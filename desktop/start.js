@@ -38,7 +38,6 @@ portfinder
                 env,
             },
         ];
-console.log(concurrently)
         return concurrently(processes, {
             inputStream: process.stdin,
             prefix: 'name',
