@@ -70,10 +70,48 @@ module.exports = {
         filename: "rnw.bundle.js",
     },
     resolve: {
-        extensions: [".web.tsx", ".web.ts", ".tsx", ".ts", ".web.js", ".js"],
         alias: {
-            "react-native$": "react-native-web",
+            'react-native-config': 'react-web-config',
+            'react-native$': 'react-native-web',
+            'react-native-sound': 'react-native-web-sound',
+            // Module alias for web & desktop
+            // https://webpack.js.org/configuration/resolve/#resolvealias
+            '@assets': path.resolve(__dirname, '../../assets'),
+            '@components': path.resolve(__dirname, '../../src/components/'),
+            '@hooks': path.resolve(__dirname, '../../src/hooks/'),
+            '@libs': path.resolve(__dirname, '../../src/libs/'),
+            // '@navigation': path.resolve(__dirname, '../../src/libs/Navigation/'),
+            '@pages': path.resolve(__dirname, '../../src/pages/'),
+            '@styles': path.resolve(__dirname, '../../src/styles/'),
+            // This path is provide alias for files like `ONYXKEYS` and `CONST`.
+            '@src': path.resolve(__dirname, '../../src/'),
+            // '@userActions': path.resolve(__dirname, '../../src/libs/actions/'),
         },
+
+        // React Native libraries may have web-specific module implementations that appear with the extension `.web.js`
+        // without this, web will try to use native implementations and break in not very obvious ways.
+        // This is also why we have to use .website.js for our own web-specific files...
+        // Because desktop also relies on "web-specific" module implementations
+        // This also skips packing web only dependencies to desktop and vice versa
+        extensions: [
+            '.web.js',
+            '.website.js',
+            '.js',
+            '.jsx',
+            '.web.ts',
+            '.website.ts',
+            '.website.tsx',
+            '.ts',
+            '.web.tsx',
+            '.tsx',
+            '.desktop.ts',
+            '.desktop.js',
+            '.desktop.tsx',
+        ],
+        // fallback: {
+        //     'process/browser': require.resolve('process/browser'),
+        //     crypto: false,
+        // },
     },
     module: {
         rules: [babelLoaderConfiguration, imageLoaderConfiguration, svgLoaderConfiguration, tsLoaderConfiguration],
