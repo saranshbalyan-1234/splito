@@ -10,8 +10,8 @@ portfinder
         port: basePort,
     })
     .then((port) => {
-        const devServer = `webpack-dev-server --config config/webpack/webpack.dev.js --port ${port} --env platform=desktop`;
-        const buildMain = 'webpack watch --config config/webpack/webpack.desktop.js --config-name desktop-main --mode=development';
+        const devServer = `webpack-dev-server --config webpack.config.js --port ${port} --env platform=desktop`;
+        const buildMain = 'webpack watch --config webpack.desktop.js --config-name desktop-main --mode=development';
 
         const env = {
             PORT: port,
@@ -32,22 +32,22 @@ portfinder
                 env,
             },
             {
-                command: `wait-port dev.new.expensify.com:${port} && npx electronmon ./desktop/dev.js`,
+                command: `npx electronmon ./desktop/dev.js`,
                 name: 'Electron',
                 prefixColor: 'cyan.dim',
                 env,
             },
         ];
-
+console.log(concurrently)
         return concurrently(processes, {
             inputStream: process.stdin,
             prefix: 'name',
 
             // Like Harry Potter and he-who-must-not-be-named, "neither can live while the other survives"
             killOthers: ['success', 'failure'],
-        }).then(
-            () => process.exit(0),
-            () => process.exit(1),
-        );
+        })
     })
-    .catch(() => process.exit(1));
+    .catch((e) => {
+        console.log(e)
+        process.exit(1)
+    });
