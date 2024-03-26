@@ -8,16 +8,19 @@ const compileNodeModules = [
     // 'react-native-gesture-handler',
 ].map((moduleName) => path.resolve(appDirectory, `node_modules/${moduleName}`));
 
+const includeModules = ["react-native-elements","react-native-vector-icons"].join("|")
+
 const babelLoaderConfiguration = {
     test: /\.(js|jsx|ts|tsx)$/, // Updated to include .jsx
     // Add every directory that needs to be compiled by Babel during the build.
-    include: [
-        path.resolve(__dirname, "index.web.js"), // Entry to your application
-        path.resolve(__dirname, "App.tsx"), // Updated to .jsx
-        path.resolve(__dirname, "src"),
-        path.resolve(__dirname, "component"),
-        ...compileNodeModules,
-    ],
+    // include: [
+    //     path.resolve(__dirname, "index.web.js"), // Entry to your application
+    //     path.resolve(__dirname, "App.tsx"), // Updated to .jsx
+    //     path.resolve(__dirname, "src"),
+    //     path.resolve(__dirname, "component"),
+    //     ...compileNodeModules,
+    // ],
+     exclude: [new RegExp(`node_modules/(?!(${includeModules})/).*|.native.js$`)],
     use: {
         loader: "babel-loader",
         options: {
@@ -35,6 +38,11 @@ const svgLoaderConfiguration = {
             loader: "@svgr/webpack",
         },
     ],
+};
+
+const assetConfiguration = {
+    test: /\.(png|jpe?g|gif)$/i,
+    type: "asset",
 };
 
 const imageLoaderConfiguration = {
@@ -60,6 +68,11 @@ const tsLoaderConfiguration = {
     },
 };
 
+const cssLoaderConfiguration = {
+    test: /\.css$/i,
+    use: ["style-loader", "css-loader"],
+};
+
 module.exports = {
     entry: {
         app: path.join(__dirname, "index.web.js"),
@@ -76,7 +89,7 @@ module.exports = {
         },
     },
     module: {
-        rules: [babelLoaderConfiguration, imageLoaderConfiguration, svgLoaderConfiguration, tsLoaderConfiguration],
+        rules: [babelLoaderConfiguration, cssLoaderConfiguration, imageLoaderConfiguration, svgLoaderConfiguration, tsLoaderConfiguration, assetConfiguration],
     },
     plugins: [
         new HtmlWebpackPlugin({
