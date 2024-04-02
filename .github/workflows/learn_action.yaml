@@ -17,6 +17,6 @@ jobs:
     javascript:
         runs-on: ubuntu-latest
         steps:
-            - name: console
             - uses: actions/checkout@v4
             - uses: ./.github/actions/first
+            - name: console
