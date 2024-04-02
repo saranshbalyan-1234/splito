@@ -8,6 +8,7 @@ on:
 
 jobs:
     hello2:
+        name: hello2externamname
         runs-on: ubuntu-latest
         steps:
             - uses: actions/checkout@v4
