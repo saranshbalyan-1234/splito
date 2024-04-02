@@ -18,8 +18,7 @@ jobs:
         runs-on: ubuntu-latest
         steps:
             - uses: actions/checkout@v4
-            - name: echo
+            - uses: ./.github/actions/first
+            - name: console
               run: echo "Hellow world"
               shell: bash
-
-            # - uses: ./.github/actions/first
