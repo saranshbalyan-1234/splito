@@ -1,4 +1,4 @@
-name: hello1
+name: Learning
 
 on:
     push:
@@ -7,11 +7,14 @@ on:
     workflow_dispatch:
 
 jobs:
-    hello2:
-        name: hello2externamname
+    first:
         runs-on: ubuntu-latest
         steps:
             - uses: actions/checkout@v4
-            - name: hellow3
+            - name: echo
               run: echo "Hellow world"
               shell: bash
+    javascript:
+        runs-on: ubuntu-latest
+        steps:
+            - uses: ./.github/actions/first
