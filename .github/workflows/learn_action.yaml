@@ -11,14 +11,14 @@ jobs:
         runs-on: ubuntu-latest
         steps:
             - uses: actions/checkout@v4
-            - name: echo
+              name: echo
               run: echo "Hellow world"
               shell: bash
     javascript:
         runs-on: ubuntu-latest
         steps:
             - uses: actions/checkout@v4
-            - name: console
+              name: console
 
             - uses: ./.github/actions/first
-            - name: custom javascript 
+              name: custom javascript 
