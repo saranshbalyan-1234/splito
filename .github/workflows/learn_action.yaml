@@ -12,7 +12,7 @@ jobs:
         steps:
             - name: console
               run: echo "Hellow world"
-              shell: bash
+            #   shell: bash
 
 
     javascript:
