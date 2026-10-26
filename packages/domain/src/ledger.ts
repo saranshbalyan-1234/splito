@@ -112,6 +112,11 @@ export function groupNet(records: LedgerRecord[], groupId: string): Record<Curre
   return net
 }
 
+/** What one expense does to one person's balance: paid minus share (> 0: they lent, < 0: they borrowed). */
+export function expenseNet(e: Pick<ExpenseRecord, 'payers' | 'shares'>, person: string): bigint {
+  return (e.payers[person] ?? 0n) - (e.shares[person] ?? 0n)
+}
+
 /** Absolute value of a minor-unit amount; screens show direction in words, not signs. */
 export function magnitude(v: bigint): bigint {
   return v < 0n ? -v : v
