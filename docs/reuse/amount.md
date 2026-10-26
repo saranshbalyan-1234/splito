@@ -19,3 +19,17 @@ money or numeric entry beyond the age gate's date picker). Searched `src/compone
 amount field - none. Toggle, Button, Settings rows and icon API were reused from the copies already in Splito.
 Written from scratch: domain parsing/rounding (`packages/domain`, no Bluesky equivalent), the keypad key rules
 (Expensify behaviour), the money-direction palette.
+
+## F-111 Amount entry and parsing correctness (2026-10-27)
+
+| Splito file | Source | What was taken | Changed |
+|---|---|---|---|
+| `packages/domain/src/calc.ts` (`plainNumber` group check, `readNumber`, `amountInputText`, `numberReadings`, unary minus, comma percents) | - (written: Bluesky has no money parsing) | - | Audit fixes C1, C2, M1, M2, M7, M14, m8, m9 |
+| `packages/domain/src/currency.ts` (prototype-free `CURRENCIES`) | - | - | Audit m13 |
+| `packages/sync/src/search.ts` (amount tokens read in the user number format) | - | - | Audit M14 |
+| `apps/client/src/components/split/form.ts`, `fields.tsx`, `SplitEditor.tsx`, `screens/EditExpense.tsx`, `components/people/RecordPaymentDialog.tsx`, `UpiPayDialog.tsx`, `features/settlement/CallItEvenDialog.tsx` | - | - | App-written amounts use the locale mark and a `decimal` reading (C1, C2); rows read decimals (M3) |
+
+Bluesky search (2026-10-27): `grep -rni "decimal\|parseFloat\|Intl.NumberFormat" src/lib src/components/forms`
+finds only count formatting (`src/lib/strings/` compact numbers); nothing reads typed money. Expensify's clone is
+still absent at `../upstream/App`; `MoneyRequestUtils.ts` behaviour (strip grouping, one decimal mark) was
+already the reference for F-310 and is unchanged.

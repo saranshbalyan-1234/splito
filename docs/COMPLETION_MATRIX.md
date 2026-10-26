@@ -28,6 +28,7 @@ Status words are the same as `docs/BACKLOG.md`: **done** (built, tested and merg
 | Expenses | Add / edit / delete / undo, all split modes, multiple payers, calculator, currencies, any date, categories | F-301, F-302 | in progress (built and tested on the unmerged UI line) |
 | Expenses | Itemize: portions, Everyone, tax / tip / service / discount visible with amount / % toggle | F-401 | in progress (built and tested on the unmerged UI line) |
 | Expenses | Smart amount input | F-310 | in progress (built and tested on feat/b-*, unmerged) |
+| Expenses | Amount entry and parsing correctness (audit C1, C2, M1, M2, M3, M7, M14, m8, m9, m13) | F-111 | done (feat/4b-33c; domain/sync/client bun tests + e2e `amountLocale.spec.ts` in de-DE and en-US with BHD; web verified, native not yet run) |
 | Expenses | Cash rounding with visible remainder | F-402 | in progress (built and tested on feat/b-*, unmerged) |
 | Settle up | Plan per group, payment rules, record repayment, UPI link and "Mark as paid?" | F-1101, F-1103 | in progress (built and tested on the unmerged UI line) |
 | Settle up | Call it even: forgive or write off | F-1113 | in progress (built and tested on feat/b-*, unmerged) |

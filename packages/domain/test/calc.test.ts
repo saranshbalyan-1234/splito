@@ -47,7 +47,9 @@ describe('evaluateAmount', () => {
     expect(evaluateAmount('1/8', 'BHD')).toBe(125n)
   })
   test('expression results round, plain amounts never do', () => {
-    expect(evaluateAmount('12.345+0', 'INR')).toBe(1235n)
+    expect(evaluateAmount('12.3456+0', 'INR')).toBe(1235n)
+    // F-111 m8: an operand like "12.345" asks first, as the plain number does.
+    expect(evaluateAmount('12.345+0', 'INR', '.', {reading: 'decimal'})).toBe(1235n)
     expect(() => evaluateAmount('12.3456', 'INR')).toThrow('TOO_MANY_DECIMALS')
     // Exactly three decimals could be a thousands group: F-310 asks instead.
     expect(() => evaluateAmount('12.345', 'INR')).toThrow('AMBIGUOUS_AMOUNT')

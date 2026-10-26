@@ -2,9 +2,11 @@ import {useState} from 'react'
 import {View} from 'react-native'
 import {Trans, useLingui} from '@lingui/react/macro'
 import {useNavigation, useRoute, type RouteProp} from '@react-navigation/native'
+import {decimalMark} from '@splito/domain'
 import {type Entity, type Expense} from '@splito/sync'
 
 import {type AllNavigatorParams, type NavigationProp} from '#/lib/routes/types'
+import {useNumberLocale} from '#/locale/numberLocale'
 import {useMutationCtx} from '#/data/hooks'
 import {atoms as a, useTheme} from '#/alf'
 import * as FormSheet from '#/components/FormSheet'
@@ -49,7 +51,9 @@ function EditForm({
   onClose: () => void
 }) {
   const {actor} = useMutationCtx()
-  const [initial] = useState(() => formFromExpense(expense.data, actor))
+  const mark = decimalMark(useNumberLocale())
+  // Amounts are written in the number format's own mark, so they read back exactly (F-111 C2).
+  const [initial] = useState(() => formFromExpense(expense.data, actor, mark))
   return (
     <ExpenseComposer
       testID="screen-edit-expense"

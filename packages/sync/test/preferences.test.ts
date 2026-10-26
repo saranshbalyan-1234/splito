@@ -27,6 +27,8 @@ test('set then get', async () => {
 test('invalid value rejected', async () => {
   await expect(setPref(s, ctx, 'accent', 'purple' as never)).rejects.toThrow('INVALID_PREF')
   await expect(setPref(s, ctx, 'defaultCurrency', 'XXX')).rejects.toThrow('INVALID_PREF')
+  // F-111 m13: an Object prototype key is no currency.
+  await expect(setPref(s, ctx, 'defaultCurrency', 'toString')).rejects.toThrow('INVALID_PREF')
   await expect(setPref(s, ctx, 'textScale', 3)).rejects.toThrow('INVALID_PREF')
 })
 

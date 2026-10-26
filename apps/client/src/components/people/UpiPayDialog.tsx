@@ -1,7 +1,13 @@
 import {useState} from 'react'
 import {Linking, View} from 'react-native'
 import {Trans, useLingui} from '@lingui/react/macro'
-import {DomainError, formatAmount, toDecimalString, ZERO} from '@splito/domain'
+import {
+  amountInputText,
+  decimalMark,
+  DomainError,
+  formatAmount,
+  ZERO,
+} from '@splito/domain'
 import {type Entity, type Person, updatePerson} from '@splito/sync'
 
 import {useHaptics} from '#/lib/haptics'
@@ -60,7 +66,8 @@ function Form({
   const haptics = useHaptics()
   const locale = useNumberLocale()
   const [upiId, setUpiId] = useState(person.data.upiId ?? '')
-  const [amountText, setAmountText] = useState(toDecimalString(amount, 2))
+  const prefill = amountInputText(amount, 'INR', decimalMark(locale))
+  const [typed, setTyped] = useState(prefill)
   const [error, setError] = useState<'upi' | 'amount' | null>(null)
   const [opened, setOpened] = useState<bigint | null>(null)
   const name = person.data.name
@@ -68,7 +75,7 @@ function Form({
   const open = async () => {
     let minor: bigint
     try {
-      minor = parseTypedAmount(amountText, 'INR', locale)
+      minor = parseTypedAmount(typed, 'INR', locale)
       if (minor <= ZERO) throw new DomainError('INVALID_AMOUNT')
     } catch {
       haptics.error()
@@ -140,13 +147,10 @@ function Form({
   return (
     <FormSheet.Inner
       title={l`Pay with UPI`}
-      isDirty={
-        upiId !== (person.data.upiId ?? '') ||
-        amountText !== toDecimalString(amount, 2)
-      }
+      isDirty={upiId !== (person.data.upiId ?? '') || typed !== prefill}
       footer={{
         saveLabel: l`Open UPI app`,
-        canSave: upiId.trim() !== '' && amountText.trim() !== '',
+        canSave: upiId.trim() !== '' && typed.trim() !== '',
         onSave: () => void open(),
       }}>
       <FormSheet.Description>
@@ -190,9 +194,9 @@ function Form({
             <Dialog.Input
               testID="upi-amount"
               label={l`Amount`}
-              value={amountText}
+              value={typed}
               onChangeText={v => {
-                setAmountText(v)
+                setTyped(v)
                 setError(null)
               }}
               keyboardType="decimal-pad"

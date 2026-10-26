@@ -143,14 +143,14 @@ msgstr "{0} बनाया गया"
 #. placeholder {1}: unitText(roundTo)
 #. placeholder {2}: name(cash.remainderTo)
 #. placeholder {3}: fmt(evaluation.total!)
-#: src/components/split/SplitEditor.tsx:962
+#: src/components/split/SplitEditor.tsx:965
 msgid "{0} doesn’t round to {1}, so it goes on {2}’s share. Everything still adds up to {3}."
 msgstr "{0} {1} में पूरा नहीं बँटता, इसलिए यह {2} के हिस्से में जुड़ता है। कुल अब भी {3} है।"
 
 #. placeholder {0}: fmt(cash.remainder)
 #. placeholder {1}: unitText(roundTo)
 #. placeholder {2}: fmt(evaluation.total!)
-#: src/components/split/SplitEditor.tsx:960
+#: src/components/split/SplitEditor.tsx:963
 msgid "{0} doesn’t round to {1}, so it goes on your share. Everything still adds up to {2}."
 msgstr "{0} {1} में पूरा नहीं बँटता, इसलिए यह आपके हिस्से में जुड़ता है। कुल अब भी {2} है।"
 
@@ -220,12 +220,12 @@ msgstr "{0} का भुगतान बाकी है"
 
 #. placeholder {0}: name(creditor)
 #. placeholder {1}: name(debtor)
-#: src/features/settlement/CallItEvenDialog.tsx:130
+#: src/features/settlement/CallItEvenDialog.tsx:131
 msgid "{0} lets {1} off"
 msgstr "{0}, {1} का कर्ज़ माफ़ कर रहे हैं"
 
 #. placeholder {0}: name(creditor)
-#: src/features/settlement/CallItEvenDialog.tsx:129
+#: src/features/settlement/CallItEvenDialog.tsx:130
 msgid "{0} lets you off"
 msgstr "{0} आपका कर्ज़ माफ़ कर रहे हैं"
 
@@ -270,7 +270,7 @@ msgstr "{0} ने भुगतान किया"
 #. placeholder {1}: name(to)
 #: src/components/people/HistoryRow.tsx:117
 #: src/components/people/PaymentDetailsDialog.tsx:99
-#: src/components/people/RecordPaymentDialog.tsx:154
+#: src/components/people/RecordPaymentDialog.tsx:155
 #: src/screens/RecentlyDeleted/describe.ts:57
 msgid "{0} paid {1}"
 msgstr "{0} ने {1} को भुगतान किया"
@@ -284,7 +284,7 @@ msgstr "{0} ने {total} चुकाए"
 #. placeholder {0}: name(r.from)
 #: src/components/people/HistoryRow.tsx:116
 #: src/components/people/PaymentDetailsDialog.tsx:98
-#: src/components/people/RecordPaymentDialog.tsx:153
+#: src/components/people/RecordPaymentDialog.tsx:154
 #: src/screens/RecentlyDeleted/describe.ts:56
 msgid "{0} paid you"
 msgstr "{0} ने आपको भुगतान किया"
@@ -571,7 +571,7 @@ msgstr "{n, plural, one {# व्यक्ति} other {# लोग}}"
 msgid "{name}, waiting for them to accept. Not selectable yet."
 msgstr "{name}, उनकी स्वीकृति का इंतज़ार। अभी चुने नहीं जा सकते।"
 
-#: src/components/people/UpiPayDialog.tsx:161
+#: src/components/people/UpiPayDialog.tsx:165
 msgid "{name}’s UPI ID"
 msgstr "{name} की UPI ID"
 
@@ -600,7 +600,7 @@ msgstr "{title}, {byline}, {totalText} में से {shareLabel} {shareText}
 msgid "{visible} categories"
 msgstr "{visible} श्रेणियाँ"
 
-#: src/features/settlement/CallItEvenDialog.tsx:156
+#: src/features/settlement/CallItEvenDialog.tsx:157
 msgid "{where} {amount} owed by {debtorName}"
 msgstr "{where} {amount}, {debtorName} पर बकाया"
 
@@ -641,7 +641,7 @@ msgid "<0>{value}</0> isn’t on Splito yet. Send an invite, or add them just fo
 msgstr "<0>{value}</0> अभी Splito पर नहीं हैं। आमंत्रण भेजें, या उन्हें सिर्फ़ अपने लिए जोड़ें और जुड़ने पर लिंक करें।"
 
 #: src/components/split/AmountKeypad.tsx:164
-#: src/components/split/fields.tsx:359
+#: src/components/split/fields.tsx:360
 msgid "= Use result"
 msgstr "= नतीजा लें"
 
@@ -989,8 +989,8 @@ msgstr "सभी"
 msgid "All {0} assigned"
 msgstr "पूरे {0} बँट गए"
 
-#: src/features/settlement/CallItEvenDialog.tsx:225
-#: src/features/settlement/CallItEvenDialog.tsx:242
+#: src/features/settlement/CallItEvenDialog.tsx:226
+#: src/features/settlement/CallItEvenDialog.tsx:243
 msgid "All even"
 msgstr "हिसाब बराबर"
 
@@ -1029,15 +1029,15 @@ msgstr "m (मिलियन) के लिए और जोड़ के अ�
 msgid "Always in the group"
 msgstr "हमेशा समूह में"
 
-#: src/components/people/RecordPaymentDialog.tsx:342
-#: src/components/people/RecordPaymentDialog.tsx:347
-#: src/components/people/UpiPayDialog.tsx:187
-#: src/components/people/UpiPayDialog.tsx:192
+#: src/components/people/RecordPaymentDialog.tsx:343
+#: src/components/people/RecordPaymentDialog.tsx:348
+#: src/components/people/UpiPayDialog.tsx:191
+#: src/components/people/UpiPayDialog.tsx:196
 #: src/components/settings/prefControls.tsx:316
 #: src/components/settings/prefControls.tsx:319
-#: src/components/split/fields.tsx:154
-#: src/components/split/fields.tsx:247
-#: src/components/split/fields.tsx:408
+#: src/components/split/fields.tsx:155
+#: src/components/split/fields.tsx:248
+#: src/components/split/fields.tsx:409
 #: src/screens/Analytics/components/Charts.tsx:247
 #: src/screens/Groups/components/GroupsFilterDialog.tsx:118
 #: src/screens/People/components/FriendsFilterDialog.tsx:124
@@ -1063,8 +1063,8 @@ msgstr "राशि कीपैड"
 msgid "Amount shortcuts"
 msgstr "राशि शॉर्टकट"
 
-#: src/features/settlement/CallItEvenDialog.tsx:331
-#: src/features/settlement/CallItEvenDialog.tsx:336
+#: src/features/settlement/CallItEvenDialog.tsx:332
+#: src/features/settlement/CallItEvenDialog.tsx:337
 msgid "Amount to let go"
 msgstr "माफ़ की जाने वाली रक़म"
 
@@ -1262,12 +1262,12 @@ msgstr "नाम के अनुसार"
 msgid "By person"
 msgstr "व्यक्ति के अनुसार"
 
-#: src/components/split/fields.tsx:333
+#: src/components/split/fields.tsx:334
 msgid "Calculator"
 msgstr "कैलकुलेटर"
 
-#: src/features/settlement/CallItEvenDialog.tsx:207
-#: src/features/settlement/CallItEvenDialog.tsx:267
+#: src/features/settlement/CallItEvenDialog.tsx:208
+#: src/features/settlement/CallItEvenDialog.tsx:268
 #: src/screens/Group/components/GroupRows.tsx:209
 #: src/screens/Group/components/GroupRows.tsx:212
 #: src/screens/Person/index.tsx:398
@@ -1423,7 +1423,7 @@ msgstr "फ़िल्टर हटाएँ"
 msgid "Clear search query"
 msgstr "खोज साफ़ करें"
 
-#: src/features/settlement/CallItEvenDialog.tsx:376
+#: src/features/settlement/CallItEvenDialog.tsx:377
 msgid "Clears: {clears}"
 msgstr "साफ़ होगा: {clears}"
 
@@ -1569,7 +1569,7 @@ msgstr "उस व्यक्ति को नहीं जोड़ सके�
 msgid "Couldn’t add your friend. Please try again."
 msgstr "आपके दोस्त को नहीं जोड़ सके। कृपया फिर कोशिश करें।"
 
-#: src/features/settlement/CallItEvenDialog.tsx:195
+#: src/features/settlement/CallItEvenDialog.tsx:196
 msgid "Couldn’t call it even. Please try again."
 msgstr "हिसाब बराबर नहीं हो सका। कृपया फिर से कोशिश करें।"
 
@@ -1633,7 +1633,7 @@ msgstr "नियम सहेजे नहीं जा सके। फिर 
 msgid "Couldn’t save. Please try again."
 msgstr "सहेजा नहीं जा सका। कृपया फिर कोशिश करें।"
 
-#: src/features/settlement/CallItEvenDialog.tsx:203
+#: src/features/settlement/CallItEvenDialog.tsx:204
 msgid "Couldn’t undo the write-off"
 msgstr "माफ़ी वापस नहीं ली जा सकी"
 
@@ -1654,7 +1654,7 @@ msgstr "{name} के साथ वाले समूहों के खर्
 msgid "Count shared group expenses in each person's balance"
 msgstr "हर व्यक्ति के बैलेंस में साझा समूह खर्च गिनें"
 
-#: src/components/people/RecordPaymentDialog.tsx:385
+#: src/components/people/RecordPaymentDialog.tsx:386
 msgid "Counts towards: {settles}"
 msgstr "इसमें गिना जाएगा: {settles}"
 
@@ -1683,10 +1683,10 @@ msgid "Create link"
 msgstr "लिंक बनाएँ"
 
 #: src/components/groups/GroupFields.tsx:100
-#: src/components/people/RecordPaymentDialog.tsx:321
+#: src/components/people/RecordPaymentDialog.tsx:322
 #: src/components/split/pickers.tsx:69
 #: src/components/split/pickers.tsx:80
-#: src/features/settlement/CallItEvenDialog.tsx:310
+#: src/features/settlement/CallItEvenDialog.tsx:311
 #: src/screens/Analytics/index.tsx:208
 #: src/screens/Groups/components/GroupsFilterDialog.tsx:90
 #: src/screens/People/components/FriendsFilterDialog.tsx:98
@@ -1700,7 +1700,7 @@ msgstr "मुद्रा"
 msgid "Currency: {0}"
 msgstr "मुद्रा: {0}"
 
-#: src/components/split/fields.tsx:201
+#: src/components/split/fields.tsx:202
 msgid "Currency: {currency}. Change"
 msgstr "मुद्रा: {currency}। बदलें"
 
@@ -1857,11 +1857,11 @@ msgstr "हमेशा के लिए हटा दिया गया"
 msgid "Description"
 msgstr "विवरण"
 
-#: src/components/people/UpiPayDialog.tsx:121
+#: src/components/people/UpiPayDialog.tsx:128
 msgid "Did the payment go through?"
 msgstr "क्या भुगतान हो गया?"
 
-#: src/components/split/fields.tsx:267
+#: src/components/split/fields.tsx:268
 msgid "Did you mean"
 msgstr "क्या आपका मतलब था"
 
@@ -1869,14 +1869,14 @@ msgstr "क्या आपका मतलब था"
 msgid "Dim"
 msgstr "मद्धम"
 
-#: src/features/settlement/CallItEvenDialog.tsx:145
+#: src/features/settlement/CallItEvenDialog.tsx:146
 #: src/screens/People/components/PersonRow.tsx:78
 #: src/screens/Person/components/PersonBalances.tsx:95
 msgid "Direct"
 msgstr "सीधा"
 
 #. placeholder {0}: formatAmount(p.amount, currency, locale)
-#: src/components/people/RecordPaymentDialog.tsx:170
+#: src/components/people/RecordPaymentDialog.tsx:171
 msgid "Direct {0}"
 msgstr "सीधा {0}"
 
@@ -1936,7 +1936,7 @@ msgstr "हो गया"
 msgid "Double tap to close the dialog"
 msgstr "डायलॉग बंद करने के लिए दो बार टैप करें"
 
-#: src/features/settlement/CallItEvenDialog.tsx:391
+#: src/features/settlement/CallItEvenDialog.tsx:392
 msgid "e.g. Birthday treat"
 msgstr "जैसे जन्मदिन की ट्रीट"
 
@@ -1944,7 +1944,7 @@ msgstr "जैसे जन्मदिन की ट्रीट"
 msgid "e.g. Goa trip"
 msgstr "जैसे गोवा यात्रा"
 
-#: src/components/people/RecordPaymentDialog.tsx:400
+#: src/components/people/RecordPaymentDialog.tsx:401
 msgid "e.g. Paid by UPI"
 msgstr "जैसे UPI से दिया"
 
@@ -1966,8 +1966,8 @@ msgstr "श्रेणी बदलें"
 
 #: src/components/split/ExpenseComposer.tsx:281
 #: src/navigation/Navigation.tsx:80
-#: src/screens/EditExpense.tsx:33
-#: src/screens/EditExpense.tsx:70
+#: src/screens/EditExpense.tsx:35
+#: src/screens/EditExpense.tsx:74
 #: src/screens/Expense/index.tsx:85
 msgid "Edit expense"
 msgstr "खर्च बदलें"
@@ -2042,7 +2042,7 @@ msgid "Enter a name."
 msgstr "नाम लिखें।"
 
 #: src/components/people/EditFriendDialog.tsx:138
-#: src/components/people/UpiPayDialog.tsx:180
+#: src/components/people/UpiPayDialog.tsx:184
 msgid "Enter a UPI ID like name@bank."
 msgstr "name@bank जैसी UPI ID लिखें।"
 
@@ -2050,8 +2050,8 @@ msgstr "name@bank जैसी UPI ID लिखें।"
 msgid "Enter an amount"
 msgstr "रकम लिखें"
 
-#: src/components/people/RecordPaymentDialog.tsx:185
-#: src/components/people/UpiPayDialog.tsx:207
+#: src/components/people/RecordPaymentDialog.tsx:186
+#: src/components/people/UpiPayDialog.tsx:211
 msgid "Enter an amount greater than zero."
 msgstr "शून्य से ज़्यादा राशि लिखें।"
 
@@ -2090,7 +2090,7 @@ msgstr "यूरोपीय"
 
 #. placeholder {0}: unitText(roundTo)
 #. placeholder {1}: fmt(evaluation.total!)
-#: src/components/split/SplitEditor.tsx:963
+#: src/components/split/SplitEditor.tsx:966
 msgid "Every share is a whole multiple of {0} and they add up to {1}."
 msgstr "हर हिस्सा {0} का पूरा गुणज है और सबका जोड़ {1} है।"
 
@@ -2272,7 +2272,7 @@ msgstr "खाना"
 msgid "For example, Rent"
 msgstr "जैसे, किराया"
 
-#: src/components/people/RecordPaymentDialog.tsx:272
+#: src/components/people/RecordPaymentDialog.tsx:273
 msgid "For money that changed hands outside Splito – cash, UPI or a bank transfer. Splito keeps the record; it never moves money."
 msgstr "Splito के बाहर हुए लेन-देन के लिए – नकद, UPI या बैंक ट्रांसफ़र। Splito सिर्फ़ रिकॉर्ड रखता है; वह कभी पैसे नहीं भेजता।"
 
@@ -2379,11 +2379,11 @@ msgstr "पैसा आपके पास आए तो हरा, आप द�
 msgid "Groceries"
 msgstr "किराना"
 
-#: src/components/people/RecordPaymentDialog.tsx:171
+#: src/components/people/RecordPaymentDialog.tsx:172
 #: src/components/split/ExpenseComposer.tsx:514
 #: src/components/split/pickers.tsx:256
 #: src/components/split/pickers.tsx:260
-#: src/features/settlement/CallItEvenDialog.tsx:145
+#: src/features/settlement/CallItEvenDialog.tsx:146
 #: src/navigation/Navigation.tsx:76
 #: src/screens/Analytics/components/Charts.tsx:325
 #: src/screens/Analytics/index.tsx:207
@@ -2545,7 +2545,7 @@ msgstr "समूह शामिल करें"
 msgid "Indian"
 msgstr "भारतीय"
 
-#: src/components/people/UpiPayDialog.tsx:201
+#: src/components/people/UpiPayDialog.tsx:205
 msgid "Indian Rupee"
 msgstr "भारतीय रुपया"
 
@@ -2657,7 +2657,7 @@ msgstr "हो सकता है यह समाप्त, पूरा इ�
 msgid "It may have moved. Everything is still in Settings."
 msgstr "शायद यह कहीं और चला गया है। सब कुछ अब भी सेटिंग्स में है।"
 
-#: src/screens/EditExpense.tsx:84
+#: src/screens/EditExpense.tsx:88
 msgid "It was deleted, or the link is wrong."
 msgstr "यह हटा दिया गया है, या लिंक गलत है।"
 
@@ -2746,7 +2746,7 @@ msgstr "अगले साल"
 msgid "Left the group"
 msgstr "समूह छोड़ दिया"
 
-#: src/features/settlement/CallItEvenDialog.tsx:273
+#: src/features/settlement/CallItEvenDialog.tsx:274
 msgid "Let a debt go without any money changing hands. It shows in history and Activity, never counts as spending, and you can undo it."
 msgstr "बिना पैसे के लेन-देन के कोई कर्ज़ माफ़ करें। यह इतिहास और गतिविधि में दिखता है, कभी ख़र्च में नहीं गिना जाता, और आप इसे वापस ले सकते हैं।"
 
@@ -3110,7 +3110,7 @@ msgstr "कोई साझा समूह नहीं"
 msgid "No tracking"
 msgstr "कोई ट्रैकिंग नहीं"
 
-#: src/components/people/UpiPayDialog.tsx:112
+#: src/components/people/UpiPayDialog.tsx:119
 msgid "No UPI app on this device can open the payment."
 msgstr "इस डिवाइस पर कोई UPI ऐप यह भुगतान नहीं खोल सकता।"
 
@@ -3158,18 +3158,18 @@ msgstr "अभी नहीं"
 msgid "Not splitting"
 msgstr "बाँट नहीं रहे"
 
-#: src/components/people/UpiPayDialog.tsx:125
+#: src/components/people/UpiPayDialog.tsx:132
 msgid "Not yet"
 msgstr "अभी नहीं"
 
 #: src/components/people/PaymentDetailsDialog.tsx:168
-#: src/components/people/RecordPaymentDialog.tsx:397
-#: src/features/settlement/CallItEvenDialog.tsx:388
+#: src/components/people/RecordPaymentDialog.tsx:398
+#: src/features/settlement/CallItEvenDialog.tsx:389
 msgid "Note"
 msgstr "नोट"
 
-#: src/components/people/RecordPaymentDialog.tsx:392
-#: src/features/settlement/CallItEvenDialog.tsx:383
+#: src/components/people/RecordPaymentDialog.tsx:393
+#: src/features/settlement/CallItEvenDialog.tsx:384
 msgid "Note (optional)"
 msgstr "नोट (वैकल्पिक)"
 
@@ -3294,12 +3294,12 @@ msgid "Open Analytics"
 msgstr "एनालिटिक्स खोलें"
 
 #. placeholder {0}: money(full)
-#: src/features/settlement/CallItEvenDialog.tsx:303
+#: src/features/settlement/CallItEvenDialog.tsx:304
 msgid "Open balance {0}"
 msgstr "बकाया बैलेंस {0}"
 
 #. placeholder {0}: formatAmount(suggestion, currency, locale)
-#: src/components/people/RecordPaymentDialog.tsx:373
+#: src/components/people/RecordPaymentDialog.tsx:374
 msgid "Open balance {0}. Part payments are fine."
 msgstr "बकाया {0}। आंशिक भुगतान भी ठीक है।"
 
@@ -3320,7 +3320,7 @@ msgstr "सेटिंग्स खोलें"
 msgid "Open source"
 msgstr "ओपन सोर्स"
 
-#: src/components/people/UpiPayDialog.tsx:148
+#: src/components/people/UpiPayDialog.tsx:152
 msgid "Open UPI app"
 msgstr "UPI ऐप खोलें"
 
@@ -3340,7 +3340,7 @@ msgstr "जो बदला, उसे खोलता है"
 msgid "Opens your profile"
 msgstr "आपकी प्रोफ़ाइल खोलता है"
 
-#: src/components/people/UpiPayDialog.tsx:153
+#: src/components/people/UpiPayDialog.tsx:157
 msgid "Opens your UPI app with {name} and the amount filled in. You confirm the payment there."
 msgstr "आपका UPI ऐप {name} और राशि भरकर खुलेगा। भुगतान की पुष्टि वहीं करें।"
 
@@ -3405,15 +3405,15 @@ msgid "Pairs you haven’t marked Allowed or Preferred are treated as excluded."
 msgstr "जिन जोड़ियों को आपने अनुमति या पसंदीदा नहीं चुना, वे बाहर मानी जाएंगी।"
 
 #. placeholder {0}: money(remainingMinor(full, [typed ?? ZERO]))
-#: src/features/settlement/CallItEvenDialog.tsx:365
+#: src/features/settlement/CallItEvenDialog.tsx:366
 msgid "Part of it: {0} stays open."
 msgstr "इसका एक हिस्सा: {0} बकाया रहेगा।"
 
-#: src/components/people/RecordPaymentDialog.tsx:374
+#: src/components/people/RecordPaymentDialog.tsx:375
 msgid "Part payments are fine."
 msgstr "आंशिक भुगतान भी ठीक है।"
 
-#: src/components/people/UpiPayDialog.tsx:142
+#: src/components/people/UpiPayDialog.tsx:149
 #: src/screens/Person/index.tsx:304
 #: src/screens/Person/index.tsx:310
 msgid "Pay with UPI"
@@ -3433,8 +3433,8 @@ msgstr "भुगतान हटाया गया"
 msgid "Payment details"
 msgstr "भुगतान का विवरण"
 
-#: src/components/people/RecordPaymentDialog.tsx:227
-#: src/components/people/RecordPaymentDialog.tsx:235
+#: src/components/people/RecordPaymentDialog.tsx:228
+#: src/components/people/RecordPaymentDialog.tsx:236
 msgid "Payment recorded"
 msgstr "भुगतान दर्ज हुआ"
 
@@ -3588,7 +3588,7 @@ msgstr "प्रोफ़ाइल"
 msgid "QR and share"
 msgstr "QR और शेयर"
 
-#: src/components/split/fields.tsx:444
+#: src/components/split/fields.tsx:445
 msgid "Rate"
 msgstr "दर"
 
@@ -3630,11 +3630,11 @@ msgstr "हाल ही में हटाए गए"
 msgid "Record"
 msgstr "दर्ज करें"
 
-#: src/components/people/RecordPaymentDialog.tsx:214
+#: src/components/people/RecordPaymentDialog.tsx:215
 msgid "Record a payment"
 msgstr "भुगतान दर्ज करें"
 
-#: src/components/people/RecordPaymentDialog.tsx:266
+#: src/components/people/RecordPaymentDialog.tsx:267
 #: src/screens/Person/index.tsx:371
 msgid "Record payment"
 msgstr "भुगतान दर्ज करें"
@@ -3791,18 +3791,18 @@ msgid "Revoked"
 msgstr "रद्द किया गया"
 
 #: src/components/settings/prefControls.tsx:364
-#: src/components/split/SplitEditor.tsx:900
-#: src/components/split/SplitEditor.tsx:916
+#: src/components/split/SplitEditor.tsx:903
+#: src/components/split/SplitEditor.tsx:919
 msgid "Round shares to cash"
 msgstr "हिस्सों को नकद में पूर्णांकित करें"
 
 #: src/components/settings/prefControls.tsx:379
-#: src/components/split/SplitEditor.tsx:930
+#: src/components/split/SplitEditor.tsx:933
 msgid "Round to"
 msgstr "इतने तक पूर्णांकित करें"
 
 #. placeholder {0}: unitText(unit)
-#: src/components/split/SplitEditor.tsx:938
+#: src/components/split/SplitEditor.tsx:941
 msgid "Round to {0}"
 msgstr "{0} तक पूर्णांकित करें"
 
@@ -3877,7 +3877,7 @@ msgstr "सहेजा गया। ऑनलाइन होने पर ह�
 #: src/components/forms/SearchInput.tsx:54
 #: src/navigation/Drawer.tsx:223
 #: src/navigation/Navigation.tsx:74
-#: src/screens/Search/index.tsx:185
+#: src/screens/Search/index.tsx:188
 #: src/view/shell/desktop/LeftNav.tsx:752
 msgid "Search"
 msgstr "खोजें"
@@ -3888,11 +3888,11 @@ msgstr "खोजें"
 msgid "Search currencies"
 msgstr "मुद्राएँ खोजें"
 
-#: src/screens/Search/index.tsx:202
+#: src/screens/Search/index.tsx:205
 msgid "Search expenses, people and groups"
 msgstr "खर्च, लोग और ग्रुप खोजें"
 
-#: src/screens/Search/index.tsx:203
+#: src/screens/Search/index.tsx:206
 msgid "Search expenses, people, groups"
 msgstr "खर्च, लोग, ग्रुप खोजें"
 
@@ -4165,9 +4165,9 @@ msgstr "कुछ"
 #: src/components/groups/RulesEditor.tsx:219
 #: src/components/people/HistoryRow.tsx:61
 #: src/components/people/PaymentDetailsDialog.tsx:88
-#: src/components/people/RecordPaymentDialog.tsx:145
+#: src/components/people/RecordPaymentDialog.tsx:146
 #: src/components/split/shared.tsx:78
-#: src/features/settlement/CallItEvenDialog.tsx:120
+#: src/features/settlement/CallItEvenDialog.tsx:121
 #: src/screens/Analytics/useReport.ts:268
 #: src/screens/Group/index.tsx:603
 #: src/screens/Group/index.tsx:637
@@ -4272,7 +4272,7 @@ msgstr "Splito - घर"
 msgid "Splito can’t open your contacts. Turn on Contacts for Splito in Settings, then come back."
 msgstr "Splito आपके संपर्क नहीं खोल सकता। सेटिंग्स में Splito के लिए Contacts चालू करें, फिर वापस आएँ।"
 
-#: src/components/people/UpiPayDialog.tsx:130
+#: src/components/people/UpiPayDialog.tsx:137
 msgid "Splito can’t see your UPI app. Record the payment only once your app shows it as successful."
 msgstr "Splito आपका UPI ऐप नहीं देख सकता। भुगतान तभी दर्ज करें जब ऐप उसे सफल दिखाए।"
 
@@ -4317,7 +4317,7 @@ msgstr "ठहरना"
 msgid "suggested"
 msgstr "सुझाया गया"
 
-#: src/components/people/RecordPaymentDialog.tsx:305
+#: src/components/people/RecordPaymentDialog.tsx:306
 msgid "Swap who paid"
 msgstr "भुगतान करने वाला बदलें"
 
@@ -4375,7 +4375,7 @@ msgid "That isn’t a number. Use digits, one decimal point and + − × ÷"
 msgstr "यह संख्या नहीं है। अंक, एक दशमलव बिंदु और + − × ÷ इस्तेमाल करें"
 
 #. placeholder {0}: money(full)
-#: src/features/settlement/CallItEvenDialog.tsx:362
+#: src/features/settlement/CallItEvenDialog.tsx:363
 msgid "That’s more than the open balance of {0}."
 msgstr "यह बकाया बैलेंस {0} से ज़्यादा है।"
 
@@ -4399,7 +4399,7 @@ msgstr "कोड 6 अंकों का होता है।"
 msgid "The payment couldn’t be deleted. Please try again."
 msgstr "भुगतान हटाया नहीं जा सका। कृपया फिर कोशिश करें।"
 
-#: src/components/people/RecordPaymentDialog.tsx:210
+#: src/components/people/RecordPaymentDialog.tsx:211
 msgid "The payment couldn’t be saved. Please try again."
 msgstr "भुगतान सहेजा नहीं जा सका। कृपया फिर कोशिश करें।"
 
@@ -4423,7 +4423,7 @@ msgstr "शुरुआती मान सेटिंग्स › सूच�
 msgid "The tab Splito opens on."
 msgstr "Splito खुलते समय यही टैब दिखेगा।"
 
-#: src/features/settlement/CallItEvenDialog.tsx:364
+#: src/features/settlement/CallItEvenDialog.tsx:365
 msgid "The whole balance: you’ll be even in {currency}. Other currencies stay as they are."
 msgstr "पूरा बैलेंस: {currency} में हिसाब बराबर हो जाएगा। दूसरी मुद्राएँ जैसी हैं वैसी रहेंगी।"
 
@@ -4451,11 +4451,11 @@ msgstr "इसे वापस नहीं किया जा सकता, �
 msgid "This contact has no email or mobile number."
 msgstr "इस संपर्क का कोई ईमेल या मोबाइल नंबर नहीं है।"
 
-#: src/components/split/fields.tsx:289
+#: src/components/split/fields.tsx:290
 msgid "This currency has no third decimal."
 msgstr "इस मुद्रा में तीसरा दशमलव अंक नहीं होता।"
 
-#: src/screens/EditExpense.tsx:75
+#: src/screens/EditExpense.tsx:79
 msgid "This expense can’t be edited"
 msgstr "यह खर्च बदला नहीं जा सकता"
 
@@ -4610,7 +4610,7 @@ msgstr "लिखें कि हर व्यक्ति पर कितन�
 #: src/components/activity/useActivityActions.tsx:128
 #: src/components/people/PaymentDetailsDialog.tsx:118
 #: src/components/people/PaymentDetailsDialog.tsx:134
-#: src/features/settlement/CallItEvenDialog.tsx:228
+#: src/features/settlement/CallItEvenDialog.tsx:229
 #: src/screens/Expense/index.tsx:144
 #: src/screens/Expense/index.tsx:152
 #: src/screens/RecentlyDeleted/index.tsx:123
@@ -4618,7 +4618,7 @@ msgid "Undo"
 msgstr "पहले जैसा करें"
 
 #: src/components/activity/useActivityActions.tsx:129
-#: src/features/settlement/CallItEvenDialog.tsx:230
+#: src/features/settlement/CallItEvenDialog.tsx:231
 #: src/screens/RecentlyDeleted/index.tsx:132
 msgctxt "action"
 msgid "Undo"
@@ -4653,7 +4653,7 @@ msgid "UPI {0}"
 msgstr "UPI {0}"
 
 #: src/components/people/EditFriendDialog.tsx:116
-#: src/components/people/UpiPayDialog.tsx:166
+#: src/components/people/UpiPayDialog.tsx:170
 msgid "UPI ID"
 msgstr "UPI ID"
 
@@ -4661,13 +4661,13 @@ msgstr "UPI ID"
 msgid "UPI ID (optional)"
 msgstr "UPI ID (वैकल्पिक)"
 
-#: src/components/people/UpiPayDialog.tsx:214
+#: src/components/people/UpiPayDialog.tsx:218
 msgid "UPI links open on a phone with a UPI app. On a computer, nothing may happen."
 msgstr "UPI लिंक UPI ऐप वाले फ़ोन पर खुलते हैं। कंप्यूटर पर शायद कुछ न हो।"
 
 #. placeholder {0}: format(v)
 #. placeholder {0}: formatContact(c)
-#: src/components/split/fields.tsx:276
+#: src/components/split/fields.tsx:277
 #: src/screens/AddFriend.tsx:724
 msgid "Use {0}"
 msgstr "{0} इस्तेमाल करें"
@@ -4684,7 +4684,7 @@ msgstr "साइडबार में खर्च जोड़ें या �
 msgid "Use as the total"
 msgstr "कुल रकम के रूप में इस्तेमाल करें"
 
-#: src/components/split/SplitEditor.tsx:854
+#: src/components/split/SplitEditor.tsx:857
 msgid "Use as total"
 msgstr "कुल रकम बनाएँ"
 
@@ -4693,7 +4693,7 @@ msgid "Use Splito’s calculator keypad for amounts on phones"
 msgstr "फ़ोन पर राशि के लिए Splito का कैलकुलेटर कीपैड इस्तेमाल करें"
 
 #: src/components/split/AmountKeypad.tsx:154
-#: src/components/split/fields.tsx:352
+#: src/components/split/fields.tsx:353
 msgid "Use the result"
 msgstr "नतीजा इस्तेमाल करें"
 
@@ -4850,7 +4850,7 @@ msgstr "किसने दिया?"
 msgid "Who you settle with"
 msgstr "किसके साथ हिसाब चुकाएं"
 
-#: src/components/split/SplitEditor.tsx:920
+#: src/components/split/SplitEditor.tsx:923
 msgid "Whole amounts that are easy to hand over"
 msgstr "पूरी राशियाँ जो देना आसान हो"
 
@@ -4866,7 +4866,7 @@ msgstr "शीर्षक, नोट, आइटम, श्रेणी, लो�
 msgid "Works once"
 msgstr "एक बार काम करता है"
 
-#: src/features/settlement/CallItEvenDialog.tsx:267
+#: src/features/settlement/CallItEvenDialog.tsx:268
 msgid "Write off"
 msgstr "माफ़ करें"
 
@@ -4883,8 +4883,8 @@ msgstr "माफ़ी वापस लाई गई"
 msgid "Write-off undone"
 msgstr "माफ़ी वापस ली गई"
 
-#: src/features/settlement/CallItEvenDialog.tsx:225
-#: src/features/settlement/CallItEvenDialog.tsx:242
+#: src/features/settlement/CallItEvenDialog.tsx:226
+#: src/features/settlement/CallItEvenDialog.tsx:243
 msgid "Written off"
 msgstr "माफ़ किया गया"
 
@@ -4898,7 +4898,7 @@ msgid "Year first"
 msgstr "पहले साल"
 
 #. placeholder {0}: formatAmount(opened, 'INR', locale)
-#: src/components/people/UpiPayDialog.tsx:123
+#: src/components/people/UpiPayDialog.tsx:130
 msgid "Yes, record {0}"
 msgstr "हां, {0} दर्ज करें"
 
@@ -4914,8 +4914,8 @@ msgid "Yesterday"
 msgstr "कल"
 
 #: src/components/activity/ActivityItem.tsx:740
-#: src/features/settlement/CallItEvenDialog.tsx:151
-#: src/features/settlement/CallItEvenDialog.tsx:154
+#: src/features/settlement/CallItEvenDialog.tsx:152
+#: src/features/settlement/CallItEvenDialog.tsx:155
 msgid "you"
 msgstr "आप"
 
@@ -4996,7 +4996,7 @@ msgstr "आपने {debtor} के साथ हिसाब बराबर �
 msgid "You can now split anything together"
 msgstr "अब आप साथ में कुछ भी बाँट सकते हैं"
 
-#: src/components/split/fields.tsx:248
+#: src/components/split/fields.tsx:249
 msgid "You can type a sum, like 1200 + 300, or 2k or 1.5L"
 msgstr "आप जोड़ लिख सकते हैं, जैसे 1200 + 300, या 2k या 1.5L"
 
@@ -5040,7 +5040,7 @@ msgid "you lent {figure}"
 msgstr "आपने {figure} उधार दिए"
 
 #. placeholder {0}: name(debtor)
-#: src/features/settlement/CallItEvenDialog.tsx:127
+#: src/features/settlement/CallItEvenDialog.tsx:128
 msgid "You let {0} off"
 msgstr "आप {0} का कर्ज़ माफ़ कर रहे हैं"
 
@@ -5089,7 +5089,7 @@ msgstr "आपने चुकाया"
 #. placeholder {0}: name(to)
 #: src/components/people/HistoryRow.tsx:114
 #: src/components/people/PaymentDetailsDialog.tsx:96
-#: src/components/people/RecordPaymentDialog.tsx:151
+#: src/components/people/RecordPaymentDialog.tsx:152
 #: src/screens/RecentlyDeleted/describe.ts:54
 msgid "You paid {0}"
 msgstr "आपने {0} को भुगतान किया"

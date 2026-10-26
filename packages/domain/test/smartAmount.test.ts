@@ -98,12 +98,11 @@ describe('F-310 ambiguous input asks', () => {
       evaluateAmount('1,234', 'EUR', ',', {reading: 'decimal'}),
     ).toThrow('TOO_MANY_DECIMALS')
   })
-  test('not ambiguous: grouping by the other mark, a leading zero, other lengths, sums', () => {
+  test('not ambiguous: grouping by the other mark, a leading zero, other lengths, shorthand', () => {
     expect(amountReadings('1,234', 'INR', '.')).toBeNull()
     expect(amountReadings('0,500', 'EUR', ',')).toBeNull()
     expect(amountReadings('12,50', 'EUR', ',')).toBeNull()
     expect(amountReadings('1.234,5', 'EUR', ',')).toBeNull()
-    expect(amountReadings('1,234+1', 'EUR', ',')).toBeNull()
     expect(amountReadings('1,234k', 'EUR', ',')).toBeNull()
   })
 })

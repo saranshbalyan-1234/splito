@@ -2,12 +2,12 @@ import {useRef, useState} from 'react'
 import {TextInput, type TextInputProps, View} from 'react-native'
 import {Trans, useLingui} from '@lingui/react/macro'
 import {
+  amountInputText,
   cleanAmountText,
   decimalMark,
   formatAmount,
   getCurrency,
   isExpression,
-  toDecimalString,
 } from '@splito/domain'
 
 import {
@@ -121,7 +121,8 @@ export function AmountField({
   onPressCurrency,
 }: {
   value: string
-  onChangeText: (v: string) => void
+  /** `reading` is set when the field wrote the text itself (a computed result), so it never asks about it. */
+  onChangeText: (v: string, reading?: 'decimal') => void
   currency: string
   locale: string
   /** The evaluated total, when valid. */
@@ -188,8 +189,8 @@ export function AmountField({
     isKeyDown.current = false
     inputRef.current?.focus()
     if (result === undefined) return
-    const text = toDecimalString(result, scale).replace('.', mark)
-    onChangeText(text)
+    const text = amountInputText(result, currency, mark)
+    onChangeText(text, 'decimal')
     moveCaret(text.length)
   }
 

@@ -143,14 +143,14 @@ msgstr "{0} created"
 #. placeholder {1}: unitText(roundTo)
 #. placeholder {2}: name(cash.remainderTo)
 #. placeholder {3}: fmt(evaluation.total!)
-#: src/components/split/SplitEditor.tsx:962
+#: src/components/split/SplitEditor.tsx:965
 msgid "{0} doesn’t round to {1}, so it goes on {2}’s share. Everything still adds up to {3}."
 msgstr "{0} doesn’t round to {1}, so it goes on {2}’s share. Everything still adds up to {3}."
 
 #. placeholder {0}: fmt(cash.remainder)
 #. placeholder {1}: unitText(roundTo)
 #. placeholder {2}: fmt(evaluation.total!)
-#: src/components/split/SplitEditor.tsx:960
+#: src/components/split/SplitEditor.tsx:963
 msgid "{0} doesn’t round to {1}, so it goes on your share. Everything still adds up to {2}."
 msgstr "{0} doesn’t round to {1}, so it goes on your share. Everything still adds up to {2}."
 
@@ -220,12 +220,12 @@ msgstr "{0} left to pay"
 
 #. placeholder {0}: name(creditor)
 #. placeholder {1}: name(debtor)
-#: src/features/settlement/CallItEvenDialog.tsx:130
+#: src/features/settlement/CallItEvenDialog.tsx:131
 msgid "{0} lets {1} off"
 msgstr "{0} lets {1} off"
 
 #. placeholder {0}: name(creditor)
-#: src/features/settlement/CallItEvenDialog.tsx:129
+#: src/features/settlement/CallItEvenDialog.tsx:130
 msgid "{0} lets you off"
 msgstr "{0} lets you off"
 
@@ -270,7 +270,7 @@ msgstr "{0} paid"
 #. placeholder {1}: name(to)
 #: src/components/people/HistoryRow.tsx:117
 #: src/components/people/PaymentDetailsDialog.tsx:99
-#: src/components/people/RecordPaymentDialog.tsx:154
+#: src/components/people/RecordPaymentDialog.tsx:155
 #: src/screens/RecentlyDeleted/describe.ts:57
 msgid "{0} paid {1}"
 msgstr "{0} paid {1}"
@@ -284,7 +284,7 @@ msgstr "{0} paid {total}"
 #. placeholder {0}: name(r.from)
 #: src/components/people/HistoryRow.tsx:116
 #: src/components/people/PaymentDetailsDialog.tsx:98
-#: src/components/people/RecordPaymentDialog.tsx:153
+#: src/components/people/RecordPaymentDialog.tsx:154
 #: src/screens/RecentlyDeleted/describe.ts:56
 msgid "{0} paid you"
 msgstr "{0} paid you"
@@ -571,7 +571,7 @@ msgstr "{n, plural, one {# person} other {# people}}"
 msgid "{name}, waiting for them to accept. Not selectable yet."
 msgstr "{name}, waiting for them to accept. Not selectable yet."
 
-#: src/components/people/UpiPayDialog.tsx:161
+#: src/components/people/UpiPayDialog.tsx:165
 msgid "{name}’s UPI ID"
 msgstr "{name}’s UPI ID"
 
@@ -600,7 +600,7 @@ msgstr "{title}, {byline}, {shareLabel} {shareText} of {totalText}"
 msgid "{visible} categories"
 msgstr "{visible} categories"
 
-#: src/features/settlement/CallItEvenDialog.tsx:156
+#: src/features/settlement/CallItEvenDialog.tsx:157
 msgid "{where} {amount} owed by {debtorName}"
 msgstr "{where} {amount} owed by {debtorName}"
 
@@ -641,7 +641,7 @@ msgid "<0>{value}</0> isn’t on Splito yet. Send an invite, or add them just fo
 msgstr "<0>{value}</0> isn’t on Splito yet. Send an invite, or add them just for you and link them when they join."
 
 #: src/components/split/AmountKeypad.tsx:164
-#: src/components/split/fields.tsx:359
+#: src/components/split/fields.tsx:360
 msgid "= Use result"
 msgstr "= Use result"
 
@@ -989,8 +989,8 @@ msgstr "All"
 msgid "All {0} assigned"
 msgstr "All {0} assigned"
 
-#: src/features/settlement/CallItEvenDialog.tsx:225
-#: src/features/settlement/CallItEvenDialog.tsx:242
+#: src/features/settlement/CallItEvenDialog.tsx:226
+#: src/features/settlement/CallItEvenDialog.tsx:243
 msgid "All even"
 msgstr "All even"
 
@@ -1029,15 +1029,15 @@ msgstr "Also works for m (million) and inside sums, like 2k + 500."
 msgid "Always in the group"
 msgstr "Always in the group"
 
-#: src/components/people/RecordPaymentDialog.tsx:342
-#: src/components/people/RecordPaymentDialog.tsx:347
-#: src/components/people/UpiPayDialog.tsx:187
-#: src/components/people/UpiPayDialog.tsx:192
+#: src/components/people/RecordPaymentDialog.tsx:343
+#: src/components/people/RecordPaymentDialog.tsx:348
+#: src/components/people/UpiPayDialog.tsx:191
+#: src/components/people/UpiPayDialog.tsx:196
 #: src/components/settings/prefControls.tsx:316
 #: src/components/settings/prefControls.tsx:319
-#: src/components/split/fields.tsx:154
-#: src/components/split/fields.tsx:247
-#: src/components/split/fields.tsx:408
+#: src/components/split/fields.tsx:155
+#: src/components/split/fields.tsx:248
+#: src/components/split/fields.tsx:409
 #: src/screens/Analytics/components/Charts.tsx:247
 #: src/screens/Groups/components/GroupsFilterDialog.tsx:118
 #: src/screens/People/components/FriendsFilterDialog.tsx:124
@@ -1063,8 +1063,8 @@ msgstr "Amount keypad"
 msgid "Amount shortcuts"
 msgstr "Amount shortcuts"
 
-#: src/features/settlement/CallItEvenDialog.tsx:331
-#: src/features/settlement/CallItEvenDialog.tsx:336
+#: src/features/settlement/CallItEvenDialog.tsx:332
+#: src/features/settlement/CallItEvenDialog.tsx:337
 msgid "Amount to let go"
 msgstr "Amount to let go"
 
@@ -1262,12 +1262,12 @@ msgstr "By name"
 msgid "By person"
 msgstr "By person"
 
-#: src/components/split/fields.tsx:333
+#: src/components/split/fields.tsx:334
 msgid "Calculator"
 msgstr "Calculator"
 
-#: src/features/settlement/CallItEvenDialog.tsx:207
-#: src/features/settlement/CallItEvenDialog.tsx:267
+#: src/features/settlement/CallItEvenDialog.tsx:208
+#: src/features/settlement/CallItEvenDialog.tsx:268
 #: src/screens/Group/components/GroupRows.tsx:209
 #: src/screens/Group/components/GroupRows.tsx:212
 #: src/screens/Person/index.tsx:398
@@ -1423,7 +1423,7 @@ msgstr "Clear filters"
 msgid "Clear search query"
 msgstr "Clear search query"
 
-#: src/features/settlement/CallItEvenDialog.tsx:376
+#: src/features/settlement/CallItEvenDialog.tsx:377
 msgid "Clears: {clears}"
 msgstr "Clears: {clears}"
 
@@ -1569,7 +1569,7 @@ msgstr "Couldn’t add that person. Please try again."
 msgid "Couldn’t add your friend. Please try again."
 msgstr "Couldn’t add your friend. Please try again."
 
-#: src/features/settlement/CallItEvenDialog.tsx:195
+#: src/features/settlement/CallItEvenDialog.tsx:196
 msgid "Couldn’t call it even. Please try again."
 msgstr "Couldn’t call it even. Please try again."
 
@@ -1633,7 +1633,7 @@ msgstr "Couldn’t save the rules. Please try again."
 msgid "Couldn’t save. Please try again."
 msgstr "Couldn’t save. Please try again."
 
-#: src/features/settlement/CallItEvenDialog.tsx:203
+#: src/features/settlement/CallItEvenDialog.tsx:204
 msgid "Couldn’t undo the write-off"
 msgstr "Couldn’t undo the write-off"
 
@@ -1654,7 +1654,7 @@ msgstr "Count expenses and payments from groups you share with {name}. Off shows
 msgid "Count shared group expenses in each person's balance"
 msgstr "Count shared group expenses in each person's balance"
 
-#: src/components/people/RecordPaymentDialog.tsx:385
+#: src/components/people/RecordPaymentDialog.tsx:386
 msgid "Counts towards: {settles}"
 msgstr "Counts towards: {settles}"
 
@@ -1683,10 +1683,10 @@ msgid "Create link"
 msgstr "Create link"
 
 #: src/components/groups/GroupFields.tsx:100
-#: src/components/people/RecordPaymentDialog.tsx:321
+#: src/components/people/RecordPaymentDialog.tsx:322
 #: src/components/split/pickers.tsx:69
 #: src/components/split/pickers.tsx:80
-#: src/features/settlement/CallItEvenDialog.tsx:310
+#: src/features/settlement/CallItEvenDialog.tsx:311
 #: src/screens/Analytics/index.tsx:208
 #: src/screens/Groups/components/GroupsFilterDialog.tsx:90
 #: src/screens/People/components/FriendsFilterDialog.tsx:98
@@ -1700,7 +1700,7 @@ msgstr "Currency"
 msgid "Currency: {0}"
 msgstr "Currency: {0}"
 
-#: src/components/split/fields.tsx:201
+#: src/components/split/fields.tsx:202
 msgid "Currency: {currency}. Change"
 msgstr "Currency: {currency}. Change"
 
@@ -1857,11 +1857,11 @@ msgstr "Deleted forever"
 msgid "Description"
 msgstr "Description"
 
-#: src/components/people/UpiPayDialog.tsx:121
+#: src/components/people/UpiPayDialog.tsx:128
 msgid "Did the payment go through?"
 msgstr "Did the payment go through?"
 
-#: src/components/split/fields.tsx:267
+#: src/components/split/fields.tsx:268
 msgid "Did you mean"
 msgstr "Did you mean"
 
@@ -1869,14 +1869,14 @@ msgstr "Did you mean"
 msgid "Dim"
 msgstr "Dim"
 
-#: src/features/settlement/CallItEvenDialog.tsx:145
+#: src/features/settlement/CallItEvenDialog.tsx:146
 #: src/screens/People/components/PersonRow.tsx:78
 #: src/screens/Person/components/PersonBalances.tsx:95
 msgid "Direct"
 msgstr "Direct"
 
 #. placeholder {0}: formatAmount(p.amount, currency, locale)
-#: src/components/people/RecordPaymentDialog.tsx:170
+#: src/components/people/RecordPaymentDialog.tsx:171
 msgid "Direct {0}"
 msgstr "Direct {0}"
 
@@ -1936,7 +1936,7 @@ msgstr "Done"
 msgid "Double tap to close the dialog"
 msgstr "Double tap to close the dialog"
 
-#: src/features/settlement/CallItEvenDialog.tsx:391
+#: src/features/settlement/CallItEvenDialog.tsx:392
 msgid "e.g. Birthday treat"
 msgstr "e.g. Birthday treat"
 
@@ -1944,7 +1944,7 @@ msgstr "e.g. Birthday treat"
 msgid "e.g. Goa trip"
 msgstr "e.g. Goa trip"
 
-#: src/components/people/RecordPaymentDialog.tsx:400
+#: src/components/people/RecordPaymentDialog.tsx:401
 msgid "e.g. Paid by UPI"
 msgstr "e.g. Paid by UPI"
 
@@ -1966,8 +1966,8 @@ msgstr "Edit category"
 
 #: src/components/split/ExpenseComposer.tsx:281
 #: src/navigation/Navigation.tsx:80
-#: src/screens/EditExpense.tsx:33
-#: src/screens/EditExpense.tsx:70
+#: src/screens/EditExpense.tsx:35
+#: src/screens/EditExpense.tsx:74
 #: src/screens/Expense/index.tsx:85
 msgid "Edit expense"
 msgstr "Edit expense"
@@ -2042,7 +2042,7 @@ msgid "Enter a name."
 msgstr "Enter a name."
 
 #: src/components/people/EditFriendDialog.tsx:138
-#: src/components/people/UpiPayDialog.tsx:180
+#: src/components/people/UpiPayDialog.tsx:184
 msgid "Enter a UPI ID like name@bank."
 msgstr "Enter a UPI ID like name@bank."
 
@@ -2050,8 +2050,8 @@ msgstr "Enter a UPI ID like name@bank."
 msgid "Enter an amount"
 msgstr "Enter an amount"
 
-#: src/components/people/RecordPaymentDialog.tsx:185
-#: src/components/people/UpiPayDialog.tsx:207
+#: src/components/people/RecordPaymentDialog.tsx:186
+#: src/components/people/UpiPayDialog.tsx:211
 msgid "Enter an amount greater than zero."
 msgstr "Enter an amount greater than zero."
 
@@ -2090,7 +2090,7 @@ msgstr "European"
 
 #. placeholder {0}: unitText(roundTo)
 #. placeholder {1}: fmt(evaluation.total!)
-#: src/components/split/SplitEditor.tsx:963
+#: src/components/split/SplitEditor.tsx:966
 msgid "Every share is a whole multiple of {0} and they add up to {1}."
 msgstr "Every share is a whole multiple of {0} and they add up to {1}."
 
@@ -2272,7 +2272,7 @@ msgstr "Food"
 msgid "For example, Rent"
 msgstr "For example, Rent"
 
-#: src/components/people/RecordPaymentDialog.tsx:272
+#: src/components/people/RecordPaymentDialog.tsx:273
 msgid "For money that changed hands outside Splito – cash, UPI or a bank transfer. Splito keeps the record; it never moves money."
 msgstr "For money that changed hands outside Splito – cash, UPI or a bank transfer. Splito keeps the record; it never moves money."
 
@@ -2379,11 +2379,11 @@ msgstr "Green when money comes to you, red when you pay"
 msgid "Groceries"
 msgstr "Groceries"
 
-#: src/components/people/RecordPaymentDialog.tsx:171
+#: src/components/people/RecordPaymentDialog.tsx:172
 #: src/components/split/ExpenseComposer.tsx:514
 #: src/components/split/pickers.tsx:256
 #: src/components/split/pickers.tsx:260
-#: src/features/settlement/CallItEvenDialog.tsx:145
+#: src/features/settlement/CallItEvenDialog.tsx:146
 #: src/navigation/Navigation.tsx:76
 #: src/screens/Analytics/components/Charts.tsx:325
 #: src/screens/Analytics/index.tsx:207
@@ -2545,7 +2545,7 @@ msgstr "Include groups"
 msgid "Indian"
 msgstr "Indian"
 
-#: src/components/people/UpiPayDialog.tsx:201
+#: src/components/people/UpiPayDialog.tsx:205
 msgid "Indian Rupee"
 msgstr "Indian Rupee"
 
@@ -2657,7 +2657,7 @@ msgstr "It may have expired, been used up or revoked. Ask for a new one."
 msgid "It may have moved. Everything is still in Settings."
 msgstr "It may have moved. Everything is still in Settings."
 
-#: src/screens/EditExpense.tsx:84
+#: src/screens/EditExpense.tsx:88
 msgid "It was deleted, or the link is wrong."
 msgstr "It was deleted, or the link is wrong."
 
@@ -2746,7 +2746,7 @@ msgstr "Later years"
 msgid "Left the group"
 msgstr "Left the group"
 
-#: src/features/settlement/CallItEvenDialog.tsx:273
+#: src/features/settlement/CallItEvenDialog.tsx:274
 msgid "Let a debt go without any money changing hands. It shows in history and Activity, never counts as spending, and you can undo it."
 msgstr "Let a debt go without any money changing hands. It shows in history and Activity, never counts as spending, and you can undo it."
 
@@ -3110,7 +3110,7 @@ msgstr "No shared groups"
 msgid "No tracking"
 msgstr "No tracking"
 
-#: src/components/people/UpiPayDialog.tsx:112
+#: src/components/people/UpiPayDialog.tsx:119
 msgid "No UPI app on this device can open the payment."
 msgstr "No UPI app on this device can open the payment."
 
@@ -3158,18 +3158,18 @@ msgstr "Not now"
 msgid "Not splitting"
 msgstr "Not splitting"
 
-#: src/components/people/UpiPayDialog.tsx:125
+#: src/components/people/UpiPayDialog.tsx:132
 msgid "Not yet"
 msgstr "Not yet"
 
 #: src/components/people/PaymentDetailsDialog.tsx:168
-#: src/components/people/RecordPaymentDialog.tsx:397
-#: src/features/settlement/CallItEvenDialog.tsx:388
+#: src/components/people/RecordPaymentDialog.tsx:398
+#: src/features/settlement/CallItEvenDialog.tsx:389
 msgid "Note"
 msgstr "Note"
 
-#: src/components/people/RecordPaymentDialog.tsx:392
-#: src/features/settlement/CallItEvenDialog.tsx:383
+#: src/components/people/RecordPaymentDialog.tsx:393
+#: src/features/settlement/CallItEvenDialog.tsx:384
 msgid "Note (optional)"
 msgstr "Note (optional)"
 
@@ -3294,12 +3294,12 @@ msgid "Open Analytics"
 msgstr "Open Analytics"
 
 #. placeholder {0}: money(full)
-#: src/features/settlement/CallItEvenDialog.tsx:303
+#: src/features/settlement/CallItEvenDialog.tsx:304
 msgid "Open balance {0}"
 msgstr "Open balance {0}"
 
 #. placeholder {0}: formatAmount(suggestion, currency, locale)
-#: src/components/people/RecordPaymentDialog.tsx:373
+#: src/components/people/RecordPaymentDialog.tsx:374
 msgid "Open balance {0}. Part payments are fine."
 msgstr "Open balance {0}. Part payments are fine."
 
@@ -3320,7 +3320,7 @@ msgstr "Open Settings"
 msgid "Open source"
 msgstr "Open source"
 
-#: src/components/people/UpiPayDialog.tsx:148
+#: src/components/people/UpiPayDialog.tsx:152
 msgid "Open UPI app"
 msgstr "Open UPI app"
 
@@ -3340,7 +3340,7 @@ msgstr "Opens what changed"
 msgid "Opens your profile"
 msgstr "Opens your profile"
 
-#: src/components/people/UpiPayDialog.tsx:153
+#: src/components/people/UpiPayDialog.tsx:157
 msgid "Opens your UPI app with {name} and the amount filled in. You confirm the payment there."
 msgstr "Opens your UPI app with {name} and the amount filled in. You confirm the payment there."
 
@@ -3405,15 +3405,15 @@ msgid "Pairs you haven’t marked Allowed or Preferred are treated as excluded."
 msgstr "Pairs you haven’t marked Allowed or Preferred are treated as excluded."
 
 #. placeholder {0}: money(remainingMinor(full, [typed ?? ZERO]))
-#: src/features/settlement/CallItEvenDialog.tsx:365
+#: src/features/settlement/CallItEvenDialog.tsx:366
 msgid "Part of it: {0} stays open."
 msgstr "Part of it: {0} stays open."
 
-#: src/components/people/RecordPaymentDialog.tsx:374
+#: src/components/people/RecordPaymentDialog.tsx:375
 msgid "Part payments are fine."
 msgstr "Part payments are fine."
 
-#: src/components/people/UpiPayDialog.tsx:142
+#: src/components/people/UpiPayDialog.tsx:149
 #: src/screens/Person/index.tsx:304
 #: src/screens/Person/index.tsx:310
 msgid "Pay with UPI"
@@ -3433,8 +3433,8 @@ msgstr "Payment deleted"
 msgid "Payment details"
 msgstr "Payment details"
 
-#: src/components/people/RecordPaymentDialog.tsx:227
-#: src/components/people/RecordPaymentDialog.tsx:235
+#: src/components/people/RecordPaymentDialog.tsx:228
+#: src/components/people/RecordPaymentDialog.tsx:236
 msgid "Payment recorded"
 msgstr "Payment recorded"
 
@@ -3588,7 +3588,7 @@ msgstr "Profile"
 msgid "QR and share"
 msgstr "QR and share"
 
-#: src/components/split/fields.tsx:444
+#: src/components/split/fields.tsx:445
 msgid "Rate"
 msgstr "Rate"
 
@@ -3630,11 +3630,11 @@ msgstr "Recently deleted"
 msgid "Record"
 msgstr "Record"
 
-#: src/components/people/RecordPaymentDialog.tsx:214
+#: src/components/people/RecordPaymentDialog.tsx:215
 msgid "Record a payment"
 msgstr "Record a payment"
 
-#: src/components/people/RecordPaymentDialog.tsx:266
+#: src/components/people/RecordPaymentDialog.tsx:267
 #: src/screens/Person/index.tsx:371
 msgid "Record payment"
 msgstr "Record payment"
@@ -3791,18 +3791,18 @@ msgid "Revoked"
 msgstr "Revoked"
 
 #: src/components/settings/prefControls.tsx:364
-#: src/components/split/SplitEditor.tsx:900
-#: src/components/split/SplitEditor.tsx:916
+#: src/components/split/SplitEditor.tsx:903
+#: src/components/split/SplitEditor.tsx:919
 msgid "Round shares to cash"
 msgstr "Round shares to cash"
 
 #: src/components/settings/prefControls.tsx:379
-#: src/components/split/SplitEditor.tsx:930
+#: src/components/split/SplitEditor.tsx:933
 msgid "Round to"
 msgstr "Round to"
 
 #. placeholder {0}: unitText(unit)
-#: src/components/split/SplitEditor.tsx:938
+#: src/components/split/SplitEditor.tsx:941
 msgid "Round to {0}"
 msgstr "Round to {0}"
 
@@ -3877,7 +3877,7 @@ msgstr "Saved. We’ll send it when you’re online."
 #: src/components/forms/SearchInput.tsx:54
 #: src/navigation/Drawer.tsx:223
 #: src/navigation/Navigation.tsx:74
-#: src/screens/Search/index.tsx:185
+#: src/screens/Search/index.tsx:188
 #: src/view/shell/desktop/LeftNav.tsx:752
 msgid "Search"
 msgstr "Search"
@@ -3888,11 +3888,11 @@ msgstr "Search"
 msgid "Search currencies"
 msgstr "Search currencies"
 
-#: src/screens/Search/index.tsx:202
+#: src/screens/Search/index.tsx:205
 msgid "Search expenses, people and groups"
 msgstr "Search expenses, people and groups"
 
-#: src/screens/Search/index.tsx:203
+#: src/screens/Search/index.tsx:206
 msgid "Search expenses, people, groups"
 msgstr "Search expenses, people, groups"
 
@@ -4165,9 +4165,9 @@ msgstr "Some"
 #: src/components/groups/RulesEditor.tsx:219
 #: src/components/people/HistoryRow.tsx:61
 #: src/components/people/PaymentDetailsDialog.tsx:88
-#: src/components/people/RecordPaymentDialog.tsx:145
+#: src/components/people/RecordPaymentDialog.tsx:146
 #: src/components/split/shared.tsx:78
-#: src/features/settlement/CallItEvenDialog.tsx:120
+#: src/features/settlement/CallItEvenDialog.tsx:121
 #: src/screens/Analytics/useReport.ts:268
 #: src/screens/Group/index.tsx:603
 #: src/screens/Group/index.tsx:637
@@ -4272,7 +4272,7 @@ msgstr "Splito - Home"
 msgid "Splito can’t open your contacts. Turn on Contacts for Splito in Settings, then come back."
 msgstr "Splito can’t open your contacts. Turn on Contacts for Splito in Settings, then come back."
 
-#: src/components/people/UpiPayDialog.tsx:130
+#: src/components/people/UpiPayDialog.tsx:137
 msgid "Splito can’t see your UPI app. Record the payment only once your app shows it as successful."
 msgstr "Splito can’t see your UPI app. Record the payment only once your app shows it as successful."
 
@@ -4317,7 +4317,7 @@ msgstr "Stay"
 msgid "suggested"
 msgstr "suggested"
 
-#: src/components/people/RecordPaymentDialog.tsx:305
+#: src/components/people/RecordPaymentDialog.tsx:306
 msgid "Swap who paid"
 msgstr "Swap who paid"
 
@@ -4375,7 +4375,7 @@ msgid "That isn’t a number. Use digits, one decimal point and + − × ÷"
 msgstr "That isn’t a number. Use digits, one decimal point and + − × ÷"
 
 #. placeholder {0}: money(full)
-#: src/features/settlement/CallItEvenDialog.tsx:362
+#: src/features/settlement/CallItEvenDialog.tsx:363
 msgid "That’s more than the open balance of {0}."
 msgstr "That’s more than the open balance of {0}."
 
@@ -4399,7 +4399,7 @@ msgstr "The code is 6 digits."
 msgid "The payment couldn’t be deleted. Please try again."
 msgstr "The payment couldn’t be deleted. Please try again."
 
-#: src/components/people/RecordPaymentDialog.tsx:210
+#: src/components/people/RecordPaymentDialog.tsx:211
 msgid "The payment couldn’t be saved. Please try again."
 msgstr "The payment couldn’t be saved. Please try again."
 
@@ -4423,7 +4423,7 @@ msgstr "The starting value is set in Settings › Lists."
 msgid "The tab Splito opens on."
 msgstr "The tab Splito opens on."
 
-#: src/features/settlement/CallItEvenDialog.tsx:364
+#: src/features/settlement/CallItEvenDialog.tsx:365
 msgid "The whole balance: you’ll be even in {currency}. Other currencies stay as they are."
 msgstr "The whole balance: you’ll be even in {currency}. Other currencies stay as they are."
 
@@ -4451,11 +4451,11 @@ msgstr "This can’t be undone, and all of your recent searches will be removed.
 msgid "This contact has no email or mobile number."
 msgstr "This contact has no email or mobile number."
 
-#: src/components/split/fields.tsx:289
+#: src/components/split/fields.tsx:290
 msgid "This currency has no third decimal."
 msgstr "This currency has no third decimal."
 
-#: src/screens/EditExpense.tsx:75
+#: src/screens/EditExpense.tsx:79
 msgid "This expense can’t be edited"
 msgstr "This expense can’t be edited"
 
@@ -4610,7 +4610,7 @@ msgstr "Type what each person owes."
 #: src/components/activity/useActivityActions.tsx:128
 #: src/components/people/PaymentDetailsDialog.tsx:118
 #: src/components/people/PaymentDetailsDialog.tsx:134
-#: src/features/settlement/CallItEvenDialog.tsx:228
+#: src/features/settlement/CallItEvenDialog.tsx:229
 #: src/screens/Expense/index.tsx:144
 #: src/screens/Expense/index.tsx:152
 #: src/screens/RecentlyDeleted/index.tsx:123
@@ -4618,7 +4618,7 @@ msgid "Undo"
 msgstr "Undo"
 
 #: src/components/activity/useActivityActions.tsx:129
-#: src/features/settlement/CallItEvenDialog.tsx:230
+#: src/features/settlement/CallItEvenDialog.tsx:231
 #: src/screens/RecentlyDeleted/index.tsx:132
 msgctxt "action"
 msgid "Undo"
@@ -4653,7 +4653,7 @@ msgid "UPI {0}"
 msgstr "UPI {0}"
 
 #: src/components/people/EditFriendDialog.tsx:116
-#: src/components/people/UpiPayDialog.tsx:166
+#: src/components/people/UpiPayDialog.tsx:170
 msgid "UPI ID"
 msgstr "UPI ID"
 
@@ -4661,13 +4661,13 @@ msgstr "UPI ID"
 msgid "UPI ID (optional)"
 msgstr "UPI ID (optional)"
 
-#: src/components/people/UpiPayDialog.tsx:214
+#: src/components/people/UpiPayDialog.tsx:218
 msgid "UPI links open on a phone with a UPI app. On a computer, nothing may happen."
 msgstr "UPI links open on a phone with a UPI app. On a computer, nothing may happen."
 
 #. placeholder {0}: format(v)
 #. placeholder {0}: formatContact(c)
-#: src/components/split/fields.tsx:276
+#: src/components/split/fields.tsx:277
 #: src/screens/AddFriend.tsx:724
 msgid "Use {0}"
 msgstr "Use {0}"
@@ -4684,7 +4684,7 @@ msgstr "Use Add expense in the sidebar, or the + button on phones. Choose who pa
 msgid "Use as the total"
 msgstr "Use as the total"
 
-#: src/components/split/SplitEditor.tsx:854
+#: src/components/split/SplitEditor.tsx:857
 msgid "Use as total"
 msgstr "Use as total"
 
@@ -4693,7 +4693,7 @@ msgid "Use Splito’s calculator keypad for amounts on phones"
 msgstr "Use Splito’s calculator keypad for amounts on phones"
 
 #: src/components/split/AmountKeypad.tsx:154
-#: src/components/split/fields.tsx:352
+#: src/components/split/fields.tsx:353
 msgid "Use the result"
 msgstr "Use the result"
 
@@ -4850,7 +4850,7 @@ msgstr "Who paid?"
 msgid "Who you settle with"
 msgstr "Who you settle with"
 
-#: src/components/split/SplitEditor.tsx:920
+#: src/components/split/SplitEditor.tsx:923
 msgid "Whole amounts that are easy to hand over"
 msgstr "Whole amounts that are easy to hand over"
 
@@ -4866,7 +4866,7 @@ msgstr "Words in titles, notes, items, categories, people and groups"
 msgid "Works once"
 msgstr "Works once"
 
-#: src/features/settlement/CallItEvenDialog.tsx:267
+#: src/features/settlement/CallItEvenDialog.tsx:268
 msgid "Write off"
 msgstr "Write off"
 
@@ -4883,8 +4883,8 @@ msgstr "Write-off restored"
 msgid "Write-off undone"
 msgstr "Write-off undone"
 
-#: src/features/settlement/CallItEvenDialog.tsx:225
-#: src/features/settlement/CallItEvenDialog.tsx:242
+#: src/features/settlement/CallItEvenDialog.tsx:226
+#: src/features/settlement/CallItEvenDialog.tsx:243
 msgid "Written off"
 msgstr "Written off"
 
@@ -4898,7 +4898,7 @@ msgid "Year first"
 msgstr "Year first"
 
 #. placeholder {0}: formatAmount(opened, 'INR', locale)
-#: src/components/people/UpiPayDialog.tsx:123
+#: src/components/people/UpiPayDialog.tsx:130
 msgid "Yes, record {0}"
 msgstr "Yes, record {0}"
 
@@ -4914,8 +4914,8 @@ msgid "Yesterday"
 msgstr "Yesterday"
 
 #: src/components/activity/ActivityItem.tsx:740
-#: src/features/settlement/CallItEvenDialog.tsx:151
-#: src/features/settlement/CallItEvenDialog.tsx:154
+#: src/features/settlement/CallItEvenDialog.tsx:152
+#: src/features/settlement/CallItEvenDialog.tsx:155
 msgid "you"
 msgstr "you"
 
@@ -4996,7 +4996,7 @@ msgstr "You called it even with {debtor}"
 msgid "You can now split anything together"
 msgstr "You can now split anything together"
 
-#: src/components/split/fields.tsx:248
+#: src/components/split/fields.tsx:249
 msgid "You can type a sum, like 1200 + 300, or 2k or 1.5L"
 msgstr "You can type a sum, like 1200 + 300, or 2k or 1.5L"
 
@@ -5040,7 +5040,7 @@ msgid "you lent {figure}"
 msgstr "you lent {figure}"
 
 #. placeholder {0}: name(debtor)
-#: src/features/settlement/CallItEvenDialog.tsx:127
+#: src/features/settlement/CallItEvenDialog.tsx:128
 msgid "You let {0} off"
 msgstr "You let {0} off"
 
@@ -5089,7 +5089,7 @@ msgstr "You paid"
 #. placeholder {0}: name(to)
 #: src/components/people/HistoryRow.tsx:114
 #: src/components/people/PaymentDetailsDialog.tsx:96
-#: src/components/people/RecordPaymentDialog.tsx:151
+#: src/components/people/RecordPaymentDialog.tsx:152
 #: src/screens/RecentlyDeleted/describe.ts:54
 msgid "You paid {0}"
 msgstr "You paid {0}"

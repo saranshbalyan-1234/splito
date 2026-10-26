@@ -19,8 +19,9 @@ export interface CurrencyInfo {
 
 const c = (code: string, scale: 0 | 2 | 3, symbol: string, name: string): CurrencyInfo => ({code, scale, symbol, name})
 
+/* No prototype, so a key lookup ("toString" in CURRENCIES, CURRENCIES[code]) only ever finds real codes. */
 export const CURRENCIES: Readonly<Record<CurrencyCode, CurrencyInfo>> = Object.freeze(
-  Object.fromEntries(
+  Object.assign(Object.create(null) as Record<CurrencyCode, CurrencyInfo>, Object.fromEntries(
     [
       c('INR', 2, '₹', 'Indian Rupee'),
       c('USD', 2, '$', 'US Dollar'),
@@ -46,7 +47,7 @@ export const CURRENCIES: Readonly<Record<CurrencyCode, CurrencyInfo>> = Object.f
       c('BHD', 3, 'BD', 'Bahraini Dinar'),
       c('OMR', 3, 'RO', 'Omani Rial'),
     ].map(i => [i.code, i]),
-  ),
+  )),
 )
 
 export function getCurrency(code: string): CurrencyInfo {

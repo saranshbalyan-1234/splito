@@ -221,7 +221,7 @@ BroadcastChannel change notices so every open tab refreshes its projections afte
 
 Fixes for logic-audit findings C1, C2, M1, M2, M3, M7, M14, m8, m9, m13 (see the report for scenario, evidence and fix per finding).
 
-- **Effort** L · **Impact** 10 · **Backend** no · **Status** todo · **Deps** merge row 30
+- **Effort** L · **Impact** 10 · **Backend** no · **Status** done (feat/4b-33c, 2026-10-27; domain `amountAudit.test.ts`, client `form.test.ts`, sync `search.test.ts` / `preferences.test.ts`, e2e `amountLocale.spec.ts` in de-DE and en-US with BHD) · **Deps** merge row 30
 - **Prefs** -
 - **Acceptance**
   1. Critical money fixes first: 3-decimal currencies (BHD, KWD, OMR) never change value when the app reads back text it wrote, in any locale; repeated or non-locale decimal marks parse correctly for 0-, 2- and 3-decimal currencies; split rows and percents accept the locale decimal mark; amount search understands the user number format; expressions allow grouping in operands and a leading minus; prototype keys are never currency codes. Each finding gets a failing test first (domain/sync bun tests and an e2e for C1/C2 in a comma locale).

@@ -2,13 +2,13 @@ import {useRef, useState} from 'react'
 import {View} from 'react-native'
 import {Trans, useLingui} from '@lingui/react/macro'
 import {
+  amountInputText,
   type BalancePart,
+  decimalMark,
   formatAmount,
-  getCurrency,
   magnitude,
   remainingMinor,
   sumMinor,
-  toDecimalString,
   writeOffParts,
   ZERO,
 } from '@splito/domain'
@@ -108,7 +108,8 @@ function Form({
   const full = magnitude(net)
   const prefill = (c: string) => {
     const n = magnitude(sumMinor((draft.balance[c] ?? []).map(p => p.amount)))
-    return n === ZERO ? '' : toDecimalString(n, getCurrency(c).scale)
+    // In the number format's own mark: parseTypedAmount reads it back exactly (F-111 C1).
+    return n === ZERO ? '' : amountInputText(n, c, decimalMark(locale))
   }
   const [amountText, setAmountText] = useState(() => prefill(draft.currency))
   const [note, setNote] = useState('')
