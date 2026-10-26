@@ -1,0 +1,190 @@
+{
+  "apps/client/src/components/Dialog/context.ts": {
+    "react-hooks/exhaustive-deps": {
+      "count": 1
+    }
+  },
+  "apps/client/src/components/Dialog/index.tsx": {
+    "react-hooks/exhaustive-deps": {
+      "count": 2
+    },
+    "typescript/no-explicit-any": {
+      "count": 2
+    }
+  },
+  "apps/client/src/components/Dialog/index.web.tsx": {
+    "typescript/no-explicit-any": {
+      "count": 4
+    }
+  },
+  "apps/client/src/components/DraggableList/index.web.tsx": {
+    "typescript/no-explicit-any": {
+      "count": 2
+    }
+  },
+  "apps/client/src/components/Menu/types.ts": {
+    "typescript/no-explicit-any": {
+      "count": 1
+    }
+  },
+  "apps/client/src/components/Portal.tsx": {
+    "typescript/no-explicit-any": {
+      "count": 1
+    }
+  },
+  "apps/client/src/components/forms/DateField/index.web.tsx": {
+    "typescript/no-explicit-any": {
+      "count": 1
+    }
+  },
+  "apps/client/src/components/forms/SegmentedControl.tsx": {
+    "typescript/no-explicit-any": {
+      "count": 1
+    }
+  },
+  "apps/client/src/components/split/PeopleDialog.tsx": {
+    "typescript/consistent-type-imports": {
+      "count": 1
+    }
+  },
+  "apps/client/src/lib/ScrollContext.tsx": {
+    "typescript/no-explicit-any": {
+      "count": 3
+    }
+  },
+  "apps/client/src/lib/hooks/useNonReactiveCallback.ts": {
+    "typescript/no-explicit-any": {
+      "count": 1
+    }
+  },
+  "apps/client/src/lib/hooks/useWebScrollRestoration.ts": {
+    "typescript/no-explicit-any": {
+      "count": 2
+    }
+  },
+  "apps/client/src/lib/routes/router.ts": {
+    "typescript/no-explicit-any": {
+      "count": 1
+    }
+  },
+  "apps/client/src/lib/routes/types.ts": {
+    "typescript/no-explicit-any": {
+      "count": 1
+    }
+  },
+  "apps/client/src/screens/Analytics/components/RangeDialog.tsx": {
+    "typescript/consistent-type-imports": {
+      "count": 1
+    }
+  },
+  "apps/client/src/screens/Person/index.tsx": {
+    "no-unused-vars": {
+      "count": 2
+    }
+  },
+  "apps/client/src/storage/index.ts": {
+    "typescript/no-explicit-any": {
+      "count": 8
+    }
+  },
+  "apps/client/src/view/com/util/EmptyState.tsx": {
+    "typescript/no-explicit-any": {
+      "count": 1
+    }
+  },
+  "apps/client/src/view/com/util/Link.tsx": {
+    "typescript/no-explicit-any": {
+      "count": 1
+    }
+  },
+  "apps/client/src/view/com/util/Views.tsx": {
+    "react/display-name": {
+      "count": 1
+    }
+  },
+  "apps/client/src/view/shell/createNativeStackNavigatorWithAuth.tsx": {
+    "typescript/no-explicit-any": {
+      "count": 1
+    }
+  },
+  "apps/client/src/view/shell/desktop/LeftNav.tsx": {
+    "no-unused-vars": {
+      "count": 1
+    }
+  },
+  "packages/domain/src/ledger.ts": {
+    "import/consistent-type-specifier-style": {
+      "count": 2
+    }
+  },
+  "packages/domain/src/reports.ts": {
+    "import/consistent-type-specifier-style": {
+      "count": 1
+    }
+  },
+  "packages/sync/src/activity.ts": {
+    "import/consistent-type-specifier-style": {
+      "count": 3
+    }
+  },
+  "packages/sync/src/idbStore.ts": {
+    "import/consistent-type-specifier-style": {
+      "count": 2
+    }
+  },
+  "packages/sync/src/mutations.ts": {
+    "import/consistent-type-specifier-style": {
+      "count": 2
+    }
+  },
+  "packages/sync/src/preferences.ts": {
+    "import/consistent-type-specifier-style": {
+      "count": 2
+    }
+  },
+  "packages/sync/src/selectors.ts": {
+    "import/consistent-type-specifier-style": {
+      "count": 4
+    }
+  },
+  "packages/sync/src/sqlStore.ts": {
+    "import/consistent-type-specifier-style": {
+      "count": 2
+    }
+  },
+  "packages/sync/src/store.ts": {
+    "import/consistent-type-specifier-style": {
+      "count": 1
+    }
+  },
+  "packages/sync/test/activity.test.ts": {
+    "import/consistent-type-specifier-style": {
+      "count": 2
+    }
+  },
+  "packages/sync/test/bunExecutor.ts": {
+    "import/consistent-type-specifier-style": {
+      "count": 1
+    }
+  },
+  "packages/sync/test/mutations.test.ts": {
+    "import/consistent-type-specifier-style": {
+      "count": 2
+    }
+  },
+  "packages/sync/test/preferences.test.ts": {
+    "import/consistent-type-specifier-style": {
+      "count": 2
+    }
+  },
+  "packages/sync/test/repayments.test.ts": {
+    "import/consistent-type-specifier-style": {
+      "count": 2
+    }
+  },
+  "packages/sync/test/storeContract.ts": {
+    "import/consistent-type-specifier-style": {
+      "count": 2
+    }
+  }
+}

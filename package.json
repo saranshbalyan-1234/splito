@@ -16,7 +16,9 @@
   },
   "scripts": {
     "test": "pnpm -r --filter './packages/*' test",
-    "typecheck": "pnpm -r typecheck"
+    "typecheck": "pnpm -r typecheck",
+    "lint": "oxlint apps/client/src apps/client/e2e apps/client/scripts packages",
+    "check": "pnpm lint && pnpm typecheck && pnpm test && pnpm --filter @splito/client test"
   },
   "devDependencies": {}
 }
