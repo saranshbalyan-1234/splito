@@ -2,7 +2,7 @@
 import {useMemo} from 'react'
 import {View} from 'react-native'
 import {utils} from '@bsky.app/alf'
-import {formatAmountCompact, magnitude, personNet} from '@splito/domain'
+import {formatAmountCompact, magnitude, personNet, repaymentFlow, ZERO} from '@splito/domain'
 import {type Expense, type Repayment} from '@splito/sync'
 import {Trans, useLingui} from '@lingui/react/macro'
 
@@ -49,7 +49,7 @@ export function RecentTransactions() {
     }
     for (const r of repayments ?? []) {
       if (r.data.from !== me.id && r.data.to !== me.id) continue
-      const net = r.data.from === me.id ? -r.data.amount : r.data.amount
+      const net = repaymentFlow(r.data, me.id)
       out.push({id: r.id, href: '/activity', title: r.data.from === me.id ? l`You paid` : l`You got paid`, category: null, currency: r.data.currency, net, date: r.data.date, updatedAt: r.updatedAt})
     }
     return out
@@ -66,8 +66,8 @@ export function RecentTransactions() {
       </Text>
       {rows.map(row => {
         const category = row.category ? categories.find(c => c.id === row.category) : undefined
-        const positive = row.net > 0n
-        const color = row.net === 0n ? t.atoms.text_contrast_medium.color : positive ? t.palette.positive_600 : t.palette.negative_500
+        const positive = row.net > ZERO
+        const color = row.net === ZERO ? t.atoms.text_contrast_medium.color : positive ? t.palette.positive_600 : t.palette.negative_500
         return (
           <Link
             key={row.id}
@@ -87,7 +87,7 @@ export function RecentTransactions() {
             <Text emoji numberOfLines={1} style={[a.flex_1, a.text_md, a.leading_snug, t.atoms.text]}>
               {row.title}
             </Text>
-            {row.net !== 0n && (
+            {row.net !== ZERO && (
               <Text
                 numberOfLines={1}
                 style={[

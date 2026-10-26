@@ -1,5 +1,4 @@
 import {
-  allocate,
   computeShares,
   DomainError,
   evaluateAmount,
@@ -11,9 +10,11 @@ import {
   parseLocalDate,
   remainingMinor,
   type SplitInput,
+  splitItem,
   sumMinor,
   toDecimalString,
   validateExpense,
+  ZERO,
 } from '@splito/domain'
 import {type Expense, type ExpenseDraft} from '@splito/sync'
 
@@ -120,7 +121,7 @@ export function emptyForm({
 
 const money = (minor: bigint, scale: number) => toDecimalString(minor, scale)
 const blankIfZero = (minor: bigint, scale: number) =>
-  minor === 0n ? '' : money(minor, scale)
+  minor === ZERO ? '' : money(minor, scale)
 const percentText = (bp: number) =>
   `${Math.floor(bp / 100)}${
     bp % 100
@@ -199,7 +200,7 @@ export function formFromExpense(e: Expense, me: string): ExpenseForm {
       }))
       form.tax = blankIfZero(s.tax, scale)
       form.tip = blankIfZero(s.tip, scale)
-      form.service = blankIfZero(s.service ?? 0n, scale)
+      form.service = blankIfZero(s.service ?? ZERO, scale)
       form.discount = blankIfZero(s.discount, scale)
       break
   }
@@ -258,10 +259,10 @@ export function evaluateForm(
     key: string,
     canBeNegative = false,
   ): bigint | undefined => {
-    if (!text?.trim()) return 0n
+    if (!text?.trim()) return ZERO
     try {
       const v = evaluateAmount(text, f.currency, mark)
-      if (v >= 0n || canBeNegative) return v
+      if (v >= ZERO || canBeNegative) return v
       r.rowErrors[key] = 'NEGATIVE_AMOUNT'
     } catch (e) {
       r.rowErrors[key] = codeOf(e)
@@ -275,7 +276,7 @@ export function evaluateForm(
   else {
     try {
       const total = evaluateAmount(f.amount, f.currency, mark)
-      if (total <= 0n) r.amountError = 'AMOUNT_NOT_POSITIVE'
+      if (total <= ZERO) r.amountError = 'AMOUNT_NOT_POSITIVE'
       else r.total = total
     } catch (e) {
       r.amountError = codeOf(e)
@@ -302,12 +303,12 @@ export function evaluateForm(
     for (const p of people) {
       const v = rowAmount(f.paid[p], `paid:${p}`)
       if (v === undefined) isComplete = false
-      else if (v !== 0n) paid[p] = v
+      else if (v !== ZERO) paid[p] = v
     }
     if (!isComplete) errors.push('INVALID_ROW_AMOUNT')
     else if (total !== undefined) {
       r.payersRemaining = remainingMinor(total, Object.values(paid))
-      if (r.payersRemaining !== 0n) errors.push('PAYERS_MISMATCH')
+      if (r.payersRemaining !== ZERO) errors.push('PAYERS_MISMATCH')
       else payers = paid
     }
   }
@@ -326,7 +327,7 @@ export function evaluateForm(
       for (const p of splitting) {
         const v = rowAmount(f.adjust[p], p, true)
         if (v === undefined) isComplete = false
-        else if (v !== 0n) adjustments[p] = v
+        else if (v !== ZERO) adjustments[p] = v
       }
       if (splitting.length === 0) errors.push('NO_PARTICIPANTS')
       else if (!isComplete) errors.push('INVALID_ROW_AMOUNT')
@@ -339,7 +340,7 @@ export function evaluateForm(
       for (const p of people) {
         const v = rowAmount(f.exact[p], p)
         if (v === undefined) isComplete = false
-        else if (v !== 0n) amounts[p] = v
+        else if (v !== ZERO) amounts[p] = v
       }
       if (!isComplete) errors.push('INVALID_ROW_AMOUNT')
       else {
@@ -349,7 +350,7 @@ export function evaluateForm(
             value: remainingMinor(total, Object.values(amounts)),
           }
         if (Object.keys(amounts).length === 0) errors.push('NO_PARTICIPANTS')
-        else if (r.remaining && r.remaining.value !== 0n)
+        else if (r.remaining && r.remaining.value !== ZERO)
           errors.push('TOTAL_MISMATCH')
         else split = {mode: 'exact', amounts}
       }
@@ -397,29 +398,24 @@ export function evaluateForm(
       for (const item of f.items) {
         const v = rowAmount(item.amount, `item:${item.key}`)
         if (v === undefined) isComplete = false
-        else if (v !== 0n) {
+        else if (v !== ZERO) {
           if (item.people.length === 0) {
             r.rowErrors[`item:${item.key}`] = 'UNASSIGNED_ITEM'
             isComplete = false
           }
-          if (item.people.length > 0) {
+          const participants = item.people.map(id => {
+            const weight = item.portions?.[id] ?? 1
+            return weight > 1 ? {id, weight} : id
+          })
+          if (participants.length > 0) {
             r.itemParts ??= {}
-            r.itemParts[item.key] = allocate(
-              v,
-              item.people.map(id => ({
-                id,
-                weight: BigInt(item.portions?.[id] ?? 1),
-              })),
-            )
+            r.itemParts[item.key] = splitItem(v, participants)
           }
           items.push({
             id: item.key,
             name: item.name.trim(),
             amount: v,
-            participants: item.people.map(id => {
-              const weight = item.portions?.[id] ?? 1
-              return weight > 1 ? {id, weight} : id
-            }),
+            participants,
           })
         }
       }
@@ -451,7 +447,7 @@ export function evaluateForm(
           value: remainingMinor(total, [r.itemsTotal]),
         }
       if (items.length === 0) errors.push('NO_ITEMS')
-      else if (r.remaining && r.remaining.value !== 0n)
+      else if (r.remaining && r.remaining.value !== ZERO)
         errors.push('TOTAL_MISMATCH')
       else split = {mode: 'items', items, tax, tip, service, discount}
       break

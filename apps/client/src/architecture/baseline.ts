@@ -31,23 +31,8 @@ export const BASELINE: Record<RuleName, Record<string, number>> = {
     'apps/client/src/components/Dialog/context.ts': 2,
     'apps/client/src/components/Toast/Toast.tsx': 1,
   },
-  moneyArithmetic: {
-    'apps/client/src/components/charts/scale.ts': 5,
-    'apps/client/src/components/groups/net.ts': 1,
-    'apps/client/src/components/people/ledger.ts': 5,
-    'apps/client/src/components/split/form.ts': 13,
-    'apps/client/src/data/demo.ts': 3,
-    'apps/client/src/data/demoData.ts': 55,
-    'apps/client/src/data/devTools.ts': 2,
-    'apps/client/src/motion/amountSteps.ts': 4,
-    'apps/client/src/screens/People/sort.ts': 5,
-    'apps/client/src/view/shell/desktop/RecentTransactions.tsx': 4,
-  },
-  rawNumberOnMoney: {
-    'apps/client/src/components/charts/scale.ts': 2,
-    'apps/client/src/screens/Group/index.tsx': 2,
-    'apps/client/src/screens/Settle/index.tsx': 2,
-  },
+  moneyArithmetic: {},
+  rawNumberOnMoney: {},
   unlikeCurrencySum: {},
   layerDirection: {
     'apps/client/src/components/HeaderAvatar.tsx': 1,
@@ -73,7 +58,9 @@ export const BASELINE: Record<RuleName, Record<string, number>> = {
     'apps/client/src/lib/routes/tabs.ts': 1,
   },
   siblingFeatures: {},
-  packageBoundaries: {},
+  packageBoundaries: {
+    'packages/domain/src/money.ts': 1,
+  },
   persistenceOutsideSync: {},
   storeAccess: {
     'apps/client/src/App.tsx': 1,

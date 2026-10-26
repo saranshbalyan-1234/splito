@@ -242,3 +242,41 @@ export function groupBalances(rows: BalanceRow[]): Record<string, Record<Currenc
 export function personNet(record: Pick<ExpenseRecord, 'payers' | 'shares'>, person: string): bigint {
   return (record.payers[person] ?? 0n) - (record.shares[person] ?? 0n)
 }
+
+/** My balance with `person` from these records (> 0: they owe me); zero when the records don't involve them. */
+export function pairBalance(records: LedgerRecord[], me: string, person: string): bigint {
+  return pairwiseBalances(records, me).find(r => r.person === person)?.amount ?? 0n
+}
+
+/** One member's net in one group and currency (> 0: they lent); zero when they have none. */
+export function groupMemberNet(records: LedgerRecord[], groupId: string, currency: CurrencyCode, person: string): bigint {
+  return groupNet(records, groupId)[currency]?.[person] ?? 0n
+}
+
+/**
+ * `groupNet` per currency (sorted by code) with every member listed, zero when
+ * they have no records yet, so a settlement plan can route through them.
+ */
+export function memberNets(records: LedgerRecord[], groupId: string, members: string[]): Record<CurrencyCode, Record<string, bigint>> {
+  const zero = Object.fromEntries(members.map(m => [m, 0n]))
+  return Object.fromEntries(
+    Object.entries(groupNet(records, groupId))
+      .sort(([x], [y]) => x.localeCompare(y))
+      .map(([currency, net]) => [currency, {...zero, ...net}]),
+  )
+}
+
+/**
+ * My balance with a friend in one currency, part by part: direct, then each
+ * group (> 0: they owe me). Zero parts are left out.
+ */
+export function balanceParts(c: {direct: bigint; groups: Record<string, bigint>}): BalancePart[] {
+  return [{groupId: null, amount: c.direct}, ...Object.entries(c.groups).map(([groupId, amount]) => ({groupId, amount}))].filter(
+    p => p.amount !== 0n,
+  )
+}
+
+/** The parts a payment by me (or to me) settles: what the payer owes there, as amounts > 0. */
+export function partsOwedBy(parts: BalancePart[], isPayerMe: boolean): BalancePart[] {
+  return parts.map(p => ({groupId: p.groupId, amount: isPayerMe ? -p.amount : p.amount})).filter(p => p.amount > 0n)
+}

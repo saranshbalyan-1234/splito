@@ -4,6 +4,7 @@ import {LayoutAnimationConfig} from 'react-native-reanimated'
 import {Trans, useLingui} from '@lingui/react/macro'
 import {type RouteProp, useNavigation, useRoute} from '@react-navigation/native'
 import {
+  compareMinor,
   fnv1a64,
   formatAmount,
   type Plan,
@@ -188,7 +189,7 @@ export function SettleScreen() {
       ...[...plan.transfers]
         .sort(
           (x, y) =>
-            Number(y.amount > x.amount) - Number(x.amount > y.amount) ||
+            compareMinor(y.amount, x.amount) ||
             (names.get(x.from) ?? '').localeCompare(names.get(y.from) ?? ''),
         )
         .map(transfer => ({

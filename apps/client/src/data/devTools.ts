@@ -1,4 +1,4 @@
-import {type SettlementRules} from '@splito/domain'
+import {parseMinor, type SettlementRules} from '@splito/domain'
 import {
   createExpense,
   createGroup,
@@ -28,11 +28,11 @@ function toBig(v: unknown, key = ''): unknown {
     return Object.fromEntries(
       Object.entries(v).map(([k, x]) =>
         MONEY_MAPS.has(k) && x && typeof x === 'object'
-          ? [k, Object.fromEntries(Object.entries(x).map(([p, n]) => [p, BigInt(n as string)]))]
+          ? [k, Object.fromEntries(Object.entries(x).map(([p, n]) => [p, parseMinor(n as string)]))]
           : [k, toBig(x, k)],
       ),
     )
-  return MONEY_KEYS.has(key) && typeof v === 'string' ? BigInt(v) : v
+  return MONEY_KEYS.has(key) && typeof v === 'string' ? parseMinor(v) : v
 }
 
 /** Dev and E2E builds only: `window.splito` seeds data through the real mutations. */

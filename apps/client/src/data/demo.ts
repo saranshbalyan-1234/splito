@@ -1,3 +1,4 @@
+import {parseMinor as minor} from '@splito/domain'
 import {
   createExpense,
   createGroup,
@@ -114,8 +115,8 @@ async function seed(store: Store, ctx: MutationCtx) {
       isDinner
         ? {
             ...draft,
-            total: 1_000_000n,
-            payers: {[ids.riya]: 500_000n, [ids.priya]: 500_000n},
+            total: minor('1000000'),
+            payers: {[ids.riya]: minor('500000'), [ids.priya]: minor('500000')},
           }
         : draft,
     )
