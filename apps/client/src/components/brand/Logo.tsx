@@ -1,8 +1,6 @@
 import {View} from 'react-native'
 import Svg, {Defs, LinearGradient, Path, Stop} from 'react-native-svg'
 
-import {atoms as a, useTheme} from '#/alf'
-import {Text} from '#/components/Typography'
 
 /**
  * Splito mark: an original butterfly whose right wings are split off, shifted
@@ -30,12 +28,11 @@ export function LogoMark({size = 32}: {size?: number}) {
   )
 }
 
+/** The logo is the butterfly alone - no wordmark, no tile (owner, 2026-10-26). */
 export function Logo({size = 28}: {size?: number}) {
-  const t = useTheme()
   return (
-    <View style={[a.flex_row, a.align_center, a.gap_sm]}>
+    <View accessibilityRole="image" accessibilityLabel="Splito">
       <LogoMark size={size} />
-      <Text style={[a.font_bold, {fontSize: size * 0.78, letterSpacing: -0.5}, t.atoms.text]}>Splito</Text>
     </View>
   )
 }
