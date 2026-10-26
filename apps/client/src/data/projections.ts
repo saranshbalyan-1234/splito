@@ -178,7 +178,9 @@ export function historyQuery(type: EntityType, id: string): Query<HistoryRow[]> 
 export const activityQuery: Query<ActivityState> = {
   key: 'activity',
   isTouchedBy: change =>
-    touches(change, 'person') || touches(change, 'group') || touches(change, 'expense') || touches(change, 'repayment'),
+    touches(change, 'person') || touches(change, 'group') || touches(change, 'expense') ||
+    touches(change, 'repayment') ||
+    touches(change, 'writeoff'),
   loader: store => {
     const track = activityTracker(store)
     return change => track(change)

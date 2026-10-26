@@ -443,7 +443,7 @@ test.describe('desktop: Bluesky left sidebar and full-width content', () => {
     const recent = page
       .getByTestId('right-nav')
       .getByTestId('sidebar-recent-groups')
-    await expect(recent).toContainText('Recent groups')
+    await expect(recent).toContainText('Recently active groups')
     await expect(recent.getByTestId('sidebar-group-Goa trip')).toBeVisible()
     await expect(
       recent.getByTestId('sidebar-group-balance-Goa trip'),

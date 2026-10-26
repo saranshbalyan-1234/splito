@@ -16,6 +16,8 @@ import {
   type Store,
   toExpenseRecord,
   toRepaymentRecord,
+  toWriteOffRecord,
+  type WriteOff,
 } from '@splito/sync'
 
 import {
@@ -54,23 +56,37 @@ function liveRows<T>(all: Entity<T>[]): Entity<T>[] {
 }
 
 const recordCache = new WeakMap<Entity, LedgerRecord>()
-function recordOf(e: Entity<Expense> | Entity<Repayment>, kind: 'expense' | 'repayment') {
+function recordOf(
+  e: Entity<Expense> | Entity<Repayment> | Entity<WriteOff>,
+  kind: 'expense' | 'repayment' | 'writeoff',
+) {
   let r = recordCache.get(e)
   if (!r) {
-    r = kind === 'expense' ? toExpenseRecord(e as Entity<Expense>) : toRepaymentRecord(e as Entity<Repayment>)
+    r =
+      kind === 'expense'
+        ? toExpenseRecord(e as Entity<Expense>)
+        : kind === 'repayment'
+          ? toRepaymentRecord(e as Entity<Repayment>)
+          : toWriteOffRecord(e as Entity<WriteOff>)
     recordCache.set(e, r)
   }
   return r
 }
 
-const ledgerCache = new WeakMap<Entity[], WeakMap<Entity[], LedgerRecord[]>>()
-function ledgerOf(expenses: Entity<Expense>[], repayments: Entity<Repayment>[]) {
+const ledgerCache = new WeakMap<Entity[], WeakMap<Entity[], WeakMap<Entity[], LedgerRecord[]>>>()
+function ledgerOf(expenses: Entity<Expense>[], repayments: Entity<Repayment>[], writeOffs: Entity<WriteOff>[]) {
   let byRepayments = ledgerCache.get(expenses)
   if (!byRepayments) ledgerCache.set(expenses, (byRepayments = new WeakMap()))
-  let ledger = byRepayments.get(repayments)
+  let byWriteOffs = byRepayments.get(repayments)
+  if (!byWriteOffs) byRepayments.set(repayments, (byWriteOffs = new WeakMap()))
+  let ledger = byWriteOffs.get(writeOffs)
   if (!ledger) {
-    ledger = [...expenses.map(e => recordOf(e, 'expense')), ...repayments.map(r => recordOf(r, 'repayment'))]
-    byRepayments.set(repayments, ledger)
+    ledger = [
+      ...expenses.map(e => recordOf(e, 'expense')),
+      ...repayments.map(r => recordOf(r, 'repayment')),
+      ...writeOffs.map(w => recordOf(w, 'writeoff')),
+    ]
+    byWriteOffs.set(writeOffs, ledger)
   }
   return ledger
 }
@@ -98,7 +114,8 @@ export function useEntities<T>(type: EntityType): Entity<T>[] | undefined {
 export function useLedger(): LedgerRecord[] | undefined {
   const expenses = useAllEntities<Expense>('expense')
   const repayments = useAllEntities<Repayment>('repayment')
-  return expenses && repayments ? ledgerOf(expenses, repayments) : undefined
+  const writeOffs = useAllEntities<WriteOff>('writeoff')
+  return expenses && repayments && writeOffs ? ledgerOf(expenses, repayments, writeOffs) : undefined
 }
 
 export function useMe(): Entity<Person> | undefined {

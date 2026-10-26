@@ -211,14 +211,16 @@ test('Recently deleted: reachable from Settings, restore re-enters balances with
   await expect(page.getByTestId('person-total-INR')).toHaveCount(0)
 })
 
-test('the bin window comes from history.binDays and the drawer reaches the bin on phones', async ({
+test('the bin window comes from history.binDays and Settings reaches the bin on phones', async ({
   page,
 }) => {
   await page.setViewportSize({width: 390, height: 844})
   await ready(page)
   await seed(page)
+  // The drawer lists only the shared nav (ARCHITECTURE 26.3); the bin lives in Settings.
   await page.getByTestId('header-avatar').click()
-  await page.getByTestId('drawer-recently-deleted').click()
+  await page.getByTestId('drawer-settings').click()
+  await page.getByTestId('settings-recently-deleted').click()
   await expect(page.getByTestId('screen-recently-deleted')).toBeVisible()
   await page.getByTestId('history.binDays-7').click()
   await expect(

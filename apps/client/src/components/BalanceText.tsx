@@ -117,6 +117,7 @@ export function BalanceBlock({
   testID?: string
 }) {
   const t = useTheme()
+  const money = useMoneyStyle()
   return (
     <View testID={testID} style={[a.align_end]}>
       <Text
@@ -138,13 +139,11 @@ export function BalanceBlock({
           a.text_md,
           a.font_semi_bold,
           a.leading_snug,
-          {
-            color:
-              amount > ZERO ? t.palette.positive_600 : t.palette.negative_500,
-            fontVariant: ['tabular-nums'],
-          },
+          {fontVariant: ['tabular-nums']},
+          money.style(amount),
         ]}>
-        {formatAmount(magnitude(amount), currency, locale)}
+        {/* Arrow, word and figure: direction never rests on colour alone (F-1801). */}
+        {`${moneyGlyph(amount)}\u00a0${formatAmount(magnitude(amount), currency, locale)}`}
       </Text>
     </View>
   )

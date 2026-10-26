@@ -116,8 +116,8 @@ test('Groups lists the demo groups with my balance in each', async ({page}) => {
   for (const name of ['Goa trip', 'Flat 4B', 'Lisbon']) {
     await expect(page.getByTestId(`group-${name}`)).toBeVisible()
   }
-  await expect(page.getByTestId('group-Lisbon').getByTestId('group-balance-EUR')).toHaveText(/^you owe ↗\s€/)
-  await expect(page.getByTestId('group-Goa trip').getByTestId('group-balance-INR')).toHaveText(/^you are owed ↙\s₹/)
+  await expect(page.getByTestId('group-Lisbon').getByTestId('group-balance-EUR')).toHaveText(/^you owe\s*↗\s€/)
+  await expect(page.getByTestId('group-Goa trip').getByTestId('group-balance-INR')).toHaveText(/^you are owed\s*↙\s₹/)
   // An Overview on top, People's style: one cell per currency, never added together.
   await expect(page.getByTestId('groups-balances-title')).toHaveText('Overview')
   await expect(
