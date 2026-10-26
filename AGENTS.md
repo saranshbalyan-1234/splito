@@ -1,5 +1,8 @@
 # AGENTS.md - Splito Development Guide
 
+> **Binding architecture and product/UI rules live in `docs/ARCHITECTURE.md` - read it before any change; it
+> wins over this file.** Owner decisions are in its § 26 "Product & UI rules (owner decisions, binding)".
+
 Splito is an offline-first expense splitting app for iOS, Android and web/PWA.
 The client is built on code adapted from Bluesky `social-app` (MIT, pinned at
 `4e4ad9c5f5cc584bd06473ab6f16318fd0bd8465`), and these standards are taken from
@@ -7,8 +10,17 @@ Bluesky's `AGENTS.md` and Expensify App's `contributingGuides/STYLE.md` and
 `PERFORMANCE.md` (MIT). Where the two disagree, Bluesky wins for client code,
 because our UI code is Bluesky's.
 
+This file is the coding-standards guide. Architecture and owner rules: `docs/ARCHITECTURE.md`.
 Design spec: `docs/superpowers/specs/2026-10-26-splito-design.md`.
-Upstream reuse record: `docs/REUSE_MAP.md`.
+Upstream reuse record: `docs/reuse/<stream>.md` (one file per work stream).
+
+## Owner decisions are recorded in the same turn
+
+Any owner decision (product, UI, UX, behaviour, branding, stack or process, including corrections like "it
+should be there") is written into `docs/ARCHITECTURE.md` § 26 in the same turn: rewrite the rule in its topic
+so only the current truth remains, add a decision-log row, and commit it with the change (ARCHITECTURE § 0
+rule 9). Never add owner rules to this file. A `UserPromptSubmit` hook in `.claude/settings.json` repeats this
+reminder on every prompt.
 
 ## Tech Stack
 
@@ -123,7 +135,8 @@ Always use `#/` for absolute client imports and `@splito/*` for packages.
   same flow (Chrome Performance on web; React Native DevTools/Hermes profiler or
   Flashlight on Android; React DevTools Profiler for re-renders). Put numbers in
   `docs/COMPLETION_MATRIX.md`.
-- Budgets: p95 local save under 100 ms; no input-blocking long task during entry.
+- Budgets and animation requirements: `docs/ARCHITECTURE.md` § 26.10 (owner rules)
+  and § 17 (engineering rules).
 
 ## Comments
 
@@ -134,22 +147,17 @@ simplifications with their ceiling.
 ## Formatting and lint
 
 Prettier config from Bluesky (`prettier.config.ts`: no semicolons, single quotes,
-no bracket spacing, trailing commas). Oxlint (`.oxlintrc.json`, every rule an error; old
-violations in `oxlint-suppressions.json`, which fails on new and on fixed-but-listed ones).
-
-Architecture rules test (`apps/client/src/architecture/`): baseline only goes down. Each rule
-counts per file; a rise or a new file fails, and a fixed count must be lowered in `baseline.ts`.
+no bracket spacing, trailing commas). Oxlint.
 
 ## Attribution
 
 Every file copied or adapted from upstream starts with
 `// Adapted from <repo>@<sha> (MIT) - <upstream path>` and gets a row in
-`docs/REUSE_MAP.md`. Never copy Bluesky's licensed icon glyphs, illustrations,
+`docs/reuse/<stream>.md`. Search Bluesky before writing anything (ARCHITECTURE § 26.1). Never copy Bluesky's licensed icon glyphs, illustrations,
 logos or `assets/images/`.
 
-## Latest owner UI decisions (binding; newest wins)
+## Latest owner UI decisions (binding; newest wins; apply even if your task text says otherwise)
 
-1. **The account avatar sits at the TOP RIGHT and opens Bluesky's account Menu** (owner, 2026-10-26: "We should move profile icon to top right"; this supersedes the earlier top-left avatar + drawer). It is the last right-hand item of every top-level header (People, Groups, Analytics) on every platform: top-right of the main content header on desktop/tablet web, top-right of the Bluesky top bar on phones (the logo or title stays centred). It is Bluesky's 32px avatar (`HeaderAvatar`, testID `header-avatar`) and opens a Bluesky `Menu` - a dropdown on web, a bottom sheet on native - with Profile, Settings, Analytics and the theme switch (`header-menu-profile|settings|analytics|theme`). There is no drawer, no account block at the bottom of the sidebar, no Profile row in the sidebar and no Profile tab in the bottom bar; `/profile` is reached from the menu.
-2. **Header system (Bluesky `Layout.Header`).** LEFT: empty slots on top-level pages (as wide as the right side, so the title stays centred); `BackButton` on every pushed page; "Cancel" in the Add expense composer. CENTRE: the page name (`TitleText`), the Splito logo on People, the entity name plus `SubtitleText` on Person/Group. RIGHT: at most one page action (People = Add friend, Groups = Create group, Analytics = Export CSV, Notifications = Mark all read, Person/Group = Settle up or overflow, Expense = Edit + overflow, Add expense = Save pill), then on top-level pages the notifications bell, then the avatar. On phones the top-level header hides on scroll down and returns on scroll up (`HidingHeader`, Bluesky's minimal-shell behaviour).
-3. **Notifications live in the header bell** (`header-notifications`, immediately left of the avatar on top-level pages) and open `/notifications` (`/activity` redirects). Sidebar = People, Groups, Analytics, Settings + "Add expense" pill; phone bottom bar = People, Groups, Analytics + Bluesky FAB.
-4. **No extra header icons.** Anything that is not the page action, its overflow menu, the bell or the avatar lives in the page body (e.g. Analytics' chart/table toggle in its filter row).
+Moved. The owner's UI and product rules (formerly numbered 1-24 here) are consolidated, with superseded rules
+resolved, in `docs/ARCHITECTURE.md` § 26 "Product & UI rules (owner decisions, binding)"; history is in its
+decision log (§ 26.23). Read that section before any UI change.
