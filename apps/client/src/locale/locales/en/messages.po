@@ -19,7 +19,7 @@ msgid "{0, plural, one {# day} other {# days}}"
 msgstr "{0, plural, one {# day} other {# days}}"
 
 #. placeholder {0}: inactive.length
-#: src/screens/Invites/InviteLinks.tsx:224
+#: src/screens/Invites/InviteLinks.tsx:239
 msgid "{0, plural, one {# expired, used or revoked link isn’t shown.} other {# expired, used or revoked links aren’t shown.}}"
 msgstr "{0, plural, one {# expired, used or revoked link isn’t shown.} other {# expired, used or revoked links aren’t shown.}}"
 
@@ -123,7 +123,7 @@ msgid "{0} has no email or mobile number."
 msgstr "{0} has no email or mobile number."
 
 #. placeholder {0}: check.person.data.name
-#: src/screens/AddFriend.tsx:622
+#: src/screens/AddFriend.tsx:623
 msgid "{0} is already your friend."
 msgstr "{0} is already your friend."
 
@@ -371,9 +371,9 @@ msgstr "{count, plural, one {# or more unread items} other {# or more unread ite
 msgid "{count, plural, one {# unread item} other {# unread items}}"
 msgstr "{count, plural, one {# unread item} other {# unread items}}"
 
-#: src/screens/People/components/RequestsSection.tsx:275
-msgid "{days, plural, one {sent yesterday} other {sent # days ago}}"
-msgstr "{days, plural, one {sent yesterday} other {sent # days ago}}"
+#: src/screens/People/components/RequestsSection.tsx:276
+msgid "{days, plural, one {yesterday} other {# days ago}}"
+msgstr "{days, plural, one {yesterday} other {# days ago}}"
 
 #: src/components/split/ExpenseComposer.tsx:239
 msgid "{first}, {second} +{rest}"
@@ -475,11 +475,11 @@ msgstr "<0>{friendCount}</0> {friendCount, plural, one {friend} other {friends}}
 msgid "<0>{groupCount}</0> {groupCount, plural, one {group} other {groups}}"
 msgstr "<0>{groupCount}</0> {groupCount, plural, one {group} other {groups}}"
 
-#: src/screens/AddFriend.tsx:571
+#: src/screens/AddFriend.tsx:572
 msgid "<0>{value}</0> is on Splito. They’ll get your friend request to accept."
 msgstr "<0>{value}</0> is on Splito. They’ll get your friend request to accept."
 
-#: src/screens/AddFriend.tsx:587
+#: src/screens/AddFriend.tsx:588
 msgid "<0>{value}</0> isn’t on Splito yet. Send an invite, or add them just for you and link them when they join."
 msgstr "<0>{value}</0> isn’t on Splito yet. Send an invite, or add them just for you and link them when they join."
 
@@ -490,6 +490,11 @@ msgstr "= Use result"
 #: src/screens/Settings/index.tsx:182
 msgid "1 category"
 msgstr "1 category"
+
+#: src/components/settings/prefControls.tsx:601
+#: src/screens/Invites/CreateInvite.tsx:242
+msgid "1 day"
+msgstr "1 day"
 
 #: src/screens/Group/index.tsx:272
 #: src/screens/Groups/components/GroupRow.tsx:59
@@ -507,11 +512,6 @@ msgstr "1 payment"
 #: src/components/split/ExpenseComposer.tsx:639
 msgid "100% assigned"
 msgstr "100% assigned"
-
-#: src/components/settings/prefControls.tsx:601
-#: src/screens/Invites/CreateInvite.tsx:242
-msgid "24 hours"
-msgstr "24 hours"
 
 #: src/components/settings/prefControls.tsx:603
 #: src/screens/Invites/CreateInvite.tsx:244
@@ -575,13 +575,13 @@ msgid "Accept"
 msgstr "Accept"
 
 #: src/components/activity/ActivityItem.tsx:929
-#: src/screens/People/components/RequestsSection.tsx:179
+#: src/screens/People/components/RequestsSection.tsx:180
 msgctxt "button"
 msgid "Accept"
 msgstr "Accept"
 
 #: src/components/activity/ActivityItem.tsx:923
-#: src/screens/People/components/RequestsSection.tsx:164
+#: src/screens/People/components/RequestsSection.tsx:165
 msgid "Accept {name}’s friend request"
 msgstr "Accept {name}’s friend request"
 
@@ -652,11 +652,11 @@ msgstr "Add an expense"
 msgid "Add another"
 msgstr "Add another"
 
-#: src/screens/AddFriend.tsx:536
+#: src/screens/AddFriend.tsx:537
 msgid "Add anyway (only for you)"
 msgstr "Add anyway (only for you)"
 
-#: src/screens/AddFriend.tsx:531
+#: src/screens/AddFriend.tsx:532
 msgid "Add anyway, only for you"
 msgstr "Add anyway, only for you"
 
@@ -664,7 +664,7 @@ msgstr "Add anyway, only for you"
 msgid "Add at least one item"
 msgstr "Add at least one item"
 
-#: src/screens/AddFriend.tsx:406
+#: src/screens/AddFriend.tsx:407
 msgid "Add by email or number"
 msgstr "Add by email or number"
 
@@ -803,7 +803,7 @@ msgstr "All time"
 msgid "All uses taken"
 msgstr "All uses taken"
 
-#: src/screens/AddFriend.tsx:668
+#: src/screens/AddFriend.tsx:669
 msgid "Allow access to contacts"
 msgstr "Allow access to contacts"
 
@@ -872,7 +872,7 @@ msgstr "Analytics view"
 msgid "Animations"
 msgstr "Animations"
 
-#: src/screens/Invites/InviteLinks.tsx:238
+#: src/screens/Invites/InviteLinks.tsx:253
 msgid "Anyone who has it can no longer use it. You can always make a new one."
 msgstr "Anyone who has it can no longer use it. You can always make a new one."
 
@@ -911,6 +911,8 @@ msgid "Automatic"
 msgstr "Automatic"
 
 #: src/screens/AddFriend.tsx:278
+#: src/screens/AddFriend.tsx:741
+#: src/screens/AddFriend.tsx:748
 msgid "Back"
 msgstr "Back"
 
@@ -1050,7 +1052,7 @@ msgstr "Charts"
 msgid "Check the dates: the trip can’t end before it starts."
 msgstr "Check the dates: the trip can’t end before it starts."
 
-#: src/screens/AddFriend.tsx:560
+#: src/screens/AddFriend.tsx:561
 msgid "Checking Splito…"
 msgstr "Checking Splito…"
 
@@ -1066,8 +1068,8 @@ msgstr "Choose at least one person to split with"
 msgid "Choose default currency"
 msgstr "Choose default currency"
 
-#: src/screens/AddFriend.tsx:448
-#: src/screens/AddFriend.tsx:456
+#: src/screens/AddFriend.tsx:449
+#: src/screens/AddFriend.tsx:457
 msgid "Choose from contacts"
 msgstr "Choose from contacts"
 
@@ -1194,7 +1196,7 @@ msgstr "Copied to clipboard"
 msgid "Copied!"
 msgstr "Copied!"
 
-#: src/screens/Invites/InviteLinks.tsx:140
+#: src/screens/Invites/InviteLinks.tsx:155
 msgid "Copy"
 msgstr "Copy"
 
@@ -1202,7 +1204,7 @@ msgstr "Copy"
 msgid "Copy invite link"
 msgstr "Copy invite link"
 
-#: src/screens/Invites/InviteLinks.tsx:134
+#: src/screens/Invites/InviteLinks.tsx:149
 msgid "Copy link"
 msgstr "Copy link"
 
@@ -1255,7 +1257,7 @@ msgstr "Couldn't restore this expense"
 msgid "Couldn’t restore this payment"
 msgstr "Couldn’t restore this payment"
 
-#: src/screens/Invites/InviteLinks.tsx:71
+#: src/screens/Invites/InviteLinks.tsx:84
 msgid "Couldn’t revoke the link. Please try again."
 msgstr "Couldn’t revoke the link. Please try again."
 
@@ -1295,8 +1297,8 @@ msgstr "Counts towards: {settles}"
 msgid "Couple"
 msgstr "Couple"
 
-#: src/screens/Invites/InviteLinks.tsx:211
-#: src/screens/Invites/InviteLinks.tsx:212
+#: src/screens/Invites/InviteLinks.tsx:226
+#: src/screens/Invites/InviteLinks.tsx:227
 msgid "Create a link"
 msgstr "Create a link"
 
@@ -1400,13 +1402,13 @@ msgid "Decline"
 msgstr "Decline"
 
 #: src/components/activity/ActivityItem.tsx:940
-#: src/screens/People/components/RequestsSection.tsx:196
+#: src/screens/People/components/RequestsSection.tsx:197
 msgctxt "button"
 msgid "Decline"
 msgstr "Decline"
 
 #: src/components/activity/ActivityItem.tsx:934
-#: src/screens/People/components/RequestsSection.tsx:184
+#: src/screens/People/components/RequestsSection.tsx:185
 msgid "Decline {name}’s friend request"
 msgstr "Decline {name}’s friend request"
 
@@ -1569,8 +1571,8 @@ msgstr "Edit who you settle with"
 msgid "Edited the notes"
 msgstr "Edited the notes"
 
-#: src/screens/AddFriend.tsx:420
-#: src/screens/AddFriend.tsx:428
+#: src/screens/AddFriend.tsx:421
+#: src/screens/AddFriend.tsx:429
 msgid "Email or mobile number"
 msgstr "Email or mobile number"
 
@@ -1802,7 +1804,7 @@ msgstr "For money that changed hands outside Splito – cash, UPI or a bank tran
 msgid "Friend"
 msgstr "Friend"
 
-#: src/screens/Invites/InviteLinks.tsx:79
+#: src/screens/Invites/InviteLinks.tsx:94
 msgid "Friend invite"
 msgstr "Friend invite"
 
@@ -1900,7 +1902,7 @@ msgstr "Groceries"
 msgid "Group"
 msgstr "Group"
 
-#: src/screens/Invites/InviteLinks.tsx:78
+#: src/screens/Invites/InviteLinks.tsx:91
 msgid "Group invite"
 msgstr "Group invite"
 
@@ -2073,13 +2075,18 @@ msgstr "Invite {0}"
 msgid "Invite declined"
 msgstr "Invite declined"
 
+#. placeholder {0}: invitedName.get(link.id)
+#: src/screens/Invites/InviteLinks.tsx:93
+msgid "Invite for {0}"
+msgstr "Invite for {0}"
+
 #: src/navigation/Navigation.tsx:77
 #: src/navigation/Navigation.tsx:78
 #: src/screens/Invites/CreateInvite.tsx:123
 msgid "Invite link"
 msgstr "Invite link"
 
-#: src/screens/AddFriend.tsx:501
+#: src/screens/AddFriend.tsx:502
 #: src/screens/Group/index.tsx:519
 #: src/screens/Group/index.tsx:524
 #: src/screens/People/index.tsx:172
@@ -2088,7 +2095,7 @@ msgid "Invite link or QR code"
 msgstr "Invite link or QR code"
 
 #: src/navigation/Navigation.tsx:76
-#: src/screens/Invites/InviteLinks.tsx:168
+#: src/screens/Invites/InviteLinks.tsx:183
 msgid "Invite links"
 msgstr "Invite links"
 
@@ -2105,7 +2112,7 @@ msgstr "Invite links need a connection. Try again when you’re online."
 msgid "Invite to {0}"
 msgstr "Invite to {0}"
 
-#: src/screens/AddFriend.tsx:496
+#: src/screens/AddFriend.tsx:497
 msgid "Invite with a link or QR code"
 msgstr "Invite with a link or QR code"
 
@@ -2118,9 +2125,9 @@ msgstr "invited you to be friends on Splito"
 msgid "invited you to join {0}"
 msgstr "invited you to join {0}"
 
-#: src/screens/People/components/RequestsSection.tsx:216
-msgid "Invited, not on Splito yet · {sent}"
-msgstr "Invited, not on Splito yet · {sent}"
+#: src/screens/People/components/RequestsSection.tsx:217
+msgid "Invited, not on Splito yet"
+msgstr "Invited, not on Splito yet"
 
 #: src/components/settings/prefControls.tsx:522
 msgid "Invites"
@@ -2130,7 +2137,7 @@ msgstr "Invites"
 msgid "Invites need a connection. Try again when you’re online."
 msgstr "Invites need a connection. Try again when you’re online."
 
-#: src/screens/People/components/RequestsSection.tsx:60
+#: src/screens/People/components/RequestsSection.tsx:61
 msgid "Invites sent"
 msgstr "Invites sent"
 
@@ -2176,12 +2183,12 @@ msgstr "Items and charges come to {0}"
 msgid "Join {0} on Splito:"
 msgstr "Join {0} on Splito:"
 
-#: src/screens/AddFriend.tsx:396
+#: src/screens/AddFriend.tsx:397
 #: src/screens/Invites/CreateInvite.tsx:162
 msgid "Join me on Splito"
 msgstr "Join me on Splito"
 
-#: src/screens/AddFriend.tsx:397
+#: src/screens/AddFriend.tsx:398
 #: src/screens/Invites/CreateInvite.tsx:166
 msgid "Join me on Splito so we can split expenses:"
 msgstr "Join me on Splito so we can split expenses:"
@@ -2232,15 +2239,15 @@ msgstr "Light"
 msgid "Link expires after"
 msgstr "Link expires after"
 
-#: src/screens/Invites/InviteLinks.tsx:66
+#: src/screens/Invites/InviteLinks.tsx:79
 msgid "Link revoked here. It stops working everywhere once you’re online."
 msgstr "Link revoked here. It stops working everywhere once you’re online."
 
-#: src/screens/Invites/InviteLinks.tsx:65
+#: src/screens/Invites/InviteLinks.tsx:78
 msgid "Link revoked. It no longer works."
 msgstr "Link revoked. It no longer works."
 
-#: src/screens/Invites/InviteLinks.tsx:196
+#: src/screens/Invites/InviteLinks.tsx:211
 msgid "Links that still work. Revoke one and it stops working straight away; friends who already joined stay friends."
 msgstr "Links that still work. Revoke one and it stops working straight away; friends who already joined stay friends."
 
@@ -2248,7 +2255,7 @@ msgstr "Links that still work. Revoke one and it stops working straight away; fr
 msgid "List density"
 msgstr "List density"
 
-#: src/screens/Invites/InviteLinks.tsx:208
+#: src/screens/Invites/InviteLinks.tsx:223
 msgid "Make a link or QR code to add friends or fill a group without typing anyone’s number."
 msgstr "Make a link or QR code to add friends or fill a group without typing anyone’s number."
 
@@ -2384,17 +2391,17 @@ msgstr "Multiple payers"
 #: src/components/settings/CategoryDialog.tsx:107
 #: src/components/settings/CategoryDialog.tsx:112
 #: src/components/settings/prefControls.tsx:435
-#: src/screens/AddFriend.tsx:470
+#: src/screens/AddFriend.tsx:471
 #: src/screens/Groups/components/GroupsFilterDialog.tsx:117
 #: src/screens/People/components/FriendsFilterDialog.tsx:125
 msgid "Name"
 msgstr "Name"
 
-#: src/screens/AddFriend.tsx:464
+#: src/screens/AddFriend.tsx:465
 msgid "Name (optional)"
 msgstr "Name (optional)"
 
-#: src/screens/AddFriend.tsx:435
+#: src/screens/AddFriend.tsx:436
 msgid "name@example.com or +91 98765 43210"
 msgstr "name@example.com or +91 98765 43210"
 
@@ -2430,7 +2437,7 @@ msgstr "New friend – no account needed"
 msgid "New group"
 msgstr "New group"
 
-#: src/screens/Invites/InviteLinks.tsx:173
+#: src/screens/Invites/InviteLinks.tsx:188
 msgid "New invite link"
 msgstr "New invite link"
 
@@ -2452,7 +2459,7 @@ msgstr "Next period"
 msgid "No {currency} expenses in {0}"
 msgstr "No {currency} expenses in {0}"
 
-#: src/screens/Invites/InviteLinks.tsx:207
+#: src/screens/Invites/InviteLinks.tsx:222
 msgid "No active invite links"
 msgstr "No active invite links"
 
@@ -2482,7 +2489,7 @@ msgstr "No direct expenses with {0}. Group expenses are hidden by the filter."
 msgid "No direct plan works with these rules"
 msgstr "No direct plan works with these rules"
 
-#: src/screens/AddFriend.tsx:546
+#: src/screens/AddFriend.tsx:547
 msgid "No email or number? Add just a name and they’re only for you."
 msgstr "No email or number? Add just a name and they’re only for you."
 
@@ -2672,14 +2679,14 @@ msgstr "Only friends with no expenses, payments or groups can be removed."
 msgid "Only people with my invite link"
 msgstr "Only people with my invite link"
 
-#: src/screens/AddFriend.tsx:630
+#: src/screens/AddFriend.tsx:631
 #: src/screens/Invites/Invite.tsx:202
 msgid "Open"
 msgstr "Open"
 
 #. placeholder {0}: check.person.data.name
 #. placeholder {0}: existing.data.name
-#: src/screens/AddFriend.tsx:626
+#: src/screens/AddFriend.tsx:627
 #: src/screens/Invites/Invite.tsx:196
 msgid "Open {0}"
 msgstr "Open {0}"
@@ -2891,7 +2898,7 @@ msgstr "Person"
 msgid "Pick a date between 1900 and 2200"
 msgstr "Pick a date between 1900 and 2200"
 
-#: src/screens/AddFriend.tsx:670
+#: src/screens/AddFriend.tsx:671
 msgid "Pick a friend from your contacts"
 msgstr "Pick a friend from your contacts"
 
@@ -2943,7 +2950,7 @@ msgstr "Privacy"
 msgid "Profile"
 msgstr "Profile"
 
-#: src/screens/Invites/InviteLinks.tsx:129
+#: src/screens/Invites/InviteLinks.tsx:144
 msgid "QR and share"
 msgstr "QR and share"
 
@@ -3010,11 +3017,11 @@ msgid "Remove item {0}"
 msgstr "Remove item {0}"
 
 #: src/components/activity/ActivityItem.tsx:910
-#: src/screens/People/components/RequestsSection.tsx:192
+#: src/screens/People/components/RequestsSection.tsx:193
 msgid "Request declined. {name} isn’t told."
 msgstr "Request declined. {name} isn’t told."
 
-#: src/screens/People/components/RequestsSection.tsx:242
+#: src/screens/People/components/RequestsSection.tsx:244
 msgid "Request sent to {name} again"
 msgstr "Request sent to {name} again"
 
@@ -3027,16 +3034,11 @@ msgstr "Request sent. You’ll see {0} once you’re in."
 msgid "Request to {name} cancelled"
 msgstr "Request to {name} cancelled"
 
-#: src/screens/People/components/RequestsSection.tsx:48
+#: src/screens/People/components/RequestsSection.tsx:49
 msgid "Requests"
 msgstr "Requests"
 
-#: src/screens/People/components/RequestsSection.tsx:248
-msgctxt "button"
-msgid "Resend"
-msgstr "Resend"
-
-#: src/screens/People/components/RequestsSection.tsx:227
+#: src/screens/People/components/RequestsSection.tsx:228
 msgid "Resend to {name}"
 msgstr "Resend to {name}"
 
@@ -3090,16 +3092,16 @@ msgstr "Restore"
 msgid "Restore expense"
 msgstr "Restore expense"
 
-#: src/screens/Invites/InviteLinks.tsx:153
+#: src/screens/Invites/InviteLinks.tsx:168
 msgid "Revoke"
 msgstr "Revoke"
 
-#: src/screens/Invites/InviteLinks.tsx:145
-#: src/screens/Invites/InviteLinks.tsx:239
+#: src/screens/Invites/InviteLinks.tsx:160
+#: src/screens/Invites/InviteLinks.tsx:254
 msgid "Revoke link"
 msgstr "Revoke link"
 
-#: src/screens/Invites/InviteLinks.tsx:237
+#: src/screens/Invites/InviteLinks.tsx:252
 msgid "Revoke this invite link?"
 msgstr "Revoke this invite link?"
 
@@ -3155,7 +3157,7 @@ msgid "Saved. We’ll check and send it when you’re online."
 msgstr "Saved. We’ll check and send it when you’re online."
 
 #: src/screens/Invites/Invite.tsx:146
-#: src/screens/People/components/RequestsSection.tsx:243
+#: src/screens/People/components/RequestsSection.tsx:245
 msgid "Saved. We’ll send it when you’re online."
 msgstr "Saved. We’ll send it when you’re online."
 
@@ -3231,10 +3233,6 @@ msgstr "Send invite"
 #: src/components/invites/InviteShare.tsx:94
 msgid "Send SMS"
 msgstr "Send SMS"
-
-#: src/screens/People/components/RequestsSection.tsx:274
-msgid "sent today"
-msgstr "sent today"
 
 #: src/components/split/SplitEditor.tsx:400
 #: src/screens/Expense/components/ItemsBreakdown.tsx:44
@@ -3353,7 +3351,7 @@ msgstr "Show days"
 msgid "Show hidden changes"
 msgstr "Show hidden changes"
 
-#: src/screens/Invites/InviteLinks.tsx:123
+#: src/screens/Invites/InviteLinks.tsx:138
 msgid "Show QR code and share"
 msgstr "Show QR code and share"
 
@@ -3484,7 +3482,7 @@ msgstr "Split with friends"
 msgid "Splito - People"
 msgstr "Splito - People"
 
-#: src/screens/AddFriend.tsx:676
+#: src/screens/AddFriend.tsx:677
 msgid "Splito can’t open your contacts. Turn on Contacts for Splito in Settings, then come back."
 msgstr "Splito can’t open your contacts. Turn on Contacts for Splito in Settings, then come back."
 
@@ -3577,7 +3575,7 @@ msgid "That amount is too large"
 msgstr "That amount is too large"
 
 #: src/components/activity/ActivityItem.tsx:915
-#: src/screens/People/components/RequestsSection.tsx:86
+#: src/screens/People/components/RequestsSection.tsx:87
 msgid "That didn’t work. Please try again."
 msgstr "That didn’t work. Please try again."
 
@@ -3625,7 +3623,7 @@ msgstr "The tab Splito opens on."
 msgid "Theme, tabs, categories, language and every other setting go back to how Splito starts. Your people, groups and expenses stay as they are."
 msgstr "Theme, tabs, categories, language and every other setting go back to how Splito starts. Your people, groups and expenses stay as they are."
 
-#: src/screens/AddFriend.tsx:410
+#: src/screens/AddFriend.tsx:411
 msgid "They get a request to accept. Once they do, you can split anything together."
 msgstr "They get a request to accept. Once they do, you can split anything together."
 
@@ -3705,6 +3703,10 @@ msgstr "Title"
 #: src/screens/Expense/components/History.tsx:52
 msgid "Title: {0} → {1}"
 msgstr "Title: {0} → {1}"
+
+#: src/screens/People/components/RequestsSection.tsx:275
+msgid "today"
+msgstr "today"
 
 #: src/components/split/DateDialog.tsx:244
 #: src/components/split/DateDialog.tsx:249
@@ -3808,7 +3810,7 @@ msgid "UPI links open on a phone with a UPI app. On a computer, nothing may happ
 msgstr "UPI links open on a phone with a UPI app. On a computer, nothing may happen."
 
 #. placeholder {0}: formatContact(c)
-#: src/screens/AddFriend.tsx:727
+#: src/screens/AddFriend.tsx:730
 msgid "Use {0}"
 msgstr "Use {0}"
 
@@ -3860,24 +3862,24 @@ msgstr "Violet"
 msgid "Waiting for {name} to accept"
 msgstr "Waiting for {name} to accept"
 
-#: src/screens/People/components/RequestsSection.tsx:220
-msgid "Waiting for them to accept · {sent}"
-msgstr "Waiting for them to accept · {sent}"
+#: src/screens/People/components/RequestsSection.tsx:221
+msgid "Waiting to accept · {sent}"
+msgstr "Waiting to accept · {sent}"
 
 #. placeholder {0}: ago(now - request.data.sentAt)
-#: src/screens/People/components/RequestsSection.tsx:160
-msgid "Wants to split expenses with you · {0}"
-msgstr "Wants to split expenses with you · {0}"
+#: src/screens/People/components/RequestsSection.tsx:161
+msgid "Wants to be friends · {0}"
+msgstr "Wants to be friends · {0}"
 
 #: src/components/split/ExpenseComposer.tsx:397
 msgid "We kept your unsaved expense."
 msgstr "We kept your unsaved expense."
 
-#: src/screens/AddFriend.tsx:605
+#: src/screens/AddFriend.tsx:606
 msgid "We’ll check when you’re online. Your request waits on this device until then."
 msgstr "We’ll check when you’re online. Your request waits on this device until then."
 
-#: src/screens/People/components/RequestsSection.tsx:218
+#: src/screens/People/components/RequestsSection.tsx:219
 msgid "We’ll send it when you’re online"
 msgstr "We’ll send it when you’re online"
 
@@ -3898,7 +3900,7 @@ msgstr "What people paid needs to add up to the total"
 msgid "What was it for?"
 msgstr "What was it for?"
 
-#: src/screens/AddFriend.tsx:473
+#: src/screens/AddFriend.tsx:474
 msgid "What you call them, e.g. Riya"
 msgstr "What you call them, e.g. Riya"
 
@@ -3943,7 +3945,7 @@ msgstr "When you pay"
 msgid "Where"
 msgstr "Where"
 
-#: src/screens/AddFriend.tsx:718
+#: src/screens/AddFriend.tsx:721
 msgid "Which one should Splito use?"
 msgstr "Which one should Splito use?"
 
@@ -4019,7 +4021,7 @@ msgstr "You accepted {subject}’s friend request"
 #. placeholder {0}: inviter.name
 #. placeholder {0}: person.data.name
 #: src/screens/Invites/Invite.tsx:155
-#: src/screens/People/components/RequestsSection.tsx:172
+#: src/screens/People/components/RequestsSection.tsx:173
 msgid "You and {0} are friends now"
 msgstr "You and {0} are friends now"
 
@@ -4031,7 +4033,7 @@ msgstr "You and {name} are friends now"
 msgid "You and {name} are settled up."
 msgstr "You and {name} are settled up."
 
-#: src/screens/Invites/InviteLinks.tsx:113
+#: src/screens/Invites/InviteLinks.tsx:128
 msgid "You approve each join"
 msgstr "You approve each join"
 
@@ -4202,7 +4204,7 @@ msgstr "You’re not part of this expense"
 msgid "You’re settled up in this group."
 msgstr "You’re settled up in this group."
 
-#: src/screens/AddFriend.tsx:641
+#: src/screens/AddFriend.tsx:642
 msgid "You’ve already asked {value}. It’s under Invites sent on People, where you can resend it."
 msgstr "You’ve already asked {value}. It’s under Invites sent on People, where you can resend it."
 
@@ -4210,7 +4212,7 @@ msgstr "You’ve already asked {value}. It’s under Invites sent on People, whe
 msgid "You've hidden everything here. New expenses, payments and group changes will show up as they happen."
 msgstr "You've hidden everything here. New expenses, payments and group changes will show up as they happen."
 
-#: src/screens/AddFriend.tsx:690
+#: src/screens/AddFriend.tsx:691
 msgid "Your contact book is never uploaded."
 msgstr "Your contact book is never uploaded."
 
@@ -4243,11 +4245,11 @@ msgid "Your net balance at the end of each year, all friends together"
 msgstr "Your net balance at the end of each year, all friends together"
 
 #. placeholder {0}: step.shownName
-#: src/screens/AddFriend.tsx:387
+#: src/screens/AddFriend.tsx:388
 msgid "Your personal invite is ready. When {0} joins with it, you’re friends straight away. It works once and is listed under Invites sent."
 msgstr "Your personal invite is ready. When {0} joins with it, you’re friends straight away. It works once and is listed under Invites sent."
 
-#: src/screens/AddFriend.tsx:681
+#: src/screens/AddFriend.tsx:682
 msgid "Your phone will ask to let Splito open your contacts. You pick one person; only the email or number you choose is used."
 msgstr "Your phone will ask to let Splito open your contacts. You pick one person; only the email or number you choose is used."
 

@@ -1,3 +1,4 @@
+// Adapted from bluesky-social/social-app@4e4ad9c (MIT) - src/components/contacts/phone-number.ts (normalizePhoneNumber)
 import {type CountryCode, isSupportedCountry, parsePhoneNumberFromString} from 'libphonenumber-js'
 
 /** How to reach someone: a lower-cased email or an E.164 mobile number. */

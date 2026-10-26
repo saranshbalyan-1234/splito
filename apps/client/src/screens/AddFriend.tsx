@@ -380,6 +380,7 @@ export function AddFriendScreen() {
           contact={step.contact}
           options={step.options}
           onPick={c => applyContact(c, step.contact)}
+          onBack={() => setStep({name: 'form'})}
         />
       ) : step.name === 'invited' ? (
         <View style={[a.px_lg, a.pt_md, a.gap_lg]} testID="add-friend-invited">
@@ -699,10 +700,12 @@ function PickValue({
   contact,
   options,
   onPick,
+  onBack,
 }: {
   contact: PickedContact
   options: Contact[]
   onPick: (c: Contact) => void
+  onBack: () => void
 }) {
   const t = useTheme()
   const {t: l} = useLingui()
@@ -733,6 +736,18 @@ function PickValue({
           </SettingsList.PressableItem>
         ))}
       </SettingsList.Container>
+      <Button
+        testID="add-friend-pick-back"
+        label={l`Back`}
+        size="small"
+        color="secondary"
+        variant="ghost"
+        style={[a.self_start]}
+        onPress={onBack}>
+        <ButtonText>
+          <Trans>Back</Trans>
+        </ButtonText>
+      </Button>
     </View>
   )
 }

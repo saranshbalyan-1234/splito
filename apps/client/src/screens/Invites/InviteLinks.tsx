@@ -15,7 +15,13 @@ import {useHaptics} from '#/lib/haptics'
 import {copyText} from '#/lib/sharing'
 import {type NavigationProp} from '#/lib/routes/types'
 import {logger} from '#/logger'
-import {directory, inviteUrl, useSortedInviteLinks} from '#/data/friends'
+import {
+  directory,
+  inviteUrl,
+  requestName,
+  useFriendRequests,
+  useSortedInviteLinks,
+} from '#/data/friends'
 import {useEntities, useMutationCtx, useStore} from '#/data/hooks'
 import {EmptyState} from '#/view/com/util/EmptyState'
 import {List} from '#/view/com/util/List'
@@ -52,6 +58,13 @@ export function InviteLinksScreen() {
   const {isLoading, active, inactive, now} = useSortedInviteLinks()
   const groups = useEntities<Group>('group')
   const groupName = new Map((groups ?? []).map(g => [g.id, g.data.name]))
+  /* A personal link sent with an invite is named after who it is for. */
+  const requests = useFriendRequests()
+  const invitedName = new Map(
+    (requests ?? []).flatMap(r =>
+      r.data.inviteCode ? [[r.data.inviteCode, requestName(r.data)] as const] : [],
+    ),
+  )
   const revokePrompt = Prompt.usePromptControl()
   const [revoking, setRevoking] = useState<Entity<InviteLink> | null>(null)
 
@@ -76,7 +89,9 @@ export function InviteLinksScreen() {
     const name =
       link.data.kind === 'group'
         ? (groupName.get(link.data.groupId ?? '') ?? l`Group invite`)
-        : l`Friend invite`
+        : invitedName.has(link.id)
+          ? l`Invite for ${invitedName.get(link.id)}`
+          : l`Friend invite`
     return (
       <Animated.View
         {...listAnimations}

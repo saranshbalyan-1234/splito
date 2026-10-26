@@ -22,6 +22,7 @@ import {useMutationCtx, useStore} from '#/data/hooks'
 import {UserAvatar} from '#/view/com/util/UserAvatar'
 import {atoms as a, useTheme} from '#/alf'
 import {Button, ButtonIcon, ButtonText} from '#/components/Button'
+import {PaperPlane_Stroke2_Corner0_Rounded as ResendIcon} from '#/components/icons/Invite'
 import {TimesLarge_Stroke2_Corner0_Rounded as XIcon} from '#/components/icons/Times'
 import * as Toast from '#/components/Toast'
 import {Text} from '#/components/Typography'
@@ -157,7 +158,7 @@ function IncomingRow({request}: {request: Entity<FriendRequest>}) {
       testID={`request-${name}`}
       name={name}
       detail={
-        <Trans>Wants to split expenses with you · {ago(now - request.data.sentAt)}</Trans>
+        <Trans>Wants to be friends · {ago(now - request.data.sentAt)}</Trans>
       }>
       <Button
         testID="request-accept"
@@ -213,11 +214,11 @@ function OutgoingRow({request}: {request: Entity<FriendRequest>}) {
   const sent = ago(now - r.sentAt)
   const detail =
     r.reach === 'invited' ? (
-      <Trans>Invited, not on Splito yet · {sent}</Trans>
+      <Trans>Invited, not on Splito yet</Trans>
     ) : r.reach === 'unchecked' ? (
       <Trans>We’ll send it when you’re online</Trans>
     ) : (
-      <Trans>Waiting for them to accept · {sent}</Trans>
+      <Trans>Waiting to accept · {sent}</Trans>
     )
 
   return (
@@ -227,6 +228,7 @@ function OutgoingRow({request}: {request: Entity<FriendRequest>}) {
         label={l`Resend to ${name}`}
         size="small"
         color="secondary"
+        shape="round"
         onPress={() =>
           void act('People.resend', async () => {
             if (r.reach === 'invited' && r.inviteCode) {
@@ -244,9 +246,7 @@ function OutgoingRow({request}: {request: Entity<FriendRequest>}) {
             )
           })
         }>
-        <ButtonText>
-          <Trans context="button">Resend</Trans>
-        </ButtonText>
+        <ButtonIcon icon={ResendIcon} />
       </Button>
       <Button
         testID="invite-sent-cancel"
@@ -270,7 +270,8 @@ function OutgoingRow({request}: {request: Entity<FriendRequest>}) {
 
 /** "today", "yesterday", "3 days ago": requests move in days. */
 function ago(ms: number) {
-  const days = Math.floor(ms / DAY)
-  if (days <= 0) return t`sent today`
-  return plural(days, {one: 'sent yesterday', other: 'sent # days ago'})
+  // Rounded: the minute tick lags the clock, so floor would read 2 days as "yesterday".
+  const days = Math.round(ms / DAY)
+  if (days <= 0) return t`today`
+  return plural(days, {one: 'yesterday', other: '# days ago'})
 }

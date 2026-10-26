@@ -598,7 +598,7 @@ function InviteExpiryPref() {
       icon={ClockIcon}
       title={l`New invite links expire after`}
       options={[
-        {value: '24h', label: l`24 hours`},
+        {value: '24h', label: l`1 day`},
         {value: '7d', label: l`7 days`},
         {value: '30d', label: l`30 days`},
         {value: 'never', label: l`Never`},

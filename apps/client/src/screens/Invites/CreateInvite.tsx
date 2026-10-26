@@ -239,7 +239,7 @@ export function CreateInviteScreen() {
           options={EXPIRIES.map(e => ({
             value: e,
             label: {
-              '24h': l`24 hours`,
+              '24h': l`1 day`,
               '7d': l`7 days`,
               '30d': l`30 days`,
               never: l`Never`,

@@ -19,9 +19,9 @@ msgid "{0, plural, one {# day} other {# days}}"
 msgstr "{0, plural, one {# दिन} other {# दिन}}"
 
 #. placeholder {0}: inactive.length
-#: src/screens/Invites/InviteLinks.tsx:224
+#: src/screens/Invites/InviteLinks.tsx:239
 msgid "{0, plural, one {# expired, used or revoked link isn’t shown.} other {# expired, used or revoked links aren’t shown.}}"
-msgstr ""
+msgstr "{0, plural, one {# समाप्त, इस्तेमाल हो चुका या रद्द लिंक नहीं दिखाया गया।} other {# समाप्त, इस्तेमाल हो चुके या रद्द लिंक नहीं दिखाए गए।}}"
 
 #. placeholder {0}: rows.length
 #: src/screens/People/index.tsx:123
@@ -72,12 +72,12 @@ msgstr "{0, plural, one {#मा} other {#मा}}"
 #. placeholder {0}: Math.round(ms / (24 * HOUR))
 #: src/components/invites/describe.ts:29
 msgid "{0, plural, one {Expires in # day} other {Expires in # days}}"
-msgstr ""
+msgstr "{0, plural, one {# दिन में समाप्त} other {# दिनों में समाप्त}}"
 
 #. placeholder {0}: Math.round(ms / HOUR)
 #: src/components/invites/describe.ts:28
 msgid "{0, plural, one {Expires in # hour} other {Expires in # hours}}"
-msgstr ""
+msgstr "{0, plural, one {# घंटे में समाप्त} other {# घंटों में समाप्त}}"
 
 #. placeholder {0}: fmt(items)
 #. placeholder {1}: fmt(extra)
@@ -94,7 +94,7 @@ msgstr "{0} − {1} छूट"
 #. placeholder {0}: person.data.name
 #: src/screens/AddFriend.tsx:192
 msgid "{0} added, only for you"
-msgstr ""
+msgstr "{0} जोड़े गए, सिर्फ़ आपके लिए"
 
 #. placeholder {0}: getCurrency(currency).name
 #: src/screens/People/components/BalanceSummary.tsx:164
@@ -120,12 +120,12 @@ msgstr "{0} के खर्च, भुगतान या समूह है�
 #. placeholder {0}: picked.name
 #: src/screens/AddFriend.tsx:257
 msgid "{0} has no email or mobile number."
-msgstr ""
+msgstr "{0} का कोई ईमेल या मोबाइल नंबर नहीं है।"
 
 #. placeholder {0}: check.person.data.name
-#: src/screens/AddFriend.tsx:622
+#: src/screens/AddFriend.tsx:623
 msgid "{0} is already your friend."
-msgstr ""
+msgstr "{0} पहले से आपके दोस्त हैं।"
 
 #. placeholder {0}: name(id)
 #: src/components/split/SplitEditor.tsx:301
@@ -337,7 +337,7 @@ msgstr "{actor} ने एक भुगतान में बदलाव क�
 
 #: src/components/activity/ActivityItem.tsx:575
 msgid "{actor} invited {subject} to Splito"
-msgstr ""
+msgstr "{actor} ने {subject} को Splito पर आमंत्रित किया"
 
 #: src/components/activity/ActivityItem.tsx:598
 msgid "{actor} removed {subject} from friends"
@@ -357,7 +357,7 @@ msgstr "{actor} ने {subject} को वापस लाया"
 
 #: src/components/activity/ActivityItem.tsx:579
 msgid "{actor} sent {subject} a friend request"
-msgstr ""
+msgstr "{actor} ने {subject} को दोस्ती का अनुरोध भेजा"
 
 #: src/components/activity/ActivityItem.tsx:645
 msgid "{actor} updated the group {subject}"
@@ -371,9 +371,9 @@ msgstr "{count, plural, one {# या अधिक अपठित} other {# य
 msgid "{count, plural, one {# unread item} other {# unread items}}"
 msgstr "{count, plural, one {# अपठित} other {# अपठित}}"
 
-#: src/screens/People/components/RequestsSection.tsx:275
-msgid "{days, plural, one {sent yesterday} other {sent # days ago}}"
-msgstr ""
+#: src/screens/People/components/RequestsSection.tsx:276
+msgid "{days, plural, one {yesterday} other {# days ago}}"
+msgstr "{days, plural, one {कल} other {# दिन पहले}}"
 
 #: src/components/split/ExpenseComposer.tsx:239
 msgid "{first}, {second} +{rest}"
@@ -407,7 +407,7 @@ msgstr "{hiddenCount, plural, one {# बदलाव आपकी गतिव�
 #. placeholder {0}: link.maxUses
 #: src/components/invites/describe.ts:21
 msgid "{left} of {0} uses left"
-msgstr ""
+msgstr "{0} में से {left} बार बाकी"
 
 #: src/screens/Group/index.tsx:272
 #: src/screens/Groups/components/GroupRow.tsx:59
@@ -420,7 +420,7 @@ msgstr "{n, plural, one {# व्यक्ति} other {# लोग}}"
 
 #: src/components/people/PendingPeople.tsx:38
 msgid "{name}, waiting for them to accept. Not selectable yet."
-msgstr ""
+msgstr "{name}, उनकी स्वीकृति का इंतज़ार। अभी चुने नहीं जा सकते।"
 
 #: src/components/people/UpiPayDialog.tsx:161
 msgid "{name}’s UPI ID"
@@ -433,11 +433,11 @@ msgstr "{settledCount} हिसाब बराबर"
 
 #: src/components/activity/ActivityItem.tsx:553
 msgid "{subject} accepted your friend request"
-msgstr ""
+msgstr "{subject} ने आपका दोस्ती का अनुरोध स्वीकार किया"
 
 #: src/components/activity/ActivityItem.tsx:525
 msgid "{subject} sent you a friend request"
-msgstr ""
+msgstr "{subject} ने आपको दोस्ती का अनुरोध भेजा"
 
 #: src/screens/Settings/SettingsSection.tsx:166
 msgid "{title} reset"
@@ -475,13 +475,13 @@ msgstr "<0>{friendCount}</0> {friendCount, plural, one {दोस्त} other {
 msgid "<0>{groupCount}</0> {groupCount, plural, one {group} other {groups}}"
 msgstr "<0>{groupCount}</0> {groupCount, plural, one {समूह} other {समूह}}"
 
-#: src/screens/AddFriend.tsx:571
+#: src/screens/AddFriend.tsx:572
 msgid "<0>{value}</0> is on Splito. They’ll get your friend request to accept."
-msgstr ""
+msgstr "<0>{value}</0> Splito पर हैं। उन्हें स्वीकार करने के लिए आपका दोस्ती का अनुरोध मिलेगा।"
 
-#: src/screens/AddFriend.tsx:587
+#: src/screens/AddFriend.tsx:588
 msgid "<0>{value}</0> isn’t on Splito yet. Send an invite, or add them just for you and link them when they join."
-msgstr ""
+msgstr "<0>{value}</0> अभी Splito पर नहीं हैं। आमंत्रण भेजें, या उन्हें सिर्फ़ अपने लिए जोड़ें और जुड़ने पर लिंक करें।"
 
 #: src/components/split/fields.tsx:231
 msgid "= Use result"
@@ -490,6 +490,11 @@ msgstr "= नतीजा लें"
 #: src/screens/Settings/index.tsx:182
 msgid "1 category"
 msgstr "1 श्रेणी"
+
+#: src/components/settings/prefControls.tsx:601
+#: src/screens/Invites/CreateInvite.tsx:242
+msgid "1 day"
+msgstr "1 दिन"
 
 #: src/screens/Group/index.tsx:272
 #: src/screens/Groups/components/GroupRow.tsx:59
@@ -508,20 +513,15 @@ msgstr "1 भुगतान"
 msgid "100% assigned"
 msgstr "100% बँट गया"
 
-#: src/components/settings/prefControls.tsx:601
-#: src/screens/Invites/CreateInvite.tsx:242
-msgid "24 hours"
-msgstr ""
-
 #: src/components/settings/prefControls.tsx:603
 #: src/screens/Invites/CreateInvite.tsx:244
 msgid "30 days"
-msgstr ""
+msgstr "30 दिन"
 
 #: src/components/settings/prefControls.tsx:602
 #: src/screens/Invites/CreateInvite.tsx:243
 msgid "7 days"
-msgstr ""
+msgstr "7 दिन"
 
 #: src/components/split/pickers.tsx:257
 msgid "A group expense splits between the group’s members and uses its currency."
@@ -533,11 +533,11 @@ msgstr "एक लिंक"
 
 #: src/screens/Invites/CreateInvite.tsx:209
 msgid "A link and QR code people can use to join this group. You set how many people and for how long."
-msgstr ""
+msgstr "एक लिंक और QR कोड, जिससे लोग इस ग्रुप में जुड़ सकें। कितने लोग और कितने समय तक, यह आप तय करें।"
 
 #: src/screens/Invites/CreateInvite.tsx:214
 msgid "A link and QR code that makes people your friends when they use it. You set how many people and for how long."
-msgstr ""
+msgstr "एक लिंक और QR कोड, जिसे इस्तेमाल करते ही लोग आपके दोस्त बन जाते हैं। कितने लोग और कितने समय तक, यह आप तय करें।"
 
 #: src/components/people/PaymentDetailsDialog.tsx:140
 msgid "A record of money that changed hands outside Splito. Deleting it puts the balance back as it was."
@@ -572,35 +572,35 @@ msgstr "एक्सेंट रंग: {name}। बदलें"
 
 #: src/screens/Invites/Invite.tsx:224
 msgid "Accept"
-msgstr ""
+msgstr "स्वीकार करें"
 
 #: src/components/activity/ActivityItem.tsx:929
-#: src/screens/People/components/RequestsSection.tsx:179
+#: src/screens/People/components/RequestsSection.tsx:180
 msgctxt "button"
 msgid "Accept"
-msgstr ""
+msgstr "स्वीकार करें"
 
 #: src/components/activity/ActivityItem.tsx:923
-#: src/screens/People/components/RequestsSection.tsx:164
+#: src/screens/People/components/RequestsSection.tsx:165
 msgid "Accept {name}’s friend request"
-msgstr ""
+msgstr "{name} का दोस्ती का अनुरोध स्वीकार करें"
 
 #: src/screens/Invites/Invite.tsx:218
 msgid "Accept invite"
-msgstr ""
+msgstr "आमंत्रण स्वीकार करें"
 
 #: src/screens/Invites/Invite.tsx:210
 msgid "Accept to see the group’s expenses and split with its members."
-msgstr ""
+msgstr "ग्रुप के खर्च देखने और सदस्यों के साथ बाँटने के लिए स्वीकार करें।"
 
 #: src/components/activity/ActivityItem.tsx:536
 msgid "Accept to split expenses together"
-msgstr ""
+msgstr "साथ में खर्च बाँटने के लिए स्वीकार करें"
 
 #. placeholder {0}: inviter.name
 #: src/screens/Invites/Invite.tsx:212
 msgid "Accept to split expenses with {0}. You’ll both see what you share."
-msgstr ""
+msgstr "{0} के साथ खर्च बाँटने के लिए स्वीकार करें। जो साझा है, दोनों को दिखेगा।"
 
 #: src/screens/Groups/components/GroupsFilterDialog.tsx:82
 msgid "Active"
@@ -650,23 +650,23 @@ msgstr "खर्च जोड़ें"
 
 #: src/screens/AddFriend.tsx:299
 msgid "Add another"
-msgstr ""
+msgstr "एक और जोड़ें"
 
-#: src/screens/AddFriend.tsx:536
+#: src/screens/AddFriend.tsx:537
 msgid "Add anyway (only for you)"
-msgstr ""
+msgstr "फिर भी जोड़ें (सिर्फ़ आपके लिए)"
 
-#: src/screens/AddFriend.tsx:531
+#: src/screens/AddFriend.tsx:532
 msgid "Add anyway, only for you"
-msgstr ""
+msgstr "फिर भी जोड़ें, सिर्फ़ आपके लिए"
 
 #: src/components/split/shared.tsx:170
 msgid "Add at least one item"
 msgstr "कम से कम एक चीज़ जोड़ें"
 
-#: src/screens/AddFriend.tsx:406
+#: src/screens/AddFriend.tsx:407
 msgid "Add by email or number"
-msgstr ""
+msgstr "ईमेल या नंबर से जोड़ें"
 
 #: src/components/settings/CategoriesEditor.tsx:119
 #: src/components/settings/CategoriesEditor.tsx:125
@@ -801,11 +801,11 @@ msgstr "अब तक"
 
 #: src/components/invites/describe.ts:14
 msgid "All uses taken"
-msgstr ""
+msgstr "सभी इस्तेमाल हो चुके"
 
-#: src/screens/AddFriend.tsx:668
+#: src/screens/AddFriend.tsx:669
 msgid "Allow access to contacts"
-msgstr ""
+msgstr "संपर्कों की अनुमति दें"
 
 #: src/components/groups/RulesEditor.tsx:272
 msgid "Allowed"
@@ -872,17 +872,17 @@ msgstr "विश्लेषण का दृश्य"
 msgid "Animations"
 msgstr "एनिमेशन"
 
-#: src/screens/Invites/InviteLinks.tsx:238
+#: src/screens/Invites/InviteLinks.tsx:253
 msgid "Anyone who has it can no longer use it. You can always make a new one."
-msgstr ""
+msgstr "जिसके पास यह है, वह अब इसे इस्तेमाल नहीं कर पाएगा। आप कभी भी नया बना सकते हैं।"
 
 #: src/screens/Invites/CreateInvite.tsx:149
 msgid "Anyone with this link or QR code can ask to join. Using it counts as accepting your invite."
-msgstr ""
+msgstr "इस लिंक या QR कोड वाला कोई भी जुड़ने का अनुरोध कर सकता है। इसका इस्तेमाल आपका आमंत्रण स्वीकार करना माना जाता है।"
 
 #: src/screens/Invites/CreateInvite.tsx:154
 msgid "Anyone with this link or QR code can become your friend on Splito. Using it counts as accepting."
-msgstr ""
+msgstr "इस लिंक या QR कोड वाला कोई भी Splito पर आपका दोस्त बन सकता है। इसका इस्तेमाल स्वीकार करना माना जाता है।"
 
 #: src/components/settings/sections.ts:43
 msgid "Appearance"
@@ -899,7 +899,7 @@ msgstr "लागू करें"
 #: src/screens/Invites/CreateInvite.tsx:256
 #: src/screens/Invites/CreateInvite.tsx:262
 msgid "Approve each join"
-msgstr ""
+msgstr "हर जुड़ने को मंज़ूरी दें"
 
 #: src/screens/Groups/components/GroupsFilterDialog.tsx:83
 msgid "Archived"
@@ -911,8 +911,10 @@ msgid "Automatic"
 msgstr "अपने आप"
 
 #: src/screens/AddFriend.tsx:278
+#: src/screens/AddFriend.tsx:741
+#: src/screens/AddFriend.tsx:748
 msgid "Back"
-msgstr ""
+msgstr "वापस"
 
 #: src/screens/Group/index.tsx:151
 #: src/screens/Group/index.tsx:152
@@ -989,7 +991,7 @@ msgstr "कैलकुलेटर"
 
 #: src/screens/Invites/Invite.tsx:313
 msgid "Can’t open this invite yet"
-msgstr ""
+msgstr "यह आमंत्रण अभी नहीं खुल सकता"
 
 #: src/components/FormSheet/shared.tsx:303
 #: src/components/FormSheet/shared.tsx:309
@@ -1001,7 +1003,7 @@ msgstr "रद्द करें"
 
 #: src/screens/People/components/RequestsSection.tsx:253
 msgid "Cancel the request to {name}"
-msgstr ""
+msgstr "{name} को भेजा अनुरोध रद्द करें"
 
 #: src/components/settings/CategoriesEditor.tsx:70
 #: src/components/settings/sections.ts:46
@@ -1050,9 +1052,9 @@ msgstr "चार्ट"
 msgid "Check the dates: the trip can’t end before it starts."
 msgstr "तारीखें जांचें: यात्रा शुरू होने से पहले खत्म नहीं हो सकती।"
 
-#: src/screens/AddFriend.tsx:560
+#: src/screens/AddFriend.tsx:561
 msgid "Checking Splito…"
-msgstr ""
+msgstr "Splito पर जाँच रहे हैं…"
 
 #: src/components/split/DateDialog.tsx:110
 msgid "Choose a year"
@@ -1066,14 +1068,14 @@ msgstr "बाँटने के लिए कम से कम एक व्�
 msgid "Choose default currency"
 msgstr "डिफ़ॉल्ट मुद्रा चुनें"
 
-#: src/screens/AddFriend.tsx:448
-#: src/screens/AddFriend.tsx:456
+#: src/screens/AddFriend.tsx:449
+#: src/screens/AddFriend.tsx:457
 msgid "Choose from contacts"
-msgstr ""
+msgstr "संपर्कों से चुनें"
 
 #: src/screens/AddFriend.tsx:367
 msgid "Choose one"
-msgstr ""
+msgstr "एक चुनें"
 
 #: src/components/settings/TabsEditor.tsx:113
 msgid "Choose the tabs you see and their order. Settings and your profile stay on your avatar, top right."
@@ -1139,7 +1141,7 @@ msgstr "ग्रुप बनाए बिना बंद करता है"
 
 #: src/screens/Invites/CreateInvite.tsx:187
 msgid "Closes without making a link"
-msgstr ""
+msgstr "लिंक बनाए बिना बंद करता है"
 
 #: src/components/FormSheet/shared.tsx:214
 msgid "Closes without saving"
@@ -1184,31 +1186,31 @@ msgstr "मेन्यू की पृष्ठभूमि, मेन्य�
 
 #: src/screens/AddFriend.tsx:283
 msgid "Continue"
-msgstr ""
+msgstr "जारी रखें"
 
 #: src/lib/sharing.ts:34
 msgid "Copied to clipboard"
-msgstr ""
+msgstr "क्लिपबोर्ड पर कॉपी हुआ"
 
 #: src/components/invites/CopyTextButton.tsx:66
 msgid "Copied!"
-msgstr ""
+msgstr "कॉपी हुआ!"
 
-#: src/screens/Invites/InviteLinks.tsx:140
+#: src/screens/Invites/InviteLinks.tsx:155
 msgid "Copy"
-msgstr ""
+msgstr "कॉपी करें"
 
 #: src/components/invites/InviteShare.tsx:70
 msgid "Copy invite link"
-msgstr ""
+msgstr "आमंत्रण लिंक कॉपी करें"
 
-#: src/screens/Invites/InviteLinks.tsx:134
+#: src/screens/Invites/InviteLinks.tsx:149
 msgid "Copy link"
-msgstr ""
+msgstr "लिंक कॉपी करें"
 
 #: src/screens/Invites/Invite.tsx:160
 msgid "Couldn’t accept the invite. Please try again."
-msgstr ""
+msgstr "आमंत्रण स्वीकार नहीं हो सका। कृपया फिर कोशिश करें।"
 
 #: src/components/groups/AddMembersDialog.tsx:93
 msgid "Couldn’t add members. Please try again."
@@ -1229,7 +1231,7 @@ msgstr "समूह नहीं बना सके। कृपया फि�
 
 #: src/screens/Invites/CreateInvite.tsx:113
 msgid "Couldn’t create the link. Please try again."
-msgstr ""
+msgstr "लिंक नहीं बन सका। कृपया फिर कोशिश करें।"
 
 #: src/components/activity/useActivityActions.tsx:100
 msgid "Couldn't delete this expense"
@@ -1241,7 +1243,7 @@ msgstr "एक्सपोर्ट नहीं हो सका। फिर �
 
 #: src/lib/sharing.ts:62
 msgid "Couldn’t open an app for that. Copy the link instead."
-msgstr ""
+msgstr "इसके लिए कोई ऐप नहीं खुला। इसके बजाय लिंक कॉपी करें।"
 
 #: src/screens/Person/index.tsx:227
 msgid "Couldn’t remove this friend. Please try again."
@@ -1255,9 +1257,9 @@ msgstr "यह खर्च वापस नहीं लाया जा सक
 msgid "Couldn’t restore this payment"
 msgstr "यह भुगतान वापस नहीं आ सका"
 
-#: src/screens/Invites/InviteLinks.tsx:71
+#: src/screens/Invites/InviteLinks.tsx:84
 msgid "Couldn’t revoke the link. Please try again."
-msgstr ""
+msgstr "लिंक रद्द नहीं हो सका। कृपया फिर कोशिश करें।"
 
 #: src/components/groups/EditGroupDialog.tsx:79
 msgid "Couldn’t save the group. Please try again."
@@ -1295,10 +1297,10 @@ msgstr "इसमें गिना जाएगा: {settles}"
 msgid "Couple"
 msgstr "जोड़ी"
 
-#: src/screens/Invites/InviteLinks.tsx:211
-#: src/screens/Invites/InviteLinks.tsx:212
+#: src/screens/Invites/InviteLinks.tsx:226
+#: src/screens/Invites/InviteLinks.tsx:227
 msgid "Create a link"
-msgstr ""
+msgstr "लिंक बनाएँ"
 
 #: src/screens/CreateGroup.tsx:135
 #: src/screens/Groups/index.tsx:126
@@ -1307,7 +1309,7 @@ msgstr "समूह बनाएँ"
 
 #: src/screens/Invites/CreateInvite.tsx:191
 msgid "Create link"
-msgstr ""
+msgstr "लिंक बनाएँ"
 
 #: src/components/groups/GroupFields.tsx:100
 #: src/components/people/RecordPaymentDialog.tsx:321
@@ -1397,22 +1399,22 @@ msgstr "तय करता है कि \"आज\" कौन-सा दिन 
 
 #: src/screens/Invites/Invite.tsx:238
 msgid "Decline"
-msgstr ""
+msgstr "अस्वीकार करें"
 
 #: src/components/activity/ActivityItem.tsx:940
-#: src/screens/People/components/RequestsSection.tsx:196
+#: src/screens/People/components/RequestsSection.tsx:197
 msgctxt "button"
 msgid "Decline"
-msgstr ""
+msgstr "अस्वीकार करें"
 
 #: src/components/activity/ActivityItem.tsx:934
-#: src/screens/People/components/RequestsSection.tsx:184
+#: src/screens/People/components/RequestsSection.tsx:185
 msgid "Decline {name}’s friend request"
-msgstr ""
+msgstr "{name} का दोस्ती का अनुरोध अस्वीकार करें"
 
 #: src/screens/Invites/Invite.tsx:229
 msgid "Decline invite"
-msgstr ""
+msgstr "आमंत्रण अस्वीकार करें"
 
 #: src/components/groups/RulesEditor.tsx:294
 #: src/components/settings/prefControls.tsx:105
@@ -1500,7 +1502,7 @@ msgstr "हटाएं"
 #: src/screens/AddFriend.tsx:298
 #: src/screens/Invites/CreateInvite.tsx:135
 msgid "Done"
-msgstr ""
+msgstr "हो गया"
 
 #: src/components/Dialog/index.tsx:610
 msgid "Double tap to close the dialog"
@@ -1569,10 +1571,10 @@ msgstr "किसके साथ हिसाब चुकाएं, बदल�
 msgid "Edited the notes"
 msgstr "नोट बदले"
 
-#: src/screens/AddFriend.tsx:420
-#: src/screens/AddFriend.tsx:428
+#: src/screens/AddFriend.tsx:421
+#: src/screens/AddFriend.tsx:429
 msgid "Email or mobile number"
-msgstr ""
+msgstr "ईमेल या मोबाइल नंबर"
 
 #: src/components/settings/AccentPicker.tsx:31
 msgid "Emerald"
@@ -1584,15 +1586,15 @@ msgstr "अंतिम तारीख"
 
 #: src/screens/AddFriend.tsx:345
 msgid "Enter a full email address, like name@example.com."
-msgstr ""
+msgstr "पूरा ईमेल पता लिखें, जैसे name@example.com।"
 
 #: src/screens/AddFriend.tsx:347
 msgid "Enter a mobile number with its country code, like +91 98765 43210."
-msgstr ""
+msgstr "देश कोड के साथ मोबाइल नंबर लिखें, जैसे +91 98765 43210।"
 
 #: src/screens/AddFriend.tsx:175
 msgid "Enter a name or an email or number."
-msgstr ""
+msgstr "नाम, ईमेल या नंबर लिखें।"
 
 #: src/components/groups/GroupFields.tsx:68
 #: src/components/people/EditFriendDialog.tsx:94
@@ -1730,11 +1732,11 @@ msgstr "खर्च"
 
 #: src/components/invites/describe.ts:13
 msgid "Expired"
-msgstr ""
+msgstr "समाप्त"
 
 #: src/components/invites/describe.ts:26
 msgid "Expires within the hour"
-msgstr ""
+msgstr "एक घंटे के अंदर समाप्त"
 
 #: src/screens/Analytics/index.tsx:65
 msgid "Export CSV"
@@ -1771,15 +1773,15 @@ msgstr "फ़िल्टर, {activeFilterCount} चालू"
 
 #: src/components/settings/prefControls.tsx:536
 msgid "Find me by email or phone"
-msgstr ""
+msgstr "ईमेल या फ़ोन से मुझे खोजा जा सके"
 
 #: src/screens/Settings/index.tsx:190
 msgid "Findable"
-msgstr ""
+msgstr "खोजे जा सकते हैं"
 
 #: src/screens/Settings/SettingsSection.tsx:116
 msgid "Finding and friend requests use Splito’s directory, which arrives with sign-in. Your choices are saved now and apply from then."
-msgstr ""
+msgstr "खोज और दोस्ती के अनुरोध Splito की डायरेक्टरी से चलते हैं, जो साइन-इन के साथ आएगी। आपकी पसंद अभी सहेजी जाती है और तब से लागू होगी।"
 
 #: src/components/split/shared.tsx:150
 msgid "Finish the sum – it ends with an operator"
@@ -1802,17 +1804,17 @@ msgstr "Splito के बाहर हुए लेन-देन के लि�
 msgid "Friend"
 msgstr "दोस्त"
 
-#: src/screens/Invites/InviteLinks.tsx:79
+#: src/screens/Invites/InviteLinks.tsx:94
 msgid "Friend invite"
-msgstr ""
+msgstr "दोस्ती का आमंत्रण"
 
 #: src/screens/Invites/Invite.tsx:175
 msgid "FRIEND INVITE"
-msgstr ""
+msgstr "दोस्ती का आमंत्रण"
 
 #: src/components/settings/prefControls.tsx:574
 msgid "Friend invite links work for"
-msgstr ""
+msgstr "दोस्ती के आमंत्रण लिंक कितनों के लिए"
 
 #: src/screens/Person/index.tsx:222
 msgid "Friend removed"
@@ -1820,7 +1822,7 @@ msgstr "दोस्त हटाया गया"
 
 #: src/screens/AddFriend.tsx:207
 msgid "Friend request sent to {shownName}"
-msgstr ""
+msgstr "{shownName} को दोस्ती का अनुरोध भेजा गया"
 
 #: src/components/groups/AddMembersDialog.tsx:123
 #: src/screens/People/index.tsx:218
@@ -1900,17 +1902,17 @@ msgstr "किराना"
 msgid "Group"
 msgstr "समूह"
 
-#: src/screens/Invites/InviteLinks.tsx:78
+#: src/screens/Invites/InviteLinks.tsx:91
 msgid "Group invite"
-msgstr ""
+msgstr "ग्रुप आमंत्रण"
 
 #: src/screens/Invites/Invite.tsx:173
 msgid "GROUP INVITE"
-msgstr ""
+msgstr "ग्रुप आमंत्रण"
 
 #: src/components/settings/prefControls.tsx:587
 msgid "Group invite links work for"
-msgstr ""
+msgstr "ग्रुप के आमंत्रण लिंक कितनों के लिए"
 
 #: src/components/groups/GroupFields.tsx:58
 msgid "Group name"
@@ -2006,11 +2008,11 @@ msgstr "रकम के अंकों को कैसे समूह और
 
 #: src/components/settings/prefControls.tsx:575
 msgid "How many people can use a new friend link. You can change it on each link."
-msgstr ""
+msgstr "नए दोस्ती लिंक को कितने लोग इस्तेमाल कर सकते हैं। हर लिंक पर इसे बदल सकते हैं।"
 
 #: src/screens/Invites/CreateInvite.tsx:223
 msgid "How many people can use it"
-msgstr ""
+msgstr "कितने लोग इस्तेमाल कर सकते हैं"
 
 #: src/components/settings/prefControls.tsx:246
 msgid "How new expenses are divided until you change it."
@@ -2062,65 +2064,70 @@ msgstr "अंतरराष्ट्रीय"
 #: src/navigation/Navigation.tsx:79
 #: src/screens/Invites/Invite.tsx:68
 msgid "Invite"
-msgstr ""
+msgstr "आमंत्रण"
 
 #. placeholder {0}: step.shownName
 #: src/screens/AddFriend.tsx:365
 msgid "Invite {0}"
-msgstr ""
+msgstr "{0} को आमंत्रित करें"
 
 #: src/screens/Invites/Invite.tsx:234
 msgid "Invite declined"
-msgstr ""
+msgstr "आमंत्रण अस्वीकार किया"
+
+#. placeholder {0}: invitedName.get(link.id)
+#: src/screens/Invites/InviteLinks.tsx:93
+msgid "Invite for {0}"
+msgstr "{0} के लिए आमंत्रण"
 
 #: src/navigation/Navigation.tsx:77
 #: src/navigation/Navigation.tsx:78
 #: src/screens/Invites/CreateInvite.tsx:123
 msgid "Invite link"
-msgstr ""
+msgstr "आमंत्रण लिंक"
 
-#: src/screens/AddFriend.tsx:501
+#: src/screens/AddFriend.tsx:502
 #: src/screens/Group/index.tsx:519
 #: src/screens/Group/index.tsx:524
 #: src/screens/People/index.tsx:172
 #: src/screens/People/index.tsx:175
 msgid "Invite link or QR code"
-msgstr ""
+msgstr "आमंत्रण लिंक या QR कोड"
 
 #: src/navigation/Navigation.tsx:76
-#: src/screens/Invites/InviteLinks.tsx:168
+#: src/screens/Invites/InviteLinks.tsx:183
 msgid "Invite links"
-msgstr ""
+msgstr "आमंत्रण लिंक"
 
 #: src/screens/Invites/CreateInvite.tsx:274
 msgid "Invite links need a connection to Splito’s servers, which arrive with sign-in and sync. Until then, add friends by email or number, or just by name."
-msgstr ""
+msgstr "आमंत्रण लिंक के लिए Splito के सर्वर से जुड़ाव चाहिए, जो साइन-इन और सिंक के साथ आएगा। तब तक दोस्तों को ईमेल, नंबर या सिर्फ़ नाम से जोड़ें।"
 
 #: src/screens/Invites/CreateInvite.tsx:105
 msgid "Invite links need a connection. Try again when you’re online."
-msgstr ""
+msgstr "आमंत्रण लिंक के लिए कनेक्शन चाहिए। ऑनलाइन होने पर फिर कोशिश करें।"
 
 #. placeholder {0}: group.data.name
 #: src/screens/Invites/CreateInvite.tsx:122
 msgid "Invite to {0}"
-msgstr ""
+msgstr "{0} में आमंत्रित करें"
 
-#: src/screens/AddFriend.tsx:496
+#: src/screens/AddFriend.tsx:497
 msgid "Invite with a link or QR code"
-msgstr ""
+msgstr "लिंक या QR कोड से आमंत्रित करें"
 
 #: src/screens/Invites/Invite.tsx:185
 msgid "invited you to be friends on Splito"
-msgstr ""
+msgstr "ने आपको Splito पर दोस्त बनने के लिए आमंत्रित किया"
 
 #. placeholder {0}: preview.groupName
 #: src/screens/Invites/Invite.tsx:183
 msgid "invited you to join {0}"
-msgstr ""
+msgstr "ने आपको {0} में जुड़ने के लिए आमंत्रित किया"
 
-#: src/screens/People/components/RequestsSection.tsx:216
-msgid "Invited, not on Splito yet · {sent}"
-msgstr ""
+#: src/screens/People/components/RequestsSection.tsx:217
+msgid "Invited, not on Splito yet"
+msgstr "आमंत्रित, अभी Splito पर नहीं"
 
 #: src/components/settings/prefControls.tsx:522
 msgid "Invites"
@@ -2128,15 +2135,15 @@ msgstr "आमंत्रण"
 
 #: src/screens/AddFriend.tsx:225
 msgid "Invites need a connection. Try again when you’re online."
-msgstr ""
+msgstr "आमंत्रण के लिए कनेक्शन चाहिए। ऑनलाइन होने पर फिर कोशिश करें।"
 
-#: src/screens/People/components/RequestsSection.tsx:60
+#: src/screens/People/components/RequestsSection.tsx:61
 msgid "Invites sent"
-msgstr ""
+msgstr "भेजे गए आमंत्रण"
 
 #: src/screens/Invites/Invite.tsx:291
 msgid "It may have expired, been used up or revoked. Ask for a new one."
-msgstr ""
+msgstr "हो सकता है यह समाप्त, पूरा इस्तेमाल या रद्द हो चुका हो। नया लिंक माँगें।"
 
 #: src/screens/Settings/SettingsSection.tsx:214
 msgid "It may have moved. Everything is still in Settings."
@@ -2174,17 +2181,17 @@ msgstr "चीज़ें और शुल्क मिलाकर {0}"
 #. placeholder {0}: group.data.name
 #: src/screens/Invites/CreateInvite.tsx:165
 msgid "Join {0} on Splito:"
-msgstr ""
-
-#: src/screens/AddFriend.tsx:396
-#: src/screens/Invites/CreateInvite.tsx:162
-msgid "Join me on Splito"
-msgstr ""
+msgstr "Splito पर {0} से जुड़ें:"
 
 #: src/screens/AddFriend.tsx:397
+#: src/screens/Invites/CreateInvite.tsx:162
+msgid "Join me on Splito"
+msgstr "Splito पर मुझसे जुड़ें"
+
+#: src/screens/AddFriend.tsx:398
 #: src/screens/Invites/CreateInvite.tsx:166
 msgid "Join me on Splito so we can split expenses:"
-msgstr ""
+msgstr "Splito पर मुझसे जुड़ें, ताकि हम खर्च बाँट सकें:"
 
 #: src/components/split/pickers.tsx:247
 msgid "Just between you and friends"
@@ -2221,7 +2228,7 @@ msgstr "समूह छोड़ दिया"
 
 #: src/components/settings/prefControls.tsx:537
 msgid "Let people who know my email or number find me"
-msgstr ""
+msgstr "जो मेरा ईमेल या नंबर जानते हैं, वे मुझे खोज सकें"
 
 #: src/components/settings/prefControls.tsx:75
 #: src/screens/Settings/index.tsx:178
@@ -2230,27 +2237,27 @@ msgstr "लाइट"
 
 #: src/screens/Invites/CreateInvite.tsx:236
 msgid "Link expires after"
-msgstr ""
+msgstr "लिंक कितने समय बाद समाप्त हो"
 
-#: src/screens/Invites/InviteLinks.tsx:66
+#: src/screens/Invites/InviteLinks.tsx:79
 msgid "Link revoked here. It stops working everywhere once you’re online."
-msgstr ""
+msgstr "यहाँ लिंक रद्द हुआ। ऑनलाइन होते ही यह हर जगह काम करना बंद कर देगा।"
 
-#: src/screens/Invites/InviteLinks.tsx:65
+#: src/screens/Invites/InviteLinks.tsx:78
 msgid "Link revoked. It no longer works."
-msgstr ""
+msgstr "लिंक रद्द हुआ। यह अब काम नहीं करता।"
 
-#: src/screens/Invites/InviteLinks.tsx:196
+#: src/screens/Invites/InviteLinks.tsx:211
 msgid "Links that still work. Revoke one and it stops working straight away; friends who already joined stay friends."
-msgstr ""
+msgstr "जो लिंक अभी काम करते हैं। रद्द करते ही लिंक बंद हो जाता है; जो दोस्त जुड़ चुके हैं, वे दोस्त बने रहते हैं।"
 
 #: src/components/settings/prefControls.tsx:125
 msgid "List density"
 msgstr "सूची का घनापन"
 
-#: src/screens/Invites/InviteLinks.tsx:208
+#: src/screens/Invites/InviteLinks.tsx:223
 msgid "Make a link or QR code to add friends or fill a group without typing anyone’s number."
-msgstr ""
+msgstr "किसी का नंबर लिखे बिना दोस्त जोड़ने या ग्रुप भरने के लिए लिंक या QR कोड बनाएँ।"
 
 #: src/screens/Invites/CreateInvite.tsx:285
 #: src/screens/Invites/CreateInvite.tsx:290
@@ -2261,11 +2268,11 @@ msgstr ""
 #: src/screens/Settings/SettingsSection.tsx:134
 #: src/screens/Settings/SettingsSection.tsx:137
 msgid "Manage invite links"
-msgstr ""
+msgstr "आमंत्रण लिंक प्रबंधित करें"
 
 #: src/screens/Invites/CreateInvite.tsx:136
 msgid "Manage links"
-msgstr ""
+msgstr "लिंक प्रबंधित करें"
 
 #: src/screens/Activity.tsx:103
 msgid "Mark all read"
@@ -2384,28 +2391,28 @@ msgstr "कई लोगों ने दिया"
 #: src/components/settings/CategoryDialog.tsx:107
 #: src/components/settings/CategoryDialog.tsx:112
 #: src/components/settings/prefControls.tsx:435
-#: src/screens/AddFriend.tsx:470
+#: src/screens/AddFriend.tsx:471
 #: src/screens/Groups/components/GroupsFilterDialog.tsx:117
 #: src/screens/People/components/FriendsFilterDialog.tsx:125
 msgid "Name"
 msgstr "नाम"
 
-#: src/screens/AddFriend.tsx:464
+#: src/screens/AddFriend.tsx:465
 msgid "Name (optional)"
-msgstr ""
+msgstr "नाम (वैकल्पिक)"
 
-#: src/screens/AddFriend.tsx:435
+#: src/screens/AddFriend.tsx:436
 msgid "name@example.com or +91 98765 43210"
-msgstr ""
+msgstr "name@example.com या +91 98765 43210"
 
 #: src/components/settings/prefControls.tsx:604
 #: src/screens/Invites/CreateInvite.tsx:245
 msgid "Never"
-msgstr ""
+msgstr "कभी नहीं"
 
 #: src/components/invites/describe.ts:22
 msgid "Never expires"
-msgstr ""
+msgstr "कभी समाप्त नहीं होता"
 
 #: src/components/settings/CategoryDialog.tsx:84
 msgid "New category"
@@ -2430,13 +2437,13 @@ msgstr "नया दोस्त – खाते की ज़रूरत न
 msgid "New group"
 msgstr "नया समूह"
 
-#: src/screens/Invites/InviteLinks.tsx:173
+#: src/screens/Invites/InviteLinks.tsx:188
 msgid "New invite link"
-msgstr ""
+msgstr "नया आमंत्रण लिंक"
 
 #: src/components/settings/prefControls.tsx:599
 msgid "New invite links expire after"
-msgstr ""
+msgstr "नए आमंत्रण लिंक समाप्त होंगे"
 
 #: src/components/split/DateDialog.tsx:139
 #: src/screens/Analytics/components/RangeDialog.tsx:148
@@ -2452,9 +2459,9 @@ msgstr "अगली अवधि"
 msgid "No {currency} expenses in {0}"
 msgstr "{0} में कोई {currency} खर्च नहीं"
 
-#: src/screens/Invites/InviteLinks.tsx:207
+#: src/screens/Invites/InviteLinks.tsx:222
 msgid "No active invite links"
-msgstr ""
+msgstr "कोई सक्रिय आमंत्रण लिंक नहीं"
 
 #. placeholder {0}: nameList(item.stuck)
 #: src/screens/Settle/index.tsx:407
@@ -2482,9 +2489,9 @@ msgstr "{0} के साथ कोई सीधा खर्च नहीं।
 msgid "No direct plan works with these rules"
 msgstr "इन नियमों से कोई सीधी योजना नहीं बनती"
 
-#: src/screens/AddFriend.tsx:546
+#: src/screens/AddFriend.tsx:547
 msgid "No email or number? Add just a name and they’re only for you."
-msgstr ""
+msgstr "ईमेल या नंबर नहीं है? सिर्फ़ नाम जोड़ें, वे सिर्फ़ आपके लिए रहेंगे।"
 
 #: src/screens/Group/index.tsx:430
 msgid "No expenses in this group yet. Add the first one and everyone’s share is worked out for you."
@@ -2510,7 +2517,7 @@ msgstr "अभी कोई समूह नहीं। समूह किस�
 #: src/components/settings/prefControls.tsx:564
 #: src/screens/Invites/CreateInvite.tsx:228
 msgid "No limit"
-msgstr ""
+msgstr "कोई सीमा नहीं"
 
 #. placeholder {0}: query.trim()
 #: src/screens/Groups/index.tsx:181
@@ -2553,7 +2560,7 @@ msgstr "शामिल नहीं"
 
 #: src/screens/AddFriend.tsx:284
 msgid "Not now"
-msgstr ""
+msgstr "अभी नहीं"
 
 #: src/components/split/SplitEditor.tsx:180
 #: src/components/split/SplitEditor.tsx:184
@@ -2670,19 +2677,19 @@ msgstr "सिर्फ़ वे दोस्त हटाए जा सकत�
 
 #: src/components/settings/prefControls.tsx:552
 msgid "Only people with my invite link"
-msgstr ""
+msgstr "सिर्फ़ मेरे आमंत्रण लिंक वाले लोग"
 
-#: src/screens/AddFriend.tsx:630
+#: src/screens/AddFriend.tsx:631
 #: src/screens/Invites/Invite.tsx:202
 msgid "Open"
-msgstr ""
+msgstr "खोलें"
 
 #. placeholder {0}: check.person.data.name
 #. placeholder {0}: existing.data.name
-#: src/screens/AddFriend.tsx:626
+#: src/screens/AddFriend.tsx:627
 #: src/screens/Invites/Invite.tsx:196
 msgid "Open {0}"
-msgstr ""
+msgstr "{0} खोलें"
 
 #: src/components/settings/AboutSettings.tsx:98
 msgid "Open a friend or a group and choose Settle up to record a payment."
@@ -2709,7 +2716,7 @@ msgstr "प्रोफ़ाइल खोलें"
 
 #: src/screens/AddFriend.tsx:277
 msgid "Open Settings"
-msgstr ""
+msgstr "सेटिंग्स खोलें"
 
 #: src/components/settings/AboutSettings.tsx:51
 msgid "Open source"
@@ -2721,7 +2728,7 @@ msgstr "UPI ऐप खोलें"
 
 #: src/screens/Invites/Invite.tsx:316
 msgid "Opening an invite needs a connection to Splito. Try again once you’re online."
-msgstr ""
+msgstr "आमंत्रण खोलने के लिए Splito से कनेक्शन चाहिए। ऑनलाइन होने पर फिर कोशिश करें।"
 
 #: src/components/activity/ActivityItem.tsx:246
 msgid "Opens what changed"
@@ -2853,7 +2860,7 @@ msgstr "लोग और समूह हर मुद्रा में दि
 
 #: src/screens/Invites/CreateInvite.tsx:265
 msgid "People who use the link wait until you let them in."
-msgstr ""
+msgstr "लिंक इस्तेमाल करने वाले तब तक इंतज़ार करेंगे जब तक आप उन्हें जोड़ न लें।"
 
 #: src/components/split/SplitEditor.tsx:60
 msgid "Percent"
@@ -2891,9 +2898,9 @@ msgstr "व्यक्ति"
 msgid "Pick a date between 1900 and 2200"
 msgstr "1900 और 2200 के बीच की तारीख चुनें"
 
-#: src/screens/AddFriend.tsx:670
+#: src/screens/AddFriend.tsx:671
 msgid "Pick a friend from your contacts"
-msgstr ""
+msgstr "अपने संपर्कों से दोस्त चुनें"
 
 #: src/components/settings/CategoriesEditor.tsx:71
 msgid "Pick categories when you add an expense. Hidden ones stay on past expenses."
@@ -2943,9 +2950,9 @@ msgstr "गोपनीयता"
 msgid "Profile"
 msgstr "प्रोफ़ाइल"
 
-#: src/screens/Invites/InviteLinks.tsx:129
+#: src/screens/Invites/InviteLinks.tsx:144
 msgid "QR and share"
-msgstr ""
+msgstr "QR और शेयर"
 
 #: src/screens/People/components/FriendsFilterDialog.tsx:126
 msgid "Recent"
@@ -3010,35 +3017,30 @@ msgid "Remove item {0}"
 msgstr "चीज़ {0} हटाएँ"
 
 #: src/components/activity/ActivityItem.tsx:910
-#: src/screens/People/components/RequestsSection.tsx:192
+#: src/screens/People/components/RequestsSection.tsx:193
 msgid "Request declined. {name} isn’t told."
-msgstr ""
+msgstr "अनुरोध अस्वीकार किया। {name} को नहीं बताया जाएगा।"
 
-#: src/screens/People/components/RequestsSection.tsx:242
+#: src/screens/People/components/RequestsSection.tsx:244
 msgid "Request sent to {name} again"
-msgstr ""
+msgstr "{name} को अनुरोध फिर भेजा गया"
 
 #. placeholder {0}: preview.groupName ?? ''
 #: src/screens/Invites/Invite.tsx:145
 msgid "Request sent. You’ll see {0} once you’re in."
-msgstr ""
+msgstr "अनुरोध भेजा गया। जुड़ने पर आपको {0} दिखेगा।"
 
 #: src/screens/People/components/RequestsSection.tsx:262
 msgid "Request to {name} cancelled"
-msgstr ""
+msgstr "{name} को भेजा अनुरोध रद्द हुआ"
 
-#: src/screens/People/components/RequestsSection.tsx:48
+#: src/screens/People/components/RequestsSection.tsx:49
 msgid "Requests"
-msgstr ""
+msgstr "अनुरोध"
 
-#: src/screens/People/components/RequestsSection.tsx:248
-msgctxt "button"
-msgid "Resend"
-msgstr ""
-
-#: src/screens/People/components/RequestsSection.tsx:227
+#: src/screens/People/components/RequestsSection.tsx:228
 msgid "Resend to {name}"
-msgstr ""
+msgstr "{name} को फिर भेजें"
 
 #: src/components/settings/PrefSection.tsx:132
 #: src/screens/Settings/SettingsSection.tsx:160
@@ -3090,22 +3092,22 @@ msgstr "वापस लाएँ"
 msgid "Restore expense"
 msgstr "खर्च वापस लाएँ"
 
-#: src/screens/Invites/InviteLinks.tsx:153
+#: src/screens/Invites/InviteLinks.tsx:168
 msgid "Revoke"
-msgstr ""
+msgstr "रद्द करें"
 
-#: src/screens/Invites/InviteLinks.tsx:145
-#: src/screens/Invites/InviteLinks.tsx:239
+#: src/screens/Invites/InviteLinks.tsx:160
+#: src/screens/Invites/InviteLinks.tsx:254
 msgid "Revoke link"
-msgstr ""
+msgstr "लिंक रद्द करें"
 
-#: src/screens/Invites/InviteLinks.tsx:237
+#: src/screens/Invites/InviteLinks.tsx:252
 msgid "Revoke this invite link?"
-msgstr ""
+msgstr "यह आमंत्रण लिंक रद्द करें?"
 
 #: src/components/invites/describe.ts:12
 msgid "Revoked"
-msgstr ""
+msgstr "रद्द किया गया"
 
 #: src/components/groups/RulesEditor.tsx:303
 msgid "Rule for this pair"
@@ -3152,12 +3154,12 @@ msgstr "इस डिवाइस पर सहेजा गया। अपन�
 
 #: src/screens/AddFriend.tsx:208
 msgid "Saved. We’ll check and send it when you’re online."
-msgstr ""
+msgstr "सहेजा गया। ऑनलाइन होने पर हम जाँचकर भेज देंगे।"
 
 #: src/screens/Invites/Invite.tsx:146
-#: src/screens/People/components/RequestsSection.tsx:243
+#: src/screens/People/components/RequestsSection.tsx:245
 msgid "Saved. We’ll send it when you’re online."
-msgstr ""
+msgstr "सहेजा गया। ऑनलाइन होने पर हम भेज देंगे।"
 
 #: src/components/forms/SearchInput.tsx:52
 #: src/components/forms/SearchInput.tsx:54
@@ -3208,33 +3210,29 @@ msgstr "सभी समूह देखें"
 #. placeholder {0}: formatContact(to)
 #: src/components/invites/InviteShare.tsx:86
 msgid "Send by email to {0}"
-msgstr ""
+msgstr "{0} को ईमेल से भेजें"
 
 #. placeholder {0}: formatContact(to)
 #: src/components/invites/InviteShare.tsx:85
 msgid "Send by SMS to {0}"
-msgstr ""
+msgstr "{0} को SMS से भेजें"
 
 #: src/components/invites/InviteShare.tsx:94
 msgid "Send email"
-msgstr ""
+msgstr "ईमेल भेजें"
 
 #: src/screens/AddFriend.tsx:325
 #: src/screens/AddFriend.tsx:332
 msgid "Send friend request"
-msgstr ""
+msgstr "दोस्ती का अनुरोध भेजें"
 
 #: src/screens/AddFriend.tsx:318
 msgid "Send invite"
-msgstr ""
+msgstr "आमंत्रण भेजें"
 
 #: src/components/invites/InviteShare.tsx:94
 msgid "Send SMS"
-msgstr ""
-
-#: src/screens/People/components/RequestsSection.tsx:274
-msgid "sent today"
-msgstr ""
+msgstr "SMS भेजें"
 
 #: src/components/split/SplitEditor.tsx:400
 #: src/screens/Expense/components/ItemsBreakdown.tsx:44
@@ -3303,7 +3301,7 @@ msgstr "हिस्सा"
 
 #: src/components/invites/InviteShare.tsx:99
 msgid "Share invite link"
-msgstr ""
+msgstr "आमंत्रण लिंक शेयर करें"
 
 #: src/components/settings/prefControls.tsx:251
 #: src/components/split/SplitEditor.tsx:61
@@ -3353,9 +3351,9 @@ msgstr "दिन दिखाएँ"
 msgid "Show hidden changes"
 msgstr "छिपे बदलाव दिखाएँ"
 
-#: src/screens/Invites/InviteLinks.tsx:123
+#: src/screens/Invites/InviteLinks.tsx:138
 msgid "Show QR code and share"
-msgstr ""
+msgstr "QR कोड दिखाएँ और शेयर करें"
 
 #: src/screens/Activity.tsx:174
 msgid "Show them"
@@ -3484,9 +3482,9 @@ msgstr "दोस्तों के साथ बाँटें"
 msgid "Splito - People"
 msgstr "Splito - लोग"
 
-#: src/screens/AddFriend.tsx:676
+#: src/screens/AddFriend.tsx:677
 msgid "Splito can’t open your contacts. Turn on Contacts for Splito in Settings, then come back."
-msgstr ""
+msgstr "Splito आपके संपर्क नहीं खोल सकता। सेटिंग्स में Splito के लिए Contacts चालू करें, फिर वापस आएँ।"
 
 #: src/components/people/UpiPayDialog.tsx:130
 msgid "Splito can’t see your UPI app. Record the payment only once your app shows it as successful."
@@ -3577,9 +3575,9 @@ msgid "That amount is too large"
 msgstr "यह रकम बहुत बड़ी है"
 
 #: src/components/activity/ActivityItem.tsx:915
-#: src/screens/People/components/RequestsSection.tsx:86
+#: src/screens/People/components/RequestsSection.tsx:87
 msgid "That didn’t work. Please try again."
-msgstr ""
+msgstr "यह नहीं हो सका। कृपया फिर कोशिश करें।"
 
 #: src/components/split/shared.tsx:146
 msgid "That isn’t a number. Use digits, one decimal point and + − × ÷"
@@ -3625,9 +3623,9 @@ msgstr "Splito खुलते समय यही टैब दिखेगा�
 msgid "Theme, tabs, categories, language and every other setting go back to how Splito starts. Your people, groups and expenses stay as they are."
 msgstr "थीम, टैब, श्रेणियाँ, भाषा और बाकी हर सेटिंग Splito की शुरुआती सेटिंग पर लौट आएगी। आपके लोग, समूह और खर्च जैसे हैं वैसे ही रहेंगे।"
 
-#: src/screens/AddFriend.tsx:410
+#: src/screens/AddFriend.tsx:411
 msgid "They get a request to accept. Once they do, you can split anything together."
-msgstr ""
+msgstr "उन्हें स्वीकार करने का अनुरोध मिलेगा। स्वीकार करते ही आप साथ में कुछ भी बाँट सकेंगे।"
 
 #: src/components/groups/AddMembersDialog.tsx:108
 msgid "They join from now on. Expenses already in the group keep their splits."
@@ -3635,11 +3633,11 @@ msgstr "वे अभी से जुड़ेंगे। समूह के 
 
 #: src/components/settings/prefControls.tsx:538
 msgid "They only learn that you’re on Splito, never anything else."
-msgstr ""
+msgstr "उन्हें सिर्फ़ यह पता चलता है कि आप Splito पर हैं, और कुछ नहीं।"
 
 #: src/screens/AddFriend.tsx:258
 msgid "This contact has no email or mobile number."
-msgstr ""
+msgstr "इस संपर्क का कोई ईमेल या मोबाइल नंबर नहीं है।"
 
 #: src/screens/EditExpense.tsx:75
 msgid "This expense can’t be edited"
@@ -3668,15 +3666,15 @@ msgstr "यह समूह इस डिवाइस पर नहीं है
 
 #: src/screens/Invites/CreateInvite.tsx:175
 msgid "This invite link isn’t on this device."
-msgstr ""
+msgstr "यह आमंत्रण लिंक इस डिवाइस पर नहीं है।"
 
 #: src/screens/Invites/Invite.tsx:288
 msgid "This invite link no longer works"
-msgstr ""
+msgstr "यह आमंत्रण लिंक अब काम नहीं करता"
 
 #: src/screens/Invites/Invite.tsx:259
 msgid "This is your invite link"
-msgstr ""
+msgstr "यह आपका आमंत्रण लिंक है"
 
 #: src/screens/Settings/SettingsSection.tsx:211
 msgid "This settings page doesn't exist"
@@ -3705,6 +3703,10 @@ msgstr "शीर्षक"
 #: src/screens/Expense/components/History.tsx:52
 msgid "Title: {0} → {1}"
 msgstr "शीर्षक: {0} → {1}"
+
+#: src/screens/People/components/RequestsSection.tsx:275
+msgid "today"
+msgstr "आज"
 
 #: src/components/split/DateDialog.tsx:244
 #: src/components/split/DateDialog.tsx:249
@@ -3743,7 +3745,7 @@ msgstr "यात्रा"
 #: src/screens/Invites/Invite.tsx:322
 #: src/screens/Invites/Invite.tsx:328
 msgid "Try again"
-msgstr ""
+msgstr "फिर कोशिश करें"
 
 #: src/screens/Analytics/components/Charts.tsx:71
 msgid "Try another period, or see everything you have recorded."
@@ -3773,7 +3775,7 @@ msgstr "पूर्ववत करें"
 
 #: src/components/invites/describe.ts:18
 msgid "Unlimited uses"
-msgstr ""
+msgstr "असीमित इस्तेमाल"
 
 #: src/components/activity/ActivityItem.tsx:292
 msgid "Unread"
@@ -3808,9 +3810,9 @@ msgid "UPI links open on a phone with a UPI app. On a computer, nothing may happ
 msgstr "UPI लिंक UPI ऐप वाले फ़ोन पर खुलते हैं। कंप्यूटर पर शायद कुछ न हो।"
 
 #. placeholder {0}: formatContact(c)
-#: src/screens/AddFriend.tsx:727
+#: src/screens/AddFriend.tsx:730
 msgid "Use {0}"
-msgstr ""
+msgstr "{0} इस्तेमाल करें"
 
 #: src/components/split/shared.tsx:166
 msgid "Use a percentage from 0 to 100, with up to two decimals"
@@ -3858,28 +3860,28 @@ msgstr "बैंगनी"
 
 #: src/components/people/PendingPeople.tsx:50
 msgid "Waiting for {name} to accept"
-msgstr ""
+msgstr "{name} की स्वीकृति का इंतज़ार"
 
-#: src/screens/People/components/RequestsSection.tsx:220
-msgid "Waiting for them to accept · {sent}"
-msgstr ""
+#: src/screens/People/components/RequestsSection.tsx:221
+msgid "Waiting to accept · {sent}"
+msgstr "स्वीकृति का इंतज़ार · {sent}"
 
 #. placeholder {0}: ago(now - request.data.sentAt)
-#: src/screens/People/components/RequestsSection.tsx:160
-msgid "Wants to split expenses with you · {0}"
-msgstr ""
+#: src/screens/People/components/RequestsSection.tsx:161
+msgid "Wants to be friends · {0}"
+msgstr "दोस्त बनना चाहते हैं · {0}"
 
 #: src/components/split/ExpenseComposer.tsx:397
 msgid "We kept your unsaved expense."
 msgstr "आपका बिना सहेजा खर्च रखा गया है।"
 
-#: src/screens/AddFriend.tsx:605
+#: src/screens/AddFriend.tsx:606
 msgid "We’ll check when you’re online. Your request waits on this device until then."
-msgstr ""
+msgstr "ऑनलाइन होने पर हम जाँचेंगे। तब तक आपका अनुरोध इसी डिवाइस पर रहेगा।"
 
-#: src/screens/People/components/RequestsSection.tsx:218
+#: src/screens/People/components/RequestsSection.tsx:219
 msgid "We’ll send it when you’re online"
-msgstr ""
+msgstr "ऑनलाइन होने पर भेजेंगे"
 
 #: src/components/settings/prefControls.tsx:266
 #: src/screens/Analytics/components/Summary.tsx:192
@@ -3898,9 +3900,9 @@ msgstr "लोगों ने जो दिया वह मिलाकर क
 msgid "What was it for?"
 msgstr "किस लिए था?"
 
-#: src/screens/AddFriend.tsx:473
+#: src/screens/AddFriend.tsx:474
 msgid "What you call them, e.g. Riya"
-msgstr ""
+msgstr "आप उन्हें क्या कहते हैं, जैसे रिया"
 
 #: src/components/FormSheet/shared.tsx:150
 msgid "What you changed here won’t be saved."
@@ -3943,9 +3945,9 @@ msgstr "जब आप देते हैं"
 msgid "Where"
 msgstr "कहां"
 
-#: src/screens/AddFriend.tsx:718
+#: src/screens/AddFriend.tsx:721
 msgid "Which one should Splito use?"
-msgstr ""
+msgstr "Splito कौन-सा इस्तेमाल करे?"
 
 #: src/components/settings/AccentPicker.tsx:231
 msgid "White text is hard to read on this color. A darker shade works better."
@@ -3953,7 +3955,7 @@ msgstr "इस रंग पर सफ़ेद टेक्स्ट पढ़�
 
 #: src/components/settings/prefControls.tsx:549
 msgid "Who can send me friend requests"
-msgstr ""
+msgstr "मुझे दोस्ती के अनुरोध कौन भेज सकता है"
 
 #: src/screens/Group/index.tsx:618
 msgid "Who owes whom"
@@ -3970,7 +3972,7 @@ msgstr "किसके साथ हिसाब चुकाएं"
 
 #: src/components/invites/describe.ts:20
 msgid "Works once"
-msgstr ""
+msgstr "एक बार काम करता है"
 
 #: src/components/settings/prefControls.tsx:268
 #: src/screens/Analytics/components/Summary.tsx:194
@@ -4014,26 +4016,26 @@ msgstr "आप"
 
 #: src/components/activity/ActivityItem.tsx:557
 msgid "You accepted {subject}’s friend request"
-msgstr ""
+msgstr "आपने {subject} का दोस्ती का अनुरोध स्वीकार किया"
 
 #. placeholder {0}: inviter.name
 #. placeholder {0}: person.data.name
 #: src/screens/Invites/Invite.tsx:155
-#: src/screens/People/components/RequestsSection.tsx:172
+#: src/screens/People/components/RequestsSection.tsx:173
 msgid "You and {0} are friends now"
-msgstr ""
+msgstr "अब आप और {0} दोस्त हैं"
 
 #: src/components/activity/ActivityItem.tsx:906
 msgid "You and {name} are friends now"
-msgstr ""
+msgstr "अब आप और {name} दोस्त हैं"
 
 #: src/screens/Person/components/PersonBalances.tsx:52
 msgid "You and {name} are settled up."
 msgstr "आपका और {name} का हिसाब बराबर है।"
 
-#: src/screens/Invites/InviteLinks.tsx:113
+#: src/screens/Invites/InviteLinks.tsx:128
 msgid "You approve each join"
-msgstr ""
+msgstr "हर जुड़ने को आप मंज़ूरी देते हैं"
 
 #: src/screens/Group/components/GroupBalanceCards.tsx:70
 #: src/screens/Groups/components/GroupsFilterDialog.tsx:105
@@ -4060,7 +4062,7 @@ msgstr "आपने {figure} उधार लिए"
 
 #: src/components/activity/ActivityItem.tsx:563
 msgid "You can now split anything together"
-msgstr ""
+msgstr "अब आप साथ में कुछ भी बाँट सकते हैं"
 
 #: src/components/split/fields.tsx:168
 msgid "You can type a sum, like 1200 + 300"
@@ -4072,7 +4074,7 @@ msgstr "शून्य से भाग नहीं दे सकते"
 
 #: src/components/activity/ActivityItem.tsx:534
 msgid "You declined"
-msgstr ""
+msgstr "आपने अस्वीकार किया"
 
 #: src/screens/Group/components/GroupRows.tsx:109
 msgid "you get back <0>{figure}</0>"
@@ -4184,11 +4186,11 @@ msgstr "आपका सारा हिसाब बराबर है।"
 
 #: src/screens/Invites/Invite.tsx:192
 msgid "You’re already friends."
-msgstr ""
+msgstr "आप पहले से दोस्त हैं।"
 
 #: src/components/activity/ActivityItem.tsx:532
 msgid "You’re friends now"
-msgstr ""
+msgstr "अब आप दोस्त हैं"
 
 #: src/screens/Settle/index.tsx:542
 msgid "You’re not part of any of these payments."
@@ -4202,17 +4204,17 @@ msgstr "आप इस खर्च में शामिल नहीं है
 msgid "You’re settled up in this group."
 msgstr "इस समूह में आपका हिसाब बराबर है।"
 
-#: src/screens/AddFriend.tsx:641
+#: src/screens/AddFriend.tsx:642
 msgid "You’ve already asked {value}. It’s under Invites sent on People, where you can resend it."
-msgstr ""
+msgstr "आप {value} को पहले ही अनुरोध भेज चुके हैं। यह People में 'भेजे गए आमंत्रण' में है, जहाँ से फिर भेज सकते हैं।"
 
 #: src/screens/Activity.tsx:135
 msgid "You've hidden everything here. New expenses, payments and group changes will show up as they happen."
 msgstr "आपने यहाँ सब कुछ छिपा दिया है। नए खर्च, भुगतान और समूह के बदलाव होते ही यहाँ दिखेंगे।"
 
-#: src/screens/AddFriend.tsx:690
+#: src/screens/AddFriend.tsx:691
 msgid "Your contact book is never uploaded."
-msgstr ""
+msgstr "आपकी संपर्क सूची कभी अपलोड नहीं होती।"
 
 #: src/components/settings/AboutSettings.tsx:41
 msgid "Your data"
@@ -4243,13 +4245,13 @@ msgid "Your net balance at the end of each year, all friends together"
 msgstr "हर साल के अंत में आपका कुल बैलेंस, सभी दोस्तों के साथ"
 
 #. placeholder {0}: step.shownName
-#: src/screens/AddFriend.tsx:387
+#: src/screens/AddFriend.tsx:388
 msgid "Your personal invite is ready. When {0} joins with it, you’re friends straight away. It works once and is listed under Invites sent."
-msgstr ""
+msgstr "आपका निजी आमंत्रण तैयार है। {0} इससे जुड़ते ही आपके दोस्त बन जाएँगे। यह एक बार काम करता है और 'भेजे गए आमंत्रण' में दिखता है।"
 
-#: src/screens/AddFriend.tsx:681
+#: src/screens/AddFriend.tsx:682
 msgid "Your phone will ask to let Splito open your contacts. You pick one person; only the email or number you choose is used."
-msgstr ""
+msgstr "आपका फ़ोन Splito को संपर्क खोलने की अनुमति माँगेगा। आप एक व्यक्ति चुनें; सिर्फ़ आपका चुना ईमेल या नंबर इस्तेमाल होगा।"
 
 #: src/screens/Settings/index.tsx:72
 msgid "Your profile · saved on this device"

@@ -24,7 +24,7 @@ export function useDescribeLink() {
     const expiry =
       ms < HOUR
         ? l`Expires within the hour`
-        : ms < 48 * HOUR
+        : ms < 23.5 * HOUR
           ? plural(Math.round(ms / HOUR), {one: 'Expires in # hour', other: 'Expires in # hours'})
           : plural(Math.round(ms / (24 * HOUR)), {one: 'Expires in # day', other: 'Expires in # days'})
     return `${uses} · ${expiry}`

@@ -43,7 +43,7 @@ test('on Splito: request -> pending (not selectable) -> they accept -> a friend 
 
   // Waiting under Invites sent.
   const row = page.getByTestId('invite-sent-ananya@example.com')
-  await expect(row).toContainText('Waiting for them to accept')
+  await expect(row).toContainText('Waiting to accept')
 
   // Not selectable while pending: greyed, no checkbox.
   const dialog = await pickerOptions(page)
@@ -135,14 +135,14 @@ test('invite link: limits, QR and link, then Manage invite links and Revoke', as
   await page.getByTestId('invite-expiry-24h').click()
   await page.getByTestId('sheet-save').click()
   await expect(page.getByTestId('invite-qr')).toBeVisible()
-  await expect(page.getByTestId('invite-details')).toHaveText('5 of 5 uses left · Expires in 24 hours')
+  await expect(page.getByTestId('invite-details')).toHaveText('5 of 5 uses left · Expires in 1 day')
   const url = await page.getByTestId('invite-url').textContent()
   const code = url!.split('/').pop()!
 
   await page.getByTestId('sheet-cancel').click() // "Manage links"
   await expect(page.getByTestId('screen-invite-links')).toBeVisible()
   const row = page.getByTestId(`invite-link-${code}`)
-  await expect(row.getByTestId('invite-link-details')).toHaveText('5 of 5 uses left · Expires in 24 hours')
+  await expect(row.getByTestId('invite-link-details')).toHaveText('5 of 5 uses left · Expires in 1 day')
   // The seeded group link shows its uses and approval.
   await expect(page.getByText('22 of 25 uses left · Expires in 26 days · You approve each join')).toBeVisible()
   await row.getByTestId('invite-link-revoke').click()
