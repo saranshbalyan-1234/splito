@@ -7,6 +7,9 @@ import {useSetDrawerOpen} from '#/state/shell/drawer-open'
 export const navigationRef = createNavigationContainerRef<RootStackParams>()
 
 const STEP_MS = 8000
+/* Module scope: the drawer remounts this component, which must not restart the tour. */
+let tourStep = 0
+let tourTimer: ReturnType<typeof setInterval> | undefined
 
 /**
  * Dev builds only, with EXPO_PUBLIC_TOUR=1: steps through the main screens on a
@@ -32,13 +35,12 @@ export function DevTour() {
       go('Settings'),
       go('AddExpense', {}),
     ]
-    let i = 0
-    const id = setInterval(() => {
+    if (tourTimer) return
+    tourTimer = setInterval(() => {
       if (!navigationRef.isReady()) return
-      steps[i++]?.()
-      if (i >= steps.length) clearInterval(id)
+      steps[tourStep++]?.()
+      if (tourStep >= steps.length) clearInterval(tourTimer)
     }, STEP_MS)
-    return () => clearInterval(id)
   }, [])
   return null
 }
