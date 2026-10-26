@@ -616,4 +616,6 @@ export const PREF_CONTROLS = {
   'notify.expense': NotifyExpensePref,
   'notify.payment': NotifyPaymentPref,
   'notify.invite': NotifyInvitePref,
+  // No row until telemetry has a vendor (A-046): a switch that changes nothing would be a placeholder.
+  sendDiagnostics: null,
 } satisfies Record<PrefKey, React.ComponentType | null>

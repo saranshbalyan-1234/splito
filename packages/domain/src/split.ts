@@ -1,4 +1,4 @@
-import type {AdjustmentKind} from './adjustments'
+import {type AdjustmentKind} from './adjustments'
 import {allocate} from './allocate'
 import {assertInRange, DomainError} from './errors'
 
@@ -91,6 +91,17 @@ export function computeShares(total: bigint, split: SplitInput): Record<string, 
 
 type ItemsSplit = Extract<SplitInput, {mode: 'items'}>
 
+/** One item split by its portions ("2 of 3 beers"), exactly; refuses an item nobody had. */
+export function splitItem(amount: bigint, participants: ItemParticipant[]): Record<string, bigint> {
+  if (participants.length === 0) throw new DomainError('UNASSIGNED_ITEM')
+  const weights = participants.map(p => {
+    const w = participantWeight(p)
+    if (!Number.isInteger(w) || w <= 0) throw new DomainError('NON_POSITIVE_WEIGHT')
+    return {id: participantId(p), weight: BigInt(w)}
+  })
+  return allocate(amount, weights)
+}
+
 /** Tax + tip + service charge - discount: what is spread over the item subtotals. */
 export function itemsAdjustment(split: ItemsSplit): bigint {
   return split.tax + split.tip + (split.service ?? 0n) - split.discount
@@ -111,13 +122,7 @@ export function itemBreakdown(split: ItemsSplit): {
   const subtotals: Record<string, bigint> = {}
   for (const item of split.items) {
     assertInRange(item.amount)
-    if (item.participants.length === 0) throw new DomainError('UNASSIGNED_ITEM')
-    const weights = item.participants.map(p => {
-      const w = participantWeight(p)
-      if (!Number.isInteger(w) || w <= 0) throw new DomainError('NON_POSITIVE_WEIGHT')
-      return {id: participantId(p), weight: BigInt(w)}
-    })
-    items[item.id] = allocate(item.amount, weights)
+    items[item.id] = splitItem(item.amount, item.participants)
     for (const [id, v] of Object.entries(items[item.id]!)) subtotals[id] = (subtotals[id] ?? 0n) + v
   }
   const adjustment = itemsAdjustment(split)

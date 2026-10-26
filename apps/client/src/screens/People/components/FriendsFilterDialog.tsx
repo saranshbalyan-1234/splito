@@ -146,7 +146,6 @@ export function Choices<V extends string>({
   options: {value: V; label: string}[]
   onChange: (value: V) => void
 }) {
-  const t = useTheme()
   return (
     <View style={[a.gap_sm]}>
       {/* One section-label style for every block of the sheet, Include groups included. */}

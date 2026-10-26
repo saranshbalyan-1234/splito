@@ -59,7 +59,7 @@ import {
   MemberRow,
   OweRow,
 } from './components/GroupRows'
-import {magnitude, planSettlement, ZERO} from '@splito/domain'
+import {compareMinor, magnitude, planSettlement, ZERO} from '@splito/domain'
 
 type Tab = 'expenses' | 'balances' | 'members'
 
@@ -208,7 +208,7 @@ export function GroupScreen() {
         return [...plan.transfers]
           .sort(
             (x, y) =>
-              Number(y.amount > x.amount) - Number(x.amount > y.amount) ||
+              compareMinor(y.amount, x.amount) ||
               (names.get(x.from) ?? '').localeCompare(names.get(y.from) ?? ''),
           )
           .map(x => ({

@@ -1,4 +1,9 @@
-import {type LedgerRecord, magnitude, type PersonSummary} from '@splito/domain'
+import {
+  type LedgerRecord,
+  magnitude,
+  type PersonSummary,
+  ZERO,
+} from '@splito/domain'
 
 /** One friend on People: their balance with me, if any. */
 export type FriendRow = {id: string; name: string; summary?: PersonSummary}
@@ -30,9 +35,9 @@ export function sortFriends<T extends FriendRow>(
   {currency, activity}: {currency: string; activity: Map<string, string>},
 ): T[] {
   const size = (row: FriendRow) =>
-    magnitude(row.summary?.byCurrency[currency]?.total ?? 0n)
+    magnitude(row.summary?.byCurrency[currency]?.total ?? ZERO)
   const isOpen = (row: FriendRow) =>
-    Object.values(row.summary?.byCurrency ?? {}).some(c => c.total !== 0n)
+    Object.values(row.summary?.byCurrency ?? {}).some(c => c.total !== ZERO)
   const byName = (x: FriendRow, y: FriendRow) => x.name.localeCompare(y.name)
   return [...rows].sort((x, y) => {
     if (sort === 'amount') {
@@ -75,9 +80,9 @@ export function filterFriends<T extends FriendRow>(
     const totals = Object.values(summary?.byCurrency ?? {}).map(c => c.total)
     const keep =
       show === 'all' ||
-      (show === 'owesYou' && totals.some(v => v > 0n)) ||
-      (show === 'youOwe' && totals.some(v => v < 0n)) ||
-      (show === 'settled' && totals.every(v => v === 0n))
+      (show === 'owesYou' && totals.some(v => v > ZERO)) ||
+      (show === 'youOwe' && totals.some(v => v < ZERO)) ||
+      (show === 'settled' && totals.every(v => v === ZERO))
     return keep ? [{...row, summary}] : []
   })
 }

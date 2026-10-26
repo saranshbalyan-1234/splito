@@ -1,9 +1,9 @@
 import {CURRENCIES, DomainError} from '@splito/domain'
 
 import type {Store} from './store'
-import type {MutationCtx} from './types'
+import type {Entity, MutationCtx} from './types'
 
-export type PrefGroup = 'appearance' | 'motion' | 'defaults' | 'categories' | 'regional' | 'lists' | 'notifications'
+export type PrefGroup = 'appearance' | 'motion' | 'defaults' | 'categories' | 'regional' | 'lists' | 'notifications' | 'privacy'
 
 export interface PrefDef<T> {
   key: string
@@ -118,14 +118,18 @@ export const PREFS = {
   'notify.expense': def('notify.expense', 'notifications', 'account', 'New expenses', true, isBool),
   'notify.payment': def('notify.payment', 'notifications', 'account', 'Payments', true, isBool),
   'notify.invite': def('notify.invite', 'notifications', 'account', 'Invites', true, isBool),
+  /** Telemetry (16.1): off, nothing is sent. No Settings row until a vendor exists (A-046); recording still honours it. */
+  sendDiagnostics: def('sendDiagnostics', 'privacy', 'device', 'Send diagnostics', true, isBool),
 } as const
 
 export type PrefKey = keyof typeof PREFS
 export type PrefValue<K extends PrefKey> = (typeof PREFS)[K] extends PrefDef<infer T> ? T : never
 
-async function readRaw<K extends PrefKey>(store: Store, key: K): Promise<PrefValue<K>> {
+type PrefRow = Pick<Entity<{value: unknown}>, 'id' | 'deleted' | 'data'>
+
+function readRaw<K extends PrefKey>(rows: ReadonlyArray<PrefRow>, key: K): PrefValue<K> {
   const def = PREFS[key] as PrefDef<PrefValue<K>>
-  const e = (await store.getAll<{value: unknown}>('preference')).find(p => p.id === key)
+  const e = rows.find(p => p.id === key)
   let value = e && !e.deleted ? e.data.value : undefined
   if (key === 'tabs' && Array.isArray(value)) {
     // Orders saved while Profile was a tab predate the Analytics tab, so it joins them.
@@ -137,14 +141,22 @@ async function readRaw<K extends PrefKey>(store: Store, key: K): Promise<PrefVal
   return value !== undefined && def.validate(value) ? (value as PrefValue<K>) : def.default
 }
 
-/** Falls back to the default when unset or invalid. */
-export async function getPref<K extends PrefKey>(store: Store, key: K): Promise<PrefValue<K>> {
-  const value = await readRaw(store, key)
+/**
+ * A preference from already-loaded preference rows (`store.getAll('preference')`),
+ * so many readers share one read. Falls back to the default when unset or invalid.
+ */
+export function prefFrom<K extends PrefKey>(rows: ReadonlyArray<PrefRow>, key: K): PrefValue<K> {
+  const value = readRaw(rows, key)
   if (key === 'homeTab') {
-    const tabs = await readRaw(store, 'tabs')
+    const tabs = readRaw(rows, 'tabs')
     return (tabs.includes(value as TabId) ? value : tabs[0]) as PrefValue<K>
   }
   return value
+}
+
+/** Falls back to the default when unset or invalid. */
+export async function getPref<K extends PrefKey>(store: Store, key: K): Promise<PrefValue<K>> {
+  return prefFrom(await store.getAll<{value: unknown}>('preference'), key)
 }
 
 async function writePref(store: Store, ctx: MutationCtx, key: PrefKey, value: unknown, deleted: boolean) {

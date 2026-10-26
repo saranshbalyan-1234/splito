@@ -30,7 +30,6 @@ type Step =
  * account or session is ever created here.
  */
 export function SignInScreen() {
-  const {t: l} = useLingui()
   const {gtMobile} = useBreakpoints()
   const [step, setStep] = useState<Step>({kind: 'choose'})
   /* Set once a step is finished: the honest "not yet" answer. */

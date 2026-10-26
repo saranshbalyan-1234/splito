@@ -5,7 +5,7 @@ import {formatAmountCompact, ZERO} from '@splito/domain'
 
 import {atoms as a, useTheme} from '#/alf'
 import {Pressable} from '#/components/Pressable'
-import {fraction} from '#/components/charts/scale'
+import {fractionBetween} from '#/components/charts/scale'
 import {Text} from '#/components/Typography'
 
 /** Room under the plot for the time labels. */
@@ -63,7 +63,7 @@ export function frame(
     plotH,
     bottom,
     slot,
-    y: (v: bigint) => PAD_TOP + (1 - fraction(v - lo, hi - lo)) * plotH,
+    y: (v: bigint) => PAD_TOP + (1 - fractionBetween(v, lo, hi)) * plotH,
     cx: (i: number) => gutter + slot * (i + 0.5),
   }
 }

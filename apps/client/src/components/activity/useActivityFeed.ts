@@ -1,16 +1,14 @@
-import {useSyncExternalStore} from 'react'
 import {plural} from '@lingui/core/macro'
 import {
   type ActivityEvent,
+  type ActivityState,
   type Entity,
   type Expense,
   type Group,
-  loadActivity,
   type Person,
-  type Store,
 } from '@splito/sync'
 
-import {useMutationCtx, useStore} from '#/data/hooks'
+import {useActivityState, useMutationCtx} from '#/data/hooks'
 import {device, useStorage} from '#/storage'
 import {
   buildRows,
@@ -27,59 +25,21 @@ export type ActivitySnapshot = {
   expenses: Map<string, Entity<Expense>>
 }
 
-type Source = {
-  subscribe: (onChange: () => void) => () => void
-  get: () => ActivitySnapshot | undefined
-}
+const snapshots = new WeakMap<ActivityState, ActivitySnapshot>()
 
-const sources = new WeakMap<Store, Source>()
-
-/*
- * One live load of the feed per store, shared by the Activity screen and the
- * nav badges, re-read after every committed transaction while anyone listens.
- */
-function sourceFor(store: Store): Source {
-  const existing = sources.get(store)
-  if (existing) return existing
-  let snapshot: ActivitySnapshot | undefined
-  let generation = 0
-  let unsubscribeStore: (() => void) | undefined
-  const listeners = new Set<() => void>()
-  const load = () => {
-    const current = ++generation
-    void Promise.all([
-      loadActivity(store),
-      store.getAll<Person>('person'),
-      store.getAll<Group>('group'),
-      store.getAll<Expense>('expense'),
-    ]).then(([events, people, groups, expenses]) => {
-      // A newer load has started; it will report.
-      if (current !== generation) return
-      snapshot = {
-        events,
-        people: new Map(people.map(p => [p.id, p])),
-        groups: new Map(groups.map(g => [g.id, g])),
-        expenses: new Map(expenses.map(e => [e.id, e])),
-      }
-      listeners.forEach(l => l())
-    })
+/* One snapshot object per loaded feed state, shared by the Activity screen and the nav badges. */
+function snapshotOf(state: ActivityState): ActivitySnapshot {
+  let snapshot = snapshots.get(state)
+  if (!snapshot) {
+    snapshot = {
+      events: state.events,
+      people: new Map((state.entities.person as Entity<Person>[]).map(p => [p.id, p])),
+      groups: new Map((state.entities.group as Entity<Group>[]).map(g => [g.id, g])),
+      expenses: new Map((state.entities.expense as Entity<Expense>[]).map(e => [e.id, e])),
+    }
+    snapshots.set(state, snapshot)
   }
-  const source: Source = {
-    subscribe(onChange) {
-      listeners.add(onChange)
-      if (listeners.size === 1) {
-        load()
-        unsubscribeStore = store.subscribe(load)
-      }
-      return () => {
-        listeners.delete(onChange)
-        if (listeners.size === 0) unsubscribeStore?.()
-      }
-    },
-    get: () => snapshot,
-  }
-  sources.set(store, source)
-  return source
+  return snapshot
 }
 
 const FEED_KEY: ['activityFeed'] = ['activityFeed']
@@ -90,10 +50,9 @@ const FEED_KEY: ['activityFeed'] = ['activityFeed']
  * value, so quick successive actions never overwrite each other.
  */
 export function useActivityFeed(filter: FeedFilter = 'all') {
-  const store = useStore()
   const {actor: me} = useMutationCtx()
-  const source = sourceFor(store)
-  const snapshot = useSyncExternalStore(source.subscribe, source.get)
+  const loaded = useActivityState()
+  const snapshot = loaded && snapshotOf(loaded)
   const [stored, setStored] = useStorage(device, FEED_KEY)
   const state = stored ?? EMPTY_FEED_STATE
   const update = (fn: (s: FeedState) => FeedState) =>

@@ -1,9 +1,9 @@
 import {ScrollView, View} from 'react-native'
 import {Trans, useLingui} from '@lingui/react/macro'
 import {formatAmount, getCurrency, toDecimalString, ZERO} from '@splito/domain'
+import {type AdjustmentModes} from '@splito/sync'
 import {nanoid} from 'nanoid/non-secure'
 
-import {usePref} from '#/data/hooks'
 import {UserAvatar} from '#/view/com/util/UserAvatar'
 import {atoms as a, tokens, useBreakpoints, useTheme, web} from '#/alf'
 import {Button, ButtonIcon, ButtonText} from '#/components/Button'
@@ -49,12 +49,17 @@ export function SplitEditor({
   evaluation,
   locale,
   onAddPeople,
+  adjustModes,
+  onAdjustModesChanged,
 }: {
   form: ExpenseForm
   update: Update
   evaluation: FormEvaluation
   locale: string
   onAddPeople: () => void
+  /** The remembered amount / % choice per itemize charge (preference read by the caller). */
+  adjustModes: AdjustmentModes | undefined
+  onAdjustModesChanged: (modes: AdjustmentModes) => void
 }) {
   const t = useTheme()
   const {t: l} = useLingui()
@@ -131,6 +136,8 @@ export function SplitEditor({
           update={update}
           evaluation={evaluation}
           locale={locale}
+          savedModes={adjustModes}
+          saveModes={onAdjustModesChanged}
         />
       ) : (
         <View>
@@ -377,15 +384,18 @@ function ItemsEditor({
   update,
   evaluation,
   locale,
+  savedModes,
+  saveModes,
 }: {
   form: ExpenseForm
   update: Update
   evaluation: FormEvaluation
   locale: string
+  savedModes: AdjustmentModes | undefined
+  saveModes: (modes: AdjustmentModes) => void
 }) {
   const t = useTheme()
   const {t: l} = useLingui()
-  const {gtMobile} = useBreakpoints()
   const name = useDisplayName()
   const avatarName = useAvatarName()
   const errorText = useErrorText()
@@ -404,7 +414,6 @@ function ItemsEditor({
       return {...f, items}
     })
 
-  const [savedModes, saveModes] = usePref('itemizeAdjustmentModes')
   const extras = [
     {key: 'tax', label: l`Tax`},
     {key: 'tip', label: l`Tip`},
@@ -700,7 +709,7 @@ function ItemsEditor({
                       adjustModes: {...f.adjustModes, [x.key]: next},
                     }))
                     if (savedModes)
-                      void saveModes({...savedModes, [x.key]: next})
+                      saveModes({...savedModes, [x.key]: next})
                   }}>
                   <SegmentedControl.Item
                     testID={`item-${x.key}-mode-amount`}

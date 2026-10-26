@@ -1,6 +1,6 @@
 import type {Expense, Group, Person, Repayment} from './mutations'
-import type {Store} from './store'
-import type {EntityType, HistoryRow} from './types'
+import {type Store, type StoreChange, touches} from './store'
+import type {Entity, EntityType, HistoryRow} from './types'
 
 type Base = {
   /** `<entityType>:<entityId>:<version>`: one per history row, stable forever. */
@@ -91,4 +91,40 @@ export async function loadActivity(store: Store): Promise<ActivityEvent[]> {
   const entities = (await Promise.all(FEED_TYPES.map(type => store.getAll(type)))).flat()
   const rows = (await Promise.all(entities.map(e => store.history(e.type, e.id)))).flat()
   return activityFromHistory(rows)
+}
+
+export type FeedType = (typeof FEED_TYPES)[number]
+
+/** The feed plus every feed entity (deleted ones included), as of one load. */
+export type ActivityState = {events: ActivityEvent[]; entities: Record<FeedType, Entity[]>}
+
+/**
+ * `loadActivity` kept current from store change notices: a load re-reads only
+ * the entity types the change touched and only the histories of the ids it
+ * names (the first load reads everything). Loads run one at a time, so a
+ * slow one never overwrites a newer read. Equal to `loadActivity` after every
+ * load (tested).
+ */
+export function activityTracker(store: Store): (change: StoreChange) => Promise<ActivityState> {
+  let entities: Partial<Record<FeedType, Entity[]>> = {}
+  const histories = new Map<string, HistoryRow[]>()
+  let queue: Promise<unknown> = Promise.resolve()
+  const load = async (change: StoreChange): Promise<ActivityState> => {
+    const fresh = await Promise.all(
+      FEED_TYPES.map(type => (!entities[type] || touches(change, type) ? store.getAll(type) : Promise.resolve(entities[type]!))),
+    )
+    entities = Object.fromEntries(FEED_TYPES.map((type, i) => [type, fresh[i]!]))
+    await Promise.all(
+      fresh.flat().map(async e => {
+        const key = `${e.type}:${e.id}`
+        if (!histories.has(key) || touches(change, e.type, e.id)) histories.set(key, await store.history(e.type, e.id))
+      }),
+    )
+    return {events: activityFromHistory([...histories.values()].flat()), entities: entities as Record<FeedType, Entity[]>}
+  }
+  return change => {
+    const next = queue.then(() => load(change))
+    queue = next.catch(() => undefined)
+    return next
+  }
 }

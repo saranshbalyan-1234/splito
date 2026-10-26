@@ -25,6 +25,8 @@ Upstream reuse record: `docs/REUSE_MAP.md`.
 pnpm install                       # root; pnpm 11.28.5, Node 24 (auto-downloaded)
 pnpm test                          # all package tests (bun)
 pnpm typecheck
+pnpm lint                          # oxlint, errors only; oxlint-suppressions.json only shrinks
+pnpm check                         # lint + typecheck + package tests + client tests (incl. architecture rules)
 pnpm --filter @splito/client web   # Expo web dev server
 pnpm --filter @splito/client ios   # dev client build (needs Xcode)
 pnpm --filter @splito/client e2e   # Playwright against the web build
@@ -129,7 +131,11 @@ simplifications with their ceiling.
 ## Formatting and lint
 
 Prettier config from Bluesky (`prettier.config.ts`: no semicolons, single quotes,
-no bracket spacing, trailing commas). Oxlint.
+no bracket spacing, trailing commas). Oxlint (`.oxlintrc.json`, every rule an error; old
+violations in `oxlint-suppressions.json`, which fails on new and on fixed-but-listed ones).
+
+Architecture rules test (`apps/client/src/architecture/`): baseline only goes down. Each rule
+counts per file; a rise or a new file fails, and a fixed count must be lowered in `baseline.ts`.
 
 ## Attribution
 

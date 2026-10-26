@@ -1,8 +1,8 @@
 import {
   balanceRows,
   type BalanceRow,
-  groupNet,
   type LedgerRecord,
+  memberNets as domainMemberNets,
 } from '@splito/domain'
 import {type Entity, type Group} from '@splito/sync'
 
@@ -15,11 +15,10 @@ export function memberNets(
   groupId: string,
   group: Group,
 ): Record<string, Record<string, bigint>> {
-  const zero = Object.fromEntries(group.members.map(m => [m.personId, 0n]))
-  return Object.fromEntries(
-    Object.entries(groupNet(records, groupId))
-      .sort(([x], [y]) => x.localeCompare(y))
-      .map(([currency, net]) => [currency, {...zero, ...net}]),
+  return domainMemberNets(
+    records,
+    groupId,
+    group.members.map(m => m.personId),
   )
 }
 

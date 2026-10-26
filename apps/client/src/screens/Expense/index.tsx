@@ -494,7 +494,7 @@ function shareDetail(
         : undefined
     case 'adjusted': {
       const adj = s.adjustments[id]
-      return adj ? (adj > ZERO ? `+${fmt(adj)}` : `−${fmt(-adj)}`) : undefined
+      return adj ? (adj > ZERO ? `+${fmt(adj)}` : `−${fmt(magnitude(adj))}`) : undefined
     }
     case 'items': {
       // Their items, then their part of tax, tip, service and discount.

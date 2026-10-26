@@ -10,6 +10,6 @@
       "#/*": ["./src/*"]
     }
   },
-  "include": ["index.ts", "src", "e2e", "app.config.ts"],
+  "include": ["index.ts", "src", "e2e", "perf", "app.config.ts"],
   "exclude": ["dist", "node_modules"]
 }

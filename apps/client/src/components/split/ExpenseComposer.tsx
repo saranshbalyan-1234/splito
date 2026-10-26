@@ -24,7 +24,7 @@ import {
 
 import {type NavigationProp} from '#/lib/routes/types'
 import {useNumberLocale} from '#/locale/numberLocale'
-import {useEntities, useMutationCtx, useStore} from '#/data/hooks'
+import {useEntities, useMutationCtx, usePref, useStore} from '#/data/hooks'
 import {atoms as a, useBreakpoints, useTheme} from '#/alf'
 import {Button, ButtonText} from '#/components/Button'
 import * as FormSheet from '#/components/FormSheet'
@@ -108,6 +108,7 @@ export function ExpenseComposer({
   const locale = useNumberLocale()
   const categories = useCategories()
   const groups = useEntities<Group>('group')
+  const [adjustModes, saveAdjustModes] = usePref('itemizeAdjustmentModes')
   const people = useEntities<Person>('person')
   const name = useDisplayName()
   const errorText = useErrorText()
@@ -528,6 +529,8 @@ export function ExpenseComposer({
         evaluation={evaluation}
         locale={locale}
         onAddPeople={() => peopleControl.open()}
+        adjustModes={adjustModes}
+        onAdjustModesChanged={saveAdjustModes}
       />
 
       <SectionLabel>

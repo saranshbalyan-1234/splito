@@ -1,12 +1,11 @@
 import {
-  type BalancePart,
   decimalMark,
   DomainError,
   evaluateAmount,
   getCurrency,
-  groupNet,
+  groupMemberNet,
   type LocalDate,
-  pairwiseBalances,
+  pairBalance,
   toDecimalString,
 } from '@splito/domain'
 import {
@@ -84,10 +83,7 @@ export function effectWithPerson(
   me: string,
   personId: string,
 ) {
-  return (
-    pairwiseBalances([toRecord(entry)], me).find(r => r.person === personId)
-      ?.amount ?? 0n
-  )
+  return pairBalance([toRecord(entry)], me, personId)
 }
 
 /** Effect of one group entry on my net in that group (> 0: I lent). */
@@ -96,34 +92,15 @@ export function effectInGroup(
   me: string,
   groupId: string,
 ) {
-  return (
-    groupNet([toRecord(entry)], groupId)[entry.entity.data.currency]?.[me] ?? 0n
+  return groupMemberNet(
+    [toRecord(entry)],
+    groupId,
+    entry.entity.data.currency,
+    me,
   )
 }
 
-/**
- * My balance with a friend in one currency, part by part: direct, then each
- * group (> 0: they owe me). Zero parts are left out.
- */
-export function balanceParts(c: {
-  direct: bigint
-  groups: Record<string, bigint>
-}): BalancePart[] {
-  return [
-    {groupId: null, amount: c.direct},
-    ...Object.entries(c.groups).map(([groupId, amount]) => ({groupId, amount})),
-  ].filter(p => p.amount !== 0n)
-}
-
-/** The parts a payment by me (or to me) settles: what the payer owes there, as amounts > 0. */
-export function partsOwedBy(
-  parts: BalancePart[],
-  isPayerMe: boolean,
-): BalancePart[] {
-  return parts
-    .map(p => ({groupId: p.groupId, amount: isPayerMe ? -p.amount : p.amount}))
-    .filter(p => p.amount > 0n)
-}
+export {balanceParts, partsOwedBy} from '@splito/domain'
 
 /** A local `YYYY-MM-DD` (or `YYYY-MM`) at UTC midnight, so formatting never shifts the day. */
 export function utcDate(d: string) {
