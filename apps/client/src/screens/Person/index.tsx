@@ -29,7 +29,7 @@ import {List} from '#/view/com/util/List'
 import {UserAvatar} from '#/view/com/util/UserAvatar'
 import {SectionHeader} from '#/screens/People/components/SectionHeader'
 import {atoms as a, useBreakpoints, useTheme} from '#/alf'
-import {AddExpenseFAB, AddExpenseFABInset} from '#/components/AddExpenseFAB'
+import {AddExpenseFABInset} from '#/components/AddExpenseFAB'
 import {Button, ButtonIcon, ButtonText} from '#/components/Button'
 import {useDialogControl} from '#/components/Dialog'
 import {myBalances} from '#/components/groups/net'
@@ -435,7 +435,6 @@ export function PersonScreen() {
           ListFooterComponent={<AddExpenseFABInset />}
         />
       </LayoutAnimationConfig>
-      <AddExpenseFAB personId={personId} />
 
       {person && me && (
         <>

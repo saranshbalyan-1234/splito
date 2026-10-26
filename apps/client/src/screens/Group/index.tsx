@@ -20,7 +20,7 @@ import {UserAvatar} from '#/view/com/util/UserAvatar'
 import {GroupBalanceCards} from '#/screens/Group/components/GroupBalanceCards'
 import {SectionHeader} from '#/screens/People/components/SectionHeader'
 import {atoms as a, useBreakpoints, useTheme, web} from '#/alf'
-import {AddExpenseFAB, AddExpenseFABInset} from '#/components/AddExpenseFAB'
+import {AddExpenseFABInset} from '#/components/AddExpenseFAB'
 import {Button, ButtonIcon, ButtonText} from '#/components/Button'
 import {useDialogControl} from '#/components/Dialog'
 import {AddMembersDialog} from '#/components/groups/AddMembersDialog'
@@ -646,7 +646,6 @@ export function GroupScreen() {
           ListFooterComponent={<AddExpenseFABInset />}
         />
       </LayoutAnimationConfig>
-      <AddExpenseFAB groupId={groupId} />
       {group && <AddMembersDialog control={addMembersControl} group={group} />}
       {group && <EditGroupDialog control={editControl} group={group} />}
       {group && me && (
