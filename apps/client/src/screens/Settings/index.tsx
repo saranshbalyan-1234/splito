@@ -1,6 +1,7 @@
 // Adapted from bluesky-social/social-app@4e4ad9c (MIT) - src/screens/Settings/Settings.tsx
 import {View} from 'react-native'
 import {type PrefGroup, resetAllPrefs} from '@splito/sync'
+import {plural} from '@lingui/core/macro'
 import {Trans, useLingui} from '@lingui/react/macro'
 
 import {useHaptics} from '#/lib/haptics'
@@ -12,6 +13,7 @@ import {atoms as a, useTheme} from '#/alf'
 import {ArrowRotateCounterClockwise_Stroke2_Corner0_Rounded as ResetIcon} from '#/components/icons/ArrowRotate'
 import {CircleInfo_Stroke2_Corner0_Rounded as InfoIcon} from '#/components/icons/CircleInfo'
 import {Cloud_Stroke2_Corner0_Rounded as CloudIcon} from '#/components/icons/Cloud'
+import {Trash_Stroke2_Corner0_Rounded as TrashIcon} from '#/components/icons/Trash'
 import * as Layout from '#/components/Layout'
 import {useTabLabels} from '#/components/settings/TabsEditor'
 import * as Prompt from '#/components/Prompt'
@@ -36,6 +38,7 @@ export function SettingsScreen() {
   const resetPrompt = Prompt.usePromptControl()
   const me = useMe()
   const {hasSession} = useSession()
+  const [binDays] = usePref('history.binDays')
 
   return (
     <Layout.Screen testID="screen-settings">
@@ -135,6 +138,24 @@ export function SettingsScreen() {
           <SectionTitle>
             <Trans>About and data</Trans>
           </SectionTitle>
+          {/* Not a preference page: the bin itself, with its window setting on top. */}
+          <SettingsList.LinkItem
+            testID="settings-recently-deleted"
+            to="/settings/recently-deleted"
+            label={l`Recently deleted`}>
+            <SettingsList.ItemIcon icon={TrashIcon} />
+            <SettingsList.ItemText>
+              <Trans>Recently deleted</Trans>
+            </SettingsList.ItemText>
+            {binDays ? (
+              <Text
+                testID="settings-recently-deleted-value"
+                numberOfLines={1}
+                style={[a.text_md, a.text_right, t.atoms.text_contrast_medium]}>
+                {plural(binDays, {one: '# day', other: '# days'})}
+              </Text>
+            ) : null}
+          </SettingsList.LinkItem>
           <SettingsList.LinkItem
             testID="settings-about"
             to="/settings/about"

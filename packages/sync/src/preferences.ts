@@ -3,7 +3,7 @@ import {CURRENCIES, DomainError} from '@splito/domain'
 import type {Store} from './store'
 import type {Entity, MutationCtx} from './types'
 
-export type PrefGroup = 'appearance' | 'motion' | 'defaults' | 'categories' | 'regional' | 'lists' | 'notifications' | 'privacy'
+export type PrefGroup = 'appearance' | 'motion' | 'defaults' | 'categories' | 'regional' | 'lists' | 'notifications' | 'privacy' | 'history'
 
 export interface PrefDef<T> {
   key: string
@@ -130,6 +130,8 @@ export const PREFS = {
   'notify.invite': def('notify.invite', 'notifications', 'account', 'Invites', true, isBool),
   /** Telemetry (16.1): off, nothing is sent. No Settings row until a vendor exists (A-046); recording still honours it. */
   sendDiagnostics: def('sendDiagnostics', 'privacy', 'device', 'Send diagnostics', true, isBool),
+  /** How long Recently deleted lists a deleted expense, payment or write-off (F-1203). */
+  'history.binDays': def('history.binDays', 'history', 'account', 'Keep deleted items for', 30, oneOf(7, 30, 90, 365)),
 } as const
 
 export type PrefKey = keyof typeof PREFS

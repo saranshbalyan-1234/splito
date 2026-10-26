@@ -1,5 +1,6 @@
 import type {CurrencyCode} from './currency'
 import type {LocalDate} from './date'
+import {DomainError} from './errors'
 import {planSettlement, type SettlementRules} from './settlement'
 
 export interface ExpenseRecord {
@@ -26,7 +27,26 @@ export interface RepaymentRecord {
   deleted: boolean
 }
 
-export type LedgerRecord = ExpenseRecord | RepaymentRecord
+/**
+ * A debt let go ("Call it even"): `from` owed `to` and `to` forgave it. It
+ * moves balances exactly like a repayment but is its own kind, so it is never
+ * shown or counted as a payment, and never as spending.
+ */
+export interface WriteOffRecord {
+  kind: 'writeoff'
+  id: string
+  groupId: string | null
+  currency: CurrencyCode
+  /** Who owed (and is forgiven). */
+  from: string
+  /** Who was owed (and forgives). */
+  to: string
+  amount: bigint
+  date: LocalDate
+  deleted: boolean
+}
+
+export type LedgerRecord = ExpenseRecord | RepaymentRecord | WriteOffRecord
 
 /** amount > 0: person owes me. amount < 0: I owe person. */
 export interface BalanceRow {
@@ -52,7 +72,7 @@ export function pairwiseBalances(records: LedgerRecord[], me: string): BalanceRo
 
   for (const r of records) {
     if (r.deleted) continue
-    if (r.kind === 'repayment') {
+    if (r.kind !== 'expense') {
       if (r.to === me) add(r.from, r.groupId, r.currency, -r.amount)
       else if (r.from === me) add(r.to, r.groupId, r.currency, r.amount)
       continue
@@ -158,6 +178,33 @@ export function splitPayment(amount: bigint, owed: BalancePart[]): BalancePart[]
   return parts
 }
 
+/**
+ * The parts of a pair's balance in one currency that a write-off of `amount`
+ * forgives (`parts` and the result are signed: > 0 they owe me, < 0 I owe
+ * them). The whole balance (`amount` = |net|) clears every part, each in its
+ * own direction, so the pair ends at zero in that currency. Less forgives
+ * only in the net's direction, direct first, then each group, up to what is
+ * owed there. More than |net|, or nothing, is `INVALID_AMOUNT`.
+ */
+export function writeOffParts(parts: BalancePart[], amount: bigint): BalancePart[] {
+  const live = [...parts.filter(p => p.groupId === null), ...parts.filter(p => p.groupId !== null)].filter(p => p.amount !== 0n)
+  const net = live.reduce((s, p) => s + p.amount, 0n)
+  const full = magnitude(net)
+  if (amount <= 0n || amount > full) throw new DomainError('INVALID_AMOUNT')
+  if (amount === full) return live.map(p => ({...p}))
+  const sign = net < 0n ? -1n : 1n
+  const out: BalancePart[] = []
+  let left = amount
+  for (const p of live) {
+    const owed = p.amount * sign
+    if (left === 0n || owed <= 0n) continue
+    const take = owed < left ? owed : left
+    out.push({groupId: p.groupId, amount: take * sign})
+    left -= take
+  }
+  return out
+}
+
 export function personSummary(rows: BalanceRow[], opts: {includeGroups: boolean}): PersonSummary[] {
   const people = new Map<string, PersonSummary>()
   for (const r of rows) {
@@ -181,7 +228,7 @@ export function groupNet(records: LedgerRecord[], groupId: string): Record<Curre
   }
   for (const r of records) {
     if (r.deleted || r.groupId !== groupId) continue
-    if (r.kind === 'repayment') {
+    if (r.kind !== 'expense') {
       add(r.currency, r.from, r.amount)
       add(r.currency, r.to, -r.amount)
     } else {

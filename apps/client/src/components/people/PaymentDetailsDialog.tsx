@@ -3,9 +3,12 @@ import {Trans, useLingui} from '@lingui/react/macro'
 import {formatAmount} from '@splito/domain'
 import {
   deleteRepayment,
+  deleteWriteOff,
   type Entity,
   type Repayment,
   restoreRepayment,
+  restoreWriteOff,
+  type WriteOff,
 } from '@splito/sync'
 
 import {useHaptics} from '#/lib/haptics'
@@ -16,24 +19,28 @@ import {atoms as a, useTheme} from '#/alf'
 import {Button, ButtonIcon, ButtonText} from '#/components/Button'
 import * as Dialog from '#/components/Dialog'
 import * as FormSheet from '#/components/FormSheet'
+import {ArrowRotateCounterClockwise_Stroke2_Corner0_Rounded as UndoIcon} from '#/components/icons/ArrowRotate'
 import {Trash_Stroke2_Corner0_Rounded as TrashIcon} from '#/components/icons/Trash'
 import {utcDate} from '#/components/people/ledger'
 import * as Toast from '#/components/Toast'
 import {Text} from '#/components/Typography'
 
 /**
- * A recorded payment: who paid whom, how much, when and where. Deleting
- * leaves a tombstone, and the toast offers Undo.
+ * A recorded payment (or, with `kind="writeoff"`, a debt let go with "Call
+ * it even"): who, how much, when and where. Deleting leaves a tombstone, and
+ * the toast offers Undo.
  */
 export function PaymentDetailsDialog({
   control,
   repayment,
+  kind = 'repayment',
   me,
   names,
   groupName,
 }: {
   control: Dialog.DialogControlProps
-  repayment: Entity<Repayment> | null
+  repayment: Entity<Repayment | WriteOff> | null
+  kind?: 'repayment' | 'writeoff'
   me: string
   names: Map<string, string>
   groupName: string | null
@@ -41,10 +48,12 @@ export function PaymentDetailsDialog({
   const {t: l} = useLingui()
   return (
     <FormSheet.Outer control={control} testID="payment-details-sheet">
-      <FormSheet.Inner title={l`Payment details`}>
+      <FormSheet.Inner
+        title={kind === 'writeoff' ? l`Called it even` : l`Payment details`}>
         {repayment && (
           <Details
             repayment={repayment}
+            isWriteOff={kind === 'writeoff'}
             me={me}
             names={names}
             groupName={groupName}
@@ -57,11 +66,13 @@ export function PaymentDetailsDialog({
 
 function Details({
   repayment,
+  isWriteOff,
   me,
   names,
   groupName,
 }: {
-  repayment: Entity<Repayment>
+  repayment: Entity<Repayment | WriteOff>
+  isWriteOff: boolean
   me: string
   names: Map<string, string>
   groupName: string | null
@@ -75,8 +86,13 @@ function Details({
   const locale = useNumberLocale()
   const {from, to, amount, currency, date, note} = repayment.data
   const name = (id: string) => names.get(id) ?? l`Someone`
-  const title =
-    from === me
+  const title = isWriteOff
+    ? to === me
+      ? l`You forgave ${name(from)}`
+      : from === me
+        ? l`${name(to)} forgave you`
+        : l`${name(to)} forgave ${name(from)}`
+    : from === me
       ? l`You paid ${name(to)}`
       : to === me
         ? l`${name(from)} paid you`
@@ -85,19 +101,34 @@ function Details({
 
   const remove = async () => {
     try {
-      await deleteRepayment(store, ctx, repayment.id)
+      await (isWriteOff ? deleteWriteOff : deleteRepayment)(
+        store,
+        ctx,
+        repayment.id,
+      )
       haptics.confirm()
       control.close(() =>
         Toast.show(
           <Toast.Outer>
             <Toast.Icon />
-            <Toast.Text>{l`Payment deleted`}</Toast.Text>
+            <Toast.Text>
+              {isWriteOff ? l`Write-off undone` : l`Payment deleted`}
+            </Toast.Text>
             <Toast.Action
               label={l`Undo`}
               onPress={() =>
-                void restoreRepayment(store, ctx, repayment.id).catch(e => {
+                void (isWriteOff ? restoreWriteOff : restoreRepayment)(
+                  store,
+                  ctx,
+                  repayment.id,
+                ).catch(e => {
                   logger.error(e, {where: 'PaymentDetailsDialog.undo'})
-                  Toast.show(l`Couldn’t restore this payment`, {type: 'error'})
+                  Toast.show(
+                    isWriteOff
+                      ? l`Couldn’t put this write-off back`
+                      : l`Couldn’t restore this payment`,
+                    {type: 'error'},
+                  )
                 })
               }>
               <Trans>Undo</Trans>
@@ -137,22 +168,43 @@ function Details({
         {note ? <DetailRow label={l`Note`} value={note} /> : null}
       </View>
       <Text style={[a.text_sm, a.leading_snug, t.atoms.text_contrast_medium]}>
-        <Trans>
-          A record of money that changed hands outside Splito. Deleting it puts
-          the balance back as it was.
-        </Trans>
+        {isWriteOff ? (
+          <Trans>
+            A debt let go – no money changed hands, and it never counts as
+            spending. Undoing it puts the balance back as it was.
+          </Trans>
+        ) : (
+          <Trans>
+            A record of money that changed hands outside Splito. Deleting it
+            puts the balance back as it was.
+          </Trans>
+        )}
       </Text>
-      <Button
-        testID="payment-delete"
-        label={l`Delete payment`}
-        size="large"
-        color="negative_subtle"
-        onPress={() => void remove()}>
-        <ButtonIcon icon={TrashIcon} />
-        <ButtonText>
-          <Trans>Delete payment</Trans>
-        </ButtonText>
-      </Button>
+      {isWriteOff ? (
+        <Button
+          testID="writeoff-undo"
+          label={l`Undo write-off`}
+          size="large"
+          color="secondary"
+          onPress={() => void remove()}>
+          <ButtonIcon icon={UndoIcon} />
+          <ButtonText>
+            <Trans>Undo write-off</Trans>
+          </ButtonText>
+        </Button>
+      ) : (
+        <Button
+          testID="payment-delete"
+          label={l`Delete payment`}
+          size="large"
+          color="negative_subtle"
+          onPress={() => void remove()}>
+          <ButtonIcon icon={TrashIcon} />
+          <ButtonText>
+            <Trans>Delete payment</Trans>
+          </ButtonText>
+        </Button>
+      )}
     </View>
   )
 }

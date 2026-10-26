@@ -14,6 +14,7 @@ const SECTION: Record<string, string> = {
   Settings: 'Settings',
   SettingsSection: 'Settings',
   SignIn: 'Settings',
+  RecentlyDeleted: 'Settings',
 }
 
 /**

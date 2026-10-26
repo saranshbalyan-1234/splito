@@ -3897,3 +3897,314 @@ msgstr "खर्च की मुद्रा की पूरी इकाइ�
 #: src/components/split/fields.tsx:247
 msgid "You can type a sum, like 1200 + 300, or 2k or 1.5L"
 msgstr "आप जोड़ लिख सकते हैं, जैसे 1200 + 300, या 2k या 1.5L"
+
+#. placeholder {0}: i18n.date(new Date(item.deletedAt), { dateStyle: 'medium', timeStyle: 'short', })
+#: src/screens/RecentlyDeleted/components/RestoreDialog.tsx:167
+msgid "{0} by {deletedByName}"
+msgstr "{0}, {deletedByName} द्वारा"
+
+#. placeholder {0}: name(r.to)
+#. placeholder {0}: name(to)
+#. placeholder {0}: name(w.to)
+#. placeholder {1}: name(from)
+#. placeholder {1}: name(r.from)
+#. placeholder {1}: name(w.from)
+#: src/components/people/HistoryRow.tsx:94
+#: src/components/people/PaymentDetailsDialog.tsx:94
+#: src/screens/RecentlyDeleted/describe.ts:52
+msgid "{0} forgave {1}"
+msgstr "{0} ने {1} का कर्ज़ माफ़ किया"
+
+#. placeholder {0}: name(r.to)
+#. placeholder {0}: name(to)
+#. placeholder {0}: name(w.to)
+#: src/components/people/HistoryRow.tsx:93
+#: src/components/people/PaymentDetailsDialog.tsx:93
+#: src/screens/RecentlyDeleted/describe.ts:51
+msgid "{0} forgave you"
+msgstr "{0} ने आपका कर्ज़ माफ़ किया"
+
+#. placeholder {0}: name(creditor)
+#. placeholder {1}: name(debtor)
+#: src/components/people/CallItEvenDialog.tsx:130
+msgid "{0} lets {1} off"
+msgstr "{0}, {1} का कर्ज़ माफ़ कर रहे हैं"
+
+#. placeholder {0}: name(creditor)
+#: src/components/people/CallItEvenDialog.tsx:129
+msgid "{0} lets you off"
+msgstr "{0} आपका कर्ज़ माफ़ कर रहे हैं"
+
+#: src/components/activity/ActivityItem.tsx:659
+msgid "{actor} undid a write-off"
+msgstr "{actor} ने एक माफ़ी वापस ली"
+
+#: src/screens/Settings/index.tsx:120
+msgid "{binDays, plural, one {# day} other {# days}}"
+msgstr "{binDays, plural, one {# दिन} other {# दिन}}"
+
+#: src/screens/RecentlyDeleted/index.tsx:186
+msgid "{count, plural, one {# item} other {# items}}"
+msgstr "{count, plural, one {# आइटम} other {# आइटम}}"
+
+#: src/components/activity/ActivityItem.tsx:665
+msgid "{creditor} called it even with {debtor}"
+msgstr "{creditor} ने {debtor} के साथ हिसाब बराबर किया"
+
+#: src/components/activity/ActivityItem.tsx:663
+msgid "{creditor} called it even with you"
+msgstr "{creditor} ने आपके साथ हिसाब बराबर किया"
+
+#: src/screens/RecentlyDeleted/index.tsx:247
+msgid "{days, plural, one {Nothing deleted in the last day.} other {Nothing deleted in the last # days.}}"
+msgstr "{days, plural, one {पिछले एक दिन में कुछ नहीं हटाया गया।} other {पिछले # दिनों में कुछ नहीं हटाया गया।}}"
+
+#: src/screens/RecentlyDeleted/index.tsx:373
+msgid "{left, plural, one {# day left} other {# days left}}"
+msgstr "{left, plural, one {# दिन बाकी} other {# दिन बाकी}}"
+
+#: src/components/people/CallItEvenDialog.tsx:156
+msgid "{where} {amount} owed by {debtorName}"
+msgstr "{where} {amount}, {debtorName} पर बकाया"
+
+#: src/components/settings/prefControls.tsx:464
+msgid "1 year"
+msgstr "1 साल"
+
+#: src/components/settings/prefControls.tsx:462
+msgid "30 days"
+msgstr "30 दिन"
+
+#: src/components/settings/prefControls.tsx:461
+msgid "7 days"
+msgstr "7 दिन"
+
+#: src/components/settings/prefControls.tsx:463
+msgid "90 days"
+msgstr "90 दिन"
+
+#: src/components/people/PaymentDetailsDialog.tsx:172
+msgid "A debt let go – no money changed hands, and it never counts as spending. Undoing it puts the balance back as it was."
+msgstr "माफ़ किया गया कर्ज़ – कोई पैसा नहीं दिया गया, और इसे कभी ख़र्च में नहीं गिना जाता। इसे वापस लेने पर बैलेंस पहले जैसा हो जाता है।"
+
+#: src/components/settings/prefControls.tsx:459
+msgid "After that they leave this list. Their history stays in each record’s audit trail."
+msgstr "उसके बाद वे इस सूची से हट जाते हैं। उनका इतिहास हर रिकॉर्ड के ऑडिट ट्रेल में बना रहता है।"
+
+#: src/components/people/CallItEvenDialog.tsx:225
+#: src/components/people/CallItEvenDialog.tsx:242
+msgid "All even"
+msgstr "हिसाब बराबर"
+
+#: src/components/people/CallItEvenDialog.tsx:331
+#: src/components/people/CallItEvenDialog.tsx:336
+msgid "Amount to let go"
+msgstr "माफ़ की जाने वाली रक़म"
+
+#: src/components/people/CallItEvenDialog.tsx:207
+#: src/components/people/CallItEvenDialog.tsx:267
+#: src/screens/Group/components/GroupRows.tsx:200
+#: src/screens/Group/components/GroupRows.tsx:203
+#: src/screens/Person/index.tsx:398 src/screens/Person/index.tsx:401
+msgid "Call it even"
+msgstr "हिसाब बराबर करें"
+
+#: src/components/people/HistoryRow.tsx:95
+#: src/components/people/PaymentDetailsDialog.tsx:52
+msgid "Called it even"
+msgstr "हिसाब बराबर किया"
+
+#: src/components/people/CallItEvenDialog.tsx:376
+msgid "Clears: {clears}"
+msgstr "साफ़ होगा: {clears}"
+
+#: src/components/people/CallItEvenDialog.tsx:195
+msgid "Couldn’t call it even. Please try again."
+msgstr "हिसाब बराबर नहीं हो सका। कृपया फिर से कोशिश करें।"
+
+#: src/screens/RecentlyDeleted/index.tsx:151
+msgid "Couldn’t delete this. Please try again."
+msgstr "इसे हटाया नहीं जा सका। कृपया फिर से कोशिश करें।"
+
+#: src/components/people/PaymentDetailsDialog.tsx:128
+msgid "Couldn’t put this write-off back"
+msgstr "यह माफ़ी वापस नहीं लाई जा सकी"
+
+#: src/screens/RecentlyDeleted/index.tsx:140
+msgid "Couldn’t restore this. Please try again."
+msgstr "इसे वापस नहीं लाया जा सका। कृपया फिर से कोशिश करें।"
+
+#: src/components/people/CallItEvenDialog.tsx:203
+msgid "Couldn’t undo the write-off"
+msgstr "माफ़ी वापस नहीं ली जा सकी"
+
+#: src/screens/RecentlyDeleted/index.tsx:127
+msgid "Couldn’t undo. Please try again."
+msgstr "पहले जैसा नहीं किया जा सका। कृपया फिर से कोशिश करें।"
+
+#: src/screens/RecentlyDeleted/components/RestoreDialog.tsx:188
+#: src/screens/RecentlyDeleted/components/RestoreDialog.tsx:194
+#: src/screens/RecentlyDeleted/index.tsx:279
+msgid "Delete forever"
+msgstr "हमेशा के लिए हटाएँ"
+
+#: src/screens/RecentlyDeleted/index.tsx:277
+msgid "Delete forever?"
+msgstr "हमेशा के लिए हटाएँ?"
+
+#: src/screens/RecentlyDeleted/components/RestoreDialog.tsx:166
+msgid "Deleted"
+msgstr "हटाया गया"
+
+#. placeholder {0}: deletedBy(item.deletedBy)
+#: src/screens/RecentlyDeleted/index.tsx:222
+msgid "Deleted by {0} · {ago}"
+msgstr "{0} ने हटाया · {ago}"
+
+#: src/screens/RecentlyDeleted/index.tsx:165
+msgid "Deleted expenses, payments and write-offs wait here before they leave for good. Restore one and its balances come back."
+msgstr "हटाए गए ख़र्च, भुगतान और माफ़ियाँ हमेशा के लिए जाने से पहले यहाँ रहते हैं। किसी को वापस लाएँ, तो उसके बैलेंस भी लौट आते हैं।"
+
+#: src/screens/RecentlyDeleted/index.tsx:148
+msgid "Deleted forever"
+msgstr "हमेशा के लिए हटा दिया गया"
+
+#: src/components/people/CallItEvenDialog.tsx:391
+msgid "e.g. Birthday treat"
+msgstr "जैसे जन्मदिन की ट्रीट"
+
+#: src/screens/RecentlyDeleted/index.tsx:103
+msgid "Expense restored"
+msgstr "ख़र्च वापस लाया गया"
+
+#: src/screens/RecentlyDeleted/components/RestoreDialog.tsx:145
+msgid "For you"
+msgstr "आपके लिए"
+
+#: src/screens/RecentlyDeleted/index.tsx:278
+msgid "It leaves Recently deleted and can’t be restored. Its history stays in the record’s audit trail."
+msgstr "यह हाल ही में हटाए गए से निकल जाएगा और वापस नहीं लाया जा सकेगा। इसका इतिहास रिकॉर्ड के ऑडिट ट्रेल में बना रहेगा।"
+
+#: src/components/settings/prefControls.tsx:458
+msgid "Keep deleted items for"
+msgstr "हटाए गए आइटम रखें"
+
+#: src/components/people/CallItEvenDialog.tsx:273
+msgid "Let a debt go without any money changing hands. It shows in history and Activity, never counts as spending, and you can undo it."
+msgstr "बिना पैसे के लेन-देन के कोई कर्ज़ माफ़ करें। यह इतिहास और गतिविधि में दिखता है, कभी ख़र्च में नहीं गिना जाता, और आप इसे वापस ले सकते हैं।"
+
+#: src/screens/RecentlyDeleted/index.tsx:186
+msgid "Loading…"
+msgstr "लोड हो रहा है…"
+
+#: src/screens/Group/components/GroupRows.tsx:182
+msgid "More options for {sentence}"
+msgstr "{sentence} के लिए और विकल्प"
+
+#. placeholder {0}: money(full)
+#: src/components/people/CallItEvenDialog.tsx:303
+msgid "Open balance {0}"
+msgstr "बकाया बैलेंस {0}"
+
+#: src/screens/RecentlyDeleted/index.tsx:318
+msgid "Opens it to restore or delete forever"
+msgstr "वापस लाने या हमेशा के लिए हटाने के लिए खोलता है"
+
+#. placeholder {0}: money(remainingMinor(full, [typed ?? ZERO]))
+#: src/components/people/CallItEvenDialog.tsx:365
+msgid "Part of it: {0} stays open."
+msgstr "इसका एक हिस्सा: {0} बकाया रहेगा।"
+
+#: src/screens/RecentlyDeleted/index.tsx:104
+msgid "Payment restored"
+msgstr "भुगतान वापस लाया गया"
+
+#: src/components/settings/sections.ts:50 src/navigation/Drawer.tsx:232
+#: src/navigation/Navigation.tsx:67 src/screens/RecentlyDeleted/index.tsx:198
+#: src/screens/Settings/index.tsx:110 src/screens/Settings/index.tsx:113
+msgid "Recently deleted"
+msgstr "हाल ही में हटाए गए"
+
+#: src/screens/RecentlyDeleted/components/RestoreDialog.tsx:90
+msgid "Restore payment"
+msgstr "भुगतान वापस लाएँ"
+
+#: src/screens/RecentlyDeleted/components/RestoreDialog.tsx:91
+msgid "Restore write-off"
+msgstr "माफ़ी वापस लाएँ"
+
+#: src/screens/RecentlyDeleted/components/RestoreDialog.tsx:180
+msgid "Restoring puts it back in balances, history and Activity. It stays here for {left} more days."
+msgstr "वापस लाने पर यह बैलेंस, इतिहास और गतिविधि में लौट आता है। यह यहाँ {left} दिन और रहेगा।"
+
+#: src/screens/RecentlyDeleted/components/RestoreDialog.tsx:175
+msgid "Restoring puts it back in balances, history and Activity. It stays here for 1 more day."
+msgstr "वापस लाने पर यह बैलेंस, इतिहास और गतिविधि में लौट आता है। यह यहाँ 1 दिन और रहेगा।"
+
+#: src/components/people/HistoryRow.tsx:199
+msgid "Shows the write-off and lets you undo it"
+msgstr "माफ़ी दिखाता है और उसे वापस लेने देता है"
+
+#. placeholder {0}: money(full)
+#: src/components/people/CallItEvenDialog.tsx:362
+msgid "That’s more than the open balance of {0}."
+msgstr "यह बकाया बैलेंस {0} से ज़्यादा है।"
+
+#: src/components/people/CallItEvenDialog.tsx:364
+msgid "The whole balance: you’ll be even in {currency}. Other currencies stay as they are."
+msgstr "पूरा बैलेंस: {currency} में हिसाब बराबर हो जाएगा। दूसरी मुद्राएँ जैसी हैं वैसी रहेंगी।"
+
+#: src/components/people/PaymentDetailsDialog.tsx:186
+#: src/components/people/PaymentDetailsDialog.tsx:192
+msgid "Undo write-off"
+msgstr "माफ़ी वापस लें"
+
+#: src/components/people/CallItEvenDialog.tsx:267
+msgid "Write off"
+msgstr "माफ़ करें"
+
+#: src/screens/RecentlyDeleted/components/RestoreDialog.tsx:97
+msgid "Write-off"
+msgstr "माफ़ी"
+
+#: src/screens/RecentlyDeleted/index.tsx:105
+msgid "Write-off restored"
+msgstr "माफ़ी वापस लाई गई"
+
+#: src/components/people/PaymentDetailsDialog.tsx:115
+#: src/screens/RecentlyDeleted/index.tsx:110
+msgid "Write-off undone"
+msgstr "माफ़ी वापस ली गई"
+
+#: src/components/people/CallItEvenDialog.tsx:225
+#: src/components/people/CallItEvenDialog.tsx:242
+msgid "Written off"
+msgstr "माफ़ किया गया"
+
+#. placeholder {0}: money(magnitude(net), e.currency)
+#: src/screens/RecentlyDeleted/describe.ts:39
+msgid "you borrowed {0}"
+msgstr "आपने {0} उधार लिए"
+
+#: src/components/activity/ActivityItem.tsx:661
+msgid "You called it even with {debtor}"
+msgstr "आपने {debtor} के साथ हिसाब बराबर किया"
+
+#. placeholder {0}: name(from)
+#. placeholder {0}: name(r.from)
+#. placeholder {0}: name(w.from)
+#: src/components/people/HistoryRow.tsx:91
+#: src/components/people/PaymentDetailsDialog.tsx:91
+#: src/screens/RecentlyDeleted/describe.ts:49
+msgid "You forgave {0}"
+msgstr "आपने {0} का कर्ज़ माफ़ किया"
+
+#. placeholder {0}: money(net, e.currency)
+#: src/screens/RecentlyDeleted/describe.ts:38
+msgid "you lent {0}"
+msgstr "आपने {0} उधार दिए"
+
+#. placeholder {0}: name(debtor)
+#: src/components/people/CallItEvenDialog.tsx:127
+msgid "You let {0} off"
+msgstr "आप {0} का कर्ज़ माफ़ कर रहे हैं"

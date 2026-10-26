@@ -14,26 +14,31 @@ import {
   type Repayment,
   toExpenseRecord,
   toRepaymentRecord,
+  toWriteOffRecord,
+  type WriteOff,
 } from '@splito/sync'
 
 /** One dated entry of a person's or a group's history. */
 export type HistoryEntry =
   | {kind: 'expense'; entity: Entity<Expense>}
   | {kind: 'repayment'; entity: Entity<Repayment>}
+  | {kind: 'writeoff'; entity: Entity<WriteOff>}
 
 /** History rows with a month heading before each new month. */
 export type HistoryItem =
   | {type: 'month'; key: string; month: string}
   | {type: 'entry'; key: string; entry: HistoryEntry}
 
-/** Live expenses and repayments as one list, newest first. */
+/** Live expenses, repayments and write-offs as one list, newest first. */
 export function toHistory(
   expenses: Entity<Expense>[],
   repayments: Entity<Repayment>[],
+  writeOffs: Entity<WriteOff>[] = [],
 ): HistoryEntry[] {
   return [
     ...expenses.map(entity => ({kind: 'expense' as const, entity})),
     ...repayments.map(entity => ({kind: 'repayment' as const, entity})),
+    ...writeOffs.map(entity => ({kind: 'writeoff' as const, entity})),
   ].sort(
     (x, y) =>
       y.entity.data.date.localeCompare(x.entity.data.date) ||
@@ -59,7 +64,9 @@ export function withMonths(entries: HistoryEntry[]): HistoryItem[] {
 export function toRecord(entry: HistoryEntry) {
   return entry.kind === 'expense'
     ? toExpenseRecord(entry.entity)
-    : toRepaymentRecord(entry.entity)
+    : entry.kind === 'writeoff'
+      ? toWriteOffRecord(entry.entity)
+      : toRepaymentRecord(entry.entity)
 }
 
 /** Whether an entry moves money between me and `personId`. */
@@ -68,7 +75,7 @@ export function involvesPair(
   me: string,
   personId: string,
 ) {
-  if (entry.kind === 'repayment') {
+  if (entry.kind !== 'expense') {
     const {from, to} = entry.entity.data
     return (from === me && to === personId) || (from === personId && to === me)
   }

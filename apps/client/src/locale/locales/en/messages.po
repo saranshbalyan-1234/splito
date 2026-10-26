@@ -3897,3 +3897,314 @@ msgstr "Whole units of the expense’s currency."
 #: src/components/split/fields.tsx:247
 msgid "You can type a sum, like 1200 + 300, or 2k or 1.5L"
 msgstr "You can type a sum, like 1200 + 300, or 2k or 1.5L"
+
+#. placeholder {0}: i18n.date(new Date(item.deletedAt), { dateStyle: 'medium', timeStyle: 'short', })
+#: src/screens/RecentlyDeleted/components/RestoreDialog.tsx:167
+msgid "{0} by {deletedByName}"
+msgstr "{0} by {deletedByName}"
+
+#. placeholder {0}: name(r.to)
+#. placeholder {0}: name(to)
+#. placeholder {0}: name(w.to)
+#. placeholder {1}: name(from)
+#. placeholder {1}: name(r.from)
+#. placeholder {1}: name(w.from)
+#: src/components/people/HistoryRow.tsx:94
+#: src/components/people/PaymentDetailsDialog.tsx:94
+#: src/screens/RecentlyDeleted/describe.ts:52
+msgid "{0} forgave {1}"
+msgstr "{0} forgave {1}"
+
+#. placeholder {0}: name(r.to)
+#. placeholder {0}: name(to)
+#. placeholder {0}: name(w.to)
+#: src/components/people/HistoryRow.tsx:93
+#: src/components/people/PaymentDetailsDialog.tsx:93
+#: src/screens/RecentlyDeleted/describe.ts:51
+msgid "{0} forgave you"
+msgstr "{0} forgave you"
+
+#. placeholder {0}: name(creditor)
+#. placeholder {1}: name(debtor)
+#: src/components/people/CallItEvenDialog.tsx:130
+msgid "{0} lets {1} off"
+msgstr "{0} lets {1} off"
+
+#. placeholder {0}: name(creditor)
+#: src/components/people/CallItEvenDialog.tsx:129
+msgid "{0} lets you off"
+msgstr "{0} lets you off"
+
+#: src/components/activity/ActivityItem.tsx:659
+msgid "{actor} undid a write-off"
+msgstr "{actor} undid a write-off"
+
+#: src/screens/Settings/index.tsx:120
+msgid "{binDays, plural, one {# day} other {# days}}"
+msgstr "{binDays, plural, one {# day} other {# days}}"
+
+#: src/screens/RecentlyDeleted/index.tsx:186
+msgid "{count, plural, one {# item} other {# items}}"
+msgstr "{count, plural, one {# item} other {# items}}"
+
+#: src/components/activity/ActivityItem.tsx:665
+msgid "{creditor} called it even with {debtor}"
+msgstr "{creditor} called it even with {debtor}"
+
+#: src/components/activity/ActivityItem.tsx:663
+msgid "{creditor} called it even with you"
+msgstr "{creditor} called it even with you"
+
+#: src/screens/RecentlyDeleted/index.tsx:247
+msgid "{days, plural, one {Nothing deleted in the last day.} other {Nothing deleted in the last # days.}}"
+msgstr "{days, plural, one {Nothing deleted in the last day.} other {Nothing deleted in the last # days.}}"
+
+#: src/screens/RecentlyDeleted/index.tsx:373
+msgid "{left, plural, one {# day left} other {# days left}}"
+msgstr "{left, plural, one {# day left} other {# days left}}"
+
+#: src/components/people/CallItEvenDialog.tsx:156
+msgid "{where} {amount} owed by {debtorName}"
+msgstr "{where} {amount} owed by {debtorName}"
+
+#: src/components/settings/prefControls.tsx:464
+msgid "1 year"
+msgstr "1 year"
+
+#: src/components/settings/prefControls.tsx:462
+msgid "30 days"
+msgstr "30 days"
+
+#: src/components/settings/prefControls.tsx:461
+msgid "7 days"
+msgstr "7 days"
+
+#: src/components/settings/prefControls.tsx:463
+msgid "90 days"
+msgstr "90 days"
+
+#: src/components/people/PaymentDetailsDialog.tsx:172
+msgid "A debt let go – no money changed hands, and it never counts as spending. Undoing it puts the balance back as it was."
+msgstr "A debt let go – no money changed hands, and it never counts as spending. Undoing it puts the balance back as it was."
+
+#: src/components/settings/prefControls.tsx:459
+msgid "After that they leave this list. Their history stays in each record’s audit trail."
+msgstr "After that they leave this list. Their history stays in each record’s audit trail."
+
+#: src/components/people/CallItEvenDialog.tsx:225
+#: src/components/people/CallItEvenDialog.tsx:242
+msgid "All even"
+msgstr "All even"
+
+#: src/components/people/CallItEvenDialog.tsx:331
+#: src/components/people/CallItEvenDialog.tsx:336
+msgid "Amount to let go"
+msgstr "Amount to let go"
+
+#: src/components/people/CallItEvenDialog.tsx:207
+#: src/components/people/CallItEvenDialog.tsx:267
+#: src/screens/Group/components/GroupRows.tsx:200
+#: src/screens/Group/components/GroupRows.tsx:203
+#: src/screens/Person/index.tsx:398 src/screens/Person/index.tsx:401
+msgid "Call it even"
+msgstr "Call it even"
+
+#: src/components/people/HistoryRow.tsx:95
+#: src/components/people/PaymentDetailsDialog.tsx:52
+msgid "Called it even"
+msgstr "Called it even"
+
+#: src/components/people/CallItEvenDialog.tsx:376
+msgid "Clears: {clears}"
+msgstr "Clears: {clears}"
+
+#: src/components/people/CallItEvenDialog.tsx:195
+msgid "Couldn’t call it even. Please try again."
+msgstr "Couldn’t call it even. Please try again."
+
+#: src/screens/RecentlyDeleted/index.tsx:151
+msgid "Couldn’t delete this. Please try again."
+msgstr "Couldn’t delete this. Please try again."
+
+#: src/components/people/PaymentDetailsDialog.tsx:128
+msgid "Couldn’t put this write-off back"
+msgstr "Couldn’t put this write-off back"
+
+#: src/screens/RecentlyDeleted/index.tsx:140
+msgid "Couldn’t restore this. Please try again."
+msgstr "Couldn’t restore this. Please try again."
+
+#: src/components/people/CallItEvenDialog.tsx:203
+msgid "Couldn’t undo the write-off"
+msgstr "Couldn’t undo the write-off"
+
+#: src/screens/RecentlyDeleted/index.tsx:127
+msgid "Couldn’t undo. Please try again."
+msgstr "Couldn’t undo. Please try again."
+
+#: src/screens/RecentlyDeleted/components/RestoreDialog.tsx:188
+#: src/screens/RecentlyDeleted/components/RestoreDialog.tsx:194
+#: src/screens/RecentlyDeleted/index.tsx:279
+msgid "Delete forever"
+msgstr "Delete forever"
+
+#: src/screens/RecentlyDeleted/index.tsx:277
+msgid "Delete forever?"
+msgstr "Delete forever?"
+
+#: src/screens/RecentlyDeleted/components/RestoreDialog.tsx:166
+msgid "Deleted"
+msgstr "Deleted"
+
+#. placeholder {0}: deletedBy(item.deletedBy)
+#: src/screens/RecentlyDeleted/index.tsx:222
+msgid "Deleted by {0} · {ago}"
+msgstr "Deleted by {0} · {ago}"
+
+#: src/screens/RecentlyDeleted/index.tsx:165
+msgid "Deleted expenses, payments and write-offs wait here before they leave for good. Restore one and its balances come back."
+msgstr "Deleted expenses, payments and write-offs wait here before they leave for good. Restore one and its balances come back."
+
+#: src/screens/RecentlyDeleted/index.tsx:148
+msgid "Deleted forever"
+msgstr "Deleted forever"
+
+#: src/components/people/CallItEvenDialog.tsx:391
+msgid "e.g. Birthday treat"
+msgstr "e.g. Birthday treat"
+
+#: src/screens/RecentlyDeleted/index.tsx:103
+msgid "Expense restored"
+msgstr "Expense restored"
+
+#: src/screens/RecentlyDeleted/components/RestoreDialog.tsx:145
+msgid "For you"
+msgstr "For you"
+
+#: src/screens/RecentlyDeleted/index.tsx:278
+msgid "It leaves Recently deleted and can’t be restored. Its history stays in the record’s audit trail."
+msgstr "It leaves Recently deleted and can’t be restored. Its history stays in the record’s audit trail."
+
+#: src/components/settings/prefControls.tsx:458
+msgid "Keep deleted items for"
+msgstr "Keep deleted items for"
+
+#: src/components/people/CallItEvenDialog.tsx:273
+msgid "Let a debt go without any money changing hands. It shows in history and Activity, never counts as spending, and you can undo it."
+msgstr "Let a debt go without any money changing hands. It shows in history and Activity, never counts as spending, and you can undo it."
+
+#: src/screens/RecentlyDeleted/index.tsx:186
+msgid "Loading…"
+msgstr "Loading…"
+
+#: src/screens/Group/components/GroupRows.tsx:182
+msgid "More options for {sentence}"
+msgstr "More options for {sentence}"
+
+#. placeholder {0}: money(full)
+#: src/components/people/CallItEvenDialog.tsx:303
+msgid "Open balance {0}"
+msgstr "Open balance {0}"
+
+#: src/screens/RecentlyDeleted/index.tsx:318
+msgid "Opens it to restore or delete forever"
+msgstr "Opens it to restore or delete forever"
+
+#. placeholder {0}: money(remainingMinor(full, [typed ?? ZERO]))
+#: src/components/people/CallItEvenDialog.tsx:365
+msgid "Part of it: {0} stays open."
+msgstr "Part of it: {0} stays open."
+
+#: src/screens/RecentlyDeleted/index.tsx:104
+msgid "Payment restored"
+msgstr "Payment restored"
+
+#: src/components/settings/sections.ts:50 src/navigation/Drawer.tsx:232
+#: src/navigation/Navigation.tsx:67 src/screens/RecentlyDeleted/index.tsx:198
+#: src/screens/Settings/index.tsx:110 src/screens/Settings/index.tsx:113
+msgid "Recently deleted"
+msgstr "Recently deleted"
+
+#: src/screens/RecentlyDeleted/components/RestoreDialog.tsx:90
+msgid "Restore payment"
+msgstr "Restore payment"
+
+#: src/screens/RecentlyDeleted/components/RestoreDialog.tsx:91
+msgid "Restore write-off"
+msgstr "Restore write-off"
+
+#: src/screens/RecentlyDeleted/components/RestoreDialog.tsx:180
+msgid "Restoring puts it back in balances, history and Activity. It stays here for {left} more days."
+msgstr "Restoring puts it back in balances, history and Activity. It stays here for {left} more days."
+
+#: src/screens/RecentlyDeleted/components/RestoreDialog.tsx:175
+msgid "Restoring puts it back in balances, history and Activity. It stays here for 1 more day."
+msgstr "Restoring puts it back in balances, history and Activity. It stays here for 1 more day."
+
+#: src/components/people/HistoryRow.tsx:199
+msgid "Shows the write-off and lets you undo it"
+msgstr "Shows the write-off and lets you undo it"
+
+#. placeholder {0}: money(full)
+#: src/components/people/CallItEvenDialog.tsx:362
+msgid "That’s more than the open balance of {0}."
+msgstr "That’s more than the open balance of {0}."
+
+#: src/components/people/CallItEvenDialog.tsx:364
+msgid "The whole balance: you’ll be even in {currency}. Other currencies stay as they are."
+msgstr "The whole balance: you’ll be even in {currency}. Other currencies stay as they are."
+
+#: src/components/people/PaymentDetailsDialog.tsx:186
+#: src/components/people/PaymentDetailsDialog.tsx:192
+msgid "Undo write-off"
+msgstr "Undo write-off"
+
+#: src/components/people/CallItEvenDialog.tsx:267
+msgid "Write off"
+msgstr "Write off"
+
+#: src/screens/RecentlyDeleted/components/RestoreDialog.tsx:97
+msgid "Write-off"
+msgstr "Write-off"
+
+#: src/screens/RecentlyDeleted/index.tsx:105
+msgid "Write-off restored"
+msgstr "Write-off restored"
+
+#: src/components/people/PaymentDetailsDialog.tsx:115
+#: src/screens/RecentlyDeleted/index.tsx:110
+msgid "Write-off undone"
+msgstr "Write-off undone"
+
+#: src/components/people/CallItEvenDialog.tsx:225
+#: src/components/people/CallItEvenDialog.tsx:242
+msgid "Written off"
+msgstr "Written off"
+
+#. placeholder {0}: money(magnitude(net), e.currency)
+#: src/screens/RecentlyDeleted/describe.ts:39
+msgid "you borrowed {0}"
+msgstr "you borrowed {0}"
+
+#: src/components/activity/ActivityItem.tsx:661
+msgid "You called it even with {debtor}"
+msgstr "You called it even with {debtor}"
+
+#. placeholder {0}: name(from)
+#. placeholder {0}: name(r.from)
+#. placeholder {0}: name(w.from)
+#: src/components/people/HistoryRow.tsx:91
+#: src/components/people/PaymentDetailsDialog.tsx:91
+#: src/screens/RecentlyDeleted/describe.ts:49
+msgid "You forgave {0}"
+msgstr "You forgave {0}"
+
+#. placeholder {0}: money(net, e.currency)
+#: src/screens/RecentlyDeleted/describe.ts:38
+msgid "you lent {0}"
+msgstr "you lent {0}"
+
+#. placeholder {0}: name(debtor)
+#: src/components/people/CallItEvenDialog.tsx:127
+msgid "You let {0} off"
+msgstr "You let {0} off"

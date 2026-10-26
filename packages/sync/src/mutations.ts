@@ -65,6 +65,22 @@ export interface Repayment {
 /** `id` makes a retried save idempotent: the same id never records a second payment. */
 export type RepaymentInput = Repayment & {id?: string}
 
+/**
+ * A debt let go ("Call it even"): `from` owed `to`, and `to` forgave it. Same
+ * shape as a payment, but its own entity type, so it is never shown or synced
+ * as money that changed hands.
+ */
+export type WriteOff = Repayment
+
+/** `id` makes a retried save idempotent, as for payments. */
+export type WriteOffInput = WriteOff & {id?: string}
+
+/** Entity types the Recently deleted bin holds. */
+export type BinType = 'expense' | 'repayment' | 'writeoff'
+
+/** Set on a tombstone by "Delete forever": out of the bin, kept in the audit trail. */
+export type Purged = {purgedAt?: number}
+
 /** Versioned write: entity, history row and outbox op, all inside the caller's transaction. */
 async function write<T>(tx: Tx, ctx: MutationCtx, type: EntityType, id: string, data: T, deleted: boolean, opType: string): Promise<Entity<T>> {
   const prev = await tx.get<T>(type, id)
@@ -135,7 +151,7 @@ export async function deletePerson(store: Store, ctx: MutationCtx, id: string): 
   // reads mid-transaction). Fine for one local writer; the server re-checks once sync exists.
   const expenses = await store.getAll<Expense>('expense')
   const groups = await store.getAll<Group>('group')
-  const repayments = await store.getAll<Repayment>('repayment')
+  const repayments = [...(await store.getAll<Repayment>('repayment')), ...(await store.getAll<WriteOff>('writeoff'))]
   const used =
     expenses.some(e => !e.deleted && (id in e.data.payers || id in e.data.shares)) ||
     groups.some(g => !g.deleted && g.data.members.some(m => m.personId === id)) ||
@@ -214,17 +230,40 @@ export async function updateExpense(store: Store, ctx: MutationCtx, id: string, 
 }
 
 export async function deleteExpense(store: Store, ctx: MutationCtx, id: string): Promise<void> {
-  await store.transaction(async tx => {
-    const e = await requireLive<Expense>(tx, 'expense', id)
-    await write(tx, ctx, 'expense', id, e.data, true, 'expense.delete')
-  })
+  await softDelete(store, ctx, 'expense', id)
 }
 
 export async function restoreExpense(store: Store, ctx: MutationCtx, id: string): Promise<void> {
+  await restore(store, ctx, 'expense', id)
+}
+
+/** Tombstones a live ledger entity: a new version, never a hard delete. */
+async function softDelete(store: Store, ctx: MutationCtx, type: BinType, id: string) {
   await store.transaction(async tx => {
-    const e = await tx.get<Expense>('expense', id)
-    if (!e?.deleted) throw new DomainError('NOT_FOUND')
-    await write(tx, ctx, 'expense', id, e.data, false, 'expense.restore')
+    const e = await requireLive(tx, type, id)
+    await write(tx, ctx, type, id, e.data, true, `${type}.delete`)
+  })
+}
+
+/** Brings a tombstone back as a new version. A purged one ("Delete forever") stays gone. */
+async function restore(store: Store, ctx: MutationCtx, type: BinType, id: string) {
+  await store.transaction(async tx => {
+    const e = await tx.get<Purged>(type, id)
+    if (!e?.deleted || e.data.purgedAt !== undefined) throw new DomainError('NOT_FOUND')
+    await write(tx, ctx, type, id, e.data, false, `${type}.restore`)
+  })
+}
+
+/**
+ * "Delete forever" from Recently deleted: the tombstone gets `purgedAt`, so it
+ * leaves the bin and can't be restored, while the entity and every history
+ * version stay in the audit trail (deletes are never hard).
+ */
+export async function purgeDeleted(store: Store, ctx: MutationCtx, type: BinType, id: string): Promise<void> {
+  await store.transaction(async tx => {
+    const e = await tx.get<Purged>(type, id)
+    if (!e?.deleted || e.data.purgedAt !== undefined) throw new DomainError('NOT_FOUND')
+    await write(tx, ctx, type, id, {...e.data, purgedAt: ctx.now()}, true, `${type}.purge`)
   })
 }
 
@@ -238,6 +277,20 @@ export async function createRepayment(store: Store, ctx: MutationCtx, input: Rep
  * balance (`splitPayment`). Each id is idempotent, as in `createRepayment`.
  */
 export async function createRepayments(store: Store, ctx: MutationCtx, inputs: RepaymentInput[]): Promise<Entity<Repayment>[]> {
+  return recordTransfers(store, ctx, 'repayment', inputs)
+}
+
+/**
+ * Records write-offs ("Call it even") in one transaction: all or none, each
+ * id idempotent. A friend's page writes one per balance part it clears
+ * (`writeOffParts`), so each group's own balance moves too.
+ */
+export async function createWriteOffs(store: Store, ctx: MutationCtx, inputs: WriteOffInput[]): Promise<Entity<WriteOff>[]> {
+  return recordTransfers(store, ctx, 'writeoff', inputs)
+}
+
+/** Payments and write-offs: validated alike, written as `<type>.create`. */
+async function recordTransfers(store: Store, ctx: MutationCtx, type: 'repayment' | 'writeoff', inputs: RepaymentInput[]): Promise<Entity<Repayment>[]> {
   const parts = inputs.map(({id, ...rest}) => {
     getCurrency(rest.currency)
     parseLocalDate(rest.date)
@@ -249,37 +302,39 @@ export async function createRepayments(store: Store, ctx: MutationCtx, inputs: R
   return store.transaction(async tx => {
     const written: Entity<Repayment>[] = []
     for (const {id, data} of parts) {
-      const existing = await tx.get<Repayment>('repayment', id)
+      const existing = await tx.get<Repayment>(type, id)
       if (existing) {
         written.push(existing)
         continue
       }
       for (const pid of [data.from, data.to]) await requireLive(tx, 'person', pid, 'UNKNOWN_PERSON')
       if (data.groupId) {
-        // Former members can still settle what they owe from their time in the group.
+        // Former members can still settle (or forgive) what is owed from their time in the group.
         const g = await requireLive<Group>(tx, 'group', data.groupId)
         const members = new Set(g.data.members.map(m => m.personId))
         if (!members.has(data.from) || !members.has(data.to)) throw new DomainError('NOT_A_MEMBER')
       }
-      written.push(await write(tx, ctx, 'repayment', id, data, false, 'repayment.create'))
+      written.push(await write(tx, ctx, type, id, data, false, `${type}.create`))
     }
     return written
   })
 }
 
 export async function deleteRepayment(store: Store, ctx: MutationCtx, id: string): Promise<void> {
-  await store.transaction(async tx => {
-    const r = await requireLive<Repayment>(tx, 'repayment', id)
-    await write(tx, ctx, 'repayment', id, r.data, true, 'repayment.delete')
-  })
+  await softDelete(store, ctx, 'repayment', id)
 }
 
 export async function restoreRepayment(store: Store, ctx: MutationCtx, id: string): Promise<void> {
-  await store.transaction(async tx => {
-    const r = await tx.get<Repayment>('repayment', id)
-    if (!r?.deleted) throw new DomainError('NOT_FOUND')
-    await write(tx, ctx, 'repayment', id, r.data, false, 'repayment.restore')
-  })
+  await restore(store, ctx, 'repayment', id)
+}
+
+/** Undoes a write-off: the balance it cleared comes back. */
+export async function deleteWriteOff(store: Store, ctx: MutationCtx, id: string): Promise<void> {
+  await softDelete(store, ctx, 'writeoff', id)
+}
+
+export async function restoreWriteOff(store: Store, ctx: MutationCtx, id: string): Promise<void> {
+  await restore(store, ctx, 'writeoff', id)
 }
 
 const EDGE_RULES: EdgeRule[] = ['allowed', 'preferred', 'excluded']

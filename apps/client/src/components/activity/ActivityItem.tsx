@@ -42,6 +42,7 @@ import {
   GroupBadge,
   PaymentBadge,
   RestoredBadge,
+  WriteOffBadge,
 } from './icons'
 import {daysAgo} from './feed'
 import {type ActivityActions, type RowAction} from './useActivityActions'
@@ -656,6 +657,58 @@ function useDescribe(
         open: () =>
           r.groupId
             ? navigation.push('Group', {groupId: r.groupId})
+            : navigation.push('Person', {personId: other}),
+      }
+    }
+    case 'writeoff': {
+      const w = event.data
+      const debtor = <Strong>{nameOf(w.from)}</Strong>
+      const creditor = <Strong>{nameOf(w.to)}</Strong>
+      const other = w.from === me ? w.to : w.from
+      const isRemoved = event.kind === 'writeoff.removed'
+      return {
+        avatarName: actorAvatar,
+        icon: isRemoved ? DeletedBadge : WriteOffBadge,
+        tone: isRemoved ? 'negative' : 'primary',
+        headline: isRemoved ? (
+          <Trans>{actor} undid a write-off</Trans>
+        ) : w.to === me ? (
+          <Trans>You called it even with {debtor}</Trans>
+        ) : w.from === me ? (
+          <Trans>{creditor} called it even with you</Trans>
+        ) : (
+          <Trans>
+            {creditor} called it even with {debtor}
+          </Trans>
+        ),
+        detail: (
+          <Detail>
+            <Text
+              style={[
+                a.text_sm,
+                t.atoms.text_contrast_medium,
+                {fontVariant: ['tabular-nums']},
+                isRemoved && {textDecorationLine: 'line-through'},
+              ]}>
+              {money(w.amount, w.currency)}
+            </Text>
+            {groupName(w.groupId) ? (
+              <>
+                <Dot />
+                {groupName(w.groupId)}
+              </>
+            ) : null}
+            {w.note ? (
+              <>
+                <Dot />
+                {w.note}
+              </>
+            ) : null}
+          </Detail>
+        ),
+        open: () =>
+          w.groupId
+            ? navigation.push('Group', {groupId: w.groupId})
             : navigation.push('Person', {personId: other}),
       }
     }
