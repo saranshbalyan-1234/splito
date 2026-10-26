@@ -1,6 +1,6 @@
 # Splito completion matrix
 
-Updated 2026-10-26. Status words: **done** (built and tested, merged on m1-foundation), **built** (built and tested on an unmerged branch), **in progress** (being built now), **wave 2** (front-end work, next run), **needs backend** (blocked on sync/auth server, built after the UI), **not started**.
+Updated 2026-10-26 (evening). Sources: Splito-Claude-Prompt.txt (original handoff), docs/superpowers/specs/2026-10-26-splito-design.md, AGENTS.md "Latest owner UI decisions" 1-9. Status words: **done** (built and tested, merged on m1-foundation), **built** (built and tested on an unmerged branch), **in progress** (being built now), **wave 2** (front-end work, next run), **needs backend** (blocked on sync/auth server, built after the UI), **not started**.
 
 | Area | Feature | Status |
 |---|---|---|
@@ -8,15 +8,21 @@ Updated 2026-10-26. Status words: **done** (built and tested, merged on m1-found
 | Core rules | Settlement planner with allowed / preferred / excluded routes | done (domain) |
 | Storage | Offline local store (SQLite / IndexedDB), history, outbox, preferences registry | done (sync, 40 tests) |
 | Shell | Bluesky sidebar / bottom bar / FAB / drawer / header rules / cat logo / brand kit | built (preview branch, iOS + web verified) |
-| Shell | Activity back in bottom bar + sidebar, no header bell | in progress |
+| Shell | Activity in bottom bar + sidebar + drawer (pulse icon, unread badge), no header bell | built (preview, web + iOS verified) |
+| Shell | Avatar top-left opens Bluesky drawer (profile header, all menu items, dark theme, help/about) | built (preview, web + iOS verified) |
+| Shell | Header rules: left avatar/back, centred title, one action on the right | built (preview) |
+| Shell | Add expense: Bluesky "New Post" pill on desktop, floating + on phones | built (preview) |
+| Lists | Overview section on Friends and Groups (per-currency owed/owe cards, counts) | next merge (rule 9) |
+| Lists | Search icon that expands into a search field, on Friends and Groups | next merge (rule 9) |
+| Lists | Filters on Friends (include groups, currency, owed/owe/settled, sort) and Groups (type, active/archived, currency, owed/owe/settled, sort) | next merge (rules 8-9) |
 | Expenses | Add / edit / delete / undo, equal / exact / percent / shares / adjust / itemize, multiple payers, calculator, currencies, any date, categories | in progress (feature branch) |
-| Expenses | Item portions (2 of 3 beers), Everyone shortcut, items on detail page | in progress (rule 5) |
-| Sheets | One FormSheet layout: X top-right, Cancel + Save at bottom, web popup | in progress (rule 7) |
+| Expenses | Item portions (2 of 3 beers), Everyone shortcut, items on detail page | next merge (rule 5) |
+| Sheets | Every sheet: X top-right, Cancel + Save at the bottom; web = centred popup with X top-right, Cancel + Save bottom-right; pickers X only; discard prompt | next merge (rule 7) |
 | People | Balances per currency, group breakdown, person page, Include groups filter | in progress |
 | People | Filters sheet (include groups, currency, owes/owed/settled, sort) | in progress (rule 8) |
-| Groups | Groups list with balances summary, group page with Expenses / Balances / Members | in progress (rule 8) |
+| Groups | Group page with Expenses / Balances / Members / Rules tabs | built (main build) |
 | Settle up | Plan per group (direct / via others), who-pays-whom rules, record payment, UPI link | in progress |
-| Activity | Feed, read/unread, all / from others, row menu, swipe, hide, undo | in progress |
+| Activity | Feed, read/unread, all / from others, row menu, swipe, hide, undo | built (feature branch); actor avatar + day headers + lent/borrowed rows next merge (rule 6) |
 | Analytics | Charts by time / category / person / group, paid vs share, filters, CSV export | in progress |
 | Settings | Every preference: theme, accent, text size, density, motion, haptics, tabs, defaults, categories, language (en / hi), timezone, formats, lists, notifications | in progress |
 | Expenses+ | Recurring expenses (rent, subscriptions) | wave 2 |
@@ -44,6 +50,7 @@ Updated 2026-10-26. Status words: **done** (built and tested, merged on m1-found
 | Platform | Home-screen widgets and quick-add shortcut | wave 2 (native build) |
 | Platform | Share a receipt into Splito from other apps | wave 2 (native build) |
 | Platform | PWA install, offline shell, update handling | wave 2 |
+| Platform | iOS simulator dev build (iPhone 18 Pro) | done (runs; Bluesky build settings + Intl polyfills) |
 | Platform | Android emulator run | not started (needs Java on PATH) |
 | Account | Sign-in (email / mobile OTP, Google, Apple), sessions | needs backend |
 | Account | Sync across devices, conflicts | needs backend (server started on fan2/api, paused) |
