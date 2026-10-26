@@ -11,7 +11,7 @@ glyphs, illustrations, logos or `assets/images` are copied.
 | `src/view/shell/desktop/composeButtonLayout.ts` | `src/view/shell/desktop/composeButtonLayout.ts` | - |
 | `src/view/shell/bottom-bar/BottomBar.tsx` | `src/view/shell/bottom-bar/BottomBar.tsx` | Splito tabs from the `tabs` preference; no centre button; account switching and chat removed; Bluesky's Notifications unread badge on the Activity tab |
 | `src/view/shell/bottom-bar/BottomBarWeb.tsx` | `src/view/shell/bottom-bar/BottomBarWeb.tsx` | As BottomBar |
-| `src/view/shell/bottom-bar/BottomBarStyles.tsx` | `src/view/shell/bottom-bar/BottomBarStyles.tsx` | Web unread badge sits 6px higher, clear of the Activity pulse glyph |
+| `src/view/shell/bottom-bar/BottomBarStyles.tsx` | `src/view/shell/bottom-bar/BottomBarStyles.tsx` | Unread badge sits 6px higher (web and native), clear of the Activity pulse glyph |
 | `src/view/shell/createNativeStackNavigatorWithAuth.tsx` | `src/view/shell/createNativeStackNavigatorWithAuth.tsx` | Auth gates removed; main content offset by the sidebar width; footer height reset off phones |
 | `src/view/shell/index.tsx` | `src/view/shell/index.tsx` | Composer, global dialogs, OTA and push hooks removed (drawer: see `preview-shell.md`) |
 | `src/view/shell/index.web.tsx` | `src/view/shell/index.web.tsx` | As above |

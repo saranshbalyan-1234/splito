@@ -2,7 +2,6 @@
 import {useCallback} from 'react'
 import {View} from 'react-native'
 import Animated from 'react-native-reanimated'
-import {msg, plural} from '@lingui/core/macro'
 import {useLingui} from '@lingui/react'
 import {useNavigationState} from '@react-navigation/native'
 import {type TabId} from '@splito/sync'
@@ -16,7 +15,7 @@ import {atoms as a, useTheme} from '#/alf'
 import {TAB_LABELS, TabGlyph} from '#/components/TabGlyph'
 import {Text} from '#/components/Typography'
 import {useAnalytics} from '#/analytics'
-import {useUnreadCount} from '#/features/notifications'
+import {describeUnread, useUnreadCount} from '#/features/notifications'
 import {styles} from './BottomBarStyles'
 
 type NavItemValue = TabId
@@ -87,7 +86,6 @@ const NavItem: React.FC<{
   onLongPress,
 }) => {
   const t = useTheme()
-  const {_} = useLingui()
   const ax = useAnalytics()
   const currentRoute = useNavigationState(state => {
     if (!state) {
@@ -122,12 +120,7 @@ const NavItem: React.FC<{
             styles.notificationCountWeb,
             {backgroundColor: t.palette.primary_500},
           ]}
-          aria-label={_(
-            msg`${plural(notificationCount, {
-              one: '# unread item',
-              other: '# unread items',
-            })}`,
-          )}>
+          aria-label={describeUnread(notificationCount)}>
           <Text
             testID={`nav-badge-${navItem}`}
             style={styles.notificationCountLabel}>

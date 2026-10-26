@@ -224,6 +224,7 @@ test.describe("activity: a tab with Bluesky's unread badge", () => {
     await expect(badge).toHaveText(/^\d+$/)
     const unread = Number(await badge.innerText())
     expect(unread).toBeGreaterThan(0)
+    await expect(badge).toHaveAttribute('aria-label', `${unread} unread items`)
     await page.getByTestId('tab-activity').click()
     await expect(page).toHaveURL(/\/activity$/)
     await expect(page.getByTestId('screen-activity')).toBeVisible()

@@ -3,7 +3,6 @@ import {type JSX, useCallback} from 'react'
 import {type GestureResponderEvent, View} from 'react-native'
 import Animated from 'react-native-reanimated'
 import {useSafeAreaInsets} from 'react-native-safe-area-context'
-import {plural} from '@lingui/core/macro'
 import {useLingui} from '@lingui/react'
 import {type BottomTabBarProps} from '@react-navigation/bottom-tabs'
 import {StackActions} from '@react-navigation/native'
@@ -21,7 +20,7 @@ import {atoms as a, useTheme} from '#/alf'
 import {TAB_LABELS, TabGlyph} from '#/components/TabGlyph'
 import {Text} from '#/components/Typography'
 import {useAnalytics} from '#/analytics'
-import {useUnreadCount} from '#/features/notifications'
+import {describeUnread, useUnreadCount} from '#/features/notifications'
 import {styles} from './BottomBarStyles'
 
 /*
@@ -117,12 +116,7 @@ export function BottomBar({navigation}: BottomTabBarProps) {
             accessibilityRole="tab"
             accessibilityLabel={_(TAB_LABELS[tab])}
             accessibilityHint={
-              tab === 'activity' && numUnreadNotifications
-                ? plural(numUnreadNotifications, {
-                    one: '# unread item',
-                    other: '# unread items',
-                  })
-                : ''
+              tab === 'activity' ? describeUnread(numUnreadNotifications) : ''
             }
           />
         ))}

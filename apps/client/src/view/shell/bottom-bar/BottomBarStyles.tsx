@@ -23,7 +23,8 @@ export const styles = StyleSheet.create({
   notificationCount: {
     position: 'absolute',
     left: '52%',
-    top: 8,
+    // Above upstream's 8: the Activity pulse is only empty at its top right (at 8 it covers the right tail on iOS).
+    top: 2,
     paddingHorizontal: 5,
     paddingTop: 1,
     paddingBottom: 2,
@@ -31,8 +32,6 @@ export const styles = StyleSheet.create({
     zIndex: 1,
   },
   notificationCountWeb: {
-    // Above upstream's 8: the Activity pulse is only empty at its top right.
-    top: 2,
     paddingTop: 3,
     paddingBottom: 3,
     borderRadius: 12,

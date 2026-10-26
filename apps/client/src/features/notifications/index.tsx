@@ -1,4 +1,5 @@
 import {createContext, useContext, useEffect, useState} from 'react'
+import {plural} from '@lingui/core/macro'
 import {useLingui} from '@lingui/react/macro'
 import {formatAmount} from '@splito/domain'
 import {
@@ -168,6 +169,14 @@ export function useNotifications(): ActivityItem[] | undefined {
 export function useUnreadCount() {
   const count = useNotifications()?.filter(item => item.isUnread).length ?? 0
   return count >= 30 ? '30+' : count === 0 ? '' : String(count)
+}
+
+/** "13 unread items" for screen readers. The badge text can be '30+', which plural() reads as NaN, so it gets a number. */
+export function describeUnread(count: string) {
+  const unreadCount = Number.parseInt(count, 10)
+  return unreadCount
+    ? plural(unreadCount, {one: '# unread item', other: '# unread items'})
+    : ''
 }
 
 /** Marks everything up to now as read on this device. */

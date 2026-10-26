@@ -134,10 +134,6 @@ msgstr "{actor} ने {subject}{amount} बदला"
 msgid "{actor} restored {subject}{amount}"
 msgstr "{actor} ने {subject}{amount} वापस लाया"
 
-#: src/view/shell/desktop/LeftNav.tsx:240
-msgid "{count, plural, one {# unread item} other {# unread items}}"
-msgstr "{count, plural, one {# अपठित} other {# अपठित}}"
-
 #: src/screens/People/components/BalanceSummary.tsx:139
 msgid "{currency} balance – open analytics"
 msgstr "{currency} बैलेंस – विश्लेषण खोलें"
@@ -146,23 +142,15 @@ msgstr "{currency} बैलेंस – विश्लेषण खोले�
 msgid "{memberCount} members"
 msgstr "{memberCount} सदस्य"
 
-#: src/view/shell/bottom-bar/BottomBarWeb.tsx:126
-msgid "{notificationCount, plural, one {# unread item} other {# unread items}}"
-msgstr "{notificationCount, plural, one {# अपठित} other {# अपठित}}"
-
-#: src/view/shell/bottom-bar/BottomBar.tsx:121
-msgid "{numUnreadNotifications, plural, one {# unread item} other {# unread items}}"
-msgstr "{numUnreadNotifications, plural, one {# अपठित} other {# अपठित}}"
-
-#: src/navigation/Drawer.tsx:209
+#: src/features/notifications/index.tsx:178
 msgid "{unreadCount, plural, one {# unread item} other {# unread items}}"
 msgstr "{unreadCount, plural, one {# अपठित} other {# अपठित}}"
 
-#: src/navigation/Drawer.tsx:102
+#: src/navigation/Drawer.tsx:101
 msgid "<0>{friendCount}</0> {friendCount, plural, one {friend} other {friends}}"
 msgstr "<0>{friendCount}</0> {friendCount, plural, one {दोस्त} other {दोस्त}}"
 
-#: src/navigation/Drawer.tsx:107
+#: src/navigation/Drawer.tsx:106
 msgid "<0>{groupCount}</0> {groupCount, plural, one {group} other {groups}}"
 msgstr "<0>{groupCount}</0> {groupCount, plural, one {समूह} other {समूह}}"
 
@@ -170,32 +158,32 @@ msgstr "<0>{groupCount}</0> {groupCount, plural, one {समूह} other {स�
 msgid "1 member"
 msgstr "1 सदस्य"
 
-#: src/navigation/Drawer.tsx:325
+#: src/navigation/Drawer.tsx:317
 #: src/screens/Profile.tsx:79
 #: src/screens/Profile.tsx:82
 msgid "About"
 msgstr "परिचय"
 
-#: src/navigation/Drawer.tsx:316
+#: src/navigation/Drawer.tsx:308
 msgid "About Splito"
 msgstr "Splito के बारे में"
 
 #: src/components/TabGlyph.tsx:30
-#: src/navigation/Drawer.tsx:206
+#: src/navigation/Drawer.tsx:205
 #: src/navigation/Navigation.tsx:60
 #: src/screens/Activity.tsx:64
-#: src/view/shell/desktop/LeftNav.tsx:366
+#: src/view/shell/desktop/LeftNav.tsx:361
 msgid "Activity"
 msgstr "गतिविधि"
 
 #: src/navigation/Navigation.tsx:67
 #: src/screens/AddExpense.tsx:33
-#: src/view/shell/desktop/LeftNav.tsx:311
+#: src/view/shell/desktop/LeftNav.tsx:306
 msgid "Add expense"
 msgstr "खर्च जोड़ें"
 
 #: src/components/AddExpenseFAB.tsx:31
-#: src/view/shell/desktop/LeftNav.tsx:319
+#: src/view/shell/desktop/LeftNav.tsx:314
 msgctxt "action"
 msgid "Add expense"
 msgstr "खर्च जोड़ें"
@@ -221,14 +209,14 @@ msgid "All settled up"
 msgstr "सब हिसाब बराबर"
 
 #: src/components/TabGlyph.tsx:29
-#: src/navigation/Drawer.tsx:199
+#: src/navigation/Drawer.tsx:198
 #: src/navigation/Navigation.tsx:59
 #: src/screens/Analytics.tsx:14
 #: src/screens/People/components/BalanceSummary.tsx:91
 #: src/screens/People/components/BalanceSummary.tsx:96
 #: src/screens/Profile.tsx:61
 #: src/screens/Profile.tsx:64
-#: src/view/shell/desktop/LeftNav.tsx:362
+#: src/view/shell/desktop/LeftNav.tsx:357
 msgid "Analytics"
 msgstr "विश्लेषण"
 
@@ -290,8 +278,8 @@ msgstr "समूह बनाएं"
 msgid "CSV export arrives with Analytics."
 msgstr "CSV एक्सपोर्ट विश्लेषण के साथ आएगा।"
 
-#: src/navigation/Drawer.tsx:241
-#: src/navigation/Drawer.tsx:260
+#: src/navigation/Drawer.tsx:233
+#: src/navigation/Drawer.tsx:252
 msgid "Dark theme"
 msgstr "डार्क थीम"
 
@@ -333,7 +321,7 @@ msgstr "दोस्त"
 msgid "From others"
 msgstr "दूसरों से"
 
-#: src/navigation/Drawer.tsx:304
+#: src/navigation/Drawer.tsx:296
 msgid "Get help"
 msgstr "मदद लें"
 
@@ -349,14 +337,14 @@ msgid "Group"
 msgstr "समूह"
 
 #: src/components/TabGlyph.tsx:28
-#: src/navigation/Drawer.tsx:192
+#: src/navigation/Drawer.tsx:191
 #: src/navigation/Navigation.tsx:58
 #: src/screens/Groups/index.tsx:47
-#: src/view/shell/desktop/LeftNav.tsx:358
+#: src/view/shell/desktop/LeftNav.tsx:353
 msgid "Groups"
 msgstr "समूह"
 
-#: src/navigation/Drawer.tsx:311
+#: src/navigation/Drawer.tsx:303
 msgid "Help"
 msgstr "मदद"
 
@@ -402,7 +390,7 @@ msgstr "अभी"
 msgid "Open menu"
 msgstr "मेन्यू खोलें"
 
-#: src/navigation/Drawer.tsx:78
+#: src/navigation/Drawer.tsx:77
 msgid "Opens your profile"
 msgstr "आपकी प्रोफ़ाइल खोलता है"
 
@@ -416,8 +404,8 @@ msgid "owes you <0>{figure}</0>"
 msgstr "आपको मिलेंगे <0>{figure}</0>"
 
 #: src/components/TabGlyph.tsx:27
-#: src/navigation/Drawer.tsx:185
-#: src/view/shell/desktop/LeftNav.tsx:354
+#: src/navigation/Drawer.tsx:184
+#: src/view/shell/desktop/LeftNav.tsx:349
 msgid "People"
 msgstr "लोग"
 
@@ -426,8 +414,8 @@ msgstr "लोग"
 msgid "Person"
 msgstr "व्यक्ति"
 
-#: src/navigation/Drawer.tsx:77
-#: src/navigation/Drawer.tsx:222
+#: src/navigation/Drawer.tsx:76
+#: src/navigation/Drawer.tsx:214
 #: src/navigation/Navigation.tsx:61
 #: src/screens/Profile.tsx:34
 msgid "Profile"
@@ -442,19 +430,19 @@ msgstr "सहेजें"
 msgid "Save expense"
 msgstr "खर्च सहेजें"
 
-#: src/navigation/Drawer.tsx:98
+#: src/navigation/Drawer.tsx:97
 #: src/screens/Profile.tsx:131
 msgid "Saved on this device"
 msgstr "इस डिवाइस पर सहेजा गया"
 
-#: src/navigation/Drawer.tsx:229
+#: src/navigation/Drawer.tsx:221
 #: src/navigation/Navigation.tsx:62
 #: src/navigation/Navigation.tsx:63
 #: src/screens/Profile.tsx:70
 #: src/screens/Profile.tsx:73
 #: src/screens/Settings/index.tsx:8
 #: src/screens/Settings/SettingsSection.tsx:8
-#: src/view/shell/desktop/LeftNav.tsx:390
+#: src/view/shell/desktop/LeftNav.tsx:385
 msgid "Settings"
 msgstr "सेटिंग्स"
 
@@ -473,7 +461,7 @@ msgstr "हिसाब बराबर"
 msgid "Sign in and sync"
 msgstr "साइन इन और सिंक"
 
-#: src/features/notifications/index.tsx:104
+#: src/features/notifications/index.tsx:105
 msgid "Someone"
 msgstr "कोई"
 
@@ -482,7 +470,7 @@ msgid "Split anything with anyone. Add an expense or a friend to get started –
 msgstr "किसी के भी साथ कुछ भी बांटें। शुरू करने के लिए खर्च या दोस्त जोड़ें – दोस्तों को ऐप की ज़रूरत नहीं।"
 
 #: src/screens/People/index.tsx:86
-#: src/view/shell/desktop/LeftNav.tsx:117
+#: src/view/shell/desktop/LeftNav.tsx:116
 msgid "Splito - People"
 msgstr "Splito - लोग"
 
@@ -495,7 +483,7 @@ msgstr "यह स्क्रीन बन रही है"
 msgid "Trip"
 msgstr "यात्रा"
 
-#: src/features/notifications/index.tsx:104
+#: src/features/notifications/index.tsx:105
 msgid "You"
 msgstr "आप"
 

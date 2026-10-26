@@ -3,7 +3,6 @@ import {useCallback, useMemo} from 'react'
 import {ScrollView, StyleSheet, View} from 'react-native'
 import {useSafeAreaInsets} from 'react-native-safe-area-context'
 import {type TabId} from '@splito/sync'
-import {plural} from '@lingui/core/macro'
 import {Trans, useLingui} from '@lingui/react/macro'
 import {useNavigation, useNavigationState} from '@react-navigation/native'
 
@@ -53,7 +52,7 @@ import {HEADER_HEIGHT} from '#/components/Layout/const'
 import {Text} from '#/components/Typography'
 import {useAnalytics} from '#/analytics'
 import {IS_NATIVE} from '#/env'
-import {useUnreadCount} from '#/features/notifications'
+import {describeUnread, useUnreadCount} from '#/features/notifications'
 import {router} from '#/routes'
 import {getComposeButtonLayout} from './composeButtonLayout'
 
@@ -154,7 +153,6 @@ function NavItem({
   onNavigateTab,
 }: NavItemProps) {
   const t = useTheme()
-  const {t: l} = useLingui()
   const accessibilityLabel = label
   const ax = useAnalytics()
 
@@ -237,10 +235,7 @@ function NavItem({
             ]}>
             <Text
               testID={`nav-badge-${navItem}`}
-              accessibilityLabel={l`${plural(count, {
-                one: '# unread item',
-                other: '# unread items',
-              })}`}
+              accessibilityLabel={describeUnread(count)}
               accessibilityHint=""
               accessible={true}
               numberOfLines={1}
@@ -253,9 +248,9 @@ function NavItem({
                 a.leading_tight,
                 a.z_20,
                 {
-                  // Higher and further right than upstream's bell: the pulse glyph is only empty at its top right.
-                  top: -6,
-                  left: count.length === 1 ? 12 : 10,
+                  // The pulse is only empty at its top right: start past the downstroke, end above the label's cap height ('30+' too).
+                  top: -9,
+                  left: 13,
                   backgroundColor: t.palette.primary_500,
                   color: t.palette.white,
                   lineHeight: a.text_sm.fontSize,

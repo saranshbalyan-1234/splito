@@ -2,7 +2,6 @@
 import {type JSX, memo} from 'react'
 import {ScrollView, TouchableOpacity, View} from 'react-native'
 import {useSafeAreaInsets} from 'react-native-safe-area-context'
-import {plural} from '@lingui/core/macro'
 import {Plural, Trans, useLingui} from '@lingui/react/macro'
 import {
   StackActions,
@@ -49,7 +48,7 @@ import {
 } from '#/components/icons/UserCircle'
 import {Text} from '#/components/Typography'
 import {IS_WEB} from '#/env'
-import {useUnreadCount} from '#/features/notifications'
+import {describeUnread, useUnreadCount} from '#/features/notifications'
 
 const iconWidth = 26
 
@@ -204,14 +203,7 @@ function DrawerContentInner(): React.ReactNode {
           testID="drawer-activity"
           icons={[ActivityIcon, ActivityFilledIcon]}
           label={l`Activity`}
-          accessibilityHint={
-            unreadCount
-              ? plural(unreadCount, {
-                  one: '# unread item',
-                  other: '# unread items',
-                })
-              : ''
-          }
+          accessibilityHint={describeUnread(unreadCount)}
           count={unreadCount}
           isActive={isAt('Activity')}
           onPress={() => onPressTab('Activity')}
@@ -376,34 +368,29 @@ function MenuItem({
               <View
                 style={[
                   a.absolute,
-                  a.inset_0,
-                  a.align_end,
-                  {top: -4, right: a.gap_sm.gap * -1},
+                  a.rounded_full,
+                  {
+                    // The pulse is only empty at its top right: start past the downstroke, clear of the label ('30+' too).
+                    top: -6,
+                    left: 13,
+                    paddingHorizontal: 4,
+                    paddingVertical: 1,
+                    backgroundColor: t.palette.primary_500,
+                  },
                 ]}>
-                <View
+                <Text
                   style={[
-                    a.rounded_full,
+                    a.text_xs,
+                    a.leading_tight,
+                    a.font_semi_bold,
                     {
-                      right: count.length === 1 ? 6 : 0,
-                      paddingHorizontal: 4,
-                      paddingVertical: 1,
-                      backgroundColor: t.palette.primary_500,
+                      fontVariant: ['tabular-nums'],
+                      color: t.palette.white,
                     },
-                  ]}>
-                  <Text
-                    style={[
-                      a.text_xs,
-                      a.leading_tight,
-                      a.font_semi_bold,
-                      {
-                        fontVariant: ['tabular-nums'],
-                        color: t.palette.white,
-                      },
-                    ]}
-                    numberOfLines={1}>
-                    {count}
-                  </Text>
-                </View>
+                  ]}
+                  numberOfLines={1}>
+                  {count}
+                </Text>
               </View>
             ) : undefined}
           </View>
