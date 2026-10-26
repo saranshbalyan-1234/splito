@@ -10,6 +10,7 @@ import {Provider as ShellStateProvider} from '#/state/shell'
 import {useAccentThemes} from '#/state/theme'
 import {ThemeProvider as Alf} from '#/alf'
 import {useColorModeTheme} from '#/alf/util/useColorModeTheme'
+import {GestureRoot} from '#/components/GestureRoot'
 import {Provider as PortalProvider} from '#/components/Portal'
 import {ToastOutlet} from '#/components/Toast'
 import {StoreProvider} from '#/data/StoreProvider'
@@ -43,12 +44,14 @@ function Themed() {
 
 export default function App() {
   return (
-    <SafeAreaProvider>
-      <I18nProvider i18n={i18n}>
-        <A11yProvider>
-          <Themed />
-        </A11yProvider>
-      </I18nProvider>
-    </SafeAreaProvider>
+    <GestureRoot>
+      <SafeAreaProvider>
+        <I18nProvider i18n={i18n}>
+          <A11yProvider>
+            <Themed />
+          </A11yProvider>
+        </I18nProvider>
+      </SafeAreaProvider>
+    </GestureRoot>
   )
 }

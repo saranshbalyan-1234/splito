@@ -1,7 +1,7 @@
 import {describe, expect, test} from 'bun:test'
 import fc from 'fast-check'
 
-import {type ExpenseRecord, groupNet, type LedgerRecord, pairwiseBalances, personSummary, type RepaymentRecord} from '../src/ledger'
+import {expenseNet, type ExpenseRecord, groupNet, type LedgerRecord, pairwiseBalances, personSummary, type RepaymentRecord} from '../src/ledger'
 import {computeShares} from '../src/split'
 
 const exp = (e: Omit<ExpenseRecord, 'kind' | 'date' | 'deleted'>): ExpenseRecord => ({kind: 'expense', date: '2026-01-01', deleted: false, ...e})
@@ -70,4 +70,23 @@ describe('groupNet', () => {
     expect(groupNet([grp], 'g1')).toEqual({INR: {me: 50n, x: -50n}}))
   test('repayment moves net toward zero', () =>
     expect(groupNet([grp, rep({from: 'x', to: 'me', amount: 50n, groupId: 'g1', currency: 'INR'})], 'g1')).toEqual({INR: {me: 0n, x: 0n}}))
+})
+
+describe('expenseNet (one expense, one person)', () => {
+  test('paid minus share: lent, borrowed, not involved', () => {
+    const e = {payers: {me: 300n, x: 0n}, shares: {me: 100n, x: 100n, y: 100n}}
+    expect(expenseNet(e, 'me')).toBe(200n)
+    expect(expenseNet(e, 'x')).toBe(-100n)
+    expect(expenseNet(e, 'z')).toBe(0n)
+  })
+  test('matches the group net for a single expense', () =>
+    fc.assert(
+      fc.property(fc.bigInt({min: 1n, max: 10n ** 9n}), fc.integer({min: 1, max: 6}), (total, k) => {
+        const people = Array.from({length: k}, (_, i) => `p${i}`)
+        const shares = computeShares(total, {mode: 'equal', participants: people})
+        const e = exp({id: 'e', groupId: 'g', currency: 'INR', total, payers: {p0: total}, shares})
+        const net = groupNet([e], 'g').INR!
+        for (const p of people) expect(expenseNet(e, p)).toBe(net[p] ?? 0n)
+      }),
+    ))
 })

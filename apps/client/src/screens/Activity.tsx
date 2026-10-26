@@ -1,148 +1,85 @@
-import {useEffect, useState} from 'react'
 import {View} from 'react-native'
-import {LayoutAnimationConfig} from 'react-native-reanimated'
-import {Trans, useLingui} from '@lingui/react/macro'
-import {formatAmount} from '@splito/domain'
-import {
-  type Entity,
-  type Expense,
-  type Group,
-  type HistoryRow,
-  type Person,
-  type Store,
-} from '@splito/sync'
+import Animated, {LayoutAnimationConfig} from 'react-native-reanimated'
+import {Plural, Trans, useLingui} from '@lingui/react/macro'
+import {PREFS} from '@splito/sync'
 
 import {useNumberLocale} from '#/locale/numberLocale'
-import {useMutationCtx, useStore} from '#/data/hooks'
-import {
-  type ActivityItem,
-  NotificationFeedItem,
-  NotificationFeedItemPlaceholder,
-} from '#/view/com/notifications/NotificationFeedItem'
+import {usePref} from '#/data/hooks'
 import {EmptyState} from '#/view/com/util/EmptyState'
 import {List} from '#/view/com/util/List'
-import {useBreakpoints} from '#/alf'
+import {atoms as a, useBreakpoints, useTheme} from '#/alf'
+import {ActivityItem} from '#/components/activity/ActivityItem'
+import {type FeedRow} from '#/components/activity/feed'
+import {LoadingSkeleton} from '#/components/activity/LoadingSkeleton'
+import {
+  getBorderColor,
+  SectionHeader,
+} from '#/components/activity/SectionHeader'
+import {useActivityActions} from '#/components/activity/useActivityActions'
+import {useActivityFeed} from '#/components/activity/useActivityFeed'
 import {AddExpenseFAB} from '#/components/AddExpenseFAB'
+import {Button, ButtonIcon, ButtonText} from '#/components/Button'
 import {HeaderAvatar} from '#/components/HeaderAvatar'
+import {CheckThick_Stroke2_Corner0_Rounded as CheckIcon} from '#/components/icons/Check'
 import * as Layout from '#/components/Layout'
+import {Text} from '#/components/Typography'
 import {Shimmer} from '#/motion/Shimmer'
+import {useListAnimations} from '#/motion/listAnimations'
 
-const PLACEHOLDER_ROWS = 8
-
-type Change = {entity: Entity; row: HistoryRow; prev: HistoryRow | undefined}
+const isUnreadRow = (row: FeedRow | undefined) =>
+  row?.type === 'event' && !row.isRead
 
 /**
- * Every entity's history rows, newest first. Includes deleted entities, so
- * deletes and restores show up.
- * ponytail: one history read per entity on each store change; add a
- * store-wide "history since" query when activity gets long.
+ * Activity: every change in the local audit history (expenses, friends,
+ * groups, payments) in Bluesky's notifications list, under one header per
+ * day. Read and hidden marks are personal and stay on this device.
  */
-async function loadChanges(store: Store): Promise<Change[]> {
-  const entities = (
-    await Promise.all([
-      store.getAll('person'),
-      store.getAll('group'),
-      store.getAll('expense'),
-    ])
-  ).flat()
-  const changes: Change[] = []
-  for (const entity of entities) {
-    const rows = (await store.history(entity.type, entity.id)).sort(
-      (x, y) => x.version - y.version,
-    )
-    rows.forEach((row, i) => changes.push({entity, row, prev: rows[i - 1]}))
-  }
-  return changes.sort(
-    (x, y) => y.row.at - x.row.at || y.row.version - x.row.version,
-  )
-}
-
-/** Live history, re-read after every committed store transaction. */
-function useChanges() {
-  const store = useStore()
-  const [changes, setChanges] = useState<Change[]>()
-  useEffect(() => {
-    let cancelled = false
-    const run = () =>
-      void loadChanges(store).then(c => {
-        if (!cancelled) setChanges(c)
-      })
-    run()
-    const off = store.subscribe(run)
-    return () => {
-      cancelled = true
-      off()
-    }
-  }, [store])
-  return changes
-}
-
-/** Activity: changes from the local store's history, in Bluesky's notification rows. */
 export function ActivityScreen() {
+  const t = useTheme()
   const {t: l} = useLingui()
   const locale = useNumberLocale()
-  const {actor} = useMutationCtx()
-  const changes = useChanges()
   const {gtMobile} = useBreakpoints()
+  const listAnimations = useListAnimations()
+  const feed = useActivityFeed()
+  const actions = useActivityActions(feed)
+  const [swipeLeft = PREFS.swipeLeft.default] = usePref('swipeLeft')
+  const [swipeRight = PREFS.swipeRight.default] = usePref('swipeRight')
+  const {snapshot, rows, hiddenCount, unreadCount, me} = feed
 
-  const names = new Map<string, string>()
-  for (const c of changes ?? []) {
-    if (c.entity.type === 'person') {
-      names.set(c.entity.id, (c.entity.data as Person).name)
+  const renderItem = ({item: row, index}: {item: FeedRow; index: number}) => {
+    if (!snapshot) return null
+    if (row.type === 'section') {
+      return (
+        <SectionHeader
+          day={row.day}
+          isFirst={index === 0}
+          isUnreadAbove={isUnreadRow(rows[index - 1])}
+          isUnreadBelow={isUnreadRow(rows[index + 1])}
+        />
+      )
     }
+    return (
+      <Animated.View
+        {...listAnimations}
+        style={[
+          row.hasDivider && [
+            a.border_t,
+            getBorderColor(t, isUnreadRow(rows[index - 1]) || !row.isRead),
+          ],
+        ]}>
+        <ActivityItem
+          event={row.event}
+          isRead={row.isRead}
+          snapshot={snapshot}
+          me={me}
+          locale={locale}
+          swipeLeft={swipeLeft}
+          swipeRight={swipeRight}
+          actions={actions}
+        />
+      </Animated.View>
+    )
   }
-  const nameOf = (id: string) =>
-    id === actor ? l`You` : (names.get(id) ?? l`Someone`)
-  const people = (ids: string[]) =>
-    ids.map(id => ({id, name: names.get(id) ?? ''}))
-
-  const items: ActivityItem[] = (changes ?? []).flatMap(
-    ({entity, row, prev}): ActivityItem[] => {
-      const key = `${entity.type}-${entity.id}-${row.version}`
-      const base = {key, actorName: nameOf(row.actor), at: row.at}
-      if (entity.type === 'expense') {
-        const e = row.data as Expense
-        const type = !prev
-          ? 'expense-added'
-          : row.deleted
-            ? 'expense-deleted'
-            : prev.deleted
-              ? 'expense-restored'
-              : 'expense-edited'
-        return [
-          {
-            ...base,
-            type,
-            subject: e.title,
-            amount: formatAmount(e.total, e.currency, locale),
-            authors: people(Object.keys(e.shares)),
-          },
-        ]
-      }
-      if (entity.type === 'group' && !prev) {
-        const g = row.data as Group
-        return [
-          {
-            ...base,
-            type: 'group-created',
-            subject: g.name,
-            authors: people(g.members.map(m => m.personId)),
-          },
-        ]
-      }
-      if (entity.type === 'person' && !prev && !(row.data as Person).isMe) {
-        return [
-          {
-            ...base,
-            type: 'person-added',
-            subject: (row.data as Person).name,
-            authors: people([entity.id]),
-          },
-        ]
-      }
-      return []
-    },
-  )
 
   return (
     <Layout.Screen testID="screen-activity">
@@ -152,37 +89,84 @@ export function ActivityScreen() {
             <Trans>Activity</Trans>
           </Layout.Header.TitleText>
         </Layout.Header.Content>
+        {unreadCount > 0 ? (
+          <Button
+            testID="activity-mark-all-read"
+            label={l`Mark all as read`}
+            color="secondary"
+            size="small"
+            onPress={actions.markEverythingRead}>
+            <ButtonIcon icon={CheckIcon} />
+            <ButtonText>
+              <Trans>Mark all read</Trans>
+            </ButtonText>
+          </Button>
+        ) : null}
         <HeaderAvatar />
       </Layout.Header.Outer>
-      {changes === undefined ? (
+      {snapshot === undefined ? (
         <Shimmer testID="activity-loading">
-          {Array.from({length: PLACEHOLDER_ROWS}, (_, i) => (
-            <NotificationFeedItemPlaceholder key={i} hideTopBorder={i === 0} />
-          ))}
+          <LoadingSkeleton />
         </Shimmer>
       ) : (
         <LayoutAnimationConfig skipEntering skipExiting>
           <List
-            data={items}
-            keyExtractor={(item: ActivityItem) => item.key}
-            renderItem={({
-              item,
-              index,
-            }: {
-              item: ActivityItem
-              index: number
-            }) => (
-              <NotificationFeedItem item={item} hideTopBorder={index === 0} />
-            )}
+            testID="activity-list"
+            data={rows}
+            keyExtractor={(row: FeedRow) => row.key}
+            renderItem={renderItem}
+            sideBorders={false}
             ListEmptyComponent={
               <EmptyState
                 testID="activity-empty"
                 illustration="empty-activity"
-                message={l`Nothing here yet. Expenses, payments and group changes will show up here.`}
+                message={
+                  hiddenCount > 0
+                    ? l`You've hidden everything here. New expenses, payments and group changes will show up as they happen.`
+                    : l`Nothing here yet. Expenses, payments and group changes will show up here.`
+                }
               />
             }
             ListFooterComponent={
-              !gtMobile ? <View style={{height: 100}} /> : undefined
+              <>
+                {hiddenCount > 0 ? (
+                  <View
+                    testID="activity-hidden-footer"
+                    style={[
+                      a.flex_row,
+                      a.align_center,
+                      a.justify_center,
+                      a.gap_sm,
+                      a.px_lg,
+                      a.py_lg,
+                      rows.length > 0 && [
+                        a.border_t,
+                        getBorderColor(t, isUnreadRow(rows.at(-1))),
+                      ],
+                    ]}>
+                    <Text style={[a.text_sm, t.atoms.text_contrast_medium]}>
+                      <Plural
+                        value={hiddenCount}
+                        one="# change hidden from your activity"
+                        other="# changes hidden from your activity"
+                      />
+                    </Text>
+                    <Button
+                      testID="activity-unhide-all"
+                      label={l`Show hidden changes`}
+                      color="secondary"
+                      variant="ghost"
+                      size="tiny"
+                      onPress={actions.unhideAll}>
+                      <ButtonText>
+                        <Trans>Show them</Trans>
+                      </ButtonText>
+                    </Button>
+                  </View>
+                ) : null}
+                {/* Clears the FAB and bottom bar on phones. */}
+                {!gtMobile ? <View style={{height: 100}} /> : null}
+              </>
             }
           />
         </LayoutAnimationConfig>

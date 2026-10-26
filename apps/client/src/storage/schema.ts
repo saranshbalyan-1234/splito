@@ -1,5 +1,7 @@
 import {type TabId} from '@splito/sync'
 
+import {type FeedState} from '#/components/activity/feed'
+
 /**
  * Per-device settings read synchronously at startup (fonts must be known
  * before first paint). Preferences that shape the first frame are mirrored
@@ -19,4 +21,6 @@ export type Device = {
   density: 'comfortable' | 'compact'
   homeTab: TabId
   hapticsEnabled: boolean
+  /** Activity read/hidden marks: personal, so they stay on this device. */
+  activityFeed: FeedState
 }

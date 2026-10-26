@@ -24,6 +24,7 @@ import {
   useTheme,
   web,
 } from '#/alf'
+import {useActivityBadge} from '#/components/activity/useActivityFeed'
 import {LogoMark} from '#/components/brand/Logo'
 import {Button, ButtonIcon, ButtonText} from '#/components/Button'
 import {
@@ -325,6 +326,7 @@ export function DesktopLeftNav({
   const {leftNavMinimal} = useLayoutBreakpoints()
   const insets = useSafeAreaInsets()
   const tabs = useTabs()
+  const activityBadge = useActivityBadge()
 
   if (!gtMobile) {
     return null
@@ -366,6 +368,7 @@ export function DesktopLeftNav({
             onNavigateTab={onNavigateTab}
             minimal={leftNavMinimal}
             icons={tabItems[tab].icons}
+            count={tab === 'activity' ? activityBadge : undefined}
           />
         ))}
         <NavItem
