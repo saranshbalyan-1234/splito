@@ -12,6 +12,7 @@ import {
   type Group,
   type Person,
   type Repayment,
+  type WriteOff,
 } from '@splito/sync'
 
 import {type AllNavigatorParams, type NavigationProp} from '#/lib/routes/types'
@@ -35,6 +36,7 @@ import {myBalances} from '#/components/groups/net'
 import {DotGrid3x1_Stroke2_Corner0_Rounded as DotsIcon} from '#/components/icons/DotGrid'
 import {
   HandCoins_Stroke2_Corner0_Rounded as HandCoinsIcon,
+  Handshake_Stroke2_Corner0_Rounded as HandshakeIcon,
   IndianRupee_Stroke2_Corner0_Rounded as RupeeIcon,
 } from '#/components/icons/Money'
 import {Pencil_Stroke2_Corner0_Rounded as PencilIcon} from '#/components/icons/Pencil'
@@ -43,6 +45,10 @@ import {SettingsSliderVertical_Stroke2_Corner0_Rounded as FilterIcon} from '#/co
 import {Trash_Stroke2_Corner0_Rounded as TrashIcon} from '#/components/icons/Trash'
 import * as Layout from '#/components/Layout'
 import * as Menu from '#/components/Menu'
+import {
+  CallItEvenDialog,
+  type EvenDraft,
+} from '#/components/people/CallItEvenDialog'
 import {EditFriendDialog} from '#/components/people/EditFriendDialog'
 import {
   HistoryRow,
@@ -96,8 +102,10 @@ export function PersonScreen() {
   const groups = useEntities<Group>('group')
   const expenses = useEntities<Expense>('expense')
   const repayments = useEntities<Repayment>('repayment')
+  const writeOffs = useEntities<WriteOff>('writeoff')
   const ledger = useLedger()
   const [includeDefault] = usePref('includeGroupsDefault')
+  const [defaultCurrency] = usePref('defaultCurrency')
   const [applied, setApplied] = useState<boolean | null>(null)
   const includeGroups = applied ?? includeDefault ?? true
 
@@ -107,13 +115,24 @@ export function PersonScreen() {
   const detailsControl = useDialogControl()
   const editControl = useDialogControl()
   const deleteControl = Prompt.usePromptControl()
+  const evenControl = useDialogControl()
+  const [evenDraft, setEvenDraft] = useState<EvenDraft | null>(null)
   const [paymentDraft, setPaymentDraft] = useState<PaymentDraft | null>(null)
-  const [openRepayment, setOpenRepayment] = useState<Entity<Repayment> | null>(
-    null,
+  const [openRepayment, setOpenRepayment] = useState<Entity<
+    Repayment | WriteOff
+  > | null>(null)
+  const [openKind, setOpenKind] = useState<'repayment' | 'writeoff'>(
+    'repayment',
   )
 
   const isLoading =
-    !me || !people || !groups || !expenses || !repayments || !ledger
+    !me ||
+    !people ||
+    !groups ||
+    !expenses ||
+    !repayments ||
+    !writeOffs ||
+    !ledger
   const person = people?.find(p => p.id === personId)
 
   if (!isLoading && (!person || person.data.isMe)) {
@@ -155,7 +174,7 @@ export function PersonScreen() {
       : undefined
   const history =
     me && expenses && repayments
-      ? toHistory(expenses, repayments).filter(
+      ? toHistory(expenses, repayments, writeOffs).filter(
           e =>
             involvesPair(e, me.id, personId) &&
             effectWithPerson(e, me.id, personId) !== ZERO &&
@@ -213,6 +232,21 @@ export function PersonScreen() {
       ...draft,
     })
     paymentControl.open()
+  }
+
+  /* "Call it even": every open currency, part by part (> 0: they owe me). */
+  const callItEven = () => {
+    if (!me || !hasOpenBalance) return
+    setEvenDraft({
+      a: me.id,
+      b: personId,
+      balance,
+      // The default currency first when it is open, else the first open one.
+      currency: openCurrencies.includes(defaultCurrency ?? '')
+        ? defaultCurrency!
+        : openCurrencies[0]!,
+    })
+    evenControl.open()
   }
 
   const removeFriend = async () => {
@@ -358,6 +392,17 @@ export function PersonScreen() {
               )}
             </Menu.Trigger>
             <Menu.Outer>
+              {hasOpenBalance && (
+                <Menu.Item
+                  testID="person-call-even"
+                  label={l`Call it even`}
+                  onPress={callItEven}>
+                  <Menu.ItemText>
+                    <Trans>Call it even</Trans>
+                  </Menu.ItemText>
+                  <Menu.ItemIcon icon={HandshakeIcon} position="right" />
+                </Menu.Item>
+              )}
               <Menu.Item
                 testID="person-edit"
                 label={l`Edit friend`}
@@ -404,8 +449,9 @@ export function PersonScreen() {
                     : null
                 }
                 locale={locale}
-                onRepaymentPress={r => {
+                onRepaymentPress={(r, kind) => {
                   setOpenRepayment(r)
+                  setOpenKind(kind)
                   detailsControl.open()
                 }}
               />
@@ -498,6 +544,7 @@ export function PersonScreen() {
           <PaymentDetailsDialog
             control={detailsControl}
             repayment={openRepayment}
+            kind={openKind}
             me={me.id}
             names={names}
             groupName={
@@ -507,6 +554,12 @@ export function PersonScreen() {
             }
           />
           <EditFriendDialog control={editControl} person={person} />
+          <CallItEvenDialog
+            control={evenControl}
+            draft={evenDraft}
+            names={names}
+            groupNames={groupNames}
+          />
           <Prompt.Basic
             control={deleteControl}
             title={l`Remove ${person.data.name}?`}

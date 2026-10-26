@@ -13,6 +13,7 @@ const SECTION: Record<string, string> = {
   Activity: 'Activity',
   Settings: 'Settings',
   SettingsSection: 'Settings',
+  RecentlyDeleted: 'Settings',
 }
 
 /**

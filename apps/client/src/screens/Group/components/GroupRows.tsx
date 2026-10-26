@@ -6,7 +6,11 @@ import {formatAmount, magnitude, ZERO} from '@splito/domain'
 import {Link} from '#/view/com/util/Link'
 import {UserAvatar} from '#/view/com/util/UserAvatar'
 import {atoms as a, useTheme} from '#/alf'
+import {Button, ButtonIcon} from '#/components/Button'
 import {ChevronRight_Stroke2_Corner0_Rounded as ChevronIcon} from '#/components/icons/Chevron'
+import {DotGrid3x1_Stroke2_Corner0_Rounded as DotsIcon} from '#/components/icons/DotGrid'
+import {Handshake_Stroke2_Corner0_Rounded as HandshakeIcon} from '#/components/icons/Money'
+import * as Menu from '#/components/Menu'
 import {currencyName} from '#/components/people/ledger'
 import * as Pills from '#/components/Pills'
 import {Text} from '#/components/Typography'
@@ -136,6 +140,7 @@ export function OweRow({
   currency,
   locale,
   testID,
+  onCallItEven,
 }: {
   /** "Arjun owes you", "You owe Riya", "Sam owes Priya". */
   sentence: string
@@ -144,8 +149,11 @@ export function OweRow({
   currency: string
   locale: string
   testID?: string
+  /** Adds the row's "..." menu with "Call it even" (F-1113). */
+  onCallItEven?: () => void
 }) {
   const t = useTheme()
+  const {t: l} = useLingui()
   return (
     <View
       testID={testID}
@@ -168,6 +176,37 @@ export function OweRow({
       <Text style={[a.text_md, a.font_semi_bold, tabular]}>
         {formatAmount(amount, currency, locale)}
       </Text>
+      {onCallItEven && (
+        /* Bluesky's row overflow: a sibling of the row's content, never nested in a Pressable. */
+        <Menu.Root>
+          <Menu.Trigger label={l`More options for ${sentence}`}>
+            {({props}) => (
+              <Button
+                {...props}
+                testID={testID ? `${testID}-more` : undefined}
+                label={props.accessibilityLabel}
+                size="small"
+                color="secondary"
+                variant="ghost"
+                shape="round"
+                style={{marginRight: -8}}>
+                <ButtonIcon icon={DotsIcon} />
+              </Button>
+            )}
+          </Menu.Trigger>
+          <Menu.Outer>
+            <Menu.Item
+              testID="owe-call-even"
+              label={l`Call it even`}
+              onPress={onCallItEven}>
+              <Menu.ItemText>
+                <Trans>Call it even</Trans>
+              </Menu.ItemText>
+              <Menu.ItemIcon icon={HandshakeIcon} position="right" />
+            </Menu.Item>
+          </Menu.Outer>
+        </Menu.Root>
+      )}
     </View>
   )
 }

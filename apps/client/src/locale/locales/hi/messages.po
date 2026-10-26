@@ -54,7 +54,7 @@ msgid "{0, plural, one {# share} other {# shares}}"
 msgstr "{0, plural, one {# हिस्सा} other {# हिस्से}}"
 
 #. placeholder {0}: sharedGroups.length
-#: src/screens/Person/index.tsx:182
+#: src/screens/Person/index.tsx:201
 msgid "{0, plural, one {# shared group} other {# shared groups}}"
 msgstr "{0, plural, one {# साझा समूह} other {# साझा समूह}}"
 
@@ -86,6 +86,11 @@ msgstr "{0} जोड़े गए"
 msgid "{0} balance - open analytics"
 msgstr "{0} बैलेंस - एनालिटिक्स खोलें"
 
+#. placeholder {0}: i18n.date(new Date(item.deletedAt), { dateStyle: 'medium', timeStyle: 'short', })
+#: src/screens/RecentlyDeleted/components/RestoreDialog.tsx:163
+msgid "{0} by {deletedByName}"
+msgstr "{0}, {deletedByName} द्वारा"
+
 #. placeholder {0}: group.data.name
 #: src/screens/CreateGroup.tsx:108
 msgid "{0} created"
@@ -97,8 +102,29 @@ msgstr "{0} बनाया गया"
 msgid "{0} each · {1}"
 msgstr "हर एक {0} · {1}"
 
+#. placeholder {0}: name(r.to)
+#. placeholder {0}: name(to)
+#. placeholder {0}: name(w.to)
+#. placeholder {1}: name(from)
+#. placeholder {1}: name(r.from)
+#. placeholder {1}: name(w.from)
+#: src/components/people/HistoryRow.tsx:94
+#: src/components/people/PaymentDetailsDialog.tsx:94
+#: src/screens/RecentlyDeleted/describe.ts:59
+msgid "{0} forgave {1}"
+msgstr "{0} ने {1} का कर्ज़ माफ़ किया"
+
+#. placeholder {0}: name(r.to)
+#. placeholder {0}: name(to)
+#. placeholder {0}: name(w.to)
+#: src/components/people/HistoryRow.tsx:93
+#: src/components/people/PaymentDetailsDialog.tsx:93
+#: src/screens/RecentlyDeleted/describe.ts:58
+msgid "{0} forgave you"
+msgstr "{0} ने आपका कर्ज़ माफ़ किया"
+
 #. placeholder {0}: person?.data.name ?? ''
-#: src/screens/Person/index.tsx:226
+#: src/screens/Person/index.tsx:260
 msgid "{0} has expenses, payments or groups, so they can’t be removed."
 msgstr "{0} के खर्च, भुगतान या समूह हैं, इसलिए उन्हें हटाया नहीं जा सकता।"
 
@@ -118,6 +144,17 @@ msgstr "{0} बाँटना बाकी है"
 #: src/components/split/PayersDialog.tsx:174
 msgid "{0} left to pay"
 msgstr "{0} का भुगतान बाकी है"
+
+#. placeholder {0}: name(creditor)
+#. placeholder {1}: name(debtor)
+#: src/components/people/CallItEvenDialog.tsx:130
+msgid "{0} lets {1} off"
+msgstr "{0}, {1} का कर्ज़ माफ़ कर रहे हैं"
+
+#. placeholder {0}: name(creditor)
+#: src/components/people/CallItEvenDialog.tsx:129
+msgid "{0} lets you off"
+msgstr "{0} आपका कर्ज़ माफ़ कर रहे हैं"
 
 #. placeholder {0}: g.data.members.filter(m => m.leftAt === null).length
 #: src/components/split/pickers.tsx:251
@@ -148,22 +185,24 @@ msgstr "कुल से {0} ज़्यादा"
 #. placeholder {0}: name(r.from)
 #. placeholder {1}: name(r.to)
 #. placeholder {1}: name(to)
-#: src/components/people/HistoryRow.tsx:90
-#: src/components/people/PaymentDetailsDialog.tsx:83
+#: src/components/people/HistoryRow.tsx:116
+#: src/components/people/PaymentDetailsDialog.tsx:99
 #: src/components/people/RecordPaymentDialog.tsx:154
+#: src/screens/RecentlyDeleted/describe.ts:64
 msgid "{0} paid {1}"
 msgstr "{0} ने {1} को भुगतान किया"
 
 #. placeholder {0}: firstName(payers[0]!)
-#: src/components/people/HistoryRow.tsx:74
+#: src/components/people/HistoryRow.tsx:78
 msgid "{0} paid {total}"
 msgstr "{0} ने {total} चुकाए"
 
 #. placeholder {0}: name(from)
 #. placeholder {0}: name(r.from)
-#: src/components/people/HistoryRow.tsx:89
-#: src/components/people/PaymentDetailsDialog.tsx:82
+#: src/components/people/HistoryRow.tsx:115
+#: src/components/people/PaymentDetailsDialog.tsx:98
 #: src/components/people/RecordPaymentDialog.tsx:153
+#: src/screens/RecentlyDeleted/describe.ts:63
 msgid "{0} paid you"
 msgstr "{0} ने आपको भुगतान किया"
 
@@ -189,7 +228,7 @@ msgid "{0} people"
 msgstr "{0} लोग"
 
 #. placeholder {0}: payers.length
-#: src/components/people/HistoryRow.tsx:71
+#: src/components/people/HistoryRow.tsx:75
 msgid "{0} people paid {total}"
 msgstr "{0} लोगों ने {total} चुकाए"
 
@@ -278,57 +317,69 @@ msgstr "{0}मि"
 msgid "{0}s"
 msgstr "{0}से"
 
-#: src/components/activity/ActivityItem.tsx:425
+#: src/components/activity/ActivityItem.tsx:426
 msgid "{actor} added {subject}"
 msgstr "{actor} ने {subject} को जोड़ा"
 
-#: src/components/activity/ActivityItem.tsx:487
+#: src/components/activity/ActivityItem.tsx:488
 msgid "{actor} added {subject} as a friend"
 msgstr "{actor} ने {subject} को दोस्त के रूप में जोड़ा"
 
-#: src/components/activity/ActivityItem.tsx:543
+#: src/components/activity/ActivityItem.tsx:544
 msgid "{actor} archived the group {subject}"
 msgstr "{actor} ने समूह {subject} को संग्रहित किया"
 
-#: src/components/activity/ActivityItem.tsx:533
+#: src/components/activity/ActivityItem.tsx:534
 msgid "{actor} created the group {subject}"
 msgstr "{actor} ने समूह {subject} बनाया"
 
-#: src/components/activity/ActivityItem.tsx:435
+#: src/components/activity/ActivityItem.tsx:436
 msgid "{actor} deleted {subject}"
 msgstr "{actor} ने {subject} को हटाया"
 
-#: src/components/activity/ActivityItem.tsx:548
+#: src/components/activity/ActivityItem.tsx:549
 msgid "{actor} deleted the group {subject}"
 msgstr "{actor} ने समूह {subject} को हटाया"
 
-#: src/components/activity/ActivityItem.tsx:430
+#: src/components/activity/ActivityItem.tsx:431
 msgid "{actor} edited {subject}"
 msgstr "{actor} ने {subject} में बदलाव किया"
 
-#: src/components/activity/ActivityItem.tsx:612
+#: src/components/activity/ActivityItem.tsx:613
 msgid "{actor} edited a payment"
 msgstr "{actor} ने एक भुगतान में बदलाव किया"
 
-#: src/components/activity/ActivityItem.tsx:491
+#: src/components/activity/ActivityItem.tsx:492
 msgid "{actor} removed {subject} from friends"
 msgstr "{actor} ने {subject} को दोस्तों से हटाया"
 
-#: src/components/activity/ActivityItem.tsx:614
+#: src/components/activity/ActivityItem.tsx:615
 msgid "{actor} removed a payment"
 msgstr "{actor} ने एक भुगतान हटाया"
 
-#: src/components/activity/ActivityItem.tsx:527
+#: src/components/activity/ActivityItem.tsx:528
 msgid "{actor} renamed {oldName} to {subject}"
 msgstr "{actor} ने {oldName} का नाम बदलकर {subject} किया"
 
-#: src/components/activity/ActivityItem.tsx:440
+#: src/components/activity/ActivityItem.tsx:441
 msgid "{actor} restored {subject}"
 msgstr "{actor} ने {subject} को वापस लाया"
 
-#: src/components/activity/ActivityItem.tsx:538
+#: src/components/activity/ActivityItem.tsx:659
+msgid "{actor} undid a write-off"
+msgstr "{actor} ने एक माफ़ी वापस ली"
+
+#: src/components/activity/ActivityItem.tsx:539
 msgid "{actor} updated the group {subject}"
 msgstr "{actor} ने समूह {subject} को अपडेट किया"
+
+#: src/screens/Settings/index.tsx:120
+msgid "{binDays, plural, one {# day} other {# days}}"
+msgstr "{binDays, plural, one {# दिन} other {# दिन}}"
+
+#: src/screens/RecentlyDeleted/index.tsx:180
+msgid "{count, plural, one {# item} other {# items}}"
+msgstr "{count, plural, one {# आइटम} other {# आइटम}}"
 
 #: src/components/activity/useActivityFeed.ts:120
 msgid "{count, plural, one {# or more unread items} other {# or more unread items}}"
@@ -338,28 +389,40 @@ msgstr "{count, plural, one {# या अधिक अपठित} other {# य
 msgid "{count, plural, one {# unread item} other {# unread items}}"
 msgstr "{count, plural, one {# अपठित} other {# अपठित}}"
 
+#: src/components/activity/ActivityItem.tsx:665
+msgid "{creditor} called it even with {debtor}"
+msgstr "{creditor} ने {debtor} के साथ हिसाब बराबर किया"
+
+#: src/components/activity/ActivityItem.tsx:663
+msgid "{creditor} called it even with you"
+msgstr "{creditor} ने आपके साथ हिसाब बराबर किया"
+
+#: src/screens/RecentlyDeleted/index.tsx:242
+msgid "{days, plural, one {Nothing deleted in the last day.} other {Nothing deleted in the last # days.}}"
+msgstr "{days, plural, one {पिछले एक दिन में कुछ नहीं हटाया गया।} other {पिछले # दिनों में कुछ नहीं हटाया गया।}}"
+
 #: src/components/split/ExpenseComposer.tsx:239
 msgid "{first}, {second} +{rest}"
 msgstr "{first}, {second} +{rest}"
 
 #. How long ago an activity happened, e.g. "7m ago". The time is already abbreviated and translated.
-#: src/components/activity/ActivityItem.tsx:719
+#: src/components/activity/ActivityItem.tsx:772
 msgid "{formatted} ago"
 msgstr "{formatted} पहले"
 
-#: src/screens/Group/index.tsx:620
+#: src/screens/Group/index.tsx:639
 msgid "{from} owes {to}"
 msgstr "{from} को {to} को देने हैं"
 
-#: src/screens/Group/index.tsx:619
+#: src/screens/Group/index.tsx:638
 msgid "{from} owes you"
 msgstr "{from} से आपको मिलने हैं"
 
-#: src/components/activity/ActivityItem.tsx:607
+#: src/components/activity/ActivityItem.tsx:608
 msgid "{from} paid {to}"
 msgstr "{from} ने {to} को भुगतान किया"
 
-#: src/components/activity/ActivityItem.tsx:605
+#: src/components/activity/ActivityItem.tsx:606
 msgid "{from} paid you"
 msgstr "{from} ने आपको भुगतान किया"
 
@@ -367,7 +430,11 @@ msgstr "{from} ने आपको भुगतान किया"
 msgid "{hiddenCount, plural, one {# change hidden from your activity} other {# changes hidden from your activity}}"
 msgstr "{hiddenCount, plural, one {# बदलाव आपकी गतिविधि से छिपा है} other {# बदलाव आपकी गतिविधि से छिपे हैं}}"
 
-#: src/screens/Group/index.tsx:271
+#: src/screens/RecentlyDeleted/index.tsx:366
+msgid "{left, plural, one {# day left} other {# days left}}"
+msgstr "{left, plural, one {# दिन बाकी} other {# दिन बाकी}}"
+
+#: src/screens/Group/index.tsx:289
 #: src/screens/Groups/components/GroupRow.tsx:59
 msgid "{memberCount} members"
 msgstr "{memberCount} सदस्य"
@@ -393,7 +460,7 @@ msgstr "{title} रीसेट हो गया"
 msgid "{title}, {byline}, {shareLabel} {shareText} of {totalText}"
 msgstr "{title}, {byline}, {totalText} में से {shareLabel} {shareText}"
 
-#: src/screens/Settings/index.tsx:181
+#: src/screens/Settings/index.tsx:202
 msgid "{visible} categories"
 msgstr "{visible} श्रेणियाँ"
 
@@ -413,11 +480,11 @@ msgstr "{who} ने यह खर्च बदला"
 msgid "{who} restored this expense"
 msgstr "{who} ने यह खर्च वापस लाया"
 
-#: src/navigation/Drawer.tsx:104
+#: src/navigation/Drawer.tsx:105
 msgid "<0>{friendCount}</0> {friendCount, plural, one {friend} other {friends}}"
 msgstr "<0>{friendCount}</0> {friendCount, plural, one {दोस्त} other {दोस्त}}"
 
-#: src/navigation/Drawer.tsx:109
+#: src/navigation/Drawer.tsx:110
 msgid "<0>{groupCount}</0> {groupCount, plural, one {group} other {groups}}"
 msgstr "<0>{groupCount}</0> {groupCount, plural, one {समूह} other {समूह}}"
 
@@ -425,11 +492,11 @@ msgstr "<0>{groupCount}</0> {groupCount, plural, one {समूह} other {स�
 msgid "= Use result"
 msgstr "= नतीजा लें"
 
-#: src/screens/Settings/index.tsx:181
+#: src/screens/Settings/index.tsx:202
 msgid "1 category"
 msgstr "1 श्रेणी"
 
-#: src/screens/Group/index.tsx:271
+#: src/screens/Group/index.tsx:289
 #: src/screens/Groups/components/GroupRow.tsx:59
 msgid "1 member"
 msgstr "1 सदस्य"
@@ -442,9 +509,29 @@ msgstr "1 सदस्य जोड़ा गया"
 msgid "1 payment"
 msgstr "1 भुगतान"
 
+#: src/components/settings/prefControls.tsx:464
+msgid "1 year"
+msgstr "1 साल"
+
 #: src/components/split/ExpenseComposer.tsx:638
 msgid "100% assigned"
 msgstr "100% बँट गया"
+
+#: src/components/settings/prefControls.tsx:462
+msgid "30 days"
+msgstr "30 दिन"
+
+#: src/components/settings/prefControls.tsx:461
+msgid "7 days"
+msgstr "7 दिन"
+
+#: src/components/settings/prefControls.tsx:463
+msgid "90 days"
+msgstr "90 दिन"
+
+#: src/components/people/PaymentDetailsDialog.tsx:172
+msgid "A debt let go – no money changed hands, and it never counts as spending. Undoing it puts the balance back as it was."
+msgstr "माफ़ किया गया कर्ज़ – कोई पैसा नहीं दिया गया, और इसे कभी ख़र्च में नहीं गिना जाता। इसे वापस लेने पर बैलेंस पहले जैसा हो जाता है।"
 
 #: src/components/split/pickers.tsx:257
 msgid "A group expense splits between the group’s members and uses its currency."
@@ -454,7 +541,7 @@ msgstr "समूह का खर्च समूह के सदस्यो�
 msgid "A link"
 msgstr "एक लिंक"
 
-#: src/components/people/PaymentDetailsDialog.tsx:140
+#: src/components/people/PaymentDetailsDialog.tsx:177
 msgid "A record of money that changed hands outside Splito. Deleting it puts the balance back as it was."
 msgstr "Splito के बाहर हुए लेन-देन का रिकॉर्ड। इसे हटाने पर बैलेंस पहले जैसा हो जाएगा।"
 
@@ -462,17 +549,17 @@ msgstr "Splito के बाहर हुए लेन-देन का रि�
 msgid "A trip, a flat or anything you split often."
 msgstr "कोई यात्रा, फ़्लैट या कुछ भी जिसे आप अक्सर बांटते हैं।"
 
-#: src/navigation/Drawer.tsx:320
+#: src/navigation/Drawer.tsx:328
 #: src/screens/Profile.tsx:73
 #: src/screens/Profile.tsx:76
-#: src/screens/Settings/index.tsx:106
-#: src/screens/Settings/index.tsx:109
+#: src/screens/Settings/index.tsx:127
+#: src/screens/Settings/index.tsx:130
 #: src/screens/Settings/SettingsSection.tsx:47
 #: src/view/shell/desktop/LeftNav.tsx:670
 msgid "About"
 msgstr "परिचय"
 
-#: src/navigation/Drawer.tsx:311
+#: src/navigation/Drawer.tsx:319
 msgid "About Splito"
 msgstr "Splito के बारे में"
 
@@ -491,8 +578,8 @@ msgstr "सक्रिय"
 
 #: src/components/settings/TabsEditor.tsx:35
 #: src/components/TabGlyph.tsx:30
-#: src/navigation/Drawer.tsx:208
-#: src/navigation/Navigation.tsx:62
+#: src/navigation/Drawer.tsx:209
+#: src/navigation/Navigation.tsx:63
 #: src/screens/Activity.tsx:98
 #: src/view/shell/desktop/LeftNav.tsx:754
 msgid "Activity"
@@ -540,11 +627,11 @@ msgstr "कम से कम एक चीज़ जोड़ें"
 msgid "Add category"
 msgstr "श्रेणी जोड़ें"
 
-#: src/navigation/Navigation.tsx:69
-#: src/screens/Group/index.tsx:433
-#: src/screens/Group/index.tsx:434
-#: src/screens/Person/index.tsx:434
-#: src/screens/Person/index.tsx:435
+#: src/navigation/Navigation.tsx:71
+#: src/screens/Group/index.tsx:451
+#: src/screens/Group/index.tsx:452
+#: src/screens/Person/index.tsx:480
+#: src/screens/Person/index.tsx:481
 #: src/view/shell/desktop/LeftNav.tsx:477
 msgid "Add expense"
 msgstr "खर्च जोड़ें"
@@ -554,18 +641,18 @@ msgstr "खर्च जोड़ें"
 #: src/screens/AddExpense.tsx:40
 #: src/screens/Analytics/index.tsx:86
 #: src/screens/Analytics/index.tsx:87
-#: src/screens/Group/index.tsx:388
-#: src/screens/Group/index.tsx:395
+#: src/screens/Group/index.tsx:406
+#: src/screens/Group/index.tsx:413
 #: src/screens/People/index.tsx:221
 #: src/screens/People/index.tsx:222
-#: src/screens/Person/index.tsx:258
-#: src/screens/Person/index.tsx:264
+#: src/screens/Person/index.tsx:292
+#: src/screens/Person/index.tsx:298
 #: src/view/shell/desktop/LeftNav.tsx:485
 msgctxt "action"
 msgid "Add expense"
 msgstr "खर्च जोड़ें"
 
-#: src/navigation/Navigation.tsx:72
+#: src/navigation/Navigation.tsx:74
 #: src/screens/AddFriend.tsx:71
 #: src/screens/AddFriend.tsx:77
 #: src/screens/People/index.tsx:137
@@ -587,10 +674,10 @@ msgid "Add member"
 msgstr "सदस्य जोड़ें"
 
 #: src/components/groups/AddMembersDialog.tsx:98
-#: src/screens/Group/index.tsx:509
-#: src/screens/Group/index.tsx:512
-#: src/screens/Group/index.tsx:578
-#: src/screens/Group/index.tsx:584
+#: src/screens/Group/index.tsx:527
+#: src/screens/Group/index.tsx:530
+#: src/screens/Group/index.tsx:597
+#: src/screens/Group/index.tsx:603
 msgid "Add members"
 msgstr "सदस्य जोड़ें"
 
@@ -636,6 +723,10 @@ msgstr "घटाएँ-बढ़ाएँ"
 msgid "Adjustment for {0}, plus or minus"
 msgstr "{0} के लिए घटाना या बढ़ाना"
 
+#: src/components/settings/prefControls.tsx:459
+msgid "After that they leave this list. Their history stays in each record’s audit trail."
+msgstr "उसके बाद वे इस सूची से हट जाते हैं। उनका इतिहास हर रिकॉर्ड के ऑडिट ट्रेल में बना रहता है।"
+
 #: src/screens/Activity.tsx:113
 #: src/screens/Groups/components/GroupsFilterDialog.tsx:69
 #: src/screens/Groups/components/GroupsFilterDialog.tsx:93
@@ -649,6 +740,11 @@ msgstr "सभी"
 msgid "All {0} assigned"
 msgstr "पूरे {0} बँट गए"
 
+#: src/components/people/CallItEvenDialog.tsx:211
+#: src/components/people/CallItEvenDialog.tsx:228
+msgid "All even"
+msgstr "हिसाब बराबर"
+
 #: src/screens/Analytics/components/FilterBar.tsx:37
 #: src/screens/Analytics/components/FilterBar.tsx:94
 #: src/screens/Analytics/components/FilterBar.tsx:97
@@ -660,7 +756,7 @@ msgstr "सभी समूह"
 msgid "All settled up"
 msgstr "सब हिसाब बराबर"
 
-#: src/components/settings/prefControls.tsx:264
+#: src/components/settings/prefControls.tsx:265
 #: src/screens/Analytics/components/Summary.tsx:195
 #: src/screens/Analytics/useReport.ts:241
 msgid "All time"
@@ -695,6 +791,11 @@ msgstr "{0} ने कितना दिया"
 msgid "Amount for {0}"
 msgstr "{0} की रकम"
 
+#: src/components/people/CallItEvenDialog.tsx:317
+#: src/components/people/CallItEvenDialog.tsx:322
+msgid "Amount to let go"
+msgstr "माफ़ की जाने वाली रक़म"
+
 #. placeholder {0}: formatAmount(was.total, was.currency, locale)
 #. placeholder {1}: formatAmount(now.total, now.currency, locale)
 #: src/screens/Expense/components/History.tsx:55
@@ -711,23 +812,23 @@ msgstr "यहाँ रकम शून्य से कम नहीं हो
 
 #: src/components/settings/TabsEditor.tsx:34
 #: src/components/TabGlyph.tsx:29
-#: src/navigation/Drawer.tsx:201
-#: src/navigation/Navigation.tsx:61
+#: src/navigation/Drawer.tsx:202
+#: src/navigation/Navigation.tsx:62
 #: src/screens/Analytics/index.tsx:60
 #: src/screens/People/components/BalanceSummary.tsx:122
 #: src/view/shell/desktop/LeftNav.tsx:750
 msgid "Analytics"
 msgstr "विश्लेषण"
 
-#: src/components/settings/prefControls.tsx:258
+#: src/components/settings/prefControls.tsx:259
 msgid "Analytics period"
 msgstr "विश्लेषण की अवधि"
 
-#: src/components/settings/prefControls.tsx:276
+#: src/components/settings/prefControls.tsx:277
 msgid "Analytics view"
 msgstr "विश्लेषण का दृश्य"
 
-#: src/components/settings/prefControls.tsx:139
+#: src/components/settings/prefControls.tsx:140
 msgid "Animations"
 msgstr "एनिमेशन"
 
@@ -747,20 +848,20 @@ msgstr "लागू करें"
 msgid "Archived"
 msgstr "संग्रहीत"
 
-#: src/components/settings/prefControls.tsx:385
-#: src/components/settings/prefControls.tsx:409
+#: src/components/settings/prefControls.tsx:386
+#: src/components/settings/prefControls.tsx:410
 msgid "Automatic"
 msgstr "अपने आप"
 
-#: src/screens/Group/index.tsx:150
-#: src/screens/Group/index.tsx:151
+#: src/screens/Group/index.tsx:167
+#: src/screens/Group/index.tsx:168
 #: src/screens/Settle/index.tsx:135
 #: src/screens/Settle/index.tsx:136
 msgid "Back to Groups"
 msgstr "समूहों पर वापस जाएं"
 
-#: src/screens/Person/index.tsx:135
-#: src/screens/Person/index.tsx:136
+#: src/screens/Person/index.tsx:154
+#: src/screens/Person/index.tsx:155
 msgid "Back to People"
 msgstr "लोग पर वापस जाएं"
 
@@ -773,7 +874,7 @@ msgid "Balance over time"
 msgstr "समय के साथ बैलेंस"
 
 #: src/components/settings/AboutSettings.tsx:102
-#: src/screens/Group/index.tsx:405
+#: src/screens/Group/index.tsx:423
 msgid "Balances"
 msgstr "बैलेंस"
 
@@ -781,7 +882,7 @@ msgstr "बैलेंस"
 msgid "Balances or rules changed since this plan was made."
 msgstr "यह योजना बनने के बाद बैलेंस या नियम बदल गए हैं।"
 
-#: src/components/settings/prefControls.tsx:429
+#: src/components/settings/prefControls.tsx:430
 msgid "Biggest balance first"
 msgstr "सबसे बड़ा बैलेंस पहले"
 
@@ -789,7 +890,7 @@ msgstr "सबसे बड़ा बैलेंस पहले"
 msgid "Bills"
 msgstr "बिल"
 
-#: src/components/settings/prefControls.tsx:91
+#: src/components/settings/prefControls.tsx:92
 msgid "Black"
 msgstr "काला"
 
@@ -797,11 +898,11 @@ msgstr "काला"
 msgid "Blue"
 msgstr "नीला"
 
-#: src/components/settings/prefControls.tsx:164
+#: src/components/settings/prefControls.tsx:165
 msgid "Browsers can't vibrate. This applies in the Splito app on your phone."
 msgstr "ब्राउज़र वाइब्रेट नहीं कर सकते। यह आपके फ़ोन के Splito ऐप में लागू होता है।"
 
-#: src/screens/Settings/index.tsx:184
+#: src/screens/Settings/index.tsx:205
 msgid "By amount"
 msgstr "रकम के अनुसार"
 
@@ -813,7 +914,7 @@ msgstr "श्रेणी के अनुसार"
 msgid "By group"
 msgstr "समूह के अनुसार"
 
-#: src/screens/Settings/index.tsx:185
+#: src/screens/Settings/index.tsx:206
 msgid "By name"
 msgstr "नाम के अनुसार"
 
@@ -824,6 +925,20 @@ msgstr "व्यक्ति के अनुसार"
 #: src/components/split/fields.tsx:202
 msgid "Calculator"
 msgstr "कैलकुलेटर"
+
+#: src/components/people/CallItEvenDialog.tsx:193
+#: src/components/people/CallItEvenDialog.tsx:253
+#: src/screens/Group/components/GroupRows.tsx:200
+#: src/screens/Group/components/GroupRows.tsx:203
+#: src/screens/Person/index.tsx:398
+#: src/screens/Person/index.tsx:401
+msgid "Call it even"
+msgstr "हिसाब बराबर करें"
+
+#: src/components/people/HistoryRow.tsx:95
+#: src/components/people/PaymentDetailsDialog.tsx:52
+msgid "Called it even"
+msgstr "हिसाब बराबर किया"
 
 #: src/components/FormSheet/shared.tsx:303
 #: src/components/FormSheet/shared.tsx:309
@@ -871,7 +986,7 @@ msgstr "भुगतान करने वाले बदले"
 msgid "Changes saved"
 msgstr "बदलाव सहेजे गए"
 
-#: src/components/settings/prefControls.tsx:278
+#: src/components/settings/prefControls.tsx:279
 #: src/screens/Analytics/components/FilterBar.tsx:149
 msgid "Charts"
 msgstr "चार्ट"
@@ -888,7 +1003,7 @@ msgstr "साल चुनें"
 msgid "Choose at least one person to split with"
 msgstr "बाँटने के लिए कम से कम एक व्यक्ति चुनें"
 
-#: src/components/settings/prefControls.tsx:217
+#: src/components/settings/prefControls.tsx:218
 msgid "Choose default currency"
 msgstr "डिफ़ॉल्ट मुद्रा चुनें"
 
@@ -896,7 +1011,7 @@ msgstr "डिफ़ॉल्ट मुद्रा चुनें"
 msgid "Choose the tabs you see and their order. Settings and your profile stay on your avatar, top right."
 msgstr "चुनें कि कौन-से टैब दिखें और किस क्रम में। सेटिंग्स और आपकी प्रोफ़ाइल ऊपर दाईं ओर आपके अवतार पर रहती हैं।"
 
-#: src/components/settings/prefControls.tsx:330
+#: src/components/settings/prefControls.tsx:331
 msgid "Choose timezone"
 msgstr "समय क्षेत्र चुनें"
 
@@ -923,6 +1038,10 @@ msgstr "फ़िल्टर हटाएँ"
 #: src/components/forms/SearchInput.tsx:88
 msgid "Clear search query"
 msgstr "खोज साफ़ करें"
+
+#: src/components/people/CallItEvenDialog.tsx:362
+msgid "Clears: {clears}"
+msgstr "साफ़ होगा: {clears}"
 
 #: src/components/Dialog/CloseButton.tsx:32
 #: src/components/FormSheet/shared.tsx:213
@@ -970,19 +1089,19 @@ msgstr "रंग"
 msgid "Color {c}"
 msgstr "रंग {c}"
 
-#: src/components/settings/prefControls.tsx:67
+#: src/components/settings/prefControls.tsx:68
 msgid "Color mode"
 msgstr "कलर मोड"
 
-#: src/components/settings/prefControls.tsx:123
+#: src/components/settings/prefControls.tsx:124
 msgid "Comfortable"
 msgstr "आरामदायक"
 
-#: src/components/settings/prefControls.tsx:124
+#: src/components/settings/prefControls.tsx:125
 msgid "Compact"
 msgstr "सघन"
 
-#: src/components/settings/prefControls.tsx:121
+#: src/components/settings/prefControls.tsx:122
 msgid "Compact fits more people, groups and activity on screen."
 msgstr "सघन में स्क्रीन पर ज़्यादा लोग, समूह और गतिविधि दिखती है।"
 
@@ -1008,6 +1127,10 @@ msgstr "उस व्यक्ति को नहीं जोड़ सके�
 msgid "Couldn’t add your friend. Please try again."
 msgstr "आपके दोस्त को नहीं जोड़ सके। कृपया फिर कोशिश करें।"
 
+#: src/components/people/CallItEvenDialog.tsx:181
+msgid "Couldn’t call it even. Please try again."
+msgstr "हिसाब बराबर नहीं हो सका। कृपया फिर से कोशिश करें।"
+
 #: src/screens/CreateGroup.tsx:118
 msgid "Couldn’t create the group. Please try again."
 msgstr "समूह नहीं बना सके। कृपया फिर कोशिश करें।"
@@ -1016,11 +1139,19 @@ msgstr "समूह नहीं बना सके। कृपया फि�
 msgid "Couldn't delete this expense"
 msgstr "यह खर्च हटाया नहीं जा सका"
 
+#: src/screens/RecentlyDeleted/index.tsx:144
+msgid "Couldn’t delete this. Please try again."
+msgstr "इसे हटाया नहीं जा सका। कृपया फिर से कोशिश करें।"
+
 #: src/screens/Analytics/index.tsx:227
 msgid "Couldn’t export. Try again."
 msgstr "एक्सपोर्ट नहीं हो सका। फिर से कोशिश करें।"
 
-#: src/screens/Person/index.tsx:227
+#: src/components/people/PaymentDetailsDialog.tsx:128
+msgid "Couldn’t put this write-off back"
+msgstr "यह माफ़ी वापस नहीं लाई जा सकी"
+
+#: src/screens/Person/index.tsx:261
 msgid "Couldn’t remove this friend. Please try again."
 msgstr "इस दोस्त को नहीं हटा सके। कृपया फिर कोशिश करें।"
 
@@ -1028,9 +1159,13 @@ msgstr "इस दोस्त को नहीं हटा सके। कृ
 msgid "Couldn't restore this expense"
 msgstr "यह खर्च वापस नहीं लाया जा सका"
 
-#: src/components/people/PaymentDetailsDialog.tsx:100
+#: src/components/people/PaymentDetailsDialog.tsx:129
 msgid "Couldn’t restore this payment"
 msgstr "यह भुगतान वापस नहीं आ सका"
+
+#: src/screens/RecentlyDeleted/index.tsx:133
+msgid "Couldn’t restore this. Please try again."
+msgstr "इसे वापस नहीं लाया जा सका। कृपया फिर से कोशिश करें।"
 
 #: src/components/groups/EditGroupDialog.tsx:79
 msgid "Couldn’t save the group. Please try again."
@@ -1044,6 +1179,14 @@ msgstr "नियम सहेजे नहीं जा सके। फिर 
 msgid "Couldn’t save. Please try again."
 msgstr "सहेजा नहीं जा सका। कृपया फिर कोशिश करें।"
 
+#: src/components/people/CallItEvenDialog.tsx:189
+msgid "Couldn’t undo the write-off"
+msgstr "माफ़ी वापस नहीं ली जा सकी"
+
+#: src/screens/RecentlyDeleted/index.tsx:120
+msgid "Couldn’t undo. Please try again."
+msgstr "पहले जैसा नहीं किया जा सका। कृपया फिर से कोशिश करें।"
+
 #: src/screens/People/components/FriendsFilterDialog.tsx:86
 #: src/screens/Person/components/HistoryFilterDialog.tsx:81
 msgid "Count balances from groups you share with each friend. Off shows only what is between you and them."
@@ -1053,7 +1196,7 @@ msgstr "हर दोस्त के साथ साझा समूहों 
 msgid "Count expenses and payments from groups you share with {name}. Off shows only what is between the two of you."
 msgstr "{name} के साथ वाले समूहों के खर्च और भुगतान भी गिनें। बंद होने पर सिर्फ़ आप दोनों के बीच का हिसाब दिखता है।"
 
-#: src/components/settings/prefControls.tsx:444
+#: src/components/settings/prefControls.tsx:445
 msgid "Count shared group expenses in each person's balance"
 msgstr "हर व्यक्ति के बैलेंस में साझा समूह खर्च गिनें"
 
@@ -1062,7 +1205,7 @@ msgid "Counts towards: {settles}"
 msgstr "इसमें गिना जाएगा: {settles}"
 
 #: src/components/groups/GroupFields.tsx:45
-#: src/screens/Group/index.tsx:261
+#: src/screens/Group/index.tsx:279
 #: src/screens/Groups/components/GroupRow.tsx:51
 #: src/screens/Groups/components/GroupsFilterDialog.tsx:72
 msgid "Couple"
@@ -1074,6 +1217,7 @@ msgid "Create group"
 msgstr "समूह बनाएँ"
 
 #: src/components/groups/GroupFields.tsx:100
+#: src/components/people/CallItEvenDialog.tsx:296
 #: src/components/people/RecordPaymentDialog.tsx:321
 #: src/components/split/pickers.tsx:69
 #: src/components/split/pickers.tsx:80
@@ -1116,28 +1260,29 @@ msgstr "अपनी अवधि"
 msgid "Custom range…"
 msgstr "अपनी अवधि…"
 
-#: src/components/settings/prefControls.tsx:71
-#: src/screens/Settings/index.tsx:177
+#: src/components/settings/prefControls.tsx:72
+#: src/screens/Settings/index.tsx:198
 msgid "Dark"
 msgstr "डार्क"
 
-#: src/components/settings/prefControls.tsx:87
+#: src/components/settings/prefControls.tsx:88
 msgid "Dark mode style"
 msgstr "डार्क मोड की शैली"
 
-#: src/navigation/Drawer.tsx:236
-#: src/navigation/Drawer.tsx:255
+#: src/navigation/Drawer.tsx:244
+#: src/navigation/Drawer.tsx:263
 msgid "Dark theme"
 msgstr "डार्क थीम"
 
-#: src/components/people/PaymentDetailsDialog.tsx:135
+#: src/components/people/PaymentDetailsDialog.tsx:166
 #: src/components/split/ExpenseComposer.tsx:336
 #: src/components/split/ExpenseComposer.tsx:481
 #: src/screens/Analytics/index.tsx:204
+#: src/screens/RecentlyDeleted/components/RestoreDialog.tsx:154
 msgid "Date"
 msgstr "तारीख"
 
-#: src/components/settings/prefControls.tsx:383
+#: src/components/settings/prefControls.tsx:384
 msgid "Date format"
 msgstr "तारीख़ का फ़ॉर्मैट"
 
@@ -1151,25 +1296,25 @@ msgstr "तारीख: {0} → {1}"
 msgid "Dates (optional)"
 msgstr "तारीखें (वैकल्पिक)"
 
-#: src/components/settings/prefControls.tsx:386
+#: src/components/settings/prefControls.tsx:387
 msgid "Day first"
 msgstr "पहले दिन"
 
-#: src/components/settings/prefControls.tsx:327
+#: src/components/settings/prefControls.tsx:328
 msgid "Decides which day \"today\" is and where weeks and months begin in reports. Each expense keeps the date it happened."
 msgstr "तय करता है कि \"आज\" कौन-सा दिन है और रिपोर्ट में हफ़्ते और महीने कहाँ से शुरू होते हैं। हर खर्च अपनी असली तारीख़ रखता है।"
 
 #: src/components/groups/RulesEditor.tsx:294
-#: src/components/settings/prefControls.tsx:100
+#: src/components/settings/prefControls.tsx:101
 msgid "Default"
 msgstr "डिफ़ॉल्ट"
 
-#: src/components/settings/prefControls.tsx:213
-#: src/components/settings/prefControls.tsx:224
+#: src/components/settings/prefControls.tsx:214
+#: src/components/settings/prefControls.tsx:225
 msgid "Default currency"
 msgstr "डिफ़ॉल्ट मुद्रा"
 
-#: src/components/settings/prefControls.tsx:240
+#: src/components/settings/prefControls.tsx:241
 msgid "Default split"
 msgstr "डिफ़ॉल्ट बँटवारा"
 
@@ -1179,14 +1324,41 @@ msgstr "डिफ़ॉल्ट बँटवारा"
 msgid "Delete expense"
 msgstr "खर्च हटाएँ"
 
-#: src/components/settings/prefControls.tsx:455
+#: src/screens/RecentlyDeleted/components/RestoreDialog.tsx:185
+#: src/screens/RecentlyDeleted/components/RestoreDialog.tsx:191
+#: src/screens/RecentlyDeleted/index.tsx:272
+msgid "Delete forever"
+msgstr "हमेशा के लिए हटाएँ"
+
+#: src/screens/RecentlyDeleted/index.tsx:270
+msgid "Delete forever?"
+msgstr "हमेशा के लिए हटाएँ?"
+
+#: src/components/settings/prefControls.tsx:475
 msgid "Delete from Activity"
 msgstr "गतिविधि से हटाएँ"
 
-#: src/components/people/PaymentDetailsDialog.tsx:147
-#: src/components/people/PaymentDetailsDialog.tsx:153
+#: src/components/people/PaymentDetailsDialog.tsx:198
+#: src/components/people/PaymentDetailsDialog.tsx:204
 msgid "Delete payment"
 msgstr "भुगतान हटाएं"
+
+#: src/screens/RecentlyDeleted/components/RestoreDialog.tsx:162
+msgid "Deleted"
+msgstr "हटाया गया"
+
+#. placeholder {0}: deletedBy(item.deletedBy)
+#: src/screens/RecentlyDeleted/index.tsx:217
+msgid "Deleted by {0} · {ago}"
+msgstr "{0} ने हटाया · {ago}"
+
+#: src/screens/RecentlyDeleted/index.tsx:158
+msgid "Deleted expenses, payments and write-offs wait here before they leave for good. Restore one and its balances come back."
+msgstr "हटाए गए ख़र्च, भुगतान और माफ़ियाँ हमेशा के लिए जाने से पहले यहाँ रहते हैं। किसी को वापस लाएँ, तो उसके बैलेंस भी लौट आते हैं।"
+
+#: src/screens/RecentlyDeleted/index.tsx:141
+msgid "Deleted forever"
+msgstr "हमेशा के लिए हटा दिया गया"
 
 #: src/screens/Analytics/index.tsx:205
 msgid "Description"
@@ -1196,7 +1368,7 @@ msgstr "विवरण"
 msgid "Did the payment go through?"
 msgstr "क्या भुगतान हो गया?"
 
-#: src/components/settings/prefControls.tsx:90
+#: src/components/settings/prefControls.tsx:91
 msgid "Dim"
 msgstr "मद्धम"
 
@@ -1207,6 +1379,8 @@ msgid "Direct"
 msgstr "सीधा"
 
 #. placeholder {0}: formatAmount(p.amount, currency, locale)
+#. placeholder {0}: money(magnitude(p.amount))
+#: src/components/people/CallItEvenDialog.tsx:143
 #: src/components/people/RecordPaymentDialog.tsx:170
 msgid "Direct {0}"
 msgstr "सीधा {0}"
@@ -1215,11 +1389,12 @@ msgstr "सीधा {0}"
 msgid "Direct expenses"
 msgstr "सीधे खर्च"
 
-#: src/screens/Person/index.tsx:298
+#: src/screens/Person/index.tsx:332
 msgid "Direct only"
 msgstr "सिर्फ़ सीधे"
 
-#: src/components/people/PaymentDetailsDialog.tsx:136
+#: src/components/people/PaymentDetailsDialog.tsx:167
+#: src/screens/RecentlyDeleted/components/RestoreDialog.tsx:160
 msgid "Direct, no group"
 msgstr "सीधा, कोई समूह नहीं"
 
@@ -1245,6 +1420,10 @@ msgstr "हटाएं"
 #: src/components/Dialog/index.tsx:610
 msgid "Double tap to close the dialog"
 msgstr "डायलॉग बंद करने के लिए दो बार टैप करें"
+
+#: src/components/people/CallItEvenDialog.tsx:377
+msgid "e.g. Birthday treat"
+msgstr "जैसे जन्मदिन की ट्रीट"
 
 #: src/components/groups/GroupFields.tsx:61
 msgid "e.g. Goa trip"
@@ -1275,7 +1454,7 @@ msgid "Edit category"
 msgstr "श्रेणी बदलें"
 
 #: src/components/split/ExpenseComposer.tsx:263
-#: src/navigation/Navigation.tsx:71
+#: src/navigation/Navigation.tsx:73
 #: src/screens/EditExpense.tsx:33
 #: src/screens/EditExpense.tsx:70
 #: src/screens/Expense/index.tsx:80
@@ -1283,14 +1462,14 @@ msgid "Edit expense"
 msgstr "खर्च बदलें"
 
 #: src/components/people/EditFriendDialog.tsx:67
-#: src/screens/Person/index.tsx:363
-#: src/screens/Person/index.tsx:366
+#: src/screens/Person/index.tsx:408
+#: src/screens/Person/index.tsx:411
 msgid "Edit friend"
 msgstr "दोस्त बदलें"
 
 #: src/components/groups/EditGroupDialog.tsx:89
-#: src/screens/Group/index.tsx:491
-#: src/screens/Group/index.tsx:494
+#: src/screens/Group/index.tsx:509
+#: src/screens/Group/index.tsx:512
 msgid "Edit group"
 msgstr "ग्रुप बदलें"
 
@@ -1354,16 +1533,16 @@ msgstr "पहले कुल रकम लिखें, फिर हर व�
 msgid "Entertainment"
 msgstr "मनोरंजन"
 
-#: src/components/settings/prefControls.tsx:243
+#: src/components/settings/prefControls.tsx:244
 #: src/components/split/SplitEditor.tsx:58
 msgid "Equally"
 msgstr "बराबर"
 
-#: src/components/settings/prefControls.tsx:412
+#: src/components/settings/prefControls.tsx:413
 msgid "European"
 msgstr "यूरोपीय"
 
-#: src/components/settings/prefControls.tsx:467
+#: src/components/settings/prefControls.tsx:487
 msgid "Every swipe action is also on the item's menu. Deleting only removes it from your feed, never from the record."
 msgstr "हर स्वाइप वाला काम आइटम के मेन्यू में भी है। हटाने से वह सिर्फ़ आपकी फ़ीड से जाता है, रिकॉर्ड से कभी नहीं।"
 
@@ -1372,7 +1551,7 @@ msgstr "हर स्वाइप वाला काम आइटम के म
 msgid "Everyone"
 msgstr "सभी"
 
-#: src/screens/Group/index.tsx:467
+#: src/screens/Group/index.tsx:485
 #: src/screens/Settle/index.tsx:389
 msgid "Everyone is settled up."
 msgstr "सबका हिसाब बराबर है।"
@@ -1417,7 +1596,7 @@ msgstr "आप जो भी जोड़ते हैं, वह इसी ड�
 msgid "Exact"
 msgstr "सटीक"
 
-#: src/components/settings/prefControls.tsx:244
+#: src/components/settings/prefControls.tsx:245
 msgid "Exact amounts"
 msgstr "सटीक रकम"
 
@@ -1425,9 +1604,10 @@ msgstr "सटीक रकम"
 msgid "Excluded"
 msgstr "बाहर"
 
-#: src/navigation/Navigation.tsx:70
+#: src/navigation/Navigation.tsx:72
 #: src/screens/Analytics/components/ExpenseRow.tsx:42
 #: src/screens/Expense/index.tsx:72
+#: src/screens/RecentlyDeleted/components/RestoreDialog.tsx:93
 msgid "Expense"
 msgstr "खर्च"
 
@@ -1438,6 +1618,7 @@ msgstr "खर्च जोड़ा गया"
 
 #: src/components/activity/useActivityActions.tsx:94
 #: src/screens/Expense/index.tsx:136
+#: src/screens/RecentlyDeleted/index.tsx:101
 msgid "Expense deleted"
 msgstr "खर्च हटाया गया"
 
@@ -1445,13 +1626,17 @@ msgstr "खर्च हटाया गया"
 msgid "Expense options"
 msgstr "खर्च के विकल्प"
 
+#: src/screens/RecentlyDeleted/index.tsx:96
+msgid "Expense restored"
+msgstr "ख़र्च वापस लाया गया"
+
 #: src/screens/Analytics/components/Charts.tsx:147
 #: src/screens/Analytics/components/Charts.tsx:187
 #: src/screens/Analytics/components/Charts.tsx:279
 #: src/screens/Analytics/components/Charts.tsx:322
 #: src/screens/Analytics/components/Summary.tsx:174
 #: src/screens/Analytics/index.tsx:149
-#: src/screens/Group/index.tsx:405
+#: src/screens/Group/index.tsx:423
 #: src/screens/Profile.tsx:249
 msgid "Expenses"
 msgstr "खर्च"
@@ -1474,8 +1659,8 @@ msgid "Fewer shares"
 msgstr "कम हिस्से"
 
 #: src/screens/Person/components/HistoryFilterDialog.tsx:55
-#: src/screens/Person/index.tsx:303
-#: src/screens/Person/index.tsx:309
+#: src/screens/Person/index.tsx:337
+#: src/screens/Person/index.tsx:343
 msgid "Filter"
 msgstr "फ़िल्टर"
 
@@ -1505,12 +1690,16 @@ msgstr "जैसे, किराया"
 msgid "For money that changed hands outside Splito – cash, UPI or a bank transfer. Splito keeps the record; it never moves money."
 msgstr "Splito के बाहर हुए लेन-देन के लिए – नकद, UPI या बैंक ट्रांसफ़र। Splito सिर्फ़ रिकॉर्ड रखता है; वह कभी पैसे नहीं भेजता।"
 
-#: src/screens/Person/index.tsx:126
-#: src/screens/Person/index.tsx:326
+#: src/screens/RecentlyDeleted/components/RestoreDialog.tsx:144
+msgid "For you"
+msgstr "आपके लिए"
+
+#: src/screens/Person/index.tsx:145
+#: src/screens/Person/index.tsx:360
 msgid "Friend"
 msgstr "दोस्त"
 
-#: src/screens/Person/index.tsx:222
+#: src/screens/Person/index.tsx:256
 msgid "Friend removed"
 msgstr "दोस्त हटाया गया"
 
@@ -1529,8 +1718,8 @@ msgstr "दोस्तों को Splito की ज़रूरत नही�
 msgid "From others"
 msgstr "दूसरों से"
 
-#: src/components/settings/prefControls.tsx:146
-#: src/screens/Settings/index.tsx:178
+#: src/components/settings/prefControls.tsx:147
+#: src/screens/Settings/index.tsx:199
 msgid "Full"
 msgstr "पूरा"
 
@@ -1538,15 +1727,15 @@ msgstr "पूरा"
 msgid "Future dates are fine – they show as upcoming until the day arrives."
 msgstr "आगे की तारीखें भी चलेंगी – उस दिन तक वे आगामी दिखेंगी।"
 
-#: src/components/settings/prefControls.tsx:161
+#: src/components/settings/prefControls.tsx:162
 msgid "Gentle vibrations when you tap, toggle and save"
 msgstr "टैप, टॉगल और सेव करने पर हल्का वाइब्रेशन"
 
-#: src/navigation/Drawer.tsx:299
+#: src/navigation/Drawer.tsx:307
 msgid "Get help"
 msgstr "मदद लें"
 
-#: src/screens/Group/components/GroupRows.tsx:113
+#: src/screens/Group/components/GroupRows.tsx:117
 msgid "gets back <0>{figure}</0>"
 msgstr "को मिलेंगे <0>{figure}</0>"
 
@@ -1576,18 +1765,19 @@ msgstr "ग्रेफ़ाइट"
 msgid "Groceries"
 msgstr "किराना"
 
+#: src/components/people/CallItEvenDialog.tsx:144
 #: src/components/people/RecordPaymentDialog.tsx:171
 #: src/components/split/ExpenseComposer.tsx:489
 #: src/components/split/pickers.tsx:256
 #: src/components/split/pickers.tsx:260
-#: src/navigation/Navigation.tsx:67
+#: src/navigation/Navigation.tsx:69
 #: src/screens/Analytics/components/Charts.tsx:322
 #: src/screens/Analytics/index.tsx:207
 #: src/screens/Analytics/useReport.ts:131
 #: src/screens/Analytics/useReport.ts:253
-#: src/screens/Group/index.tsx:141
-#: src/screens/Group/index.tsx:261
-#: src/screens/Group/index.tsx:453
+#: src/screens/Group/index.tsx:158
+#: src/screens/Group/index.tsx:279
+#: src/screens/Group/index.tsx:471
 #: src/screens/Groups/components/GroupRow.tsx:52
 #: src/screens/People/components/PersonRow.tsx:60
 #: src/screens/Person/components/PersonBalances.tsx:102
@@ -1616,8 +1806,8 @@ msgstr "समूह: {groupLabel}"
 
 #: src/components/settings/TabsEditor.tsx:33
 #: src/components/TabGlyph.tsx:28
-#: src/navigation/Drawer.tsx:194
-#: src/navigation/Navigation.tsx:60
+#: src/navigation/Drawer.tsx:195
+#: src/navigation/Navigation.tsx:61
 #: src/screens/Groups/index.tsx:121
 #: src/screens/Groups/index.tsx:135
 #: src/screens/Groups/index.tsx:164
@@ -1626,11 +1816,11 @@ msgstr "समूह: {groupLabel}"
 msgid "Groups"
 msgstr "समूह"
 
-#: src/components/settings/prefControls.tsx:160
+#: src/components/settings/prefControls.tsx:161
 msgid "Haptics"
 msgstr "हैप्टिक्स"
 
-#: src/navigation/Drawer.tsx:306
+#: src/navigation/Drawer.tsx:314
 #: src/screens/Settings/SettingsSection.tsx:54
 #: src/view/shell/desktop/LeftNav.tsx:669
 msgid "Help"
@@ -1661,31 +1851,31 @@ msgstr "{name} छिपाएँ"
 msgid "Hide from activity"
 msgstr "गतिविधि से छिपाएँ"
 
-#: src/components/settings/prefControls.tsx:454
+#: src/components/settings/prefControls.tsx:474
 msgid "Hide from Activity"
 msgstr "गतिविधि से छिपाएँ"
 
 #: src/screens/Expense/components/History.tsx:95
-#: src/screens/Person/index.tsx:291
+#: src/screens/Person/index.tsx:325
 msgid "History"
 msgstr "इतिहास"
 
 #: src/components/groups/GroupFields.tsx:44
-#: src/screens/Group/index.tsx:261
+#: src/screens/Group/index.tsx:279
 #: src/screens/Groups/components/GroupRow.tsx:50
 #: src/screens/Groups/components/GroupsFilterDialog.tsx:71
 msgid "Home"
 msgstr "घर"
 
-#: src/components/settings/prefControls.tsx:181
+#: src/components/settings/prefControls.tsx:182
 msgid "Home tab"
 msgstr "होम टैब"
 
-#: src/components/settings/prefControls.tsx:407
+#: src/components/settings/prefControls.tsx:408
 msgid "How amounts are grouped and punctuated."
 msgstr "रकम के अंकों को कैसे समूह और विराम-चिह्न दिए जाएँ।"
 
-#: src/components/settings/prefControls.tsx:241
+#: src/components/settings/prefControls.tsx:242
 msgid "How new expenses are divided until you change it."
 msgstr "जब तक आप न बदलें, नए खर्च ऐसे बँटेंगे।"
 
@@ -1706,7 +1896,7 @@ msgstr "आइकन"
 msgid "In this period"
 msgstr "इस अवधि में"
 
-#: src/components/settings/prefControls.tsx:443
+#: src/components/settings/prefControls.tsx:444
 #: src/screens/Analytics/components/FilterBar.tsx:123
 #: src/screens/Analytics/components/FilterBar.tsx:132
 #: src/screens/People/components/FriendsFilterDialog.tsx:76
@@ -1716,7 +1906,7 @@ msgstr "इस अवधि में"
 msgid "Include groups"
 msgstr "समूह शामिल करें"
 
-#: src/components/settings/prefControls.tsx:410
+#: src/components/settings/prefControls.tsx:411
 msgid "Indian"
 msgstr "भारतीय"
 
@@ -1728,17 +1918,21 @@ msgstr "भारतीय रुपया"
 msgid "Indigo"
 msgstr "नील"
 
-#: src/components/settings/prefControls.tsx:411
+#: src/components/settings/prefControls.tsx:412
 msgid "International"
 msgstr "अंतरराष्ट्रीय"
 
-#: src/components/settings/prefControls.tsx:517
+#: src/components/settings/prefControls.tsx:537
 msgid "Invites"
 msgstr "आमंत्रण"
 
 #: src/screens/AddFriend.tsx:164
 msgid "Inviting friends to Splito by link or QR is available when you sign in, coming with sync."
 msgstr "लिंक या QR से दोस्तों को Splito पर बुलाना साइन इन करने पर मिलेगा, सिंक के साथ आ रहा है।"
+
+#: src/screens/RecentlyDeleted/index.tsx:271
+msgid "It leaves Recently deleted and can’t be restored. Its history stays in the record’s audit trail."
+msgstr "यह हाल ही में हटाए गए से निकल जाएगा और वापस नहीं लाया जा सकेगा। इसका इतिहास रिकॉर्ड के ऑडिट ट्रेल में बना रहेगा।"
 
 #: src/screens/Settings/SettingsSection.tsx:196
 msgid "It may have moved. Everything is still in Settings."
@@ -1777,12 +1971,16 @@ msgstr "चीज़ें और शुल्क मिलाकर {0}"
 msgid "Just between you and friends"
 msgstr "सिर्फ़ आप और दोस्तों के बीच"
 
+#: src/components/settings/prefControls.tsx:458
+msgid "Keep deleted items for"
+msgstr "हटाए गए आइटम रखें"
+
 #: src/components/FormSheet/shared.tsx:153
 #: src/components/split/ExpenseComposer.tsx:582
 msgid "Keep editing"
 msgstr "बदलाव जारी रखें"
 
-#: src/components/settings/prefControls.tsx:293
+#: src/components/settings/prefControls.tsx:294
 msgid "Language"
 msgstr "भाषा"
 
@@ -1790,11 +1988,11 @@ msgstr "भाषा"
 msgid "Language and region"
 msgstr "भाषा और क्षेत्र"
 
-#: src/components/settings/prefControls.tsx:100
+#: src/components/settings/prefControls.tsx:101
 msgid "Larger"
 msgstr "बड़ा"
 
-#: src/components/settings/prefControls.tsx:100
+#: src/components/settings/prefControls.tsx:101
 msgid "Largest"
 msgstr "सबसे बड़ा"
 
@@ -1802,29 +2000,37 @@ msgstr "सबसे बड़ा"
 msgid "Later years"
 msgstr "अगले साल"
 
-#: src/screens/Group/components/GroupRows.tsx:204
+#: src/screens/Group/components/GroupRows.tsx:243
 msgid "Left the group"
 msgstr "समूह छोड़ दिया"
+
+#: src/components/people/CallItEvenDialog.tsx:259
+msgid "Let a debt go without any money changing hands. It shows in history and Activity, never counts as spending, and you can undo it."
+msgstr "बिना पैसे के लेन-देन के कोई कर्ज़ माफ़ करें। यह इतिहास और गतिविधि में दिखता है, कभी ख़र्च में नहीं गिना जाता, और आप इसे वापस ले सकते हैं।"
 
 #: src/screens/AddFriend.tsx:156
 msgid "Lets you open your UPI app when you pay them in rupees."
 msgstr "रुपयों में भुगतान करते समय आपका UPI ऐप खोलने देता है।"
 
-#: src/components/settings/prefControls.tsx:70
-#: src/screens/Settings/index.tsx:177
+#: src/components/settings/prefControls.tsx:71
+#: src/screens/Settings/index.tsx:198
 msgid "Light"
 msgstr "लाइट"
 
-#: src/components/settings/prefControls.tsx:120
+#: src/components/settings/prefControls.tsx:121
 msgid "List density"
 msgstr "सूची का घनापन"
+
+#: src/screens/RecentlyDeleted/index.tsx:181
+msgid "Loading…"
+msgstr "लोड हो रहा है…"
 
 #: src/screens/Activity.tsx:103
 msgid "Mark all read"
 msgstr "सभी को पढ़ा हुआ मार्क करें"
 
 #: src/components/activity/useActivityActions.tsx:56
-#: src/components/settings/prefControls.tsx:453
+#: src/components/settings/prefControls.tsx:473
 msgid "Mark as read"
 msgstr "पढ़ा हुआ मार्क करें"
 
@@ -1836,7 +2042,7 @@ msgstr "अपठित मार्क करें"
 msgid "Marked everything as read"
 msgstr "सब कुछ पढ़ा हुआ मार्क किया गया"
 
-#: src/components/activity/ActivityItem.tsx:235
+#: src/components/activity/ActivityItem.tsx:236
 msgid "Marks it as read"
 msgstr "इसे पढ़ा हुआ मार्क करता है"
 
@@ -1846,10 +2052,10 @@ msgstr "माप"
 
 #: src/screens/CreateGroup.tsx:176
 #: src/screens/CreateGroup.tsx:196
-#: src/screens/Group/index.tsx:405
-#: src/screens/Group/index.tsx:500
-#: src/screens/Group/index.tsx:503
-#: src/screens/Group/index.tsx:573
+#: src/screens/Group/index.tsx:423
+#: src/screens/Group/index.tsx:518
+#: src/screens/Group/index.tsx:521
+#: src/screens/Group/index.tsx:592
 msgid "Members"
 msgstr "सदस्य"
 
@@ -1863,30 +2069,34 @@ msgstr "{0} के सदस्य"
 msgid "Menu"
 msgstr "मेन्यू"
 
-#: src/components/settings/prefControls.tsx:262
+#: src/components/settings/prefControls.tsx:263
 #: src/screens/Analytics/components/Summary.tsx:193
 msgid "Month"
 msgstr "महीना"
 
-#: src/components/settings/prefControls.tsx:387
+#: src/components/settings/prefControls.tsx:388
 msgid "Month first"
 msgstr "पहले महीना"
 
-#: src/components/activity/ActivityItem.tsx:244
-#: src/components/activity/ActivityItem.tsx:328
+#: src/components/activity/ActivityItem.tsx:245
+#: src/components/activity/ActivityItem.tsx:329
 msgid "More actions"
 msgstr "और विकल्प"
 
-#: src/screens/Group/index.tsx:472
-#: src/screens/Person/index.tsx:344
+#: src/screens/Group/index.tsx:490
+#: src/screens/Person/index.tsx:378
 msgid "More options"
 msgstr "और विकल्प"
+
+#: src/screens/Group/components/GroupRows.tsx:182
+msgid "More options for {sentence}"
+msgstr "{sentence} के लिए और विकल्प"
 
 #: src/components/split/SplitEditor.tsx:353
 msgid "More shares"
 msgstr "ज़्यादा हिस्से"
 
-#: src/screens/Settings/index.tsx:186
+#: src/screens/Settings/index.tsx:207
 msgid "Most recent"
 msgstr "सबसे हाल का"
 
@@ -1934,7 +2144,7 @@ msgstr "कई लोगों ने दिया"
 #: src/components/people/EditFriendDialog.tsx:82
 #: src/components/settings/CategoryDialog.tsx:107
 #: src/components/settings/CategoryDialog.tsx:112
-#: src/components/settings/prefControls.tsx:430
+#: src/components/settings/prefControls.tsx:431
 #: src/screens/AddFriend.tsx:98
 #: src/screens/AddFriend.tsx:104
 #: src/screens/Groups/components/GroupsFilterDialog.tsx:117
@@ -1946,11 +2156,11 @@ msgstr "नाम"
 msgid "New category"
 msgstr "नई श्रेणी"
 
-#: src/components/settings/prefControls.tsx:493
+#: src/components/settings/prefControls.tsx:513
 msgid "New expenses"
 msgstr "नए खर्च"
 
-#: src/components/settings/prefControls.tsx:214
+#: src/components/settings/prefControls.tsx:215
 msgid "New expenses start in this currency. You can change it on any expense."
 msgstr "नए खर्च इसी मुद्रा में शुरू होते हैं। आप किसी भी खर्च पर इसे बदल सकते हैं।"
 
@@ -1958,7 +2168,7 @@ msgstr "नए खर्च इसी मुद्रा में शुरू 
 msgid "New friend – no account needed"
 msgstr "नया दोस्त – खाते की ज़रूरत नहीं"
 
-#: src/navigation/Navigation.tsx:73
+#: src/navigation/Navigation.tsx:75
 #: src/screens/CreateGroup.tsx:128
 #: src/screens/Groups/index.tsx:203
 #: src/screens/Groups/index.tsx:204
@@ -1984,11 +2194,11 @@ msgstr "{0} में कोई {currency} खर्च नहीं"
 msgid "No allowed pair to pay anyone who is owed: {0}"
 msgstr "जिन्हें पैसे मिलने हैं, उनमें से किसी को देने के लिए अनुमति वाली जोड़ी नहीं: {0}"
 
-#: src/components/people/HistoryRow.tsx:198
+#: src/components/people/HistoryRow.tsx:229
 msgid "no balance change"
 msgstr "बैलेंस नहीं बदला"
 
-#: src/screens/Group/index.tsx:423
+#: src/screens/Group/index.tsx:441
 msgid "No balances yet. They appear once the group has an expense."
 msgstr "अभी कोई बैलेंस नहीं। समूह में खर्च जुड़ते ही दिखेंगे।"
 
@@ -1997,7 +2207,7 @@ msgid "No currency matches “{query}”"
 msgstr "“{query}” से कोई मुद्रा नहीं मिली"
 
 #. placeholder {0}: person!.data.name
-#: src/screens/Person/index.tsx:429
+#: src/screens/Person/index.tsx:475
 msgid "No direct expenses with {0}. Group expenses are hidden by the filter."
 msgstr "{0} के साथ कोई सीधा खर्च नहीं। समूह के खर्च फ़िल्टर से छिपे हैं।"
 
@@ -2005,7 +2215,7 @@ msgstr "{0} के साथ कोई सीधा खर्च नहीं।
 msgid "No direct plan works with these rules"
 msgstr "इन नियमों से कोई सीधी योजना नहीं बनती"
 
-#: src/screens/Group/index.tsx:429
+#: src/screens/Group/index.tsx:447
 msgid "No expenses in this group yet. Add the first one and everyone’s share is worked out for you."
 msgstr "इस समूह में अभी कोई खर्च नहीं। पहला जोड़ें, सबका हिस्सा अपने आप निकल आएगा।"
 
@@ -2040,7 +2250,7 @@ msgstr "किसी का हिस्सा शून्य से कम न
 msgid "No open balances"
 msgstr "कोई बकाया नहीं"
 
-#: src/screens/Person/index.tsx:181
+#: src/screens/Person/index.tsx:200
 msgid "No shared groups"
 msgstr "कोई साझा समूह नहीं"
 
@@ -2060,8 +2270,8 @@ msgstr "“{query}” से कोई नहीं मिला"
 msgid "Nobody yet"
 msgstr "अभी कोई नहीं"
 
-#: src/components/activity/ActivityItem.tsx:466
-#: src/components/people/HistoryRow.tsx:200
+#: src/components/activity/ActivityItem.tsx:467
+#: src/components/people/HistoryRow.tsx:231
 msgid "not involved"
 msgstr "शामिल नहीं"
 
@@ -2074,11 +2284,13 @@ msgstr "बाँट नहीं रहे"
 msgid "Not yet"
 msgstr "अभी नहीं"
 
-#: src/components/people/PaymentDetailsDialog.tsx:137
+#: src/components/people/CallItEvenDialog.tsx:374
+#: src/components/people/PaymentDetailsDialog.tsx:168
 #: src/components/people/RecordPaymentDialog.tsx:397
 msgid "Note"
 msgstr "नोट"
 
+#: src/components/people/CallItEvenDialog.tsx:369
 #: src/components/people/RecordPaymentDialog.tsx:392
 msgid "Note (optional)"
 msgstr "नोट (वैकल्पिक)"
@@ -2089,7 +2301,7 @@ msgstr "नोट (वैकल्पिक)"
 msgid "Notes"
 msgstr "नोट"
 
-#: src/components/settings/prefControls.tsx:456
+#: src/components/settings/prefControls.tsx:476
 msgid "Nothing"
 msgstr "कुछ नहीं"
 
@@ -2110,7 +2322,7 @@ msgid "Nothing to settle. This group has no expenses yet."
 msgstr "चुकाने को कुछ नहीं। इस समूह में अभी कोई खर्च नहीं।"
 
 #. placeholder {0}: person!.data.name
-#: src/screens/Person/index.tsx:428
+#: src/screens/Person/index.tsx:474
 msgid "Nothing with {0} yet. Add an expense you shared and it shows up here."
 msgstr "{0} के साथ अभी कुछ नहीं। साझा खर्च जोड़ें, वह यहां दिखेगा।"
 
@@ -2126,7 +2338,7 @@ msgstr "सूचनाएँ साइन इन करके सिंक च�
 msgid "now"
 msgstr "अभी"
 
-#: src/components/settings/prefControls.tsx:406
+#: src/components/settings/prefControls.tsx:407
 msgid "Number format"
 msgstr "संख्या फ़ॉर्मैट"
 
@@ -2146,13 +2358,13 @@ msgstr "कुल का"
 msgid "of your share was paid by others"
 msgstr "आपके हिस्से में से दूसरों ने चुकाया"
 
-#: src/components/settings/prefControls.tsx:148
-#: src/screens/Settings/index.tsx:178
-#: src/screens/Settings/index.tsx:188
+#: src/components/settings/prefControls.tsx:149
+#: src/screens/Settings/index.tsx:199
+#: src/screens/Settings/index.tsx:209
 msgid "Off"
 msgstr "बंद"
 
-#: src/screens/Settings/index.tsx:188
+#: src/screens/Settings/index.tsx:209
 msgid "On"
 msgstr "चालू"
 
@@ -2174,7 +2386,7 @@ msgstr "साझा खर्च के लिए एक जगह"
 msgid "Only allowed pairs"
 msgstr "सिर्फ़ अनुमति वाली जोड़ियाँ"
 
-#: src/screens/Person/index.tsx:513
+#: src/screens/Person/index.tsx:566
 msgid "Only friends with no expenses, payments or groups can be removed."
 msgstr "सिर्फ़ वे दोस्त हटाए जा सकते हैं जिनका कोई खर्च, भुगतान या समूह नहीं है।"
 
@@ -2186,6 +2398,11 @@ msgstr "भुगतान दर्ज करने के लिए किस�
 #: src/screens/People/components/BalanceSummary.tsx:105
 msgid "Open Analytics"
 msgstr "एनालिटिक्स खोलें"
+
+#. placeholder {0}: money(full)
+#: src/components/people/CallItEvenDialog.tsx:289
+msgid "Open balance {0}"
+msgstr "बकाया बैलेंस {0}"
 
 #. placeholder {0}: formatAmount(suggestion, currency, locale)
 #: src/components/people/RecordPaymentDialog.tsx:373
@@ -2209,11 +2426,15 @@ msgstr "ओपन सोर्स"
 msgid "Open UPI app"
 msgstr "UPI ऐप खोलें"
 
-#: src/components/activity/ActivityItem.tsx:235
+#: src/screens/RecentlyDeleted/index.tsx:311
+msgid "Opens it to restore or delete forever"
+msgstr "वापस लाने या हमेशा के लिए हटाने के लिए खोलता है"
+
+#: src/components/activity/ActivityItem.tsx:236
 msgid "Opens what changed"
 msgstr "जो बदला, उसे खोलता है"
 
-#: src/navigation/Drawer.tsx:80
+#: src/navigation/Drawer.tsx:81
 msgid "Opens your profile"
 msgstr "आपकी प्रोफ़ाइल खोलता है"
 
@@ -2251,7 +2472,7 @@ msgstr "आपको मिलने हैं {0}"
 msgid "Owed to you <0>{0}</0>"
 msgstr "आपको मिलेंगे <0>{0}</0>"
 
-#: src/screens/Group/components/GroupRows.tsx:122
+#: src/screens/Group/components/GroupRows.tsx:126
 msgid "owes <0>{figure}</0>"
 msgstr "को देने हैं <0>{figure}</0>"
 
@@ -2277,25 +2498,32 @@ msgstr "चुकाया बनाम आपका हिस्सा"
 msgid "Pairs you haven’t marked Allowed or Preferred are treated as excluded."
 msgstr "जिन जोड़ियों को आपने अनुमति या पसंदीदा नहीं चुना, वे बाहर मानी जाएंगी।"
 
+#. placeholder {0}: money(remainingMinor(full, [typed ?? ZERO]))
+#: src/components/people/CallItEvenDialog.tsx:351
+msgid "Part of it: {0} stays open."
+msgstr "इसका एक हिस्सा: {0} बकाया रहेगा।"
+
 #: src/components/people/RecordPaymentDialog.tsx:374
 msgid "Part payments are fine."
 msgstr "आंशिक भुगतान भी ठीक है।"
 
 #: src/components/people/UpiPayDialog.tsx:142
-#: src/screens/Person/index.tsx:270
-#: src/screens/Person/index.tsx:276
+#: src/screens/Person/index.tsx:304
+#: src/screens/Person/index.tsx:310
 msgid "Pay with UPI"
 msgstr "UPI से भुगतान करें"
 
-#: src/components/people/HistoryRow.tsx:91
+#: src/components/people/HistoryRow.tsx:117
+#: src/screens/RecentlyDeleted/components/RestoreDialog.tsx:95
 msgid "Payment"
 msgstr "भुगतान"
 
-#: src/components/people/PaymentDetailsDialog.tsx:94
+#: src/components/people/PaymentDetailsDialog.tsx:115
+#: src/screens/RecentlyDeleted/index.tsx:102
 msgid "Payment deleted"
 msgstr "भुगतान हटाया गया"
 
-#: src/components/people/PaymentDetailsDialog.tsx:44
+#: src/components/people/PaymentDetailsDialog.tsx:52
 msgid "Payment details"
 msgstr "भुगतान का विवरण"
 
@@ -2304,9 +2532,13 @@ msgstr "भुगतान का विवरण"
 msgid "Payment recorded"
 msgstr "भुगतान दर्ज हुआ"
 
+#: src/screens/RecentlyDeleted/index.tsx:97
+msgid "Payment restored"
+msgstr "भुगतान वापस लाया गया"
+
 #: src/components/groups/RulesEditor.tsx:97
-#: src/screens/Group/index.tsx:518
-#: src/screens/Group/index.tsx:521
+#: src/screens/Group/index.tsx:536
+#: src/screens/Group/index.tsx:539
 msgid "Payment rules"
 msgstr "भुगतान के नियम"
 
@@ -2314,7 +2546,7 @@ msgstr "भुगतान के नियम"
 msgid "Payment rules saved"
 msgstr "भुगतान के नियम सहेजे गए"
 
-#: src/components/settings/prefControls.tsx:505
+#: src/components/settings/prefControls.tsx:525
 msgid "Payments"
 msgstr "भुगतान"
 
@@ -2328,7 +2560,7 @@ msgstr "आपको देता है"
 
 #: src/components/settings/TabsEditor.tsx:32
 #: src/components/TabGlyph.tsx:27
-#: src/navigation/Drawer.tsx:187
+#: src/navigation/Drawer.tsx:188
 #: src/view/shell/desktop/LeftNav.tsx:742
 msgid "People"
 msgstr "लोग"
@@ -2346,7 +2578,7 @@ msgstr "प्रतिशत"
 msgid "Percent for {0}"
 msgstr "{0} का प्रतिशत"
 
-#: src/components/settings/prefControls.tsx:245
+#: src/components/settings/prefControls.tsx:246
 msgid "Percentages"
 msgstr "प्रतिशत"
 
@@ -2364,7 +2596,7 @@ msgstr "अवधि"
 msgid "Period: {periodName}, {0}"
 msgstr "अवधि: {periodName}, {0}"
 
-#: src/navigation/Navigation.tsx:66
+#: src/navigation/Navigation.tsx:68
 #: src/screens/Analytics/components/Charts.tsx:279
 msgid "Person"
 msgstr "व्यक्ति"
@@ -2413,11 +2645,11 @@ msgstr "चीज़ {0} की कीमत"
 msgid "Privacy"
 msgstr "गोपनीयता"
 
-#: src/navigation/Drawer.tsx:79
-#: src/navigation/Drawer.tsx:217
-#: src/navigation/Navigation.tsx:63
+#: src/navigation/Drawer.tsx:80
+#: src/navigation/Drawer.tsx:218
+#: src/navigation/Navigation.tsx:64
 #: src/screens/Profile.tsx:40
-#: src/screens/Settings/index.tsx:55
+#: src/screens/Settings/index.tsx:58
 msgid "Profile"
 msgstr "प्रोफ़ाइल"
 
@@ -2425,7 +2657,7 @@ msgstr "प्रोफ़ाइल"
 msgid "Recent"
 msgstr "हाल के"
 
-#: src/components/settings/prefControls.tsx:431
+#: src/components/settings/prefControls.tsx:432
 #: src/screens/Groups/components/GroupsFilterDialog.tsx:116
 msgid "Recent activity"
 msgstr "हाल की गतिविधि"
@@ -2438,6 +2670,15 @@ msgstr "हाल के समूह"
 msgid "Recent transactions"
 msgstr "हाल के लेन-देन"
 
+#: src/components/settings/sections.ts:50
+#: src/navigation/Drawer.tsx:232
+#: src/navigation/Navigation.tsx:67
+#: src/screens/RecentlyDeleted/index.tsx:193
+#: src/screens/Settings/index.tsx:110
+#: src/screens/Settings/index.tsx:113
+msgid "Recently deleted"
+msgstr "हाल ही में हटाए गए"
+
 #: src/screens/Settle/components/TransferRow.tsx:110
 msgid "Record"
 msgstr "दर्ज करें"
@@ -2447,7 +2688,7 @@ msgid "Record a payment"
 msgstr "भुगतान दर्ज करें"
 
 #: src/components/people/RecordPaymentDialog.tsx:266
-#: src/screens/Person/index.tsx:337
+#: src/screens/Person/index.tsx:371
 msgid "Record payment"
 msgstr "भुगतान दर्ज करें"
 
@@ -2455,26 +2696,26 @@ msgstr "भुगतान दर्ज करें"
 msgid "Record this payment"
 msgstr "यह भुगतान दर्ज करें"
 
-#: src/components/settings/prefControls.tsx:147
-#: src/screens/Settings/index.tsx:178
+#: src/components/settings/prefControls.tsx:148
+#: src/screens/Settings/index.tsx:199
 msgid "Reduced"
 msgstr "कम"
 
-#: src/components/settings/prefControls.tsx:143
+#: src/components/settings/prefControls.tsx:144
 msgid "Reduced swaps movement for gentle fades. Off shows every change instantly."
 msgstr "कम में हलचल की जगह हल्का फ़ेड होता है। बंद में हर बदलाव तुरंत दिखता है।"
 
-#: src/screens/Person/index.tsx:514
+#: src/screens/Person/index.tsx:567
 msgid "Remove"
 msgstr "हटाएं"
 
 #. placeholder {0}: person.data.name
-#: src/screens/Person/index.tsx:512
+#: src/screens/Person/index.tsx:565
 msgid "Remove {0}?"
 msgstr "{0} को हटाएं?"
 
-#: src/screens/Person/index.tsx:372
-#: src/screens/Person/index.tsx:376
+#: src/screens/Person/index.tsx:417
+#: src/screens/Person/index.tsx:421
 msgid "Remove friend"
 msgstr "दोस्त हटाएं"
 
@@ -2500,16 +2741,16 @@ msgstr "{title} को डिफ़ॉल्ट पर रीसेट करे
 msgid "Reset {title}?"
 msgstr "{title} रीसेट करें?"
 
-#: src/screens/Settings/index.tsx:145
+#: src/screens/Settings/index.tsx:166
 msgid "Reset all"
 msgstr "सब रीसेट करें"
 
-#: src/screens/Settings/index.tsx:116
-#: src/screens/Settings/index.tsx:120
+#: src/screens/Settings/index.tsx:137
+#: src/screens/Settings/index.tsx:141
 msgid "Reset all settings"
 msgstr "सभी सेटिंग्स रीसेट करें"
 
-#: src/screens/Settings/index.tsx:143
+#: src/screens/Settings/index.tsx:164
 msgid "Reset all settings?"
 msgstr "सभी सेटिंग्स रीसेट करें?"
 
@@ -2526,22 +2767,40 @@ msgid "Reset to anyone pays anyone"
 msgstr "रीसेट करें: कोई भी किसी को भी दे"
 
 #: src/screens/Expense/index.tsx:434
+#: src/screens/RecentlyDeleted/components/RestoreDialog.tsx:102
 msgid "Restore"
 msgstr "वापस लाएँ"
 
 #: src/screens/Expense/index.tsx:422
+#: src/screens/RecentlyDeleted/components/RestoreDialog.tsx:87
 msgid "Restore expense"
 msgstr "खर्च वापस लाएँ"
+
+#: src/screens/RecentlyDeleted/components/RestoreDialog.tsx:89
+msgid "Restore payment"
+msgstr "भुगतान वापस लाएँ"
+
+#: src/screens/RecentlyDeleted/components/RestoreDialog.tsx:90
+msgid "Restore write-off"
+msgstr "माफ़ी वापस लाएँ"
+
+#: src/screens/RecentlyDeleted/components/RestoreDialog.tsx:177
+msgid "Restoring puts it back in balances, history and Activity. It stays here for {left} more days."
+msgstr "वापस लाने पर यह बैलेंस, इतिहास और गतिविधि में लौट आता है। यह यहाँ {left} दिन और रहेगा।"
+
+#: src/screens/RecentlyDeleted/components/RestoreDialog.tsx:172
+msgid "Restoring puts it back in balances, history and Activity. It stays here for 1 more day."
+msgstr "वापस लाने पर यह बैलेंस, इतिहास और गतिविधि में लौट आता है। यह यहाँ 1 दिन और रहेगा।"
 
 #: src/components/groups/RulesEditor.tsx:303
 msgid "Rule for this pair"
 msgstr "इस जोड़ी का नियम"
 
-#: src/components/settings/prefControls.tsx:311
+#: src/components/settings/prefControls.tsx:312
 msgid "Same as this device"
 msgstr "इस डिवाइस जैसा"
 
-#: src/components/settings/prefControls.tsx:320
+#: src/components/settings/prefControls.tsx:321
 msgid "Same as this device ({deviceZone})"
 msgstr "इस डिवाइस जैसा ({deviceZone})"
 
@@ -2566,7 +2825,7 @@ msgstr "सहेजा गया"
 
 #: src/components/settings/AboutSettings.tsx:44
 #: src/components/settings/AboutSettings.tsx:116
-#: src/navigation/Drawer.tsx:100
+#: src/navigation/Drawer.tsx:101
 #: src/screens/Profile.tsx:192
 #: src/view/shell/desktop/LeftNav.tsx:219
 msgid "Saved on this device"
@@ -2581,7 +2840,7 @@ msgstr "इस डिवाइस पर सहेजा गया। अपन�
 msgid "Search"
 msgstr "खोजें"
 
-#: src/components/settings/prefControls.tsx:225
+#: src/components/settings/prefControls.tsx:226
 #: src/components/split/pickers.tsx:75
 #: src/components/split/pickers.tsx:76
 msgid "Search currencies"
@@ -2605,7 +2864,7 @@ msgstr "नाम खोजें या जोड़ें"
 msgid "Search people"
 msgstr "लोग खोजें"
 
-#: src/components/settings/prefControls.tsx:338
+#: src/components/settings/prefControls.tsx:339
 msgid "Search timezones"
 msgstr "समय क्षेत्र खोजें"
 
@@ -2631,31 +2890,31 @@ msgstr "सर्विस चार्ज"
 msgid "Set for this group"
 msgstr "इस समूह के लिए तय"
 
-#: src/navigation/Drawer.tsx:224
-#: src/navigation/Navigation.tsx:64
+#: src/navigation/Drawer.tsx:225
 #: src/navigation/Navigation.tsx:65
+#: src/navigation/Navigation.tsx:66
 #: src/screens/Profile.tsx:64
 #: src/screens/Profile.tsx:67
-#: src/screens/Settings/index.tsx:44
+#: src/screens/Settings/index.tsx:47
 #: src/screens/Settings/SettingsSection.tsx:68
 #: src/view/shell/desktop/LeftNav.tsx:769
 msgid "Settings"
 msgstr "सेटिंग्स"
 
-#: src/screens/Settings/index.tsx:132
+#: src/screens/Settings/index.tsx:153
 msgid "Settings are saved on this device. Once you sign in, they follow you to your other devices."
 msgstr "सेटिंग्स इसी डिवाइस पर सेव हैं। साइन इन करने के बाद ये आपके दूसरे डिवाइस पर भी मिलेंगी।"
 
-#: src/screens/Settings/index.tsx:150
+#: src/screens/Settings/index.tsx:171
 msgid "Settings reset"
 msgstr "सेटिंग्स रीसेट हो गईं"
 
 #: src/components/settings/AboutSettings.tsx:97
-#: src/navigation/Navigation.tsx:68
-#: src/screens/Group/index.tsx:464
-#: src/screens/Group/index.tsx:642
-#: src/screens/Group/index.tsx:649
-#: src/screens/Person/index.tsx:337
+#: src/navigation/Navigation.tsx:70
+#: src/screens/Group/index.tsx:482
+#: src/screens/Group/index.tsx:673
+#: src/screens/Group/index.tsx:680
+#: src/screens/Person/index.tsx:371
 #: src/screens/Settle/index.tsx:126
 #: src/screens/Settle/index.tsx:279
 msgid "Settle up"
@@ -2671,7 +2930,7 @@ msgid "Settled"
 msgstr "हिसाब बराबर"
 
 #: src/components/BalanceText.tsx:46
-#: src/screens/Group/components/GroupRows.tsx:106
+#: src/screens/Group/components/GroupRows.tsx:110
 #: src/screens/Groups/components/GroupRow.tsx:69
 #: src/screens/People/components/PersonRow.tsx:94
 msgid "settled up"
@@ -2686,7 +2945,7 @@ msgstr "हिसाब बराबर"
 msgid "Share"
 msgstr "हिस्सा"
 
-#: src/components/settings/prefControls.tsx:246
+#: src/components/settings/prefControls.tsx:247
 #: src/components/split/SplitEditor.tsx:61
 msgid "Shares"
 msgstr "हिस्से"
@@ -2742,11 +3001,15 @@ msgstr "दिखाएँ"
 msgid "Shown on your expenses and payments."
 msgstr "आपके खर्चों और भुगतानों पर दिखता है।"
 
-#: src/components/people/HistoryRow.tsx:170
+#: src/components/people/HistoryRow.tsx:200
 msgid "Shows the payment and lets you delete it"
 msgstr "भुगतान दिखाता है और उसे हटाने देता है"
 
-#: src/components/settings/prefControls.tsx:100
+#: src/components/people/HistoryRow.tsx:199
+msgid "Shows the write-off and lets you undo it"
+msgstr "माफ़ी दिखाता है और उसे वापस लेने देता है"
+
+#: src/components/settings/prefControls.tsx:101
 msgid "Smaller"
 msgstr "छोटा"
 
@@ -2754,21 +3017,24 @@ msgstr "छोटा"
 msgid "So friends know it’s you."
 msgstr "ताकि दोस्त जानें कि यह आप हैं।"
 
-#: src/screens/Settings/index.tsx:188
+#: src/screens/Settings/index.tsx:209
 msgid "Some"
 msgstr "कुछ"
 
-#: src/components/activity/ActivityItem.tsx:373
+#: src/components/activity/ActivityItem.tsx:374
 #: src/components/groups/RulesEditor.tsx:219
-#: src/components/people/HistoryRow.tsx:56
-#: src/components/people/PaymentDetailsDialog.tsx:77
+#: src/components/people/CallItEvenDialog.tsx:120
+#: src/components/people/HistoryRow.tsx:60
+#: src/components/people/PaymentDetailsDialog.tsx:88
 #: src/components/people/RecordPaymentDialog.tsx:145
 #: src/components/split/shared.tsx:77
 #: src/screens/Analytics/useReport.ts:251
-#: src/screens/Group/index.tsx:560
-#: src/screens/Group/index.tsx:594
-#: src/screens/Group/index.tsx:610
-#: src/screens/Group/index.tsx:611
+#: src/screens/Group/index.tsx:579
+#: src/screens/Group/index.tsx:613
+#: src/screens/Group/index.tsx:629
+#: src/screens/Group/index.tsx:630
+#: src/screens/RecentlyDeleted/describe.ts:33
+#: src/screens/RecentlyDeleted/index.tsx:92
 #: src/screens/Settle/components/TransferRow.tsx:41
 msgid "Someone"
 msgstr "कोई"
@@ -2786,7 +3052,7 @@ msgstr "कुछ ठीक नहीं है। चिह्नित जग�
 msgid "Sort by"
 msgstr "क्रम"
 
-#: src/components/settings/prefControls.tsx:427
+#: src/components/settings/prefControls.tsx:428
 msgid "Sort people by"
 msgstr "लोगों का क्रम"
 
@@ -2794,7 +3060,7 @@ msgstr "लोगों का क्रम"
 msgid "Sorting and filters"
 msgstr "क्रम और फ़िल्टर"
 
-#: src/components/settings/prefControls.tsx:413
+#: src/components/settings/prefControls.tsx:414
 msgid "Spaced"
 msgstr "खाली जगह वाला"
 
@@ -2881,7 +3147,7 @@ msgstr "Splito कभी पैसे नहीं भेजता। हर भ
 msgid "Splito's interface is built on Bluesky's social-app (MIT licence). Icons are Lucide (ISC licence). The Inter typeface is under the SIL Open Font License."
 msgstr "Splito का इंटरफ़ेस Bluesky के social-app (MIT लाइसेंस) पर बना है। आइकन Lucide (ISC लाइसेंस) के हैं। Inter टाइपफ़ेस SIL Open Font License के तहत है।"
 
-#: src/components/settings/prefControls.tsx:294
+#: src/components/settings/prefControls.tsx:295
 msgid "Splito's language. Names, notes and amounts you enter stay as you typed them."
 msgstr "Splito की भाषा। आपके लिखे नाम, नोट और रकम जैसे लिखे थे वैसे ही रहते हैं।"
 
@@ -2910,20 +3176,20 @@ msgstr "सुझाया गया"
 msgid "Swap who paid"
 msgstr "भुगतान करने वाला बदलें"
 
-#: src/components/settings/prefControls.tsx:466
+#: src/components/settings/prefControls.tsx:486
 msgid "Swipe left on Activity"
 msgstr "गतिविधि पर बाएँ स्वाइप"
 
-#: src/components/settings/prefControls.tsx:479
+#: src/components/settings/prefControls.tsx:499
 msgid "Swipe right on Activity"
 msgstr "गतिविधि पर दाएँ स्वाइप"
 
-#: src/components/settings/prefControls.tsx:69
-#: src/screens/Settings/index.tsx:177
+#: src/components/settings/prefControls.tsx:70
+#: src/screens/Settings/index.tsx:198
 msgid "System"
 msgstr "सिस्टम"
 
-#: src/components/settings/prefControls.tsx:279
+#: src/components/settings/prefControls.tsx:280
 #: src/screens/Analytics/components/FilterBar.tsx:149
 msgid "Table"
 msgstr "टेबल"
@@ -2945,7 +3211,7 @@ msgstr "एक और हिस्से के लिए टैप करें
 msgid "Tax"
 msgstr "टैक्स"
 
-#: src/components/settings/prefControls.tsx:105
+#: src/components/settings/prefControls.tsx:106
 msgid "Text size"
 msgstr "टेक्स्ट का आकार"
 
@@ -2957,6 +3223,11 @@ msgstr "यह रकम बहुत बड़ी है"
 msgid "That isn’t a number. Use digits, one decimal point and + − × ÷"
 msgstr "यह संख्या नहीं है। अंक, एक दशमलव बिंदु और + − × ÷ इस्तेमाल करें"
 
+#. placeholder {0}: money(full)
+#: src/components/people/CallItEvenDialog.tsx:348
+msgid "That’s more than the open balance of {0}."
+msgstr "यह बकाया बैलेंस {0} से ज़्यादा है।"
+
 #: src/components/split/shared.tsx:178
 msgid "The adjustments add up to more than the total"
 msgstr "बदलाव मिलाकर कुल रकम से ज़्यादा हैं"
@@ -2965,7 +3236,7 @@ msgstr "बदलाव मिलाकर कुल रकम से ज़्�
 msgid "The amount needs to be more than zero"
 msgstr "रकम शून्य से ज़्यादा होनी चाहिए"
 
-#: src/components/people/PaymentDetailsDialog.tsx:110
+#: src/components/people/PaymentDetailsDialog.tsx:141
 msgid "The payment couldn’t be deleted. Please try again."
 msgstr "भुगतान हटाया नहीं जा सका। कृपया फिर कोशिश करें।"
 
@@ -2973,7 +3244,7 @@ msgstr "भुगतान हटाया नहीं जा सका। क�
 msgid "The payment couldn’t be saved. Please try again."
 msgstr "भुगतान सहेजा नहीं जा सका। कृपया फिर कोशिश करें।"
 
-#: src/components/settings/prefControls.tsx:259
+#: src/components/settings/prefControls.tsx:260
 msgid "The range Analytics opens with."
 msgstr "विश्लेषण खुलने पर यही अवधि दिखेगी।"
 
@@ -2981,7 +3252,7 @@ msgstr "विश्लेषण खुलने पर यही अवधि �
 msgid "The split needs to add up to the total"
 msgstr "बँटवारा मिलाकर कुल रकम के बराबर होना चाहिए"
 
-#: src/components/settings/prefControls.tsx:445
+#: src/components/settings/prefControls.tsx:446
 msgid "The starting point for the People filter; you can still switch it there."
 msgstr "लोग फ़िल्टर की शुरुआती स्थिति; आप वहाँ इसे फिर भी बदल सकते हैं।"
 
@@ -2989,11 +3260,15 @@ msgstr "लोग फ़िल्टर की शुरुआती स्थ�
 msgid "The starting value is set in Settings › Lists."
 msgstr "शुरुआती मान सेटिंग्स › सूचियाँ में तय होता है।"
 
-#: src/components/settings/prefControls.tsx:182
+#: src/components/settings/prefControls.tsx:183
 msgid "The tab Splito opens on."
 msgstr "Splito खुलते समय यही टैब दिखेगा।"
 
-#: src/screens/Settings/index.tsx:144
+#: src/components/people/CallItEvenDialog.tsx:350
+msgid "The whole balance: you’ll be even in {currency}. Other currencies stay as they are."
+msgstr "पूरा बैलेंस: {currency} में हिसाब बराबर हो जाएगा। दूसरी मुद्राएँ जैसी हैं वैसी रहेंगी।"
+
+#: src/screens/Settings/index.tsx:165
 msgid "Theme, tabs, categories, language and every other setting go back to how Splito starts. Your people, groups and expenses stay as they are."
 msgstr "थीम, टैब, श्रेणियाँ, भाषा और बाकी हर सेटिंग Splito की शुरुआती सेटिंग पर लौट आएगी। आपके लोग, समूह और खर्च जैसे हैं वैसे ही रहेंगे।"
 
@@ -3017,11 +3292,11 @@ msgstr "यह खर्च अब मौजूद नहीं है"
 msgid "This expense was deleted. It no longer counts towards any balance."
 msgstr "यह खर्च हटा दिया गया है। अब यह किसी हिसाब में नहीं गिना जाता।"
 
-#: src/screens/Person/index.tsx:133
+#: src/screens/Person/index.tsx:152
 msgid "This friend isn’t on this device. They may have been removed."
 msgstr "यह दोस्त इस डिवाइस पर नहीं है। शायद हटा दिया गया है।"
 
-#: src/screens/Group/index.tsx:148
+#: src/screens/Group/index.tsx:165
 #: src/screens/Settle/index.tsx:133
 msgid "This group isn’t on this device. It may have been removed."
 msgstr "यह समूह इस डिवाइस पर नहीं है। शायद हटा दिया गया है।"
@@ -3030,8 +3305,8 @@ msgstr "यह समूह इस डिवाइस पर नहीं है
 msgid "This settings page doesn't exist"
 msgstr "यह सेटिंग्स पेज मौजूद नहीं है"
 
-#: src/components/settings/prefControls.tsx:326
-#: src/components/settings/prefControls.tsx:337
+#: src/components/settings/prefControls.tsx:327
+#: src/components/settings/prefControls.tsx:338
 msgid "Timezone"
 msgstr "समय क्षेत्र"
 
@@ -3082,7 +3357,7 @@ msgid "Transport"
 msgstr "आना-जाना"
 
 #: src/components/groups/GroupFields.tsx:43
-#: src/screens/Group/index.tsx:261
+#: src/screens/Group/index.tsx:279
 #: src/screens/Groups/components/GroupRow.tsx:49
 #: src/screens/Groups/components/GroupsFilterDialog.tsx:70
 msgid "Trip"
@@ -3102,19 +3377,28 @@ msgid "Type what each person owes."
 msgstr "लिखें कि हर व्यक्ति पर कितना बनता है।"
 
 #: src/components/activity/useActivityActions.tsx:126
-#: src/components/people/PaymentDetailsDialog.tsx:96
-#: src/components/people/PaymentDetailsDialog.tsx:103
+#: src/components/people/CallItEvenDialog.tsx:214
+#: src/components/people/PaymentDetailsDialog.tsx:118
+#: src/components/people/PaymentDetailsDialog.tsx:134
 #: src/screens/Expense/index.tsx:139
 #: src/screens/Expense/index.tsx:147
+#: src/screens/RecentlyDeleted/index.tsx:116
 msgid "Undo"
 msgstr "पहले जैसा करें"
 
 #: src/components/activity/useActivityActions.tsx:127
+#: src/components/people/CallItEvenDialog.tsx:216
+#: src/screens/RecentlyDeleted/index.tsx:125
 msgctxt "action"
 msgid "Undo"
 msgstr "पूर्ववत करें"
 
-#: src/components/activity/ActivityItem.tsx:281
+#: src/components/people/PaymentDetailsDialog.tsx:186
+#: src/components/people/PaymentDetailsDialog.tsx:192
+msgid "Undo write-off"
+msgstr "माफ़ी वापस लें"
+
+#: src/components/activity/ActivityItem.tsx:282
 msgid "Unread"
 msgstr "अपठित"
 
@@ -3129,7 +3413,7 @@ msgid "Update plan"
 msgstr "योजना अपडेट करें"
 
 #. placeholder {0}: person.data.upiId
-#: src/screens/Person/index.tsx:179
+#: src/screens/Person/index.tsx:198
 msgid "UPI {0}"
 msgstr "UPI {0}"
 
@@ -3172,7 +3456,7 @@ msgstr "नतीजा इस्तेमाल करें"
 msgid "Used to open your UPI app when you pay them in rupees."
 msgstr "रुपयों में भुगतान करते समय आपका UPI ऐप खोलने के लिए।"
 
-#: src/components/settings/prefControls.tsx:88
+#: src/components/settings/prefControls.tsx:89
 msgid "Used whenever Splito is in dark mode."
 msgstr "जब भी Splito डार्क मोड में हो, यही इस्तेमाल होता है।"
 
@@ -3196,12 +3480,12 @@ msgstr "बैंगनी"
 msgid "We kept your unsaved expense."
 msgstr "आपका बिना सहेजा खर्च रखा गया है।"
 
-#: src/components/settings/prefControls.tsx:261
+#: src/components/settings/prefControls.tsx:262
 #: src/screens/Analytics/components/Summary.tsx:192
 msgid "Week"
 msgstr "सप्ताह"
 
-#: src/components/settings/prefControls.tsx:364
+#: src/components/settings/prefControls.tsx:365
 msgid "Week starts on"
 msgstr "हफ़्ता शुरू होता है"
 
@@ -3234,15 +3518,15 @@ msgstr "आपने जो लिखा वह नहीं रखा जाए
 msgid "When {0} pays"
 msgstr "जब {0} देते हैं"
 
-#: src/components/settings/prefControls.tsx:506
+#: src/components/settings/prefControls.tsx:526
 msgid "When a payment to or from you is recorded"
 msgstr "जब आपको या आपसे कोई भुगतान दर्ज हो"
 
-#: src/components/settings/prefControls.tsx:518
+#: src/components/settings/prefControls.tsx:538
 msgid "When someone accepts your invite"
 msgstr "जब कोई आपका आमंत्रण स्वीकार करे"
 
-#: src/components/settings/prefControls.tsx:494
+#: src/components/settings/prefControls.tsx:514
 msgid "When someone adds an expense that includes you"
 msgstr "जब कोई ऐसा खर्च जोड़े जिसमें आप शामिल हों"
 
@@ -3250,7 +3534,8 @@ msgstr "जब कोई ऐसा खर्च जोड़े जिसमे�
 msgid "When you pay"
 msgstr "जब आप देते हैं"
 
-#: src/components/people/PaymentDetailsDialog.tsx:136
+#: src/components/people/PaymentDetailsDialog.tsx:167
+#: src/screens/RecentlyDeleted/components/RestoreDialog.tsx:160
 msgid "Where"
 msgstr "कहां"
 
@@ -3258,7 +3543,7 @@ msgstr "कहां"
 msgid "White text is hard to read on this color. A darker shade works better."
 msgstr "इस रंग पर सफ़ेद टेक्स्ट पढ़ना मुश्किल है। गहरा रंग बेहतर रहेगा।"
 
-#: src/screens/Group/index.tsx:606
+#: src/screens/Group/index.tsx:625
 msgid "Who owes whom"
 msgstr "किसे किसको देना है"
 
@@ -3271,12 +3556,34 @@ msgstr "किसने दिया?"
 msgid "Who you settle with"
 msgstr "किसके साथ हिसाब चुकाएं"
 
-#: src/components/settings/prefControls.tsx:263
+#: src/components/people/CallItEvenDialog.tsx:253
+msgid "Write off"
+msgstr "माफ़ करें"
+
+#: src/screens/RecentlyDeleted/components/RestoreDialog.tsx:96
+msgid "Write-off"
+msgstr "माफ़ी"
+
+#: src/screens/RecentlyDeleted/index.tsx:98
+msgid "Write-off restored"
+msgstr "माफ़ी वापस लाई गई"
+
+#: src/components/people/PaymentDetailsDialog.tsx:115
+#: src/screens/RecentlyDeleted/index.tsx:103
+msgid "Write-off undone"
+msgstr "माफ़ी वापस ली गई"
+
+#: src/components/people/CallItEvenDialog.tsx:211
+#: src/components/people/CallItEvenDialog.tsx:228
+msgid "Written off"
+msgstr "माफ़ किया गया"
+
+#: src/components/settings/prefControls.tsx:264
 #: src/screens/Analytics/components/Summary.tsx:194
 msgid "Year"
 msgstr "साल"
 
-#: src/components/settings/prefControls.tsx:388
+#: src/components/settings/prefControls.tsx:389
 msgid "Year first"
 msgstr "पहले साल"
 
@@ -3296,17 +3603,19 @@ msgctxt "Activity section header"
 msgid "Yesterday"
 msgstr "कल"
 
-#: src/components/activity/ActivityItem.tsx:620
+#: src/components/activity/ActivityItem.tsx:621
 msgid "you"
 msgstr "आप"
 
-#: src/components/activity/ActivityItem.tsx:374
+#: src/components/activity/ActivityItem.tsx:375
 #: src/components/groups/RulesEditor.tsx:219
 #: src/components/split/shared.tsx:77
 #: src/screens/Analytics/useReport.ts:251
 #: src/screens/CreateGroup.tsx:189
-#: src/screens/Group/index.tsx:162
-#: src/screens/Person/index.tsx:147
+#: src/screens/Group/index.tsx:179
+#: src/screens/Person/index.tsx:166
+#: src/screens/RecentlyDeleted/describe.ts:33
+#: src/screens/RecentlyDeleted/index.tsx:92
 #: src/screens/Settle/index.tsx:84
 msgid "You"
 msgstr "आप"
@@ -3325,18 +3634,27 @@ msgstr "आपको मिलेंगे"
 msgid "you are owed <0>{figure}</0>"
 msgstr "आपको मिलेंगे <0>{figure}</0>"
 
-#: src/components/people/HistoryRow.tsx:205
+#: src/components/people/HistoryRow.tsx:236
 msgid "you borrowed"
 msgstr "आपने उधार लिए"
+
+#. placeholder {0}: money(magnitude(net), e.currency)
+#: src/screens/RecentlyDeleted/describe.ts:46
+msgid "you borrowed {0}"
+msgstr "आपने {0} उधार लिए"
 
 #. placeholder {0}: fmt(magnitude(myNet))
 #: src/screens/Expense/index.tsx:335
 msgid "You borrowed {0}"
 msgstr "आपने {0} उधार लिए"
 
-#: src/components/activity/ActivityItem.tsx:470
+#: src/components/activity/ActivityItem.tsx:471
 msgid "you borrowed {figure}"
 msgstr "आपने {figure} उधार लिए"
+
+#: src/components/activity/ActivityItem.tsx:661
+msgid "You called it even with {debtor}"
+msgstr "आपने {debtor} के साथ हिसाब बराबर किया"
 
 #: src/components/split/fields.tsx:168
 msgid "You can type a sum, like 1200 + 300"
@@ -3346,7 +3664,16 @@ msgstr "आप हिसाब भी लिख सकते हैं, जै�
 msgid "You can’t divide by zero"
 msgstr "शून्य से भाग नहीं दे सकते"
 
-#: src/screens/Group/components/GroupRows.tsx:109
+#. placeholder {0}: name(from)
+#. placeholder {0}: name(r.from)
+#. placeholder {0}: name(w.from)
+#: src/components/people/HistoryRow.tsx:91
+#: src/components/people/PaymentDetailsDialog.tsx:91
+#: src/screens/RecentlyDeleted/describe.ts:56
+msgid "You forgave {0}"
+msgstr "आपने {0} का कर्ज़ माफ़ किया"
+
+#: src/screens/Group/components/GroupRows.tsx:113
 msgid "you get back <0>{figure}</0>"
 msgstr "आपको मिलेंगे <0>{figure}</0>"
 
@@ -3354,18 +3681,28 @@ msgstr "आपको मिलेंगे <0>{figure}</0>"
 msgid "You got paid"
 msgstr "आपको भुगतान मिला"
 
-#: src/components/people/HistoryRow.tsx:203
+#: src/components/people/HistoryRow.tsx:234
 msgid "you lent"
 msgstr "आपने उधार दिए"
+
+#. placeholder {0}: money(net, e.currency)
+#: src/screens/RecentlyDeleted/describe.ts:45
+msgid "you lent {0}"
+msgstr "आपने {0} उधार दिए"
 
 #. placeholder {0}: fmt(myNet)
 #: src/screens/Expense/index.tsx:333
 msgid "You lent {0}"
 msgstr "आपने {0} उधार दिए"
 
-#: src/components/activity/ActivityItem.tsx:468
+#: src/components/activity/ActivityItem.tsx:469
 msgid "you lent {figure}"
 msgstr "आपने {figure} उधार दिए"
+
+#. placeholder {0}: name(debtor)
+#: src/components/people/CallItEvenDialog.tsx:127
+msgid "You let {0} off"
+msgstr "आप {0} का कर्ज़ माफ़ कर रहे हैं"
 
 #: src/screens/Group/components/GroupBalanceCards.tsx:72
 #: src/screens/Groups/components/GroupsFilterDialog.tsx:106
@@ -3380,7 +3717,7 @@ msgstr "आपको देने हैं"
 msgid "You owe {0}"
 msgstr "आपको देने हैं {0}"
 
-#: src/screens/Group/index.tsx:617
+#: src/screens/Group/index.tsx:636
 msgid "You owe {to}"
 msgstr "आपको {to} को देने हैं"
 
@@ -3390,7 +3727,7 @@ msgid "You owe <0>{0}</0>"
 msgstr "आपको देने हैं <0>{0}</0>"
 
 #: src/components/BalanceText.tsx:58
-#: src/screens/Group/components/GroupRows.tsx:118
+#: src/screens/Group/components/GroupRows.tsx:122
 msgid "you owe <0>{figure}</0>"
 msgstr "आपको देने हैं <0>{figure}</0>"
 
@@ -3405,13 +3742,14 @@ msgstr "आपने चुकाया"
 
 #. placeholder {0}: name(r.to)
 #. placeholder {0}: name(to)
-#: src/components/people/HistoryRow.tsx:87
-#: src/components/people/PaymentDetailsDialog.tsx:80
+#: src/components/people/HistoryRow.tsx:113
+#: src/components/people/PaymentDetailsDialog.tsx:96
 #: src/components/people/RecordPaymentDialog.tsx:151
+#: src/screens/RecentlyDeleted/describe.ts:61
 msgid "You paid {0}"
 msgstr "आपने {0} को भुगतान किया"
 
-#: src/components/people/HistoryRow.tsx:73
+#: src/components/people/HistoryRow.tsx:77
 msgid "You paid {total}"
 msgstr "आपने {total} चुकाए"
 
@@ -3474,7 +3812,7 @@ msgstr "आपने यहाँ सब कुछ छिपा दिया ह
 msgid "Your data"
 msgstr "आपका डेटा"
 
-#: src/components/settings/prefControls.tsx:142
+#: src/components/settings/prefControls.tsx:143
 msgid "Your device asks for reduced motion, so Splito keeps movement to gentle fades whatever you pick here."
 msgstr "आपका डिवाइस कम मोशन माँगता है, इसलिए आप यहाँ जो भी चुनें, Splito सिर्फ़ हल्के फ़ेड दिखाएगा।"
 
@@ -3498,7 +3836,7 @@ msgstr "हर सप्ताह के अंत में आपका कु
 msgid "Your net balance at the end of each year, all friends together"
 msgstr "हर साल के अंत में आपका कुल बैलेंस, सभी दोस्तों के साथ"
 
-#: src/screens/Settings/index.tsx:72
+#: src/screens/Settings/index.tsx:75
 msgid "Your profile · saved on this device"
 msgstr "आपकी प्रोफ़ाइल · इस डिवाइस पर सहेजी गई"
 

@@ -9,7 +9,7 @@ export function lastActivity(records: LedgerRecord[]): Map<string, string> {
   for (const r of records) {
     if (r.deleted) continue
     const people =
-      r.kind === 'repayment'
+      r.kind !== 'expense'
         ? [r.from, r.to]
         : [...Object.keys(r.payers), ...Object.keys(r.shares)]
     for (const p of people)

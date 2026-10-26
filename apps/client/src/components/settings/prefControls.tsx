@@ -31,6 +31,7 @@ import {
   SwitchPref,
 } from '#/components/settings/controls'
 import {
+  BinIcon,
   CalendarIcon,
   ClockIcon,
   CurrencyIcon,
@@ -447,6 +448,25 @@ function IncludeGroupsPref() {
   )
 }
 
+/** Recently deleted's window; the row sits at the top of that screen. */
+function BinDaysPref() {
+  const {t: l} = useLingui()
+  return (
+    <SegmentedPref
+      pref={usePrefControl('history.binDays')}
+      icon={BinIcon}
+      title={l`Keep deleted items for`}
+      description={l`After that they leave this list. Their history stays in each record’s audit trail.`}
+      options={[
+        {value: 7, label: l`7 days`},
+        {value: 30, label: l`30 days`},
+        {value: 90, label: l`90 days`},
+        {value: 365, label: l`1 year`},
+      ]}
+    />
+  )
+}
+
 function useSwipeOptions(): Option<SwipeAction>[] {
   const {t: l} = useLingui()
   return [
@@ -553,4 +573,5 @@ export const PREF_CONTROLS = {
   'notify.expense': NotifyExpensePref,
   'notify.payment': NotifyPaymentPref,
   'notify.invite': NotifyInvitePref,
+  'history.binDays': BinDaysPref,
 } satisfies Record<PrefKey, React.ComponentType | null>

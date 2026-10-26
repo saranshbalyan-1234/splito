@@ -2,7 +2,7 @@ import {View} from 'react-native'
 import Animated from 'react-native-reanimated'
 import {Trans, useLingui} from '@lingui/react/macro'
 import {formatAmount, magnitude, ZERO} from '@splito/domain'
-import {type Entity, type Repayment} from '@splito/sync'
+import {type Entity, type Repayment, type WriteOff} from '@splito/sync'
 
 import {Link} from '#/view/com/util/Link'
 import {PressableWithHover} from '#/view/com/util/PressableWithHover'
@@ -46,7 +46,11 @@ export function HistoryRow({
   /** The group's name, shown in a person's history. */
   groupName?: string | null
   locale: string
-  onRepaymentPress: (repayment: Entity<Repayment>) => void
+  /** Opens a payment's or a write-off's details (`kind` says which). */
+  onRepaymentPress: (
+    repayment: Entity<Repayment | WriteOff>,
+    kind: 'repayment' | 'writeoff',
+  ) => void
 }) {
   const t = useTheme()
   const {t: l} = useLingui()
@@ -79,6 +83,28 @@ export function HistoryRow({
         context={context}
         figure={amount(magnitude(effect))}
       />
+    )
+  } else if (entry.kind === 'writeoff') {
+    const w = entry.entity.data
+    title =
+      w.to === me
+        ? l`You forgave ${name(w.from)}`
+        : w.from === me
+          ? l`${name(w.to)} forgave you`
+          : l`${name(w.to)} forgave ${name(w.from)}`
+    byline = [l`Called it even`]
+    if (w.note) byline.push(w.note)
+    trailing = (
+      <Text
+        style={[
+          a.text_md,
+          a.font_semi_bold,
+          a.leading_snug,
+          t.atoms.text_contrast_medium,
+          tabular,
+        ]}>
+        {amount(w.amount)}
+      </Text>
     )
   } else {
     const r = entry.entity.data
@@ -116,6 +142,7 @@ export function HistoryRow({
           entry.kind === 'expense' ? entry.entity.data.category : undefined
         }
         isPayment={entry.kind === 'repayment'}
+        isWriteOff={entry.kind === 'writeoff'}
       />
       <View style={[a.flex_1, a.gap_2xs]}>
         <Text
@@ -164,10 +191,14 @@ export function HistoryRow({
           testID={`history-${entry.entity.id}`}
           onPressIn={press.onPressIn}
           onPressOut={press.onPressOut}
-          onPress={() => onRepaymentPress(entry.entity)}
+          onPress={() => onRepaymentPress(entry.entity, entry.kind)}
           accessibilityRole="button"
           accessibilityLabel={title}
-          accessibilityHint={l`Shows the payment and lets you delete it`}
+          accessibilityHint={
+            entry.kind === 'writeoff'
+              ? l`Shows the write-off and lets you undo it`
+              : l`Shows the payment and lets you delete it`
+          }
           hoverStyle={t.atoms.bg_contrast_25}
           style={rowStyle}>
           {content}

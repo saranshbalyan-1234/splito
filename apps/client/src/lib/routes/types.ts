@@ -21,6 +21,8 @@ export type RootStackParams = {
   Profile: undefined
   Settings: undefined
   SettingsSection: {section: string}
+  /** Settings > Recently deleted (also in the drawer). */
+  RecentlyDeleted: undefined
   Person: {personId: string}
   /** `tab` opens a section directly (`/groups/:groupId?tab=rules`). */
   Group: {groupId: string; tab?: 'expenses' | 'balances' | 'members' | 'rules'}

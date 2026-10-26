@@ -9,6 +9,7 @@ import {
   type Group,
   type Person,
   type Repayment,
+  type WriteOff,
 } from '@splito/sync'
 
 import {type AllNavigatorParams, type NavigationProp} from '#/lib/routes/types'
@@ -47,6 +48,10 @@ import {
   utcDate,
   withMonths,
 } from '#/components/people/ledger'
+import {
+  CallItEvenDialog,
+  type EvenDraft,
+} from '#/components/people/CallItEvenDialog'
 import {PaymentDetailsDialog} from '#/components/people/PaymentDetailsDialog'
 import {Route_Stroke2_Corner0_Rounded as RouteIcon} from '#/components/icons/Route'
 import * as Skeleton from '#/components/Skeleton'
@@ -112,17 +117,29 @@ export function GroupScreen() {
   const groups = useEntities<Group>('group')
   const expenses = useEntities<Expense>('expense')
   const repayments = useEntities<Repayment>('repayment')
+  const writeOffs = useEntities<WriteOff>('writeoff')
   const ledger = useLedger()
   const detailsControl = useDialogControl()
   const addMembersControl = useDialogControl()
   const editControl = useDialogControl()
   const rulesControl = useDialogControl()
-  const [openRepayment, setOpenRepayment] = useState<Entity<Repayment> | null>(
-    null,
+  const [openRepayment, setOpenRepayment] = useState<Entity<
+    Repayment | WriteOff
+  > | null>(null)
+  const [openKind, setOpenKind] = useState<'repayment' | 'writeoff'>(
+    'repayment',
   )
+  const evenControl = useDialogControl()
+  const [evenDraft, setEvenDraft] = useState<EvenDraft | null>(null)
 
   const isLoading =
-    !me || !people || !groups || !expenses || !repayments || !ledger
+    !me ||
+    !people ||
+    !groups ||
+    !expenses ||
+    !repayments ||
+    !writeOffs ||
+    !ledger
   const wantsRules = route.params.tab === 'rules'
   useEffect(() => {
     if (!wantsRules || isLoading) return
@@ -162,10 +179,11 @@ export function GroupScreen() {
     (people ?? []).map(p => [p.id, p.id === me?.id ? l`You` : p.data.name]),
   )
   const history =
-    expenses && repayments
+    expenses && repayments && writeOffs
       ? toHistory(
           expenses.filter(e => e.data.groupId === groupId),
           repayments.filter(r => r.data.groupId === groupId),
+          writeOffs.filter(w => w.data.groupId === groupId),
         )
       : []
   const nets = group && ledger ? memberNets(ledger, groupId, group.data) : {}
@@ -546,8 +564,9 @@ export function GroupScreen() {
                     me={me!.id}
                     names={names}
                     locale={locale}
-                    onRepaymentPress={r => {
+                    onRepaymentPress={(r, kind) => {
                       setOpenRepayment(r)
+                      setOpenKind(kind)
                       detailsControl.open()
                     }}
                   />
@@ -625,6 +644,18 @@ export function GroupScreen() {
                     amount={item.amount}
                     currency={item.currency}
                     locale={locale}
+                    onCallItEven={() => {
+                      // One part: this group's transfer, `from` owes `to`.
+                      setEvenDraft({
+                        a: item.to,
+                        b: item.from,
+                        balance: {
+                          [item.currency]: [{groupId, amount: item.amount}],
+                        },
+                        currency: item.currency,
+                      })
+                      evenControl.open()
+                    }}
                   />
                 )
               }
@@ -658,6 +689,7 @@ export function GroupScreen() {
         />
       </LayoutAnimationConfig>
       {group && <AddMembersDialog control={addMembersControl} group={group} />}
+      <CallItEvenDialog control={evenControl} draft={evenDraft} names={names} />
       {group && <EditGroupDialog control={editControl} group={group} />}
       {group && me && (
         <RulesDialog
@@ -671,6 +703,7 @@ export function GroupScreen() {
         <PaymentDetailsDialog
           control={detailsControl}
           repayment={openRepayment}
+          kind={openKind}
           me={me.id}
           names={names}
           groupName={group?.data.name ?? null}

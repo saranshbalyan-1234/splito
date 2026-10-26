@@ -2,7 +2,11 @@ import {
   createExpense,
   createGroup,
   createPerson,
+  createRepayment,
+  createWriteOffs,
   deleteExpense,
+  deleteRepayment,
+  deleteWriteOff,
   type ExpenseDraft,
   type Group,
   type MutationCtx,
@@ -133,4 +137,75 @@ async function seed(store: Store, ctx: MutationCtx) {
   // Groceries deleted by mistake and put back: both show in Activity.
   await deleteExpense(store, at(now - 40 * MINUTE), expenseIds.Groceries!)
   await restoreExpense(store, at(now - 38 * MINUTE), expenseIds.Groceries!)
+
+  /*
+   * Recently deleted: records added and then deleted, so balances are
+   * unchanged and the bin has one of each kind to show.
+   */
+  const binned = async (
+    title: string,
+    group: DemoGroupKey,
+    total: bigint,
+    payer: DemoPersonKey,
+    added: number,
+    deleted: number,
+    category: string,
+  ) => {
+    const members = DEMO_GROUPS[group].members.map(m => ids[m])
+    const e = await createExpense(store, at(added, ids[payer]), {
+      title,
+      groupId: groupIds[group],
+      currency: 'INR',
+      total,
+      payers: {[ids[payer]]: total},
+      split: {mode: 'equal', participants: [ctx.actor, ...members]},
+      date: new Date(added).toISOString().slice(0, 10),
+      tz: DEMO_GROUPS[group].tz,
+      category,
+      notes: '',
+    })
+    await deleteExpense(store, at(deleted, ids[payer]), e.id)
+  }
+  await binned(
+    'Sunset cruise',
+    'goa',
+    300000n,
+    'arjun',
+    now - 3 * DAY,
+    now - 2 * DAY,
+    'entertainment',
+  )
+  await binned(
+    'Takeout pizza',
+    'flat',
+    135000n,
+    'me',
+    now - 26 * HOUR,
+    now - 20 * HOUR,
+    'food',
+  )
+  const paid = await createRepayment(store, at(now - 2 * DAY, ids.priya), {
+    groupId: null,
+    currency: 'INR',
+    from: ids.priya,
+    to: ctx.actor,
+    amount: 250000n,
+    date: new Date(now - 2 * DAY).toISOString().slice(0, 10),
+    tz: 'Asia/Kolkata',
+    note: 'UPI',
+  })
+  await deleteRepayment(store, at(now - 5 * HOUR), paid.id)
+  const [forgiven] = await createWriteOffs(store, at(now - 4 * DAY), [
+    {
+      groupId: null,
+      currency: 'EUR',
+      from: ids.sam,
+      to: ctx.actor,
+      amount: 900n,
+      date: new Date(now - 4 * DAY).toISOString().slice(0, 10),
+      tz: 'Europe/Lisbon',
+      note: 'Coffee on me',
+    },
+  ])
+  await deleteWriteOff(store, at(now - 3 * DAY), forgiven!.id)
 }

@@ -11,6 +11,7 @@ import {
   Eye,
   EyeOff,
   Hash,
+  History,
   Languages,
   LayoutGrid,
   Palette,
@@ -44,3 +45,5 @@ export const SwipeRightIcon = createIcon(ArrowRightToLine)
 export const NotifyIcon = createIcon(BellRing)
 export const EyeIcon = createIcon(Eye)
 export const EyeOffIcon = createIcon(EyeOff)
+/** Recently deleted: how long deleted items stay. */
+export const BinIcon = createIcon(History)

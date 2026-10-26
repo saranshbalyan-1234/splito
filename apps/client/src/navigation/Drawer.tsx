@@ -42,6 +42,7 @@ import {
   SettingsGear2_Filled_Corner0_Rounded as SettingsFilledIcon,
   SettingsGear2_Stroke2_Corner0_Rounded as SettingsIcon,
 } from '#/components/icons/Settings'
+import {Trash_Stroke2_Corner0_Rounded as TrashIcon} from '#/components/icons/Trash'
 import {
   UserCircle_Filled_Corner0_Rounded as UserCircleFilledIcon,
   UserCircle_Stroke2_Corner0_Rounded as UserCircleIcon,
@@ -116,7 +117,7 @@ let DrawerProfileCard = ({
 }
 DrawerProfileCard = memo(DrawerProfileCard)
 
-type PushedRoute = 'Profile' | 'Settings'
+type PushedRoute = 'Profile' | 'Settings' | 'RecentlyDeleted'
 
 /**
  * Bluesky's drawer, opened from the header avatar on every top-level page
@@ -224,6 +225,13 @@ function DrawerContentInner(): React.ReactNode {
           label={l`Settings`}
           isActive={isAt('Settings') || isAt('SettingsSection')}
           onPress={() => onPressScreen('Settings')}
+        />
+        <MenuItem
+          testID="drawer-recently-deleted"
+          icons={[TrashIcon, TrashIcon]}
+          label={l`Recently deleted`}
+          isActive={isAt('RecentlyDeleted')}
+          onPress={() => onPressScreen('RecentlyDeleted')}
         />
 
         <View style={[a.px_xl]}>

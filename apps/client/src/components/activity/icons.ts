@@ -7,6 +7,7 @@ import {
   CircleDot,
   Eye,
   EyeOff,
+  Handshake,
   Pencil,
   Plus,
   RotateCcw,
@@ -38,3 +39,5 @@ export const FriendRemovedBadge = createIcon(UserRoundMinus, BADGE)
 export const GroupBadge = createIcon(Users, BADGE)
 export const ArchivedBadge = createIcon(Archive, BADGE)
 export const PaymentBadge = createIcon(Banknote, BADGE)
+/** A write-off ("Call it even"): a debt let go, not money that moved. */
+export const WriteOffBadge = createIcon(Handshake, BADGE)
