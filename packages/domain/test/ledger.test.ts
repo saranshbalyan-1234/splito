@@ -42,10 +42,17 @@ describe('pairwiseBalances', () => {
   test('multi-payer pairwise', () =>
     expect(
       pairwiseBalances([exp({id: 'e', groupId: null, currency: 'INR', total: 300n, payers: {me: 200n, y: 100n}, shares: {me: 100n, x: 100n, y: 100n}})], 'me'),
-    ).toEqual([
-      {person: 'x', groupId: null, currency: 'INR', amount: 67n},
-      {person: 'y', groupId: null, currency: 'INR', amount: 34n},
-    ]))
+    ).toEqual([{person: 'x', groupId: null, currency: 'INR', amount: 100n}]))
+  test('payers who each pay their own share owe nobody (no rounding residue)', () => {
+    const e = exp({id: 'e', groupId: null, currency: 'INR', total: 30000n, payers: {me: 10000n, b: 10000n, c: 10000n}, shares: {me: 10000n, b: 10000n, c: 10000n}})
+    expect(pairwiseBalances([e], 'me')).toEqual([])
+    expect(pairwiseBalances([e], 'b')).toEqual([])
+  })
+  test('uneven payers, equal split: only real debts appear', () => {
+    const e = exp({id: 'e', groupId: null, currency: 'INR', total: 100000n, payers: {me: 33333n, b: 33333n, c: 33334n}, shares: {me: 33334n, b: 33333n, c: 33333n}})
+    expect(pairwiseBalances([e], 'b')).toEqual([])
+    expect(pairwiseBalances([e], 'me')).toEqual([{person: 'c', groupId: null, currency: 'INR', amount: -1n}])
+  })
   test('debts between others ignored', () =>
     expect(pairwiseBalances([exp({id: 'e', groupId: 'g', currency: 'INR', total: 100n, payers: {x: 100n}, shares: {y: 100n}})], 'me')).toEqual([]))
 })

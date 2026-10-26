@@ -11,7 +11,7 @@ export async function openStore(): Promise<Store> {
       await db.runAsync(sql, params as never[])
     },
     all: (sql, params) => db.getAllAsync(sql, params as never[]),
-    // ponytail: non-exclusive transaction; safe while this device has one writer (the UI thread).
+    // Plain BEGIN/COMMIT on the shared connection; openSqlStore queues transactions and reads so they never overlap.
     withTransaction: async fn => {
       let result!: Awaited<ReturnType<typeof fn>>
       await db.withTransactionAsync(async () => {

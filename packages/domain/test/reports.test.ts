@@ -226,6 +226,11 @@ describe('balanceTrend', () => {
       .reduce((s, r) => s + r.amount, 0n)
     expect(trend.at(-1)!.balance).toBe(people)
   })
+  test('a multi-payer group expense where everyone paid their share moves nothing', () => {
+    const even = exp({id: 'm', groupId: 'trip', date: '2026-03-01', total: 30000n, payers: {me: 10000n, a: 10000n, b: 10000n}, shares: {me: 10000n, a: 10000n, b: 10000n}})
+    const trend = balanceTrend([even], 'me', {...ALL_INR, range: {from: '2026-03-01', to: '2026-03-31'}}, 'month', 1)
+    expect(trend.at(-1)!.balance).toBe(0n)
+  })
   test('scoped to one group', () =>
     expect(
       balanceTrend(LEDGER, 'me', {...ALL_INR, groupId: 'flat', range: {from: '2026-02-01', to: '2026-02-28'}}, 'month', 1),

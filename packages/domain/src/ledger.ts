@@ -1,4 +1,3 @@
-import {allocate} from './allocate'
 import type {CurrencyCode} from './currency'
 import type {LocalDate} from './date'
 import {planSettlement, type SettlementRules} from './settlement'
@@ -58,17 +57,27 @@ export function pairwiseBalances(records: LedgerRecord[], me: string): BalanceRo
       else if (r.from === me) add(r.to, r.groupId, r.currency, r.amount)
       continue
     }
-    // Each participant owes the payers in proportion to what each payer paid.
-    const payerWeights = Object.entries(r.payers)
-      .filter(([, v]) => v !== 0n)
-      .map(([id, v]) => ({id, weight: v < 0n ? -v : v}))
-    for (const [p, share] of Object.entries(r.shares)) {
-      if (share === 0n) continue
-      for (const [q, debt] of Object.entries(allocate(share, payerWeights))) {
-        if (p === q) continue
-        if (q === me) add(p, r.groupId, r.currency, debt)
-        else if (p === me) add(q, r.groupId, r.currency, -debt)
-      }
+    /*
+     * Pairs come from each person's net in this expense (paid - share), so
+     * someone who paid exactly their share owes nobody and no per-payer
+     * rounding leaves 1-minor-unit residues. One creditor (the usual single
+     * payer) needs no plan; several use the exact direct settle-up plan.
+     */
+    const net: Record<string, bigint> = {}
+    for (const [id, v] of Object.entries(r.payers)) net[id] = (net[id] ?? 0n) + v
+    for (const [id, v] of Object.entries(r.shares)) net[id] = (net[id] ?? 0n) - v
+    const creditors = Object.keys(net).filter(id => net[id]! > 0n)
+    const transfers =
+      creditors.length === 1
+        ? Object.keys(net)
+            .filter(id => net[id]! < 0n)
+            .map(id => ({from: id, to: creditors[0]!, amount: -net[id]!}))
+        : creditors.length === 0
+          ? []
+          : directTransfers(net)
+    for (const t of transfers) {
+      if (t.to === me) add(t.from, r.groupId, r.currency, t.amount)
+      else if (t.from === me) add(t.to, r.groupId, r.currency, -t.amount)
     }
   }
 
@@ -80,6 +89,11 @@ export function pairwiseBalances(records: LedgerRecord[], me: string): BalanceRo
 const cmp = (a: string, b: string) => (a < b ? -1 : a > b ? 1 : 0)
 
 const NO_RULES: SettlementRules = {allowListOnly: false, edges: {}}
+
+function directTransfers(net: Record<string, bigint>) {
+  const plan = planSettlement(net, NO_RULES, 'direct')
+  return plan.status === 'ok' ? plan.transfers : []
+}
 
 /**
  * My balance with each person, per group and currency: the one source every

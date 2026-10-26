@@ -60,6 +60,21 @@ export async function openSqlStore(db: SqlExecutor): Promise<Store> {
     })
   }
 
+  /*
+   * One connection, one transaction at a time: expo-sqlite's
+   * withTransactionAsync is a plain BEGIN/COMMIT, so a second BEGIN while
+   * one is open fails and its ROLLBACK undoes the first. Transactions and
+   * top-level reads queue here; reads then never see uncommitted writes.
+   * Calls on `tx` inside a transaction run directly (queueing them would
+   * deadlock).
+   */
+  let queue: Promise<unknown> = Promise.resolve()
+  const serial = <T>(fn: () => Promise<T>): Promise<T> => {
+    const next = queue.then(fn)
+    queue = next.catch(() => undefined)
+    return next
+  }
+
   const listeners = new Set<() => void>()
   const tx: Tx = {
     async get<T>(type: EntityType, id: string) {
@@ -99,22 +114,24 @@ export async function openSqlStore(db: SqlExecutor): Promise<Store> {
 
   return {
     async transaction(fn) {
-      const result = await db.withTransaction(() => fn(tx))
+      const result = await serial(() => db.withTransaction(() => fn(tx)))
       listeners.forEach(l => l())
       return result
     },
     async getAll<T>(type: EntityType) {
-      const rows = await db.all<EntityRow>('SELECT * FROM entities WHERE type = ? ORDER BY id', [type])
+      const rows = await serial(() => db.all<EntityRow>('SELECT * FROM entities WHERE type = ? ORDER BY id', [type]))
       return rows.map(toEntity) as Entity<T>[]
     },
     async history(type, id) {
-      const rows = await db.all<HistoryDbRow>('SELECT * FROM history WHERE entity_type = ? AND entity_id = ? ORDER BY version', [type, id])
+      const rows = await serial(() =>
+        db.all<HistoryDbRow>('SELECT * FROM history WHERE entity_type = ? AND entity_id = ? ORDER BY version', [type, id]),
+      )
       return rows.map(
         (r): HistoryRow => ({entityType: r.entity_type, entityId: r.entity_id, version: r.version, data: decode(r.data), deleted: !!r.deleted, at: r.at, actor: r.actor}),
       )
     },
     async outbox() {
-      const rows = await db.all<OutboxRow>('SELECT * FROM outbox ORDER BY seq', [])
+      const rows = await serial(() => db.all<OutboxRow>('SELECT * FROM outbox ORDER BY seq', []))
       return rows.map(
         (r): OutboxOp => ({
           seq: r.seq,
@@ -138,6 +155,6 @@ export async function openSqlStore(db: SqlExecutor): Promise<Store> {
       listeners.add(fn)
       return () => listeners.delete(fn)
     },
-    close: () => db.close(),
+    close: () => serial(() => db.close()),
   }
 }
