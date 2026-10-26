@@ -83,15 +83,9 @@ test('group page: header, my balance, expenses, member balances and members', as
   await expect(rafting).toContainText('₹100.00')
 
   await page.getByTestId('group-tab-balances').click()
-  await expect(page.getByTestId('group-net-INR-Chirag Shah-text')).toHaveText(
-    'is owed ₹100.00',
-  )
-  await expect(page.getByTestId('group-net-INR-You-text')).toHaveText(
-    'you owe ₹100.00',
-  )
-  await expect(page.getByTestId('group-net-INR-Bela Joshi-text')).toHaveText(
-    'settled up',
-  )
+  await expect(page.getByTestId('group-net-INR-Chirag Shah-text')).toHaveText('is owed ↙ ₹100.00')
+  await expect(page.getByTestId('group-net-INR-You-text')).toHaveText('you owe ↗ ₹100.00')
+  await expect(page.getByTestId('group-net-INR-Bela Joshi-text')).toHaveText('settled up')
   // Who owes whom: the direct plan, with Settle up beside it.
   await expect(page.getByTestId('group-owe-You-Chirag Shah')).toContainText(
     'You owe Chirag Shah',
@@ -158,9 +152,7 @@ test('a plan goes stale when the ledger changes, and updates on request', async 
   await ready(page)
   const {group, b} = await seedA07(page)
   await page.goto(`/groups/${group}/settle`)
-  await expect(
-    page.getByTestId('transfer-You-Chirag Shah').getByTestId('transfer-amount'),
-  ).toHaveText('₹100.00')
+  await expect(page.getByTestId('transfer-You-Chirag Shah').getByTestId('transfer-amount')).toHaveText('↗ ₹100.00')
   // The plan's version is a data attribute for tests; users never see a hash.
   const before = await page
     .getByTestId('settle-footer')
@@ -196,12 +188,8 @@ test('a plan goes stale when the ledger changes, and updates on request', async 
     page.getByText('Balances or rules changed since this plan was made.'),
   ).toHaveCount(0)
   await expect(page.getByTestId('settle-count-INR')).toHaveText('2 payments')
-  await expect(
-    page.getByTestId('transfer-You-Bela Joshi').getByTestId('transfer-amount'),
-  ).toHaveText('₹40.00')
-  expect(
-    await page.getByTestId('settle-footer').getAttribute('data-plan-hash'),
-  ).not.toBe(before)
+  await expect(page.getByTestId('transfer-You-Bela Joshi').getByTestId('transfer-amount')).toHaveText('↗ ₹40.00')
+  expect(await page.getByTestId('settle-footer').getAttribute('data-plan-hash')).not.toBe(before)
 })
 
 test('"Record this payment" records a part payment and the plan follows', async ({
@@ -230,10 +218,8 @@ test('"Record this payment" records a part payment and the plan follows', async 
   await page.getByTestId('sheet-save').click()
   await expect(page.getByTestId('payment-recorded')).toBeVisible()
 
-  await expect(transfer.getByTestId('transfer-amount')).toHaveText('₹40.00')
-  await expect(
-    page.getByText('Balances or rules changed since this plan was made.'),
-  ).toHaveCount(0)
+  await expect(transfer.getByTestId('transfer-amount')).toHaveText('↗ ₹40.00')
+  await expect(page.getByText('Balances or rules changed since this plan was made.')).toHaveCount(0)
   await expect(page.getByText('send money', {exact: false})).toHaveCount(0)
 
   await page.goto(`/groups/${group}`)

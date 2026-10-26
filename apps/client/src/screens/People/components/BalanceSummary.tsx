@@ -15,6 +15,7 @@ import {ChevronRight_Stroke2_Corner0_Rounded as ChevronIcon} from '#/components/
 import {CircleCheck_Stroke2_Corner0_Rounded as CheckIcon} from '#/components/icons/CircleCheck'
 import * as Skeleton from '#/components/Skeleton'
 import {Text} from '#/components/Typography'
+import {MoneyArrow, useMoneyStyle} from '#/components/MoneyDirection'
 import {AnimatedAmount} from '#/motion/AnimatedAmount'
 import {usePressScale} from '#/motion/PressableScale'
 import {SectionHeader} from './SectionHeader'
@@ -157,12 +158,7 @@ function SummaryCell({
   const {gtMobile} = useBreakpoints()
   const {currency, owed, owe, net} = total
   const press = usePressScale()
-  const netColor =
-    net > ZERO
-      ? t.palette.positive_600
-      : net < ZERO
-        ? t.palette.negative_500
-        : t.atoms.text.color
+  const money = useMoneyStyle()
 
   return (
     <Animated.View
@@ -218,7 +214,8 @@ function SummaryCell({
             </Text>
           </View>
         </View>
-        <View style={a.pt_2xs}>
+        <View style={[a.pt_2xs, a.flex_row, a.align_center, a.gap_xs]}>
+          <MoneyArrow amount={net} size={gtMobile ? 'lg' : 'md'} />
           <AnimatedAmount
             testID={`summary-${currency}-net`}
             minor={magnitude(net)}
@@ -228,7 +225,7 @@ function SummaryCell({
               gtMobile ? a.text_3xl : a.text_2xl,
               a.font_bold,
               a.leading_tight,
-              {color: netColor},
+              money.style(net),
             ]}
           />
         </View>

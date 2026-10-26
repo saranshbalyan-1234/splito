@@ -6,6 +6,7 @@ import {atoms as a, useBreakpoints, useTheme} from '#/alf'
 import {CircleCheck_Stroke2_Corner0_Rounded as CheckIcon} from '#/components/icons/CircleCheck'
 import * as Skeleton from '#/components/Skeleton'
 import {Text} from '#/components/Typography'
+import {MoneyArrow, useMoneyStyle} from '#/components/MoneyDirection'
 import {AnimatedAmount} from '#/motion/AnimatedAmount'
 
 const tabular = {fontVariant: ['tabular-nums' as const]}
@@ -89,12 +90,7 @@ function BalanceCard({
   const {t: l} = useLingui()
   const {gtMobile} = useBreakpoints()
   const {total, direct, groups} = balance
-  const color =
-    total > ZERO
-      ? t.palette.positive_600
-      : total < ZERO
-        ? t.palette.negative_500
-        : t.atoms.text.color
+  const money = useMoneyStyle()
   const parts = [
     ...(direct !== ZERO ? [{key: 'direct', label: l`Direct`, v: direct}] : []),
     ...Object.entries(groups)
@@ -138,13 +134,14 @@ function BalanceCard({
           )}
         </Text>
       </View>
-      <View style={a.pt_xs}>
+      <View style={[a.pt_xs, a.flex_row, a.align_center, a.gap_xs]}>
+        <MoneyArrow amount={total} size="lg" />
         <AnimatedAmount
           testID={`person-total-${currency}`}
           minor={magnitude(total)}
           currency={currency}
           locale={locale}
-          style={[a.text_3xl, a.font_bold, a.leading_tight, {color}]}
+          style={[a.text_3xl, a.font_bold, a.leading_tight, money.style(total)]}
         />
       </View>
       {showParts && (
@@ -172,12 +169,7 @@ function BalanceCard({
                   a.text_sm,
                   a.font_semi_bold,
                   tabular,
-                  {
-                    color:
-                      part.v > ZERO
-                        ? t.palette.positive_600
-                        : t.palette.negative_500,
-                  },
+                  money.style(part.v),
                 ]}>
                 {(part.v > ZERO ? '+' : '−') +
                   formatAmount(magnitude(part.v), currency, locale)}

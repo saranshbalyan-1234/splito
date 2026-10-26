@@ -34,14 +34,18 @@ import {
 } from '#/components/settings/controls'
 import {
   CalendarIcon,
+  CashIcon,
   ClockIcon,
+  ContrastIcon,
   CurrencyIcon,
   DensityIcon,
   GroupsIcon,
+  KeypadIcon,
   LanguageIcon,
   NotifyIcon,
   NumberIcon,
   PhoneIcon,
+  ShorthandIcon,
   SortIcon,
   SparklesIcon,
   SplitIcon,
@@ -125,6 +129,36 @@ function DensityPref() {
       options={[
         {value: 'comfortable', label: l`Comfortable`},
         {value: 'compact', label: l`Compact`},
+      ]}
+    />
+  )
+}
+
+/** F-1801: direction always has an arrow and words; this only picks the colours. */
+function MoneyPalettePref() {
+  const {t: l} = useLingui()
+  return (
+    <RadioPref
+      pref={usePrefControl('moneyPalette')}
+      icon={ContrastIcon}
+      title={l`Money colours`}
+      description={l`Balances always show an arrow and words like “owes you”, so they read without colour too.`}
+      options={[
+        {
+          value: 'default',
+          label: l`Green and red`,
+          hint: l`Green when money comes to you, red when you pay`,
+        },
+        {
+          value: 'colorblind',
+          label: l`Colour-blind safe`,
+          hint: l`Blue and orange, easy to tell apart with any colour vision`,
+        },
+        {
+          value: 'mono',
+          label: l`Monochrome`,
+          hint: l`No colour: arrows and bold type show the direction`,
+        },
       ]}
     />
   )
@@ -311,6 +345,53 @@ function SplitModePref() {
   )
 }
 
+/** F-402: new splits start rounded to cash; the unit shows while it is on, as Dark mode style does under Color mode. */
+function RoundCashPref() {
+  const {t: l} = useLingui()
+  const pref = usePrefControl('split.roundCash')
+  return (
+    <>
+      <SwitchPref
+        pref={pref}
+        icon={CashIcon}
+        title={l`Round shares to cash`}
+        label={l`Start equal, shares and percent splits rounded to whole cash amounts`}
+        description={l`Whatever doesn’t round is shown and added to one person’s share, so nothing is lost. You can change it on each expense.`}
+      />
+      {pref.value ? <RoundToPref /> : null}
+    </>
+  )
+}
+
+function RoundToPref() {
+  const {t: l} = useLingui()
+  return (
+    <SegmentedPref
+      pref={usePrefControl('split.roundTo')}
+      icon={CashIcon}
+      title={l`Round to`}
+      description={l`Whole units of the expense’s currency.`}
+      options={([1, 5, 10, 50, 100] as const).map(unit => ({
+        value: unit,
+        label: String(unit),
+      }))}
+    />
+  )
+}
+
+function AmountKeypadPref() {
+  const {t: l} = useLingui()
+  return (
+    <SwitchPref
+      pref={usePrefControl('amount.keypad')}
+      icon={KeypadIcon}
+      title={l`Amount keypad`}
+      label={l`Use Splito’s calculator keypad for amounts on phones`}
+      description={l`Big keys with + − × ÷ and 000. Turn it off to use your phone’s keyboard.`}
+    />
+  )
+}
+
 function AnalyticsPeriodPref() {
   const {t: l} = useLingui()
   return (
@@ -478,6 +559,19 @@ function NumberFormatPref() {
   )
 }
 
+function AmountShorthandPref() {
+  const {t: l} = useLingui()
+  return (
+    <SwitchPref
+      pref={usePrefControl('amount.shorthand')}
+      icon={ShorthandIcon}
+      title={l`Amount shortcuts`}
+      label={l`Read 2k as 2,000, 1.5L as 1,50,000 and 1cr as 1,00,00,000`}
+      description={l`Also works for m (million) and inside sums, like 2k + 500.`}
+    />
+  )
+}
+
 /* Lists */
 
 function PeopleSortPref() {
@@ -594,6 +688,7 @@ export const PREF_CONTROLS = {
   accent: AccentPicker,
   textScale: TextScalePref,
   density: DensityPref,
+  moneyPalette: MoneyPalettePref,
   motion: MotionPref,
   haptics: HapticsPref,
   tabs: TabsEditor,
@@ -601,6 +696,10 @@ export const PREF_CONTROLS = {
   defaultCurrency: CurrencyPref,
   itemizeAdjustmentModes: ItemizeChargesPref,
   defaultSplitMode: SplitModePref,
+  'split.roundCash': RoundCashPref,
+  // Shown under Round shares to cash while it is on.
+  'split.roundTo': null,
+  'amount.keypad': AmountKeypadPref,
   analyticsPeriod: AnalyticsPeriodPref,
   analyticsView: AnalyticsViewPref,
   categories: CategoriesEditor,
@@ -609,6 +708,7 @@ export const PREF_CONTROLS = {
   weekStart: WeekStartPref,
   dateFormat: DateFormatPref,
   numberLocale: NumberFormatPref,
+  'amount.shorthand': AmountShorthandPref,
   peopleSort: PeopleSortPref,
   includeGroupsDefault: IncludeGroupsPref,
   swipeLeft: SwipeLeftPref,

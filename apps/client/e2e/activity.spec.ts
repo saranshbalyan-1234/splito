@@ -47,7 +47,7 @@ test('the demo history reads as a feed grouped by day, in real words', async ({
   const dinner = row(page, 'expense.edited', 'Dinner at Thalassa')
   await expect(dinner).toContainText('Riya Sharma edited Dinner at Thalassa')
   await expect(dinner).toContainText(
-    '₹10,000.00 → ₹12,500.00 · Goa trip · you borrowed ₹2,500.00',
+    '₹10,000.00 → ₹12,500.00 · Goa trip · you borrowed ↗ ₹2,500.00',
   )
   await expect(dinner).toContainText(/\d+m ago|1h ago/)
   await expect(row(page, 'expense.deleted', 'Groceries')).toContainText(

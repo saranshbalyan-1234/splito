@@ -109,6 +109,7 @@ export function ExpenseComposer({
   const categories = useCategories()
   const groups = useEntities<Group>('group')
   const [adjustModes, saveAdjustModes] = usePref('itemizeAdjustmentModes')
+  const [defaultRoundTo = 1] = usePref('split.roundTo')
   const people = useEntities<Person>('person')
   const name = useDisplayName()
   const errorText = useErrorText()
@@ -119,7 +120,11 @@ export function ExpenseComposer({
   const [isSaving, setIsSaving] = useState(false)
   const [savedId, setSavedId] = useState<string>()
   const [isTitleFocused, setIsTitleFocused] = useState(false)
-  const evaluation = evaluateForm(form, tz, decimalMark(locale))
+  const [isShorthandOn = true] = usePref('amount.shorthand')
+  const [isKeypadOn = true] = usePref('amount.keypad')
+  const evaluation = evaluateForm(form, tz, decimalMark(locale), {
+    shorthand: isShorthandOn,
+  })
   const category = useCategory(form.category)
   const isEdit = !!expenseId
   const isDirty = form !== initialForm
@@ -477,13 +482,19 @@ export function ExpenseComposer({
 
       <AmountField
         value={form.amount}
-        onChangeText={amount => update(f => ({...f, amount}))}
+        onChangeText={amount =>
+          update(f => ({...f, amount, amountReading: undefined}))
+        }
         currency={form.currency}
         locale={locale}
         result={evaluation.total}
         errorText={
           evaluation.amountError ? errorText(evaluation.amountError) : undefined
         }
+        readings={evaluation.amountReadings}
+        reading={form.amountReading}
+        onReadingPicked={amountReading => update(f => ({...f, amountReading}))}
+        hasKeypad={isKeypadOn && !gtMobile}
         onPressCurrency={() => currencyControl.open()}
       />
 
@@ -531,6 +542,8 @@ export function ExpenseComposer({
         onAddPeople={() => peopleControl.open()}
         adjustModes={adjustModes}
         onAdjustModesChanged={saveAdjustModes}
+        defaultRoundTo={defaultRoundTo}
+        me={ctx.actor}
       />
 
       <SectionLabel>

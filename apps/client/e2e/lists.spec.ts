@@ -70,17 +70,13 @@ test('A04 on People: the Overview reads 150 with groups and 100 without, the row
   await page.goto('/')
   const people = page.getByTestId('screen-people')
   await expect(people.getByTestId('summary-INR-net')).toHaveText('₹150.00')
-  await expect(
-    people.getByTestId('person-Kavya Rao').getByTestId('balance-INR'),
-  ).toHaveText('owes you ₹150.00')
+  await expect(people.getByTestId('person-Kavya Rao').getByTestId('balance-INR')).toHaveText('owes you ↙ ₹150.00')
 
   await people.getByTestId('list-filters').click()
   await page.getByTestId('filter-include-groups').click()
   await page.getByTestId('sheet-save').click()
   await expect(people.getByTestId('summary-INR-net')).toHaveText('₹100.00')
-  await expect(
-    people.getByTestId('person-Kavya Rao').getByTestId('balance-INR'),
-  ).toHaveText('owes you ₹100.00')
+  await expect(people.getByTestId('person-Kavya Rao').getByTestId('balance-INR')).toHaveText('owes you ↙ ₹100.00')
   await expect(people.getByTestId('list-filters-dot')).toBeVisible()
 
   // Back on: the defaults again, so the dot goes.

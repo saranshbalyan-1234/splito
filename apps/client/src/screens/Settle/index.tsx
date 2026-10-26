@@ -9,6 +9,7 @@ import {
   formatAmount,
   type Plan,
   planSettlement,
+  repaymentFlow,
   sumMinor,
   type Transfer,
   ZERO,
@@ -36,6 +37,7 @@ import {
 } from '#/components/people/RecordPaymentDialog'
 import * as Skeleton from '#/components/Skeleton'
 import {Text} from '#/components/Typography'
+import {MoneyArrow, useMoneyStyle} from '#/components/MoneyDirection'
 import {Shimmer} from '#/motion/Shimmer'
 import {TransferRow} from './components/TransferRow'
 
@@ -513,6 +515,7 @@ function SettleSummary({
   locale: string
 }) {
   const t = useTheme()
+  const money = useMoneyStyle()
   const lines = plans.flatMap(({currency, plan}) => {
     if (!plan || plan.status === 'infeasible') return []
     const sides = [
@@ -529,6 +532,8 @@ function SettleSummary({
           currency,
           locale,
         ),
+        /* Signed from my side (domain): drives the arrow and colour. */
+        net: sumMinor(side.list.map(x => repaymentFlow(x, me))),
         people: side.list.length,
       }))
   })
@@ -553,20 +558,19 @@ function SettleSummary({
               <Trans>You’ll pay</Trans>
             )}
           </Text>
-          <Text
-            style={[
-              a.text_3xl,
-              a.font_bold,
-              a.leading_tight,
-              {
-                color: line.isIncoming
-                  ? t.palette.positive_600
-                  : t.palette.negative_500,
-                fontVariant: ['tabular-nums'],
-              },
-            ]}>
-            {line.amount}
-          </Text>
+          <View style={[a.flex_row, a.align_center, a.gap_xs]}>
+            <MoneyArrow amount={line.net} size="lg" />
+            <Text
+              style={[
+                a.text_3xl,
+                a.font_bold,
+                a.leading_tight,
+                {fontVariant: ['tabular-nums']},
+                money.style(line.net),
+              ]}>
+              {line.amount}
+            </Text>
+          </View>
           <Text
             style={[a.text_sm, a.leading_snug, t.atoms.text_contrast_medium]}>
             {line.isIncoming ? (

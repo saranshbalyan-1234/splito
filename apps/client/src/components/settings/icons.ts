@@ -4,10 +4,13 @@ import {
   ArrowDownWideNarrow,
   ArrowLeftToLine,
   ArrowRightToLine,
+  Banknote,
   BellRing,
+  Calculator,
   CalendarDays,
   Clock,
   Coins,
+  Contrast,
   Eye,
   EyeOff,
   Hash,
@@ -15,6 +18,7 @@ import {
   LayoutGrid,
   Palette,
   Rows3,
+  Sigma,
   Smartphone,
   Sparkles,
   Split,
@@ -44,3 +48,7 @@ export const SwipeRightIcon = createIcon(ArrowRightToLine)
 export const NotifyIcon = createIcon(BellRing)
 export const EyeIcon = createIcon(Eye)
 export const EyeOffIcon = createIcon(EyeOff)
+export const CashIcon = createIcon(Banknote)
+export const KeypadIcon = createIcon(Calculator)
+export const ShorthandIcon = createIcon(Sigma)
+export const ContrastIcon = createIcon(Contrast)

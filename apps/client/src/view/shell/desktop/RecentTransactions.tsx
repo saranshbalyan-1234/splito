@@ -13,6 +13,7 @@ import {atoms as a, useTheme} from '#/alf'
 import {ChevronRight_Stroke2_Corner0_Rounded as ChevronRightIcon} from '#/components/icons/Chevron'
 import {CategoryTile, useCategories} from '#/components/split/shared'
 import {Text} from '#/components/Typography'
+import {useMoneyStyle} from '#/components/MoneyDirection'
 
 const RECENT = 5
 
@@ -31,6 +32,7 @@ type Row = {
 /** The sidebar's last transactions that involve me, newest first. */
 export function RecentTransactions() {
   const t = useTheme()
+  const money = useMoneyStyle()
   const {t: l} = useLingui()
   const locale = useNumberLocale()
   const me = useMe()
@@ -67,7 +69,7 @@ export function RecentTransactions() {
       {rows.map(row => {
         const category = row.category ? categories.find(c => c.id === row.category) : undefined
         const positive = row.net > ZERO
-        const color = row.net === ZERO ? t.atoms.text_contrast_medium.color : positive ? t.palette.positive_600 : t.palette.negative_500
+        const color = row.net === ZERO ? t.atoms.text_contrast_medium.color : money.color(row.net)
         return (
           <Link
             key={row.id}

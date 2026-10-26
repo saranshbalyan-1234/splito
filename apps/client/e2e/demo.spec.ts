@@ -73,10 +73,8 @@ test('People shows each friend with real words and the right balance per currenc
       continue
     }
     for (const [currency, {total}] of Object.entries(summary.byCurrency)) {
-      const words = total > 0n ? 'owes you' : 'you owe'
-      await expect(row.getByTestId(`balance-${currency}`)).toHaveText(
-        `${words} ${formatAmount(magnitude(total), currency, LOCALE)}`,
-      )
+      const words = total > 0n ? 'owes you ↙' : 'you owe ↗'
+      await expect(row.getByTestId(`balance-${currency}`)).toHaveText(`${words} ${formatAmount(magnitude(total), currency, LOCALE)}`)
     }
   }
   await expect(page.getByTestId('people-balances-title')).toHaveText('Overview')
@@ -118,12 +116,8 @@ test('Groups lists the demo groups with my balance in each', async ({page}) => {
   for (const name of ['Goa trip', 'Flat 4B', 'Lisbon']) {
     await expect(page.getByTestId(`group-${name}`)).toBeVisible()
   }
-  await expect(
-    page.getByTestId('group-Lisbon').getByTestId('group-balance-EUR'),
-  ).toHaveText(/^you owe\s*€/)
-  await expect(
-    page.getByTestId('group-Goa trip').getByTestId('group-balance-INR'),
-  ).toHaveText(/^you are owed\s*₹/)
+  await expect(page.getByTestId('group-Lisbon').getByTestId('group-balance-EUR')).toHaveText(/^you owe ↗\s€/)
+  await expect(page.getByTestId('group-Goa trip').getByTestId('group-balance-INR')).toHaveText(/^you are owed ↙\s₹/)
   // An Overview on top, People's style: one cell per currency, never added together.
   await expect(page.getByTestId('groups-balances-title')).toHaveText('Overview')
   await expect(
@@ -142,14 +136,11 @@ test('Hindi renders translated words with Indian grouping, never message ids', a
   await page.evaluate(() => (window as any).splito.setPref('language', 'hi'))
   await expect(page.getByTestId('people-balances-title')).toHaveText('सारांश')
   await expect(page.getByTestId('people-friends-title')).toHaveText(/^दोस्त/)
-  await expect(page.getByTestId('people-add-friend')).toHaveAttribute(
-    'aria-label',
-    'दोस्त जोड़ें',
-  )
+  await expect(page.getByTestId('people-add-friend')).toHaveAttribute('aria-label', 'दोस्त जोड़ें')
   const arjun = byKey.get('arjun')!.byCurrency.INR!.total
-  await expect(
-    page.getByTestId('person-Arjun Mehta').getByTestId('balance-INR'),
-  ).toHaveText(`आपको मिलेंगे ${formatAmount(arjun, 'INR', 'hi-IN')}`)
+  await expect(page.getByTestId('person-Arjun Mehta').getByTestId('balance-INR')).toHaveText(
+    `आपको मिलेंगे ↙ ${formatAmount(arjun, 'INR', 'hi-IN')}`,
+  )
   await expectNoMessageIds(page)
 })
 

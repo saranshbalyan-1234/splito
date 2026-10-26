@@ -19,6 +19,8 @@ export type Device = {
   /** Accent hex (`#rrggbb`). */
   accent: string
   density: 'comfortable' | 'compact'
+  /** How money direction is coloured (F-1801), mirrored so every balance paints right at once. */
+  moneyPalette: 'default' | 'colorblind' | 'mono'
   homeTab: TabId
   hapticsEnabled: boolean
   /** Activity read/hidden marks: personal, so they stay on this device. */

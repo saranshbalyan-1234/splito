@@ -3708,3 +3708,192 @@ msgstr "You’ll pay, to {0} people"
 #: src/screens/Settle/index.tsx:559
 msgid "You’ll pay, to 1 person"
 msgstr "You’ll pay, to 1 person"
+
+#. placeholder {0}: formatAmount(share, form.currency, locale)
+#. placeholder {1}: formatAmount(evaluation.cash.remainder, form.currency, locale)
+#: src/components/split/SplitEditor.tsx:202
+msgid "{0} · includes {1} left over"
+msgstr "{0} · includes {1} left over"
+
+#. placeholder {0}: fmt(cash.remainder)
+#. placeholder {1}: unitText(roundTo)
+#. placeholder {2}: name(cash.remainderTo)
+#. placeholder {3}: fmt(evaluation.total!)
+#: src/components/split/SplitEditor.tsx:859
+msgid "{0} doesn’t round to {1}, so it goes on {2}’s share. Everything still adds up to {3}."
+msgstr "{0} doesn’t round to {1}, so it goes on {2}’s share. Everything still adds up to {3}."
+
+#. placeholder {0}: fmt(cash.remainder)
+#. placeholder {1}: unitText(roundTo)
+#. placeholder {2}: fmt(evaluation.total!)
+#: src/components/split/SplitEditor.tsx:857
+msgid "{0} doesn’t round to {1}, so it goes on your share. Everything still adds up to {2}."
+msgstr "{0} doesn’t round to {1}, so it goes on your share. Everything still adds up to {2}."
+
+#: src/components/split/SplitEditor.tsx:82
+msgid "Add the bill’s items and pick who had each. Tap a name again for one more portion; hold or right-click it to take them off. Tax, tip, service and discount follow what each person had."
+msgstr "Add the bill’s items and pick who had each. Tap a name again for one more portion; hold or right-click it to take them off. Tax, tip, service and discount follow what each person had."
+
+#: src/components/settings/prefControls.tsx:508
+msgid "Also works for m (million) and inside sums, like 2k + 500."
+msgstr "Also works for m (million) and inside sums, like 2k + 500."
+
+#: src/components/settings/prefControls.tsx:326
+#: src/components/split/AmountKeypad.tsx:80
+msgid "Amount keypad"
+msgstr "Amount keypad"
+
+#: src/components/settings/prefControls.tsx:506
+msgid "Amount shortcuts"
+msgstr "Amount shortcuts"
+
+#: src/components/settings/prefControls.tsx:142
+msgid "Balances always show an arrow and words like “owes you”, so they read without colour too."
+msgstr "Balances always show an arrow and words like “owes you”, so they read without colour too."
+
+#: src/components/settings/prefControls.tsx:328
+msgid "Big keys with + − × ÷ and 000. Turn it off to use your phone’s keyboard."
+msgstr "Big keys with + − × ÷ and 000. Turn it off to use your phone’s keyboard."
+
+#: src/components/settings/prefControls.tsx:152
+msgid "Blue and orange, easy to tell apart with any colour vision"
+msgstr "Blue and orange, easy to tell apart with any colour vision"
+
+#: src/components/settings/prefControls.tsx:151
+msgid "Colour-blind safe"
+msgstr "Colour-blind safe"
+
+#: src/components/split/AmountKeypad.tsx:65
+msgid "Decimal point"
+msgstr "Decimal point"
+
+#: src/components/split/AmountKeypad.tsx:66
+msgid "Delete"
+msgstr "Delete"
+
+#: src/components/split/fields.tsx:266
+msgid "Did you mean"
+msgstr "Did you mean"
+
+#: src/components/split/AmountKeypad.tsx:70
+msgid "Divided by"
+msgstr "Divided by"
+
+#: src/components/split/AmountKeypad.tsx:169
+#: src/components/split/AmountKeypad.tsx:174
+msgid "Done"
+msgstr "Done"
+
+#. placeholder {0}: unitText(roundTo)
+#. placeholder {1}: fmt(evaluation.total!)
+#: src/components/split/SplitEditor.tsx:860
+msgid "Every share is a whole multiple of {0} and they add up to {1}."
+msgstr "Every share is a whole multiple of {0} and they add up to {1}."
+
+#: src/components/settings/prefControls.tsx:146
+msgid "Green and red"
+msgstr "Green and red"
+
+#: src/components/settings/prefControls.tsx:147
+msgid "Green when money comes to you, red when you pay"
+msgstr "Green when money comes to you, red when you pay"
+
+#: src/components/split/shared.tsx:157
+msgid "Is that a thousands separator or decimals? Write it without the separator, like 1234"
+msgstr "Is that a thousands separator or decimals? Write it without the separator, like 1234"
+
+#: src/components/split/AmountKeypad.tsx:68
+msgid "Minus"
+msgstr "Minus"
+
+#: src/components/settings/prefControls.tsx:141
+msgid "Money colours"
+msgstr "Money colours"
+
+#: src/components/settings/prefControls.tsx:156
+msgid "Monochrome"
+msgstr "Monochrome"
+
+#: src/components/settings/prefControls.tsx:157
+msgid "No colour: arrows and bold type show the direction"
+msgstr "No colour: arrows and bold type show the direction"
+
+#: src/components/split/shared.tsx:159
+msgid "Pick a whole cash unit to round to"
+msgstr "Pick a whole cash unit to round to"
+
+#: src/components/split/AmountKeypad.tsx:67
+msgid "Plus"
+msgstr "Plus"
+
+#: src/components/settings/prefControls.tsx:507
+msgid "Read 2k as 2,000, 1.5L as 1,50,000 and 1cr as 1,00,00,000"
+msgstr "Read 2k as 2,000, 1.5L as 1,50,000 and 1cr as 1,00,00,000"
+
+#: src/components/settings/prefControls.tsx:295
+#: src/components/split/SplitEditor.tsx:797
+#: src/components/split/SplitEditor.tsx:813
+msgid "Round shares to cash"
+msgstr "Round shares to cash"
+
+#: src/components/settings/prefControls.tsx:310
+#: src/components/split/SplitEditor.tsx:827
+msgid "Round to"
+msgstr "Round to"
+
+#. placeholder {0}: unitText(unit)
+#: src/components/split/SplitEditor.tsx:835
+msgid "Round to {0}"
+msgstr "Round to {0}"
+
+#: src/screens/Expense/index.tsx:630
+msgid "Rounded to {unit} for cash."
+msgstr "Rounded to {unit} for cash."
+
+#. placeholder {0}: fmt(cash.remainder)
+#. placeholder {1}: name(cash.remainderTo)
+#: src/screens/Expense/index.tsx:629
+msgid "Rounded to {unit} for cash. {0} left over is on {1}’s share."
+msgstr "Rounded to {unit} for cash. {0} left over is on {1}’s share."
+
+#. placeholder {0}: fmt(cash.remainder)
+#: src/screens/Expense/index.tsx:627
+msgid "Rounded to {unit} for cash. {0} left over is on your share."
+msgstr "Rounded to {unit} for cash. {0} left over is on your share."
+
+#: src/components/settings/prefControls.tsx:296
+msgid "Start equal, shares and percent splits rounded to whole cash amounts"
+msgstr "Start equal, shares and percent splits rounded to whole cash amounts"
+
+#: src/components/split/fields.tsx:288
+msgid "This currency has no third decimal."
+msgstr "This currency has no third decimal."
+
+#: src/components/split/AmountKeypad.tsx:69
+msgid "Times"
+msgstr "Times"
+
+#. placeholder {0}: format(v)
+#: src/components/split/fields.tsx:275
+msgid "Use {0}"
+msgstr "Use {0}"
+
+#: src/components/settings/prefControls.tsx:327
+msgid "Use Splito’s calculator keypad for amounts on phones"
+msgstr "Use Splito’s calculator keypad for amounts on phones"
+
+#: src/components/settings/prefControls.tsx:297
+msgid "Whatever doesn’t round is shown and added to one person’s share, so nothing is lost. You can change it on each expense."
+msgstr "Whatever doesn’t round is shown and added to one person’s share, so nothing is lost. You can change it on each expense."
+
+#: src/components/split/SplitEditor.tsx:817
+msgid "Whole amounts that are easy to hand over"
+msgstr "Whole amounts that are easy to hand over"
+
+#: src/components/settings/prefControls.tsx:311
+msgid "Whole units of the expense’s currency."
+msgstr "Whole units of the expense’s currency."
+
+#: src/components/split/fields.tsx:247
+msgid "You can type a sum, like 1200 + 300, or 2k or 1.5L"
+msgstr "You can type a sum, like 1200 + 300, or 2k or 1.5L"

@@ -3708,3 +3708,192 @@ msgstr "आप देंगे, {0} लोगों को"
 #: src/screens/Settle/index.tsx:559
 msgid "You’ll pay, to 1 person"
 msgstr "आप देंगे, 1 व्यक्ति को"
+
+#. placeholder {0}: formatAmount(share, form.currency, locale)
+#. placeholder {1}: formatAmount(evaluation.cash.remainder, form.currency, locale)
+#: src/components/split/SplitEditor.tsx:202
+msgid "{0} · includes {1} left over"
+msgstr "{0} · इसमें बचे हुए {1} शामिल हैं"
+
+#. placeholder {0}: fmt(cash.remainder)
+#. placeholder {1}: unitText(roundTo)
+#. placeholder {2}: name(cash.remainderTo)
+#. placeholder {3}: fmt(evaluation.total!)
+#: src/components/split/SplitEditor.tsx:859
+msgid "{0} doesn’t round to {1}, so it goes on {2}’s share. Everything still adds up to {3}."
+msgstr "{0} {1} में पूरा नहीं बँटता, इसलिए यह {2} के हिस्से में जुड़ता है। कुल अब भी {3} है।"
+
+#. placeholder {0}: fmt(cash.remainder)
+#. placeholder {1}: unitText(roundTo)
+#. placeholder {2}: fmt(evaluation.total!)
+#: src/components/split/SplitEditor.tsx:857
+msgid "{0} doesn’t round to {1}, so it goes on your share. Everything still adds up to {2}."
+msgstr "{0} {1} में पूरा नहीं बँटता, इसलिए यह आपके हिस्से में जुड़ता है। कुल अब भी {2} है।"
+
+#: src/components/split/SplitEditor.tsx:82
+msgid "Add the bill’s items and pick who had each. Tap a name again for one more portion; hold or right-click it to take them off. Tax, tip, service and discount follow what each person had."
+msgstr "बिल की चीज़ें जोड़ें और चुनें कि किसने क्या लिया। एक और हिस्से के लिए नाम पर फिर से टैप करें; हटाने के लिए उसे दबाकर रखें या राइट-क्लिक करें। टैक्स, टिप, सर्विस और छूट हर व्यक्ति के हिस्से के हिसाब से बँटते हैं।"
+
+#: src/components/settings/prefControls.tsx:508
+msgid "Also works for m (million) and inside sums, like 2k + 500."
+msgstr "m (मिलियन) के लिए और जोड़ के अंदर भी चलता है, जैसे 2k + 500।"
+
+#: src/components/settings/prefControls.tsx:326
+#: src/components/split/AmountKeypad.tsx:80
+msgid "Amount keypad"
+msgstr "राशि कीपैड"
+
+#: src/components/settings/prefControls.tsx:506
+msgid "Amount shortcuts"
+msgstr "राशि शॉर्टकट"
+
+#: src/components/settings/prefControls.tsx:142
+msgid "Balances always show an arrow and words like “owes you”, so they read without colour too."
+msgstr "बैलेंस हमेशा तीर और “आपको देना है” जैसे शब्दों के साथ दिखते हैं, इसलिए रंग के बिना भी समझ आते हैं।"
+
+#: src/components/settings/prefControls.tsx:328
+msgid "Big keys with + − × ÷ and 000. Turn it off to use your phone’s keyboard."
+msgstr "+ − × ÷ और 000 वाली बड़ी कुंजियाँ। फ़ोन का कीबोर्ड इस्तेमाल करने के लिए इसे बंद करें।"
+
+#: src/components/settings/prefControls.tsx:152
+msgid "Blue and orange, easy to tell apart with any colour vision"
+msgstr "नीला और नारंगी, हर तरह की रंग-दृष्टि में आसानी से अलग दिखते हैं"
+
+#: src/components/settings/prefControls.tsx:151
+msgid "Colour-blind safe"
+msgstr "कलर-ब्लाइंड के लिए सुरक्षित"
+
+#: src/components/split/AmountKeypad.tsx:65
+msgid "Decimal point"
+msgstr "दशमलव बिंदु"
+
+#: src/components/split/AmountKeypad.tsx:66
+msgid "Delete"
+msgstr "मिटाएँ"
+
+#: src/components/split/fields.tsx:266
+msgid "Did you mean"
+msgstr "क्या आपका मतलब था"
+
+#: src/components/split/AmountKeypad.tsx:70
+msgid "Divided by"
+msgstr "भाग"
+
+#: src/components/split/AmountKeypad.tsx:169
+#: src/components/split/AmountKeypad.tsx:174
+msgid "Done"
+msgstr "हो गया"
+
+#. placeholder {0}: unitText(roundTo)
+#. placeholder {1}: fmt(evaluation.total!)
+#: src/components/split/SplitEditor.tsx:860
+msgid "Every share is a whole multiple of {0} and they add up to {1}."
+msgstr "हर हिस्सा {0} का पूरा गुणज है और सबका जोड़ {1} है।"
+
+#: src/components/settings/prefControls.tsx:146
+msgid "Green and red"
+msgstr "हरा और लाल"
+
+#: src/components/settings/prefControls.tsx:147
+msgid "Green when money comes to you, red when you pay"
+msgstr "पैसा आपके पास आए तो हरा, आप दें तो लाल"
+
+#: src/components/split/shared.tsx:157
+msgid "Is that a thousands separator or decimals? Write it without the separator, like 1234"
+msgstr "यह हज़ार का विभाजक है या दशमलव? इसे विभाजक के बिना लिखें, जैसे 1234"
+
+#: src/components/split/AmountKeypad.tsx:68
+msgid "Minus"
+msgstr "घटा"
+
+#: src/components/settings/prefControls.tsx:141
+msgid "Money colours"
+msgstr "पैसों के रंग"
+
+#: src/components/settings/prefControls.tsx:156
+msgid "Monochrome"
+msgstr "एक रंग"
+
+#: src/components/settings/prefControls.tsx:157
+msgid "No colour: arrows and bold type show the direction"
+msgstr "कोई रंग नहीं: तीर और मोटे अक्षर दिशा बताते हैं"
+
+#: src/components/split/shared.tsx:159
+msgid "Pick a whole cash unit to round to"
+msgstr "पूर्णांकन के लिए नकद की पूरी इकाई चुनें"
+
+#: src/components/split/AmountKeypad.tsx:67
+msgid "Plus"
+msgstr "जोड़"
+
+#: src/components/settings/prefControls.tsx:507
+msgid "Read 2k as 2,000, 1.5L as 1,50,000 and 1cr as 1,00,00,000"
+msgstr "2k को 2,000, 1.5L को 1,50,000 और 1cr को 1,00,00,000 पढ़ें"
+
+#: src/components/settings/prefControls.tsx:295
+#: src/components/split/SplitEditor.tsx:797
+#: src/components/split/SplitEditor.tsx:813
+msgid "Round shares to cash"
+msgstr "हिस्सों को नकद में पूर्णांकित करें"
+
+#: src/components/settings/prefControls.tsx:310
+#: src/components/split/SplitEditor.tsx:827
+msgid "Round to"
+msgstr "इतने तक पूर्णांकित करें"
+
+#. placeholder {0}: unitText(unit)
+#: src/components/split/SplitEditor.tsx:835
+msgid "Round to {0}"
+msgstr "{0} तक पूर्णांकित करें"
+
+#: src/screens/Expense/index.tsx:630
+msgid "Rounded to {unit} for cash."
+msgstr "नकद के लिए {unit} तक पूर्णांकित।"
+
+#. placeholder {0}: fmt(cash.remainder)
+#. placeholder {1}: name(cash.remainderTo)
+#: src/screens/Expense/index.tsx:629
+msgid "Rounded to {unit} for cash. {0} left over is on {1}’s share."
+msgstr "नकद के लिए {unit} तक पूर्णांकित। बचे हुए {0} {1} के हिस्से में हैं।"
+
+#. placeholder {0}: fmt(cash.remainder)
+#: src/screens/Expense/index.tsx:627
+msgid "Rounded to {unit} for cash. {0} left over is on your share."
+msgstr "नकद के लिए {unit} तक पूर्णांकित। बचे हुए {0} आपके हिस्से में हैं।"
+
+#: src/components/settings/prefControls.tsx:296
+msgid "Start equal, shares and percent splits rounded to whole cash amounts"
+msgstr "बराबर, हिस्सों और प्रतिशत वाले बँटवारे पूरी नकद राशि में पूर्णांकित होकर शुरू हों"
+
+#: src/components/split/fields.tsx:288
+msgid "This currency has no third decimal."
+msgstr "इस मुद्रा में तीसरा दशमलव अंक नहीं होता।"
+
+#: src/components/split/AmountKeypad.tsx:69
+msgid "Times"
+msgstr "गुणा"
+
+#. placeholder {0}: format(v)
+#: src/components/split/fields.tsx:275
+msgid "Use {0}"
+msgstr "{0} इस्तेमाल करें"
+
+#: src/components/settings/prefControls.tsx:327
+msgid "Use Splito’s calculator keypad for amounts on phones"
+msgstr "फ़ोन पर राशि के लिए Splito का कैलकुलेटर कीपैड इस्तेमाल करें"
+
+#: src/components/settings/prefControls.tsx:297
+msgid "Whatever doesn’t round is shown and added to one person’s share, so nothing is lost. You can change it on each expense."
+msgstr "जो पूर्णांकित नहीं होता वह दिखाया जाता है और एक व्यक्ति के हिस्से में जोड़ा जाता है, इसलिए कुछ नहीं खोता। आप इसे हर खर्च पर बदल सकते हैं।"
+
+#: src/components/split/SplitEditor.tsx:817
+msgid "Whole amounts that are easy to hand over"
+msgstr "पूरी राशियाँ जो देना आसान हो"
+
+#: src/components/settings/prefControls.tsx:311
+msgid "Whole units of the expense’s currency."
+msgstr "खर्च की मुद्रा की पूरी इकाइयाँ।"
+
+#: src/components/split/fields.tsx:247
+msgid "You can type a sum, like 1200 + 300, or 2k or 1.5L"
+msgstr "आप जोड़ लिख सकते हैं, जैसे 1200 + 300, या 2k या 1.5L"

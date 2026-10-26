@@ -6,10 +6,12 @@ import {View} from 'react-native'
 import {atoms as a, type TextStyleProp, useTheme} from '#/alf'
 import {Check_Stroke2_Corner0_Rounded as CheckIcon} from '#/components/icons/Check'
 import {Text} from '#/components/Typography'
+import {moneyGlyph, useMoneyStyle} from '#/components/MoneyDirection'
 
 /**
- * One currency's balance in words, the amount emphasised and coloured by
- * direction (green: money comes to you, red: you pay). `subject` picks the
+ * One currency's balance in words, the amount emphasised, marked with an
+ * arrow (in: money comes to you, out: you pay) and coloured by direction in
+ * the `moneyPalette` colours. `subject` picks the
  * wording: a person ("owes you" / "you owe") or a group ("you are owed").
  */
 export function BalanceText({
@@ -30,14 +32,14 @@ export function BalanceText({
   testID?: string
 } & TextStyleProp) {
   const t = useTheme()
-  const figure = formatAmount(magnitude(amount), currency, locale)
+  const money = useMoneyStyle()
+  /* Arrow, word and figure: direction never rests on colour alone (F-1801). */
+  const figure = `${moneyGlyph(amount)}\u00a0${formatAmount(magnitude(amount), currency, locale)}`
   const figureStyle = [
     isCompact ? a.text_sm : a.text_md,
     a.font_semi_bold,
-    {
-      color: amount > ZERO ? t.palette.positive_600 : t.palette.negative_500,
-      fontVariant: ['tabular-nums' as const],
-    },
+    {fontVariant: ['tabular-nums' as const]},
+    money.style(amount),
   ]
 
   return (

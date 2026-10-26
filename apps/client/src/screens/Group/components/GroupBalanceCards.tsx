@@ -5,6 +5,7 @@ import {magnitude, ZERO} from '@splito/domain'
 import {atoms as a, useBreakpoints, useTheme} from '#/alf'
 import {CircleCheck_Stroke2_Corner0_Rounded as CheckIcon} from '#/components/icons/CircleCheck'
 import {Text} from '#/components/Typography'
+import {MoneyArrow, useMoneyStyle} from '#/components/MoneyDirection'
 import {AnimatedAmount} from '#/motion/AnimatedAmount'
 
 /**
@@ -22,6 +23,7 @@ export function GroupBalanceCards({
   locale: string
 }) {
   const t = useTheme()
+  const money = useMoneyStyle()
   const {gtMobile} = useBreakpoints()
   const isSettled = openCurrencies.length === 0
 
@@ -71,7 +73,8 @@ export function GroupBalanceCards({
                     <Trans>You owe</Trans>
                   )}
                 </Text>
-                <View style={a.pt_2xs}>
+                <View style={[a.pt_2xs, a.flex_row, a.align_center, a.gap_xs]}>
+                  <MoneyArrow amount={net} size={gtMobile ? 'lg' : 'md'} />
                   <AnimatedAmount
                     minor={magnitude(net)}
                     currency={currency}
@@ -80,12 +83,7 @@ export function GroupBalanceCards({
                       gtMobile ? a.text_3xl : a.text_2xl,
                       a.font_bold,
                       a.leading_tight,
-                      {
-                        color:
-                          net > ZERO
-                            ? t.palette.positive_600
-                            : t.palette.negative_500,
-                      },
+                      money.style(net),
                     ]}
                   />
                 </View>

@@ -182,13 +182,13 @@ test('People: the Include groups filter changes the totals only on Apply', async
   await seedA04(page)
   await page.goto('/')
   const row = page.getByTestId('person-Kavya Rao')
-  await expect(row.getByTestId('balance-INR')).toHaveText('owes you ₹150.00')
+  await expect(row.getByTestId('balance-INR')).toHaveText('owes you ↙ ₹150.00')
   await expect(page.getByTestId('list-filters-dot')).toHaveCount(0)
   await page.getByTestId('list-filters').click()
   await page.getByTestId('filter-include-groups').click()
-  await expect(row.getByTestId('balance-INR')).toHaveText('owes you ₹150.00')
+  await expect(row.getByTestId('balance-INR')).toHaveText('owes you ↙ ₹150.00')
   await page.getByTestId('sheet-save').click()
-  await expect(row.getByTestId('balance-INR')).toHaveText('owes you ₹100.00')
+  await expect(row.getByTestId('balance-INR')).toHaveText('owes you ↙ ₹100.00')
   // The button carries a dot and says how many filters differ from the defaults.
   await expect(page.getByTestId('list-filters-dot')).toBeVisible()
   await expect(page.getByTestId('list-filters')).toHaveAttribute(

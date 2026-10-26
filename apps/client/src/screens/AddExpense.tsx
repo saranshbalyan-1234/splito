@@ -27,6 +27,8 @@ export function AddExpenseScreen() {
   const [currency] = usePref('defaultCurrency')
   const [mode] = usePref('defaultSplitMode')
   const [adjustModes] = usePref('itemizeAdjustmentModes')
+  const [isRoundingCash] = usePref('split.roundCash')
+  const [roundTo] = usePref('split.roundTo')
   const tz = useExpenseTz()
 
   const close = () => {
@@ -34,7 +36,16 @@ export function AddExpenseScreen() {
     else navigation.navigate('People')
   }
 
-  if (!me || !people || !groups || !currency || !mode || !adjustModes) {
+  if (
+    !me ||
+    !people ||
+    !groups ||
+    !currency ||
+    !mode ||
+    !adjustModes ||
+    isRoundingCash === undefined ||
+    roundTo === undefined
+  ) {
     return (
       <ComposerSkeleton
         testID="screen-add-expense"
@@ -52,6 +63,7 @@ export function AddExpenseScreen() {
       currency={currency}
       mode={mode}
       adjustModes={adjustModes}
+      roundTo={isRoundingCash ? roundTo : 0}
       tz={tz}
       personId={params?.personId}
       groupId={params?.groupId}
@@ -67,6 +79,7 @@ function AddExpenseForm({
   currency,
   mode,
   adjustModes,
+  roundTo,
   tz,
   personId,
   groupId,
@@ -78,6 +91,8 @@ function AddExpenseForm({
   currency: string
   mode: ExpenseForm['mode']
   adjustModes: ExpenseForm['adjustModes']
+  /** Cash rounding new splits start with (the `split.roundCash` / `split.roundTo` preferences); 0 is off. */
+  roundTo: number
   tz: string
   personId?: string
   groupId?: string
@@ -98,6 +113,7 @@ function AddExpenseForm({
         groupId: group.id,
         mode,
         adjustModes,
+        roundTo,
       })
     }
     const person = people.find(p => p.id === personId)
@@ -109,6 +125,7 @@ function AddExpenseForm({
       groupId: null,
       mode,
       adjustModes,
+      roundTo,
     })
   })
   const [draft] = useState(() => {

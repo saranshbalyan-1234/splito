@@ -11,6 +11,7 @@ import {BalanceText, SettledPill} from '#/components/BalanceText'
 import * as Pills from '#/components/Pills'
 import * as ProfileCard from '#/components/ProfileCard'
 import {Text} from '#/components/Typography'
+import {useMoneyStyle} from '#/components/MoneyDirection'
 import {useListAnimations} from '#/motion/listAnimations'
 import {usePressScale} from '#/motion/PressableScale'
 
@@ -37,6 +38,7 @@ export function PersonRow({
   locale: string
 }) {
   const t = useTheme()
+  const money = useMoneyStyle()
   const rowPadding = useRowPadding()
   const {t: l} = useLingui()
   const {gtMobile} = useBreakpoints()
@@ -161,13 +163,8 @@ export function PersonRow({
                           style={[
                             a.text_xs,
                             a.font_semi_bold,
-                            {
-                              color:
-                                chip.v > ZERO
-                                  ? t.palette.positive_600
-                                  : t.palette.negative_500,
-                              fontVariant: ['tabular-nums'],
-                            },
+                            {fontVariant: ['tabular-nums']},
+                            money.style(chip.v),
                           ]}>
                           {(chip.v > ZERO ? '+' : '−') +
                             formatAmount(

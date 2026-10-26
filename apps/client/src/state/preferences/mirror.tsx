@@ -33,14 +33,14 @@ function put<K extends keyof Device>(key: K, value: Device[K]) {
 
 /**
  * Applies app-wide preferences. Copies the ones that shape the first frame
- * (theme, accent, text size, density, home tab, haptics) from the registry into
+ * (theme, accent, text size, density, money colours, home tab, haptics) from the registry into
  * synchronous device storage whenever one changes. The registry stays
  * the source of truth; the copy only exists so the next launch paints right
  * before the local store opens.
  */
 export function PrefsMirror() {
   const {setFontScale} = useAlf().fonts
-  // One shared read of the preference rows serves all seven (data/projections).
+  // One shared read of the preference rows serves all eight (data/projections).
   const [theme] = usePref('theme')
   const [darkTheme] = usePref('darkTheme')
   const [accent] = usePref('accent')
@@ -48,9 +48,10 @@ export function PrefsMirror() {
   const [haptics] = usePref('haptics')
   const [density] = usePref('density')
   const [homeTab] = usePref('homeTab')
+  const [moneyPalette] = usePref('moneyPalette')
 
   useEffect(() => {
-    // All seven come from the same rows, so they arrive together.
+    // All eight come from the same rows, so they arrive together.
     if (
       theme === undefined ||
       darkTheme === undefined ||
@@ -58,7 +59,8 @@ export function PrefsMirror() {
       textScale === undefined ||
       haptics === undefined ||
       density === undefined ||
-      homeTab === undefined
+      homeTab === undefined ||
+      moneyPalette === undefined
     )
       return
     put('colorMode', theme)
@@ -66,10 +68,11 @@ export function PrefsMirror() {
     put('accent', accent)
     put('hapticsEnabled', haptics)
     put('density', density)
+    put('moneyPalette', moneyPalette)
     put('homeTab', homeTab)
     const scale = fontScaleFor(textScale)
     if (scale !== getFontScale()) setFontScale(scale)
-  }, [theme, darkTheme, accent, textScale, haptics, density, homeTab, setFontScale])
+  }, [theme, darkTheme, accent, textScale, haptics, density, homeTab, moneyPalette, setFontScale])
 
   /*
    * The Animations preference (or the OS setting) also reaches every

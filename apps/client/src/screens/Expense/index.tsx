@@ -3,10 +3,13 @@ import {msg, plural} from '@lingui/core/macro'
 import {Trans, useLingui} from '@lingui/react/macro'
 import {useNavigation, useRoute, type RouteProp} from '@react-navigation/native'
 import {
+  cashSplit,
+  cashUnitWhole,
   expenseNet,
   formatAmount,
   magnitude,
   itemBreakdown,
+  type SplitInput,
   ZERO,
 } from '@splito/domain'
 import {
@@ -33,6 +36,7 @@ import * as Layout from '#/components/Layout'
 import * as Menu from '#/components/Menu'
 import * as Skeleton from '#/components/Skeleton'
 import {
+  cashUnitText,
   CategoryTile,
   localToday,
   SectionLabel,
@@ -46,6 +50,7 @@ import {ReceiptIcon} from '#/components/split/icons'
 import {useExpense} from '#/components/split/useExpense'
 import * as Toast from '#/components/Toast'
 import {Text} from '#/components/Typography'
+import {MoneyArrow, useMoneyStyle} from '#/components/MoneyDirection'
 import {Shimmer} from '#/motion/Shimmer'
 import {History} from './components/History'
 import {ItemsBreakdown} from './components/ItemsBreakdown'
@@ -212,6 +217,7 @@ function Detail({
       ? expenseNet(e, ctx.actor)
       : undefined
   const isUpcoming = e.date > localToday(tz)
+  const money = useMoneyStyle()
   const splitLabel = {
     equal: l`Split equally`,
     exact: l`Split by exact amounts`,
@@ -300,7 +306,7 @@ function Detail({
       </View>
 
       {myNet !== undefined ? (
-        /* A chip tinted by direction: green when I lent, red when I borrowed. */
+        /* A chip tinted by direction (green lent, red borrowed), with an arrow and words so colour is never alone. */
         <View
           testID="expense-my-net"
           style={[
@@ -315,24 +321,19 @@ function Detail({
             myNet !== ZERO
               ? {
                   backgroundColor: utils.alpha(
-                    myNet > ZERO
-                      ? t.palette.positive_600
-                      : t.palette.negative_500,
+                    money.color(myNet),
                     t.scheme === 'light' ? 0.1 : 0.16,
                   ),
                 }
               : t.atoms.bg_contrast_25,
           ]}>
+          <MoneyArrow amount={myNet} />
           <Text
             style={[
               a.text_md,
               a.font_semi_bold,
-              myNet > ZERO
-                ? {color: t.palette.positive_600}
-                : myNet < ZERO
-                  ? {color: t.palette.negative_500}
-                  : t.atoms.text,
               {fontVariant: ['tabular-nums']},
+              money.style(myNet),
             ]}>
             {myNet > ZERO ? (
               <Trans>You lent {fmt(myNet)}</Trans>
@@ -378,6 +379,15 @@ function Detail({
           testID={`share-row-${name(id)}`}
         />
       ))}
+
+      <CashRoundingNote
+        total={e.total}
+        split={e.split}
+        currency={e.currency}
+        fmt={fmt}
+        name={name}
+        me={ctx.actor}
+      />
 
       {e.split.mode === 'items' ? (
         <ItemsBreakdown
@@ -585,5 +595,46 @@ function DetailSkeleton() {
         </Skeleton.Row>
       ))}
     </Shimmer>
+  )
+}
+
+/** F-402: a cash-rounded split says so, with the remainder and whose share carries it. */
+function CashRoundingNote({
+  total,
+  split,
+  currency,
+  fmt,
+  name,
+  me,
+}: {
+  total: bigint
+  split: SplitInput
+  me: string
+  currency: string
+  fmt: (v: bigint) => string
+  name: (id: string) => string
+}) {
+  const t = useTheme()
+  const {t: l} = useLingui()
+  const cash = cashSplit(total, split)
+  if (!cash || !('roundTo' in split) || split.roundTo === undefined) return null
+  const unit = cashUnitText(currency, cashUnitWhole(currency, split.roundTo))
+  return (
+    <Text
+      testID="expense-cash-rounding"
+      style={[
+        a.px_lg,
+        a.pt_sm,
+        a.text_sm,
+        a.leading_snug,
+        t.atoms.text_contrast_medium,
+        {fontVariant: ['tabular-nums']},
+      ]}>
+      {cash.remainderTo === me
+        ? l`Rounded to ${unit} for cash. ${fmt(cash.remainder)} left over is on your share.`
+        : cash.remainderTo
+          ? l`Rounded to ${unit} for cash. ${fmt(cash.remainder)} left over is on ${name(cash.remainderTo)}’s share.`
+          : l`Rounded to ${unit} for cash.`}
+    </Text>
   )
 }

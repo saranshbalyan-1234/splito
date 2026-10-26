@@ -11,6 +11,7 @@ import {EntryIcon} from '#/components/people/EntryIcon'
 import {type HistoryEntry, utcDate} from '#/components/people/ledger'
 import * as Skeleton from '#/components/Skeleton'
 import {Text} from '#/components/Typography'
+import {moneyGlyph, useMoneyStyle} from '#/components/MoneyDirection'
 import {useListAnimations} from '#/motion/listAnimations'
 import {usePressScale} from '#/motion/PressableScale'
 
@@ -192,6 +193,7 @@ function EffectText({
   figure: string
 }) {
   const t = useTheme()
+  const money = useMoneyStyle()
   const label =
     effect === ZERO ? (
       context === 'person' ? (
@@ -224,13 +226,10 @@ function EffectText({
             a.font_semi_bold,
             a.leading_snug,
             a.text_right,
-            {
-              color:
-                effect > ZERO ? t.palette.positive_600 : t.palette.negative_500,
-              ...tabular,
-            },
+            tabular,
+            money.style(effect),
           ]}>
-          {figure}
+          {`${moneyGlyph(effect)}\u00a0${figure}`}
         </Text>
       )}
     </>
