@@ -6,7 +6,7 @@ import {useLingui} from '@lingui/react/macro'
 
 import {useHaptics} from '#/lib/haptics'
 import {useA11y} from '#/state/a11y'
-import {atoms as a, useTheme} from '#/alf'
+import {atoms as a, useBreakpoints, useTheme} from '#/alf'
 import {Button, ButtonIcon} from '#/components/Button'
 import {SortableList} from '#/components/DraggableList'
 import * as Toggle from '#/components/forms/Toggle'
@@ -72,6 +72,7 @@ export function TabsEditor() {
   const pref = usePrefControl('tabs')
   const haptics = useHaptics()
   const {screenReaderEnabled} = useA11y()
+  const {gtMobile} = useBreakpoints()
   const labels = useTabLabels()
   /*
    * Only visible tabs are stored, so where a hidden tab sits is kept here for
@@ -93,7 +94,8 @@ export function TabsEditor() {
     void pref.set(next.filter(r => r.isVisible).map(r => r.tab))
   }
   const visibleCount = rows.filter(r => r.isVisible).length
-  const showArrows = IS_WEB || screenReaderEnabled
+  // Keyboard users on wide web and screen readers get arrows; touch drags.
+  const showArrows = (IS_WEB && gtMobile) || screenReaderEnabled
 
   const move = (index: number, by: -1 | 1) => {
     const next = [...rows]

@@ -38,7 +38,12 @@ export function CategoryDialog({
   return (
     <Dialog.Outer control={control}>
       <Dialog.Handle />
-      <Inner category={category} onCategorySaved={onCategorySaved} />
+      {/* Keyed so the form starts from the category being edited. The dialog itself must not remount, or it would lose its open state. */}
+      <Inner
+        key={category?.id ?? 'new'}
+        category={category}
+        onCategorySaved={onCategorySaved}
+      />
     </Dialog.Outer>
   )
 }

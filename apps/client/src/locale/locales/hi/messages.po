@@ -150,7 +150,7 @@ msgstr "{memberCount} सदस्य"
 msgid "{notificationCount, plural, one {# unread item} other {# unread items}}"
 msgstr "{notificationCount, plural, one {# अपठित} other {# अपठित}}"
 
-#: src/screens/Settings/SettingsSection.tsx:133
+#: src/screens/Settings/SettingsSection.tsx:130
 msgid "{title} reset"
 msgstr "{title} रीसेट हो गया"
 
@@ -160,9 +160,9 @@ msgstr "1 सदस्य"
 
 #: src/screens/Profile.tsx:79
 #: src/screens/Profile.tsx:82
-#: src/screens/Settings/index.tsx:59
-#: src/screens/Settings/index.tsx:62
-#: src/screens/Settings/SettingsSection.tsx:46
+#: src/screens/Settings/index.tsx:61
+#: src/screens/Settings/index.tsx:64
+#: src/screens/Settings/SettingsSection.tsx:43
 msgid "About"
 msgstr "परिचय"
 
@@ -182,8 +182,8 @@ msgstr "खाता मेनू"
 msgid "Activity"
 msgstr "गतिविधि"
 
-#: src/components/settings/CategoriesEditor.tsx:116
-#: src/components/settings/CategoriesEditor.tsx:122
+#: src/components/settings/CategoriesEditor.tsx:117
+#: src/components/settings/CategoriesEditor.tsx:123
 msgid "Add category"
 msgstr "श्रेणी जोड़ें"
 
@@ -230,24 +230,24 @@ msgstr "अंबर"
 msgid "Analytics"
 msgstr "विश्लेषण"
 
-#: src/components/settings/prefControls.tsx:134
+#: src/components/settings/prefControls.tsx:137
 msgid "Animations"
 msgstr "एनिमेशन"
 
-#: src/components/settings/sections.ts:40
+#: src/components/settings/sections.ts:42
 msgid "Appearance"
 msgstr "रूप-रंग"
 
-#: src/components/settings/AccentPicker.tsx:162
+#: src/components/settings/AccentPicker.tsx:171
 msgid "Apply"
 msgstr "लागू करें"
 
-#: src/components/settings/AccentPicker.tsx:155
+#: src/components/settings/AccentPicker.tsx:164
 msgid "Apply accent colour"
 msgstr "एक्सेंट रंग लागू करें"
 
-#: src/components/settings/prefControls.tsx:339
-#: src/components/settings/prefControls.tsx:363
+#: src/components/settings/prefControls.tsx:350
+#: src/components/settings/prefControls.tsx:374
 msgid "Automatic"
 msgstr "अपने आप"
 
@@ -256,7 +256,7 @@ msgstr "अपने आप"
 msgid "Balances"
 msgstr "बैलेंस"
 
-#: src/components/settings/prefControls.tsx:383
+#: src/components/settings/prefControls.tsx:394
 msgid "Biggest balance first"
 msgstr "सबसे बड़ा बैलेंस पहले"
 
@@ -268,7 +268,7 @@ msgstr "बिल"
 msgid "Bluesky blue"
 msgstr "ब्लूस्काई नीला"
 
-#: src/components/settings/prefControls.tsx:158
+#: src/components/settings/prefControls.tsx:162
 msgid "Browsers can't vibrate. This applies in the Splito app on your phone."
 msgstr "ब्राउज़र वाइब्रेट नहीं कर सकते। यह आपके फ़ोन के Splito ऐप में लागू होता है।"
 
@@ -277,19 +277,19 @@ msgstr "ब्राउज़र वाइब्रेट नहीं कर �
 #: src/components/Menu/index.tsx:387
 #: src/components/Prompt.tsx:153
 #: src/components/Prompt.tsx:155
-#: src/components/settings/AccentPicker.tsx:167
-#: src/components/settings/AccentPicker.tsx:175
-#: src/components/settings/CategoryDialog.tsx:195
-#: src/components/settings/CategoryDialog.tsx:200
+#: src/components/settings/AccentPicker.tsx:176
+#: src/components/settings/AccentPicker.tsx:184
+#: src/components/settings/CategoryDialog.tsx:215
+#: src/components/settings/CategoryDialog.tsx:220
 msgid "Cancel"
 msgstr "रद्द करें"
 
-#: src/components/settings/CategoriesEditor.tsx:71
-#: src/components/settings/sections.ts:43
+#: src/components/settings/CategoriesEditor.tsx:68
+#: src/components/settings/sections.ts:45
 msgid "Categories"
 msgstr "श्रेणियाँ"
 
-#: src/components/settings/prefControls.tsx:210
+#: src/components/settings/prefControls.tsx:215
 msgid "Choose default currency"
 msgstr "डिफ़ॉल्ट मुद्रा चुनें"
 
@@ -297,7 +297,7 @@ msgstr "डिफ़ॉल्ट मुद्रा चुनें"
 msgid "Choose the tabs you see and their order. Settings and your profile stay on your avatar, top right."
 msgstr "चुनें कि कौन-से टैब दिखें और किस क्रम में। सेटिंग्स और आपकी प्रोफ़ाइल ऊपर दाईं ओर आपके अवतार पर रहती हैं।"
 
-#: src/components/settings/prefControls.tsx:290
+#: src/components/settings/prefControls.tsx:295
 msgid "Choose timezone"
 msgstr "समय क्षेत्र चुनें"
 
@@ -310,7 +310,7 @@ msgstr "खोज साफ़ करें"
 msgid "Close active dialog"
 msgstr "खुला डायलॉग बंद करें"
 
-#: src/components/settings/OptionDialog.tsx:105
+#: src/components/settings/OptionDialog.tsx:113
 msgid "Close dialog"
 msgstr "डायलॉग बंद करें"
 
@@ -326,15 +326,15 @@ msgstr "बिना सहेजे खर्च जोड़ना बंद �
 msgid "Color mode"
 msgstr "कलर मोड"
 
-#: src/components/settings/CategoryDialog.tsx:107
+#: src/components/settings/CategoryDialog.tsx:119
 msgid "Colour"
 msgstr "रंग"
 
-#: src/components/settings/CategoryDialog.tsx:116
+#: src/components/settings/CategoryDialog.tsx:128
 msgid "Colour {c}"
 msgstr "रंग {c}"
 
-#: src/components/settings/prefControls.tsx:118
+#: src/components/settings/prefControls.tsx:121
 msgid "Comfortable"
 msgstr "आरामदायक"
 
@@ -342,13 +342,13 @@ msgstr "आरामदायक"
 msgid "Coming with sync"
 msgstr "सिंक के साथ आ रहा है"
 
-#: src/components/settings/prefControls.tsx:119
+#: src/components/settings/prefControls.tsx:122
 msgid "Compact"
 msgstr "सघन"
 
-#: src/components/settings/prefControls.tsx:116
+#: src/components/settings/prefControls.tsx:119
 msgid "Compact fits more people, groups and activity on screen."
-msgstr "सघन में स्क्रीन पर ज़्यादा लोग, ग्रुप और गतिविधि दिखती है।"
+msgstr "सघन में स्क्रीन पर ज़्यादा लोग, समूह और गतिविधि दिखती है।"
 
 #: src/components/Prompt.tsx:212
 #: src/components/Prompt.tsx:215
@@ -359,9 +359,9 @@ msgstr "पुष्टि करें"
 msgid "Context menu backdrop, click to close the menu."
 msgstr "मेन्यू की पृष्ठभूमि, मेन्यू बंद करने के लिए क्लिक करें।"
 
-#: src/components/settings/prefControls.tsx:398
+#: src/components/settings/prefControls.tsx:409
 msgid "Count shared group expenses in each person's balance"
-msgstr "हर व्यक्ति के बैलेंस में साझा ग्रुप खर्च गिनें"
+msgstr "हर व्यक्ति के बैलेंस में साझा समूह खर्च गिनें"
 
 #: src/screens/Groups/components/GroupRow.tsx:49
 msgid "Couple"
@@ -386,15 +386,15 @@ msgstr "डार्क"
 msgid "Dark theme"
 msgstr "डार्क थीम"
 
-#: src/components/settings/prefControls.tsx:337
+#: src/components/settings/prefControls.tsx:348
 msgid "Date format"
 msgstr "तारीख़ का फ़ॉर्मैट"
 
-#: src/components/settings/prefControls.tsx:340
+#: src/components/settings/prefControls.tsx:351
 msgid "Day first"
 msgstr "पहले दिन"
 
-#: src/components/settings/prefControls.tsx:287
+#: src/components/settings/prefControls.tsx:292
 msgid "Decides which day \"today\" is and where weeks and months begin in reports. Each expense keeps the date it happened."
 msgstr "तय करता है कि \"आज\" कौन-सा दिन है और रिपोर्ट में हफ़्ते और महीने कहाँ से शुरू होते हैं। हर खर्च अपनी असली तारीख़ रखता है।"
 
@@ -402,16 +402,16 @@ msgstr "तय करता है कि \"आज\" कौन-सा दिन 
 msgid "Default"
 msgstr "डिफ़ॉल्ट"
 
-#: src/components/settings/prefControls.tsx:206
-#: src/components/settings/prefControls.tsx:217
+#: src/components/settings/prefControls.tsx:211
+#: src/components/settings/prefControls.tsx:222
 msgid "Default currency"
 msgstr "डिफ़ॉल्ट मुद्रा"
 
-#: src/components/settings/prefControls.tsx:233
+#: src/components/settings/prefControls.tsx:238
 msgid "Default split"
 msgstr "डिफ़ॉल्ट बँटवारा"
 
-#: src/components/settings/prefControls.tsx:409
+#: src/components/settings/prefControls.tsx:420
 msgid "Delete from Activity"
 msgstr "गतिविधि से हटाएँ"
 
@@ -435,12 +435,12 @@ msgstr "हटाएं"
 msgid "Double tap to close the dialog"
 msgstr "डायलॉग बंद करने के लिए दो बार टैप करें"
 
-#: src/components/settings/CategoriesEditor.tsx:233
+#: src/components/settings/CategoriesEditor.tsx:235
 msgid "Edit {name}"
 msgstr "{name} बदलें"
 
-#: src/components/settings/CategoryDialog.tsx:76
-#: src/components/settings/CategoryDialog.tsx:82
+#: src/components/settings/CategoryDialog.tsx:84
+#: src/components/settings/CategoryDialog.tsx:91
 msgid "Edit category"
 msgstr "श्रेणी बदलें"
 
@@ -457,23 +457,23 @@ msgstr "पन्ना हरा"
 msgid "Entertainment"
 msgstr "मनोरंजन"
 
-#: src/components/settings/prefControls.tsx:236
+#: src/components/settings/prefControls.tsx:241
 msgid "Equally"
 msgstr "बराबर"
 
-#: src/components/settings/prefControls.tsx:366
+#: src/components/settings/prefControls.tsx:377
 msgid "European"
 msgstr "यूरोपीय"
 
-#: src/components/settings/prefControls.tsx:421
+#: src/components/settings/prefControls.tsx:432
 msgid "Every swipe action is also on the item's menu. Deleting only removes it from your feed, never from the record."
 msgstr "हर स्वाइप वाला काम आइटम के मेन्यू में भी है। हटाने से वह सिर्फ़ आपकी फ़ीड से जाता है, रिकॉर्ड से कभी नहीं।"
 
-#: src/screens/Settings/SettingsSection.tsx:126
+#: src/screens/Settings/SettingsSection.tsx:123
 msgid "Everything on this page goes back to how Splito starts."
 msgstr "इस पेज की हर सेटिंग Splito की शुरुआती सेटिंग पर लौट आएगी।"
 
-#: src/components/settings/prefControls.tsx:237
+#: src/components/settings/prefControls.tsx:242
 msgid "Exact amounts"
 msgstr "सटीक रकम"
 
@@ -486,7 +486,7 @@ msgstr "खर्च"
 msgid "Food"
 msgstr "खाना"
 
-#: src/components/settings/CategoryDialog.tsx:94
+#: src/components/settings/CategoryDialog.tsx:106
 msgid "For example, Rent"
 msgstr "जैसे, किराया"
 
@@ -494,11 +494,11 @@ msgstr "जैसे, किराया"
 msgid "Friends"
 msgstr "दोस्त"
 
-#: src/components/settings/prefControls.tsx:141
+#: src/components/settings/prefControls.tsx:144
 msgid "Full"
 msgstr "पूरा"
 
-#: src/components/settings/prefControls.tsx:156
+#: src/components/settings/prefControls.tsx:159
 msgid "Gentle vibrations when you tap, toggle and save"
 msgstr "टैप, टॉगल और सेव करने पर हल्का वाइब्रेशन"
 
@@ -506,8 +506,8 @@ msgstr "टैप, टॉगल और सेव करने पर हल्�
 msgid "Go back"
 msgstr "वापस जाएं"
 
-#: src/screens/Settings/SettingsSection.tsx:178
-#: src/screens/Settings/SettingsSection.tsx:183
+#: src/screens/Settings/SettingsSection.tsx:181
+#: src/screens/Settings/SettingsSection.tsx:186
 msgid "Go to Settings"
 msgstr "सेटिंग्स पर जाएँ"
 
@@ -534,7 +534,7 @@ msgstr "समूह"
 msgid "Groups"
 msgstr "समूह"
 
-#: src/components/settings/prefControls.tsx:155
+#: src/components/settings/prefControls.tsx:158
 msgid "Haptics"
 msgstr "हैप्टिक्स"
 
@@ -543,19 +543,19 @@ msgstr "हैप्टिक्स"
 msgid "Hex colour"
 msgstr "हेक्स रंग"
 
-#: src/components/settings/CategoriesEditor.tsx:193
+#: src/components/settings/CategoriesEditor.tsx:195
 msgid "Hidden"
 msgstr "छिपी हुई"
 
-#: src/components/settings/TabsEditor.tsx:230
+#: src/components/settings/TabsEditor.tsx:236
 msgid "Hide {label}"
 msgstr "{label} छिपाएँ"
 
-#: src/components/settings/CategoriesEditor.tsx:223
+#: src/components/settings/CategoriesEditor.tsx:225
 msgid "Hide {name}"
 msgstr "{name} छिपाएँ"
 
-#: src/components/settings/prefControls.tsx:408
+#: src/components/settings/prefControls.tsx:419
 msgid "Hide from Activity"
 msgstr "गतिविधि से छिपाएँ"
 
@@ -563,27 +563,27 @@ msgstr "गतिविधि से छिपाएँ"
 msgid "Home"
 msgstr "घर"
 
-#: src/components/settings/prefControls.tsx:174
+#: src/components/settings/prefControls.tsx:179
 msgid "Home tab"
 msgstr "होम टैब"
 
-#: src/components/settings/prefControls.tsx:361
+#: src/components/settings/prefControls.tsx:372
 msgid "How amounts are grouped and punctuated."
 msgstr "रकम के अंकों को कैसे समूह और विराम-चिह्न दिए जाएँ।"
 
-#: src/components/settings/prefControls.tsx:234
+#: src/components/settings/prefControls.tsx:239
 msgid "How new expenses are divided until you change it."
 msgstr "जब तक आप न बदलें, नए खर्च ऐसे बँटेंगे।"
 
-#: src/components/settings/CategoryDialog.tsx:145
+#: src/components/settings/CategoryDialog.tsx:161
 msgid "Icon"
 msgstr "आइकन"
 
-#: src/components/settings/prefControls.tsx:397
+#: src/components/settings/prefControls.tsx:408
 msgid "Include groups"
-msgstr "ग्रुप शामिल करें"
+msgstr "समूह शामिल करें"
 
-#: src/components/settings/prefControls.tsx:364
+#: src/components/settings/prefControls.tsx:375
 msgid "Indian"
 msgstr "भारतीय"
 
@@ -591,23 +591,23 @@ msgstr "भारतीय"
 msgid "Indigo"
 msgstr "नील"
 
-#: src/components/settings/prefControls.tsx:365
+#: src/components/settings/prefControls.tsx:376
 msgid "International"
 msgstr "अंतरराष्ट्रीय"
 
-#: src/components/settings/prefControls.tsx:471
+#: src/components/settings/prefControls.tsx:482
 msgid "Invites"
 msgstr "आमंत्रण"
 
-#: src/screens/Settings/SettingsSection.tsx:175
+#: src/screens/Settings/SettingsSection.tsx:178
 msgid "It may have moved. Everything is still in Settings."
 msgstr "शायद यह कहीं और चला गया है। सब कुछ अब भी सेटिंग्स में है।"
 
-#: src/components/settings/prefControls.tsx:253
+#: src/components/settings/prefControls.tsx:258
 msgid "Language"
 msgstr "भाषा"
 
-#: src/components/settings/sections.ts:44
+#: src/components/settings/sections.ts:46
 msgid "Language and region"
 msgstr "भाषा और क्षेत्र"
 
@@ -628,15 +628,15 @@ msgstr "लाइट"
 msgid "Light theme"
 msgstr "लाइट थीम"
 
-#: src/components/settings/prefControls.tsx:115
+#: src/components/settings/prefControls.tsx:118
 msgid "List density"
 msgstr "सूची का घनापन"
 
-#: src/components/settings/sections.ts:45
+#: src/components/settings/sections.ts:47
 msgid "Lists"
 msgstr "सूचियाँ"
 
-#: src/components/settings/prefControls.tsx:407
+#: src/components/settings/prefControls.tsx:418
 msgid "Mark as read"
 msgstr "पढ़ा हुआ मार्क करें"
 
@@ -644,33 +644,33 @@ msgstr "पढ़ा हुआ मार्क करें"
 msgid "Menu"
 msgstr "मेन्यू"
 
-#: src/components/settings/prefControls.tsx:341
+#: src/components/settings/prefControls.tsx:352
 msgid "Month first"
 msgstr "पहले महीना"
 
-#: src/components/settings/sections.ts:41
+#: src/components/settings/sections.ts:43
 msgid "Motion and haptics"
 msgstr "मोशन और हैप्टिक्स"
 
-#: src/components/settings/TabsEditor.tsx:215
+#: src/components/settings/TabsEditor.tsx:221
 msgid "Move {label} down"
 msgstr "{label} नीचे ले जाएँ"
 
-#: src/components/settings/TabsEditor.tsx:204
+#: src/components/settings/TabsEditor.tsx:210
 msgid "Move {label} up"
 msgstr "{label} ऊपर ले जाएँ"
 
-#: src/components/settings/CategoriesEditor.tsx:210
+#: src/components/settings/CategoriesEditor.tsx:212
 msgid "Move {name} down"
 msgstr "{name} नीचे ले जाएँ"
 
-#: src/components/settings/CategoriesEditor.tsx:200
+#: src/components/settings/CategoriesEditor.tsx:202
 msgid "Move {name} up"
 msgstr "{name} ऊपर ले जाएँ"
 
-#: src/components/settings/CategoryDialog.tsx:88
-#: src/components/settings/CategoryDialog.tsx:93
-#: src/components/settings/prefControls.tsx:384
+#: src/components/settings/CategoryDialog.tsx:100
+#: src/components/settings/CategoryDialog.tsx:105
+#: src/components/settings/prefControls.tsx:395
 msgid "Name"
 msgstr "नाम"
 
@@ -679,16 +679,16 @@ msgctxt "action"
 msgid "New"
 msgstr "नया"
 
-#: src/components/settings/CategoryDialog.tsx:76
-#: src/components/settings/CategoryDialog.tsx:82
+#: src/components/settings/CategoryDialog.tsx:84
+#: src/components/settings/CategoryDialog.tsx:93
 msgid "New category"
 msgstr "नई श्रेणी"
 
-#: src/components/settings/prefControls.tsx:447
+#: src/components/settings/prefControls.tsx:458
 msgid "New expenses"
 msgstr "नए खर्च"
 
-#: src/components/settings/prefControls.tsx:207
+#: src/components/settings/prefControls.tsx:212
 msgid "New expenses start in this currency. You can change it on any expense."
 msgstr "नए खर्च इसी मुद्रा में शुरू होते हैं। आप किसी भी खर्च पर इसे बदल सकते हैं।"
 
@@ -708,7 +708,7 @@ msgstr "अभी कोई समूह नहीं। समूह किस�
 msgid "No open balances"
 msgstr "कोई बकाया नहीं"
 
-#: src/components/settings/prefControls.tsx:410
+#: src/components/settings/prefControls.tsx:421
 msgid "Nothing"
 msgstr "कुछ नहीं"
 
@@ -716,15 +716,15 @@ msgstr "कुछ नहीं"
 msgid "Nothing here yet. Expenses, payments and group changes will show up here."
 msgstr "अभी यहां कुछ नहीं। खर्च, भुगतान और समूह के बदलाव यहां दिखेंगे।"
 
-#: src/components/settings/OptionDialog.tsx:145
+#: src/components/settings/OptionDialog.tsx:162
 msgid "Nothing matches “{search}”"
 msgstr "“{search}” से कुछ नहीं मिला"
 
-#: src/components/settings/sections.ts:46
+#: src/components/settings/sections.ts:48
 msgid "Notifications"
 msgstr "सूचनाएँ"
 
-#: src/screens/Settings/SettingsSection.tsx:99
+#: src/screens/Settings/SettingsSection.tsx:96
 msgid "Notifications start once you sign in and turn on sync. Your choices are saved now and apply from then."
 msgstr "सूचनाएँ साइन इन करके सिंक चालू करने के बाद शुरू होंगी। आपकी पसंद अभी सेव हो जाती है और तब से लागू होगी।"
 
@@ -732,11 +732,11 @@ msgstr "सूचनाएँ साइन इन करके सिंक च�
 msgid "now"
 msgstr "अभी"
 
-#: src/components/settings/prefControls.tsx:360
+#: src/components/settings/prefControls.tsx:371
 msgid "Number format"
 msgstr "संख्या फ़ॉर्मैट"
 
-#: src/components/settings/prefControls.tsx:143
+#: src/components/settings/prefControls.tsx:146
 msgid "Off"
 msgstr "बंद"
 
@@ -765,7 +765,7 @@ msgstr "आपको मिलेंगे <0>{0}</0>"
 msgid "owes you <0>{figure}</0>"
 msgstr "आपको मिलेंगे <0>{figure}</0>"
 
-#: src/components/settings/prefControls.tsx:459
+#: src/components/settings/prefControls.tsx:470
 msgid "Payments"
 msgstr "भुगतान"
 
@@ -775,7 +775,7 @@ msgstr "भुगतान"
 msgid "People"
 msgstr "लोग"
 
-#: src/components/settings/prefControls.tsx:238
+#: src/components/settings/prefControls.tsx:243
 msgid "Percentages"
 msgstr "प्रतिशत"
 
@@ -784,7 +784,7 @@ msgstr "प्रतिशत"
 msgid "Person"
 msgstr "व्यक्ति"
 
-#: src/components/settings/CategoriesEditor.tsx:72
+#: src/components/settings/CategoriesEditor.tsx:69
 msgid "Pick categories when you add an expense. Hidden ones stay on past expenses."
 msgstr "खर्च जोड़ते समय श्रेणी चुनें। छिपी हुई श्रेणियाँ पुराने खर्चों पर बनी रहती हैं।"
 
@@ -799,24 +799,24 @@ msgstr "गुलाबी"
 msgid "Profile"
 msgstr "प्रोफ़ाइल"
 
-#: src/components/settings/prefControls.tsx:385
+#: src/components/settings/prefControls.tsx:396
 msgid "Recent activity"
 msgstr "हाल की गतिविधि"
 
-#: src/components/settings/prefControls.tsx:142
+#: src/components/settings/prefControls.tsx:145
 msgid "Reduced"
 msgstr "कम"
 
-#: src/components/settings/prefControls.tsx:138
+#: src/components/settings/prefControls.tsx:141
 msgid "Reduced swaps movement for gentle fades. Off shows every change instantly."
 msgstr "कम में हलचल की जगह हल्का फ़ेड होता है। बंद में हर बदलाव तुरंत दिखता है।"
 
 #: src/components/settings/PrefSection.tsx:132
-#: src/screens/Settings/SettingsSection.tsx:127
+#: src/screens/Settings/SettingsSection.tsx:124
 msgid "Reset"
 msgstr "रीसेट"
 
-#: src/screens/Settings/SettingsSection.tsx:115
+#: src/screens/Settings/SettingsSection.tsx:112
 msgid "Reset {title}"
 msgstr "{title} रीसेट करें"
 
@@ -824,36 +824,36 @@ msgstr "{title} रीसेट करें"
 msgid "Reset {title} to default"
 msgstr "{title} को डिफ़ॉल्ट पर रीसेट करें"
 
-#: src/screens/Settings/SettingsSection.tsx:125
+#: src/screens/Settings/SettingsSection.tsx:122
 msgid "Reset {title}?"
 msgstr "{title} रीसेट करें?"
 
-#: src/screens/Settings/index.tsx:93
+#: src/screens/Settings/index.tsx:100
 msgid "Reset all"
 msgstr "सब रीसेट करें"
 
-#: src/screens/Settings/index.tsx:69
-#: src/screens/Settings/index.tsx:73
+#: src/screens/Settings/index.tsx:71
+#: src/screens/Settings/index.tsx:75
 msgid "Reset all settings"
 msgstr "सभी सेटिंग्स रीसेट करें"
 
-#: src/screens/Settings/index.tsx:91
+#: src/screens/Settings/index.tsx:98
 msgid "Reset all settings?"
 msgstr "सभी सेटिंग्स रीसेट करें?"
 
-#: src/screens/Settings/SettingsSection.tsx:119
+#: src/screens/Settings/SettingsSection.tsx:116
 msgid "Reset this page"
 msgstr "यह पेज रीसेट करें"
 
-#: src/components/settings/prefControls.tsx:271
+#: src/components/settings/prefControls.tsx:276
 msgid "Same as this device"
 msgstr "इस डिवाइस जैसा"
 
-#: src/components/settings/prefControls.tsx:280
+#: src/components/settings/prefControls.tsx:285
 msgid "Same as this device ({deviceZone})"
 msgstr "इस डिवाइस जैसा ({deviceZone})"
 
-#: src/components/settings/CategoryDialog.tsx:191
+#: src/components/settings/CategoryDialog.tsx:211
 msgid "Save"
 msgstr "सेव करें"
 
@@ -862,7 +862,7 @@ msgctxt "action"
 msgid "Save"
 msgstr "सहेजें"
 
-#: src/components/settings/CategoryDialog.tsx:185
+#: src/components/settings/CategoryDialog.tsx:205
 msgid "Save category"
 msgstr "श्रेणी सेव करें"
 
@@ -880,11 +880,11 @@ msgstr "इस डिवाइस पर सहेजा गया"
 msgid "Search"
 msgstr "खोजें"
 
-#: src/components/settings/prefControls.tsx:218
+#: src/components/settings/prefControls.tsx:223
 msgid "Search currencies"
 msgstr "मुद्राएँ खोजें"
 
-#: src/components/settings/prefControls.tsx:298
+#: src/components/settings/prefControls.tsx:303
 msgid "Search timezones"
 msgstr "समय क्षेत्र खोजें"
 
@@ -895,16 +895,16 @@ msgstr "समय क्षेत्र खोजें"
 #: src/screens/Profile.tsx:70
 #: src/screens/Profile.tsx:73
 #: src/screens/Settings/index.tsx:38
-#: src/screens/Settings/SettingsSection.tsx:53
+#: src/screens/Settings/SettingsSection.tsx:50
 #: src/view/shell/desktop/LeftNav.tsx:372
 msgid "Settings"
 msgstr "सेटिंग्स"
 
-#: src/screens/Settings/index.tsx:80
+#: src/screens/Settings/index.tsx:87
 msgid "Settings are saved on this device. Once you sign in, they follow you to your other devices."
 msgstr "सेटिंग्स इसी डिवाइस पर सेव हैं। साइन इन करने के बाद ये आपके दूसरे डिवाइस पर भी मिलेंगी।"
 
-#: src/screens/Settings/index.tsx:98
+#: src/screens/Settings/index.tsx:105
 msgid "Settings reset"
 msgstr "सेटिंग्स रीसेट हो गईं"
 
@@ -919,7 +919,7 @@ msgstr "हिसाब चुकाएं"
 msgid "settled up"
 msgstr "हिसाब बराबर"
 
-#: src/components/settings/prefControls.tsx:239
+#: src/components/settings/prefControls.tsx:244
 msgid "Shares"
 msgstr "हिस्से"
 
@@ -927,11 +927,11 @@ msgstr "हिस्से"
 msgid "Shopping"
 msgstr "शॉपिंग"
 
-#: src/components/settings/TabsEditor.tsx:230
+#: src/components/settings/TabsEditor.tsx:236
 msgid "Show {label}"
 msgstr "{label} दिखाएँ"
 
-#: src/components/settings/CategoriesEditor.tsx:223
+#: src/components/settings/CategoriesEditor.tsx:225
 msgid "Show {name}"
 msgstr "{name} दिखाएँ"
 
@@ -947,11 +947,11 @@ msgstr "छोटा"
 msgid "Someone"
 msgstr "कोई"
 
-#: src/components/settings/prefControls.tsx:381
+#: src/components/settings/prefControls.tsx:392
 msgid "Sort people by"
 msgstr "लोगों का क्रम"
 
-#: src/components/settings/prefControls.tsx:367
+#: src/components/settings/prefControls.tsx:378
 msgid "Spaced"
 msgstr "खाली जगह वाला"
 
@@ -972,7 +972,7 @@ msgstr "Splito - लोग"
 msgid "Splito's interface is built on Bluesky's social-app (MIT licence). Icons are Lucide (ISC licence). The Inter typeface is under the SIL Open Font License."
 msgstr "Splito का इंटरफ़ेस Bluesky के social-app (MIT लाइसेंस) पर बना है। आइकन Lucide (ISC लाइसेंस) के हैं। Inter टाइपफ़ेस SIL Open Font License के तहत है।"
 
-#: src/components/settings/prefControls.tsx:254
+#: src/components/settings/prefControls.tsx:259
 msgid "Splito's language. Names, notes and amounts you enter stay as you typed them."
 msgstr "Splito की भाषा। आपके लिखे नाम, नोट और रकम जैसे लिखे थे वैसे ही रहते हैं।"
 
@@ -980,11 +980,11 @@ msgstr "Splito की भाषा। आपके लिखे नाम, न�
 msgid "Stay"
 msgstr "ठहरना"
 
-#: src/components/settings/prefControls.tsx:420
+#: src/components/settings/prefControls.tsx:431
 msgid "Swipe left on Activity"
 msgstr "गतिविधि पर बाएँ स्वाइप"
 
-#: src/components/settings/prefControls.tsx:433
+#: src/components/settings/prefControls.tsx:444
 msgid "Swipe right on Activity"
 msgstr "गतिविधि पर दाएँ स्वाइप"
 
@@ -996,7 +996,7 @@ msgstr "सिस्टम"
 msgid "Tabs"
 msgstr "टैब"
 
-#: src/components/settings/sections.ts:42
+#: src/components/settings/sections.ts:44
 msgid "Tabs and defaults"
 msgstr "टैब और डिफ़ॉल्ट"
 
@@ -1004,29 +1004,29 @@ msgstr "टैब और डिफ़ॉल्ट"
 msgid "Text size"
 msgstr "टेक्स्ट का आकार"
 
-#: src/components/settings/prefControls.tsx:399
+#: src/components/settings/prefControls.tsx:410
 msgid "The starting point for the People filter; you can still switch it there."
 msgstr "लोग फ़िल्टर की शुरुआती स्थिति; आप वहाँ इसे फिर भी बदल सकते हैं।"
 
-#: src/components/settings/prefControls.tsx:175
+#: src/components/settings/prefControls.tsx:180
 msgid "The tab Splito opens on."
 msgstr "Splito खुलते समय यही टैब दिखेगा।"
 
-#: src/screens/Settings/index.tsx:92
+#: src/screens/Settings/index.tsx:99
 msgid "Theme, tabs, categories, language and every other setting go back to how Splito starts. Your people, groups and expenses stay as they are."
-msgstr "थीम, टैब, श्रेणियाँ, भाषा और बाकी हर सेटिंग Splito की शुरुआती सेटिंग पर लौट आएगी। आपके लोग, ग्रुप और खर्च जैसे हैं वैसे ही रहेंगे।"
+msgstr "थीम, टैब, श्रेणियाँ, भाषा और बाकी हर सेटिंग Splito की शुरुआती सेटिंग पर लौट आएगी। आपके लोग, समूह और खर्च जैसे हैं वैसे ही रहेंगे।"
 
 #: src/screens/AddExpense.tsx:36
 #: src/screens/StubScreen.tsx:36
 msgid "This screen is being built"
 msgstr "यह स्क्रीन बन रही है"
 
-#: src/screens/Settings/SettingsSection.tsx:172
+#: src/screens/Settings/SettingsSection.tsx:175
 msgid "This settings page doesn't exist"
 msgstr "यह सेटिंग्स पेज मौजूद नहीं है"
 
-#: src/components/settings/prefControls.tsx:286
-#: src/components/settings/prefControls.tsx:297
+#: src/components/settings/prefControls.tsx:291
+#: src/components/settings/prefControls.tsx:302
 msgid "Timezone"
 msgstr "समय क्षेत्र"
 
@@ -1050,27 +1050,27 @@ msgstr "वर्ज़न"
 msgid "Violet"
 msgstr "बैंगनी"
 
-#: src/components/settings/prefControls.tsx:321
+#: src/components/settings/prefControls.tsx:329
 msgid "Week starts on"
 msgstr "हफ़्ता शुरू होता है"
 
-#: src/components/settings/prefControls.tsx:460
+#: src/components/settings/prefControls.tsx:471
 msgid "When a payment to or from you is recorded"
 msgstr "जब आपको या आपसे कोई भुगतान दर्ज हो"
 
-#: src/components/settings/prefControls.tsx:472
+#: src/components/settings/prefControls.tsx:483
 msgid "When someone accepts your invite"
 msgstr "जब कोई आपका आमंत्रण स्वीकार करे"
 
-#: src/components/settings/prefControls.tsx:448
+#: src/components/settings/prefControls.tsx:459
 msgid "When someone adds an expense that includes you"
 msgstr "जब कोई ऐसा खर्च जोड़े जिसमें आप शामिल हों"
 
-#: src/components/settings/AccentPicker.tsx:147
+#: src/components/settings/AccentPicker.tsx:153
 msgid "White text is hard to read on this colour. A darker shade works better."
 msgstr "इस रंग पर सफ़ेद टेक्स्ट पढ़ना मुश्किल है। गहरा रंग बेहतर रहेगा।"
 
-#: src/components/settings/prefControls.tsx:342
+#: src/components/settings/prefControls.tsx:353
 msgid "Year first"
 msgstr "पहले साल"
 
@@ -1107,6 +1107,6 @@ msgstr "आपका डेटा"
 msgid "Your data is safe on this device."
 msgstr "आपका डेटा इस डिवाइस पर सुरक्षित है।"
 
-#: src/components/settings/prefControls.tsx:137
+#: src/components/settings/prefControls.tsx:140
 msgid "Your device asks for reduced motion, so Splito keeps movement to gentle fades whatever you pick here."
 msgstr "आपका डिवाइस कम मोशन माँगता है, इसलिए आप यहाँ जो भी चुनें, Splito सिर्फ़ हल्के फ़ेड दिखाएगा।"

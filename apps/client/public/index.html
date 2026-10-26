@@ -23,6 +23,8 @@
       @media (prefers-color-scheme: dark) { body { background: #000000; } }
       #root { display: flex; }
       button, input, textarea { font: inherit; line-height: inherit; }
+      /* As Bluesky's src/style.css: TextField draws its own focus ring. */
+      input:focus, textarea:focus { outline: 0; }
     </style>
   </head>
   <body>

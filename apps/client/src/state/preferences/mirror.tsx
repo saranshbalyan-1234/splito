@@ -1,8 +1,10 @@
 import {useEffect} from 'react'
+import {ReducedMotionConfig, ReduceMotion} from 'react-native-reanimated'
 import {getPref, type PrefValue} from '@splito/sync'
 
 import {getFontScale, useAlf} from '#/alf'
 import {useStore} from '#/data/hooks'
+import {useShouldReduceMotion} from '#/motion/useShouldReduceMotion'
 import {type Device, device} from '#/storage'
 
 /** The Text size choices, as ALF font scale steps (Bluesky's 1/16 increments). */
@@ -30,8 +32,8 @@ function put<K extends keyof Device>(key: K, value: Device[K]) {
 }
 
 /**
- * Copies the preferences that shape the first frame (theme, accent, text
- * size, density, home tab, haptics) from the preferences registry into
+ * Applies app-wide preferences. Copies the ones that shape the first frame
+ * (theme, accent, text size, density, home tab, haptics) from the registry into
  * synchronous device storage after every store commit. The registry stays
  * the source of truth; the copy only exists so the next launch paints right
  * before the local store opens.
@@ -71,5 +73,15 @@ export function PrefsMirror() {
     }
   }, [store, setFontScale])
 
-  return null
+  /*
+   * The Animations preference (or the OS setting) also reaches every
+   * Reanimated animation, Bluesky's included: reduced and off land them on
+   * their final frame.
+   */
+  const shouldReduceMotion = useShouldReduceMotion()
+  return (
+    <ReducedMotionConfig
+      mode={shouldReduceMotion ? ReduceMotion.Always : ReduceMotion.System}
+    />
+  )
 }

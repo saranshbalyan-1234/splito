@@ -93,6 +93,22 @@ test('hiding Groups removes it from the bar and sidebar; Settings stays reachabl
   await open(page, '/groups', 'screen-groups')
 })
 
+test('the arrow buttons reorder the sidebar tabs', async ({page}) => {
+  await page.setViewportSize(LAPTOP)
+  await open(page, '/settings/defaults', 'screen-settings-section')
+  const top = async (tab: string) =>
+    (await page.getByTestId(`tab-${tab}`).boundingBox())!.y
+  expect(await top('people')).toBeLessThan(await top('groups'))
+  await page.getByTestId('tabs-up-groups').click()
+  await expect
+    .poll(async () => (await top('groups')) < (await top('people')))
+    .toBe(true)
+  await page.getByTestId('reset-tabs').click()
+  await expect
+    .poll(async () => (await top('people')) < (await top('groups')))
+    .toBe(true)
+})
+
 test('the last visible tab cannot be hidden', async ({page}) => {
   await open(page, '/settings/defaults', 'screen-settings-section')
   for (const tab of ['groups', 'analytics', 'activity']) {
@@ -165,9 +181,16 @@ test('Reset restores one default, and Reset all restores every default', async (
   await expect(page.getByTestId('reset-theme')).toHaveCount(0)
 })
 
-test('categories: add one, then hide it', async ({page}) => {
+test('categories: rename one, add one, then hide it', async ({page}) => {
   await open(page, '/settings/categories', 'screen-settings-section')
+  await page.getByTestId('category-edit-food').click()
+  await expect(page.getByTestId('category-name')).toHaveValue('Food')
+  await page.getByTestId('category-name').fill('Eating out')
+  await page.getByTestId('category-save').click()
+  await expect(page.getByTestId('category-food')).toContainText('Eating out')
+
   await page.getByTestId('category-add').click()
+  await expect(page.getByTestId('category-name')).toHaveValue('')
   await page.getByTestId('category-name').fill('Rent')
   await page.getByTestId('category-icon-house').click()
   await page.getByTestId('category-save').click()

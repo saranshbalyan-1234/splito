@@ -6,7 +6,7 @@ import {Trans, useLingui} from '@lingui/react/macro'
 import {useHaptics} from '#/lib/haptics'
 import {useA11y} from '#/state/a11y'
 import {useMutationCtx} from '#/data/hooks'
-import {atoms as a, useTheme} from '#/alf'
+import {atoms as a, useBreakpoints, useTheme} from '#/alf'
 import {Button, ButtonIcon, ButtonText} from '#/components/Button'
 import {useDialogControl} from '#/components/Dialog'
 import {SortableList} from '#/components/DraggableList'
@@ -37,13 +37,15 @@ export function CategoriesEditor() {
   const haptics = useHaptics()
   const {newId} = useMutationCtx()
   const {screenReaderEnabled} = useA11y()
+  const {gtMobile} = useBreakpoints()
   const pref = usePrefControl('categories')
   const dialog = useDialogControl()
   const [editing, setEditing] = useState<Category | undefined>()
 
   if (!pref.value) return null
   const categories = [...pref.value].sort((x, y) => x.order - y.order)
-  const showArrows = IS_WEB || screenReaderEnabled
+  // Keyboard users on wide web and screen readers get arrows; touch drags.
+  const showArrows = (IS_WEB && gtMobile) || screenReaderEnabled
 
   const save = (next: Category[]) =>
     void pref.set(next.map((c, order) => ({...c, order})))
@@ -126,7 +128,6 @@ export function CategoriesEditor() {
       </View>
 
       <CategoryDialog
-        key={editing?.id ?? 'new'}
         control={dialog}
         category={editing}
         onCategorySaved={draft => {
