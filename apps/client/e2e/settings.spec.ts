@@ -161,7 +161,7 @@ test('Reset restores one default, and Reset all restores every default', async (
   await expect(page.getByTestId('reset-density')).toHaveCount(0)
 
   await page.getByTestId('theme-dark').click()
-  await expect(page.locator('html')).toHaveClass(/theme--dark/)
+  await expect(page.locator('html')).toHaveClass(/theme--dim/)
   await page.getByTestId('textScale-1.125').click()
   await expect(page.getByTestId('textScale-1.125')).toHaveAttribute(
     'aria-checked',

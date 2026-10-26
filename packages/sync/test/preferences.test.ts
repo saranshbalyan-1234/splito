@@ -102,10 +102,10 @@ test('categories rename keeps id', async () => {
 test('categories with duplicate ids rejected', async () =>
   expect(setPref(s, ctx, 'categories', [DEFAULT_CATEGORIES[0]!, DEFAULT_CATEGORIES[0]!])).rejects.toThrow('INVALID_PREF'))
 
-test('dark theme: Bluesky dim or dark, blackish dark by default', async () => {
-  expect(await getPref(s, 'darkTheme')).toBe('dark')
-  await setPref(s, ctx, 'darkTheme', 'dim')
+test('dark theme: Bluesky dim or dark, Dim by default (owner rule 14)', async () => {
   expect(await getPref(s, 'darkTheme')).toBe('dim')
+  await setPref(s, ctx, 'darkTheme', 'dark')
+  expect(await getPref(s, 'darkTheme')).toBe('dark')
   await expect(setPref(s, ctx, 'darkTheme', 'light' as never)).rejects.toThrow('INVALID_PREF')
 })
 

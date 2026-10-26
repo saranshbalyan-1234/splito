@@ -60,7 +60,7 @@ function def<T>(key: string, group: PrefGroup, scope: PrefDef<T>['scope'], label
 export const PREFS = {
   theme: def('theme', 'appearance', 'account', 'Theme', 'system', oneOf('system', 'light', 'dark')),
   /** Which dark theme `dark` (and `system` at night) uses: Bluesky's dim or its blackish dark. */
-  darkTheme: def('darkTheme', 'appearance', 'account', 'Dark theme', 'dark', oneOf('dim', 'dark')),
+  darkTheme: def('darkTheme', 'appearance', 'account', 'Dark theme', 'dim', oneOf('dim', 'dark')),
   accent: def('accent', 'appearance', 'account', 'Accent colour', '#006AFF', (v): v is string => typeof v === 'string' && HEX.test(v)),
   textScale: def('textScale', 'appearance', 'device', 'Text size', 1, (v): v is number => typeof v === 'number' && v >= 0.85 && v <= 1.3),
   density: def('density', 'appearance', 'account', 'List density', 'comfortable', oneOf('comfortable', 'compact')),

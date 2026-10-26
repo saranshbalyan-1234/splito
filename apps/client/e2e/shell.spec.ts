@@ -240,11 +240,11 @@ test.describe('drawer: Bluesky drawer from the header avatar', () => {
     await expect(page.locator('html')).toHaveClass(/theme--light/)
     await on(page, 'screen-groups', 'header-avatar').click()
     await page.getByTestId('drawer-theme').click()
-    await expect(page.locator('html')).toHaveClass(/theme--dark/)
+    await expect(page.locator('html')).toHaveClass(/theme--dim/)
     // It's the `theme` preference, so it survives a reload.
     await page.reload()
     await expect(page.getByTestId('screen-groups')).toBeVisible()
-    await expect(page.locator('html')).toHaveClass(/theme--dark/)
+    await expect(page.locator('html')).toHaveClass(/theme--dim/)
     await on(page, 'screen-groups', 'header-avatar').click()
     await expect(page.getByTestId('drawer-theme')).toHaveAttribute('aria-checked', 'true')
     await page.getByTestId('drawer-theme').click()

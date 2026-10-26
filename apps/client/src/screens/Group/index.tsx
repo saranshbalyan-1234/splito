@@ -205,14 +205,21 @@ export function GroupScreen() {
         if (!Object.values(net).some(v => v !== ZERO)) return []
         const plan = planSettlement(net, rules, 'direct')
         if (plan.status === 'infeasible') return []
-        return plan.transfers.map(x => ({
-          type: 'owe' as const,
-          key: `owe-${currency}-${x.from}-${x.to}`,
-          currency,
-          from: x.from,
-          to: x.to,
-          amount: x.amount,
-        }))
+        // As Settle up: biggest payments first, then by payer, so the order never depends on member ids.
+        return [...plan.transfers]
+          .sort(
+            (x, y) =>
+              Number(y.amount > x.amount) - Number(x.amount > y.amount) ||
+              (names.get(x.from) ?? '').localeCompare(names.get(y.from) ?? ''),
+          )
+          .map(x => ({
+            type: 'owe' as const,
+            key: `owe-${currency}-${x.from}-${x.to}`,
+            currency,
+            from: x.from,
+            to: x.to,
+            amount: x.amount,
+          }))
       })
       items = [
         ...Object.entries(nets).flatMap(([currency, net]) => [

@@ -32,6 +32,6 @@ export function Provider({children}: React.PropsWithChildren<{}>) {
 /** Theme mode comes from the `theme` and `darkTheme` preferences, mirrored to device storage for first paint (see `#/state/preferences/mirror`). */
 export function useThemePrefs() {
   const [colorMode = 'system'] = useStorage(device, ['colorMode'])
-  const [darkTheme = 'dark'] = useStorage(device, ['darkTheme'])
+  const [darkTheme = 'dim'] = useStorage(device, ['darkTheme'])
   return {colorMode, darkTheme}
 }
