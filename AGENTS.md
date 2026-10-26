@@ -137,3 +137,7 @@ Every file copied or adapted from upstream starts with
 `// Adapted from <repo>@<sha> (MIT) - <upstream path>` and gets a row in
 `docs/REUSE_MAP.md`. Never copy Bluesky's licensed icon glyphs, illustrations,
 logos or `assets/images/`.
+
+## Latest owner UI decisions (binding; newest wins; apply even if your task text says otherwise)
+
+1. **Avatar opens Bluesky's drawer, not a dropdown.** The top-right avatar (web and phones) opens a side drawer copied from Bluesky `src/view/shell/Drawer.tsx` (MIT, header + adaptation rules as usual): Bluesky's drawer layout, spacing, item rows, header block and footer, sliding in from the RIGHT edge (the trigger is top-right), scrim tap and swipe (native, Gesture Handler) to close, Bluesky's open/close animation, focus trap and Escape on web. Header: avatar, name, "Saved on this device" / sync status, link to Profile. Items (icon + label, Bluesky drawer style): People, Groups, Analytics, Activity, Profile, Settings; then Dark theme toggle; then Help and About. The previous avatar dropdown menu is removed. Keep testID `header-avatar` for the trigger and add `drawer` for the panel. (Owner, 2026-10-26: "It should open the drawer like Bluesky where all menu appears like the hamburger".)
