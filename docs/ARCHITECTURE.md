@@ -1159,6 +1159,13 @@ labelled sidebar); **wide** = web 1300 px and up (Bluesky `gtTablet`, right colu
   different, make them same". *Why:* "make notification
   as activity and move to bottom". *Where:* `view/shell/bottom-bar/`, `view/shell/desktop/LeftNav.tsx`,
   `navigation/Drawer.tsx`.
+- **Settings > Navigation lets the user choose the phone bottom bar from every sidebar item.** All items of the
+  shared list (Home, Search, Groups, Analytics, Ask Splito, Activity, Settings) are offered, each with a toggle
+  and a drag handle (Bluesky's reorderable list): what is on and its order is the bottom bar (2 to 5 tabs, as in
+  Bluesky; Home cannot be turned off; a sixth is refused with a short note). Items not in the bar stay in the
+  drawer. Default bar: Home, Search, Groups, Analytics, Activity. Desktop and rail always show the full list.
+  "Reset" restores the default. Stored in the existing `tabs` preference. *Why:* "all of the sidebar options to
+  be available in settings to be added in navigation bar".
 - **Activity's route is `/activity`; `/notifications` redirects to it.**
 - **Pushed pages** (Person, Group, Settle, Expense, Profile, Settings and its sections, Add friend, Create
   group) show Back in the header; top-level pages (People, Groups, Analytics, Activity) show the avatar. This
@@ -1704,6 +1711,7 @@ Every owner decision, in the order it was made (all 2026-10-26). "Replaced" name
 | 67 | "analytics group selection needs to be rethought, one dropdown and one selection doesn't make sense" | One scope chip + one checklist sheet (All / Non-group / each group); Include groups toggle removed | § 26.16 | Group dropdown + "Include groups" toggle |
 | 68 | "add multiple currency examples for everything, like group (if logically makes sense or group should have one currency), friends" | Group currency is only a default; any currency per expense; everything shown per currency, never summed; demo data multi-currency everywhere | § 26.13 | - |
 | 69 | "why i see a search section on sidebar but only on web, whats the placement for ai chat, and i need on both platforms" | Search tab on phones + Ask Splito chip/suggestions in Search; both on web and mobile; nav unification and Ask Splito built next, right after the audit fixes | §§ 26.3, 26.19 | Ask Splito last in the queue |
+| 70 | "all of the sidebar options to be available in settings to be added in navigation bar" | Settings > Navigation: every sidebar item can go in the phone bottom bar (2-5 tabs, reorder, Home fixed) | § 26.3 | Fixed bottom bar; Custom navigation offered only some tabs |
 
 New decisions follow § 0 rule 9: rewrite the rule in its topic so only the current truth remains, then add a
 row here.
