@@ -2085,12 +2085,13 @@ Exact numbers from the ledger, never illustrative.
 
 Spending over time, by category, per person and group, paid vs share, filters, CSV.
 
-- **Effort** M · **Impact** 8 · **Backend** no · **Status** done (built and tested on ui/r1-polish-2 / ui/preview-latest, unmerged) · **Deps** F-301
+- **Effort** M · **Impact** 8 · **Backend** no · **Status** in progress (built and tested on ui/r1-polish-2 / ui/preview-latest, unmerged) · **Deps** F-301
 - **Prefs** -
 - **Acceptance**
   1. One chart per currency, never mixed.
   2. CSV export matches the on-screen filter.
   3. Charts and a table view, filtered by period, currency and group; the chart / table toggle sits in that filter row, never in the header. The header holds Ask Splito (F-2301) and an overflow with Export CSV. A converted view labels the rate used.
+  9. Scope is one chip + one "Show expenses from" checklist sheet (All, Non-group expenses, each group); no separate group dropdown or "Include groups" toggle; By-group chart taps narrow the scope; last scope remembered per device (§ 26.16, decision 67).
 
 ### F-1302 My Spending measure everywhere `spec v1 (extended)`
 
@@ -3571,6 +3572,7 @@ Every owner request from ARCHITECTURE § 26 (decision log rows 47-63) that was n
 | 31 | F-618 | Add friend by email or mobile, with a Splito check and consent | Add friend sheet, People requests, directory client (finish feat/friend-invites) | L | 9 | F-601, F-205 |
 | 32 | F-619 | Invite link and QR with limits | screens/Invites (finish feat/friend-invites) | M | 8 | F-618, F-603 |
 | 33 | F-602 | Add friend from device contacts | contacts picker (finish feat/friend-invites) | S | 7 | F-618 |
+| 33b | F-1301 | Analytics scope: one chip + checklist sheet (§ 26.16) | screens/Analytics FilterBar + useReport | S | 8 | merge row 30 |
 | 33a | F-225 | Sign in / Create account: Bluesky LoggedOut, Login and Signup screens copied (§ 26.15) | screens/Login, screens/Signup, view/com/auth | M | 7 | merge row 30 |
 | 34 | F-226 | Feedback: Send feedback and "Your feedback" | Settings Support + feedback sheet (finish feat/feedback) | M | 7 | F-201, F-205 |
 | 35 | F-222 | One navigation list for sidebar and drawer, Home label and title | navigationItems + NavFooterLinks, drawer header | S | 8 | F-201, F-204 |

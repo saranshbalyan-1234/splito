@@ -1487,6 +1487,15 @@ built yet.
   group; the chart/table toggle sits in that filter row, never in the header; the header's one action is
   Export CSV. One chart per currency, or converted with the rate labelled. *Why:* "analytics also needed, with
   graphs and all". *Where:* `screens/Analytics`, § 25 "Analytics and export", spec § 4.
+- **One scope control, not a dropdown plus a toggle.** The filter row has a single "scope" chip whose label
+  says what is counted: "Everything" (default), "Non-group only", "Goa trip", "Goa trip + 2", "3 groups",
+  "Non-group + 2 groups". Tapping it opens one sheet (bottom drawer on phones, popup on desktop) titled "Show
+  expenses from" with one checklist: an "All" row at the top, then "Non-group expenses" (direct with friends),
+  then every group (active first, archived under a fold; search when more than 8), each with its icon; Cancel /
+  Apply in the footer, Apply disabled when nothing is ticked. The separate "Include groups" toggle is gone.
+  Tapping a group in the "By group" chart narrows the scope to that group. The last scope is remembered per
+  device (`analyticsScope`, device pref). *Why:* "analytics group selection needs to be rethought, one dropdown
+  and one selection doesn't make sense".
 
 ### 26.17 Desktop right column (wide, 1300 px and up)
 
@@ -1680,6 +1689,7 @@ Every owner decision, in the order it was made (all 2026-10-26). "Replaced" name
 | 64 | "add a lot of demo data to my account" | Large deterministic demo dataset, `?demo=large` + Settings > Data (dev/e2e only), removable | § 26.1 | Small `?demo=1` set only |
 | 65 | "there is signin page already there in bluesky, use that" | Sign in / Create account copy Bluesky LoggedOut + Login + Signup screens | § 26.15 | Own method-picker sign-in screen (email/phone code, Apple/Google) |
 | 66 | "where is the ai chat placement, and why i see a new search, its also not visible on mobile" | Search becomes the second phone bottom-bar tab (Bluesky); Ask Splito placement unchanged (sidebar/drawer, Analytics header, Search row) | §§ 26.3, 26.19 | Search only in the drawer on phones |
+| 67 | "analytics group selection needs to be rethought, one dropdown and one selection doesn't make sense" | One scope chip + one checklist sheet (All / Non-group / each group); Include groups toggle removed | § 26.16 | Group dropdown + "Include groups" toggle |
 
 New decisions follow § 0 rule 9: rewrite the rule in its topic so only the current truth remains, then add a
 row here.
