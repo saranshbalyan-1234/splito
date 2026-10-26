@@ -20,7 +20,8 @@ export type SplitInput =
   /** Integer basis points (1% = 100), summing to 10000. */
   | {mode: 'percent'; basisPoints: Record<string, number>}
   | {mode: 'shares'; shares: Record<string, number>}
-  | {mode: 'items'; items: Array<{id: string; name?: string; amount: bigint; participants: ItemParticipant[]}>; tax: bigint; tip: bigint; discount: bigint}
+  /** A bill of items; tax, tip, service charge (optional, older records have none) and discount follow each person's item subtotal. */
+  | {mode: 'items'; items: Array<{id: string; name?: string; amount: bigint; participants: ItemParticipant[]}>; tax: bigint; tip: bigint; service?: bigint; discount: bigint}
   /** Equal with adjustments: each adjustment is added to (or taken from) that person, the rest is split equally. */
   | {mode: 'adjusted'; participants: string[]; adjustments: Record<string, bigint>}
 
@@ -69,29 +70,55 @@ export function computeShares(total: bigint, split: SplitInput): Record<string, 
       return shares
     }
     case 'items': {
-      const adjustment = split.tax + split.tip - split.discount
-      if (sum(split.items.map(i => i.amount)) + adjustment !== total) throw new DomainError('TOTAL_MISMATCH')
-      const subtotals: Record<string, bigint> = {}
-      for (const item of split.items) {
-        if (item.participants.length === 0) throw new DomainError('UNASSIGNED_ITEM')
-        const weights = item.participants.map(p => {
-          const w = participantWeight(p)
-          if (!Number.isInteger(w) || w <= 0) throw new DomainError('NON_POSITIVE_WEIGHT')
-          return {id: participantId(p), weight: BigInt(w)}
-        })
-        for (const [id, v] of Object.entries(allocate(item.amount, weights)))
-          subtotals[id] = (subtotals[id] ?? 0n) + v
-      }
-      if (adjustment !== 0n) {
-        // Tax, tip and discount follow each person's item subtotal.
-        const weights = Object.entries(subtotals)
-          .filter(([, v]) => v !== 0n)
-          .map(([id, v]) => ({id, weight: v < 0n ? -v : v}))
-        for (const [id, v] of Object.entries(allocate(adjustment, weights))) subtotals[id] = subtotals[id]! + v
-      }
-      return subtotals
+      const {subtotals, extras} = itemBreakdown(split)
+      if (sum(split.items.map(i => i.amount)) + itemsAdjustment(split) !== total) throw new DomainError('TOTAL_MISMATCH')
+      const shares = {...subtotals}
+      for (const [id, v] of Object.entries(extras)) shares[id] = (shares[id] ?? 0n) + v
+      return shares
     }
   }
+}
+
+type ItemsSplit = Extract<SplitInput, {mode: 'items'}>
+
+/** Tax + tip + service charge - discount: what is spread over the item subtotals. */
+export function itemsAdjustment(split: ItemsSplit): bigint {
+  return split.tax + split.tip + (split.service ?? 0n) - split.discount
+}
+
+/**
+ * Who owes what of an itemised bill, item by item: `items[itemId][personId]`
+ * splits each item by its portions; `subtotals` adds them up per person;
+ * `extras` spreads tax, tip, service and discount by those subtotals. A
+ * person's share is their subtotal plus their extras, exactly.
+ */
+export function itemBreakdown(split: ItemsSplit): {
+  items: Record<string, Record<string, bigint>>
+  subtotals: Record<string, bigint>
+  extras: Record<string, bigint>
+} {
+  const items: Record<string, Record<string, bigint>> = {}
+  const subtotals: Record<string, bigint> = {}
+  for (const item of split.items) {
+    assertInRange(item.amount)
+    if (item.participants.length === 0) throw new DomainError('UNASSIGNED_ITEM')
+    const weights = item.participants.map(p => {
+      const w = participantWeight(p)
+      if (!Number.isInteger(w) || w <= 0) throw new DomainError('NON_POSITIVE_WEIGHT')
+      return {id: participantId(p), weight: BigInt(w)}
+    })
+    items[item.id] = allocate(item.amount, weights)
+    for (const [id, v] of Object.entries(items[item.id]!)) subtotals[id] = (subtotals[id] ?? 0n) + v
+  }
+  const adjustment = itemsAdjustment(split)
+  let extras: Record<string, bigint> = {}
+  if (adjustment !== 0n) {
+    const weights = Object.entries(subtotals)
+      .filter(([, v]) => v !== 0n)
+      .map(([id, v]) => ({id, weight: v < 0n ? -v : v}))
+    extras = allocate(adjustment, weights)
+  }
+  return {items, subtotals, extras}
 }
 
 /**
