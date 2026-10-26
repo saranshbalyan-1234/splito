@@ -1,4 +1,4 @@
-import {useEffect} from 'react'
+import {useEffect, useRef} from 'react'
 import {createNavigationContainerRef} from '@react-navigation/native'
 
 import {type RootStackParams} from '#/lib/routes/types'
@@ -15,14 +15,17 @@ const STEP_MS = 8000
  */
 export function DevTour() {
   const setDrawerOpen = useSetDrawerOpen()
+  /* Read through a ref: the setter's identity changes with drawer state, which must not restart the tour. */
+  const setDrawerOpenRef = useRef(setDrawerOpen)
+  setDrawerOpenRef.current = setDrawerOpen
   useEffect(() => {
     if (!(__DEV__ && process.env.EXPO_PUBLIC_TOUR === '1')) return
     const go = (name: string, params?: object) => () =>
       (navigationRef.navigate as (n: string, p?: object) => void)(name, params)
     const steps = [
       go('Tabs', {screen: 'People'}),
-      () => setDrawerOpen(true),
-      () => setDrawerOpen(false),
+      () => setDrawerOpenRef.current(true),
+      () => setDrawerOpenRef.current(false),
       go('Tabs', {screen: 'Groups'}),
       go('Tabs', {screen: 'Analytics'}),
       go('Notifications'),
@@ -36,6 +39,6 @@ export function DevTour() {
       if (i >= steps.length) clearInterval(id)
     }, STEP_MS)
     return () => clearInterval(id)
-  }, [setDrawerOpen])
+  }, [])
   return null
 }
