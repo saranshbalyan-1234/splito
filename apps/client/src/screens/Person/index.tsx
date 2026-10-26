@@ -4,7 +4,13 @@ import {LayoutAnimationConfig} from 'react-native-reanimated'
 import {plural} from '@lingui/core/macro'
 import {Trans, useLingui} from '@lingui/react/macro'
 import {type RouteProp, useNavigation, useRoute} from '@react-navigation/native'
-import {DomainError, personSummary, sumMinor, ZERO} from '@splito/domain'
+import {
+  DomainError,
+  isSettledBalance,
+  personSummary,
+  sumMinor,
+  ZERO,
+} from '@splito/domain'
 import {
   deletePerson,
   type Entity,
@@ -189,8 +195,9 @@ export function PersonScreen() {
   )
 
   const totals = summary?.byCurrency ?? {}
+  // Open while any part is (audit M10): owed directly and owing in a group is not settled.
   const openCurrencies = Object.keys(totals)
-    .filter(c => totals[c]!.total !== ZERO)
+    .filter(c => !isSettledBalance(totals[c]!))
     .sort()
   const hasOpenBalance = openCurrencies.length > 0
   /* What the hero can say that the balance card does not: shared groups and a UPI id. */

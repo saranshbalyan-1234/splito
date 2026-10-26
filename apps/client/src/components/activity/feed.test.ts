@@ -10,6 +10,7 @@ import {
   markAllRead,
   setHidden,
   setRead,
+  writeOffParties,
 } from './feed'
 
 const at = (day: number, hour: number) => new Date(2026, 9, day, hour).getTime()
@@ -90,4 +91,22 @@ test('daysAgo counts calendar days, not 24-hour periods', () => {
   expect(daysAgo(at(19, 1), now)).toBe(7)
   // Across the end of a month.
   expect(daysAgo(new Date(2026, 8, 30, 12).getTime(), now)).toBe(26)
+})
+
+/* F-113 m5: a write-off row is told from who recorded it. */
+test('write-off rows name the person the actor called it even with', () => {
+  // I owe Bob and I call it even: the row is mine, with Bob.
+  expect(writeOffParties({from: 'me', to: 'bob'}, 'me')).toEqual({
+    kind: 'pair',
+    other: 'bob',
+  })
+  // Bob forgives me on his device: Bob's row, with me.
+  expect(writeOffParties({from: 'me', to: 'bob'}, 'bob')).toEqual({
+    kind: 'pair',
+    other: 'me',
+  })
+  // Riya records it for the two of us.
+  expect(writeOffParties({from: 'me', to: 'bob'}, 'riya')).toEqual({
+    kind: 'third',
+  })
 })

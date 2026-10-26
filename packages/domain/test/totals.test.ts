@@ -15,9 +15,10 @@ describe('balanceTotals', () => {
       {currency: 'INR', owed: 800n, owe: 200n, net: 600n},
     ])
   })
-  test('a person settled in a currency adds nothing', () =>
+  // F-113 M10 (deliberate change): parts that net to zero are open both ways, never "settled".
+  test('a person owed one way in a group and the other way directly counts both ways', () =>
     expect(balanceTotals(personSummary([row('a', 'g', 'INR', 100n), row('a', null, 'INR', -100n)], {includeGroups: true}))).toEqual([
-      {currency: 'INR', owed: 0n, owe: 0n, net: 0n},
+      {currency: 'INR', owed: 100n, owe: 100n, net: 0n},
     ]))
   test('no people, no totals', () => expect(balanceTotals([])).toEqual([]))
 })

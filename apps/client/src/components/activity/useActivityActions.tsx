@@ -133,7 +133,14 @@ export function useActivityActions(feed: ReturnType<typeof useActivityFeed>) {
     )
   }
 
-  return {isAvailable, info, perform, markEverythingRead, unhideAll, answerRequest}
+  return {
+    isAvailable,
+    info,
+    perform,
+    markEverythingRead,
+    unhideAll,
+    answerRequest,
+  }
 }
 
 export type ActivityActions = ReturnType<typeof useActivityActions>

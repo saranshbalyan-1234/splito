@@ -41,8 +41,10 @@ import {AmountField, DetailRow, FieldError, PlainInput} from './fields'
 import {
   evaluateForm,
   type ExpenseForm,
+  formPayers,
   type FormEvaluation,
   hasContent,
+  withPeople,
 } from './form'
 import {CircleCheck_Stroke2_Corner0_Rounded as CheckIcon} from '#/components/icons/CircleCheck'
 import {Warning_Stroke2_Corner0_Rounded as WarningIcon} from '#/components/icons/Warning'
@@ -158,22 +160,7 @@ export function ExpenseComposer({
   const candidates = members ?? [ctx.actor, ...friends]
 
   const setPeople = (ids: string[]) =>
-    update(f => {
-      const next = [
-        ...candidates.filter(id => ids.includes(id)),
-        ...ids.filter(id => !candidates.includes(id)),
-      ]
-      return {
-        ...f,
-        people: next,
-        payer: next.includes(f.payer) ? f.payer : (next[0] ?? ctx.actor),
-        excluded: f.excluded.filter(p => next.includes(p)),
-        items: f.items.map(i => ({
-          ...i,
-          people: i.people.filter(p => next.includes(p)),
-        })),
-      }
-    })
+    update(f => withPeople(f, ids, candidates))
 
   const selectGroup = (groupId: string | null) =>
     update(f => {
@@ -379,6 +366,8 @@ export function ExpenseComposer({
             }
             candidates={candidates}
             selected={form.people}
+            lockedIds={formPayers(form)}
+            lockedNote={l`Paid · change who paid to remove`}
             allowNew={!group}
             showPending={!group}
             onChange={setPeople}

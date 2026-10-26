@@ -1,4 +1,6 @@
 import {
+  balanceSides,
+  isSettledBalance,
   type LedgerRecord,
   magnitude,
   type PersonSummary,
@@ -37,7 +39,7 @@ export function sortFriends<T extends FriendRow>(
   const size = (row: FriendRow) =>
     magnitude(row.summary?.byCurrency[currency]?.total ?? ZERO)
   const isOpen = (row: FriendRow) =>
-    Object.values(row.summary?.byCurrency ?? {}).some(c => c.total !== ZERO)
+    Object.values(row.summary?.byCurrency ?? {}).some(c => !isSettledBalance(c))
   const byName = (x: FriendRow, y: FriendRow) => x.name.localeCompare(y.name)
   return [...rows].sort((x, y) => {
     if (sort === 'amount') {
@@ -64,7 +66,8 @@ export type FriendFilter = {
  * The People filter applied. A single currency also trims each summary to
  * that currency, so the rows and the totals above them show only it.
  * `owesYou` / `youOwe` keep a friend with any balance that way (a friend can
- * be both, in different currencies); `settled` keeps those with none open.
+ * be both, in different currencies, or directly and in a group); `settled`
+ * keeps those with every part zero.
  */
 export function filterFriends<T extends FriendRow>(
   rows: T[],
@@ -77,12 +80,14 @@ export function filterFriends<T extends FriendRow>(
       if (!all[currency]) return []
       summary = {...row.summary!, byCurrency: {[currency]: all[currency]}}
     }
-    const totals = Object.values(summary?.byCurrency ?? {}).map(c => c.total)
+    // Each way part by part, never netted across direct and groups (audit M10).
+    const sides = Object.values(summary?.byCurrency ?? {}).map(balanceSides)
     const keep =
       show === 'all' ||
-      (show === 'owesYou' && totals.some(v => v > ZERO)) ||
-      (show === 'youOwe' && totals.some(v => v < ZERO)) ||
-      (show === 'settled' && totals.every(v => v === ZERO))
+      (show === 'owesYou' && sides.some(v => v.owed > ZERO)) ||
+      (show === 'youOwe' && sides.some(v => v.owe > ZERO)) ||
+      (show === 'settled' &&
+        sides.every(v => v.owed === ZERO && v.owe === ZERO))
     return keep ? [{...row, summary}] : []
   })
 }

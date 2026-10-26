@@ -7,8 +7,8 @@ import {
   compareMinor,
   fnv1a64,
   formatAmount,
-  type Plan,
-  planSettlement,
+  type DirectPlan,
+  directPlan,
   repaymentFlow,
   sumMinor,
   type Transfer,
@@ -41,7 +41,7 @@ import {MoneyArrow, useMoneyStyle} from '#/components/MoneyDirection'
 import {Shimmer} from '#/motion/Shimmer'
 import {TransferRow} from './components/TransferRow'
 
-type CurrencyPlan = {currency: string; plan: Plan | null}
+type CurrencyPlan = {currency: string; plan: DirectPlan | null}
 type Snapshot = {hash: string; plans: CurrencyPlan[]}
 
 type Item =
@@ -57,9 +57,11 @@ type Item =
   | {type: 'settled'; key: string; currency: string}
 
 /**
- * Settle up a group: per currency, the direct plan from `planSettlement`
+ * Settle up a group: per currency, the group's plan from `directPlan`
  * over the members' nets and the group's rules (spec v1: direct only;
- * routing through other members waits for their consent, v2). The plan
+ * routing through other members waits for their consent, v2). When the
+ * rules leave no plan, the plan goes outside them and says so, as the
+ * group's Balances tab and People do (audit M11). The plan
  * shown is a snapshot with a hash; when expenses, payments, rules or members
  * change it is marked stale until the user updates it. A plan is never a
  * payment: each transfer is recorded only when the user says it happened.
@@ -94,7 +96,7 @@ export function SettleScreen() {
       ([currency, net]) => ({
         currency,
         plan: Object.values(net).some(v => v !== ZERO)
-          ? planSettlement(net, rules, 'direct')
+          ? directPlan(net, rules)
           : null,
       }),
     )
@@ -159,22 +161,6 @@ export function SettleScreen() {
         },
         {type: 'settled', key: `settled-${currency}`, currency},
       ]
-    if (plan.status === 'infeasible')
-      return [
-        {
-          type: 'currency',
-          key: `cur-${currency}`,
-          currency,
-          count: null,
-          total: null,
-        },
-        {
-          type: 'infeasible',
-          key: `stuck-${currency}`,
-          currency,
-          stuck: plan.stuck,
-        },
-      ]
     return [
       {
         type: 'currency',
@@ -185,6 +171,17 @@ export function SettleScreen() {
         total:
           shown.length > 1 ? sumMinor(plan.transfers.map(x => x.amount)) : null,
       },
+      /* The rules leave no plan: this one goes outside them, and says so (audit M11). */
+      ...(plan.stuck.length > 0
+        ? [
+            {
+              type: 'infeasible' as const,
+              key: `stuck-${currency}`,
+              currency,
+              stuck: plan.stuck,
+            },
+          ]
+        : []),
       // Biggest payments first, then by payer, so the order never depends on member ids.
       ...[...plan.transfers]
         .sort(
@@ -394,20 +391,21 @@ export function SettleScreen() {
               case 'infeasible':
                 return (
                   <View style={[a.px_lg, a.pb_lg]}>
-                    <Admonition.Outer type="error" style={[a.gap_sm]}>
+                    <Admonition.Outer type="warning" style={[a.gap_sm]}>
                       <Admonition.Row>
                         <Admonition.Icon />
                         <Admonition.Content>
                           <Admonition.Text
                             style={[a.text_md, a.font_semi_bold]}>
-                            <Trans>No direct plan works with these rules</Trans>
+                            <Trans>This plan goes outside your rules</Trans>
                           </Admonition.Text>
                           <Text
                             testID={`settle-stuck-${item.currency}`}
                             style={[a.text_sm, a.leading_snug, a.pr_md]}>
                             <Trans>
-                              No allowed pair to pay anyone who is owed:{' '}
-                              {nameList(item.stuck)}
+                              Your payment rules give no allowed pair to pay
+                              anyone who is owed: {nameList(item.stuck)}. These
+                              payments still settle everyone up.
                             </Trans>
                           </Text>
                         </Admonition.Content>
@@ -517,7 +515,7 @@ function SettleSummary({
   const t = useTheme()
   const money = useMoneyStyle()
   const lines = plans.flatMap(({currency, plan}) => {
-    if (!plan || plan.status === 'infeasible') return []
+    if (!plan) return []
     const sides = [
       {isIncoming: true, list: plan.transfers.filter(x => x.to === me)},
       {isIncoming: false, list: plan.transfers.filter(x => x.from === me)},

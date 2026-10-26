@@ -12,7 +12,7 @@ import {
   writeOffParts,
   ZERO,
 } from '@splito/domain'
-import {createWriteOffs, deleteWriteOff} from '@splito/sync'
+import {createWriteOffs, deleteWriteOffs} from '@splito/sync'
 
 import {useHaptics} from '#/lib/haptics'
 import {logger} from '#/logger'
@@ -106,6 +106,15 @@ function Form({
   const parts = draft.balance[currency] ?? []
   const net = sumMinor(parts.map(p => p.amount))
   const full = magnitude(net)
+  /*
+   * Owed one way directly and the other way in a group, netting to zero
+   * (audit m7): calling it even clears every part, so there is no amount
+   * to type, only what each side lets go.
+   */
+  const isZeroNet = full === ZERO && parts.length > 0
+  const eachWay = sumMinor(
+    parts.filter(p => p.amount > ZERO).map(p => p.amount),
+  )
   const prefill = (c: string) => {
     const n = magnitude(sumMinor((draft.balance[c] ?? []).map(p => p.amount)))
     // In the number format's own mark: parseTypedAmount reads it back exactly (F-111 C1).
@@ -123,8 +132,11 @@ function Form({
   /* Who forgives whom, in the balance's direction. */
   const creditor = net >= ZERO ? draft.a : draft.b
   const debtor = net >= ZERO ? draft.b : draft.a
-  const sentence =
-    creditor === ctx.actor
+  const sentence = isZeroNet
+    ? draft.a === ctx.actor || draft.b === ctx.actor
+      ? l`You and ${name(draft.a === ctx.actor ? draft.b : draft.a)} let each other off`
+      : l`${name(draft.a)} and ${name(draft.b)} let each other off`
+    : creditor === ctx.actor
       ? l`You let ${name(debtor)} off`
       : debtor === ctx.actor
         ? l`${name(creditor)} lets you off`
@@ -132,9 +144,9 @@ function Form({
 
   const typed = typedAmountOrNull(amountText, currency, locale)
   const isOver = typed !== null && typed > full
-  const isValid = typed !== null && typed > ZERO && !isOver
-  const isFull = isValid && typed === full
-  const pieces = isValid ? writeOffParts(parts, typed) : []
+  const isValid = isZeroNet || (typed !== null && typed > ZERO && !isOver)
+  const isFull = isZeroNet || (isValid && typed === full)
+  const pieces = isValid ? writeOffParts(parts, isZeroNet ? ZERO : typed!) : []
   const money = (v: bigint) => formatAmount(v, currency, locale)
   /*
    * Each part it clears, with its direction when parts go both ways (owed to
@@ -197,13 +209,12 @@ function Form({
     }
   }
 
+  /* One transaction: an undo that fails leaves every part as it was (audit m16). */
   const undo = (written: string[]) =>
-    void Promise.all(written.map(id => deleteWriteOff(store, ctx, id))).catch(
-      e => {
-        logger.error(e, {where: 'CallItEvenDialog.undo'})
-        Toast.show(l`Couldn’t undo the write-off`, {type: 'error'})
-      },
-    )
+    void deleteWriteOffs(store, ctx, written).catch(e => {
+      logger.error(e, {where: 'CallItEvenDialog.undo'})
+      Toast.show(l`Couldn’t undo the write-off`, {type: 'error'})
+    })
 
   const title = l`Call it even`
   if (done) {
@@ -249,7 +260,7 @@ function Form({
               a.text_center,
               t.atoms.text_contrast_medium,
             ]}>
-            {sentence} {money(typed ?? ZERO)}
+            {isZeroNet ? sentence : `${sentence} ${money(typed ?? ZERO)}`}
           </Text>
         </View>
       </FormSheet.Inner>
@@ -301,7 +312,11 @@ function Form({
             </Text>
             <Text
               style={[a.text_sm, a.leading_snug, t.atoms.text_contrast_medium]}>
-              <Trans>Open balance {money(full)}</Trans>
+              {isZeroNet ? (
+                <Trans>{money(eachWay)} owed each way</Trans>
+              ) : (
+                <Trans>Open balance {money(full)}</Trans>
+              )}
             </Text>
           </View>
         </View>
@@ -328,27 +343,32 @@ function Form({
         )}
 
         <View>
-          <TextField.LabelText>
-            <Trans>Amount to let go</Trans>
-          </TextField.LabelText>
-          <TextField.Root isInvalid={isOver}>
-            <Dialog.Input
-              testID="call-even-amount"
-              label={l`Amount to let go`}
-              value={amountText}
-              onChangeText={text => {
-                setAmountText(text)
-                ids.current = []
-              }}
-              keyboardType="decimal-pad"
-              inputMode="decimal"
-              placeholder={currency}
-              onSubmitEditing={() => void save()}
-            />
-            <TextField.SuffixText label={currencyName(currency, i18n.locale)}>
-              {currency}
-            </TextField.SuffixText>
-          </TextField.Root>
+          {!isZeroNet && (
+            <>
+              <TextField.LabelText>
+                <Trans>Amount to let go</Trans>
+              </TextField.LabelText>
+              <TextField.Root isInvalid={isOver}>
+                <Dialog.Input
+                  testID="call-even-amount"
+                  label={l`Amount to let go`}
+                  value={amountText}
+                  onChangeText={text => {
+                    setAmountText(text)
+                    ids.current = []
+                  }}
+                  keyboardType="decimal-pad"
+                  inputMode="decimal"
+                  placeholder={currency}
+                  onSubmitEditing={() => void save()}
+                />
+                <TextField.SuffixText
+                  label={currencyName(currency, i18n.locale)}>
+                  {currency}
+                </TextField.SuffixText>
+              </TextField.Root>
+            </>
+          )}
           <Text
             testID="call-even-hint"
             style={[
@@ -359,11 +379,13 @@ function Form({
                 ? {color: t.palette.negative_500}
                 : t.atoms.text_contrast_medium,
             ]}>
-            {isOver
-              ? l`That’s more than the open balance of ${money(full)}.`
-              : isFull || !isValid
-                ? l`The whole balance: you’ll be even in ${currency}. Other currencies stay as they are.`
-                : l`Part of it: ${money(remainingMinor(full, [typed ?? ZERO]))} stays open.`}
+            {isZeroNet
+              ? l`Both ways: each of you lets the other off, and you’ll be even in ${currency}. Other currencies stay as they are.`
+              : isOver
+                ? l`That’s more than the open balance of ${money(full)}.`
+                : isFull || !isValid
+                  ? l`The whole balance: you’ll be even in ${currency}. Other currencies stay as they are.`
+                  : l`Part of it: ${money(remainingMinor(full, [typed ?? ZERO]))} stays open.`}
           </Text>
           {clears && (
             <Text

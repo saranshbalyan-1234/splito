@@ -35,6 +35,7 @@ import {Handshake_Stroke2_Corner0_Rounded as HandCoinsIcon} from '#/components/i
 import {PersonPlus_Filled_Stroke2_Corner0_Rounded as PersonPlusIcon} from '#/components/icons/Person'
 import {QrCode_Stroke2_Corner0_Rounded as QrIcon} from '#/components/icons/Invite'
 import {PlusLarge_Stroke2_Corner0_Rounded as PlusIcon} from '#/components/icons/Plus'
+import * as Admonition from '#/components/Admonition'
 import * as Layout from '#/components/Layout'
 import * as Menu from '#/components/Menu'
 import {
@@ -65,7 +66,7 @@ import {
   MemberRow,
   OweRow,
 } from './components/GroupRows'
-import {compareMinor, magnitude, planSettlement, ZERO} from '@splito/domain'
+import {compareMinor, directPlan, magnitude, ZERO} from '@splito/domain'
 
 type Tab = 'expenses' | 'balances' | 'members'
 
@@ -86,6 +87,7 @@ type Item =
       amount: bigint
     }
   | {type: 'settleCta'; key: string; payments: number}
+  | {type: 'outsideRules'; key: string; currencies: string[]}
 
 const AVATAR_STACK = 3
 /* Payment rules open from the overflow menu, so they are not a tab (owner: Expenses / Balances / Members). */
@@ -217,12 +219,17 @@ export function GroupScreen() {
   if (!isLoading && group) {
     if (tab === 'expenses') items = withMonths(history)
     else if (tab === 'balances') {
-      /* Who owes whom: the direct settle-up plan under the group's rules, as Settle up shows it. */
+      /*
+       * Who owes whom: the group's settle-up plan (`directPlan`), as Settle
+       * up and People show it. When the rules leave no plan it goes outside
+       * them, and the tab says so (audit M11).
+       */
       const rules = group.data.rules ?? NO_RULES
+      const outside: string[] = []
       const owes = Object.entries(nets).flatMap(([currency, net]) => {
         if (!Object.values(net).some(v => v !== ZERO)) return []
-        const plan = planSettlement(net, rules, 'direct')
-        if (plan.status === 'infeasible') return []
+        const plan = directPlan(net, rules)
+        if (plan.stuck.length > 0) outside.push(currency)
         // As Settle up: biggest payments first, then by payer, so the order never depends on member ids.
         return [...plan.transfers]
           .sort(
@@ -247,6 +254,15 @@ export function GroupScreen() {
                 type: 'settleCta' as const,
                 key: 'settle-cta',
                 payments: owes.length,
+              },
+            ]
+          : []),
+        ...(outside.length > 0
+          ? [
+              {
+                type: 'outsideRules' as const,
+                key: 'outside-rules',
+                currencies: outside,
               },
             ]
           : []),
@@ -690,6 +706,34 @@ export function GroupScreen() {
                   />
                 )
               }
+              case 'outsideRules':
+                return (
+                  <View
+                    testID="group-outside-rules"
+                    style={[a.px_lg, a.pb_md]}>
+                    <Admonition.Outer type="warning">
+                      <Admonition.Row>
+                        <Admonition.Icon />
+                        <Admonition.Content>
+                          <Admonition.Text>
+                            {item.currencies.length === Object.keys(nets).length
+                              ? l`Your payment rules leave no way to settle up, so this plan goes outside them.`
+                              : l`Your payment rules leave no way to settle up in ${item.currencies.join(', ')}, so that plan goes outside them.`}
+                          </Admonition.Text>
+                        </Admonition.Content>
+                        <Admonition.Button
+                          testID="group-outside-rules-edit"
+                          label={l`Edit who you settle with`}
+                          color="secondary"
+                          onPress={() => rulesControl.open()}>
+                          <ButtonText>
+                            <Trans>Edit rules</Trans>
+                          </ButtonText>
+                        </Admonition.Button>
+                      </Admonition.Row>
+                    </Admonition.Outer>
+                  </View>
+                )
               case 'settleCta':
                 return (
                   <View

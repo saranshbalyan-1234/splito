@@ -4,6 +4,7 @@ import {join} from 'node:path'
 import {expect, type Page, test} from '@playwright/test'
 import {
   balanceRows,
+  balanceSides,
   balanceTotals,
   computeShares,
   type ExpenseRecord,
@@ -72,9 +73,23 @@ test('People shows each friend with real words and the right balance per currenc
       await expect(row).toContainText('Settled up')
       continue
     }
-    for (const [currency, {total}] of Object.entries(summary.byCurrency)) {
-      const words = total > 0n ? 'owes you ↙' : 'you owe ↗'
-      await expect(row.getByTestId(`balance-${currency}`)).toHaveText(`${words} ${formatAmount(magnitude(total), currency, LOCALE)}`)
+    // Each way on its own line, never netted across direct and groups (F-113 M10).
+    for (const [currency, balance] of Object.entries(summary.byCurrency)) {
+      const {owed, owe} = balanceSides(balance)
+      const money = (v: bigint) => formatAmount(v, currency, LOCALE)
+      const isBoth = owed > 0n && owe > 0n
+      if (owed > 0n)
+        await expect(
+          row.getByTestId(
+            isBoth ? `balance-${currency}-owed` : `balance-${currency}`,
+          ),
+        ).toHaveText(`owes you ↙ ${money(owed)}`)
+      if (owe > 0n)
+        await expect(
+          row.getByTestId(
+            isBoth ? `balance-${currency}-owe` : `balance-${currency}`,
+          ),
+        ).toHaveText(`you owe ↗ ${money(owe)}`)
     }
   }
   await expect(page.getByTestId('people-balances-title')).toHaveText('Overview')
@@ -116,8 +131,12 @@ test('Groups lists the demo groups with my balance in each', async ({page}) => {
   for (const name of ['Goa trip', 'Flat 4B', 'Lisbon']) {
     await expect(page.getByTestId(`group-${name}`)).toBeVisible()
   }
-  await expect(page.getByTestId('group-Lisbon').getByTestId('group-balance-EUR')).toHaveText(/^you owe\s*↗\s€/)
-  await expect(page.getByTestId('group-Goa trip').getByTestId('group-balance-INR')).toHaveText(/^you are owed\s*↙\s₹/)
+  await expect(
+    page.getByTestId('group-Lisbon').getByTestId('group-balance-EUR'),
+  ).toHaveText(/^you owe\s*↗\s€/)
+  await expect(
+    page.getByTestId('group-Goa trip').getByTestId('group-balance-INR'),
+  ).toHaveText(/^you are owed\s*↙\s₹/)
   // An Overview on top, People's style: one cell per currency, never added together.
   await expect(page.getByTestId('groups-balances-title')).toHaveText('Overview')
   await expect(
@@ -136,11 +155,14 @@ test('Hindi renders translated words with Indian grouping, never message ids', a
   await page.evaluate(() => (window as any).splito.setPref('language', 'hi'))
   await expect(page.getByTestId('people-balances-title')).toHaveText('सारांश')
   await expect(page.getByTestId('people-friends-title')).toHaveText(/^दोस्त/)
-  await expect(page.getByTestId('people-add-friend')).toHaveAttribute('aria-label', 'दोस्त जोड़ें')
-  const arjun = byKey.get('arjun')!.byCurrency.INR!.total
-  await expect(page.getByTestId('person-Arjun Mehta').getByTestId('balance-INR')).toHaveText(
-    `आपको मिलेंगे ↙ ${formatAmount(arjun, 'INR', 'hi-IN')}`,
+  await expect(page.getByTestId('people-add-friend')).toHaveAttribute(
+    'aria-label',
+    'दोस्त जोड़ें',
   )
+  const arjun = byKey.get('arjun')!.byCurrency.INR!.total
+  await expect(
+    page.getByTestId('person-Arjun Mehta').getByTestId('balance-INR'),
+  ).toHaveText(`आपको मिलेंगे ↙ ${formatAmount(arjun, 'INR', 'hi-IN')}`)
   await expectNoMessageIds(page)
 })
 

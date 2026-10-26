@@ -364,7 +364,20 @@ export async function restoreRepayment(store: Store, ctx: MutationCtx, id: strin
 
 /** Undoes a write-off: the balance it cleared comes back. */
 export async function deleteWriteOff(store: Store, ctx: MutationCtx, id: string): Promise<void> {
-  await softDelete(store, ctx, 'writeoff', id)
+  await deleteWriteOffs(store, ctx, [id])
+}
+
+/**
+ * Undoes several write-offs (one "Call it even" across parts) in one
+ * transaction: all or none, so a failure never leaves a partial undo (audit m16).
+ */
+export async function deleteWriteOffs(store: Store, ctx: MutationCtx, ids: string[]): Promise<void> {
+  await store.transaction(async tx => {
+    for (const id of ids) {
+      const e = await requireLive(tx, 'writeoff', id)
+      await write(tx, ctx, 'writeoff', id, e.data, true, 'writeoff.delete')
+    }
+  })
 }
 
 export async function restoreWriteOff(store: Store, ctx: MutationCtx, id: string): Promise<void> {

@@ -21,8 +21,13 @@ export type Plan =
   | {status: 'ok'; mode: PlanMode; transfers: Transfer[]; hash: string}
   | {status: 'infeasible'; mode: PlanMode; reason: 'NO_ROUTE'; stuck: string[]; hash: string}
 
-// Preferred is cheaper than allowed; any extra hop costs more than a preference saves.
-const COST = {preferred: 1, allowed: 3} as const
+/*
+ * Preferred is cheaper than allowed, and every transfer pays a base cost
+ * first, so an extra hop always costs more than a preference saves: two
+ * preferred hops (2 x 11) never beat one allowed transfer (13) (audit m10).
+ */
+const HOP = 10
+const COST = {preferred: HOP + 1, allowed: HOP + 3} as const
 
 interface Arc {
   to: number
@@ -34,17 +39,26 @@ interface Arc {
 /**
  * Min-cost feasible flow on the authorized edge graph (successive shortest paths,
  * Bellman-Ford, deterministic by member id). Minimizes routing cost, not transfer count.
- * net < 0 owes, net > 0 is owed.
+ * net < 0 owes, net > 0 is owed. In `transit` mode only members in `consenting`
+ * pass money on (receive it to pay someone else); everyone else only pays
+ * what they owe or receives what they are owed, as in `direct`.
  */
-export function planSettlement(net: Record<string, bigint>, rules: SettlementRules, mode: PlanMode): Plan {
+export function planSettlement(
+  net: Record<string, bigint>,
+  rules: SettlementRules,
+  mode: PlanMode,
+  consenting: readonly string[] = [],
+): Plan {
   const members = Object.keys(net).sort()
   if (members.reduce((a, m) => a + net[m]!, 0n) !== 0n) throw new DomainError('UNBALANCED')
+  const passesOn = new Set(mode === 'transit' ? consenting : [])
   const hash = fnv1a64(
     JSON.stringify([
       members.map(m => [m, net[m]!.toString()]),
       rules.allowListOnly,
       Object.entries(rules.edges).sort(([a], [b]) => (a < b ? -1 : 1)),
       mode,
+      ...(mode === 'transit' ? [[...passesOn].sort()] : []),
     ]),
   )
 
@@ -71,7 +85,7 @@ export function planSettlement(net: Record<string, bigint>, rules: SettlementRul
   members.forEach((a, i) =>
     members.forEach((b, j) => {
       if (a === b) return
-      if (mode === 'direct' && !(net[a]! < 0n && net[b]! > 0n)) return
+      if (!(net[a]! < 0n || passesOn.has(a)) || !(net[b]! > 0n || passesOn.has(b))) return
       const rule = rules.edges[`${a}>${b}`] ?? (rules.allowListOnly ? 'excluded' : 'allowed')
       if (rule === 'excluded') return
       memberArcs.push({from: a, to: b, u: i + 1, idx: graph[i + 1]!.length})
@@ -122,4 +136,30 @@ export function planSettlement(net: Record<string, bigint>, rules: SettlementRul
     .map(({from, to, u, idx}) => ({from, to, amount: totalDebt - graph[u]![idx]!.cap}))
     .filter(t => t.amount > 0n)
   return {status: 'ok', mode, transfers, hash}
+}
+
+export const NO_RULES: SettlementRules = {allowListOnly: false, edges: {}}
+
+/** A group's settle-up plan in one currency, and who its rules left without a route. */
+export interface DirectPlan {
+  transfers: Transfer[]
+  /** Debtors the rules give no allowed pair; empty when the plan keeps to the rules. */
+  stuck: string[]
+  /** Changes when the balances or the rules change. */
+  hash: string
+}
+
+/**
+ * The one plan policy (audit M11): the direct plan under the group's rules;
+ * when the rules leave no plan, the direct plan with no rules, with the
+ * debtors the rules left stuck, so the group page can say it goes outside
+ * them. People, the group page and Settle up all show this plan, so they
+ * always agree. A direct plan with no rules always exists.
+ */
+export function directPlan(net: Record<string, bigint>, rules: SettlementRules): DirectPlan {
+  const plan = planSettlement(net, rules, 'direct')
+  if (plan.status === 'ok') return {transfers: plan.transfers, stuck: [], hash: plan.hash}
+  const fallback = planSettlement(net, NO_RULES, 'direct')
+  if (fallback.status !== 'ok') throw new DomainError('UNBALANCED')
+  return {transfers: fallback.transfers, stuck: plan.stuck, hash: plan.hash}
 }
