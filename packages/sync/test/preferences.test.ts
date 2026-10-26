@@ -17,7 +17,7 @@ test('default returned when unset', async () => {
   expect(await getPref(s, 'defaultCurrency')).toBe('INR')
   expect(await getPref(s, 'includeGroupsDefault')).toBe(true)
   expect(await getPref(s, 'settleMode')).toBe('direct')
-  expect(await getPref(s, 'tabs')).toEqual(['people', 'groups', 'analytics', 'activity'])
+  expect(await getPref(s, 'tabs')).toEqual(['people', 'groups', 'analytics'])
 })
 
 test('set then get', async () => {
@@ -48,8 +48,18 @@ test('tabs: any non-empty set of known tabs, no duplicates; Profile is not a tab
 })
 
 test('home tab must be a visible tab', async () => {
-  await setPref(s, ctx, 'tabs', ['groups', 'activity'])
+  await setPref(s, ctx, 'tabs', ['groups', 'analytics'])
   expect(await getPref(s, 'homeTab')).toBe('groups')
+})
+
+test('Activity left the tabs for the header bell: a stored order keeps the rest', async () => {
+  const stored = (id: string, value: unknown) =>
+    s.transaction(async tx => tx.put({type: 'preference', id, data: {value}, version: 1, deleted: false, updatedAt: 1}))
+  await stored('tabs', ['activity', 'analytics', 'people'])
+  await stored('homeTab', 'activity')
+  expect(await getPref(s, 'tabs')).toEqual(['analytics', 'people'])
+  expect(await getPref(s, 'homeTab')).toBe('people')
+  await expect(setPref(s, ctx, 'tabs', ['groups', 'activity'] as never)).rejects.toThrow('INVALID_PREF')
 })
 
 test('reset restores default', async () => {

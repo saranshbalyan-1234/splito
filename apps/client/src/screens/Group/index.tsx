@@ -28,10 +28,13 @@ import * as SegmentedControl from '#/components/forms/SegmentedControl'
 import {AddMembersDialog} from '#/components/groups/AddMembersDialog'
 import {memberNets} from '#/components/groups/net'
 import {RulesEditor} from '#/components/groups/RulesEditor'
+import {DotGrid3x1_Stroke2_Corner0_Rounded as DotsIcon} from '#/components/icons/DotGrid'
+import {Group3_Stroke2_Corner0_Rounded as GroupIcon} from '#/components/icons/Group'
 import {HandCoins_Stroke2_Corner0_Rounded as HandCoinsIcon} from '#/components/icons/Money'
 import {PersonPlus_Filled_Stroke2_Corner0_Rounded as PersonPlusIcon} from '#/components/icons/Person'
 import {PlusLarge_Stroke2_Corner0_Rounded as PlusIcon} from '#/components/icons/Plus'
 import * as Layout from '#/components/Layout'
+import * as Menu from '#/components/Menu'
 import {
   HistoryRow,
   HistoryRowPlaceholder,
@@ -45,6 +48,7 @@ import {
   withMonths,
 } from '#/components/people/ledger'
 import {PaymentDetailsDialog} from '#/components/people/PaymentDetailsDialog'
+import {Route_Stroke2_Corner0_Rounded as RouteIcon} from '#/components/icons/Route'
 import * as Skeleton from '#/components/Skeleton'
 import {Text} from '#/components/Typography'
 import {Shimmer} from '#/motion/Shimmer'
@@ -415,8 +419,64 @@ export function GroupScreen() {
           <Layout.Header.TitleText>
             {group?.data.name ?? <Trans>Group</Trans>}
           </Layout.Header.TitleText>
+          {group && (
+            <Layout.Header.SubtitleText>
+              {[kindLabel, memberText].join(' · ')}
+            </Layout.Header.SubtitleText>
+          )}
         </Layout.Header.Content>
-        <Layout.Header.Slot />
+        {/* Settle up and Add expense are the page's own buttons, so the header keeps only the overflow (owner header rule). */}
+        {group ? (
+          <Menu.Root>
+            <Menu.Trigger label={l`More options`}>
+              {({props}) => (
+                <Layout.Header.Slot>
+                  <Button
+                    {...props}
+                    testID="group-more"
+                    label={props.accessibilityLabel}
+                    size="small"
+                    color="secondary"
+                    variant="ghost"
+                    shape="round">
+                    <ButtonIcon icon={DotsIcon} size="lg" />
+                  </Button>
+                </Layout.Header.Slot>
+              )}
+            </Menu.Trigger>
+            <Menu.Outer>
+              <Menu.Item
+                testID="group-menu-members"
+                label={l`Members`}
+                onPress={() => setTab('members')}>
+                <Menu.ItemText>
+                  <Trans>Members</Trans>
+                </Menu.ItemText>
+                <Menu.ItemIcon icon={GroupIcon} position="right" />
+              </Menu.Item>
+              <Menu.Item
+                testID="group-menu-add-members"
+                label={l`Add members`}
+                onPress={() => addMembersControl.open()}>
+                <Menu.ItemText>
+                  <Trans>Add members</Trans>
+                </Menu.ItemText>
+                <Menu.ItemIcon icon={PersonPlusIcon} position="right" />
+              </Menu.Item>
+              <Menu.Item
+                testID="group-menu-rules"
+                label={l`Payment rules`}
+                onPress={() => setTab('rules')}>
+                <Menu.ItemText>
+                  <Trans>Payment rules</Trans>
+                </Menu.ItemText>
+                <Menu.ItemIcon icon={RouteIcon} position="right" />
+              </Menu.Item>
+            </Menu.Outer>
+          </Menu.Root>
+        ) : (
+          <Layout.Header.Slot />
+        )}
       </Layout.Header.Outer>
       <LayoutAnimationConfig skipEntering skipExiting>
         <List

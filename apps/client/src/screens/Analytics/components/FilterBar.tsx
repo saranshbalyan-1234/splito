@@ -9,6 +9,10 @@ import * as Toggle from '#/components/forms/Toggle'
 import {CalendarDays_Stroke2_Corner0_Rounded as CalendarIcon} from '#/components/icons/CalendarDays'
 import {ChevronBottom_Stroke2_Corner0_Rounded as ChevronDownIcon} from '#/components/icons/Chevron'
 import {Group3_Stroke2_Corner0_Rounded as GroupIcon} from '#/components/icons/Group'
+import {
+  ChartColumn_Stroke2_Corner0_Rounded as ChartIcon,
+  Table_Stroke2_Corner0_Rounded as TableIcon,
+} from '#/components/icons/Table'
 import * as Menu from '#/components/Menu'
 import {RangeDialog} from '#/screens/Analytics/components/RangeDialog'
 import {type PeriodChoice, type Report} from '#/screens/Analytics/useReport'
@@ -18,7 +22,15 @@ import {type PeriodChoice, type Report} from '#/screens/Analytics/useReport'
  * currency, group and Include groups. Charts, totals, the list and the CSV
  * all follow it. Phones scroll the row sideways.
  */
-export function FilterBar({report}: {report: Report}) {
+export function FilterBar({
+  report,
+  isTable,
+  onToggleView,
+}: {
+  report: Report
+  isTable: boolean
+  onToggleView: () => void
+}) {
   const t = useTheme()
   const {t: l} = useLingui()
   const {gtMobile} = useBreakpoints()
@@ -184,6 +196,17 @@ export function FilterBar({report}: {report: Report}) {
           </Toggle.LabelText>
         </Toggle.Item>
       )}
+
+      {/* Charts or tables: a display choice (the `analyticsView` preference), so it sits with the filters. */}
+      <Button
+        testID="analytics-view-toggle"
+        label={isTable ? l`Show charts` : l`Show as tables`}
+        size="small"
+        color="secondary"
+        shape="round"
+        onPress={onToggleView}>
+        <ButtonIcon icon={isTable ? ChartIcon : TableIcon} />
+      </Button>
     </>
   )
 

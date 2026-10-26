@@ -13,7 +13,6 @@ import {TAB_ROUTE, tabHref, useTabs} from '#/lib/routes/tabs'
 import {useShellLayout} from '#/state/shell/shell-layout'
 import {Link} from '#/view/com/util/Link'
 import {atoms as a, useTheme} from '#/alf'
-import {useActivityBadge} from '#/components/activity/useActivityFeed'
 import {TAB_LABELS, TabGlyph} from '#/components/TabGlyph'
 import {Text} from '#/components/Typography'
 import {useAnalytics} from '#/analytics'
@@ -32,7 +31,6 @@ export function BottomBarWeb() {
   const footerMinimalShellTransform = useMinimalShellFooterTransform()
   const {footerHeight} = useShellLayout()
   const tabs = useTabs()
-  const activityBadge = useActivityBadge()
   const iconWidth = 26
 
   return (
@@ -53,8 +51,7 @@ export function BottomBarWeb() {
             routeName={TAB_ROUTE[tab]}
             label={_(TAB_LABELS[tab])}
             href={tabHref(tab)}
-            navItem={tab}
-            notificationCount={tab === 'activity' ? activityBadge : undefined}>
+            navItem={tab}>
             {({isActive}) => (
               <TabGlyph tab={tab} isActive={isActive} size={iconWidth} />
             )}

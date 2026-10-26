@@ -18,16 +18,19 @@ const MESSAGE_IDS = Object.keys(
   ),
 )
 
-/** Seeds the demo (two weeks of history, some of it by friends) and opens Activity. */
+/** Seeds the demo (two weeks of history, some of it by friends) and opens Notifications. */
 async function openActivity(page: Page) {
   await page.goto('/?demo=1')
   await expect(page.getByTestId('person-Arjun Mehta')).toBeVisible()
-  await page.goto('/activity')
+  await page.goto('/notifications')
   await expect(screen(page).getByTestId('activity-list')).toBeVisible()
 }
 
-/* Web keeps earlier pages of the stack mounted (hidden), so scope to Activity. */
-const screen = (page: Page) => page.getByTestId('screen-activity')
+/* Web keeps earlier pages of the stack mounted (hidden), so scope to Notifications. */
+const screen = (page: Page) => page.getByTestId('screen-notifications')
+/* The header bell's badge on People. */
+const peopleBadge = (page: Page) =>
+  page.getByTestId('screen-people').getByTestId('header-notifications-badge')
 const row = (page: Page, kind: string, text: string) =>
   screen(page).getByTestId(`activity-${kind}`).filter({hasText: text})
 const unreadDot = (r: Locator) => r.getByTestId('activity-unread-dot')
@@ -84,18 +87,17 @@ test('changes by friends are unread with a badge; mark all read clears them, und
   const dots = screen(page).getByTestId('activity-unread-dot')
   const unread = await dots.count()
   expect(unread).toBeGreaterThan(5)
-  await expect(
-    page.getByRole('navigation').getByText(String(unread), {exact: true}),
-  ).toBeVisible()
+  // The header bell badges the same count: unread changes by other people.
+  await page.goto('/')
+  await expect(peopleBadge(page)).toHaveText(String(unread))
+  await page.getByTestId('screen-people').getByTestId('header-notifications').click()
+  await expect(screen(page).getByTestId('activity-list')).toBeVisible()
 
   await screen(page).getByTestId('activity-mark-all-read').click()
   await expect(dots).toHaveCount(0)
   await expect(screen(page).getByTestId('activity-mark-all-read')).toHaveCount(
     0,
   )
-  await expect(
-    page.getByRole('navigation').getByText(String(unread), {exact: true}),
-  ).toHaveCount(0)
 
   await page.getByRole('button', {name: 'Undo'}).click()
   await expect(dots).toHaveCount(unread)
@@ -106,6 +108,20 @@ test('changes by friends are unread with a badge; mark all read clears them, und
   await expect(screen(page).getByTestId('activity-list')).toBeVisible()
   await expect(row(page, 'expense.edited', 'Dinner at Thalassa')).toBeVisible()
   await expect(dots).toHaveCount(0)
+  await page.goto('/')
+  await expect(page.getByTestId('screen-people').getByTestId('header-notifications')).toBeVisible()
+  await expect(peopleBadge(page)).toHaveCount(0)
+})
+
+test('"From others" leaves out your own changes', async ({page}) => {
+  await page.setViewportSize(DESKTOP)
+  await openActivity(page)
+  await expect(row(page, 'expense.restored', 'Groceries')).toBeVisible()
+  await screen(page).getByTestId('notifications-tabs-selector-1').click()
+  await expect(row(page, 'expense.edited', 'Dinner at Thalassa')).toBeVisible()
+  await expect(row(page, 'expense.restored', 'Groceries')).toHaveCount(0)
+  await screen(page).getByTestId('notifications-tabs-selector-0').click()
+  await expect(row(page, 'expense.restored', 'Groceries')).toBeVisible()
 })
 
 test('hover shows the swipe actions as buttons: mark read toggles, delete tombstones the expense with undo', async ({
@@ -180,7 +196,7 @@ test('hide works from the keyboard, offers undo, and hidden rows come back from 
   await expect(coffee).toHaveCount(0)
   // Hiding is personal: the audit history still has the expense.
   await page.goto('/')
-  await page.goto('/activity')
+  await page.goto('/notifications')
   await expect(screen(page).getByTestId('activity-hidden-footer')).toBeVisible()
   await screen(page).getByTestId('activity-unhide-all').click()
   await expect(coffee).toBeVisible()
@@ -224,7 +240,7 @@ test('a row opens what it is about and becomes read', async ({page}) => {
   await expect(page.getByTestId('screen-person')).toBeVisible()
 })
 
-test('phones: the menu button is always there, the FAB and the bottom-bar badge show', async ({
+test('phones: the menu button is always there, the FAB and the bell badge show', async ({
   page,
 }) => {
   await page.setViewportSize(PHONE)
@@ -240,12 +256,16 @@ test('phones: the menu button is always there, the FAB and the bottom-bar badge 
     ),
   ).toHaveCount(0)
   await expect(screen(page).getByTestId('fab-add')).toBeVisible()
-  await expect(page.getByTestId('tab-activity')).toContainText(/\d+/)
-  await expect(screen(page).getByTestId('header-avatar')).toBeVisible()
+  // A pushed page: Back on the left, no bell of its own.
+  await expect(screen(page).getByLabel('Go back')).toBeVisible()
+  await expect(screen(page).getByTestId('header-notifications')).toHaveCount(0)
+  await page.goto('/')
+  await expect(peopleBadge(page)).toContainText(/\d+/)
 })
 
-test('an empty store shows the illustrated empty state', async ({page}) => {
+test('an empty store shows the illustrated empty state; the old /activity link still lands', async ({page}) => {
   await page.goto('/activity')
+  await expect(page.getByTestId('screen-notifications')).toBeVisible()
   await expect(page.getByTestId('activity-empty')).toBeVisible()
   await expect(page.getByTestId('activity-empty')).toContainText(
     'Nothing here yet',

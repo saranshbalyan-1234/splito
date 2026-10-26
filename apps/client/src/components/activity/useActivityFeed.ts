@@ -11,7 +11,12 @@ import {
 
 import {useMutationCtx, useStore} from '#/data/hooks'
 import {device, useStorage} from '#/storage'
-import {buildRows, EMPTY_FEED_STATE, type FeedState} from './feed'
+import {
+  buildRows,
+  EMPTY_FEED_STATE,
+  type FeedFilter,
+  type FeedState,
+} from './feed'
 
 export type ActivitySnapshot = {
   events: ActivityEvent[]
@@ -83,7 +88,7 @@ const FEED_KEY: ['activityFeed'] = ['activityFeed']
  * until the first load. `update` changes the marks from their latest stored
  * value, so quick successive actions never overwrite each other.
  */
-export function useActivityFeed() {
+export function useActivityFeed(filter: FeedFilter = 'all') {
   const store = useStore()
   const {actor: me} = useMutationCtx()
   const source = sourceFor(store)
@@ -92,15 +97,16 @@ export function useActivityFeed() {
   const state = stored ?? EMPTY_FEED_STATE
   const update = (fn: (s: FeedState) => FeedState) =>
     setStored(fn(device.get(FEED_KEY) ?? EMPTY_FEED_STATE))
-  const feed = buildRows(snapshot?.events ?? [], state, me)
+  const feed = buildRows(snapshot?.events ?? [], state, me, filter)
   return {me, snapshot, state, update, ...feed}
 }
 
 /**
- * The Activity tab's badge, as Bluesky badges Notifications: the unread
- * count, capped at "30+" as upstream does; empty when there's nothing new.
+ * The header bell's badge, as Bluesky badges Notifications: unread changes
+ * by other people, capped at "30+" as upstream does; empty when there's
+ * nothing new.
  */
 export function useActivityBadge() {
-  const {unreadCount} = useActivityFeed()
-  return unreadCount > 30 ? '30+' : unreadCount > 0 ? String(unreadCount) : ''
+  const {unreadFromOthers: n} = useActivityFeed()
+  return n > 30 ? '30+' : n > 0 ? String(n) : ''
 }

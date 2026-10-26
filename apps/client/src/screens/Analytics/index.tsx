@@ -15,12 +15,9 @@ import {Button, ButtonIcon, ButtonText} from '#/components/Button'
 import {HeaderAvatar} from '#/components/HeaderAvatar'
 import {Download_Stroke2_Corner0_Rounded as DownloadIcon} from '#/components/icons/Download'
 import {PlusLarge_Stroke2_Corner0_Rounded as PlusIcon} from '#/components/icons/Plus'
-import {
-  ChartColumn_Stroke2_Corner0_Rounded as ChartIcon,
-  Table_Stroke2_Corner0_Rounded as TableIcon,
-} from '#/components/icons/Table'
 import {TimesLarge_Stroke2_Corner0_Rounded as XIcon} from '#/components/icons/Times'
 import * as Layout from '#/components/Layout'
+import {NotificationsBell} from '#/components/NotificationsBell'
 import * as Toast from '#/components/Toast'
 import {Text} from '#/components/Typography'
 import {Shimmer} from '#/motion/Shimmer'
@@ -54,27 +51,27 @@ export function AnalyticsScreen() {
   const report = useReport()
   const [view = 'charts', setView] = usePref('analyticsView')
   const isTable = view === 'table'
+  const exportRows = useExportRows()
 
   return (
     <Layout.Screen testID="screen-analytics">
       <Layout.Header.Outer>
-        <Layout.Header.Content align="left">
+        <HeaderAvatar />
+        {/* Balances the action and bell on the right, so the title stays centred. */}
+        <Layout.Header.Slot />
+        <Layout.Header.Content>
           <Layout.Header.TitleText>
             <Trans>Analytics</Trans>
           </Layout.Header.TitleText>
         </Layout.Header.Content>
-        {report?.hasExpenses && (
-          <Button
-            testID="analytics-view-toggle"
-            label={isTable ? l`Show charts` : l`Show as tables`}
-            size="small"
-            color="secondary"
-            shape="round"
-            onPress={() => void setView(isTable ? 'charts' : 'table')}>
-            <ButtonIcon icon={isTable ? ChartIcon : TableIcon} />
-          </Button>
-        )}
-        <HeaderAvatar />
+        <Layout.Header.IconButton
+          testID="analytics-export"
+          icon={DownloadIcon}
+          label={l`Export CSV`}
+          disabled={!report || report.rows.length === 0}
+          onPress={() => report && void exportRows(report)}
+        />
+        <NotificationsBell />
       </Layout.Header.Outer>
       {!report ? (
         <Shimmer testID="analytics-loading">
@@ -121,7 +118,11 @@ export function AnalyticsScreen() {
             )}
             ListHeaderComponent={
               <>
-                <FilterBar report={report} />
+                <FilterBar
+                  report={report}
+                  isTable={isTable}
+                  onToggleView={() => void setView(isTable ? 'charts' : 'table')}
+                />
                 <Summary report={report} locale={locale} />
                 <Charts report={report} locale={locale} isTable={isTable} />
                 {report.totals.count > 0 && (
@@ -140,41 +141,11 @@ export function AnalyticsScreen() {
   )
 }
 
-/* "Expenses" with the export action, and the active chart selection as a clearable chip. */
+/* "Expenses", and the active chart selection as a clearable chip. */
 function ExpensesHeader({report, locale}: {report: Report; locale: string}) {
   const t = useTheme()
   const {t: l} = useLingui()
   const {selection, rows, currency} = report
-
-  const exportRows = async () => {
-    const csv = reportCsv(rows, report.me, {
-      header: [
-        l`Date`,
-        l`Description`,
-        l`Category`,
-        l`Group`,
-        l`Currency`,
-        l`Total`,
-        l`You paid`,
-        l`Your share`,
-      ],
-      categoryName: id => report.category(id).name,
-      groupName: id => (id === null ? '' : report.nameOfGroup(id)),
-    })
-    const name = `splito-${currency}-${report.range.from}-to-${report.range.to}.csv`
-    try {
-      if (await exportCsv(name, csv)) {
-        Toast.show(
-          rows.length === 1
-            ? l`Exported 1 expense`
-            : l`Exported ${rows.length} expenses`,
-          {type: 'success'},
-        )
-      }
-    } catch {
-      Toast.show(l`Couldn’t export. Try again.`, {type: 'error'})
-    }
-  }
 
   return (
     <View>
@@ -182,19 +153,6 @@ function ExpensesHeader({report, locale}: {report: Report; locale: string}) {
         title={l`Expenses`}
         count={rows.length}
         testID="analytics-expenses-title"
-        action={
-          <Button
-            testID="analytics-export"
-            label={l`Export CSV`}
-            size="small"
-            color="secondary"
-            onPress={() => void exportRows()}>
-            <ButtonIcon icon={DownloadIcon} />
-            <ButtonText>
-              <Trans>Export CSV</Trans>
-            </ButtonText>
-          </Button>
-        }
       />
       {selection && (
         <View
@@ -238,4 +196,39 @@ function ExpensesHeader({report, locale}: {report: Report; locale: string}) {
       )}
     </View>
   )
+}
+
+/** The header's Export CSV: the rows on screen (filters and chart selection applied), as a file. */
+function useExportRows() {
+  const {t: l} = useLingui()
+  return async (report: Report) => {
+    const {rows, currency} = report
+    const csv = reportCsv(rows, report.me, {
+      header: [
+        l`Date`,
+        l`Description`,
+        l`Category`,
+        l`Group`,
+        l`Currency`,
+        l`Total`,
+        l`You paid`,
+        l`Your share`,
+      ],
+      categoryName: id => report.category(id).name,
+      groupName: id => (id === null ? '' : report.nameOfGroup(id)),
+    })
+    const name = `splito-${currency}-${report.range.from}-to-${report.range.to}.csv`
+    try {
+      if (await exportCsv(name, csv)) {
+        Toast.show(
+          rows.length === 1
+            ? l`Exported 1 expense`
+            : l`Exported ${rows.length} expenses`,
+          {type: 'success'},
+        )
+      }
+    } catch {
+      Toast.show(l`Couldn’t export. Try again.`, {type: 'error'})
+    }
+  }
 }

@@ -1,3 +1,4 @@
+import {useState} from 'react'
 import {View} from 'react-native'
 import Animated, {LayoutAnimationConfig} from 'react-native-reanimated'
 import {Plural, Trans, useLingui} from '@lingui/react/macro'
@@ -7,7 +8,7 @@ import {useNumberLocale} from '#/locale/numberLocale'
 import {usePref} from '#/data/hooks'
 import {EmptyState} from '#/view/com/util/EmptyState'
 import {List} from '#/view/com/util/List'
-import {atoms as a, useBreakpoints, useTheme} from '#/alf'
+import {atoms as a, useBreakpoints, useTheme, web} from '#/alf'
 import {ActivityItem} from '#/components/activity/ActivityItem'
 import {type FeedRow} from '#/components/activity/feed'
 import {LoadingSkeleton} from '#/components/activity/LoadingSkeleton'
@@ -18,10 +19,10 @@ import {
 import {useActivityActions} from '#/components/activity/useActivityActions'
 import {useActivityFeed} from '#/components/activity/useActivityFeed'
 import {AddExpenseFAB} from '#/components/AddExpenseFAB'
-import {Button, ButtonIcon, ButtonText} from '#/components/Button'
-import {HeaderAvatar} from '#/components/HeaderAvatar'
+import {Button, ButtonText} from '#/components/Button'
 import {CheckThick_Stroke2_Corner0_Rounded as CheckIcon} from '#/components/icons/Check'
 import * as Layout from '#/components/Layout'
+import {TabBar} from '#/components/TabBar'
 import {Text} from '#/components/Typography'
 import {Shimmer} from '#/motion/Shimmer'
 import {useListAnimations} from '#/motion/listAnimations'
@@ -30,17 +31,20 @@ const isUnreadRow = (row: FeedRow | undefined) =>
   row?.type === 'event' && !row.isRead
 
 /**
- * Activity: every change in the local audit history (expenses, friends,
- * groups, payments) in Bluesky's notifications list, under one header per
- * day. Read and hidden marks are personal and stay on this device.
+ * Notifications (the Activity feed): every change in the local audit history
+ * (expenses, friends, groups, payments) in Bluesky's notifications list,
+ * under one header per day, with Bluesky's "All" tab and a "From others" tab
+ * in its Mentions slot. Opened from the header bell. Read and hidden marks
+ * are personal and stay on this device.
  */
-export function ActivityScreen() {
+export function NotificationsScreen() {
   const t = useTheme()
   const {t: l} = useLingui()
   const locale = useNumberLocale()
   const {gtMobile} = useBreakpoints()
   const listAnimations = useListAnimations()
-  const feed = useActivityFeed()
+  const [tab, setTab] = useState(0)
+  const feed = useActivityFeed(tab === 0 ? 'all' : 'others')
   const actions = useActivityActions(feed)
   const [swipeLeft = PREFS.swipeLeft.default] = usePref('swipeLeft')
   const [swipeRight = PREFS.swipeRight.default] = usePref('swipeRight')
@@ -82,28 +86,33 @@ export function ActivityScreen() {
   }
 
   return (
-    <Layout.Screen testID="screen-activity">
-      <Layout.Header.Outer>
-        <Layout.Header.Content align="left">
+    <Layout.Screen testID="screen-notifications">
+      <Layout.Header.Outer noBottomBorder sticky={false}>
+        <Layout.Header.BackButton />
+        <Layout.Header.Content>
           <Layout.Header.TitleText>
-            <Trans>Activity</Trans>
+            <Trans>Notifications</Trans>
           </Layout.Header.TitleText>
         </Layout.Header.Content>
         {unreadCount > 0 ? (
-          <Button
+          <Layout.Header.IconButton
             testID="activity-mark-all-read"
+            icon={CheckIcon}
             label={l`Mark all as read`}
-            color="secondary"
-            size="small"
-            onPress={actions.markEverythingRead}>
-            <ButtonIcon icon={CheckIcon} />
-            <ButtonText>
-              <Trans>Mark all read</Trans>
-            </ButtonText>
-          </Button>
-        ) : null}
-        <HeaderAvatar />
+            onPress={actions.markEverythingRead}
+          />
+        ) : (
+          <Layout.Header.Slot />
+        )}
       </Layout.Header.Outer>
+      <View style={[a.z_10, web([a.sticky, {top: 0}])]}>
+        <TabBar
+          testID="notifications-tabs"
+          selectedPage={tab}
+          items={[l`All`, l`From others`]}
+          onSelect={setTab}
+        />
+      </View>
       {snapshot === undefined ? (
         <Shimmer testID="activity-loading">
           <LoadingSkeleton />
@@ -123,7 +132,9 @@ export function ActivityScreen() {
                 message={
                   hiddenCount > 0
                     ? l`You've hidden everything here. New expenses, payments and group changes will show up as they happen.`
-                    : l`Nothing here yet. Expenses, payments and group changes will show up here.`
+                    : tab === 1
+                      ? l`Nothing from other people yet. When someone else adds or changes something you share, it shows up here.`
+                      : l`Nothing here yet. Expenses, payments and group changes will show up here.`
                 }
               />
             }

@@ -1,6 +1,6 @@
 import {View} from 'react-native'
 import {LayoutAnimationConfig} from 'react-native-reanimated'
-import {Trans, useLingui} from '@lingui/react/macro'
+import {useLingui} from '@lingui/react/macro'
 import {useNavigation} from '@react-navigation/native'
 import {balanceTotals, pairwiseBalances, personSummary} from '@splito/domain'
 import {type Group, type Person} from '@splito/sync'
@@ -13,7 +13,6 @@ import {EmptyState} from '#/view/com/util/EmptyState'
 import {List} from '#/view/com/util/List'
 import {useBreakpoints} from '#/alf'
 import {AddExpenseFAB} from '#/components/AddExpenseFAB'
-import {Button, ButtonIcon, ButtonText} from '#/components/Button'
 import {PersonPlus_Filled_Stroke2_Corner0_Rounded as PersonPlusIcon} from '#/components/icons/Person'
 import * as Layout from '#/components/Layout'
 import {Shimmer} from '#/motion/Shimmer'
@@ -125,29 +124,14 @@ export function PeopleScreen() {
   )
 }
 
-/* The friends list heading, with Add friend as the section's own action. */
+/* The friends list heading; Add friend is the header's action (owner header rule). */
 function FriendsHeader({count}: {count: number | undefined}) {
   const {t: l} = useLingui()
-  const navigation = useNavigation<NavigationProp>()
-
   return (
     <SectionHeader
       title={l`Friends`}
       testID="people-friends-title"
       count={count}
-      action={
-        <Button
-          testID="people-add-friend"
-          label={l`Add friend`}
-          size="small"
-          color="secondary"
-          onPress={() => navigation.navigate('AddFriend')}>
-          <ButtonIcon icon={PersonPlusIcon} />
-          <ButtonText>
-            <Trans>Add friend</Trans>
-          </ButtonText>
-        </Button>
-      }
     />
   )
 }

@@ -80,17 +80,28 @@ export type FeedRow =
       hasDivider: boolean
     }
 
+/** The Notifications tabs: everything, or only changes by other people (Bluesky's "Mentions" slot). */
+export type FeedFilter = 'all' | 'others'
+
 /**
  * The list's rows: the visible changes (newest first) under one header per
  * local day, as Bluesky's notifications sit under "Today" and "Earlier".
+ * `unreadFromOthers` is the badge count: your own changes never badge.
  */
-export function buildRows(events: ActivityEvent[], s: FeedState, me: string) {
+export function buildRows(
+  events: ActivityEvent[],
+  s: FeedState,
+  me: string,
+  filter: FeedFilter = 'all',
+) {
   const hidden = new Set(s.hidden)
   const rows: FeedRow[] = []
   let hiddenCount = 0
   let unreadCount = 0
+  let unreadFromOthers = 0
   let day: number | undefined
   for (const event of events) {
+    if (filter === 'others' && event.actor === me) continue
     if (hidden.has(event.id)) {
       hiddenCount++
       continue
@@ -101,7 +112,10 @@ export function buildRows(events: ActivityEvent[], s: FeedState, me: string) {
       rows.push({type: 'section', key: `day-${day}`, day})
     }
     const read = isRead(s, event, me)
-    if (!read) unreadCount++
+    if (!read) {
+      unreadCount++
+      if (event.actor !== me) unreadFromOthers++
+    }
     rows.push({
       type: 'event',
       key: event.id,
@@ -110,5 +124,5 @@ export function buildRows(events: ActivityEvent[], s: FeedState, me: string) {
       hasDivider: rows.at(-1)?.type === 'event',
     })
   }
-  return {rows, hiddenCount, unreadCount}
+  return {rows, hiddenCount, unreadCount, unreadFromOthers}
 }

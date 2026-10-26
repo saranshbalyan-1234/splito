@@ -65,6 +65,22 @@ test('rows: one header per local day, dividers only between rows of a day, hidde
   expect(buildRows(events, setHidden(s, 'x', false), 'me').hiddenCount).toBe(0)
 })
 
+test('"From others" leaves out your own changes; the badge counts only unread from others', () => {
+  const events = [
+    ev('c', at(26, 9)),
+    ev('b', at(26, 8), 'me'),
+    ev('a', at(25, 12)),
+  ]
+  // Your own change marked unread again shows as unread in All, but never badges.
+  const s = setRead(EMPTY_FEED_STATE, events[1]!, false)
+  const all = buildRows(events, s, 'me')
+  expect(all.unreadCount).toBe(3)
+  expect(all.unreadFromOthers).toBe(2)
+  const others = buildRows(events, s, 'me', 'others')
+  expect(others.rows.flatMap(r => (r.type === 'event' ? [r.event.id] : []))).toEqual(['c', 'a'])
+  expect(others.unreadCount).toBe(2)
+})
+
 test('daysAgo counts calendar days, not 24-hour periods', () => {
   const now = at(26, 0) + 60_000
   expect(daysAgo(at(26, 0), now)).toBe(0)

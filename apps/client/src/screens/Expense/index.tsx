@@ -58,30 +58,30 @@ export function ExpenseScreen() {
     <Layout.Screen testID="screen-expense">
       <Layout.Header.Outer>
         <Layout.Header.BackButton />
+        {/* Balances Edit and the overflow on the right, so the title stays centred. */}
+        <Layout.Header.Slot />
         <Layout.Header.Content>
           <Layout.Header.TitleText>
-            <Trans>Expense</Trans>
+            {expense?.data.title ?? <Trans>Expense</Trans>}
           </Layout.Header.TitleText>
         </Layout.Header.Content>
         {expense && !expense.deleted ? (
-          <View style={[a.flex_row, a.align_center, a.gap_xs]}>
-            <Button
+          <>
+            <Layout.Header.IconButton
               testID="expense-edit-button"
+              icon={PencilIcon}
               label={l`Edit expense`}
-              size="small"
-              color="secondary"
               onPress={() =>
                 navigation.navigate('EditExpense', {expenseId: expense.id})
-              }>
-              <ButtonIcon icon={PencilIcon} />
-              <ButtonText>
-                <Trans>Edit</Trans>
-              </ButtonText>
-            </Button>
+              }
+            />
             <ExpenseMenu expense={expense} />
-          </View>
+          </>
         ) : (
-          <Layout.Header.Slot />
+          <>
+            <Layout.Header.Slot />
+            <Layout.Header.Slot />
+          </>
         )}
       </Layout.Header.Outer>
       {expense === undefined ? (
@@ -147,16 +147,18 @@ function ExpenseMenu({expense}: {expense: Entity<Expense>}) {
     <Menu.Root>
       <Menu.Trigger label={l`Expense options`}>
         {({props}) => (
-          <Button
-            testID="expense-menu"
-            label={props.accessibilityLabel}
-            {...props}
-            size="small"
-            variant="ghost"
-            color="secondary"
-            shape="round">
-            <ButtonIcon icon={DotsIcon} size="lg" />
-          </Button>
+          <Layout.Header.Slot>
+            <Button
+              testID="expense-menu"
+              label={props.accessibilityLabel}
+              {...props}
+              size="small"
+              variant="ghost"
+              color="secondary"
+              shape="round">
+              <ButtonIcon icon={DotsIcon} size="lg" />
+            </Button>
+          </Layout.Header.Slot>
         )}
       </Menu.Trigger>
       <Menu.Outer>

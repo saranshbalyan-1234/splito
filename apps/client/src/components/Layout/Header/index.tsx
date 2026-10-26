@@ -26,7 +26,6 @@ import {
 } from '#/components/Layout/const'
 import {Text} from '#/components/Typography'
 import {useAnalytics} from '#/analytics'
-import {IS_IOS} from '#/env'
 
 const HEADER_BUTTON_HITSLOP = {top: 30, bottom: 10, left: 30, right: 30}
 
@@ -83,7 +82,7 @@ export function Content({
       style={[
         a.flex_1,
         a.justify_center,
-        IS_IOS && align === 'platform' && a.align_center,
+        align === 'platform' && a.align_center,
         {minHeight: HEADER_SLOT_SIZE},
       ]}>
       <AlignmentContext.Provider value={align}>
@@ -168,6 +167,43 @@ export function MenuButton() {
   )
 }
 
+/**
+ * One icon action in a header slot (owner header rule: at most one basic
+ * action on the right, so the centred title stays centred). Styled as
+ * Bluesky's header buttons; `label` is its accessible name.
+ */
+export function IconButton({
+  icon,
+  label,
+  testID,
+  onPress,
+  disabled,
+}: {
+  icon: React.ComponentProps<typeof ButtonIcon>['icon']
+  label: string
+  testID?: string
+  onPress: () => void
+  disabled?: boolean
+}) {
+  return (
+    <Slot>
+      <Button
+        testID={testID}
+        label={label}
+        size="small"
+        variant="ghost"
+        color="secondary"
+        shape="round"
+        disabled={disabled}
+        onPress={onPress}
+        hitSlop={HEADER_BUTTON_HITSLOP}
+        style={[{marginRight: -BUTTON_VISUAL_ALIGNMENT_OFFSET}]}>
+        <ButtonIcon icon={icon} size="lg" />
+      </Button>
+    </Slot>
+  )
+}
+
 export function TitleText({
   children,
   style,
@@ -182,7 +218,7 @@ export function TitleText({
           ? [a.text_xl, a.font_bold]
           : [a.text_lg, a.font_semi_bold],
         a.leading_tight,
-        IS_IOS && align === 'platform' && a.text_center,
+        align === 'platform' && a.text_center,
         gtMobile && a.text_xl,
         style,
       ]}
@@ -202,7 +238,7 @@ export function SubtitleText({children}: {children: React.ReactNode}) {
       style={[
         a.text_sm,
         a.leading_snug,
-        IS_IOS && align === 'platform' && a.text_center,
+        align === 'platform' && a.text_center,
         t.atoms.text_contrast_medium,
       ]}
       numberOfLines={1}>

@@ -16,7 +16,8 @@ export interface PrefDef<T> {
 }
 
 /** Bottom-bar / sidebar destinations. Profile and Settings open from the header avatar instead. */
-export type TabId = 'people' | 'groups' | 'analytics' | 'activity'
+/** Bottom bar / sidebar destinations. Activity left them for the header bell (it is now Notifications). */
+export type TabId = 'people' | 'groups' | 'analytics'
 export type SwipeAction = 'markRead' | 'hide' | 'delete' | 'none'
 /** direct: debtors pay creditors only. transit: payments may pass through other members. */
 export type SettleMode = 'direct' | 'transit'
@@ -41,7 +42,7 @@ export const DEFAULT_CATEGORIES: Category[] = [
   ['other', 'Other', '#94a3b8', 'circle'],
 ].map(([id, name, color, icon], order) => ({id: id!, name: name!, color: color!, icon: icon!, order, hidden: false}))
 
-const TAB_IDS: TabId[] = ['people', 'groups', 'analytics', 'activity']
+const TAB_IDS: TabId[] = ['people', 'groups', 'analytics']
 const HEX = /^#[0-9a-f]{6}$/i
 
 const oneOf =
@@ -112,7 +113,10 @@ export type PrefValue<K extends PrefKey> = (typeof PREFS)[K] extends PrefDef<inf
 async function readRaw<K extends PrefKey>(store: Store, key: K): Promise<PrefValue<K>> {
   const def = PREFS[key] as PrefDef<PrefValue<K>>
   const e = (await store.getAll<{value: unknown}>('preference')).find(p => p.id === key)
-  return e && !e.deleted && def.validate(e.data.value) ? e.data.value : def.default
+  let value = e && !e.deleted ? e.data.value : undefined
+  // A tab order saved before Activity left the tabs keeps the tabs that remain.
+  if (key === 'tabs' && Array.isArray(value)) value = value.filter(t => TAB_IDS.includes(t))
+  return value !== undefined && def.validate(value) ? (value as PrefValue<K>) : def.default
 }
 
 /** Falls back to the default when unset or invalid. */

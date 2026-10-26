@@ -12,16 +12,16 @@ import {EmptyState} from '#/view/com/util/EmptyState'
 import {List} from '#/view/com/util/List'
 import {useBreakpoints} from '#/alf'
 import {AddExpenseFAB} from '#/components/AddExpenseFAB'
-import {Button, ButtonIcon, ButtonText} from '#/components/Button'
 import {HeaderAvatar} from '#/components/HeaderAvatar'
 import {PlusLarge_Stroke2_Corner0_Rounded as PlusIcon} from '#/components/icons/Plus'
 import * as Layout from '#/components/Layout'
+import {NotificationsBell} from '#/components/NotificationsBell'
 import {Shimmer} from '#/motion/Shimmer'
 import {GroupRow, GroupRowPlaceholder} from './components/GroupRow'
 
 const PLACEHOLDER_ROWS = 4
 
-/** Groups list: Bluesky's Lists screen (header with "New", list-card rows). */
+/** Groups list: Bluesky's Lists screen (header with a create action, list-card rows). */
 export function GroupsScreen() {
   const {t: l} = useLingui()
   const locale = useNumberLocale()
@@ -42,23 +42,21 @@ export function GroupsScreen() {
   return (
     <Layout.Screen testID="screen-groups">
       <Layout.Header.Outer>
-        <Layout.Header.Content align="left">
+        <HeaderAvatar />
+        {/* Balances the action and bell on the right, so the title stays centred. */}
+        <Layout.Header.Slot />
+        <Layout.Header.Content>
           <Layout.Header.TitleText>
             <Trans>Groups</Trans>
           </Layout.Header.TitleText>
         </Layout.Header.Content>
-        <Button
+        <Layout.Header.IconButton
           testID="groups-new"
-          label={l`New group`}
-          color="secondary"
-          size="small"
-          onPress={createGroup}>
-          <ButtonIcon icon={PlusIcon} />
-          <ButtonText>
-            <Trans context="action">New</Trans>
-          </ButtonText>
-        </Button>
-        <HeaderAvatar />
+          icon={PlusIcon}
+          label={l`Create group`}
+          onPress={createGroup}
+        />
+        <NotificationsBell />
       </Layout.Header.Outer>
       {isLoading ? (
         <Shimmer testID="groups-loading">

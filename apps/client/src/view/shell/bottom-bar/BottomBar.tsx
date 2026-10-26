@@ -17,7 +17,6 @@ import {TAB_ROUTE, useTabs} from '#/lib/routes/tabs'
 import {useShellLayout} from '#/state/shell/shell-layout'
 import {type SidebarTab} from '#/view/shell/desktop/LeftNav'
 import {atoms as a, useTheme} from '#/alf'
-import {useActivityBadge} from '#/components/activity/useActivityFeed'
 import {TAB_LABELS, TabGlyph} from '#/components/TabGlyph'
 import {Text} from '#/components/Typography'
 import {useAnalytics} from '#/analytics'
@@ -36,7 +35,6 @@ export function BottomBar({navigation}: BottomTabBarProps) {
   const {footerHeight} = useShellLayout()
   const tabState = useNavigationTabState()
   const tabs = useTabs()
-  const activityBadge = useActivityBadge()
   const dedupe = useDedupe()
   const footerMinimalShellTransform = useMinimalShellFooterTransform()
   const iconWidth = 28
@@ -45,7 +43,6 @@ export function BottomBar({navigation}: BottomTabBarProps) {
     People: tabState.isAtPeople,
     Groups: tabState.isAtGroups,
     Analytics: tabState.isAtAnalytics,
-    Activity: tabState.isAtActivity,
   }
 
   const onPressTab = useCallback(
@@ -108,7 +105,6 @@ export function BottomBar({navigation}: BottomTabBarProps) {
                 size={iconWidth}
               />
             }
-            notificationCount={tab === 'activity' ? activityBadge : undefined}
             onPress={() => onPressTab(TAB_ROUTE[tab])}
             accessibilityRole="tab"
             accessibilityLabel={_(TAB_LABELS[tab])}

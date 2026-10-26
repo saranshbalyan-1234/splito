@@ -7,7 +7,6 @@ const TABS: RouteName[] = [
   'People',
   'Groups',
   'Analytics',
-  'Activity',
 ] satisfies (keyof TabParams)[]
 
 function pathsFor(names: RouteName[]) {
@@ -29,6 +28,8 @@ export const linking: LinkingOptions<RootStackParams> = {
           name => !TABS.includes(name),
         ),
       ),
+      // Activity became Notifications; old links still land.
+      Notifications: {path: 'notifications', alias: ['activity']},
     },
   },
 }

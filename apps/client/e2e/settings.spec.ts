@@ -80,9 +80,9 @@ test('hiding Groups removes it from the bar and sidebar; Settings stays reachabl
   await open(page, '/', 'screen-people')
   await expect(page.getByTestId('tab-people')).toBeVisible()
   await expect(page.getByTestId('tab-groups')).toHaveCount(0)
-  // The avatar (top right) is the guaranteed way back to Settings.
+  // The avatar's drawer is the guaranteed way back to Settings.
   await page.getByTestId('screen-people').getByTestId('header-avatar').click()
-  await page.getByText('Settings', {exact: true}).last().click()
+  await page.getByTestId('drawer-settings').click()
   await expect(page.getByTestId('screen-settings')).toBeVisible()
 
   await page.setViewportSize(LAPTOP)
@@ -111,7 +111,7 @@ test('the arrow buttons reorder the sidebar tabs', async ({page}) => {
 
 test('the last visible tab cannot be hidden', async ({page}) => {
   await open(page, '/settings/defaults', 'screen-settings-section')
-  for (const tab of ['groups', 'analytics', 'activity']) {
+  for (const tab of ['groups', 'analytics']) {
     await page.getByTestId(`tabs-toggle-${tab}`).click()
     await expect(page.getByTestId(`tabs-toggle-${tab}`)).toHaveAttribute(
       'aria-checked',
