@@ -15,6 +15,7 @@ import {
 } from '@splito/sync'
 
 import {type AllNavigatorParams, type NavigationProp} from '#/lib/routes/types'
+import {goBack} from '#/navigation/goBack'
 import {
   useEntities,
   useLedger,
@@ -218,7 +219,7 @@ export function PersonScreen() {
   const removeFriend = async () => {
     try {
       await deletePerson(store, ctx, personId)
-      navigation.goBack()
+      goBack(navigation, {name: 'People'})
       Toast.show(l`Friend removed`)
     } catch (e) {
       Toast.show(

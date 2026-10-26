@@ -7,6 +7,7 @@ import {useLingui} from '@lingui/react'
 import {useNavigation} from '@react-navigation/native'
 
 import {type NavigationProp} from '#/lib/routes/types'
+import {backFallback, goBack} from '#/navigation/goBack'
 import {useShellHeaderLayout} from '#/state/shell/shell-layout'
 import {useIsWithinSplitView} from '#/lib/splitView'
 import {
@@ -139,11 +140,9 @@ export function BackButton({onPress, style, ...props}: Partial<ButtonProps>) {
     (evt: GestureResponderEvent) => {
       onPress?.(evt)
       if (evt.defaultPrevented) return
-      if (navigation.canGoBack()) {
-        navigation.goBack()
-      } else {
-        navigation.navigate('People')
-      }
+      // Opened directly (deep link, refresh): Back goes to this page's parent.
+      const state = navigation.getState()
+      goBack(navigation, backFallback(state?.routes[state.index] ?? {name: 'People'}))
     },
     [onPress, navigation],
   )

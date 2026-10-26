@@ -7,7 +7,7 @@ import {type Props as SVGIconProps} from '#/components/icons/common'
 import {Earth_Stroke2_Corner2_Rounded as EarthIcon} from '#/components/icons/Globe'
 import {PaintRoller_Stroke2_Corner2_Rounded as PaintRollerIcon} from '#/components/icons/PaintRoller'
 import {Shapes_Stroke2_Corner0_Rounded as ShapesIcon} from '#/components/icons/Shapes'
-import {SparklesIcon, TabsIcon} from '#/components/settings/icons'
+import {EyeOffIcon, SparklesIcon, TabsIcon} from '#/components/settings/icons'
 
 /** Settings pages, one per preferences-registry group, in the order the Settings list shows them. */
 export const SETTINGS_SECTIONS = [
@@ -46,5 +46,7 @@ export function useSectionInfo(): Record<
     /* What the People list shows and in what order; "Lists" alone said nothing. */
     lists: {title: l`Sorting and filters`, icon: ListIcon},
     notifications: {title: l`Notifications`, icon: BellIcon},
+    /* No page yet: holds Send diagnostics until telemetry has a vendor (A-046). */
+    privacy: {title: l`Privacy`, icon: EyeOffIcon},
   }
 }

@@ -1,11 +1,13 @@
 import {createContext, useContext, useEffect, useState} from 'react'
+import {AppState} from 'react-native'
 import {randomUUID} from 'expo-crypto'
-import {ensureMe, type MutationCtx, type Store} from '@splito/sync'
+import {ensureMe, type MutationCtx, prefFrom, type Store} from '@splito/sync'
 
-import {logger} from '#/logger'
+import {flush, logger, setDiagnosticsEnabled, setTelemetryIdentity} from '#/logger'
 import {device} from '#/storage'
 import {seedDemoIfRequested} from '#/data/demo'
 import {installDevTools} from '#/data/devTools'
+import {entitiesQuery, projectionFor} from '#/data/projections'
 import {openStore} from '#/data/store'
 
 type DataContext = {store: Store; ctx: MutationCtx}
@@ -28,6 +30,24 @@ function getMutationCtx(): MutationCtx {
   return {deviceId, actor, now: () => Date.now(), newId: () => randomUUID()}
 }
 
+/*
+ * Telemetry follows the store: the opaque install id, the Send diagnostics
+ * preference (from the shared preference read), and a flush on going to the
+ * background (16.2). Returns the cleanup.
+ */
+function wireTelemetry(store: Store, ctx: MutationCtx) {
+  setTelemetryIdentity({installId: ctx.deviceId})
+  const prefs = projectionFor(store, entitiesQuery<{value: unknown}>('preference'))
+  const offPrefs = prefs.subscribe(() => setDiagnosticsEnabled(prefFrom(prefs.get() ?? [], 'sendDiagnostics')))
+  const appState = AppState.addEventListener('change', state => {
+    if (state === 'background') flush()
+  })
+  return () => {
+    offPrefs()
+    appState.remove()
+  }
+}
+
 /** Opens the local store and ensures the "me" person exists before rendering children. */
 export function StoreProvider({children, fallback = null}: {children: React.ReactNode; fallback?: React.ReactNode}) {
   const [value, setValue] = useState<DataContext | null>(null)
@@ -35,6 +55,7 @@ export function StoreProvider({children, fallback = null}: {children: React.Reac
 
   useEffect(() => {
     let store: Store | undefined
+    let unwire: (() => void) | undefined
     let cancelled = false
     const ctx = getMutationCtx()
     openStore()
@@ -47,6 +68,7 @@ export function StoreProvider({children, fallback = null}: {children: React.Reac
         store = s
         await ensureMe(s, ctx, 'Me')
         installDevTools(s, ctx)
+        unwire = wireTelemetry(s, ctx)
         await seedDemoIfRequested(s, ctx)
         setValue({store: s, ctx})
       })
@@ -56,6 +78,7 @@ export function StoreProvider({children, fallback = null}: {children: React.Reac
       })
     return () => {
       cancelled = true
+      unwire?.()
       void store?.close()
     }
   }, [])

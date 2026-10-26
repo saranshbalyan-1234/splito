@@ -3,7 +3,7 @@ import {CURRENCIES, DomainError} from '@splito/domain'
 import type {Store} from './store'
 import type {Entity, MutationCtx} from './types'
 
-export type PrefGroup = 'appearance' | 'motion' | 'defaults' | 'categories' | 'regional' | 'lists' | 'notifications'
+export type PrefGroup = 'appearance' | 'motion' | 'defaults' | 'categories' | 'regional' | 'lists' | 'notifications' | 'privacy'
 
 export interface PrefDef<T> {
   key: string
@@ -105,6 +105,8 @@ export const PREFS = {
   'notify.expense': def('notify.expense', 'notifications', 'account', 'New expenses', true, isBool),
   'notify.payment': def('notify.payment', 'notifications', 'account', 'Payments', true, isBool),
   'notify.invite': def('notify.invite', 'notifications', 'account', 'Invites', true, isBool),
+  /** Telemetry (16.1): off, nothing is sent. No Settings row until a vendor exists (A-046); recording still honours it. */
+  sendDiagnostics: def('sendDiagnostics', 'privacy', 'device', 'Send diagnostics', true, isBool),
 } as const
 
 export type PrefKey = keyof typeof PREFS
