@@ -15,6 +15,7 @@ import {Trash_Stroke2_Corner0_Rounded as TrashIcon} from '#/components/icons/Tra
 import {createIcon} from '#/components/icons/lucide'
 import * as Prompt from '#/components/Prompt'
 import * as Toast from '#/components/Toast'
+import {dismiss as dismissToast} from '#/components/Toast/sonner'
 import {Text} from '#/components/Typography'
 
 const DemoIcon = createIcon(DatabaseZap)
@@ -54,7 +55,7 @@ export async function runLargeDemo(
 ) {
   if (progress) return
   setProgress({action, done: 0})
-  Toast.show(
+  const toast = Toast.show(
     <Toast.Outer>
       <Toast.Icon />
       <Toast.Text>
@@ -64,35 +65,38 @@ export async function runLargeDemo(
     {duration: 120_000},
   )
   const started = performance.now()
+  let done: {text: string; type: Toast.ToastType}
   try {
     if (action === 'add') {
-      const counts = await addLargeDemo(store, ctx, done =>
-        setProgress({action, done}),
+      const counts = await addLargeDemo(store, ctx, part =>
+        setProgress({action, done: part}),
       )
-      const ms = Math.round(performance.now() - started)
-      Toast.api.dismiss()
       if (counts) {
-        // Kept in the console for the owner's timing checks (dev and e2e builds only).
-        logger.info('demo.large.added', {ms, ...counts})
-        Toast.show(
-          t`Demo data added: ${plural(counts.expenses, {one: '# expense', other: '# expenses'})}`,
-          {type: 'success'},
-        )
-      } else Toast.show(t`Demo data is already added`)
+        // Kept in the log for the owner's timing checks (dev and e2e builds only).
+        logger.info('demo.large.added', {
+          ms: Math.round(performance.now() - started),
+          ...counts,
+        })
+        done = {
+          text: t`Demo data added: ${plural(counts.expenses, {one: '# expense', other: '# expenses'})}`,
+          type: 'success',
+        }
+      } else done = {text: t`Demo data is already added`, type: 'default'}
     } else {
       await removeLargeDemo(store)
-      Toast.api.dismiss()
-      Toast.show(t`Demo data removed`, {type: 'success'})
+      done = {text: t`Demo data removed`, type: 'success'}
     }
   } catch (e) {
-    Toast.api.dismiss()
     logger.error(e, {where: 'runLargeDemo'})
-    Toast.show(t`Couldn't finish. Try Remove demo data, then add it again.`, {
+    done = {
+      text: t`Couldn't finish. Try Remove demo data, then add it again.`,
       type: 'error',
-    })
-  } finally {
-    setProgress(null)
+    }
   }
+  setProgress(null)
+  dismissToast(toast)
+  // The progress toast leaves first, then the outcome takes its place.
+  setTimeout(() => Toast.show(done.text, {type: done.type}), 400)
 }
 
 /**

@@ -582,8 +582,9 @@ export function generateLargeDemo({me, today, now, seed = DEMO_LARGE_SEED}: {me:
     }
     const tpl = TRIP_TPL[g.key]!
     const all = [me, ...g.members.map(pid)]
-    // Flights (or the car) are booked weeks ahead, in rupees, by me: exact fares per person.
-    const fares = all.map(p => [p, money('INR', parseTpl(tpl.flights).lo / all.length, parseTpl(tpl.flights).hi / all.length)] as const)
+    // Flights (or the car) are booked weeks ahead, in rupees, by me: exact fares for everyone flying from India (not the locals).
+    const flyers = [me, ...g.members.filter(m => INDIAN.includes(m)).map(pid)]
+    const fares = flyers.map(p => [p, money('INR', parseTpl(tpl.flights).lo / all.length, parseTpl(tpl.flights).hi / all.length)] as const)
     const fareTotal = sumMinor(fares.map(([, v]) => v))
     addExpense({title: parseTpl(tpl.flights).title, category: 'transport', groupId: gid(g.key), currency: 'INR', tz: 'Asia/Kolkata', date: dayAgo(startAgo + rng.int(20, 35)), total: fareTotal, split: {mode: 'exact', amounts: Object.fromEntries(fares)}, payers: {[me]: fareTotal}, notes: 'Booked early, fares as quoted'})
     tpl.stay.forEach((s, i) =>
@@ -654,7 +655,7 @@ export function generateLargeDemo({me, today, now, seed = DEMO_LARGE_SEED}: {me:
     }
     if (rng.chance(EVERYDAY.football!.p)) fromTpl(football, pickTpl(EVERYDAY.football!.tpl), date)
 
-    // Book club: the monthly meet-up at a café, and the books.
+    // Book club: the monthly meet-up at a cafe, and the books.
     if (weekday === 6 && dom <= 7) {
       const people = [me, ...bookclub.members.map(pid)]
       const {total, split} = bill('INR', rng.sample(people, rng.int(4, people.length)))
