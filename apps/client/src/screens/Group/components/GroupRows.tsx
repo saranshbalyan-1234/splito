@@ -56,12 +56,15 @@ export function CurrencyHeader({currency}: {currency: string}) {
  */
 export function MemberBalanceRow({
   name,
+  avatarName = name,
   isMe,
   net,
   currency,
   locale,
 }: {
   name: string
+  /** The name the avatar draws from ("You" reads the account's own name). */
+  avatarName?: string
   isMe: boolean
   net: bigint
   currency: string
@@ -88,7 +91,7 @@ export function MemberBalanceRow({
         a.border_t,
         t.atoms.border_contrast_low,
       ]}>
-      <UserAvatar size={42} name={name} type="user" />
+      <UserAvatar size={42} name={avatarName} type="user" />
       <Text
         emoji
         numberOfLines={1}
@@ -173,11 +176,14 @@ export function OweRow({
 export function MemberRow({
   personId,
   name,
+  avatarName = name,
   isMe,
   hasLeft,
 }: {
   personId: string
   name: string
+  /** The name the avatar draws from ("You" reads the account's own name). */
+  avatarName?: string
   isMe: boolean
   hasLeft: boolean
 }) {
@@ -186,7 +192,7 @@ export function MemberRow({
   const press = usePressScale()
   const content = (
     <Animated.View style={[a.flex_row, a.align_center, a.gap_md, press.style]}>
-      <UserAvatar size={42} name={name} type="user" />
+      <UserAvatar size={42} name={avatarName} type="user" />
       <Text
         emoji
         numberOfLines={1}

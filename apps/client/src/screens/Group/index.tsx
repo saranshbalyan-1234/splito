@@ -517,6 +517,9 @@ export function GroupScreen() {
                 return (
                   <MemberBalanceRow
                     name={names.get(item.personId) ?? l`Someone`}
+                    avatarName={
+                      item.personId === me?.id ? me.data.name : undefined
+                    }
                     isMe={item.personId === me?.id}
                     net={item.net}
                     currency={item.currency}
@@ -548,6 +551,9 @@ export function GroupScreen() {
                   <MemberRow
                     personId={item.personId}
                     name={names.get(item.personId) ?? l`Someone`}
+                    avatarName={
+                      item.personId === me?.id ? me.data.name : undefined
+                    }
                     isMe={item.personId === me?.id}
                     hasLeft={item.hasLeft}
                   />

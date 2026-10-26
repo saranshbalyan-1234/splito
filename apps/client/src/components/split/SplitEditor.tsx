@@ -4,7 +4,7 @@ import {formatAmount, getCurrency, toDecimalString, ZERO} from '@splito/domain'
 import {nanoid} from 'nanoid/non-secure'
 
 import {UserAvatar} from '#/view/com/util/UserAvatar'
-import {atoms as a, tokens, useTheme, web} from '#/alf'
+import {atoms as a, tokens, useBreakpoints, useTheme, web} from '#/alf'
 import {Button, ButtonIcon, ButtonText} from '#/components/Button'
 import * as TextField from '#/components/forms/TextField'
 import * as Toggle from '#/components/forms/Toggle'
@@ -374,6 +374,7 @@ function ItemsEditor({
 }) {
   const t = useTheme()
   const {t: l} = useLingui()
+  const {gtMobile} = useBreakpoints()
   const name = useDisplayName()
   const avatarName = useAvatarName()
   const errorText = useErrorText()
@@ -402,11 +403,73 @@ function ItemsEditor({
     <View style={[a.px_lg, a.gap_sm]}>
       {form.items.map((item, index) => {
         const error = evaluation.rowErrors[`item:${item.key}`]
+        const controls = (
+          <View style={[a.flex_row, a.align_center]}>
+            {form.items.length > 1 && (
+              <>
+                <Button
+                  testID={`item-${index}-up`}
+                  label={l`Move item ${index + 1} up`}
+                  size="small"
+                  variant="ghost"
+                  color="secondary"
+                  shape="round"
+                  disabled={index === 0}
+                  style={[a.bg_transparent]}
+                  onPress={() => moveItem(index, -1)}>
+                  <ButtonIcon icon={ArrowUpIcon} size="sm" />
+                </Button>
+                <Button
+                  testID={`item-${index}-down`}
+                  label={l`Move item ${index + 1} down`}
+                  size="small"
+                  variant="ghost"
+                  color="secondary"
+                  shape="round"
+                  disabled={index === form.items.length - 1}
+                  style={[a.bg_transparent]}
+                  onPress={() => moveItem(index, 1)}>
+                  <ButtonIcon icon={ArrowDownIcon} size="sm" />
+                </Button>
+              </>
+            )}
+            <Button
+              testID={`item-${index}-remove`}
+              label={l`Remove item ${index + 1}`}
+              size="small"
+              variant="ghost"
+              color="secondary"
+              shape="round"
+              style={[a.bg_transparent]}
+              onPress={() =>
+                update(f => ({
+                  ...f,
+                  items: f.items.filter(i => i.key !== item.key),
+                }))
+              }>
+              <ButtonIcon icon={XIcon} />
+            </Button>
+          </View>
+        )
         return (
           <View
             key={item.key}
             testID={`item-${index}`}
             style={[a.p_md, a.gap_sm, a.rounded_md, t.atoms.bg_contrast_25]}>
+            {/* Phones: reorder and remove get their own line, so the name keeps the row's width. */}
+            {!gtMobile && (
+              <View style={[a.flex_row, a.align_center, a.justify_between]}>
+                <Text
+                  style={[
+                    a.text_sm,
+                    a.font_semi_bold,
+                    t.atoms.text_contrast_medium,
+                  ]}>
+                  <Trans>Item {index + 1}</Trans>
+                </Text>
+                {controls}
+              </View>
+            )}
             <View style={[a.flex_row, a.align_center, a.gap_xs]}>
               <View style={[a.flex_1]}>
                 <TextField.Root>
@@ -428,50 +491,7 @@ function ItemsEditor({
                 width={120}
                 onChangeText={v => setItem(item.key, {amount: v})}
               />
-              {form.items.length > 1 && (
-                <View style={[a.flex_row]}>
-                  <Button
-                    testID={`item-${index}-up`}
-                    label={l`Move item ${index + 1} up`}
-                    size="small"
-                    variant="ghost"
-                    color="secondary"
-                    shape="round"
-                    disabled={index === 0}
-                    style={[a.bg_transparent]}
-                    onPress={() => moveItem(index, -1)}>
-                    <ButtonIcon icon={ArrowUpIcon} size="sm" />
-                  </Button>
-                  <Button
-                    testID={`item-${index}-down`}
-                    label={l`Move item ${index + 1} down`}
-                    size="small"
-                    variant="ghost"
-                    color="secondary"
-                    shape="round"
-                    disabled={index === form.items.length - 1}
-                    style={[a.bg_transparent]}
-                    onPress={() => moveItem(index, 1)}>
-                    <ButtonIcon icon={ArrowDownIcon} size="sm" />
-                  </Button>
-                </View>
-              )}
-              <Button
-                testID={`item-${index}-remove`}
-                label={l`Remove item ${index + 1}`}
-                size="small"
-                variant="ghost"
-                color="secondary"
-                shape="round"
-                style={[a.bg_transparent]}
-                onPress={() =>
-                  update(f => ({
-                    ...f,
-                    items: f.items.filter(i => i.key !== item.key),
-                  }))
-                }>
-                <ButtonIcon icon={XIcon} />
-              </Button>
+              {gtMobile && controls}
             </View>
             {/*
              * Who had it: a tap adds someone, another tap gives them one more
@@ -493,7 +513,10 @@ function ItemsEditor({
                     variant="outline"
                     color={isEveryone ? 'primary' : 'secondary'}
                     onPress={() =>
-                      setItem(item.key, {people: [...form.people], portions: {}})
+                      setItem(item.key, {
+                        people: [...form.people],
+                        portions: {},
+                      })
                     }>
                     <ButtonText>
                       <Trans>Everyone</Trans>

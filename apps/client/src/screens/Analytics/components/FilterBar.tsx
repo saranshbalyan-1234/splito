@@ -2,7 +2,7 @@ import {ScrollView, View} from 'react-native'
 import {Trans, useLingui} from '@lingui/react/macro'
 import {getCurrency} from '@splito/domain'
 
-import {atoms as a} from '#/alf'
+import {atoms as a, useBreakpoints} from '#/alf'
 import {Button, ButtonIcon, ButtonText} from '#/components/Button'
 import {Check_Stroke2_Corner0_Rounded as CheckIcon} from '#/components/icons/Check'
 import {ChevronBottom_Stroke2_Corner0_Rounded as ChevronDownIcon} from '#/components/icons/Chevron'
@@ -17,8 +17,9 @@ import {type Report} from '#/screens/Analytics/useReport'
 /**
  * The one row of filters above everything they scope: currency, group and
  * Include groups (the period is the headline's own control). Charts,
- * totals, the list and the CSV all follow it. The row scrolls sideways when
- * it does not fit; the charts / table switch stays at its end.
+ * totals, the list and the CSV all follow it. Wide screens keep one row
+ * that scrolls sideways if it must, with the charts / table switch at its
+ * end; phones wrap the chips instead, so none is ever cut in half.
  */
 export function FilterBar({
   report,
@@ -30,6 +31,7 @@ export function FilterBar({
   onToggleView: () => void
 }) {
   const {t: l} = useLingui()
+  const {gtMobile} = useBreakpoints()
   const groupLabel = report.groupId
     ? report.nameOfGroup(report.groupId)
     : l`All groups`
@@ -131,15 +133,28 @@ export function FilterBar({
           </ButtonText>
         </Button>
       )}
-
     </>
   )
 
-  return (
+  /* Charts or tables: a display choice (the `analyticsView` preference), so it sits with the filters. */
+  const viewToggle = (
+    <Button
+      testID="analytics-view-toggle"
+      label={isTable ? l`Show charts` : l`Show as tables`}
+      size="small"
+      color="secondary"
+      onPress={onToggleView}>
+      <ButtonIcon icon={isTable ? ChartIcon : TableIcon} />
+      <ButtonText>
+        {isTable ? <Trans>Charts</Trans> : <Trans>Table</Trans>}
+      </ButtonText>
+    </Button>
+  )
+
+  return gtMobile ? (
     <View
       testID="analytics-filters"
       style={[a.flex_row, a.align_center, a.gap_sm, a.pt_md, a.pr_lg]}>
-      {/* The filters scroll sideways in one row; the view switch stays put at the end. */}
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
@@ -147,18 +162,21 @@ export function FilterBar({
         contentContainerStyle={[a.flex_row, a.align_center, a.gap_sm, a.pl_lg]}>
         {chips}
       </ScrollView>
-      {/* Charts or tables: a display choice (the `analyticsView` preference), so it sits with the filters. */}
-      <Button
-        testID="analytics-view-toggle"
-        label={isTable ? l`Show charts` : l`Show as tables`}
-        size="small"
-        color="secondary"
-        onPress={onToggleView}>
-        <ButtonIcon icon={isTable ? ChartIcon : TableIcon} />
-        <ButtonText>
-          {isTable ? <Trans>Charts</Trans> : <Trans>Table</Trans>}
-        </ButtonText>
-      </Button>
+      {viewToggle}
+    </View>
+  ) : (
+    <View
+      testID="analytics-filters"
+      style={[
+        a.flex_row,
+        a.flex_wrap,
+        a.align_center,
+        a.gap_sm,
+        a.pt_md,
+        a.px_lg,
+      ]}>
+      {chips}
+      {viewToggle}
     </View>
   )
 }

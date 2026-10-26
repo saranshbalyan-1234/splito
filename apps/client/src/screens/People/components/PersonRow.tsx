@@ -126,12 +126,18 @@ export function PersonRow({
           ]}>
           <UserAvatar size={AVATAR_SIZE} name={row.name} type="user" />
           {/*
-           * Name and chips are one column, the balances another, so a second
-           * currency never pushes the chips down. Phones top-align the
-           * balances with the name.
+           * Wide screens: name and chips are one column, the balances
+           * another, so a second currency never pushes the chips down.
            */}
           <View style={[a.flex_1, a.gap_2xs]}>
-            <ProfileCard.Name profile={row} />
+            {/* Phones: the balance shares the name's line, so the chips get the full width. */}
+            <View
+              style={[a.flex_row, a.align_start, a.justify_between, a.gap_md]}>
+              <View style={[a.flex_1]}>
+                <ProfileCard.Name profile={row} />
+              </View>
+              {!gtMobile && balances}
+            </View>
             {chips.length > 0 ? (
               <Pills.Row style={[a.pt_2xs]}>
                 {chips.map(chip => (
@@ -171,7 +177,7 @@ export function PersonRow({
               </Text>
             )}
           </View>
-          {balances}
+          {gtMobile && balances}
         </Animated.View>
       </Link>
     </Animated.View>
