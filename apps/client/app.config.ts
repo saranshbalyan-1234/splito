@@ -1,7 +1,7 @@
 import {type ExpoConfig} from 'expo/config'
 
 /*
- * Brand assets are generated from assets/brand/mark*.svg by
+ * Brand assets are generated from assets-owner/logo-owner-provided.svg by
  * `pnpm brand` (scripts/brand.ts) - edit the script, not the PNGs.
  */
 const SPLASH = {
