@@ -20,7 +20,7 @@ import {useActivityActions} from '#/components/activity/useActivityActions'
 import {useActivityFeed} from '#/components/activity/useActivityFeed'
 import {AddExpenseFAB} from '#/components/AddExpenseFAB'
 import {Button, ButtonText} from '#/components/Button'
-import {CheckThick_Stroke2_Corner0_Rounded as CheckIcon} from '#/components/icons/Check'
+import {MarkAllReadIcon} from '#/components/activity/icons'
 import * as Layout from '#/components/Layout'
 import {TabBar} from '#/components/TabBar'
 import {Text} from '#/components/Typography'
@@ -97,7 +97,7 @@ export function NotificationsScreen() {
         {unreadCount > 0 ? (
           <Layout.Header.IconButton
             testID="activity-mark-all-read"
-            icon={CheckIcon}
+            icon={MarkAllReadIcon}
             label={l`Mark all as read`}
             onPress={actions.markEverythingRead}
           />

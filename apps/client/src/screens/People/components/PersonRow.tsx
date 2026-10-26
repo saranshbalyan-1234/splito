@@ -118,12 +118,21 @@ export function PersonRow({
           a.transition_color,
         ]}>
         <Animated.View
-          style={[a.flex_row, a.align_center, a.gap_md, press.style]}>
+          style={[
+            a.flex_row,
+            gtMobile ? a.align_center : a.align_start,
+            a.gap_md,
+            press.style,
+          ]}>
           <UserAvatar size={AVATAR_SIZE} name={row.name} type="user" />
           <View style={[a.flex_1, a.gap_2xs]}>
-            {/* Phones: the balance shares the name's line so the chips get the full width. */}
+            {/*
+             * Phones: the balance shares the name's line so the chips get the
+             * full width; a second currency stacks under the first, top-aligned
+             * with the name.
+             */}
             <View
-              style={[a.flex_row, a.align_center, a.justify_between, a.gap_md]}>
+              style={[a.flex_row, a.align_start, a.justify_between, a.gap_md]}>
               <View style={[a.flex_1]}>
                 <ProfileCard.Name profile={row} />
               </View>

@@ -44,7 +44,8 @@ export function useSectionInfo(): Record<
     defaults: {title: l`Tabs and defaults`, icon: SlidersIcon},
     categories: {title: l`Categories`, icon: ShapesIcon},
     regional: {title: l`Language and region`, icon: EarthIcon},
-    lists: {title: l`Lists`, icon: ListIcon},
+    /* What the People list shows and in what order; "Lists" alone said nothing. */
+    lists: {title: l`Sorting and filters`, icon: ListIcon},
     notifications: {title: l`Notifications`, icon: BellIcon},
   }
 }

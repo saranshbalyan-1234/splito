@@ -2,7 +2,7 @@ import {View} from 'react-native'
 import {LayoutAnimationConfig} from 'react-native-reanimated'
 import {Trans, useLingui} from '@lingui/react/macro'
 import {useNavigation} from '@react-navigation/native'
-import {groupBalances} from '@splito/domain'
+import {groupBalances, sumMinor, ZERO} from '@splito/domain'
 import {type Entity, type Group} from '@splito/sync'
 
 import {
@@ -16,19 +16,24 @@ import {useNumberLocale} from '#/locale/numberLocale'
 import {useEntities, useLedger, useMe} from '#/data/hooks'
 import {EmptyState} from '#/view/com/util/EmptyState'
 import {List} from '#/view/com/util/List'
-import {useBreakpoints} from '#/alf'
-import {AddExpenseFAB} from '#/components/AddExpenseFAB'
+import {atoms as a, useBreakpoints, useTheme} from '#/alf'
+import {BalanceText} from '#/components/BalanceText'
 import {myBalances} from '#/components/groups/net'
 import {HeaderAvatar} from '#/components/HeaderAvatar'
 import {PlusLarge_Stroke2_Corner0_Rounded as PlusIcon} from '#/components/icons/Plus'
 import * as Layout from '#/components/Layout'
 import {NotificationsBell} from '#/components/NotificationsBell'
+import {Text} from '#/components/Typography'
 import {Shimmer} from '#/motion/Shimmer'
 import {GroupRow, GroupRowPlaceholder} from './components/GroupRow'
 
 const PLACEHOLDER_ROWS = 4
 
-/** Groups list: Bluesky's Lists screen (header with a create action, list-card rows). */
+/**
+ * Groups list: Bluesky's Lists screen (header with a create action,
+ * list-card rows, and - as Lists - no compose FAB; a group's own page has
+ * it). A line above the rows sums my balance across groups per currency.
+ */
 export function GroupsScreen() {
   const {t: l} = useLingui()
   const locale = useNumberLocale()
@@ -47,6 +52,16 @@ export function GroupsScreen() {
     .filter(g => !g.data.archived)
     .sort((x, y) => x.data.name.localeCompare(y.data.name))
   const createGroup = () => navigation.navigate('CreateGroup')
+  /* Per currency, never across currencies. */
+  const overall = [
+    ...new Set(rows.flatMap(g => Object.keys(balances[g.id] ?? {}))),
+  ]
+    .sort()
+    .map(currency => ({
+      currency,
+      net: sumMinor(rows.map(g => balances[g.id]?.[currency] ?? ZERO)),
+    }))
+    .filter(({net}) => net !== ZERO)
 
   return (
     <Layout.Screen testID="screen-groups">
@@ -98,9 +113,14 @@ export function GroupsScreen() {
                     group={item}
                     balances={balances[item.id] ?? {}}
                     locale={locale}
-                    hideTopBorder={index === 0}
+                    hideTopBorder={index === 0 && overall.length === 0}
                   />
                 )}
+                ListHeaderComponent={
+                  rows.length > 0 && overall.length > 0 ? (
+                    <OverallBalance overall={overall} locale={locale} />
+                  ) : undefined
+                }
                 ListEmptyComponent={
                   <EmptyState
                     testID="groups-empty"
@@ -123,8 +143,40 @@ export function GroupsScreen() {
             </MainScrollProvider>
           </LayoutAnimationConfig>
         )}
-        <AddExpenseFAB />
       </HomeHeaderModeProvider>
     </Layout.Screen>
+  )
+}
+
+/** "Across your groups": my net in every group, one figure per currency. */
+function OverallBalance({
+  overall,
+  locale,
+}: {
+  overall: {currency: string; net: bigint}[]
+  locale: string
+}) {
+  const t = useTheme()
+  return (
+    <View
+      testID="groups-overall"
+      style={[a.px_lg, a.pt_md, a.pb_md, a.gap_2xs]}>
+      <Text style={[a.text_sm, a.font_semi_bold, t.atoms.text_contrast_medium]}>
+        <Trans>Across your groups</Trans>
+      </Text>
+      <View style={[a.flex_row, a.flex_wrap, {columnGap: 16, rowGap: 2}]}>
+        {overall.map(({currency, net}) => (
+          <BalanceText
+            key={currency}
+            testID={`groups-overall-${currency}`}
+            amount={net}
+            currency={currency}
+            locale={locale}
+            subject="group"
+            style={[a.text_md]}
+          />
+        ))}
+      </View>
+    </View>
   )
 }

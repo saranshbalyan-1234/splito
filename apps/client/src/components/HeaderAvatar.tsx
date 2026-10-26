@@ -1,4 +1,5 @@
 // Adapted from bluesky-social/social-app@4e4ad9c (MIT) - src/view/shell/desktop/LeftNav.tsx (ProfileCard account menu)
+import {View} from 'react-native'
 import {Trans, useLingui} from '@lingui/react/macro'
 import {useNavigation} from '@react-navigation/native'
 
@@ -15,6 +16,7 @@ import {Sun_Stroke2_Corner0_Rounded as SunIcon} from '#/components/icons/Sun'
 import {UserCircle_Stroke2_Corner0_Rounded as UserCircleIcon} from '#/components/icons/UserCircle'
 import {HEADER_SLOT_SIZE} from '#/components/Layout/const'
 import * as Menu from '#/components/Menu'
+import {Text} from '#/components/Typography'
 
 const AVATAR_SIZE = 32
 
@@ -68,7 +70,27 @@ export function HeaderAvatar() {
           )
         }}
       </Menu.Trigger>
-      <Menu.Outer>
+      <Menu.Outer style={[{minWidth: 240}]}>
+        {/* Whose account this is, as Bluesky's account menu opens with the account. */}
+        <View
+          testID="header-menu-account"
+          style={[a.flex_row, a.align_center, a.gap_sm, a.px_sm, a.py_sm]}>
+          <UserAvatar name={me?.data.name} size={40} type="user" />
+          <View style={[a.flex_1]}>
+            <Text
+              emoji
+              numberOfLines={1}
+              style={[a.text_md, a.font_semi_bold, a.leading_snug]}>
+              {me?.data.name ?? ''}
+            </Text>
+            <Text
+              numberOfLines={1}
+              style={[a.text_sm, a.leading_snug, t.atoms.text_contrast_medium]}>
+              <Trans>Saved on this device</Trans>
+            </Text>
+          </View>
+        </View>
+        <Menu.Divider />
         <Menu.Group>
           <Menu.Item
             testID="header-menu-profile"

@@ -6,7 +6,7 @@ import Animated, {
   useSharedValue,
   withTiming,
 } from 'react-native-reanimated'
-import Svg, {Path} from 'react-native-svg'
+import Svg, {Path, Rect} from 'react-native-svg'
 import {axisTicks, formatAmount, ZERO} from '@splito/domain'
 
 import {atoms as a, useTheme} from '#/alf'
@@ -104,12 +104,25 @@ export function BarChart({
   const activeIndex = points.findIndex(p => p.key === activeKey)
   const active = points[activeIndex]
   const hasSelection = selectedKey !== undefined
+  /* Today's bucket gets a faint column behind it, so "now" reads at a glance. */
+  const currentIndex = points.findIndex(p => p.isCurrent)
 
   return (
     <View testID={testID} style={[a.w_full, {height}]} onLayout={onLayout}>
       {width > 0 && (
         <>
           <Svg width={width} height={height} style={a.absolute}>
+            {currentIndex >= 0 && (
+              <Rect
+                x={cx(currentIndex) - slot / 2}
+                y={0}
+                width={slot}
+                height={bottom}
+                rx={4}
+                fill={t.palette.primary_500}
+                opacity={0.07}
+              />
+            )}
             <Grid ticks={ticks} width={width} gutter={gutter} y={y} />
           </Svg>
           <Animated.View

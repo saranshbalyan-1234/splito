@@ -149,13 +149,23 @@ export function PeopleScreen() {
                   <EmptyState
                     testID="people-empty"
                     illustration="empty-people"
-                    message={l`Split anything with anyone. Add an expense or a friend to get started – friends don’t need the app.`}
+                    title={l`Split with friends`}
+                    message={l`Add a friend, then split any bill with them. They don’t need the app.`}
                     button={{
-                      label: l`Add friend`,
-                      text: l`Add friend`,
+                      testID: 'people-empty-add-friend',
+                      label: l`Add a friend`,
+                      text: l`Add a friend`,
                       icon: PersonPlusIcon,
                       onPress: () => navigation.navigate('AddFriend'),
-                      size: 'small',
+                      size: 'large',
+                      color: 'primary',
+                    }}
+                    secondaryButton={{
+                      testID: 'people-empty-add-expense',
+                      label: l({message: 'Add expense', context: 'action'}),
+                      text: l({message: 'Add expense', context: 'action'}),
+                      onPress: () => navigation.navigate('AddExpense', {}),
+                      size: 'large',
                       color: 'secondary',
                     }}
                   />

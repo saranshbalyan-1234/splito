@@ -24,6 +24,10 @@ import {DotGrid3x1_Stroke2_Corner0_Rounded as DotsIcon} from '#/components/icons
 import {Pencil_Stroke2_Corner0_Rounded as PencilIcon} from '#/components/icons/Pencil'
 import {Trash_Stroke2_Corner0_Rounded as TrashIcon} from '#/components/icons/Trash'
 import * as Layout from '#/components/Layout'
+import {
+  ScrollTitle,
+  useContentScrollTitle,
+} from '#/components/Layout/ScrollTitle'
 import * as Menu from '#/components/Menu'
 import * as Skeleton from '#/components/Skeleton'
 import {
@@ -53,6 +57,7 @@ export function ExpenseScreen() {
   const {params} = useRoute<RouteProp<AllNavigatorParams, 'Expense'>>()
   const navigation = useNavigation<NavigationProp>()
   const {expense, history} = useExpense(params.expenseId)
+  const scrollTitle = useContentScrollTitle()
 
   return (
     <Layout.Screen testID="screen-expense">
@@ -61,15 +66,18 @@ export function ExpenseScreen() {
         {/* Balances Edit and the overflow on the right, so the title stays centred. */}
         <Layout.Header.Slot />
         <Layout.Header.Content>
-          <Layout.Header.TitleText>
-            {expense?.data.title ?? <Trans>Expense</Trans>}
-          </Layout.Header.TitleText>
+          <ScrollTitle isShown={scrollTitle.isShown}>
+            <Layout.Header.TitleText>
+              {expense?.data.title ?? <Trans>Expense</Trans>}
+            </Layout.Header.TitleText>
+          </ScrollTitle>
         </Layout.Header.Content>
         {expense && !expense.deleted ? (
           <>
             <Layout.Header.IconButton
               testID="expense-edit-button"
               icon={PencilIcon}
+              iconSize="md"
               label={l`Edit expense`}
               onPress={() =>
                 navigation.navigate('EditExpense', {expenseId: expense.id})
@@ -100,7 +108,11 @@ export function ExpenseScreen() {
           }}
         />
       ) : (
-        <Detail expense={expense} history={history} />
+        <Detail
+          expense={expense}
+          history={history}
+          onScroll={scrollTitle.onScroll}
+        />
       )}
     </Layout.Screen>
   )
@@ -192,9 +204,11 @@ function ExpenseMenu({expense}: {expense: Entity<Expense>}) {
 function Detail({
   expense,
   history,
+  onScroll,
 }: {
   expense: Entity<Expense>
   history: Parameters<typeof History>[0]['history']
+  onScroll: React.ComponentProps<typeof Layout.Content>['onScroll']
 }) {
   const t = useTheme()
   const {t: l, i18n} = useLingui()
@@ -309,6 +323,7 @@ function Detail({
       </View>
 
       {myNet !== undefined ? (
+        /* A chip tinted by direction: green when I lent, red when I borrowed. */
         <View
           testID="expense-my-net"
           style={[
@@ -319,33 +334,28 @@ function Detail({
             a.px_md,
             a.py_sm,
             a.rounded_full,
-            t.atoms.bg_contrast_25,
+            /* Dark themes invert the palette, so _25 is the deep tint there. */
+            myNet > ZERO
+              ? {backgroundColor: t.palette.positive_25}
+              : myNet < ZERO
+                ? {backgroundColor: t.palette.negative_25}
+                : t.atoms.bg_contrast_25,
           ]}>
-          <Text style={[a.text_md, a.font_medium]}>
+          <Text
+            style={[
+              a.text_md,
+              a.font_semi_bold,
+              myNet > ZERO
+                ? {color: t.palette.positive_600}
+                : myNet < ZERO
+                  ? {color: t.palette.negative_600}
+                  : t.atoms.text,
+              {fontVariant: ['tabular-nums']},
+            ]}>
             {myNet > ZERO ? (
-              <Trans>
-                You lent{' '}
-                <Text
-                  style={[
-                    a.text_md,
-                    a.font_semi_bold,
-                    {color: t.palette.positive_600},
-                  ]}>
-                  {fmt(myNet)}
-                </Text>
-              </Trans>
+              <Trans>You lent {fmt(myNet)}</Trans>
             ) : myNet < ZERO ? (
-              <Trans>
-                You borrowed{' '}
-                <Text
-                  style={[
-                    a.text_md,
-                    a.font_semi_bold,
-                    {color: t.palette.negative_500},
-                  ]}>
-                  {fmt(magnitude(myNet))}
-                </Text>
-              </Trans>
+              <Trans>You borrowed {fmt(magnitude(myNet))}</Trans>
             ) : (
               <Trans>You paid your own share</Trans>
             )}
@@ -493,7 +503,10 @@ function Detail({
   ) : null
 
   return (
-    <Layout.Content contentContainerStyle={[a.pb_5xl]}>
+    <Layout.Content
+      contentContainerStyle={[a.pb_5xl]}
+      onScroll={onScroll}
+      scrollEventThrottle={32}>
       {deletedBanner}
       {gtTablet ? (
         <View style={[a.flex_row, a.align_start]}>
@@ -501,14 +514,17 @@ function Detail({
             {hero}
             {breakdown}
           </View>
+          {/* History as a side card, so it needs no divider running the page's height. */}
           <View
             style={[
               a.flex_1,
               {flexGrow: 2, maxWidth: 520},
-              a.border_l,
-              t.atoms.border_contrast_low,
               a.mt_xl,
-              a.pl_sm,
+              a.mr_lg,
+              a.pb_md,
+              a.rounded_md,
+              a.border,
+              t.atoms.border_contrast_low,
             ]}>
             <History history={history} />
           </View>

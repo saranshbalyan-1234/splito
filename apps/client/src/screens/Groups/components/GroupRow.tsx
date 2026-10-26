@@ -7,9 +7,9 @@ import {type Entity, type Group} from '@splito/sync'
 
 import {useRowPadding} from '#/state/preferences/density'
 import {Link} from '#/view/com/util/Link'
-import {UserAvatar} from '#/view/com/util/UserAvatar'
 import {atoms as a, useBreakpoints, useTheme} from '#/alf'
 import {BalanceText} from '#/components/BalanceText'
+import {GroupAvatar} from '#/components/groups/GroupAvatar'
 import * as Skeleton from '#/components/Skeleton'
 import {Text} from '#/components/Typography'
 import {useListAnimations} from '#/motion/listAnimations'
@@ -23,8 +23,9 @@ function utcDate(d: string) {
 }
 
 /**
- * Bluesky's list card as a row: square avatar, title, byline (kind, trip
- * dates, members), and my balance in the group per currency on the right.
+ * Bluesky's list card as a row: the group's kind tile, title, byline (kind,
+ * trip dates, members), and my balance in the group per currency on the
+ * right.
  */
 export function GroupRow({
   group,
@@ -105,7 +106,7 @@ export function GroupRow({
         ]}>
         <Animated.View
           style={[a.flex_row, a.align_center, a.gap_md, press.style]}>
-          <UserAvatar size={AVATAR_SIZE} name={name} type="list" />
+          <GroupAvatar kind={kind} size={AVATAR_SIZE} />
           <View style={[a.flex_1, a.gap_2xs]}>
             {/* Phones: the balance shares the title's line so the byline gets the full width. */}
             <View

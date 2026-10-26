@@ -138,25 +138,43 @@ export function AmountField({
             style={[a.font_semi_bold]}>{`${symbol} ${currency}`}</ButtonText>
           <ButtonIcon icon={ChevronDownIcon} size="xs" />
         </Button>
-        <PlainInput
-          testID="amount-input"
-          ref={inputRef}
-          value={value}
-          onChangeText={onChangeText}
-          onFocus={() => setIsFocused(true)}
-          onBlur={() => setIsFocused(false)}
-          placeholder={placeholder}
-          accessibilityLabel={l`Amount`}
-          accessibilityHint={l`You can type a sum, like 1200 + 300`}
-          inputMode="decimal"
-          keyboardType="decimal-pad"
+        {/* An underline, as a field's edge: it reads as editable and lights up while typing. */}
+        <View
           style={[
             a.flex_1,
-            a.text_4xl,
-            a.font_bold,
-            {fontVariant: ['tabular-nums'], minWidth: 0, paddingVertical: 4},
-          ]}
-        />
+            {
+              borderBottomWidth: isFocused ? 2 : 1,
+              marginBottom: isFocused ? 0 : 1,
+              borderColor: isFocused
+                ? t.palette.primary_500
+                : t.atoms.border_contrast_medium.borderColor,
+            },
+          ]}>
+          <PlainInput
+            testID="amount-input"
+            ref={inputRef}
+            value={value}
+            onChangeText={onChangeText}
+            onFocus={() => setIsFocused(true)}
+            /*
+             * Blur late, so a tap on a calculator key (which takes focus for
+             * a moment) lands before the keys hide; the key refocuses the
+             * input. ponytail: fixed 200 ms, a focus-within check if it ever
+             * misfires.
+             */
+            onBlur={() => setTimeout(() => setIsFocused(false), 200)}
+            placeholder={placeholder}
+            accessibilityLabel={l`Amount`}
+            accessibilityHint={l`You can type a sum, like 1200 + 300`}
+            inputMode="decimal"
+            keyboardType="decimal-pad"
+            style={[
+              a.text_4xl,
+              a.font_bold,
+              {fontVariant: ['tabular-nums'], minWidth: 0, paddingVertical: 4},
+            ]}
+          />
+        </View>
       </View>
 
       {errorText &&
@@ -177,7 +195,8 @@ export function AmountField({
         </View>
       ) : null}
 
-      {isFocused || value.trim() !== '' ? (
+      {/* The calculator keys show while the amount is being typed, like a keyboard accessory bar. */}
+      {isFocused || isExpression ? (
         <View
           style={[a.flex_row, a.align_center, a.gap_sm, a.pt_md]}
           accessibilityLabel={l`Calculator`}>
@@ -196,21 +215,23 @@ export function AmountField({
               </ButtonText>
             </Button>
           ))}
-          <Button
-            testID="calc-equals"
-            label={l`Use the result`}
-            size="small"
-            color="primary_subtle"
-            disabled={!isExpression || result === undefined}
-            onPress={() => {
-              if (result !== undefined)
-                onChangeText(toDecimalString(result, scale))
-            }}
-            style={[a.ml_auto]}>
-            <ButtonText>
-              <Trans>= Use result</Trans>
-            </ButtonText>
-          </Button>
+          {isExpression && (
+            <Button
+              testID="calc-equals"
+              label={l`Use the result`}
+              size="small"
+              color="primary"
+              disabled={result === undefined}
+              onPress={() => {
+                if (result !== undefined)
+                  onChangeText(toDecimalString(result, scale))
+              }}
+              style={[a.ml_auto]}>
+              <ButtonText>
+                <Trans>= Use result</Trans>
+              </ButtonText>
+            </Button>
+          )}
         </View>
       ) : null}
     </View>

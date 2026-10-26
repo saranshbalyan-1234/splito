@@ -1,37 +1,16 @@
 import {View} from 'react-native'
-import {
-  BedDouble,
-  Car,
-  Circle,
-  Receipt,
-  ShoppingBag,
-  ShoppingCart,
-  Ticket,
-  Utensils,
-} from 'lucide-react-native'
 
 import {usePref} from '#/data/hooks'
-import {atoms as a, useTheme} from '#/alf'
-import {createIcon} from '#/components/icons/lucide'
+import {atoms as a, useTheme, utils} from '#/alf'
 import {Banknote_Stroke2_Corner0_Rounded as BanknoteIcon} from '#/components/icons/Money'
-
-/* Lucide glyphs (ISC) for the default category icon names in the preferences registry. */
-const GLYPHS = {
-  utensils: createIcon(Utensils),
-  car: createIcon(Car),
-  bed: createIcon(BedDouble),
-  'shopping-bag': createIcon(ShoppingBag),
-  ticket: createIcon(Ticket),
-  receipt: createIcon(Receipt),
-  'shopping-cart': createIcon(ShoppingCart),
-  circle: createIcon(Circle),
-} as const
+import {CategoryGlyph} from '#/components/settings/CategoryIcon'
 
 const SIZE = 42
 
 /**
  * The leading tile of a history row, in the place Bluesky puts an avatar:
- * the expense's category glyph, or a banknote for a recorded payment.
+ * the expense's category glyph on a soft tint of the category's colour (as
+ * the expense page shows it), or a banknote for a recorded payment.
  */
 export function EntryIcon({
   category,
@@ -42,10 +21,8 @@ export function EntryIcon({
 }) {
   const t = useTheme()
   const [categories] = usePref('categories')
-  const icon = categories?.find(c => c.id === category)?.icon
-  const Glyph = isPayment
-    ? BanknoteIcon
-    : (GLYPHS[icon as keyof typeof GLYPHS] ?? GLYPHS.receipt)
+  const found = categories?.find(c => c.id === category)
+  const color = found?.color ?? t.atoms.text_contrast_medium.color
 
   return (
     <View
@@ -53,17 +30,19 @@ export function EntryIcon({
         a.align_center,
         a.justify_center,
         isPayment ? a.rounded_full : {borderRadius: 10},
-        isPayment
-          ? {backgroundColor: t.palette.primary_50}
-          : t.atoms.bg_contrast_50,
-        {width: SIZE, height: SIZE},
+        {
+          width: SIZE,
+          height: SIZE,
+          backgroundColor: isPayment
+            ? t.palette.primary_50
+            : utils.alpha(color, t.scheme === 'light' ? 0.14 : 0.22),
+        },
       ]}>
-      <Glyph
-        size="md"
-        fill={
-          isPayment ? t.palette.primary_500 : t.atoms.text_contrast_high.color
-        }
-      />
+      {isPayment ? (
+        <BanknoteIcon size="md" fill={t.palette.primary_500} />
+      ) : (
+        <CategoryGlyph icon={found?.icon ?? 'receipt'} color={color} />
+      )}
     </View>
   )
 }

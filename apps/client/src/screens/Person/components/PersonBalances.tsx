@@ -14,7 +14,8 @@ const tabular = {fontVariant: ['tabular-nums' as const]}
 /**
  * One card per currency (never added together): who owes whom, the total,
  * and - when groups are included - what is direct and what each shared
- * group contributes. The People summary card's look.
+ * group contributes. The People summary card's look. The caller places
+ * and pads it.
  */
 export function PersonBalances({
   name,
@@ -35,31 +36,28 @@ export function PersonBalances({
 
   if (currencies.length === 0) {
     return (
-      <View style={[a.px_lg, a.pb_lg]}>
-        <View
-          testID="person-settled"
-          style={[
-            a.flex_row,
-            a.align_center,
-            a.gap_sm,
-            a.px_lg,
-            a.py_md,
-            a.rounded_md,
-            a.border,
-            t.atoms.border_contrast_low,
-            {maxWidth: 480},
-          ]}>
-          <CheckIcon size="md" fill={t.palette.positive_600} />
-          <Text style={[a.flex_1, a.text_md, a.leading_snug]}>
-            <Trans>You and {name} are settled up.</Trans>
-          </Text>
-        </View>
+      <View
+        testID="person-settled"
+        style={[
+          a.flex_row,
+          a.align_center,
+          a.gap_sm,
+          a.px_lg,
+          a.py_md,
+          a.rounded_md,
+          a.border,
+          t.atoms.border_contrast_low,
+        ]}>
+        <CheckIcon size="md" fill={t.palette.positive_600} />
+        <Text style={[a.flex_1, a.text_md, a.leading_snug]}>
+          <Trans>You and {name} are settled up.</Trans>
+        </Text>
       </View>
     )
   }
 
   return (
-    <View style={[a.px_lg, a.pb_lg, a.flex_row, a.flex_wrap, a.gap_md]}>
+    <View style={[a.flex_row, a.flex_wrap, a.gap_md]}>
       {currencies.map(currency => (
         <BalanceCard
           key={currency}
@@ -119,7 +117,7 @@ function BalanceCard({
         t.atoms.border_contrast_low,
         a.px_lg,
         a.py_md,
-        {flexBasis: 300, flexGrow: 1, maxWidth: 480},
+        {flexBasis: 280, flexGrow: 1},
       ]}>
       <View style={[a.flex_row, a.align_center, a.justify_between, a.gap_sm]}>
         <Text
@@ -210,20 +208,17 @@ function BalanceCard({
 export function PersonBalancesPlaceholder() {
   const t = useTheme()
   return (
-    <View style={[a.px_lg, a.pb_lg]}>
-      <View
-        style={[
-          a.rounded_md,
-          a.border,
-          t.atoms.border_contrast_low,
-          a.px_lg,
-          a.py_md,
-          a.gap_sm,
-          {maxWidth: 480},
-        ]}>
-        <Skeleton.Text style={[a.text_sm, {width: 120}]} />
-        <Skeleton.Text style={[a.text_3xl, {width: 180}]} />
-      </View>
+    <View
+      style={[
+        a.rounded_md,
+        a.border,
+        t.atoms.border_contrast_low,
+        a.px_lg,
+        a.py_md,
+        a.gap_sm,
+      ]}>
+      <Skeleton.Text style={[a.text_sm, {width: 120}]} />
+      <Skeleton.Text style={[a.text_3xl, {width: 180}]} />
     </View>
   )
 }

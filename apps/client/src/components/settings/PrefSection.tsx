@@ -8,7 +8,7 @@ import {useHaptics} from '#/lib/haptics'
 import {useData} from '#/data/StoreProvider'
 import {usePref} from '#/data/hooks'
 import * as SettingsList from '#/screens/Settings/components/SettingsList'
-import {atoms as a, useBreakpoints, useTheme} from '#/alf'
+import {atoms as a, useTheme} from '#/alf'
 import {Button, ButtonText} from '#/components/Button'
 import {type Props as SVGIconProps} from '#/components/icons/common'
 import {Text} from '#/components/Typography'
@@ -65,12 +65,14 @@ export function PrefSection({
   children: React.ReactNode
 }) {
   const t = useTheme()
-  const {gtMobile} = useBreakpoints()
   return (
     <View style={[a.w_full]} testID={`pref-${pref.key}`}>
       <SettingsList.Item style={[a.pb_2xs, {minHeight: 42}]}>
         <SettingsList.ItemIcon icon={icon} />
-        <SettingsList.ItemText>{title}</SettingsList.ItemText>
+        {/* Splito: section titles in semibold, so each block reads as a heading over its control. */}
+        <SettingsList.ItemText style={[a.font_semi_bold]}>
+          {title}
+        </SettingsList.ItemText>
         {!pref.isDefault && <ResetButton pref={pref} title={title} />}
       </SettingsList.Item>
       <SettingsList.Item
@@ -83,14 +85,12 @@ export function PrefSection({
               a.leading_snug,
               t.atoms.text_contrast_medium,
               a.w_full,
-              gtMobile && {maxWidth: CONTROL_MAX_WIDTH},
             ]}>
             {description}
           </Text>
         )}
-        <View style={[a.w_full, gtMobile && {maxWidth: CONTROL_MAX_WIDTH}]}>
-          {children}
-        </View>
+        {/* The settings container caps the page's width, so controls share the dividers' width. */}
+        <View style={[a.w_full]}>{children}</View>
       </SettingsList.Item>
     </View>
   )

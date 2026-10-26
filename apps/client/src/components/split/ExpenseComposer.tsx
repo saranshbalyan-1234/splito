@@ -33,7 +33,9 @@ import {
   type FormEvaluation,
   hasContent,
 } from './form'
+import {CircleCheck_Stroke2_Corner0_Rounded as CheckIcon} from '#/components/icons/CircleCheck'
 import {Person_Stroke2_Corner2_Rounded as PersonIcon} from '#/components/icons/Person'
+import {Warning_Stroke2_Corner0_Rounded as WarningIcon} from '#/components/icons/Warning'
 import {CalendarIcon, GroupIcon, NotesIcon, WalletIcon} from './icons'
 import {PayersDialog} from './PayersDialog'
 import {PeopleDialog} from './PeopleDialog'
@@ -99,6 +101,7 @@ export function ExpenseComposer({
   const [showRestored, setShowRestored] = useState(isDraftRestored)
   const [isSaving, setIsSaving] = useState(false)
   const [savedId, setSavedId] = useState<string>()
+  const [isTitleFocused, setIsTitleFocused] = useState(false)
   const evaluation = evaluateForm(form, tz, decimalMark(locale))
   const category = useCategory(form.category)
   const isEdit = !!expenseId
@@ -271,13 +274,9 @@ export function ExpenseComposer({
           isEdit
             ? l`Closes without saving your changes`
             : l`Closes Add expense; your draft is kept`
-        }>
-        <Text
-          style={[a.text_sm, a.pr_sm, t.atoms.text_contrast_medium]}
-          numberOfLines={1}>
-          {isEdit ? <Trans>Edit expense</Trans> : <Trans>New expense</Trans>}
-        </Text>
-      </Composer.TopBar>
+        }
+        title={isEdit ? l`Edit expense` : l`New expense`}
+      />
 
       <KeyboardAvoidingView
         behavior={IS_IOS ? 'padding' : undefined}
@@ -337,18 +336,31 @@ export function ExpenseComposer({
               <CategoryTile category={category} size={42} />
             </Button>
             <View style={[a.flex_1, a.gap_2xs]}>
-              <PlainInput
-                testID="expense-title"
-                value={form.title}
-                onChangeText={setTitle}
-                placeholder={l`What was it for?`}
-                accessibilityLabel={l`Title`}
-                autoFocus={!isEdit && gtMobile}
-                maxLength={120}
-                spellCheck={false}
-                returnKeyType="next"
-                style={[a.text_xl, a.font_medium, {paddingVertical: 2}]}
-              />
+              <View
+                style={[
+                  {
+                    borderBottomWidth: isTitleFocused ? 2 : 1,
+                    marginBottom: isTitleFocused ? 0 : 1,
+                    borderColor: isTitleFocused
+                      ? t.palette.primary_500
+                      : t.atoms.border_contrast_medium.borderColor,
+                  },
+                ]}>
+                <PlainInput
+                  testID="expense-title"
+                  value={form.title}
+                  onChangeText={setTitle}
+                  onFocus={() => setIsTitleFocused(true)}
+                  onBlur={() => setIsTitleFocused(false)}
+                  placeholder={l`What was it for?`}
+                  accessibilityLabel={l`Title`}
+                  autoFocus={!isEdit && gtMobile}
+                  maxLength={120}
+                  spellCheck={false}
+                  returnKeyType="next"
+                  style={[a.text_xl, a.font_medium, {paddingVertical: 4}]}
+                />
+              </View>
               <Text
                 testID="expense-category-name"
                 style={[a.text_sm, t.atoms.text_contrast_medium]}
@@ -698,21 +710,37 @@ function Footer({
             <FieldError testID="split-readout">{text}</FieldError>
           </View>
         ) : (
-          <Text
-            testID="split-readout"
+          <View
             style={[
-              need ? a.text_right : a.flex_1,
-              a.text_sm,
-              a.font_medium,
-              {fontVariant: ['tabular-nums']},
-              tone === 'off'
-                ? {color: t.palette.negative_500}
-                : tone === 'ok'
-                  ? t.atoms.text_contrast_high
-                  : t.atoms.text_contrast_medium,
+              need ? null : a.flex_1,
+              a.flex_row,
+              a.align_center,
+              a.gap_xs,
             ]}>
-            {text}
-          </Text>
+            {/* A status mark: green check when the split adds up, red when it does not. */}
+            {remaining && tone === 'ok' ? (
+              <CheckIcon size="sm" fill={t.palette.positive_600} />
+            ) : remaining && tone === 'off' ? (
+              <WarningIcon size="sm" fill={t.palette.negative_500} />
+            ) : null}
+            <Text
+              testID="split-readout"
+              style={[
+                need ? a.text_right : a.flex_1,
+                a.text_sm,
+                a.font_medium,
+                {fontVariant: ['tabular-nums']},
+                tone === 'off'
+                  ? {color: t.palette.negative_500}
+                  : remaining && tone === 'ok'
+                    ? {color: t.palette.positive_600}
+                    : tone === 'ok'
+                      ? t.atoms.text_contrast_high
+                      : t.atoms.text_contrast_medium,
+              ]}>
+              {text}
+            </Text>
+          </View>
         )
       ) : null}
     </View>

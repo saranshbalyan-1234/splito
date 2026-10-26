@@ -17,14 +17,15 @@ import {useNumberLocale} from '#/locale/numberLocale'
 import {EmptyState} from '#/view/com/util/EmptyState'
 import {List} from '#/view/com/util/List'
 import {UserAvatar} from '#/view/com/util/UserAvatar'
+import {GroupBalanceCards} from '#/screens/Group/components/GroupBalanceCards'
 import {SectionHeader} from '#/screens/People/components/SectionHeader'
 import {atoms as a, tokens, useBreakpoints, useTheme} from '#/alf'
 import {AddExpenseFAB} from '#/components/AddExpenseFAB'
-import {BalanceText} from '#/components/BalanceText'
 import {Button, ButtonIcon, ButtonText} from '#/components/Button'
 import {useDialogControl} from '#/components/Dialog'
 import * as SegmentedControl from '#/components/forms/SegmentedControl'
 import {AddMembersDialog} from '#/components/groups/AddMembersDialog'
+import {GroupAvatar} from '#/components/groups/GroupAvatar'
 import {memberNets} from '#/components/groups/net'
 import {RulesEditor} from '#/components/groups/RulesEditor'
 import {DotGrid3x1_Stroke2_Corner0_Rounded as DotsIcon} from '#/components/icons/DotGrid'
@@ -33,6 +34,7 @@ import {HandCoins_Stroke2_Corner0_Rounded as HandCoinsIcon} from '#/components/i
 import {PersonPlus_Filled_Stroke2_Corner0_Rounded as PersonPlusIcon} from '#/components/icons/Person'
 import {PlusLarge_Stroke2_Corner0_Rounded as PlusIcon} from '#/components/icons/Plus'
 import * as Layout from '#/components/Layout'
+import {ScrollTitle, useScrollTitle} from '#/components/Layout/ScrollTitle'
 import * as Menu from '#/components/Menu'
 import {
   HistoryRow,
@@ -69,7 +71,7 @@ type Item =
   | {type: 'member'; key: string; personId: string; hasLeft: boolean}
   | {type: 'rules'; key: string}
 
-const AVATAR_STACK = 5
+const AVATAR_STACK = 3
 
 /**
  * A group, laid out like Bluesky's list page: the header block (avatar,
@@ -86,6 +88,7 @@ export function GroupScreen() {
   const route = useRoute<RouteProp<AllNavigatorParams, 'Group'>>()
   const {groupId} = route.params
   const [tab, setTab] = useState<Tab>(route.params.tab ?? 'expenses')
+  const scrollTitle = useScrollTitle()
   const me = useMe()
   const people = useEntities<Person>('person')
   const groups = useEntities<Group>('group')
@@ -210,11 +213,31 @@ export function GroupScreen() {
       : null
   const memberCount = members.filter(m => m.leftAt === null).length
   const memberText = memberCount === 1 ? l`1 member` : l`${memberCount} members`
-  const byline = [kindLabel, dates, memberText].filter(Boolean).join(' · ')
-  const stack = members.filter(m => m.leftAt === null).slice(0, AVATAR_STACK)
-  const memberNames = members
-    .filter(m => m.leftAt === null)
-    .map(m => names.get(m.personId) ?? '')
+  const byline = [kindLabel, memberText].join(' · ')
+  const current = members.filter(m => m.leftAt === null)
+  /* Bluesky's "followed by" stack: three faces, then +N. */
+  const stack = current.slice(0, AVATAR_STACK)
+  const moreCount = current.length - stack.length
+  const memberNames = current.map(m => names.get(m.personId) ?? '')
+  /* The faces' names; the +N chip beside them already counts the rest. */
+  const memberSummary = memberNames.slice(0, AVATAR_STACK).join(', ')
+
+  const settleButton = (
+    <View style={[a.flex_row, a.flex_wrap, a.gap_sm]}>
+      <Button
+        testID="group-settle"
+        label={l`Settle up`}
+        size="large"
+        color="primary"
+        disabled={isSettled}
+        onPress={() => navigation.navigate('Settle', {groupId})}>
+        <ButtonIcon icon={HandCoinsIcon} />
+        <ButtonText>
+          {isSettled ? <Trans>All settled up</Trans> : <Trans>Settle up</Trans>}
+        </ButtonText>
+      </Button>
+    </View>
+  )
 
   const header =
     isLoading || !group ? (
@@ -231,116 +254,131 @@ export function GroupScreen() {
       </Shimmer>
     ) : (
       <>
-        <View style={[a.px_lg, a.pt_lg, a.pb_md, a.gap_md]}>
-          <View style={[a.flex_row, a.align_center, a.gap_md]}>
-            <UserAvatar
-              size={gtMobile ? 72 : 64}
-              name={group.data.name}
-              type="list"
-            />
-            <View style={[a.flex_1, a.gap_2xs]}>
+        {/* As a friend's page: wide screens put the balance cards beside the hero. */}
+        <View
+          style={[
+            a.px_lg,
+            a.pt_lg,
+            a.pb_lg,
+            gtMobile ? [a.flex_row, a.align_start, a.gap_2xl] : a.gap_lg,
+          ]}>
+          <View
+            style={[
+              a.gap_lg,
+              gtMobile && {flexBasis: 380, flexGrow: 0, flexShrink: 1},
+            ]}>
+            <View style={[a.flex_row, a.align_center, a.gap_md]}>
+              <GroupAvatar kind={group.data.kind} size={gtMobile ? 72 : 64} />
+              <View style={[a.flex_1, a.gap_2xs]}>
+                <Text
+                  emoji
+                  testID="group-name"
+                  numberOfLines={2}
+                  style={[
+                    gtMobile ? a.text_3xl : a.text_2xl,
+                    a.font_bold,
+                    a.leading_tight,
+                  ]}>
+                  {group.data.name}
+                </Text>
+                <Text
+                  testID="group-byline"
+                  numberOfLines={1}
+                  style={[
+                    a.text_md,
+                    a.leading_snug,
+                    t.atoms.text_contrast_medium,
+                  ]}>
+                  {byline}
+                </Text>
+                {dates && (
+                  <Text
+                    testID="group-dates"
+                    numberOfLines={1}
+                    style={[
+                      a.text_sm,
+                      a.leading_snug,
+                      t.atoms.text_contrast_medium,
+                    ]}>
+                    {dates}
+                  </Text>
+                )}
+              </View>
+            </View>
+
+            <View style={[a.flex_row, a.align_center, a.gap_sm]}>
+              <View style={[a.flex_row, a.align_center]}>
+                {stack.map((m, i) => (
+                  <View
+                    key={m.personId}
+                    style={[
+                      a.rounded_full,
+                      {
+                        marginLeft: i === 0 ? 0 : -6,
+                        borderWidth: 2,
+                        borderColor: t.atoms.bg.backgroundColor,
+                        zIndex: AVATAR_STACK - i,
+                      },
+                    ]}>
+                    <UserAvatar
+                      size={32}
+                      name={
+                        m.personId === me?.id
+                          ? me.data.name
+                          : names.get(m.personId)
+                      }
+                      type="user"
+                      noBorder
+                    />
+                  </View>
+                ))}
+                {moreCount > 0 && (
+                  <View
+                    style={[
+                      a.rounded_full,
+                      a.align_center,
+                      a.justify_center,
+                      t.atoms.bg_contrast_50,
+                      {
+                        marginLeft: -6,
+                        height: 36,
+                        minWidth: 36,
+                        paddingHorizontal: 6,
+                        borderWidth: 2,
+                        borderColor: t.atoms.bg.backgroundColor,
+                      },
+                    ]}>
+                    <Text
+                      style={[
+                        a.text_xs,
+                        a.font_semi_bold,
+                        t.atoms.text_contrast_medium,
+                      ]}>
+                      +{moreCount}
+                    </Text>
+                  </View>
+                )}
+              </View>
               <Text
                 emoji
-                testID="group-name"
-                numberOfLines={2}
-                style={[
-                  gtMobile ? a.text_3xl : a.text_2xl,
-                  a.font_bold,
-                  a.leading_tight,
-                ]}>
-                {group.data.name}
-              </Text>
-              <Text
-                testID="group-byline"
-                numberOfLines={2}
-                style={[
-                  a.text_md,
-                  a.leading_snug,
-                  t.atoms.text_contrast_medium,
-                ]}>
-                {byline}
+                numberOfLines={1}
+                style={[a.flex_1, a.text_sm, t.atoms.text_contrast_medium]}>
+                {memberSummary}
               </Text>
             </View>
+
+            {gtMobile && settleButton}
           </View>
 
-          <View style={[a.flex_row, a.align_center, a.gap_sm]}>
-            <View style={[a.flex_row]}>
-              {stack.map((m, i) => (
-                <View
-                  key={m.personId}
-                  style={[
-                    a.rounded_full,
-                    {
-                      marginLeft: i === 0 ? 0 : -6,
-                      borderWidth: 2,
-                      borderColor: t.atoms.bg.backgroundColor,
-                    },
-                  ]}>
-                  <UserAvatar
-                    size={28}
-                    name={
-                      m.personId === me?.id
-                        ? me.data.name
-                        : names.get(m.personId)
-                    }
-                    type="user"
-                    noBorder
-                  />
-                </View>
-              ))}
-            </View>
-            <Text
-              emoji
-              numberOfLines={1}
-              style={[a.flex_1, a.text_sm, t.atoms.text_contrast_medium]}>
-              {memberNames.join(', ')}
-            </Text>
+          <View style={[gtMobile && a.flex_1]}>
+            <GroupBalanceCards
+              openCurrencies={openCurrencies}
+              mine={mine}
+              locale={locale}
+            />
           </View>
 
-          <View style={[a.gap_2xs]}>
-            {openCurrencies.length === 0 ? (
-              <Text
-                testID="group-my-balance"
-                style={[
-                  a.text_md,
-                  a.leading_snug,
-                  t.atoms.text_contrast_medium,
-                ]}>
-                <Trans>You’re settled up in this group.</Trans>
-              </Text>
-            ) : (
-              openCurrencies.map(currency => (
-                <BalanceText
-                  key={currency}
-                  testID={`group-my-balance-${currency}`}
-                  amount={mine[currency]!}
-                  currency={currency}
-                  locale={locale}
-                  subject="group"
-                  style={[a.text_md]}
-                />
-              ))
-            )}
-          </View>
-
-          <View style={[a.flex_row, a.flex_wrap, a.gap_xs]}>
-            <Button
-              testID="group-settle"
-              label={l`Settle up`}
-              size="small"
-              color="primary"
-              disabled={isSettled}
-              onPress={() => navigation.navigate('Settle', {groupId})}>
-              <ButtonIcon icon={HandCoinsIcon} />
-              <ButtonText>
-                {isSettled ? (
-                  <Trans>All settled up</Trans>
-                ) : (
-                  <Trans>Settle up</Trans>
-                )}
-              </ButtonText>
-            </Button>
-          </View>
+          {!gtMobile && settleButton}
         </View>
 
         <View style={[a.px_lg, a.pb_md, {maxWidth: 640 + tokens.space.lg * 2}]}>
@@ -410,14 +448,11 @@ export function GroupScreen() {
       <Layout.Header.Outer>
         <Layout.Header.BackButton />
         <Layout.Header.Content>
-          <Layout.Header.TitleText>
-            {group?.data.name ?? <Trans>Group</Trans>}
-          </Layout.Header.TitleText>
-          {group && (
-            <Layout.Header.SubtitleText>
-              {[kindLabel, memberText].join(' · ')}
-            </Layout.Header.SubtitleText>
-          )}
+          <ScrollTitle isShown={scrollTitle.isShown}>
+            <Layout.Header.TitleText>
+              {group?.data.name ?? <Trans>Group</Trans>}
+            </Layout.Header.TitleText>
+          </ScrollTitle>
         </Layout.Header.Content>
         {/* Settle up and Add expense are the page's own buttons, so the header keeps only the overflow (owner header rule). */}
         {group ? (
@@ -474,6 +509,7 @@ export function GroupScreen() {
       </Layout.Header.Outer>
       <LayoutAnimationConfig skipEntering skipExiting>
         <List
+          onScrolledDownChange={scrollTitle.onScrolledDownChange}
           data={items}
           keyExtractor={(item: Item) => item.key}
           renderItem={({item}: {item: Item}) => {

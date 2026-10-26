@@ -4,7 +4,7 @@ import {Trans, useLingui} from '@lingui/react/macro'
 import {formatAmount, type Transfer} from '@splito/domain'
 
 import {UserAvatar} from '#/view/com/util/UserAvatar'
-import {atoms as a, useBreakpoints, useTheme} from '#/alf'
+import {atoms as a, useTheme} from '#/alf'
 import {Button, ButtonText} from '#/components/Button'
 import {ArrowRight_Stroke2_Corner0_Rounded as ArrowRightIcon} from '#/components/icons/Arrow'
 import {Text} from '#/components/Typography'
@@ -12,7 +12,9 @@ import {useListAnimations} from '#/motion/listAnimations'
 
 /**
  * One payment of a settle-up plan: who pays whom and how much, with the
- * button that records it once it has happened outside Splito.
+ * button that records it once it has happened outside Splito. When I am one
+ * side, only the other person's face shows and the amount takes the money
+ * colour (green coming to me, red going out).
  */
 export function TransferRow({
   transfer,
@@ -34,17 +36,17 @@ export function TransferRow({
 }) {
   const t = useTheme()
   const {t: l} = useLingui()
-  const {gtMobile} = useBreakpoints()
   const listAnimations = useListAnimations()
   const {from, to, amount} = transfer
   const name = (id: string) => names.get(id) ?? l`Someone`
   const avatarName = (id: string) => (id === me ? meName : name(id))
-  const sentence =
-    from === me
-      ? l`You pay ${name(to)}`
-      : to === me
-        ? l`${name(from)} pays you`
-        : l`${name(from)} pays ${name(to)}`
+  const isIncoming = to === me
+  const isOutgoing = from === me
+  const sentence = isOutgoing
+    ? l`You pay ${name(to)}`
+    : isIncoming
+      ? l`${name(from)} pays you`
+      : l`${name(from)} pays ${name(to)}`
 
   return (
     <Animated.View
@@ -59,11 +61,19 @@ export function TransferRow({
         a.border_t,
         t.atoms.border_contrast_low,
       ]}>
-      <View style={[a.flex_row, a.align_center, a.gap_2xs]}>
-        <UserAvatar size={36} name={avatarName(from)} type="user" />
-        <ArrowRightIcon size="xs" fill={t.atoms.text_contrast_low.color} />
-        <UserAvatar size={36} name={avatarName(to)} type="user" />
-      </View>
+      {isIncoming || isOutgoing ? (
+        <UserAvatar
+          size={42}
+          name={avatarName(isIncoming ? from : to)}
+          type="user"
+        />
+      ) : (
+        <View style={[a.flex_row, a.align_center, a.gap_2xs]}>
+          <UserAvatar size={32} name={avatarName(from)} type="user" />
+          <ArrowRightIcon size="sm" fill={t.atoms.text_contrast_medium.color} />
+          <UserAvatar size={32} name={avatarName(to)} type="user" />
+        </View>
+      )}
       <View style={[a.flex_1, a.gap_2xs]}>
         <Text
           emoji
@@ -75,10 +85,17 @@ export function TransferRow({
         <Text
           testID="transfer-amount"
           style={[
-            a.text_lg,
-            a.font_bold,
-            a.leading_tight,
-            {fontVariant: ['tabular-nums']},
+            a.text_md,
+            a.font_semi_bold,
+            a.leading_snug,
+            {
+              color: isIncoming
+                ? t.palette.positive_600
+                : isOutgoing
+                  ? t.palette.negative_500
+                  : t.atoms.text.color,
+              fontVariant: ['tabular-nums'],
+            },
           ]}>
           {formatAmount(amount, currency, locale)}
         </Text>
@@ -87,14 +104,10 @@ export function TransferRow({
         testID="transfer-record"
         label={l`Record this payment`}
         size="small"
-        color="secondary"
+        color="primary_subtle"
         onPress={onRecordPress}>
         <ButtonText>
-          {gtMobile ? (
-            <Trans>Record this payment</Trans>
-          ) : (
-            <Trans>Record</Trans>
-          )}
+          <Trans>Record</Trans>
         </ButtonText>
       </Button>
     </Animated.View>

@@ -1,6 +1,7 @@
 import {useState} from 'react'
 import {View} from 'react-native'
 import {LayoutAnimationConfig} from 'react-native-reanimated'
+import {plural} from '@lingui/core/macro'
 import {Trans, useLingui} from '@lingui/react/macro'
 import {type RouteProp, useNavigation, useRoute} from '@react-navigation/native'
 import {DomainError, personSummary, sumMinor, ZERO} from '@splito/domain'
@@ -42,6 +43,7 @@ import {PlusLarge_Stroke2_Corner0_Rounded as PlusIcon} from '#/components/icons/
 import {SettingsSliderVertical_Stroke2_Corner0_Rounded as FilterIcon} from '#/components/icons/SettingsSlider'
 import {Trash_Stroke2_Corner0_Rounded as TrashIcon} from '#/components/icons/Trash'
 import * as Layout from '#/components/Layout'
+import {ScrollTitle, useScrollTitle} from '#/components/Layout/ScrollTitle'
 import * as Menu from '#/components/Menu'
 import {EditFriendDialog} from '#/components/people/EditFriendDialog'
 import {
@@ -101,6 +103,7 @@ export function PersonScreen() {
   const [applied, setApplied] = useState<boolean | null>(null)
   const includeGroups = applied ?? includeDefault ?? true
 
+  const scrollTitle = useScrollTitle()
   const filterControl = useDialogControl()
   const paymentControl = useDialogControl()
   const upiControl = useDialogControl()
@@ -163,19 +166,29 @@ export function PersonScreen() {
         )
       : []
   const items = withMonths(history)
-  const sharedGroups = (groups ?? [])
-    .filter(
-      g =>
-        !g.data.archived &&
-        g.data.members.some(m => m.personId === personId && m.leftAt === null),
-    )
-    .map(g => g.data.name)
-    .sort((x, y) => x.localeCompare(y))
+  const sharedGroups = (groups ?? []).filter(
+    g =>
+      !g.data.archived &&
+      g.data.members.some(m => m.personId === personId && m.leftAt === null),
+  )
 
   const totals = summary?.byCurrency ?? {}
   const openCurrencies = Object.keys(totals)
     .filter(c => totals[c]!.total !== ZERO)
     .sort()
+  const hasOpenBalance = openCurrencies.length > 0
+  /* What the hero can say that the balance card does not: shared groups and a UPI id. */
+  const byline = [
+    person?.data.upiId ? l`UPI ${person.data.upiId}` : null,
+    sharedGroups.length === 0
+      ? l`No shared groups`
+      : plural(sharedGroups.length, {
+          one: '# shared group',
+          other: '# shared groups',
+        }),
+  ]
+    .filter(Boolean)
+    .join(' · ')
   // Each currency's balance by part; a payment settles these (RecordPaymentDialog).
   const balance = Object.fromEntries(
     openCurrencies.map(c => [c, balanceParts(totals[c]!)]),
@@ -223,41 +236,69 @@ export function PersonScreen() {
   const header = isLoading ? (
     <Shimmer testID="person-loading">
       <PersonHeroPlaceholder />
-      <PersonBalancesPlaceholder />
+      <View style={[a.px_lg, a.pb_lg]}>
+        <PersonBalancesPlaceholder />
+      </View>
     </Shimmer>
   ) : (
     <>
-      <View style={[a.px_lg, a.pt_lg, a.pb_lg, a.gap_md]}>
-        <View style={[a.flex_row, a.align_end, a.justify_between, a.gap_md]}>
+      {/*
+       * Bluesky's profile header: avatar, name, a byline, then the page's
+       * one primary action. Wide screens put the balance cards beside it.
+       */}
+      <View
+        style={[
+          gtMobile ? [a.flex_row, a.align_start, a.gap_2xl] : a.gap_lg,
+          a.px_lg,
+          a.pt_lg,
+          a.pb_lg,
+        ]}>
+        <View style={[a.gap_md, gtMobile && {flexBasis: 320, flexShrink: 0}]}>
           <UserAvatar
-            size={gtMobile ? 90 : 72}
+            size={gtMobile ? 88 : 72}
             name={person!.data.name}
             type="user"
           />
-          <View
-            style={[
-              a.flex_1,
-              a.flex_row,
-              a.flex_wrap,
-              a.justify_end,
-              a.gap_xs,
-            ]}>
+          <View style={[a.gap_2xs]}>
+            <Text
+              emoji
+              testID="person-name"
+              style={[
+                gtMobile ? a.text_4xl : a.text_3xl,
+                a.font_bold,
+                a.leading_tight,
+                t.atoms.text,
+              ]}>
+              {person!.data.name}
+            </Text>
+            <Text
+              testID="person-byline"
+              numberOfLines={1}
+              style={[a.text_md, a.leading_snug, t.atoms.text_contrast_medium]}>
+              {byline}
+            </Text>
+          </View>
+          <View style={[a.flex_row, a.flex_wrap, a.gap_sm, a.pt_xs]}>
             <Button
               testID="person-record-payment"
-              label={l`Record a payment`}
-              size="small"
-              color="secondary"
+              label={hasOpenBalance ? l`Settle up` : l`Record a payment`}
+              size="large"
+              color={hasOpenBalance ? 'primary' : 'secondary'}
               onPress={() => recordPayment()}>
               <ButtonIcon icon={HandCoinsIcon} />
               <ButtonText>
-                <Trans>Record payment</Trans>
+                {hasOpenBalance ? (
+                  <Trans>Settle up</Trans>
+                ) : (
+                  <Trans>Record payment</Trans>
+                )}
               </ButtonText>
             </Button>
             {owedInr !== null && (
               <Button
                 testID="person-upi"
                 label={l`Pay with UPI`}
-                size="small"
+                size="large"
                 color="secondary"
                 onPress={() => upiControl.open()}>
                 <ButtonIcon icon={RupeeIcon} />
@@ -268,38 +309,15 @@ export function PersonScreen() {
             )}
           </View>
         </View>
-        <View style={[a.gap_2xs]}>
-          <Text
-            emoji
-            testID="person-name"
-            style={[
-              gtMobile ? a.text_4xl : a.text_3xl,
-              a.font_bold,
-              a.leading_tight,
-              t.atoms.text,
-            ]}>
-            {person!.data.name}
-          </Text>
-          <Text
-            numberOfLines={1}
-            style={[a.text_md, a.leading_snug, t.atoms.text_contrast_medium]}>
-            {person!.data.upiId ?? l`Friend on this device`}
-          </Text>
+        <View style={[gtMobile && a.flex_1]}>
+          <PersonBalances
+            name={person!.data.name}
+            summary={summary}
+            groupNames={groupNames}
+            locale={locale}
+          />
         </View>
-        {sharedGroups.length > 0 && (
-          <Pills.Row size="lg">
-            {sharedGroups.map(g => (
-              <Pills.Tag key={g}>{g}</Pills.Tag>
-            ))}
-          </Pills.Row>
-        )}
       </View>
-      <PersonBalances
-        name={person!.data.name}
-        summary={summary}
-        groupNames={groupNames}
-        locale={locale}
-      />
       <SectionHeader
         title={l`History`}
         testID="person-history-title"
@@ -333,9 +351,11 @@ export function PersonScreen() {
       <Layout.Header.Outer>
         <Layout.Header.BackButton />
         <Layout.Header.Content>
-          <Layout.Header.TitleText>
-            {person?.data.name ?? <Trans>Friend</Trans>}
-          </Layout.Header.TitleText>
+          <ScrollTitle isShown={scrollTitle.isShown}>
+            <Layout.Header.TitleText>
+              {person?.data.name ?? <Trans>Friend</Trans>}
+            </Layout.Header.TitleText>
+          </ScrollTitle>
         </Layout.Header.Content>
         {person ? (
           <Menu.Root>
@@ -381,6 +401,7 @@ export function PersonScreen() {
       </Layout.Header.Outer>
       <LayoutAnimationConfig skipEntering skipExiting>
         <List
+          onScrolledDownChange={scrollTitle.onScrolledDownChange}
           data={isLoading ? [] : items}
           keyExtractor={(item: HistoryItem) => item.key}
           renderItem={({item}: {item: HistoryItem}) =>
@@ -522,7 +543,7 @@ export function PersonScreen() {
 
 function PersonHeroPlaceholder() {
   return (
-    <View style={[a.px_lg, a.pt_lg, a.pb_lg, a.gap_md]}>
+    <View style={[a.px_lg, a.pt_lg, a.pb_md, a.gap_md]}>
       <Skeleton.Circle size={72} />
       <View style={[a.gap_xs]}>
         <Skeleton.Text style={[a.text_3xl, {width: 200}]} />

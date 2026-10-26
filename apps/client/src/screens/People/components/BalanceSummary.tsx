@@ -1,4 +1,4 @@
-import {ScrollView, useWindowDimensions, View} from 'react-native'
+import {View} from 'react-native'
 import Animated from 'react-native-reanimated'
 import {Trans, useLingui} from '@lingui/react/macro'
 import {
@@ -10,8 +10,7 @@ import {
 } from '@splito/domain'
 
 import {Link} from '#/view/com/util/Link'
-import {atoms as a, tokens, useBreakpoints, useTheme, web} from '#/alf'
-import {ChevronRight_Stroke2_Corner0_Rounded as ChevronIcon} from '#/components/icons/Chevron'
+import {atoms as a, tokens, useTheme} from '#/alf'
 import * as Skeleton from '#/components/Skeleton'
 import {Text} from '#/components/Typography'
 import {AnimatedAmount} from '#/motion/AnimatedAmount'
@@ -20,13 +19,12 @@ import {SectionHeader} from './SectionHeader'
 
 const tabular = {fontVariant: ['tabular-nums' as const]}
 const CARD_GAP = tokens.space.md
-/** How much of the next card shows on phones, hinting that the row scrolls. */
-const PEEK = 40
 
 /**
- * The top of People: one card per currency with the net balance, what
- * friends owe you and what you owe. Currencies are never added together.
- * Cards open Analytics. Phones scroll the cards sideways.
+ * The top of People: one card per currency with the net balance, and what
+ * friends owe you and what you owe when both are open. Currencies are never
+ * added together. Cards open Analytics. They share the row on wide screens
+ * and stack on phones, so every card is whole on screen.
  */
 export function BalanceSummary({
   totals,
@@ -36,80 +34,21 @@ export function BalanceSummary({
   locale: string
 }) {
   const {t: l} = useLingui()
-  const {gtMobile} = useBreakpoints()
-  const {width} = useWindowDimensions()
-  const isCarousel = !gtMobile && totals.length > 1
-  const cardWidth = width - tokens.space.lg * 2 - (isCarousel ? PEEK : 0)
-
-  const cards = totals.map(total => (
-    <SummaryCard
-      key={total.currency}
-      total={total}
-      locale={locale}
-      width={gtMobile ? undefined : cardWidth}
-    />
-  ))
 
   return (
     <View testID="people-summary">
-      <SectionHeader
-        testID="people-balances-title"
-        title={l`Balances`}
-        action={<AnalyticsLink />}
-      />
-      {isCarousel ? (
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          snapToInterval={cardWidth + CARD_GAP}
-          decelerationRate="fast"
-          style={web({
-            scrollSnapType: 'x mandatory',
-            scrollPaddingLeft: tokens.space.lg,
-          })}
-          contentContainerStyle={[a.px_lg, a.pb_md, {gap: CARD_GAP}]}>
-          {cards}
-        </ScrollView>
-      ) : (
-        <View
-          style={[a.px_lg, a.pb_md, a.flex_row, a.flex_wrap, {gap: CARD_GAP}]}>
-          {cards}
-        </View>
-      )}
+      <SectionHeader testID="people-balances-title" title={l`Balances`} />
+      <View
+        style={[a.px_lg, a.pb_md, a.flex_row, a.flex_wrap, {gap: CARD_GAP}]}>
+        {totals.map(total => (
+          <SummaryCard key={total.currency} total={total} locale={locale} />
+        ))}
+      </View>
     </View>
   )
 }
 
-function AnalyticsLink() {
-  const t = useTheme()
-  const {t: l} = useLingui()
-  return (
-    <Link
-      testID="people-summary-analytics"
-      href="/analytics"
-      asAnchor
-      anchorNoUnderline
-      accessibilityLabel={l`Analytics`}
-      accessibilityHint=""
-      style={[a.flex_row, a.align_center, a.gap_2xs, a.py_xs]}>
-      <Text
-        style={[a.text_sm, a.font_semi_bold, {color: t.palette.primary_500}]}>
-        <Trans>Analytics</Trans>
-      </Text>
-      <ChevronIcon size="sm" fill={t.palette.primary_500} />
-    </Link>
-  )
-}
-
-function SummaryCard({
-  total,
-  locale,
-  width,
-}: {
-  total: CurrencyTotal
-  locale: string
-  width: number | undefined
-}) {
+function SummaryCard({total, locale}: {total: CurrencyTotal; locale: string}) {
   const t = useTheme()
   const {t: l} = useLingui()
   const {currency, owed, owe, net} = total
@@ -123,13 +62,7 @@ function SummaryCard({
 
   /* The wrapper takes the card's place in the row so the whole card, border included, shrinks on press. */
   return (
-    <Animated.View
-      style={[
-        width === undefined
-          ? {flexBasis: 300, flexGrow: 1, maxWidth: 400}
-          : [{width}, web({scrollSnapAlign: 'start'})],
-        press.style,
-      ]}>
+    <Animated.View style={[{flexBasis: 280, flexGrow: 1}, press.style]}>
       <Link
         testID={`summary-${currency}`}
         onPressIn={press.onPressIn}
@@ -191,26 +124,29 @@ function SummaryCard({
             ]}
           />
         </View>
-        <View style={[a.flex_row, a.flex_wrap, a.pt_sm, a.gap_md]}>
-          <Text style={[a.text_sm, t.atoms.text_contrast_medium]}>
-            <Trans>
-              Owed to you{' '}
-              <Text
-                style={[a.text_sm, a.font_semi_bold, t.atoms.text, tabular]}>
-                {formatAmount(owed, currency, locale)}
-              </Text>
-            </Trans>
-          </Text>
-          <Text style={[a.text_sm, t.atoms.text_contrast_medium]}>
-            <Trans>
-              You owe{' '}
-              <Text
-                style={[a.text_sm, a.font_semi_bold, t.atoms.text, tabular]}>
-                {formatAmount(owe, currency, locale)}
-              </Text>
-            </Trans>
-          </Text>
-        </View>
+        {/* Both sides only when both are open; otherwise they repeat the headline. */}
+        {owed !== ZERO && owe !== ZERO && (
+          <View style={[a.flex_row, a.flex_wrap, a.pt_sm, a.gap_md]}>
+            <Text style={[a.text_sm, t.atoms.text_contrast_medium]}>
+              <Trans>
+                Owed to you{' '}
+                <Text
+                  style={[a.text_sm, a.font_semi_bold, t.atoms.text, tabular]}>
+                  {formatAmount(owed, currency, locale)}
+                </Text>
+              </Trans>
+            </Text>
+            <Text style={[a.text_sm, t.atoms.text_contrast_medium]}>
+              <Trans>
+                You owe{' '}
+                <Text
+                  style={[a.text_sm, a.font_semi_bold, t.atoms.text, tabular]}>
+                  {formatAmount(owe, currency, locale)}
+                </Text>
+              </Trans>
+            </Text>
+          </View>
+        )}
       </Link>
     </Animated.View>
   )
@@ -232,7 +168,6 @@ export function BalanceSummaryPlaceholder() {
             a.px_lg,
             a.py_md,
             a.gap_sm,
-            {maxWidth: 400},
           ]}>
           <Skeleton.Text style={[a.text_sm, {width: 90}]} />
           <Skeleton.Text style={[a.text_3xl, {width: 180}]} />

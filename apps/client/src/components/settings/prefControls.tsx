@@ -85,6 +85,7 @@ function DarkThemePref() {
         pref={pref}
         icon={MoonIcon}
         title={l`Dark theme`}
+        description={l`Used whenever Splito is in dark mode.`}
         options={[
           {value: 'dim', label: l`Dim`},
           {value: 'dark', label: l`Dark`},

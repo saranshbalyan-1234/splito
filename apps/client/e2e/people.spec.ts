@@ -50,7 +50,9 @@ test('A04: direct 100 + group 50 = 150; Include groups off = 100, totals and his
   await expect(page.getByText('Direct only')).toBeVisible()
   await expect(page.getByText('Snacks')).toHaveCount(0)
   await expect(page.getByText('Concert')).toBeVisible()
-  await expect(page.getByText('owes you ₹100.00')).toBeVisible()
+  const concert = page.locator('[data-testid^="history-"]', {hasText: 'Concert'})
+  await expect(concert).toContainText('owes you')
+  await expect(concert).toContainText('₹100.00')
 })
 
 test('the Include groups default comes from preferences', async ({page}) => {

@@ -3,7 +3,7 @@ import {
   Bed,
   Car,
   Circle,
-  Receipt,
+  ReceiptText,
   ShoppingBag,
   ShoppingCart,
   Ticket,
@@ -20,7 +20,7 @@ const ICONS = {
   bed: createIcon(Bed),
   'shopping-bag': createIcon(ShoppingBag),
   ticket: createIcon(Ticket),
-  receipt: createIcon(Receipt),
+  receipt: createIcon(ReceiptText),
   'shopping-cart': createIcon(ShoppingCart),
   circle: createIcon(Circle),
 }

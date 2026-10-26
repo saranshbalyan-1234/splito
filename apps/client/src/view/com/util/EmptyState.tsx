@@ -27,12 +27,18 @@ export function EmptyState({
   icon,
   iconSize = '3xl',
   iconColor,
+  title,
   message,
   style,
   textStyle,
   button,
+  secondaryButton,
 }: {
   testID?: string
+  /** Splito: a headline above the message (title, body, primary action). */
+  title?: string
+  /** Splito: a second, lesser action beside `button`. */
+  secondaryButton?: EmptyStateButtonProps
   /**
    * Splito: an animated illustration in place of the icon (main pages' empty
    * states). Static under reduce motion.
@@ -109,12 +115,28 @@ export function EmptyState({
           {renderIcon()}
         </View>
       )}
+      {title && (
+        <Text
+          role="heading"
+          style={[
+            a.pt_lg,
+            a.px_lg,
+            a.text_xl,
+            a.font_bold,
+            a.leading_snug,
+            a.text_center,
+            a.self_center,
+          ]}>
+          {title}
+        </Text>
+      )}
       <Text
         style={[
-          t.atoms.text_contrast_high,
-          {maxWidth: gtMobile ? '40%' : '60%'},
-          a.pt_xs,
-          a.font_medium,
+          title ? t.atoms.text_contrast_medium : t.atoms.text_contrast_high,
+          /* Splito: a fixed measure (not a % of the screen) so lines break evenly on every width. */
+          {maxWidth: title ? 340 : gtMobile ? '40%' : '60%'},
+          title ? [a.pt_sm, a.px_lg] : a.pt_xs,
+          title ? a.font_normal : a.font_medium,
           a.text_md,
           a.leading_snug,
           a.text_center,
@@ -125,11 +147,29 @@ export function EmptyState({
         {message}
       </Text>
       {button && (
-        <View style={[a.flex_shrink, a.mt_md, a.self_center, a.mb_5xl]}>
+        <View
+          style={[
+            a.flex_row,
+            a.flex_wrap,
+            a.justify_center,
+            a.gap_sm,
+            a.px_lg,
+            title ? a.mt_xl : a.mt_md,
+            a.self_center,
+            a.mb_5xl,
+          ]}>
           <Button {...button}>
             {button.icon && <ButtonIcon icon={button.icon} />}
             <ButtonText>{button.text}</ButtonText>
           </Button>
+          {secondaryButton && (
+            <Button {...secondaryButton}>
+              {secondaryButton.icon && (
+                <ButtonIcon icon={secondaryButton.icon} />
+              )}
+              <ButtonText>{secondaryButton.text}</ButtonText>
+            </Button>
+          )}
         </View>
       )}
     </View>

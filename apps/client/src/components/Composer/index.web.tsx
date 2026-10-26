@@ -11,11 +11,10 @@ import {Portal} from '#/components/Portal'
 
 export {TopBar} from './TopBar'
 
-const BOTTOM_BAR_HEIGHT = 61
-
 /**
  * Bluesky's web composer: a dimmed full-window layer with the composer
- * centred near the top (full width above the bottom bar on phones). Escape
+ * centred near the top, and full screen on phones as Bluesky's native
+ * composer, covering the top and bottom bars. Escape
  * asks the composer to cancel; outside clicks are ignored, as upstream.
  *
  * Bluesky mounts its composer at the shell's top level. This is a route, so
@@ -88,11 +87,13 @@ const styles = StyleSheet.create({
     maxHeight: 'calc(100% - (40px * 2))',
     overflow: 'hidden',
   },
-  /* Splito: on phones the composer fills the height, as Bluesky's native composer does (owner: full-screen on phones). */
+  /* Splito: on phones the composer fills the screen, as Bluesky's native composer does (owner: full-screen on phones). */
   containerMobile: {
     flex: 1,
+    marginTop: 0,
     borderRadius: 0,
-    marginBottom: BOTTOM_BAR_HEIGHT,
-    maxHeight: `calc(100% - ${BOTTOM_BAR_HEIGHT}px)`,
+    borderWidth: 0,
+    maxWidth: '100%',
+    maxHeight: '100%',
   },
 })

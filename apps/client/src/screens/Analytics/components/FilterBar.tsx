@@ -1,12 +1,12 @@
-import {ScrollView, View} from 'react-native'
+import {View} from 'react-native'
 import {Trans, useLingui} from '@lingui/react/macro'
 import {getCurrency} from '@splito/domain'
 
-import {atoms as a, useBreakpoints, useTheme} from '#/alf'
+import {atoms as a} from '#/alf'
 import {Button, ButtonIcon, ButtonText} from '#/components/Button'
 import * as Dialog from '#/components/Dialog'
-import * as Toggle from '#/components/forms/Toggle'
 import {CalendarDays_Stroke2_Corner0_Rounded as CalendarIcon} from '#/components/icons/CalendarDays'
+import {Check_Stroke2_Corner0_Rounded as CheckIcon} from '#/components/icons/Check'
 import {ChevronBottom_Stroke2_Corner0_Rounded as ChevronDownIcon} from '#/components/icons/Chevron'
 import {Group3_Stroke2_Corner0_Rounded as GroupIcon} from '#/components/icons/Group'
 import {
@@ -31,9 +31,7 @@ export function FilterBar({
   isTable: boolean
   onToggleView: () => void
 }) {
-  const t = useTheme()
   const {t: l} = useLingui()
-  const {gtMobile} = useBreakpoints()
   const rangeControl = Dialog.useDialogControl()
 
   const periods: Array<{
@@ -177,24 +175,21 @@ export function FilterBar({
       )}
 
       {!report.groupId && report.groupChoices.length > 0 && (
-        <Toggle.Item
+        /* A filter chip that is on or off, like the others: filled with a tick when on. */
+        <Button
           testID="analytics-include-groups"
-          name="include-groups"
           label={l`Include groups`}
-          value={report.includeGroups}
-          onChange={report.setIncludeGroups}
-          style={[
-            a.rounded_full,
-            a.pl_sm,
-            a.pr_md,
-            {height: 33},
-            t.atoms.bg_contrast_50,
-          ]}>
-          <Toggle.Checkbox />
-          <Toggle.LabelText style={[a.text_sm]}>
+          role="switch"
+          aria-checked={report.includeGroups}
+          accessibilityState={{checked: report.includeGroups}}
+          size="small"
+          color={report.includeGroups ? 'primary_subtle' : 'secondary'}
+          onPress={() => report.setIncludeGroups(!report.includeGroups)}>
+          {report.includeGroups && <ButtonIcon icon={CheckIcon} />}
+          <ButtonText>
             <Trans>Include groups</Trans>
-          </Toggle.LabelText>
-        </Toggle.Item>
+          </ButtonText>
+        </Button>
       )}
 
       {/* Charts or tables: a display choice (the `analyticsView` preference), so it sits with the filters. */}
@@ -203,37 +198,30 @@ export function FilterBar({
         label={isTable ? l`Show charts` : l`Show as tables`}
         size="small"
         color="secondary"
-        shape="round"
         onPress={onToggleView}>
         <ButtonIcon icon={isTable ? ChartIcon : TableIcon} />
+        <ButtonText>
+          {isTable ? <Trans>Charts</Trans> : <Trans>Table</Trans>}
+        </ButtonText>
       </Button>
     </>
   )
 
   return (
     <>
-      {gtMobile ? (
-        <View
-          testID="analytics-filters"
-          style={[
-            a.flex_row,
-            a.flex_wrap,
-            a.align_center,
-            a.gap_sm,
-            a.px_lg,
-            a.pt_md,
-          ]}>
-          {chips}
-        </View>
-      ) : (
-        <ScrollView
-          testID="analytics-filters"
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={[a.align_center, a.gap_sm, a.px_lg, a.pt_md]}>
-          {chips}
-        </ScrollView>
-      )}
+      {/* The chips wrap rather than scroll, so none is ever cut off at the edge. */}
+      <View
+        testID="analytics-filters"
+        style={[
+          a.flex_row,
+          a.flex_wrap,
+          a.align_center,
+          a.gap_sm,
+          a.px_lg,
+          a.pt_md,
+        ]}>
+        {chips}
+      </View>
       <RangeDialog
         control={rangeControl}
         initial={report.customRange}

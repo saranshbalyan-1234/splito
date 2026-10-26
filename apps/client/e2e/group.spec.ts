@@ -31,10 +31,15 @@ test('group page: header, my balance, expenses, member balances and members', as
   await page.goto(`/groups/${group}`)
 
   await expect(page.getByTestId('group-name')).toHaveText('Rishikesh')
-  await expect(page.getByTestId('group-byline')).toHaveText('Trip · Sep 4 – Sep 7, 2026 · 3 members')
-  await expect(page.getByTestId('group-my-balance-INR')).toHaveText('you owe ₹100.00')
+  await expect(page.getByTestId('group-byline')).toHaveText('Trip · 3 members')
+  await expect(page.getByTestId('group-dates')).toHaveText('Sep 4 – Sep 7, 2026')
+  // My balance is a card: direction, currency, then the amount.
+  await expect(page.getByTestId('group-my-balance-INR')).toHaveText(/^You owe\s*INR\s*₹100\.00$/)
   await expect(page.getByText('Rafting')).toBeVisible()
-  await expect(page.getByText('you borrowed ₹100.00')).toBeVisible()
+  // History rows stack what it means over the amount.
+  const rafting = page.locator('[data-testid^="history-"]', {hasText: 'Rafting'})
+  await expect(rafting).toContainText('you borrowed')
+  await expect(rafting).toContainText('₹100.00')
 
   await page.getByTestId('group-tab-balances').click()
   await expect(page.getByTestId('group-net-INR-Chirag Shah-text')).toHaveText('gets back ₹100.00')
@@ -48,7 +53,7 @@ test('group page: header, my balance, expenses, member balances and members', as
   await page.getByTestId('add-member-new-save').click()
   await page.getByTestId('add-members-save').click()
   await expect(page.getByTestId('member-Dev Malik')).toBeVisible()
-  await expect(page.getByTestId('group-byline')).toHaveText('Trip · Sep 4 – Sep 7, 2026 · 4 members')
+  await expect(page.getByTestId('group-byline')).toHaveText('Trip · 4 members')
   await page.getByTestId('member-Bela Joshi').click()
   await expect(page.getByTestId('person-name')).toHaveText('Bela Joshi')
 })
@@ -107,6 +112,11 @@ test('"Record this payment" records a part payment and the plan follows', async 
   await page.goto(`/groups/${group}/settle`)
   const transfer = page.getByTestId('transfer-You-Chirag Shah')
   await expect(transfer.getByTestId('transfer-sentence')).toHaveText('You pay Chirag Shah')
+  // The plan opens with what it means for me, not with how it is made.
+  await expect(page.getByTestId('settle-summary')).toContainText('You’ll pay, to 1 person')
+  await expect(page.getByTestId('settle-explanation')).toHaveCount(0)
+  await page.getByTestId('settle-how').click()
+  await expect(page.getByTestId('settle-explanation')).toBeVisible()
   await transfer.getByTestId('transfer-record').click()
   await expect(page.getByTestId('payment-sentence')).toHaveText('You paid Chirag Shah')
   await expect(page.getByTestId('payment-amount')).toHaveValue('100.00')
@@ -119,7 +129,7 @@ test('"Record this payment" records a part payment and the plan follows', async 
   await expect(page.getByText('send money', {exact: false})).toHaveCount(0)
 
   await page.goto(`/groups/${group}`)
-  await expect(page.getByTestId('group-my-balance-INR')).toHaveText('you owe ₹40.00')
+  await expect(page.getByTestId('group-my-balance-INR')).toHaveText(/^You owe\s*INR\s*₹40\.00$/)
   await expect(page.getByText('You paid Chirag Shah')).toBeVisible()
 })
 

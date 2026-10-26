@@ -53,8 +53,8 @@ export function NotificationsBell() {
               a.absolute,
               a.rounded_full,
               {
-                top: -2,
-                left: '50%',
+                top: -4,
+                right: -6,
                 paddingHorizontal: 5,
                 paddingVertical: 1,
                 minWidth: 18,

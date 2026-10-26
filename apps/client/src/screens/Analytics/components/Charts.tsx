@@ -2,6 +2,7 @@ import {View} from 'react-native'
 import {Trans, useLingui} from '@lingui/react/macro'
 import {formatAmount, magnitude, ZERO} from '@splito/domain'
 
+import {useMe} from '#/data/hooks'
 import {UserAvatar} from '#/view/com/util/UserAvatar'
 import {atoms as a, useBreakpoints, useTheme} from '#/alf'
 import {BalanceText} from '#/components/BalanceText'
@@ -35,6 +36,7 @@ export function Charts({
   locale: string
   isTable: boolean
 }) {
+  const me = useMe()
   const t = useTheme()
   const {t: l} = useLingui()
   const {gtTablet} = useBreakpoints()
@@ -110,6 +112,8 @@ export function Charts({
     value: b.share,
     axisLabel: b.axisLabel,
     label: b.label,
+    isCurrent: b.from <= report.today && report.today <= b.to,
+    isFuture: b.from > report.today,
   }))
   const slices = report.byCategory.map(c => {
     const cat = report.category(c.key)
@@ -136,7 +140,7 @@ export function Charts({
         testID="analytics-over-time"
         title={l`Spending over time`}
         subtitle={perBucket}
-        style={FULL}>
+        style={HALF}>
         {isTable ? (
           <DataTable
             testID="analytics-over-time-table"
@@ -285,7 +289,14 @@ export function Charts({
               locale={locale}
               bars={people.map(p => ({
                 ...p,
-                leading: <UserAvatar size={24} name={p.label} type="user" />,
+                /* My own name, not "You", so my avatar matches everywhere else. */
+                leading: (
+                  <UserAvatar
+                    size={24}
+                    name={p.key === me?.id ? me.data.name : p.label}
+                    type="user"
+                  />
+                ),
               }))}
               selectedKey={
                 selection?.kind === 'person' ? selection.key : undefined

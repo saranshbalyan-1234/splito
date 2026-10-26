@@ -262,11 +262,12 @@ export function ItemText({style, ...props}: ButtonTextProps) {
         a.text_md,
         a.font_medium,
         a.px_xs,
+        /* Splito: inactive labels at contrast_medium so they pass AA on the track. */
         ctx.active
           ? t.atoms.text
           : ctx.focused || ctx.hovered || ctx.pressed
-            ? t.atoms.text_contrast_medium
-            : t.atoms.text_contrast_low,
+            ? t.atoms.text_contrast_high
+            : t.atoms.text_contrast_medium,
         style,
       ]}
     />

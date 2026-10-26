@@ -2,10 +2,11 @@
 import {
   Archive,
   Banknote,
+  CheckCheck,
+  CircleCheck,
+  CircleDot,
   Eye,
   EyeOff,
-  Mail,
-  MailOpen,
   Pencil,
   Plus,
   RotateCcw,
@@ -17,8 +18,11 @@ import {
 
 import {createIcon} from '#/components/icons/lucide'
 
-export const MarkReadIcon = createIcon(MailOpen)
-export const MarkUnreadIcon = createIcon(Mail)
+/* A tick marks read; a dot - the unread mark itself - marks unread. */
+export const MarkReadIcon = createIcon(CircleCheck)
+export const MarkUnreadIcon = createIcon(CircleDot)
+/** "Mark all read": the double tick messaging apps use for read. */
+export const MarkAllReadIcon = createIcon(CheckCheck)
 export const HideIcon = createIcon(EyeOff)
 export const ShowIcon = createIcon(Eye)
 export const DeleteIcon = createIcon(Trash2)

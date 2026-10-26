@@ -27,18 +27,72 @@ export function Summary({report, locale}: {report: Report; locale: string}) {
   const {currency, totals} = report
   const canStep = report.period !== 'all' && report.period !== 'custom'
 
-  const stat = (testID: string, label: string, value: string) => (
-    <View style={[a.gap_2xs]}>
-      <Text style={[a.text_sm, a.leading_snug, t.atoms.text_contrast_medium]}>
-        {label}
-      </Text>
-      <Text
-        testID={testID}
-        style={[a.text_md, a.font_semi_bold, a.leading_snug, tabular]}>
-        {value}
-      </Text>
-    </View>
-  )
+  /* One cell of the stat strip: label, figure, and a line saying what it counts. */
+  const stat = (
+    testID: string,
+    label: string,
+    value: string,
+    hint: string,
+    isFirst = false,
+  ) =>
+    gtMobile ? (
+      <View
+        style={[
+          a.flex_1,
+          a.gap_2xs,
+          a.px_md,
+          a.py_md,
+          !isFirst && [a.border_l, t.atoms.border_contrast_low],
+        ]}>
+        <Text
+          numberOfLines={1}
+          style={[a.text_sm, a.font_semi_bold, t.atoms.text_contrast_medium]}>
+          {label}
+        </Text>
+        <Text
+          testID={testID}
+          numberOfLines={1}
+          style={[a.text_lg, a.font_bold, a.leading_snug, tabular]}>
+          {value}
+        </Text>
+        <Text
+          numberOfLines={2}
+          style={[a.text_xs, a.leading_snug, t.atoms.text_contrast_medium]}>
+          {hint}
+        </Text>
+      </View>
+    ) : (
+      /* Phones: one stat per line, so no figure is ever cut short. */
+      <View
+        style={[
+          a.flex_row,
+          a.align_center,
+          a.justify_between,
+          a.gap_md,
+          a.px_md,
+          a.py_sm,
+          !isFirst && [a.border_t, t.atoms.border_contrast_low],
+        ]}>
+        <View style={[a.flex_1]}>
+          <Text
+            numberOfLines={1}
+            style={[a.text_sm, a.font_semi_bold, t.atoms.text_contrast_medium]}>
+            {label}
+          </Text>
+          <Text
+            numberOfLines={1}
+            style={[a.text_xs, a.leading_snug, t.atoms.text_contrast_medium]}>
+            {hint}
+          </Text>
+        </View>
+        <Text
+          testID={testID}
+          numberOfLines={1}
+          style={[a.text_md, a.font_bold, a.leading_snug, tabular]}>
+          {value}
+        </Text>
+      </View>
+    )
 
   return (
     <View style={[a.px_lg, a.pt_md, a.pb_sm, a.gap_md]}>
@@ -84,7 +138,7 @@ export function Summary({report, locale}: {report: Report; locale: string}) {
       <View style={a.gap_2xs}>
         <Text
           style={[a.text_sm, a.font_semi_bold, t.atoms.text_contrast_medium]}>
-          <Trans>You spent</Trans>
+          <Trans>Your share of expenses</Trans>
         </Text>
         <AnimatedAmount
           testID="analytics-total-share"
@@ -94,21 +148,32 @@ export function Summary({report, locale}: {report: Report; locale: string}) {
           style={[a.text_5xl, a.font_bold, a.leading_tight]}
         />
       </View>
-      <View style={[a.flex_row, a.flex_wrap, gtMobile ? a.gap_2xl : a.gap_lg]}>
+      <View
+        style={[
+          gtMobile && a.flex_row,
+          a.rounded_md,
+          a.border,
+          t.atoms.border_contrast_low,
+          {maxWidth: 720},
+        ]}>
         {stat(
           'analytics-total-paid',
           l`You paid`,
           formatAmount(totals.paid, currency, locale),
+          l`Out of your pocket`,
+          true,
         )}
         {stat(
           'analytics-total-all',
-          l`Total, everyone`,
+          l`Group total`,
           formatAmount(totals.total, currency, locale),
+          l`Everyone’s shares`,
         )}
         {stat(
           'analytics-count',
           l`Expenses`,
           new Intl.NumberFormat(locale).format(totals.count),
+          l`In this period`,
         )}
       </View>
     </View>

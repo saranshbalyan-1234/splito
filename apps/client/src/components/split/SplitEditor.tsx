@@ -67,14 +67,11 @@ export function SplitEditor({
   return (
     <View>
       <View style={[a.px_lg, a.pb_sm]}>
-        {/* Phones: the modes scroll sideways edge to edge, so the row bleeds into the gutters. */}
-        <View style={[!gtMobile && {marginHorizontal: -16}]}>
+        {gtMobile ? (
           <SegmentedControl.Root
             label={l`How to split`}
             type="radio"
             size="small"
-            scrollable={!gtMobile}
-            style={[!gtMobile && a.mx_lg]}
             value={form.mode}
             onChange={mode =>
               update(f => (f.mode === mode ? f : {...f, mode}))
@@ -91,7 +88,33 @@ export function SplitEditor({
               </SegmentedControl.Item>
             ))}
           </SegmentedControl.Root>
-        </View>
+        ) : (
+          /* Phones: six modes do not fit one track, so they wrap as choice chips inside the gutter. */
+          <View
+            role="radiogroup"
+            accessibilityLabel={l`How to split`}
+            style={[a.flex_row, a.flex_wrap, a.gap_xs]}>
+            {SPLIT_MODES.map(mode => {
+              const isOn = form.mode === mode
+              return (
+                <Button
+                  key={mode}
+                  testID={`split-mode-${mode}`}
+                  label={labels[mode]}
+                  role="radio"
+                  aria-checked={isOn}
+                  accessibilityState={{checked: isOn}}
+                  size="small"
+                  color={isOn ? 'primary' : 'secondary'}
+                  onPress={() =>
+                    update(f => (f.mode === mode ? f : {...f, mode}))
+                  }>
+                  <ButtonText>{labels[mode]}</ButtonText>
+                </Button>
+              )
+            })}
+          </View>
+        )}
         <Text
           style={[
             a.text_sm,
@@ -386,13 +409,7 @@ function ItemsEditor({
           <View
             key={item.key}
             testID={`item-${index}`}
-            style={[
-              a.p_md,
-              a.gap_sm,
-              a.rounded_md,
-              a.border,
-              t.atoms.border_contrast_low,
-            ]}>
+            style={[a.p_md, a.gap_sm, a.rounded_md, t.atoms.bg_contrast_25]}>
             <View style={[a.flex_row, a.align_center, a.gap_sm]}>
               <View style={[a.flex_1]}>
                 <TextField.Root>
@@ -421,6 +438,7 @@ function ItemsEditor({
                 variant="ghost"
                 color="secondary"
                 shape="round"
+                style={[a.bg_transparent]}
                 onPress={() =>
                   update(f => ({
                     ...f,
@@ -440,7 +458,8 @@ function ItemsEditor({
                     label={name(id)}
                     accessibilityState={{selected: isOn}}
                     size="tiny"
-                    color={isOn ? 'primary_subtle' : 'secondary'}
+                    variant={isOn ? 'solid' : 'outline'}
+                    color={isOn ? 'primary' : 'secondary'}
                     onPress={() =>
                       setItem(item.key, {
                         people: isOn

@@ -33,9 +33,9 @@ export const DEFAULT_CATEGORIES: Category[] = [
   ['transport', 'Transport', '#0ea5e9', 'car'],
   ['stay', 'Stay', '#8b5cf6', 'bed'],
   ['shopping', 'Shopping', '#ec4899', 'shopping-bag'],
-  ['entertainment', 'Entertainment', '#eab308', 'ticket'],
+  ['entertainment', 'Entertainment', '#f59e0b', 'ticket'],
   ['bills', 'Bills', '#6366f1', 'receipt'],
-  ['groceries', 'Groceries', '#84cc16', 'shopping-cart'],
+  ['groceries', 'Groceries', '#14b8a6', 'shopping-cart'],
   ['other', 'Other', '#94a3b8', 'circle'],
 ].map(([id, name, color, icon], order) => ({id: id!, name: name!, color: color!, icon: icon!, order, hidden: false}))
 

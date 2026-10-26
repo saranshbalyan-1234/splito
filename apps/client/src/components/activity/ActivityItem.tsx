@@ -22,7 +22,8 @@ import {type NavigationProp} from '#/lib/routes/types'
 import {useRowPadding} from '#/state/preferences/density'
 import {TimeElapsed} from '#/view/com/util/TimeElapsed'
 import {UserAvatar} from '#/view/com/util/UserAvatar'
-import {atoms as a, select, useBreakpoints, useTheme} from '#/alf'
+import {atoms as a, useBreakpoints, useTheme} from '#/alf'
+import {hexToRgb, rgbToHex} from '#/alf/util/colorGeneration'
 import {Button, ButtonIcon} from '#/components/Button'
 import {DotGrid3x1_Stroke2_Corner0_Rounded as DotsIcon} from '#/components/icons/DotGrid'
 import {type Props as SVGIconProps} from '#/components/icons/common'
@@ -76,20 +77,24 @@ const ACTIONS_RIGHT = 12
 /** The swipe distance that commits an action, as Bluesky's chat list. */
 const SWIPE_THRESHOLD = 120
 
-type BadgeTone = 'primary' | 'neutral'
+/** What a change's badge says by colour: added (primary), removed (negative), changed (neutral). */
+type BadgeTone = 'primary' | 'negative' | 'neutral'
 
 /**
- * The background of a row, tinted while unread. The dark themes use
- * Bluesky's own tints: `primary_25` barely shows against them.
+ * The background of a row, faintly tinted while unread; the dot carries
+ * the state. Light themes use `primary_25`; dark themes mix 7% of the
+ * accent into the page colour, as the inverted palette's tints read too
+ * strong there. Opaque, so the avatar badge's ring can take it.
  */
 export function useRowBackgroundColor(isRead: boolean) {
   const t = useTheme()
   if (isRead) return t.atoms.bg.backgroundColor
-  return select(t.name, {
-    light: t.palette.primary_25,
-    dim: '#071F40',
-    dark: '#202F43',
-  })
+  if (t.scheme === 'light') return t.palette.primary_25
+  const bg = hexToRgb(String(t.atoms.bg.backgroundColor))
+  const tint = hexToRgb(t.palette.primary_500)
+  if (!bg || !tint) return t.palette.primary_25
+  const mix = (x: number, y: number) => x + (y - x) * 0.07
+  return rgbToHex(mix(bg.r, tint.r), mix(bg.g, tint.g), mix(bg.b, tint.b))
 }
 
 /**
@@ -128,6 +133,7 @@ export function ActivityItem({
   const {gtMobile} = useBreakpoints()
   const backgroundColor = useRowBackgroundColor(isRead)
   const rowPadding = useRowPadding()
+  const rowPaddingTop = (rowPadding as {paddingTop?: number}).paddingTop ?? 12
   const menuControl = Menu.useMenuControl()
   const [isHovered, setIsHovered] = useState(false)
   const [isFocusWithin, setIsFocusWithin] = useState(false)
@@ -274,10 +280,11 @@ export function ActivityItem({
               accessibilityRole="image"
               accessibilityLabel={l`Unread`}
               style={[
+                a.absolute,
                 a.rounded_full,
                 {width: 8, height: 8, backgroundColor: t.palette.primary_500},
-                // In line with the headline; on web, clear of the buttons.
-                IS_WEB ? [a.absolute, {right: 16, top: 18}] : {marginTop: 7},
+                // In the gutter left of the avatar, level with its centre, as mail apps mark unread.
+                {left: 4, top: rowPaddingTop + AVATAR_SIZE / 2 - 4},
               ]}
             />
           )}
@@ -290,7 +297,8 @@ export function ActivityItem({
               a.flex_row,
               a.align_center,
               a.gap_xs,
-              {top: 0, bottom: 0, right: ACTIONS_RIGHT},
+              // On the headline's line, so a long row never stacks them oddly.
+              {top: rowPaddingTop - 6, right: ACTIONS_RIGHT},
               {opacity: isShowingActions ? 1 : 0},
               a.transition_opacity,
             ]}>
@@ -403,7 +411,12 @@ function useDescribe(
           'expense.deleted': DeletedBadge,
           'expense.restored': RestoredBadge,
         }[event.kind],
-        tone: event.kind === 'expense.created' ? 'primary' : 'neutral',
+        tone:
+          event.kind === 'expense.created' || event.kind === 'expense.restored'
+            ? 'primary'
+            : event.kind === 'expense.deleted'
+              ? 'negative'
+              : 'neutral',
         headline: {
           'expense.created': (
             <Trans>
@@ -467,7 +480,7 @@ function useDescribe(
         avatarName: event.data.name,
         avatarShape: 'circle',
         icon: isAdded ? FriendAddedBadge : FriendRemovedBadge,
-        tone: isAdded ? 'primary' : 'neutral',
+        tone: isAdded ? 'primary' : 'negative',
         headline: isAdded ? (
           <Trans>
             {actor} added {subject} as a friend
@@ -503,7 +516,12 @@ function useDescribe(
               : event.kind === 'group.edited'
                 ? EditedBadge
                 : GroupBadge,
-        tone: event.kind === 'group.created' ? 'primary' : 'neutral',
+        tone:
+          event.kind === 'group.created'
+            ? 'primary'
+            : event.kind === 'group.deleted'
+              ? 'negative'
+              : 'neutral',
         headline: isRenamed ? (
           <Trans>
             {actor} renamed {oldName} to {subject}
@@ -575,7 +593,12 @@ function useDescribe(
             : event.kind === 'repayment.edited'
               ? EditedBadge
               : PaymentBadge,
-        tone: event.kind === 'repayment.recorded' ? 'primary' : 'neutral',
+        tone:
+          event.kind === 'repayment.recorded'
+            ? 'primary'
+            : event.kind === 'repayment.removed'
+              ? 'negative'
+              : 'neutral',
         headline:
           event.kind === 'repayment.recorded' ? (
             r.to === me ? (
@@ -671,14 +694,8 @@ function Timestamp({at}: {at: number}) {
           style={[
             a.self_start,
             a.text_sm,
-            {
-              // Stronger than Bluesky's contrast_300, which fades out on the dark unread tint.
-              color: select(t.name, {
-                light: t.palette.contrast_400,
-                dim: t.palette.contrast_500,
-                dark: t.palette.contrast_500,
-              }),
-            },
+            // Secondary text, at AA contrast on both the plain and the unread row.
+            t.atoms.text_contrast_medium,
           ]}>
           {timeElapsed}
         </Text>
@@ -754,7 +771,9 @@ function Avatar({
               backgroundColor:
                 tone === 'primary'
                   ? t.palette.primary_500
-                  : t.palette.contrast_500,
+                  : tone === 'negative'
+                    ? t.palette.negative_500
+                    : t.palette.contrast_500,
             },
           ]}>
           <Icon width={BADGE_ICON_SIZE} fill={t.palette.white} />

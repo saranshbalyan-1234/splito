@@ -48,8 +48,6 @@ export function AccentPicker() {
     indigo: l`Indigo`,
     violet: l`Violet`,
     pink: l`Pink`,
-    orange: l`Orange`,
-    amber: l`Amber`,
     graphite: l`Graphite`,
   }
 
@@ -79,7 +77,8 @@ export function AccentPicker() {
       icon={PaletteIcon}
       title={l`Accent color`}
       description={l`Tints buttons, links and highlights. Money keeps its green and red.`}>
-      <View style={[a.flex_row, a.flex_wrap, a.gap_md, a.py_2xs]}>
+      {/* 8px gaps keep the presets and the custom swatch on one row on a phone. */}
+      <View style={[a.flex_row, a.flex_wrap, a.gap_sm, a.py_2xs]}>
         {ACCENTS.map(acc => (
           <Swatch
             key={acc.id}

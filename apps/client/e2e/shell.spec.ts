@@ -224,6 +224,27 @@ test.describe('phone: Bluesky bottom bar and FAB', () => {
     expect(box.y + box.height).toBeLessThan(bar.y)
   })
 
+  test('the FAB shows where Bluesky has one (feeds, profiles, notifications), not on Groups (Lists) or Analytics (Search)', async ({page}) => {
+    await page.setViewportSize(PHONE)
+    for (const [path, screen] of [['/', 'screen-people'], ['/notifications', 'screen-notifications']]) {
+      await open(page, path, screen)
+      await expect(page.getByTestId(screen).getByTestId('fab-add')).toBeVisible()
+    }
+    for (const [path, screen] of [['/groups', 'screen-groups'], ['/analytics', 'screen-analytics']]) {
+      await open(page, path, screen)
+      await expect(page.getByTestId(screen).getByTestId('fab-add')).toHaveCount(0)
+    }
+  })
+
+  test('the composer covers the whole phone screen, top bar and tab bar included', async ({page}) => {
+    await page.setViewportSize(PHONE)
+    await open(page, '/expense/new', 'screen-add-expense')
+    const box = (await page.getByTestId('screen-add-expense').boundingBox())!
+    expect(box.y).toBe(0)
+    expect(box.height).toBe(PHONE.height)
+    expect(box.width).toBe(PHONE.width)
+  })
+
   test('the FAB opens Add expense like the composer; Cancel returns', async ({page}) => {
     await page.setViewportSize(PHONE)
     await open(page, '/', 'screen-people')

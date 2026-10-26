@@ -152,6 +152,31 @@ const stroke = (
 const trim = (e: unknown) => ({ty: 'tm', s: st(0), e, o: st(0), m: 1})
 
 type Bezier = {v: number[][]; i: number[][]; o: number[][]; c: boolean}
+/** A closed circle of radius r round the comp centre, as four cubic arcs. */
+function circlePath(r: number): Bezier {
+  const k = r * 0.5523
+  return {
+    v: [
+      [C, C - r],
+      [C + r, C],
+      [C, C + r],
+      [C - r, C],
+    ],
+    i: [
+      [-k, 0],
+      [0, -k],
+      [k, 0],
+      [0, k],
+    ],
+    o: [
+      [k, 0],
+      [0, k],
+      [-k, 0],
+      [0, -k],
+    ],
+    c: true,
+  }
+}
 const pathShape = (b: Bezier) => ({ty: 'sh', d: 1, ks: st(b)})
 /** Open polyline as a Lottie path. */
 function polyline(points: number[][]): Bezier {
@@ -166,6 +191,8 @@ function polyline(points: number[][]): Bezier {
 type Layer = {
   nm: string
   shapes: unknown[]
+  /** Clip the layer to a circle of this radius round the centre (the backdrop disc). */
+  clip?: number
   p?: unknown
   a?: unknown
   s?: unknown
@@ -186,6 +213,19 @@ function animation(nm: string, frames: number, layers: Layer[]) {
     ddd: 0,
     assets: [],
     layers: [...layers].reverse().map((l, i) => ({
+      ...(l.clip && {
+        hasMask: true,
+        masksProperties: [
+          {
+            inv: false,
+            mode: 'a',
+            pt: st(circlePath(l.clip)),
+            o: st(100),
+            x: st(0),
+            nm: 'disc',
+          },
+        ],
+      }),
       ddd: 0,
       ind: i + 1,
       ty: 4,
@@ -520,6 +560,11 @@ function person(color: string, scale = 1) {
   ]
 }
 
+/** The body below `person`'s shoulders, long enough for the backdrop disc to clip it. */
+function torso(color: string) {
+  return group('torso', [rect(72, 60, 0, [0, 66]), fill(color)])
+}
+
 /* ---------- animations ---------- */
 
 /**
@@ -686,11 +731,18 @@ function success(c: Palette) {
   ])
 }
 
-/** A coin hops between two friends and back, flipping as it goes. 3 s loop. */
+/**
+ * A coin hops between two friends and back, flipping as it goes. The
+ * friends are clipped to the backdrop disc, so their shoulders follow its
+ * edge, and the coin rests just above a head. 3 s loop.
+ */
 function emptyPeople(c: Palette) {
   const L = [C - 46, 176]
   const R = [C + 46, 176]
-  const coinY = 70
+  /* The coin passes between the two heads, from one friend's side to the other's. */
+  const coinL = C - 8
+  const coinR = C + 8
+  const coinY = 104
   const hop = (t: number, from: number, to: number): Key[] => [
     [t, from],
     [t + 50, to],
@@ -706,8 +758,9 @@ function emptyPeople(c: Palette) {
     backdrop(c),
     {
       nm: 'friend-left',
+      clip: 100,
       shapes: [
-        group('person', person(c.ink), {
+        group('person', [...person(c.ink), torso(c.ink)], {
           p: st(L),
           a: st([0, 40]),
           s: kf(bounce(140)),
@@ -717,8 +770,9 @@ function emptyPeople(c: Palette) {
     },
     {
       nm: 'friend-right',
+      clip: 100,
       shapes: [
-        group('person', person(c.t(0.54)), {
+        group('person', [...person(c.t(0.54)), torso(c.t(0.54))], {
           p: st(R),
           a: st([0, 40]),
           s: kf(bounce(70)),
@@ -731,7 +785,7 @@ function emptyPeople(c: Palette) {
       shapes: [
         group(
           'coin',
-          [ellipse(30), fill(c.t(0.34)), ellipse(16), stroke(c.ink, 3.5)],
+          [ellipse(14), stroke(c.ink, 3), ellipse(28), fill(c.t(0.34))],
           {
             s: kf([
               [20, [100, 100]],
@@ -751,18 +805,18 @@ function emptyPeople(c: Palette) {
       p: {
         s: true,
         x: kf([
-          [0, L[0]!],
-          ...hop(20, L[0]!, R[0]!),
-          ...hop(90, R[0]!, L[0]!),
-          [180, L[0]!],
+          [0, coinL],
+          ...hop(20, coinL, coinR),
+          ...hop(90, coinR, coinL),
+          [180, coinL],
         ]),
         y: kf([
           [0, coinY],
           [20, coinY, EASE.out],
-          [45, coinY - 28, EASE.inOut],
+          [45, coinY - 22, EASE.inOut],
           [70, coinY],
           [90, coinY, EASE.out],
-          [115, coinY - 28, EASE.inOut],
+          [115, coinY - 22, EASE.inOut],
           [140, coinY],
           [180, coinY],
         ]),

@@ -50,7 +50,8 @@ export function Outer({
         !noBottomBorder && a.border_b,
         a.flex_row,
         a.align_center,
-        a.gap_sm,
+        /* Splito: 12px between header controls so the bell's badge never touches the avatar. */
+        a.gap_md,
         sticky && web([a.sticky, {top: 0}, a.z_10, t.atoms.bg]),
         isWithinLeftPanel ? a.px_lg : gutters,
         platform({
@@ -140,12 +141,15 @@ export function BackButton({onPress, style, ...props}: Partial<ButtonProps>) {
  */
 export function IconButton({
   icon,
+  iconSize = 'lg',
   label,
   testID,
   onPress,
   disabled,
 }: {
   icon: React.ComponentProps<typeof ButtonIcon>['icon']
+  /** Splito: a glyph that reads heavier than its neighbours (a pencil beside "...") can step down. */
+  iconSize?: React.ComponentProps<typeof ButtonIcon>['size']
   label: string
   testID?: string
   onPress: () => void
@@ -164,7 +168,7 @@ export function IconButton({
         onPress={onPress}
         hitSlop={HEADER_BUTTON_HITSLOP}
         style={[{marginRight: -BUTTON_VISUAL_ALIGNMENT_OFFSET}]}>
-        <ButtonIcon icon={icon} size="lg" />
+        <ButtonIcon icon={icon} size={iconSize} />
       </Button>
     </Slot>
   )

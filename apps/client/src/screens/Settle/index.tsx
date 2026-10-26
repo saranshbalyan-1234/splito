@@ -5,8 +5,10 @@ import {Trans, useLingui} from '@lingui/react/macro'
 import {type RouteProp, useNavigation, useRoute} from '@react-navigation/native'
 import {
   fnv1a64,
+  formatAmount,
   type Plan,
   planSettlement,
+  sumMinor,
   type Transfer,
   ZERO,
 } from '@splito/domain'
@@ -19,14 +21,14 @@ import {EmptyState} from '#/view/com/util/EmptyState'
 import {List} from '#/view/com/util/List'
 import {atoms as a, useBreakpoints, useTheme} from '#/alf'
 import * as Admonition from '#/components/Admonition'
-import {ButtonIcon, ButtonText} from '#/components/Button'
+import {Button, ButtonIcon, ButtonText} from '#/components/Button'
 import {useDialogControl} from '#/components/Dialog'
 import {memberNets} from '#/components/groups/net'
 import {NO_RULES} from '#/components/groups/RulesEditor'
 import {ArrowRotateCounterClockwise_Stroke2_Corner0_Rounded as RefreshIcon} from '#/components/icons/ArrowRotate'
 import {CircleCheck_Stroke2_Corner0_Rounded as CheckIcon} from '#/components/icons/CircleCheck'
+import {CircleInfo_Stroke2_Corner0_Rounded as InfoIcon} from '#/components/icons/CircleInfo'
 import * as Layout from '#/components/Layout'
-import {currencyName} from '#/components/people/ledger'
 import {
   type PaymentDraft,
   RecordPaymentDialog,
@@ -40,7 +42,13 @@ type CurrencyPlan = {currency: string; plan: Plan | null}
 type Snapshot = {hash: string; plans: CurrencyPlan[]}
 
 type Item =
-  | {type: 'currency'; key: string; currency: string; count: number | null}
+  | {
+      type: 'currency'
+      key: string
+      currency: string
+      count: number | null
+      total: bigint | null
+    }
   | {type: 'transfer'; key: string; currency: string; transfer: Transfer}
   | {type: 'infeasible'; key: string; currency: string; stuck: string[]}
   | {type: 'settled'; key: string; currency: string}
@@ -55,7 +63,7 @@ type Item =
  */
 export function SettleScreen() {
   const t = useTheme()
-  const {t: l, i18n} = useLingui()
+  const {t: l} = useLingui()
   const {gtMobile} = useBreakpoints()
   const locale = useNumberLocale()
   const navigation = useNavigation<NavigationProp>()
@@ -66,6 +74,7 @@ export function SettleScreen() {
   const ledger = useLedger()
   const [snapshot, setSnapshot] = useState<Snapshot | null>(null)
   const [isAdopting, setIsAdopting] = useState(false)
+  const [isExplained, setIsExplained] = useState(false)
   const paymentControl = useDialogControl()
   const [draft, setDraft] = useState<PaymentDraft | null>(null)
 
@@ -138,12 +147,24 @@ export function SettleScreen() {
   const items: Item[] = shown.flatMap(({currency, plan}): Item[] => {
     if (!plan)
       return [
-        {type: 'currency', key: `cur-${currency}`, currency, count: null},
+        {
+          type: 'currency',
+          key: `cur-${currency}`,
+          currency,
+          count: null,
+          total: null,
+        },
         {type: 'settled', key: `settled-${currency}`, currency},
       ]
     if (plan.status === 'infeasible')
       return [
-        {type: 'currency', key: `cur-${currency}`, currency, count: null},
+        {
+          type: 'currency',
+          key: `cur-${currency}`,
+          currency,
+          count: null,
+          total: null,
+        },
         {
           type: 'infeasible',
           key: `stuck-${currency}`,
@@ -157,6 +178,7 @@ export function SettleScreen() {
         key: `cur-${currency}`,
         currency,
         count: plan.transfers.length,
+        total: sumMinor(plan.transfers.map(x => x.amount)),
       },
       // Biggest payments first, then by payer, so the order never depends on member ids.
       ...[...plan.transfers]
@@ -184,21 +206,39 @@ export function SettleScreen() {
       </View>
     </Shimmer>
   ) : (
-    <View style={[a.px_lg, a.pt_lg, a.pb_md, a.gap_md]}>
-      <Text
-        testID="settle-explanation"
-        style={[
-          a.text_md,
-          a.leading_snug,
-          t.atoms.text_contrast_medium,
-          {maxWidth: 720},
-        ]}>
-        <Trans>
-          Everyone who owes pays the people who are owed, straight to them. Only
-          pairs allowed in Who you settle with are used, preferred pairs first,
-          so the plan isn’t always the fewest payments.
-        </Trans>
-      </Text>
+    <View style={[a.px_lg, a.pt_lg, a.pb_lg, a.gap_md]}>
+      <SettleSummary plans={shown} me={me!.id} locale={locale} />
+      <View style={[a.flex_row]}>
+        <Button
+          testID="settle-how"
+          label={l`How this plan works`}
+          size="small"
+          variant="ghost"
+          color="secondary"
+          style={[{marginLeft: -12}]}
+          onPress={() => setIsExplained(v => !v)}>
+          <ButtonIcon icon={InfoIcon} />
+          <ButtonText>
+            <Trans>How this plan works</Trans>
+          </ButtonText>
+        </Button>
+      </View>
+      {isExplained && (
+        <Text
+          testID="settle-explanation"
+          style={[
+            a.text_sm,
+            a.leading_snug,
+            t.atoms.text_contrast_medium,
+            {maxWidth: 640},
+          ]}>
+          <Trans>
+            Everyone who owes pays the people who are owed, straight to them.
+            Only pairs allowed in Who you settle with are used, preferred pairs
+            first, so the plan isn’t always the fewest payments.
+          </Trans>
+        </Text>
+      )}
       {isStale && (
         <Admonition.Outer type="warning">
           <Admonition.Row>
@@ -262,18 +302,34 @@ export function SettleScreen() {
                       a.border_t,
                       t.atoms.border_contrast_low,
                     ]}>
-                    <Text style={[a.text_lg, a.font_bold]}>
-                      {currencyName(item.currency, i18n.locale)}
-                    </Text>
-                    {item.count !== null && (
+                    <View style={[a.flex_row, a.align_center, a.gap_xs]}>
+                      <Text style={[a.text_lg, a.font_bold]}>
+                        {item.currency}
+                      </Text>
+                      {item.count !== null && (
+                        <Text style={[a.text_md, t.atoms.text_contrast_medium]}>
+                          {'· '}
+                          <Text
+                            testID={`settle-count-${item.currency}`}
+                            style={[a.text_md, t.atoms.text_contrast_medium]}>
+                            {item.count === 1 ? (
+                              <Trans>1 payment</Trans>
+                            ) : (
+                              <Trans>{item.count} payments</Trans>
+                            )}
+                          </Text>
+                        </Text>
+                      )}
+                    </View>
+                    {item.total !== null && (
                       <Text
-                        testID={`settle-count-${item.currency}`}
-                        style={[a.text_sm, t.atoms.text_contrast_medium]}>
-                        {item.count === 1 ? (
-                          <Trans>1 payment</Trans>
-                        ) : (
-                          <Trans>{item.count} payments</Trans>
-                        )}
+                        style={[
+                          a.text_md,
+                          a.font_semi_bold,
+                          t.atoms.text_contrast_medium,
+                          {fontVariant: ['tabular-nums']},
+                        ]}>
+                        {formatAmount(item.total, item.currency, locale)}
                       </Text>
                     )}
                   </View>
@@ -303,15 +359,29 @@ export function SettleScreen() {
                 return (
                   <View
                     testID={`settle-settled-${item.currency}`}
-                    style={[
-                      a.flex_row,
-                      a.align_center,
-                      a.gap_sm,
-                      a.px_lg,
-                      a.pb_lg,
-                    ]}>
-                    <CheckIcon size="md" fill={t.palette.positive_600} />
-                    <Text style={[a.text_md, t.atoms.text_contrast_medium]}>
+                    style={[a.align_center, a.gap_sm, a.px_lg, a.py_2xl]}>
+                    <View
+                      style={[
+                        a.rounded_full,
+                        a.align_center,
+                        a.justify_center,
+                        {
+                          width: 56,
+                          height: 56,
+                          backgroundColor: t.palette.positive_50,
+                        },
+                      ]}>
+                      <CheckIcon size="xl" fill={t.palette.positive_600} />
+                    </View>
+                    <Text style={[a.text_lg, a.font_bold, a.text_center]}>
+                      <Trans>All settled up</Trans>
+                    </Text>
+                    <Text
+                      style={[
+                        a.text_md,
+                        a.text_center,
+                        t.atoms.text_contrast_medium,
+                      ]}>
                       <Trans>Everyone is settled up.</Trans>
                     </Text>
                   </View>
@@ -423,5 +493,86 @@ export function SettleScreen() {
         />
       )}
     </Layout.Screen>
+  )
+}
+
+/**
+ * What the plan means for me, per currency (never added across): what I get
+ * and from how many people, and what I pay and to how many.
+ */
+function SettleSummary({
+  plans,
+  me,
+  locale,
+}: {
+  plans: CurrencyPlan[]
+  me: string
+  locale: string
+}) {
+  const t = useTheme()
+  const lines = plans.flatMap(({currency, plan}) => {
+    if (!plan || plan.status === 'infeasible') return []
+    const sides = [
+      {isIncoming: true, list: plan.transfers.filter(x => x.to === me)},
+      {isIncoming: false, list: plan.transfers.filter(x => x.from === me)},
+    ]
+    return sides
+      .filter(side => side.list.length > 0)
+      .map(side => ({
+        key: `${side.isIncoming ? 'in' : 'out'}-${currency}`,
+        isIncoming: side.isIncoming,
+        amount: formatAmount(
+          sumMinor(side.list.map(x => x.amount)),
+          currency,
+          locale,
+        ),
+        people: side.list.length,
+      }))
+  })
+
+  if (lines.length === 0) {
+    return (
+      <Text
+        testID="settle-summary"
+        style={[a.text_md, a.leading_snug, t.atoms.text_contrast_medium]}>
+        <Trans>You’re not part of any of these payments.</Trans>
+      </Text>
+    )
+  }
+  return (
+    <View testID="settle-summary" style={[a.flex_row, a.flex_wrap, a.gap_2xl]}>
+      {lines.map(line => (
+        <View key={line.key} style={[a.gap_2xs]}>
+          <Text
+            style={[a.text_sm, a.font_semi_bold, t.atoms.text_contrast_medium]}>
+            {line.isIncoming ? (
+              line.people === 1 ? (
+                <Trans>You’ll get, from 1 person</Trans>
+              ) : (
+                <Trans>You’ll get, from {line.people} people</Trans>
+              )
+            ) : line.people === 1 ? (
+              <Trans>You’ll pay, to 1 person</Trans>
+            ) : (
+              <Trans>You’ll pay, to {line.people} people</Trans>
+            )}
+          </Text>
+          <Text
+            style={[
+              a.text_3xl,
+              a.font_bold,
+              a.leading_tight,
+              {
+                color: line.isIncoming
+                  ? t.palette.positive_600
+                  : t.palette.negative_500,
+                fontVariant: ['tabular-nums'],
+              },
+            ]}>
+            {line.amount}
+          </Text>
+        </View>
+      ))}
+    </View>
   )
 }

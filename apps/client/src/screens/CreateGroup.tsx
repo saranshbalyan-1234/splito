@@ -8,7 +8,13 @@ import {createGroup, createPerson, type Group, type Person} from '@splito/sync'
 import {useHaptics} from '#/lib/haptics'
 import {type NavigationProp} from '#/lib/routes/types'
 import {logger} from '#/logger'
-import {useEntities, useMutationCtx, usePref, useStore} from '#/data/hooks'
+import {
+  useEntities,
+  useMe,
+  useMutationCtx,
+  usePref,
+  useStore,
+} from '#/data/hooks'
 import {UserAvatar} from '#/view/com/util/UserAvatar'
 import {atoms as a, useBreakpoints, useTheme, web} from '#/alf'
 import {Button, ButtonIcon, ButtonText} from '#/components/Button'
@@ -42,6 +48,7 @@ export function CreateGroupScreen() {
   const ctx = useMutationCtx()
   const haptics = useHaptics()
   const people = useEntities<Person>('person')
+  const me = useMe()
   const [defaultCurrency] = usePref('defaultCurrency')
   const [name, setName] = useState('')
   const [kind, setKind] = useState<Kind>('trip')
@@ -287,7 +294,7 @@ export function CreateGroupScreen() {
                   a.px_md,
                   a.py_sm,
                 ]}>
-                <UserAvatar size={32} name={l`You`} type="user" />
+                <UserAvatar size={32} name={me?.data.name} type="user" />
                 <Text style={[a.flex_1, a.text_md, a.font_semi_bold]}>
                   <Trans>You</Trans>
                 </Text>

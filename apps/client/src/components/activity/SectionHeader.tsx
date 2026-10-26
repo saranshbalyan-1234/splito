@@ -81,7 +81,9 @@ export function SectionHeader({
         a.border_b,
         getBorderColor(t, isUnreadBelow, 'bottom'),
       ]}>
-      <Text accessibilityRole="header" style={[a.text_md, a.font_bold]}>
+      <Text
+        accessibilityRole="header"
+        style={[a.text_sm, a.font_semi_bold, t.atoms.text_contrast_medium]}>
         {label}
       </Text>
     </View>

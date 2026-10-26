@@ -23,6 +23,10 @@ export type Point = {
   axisLabel: string
   /** Full label for tooltips and screen readers ("March 2026"). */
   label: string
+  /** Splito: the bucket that holds today, drawn strongest. */
+  isCurrent?: boolean
+  /** Splito: a bucket still in the future, labelled faintly. */
+  isFuture?: boolean
 }
 
 /** Approximate width of one `text_xs` character, for sizing the value gutter before layout. */
@@ -151,10 +155,15 @@ export function XLabels({
   const fit = Math.max(1, Math.floor(plotW / 44))
   const every = Math.ceil(points.length / fit)
   const w = slot * every
+  /* Labels step from the current bucket when there is one, so "now" is always labelled. */
+  const anchor = Math.max(
+    0,
+    points.findIndex(p => p.isCurrent),
+  )
   return (
     <>
       {points.map((p, i) =>
-        i % every === 0 ? (
+        (i - anchor) % every === 0 ? (
           <Text
             key={p.key}
             numberOfLines={1}
@@ -163,7 +172,11 @@ export function XLabels({
               a.absolute,
               a.text_xs,
               a.text_center,
-              t.atoms.text_contrast_medium,
+              p.isCurrent
+                ? [a.font_semi_bold, {color: t.palette.primary_500}]
+                : p.isFuture
+                  ? t.atoms.text_contrast_low
+                  : t.atoms.text_contrast_medium,
               {
                 left: cx(i) - w / 2,
                 width: w,

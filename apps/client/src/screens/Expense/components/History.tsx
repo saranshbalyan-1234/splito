@@ -155,8 +155,13 @@ export function History({history}: {history: HistoryRow[]}) {
       })}
       <View
         testID="expense-sync-status"
-        style={[a.flex_row, a.align_center, a.gap_sm, a.px_lg, a.pt_xs]}>
-        <CloudIcon size="sm" fill={t.atoms.text_contrast_low.color} />
+        style={[a.flex_row, a.align_start, a.gap_sm, a.px_lg, a.pt_xs]}>
+        {/* Nudged onto the first line's centre (20px line, 16px glyph). */}
+        <CloudIcon
+          size="sm"
+          fill={t.atoms.text_contrast_medium.color}
+          style={{marginTop: 2}}
+        />
         <Text
           style={[
             a.flex_1,
@@ -164,7 +169,7 @@ export function History({history}: {history: HistoryRow[]}) {
             a.leading_snug,
             t.atoms.text_contrast_medium,
           ]}>
-          {l`Saved on this device. Syncing to your other devices arrives when you sign in.`}
+          {l`Saved on this device. Sign in to sync it to your other devices.`}
         </Text>
       </View>
     </View>

@@ -24,7 +24,7 @@ import {
   PawPrint,
   Pizza,
   Plane,
-  Receipt,
+  ReceiptText,
   Shirt,
   ShoppingBag,
   ShoppingCart,
@@ -63,7 +63,8 @@ const GLYPHS: Record<string, LucideIcon> = {
   house: House,
   zap: Zap,
   wifi: Wifi,
-  receipt: Receipt,
+  /* The text receipt: Lucide's plain one prints a dollar sign. */
+  receipt: ReceiptText,
   'heart-pulse': HeartPulse,
   dumbbell: Dumbbell,
   ticket: Ticket,

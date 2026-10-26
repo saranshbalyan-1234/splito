@@ -6,7 +6,7 @@ import {type Entity, type Repayment} from '@splito/sync'
 
 import {Link} from '#/view/com/util/Link'
 import {PressableWithHover} from '#/view/com/util/PressableWithHover'
-import {atoms as a, useBreakpoints, useTheme} from '#/alf'
+import {atoms as a, useTheme} from '#/alf'
 import {EntryIcon} from '#/components/people/EntryIcon'
 import {type HistoryEntry, utcDate} from '#/components/people/ledger'
 import * as Skeleton from '#/components/Skeleton'
@@ -47,7 +47,6 @@ export function HistoryRow({
 }) {
   const t = useTheme()
   const {t: l, i18n} = useLingui()
-  const {gtMobile} = useBreakpoints()
   const listAnimations = useListAnimations()
   const press = usePressScale()
   const data = entry.entity.data
@@ -107,9 +106,10 @@ export function HistoryRow({
   if (groupName) byline.push(groupName)
   byline.push(date)
 
-  const trailingView = (
-    <View style={[a.align_end, a.flex_shrink_0]}>{trailing}</View>
-  )
+  /*
+   * Splitwise's money column: what it means on top, the amount under it,
+   * both right-aligned, so the title and byline keep the row's width.
+   */
   const content = (
     <Animated.View style={[a.flex_row, a.align_center, a.gap_md, press.style]}>
       <EntryIcon
@@ -119,16 +119,12 @@ export function HistoryRow({
         isPayment={entry.kind === 'repayment'}
       />
       <View style={[a.flex_1, a.gap_2xs]}>
-        {/* Phones: the effect shares the title's line so the byline gets the full width. */}
-        <View style={[a.flex_row, a.align_center, a.justify_between, a.gap_md]}>
-          <Text
-            emoji
-            numberOfLines={1}
-            style={[a.flex_1, a.text_md, a.font_semi_bold, a.leading_snug]}>
-            {title}
-          </Text>
-          {!gtMobile && trailingView}
-        </View>
+        <Text
+          emoji
+          numberOfLines={1}
+          style={[a.text_md, a.font_semi_bold, a.leading_snug]}>
+          {title}
+        </Text>
         <Text
           emoji
           numberOfLines={1}
@@ -136,7 +132,9 @@ export function HistoryRow({
           {byline.join(' · ')}
         </Text>
       </View>
-      {gtMobile && trailingView}
+      <View style={[a.align_end, a.flex_shrink_0, {maxWidth: '45%'}]}>
+        {trailing}
+      </View>
     </Animated.View>
   )
   const rowStyle = [
@@ -181,7 +179,10 @@ export function HistoryRow({
   )
 }
 
-/** "owes you" / "you owe" (person) or "you lent" / "you borrowed" (group), the amount coloured by direction. */
+/**
+ * "owes you" / "you owe" (person) or "you lent" / "you borrowed" (group)
+ * above the amount, coloured by direction.
+ */
 function EffectText({
   effect,
   context,
@@ -192,49 +193,54 @@ function EffectText({
   figure: string
 }) {
   const t = useTheme()
-  const figureStyle = [
-    a.text_md,
-    a.font_semi_bold,
-    {
-      color: effect > ZERO ? t.palette.positive_600 : t.palette.negative_500,
-      ...tabular,
-    },
-  ]
-  return (
-    <Text
-      numberOfLines={1}
-      style={[
-        a.text_sm,
-        a.leading_snug,
-        t.atoms.text_contrast_medium,
-        a.text_right,
-      ]}>
-      {effect === ZERO ? (
-        context === 'person' ? (
-          <Trans>no balance change</Trans>
-        ) : (
-          <Trans>not involved</Trans>
-        )
-      ) : effect > ZERO ? (
-        context === 'person' ? (
-          <Trans>
-            owes you <Text style={figureStyle}>{figure}</Text>
-          </Trans>
-        ) : (
-          <Trans>
-            you lent <Text style={figureStyle}>{figure}</Text>
-          </Trans>
-        )
-      ) : context === 'person' ? (
-        <Trans>
-          you owe <Text style={figureStyle}>{figure}</Text>
-        </Trans>
+  const label =
+    effect === ZERO ? (
+      context === 'person' ? (
+        <Trans>no balance change</Trans>
       ) : (
-        <Trans>
-          you borrowed <Text style={figureStyle}>{figure}</Text>
-        </Trans>
+        <Trans>not involved</Trans>
+      )
+    ) : effect > ZERO ? (
+      context === 'person' ? (
+        <Trans>owes you</Trans>
+      ) : (
+        <Trans>you lent</Trans>
+      )
+    ) : context === 'person' ? (
+      <Trans>you owe</Trans>
+    ) : (
+      <Trans>you borrowed</Trans>
+    )
+  return (
+    <>
+      <Text
+        numberOfLines={1}
+        style={[
+          a.text_xs,
+          a.leading_snug,
+          a.text_right,
+          t.atoms.text_contrast_medium,
+        ]}>
+        {label}
+      </Text>
+      {effect !== ZERO && (
+        <Text
+          numberOfLines={1}
+          style={[
+            a.text_md,
+            a.font_semi_bold,
+            a.leading_snug,
+            a.text_right,
+            {
+              color:
+                effect > ZERO ? t.palette.positive_600 : t.palette.negative_500,
+              ...tabular,
+            },
+          ]}>
+          {figure}
+        </Text>
       )}
-    </Text>
+    </>
   )
 }
 

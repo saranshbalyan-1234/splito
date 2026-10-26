@@ -116,11 +116,17 @@ test('Hindi renders translated words with Indian grouping, never message ids', a
   await expectNoMessageIds(page)
 })
 
-test('Profile is Bluesky settings-style with Analytics, Settings and About', async ({page}) => {
+test('Profile holds identity: name prompt, counts, then Settings and About; no dead sync row', async ({page}) => {
   await openDemo(page)
   await page.goto('/profile')
   await expect(page.getByTestId('profileHeaderDisplayName')).toBeVisible()
-  await expect(page.getByTestId('profile-analytics')).toBeVisible()
+  // The starting name "Me" asks for a real one.
+  await expect(page.getByTestId('profile-edit')).toHaveAttribute('aria-label', 'Add your name')
+  await expect(page.getByTestId('profile-stat-friends')).toContainText(String(Object.keys(DEMO_FRIENDS).length))
+  await expect(page.getByTestId('profile-stat-groups')).toContainText('3')
+  await expect(page.getByTestId('profile-analytics')).toHaveCount(0)
+  await expect(page.getByText('Coming with sync')).toHaveCount(0)
+  await expect(page.getByTestId('profile-sync-note')).toBeVisible()
   await expect(page.getByTestId('profile-about')).toBeVisible()
   await page.getByTestId('profile-settings').click()
   await expect(page.getByTestId('screen-settings')).toBeVisible()

@@ -10,7 +10,7 @@ import {useLingui} from '@lingui/react/macro'
 
 import {HITSLOP_10, UNREAD_NOTIFICATION_CAP} from '#/lib/constants'
 import {Link} from '#/view/com/util/Link'
-import {atoms as a, useTheme, type ViewStyleProp} from '#/alf'
+import {atoms as a, useBreakpoints, useTheme, type ViewStyleProp} from '#/alf'
 import * as Button from '#/components/Button'
 import {ChevronRight_Stroke2_Corner0_Rounded as ChevronRightIcon} from '#/components/icons/Chevron'
 import {createPortalGroup} from '#/components/Portal'
@@ -24,8 +24,19 @@ ItemContext.displayName = 'SettingsListItemContext'
 
 const Portal = createPortalGroup()
 
+/*
+ * Splito: on wide screens a settings page keeps one readable width for rows,
+ * controls and dividers alike, from the content's left edge, so a label and
+ * its chevron or value stay together (the frame itself still fills the
+ * screen beside the sidebar).
+ */
 export function Container({children}: {children: React.ReactNode}) {
-  return <View style={[a.flex_1, a.py_md]}>{children}</View>
+  const {gtMobile} = useBreakpoints()
+  return (
+    <View style={[a.flex_1, a.py_md, gtMobile && {maxWidth: 720}]}>
+      {children}
+    </View>
+  )
 }
 
 /**

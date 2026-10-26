@@ -8,15 +8,17 @@ import {PREFS} from '@splito/sync'
 
 import {hexToRgb, lighten} from '#/alf/util/colorGeneration'
 
-/** Accent presets for Settings > Appearance. Each keeps white text at 4.5:1 or better. */
+/**
+ * Accent presets for Settings > Appearance. Each keeps white text at 4.5:1
+ * or better. Red-orange and amber are left out: next to the money red they
+ * read as "you owe". Emerald stays as the owner's optional accent.
+ */
 export const ACCENTS = [
   {id: 'blue', hex: PREFS.accent.default},
   {id: 'emerald', hex: '#0B8263'},
   {id: 'indigo', hex: '#4F46E5'},
   {id: 'violet', hex: '#7C3AED'},
   {id: 'pink', hex: '#DB2777'},
-  {id: 'orange', hex: '#C2410C'},
-  {id: 'amber', hex: '#B45309'},
   {id: 'graphite', hex: '#475569'},
 ] as const
 
