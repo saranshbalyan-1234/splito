@@ -5,6 +5,7 @@ import {Trans, useLingui} from '@lingui/react/macro'
 import {useNavigation, useRoute} from '@react-navigation/native'
 import {search} from '@splito/sync'
 
+import {usePagedRows} from '#/lib/hooks/usePagedRows'
 import {type NavigationProp} from '#/lib/routes/types'
 import {todayIn} from '#/locale/dates'
 import {useNumberLocale} from '#/locale/numberLocale'
@@ -66,6 +67,7 @@ export function SearchScreen() {
   const results = index ? search(index, query, {today}) : undefined
   const rows = results ? searchRows(results) : []
   const navRows = rows.filter((r): r is SearchResultRow => r.type !== 'header')
+  const {shown, onEndReached} = usePagedRows(query)(rows)
 
   const rememberQuery = (q: string) => {
     const item = q.trim()
@@ -224,7 +226,8 @@ export function SearchScreen() {
       ) : (
         <List
           testID="search-results"
-          data={rows}
+          data={shown}
+          onEndReached={onEndReached}
           keyExtractor={(row: SearchRow) => row.key}
           renderItem={renderItem}
           sideBorders={false}

@@ -12,6 +12,7 @@ import {
   type WriteOff,
 } from '@splito/sync'
 
+import {usePagedRows} from '#/lib/hooks/usePagedRows'
 import {type AllNavigatorParams, type NavigationProp} from '#/lib/routes/types'
 import {useEntities, useLedger, useMe} from '#/data/hooks'
 import {useNumberLocale} from '#/locale/numberLocale'
@@ -148,6 +149,7 @@ export function GroupScreen() {
   }, [wantsRules, isLoading, rulesControl, navigation])
   const group = groups?.find(g => g.id === groupId)
 
+  const pageOf = usePagedRows(tab)
   if (!isLoading && !group) {
     return (
       <Layout.Screen testID="screen-group">
@@ -472,6 +474,8 @@ export function GroupScreen() {
     />
   )
 
+  const {shown, onEndReached} = pageOf(items)
+
   return (
     <Layout.Screen testID="screen-group">
       <Layout.Header.Outer>
@@ -560,7 +564,8 @@ export function GroupScreen() {
       </Layout.Header.Outer>
       <LayoutAnimationConfig skipEntering skipExiting>
         <List
-          data={items}
+          data={shown}
+          onEndReached={onEndReached}
           keyExtractor={(item: Item) => item.key}
           renderItem={({item, index}: {item: Item; index: number}) => {
             switch (item.type) {

@@ -165,8 +165,15 @@ for (const [name, path, screen] of [
     const inset = page.getByTestId(screen).getByTestId('fab-inset')
     await expect(inset).toHaveCount(1)
     await page.mouse.move(PHONE.width / 2, 300)
-    await page.mouse.wheel(0, 20000)
-    await page.waitForTimeout(400)
+    // Long lists load a page at a time: scroll until no more rows come in.
+    let lastY = -1
+    for (let i = 0; i < 10; i++) {
+      await page.mouse.wheel(0, 20000)
+      await page.waitForTimeout(400)
+      const y = (await inset.boundingBox())!.y
+      if (y === lastY) break
+      lastY = y
+    }
     // The inset starts where the last row ends.
     const lastRowBottom = (await inset.boundingBox())!.y
     const fab = (await page

@@ -26,20 +26,56 @@ import {
 } from '#/data/demoData'
 import {IS_DEV, IS_E2E} from '#/env'
 
-/** True when this load asked for demo data: `?demo=1` on web, `EXPO_PUBLIC_DEMO=1` for native dev builds. */
-function isDemoRequested() {
-  if (process.env.EXPO_PUBLIC_DEMO === '1') return true
-  if (typeof window === 'undefined' || !window.location?.search) return false
-  return new URLSearchParams(window.location.search).get('demo') === '1'
+/**
+ * The demo set this load asked for: `?demo=1` / `?demo=large` on web,
+ * `EXPO_PUBLIC_DEMO=1` / `large` for native dev builds; null for none.
+ */
+function demoRequested(): '1' | 'large' | null {
+  const env = process.env.EXPO_PUBLIC_DEMO
+  if (env === '1' || env === 'large') return env
+  if (typeof window === 'undefined' || !window.location?.search) return null
+  const q = new URLSearchParams(window.location.search).get('demo')
+  return q === '1' || q === 'large' ? q : null
 }
 
 /**
- * Dev and E2E builds only: with `?demo=1`, seeds the demo friends, groups and
+ * `EXPO_PUBLIC_DEMO_AUTO=large` (preview builds): load the large set when the
+ * device holds nothing but "me", so a fresh browser opens on populated screens.
+ */
+async function isAutoLarge(store: Store, ctx: MutationCtx) {
+  if (process.env.EXPO_PUBLIC_DEMO_AUTO !== 'large') return false
+  const [people, groups, expenses] = await Promise.all([
+    store.getAll('person'),
+    store.getAll('group'),
+    store.getAll('expense'),
+  ])
+  return (
+    people.every(p => p.id === ctx.actor) &&
+    groups.length === 0 &&
+    expenses.length === 0
+  )
+}
+
+/**
+ * Dev and E2E builds only: with `?demo=large` (or the preview auto flag),
+ * adds the large set (`demoLarge.ts`). With `?demo=1`, seeds the demo friends, groups and
  * expenses through the real mutations, once per local store. Production builds
  * never seed (the env check is first, so the URL is never read there).
  */
-export function seedDemoIfRequested(store: Store, ctx: MutationCtx) {
-  if (!(IS_DEV || IS_E2E) || !isDemoRequested()) return Promise.resolve()
+export async function seedDemoIfRequested(store: Store, ctx: MutationCtx) {
+  if (!(IS_DEV || IS_E2E)) return
+  const requested = demoRequested()
+  if (
+    requested === 'large' ||
+    (!requested && (await isAutoLarge(store, ctx)))
+  ) {
+    // A year of data: written in the background with a progress toast, so the app opens at once.
+    void import('#/screens/Settings/DemoData').then(m =>
+      m.runLargeDemo(store, ctx, 'add'),
+    )
+    return
+  }
+  if (requested !== '1') return
   // One run per page load, even if the store opens twice (dev remounts).
   seeding ??= seed(store, ctx)
   return seeding

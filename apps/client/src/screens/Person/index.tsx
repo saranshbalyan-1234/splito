@@ -15,6 +15,7 @@ import {
   type WriteOff,
 } from '@splito/sync'
 
+import {usePagedRows} from '#/lib/hooks/usePagedRows'
 import {type AllNavigatorParams, type NavigationProp} from '#/lib/routes/types'
 import {goBack} from '#/navigation/goBack'
 import {
@@ -135,6 +136,7 @@ export function PersonScreen() {
     !ledger
   const person = people?.find(p => p.id === personId)
 
+  const pageOf = usePagedRows()
   if (!isLoading && (!person || person.data.isMe)) {
     return (
       <Layout.Screen testID="screen-person">
@@ -349,6 +351,8 @@ export function PersonScreen() {
     </>
   )
 
+  const {shown, onEndReached} = pageOf(isLoading ? [] : items)
+
   return (
     <Layout.Screen testID="screen-person">
       <Layout.Header.Outer>
@@ -430,7 +434,8 @@ export function PersonScreen() {
       </Layout.Header.Outer>
       <LayoutAnimationConfig skipEntering skipExiting>
         <List
-          data={isLoading ? [] : items}
+          data={shown}
+          onEndReached={onEndReached}
           keyExtractor={(item: HistoryItem) => item.key}
           renderItem={({item, index}: {item: HistoryItem; index: number}) =>
             item.type === 'month' ? (

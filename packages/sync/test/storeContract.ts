@@ -143,5 +143,25 @@ export function runStoreContract(name: string, open: () => Promise<Store>, reope
       expect((await s.history('expense', 'e')).map(h => h.version)).toEqual([1, 2, 3])
       await s.close()
     })
+
+    test('erase removes exactly the named entities with their history and outbox ops', async () => {
+      const s = await open()
+      await s.transaction(async tx => {
+        for (const id of ['p1', 'p2']) {
+          await tx.put(ent('person', id))
+          await tx.appendHistory({entityType: 'person', entityId: id, version: 1, data: {}, deleted: false, at: 1, actor: 'me'})
+          await tx.enqueue({...op(`op-${id}`), entityId: id})
+        }
+      })
+      const seen: unknown[] = []
+      s.subscribe(c => seen.push(c))
+      await s.erase([{type: 'person', id: 'p1'}])
+      expect((await s.getAll('person')).map(e => e.id)).toEqual(['p2'])
+      expect(await s.history('person', 'p1')).toEqual([])
+      expect(await s.history('person', 'p2')).toHaveLength(1)
+      expect((await s.outbox()).map(o => o.opId)).toEqual(['op-p2'])
+      expect(touches(seen[0] as StoreChange, 'person', 'p1')).toBe(true)
+      await s.close()
+    })
   })
 }

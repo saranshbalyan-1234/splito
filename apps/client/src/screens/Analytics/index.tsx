@@ -4,6 +4,7 @@ import {Trans, useLingui} from '@lingui/react/macro'
 import {useNavigation} from '@react-navigation/native'
 import {formatAmount, type ReportExpense, reportCsv} from '@splito/domain'
 
+import {usePagedRows} from '#/lib/hooks/usePagedRows'
 import {type NavigationProp} from '#/lib/routes/types'
 import {useNumberLocale} from '#/locale/numberLocale'
 import {usePref} from '#/data/hooks'
@@ -50,6 +51,7 @@ export function AnalyticsScreen() {
   const [view = 'charts', setView] = usePref('analyticsView')
   const isTable = view === 'table'
   const exportRows = useExportRows()
+  const {shown, onEndReached} = usePagedRows()(report?.rows ?? [])
 
   return (
     <Layout.Screen testID="screen-analytics">
@@ -94,7 +96,8 @@ export function AnalyticsScreen() {
       ) : (
         <LayoutAnimationConfig skipEntering skipExiting>
           <List
-            data={report.rows}
+            data={shown}
+            onEndReached={onEndReached}
             keyExtractor={(e: ReportExpense) => e.id}
             renderItem={({item}: {item: ReportExpense}) => (
               <ExpenseRow

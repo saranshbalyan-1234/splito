@@ -7,6 +7,8 @@ import {Trans, useLingui} from '@lingui/react/macro'
 import {useHaptics} from '#/lib/haptics'
 import {useMe, usePref} from '#/data/hooks'
 import {useData} from '#/data/StoreProvider'
+import {IS_DEV, IS_E2E} from '#/env'
+import {DemoDataRows} from '#/screens/Settings/DemoData'
 import {UserAvatar} from '#/view/com/util/UserAvatar'
 import * as SettingsList from '#/screens/Settings/components/SettingsList'
 import {atoms as a, useTheme} from '#/alf'
@@ -156,6 +158,8 @@ export function SettingsScreen() {
               </Text>
             ) : null}
           </SettingsList.LinkItem>
+          {/* Dev and e2e builds only: the large demo set (ARCHITECTURE 26.1). */}
+          {(IS_DEV || IS_E2E) && <DemoDataRows />}
           <SettingsList.LinkItem
             testID="settings-about"
             to="/settings/about"
