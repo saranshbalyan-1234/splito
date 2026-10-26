@@ -17,6 +17,7 @@ import {useEntities, useMutationCtx, useStore} from '#/data/hooks'
 import {atoms as a, useBreakpoints, useTheme, web} from '#/alf'
 import {Button, ButtonText} from '#/components/Button'
 import * as Composer from '#/components/Composer'
+import * as FormSheet from '#/components/FormSheet'
 import * as Dialog from '#/components/Dialog'
 import {Divider} from '#/components/Divider'
 import * as Prompt from '#/components/Prompt'
@@ -34,9 +35,14 @@ import {
   hasContent,
 } from './form'
 import {CircleCheck_Stroke2_Corner0_Rounded as CheckIcon} from '#/components/icons/CircleCheck'
-import {Person_Stroke2_Corner2_Rounded as PersonIcon} from '#/components/icons/Person'
 import {Warning_Stroke2_Corner0_Rounded as WarningIcon} from '#/components/icons/Warning'
-import {CalendarIcon, GroupIcon, NotesIcon, WalletIcon} from './icons'
+import {
+  CalendarIcon,
+  FolderIcon,
+  GroupIcon,
+  NotesIcon,
+  WalletIcon,
+} from './icons'
 import {PayersDialog} from './PayersDialog'
 import {PeopleDialog} from './PeopleDialog'
 import {CategoryDialog, CurrencyDialog, GroupDialog} from './pickers'
@@ -264,18 +270,18 @@ export function ExpenseComposer({
 
   return (
     <Composer.Outer testID={testID} onDismiss={requestClose}>
-      <Composer.TopBar
-        onCancel={requestClose}
-        onSave={() => void save()}
-        canSave={!!evaluation.draft && !savedId}
-        isSaving={isSaving}
-        saveLabel={isEdit ? l`Save changes` : l`Save expense`}
-        cancelHint={
+      <FormSheet.Header
+        onClose={requestClose}
+        closeHint={
           isEdit
             ? l`Closes without saving your changes`
             : l`Closes Add expense; your draft is kept`
         }
-        title={isEdit ? l`Edit expense` : l`New expense`}
+        title={
+          isEdit
+            ? l`Edit expense`
+            : l({message: 'Add expense', context: 'action'})
+        }
       />
 
       <KeyboardAvoidingView
@@ -400,14 +406,14 @@ export function ExpenseComposer({
           />
           <DetailRow
             testID="expense-group"
-            icon={GroupIcon}
+            icon={FolderIcon}
             label={l`Group`}
             value={group ? group.data.name : l`No group`}
             onPress={() => groupControl.open()}
           />
           <DetailRow
             testID="expense-people"
-            icon={PersonIcon}
+            icon={GroupIcon}
             label={l`Split with`}
             value={peopleSummary}
             onPress={() => peopleControl.open()}
@@ -455,11 +461,21 @@ export function ExpenseComposer({
           </View>
         </ScrollView>
 
-        <Footer
-          form={form}
-          evaluation={evaluation}
-          locale={locale}
-          isDirty={isDirty}
+        {/* Cancel and Save at the bottom, the split's readout right above them (owner: one sheet layout). */}
+        <FormSheet.Footer
+          onCancel={requestClose}
+          saveLabel={isEdit ? l`Save changes` : l`Save expense`}
+          onSave={() => void save()}
+          canSave={!!evaluation.draft && !savedId}
+          isSaving={isSaving}
+          readout={
+            <Footer
+              form={form}
+              evaluation={evaluation}
+              locale={locale}
+              isDirty={isDirty}
+            />
+          }
         />
       </KeyboardAvoidingView>
 
@@ -680,17 +696,7 @@ function Footer({
   }
 
   return (
-    <View
-      style={[
-        a.flex_row,
-        a.align_center,
-        a.px_lg,
-        a.py_md,
-        a.border_t,
-        t.atoms.border_contrast_low,
-        t.atoms.bg,
-        {minHeight: 48},
-      ]}>
+    <View style={[a.flex_row, a.align_center, a.pb_sm, {minHeight: 28}]}>
       {need ? (
         <Text
           testID="save-needs"

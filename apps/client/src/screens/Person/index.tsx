@@ -244,16 +244,11 @@ export function PersonScreen() {
     <>
       {/*
        * Bluesky's profile header: avatar, name, a byline, then the page's
-       * one primary action. Wide screens put the balance cards beside it.
+       * one primary action; the balance cards follow in the same column, so
+       * every label sits beside its amount.
        */}
-      <View
-        style={[
-          gtMobile ? [a.flex_row, a.align_start, a.gap_2xl] : a.gap_lg,
-          a.px_lg,
-          a.pt_lg,
-          a.pb_lg,
-        ]}>
-        <View style={[a.gap_md, gtMobile && {flexBasis: 320, flexShrink: 0}]}>
+      <View style={[a.gap_lg, a.px_lg, a.pt_lg, a.pb_lg]}>
+        <View style={[a.gap_md]}>
           <UserAvatar
             size={gtMobile ? 88 : 72}
             name={person!.data.name}
@@ -309,7 +304,7 @@ export function PersonScreen() {
             )}
           </View>
         </View>
-        <View style={[gtMobile && a.flex_1]}>
+        <View>
           <PersonBalances
             name={person!.data.name}
             summary={summary}
@@ -404,11 +399,12 @@ export function PersonScreen() {
           onScrolledDownChange={scrollTitle.onScrolledDownChange}
           data={isLoading ? [] : items}
           keyExtractor={(item: HistoryItem) => item.key}
-          renderItem={({item}: {item: HistoryItem}) =>
+          renderItem={({item, index}: {item: HistoryItem; index: number}) =>
             item.type === 'month' ? (
               <MonthHeader month={item.month} />
             ) : (
               <HistoryRow
+                hideTopBorder={items[index - 1]?.type === 'month'}
                 entry={item.entry}
                 context="person"
                 effect={effectWithPerson(item.entry, me!.id, personId)}

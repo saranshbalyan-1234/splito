@@ -5,6 +5,10 @@ import {type TabId} from '@splito/sync'
 import {styles} from '#/view/shell/bottom-bar/BottomBarStyles'
 import {useTheme} from '#/alf'
 import {
+  Activity_Filled_Corner0_Rounded as ActivityFilled,
+  Activity_Stroke2_Corner0_Rounded as Activity,
+} from '#/components/icons/Activity'
+import {
   ChartPie_Filled_Corner0_Rounded as ChartPieFilled,
   ChartPie_Stroke2_Corner0_Rounded as ChartPie,
 } from '#/components/icons/ChartPie'
@@ -23,6 +27,7 @@ export const TAB_LABELS = {
   people: msg`People`,
   groups: msg`Groups`,
   analytics: msg`Analytics`,
+  activity: msg`Activity`,
 } satisfies Record<TabId, unknown>
 
 /* Glyphs per tab, nudged as upstream nudges its bottom-bar glyphs. */
@@ -38,6 +43,7 @@ const GLYPHS: Record<
   people: {icon: Home, filled: HomeFilled, widthAdjust: 1, style: styles.homeIcon},
   groups: {icon: Group, filled: GroupFilled, widthAdjust: 1},
   analytics: {icon: ChartPie, filled: ChartPieFilled, widthAdjust: 0},
+  activity: {icon: Activity, filled: ActivityFilled, widthAdjust: 0},
 }
 
 /** A bottom-bar tab's glyph, filled when active. */

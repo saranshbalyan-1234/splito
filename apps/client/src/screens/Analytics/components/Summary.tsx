@@ -4,14 +4,18 @@ import {formatAmount} from '@splito/domain'
 
 import {atoms as a, useBreakpoints, useTheme} from '#/alf'
 import {Button, ButtonIcon} from '#/components/Button'
+import * as Dialog from '#/components/Dialog'
 import {
+  ChevronBottom_Stroke2_Corner0_Rounded as ChevronDownIcon,
   ChevronLeft_Stroke2_Corner0_Rounded as ChevronLeftIcon,
   ChevronRight_Stroke2_Corner0_Rounded as ChevronRightIcon,
 } from '#/components/icons/Chevron'
+import * as Menu from '#/components/Menu'
 import * as Skeleton from '#/components/Skeleton'
 import {Text} from '#/components/Typography'
 import {AnimatedAmount} from '#/motion/AnimatedAmount'
-import {type Report} from '#/screens/Analytics/useReport'
+import {RangeDialog} from '#/screens/Analytics/components/RangeDialog'
+import {type PeriodChoice, type Report} from '#/screens/Analytics/useReport'
 
 const tabular = {fontVariant: ['tabular-nums' as const]}
 
@@ -96,11 +100,12 @@ export function Summary({report, locale}: {report: Report; locale: string}) {
 
   return (
     <View style={[a.px_lg, a.pt_md, a.pb_sm, a.gap_md]}>
+      {/* One period control: step back and forward, or open the label to pick the kind of period. */}
       <View
         style={[
           a.flex_row,
           a.align_center,
-          a.gap_xs,
+          a.gap_2xs,
           canStep && {marginLeft: -8},
         ]}>
         {canStep && (
@@ -116,11 +121,7 @@ export function Summary({report, locale}: {report: Report; locale: string}) {
             <ButtonIcon icon={ChevronLeftIcon} size="md" />
           </Button>
         )}
-        <Text
-          testID="analytics-period-label"
-          style={[a.text_lg, a.font_semi_bold, a.leading_snug]}>
-          {report.periodLabel}
-        </Text>
+        <PeriodMenu report={report} />
         {canStep && (
           <Button
             testID="analytics-next"
@@ -154,7 +155,6 @@ export function Summary({report, locale}: {report: Report; locale: string}) {
           a.rounded_md,
           a.border,
           t.atoms.border_contrast_low,
-          {maxWidth: 720},
         ]}>
         {stat(
           'analytics-total-paid',
@@ -177,6 +177,89 @@ export function Summary({report, locale}: {report: Report; locale: string}) {
         )}
       </View>
     </View>
+  )
+}
+
+/** The period's name as a menu: week, month, year, all time or a custom range. */
+function PeriodMenu({report}: {report: Report}) {
+  const t = useTheme()
+  const {t: l} = useLingui()
+  const rangeControl = Dialog.useDialogControl()
+  const periods: Array<{
+    value: Exclude<PeriodChoice, 'custom'>
+    label: string
+  }> = [
+    {value: 'week', label: l`Week`},
+    {value: 'month', label: l`Month`},
+    {value: 'year', label: l`Year`},
+    {value: 'all', label: l`All time`},
+  ]
+  const periodName =
+    report.period === 'custom'
+      ? l`Custom range`
+      : periods.find(p => p.value === report.period)!.label
+
+  return (
+    <>
+      <Menu.Root>
+        <Menu.Trigger label={l`Period: ${periodName}, ${report.periodLabel}`}>
+          {({props, state, control}) => (
+            <Button
+              testID="analytics-period"
+              {...props}
+              label={props.accessibilityLabel}
+              size="small"
+              variant="ghost"
+              color="secondary"
+              style={[
+                a.px_sm,
+                (state.hovered || state.pressed || control.isOpen) &&
+                  t.atoms.bg_contrast_50,
+              ]}>
+              <Text
+                testID="analytics-period-label"
+                style={[a.text_lg, a.font_semi_bold, a.leading_snug]}>
+                {report.periodLabel}
+              </Text>
+              <ButtonIcon icon={ChevronDownIcon} size="sm" />
+            </Button>
+          )}
+        </Menu.Trigger>
+        <Menu.Outer>
+          <Menu.Group>
+            {periods.map(p => (
+              <Menu.Item
+                key={p.value}
+                testID={`analytics-period-${p.value}`}
+                label={p.label}
+                onPress={() => report.setPeriod(p.value)}>
+                <Menu.ItemText>{p.label}</Menu.ItemText>
+                <Menu.ItemRadio selected={report.period === p.value} />
+              </Menu.Item>
+            ))}
+          </Menu.Group>
+          <Menu.Divider />
+          <Menu.Group>
+            <Menu.Item
+              testID="analytics-period-custom"
+              label={l`Custom range…`}
+              onPress={() => rangeControl.open()}>
+              <Menu.ItemText>
+                <Trans>Custom range…</Trans>
+              </Menu.ItemText>
+              <Menu.ItemRadio selected={report.period === 'custom'} />
+            </Menu.Item>
+          </Menu.Group>
+        </Menu.Outer>
+      </Menu.Root>
+      <RangeDialog
+        control={rangeControl}
+        initial={report.customRange}
+        today={report.today}
+        weekStart={report.weekStart}
+        onApply={report.setCustom}
+      />
+    </>
   )
 }
 

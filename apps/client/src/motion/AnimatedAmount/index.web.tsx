@@ -47,9 +47,16 @@ export function AnimatedAmount({
     const start = performance.now()
     let raf = 0
     const tick = (now: number) => {
+      /*
+       * A frame's timestamp is when the frame began, which can be before
+       * `start`: clamp at 0, or frames[-1] (undefined) blanks the text.
+       */
       const i = Math.min(
         frames.length - 1,
-        Math.floor(((now - start) / AMOUNT_DURATION_MS) * frames.length),
+        Math.max(
+          0,
+          Math.floor(((now - start) / AMOUNT_DURATION_MS) * frames.length),
+        ),
       )
       node.nodeValue = frames[i]!
       if (i < frames.length - 1) raf = requestAnimationFrame(tick)

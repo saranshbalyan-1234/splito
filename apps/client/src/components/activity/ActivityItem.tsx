@@ -81,8 +81,9 @@ const SWIPE_THRESHOLD = 120
 type BadgeTone = 'primary' | 'negative' | 'neutral'
 
 /**
- * The background of a row, faintly tinted while unread; the dot carries
- * the state. Light themes use `primary_25`; dark themes mix 7% of the
+ * The background of a row, faintly tinted while unread; the accent bar on
+ * the row's edge carries the state. Light themes use `primary_25`; dark
+ * themes mix 12% of the
  * accent into the page colour, as the inverted palette's tints read too
  * strong there. Opaque, so the avatar badge's ring can take it.
  */
@@ -93,7 +94,7 @@ export function useRowBackgroundColor(isRead: boolean) {
   const bg = hexToRgb(String(t.atoms.bg.backgroundColor))
   const tint = hexToRgb(t.palette.primary_500)
   if (!bg || !tint) return t.palette.primary_25
-  const mix = (x: number, y: number) => x + (y - x) * 0.07
+  const mix = (x: number, y: number) => x + (y - x) * 0.12
   return rgbToHex(mix(bg.r, tint.r), mix(bg.g, tint.g), mix(bg.b, tint.b))
 }
 
@@ -281,10 +282,14 @@ export function ActivityItem({
               accessibilityLabel={l`Unread`}
               style={[
                 a.absolute,
-                a.rounded_full,
-                {width: 8, height: 8, backgroundColor: t.palette.primary_500},
-                // In the gutter left of the avatar, level with its centre, as mail apps mark unread.
-                {left: 4, top: rowPaddingTop + AVATAR_SIZE / 2 - 4},
+                // An accent bar on the row's leading edge, clear of the avatar and the sidebar's border.
+                {
+                  left: 0,
+                  top: 0,
+                  bottom: 0,
+                  width: 3,
+                  backgroundColor: t.palette.primary_500,
+                },
               ]}
             />
           )}

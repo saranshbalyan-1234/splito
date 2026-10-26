@@ -34,7 +34,7 @@ test('group page: header, my balance, expenses, member balances and members', as
   await expect(page.getByTestId('group-byline')).toHaveText('Trip · 3 members')
   await expect(page.getByTestId('group-dates')).toHaveText('Sep 4 – Sep 7, 2026')
   // My balance is a card: direction, currency, then the amount.
-  await expect(page.getByTestId('group-my-balance-INR')).toHaveText(/^You owe\s*INR\s*₹100\.00$/)
+  await expect(page.getByTestId('group-my-balance-INR')).toHaveText(/^You owe\s*₹100\.00$/)
   await expect(page.getByText('Rafting')).toBeVisible()
   // History rows stack what it means over the amount.
   const rafting = page.locator('[data-testid^="history-"]', {hasText: 'Rafting'})
@@ -45,6 +45,10 @@ test('group page: header, my balance, expenses, member balances and members', as
   await expect(page.getByTestId('group-net-INR-Chirag Shah-text')).toHaveText('gets back ₹100.00')
   await expect(page.getByTestId('group-net-INR-You-text')).toHaveText('you owe ₹100.00')
   await expect(page.getByTestId('group-net-INR-Bela Joshi-text')).toHaveText('settled up')
+  // Who owes whom: the direct plan, with Settle up beside it.
+  await expect(page.getByTestId('group-owe-You-Chirag Shah')).toContainText('You owe Chirag Shah')
+  await expect(page.getByTestId('group-owe-You-Chirag Shah')).toContainText('₹100.00')
+  await expect(page.getByTestId('group-balances-settle')).toBeVisible()
 
   await page.getByTestId('group-tab-members').click()
   await expect(page.getByTestId('member-You')).toBeVisible()
@@ -129,7 +133,7 @@ test('"Record this payment" records a part payment and the plan follows', async 
   await expect(page.getByText('send money', {exact: false})).toHaveCount(0)
 
   await page.goto(`/groups/${group}`)
-  await expect(page.getByTestId('group-my-balance-INR')).toHaveText(/^You owe\s*INR\s*₹40\.00$/)
+  await expect(page.getByTestId('group-my-balance-INR')).toHaveText(/^You owe\s*₹40\.00$/)
   await expect(page.getByText('You paid Chirag Shah')).toBeVisible()
 })
 
@@ -144,7 +148,7 @@ test('create a group with a new member, then land on it', async ({page}) => {
   await page.getByTestId('create-group-currency').click()
   await page.getByTestId('currency-EUR').click()
   await expect(page.getByTestId('create-group-currency')).toContainText('EUR · Euro')
-  await page.getByTestId('create-group-save').click()
+  await page.getByTestId('sheet-save').click()
 
   await expect(page.getByTestId('group-name')).toHaveText('Weekend in Goa')
   await expect(page.getByTestId('group-byline')).toHaveText('Trip · 3 members')

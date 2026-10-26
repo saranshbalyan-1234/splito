@@ -1,5 +1,5 @@
 import {useState} from 'react'
-import {View} from 'react-native'
+import {KeyboardAvoidingView, ScrollView, View} from 'react-native'
 import {Trans, useLingui} from '@lingui/react/macro'
 import {useNavigation} from '@react-navigation/native'
 import {DomainError} from '@splito/domain'
@@ -9,22 +9,23 @@ import {useHaptics} from '#/lib/haptics'
 import {type NavigationProp} from '#/lib/routes/types'
 import {logger} from '#/logger'
 import {useMutationCtx, useStore} from '#/data/hooks'
-import {atoms as a, useTheme} from '#/alf'
+import {atoms as a, useTheme, web} from '#/alf'
 import {Admonition} from '#/components/Admonition'
-import {Button, ButtonText} from '#/components/Button'
+import * as Composer from '#/components/Composer'
+import * as FormSheet from '#/components/FormSheet'
 import * as TextField from '#/components/forms/TextField'
 import {Person_Stroke2_Corner2_Rounded as PersonIcon} from '#/components/icons/Person'
-import * as Layout from '#/components/Layout'
 import {AvatarPreview} from '#/components/people/AvatarPreview'
+import * as Prompt from '#/components/Prompt'
 import * as Toast from '#/components/Toast'
 import {Text} from '#/components/Typography'
-
-/** Form width; the page itself spans the content area. */
-const FORM_WIDTH = 560
+import {IS_IOS} from '#/env'
 
 /**
  * Add a friend privately: a name and, optionally, the UPI ID used for pay
- * links. Friends don't need the app; invites arrive with sign-in.
+ * links. Friends don't need the app; invites arrive with sign-in. Opens as
+ * a composer sheet (owner: close cross at the top right, the primary
+ * action at the bottom).
  */
 export function AddFriendScreen() {
   const t = useTheme()
@@ -37,6 +38,17 @@ export function AddFriendScreen() {
   const [upiId, setUpiId] = useState('')
   const [error, setError] = useState<'name' | 'upi' | null>(null)
   const [isSaving, setIsSaving] = useState(false)
+  const discardControl = Prompt.usePromptControl()
+  const isDirty = name.trim() !== '' || upiId.trim() !== ''
+
+  const close = () => {
+    if (navigation.canGoBack()) navigation.goBack()
+    else navigation.navigate('People')
+  }
+  const requestClose = () => {
+    if (isDirty && !isSaving) discardControl.open()
+    else close()
+  }
 
   const save = async () => {
     setIsSaving(true)
@@ -44,7 +56,8 @@ export function AddFriendScreen() {
       const person = await createPerson(store, ctx, {name, upiId})
       haptics.success()
       Toast.show(l`${person.data.name} added`, {type: 'success'})
-      navigation.replace('Person', {personId: person.id})
+      close()
+      navigation.navigate('Person', {personId: person.id})
     } catch (e) {
       setIsSaving(false)
       haptics.error()
@@ -62,25 +75,19 @@ export function AddFriendScreen() {
   }
 
   return (
-    <Layout.Screen testID="screen-add-friend">
-      <Layout.Header.Outer>
-        <Layout.Header.BackButton />
-        <Layout.Header.Content>
-          <Layout.Header.TitleText>
-            <Trans>Add friend</Trans>
-          </Layout.Header.TitleText>
-        </Layout.Header.Content>
-        <Layout.Header.Slot />
-      </Layout.Header.Outer>
-      <Layout.Content keyboardShouldPersistTaps="handled">
-        <View
-          style={[
-            a.px_lg,
-            a.pt_xl,
-            a.pb_2xl,
-            a.gap_xl,
-            {maxWidth: FORM_WIDTH},
-          ]}>
+    <Composer.Outer testID="screen-add-friend" onDismiss={requestClose}>
+      <FormSheet.Header
+        title={l`Add friend`}
+        onClose={requestClose}
+        closeHint={l`Closes without adding anyone`}
+      />
+      <KeyboardAvoidingView
+        behavior={IS_IOS ? 'padding' : undefined}
+        style={[a.flex_1, web(a.flex_shrink)]}>
+        <ScrollView
+          keyboardShouldPersistTaps="handled"
+          style={[a.flex_1, web([a.flex_shrink, {minHeight: 0}])]}
+          contentContainerStyle={[a.px_lg, a.pt_md, a.pb_xl, a.gap_xl]}>
           <View style={[a.flex_row, a.align_center, a.gap_md]}>
             <AvatarPreview name={name} type="user" />
             <View style={[a.flex_1, a.gap_2xs]}>
@@ -172,20 +179,24 @@ export function AddFriendScreen() {
               sign in, coming with sync.
             </Trans>
           </Admonition>
-
-          <Button
-            testID="add-friend-save"
-            label={l`Add friend`}
-            size="large"
-            color="primary"
-            disabled={isSaving}
-            onPress={() => void save()}>
-            <ButtonText>
-              <Trans>Add friend</Trans>
-            </ButtonText>
-          </Button>
-        </View>
-      </Layout.Content>
-    </Layout.Screen>
+        </ScrollView>
+        <FormSheet.Footer
+          onCancel={requestClose}
+          saveLabel={l`Add friend`}
+          canSave={name.trim() !== ''}
+          isSaving={isSaving}
+          onSave={() => void save()}
+        />
+      </KeyboardAvoidingView>
+      <Prompt.Basic
+        control={discardControl}
+        title={l`Discard changes?`}
+        description={l`What you typed won’t be kept.`}
+        confirmButtonCta={l`Discard`}
+        confirmButtonColor="negative"
+        cancelButtonCta={l`Keep editing`}
+        onConfirm={close}
+      />
+    </Composer.Outer>
   )
 }

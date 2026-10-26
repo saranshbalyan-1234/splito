@@ -10,7 +10,7 @@ import {useLingui} from '@lingui/react/macro'
 
 import {HITSLOP_10, UNREAD_NOTIFICATION_CAP} from '#/lib/constants'
 import {Link} from '#/view/com/util/Link'
-import {atoms as a, useBreakpoints, useTheme, type ViewStyleProp} from '#/alf'
+import {atoms as a, useTheme, type ViewStyleProp} from '#/alf'
 import * as Button from '#/components/Button'
 import {ChevronRight_Stroke2_Corner0_Rounded as ChevronRightIcon} from '#/components/icons/Chevron'
 import {createPortalGroup} from '#/components/Portal'
@@ -25,18 +25,12 @@ ItemContext.displayName = 'SettingsListItemContext'
 const Portal = createPortalGroup()
 
 /*
- * Splito: on wide screens a settings page keeps one readable width for rows,
- * controls and dividers alike, from the content's left edge, so a label and
- * its chevron or value stay together (the frame itself still fills the
- * screen beside the sidebar).
+ * Splito: rows, controls and dividers span the content area beside the
+ * sidebar (owner: no centred column), so they share the header's width and
+ * its centred title sits over them.
  */
 export function Container({children}: {children: React.ReactNode}) {
-  const {gtMobile} = useBreakpoints()
-  return (
-    <View style={[a.flex_1, a.py_md, gtMobile && {maxWidth: 720}]}>
-      {children}
-    </View>
-  )
+  return <View style={[a.flex_1, a.py_md]}>{children}</View>
 }
 
 /**
@@ -230,8 +224,12 @@ export function ItemIcon({
     '4xl': 48,
   }[size]
 
+  /* Splito: row icons a step quieter than their labels, so the words lead. */
   const color =
-    colorProp ?? (destructive ? t.palette.negative_500 : t.atoms.text.color)
+    colorProp ??
+    (destructive
+      ? t.palette.negative_500
+      : t.atoms.text_contrast_medium.color)
 
   const content = (
     <View style={[a.z_20, {width: iconSize, height: iconSize}]}>

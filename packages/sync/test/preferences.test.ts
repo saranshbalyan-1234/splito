@@ -16,7 +16,7 @@ beforeEach(async () => {
 test('default returned when unset', async () => {
   expect(await getPref(s, 'defaultCurrency')).toBe('INR')
   expect(await getPref(s, 'includeGroupsDefault')).toBe(true)
-  expect(await getPref(s, 'tabs')).toEqual(['people', 'groups', 'analytics'])
+  expect(await getPref(s, 'tabs')).toEqual(['people', 'groups', 'analytics', 'activity'])
 })
 
 test('set then get', async () => {
@@ -51,21 +51,22 @@ test('home tab must be a visible tab', async () => {
   expect(await getPref(s, 'homeTab')).toBe('groups')
 })
 
-test('Activity left the tabs for the header bell: a stored order keeps the rest', async () => {
+test('Activity is a tab again: a stored order keeps it and its place', async () => {
   const stored = (id: string, value: unknown) =>
     s.transaction(async tx => tx.put({type: 'preference', id, data: {value}, version: 1, deleted: false, updatedAt: 1}))
   await stored('tabs', ['activity', 'analytics', 'people'])
   await stored('homeTab', 'activity')
-  expect(await getPref(s, 'tabs')).toEqual(['analytics', 'people'])
-  expect(await getPref(s, 'homeTab')).toBe('people')
-  await expect(setPref(s, ctx, 'tabs', ['groups', 'activity'] as never)).rejects.toThrow('INVALID_PREF')
+  expect(await getPref(s, 'tabs')).toEqual(['activity', 'analytics', 'people'])
+  expect(await getPref(s, 'homeTab')).toBe('activity')
+  await setPref(s, ctx, 'tabs', ['groups', 'activity'])
+  expect(await getPref(s, 'tabs')).toEqual(['groups', 'activity'])
 })
 
 test('an order saved while Profile was a tab predates the Analytics tab, so Analytics joins it', async () => {
   await s.transaction(async tx =>
     tx.put({type: 'preference', id: 'tabs', data: {value: ['people', 'groups', 'activity', 'profile']}, version: 1, deleted: false, updatedAt: 1}),
   )
-  expect(await getPref(s, 'tabs')).toEqual(['people', 'groups', 'analytics'])
+  expect(await getPref(s, 'tabs')).toEqual(['people', 'groups', 'activity', 'analytics'])
 })
 
 test('reset restores default', async () => {

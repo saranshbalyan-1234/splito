@@ -3,10 +3,10 @@ import {View} from 'react-native'
 import {Trans, useLingui} from '@lingui/react/macro'
 
 import {atoms as a, useTheme, web} from '#/alf'
-import {Button, ButtonText} from '#/components/Button'
 import * as Dialog from '#/components/Dialog'
 import * as Toggle from '#/components/forms/Toggle'
 import {Text} from '#/components/Typography'
+import * as FormSheet from '#/components/FormSheet'
 
 /**
  * The People and person pages' filter. Changes apply only on Apply (spec:
@@ -91,16 +91,13 @@ function Form({
       <Text style={[a.text_sm, a.leading_snug, t.atoms.text_contrast_medium]}>
         <Trans>The starting value is set in Settings › Lists.</Trans>
       </Text>
-      <Button
-        testID="filter-apply"
-        label={l`Apply`}
-        size="large"
-        color="primary"
-        onPress={() => control.close(() => onFilterApplied(draft))}>
-        <ButtonText>
-          <Trans>Apply</Trans>
-        </ButtonText>
-      </Button>
+      <FormSheet.Actions
+        saveTestID="filter-apply"
+        cancelTestID="filter-cancel"
+        saveLabel={l`Apply`}
+        onCancel={() => control.close()}
+        onSave={() => control.close(() => onFilterApplied(draft))}
+      />
     </View>
   )
 }

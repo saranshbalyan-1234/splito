@@ -178,7 +178,11 @@ export function SettleScreen() {
         key: `cur-${currency}`,
         currency,
         count: plan.transfers.length,
-        total: sumMinor(plan.transfers.map(x => x.amount)),
+        /* With one currency the summary above already gives the total. */
+        total:
+          shown.length > 1
+            ? sumMinor(plan.transfers.map(x => x.amount))
+            : null,
       },
       // Biggest payments first, then by payer, so the order never depends on member ids.
       ...[...plan.transfers]
@@ -206,7 +210,7 @@ export function SettleScreen() {
       </View>
     </Shimmer>
   ) : (
-    <View style={[a.px_lg, a.pt_lg, a.pb_lg, a.gap_md]}>
+    <View style={[a.px_lg, a.pt_lg, a.pb_md, a.gap_xs]}>
       <SettleSummary plans={shown} me={me!.id} locale={locale} />
       <View style={[a.flex_row]}>
         <Button

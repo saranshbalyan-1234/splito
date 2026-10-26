@@ -77,6 +77,7 @@ export function GroupRow({
             currency={currency}
             locale={locale}
             subject="group"
+            isCompact
             style={a.text_right}
           />
         ))
@@ -106,7 +107,7 @@ export function GroupRow({
         ]}>
         <Animated.View
           style={[a.flex_row, a.align_center, a.gap_md, press.style]}>
-          <GroupAvatar kind={kind} size={AVATAR_SIZE} />
+          <GroupAvatar kind={kind} name={name} size={AVATAR_SIZE} />
           <View style={[a.flex_1, a.gap_2xs]}>
             {/* Phones: the balance shares the title's line so the byline gets the full width. */}
             <View

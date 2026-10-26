@@ -9,6 +9,7 @@ export const TAB_ROUTE = {
   people: 'People',
   groups: 'Groups',
   analytics: 'Analytics',
+  activity: 'Activity',
 } as const satisfies Record<TabId, keyof TabParams>
 
 /** Each tab's path. */

@@ -13,6 +13,7 @@ import {ArrowRotateCounterClockwise_Stroke2_Corner0_Rounded as ResetIcon} from '
 import {CircleInfo_Stroke2_Corner0_Rounded as InfoIcon} from '#/components/icons/CircleInfo'
 import {Cloud_Stroke2_Corner0_Rounded as CloudIcon} from '#/components/icons/Cloud'
 import * as Layout from '#/components/Layout'
+import {useTabLabels} from '#/components/settings/TabsEditor'
 import * as Prompt from '#/components/Prompt'
 import {SETTINGS_SECTIONS, useSectionInfo} from '#/components/settings/sections'
 import * as Toast from '#/components/Toast'
@@ -161,6 +162,8 @@ function useSectionSummary(): Partial<Record<PrefGroup, string>> {
   const [theme = 'system'] = usePref('theme')
   const [motion = 'full'] = usePref('motion')
   const [currency = 'INR'] = usePref('defaultCurrency')
+  const [homeTab = 'people'] = usePref('homeTab')
+  const tabLabels = useTabLabels()
   const [categories] = usePref('categories')
   const [language = 'en'] = usePref('language')
   const [sort = 'amount'] = usePref('peopleSort')
@@ -174,7 +177,8 @@ function useSectionSummary(): Partial<Record<PrefGroup, string>> {
   return {
     appearance: {system: l`System`, light: l`Light`, dark: l`Dark`}[theme],
     motion: {full: l`Full`, reduced: l`Reduced`, off: l`Off`}[motion],
-    defaults: currency,
+    /* Both halves of the page: where the app opens, and the currency new expenses start in. */
+    defaults: `${tabLabels[homeTab]} · ${currency}`,
     categories: visible === 1 ? l`1 category` : l`${visible} categories`,
     regional: {en: 'English', hi: 'हिन्दी'}[language],
     lists: {

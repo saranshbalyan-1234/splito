@@ -2,9 +2,8 @@ import {View} from 'react-native'
 import {Trans, useLingui} from '@lingui/react/macro'
 import {formatAmount, magnitude, type PersonSummary, ZERO} from '@splito/domain'
 
-import {atoms as a, useTheme} from '#/alf'
+import {atoms as a, useBreakpoints, useTheme} from '#/alf'
 import {CircleCheck_Stroke2_Corner0_Rounded as CheckIcon} from '#/components/icons/CircleCheck'
-import {currencyName} from '#/components/people/ledger'
 import * as Skeleton from '#/components/Skeleton'
 import {Text} from '#/components/Typography'
 import {AnimatedAmount} from '#/motion/AnimatedAmount'
@@ -61,7 +60,6 @@ export function PersonBalances({
       {currencies.map(currency => (
         <BalanceCard
           key={currency}
-          name={name}
           currency={currency}
           balance={byCurrency[currency]!}
           groupNames={groupNames}
@@ -77,20 +75,19 @@ function hasParts(c: PersonSummary['byCurrency'][string]) {
 }
 
 function BalanceCard({
-  name,
   currency,
   balance,
   groupNames,
   locale,
 }: {
-  name: string
   currency: string
   balance: PersonSummary['byCurrency'][string]
   groupNames: Map<string, string>
   locale: string
 }) {
   const t = useTheme()
-  const {t: l, i18n} = useLingui()
+  const {t: l} = useLingui()
+  const {gtMobile} = useBreakpoints()
   const {total, direct, groups} = balance
   const color =
     total > ZERO
@@ -118,6 +115,7 @@ function BalanceCard({
         a.px_lg,
         a.py_md,
         {flexBasis: 280, flexGrow: 1},
+        gtMobile && {maxWidth: 440},
       ]}>
       <View style={[a.flex_row, a.align_center, a.justify_between, a.gap_sm]}>
         <Text
@@ -130,27 +128,15 @@ function BalanceCard({
             a.font_semi_bold,
             t.atoms.text_contrast_medium,
           ]}>
+          {/* The name is the page's heading, so the card only says which way. */}
           {total > ZERO ? (
-            <Trans>{name} owes you</Trans>
+            <Trans>Owes you</Trans>
           ) : total < ZERO ? (
-            <Trans>You owe {name}</Trans>
+            <Trans>You owe</Trans>
           ) : (
             <Trans>Settled up</Trans>
           )}
         </Text>
-        <View
-          style={[
-            a.rounded_xs,
-            a.px_xs,
-            {paddingVertical: 1},
-            t.atoms.bg_contrast_50,
-          ]}>
-          <Text
-            accessibilityLabel={currencyName(currency, i18n.locale)}
-            style={[a.text_xs, a.font_semi_bold, t.atoms.text_contrast_medium]}>
-            {currency}
-          </Text>
-        </View>
       </View>
       <View style={a.pt_xs}>
         <AnimatedAmount

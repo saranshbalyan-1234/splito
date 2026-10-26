@@ -32,7 +32,10 @@ export function HistoryRow({
   groupName,
   locale,
   onRepaymentPress,
+  hideTopBorder = false,
 }: {
+  /** The first row under a month heading: the heading's rule already separates them. */
+  hideTopBorder?: boolean
   entry: HistoryEntry
   context: 'person' | 'group'
   effect: bigint
@@ -46,16 +49,13 @@ export function HistoryRow({
   onRepaymentPress: (repayment: Entity<Repayment>) => void
 }) {
   const t = useTheme()
-  const {t: l, i18n} = useLingui()
+  const {t: l} = useLingui()
   const listAnimations = useListAnimations()
   const press = usePressScale()
   const data = entry.entity.data
-  const date = i18n.date(utcDate(data.date), {
-    day: 'numeric',
-    month: 'short',
-    timeZone: 'UTC',
-  })
   const name = (id: string) => names.get(id) ?? l`Someone`
+  /* Bylines are short enough for a phone: first names, and no date (the month heading has it). */
+  const firstName = (id: string) => name(id).split(' ')[0]!
   const amount = (minor: bigint) => formatAmount(minor, data.currency, locale)
 
   let title: string
@@ -71,7 +71,7 @@ export function HistoryRow({
         ? l`${payers.length} people paid ${total}`
         : payers[0] === me
           ? l`You paid ${total}`
-          : l`${name(payers[0]!)} paid ${total}`,
+          : l`${firstName(payers[0]!)} paid ${total}`,
     ]
     trailing = (
       <EffectText
@@ -104,7 +104,6 @@ export function HistoryRow({
     )
   }
   if (groupName) byline.push(groupName)
-  byline.push(date)
 
   /*
    * Splitwise's money column: what it means on top, the amount under it,
@@ -140,8 +139,7 @@ export function HistoryRow({
   const rowStyle = [
     a.px_lg,
     a.py_md,
-    a.border_t,
-    t.atoms.border_contrast_low,
+    !hideTopBorder && [a.border_t, t.atoms.border_contrast_low],
     a.transition_color,
   ]
 
@@ -180,8 +178,9 @@ export function HistoryRow({
 }
 
 /**
- * "owes you" / "you owe" (person) or "you lent" / "you borrowed" (group)
- * above the amount, coloured by direction.
+ * What one expense did, Splitwise's words: "you lent" / "you borrowed"
+ * above the amount, coloured by direction. Balances (People, a friend's
+ * total) say "owes you" / "you owe".
  */
 function EffectText({
   effect,
@@ -201,13 +200,7 @@ function EffectText({
         <Trans>not involved</Trans>
       )
     ) : effect > ZERO ? (
-      context === 'person' ? (
-        <Trans>owes you</Trans>
-      ) : (
-        <Trans>you lent</Trans>
-      )
-    ) : context === 'person' ? (
-      <Trans>you owe</Trans>
+      <Trans>you lent</Trans>
     ) : (
       <Trans>you borrowed</Trans>
     )
@@ -216,8 +209,8 @@ function EffectText({
       <Text
         numberOfLines={1}
         style={[
-          a.text_xs,
-          a.leading_snug,
+          a.text_sm,
+          a.leading_tight,
           a.text_right,
           t.atoms.text_contrast_medium,
         ]}>

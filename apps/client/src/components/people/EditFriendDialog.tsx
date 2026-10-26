@@ -8,11 +8,11 @@ import {useHaptics} from '#/lib/haptics'
 import {logger} from '#/logger'
 import {useMutationCtx, useStore} from '#/data/hooks'
 import {atoms as a, useTheme, web} from '#/alf'
-import {Button, ButtonText} from '#/components/Button'
 import * as Dialog from '#/components/Dialog'
 import * as TextField from '#/components/forms/TextField'
 import * as Toast from '#/components/Toast'
 import {Text} from '#/components/Typography'
+import * as FormSheet from '#/components/FormSheet'
 
 /**
  * Rename a friend and set the UPI ID used for pay links. For my own person
@@ -146,16 +146,13 @@ function Form({person}: {person: Entity<Person>}) {
           </Text>
         </View>
       )}
-      <Button
-        testID="friend-save"
-        label={l`Save`}
-        size="large"
-        color="primary"
-        onPress={() => void save()}>
-        <ButtonText>
-          <Trans>Save</Trans>
-        </ButtonText>
-      </Button>
+      <FormSheet.Actions
+        saveTestID="friend-save"
+        cancelTestID="friend-cancel"
+        saveLabel={l`Save`}
+        onCancel={() => control.close()}
+        onSave={() => void save()}
+      />
     </View>
   )
 }

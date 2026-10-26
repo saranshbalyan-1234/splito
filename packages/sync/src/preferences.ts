@@ -15,8 +15,8 @@ export interface PrefDef<T> {
   label: string
 }
 
-/** Bottom bar / sidebar destinations. Profile and Settings open from the header avatar's menu; Activity is the header bell's Notifications. */
-export type TabId = 'people' | 'groups' | 'analytics'
+/** Bottom bar / sidebar destinations. Profile and Settings open from the header avatar's menu. */
+export type TabId = 'people' | 'groups' | 'analytics' | 'activity'
 export type SwipeAction = 'markRead' | 'hide' | 'delete' | 'none'
 
 export interface Category {
@@ -39,7 +39,7 @@ export const DEFAULT_CATEGORIES: Category[] = [
   ['other', 'Other', '#94a3b8', 'circle'],
 ].map(([id, name, color, icon], order) => ({id: id!, name: name!, color: color!, icon: icon!, order, hidden: false}))
 
-const TAB_IDS: TabId[] = ['people', 'groups', 'analytics']
+const TAB_IDS: TabId[] = ['people', 'groups', 'analytics', 'activity']
 const HEX = /^#[0-9a-f]{6}$/i
 
 const oneOf =
@@ -113,7 +113,7 @@ async function readRaw<K extends PrefKey>(store: Store, key: K): Promise<PrefVal
   if (key === 'tabs' && Array.isArray(value)) {
     // Orders saved while Profile was a tab predate the Analytics tab, so it joins them.
     const isPreAnalytics = value.includes('profile')
-    // Activity and Profile left the tabs for the header; the rest keep their order.
+    // Profile left the tabs for the header avatar; the rest keep their order.
     value = value.filter(t => TAB_IDS.includes(t))
     if (isPreAnalytics && !(value as TabId[]).includes('analytics')) value = [...(value as TabId[]), 'analytics']
   }

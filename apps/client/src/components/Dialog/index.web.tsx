@@ -31,14 +31,12 @@ import {useShouldReduceMotion} from '#/motion/useShouldReduceMotion'
 import {useDialogStateControlContext} from '#/state/dialogs'
 import {type ListMethods} from '#/view/com/util/List'
 import {atoms as a, flatten, useBreakpoints, useTheme, web} from '#/alf'
-import {Button, ButtonIcon} from '#/components/Button'
 import {Context} from '#/components/Dialog/context'
 import {
   type DialogControlProps,
   type DialogInnerProps,
   type DialogOuterProps,
 } from '#/components/Dialog/types'
-import {TimesLarge_Stroke2_Corner0_Rounded as X} from '#/components/icons/Times'
 import {Portal} from '#/components/Portal'
 
 export {useDialogContext, useDialogControl} from '#/components/Dialog/context'
@@ -351,31 +349,7 @@ export function FlatListFooter({
   )
 }
 
-export function Close() {
-  const {_} = useLingui()
-  const {close} = useContext(Context)
-  return (
-    <View
-      style={[
-        a.absolute,
-        a.z_10,
-        {
-          top: a.pt_md.paddingTop,
-          right: a.pr_md.paddingRight,
-        },
-      ]}>
-      <Button
-        size="small"
-        variant="ghost"
-        color="secondary"
-        shape="round"
-        onPress={() => close()}
-        label={_(msg`Close active dialog`)}>
-        <ButtonIcon icon={X} size="md" />
-      </Button>
-    </View>
-  )
-}
+export {CloseButton as Close} from '#/components/Dialog/CloseButton'
 
 /*
  * The drag handle only exists on the native bottom sheet; props are accepted

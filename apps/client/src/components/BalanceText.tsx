@@ -14,9 +14,12 @@ export function BalanceText({
   currency,
   locale,
   subject = 'person',
+  isCompact = false,
   testID,
   style,
 }: {
+  /** The figure at the label's size, for rows whose title should lead. */
+  isCompact?: boolean
   amount: bigint
   currency: string
   locale: string
@@ -26,7 +29,7 @@ export function BalanceText({
   const t = useTheme()
   const figure = formatAmount(magnitude(amount), currency, locale)
   const figureStyle = [
-    a.text_md,
+    isCompact ? a.text_sm : a.text_md,
     a.font_semi_bold,
     {
       color: amount > ZERO ? t.palette.positive_600 : t.palette.negative_500,

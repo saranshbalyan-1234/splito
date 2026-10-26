@@ -13,6 +13,7 @@ import {
   Coffee,
   Dog,
   Dumbbell,
+  Folder,
   Film,
   Fuel,
   Gamepad2,
@@ -46,6 +47,8 @@ export const WalletIcon = createIcon(Wallet)
 export const NotesIcon = createIcon(StickyNote)
 export const CalculatorIcon = createIcon(Calculator)
 export const GroupIcon = createIcon(Users)
+/** A group picked for an expense: the container the expense files into. */
+export const FolderIcon = createIcon(Folder)
 export const ChevronDownIcon = createIcon(ChevronDown)
 export const ChevronLeftIcon = createIcon(ChevronLeft)
 export const HistoryIcon = createIcon(History)

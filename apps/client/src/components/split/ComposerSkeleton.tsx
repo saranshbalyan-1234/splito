@@ -1,7 +1,10 @@
 import {View} from 'react-native'
 
+import {useLingui} from '@lingui/react/macro'
+
 import {atoms as a} from '#/alf'
 import * as Composer from '#/components/Composer'
+import * as FormSheet from '#/components/FormSheet'
 import * as Skeleton from '#/components/Skeleton'
 import {Shimmer} from '#/motion/Shimmer'
 
@@ -13,9 +16,13 @@ export function ComposerSkeleton({
   testID: string
   onClose: () => void
 }) {
+  const {t: l} = useLingui()
   return (
     <Composer.Outer testID={testID} onDismiss={onClose}>
-      <Composer.TopBar onCancel={onClose} onSave={() => {}} canSave={false} />
+      <FormSheet.Header
+        title={l({message: 'Add expense', context: 'action'})}
+        onClose={onClose}
+      />
       <Shimmer
         testID="composer-loading"
         style={[a.px_lg, a.pt_sm, a.pb_2xl, a.gap_lg]}>

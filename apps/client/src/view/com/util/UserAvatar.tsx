@@ -47,7 +47,7 @@ export const AVATAR_COLORS = [
   '#DB2777',
   '#C2410C',
   '#0E7490',
-  '#475569',
+  '#A16207',
 ] as const
 
 /** The avatar hue for a name (FNV-1a hash, stable across sessions). */

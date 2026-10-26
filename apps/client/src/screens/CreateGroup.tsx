@@ -1,5 +1,5 @@
 import {useState} from 'react'
-import {View} from 'react-native'
+import {KeyboardAvoidingView, ScrollView, View} from 'react-native'
 import {Trans, useLingui} from '@lingui/react/macro'
 import {useNavigation} from '@react-navigation/native'
 import {CURRENCIES, DomainError, parseLocalDate} from '@splito/domain'
@@ -26,13 +26,15 @@ import * as Toggle from '#/components/forms/Toggle'
 import {ChevronRight_Stroke2_Corner0_Rounded as ChevronIcon} from '#/components/icons/Chevron'
 import {Group3_Stroke2_Corner0_Rounded as GroupIcon} from '#/components/icons/Group'
 import {PlusLarge_Stroke2_Corner0_Rounded as PlusIcon} from '#/components/icons/Plus'
-import * as Layout from '#/components/Layout'
+import * as Composer from '#/components/Composer'
+import * as FormSheet from '#/components/FormSheet'
 import {AvatarPreview} from '#/components/people/AvatarPreview'
 import {currencyName} from '#/components/people/ledger'
+import * as Prompt from '#/components/Prompt'
 import * as Toast from '#/components/Toast'
 import {Text} from '#/components/Typography'
+import {IS_IOS} from '#/env'
 
-const FORM_WIDTH = 560
 
 type Kind = Group['kind']
 
@@ -61,6 +63,18 @@ export function CreateGroupScreen() {
   const [error, setError] = useState<'name' | 'dates' | null>(null)
   const [isSaving, setIsSaving] = useState(false)
   const currencyControl = Dialog.useDialogControl()
+  const discardControl = Prompt.usePromptControl()
+  const isDirty =
+    name.trim() !== '' || memberIds.length > 0 || !!startDate || !!endDate
+
+  const close = () => {
+    if (navigation.canGoBack()) navigation.goBack()
+    else navigation.navigate('Groups')
+  }
+  const requestClose = () => {
+    if (isDirty && !isSaving) discardControl.open()
+    else close()
+  }
 
   const friends = (people ?? [])
     .filter(p => !p.data.isMe)
@@ -105,7 +119,8 @@ export function CreateGroupScreen() {
       })
       haptics.success()
       Toast.show(l`${group.data.name} created`, {type: 'success'})
-      navigation.replace('Group', {groupId: group.id})
+      close()
+      navigation.navigate('Group', {groupId: group.id})
     } catch (e) {
       setIsSaving(false)
       haptics.error()
@@ -128,25 +143,19 @@ export function CreateGroupScreen() {
   ]
 
   return (
-    <Layout.Screen testID="screen-create-group">
-      <Layout.Header.Outer>
-        <Layout.Header.BackButton />
-        <Layout.Header.Content>
-          <Layout.Header.TitleText>
-            <Trans>New group</Trans>
-          </Layout.Header.TitleText>
-        </Layout.Header.Content>
-        <Layout.Header.Slot />
-      </Layout.Header.Outer>
-      <Layout.Content keyboardShouldPersistTaps="handled">
-        <View
-          style={[
-            a.px_lg,
-            a.pt_xl,
-            a.pb_2xl,
-            a.gap_xl,
-            {maxWidth: FORM_WIDTH},
-          ]}>
+    <Composer.Outer testID="screen-create-group" onDismiss={requestClose}>
+      <FormSheet.Header
+        title={l`New group`}
+        onClose={requestClose}
+        closeHint={l`Closes without creating the group`}
+      />
+      <KeyboardAvoidingView
+        behavior={IS_IOS ? 'padding' : undefined}
+        style={[a.flex_1, web(a.flex_shrink)]}>
+        <ScrollView
+          keyboardShouldPersistTaps="handled"
+          style={[a.flex_1, web([a.flex_shrink, {minHeight: 0}])]}
+          contentContainerStyle={[a.px_lg, a.pt_md, a.pb_xl, a.gap_xl]}>
           <View style={[a.flex_row, a.align_center, a.gap_md]}>
             <AvatarPreview name={name} type="list" />
             <View style={[a.flex_1, a.gap_2xs]}>
@@ -365,25 +374,30 @@ export function CreateGroupScreen() {
             </View>
           </View>
 
-          <Button
-            testID="create-group-save"
-            label={l`Create group`}
-            size="large"
-            color="primary"
-            disabled={isSaving}
-            onPress={() => void save()}>
-            <ButtonText>
-              <Trans>Create group</Trans>
-            </ButtonText>
-          </Button>
-        </View>
-      </Layout.Content>
+        </ScrollView>
+        <FormSheet.Footer
+          onCancel={requestClose}
+          saveLabel={l`Create group`}
+          canSave={name.trim() !== ''}
+          isSaving={isSaving}
+          onSave={() => void save()}
+        />
+      </KeyboardAvoidingView>
       <CurrencyDialog
         control={currencyControl}
         value={currency}
         onCurrencyChosen={setCurrency}
       />
-    </Layout.Screen>
+      <Prompt.Basic
+        control={discardControl}
+        title={l`Discard changes?`}
+        description={l`What you filled in won’t be kept. Anyone you added as a new friend stays in People.`}
+        confirmButtonCta={l`Discard`}
+        confirmButtonColor="negative"
+        cancelButtonCta={l`Keep editing`}
+        onConfirm={close}
+      />
+    </Composer.Outer>
   )
 }
 

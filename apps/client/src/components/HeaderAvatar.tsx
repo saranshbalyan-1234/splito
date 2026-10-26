@@ -70,7 +70,16 @@ export function HeaderAvatar() {
           )
         }}
       </Menu.Trigger>
-      <Menu.Outer style={[{minWidth: 240}]}>
+      {/*
+       * Web: the dropdown's right edge sits on the avatar's (the page
+       * gutter) and clears the header's hairline. Native: Bluesky's menu
+       * sheet with its grab handle, on iPhone too.
+       */}
+      <Menu.Outer
+        style={[{minWidth: 240}]}
+        align="end"
+        sideOffset={14}
+        popover="never">
         {/* Whose account this is, as Bluesky's account menu opens with the account. */}
         <View
           testID="header-menu-account"
@@ -80,7 +89,7 @@ export function HeaderAvatar() {
             <Text
               emoji
               numberOfLines={1}
-              style={[a.text_md, a.font_semi_bold, a.leading_snug]}>
+              style={[a.text_md, a.font_bold, a.leading_snug]}>
               {me?.data.name ?? ''}
             </Text>
             <Text

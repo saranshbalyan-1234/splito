@@ -632,9 +632,7 @@ export function Handle({
   )
 }
 
-export function Close() {
-  return null
-}
+export {CloseButton as Close} from '#/components/Dialog/CloseButton'
 
 export function Backdrop() {
   return null

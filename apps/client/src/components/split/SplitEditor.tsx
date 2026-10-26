@@ -1,14 +1,18 @@
-import {View} from 'react-native'
+import {ScrollView, View} from 'react-native'
 import {Trans, useLingui} from '@lingui/react/macro'
 import {formatAmount, getCurrency, toDecimalString, ZERO} from '@splito/domain'
 import {nanoid} from 'nanoid/non-secure'
 
 import {UserAvatar} from '#/view/com/util/UserAvatar'
-import {atoms as a, useBreakpoints, useTheme} from '#/alf'
+import {atoms as a, tokens, useTheme, web} from '#/alf'
 import {Button, ButtonIcon, ButtonText} from '#/components/Button'
-import * as SegmentedControl from '#/components/forms/SegmentedControl'
 import * as TextField from '#/components/forms/TextField'
 import * as Toggle from '#/components/forms/Toggle'
+import {
+  ArrowBottom_Stroke2_Corner0_Rounded as ArrowDownIcon,
+  ArrowTop_Stroke2_Corner0_Rounded as ArrowUpIcon,
+} from '#/components/icons/Arrow'
+import {Check_Stroke2_Corner0_Rounded as CheckIcon} from '#/components/icons/Check'
 import {PersonPlus_Filled_Stroke2_Corner0_Rounded as PersonPlusIcon} from '#/components/icons/Person'
 import {PlusLarge_Stroke2_Corner0_Rounded as PlusIcon} from '#/components/icons/Plus'
 import {TimesLarge_Stroke2_Corner0_Rounded as XIcon} from '#/components/icons/Times'
@@ -24,6 +28,9 @@ import {MinusIcon} from './icons'
 import {useAvatarName, useDisplayName, useErrorText} from './shared'
 
 type Update = (fn: (f: ExpenseForm) => ExpenseForm) => void
+
+/** A cap on one person's portions of one item, so a stray tap never runs away. */
+const MAX_PORTIONS = 9
 
 /**
  * The split section of the expense form: a segmented control for the mode
@@ -45,7 +52,6 @@ export function SplitEditor({
 }) {
   const t = useTheme()
   const {t: l} = useLingui()
-  const {gtMobile} = useBreakpoints()
 
   const labels: Record<SplitMode, string> = {
     equal: l`Equally`,
@@ -67,33 +73,16 @@ export function SplitEditor({
   return (
     <View>
       <View style={[a.px_lg, a.pb_sm]}>
-        {gtMobile ? (
-          <SegmentedControl.Root
-            label={l`How to split`}
-            type="radio"
-            size="small"
-            value={form.mode}
-            onChange={mode =>
-              update(f => (f.mode === mode ? f : {...f, mode}))
-            }>
-            {SPLIT_MODES.map(mode => (
-              <SegmentedControl.Item
-                key={mode}
-                value={mode}
-                label={labels[mode]}
-                testID={`split-mode-${mode}`}>
-                <SegmentedControl.ItemText style={[a.text_sm]}>
-                  {labels[mode]}
-                </SegmentedControl.ItemText>
-              </SegmentedControl.Item>
-            ))}
-          </SegmentedControl.Root>
-        ) : (
-          /* Phones: six modes do not fit one track, so they wrap as choice chips inside the gutter. */
+        {/* One row of choice chips on every width; it scrolls sideways when six do not fit. */}
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          style={[{marginHorizontal: -tokens.space.lg}]}
+          contentContainerStyle={[a.px_lg]}>
           <View
             role="radiogroup"
             accessibilityLabel={l`How to split`}
-            style={[a.flex_row, a.flex_wrap, a.gap_xs]}>
+            style={[a.flex_row, a.gap_xs]}>
             {SPLIT_MODES.map(mode => {
               const isOn = form.mode === mode
               return (
@@ -114,7 +103,7 @@ export function SplitEditor({
               )
             })}
           </View>
-        )}
+        </ScrollView>
         <Text
           style={[
             a.text_sm,
@@ -395,6 +384,14 @@ function ItemsEditor({
       items: f.items.map(i => (i.key === key ? {...i, ...patch} : i)),
     }))
 
+  const moveItem = (index: number, by: -1 | 1) =>
+    update(f => {
+      const items = [...f.items]
+      const [moved] = items.splice(index, 1)
+      items.splice(index + by, 0, moved!)
+      return {...f, items}
+    })
+
   const extras = [
     {key: 'tax', label: l`Tax`},
     {key: 'tip', label: l`Tip`},
@@ -410,7 +407,7 @@ function ItemsEditor({
             key={item.key}
             testID={`item-${index}`}
             style={[a.p_md, a.gap_sm, a.rounded_md, t.atoms.bg_contrast_25]}>
-            <View style={[a.flex_row, a.align_center, a.gap_sm]}>
+            <View style={[a.flex_row, a.align_center, a.gap_xs]}>
               <View style={[a.flex_1]}>
                 <TextField.Root>
                   <TextField.Input
@@ -431,6 +428,34 @@ function ItemsEditor({
                 width={120}
                 onChangeText={v => setItem(item.key, {amount: v})}
               />
+              {form.items.length > 1 && (
+                <View style={[a.flex_row]}>
+                  <Button
+                    testID={`item-${index}-up`}
+                    label={l`Move item ${index + 1} up`}
+                    size="small"
+                    variant="ghost"
+                    color="secondary"
+                    shape="round"
+                    disabled={index === 0}
+                    style={[a.bg_transparent]}
+                    onPress={() => moveItem(index, -1)}>
+                    <ButtonIcon icon={ArrowUpIcon} size="sm" />
+                  </Button>
+                  <Button
+                    testID={`item-${index}-down`}
+                    label={l`Move item ${index + 1} down`}
+                    size="small"
+                    variant="ghost"
+                    color="secondary"
+                    shape="round"
+                    disabled={index === form.items.length - 1}
+                    style={[a.bg_transparent]}
+                    onPress={() => moveItem(index, 1)}>
+                    <ButtonIcon icon={ArrowDownIcon} size="sm" />
+                  </Button>
+                </View>
+              )}
               <Button
                 testID={`item-${index}-remove`}
                 label={l`Remove item ${index + 1}`}
@@ -448,28 +473,101 @@ function ItemsEditor({
                 <ButtonIcon icon={XIcon} />
               </Button>
             </View>
+            {/*
+             * Who had it: a tap adds someone, another tap gives them one more
+             * portion ("2 of 3 beers"), a long press or right-click takes
+             * them off. "Everyone" puts the whole split on it, one each.
+             */}
             <View style={[a.flex_row, a.flex_wrap, a.gap_xs]}>
+              {(() => {
+                const isEveryone =
+                  form.people.every(id => item.people.includes(id)) &&
+                  Object.keys(item.portions ?? {}).length === 0
+                return (
+                  <Button
+                    testID={`item-${index}-everyone`}
+                    label={l`Everyone, one portion each`}
+                    accessibilityState={{selected: isEveryone}}
+                    aria-pressed={isEveryone}
+                    size="tiny"
+                    variant="outline"
+                    color={isEveryone ? 'primary' : 'secondary'}
+                    onPress={() =>
+                      setItem(item.key, {people: [...form.people], portions: {}})
+                    }>
+                    <ButtonText>
+                      <Trans>Everyone</Trans>
+                    </ButtonText>
+                  </Button>
+                )
+              })()}
               {form.people.map(id => {
                 const isOn = item.people.includes(id)
+                const portions = item.portions?.[id] ?? 1
+                const takeOff = () =>
+                  setItem(item.key, {
+                    people: item.people.filter(p => p !== id),
+                    portions: Object.fromEntries(
+                      Object.entries(item.portions ?? {}).filter(
+                        ([p]) => p !== id,
+                      ),
+                    ),
+                  })
                 return (
                   <Button
                     key={id}
                     testID={`item-${index}-person-${name(id)}`}
-                    label={name(id)}
+                    label={
+                      isOn && portions > 1
+                        ? l`${name(id)}, ${portions} portions`
+                        : name(id)
+                    }
+                    accessibilityHint={
+                      isOn
+                        ? l`Tap for one more portion; hold to take them off`
+                        : l`Adds them to this item`
+                    }
                     accessibilityState={{selected: isOn}}
+                    aria-pressed={isOn}
                     size="tiny"
-                    variant={isOn ? 'solid' : 'outline'}
+                    variant="outline"
                     color={isOn ? 'primary' : 'secondary'}
                     onPress={() =>
-                      setItem(item.key, {
-                        people: isOn
-                          ? item.people.filter(p => p !== id)
-                          : [...item.people, id],
-                      })
+                      setItem(
+                        item.key,
+                        isOn
+                          ? {
+                              portions: {
+                                ...item.portions,
+                                [id]: Math.min(portions + 1, MAX_PORTIONS),
+                              },
+                            }
+                          : {people: [...item.people, id]},
+                      )
                     }
+                    onLongPress={isOn ? takeOff : undefined}
+                    {...web({
+                      onContextMenu: (e: {preventDefault: () => void}) => {
+                        e.preventDefault()
+                        if (isOn) takeOff()
+                      },
+                    })}
                     style={[a.gap_xs, a.pl_2xs]}>
                     <UserAvatar size={20} name={avatarName(id)} type="user" />
                     <ButtonText>{name(id)}</ButtonText>
+                    {isOn && portions > 1 ? (
+                      <Text
+                        testID={`item-${index}-portions-${name(id)}`}
+                        style={[
+                          a.text_xs,
+                          a.font_bold,
+                          {color: t.palette.primary_500},
+                        ]}>
+                        ×{portions}
+                      </Text>
+                    ) : isOn ? (
+                      <ButtonIcon icon={CheckIcon} size="xs" />
+                    ) : null}
                   </Button>
                 )
               })}

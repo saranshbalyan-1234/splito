@@ -11,14 +11,12 @@ import {LogoMark} from '#/components/brand/Logo'
 import {HeaderAvatar} from '#/components/HeaderAvatar'
 import {PersonPlus_Filled_Stroke2_Corner0_Rounded as PersonPlusIcon} from '#/components/icons/Person'
 import * as Layout from '#/components/Layout'
-import {NotificationsBell} from '#/components/NotificationsBell'
 
 /*
  * As Bluesky, this header is fixed to the top and slides away on scroll down
- * (`HidingHeader`, Bluesky's minimal-shell behaviour). Add friend, the
- * notifications bell and the account avatar sit on the right (owner: "move
- * profile icon to top right"), with as many empty slots on the left to keep
- * the logo centred. The logo is the home link, inactive here because this
+ * (`HidingHeader`, Bluesky's minimal-shell behaviour). Add friend and the
+ * account avatar sit on the right (owner: "move profile icon to top right"),
+ * with as many empty slots on the left to keep the logo centred. The logo is the home link, inactive here because this
  * header is on People.
  */
 /** People's one header action (owner header rule). */
@@ -46,8 +44,7 @@ export function HomeHeaderLayoutMobile({
   return (
     <HidingHeader>
       <Layout.Header.Outer>
-        {/* Empty slots as wide as the action, bell and avatar on the right, so the title stays centred. */}
-        <Layout.Header.Slot />
+        {/* Empty slots as wide as the action and avatar on the right, so the logo stays centred. */}
         <Layout.Header.Slot />
         <Layout.Header.Slot />
 
@@ -64,7 +61,6 @@ export function HomeHeaderLayoutMobile({
         </View>
 
         <AddFriendButton />
-        <NotificationsBell />
         <HeaderAvatar />
       </Layout.Header.Outer>
       {children}

@@ -13,6 +13,7 @@ import {
   isTab,
   TabState,
 } from '#/lib/routes/helpers'
+import {currentSection} from '#/lib/routes/section'
 import {TAB_ROUTE, tabHref, useTabs} from '#/lib/routes/tabs'
 import {type NavigationProp, type TabParams} from '#/lib/routes/types'
 import {Link} from '#/view/com/util/Link'
@@ -25,7 +26,12 @@ import {
   web,
 } from '#/alf'
 import {LogoMark} from '#/components/brand/Logo'
+import {useActivityBadge} from '#/components/activity/useActivityFeed'
 import {Button, ButtonIcon, ButtonText} from '#/components/Button'
+import {
+  Activity_Filled_Corner0_Rounded as ActivityFilledIcon,
+  Activity_Stroke2_Corner0_Rounded as ActivityIcon,
+} from '#/components/icons/Activity'
 import {
   ChartPie_Filled_Corner0_Rounded as ChartPieFilledIcon,
   ChartPie_Stroke2_Corner0_Rounded as ChartPieIcon,
@@ -57,14 +63,6 @@ type NavClickItem = TabId | 'settings'
 const LARGE_ELEMENT_SIZE = 48
 const NAV_ICON_WIDTH = 28
 const NAV_ITEM_TO_TAB: Partial<Record<NavClickItem, SidebarTab>> = TAB_ROUTE
-/** Detail routes whose section stays highlighted (filled icon), as Bluesky does for related pages. */
-const PARENT_ITEM: Record<string, NavClickItem> = {
-  Person: 'people',
-  AddFriend: 'people',
-  Group: 'groups',
-  CreateGroup: 'groups',
-  Settle: 'groups',
-}
 
 export const LEFT_NAV_STANDARD_WIDTH = 240
 export const LEFT_NAV_MINIMAL_WIDTH = 80
@@ -146,13 +144,11 @@ function NavItem({
   const currentRouteInfo = getCurrentRoute(navigationState)
   const tab = NAV_ITEM_TO_TAB[navItem]
   const isCurrent = isTab(currentRouteInfo.name, pathName)
+  /* A pushed page keeps its section lit (bold label and filled icon), as Bluesky's tabs do. */
   const isSelected =
     IS_NATIVE && tab
       ? getTabState(navigationState, tab) !== TabState.Outside
-      : isCurrent
-  const isRelated =
-    currentRouteInfo.name.startsWith(pathName) ||
-    PARENT_ITEM[currentRouteInfo.name] === navItem
+      : currentSection(navigationState) === pathName
   const navigation = useNavigation<NavigationProp>()
   const onPressWrapped = useCallback(
     (e: React.MouseEvent<HTMLAnchorElement, MouseEvent>) => {
@@ -175,8 +171,7 @@ function NavItem({
     [navigation, href, isCurrent, ax, navItem, onNavigateTab, tab],
   )
 
-  const Icon =
-    isSelected || (!IS_NATIVE && isRelated) ? icons.active : icons.inactive
+  const Icon = isSelected ? icons.active : icons.inactive
 
   return (
     <PressableWithHover
@@ -219,6 +214,7 @@ function NavItem({
               {right: -20}, // more breathing room
             ]}>
             <Text
+              testID={`tab-${navItem}-badge`}
               accessibilityLabel={l`${plural(count, {
                 one: '# unread item',
                 other: '# unread items',
@@ -340,6 +336,7 @@ export function DesktopLeftNav({
   const {leftNavMinimal} = useLayoutBreakpoints()
   const insets = useSafeAreaInsets()
   const tabs = useTabs()
+  const activityBadge = useActivityBadge()
 
   if (!gtMobile) {
     return null
@@ -359,6 +356,10 @@ export function DesktopLeftNav({
         label: l`Analytics`,
         icons: {inactive: ChartPieIcon, active: ChartPieFilledIcon},
       },
+      activity: {
+        label: l`Activity`,
+        icons: {inactive: ActivityIcon, active: ActivityFilledIcon},
+      },
     }
 
   /* Bluesky's account card is gone: the account avatar sits at the top right of each top-level header (owner directive). */
@@ -376,6 +377,7 @@ export function DesktopLeftNav({
             onNavigateTab={onNavigateTab}
             minimal={leftNavMinimal}
             icons={tabItems[tab].icons}
+            count={tab === 'activity' ? activityBadge : undefined}
           />
         ))}
         <NavItem

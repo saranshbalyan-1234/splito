@@ -111,7 +111,7 @@ test('the arrow buttons reorder the sidebar tabs', async ({page}) => {
 
 test('the last visible tab cannot be hidden', async ({page}) => {
   await open(page, '/settings/defaults', 'screen-settings-section')
-  for (const tab of ['groups', 'analytics']) {
+  for (const tab of ['groups', 'analytics', 'activity']) {
     await page.getByTestId(`tabs-toggle-${tab}`).click()
     await expect(page.getByTestId(`tabs-toggle-${tab}`)).toHaveAttribute(
       'aria-checked',

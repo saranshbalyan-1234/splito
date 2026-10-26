@@ -20,6 +20,7 @@ import {useActivityActions} from '#/components/activity/useActivityActions'
 import {useActivityFeed} from '#/components/activity/useActivityFeed'
 import {AddExpenseFAB} from '#/components/AddExpenseFAB'
 import {Button, ButtonText} from '#/components/Button'
+import {HeaderAvatar} from '#/components/HeaderAvatar'
 import {MarkAllReadIcon} from '#/components/activity/icons'
 import * as Layout from '#/components/Layout'
 import {TabBar} from '#/components/TabBar'
@@ -31,13 +32,14 @@ const isUnreadRow = (row: FeedRow | undefined) =>
   row?.type === 'event' && !row.isRead
 
 /**
- * Notifications (the Activity feed): every change in the local audit history
- * (expenses, friends, groups, payments) in Bluesky's notifications list,
- * under one header per day, with Bluesky's "All" tab and a "From others" tab
- * in its Mentions slot. Opened from the header bell. Read and hidden marks
+ * Activity: every change in the local audit history (expenses, friends,
+ * groups, payments) in Bluesky's notifications list, under one header per
+ * day, with Bluesky's "All" tab and a "From others" tab in its Mentions slot.
+ * A bottom-bar / sidebar destination with Bluesky's unread badge (owner:
+ * "make notification as activity and move to bottom"). Read and hidden marks
  * are personal and stay on this device.
  */
-export function NotificationsScreen() {
+export function ActivityScreen() {
   const t = useTheme()
   const {t: l} = useLingui()
   const locale = useNumberLocale()
@@ -86,12 +88,14 @@ export function NotificationsScreen() {
   }
 
   return (
-    <Layout.Screen testID="screen-notifications">
+    <Layout.Screen testID="screen-activity">
       <Layout.Header.Outer noBottomBorder sticky={false}>
-        <Layout.Header.BackButton />
+        {/* Empty slots as wide as the action and avatar on the right, so the title stays centred. */}
+        <Layout.Header.Slot />
+        <Layout.Header.Slot />
         <Layout.Header.Content>
           <Layout.Header.TitleText>
-            <Trans>Notifications</Trans>
+            <Trans>Activity</Trans>
           </Layout.Header.TitleText>
         </Layout.Header.Content>
         {unreadCount > 0 ? (
@@ -104,10 +108,11 @@ export function NotificationsScreen() {
         ) : (
           <Layout.Header.Slot />
         )}
+        <HeaderAvatar />
       </Layout.Header.Outer>
       <View style={[a.z_10, web([a.sticky, {top: 0}])]}>
         <TabBar
-          testID="notifications-tabs"
+          testID="activity-tabs"
           selectedPage={tab}
           items={[l`All`, l`From others`]}
           onSelect={setTab}

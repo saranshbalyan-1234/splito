@@ -7,8 +7,8 @@ import {type Entity, type Expense} from '@splito/sync'
 import {type AllNavigatorParams, type NavigationProp} from '#/lib/routes/types'
 import {useMutationCtx} from '#/data/hooks'
 import {atoms as a, useTheme} from '#/alf'
-import {Button, ButtonText} from '#/components/Button'
 import * as Composer from '#/components/Composer'
+import * as FormSheet from '#/components/FormSheet'
 import {ComposerSkeleton} from '#/components/split/ComposerSkeleton'
 import {ExpenseComposer} from '#/components/split/ExpenseComposer'
 import {formFromExpense} from '#/components/split/form'
@@ -60,18 +60,7 @@ function Missing({onClose}: {onClose: () => void}) {
   const {t: l} = useLingui()
   return (
     <Composer.Outer testID="screen-edit-expense" onDismiss={onClose}>
-      <View style={[a.flex_row, a.p_sm]}>
-        <Button
-          label={l`Close`}
-          variant="ghost"
-          color="primary"
-          size="small"
-          onPress={onClose}>
-          <ButtonText style={[a.text_md]}>
-            <Trans>Close</Trans>
-          </ButtonText>
-        </Button>
-      </View>
+      <FormSheet.Header title={l`Edit expense`} onClose={onClose} />
       <View style={[a.px_xl, a.py_4xl, a.gap_xs, a.align_center]}>
         <Text style={[a.text_lg, a.font_semi_bold, a.text_center]}>
           <Trans>This expense can’t be edited</Trans>

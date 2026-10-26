@@ -209,7 +209,11 @@ export function Item({
 
   return (
     <View
-      style={[!ctx.isScrollable && a.flex_1, a.flex_row]}
+      /* Splito: equal segments whatever their label length (flexBasis 0, not content width). */
+      style={[
+        !ctx.isScrollable && [a.flex_1, {flexBasis: 0, minWidth: 0}],
+        a.flex_row,
+      ]}
       onLayout={evt => {
         const measuredPosition = {
           x: evt.nativeEvent.layout.x,
@@ -283,7 +287,10 @@ function Slider({x, width}: {x: number; width: number}) {
       style={[
         a.absolute,
         a.curve_continuous,
-        t.atoms.bg,
+        /* Splito: in dark themes the page colour reads as a hole in the track; a lighter step reads as raised. */
+        t.scheme === 'dark'
+          ? {backgroundColor: t.palette.contrast_200}
+          : t.atoms.bg,
         {
           top: 4,
           bottom: 4,

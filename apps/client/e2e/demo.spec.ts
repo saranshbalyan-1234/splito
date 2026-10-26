@@ -100,6 +100,10 @@ test('Groups lists the demo groups with my balance in each', async ({page}) => {
   }
   await expect(page.getByTestId('group-Lisbon').getByTestId('group-balance-EUR')).toHaveText(/^you owe €/)
   await expect(page.getByTestId('group-Goa trip').getByTestId('group-balance-INR')).toHaveText(/^you are owed ₹/)
+  // A Balances card on top, People's style: one cell per currency, never added together.
+  await expect(page.getByTestId('groups-balances-title')).toHaveText('Balances')
+  await expect(page.getByTestId('groups-balances').getByTestId('summary-INR-net')).toBeVisible()
+  await expect(page.getByTestId('groups-balances').getByTestId('summary-EUR-net')).toBeVisible()
   await expectNoMessageIds(page)
 })
 

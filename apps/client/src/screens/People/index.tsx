@@ -1,5 +1,5 @@
 import {useState} from 'react'
-import {View} from 'react-native'
+import {useWindowDimensions, View} from 'react-native'
 import {LayoutAnimationConfig} from 'react-native-reanimated'
 import {Trans, useLingui} from '@lingui/react/macro'
 import {useNavigation} from '@react-navigation/native'
@@ -17,7 +17,7 @@ import {useEntities, useLedger, useMe, usePref} from '#/data/hooks'
 import {HomeHeaderLayout} from '#/view/com/home/HomeHeaderLayout'
 import {EmptyState} from '#/view/com/util/EmptyState'
 import {List} from '#/view/com/util/List'
-import {atoms as a, useBreakpoints} from '#/alf'
+import {atoms as a, useBreakpoints, useTheme} from '#/alf'
 import {AddExpenseFAB} from '#/components/AddExpenseFAB'
 import {Button, ButtonIcon, ButtonText} from '#/components/Button'
 import {useDialogControl} from '#/components/Dialog'
@@ -26,8 +26,8 @@ import {PersonPlus_Filled_Stroke2_Corner0_Rounded as PersonPlusIcon} from '#/com
 import {SettingsSliderVertical_Stroke2_Corner0_Rounded as FilterIcon} from '#/components/icons/SettingsSlider'
 import * as Layout from '#/components/Layout'
 import * as Pills from '#/components/Pills'
+import {Text} from '#/components/Typography'
 import {Shimmer} from '#/motion/Shimmer'
-import {HistoryFilterDialog} from '#/screens/Person/components/HistoryFilterDialog'
 import {
   BalanceSummary,
   BalanceSummaryPlaceholder,
@@ -37,8 +37,12 @@ import {
   type PersonRowData,
   PersonRowPlaceholder,
 } from './components/PersonRow'
+import {
+  FriendsFilterDialog,
+  type PeopleFilters,
+} from './components/FriendsFilterDialog'
 import {SectionHeader} from './components/SectionHeader'
-import {lastActivity, sortFriends} from './sort'
+import {filterFriends, lastActivity, sortFriends} from './sort'
 
 const PLACEHOLDER_ROWS = 6
 
@@ -49,19 +53,32 @@ const PLACEHOLDER_ROWS = 6
  * totals and the rows.
  */
 export function PeopleScreen() {
+  const t = useTheme()
   const {t: l} = useLingui()
   const locale = useNumberLocale()
   const navigation = useNavigation<NavigationProp>()
   const {gtMobile} = useBreakpoints()
+  const {height} = useWindowDimensions()
   const me = useMe()
   const people = useEntities<Person>('person')
   const groups = useEntities<Group>('group')
   const ledger = useLedger()
-  const [sort = 'amount'] = usePref('peopleSort')
+  const [sortDefault = 'amount'] = usePref('peopleSort')
   const [currency = 'INR'] = usePref('defaultCurrency')
   const [includeDefault] = usePref('includeGroupsDefault')
-  const [applied, setApplied] = useState<boolean | null>(null)
-  const includeGroups = applied ?? includeDefault ?? true
+  const defaults: PeopleFilters = {
+    includeGroups: includeDefault ?? true,
+    currency: 'all',
+    show: 'all',
+    sort: sortDefault,
+  }
+  const [applied, setApplied] = useState<PeopleFilters | null>(null)
+  const filters = applied ?? defaults
+  const {includeGroups, sort} = filters
+  /* The filter button counts what differs from the defaults (Settings › Sorting and filters). */
+  const activeCount = (
+    ['includeGroups', 'currency', 'show', 'sort'] as const
+  ).filter(k => filters[k] !== defaults[k]).length
   const filterControl = useDialogControl()
 
   const isLoading = !me || !people || !groups || !ledger
@@ -69,19 +86,27 @@ export function PeopleScreen() {
     me && ledger && groups
       ? personSummary(myBalances(ledger, me.id, groups), {includeGroups})
       : []
-  const totals = balanceTotals(summaries)
   const byPerson = new Map(summaries.map(s => [s.person, s]))
   const groupNames = new Map((groups ?? []).map(g => [g.id, g.data.name]))
+  const friends = (people ?? [])
+    .filter(p => !p.data.isMe)
+    .map(p => ({id: p.id, name: p.data.name, summary: byPerson.get(p.id)}))
+  const currencies = [
+    ...new Set(summaries.flatMap(s => Object.keys(s.byCurrency))),
+  ].sort()
   const rows: PersonRowData[] = sortFriends(
-    (people ?? [])
-      .filter(p => !p.data.isMe)
-      .map(p => ({id: p.id, name: p.data.name, summary: byPerson.get(p.id)})),
+    filterFriends(friends, filters),
     sort,
     {
-      currency,
+      currency: filters.currency === 'all' ? currency : filters.currency,
       activity: sort === 'recent' && ledger ? lastActivity(ledger) : new Map(),
     },
   )
+  /* The summary follows the filters too, so its figures always match the list. */
+  const totals = balanceTotals(
+    rows.flatMap(row => (row.summary ? [row.summary] : [])),
+  )
+  const isFiltered = activeCount > 0
   const friendsAction = (
     <View style={[a.flex_row, a.align_center, a.gap_sm]}>
       {!includeGroups && (
@@ -90,15 +115,39 @@ export function PeopleScreen() {
         </Pills.Tag>
       )}
       <Button
-        testID="people-filter"
-        label={l`Filter`}
+        testID="friends-filters"
+        label={activeCount > 0 ? l`Filters, ${activeCount} on` : l`Filters`}
         size="small"
-        color="secondary"
+        color={activeCount > 0 ? 'primary_subtle' : 'secondary'}
         onPress={() => filterControl.open()}>
         <ButtonIcon icon={FilterIcon} />
         <ButtonText>
-          <Trans>Filter</Trans>
+          <Trans>Filters</Trans>
         </ButtonText>
+        {activeCount > 0 && (
+          <View
+            testID="friends-filters-count"
+            style={[
+              a.rounded_full,
+              a.align_center,
+              a.justify_center,
+              {
+                minWidth: 18,
+                height: 18,
+                paddingHorizontal: 5,
+                backgroundColor: t.palette.primary_500,
+              },
+            ]}>
+            <Text
+              style={[
+                a.text_xs,
+                a.font_semi_bold,
+                {color: t.palette.white, lineHeight: 14},
+              ]}>
+              {activeCount}
+            </Text>
+          </View>
+        )}
       </Button>
     </View>
   )
@@ -133,7 +182,7 @@ export function PeopleScreen() {
                   />
                 )}
                 ListHeaderComponent={
-                  rows.length > 0 ? (
+                  rows.length > 0 || isFiltered ? (
                     <>
                       {totals.length > 0 && (
                         <BalanceSummary totals={totals} locale={locale} />
@@ -146,29 +195,47 @@ export function PeopleScreen() {
                   ) : undefined
                 }
                 ListEmptyComponent={
-                  <EmptyState
-                    testID="people-empty"
-                    illustration="empty-people"
-                    title={l`Split with friends`}
-                    message={l`Add a friend, then split any bill with them. They don’t need the app.`}
-                    button={{
-                      testID: 'people-empty-add-friend',
-                      label: l`Add a friend`,
-                      text: l`Add a friend`,
-                      icon: PersonPlusIcon,
-                      onPress: () => navigation.navigate('AddFriend'),
-                      size: 'large',
-                      color: 'primary',
-                    }}
-                    secondaryButton={{
-                      testID: 'people-empty-add-expense',
-                      label: l({message: 'Add expense', context: 'action'}),
-                      text: l({message: 'Add expense', context: 'action'}),
-                      onPress: () => navigation.navigate('AddExpense', {}),
-                      size: 'large',
-                      color: 'secondary',
-                    }}
-                  />
+                  friends.length > 0 ? (
+                    <EmptyState
+                      testID="people-filtered-empty"
+                      icon={null}
+                      message={l`No friends match these filters.`}
+                      button={{
+                        testID: 'people-clear-filters',
+                        label: l`Clear filters`,
+                        text: l`Clear filters`,
+                        onPress: () => setApplied(null),
+                        size: 'small',
+                        color: 'secondary',
+                      }}
+                    />
+                  ) : (
+                    <EmptyState
+                      testID="people-empty"
+                      /* Centred in the space under the header, as Bluesky's empty states sit. */
+                      style={[a.justify_center, {minHeight: height - 160}]}
+                      illustration="empty-people"
+                      title={l`Split with friends`}
+                      message={l`Add a friend, then split any bill with them. They don’t need the app.`}
+                      button={{
+                        testID: 'people-empty-add-friend',
+                        label: l`Add a friend`,
+                        text: l`Add a friend`,
+                        icon: PersonPlusIcon,
+                        onPress: () => navigation.navigate('AddFriend'),
+                        size: 'large',
+                        color: 'primary',
+                      }}
+                      secondaryButton={{
+                        testID: 'people-empty-add-expense',
+                        label: l({message: 'Add expense', context: 'action'}),
+                        text: l({message: 'Add expense', context: 'action'}),
+                        onPress: () => navigation.navigate('AddExpense', {}),
+                        size: 'large',
+                        color: 'secondary',
+                      }}
+                    />
+                  )
                 }
                 ListFooterComponent={
                   !gtMobile ? <View style={{height: 100}} /> : undefined
@@ -177,12 +244,14 @@ export function PeopleScreen() {
             </MainScrollProvider>
           </LayoutAnimationConfig>
         )}
-        <AddExpenseFAB />
+        {/* The empty state's own buttons are the actions; a FAB would be a third Add. */}
+        {(isLoading || friends.length > 0) && <AddExpenseFAB />}
       </HomeHeaderModeProvider>
-      <HistoryFilterDialog
+      <FriendsFilterDialog
         control={filterControl}
-        includeGroups={includeGroups}
-        onFilterApplied={setApplied}
+        filters={filters}
+        currencies={currencies}
+        onFiltersApplied={setApplied}
       />
     </Layout.Screen>
   )

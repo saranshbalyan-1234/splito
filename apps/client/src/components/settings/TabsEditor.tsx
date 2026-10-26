@@ -14,6 +14,7 @@ import {
   ArrowBottom_Stroke2_Corner0_Rounded as ArrowDownIcon,
   ArrowTop_Stroke2_Corner0_Rounded as ArrowUpIcon,
 } from '#/components/icons/Arrow'
+import {Activity_Stroke2_Corner0_Rounded as ActivityIcon} from '#/components/icons/Activity'
 import {ChartPie_Stroke2_Corner0_Rounded as ChartPieIcon} from '#/components/icons/ChartPie'
 import {Group3_Stroke2_Corner0_Rounded as GroupIcon} from '#/components/icons/Group'
 import {HomeOpen_Stoke2_Corner0_Rounded as HomeIcon} from '#/components/icons/HomeOpen'
@@ -31,6 +32,7 @@ export function useTabLabels(): Record<TabId, string> {
     people: l`People`,
     groups: l`Groups`,
     analytics: l`Analytics`,
+    activity: l`Activity`,
   }
 }
 
@@ -38,6 +40,7 @@ const TAB_ICONS = {
   people: HomeIcon,
   groups: GroupIcon,
   analytics: ChartPieIcon,
+  activity: ActivityIcon,
 } satisfies Record<TabId, unknown>
 
 type Row = {tab: TabId; isVisible: boolean}

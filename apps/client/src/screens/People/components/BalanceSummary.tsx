@@ -10,7 +10,7 @@ import {
 } from '@splito/domain'
 
 import {Link} from '#/view/com/util/Link'
-import {atoms as a, tokens, useTheme} from '#/alf'
+import {atoms as a, useBreakpoints, useTheme} from '#/alf'
 import * as Skeleton from '#/components/Skeleton'
 import {Text} from '#/components/Typography'
 import {AnimatedAmount} from '#/motion/AnimatedAmount'
@@ -18,39 +18,69 @@ import {usePressScale} from '#/motion/PressableScale'
 import {SectionHeader} from './SectionHeader'
 
 const tabular = {fontVariant: ['tabular-nums' as const]}
-const CARD_GAP = tokens.space.md
 
 /**
- * The top of People: one card per currency with the net balance, and what
- * friends owe you and what you owe when both are open. Currencies are never
- * added together. Cards open Analytics. They share the row on wide screens
- * and stack on phones, so every card is whole on screen.
+ * The top of People: one card holding a cell per currency with the net
+ * balance (and both sides when both are open). Currencies are never added
+ * together. Each cell opens Analytics. Cells sit side by side - two to a
+ * row on phones - so the card stays one compact block above the list.
  */
 export function BalanceSummary({
   totals,
   locale,
+  title,
+  testID = 'people-summary',
+  titleTestID = 'people-balances-title',
 }: {
   totals: CurrencyTotal[]
   locale: string
+  /** Default "Balances"; Groups heads it "Across your groups". */
+  title?: string
+  testID?: string
+  titleTestID?: string
 }) {
+  const t = useTheme()
   const {t: l} = useLingui()
 
   return (
-    <View testID="people-summary">
-      <SectionHeader testID="people-balances-title" title={l`Balances`} />
-      <View
-        style={[a.px_lg, a.pb_md, a.flex_row, a.flex_wrap, {gap: CARD_GAP}]}>
-        {totals.map(total => (
-          <SummaryCard key={total.currency} total={total} locale={locale} />
-        ))}
+    <View testID={testID}>
+      <SectionHeader testID={titleTestID} title={title ?? l`Balances`} />
+      <View style={[a.px_lg, a.pb_md]}>
+        <View
+          style={[
+            a.flex_row,
+            a.flex_wrap,
+            a.rounded_md,
+            a.border,
+            a.overflow_hidden,
+            t.atoms.border_contrast_low,
+          ]}>
+          {totals.map((total, i) => (
+            <SummaryCell
+              key={total.currency}
+              total={total}
+              locale={locale}
+              hasDivider={i > 0}
+            />
+          ))}
+        </View>
       </View>
     </View>
   )
 }
 
-function SummaryCard({total, locale}: {total: CurrencyTotal; locale: string}) {
+function SummaryCell({
+  total,
+  locale,
+  hasDivider,
+}: {
+  total: CurrencyTotal
+  locale: string
+  hasDivider: boolean
+}) {
   const t = useTheme()
   const {t: l} = useLingui()
+  const {gtMobile} = useBreakpoints()
   const {currency, owed, owe, net} = total
   const press = usePressScale()
   const netColor =
@@ -60,9 +90,13 @@ function SummaryCard({total, locale}: {total: CurrencyTotal; locale: string}) {
         ? t.palette.negative_500
         : t.atoms.text.color
 
-  /* The wrapper takes the card's place in the row so the whole card, border included, shrinks on press. */
   return (
-    <Animated.View style={[{flexBasis: 280, flexGrow: 1}, press.style]}>
+    <Animated.View
+      style={[
+        {flexBasis: gtMobile ? 260 : 140, flexGrow: 1},
+        hasDivider && [a.border_l, t.atoms.border_contrast_low],
+        press.style,
+      ]}>
       <Link
         testID={`summary-${currency}`}
         onPressIn={press.onPressIn}
@@ -70,54 +104,29 @@ function SummaryCard({total, locale}: {total: CurrencyTotal; locale: string}) {
         href="/analytics"
         asAnchor
         anchorNoUnderline
-        accessibilityLabel={l`${currency} balance – open analytics`}
+        accessibilityLabel={l`${getCurrency(currency).name} balance - open analytics`}
         accessibilityHint=""
         hoverStyle={t.atoms.bg_contrast_25}
-        style={[
-          a.rounded_md,
-          a.border,
-          t.atoms.border_contrast_low,
-          a.px_lg,
-          a.py_md,
-          a.transition_color,
-        ]}>
-        <View style={[a.flex_row, a.align_center, a.justify_between, a.gap_sm]}>
-          <Text
-            style={[a.text_sm, a.font_semi_bold, t.atoms.text_contrast_medium]}>
-            {net > ZERO ? (
-              <Trans>You are owed</Trans>
-            ) : net < ZERO ? (
-              <Trans>You owe</Trans>
-            ) : (
-              <Trans>All settled up</Trans>
-            )}
-          </Text>
-          <View
-            style={[
-              a.rounded_xs,
-              a.px_xs,
-              {paddingVertical: 1},
-              t.atoms.bg_contrast_50,
-            ]}>
-            <Text
-              accessibilityLabel={getCurrency(currency).name}
-              style={[
-                a.text_xs,
-                a.font_semi_bold,
-                t.atoms.text_contrast_medium,
-              ]}>
-              {currency}
-            </Text>
-          </View>
-        </View>
-        <View style={a.pt_xs}>
+        style={[a.h_full, a.px_lg, a.py_md, a.transition_color]}>
+        <Text
+          numberOfLines={1}
+          style={[a.text_sm, a.font_medium, t.atoms.text_contrast_medium]}>
+          {net > ZERO ? (
+            <Trans>You are owed</Trans>
+          ) : net < ZERO ? (
+            <Trans>You owe</Trans>
+          ) : (
+            <Trans>All settled up</Trans>
+          )}
+        </Text>
+        <View style={a.pt_2xs}>
           <AnimatedAmount
             testID={`summary-${currency}-net`}
             minor={magnitude(net)}
             currency={currency}
             locale={locale}
             style={[
-              a.text_3xl,
+              gtMobile ? a.text_3xl : a.text_2xl,
               a.font_bold,
               a.leading_tight,
               {color: netColor},
@@ -126,21 +135,21 @@ function SummaryCard({total, locale}: {total: CurrencyTotal; locale: string}) {
         </View>
         {/* Both sides only when both are open; otherwise they repeat the headline. */}
         {owed !== ZERO && owe !== ZERO && (
-          <View style={[a.flex_row, a.flex_wrap, a.pt_sm, a.gap_md]}>
-            <Text style={[a.text_sm, t.atoms.text_contrast_medium]}>
+          <View style={[a.pt_xs, a.gap_2xs]}>
+            <Text style={[a.text_xs, t.atoms.text_contrast_medium]}>
               <Trans>
                 Owed to you{' '}
                 <Text
-                  style={[a.text_sm, a.font_semi_bold, t.atoms.text, tabular]}>
+                  style={[a.text_xs, a.font_semi_bold, t.atoms.text, tabular]}>
                   {formatAmount(owed, currency, locale)}
                 </Text>
               </Trans>
             </Text>
-            <Text style={[a.text_sm, t.atoms.text_contrast_medium]}>
+            <Text style={[a.text_xs, t.atoms.text_contrast_medium]}>
               <Trans>
                 You owe{' '}
                 <Text
-                  style={[a.text_sm, a.font_semi_bold, t.atoms.text, tabular]}>
+                  style={[a.text_xs, a.font_semi_bold, t.atoms.text, tabular]}>
                   {formatAmount(owe, currency, locale)}
                 </Text>
               </Trans>

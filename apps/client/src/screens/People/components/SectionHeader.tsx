@@ -30,7 +30,8 @@ export function SectionHeader({
       <Text testID={testID} style={[a.text_lg, a.font_bold, a.leading_snug]}>
         {title}
         {count !== undefined && (
-          <Text style={[a.text_lg, a.font_normal, t.atoms.text_contrast_medium]}>
+          <Text
+            style={[a.text_lg, a.font_normal, t.atoms.text_contrast_medium]}>
             {'  '}
             {count}
           </Text>

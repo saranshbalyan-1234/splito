@@ -3,7 +3,10 @@ import {
   DomainError,
   evaluateAmount,
   getCurrency,
+  type ItemParticipant,
   parseBasisPoints,
+  participantId,
+  participantWeight,
   parseLocalDate,
   remainingMinor,
   type SplitInput,
@@ -30,6 +33,8 @@ export type ItemForm = {
   name: string
   amount: string
   people: string[]
+  /** Portions above one, by person ("2 of 3 beers"); everyone else had one. */
+  portions?: Record<string, number>
 }
 
 /**
@@ -181,7 +186,12 @@ export function formFromExpense(e: Expense, me: string): ExpenseForm {
         key: i.id,
         name: i.name ?? '',
         amount: money(i.amount, scale),
-        people: i.participants,
+        people: i.participants.map(participantId),
+        portions: Object.fromEntries(
+          i.participants
+            .filter(p => participantWeight(p) > 1)
+            .map(p => [participantId(p), participantWeight(p)]),
+        ),
       }))
       form.tax = blankIfZero(s.tax, scale)
       form.tip = blankIfZero(s.tip, scale)
@@ -374,7 +384,7 @@ export function evaluateForm(
         id: string
         name: string
         amount: bigint
-        participants: string[]
+        participants: ItemParticipant[]
       }> = []
       let isComplete = true
       for (const item of f.items) {
@@ -389,7 +399,10 @@ export function evaluateForm(
             id: item.key,
             name: item.name.trim(),
             amount: v,
-            participants: item.people,
+            participants: item.people.map(id => {
+              const weight = item.portions?.[id] ?? 1
+              return weight > 1 ? {id, weight} : id
+            }),
           })
         }
       }

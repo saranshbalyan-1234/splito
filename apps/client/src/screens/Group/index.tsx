@@ -19,15 +19,14 @@ import {List} from '#/view/com/util/List'
 import {UserAvatar} from '#/view/com/util/UserAvatar'
 import {GroupBalanceCards} from '#/screens/Group/components/GroupBalanceCards'
 import {SectionHeader} from '#/screens/People/components/SectionHeader'
-import {atoms as a, tokens, useBreakpoints, useTheme} from '#/alf'
+import {atoms as a, useBreakpoints, useTheme, web} from '#/alf'
 import {AddExpenseFAB} from '#/components/AddExpenseFAB'
 import {Button, ButtonIcon, ButtonText} from '#/components/Button'
 import {useDialogControl} from '#/components/Dialog'
-import * as SegmentedControl from '#/components/forms/SegmentedControl'
 import {AddMembersDialog} from '#/components/groups/AddMembersDialog'
 import {GroupAvatar} from '#/components/groups/GroupAvatar'
 import {memberNets} from '#/components/groups/net'
-import {RulesEditor} from '#/components/groups/RulesEditor'
+import {NO_RULES, RulesEditor} from '#/components/groups/RulesEditor'
 import {DotGrid3x1_Stroke2_Corner0_Rounded as DotsIcon} from '#/components/icons/DotGrid'
 import {Group3_Stroke2_Corner0_Rounded as GroupIcon} from '#/components/icons/Group'
 import {HandCoins_Stroke2_Corner0_Rounded as HandCoinsIcon} from '#/components/icons/Money'
@@ -51,14 +50,16 @@ import {
 import {PaymentDetailsDialog} from '#/components/people/PaymentDetailsDialog'
 import {Route_Stroke2_Corner0_Rounded as RouteIcon} from '#/components/icons/Route'
 import * as Skeleton from '#/components/Skeleton'
+import {TabBar} from '#/components/TabBar'
 import {Text} from '#/components/Typography'
 import {Shimmer} from '#/motion/Shimmer'
 import {
   CurrencyHeader,
   MemberBalanceRow,
   MemberRow,
+  OweRow,
 } from './components/GroupRows'
-import {ZERO} from '@splito/domain'
+import {planSettlement, ZERO} from '@splito/domain'
 
 type Tab = 'expenses' | 'balances' | 'members' | 'rules'
 
@@ -70,8 +71,22 @@ type Item =
   | {type: 'membersHeader'; key: string; count: number}
   | {type: 'member'; key: string; personId: string; hasLeft: boolean}
   | {type: 'rules'; key: string}
+  | {type: 'owesHeader'; key: string}
+  | {
+      type: 'owe'
+      key: string
+      currency: string
+      from: string
+      to: string
+      amount: bigint
+    }
+  | {type: 'settleCta'; key: string}
 
 const AVATAR_STACK = 3
+/* Payment rules open from the overflow menu, so they are not a tab (owner: Expenses / Balances / Members). */
+const TABS = ['expenses', 'balances', 'members'] as const
+/* The page header's height: the tab bar pins right under it. */
+const STICKY_TOP = 52
 
 /**
  * A group, laid out like Bluesky's list page: the header block (avatar,
@@ -171,19 +186,44 @@ export function GroupScreen() {
   let items: Item[] = []
   if (!isLoading && group) {
     if (tab === 'expenses') items = withMonths(history)
-    else if (tab === 'balances')
-      items = Object.entries(nets).flatMap(([currency, net]) => [
-        {type: 'currency' as const, key: `cur-${currency}`, currency},
-        ...Object.entries(net)
-          .sort(([, x], [, y]) => (x === y ? 0 : x > y ? -1 : 1))
-          .map(([personId, v]) => ({
-            type: 'net' as const,
-            key: `net-${currency}-${personId}`,
-            currency,
-            personId,
-            net: v,
-          })),
-      ])
+    else if (tab === 'balances') {
+      /* Who owes whom: the direct settle-up plan under the group's rules, as Settle up shows it. */
+      const rules = group.data.rules ?? NO_RULES
+      const owes = Object.entries(nets).flatMap(([currency, net]) => {
+        if (!Object.values(net).some(v => v !== ZERO)) return []
+        const plan = planSettlement(net, rules, 'direct')
+        if (plan.status === 'infeasible') return []
+        return plan.transfers.map(x => ({
+          type: 'owe' as const,
+          key: `owe-${currency}-${x.from}-${x.to}`,
+          currency,
+          from: x.from,
+          to: x.to,
+          amount: x.amount,
+        }))
+      })
+      items = [
+        ...Object.entries(nets).flatMap(([currency, net]) => [
+          {type: 'currency' as const, key: `cur-${currency}`, currency},
+          ...Object.entries(net)
+            .sort(([, x], [, y]) => (x === y ? 0 : x > y ? -1 : 1))
+            .map(([personId, v]) => ({
+              type: 'net' as const,
+              key: `net-${currency}-${personId}`,
+              currency,
+              personId,
+              net: v,
+            })),
+        ]),
+        ...(owes.length > 0
+          ? [
+              {type: 'owesHeader' as const, key: 'owes-header'},
+              ...owes,
+              {type: 'settleCta' as const, key: 'settle-cta'},
+            ]
+          : []),
+      ]
+    }
     else if (tab === 'members')
       items = [
         {
@@ -223,20 +263,18 @@ export function GroupScreen() {
   const memberSummary = memberNames.slice(0, AVATAR_STACK).join(', ')
 
   const settleButton = (
-    <View style={[a.flex_row, a.flex_wrap, a.gap_sm]}>
-      <Button
-        testID="group-settle"
-        label={l`Settle up`}
-        size="large"
-        color="primary"
-        disabled={isSettled}
-        onPress={() => navigation.navigate('Settle', {groupId})}>
-        <ButtonIcon icon={HandCoinsIcon} />
-        <ButtonText>
-          {isSettled ? <Trans>All settled up</Trans> : <Trans>Settle up</Trans>}
-        </ButtonText>
-      </Button>
-    </View>
+    <Button
+      testID="group-settle"
+      label={l`Settle up`}
+      size="small"
+      color="primary"
+      disabled={isSettled}
+      onPress={() => navigation.navigate('Settle', {groupId})}>
+      <ButtonIcon icon={HandCoinsIcon} />
+      <ButtonText>
+        <Trans>Settle up</Trans>
+      </ButtonText>
+    </Button>
   )
 
   const header =
@@ -254,21 +292,15 @@ export function GroupScreen() {
       </Shimmer>
     ) : (
       <>
-        {/* As a friend's page: wide screens put the balance cards beside the hero. */}
-        <View
-          style={[
-            a.px_lg,
-            a.pt_lg,
-            a.pb_lg,
-            gtMobile ? [a.flex_row, a.align_start, a.gap_2xl] : a.gap_lg,
-          ]}>
-          <View
-            style={[
-              a.gap_lg,
-              gtMobile && {flexBasis: 380, flexGrow: 0, flexShrink: 1},
-            ]}>
+        {/* As a friend's page: one column - identity, members, then my balance with Settle up in its card. */}
+        <View style={[a.px_lg, a.pt_lg, a.pb_lg, a.gap_lg]}>
+          <View style={[a.gap_lg]}>
             <View style={[a.flex_row, a.align_center, a.gap_md]}>
-              <GroupAvatar kind={group.data.kind} size={gtMobile ? 72 : 64} />
+              <GroupAvatar
+                kind={group.data.kind}
+                name={group.data.name}
+                size={gtMobile ? 72 : 64}
+              />
               <View style={[a.flex_1, a.gap_2xs]}>
                 <Text
                   emoji
@@ -367,46 +399,25 @@ export function GroupScreen() {
               </Text>
             </View>
 
-            {gtMobile && settleButton}
           </View>
 
-          <View style={[gtMobile && a.flex_1]}>
-            <GroupBalanceCards
-              openCurrencies={openCurrencies}
-              mine={mine}
-              locale={locale}
-            />
-          </View>
-
-          {!gtMobile && settleButton}
+          <GroupBalanceCards
+            openCurrencies={openCurrencies}
+            mine={mine}
+            locale={locale}
+            action={settleButton}
+          />
         </View>
 
-        <View style={[a.px_lg, a.pb_md, {maxWidth: 640 + tokens.space.lg * 2}]}>
-          <SegmentedControl.Root
-            label={l`Group sections`}
-            type="tabs"
-            size="small"
-            value={tab}
-            onChange={setTab}>
-            {(
-              [
-                ['expenses', l`Expenses`],
-                ['balances', l`Balances`],
-                ['members', l`Members`],
-                ['rules', l`Rules`],
-              ] as const
-            ).map(([value, label]) => (
-              <SegmentedControl.Item
-                key={value}
-                value={value}
-                label={label}
-                testID={`group-tab-${value}`}>
-                <SegmentedControl.ItemText style={[a.text_sm]}>
-                  {label}
-                </SegmentedControl.ItemText>
-              </SegmentedControl.Item>
-            ))}
-          </SegmentedControl.Root>
+        {/* Bluesky's pager tab bar, pinned under the header while the list scrolls (web). */}
+        <View style={[a.z_10, web([a.sticky, {top: STICKY_TOP}])]}>
+          <TabBar
+            testID="group-tabs"
+            selectedPage={TABS.indexOf(tab as (typeof TABS)[number])}
+            items={[l`Expenses`, l`Balances`, l`Members`]}
+            itemTestIDs={TABS.map(value => `group-tab-${value}`)}
+            onSelect={i => setTab(TABS[i]!)}
+          />
         </View>
       </>
     )
@@ -512,13 +523,14 @@ export function GroupScreen() {
           onScrolledDownChange={scrollTitle.onScrolledDownChange}
           data={items}
           keyExtractor={(item: Item) => item.key}
-          renderItem={({item}: {item: Item}) => {
+          renderItem={({item, index}: {item: Item; index: number}) => {
             switch (item.type) {
               case 'month':
                 return <MonthHeader month={item.month} />
               case 'entry':
                 return (
                   <HistoryRow
+                    hideTopBorder={items[index - 1]?.type === 'month'}
                     entry={item.entry}
                     context="group"
                     effect={effectInGroup(item.entry, me!.id, groupId)}
@@ -573,7 +585,67 @@ export function GroupScreen() {
                   />
                 )
               case 'rules':
-                return <RulesEditor group={group!} names={names} me={me!.id} />
+                return (
+                  <>
+                    <SectionHeader
+                      testID="group-rules-title"
+                      title={l`Payment rules`}
+                    />
+                    <RulesEditor group={group!} names={names} me={me!.id} />
+                  </>
+                )
+              case 'owesHeader':
+                return (
+                  <SectionHeader
+                    testID="group-owes-title"
+                    title={l`Who owes whom`}
+                  />
+                )
+              case 'owe': {
+                const from = names.get(item.from) ?? l`Someone`
+                const to = names.get(item.to) ?? l`Someone`
+                return (
+                  <OweRow
+                    testID={`group-owe-${from}-${to}`}
+                    sentence={
+                      item.from === me?.id
+                        ? l`You owe ${to}`
+                        : item.to === me?.id
+                          ? l`${from} owes you`
+                          : l`${from} owes ${to}`
+                    }
+                    avatarName={
+                      item.from === me?.id ? (me?.data.name ?? from) : from
+                    }
+                    amount={item.amount}
+                    currency={item.currency}
+                    locale={locale}
+                  />
+                )
+              }
+              case 'settleCta':
+                return (
+                  <View
+                    style={[
+                      a.px_lg,
+                      a.py_lg,
+                      a.border_t,
+                      t.atoms.border_contrast_low,
+                    ]}>
+                    <Button
+                      testID="group-balances-settle"
+                      label={l`Settle up`}
+                      size="large"
+                      color="primary"
+                      style={[a.self_start]}
+                      onPress={() => navigation.navigate('Settle', {groupId})}>
+                      <ButtonIcon icon={HandCoinsIcon} />
+                      <ButtonText>
+                        <Trans>Settle up</Trans>
+                      </ButtonText>
+                    </Button>
+                  </View>
+                )
             }
           }}
           ListHeaderComponent={header}

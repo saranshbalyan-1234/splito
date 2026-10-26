@@ -122,6 +122,31 @@ describe('evaluateForm', () => {
     const short = evaluateForm(base({mode: 'items', items}), 'UTC')
     expect(short.remaining).toEqual({kind: 'money', value: 3000n})
   })
+  test('item portions: 2 of 3 beers, and they survive a round trip', () => {
+    const items = [
+      {
+        key: 'a',
+        name: 'Beers',
+        amount: '300',
+        people: ['me', 'riya'],
+        portions: {riya: 2},
+      },
+    ]
+    const r = evaluateForm(base({mode: 'items', items}), 'UTC')
+    expect(r.error).toBeUndefined()
+    expect(r.shares).toEqual({me: 10000n, riya: 20000n})
+    const split = r.draft!.split
+    expect(split.mode === 'items' && split.items[0]!.participants).toEqual([
+      'me',
+      {id: 'riya', weight: 2},
+    ])
+    const back = formFromExpense(
+      {...r.draft!, shares: r.shares!} as unknown as Expense,
+      'me',
+    )
+    expect(back.items[0]!.people).toEqual(['me', 'riya'])
+    expect(back.items[0]!.portions).toEqual({riya: 2})
+  })
   test('multiple payers must add up', () => {
     const r = evaluateForm(
       base({payerMode: 'multiple', paid: {me: '100', riya: '100'}}),

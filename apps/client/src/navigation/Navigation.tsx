@@ -36,12 +36,12 @@ import {useShouldReduceMotion} from '#/motion/useShouldReduceMotion'
 import {linking} from '#/navigation/linking'
 import {AddExpenseScreen} from '#/screens/AddExpense'
 import {AddFriendScreen} from '#/screens/AddFriend'
+import {ActivityScreen} from '#/screens/Activity'
 import {AnalyticsScreen} from '#/screens/Analytics'
 import {CreateGroupScreen} from '#/screens/CreateGroup'
 import {EditExpenseScreen} from '#/screens/EditExpense'
 import {ExpenseScreen} from '#/screens/Expense'
 import {GroupScreen} from '#/screens/Group'
-import {NotificationsScreen} from '#/screens/Notifications'
 import {GroupsScreen} from '#/screens/Groups'
 import {PeopleScreen} from '#/screens/People'
 import {PersonScreen} from '#/screens/Person'
@@ -58,7 +58,7 @@ const Flat = createNativeStackNavigatorWithAuth<FlatNavigatorParams>()
 const TITLES: Partial<Record<keyof FlatNavigatorParams, MessageDescriptor>> = {
   Groups: msg`Groups`,
   Analytics: msg`Analytics`,
-  Notifications: msg`Notifications`,
+  Activity: msg`Activity`,
   Profile: msg`Profile`,
   Settings: msg`Settings`,
   SettingsSection: msg`Settings`,
@@ -139,6 +139,7 @@ function Tabs() {
       <Tab.Screen name="People" component={PeopleScreen} />
       <Tab.Screen name="Groups" component={GroupsScreen} />
       <Tab.Screen name="Analytics" component={AnalyticsScreen} />
+      <Tab.Screen name="Activity" component={ActivityScreen} />
     </Tab.Navigator>
   )
 }
@@ -162,16 +163,13 @@ export function TabsNavigator() {
       }}>
       <Stack.Screen name="Tabs" component={Tabs} />
       <Stack.Screen name="Profile" component={ProfileScreen} />
-      <Stack.Screen name="Notifications" component={NotificationsScreen} />
       <Stack.Screen name="Settings" component={SettingsScreen} />
       <Stack.Screen name="SettingsSection" component={SettingsSectionScreen} />
       <Stack.Screen name="Person" component={PersonScreen} />
       <Stack.Screen name="Group" component={GroupScreen} />
       <Stack.Screen name="Settle" component={SettleScreen} />
       <Stack.Screen name="Expense" component={ExpenseScreen} />
-      <Stack.Screen name="AddFriend" component={AddFriendScreen} />
-      <Stack.Screen name="CreateGroup" component={CreateGroupScreen} />
-      {/* Add and Edit expense open like Bluesky's composer. */}
+      {/* The composers (owner: one sheet layout for Add / Edit expense, Add friend, New group) open like Bluesky's composer. */}
       <Stack.Group
         screenOptions={
           reducedAnimation
@@ -180,6 +178,8 @@ export function TabsNavigator() {
         }>
         <Stack.Screen name="AddExpense" component={AddExpenseScreen} />
         <Stack.Screen name="EditExpense" component={EditExpenseScreen} />
+        <Stack.Screen name="AddFriend" component={AddFriendScreen} />
+        <Stack.Screen name="CreateGroup" component={CreateGroupScreen} />
       </Stack.Group>
     </Stack.Navigator>
   )
@@ -219,9 +219,9 @@ export function FlatNavigator() {
         options={{title: title('Analytics')}}
       />
       <Flat.Screen
-        name="Notifications"
-        component={NotificationsScreen}
-        options={{title: title('Notifications')}}
+        name="Activity"
+        component={ActivityScreen}
+        options={{title: title('Activity')}}
       />
       <Flat.Screen
         name="Profile"
@@ -266,12 +266,12 @@ export function FlatNavigator() {
       <Flat.Screen
         name="AddFriend"
         component={AddFriendScreen}
-        options={{title: title('AddFriend')}}
+        options={{...COMPOSER_WEB, title: title('AddFriend')}}
       />
       <Flat.Screen
         name="CreateGroup"
         component={CreateGroupScreen}
-        options={{title: title('CreateGroup')}}
+        options={{...COMPOSER_WEB, title: title('CreateGroup')}}
       />
       <Flat.Screen
         name="AddExpense"

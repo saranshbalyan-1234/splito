@@ -1,7 +1,7 @@
 import {expect, test} from 'bun:test'
 import {type LedgerRecord, type PersonSummary} from '@splito/domain'
 
-import {type FriendRow, lastActivity, sortFriends} from './sort'
+import {filterFriends, type FriendRow, lastActivity, sortFriends} from './sort'
 
 const summary = (
   person: string,
@@ -80,3 +80,30 @@ test('name: alphabetical', () =>
       activity: new Map(),
     }).map(r => r.id),
   ).toEqual(['a', 'b', 'c', 'd']))
+
+test('filterFriends: one currency keeps only that currency; show picks a direction', () => {
+  const ids = (xs: FriendRow[]) => xs.map(r => r.id)
+  expect(ids(filterFriends(rows, {currency: 'all', show: 'all'}))).toEqual([
+    'a',
+    'b',
+    'c',
+    'd',
+  ])
+  const inr = filterFriends(rows, {currency: 'INR', show: 'all'})
+  expect(ids(inr)).toEqual(['a', 'b'])
+  // Other currencies leave the summary, so the row and the totals show INR only.
+  expect(Object.keys(inr[0]!.summary!.byCurrency)).toEqual(['INR'])
+  expect(ids(filterFriends(rows, {currency: 'all', show: 'owesYou'}))).toEqual([
+    'a',
+    'c',
+  ])
+  expect(ids(filterFriends(rows, {currency: 'all', show: 'youOwe'}))).toEqual([
+    'b',
+  ])
+  expect(ids(filterFriends(rows, {currency: 'all', show: 'settled'}))).toEqual([
+    'd',
+  ])
+  expect(ids(filterFriends(rows, {currency: 'USD', show: 'youOwe'}))).toEqual(
+    [],
+  )
+})

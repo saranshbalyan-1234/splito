@@ -560,11 +560,6 @@ function person(color: string, scale = 1) {
   ]
 }
 
-/** The body below `person`'s shoulders, long enough for the backdrop disc to clip it. */
-function torso(color: string) {
-  return group('torso', [rect(72, 60, 0, [0, 66]), fill(color)])
-}
-
 /* ---------- animations ---------- */
 
 /**
@@ -733,16 +728,16 @@ function success(c: Palette) {
 
 /**
  * A coin hops between two friends and back, flipping as it goes. The
- * friends are clipped to the backdrop disc, so their shoulders follow its
- * edge, and the coin rests just above a head. 3 s loop.
+ * friends are whole head-and-shoulders busts inside the backdrop disc, and
+ * the coin arcs above their heads. 3 s loop.
  */
 function emptyPeople(c: Palette) {
-  const L = [C - 46, 176]
-  const R = [C + 46, 176]
-  /* The coin passes between the two heads, from one friend's side to the other's. */
-  const coinL = C - 8
-  const coinR = C + 8
-  const coinY = 104
+  const L = [C - 38, 186]
+  const R = [C + 38, 186]
+  /* The coin passes above the two heads, from one friend's side to the other's. */
+  const coinL = C - 30
+  const coinR = C + 30
+  const coinY = 72
   const hop = (t: number, from: number, to: number): Key[] => [
     [t, from],
     [t + 50, to],
@@ -758,9 +753,8 @@ function emptyPeople(c: Palette) {
     backdrop(c),
     {
       nm: 'friend-left',
-      clip: 100,
       shapes: [
-        group('person', [...person(c.ink), torso(c.ink)], {
+        group('person', person(c.ink, 0.85), {
           p: st(L),
           a: st([0, 40]),
           s: kf(bounce(140)),
@@ -770,9 +764,8 @@ function emptyPeople(c: Palette) {
     },
     {
       nm: 'friend-right',
-      clip: 100,
       shapes: [
-        group('person', [...person(c.t(0.54)), torso(c.t(0.54))], {
+        group('person', person(c.t(0.54), 0.85), {
           p: st(R),
           a: st([0, 40]),
           s: kf(bounce(70)),
@@ -785,7 +778,7 @@ function emptyPeople(c: Palette) {
       shapes: [
         group(
           'coin',
-          [ellipse(14), stroke(c.ink, 3), ellipse(28), fill(c.t(0.34))],
+          [ellipse(18), stroke(c.ink, 3), ellipse(36), fill(c.t(0.34)), stroke(c.ink, 3)],
           {
             s: kf([
               [20, [100, 100]],
@@ -813,10 +806,10 @@ function emptyPeople(c: Palette) {
         y: kf([
           [0, coinY],
           [20, coinY, EASE.out],
-          [45, coinY - 22, EASE.inOut],
+          [45, coinY - 26, EASE.inOut],
           [70, coinY],
           [90, coinY, EASE.out],
-          [115, coinY - 22, EASE.inOut],
+          [115, coinY - 26, EASE.inOut],
           [140, coinY],
           [180, coinY],
         ]),

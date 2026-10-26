@@ -177,14 +177,21 @@ export function Trigger({
   )
 }
 
-export function Outer({children, style, onCloseAutoFocus}: OuterProps) {
+export function Outer({
+  children,
+  style,
+  onCloseAutoFocus,
+  align,
+  sideOffset = 5,
+}: OuterProps) {
   const t = useTheme()
   const reduceMotionEnabled = useShouldReduceMotion()
 
   return (
     <DropdownMenu.Portal>
       <DropdownMenu.Content
-        sideOffset={5}
+        sideOffset={sideOffset}
+        align={align}
         collisionPadding={{left: 5, right: 5, bottom: 5}}
         loop
         aria-label="Test"

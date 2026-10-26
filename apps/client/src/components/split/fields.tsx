@@ -279,7 +279,8 @@ export function MoneyInput({
           placeholder={scale ? `0.${'0'.repeat(scale)}` : '0'}
           inputMode={allowSign ? 'text' : 'decimal'}
           keyboardType={allowSign ? 'numbers-and-punctuation' : 'decimal-pad'}
-          style={[a.text_right, {fontVariant: ['tabular-nums']}]}
+          /* Left-aligned, so the figure sits right after its currency symbol. */
+          style={[{fontVariant: ['tabular-nums']}]}
         />
       </TextField.Root>
     </View>

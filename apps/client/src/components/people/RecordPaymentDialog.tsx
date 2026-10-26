@@ -17,7 +17,7 @@ import {useMutationCtx, useStore} from '#/data/hooks'
 import {useNumberLocale} from '#/locale/numberLocale'
 import {UserAvatar} from '#/view/com/util/UserAvatar'
 import {atoms as a, useTheme, web} from '#/alf'
-import {Button, ButtonIcon, ButtonText} from '#/components/Button'
+import {Button, ButtonIcon} from '#/components/Button'
 import * as Dialog from '#/components/Dialog'
 import * as SegmentedControl from '#/components/forms/SegmentedControl'
 import * as TextField from '#/components/forms/TextField'
@@ -31,6 +31,7 @@ import {
 } from '#/components/people/ledger'
 import * as Toast from '#/components/Toast'
 import {Text} from '#/components/Typography'
+import * as FormSheet from '#/components/FormSheet'
 import {SuccessCheck} from '#/motion/SuccessCheck'
 
 export type PaymentDraft = {
@@ -392,17 +393,14 @@ function Form({
         </TextField.Root>
       </View>
 
-      <Button
-        testID="payment-save"
-        label={l`Record payment`}
-        size="large"
-        color="primary"
-        disabled={isSaving}
-        onPress={() => void save()}>
-        <ButtonText>
-          <Trans>Record payment</Trans>
-        </ButtonText>
-      </Button>
+      <FormSheet.Actions
+        saveTestID="payment-save"
+        cancelTestID="payment-cancel"
+        saveLabel={l`Record payment`}
+        isSaving={isSaving}
+        onCancel={() => control.close()}
+        onSave={() => void save()}
+      />
     </View>
   )
 }

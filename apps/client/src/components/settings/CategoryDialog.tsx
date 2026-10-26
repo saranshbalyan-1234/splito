@@ -6,7 +6,7 @@ import {Trans, useLingui} from '@lingui/react/macro'
 import {useHaptics} from '#/lib/haptics'
 import {CATEGORY_COLORS} from '#/alf/swatches'
 import {atoms as a, useTheme, web} from '#/alf'
-import {Button, ButtonText} from '#/components/Button'
+import {Button} from '#/components/Button'
 import * as Dialog from '#/components/Dialog'
 import * as TextField from '#/components/forms/TextField'
 import {Check_Stroke2_Corner0_Rounded as CheckIcon} from '#/components/icons/Check'
@@ -17,6 +17,7 @@ import {
   useCategoryName,
 } from '#/components/settings/CategoryIcon'
 import {Text} from '#/components/Typography'
+import * as FormSheet from '#/components/FormSheet'
 
 const NAME_MAX = 32
 
@@ -201,28 +202,14 @@ function Inner({
           </View>
         </View>
 
-        <View style={[a.gap_sm, web([a.flex_row_reverse])]}>
-          <Button
-            testID="category-save"
-            label={l`Save category`}
-            onPress={save}
-            disabled={!isValid}
-            size="large"
-            color="primary">
-            <ButtonText>
-              <Trans>Save</Trans>
-            </ButtonText>
-          </Button>
-          <Button
-            label={l`Cancel`}
-            onPress={() => control.close()}
-            size="large"
-            color="secondary">
-            <ButtonText>
-              <Trans>Cancel</Trans>
-            </ButtonText>
-          </Button>
-        </View>
+        <FormSheet.Actions
+          saveTestID="category-save"
+          cancelTestID="category-cancel"
+          saveLabel={l`Save`}
+          canSave={isValid}
+          onCancel={() => control.close()}
+          onSave={save}
+        />
       </View>
       <Dialog.Close />
     </Dialog.ScrollableInner>

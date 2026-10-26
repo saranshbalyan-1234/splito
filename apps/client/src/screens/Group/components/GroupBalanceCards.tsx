@@ -1,120 +1,105 @@
 import {View} from 'react-native'
-import {Trans, useLingui} from '@lingui/react/macro'
+import {Trans} from '@lingui/react/macro'
 import {magnitude, ZERO} from '@splito/domain'
 
-import {atoms as a, useTheme} from '#/alf'
+import {atoms as a, useBreakpoints, useTheme} from '#/alf'
 import {CircleCheck_Stroke2_Corner0_Rounded as CheckIcon} from '#/components/icons/CircleCheck'
-import {currencyName} from '#/components/people/ledger'
 import {Text} from '#/components/Typography'
 import {AnimatedAmount} from '#/motion/AnimatedAmount'
 
 /**
- * My balance in a group, one card per currency (never added together), in
- * the same card as a friend's balance: direction, currency, the amount.
+ * My balance in a group: one card with a cell per currency (never added
+ * together), as People's summary, and the page's primary action (Settle up)
+ * as the card's trailing button, so the hero stays short on phones.
  */
 export function GroupBalanceCards({
   openCurrencies,
   mine,
   locale,
+  action,
 }: {
   openCurrencies: string[]
   mine: Record<string, bigint>
   locale: string
+  /** Settle up, at the card's right edge. */
+  action: React.ReactNode
 }) {
   const t = useTheme()
-  const {i18n} = useLingui()
-
-  if (openCurrencies.length === 0) {
-    return (
-      <View
-        testID="group-my-balance"
-        style={[
-          a.flex_row,
-          a.align_center,
-          a.gap_sm,
-          a.px_lg,
-          a.py_md,
-          a.rounded_md,
-          a.border,
-          t.atoms.border_contrast_low,
-        ]}>
-        <CheckIcon size="md" fill={t.palette.positive_600} />
-        <Text style={[a.flex_1, a.text_md, a.leading_snug]}>
-          <Trans>You’re settled up in this group.</Trans>
-        </Text>
-      </View>
-    )
-  }
+  const {gtMobile} = useBreakpoints()
+  const isSettled = openCurrencies.length === 0
 
   return (
-    <View style={[a.flex_row, a.flex_wrap, a.gap_md]}>
-      {openCurrencies.map(currency => {
-        const net = mine[currency]!
-        return (
+    <View
+      style={[
+        a.flex_row,
+        a.align_center,
+        a.gap_md,
+        a.pr_md,
+        a.rounded_md,
+        a.border,
+        t.atoms.border_contrast_low,
+        gtMobile && {maxWidth: 640},
+      ]}>
+      <View style={[a.flex_1, a.flex_row, a.flex_wrap]}>
+        {isSettled ? (
           <View
-            key={currency}
-            testID={`group-my-balance-${currency}`}
-            style={[
-              a.rounded_md,
-              a.border,
-              t.atoms.border_contrast_low,
-              a.px_lg,
-              a.py_md,
-              {flexBasis: 280, flexGrow: 1},
-            ]}>
-            <View
-              style={[a.flex_row, a.align_center, a.justify_between, a.gap_sm]}>
-              <Text
-                style={[
-                  a.text_sm,
-                  a.font_semi_bold,
-                  t.atoms.text_contrast_medium,
-                ]}>
-                {net > ZERO ? (
-                  <Trans>You are owed</Trans>
-                ) : (
-                  <Trans>You owe</Trans>
-                )}
-              </Text>
+            testID="group-my-balance"
+            style={[a.flex_row, a.align_center, a.gap_sm, a.px_lg, a.py_md]}>
+            <CheckIcon size="md" fill={t.palette.positive_600} />
+            <Text style={[a.flex_1, a.text_md, a.leading_snug]}>
+              <Trans>You’re settled up in this group.</Trans>
+            </Text>
+          </View>
+        ) : (
+          openCurrencies.map((currency, i) => {
+            const net = mine[currency]!
+            return (
               <View
+                key={currency}
+                testID={`group-my-balance-${currency}`}
                 style={[
-                  a.rounded_xs,
-                  a.px_xs,
-                  {paddingVertical: 1},
-                  t.atoms.bg_contrast_50,
+                  a.px_lg,
+                  a.py_md,
+                  {flexBasis: 140, flexGrow: 1},
+                  i > 0 && [a.border_l, t.atoms.border_contrast_low],
                 ]}>
                 <Text
-                  accessibilityLabel={currencyName(currency, i18n.locale)}
+                  numberOfLines={1}
                   style={[
-                    a.text_xs,
-                    a.font_semi_bold,
+                    a.text_sm,
+                    a.font_medium,
                     t.atoms.text_contrast_medium,
                   ]}>
-                  {currency}
+                  {net > ZERO ? (
+                    <Trans>You are owed</Trans>
+                  ) : (
+                    <Trans>You owe</Trans>
+                  )}
                 </Text>
+                <View style={a.pt_2xs}>
+                  <AnimatedAmount
+                    minor={magnitude(net)}
+                    currency={currency}
+                    locale={locale}
+                    style={[
+                      gtMobile ? a.text_3xl : a.text_2xl,
+                      a.font_bold,
+                      a.leading_tight,
+                      {
+                        color:
+                          net > ZERO
+                            ? t.palette.positive_600
+                            : t.palette.negative_500,
+                      },
+                    ]}
+                  />
+                </View>
               </View>
-            </View>
-            <View style={a.pt_xs}>
-              <AnimatedAmount
-                minor={magnitude(net)}
-                currency={currency}
-                locale={locale}
-                style={[
-                  a.text_3xl,
-                  a.font_bold,
-                  a.leading_tight,
-                  {
-                    color:
-                      net > ZERO
-                        ? t.palette.positive_600
-                        : t.palette.negative_500,
-                  },
-                ]}
-              />
-            </View>
-          </View>
-        )
-      })}
+            )
+          })
+        )}
+      </View>
+      {action}
     </View>
   )
 }

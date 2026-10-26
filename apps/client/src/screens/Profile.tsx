@@ -1,5 +1,5 @@
 // Adapted from bluesky-social/social-app@4e4ad9c (MIT) - src/screens/Settings/Settings.tsx
-import {View} from 'react-native'
+import {Pressable, View} from 'react-native'
 import {Trans, useLingui} from '@lingui/react/macro'
 import {type Entity, type Expense, type Group, type Person} from '@splito/sync'
 
@@ -117,16 +117,56 @@ function ProfilePreview({me}: {me: Entity<Person>}) {
 
   return (
     <>
-      <UserAvatar size={80} name={name} type="user" />
+      {/* The avatar with Bluesky's edit badge on its corner; both open Edit profile. */}
+      <Pressable
+        testID="profile-avatar"
+        accessibilityRole="button"
+        accessibilityLabel={l`Edit profile`}
+        accessibilityHint=""
+        onPress={() => editControl.open()}>
+        <UserAvatar size={80} name={name} type="user" />
+        <View
+          style={[
+            a.absolute,
+            a.rounded_full,
+            a.align_center,
+            a.justify_center,
+            t.atoms.bg_contrast_25,
+            {
+              right: -2,
+              bottom: -2,
+              width: 28,
+              height: 28,
+              borderWidth: 2,
+              borderColor: t.atoms.bg.backgroundColor,
+            },
+          ]}>
+          <PencilIcon size="xs" fill={t.atoms.text.color} />
+        </View>
+      </Pressable>
 
-      <View
-        style={[
-          a.flex_row,
-          a.gap_xs,
-          a.align_center,
-          a.justify_center,
-          a.w_full,
-        ]}>
+      {hasDefaultName ? (
+        /* Until a real name is set, the name's place is a tappable prompt rather than "Me". */
+        <Button
+          testID="profile-edit"
+          label={l`Add your name`}
+          size="small"
+          variant="ghost"
+          color="secondary"
+          style={[a.mt_xs, a.bg_transparent]}
+          onPress={() => editControl.open()}>
+          <Text
+            testID="profileHeaderDisplayName"
+            style={[
+              gtMobile ? a.text_3xl : a.text_2xl,
+              a.font_bold,
+              t.atoms.text_contrast_medium,
+            ]}>
+            <Trans>Add your name</Trans>
+          </Text>
+          <ButtonIcon icon={PencilIcon} size="md" />
+        </Button>
+      ) : (
         <Text
           emoji
           testID="profileHeaderDisplayName"
@@ -134,12 +174,12 @@ function ProfilePreview({me}: {me: Entity<Person>}) {
           style={[
             a.pt_sm,
             t.atoms.text,
-            gtMobile ? a.text_4xl : a.text_3xl,
+            gtMobile ? a.text_3xl : a.text_2xl,
             a.font_bold,
           ]}>
           {name}
         </Text>
-      </View>
+      )}
       <Text
         style={[
           a.text_md,
@@ -148,27 +188,25 @@ function ProfilePreview({me}: {me: Entity<Person>}) {
           t.atoms.text_contrast_medium,
         ]}>
         {hasDefaultName ? (
-          <Trans>Add your name so friends know it’s you.</Trans>
+          <Trans>So friends know it’s you.</Trans>
         ) : (
           <Trans>Saved on this device</Trans>
         )}
       </Text>
-      <Button
-        testID="profile-edit"
-        label={hasDefaultName ? l`Add your name` : l`Edit profile`}
-        size="small"
-        color={hasDefaultName ? 'primary' : 'secondary'}
-        style={[a.mt_md]}
-        onPress={() => editControl.open()}>
-        <ButtonIcon icon={PencilIcon} />
-        <ButtonText>
-          {hasDefaultName ? (
-            <Trans>Add your name</Trans>
-          ) : (
+      {!hasDefaultName && (
+        <Button
+          testID="profile-edit"
+          label={l`Edit profile`}
+          size="small"
+          color="secondary"
+          style={[a.mt_md]}
+          onPress={() => editControl.open()}>
+          <ButtonIcon icon={PencilIcon} />
+          <ButtonText>
             <Trans>Edit profile</Trans>
-          )}
-        </ButtonText>
-      </Button>
+          </ButtonText>
+        </Button>
+      )}
       <EditFriendDialog control={editControl} person={me} />
     </>
   )

@@ -1,11 +1,9 @@
-import {View} from 'react-native'
+import {ScrollView, View} from 'react-native'
 import {Trans, useLingui} from '@lingui/react/macro'
 import {getCurrency} from '@splito/domain'
 
 import {atoms as a} from '#/alf'
 import {Button, ButtonIcon, ButtonText} from '#/components/Button'
-import * as Dialog from '#/components/Dialog'
-import {CalendarDays_Stroke2_Corner0_Rounded as CalendarIcon} from '#/components/icons/CalendarDays'
 import {Check_Stroke2_Corner0_Rounded as CheckIcon} from '#/components/icons/Check'
 import {ChevronBottom_Stroke2_Corner0_Rounded as ChevronDownIcon} from '#/components/icons/Chevron'
 import {Group3_Stroke2_Corner0_Rounded as GroupIcon} from '#/components/icons/Group'
@@ -14,13 +12,13 @@ import {
   Table_Stroke2_Corner0_Rounded as TableIcon,
 } from '#/components/icons/Table'
 import * as Menu from '#/components/Menu'
-import {RangeDialog} from '#/screens/Analytics/components/RangeDialog'
-import {type PeriodChoice, type Report} from '#/screens/Analytics/useReport'
+import {type Report} from '#/screens/Analytics/useReport'
 
 /**
- * The one row of filters above everything they scope: period first, then
- * currency, group and Include groups. Charts, totals, the list and the CSV
- * all follow it. Phones scroll the row sideways.
+ * The one row of filters above everything they scope: currency, group and
+ * Include groups (the period is the headline's own control). Charts,
+ * totals, the list and the CSV all follow it. The row scrolls sideways when
+ * it does not fit; the charts / table switch stays at its end.
  */
 export function FilterBar({
   report,
@@ -32,70 +30,12 @@ export function FilterBar({
   onToggleView: () => void
 }) {
   const {t: l} = useLingui()
-  const rangeControl = Dialog.useDialogControl()
-
-  const periods: Array<{
-    value: Exclude<PeriodChoice, 'custom'>
-    label: string
-  }> = [
-    {value: 'week', label: l`Week`},
-    {value: 'month', label: l`Month`},
-    {value: 'year', label: l`Year`},
-    {value: 'all', label: l`All time`},
-  ]
-  const periodName =
-    report.period === 'custom'
-      ? l`Custom range`
-      : periods.find(p => p.value === report.period)!.label
   const groupLabel = report.groupId
     ? report.nameOfGroup(report.groupId)
     : l`All groups`
 
   const chips = (
     <>
-      <Menu.Root>
-        <Menu.Trigger label={l`Period: ${periodName}`}>
-          {({props}) => (
-            <Button
-              testID="analytics-period"
-              {...props}
-              label={props.accessibilityLabel}
-              size="small"
-              color="secondary">
-              <ButtonIcon icon={CalendarIcon} />
-              <ButtonText>{periodName}</ButtonText>
-              <ButtonIcon icon={ChevronDownIcon} />
-            </Button>
-          )}
-        </Menu.Trigger>
-        <Menu.Outer>
-          <Menu.Group>
-            {periods.map(p => (
-              <Menu.Item
-                key={p.value}
-                testID={`analytics-period-${p.value}`}
-                label={p.label}
-                onPress={() => report.setPeriod(p.value)}>
-                <Menu.ItemText>{p.label}</Menu.ItemText>
-                <Menu.ItemRadio selected={report.period === p.value} />
-              </Menu.Item>
-            ))}
-          </Menu.Group>
-          <Menu.Divider />
-          <Menu.Group>
-            <Menu.Item
-              testID="analytics-period-custom"
-              label={l`Custom range…`}
-              onPress={() => rangeControl.open()}>
-              <Menu.ItemText>
-                <Trans>Custom range…</Trans>
-              </Menu.ItemText>
-              <Menu.ItemRadio selected={report.period === 'custom'} />
-            </Menu.Item>
-          </Menu.Group>
-        </Menu.Outer>
-      </Menu.Root>
-
       <Menu.Root>
         <Menu.Trigger label={l`Currency: ${report.currency}`}>
           {({props}) => (
@@ -192,6 +132,21 @@ export function FilterBar({
         </Button>
       )}
 
+    </>
+  )
+
+  return (
+    <View
+      testID="analytics-filters"
+      style={[a.flex_row, a.align_center, a.gap_sm, a.pt_md, a.pr_lg]}>
+      {/* The filters scroll sideways in one row; the view switch stays put at the end. */}
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        style={[a.flex_1]}
+        contentContainerStyle={[a.flex_row, a.align_center, a.gap_sm, a.pl_lg]}>
+        {chips}
+      </ScrollView>
       {/* Charts or tables: a display choice (the `analyticsView` preference), so it sits with the filters. */}
       <Button
         testID="analytics-view-toggle"
@@ -204,31 +159,6 @@ export function FilterBar({
           {isTable ? <Trans>Charts</Trans> : <Trans>Table</Trans>}
         </ButtonText>
       </Button>
-    </>
-  )
-
-  return (
-    <>
-      {/* The chips wrap rather than scroll, so none is ever cut off at the edge. */}
-      <View
-        testID="analytics-filters"
-        style={[
-          a.flex_row,
-          a.flex_wrap,
-          a.align_center,
-          a.gap_sm,
-          a.px_lg,
-          a.pt_md,
-        ]}>
-        {chips}
-      </View>
-      <RangeDialog
-        control={rangeControl}
-        initial={report.customRange}
-        today={report.today}
-        weekStart={report.weekStart}
-        onApply={report.setCustom}
-      />
-    </>
+    </View>
   )
 }

@@ -152,14 +152,11 @@ export function XLabels({
 }) {
   const t = useTheme()
   const plotW = slot * points.length
-  const fit = Math.max(1, Math.floor(plotW / 44))
+  const fit = Math.max(1, Math.floor(plotW / 36))
   const every = Math.ceil(points.length / fit)
   const w = slot * every
-  /* Labels step from the current bucket when there is one, so "now" is always labelled. */
-  const anchor = Math.max(
-    0,
-    points.findIndex(p => p.isCurrent),
-  )
+  /* Labels step from the first bucket, so the axis always starts labelled; "now" also has its dot. */
+  const anchor = 0
   return (
     <>
       {points.map((p, i) =>

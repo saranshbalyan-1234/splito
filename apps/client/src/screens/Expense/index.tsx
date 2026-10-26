@@ -2,7 +2,14 @@ import {View} from 'react-native'
 import {plural} from '@lingui/core/macro'
 import {Trans, useLingui} from '@lingui/react/macro'
 import {useNavigation, useRoute, type RouteProp} from '@react-navigation/native'
-import {expenseNet, formatAmount, magnitude, ZERO} from '@splito/domain'
+import {
+  expenseNet,
+  formatAmount,
+  magnitude,
+  participantId,
+  participantWeight,
+  ZERO,
+} from '@splito/domain'
 import {
   deleteExpense,
   type Entity,
@@ -392,6 +399,7 @@ function Detail({
           name={name(id)}
           amount={fmt(e.shares[id]!)}
           detail={shareDetail(e, id, fmt, i18n)}
+          isMe={id === ctx.actor}
           testID={`share-row-${name(id)}`}
         />
       ))}
@@ -415,7 +423,14 @@ function Detail({
                 <Text
                   style={[a.text_sm, t.atoms.text_contrast_medium]}
                   numberOfLines={2}>
-                  {item.participants.map(name).join(', ')}
+                  {/* Portions show as "Riya ×2", so an unequal item reads at a glance. */}
+                  {item.participants
+                    .map(p =>
+                      participantWeight(p) > 1
+                        ? `${name(participantId(p))} ×${participantWeight(p)}`
+                        : name(participantId(p)),
+                    )
+                    .join(', ')}
                 </Text>
               </View>
               <Text style={[a.text_md, {fontVariant: ['tabular-nums']}]}>
@@ -509,21 +524,17 @@ function Detail({
       scrollEventThrottle={32}>
       {deletedBanner}
       {gtTablet ? (
+        /* Two columns filling the page, tops aligned: the expense, then its history as a rail. */
         <View style={[a.flex_row, a.align_start]}>
-          <View style={[a.flex_1, {flexGrow: 3, maxWidth: 760}]}>
+          <View style={[a.flex_1, {flexGrow: 3}]}>
             {hero}
             {breakdown}
           </View>
-          {/* History as a side card, so it needs no divider running the page's height. */}
           <View
             style={[
               a.flex_1,
-              {flexGrow: 2, maxWidth: 520},
-              a.mt_xl,
-              a.mr_lg,
-              a.pb_md,
-              a.rounded_md,
-              a.border,
+              {flexGrow: 2},
+              a.border_l,
               t.atoms.border_contrast_low,
             ]}>
             <History history={history} />
@@ -571,12 +582,15 @@ function PersonAmount({
   name,
   amount,
   detail,
+  isMe = false,
   testID,
 }: {
   avatar: string
   name: string
   amount: string
   detail?: string
+  /** My own share: tinted and bold, so it stands out. */
+  isMe?: boolean
   testID?: string
 }) {
   const t = useTheme()
@@ -590,6 +604,7 @@ function PersonAmount({
         a.px_lg,
         a.py_sm,
         {minHeight: 56},
+        isMe && t.atoms.bg_contrast_25,
       ]}>
       <UserAvatar size={36} name={avatar} type="user" />
       <View style={[a.flex_1]}>
@@ -603,7 +618,11 @@ function PersonAmount({
         ) : null}
       </View>
       <Text
-        style={[a.text_md, a.font_semi_bold, {fontVariant: ['tabular-nums']}]}>
+        style={[
+          a.text_md,
+          isMe ? a.font_bold : a.font_semi_bold,
+          {fontVariant: ['tabular-nums']},
+        ]}>
         {amount}
       </Text>
     </View>

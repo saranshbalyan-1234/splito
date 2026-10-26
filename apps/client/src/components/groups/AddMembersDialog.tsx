@@ -14,13 +14,14 @@ import {logger} from '#/logger'
 import {useEntities, useMutationCtx, useStore} from '#/data/hooks'
 import {UserAvatar} from '#/view/com/util/UserAvatar'
 import {atoms as a, useTheme, web} from '#/alf'
-import {Button, ButtonIcon, ButtonText} from '#/components/Button'
+import {Button, ButtonIcon} from '#/components/Button'
 import * as Dialog from '#/components/Dialog'
 import * as TextField from '#/components/forms/TextField'
 import * as Toggle from '#/components/forms/Toggle'
 import {PlusLarge_Stroke2_Corner0_Rounded as PlusIcon} from '#/components/icons/Plus'
 import * as Toast from '#/components/Toast'
 import {Text} from '#/components/Typography'
+import * as FormSheet from '#/components/FormSheet'
 
 /**
  * Adds friends (or someone new) to a group from now on. Earlier expenses
@@ -185,17 +186,15 @@ function Form({group}: {group: Entity<Group>}) {
         </View>
       </View>
 
-      <Button
-        testID="add-members-save"
-        label={l`Add members`}
-        size="large"
-        color="primary"
-        disabled={isSaving || selected.length === 0}
-        onPress={() => void save()}>
-        <ButtonText>
-          <Trans>Add to group</Trans>
-        </ButtonText>
-      </Button>
+      <FormSheet.Actions
+        saveTestID="add-members-save"
+        cancelTestID="add-members-cancel"
+        saveLabel={l`Add to group`}
+        canSave={selected.length > 0}
+        isSaving={isSaving}
+        onCancel={() => control.close()}
+        onSave={() => void save()}
+      />
     </View>
   )
 }

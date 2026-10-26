@@ -5,11 +5,12 @@ const LAPTOP = {width: 1280, height: 800}
 const RAIL = {width: 900, height: 800}
 const PHONE = {width: 390, height: 844}
 
-const TABS = ['people', 'groups', 'analytics']
+const TABS = ['people', 'groups', 'analytics', 'activity']
 const TOP_LEVEL: [string, string][] = [
   ['/', 'screen-people'],
   ['/groups', 'screen-groups'],
   ['/analytics', 'screen-analytics'],
+  ['/activity', 'screen-activity'],
 ]
 
 async function open(page: Page, path: string, screen: string) {
@@ -22,12 +23,10 @@ function avatarOn(page: Page, screen: string) {
   return page.getByTestId(screen).getByTestId('header-avatar')
 }
 
-function bellOn(page: Page, screen: string) {
-  return page.getByTestId(screen).getByTestId('header-notifications')
-}
-
-test('People is the initial route with no People title', async ({page}) => {
+test('People is the initial route; phones head it with the logo, not a title', async ({page}) => {
+  await page.setViewportSize(PHONE)
   await open(page, '/', 'screen-people')
+  await expect(page.getByTestId('screen-people').getByTestId('logo')).toBeVisible()
   await expect(page.getByRole('heading', {name: 'People'})).toHaveCount(0)
 })
 
@@ -43,8 +42,8 @@ test('every route in the route table resolves, including after a reload', async 
   const routes: [string, string][] = [
     ['/', 'screen-people'],
     ['/groups', 'screen-groups'],
-    ['/notifications', 'screen-notifications'],
-    ['/activity', 'screen-notifications'],
+    ['/activity', 'screen-activity'],
+    ['/notifications', 'screen-activity'],
     ['/analytics', 'screen-analytics'],
     ['/profile', 'screen-profile'],
     ['/settings', 'screen-settings'],
@@ -75,14 +74,14 @@ test.describe('desktop: Bluesky left sidebar and full-width content', () => {
     await expect(page.getByTestId('tab-people')).toContainText('People')
     await expect(page.getByTestId('tab-people')).toHaveAttribute('aria-current', 'page')
     await expect(page.getByTestId('sidebar-add')).toContainText('Add expense')
-    // Profile and the account card left the sidebar for the header avatar; Notifications for the header bell.
+    // Profile and the account card left the sidebar for the header avatar; there is no header bell.
     await expect(page.getByTestId('tab-profile')).toHaveCount(0)
-    await expect(page.getByTestId('tab-activity')).toHaveCount(0)
     await expect(page.getByTestId('sidebar-account')).toHaveCount(0)
+    await expect(page.getByTestId('header-notifications')).toHaveCount(0)
     await expect(page.getByTestId('fab-add')).toHaveCount(0)
   })
 
-  test('every top-level header: centred title, then the action, the bell and the avatar at the top right', async ({page}) => {
+  test('every top-level header: centred title, then the action and the avatar at the top right', async ({page}) => {
     await page.setViewportSize(DESKTOP)
     for (const [path, screen] of TOP_LEVEL) {
       await open(page, path, screen)
@@ -91,16 +90,13 @@ test.describe('desktop: Bluesky left sidebar and full-width content', () => {
       expect(avatar.width).toBe(40)
       expect(DESKTOP.width - (avatar.x + avatar.width)).toBe(20 - 4)
       expect(avatar.y).toBeLessThan(20)
-      // The bell sits immediately left of the avatar.
-      const bell = (await bellOn(page, screen).boundingBox())!
-      expect(bell.x + bell.width).toBeLessThanOrEqual(avatar.x + 4)
-      expect(avatar.x - (bell.x + bell.width)).toBeLessThan(12)
-      expect(bell.y).toBeLessThan(20)
     }
-    // Pushed pages have a back button instead, and neither the avatar nor the bell.
+    // The sidebar has the logo, so the desktop People header has its title.
+    await open(page, '/', 'screen-people')
+    await expect(page.getByTestId('screen-people').getByText('People', {exact: true})).toBeVisible()
+    // Pushed pages have a back button instead, and no avatar.
     await open(page, '/settings', 'screen-settings')
     await expect(avatarOn(page, 'screen-settings')).toHaveCount(0)
-    await expect(bellOn(page, 'screen-settings')).toHaveCount(0)
   })
 
   test('the avatar menu opens Profile, Settings and Analytics and switches the theme', async ({page}) => {
@@ -110,9 +106,11 @@ test.describe('desktop: Bluesky left sidebar and full-width content', () => {
     for (const item of ['profile', 'settings', 'analytics', 'theme']) {
       await expect(page.getByTestId(`header-menu-${item}`)).toBeVisible()
     }
-    // A dropdown under the avatar, as Bluesky's web menus; no drawer.
+    // A dropdown under the avatar, its right edge on the avatar's (the gutter), clear of the header; no drawer.
     const menu = (await page.getByTestId('header-menu-profile').boundingBox())!
     expect(menu.x + menu.width).toBeGreaterThan(LAPTOP.width - 40)
+    const account = (await page.getByTestId('header-menu-account').boundingBox())!
+    expect(account.y).toBeGreaterThan(52)
     await expect(page.getByTestId('drawer')).toHaveCount(0)
     await page.getByTestId('header-menu-profile').click()
     await expect(page).toHaveURL(/\/profile$/)
@@ -150,14 +148,16 @@ test.describe('desktop: Bluesky left sidebar and full-width content', () => {
     await expect(page.locator('html')).toHaveClass(/theme--light/)
   })
 
-  test('the bell opens Notifications, a pushed page with Back', async ({page}) => {
+  test('Activity is a sidebar item with the unread badge; pushed pages keep their section lit', async ({page}) => {
     await page.setViewportSize(LAPTOP)
     await open(page, '/groups', 'screen-groups')
-    await bellOn(page, 'screen-groups').click()
-    await expect(page).toHaveURL(/\/notifications$/)
-    await expect(page.getByTestId('screen-notifications')).toBeVisible()
-    await page.getByTestId('screen-notifications').getByLabel('Go back').click()
-    await expect(page.getByTestId('screen-groups')).toBeVisible()
+    await page.getByTestId('tab-activity').click()
+    await expect(page).toHaveURL(/\/activity$/)
+    await expect(page.getByTestId('screen-activity')).toBeVisible()
+    await expect(page.getByTestId('tab-activity')).toHaveAttribute('aria-current', 'page')
+    // A friend's page lights People, as Bluesky's tab stays lit under a pushed screen.
+    await open(page, '/people/p1', 'screen-person')
+    await expect(page.getByTestId('tab-people')).toHaveAttribute('aria-current', 'page')
   })
 
   test('content fills the window beside the sidebar (no centred column)', async ({page}) => {
@@ -184,8 +184,16 @@ test.describe('desktop: Bluesky left sidebar and full-width content', () => {
     await page.getByTestId('sidebar-add').click()
     await expect(page).toHaveURL(/\/expense\/new$/)
     await expect(page.getByRole('dialog')).toBeVisible()
-    await expect(page.getByTestId('composer-cancel')).toBeVisible()
-    await expect(page.getByTestId('composer-save')).toBeVisible()
+    // One sheet layout: the close cross at the top right, Cancel then Save at the bottom right.
+    const close = (await page.getByTestId('sheet-close').boundingBox())!
+    const cancel = (await page.getByTestId('sheet-cancel').boundingBox())!
+    const save = (await page.getByTestId('sheet-save').boundingBox())!
+    const dialog = (await page.getByTestId('screen-add-expense').boundingBox())!
+    expect(close.x + close.width).toBeGreaterThan(dialog.x + dialog.width - 24)
+    expect(close.y).toBeLessThan(dialog.y + 24)
+    expect(save.y + save.height).toBeGreaterThan(dialog.y + dialog.height - 24)
+    expect(save.x + save.width).toBeGreaterThan(dialog.x + dialog.width - 24)
+    expect(cancel.x + cancel.width).toBeLessThan(save.x)
     // The page underneath stays rendered, as under Bluesky's composer.
     await expect(page.getByTestId('screen-groups')).toBeVisible()
     await page.keyboard.press('Escape')
@@ -203,14 +211,13 @@ test.describe('desktop: Bluesky left sidebar and full-width content', () => {
 })
 
 test.describe('phone: Bluesky bottom bar and FAB', () => {
-  test('three tabs, no Profile or Activity tab, no centre button, the FAB, no sidebar', async ({page}) => {
+  test('four tabs with Activity, no Profile tab, no centre button, the FAB, no sidebar', async ({page}) => {
     await page.setViewportSize(PHONE)
-    await open(page, '/', 'screen-people')
+    await open(page, '/?demo=1', 'screen-people')
     for (const tab of TABS) {
       await expect(page.getByTestId(`tab-${tab}`)).toBeVisible()
     }
     await expect(page.getByTestId('tab-profile')).toHaveCount(0)
-    await expect(page.getByTestId('tab-activity')).toHaveCount(0)
     await expect(page.getByTestId('tab-add')).toHaveCount(0)
     await expect(page.getByTestId('sidebar-add')).toHaveCount(0)
     const fab = page.getByTestId('fab-add')
@@ -226,7 +233,11 @@ test.describe('phone: Bluesky bottom bar and FAB', () => {
 
   test('the FAB shows where Bluesky has one (feeds, profiles, notifications), not on Groups (Lists) or Analytics (Search)', async ({page}) => {
     await page.setViewportSize(PHONE)
-    for (const [path, screen] of [['/', 'screen-people'], ['/notifications', 'screen-notifications']]) {
+    // Empty People has its own Add a friend / Add expense buttons, so no third Add.
+    await open(page, '/', 'screen-people')
+    await expect(page.getByTestId('people-empty')).toBeVisible()
+    await expect(page.getByTestId('screen-people').getByTestId('fab-add')).toHaveCount(0)
+    for (const [path, screen] of [['/?demo=1', 'screen-people'], ['/activity', 'screen-activity']]) {
       await open(page, path, screen)
       await expect(page.getByTestId(screen).getByTestId('fab-add')).toBeVisible()
     }
@@ -245,18 +256,18 @@ test.describe('phone: Bluesky bottom bar and FAB', () => {
     expect(box.width).toBe(PHONE.width)
   })
 
-  test('the FAB opens Add expense like the composer; Cancel returns', async ({page}) => {
+  test('the FAB opens Add expense like the composer; the close cross returns', async ({page}) => {
     await page.setViewportSize(PHONE)
-    await open(page, '/', 'screen-people')
+    await open(page, '/?demo=1', 'screen-people')
     await page.getByTestId('fab-add').click()
     await expect(page).toHaveURL(/\/expense\/new$/)
     await expect(page.getByTestId('screen-add-expense')).toBeVisible()
-    await page.getByTestId('composer-cancel').click()
-    await expect(page).toHaveURL(/\/$/)
+    await page.getByTestId('sheet-close').click()
+    await expect(page).toHaveURL(/\/(\?demo=1)?$/)
     await expect(page.getByTestId('screen-add-expense')).toHaveCount(0)
   })
 
-  test('the avatar is at the top right of the top bar, the bell left of it; the logo stays centred', async ({page}) => {
+  test('the avatar is at the top right of the top bar; the logo stays centred', async ({page}) => {
     await page.setViewportSize(PHONE)
     for (const [path, screen] of TOP_LEVEL) {
       await open(page, path, screen)
@@ -264,8 +275,6 @@ test.describe('phone: Bluesky bottom bar and FAB', () => {
       // The avatar sits on the 16px phone gutter (its 4px halo overhangs it).
       expect(PHONE.width - (box.x + box.width)).toBe(16 - 4)
       expect(box.y).toBeLessThan(20)
-      const bell = (await bellOn(page, screen).boundingBox())!
-      expect(bell.x + bell.width).toBeLessThanOrEqual(box.x + 4)
     }
     await open(page, '/', 'screen-people')
     const logo = (await page.getByTestId('logo').boundingBox())!
@@ -289,6 +298,8 @@ test.describe('phone: Bluesky bottom bar and FAB', () => {
     await open(page, '/', 'screen-people')
     await page.getByTestId('tab-groups').click()
     await expect(page.getByTestId('screen-groups')).toBeVisible()
+    await page.getByTestId('tab-activity').click()
+    await expect(page.getByTestId('screen-activity')).toBeVisible()
     await page.getByTestId('tab-analytics').click()
     await expect(page.getByTestId('screen-analytics')).toBeVisible()
     await avatarOn(page, 'screen-analytics').click()
@@ -305,6 +316,7 @@ test('the tabs preference orders and hides tabs; hidden routes still open', asyn
   await page.waitForFunction(() => 'splito' in window)
   await page.evaluate(() => (window as any).splito.setPref('tabs', ['groups', 'people']))
   await expect(page.getByTestId('tab-analytics')).toHaveCount(0)
+  await expect(page.getByTestId('tab-activity')).toHaveCount(0)
   const order = await page.getByRole('navigation').locator('[data-testid^="tab-"]').evaluateAll(els => els.map(e => e.getAttribute('data-testid')))
   expect(order).toEqual(['tab-groups', 'tab-people'])
   // Hiding tabs never strands Settings: the avatar menu still reaches it.
@@ -325,7 +337,8 @@ test('dev tools seed data in e2e builds', async ({page}) => {
 
 test('Profile: Edit profile renames me (only my name, no UPI field)', async ({page}) => {
   await open(page, '/profile', 'screen-profile')
-  await expect(page.getByTestId('profileHeaderDisplayName')).toHaveText('Me')
+  // Until a real name is set, the name's place asks for one.
+  await expect(page.getByTestId('profileHeaderDisplayName')).toHaveText('Add your name')
   await page.getByTestId('profile-edit').click()
   await expect(page.getByTestId('friend-upi')).toHaveCount(0)
   await page.getByTestId('friend-name').fill('Saransh Balyan')

@@ -2,7 +2,7 @@ import {View} from 'react-native'
 import {LayoutAnimationConfig} from 'react-native-reanimated'
 import {Trans, useLingui} from '@lingui/react/macro'
 import {useNavigation} from '@react-navigation/native'
-import {groupBalances, sumMinor, ZERO} from '@splito/domain'
+import {groupBalances, magnitude, sumMinor, ZERO} from '@splito/domain'
 import {type Entity, type Group} from '@splito/sync'
 
 import {
@@ -15,16 +15,16 @@ import {type NavigationProp} from '#/lib/routes/types'
 import {useNumberLocale} from '#/locale/numberLocale'
 import {useEntities, useLedger, useMe} from '#/data/hooks'
 import {EmptyState} from '#/view/com/util/EmptyState'
+import {PressableWithHover} from '#/view/com/util/PressableWithHover'
 import {List} from '#/view/com/util/List'
 import {atoms as a, useBreakpoints, useTheme} from '#/alf'
-import {BalanceText} from '#/components/BalanceText'
 import {myBalances} from '#/components/groups/net'
 import {HeaderAvatar} from '#/components/HeaderAvatar'
 import {PlusLarge_Stroke2_Corner0_Rounded as PlusIcon} from '#/components/icons/Plus'
 import * as Layout from '#/components/Layout'
-import {NotificationsBell} from '#/components/NotificationsBell'
 import {Text} from '#/components/Typography'
 import {Shimmer} from '#/motion/Shimmer'
+import {BalanceSummary} from '#/screens/People/components/BalanceSummary'
 import {GroupRow, GroupRowPlaceholder} from './components/GroupRow'
 
 const PLACEHOLDER_ROWS = 4
@@ -57,10 +57,15 @@ export function GroupsScreen() {
     ...new Set(rows.flatMap(g => Object.keys(balances[g.id] ?? {}))),
   ]
     .sort()
-    .map(currency => ({
-      currency,
-      net: sumMinor(rows.map(g => balances[g.id]?.[currency] ?? ZERO)),
-    }))
+    .map(currency => {
+      const net = sumMinor(rows.map(g => balances[g.id]?.[currency] ?? ZERO))
+      return {
+        currency,
+        net,
+        owed: net > ZERO ? net : ZERO,
+        owe: net < ZERO ? magnitude(net) : ZERO,
+      }
+    })
     .filter(({net}) => net !== ZERO)
 
   return (
@@ -68,8 +73,7 @@ export function GroupsScreen() {
       <HomeHeaderModeProvider>
         <HidingHeader>
           <Layout.Header.Outer>
-            {/* Empty slots as wide as the action, bell and avatar on the right, so the title stays centred. */}
-            <Layout.Header.Slot />
+            {/* Empty slots as wide as the action and avatar on the right, so the title stays centred. */}
             <Layout.Header.Slot />
             <Layout.Header.Slot />
             <Layout.Header.Content>
@@ -83,7 +87,6 @@ export function GroupsScreen() {
               label={l`Create group`}
               onPress={createGroup}
             />
-            <NotificationsBell />
             <HeaderAvatar />
           </Layout.Header.Outer>
         </HidingHeader>
@@ -118,7 +121,13 @@ export function GroupsScreen() {
                 )}
                 ListHeaderComponent={
                   rows.length > 0 && overall.length > 0 ? (
-                    <OverallBalance overall={overall} locale={locale} />
+                    /* People's balance card, so both tabs read the same way: my net across all groups, per currency. */
+                    <BalanceSummary
+                      testID="groups-balances"
+                      titleTestID="groups-balances-title"
+                      totals={overall}
+                      locale={locale}
+                    />
                   ) : undefined
                 }
                 ListEmptyComponent={
@@ -137,7 +146,12 @@ export function GroupsScreen() {
                   />
                 }
                 ListFooterComponent={
-                  !gtMobile ? <View style={{height: 100}} /> : undefined
+                  rows.length > 0 ? (
+                    <>
+                      <NewGroupRow onPress={createGroup} />
+                      {!gtMobile && <View style={{height: 100}} />}
+                    </>
+                  ) : undefined
                 }
               />
             </MainScrollProvider>
@@ -148,35 +162,47 @@ export function GroupsScreen() {
   )
 }
 
-/** "Across your groups": my net in every group, one figure per currency. */
-function OverallBalance({
-  overall,
-  locale,
-}: {
-  overall: {currency: string; net: bigint}[]
-  locale: string
-}) {
+/** The list's last row: a quiet way to start another group. */
+function NewGroupRow({onPress}: {onPress: () => void}) {
   const t = useTheme()
+  const {t: l} = useLingui()
   return (
-    <View
-      testID="groups-overall"
-      style={[a.px_lg, a.pt_md, a.pb_md, a.gap_2xs]}>
-      <Text style={[a.text_sm, a.font_semi_bold, t.atoms.text_contrast_medium]}>
-        <Trans>Across your groups</Trans>
-      </Text>
-      <View style={[a.flex_row, a.flex_wrap, {columnGap: 16, rowGap: 2}]}>
-        {overall.map(({currency, net}) => (
-          <BalanceText
-            key={currency}
-            testID={`groups-overall-${currency}`}
-            amount={net}
-            currency={currency}
-            locale={locale}
-            subject="group"
-            style={[a.text_md]}
-          />
-        ))}
+    <PressableWithHover
+      testID="groups-new-row"
+      onPress={onPress}
+      accessibilityRole="button"
+      accessibilityLabel={l`Create group`}
+      accessibilityHint=""
+      hoverStyle={t.atoms.bg_contrast_25}
+      style={[
+        a.flex_row,
+        a.align_center,
+        a.gap_md,
+        a.px_lg,
+        a.py_md,
+        a.border_t,
+        a.border_b,
+        t.atoms.border_contrast_low,
+        a.transition_color,
+      ]}>
+      <View
+        style={[
+          a.align_center,
+          a.justify_center,
+          {
+            width: 42,
+            height: 42,
+            borderRadius: 10,
+            borderWidth: 1.5,
+            borderStyle: 'dashed',
+            borderColor: t.palette.contrast_300,
+          },
+        ]}>
+        <PlusIcon size="md" fill={t.palette.primary_500} />
       </View>
-    </View>
+      <Text style={[a.text_md, a.font_semi_bold, {color: t.palette.primary_500}]}>
+        <Trans>New group</Trans>
+      </Text>
+    </PressableWithHover>
   )
 }

@@ -32,8 +32,8 @@ export const linking: LinkingOptions<FlatNavigatorParams> = {
       ...Object.fromEntries(
         Object.entries(ROUTE_PATHS).map(([name, path]) => [name, path.slice(1)]),
       ),
-      // Activity became Notifications; old links still land.
-      Notifications: {path: 'notifications', alias: ['activity']},
+      // Activity was briefly Notifications; those links still land.
+      Activity: {path: 'activity', alias: ['notifications']},
     },
   },
 }

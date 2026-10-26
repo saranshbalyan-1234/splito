@@ -16,13 +16,13 @@ async function splitWith(page: Page, names: string[]) {
   await page.getByTestId('expense-people').click()
   for (const name of names)
     await page.getByTestId(`person-option-${name}`).click()
-  await page.getByTestId('people-done').click()
+  await page.getByTestId('dialog-close').click()
   await expect(page.getByTestId('people-dialog')).toHaveCount(0)
 }
 
 /** Saves, waits for the success check, and opens the new expense from the toast. Returns its id. */
 async function saveAndView(page: Page) {
-  await page.getByTestId('composer-save').click()
+  await page.getByTestId('sheet-save').click()
   await expect(page.getByTestId('expense-saved')).toBeVisible()
   await page.getByRole('button', {name: 'View expense'}).click()
   await expect(page.getByTestId('screen-expense')).toBeVisible()
@@ -33,7 +33,7 @@ test('add an expense: category suggestion, calculator, exact split readout, save
   page,
 }) => {
   await openAddExpense(page)
-  const save = page.getByTestId('composer-save')
+  const save = page.getByTestId('sheet-save')
   await expect(save).toBeDisabled()
 
   await page.getByTestId('expense-title').fill('Dinner at Thalassa')
@@ -95,7 +95,7 @@ test('amount errors read in plain words', async ({page}) => {
   await amount.fill('abc')
   await page.getByTestId('expense-title').click()
   await expect(page.getByTestId('amount-error')).toContainText('isn’t a number')
-  await expect(page.getByTestId('composer-save')).toBeDisabled()
+  await expect(page.getByTestId('sheet-save')).toBeDisabled()
 })
 
 test('a group expense uses the group members and currency; multiple payers must add up', async ({
@@ -165,7 +165,13 @@ test('itemised split with tax, shares and equal-with-adjustments', async ({
   await page.getByTestId('item-add').click()
   await page.getByTestId('item-1-name').fill('Garlic bread')
   await page.getByTestId('item-1-amount').fill('100')
-  await page.getByTestId('item-1-person-You').click()
+  // A right-click (long press on touch) takes someone off an item.
+  await page.getByTestId('item-1-person-You').click({button: 'right'})
+  // Another tap on someone already on it gives them one more portion; Everyone resets to one each.
+  await page.getByTestId('item-0-person-Riya Sharma').click()
+  await expect(page.getByTestId('item-0-portions-Riya Sharma')).toHaveText('×2')
+  await page.getByTestId('item-0-everyone').click()
+  await expect(page.getByTestId('item-0-portions-Riya Sharma')).toHaveCount(0)
   await page.getByTestId('item-tax').fill('30')
   await expect(page.getByTestId('split-readout')).toHaveText(
     'All ₹330.00 assigned',
@@ -189,7 +195,7 @@ test('edit, then delete with undo', async ({page}) => {
   await expect(page.getByTestId('screen-edit-expense')).toBeVisible()
   await expect(page.getByTestId('expense-title')).toHaveValue('Cab to airport')
   await page.getByTestId('amount-input').fill('750')
-  await page.getByTestId('composer-save').click()
+  await page.getByTestId('sheet-save').click()
   await expect(page.getByTestId('screen-edit-expense')).toHaveCount(0)
   await expect(page.getByTestId('expense-detail-amount')).toHaveText('₹750.00')
   await expect(page.getByTestId('history-edited')).toContainText(
@@ -240,7 +246,7 @@ test('future dates are marked upcoming', async ({page}) => {
 test('a draft survives closing', async ({page}) => {
   await openAddExpense(page)
   await page.getByTestId('expense-title').fill('Half-typed groceries')
-  await page.getByTestId('composer-cancel').click()
+  await page.getByTestId('sheet-close').click()
   await page.getByTestId('draft-save').click()
   await expect(page.getByTestId('screen-add-expense')).toHaveCount(0)
 
@@ -264,6 +270,6 @@ test('phones: the FAB opens Add expense full screen; Cancel on an empty form jus
   await expect(composer).toBeVisible()
   const box = await composer.boundingBox()
   expect(box!.width).toBe(PHONE.width)
-  await page.getByTestId('composer-cancel').click()
+  await page.getByTestId('sheet-close').click()
   await expect(composer).toHaveCount(0)
 })

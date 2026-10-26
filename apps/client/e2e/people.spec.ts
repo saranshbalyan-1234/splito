@@ -33,7 +33,7 @@ test('A04: direct 100 + group 50 = 150; Include groups off = 100, totals and his
   await page.goto(`/people/${kavya}`)
 
   await expect(page.getByTestId('person-name')).toHaveText('Kavya Rao')
-  await expect(page.getByTestId('person-direction-INR')).toHaveText('Kavya Rao owes you')
+  await expect(page.getByTestId('person-direction-INR')).toHaveText('Owes you')
   await expect(page.getByTestId('person-total-INR')).toHaveText('₹150.00')
   await expect(page.getByTestId('person-part-INR-direct')).toContainText('+₹100.00')
   await expect(page.getByTestId('person-history-title')).toHaveText('History  2')
@@ -51,7 +51,8 @@ test('A04: direct 100 + group 50 = 150; Include groups off = 100, totals and his
   await expect(page.getByText('Snacks')).toHaveCount(0)
   await expect(page.getByText('Concert')).toBeVisible()
   const concert = page.locator('[data-testid^="history-"]', {hasText: 'Concert'})
-  await expect(concert).toContainText('owes you')
+  // An expense row says what it did (Splitwise's words); balances say "owes you".
+  await expect(concert).toContainText('you lent')
   await expect(concert).toContainText('₹100.00')
 })
 
@@ -125,12 +126,47 @@ test('People: the Include groups filter changes the totals only on Apply', async
   await page.goto('/')
   const row = page.getByTestId('person-Kavya Rao')
   await expect(row.getByTestId('balance-INR')).toHaveText('owes you ₹150.00')
-  await page.getByTestId('people-filter').click()
+  await page.getByTestId('friends-filters').click()
   await page.getByTestId('filter-include-groups').click()
   await expect(row.getByTestId('balance-INR')).toHaveText('owes you ₹150.00')
   await page.getByTestId('filter-apply').click()
   await expect(row.getByTestId('balance-INR')).toHaveText('owes you ₹100.00')
   await expect(page.getByTestId('screen-people').getByText('Direct only')).toBeVisible()
+  // The button counts the filters that differ from the defaults.
+  await expect(page.getByTestId('friends-filters-count')).toHaveText('1')
+})
+
+test('People filters: one currency, which way, and the order drive the list and the summary', async ({page}) => {
+  await page.goto('/?demo=1')
+  const people = page.getByTestId('screen-people')
+  await expect(people.getByTestId('person-Arjun Mehta')).toBeVisible()
+  await expect(people.getByTestId('summary-EUR-net')).toBeVisible()
+
+  await people.getByTestId('friends-filters').click()
+  await page.getByTestId('filter-currency-EUR').click()
+  await page.getByTestId('filter-show-youOwe').click()
+  // Nothing changes before Apply.
+  await expect(people.getByTestId('person-Arjun Mehta')).toBeVisible()
+  await page.getByTestId('filter-apply').click()
+
+  // Only friends I owe in euros, and only euros in the summary.
+  await expect(people.getByTestId('person-Arjun Mehta')).toHaveCount(0)
+  await expect(people.getByTestId('person-Sam Carter')).toBeVisible()
+  await expect(people.getByTestId('person-Sam Carter').getByTestId('balance-INR')).toHaveCount(0)
+  await expect(people.getByTestId('summary-INR-net')).toHaveCount(0)
+  await expect(people.getByTestId('friends-filters-count')).toHaveText('2')
+
+  // Cancel leaves the applied filters alone; nobody matching shows a way back.
+  await people.getByTestId('friends-filters').click()
+  await page.getByTestId('filter-show-settled').click()
+  await page.getByTestId('filter-cancel').click()
+  await expect(people.getByTestId('person-Sam Carter')).toBeVisible()
+  await people.getByTestId('friends-filters').click()
+  await page.getByTestId('filter-show-settled').click()
+  await page.getByTestId('filter-apply').click()
+  await expect(people.getByTestId('people-filtered-empty')).toBeVisible()
+  await people.getByTestId('people-clear-filters').click()
+  await expect(people.getByTestId('person-Arjun Mehta')).toBeVisible()
 })
 
 test('People sorts by the biggest balance, recent activity or name (preference)', async ({page}) => {
@@ -165,11 +201,11 @@ test('UPI pay link shows only when I owe them rupees, and asks before recording'
   })
 
   await page.goto(`/people/${owedUSD}`)
-  await expect(page.getByTestId('person-direction-USD')).toHaveText('You owe Tom Hale')
+  await expect(page.getByTestId('person-direction-USD')).toHaveText('You owe')
   await expect(page.getByTestId('person-upi')).toHaveCount(0)
 
   await page.goto(`/people/${owedINR}`)
-  await expect(page.getByTestId('person-direction-INR')).toHaveText('You owe Meera Iyer')
+  await expect(page.getByTestId('person-direction-INR')).toHaveText('You owe')
   await page.getByTestId('person-upi').click()
   await expect(page.getByTestId('upi-amount')).toHaveValue('150.00')
   await page.getByTestId('upi-open').click()
@@ -207,11 +243,11 @@ test('UPI pay link shows only when I owe them rupees, and asks before recording'
 test('add a friend, then land on their page', async ({page}) => {
   await ready(page)
   await page.goto('/friends/new')
-  await page.getByTestId('add-friend-save').click()
-  await expect(page.getByText('Enter a name.')).toBeVisible()
+  // A sheet: the primary action at the bottom, off until there is a name.
+  await expect(page.getByTestId('sheet-save')).toBeDisabled()
   await page.getByTestId('add-friend-name').fill('Nikhil Das')
   await page.getByTestId('add-friend-upi').fill('nikhil@ybl')
-  await page.getByTestId('add-friend-save').click()
+  await page.getByTestId('sheet-save').click()
   await expect(page.getByTestId('person-name')).toHaveText('Nikhil Das')
   await expect(page.getByText('nikhil@ybl')).toBeVisible()
   await expect(page.getByTestId('person-settled')).toBeVisible()

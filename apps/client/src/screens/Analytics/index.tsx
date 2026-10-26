@@ -22,7 +22,6 @@ import {Download_Stroke2_Corner0_Rounded as DownloadIcon} from '#/components/ico
 import {PlusLarge_Stroke2_Corner0_Rounded as PlusIcon} from '#/components/icons/Plus'
 import {TimesLarge_Stroke2_Corner0_Rounded as XIcon} from '#/components/icons/Times'
 import * as Layout from '#/components/Layout'
-import {NotificationsBell} from '#/components/NotificationsBell'
 import * as Toast from '#/components/Toast'
 import {Text} from '#/components/Typography'
 import {Shimmer} from '#/motion/Shimmer'
@@ -63,8 +62,7 @@ export function AnalyticsScreen() {
       <HomeHeaderModeProvider>
         <HidingHeader>
           <Layout.Header.Outer>
-            {/* Empty slots as wide as the action, bell and avatar on the right, so the title stays centred. */}
-            <Layout.Header.Slot />
+            {/* Empty slots as wide as the action and avatar on the right, so the title stays centred. */}
             <Layout.Header.Slot />
             <Layout.Header.Slot />
             <Layout.Header.Content>
@@ -79,7 +77,6 @@ export function AnalyticsScreen() {
               disabled={!report || report.rows.length === 0}
               onPress={() => report && void exportRows(report)}
             />
-            <NotificationsBell />
             <HeaderAvatar />
           </Layout.Header.Outer>
         </HidingHeader>

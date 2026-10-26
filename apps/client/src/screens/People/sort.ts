@@ -48,3 +48,36 @@ export function sortFriends<T extends FriendRow>(
     return byName(x, y)
   })
 }
+
+/** What the People filter keeps: one currency or all, and which way the balance goes. */
+export type FriendFilter = {
+  currency: string | 'all'
+  show: 'all' | 'owesYou' | 'youOwe' | 'settled'
+}
+
+/**
+ * The People filter applied. A single currency also trims each summary to
+ * that currency, so the rows and the totals above them show only it.
+ * `owesYou` / `youOwe` keep a friend with any balance that way (a friend can
+ * be both, in different currencies); `settled` keeps those with none open.
+ */
+export function filterFriends<T extends FriendRow>(
+  rows: T[],
+  {currency, show}: FriendFilter,
+): T[] {
+  return rows.flatMap(row => {
+    const all = row.summary?.byCurrency ?? {}
+    let summary = row.summary
+    if (currency !== 'all') {
+      if (!all[currency]) return []
+      summary = {...row.summary!, byCurrency: {[currency]: all[currency]}}
+    }
+    const totals = Object.values(summary?.byCurrency ?? {}).map(c => c.total)
+    const keep =
+      show === 'all' ||
+      (show === 'owesYou' && totals.some(v => v > 0n)) ||
+      (show === 'youOwe' && totals.some(v => v < 0n)) ||
+      (show === 'settled' && totals.every(v => v === 0n))
+    return keep ? [{...row, summary}] : []
+  })
+}

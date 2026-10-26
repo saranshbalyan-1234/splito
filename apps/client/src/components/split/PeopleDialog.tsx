@@ -13,7 +13,7 @@ import * as Toggle from '#/components/forms/Toggle'
 import {PersonPlus_Filled_Stroke2_Corner0_Rounded as PersonPlusIcon} from '#/components/icons/Person'
 import * as Toast from '#/components/Toast'
 import {Text} from '#/components/Typography'
-import {DialogHeading, DoneButton} from './pickers'
+import {DialogHeading} from './pickers'
 import {useAvatarName, useDisplayName, useErrorText} from './shared'
 
 /**
@@ -79,7 +79,6 @@ function PeopleInner({
 }) {
   const t = useTheme()
   const {t: l} = useLingui()
-  const control = Dialog.useDialogContext()
   const store = useStore()
   const ctx = useMutationCtx()
   const name = useDisplayName()
@@ -201,7 +200,7 @@ function PeopleInner({
           <Trans>Nobody matches “{query}”</Trans>
         </Text>
       ) : null}
-      <DoneButton testID="people-done" onPress={() => control.close()} />
+      {/* A picker: choices apply as they are made, so the cross is all it needs (owner sheet rule). */}
       <Dialog.Close />
     </Dialog.ScrollableInner>
   )

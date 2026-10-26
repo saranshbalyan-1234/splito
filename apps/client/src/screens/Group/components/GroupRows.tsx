@@ -125,6 +125,50 @@ export function MemberBalanceRow({
   )
 }
 
+/** One payment of the group's direct settle-up plan: who owes whom, and how much. */
+export function OweRow({
+  sentence,
+  avatarName,
+  amount,
+  currency,
+  locale,
+  testID,
+}: {
+  /** "Arjun owes you", "You owe Riya", "Sam owes Priya". */
+  sentence: string
+  avatarName: string
+  amount: bigint
+  currency: string
+  locale: string
+  testID?: string
+}) {
+  const t = useTheme()
+  return (
+    <View
+      testID={testID}
+      style={[
+        a.flex_row,
+        a.align_center,
+        a.gap_md,
+        a.px_lg,
+        a.py_md,
+        a.border_t,
+        t.atoms.border_contrast_low,
+      ]}>
+      <UserAvatar size={42} name={avatarName} type="user" />
+      <Text
+        emoji
+        numberOfLines={1}
+        style={[a.flex_1, a.text_md, a.font_semi_bold]}>
+        {sentence}
+      </Text>
+      <Text style={[a.text_md, a.font_semi_bold, tabular]}>
+        {formatAmount(amount, currency, locale)}
+      </Text>
+    </View>
+  )
+}
+
 /** A member row; friends open their page. */
 export function MemberRow({
   personId,

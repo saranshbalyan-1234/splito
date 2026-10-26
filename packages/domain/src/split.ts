@@ -1,13 +1,26 @@
 import {allocate} from './allocate'
 import {assertInRange, DomainError} from './errors'
 
+/** Who had an item: a person id (one portion), or an id with a whole number of portions ("2 of 3 beers"). */
+export type ItemParticipant = string | {id: string; weight: number}
+
+/** The person an item participant names. */
+export function participantId(p: ItemParticipant): string {
+  return typeof p === 'string' ? p : p.id
+}
+
+/** How many portions of the item a participant had (1 unless set). */
+export function participantWeight(p: ItemParticipant): number {
+  return typeof p === 'string' ? 1 : p.weight
+}
+
 export type SplitInput =
   | {mode: 'equal'; participants: string[]}
   | {mode: 'exact'; amounts: Record<string, bigint>}
   /** Integer basis points (1% = 100), summing to 10000. */
   | {mode: 'percent'; basisPoints: Record<string, number>}
   | {mode: 'shares'; shares: Record<string, number>}
-  | {mode: 'items'; items: Array<{id: string; name?: string; amount: bigint; participants: string[]}>; tax: bigint; tip: bigint; discount: bigint}
+  | {mode: 'items'; items: Array<{id: string; name?: string; amount: bigint; participants: ItemParticipant[]}>; tax: bigint; tip: bigint; discount: bigint}
   /** Equal with adjustments: each adjustment is added to (or taken from) that person, the rest is split equally. */
   | {mode: 'adjusted'; participants: string[]; adjustments: Record<string, bigint>}
 
@@ -61,7 +74,12 @@ export function computeShares(total: bigint, split: SplitInput): Record<string, 
       const subtotals: Record<string, bigint> = {}
       for (const item of split.items) {
         if (item.participants.length === 0) throw new DomainError('UNASSIGNED_ITEM')
-        for (const [id, v] of Object.entries(allocate(item.amount, item.participants.map(id => ({id, weight: 1n})))))
+        const weights = item.participants.map(p => {
+          const w = participantWeight(p)
+          if (!Number.isInteger(w) || w <= 0) throw new DomainError('NON_POSITIVE_WEIGHT')
+          return {id: participantId(p), weight: BigInt(w)}
+        })
+        for (const [id, v] of Object.entries(allocate(item.amount, weights)))
           subtotals[id] = (subtotals[id] ?? 0n) + v
       }
       if (adjustment !== 0n) {

@@ -9,8 +9,6 @@ import {useShouldReduceMotion} from '#/motion/useShouldReduceMotion'
 import {atoms as a, flatten, useBreakpoints, useTheme} from '#/alf'
 import {Portal} from '#/components/Portal'
 
-export {TopBar} from './TopBar'
-
 /**
  * Bluesky's web composer: a dimmed full-window layer with the composer
  * centred near the top, and full screen on phones as Bluesky's native

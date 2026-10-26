@@ -11,7 +11,7 @@ export const ROUTE_PATHS = {
   People: '/',
   Groups: '/groups',
   Analytics: '/analytics',
-  Notifications: '/notifications',
+  Activity: '/activity',
   Profile: '/profile',
   Settings: '/settings',
   SettingsSection: '/settings/:section',

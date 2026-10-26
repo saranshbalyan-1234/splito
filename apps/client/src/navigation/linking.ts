@@ -7,6 +7,7 @@ const TABS: RouteName[] = [
   'People',
   'Groups',
   'Analytics',
+  'Activity',
 ] satisfies (keyof TabParams)[]
 
 function pathsFor(names: RouteName[]) {
@@ -22,14 +23,18 @@ export const linking: LinkingOptions<RootStackParams> = {
   config: {
     initialRouteName: 'Tabs',
     screens: {
-      Tabs: {screens: pathsFor(TABS)},
+      Tabs: {
+        screens: {
+          ...pathsFor(TABS),
+          // Activity was briefly Notifications; those links still land.
+          Activity: {path: 'activity', alias: ['notifications']},
+        },
+      },
       ...pathsFor(
         (Object.keys(ROUTE_PATHS) as RouteName[]).filter(
           name => !TABS.includes(name),
         ),
       ),
-      // Activity became Notifications; old links still land.
-      Notifications: {path: 'notifications', alias: ['activity']},
     },
   },
 }
