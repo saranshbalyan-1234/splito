@@ -1,0 +1,14 @@
+{
+  "hooks": {
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "printf %s \"{\\\"hookSpecificOutput\\\":{\\\"hookEventName\\\":\\\"UserPromptSubmit\\\",\\\"additionalContext\\\":\\\"SPLITO DECISION RULE: if this message contains any product, UI, UX, behaviour or architecture decision (including corrections like it should be X, move Y, keep Z), record it in the same turn in splito/docs/ARCHITECTURE.md section Product & UI rules (owner decisions, binding) plus one Decision log row (date, quote, rule), update any older rule it overrides, and commit with the code change.\\\"}}\""
+          }
+        ]
+      }
+    ]
+  }
+}

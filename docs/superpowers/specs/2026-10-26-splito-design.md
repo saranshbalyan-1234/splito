@@ -87,9 +87,9 @@ Each phase ships a runnable app. Arithmetic, authorization, migrations and offli
 ### v1 — Core
 
 **App shell & navigation**
-- Destinations: People (default home, no redundant title), Groups, Activity, Profile.
+- Destinations: People (default home, no redundant title), Groups, Analytics, Activity; Profile and Settings from the drawer (current shell: ARCHITECTURE § 26.3).
 - Logo returns home and is inactive on home.
-- Mobile: central + button. Desktop: + at the bottom of the sidebar.
+- Add expense: Bluesky FAB on phones, "Add expense" pill in the desktop sidebar (ARCHITECTURE § 26.6).
 - Person detail is a real page with deep link, back and browser history.
 - Responsive phone/tablet/desktop layouts. Native stack transitions, safe areas, keyboard handling.
 
@@ -222,6 +222,8 @@ Source: `docs/research/2026-10-26-gamerun-architecture-takeaways.md`. Adopted: k
 
 ## 5. Decisions made in conversation
 
+The owner's product and UI decisions, with every superseded one resolved, are kept current in `docs/ARCHITECTURE.md` § 26 "Product & UI rules (owner decisions, binding)", which wins over this table. Rows below marked (superseded) are kept for history.
+
 | Decision | Source |
 |---|---|
 | Keep every feature from the handoff spec, including ones the assistant initially proposed cutting | Owner |
@@ -236,13 +238,13 @@ Source: `docs/research/2026-10-26-gamerun-architecture-takeaways.md`. Adopted: k
 | Copy Bluesky AND Expensify code, structure, standards and speed practices (both MIT) | Owner |
 | UI is Bluesky's design copied pixel for pixel; only required replacements (routes, data, logo, licensed icon glyphs, copy, social-only code) | Owner |
 | Bluesky blue palette is the default theme; Splito emerald becomes an optional accent | Owner ("same Bluesky design") |
-| Splito logo is an original split-butterfly, visibly different from Bluesky's mark | Owner asked for a butterfly; the split design is the assistant's call |
-| Logo changed to a symmetrical cat: Lucide "cat" icon (ISC), filled, Bluesky blue, eyes/nose knocked out. Stock icon, so not registrable as a trademark - a bespoke mark can replace it later | Owner ("symmetrical cat", "don't draw", "Lucide", "fill") |
+| (superseded) Splito logo is an original split-butterfly, visibly different from Bluesky's mark | Owner asked for a butterfly; the split design is the assistant's call |
+| (superseded by ARCHITECTURE § 26.11: owner-provided butterfly, dev only, accent-coloured) Logo changed to a symmetrical cat: Lucide "cat" icon (ISC), filled, Bluesky blue, eyes/nose knocked out. Stock icon, so not registrable as a trademark - a bespoke mark can replace it later | Owner ("symmetrical cat", "don't draw", "Lucide", "fill") |
 | (superseded) Logo is the butterfly alone everywhere in the UI (no wordmark, no tile); store app icons keep a plain background because iOS/Android require an opaque square | Owner ("butterfly only"); icon background is a platform rule |
-| Web layout: Bluesky's left sidebar (logged-in LeftNav: icon + label rows, active item bold + filled icon, Add expense pill) plus main content filling the rest of the screen; no right column | Owner ("occupy complete screen", "keep my left sidebar and main content") |
+| (superseded by ARCHITECTURE § 26.17: right column at 1300 px and up) Web layout: Bluesky's left sidebar (logged-in LeftNav: icon + label rows, active item bold + filled icon, Add expense pill) plus main content filling the rest of the screen; no right column | Owner ("occupy complete screen", "keep my left sidebar and main content") |
 | Add expense follows Bluesky exactly: blue pill in the sidebar on desktop/tablet web (Bluesky's "New Post"), Bluesky FAB bottom-right on phone widths (native and web); both open like Bluesky's composer. Replaces the spec's mobile central + | Owner ("use the same flow of that FAB icon", then "go with what Bluesky had") |
-| Profile avatar sits top-left (Bluesky's hamburger spot) on every platform and opens Bluesky's drawer (copied from Drawer.tsx, slides from the left) with the full menu - People, Groups, Analytics, Activity, Profile, Settings, Dark theme, Help/About; no avatar block or Profile row in the web sidebar; no Profile tab in the phone bottom bar | Owner ("move profile icon to top right", then "drawer like Bluesky", "move this to left where the hamburger was") |
-| Header rule set: left = avatar on tab pages / Back on pushed pages / Cancel in composer; centre = page name (cat logo on People; entity name + subtitle on detail); right = at most one basic action + optional overflow menu (per-screen table in AGENTS.md) | Owner direction ("centre page name, right basic action, left back or avatar"); per-screen choices are the assistant's call |
+| Profile avatar sits top-left (Bluesky's hamburger spot) on every platform and opens Bluesky's drawer (on the full desktop sidebar it opens Profile, ARCHITECTURE § 26.4) (copied from Drawer.tsx, slides from the left) with the full menu - People, Groups, Analytics, Activity, Profile, Settings, Dark theme, Help/About; no avatar block or Profile row in the web sidebar; no Profile tab in the phone bottom bar | Owner ("move profile icon to top right", then "drawer like Bluesky", "move this to left where the hamburger was") |
+| (partly superseded by ARCHITECTURE § 26.4: Add expense is a sheet with no header; People shows the current logo mark) Header rule set: left = avatar on tab pages / Back on pushed pages / Cancel in composer; centre = page name (cat logo on People; entity name + subtitle on detail); right = at most one basic action + optional overflow menu (per-screen table in ARCHITECTURE § 26.4) | Owner direction ("centre page name, right basic action, left back or avatar"); per-screen choices are the assistant's call |
 | Activity is a nav destination (pulse icon, unread badge) in the phone bottom bar (People, Groups, Analytics, Activity + FAB) and web sidebar (People, Groups, Analytics, Activity, Settings); no header bell; /notifications redirects to /activity | Owner ("make notification as activity and move to bottom", superseding the header bell) |
 | Bluesky's licensed Central icon glyphs replaced by Lucide; buying a Central licence would make icons pixel-exact | Assistant's call (licence) |
 | Hindi is the second launch language | Assistant's call |
@@ -268,14 +270,14 @@ splito/
   packages/contracts   Versioned request/response schemas (zod/TypeBox), error codes
   packages/sync        Outbox, cursor, conflict handling shared by client and API
   packages/test-fixtures  Demo/test data, never loaded in live mode
-  docs/                REUSE_MAP.md, COMPLETION_MATRIX.md, ADRs, specs
+  docs/                ARCHITECTURE.md, reuse/<stream>.md, COMPLETION_MATRIX.md, ADRs, specs
 ```
 - pnpm workspace (matching upstream). The API runs and is tested with Bun.
 
 ### Bluesky reuse strategy
 - **Fork-adaptation, not wholesale fork.** Bluesky's `src/` is deeply tied to AT Protocol (agent, session, feeds, moderation, lexicons). Keeping it would obstruct Splito. Extract the cohesive cross-platform infrastructure into `apps/client`: navigation setup, `alf` design-system tokens/themes, `components/` primitives (dialogs, menus, buttons, text fields, toggles), bottom-sheet module, gesture/keyboard handling, platform adapters (`*.web.tsx` / `*.native.tsx` pattern), error boundaries, Lingui i18n setup, Expo config/plugins, Metro/Babel config, and the share-intent modules for v2.
 - Remove: AT Protocol, feeds, posts, moderation, chat-DM, Bluesky identity, assets and trademarks.
-- `docs/REUSE_MAP.md` records every upstream path, the pinned SHA, destination path, modifications, license obligations and validation. Upstream dependency versions are checked at the pinned revision, not assumed.
+- `docs/reuse/<stream>.md` (one file per work stream) records every upstream path, the pinned SHA, destination path, modifications, license obligations and validation. Upstream dependency versions are checked at the pinned revision, not assumed.
 
 ### Data
 - Money: integer minor units (`bigint` in Postgres; string over JSON when above 2^53 − 1; bounded in validation). Every financial record stores its currency.

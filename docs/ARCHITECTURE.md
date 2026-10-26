@@ -3,9 +3,9 @@
 How Splito is built, and the rules every change follows. This is the app's memory: when you are about to
 change something, read the section first, and update it in the same change.
 
-- Binding order when rules disagree: owner decisions in `AGENTS.md` > design spec
+- Binding order when rules disagree: owner decisions in § 26 (Product & UI rules) > design spec
   (`docs/superpowers/specs/2026-10-26-splito-design.md`) > Bluesky's code and conventions > this document's
-  rules taken from GameRun.
+  rules taken from GameRun. `AGENTS.md` (coding standards) and `CLAUDE.md` point here.
 - Most rules here come from GameRun's `gamerun-expo/expo-app/ARCHITECTURE.md` (all 2,041 lines read on
   2026-10-26: 407 patterns, 277 adopted, 104 adapted, 12 in conflict, 14 skipped; see § 21 and § 22). The
   first cut is `docs/research/2026-10-26-gamerun-architecture-takeaways.md`, and spec § 4c is the summary.
@@ -33,7 +33,8 @@ them do yet.
    (a root cause, a library quirk, an approach that failed). A PR that leaves this document out of date is
    incomplete. Reason: GameRun's doc stayed useful only because the PR that changed the code changed the doc.
 2. **Format: rule first, then the reason, then where it lives.** One rule lives in one place; other places
-   link to it. A rule every change must follow also gets a one-line summary in `AGENTS.md`.
+   link to it. A coding standard every change must follow also gets a one-line summary in `AGENTS.md`;
+   product and UI rules live only in § 26.
 3. **Every feature entry ends with four lines** (write "None" when there is nothing; never leave one out):
    - *Reads/writes*: store queries, mutations, outbox op types, (M2) routes.
    - *Cost*: store reads per screen, writes and outbox rows per mutation, server requests, new subscriptions
@@ -51,6 +52,14 @@ them do yet.
 7. **Telemetry names are a contract**: a metric name or attribute value set changes only with a dated note in
    § 16.
 8. **Status tags stay true.** Mark a rule [Built] only after checking the code.
+9. **Every owner decision is recorded in § 26 in the same turn it is made, and committed with the change.**
+   This covers product, UI, UX, behaviour, branding, stack and process decisions, including corrections
+   ("it should be there", "move X", "keep Y"). Rewrite the rule in its § 26 topic so only the current truth
+   remains (never append a rule that contradicts an older one), update every other place that restates it,
+   and add one row to the § 26.19 decision log (owner's words, decision, rule, what it replaced). Never record
+   owner decisions in `AGENTS.md`. A `UserPromptSubmit` hook in the repo's `.claude/settings.json` injects
+   this reminder on every prompt. Reason: owner, 2026-10-26: "make sure this file updates on its own,
+   whenever there is any such decision".
 
 ---
 
@@ -109,7 +118,7 @@ Rules:
   | Menu, overflow | `#/components/Menu` |
   | Toast, undo | `#/components/Toast` |
   | Long list | `#/view/com/util/List` |
-  | In-page tabs | Bluesky Pager + `TabBar` (owner rule 12) [Partial: `components/TabBar.tsx`, no Pager yet] |
+  | In-page tabs | Bluesky Pager + `TabBar` (§ 26.9) [Partial: `components/TabBar.tsx`, no Pager yet] |
   | Search input | `#/components/forms/SearchInput` |
   | Text field | `#/components/forms/TextField` (no raw `TextInput`, A-002) |
   | Empty state | `#/view/com/util/EmptyState` |
@@ -166,12 +175,12 @@ Rules:
 
 ## 3. Responsive shell and navigation (Bluesky)
 
-The shell is Bluesky's, per owner rules 1-4, 12 and 13 in `AGENTS.md` (drawer from the top-left avatar,
-header slots, Activity as a destination, LeftNav, FAB, animated tab switches). [Built] in `view/shell/`,
+The shell is Bluesky's, per § 26.3-26.9 and § 26.17 (drawer from the top-left avatar, header slots,
+Activity as a destination, LeftNav, right column, FAB, sheets, animated tab switches). [Built] in `view/shell/`,
 `components/Layout/`, `navigation/Navigation.tsx`.
 
-- **One `navigationItems` array feeds the bottom bar, the web sidebar and the drawer**, and a test pins owner
-  rule 3's order. Nav items never hide or reorder while data loads; only badges (Activity unread) appear
+- **One `navigationItems` array feeds the bottom bar, the web sidebar and the drawer**, and a test pins § 26.3's
+  order. Nav items never hide or reorder while data loads; only badges (Activity unread) appear
   once data is there. [Planned] (A-027)
 - **Every Back control calls `goBack(navigation, fallbackRoute)`**, so a page opened from a deep link or a
   refresh still has somewhere to go. [Partial] `Layout.Header.BackButton` falls back to People; screens call
@@ -183,8 +192,10 @@ header slots, Activity as a destination, LeftNav, FAB, animated tab switches). [
   (`screens/People/index.tsx` uses it today; review in A-028). No second phone/desktop rule.
 - **Animated bottom tabs must land at rest:** after a switch the focused tab's style is the identity. An e2e
   test taps four tabs within 300 ms and asserts the last is visible (A-027).
-- **The FAB has one suppression rule list**: hidden on Settings and its sections, Profile, onboarding, any
-  screen with a pinned footer, and while the keyboard shows; decided by the focused screen, not by mount.
+- **The FAB has one suppression rule list**: shown only at phone widths on screens with no Back (§ 26.6), so
+  hidden on Settings and its sections, Profile and every pushed page; also hidden on onboarding, any screen
+  with a pinned footer, while a sheet is open and while the keyboard shows; decided by the focused screen,
+  not by mount.
   Tab lists pad their bottom by the FAB clearance.
 - **No navigation writes on mount.** Defaults (Analytics period/currency, list filters, Group tab) are read
   when the param is absent; params are written only on a tap or Apply (A-002 counter: `setParams` in
@@ -200,8 +211,9 @@ header slots, Activity as a destination, LeftNav, FAB, animated tab switches). [
 
 ## 4. Dialogs and FormSheet
 
-Every form sheet uses owner rule 7's layout through `components/FormSheet.tsx` (title left, round X top
-right, Cancel + primary pinned at the bottom on phones; centred modal with footer bottom right on web).
+Every form sheet uses § 26.8's layout through `components/FormSheet.tsx` (title left, round X top right,
+Cancel + primary pinned at the bottom; a bottom sheet with drag-to-close on phones, a centred popup with the
+footer bottom right on rail and desktop). On phones every modal, prompts included, is a bottom sheet.
 [Built] header and footer.
 
 - **Never render React Native `Modal` directly** (a transparent Modal still swallows taps on iOS). [Built]:
@@ -228,7 +240,7 @@ right, Cancel + primary pinned at the bottom on phones; centred modal with foote
   FocusScope does; patch if not). Tab/Shift+Tab stay inside, Escape closes (A-035 checks this).
 - **Footer geometry:** bottom padding `max(safe-area bottom, a.pb_lg)`; controls side by side share one
   height; footer buttons share the row and ellipsize, never wrap (checked at 320 px in the longest locale).
-- **Save is disabled until valid (owner rule 7), and the reason is always visible** just above the footer
+- **Save is disabled until valid (§ 26.8), and the reason is always visible** just above the footer
   ("Pick who paid", "EUR 3 left to assign"). Field errors appear after the first blur or a save attempt.
 - **The primary button never swaps under the finger:** success sheets and toasts show their call-to-action
   only once its target is known.
@@ -379,7 +391,7 @@ The spec's labels are `Saved on this device`, `Waiting for connection`, `Syncing
   app label so they never disagree: "Saved on this device" while the oldest op is under 30 s old and
   online; waiting with a count once older; offline with a count at once when offline; "Needs attention"
   when any op is refused or in conflict; a brief all-saved state after a drain. All surfaces (drawer
-  header, LeftNav ProfileCard, Settings, per-row status, web tab title prefix "● 3 unsynced - ") are sinks
+  header, Profile, Settings, per-row status, web tab title prefix "● 3 unsynced - ") are sinks
   of that one follower.
 - A status line reserves its height, so rows never jump.
 - **Loops rest.** The sync indicator never loops while waiting or offline (static icon + text); a spinner
@@ -811,9 +823,8 @@ is no telemetry vendor and no root error boundary.
 
 ## 17. Performance budgets
 
-Budgets (owner rule 10 + `AGENTS.md`): cold start to interactive People < 1.5 s on a mid-range phone (web
-LCP < 1.5 s cached); tap feedback < 100 ms; local save p95 < 100 ms; 60 fps (120 ProMotion) transitions and
-lists of 1,000 rows; no JS long task > 50 ms while typing, scrolling or animating; bundle growth justified.
+The budgets are owner rules and live in § 26.10 (cold start < 1.5 s, tap feedback < 100 ms, local save
+p95 < 100 ms, 60/120 fps, no JS long task > 50 ms). This section holds the engineering rules that meet them.
 Numbers go in `docs/COMPLETION_MATRIX.md` with a baseline and an after on the same flow. [Partial] budgets
 are written; nothing records them automatically (A-037).
 
@@ -889,7 +900,7 @@ Rules:
   Settle up), person (balance per currency).
 - **Per-feature Playwright spec** seeded through a test-only store fixture (no server): both themes, 320,
   390, 768/800, 1280 and 1440 px; empty, offline, refused and conflict states; fails on any console error or
-  horizontal overflow; geometry checks for owner rules (title centred, at most one right action, footer
+  horizontal overflow; geometry checks for § 26 rules (title centred, at most one right action, footer
   pinned); screenshots to a gitignored `apps/client/qa/<feature>/`. A stale selector is fixed in the spec,
   never by reverting UI. Release e2e runs on `expo export -p web` output.
 - **Every wait is bounded** (Playwright and bun): a timeout fails the test.
@@ -926,14 +937,14 @@ Rules:
 | Web token in `localStorage` | httpOnly cookie + CSRF | Spec security rule |
 | Sentry identity = email and name; replay unmasked | Opaque ids; replay off or masked | Privacy; app used before signup |
 | ESLint, not run in CI | Oxlint in CI | Speed; takeaways |
-| Filters drawer applies each choice at once | Apply button (owner rule 8c); keep the active dot and options from loaded data | Owner rule |
-| Account control top right, drawer title centred, stacked dialog buttons, tapping the current tab does nothing | Owner rules 1, 2, 7; re-tap scrolls to top | Owner rules, Bluesky |
-| Save always pressable, errors under fields | Save disabled until valid (owner rule 7), reason always visible | Owner rule; GameRun's lesson kept |
+| Filters drawer applies each choice at once | Apply button (§ 26.12); keep the active dot and options from loaded data | Owner rule |
+| Account control top right, drawer title centred, stacked dialog buttons, tapping the current tab does nothing | § 26.4, § 26.8; re-tap scrolls to top | Owner rules, Bluesky |
+| Save always pressable, errors under fields | Save disabled until valid (§ 26.8), reason always visible | Owner rule; GameRun's lesson kept |
 | Hidden features commented out on screens | One flag predicate, entry point hidden | Commented code drifts past lint, types and tests |
 | Latest unsent commit replaces the queued one | Financial ops never coalesce | Each is history others see |
 | Bad stored values clamped on read | Money never clamped; malformed rows quarantined | Money rules |
 | Another person's data never persisted | Member ledgers persisted; non-member data in memory only | Offline-first |
-| RN Animated native driver for tap motion | Reanimated (owner rule 10) | Owner rule, Bluesky |
+| RN Animated native driver for tap motion | Reanimated (§ 26.10) | Owner rule, Bluesky |
 | Presses through gesture-handler taps | Bluesky Button/Pressable; revisit only if dropped taps are measured | Bluesky first |
 | QA token committed in the architecture doc | Never commit tokens | Security |
 
@@ -997,7 +1008,7 @@ Reset to default + sync scope decided + read path before first paint if it chang
 Rules that belong to one feature area rather than a layer.
 
 **Lists (People, Groups, Activity).**
-- Local search filters on every keystroke (owner rule 9); search and Filters buttons hide while the list is
+- Local search filters on every keystroke (§ 26.12); search and Filters buttons hide while the list is
   empty; the empty state does not repeat the header's action. M2 server lookups (find a user) are debounced,
   keep previous results and run only while their sheet is open.
 - Programmatic scroll or an initial pager page is not a user edit: it never changes a filter or fires
@@ -1037,3 +1048,470 @@ Read-only balance links never render write UI.
 failure is one issue per launch. If live sync (SSE/WebSocket) is added, N connections that never went live
 raise one issue and polling pull stays the fallback. Local reminders respect dismissal; web notification
 permission is asked only from a tap.
+
+
+---
+
+## 26. Product & UI rules (owner decisions, binding)
+
+Everything the owner has decided about the product, its UI and how work is done, consolidated to the current
+truth. These rules win over everything else in this document, the design spec and Bluesky's defaults (binding
+order at the top), and over any task text that says otherwise. Where a decision replaced an earlier one, only
+the current rule is written here; the history is in the decision log (§ 26.19). Every decision so far is dated
+2026-10-26.
+
+Format: **rule**, then *Why* (the owner's words), then *Where* (paths on `ui/preview-latest` at `0546097`, the
+newest UI branch; the main checkout's `m1-foundation` has no client code). Widths: **phone** = native, or web
+under 800 px; **rail** = web 800-999 px (Bluesky's minimal LeftNav); **desktop** = web 1000 px and up (full
+labelled sidebar); **wide** = web 1300 px and up (Bluesky `gtTablet`, right column shows).
+
+### 26.1 Principles and process
+
+- **Bluesky first: copy, don't write.** Before writing any code (component, hook, screen, layout, list,
+  dialog/sheet, menu, tabs/pager, search input, settings row, toggle, avatar, badge, toast, animation, gesture,
+  haptics, keyboard handling, navigation, storage, i18n, error boundary, test helper, e2e pattern, build
+  config), search the Bluesky clone at `/Users/saransh/Desktop/Splito-Handoff/upstream/social-app` (`src/`,
+  `modules/`, `__e2e__/`, `jest/`, config files) and copy the equivalent, changing only what is required
+  (routes, data, logo, licensed icon glyphs -> Lucide, copy, social-only code). Write new code only where
+  Bluesky has none (money, splits, settlement: `packages/domain`), following the nearest Bluesky pattern.
+  Every report has a "Bluesky search" section (what was searched, what was copied, what was written from
+  scratch and why). Reviewers fail work that re-implements something Bluesky has. *Why:* "always take code
+  from Bluesky because it has the best code, don't write code on your own; whatever you want to build, check
+  in Bluesky". *Where:* attribution header and reuse row (`AGENTS.md` § Attribution, `docs/reuse/<stream>.md`).
+- **The UI is Bluesky's design, pixel for pixel;** only the required replacements change (routes, data, logo,
+  licensed icon glyphs, copy, social-only code). When a UI behaviour is undecided, do what Bluesky does.
+  *Why:* "I need same Bluesky design", "every pixel to pixel same with Bluesky and don't create new, just copy
+  paste", "go with what Bluesky had".
+- **Copy Expensify too, and copy practice, not just looks:** structure, coding standards, code practice and
+  speed come from Bluesky and Expensify App (both MIT); Bluesky wins for client code. Their licensed artwork,
+  icons and logos are never copied. *Why:* "And Expensify as well", "make sure to copy not just the design but
+  the code practice", "speed and all", "the structure", "coding standards". *Where:* `AGENTS.md`.
+- **Everything customizable.** Every user-facing choice the app makes has a setting with a sensible default,
+  and every surface that shows a collection (cards, tabs, lists, charts) can be shown, hidden, reordered and
+  restyled; dialog and form internals stay fixed. A new choice costs one preferences-registry entry plus its
+  Settings row (§ 24). *Why:* "remember every single thing to be customizable" (scope reading is the
+  assistant's, spec § 3a). *Where:* `packages/sync/src/preferences.ts`; spec § 3a has the v1 vs v2/v3 list.
+- **Fast and animated, always:** no feature is done until it meets § 26.10. *Why:* "consider speed and
+  animations always"; "make sure things are smooth like Bluesky"; "animations can be added like Expensify".
+- **Best in class, premium, never basic.** Splito aims to beat every competing app on features, looks and
+  simplicity. Previews show seeded, populated screens (demo data in dev/e2e builds only), never empty shells.
+  *Why:* "make sure this is best in terms of features, looks, simplicity"; "this is way too basic like 10th
+  class app"; "make it look professional not some third grade project".
+- **Don't ask; decide.** The owner has delegated every open choice: make the call, record it (spec decision
+  table or here), deliver the final version, and do not interrupt with questions. *Why:* "don't ask me
+  anything, take your own decisions, give final version"; "do what you want to do, take own decisions, don't
+  disturb me".
+- **Screenshots after every UI change the owner asks for:** populated light and dark (Dim), phone and
+  desktop, sent in the same turn or as soon as they exist, work in progress labelled honestly. During an
+  autonomous run the owner asked not to be disturbed: send one consolidated set at the end instead. *Why:*
+  "keep sending me SS on my every update"; "don't disturb me".
+- **Record every owner decision here in the same turn** (§ 0 rule 9). *Why:* "make sure this file updates on
+  its own, whenever there is any such decision"; "make sure to add whatever we discussed so far". *Where:*
+  `.claude/settings.json` UserPromptSubmit hook reminds on every prompt.
+- **Large work fans out** into parallel throwaway worktrees (§ 20) with judges and review. *Why:* "Fanout".
+
+### 26.2 Product scope, platforms and backend
+
+- **Keep every feature of the handoff spec, plus the agreed USPs and everyday features;** never cut scope to
+  simplify. The master feature list is `docs/BACKLOG.md`, built batch by batch. *Why:* "need all what you
+  dropped"; "think of more features if you want to add"; "think of all the features it might have and store
+  them and keep building one by one". *Where:* spec §§ 1 and 4, `docs/BACKLOG.md`.
+- **Analytics with graphs is required** (§ 26.16). *Why:* "analytics also needed, with graphs and all".
+- **Multi-language: English is the default; Hindi is the second launch language** (Hindi is the assistant's
+  call). Indian number grouping under Hindi and en-IN. *Why:* "multi language support", "default eng". *Where:*
+  § 7, `locale/`.
+- **The user sets their own timezone** (Settings > Regional); each expense keeps its local date and IANA tz.
+  *Why:* "set your timezone". *Where:* spec § 5, preferences registry.
+- **All platforms (iOS, Android, web/PWA) get the full polish: splash, branding, icons.** *Why:* "for all
+  platforms: splash, branding etc". *Where:* § 8, `apps/client/scripts/brand.ts`.
+- **Backend comes after the UI.** Front-end batches first; the server is Fastify on Bun with **Postgres**.
+  *Why:* "let's build backend later once we are done with UI"; "use Postgres". *Where:* `docs/RESUME.md`, § 9.4.
+- **GameRun's Expo architecture is adopted where it fits** (§§ 21-22 record the calls). *Why:* "can you also
+  look into architecture md file from GameRun expo".
+
+### 26.3 Shell and navigation
+
+- **Bluesky's shell on every width.** Web fills the whole screen: left sidebar plus main content (plus the
+  right column when wide, § 26.17). *Why:* "on web it should occupy complete screen", "the navigation should
+  be like Bluesky", "for web, keep my left sidebar and main content".
+- **Destinations:** phone bottom bar = People, Groups, Analytics, Activity, plus the FAB (§ 26.6). Rail and
+  desktop sidebar = People, Groups, Analytics, Activity, Settings, plus the "Add expense" pill (§ 26.5). The
+  drawer (§ 26.7) lists People, Groups, Analytics, Activity, Profile, Settings. People is home. One
+  `navigationItems` array feeds all three (§ 3). Profile is never a bottom-bar tab. *Why:* "make notification
+  as activity and move to bottom". *Where:* `view/shell/bottom-bar/`, `view/shell/desktop/LeftNav.tsx`,
+  `navigation/Drawer.tsx`.
+- **Activity's route is `/activity`; `/notifications` redirects to it.**
+- **Pushed pages** (Person, Group, Settle, Expense, Profile, Settings and its sections, Add friend, Create
+  group) show Back in the header; top-level pages (People, Groups, Analytics, Activity) show the avatar. This
+  one distinction also decides the FAB (§ 26.6).
+- **The logo returns home and is inactive on home** (spec).
+- **Page background (`html`/`body` on web) always follows the active theme** (no black band under Dim
+  content).
+- Main-tab switch animation and tab icons: § 26.9.
+
+### 26.4 Header
+
+One rule set for every screen, built from Bluesky `Layout.Header` components. *Why:* "think of header, when to
+show what: centre may be page name, right maybe some basic action, and left may be back or avatar". *Where:*
+`components/Layout/Header/`, `components/HeaderAvatar.tsx`.
+
+- **Left:** the avatar (testID `header-avatar`) on top-level pages at every width, desktop included; Bluesky
+  `BackButton` with `goBack(navigation, fallback)` on pushed pages. On phone and rail the avatar opens the
+  drawer; on desktop (full sidebar visible) it opens Profile, labelled "Open profile". No avatar on the right
+  and no avatar dropdown menu. *Why:* "it should open the drawer like Bluesky where all menu appears like the
+  hamburger", "and move this to left, where hamburger icon was there in Bluesky"; "on desktop when sidebar is
+  opened completely don't open sidebar on avatar click".
+- **Centre:** the page name, centred on all platforms (`TitleText`). People shows the logo mark (§ 26.11)
+  instead of a "People" title. Person and Group show the entity name with a `SubtitleText` ("Trip · 5
+  members"); Expense shows its title. Empty slots keep their width so the title stays centred.
+- **Right:** at most one basic action (Bluesky header icon button), optionally followed by a Bluesky "..."
+  overflow Menu. No bell and no other header icon: anything else lives in the page body (Analytics' chart /
+  table toggle sits in its filter row). Body primary actions are not repeated in the header. *Why:* "what's
+  the second icon on header left of avatar".
+
+  | Screen | Right slot |
+  |---|---|
+  | People | Add friend |
+  | Groups | Create group |
+  | Analytics | Export CSV |
+  | Activity | Mark all read |
+  | Person | Settle up + overflow (Edit, Delete) |
+  | Group | Settle up + overflow (Edit group, Members, Payment rules) |
+  | Expense | Edit + overflow (Delete) |
+  | Settings, Profile, Settle | none |
+
+- **Behaviour:** sticky, Bluesky bottom border; on phones it hides on scroll down and returns on scroll up
+  (Bluesky minimal shell). On rail and desktop it sits at the top of the main content, separate from the
+  sidebar.
+- **Add expense and Edit expense are sheets (§ 26.8), so they have no header;** no header anywhere carries a
+  "Cancel" text button or a "Save" pill.
+
+### 26.5 Left sidebar (rail and desktop)
+
+Bluesky's `LeftNav`, copied as closely as possible. *Why:* "you need to improve left sidebar, it doesn't look
+good"; "the left sidebar looks bad on desktop". *Where:* `view/shell/desktop/LeftNav.tsx`.
+
+- **It holds only three things:** the logo mark, the nav items, the "Add expense" pill. No avatar or
+  `ProfileCard`, no "Splito" wordmark, no recent groups or transactions (those live in the right column,
+  § 26.17), no footer links. *Why:* "remove the avatar from sidebar"; "remove label from logo".
+- **Logo:** the mark only (§ 26.11), 40 px, horizontally centred in the sidebar column, vertically aligned with
+  the content header row (same top padding and height as `Layout.Header`). *Why:* "make the branding in
+  centre".
+- **Nav items:** Bluesky `NavItem` exactly (24 px icon, `text_xl`, active = bold + filled icon,
+  `rounded_full` hover background, Bluesky badge/dot): People, Groups, Analytics, Activity, Settings. The
+  sliding active indicator (§ 26.9) sits beside the active item.
+- **Add expense:** Bluesky `ComposeBtn` as a large full-width pill with a plus icon; it opens the Add expense
+  popup (§ 26.8). *Why:* "go with what Bluesky had".
+- **Geometry:** widths and paddings from Bluesky's `LEFT_NAV_STANDARD_WIDTH` / `LEFT_NAV_MINIMAL_WIDTH`;
+  hairline right border; sticky full height; scrolls on its own when tall.
+- **Rail (800-999 px):** Bluesky minimal mode: mark, icons only, round compose button.
+
+### 26.6 FAB
+
+- **The Bluesky FAB shows only at phone widths, and only on screens whose header has no Back** (People,
+  Groups, Analytics, Activity). It is hidden on every pushed page (Profile and Settings included), while a
+  sheet is open, while the keyboard shows, and on onboarding (§ 3's suppression list). Rail and desktop have
+  no FAB; the sidebar pill adds expenses there. *Why:* "fab icon to show everywhere on the screen from nav
+  bar, basically if back button is not there show it"; "home and activity also should show the fab"; "the fab
+  icon should not be visible on desktop as we have it on sidebar".
+- **Decided once, in the shell, from the header's left-slot state** (no per-screen flags). It keeps Bluesky's
+  hide on scroll down / show on scroll up, and lists pad their bottom by the FAB clearance.
+- **Tapping it opens Add expense as a bottom sheet** (§ 26.8). On a Group page (pushed, no FAB) "Add expense"
+  lives in the body and pre-selects the group. *Why:* "use the same flow of that FAB icon".
+- *Where:* `components/AddExpenseFAB.tsx`, `view/com/util/fab/`.
+
+### 26.7 Drawer (side drawer)
+
+- **Bluesky's `Drawer.tsx`, copied:** slides in from the LEFT with Bluesky's animation, layout, spacing, rows,
+  header block and footer; closes on scrim tap and swipe (native, Gesture Handler); focus trap and Escape on
+  web. testID `drawer`. *Why:* "it should open the drawer like Bluesky where all menu appears like the
+  hamburger".
+- **Opened by** the header avatar on phone and rail (on desktop the avatar opens Profile, § 26.4).
+- **Contents:** header with avatar, name, sync status ("Saved on this device") and a link to Profile; items
+  (icon + label) People, Groups, Analytics, Activity, Profile, Settings; a Dark theme toggle; Help and About;
+  "Sign in" or "Log out" in the footer (§ 26.15).
+- *Where:* `navigation/Drawer.tsx`, `state/shell/drawer-open.tsx`.
+
+### 26.8 Sheets, popups and prompts
+
+- **On phones every modal is a bottom sheet that closes when dragged down; rail and desktop keep centred
+  popups.** This covers form sheets (Add expense, Edit expense, Add friend, Create group, Edit group,
+  Members, Payment rules, Record payment), settings editors (accent, categories, timezone, ...), pickers
+  (currency, date, category, people), filters, menus, and **prompts and confirmations** (Discard changes?,
+  Log out?, Delete?, Reset). The owner calls these "drawers"; they are not the side drawer of § 26.7. *Why:*
+  "all modal in mobile should be drawers I said". *Where:* `components/Dialog`, `components/FormSheet`,
+  `components/Prompt.tsx`.
+- **Form sheet layout (one shared `FormSheet` on Bluesky's Dialog).** Phone: top bar with the title on the
+  LEFT and a round close button with a Lucide `X` at the TOP RIGHT (30-32 px circle `t.atoms.bg_contrast_50`,
+  label "Close", testID `sheet-close`), no "Cancel" in the top bar; a footer pinned at the bottom above the
+  keyboard (react-native-keyboard-controller sticky footer) and the safe area, with two buttons filling the
+  width: "Cancel" (secondary, `sheet-cancel`) left, the primary ("Save", "Save expense", "Add friend",
+  "Create group", `sheet-save`) right, disabled until valid; any live readout ("EUR 3 left to assign") sits
+  just above the footer. Rail/desktop: a centred popup (Bluesky web Dialog, scrim, max width ~600, focus
+  trap, Escape closes), X at the top right, footer buttons at the bottom right: Cancel, then Save. *Why:*
+  "the cancel button to be a cross on top right like iPhone native, and save button on bottom"; "all the
+  drawers to have cross button like this and cancel and save button at bottom, drawers become modal/popup on
+  web, with a cross button on top right and save and cancel on bottom right".
+- **Pickers** show only the X; a selection applies at once; no footer.
+- **Prompts** keep Bluesky `Prompt`'s content and buttons; on phones they present as a bottom sheet like
+  everything else (Bluesky's native Prompt already does; phone-width web must too). Dragging a prompt down is
+  Cancel; a destructive action never runs from a drag.
+- **Add expense and Edit expense are form sheets on every width:** a bottom sheet on phones (drag handle,
+  snaps to full height when the form needs it, keyboard-aware), the centred popup on rail and desktop. Never
+  a pushed page or a full-screen modal. *Why:* "when I click on add expense, it should open a sheet from
+  bottom".
+- **Drag to close:** every bottom sheet closes when dragged down past ~30 % of its height or flicked down
+  (velocity threshold), from the handle, the top bar, or the content when it is scrolled to the top. With
+  unsaved changes the sheet springs back and asks "Discard changes?" (itself a prompt, so a bottom sheet on
+  phones; on iOS it follows § 4's one-native-modal rule). Closing by X, Cancel or scrim asks the same. The
+  threshold logic is unit-tested; drag-to-close has an e2e check where the runner supports gestures. *Why:*
+  "and should be closable if I drag it down".
+- **Every sheet and popup animates** (§ 26.10). *Why:* "all the sheets should have animation".
+
+### 26.9 Tabs and pager
+
+- **In-page tabs are Bluesky's Pager, never a segmented control,** and every set looks like Activity's "All /
+  From others": one shared component copied from Bluesky `src/view/com/pager/` (Pager on
+  react-native-pager-view with swipe between pages, TabBar with the animated sliding underline,
+  scroll-to-selected, haptic selection tick, `PagerWithHeader` where a header block sits above the tabs); web
+  uses Bluesky's web pager. Group: Expenses / Balances / Members; Activity: All / From others; Analytics,
+  Person and Settings if tabbed. *Why:* "there is no animation when switching tabs, but it's there in Bluesky,
+  why it's not there". *Where:* `components/TabBar.tsx` (Pager not copied yet, § 1 table).
+- **Main bottom-bar / sidebar switches are animated** (owner override of Bluesky's instant switch): a
+  direction-aware horizontal slide (from the right when moving to a tab on the right, else from the left;
+  native ~220 ms via a bottom-tabs `sceneStyleInterpolator` + `transitionSpec`, web ~200 ms transform of the
+  content area). A small indicator under the active bottom-bar icon / beside the active sidebar item springs
+  to the new tab like the Activity underline; the tapped icon does a small spring scale pop while filled and
+  stroke states cross-fade, with a Bluesky haptic tap; the unread badge springs in on count change; re-tap
+  scrolls to top. No swipe between main tabs (it would fight the drawer edge-swipe and row swipe actions).
+  Content is usable at once; lazy tabs stay mounted after the first visit. Under reduced motion or motion
+  `off`, no animation. *Why:* "need animations while switching bottom navigation", "tab navigation like in
+  activities tab". *Where:* `navigation/Navigation.tsx`, `view/shell/bottom-bar/`.
+
+### 26.10 Motion and speed
+
+*Why:* "consider speed and animations always"; "smooth like Bluesky"; Expensify "have some animations on
+pages". § 17 holds the engineering rules that meet these budgets.
+
+- **Speed budgets (measured and recorded in every PR/report):** cold start to an interactive People list
+  < 1.5 s on a mid-range phone (web: LCP < 1.5 s on a cached load); visual feedback within 100 ms of any tap;
+  local save p95 < 100 ms; 60 fps (120 on ProMotion) transitions with no dropped frames on lists of 1,000
+  rows; no JS long task > 50 ms while typing, scrolling or animating; no full-ledger recompute per render;
+  lists virtualised with Bluesky `List`; images and Lottie lazy-loaded; bundle growth justified. Any change
+  touching lists, navigation or totals is profiled (Chrome Performance on web; React Native DevTools / Hermes
+  profiler on a simulator) with a baseline and an after, numbers in `docs/COMPLETION_MATRIX.md`.
+- **Animation on every surface, UI thread only** (Reanimated worklets, no JS loops): native stack push/pop and
+  swipe-back; sheets and popups; list rows enter/exit/reorder (`LinearTransition` / `FadeInDown`); press
+  feedback (`PressableScale`) on every tappable row, card and button; tab switches (§ 26.9); expanding search;
+  filter dot; `AnimatedAmount` whenever a money total changes; skeleton shimmer while loading; success check +
+  haptic on save and settle; drawer open/close with scrim.
+- **Expensify-style page illustrations in v1:** each main page (People empty state, Groups, Activity,
+  Profile/Settings sections, Analytics) has an animated Lottie header or empty-state illustration, original
+  to Splito; Lottie never drives navigation. *Where:* spec § 4 "Motion & feel", `apps/client/scripts/lottie.ts`.
+- **Sheets and popups:** phone sheets slide up with Bluesky's bottom-sheet spring, the scrim fades, the handle
+  follows the finger, a drag-down dismiss tracks the gesture and springs closed or back, snapping between
+  heights animates, the keyboard moves the footer. Web popups fade and scale 0.96 -> 1 (~180 ms), scrim fades,
+  closing reverses. Pickers inside a sheet push/slide; content height changes animate. Save shows a check +
+  haptic before the sheet closes. No sheet appears or disappears without motion.
+- **Reduced motion and the `motion` preference (full / reduced / off)** are honoured by every animation;
+  under `off` sheets open and close instantly with a fade only.
+
+### 26.11 Theme, accent and logo
+
+- **Default theme is Bluesky's:** Bluesky blue accent (`#006AFF`); Splito emerald is an optional accent.
+  *Why:* "same Bluesky design".
+- **Dark mode defaults to ALF `dim`.** A `darkTheme` preference (`dim` default | `dark`) sits under Appearance
+  as "Dark mode style: Dim / Black", as in Bluesky; `useThemePrefs()` returns it and `useColorModeTheme` uses
+  it. Screenshots and judges use Dim for "dark". *Why:* "by default keep the dim mode in dark".
+- **The logo is the owner-provided butterfly SVG, for development only:** `assets-owner/logo-owner-provided.svg`
+  (single path, viewBox 0 0 600 535). It lives in ONE source file and ONE component (`components/brand/Logo.tsx`
+  via react-native-svg) so a replacement is one change, and it is used everywhere: sidebar, People header,
+  splash, favicon, app icons (brand kit generated by `apps/client/scripts/brand.ts`). It is the mark alone: no
+  "Splito" wordmark or label, no tile, and Bluesky's name appears nowhere. *Why:* "I have a logo.svg file in
+  downloads, use that", "just use that" (after being told it is Bluesky's trademark); "use it everywhere, even
+  for the favicons"; "remove label from logo". Release blocker: § 26.18.
+- **In the UI the mark is drawn in the current accent (`t.palette.primary_500`) on every theme and surface**
+  (light, Dim, Black, sidebar, header): changing the accent recolours the logo everywhere. Static assets
+  (favicon, app icons, native splash) keep the SVG's default blue (`#1185fe`). *Why:* "changing accent color
+  should change logo color as well" (replaces "keep it blue always").
+- **Icons are Lucide** (Bluesky's licensed Central glyphs are not copied; assistant's call). Bluesky's
+  logos, artwork and trademarks are not shipped except the dev-only mark above.
+
+### 26.12 Lists: overview, search, filters, balances
+
+*Why:* "add balances option in group as well, and filters option in friends, also add option for include
+group there"; "add overview in both friends and groups, with search and filters as well, search icon only,
+expands once I click". *Where:* `screens/People`, `screens/Groups`, `screens/Group`, `components/ListToolsHeader.tsx`.
+
+- **People (Friends) and Groups both start with an "Overview" section:** one card per currency, "You are owed"
+  / "You owe" (never summing currencies), a counts line ("6 friends - 2 settled" / "3 groups - 1 settled"),
+  and an "Analytics >" link. Each group row shows your balance in that group per currency.
+- **The list section header row** ("Friends 6" / "Groups 3") carries two icon buttons on its RIGHT: search
+  (Lucide `Search`, testID `list-search`) and Filters (`list-filters`, with a dot/count when non-default
+  filters are active). Both hide while the list is empty (§ 25).
+- **Search is an icon until tapped,** then expands (Reanimated width/opacity, reduced-motion aware) into a
+  full-width Bluesky `SearchInput` in the same row, autofocused, with an X that collapses and clears. Results
+  filter live: friends by name, groups by group or member name; no match shows Bluesky's empty state "No
+  matches for '...'".
+- **Filters open a form sheet (§ 26.8) with Cancel + Apply; changes apply only on Apply,** and drive both the
+  overview cards and the list. Filters and search combine. Friends: "Include groups" (default from the
+  `includeGroupsDefault` preference, on), currency (All / each present), show (All / Owes you / You owe /
+  Settled), sort (Amount / Name / Recent, default from `peopleSort`). Groups: type (Trip / Home / Couple /
+  Other), status (Active / Archived), currency, show (All / You are owed / You owe / Settled), sort (Recent
+  activity / Name / Amount). The Person page's history obeys the same Include groups choice.
+- **Group page:** Pager tabs Expenses / Balances / Members (§ 26.9). Balances shows each member's net per
+  currency, a "who owes whom" list (pairwise, from the direct-mode settlement plan) and "Settle up".
+  Payment rules are reached from the header overflow (§ 26.4). testIDs `friends-filters`, `groups-balances`,
+  `group-tab-balances`.
+
+### 26.13 Expenses and itemize
+
+*Why:* "an expense can be one expense or with multiple expense, like dinner $100, but can be divided into
+dishes etc and each item can be assigned to each in split"; "in itemize don't show default tax tip discount"
+-> "let it be" -> "it should be there"; "but add the percentage option as well". *Where:*
+`components/split/`, `packages/domain`.
+
+- **An expense is one amount or a bill of items** (the Itemize split). Each item has a name, an amount and who
+  had it. Tapping a person's chip again adds a portion (x2, x3; long-press or right-click resets), so one item
+  can be shared unequally (2 of 3 beers); each item has an "Everyone" shortcut; items reorder and delete.
+- **Domain:** `SplitInput` item participants may carry integer weights (`participants: Array<string | {id:
+  string; weight: number}>`, a plain string = weight 1), allocated exactly with `allocate` (bigint, stable
+  tie-break). Bun tests: conservation, 2-of-3 portions, tax pro-rata with weights.
+- **Tax, tip, service charge and discount are visible by default** (the owner withdrew "don't show" with "it
+  should be there") and each has an amount / % toggle (segmented "INR | %"), remembered per kind in the
+  `itemizeAdjustmentModes` preference (defaults: tax %, tip %, service %, discount amount). Percentages take up
+  to 2 decimals and are stored as integer basis points. Order: discount on the items subtotal; then service
+  charge and tax on the discounted subtotal; then tip on the discounted, pre-tax subtotal (said in the UI help
+  text). Percent-to-money conversion happens only in `packages/domain` (bigint, round half away from zero to
+  the currency's minor unit; tests include JPY scale 0, BHD scale 3, 18 % GST on INR, 12.5 % service, 15 %
+  discount), then each adjustment is spread pro rata over each person's weighted item subtotal.
+- **The "remaining to assign" readout and the total stay exact;** Save is disabled until everything is
+  assigned.
+- **Expense detail lists every item with its people and portions, each person's resulting share, and
+  adjustment lines** ("Tax 18% - INR 216.00").
+
+### 26.14 Activity
+
+*Why:* "make notification as activity and move to bottom". *Where:* `screens/Activity.tsx`,
+`components/activity/`.
+
+- **Activity is a navigation destination, not a header bell** (§ 26.3): Lucide `Activity` (pulse) icon,
+  Bluesky's unread badge on the nav item (bottom bar, sidebar), counting unread items from others. testIDs
+  `tab-activity`, `screen-activity`.
+- **Header:** avatar | "Activity" | "Mark all read".
+- **Body keeps Bluesky's notification list:** Pager tabs "All" / "From others", day section headers (Today /
+  Yesterday / weekday / date), read/unread tint, row menu (mark read, hide, delete expense), swipe actions,
+  hide and undo.
+- **A row shows who did it and what it means for you:** the avatar is the ACTOR (who added, edited or
+  deleted), never the participants; the line carries the amount and your effect ("you lent EUR 9" in the
+  positive colour, "you borrowed INR 450" in the negative colour) and the group name.
+
+### 26.15 Settings, sign in and log out
+
+*Why:* "add sign in option, and logout as well in settings". *Where:* `screens/Settings`; `useSession()` not
+built yet.
+
+- **Settings starts with an "Account" section** (copied from Bluesky's Settings account section and its
+  Login/Signup screens' layout, `src/screens/Login`, `src/screens/Settings`).
+- **Signed out:** a "Sign in" row, subtitle "Back up and share with friends", pushes the sign-in flow: choose a
+  method (Continue with Apple, Continue with Google, Email, Phone) -> email or phone entry -> 6-digit code.
+  Every field is validated. Until the auth backend exists (BACKLOG F-2101..F-2105), submit shows an honest
+  Bluesky Admonition "Sign-in arrives with sync. Your data stays safe on this device." No fake success, no fake
+  account.
+- **Signed in (only once the backend exists):** an account row (avatar, name, email/phone, sync status) and
+  a destructive "Log out" row opening a prompt "Log out?" that warns when the outbox holds unsynced changes
+  ("N changes haven't synced yet") and offers "Keep this device's data" / "Erase this device's data". Logout
+  never silently deletes unsynced outbox rows (§ 11).
+- **"Sign in" / "Log out" also appear in the drawer footer** (§ 26.7).
+- **Auth state comes from one `useSession()`** (Bluesky pattern, `src/state/session`), signed out until the
+  backend lands.
+
+### 26.16 Analytics
+
+- **Analytics is a main destination with graphs** (charts and a table view), filtered by period, currency and
+  group; the chart/table toggle sits in that filter row, never in the header; the header's one action is
+  Export CSV. One chart per currency, or converted with the rate labelled. *Why:* "analytics also needed, with
+  graphs and all". *Where:* `screens/Analytics`, § 25 "Analytics and export", spec § 4.
+
+### 26.17 Desktop right column (wide, 1300 px and up)
+
+*Why:* "let's have a right sidebar, where it shows recent transactions, and recent groups", "max to 5".
+*Where:* `view/shell/desktop/RightNav.tsx`, `view/shell/desktop/RecentTransactions.tsx`.
+
+- **A fixed 320 px right column in Bluesky `RightNav` style** (left hairline, own scroll), hidden under
+  1300 px. Content fills the space between the two columns.
+- **"Recent transactions":** the 5 newest expenses and repayments involving me: category tile, title, my net
+  chip (lent / borrowed, from domain `personNet`); a row opens the expense; "See all" -> Activity.
+- **"Recent groups":** 5 groups by last activity with balance chips; "See all" -> Groups.
+
+### 26.18 Release blockers
+
+- **The butterfly logo must be replaced before any public release** (public web deploy, TestFlight / App
+  Store, Play Store). It is Bluesky's trademark, excluded from Bluesky's MIT licence, and stores reject
+  look-alike apps. The item in `docs/RELEASE_CHECKLIST.md` stays open until an original mark replaces the one
+  logo source file and the brand kit is regenerated. *Why:* the owner chose it for development after being
+  told.
+- The other release blockers (dev-only switches inert, real auth and sync live) are listed in
+  `docs/RELEASE_CHECKLIST.md`.
+
+### 26.19 Decision log
+
+Every owner decision, in the order it was made (all 2026-10-26). "Replaced" names what the decision overrode;
+"AGENTS rN" is the rule's number in the old `AGENTS.md` list (see git history before this section existed).
+
+| # | Owner said | Decision | Rule | Replaced |
+|---|---|---|---|---|
+| 1 | "need all what you dropped"; "think of more features" | Keep every spec feature, add USPs | § 26.2 | Assistant's proposed cuts |
+| 2 | "analytics also needed, with graphs and all" | Analytics with graphs | § 26.16 | - |
+| 3 | "multi language support"; "default eng" | Multi-language, English default (Hindi second: assistant) | § 26.2 | - |
+| 4 | "set your timezone" | User-settable timezone | § 26.2 | - |
+| 5 | "smooth like Bluesky"; "animations like Expensify" | Bluesky smoothness, Expensify page animations in v1 | § 26.10 | Lottie planned for v3 |
+| 6 | "every single thing to be customizable" | Preferences registry, everything customizable | § 26.1 | - |
+| 7 | "use Postgres" | Server on Postgres | § 26.2 | - |
+| 8 | "copy from Bluesky ... and Expensify ... code practice, speed, structure, coding standards" | Copy code and practice from both | § 26.1 | - |
+| 9 | "best in terms of features, looks, simplicity" | Best-in-class bar | § 26.1 | - |
+| 10 | "for all platforms: splash, branding" | Full polish on every platform | § 26.2 | - |
+| 11 | "look into architecture md file from GameRun expo" | GameRun architecture adopted where it fits | § 26.2 | - |
+| 12 | "way too basic like 10th class app" | Premium, populated previews | § 26.1 | - |
+| 13 | "same Bluesky design", "every pixel to pixel same" | UI copied pixel for pixel | § 26.1 | Splito's own visual language |
+| 14 | "create your own butterfly logo" -> "use same logo for now" -> "butterfly only" -> "very shitty" | (all replaced) | § 26.11 | Original split-butterfly |
+| 15 | "symmetrical, use a cat", "Lucide", "don't draw", "but fill" | Filled Lucide cat | § 26.11 | Butterfly (#14); later replaced by #46 |
+| 16 | "either blue n white or black n white" | Cat blue+white or black+white | § 26.11 | Replaced by #45, #46, #49 |
+| 17 | "on web it should occupy complete screen", "navigation like Bluesky" | Bluesky shell, full-width web | § 26.3 | - |
+| 18 | "even on web make it fab icon only" -> "go with what Bluesky had" | FAB on phones, pill on desktop | § 26.6 | Spec's central + button |
+| 19 | "for web, keep my left sidebar and main content" | No right column | § 26.17 | Replaced by #47 |
+| 20 | "don't ask me anything ... build backend later" | Decide without asking; backend after UI | §§ 26.1, 26.2 | - |
+| 21 | "use the same flow of that FAB icon" | Add expense opens like Bluesky's composer | § 26.6 | - |
+| 22 | "move profile icon to top right" | Avatar top right (dropdown) | § 26.4 | Replaced by #23 |
+| 23 | "open the drawer like Bluesky", "move this to left, where hamburger icon was" | Avatar top left opens Bluesky drawer (AGENTS r1) | §§ 26.4, 26.7 | #22 |
+| 24 | "centre may be page name, right maybe some basic action, left back or avatar" | Header rule set (AGENTS r2) | § 26.4 | - |
+| 25 | "make notifications as activity or move to top" -> "move it to header" | Header bell | § 26.14 | Replaced by #28 |
+| 26 | "what's the second icon on header left of avatar" | No extra header icons (AGENTS r4) | § 26.4 | - |
+| 27 | "an expense can be one expense or with multiple ... dishes" | Itemized expenses with portions (AGENTS r5) | § 26.13 | - |
+| 28 | "make notification as activity and move to bottom" | Activity tab with badge, no bell (AGENTS r3) | § 26.14 | #25 |
+| 29 | "the cancel button to be a cross on top right like iPhone native, and save button on bottom" | X top right, Save at bottom | § 26.8 | Header "Cancel" + "Save" pill (AGENTS r2) |
+| 30 | "cross button ... cancel and save button at bottom; modal/popup on web ... bottom right" | Shared FormSheet layout (AGENTS r7) | § 26.8 | #29's Save-only footer |
+| 31 | "add balances option in group ... filters in friends ... include group" | Group balances, Friends filters (AGENTS r8) | § 26.12 | - |
+| 32 | "add overview in both friends and groups, with search and filters, search icon only" | Overview, expanding search, filters (AGENTS r9) | § 26.12 | Groups "Balances" heading (r8a) |
+| 33 | "do what you want, take own decisions, don't disturb me"; "store them and keep building one by one" | Autonomy; `docs/BACKLOG.md` built in batches | §§ 26.1, 26.2 | Screenshot on every update during autonomous runs |
+| 34 | "consider speed and animations always" | Budgets and animation everywhere (AGENTS r10) | § 26.10 | - |
+| 35 | "always take code from Bluesky ... check in Bluesky" | Bluesky first (AGENTS r11) | § 26.1 | - |
+| 36 | "no animation when switching tabs"; "need animations while switching bottom navigation" | Pager tabs, animated main tabs (AGENTS r12) | § 26.9 | Segmented controls; Bluesky's instant switch |
+| 37 | "you need to improve left sidebar" | Bluesky LeftNav (AGENTS r13) | § 26.5 | - |
+| 38 | "by default keep the dim mode in dark" | Dark = Dim (AGENTS r14) | § 26.11 | Pure black dark |
+| 39 | "in desktop, when you show logo add the name as well" | Desktop wordmark (AGENTS r15) | § 26.5 | Replaced by #48 |
+| 40 | "in itemize don't show default tax tip discount" -> "let it be" -> "it should be there" | Adjustments stay visible | § 26.13 | Hide-until-added (reverted the same minute) |
+| 41 | "but add the percentage option as well" | Amount / % toggle (AGENTS r16) | § 26.13 | - |
+| 42 | "add expense ... sheet from bottom, fab ... if back button is not there show it"; "home and activity also" | Add expense bottom sheet; FAB on every no-Back screen, all widths (AGENTS r17) | §§ 26.6, 26.8 | Desktop part replaced by #49 |
+| 43 | "all the sheets should have animation"; "closable if I drag it down" | Animated sheets, drag to close (AGENTS r18) | §§ 26.8, 26.10 | - |
+| 44 | "add signin option, and logout as well in settings" | Account section, honest sign-in (AGENTS r19) | § 26.15 | - |
+| 45 | "keep it blue always" | Logo always blue (AGENTS r20) | § 26.11 | #16; replaced by #49 |
+| 46 | "I have a logo.svg file in downloads, use that", "you can change the color", "just use that", "use it everywhere, even for the favicons" | Owner butterfly, dev only, release blocker (AGENTS r21) | §§ 26.11, 26.18 | Cat (#15); r20's "butterfly not used" |
+| 47 | "let's have recent transactions instead of recent groups" -> "or have both, do we need a right sidebar" -> "right sidebar ... recent transactions, and recent groups", "max to 5" | Right column, 5 + 5 (AGENTS r23) | § 26.17 | #19; recent groups in the left sidebar (r13d) |
+| 48 | "show the brand text on desktop" -> "make the branding in centre" -> "remove the avatar from sidebar" -> "remove label from logo" | Centred mark only; no sidebar avatar (AGENTS r22) | § 26.5 | #39; ProfileCard (r13a) |
+| 49 | "changing accent color should change logo color ... don't open sidebar on avatar click ... fab should not be visible on desktop" | Accent logo; avatar -> Profile on desktop; phone-only FAB (AGENTS r24) | §§ 26.4, 26.6, 26.11 | #45; desktop FAB (#42) |
+| 50 | "all modal in mobile should be drawers" | Every phone modal, prompts included, is a bottom sheet | § 26.8 | Prompts excepted (AGENTS r7) |
+| 51 | "make sure this file updates on its own"; "add whatever we discussed so far" | Decisions recorded here in the same turn; hook reminder | § 0 rule 9, § 26.1 | Numbered list in `AGENTS.md` |
+
+New decisions follow § 0 rule 9: rewrite the rule in its topic so only the current truth remains, then add a
+row here.
