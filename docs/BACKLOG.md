@@ -500,13 +500,14 @@ A fixed 320 px right column in Bluesky `RightNav` style at 1300 px and up, with 
 
 Settings starts with an "Account" section copied from Bluesky's Settings account section and Login/Signup screens; auth state comes from one `useSession()`. Honest until the auth backend exists.
 
-- **Effort** M · **Impact** 8 · **Backend** no · **Status** todo · **Deps** F-1701, F-205
+- **Effort** M · **Impact** 8 · **Backend** no · **Status** in progress · **Deps** F-1701, F-205
 - **Prefs** -
 - **Acceptance**
   1. Signed out: a "Sign in" row with the subtitle "Back up and share with friends" pushes the sign-in flow: choose a method (Continue with Apple, Continue with Google, Email, Phone) -> email or phone entry -> 6-digit code; every field is validated.
   2. Until F-2102 exists, submit shows the Bluesky Admonition "Sign-in arrives with sync. Your data stays safe on this device."; no fake success and no fake account.
   3. Auth state comes from one `useSession()` (Bluesky `src/state/session` pattern), signed out until the backend lands; the drawer footer shows "Sign in" (and "Log out" once signed in).
   4. The signed-in account row and the "Log out?" prompt ship with F-2102 (criteria there).
+  5. The signed-out flow is Bluesky's LoggedOut/SplashScreen, screens/Login (FormContainer, LoginForm, ChooseAccountForm, ForgotPasswordForm, SetNewPasswordForm, PasswordUpdatedForm) and screens/Signup (StepInfo, step indicator, BackNextButtons) copied with only Splito replacements (§ 26.15, decision 65); header and reuse rows on every adapted file.
 
 ### F-227 Large demo dataset for testing `spec: owner § 26.1`
 
@@ -3567,6 +3568,7 @@ Every owner request from ARCHITECTURE § 26 (decision log rows 47-63) that was n
 |---|---|---|---|---|---|---|
 | 30 | - | ~~Merge UI line + Batch 4 + drawers into m1-foundation~~ done 2026-10-27 (d397576) | git: ui/r1-polish-2, ui/preview-latest (incl. phone bottom drawers), feat/b-* into m1-foundation; full test + e2e run | M | 10 | Batches 0-4 built |
 | 30a | F-227 | Large demo dataset for testing | data/demoLarge.ts, Settings > Data (dev only) | S | 7 | merge row 30 |
+| 30b | F-225 | Sign in / Create account: Bluesky LoggedOut, Login and Signup screens copied (§ 26.15) | screens/Login, screens/Signup, view/com/auth | M | 7 | merge row 30 |
 | 31 | F-618 | Add friend by email or mobile, with a Splito check and consent | Add friend sheet, People requests, directory client (finish feat/friend-invites) | L | 9 | F-601, F-205 |
 | 32 | F-619 | Invite link and QR with limits | screens/Invites (finish feat/friend-invites) | M | 8 | F-618, F-603 |
 | 33 | F-602 | Add friend from device contacts | contacts picker (finish feat/friend-invites) | S | 7 | F-618 |

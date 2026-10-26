@@ -1449,11 +1449,18 @@ built yet.
 
 - **Settings starts with an "Account" section** (copied from Bluesky's Settings account section and its
   Login/Signup screens' layout, `src/screens/Login`, `src/screens/Settings`).
-- **Signed out:** a "Sign in" row, subtitle "Back up and share with friends", pushes the sign-in flow: choose a
-  method (Continue with Apple, Continue with Google, Email, Phone) -> email or phone entry -> 6-digit code.
-  Every field is validated. Until the auth backend exists (BACKLOG F-2101..F-2105), submit shows an honest
-  Bluesky Admonition "Sign-in arrives with sync. Your data stays safe on this device." No fake success, no fake
-  account.
+- **Signed out:** a "Sign in" row, subtitle "Back up and share with friends", opens **Bluesky's own logged-out
+  flow, copied screen for screen** (not a new design): `view/com/auth/LoggedOut.tsx` + `SplashScreen(.web).tsx`
+  (logo mark, tagline, "Create account" and "Sign in" buttons), `screens/Login/` (`FormContainer`,
+  `LoginForm` with "Email or phone" in place of the handle field, password, "Forgot?" link, Back / Next;
+  `ChooseAccountForm` for several accounts; `ForgotPasswordForm` -> `SetNewPasswordForm` (emailed/texted
+  code + new password) -> `PasswordUpdatedForm`), and `screens/Signup/` (`StepInfo`: name, email or phone,
+  password; Bluesky's step indicator and `BackNextButtons`; the handle and captcha steps are dropped).
+  Only the replacements required for Splito change (copy text, field types, logo, routes). Presented as a full
+  screen over the app (Splito is offline-first, so signing in is optional and can be closed). Every field is
+  validated. Until the auth backend exists (BACKLOG F-2101..F-2105), Next shows Bluesky's Admonition
+  "Sign-in arrives with sync. Your data stays safe on this device." No fake success, no fake account. *Why:*
+  "there is signin page already there in bluesky, use that".
 - **Signed in (only once the backend exists):** an account row (avatar, name, email/phone, sync status) and
   a destructive "Log out" row opening a prompt "Log out?" that warns when the outbox holds unsynced changes
   ("N changes haven't synced yet") and offers "Keep this device's data" / "Erase this device's data". Logout
@@ -1671,6 +1678,7 @@ Every owner decision, in the order it was made (all 2026-10-26). "Replaced" name
 | 62 | "mobile sidebar and desktop seems to be different, make them same" | One nav list + one footer for sidebar and drawer | §§ 26.3, 26.5, 26.7 | Drawer had Profile, theme toggle; sidebar had no footer |
 | 63 | "add everything to feature list and pick one by one" | Every request becomes a BACKLOG entry; build one feature at a time to done | § 26.1 | Many feature streams in parallel |
 | 64 | "add a lot of demo data to my account" | Large deterministic demo dataset, `?demo=large` + Settings > Data (dev/e2e only), removable | § 26.1 | Small `?demo=1` set only |
+| 65 | "there is signin page already there in bluesky, use that" | Sign in / Create account copy Bluesky LoggedOut + Login + Signup screens | § 26.15 | Own method-picker sign-in screen (email/phone code, Apple/Google) |
 
 New decisions follow § 0 rule 9: rewrite the rule in its topic so only the current truth remains, then add a
 row here.
