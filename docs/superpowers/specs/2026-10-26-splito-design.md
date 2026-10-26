@@ -208,6 +208,18 @@ Preferences (theme, nav, cards, language, timezone) persist locally and sync acr
 
 ---
 
+## 4b. Additions from the competitor teardown (2026-10-26)
+
+Source: `docs/research/2026-10-26-competitors.md`. Owner asked for the best app on features, looks and simplicity; these close gaps against Splitwise, Tricount, Settle Up, Splid, Spliit and others. Phase placement is the assistant's call.
+
+- **v1:** free search (Splitwise paywalls it); "equal with adjustments" split, inline calculator in the amount field, live "remaining" readout, drafts that survive close; offline category auto-suggest from the title; "fewest payments" toggle for groups without rules, showing the payment count (separate exact solver; min-cost flow stays for constrained groups); trip summary shared over WhatsApp.
+- **v2:** editable guest links (friends add expenses from a link without an account, picking "who are you"); guests claim their own receipt items from a shared link; payment handles beyond UPI (PayPal.me, Venmo, Revolut, Monzo, Wise, Cash App) as links that open the provider, recorded by the user afterwards; opt-in automatic reminders; split from a payment screenshot (UPI/bank) shared into the app; Splitwise importer.
+- **Free forever:** everything Splitwise paywalls (unlimited expenses, receipt scanning, itemization, currency conversion, search, charts, export, no ads). Monetization, if ever, is the owner's call ("one person pays for the whole group" draws the fewest complaints).
+
+## 4c. Architecture rules adopted from GameRun (2026-10-26)
+
+Source: `docs/research/2026-10-26-gamerun-architecture-takeaways.md`. Adopted: keep `docs/ARCHITECTURE.md` current in the same change; enforce checkable rules with an architecture test whose per-file baseline only goes down (raw hex colours outside `alf/`, direct RN `Modal`, direct `expo-haptics`, new files under `src/view/`, token access outside the credential store); platform differences only behind `.web`/`.native` pairs; one credential-store module (secure store, serialized operations, a 401 never deletes unsynced outbox rows); one never-throwing telemetry module with outcome + duration metrics and an opaque account id (no email/name, replay masked); OTA checks on launch and background-to-active only; one link resolver with unknown paths opening home and `goBack(fallback)` everywhere. Rejected: GameRun's "You're offline" banner (Splito uses sync status labels), `localStorage` web tokens (Splito uses httpOnly cookie + CSRF), `createStyles` and its own dialog/copy systems (ALF, Bluesky Dialog and Lingui win).
+
 ## 5. Decisions made in conversation
 
 | Decision | Source |
@@ -221,6 +233,12 @@ Preferences (theme, nav, cards, language, timezone) persist locally and sync acr
 | Smooth like Bluesky; page animations like Expensify (Lottie moved from v3 to v1) | Owner |
 | Owner said "start the implementation" — design treated as approved | Owner |
 | Everything customizable; preferences registry from v1 (scope interpretation in 3a is the assistant's call) | Owner |
+| Copy Bluesky AND Expensify code, structure, standards and speed practices (both MIT) | Owner |
+| UI is Bluesky's design copied pixel for pixel; only required replacements (routes, data, logo, licensed icon glyphs, copy, social-only code) | Owner |
+| Bluesky blue palette is the default theme; Splito emerald becomes an optional accent | Owner ("same Bluesky design") |
+| Splito logo is an original split-butterfly, visibly different from Bluesky's mark | Owner asked for a butterfly; the split design is the assistant's call |
+| Phones keep the spec's central + inside Bluesky's bottom bar | Assistant's call (spec vs pixel-copy conflict) |
+| Bluesky's licensed Central icon glyphs replaced by Lucide; buying a Central licence would make icons pixel-exact | Assistant's call (licence) |
 | Hindi is the second launch language | Assistant's call |
 | Phase placement (v1/v2/v3) of each feature | Assistant's call; owner did not object |
 | Indian number grouping (₹1,00,000) under Hindi and en-IN locales | Assistant's call |
