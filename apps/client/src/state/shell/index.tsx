@@ -1,5 +1,7 @@
 import {useStorage, device} from '#/storage'
 
+export {useTickEveryMinute} from './tick-every-minute'
+
 /** Theme mode comes from the Splito `theme` preference, mirrored to device storage for first paint. */
 export function useThemePrefs() {
   const [colorMode = 'system'] = useStorage(device, ['colorMode'])

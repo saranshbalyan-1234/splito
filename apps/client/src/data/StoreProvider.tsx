@@ -4,6 +4,7 @@ import {ensureMe, type MutationCtx, type Store} from '@splito/sync'
 
 import {logger} from '#/logger'
 import {device} from '#/storage'
+import {seedDemoIfRequested} from '#/data/demo'
 import {installDevTools} from '#/data/devTools'
 import {openStore} from '#/data/store'
 
@@ -40,6 +41,7 @@ export function StoreProvider({children, fallback = null}: {children: React.Reac
         store = s
         await ensureMe(s, ctx, 'Me')
         installDevTools(s, ctx)
+        await seedDemoIfRequested(s, ctx)
         setValue({store: s, ctx})
       })
       .catch(e => {

@@ -235,6 +235,9 @@ importers:
       '@lingui/core':
         specifier: ^5.9.2
         version: 5.9.5(@lingui/babel-plugin-lingui-macro@5.9.5(@typescript/typescript6@6.0.2)(supports-color@8.1.1))
+      '@lingui/message-utils':
+        specifier: 5.9.5
+        version: 5.9.5
       '@lingui/react':
         specifier: ^5.9.2
         version: 5.9.5(@lingui/babel-plugin-lingui-macro@5.9.5(@typescript/typescript6@6.0.2)(supports-color@8.1.1))(react@19.3.0)
