@@ -76,8 +76,15 @@ export function computeShares(total: bigint, split: SplitInput): Record<string, 
   }
 }
 
+/**
+ * Paid = owed = total, exactly, and no payer or share runs against the
+ * total's sign (a +150 / -50 payer pair would make pairwise and group
+ * balances disagree). Every write goes through here via `buildExpense`.
+ */
 export function validateExpense(e: {total: bigint; payers: Record<string, bigint>; shares: Record<string, bigint>}): void {
   assertInRange(e.total)
+  const isAgainstTotal = (v: bigint) => (e.total >= 0n ? v < 0n : v > 0n)
+  if ([...Object.values(e.payers), ...Object.values(e.shares)].some(isAgainstTotal)) throw new DomainError('SIGN_MISMATCH')
   if (sum(Object.values(e.payers)) !== e.total) throw new DomainError('PAYERS_MISMATCH')
   if (sum(Object.values(e.shares)) !== e.total) throw new DomainError('TOTAL_MISMATCH')
 }

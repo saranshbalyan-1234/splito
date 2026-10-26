@@ -1,6 +1,7 @@
 import {describe, expect, test} from 'bun:test'
 
 import {
+  decimalMark,
   evaluateAmount,
   isExpression,
   parseBasisPoints,
@@ -48,6 +49,27 @@ describe('evaluateAmount', () => {
     expect(() => evaluateAmount('9999999999999x1000', 'INR')).toThrow(
       'OUT_OF_RANGE',
     ))
+  test('a comma decimal mark (de-DE, fr-FR, decimal pads) is a decimal, not grouping', () => {
+    expect(evaluateAmount('12,50', 'EUR', ',')).toBe(1250n)
+    expect(evaluateAmount('1.234,50', 'EUR', ',')).toBe(123450n)
+    expect(evaluateAmount('1 234,5', 'EUR', ',')).toBe(123450n)
+    expect(evaluateAmount('12,50+1,25', 'EUR', ',')).toBe(1375n)
+    expect(() => evaluateAmount('12,505', 'EUR', ',')).toThrow('TOO_MANY_DECIMALS')
+  })
+  test("a decimal pad's comma reads as a decimal under '.' locales too, unless it groups thousands", () => {
+    expect(evaluateAmount('12,50', 'INR')).toBe(1250n)
+    expect(evaluateAmount('1,200', 'INR')).toBe(120000n)
+    expect(evaluateAmount('1.200', 'EUR', ',')).toBe(120000n)
+    expect(evaluateAmount('12.5', 'EUR', ',')).toBe(1250n)
+  })
+  test('decimalMark', () => {
+    expect(decimalMark('de-DE')).toBe(',')
+    expect(decimalMark('fr-FR')).toBe(',')
+    expect(decimalMark('en-IN')).toBe('.')
+    expect(decimalMark('hi-IN')).toBe('.')
+  })
+  test('negative plain amounts still parse (adjustments)', () =>
+    expect(evaluateAmount('-50', 'INR')).toBe(-5000n))
   test('isExpression', () => {
     expect(isExpression('12.5')).toBe(false)
     expect(isExpression('12+5')).toBe(true)

@@ -2,6 +2,14 @@ import {assertInRange, DomainError} from './errors'
 
 export type CurrencyCode = string
 
+/**
+ * Zero minor units. Components compare against this instead of writing
+ * `0n`: React Compiler skips any component with a BigInt literal
+ * ("Handle BigIntLiteral expressions"), which leaves the money screens
+ * unmemoized.
+ */
+export const ZERO = 0n
+
 export interface CurrencyInfo {
   code: CurrencyCode
   scale: 0 | 2 | 3

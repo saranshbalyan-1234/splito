@@ -42,6 +42,33 @@ describe('evaluateForm', () => {
       'AMOUNT_NOT_POSITIVE',
     )
   })
+  test('a comma decimal mark (de-DE) reads 12,50 as 12.50, not 1250', () =>
+    expect(evaluateForm(base({amount: '12,50'}), 'UTC', ',').total).toBe(1250n))
+  test('negative payer, exact and item rows are refused', () => {
+    const paid = evaluateForm(
+      base({payerMode: 'multiple', paid: {me: '400', riya: '-100'}}),
+      'UTC',
+    )
+    expect(paid.rowErrors['paid:riya']).toBe('NEGATIVE_AMOUNT')
+    expect(paid.draft).toBeUndefined()
+    const exact = evaluateForm(
+      base({mode: 'exact', exact: {me: '0-50', riya: '350'}}),
+      'UTC',
+    )
+    expect(exact.rowErrors.me).toBe('NEGATIVE_AMOUNT')
+    expect(exact.draft).toBeUndefined()
+  })
+  test('an adjustment that pushes a share below zero is refused', () => {
+    const r = evaluateForm(
+      base({mode: 'adjusted', adjust: {me: '-400'}, people: ['me', 'riya']}),
+      'UTC',
+    )
+    expect(r.error).toBe('SIGN_MISMATCH')
+    expect(r.draft).toBeUndefined()
+    expect(
+      evaluateForm(base({mode: 'adjusted', adjust: {me: '-50'}}), 'UTC').draft,
+    ).toBeDefined()
+  })
   test('calculator amount', () =>
     expect(evaluateForm(base({amount: '250+50'}), 'UTC').total).toBe(30000n))
   test('excluded people leave the equal split', () =>

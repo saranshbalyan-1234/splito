@@ -16,7 +16,6 @@ beforeEach(async () => {
 test('default returned when unset', async () => {
   expect(await getPref(s, 'defaultCurrency')).toBe('INR')
   expect(await getPref(s, 'includeGroupsDefault')).toBe(true)
-  expect(await getPref(s, 'settleMode')).toBe('direct')
   expect(await getPref(s, 'tabs')).toEqual(['people', 'groups', 'analytics'])
 })
 
@@ -60,6 +59,13 @@ test('Activity left the tabs for the header bell: a stored order keeps the rest'
   expect(await getPref(s, 'tabs')).toEqual(['analytics', 'people'])
   expect(await getPref(s, 'homeTab')).toBe('people')
   await expect(setPref(s, ctx, 'tabs', ['groups', 'activity'] as never)).rejects.toThrow('INVALID_PREF')
+})
+
+test('an order saved while Profile was a tab predates the Analytics tab, so Analytics joins it', async () => {
+  await s.transaction(async tx =>
+    tx.put({type: 'preference', id: 'tabs', data: {value: ['people', 'groups', 'activity', 'profile']}, version: 1, deleted: false, updatedAt: 1}),
+  )
+  expect(await getPref(s, 'tabs')).toEqual(['people', 'groups', 'analytics'])
 })
 
 test('reset restores default', async () => {

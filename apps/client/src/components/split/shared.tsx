@@ -170,6 +170,10 @@ export function useErrorText() {
         return l`Add at least one item`
       case 'UNASSIGNED_ITEM':
         return l`Choose who shares each item`
+      case 'NEGATIVE_AMOUNT':
+        return l`Amounts here can’t be below zero`
+      case 'SIGN_MISMATCH':
+        return l`No one’s share can go below zero – make the adjustments smaller`
       case 'ADJUSTMENT_TOO_LARGE':
         return l`The adjustments add up to more than the total`
       case 'NOT_A_MEMBER':

@@ -13,10 +13,36 @@ const OPS: Record<string, '+' | '-' | '*' | '/'> = {
   '/': '/',
   '÷': '/',
 }
-const TOKEN = /(\d+(?:\.\d+)?)|([+\-−xX×*/÷])/y
+const TOKEN = /(\d[\d.,]*)|([+\-−xX×*/÷])/y
 
-/** Grouping commas and spaces carry no meaning in an amount ("1,20,000"). */
-const normalize = (input: string) => input.replace(/[\s,]/g, '')
+/** Spaces (also the no-break ones fr-FR groups with) and apostrophes (de-CH) only ever group digits. */
+const normalize = (input: string) => input.replace(/[\s\u00a0\u202f'’]/g, '')
+
+/** The decimal mark a locale writes: "," in de-DE and fr-FR, "." in en-IN and hi-IN. */
+export function decimalMark(locale: string): '.' | ',' {
+  const mark = new Intl.NumberFormat(locale)
+    .formatToParts(1.5)
+    .find(p => p.type === 'decimal')?.value
+  return mark === ',' ? ',' : '.'
+}
+
+/**
+ * One typed number to a plain decimal ("1.234,5" -> "1234.5"). The last "."
+ * or "," is the decimal mark when it is the locale's own mark, or when the
+ * digits after it fit the currency's scale and aren't three - so "1,200" is
+ * 1200 and "12,50" is 12.50 whichever mark a decimal pad shows. Every other
+ * mark groups digits.
+ */
+function plainNumber(num: string, scale: number, mark: '.' | ','): string {
+  const last = Math.max(num.lastIndexOf('.'), num.lastIndexOf(','))
+  if (last < 0) return num
+  const tail = num.slice(last + 1)
+  const isDecimal =
+    tail.length > 0 &&
+    (num[last] === mark || (tail.length <= scale && tail.length !== 3))
+  const whole = (isDecimal ? num.slice(0, last) : num).replace(/[.,]/g, '')
+  return isDecimal ? `${whole || '0'}.${tail}` : whole
+}
 
 /** True when the input has an operator, i.e. the amount field should show a computed result. */
 export function isExpression(input: string): boolean {
@@ -35,19 +61,28 @@ function toRatio(num: string): Ratio {
  * "100/3") into minor units, exactly: operands are rationals, `x` and `/` bind
  * tighter than `+` and `-`, and only the final result is rounded (half away
  * from zero) to the currency's minor unit. A plain number goes through
- * `parseAmount`, so it is never silently rounded.
+ * `parseAmount`, so it is never silently rounded. `mark` is the number
+ * locale's decimal mark (`decimalMark`); grouping marks are dropped.
  */
-export function evaluateAmount(input: string, code: CurrencyCode): bigint {
+export function evaluateAmount(
+  input: string,
+  code: CurrencyCode,
+  mark: '.' | ',' = '.',
+): bigint {
   const s = normalize(input)
-  if (!isExpression(s)) return parseAmount(s, code)
   const {scale} = getCurrency(code)
+  if (!isExpression(s)) {
+    const m = /^([-−]?)([\d.,]*\d[\d.,]*)$/.exec(s)
+    if (!m) throw new DomainError('INVALID_AMOUNT')
+    return parseAmount(`${m[1] ? '-' : ''}${plainNumber(m[2]!, scale, mark)}`, code)
+  }
 
   const tokens: string[] = []
   TOKEN.lastIndex = 0
   while (TOKEN.lastIndex < s.length) {
     const m = TOKEN.exec(s)
     if (!m) throw new DomainError('INVALID_AMOUNT')
-    tokens.push(m[0])
+    tokens.push(m[1] ? plainNumber(m[1], scale, mark) : m[0])
   }
   // Must alternate number, operator, number ...
   tokens.forEach((tok, i) => {

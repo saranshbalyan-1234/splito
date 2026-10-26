@@ -99,4 +99,12 @@ describe('validateExpense', () => {
     expect(() => validateExpense({total: 100n, payers: {a: 100n}, shares: {a: 50n}})).toThrow('TOTAL_MISMATCH'))
   test('payerNotParticipant', () =>
     expect(() => validateExpense({total: 100n, payers: {z: 100n}, shares: {a: 50n, b: 50n}})).not.toThrow())
+  test('a payer with the opposite sign to the total is refused', () =>
+    expect(() => validateExpense({total: 100n, payers: {a: 150n, b: -50n}, shares: {a: 50n, b: 50n}})).toThrow('SIGN_MISMATCH'))
+  test('a share with the opposite sign to the total is refused', () =>
+    expect(() => validateExpense({total: 100n, payers: {a: 100n}, shares: {a: -25n, b: 125n}})).toThrow('SIGN_MISMATCH'))
+  test('a refund (negative total) keeps every part negative', () => {
+    expect(() => validateExpense({total: -100n, payers: {a: -100n}, shares: {a: -50n, b: -50n}})).not.toThrow()
+    expect(() => validateExpense({total: -100n, payers: {a: -100n}, shares: {a: 50n, b: -150n}})).toThrow('SIGN_MISMATCH')
+  })
 })

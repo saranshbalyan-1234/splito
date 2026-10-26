@@ -1,10 +1,12 @@
 import {
+  type BalancePart,
+  decimalMark,
   DomainError,
+  evaluateAmount,
   getCurrency,
   groupNet,
   type LocalDate,
   pairwiseBalances,
-  parseAmount,
   toDecimalString,
 } from '@splito/domain'
 import {
@@ -99,6 +101,30 @@ export function effectInGroup(
   )
 }
 
+/**
+ * My balance with a friend in one currency, part by part: direct, then each
+ * group (> 0: they owe me). Zero parts are left out.
+ */
+export function balanceParts(c: {
+  direct: bigint
+  groups: Record<string, bigint>
+}): BalancePart[] {
+  return [
+    {groupId: null, amount: c.direct},
+    ...Object.entries(c.groups).map(([groupId, amount]) => ({groupId, amount})),
+  ].filter(p => p.amount !== 0n)
+}
+
+/** The parts a payment by me (or to me) settles: what the payer owes there, as amounts > 0. */
+export function partsOwedBy(
+  parts: BalancePart[],
+  isPayerMe: boolean,
+): BalancePart[] {
+  return parts
+    .map(p => ({groupId: p.groupId, amount: isPayerMe ? -p.amount : p.amount}))
+    .filter(p => p.amount > 0n)
+}
+
 /** A local `YYYY-MM-DD` (or `YYYY-MM`) at UTC midnight, so formatting never shifts the day. */
 export function utcDate(d: string) {
   return new Date(`${d.length === 7 ? `${d}-01` : d}T00:00:00Z`)
@@ -118,36 +144,19 @@ export function todayLocal(): {date: LocalDate; tz: string} {
 }
 
 /**
- * Typed amount -> minor units. Spaces and grouping marks are ignored; the
- * last "." or "," is the decimal mark when the digits after it fit the
- * currency's scale (three digits after a non-decimal mark of the locale read
- * as grouping, so "1,200" is 1200 and "12,50" is 12.50). The locale's own
- * decimal mark followed by more digits than the currency allows is an error,
- * never a silent grouping. Then `parseAmount`'s exact rules apply.
+ * Typed amount -> minor units, read exactly as the expense composer reads
+ * it (`evaluateAmount` with the locale's decimal mark): spaces and grouping
+ * marks are ignored, "1,200" is 1200 and "12,50" is 12.50. Only digits and
+ * marks - no sums, no sign.
  */
 export function parseTypedAmount(
   text: string,
   currency: string,
   locale: string,
 ) {
-  const {scale} = getCurrency(currency)
-  const decimal =
-    new Intl.NumberFormat(locale)
-      .formatToParts(1.5)
-      .find(p => p.type === 'decimal')?.value ?? '.'
-  const s = text.replace(/[\s\u00a0\u202f']/g, '')
-  if (!/^[\d.,]+$/.test(s)) throw new DomainError('INVALID_AMOUNT')
-  const last = Math.max(s.lastIndexOf('.'), s.lastIndexOf(','))
-  const tail = last >= 0 ? s.slice(last + 1) : ''
-  if (last >= 0 && s[last] === decimal && tail.length > scale)
-    throw new DomainError('TOO_MANY_DECIMALS')
-  const isDecimal =
-    last >= 0 &&
-    tail.length > 0 &&
-    tail.length <= scale &&
-    (tail.length !== 3 || s[last] === decimal)
-  const whole = (isDecimal ? s.slice(0, last) : s).replace(/[.,]/g, '') || '0'
-  return parseAmount(isDecimal ? `${whole}.${tail}` : whole, currency)
+  if (!/^[\d.,\s\u00a0\u202f']+$/.test(text) || !/\d/.test(text))
+    throw new DomainError('INVALID_AMOUNT')
+  return evaluateAmount(text, currency, decimalMark(locale))
 }
 
 /** `upi://pay` deep link (NPCI UPI linking spec): payee VPA, name, amount in rupees, INR. */

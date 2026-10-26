@@ -210,25 +210,41 @@ export async function restoreExpense(store: Store, ctx: MutationCtx, id: string)
 }
 
 export async function createRepayment(store: Store, ctx: MutationCtx, input: RepaymentInput): Promise<Entity<Repayment>> {
-  const {id: requestedId, ...rest} = input
-  getCurrency(rest.currency)
-  parseLocalDate(rest.date)
-  if (rest.amount <= 0n) throw new DomainError('INVALID_AMOUNT')
-  assertInRange(rest.amount)
-  if (rest.from === rest.to) throw new DomainError('SAME_PERSON')
-  const data: Repayment = {...rest, note: rest.note.trim()}
-  const id = requestedId ?? ctx.newId()
+  return (await createRepayments(store, ctx, [input]))[0]!
+}
+
+/**
+ * Records several payments in one transaction: all or none. A friend's page
+ * uses it to split one payment across the direct and group parts of a
+ * balance (`splitPayment`). Each id is idempotent, as in `createRepayment`.
+ */
+export async function createRepayments(store: Store, ctx: MutationCtx, inputs: RepaymentInput[]): Promise<Entity<Repayment>[]> {
+  const parts = inputs.map(({id, ...rest}) => {
+    getCurrency(rest.currency)
+    parseLocalDate(rest.date)
+    if (rest.amount <= 0n) throw new DomainError('INVALID_AMOUNT')
+    assertInRange(rest.amount)
+    if (rest.from === rest.to) throw new DomainError('SAME_PERSON')
+    return {id: id ?? ctx.newId(), data: {...rest, note: rest.note.trim()} satisfies Repayment}
+  })
   return store.transaction(async tx => {
-    const existing = await tx.get<Repayment>('repayment', id)
-    if (existing) return existing
-    for (const pid of [data.from, data.to]) await requireLive(tx, 'person', pid, 'UNKNOWN_PERSON')
-    if (data.groupId) {
-      // Former members can still settle what they owe from their time in the group.
-      const g = await requireLive<Group>(tx, 'group', data.groupId)
-      const members = new Set(g.data.members.map(m => m.personId))
-      if (!members.has(data.from) || !members.has(data.to)) throw new DomainError('NOT_A_MEMBER')
+    const written: Entity<Repayment>[] = []
+    for (const {id, data} of parts) {
+      const existing = await tx.get<Repayment>('repayment', id)
+      if (existing) {
+        written.push(existing)
+        continue
+      }
+      for (const pid of [data.from, data.to]) await requireLive(tx, 'person', pid, 'UNKNOWN_PERSON')
+      if (data.groupId) {
+        // Former members can still settle what they owe from their time in the group.
+        const g = await requireLive<Group>(tx, 'group', data.groupId)
+        const members = new Set(g.data.members.map(m => m.personId))
+        if (!members.has(data.from) || !members.has(data.to)) throw new DomainError('NOT_A_MEMBER')
+      }
+      written.push(await write(tx, ctx, 'repayment', id, data, false, 'repayment.create'))
     }
-    return write(tx, ctx, 'repayment', id, data, false, 'repayment.create')
+    return written
   })
 }
 

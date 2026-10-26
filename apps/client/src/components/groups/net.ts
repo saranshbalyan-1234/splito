@@ -1,5 +1,10 @@
-import {groupNet, type LedgerRecord} from '@splito/domain'
-import {type Group} from '@splito/sync'
+import {
+  balanceRows,
+  type BalanceRow,
+  groupNet,
+  type LedgerRecord,
+} from '@splito/domain'
+import {type Entity, type Group} from '@splito/sync'
 
 /**
  * `groupNet` per currency with every member listed (zero when they have no
@@ -15,5 +20,22 @@ export function memberNets(
     Object.entries(groupNet(records, groupId))
       .sort(([x], [y]) => x.localeCompare(y))
       .map(([currency, net]) => [currency, {...zero, ...net}]),
+  )
+}
+
+/**
+ * My balance rows with every person (`balanceRows`): group parts come from
+ * each group's settle-up plan under its own rules, so People, Groups, the
+ * group page and Settle up always agree.
+ */
+export function myBalances(
+  records: LedgerRecord[],
+  me: string,
+  groups: Entity<Group>[],
+): BalanceRow[] {
+  return balanceRows(
+    records,
+    me,
+    Object.fromEntries(groups.map(g => [g.id, g.data.rules])),
   )
 }

@@ -6,6 +6,7 @@ import {
   createGroup,
   createPerson,
   createRepayment,
+  createRepayments,
   deletePerson,
   deleteRepayment,
   ensureMe,
@@ -125,6 +126,29 @@ test('group repayments move the group net; a group settles to zero', async () =>
   expect(groupNet(await loadLedger(s), g.id)).toEqual({INR: {me: 100n, [x.id]: -100n}})
   await createRepayment(s, ctx, pay({groupId: g.id, from: x.id, to: 'me', amount: 100n}))
   expect(groupNet(await loadLedger(s), g.id)).toEqual({INR: {me: 0n, [x.id]: 0n}})
+})
+
+test("a friend's payment split across direct and group parts clears every view, once", async () => {
+  const x = await createPerson(s, ctx, {name: 'Riya'})
+  const g = await createGroup(s, ctx, {name: 'Goa', kind: 'trip', currency: 'INR', memberIds: [x.id], startDate: null, endDate: null})
+  await createExpense(s, ctx, expense({split: {mode: 'equal', participants: ['me', x.id]}}))
+  await createExpense(s, ctx, expense({groupId: g.id, split: {mode: 'equal', participants: ['me', x.id]}}))
+  const parts = [pay({id: 'p1', from: x.id, to: 'me'}), pay({id: 'p2', from: x.id, to: 'me', groupId: g.id})]
+  await createRepayments(s, ctx, parts)
+  await createRepayments(s, ctx, parts)
+  expect(pairwiseBalances(await loadLedger(s), 'me')).toEqual([])
+  expect(groupNet(await loadLedger(s), g.id)).toEqual({INR: {me: 0n, [x.id]: 0n}})
+  expect((await s.getAll('repayment')).length).toBe(2)
+})
+
+test('a batch with one bad part records nothing', async () => {
+  const x = await createPerson(s, ctx, {name: 'Riya'})
+  const y = await createPerson(s, ctx, {name: 'Sam'})
+  const g = await createGroup(s, ctx, {name: 'Goa', kind: 'trip', currency: 'INR', memberIds: [x.id], startDate: null, endDate: null})
+  await expect(
+    createRepayments(s, ctx, [pay({id: 'ok', from: y.id, to: 'me'}), pay({id: 'bad', from: y.id, to: 'me', groupId: g.id})]),
+  ).rejects.toThrow('NOT_A_MEMBER')
+  expect(await s.getAll('repayment')).toEqual([])
 })
 
 test('A07: rules stored per group; A->C excluded is infeasible direct, feasible via B', async () => {

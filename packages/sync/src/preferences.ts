@@ -15,12 +15,9 @@ export interface PrefDef<T> {
   label: string
 }
 
-/** Bottom-bar / sidebar destinations. Profile and Settings open from the header avatar instead. */
-/** Bottom bar / sidebar destinations. Activity left them for the header bell (it is now Notifications). */
+/** Bottom bar / sidebar destinations. Profile and Settings open from the header avatar's menu; Activity is the header bell's Notifications. */
 export type TabId = 'people' | 'groups' | 'analytics'
 export type SwipeAction = 'markRead' | 'hide' | 'delete' | 'none'
-/** direct: debtors pay creditors only. transit: payments may pass through other members. */
-export type SettleMode = 'direct' | 'transit'
 
 export interface Category {
   id: string
@@ -37,8 +34,8 @@ export const DEFAULT_CATEGORIES: Category[] = [
   ['stay', 'Stay', '#8b5cf6', 'bed'],
   ['shopping', 'Shopping', '#ec4899', 'shopping-bag'],
   ['entertainment', 'Entertainment', '#eab308', 'ticket'],
-  ['bills', 'Bills', '#64748b', 'receipt'],
-  ['groceries', 'Groceries', '#22c55e', 'shopping-cart'],
+  ['bills', 'Bills', '#6366f1', 'receipt'],
+  ['groceries', 'Groceries', '#84cc16', 'shopping-cart'],
   ['other', 'Other', '#94a3b8', 'circle'],
 ].map(([id, name, color, icon], order) => ({id: id!, name: name!, color: color!, icon: icon!, order, hidden: false}))
 
@@ -99,7 +96,6 @@ export const PREFS = {
   numberLocale: def('numberLocale', 'regional', 'account', 'Number format', 'auto', oneOf('auto', 'en-IN', 'en-US', 'de-DE', 'fr-FR')),
   peopleSort: def('peopleSort', 'lists', 'account', 'Sort people by', 'amount', oneOf('amount', 'name', 'recent')),
   includeGroupsDefault: def('includeGroupsDefault', 'lists', 'account', 'Include groups by default', true, isBool),
-  settleMode: def<SettleMode>('settleMode', 'defaults', 'account', 'Settle-up plan', 'direct', oneOf('direct', 'transit')),
   swipeLeft: def<SwipeAction>('swipeLeft', 'lists', 'account', 'Swipe left', 'delete', oneOf('markRead', 'hide', 'delete', 'none')),
   swipeRight: def<SwipeAction>('swipeRight', 'lists', 'account', 'Swipe right', 'markRead', oneOf('markRead', 'hide', 'delete', 'none')),
   'notify.expense': def('notify.expense', 'notifications', 'account', 'New expenses', true, isBool),
@@ -114,8 +110,13 @@ async function readRaw<K extends PrefKey>(store: Store, key: K): Promise<PrefVal
   const def = PREFS[key] as PrefDef<PrefValue<K>>
   const e = (await store.getAll<{value: unknown}>('preference')).find(p => p.id === key)
   let value = e && !e.deleted ? e.data.value : undefined
-  // A tab order saved before Activity left the tabs keeps the tabs that remain.
-  if (key === 'tabs' && Array.isArray(value)) value = value.filter(t => TAB_IDS.includes(t))
+  if (key === 'tabs' && Array.isArray(value)) {
+    // Orders saved while Profile was a tab predate the Analytics tab, so it joins them.
+    const isPreAnalytics = value.includes('profile')
+    // Activity and Profile left the tabs for the header; the rest keep their order.
+    value = value.filter(t => TAB_IDS.includes(t))
+    if (isPreAnalytics && !(value as TabId[]).includes('analytics')) value = [...(value as TabId[]), 'analytics']
+  }
   return value !== undefined && def.validate(value) ? (value as PrefValue<K>) : def.default
 }
 

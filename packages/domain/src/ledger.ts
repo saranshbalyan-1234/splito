@@ -1,6 +1,7 @@
 import {allocate} from './allocate'
 import type {CurrencyCode} from './currency'
 import type {LocalDate} from './date'
+import {planSettlement, type SettlementRules} from './settlement'
 
 export interface ExpenseRecord {
   kind: 'expense'
@@ -77,6 +78,71 @@ export function pairwiseBalances(records: LedgerRecord[], me: string): BalanceRo
 }
 
 const cmp = (a: string, b: string) => (a < b ? -1 : a > b ? 1 : 0)
+
+const NO_RULES: SettlementRules = {allowListOnly: false, edges: {}}
+
+/**
+ * My balance with each person, per group and currency: the one source every
+ * screen shows. Direct records count pair by pair (`pairwiseBalances`).
+ * Inside a group, my rows are the transfers of the group's settle-up plan
+ * (`planSettlement` over `groupNet`, direct, the group's rules - or no rules
+ * when those leave no plan), so my group rows add up to my group net and
+ * recording the plan clears People, the group and Settle up together.
+ */
+export function balanceRows(
+  records: LedgerRecord[],
+  me: string,
+  rules: Record<string, SettlementRules | undefined> = {},
+): BalanceRow[] {
+  const rows = pairwiseBalances(
+    records.filter(r => r.groupId === null),
+    me,
+  )
+  const groupIds = new Set(records.flatMap(r => (r.groupId === null || r.deleted ? [] : [r.groupId])))
+  for (const groupId of [...groupIds].sort()) {
+    for (const [currency, net] of Object.entries(groupNet(records, groupId)).sort(([x], [y]) => cmp(x, y))) {
+      if (!net[me]) continue
+      let plan = planSettlement(net, rules[groupId] ?? NO_RULES, 'direct')
+      if (plan.status !== 'ok') plan = planSettlement(net, NO_RULES, 'direct')
+      if (plan.status !== 'ok') continue
+      for (const t of plan.transfers) {
+        if (t.from === me) rows.push({person: t.to, groupId, currency, amount: -t.amount})
+        else if (t.to === me) rows.push({person: t.from, groupId, currency, amount: t.amount})
+      }
+    }
+  }
+  return rows.sort((a, b) => cmp(a.person, b.person) || cmp(a.groupId ?? '', b.groupId ?? '') || cmp(a.currency, b.currency))
+}
+
+/** One part of a balance between two people: direct (`groupId` null) or one group's. */
+export interface BalancePart {
+  groupId: string | null
+  amount: bigint
+}
+
+/**
+ * Splits one payment across the parts of a balance it settles: direct
+ * first, then each group in turn, each up to what is owed there in the
+ * payment's direction (`owed`, amounts > 0). Anything over goes to direct.
+ * Parts owed the other way are left alone, so debts are never netted
+ * across groups (spec non-goal).
+ */
+export function splitPayment(amount: bigint, owed: BalancePart[]): BalancePart[] {
+  const parts: BalancePart[] = []
+  let left = amount
+  for (const p of [...owed.filter(p => p.groupId === null), ...owed.filter(p => p.groupId !== null)]) {
+    if (left <= 0n || p.amount <= 0n) continue
+    const take = p.amount < left ? p.amount : left
+    parts.push({groupId: p.groupId, amount: take})
+    left -= take
+  }
+  if (left > 0n) {
+    const direct = parts.find(p => p.groupId === null)
+    if (direct) direct.amount += left
+    else parts.unshift({groupId: null, amount: left})
+  }
+  return parts
+}
 
 export function personSummary(rows: BalanceRow[], opts: {includeGroups: boolean}): PersonSummary[] {
   const people = new Map<string, PersonSummary>()

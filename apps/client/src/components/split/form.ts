@@ -221,23 +221,35 @@ const codeOf = (e: unknown) =>
 /**
  * Turns the form into a domain draft. All money maths goes through
  * `@splito/domain` (evaluateAmount, sums, computeShares, validateExpense).
+ * `mark` is the number locale's decimal mark (`decimalMark`).
  */
-export function evaluateForm(f: ExpenseForm, tz: string): FormEvaluation {
+export function evaluateForm(
+  f: ExpenseForm,
+  tz: string,
+  mark: '.' | ',' = '.',
+): FormEvaluation {
   const r: FormEvaluation = {rowErrors: {}}
   const errors: string[] = []
 
-  /* Optional amount in a row: blank is zero; a bad one is reported against its key. */
+  /*
+   * Optional amount in a row: blank is zero; a bad one is reported against
+   * its key. Only adjustments may go below zero (validateExpense refuses a
+   * payer or share against the total's sign).
+   */
   const rowAmount = (
     text: string | undefined,
     key: string,
+    canBeNegative = false,
   ): bigint | undefined => {
     if (!text?.trim()) return 0n
     try {
-      return evaluateAmount(text, f.currency)
+      const v = evaluateAmount(text, f.currency, mark)
+      if (v >= 0n || canBeNegative) return v
+      r.rowErrors[key] = 'NEGATIVE_AMOUNT'
     } catch (e) {
       r.rowErrors[key] = codeOf(e)
-      return undefined
     }
+    return undefined
   }
 
   if (!f.title.trim()) errors.push('TITLE_REQUIRED')
@@ -245,7 +257,7 @@ export function evaluateForm(f: ExpenseForm, tz: string): FormEvaluation {
   if (!f.amount.trim()) errors.push('AMOUNT_REQUIRED')
   else {
     try {
-      const total = evaluateAmount(f.amount, f.currency)
+      const total = evaluateAmount(f.amount, f.currency, mark)
       if (total <= 0n) r.amountError = 'AMOUNT_NOT_POSITIVE'
       else r.total = total
     } catch (e) {
@@ -295,7 +307,7 @@ export function evaluateForm(f: ExpenseForm, tz: string): FormEvaluation {
       const adjustments: Record<string, bigint> = {}
       let isComplete = true
       for (const p of splitting) {
-        const v = rowAmount(f.adjust[p], p)
+        const v = rowAmount(f.adjust[p], p, true)
         if (v === undefined) isComplete = false
         else if (v !== 0n) adjustments[p] = v
       }
@@ -448,7 +460,12 @@ export function evaluateForm(f: ExpenseForm, tz: string): FormEvaluation {
     }
   }
 
-  r.error = errors[0]
+  // A row below zero says so, rather than "isn't a valid number".
+  r.error =
+    errors[0] === 'INVALID_ROW_AMOUNT' &&
+    Object.values(r.rowErrors).includes('NEGATIVE_AMOUNT')
+      ? 'NEGATIVE_AMOUNT'
+      : errors[0]
   return r
 }
 
