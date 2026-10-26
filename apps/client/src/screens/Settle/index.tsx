@@ -6,14 +6,14 @@ import {type RouteProp, useNavigation, useRoute} from '@react-navigation/native'
 import {
   fnv1a64,
   type Plan,
-  type PlanMode,
   planSettlement,
   type Transfer,
+  ZERO,
 } from '@splito/domain'
 import {type Group, type Person} from '@splito/sync'
 
 import {type AllNavigatorParams, type NavigationProp} from '#/lib/routes/types'
-import {useEntities, useLedger, useMe, usePref} from '#/data/hooks'
+import {useEntities, useLedger, useMe} from '#/data/hooks'
 import {useNumberLocale} from '#/locale/numberLocale'
 import {EmptyState} from '#/view/com/util/EmptyState'
 import {List} from '#/view/com/util/List'
@@ -21,7 +21,6 @@ import {atoms as a, useBreakpoints, useTheme} from '#/alf'
 import * as Admonition from '#/components/Admonition'
 import {ButtonIcon, ButtonText} from '#/components/Button'
 import {useDialogControl} from '#/components/Dialog'
-import * as SegmentedControl from '#/components/forms/SegmentedControl'
 import {memberNets} from '#/components/groups/net'
 import {NO_RULES} from '#/components/groups/RulesEditor'
 import {ArrowRotateCounterClockwise_Stroke2_Corner0_Rounded as RefreshIcon} from '#/components/icons/ArrowRotate'
@@ -38,7 +37,7 @@ import {Shimmer} from '#/motion/Shimmer'
 import {TransferRow} from './components/TransferRow'
 
 type CurrencyPlan = {currency: string; plan: Plan | null}
-type Snapshot = {hash: string; mode: PlanMode; plans: CurrencyPlan[]}
+type Snapshot = {hash: string; plans: CurrencyPlan[]}
 
 type Item =
   | {type: 'currency'; key: string; currency: string; count: number | null}
@@ -47,12 +46,12 @@ type Item =
   | {type: 'settled'; key: string; currency: string}
 
 /**
- * Settle up a group: per currency, the plan from `planSettlement` over the
- * members' nets and the group's rules, in direct or via-others mode. The
- * plan shown is a snapshot with a hash; when expenses, payments, rules or
- * members change it is marked stale until the user updates it. A plan is
- * never a payment: each transfer is recorded only when the user says it
- * happened.
+ * Settle up a group: per currency, the direct plan from `planSettlement`
+ * over the members' nets and the group's rules (spec v1: direct only;
+ * routing through other members waits for their consent, v2). The plan
+ * shown is a snapshot with a hash; when expenses, payments, rules or members
+ * change it is marked stale until the user updates it. A plan is never a
+ * payment: each transfer is recorded only when the user says it happened.
  */
 export function SettleScreen() {
   const t = useTheme()
@@ -65,15 +64,12 @@ export function SettleScreen() {
   const people = useEntities<Person>('person')
   const groups = useEntities<Group>('group')
   const ledger = useLedger()
-  const [modePref] = usePref('settleMode')
-  const [chosenMode, setChosenMode] = useState<PlanMode | null>(null)
-  const mode = chosenMode ?? modePref ?? 'direct'
   const [snapshot, setSnapshot] = useState<Snapshot | null>(null)
   const [isAdopting, setIsAdopting] = useState(false)
   const paymentControl = useDialogControl()
   const [draft, setDraft] = useState<PaymentDraft | null>(null)
 
-  const isLoading = !me || !people || !groups || !ledger || !modePref
+  const isLoading = !me || !people || !groups || !ledger
   const group = groups?.find(g => g.id === groupId)
   const names = new Map(
     (people ?? []).map(p => [p.id, p.id === me?.id ? l`You` : p.data.name]),
@@ -85,13 +81,12 @@ export function SettleScreen() {
     const plans = Object.entries(memberNets(ledger, groupId, group.data)).map(
       ([currency, net]) => ({
         currency,
-        plan: Object.values(net).some(v => v !== 0n)
-          ? planSettlement(net, rules, mode)
+        plan: Object.values(net).some(v => v !== ZERO)
+          ? planSettlement(net, rules, 'direct')
           : null,
       }),
     )
     current = {
-      mode,
       plans,
       hash: fnv1a64(
         plans.map(p => `${p.currency}:${p.plan?.hash ?? '0'}`).join('|'),
@@ -100,14 +95,12 @@ export function SettleScreen() {
   }
 
   /*
-   * Adopt the live plan on first load, on a mode switch, and after a payment
-   * recorded here. Any other change only marks the shown plan stale.
+   * Adopt the live plan on first load and after a payment recorded here.
+   * Any other change only marks the shown plan stale.
    */
   if (
     current &&
-    (snapshot === null ||
-      snapshot.mode !== current.mode ||
-      (isAdopting && snapshot.hash !== current.hash))
+    (snapshot === null || (isAdopting && snapshot.hash !== current.hash))
   ) {
     setSnapshot(current)
     if (isAdopting) setIsAdopting(false)
@@ -165,12 +158,19 @@ export function SettleScreen() {
         currency,
         count: plan.transfers.length,
       },
-      ...plan.transfers.map(transfer => ({
-        type: 'transfer' as const,
-        key: `t-${currency}-${transfer.from}-${transfer.to}`,
-        currency,
-        transfer,
-      })),
+      // Biggest payments first, then by payer, so the order never depends on member ids.
+      ...[...plan.transfers]
+        .sort(
+          (x, y) =>
+            Number(y.amount > x.amount) - Number(x.amount > y.amount) ||
+            (names.get(x.from) ?? '').localeCompare(names.get(y.from) ?? ''),
+        )
+        .map(transfer => ({
+          type: 'transfer' as const,
+          key: `t-${currency}-${transfer.from}-${transfer.to}`,
+          currency,
+          transfer,
+        })),
     ]
   })
   const nameList = (ids: string[]) =>
@@ -179,36 +179,12 @@ export function SettleScreen() {
   const header = isLoading ? (
     <Shimmer testID="settle-loading">
       <View style={[a.px_lg, a.pt_lg, a.pb_lg, a.gap_md]}>
-        <Skeleton.Pill size={40} style={{width: '100%', maxWidth: 420}} />
-        <Skeleton.Text style={[a.text_sm, {width: 280}]} />
+        <Skeleton.Text style={[a.text_md, {width: '90%', maxWidth: 560}]} />
+        <Skeleton.Text style={[a.text_md, {width: '60%', maxWidth: 380}]} />
       </View>
     </Shimmer>
   ) : (
     <View style={[a.px_lg, a.pt_lg, a.pb_md, a.gap_md]}>
-      <View style={[{maxWidth: 420}]}>
-        <SegmentedControl.Root
-          label={l`Plan type`}
-          type="radio"
-          value={mode}
-          onChange={setChosenMode}>
-          <SegmentedControl.Item
-            value="direct"
-            label={l`Direct`}
-            testID="settle-mode-direct">
-            <SegmentedControl.ItemText>
-              <Trans>Direct</Trans>
-            </SegmentedControl.ItemText>
-          </SegmentedControl.Item>
-          <SegmentedControl.Item
-            value="transit"
-            label={l`Via others`}
-            testID="settle-mode-transit">
-            <SegmentedControl.ItemText>
-              <Trans>Via others</Trans>
-            </SegmentedControl.ItemText>
-          </SegmentedControl.Item>
-        </SegmentedControl.Root>
-      </View>
       <Text
         testID="settle-explanation"
         style={[
@@ -217,19 +193,10 @@ export function SettleScreen() {
           t.atoms.text_contrast_medium,
           {maxWidth: 720},
         ]}>
-        {mode === 'direct' ? (
-          <Trans>
-            Everyone who owes pays the people who are owed, straight to them.
-          </Trans>
-        ) : (
-          <Trans>
-            Payments may pass through other members when a direct pair isn’t
-            allowed. Everyone still ends up even.
-          </Trans>
-        )}{' '}
         <Trans>
-          Only pairs allowed in Who you settle with are used, preferred pairs
-          first, so the plan isn’t always the fewest payments.
+          Everyone who owes pays the people who are owed, straight to them. Only
+          pairs allowed in Who you settle with are used, preferred pairs first,
+          so the plan isn’t always the fewest payments.
         </Trans>
       </Text>
       {isStale && (
@@ -317,6 +284,7 @@ export function SettleScreen() {
                     transfer={item.transfer}
                     currency={item.currency}
                     me={me!.id}
+                    meName={me!.data.name}
                     names={names}
                     locale={locale}
                     onRecordPress={() => {
@@ -357,28 +325,15 @@ export function SettleScreen() {
                         <Admonition.Content>
                           <Admonition.Text
                             style={[a.text_md, a.font_semi_bold]}>
-                            {mode === 'direct' ? (
-                              <Trans>
-                                No direct plan works with these rules
-                              </Trans>
-                            ) : (
-                              <Trans>No plan works with these rules</Trans>
-                            )}
+                            <Trans>No direct plan works with these rules</Trans>
                           </Admonition.Text>
                           <Text
                             testID={`settle-stuck-${item.currency}`}
                             style={[a.text_sm, a.leading_snug, a.pr_md]}>
-                            {mode === 'direct' ? (
-                              <Trans>
-                                No allowed pair to pay anyone who is owed:{' '}
-                                {nameList(item.stuck)}
-                              </Trans>
-                            ) : (
-                              <Trans>
-                                No allowed route to anyone who is owed, even
-                                through other members: {nameList(item.stuck)}
-                              </Trans>
-                            )}
+                            <Trans>
+                              No allowed pair to pay anyone who is owed:{' '}
+                              {nameList(item.stuck)}
+                            </Trans>
                           </Text>
                         </Admonition.Content>
                       </Admonition.Row>
@@ -389,17 +344,6 @@ export function SettleScreen() {
                           a.gap_sm,
                           {paddingLeft: 28},
                         ]}>
-                        {mode === 'direct' && (
-                          <Admonition.Button
-                            testID="settle-try-transit"
-                            label={l`Try via others`}
-                            color="primary_subtle"
-                            onPress={() => setChosenMode('transit')}>
-                            <ButtonText>
-                              <Trans>Try via others</Trans>
-                            </ButtonText>
-                          </Admonition.Button>
-                        )}
                         <Admonition.Button
                           testID="settle-edit-rules"
                           label={l`Edit who you settle with`}
@@ -433,6 +377,10 @@ export function SettleScreen() {
           ListFooterComponent={
             snapshot && items.length > 0 ? (
               <View
+                testID="settle-footer"
+                // Tests read the plan's version here; it is never shown.
+                // @ts-expect-error web only: RN Web renders dataSet as data-* attributes
+                dataSet={{planHash: snapshot.hash}}
                 style={[
                   a.px_lg,
                   a.pt_lg,
@@ -451,15 +399,6 @@ export function SettleScreen() {
                     Splito never moves money. Record each payment once it has
                     happened – part payments are fine.
                   </Trans>
-                </Text>
-                <Text
-                  testID="settle-plan-id"
-                  style={[
-                    a.text_xs,
-                    t.atoms.text_contrast_low,
-                    {fontVariant: ['tabular-nums']},
-                  ]}>
-                  <Trans>Plan {snapshot.hash.slice(0, 8)}</Trans>
                 </Text>
               </View>
             ) : undefined

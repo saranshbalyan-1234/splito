@@ -1,6 +1,6 @@
 import {View} from 'react-native'
 import {Trans, useLingui} from '@lingui/react/macro'
-import {formatAmount, getCurrency, toDecimalString} from '@splito/domain'
+import {formatAmount, getCurrency, toDecimalString, ZERO} from '@splito/domain'
 import {nanoid} from 'nanoid/non-secure'
 
 import {UserAvatar} from '#/view/com/util/UserAvatar'
@@ -501,9 +501,9 @@ function ItemsEditor({
       </View>
 
       {evaluation.itemsTotal !== undefined &&
-      evaluation.itemsTotal > 0n &&
+      evaluation.itemsTotal > ZERO &&
       evaluation.remaining?.kind === 'money' &&
-      evaluation.remaining.value !== 0n ? (
+      evaluation.remaining.value !== ZERO ? (
         <View
           style={[
             a.flex_row,

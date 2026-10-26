@@ -2,7 +2,7 @@ import {View} from 'react-native'
 import {plural} from '@lingui/core/macro'
 import {Trans, useLingui} from '@lingui/react/macro'
 import {useNavigation, useRoute, type RouteProp} from '@react-navigation/native'
-import {expenseNet, formatAmount, magnitude} from '@splito/domain'
+import {expenseNet, formatAmount, magnitude, ZERO} from '@splito/domain'
 import {
   deleteExpense,
   type Entity,
@@ -322,7 +322,7 @@ function Detail({
             t.atoms.bg_contrast_25,
           ]}>
           <Text style={[a.text_md, a.font_medium]}>
-            {myNet > 0n ? (
+            {myNet > ZERO ? (
               <Trans>
                 You lent{' '}
                 <Text
@@ -334,7 +334,7 @@ function Detail({
                   {fmt(myNet)}
                 </Text>
               </Trans>
-            ) : myNet < 0n ? (
+            ) : myNet < ZERO ? (
               <Trans>
                 You borrowed{' '}
                 <Text
@@ -418,7 +418,7 @@ function Detail({
             {label: l`Tip`, value: e.split.tip, sign: ''},
             {label: l`Discount`, value: e.split.discount, sign: '−'},
           ]
-            .filter(x => x.value !== 0n)
+            .filter(x => x.value !== ZERO)
             .map(x => (
               <View key={x.label} style={[a.flex_row, a.justify_between]}>
                 <Text style={[a.text_md, t.atoms.text_contrast_medium]}>
@@ -543,7 +543,7 @@ function shareDetail(
         : undefined
     case 'adjusted': {
       const adj = s.adjustments[id]
-      return adj ? (adj > 0n ? `+${fmt(adj)}` : `−${fmt(-adj)}`) : undefined
+      return adj ? (adj > ZERO ? `+${fmt(adj)}` : `−${fmt(-adj)}`) : undefined
     }
     default:
       return undefined

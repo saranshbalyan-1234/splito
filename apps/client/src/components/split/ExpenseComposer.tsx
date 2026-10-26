@@ -3,7 +3,7 @@ import {KeyboardAvoidingView, ScrollView, View} from 'react-native'
 import {plural} from '@lingui/core/macro'
 import {Trans, useLingui} from '@lingui/react/macro'
 import {useNavigation} from '@react-navigation/native'
-import {formatAmount, magnitude} from '@splito/domain'
+import {decimalMark, formatAmount, magnitude, ZERO} from '@splito/domain'
 import {
   createExpense,
   type Group,
@@ -99,7 +99,7 @@ export function ExpenseComposer({
   const [showRestored, setShowRestored] = useState(isDraftRestored)
   const [isSaving, setIsSaving] = useState(false)
   const [savedId, setSavedId] = useState<string>()
-  const evaluation = evaluateForm(form, tz)
+  const evaluation = evaluateForm(form, tz, decimalMark(locale))
   const category = useCategory(form.category)
   const isEdit = !!expenseId
   const isDirty = form !== initialForm
@@ -249,15 +249,15 @@ export function ExpenseComposer({
     form.payerMode === 'single'
       ? name(form.payer)
       : evaluation.payersRemaining !== undefined &&
-          evaluation.payersRemaining !== 0n
-        ? evaluation.payersRemaining > 0n
+          evaluation.payersRemaining !== ZERO
+        ? evaluation.payersRemaining > ZERO
           ? l`${formatAmount(evaluation.payersRemaining, form.currency, locale)} left to pay`
           : l`${formatAmount(magnitude(evaluation.payersRemaining), form.currency, locale)} too much`
         : l`${Object.keys(evaluation.draft?.payers ?? form.paid).length} people`
   const isPayersOff =
     form.payerMode === 'multiple' &&
     evaluation.payersRemaining !== undefined &&
-    evaluation.payersRemaining !== 0n
+    evaluation.payersRemaining !== ZERO
 
   return (
     <Composer.Outer testID={testID} onDismiss={requestClose}>
@@ -626,11 +626,11 @@ function Footer({
           ? l`${pct(remaining.value)}% left to assign`
           : l`${pct(remaining.value)}% over 100%`
   } else if (remaining?.kind === 'money') {
-    tone = remaining.value === 0n ? 'ok' : 'off'
+    tone = remaining.value === ZERO ? 'ok' : 'off'
     text =
-      remaining.value === 0n
+      remaining.value === ZERO
         ? l`All ${fmt(total!)} assigned`
-        : remaining.value > 0n
+        : remaining.value > ZERO
           ? l`${fmt(remaining.value)} left to assign`
           : l`${fmt(magnitude(remaining.value))} over the total`
   } else if (total === undefined) {
@@ -643,7 +643,7 @@ function Footer({
   ) {
     const values = Object.values(shares)
     const n = values.length
-    const most = values.reduce((x, y) => (y > x ? y : x), 0n)
+    const most = values.reduce((x, y) => (y > x ? y : x), ZERO)
     const least = values.reduce((x, y) => (y < x ? y : x), most)
     tone = 'ok'
     text =

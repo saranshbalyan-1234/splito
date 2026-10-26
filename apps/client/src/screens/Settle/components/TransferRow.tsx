@@ -18,6 +18,7 @@ export function TransferRow({
   transfer,
   currency,
   me,
+  meName,
   names,
   locale,
   onRecordPress,
@@ -25,6 +26,8 @@ export function TransferRow({
   transfer: Transfer
   currency: string
   me: string
+  /** My own name, for my avatar ("You" is only the label). */
+  meName: string
   names: Map<string, string>
   locale: string
   onRecordPress: () => void
@@ -35,6 +38,7 @@ export function TransferRow({
   const listAnimations = useListAnimations()
   const {from, to, amount} = transfer
   const name = (id: string) => names.get(id) ?? l`Someone`
+  const avatarName = (id: string) => (id === me ? meName : name(id))
   const sentence =
     from === me
       ? l`You pay ${name(to)}`
@@ -56,9 +60,9 @@ export function TransferRow({
         t.atoms.border_contrast_low,
       ]}>
       <View style={[a.flex_row, a.align_center, a.gap_2xs]}>
-        <UserAvatar size={36} name={name(from)} type="user" />
+        <UserAvatar size={36} name={avatarName(from)} type="user" />
         <ArrowRightIcon size="xs" fill={t.atoms.text_contrast_low.color} />
-        <UserAvatar size={36} name={name(to)} type="user" />
+        <UserAvatar size={36} name={avatarName(to)} type="user" />
       </View>
       <View style={[a.flex_1, a.gap_2xs]}>
         <Text

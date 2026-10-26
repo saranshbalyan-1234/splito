@@ -1,7 +1,7 @@
 import {View} from 'react-native'
 import Animated from 'react-native-reanimated'
 import {Trans, useLingui} from '@lingui/react/macro'
-import {formatAmount, magnitude, type PersonSummary} from '@splito/domain'
+import {formatAmount, magnitude, type PersonSummary, ZERO} from '@splito/domain'
 
 import {useRowPadding} from '#/state/preferences/density'
 import {Link} from '#/view/com/util/Link'
@@ -46,7 +46,7 @@ export function PersonRow({
   const currencies = Object.keys(byCurrency)
     .filter(
       c =>
-        byCurrency[c]!.total !== 0n ||
+        byCurrency[c]!.total !== ZERO ||
         Object.keys(byCurrency[c]!.groups).length > 0,
     )
     .sort()
@@ -54,7 +54,7 @@ export function PersonRow({
   const chips = currencies.flatMap(currency => {
     const c = byCurrency[currency]!
     const groups = Object.entries(c.groups)
-      .filter(([, v]) => v !== 0n)
+      .filter(([, v]) => v !== ZERO)
       .map(([groupId, v]) => ({
         key: `${currency}-${groupId}`,
         name: groupNames.get(groupId) ?? l`Group`,
@@ -63,7 +63,7 @@ export function PersonRow({
       .sort((x, y) => x.name.localeCompare(y.name))
     if (groups.length === 0) return []
     return [
-      ...(c.direct !== 0n
+      ...(c.direct !== ZERO
         ? [{key: `${currency}-direct`, name: l`Direct`, v: c.direct}]
         : []),
       ...groups,
@@ -72,7 +72,7 @@ export function PersonRow({
       currency,
     }))
   })
-  const isSettled = currencies.every(c => byCurrency[c]!.total === 0n)
+  const isSettled = currencies.every(c => byCurrency[c]!.total === ZERO)
 
   const balances = (
     <View style={[a.align_end, a.gap_2xs, a.flex_shrink_0]}>
@@ -82,7 +82,7 @@ export function PersonRow({
         </Text>
       ) : (
         currencies
-          .filter(c => byCurrency[c]!.total !== 0n)
+          .filter(c => byCurrency[c]!.total !== ZERO)
           .map(currency => (
             <BalanceText
               key={currency}
@@ -140,13 +140,13 @@ export function PersonRow({
                         a.font_semi_bold,
                         {
                           color:
-                            chip.v > 0n
+                            chip.v > ZERO
                               ? t.palette.positive_600
                               : t.palette.negative_500,
                           fontVariant: ['tabular-nums'],
                         },
                       ]}>
-                      {(chip.v > 0n ? '+' : '−') +
+                      {(chip.v > ZERO ? '+' : '−') +
                         formatAmount(magnitude(chip.v), chip.currency, locale)}
                     </Text>
                   </Pills.Tag>

@@ -11,7 +11,7 @@ import {type I18n} from '@lingui/core'
 import {defineMessage} from '@lingui/core/macro'
 import {Trans, useLingui} from '@lingui/react/macro'
 import {useNavigation} from '@react-navigation/native'
-import {expenseNet, formatAmount, magnitude} from '@splito/domain'
+import {expenseNet, formatAmount, magnitude, ZERO} from '@splito/domain'
 import {type ActivityEvent, type SwipeAction} from '@splito/sync'
 
 import {useHaptics} from '#/lib/haptics'
@@ -386,7 +386,8 @@ function useDescribe(
             a.text_sm,
             a.font_semi_bold,
             {
-              color: net > 0n ? t.palette.positive_600 : t.palette.negative_500,
+              color:
+                net > ZERO ? t.palette.positive_600 : t.palette.negative_500,
               fontVariant: ['tabular-nums'],
             },
           ]}>
@@ -445,9 +446,9 @@ function useDescribe(
             {isDeleted ? null : (
               <>
                 <Dot />
-                {net === 0n ? (
+                {net === ZERO ? (
                   <Trans>not involved</Trans>
-                ) : net > 0n ? (
+                ) : net > ZERO ? (
                   <Trans>you lent {figure}</Trans>
                 ) : (
                   <Trans>you borrowed {figure}</Trans>

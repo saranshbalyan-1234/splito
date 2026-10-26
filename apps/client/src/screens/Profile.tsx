@@ -1,16 +1,21 @@
 // Adapted from bluesky-social/social-app@4e4ad9c (MIT) - src/screens/Settings/Settings.tsx
 import {View} from 'react-native'
 import {Trans, useLingui} from '@lingui/react/macro'
+import {type Entity, type Person} from '@splito/sync'
 
 import {useMe} from '#/data/hooks'
 import {UserAvatar} from '#/view/com/util/UserAvatar'
 import * as SettingsList from '#/screens/Settings/components/SettingsList'
 import {atoms as a, useBreakpoints, useTheme} from '#/alf'
+import {Button, ButtonIcon, ButtonText} from '#/components/Button'
+import {useDialogControl} from '#/components/Dialog'
 import {ChartPie_Stroke2_Corner0_Rounded as ChartPieIcon} from '#/components/icons/ChartPie'
 import {CircleInfo_Stroke2_Corner0_Rounded as InfoIcon} from '#/components/icons/CircleInfo'
 import {Cloud_Stroke2_Corner0_Rounded as CloudIcon} from '#/components/icons/Cloud'
 import {SettingsGear2_Stroke2_Corner0_Rounded as SettingsIcon} from '#/components/icons/Settings'
+import {Pencil_Stroke2_Corner0_Rounded as PencilIcon} from '#/components/icons/Pencil'
 import * as Layout from '#/components/Layout'
+import {EditFriendDialog} from '#/components/people/EditFriendDialog'
 import * as Skeleton from '#/components/Skeleton'
 import {Text} from '#/components/Typography'
 import {Shimmer} from '#/motion/Shimmer'
@@ -48,11 +53,7 @@ export function ProfileScreen() {
               a.align_center,
               {minHeight: 160},
             ]}>
-            {me ? (
-              <ProfilePreview name={me.data.name} />
-            ) : (
-              <ProfilePreviewPlaceholder />
-            )}
+            {me ? <ProfilePreview me={me} /> : <ProfilePreviewPlaceholder />}
           </View>
           <SettingsList.Divider />
           <SettingsList.LinkItem
@@ -98,9 +99,13 @@ export function ProfileScreen() {
   )
 }
 
-function ProfilePreview({name}: {name: string}) {
+/* Bluesky's profile header block: avatar, name, then its Edit profile button. */
+function ProfilePreview({me}: {me: Entity<Person>}) {
   const t = useTheme()
+  const {t: l} = useLingui()
   const {gtMobile} = useBreakpoints()
+  const editControl = useDialogControl()
+  const name = me.data.name
 
   return (
     <>
@@ -130,6 +135,19 @@ function ProfilePreview({name}: {name: string}) {
       <Text style={[a.text_md, a.leading_snug, t.atoms.text_contrast_medium]}>
         <Trans>Saved on this device</Trans>
       </Text>
+      <Button
+        testID="profile-edit"
+        label={l`Edit profile`}
+        size="small"
+        color="secondary"
+        style={[a.mt_md]}
+        onPress={() => editControl.open()}>
+        <ButtonIcon icon={PencilIcon} />
+        <ButtonText>
+          <Trans>Edit profile</Trans>
+        </ButtonText>
+      </Button>
+      <EditFriendDialog control={editControl} person={me} />
     </>
   )
 }

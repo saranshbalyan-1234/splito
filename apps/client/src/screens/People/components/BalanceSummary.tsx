@@ -6,6 +6,7 @@ import {
   formatAmount,
   getCurrency,
   magnitude,
+  ZERO,
 } from '@splito/domain'
 
 import {Link} from '#/view/com/util/Link'
@@ -114,9 +115,9 @@ function SummaryCard({
   const {currency, owed, owe, net} = total
   const press = usePressScale()
   const netColor =
-    net > 0n
+    net > ZERO
       ? t.palette.positive_600
-      : net < 0n
+      : net < ZERO
         ? t.palette.negative_500
         : t.atoms.text.color
 
@@ -150,9 +151,9 @@ function SummaryCard({
         <View style={[a.flex_row, a.align_center, a.justify_between, a.gap_sm]}>
           <Text
             style={[a.text_sm, a.font_semi_bold, t.atoms.text_contrast_medium]}>
-            {net > 0n ? (
+            {net > ZERO ? (
               <Trans>You are owed</Trans>
-            ) : net < 0n ? (
+            ) : net < ZERO ? (
               <Trans>You owe</Trans>
             ) : (
               <Trans>All settled up</Trans>

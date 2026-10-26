@@ -1,7 +1,7 @@
 import {useState} from 'react'
 import {Linking, View} from 'react-native'
 import {Trans, useLingui} from '@lingui/react/macro'
-import {DomainError, formatAmount, toDecimalString} from '@splito/domain'
+import {DomainError, formatAmount, toDecimalString, ZERO} from '@splito/domain'
 import {type Entity, type Person, updatePerson} from '@splito/sync'
 
 import {useHaptics} from '#/lib/haptics'
@@ -81,7 +81,7 @@ function Form({
     let minor: bigint
     try {
       minor = parseTypedAmount(amountText, 'INR', locale)
-      if (minor <= 0n) throw new DomainError('INVALID_AMOUNT')
+      if (minor <= ZERO) throw new DomainError('INVALID_AMOUNT')
     } catch {
       haptics.error()
       setError('amount')

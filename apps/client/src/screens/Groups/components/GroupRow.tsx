@@ -2,6 +2,7 @@
 import {View} from 'react-native'
 import Animated from 'react-native-reanimated'
 import {Trans, useLingui} from '@lingui/react/macro'
+import {ZERO} from '@splito/domain'
 import {type Entity, type Group} from '@splito/sync'
 
 import {useRowPadding} from '#/state/preferences/density'
@@ -57,7 +58,7 @@ export function GroupRow({
   const memberText = memberCount === 1 ? l`1 member` : l`${memberCount} members`
   const byline = [kindLabel, dates, memberText].filter(Boolean).join(' · ')
   const open = Object.keys(balances)
-    .filter(c => balances[c] !== 0n)
+    .filter(c => balances[c] !== ZERO)
     .sort()
 
   const balanceView = (

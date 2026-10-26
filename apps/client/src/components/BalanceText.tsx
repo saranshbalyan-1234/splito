@@ -1,5 +1,5 @@
 import {Trans} from '@lingui/react/macro'
-import {formatAmount, magnitude} from '@splito/domain'
+import {formatAmount, magnitude, ZERO} from '@splito/domain'
 
 import {atoms as a, type TextStyleProp, useTheme} from '#/alf'
 import {Text} from '#/components/Typography'
@@ -29,7 +29,7 @@ export function BalanceText({
     a.text_md,
     a.font_semi_bold,
     {
-      color: amount > 0n ? t.palette.positive_600 : t.palette.negative_500,
+      color: amount > ZERO ? t.palette.positive_600 : t.palette.negative_500,
       fontVariant: ['tabular-nums' as const],
     },
   ]
@@ -39,9 +39,9 @@ export function BalanceText({
       testID={testID}
       numberOfLines={1}
       style={[a.text_sm, a.leading_snug, t.atoms.text_contrast_medium, style]}>
-      {amount === 0n ? (
+      {amount === ZERO ? (
         <Trans>settled up</Trans>
-      ) : amount > 0n ? (
+      ) : amount > ZERO ? (
         subject === 'person' ? (
           <Trans>
             owes you <Text style={figureStyle}>{figure}</Text>

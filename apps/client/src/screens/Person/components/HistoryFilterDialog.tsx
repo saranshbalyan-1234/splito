@@ -9,9 +9,10 @@ import * as Toggle from '#/components/forms/Toggle'
 import {Text} from '#/components/Typography'
 
 /**
- * The person page's filter. Changes apply only on Apply (spec: filters use
- * Apply), to both the totals and the history. The starting value comes from
- * the "Include groups by default" preference.
+ * The People and person pages' filter. Changes apply only on Apply (spec:
+ * filters use Apply), to both the totals and the history. The starting
+ * value comes from the "Include groups by default" preference. `name` is the
+ * friend on a person page; People leaves it out.
  */
 export function HistoryFilterDialog({
   control,
@@ -20,7 +21,7 @@ export function HistoryFilterDialog({
   onFilterApplied,
 }: {
   control: Dialog.DialogControlProps
-  name: string
+  name?: string
   includeGroups: boolean
   onFilterApplied: (includeGroups: boolean) => void
 }) {
@@ -45,7 +46,7 @@ function Form({
   includeGroups,
   onFilterApplied,
 }: {
-  name: string
+  name?: string
   includeGroups: boolean
   onFilterApplied: (includeGroups: boolean) => void
 }) {
@@ -72,10 +73,17 @@ function Form({
           </Toggle.LabelText>
           <Text
             style={[a.text_sm, a.leading_snug, t.atoms.text_contrast_medium]}>
-            <Trans>
-              Count expenses and payments from groups you share with {name}. Off
-              shows only what is between the two of you.
-            </Trans>
+            {name ? (
+              <Trans>
+                Count expenses and payments from groups you share with {name}.
+                Off shows only what is between the two of you.
+              </Trans>
+            ) : (
+              <Trans>
+                Count balances from groups you share with each friend. Off shows
+                only what is between you and them.
+              </Trans>
+            )}
           </Text>
         </View>
         <Toggle.Platform />

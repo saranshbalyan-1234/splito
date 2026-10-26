@@ -1,6 +1,6 @@
 import {View} from 'react-native'
 import {Trans, useLingui} from '@lingui/react/macro'
-import {formatAmount, magnitude} from '@splito/domain'
+import {formatAmount, magnitude, ZERO} from '@splito/domain'
 
 import {UserAvatar} from '#/view/com/util/UserAvatar'
 import {atoms as a, useTheme} from '#/alf'
@@ -166,13 +166,13 @@ function PayersInner({
                 a.font_medium,
                 a.pt_md,
                 {fontVariant: ['tabular-nums']},
-                left === 0n
+                left === ZERO
                   ? t.atoms.text_contrast_medium
                   : {color: t.palette.negative_500},
               ]}>
-              {left === 0n ? (
+              {left === ZERO ? (
                 <Trans>Adds up to the total</Trans>
-              ) : left > 0n ? (
+              ) : left > ZERO ? (
                 <Trans>
                   {formatAmount(left, form.currency, locale)} left to pay
                 </Trans>

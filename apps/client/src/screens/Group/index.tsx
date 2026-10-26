@@ -3,7 +3,6 @@ import {View} from 'react-native'
 import {LayoutAnimationConfig} from 'react-native-reanimated'
 import {Trans, useLingui} from '@lingui/react/macro'
 import {type RouteProp, useNavigation, useRoute} from '@react-navigation/native'
-import {groupBalances, pairwiseBalances} from '@splito/domain'
 import {
   type Entity,
   type Expense,
@@ -57,6 +56,7 @@ import {
   MemberBalanceRow,
   MemberRow,
 } from './components/GroupRows'
+import {ZERO} from '@splito/domain'
 
 type Tab = 'expenses' | 'balances' | 'members' | 'rules'
 
@@ -140,15 +140,18 @@ export function GroupScreen() {
         )
       : []
   const nets = group && ledger ? memberNets(ledger, groupId, group.data) : {}
-  const myBalances =
-    me && ledger
-      ? (groupBalances(pairwiseBalances(ledger, me.id))[groupId] ?? {})
-      : {}
-  const openCurrencies = Object.keys(myBalances)
-    .filter(c => myBalances[c] !== 0n)
+  // My balance here is my group net, as on the Balances tab and in Settle up.
+  const mine: Record<string, bigint> = Object.fromEntries(
+    Object.entries(nets).map(([c, net]) => [
+      c,
+      me ? (net[me.id] ?? ZERO) : ZERO,
+    ]),
+  )
+  const openCurrencies = Object.keys(mine)
+    .filter(c => mine[c] !== ZERO)
     .sort()
   const isSettled = Object.values(nets).every(net =>
-    Object.values(net).every(v => v === 0n),
+    Object.values(net).every(v => v === ZERO),
   )
   const members = (group?.data.members ?? [])
     .slice()
@@ -275,7 +278,11 @@ export function GroupScreen() {
                   ]}>
                   <UserAvatar
                     size={28}
-                    name={names.get(m.personId)}
+                    name={
+                      m.personId === me?.id
+                        ? me.data.name
+                        : names.get(m.personId)
+                    }
                     type="user"
                     noBorder
                   />
@@ -306,7 +313,7 @@ export function GroupScreen() {
                 <BalanceText
                   key={currency}
                   testID={`group-my-balance-${currency}`}
-                  amount={myBalances[currency]!}
+                  amount={mine[currency]!}
                   currency={currency}
                   locale={locale}
                   subject="group"
@@ -317,24 +324,11 @@ export function GroupScreen() {
           </View>
 
           <View style={[a.flex_row, a.flex_wrap, a.gap_xs]}>
-            {gtMobile && (
-              <Button
-                testID="group-add-expense"
-                label={l`Add expense to ${group.data.name}`}
-                size="small"
-                color="primary"
-                onPress={() => navigation.navigate('AddExpense', {groupId})}>
-                <ButtonIcon icon={PlusIcon} />
-                <ButtonText>
-                  <Trans context="action">Add expense</Trans>
-                </ButtonText>
-              </Button>
-            )}
             <Button
               testID="group-settle"
               label={l`Settle up`}
               size="small"
-              color={gtMobile ? 'secondary' : 'primary'}
+              color="primary"
               disabled={isSettled}
               onPress={() => navigation.navigate('Settle', {groupId})}>
               <ButtonIcon icon={HandCoinsIcon} />

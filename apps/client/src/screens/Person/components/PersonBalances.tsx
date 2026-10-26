@@ -1,6 +1,6 @@
 import {View} from 'react-native'
 import {Trans, useLingui} from '@lingui/react/macro'
-import {formatAmount, magnitude, type PersonSummary} from '@splito/domain'
+import {formatAmount, magnitude, type PersonSummary, ZERO} from '@splito/domain'
 
 import {atoms as a, useTheme} from '#/alf'
 import {CircleCheck_Stroke2_Corner0_Rounded as CheckIcon} from '#/components/icons/CircleCheck'
@@ -30,7 +30,7 @@ export function PersonBalances({
   const t = useTheme()
   const byCurrency = summary?.byCurrency ?? {}
   const currencies = Object.keys(byCurrency)
-    .filter(c => byCurrency[c]!.total !== 0n || hasParts(byCurrency[c]!))
+    .filter(c => byCurrency[c]!.total !== ZERO || hasParts(byCurrency[c]!))
     .sort()
 
   if (currencies.length === 0) {
@@ -75,7 +75,7 @@ export function PersonBalances({
 }
 
 function hasParts(c: PersonSummary['byCurrency'][string]) {
-  return Object.values(c.groups).some(v => v !== 0n)
+  return Object.values(c.groups).some(v => v !== ZERO)
 }
 
 function BalanceCard({
@@ -95,15 +95,15 @@ function BalanceCard({
   const {t: l, i18n} = useLingui()
   const {total, direct, groups} = balance
   const color =
-    total > 0n
+    total > ZERO
       ? t.palette.positive_600
-      : total < 0n
+      : total < ZERO
         ? t.palette.negative_500
         : t.atoms.text.color
   const parts = [
-    ...(direct !== 0n ? [{key: 'direct', label: l`Direct`, v: direct}] : []),
+    ...(direct !== ZERO ? [{key: 'direct', label: l`Direct`, v: direct}] : []),
     ...Object.entries(groups)
-      .filter(([, v]) => v !== 0n)
+      .filter(([, v]) => v !== ZERO)
       .map(([id, v]) => ({key: id, label: groupNames.get(id) ?? l`Group`, v}))
       .sort((x, y) => x.label.localeCompare(y.label)),
   ]
@@ -132,9 +132,9 @@ function BalanceCard({
             a.font_semi_bold,
             t.atoms.text_contrast_medium,
           ]}>
-          {total > 0n ? (
+          {total > ZERO ? (
             <Trans>{name} owes you</Trans>
-          ) : total < 0n ? (
+          ) : total < ZERO ? (
             <Trans>You owe {name}</Trans>
           ) : (
             <Trans>Settled up</Trans>
@@ -190,12 +190,12 @@ function BalanceCard({
                   tabular,
                   {
                     color:
-                      part.v > 0n
+                      part.v > ZERO
                         ? t.palette.positive_600
                         : t.palette.negative_500,
                   },
                 ]}>
-                {(part.v > 0n ? '+' : '−') +
+                {(part.v > ZERO ? '+' : '−') +
                   formatAmount(magnitude(part.v), currency, locale)}
               </Text>
             </View>

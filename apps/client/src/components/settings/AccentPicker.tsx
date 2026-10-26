@@ -77,7 +77,7 @@ export function AccentPicker() {
         },
       }}
       icon={PaletteIcon}
-      title={l`Accent colour`}
+      title={l`Accent color`}
       description={l`Tints buttons, links and highlights. Money keeps its green and red.`}>
       <View style={[a.flex_row, a.flex_wrap, a.gap_md, a.py_2xs]}>
         {ACCENTS.map(acc => (
@@ -97,14 +97,14 @@ export function AccentPicker() {
           <Swatch
             testID="accent-custom-applied"
             color={applied}
-            label={l`Custom colour ${applied}`}
+            label={l`Custom color ${applied}`}
             isSelected={choice === applied}
             onPress={() => choose(applied)}
           />
         ) : null}
         <Button
           testID="accent-custom"
-          label={l`Custom colour`}
+          label={l`Custom color`}
           onPress={() => setCustom(custom === null ? choice.slice(1) : null)}
           style={[
             a.rounded_full,
@@ -121,12 +121,12 @@ export function AccentPicker() {
       {custom !== null && (
         <View style={[a.pt_sm]}>
           <TextField.LabelText>
-            <Trans>Hex colour</Trans>
+            <Trans>Hex color</Trans>
           </TextField.LabelText>
           <TextField.Root isInvalid={custom.length > 0 && !customValid}>
             <TextField.Input
               testID="accent-hex"
-              label={l`Hex colour`}
+              label={l`Hex color`}
               placeholder="006AFF"
               value={custom}
               autoCapitalize="characters"
@@ -151,7 +151,7 @@ export function AccentPicker() {
             {color: t.palette.negative_500},
           ]}>
           <Trans>
-            White text is hard to read on this colour. A darker shade works
+            White text is hard to read on this color. A darker shade works
             better.
           </Trans>
         </Text>
@@ -161,7 +161,7 @@ export function AccentPicker() {
         <View style={[a.flex_row, a.gap_sm, a.pt_sm]}>
           <Button
             testID="accent-apply"
-            label={l`Apply accent colour`}
+            label={l`Apply accent color`}
             onPress={apply}
             size="small"
             color="primary"
@@ -210,7 +210,8 @@ function Swatch({
       label={label}
       onPress={onPress}
       role="radio"
-      accessibilityState={{selected: isSelected}}
+      accessibilityState={{checked: isSelected}}
+      aria-checked={isSelected}
       style={[
         a.rounded_full,
         a.align_center,

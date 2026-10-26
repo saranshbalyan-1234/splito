@@ -1,4 +1,4 @@
-import {useEffect, useState} from 'react'
+import {useEffect, useMemo, useState} from 'react'
 import {type LedgerRecord} from '@splito/domain'
 import {
   type Entity,
@@ -51,7 +51,12 @@ function useLive<T>(load: (store: Store) => Promise<T>): T | undefined {
 /** Live list of non-deleted entities of one type. Undefined while loading. */
 export function useEntities<T>(type: EntityType): Entity<T>[] | undefined {
   const all = useLive(store => store.getAll<T>(type))
-  return all?.filter(e => !e.deleted)
+  /*
+   * Same array until the store commits, so compiled screens can memoize the
+   * balances they derive from it. React Compiler skips this file (it has an
+   * eslint-disable), hence the explicit useMemo.
+   */
+  return useMemo(() => all?.filter(e => !e.deleted), [all])
 }
 
 /** Live ledger records (tombstoned records included, flagged `deleted`). */
@@ -65,7 +70,9 @@ export function useMe(): Entity<Person> | undefined {
 }
 
 /** Live preference value (default until loaded) plus a validated setter. */
-export function usePref<K extends PrefKey>(key: K): [PrefValue<K> | undefined, (v: PrefValue<K>) => Promise<void>] {
+export function usePref<K extends PrefKey>(
+  key: K,
+): [PrefValue<K> | undefined, (v: PrefValue<K>) => Promise<void>] {
   const {store, ctx} = useData()
   const value = useLive(s => getPref(s, key))
   return [value, v => setPref(store, ctx, key, v)]

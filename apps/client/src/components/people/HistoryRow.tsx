@@ -1,7 +1,7 @@
 import {View} from 'react-native'
 import Animated from 'react-native-reanimated'
 import {Trans, useLingui} from '@lingui/react/macro'
-import {formatAmount, magnitude} from '@splito/domain'
+import {formatAmount, magnitude, ZERO} from '@splito/domain'
 import {type Entity, type Repayment} from '@splito/sync'
 
 import {Link} from '#/view/com/util/Link'
@@ -64,7 +64,7 @@ export function HistoryRow({
   let trailing: React.ReactNode
   if (entry.kind === 'expense') {
     const e = entry.entity.data
-    const payers = Object.keys(e.payers).filter(id => e.payers[id] !== 0n)
+    const payers = Object.keys(e.payers).filter(id => e.payers[id] !== ZERO)
     const total = amount(e.total)
     title = e.title
     byline = [
@@ -196,7 +196,7 @@ function EffectText({
     a.text_md,
     a.font_semi_bold,
     {
-      color: effect > 0n ? t.palette.positive_600 : t.palette.negative_500,
+      color: effect > ZERO ? t.palette.positive_600 : t.palette.negative_500,
       ...tabular,
     },
   ]
@@ -209,13 +209,13 @@ function EffectText({
         t.atoms.text_contrast_medium,
         a.text_right,
       ]}>
-      {effect === 0n ? (
+      {effect === ZERO ? (
         context === 'person' ? (
           <Trans>no balance change</Trans>
         ) : (
           <Trans>not involved</Trans>
         )
-      ) : effect > 0n ? (
+      ) : effect > ZERO ? (
         context === 'person' ? (
           <Trans>
             owes you <Text style={figureStyle}>{figure}</Text>

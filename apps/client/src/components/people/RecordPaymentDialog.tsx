@@ -1,13 +1,15 @@
-import {useState} from 'react'
+import {useRef, useState} from 'react'
 import {View} from 'react-native'
 import {Trans, useLingui} from '@lingui/react/macro'
 import {
-  DomainError,
+  type BalancePart,
   formatAmount,
   getCurrency,
+  splitPayment,
   toDecimalString,
+  ZERO,
 } from '@splito/domain'
-import {createRepayment} from '@splito/sync'
+import {createRepayments} from '@splito/sync'
 
 import {useHaptics} from '#/lib/haptics'
 import {logger} from '#/logger'
@@ -24,6 +26,7 @@ import {ArrowRightLeft_Stroke2_Corner0_Rounded as SwapIcon} from '#/components/i
 import {
   currencyName,
   parseTypedAmount,
+  partsOwedBy,
   todayLocal,
 } from '#/components/people/ledger'
 import * as Toast from '#/components/Toast'
@@ -44,8 +47,10 @@ export type PaymentDraft = {
 /**
  * Records money that changed hands outside Splito (partial or full). The
  * suggestion is prefilled and editable; Splito never moves money and never
- * says it did. Saving twice records one payment: the id is fixed when the
- * dialog opens.
+ * says it did. Saving twice records one payment: ids are fixed while the
+ * dialog is open. With `balance` (a friend's page), one payment is split
+ * across the direct and group parts it settles (`splitPayment`), so each
+ * group's own balance moves too; otherwise it goes to `draft.groupId`.
  */
 export function RecordPaymentDialog({
   control,
@@ -55,6 +60,8 @@ export function RecordPaymentDialog({
   me,
   names,
   canSwap = false,
+  balance,
+  groupNames,
   onPaymentRecorded,
 }: {
   control: Dialog.DialogControlProps
@@ -66,6 +73,9 @@ export function RecordPaymentDialog({
   me: string
   names: Map<string, string>
   canSwap?: boolean
+  /** My balance with the friend per currency, part by part (> 0: they owe me). */
+  balance?: Record<string, BalancePart[]>
+  groupNames?: Map<string, string>
   onPaymentRecorded?: () => void
 }) {
   const {t: l} = useLingui()
@@ -82,6 +92,8 @@ export function RecordPaymentDialog({
           me={me}
           names={names}
           canSwap={canSwap}
+          balance={balance}
+          groupNames={groupNames}
           onPaymentRecorded={onPaymentRecorded}
         />
         <Dialog.Close />
@@ -97,6 +109,8 @@ function Form({
   me,
   names,
   canSwap,
+  balance,
+  groupNames,
   onPaymentRecorded,
 }: {
   draft: PaymentDraft
@@ -105,6 +119,8 @@ function Form({
   me: string
   names: Map<string, string>
   canSwap: boolean
+  balance?: Record<string, BalancePart[]>
+  groupNames?: Map<string, string>
   onPaymentRecorded?: () => void
 }) {
   const t = useTheme()
@@ -114,7 +130,7 @@ function Form({
   const ctx = useMutationCtx()
   const haptics = useHaptics()
   const locale = useNumberLocale()
-  const [id] = useState(() => ctx.newId())
+  const ids = useRef<string[]>([])
   const [from, setFrom] = useState(draft.from)
   const [to, setTo] = useState(draft.to)
   const [currency, setCurrency] = useState(draft.currency)
@@ -140,13 +156,34 @@ function Form({
         ? l`${name(from)} paid you`
         : l`${name(from)} paid ${name(to)}`
   const suggestion = suggestionFor(currency)
+  /* The parts one payment of `amount` settles, in order. */
+  const piecesFor = (amount: bigint): BalancePart[] => {
+    const parts = balance?.[currency]
+    return parts
+      ? splitPayment(amount, partsOwedBy(parts, from === me))
+      : [{groupId: draft.groupId, amount}]
+  }
+  const typed = typedAmountOrNull(amountText, currency, locale)
+  const pieces = typed ? piecesFor(typed) : []
+  const settles =
+    balance && pieces.some(p => p.groupId !== null)
+      ? pieces
+          .map(p =>
+            p.groupId === null
+              ? l`Direct ${formatAmount(p.amount, currency, locale)}`
+              : `${groupNames?.get(p.groupId) ?? l`Group`} ${formatAmount(p.amount, currency, locale)}`,
+          )
+          .join(' · ')
+      : null
+
+  /* One id per part, kept while the dialog is open, so saving twice records once. */
+  const idFor = (i: number) => {
+    if (!ids.current[i]) ids.current[i] = ctx.newId()
+    return ids.current[i]
+  }
 
   const save = async () => {
-    let amount: bigint
-    try {
-      amount = parseTypedAmount(amountText, currency, locale)
-      if (amount <= 0n) throw new DomainError('INVALID_AMOUNT')
-    } catch {
+    if (typed === null || typed <= ZERO) {
       haptics.error()
       setError(l`Enter an amount greater than zero.`)
       return
@@ -154,17 +191,21 @@ function Form({
     setIsSaving(true)
     try {
       const {date, tz} = todayLocal()
-      await createRepayment(store, ctx, {
-        id,
-        groupId: draft.groupId,
-        currency,
-        from,
-        to,
-        amount,
-        date,
-        tz,
-        note,
-      })
+      await createRepayments(
+        store,
+        ctx,
+        piecesFor(typed).map((p, i) => ({
+          id: idFor(i),
+          groupId: p.groupId,
+          currency,
+          from,
+          to,
+          amount: p.amount,
+          date,
+          tz,
+          note,
+        })),
+      )
       setIsDone(true)
     } catch (e) {
       logger.error(e, {where: 'RecordPaymentDialog.save'})
@@ -321,6 +362,18 @@ function Form({
               ? l`Open balance ${formatAmount(suggestion, currency, locale)}. Part payments are fine.`
               : l`Part payments are fine.`)}
         </Text>
+        {!error && settles && (
+          <Text
+            testID="payment-settles"
+            style={[
+              a.pt_xs,
+              a.text_sm,
+              a.leading_snug,
+              t.atoms.text_contrast_medium,
+            ]}>
+            <Trans>Counts towards: {settles}</Trans>
+          </Text>
+        )}
       </View>
 
       <View>
@@ -352,4 +405,13 @@ function Form({
       </Button>
     </View>
   )
+}
+
+/** The typed amount, or null while it isn't one yet. */
+function typedAmountOrNull(text: string, currency: string, locale: string) {
+  try {
+    return parseTypedAmount(text, currency, locale)
+  } catch {
+    return null
+  }
 }

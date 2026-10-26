@@ -1,7 +1,7 @@
 import {useState} from 'react'
 import {View} from 'react-native'
 import {Line} from 'react-native-svg'
-import {formatAmountCompact} from '@splito/domain'
+import {formatAmountCompact, ZERO} from '@splito/domain'
 
 import {atoms as a, useTheme} from '#/alf'
 import {Pressable} from '#/components/Pressable'
@@ -84,7 +84,9 @@ export function Grid({
           x2={width}
           y1={Math.round(y(tick)) + 0.5}
           y2={Math.round(y(tick)) + 0.5}
-          stroke={tick === 0n ? t.palette.contrast_200 : t.palette.contrast_50}
+          stroke={
+            tick === ZERO ? t.palette.contrast_200 : t.palette.contrast_50
+          }
           strokeWidth={1}
         />
       ))}

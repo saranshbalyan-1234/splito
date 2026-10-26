@@ -1,7 +1,7 @@
 import {View} from 'react-native'
 import Animated from 'react-native-reanimated'
 import {Trans, useLingui} from '@lingui/react/macro'
-import {formatAmount, type ReportExpense} from '@splito/domain'
+import {formatAmount, type ReportExpense, ZERO} from '@splito/domain'
 
 import {Link} from '#/view/com/util/Link'
 import {atoms as a, useTheme} from '#/alf'
@@ -38,7 +38,7 @@ export function ExpenseRow({
   const {t: l, i18n} = useLingui()
   const listAnimations = useListAnimations()
   const press = usePressScale()
-  const share = expense.shares[shareOf] ?? 0n
+  const share = expense.shares[shareOf] ?? ZERO
   const title = expense.title || l`Expense`
   const date = i18n.date(utcDate(expense.date), {
     day: 'numeric',

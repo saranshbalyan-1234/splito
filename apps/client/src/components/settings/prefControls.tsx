@@ -21,7 +21,6 @@ import {useDialogControl} from '#/components/Dialog'
 import {ChartPie_Stroke2_Corner0_Rounded as ChartIcon} from '#/components/icons/ChartPie'
 import {HomeOpen_Stoke2_Corner0_Rounded as HomeIcon} from '#/components/icons/HomeOpen'
 import {Moon_Stroke2_Corner0_Rounded as MoonIcon} from '#/components/icons/Moon'
-import {Route_Stroke2_Corner0_Rounded as RouteIcon} from '#/components/icons/Route'
 import {AccentPicker} from '#/components/settings/AccentPicker'
 import {CategoriesEditor} from '#/components/settings/CategoriesEditor'
 import {
@@ -244,22 +243,6 @@ function SplitModePref() {
         {value: 'exact', label: l`Exact amounts`},
         {value: 'percent', label: l`Percentages`},
         {value: 'shares', label: l`Shares`},
-      ]}
-    />
-  )
-}
-
-function SettleModePref() {
-  const {t: l} = useLingui()
-  return (
-    <SegmentedPref
-      pref={usePrefControl('settleMode')}
-      icon={RouteIcon}
-      title={l`Settle-up plan`}
-      description={l`Direct pays each person you owe. Via others uses fewer payments by routing through group members.`}
-      options={[
-        {value: 'direct', label: l`Direct`},
-        {value: 'transit', label: l`Via others`},
       ]}
     />
   )
@@ -554,7 +537,6 @@ export const PREF_CONTROLS = {
   homeTab: HomeTabPref,
   defaultCurrency: CurrencyPref,
   defaultSplitMode: SplitModePref,
-  settleMode: SettleModePref,
   analyticsPeriod: AnalyticsPeriodPref,
   analyticsView: AnalyticsViewPref,
   categories: CategoriesEditor,

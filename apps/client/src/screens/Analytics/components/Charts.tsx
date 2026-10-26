@@ -1,6 +1,6 @@
 import {View} from 'react-native'
 import {Trans, useLingui} from '@lingui/react/macro'
-import {formatAmount, magnitude} from '@splito/domain'
+import {formatAmount, magnitude, ZERO} from '@splito/domain'
 
 import {UserAvatar} from '#/view/com/util/UserAvatar'
 import {atoms as a, useBreakpoints, useTheme} from '#/alf'
@@ -99,9 +99,9 @@ export function Charts({
     year: l`Your net balance at the end of each year, all friends together`,
   }[granularity]
   const balanceWords = (v: bigint) =>
-    v > 0n
+    v > ZERO
       ? l`Owed to you ${money(v)}`
-      : v < 0n
+      : v < ZERO
         ? l`You owe ${money(magnitude(v))}`
         : l`Settled up`
 
@@ -128,7 +128,7 @@ export function Charts({
     label: report.nameOfGroup(g.key),
     count: g.count,
   }))
-  const lastBalance = report.trend.at(-1)?.balance ?? 0n
+  const lastBalance = report.trend.at(-1)?.balance ?? ZERO
 
   return (
     <View style={[a.flex_row, a.flex_wrap, a.gap_md, a.px_lg, a.py_md]}>
@@ -227,9 +227,9 @@ export function Charts({
           </Text>
           <Text
             style={[a.text_sm, a.leading_snug, t.atoms.text_contrast_medium]}>
-            {totals.covered > 0n ? (
+            {totals.covered > ZERO ? (
               <Trans>you paid for others, beyond your share</Trans>
-            ) : totals.covered < 0n ? (
+            ) : totals.covered < ZERO ? (
               <Trans>of your share was paid by others</Trans>
             ) : (
               <Trans>You paid exactly your share.</Trans>

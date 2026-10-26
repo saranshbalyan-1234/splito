@@ -1,7 +1,7 @@
 import {View} from 'react-native'
 import Animated from 'react-native-reanimated'
 import {Trans, useLingui} from '@lingui/react/macro'
-import {formatAmount, magnitude} from '@splito/domain'
+import {formatAmount, magnitude, ZERO} from '@splito/domain'
 
 import {Link} from '#/view/com/util/Link'
 import {UserAvatar} from '#/view/com/util/UserAvatar'
@@ -73,7 +73,7 @@ export function MemberBalanceRow({
     a.text_md,
     a.font_semi_bold,
     tabular,
-    {color: net > 0n ? t.palette.positive_600 : t.palette.negative_500},
+    {color: net > ZERO ? t.palette.positive_600 : t.palette.negative_500},
   ]
 
   return (
@@ -99,9 +99,9 @@ export function MemberBalanceRow({
         testID={`group-net-${currency}-${name}-text`}
         numberOfLines={1}
         style={[a.text_sm, a.leading_snug, t.atoms.text_contrast_medium]}>
-        {net === 0n ? (
+        {net === ZERO ? (
           <Trans>settled up</Trans>
-        ) : net > 0n ? (
+        ) : net > ZERO ? (
           isMe ? (
             <Trans>
               you get back <Text style={figureStyle}>{figure}</Text>

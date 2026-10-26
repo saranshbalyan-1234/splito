@@ -18,6 +18,7 @@ import {
   spendingTotals,
   todayIn,
   type WeekStart,
+  ZERO,
 } from '@splito/domain'
 import {
   DEFAULT_CATEGORIES,
@@ -179,16 +180,16 @@ export function useReport() {
   const shareOf = selection?.kind === 'person' ? selection.key : me
   const rows = selected.filter(e => {
     if (!selection) return true
-    const myShare = e.shares[me] ?? 0n
+    const myShare = e.shares[me] ?? ZERO
     switch (selection.kind) {
       case 'time':
         return e.date >= selection.from && e.date <= selection.to
       case 'category':
-        return myShare !== 0n && (e.category ?? 'other') === selection.key
+        return myShare !== ZERO && (e.category ?? 'other') === selection.key
       case 'group':
-        return myShare !== 0n && e.groupId === selection.groupId
+        return myShare !== ZERO && e.groupId === selection.groupId
       case 'person':
-        return (e.shares[selection.key] ?? 0n) !== 0n
+        return (e.shares[selection.key] ?? ZERO) !== ZERO
     }
   })
   const rowsTotal = spendingTotals(rows, shareOf).share

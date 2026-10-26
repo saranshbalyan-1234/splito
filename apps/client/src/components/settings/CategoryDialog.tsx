@@ -116,7 +116,7 @@ function Inner({
 
         <View>
           <TextField.LabelText>
-            <Trans>Colour</Trans>
+            <Trans>Color</Trans>
           </TextField.LabelText>
           <View style={[a.flex_row, a.flex_wrap, a.gap_sm]} role="radiogroup">
             {CATEGORY_COLORS.map(c => {
@@ -125,9 +125,10 @@ function Inner({
                 <Button
                   key={c}
                   testID={`category-color-${c.slice(1)}`}
-                  label={l`Colour ${c}`}
+                  label={l`Color ${c}`}
                   role="radio"
-                  accessibilityState={{selected: isSelected}}
+                  accessibilityState={{checked: isSelected}}
+                  aria-checked={isSelected}
                   onPress={() => {
                     haptics.selection()
                     setColor(c)
@@ -169,7 +170,8 @@ function Inner({
                   testID={`category-icon-${id}`}
                   label={id}
                   role="radio"
-                  accessibilityState={{selected: isSelected}}
+                  accessibilityState={{checked: isSelected}}
+                  aria-checked={isSelected}
                   onPress={() => {
                     haptics.selection()
                     setIcon(id)

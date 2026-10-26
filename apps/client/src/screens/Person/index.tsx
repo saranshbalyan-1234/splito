@@ -3,12 +3,7 @@ import {View} from 'react-native'
 import {LayoutAnimationConfig} from 'react-native-reanimated'
 import {Trans, useLingui} from '@lingui/react/macro'
 import {type RouteProp, useNavigation, useRoute} from '@react-navigation/native'
-import {
-  DomainError,
-  magnitude,
-  pairwiseBalances,
-  personSummary,
-} from '@splito/domain'
+import {DomainError, personSummary, sumMinor, ZERO} from '@splito/domain'
 import {
   deletePerson,
   type Entity,
@@ -36,6 +31,7 @@ import {atoms as a, useBreakpoints, useTheme} from '#/alf'
 import {AddExpenseFAB} from '#/components/AddExpenseFAB'
 import {Button, ButtonIcon, ButtonText} from '#/components/Button'
 import {useDialogControl} from '#/components/Dialog'
+import {myBalances} from '#/components/groups/net'
 import {DotGrid3x1_Stroke2_Corner0_Rounded as DotsIcon} from '#/components/icons/DotGrid'
 import {
   HandCoins_Stroke2_Corner0_Rounded as HandCoinsIcon,
@@ -54,9 +50,11 @@ import {
   MonthHeader,
 } from '#/components/people/HistoryRow'
 import {
+  balanceParts,
   effectWithPerson,
   type HistoryItem,
   involvesPair,
+  partsOwedBy,
   toHistory,
   withMonths,
 } from '#/components/people/ledger'
@@ -151,16 +149,16 @@ export function PersonScreen() {
   const groupNames = new Map((groups ?? []).map(g => [g.id, g.data.name]))
   const summary =
     me && ledger
-      ? personSummary(pairwiseBalances(ledger, me.id), {includeGroups}).find(
-          s => s.person === personId,
-        )
+      ? personSummary(myBalances(ledger, me.id, groups ?? []), {
+          includeGroups,
+        }).find(s => s.person === personId)
       : undefined
   const history =
     me && expenses && repayments
       ? toHistory(expenses, repayments).filter(
           e =>
             involvesPair(e, me.id, personId) &&
-            effectWithPerson(e, me.id, personId) !== 0n &&
+            effectWithPerson(e, me.id, personId) !== ZERO &&
             (includeGroups || e.entity.data.groupId === null),
         )
       : []
@@ -176,23 +174,31 @@ export function PersonScreen() {
 
   const totals = summary?.byCurrency ?? {}
   const openCurrencies = Object.keys(totals)
-    .filter(c => totals[c]!.total !== 0n)
+    .filter(c => totals[c]!.total !== ZERO)
     .sort()
+  // Each currency's balance by part; a payment settles these (RecordPaymentDialog).
+  const balance = Object.fromEntries(
+    openCurrencies.map(c => [c, balanceParts(totals[c]!)]),
+  )
+  /* What whoever owes overall still owes, part by part in their direction (never netted across groups). */
+  const owedFor = (c: string) => {
+    const isPayerMe = (totals[c]?.total ?? ZERO) < ZERO
+    return sumMinor(partsOwedBy(balance[c] ?? [], isPayerMe).map(p => p.amount))
+  }
   // What I owe them in rupees, if anything: the only case a UPI link helps.
-  const owedInr =
-    totals.INR && totals.INR.total < 0n ? magnitude(totals.INR.total) : null
+  const owedInr = totals.INR && totals.INR.total < ZERO ? owedFor('INR') : null
 
   const recordPayment = (draft?: Partial<PaymentDraft>) => {
     if (!me) return
     const currency = draft?.currency ?? openCurrencies[0] ?? 'INR'
-    const total = totals[currency]?.total ?? 0n
+    const total = totals[currency]?.total ?? ZERO
     // Default direction follows the balance: whoever owes pays.
-    const theyPay = total >= 0n
+    const theyPay = total >= ZERO
     setPaymentDraft({
       from: theyPay ? personId : me.id,
       to: theyPay ? me.id : personId,
       currency,
-      amount: total === 0n ? null : magnitude(total),
+      amount: total === ZERO ? null : owedFor(currency),
       groupId: null,
       ...draft,
     })
@@ -236,19 +242,6 @@ export function PersonScreen() {
               a.justify_end,
               a.gap_xs,
             ]}>
-            {gtMobile && (
-              <Button
-                testID="person-add-expense"
-                label={l`Add expense with ${person!.data.name}`}
-                size="small"
-                color="primary"
-                onPress={() => navigation.navigate('AddExpense', {personId})}>
-                <ButtonIcon icon={PlusIcon} />
-                <ButtonText>
-                  <Trans context="action">Add expense</Trans>
-                </ButtonText>
-              </Button>
-            )}
             <Button
               testID="person-record-payment"
               label={l`Record a payment`}
@@ -477,10 +470,12 @@ export function PersonScreen() {
                 openCurrencies.length > 1 ? openCurrencies : undefined
               }
               suggestions={Object.fromEntries(
-                openCurrencies.map(c => [c, magnitude(totals[c]!.total)]),
+                openCurrencies.map(c => [c, owedFor(c)]),
               )}
               me={me.id}
               names={names}
+              balance={balance}
+              groupNames={groupNames}
               canSwap
             />
           }

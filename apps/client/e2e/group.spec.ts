@@ -53,7 +53,7 @@ test('group page: header, my balance, expenses, member balances and members', as
   await expect(page.getByTestId('person-name')).toHaveText('Bela Joshi')
 })
 
-test('A07: A->C excluded makes direct infeasible; transit routes via B', async ({page}) => {
+test('A07: A->C excluded makes the direct plan infeasible and says why (routing via others waits for v2)', async ({page}) => {
   await ready(page)
   const {group, me, c} = await seedA07(page)
 
@@ -67,11 +67,11 @@ test('A07: A->C excluded makes direct infeasible; transit routes via B', async (
   await expect(page.getByText('No direct plan works with these rules')).toBeVisible()
   await expect(page.getByTestId('settle-stuck-INR')).toHaveText('No allowed pair to pay anyone who is owed: You')
 
-  await page.getByTestId('settle-mode-transit').click()
-  await expect(page.getByTestId('settle-count-INR')).toHaveText('2 payments')
-  await expect(page.getByTestId('transfer-You-Bela Joshi').getByTestId('transfer-amount')).toHaveText('₹100.00')
-  await expect(page.getByTestId('transfer-Bela Joshi-Chirag Shah').getByTestId('transfer-amount')).toHaveText('₹100.00')
-  await expect(page.getByTestId('transfer-You-Chirag Shah')).toHaveCount(0)
+  // Spec v1 is direct-only: no plan routes money through members who never agreed to it.
+  await expect(page.getByTestId('settle-mode-transit')).toHaveCount(0)
+  await expect(page.getByTestId('settle-try-transit')).toHaveCount(0)
+  await page.getByTestId('settle-edit-rules').click()
+  await expect(page.getByTestId('screen-group').getByText('Who you settle with', {exact: true})).toBeVisible()
 })
 
 test('a plan goes stale when the ledger changes, and updates on request', async ({page}) => {
@@ -79,7 +79,10 @@ test('a plan goes stale when the ledger changes, and updates on request', async 
   const {group, b} = await seedA07(page)
   await page.goto(`/groups/${group}/settle`)
   await expect(page.getByTestId('transfer-You-Chirag Shah').getByTestId('transfer-amount')).toHaveText('₹100.00')
-  const before = await page.getByTestId('settle-plan-id').innerText()
+  // The plan's version is a data attribute for tests; users never see a hash.
+  const before = await page.getByTestId('settle-footer').getAttribute('data-plan-hash')
+  expect(before).toBeTruthy()
+  await expect(page.getByText(/Plan [0-9a-f]{8}/)).toHaveCount(0)
 
   await page.evaluate(
     async ({group, b}) => {
@@ -95,7 +98,7 @@ test('a plan goes stale when the ledger changes, and updates on request', async 
   await expect(page.getByText('Balances or rules changed since this plan was made.')).toHaveCount(0)
   await expect(page.getByTestId('settle-count-INR')).toHaveText('2 payments')
   await expect(page.getByTestId('transfer-You-Bela Joshi').getByTestId('transfer-amount')).toHaveText('₹40.00')
-  expect(await page.getByTestId('settle-plan-id').innerText()).not.toBe(before)
+  expect(await page.getByTestId('settle-footer').getAttribute('data-plan-hash')).not.toBe(before)
 })
 
 test('"Record this payment" records a part payment and the plan follows', async ({page}) => {

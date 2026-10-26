@@ -1,7 +1,7 @@
 import {useState} from 'react'
 import {View} from 'react-native'
 import Svg, {Circle, Line, Path} from 'react-native-svg'
-import {axisTicks} from '@splito/domain'
+import {axisTicks, ZERO} from '@splito/domain'
 
 import {atoms as a, useTheme} from '#/alf'
 import {
@@ -40,8 +40,8 @@ export function LineChart({
   const [width, onLayout] = useWidth()
   const [hoverKey, setHoverKey] = useState<string>()
   const values = points.map(p => p.value)
-  const lo = values.reduce((m, v) => (v < m ? v : m), 0n)
-  const hi = values.reduce((m, v) => (v > m ? v : m), 0n)
+  const lo = values.reduce((m, v) => (v < m ? v : m), ZERO)
+  const hi = values.reduce((m, v) => (v > m ? v : m), ZERO)
   const ticks = axisTicks(lo, hi)
   const {gutter, labels, slot, bottom, y, cx} = frame(
     width,
@@ -55,7 +55,7 @@ export function LineChart({
 
   const xy = points.map((p, i) => [cx(i), y(p.value)] as const)
   const line = xy.map(([x, yy], i) => `${i ? 'L' : 'M'}${x},${yy}`).join(' ')
-  const zero = y(0n)
+  const zero = y(ZERO)
   const area =
     xy.length > 1
       ? `${line} L${xy.at(-1)![0]},${zero} L${xy[0]![0]},${zero} Z`

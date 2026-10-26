@@ -7,7 +7,7 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated'
 import Svg, {Path} from 'react-native-svg'
-import {axisTicks, formatAmount} from '@splito/domain'
+import {axisTicks, formatAmount, ZERO} from '@splito/domain'
 
 import {atoms as a, useTheme} from '#/alf'
 import {
@@ -68,8 +68,8 @@ export function BarChart({
   const [width, onLayout] = useWidth()
   const [hoverKey, setHoverKey] = useState<string>()
   const shouldReduceMotion = useShouldReduceMotion()
-  const max = points.reduce((m, p) => (p.value > m ? p.value : m), 0n)
-  const ticks = axisTicks(0n, max)
+  const max = points.reduce((m, p) => (p.value > m ? p.value : m), ZERO)
+  const ticks = axisTicks(ZERO, max)
   const {gutter, labels, slot, bottom, y, cx} = frame(
     width,
     height,
@@ -123,7 +123,7 @@ export function BarChart({
               {points.map((p, i) => (
                 <Path
                   key={p.key}
-                  d={barPath(cx(i) - barW / 2, barW, y(p.value), y(0n))}
+                  d={barPath(cx(i) - barW / 2, barW, y(p.value), y(ZERO))}
                   fill={t.palette.primary_500}
                   opacity={
                     hasSelection && p.key !== selectedKey

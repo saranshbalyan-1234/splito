@@ -3,12 +3,12 @@ import {join} from 'node:path'
 
 import {expect, type Page, test} from '@playwright/test'
 import {
+  balanceRows,
   balanceTotals,
   computeShares,
   type ExpenseRecord,
   formatAmount,
   magnitude,
-  pairwiseBalances,
   personSummary,
 } from '@splito/domain'
 
@@ -27,7 +27,8 @@ const records: ExpenseRecord[] = DEMO_EXPENSES.map((e, i) => ({
   date: e.date,
   deleted: false,
 }))
-const summaries = personSummary(pairwiseBalances(records, 'me'), {includeGroups: true})
+// Group parts follow each group's settle-up plan, as the app shows them (`balanceRows`; demo groups have no rules).
+const summaries = personSummary(balanceRows(records, 'me'), {includeGroups: true})
 const byKey = new Map(summaries.map(s => [s.person, s]))
 
 /* Every compiled message id, so the UI can be checked for ids shown instead of words. */
@@ -55,7 +56,13 @@ test('People shows each friend with real words and the right balance per currenc
   for (const [key, name] of Object.entries(DEMO_FRIENDS)) {
     const row = page.getByTestId(`person-${name}`)
     await expect(row).toBeVisible()
-    for (const [currency, {total}] of Object.entries(byKey.get(key)!.byCurrency)) {
+    // A friend whose group debts the settle-up plan routes to others has nothing open with me.
+    const summary = byKey.get(key)
+    if (!summary) {
+      await expect(row).toContainText('settled up')
+      continue
+    }
+    for (const [currency, {total}] of Object.entries(summary.byCurrency)) {
       const words = total > 0n ? 'owes you' : 'you owe'
       await expect(row.getByTestId(`balance-${currency}`)).toHaveText(`${words} ${formatAmount(magnitude(total), currency, LOCALE)}`)
     }

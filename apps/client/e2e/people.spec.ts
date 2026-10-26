@@ -59,7 +59,7 @@ test('the Include groups default comes from preferences', async ({page}) => {
   await page.evaluate(() => (window as unknown as {splito: Splito}).splito.setPref('includeGroupsDefault', false))
   await page.goto(`/people/${kavya}`)
   await expect(page.getByTestId('person-total-INR')).toHaveText('₹100.00')
-  await expect(page.getByText('Direct only')).toBeVisible()
+  await expect(page.getByTestId('screen-person').getByText('Direct only')).toBeVisible()
 })
 
 test('recording a part payment moves the balance; deleting it is undoable', async ({page}) => {
@@ -98,6 +98,56 @@ test('swapping the direction records what I paid them', async ({page}) => {
   await page.getByTestId('payment-amount').fill('25')
   await page.getByTestId('payment-save').click()
   await expect(page.getByTestId('person-total-INR')).toHaveText('₹175.00')
+})
+
+test('paying the whole balance from a friend’s page settles the group part too, so nobody pays twice', async ({page}) => {
+  await ready(page)
+  const kavya = await seedA04(page)
+  await page.goto(`/people/${kavya}`)
+  await page.getByTestId('person-record-payment').click()
+  await expect(page.getByTestId('payment-amount')).toHaveValue('150.00')
+  await expect(page.getByTestId('payment-settles')).toHaveText('Counts towards: Direct ₹100.00 · Pune trip ₹50.00')
+  await page.getByTestId('payment-save').click()
+  await expect(page.getByTestId('payment-recorded')).toBeVisible()
+  await expect(page.getByTestId('person-settled')).toBeVisible()
+
+  // The group agrees: nothing left to settle there.
+  await page.goto('/groups')
+  await page.getByText('Pune trip').click()
+  await expect(page.getByTestId('group-settle')).toBeDisabled()
+})
+
+test('People: the Include groups filter changes the totals only on Apply', async ({page}) => {
+  await ready(page)
+  await seedA04(page)
+  await page.goto('/')
+  const row = page.getByTestId('person-Kavya Rao')
+  await expect(row.getByTestId('balance-INR')).toHaveText('owes you ₹150.00')
+  await page.getByTestId('people-filter').click()
+  await page.getByTestId('filter-include-groups').click()
+  await expect(row.getByTestId('balance-INR')).toHaveText('owes you ₹150.00')
+  await page.getByTestId('filter-apply').click()
+  await expect(row.getByTestId('balance-INR')).toHaveText('owes you ₹100.00')
+  await expect(page.getByTestId('screen-people').getByText('Direct only')).toBeVisible()
+})
+
+test('People sorts by the biggest balance, recent activity or name (preference)', async ({page}) => {
+  await ready(page)
+  await page.evaluate(async () => {
+    const s = (window as unknown as {splito: Splito}).splito
+    const base = {currency: 'INR', tz: 'Asia/Kolkata', category: 'food', notes: '', groupId: null}
+    const small = await s.createPerson('Aarav Small')
+    const big = await s.createPerson('Zoya Big')
+    await s.createExpense({...base, title: 'Tea', total: '2000', payers: {[s.me]: '2000'}, split: {mode: 'equal', participants: [s.me, small]}, date: '2026-10-25'})
+    await s.createExpense({...base, title: 'Rent', total: '200000', payers: {[s.me]: '200000'}, split: {mode: 'equal', participants: [s.me, big]}, date: '2026-09-01'})
+  })
+  const order = () =>
+    page.locator('[data-testid^="person-"][data-testid$="Small"], [data-testid^="person-"][data-testid$="Big"]').evaluateAll(els => els.map(e => e.getAttribute('data-testid')))
+  await page.goto('/')
+  await expect(page.getByTestId('person-Zoya Big')).toBeVisible()
+  expect(await order()).toEqual(['person-Zoya Big', 'person-Aarav Small'])
+  await page.evaluate(() => (window as unknown as {splito: Splito}).splito.setPref('peopleSort', 'recent'))
+  await expect.poll(order).toEqual(['person-Aarav Small', 'person-Zoya Big'])
 })
 
 test('UPI pay link shows only when I owe them rupees, and asks before recording', async ({page}) => {
@@ -166,17 +216,17 @@ test('add a friend, then land on their page', async ({page}) => {
   await expect(page.getByTestId('person-history-empty')).toBeVisible()
 })
 
-test('compose follows Bluesky: hero button on desktop, FAB with the friend on phones', async ({page}) => {
+test('compose follows Bluesky: the sidebar pill on desktop and the FAB on phones both bring the friend', async ({page}) => {
   await ready(page)
   const kavya = await seedA04(page)
   await page.setViewportSize({width: 1280, height: 800})
   await page.goto(`/people/${kavya}`)
-  await expect(page.getByTestId('person-add-expense')).toBeVisible()
   await expect(page.getByTestId('fab-add')).toHaveCount(0)
+  await page.getByTestId('sidebar-add').click()
+  await expect(page).toHaveURL(new RegExp(`/expense/new\\?personId=${kavya}`))
 
   await page.setViewportSize({width: 390, height: 844})
   await page.goto(`/people/${kavya}`)
-  await expect(page.getByTestId('person-add-expense')).toHaveCount(0)
   await page.getByTestId('screen-person').getByTestId('fab-add').click()
   await expect(page).toHaveURL(new RegExp(`/expense/new\\?personId=${kavya}`))
 })

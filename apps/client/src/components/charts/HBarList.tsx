@@ -1,5 +1,5 @@
 import {View} from 'react-native'
-import {formatAmount} from '@splito/domain'
+import {formatAmount, ZERO} from '@splito/domain'
 
 import {atoms as a, useTheme} from '#/alf'
 import {Pressable} from '#/components/Pressable'
@@ -39,7 +39,7 @@ export function HBarList({
   testID: string
 }) {
   const t = useTheme()
-  const max = bars.reduce((m, b) => (b.value > m ? b.value : m), 0n)
+  const max = bars.reduce((m, b) => (b.value > m ? b.value : m), ZERO)
   return (
     <View testID={testID} role="list" style={a.gap_2xs}>
       {bars.map(b => {

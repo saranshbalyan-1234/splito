@@ -97,7 +97,12 @@ function Details({
             <Toast.Text>{l`Payment deleted`}</Toast.Text>
             <Toast.Action
               label={l`Undo`}
-              onPress={() => void restoreRepayment(store, ctx, repayment.id)}>
+              onPress={() =>
+                void restoreRepayment(store, ctx, repayment.id).catch(e => {
+                  logger.error(e, {where: 'PaymentDetailsDialog.undo'})
+                  Toast.show(l`Couldn’t restore this payment`, {type: 'error'})
+                })
+              }>
               <Trans>Undo</Trans>
             </Toast.Action>
           </Toast.Outer>,
