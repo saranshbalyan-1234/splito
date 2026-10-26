@@ -23,6 +23,12 @@ export const ILLUSTRATIONS = {
     staticFrame: 120,
     isLoop: true,
   },
+  'empty-analytics': {
+    source: require('../../assets/lottie/empty-analytics.json'),
+    sourceDark: require('../../assets/lottie/empty-analytics-dark.json'),
+    staticFrame: 100,
+    isLoop: true,
+  },
   loading: {
     source: require('../../assets/lottie/loading.json'),
     sourceDark: require('../../assets/lottie/loading-dark.json'),

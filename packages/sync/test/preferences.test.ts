@@ -75,3 +75,12 @@ test('categories with duplicate ids rejected', async () =>
 test('every default passes its own validator', () => {
   for (const def of Object.values(PREFS)) expect(def.validate(def.default)).toBe(true)
 })
+
+test('analytics opens on this year as charts; both are choices with a reset', async () => {
+  expect(await getPref(s, 'analyticsPeriod')).toBe('year')
+  expect(await getPref(s, 'analyticsView')).toBe('charts')
+  await setPref(s, ctx, 'analyticsView', 'table')
+  await expect(setPref(s, ctx, 'analyticsPeriod', 'decade' as never)).rejects.toThrow('INVALID_PREF')
+  await resetPref(s, ctx, 'analyticsView')
+  expect(await getPref(s, 'analyticsView')).toBe('charts')
+})

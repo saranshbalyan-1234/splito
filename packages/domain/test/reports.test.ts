@@ -4,10 +4,12 @@ import fc from 'fast-check'
 import {type ExpenseRecord, pairwiseBalances, type RepaymentRecord} from '../src/ledger'
 import {
   addDays,
+  axisTicks,
   balanceTrend,
   buckets,
   csvCell,
   dataRange,
+  formatAmountCompact,
   granularityFor,
   periodRange,
   type ReportExpense,
@@ -131,12 +133,12 @@ describe('selectExpenses', () => {
 describe('spending', () => {
   const inr = selectExpenses(LEDGER, ALL_INR)
   test('totals: your share, what you paid, everyone together', () =>
-    expect(spendingTotals(inr, 'me')).toEqual({share: 500n, paid: 300n, total: 1400n, count: 3}))
+    expect(spendingTotals(inr, 'me')).toEqual({share: 500n, paid: 300n, total: 1400n, covered: -200n, count: 3}))
   test('over time, by month, keeps empty buckets', () =>
     expect(spendingOverTime(inr, 'me', {from: '2026-01-01', to: '2026-03-31'}, 'month', 1)).toEqual([
-      {key: '2026-01-01', from: '2026-01-01', to: '2026-01-31', share: 200n, paid: 300n, total: 500n, count: 2},
-      {key: '2026-02-01', from: '2026-02-01', to: '2026-02-28', share: 300n, paid: 0n, total: 900n, count: 1},
-      {key: '2026-03-01', from: '2026-03-01', to: '2026-03-31', share: 0n, paid: 0n, total: 0n, count: 0},
+      {key: '2026-01-01', from: '2026-01-01', to: '2026-01-31', share: 200n, paid: 300n, total: 500n, covered: 100n, count: 2},
+      {key: '2026-02-01', from: '2026-02-01', to: '2026-02-28', share: 300n, paid: 0n, total: 900n, covered: -300n, count: 1},
+      {key: '2026-03-01', from: '2026-03-01', to: '2026-03-31', share: 0n, paid: 0n, total: 0n, covered: 0n, count: 0},
     ]))
   test('by category, largest first, ties by id', () =>
     expect(spendingByCategory(inr, 'me')).toEqual([
@@ -162,9 +164,12 @@ describe('spending', () => {
     ]))
   test('expenses you are not part of still count for the group, not for you', () => {
     const others = [exp({id: 'o', total: 80n, payers: {a: 80n}, shares: {a: 40n, b: 40n}, groupId: 'flat'})]
-    expect(spendingTotals(others, 'me')).toEqual({share: 0n, paid: 0n, total: 80n, count: 1})
+    expect(spendingTotals(others, 'me')).toEqual({share: 0n, paid: 0n, total: 80n, covered: 0n, count: 1})
     expect(spendingByCategory(others, 'me')).toEqual([])
+    expect(spendingByGroup(others, 'me')).toEqual([])
   })
+  test('a zero share is not counted as taking part', () =>
+    expect(spendingByPerson([exp({id: 'z', total: 10n, payers: {me: 10n}, shares: {me: 10n, a: 0n}})])).toEqual([{key: 'me', share: 10n, count: 1}]))
   test('the parts always add up to the total (property)', () => {
     const people = ['me', 'a', 'b', 'c']
     const arb = fc.array(
@@ -266,6 +271,21 @@ describe('CSV', () => {
       reportCsv([e], 'me', {header: [], categoryName: () => '', groupName: () => ''}).split('\r\n')[1]!.split(',').slice(4)
     expect(csv(yen)).toEqual(['JPY', '1200', '1200', '600'])
     expect(csv(kwd)).toEqual(['KWD', '1.500', '0.000', '1.500'])
+  })
+})
+
+describe('chart axes', () => {
+  test('ticks are round steps from zero past the maximum', () => {
+    expect(axisTicks(0n, 1234n)).toEqual([0n, 500n, 1000n, 1500n])
+    expect(axisTicks(0n, 4000000n)).toEqual([0n, 1000000n, 2000000n, 3000000n, 4000000n])
+    expect(axisTicks(0n, 7n)).toEqual([0n, 2n, 4n, 6n, 8n])
+  })
+  test('signed ranges keep zero as a tick', () => expect(axisTicks(-300n, 200n)).toEqual([-400n, -200n, 0n, 200n]))
+  test('nothing to show is a single zero tick', () => expect(axisTicks(0n, 0n)).toEqual([0n]))
+  test('compact labels', () => {
+    expect(formatAmountCompact(4000000n, 'INR', 'en-US')).toBe('₹40K')
+    expect(formatAmountCompact(123456789n, 'USD', 'en-US')).toBe('$1.2M')
+    expect(formatAmountCompact(0n, 'EUR', 'en-US')).toBe('€0')
   })
 })
 

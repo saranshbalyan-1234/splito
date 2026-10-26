@@ -911,12 +911,64 @@ function emptyActivity(c: Palette) {
   ])
 }
 
+/** Columns rise from a baseline one by one, the tallest in full ink, then sink. 3 s loop. */
+function emptyAnalytics(c: Palette) {
+  const BASE = C + 44
+  const bars = [
+    {x: C - 42, h: 40, color: c.t(0.54)},
+    {x: C - 14, h: 66, color: c.t(0.74)},
+    {x: C + 14, h: 52, color: c.t(0.54)},
+    {x: C + 42, h: 88, color: c.ink},
+  ].map(({x, h, color}, i): Layer => {
+    const t = 10 + i * 14
+    return {
+      nm: `bar-${i}`,
+      shapes: [
+        /* The rect hangs above the group's origin, so scaling the group grows it from the baseline. */
+        group('bar', [rect(18, h, 5, [0, -h / 2]), fill(color)], {
+          p: st([x, BASE]),
+          s: kf([
+            [0, [100, 0]],
+            [t, [100, 0], EASE.back],
+            [t + 30, [100, 100]],
+            [138 + i * 4, [100, 100], EASE.in],
+            [156 + i * 4, [100, 0]],
+            [180, [100, 0]],
+          ]),
+        }),
+      ],
+      p: st([0, 0, 0]),
+    }
+  })
+  return animation('empty-analytics', 180, [
+    backdrop(c),
+    {
+      nm: 'card',
+      shapes: [
+        group('card', [
+          rect(148, 148, 22),
+          fill(c.ink, st(10)),
+          stroke(c.t(0.74), 3, st(70)),
+        ]),
+      ],
+    },
+    {
+      nm: 'baseline',
+      shapes: [
+        group('line', [rect(112, 3, 1.5, [0, BASE - C + 2]), fill(c.t(0.34))]),
+      ],
+    },
+    ...bars,
+  ])
+}
+
 const BUILDERS = {
   loading,
   success,
   'empty-people': emptyPeople,
   'empty-groups': emptyGroups,
   'empty-activity': emptyActivity,
+  'empty-analytics': emptyAnalytics,
 }
 /** name -> {light, dark} Lottie JSON */
 const ANIMATIONS = Object.fromEntries(

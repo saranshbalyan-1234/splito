@@ -80,6 +80,17 @@ msgstr "{0} edited {1}{amount}"
 msgid "{0} restored {1}{amount}"
 msgstr "{0} restored {1}{amount}"
 
+#. placeholder {0}: report.nameOfPerson(report.shareOf)
+#: src/screens/Analytics/index.tsx:110
+msgid "{0}’s share"
+msgstr "{0}’s share"
+
+#. placeholder {0}: report.nameOfPerson(report.shareOf)
+#. placeholder {1}: formatAmount(report.rowsTotal, currency, locale)
+#: src/screens/Analytics/index.tsx:217
+msgid "{0}’s share <0>{1}</0>"
+msgstr "{0}’s share <0>{1}</0>"
+
 #. Displayed when the number of notifications exceeds the cap – for example, 99+
 #. placeholder {0}: i18n.number(UNREAD_NOTIFICATION_CAP - 1)
 #: src/screens/Settings/components/SettingsList.tsx:341
@@ -150,6 +161,10 @@ msgstr "{memberCount} members"
 msgid "{notificationCount, plural, one {# unread item} other {# unread items}}"
 msgstr "{notificationCount, plural, one {# unread item} other {# unread items}}"
 
+#: src/screens/Analytics/components/ExpenseRow.tsx:62
+msgid "{title}, {byline}, {shareLabel} {shareText} of {totalText}"
+msgstr "{title}, {byline}, {shareLabel} {shareText} of {totalText}"
+
 #: src/screens/Groups/components/GroupRow.tsx:55
 msgid "1 member"
 msgstr "1 member"
@@ -177,6 +192,8 @@ msgid "Add expense"
 msgstr "Add expense"
 
 #: src/components/AddExpenseFAB.tsx:31
+#: src/screens/Analytics/index.tsx:90
+#: src/screens/Analytics/index.tsx:91
 #: src/view/shell/desktop/LeftNav.tsx:304
 msgctxt "action"
 msgid "Add expense"
@@ -191,15 +208,34 @@ msgstr "Add expense"
 msgid "Add friend"
 msgstr "Add friend"
 
+#: src/screens/Analytics/components/FilterBar.tsx:39
+#: src/screens/Analytics/components/FilterBar.tsx:139
+#: src/screens/Analytics/components/FilterBar.tsx:142
+msgid "All groups"
+msgstr "All groups"
+
 #: src/screens/People/components/BalanceSummary.tsx:158
 msgid "All settled up"
 msgstr "All settled up"
 
-#: src/components/HeaderAvatar.tsx:82
+#: src/screens/Analytics/components/FilterBar.tsx:31
+#: src/screens/Analytics/useReport.ts:216
+msgid "All time"
+msgstr "All time"
+
+#: src/screens/Analytics/components/Charts.tsx:218
+msgid "Amount"
+msgstr "Amount"
+
+#: src/screens/Analytics/components/FilterBar.tsx:102
+msgid "Amounts are never added across currencies."
+msgstr "Amounts are never added across currencies."
+
 #: src/components/HeaderAvatar.tsx:86
+#: src/components/HeaderAvatar.tsx:90
 #: src/components/TabGlyph.tsx:29
 #: src/navigation/Navigation.tsx:58
-#: src/screens/Analytics.tsx:8
+#: src/screens/Analytics/index.tsx:60
 #: src/screens/People/components/BalanceSummary.tsx:91
 #: src/screens/People/components/BalanceSummary.tsx:96
 #: src/screens/Profile.tsx:61
@@ -208,18 +244,55 @@ msgstr "All settled up"
 msgid "Analytics"
 msgstr "Analytics"
 
+#: src/screens/Analytics/components/RangeDialog.tsx:261
+#: src/screens/Analytics/components/RangeDialog.tsx:267
+msgid "Apply"
+msgstr "Apply"
+
+#: src/screens/Analytics/components/Charts.tsx:329
+msgid "Balance"
+msgstr "Balance"
+
+#: src/screens/Analytics/components/Charts.tsx:313
+msgid "Balance over time"
+msgstr "Balance over time"
+
 #: src/screens/People/components/BalanceSummary.tsx:56
 #: src/screens/People/components/BalanceSummary.tsx:224
 msgid "Balances"
 msgstr "Balances"
+
+#: src/screens/Analytics/components/Charts.tsx:158
+msgid "By category"
+msgstr "By category"
+
+#: src/screens/Analytics/components/Charts.tsx:279
+msgid "By group"
+msgstr "By group"
+
+#: src/screens/Analytics/components/Charts.tsx:245
+msgid "By person"
+msgstr "By person"
 
 #: src/components/Composer/TopBar.tsx:33
 #: src/components/Composer/TopBar.tsx:43
 #: src/components/Menu/index.tsx:387
 #: src/components/Prompt.tsx:153
 #: src/components/Prompt.tsx:155
+#: src/screens/Analytics/components/RangeDialog.tsx:251
+#: src/screens/Analytics/components/RangeDialog.tsx:256
 msgid "Cancel"
 msgstr "Cancel"
+
+#: src/screens/Analytics/components/Charts.tsx:164
+#: src/screens/Analytics/index.tsx:149
+msgid "Category"
+msgstr "Category"
+
+#. placeholder {0}: selection.label
+#: src/screens/Analytics/index.tsx:199
+msgid "Clear filter: {0}"
+msgstr "Clear filter: {0}"
 
 #: src/components/Dialog/index.web.tsx:156
 #: src/components/Dialog/index.web.tsx:373
@@ -247,15 +320,48 @@ msgstr "Confirm"
 msgid "Context menu backdrop, click to close the menu."
 msgstr "Context menu backdrop, click to close the menu."
 
+#: src/screens/Analytics/index.tsx:170
+msgid "Couldn’t export. Try again."
+msgstr "Couldn’t export. Try again."
+
 #: src/screens/Groups/components/GroupRow.tsx:47
 msgid "Couple"
 msgstr "Couple"
 
-#: src/components/HeaderAvatar.tsx:94
+#: src/screens/Analytics/index.tsx:151
+msgid "Currency"
+msgstr "Currency"
+
+#. placeholder {0}: report.currency
+#: src/screens/Analytics/components/FilterBar.tsx:87
+msgid "Currency: {0}"
+msgstr "Currency: {0}"
+
+#: src/screens/Analytics/components/FilterBar.tsx:35
+#: src/screens/Analytics/components/RangeDialog.tsx:51
+#: src/screens/Analytics/components/RangeDialog.tsx:123
+msgid "Custom range"
+msgstr "Custom range"
+
+#: src/screens/Analytics/components/FilterBar.tsx:75
+#: src/screens/Analytics/components/FilterBar.tsx:78
+msgid "Custom range…"
+msgstr "Custom range…"
+
 #: src/components/HeaderAvatar.tsx:98
+#: src/components/HeaderAvatar.tsx:102
 msgid "Dark theme"
 msgstr "Dark theme"
 
+#: src/screens/Analytics/index.tsx:147
+msgid "Date"
+msgstr "Date"
+
+#: src/screens/Analytics/index.tsx:148
+msgid "Description"
+msgstr "Description"
+
+#: src/screens/Analytics/useReport.ts:228
 #: src/screens/People/components/PersonRow.tsx:65
 msgid "Direct"
 msgstr "Direct"
@@ -277,10 +383,38 @@ msgstr "Double tap to close the dialog"
 msgid "Edit expense"
 msgstr "Edit expense"
 
+#: src/screens/Analytics/components/Charts.tsx:246
+msgid "Everyone’s share of these expenses"
+msgstr "Everyone’s share of these expenses"
+
 #: src/navigation/Navigation.tsx:67
+#: src/screens/Analytics/components/ExpenseRow.tsx:42
 #: src/screens/Expense.tsx:8
 msgid "Expense"
 msgstr "Expense"
+
+#: src/screens/Analytics/components/Charts.tsx:130
+#: src/screens/Analytics/components/Charts.tsx:164
+#: src/screens/Analytics/components/Charts.tsx:251
+#: src/screens/Analytics/components/Charts.tsx:285
+#: src/screens/Analytics/components/Summary.tsx:103
+#: src/screens/Analytics/index.tsx:177
+msgid "Expenses"
+msgstr "Expenses"
+
+#: src/screens/Analytics/index.tsx:183
+#: src/screens/Analytics/index.tsx:189
+msgid "Export CSV"
+msgstr "Export CSV"
+
+#. placeholder {0}: rows.length
+#: src/screens/Analytics/index.tsx:165
+msgid "Exported {0} expenses"
+msgstr "Exported {0} expenses"
+
+#: src/screens/Analytics/index.tsx:164
+msgid "Exported 1 expense"
+msgstr "Exported 1 expense"
 
 #: src/screens/People/index.tsx:135
 msgid "Friends"
@@ -291,11 +425,19 @@ msgid "Go back"
 msgstr "Go back"
 
 #: src/navigation/Navigation.tsx:64
+#: src/screens/Analytics/components/Charts.tsx:285
+#: src/screens/Analytics/index.tsx:150
+#: src/screens/Analytics/useReport.ts:125
+#: src/screens/Analytics/useReport.ts:228
 #: src/screens/Group.tsx:8
 #: src/screens/Groups/components/GroupRow.tsx:48
 #: src/screens/People/components/PersonRow.tsx:58
 msgid "Group"
 msgstr "Group"
+
+#: src/screens/Analytics/components/FilterBar.tsx:121
+msgid "Group: {groupLabel}"
+msgstr "Group: {groupLabel}"
 
 #: src/components/TabGlyph.tsx:28
 #: src/navigation/Navigation.tsx:57
@@ -308,14 +450,27 @@ msgstr "Groups"
 msgid "Home"
 msgstr "Home"
 
-#: src/components/HeaderAvatar.tsx:94
+#: src/screens/Analytics/components/FilterBar.tsx:168
+#: src/screens/Analytics/components/FilterBar.tsx:174
+msgid "Include groups"
+msgstr "Include groups"
+
 #: src/components/HeaderAvatar.tsx:98
+#: src/components/HeaderAvatar.tsx:102
 msgid "Light theme"
 msgstr "Light theme"
+
+#: src/screens/Analytics/components/Charts.tsx:218
+msgid "Measure"
+msgstr "Measure"
 
 #: src/components/Menu/index.tsx:133
 msgid "Menu"
 msgstr "Menu"
+
+#: src/screens/Analytics/components/FilterBar.tsx:29
+msgid "Month"
+msgstr "Month"
 
 #: src/screens/Groups/index.tsx:58
 msgctxt "action"
@@ -329,6 +484,19 @@ msgstr "New"
 #: src/screens/Groups/index.tsx:95
 msgid "New group"
 msgstr "New group"
+
+#: src/screens/Analytics/components/RangeDialog.tsx:155
+msgid "Next month"
+msgstr "Next month"
+
+#: src/screens/Analytics/components/Summary.tsx:67
+msgid "Next period"
+msgstr "Next period"
+
+#. placeholder {0}: report.periodLabel
+#: src/screens/Analytics/components/Charts.tsx:55
+msgid "No {currency} expenses in {0}"
+msgstr "No {currency} expenses in {0}"
 
 #: src/screens/Groups/index.tsx:92
 msgid "No groups yet. A group keeps a trip’s or a flat’s expenses and balances in one place."
@@ -346,9 +514,30 @@ msgstr "Nothing here yet. Expenses, payments and group changes will show up here
 msgid "now"
 msgstr "now"
 
+#: src/screens/Analytics/components/ExpenseRow.tsx:100
+msgid "of {totalText}"
+msgstr "of {totalText}"
+
+#: src/screens/Analytics/components/Charts.tsx:164
+msgid "Of total"
+msgstr "Of total"
+
+#: src/screens/Analytics/components/Charts.tsx:209
+msgid "of your share was paid by others"
+msgstr "of your share was paid by others"
+
 #: src/components/Layout/Header/index.tsx:154
 msgid "Open drawer menu"
 msgstr "Open drawer menu"
+
+#: src/screens/Analytics/useReport.ts:232
+msgid "Other"
+msgstr "Other"
+
+#. placeholder {0}: money(v)
+#: src/screens/Analytics/components/Charts.tsx:90
+msgid "Owed to you {0}"
+msgstr "Owed to you {0}"
 
 #. placeholder {0}: formatAmount(owed, currency, locale)
 #: src/screens/People/components/BalanceSummary.tsx:195
@@ -359,18 +548,44 @@ msgstr "Owed to you <0>{0}</0>"
 msgid "owes you <0>{figure}</0>"
 msgstr "owes you <0>{figure}</0>"
 
+#: src/screens/Analytics/components/Charts.tsx:196
+msgid "Paid vs your share"
+msgstr "Paid vs your share"
+
 #: src/components/TabGlyph.tsx:27
 #: src/view/shell/desktop/LeftNav.tsx:338
 msgid "People"
 msgstr "People"
 
+#: src/screens/Analytics/components/Charts.tsx:130
+#: src/screens/Analytics/components/Charts.tsx:329
+msgid "Period"
+msgstr "Period"
+
+#: src/screens/Analytics/components/FilterBar.tsx:44
+msgid "Period: {periodName}"
+msgstr "Period: {periodName}"
+
 #: src/navigation/Navigation.tsx:63
+#: src/screens/Analytics/components/Charts.tsx:251
 #: src/screens/Person.tsx:8
 msgid "Person"
 msgstr "Person"
 
-#: src/components/HeaderAvatar.tsx:64
+#: src/screens/Analytics/components/RangeDialog.tsx:117
+msgid "Pick the first day"
+msgstr "Pick the first day"
+
+#: src/screens/Analytics/components/RangeDialog.tsx:142
+msgid "Previous month"
+msgstr "Previous month"
+
+#: src/screens/Analytics/components/Summary.tsx:49
+msgid "Previous period"
+msgstr "Previous period"
+
 #: src/components/HeaderAvatar.tsx:68
+#: src/components/HeaderAvatar.tsx:72
 #: src/navigation/Navigation.tsx:60
 #: src/screens/Profile.tsx:34
 msgid "Profile"
@@ -389,8 +604,8 @@ msgstr "Save expense"
 msgid "Saved on this device"
 msgstr "Saved on this device"
 
-#: src/components/HeaderAvatar.tsx:73
 #: src/components/HeaderAvatar.tsx:77
+#: src/components/HeaderAvatar.tsx:81
 #: src/navigation/Navigation.tsx:61
 #: src/navigation/Navigation.tsx:62
 #: src/screens/Profile.tsx:70
@@ -412,13 +627,39 @@ msgstr "Settle up"
 msgid "settled up"
 msgstr "settled up"
 
+#: src/screens/Analytics/components/Charts.tsx:93
+msgid "Settled up"
+msgstr "Settled up"
+
+#: src/screens/Analytics/components/Charts.tsx:251
+msgid "Share"
+msgstr "Share"
+
+#: src/screens/Analytics/components/Charts.tsx:63
+#: src/screens/Analytics/components/Charts.tsx:68
+msgid "Show all time"
+msgstr "Show all time"
+
+#: src/screens/Analytics/index.tsx:66
+msgid "Show as tables"
+msgstr "Show as tables"
+
+#: src/screens/Analytics/index.tsx:66
+msgid "Show charts"
+msgstr "Show charts"
+
 #: src/screens/Profile.tsx:89
 msgid "Sign in and sync"
 msgstr "Sign in and sync"
 
 #: src/screens/Activity.tsx:95
+#: src/screens/Analytics/useReport.ts:226
 msgid "Someone"
 msgstr "Someone"
+
+#: src/screens/Analytics/components/Charts.tsx:124
+msgid "Spending over time"
+msgstr "Spending over time"
 
 #: src/screens/People/index.tsx:106
 msgid "Split anything with anyone. Add an expense or a friend to get started – friends don’t need the app."
@@ -434,11 +675,36 @@ msgstr "Splito - People"
 msgid "This screen is being built"
 msgstr "This screen is being built"
 
+#: src/screens/Analytics/index.tsx:152
+msgid "Total"
+msgstr "Total"
+
+#: src/screens/Analytics/components/Summary.tsx:98
+msgid "Total, everyone"
+msgstr "Total, everyone"
+
 #: src/screens/Groups/components/GroupRow.tsx:45
 msgid "Trip"
 msgstr "Trip"
 
+#: src/screens/Analytics/components/Charts.tsx:58
+msgid "Try another period, or see everything you have recorded."
+msgstr "Try another period, or see everything you have recorded."
+
+#: src/screens/Analytics/components/FilterBar.tsx:28
+msgid "Week"
+msgstr "Week"
+
+#: src/screens/Analytics/components/Charts.tsx:197
+msgid "What you paid for everyone, against what was yours"
+msgstr "What you paid for everyone, against what was yours"
+
+#: src/screens/Analytics/components/FilterBar.tsx:30
+msgid "Year"
+msgstr "Year"
+
 #: src/screens/Activity.tsx:95
+#: src/screens/Analytics/useReport.ts:226
 msgid "You"
 msgstr "You"
 
@@ -454,6 +720,11 @@ msgstr "you are owed <0>{figure}</0>"
 msgid "You owe"
 msgstr "You owe"
 
+#. placeholder {0}: money(magnitude(v))
+#: src/screens/Analytics/components/Charts.tsx:92
+msgid "You owe {0}"
+msgstr "You owe {0}"
+
 #. placeholder {0}: formatAmount(owe, currency, locale)
 #: src/screens/People/components/BalanceSummary.tsx:204
 msgid "You owe <0>{0}</0>"
@@ -463,6 +734,86 @@ msgstr "You owe <0>{0}</0>"
 msgid "you owe <0>{figure}</0>"
 msgstr "you owe <0>{figure}</0>"
 
+#: src/screens/Analytics/components/Charts.tsx:130
+#: src/screens/Analytics/components/Charts.tsx:220
+#: src/screens/Analytics/components/Charts.tsx:230
+#: src/screens/Analytics/components/Summary.tsx:93
+#: src/screens/Analytics/index.tsx:153
+msgid "You paid"
+msgstr "You paid"
+
+#: src/screens/Analytics/components/Charts.tsx:211
+msgid "You paid exactly your share."
+msgstr "You paid exactly your share."
+
+#: src/screens/Analytics/components/Charts.tsx:207
+msgid "you paid for others, beyond your share"
+msgstr "you paid for others, beyond your share"
+
+#: src/screens/Analytics/components/Summary.tsx:80
+msgid "You spent"
+msgstr "You spent"
+
 #: src/screens/StubScreen.tsx:40
 msgid "Your data is safe on this device."
 msgstr "Your data is safe on this device."
+
+#: src/screens/Analytics/components/Charts.tsx:83
+msgid "Your net balance at the end of each day, all friends together"
+msgstr "Your net balance at the end of each day, all friends together"
+
+#: src/screens/Analytics/components/Charts.tsx:85
+msgid "Your net balance at the end of each month, all friends together"
+msgstr "Your net balance at the end of each month, all friends together"
+
+#: src/screens/Analytics/components/Charts.tsx:84
+msgid "Your net balance at the end of each week, all friends together"
+msgstr "Your net balance at the end of each week, all friends together"
+
+#: src/screens/Analytics/components/Charts.tsx:86
+msgid "Your net balance at the end of each year, all friends together"
+msgstr "Your net balance at the end of each year, all friends together"
+
+#: src/screens/Analytics/components/Charts.tsx:130
+#: src/screens/Analytics/components/Charts.tsx:164
+#: src/screens/Analytics/components/Charts.tsx:180
+#: src/screens/Analytics/components/Charts.tsx:221
+#: src/screens/Analytics/components/Charts.tsx:234
+#: src/screens/Analytics/components/Charts.tsx:285
+#: src/screens/Analytics/index.tsx:109
+#: src/screens/Analytics/index.tsx:154
+msgid "Your share"
+msgstr "Your share"
+
+#. placeholder {0}: formatAmount(report.rowsTotal, currency, locale)
+#: src/screens/Analytics/index.tsx:210
+msgid "Your share <0>{0}</0>"
+msgstr "Your share <0>{0}</0>"
+
+#: src/screens/Analytics/components/Charts.tsx:77
+msgid "Your share each day"
+msgstr "Your share each day"
+
+#: src/screens/Analytics/components/Charts.tsx:79
+msgid "Your share each month"
+msgstr "Your share each month"
+
+#: src/screens/Analytics/components/Charts.tsx:78
+msgid "Your share each week"
+msgstr "Your share each week"
+
+#: src/screens/Analytics/components/Charts.tsx:80
+msgid "Your share each year"
+msgstr "Your share each year"
+
+#: src/screens/Analytics/components/Charts.tsx:280
+msgid "Your share in each group"
+msgstr "Your share in each group"
+
+#: src/screens/Analytics/components/Charts.tsx:159
+msgid "Your share of each category"
+msgstr "Your share of each category"
+
+#: src/screens/Analytics/index.tsx:88
+msgid "Your spending shows up here – by month, category, person and group – once you add an expense."
+msgstr "Your spending shows up here – by month, category, person and group – once you add an expense."

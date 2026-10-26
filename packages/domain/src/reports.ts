@@ -1,4 +1,4 @@
-import {type CurrencyCode, getCurrency, toDecimalString} from './currency'
+import {type CurrencyCode, formatAmount, getCurrency, toDecimalString} from './currency'
 import type {LocalDate} from './date'
 import {type ExpenseRecord, type LedgerRecord, pairwiseBalances} from './ledger'
 
@@ -149,17 +149,20 @@ export interface SpendingTotals {
   paid: bigint
   /** Everyone's spending together. */
   total: bigint
+  /** paid - share: > 0 you covered more than your share, < 0 others covered part of yours. */
+  covered: bigint
   count: number
 }
 
 export function spendingTotals(expenses: ReadonlyArray<ReportExpense>, me: string): SpendingTotals {
-  const t: SpendingTotals = {share: 0n, paid: 0n, total: 0n, count: 0}
+  const t: SpendingTotals = {share: 0n, paid: 0n, total: 0n, covered: 0n, count: 0}
   for (const e of expenses) {
     t.share += e.shares[me] ?? 0n
     t.paid += e.payers[me] ?? 0n
     t.total += e.total
     t.count += 1
   }
+  t.covered = t.paid - t.share
   return t
 }
 
@@ -191,6 +194,8 @@ export interface Slice<K> {
 function slices<K extends string | null>(entries: Iterable<[K, bigint]>): Slice<K>[] {
   const map = new Map<K, Slice<K>>()
   for (const [key, v] of entries) {
+    /* A zero share is not taking part: it adds nothing and is not counted. */
+    if (v === 0n) continue
     const s = map.get(key) ?? {key, share: 0n, count: 0}
     s.share += v
     s.count += 1
@@ -204,7 +209,7 @@ function slices<K extends string | null>(entries: Iterable<[K, bigint]>): Slice<
 
 /** Your share per category, largest first. No category counts as `other`. */
 export function spendingByCategory(expenses: ReadonlyArray<ReportExpense>, me: string): Slice<string>[] {
-  return slices(expenses.filter(e => me in e.shares).map(e => [e.category ?? 'other', e.shares[me]!]))
+  return slices(expenses.map(e => [e.category ?? 'other', e.shares[me] ?? 0n]))
 }
 
 /** Each participant's share of the same expenses (you included), largest first. Adds up to their total. */
@@ -214,7 +219,7 @@ export function spendingByPerson(expenses: ReadonlyArray<ReportExpense>): Slice<
 
 /** Your share per group, largest first; non-group expenses under `null`. */
 export function spendingByGroup(expenses: ReadonlyArray<ReportExpense>, me: string): Slice<string | null>[] {
-  return slices(expenses.filter(e => me in e.shares).map(e => [e.groupId, e.shares[me]!]))
+  return slices(expenses.map(e => [e.groupId, e.shares[me] ?? 0n]))
 }
 
 export type TrendPoint = Bucket & {
@@ -239,6 +244,39 @@ export function balanceTrend(records: ReadonlyArray<ReportRecord>, me: string, f
     while (i < effects.length && effects[i]!.date <= b.to) balance += effects[i++]!.net
     return {...b, balance}
   })
+}
+
+const ceilDiv = (a: bigint, b: bigint) => (a >= 0n ? (a + b - 1n) / b : a / b)
+const floorDiv = (a: bigint, b: bigint) => (a >= 0n ? a / b : -ceilDiv(-a, b))
+
+/**
+ * Round axis ticks (1, 2 or 5 times a power of ten, in minor units) from a
+ * multiple of the step at or below min(0, lo) to one at or above max(0, hi),
+ * about `target` steps. Zero is always a tick.
+ */
+export function axisTicks(lo: bigint, hi: bigint, target = 4): bigint[] {
+  const min = lo < 0n ? lo : 0n
+  const max = hi > 0n ? hi : 0n
+  if (min === max) return [0n]
+  const raw = ceilDiv(max - min, BigInt(target))
+  const mag = 10n ** BigInt(raw.toString().length - 1)
+  const step = [1n, 2n, 5n, 10n].map(m => m * mag).find(st => st >= raw)!
+  const out: bigint[] = []
+  for (let v = floorDiv(min, step) * step; v <= ceilDiv(max, step) * step; v += step) out.push(v)
+  return out
+}
+
+/** Short amount for chart axes ("₹40K", "₹1.2 लाख"). Exact amounts use `formatAmount`. */
+export function formatAmountCompact(minor: bigint, code: CurrencyCode, locale: string): string {
+  const {scale} = getCurrency(code)
+  try {
+    return new Intl.NumberFormat(locale, {style: 'currency', currency: code, notation: 'compact', maximumFractionDigits: 1}).format(
+      toDecimalString(minor, scale) as unknown as number,
+    )
+  } catch {
+    /* Engines without compact notation: the exact amount is still right, just longer. */
+    return formatAmount(minor, code, locale)
+  }
 }
 
 const NUMBER = /^-?\d+(\.\d+)?$/
