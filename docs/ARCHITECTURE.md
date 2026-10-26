@@ -1150,7 +1150,7 @@ labelled sidebar); **wide** = web 1300 px and up (Bluesky `gtTablet`, right colu
   right column when wide, § 26.17). *Why:* "on web it should occupy complete screen", "the navigation should
   be like Bluesky", "for web, keep my left sidebar and main content".
 - **Destinations:** the home destination is labelled **"Home"** (house icon; it holds the Overview and the
-  friends list). Phone bottom bar = Home, Groups, Analytics, Activity, plus the FAB (§ 26.6). **The desktop/rail
+  friends list). Phone bottom bar = Home, Search, Groups, Analytics, Activity (five tabs, Search second, as in Bluesky), plus the FAB (§ 26.6). *Why:* "why i see a new search, its also not visible on mobile" (Search was reachable on phones only through the drawer). **The desktop/rail
   sidebar and the phone drawer show the same list, in the same order, with the same icons and labels:** Home,
   Search, Groups, Analytics, Ask Splito, Activity, Settings (Search second, as in Bluesky; assistant's call), then the same footer links (Feedback · Help · Privacy ·
   About). The sidebar adds only the logo and the "Add expense" pill; the drawer adds only its profile header
@@ -1549,8 +1549,8 @@ add anyway (only for you)"; "also i should be able to select from contacts". *Wh
 
 - **One AI entry point, "Ask Splito"** (Lucide sparkles icon). Placement: a nav item in the shared sidebar /
   drawer list between Analytics and Activity (§ 26.3); Analytics' header right action; an "Ask Splito about
-  '<query>'" row at the top of Search results. Phones keep four bottom-bar tabs; Custom navigation (F-209) can
-  pin Ask Splito there.
+  '<query>'" row at the top of Search results. On phones Ask Splito is reached from the drawer, the Analytics
+  header and Search (the bottom bar stays at five tabs); Custom navigation (F-209) can pin it to the bar.
 - **Chat screen copies Bluesky's DM conversation screen** (message list, composer bar above the keyboard, day
   separators). Empty state: suggested question chips ("How much did I spend on food this month?", "Who owes
   me the most?", "Split last night's dinner 3 ways", "Show my Goa trip spending by day").
@@ -1679,6 +1679,7 @@ Every owner decision, in the order it was made (all 2026-10-26). "Replaced" name
 | 63 | "add everything to feature list and pick one by one" | Every request becomes a BACKLOG entry; build one feature at a time to done | § 26.1 | Many feature streams in parallel |
 | 64 | "add a lot of demo data to my account" | Large deterministic demo dataset, `?demo=large` + Settings > Data (dev/e2e only), removable | § 26.1 | Small `?demo=1` set only |
 | 65 | "there is signin page already there in bluesky, use that" | Sign in / Create account copy Bluesky LoggedOut + Login + Signup screens | § 26.15 | Own method-picker sign-in screen (email/phone code, Apple/Google) |
+| 66 | "where is the ai chat placement, and why i see a new search, its also not visible on mobile" | Search becomes the second phone bottom-bar tab (Bluesky); Ask Splito placement unchanged (sidebar/drawer, Analytics header, Search row) | §§ 26.3, 26.19 | Search only in the drawer on phones |
 
 New decisions follow § 0 rule 9: rewrite the rule in its topic so only the current truth remains, then add a
 row here.
