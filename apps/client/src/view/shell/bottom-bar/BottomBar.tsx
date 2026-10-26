@@ -3,7 +3,7 @@ import {type JSX, useCallback} from 'react'
 import {type GestureResponderEvent, View} from 'react-native'
 import Animated from 'react-native-reanimated'
 import {useSafeAreaInsets} from 'react-native-safe-area-context'
-import {useLingui} from '@lingui/react/macro'
+import {useLingui} from '@lingui/react'
 import {type BottomTabBarProps} from '@react-navigation/bottom-tabs'
 import {StackActions} from '@react-navigation/native'
 
@@ -13,43 +13,39 @@ import {useMinimalShellFooterTransform} from '#/lib/hooks/useMinimalShellTransfo
 import {useNavigationTabState} from '#/lib/hooks/useNavigationTabState'
 import {clamp} from '#/lib/numbers'
 import {getTabState, TabState} from '#/lib/routes/helpers'
+import {TAB_ROUTE, useTabs} from '#/lib/routes/tabs'
 import {useShellLayout} from '#/state/shell/shell-layout'
-import {useMe} from '#/data/hooks'
-import {UserAvatar} from '#/view/com/util/UserAvatar'
 import {type SidebarTab} from '#/view/shell/desktop/LeftNav'
 import {atoms as a, useTheme} from '#/alf'
-import {
-  Bell_Filled_Corner0_Rounded as BellFilled,
-  Bell_Stroke2_Corner0_Rounded as Bell,
-} from '#/components/icons/Bell'
-import {
-  ChartPie_Filled_Corner0_Rounded as ChartPieFilled,
-  ChartPie_Stroke2_Corner0_Rounded as ChartPie,
-} from '#/components/icons/ChartPie'
-import {
-  Group3_Filled_Corner0_Rounded as GroupFilled,
-  Group3_Stroke2_Corner0_Rounded as Group,
-} from '#/components/icons/Group'
-import {
-  HomeOpen_Filled_Corner0_Rounded as HomeFilled,
-  HomeOpen_Stoke2_Corner0_Rounded as Home,
-} from '#/components/icons/HomeOpen'
+import {TAB_LABELS, TabGlyph} from '#/components/TabGlyph'
 import {Text} from '#/components/Typography'
 import {useAnalytics} from '#/analytics'
 import {styles} from './BottomBarStyles'
 
+/*
+ * Bluesky's signed-in native bottom bar with Splito's tabs, in the order the
+ * `tabs` preference sets. There is no centre button: Add expense is the FAB,
+ * as Bluesky's compose action is.
+ */
 export function BottomBar({navigation}: BottomTabBarProps) {
   const t = useTheme()
-  const {t: l} = useLingui()
+  const {_} = useLingui()
   const ax = useAnalytics()
   const safeAreaInsets = useSafeAreaInsets()
   const {footerHeight} = useShellLayout()
-  const {isAtPeople, isAtGroups, isAtAnalytics, isAtActivity, isAtProfile} =
-    useNavigationTabState()
-  const me = useMe()
+  const tabState = useNavigationTabState()
+  const tabs = useTabs()
   const dedupe = useDedupe()
   const footerMinimalShellTransform = useMinimalShellFooterTransform()
   const iconWidth = 28
+
+  const isAt: Record<SidebarTab, boolean> = {
+    People: tabState.isAtPeople,
+    Groups: tabState.isAtGroups,
+    Analytics: tabState.isAtAnalytics,
+    Activity: tabState.isAtActivity,
+    Profile: tabState.isAtProfile,
+  }
 
   const onPressTab = useCallback(
     (tab: SidebarTab) => {
@@ -86,19 +82,6 @@ export function BottomBar({navigation}: BottomTabBarProps) {
     },
     [navigation, dedupe, ax],
   )
-  const onPressPeople = useCallback(() => onPressTab('People'), [onPressTab])
-  const onPressGroups = useCallback(() => onPressTab('Groups'), [onPressTab])
-  const onPressAnalytics = useCallback(
-    () => onPressTab('Analytics'),
-    [onPressTab],
-  )
-  const onPressActivity = useCallback(
-    () => onPressTab('Activity'),
-    [onPressTab],
-  )
-  const onPressProfile = useCallback(() => {
-    onPressTab('Profile')
-  }, [onPressTab])
 
   return (
     <>
@@ -113,119 +96,23 @@ export function BottomBar({navigation}: BottomTabBarProps) {
         onLayout={e => {
           footerHeight.set(e.nativeEvent.layout.height)
         }}>
-        <>
+        {tabs.map(tab => (
           <Btn
-            testID="tab-people"
+            key={tab}
+            testID={`tab-${tab}`}
             icon={
-              isAtPeople ? (
-                <HomeFilled
-                  width={iconWidth + 1}
-                  style={[styles.ctrlIcon, t.atoms.text, styles.homeIcon]}
-                />
-              ) : (
-                <Home
-                  width={iconWidth + 1}
-                  style={[styles.ctrlIcon, t.atoms.text, styles.homeIcon]}
-                />
-              )
+              <TabGlyph
+                tab={tab}
+                isActive={isAt[TAB_ROUTE[tab]]}
+                size={iconWidth}
+              />
             }
-            onPress={onPressPeople}
+            onPress={() => onPressTab(TAB_ROUTE[tab])}
             accessibilityRole="tab"
-            accessibilityLabel={l`People`}
+            accessibilityLabel={_(TAB_LABELS[tab])}
             accessibilityHint=""
           />
-          <Btn
-            testID="tab-groups"
-            icon={
-              isAtGroups ? (
-                <GroupFilled
-                  width={iconWidth + 2}
-                  style={[styles.ctrlIcon, t.atoms.text, styles.searchIcon]}
-                />
-              ) : (
-                <Group
-                  width={iconWidth + 2}
-                  style={[styles.ctrlIcon, t.atoms.text, styles.searchIcon]}
-                />
-              )
-            }
-            onPress={onPressGroups}
-            accessibilityRole="tab"
-            accessibilityLabel={l`Groups`}
-            accessibilityHint=""
-          />
-          {/* No centre button: Add expense is the FAB, as Bluesky's compose action is. */}
-          <Btn
-            testID="tab-analytics"
-            icon={
-              isAtAnalytics ? (
-                <ChartPieFilled
-                  width={iconWidth}
-                  style={[styles.ctrlIcon, t.atoms.text]}
-                />
-              ) : (
-                <ChartPie
-                  width={iconWidth}
-                  style={[styles.ctrlIcon, t.atoms.text]}
-                />
-              )
-            }
-            onPress={onPressAnalytics}
-            accessibilityRole="tab"
-            accessibilityLabel={l`Analytics`}
-            accessibilityHint=""
-          />
-          <Btn
-            testID="tab-activity"
-            icon={
-              isAtActivity ? (
-                <BellFilled
-                  width={iconWidth}
-                  style={[styles.ctrlIcon, t.atoms.text, styles.bellIcon]}
-                />
-              ) : (
-                <Bell
-                  width={iconWidth}
-                  style={[styles.ctrlIcon, t.atoms.text, styles.bellIcon]}
-                />
-              )
-            }
-            onPress={onPressActivity}
-            accessible={true}
-            accessibilityRole="tab"
-            accessibilityLabel={l`Activity`}
-            accessibilityHint=""
-          />
-          <Btn
-            testID="tab-profile"
-            icon={
-              <View style={styles.ctrlIconSizingWrapper}>
-                <View
-                  style={[
-                    styles.ctrlIcon,
-                    styles.profileIcon,
-                    isAtProfile && [
-                      styles.onProfile,
-                      {
-                        borderColor: t.atoms.text.color,
-                        borderWidth: 1,
-                      },
-                    ],
-                  ]}>
-                  <UserAvatar
-                    name={me?.data.name}
-                    size={iconWidth - (isAtProfile ? 3 : 2)}
-                    type="user"
-                  />
-                </View>
-              </View>
-            }
-            onPress={onPressProfile}
-            accessibilityRole="tab"
-            accessibilityLabel={l`Profile`}
-            accessibilityHint=""
-          />
-        </>
+        ))}
       </Animated.View>
     </>
   )

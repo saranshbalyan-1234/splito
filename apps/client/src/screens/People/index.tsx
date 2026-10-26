@@ -102,7 +102,7 @@ export function PeopleScreen() {
             <EmptyState
               testID="people-empty"
               icon={PersonIcon}
-              message={l`Split anything with anyone. Add an expense or a friend to get started – friends don't need the app.`}
+              message={l`Split anything with anyone. Add an expense or a friend to get started – friends don’t need the app.`}
               button={{
                 label: l`Add friend`,
                 text: l`Add friend`,

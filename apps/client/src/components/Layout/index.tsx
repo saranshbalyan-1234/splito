@@ -19,16 +19,13 @@ import {useIsWithinSplitView} from '#/lib/splitView'
 import {
   atoms as a,
   useBreakpoints,
-  useLayoutBreakpoints,
   useTheme,
   web,
 } from '#/alf'
 import {shouldCenterNativeTabletContent} from '#/alf/breakpoints.shared'
 import {useDialogContext} from '#/components/Dialog'
 import {
-  CENTER_COLUMN_OFFSET,
   CENTER_COLUMN_WIDTH,
-  SCROLLBAR_OFFSET,
 } from '#/components/Layout/const'
 import {ScrollbarOffsetContext} from '#/components/Layout/context'
 import {IS_IPAD, IS_WEB} from '#/env'
@@ -51,12 +48,11 @@ export const Screen = memo(function Screen({
   style,
   noInsetTop,
   minimalShell = false,
-  fullBleed = false,
+  fullBleed: _fullBleed = false,
   ...props
 }: ScreenProps) {
   const {top} = useSafeAreaInsets()
   const {isWithinSplitView} = useIsWithinSplitView()
-  const {gtMobile} = useBreakpoints()
 
   useEnableMinimalShellModeForScreen({enabled: minimalShell})
 

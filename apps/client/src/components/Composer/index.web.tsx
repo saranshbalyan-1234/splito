@@ -88,7 +88,9 @@ const styles = StyleSheet.create({
     maxHeight: 'calc(100% - (40px * 2))',
     overflow: 'hidden',
   },
+  /* Splito: on phones the composer fills the height, as Bluesky's native composer does (owner: full-screen on phones). */
   containerMobile: {
+    flex: 1,
     borderRadius: 0,
     marginBottom: BOTTOM_BAR_HEIGHT,
     maxHeight: `calc(100% - ${BOTTOM_BAR_HEIGHT}px)`,

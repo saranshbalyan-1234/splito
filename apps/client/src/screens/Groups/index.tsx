@@ -78,7 +78,7 @@ export function GroupsScreen() {
             <EmptyState
               testID="groups-empty"
               icon={GroupIcon}
-              message={l`No groups yet. A group keeps a trip's or a flat's expenses and balances in one place.`}
+              message={l`No groups yet. A group keeps a trip’s or a flat’s expenses and balances in one place.`}
               button={{
                 label: l`New group`,
                 text: l`New group`,

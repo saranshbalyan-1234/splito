@@ -5,7 +5,7 @@ import {type Entity, type Group} from '@splito/sync'
 
 import {Link} from '#/view/com/util/Link'
 import {UserAvatar} from '#/view/com/util/UserAvatar'
-import {atoms as a, useTheme} from '#/alf'
+import {atoms as a, useBreakpoints, useTheme} from '#/alf'
 import {BalanceText} from '#/components/BalanceText'
 import * as Skeleton from '#/components/Skeleton'
 import {Text} from '#/components/Typography'
@@ -34,6 +34,7 @@ export function GroupRow({
 }) {
   const t = useTheme()
   const {t: l, i18n} = useLingui()
+  const {gtMobile} = useBreakpoints()
   const {name, kind, startDate, endDate, members} = group.data
   const kindLabel = {
     trip: l`Trip`,
@@ -52,6 +53,28 @@ export function GroupRow({
     .filter(c => balances[c] !== 0n)
     .sort()
 
+  const balanceView = (
+    <View style={[a.align_end, a.gap_2xs, a.flex_shrink_0]}>
+      {open.length === 0 ? (
+        <Text style={[a.text_sm, a.leading_snug, t.atoms.text_contrast_medium]}>
+          <Trans>settled up</Trans>
+        </Text>
+      ) : (
+        open.map(currency => (
+          <BalanceText
+            key={currency}
+            testID={`group-balance-${currency}`}
+            amount={balances[currency]!}
+            currency={currency}
+            locale={locale}
+            subject="group"
+            style={a.text_right}
+          />
+        ))
+      )}
+    </View>
+  )
+
   return (
     <Link
       testID={`group-${name}`}
@@ -65,32 +88,18 @@ export function GroupRow({
       <View style={[a.flex_row, a.align_center, a.gap_md]}>
         <UserAvatar size={AVATAR_SIZE} name={name} type="list" />
         <View style={[a.flex_1, a.gap_2xs]}>
-          <Text emoji numberOfLines={1} style={[a.text_md, a.font_semi_bold, a.leading_snug]}>
-            {name}
-          </Text>
+          {/* Phones: the balance shares the title's line so the byline gets the full width. */}
+          <View style={[a.flex_row, a.align_center, a.justify_between, a.gap_md]}>
+            <Text emoji numberOfLines={1} style={[a.flex_1, a.text_md, a.font_semi_bold, a.leading_snug]}>
+              {name}
+            </Text>
+            {!gtMobile && balanceView}
+          </View>
           <Text numberOfLines={1} style={[a.text_sm, a.leading_snug, t.atoms.text_contrast_medium]}>
             {byline}
           </Text>
         </View>
-        <View style={[a.align_end, a.gap_2xs, a.flex_shrink_0]}>
-          {open.length === 0 ? (
-            <Text style={[a.text_sm, t.atoms.text_contrast_medium]}>
-              <Trans>settled up</Trans>
-            </Text>
-          ) : (
-            open.map(currency => (
-              <BalanceText
-                key={currency}
-                testID={`group-balance-${currency}`}
-                amount={balances[currency]!}
-                currency={currency}
-                locale={locale}
-                subject="group"
-                style={a.text_right}
-              />
-            ))
-          )}
-        </View>
+        {gtMobile && balanceView}
       </View>
     </Link>
   )

@@ -2,6 +2,7 @@
 import {useCallback, useMemo} from 'react'
 import {ScrollView, StyleSheet, View} from 'react-native'
 import {useSafeAreaInsets} from 'react-native-safe-area-context'
+import {type TabId} from '@splito/sync'
 import {plural} from '@lingui/core/macro'
 import {Trans, useLingui} from '@lingui/react/macro'
 import {useNavigation, useNavigationState} from '@react-navigation/native'
@@ -12,6 +13,7 @@ import {
   isTab,
   TabState,
 } from '#/lib/routes/helpers'
+import {TAB_ROUTE, tabHref, useTabs} from '#/lib/routes/tabs'
 import {type NavigationProp, type TabParams} from '#/lib/routes/types'
 import {useA11y} from '#/state/a11y'
 import {useMe} from '#/data/hooks'
@@ -65,22 +67,18 @@ import {getComposeButtonLayout} from './composeButtonLayout'
 
 /** The left nav's tab destinations; the tab navigator's route names on native. */
 export type SidebarTab = keyof TabParams
-type NavClickItem =
-  | 'people'
-  | 'groups'
-  | 'analytics'
-  | 'activity'
-  | 'profile'
-  | 'settings'
+type NavClickItem = TabId | 'settings'
 
 const LARGE_ELEMENT_SIZE = 48
 const NAV_ICON_WIDTH = 28
-const NAV_ITEM_TO_TAB: Partial<Record<NavClickItem, SidebarTab>> = {
-  people: 'People',
-  groups: 'Groups',
-  analytics: 'Analytics',
-  activity: 'Activity',
-  profile: 'Profile',
+const NAV_ITEM_TO_TAB: Partial<Record<NavClickItem, SidebarTab>> = TAB_ROUTE
+/** Detail routes whose section stays highlighted (filled icon), as Bluesky does for related pages. */
+const PARENT_ITEM: Record<string, NavClickItem> = {
+  Person: 'people',
+  AddFriend: 'people',
+  Group: 'groups',
+  CreateGroup: 'groups',
+  Settle: 'groups',
 }
 
 export const LEFT_NAV_STANDARD_WIDTH = 240
@@ -304,7 +302,9 @@ function NavItem({
     IS_NATIVE && tab
       ? getTabState(navigationState, tab) !== TabState.Outside
       : isCurrent
-  const isRelated = currentRouteInfo.name.startsWith(pathName)
+  const isRelated =
+    currentRouteInfo.name.startsWith(pathName) ||
+    PARENT_ITEM[currentRouteInfo.name] === navItem
   const navigation = useNavigation<NavigationProp>()
   const onPressWrapped = useCallback(
     (e: React.MouseEvent<HTMLAnchorElement, MouseEvent>) => {
@@ -472,55 +472,53 @@ export function DesktopLeftNav({
   const {gtMobile} = useBreakpoints()
   const {leftNavMinimal} = useLayoutBreakpoints()
   const insets = useSafeAreaInsets()
+  const tabs = useTabs()
 
   if (!gtMobile) {
     return null
+  }
+
+  const tabItems: Record<
+    TabId,
+    {label: string; icons: NavItemProps['icons']}
+  > = {
+    people: {
+      label: l`People`,
+      icons: {inactive: HomeIcon, active: HomeFilledIcon},
+    },
+    groups: {
+      label: l`Groups`,
+      icons: {inactive: GroupIcon, active: GroupFilledIcon},
+    },
+    analytics: {
+      label: l`Analytics`,
+      icons: {inactive: ChartPieIcon, active: ChartPieFilledIcon},
+    },
+    activity: {
+      label: l`Activity`,
+      icons: {inactive: BellIcon, active: BellFilledIcon},
+    },
+    profile: {
+      label: l`Profile`,
+      icons: {inactive: UserCircleIcon, active: UserCircleFilledIcon},
+    },
   }
 
   const content = (
     <>
       <View style={[!leftNavMinimal && a.w_full, leftNavMinimal && a.align_center]}>
         <LogoCard minimal={leftNavMinimal} />
-        <NavItem
-          label={l`People`}
-          href="/"
-          navItem="people"
-          onNavigateTab={onNavigateTab}
-          minimal={leftNavMinimal}
-          icons={{inactive: HomeIcon, active: HomeFilledIcon}}
-        />
-        <NavItem
-          label={l`Groups`}
-          href="/groups"
-          navItem="groups"
-          onNavigateTab={onNavigateTab}
-          minimal={leftNavMinimal}
-          icons={{inactive: GroupIcon, active: GroupFilledIcon}}
-        />
-        <NavItem
-          label={l`Analytics`}
-          href="/analytics"
-          navItem="analytics"
-          onNavigateTab={onNavigateTab}
-          minimal={leftNavMinimal}
-          icons={{inactive: ChartPieIcon, active: ChartPieFilledIcon}}
-        />
-        <NavItem
-          label={l`Activity`}
-          href="/activity"
-          navItem="activity"
-          onNavigateTab={onNavigateTab}
-          minimal={leftNavMinimal}
-          icons={{inactive: BellIcon, active: BellFilledIcon}}
-        />
-        <NavItem
-          label={l`Profile`}
-          href="/profile"
-          navItem="profile"
-          onNavigateTab={onNavigateTab}
-          minimal={leftNavMinimal}
-          icons={{inactive: UserCircleIcon, active: UserCircleFilledIcon}}
-        />
+        {tabs.map(tab => (
+          <NavItem
+            key={tab}
+            label={tabItems[tab].label}
+            href={tabHref(tab)}
+            navItem={tab}
+            onNavigateTab={onNavigateTab}
+            minimal={leftNavMinimal}
+            icons={tabItems[tab].icons}
+          />
+        ))}
         <NavItem
           label={l`Settings`}
           href="/settings"

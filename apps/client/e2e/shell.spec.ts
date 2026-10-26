@@ -151,6 +151,22 @@ test.describe('phone: Bluesky bottom bar and FAB', () => {
   })
 })
 
+test('the tabs preference orders and hides tabs; hidden routes still open', async ({page}) => {
+  await page.setViewportSize(PHONE)
+  await open(page, '/', 'screen-people')
+  await page.waitForFunction(() => 'splito' in window)
+  await page.evaluate(() => (window as any).splito.setPref('tabs', ['groups', 'people', 'profile']))
+  await expect(page.getByTestId('tab-analytics')).toHaveCount(0)
+  await expect(page.getByTestId('tab-activity')).toHaveCount(0)
+  const order = await page.getByRole('navigation').locator('[data-testid^="tab-"]').evaluateAll(els => els.map(e => e.getAttribute('data-testid')))
+  expect(order).toEqual(['tab-groups', 'tab-people', 'tab-profile'])
+
+  await page.setViewportSize(LAPTOP)
+  await expect(page.getByTestId('tab-analytics')).toHaveCount(0)
+  await expect(page.getByTestId('tab-settings')).toBeVisible()
+  await open(page, '/analytics', 'screen-analytics')
+})
+
 test('dev tools seed data in e2e builds', async ({page}) => {
   await page.goto('/')
   await page.waitForFunction(() => 'splito' in window)

@@ -4,7 +4,7 @@ import {formatAmount, magnitude, type PersonSummary} from '@splito/domain'
 
 import {Link} from '#/view/com/util/Link'
 import {UserAvatar} from '#/view/com/util/UserAvatar'
-import {atoms as a, useTheme} from '#/alf'
+import {atoms as a, useBreakpoints, useTheme} from '#/alf'
 import {BalanceText} from '#/components/BalanceText'
 import * as Pills from '#/components/Pills'
 import * as ProfileCard from '#/components/ProfileCard'
@@ -34,6 +34,7 @@ export function PersonRow({
 }) {
   const t = useTheme()
   const {t: l} = useLingui()
+  const {gtMobile} = useBreakpoints()
   const byCurrency = row.summary?.byCurrency ?? {}
   const currencies = Object.keys(byCurrency)
     .filter(c => byCurrency[c]!.total !== 0n || Object.keys(byCurrency[c]!.groups).length > 0)
@@ -53,6 +54,29 @@ export function PersonRow({
   })
   const isSettled = currencies.every(c => byCurrency[c]!.total === 0n)
 
+  const balances = (
+    <View style={[a.align_end, a.gap_2xs, a.flex_shrink_0]}>
+      {isSettled ? (
+        <Text style={[a.text_sm, a.leading_snug, t.atoms.text_contrast_medium]}>
+          <Trans>settled up</Trans>
+        </Text>
+      ) : (
+        currencies
+          .filter(c => byCurrency[c]!.total !== 0n)
+          .map(currency => (
+            <BalanceText
+              key={currency}
+              testID={`balance-${currency}`}
+              amount={byCurrency[currency]!.total}
+              currency={currency}
+              locale={locale}
+              style={a.text_right}
+            />
+          ))
+      )}
+    </View>
+  )
+
   return (
     <Link
       testID={`person-${row.name}`}
@@ -66,30 +90,12 @@ export function PersonRow({
       <View style={[a.flex_row, a.align_center, a.gap_md]}>
         <UserAvatar size={AVATAR_SIZE} name={row.name} type="user" />
         <View style={[a.flex_1, a.gap_2xs]}>
-          <View style={[a.flex_row, a.align_start, a.justify_between, a.gap_md]}>
-            <View style={[a.flex_1, a.pt_2xs]}>
+          {/* Phones: the balance shares the name's line so the chips get the full width. */}
+          <View style={[a.flex_row, a.align_center, a.justify_between, a.gap_md]}>
+            <View style={[a.flex_1]}>
               <ProfileCard.Name profile={row} />
             </View>
-            <View style={[a.align_end, a.gap_2xs, a.flex_shrink_0]}>
-              {isSettled ? (
-                <Text style={[a.text_sm, a.leading_snug, a.pt_2xs, t.atoms.text_contrast_medium]}>
-                  <Trans>settled up</Trans>
-                </Text>
-              ) : (
-                currencies
-                  .filter(c => byCurrency[c]!.total !== 0n)
-                  .map(currency => (
-                    <BalanceText
-                      key={currency}
-                      testID={`balance-${currency}`}
-                      amount={byCurrency[currency]!.total}
-                      currency={currency}
-                      locale={locale}
-                      style={a.text_right}
-                    />
-                  ))
-              )}
-            </View>
+            {!gtMobile && balances}
           </View>
           {chips.length > 0 ? (
             <Pills.Row style={[a.pt_2xs]}>
@@ -116,6 +122,7 @@ export function PersonRow({
             </Text>
           )}
         </View>
+        {gtMobile && balances}
       </View>
     </Link>
   )
