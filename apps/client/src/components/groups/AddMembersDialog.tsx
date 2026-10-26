@@ -24,24 +24,34 @@ import * as FormSheet from '#/components/FormSheet'
 import {PendingPeople} from '#/components/people/PendingPeople'
 
 /**
- * Adds friends (or someone new) to a group from now on. Earlier expenses
+ * Adds friends (or someone new) to a group from now on, or opens the
+ * group's invite link / QR. Earlier expenses
  * keep their splits; a former member rejoins.
  */
 export function AddMembersDialog({
   control,
   group,
+  inviteRow,
 }: {
   control: Dialog.DialogControlProps
   group: Entity<Group>
+  /** The "Invite link or QR code" row, drawn by the screen (it navigates). */
+  inviteRow?: React.ReactNode
 }) {
   return (
     <FormSheet.Outer control={control} testID="add-members-sheet">
-      <Form group={group} />
+      <Form group={group} inviteRow={inviteRow} />
     </FormSheet.Outer>
   )
 }
 
-function Form({group}: {group: Entity<Group>}) {
+function Form({
+  group,
+  inviteRow,
+}: {
+  group: Entity<Group>
+  inviteRow: React.ReactNode
+}) {
   const t = useTheme()
   const {outgoing: pending} = usePendingRequests()
   const {t: l} = useLingui()
@@ -191,6 +201,9 @@ function Form({group}: {group: Entity<Group>}) {
           </Button>
         </View>
       </View>
+
+      {/* The group's invite link lives only here (26.18 decision 77). */}
+      {inviteRow}
     </FormSheet.Inner>
   )
 }
