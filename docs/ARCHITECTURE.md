@@ -1425,6 +1425,18 @@ built yet.
 - **"Sign in" / "Log out" also appear in the drawer footer** (§ 26.7).
 - **Auth state comes from one `useSession()`** (Bluesky pattern, `src/state/session`), signed out until the
   backend lands.
+- **Feedback** ("add one feedback section as well"). Placement copied from Bluesky: a "Feedback" item in the
+  drawer (Bluesky `Drawer.tsx` onPressFeedback), a "Support" section in Settings ("Send feedback", "Your
+  feedback", "Help", "About"), and on desktop the right column ends with Bluesky's footer links
+  "Feedback · Help · Privacy · About" (`desktop/RightNav.tsx`); below 1300 px desktop reaches them through the
+  drawer and Settings. "Send feedback" opens a FormSheet (bottom drawer on phones, centred popup on desktop):
+  type chips Bug / Idea / Question / Other, a required message, optional screenshot or photo, "Include app
+  info" toggle (default on: version, platform, OS, language, current screen; never amounts, names, notes or
+  receipts; the sheet shows exactly what is attached), optional reply email (prefilled once signed in). Sent
+  feedback is kept in "Your feedback" with its status. Until the backend feedback endpoint exists, Send saves it
+  on the device (status "Saved on this device") and offers "Send by email" (a prefilled email draft to the
+  support address, `FEEDBACK_EMAIL`, a release-checklist item); once the backend exists it goes through the
+  outbox. Preference "Shake to send feedback" (phones, default off).
 
 ### 26.16 Analytics
 
@@ -1554,6 +1566,7 @@ Every owner decision, in the order it was made (all 2026-10-26). "Replaced" name
 | 50 | "all modal in mobile should be drawers" | Every phone modal, prompts included, is a bottom sheet | § 26.8 | Prompts excepted (AGENTS r7) |
 | 51 | "make sure this file updates on its own"; "add whatever we discussed so far" | Decisions recorded here in the same turn; hook reminder | § 0 rule 9, § 26.1 | Numbered list in `AGENTS.md` |
 | 52 | "to add the friend, it should ask the email or mobile, and try to invite, once they accept they can be used anywhere"; "invite link, or qr, with limits"; "they should accept"; "if they are not there show the warning, and one option to add anyway (only for you)"; "select from contacts" | Add friend by email/mobile or contacts, directory check first, consent required, not-on-Splito warning with Send invite / Add anyway (only for you), invite link + QR with use and expiry limits | § 26.18 | Add friend = local name only (F-601) |
+| 53 | "add one feedback section as well" | Feedback in drawer, Settings > Support and desktop right-column footer (Bluesky placement); in-app feedback sheet, saved locally + email draft until backend | § 26.15 | Feedback as email draft only (BACKLOG F-215) |
 
 New decisions follow § 0 rule 9: rewrite the rule in its topic so only the current truth remains, then add a
 row here.
