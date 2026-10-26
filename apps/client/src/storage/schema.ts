@@ -7,4 +7,6 @@ export type Device = {
   meId: string
   colorMode: 'system' | 'light' | 'dark'
   hapticsEnabled: boolean
+  /** Epoch ms of the last "Mark all read"; changes from others after it are unread. */
+  notificationsSeenAt: number
 }

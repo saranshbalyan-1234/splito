@@ -84,11 +84,11 @@ function rowAnimates(page: Page, testID: string) {
   )
 }
 
-test('empty People, Groups and Activity show their animated illustration', async ({page}) => {
+test('empty People, Groups and Notifications show their animated illustration', async ({page}) => {
   for (const [path, id] of [
     ['/', 'people-empty'],
     ['/groups', 'groups-empty'],
-    ['/activity', 'activity-empty'],
+    ['/notifications', 'notifications-empty'],
   ] as const) {
     await page.goto(path)
     const art = page.getByTestId(`${id}-illustration`)
@@ -165,14 +165,14 @@ test('skeletons show while the local store loads', async ({page}) => {
   for (const [path, screen] of [
     ['/?demo=1', 'person-Arjun Mehta'],
     ['/groups', 'group-Goa trip'],
-    ['/activity', 'screen-activity'],
+    ['/notifications', 'screen-notifications'],
     ['/profile', 'profileHeaderDisplayName'],
   ] as const) {
     await page.goto(path)
     await expect(page.getByTestId(screen).first()).toBeVisible()
   }
   const seen: string[] = await page.evaluate(() => JSON.parse(sessionStorage.getItem('skeletonsSeen') ?? '[]'))
-  expect(seen.sort()).toEqual(['activity-loading', 'groups-loading', 'people-loading', 'profile-loading'])
+  expect(seen.sort()).toEqual(['groups-loading', 'notifications-loading', 'people-loading', 'profile-loading'])
   // Loading never lingers once data is in.
   await expect(page.locator('[data-testid$="-loading"]')).toHaveCount(0)
 })

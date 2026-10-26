@@ -1,6 +1,6 @@
 import {View} from 'react-native'
 import {LayoutAnimationConfig} from 'react-native-reanimated'
-import {Trans, useLingui} from '@lingui/react/macro'
+import {useLingui} from '@lingui/react/macro'
 import {useNavigation} from '@react-navigation/native'
 import {balanceTotals, pairwiseBalances, personSummary} from '@splito/domain'
 import {type Group, type Person} from '@splito/sync'
@@ -8,15 +8,17 @@ import {type Group, type Person} from '@splito/sync'
 import {type NavigationProp} from '#/lib/routes/types'
 import {useNumberLocale} from '#/locale/numberLocale'
 import {useEntities, useLedger, useMe, usePref} from '#/data/hooks'
-import {HomeHeaderLayout} from '#/view/com/home/HomeHeaderLayout'
 import {EmptyState} from '#/view/com/util/EmptyState'
 import {List} from '#/view/com/util/List'
 import {useBreakpoints} from '#/alf'
 import {AddExpenseFAB} from '#/components/AddExpenseFAB'
-import {Button, ButtonIcon, ButtonText} from '#/components/Button'
+import {LogoMark} from '#/components/brand/Logo'
+import {HeaderAvatar} from '#/components/HeaderAvatar'
 import {PersonPlus_Filled_Stroke2_Corner0_Rounded as PersonPlusIcon} from '#/components/icons/Person'
 import * as Layout from '#/components/Layout'
+import {PressableScale} from '#/motion/PressableScale'
 import {Shimmer} from '#/motion/Shimmer'
+import {HeaderBell} from '#/features/notifications/HeaderBell'
 import {
   BalanceSummary,
   BalanceSummaryPlaceholder,
@@ -32,7 +34,8 @@ const PLACEHOLDER_ROWS = 6
 
 /**
  * Home: balances per currency, then one row per friend with their balance
- * per currency and each group's part. No page title, by spec.
+ * per currency and each group's part. No page title, by spec: the header
+ * centres the logo, as Bluesky's home header does.
  */
 export function PeopleScreen() {
   const {t: l} = useLingui()
@@ -69,9 +72,33 @@ export function PeopleScreen() {
         x.name.localeCompare(y.name),
     )
 
+  const addFriend = () => navigation.navigate('AddFriend')
+
   return (
     <Layout.Screen testID="screen-people">
-      <HomeHeaderLayout tabBarAnchor={null}>{null}</HomeHeaderLayout>
+      <Layout.Header.Outer>
+        <HeaderAvatar />
+        <Layout.Header.Slot />
+        <Layout.Header.Content>
+          {/* The home link, inactive here because this header is on People. */}
+          <PressableScale
+            testID="header-logo"
+            targetScale={0.9}
+            accessibilityRole="link"
+            accessibilityLabel={l`Splito - People`}
+            aria-disabled={true}
+            disabled={true}>
+            <LogoMark size={30} />
+          </PressableScale>
+        </Layout.Header.Content>
+        <Layout.Header.ActionButton
+          testID="people-add-friend"
+          label={l`Add friend`}
+          icon={PersonPlusIcon}
+          onPress={addFriend}
+        />
+        <HeaderBell />
+      </Layout.Header.Outer>
       {isLoading ? (
         <Shimmer testID="people-loading">
           <BalanceSummaryPlaceholder />
@@ -108,7 +135,7 @@ export function PeopleScreen() {
                   label: l`Add friend`,
                   text: l`Add friend`,
                   icon: PersonPlusIcon,
-                  onPress: () => navigation.navigate('AddFriend'),
+                  onPress: addFriend,
                   size: 'small',
                   color: 'secondary',
                 }}
@@ -125,29 +152,14 @@ export function PeopleScreen() {
   )
 }
 
-/* The friends list heading, with Add friend as the section's own action. */
+/* The friends list heading; Add friend is the header's action, so it isn't repeated here. */
 function FriendsHeader({count}: {count: number | undefined}) {
   const {t: l} = useLingui()
-  const navigation = useNavigation<NavigationProp>()
-
   return (
     <SectionHeader
       title={l`Friends`}
       testID="people-friends-title"
       count={count}
-      action={
-        <Button
-          testID="people-add-friend"
-          label={l`Add friend`}
-          size="small"
-          color="secondary"
-          onPress={() => navigation.navigate('AddFriend')}>
-          <ButtonIcon icon={PersonPlusIcon} />
-          <ButtonText>
-            <Trans>Add friend</Trans>
-          </ButtonText>
-        </Button>
-      }
     />
   )
 }

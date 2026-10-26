@@ -32,7 +32,6 @@ import {IS_ANDROID, IS_IPAD} from '#/env'
 import {usePref} from '#/data/hooks'
 import {useShouldReduceMotion} from '#/motion/useShouldReduceMotion'
 import {linking} from '#/navigation/linking'
-import {ActivityScreen} from '#/screens/Activity'
 import {AddExpenseScreen} from '#/screens/AddExpense'
 import {AddFriendScreen} from '#/screens/AddFriend'
 import {AnalyticsScreen} from '#/screens/Analytics'
@@ -41,6 +40,7 @@ import {EditExpenseScreen} from '#/screens/EditExpense'
 import {ExpenseScreen} from '#/screens/Expense'
 import {GroupScreen} from '#/screens/Group'
 import {GroupsScreen} from '#/screens/Groups'
+import {NotificationsScreen} from '#/screens/Notifications'
 import {PeopleScreen} from '#/screens/People'
 import {PersonScreen} from '#/screens/Person'
 import {ProfileScreen} from '#/screens/Profile'
@@ -56,7 +56,7 @@ const Flat = createNativeStackNavigatorWithAuth<FlatNavigatorParams>()
 const TITLES: Partial<Record<keyof FlatNavigatorParams, MessageDescriptor>> = {
   Groups: msg`Groups`,
   Analytics: msg`Analytics`,
-  Activity: msg`Activity`,
+  Notifications: msg`Notifications`,
   Profile: msg`Profile`,
   Settings: msg`Settings`,
   SettingsSection: msg`Settings`,
@@ -136,7 +136,6 @@ function Tabs() {
       <Tab.Screen name="People" component={PeopleScreen} />
       <Tab.Screen name="Groups" component={GroupsScreen} />
       <Tab.Screen name="Analytics" component={AnalyticsScreen} />
-      <Tab.Screen name="Activity" component={ActivityScreen} />
     </Tab.Navigator>
   )
 }
@@ -145,7 +144,12 @@ function Tabs() {
  * The TabsNavigator is used by native mobile to represent the routes
  * as tabs, with every other route pushed above them.
  */
-export function TabsNavigator() {
+export function TabsNavigator({
+  layout,
+}: {
+  /** Wraps the navigator's content, inside its navigation state (the drawer). */
+  layout?: React.ComponentProps<typeof Stack.Navigator>['layout']
+}) {
   const t = useTheme()
   const [motion] = usePref('motion')
   const shouldReduceMotion = useShouldReduceMotion()
@@ -154,11 +158,13 @@ export function TabsNavigator() {
     motion === 'off' ? 'none' : shouldReduceMotion ? 'fade' : undefined
   return (
     <Stack.Navigator
+      layout={layout}
       screenOptions={{
         ...screenOptions(t),
         ...(reducedAnimation && {animation: reducedAnimation}),
       }}>
       <Stack.Screen name="Tabs" component={Tabs} />
+      <Stack.Screen name="Notifications" component={NotificationsScreen} />
       <Stack.Screen name="Profile" component={ProfileScreen} />
       <Stack.Screen name="Settings" component={SettingsScreen} />
       <Stack.Screen name="SettingsSection" component={SettingsSectionScreen} />
@@ -186,7 +192,12 @@ export function TabsNavigator() {
  * The FlatNavigator is used by Web to represent the routes
  * in a single ("flat") stack.
  */
-export function FlatNavigator() {
+export function FlatNavigator({
+  layout,
+}: {
+  /** Wraps the navigator's content, inside its navigation state (the drawer). */
+  layout?: React.ComponentProps<typeof Flat.Navigator>['layout']
+}) {
   const t = useTheme()
   const {_} = useLingui()
   const screenListeners = useWebScrollRestoration()
@@ -198,6 +209,7 @@ export function FlatNavigator() {
 
   return (
     <Flat.Navigator
+      layout={layout}
       screenListeners={screenListeners}
       screenOptions={screenOptions(t)}>
       <Flat.Screen
@@ -216,9 +228,9 @@ export function FlatNavigator() {
         options={{title: title('Analytics')}}
       />
       <Flat.Screen
-        name="Activity"
-        component={ActivityScreen}
-        options={{title: title('Activity')}}
+        name="Notifications"
+        component={NotificationsScreen}
+        options={{title: title('Notifications')}}
       />
       <Flat.Screen
         name="Profile"

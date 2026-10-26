@@ -1,7 +1,7 @@
-import {type LinkingOptions} from '@react-navigation/native'
+import {getStateFromPath, type LinkingOptions} from '@react-navigation/native'
 
 import {type FlatNavigatorParams} from '#/lib/routes/types'
-import {ROUTE_PATHS} from '#/routes'
+import {redirectOldPath, ROUTE_PATHS} from '#/routes'
 
 /*
  * Web uses one flat stack (see `FlatNavigator`), so every path maps to a
@@ -10,6 +10,8 @@ import {ROUTE_PATHS} from '#/routes'
  */
 export const linking: LinkingOptions<FlatNavigatorParams> = {
   prefixes: ['https://splito.app'],
+  getStateFromPath: (path, options) =>
+    getStateFromPath(redirectOldPath(path), options),
   config: {
     initialRouteName: 'People',
     screens: Object.fromEntries(

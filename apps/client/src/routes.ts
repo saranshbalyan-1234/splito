@@ -11,7 +11,7 @@ export const ROUTE_PATHS = {
   People: '/',
   Groups: '/groups',
   Analytics: '/analytics',
-  Activity: '/activity',
+  Notifications: '/notifications',
   Profile: '/profile',
   Settings: '/settings',
   SettingsSection: '/settings/:section',
@@ -26,5 +26,13 @@ export const ROUTE_PATHS = {
 } as const satisfies Record<keyof FlatNavigatorParams, string>
 
 export type RouteName = keyof typeof ROUTE_PATHS
+
+/**
+ * Old paths that redirect, so the URL changes too: the Activity feed became
+ * Notifications. Both linking configs read paths through this.
+ */
+export function redirectOldPath(path: string) {
+  return path.replace(/^\/?activity(?=[/?#]|$)/, '/notifications')
+}
 
 export const router = new Router<FlatNavigatorParams>(ROUTE_PATHS)

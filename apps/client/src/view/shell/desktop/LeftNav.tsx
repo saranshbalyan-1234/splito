@@ -27,10 +27,6 @@ import {
 import {LogoMark} from '#/components/brand/Logo'
 import {Button, ButtonIcon, ButtonText} from '#/components/Button'
 import {
-  Bell_Filled_Corner0_Rounded as BellFilledIcon,
-  Bell_Stroke2_Corner0_Rounded as BellIcon,
-} from '#/components/icons/Bell'
-import {
   ChartPie_Filled_Corner0_Rounded as ChartPieFilledIcon,
   ChartPie_Stroke2_Corner0_Rounded as ChartPieIcon,
 } from '#/components/icons/ChartPie'
@@ -346,13 +342,9 @@ export function DesktopLeftNav({
       label: l`Analytics`,
       icons: {inactive: ChartPieIcon, active: ChartPieFilledIcon},
     },
-    activity: {
-      label: l`Activity`,
-      icons: {inactive: BellIcon, active: BellFilledIcon},
-    },
   }
 
-  /* Bluesky's account card is gone: the account avatar sits at the top right of the content (owner directive). */
+  /* Bluesky's account card is gone: the account avatar sits at the top left of the content and opens the drawer (owner directive). */
   const content = (
     <>
       <View style={[!leftNavMinimal && a.w_full, leftNavMinimal && a.align_center]}>

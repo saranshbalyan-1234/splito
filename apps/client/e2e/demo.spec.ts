@@ -64,7 +64,8 @@ test('People shows each friend with real words and the right balance per currenc
   await expect(page.getByTestId('people-friends-title')).toHaveText(
     `Friends  ${Object.keys(DEMO_FRIENDS).length}`,
   )
-  await expect(page.getByTestId('people-add-friend')).toHaveText('Add friend')
+  // Add friend is the header's one action (an icon button), not repeated in the list.
+  await expect(page.getByTestId('people-add-friend')).toHaveAttribute('aria-label', 'Add friend')
   await expectNoMessageIds(page)
 })
 
@@ -101,7 +102,7 @@ test('Hindi renders translated words with Indian grouping, never message ids', a
   await page.evaluate(() => (window as any).splito.setPref('language', 'hi'))
   await expect(page.getByTestId('people-balances-title')).toHaveText('बैलेंस')
   await expect(page.getByTestId('people-friends-title')).toHaveText(/^दोस्त/)
-  await expect(page.getByTestId('people-add-friend')).toHaveText('दोस्त जोड़ें')
+  await expect(page.getByTestId('people-add-friend')).toHaveAttribute('aria-label', 'दोस्त जोड़ें')
   const arjun = byKey.get('arjun')!.byCurrency.INR!.total
   await expect(page.getByTestId('person-Arjun Mehta').getByTestId('balance-INR')).toHaveText(
     `आपको मिलेंगे ${formatAmount(arjun, 'INR', 'hi-IN')}`,

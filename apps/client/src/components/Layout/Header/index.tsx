@@ -1,12 +1,13 @@
 // Adapted from bluesky-social/social-app@4e4ad9c (MIT) — src/components/Layout/Header/index.tsx
 import {createContext, useCallback, useContext} from 'react'
-import {type GestureResponderEvent, Keyboard, View} from 'react-native'
+import {type GestureResponderEvent, View} from 'react-native'
+import Animated from 'react-native-reanimated'
 import {msg} from '@lingui/core/macro'
 import {useLingui} from '@lingui/react'
 import {useNavigation} from '@react-navigation/native'
 
 import {type NavigationProp} from '#/lib/routes/types'
-import {useSetDrawerOpen} from '#/state/shell'
+import {useShellHeaderLayout} from '#/state/shell/shell-layout'
 import {useIsWithinSplitView} from '#/lib/splitView'
 import {
   atoms as a,
@@ -18,18 +19,50 @@ import {
   web,
 } from '#/alf'
 import {Button, ButtonIcon, type ButtonProps} from '#/components/Button'
+import {type Props as SVGIconProps} from '#/components/icons/common'
 import {ArrowLeft_Stroke2_Corner0_Rounded as ArrowLeft} from '#/components/icons/Arrow'
-import {Menu_Stroke2_Corner0_Rounded as Menu} from '#/components/icons/Menu'
 import {
   BUTTON_VISUAL_ALIGNMENT_OFFSET,
   HEADER_SLOT_SIZE,
 } from '#/components/Layout/const'
+import {useHeaderHideTransform} from '#/components/Layout/MainScrollProvider'
 import {Text} from '#/components/Typography'
-import {useAnalytics} from '#/analytics'
-import {IS_IOS} from '#/env'
 
 const HEADER_BUTTON_HITSLOP = {top: 30, bottom: 10, left: 30, right: 30}
 
+/**
+ * Pins a header (and anything that travels with it, such as a tab bar) to
+ * the top of the screen. On phones it slides away as the screen scrolls down
+ * and returns on scroll up, Bluesky's minimal-shell header.
+ */
+export function Sticky({children}: {children: React.ReactNode}) {
+  const t = useTheme()
+  const {gtMobile} = useBreakpoints()
+  const {height, onLayout} = useShellHeaderLayout()
+  const hideTransform = useHeaderHideTransform(height)
+
+  return (
+    <Animated.View
+      onLayout={onLayout}
+      style={[
+        a.w_full,
+        a.z_10,
+        web([a.sticky, {top: 0}]),
+        t.atoms.bg,
+        !gtMobile && hideTransform,
+      ]}>
+      {children}
+    </Animated.View>
+  )
+}
+
+/**
+ * Splito's header rule set (owner directive): the left slot holds the
+ * avatar on top-level pages or Back on pushed ones, the title is centred on
+ * every platform, and the right holds at most one action (plus an overflow
+ * menu, plus the bell on top-level pages). Empty slots keep their width so
+ * the title stays centred.
+ */
 export function Outer({
   children,
   noBottomBorder,
@@ -45,7 +78,7 @@ export function Outer({
   const gutters = useGutters([0, 'base'])
   const {isWithinLeftPanel} = useIsWithinSplitView()
 
-  return (
+  const row = (
     <View
       ref={headerRef}
       style={[
@@ -54,7 +87,6 @@ export function Outer({
         a.flex_row,
         a.align_center,
         a.gap_sm,
-        sticky && web([a.sticky, {top: 0}, a.z_10, t.atoms.bg]),
         isWithinLeftPanel ? a.px_lg : gutters,
         platform({
           native: [a.pb_xs, {minHeight: 48}],
@@ -66,24 +98,26 @@ export function Outer({
       {children}
     </View>
   )
+
+  return sticky ? <Sticky>{row}</Sticky> : row
 }
 
-const AlignmentContext = createContext<'platform' | 'left'>('platform')
+const AlignmentContext = createContext<'center' | 'left'>('center')
 AlignmentContext.displayName = 'AlignmentContext'
 
 export function Content({
   children,
-  align = 'platform',
+  align = 'center',
 }: {
   children?: React.ReactNode
-  align?: 'platform' | 'left'
+  align?: 'center' | 'left'
 }) {
   return (
     <View
       style={[
         a.flex_1,
         a.justify_center,
-        IS_IOS && align === 'platform' && a.align_center,
+        align === 'center' && a.align_center,
         {minHeight: HEADER_SLOT_SIZE},
       ]}>
       <AlignmentContext.Provider value={align}>
@@ -117,6 +151,7 @@ export function BackButton({onPress, style, ...props}: Partial<ButtonProps>) {
   return (
     <Slot>
       <Button
+        testID="header-back"
         label={_(msg`Go back`)}
         size="small"
         variant="ghost"
@@ -136,33 +171,47 @@ export function BackButton({onPress, style, ...props}: Partial<ButtonProps>) {
   )
 }
 
-export function MenuButton() {
-  const {_} = useLingui()
-  const ax = useAnalytics()
-  const setDrawerOpen = useSetDrawerOpen()
-  const {gtMobile} = useBreakpoints()
-
-  const onPress = useCallback(() => {
-    ax.metric('nav:click', {item: 'menu', surface: 'topBar'})
-    Keyboard.dismiss()
-    setDrawerOpen(true)
-  }, [setDrawerOpen, ax])
-
-  return gtMobile ? null : (
+/**
+ * Bluesky's header icon button (the feeds / settings links in its headers),
+ * for a page's one action. `edge` pulls the glyph onto the gutter, as
+ * upstream does for the rightmost button.
+ */
+export function ActionButton({
+  testID,
+  label,
+  icon,
+  onPress,
+  edge = false,
+  disabled = false,
+  children,
+}: {
+  testID: string
+  label: string
+  icon: React.ComponentType<SVGIconProps>
+  onPress: () => void
+  edge?: boolean
+  disabled?: boolean
+  /** Drawn over the glyph, e.g. an unread badge. */
+  children?: React.ReactElement | null
+}) {
+  return (
     <Slot>
       <Button
-        label={_(msg`Open drawer menu`)}
+        testID={testID}
+        label={label}
         size="small"
         variant="ghost"
         color="secondary"
-        shape="square"
+        shape="round"
         onPress={onPress}
+        disabled={disabled}
         hitSlop={HEADER_BUTTON_HITSLOP}
         style={[
-          {marginLeft: -BUTTON_VISUAL_ALIGNMENT_OFFSET},
-          a.bg_transparent,
+          edge && {marginLeft: BUTTON_VISUAL_ALIGNMENT_OFFSET},
+          a.overflow_visible,
         ]}>
-        <ButtonIcon icon={Menu} size="lg" />
+        <ButtonIcon icon={icon} size="lg" />
+        {children}
       </Button>
     </Slot>
   )
@@ -182,7 +231,7 @@ export function TitleText({
           ? [a.text_xl, a.font_bold]
           : [a.text_lg, a.font_semi_bold],
         a.leading_tight,
-        IS_IOS && align === 'platform' && a.text_center,
+        align === 'center' && a.text_center,
         gtMobile && a.text_xl,
         style,
       ]}
@@ -202,7 +251,7 @@ export function SubtitleText({children}: {children: React.ReactNode}) {
       style={[
         a.text_sm,
         a.leading_snug,
-        IS_IOS && align === 'platform' && a.text_center,
+        align === 'center' && a.text_center,
         t.atoms.text_contrast_medium,
       ]}
       numberOfLines={1}>

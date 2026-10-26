@@ -1,17 +1,18 @@
-import {type LinkingOptions} from '@react-navigation/native'
+import {getStateFromPath, type LinkingOptions} from '@react-navigation/native'
 
 import {type RootStackParams, type TabParams} from '#/lib/routes/types'
-import {ROUTE_PATHS, type RouteName} from '#/routes'
+import {redirectOldPath, ROUTE_PATHS, type RouteName} from '#/routes'
 
 const TABS: RouteName[] = [
   'People',
   'Groups',
   'Analytics',
-  'Activity',
 ] satisfies (keyof TabParams)[]
 
 function pathsFor(names: RouteName[]) {
-  return Object.fromEntries(names.map(name => [name, ROUTE_PATHS[name].slice(1)]))
+  return Object.fromEntries(
+    names.map(name => [name, ROUTE_PATHS[name].slice(1)]),
+  )
 }
 
 /*
@@ -20,6 +21,8 @@ function pathsFor(names: RouteName[]) {
  */
 export const linking: LinkingOptions<RootStackParams> = {
   prefixes: ['splito://', 'https://splito.app'],
+  getStateFromPath: (path, options) =>
+    getStateFromPath(redirectOldPath(path), options),
   config: {
     initialRouteName: 'Tabs',
     screens: {

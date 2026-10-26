@@ -59,7 +59,12 @@ async function seed(store: Store, ctx: MutationCtx) {
   }
 
   for (const e of DEMO_EXPENSES) {
-    await createExpense(store, ctx, {
+    /*
+     * Whoever paid first added the expense, so Notifications shows changes
+     * from others (as sync will) next to your own.
+     */
+    const addedBy = ids[Object.keys(e.payers)[0] as DemoPersonKey]
+    await createExpense(store, {...ctx, actor: addedBy}, {
       title: e.title,
       groupId: e.group ? groupIds[e.group] : null,
       currency: e.currency,

@@ -15,8 +15,12 @@ export interface PrefDef<T> {
   label: string
 }
 
-/** Bottom-bar / sidebar destinations. Profile and Settings open from the header avatar instead. */
-export type TabId = 'people' | 'groups' | 'analytics' | 'activity'
+/**
+ * Bottom-bar / sidebar destinations. Profile and Settings open from the
+ * avatar's drawer; Notifications from the header bell. A stored list that
+ * still names the old 'activity' tab fails validation and reads as the default.
+ */
+export type TabId = 'people' | 'groups' | 'analytics'
 export type SwipeAction = 'markRead' | 'hide' | 'delete' | 'none'
 
 export interface Category {
@@ -39,7 +43,7 @@ export const DEFAULT_CATEGORIES: Category[] = [
   ['other', 'Other', '#94a3b8', 'circle'],
 ].map(([id, name, color, icon], order) => ({id: id!, name: name!, color: color!, icon: icon!, order, hidden: false}))
 
-const TAB_IDS: TabId[] = ['people', 'groups', 'analytics', 'activity']
+const TAB_IDS: TabId[] = ['people', 'groups', 'analytics']
 const HEX = /^#[0-9a-f]{6}$/i
 
 const oneOf =
@@ -66,7 +70,7 @@ export const PREFS = {
     'account',
     'Tabs and order',
     [...TAB_IDS],
-    // Any non-empty set works: Settings stays reachable from the header avatar on every tab.
+    // Any non-empty set works: Settings stays reachable from the avatar's drawer on every tab.
     (v): v is TabId[] => Array.isArray(v) && v.length > 0 && new Set(v).size === v.length && v.every(t => TAB_IDS.includes(t)),
   ),
   homeTab: def<TabId>('homeTab', 'defaults', 'account', 'Home tab', 'people', oneOf(...TAB_IDS)),

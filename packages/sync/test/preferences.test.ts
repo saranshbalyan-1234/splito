@@ -16,7 +16,7 @@ beforeEach(async () => {
 test('default returned when unset', async () => {
   expect(await getPref(s, 'defaultCurrency')).toBe('INR')
   expect(await getPref(s, 'includeGroupsDefault')).toBe(true)
-  expect(await getPref(s, 'tabs')).toEqual(['people', 'groups', 'analytics', 'activity'])
+  expect(await getPref(s, 'tabs')).toEqual(['people', 'groups', 'analytics'])
 })
 
 test('set then get', async () => {
@@ -44,10 +44,12 @@ test('tabs: any non-empty set of known tabs, no duplicates; Profile is not a tab
   await expect(setPref(s, ctx, 'tabs', [])).rejects.toThrow('INVALID_PREF')
   await expect(setPref(s, ctx, 'tabs', ['groups', 'groups'])).rejects.toThrow('INVALID_PREF')
   await expect(setPref(s, ctx, 'tabs', ['groups', 'profile'] as never)).rejects.toThrow('INVALID_PREF')
+  // Notifications moved to the header bell, so the old Activity tab is gone.
+  await expect(setPref(s, ctx, 'tabs', ['groups', 'activity'] as never)).rejects.toThrow('INVALID_PREF')
 })
 
 test('home tab must be a visible tab', async () => {
-  await setPref(s, ctx, 'tabs', ['groups', 'activity'])
+  await setPref(s, ctx, 'tabs', ['groups', 'analytics'])
   expect(await getPref(s, 'homeTab')).toBe('groups')
 })
 

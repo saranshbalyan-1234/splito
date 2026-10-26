@@ -16,8 +16,8 @@ import {Text} from '#/components/Typography'
 import {Shimmer} from '#/motion/Shimmer'
 
 /*
- * Bluesky's Settings index, as Splito's Profile page (opened from the header
- * avatar menu): the account block, then rows. Account switching, moderation,
+ * Bluesky's Settings index, as Splito's Profile page (opened from the
+ * drawer): the account block, then rows. Account switching, moderation,
  * sign-out and developer options are removed; sign-in arrives with sync, and
  * its row says so.
  */

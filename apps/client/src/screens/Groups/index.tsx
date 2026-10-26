@@ -12,16 +12,16 @@ import {EmptyState} from '#/view/com/util/EmptyState'
 import {List} from '#/view/com/util/List'
 import {useBreakpoints} from '#/alf'
 import {AddExpenseFAB} from '#/components/AddExpenseFAB'
-import {Button, ButtonIcon, ButtonText} from '#/components/Button'
 import {HeaderAvatar} from '#/components/HeaderAvatar'
 import {PlusLarge_Stroke2_Corner0_Rounded as PlusIcon} from '#/components/icons/Plus'
 import * as Layout from '#/components/Layout'
 import {Shimmer} from '#/motion/Shimmer'
+import {HeaderBell} from '#/features/notifications/HeaderBell'
 import {GroupRow, GroupRowPlaceholder} from './components/GroupRow'
 
 const PLACEHOLDER_ROWS = 4
 
-/** Groups list: Bluesky's Lists screen (header with "New", list-card rows). */
+/** Groups list: Bluesky's Lists screen (list-card rows); Create group is the header's action. */
 export function GroupsScreen() {
   const {t: l} = useLingui()
   const locale = useNumberLocale()
@@ -42,23 +42,20 @@ export function GroupsScreen() {
   return (
     <Layout.Screen testID="screen-groups">
       <Layout.Header.Outer>
-        <Layout.Header.Content align="left">
+        <HeaderAvatar />
+        <Layout.Header.Slot />
+        <Layout.Header.Content>
           <Layout.Header.TitleText>
             <Trans>Groups</Trans>
           </Layout.Header.TitleText>
         </Layout.Header.Content>
-        <Button
+        <Layout.Header.ActionButton
           testID="groups-new"
-          label={l`New group`}
-          color="secondary"
-          size="small"
-          onPress={createGroup}>
-          <ButtonIcon icon={PlusIcon} />
-          <ButtonText>
-            <Trans context="action">New</Trans>
-          </ButtonText>
-        </Button>
-        <HeaderAvatar />
+          label={l`Create group`}
+          icon={PlusIcon}
+          onPress={createGroup}
+        />
+        <HeaderBell />
       </Layout.Header.Outer>
       {isLoading ? (
         <Shimmer testID="groups-loading">
@@ -91,8 +88,8 @@ export function GroupsScreen() {
                 illustration="empty-groups"
                 message={l`No groups yet. A group keeps a trip’s or a flat’s expenses and balances in one place.`}
                 button={{
-                  label: l`New group`,
-                  text: l`New group`,
+                  label: l`Create group`,
+                  text: l`Create group`,
                   icon: PlusIcon,
                   onPress: createGroup,
                   size: 'small',

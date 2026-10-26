@@ -19,7 +19,7 @@ import {useListAnimations} from '#/motion/listAnimations'
 
 const MAX_AUTHORS = 5
 
-/** One change from the local store's history, shaped for the Activity feed. */
+/** One change from the local store's history, shaped for the Notifications feed. */
 export type ActivityItem = {
   key: string
   type:
@@ -39,6 +39,10 @@ export type ActivityItem = {
   authors: Array<{id: string; name: string}>
   /** Epoch ms of the change. */
   at: number
+  /** Made by someone other than this device's user. */
+  isFromOthers: boolean
+  /** From others and newer than the last "Mark all read". */
+  isUnread: boolean
 }
 
 /*
@@ -136,13 +140,17 @@ let NotificationFeedItem = ({
       {...listAnimations}
       accessible={true}
       accessibilityLabel={a11yLabel}
-      testID={`activityItem-${item.key}`}
+      testID="notification-row"
       style={[
         a.flex_row,
         a.align_start,
         {padding: 10},
         a.pr_lg,
         t.atoms.border_contrast_low,
+        item.isUnread && {
+          backgroundColor: t.palette.primary_25,
+          borderColor: t.palette.primary_100,
+        },
         !hideTopBorder && a.border_t,
         // Clip horizontal overflow (in case of long handles) but let the timestamp overflow the bottom of the cell.
         platform({

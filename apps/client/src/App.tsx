@@ -13,12 +13,13 @@ import {Provider as PortalProvider} from '#/components/Portal'
 import {ToastOutlet} from '#/components/Toast'
 import {usePref} from '#/data/hooks'
 import {StoreProvider} from '#/data/StoreProvider'
+import {Provider as NotificationsProvider} from '#/features/notifications'
 import {device} from '#/storage'
 import {Shell} from '#/view/shell'
 
 /*
  * The theme reads device storage synchronously so the first paint is right;
- * the `theme` preference (Settings, the avatar menu's shortcut) is the source
+ * the `theme` preference (Settings, the drawer's dark-theme switch) is the source
  * of truth and is mirrored there.
  */
 function ThemeFromPrefs() {
@@ -41,7 +42,9 @@ function Themed() {
             <StoreProvider>
               <LocaleFromPrefs />
               <ThemeFromPrefs />
-              <Shell />
+              <NotificationsProvider>
+                <Shell />
+              </NotificationsProvider>
             </StoreProvider>
             <ToastOutlet />
           </ShellStateProvider>
