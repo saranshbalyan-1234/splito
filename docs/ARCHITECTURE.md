@@ -1143,7 +1143,7 @@ labelled sidebar); **wide** = web 1300 px and up (Bluesky `gtTablet`, right colu
 - **Destinations:** the home destination is labelled **"Home"** (house icon; it holds the Overview and the
   friends list). Phone bottom bar = Home, Groups, Analytics, Activity, plus the FAB (§ 26.6). **The desktop/rail
   sidebar and the phone drawer show the same list, in the same order, with the same icons and labels:** Home,
-  Groups, Analytics, Ask Splito, Activity, Settings, then the same footer links (Feedback · Help · Privacy ·
+  Search, Groups, Analytics, Ask Splito, Activity, Settings (Search second, as in Bluesky; assistant's call), then the same footer links (Feedback · Help · Privacy ·
   About). The sidebar adds only the logo and the "Add expense" pill; the drawer adds only its profile header
   (§ 26.7) and Sign in / Log out. One `navigationItems` array and one `NavFooterLinks` component feed all of
   them (§ 3). Profile is never a nav item (the avatar opens it). *Why:* "mobile sidebar and desktop seems to be
@@ -1210,8 +1210,7 @@ good"; "the left sidebar looks bad on desktop". *Where:* `view/shell/desktop/Lef
   the content header row (same top padding and height as `Layout.Header`). *Why:* "make the branding in
   centre".
 - **Nav items:** Bluesky `NavItem` exactly (24 px icon, `text_xl`, active = bold + filled icon,
-  `rounded_full` hover background, Bluesky badge/dot): Home, Groups, Analytics, Ask Splito, Activity,
-  Settings (§ 26.3). The
+  `rounded_full` hover background, Bluesky badge/dot): the shared list of § 26.3. The
   sliding active indicator (§ 26.9) sits beside the active item.
 - **Add expense:** Bluesky `ComposeBtn` as a large full-width pill with a plus icon; it opens the Add expense
   popup (§ 26.8). *Why:* "go with what Bluesky had".
@@ -1242,7 +1241,7 @@ good"; "the left sidebar looks bad on desktop". *Where:* `view/shell/desktop/Lef
 - **Opened by** the header avatar on phone and rail (on desktop the avatar opens Profile, § 26.4).
 - **Contents, the same as the desktop sidebar (§ 26.3):** a profile header (avatar with the sync-status dot,
   the person's real name; tapping it opens Profile; no "Me" label and no "Saved on this device" text); the
-  shared nav items Home, Groups, Analytics, Ask Splito, Activity, Settings; the shared footer links Feedback ·
+  shared nav items (§ 26.3); the shared footer links Feedback ·
   Help · Privacy · About; "Sign in" or "Log out" (§ 26.15). No separate Profile item and no theme toggle
   (Appearance lives in Settings). *Why:* "remove me from drawer profile"; "removed the other saved on device and
   me"; "make them same".
