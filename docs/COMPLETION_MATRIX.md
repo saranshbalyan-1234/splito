@@ -1,63 +1,92 @@
 # Splito completion matrix
 
-Updated 2026-10-26 (evening). Sources: Splito-Claude-Prompt.txt (original handoff), docs/superpowers/specs/2026-10-26-splito-design.md, AGENTS.md "Latest owner UI decisions" 1-9. Status words: **done** (built and tested, merged on m1-foundation), **built** (built and tested on an unmerged branch), **in progress** (being built now), **wave 2** (front-end work, next run), **needs backend** (blocked on sync/auth server, built after the UI), **not started**.
+Updated 2026-10-27. Binding rules source: `docs/ARCHITECTURE.md` § 26 "Product & UI rules (owner decisions, binding)" (decision log rows 1-63). Feature IDs, acceptance criteria and build order: `docs/BACKLOG.md` (owner requests not yet built are its Batch 4b). Other sources: Splito-Claude-Prompt.txt (original handoff), docs/superpowers/specs/2026-10-26-splito-design.md.
 
-| Area | Feature | Status |
-|---|---|---|
-| Core rules | Exact money (bigint), all split modes, rounding, multi-currency maths | done (domain, 68 tests) |
-| Core rules | Settlement planner with allowed / preferred / excluded routes | done (domain) |
-| Storage | Offline local store (SQLite / IndexedDB), history, outbox, preferences registry | done (sync, 40 tests) |
-| Shell | Bluesky sidebar / bottom bar / FAB / drawer / header rules / cat logo / brand kit | built (preview branch, iOS + web verified) |
-| Shell | Activity in bottom bar + sidebar + drawer (pulse icon, unread badge), no header bell | built (preview, web + iOS verified) |
-| Shell | Avatar top-left opens Bluesky drawer (profile header, all menu items, dark theme, help/about) | built (preview, web + iOS verified) |
-| Shell | Header rules: left avatar/back, centred title, one action on the right | built (preview) |
-| Shell | Add expense: Bluesky "New Post" pill on desktop, floating + on phones | built (preview) |
-| Lists | Overview section on Friends and Groups (per-currency owed/owe cards, counts) | next merge (rule 9) |
-| Lists | Search icon that expands into a search field, on Friends and Groups | next merge (rule 9) |
-| Lists | Filters on Friends (include groups, currency, owed/owe/settled, sort) and Groups (type, active/archived, currency, owed/owe/settled, sort) | next merge (rules 8-9) |
-| Expenses | Add / edit / delete / undo, equal / exact / percent / shares / adjust / itemize, multiple payers, calculator, currencies, any date, categories | in progress (feature branch) |
-| Expenses | Item portions (2 of 3 beers), Everyone shortcut, items on detail page | next merge (rule 5) |
-| Sheets | Every sheet: X top-right, Cancel + Save at the bottom; web = centred popup with X top-right, Cancel + Save bottom-right; pickers X only; discard prompt | next merge (rule 7) |
-| People | Balances per currency, group breakdown, person page, Include groups filter | in progress |
-| People | Filters sheet (include groups, currency, owes/owed/settled, sort) | in progress (rule 8) |
-| Groups | Group page with Expenses / Balances / Members / Rules tabs | built (main build) |
-| Settle up | Plan per group (direct / via others), who-pays-whom rules, record payment, UPI link | in progress |
-| Activity | Feed, read/unread, all / from others, row menu, swipe, hide, undo | built (feature branch); actor avatar + day headers + lent/borrowed rows next merge (rule 6) |
-| Analytics | Charts by time / category / person / group, paid vs share, filters, CSV export | in progress |
-| Settings | Every preference: theme, accent, text size, density, motion, haptics, tabs, defaults, categories, language (en / hi), timezone, formats, lists, notifications | in progress |
-| Expenses+ | Recurring expenses (rent, subscriptions) | wave 2 |
-| Expenses+ | Saved split templates | wave 2 |
-| Expenses+ | Guest participants (one-off people) | wave 2 |
-| Expenses+ | Quick add by typing ("Dinner 1200 with Riya and Sam") | wave 2 |
-| Expenses+ | Comments and disputes on an expense | wave 2 (local; shared once backend exists) |
-| Expenses+ | Receipt capture: camera / photo / file, on-device OCR, review before saving | wave 2 |
-| Expenses+ | Attachments (photos, PDFs) | wave 2 |
-| Expenses+ | Location: manual place, optional automatic | wave 2 |
-| Groups+ | Archive groups | wave 2 |
-| Groups+ | Trip kitty (shared cash pot) | wave 2 |
-| Groups+ | Split accommodation by nights stayed | wave 2 |
-| Groups+ | Trip budget (total + per category) | wave 2 |
-| Groups+ | "Fewest payments" toggle for groups without rules | wave 2 |
-| Data | Free search across expenses | wave 2 |
-| Data | Saved views (This month, a trip, Outstanding, Missing receipts) | wave 2 |
-| Data | JSON backup export + import / restore | wave 2 |
-| Data | Trip summary PDF, share summary via WhatsApp | wave 2 |
-| Data | Splitwise importer | wave 2 |
-| Payments | Payment links beyond UPI (PayPal.me, Venmo, Revolut, Wise, ...) | wave 2 |
-| Payments | Send money through a payment provider | needs backend + provider choice |
-| Motion | Lottie illustrations, animated balances, success check, list animations | built (brand branch), wiring in progress |
-| Customization | Card hide / reorder / rename / resize / tint on home, group and analytics cards; black-and-white theme | wave 2 |
-| Platform | Home-screen widgets and quick-add shortcut | wave 2 (native build) |
-| Platform | Share a receipt into Splito from other apps | wave 2 (native build) |
-| Platform | PWA install, offline shell, update handling | wave 2 |
-| Platform | iOS simulator dev build (iPhone 18 Pro) | done (runs; Bluesky build settings + Intl polyfills) |
-| Platform | Android emulator run | not started (needs Java on PATH) |
-| Account | Sign-in (email / mobile OTP, Google, Apple), sessions | needs backend |
-| Account | Sync across devices, conflicts | needs backend (server started on fan2/api, paused) |
-| Account | Invites by link / QR, link private friend to real account | needs backend |
-| Account | Read-only balance link for friends without the app, editable guest links | needs backend |
-| Account | Reminders (manual drafts in wave 2; automatic ones need backend) | wave 2 / needs backend |
-| Account | Push notifications | needs backend |
-| AI | AI chat answering from your records | needs backend (server-side model) |
-| Security | PIN lock, biometrics, encrypted storage | wave 2 |
-| Languages | Hindi complete; more languages | done for en/hi; more = wave 2 |
+Status words are the same as `docs/BACKLOG.md`: **done** (built, tested and merged on m1-foundation), **in progress** (being built, or built and tested on an unmerged branch, named; work counts as in progress until it is merged into m1-foundation), **todo** (not started). "(needs backend)" marks work that waits for the sync/auth server, which is built after the UI. Unmerged UI line = branches `ui/r1-polish-2` and `ui/preview-latest`; Batch 4 streams = branches `feat/b-*`.
+
+| Area | Feature | ID | Status |
+|---|---|---|---|
+| Core rules | Exact money (bigint), all split modes, rounding, multi-currency maths | F-101 | done (domain, 68 tests) |
+| Core rules | Settlement planner with allowed / preferred / excluded routes | F-102 | done (domain) |
+| Storage | Offline local store (SQLite / IndexedDB), history, outbox, preferences registry | F-103, F-104 | done (sync, 40 tests) |
+| Engineering | Guardrails: CI architecture test | F-108 | in progress (built and tested on feat/b-*, unmerged) |
+| Integration | Merge the UI line + Batch 4 streams + phone bottom drawers into m1-foundation | Batch 4b row 30 | todo (first item of Batch 4b) |
+| Shell | Bluesky sidebar / bottom bar / FAB (phones only, no-Back screens) / drawer / header rules / owner logo in the accent colour | F-201 | in progress (built and tested on the unmerged UI line) |
+| Shell | Activity in bottom bar + sidebar + drawer (pulse icon, unread badge), no header bell | F-202 | in progress (built and tested on the unmerged UI line) |
+| Shell | Pager tabs and animated main-tab switches | F-203 | in progress (built and tested on the unmerged UI line) |
+| Shell | Desktop LeftNav: centred mark, nav items, Add expense pill, footer links, rail | F-204 | in progress (built and tested on the unmerged UI line) |
+| Shell | Desktop right column: 5 recent transactions + 5 recently active groups (by last change time) | F-224 | in progress (built on ui/preview-latest, unmerged) |
+| Shell | One nav list for sidebar and drawer; "Home" label; desktop/rail Home title; drawer shows real name only | F-222 | todo (Batch 4b) |
+| Shell | Sync-status dot on the user's avatar (green / yellow / red, with text label) | F-223 | todo (Batch 4b) |
+| Branding | Dim splash in dark mode; brand kit on iOS, Android, web | F-1711 | todo (Batch 4b) |
+| Branding | Original Splito mark replaces the dev butterfly (release blocker) | F-1712 | todo |
+| Sheets | Every phone modal (forms, pickers, filters, menus, prompts) is a bottom drawer with drag to close; desktop popups with X top-right, Cancel + Save bottom-right | F-205 | in progress (built and tested on the unmerged UI line) |
+| Lists | Overview, expanding search and filters on Friends and Groups | F-206 | in progress (built and tested on the unmerged UI line) |
+| People | Balances per currency, group breakdown, person page, Include groups filter | F-207 | in progress (built and tested on the unmerged UI line) |
+| Groups | Group page with Expenses / Balances / Members tabs; payment rules in the overflow | F-208 | in progress (built and tested on the unmerged UI line) |
+| Groups | Groups and trips (create, edit, members) | F-603 | in progress (built and tested on the unmerged UI line) |
+| Expenses | Add / edit / delete / undo, all split modes, multiple payers, calculator, currencies, any date, categories | F-301, F-302 | in progress (built and tested on the unmerged UI line) |
+| Expenses | Itemize: portions, Everyone, tax / tip / service / discount visible with amount / % toggle | F-401 | in progress (built and tested on the unmerged UI line) |
+| Expenses | Smart amount input | F-310 | in progress (built and tested on feat/b-*, unmerged) |
+| Expenses | Cash rounding with visible remainder | F-402 | in progress (built and tested on feat/b-*, unmerged) |
+| Settle up | Plan per group, payment rules, record repayment, UPI link and "Mark as paid?" | F-1101, F-1103 | in progress (built and tested on the unmerged UI line) |
+| Settle up | Call it even: forgive or write off | F-1113 | in progress (built and tested on feat/b-*, unmerged) |
+| Activity | Feed, read/unread, All / From others, actor avatar, day headers, lent/borrowed rows, swipe, hide, undo | F-1201 | in progress (built and tested on the unmerged UI line) |
+| Activity | Recently deleted bin | F-1203 | in progress (built and tested on feat/b-*, unmerged) |
+| Analytics | Charts + table, period / currency / group filters, Export CSV in the header overflow | F-1301 | in progress (built and tested on the unmerged UI line) |
+| Settings | Every preference incl. Dim / Black dark style, accent, timezone | F-1701 | in progress (built and tested on the unmerged UI line) |
+| Settings | Account section: Sign in (honest until sync) / Log out | F-225 | todo |
+| Friends | Private friends ("Add anyway (only for you)") | F-601 | in progress (built on the unmerged UI line) |
+| Friends | Add friend by email or mobile, Splito directory check, consent, Requests and Invites sent | F-618 | in progress (partially built on feat/friend-invites, unverified) |
+| Friends | Invite link and QR with use / expiry limits, manage and revoke | F-619 | in progress (partially built on feat/friend-invites, unverified) |
+| Friends | Choose from contacts | F-602 | in progress (partially built on feat/friend-invites, unverified) |
+| Friends | Directory lookup and friend requests on the server | F-2111 | todo (needs backend) |
+| Friends | Invites and invite links on the server; link a private friend to a real account | F-2105, F-2106 | todo (needs backend) |
+| Support | Feedback: drawer + footer + Settings > Support, Send feedback sheet, Your feedback, saved on device + email draft | F-226 | in progress (partially built on feat/feedback, unverified) |
+| Support | Feedback endpoint | F-2112 | todo (needs backend) |
+| Support | Help, About, licences, privacy | F-215 | todo |
+| Platform | PWA: production service worker, offline shell, update toast, manifest, Install app | F-1901 | todo (Batch 4b) |
+| Expenses+ | Comments on expenses and repayments (local + outbox) | F-1204 | todo (Batch 4b) |
+| Expenses+ | Disputes and flags | F-1210 | todo |
+| Expenses+ | Shared comments and disputes | F-2208 | todo (needs backend) |
+| Reminders | Remind via share sheet (Person, group Balances, Settle plan), logged in Activity | F-1118 | todo (Batch 4b) |
+| Reminders | Remind me (local notification for yourself) | F-1119, F-1907 | todo (Batch 4b) |
+| Reminders | Reminder policy, tone, language, snooze | F-1111 | todo |
+| Reminders | In-app reminders (1 per person per 3 days) and opt-in automatic reminders | F-2210 | todo (needs backend) |
+| Data | JSON backup export + import / restore (Settings > Data) | F-2001 | todo (Batch 4b) |
+| Data | Export centre: CSV, PDF statement, filters; Group / Person / Analytics export entries | F-2007 | todo (Batch 4b) |
+| Data | Power exports (YNAB, Beancount, XLSX) | F-2004 | todo |
+| AI | Ask Splito: nav item, Analytics header, Search row; DM-style chat; on-device answers with rich cards | F-2301 | todo (Batch 4b) |
+| AI | Free-form answers via the backend model; AI opt-in and privacy | F-2302, F-2303 | todo (needs backend) |
+| Data | Free search across expenses | F-1401 | in progress (built and tested on feat/b-*, unmerged) |
+| Accessibility | Money direction never shown by colour alone | F-1801 | in progress (built and tested on feat/b-*, unmerged) |
+| Motion | Lottie illustrations, animated balances, success check, list animations | F-1704 | in progress (built on ui/brand, wiring) |
+| Expenses+ | Recurring expenses (rent, subscriptions) | F-306 | todo |
+| Expenses+ | Saved split templates | F-305 | todo |
+| Expenses+ | Guest participants (one-off people) | F-308 | todo |
+| Expenses+ | Quick add by typing ("Dinner 1200 with Riya and Sam") | F-507 | todo |
+| Expenses+ | Receipt capture: camera / photo / file, on-device OCR, review before saving | F-501, F-502 | todo |
+| Expenses+ | Attachments (photos, PDFs) | F-312 | todo |
+| Expenses+ | Location: manual place, optional automatic | F-313 | todo |
+| Groups+ | Archive groups | F-604 | todo |
+| Groups+ | Trip kitty (shared cash pot) | F-701 | todo |
+| Groups+ | Split accommodation by nights stayed | F-702 | todo |
+| Groups+ | Trip budget (total + per category) | F-1304 | todo |
+| Groups+ | "Fewest payments" toggle for groups without rules | F-1102 | todo |
+| Data | Saved views (This month, a trip, Outstanding, Missing receipts) | F-1403 | todo |
+| Data | Trip summary PDF, share summary via WhatsApp | F-1503, F-1501 | todo |
+| Data | Splitwise importer | F-2003 | todo |
+| Payments | Payment links beyond UPI (PayPal.me, Venmo, Revolut, Wise, ...) | F-1106 | todo |
+| Payments | Send money through a payment provider | F-2223 | todo (needs backend + provider choice) |
+| Customization | Card hide / reorder / rename / resize / tint; black-and-white theme | F-1703, F-1702 | todo |
+| Platform | Home-screen widgets and quick-add shortcut | F-1905 | todo (native build) |
+| Platform | Share a receipt into Splito from other apps | F-509 | todo (native build) |
+| Platform | iOS simulator dev build (iPhone 18 Pro) | F-1902 | done (runs; Bluesky build settings + Intl polyfills) |
+| Platform | Android build and emulator run | F-1903 | in progress (built and tested on feat/b-*, unmerged) |
+| Account | API service (Fastify on Bun, Postgres) | F-2101 | in progress (fan2/api paused, 13 open review findings) |
+| Account | Sign-in (email / mobile OTP, Google, Apple), sessions, Log out prompt | F-2102 | todo (needs backend) |
+| Account | Sync across devices, conflicts (drives the green / yellow avatar dot) | F-2103 | todo (needs backend) |
+| Account | Read-only balance link for friends without the app, editable guest links | F-2203, F-2204 | todo (needs backend) |
+| Account | Push notifications | F-2201 | todo (needs backend) |
+| Security | PIN lock, biometrics, encrypted storage | F-1601 | todo |
+| Languages | English and Hindi complete; more languages | F-1810, F-1811 | done for en/hi (F-1810); more languages todo (F-1811) |

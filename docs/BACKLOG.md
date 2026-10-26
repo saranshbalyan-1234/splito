@@ -1,24 +1,26 @@
 # Splito master backlog
 
-Updated 2026-10-26. This is the single, complete list of Splito features: everything promised in the handoff prompt, the design spec, `COMPLETION_MATRIX.md` and the owner UI rules in `AGENTS.md`, plus 263 ideas from ten strategy lenses (travel, flatmates and households, couples and family, India and UPI, power users, capture and automation, social and sharing, trust and privacy, native platform, accessibility and simplicity), with duplicates merged.
+Updated 2026-10-27. This is the single, complete list of Splito features: everything promised in the handoff prompt, the design spec, `COMPLETION_MATRIX.md` and every owner decision in `docs/ARCHITECTURE.md` § 26 (decision log rows 1-63), plus 263 ideas from ten strategy lenses (travel, flatmates and households, couples and family, India and UPI, power users, capture and automation, social and sharing, trust and privacy, native platform, accessibility and simplicity), with duplicates merged.
 
-**23 epics, 296 features (141 tagged `spec`: already promised in the handoff, design spec, matrix or owner rules, some extended; 155 new), an architecture Batch 0, 31 front-end batches and 6 backend batches.** Status: 7 done, 19 in progress, 270 todo. 45 features need the backend.
+**23 epics, 311 features (158 tagged `spec`: already promised in the handoff, design spec, matrix or owner rules (ARCHITECTURE § 26), some extended; 153 new), an architecture Batch 0, 32 front-end batches (Batch 4b holds the 2026-10-26/27 owner requests) and 6 backend batches.** Status: 7 done, 34 in progress, 270 todo. 47 features need the backend.
 
 Completeness pass (2026-10-26): 32 features added after walking whole journeys (first launch, a 3-tap first expense, a 10-person trip abroad, a flat over a year, a couple, settling up, a dispute, switching phones, leaving a group, deleting the app), edge cases (refunds, partial and over-payments, currency changes, leavers, deleted and duplicate friends), accessibility, 10k-expense performance and the competitor gaps; 27 existing features got missing acceptance criteria, deps or descriptions, and 7 moved batch (F-108 to Batch 0; F-1102, F-1907, F-1605, F-705, F-1901 and F-1108 to where their deps and priority put them) so every dependency lands in an earlier batch.
 
-Sources: `../Splito-Claude-Prompt.txt`, `docs/superpowers/specs/2026-10-26-splito-design.md`, `docs/COMPLETION_MATRIX.md`, `docs/research/2026-10-26-competitors.md`, `AGENTS.md`.
+Owner-request pass (2026-10-27): every owner decision in ARCHITECTURE § 26 now maps to a feature with acceptance criteria matching the binding rule, a status and a build slot ([Owner decisions to features](#owner-decisions-to-features)); 15 features added (F-222..F-226, F-618, F-619, F-1118, F-1119, F-1210, F-1711, F-1712, F-2007, F-2111, F-2112; F-1210 is the disputes half split out of F-1204) and the unbuilt requests ordered in Batch 4b.
+
+Sources: `../Splito-Claude-Prompt.txt`, `docs/superpowers/specs/2026-10-26-splito-design.md`, `docs/COMPLETION_MATRIX.md`, `docs/research/2026-10-26-competitors.md`, `docs/ARCHITECTURE.md` § 26 (binding owner rules; wins over this file).
 
 ## How to use this file
 
-- Build in the order of [Build order](#build-order). Each batch holds 4-8 related features that touch different code areas (the Area column), so one builder per feature can work in parallel.
+- Build in the order of [Build order](#build-order), one feature at a time (ARCHITECTURE § 26.1): take the next feature, finish it (built, tested, merged, screenshots, status updated here and in `COMPLETION_MATRIX.md`), then start the next. Parallel workers may split one feature, not run several. Each batch holds related features that touch different code areas (the Area column).
 - Never start a feature before its Deps are done. Backend features wait for the Backend foundation batch.
 - When a feature ships, change its Status here and its row in `COMPLETION_MATRIX.md` in the same change.
-- New ideas get the next free ID in the right epic and a slot in a batch after their deps.
+- Every owner request (new feature or change) becomes or updates an entry here, with acceptance criteria matching its ARCHITECTURE § 26 rule, a status and a build slot, in the same turn as its § 26 rule; add it to [Owner decisions to features](#owner-decisions-to-features). New ideas get the next free ID in the right epic and a slot in a batch after their deps.
 
 ## Conventions
 
 - **ID** `F-EEnn`: epic `EE`, feature `nn` (F-101 is epic 1, F-1101 is epic 11).
-- **`spec` tag** after the title: the feature was already promised, and where (`spec v1`, `spec 4b`, `spec: owner rule 7`, `spec: matrix`). "(extended)" means this backlog version goes further than the promise. No tag = new from the strategy ideas.
+- **`spec` tag** after the title: the feature was already promised, and where (`spec v1`, `spec 4b`, `spec: owner § 26.8` = an owner rule in ARCHITECTURE § 26, `spec: matrix`). "(extended)" means this backlog version goes further than the promise. No tag = new from the strategy ideas.
 - **Effort**: S up to 1 day, M 2-4 days, L 1-2 weeks, XL more than 2 weeks, for one builder including tests.
 - **Impact**: 1-10, value to users relative to the rest of this list.
 - **Backend**: yes = needs the Splito server (accounts, sync, push, server storage). Third-party calls from the device (FX rate provider, place search) do not count.
@@ -28,36 +30,77 @@ Sources: `../Splito-Claude-Prompt.txt`, `docs/superpowers/specs/2026-10-26-split
 ## Definition of done (applies to every feature)
 
 1. Money logic lives in `packages/domain` with bun tests; every write goes through a `packages/sync` mutation (entity + history + outbox in one transaction).
-2. Bluesky first (AGENTS rule 11): upstream searched and copied where an equivalent exists, with header and reuse row.
-3. Fast and animated (AGENTS rule 10): speed budgets measured and recorded; reduced-motion and `motion` pref honoured.
+2. Bluesky first (ARCHITECTURE § 26.1): upstream Bluesky (then Expensify) searched and copied where an equivalent exists, with header and reuse row; the UI matches Bluesky pixel for pixel except the required replacements.
+3. Fast and animated (ARCHITECTURE § 26.10): speed budgets measured and recorded; reduced-motion and `motion` pref honoured.
 4. Every user-facing choice has a registry entry; every string goes through Lingui with en and hi.
 5. Acceptance criteria below pass with recorded evidence (command, platform, result). Untested is not done.
+6. Merged into m1-foundation, with populated screenshots (light and Dim, phone and desktop) for any UI change (ARCHITECTURE § 26.1). Where an ARCHITECTURE § 26 rule and a criterion here disagree, § 26 wins and this file is corrected.
+
+## Owner decisions to features
+
+Every row of the ARCHITECTURE § 26.23 decision log (rows 1-63) and the feature(s) that carry it. Process-only decisions map to the rules of this file.
+
+| Decision log rows | Rule | Features |
+|---|---|---|
+| 1, 33 keep every feature; build the list batch by batch | § 26.2 | this file (all epics, [Build order](#build-order)) |
+| 2 analytics with graphs | § 26.16 | F-1301, F-1303 |
+| 3 multi-language, English default | § 26.2 | F-1810, F-1811 |
+| 4 user-set timezone | § 26.2 | F-1701 |
+| 5, 34 speed, Bluesky smoothness, Expensify page animations | § 26.10 | F-1704, F-109, Definition of done 3 |
+| 6 everything customizable | § 26.1 | F-104, F-1701, F-1703, Definition of done 4 |
+| 7 Postgres | § 26.2 | F-2101 |
+| 8, 13, 35 copy Bluesky and Expensify code and practice, pixel for pixel | § 26.1 | Definition of done 2 |
+| 9, 12 best in class, populated previews | § 26.1 | Definition of done 6, F-218 |
+| 10 full polish on every platform | § 26.2 | F-1711, F-1901, F-1902, F-1903 |
+| 11 GameRun architecture where it fits | § 26.2 | ARCHITECTURE §§ 21-22 (no feature) |
+| 14-16, 45, 46, 49 logo: owner butterfly, accent colour, release blocker | § 26.11, 26.22 | F-201, F-1711, F-1712 |
+| 17, 18, 21, 42, 49 Bluesky shell, full-width web, FAB on phones only, Add expense flow | § 26.3, 26.6 | F-201, F-205 |
+| 19, 47, 54 right column with recent transactions and recently active groups | § 26.17 | F-224 |
+| 20 decide without asking; backend after UI | § 26.1, 26.2 | [Build order](#build-order) (front end first) |
+| 22-24, 26, 49 header rules, avatar left, avatar opens Profile on desktop | § 26.4 | F-201 |
+| 25, 28 Activity tab with badge, no bell | § 26.14 | F-202, F-1201 |
+| 27, 40, 41 itemize with portions; tax, tip, discount visible with % toggle | § 26.13 | F-401 |
+| 29, 30, 43, 50 sheets: X, Cancel + Save, drag to close, every phone modal a bottom drawer | § 26.8 | F-205 |
+| 31, 32 overview, expanding search, filters, group balances | § 26.12 | F-206, F-207, F-208 |
+| 36 Pager tabs, animated main tabs | § 26.9 | F-203 |
+| 37, 39, 48 Bluesky LeftNav, centred mark, no avatar | § 26.5 | F-204 |
+| 38 dark = Dim | § 26.11 | F-1701 |
+| 44 sign in and log out in Settings | § 26.15 | F-225, F-2102 |
+| 51, 63 record decisions; every request in this list, built one by one | § 26.1 | [How to use this file](#how-to-use-this-file), Batch 4b |
+| 52 add friend by email / mobile / contacts, directory check, consent, add anyway, invite link + QR with limits | § 26.18 | F-618, F-619, F-601, F-602, F-2111, F-2105, F-2106 |
+| 53 feedback section | § 26.15 | F-226, F-215, F-2112 |
+| 55, 60, 62 one nav list for sidebar and drawer, Home label, Home title on desktop, drawer shows real name | § 26.3, 26.4, 26.7 | F-222 |
+| 56 Dim splash | § 26.11 | F-1711 |
+| 57 Ask Splito AI chat | § 26.19 | F-2301, F-2302, F-2303, F-209 |
+| 58 service worker and PWA | § 26.21 | F-1901 |
+| 59 comments, remind, export | § 26.20 | F-1204, F-2208, F-1118, F-1119, F-1111, F-2210, F-2001, F-2007, F-2004 |
+| 61 sync-status dot on the avatar | § 26.7 | F-223, F-2103 |
 
 ## Epics
 
 | Epic | Name | Features | Done | In progress | Todo | Needs backend |
 |---|---|---|---|---|---|---|
-| E1 | [Core ledger and foundations](#e1-core-ledger-and-foundations) | 10 | 4 | 0 | 6 | 0 |
-| E2 | [App shell, navigation and lists](#e2-app-shell-navigation-and-lists) | 21 | 0 | 7 | 14 | 0 |
-| E3 | [Expenses and composer](#e3-expenses-and-composer) | 17 | 0 | 2 | 15 | 0 |
-| E4 | [Itemize and receipt splitting](#e4-itemize-and-receipt-splitting) | 9 | 0 | 1 | 8 | 0 |
+| E1 | [Core ledger and foundations](#e1-core-ledger-and-foundations) | 10 | 4 | 1 | 5 | 0 |
+| E2 | [App shell, navigation and lists](#e2-app-shell-navigation-and-lists) | 26 | 0 | 11 | 15 | 0 |
+| E3 | [Expenses and composer](#e3-expenses-and-composer) | 17 | 0 | 3 | 14 | 0 |
+| E4 | [Itemize and receipt splitting](#e4-itemize-and-receipt-splitting) | 9 | 0 | 2 | 7 | 0 |
 | E5 | [Capture and automation](#e5-capture-and-automation) | 22 | 0 | 0 | 22 | 0 |
-| E6 | [People and groups](#e6-people-and-groups) | 17 | 0 | 2 | 15 | 0 |
+| E6 | [People and groups](#e6-people-and-groups) | 19 | 0 | 5 | 14 | 0 |
 | E7 | [Trips and travel](#e7-trips-and-travel) | 9 | 0 | 0 | 9 | 0 |
 | E8 | [Home and household](#e8-home-and-household) | 16 | 0 | 0 | 16 | 0 |
 | E9 | [Couples and family](#e9-couples-and-family) | 10 | 0 | 0 | 10 | 0 |
 | E10 | [Currencies and FX](#e10-currencies-and-fx) | 11 | 1 | 0 | 10 | 0 |
-| E11 | [Settle up and payments](#e11-settle-up-and-payments) | 17 | 0 | 2 | 15 | 0 |
-| E12 | [Activity, history and trust](#e12-activity-history-and-trust) | 9 | 0 | 1 | 8 | 0 |
+| E11 | [Settle up and payments](#e11-settle-up-and-payments) | 19 | 0 | 3 | 16 | 0 |
+| E12 | [Activity, history and trust](#e12-activity-history-and-trust) | 10 | 0 | 2 | 8 | 0 |
 | E13 | [Analytics, reports and budgets](#e13-analytics-reports-and-budgets) | 11 | 0 | 1 | 10 | 0 |
-| E14 | [Search, organisation and power tools](#e14-search-organisation-and-power-tools) | 11 | 0 | 0 | 11 | 0 |
+| E14 | [Search, organisation and power tools](#e14-search-organisation-and-power-tools) | 11 | 0 | 1 | 10 | 0 |
 | E15 | [Sharing and summaries](#e15-sharing-and-summaries) | 6 | 0 | 0 | 6 | 0 |
 | E16 | [Privacy and security](#e16-privacy-and-security) | 10 | 0 | 0 | 10 | 0 |
-| E17 | [Customization, appearance and motion](#e17-customization-appearance-and-motion) | 10 | 0 | 2 | 8 | 0 |
-| E18 | [Accessibility and localization](#e18-accessibility-and-localization) | 15 | 1 | 0 | 14 | 0 |
-| E19 | [Platform integrations](#e19-platform-integrations) | 13 | 1 | 0 | 12 | 0 |
-| E20 | [Data portability](#e20-data-portability) | 6 | 0 | 0 | 6 | 0 |
-| E21 | [Backend foundation](#e21-backend-foundation) | 10 | 0 | 1 | 9 | 10 |
+| E17 | [Customization, appearance and motion](#e17-customization-appearance-and-motion) | 12 | 0 | 2 | 10 | 0 |
+| E18 | [Accessibility and localization](#e18-accessibility-and-localization) | 15 | 1 | 1 | 13 | 0 |
+| E19 | [Platform integrations](#e19-platform-integrations) | 13 | 1 | 1 | 11 | 0 |
+| E20 | [Data portability](#e20-data-portability) | 7 | 0 | 0 | 7 | 0 |
+| E21 | [Backend foundation](#e21-backend-foundation) | 12 | 0 | 1 | 11 | 12 |
 | E22 | [Shared and collaborative](#e22-shared-and-collaborative) | 31 | 0 | 0 | 31 | 31 |
 | E23 | [AI](#e23-ai) | 5 | 0 | 0 | 5 | 4 |
 
@@ -145,7 +188,7 @@ Records generated by rules get id = hash(ruleId + period); imported operations d
 
 Architecture test with a per-file baseline that only goes down, one link resolver with goBack(fallback), one never-throwing telemetry module, OTA checks on launch and background-to-active only. Built as ARCHITECTURE-BACKLOG A-001, A-014 and A-019 (OTA rules with A-050 at M2), which docs/RESUME.md runs before Batch 1; this row only closes when those do. Do not build it twice.
 
-- **Effort** M · **Impact** 6 · **Backend** no · **Status** todo · **Deps** A-001, A-014, A-019 (ARCHITECTURE-BACKLOG)
+- **Effort** M · **Impact** 6 · **Backend** no · **Status** in progress (built and tested on a feat/b-* branch, unmerged) · **Deps** A-001, A-014, A-019 (ARCHITECTURE-BACKLOG)
 - **Prefs** -
 - **Acceptance**
   1. CI fails when a raw hex colour outside alf/, a direct RN Modal or a direct expo-haptics import is added beyond the baseline.
@@ -176,103 +219,115 @@ BroadcastChannel change notices so every open tab refreshes its projections afte
 
 ## E2 App shell, navigation and lists
 
-Bluesky shell, owner UI rules 1-13 and first-run experience.
+Bluesky shell and the owner's shell, header, sidebar, drawer, sheet and list rules (ARCHITECTURE §§ 26.3-26.17), plus the first-run experience.
 
-### F-201 Bluesky shell: sidebar, bottom bar, FAB, avatar drawer, header rules, cat logo `spec: owner rules 1, 2, 4`
+### F-201 Bluesky shell: sidebar, bottom bar, FAB, avatar drawer, header rules, logo `spec: owner § 26.3, 26.4, 26.6, 26.11`
 
-LeftNav on desktop web, bottom bar + FAB on phones, avatar top-left opening Bluesky's drawer, one header rule set, cat logo on People.
+Bluesky's shell on every width: web fills the screen with the left sidebar and main content (plus the right column at 1300 px and up, F-224), bottom bar + FAB on phones, the avatar top-left opening Bluesky's drawer, one header rule set, and the owner's dev logo from one source file drawn in the current accent.
 
-- **Effort** L · **Impact** 10 · **Backend** no · **Status** in progress (built on ui/preview-shell-fix, unmerged) · **Deps** -
-- **Prefs** `theme` (drawer toggle)
+- **Effort** L · **Impact** 10 · **Backend** no · **Status** in progress (built and tested on ui/r1-polish-2 / ui/preview-latest, unmerged) · **Deps** -
+- **Prefs** -
 - **Acceptance**
-  1. People shows the cat logo and the logo is inactive on home.
-  2. The avatar opens the drawer; scrim tap, swipe and Escape close it.
-  3. Every screen's header matches the rule-2 table (left avatar/back, centred title, one right action plus optional overflow).
+  1. Phone bottom bar = Home, Groups, Analytics, Activity plus the FAB. The FAB shows only at phone widths and only on screens whose header has no Back; it is hidden on every pushed page (Profile and Settings included), while a sheet is open, while the keyboard shows and on onboarding, is decided once in the shell from the header's left-slot state, hides on scroll down and returns on scroll up, and opens Add expense as a bottom sheet. Rail and desktop have no FAB; the sidebar pill adds expenses.
+  2. Header: the avatar (`header-avatar`) on the left of top-level pages at every width and Bluesky `BackButton` with a fallback on pushed pages; on phone and rail the avatar opens the drawer, on desktop (full sidebar) it opens Profile, labelled "Open profile". The centre holds the page name; the right holds at most one action plus an optional "..." overflow, exactly per the § 26.4 table. No bell, no other header icon, no avatar dropdown, and no header carries "Cancel" or a "Save" pill. Sticky with Bluesky's bottom border; on phones it hides on scroll down.
+  3. The drawer slides in from the left with Bluesky's animation; scrim tap, swipe and Escape close it; focus is trapped on web.
+  4. The logo is the owner SVG from one source file and one `Logo` component, the mark only (no wordmark, no tile), drawn in `t.palette.primary_500` on light, Dim and Black (changing the accent recolours it everywhere); static assets keep `#1185fe`. The logo returns home and is inactive on home.
+  5. `/notifications` redirects to `/activity`; the web page background (`html`/`body`) always follows the active theme (no black band under Dim).
 
-### F-202 Activity as a nav destination with unread badge `spec: owner rule 3`
+### F-202 Activity as a nav destination with unread badge `spec: owner § 26.14`
 
 Pulse icon in bottom bar, sidebar and drawer with Bluesky's unread badge; no header bell.
 
-- **Effort** S · **Impact** 8 · **Backend** no · **Status** in progress (built, unmerged) · **Deps** F-201
+- **Effort** S · **Impact** 8 · **Backend** no · **Status** in progress (built and tested on ui/r1-polish-2 / ui/preview-latest, unmerged) · **Deps** F-201
 - **Prefs** -
 - **Acceptance**
   1. /notifications redirects to /activity.
   2. The badge counts unread items from others and updates without a reload.
+  3. The header reads avatar | "Activity" | "Mark all read"; testIDs `tab-activity` and `screen-activity`.
 
-### F-203 Pager tabs and animated main-tab switches `spec: owner rule 12`
+### F-203 Pager tabs and animated main-tab switches `spec: owner § 26.9`
 
 Bluesky Pager and TabBar for every in-page tab set; direction-aware slide and sliding indicator for bottom-bar and sidebar switches.
 
-- **Effort** M · **Impact** 7 · **Backend** no · **Status** todo · **Deps** F-201
+- **Effort** M · **Impact** 7 · **Backend** no · **Status** in progress (built and tested on ui/r1-polish-2 / ui/preview-latest, unmerged) · **Deps** F-201
 - **Prefs** `motion`
 - **Acceptance**
   1. Group and Activity tabs swipe between pages with the sliding underline.
   2. A main-tab switch slides in from the side of the tapped tab in about 220 ms and re-tap scrolls to top.
   3. motion = off gives instant switches and tab content is usable immediately.
+  4. Every in-page tab set (Group: Expenses / Balances / Members; Activity: All / From others) uses the one Pager and TabBar copied from Bluesky `src/view/com/pager/`, never a segmented control.
+  5. On a main switch the indicator springs to the new tab, the tapped icon does a spring scale pop with a haptic tap and the unread badge springs on count change; there is no swipe between main tabs and lazy tabs stay mounted after the first visit.
 
-### F-204 Desktop LeftNav complete `spec: owner rule 13`
+### F-204 Desktop LeftNav complete `spec: owner § 26.5`
 
-Profile card, NavItems, Add expense pill, Recent groups with balance chips, pinned footer, minimal rail at 800-1000 px.
+Bluesky's `LeftNav` copied as closely as possible: the centred logo mark, the shared nav items and footer links (F-222), the "Add expense" pill, and the minimal rail at 800-999 px.
 
-- **Effort** M · **Impact** 7 · **Backend** no · **Status** todo · **Deps** F-201
-- **Prefs** `nav.showRecentGroups`
-- **Acceptance**
-  1. Recent groups lists up to 5 groups by last activity with a per-currency balance chip.
-  2. Widths 800-1000 px show the minimal rail with a round compose button.
-  3. The logo aligns with the content header row.
-
-### F-205 FormSheet for every sheet and dialog `spec: owner rule 7`
-
-Phones: bottom sheet with title left, X top-right, Cancel + primary pinned above the keyboard. Web: centred modal with X and bottom-right footer. Pickers: X only.
-
-- **Effort** M · **Impact** 8 · **Backend** no · **Status** in progress (next merge) · **Deps** F-201
+- **Effort** M · **Impact** 7 · **Backend** no · **Status** in progress (built and tested on ui/r1-polish-2 / ui/preview-latest, unmerged) · **Deps** F-201
 - **Prefs** -
 - **Acceptance**
-  1. Every listed sheet uses FormSheet (testIDs sheet-close, sheet-cancel, sheet-save).
-  2. Closing with unsaved changes asks "Discard changes?".
-  3. Primary stays disabled until the form is valid.
+  1. The sidebar holds only the logo mark, the shared nav items (Home, Groups, Analytics, Ask Splito, Activity, Settings), the "Add expense" pill and the footer links Feedback · Help · Privacy · About pinned at the bottom; no avatar or `ProfileCard`, no "Splito" wordmark, no recent groups or transactions (those live in the right column, F-224).
+  2. The logo is the mark only, 40 px, horizontally centred in the sidebar column and vertically aligned with the content header row (same top padding and height as `Layout.Header`).
+  3. Nav items are Bluesky `NavItem` exactly (24 px icon, `text_xl`, active = bold + filled icon, `rounded_full` hover, Bluesky badge/dot) with the sliding active indicator (F-203); the "Add expense" pill is Bluesky `ComposeBtn`, full width with a plus icon, and opens the Add expense popup.
+  4. Widths and paddings come from `LEFT_NAV_STANDARD_WIDTH` / `LEFT_NAV_MINIMAL_WIDTH`; hairline right border; sticky full height; scrolls on its own when tall. At 800-999 px it is Bluesky's minimal rail: mark, icons only, round compose button.
 
-### F-206 Overview, expanding search and filters on Friends and Groups `spec: owner rules 8, 9`
+### F-205 Phone bottom drawers and desktop popups: one FormSheet for every sheet, picker and prompt `spec: owner § 26.8`
+
+On phones every modal is a bottom sheet (the owner's "drawers") that closes when dragged down; rail and desktop keep centred popups. One shared `FormSheet` on Bluesky's Dialog; prompts keep Bluesky `Prompt`'s content and buttons.
+
+- **Effort** M · **Impact** 9 · **Backend** no · **Status** in progress (built and tested on ui/r1-polish-2 / ui/preview-latest, unmerged) · **Deps** F-201
+- **Prefs** -
+- **Acceptance**
+  1. Phones: form sheets (Add expense, Edit expense, Add friend, Create group, Edit group, Members, Payment rules, Record payment), settings editors (accent, categories, timezone, ...), pickers (currency, date, category, people), filters, menus and prompts (Discard changes?, Log out?, Delete?, Reset) all present as bottom sheets, phone-width web included. Rail and desktop: a centred popup (Bluesky web Dialog, scrim, max width ~600, focus trap, Escape closes).
+  2. Phone form sheet: title on the LEFT, a round close button with a Lucide `X` at the TOP RIGHT (30-32 px, `bg_contrast_50`, label "Close", testID `sheet-close`), no "Cancel" in the top bar; a footer pinned above the keyboard and the safe area with "Cancel" (`sheet-cancel`) left and the primary (`sheet-save`) right, disabled until valid; any live readout sits just above the footer. Popup: X top right, Cancel then Save bottom right. Pickers show only the X and apply a selection at once.
+  3. Drag to close: a bottom sheet closes when dragged down past ~30 % of its height or flicked down, from the handle, the top bar, or the content when scrolled to the top. With unsaved changes it springs back and asks "Discard changes?" (itself a bottom sheet); X, Cancel and scrim ask the same. Dragging a prompt down is Cancel; a destructive action never runs from a drag. The threshold logic is unit-tested; drag-to-close has an e2e check where the runner supports gestures.
+  4. Add expense and Edit expense are form sheets on every width (bottom sheet with drag handle, snapping to full height, keyboard-aware, on phones; the centred popup on rail and desktop), never a pushed page.
+  5. Every sheet and popup animates per § 26.10 (sheet spring and scrim fade, web fade + scale 0.96 -> 1 in ~180 ms, check + haptic on save); under motion `off` they open and close with a fade only.
+
+### F-206 Overview, expanding search and filters on Friends and Groups `spec: owner § 26.12`
 
 Per-currency owed/owe overview cards with counts, icon-only search that expands, Filters sheet with Apply and an active dot.
 
-- **Effort** M · **Impact** 9 · **Backend** no · **Status** in progress (next merge) · **Deps** F-201
+- **Effort** M · **Impact** 9 · **Backend** no · **Status** in progress (built and tested on ui/r1-polish-2 / ui/preview-latest, unmerged) · **Deps** F-201
 - **Prefs** `includeGroupsDefault`, `peopleSort`, `groupsSort`
 - **Acceptance**
   1. Overview cards never sum unlike currencies.
   2. Search filters live by friend name, group name or member name, with a "No matches" state.
   3. Filters change only on Apply and drive both the cards and the list.
+  4. Search (`list-search`) and Filters (`list-filters`, with a dot/count when non-default) sit on the RIGHT of the list section header ("Friends 6" / "Groups 3") and hide while the list is empty; search expands with Reanimated (reduced-motion aware) and its X collapses and clears.
+  5. Friends filters: Include groups, currency, show, sort; Groups filters: type, status, currency, show, sort (Recent activity uses last change time, F-224); the Person page history obeys the same Include groups choice.
 
-### F-207 People balances and person page `spec v1`
+### F-207 People balances and person page `spec v1, owner § 26.12`
 
 Direct plus included group balances per currency with each group's contribution; person page with expense and settlement history; deep link and back.
 
-- **Effort** M · **Impact** 10 · **Backend** no · **Status** in progress · **Deps** F-201
+- **Effort** M · **Impact** 10 · **Backend** no · **Status** in progress (built and tested on ui/r1-polish-2 / ui/preview-latest, unmerged) · **Deps** F-201
 - **Prefs** `includeGroupsDefault`
 - **Acceptance**
   1. A04: direct 100 plus group 50 shows 150; Include groups off shows 100 and also filters history; another currency stays separate.
   2. A person deep link opens with working back and browser history.
   3. Signs read "owes you" / "you owe".
 
-### F-208 Group page with Expenses, Balances, Members and Rules tabs `spec: owner rule 8`
+### F-208 Group page: Expenses, Balances and Members tabs `spec: owner § 26.12`
 
-Group tabs; Balances shows each member's net per currency plus who-owes-whom and a Settle up button.
+Pager tabs Expenses / Balances / Members (F-203). Balances shows each member's net per currency, a "who owes whom" list from the direct-mode plan and Settle up; Payment rules open from the header overflow.
 
-- **Effort** M · **Impact** 9 · **Backend** no · **Status** in progress (built on main build) · **Deps** F-201
+- **Effort** M · **Impact** 9 · **Backend** no · **Status** in progress (built and tested on ui/r1-polish-2 / ui/preview-latest, unmerged) · **Deps** F-201
 - **Prefs** -
 - **Acceptance**
-  1. Balances equals groupNet per member per currency.
+  1. Balances equals groupNet per member per currency, and "who owes whom" is the pairwise direct-mode settlement plan.
   2. Settle up opens the plan for that group.
+  3. The header is Settle up + overflow (Edit group, Members, Payment rules, Invite link, Export); "Add expense" lives in the body and pre-selects the group; testIDs `groups-balances`, `group-tab-balances`.
 
-### F-209 Custom navigation `spec v3`
+### F-209 Custom navigation `spec v3, owner § 26.19`
 
-Choose and order destinations (People, Groups, Analytics, Activity) with a guaranteed recovery route to Settings.
+Choose and order the phone bottom-bar destinations (Home, Groups, Analytics, Activity, Ask Splito) with a guaranteed recovery route to Settings.
 
 - **Effort** S · **Impact** 6 · **Backend** no · **Status** in progress (Settings) · **Deps** F-201
 - **Prefs** `tabs`, `homeTab`
 - **Acceptance**
   1. Hiding every optional tab still leaves Settings reachable from the drawer.
   2. Order persists, syncs (account scope) and resets to default.
+  3. Ask Splito can be pinned to the bottom bar; the default stays four tabs plus the FAB.
 
 ### F-210 Empty states that teach one next step
 
@@ -329,9 +384,9 @@ Profile page for me (name, photo / emoji / initials avatar, home currency) and p
   2. A photo avatar is resized under 100 KB with EXIF stripped and shows wherever the person appears (lists, drawer, Activity actor).
   3. Works fully offline.
 
-### F-215 Help, About, licences and privacy `spec: handoff 2 notices, owner rule 13 footer`
+### F-215 Help, About, licences and privacy `spec: handoff 2 notices, owner § 26.3 footer`
 
-Offline help (how balances, splits, payment rules and sync labels work), About with version, open-source licences generated from REUSE_MAP and NOTICE (MIT, OFL, Apache-2.0, ISC for Lucide), privacy policy and terms, What's new after an update, and Send feedback as an email draft with optional diagnostics (A-040).
+Offline help (how balances, splits, payment rules and sync labels work), About with version, open-source licences generated from REUSE_MAP and NOTICE (MIT, OFL, Apache-2.0, ISC for Lucide), privacy policy and terms, and What's new after an update. Feedback is F-226.
 
 - **Effort** M · **Impact** 7 · **Backend** no · **Status** todo · **Deps** F-201
 - **Prefs** `whatsNew.show`
@@ -394,17 +449,76 @@ Sticky month headers with per-currency month totals, an "Only involving me" togg
 - **Acceptance**
   1. "Only involving me" hides expenses where I neither paid nor have a share, and says how many are hidden.
   2. Month totals are per currency and match Analytics for that group and month.
-  3. Filters sit in the body filter row (rule 4) in a FormSheet with Apply (rule 7).
+  3. Filters sit in the body filter row (§ 26.4) in a FormSheet with Apply (§ 26.8).
 
 ### F-221 Pin and reorder friends and groups
 
-Pin friends and groups to the top of their lists and the sidebar Recent groups; manual order as a sort option.
+Pin friends and groups to the top of their lists and of the right column's Recently active groups (F-224); manual order as a sort option.
 
 - **Effort** S · **Impact** 5 · **Backend** no · **Status** todo · **Deps** F-206
 - **Prefs** `peoplePinned`, `groupsPinned`, `peopleSort` and `groupsSort` (add "Manual")
 - **Acceptance**
   1. Pinned rows stay on top under every sort and filter and show a pin glyph with an accessible label.
   2. Manual order persists, syncs and resets.
+
+### F-222 One navigation list for sidebar and drawer, Home label and title `spec: owner § 26.3, 26.4, 26.7`
+
+One `navigationItems` array and one `NavFooterLinks` component feed the desktop/rail sidebar and the phone drawer, so both show Home, Groups, Analytics, Ask Splito, Activity, Settings, then Feedback · Help · Privacy · About. The home destination is "Home"; its header shows the logo on phones and the title "Home" on rail and desktop. The drawer header shows the avatar and the person's real name only.
+
+- **Effort** S · **Impact** 8 · **Backend** no · **Status** todo · **Deps** F-201, F-204
+- **Prefs** -
+- **Acceptance**
+  1. Sidebar and drawer show the same items in the same order with the same icons and labels, rendered from one `navigationItems` array and one `NavFooterLinks` component (a unit test asserts both lists are identical). The sidebar adds only the logo and the "Add expense" pill; the drawer adds only its profile header and Sign in / Log out (F-225).
+  2. Profile is never a nav item (the avatar opens it). The drawer has no Profile row, no theme toggle, no "Me" label and no "Saved on this device" text; its header shows the avatar (with the F-223 dot) and the real name, and tapping it opens Profile.
+  3. The home destination is labelled "Home" with a house icon in the bottom bar, sidebar and drawer; the Home header shows the logo mark on phones and the centred title "Home" on rail and desktop.
+  4. Ask Splito sits between Analytics and Activity; until F-2301 ships the item is hidden rather than a dead link.
+
+### F-223 Sync-status dot on the user's avatar `spec: owner § 26.7`
+
+A Bluesky presence-style dot on the user's avatar in the drawer header and on the header avatar at every width: green synced, yellow syncing, red on this device only.
+
+- **Effort** S · **Impact** 7 · **Backend** no · **Status** todo · **Deps** F-222, F-1801
+- **Prefs** -
+- **Acceptance**
+  1. Green = signed in, online and everything acknowledged by the server; yellow = syncing or waiting to sync (changes in the outbox, or offline with unsynced changes); red = on this device only (no account, nothing backed up). Until the backend exists the state is red; green never shows before server acknowledgement.
+  2. The dot copies Bluesky's presence-dot geometry (bottom-right, ring in the background colour) on the drawer header avatar and the header avatar on phone, rail and desktop.
+  3. Never colour alone: the avatar's accessibility label says "Synced" / "Syncing" / "On this device only", and long-press (native) or hover (web) shows it as a tooltip; tapping the dot area in the drawer opens Settings > Account/Sync.
+  4. It replaces every other "Saved on this device" text in the shell; state changes animate (instant under reduced motion).
+
+### F-224 Desktop right column: recent transactions and recently active groups `spec: owner § 26.17`
+
+A fixed 320 px right column in Bluesky `RightNav` style at 1300 px and up, with the 5 newest transactions involving me and the 5 most recently active groups.
+
+- **Effort** M · **Impact** 7 · **Backend** no · **Status** in progress (built on ui/preview-latest, unmerged) · **Deps** F-201, F-603
+- **Prefs** `rightColumn.sections` (show, hide and order the two sections)
+- **Acceptance**
+  1. Shows only at 1300 px and up: fixed 320 px, left hairline, own scroll; content fills the space between the two columns; hidden under 1300 px.
+  2. "Recent transactions": the 5 newest expenses and repayments involving me, each with category tile, title and my net chip (lent / borrowed, from domain `personNet`); a row opens the expense; "See all" opens Activity.
+  3. "Recently active groups": the 5 groups with the newest change (an expense or repayment added, edited or deleted in it, or the group itself edited), ordered by change time, not expense date, with balance chips; "See all" opens Groups. The Groups list "Recent activity" sort uses the same rule (test: editing an old expense moves its group to the top).
+
+### F-225 Account section: Sign in and Log out `spec: owner § 26.15`
+
+Settings starts with an "Account" section copied from Bluesky's Settings account section and Login/Signup screens; auth state comes from one `useSession()`. Honest until the auth backend exists.
+
+- **Effort** M · **Impact** 8 · **Backend** no · **Status** todo · **Deps** F-1701, F-205
+- **Prefs** -
+- **Acceptance**
+  1. Signed out: a "Sign in" row with the subtitle "Back up and share with friends" pushes the sign-in flow: choose a method (Continue with Apple, Continue with Google, Email, Phone) -> email or phone entry -> 6-digit code; every field is validated.
+  2. Until F-2102 exists, submit shows the Bluesky Admonition "Sign-in arrives with sync. Your data stays safe on this device."; no fake success and no fake account.
+  3. Auth state comes from one `useSession()` (Bluesky `src/state/session` pattern), signed out until the backend lands; the drawer footer shows "Sign in" (and "Log out" once signed in).
+  4. The signed-in account row and the "Log out?" prompt ship with F-2102 (criteria there).
+
+### F-226 Feedback: Send feedback and "Your feedback" `spec: owner § 26.15`
+
+Bluesky's placement: a "Feedback" item in the drawer and the shared footer links, and a Settings "Support" section (Send feedback, Your feedback, Help, About). Feedback is kept on the device, with an email fallback, until the backend endpoint (F-2112).
+
+- **Effort** M · **Impact** 7 · **Backend** no · **Status** in progress (partially built on feat/feedback, unverified) · **Deps** F-201, F-205
+- **Prefs** `feedback.shake` (device)
+- **Acceptance**
+  1. "Feedback" opens from the drawer and from the footer links of the sidebar and drawer; Settings has a "Support" section with Send feedback, Your feedback, Help and About; under 1300 px desktop reaches them through the drawer and Settings.
+  2. "Send feedback" opens a FormSheet (bottom drawer on phones, centred popup on desktop): type chips Bug / Idea / Question / Other, a required message, an optional screenshot or photo, an "Include app info" toggle (default on: version, platform, OS, language, current screen; never amounts, names, notes or receipts) with the sheet showing exactly what is attached, and an optional reply email (prefilled once signed in).
+  3. Until the backend endpoint exists, Send saves the feedback on the device (status "Saved on this device") and offers "Send by email" (a prefilled draft to `FEEDBACK_EMAIL`, a release-checklist item); opening the draft is never shown as sent. Once F-2112 ships, feedback goes through the outbox.
+  4. "Your feedback" lists every sent item with its status; "Shake to send feedback" (phones, default off) opens the sheet.
 
 ## E3 Expenses and composer
 
@@ -414,7 +528,7 @@ Adding, editing and entering expenses fast.
 
 Personal, direct and group expenses with title, amount, currency, any date (future = "upcoming"), category, payers, participants, notes; edit history; tombstone delete with undo.
 
-- **Effort** L · **Impact** 10 · **Backend** no · **Status** in progress (feature branch) · **Deps** F-103
+- **Effort** L · **Impact** 10 · **Backend** no · **Status** in progress (built and tested on ui/r1-polish-2 / ui/preview-latest, unmerged) · **Deps** F-103
 - **Prefs** `defaultCurrency`, `defaultSplitMode`, `defaultPayer`
 - **Acceptance**
   1. Editing keeps the prior version in history; delete is a tombstone with Undo.
@@ -425,7 +539,7 @@ Personal, direct and group expenses with title, amount, currency, any date (futu
 
 Equal, exact, percent, shares and equal-with-adjustments; calculator in the amount field; live remaining; drafts survive close.
 
-- **Effort** M · **Impact** 9 · **Backend** no · **Status** in progress (feature branch) · **Deps** F-301
+- **Effort** M · **Impact** 9 · **Backend** no · **Status** in progress (built and tested on ui/r1-polish-2 / ui/preview-latest, unmerged) · **Deps** F-301
 - **Prefs** `defaultSplitMode`
 - **Acceptance**
   1. Typing 1200+340 in the amount evaluates exactly to 1540.
@@ -512,7 +626,7 @@ Save and add another keeps group, payer, participants, split, currency and date;
 
 Accepts locale separators, Devanagari / Arabic-Indic / Persian digits, a 000 key, k / L / cr / m suffixes and pasted "₹1,20,000.50"; ambiguous input asks.
 
-- **Effort** S · **Impact** 8 · **Backend** no · **Status** todo · **Deps** F-302
+- **Effort** S · **Impact** 8 · **Backend** no · **Status** in progress (built and tested on a feat/b-* branch, unmerged) · **Deps** F-302
 - **Prefs** `numberLocale`, `amount.shorthand`
 - **Acceptance**
   1. "1.5L" gives 150000.00 INR and "2k" gives 2000.
@@ -598,22 +712,24 @@ Split a total among N people without naming anyone: each share, rounding and a p
 
 Splitting a bill line by line, fairly.
 
-### F-401 Itemized bill with portions `spec: owner rule 5`
+### F-401 Itemized bill with portions, tax, tip, service and discount `spec: owner § 26.13`
 
-Items with name, amount and people; tap again for x2/x3 portions; Everyone shortcut; tax / tip / service / discount pro-rata; remaining readout; items listed on detail.
+An expense is one amount or a bill of items, each with a name, an amount and who had it; tapping a chip again adds a portion; an "Everyone" shortcut; items reorder and delete. Tax, tip, service charge and discount are always visible, each with an amount / % toggle.
 
-- **Effort** M · **Impact** 9 · **Backend** no · **Status** in progress (next merge) · **Deps** F-302
-- **Prefs** -
+- **Effort** M · **Impact** 9 · **Backend** no · **Status** in progress (built and tested on ui/r1-polish-2 / ui/preview-latest, unmerged) · **Deps** F-302
+- **Prefs** `itemizeAdjustmentModes`
 - **Acceptance**
-  1. 2 of 3 beers via x2 portions allocates exactly with bun tests.
-  2. Tax and tip follow each person's item subtotal including weights.
-  3. Save stays disabled until every item is assigned.
+  1. Tapping a person's chip again adds a portion (x2, x3); long-press or right-click resets. Domain `SplitInput` item participants carry integer weights (a plain string = weight 1), allocated exactly with bigint `allocate` and a stable tie-break; bun tests cover conservation and 2 of 3 beers.
+  2. Tax, tip, service charge and discount are visible by default and each has a segmented "<currency> | %" toggle, remembered per kind in `itemizeAdjustmentModes` (defaults: tax %, tip %, service %, discount amount). Percentages take up to 2 decimals and are stored as integer basis points.
+  3. Order: discount on the items subtotal; then service charge and tax on the discounted subtotal; then tip on the discounted, pre-tax subtotal (said in the UI help text). Percent-to-money happens only in `packages/domain` (bigint, round half away from zero to the currency's minor unit), then each adjustment is spread pro rata over each person's weighted item subtotal. Bun tests include JPY (scale 0), BHD (scale 3), 18 % GST on INR, 12.5 % service and 15 % discount.
+  4. The "remaining to assign" readout and the total stay exact; Save is disabled until everything is assigned.
+  5. Expense detail lists every item with its people and portions, each person's resulting share, and adjustment lines ("Tax 18% - INR 216.00").
 
 ### F-402 Cash rounding with visible remainder
 
 Round shares to 1 / 5 / 10 units per group or expense and transfers to 10 for cash payers; the leftover shows as a carried line or an explicit adjustment entry.
 
-- **Effort** S · **Impact** 8 · **Backend** no · **Status** todo · **Deps** F-101
+- **Effort** S · **Impact** 8 · **Backend** no · **Status** in progress (built and tested on a feat/b-* branch, unmerged) · **Deps** F-101
 - **Prefs** `split.roundTo`, `group:roundTo`, `person:prefersCash`
 - **Acceptance**
   1. 1000 over 3 rounded to 1 gives 334/333/333 with no paise.
@@ -934,9 +1050,9 @@ CSV, XLSX, OFX, QIF and PDF statements with a saved column mapper; rows go to th
 
 Who is in the ledger and how groups behave.
 
-### F-601 Private friends `spec v1`
+### F-601 Private friends `spec v1, owner § 26.18`
 
-Add friends without accounts or invites.
+Friends without accounts or invites, visible and usable only on your side: the "Add anyway (only for you)" path of Add friend (F-618), and the offline way to add anyone.
 
 - **Effort** S · **Impact** 9 · **Backend** no · **Status** in progress · **Deps** F-103
 - **Prefs** -
@@ -944,22 +1060,25 @@ Add friends without accounts or invites.
   1. A friend can be added offline with only a name.
   2. Deleting a friend with ledger rows never erases history.
   3. A deleted friend shows by name with a "former friend" label on every past record and can be restored from Recently deleted.
+  4. A private friend is selectable in expenses and groups at once; when that person later joins and accepts, the private friend is linked to their account (F-2106) and history merges (F-616).
 
-### F-602 Add friend from device contacts
+### F-602 Add friend from device contacts `spec: owner § 26.18`
 
-System contact picker imports one person without full address-book permission or upload.
+"Choose from contacts" in the Add friend sheet: the native contacts picker (expo-contacts) after a permission primer; on web the Contact Picker API where the browser has it, otherwise the button is hidden. Contacts stay on the device.
 
-- **Effort** S · **Impact** 7 · **Backend** no · **Status** todo · **Deps** F-601
+- **Effort** S · **Impact** 7 · **Backend** no · **Status** in progress (partially built on feat/friend-invites, unverified) · **Deps** F-618
 - **Prefs** -
 - **Acceptance**
-  1. Only the name and the phone/email the user ticks are stored.
-  2. The stored phone powers wa.me reminders.
+  1. Native: the button shows a pre-permission primer (the F-216 pattern, built here for contacts if F-216 has not shipped), then the system picker; a denied permission falls back to typing, with Open Settings; nothing dead-ends.
+  2. Web: the button shows only where the Contact Picker API exists.
+  3. A contact with several numbers or emails asks which one; only the name and the chosen phone or email are stored, nothing is uploaded.
+  4. The chosen value goes through the same Splito check as a typed one (F-618); a stored phone powers wa.me reminders.
 
 ### F-603 Groups and trips `spec v1`
 
 Name, type, currency, members, roles, trip dates; membership changes never rewrite past splits.
 
-- **Effort** M · **Impact** 10 · **Backend** no · **Status** in progress · **Deps** F-601
+- **Effort** M · **Impact** 10 · **Backend** no · **Status** in progress (built and tested on ui/r1-polish-2 / ui/preview-latest, unmerged) · **Deps** F-601
 - **Prefs** -
 - **Acceptance**
   1. A09: adding or removing a member leaves old splits unchanged.
@@ -1109,6 +1228,32 @@ Named subsets inside a group ("Car 1", "Room B", "Divers") picked in one tap; th
   1. Picking "Room B" selects exactly its current members; a removed member is dropped with a note.
   2. Select all, none and invert work by keyboard and screen reader.
   3. The picker stays smooth with 50 members (virtualized, measured).
+
+### F-618 Add friend by email or mobile, with a Splito check and consent `spec: owner § 26.18`
+
+Add friend asks for an email or mobile number (one field, auto-detected) plus an optional display name, checks the account directory before inviting, and never makes anyone a friend without their consent. Front end and directory client; live lookups and requests need F-2111.
+
+- **Effort** L · **Impact** 9 · **Backend** no · **Status** in progress (partially built on feat/friend-invites, unverified) · **Deps** F-601, F-205
+- **Prefs** `privacy.findByContact`, `privacy.friendRequestsFrom`
+- **Acceptance**
+  1. One field detects email or mobile and validates it; phone numbers are stored in E.164 with the user's region as the default; an optional display name.
+  2. As soon as the value is valid, Splito looks it up (exact match only; the answer is only "on Splito" / "not on Splito"). On Splito: primary action "Send friend request", and the person appears under People > "Invites sent" as pending with Resend and Cancel. Not on Splito: a warning banner "<value> isn't on Splito yet" with "Send invite" (SMS / email / share sheet with a personal invite link) and "Add anyway (only for you)", which creates a private friend (F-601). Offline or check unavailable: "We'll check when you're online", the request is queued in the outbox, and "Add anyway (only for you)" is still offered.
+  3. They must accept: nobody becomes a friend or joins your groups without consent. Pending people show greyed with "Waiting for <name> to accept" and cannot be selected in expenses or groups; once accepted they are full friends usable anywhere (any group, any expense, settle up) and both sides see the shared history.
+  4. Incoming requests show in Activity (From others, unread badge) and at the top of People ("Requests": Accept / Decline). Declining is silent to the sender, whose request stays pending until it expires after 30 days.
+  5. Privacy settings "Let people find me by email / phone" (default on) and "Who can send me friend requests" (everyone / people with my link only) are registry entries with Settings rows.
+  6. Demo mode (`?demo=1`) ships a fake directory so every branch can be seen; production builds use the backend directory (F-2111) and never show a fake "sent" state.
+
+### F-619 Invite link and QR with limits `spec: owner § 26.18`
+
+Personal and group invite links with a QR, use and expiry limits, a manage list and revoke; using a link always counts as accepting. Front end; links work across devices once F-2105 ships.
+
+- **Effort** M · **Impact** 8 · **Backend** no · **Status** in progress (partially built on feat/friend-invites, unverified) · **Deps** F-618, F-603
+- **Prefs** `invites.defaultMaxUses`, `invites.defaultExpiry`, `group:invites.approveJoins`
+- **Acceptance**
+  1. "Invite link / QR" is offered from the People (Home) header and the Add friend sheet; groups offer the same for joining a group (Group overflow "Invite link").
+  2. Creating one sets max uses (1, 5, 25, unlimited; default 1 for friends, 25 for groups), expiry (24 hours, 7 days, 30 days, never; default 7 days) and, for groups, "approve each join" (default off); the defaults are editable in Settings.
+  3. The sheet shows a scannable QR with the accent-coloured logo in the centre, the link, Copy and Share; "Manage invite links" lists active links with uses left and expiry, and Revoke.
+  4. Opening a link: a person with Splito sees who invited them and Accept / Decline; without Splito, web onboarding then the same prompt. Expired, used-up or revoked links say so and add nobody.
 
 ## E7 Trips and travel
 
@@ -1613,7 +1758,7 @@ From "who owes whom" to money actually changing hands.
 
 Per-group plan in direct mode obeying payment rules, rules editor, partial/full repayment with optional proof.
 
-- **Effort** L · **Impact** 10 · **Backend** no · **Status** in progress · **Deps** F-102, F-603
+- **Effort** L · **Impact** 10 · **Backend** no · **Status** in progress (built and tested on ui/r1-polish-2 / ui/preview-latest, unmerged) · **Deps** F-102, F-603
 - **Prefs** -
 - **Acceptance**
   1. The plan has a version hash and goes stale after any expense, payment, rule or membership change.
@@ -1634,7 +1779,7 @@ Separate exact solver for groups without rules, showing the payment count.
 
 upi://pay with payee VPA and amount, then ask to record the payment.
 
-- **Effort** S · **Impact** 9 · **Backend** no · **Status** in progress · **Deps** F-1101
+- **Effort** S · **Impact** 9 · **Backend** no · **Status** in progress (built and tested on ui/r1-polish-2 / ui/preview-latest, unmerged) · **Deps** F-1101
 - **Prefs** -
 - **Acceptance**
   1. The link has pa, pn, am (exact, no grouping), cu=INR and tn.
@@ -1715,14 +1860,14 @@ Ask each member for a sum (equal, weighted or per household) for a deposit, kitt
 
 ### F-1111 Reminder drafts that do not annoy `spec v2`
 
-Per-friend policy (tone, minimum amount, minimum age, cap per week, max total), drafts in the friend's language with the QR card, private "remind me", snooze to salary day.
+Builds on Remind (F-1118): a per-friend policy (tone, minimum amount, minimum age, cap per week, max total), drafts in the friend's language with the QR card, snooze to salary day.
 
-- **Effort** M · **Impact** 9 · **Backend** no · **Status** todo · **Deps** F-1106, F-1907
+- **Effort** M · **Impact** 9 · **Backend** no · **Status** todo · **Deps** F-1118, F-1106
 - **Prefs** `reminders.defaultTone`, `person:reminderPolicy`, `person:messageLanguage`
 - **Acceptance**
-  1. The cap of one reminder per person per 7 days is enforced.
+  1. The per-friend cap (default one reminder per person per 7 days, never looser than § 26.20's one in-app reminder per 3 days) is enforced.
   2. A Hindi-language friend gets a Hindi draft while the UI stays English.
-  3. "Remind me" notifies only me; opening a draft is never claimed as sending.
+  3. Opening a draft is never claimed as sending.
 
 ### F-1112 Settle-up day for the group
 
@@ -1738,7 +1883,7 @@ A group settle date (trip end + 1, monthly for homes) with one local notificatio
 
 An explicit write-off ledger entry with a note, never a fake repayment or a deletion.
 
-- **Effort** S · **Impact** 7 · **Backend** no · **Status** todo · **Deps** F-101
+- **Effort** S · **Impact** 7 · **Backend** no · **Status** in progress (built and tested on a feat/b-* branch, unmerged) · **Deps** F-101
 - **Prefs** `forgive.threshold`
 - **Acceptance**
   1. The write-off is undoable and shows in Activity and history.
@@ -1787,15 +1932,38 @@ From a person page, record one real transfer and split it into linked repayment 
   3. Paying more than owed warns first and records the excess as Riya owing me.
   4. One undo removes every linked record.
 
+### F-1118 Remind: a friendly reminder through the share sheet `spec: owner § 26.20`
+
+"Remind" on the Person page (header overflow), on each debtor row in group Balances and in the Settle plan: a friendly message with the amount per currency and the UPI / payment link, opened in the share sheet (WhatsApp, SMS, email). In-app delivery comes with F-2210.
+
+- **Effort** S · **Impact** 9 · **Backend** no · **Status** todo · **Deps** F-1103, F-207, F-208
+- **Prefs** -
+- **Acceptance**
+  1. "Remind" appears in the Person overflow, on each debtor row in group Balances and in the Settle plan, never for someone who owes nothing.
+  2. The message is friendly, lists the amount per currency (never summed across currencies) and the UPI link (F-1103) or the friend's payment link when known; its text builder is the one F-1501 reuses. It opens the share sheet, using wa.me when the friend's phone is known.
+  3. Opening the share sheet is never shown as sent; every reminder is logged in Activity ("You reminded Riya · INR 450").
+  4. Once the friend is on Splito and the backend exists, the same action also sends an in-app reminder (F-2210), at most one per person per 3 days.
+
+### F-1119 Remind me `spec: owner § 26.20`
+
+"Remind me" next to Remind schedules a local notification for yourself about a balance (date and time, optional repeat). Nothing is sent to anyone.
+
+- **Effort** S · **Impact** 7 · **Backend** no · **Status** todo · **Deps** F-1118, F-1907
+- **Prefs** -
+- **Acceptance**
+  1. Picking a date and time and a repeat (none, daily, weekly, monthly) schedules a local notification that fires offline and opens the person or group.
+  2. It notifies only me; the reminder is listed on the person page where it can be edited or cancelled, and is logged in Activity.
+  3. Notification permission is asked only at this moment, with a primer (F-216 pattern), never at launch.
+
 ## E12 Activity, history and trust
 
 Nothing changes silently; every change is visible and reversible.
 
-### F-1201 Activity feed `spec v1, owner rule 6`
+### F-1201 Activity feed `spec v1, owner § 26.14`
 
 Read/unread, All / From others, actor avatar, day headers, "you lent / you borrowed", row menu, swipe, hide, undo.
 
-- **Effort** M · **Impact** 9 · **Backend** no · **Status** in progress (feature branch; rule 6 rows next merge) · **Deps** F-103
+- **Effort** M · **Impact** 9 · **Backend** no · **Status** in progress (built and tested on ui/r1-polish-2 / ui/preview-latest, unmerged) · **Deps** F-103
 - **Prefs** `swipeLeft`, `swipeRight`
 - **Acceptance**
   1. The row avatar is the actor, never the participants.
@@ -1816,22 +1984,23 @@ An expense History tab with plain diffs per version; an Activity row whenever an
 
 Tombstoned expenses and payments listed for a configurable window with who, when and effect; one-tap restore.
 
-- **Effort** S · **Impact** 8 · **Backend** no · **Status** todo · **Deps** F-103
+- **Effort** S · **Impact** 8 · **Backend** no · **Status** in progress (built and tested on a feat/b-* branch, unmerged) · **Deps** F-103
 - **Prefs** `history.binDays`
 - **Acceptance**
   1. Restore uses restoreExpense and is undoable.
   2. After the window the tombstone stays in the audit trail.
 
-### F-1204 Comments and disputes `spec v2`
+### F-1204 Comments on expenses and repayments `spec v2, owner § 26.20`
 
-A thread per expense and flags (not there, wrong amount, wrong payer, duplicate); disputed amounts stay visible but leave the plan by default until resolved.
+A comment thread at the bottom of every expense and repayment detail, using Bluesky's reply rows and the Bluesky DM composer bar. Local and in the outbox now; shared once sync exists (F-2208). Disputes are F-1210.
 
-- **Effort** M · **Impact** 8 · **Backend** no · **Status** todo · **Deps** F-301
-- **Prefs** `group:excludeDisputed`
+- **Effort** M · **Impact** 8 · **Backend** no · **Status** todo · **Deps** F-301, F-1201
+- **Prefs** -
 - **Acceptance**
-  1. Balances show a "disputed" sub-total.
-  2. The settle plan excludes disputed amounts unless toggled.
-  3. The creator's resolution is recorded in history.
+  1. Every expense and repayment detail ends with a thread (Bluesky reply rows) and a composer bar above the keyboard (Bluesky DM composer) with emoji and @mention of the expense's participants.
+  2. I can edit and delete only my own comments; edits and deletes keep history (tombstones); every write is a `packages/sync` mutation with an outbox row.
+  3. Expense rows show a comment count.
+  4. New comments from others show in Activity as unread (From others) once sync delivers them (F-2208).
 
 ### F-1205 Settle-up checkpoints `spec 4b gap 11`
 
@@ -1884,19 +2053,31 @@ Tap any balance to see a line-by-line running total per currency since the last 
   2. The Include groups choice applies; each line opens its record.
   3. Shareable as text with only that pair's lines.
 
+### F-1210 Disputes and flags `spec v2`
+
+Flags on an expense (not there, wrong amount, wrong payer, duplicate) raised in its comment thread; disputed amounts stay visible but leave the plan by default until resolved.
+
+- **Effort** M · **Impact** 7 · **Backend** no · **Status** todo · **Deps** F-1204
+- **Prefs** `group:excludeDisputed`
+- **Acceptance**
+  1. Balances show a "disputed" sub-total.
+  2. The settle plan excludes disputed amounts unless toggled.
+  3. The creator's resolution is recorded in history.
+
 ## E13 Analytics, reports and budgets
 
 Exact numbers from the ledger, never illustrative.
 
-### F-1301 Basic analytics `spec v1`
+### F-1301 Basic analytics `spec v1, owner § 26.16`
 
 Spending over time, by category, per person and group, paid vs share, filters, CSV.
 
-- **Effort** M · **Impact** 8 · **Backend** no · **Status** in progress · **Deps** F-301
+- **Effort** M · **Impact** 8 · **Backend** no · **Status** in progress (built and tested on ui/r1-polish-2 / ui/preview-latest, unmerged) · **Deps** F-301
 - **Prefs** -
 - **Acceptance**
   1. One chart per currency, never mixed.
   2. CSV export matches the on-screen filter.
+  3. Charts and a table view, filtered by period, currency and group; the chart / table toggle sits in that filter row, never in the header. The header holds Ask Splito (F-2301) and an overflow with Export CSV. A converted view labels the rate used.
 
 ### F-1302 My Spending measure everywhere `spec v1 (extended)`
 
@@ -2008,11 +2189,12 @@ Find anything fast; change many things at once.
 
 Search titles, notes, people, groups and amounts, offline and indexed.
 
-- **Effort** S · **Impact** 8 · **Backend** no · **Status** todo · **Deps** F-301
+- **Effort** S · **Impact** 8 · **Backend** no · **Status** in progress (built and tested on a feat/b-* branch, unmerged) · **Deps** F-301
 - **Prefs** -
 - **Acceptance**
   1. Results show totals per currency.
   2. No full-ledger scan per keystroke (measured).
+  3. Once F-2301 ships, the top result row is "Ask Splito about '<query>'".
 
 ### F-1402 Advanced search operators `spec v2 saved views (extended)`
 
@@ -2288,16 +2470,17 @@ Offline erase of local data with an export offer and an unsynced-work warning.
 
 Everything customizable, everything smooth.
 
-### F-1701 Settings for every preference `spec 3a`
+### F-1701 Settings for every preference `spec 3a, owner § 26.1, 26.2, 26.11`
 
 Theme, accent with Apply, text size, density, motion, haptics, tabs, defaults, categories, language, timezone, formats, lists, notifications.
 
-- **Effort** M · **Impact** 9 · **Backend** no · **Status** in progress · **Deps** F-104
+- **Effort** M · **Impact** 9 · **Backend** no · **Status** in progress (built and tested on ui/r1-polish-2 / ui/preview-latest, unmerged) · **Deps** F-104
 - **Prefs** every registry key
 - **Acceptance**
   1. Each setting has Reset to default; Reset all works.
   2. Account-scope settings sync; device-scope stay local.
   3. A search field finds any setting by label or synonym (en and hi), and changed-from-default settings are marked.
+  4. Appearance has "Dark mode style: Dim / Black" (`darkTheme`, default Dim) and an accent picker (default Bluesky blue `#006AFF`, Splito emerald optional); Regional has the timezone, and each expense keeps its local date and IANA tz.
 
 ### F-1702 Black-and-white theme and background overrides `spec v3`
 
@@ -2319,7 +2502,7 @@ Hide, reorder, rename, resize and tint cards on People, group overview, Analytic
   1. Changes persist, sync and reset.
   2. Dialog and form internals are not customizable.
 
-### F-1704 Motion: Lottie, animated balances, success check, list animations `spec v1, owner rule 10`
+### F-1704 Motion: Lottie, animated balances, success check, list animations `spec v1, owner § 26.10`
 
 Page illustrations, count-up balances, skeletons, success check, list enter/exit/reorder, all UI-thread.
 
@@ -2389,6 +2572,28 @@ tabular-nums on all money; Inter, System or Atkinson Hyperlegible.
   1. AnimatedAmount no longer jitters (digits keep width).
   2. The font choice applies app-wide through setFontFamily and persists.
 
+### F-1711 Dim splash and brand kit on every platform `spec: owner § 26.2, 26.11`
+
+Splash, icons and favicon from the brand kit on iOS, Android and web/PWA; in dark mode the splash uses the Dim background, never pure black.
+
+- **Effort** S · **Impact** 5 · **Backend** no · **Status** todo · **Deps** F-201
+- **Prefs** -
+- **Acceptance**
+  1. The native splash `dark.backgroundColor` and the web launch screen take ALF Dim's background token with the logo centred; light mode keeps the light background (brand kit generated by `apps/client/scripts/brand.ts`).
+  2. No pure-black frame appears between the splash and the first screen in Dim (checked on iOS and web).
+  3. iOS, Android and web/PWA show the splash, app icon and favicon from the brand kit, with a light and Dim screenshot per platform.
+
+### F-1712 Original Splito mark before public release `spec: owner § 26.22`
+
+The owner's butterfly is a dev-only mark (Bluesky's trademark). An original mark replaces it in the one logo source file before any public release.
+
+- **Effort** S · **Impact** 6 · **Backend** no · **Status** todo · **Deps** F-1711
+- **Prefs** -
+- **Acceptance**
+  1. An original mark replaces the butterfly in the one source file and the `Logo` component; the brand kit (favicon, app icons, splash, PWA icons) is regenerated.
+  2. A release-build check fails while the dev SVG is bundled; the `docs/RELEASE_CHECKLIST.md` item closes only then.
+  3. No public web deploy, TestFlight / App Store or Play Store build ships the butterfly.
+
 ## E18 Accessibility and localization
 
 Usable by everyone, in their language.
@@ -2397,7 +2602,7 @@ Usable by everyone, in their language.
 
 Every balance has a word, an arrow and a sign; palettes: default, colour-blind safe, monochrome.
 
-- **Effort** S · **Impact** 8 · **Backend** no · **Status** todo · **Deps** -
+- **Effort** S · **Impact** 8 · **Backend** no · **Status** in progress (built and tested on a feat/b-* branch, unmerged) · **Deps** -
 - **Prefs** `moneyPalette`
 - **Acceptance**
   1. Balances read correctly in grayscale screenshots.
@@ -2483,7 +2688,7 @@ On-device text-to-speech summary of balances in the app language.
   1. Works offline and stops on tap.
   2. Speaks in the app language.
 
-### F-1810 English and Hindi `spec 5`
+### F-1810 English and Hindi `spec 5, owner § 26.2`
 
 Lingui strings with Hindi at launch; Indian number grouping under hi and en-IN.
 
@@ -2547,16 +2752,18 @@ axe-core on every route in Playwright (both themes, 320-1440 px), React Native a
 
 Native surfaces and the PWA.
 
-### F-1901 PWA: install, offline shell, updates, desktop integration `spec v1`
+### F-1901 PWA: service worker, offline shell, updates and install `spec v1, owner § 26.21`
 
-Manifest, offline shell, update handling with pending outbox, persistent storage request; manifest shortcuts, badge, .splito file handler.
+A production-only service worker with an offline app shell, a Bluesky-style update toast, a web manifest and install; plus manifest shortcuts, badge and a .splito file handler.
 
-- **Effort** M · **Impact** 7 · **Backend** no · **Status** todo · **Deps** -
-- **Prefs** -
+- **Effort** M · **Impact** 8 · **Backend** no · **Status** todo · **Deps** F-201
+- **Prefs** `pwa.installHintDismissed` (device)
 - **Acceptance**
-  1. A16: refresh on a deep route works offline; an update with a pending outbox loses nothing.
-  2. Private API responses are never cached.
-  3. Safari users not running the installed PWA see a one-time warning that Safari may erase site data after 7 days without a visit, with Install and Export actions.
+  1. The service worker registers only in production web builds (off in dev and e2e). It precaches the hashed app shell and assets, serves fonts and images stale-while-revalidate, and falls back to the cached shell for navigations, so the app opens offline (A16: refreshing a deep route offline works).
+  2. API responses are never cached (data lives in IndexedDB); a test asserts no API route reaches the cache.
+  3. A new version installs in the background and shows the toast "New version available · Reload"; it never reloads on its own while a sheet has unsaved input, and an update with a pending outbox loses nothing.
+  4. The manifest has name, short name, brand-kit icons, the Dim dark background and standalone display. The browser install prompt is captured once and offered as "Install app" in Settings plus a one-time dismissible hint; iOS shows "Add to Home Screen" instructions.
+  5. Safari users not running the installed PWA see a one-time warning that Safari may erase site data after 7 days without a visit, with Install and Export actions.
 
 ### F-1902 iOS simulator dev build `spec: matrix`
 
@@ -2572,7 +2779,7 @@ Dev client build with Bluesky build settings and Intl polyfills.
 
 Java on PATH, dev client build, emulator run.
 
-- **Effort** S · **Impact** 8 · **Backend** no · **Status** todo · **Deps** -
+- **Effort** S · **Impact** 8 · **Backend** no · **Status** in progress (built and tested on a feat/b-* branch, unmerged) · **Deps** -
 - **Prefs** -
 - **Acceptance**
   1. The add-expense and settle-up smoke flow passes on the Android emulator.
@@ -2682,15 +2889,16 @@ Native review API only after a positive moment (all square, fifth saved expense)
 
 Your data in and out, safely.
 
-### F-2001 JSON backup export and restore `spec v2`
+### F-2001 JSON backup export and import `spec v2, owner § 26.20`
 
-Versioned JSON with schema validation, migration, dedupe, preview, merge/replace and rollback on failure.
+Full JSON backup from Settings > Data > Export and restore from Settings > Data > Import: versioned JSON with schema validation, migration, dedupe, preview, merge/replace and rollback on failure; generated on the device.
 
-- **Effort** M · **Impact** 8 · **Backend** no · **Status** todo · **Deps** F-103
+- **Effort** M · **Impact** 8 · **Backend** no · **Status** todo · **Deps** F-103, F-1701
 - **Prefs** -
 - **Acceptance**
   1. A12: round-trip preserves IDs, currencies and splits.
   2. A corrupt file is rejected atomically with nothing applied.
+  3. Settings > Data has Export (full JSON backup) and Import; Import shows a preview of what will change and asks merge or replace before applying.
 
 ### F-2002 Encrypted and automatic backups
 
@@ -2714,9 +2922,9 @@ Import Splitwise exports (and Tricount / Settle Up / Splid via mapper profiles) 
 
 ### F-2004 Power exports `spec v2 CSV (extended)`
 
-Current filter across all groups; wide (paid + share columns), tidy, YNAB/Actual, Beancount/hledger; CSV, XLSX, PDF; formula-safe.
+Extends the export centre (F-2007): current filter across all groups; wide (paid + share columns), tidy, YNAB/Actual, Beancount/hledger; CSV, XLSX, PDF; formula-safe.
 
-- **Effort** M · **Impact** 7 · **Backend** no · **Status** todo · **Deps** F-1302
+- **Effort** M · **Impact** 7 · **Backend** no · **Status** todo · **Deps** F-2007, F-1302
 - **Prefs** `export.layout`
 - **Acceptance**
   1. Cells starting with = + - @ are escaped.
@@ -2744,11 +2952,23 @@ Space used by receipts, attachments and history per group; compress old images, 
   2. Compressing keeps the receipt readable and records the change in history.
   3. Nothing unsynced or the only copy is ever deleted.
 
+### F-2007 Export centre: CSV and PDF statements `spec: owner § 26.20`
+
+Settings > Data > Export (CSV, PDF statement, full JSON backup via F-2001) with filters, plus Group overflow "Export", Person overflow "Export statement" and Analytics overflow "Export CSV". Generated on the device.
+
+- **Effort** M · **Impact** 8 · **Backend** no · **Status** todo · **Deps** F-1301, F-2001
+- **Prefs** -
+- **Acceptance**
+  1. Settings > Data > Export offers CSV, PDF statement and full JSON backup, with filters for date range, group, person and currency.
+  2. Group overflow "Export", Person overflow "Export statement" and Analytics overflow "Export CSV" open the same export pre-filtered to that group, that person, or the current Analytics filter.
+  3. Exports are generated on the device and work offline; amounts are exact and labelled per currency, never summed across currencies; CSV cells starting with = + - @ are escaped.
+  4. The PDF statement lists every expense and repayment in range with a running balance per currency that matches the on-screen balance.
+
 ## E21 Backend foundation
 
 Fastify on Bun + Postgres. Everything shared waits for this.
 
-### F-2101 API service `spec 9`
+### F-2101 API service `spec 9, owner § 26.2`
 
 Fastify on pinned Bun, Postgres migrations, versioned contracts, structured errors, health/readiness, graceful shutdown.
 
@@ -2758,7 +2978,7 @@ Fastify on pinned Bun, Postgres migrations, versioned contracts, structured erro
   1. The 13 fan2/api review findings are closed.
   2. Integration tests run against real Postgres under Bun.
 
-### F-2102 Sign-in and sessions `spec v1`
+### F-2102 Sign-in and sessions `spec v1, owner § 26.15`
 
 Email OTP, mobile OTP, Google and Apple; refresh and revoke; OTP throttling; secure token storage; web httpOnly cookie + CSRF.
 
@@ -2768,6 +2988,7 @@ Email OTP, mobile OTP, Google and Apple; refresh and revoke; OTP throttling; sec
   1. A15: session expiry and revoke verified; OTP throttled.
   2. No secrets in the client bundle or logs.
   3. One account can add and remove sign-in methods (email, phone, Google, Apple) and change its email or phone; the last method cannot be removed.
+  4. Signed in, Settings > Account shows an account row (avatar, name, email/phone, sync status) and a destructive "Log out" row opening "Log out?", which warns when the outbox holds unsynced changes ("N changes haven't synced yet") and offers "Keep this device's data" / "Erase this device's data"; logout never silently deletes unsynced outbox rows (§ 26.15).
 
 ### F-2103 Sync push/pull and conflicts `spec v1`
 
@@ -2781,6 +3002,7 @@ Bounded push with server idempotency, opaque-cursor pull with tombstones, snapsh
   3. "Synced" shows only after server acknowledgement; user switch never exposes another account's data.
   4. A client older than the server's minimum contract version shows "Update required", keeps its outbox and resumes after updating.
   5. First sync of the F-109 fixture finishes in under 60 s on a mid-range phone with progress shown and the app usable throughout.
+  6. Sync state drives the avatar dot (F-223): green only after acknowledgement, yellow while the outbox is not empty.
 
 ### F-2104 Move local data into an account `spec v1`
 
@@ -2792,15 +3014,16 @@ Explicit, atomic migration of offline data into a new account.
   1. A failed migration leaves local data intact.
   2. Every migrated record reaches the server exactly once.
 
-### F-2105 Invites `spec v1`
+### F-2105 Invites and invite links `spec v1, owner § 26.18`
 
-Link and QR invites with server accept, expiry, revoke, role, max uses and approval queue; email/SMS drafts.
+Server side of F-619 and F-618's "Send invite": personal and group invite links and QR codes with max uses, expiry, revoke, role and the group approval queue; using a link counts as consent; email/SMS drafts.
 
 - **Effort** M · **Impact** 9 · **Backend** yes · **Status** todo · **Deps** F-2103
 - **Prefs** `group:invite.defaultRole`
 - **Acceptance**
   1. A09: expired or revoked invites fail; repeated acceptance is idempotent.
   2. Opening a draft is never shown as sent.
+  3. Max uses and expiry are enforced server-side; "approve each join" puts group joins in the approval queue.
 
 ### F-2106 Link a private friend to a real account `spec v1`
 
@@ -2854,6 +3077,29 @@ Deploy pipeline per tier, Postgres point-in-time backups with a monthly restore 
   1. A restore drill rebuilds a tier to a stated point in time and the recovery time is recorded.
   2. Rate limits return structured retryable errors and the client backs off.
   3. Secrets come from a secret store and a CI scan proves none reach logs.
+
+### F-2111 Account directory and friend requests `spec: owner § 26.18`
+
+Server lookup of an exact email or phone ("on Splito" / "not on Splito" only) and friend requests that become friendships only when the other person accepts. Backend for F-618.
+
+- **Effort** M · **Impact** 9 · **Backend** yes · **Status** todo · **Deps** F-2102, F-2103
+- **Prefs** `privacy.findByContact`, `privacy.friendRequestsFrom` (enforced here)
+- **Acceptance**
+  1. Lookup is exact match only, rate-limited per account and IP, and reveals nothing but on / not on Splito; someone with "Let people find me" off reads as not on Splito.
+  2. A request becomes a friendship only on accept; decline is silent to the sender; unanswered requests expire after 30 days; "people with my link only" refuses requests that did not come through a link.
+  3. Requests queued offline are checked and sent from the outbox on reconnect; repeated sends and accepts are idempotent.
+  4. Accepting links a matching private friend through F-2106's confirm flow.
+
+### F-2112 Feedback endpoint `spec: owner § 26.15`
+
+Receives feedback from the outbox (F-226) and reports its status back to "Your feedback".
+
+- **Effort** S · **Impact** 5 · **Backend** yes · **Status** todo · **Deps** F-2103, F-226
+- **Prefs** -
+- **Acceptance**
+  1. Feedback saved on the device before sign-in is sent through the outbox after sign-in, exactly once.
+  2. The server stores only what the sheet showed as attached (no amounts, names, notes or receipts).
+  3. Status changes (received, answered) appear in "Your feedback".
 
 ## E22 Shared and collaborative
 
@@ -2930,15 +3176,16 @@ Everyone claims their own receipt items from a table QR and sees their running t
   1. Pending payments show separately from confirmed money.
   2. The auto-confirm period is set per group.
 
-### F-2208 Shared comments, disputes and comments 2.0 `spec v2`
+### F-2208 Shared comments, disputes and comments 2.0 `spec v2, owner § 26.20`
 
-Comments and disputes sync to members; quick replies, mentions, receipt requests.
+Comments (F-1204) and disputes (F-1210) sync to members; comments from others arrive in Activity as unread; quick replies, mentions, receipt requests.
 
-- **Effort** M · **Impact** 7 · **Backend** yes · **Status** todo · **Deps** F-2201, F-1204
+- **Effort** M · **Impact** 7 · **Backend** yes · **Status** todo · **Deps** F-2201, F-1204, F-1210
 - **Prefs** -
 - **Acceptance**
   1. A mention notifies only that member.
   2. Resolved disputes collapse in the thread and stay in history.
+  3. A comment written offline reaches every participant after sync and shows in their Activity as unread.
 
 ### F-2209 Shared reactions and "Say thanks" `spec v3`
 
@@ -2950,15 +3197,16 @@ Reactions attached to records so every participant sees them; a thanks quick act
   1. Reactions never change the ledger.
   2. Every participant sees the same reactions after sync.
 
-### F-2210 Automatic reminders (opt-in) `spec 4b v2`
+### F-2210 In-app and automatic reminders `spec 4b v2, owner § 26.20`
 
-Server-sent reminders that follow the per-friend policy.
+Server delivery for Remind (F-1118) when the friend is on Splito, plus opt-in automatic reminders that follow the per-friend policy (F-1111).
 
-- **Effort** M · **Impact** 6 · **Backend** yes · **Status** todo · **Deps** F-2201, F-1111
+- **Effort** M · **Impact** 7 · **Backend** yes · **Status** todo · **Deps** F-2201, F-1118, F-1111
 - **Prefs** `person:reminderPolicy`
 - **Acceptance**
-  1. Off by default; the cap and quiet hours are enforced server-side.
-  2. Each sent reminder is listed on the person page.
+  1. Remind on a friend who is on Splito also sends an in-app reminder; at most one in-app reminder per person per 3 days, enforced server-side, and the UI says when the next one is allowed.
+  2. Automatic reminders are off by default; their cap and quiet hours are enforced server-side.
+  3. Every reminder sent is listed on the person page and logged in Activity.
 
 ### F-2211 Gift pool / chip-in link
 
@@ -3174,19 +3422,22 @@ Account Aggregator (India) or Plaid / Tink style feeds turn card and bank transa
 
 Answers from real records, never invented numbers.
 
-### F-2301 Chat window and offline deterministic answers `spec v2`
+### F-2301 Ask Splito: chat screen and on-device answers `spec v2, owner § 26.19`
 
-Floating window on desktop (page stays usable), sheet on mobile, persistent history and drafts; offline answers computed by domain functions with record links.
+One AI entry point, "Ask Splito" (Lucide sparkles): a nav item between Analytics and Activity, the Analytics header action, and an "Ask Splito about '<query>'" row in Search. The chat screen copies Bluesky's DM conversation; questions over your own data are answered on the device by a deterministic engine.
 
-- **Effort** M · **Impact** 8 · **Backend** no · **Status** todo · **Deps** F-1302
+- **Effort** L · **Impact** 8 · **Backend** no · **Status** todo · **Deps** F-1301, F-222, F-1401
 - **Prefs** -
 - **Acceptance**
-  1. A14: closing and reopening keeps history and the draft.
-  2. "What does Riya owe me?" offline equals the People balance and is labelled "answered on this device".
+  1. Placement: the shared sidebar / drawer item between Analytics and Activity, the Analytics header's right action, and an "Ask Splito about '<query>'" row at the top of Search results; phones keep four bottom-bar tabs (F-209 can pin it).
+  2. The chat screen copies Bluesky's DM conversation screen (message list, composer bar above the keyboard, day separators). The empty state shows suggestion chips ("How much did I spend on food this month?", "Who owes me the most?", "Split last night's dinner 3 ways", "Show my Goa trip spending by day"). Closing and reopening keeps history and the draft (A14).
+  3. A deterministic engine in `lib/ask` answers totals, who owes whom, spend by category / person / group / period and trends with `@splito/domain` (exact money, never summing currencies), labelled "answered on this device"; "What does Riya owe me?" equals the People balance. Nothing leaves the device for these answers.
+  4. Answers can carry rich cards: an inline chart (the Analytics chart components), a small table, a balance card, or an action card ("Add this expense", "Record payment", "Remind Riya") that opens the normal sheet pre-filled; nothing is written without that confirmation.
+  5. Questions the engine cannot answer get "I can answer this once you sign in" with the closest supported suggestion; never a fake answer.
 
-### F-2302 Server model with scoped tools `spec v2`
+### F-2302 Server model with scoped tools `spec v2, owner § 26.19`
 
-Server-side model adapter, scoped read tools over the ledger, streaming, retry, cancel; proposed edits need review.
+Free-form questions go through the backend to an AI model (Claude, latest model): server-side model adapter, scoped read tools over the ledger, streaming, retry, cancel; proposed edits need review.
 
 - **Effort** L · **Impact** 9 · **Backend** yes · **Status** todo · **Deps** F-2103, F-2301
 - **Prefs** -
@@ -3195,7 +3446,7 @@ Server-side model adapter, scoped read tools over the ledger, streaming, retry, 
   2. A prompt-injected receipt cannot reach another group or write without review.
   3. Stays behind a feature flag, off for users, until F-2303 consent, exclusion and retention controls ship (handoff 10).
 
-### F-2303 AI privacy controls
+### F-2303 AI privacy controls `spec: owner § 26.19`
 
 Off until opted in; per-group "never send"; pseudonyms before model calls; "what was sent" viewer; retention.
 
@@ -3204,6 +3455,7 @@ Off until opted in; per-group "never send"; pseudonyms before model calls; "what
 - **Acceptance**
   1. An excluded group's records never appear in a model request (test).
   2. The "what was sent" viewer shows the exact records for each answer.
+  3. "Ask Splito uses AI" (`ai.enabled`) is off until the user signs in and opts in; the first use shows exactly what data will be sent; on-device answers send nothing.
 
 ### F-2304 Cloud OCR re-read `spec v2`
 
@@ -3227,7 +3479,7 @@ When online, the model refines the local parse; the result is still a draft for 
 
 ## Build order
 
-Front-end features (Backend = no) come first, in batches, after the architecture prerequisites in Batch 0. Batches 1-3 finish the work already in progress (docs/RESUME.md) and, unlike later batches, contain dependency chains, so inside them follow the Deps column (Batch 1: F-201 first; Batch 2: F-301 -> F-302 -> F-401 and F-601 -> F-603 -> F-1101 -> F-1103); after that, batches are ordered by impact per effort (S=1, M=2, L=3, XL=5) while respecting dependencies. Inside a batch every feature touches a different area, so they can be built in parallel. Order inside a batch is the suggested pick order.
+Front-end features (Backend = no) come first, in batches, after the architecture prerequisites in Batch 0. Batches 1-3 finish the work already in progress (docs/RESUME.md) and, unlike later batches, contain dependency chains, so inside them follow the Deps column (Batch 1: F-201 first; Batch 2: F-301 -> F-302 -> F-401 and F-601 -> F-603 -> F-1101 -> F-1103); after that, batches are ordered by impact per effort (S=1, M=2, L=3, XL=5) while respecting dependencies. Inside a batch every feature touches a different area. Since 2026-10-26 (ARCHITECTURE § 26.1) features are built one at a time in pick order (the "#" column), each finished (built, tested, merged, screenshots, status updated here and in `COMPLETION_MATRIX.md`) before the next starts; parallel workers may split one feature, not run several. Owner requests not yet built are in Batch 4b, right after Batch 4.
 
 ### Front end
 
@@ -3245,9 +3497,9 @@ Merge ui/preview-shell-fix into ui/polish-2 (docs/RESUME.md step 1).
 
 | # | ID | Feature | Area | Effort | Impact | Deps |
 |---|---|---|---|---|---|---|
-| 2 | F-201 | Bluesky shell: sidebar, bottom bar, FAB, avatar drawer, header rules, cat logo | navigation shell, LeftNav, drawer | L | 10 | - |
+| 2 | F-201 | Bluesky shell: sidebar, bottom bar, FAB, avatar drawer, header rules, logo | navigation shell, LeftNav, drawer | L | 10 | - |
 | 3 | F-202 | Activity as a nav destination with unread badge | nav item + badge | S | 8 | F-201 |
-| 4 | F-205 | FormSheet for every sheet and dialog | components/FormSheet | M | 8 | F-201 |
+| 4 | F-205 | Phone bottom drawers and desktop popups: one FormSheet for every sheet, picker and prompt | components/FormSheet | M | 8 | F-201 |
 | 5 | F-206 | Overview, expanding search and filters on Friends and Groups | People and Groups list screens | M | 9 | F-201 |
 | 6 | F-207 | People balances and person page | Person screen, People selectors | M | 10 | F-201 |
 | 7 | F-1201 | Activity feed | Activity screen rows | M | 9 | F-103 |
@@ -3260,16 +3512,16 @@ In-progress expense, group and settle work.
 |---|---|---|---|---|---|---|
 | 8 | F-301 | Expense add / edit / delete / undo | AddExpense screen | L | 10 | F-103 |
 | 9 | F-302 | Split editor, inline calculator, remaining readout, persistent drafts | split editor component | M | 9 | F-301 |
-| 10 | F-401 | Itemized bill with portions | itemize editor component | M | 9 | F-302 |
+| 10 | F-401 | Itemized bill with portions, tax, tip, service and discount | itemize editor component | M | 9 | F-302 |
 | 11 | F-601 | Private friends | Add friend sheet | S | 9 | F-103 |
 | 12 | F-603 | Groups and trips | Create/Edit group sheet | M | 10 | F-601 |
-| 13 | F-208 | Group page with Expenses, Balances, Members and Rules tabs | Group screen tabs | M | 9 | F-201 |
+| 13 | F-208 | Group page: Expenses, Balances and Members tabs | Group screen tabs | M | 9 | F-201 |
 | 14 | F-1101 | Settle up: plan, rules editor, record repayment | Settle screen + rules editor | L | 10 | F-102, F-603 |
 | 15 | F-1103 | UPI pay link and "Mark as paid?" | lib/upi | S | 9 | F-1101 |
 
 ### Batch 3: Finish M1 polish
 
-Owner rules 10-13 and the remaining in-progress settings.
+Owner rules § 26.5, 26.9, 26.10 and 26.17 and the remaining in-progress settings.
 
 | # | ID | Feature | Area | Effort | Impact | Deps |
 |---|---|---|---|---|---|---|
@@ -3279,6 +3531,7 @@ Owner rules 10-13 and the remaining in-progress settings.
 | 19 | F-1704 | Motion: Lottie, animated balances, success check, list animations | motion components | M | 8 | F-201 |
 | 20 | F-203 | Pager tabs and animated main-tab switches | pager component | M | 7 | F-201 |
 | 21 | F-204 | Desktop LeftNav complete | desktop LeftNav | M | 7 | F-201 |
+| 22 | F-224 | Desktop right column: recent transactions and recently active groups | desktop RightNav | M | 7 | F-201, F-603 |
 
 ### Batch 4: Money quick wins
 
@@ -3286,28 +3539,52 @@ Small, high-impact, independent.
 
 | # | ID | Feature | Area | Effort | Impact | Deps |
 |---|---|---|---|---|---|---|
-| 22 | F-310 | Smart amount input | composer amount field | S | 8 | F-302 |
-| 23 | F-402 | Cash rounding with visible remainder | domain allocate rounding | S | 8 | F-101 |
-| 24 | F-1801 | Money direction never shown by colour alone | balance display components | S | 8 | - |
-| 25 | F-1203 | Recently deleted bin | Recently deleted screen | S | 8 | F-103 |
-| 26 | F-1113 | Call it even: forgive or write off | write-off ledger kind + person action | S | 7 | F-101 |
-| 27 | F-1401 | Free search across expenses | expense search index | S | 8 | F-301 |
-| 28 | F-1903 | Android build and emulator run | Android build config | S | 8 | - |
+| 23 | F-310 | Smart amount input | composer amount field | S | 8 | F-302 |
+| 24 | F-402 | Cash rounding with visible remainder | domain allocate rounding | S | 8 | F-101 |
+| 25 | F-1801 | Money direction never shown by colour alone | balance display components | S | 8 | - |
+| 26 | F-1203 | Recently deleted bin | Recently deleted screen | S | 8 | F-103 |
+| 27 | F-1113 | Call it even: forgive or write off | write-off ledger kind + person action | S | 7 | F-101 |
+| 28 | F-1401 | Free search across expenses | expense search index | S | 8 | F-301 |
+| 29 | F-1903 | Android build and emulator run | Android build config | S | 8 | - |
 
-### Batch 5: First impressions and scale
+### Batch 4b: Owner requests (2026-10-26/27)
 
-The 10-second first expense, 10k-expense speed, offline web, and the screens every real user meets.
+Every owner request from ARCHITECTURE § 26 (decision log rows 47-63) that was not built yet, in the owner's order. ARCHITECTURE § 26.1 applies strictly here: one feature at a time, top to bottom; each is built, tested, merged into m1-foundation, screenshotted (light and Dim, phone and desktop) and marked done here and in `COMPLETION_MATRIX.md` before the next starts; parallel workers may split one feature, never run two. The merge row comes first: nothing else starts until every built branch is merged. Backend parts of these requests sit in the backend batches (F-2111, F-2105, F-2112, F-2208, F-2210, F-2302, F-2303).
 
 | # | ID | Feature | Area | Effort | Impact | Deps |
 |---|---|---|---|---|---|---|
-| 29 | F-314 | Three-tap add with sentence defaults | composer defaults + sentence chip | M | 10 | F-302 |
-| 30 | F-109 | Large-ledger performance at 10,000 expenses | projections + perf fixture | L | 9 | F-103, A-016 |
-| 31 | F-1901 | PWA: install, offline shell, updates, desktop integration | PWA | M | 7 | - |
-| 32 | F-215 | Help, About, licences and privacy | Help / About / Licences screens | M | 7 | F-201 |
-| 33 | F-214 | My profile and avatars | profile screen + avatars | M | 7 | F-201, F-601 |
-| 34 | F-220 | Group expense list: month sections, "involving me" filter and sort | group Expenses tab list | S | 7 | F-208 |
-| 35 | F-110 | Multi-tab web consistency | cross-tab channel + web lock | S | 7 | F-103 |
-| 36 | F-216 | Permission primers and recovery | permission primer sheets | S | 6 | F-205 |
+| 30 | - | Merge UI line + Batch 4 + drawers into m1-foundation | git: ui/r1-polish-2, ui/preview-latest (incl. phone bottom drawers), feat/b-* into m1-foundation; full test + e2e run | M | 10 | Batches 0-4 built |
+| 31 | F-618 | Add friend by email or mobile, with a Splito check and consent | Add friend sheet, People requests, directory client (finish feat/friend-invites) | L | 9 | F-601, F-205 |
+| 32 | F-619 | Invite link and QR with limits | screens/Invites (finish feat/friend-invites) | M | 8 | F-618, F-603 |
+| 33 | F-602 | Add friend from device contacts | contacts picker (finish feat/friend-invites) | S | 7 | F-618 |
+| 34 | F-226 | Feedback: Send feedback and "Your feedback" | Settings Support + feedback sheet (finish feat/feedback) | M | 7 | F-201, F-205 |
+| 35 | F-222 | One navigation list for sidebar and drawer, Home label and title | navigationItems + NavFooterLinks, drawer header | S | 8 | F-201, F-204 |
+| 36 | F-223 | Sync-status dot on the user's avatar | avatar dot + session/outbox state | S | 7 | F-222, F-1801 |
+| 37 | F-1711 | Dim splash and brand kit on every platform | splash config + brand kit | S | 5 | F-201 |
+| 38 | F-1901 | PWA: service worker, offline shell, updates and install | apps/client/web, export post-step | M | 8 | F-201 |
+| 39 | F-1204 | Comments on expenses and repayments | components/comments | M | 8 | F-301, F-1201 |
+| 40 | F-1118 | Remind: a friendly reminder through the share sheet | lib/remind + share text | S | 9 | F-1103, F-207, F-208 |
+| 41 | F-1907 | Local scheduled notifications | local notifications module | M | 7 | - |
+| 42 | F-1119 | Remind me | remind-me scheduler | S | 7 | F-1118, F-1907 |
+| 43 | F-2001 | JSON backup export and import | lib/export backup + Settings > Data | M | 8 | F-103, F-1701 |
+| 44 | F-2007 | Export centre: CSV and PDF statements | lib/export CSV / PDF + overflow entries | M | 8 | F-1301, F-2001 |
+| 45 | F-2301 | Ask Splito: chat screen and on-device answers | screens/Ask, lib/ask | L | 8 | F-1301, F-222, F-1401 |
+
+### Batch 5: First impressions and scale
+
+The 10-second first expense, 10k-expense speed, sign-in screens, and the screens every real user meets (offline web moved to Batch 4b).
+
+| # | ID | Feature | Area | Effort | Impact | Deps |
+|---|---|---|---|---|---|---|
+| 46 | F-314 | Three-tap add with sentence defaults | composer defaults + sentence chip | M | 10 | F-302 |
+| 47 | F-109 | Large-ledger performance at 10,000 expenses | projections + perf fixture | L | 9 | F-103, A-016 |
+| 48 | F-215 | Help, About, licences and privacy | Help / About / Licences screens | M | 7 | F-201 |
+| 49 | F-214 | My profile and avatars | profile screen + avatars | M | 7 | F-201, F-601 |
+| 50 | F-220 | Group expense list: month sections, "involving me" filter and sort | group Expenses tab list | S | 7 | F-208 |
+| 51 | F-110 | Multi-tab web consistency | cross-tab channel + web lock | S | 7 | F-103 |
+| 52 | F-216 | Permission primers and recovery | permission primer sheets | S | 6 | F-205 |
+| 53 | F-225 | Account section: Sign in and Log out | Settings Account + sign-in screens | M | 8 | F-1701, F-205 |
+| 54 | F-1712 | Original Splito mark before public release | logo source + brand kit | S | 6 | F-1711 |
 
 ### Batch 6: Get paid
 
@@ -3315,14 +3592,14 @@ Payment handles and the first settle helpers.
 
 | # | ID | Feature | Area | Effort | Impact | Deps |
 |---|---|---|---|---|---|---|
-| 37 | F-1106 | Payment handles | person payment handles | M | 8 | F-601 |
-| 38 | F-1117 | Settle up with a person across groups | person settle sheet | M | 9 | F-1101, F-207 |
-| 39 | F-1110 | Next-to-pay suggestion | group header next-to-pay selector | S | 7 | F-1101 |
-| 40 | F-1501 | Text summaries for WhatsApp | share text builder | S | 8 | F-1101 |
-| 41 | F-1114 | "Everyone settles with the organiser" preset | payment rules editor preset | S | 6 | F-1101 |
-| 42 | F-1102 | Fewest-payments toggle | fewest-payments solver | M | 7 | F-1101 |
-| 43 | F-107 | Deterministic generated IDs and operation dedupe | sync generated IDs | S | 7 | F-103 |
-| 44 | F-106 | Day-weight allocation from date ranges | domain day weights | S | 8 | F-101 |
+| 55 | F-1106 | Payment handles | person payment handles | M | 8 | F-601 |
+| 56 | F-1117 | Settle up with a person across groups | person settle sheet | M | 9 | F-1101, F-207 |
+| 57 | F-1110 | Next-to-pay suggestion | group header next-to-pay selector | S | 7 | F-1101 |
+| 58 | F-1501 | Text summaries for WhatsApp | share text builder | S | 8 | F-1101 |
+| 59 | F-1114 | "Everyone settles with the organiser" preset | payment rules editor preset | S | 6 | F-1101 |
+| 60 | F-1102 | Fewest-payments toggle | fewest-payments solver | M | 7 | F-1101 |
+| 61 | F-107 | Deterministic generated IDs and operation dedupe | sync generated IDs | S | 7 | F-103 |
+| 62 | F-106 | Day-weight allocation from date ranges | domain day weights | S | 8 | F-101 |
 
 ### Batch 7: Pay and entry speed
 
@@ -3330,14 +3607,13 @@ QR, UPI handoff and faster entry.
 
 | # | ID | Feature | Area | Effort | Impact | Deps |
 |---|---|---|---|---|---|---|
-| 45 | F-1105 | Pay-me QR at the table | Get-paid QR screen | S | 9 | F-1106 |
-| 46 | F-1104 | UPI app chooser and fallback chain | native UPI module + pay sheet | M | 9 | F-1103, F-1106 |
-| 47 | F-305 | Saved split templates | split templates | S | 7 | F-302 |
-| 48 | F-309 | Rapid entry: save and add another, duplicate, repeat last | composer footer actions | S | 7 | F-301 |
-| 49 | F-1603 | Hide amounts (discreet mode) | amount formatter context | S | 7 | - |
-| 50 | F-1202 | Readable change history and "your share changed" | expense History tab | M | 9 | F-103 |
-| 51 | F-1907 | Local scheduled notifications | local notifications module | M | 7 | - |
-| 52 | F-210 | Empty states that teach one next step | empty states | S | 6 | F-1704 |
+| 63 | F-1105 | Pay-me QR at the table | Get-paid QR screen | S | 9 | F-1106 |
+| 64 | F-1104 | UPI app chooser and fallback chain | native UPI module + pay sheet | M | 9 | F-1103, F-1106 |
+| 65 | F-305 | Saved split templates | split templates | S | 7 | F-302 |
+| 66 | F-309 | Rapid entry: save and add another, duplicate, repeat last | composer footer actions | S | 7 | F-301 |
+| 67 | F-1603 | Hide amounts (discreet mode) | amount formatter context | S | 7 | - |
+| 68 | F-1202 | Readable change history and "your share changed" | expense History tab | M | 9 | F-103 |
+| 69 | F-210 | Empty states that teach one next step | empty states | S | 6 | F-1704 |
 
 ### Batch 8: Rules and recurring
 
@@ -3345,14 +3621,14 @@ Group rules, recurring engine, FX base.
 
 | # | ID | Feature | Area | Effort | Impact | Deps |
 |---|---|---|---|---|---|---|
-| 53 | F-306 | Recurring expenses: fixed, variable, estimate then true-up | recurring rules + generator | L | 9 | F-107, F-301, F-1907 |
-| 54 | F-609 | Per-category split rules for a group | group settings: How we split | M | 9 | F-305 |
-| 55 | F-902 | Income-proportional fair-share ratio | fair-share template | S | 9 | F-305 |
-| 56 | F-1107 | Payment-handle change warning | pay-link guard | S | 8 | F-1106 |
-| 57 | F-307 | Category and emoji auto-suggest | category field suggestions | S | 7 | F-301 |
-| 58 | F-1302 | My Spending measure everywhere | analytics measure | M | 9 | F-1301 |
-| 59 | F-316 | Favourite expenses: one-tap tiles | favourite tiles | S | 7 | F-309 |
-| 60 | F-1002 | Conversion records and exchange rates | FX rates module | M | 9 | F-1001 |
+| 70 | F-306 | Recurring expenses: fixed, variable, estimate then true-up | recurring rules + generator | L | 9 | F-107, F-301, F-1907 |
+| 71 | F-609 | Per-category split rules for a group | group settings: How we split | M | 9 | F-305 |
+| 72 | F-902 | Income-proportional fair-share ratio | fair-share template | S | 9 | F-305 |
+| 73 | F-1107 | Payment-handle change warning | pay-link guard | S | 8 | F-1106 |
+| 74 | F-307 | Category and emoji auto-suggest | category field suggestions | S | 7 | F-301 |
+| 75 | F-1302 | My Spending measure everywhere | analytics measure | M | 9 | F-1301 |
+| 76 | F-316 | Favourite expenses: one-tap tiles | favourite tiles | S | 7 | F-309 |
+| 77 | F-1002 | Conversion records and exchange rates | FX rates module | M | 9 | F-1001 |
 
 ### Batch 9: Inbox and pots
 
@@ -3360,14 +3636,14 @@ The review queue, duplicates and pot accounts.
 
 | # | ID | Feature | Area | Effort | Impact | Deps |
 |---|---|---|---|---|---|---|
-| 61 | F-503 | Review Inbox for automated drafts | Inbox screen + FAB badge | M | 9 | F-301 |
-| 62 | F-504 | Unified duplicate detection | duplicate fingerprint engine | M | 9 | F-301 |
-| 63 | F-312 | Attachments | attachments | M | 7 | F-301 |
-| 64 | F-1111 | Reminder drafts that do not annoy | reminder drafts | M | 9 | F-1106, F-1907 |
-| 65 | F-1005 | Card-charged amount sets the real rate | card-charged fields | M | 9 | F-1002 |
-| 66 | F-105 | Pot ledger accounts | domain pot accounts | M | 8 | F-101, F-103 |
-| 67 | F-1802 | Screen-reader money sentences | a11y money sentences | M | 9 | F-1001 |
-| 68 | F-1305 | Period presets | period presets | S | 5 | F-1301 |
+| 78 | F-503 | Review Inbox for automated drafts | Inbox screen + FAB badge | M | 9 | F-301 |
+| 79 | F-504 | Unified duplicate detection | duplicate fingerprint engine | M | 9 | F-301 |
+| 80 | F-312 | Attachments | attachments | M | 7 | F-301 |
+| 81 | F-1111 | Reminder drafts that do not annoy | reminder drafts | M | 9 | F-1118, F-1106 |
+| 82 | F-1005 | Card-charged amount sets the real rate | card-charged fields | M | 9 | F-1002 |
+| 83 | F-105 | Pot ledger accounts | domain pot accounts | M | 8 | F-101, F-103 |
+| 84 | F-1802 | Screen-reader money sentences | a11y money sentences | M | 9 | F-1001 |
+| 85 | F-1305 | Period presets | period presets | S | 5 | F-1301 |
 
 ### Batch 10: Households and groups
 
@@ -3375,14 +3651,14 @@ Parties, presence, couples and trust basics.
 
 | # | ID | Feature | Area | Effort | Impact | Deps |
 |---|---|---|---|---|---|---|
-| 69 | F-607 | Households: a couple or family settles as one party | households (members + settle) | M | 9 | F-102, F-603 |
-| 70 | F-614 | Presence calendar: stay dates, away days, guest nights | presence calendar | M | 8 | F-106, F-603 |
-| 71 | F-901 | Ours / Mine / For you chips | composer ownership chips | S | 8 | F-609 |
-| 72 | F-1204 | Comments and disputes | expense thread + disputes | M | 8 | F-301 |
-| 73 | F-1205 | Settle-up checkpoints | settle checkpoints | M | 8 | F-1101 |
-| 74 | F-1109 | Collections: who-has-paid tracker | collections screen | M | 8 | F-105, F-1106 |
-| 75 | F-211 | 60-second zero-signup onboarding | onboarding flow | M | 8 | F-1701 |
-| 76 | F-606 | Group templates | group templates | S | 7 | F-603 |
+| 86 | F-607 | Households: a couple or family settles as one party | households (members + settle) | M | 9 | F-102, F-603 |
+| 87 | F-614 | Presence calendar: stay dates, away days, guest nights | presence calendar | M | 8 | F-106, F-603 |
+| 88 | F-901 | Ours / Mine / For you chips | composer ownership chips | S | 8 | F-609 |
+| 89 | F-1210 | Disputes and flags | expense disputes | M | 7 | F-1204 |
+| 90 | F-1205 | Settle-up checkpoints | settle checkpoints | M | 8 | F-1101 |
+| 91 | F-1109 | Collections: who-has-paid tracker | collections screen | M | 8 | F-105, F-1106 |
+| 92 | F-211 | 60-second zero-signup onboarding | onboarding flow | M | 8 | F-1701 |
+| 93 | F-606 | Group templates | group templates | S | 7 | F-603 |
 
 ### Batch 11: Trips I
 
@@ -3390,14 +3666,14 @@ Kitty, nights and trip money.
 
 | # | ID | Feature | Area | Effort | Impact | Deps |
 |---|---|---|---|---|---|---|
-| 77 | F-701 | Trip kitty v2: multi-currency, holder hand-off, cash count | kitty screens | L | 9 | F-105 |
-| 78 | F-702 | Split by nights or days present, with room weights | nights/days split mode | M | 8 | F-614 |
-| 79 | F-1003 | Offline rate pack and re-price review | FX cache | S | 7 | F-1002 |
-| 80 | F-1004 | Trip rate book | trip rate book | M | 8 | F-1002, F-603 |
-| 81 | F-604 | Archive groups | archive | S | 6 | F-603 |
-| 82 | F-1304 | Budgets | budgets engine + screen | M | 8 | F-1302, F-1305, F-1907 |
-| 83 | F-1601 | App lock with step-up actions | app lock | M | 8 | F-1701 |
-| 84 | F-1605 | Notification privacy levels | notification privacy | S | 5 | F-1907 |
+| 94 | F-701 | Trip kitty v2: multi-currency, holder hand-off, cash count | kitty screens | L | 9 | F-105 |
+| 95 | F-702 | Split by nights or days present, with room weights | nights/days split mode | M | 8 | F-614 |
+| 96 | F-1003 | Offline rate pack and re-price review | FX cache | S | 7 | F-1002 |
+| 97 | F-1004 | Trip rate book | trip rate book | M | 8 | F-1002, F-603 |
+| 98 | F-604 | Archive groups | archive | S | 6 | F-603 |
+| 99 | F-1304 | Budgets | budgets engine + screen | M | 8 | F-1302, F-1305, F-1907 |
+| 100 | F-1601 | App lock with step-up actions | app lock | M | 8 | F-1701 |
+| 101 | F-1605 | Notification privacy levels | notification privacy | S | 5 | F-1907 |
 
 ### Batch 12: Home I
 
@@ -3405,14 +3681,13 @@ Proration, bills and pots for flats.
 
 | # | ID | Feature | Area | Effort | Impact | Deps |
 |---|---|---|---|---|---|---|
-| 85 | F-804 | Billing periods with day proration | billing period proration | M | 9 | F-106, F-614 |
-| 86 | F-802 | Fair rent calculator | rent calculator sheet | S | 7 | F-609 |
-| 87 | F-807 | Bills due board and calendar | bills due board | M | 8 | F-306, F-1907 |
-| 88 | F-815 | Household and joint pots | household pots | M | 8 | F-105, F-306 |
-| 89 | F-903 | "Us" overview card with fairness meter | Us overview card | M | 8 | F-902, F-1302 |
-| 90 | F-1006 | Cash wallets and forex lots | cash wallets | M | 8 | F-1005 |
-| 91 | F-2001 | JSON backup export and restore | backup export/import | M | 8 | F-103 |
-| 92 | F-308 | Guest participants | guest participants | S | 6 | F-301 |
+| 102 | F-804 | Billing periods with day proration | billing period proration | M | 9 | F-106, F-614 |
+| 103 | F-802 | Fair rent calculator | rent calculator sheet | S | 7 | F-609 |
+| 104 | F-807 | Bills due board and calendar | bills due board | M | 8 | F-306, F-1907 |
+| 105 | F-815 | Household and joint pots | household pots | M | 8 | F-105, F-306 |
+| 106 | F-903 | "Us" overview card with fairness meter | Us overview card | M | 8 | F-902, F-1302 |
+| 107 | F-1006 | Cash wallets and forex lots | cash wallets | M | 8 | F-1005 |
+| 108 | F-308 | Guest participants | guest participants | S | 6 | F-301 |
 
 ### Batch 13: Lifecycle and trust
 
@@ -3420,14 +3695,14 @@ Disputes, leaving, duplicates, switching phones.
 
 | # | ID | Feature | Area | Effort | Impact | Deps |
 |---|---|---|---|---|---|---|
-| 93 | F-1209 | Explain this balance | balance explainer screen | S | 8 | F-207, F-1501 |
-| 94 | F-615 | Leave or delete a group | group leave / delete flow | M | 8 | F-603, F-1113, F-1203 |
-| 95 | F-2005 | Move to a new phone without an account | phone transfer flow | M | 8 | F-2001 |
-| 96 | F-616 | Merge duplicate friends | friend merge | M | 7 | F-601 |
-| 97 | F-617 | Saved member subsets and a big-group picker | member subsets + participant picker | S | 7 | F-603 |
-| 98 | F-1108 | Payment method and UTR proof | Record payment sheet | S | 6 | F-1101 |
-| 99 | F-1011 | Change a group's or my home currency safely | currency change flow | S | 6 | F-1002 |
-| 100 | F-2006 | Storage manager | storage manager screen | S | 5 | F-312 |
+| 109 | F-1209 | Explain this balance | balance explainer screen | S | 8 | F-207, F-1501 |
+| 110 | F-615 | Leave or delete a group | group leave / delete flow | M | 8 | F-603, F-1113, F-1203 |
+| 111 | F-2005 | Move to a new phone without an account | phone transfer flow | M | 8 | F-2001 |
+| 112 | F-616 | Merge duplicate friends | friend merge | M | 7 | F-601 |
+| 113 | F-617 | Saved member subsets and a big-group picker | member subsets + participant picker | S | 7 | F-603 |
+| 114 | F-1108 | Payment method and UTR proof | Record payment sheet | S | 6 | F-1101 |
+| 115 | F-1011 | Change a group's or my home currency safely | currency change flow | S | 6 | F-1002 |
+| 116 | F-2006 | Storage manager | storage manager screen | S | 5 | F-312 |
 
 ### Batch 14: Trips II: settling in one currency
 
@@ -3435,14 +3710,14 @@ Settle currency, legs, reports, refunds.
 
 | # | ID | Feature | Area | Effort | Impact | Deps |
 |---|---|---|---|---|---|---|
-| 101 | F-1007 | Settle a trip in one currency with rate-policy preview | settle-in-one-currency flow | L | 9 | F-1004, F-1101 |
-| 102 | F-704 | Trip legs and travel mode | trip legs | M | 8 | F-603, F-1002 |
-| 103 | F-317 | Quick split by headcount | headcount quick split | S | 7 | F-302, F-308, F-1105 |
-| 104 | F-1208 | "All square" moment | all-square celebration | S | 6 | F-1704 |
-| 105 | F-1303 | Full reports | reports | M | 8 | F-1302 |
-| 106 | F-1607 | Privacy and data safety center | privacy center screen | S | 7 | F-2001 |
-| 107 | F-303 | Refunds and reversals | refunds | M | 7 | F-301 |
-| 108 | F-605 | Group emoji and colour | group emoji | S | 6 | F-603 |
+| 117 | F-1007 | Settle a trip in one currency with rate-policy preview | settle-in-one-currency flow | L | 9 | F-1004, F-1101 |
+| 118 | F-704 | Trip legs and travel mode | trip legs | M | 8 | F-603, F-1002 |
+| 119 | F-317 | Quick split by headcount | headcount quick split | S | 7 | F-302, F-308, F-1105 |
+| 120 | F-1208 | "All square" moment | all-square celebration | S | 6 | F-1704 |
+| 121 | F-1303 | Full reports | reports | M | 8 | F-1302 |
+| 122 | F-1607 | Privacy and data safety center | privacy center screen | S | 7 | F-2001 |
+| 123 | F-303 | Refunds and reversals | refunds | M | 7 | F-301 |
+| 124 | F-605 | Group emoji and colour | group emoji | S | 6 | F-603 |
 
 ### Batch 15: Capture I
 
@@ -3450,14 +3725,13 @@ Scanner, quick add and the predictor.
 
 | # | ID | Feature | Area | Effort | Impact | Deps |
 |---|---|---|---|---|---|---|
-| 109 | F-501 | Receipt scanner | scanner module | M | 8 | F-312 |
-| 110 | F-403 | GST-aware Indian bill lines | itemize tax lines | M | 8 | F-401 |
-| 111 | F-507 | Quick add by text v2 | quick-add parser + chips | M | 8 | F-310, F-503 |
-| 112 | F-515 | Smart defaults predictor | defaults predictor | M | 9 | F-301 |
-| 113 | F-803 | Rent collector board | rent collector board | M | 9 | F-306, F-1109, F-1104 |
-| 114 | F-1010 | Unambiguous currency display and compact amounts | currency formatter | S | 6 | F-1001 |
-| 115 | F-1805 | Dynamic Type to 200% with reflow | dynamic type reflow | M | 8 | - |
-| 116 | F-2301 | Chat window and offline deterministic answers | chat window | M | 8 | F-1302 |
+| 125 | F-501 | Receipt scanner | scanner module | M | 8 | F-312 |
+| 126 | F-403 | GST-aware Indian bill lines | itemize tax lines | M | 8 | F-401 |
+| 127 | F-507 | Quick add by text v2 | quick-add parser + chips | M | 8 | F-310, F-503 |
+| 128 | F-515 | Smart defaults predictor | defaults predictor | M | 9 | F-301 |
+| 129 | F-803 | Rent collector board | rent collector board | M | 9 | F-306, F-1109, F-1104 |
+| 130 | F-1010 | Unambiguous currency display and compact amounts | currency formatter | S | 6 | F-1001 |
+| 131 | F-1805 | Dynamic Type to 200% with reflow | dynamic type reflow | M | 8 | - |
 
 ### Batch 16: Capture II: OCR
 
@@ -3465,14 +3739,13 @@ On-device OCR, closing a trip and trip spend views.
 
 | # | ID | Feature | Area | Effort | Impact | Deps |
 |---|---|---|---|---|---|---|
-| 117 | F-502 | On-device OCR with review | OCR engines + review | L | 9 | F-501, F-401 |
-| 118 | F-705 | Close the trip: wrap-up checklist | trip wrap-up card | M | 9 | F-604, F-1205, F-701, F-1007 |
-| 119 | F-1008 | Pay back with leftover foreign cash | cross-currency repayment | S | 7 | F-1007 |
-| 120 | F-706 | What this trip cost me | trip cost view | M | 8 | F-1302, F-1005 |
-| 121 | F-808 | Month close and household statement | month close | M | 8 | F-1205 |
-| 122 | F-1009 | Live home-currency hint | amount hint | S | 7 | F-1002, F-310 |
-| 123 | F-1502 | Shareable image cards | image card renderer | M | 7 | F-1105 |
-| 124 | F-602 | Add friend from device contacts | contacts picker | S | 7 | F-601 |
+| 132 | F-502 | On-device OCR with review | OCR engines + review | L | 9 | F-501, F-401 |
+| 133 | F-705 | Close the trip: wrap-up checklist | trip wrap-up card | M | 9 | F-604, F-1205, F-701, F-1007 |
+| 134 | F-1008 | Pay back with leftover foreign cash | cross-currency repayment | S | 7 | F-1007 |
+| 135 | F-706 | What this trip cost me | trip cost view | M | 8 | F-1302, F-1005 |
+| 136 | F-808 | Month close and household statement | month close | M | 8 | F-1205 |
+| 137 | F-1009 | Live home-currency hint | amount hint | S | 7 | F-1002, F-310 |
+| 138 | F-1502 | Shareable image cards | image card renderer | M | 7 | F-1105 |
 
 ### Batch 17: Receipt intelligence
 
@@ -3480,14 +3753,14 @@ Make OCR results trustworthy.
 
 | # | ID | Feature | Area | Effort | Impact | Deps |
 |---|---|---|---|---|---|---|
-| 125 | F-406 | Receipt math checker | OCR math checker | S | 8 | F-502 |
-| 126 | F-405 | Line-item cleanup | line normaliser | M | 8 | F-401, F-502 |
-| 127 | F-506 | Receipt currency and number-format auto-detect | currency detector | S | 7 | F-502 |
-| 128 | F-505 | Attach-to-existing matcher and missing-receipt nudge | receipt matcher | S | 7 | F-502 |
-| 129 | F-509 | Incoming share | share extension / intent | L | 7 | F-503 |
-| 130 | F-1306 | Deterministic insights | insights card | S | 5 | F-1303 |
-| 131 | F-1803 | Accessibility actions for every swipe and long-press | row a11y actions | S | 7 | F-1201 |
-| 132 | F-612 | Duplicate group as template | duplicate group | S | 5 | F-603 |
+| 139 | F-406 | Receipt math checker | OCR math checker | S | 8 | F-502 |
+| 140 | F-405 | Line-item cleanup | line normaliser | M | 8 | F-401, F-502 |
+| 141 | F-506 | Receipt currency and number-format auto-detect | currency detector | S | 7 | F-502 |
+| 142 | F-505 | Attach-to-existing matcher and missing-receipt nudge | receipt matcher | S | 7 | F-502 |
+| 143 | F-509 | Incoming share | share extension / intent | L | 7 | F-503 |
+| 144 | F-1306 | Deterministic insights | insights card | S | 5 | F-1303 |
+| 145 | F-1803 | Accessibility actions for every swipe and long-press | row a11y actions | S | 7 | F-1201 |
+| 146 | F-612 | Duplicate group as template | duplicate group | S | 5 | F-603 |
 
 ### Batch 18: Itemize power
 
@@ -3495,14 +3768,14 @@ Faster, smarter item assignment.
 
 | # | ID | Feature | Area | Effort | Impact | Deps |
 |---|---|---|---|---|---|---|
-| 133 | F-407 | Tap-the-receipt painter assignment | painter view | M | 8 | F-401, F-502 |
-| 134 | F-404 | Item memory and shared-item defaults | item memory | S | 6 | F-401 |
-| 135 | F-408 | Delivery and ride e-receipt splitter | e-receipt templates | M | 8 | F-502, F-509 |
-| 136 | F-510 | Paste or share text into drafts | text-to-draft parser | M | 7 | F-507 |
-| 137 | F-1804 | Accessible portion editor and spoken remaining | portion chip a11y | S | 7 | F-401 |
-| 138 | F-1602 | PIN recovery kit | PIN recovery | S | 6 | F-1601 |
-| 139 | F-1307 | Receivables ageing and net position | receivables panel | S | 6 | F-1301 |
-| 140 | F-611 | Pinned group note and payment-handle directory | pinned note + handles directory | S | 5 | F-1106 |
+| 147 | F-407 | Tap-the-receipt painter assignment | painter view | M | 8 | F-401, F-502 |
+| 148 | F-404 | Item memory and shared-item defaults | item memory | S | 6 | F-401 |
+| 149 | F-408 | Delivery and ride e-receipt splitter | e-receipt templates | M | 8 | F-502, F-509 |
+| 150 | F-510 | Paste or share text into drafts | text-to-draft parser | M | 7 | F-507 |
+| 151 | F-1804 | Accessible portion editor and spoken remaining | portion chip a11y | S | 7 | F-401 |
+| 152 | F-1602 | PIN recovery kit | PIN recovery | S | 6 | F-1601 |
+| 153 | F-1307 | Receivables ageing and net position | receivables panel | S | 6 | F-1301 |
+| 154 | F-611 | Pinned group note and payment-handle directory | pinned note + handles directory | S | 5 | F-1106 |
 
 ### Batch 19: Households II and family
 
@@ -3510,14 +3783,14 @@ Dependents, loans, cards and the native bridge.
 
 | # | ID | Feature | Area | Effort | Impact | Deps |
 |---|---|---|---|---|---|---|
-| 141 | F-608 | Dependents: kids, pets and parents who never owe | dependents | M | 8 | F-607 |
-| 142 | F-814 | Presence-aware category rules | presence category rules | M | 7 | F-614, F-609 |
-| 143 | F-905 | IOU loans and EMI splits | loans | M | 7 | F-301 |
-| 144 | F-613 | Safe member removal and drop-out re-split wizard | member removal wizard | M | 7 | F-1113 |
-| 145 | F-1206 | Ledger fingerprint and balance code | balance code | M | 6 | F-103 |
-| 146 | F-1703 | Card customization | card customization | L | 7 | F-1701 |
-| 147 | F-1904 | Extension data bridge | extension data bridge | M | 7 | - |
-| 148 | F-1112 | Settle-up day for the group | settle-up day | S | 7 | F-1907 |
+| 155 | F-608 | Dependents: kids, pets and parents who never owe | dependents | M | 8 | F-607 |
+| 156 | F-814 | Presence-aware category rules | presence category rules | M | 7 | F-614, F-609 |
+| 157 | F-905 | IOU loans and EMI splits | loans | M | 7 | F-301 |
+| 158 | F-613 | Safe member removal and drop-out re-split wizard | member removal wizard | M | 7 | F-1113 |
+| 159 | F-1206 | Ledger fingerprint and balance code | balance code | M | 6 | F-103 |
+| 160 | F-1703 | Card customization | card customization | L | 7 | F-1701 |
+| 161 | F-1904 | Extension data bridge | extension data bridge | M | 7 | - |
+| 162 | F-1112 | Settle-up day for the group | settle-up day | S | 7 | F-1907 |
 
 ### Batch 20: Organise and export
 
@@ -3525,14 +3798,14 @@ Tags, bulk edit, views, PWA.
 
 | # | ID | Feature | Area | Effort | Impact | Deps |
 |---|---|---|---|---|---|---|
-| 149 | F-1404 | Tags and occasion tags | tags | M | 7 | F-301 |
-| 150 | F-1405 | Bulk select and edit | bulk select | M | 8 | F-301 |
-| 151 | F-1403 | Saved views | saved views | S | 6 | F-1401 |
-| 152 | F-1308 | Subscriptions dashboard and 30-day forecast | subscriptions dashboard | S | 6 | F-306 |
-| 153 | F-517 | Recurring pattern detection and price-change alerts | recurring pattern detection | S | 7 | F-306 |
-| 154 | F-2004 | Power exports | exports | M | 7 | F-1302 |
-| 155 | F-221 | Pin and reorder friends and groups | list pinning | S | 5 | F-206 |
-| 156 | F-610 | Per-group permissions (local) | group permissions | M | 8 | F-603 |
+| 163 | F-1404 | Tags and occasion tags | tags | M | 7 | F-301 |
+| 164 | F-1405 | Bulk select and edit | bulk select | M | 8 | F-301 |
+| 165 | F-1403 | Saved views | saved views | S | 6 | F-1401 |
+| 166 | F-1308 | Subscriptions dashboard and 30-day forecast | subscriptions dashboard | S | 6 | F-306 |
+| 167 | F-517 | Recurring pattern detection and price-change alerts | recurring pattern detection | S | 7 | F-306 |
+| 168 | F-2004 | Power exports | exports | M | 7 | F-2007, F-1302 |
+| 169 | F-221 | Pin and reorder friends and groups | list pinning | S | 5 | F-206 |
+| 170 | F-610 | Per-group permissions (local) | group permissions | M | 8 | F-603 |
 
 ### Batch 21: Automation and widgets
 
@@ -3540,14 +3813,14 @@ Rules engine, search operators, widgets.
 
 | # | ID | Feature | Area | Effort | Impact | Deps |
 |---|---|---|---|---|---|---|
-| 157 | F-516 | Automation rules engine | rules engine | M | 7 | F-305, F-503, F-1404 |
-| 158 | F-1402 | Advanced search operators | search operators | M | 7 | F-1401 |
-| 159 | F-1505 | Share privacy presets | share privacy presets | S | 6 | F-1501 |
-| 160 | F-1905 | Home and lock-screen widgets | widgets | L | 8 | F-1904 |
-| 161 | F-806 | Security deposit ledger | deposit ledger | M | 8 | F-105, F-312 |
-| 162 | F-2002 | Encrypted and automatic backups | encrypted backups | M | 8 | F-2001, F-1907 |
-| 163 | F-1702 | Black-and-white theme and background overrides | B&W theme | S | 5 | F-1701 |
-| 164 | F-219 | Contextual tips and feature discovery | tips registry | S | 6 | F-211, F-215 |
+| 171 | F-516 | Automation rules engine | rules engine | M | 7 | F-305, F-503, F-1404 |
+| 172 | F-1402 | Advanced search operators | search operators | M | 7 | F-1401 |
+| 173 | F-1505 | Share privacy presets | share privacy presets | S | 6 | F-1501 |
+| 174 | F-1905 | Home and lock-screen widgets | widgets | L | 8 | F-1904 |
+| 175 | F-806 | Security deposit ledger | deposit ledger | M | 8 | F-105, F-312 |
+| 176 | F-2002 | Encrypted and automatic backups | encrypted backups | M | 8 | F-2001, F-1907 |
+| 177 | F-1702 | Black-and-white theme and background overrides | B&W theme | S | 5 | F-1701 |
+| 178 | F-219 | Contextual tips and feature discovery | tips registry | S | 6 | F-211, F-215 |
 
 ### Batch 22: Sharing and links
 
@@ -3555,14 +3828,14 @@ Serverless balance link, PDF, intents.
 
 | # | ID | Feature | Area | Effort | Impact | Deps |
 |---|---|---|---|---|---|---|
-| 165 | F-1506 | Serverless balance link | balance link page | M | 9 | F-1505, F-1901 |
-| 166 | F-1503 | Trip summary PDF | trip PDF | M | 6 | F-1101 |
-| 167 | F-511 | Payment-screenshot split (RRN-aware) | payment screenshot parser | M | 7 | F-502, F-1106, F-509 |
-| 168 | F-1906 | App Intents, Siri, Shortcuts and Android App Actions | App Intents | L | 8 | F-1904, F-503 |
-| 169 | F-809 | Shared shopping list to itemized expense | shopping list | M | 7 | F-401, F-609 |
-| 170 | F-2003 | Splitwise importer | Splitwise importer | M | 7 | F-504 |
-| 171 | F-1710 | Tabular numerals and font option | font + tabular nums | S | 6 | - |
-| 172 | F-709 | Road trip: fuel and distance split | distance split | S | 5 | F-302, F-617 |
+| 179 | F-1506 | Serverless balance link | balance link page | M | 9 | F-1505, F-1901 |
+| 180 | F-1503 | Trip summary PDF | trip PDF | M | 6 | F-1101 |
+| 181 | F-511 | Payment-screenshot split (RRN-aware) | payment screenshot parser | M | 7 | F-502, F-1106, F-509 |
+| 182 | F-1906 | App Intents, Siri, Shortcuts and Android App Actions | App Intents | L | 8 | F-1904, F-503 |
+| 183 | F-809 | Shared shopping list to itemized expense | shopping list | M | 7 | F-401, F-609 |
+| 184 | F-2003 | Splitwise importer | Splitwise importer | M | 7 | F-504 |
+| 185 | F-1710 | Tabular numerals and font option | font + tabular nums | S | 6 | - |
+| 186 | F-709 | Road trip: fuel and distance split | distance split | S | 5 | F-302, F-617 |
 
 ### Batch 23: Statements and personal views
 
@@ -3570,14 +3843,14 @@ PDF-based outputs and privacy.
 
 | # | ID | Feature | Area | Effort | Impact | Deps |
 |---|---|---|---|---|---|---|
-| 173 | F-1116 | Settlement statement | settlement statement | S | 5 | F-1503 |
-| 174 | F-910 | Year-end tax pack and cost of living | tax pack | M | 6 | F-1302, F-1503 |
-| 175 | F-1310 | Reimbursable and work expense claims | reimbursable claims | M | 6 | F-1302, F-1503 |
-| 176 | F-1504 | Trip recap story and Year in Review | recap story | M | 6 | F-1502, F-1302 |
-| 177 | F-1410 | Private overlay and private notes | private overlay | M | 6 | F-301 |
-| 178 | F-1604 | App-switcher privacy and screenshot blocking | app-switcher privacy | S | 6 | - |
-| 179 | F-1908 | Home-screen icon quick actions | icon quick actions | S | 6 | - |
-| 180 | F-816 | Daily quantity log: milk, tiffin and water cans | quantity log | S | 5 | F-306 |
+| 187 | F-1116 | Settlement statement | settlement statement | S | 5 | F-1503 |
+| 188 | F-910 | Year-end tax pack and cost of living | tax pack | M | 6 | F-1302, F-1503 |
+| 189 | F-1310 | Reimbursable and work expense claims | reimbursable claims | M | 6 | F-1302, F-1503 |
+| 190 | F-1504 | Trip recap story and Year in Review | recap story | M | 6 | F-1502, F-1302 |
+| 191 | F-1410 | Private overlay and private notes | private overlay | M | 6 | F-301 |
+| 192 | F-1604 | App-switcher privacy and screenshot blocking | app-switcher privacy | S | 6 | - |
+| 193 | F-1908 | Home-screen icon quick actions | icon quick actions | S | 6 | - |
+| 194 | F-816 | Daily quantity log: milk, tiffin and water cans | quantity log | S | 5 | F-306 |
 
 ### Batch 24: Trip extras
 
@@ -3585,14 +3858,14 @@ Timeline, deposits, tickets, income.
 
 | # | ID | Feature | Area | Effort | Impact | Deps |
 |---|---|---|---|---|---|---|
-| 181 | F-703 | Trip dashboard and day-by-day timeline with budget pace | trip timeline | M | 7 | F-1304, F-704 |
-| 182 | F-707 | Pre-trip bookings and refundable deposits | refundable deposits | M | 7 | F-303, F-705 |
-| 183 | F-409 | Ticket split with partial cancellation | ticket split | M | 6 | F-303, F-509 |
-| 184 | F-520 | Trip auto-detect from spending clusters | trip auto-detect | S | 6 | F-1405 |
-| 185 | F-1909 | Quick add from Control Center, Action Button and Quick Settings | Control Center / QS tile | M | 7 | F-1906 |
-| 186 | F-1806 | Increase-contrast mode | increase contrast | M | 6 | - |
-| 187 | F-304 | Money-in entries (group income) | money-in entries | S | 5 | F-301 |
-| 188 | F-810 | Shared asset register with buyout | asset register | M | 6 | F-301 |
+| 195 | F-703 | Trip dashboard and day-by-day timeline with budget pace | trip timeline | M | 7 | F-1304, F-704 |
+| 196 | F-707 | Pre-trip bookings and refundable deposits | refundable deposits | M | 7 | F-303, F-705 |
+| 197 | F-409 | Ticket split with partial cancellation | ticket split | M | 6 | F-303, F-509 |
+| 198 | F-520 | Trip auto-detect from spending clusters | trip auto-detect | S | 6 | F-1405 |
+| 199 | F-1909 | Quick add from Control Center, Action Button and Quick Settings | Control Center / QS tile | M | 7 | F-1906 |
+| 200 | F-1806 | Increase-contrast mode | increase contrast | M | 6 | - |
+| 201 | F-304 | Money-in entries (group income) | money-in entries | S | 5 | F-301 |
+| 202 | F-810 | Shared asset register with buyout | asset register | M | 6 | F-301 |
 
 ### Batch 25: Home III
 
@@ -3600,14 +3873,14 @@ Flat wizard, move-out and utilities.
 
 | # | ID | Feature | Area | Effort | Impact | Deps |
 |---|---|---|---|---|---|---|
-| 189 | F-801 | Flat setup wizard | flat setup wizard | M | 8 | F-606, F-306, F-609, F-802 |
-| 190 | F-805 | Move-out checkout wizard | move-out wizard | L | 9 | F-804, F-806, F-810, F-613 |
-| 191 | F-811 | Metered utility split | metered split | M | 6 | F-609 |
-| 192 | F-812 | Household staff payroll | staff payroll | M | 6 | F-306 |
-| 193 | F-518 | Utility bill OCR | utility bill OCR | M | 6 | F-502, F-306 |
-| 194 | F-1309 | Custom report builder | report builder | L | 6 | F-1303, F-1703 |
-| 195 | F-1813 | RTL done properly | RTL | M | 6 | - |
-| 196 | F-519 | Booking confirmation to expense with dates | booking confirmation parser | L | 6 | F-509, F-702 |
+| 203 | F-801 | Flat setup wizard | flat setup wizard | M | 8 | F-606, F-306, F-609, F-802 |
+| 204 | F-805 | Move-out checkout wizard | move-out wizard | L | 9 | F-804, F-806, F-810, F-613 |
+| 205 | F-811 | Metered utility split | metered split | M | 6 | F-609 |
+| 206 | F-812 | Household staff payroll | staff payroll | M | 6 | F-306 |
+| 207 | F-518 | Utility bill OCR | utility bill OCR | M | 6 | F-502, F-306 |
+| 208 | F-1309 | Custom report builder | report builder | L | 6 | F-1303, F-1703 |
+| 209 | F-1813 | RTL done properly | RTL | M | 6 | - |
+| 210 | F-519 | Booking confirmation to expense with dates | booking confirmation parser | L | 6 | F-509, F-702 |
 
 ### Batch 26: Family and events
 
@@ -3615,14 +3888,14 @@ Goals, allowance, co-parenting, weddings.
 
 | # | ID | Feature | Area | Effort | Impact | Deps |
 |---|---|---|---|---|---|---|
-| 197 | F-904 | Shared goals and savings pots | goals | M | 6 | F-105 |
-| 198 | F-906 | Kids' allowance and pocket-money ledger | allowance | M | 6 | F-608, F-306 |
-| 199 | F-907 | Co-parenting ledger | co-parenting | L | 6 | F-606, F-609, F-1204 |
-| 200 | F-909 | Wedding and event mode | wedding mode | L | 6 | F-606, F-607, F-1304 |
-| 201 | F-908 | Shagun / gift register | gift register | M | 5 | F-301 |
-| 202 | F-1311 | Payment accounts and reconciliation | payment accounts | M | 6 | F-1302 |
-| 203 | F-1910 | Live Activity for a trip day | Live Activity | L | 6 | F-1904, F-703 |
-| 204 | F-1913 | Store review prompt at happy moments | review prompt | S | 3 | F-1208 |
+| 211 | F-904 | Shared goals and savings pots | goals | M | 6 | F-105 |
+| 212 | F-906 | Kids' allowance and pocket-money ledger | allowance | M | 6 | F-608, F-306 |
+| 213 | F-907 | Co-parenting ledger | co-parenting | L | 6 | F-606, F-609, F-1204 |
+| 214 | F-909 | Wedding and event mode | wedding mode | L | 6 | F-606, F-607, F-1304 |
+| 215 | F-908 | Shagun / gift register | gift register | M | 5 | F-301 |
+| 216 | F-1311 | Payment accounts and reconciliation | payment accounts | M | 6 | F-1302 |
+| 217 | F-1910 | Live Activity for a trip day | Live Activity | L | 6 | F-1904, F-703 |
+| 218 | F-1913 | Store review prompt at happy moments | review prompt | S | 3 | F-1208 |
 
 ### Batch 27: Capture everywhere
 
@@ -3630,14 +3903,14 @@ Voice, notifications, Wallet, statements.
 
 | # | ID | Feature | Area | Effort | Impact | Deps |
 |---|---|---|---|---|---|---|
-| 205 | F-508 | Push-to-talk voice add | voice add | M | 7 | F-507 |
-| 206 | F-512 | Payment notification and bank SMS capture (Android, opt-in) | Android capture service | L | 8 | F-510, F-1106 |
-| 207 | F-513 | Wallet tap to split draft (iOS Shortcuts) | Wallet intent | M | 7 | F-1906 |
-| 208 | F-514 | Merchant dictionary and name cleanup | merchant dictionary | M | 6 | F-307 |
-| 209 | F-521 | Composer suggestions from clipboard and latest screenshot | clipboard chip | S | 6 | F-507, F-502 |
-| 210 | F-522 | Statement and CSV import with column mapper | statement importer | L | 8 | F-503, F-504 |
-| 211 | F-1409 | Full-text receipt search | receipt FTS | S | 6 | F-502, F-1401 |
-| 212 | F-315 | Optional time of day on expenses | expense time field | S | 4 | F-301 |
+| 219 | F-508 | Push-to-talk voice add | voice add | M | 7 | F-507 |
+| 220 | F-512 | Payment notification and bank SMS capture (Android, opt-in) | Android capture service | L | 8 | F-510, F-1106 |
+| 221 | F-513 | Wallet tap to split draft (iOS Shortcuts) | Wallet intent | M | 7 | F-1906 |
+| 222 | F-514 | Merchant dictionary and name cleanup | merchant dictionary | M | 6 | F-307 |
+| 223 | F-521 | Composer suggestions from clipboard and latest screenshot | clipboard chip | S | 6 | F-507, F-502 |
+| 224 | F-522 | Statement and CSV import with column mapper | statement importer | L | 8 | F-503, F-504 |
+| 225 | F-1409 | Full-text receipt search | receipt FTS | S | 6 | F-502, F-1401 |
+| 226 | F-315 | Optional time of day on expenses | expense time field | S | 4 | F-301 |
 
 ### Batch 28: Accessibility and locale
 
@@ -3645,14 +3918,14 @@ Inclusive by default.
 
 | # | ID | Feature | Area | Effort | Impact | Deps |
 |---|---|---|---|---|---|---|
-| 213 | F-1807 | Undo toasts that wait for assistive tech | undo toasts | S | 6 | - |
-| 214 | F-1808 | Contrast-guarded accent and category colours | contrast guard | S | 5 | F-1701 |
-| 215 | F-1812 | Locale-correct plurals, dates, sorting and search | plurals and collation | S | 6 | - |
-| 216 | F-1814 | Self-describing charts | chart summaries | M | 6 | F-1301 |
-| 217 | F-1811 | Hinglish and more Indian languages | more languages | L | 7 | F-1810 |
-| 218 | F-1809 | Read my balances aloud | read aloud | S | 4 | - |
-| 219 | F-1705 | Haptic vocabulary | haptic table | S | 5 | - |
-| 220 | F-1815 | Accessibility CI and release audit | axe + a11y lint in CI | M | 7 | A-035 |
+| 227 | F-1807 | Undo toasts that wait for assistive tech | undo toasts | S | 6 | - |
+| 228 | F-1808 | Contrast-guarded accent and category colours | contrast guard | S | 5 | F-1701 |
+| 229 | F-1812 | Locale-correct plurals, dates, sorting and search | plurals and collation | S | 6 | - |
+| 230 | F-1814 | Self-describing charts | chart summaries | M | 6 | F-1301 |
+| 231 | F-1811 | Hinglish and more Indian languages | more languages | L | 7 | F-1810 |
+| 232 | F-1809 | Read my balances aloud | read aloud | S | 4 | - |
+| 233 | F-1705 | Haptic vocabulary | haptic table | S | 5 | - |
+| 234 | F-1815 | Accessibility CI and release audit | axe + a11y lint in CI | M | 7 | A-035 |
 
 ### Batch 29: Customization and polish
 
@@ -3660,14 +3933,14 @@ Optional modes and personality.
 
 | # | ID | Feature | Area | Effort | Impact | Deps |
 |---|---|---|---|---|---|---|
-| 221 | F-212 | Simple mode | simple mode | M | 6 | F-209 |
-| 222 | F-213 | Handedness and reach | handedness | S | 4 | F-201 |
-| 223 | F-1706 | Living cat mascot for sync states | cat mascot | M | 5 | F-1704 |
-| 224 | F-1707 | Alternate app icons | alternate icons | M | 4 | - |
-| 225 | F-1708 | Balance wording style per group | balance wording | S | 5 | - |
-| 226 | F-1709 | Lite mode | lite mode | M | 6 | - |
-| 227 | F-217 | Tablet, landscape and foldable layouts | two-pane layouts | M | 6 | F-201, F-204 |
-| 228 | F-218 | Sample group to explore | sample namespace | S | 5 | F-603, F-210 |
+| 235 | F-212 | Simple mode | simple mode | M | 6 | F-209 |
+| 236 | F-213 | Handedness and reach | handedness | S | 4 | F-201 |
+| 237 | F-1706 | Living cat mascot for sync states | cat mascot | M | 5 | F-1704 |
+| 238 | F-1707 | Alternate app icons | alternate icons | M | 4 | - |
+| 239 | F-1708 | Balance wording style per group | balance wording | S | 5 | - |
+| 240 | F-1709 | Lite mode | lite mode | M | 6 | - |
+| 241 | F-217 | Tablet, landscape and foldable layouts | two-pane layouts | M | 6 | F-201, F-204 |
+| 242 | F-218 | Sample group to explore | sample namespace | S | 5 | F-603, F-210 |
 
 ### Batch 30: Power user and privacy
 
@@ -3675,14 +3948,14 @@ Keyboard, grid, fields, privacy extras.
 
 | # | ID | Feature | Area | Effort | Impact | Deps |
 |---|---|---|---|---|---|---|
-| 229 | F-1407 | Command palette and keyboard shortcuts | command palette | M | 6 | F-1401 |
-| 230 | F-1408 | Spreadsheet grid view (web) | grid view | L | 5 | F-1405, F-522 |
-| 231 | F-1406 | Category hierarchy and per-group sets | category hierarchy | M | 5 | F-1701 |
-| 232 | F-1411 | Custom fields | custom fields | M | 4 | F-301 |
-| 233 | F-311 | Amount typo and anomaly guard | composer anomaly guard | S | 6 | F-301 |
-| 234 | F-1606 | Hand-off mode | hand-off mode | S | 6 | F-1601 |
-| 235 | F-1609 | Hidden personal expenses and groups | hidden items | S | 5 | F-1601 |
-| 236 | F-1608 | Receipt privacy: EXIF strip and auto-redact | receipt redaction | M | 6 | F-502 |
+| 243 | F-1407 | Command palette and keyboard shortcuts | command palette | M | 6 | F-1401 |
+| 244 | F-1408 | Spreadsheet grid view (web) | grid view | L | 5 | F-1405, F-522 |
+| 245 | F-1406 | Category hierarchy and per-group sets | category hierarchy | M | 5 | F-1701 |
+| 246 | F-1411 | Custom fields | custom fields | M | 4 | F-301 |
+| 247 | F-311 | Amount typo and anomaly guard | composer anomaly guard | S | 6 | F-301 |
+| 248 | F-1606 | Hand-off mode | hand-off mode | S | 6 | F-1601 |
+| 249 | F-1609 | Hidden personal expenses and groups | hidden items | S | 5 | F-1601 |
+| 250 | F-1608 | Receipt privacy: EXIF strip and auto-redact | receipt redaction | M | 6 | F-502 |
 
 ### Batch 31: Long tail
 
@@ -3690,14 +3963,14 @@ Low impact-per-effort items.
 
 | # | ID | Feature | Area | Effort | Impact | Deps |
 |---|---|---|---|---|---|---|
-| 237 | F-708 | Offline phone-to-phone exchange (QR and file) | QR / file exchange | XL | 7 | F-107 |
-| 238 | F-1115 | Transit routing with consent | transit routing | M | 5 | F-1101 |
-| 239 | F-1207 | Reactions on activity items (local) | local reactions | S | 4 | F-1201 |
-| 240 | F-813 | Chore-cover payouts | chore cover pay | M | 4 | F-301 |
-| 241 | F-1610 | Erase this device | erase device | S | 6 | F-2001 |
-| 242 | F-1911 | Spotlight and launcher search indexing | Spotlight indexing | M | 5 | F-1906 |
-| 243 | F-313 | Location | location | M | 4 | F-301 |
-| 244 | F-1912 | Apple Watch and Wear OS companion | watch companion | XL | 4 | F-1904, F-503 |
+| 251 | F-708 | Offline phone-to-phone exchange (QR and file) | QR / file exchange | XL | 7 | F-107 |
+| 252 | F-1115 | Transit routing with consent | transit routing | M | 5 | F-1101 |
+| 253 | F-1207 | Reactions on activity items (local) | local reactions | S | 4 | F-1201 |
+| 254 | F-813 | Chore-cover payouts | chore cover pay | M | 4 | F-301 |
+| 255 | F-1610 | Erase this device | erase device | S | 6 | F-2001 |
+| 256 | F-1911 | Spotlight and launcher search indexing | Spotlight indexing | M | 5 | F-1906 |
+| 257 | F-313 | Location | location | M | 4 | F-301 |
+| 258 | F-1912 | Apple Watch and Wear OS companion | watch companion | XL | 4 | F-1904, F-503 |
 
 ### Backend (after Backend foundation)
 
@@ -3711,14 +3984,15 @@ Sequential inside: F-2101 -> F-2102 -> F-2103, then the rest in parallel.
 
 | # | ID | Feature | Area | Effort | Impact | Deps |
 |---|---|---|---|---|---|---|
-| 245 | F-2101 | API service | apps/api | L | 10 | - |
-| 246 | F-2110 | Production operations | deploy, backups, alerts, rate limits | M | 9 | F-2101 |
-| 247 | F-2102 | Sign-in and sessions | auth routes + client credential store | L | 10 | F-2101 |
-| 248 | F-2103 | Sync push/pull and conflicts | sync routes + client sync loop | XL | 10 | F-2102, F-103 |
-| 249 | F-2104 | Move local data into an account | migration flow | M | 9 | F-2103 |
-| 250 | F-2105 | Invites | invites | M | 9 | F-2103 |
-| 251 | F-2107 | Attachment upload | attachments service | M | 8 | F-2103, F-312 |
-| 252 | F-2108 | Server permissions and history visibility | authorization layer | M | 8 | F-2103, F-610 |
+| 259 | F-2101 | API service | apps/api | L | 10 | - |
+| 260 | F-2110 | Production operations | deploy, backups, alerts, rate limits | M | 9 | F-2101 |
+| 261 | F-2102 | Sign-in and sessions | auth routes + client credential store | L | 10 | F-2101 |
+| 262 | F-2103 | Sync push/pull and conflicts | sync routes + client sync loop | XL | 10 | F-2102, F-103 |
+| 263 | F-2104 | Move local data into an account | migration flow | M | 9 | F-2103 |
+| 264 | F-2105 | Invites and invite links | invites | M | 9 | F-2103 |
+| 265 | F-2111 | Account directory and friend requests | directory + friend requests API | M | 9 | F-2102, F-2103 |
+| 266 | F-2107 | Attachment upload | attachments service | M | 8 | F-2103, F-312 |
+| 267 | F-2108 | Server permissions and history visibility | authorization layer | M | 8 | F-2103, F-610 |
 
 ### Backend batch 2: Shared basics
 
@@ -3726,14 +4000,15 @@ First things people feel once sync exists.
 
 | # | ID | Feature | Area | Effort | Impact | Deps |
 |---|---|---|---|---|---|---|
-| 253 | F-2109 | Needs attention: conflicts and refused changes | conflict resolution screen | M | 9 | F-2103 |
-| 254 | F-2106 | Link a private friend to a real account | person linking | M | 8 | F-2105 |
-| 255 | F-2201 | Push notifications with actions | push + NSE | L | 8 | F-2103 |
-| 256 | F-2207 | Two-sided payment confirmation | payment claims | M | 8 | F-2103 |
-| 257 | F-2203 | Hardened read-only balance link | balance link service | M | 7 | F-2103 |
-| 258 | F-2204 | Personal guest links | guest links | L | 9 | F-2105, F-2108 |
-| 259 | F-2302 | Server model with scoped tools (flagged off until F-2303) | AI model adapter | L | 9 | F-2103, F-2301 |
-| 260 | F-2212 | Devices, sessions and lost-phone wipe | devices screen | M | 7 | F-2102, F-2103 |
+| 268 | F-2109 | Needs attention: conflicts and refused changes | conflict resolution screen | M | 9 | F-2103 |
+| 269 | F-2106 | Link a private friend to a real account | person linking | M | 8 | F-2105 |
+| 270 | F-2201 | Push notifications with actions | push + NSE | L | 8 | F-2103 |
+| 271 | F-2207 | Two-sided payment confirmation | payment claims | M | 8 | F-2103 |
+| 272 | F-2203 | Hardened read-only balance link | balance link service | M | 7 | F-2103 |
+| 273 | F-2204 | Personal guest links | guest links | L | 9 | F-2105, F-2108 |
+| 274 | F-2302 | Server model with scoped tools (flagged off until F-2303) | AI model adapter | L | 9 | F-2103, F-2301 |
+| 275 | F-2212 | Devices, sessions and lost-phone wipe | devices screen | M | 7 | F-2102, F-2103 |
+| 276 | F-2112 | Feedback endpoint | feedback API | S | 5 | F-2103, F-226 |
 
 ### Backend batch 3: Collaboration
 
@@ -3741,14 +4016,14 @@ Built on push, guest links and the model.
 
 | # | ID | Feature | Area | Effort | Impact | Deps |
 |---|---|---|---|---|---|---|
-| 261 | F-2202 | Notification digest, mute and "only if it affects me" | notification digest | M | 7 | F-2201 |
-| 262 | F-2208 | Shared comments, disputes and comments 2.0 | shared comments | M | 7 | F-2201, F-1204 |
-| 263 | F-2205 | Guest-to-member upgrade | guest upgrade | M | 7 | F-2204, F-2106 |
-| 264 | F-2206 | Live table mode | live table | L | 8 | F-2204, F-401 |
-| 265 | F-2303 | AI privacy controls | AI privacy | M | 6 | F-2302 |
-| 266 | F-2304 | Cloud OCR re-read | cloud OCR | M | 7 | F-2302, F-502 |
-| 267 | F-2216 | Rich link previews | link previews | S | 6 | F-2105 |
-| 268 | F-2213 | Delete account with preview | account deletion | M | 7 | F-2102, F-2103, F-2108 |
+| 277 | F-2202 | Notification digest, mute and "only if it affects me" | notification digest | M | 7 | F-2201 |
+| 278 | F-2208 | Shared comments, disputes and comments 2.0 | shared comments | M | 7 | F-2201, F-1204, F-1210 |
+| 279 | F-2205 | Guest-to-member upgrade | guest upgrade | M | 7 | F-2204, F-2106 |
+| 280 | F-2206 | Live table mode | live table | L | 8 | F-2204, F-401 |
+| 281 | F-2303 | AI privacy controls | AI privacy | M | 6 | F-2302 |
+| 282 | F-2304 | Cloud OCR re-read | cloud OCR | M | 7 | F-2302, F-502 |
+| 283 | F-2216 | Rich link previews | link previews | S | 6 | F-2105 |
+| 284 | F-2213 | Delete account with preview | account deletion | M | 7 | F-2102, F-2103, F-2108 |
 
 ### Backend batch 4: Reach
 
@@ -3756,14 +4031,14 @@ Reminders, pools and background work.
 
 | # | ID | Feature | Area | Effort | Impact | Deps |
 |---|---|---|---|---|---|---|
-| 269 | F-2210 | Automatic reminders (opt-in) | automatic reminders | M | 6 | F-2201, F-1111 |
-| 270 | F-2211 | Gift pool / chip-in link | gift pool | M | 7 | F-2204, F-1109 |
-| 271 | F-2209 | Shared reactions and "Say thanks" | shared reactions | S | 5 | F-2103, F-1207 |
-| 272 | F-2214 | Background sync and widget refresh | background sync | M | 6 | F-2103, F-1904 |
-| 273 | F-2222 | Roaming data saver | roaming saver | S | 6 | F-2107 |
-| 274 | F-2305 | AI-improved quick add | AI quick add | S | 6 | F-2302, F-507 |
-| 275 | F-2215 | Passkey sign-in | passkeys | M | 5 | F-2102 |
-| 276 | F-2230 | Splitwise one-tap import via API | Splitwise OAuth importer | M | 7 | F-2003, F-2101 |
+| 285 | F-2210 | In-app and automatic reminders | automatic reminders | M | 6 | F-2201, F-1118, F-1111 |
+| 286 | F-2211 | Gift pool / chip-in link | gift pool | M | 7 | F-2204, F-1109 |
+| 287 | F-2209 | Shared reactions and "Say thanks" | shared reactions | S | 5 | F-2103, F-1207 |
+| 288 | F-2214 | Background sync and widget refresh | background sync | M | 6 | F-2103, F-1904 |
+| 289 | F-2222 | Roaming data saver | roaming saver | S | 6 | F-2107 |
+| 290 | F-2305 | AI-improved quick add | AI quick add | S | 6 | F-2302, F-507 |
+| 291 | F-2215 | Passkey sign-in | passkeys | M | 5 | F-2102 |
+| 292 | F-2230 | Splitwise one-tap import via API | Splitwise OAuth importer | M | 7 | F-2003, F-2101 |
 
 ### Backend batch 5: Advanced shared
 
@@ -3771,13 +4046,13 @@ Lower impact-per-effort shared features.
 
 | # | ID | Feature | Area | Effort | Impact | Deps |
 |---|---|---|---|---|---|---|
-| 277 | F-2219 | Email-forward receipts | email inbound | L | 7 | F-2103, F-503 |
-| 278 | F-2218 | App Clip for guest links and invites | App Clip | L | 6 | F-2204 |
-| 279 | F-2221 | Surprise expenses | surprise expenses | M | 6 | F-2103, F-2108 |
-| 280 | F-2220 | Big-purchase proposals | proposals | M | 5 | F-2103 |
-| 281 | F-2217 | "Friends already on Splito" matching | contact matching | M | 5 | F-2106, F-602 |
-| 282 | F-2223 | Send money via provider (sandbox) | provider sandbox | L | 5 | F-2103 |
-| 283 | F-2229 | Account switcher | account switcher | M | 4 | F-2102, F-2103 |
+| 293 | F-2219 | Email-forward receipts | email inbound | L | 7 | F-2103, F-503 |
+| 294 | F-2218 | App Clip for guest links and invites | App Clip | L | 6 | F-2204 |
+| 295 | F-2221 | Surprise expenses | surprise expenses | M | 6 | F-2103, F-2108 |
+| 296 | F-2220 | Big-purchase proposals | proposals | M | 5 | F-2103 |
+| 297 | F-2217 | "Friends already on Splito" matching | contact matching | M | 5 | F-2106, F-602 |
+| 298 | F-2223 | Send money via provider (sandbox) | provider sandbox | L | 5 | F-2103 |
+| 299 | F-2229 | Account switcher | account switcher | M | 4 | F-2102, F-2103 |
 
 ### Backend batch 6: Extras
 
@@ -3785,12 +4060,12 @@ Lowest priority.
 
 | # | ID | Feature | Area | Effort | Impact | Deps |
 |---|---|---|---|---|---|---|
-| 284 | F-2224 | Cosmetic unlocks | cosmetics | M | 5 | F-2105, F-1707 |
-| 285 | F-2225 | Apple / Google Wallet pass | Wallet pass | L | 4 | F-2105 |
-| 286 | F-2226 | iMessage app extension | iMessage extension | L | 3 | F-2218 |
-| 287 | F-2227 | End-to-end encrypted groups (opt-in) | E2E groups | XL | 5 | F-2103 |
-| 288 | F-2231 | Bank transaction feed (opt-in) | bank feed (needs provider) | XL | 6 | F-2103, F-522 |
-| 289 | F-2228 | Public API and webhooks | public API | L | 3 | F-2102, F-2108 |
+| 300 | F-2224 | Cosmetic unlocks | cosmetics | M | 5 | F-2105, F-1707 |
+| 301 | F-2225 | Apple / Google Wallet pass | Wallet pass | L | 4 | F-2105 |
+| 302 | F-2226 | iMessage app extension | iMessage extension | L | 3 | F-2218 |
+| 303 | F-2227 | End-to-end encrypted groups (opt-in) | E2E groups | XL | 5 | F-2103 |
+| 304 | F-2231 | Bank transaction feed (opt-in) | bank feed (needs provider) | XL | 6 | F-2103, F-522 |
+| 305 | F-2228 | Public API and webhooks | public API | L | 3 | F-2102, F-2108 |
 
 ## Main merges
 
