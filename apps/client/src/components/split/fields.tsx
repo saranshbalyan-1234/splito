@@ -29,10 +29,15 @@ export function PlainInput({
   style,
   ref,
   ...props
-}: TextInputProps & {style?: TextStyleProp['style']; ref?: React.Ref<React.ComponentRef<typeof TextInput>>}) {
+}: TextInputProps & {
+  style?: TextStyleProp['style']
+  ref?: React.Ref<React.ComponentRef<typeof TextInput>>
+}) {
   const t = useTheme()
   const {fonts} = useAlf()
-  const s: MutableTextStyle = {...flatten([a.text_md, t.atoms.text, web({outlineStyle: 'none'}), style])}
+  const s: MutableTextStyle = {
+    ...flatten([a.text_md, t.atoms.text, web({outlineStyle: 'none'}), style]),
+  }
   applyFonts(s, fonts.family)
   if (s.fontSize) s.fontSize = Math.round(s.fontSize * fonts.scaleMultiplier)
   return (
@@ -47,12 +52,28 @@ export function PlainInput({
 }
 
 /** Error line under a field, in plain words, with Bluesky's warning glyph. */
-export function FieldError({children, testID}: {children: React.ReactNode; testID?: string}) {
+export function FieldError({
+  children,
+  testID,
+}: {
+  children: React.ReactNode
+  testID?: string
+}) {
   const t = useTheme()
   return (
-    <View testID={testID} style={[a.flex_row, a.align_center, a.gap_xs, a.pt_xs]}>
+    <View
+      testID={testID}
+      style={[a.flex_row, a.align_center, a.gap_xs, a.pt_xs]}>
       <WarningIcon size="xs" fill={t.palette.negative_500} />
-      <Text style={[a.flex_1, a.text_sm, a.leading_snug, {color: t.palette.negative_500}]}>{children}</Text>
+      <Text
+        style={[
+          a.flex_1,
+          a.text_sm,
+          a.leading_snug,
+          {color: t.palette.negative_500},
+        ]}>
+        {children}
+      </Text>
     </View>
   )
 }
@@ -113,7 +134,8 @@ export function AmountField({
           color="secondary"
           onPress={onPressCurrency}
           style={[a.gap_xs]}>
-          <ButtonText style={[a.font_semi_bold]}>{`${symbol} ${currency}`}</ButtonText>
+          <ButtonText
+            style={[a.font_semi_bold]}>{`${symbol} ${currency}`}</ButtonText>
           <ButtonIcon icon={ChevronDownIcon} size="xs" />
         </Button>
         <PlainInput
@@ -128,22 +150,37 @@ export function AmountField({
           accessibilityHint={l`You can type a sum, like 1200 + 300`}
           inputMode="decimal"
           keyboardType="decimal-pad"
-          style={[a.flex_1, a.text_4xl, a.font_bold, {fontVariant: ['tabular-nums'], minWidth: 0, paddingVertical: 4}]}
+          style={[
+            a.flex_1,
+            a.text_4xl,
+            a.font_bold,
+            {fontVariant: ['tabular-nums'], minWidth: 0, paddingVertical: 4},
+          ]}
         />
       </View>
 
-      {errorText && (!isFocused || value.trim() === '' || !/[+\-−xX×*/÷]\s*$/.test(value)) ? (
+      {errorText &&
+      (!isFocused || value.trim() === '' || !/[+\-−xX×*/÷]\s*$/.test(value)) ? (
         <FieldError testID="amount-error">{errorText}</FieldError>
       ) : isExpression && result !== undefined ? (
         <View style={[a.flex_row, a.align_center, a.gap_sm, a.pt_xs]}>
-          <Text testID="amount-result" style={[a.text_md, a.font_semi_bold, t.atoms.text_contrast_medium, {fontVariant: ['tabular-nums']}]}>
+          <Text
+            testID="amount-result"
+            style={[
+              a.text_md,
+              a.font_semi_bold,
+              t.atoms.text_contrast_medium,
+              {fontVariant: ['tabular-nums']},
+            ]}>
             = {formatAmount(result, currency, locale)}
           </Text>
         </View>
       ) : null}
 
       {isFocused || value.trim() !== '' ? (
-        <View style={[a.flex_row, a.align_center, a.gap_sm, a.pt_md]} accessibilityLabel={l`Calculator`}>
+        <View
+          style={[a.flex_row, a.align_center, a.gap_sm, a.pt_md]}
+          accessibilityLabel={l`Calculator`}>
           {OPERATORS.map(op => (
             <Button
               key={op.key}
@@ -154,7 +191,9 @@ export function AmountField({
               shape="round"
               onPress={() => append(op.key)}
               style={[{width: 40, height: 40}]}>
-              <ButtonText style={[a.text_lg, a.font_semi_bold]}>{op.label}</ButtonText>
+              <ButtonText style={[a.text_lg, a.font_semi_bold]}>
+                {op.label}
+              </ButtonText>
             </Button>
           ))}
           <Button
@@ -164,7 +203,8 @@ export function AmountField({
             color="primary_subtle"
             disabled={!isExpression || result === undefined}
             onPress={() => {
-              if (result !== undefined) onChangeText(toDecimalString(result, scale))
+              if (result !== undefined)
+                onChangeText(toDecimalString(result, scale))
             }}
             style={[a.ml_auto]}>
             <ButtonText>
@@ -206,7 +246,10 @@ export function MoneyInput({
   return (
     <View style={{width}}>
       <TextField.Root isInvalid={isInvalid}>
-        <Text style={[a.z_20, a.text_md, t.atoms.text_contrast_medium, a.pl_xs]}>{symbol}</Text>
+        <Text
+          style={[a.z_20, a.text_md, t.atoms.text_contrast_medium, a.pl_xs]}>
+          {symbol}
+        </Text>
         <TextField.Input
           testID={testID}
           label={label}
@@ -283,14 +326,29 @@ export function DetailRow({
       label={`${label}: ${value}`}
       onPress={onPress}
       hoverStyle={t.atoms.bg_contrast_25}
-      style={[a.w_full, a.flex_row, a.align_center, a.gap_md, a.px_lg, a.rounded_0, a.justify_start, {minHeight: 52}]}>
+      style={[
+        a.w_full,
+        a.flex_row,
+        a.align_center,
+        a.gap_md,
+        a.px_lg,
+        a.rounded_0,
+        a.justify_start,
+        {minHeight: 52},
+      ]}>
       <Icon size="md" fill={t.atoms.text_contrast_medium.color} />
       <Text style={[a.text_md, a.font_medium]}>{label}</Text>
-      <View style={[a.flex_1, a.flex_row, a.align_center, a.justify_end, a.gap_sm]}>
+      <View
+        style={[a.flex_1, a.flex_row, a.align_center, a.justify_end, a.gap_sm]}>
         {accessory}
         <Text
           testID={testID ? `${testID}-value` : undefined}
-          style={[a.text_md, a.text_right, a.flex_shrink, valueColor ? {color: valueColor} : t.atoms.text_contrast_medium]}
+          style={[
+            a.text_md,
+            a.text_right,
+            a.flex_shrink,
+            valueColor ? {color: valueColor} : t.atoms.text_contrast_medium,
+          ]}
           numberOfLines={1}>
           {value}
         </Text>

@@ -14,7 +14,12 @@ import {PlusLarge_Stroke2_Corner0_Rounded as PlusIcon} from '#/components/icons/
 import {TimesLarge_Stroke2_Corner0_Rounded as XIcon} from '#/components/icons/Times'
 import {Text} from '#/components/Typography'
 import {FieldError, MoneyInput, PercentInput} from './fields'
-import {type ExpenseForm, type FormEvaluation, SPLIT_MODES, type SplitMode} from './form'
+import {
+  type ExpenseForm,
+  type FormEvaluation,
+  SPLIT_MODES,
+  type SplitMode,
+} from './form'
 import {MinusIcon} from './icons'
 import {useAvatarName, useDisplayName, useErrorText} from './shared'
 
@@ -62,27 +67,59 @@ export function SplitEditor({
   return (
     <View>
       <View style={[a.px_lg, a.pb_sm]}>
-        <SegmentedControl.Root
-          label={l`How to split`}
-          type="radio"
-          size="small"
-          scrollable={!gtMobile}
-          value={form.mode}
-          onChange={mode => update(f => (f.mode === mode ? f : {...f, mode}))}>
-          {SPLIT_MODES.map(mode => (
-            <SegmentedControl.Item key={mode} value={mode} label={labels[mode]} testID={`split-mode-${mode}`}>
-              <SegmentedControl.ItemText style={[a.text_sm]}>{labels[mode]}</SegmentedControl.ItemText>
-            </SegmentedControl.Item>
-          ))}
-        </SegmentedControl.Root>
-        <Text style={[a.text_sm, a.leading_snug, a.pt_sm, t.atoms.text_contrast_medium]}>{help[form.mode]}</Text>
+        {/* Phones: the modes scroll sideways edge to edge, so the row bleeds into the gutters. */}
+        <View style={[!gtMobile && {marginHorizontal: -16}]}>
+          <SegmentedControl.Root
+            label={l`How to split`}
+            type="radio"
+            size="small"
+            scrollable={!gtMobile}
+            style={[!gtMobile && a.mx_lg]}
+            value={form.mode}
+            onChange={mode =>
+              update(f => (f.mode === mode ? f : {...f, mode}))
+            }>
+            {SPLIT_MODES.map(mode => (
+              <SegmentedControl.Item
+                key={mode}
+                value={mode}
+                label={labels[mode]}
+                testID={`split-mode-${mode}`}>
+                <SegmentedControl.ItemText style={[a.text_sm]}>
+                  {labels[mode]}
+                </SegmentedControl.ItemText>
+              </SegmentedControl.Item>
+            ))}
+          </SegmentedControl.Root>
+        </View>
+        <Text
+          style={[
+            a.text_sm,
+            a.leading_snug,
+            a.pt_sm,
+            t.atoms.text_contrast_medium,
+          ]}>
+          {help[form.mode]}
+        </Text>
       </View>
       {form.mode === 'items' ? (
-        <ItemsEditor form={form} update={update} evaluation={evaluation} locale={locale} />
+        <ItemsEditor
+          form={form}
+          update={update}
+          evaluation={evaluation}
+          locale={locale}
+        />
       ) : (
         <View>
           {form.people.map(id => (
-            <SplitRow key={id} id={id} form={form} update={update} evaluation={evaluation} locale={locale} />
+            <SplitRow
+              key={id}
+              id={id}
+              form={form}
+              update={update}
+              evaluation={evaluation}
+              locale={locale}
+            />
           ))}
           <View style={[a.px_lg, a.pt_xs]}>
             <Button
@@ -132,10 +169,15 @@ function SplitRow({
         ? formatAmount(share, form.currency, locale)
         : form.mode === 'shares' && (form.shares[id] ?? 1) === 0
           ? l`Not splitting`
-          : '–'
+          : null
 
   const setExcluded = (isIncluded: boolean) =>
-    update(f => ({...f, excluded: isIncluded ? f.excluded.filter(p => p !== id) : [...f.excluded, id]}))
+    update(f => ({
+      ...f,
+      excluded: isIncluded
+        ? f.excluded.filter(p => p !== id)
+        : [...f.excluded, id],
+    }))
 
   const identity = (
     <>
@@ -144,17 +186,30 @@ function SplitRow({
         <Text style={[a.text_md, a.font_medium]} numberOfLines={1}>
           {name(id)}
         </Text>
-        <Text
-          testID={`share-${name(id)}`}
-          style={[a.text_sm, t.atoms.text_contrast_medium, {fontVariant: ['tabular-nums']}]}
-          numberOfLines={1}>
-          {shareText}
-        </Text>
+        {shareText && form.mode !== 'exact' ? (
+          <Text
+            testID={`share-${name(id)}`}
+            style={[
+              a.text_sm,
+              t.atoms.text_contrast_medium,
+              {fontVariant: ['tabular-nums']},
+            ]}
+            numberOfLines={1}>
+            {shareText}
+          </Text>
+        ) : null}
       </View>
     </>
   )
 
-  const rowStyle = [a.flex_row, a.align_center, a.gap_md, a.px_lg, a.py_sm, {minHeight: 60}]
+  const rowStyle = [
+    a.flex_row,
+    a.align_center,
+    a.gap_md,
+    a.px_lg,
+    a.py_sm,
+    {minHeight: 60},
+  ]
 
   if (form.mode === 'equal') {
     return (
@@ -167,7 +222,9 @@ function SplitRow({
         style={[...rowStyle, a.rounded_0]}>
         {({hovered}) => (
           <>
-            {hovered ? <View style={[a.absolute, a.inset_0, t.atoms.bg_contrast_25]} /> : null}
+            {hovered ? (
+              <View style={[a.absolute, a.inset_0, t.atoms.bg_contrast_25]} />
+            ) : null}
             {identity}
             <Toggle.Checkbox />
           </>
@@ -187,7 +244,9 @@ function SplitRow({
             currency={form.currency}
             value={form.exact[id] ?? ''}
             isInvalid={!!rowError}
-            onChangeText={v => update(f => ({...f, exact: {...f.exact, [id]: v}}))}
+            onChangeText={v =>
+              update(f => ({...f, exact: {...f.exact, [id]: v}}))
+            }
           />
         ) : form.mode === 'percent' ? (
           <PercentInput
@@ -195,14 +254,18 @@ function SplitRow({
             label={l`Percent for ${name(id)}`}
             value={form.percent[id] ?? ''}
             isInvalid={!!rowError}
-            onChangeText={v => update(f => ({...f, percent: {...f.percent, [id]: v}}))}
+            onChangeText={v =>
+              update(f => ({...f, percent: {...f.percent, [id]: v}}))
+            }
           />
         ) : form.mode === 'shares' ? (
           <Stepper
             testID={`split-shares-${name(id)}`}
             label={l`Shares for ${name(id)}`}
             value={form.shares[id] ?? 1}
-            onChange={v => update(f => ({...f, shares: {...f.shares, [id]: v}}))}
+            onChange={v =>
+              update(f => ({...f, shares: {...f.shares, [id]: v}}))
+            }
           />
         ) : (
           <View style={[a.flex_row, a.align_center, a.gap_sm]}>
@@ -215,10 +278,17 @@ function SplitRow({
                 isInvalid={!!rowError}
                 allowSign
                 width={120}
-                onChangeText={v => update(f => ({...f, adjust: {...f.adjust, [id]: v}}))}
+                onChangeText={v =>
+                  update(f => ({...f, adjust: {...f.adjust, [id]: v}}))
+                }
               />
             ) : null}
-            <Toggle.Item name={id} label={l`${name(id)} is splitting`} value={!isExcluded} onChange={setExcluded} testID={`split-include-${name(id)}`}>
+            <Toggle.Item
+              name={id}
+              label={l`${name(id)} is splitting`}
+              value={!isExcluded}
+              onChange={setExcluded}
+              testID={`split-include-${name(id)}`}>
               <Toggle.Checkbox />
             </Toggle.Item>
           </View>
@@ -229,10 +299,22 @@ function SplitRow({
 }
 
 /** Bluesky-style round minus / plus buttons around a whole number. */
-function Stepper({value, onChange, label, testID}: {value: number; onChange: (v: number) => void; label: string; testID?: string}) {
+function Stepper({
+  value,
+  onChange,
+  label,
+  testID,
+}: {
+  value: number
+  onChange: (v: number) => void
+  label: string
+  testID?: string
+}) {
   const {t: l} = useLingui()
   return (
-    <View style={[a.flex_row, a.align_center, a.gap_sm]} accessibilityLabel={label}>
+    <View
+      style={[a.flex_row, a.align_center, a.gap_sm]}
+      accessibilityLabel={label}>
       <Button
         testID={testID ? `${testID}-minus` : undefined}
         label={l`Fewer shares`}
@@ -243,7 +325,14 @@ function Stepper({value, onChange, label, testID}: {value: number; onChange: (v:
         onPress={() => onChange(Math.max(0, value - 1))}>
         <ButtonIcon icon={MinusIcon} />
       </Button>
-      <Text testID={testID} style={[a.text_lg, a.font_semi_bold, a.text_center, {minWidth: 24, fontVariant: ['tabular-nums']}]}>
+      <Text
+        testID={testID}
+        style={[
+          a.text_lg,
+          a.font_semi_bold,
+          a.text_center,
+          {minWidth: 24, fontVariant: ['tabular-nums']},
+        ]}>
         {value}
       </Text>
       <Button
@@ -278,7 +367,10 @@ function ItemsEditor({
   const errorText = useErrorText()
 
   const setItem = (key: string, patch: Partial<ExpenseForm['items'][number]>) =>
-    update(f => ({...f, items: f.items.map(i => (i.key === key ? {...i, ...patch} : i))}))
+    update(f => ({
+      ...f,
+      items: f.items.map(i => (i.key === key ? {...i, ...patch} : i)),
+    }))
 
   const extras = [
     {key: 'tax', label: l`Tax`},
@@ -291,7 +383,16 @@ function ItemsEditor({
       {form.items.map((item, index) => {
         const error = evaluation.rowErrors[`item:${item.key}`]
         return (
-          <View key={item.key} testID={`item-${index}`} style={[a.p_md, a.gap_sm, a.rounded_md, a.border, t.atoms.border_contrast_low]}>
+          <View
+            key={item.key}
+            testID={`item-${index}`}
+            style={[
+              a.p_md,
+              a.gap_sm,
+              a.rounded_md,
+              a.border,
+              t.atoms.border_contrast_low,
+            ]}>
             <View style={[a.flex_row, a.align_center, a.gap_sm]}>
               <View style={[a.flex_1]}>
                 <TextField.Root>
@@ -320,7 +421,12 @@ function ItemsEditor({
                 variant="ghost"
                 color="secondary"
                 shape="round"
-                onPress={() => update(f => ({...f, items: f.items.filter(i => i.key !== item.key)}))}>
+                onPress={() =>
+                  update(f => ({
+                    ...f,
+                    items: f.items.filter(i => i.key !== item.key),
+                  }))
+                }>
                 <ButtonIcon icon={XIcon} />
               </Button>
             </View>
@@ -335,7 +441,13 @@ function ItemsEditor({
                     accessibilityState={{selected: isOn}}
                     size="tiny"
                     color={isOn ? 'primary_subtle' : 'secondary'}
-                    onPress={() => setItem(item.key, {people: isOn ? item.people.filter(p => p !== id) : [...item.people, id]})}
+                    onPress={() =>
+                      setItem(item.key, {
+                        people: isOn
+                          ? item.people.filter(p => p !== id)
+                          : [...item.people, id],
+                      })
+                    }
                     style={[a.gap_xs, a.pl_2xs]}>
                     <UserAvatar size={20} name={avatarName(id)} type="user" />
                     <ButtonText>{name(id)}</ButtonText>
@@ -353,7 +465,15 @@ function ItemsEditor({
         label={l`Add item`}
         size="small"
         color="secondary"
-        onPress={() => update(f => ({...f, items: [...f.items, {key: nanoid(8), name: '', amount: '', people: [...f.people]}]}))}
+        onPress={() =>
+          update(f => ({
+            ...f,
+            items: [
+              ...f.items,
+              {key: nanoid(8), name: '', amount: '', people: [...f.people]},
+            ],
+          }))
+        }
         style={[a.self_start]}>
         <ButtonIcon icon={PlusIcon} />
         <ButtonText>
@@ -363,7 +483,9 @@ function ItemsEditor({
 
       <View style={[a.pt_sm]}>
         {extras.map(x => (
-          <View key={x.key} style={[a.flex_row, a.align_center, a.justify_between, a.py_xs]}>
+          <View
+            key={x.key}
+            style={[a.flex_row, a.align_center, a.justify_between, a.py_xs]}>
             <Text style={[a.text_md]}>{x.label}</Text>
             <MoneyInput
               testID={`item-${x.key}`}
@@ -378,11 +500,30 @@ function ItemsEditor({
         ))}
       </View>
 
-      {evaluation.itemsTotal !== undefined && evaluation.itemsTotal > 0n && evaluation.remaining?.kind === 'money' && evaluation.remaining.value !== 0n ? (
-        <View style={[a.flex_row, a.align_center, a.justify_between, a.gap_md, a.p_md, a.rounded_md, t.atoms.bg_contrast_25]}>
-          <Text style={[a.flex_1, a.text_sm, a.leading_snug, t.atoms.text_contrast_high]}>
+      {evaluation.itemsTotal !== undefined &&
+      evaluation.itemsTotal > 0n &&
+      evaluation.remaining?.kind === 'money' &&
+      evaluation.remaining.value !== 0n ? (
+        <View
+          style={[
+            a.flex_row,
+            a.align_center,
+            a.justify_between,
+            a.gap_md,
+            a.p_md,
+            a.rounded_md,
+            t.atoms.bg_contrast_25,
+          ]}>
+          <Text
+            style={[
+              a.flex_1,
+              a.text_sm,
+              a.leading_snug,
+              t.atoms.text_contrast_high,
+            ]}>
             <Trans>
-              Items, tax and tip come to {formatAmount(evaluation.itemsTotal, form.currency, locale)}
+              Items, tax and tip come to{' '}
+              {formatAmount(evaluation.itemsTotal, form.currency, locale)}
             </Trans>
           </Text>
           <Button
@@ -390,7 +531,15 @@ function ItemsEditor({
             label={l`Use as the total`}
             size="small"
             color="primary_subtle"
-            onPress={() => update(f => ({...f, amount: toDecimalString(evaluation.itemsTotal!, getCurrency(f.currency).scale)}))}>
+            onPress={() =>
+              update(f => ({
+                ...f,
+                amount: toDecimalString(
+                  evaluation.itemsTotal!,
+                  getCurrency(f.currency).scale,
+                ),
+              }))
+            }>
             <ButtonText>
               <Trans>Use as total</Trans>
             </ButtonText>

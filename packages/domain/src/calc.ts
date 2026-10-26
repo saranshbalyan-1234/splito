@@ -2,7 +2,17 @@ import {type CurrencyCode, getCurrency, parseAmount} from './currency'
 import {assertInRange, DomainError} from './errors'
 
 /** Calculator operators as people type them: x, ×, * multiply; /, ÷ divide; -, − subtract. */
-const OPS: Record<string, '+' | '-' | '*' | '/'> = {'+': '+', '-': '-', '−': '-', x: '*', X: '*', '×': '*', '*': '*', '/': '/', '÷': '/'}
+const OPS: Record<string, '+' | '-' | '*' | '/'> = {
+  '+': '+',
+  '-': '-',
+  '−': '-',
+  x: '*',
+  X: '*',
+  '×': '*',
+  '*': '*',
+  '/': '/',
+  '÷': '/',
+}
 const TOKEN = /(\d+(?:\.\d+)?)|([+\-−xX×*/÷])/y
 
 /** Grouping commas and spaces carry no meaning in an amount ("1,20,000"). */
@@ -41,7 +51,8 @@ export function evaluateAmount(input: string, code: CurrencyCode): bigint {
   }
   // Must alternate number, operator, number ...
   tokens.forEach((tok, i) => {
-    if ((i % 2 === 0) !== /^\d/.test(tok)) throw new DomainError('INVALID_AMOUNT')
+    if ((i % 2 === 0) !== /^\d/.test(tok))
+      throw new DomainError('INVALID_AMOUNT')
   })
   if (tokens.length % 2 === 0) throw new DomainError('INCOMPLETE')
 
@@ -56,7 +67,10 @@ export function evaluateAmount(input: string, code: CurrencyCode): bigint {
       if (next.n === 0n) throw new DomainError('DIVIDE_BY_ZERO')
       term = {n: term.n * next.d, d: term.d * next.n}
     } else {
-      total = {n: total.n * term.d + sign * term.n * total.d, d: total.d * term.d}
+      total = {
+        n: total.n * term.d + sign * term.n * total.d,
+        d: total.d * term.d,
+      }
       sign = op === '+' ? 1n : -1n
       term = next
     }
@@ -86,7 +100,10 @@ export function sumMinor(xs: Iterable<bigint>): bigint {
 }
 
 /** Each person's net position on one expense: what they paid minus their share (> 0: they are owed). */
-export function expenseNet(e: {payers: Record<string, bigint>; shares: Record<string, bigint>}): Record<string, bigint> {
+export function expenseNet(e: {
+  payers: Record<string, bigint>
+  shares: Record<string, bigint>
+}): Record<string, bigint> {
   const net: Record<string, bigint> = {}
   for (const [id, v] of Object.entries(e.payers)) net[id] = (net[id] ?? 0n) + v
   for (const [id, v] of Object.entries(e.shares)) net[id] = (net[id] ?? 0n) - v

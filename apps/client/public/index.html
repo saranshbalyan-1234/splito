@@ -23,6 +23,8 @@
       @media (prefers-color-scheme: dark) { body { background: #000000; } }
       #root { display: flex; }
       button, input, textarea { font: inherit; line-height: inherit; }
+      /* As Bluesky's src/style.css: fields draw their own focus state. */
+      textarea:focus, input:focus { outline: 0; }
     </style>
   </head>
   <body>

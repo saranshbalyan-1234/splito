@@ -16,10 +16,22 @@ import {Divider} from '#/components/Divider'
 import {type Props as SVGIconProps} from '#/components/icons/common'
 import {DateDialog} from '#/components/split/DateDialog'
 import {DetailRow, FieldError, PlainInput} from '#/components/split/fields'
-import {CalendarIcon, CoupleIcon, GroupIcon, HomeIcon, TripIcon, WalletIcon} from '#/components/split/icons'
+import {
+  CalendarIcon,
+  CoupleIcon,
+  GroupIcon,
+  HomeIcon,
+  TripIcon,
+  WalletIcon,
+} from '#/components/split/icons'
 import {PeopleDialog} from '#/components/split/PeopleDialog'
 import {CurrencyDialog} from '#/components/split/pickers'
-import {SectionLabel, useDisplayName, useErrorText, useFormatDay} from '#/components/split/shared'
+import {
+  SectionLabel,
+  useDisplayName,
+  useErrorText,
+  useFormatDay,
+} from '#/components/split/shared'
 import * as Toast from '#/components/Toast'
 import {Text} from '#/components/Typography'
 
@@ -61,10 +73,15 @@ export function CreateGroupScreen() {
     .sort((x, y) => x.data.name.localeCompare(y.data.name))
     .map(p => p.id)
   const isTrip = kind === 'trip'
-  const isDateOrderWrong = isTrip && !!startDate && !!endDate && endDate < startDate
+  const isDateOrderWrong =
+    isTrip && !!startDate && !!endDate && endDate < startDate
   const canSave = !!title.trim() && !isDateOrderWrong && !isSaving
 
-  const kinds: Array<{kind: Kind; label: string; icon: React.ComponentType<SVGIconProps>}> = [
+  const kinds: Array<{
+    kind: Kind
+    label: string
+    icon: React.ComponentType<SVGIconProps>
+  }> = [
     {kind: 'trip', label: l`Trip`, icon: TripIcon},
     {kind: 'home', label: l`Home`, icon: HomeIcon},
     {kind: 'couple', label: l`Couple`, icon: CoupleIcon},
@@ -98,7 +115,12 @@ export function CreateGroupScreen() {
   }
 
   const others = members.filter(id => id !== ctx.actor)
-  const membersValue = others.length === 0 ? l`Just you` : others.length <= 2 ? [name(ctx.actor), ...others.map(name)].join(', ') : l`You and ${others.length} others`
+  const membersValue =
+    others.length === 0
+      ? l`Just you`
+      : others.length <= 1
+        ? [name(ctx.actor), ...others.map(name)].join(', ')
+        : l`You and ${others.length} others`
 
   return (
     <Composer.Outer testID="screen-create-group" onDismiss={close}>
@@ -113,8 +135,19 @@ export function CreateGroupScreen() {
           <Trans>New group</Trans>
         </Text>
       </Composer.TopBar>
-      <ScrollView keyboardShouldPersistTaps="handled" style={[a.flex_1, web([a.flex_shrink, {minHeight: 0}])]} contentContainerStyle={[a.pb_2xl]}>
-        <View style={[a.flex_row, a.align_center, a.gap_md, a.px_lg, a.pt_sm, a.pb_md]}>
+      <ScrollView
+        keyboardShouldPersistTaps="handled"
+        style={[a.flex_1, web([a.flex_shrink, {minHeight: 0}])]}
+        contentContainerStyle={[a.pb_2xl]}>
+        <View
+          style={[
+            a.flex_row,
+            a.align_center,
+            a.gap_md,
+            a.px_lg,
+            a.pt_sm,
+            a.pb_md,
+          ]}>
           <UserAvatar size={42} name={title.trim() || '?'} type="list" />
           <PlainInput
             testID="group-name"
@@ -131,12 +164,16 @@ export function CreateGroupScreen() {
         <SectionLabel>
           <Trans>Type</Trans>
         </SectionLabel>
-        <View style={[a.flex_row, a.flex_wrap, a.px_lg, {marginHorizontal: -4}]} accessibilityRole="radiogroup">
+        <View
+          style={[a.flex_row, a.flex_wrap, a.px_lg, {marginHorizontal: -4}]}
+          accessibilityRole="radiogroup">
           {kinds.map(k => {
             const isSelected = k.kind === kind
             const Icon = k.icon
             return (
-              <View key={k.kind} style={[a.p_xs, {width: gtMobile ? '25%' : '50%'}]}>
+              <View
+                key={k.kind}
+                style={[a.p_xs, {width: gtMobile ? '25%' : '50%'}]}>
                 <Button
                   testID={`group-kind-${k.kind}`}
                   label={k.label}
@@ -154,10 +191,29 @@ export function CreateGroupScreen() {
                     a.py_md,
                     a.rounded_md,
                     a.border,
-                    isSelected ? {borderColor: t.palette.primary_500, backgroundColor: t.palette.primary_25} : t.atoms.border_contrast_low,
+                    isSelected
+                      ? {
+                          borderColor: t.palette.primary_500,
+                          backgroundColor: t.palette.primary_25,
+                        }
+                      : t.atoms.border_contrast_low,
                   ]}>
-                  <Icon size="md" fill={isSelected ? t.palette.primary_500 : t.atoms.text_contrast_medium.color} />
-                  <Text style={[a.text_md, a.font_medium, isSelected && {color: t.palette.primary_600}]}>{k.label}</Text>
+                  <Icon
+                    size="md"
+                    fill={
+                      isSelected
+                        ? t.palette.primary_500
+                        : t.atoms.text_contrast_medium.color
+                    }
+                  />
+                  <Text
+                    style={[
+                      a.text_md,
+                      a.font_medium,
+                      isSelected && {color: t.palette.primary_600},
+                    ]}>
+                    {k.label}
+                  </Text>
                 </Button>
               </View>
             )
@@ -173,21 +229,33 @@ export function CreateGroupScreen() {
             value={`${getCurrency(code).symbol} ${code}`}
             onPress={() => currencyControl.open()}
           />
-          <DetailRow testID="group-members" icon={GroupIcon} label={l`Members`} value={membersValue} onPress={() => membersControl.open()} />
+          <DetailRow
+            testID="group-members"
+            icon={GroupIcon}
+            label={l`Members`}
+            value={membersValue}
+            onPress={() => membersControl.open()}
+          />
           {isTrip ? (
             <>
               <DetailRow
                 testID="group-start"
                 icon={CalendarIcon}
                 label={l`Starts`}
-                value={startDate ? formatDay(startDate, {relative: false}) : l`Not set`}
+                value={
+                  startDate
+                    ? formatDay(startDate, {relative: false})
+                    : l`Not set`
+                }
                 onPress={() => startControl.open()}
               />
               <DetailRow
                 testID="group-end"
                 icon={CalendarIcon}
                 label={l`Ends`}
-                value={endDate ? formatDay(endDate, {relative: false}) : l`Not set`}
+                value={
+                  endDate ? formatDay(endDate, {relative: false}) : l`Not set`
+                }
                 onPress={() => endControl.open()}
               />
             </>
@@ -196,7 +264,9 @@ export function CreateGroupScreen() {
         </View>
 
         <View style={[a.px_lg, a.pt_md, a.gap_sm]}>
-          {isDateOrderWrong ? <FieldError testID="group-date-error">{l`The trip can’t end before it starts`}</FieldError> : null}
+          {isDateOrderWrong ? (
+            <FieldError testID="group-date-error">{l`The trip can’t end before it starts`}</FieldError>
+          ) : null}
           {isTrip && (startDate || endDate) ? (
             <Button
               testID="group-clear-dates"
@@ -214,17 +284,28 @@ export function CreateGroupScreen() {
               </ButtonText>
             </Button>
           ) : null}
-          <Text style={[a.text_sm, a.leading_snug, t.atoms.text_contrast_medium]}>
+          <Text
+            style={[a.text_sm, a.leading_snug, t.atoms.text_contrast_medium]}>
             {isTrip ? (
-              <Trans>Trip dates are optional. Expenses can still be added before or after them.</Trans>
+              <Trans>
+                Trip dates are optional. Expenses can still be added before or
+                after them.
+              </Trans>
             ) : (
-              <Trans>Members can change later. Past expenses keep the people they were split with.</Trans>
+              <Trans>
+                Members can change later. Past expenses keep the people they
+                were split with.
+              </Trans>
             )}
           </Text>
         </View>
       </ScrollView>
 
-      <CurrencyDialog control={currencyControl} value={code} onSelect={setCurrency} />
+      <CurrencyDialog
+        control={currencyControl}
+        value={code}
+        onSelect={setCurrency}
+      />
       <PeopleDialog
         control={membersControl}
         title={l`Members`}
@@ -235,8 +316,18 @@ export function CreateGroupScreen() {
         allowNew
         onChange={setMembers}
       />
-      <DateDialog control={startControl} title={l`Trip starts`} value={startDate ?? ''} onSelect={setStartDate} />
-      <DateDialog control={endControl} title={l`Trip ends`} value={endDate ?? startDate ?? ''} onSelect={setEndDate} />
+      <DateDialog
+        control={startControl}
+        title={l`Trip starts`}
+        value={startDate ?? ''}
+        onSelect={setStartDate}
+      />
+      <DateDialog
+        control={endControl}
+        title={l`Trip ends`}
+        value={endDate ?? startDate ?? ''}
+        onSelect={setEndDate}
+      />
     </Composer.Outer>
   )
 }

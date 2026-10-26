@@ -3,7 +3,13 @@ import {plural} from '@lingui/core/macro'
 import {Trans, useLingui} from '@lingui/react/macro'
 import {useNavigation, useRoute, type RouteProp} from '@react-navigation/native'
 import {expenseNet, formatAmount, magnitude} from '@splito/domain'
-import {deleteExpense, type Entity, type Expense, type Group, restoreExpense} from '@splito/sync'
+import {
+  deleteExpense,
+  type Entity,
+  type Expense,
+  type Group,
+  restoreExpense,
+} from '@splito/sync'
 
 import {type AllNavigatorParams, type NavigationProp} from '#/lib/routes/types'
 import {useNumberLocale} from '#/locale/numberLocale'
@@ -20,7 +26,17 @@ import {Trash_Stroke2_Corner0_Rounded as TrashIcon} from '#/components/icons/Tra
 import * as Layout from '#/components/Layout'
 import * as Menu from '#/components/Menu'
 import * as Skeleton from '#/components/Skeleton'
-import {CategoryTile, localToday, SectionLabel, useAvatarName, useCategory, useDisplayName, useErrorText, useExpenseTz} from '#/components/split/shared'
+import {
+  CategoryTile,
+  localToday,
+  SectionLabel,
+  useAvatarName,
+  useCategory,
+  useDisplayName,
+  useErrorText,
+  useExpenseTz,
+} from '#/components/split/shared'
+import {ReceiptIcon} from '#/components/split/icons'
 import {useExpense} from '#/components/split/useExpense'
 import * as Toast from '#/components/Toast'
 import {Text} from '#/components/Typography'
@@ -47,16 +63,41 @@ export function ExpenseScreen() {
             <Trans>Expense</Trans>
           </Layout.Header.TitleText>
         </Layout.Header.Content>
-        <Layout.Header.Slot>{expense && !expense.deleted ? <ExpenseMenu expense={expense} /> : null}</Layout.Header.Slot>
+        {expense && !expense.deleted ? (
+          <View style={[a.flex_row, a.align_center, a.gap_xs]}>
+            <Button
+              testID="expense-edit-button"
+              label={l`Edit expense`}
+              size="small"
+              color="secondary"
+              onPress={() =>
+                navigation.navigate('EditExpense', {expenseId: expense.id})
+              }>
+              <ButtonIcon icon={PencilIcon} />
+              <ButtonText>
+                <Trans>Edit</Trans>
+              </ButtonText>
+            </Button>
+            <ExpenseMenu expense={expense} />
+          </View>
+        ) : (
+          <Layout.Header.Slot />
+        )}
       </Layout.Header.Outer>
       {expense === undefined ? (
         <DetailSkeleton />
       ) : expense === null ? (
         <EmptyState
           testID="expense-not-found"
-          icon={TrashIcon}
+          icon={ReceiptIcon}
           message={l`This expense doesn’t exist. The link may be wrong.`}
-          button={{label: l`Go to People`, text: l`Go to People`, onPress: () => navigation.navigate('People'), size: 'small', color: 'secondary'}}
+          button={{
+            label: l`Go to People`,
+            text: l`Go to People`,
+            onPress: () => navigation.navigate('People'),
+            size: 'small',
+            color: 'secondary',
+          }}
         />
       ) : (
         <Detail expense={expense} history={history} />
@@ -90,7 +131,11 @@ function ExpenseMenu({expense}: {expense: Entity<Expense>}) {
         <Toast.Action
           label={l`Undo`}
           onPress={() =>
-            void restoreExpense(store, ctx, expense.id).catch(e => Toast.show(errorText((e as {code?: string}).code ?? ''), {type: 'error'}))
+            void restoreExpense(store, ctx, expense.id).catch(e =>
+              Toast.show(errorText((e as {code?: string}).code ?? ''), {
+                type: 'error',
+              }),
+            )
           }>
           <Trans>Undo</Trans>
         </Toast.Action>
@@ -102,20 +147,35 @@ function ExpenseMenu({expense}: {expense: Entity<Expense>}) {
     <Menu.Root>
       <Menu.Trigger label={l`Expense options`}>
         {({props}) => (
-          <Button testID="expense-menu" label={props.accessibilityLabel} {...props} size="small" variant="ghost" color="secondary" shape="round">
+          <Button
+            testID="expense-menu"
+            label={props.accessibilityLabel}
+            {...props}
+            size="small"
+            variant="ghost"
+            color="secondary"
+            shape="round">
             <ButtonIcon icon={DotsIcon} size="lg" />
           </Button>
         )}
       </Menu.Trigger>
       <Menu.Outer>
         <Menu.Group>
-          <Menu.Item testID="expense-edit" label={l`Edit expense`} onPress={() => navigation.navigate('EditExpense', {expenseId: expense.id})}>
+          <Menu.Item
+            testID="expense-edit"
+            label={l`Edit expense`}
+            onPress={() =>
+              navigation.navigate('EditExpense', {expenseId: expense.id})
+            }>
             <Menu.ItemText>
               <Trans>Edit expense</Trans>
             </Menu.ItemText>
             <Menu.ItemIcon icon={PencilIcon} position="right" />
           </Menu.Item>
-          <Menu.Item testID="expense-delete" label={l`Delete expense`} onPress={() => void remove()}>
+          <Menu.Item
+            testID="expense-delete"
+            label={l`Delete expense`}
+            onPress={() => void remove()}>
             <Menu.ItemText>
               <Trans>Delete expense</Trans>
             </Menu.ItemText>
@@ -127,7 +187,13 @@ function ExpenseMenu({expense}: {expense: Entity<Expense>}) {
   )
 }
 
-function Detail({expense, history}: {expense: Entity<Expense>; history: Parameters<typeof History>[0]['history']}) {
+function Detail({
+  expense,
+  history,
+}: {
+  expense: Entity<Expense>
+  history: Parameters<typeof History>[0]['history']
+}) {
   const t = useTheme()
   const {t: l, i18n} = useLingui()
   const {gtTablet} = useBreakpoints()
@@ -153,24 +219,40 @@ function Detail({expense, history}: {expense: Entity<Expense>; history: Paramete
     adjusted: l`Split equally, with adjustments`,
     items: l`Split by items`,
   }[e.split.mode]
-  const people = Object.keys(e.shares).sort((x, y) => (x === ctx.actor ? -1 : y === ctx.actor ? 1 : name(x).localeCompare(name(y))))
-  const payers = Object.keys(e.payers).sort((x, y) => (x === ctx.actor ? -1 : y === ctx.actor ? 1 : name(x).localeCompare(name(y))))
+  const people = Object.keys(e.shares).sort((x, y) =>
+    x === ctx.actor ? -1 : y === ctx.actor ? 1 : name(x).localeCompare(name(y)),
+  )
+  const payers = Object.keys(e.payers).sort((x, y) =>
+    x === ctx.actor ? -1 : y === ctx.actor ? 1 : name(x).localeCompare(name(y)),
+  )
 
   const hero = (
     <View style={[a.px_lg, a.pt_xl, a.pb_lg, a.gap_lg]}>
       <View style={[a.flex_row, a.align_center, a.gap_md]}>
         <CategoryTile category={category} size={52} />
         <View style={[a.flex_1, a.gap_2xs]}>
-          <Text testID="expense-detail-title" style={[a.text_2xl, a.font_bold, a.leading_tight]} numberOfLines={3}>
+          <Text
+            testID="expense-detail-title"
+            style={[a.text_2xl, a.font_bold, a.leading_tight]}
+            numberOfLines={3}>
             {e.title}
           </Text>
           <View style={[a.flex_row, a.align_center, a.flex_wrap, a.gap_xs]}>
-            <Text style={[a.text_md, t.atoms.text_contrast_medium]}>{category.name}</Text>
+            <Text style={[a.text_md, t.atoms.text_contrast_medium]}>
+              {category.name}
+            </Text>
             {group ? (
               <>
                 <Text style={[a.text_md, t.atoms.text_contrast_medium]}>·</Text>
-                <Link testID="expense-group-link" href={`/groups/${group.id}`} title={group.data.name} asAnchor anchorNoUnderline>
-                  <Text style={[a.text_md, {color: t.palette.primary_500}]}>{group.data.name}</Text>
+                <Link
+                  testID="expense-group-link"
+                  href={`/groups/${group.id}`}
+                  title={group.data.name}
+                  asAnchor
+                  anchorNoUnderline>
+                  <Text style={[a.text_md, {color: t.palette.primary_500}]}>
+                    {group.data.name}
+                  </Text>
                 </Link>
               </>
             ) : null}
@@ -179,16 +261,41 @@ function Detail({expense, history}: {expense: Entity<Expense>; history: Paramete
       </View>
 
       <View style={[a.gap_xs]}>
-        <Text testID="expense-detail-amount" style={[a.text_5xl, a.font_bold, a.leading_tight, {fontVariant: ['tabular-nums']}]}>
+        <Text
+          testID="expense-detail-amount"
+          style={[
+            a.text_5xl,
+            a.font_bold,
+            a.leading_tight,
+            {fontVariant: ['tabular-nums']},
+          ]}>
           {fmt(e.total)}
         </Text>
         <View style={[a.flex_row, a.align_center, a.gap_sm, a.flex_wrap]}>
           <Text style={[a.text_md, t.atoms.text_contrast_medium]}>
-            {i18n.date(new Date(`${e.date}T00:00:00Z`), {weekday: 'long', day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC'})}
+            {i18n.date(new Date(`${e.date}T00:00:00Z`), {
+              weekday: 'long',
+              day: 'numeric',
+              month: 'long',
+              year: 'numeric',
+              timeZone: 'UTC',
+            })}
           </Text>
           {isUpcoming ? (
-            <View testID="expense-upcoming" style={[a.px_sm, a.py_2xs, a.rounded_full, {backgroundColor: t.palette.primary_50}]}>
-              <Text style={[a.text_xs, a.font_semi_bold, {color: t.palette.primary_600}]}>
+            <View
+              testID="expense-upcoming"
+              style={[
+                a.px_sm,
+                a.py_2xs,
+                a.rounded_full,
+                {backgroundColor: t.palette.primary_50},
+              ]}>
+              <Text
+                style={[
+                  a.text_xs,
+                  a.font_semi_bold,
+                  {color: t.palette.primary_600},
+                ]}>
                 <Trans>Upcoming</Trans>
               </Text>
             </View>
@@ -197,15 +304,42 @@ function Detail({expense, history}: {expense: Entity<Expense>; history: Paramete
       </View>
 
       {myNet !== undefined ? (
-        <View testID="expense-my-net" style={[a.flex_row, a.align_center, a.self_start, a.gap_sm, a.px_md, a.py_sm, a.rounded_full, t.atoms.bg_contrast_25]}>
+        <View
+          testID="expense-my-net"
+          style={[
+            a.flex_row,
+            a.align_center,
+            a.self_start,
+            a.gap_sm,
+            a.px_md,
+            a.py_sm,
+            a.rounded_full,
+            t.atoms.bg_contrast_25,
+          ]}>
           <Text style={[a.text_md, a.font_medium]}>
             {myNet > 0n ? (
               <Trans>
-                You lent <Text style={[a.text_md, a.font_semi_bold, {color: t.palette.positive_600}]}>{fmt(myNet)}</Text>
+                You lent{' '}
+                <Text
+                  style={[
+                    a.text_md,
+                    a.font_semi_bold,
+                    {color: t.palette.positive_600},
+                  ]}>
+                  {fmt(myNet)}
+                </Text>
               </Trans>
             ) : myNet < 0n ? (
               <Trans>
-                You borrowed <Text style={[a.text_md, a.font_semi_bold, {color: t.palette.negative_500}]}>{fmt(magnitude(myNet))}</Text>
+                You borrowed{' '}
+                <Text
+                  style={[
+                    a.text_md,
+                    a.font_semi_bold,
+                    {color: t.palette.negative_500},
+                  ]}>
+                  {fmt(magnitude(myNet))}
+                </Text>
               </Trans>
             ) : (
               <Trans>You paid your own share</Trans>
@@ -226,7 +360,13 @@ function Detail({expense, history}: {expense: Entity<Expense>; history: Paramete
         <Trans>Paid by</Trans>
       </SectionLabel>
       {payers.map(id => (
-        <PersonAmount key={id} avatar={avatarName(id)} name={name(id)} amount={fmt(e.payers[id]!)} testID={`paid-row-${name(id)}`} />
+        <PersonAmount
+          key={id}
+          avatar={avatarName(id)}
+          name={name(id)}
+          amount={fmt(e.payers[id]!)}
+          testID={`paid-row-${name(id)}`}
+        />
       ))}
 
       <SectionLabel>{splitLabel}</SectionLabel>
@@ -242,16 +382,30 @@ function Detail({expense, history}: {expense: Entity<Expense>; history: Paramete
       ))}
 
       {e.split.mode === 'items' ? (
-        <View style={[a.mx_lg, a.mt_sm, a.p_md, a.rounded_md, a.gap_sm, t.atoms.bg_contrast_25]}>
+        <View
+          style={[
+            a.mx_lg,
+            a.mt_sm,
+            a.p_md,
+            a.rounded_md,
+            a.gap_sm,
+            t.atoms.bg_contrast_25,
+          ]}>
           {e.split.items.map((item, i) => (
             <View key={item.id} style={[a.flex_row, a.gap_md]}>
               <View style={[a.flex_1]}>
-                <Text style={[a.text_md, a.font_medium]}>{item.name || l`Item ${i + 1}`}</Text>
-                <Text style={[a.text_sm, t.atoms.text_contrast_medium]} numberOfLines={2}>
+                <Text style={[a.text_md, a.font_medium]}>
+                  {item.name || l`Item ${i + 1}`}
+                </Text>
+                <Text
+                  style={[a.text_sm, t.atoms.text_contrast_medium]}
+                  numberOfLines={2}>
                   {item.participants.map(name).join(', ')}
                 </Text>
               </View>
-              <Text style={[a.text_md, {fontVariant: ['tabular-nums']}]}>{fmt(item.amount)}</Text>
+              <Text style={[a.text_md, {fontVariant: ['tabular-nums']}]}>
+                {fmt(item.amount)}
+              </Text>
             </View>
           ))}
           {[
@@ -262,8 +416,15 @@ function Detail({expense, history}: {expense: Entity<Expense>; history: Paramete
             .filter(x => x.value !== 0n)
             .map(x => (
               <View key={x.label} style={[a.flex_row, a.justify_between]}>
-                <Text style={[a.text_md, t.atoms.text_contrast_medium]}>{x.label}</Text>
-                <Text style={[a.text_md, t.atoms.text_contrast_medium, {fontVariant: ['tabular-nums']}]}>
+                <Text style={[a.text_md, t.atoms.text_contrast_medium]}>
+                  {x.label}
+                </Text>
+                <Text
+                  style={[
+                    a.text_md,
+                    t.atoms.text_contrast_medium,
+                    {fontVariant: ['tabular-nums']},
+                  ]}>
                   {x.sign}
                   {fmt(x.value)}
                 </Text>
@@ -277,7 +438,9 @@ function Detail({expense, history}: {expense: Entity<Expense>; history: Paramete
           <SectionLabel>
             <Trans>Notes</Trans>
           </SectionLabel>
-          <Text testID="expense-notes" style={[a.px_lg, a.text_md, a.leading_relaxed]}>
+          <Text
+            testID="expense-notes"
+            style={[a.px_lg, a.text_md, a.leading_relaxed]}>
             {e.notes}
           </Text>
         </>
@@ -286,17 +449,36 @@ function Detail({expense, history}: {expense: Entity<Expense>; history: Paramete
   )
 
   const deletedBanner = expense.deleted ? (
-    <View testID="expense-deleted" style={[a.mx_lg, a.mt_lg, a.p_md, a.rounded_md, a.flex_row, a.align_center, a.gap_md, {backgroundColor: t.palette.negative_25}]}>
+    <View
+      testID="expense-deleted"
+      style={[
+        a.mx_lg,
+        a.mt_lg,
+        a.p_md,
+        a.rounded_md,
+        a.flex_row,
+        a.align_center,
+        a.gap_md,
+        {backgroundColor: t.palette.negative_25},
+      ]}>
       <TrashIcon size="md" fill={t.palette.negative_500} />
       <Text style={[a.flex_1, a.text_md, a.leading_snug]}>
-        <Trans>This expense was deleted. It no longer counts towards any balance.</Trans>
+        <Trans>
+          This expense was deleted. It no longer counts towards any balance.
+        </Trans>
       </Text>
       <Button
         testID="expense-restore"
         label={l`Restore expense`}
         size="small"
         color="secondary"
-        onPress={() => void restoreExpense(store, ctx, expense.id).catch(err => Toast.show(errorText((err as {code?: string}).code ?? ''), {type: 'error'}))}>
+        onPress={() =>
+          void restoreExpense(store, ctx, expense.id).catch(err =>
+            Toast.show(errorText((err as {code?: string}).code ?? ''), {
+              type: 'error',
+            }),
+          )
+        }>
         <ButtonIcon icon={UndoIcon} />
         <ButtonText>
           <Trans>Restore</Trans>
@@ -314,15 +496,23 @@ function Detail({expense, history}: {expense: Entity<Expense>; history: Paramete
             {hero}
             {breakdown}
           </View>
-          <View style={[a.flex_1, {flexGrow: 2, maxWidth: 520}, a.border_l, t.atoms.border_contrast_low, a.mt_xl, a.pl_sm]}>
-            <History history={history} currency={e.currency} />
+          <View
+            style={[
+              a.flex_1,
+              {flexGrow: 2, maxWidth: 520},
+              a.border_l,
+              t.atoms.border_contrast_low,
+              a.mt_xl,
+              a.pl_sm,
+            ]}>
+            <History history={history} />
           </View>
         </View>
       ) : (
         <>
           {hero}
           {breakdown}
-          <History history={history} currency={e.currency} />
+          <History history={history} />
         </>
       )}
     </Layout.Content>
@@ -330,13 +520,22 @@ function Detail({expense, history}: {expense: Entity<Expense>; history: Paramete
 }
 
 /** What a person's share is made of, in the expense's split mode. */
-function shareDetail(e: Expense, id: string, fmt: (v: bigint) => string, i18n: ReturnType<typeof useLingui>['i18n']) {
+function shareDetail(
+  e: Expense,
+  id: string,
+  fmt: (v: bigint) => string,
+  i18n: ReturnType<typeof useLingui>['i18n'],
+) {
   const s = e.split
   switch (s.mode) {
     case 'percent':
-      return s.basisPoints[id] ? `${i18n.number(s.basisPoints[id] / 100, {maximumFractionDigits: 2})}%` : undefined
+      return s.basisPoints[id]
+        ? `${i18n.number(s.basisPoints[id] / 100, {maximumFractionDigits: 2})}%`
+        : undefined
     case 'shares':
-      return s.shares[id] ? plural(s.shares[id], {one: '# share', other: '# shares'}) : undefined
+      return s.shares[id]
+        ? plural(s.shares[id], {one: '# share', other: '# shares'})
+        : undefined
     case 'adjusted': {
       const adj = s.adjustments[id]
       return adj ? (adj > 0n ? `+${fmt(adj)}` : `−${fmt(-adj)}`) : undefined
@@ -346,18 +545,46 @@ function shareDetail(e: Expense, id: string, fmt: (v: bigint) => string, i18n: R
   }
 }
 
-function PersonAmount({avatar, name, amount, detail, testID}: {avatar: string; name: string; amount: string; detail?: string; testID?: string}) {
+function PersonAmount({
+  avatar,
+  name,
+  amount,
+  detail,
+  testID,
+}: {
+  avatar: string
+  name: string
+  amount: string
+  detail?: string
+  testID?: string
+}) {
   const t = useTheme()
   return (
-    <View testID={testID} style={[a.flex_row, a.align_center, a.gap_md, a.px_lg, a.py_sm, {minHeight: 56}]}>
+    <View
+      testID={testID}
+      style={[
+        a.flex_row,
+        a.align_center,
+        a.gap_md,
+        a.px_lg,
+        a.py_sm,
+        {minHeight: 56},
+      ]}>
       <UserAvatar size={36} name={avatar} type="user" />
       <View style={[a.flex_1]}>
         <Text style={[a.text_md, a.font_medium]} numberOfLines={1}>
           {name}
         </Text>
-        {detail ? <Text style={[a.text_sm, t.atoms.text_contrast_medium]}>{detail}</Text> : null}
+        {detail ? (
+          <Text style={[a.text_sm, t.atoms.text_contrast_medium]}>
+            {detail}
+          </Text>
+        ) : null}
       </View>
-      <Text style={[a.text_md, a.font_semi_bold, {fontVariant: ['tabular-nums']}]}>{amount}</Text>
+      <Text
+        style={[a.text_md, a.font_semi_bold, {fontVariant: ['tabular-nums']}]}>
+        {amount}
+      </Text>
     </View>
   )
 }

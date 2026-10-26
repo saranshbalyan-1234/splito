@@ -35,7 +35,13 @@ export function EditExpenseScreen() {
   return <EditForm expense={expense} onClose={close} />
 }
 
-function EditForm({expense, onClose}: {expense: Entity<Expense>; onClose: () => void}) {
+function EditForm({
+  expense,
+  onClose,
+}: {
+  expense: Entity<Expense>
+  onClose: () => void
+}) {
   const {actor} = useMutationCtx()
   const [initial] = useState(() => formFromExpense(expense.data, actor))
   return (
@@ -55,7 +61,12 @@ function Missing({onClose}: {onClose: () => void}) {
   return (
     <Composer.Outer testID="screen-edit-expense" onDismiss={onClose}>
       <View style={[a.flex_row, a.p_sm]}>
-        <Button label={l`Close`} variant="ghost" color="primary" size="small" onPress={onClose}>
+        <Button
+          label={l`Close`}
+          variant="ghost"
+          color="primary"
+          size="small"
+          onPress={onClose}>
           <ButtonText style={[a.text_md]}>
             <Trans>Close</Trans>
           </ButtonText>
@@ -65,7 +76,13 @@ function Missing({onClose}: {onClose: () => void}) {
         <Text style={[a.text_lg, a.font_semi_bold, a.text_center]}>
           <Trans>This expense can’t be edited</Trans>
         </Text>
-        <Text style={[a.text_md, a.text_center, a.leading_snug, t.atoms.text_contrast_medium]}>
+        <Text
+          style={[
+            a.text_md,
+            a.text_center,
+            a.leading_snug,
+            t.atoms.text_contrast_medium,
+          ]}>
           <Trans>It was deleted, or the link is wrong.</Trans>
         </Text>
       </View>

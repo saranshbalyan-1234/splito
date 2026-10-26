@@ -42,7 +42,10 @@ export function PeopleDialog({
   onChange: (ids: string[]) => void
 }) {
   return (
-    <Dialog.Outer control={control} nativeOptions={{fullHeight: true}} testID="people-dialog">
+    <Dialog.Outer
+      control={control}
+      nativeOptions={{fullHeight: true}}
+      testID="people-dialog">
       <Dialog.Handle />
       <PeopleInner
         title={title}
@@ -85,8 +88,12 @@ function PeopleInner({
   const [query, setQuery] = useState('')
   const [isAdding, setIsAdding] = useState(false)
   const q = query.trim()
-  const rows = candidates.filter(id => !q || name(id).toLowerCase().includes(q.toLowerCase()))
-  const hasExactMatch = candidates.some(id => name(id).toLowerCase() === q.toLowerCase())
+  const rows = candidates.filter(
+    id => !q || name(id).toLowerCase().includes(q.toLowerCase()),
+  )
+  const hasExactMatch = candidates.some(
+    id => name(id).toLowerCase() === q.toLowerCase(),
+  )
 
   const addPerson = async () => {
     setIsAdding(true)
@@ -122,8 +129,24 @@ function PeopleInner({
           onPress={() => void addPerson()}
           disabled={isAdding}
           hoverStyle={t.atoms.bg_contrast_25}
-          style={[a.flex_row, a.align_center, a.gap_md, a.py_md, a.mt_sm, a.border_b, t.atoms.border_contrast_low, a.rounded_0, a.justify_start]}>
-          <View style={[a.align_center, a.justify_center, a.rounded_full, {width: 36, height: 36, backgroundColor: t.palette.primary_50}]}>
+          style={[
+            a.flex_row,
+            a.align_center,
+            a.gap_md,
+            a.py_md,
+            a.mt_sm,
+            a.border_b,
+            t.atoms.border_contrast_low,
+            a.rounded_0,
+            a.justify_start,
+          ]}>
+          <View
+            style={[
+              a.align_center,
+              a.justify_center,
+              a.rounded_full,
+              {width: 36, height: 36, backgroundColor: t.palette.primary_50},
+            ]}>
             <PersonPlusIcon size="md" fill={t.palette.primary_500} />
           </View>
           <View style={[a.flex_1]}>
@@ -149,9 +172,18 @@ function PeopleInner({
             label={name(id)}
             testID={`person-option-${name(id)}`}
             disabled={lockedIds.includes(id)}
-            style={[t.atoms.border_contrast_low, i < rows.length - 1 && a.border_b, a.rounded_0, a.px_0, a.py_sm, a.gap_md]}>
+            style={[
+              t.atoms.border_contrast_low,
+              i < rows.length - 1 && a.border_b,
+              a.rounded_0,
+              a.px_0,
+              a.py_sm,
+              a.gap_md,
+            ]}>
             <UserAvatar size={36} name={avatarName(id)} type="user" />
-            <Text style={[a.flex_1, a.text_md, a.font_medium]} numberOfLines={1}>
+            <Text
+              style={[a.flex_1, a.text_md, a.font_medium]}
+              numberOfLines={1}>
               {name(id)}
             </Text>
             <Toggle.Checkbox />
@@ -159,7 +191,13 @@ function PeopleInner({
         ))}
       </Toggle.Group>
       {rows.length === 0 && !allowNew ? (
-        <Text style={[a.text_md, a.py_xl, a.text_center, t.atoms.text_contrast_medium]}>
+        <Text
+          style={[
+            a.text_md,
+            a.py_xl,
+            a.text_center,
+            t.atoms.text_contrast_medium,
+          ]}>
           <Trans>Nobody matches “{query}”</Trans>
         </Text>
       ) : null}

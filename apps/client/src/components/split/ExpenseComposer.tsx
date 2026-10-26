@@ -4,7 +4,12 @@ import {plural} from '@lingui/core/macro'
 import {Trans, useLingui} from '@lingui/react/macro'
 import {useNavigation} from '@react-navigation/native'
 import {formatAmount, magnitude} from '@splito/domain'
-import {createExpense, type Group, type Person, updateExpense} from '@splito/sync'
+import {
+  createExpense,
+  type Group,
+  type Person,
+  updateExpense,
+} from '@splito/sync'
 
 import {type NavigationProp} from '#/lib/routes/types'
 import {useNumberLocale} from '#/locale/numberLocale'
@@ -22,7 +27,12 @@ import {SuccessCheck} from '#/motion/SuccessCheck'
 import {DateDialog} from './DateDialog'
 import {clearDraft, type DraftContext, writeDraft} from './drafts'
 import {AmountField, DetailRow, FieldError, PlainInput} from './fields'
-import {evaluateForm, type ExpenseForm, type FormEvaluation, hasContent} from './form'
+import {
+  evaluateForm,
+  type ExpenseForm,
+  type FormEvaluation,
+  hasContent,
+} from './form'
 import {Person_Stroke2_Corner2_Rounded as PersonIcon} from '#/components/icons/Person'
 import {CalendarIcon, GroupIcon, NotesIcon, WalletIcon} from './icons'
 import {PayersDialog} from './PayersDialog'
@@ -111,8 +121,17 @@ export function ExpenseComposer({
     else clearDraft()
   }, [form, draftContext, savedId, initialForm])
 
-  const group = form.groupId ? groups?.find(g => g.id === form.groupId) : undefined
-  const members = group?.data.members.filter(m => m.leftAt === null).map(m => m.personId)
+  /* Edits have no draft, so a swipe-down on the iOS sheet must not drop them silently. */
+  useEffect(() => {
+    if (isEdit) navigation.setOptions({gestureEnabled: !isDirty})
+  }, [isEdit, isDirty, navigation])
+
+  const group = form.groupId
+    ? groups?.find(g => g.id === form.groupId)
+    : undefined
+  const members = group?.data.members
+    .filter(m => m.leftAt === null)
+    .map(m => m.personId)
   const friends = (people ?? [])
     .filter(p => !p.data.isMe)
     .sort((x, y) => x.data.name.localeCompare(y.data.name))
@@ -121,13 +140,19 @@ export function ExpenseComposer({
 
   const setPeople = (ids: string[]) =>
     update(f => {
-      const next = [...candidates.filter(id => ids.includes(id)), ...ids.filter(id => !candidates.includes(id))]
+      const next = [
+        ...candidates.filter(id => ids.includes(id)),
+        ...ids.filter(id => !candidates.includes(id)),
+      ]
       return {
         ...f,
         people: next,
         payer: next.includes(f.payer) ? f.payer : (next[0] ?? ctx.actor),
         excluded: f.excluded.filter(p => next.includes(p)),
-        items: f.items.map(i => ({...i, people: i.people.filter(p => next.includes(p))})),
+        items: f.items.map(i => ({
+          ...i,
+          people: i.people.filter(p => next.includes(p)),
+        })),
       }
     })
 
@@ -136,8 +161,13 @@ export function ExpenseComposer({
       if (!groupId) return {...f, groupId: null}
       const g = groups?.find(x => x.id === groupId)
       if (!g) return f
-      const ids = g.data.members.filter(m => m.leftAt === null).map(m => m.personId)
-      const next = [...ids.filter(id => id === ctx.actor), ...ids.filter(id => id !== ctx.actor)]
+      const ids = g.data.members
+        .filter(m => m.leftAt === null)
+        .map(m => m.personId)
+      const next = [
+        ...ids.filter(id => id === ctx.actor),
+        ...ids.filter(id => id !== ctx.actor),
+      ]
       return {
         ...f,
         groupId,
@@ -145,7 +175,10 @@ export function ExpenseComposer({
         people: next,
         payer: next.includes(f.payer) ? f.payer : (next[0] ?? ctx.actor),
         excluded: [],
-        items: f.items.map(i => ({...i, people: i.people.filter(p => next.includes(p))})),
+        items: f.items.map(i => ({
+          ...i,
+          people: i.people.filter(p => next.includes(p)),
+        })),
       }
     })
 
@@ -153,7 +186,9 @@ export function ExpenseComposer({
     update(f => ({
       ...f,
       title,
-      category: f.isCategoryPicked ? f.category : (suggestCategory(title, categories) ?? f.category),
+      category: f.isCategoryPicked
+        ? f.category
+        : (suggestCategory(title, categories) ?? f.category),
     }))
 
   const finish = (id: string) => {
@@ -165,7 +200,9 @@ export function ExpenseComposer({
           <Toast.Text>
             <Trans>Expense added</Trans>
           </Toast.Text>
-          <Toast.Action label={l`View expense`} onPress={() => navigation.navigate('Expense', {expenseId: id})}>
+          <Toast.Action
+            label={l`View expense`}
+            onPress={() => navigation.navigate('Expense', {expenseId: id})}>
             <Trans>View</Trans>
           </Toast.Action>
         </Toast.Outer>,
@@ -179,7 +216,9 @@ export function ExpenseComposer({
     if (!draft || isSaving || savedId) return
     setIsSaving(true)
     try {
-      const saved = expenseId ? await updateExpense(store, ctx, expenseId, draft) : await createExpense(store, ctx, draft)
+      const saved = expenseId
+        ? await updateExpense(store, ctx, expenseId, draft)
+        : await createExpense(store, ctx, draft)
       if (draftContext) clearDraft()
       setSavedId(saved.id)
     } catch (e) {
@@ -194,17 +233,31 @@ export function ExpenseComposer({
     else onClose()
   }
 
+  const first = form.people[0] ? name(form.people[0]) : ''
+  const second = form.people[1] ? name(form.people[1]) : ''
+  const rest = form.people.length - 2
+  const peopleSummary =
+    form.people.length === 0
+      ? l`Nobody yet`
+      : form.people.length <= 2
+        ? form.people.map(name).join(', ')
+        : l`${first}, ${second} +${rest}`
+
   const today = localToday(tz)
   const isUpcoming = form.date > today
   const payersValue =
     form.payerMode === 'single'
       ? name(form.payer)
-      : evaluation.payersRemaining !== undefined && evaluation.payersRemaining !== 0n
+      : evaluation.payersRemaining !== undefined &&
+          evaluation.payersRemaining !== 0n
         ? evaluation.payersRemaining > 0n
           ? l`${formatAmount(evaluation.payersRemaining, form.currency, locale)} left to pay`
           : l`${formatAmount(magnitude(evaluation.payersRemaining), form.currency, locale)} too much`
         : l`${Object.keys(evaluation.draft?.payers ?? form.paid).length} people`
-  const isPayersOff = form.payerMode === 'multiple' && evaluation.payersRemaining !== undefined && evaluation.payersRemaining !== 0n
+  const isPayersOff =
+    form.payerMode === 'multiple' &&
+    evaluation.payersRemaining !== undefined &&
+    evaluation.payersRemaining !== 0n
 
   return (
     <Composer.Outer testID={testID} onDismiss={requestClose}>
@@ -214,21 +267,46 @@ export function ExpenseComposer({
         canSave={!!evaluation.draft && !savedId}
         isSaving={isSaving}
         saveLabel={isEdit ? l`Save changes` : l`Save expense`}
-        cancelHint={isEdit ? l`Closes without saving your changes` : l`Closes Add expense; your draft is kept`}>
-        <Text style={[a.text_sm, a.pr_sm, t.atoms.text_contrast_medium]} numberOfLines={1}>
+        cancelHint={
+          isEdit
+            ? l`Closes without saving your changes`
+            : l`Closes Add expense; your draft is kept`
+        }>
+        <Text
+          style={[a.text_sm, a.pr_sm, t.atoms.text_contrast_medium]}
+          numberOfLines={1}>
           {isEdit ? <Trans>Edit expense</Trans> : <Trans>New expense</Trans>}
         </Text>
       </Composer.TopBar>
 
-      <KeyboardAvoidingView behavior={IS_IOS ? 'padding' : undefined} style={[a.flex_1, web(a.flex_shrink)]}>
+      <KeyboardAvoidingView
+        behavior={IS_IOS ? 'padding' : undefined}
+        style={[a.flex_1, web(a.flex_shrink)]}>
         <ScrollView
           testID="expense-form"
           keyboardShouldPersistTaps="handled"
           style={[a.flex_1, web([a.flex_shrink, {minHeight: 0}])]}
           contentContainerStyle={[a.pb_2xl]}>
           {showRestored && freshForm ? (
-            <View style={[a.mx_lg, a.mb_sm, a.px_md, a.py_sm, a.rounded_sm, a.flex_row, a.align_center, a.gap_sm, t.atoms.bg_contrast_25]}>
-              <Text style={[a.flex_1, a.text_sm, a.leading_snug, t.atoms.text_contrast_high]}>
+            <View
+              style={[
+                a.mx_lg,
+                a.mb_sm,
+                a.px_md,
+                a.py_sm,
+                a.rounded_sm,
+                a.flex_row,
+                a.align_center,
+                a.gap_sm,
+                t.atoms.bg_contrast_25,
+              ]}>
+              <Text
+                style={[
+                  a.flex_1,
+                  a.text_sm,
+                  a.leading_snug,
+                  t.atoms.text_contrast_high,
+                ]}>
                 <Trans>We kept your unsaved expense.</Trans>
               </Text>
               <Button
@@ -267,12 +345,20 @@ export function ExpenseComposer({
                 accessibilityLabel={l`Title`}
                 autoFocus={!isEdit && gtMobile}
                 maxLength={120}
+                spellCheck={false}
                 returnKeyType="next"
                 style={[a.text_xl, a.font_medium, {paddingVertical: 2}]}
               />
-              <Text testID="expense-category-name" style={[a.text_sm, t.atoms.text_contrast_medium]} numberOfLines={1}>
+              <Text
+                testID="expense-category-name"
+                style={[a.text_sm, t.atoms.text_contrast_medium]}
+                numberOfLines={1}>
                 {category.name}
-                {!form.isCategoryPicked && form.title.trim() && category.id !== 'other' ? ` · ${l`suggested`}` : ''}
+                {!form.isCategoryPicked &&
+                form.title.trim() &&
+                category.id !== 'other'
+                  ? ` · ${l`suggested`}`
+                  : ''}
               </Text>
             </View>
           </View>
@@ -283,7 +369,11 @@ export function ExpenseComposer({
             currency={form.currency}
             locale={locale}
             result={evaluation.total}
-            errorText={evaluation.amountError ? errorText(evaluation.amountError) : undefined}
+            errorText={
+              evaluation.amountError
+                ? errorText(evaluation.amountError)
+                : undefined
+            }
             onPressCurrency={() => currencyControl.open()}
           />
 
@@ -307,7 +397,7 @@ export function ExpenseComposer({
             testID="expense-people"
             icon={PersonIcon}
             label={l`Split with`}
-            value={peopleSummary(form.people, name, l)}
+            value={peopleSummary}
             onPress={() => peopleControl.open()}
           />
           <DetailRow
@@ -323,13 +413,23 @@ export function ExpenseComposer({
           <SectionLabel>
             <Trans>Split</Trans>
           </SectionLabel>
-          <SplitEditor form={form} update={update} evaluation={evaluation} locale={locale} onAddPeople={() => peopleControl.open()} />
+          <SplitEditor
+            form={form}
+            update={update}
+            evaluation={evaluation}
+            locale={locale}
+            onAddPeople={() => peopleControl.open()}
+          />
 
           <SectionLabel>
             <Trans>Notes</Trans>
           </SectionLabel>
           <View style={[a.flex_row, a.align_start, a.gap_md, a.px_lg]}>
-            <NotesIcon size="md" fill={t.atoms.text_contrast_medium.color} style={[{marginTop: 2}]} />
+            <NotesIcon
+              size="md"
+              fill={t.atoms.text_contrast_medium.color}
+              style={[{marginTop: 2}]}
+            />
             <PlainInput
               testID="expense-notes"
               value={form.notes}
@@ -343,35 +443,85 @@ export function ExpenseComposer({
           </View>
         </ScrollView>
 
-        <Footer form={form} evaluation={evaluation} locale={locale} isDirty={isDirty} />
+        <Footer
+          form={form}
+          evaluation={evaluation}
+          locale={locale}
+          isDirty={isDirty}
+        />
       </KeyboardAvoidingView>
 
       {savedId ? (
-        <View testID="expense-saved" style={[a.absolute, a.inset_0, a.z_50, a.align_center, a.justify_center, a.gap_lg, t.atoms.bg]}>
-          <SuccessCheck size={72} onCheckShown={() => setTimeout(() => finish(savedId), 350)} />
-          <Text style={[a.text_xl, a.font_semi_bold]}>{isEdit ? <Trans>Changes saved</Trans> : <Trans>Expense added</Trans>}</Text>
+        <View
+          testID="expense-saved"
+          style={[
+            a.absolute,
+            a.inset_0,
+            a.z_50,
+            a.align_center,
+            a.justify_center,
+            a.gap_lg,
+            t.atoms.bg,
+          ]}>
+          <SuccessCheck
+            size={72}
+            onCheckShown={() => setTimeout(() => finish(savedId), 350)}
+          />
+          <Text style={[a.text_xl, a.font_semi_bold]}>
+            {isEdit ? (
+              <Trans>Changes saved</Trans>
+            ) : (
+              <Trans>Expense added</Trans>
+            )}
+          </Text>
         </View>
       ) : null}
 
-      <CurrencyDialog control={currencyControl} value={form.currency} onSelect={currency => update(f => ({...f, currency}))} />
-      <DateDialog control={dateControl} title={l`Date`} value={form.date} onSelect={date => update(f => ({...f, date}))} />
+      <CurrencyDialog
+        control={currencyControl}
+        value={form.currency}
+        onSelect={currency => update(f => ({...f, currency}))}
+      />
+      <DateDialog
+        control={dateControl}
+        title={l`Date`}
+        value={form.date}
+        onSelect={date => update(f => ({...f, date}))}
+      />
       <CategoryDialog
         control={categoryControl}
         categories={categories}
         value={form.category}
-        onSelect={id => update(f => ({...f, category: id, isCategoryPicked: true}))}
+        onSelect={id =>
+          update(f => ({...f, category: id, isCategoryPicked: true}))
+        }
       />
-      <GroupDialog control={groupControl} groups={groups ?? []} value={form.groupId} onSelect={selectGroup} />
+      <GroupDialog
+        control={groupControl}
+        groups={groups ?? []}
+        value={form.groupId}
+        onSelect={selectGroup}
+      />
       <PeopleDialog
         control={peopleControl}
         title={l`Split with`}
-        description={group ? l`Members of ${group.data.name}` : l`Add friends, or type a new name to add someone without an account.`}
+        description={
+          group
+            ? l`Members of ${group.data.name}`
+            : l`Add friends, or type a new name to add someone without an account.`
+        }
         candidates={candidates}
         selected={form.people}
         allowNew={!group}
         onChange={setPeople}
       />
-      <PayersDialog control={payersControl} form={form} update={update} evaluation={evaluation} locale={locale} />
+      <PayersDialog
+        control={payersControl}
+        form={form}
+        update={update}
+        evaluation={evaluation}
+        locale={locale}
+      />
 
       {isEdit ? (
         <Prompt.Basic
@@ -384,17 +534,26 @@ export function ExpenseComposer({
           onConfirm={onClose}
         />
       ) : (
-        <Prompt.Outer control={closePromptControl} testID="expense-close-prompt">
+        <Prompt.Outer
+          control={closePromptControl}
+          testID="expense-close-prompt">
           <Prompt.Content>
             <Prompt.TitleText>
               <Trans>Save draft?</Trans>
             </Prompt.TitleText>
             <Prompt.DescriptionText>
-              <Trans>Would you like to keep this as a draft to finish later?</Trans>
+              <Trans>
+                Would you like to keep this as a draft to finish later?
+              </Trans>
             </Prompt.DescriptionText>
           </Prompt.Content>
           <Prompt.Actions>
-            <Prompt.Action testID="draft-save" cta={l`Save draft`} color="primary" onPress={onClose} />
+            <Prompt.Action
+              testID="draft-save"
+              cta={l`Save draft`}
+              color="primary"
+              onPress={onClose}
+            />
             <Prompt.Cancel cta={l`Keep editing`} />
             <Prompt.Action
               testID="draft-discard"
@@ -416,18 +575,19 @@ function peopleCount(n: number) {
   return plural(n, {one: '# person', other: '# people'})
 }
 
-function peopleSummary(ids: string[], name: (id: string) => string, l: ReturnType<typeof useLingui>['t']) {
-  if (ids.length === 0) return l`Nobody yet`
-  if (ids.length <= 2) return ids.map(name).join(', ')
-  const rest = ids.length - 2
-  return l`${name(ids[0]!)}, ${name(ids[1]!)} +${rest}`
-}
-
 function UpcomingTag() {
   const t = useTheme()
   return (
-    <View testID="upcoming-tag" style={[a.px_sm, a.py_2xs, a.rounded_full, {backgroundColor: t.palette.primary_50}]}>
-      <Text style={[a.text_xs, a.font_semi_bold, {color: t.palette.primary_600}]}>
+    <View
+      testID="upcoming-tag"
+      style={[
+        a.px_sm,
+        a.py_2xs,
+        a.rounded_full,
+        {backgroundColor: t.palette.primary_50},
+      ]}>
+      <Text
+        style={[a.text_xs, a.font_semi_bold, {color: t.palette.primary_600}]}>
         <Trans>Upcoming</Trans>
       </Text>
     </View>
@@ -451,7 +611,8 @@ function Footer({
   const errorText = useErrorText()
   const {total, remaining, shares} = evaluation
   const fmt = (v: bigint) => formatAmount(v, form.currency, locale)
-  const pct = (bp: number) => i18n.number(Math.abs(bp) / 100, {maximumFractionDigits: 2})
+  const pct = (bp: number) =>
+    i18n.number(Math.abs(bp) / 100, {maximumFractionDigits: 2})
 
   let text: string | null = null
   let tone: 'ok' | 'off' | 'muted' = 'muted'
@@ -474,7 +635,12 @@ function Footer({
           : l`${fmt(magnitude(remaining.value))} over the total`
   } else if (total === undefined) {
     text = l`Enter an amount to see everyone’s share`
-  } else if (shares && (form.mode === 'equal' || form.mode === 'adjusted' || form.mode === 'shares')) {
+  } else if (
+    shares &&
+    (form.mode === 'equal' ||
+      form.mode === 'adjusted' ||
+      form.mode === 'shares')
+  ) {
     const values = Object.values(shares)
     const n = values.length
     const most = values.reduce((x, y) => (y > x ? y : x), 0n)
@@ -490,14 +656,39 @@ function Footer({
 
   // When the split itself is fine, say quietly what else Save still needs (after the first edit).
   let need: string | null = null
-  if (tone !== 'off' && evaluation.error && isDirty && evaluation.error !== 'AMOUNT_REQUIRED' && !evaluation.amountError) {
-    if (!['TOTAL_MISMATCH', 'PERCENT_NOT_100'].includes(evaluation.error)) need = errorText(evaluation.error)
+  if (
+    tone !== 'off' &&
+    evaluation.error &&
+    isDirty &&
+    evaluation.error !== 'AMOUNT_REQUIRED' &&
+    !evaluation.amountError
+  ) {
+    if (!['TOTAL_MISMATCH', 'PERCENT_NOT_100'].includes(evaluation.error))
+      need = errorText(evaluation.error)
   }
 
   return (
-    <View style={[a.flex_row, a.align_center, a.px_lg, a.py_md, a.border_t, t.atoms.border_contrast_low, t.atoms.bg, {minHeight: 48}]}>
+    <View
+      style={[
+        a.flex_row,
+        a.align_center,
+        a.px_lg,
+        a.py_md,
+        a.border_t,
+        t.atoms.border_contrast_low,
+        t.atoms.bg,
+        {minHeight: 48},
+      ]}>
       {need ? (
-        <Text testID="save-needs" style={[a.flex_1, a.text_sm, a.font_medium, t.atoms.text_contrast_medium]} numberOfLines={1}>
+        <Text
+          testID="save-needs"
+          style={[
+            a.flex_1,
+            a.text_sm,
+            a.font_medium,
+            t.atoms.text_contrast_medium,
+          ]}
+          numberOfLines={1}>
           {need}
         </Text>
       ) : null}
@@ -514,7 +705,11 @@ function Footer({
               a.text_sm,
               a.font_medium,
               {fontVariant: ['tabular-nums']},
-              tone === 'off' ? {color: t.palette.negative_500} : tone === 'ok' ? t.atoms.text_contrast_high : t.atoms.text_contrast_medium,
+              tone === 'off'
+                ? {color: t.palette.negative_500}
+                : tone === 'ok'
+                  ? t.atoms.text_contrast_high
+                  : t.atoms.text_contrast_medium,
             ]}>
             {text}
           </Text>

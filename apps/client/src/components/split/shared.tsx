@@ -1,7 +1,12 @@
 import {View} from 'react-native'
 import {type I18n} from '@lingui/core'
 import {useLingui} from '@lingui/react/macro'
-import {type Category, DEFAULT_CATEGORIES, type Person, PREFS} from '@splito/sync'
+import {
+  type Category,
+  DEFAULT_CATEGORIES,
+  type Person,
+  PREFS,
+} from '@splito/sync'
 
 import {useEntities, useMutationCtx, usePref} from '#/data/hooks'
 import {atoms as a, useTheme} from '#/alf'
@@ -22,7 +27,12 @@ export function useExpenseTz() {
 /** Today's `YYYY-MM-DD` in `tz` (en-CA formats dates as ISO). */
 export function localToday(tz: string, offsetDays = 0) {
   const d = new Date(Date.now() + offsetDays * 86_400_000)
-  return new Intl.DateTimeFormat('en-CA', {timeZone: tz, year: 'numeric', month: '2-digit', day: '2-digit'}).format(d)
+  return new Intl.DateTimeFormat('en-CA', {
+    timeZone: tz,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).format(d)
 }
 
 /** A local `YYYY-MM-DD` as a Date at UTC midnight, so formatting never shifts the day. */
@@ -44,8 +54,18 @@ export function useFormatDay() {
   }
 }
 
-export function formatDay(i18n: I18n, date: string, opts: Intl.DateTimeFormatOptions = {}) {
-  return i18n.date(utcDate(date), {day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC', ...opts})
+export function formatDay(
+  i18n: I18n,
+  date: string,
+  opts: Intl.DateTimeFormatOptions = {},
+) {
+  return i18n.date(utcDate(date), {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+    timeZone: 'UTC',
+    ...opts,
+  })
 }
 
 /** Display names by person id; the local user is "You". */
@@ -75,7 +95,10 @@ export function useCategory(id: string): Category {
   const [categories = PREFS.categories.default] = usePref('categories')
   return (
     categories.find(c => c.id === id) ??
-    categories.find(c => c.id === 'other') ?? {...DEFAULT_CATEGORIES.at(-1)!, id}
+    categories.find(c => c.id === 'other') ?? {
+      ...DEFAULT_CATEGORIES.at(-1)!,
+      id,
+    }
   )
 }
 
@@ -83,14 +106,25 @@ export function useCategory(id: string): Category {
  * The category's glyph on a tint of its colour, in Bluesky's rounded-square
  * avatar shape (feeds and lists use it). Sized like the avatar it replaces.
  */
-export function CategoryTile({category, size = 42}: {category: Category; size?: number}) {
+export function CategoryTile({
+  category,
+  size = 42,
+}: {
+  category: Category
+  size?: number
+}) {
   const Icon = categoryIcon(category.icon)
   return (
     <View
       style={[
         a.align_center,
         a.justify_center,
-        {width: size, height: size, borderRadius: size > 32 ? 10 : 6, backgroundColor: category.color + '24'},
+        {
+          width: size,
+          height: size,
+          borderRadius: size > 32 ? 10 : 6,
+          backgroundColor: category.color + '24',
+        },
       ]}>
       <Icon width={Math.round(size * 0.5)} fill={category.color} />
     </View>
@@ -153,11 +187,27 @@ export function useErrorText() {
 }
 
 /** Bluesky's small grey section label (as in Settings lists). */
-export function SectionLabel({children, right}: {children: React.ReactNode; right?: React.ReactNode}) {
+export function SectionLabel({
+  children,
+  right,
+}: {
+  children: React.ReactNode
+  right?: React.ReactNode
+}) {
   const t = useTheme()
   return (
-    <View style={[a.flex_row, a.align_center, a.justify_between, a.px_lg, a.pt_xl, a.pb_sm]}>
-      <Text style={[a.text_sm, a.font_semi_bold, t.atoms.text_contrast_medium]}>{children}</Text>
+    <View
+      style={[
+        a.flex_row,
+        a.align_center,
+        a.justify_between,
+        a.px_lg,
+        a.pt_xl,
+        a.pb_sm,
+      ]}>
+      <Text style={[a.text_sm, a.font_semi_bold, t.atoms.text_contrast_medium]}>
+        {children}
+      </Text>
       {right}
     </View>
   )

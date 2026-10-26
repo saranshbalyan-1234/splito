@@ -20,8 +20,12 @@ export function readDraft(context: DraftContext): ExpenseForm | undefined {
   try {
     const d = drafts.get(['addExpense'])
     if (!d) return undefined
-    const isSamePlace = (d.context.groupId ?? null) === (context.groupId ?? null) && (d.context.personId ?? null) === (context.personId ?? null)
-    return isSamePlace || (!context.groupId && !context.personId) ? d.form : undefined
+    const isSamePlace =
+      (d.context.groupId ?? null) === (context.groupId ?? null) &&
+      (d.context.personId ?? null) === (context.personId ?? null)
+    return isSamePlace || (!context.groupId && !context.personId)
+      ? d.form
+      : undefined
   } catch {
     return undefined
   }

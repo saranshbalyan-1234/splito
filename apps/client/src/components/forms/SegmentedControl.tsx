@@ -107,7 +107,15 @@ export function Root<T extends string>({
         })
       },
     }
-  }, [value, selectedPosition, setSelectedPosition, onChange, type, size, scrollable])
+  }, [
+    value,
+    selectedPosition,
+    setSelectedPosition,
+    onChange,
+    type,
+    size,
+    scrollable,
+  ])
 
   const control = (
     <View

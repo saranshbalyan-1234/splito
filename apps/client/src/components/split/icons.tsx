@@ -93,5 +93,7 @@ const CATEGORY_ICONS = {
 } as const
 
 export function categoryIcon(name: string) {
-  return CATEGORY_ICONS[name as keyof typeof CATEGORY_ICONS] ?? CATEGORY_ICONS.circle
+  return (
+    CATEGORY_ICONS[name as keyof typeof CATEGORY_ICONS] ?? CATEGORY_ICONS.circle
+  )
 }

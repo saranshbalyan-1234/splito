@@ -44,7 +44,15 @@ export function DateDialog({
   )
 }
 
-function Calendar({title, value, onSelect}: {title: string; value: string; onSelect: (date: string) => void}) {
+function Calendar({
+  title,
+  value,
+  onSelect,
+}: {
+  title: string
+  value: string
+  onSelect: (date: string) => void
+}) {
   const t = useTheme()
   const {t: l, i18n} = useLingui()
   const control = Dialog.useDialogContext()
@@ -55,7 +63,9 @@ function Calendar({title, value, onSelect}: {title: string; value: string; onSel
   const [vy, vm] = start.split('-').map(Number) as [number, number]
   const [view, setView] = useState({y: vy, m: vm - 1})
   const [isPickingYear, setIsPickingYear] = useState(false)
-  const [yearPage, setYearPage] = useState(() => Math.floor((vy - MIN_YEAR) / YEARS_PER_PAGE))
+  const [yearPage, setYearPage] = useState(() =>
+    Math.floor((vy - MIN_YEAR) / YEARS_PER_PAGE),
+  )
 
   const pick = (date: string) => control.close(() => onSelect(date))
   const step = (delta: number) => {
@@ -65,14 +75,30 @@ function Calendar({title, value, onSelect}: {title: string; value: string; onSel
     setView({y, m: n % 12})
   }
 
-  const monthTitle = i18n.date(new Date(Date.UTC(view.y, view.m, 1)), {month: 'long', year: 'numeric', timeZone: 'UTC'})
+  const monthTitle = i18n.date(new Date(Date.UTC(view.y, view.m, 1)), {
+    month: 'long',
+    year: 'numeric',
+    timeZone: 'UTC',
+  })
   const daysInMonth = new Date(Date.UTC(view.y, view.m + 1, 0)).getUTCDate()
-  const lead = (new Date(Date.UTC(view.y, view.m, 1)).getUTCDay() - weekStart + 7) % 7
-  const cells: Array<number | null> = [...Array(lead).fill(null), ...Array.from({length: daysInMonth}, (_, i) => i + 1)]
+  const lead =
+    (new Date(Date.UTC(view.y, view.m, 1)).getUTCDay() - weekStart + 7) % 7
+  const cells: Array<number | null> = [
+    ...Array(lead).fill(null),
+    ...Array.from({length: daysInMonth}, (_, i) => i + 1),
+  ]
   while (cells.length % 7) cells.push(null)
   // 1 Jan 2023 was a Sunday.
-  const weekdays = Array.from({length: 7}, (_, i) => i18n.date(new Date(Date.UTC(2023, 0, 1 + ((weekStart + i) % 7))), {weekday: 'short', timeZone: 'UTC'}))
-  const years = Array.from({length: YEARS_PER_PAGE}, (_, i) => MIN_YEAR + yearPage * YEARS_PER_PAGE + i).filter(y => y <= MAX_YEAR)
+  const weekdays = Array.from({length: 7}, (_, i) =>
+    i18n.date(new Date(Date.UTC(2023, 0, 1 + ((weekStart + i) % 7))), {
+      weekday: 'short',
+      timeZone: 'UTC',
+    }),
+  )
+  const years = Array.from(
+    {length: YEARS_PER_PAGE},
+    (_, i) => MIN_YEAR + yearPage * YEARS_PER_PAGE + i,
+  ).filter(y => y <= MAX_YEAR)
 
   const isFirstMonth = view.y === MIN_YEAR && view.m === 0
   const isLastMonth = view.y === MAX_YEAR && view.m === 11
@@ -91,7 +117,9 @@ function Calendar({title, value, onSelect}: {title: string; value: string; onSel
           onPress={() => setIsPickingYear(v => !v)}
           style={[{marginLeft: -12}]}>
           <ButtonText style={[a.text_lg, a.font_semi_bold, t.atoms.text]}>
-            {isPickingYear ? `${years[0]} – ${years[years.length - 1]}` : monthTitle}
+            {isPickingYear
+              ? `${years[0]} – ${years[years.length - 1]}`
+              : monthTitle}
           </ButtonText>
           <ButtonIcon icon={ChevronDownIcon} size="sm" />
         </Button>
@@ -104,7 +132,9 @@ function Calendar({title, value, onSelect}: {title: string; value: string; onSel
             color="secondary"
             shape="round"
             disabled={isPickingYear ? yearPage === 0 : isFirstMonth}
-            onPress={() => (isPickingYear ? setYearPage(p => p - 1) : step(-1))}>
+            onPress={() =>
+              isPickingYear ? setYearPage(p => p - 1) : step(-1)
+            }>
             <ButtonIcon icon={ChevronLeftIcon} size="md" />
           </Button>
           <Button
@@ -114,7 +144,9 @@ function Calendar({title, value, onSelect}: {title: string; value: string; onSel
             variant="ghost"
             color="secondary"
             shape="round"
-            disabled={isPickingYear ? years[years.length - 1]! >= MAX_YEAR : isLastMonth}
+            disabled={
+              isPickingYear ? years[years.length - 1]! >= MAX_YEAR : isLastMonth
+            }
             onPress={() => (isPickingYear ? setYearPage(p => p + 1) : step(1))}>
             <ButtonIcon icon={ChevronRightIcon} size="md" />
           </Button>
@@ -147,25 +179,40 @@ function Calendar({title, value, onSelect}: {title: string; value: string; onSel
           <View style={[a.flex_row]}>
             {weekdays.map(d => (
               <View key={d} style={[a.flex_1, a.align_center, a.pb_sm]}>
-                <Text style={[a.text_xs, a.font_semi_bold, t.atoms.text_contrast_medium]}>{d}</Text>
+                <Text
+                  style={[
+                    a.text_xs,
+                    a.font_semi_bold,
+                    t.atoms.text_contrast_medium,
+                  ]}>
+                  {d}
+                </Text>
               </View>
             ))}
           </View>
           {Array.from({length: cells.length / 7}, (_, row) => (
             <View key={row} style={[a.flex_row]}>
               {cells.slice(row * 7, row * 7 + 7).map((day, i) => {
-                if (day === null) return <View key={i} style={[a.flex_1, {height: CELL + 4}]} />
+                if (day === null)
+                  return <View key={i} style={[a.flex_1, {height: CELL + 4}]} />
                 const date = iso(view.y, view.m, day)
                 const isSelected = date === value
                 const isToday = date === today
                 return (
-                  <View key={i} style={[a.flex_1, a.align_center, {height: CELL + 4}]}>
+                  <View
+                    key={i}
+                    style={[a.flex_1, a.align_center, {height: CELL + 4}]}>
                     <Button
                       testID={`calendar-day-${date}`}
-                      label={i18n.date(new Date(`${date}T00:00:00Z`), {dateStyle: 'full', timeZone: 'UTC'})}
+                      label={i18n.date(new Date(`${date}T00:00:00Z`), {
+                        dateStyle: 'full',
+                        timeZone: 'UTC',
+                      })}
                       accessibilityState={{selected: isSelected}}
                       onPress={() => pick(date)}
-                      hoverStyle={isSelected ? undefined : t.atoms.bg_contrast_50}
+                      hoverStyle={
+                        isSelected ? undefined : t.atoms.bg_contrast_50
+                      }
                       style={[
                         a.align_center,
                         a.justify_center,
@@ -195,19 +242,37 @@ function Calendar({title, value, onSelect}: {title: string; value: string; onSel
       )}
 
       <View style={[a.flex_row, a.gap_sm, a.pt_md]}>
-        <Button testID="calendar-today" label={l`Today`} size="small" color="secondary" onPress={() => pick(today)}>
+        <Button
+          testID="calendar-today"
+          label={l`Today`}
+          size="small"
+          color="secondary"
+          onPress={() => pick(today)}>
           <ButtonText>
             <Trans>Today</Trans>
           </ButtonText>
         </Button>
-        <Button testID="calendar-yesterday" label={l`Yesterday`} size="small" color="secondary" onPress={() => pick(localToday(tz, -1))}>
+        <Button
+          testID="calendar-yesterday"
+          label={l`Yesterday`}
+          size="small"
+          color="secondary"
+          onPress={() => pick(localToday(tz, -1))}>
           <ButtonText>
             <Trans>Yesterday</Trans>
           </ButtonText>
         </Button>
       </View>
-      <Text style={[a.text_sm, a.leading_snug, a.pt_md, t.atoms.text_contrast_medium]}>
-        <Trans>Future dates are fine – they show as upcoming until the day arrives.</Trans>
+      <Text
+        style={[
+          a.text_sm,
+          a.leading_snug,
+          a.pt_md,
+          t.atoms.text_contrast_medium,
+        ]}>
+        <Trans>
+          Future dates are fine – they show as upcoming until the day arrives.
+        </Trans>
       </Text>
       <Dialog.Close />
     </Dialog.ScrollableInner>

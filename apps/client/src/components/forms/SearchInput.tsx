@@ -21,13 +21,7 @@ type Props = Omit<TextField.InputProps, 'label'> & {
   ref?: React.Ref<React.ComponentRef<typeof TextInput>>
 }
 
-export function SearchInput({
-  value,
-  label,
-  onClearText,
-  ref,
-  ...rest
-}: Props) {
+export function SearchInput({value, label, onClearText, ref, ...rest}: Props) {
   const t = useTheme()
   const {t: l} = useLingui()
   const showClear = !!value && value.length > 0

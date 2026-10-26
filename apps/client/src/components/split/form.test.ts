@@ -1,11 +1,23 @@
 import {describe, expect, test} from 'bun:test'
 import {type Expense} from '@splito/sync'
 
-import {emptyForm, evaluateForm, type ExpenseForm, formFromExpense} from './form'
+import {
+  emptyForm,
+  evaluateForm,
+  type ExpenseForm,
+  formFromExpense,
+} from './form'
 import {suggestCategory} from './suggestCategory'
 
 const base = (over: Partial<ExpenseForm> = {}): ExpenseForm => ({
-  ...emptyForm({me: 'me', currency: 'INR', date: '2026-10-26', people: ['me', 'riya', 'sam'], groupId: null, mode: 'equal'}),
+  ...emptyForm({
+    me: 'me',
+    currency: 'INR',
+    date: '2026-10-26',
+    people: ['me', 'riya', 'sam'],
+    groupId: null,
+    mode: 'equal',
+  }),
   title: 'Dinner',
   amount: '300',
   ...over,
@@ -20,29 +32,58 @@ describe('evaluateForm', () => {
     expect(r.draft?.total).toBe(30000n)
   })
   test('title and amount are required', () => {
-    expect(evaluateForm(base({title: '  '}), 'UTC').error).toBe('TITLE_REQUIRED')
-    expect(evaluateForm(base({amount: ''}), 'UTC').error).toBe('AMOUNT_REQUIRED')
-    expect(evaluateForm(base({amount: '0'}), 'UTC').error).toBe('AMOUNT_NOT_POSITIVE')
+    expect(evaluateForm(base({title: '  '}), 'UTC').error).toBe(
+      'TITLE_REQUIRED',
+    )
+    expect(evaluateForm(base({amount: ''}), 'UTC').error).toBe(
+      'AMOUNT_REQUIRED',
+    )
+    expect(evaluateForm(base({amount: '0'}), 'UTC').error).toBe(
+      'AMOUNT_NOT_POSITIVE',
+    )
   })
-  test('calculator amount', () => expect(evaluateForm(base({amount: '250+50'}), 'UTC').total).toBe(30000n))
+  test('calculator amount', () =>
+    expect(evaluateForm(base({amount: '250+50'}), 'UTC').total).toBe(30000n))
   test('excluded people leave the equal split', () =>
-    expect(evaluateForm(base({excluded: ['sam']}), 'UTC').shares).toEqual({me: 15000n, riya: 15000n}))
+    expect(evaluateForm(base({excluded: ['sam']}), 'UTC').shares).toEqual({
+      me: 15000n,
+      riya: 15000n,
+    }))
   test('exact: remaining readout until it adds up', () => {
-    const r = evaluateForm(base({mode: 'exact', exact: {me: '100', riya: '50'}}), 'UTC')
+    const r = evaluateForm(
+      base({mode: 'exact', exact: {me: '100', riya: '50'}}),
+      'UTC',
+    )
     expect(r.remaining).toEqual({kind: 'money', value: 15000n})
     expect(r.error).toBe('TOTAL_MISMATCH')
-    const ok = evaluateForm(base({mode: 'exact', exact: {me: '100', riya: '50', sam: '150'}}), 'UTC')
+    const ok = evaluateForm(
+      base({mode: 'exact', exact: {me: '100', riya: '50', sam: '150'}}),
+      'UTC',
+    )
     expect(ok.error).toBeUndefined()
   })
   test('percent: remaining in percent', () => {
-    const r = evaluateForm(base({mode: 'percent', percent: {me: '50', riya: '25'}}), 'UTC')
+    const r = evaluateForm(
+      base({mode: 'percent', percent: {me: '50', riya: '25'}}),
+      'UTC',
+    )
     expect(r.remaining).toEqual({kind: 'percent', value: 2500})
-    expect(evaluateForm(base({mode: 'percent', percent: {me: '50', riya: '25', sam: '25'}}), 'UTC').shares).toEqual({me: 15000n, riya: 7500n, sam: 7500n})
+    expect(
+      evaluateForm(
+        base({mode: 'percent', percent: {me: '50', riya: '25', sam: '25'}}),
+        'UTC',
+      ).shares,
+    ).toEqual({me: 15000n, riya: 7500n, sam: 7500n})
   })
   test('shares default to 1 each, 0 leaves someone out', () =>
-    expect(evaluateForm(base({mode: 'shares', shares: {me: 2, sam: 0}}), 'UTC').shares).toEqual({me: 20000n, riya: 10000n}))
+    expect(
+      evaluateForm(base({mode: 'shares', shares: {me: 2, sam: 0}}), 'UTC')
+        .shares,
+    ).toEqual({me: 20000n, riya: 10000n}))
   test('equal with adjustments', () =>
-    expect(evaluateForm(base({mode: 'adjusted', adjust: {sam: '60'}}), 'UTC').shares).toEqual({me: 8000n, riya: 8000n, sam: 14000n}))
+    expect(
+      evaluateForm(base({mode: 'adjusted', adjust: {sam: '60'}}), 'UTC').shares,
+    ).toEqual({me: 8000n, riya: 8000n, sam: 14000n}))
   test('items with tax', () => {
     const items = [
       {key: 'a', name: 'Pizza', amount: '200', people: ['me', 'riya']},
@@ -55,10 +96,18 @@ describe('evaluateForm', () => {
     expect(short.remaining).toEqual({kind: 'money', value: 3000n})
   })
   test('multiple payers must add up', () => {
-    const r = evaluateForm(base({payerMode: 'multiple', paid: {me: '100', riya: '100'}}), 'UTC')
+    const r = evaluateForm(
+      base({payerMode: 'multiple', paid: {me: '100', riya: '100'}}),
+      'UTC',
+    )
     expect(r.payersRemaining).toBe(10000n)
     expect(r.error).toBe('PAYERS_MISMATCH')
-    expect(evaluateForm(base({payerMode: 'multiple', paid: {me: '100', riya: '200'}}), 'UTC').draft?.payers).toEqual({me: 10000n, riya: 20000n})
+    expect(
+      evaluateForm(
+        base({payerMode: 'multiple', paid: {me: '100', riya: '200'}}),
+        'UTC',
+      ).draft?.payers,
+    ).toEqual({me: 10000n, riya: 20000n})
   })
   test('bad row amounts are reported per person', () => {
     const r = evaluateForm(base({mode: 'exact', exact: {me: '1.234'}}), 'UTC')
@@ -93,7 +142,16 @@ describe('formFromExpense', () => {
 })
 
 describe('suggestCategory', () => {
-  const ids = ['food', 'transport', 'stay', 'shopping', 'entertainment', 'bills', 'groceries', 'other'].map(id => ({id, name: id[0]!.toUpperCase() + id.slice(1)}))
+  const ids = [
+    'food',
+    'transport',
+    'stay',
+    'shopping',
+    'entertainment',
+    'bills',
+    'groceries',
+    'other',
+  ].map(id => ({id, name: id[0]!.toUpperCase() + id.slice(1)}))
   test('keywords', () => {
     expect(suggestCategory('Dinner at Thalassa', ids)).toBe('food')
     expect(suggestCategory('Cab to airport', ids)).toBe('transport')
@@ -101,6 +159,10 @@ describe('suggestCategory', () => {
     expect(suggestCategory('Villa, 4 nights', ids)).toBe('stay')
     expect(suggestCategory('BigBasket order', ids)).toBe('groceries')
   })
-  test('custom category names match too', () => expect(suggestCategory('Gym fees', [...ids, {id: 'x', name: 'Gym'}])).toBe('x'))
-  test('nothing to suggest', () => expect(suggestCategory('Misc', ids)).toBeUndefined())
+  test('custom category names match too', () =>
+    expect(suggestCategory('Gym fees', [...ids, {id: 'x', name: 'Gym'}])).toBe(
+      'x',
+    ))
+  test('nothing to suggest', () =>
+    expect(suggestCategory('Misc', ids)).toBeUndefined())
 })

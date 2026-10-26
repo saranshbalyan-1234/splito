@@ -75,11 +75,27 @@ function AddExpenseForm({
   const [fresh] = useState(() => {
     const group = groups.find(g => g.id === groupId)
     if (group) {
-      const members = group.data.members.filter(m => m.leftAt === null).map(m => m.personId)
-      return emptyForm({me, currency: group.data.currency, date: localToday(tz), people: members, groupId: group.id, mode})
+      const members = group.data.members
+        .filter(m => m.leftAt === null)
+        .map(m => m.personId)
+      return emptyForm({
+        me,
+        currency: group.data.currency,
+        date: localToday(tz),
+        people: members,
+        groupId: group.id,
+        mode,
+      })
     }
     const person = people.find(p => p.id === personId)
-    return emptyForm({me, currency, date: localToday(tz), people: person ? [person.id] : [], groupId: null, mode})
+    return emptyForm({
+      me,
+      currency,
+      date: localToday(tz),
+      people: person ? [person.id] : [],
+      groupId: null,
+      mode,
+    })
   })
   const [draft] = useState(() => {
     const d = readDraft(context)
@@ -87,7 +103,9 @@ function AddExpenseForm({
     // People removed since the draft was written drop out of it.
     const alive = new Set(people.map(p => p.id))
     const isGroupAlive = !d.groupId || groups.some(g => g.id === d.groupId)
-    return isGroupAlive ? {...d, people: d.people.filter(p => alive.has(p))} : undefined
+    return isGroupAlive
+      ? {...d, people: d.people.filter(p => alive.has(p))}
+      : undefined
   })
 
   return (
