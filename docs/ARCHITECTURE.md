@@ -1159,8 +1159,10 @@ labelled sidebar); **wide** = web 1300 px and up (Bluesky `gtTablet`, right colu
   different, make them same". *Why:* "make notification
   as activity and move to bottom". *Where:* `view/shell/bottom-bar/`, `view/shell/desktop/LeftNav.tsx`,
   `navigation/Drawer.tsx`.
-- **Global search on Home.** Home starts with one Bluesky `SearchInput` ("Search friends, groups, expenses")
-  at the top, above the Overview, on every platform. Typing replaces Home's content in place (no navigation) with
+- **Global search on Home, opened from the header.** Home's header right side has a search icon to the LEFT of
+  Add friend, on every platform. Tapping it expands (Reanimated, reduced-motion aware) into a Bluesky
+  `SearchInput` ("Search friends, groups, expenses") across the header, autofocused, with an X / Cancel that
+  collapses it. Typing replaces Home's content in place (no navigation) with
   grouped live results: People, Groups, Expenses (title, notes, items, category, amount like "> 1000", dates
   like "yesterday"), with the query highlighted, plus an "Ask Splito about '<query>'" row first. Clearing (X) or
   Escape restores Home with its scroll position. On web, "/" or Cmd/Ctrl+K focuses it from anywhere (switching
@@ -1199,14 +1201,14 @@ show what: centre may be page name, right maybe some basic action, and left may 
   phones only; on rail and desktop, where the sidebar already shows the logo, it shows the title "Home". *Why:*
   "on desktop, show home instead of branding as branding is there on left". Person and Group show the entity name with a `SubtitleText` ("Trip · 5
   members"); Expense shows its title. Empty slots keep their width so the title stays centred.
-- **Right:** at most one basic action (Bluesky header icon button), optionally followed by a Bluesky "..."
+- **Right:** at most one basic action (exception: Home has Search to the left of Add friend, § 26.3) (Bluesky header icon button), optionally followed by a Bluesky "..."
   overflow Menu. No bell and no other header icon: anything else lives in the page body (Analytics' chart /
   table toggle sits in its filter row). Body primary actions are not repeated in the header. *Why:* "what's
   the second icon on header left of avatar".
 
   | Screen | Right slot |
   |---|---|
-  | Home | Add friend |
+  | Home | Search (expands in place) + Add friend |
   | Groups | Create group |
   | Analytics | Ask Splito + overflow (Export CSV) |
   | Activity | Mark all read |
@@ -1720,6 +1722,7 @@ Every owner decision, in the order it was made (all 2026-10-26). "Replaced" name
 | 69 | "why i see a search section on sidebar but only on web, whats the placement for ai chat, and i need on both platforms" | Search tab on phones + Ask Splito chip/suggestions in Search; both on web and mobile; nav unification and Ask Splito built next, right after the audit fixes | §§ 26.3, 26.19 | Ask Splito last in the queue |
 | 70 | "all of the sidebar options to be available in settings to be added in navigation bar" | Settings > Navigation: every sidebar item can go in the phone bottom bar (2-5 tabs, reorder, Home fixed) | § 26.3 | Fixed bottom bar; Custom navigation offered only some tabs |
 | 71 | "that search to be available globally on home section instead of a separate page" | Global search field at the top of Home with in-place grouped results; Search is no longer a page or nav item; freed bottom-bar slot goes to Ask Splito (centre) | §§ 26.3, 26.12, 26.19 | Search page + Search tab (rows 66, 69) |
+| 72 | "the search option to be left of add people on the header, which expands on click" | Global search is a header icon left of Add friend that expands into the search field | §§ 26.3, 26.4 | Search field always visible at the top of Home (row 71) |
 
 New decisions follow § 0 rule 9: rewrite the rule in its topic so only the current truth remains, then add a
 row here.
