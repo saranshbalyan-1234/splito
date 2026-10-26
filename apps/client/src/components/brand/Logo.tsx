@@ -11,9 +11,12 @@ const HEAD =
  * LICENSES/lucide.txt), filled, with eyes and nose knocked out. Source file:
  * assets/brand/mark.svg.
  */
-export function LogoMark({size = 32, color, featureColor = '#FFFFFF'}: {size?: number; color?: string; featureColor?: string}) {
+export function LogoMark({size = 32, color, featureColor}: {size?: number; color?: string; featureColor?: string}) {
   const t = useTheme()
-  const fill = color ?? t.palette.primary_500
+  /* Owner rule: blue and white, or black and white - never blue on dark. */
+  const isDark = t.scheme === 'dark'
+  const fill = color ?? (isDark ? '#FFFFFF' : t.palette.primary_500)
+  featureColor ??= isDark ? '#000000' : '#FFFFFF'
   return (
     <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" strokeLinecap="round" strokeLinejoin="round">
       <Path d={HEAD} fill={fill} stroke={fill} strokeWidth={2} />
