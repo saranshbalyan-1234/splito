@@ -4,6 +4,7 @@ import {StyleSheet, View} from 'react-native'
 import Animated from 'react-native-reanimated'
 import {Trans, useLingui} from '@lingui/react/macro'
 
+import {useListDensity} from '#/state/preferences/density'
 import {TimeElapsed} from '#/view/com/util/TimeElapsed'
 import {UserAvatar} from '#/view/com/util/UserAvatar'
 import {atoms as a, platform, useTheme} from '#/alf'
@@ -56,6 +57,7 @@ let NotificationFeedItem = ({
   const t = useTheme()
   const {t: l, i18n} = useLingui()
   const listAnimations = useListAnimations()
+  const isCompact = useListDensity() === 'compact'
   const timestamp = new Date(item.at).toISOString()
   const niceTimestamp = i18n.date(new Date(item.at), {
     dateStyle: 'medium',
@@ -141,6 +143,7 @@ let NotificationFeedItem = ({
         a.flex_row,
         a.align_start,
         {padding: 10},
+        isCompact && {paddingVertical: 6},
         a.pr_lg,
         t.atoms.border_contrast_low,
         !hideTopBorder && a.border_t,

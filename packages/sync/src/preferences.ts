@@ -55,6 +55,8 @@ function def<T>(key: string, group: PrefGroup, scope: PrefDef<T>['scope'], label
 
 export const PREFS = {
   theme: def('theme', 'appearance', 'account', 'Theme', 'system', oneOf('system', 'light', 'dark')),
+  /** Which dark theme `dark` (and `system` at night) uses: Bluesky's dim or its blackish dark. */
+  darkTheme: def('darkTheme', 'appearance', 'account', 'Dark theme', 'dark', oneOf('dim', 'dark')),
   accent: def('accent', 'appearance', 'account', 'Accent colour', '#006AFF', (v): v is string => typeof v === 'string' && HEX.test(v)),
   textScale: def('textScale', 'appearance', 'device', 'Text size', 1, (v): v is number => typeof v === 'number' && v >= 0.85 && v <= 1.3),
   density: def('density', 'appearance', 'account', 'List density', 'comfortable', oneOf('comfortable', 'compact')),
@@ -84,9 +86,10 @@ export const PREFS = {
       new Set(v.map(c => c?.id)).size === v.length &&
       v.every(c => isString(c?.id) && isString(c?.name) && HEX.test(c?.color) && isString(c?.icon) && Number.isInteger(c?.order) && isBool(c?.hidden)),
   ),
-  weekStart: def('weekStart', 'regional', 'account', 'Week starts on', 1, oneOf(0, 1, 6)),
-  timezone: def('timezone', 'regional', 'account', 'Timezone', 'device', isString),
+  // Registry order is the order Settings shows each group's items in.
   language: def('language', 'regional', 'account', 'Language', 'en', oneOf('en', 'hi')),
+  timezone: def('timezone', 'regional', 'account', 'Timezone', 'device', isString),
+  weekStart: def('weekStart', 'regional', 'account', 'Week starts on', 1, oneOf(0, 1, 6)),
   dateFormat: def('dateFormat', 'regional', 'account', 'Date format', 'auto', oneOf('auto', 'dmy', 'mdy', 'ymd')),
   numberLocale: def('numberLocale', 'regional', 'account', 'Number format', 'auto', oneOf('auto', 'en-IN', 'en-US', 'de-DE', 'fr-FR')),
   peopleSort: def('peopleSort', 'lists', 'account', 'Sort people by', 'amount', oneOf('amount', 'name', 'recent')),

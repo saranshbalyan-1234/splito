@@ -46,37 +46,37 @@ msgstr "{0, plural, one {#mo} other {#mo}}"
 
 #. placeholder {0}: item.actorName
 #. placeholder {1}: item.subject
-#: src/view/com/notifications/NotificationFeedItem.tsx:122
+#: src/view/com/notifications/NotificationFeedItem.tsx:124
 msgid "{0} added {1}"
 msgstr "{0} added {1}"
 
 #. placeholder {0}: item.actorName
 #. placeholder {1}: item.subject
-#: src/view/com/notifications/NotificationFeedItem.tsx:78
+#: src/view/com/notifications/NotificationFeedItem.tsx:80
 msgid "{0} added {1}{amount}"
 msgstr "{0} added {1}{amount}"
 
 #. placeholder {0}: item.actorName
 #. placeholder {1}: item.subject
-#: src/view/com/notifications/NotificationFeedItem.tsx:114
+#: src/view/com/notifications/NotificationFeedItem.tsx:116
 msgid "{0} created the group {1}"
 msgstr "{0} created the group {1}"
 
 #. placeholder {0}: item.actorName
 #. placeholder {1}: item.subject
-#: src/view/com/notifications/NotificationFeedItem.tsx:96
+#: src/view/com/notifications/NotificationFeedItem.tsx:98
 msgid "{0} deleted {1}{amount}"
 msgstr "{0} deleted {1}{amount}"
 
 #. placeholder {0}: item.actorName
 #. placeholder {1}: item.subject
-#: src/view/com/notifications/NotificationFeedItem.tsx:87
+#: src/view/com/notifications/NotificationFeedItem.tsx:89
 msgid "{0} edited {1}{amount}"
 msgstr "{0} edited {1}{amount}"
 
 #. placeholder {0}: item.actorName
 #. placeholder {1}: item.subject
-#: src/view/com/notifications/NotificationFeedItem.tsx:105
+#: src/view/com/notifications/NotificationFeedItem.tsx:107
 msgid "{0} restored {1}{amount}"
 msgstr "{0} restored {1}{amount}"
 
@@ -110,27 +110,27 @@ msgstr "{0}m"
 msgid "{0}s"
 msgstr "{0}s"
 
-#: src/view/com/notifications/NotificationFeedItem.tsx:124
+#: src/view/com/notifications/NotificationFeedItem.tsx:126
 msgid "{actor} added {subject}"
 msgstr "{actor} added {subject}"
 
-#: src/view/com/notifications/NotificationFeedItem.tsx:80
+#: src/view/com/notifications/NotificationFeedItem.tsx:82
 msgid "{actor} added {subject}{amount}"
 msgstr "{actor} added {subject}{amount}"
 
-#: src/view/com/notifications/NotificationFeedItem.tsx:116
+#: src/view/com/notifications/NotificationFeedItem.tsx:118
 msgid "{actor} created the group {subject}"
 msgstr "{actor} created the group {subject}"
 
-#: src/view/com/notifications/NotificationFeedItem.tsx:98
+#: src/view/com/notifications/NotificationFeedItem.tsx:100
 msgid "{actor} deleted {subject}{amount}"
 msgstr "{actor} deleted {subject}{amount}"
 
-#: src/view/com/notifications/NotificationFeedItem.tsx:89
+#: src/view/com/notifications/NotificationFeedItem.tsx:91
 msgid "{actor} edited {subject}{amount}"
 msgstr "{actor} edited {subject}{amount}"
 
-#: src/view/com/notifications/NotificationFeedItem.tsx:107
+#: src/view/com/notifications/NotificationFeedItem.tsx:109
 msgid "{actor} restored {subject}{amount}"
 msgstr "{actor} restored {subject}{amount}"
 
@@ -142,7 +142,7 @@ msgstr "{count, plural, one {# unread item} other {# unread items}}"
 msgid "{currency} balance – open analytics"
 msgstr "{currency} balance – open analytics"
 
-#: src/screens/Groups/components/GroupRow.tsx:55
+#: src/screens/Groups/components/GroupRow.tsx:57
 msgid "{memberCount} members"
 msgstr "{memberCount} members"
 
@@ -150,27 +150,44 @@ msgstr "{memberCount} members"
 msgid "{notificationCount, plural, one {# unread item} other {# unread items}}"
 msgstr "{notificationCount, plural, one {# unread item} other {# unread items}}"
 
-#: src/screens/Groups/components/GroupRow.tsx:55
+#: src/screens/Settings/SettingsSection.tsx:133
+msgid "{title} reset"
+msgstr "{title} reset"
+
+#: src/screens/Groups/components/GroupRow.tsx:57
 msgid "1 member"
 msgstr "1 member"
 
 #: src/screens/Profile.tsx:79
 #: src/screens/Profile.tsx:82
+#: src/screens/Settings/index.tsx:59
+#: src/screens/Settings/index.tsx:62
+#: src/screens/Settings/SettingsSection.tsx:46
 msgid "About"
 msgstr "About"
+
+#: src/components/settings/AccentPicker.tsx:80
+msgid "Accent colour"
+msgstr "Accent colour"
 
 #: src/components/HeaderAvatar.tsx:37
 msgid "Account menu"
 msgstr "Account menu"
 
+#: src/components/settings/TabsEditor.tsx:35
 #: src/components/TabGlyph.tsx:30
-#: src/navigation/Navigation.tsx:59
+#: src/navigation/Navigation.tsx:61
 #: src/screens/Activity.tsx:152
 #: src/view/shell/desktop/LeftNav.tsx:350
 msgid "Activity"
 msgstr "Activity"
 
-#: src/navigation/Navigation.tsx:66
+#: src/components/settings/CategoriesEditor.tsx:116
+#: src/components/settings/CategoriesEditor.tsx:122
+msgid "Add category"
+msgstr "Add category"
+
+#: src/navigation/Navigation.tsx:68
 #: src/screens/AddExpense.tsx:33
 #: src/view/shell/desktop/LeftNav.tsx:296
 msgid "Add expense"
@@ -182,7 +199,7 @@ msgctxt "action"
 msgid "Add expense"
 msgstr "Add expense"
 
-#: src/navigation/Navigation.tsx:69
+#: src/navigation/Navigation.tsx:71
 #: src/screens/AddFriend.tsx:8
 #: src/screens/People/index.tsx:108
 #: src/screens/People/index.tsx:109
@@ -195,10 +212,15 @@ msgstr "Add friend"
 msgid "All settled up"
 msgstr "All settled up"
 
-#: src/components/HeaderAvatar.tsx:82
+#: src/components/settings/AccentPicker.tsx:52
+msgid "Amber"
+msgstr "Amber"
+
 #: src/components/HeaderAvatar.tsx:86
+#: src/components/HeaderAvatar.tsx:90
+#: src/components/settings/TabsEditor.tsx:34
 #: src/components/TabGlyph.tsx:29
-#: src/navigation/Navigation.tsx:58
+#: src/navigation/Navigation.tsx:60
 #: src/screens/Analytics.tsx:8
 #: src/screens/People/components/BalanceSummary.tsx:91
 #: src/screens/People/components/BalanceSummary.tsx:96
@@ -208,23 +230,89 @@ msgstr "All settled up"
 msgid "Analytics"
 msgstr "Analytics"
 
+#: src/components/settings/prefControls.tsx:134
+msgid "Animations"
+msgstr "Animations"
+
+#: src/components/settings/sections.ts:40
+msgid "Appearance"
+msgstr "Appearance"
+
+#: src/components/settings/AccentPicker.tsx:162
+msgid "Apply"
+msgstr "Apply"
+
+#: src/components/settings/AccentPicker.tsx:155
+msgid "Apply accent colour"
+msgstr "Apply accent colour"
+
+#: src/components/settings/prefControls.tsx:339
+#: src/components/settings/prefControls.tsx:363
+msgid "Automatic"
+msgstr "Automatic"
+
 #: src/screens/People/components/BalanceSummary.tsx:56
 #: src/screens/People/components/BalanceSummary.tsx:224
 msgid "Balances"
 msgstr "Balances"
+
+#: src/components/settings/prefControls.tsx:383
+msgid "Biggest balance first"
+msgstr "Biggest balance first"
+
+#: src/components/settings/CategoryIcon.tsx:128
+msgid "Bills"
+msgstr "Bills"
+
+#: src/components/settings/AccentPicker.tsx:46
+msgid "Bluesky blue"
+msgstr "Bluesky blue"
+
+#: src/components/settings/prefControls.tsx:158
+msgid "Browsers can't vibrate. This applies in the Splito app on your phone."
+msgstr "Browsers can't vibrate. This applies in the Splito app on your phone."
 
 #: src/components/Composer/TopBar.tsx:33
 #: src/components/Composer/TopBar.tsx:43
 #: src/components/Menu/index.tsx:387
 #: src/components/Prompt.tsx:153
 #: src/components/Prompt.tsx:155
+#: src/components/settings/AccentPicker.tsx:167
+#: src/components/settings/AccentPicker.tsx:175
+#: src/components/settings/CategoryDialog.tsx:195
+#: src/components/settings/CategoryDialog.tsx:200
 msgid "Cancel"
 msgstr "Cancel"
+
+#: src/components/settings/CategoriesEditor.tsx:71
+#: src/components/settings/sections.ts:43
+msgid "Categories"
+msgstr "Categories"
+
+#: src/components/settings/prefControls.tsx:210
+msgid "Choose default currency"
+msgstr "Choose default currency"
+
+#: src/components/settings/TabsEditor.tsx:111
+msgid "Choose the tabs you see and their order. Settings and your profile stay on your avatar, top right."
+msgstr "Choose the tabs you see and their order. Settings and your profile stay on your avatar, top right."
+
+#: src/components/settings/prefControls.tsx:290
+msgid "Choose timezone"
+msgstr "Choose timezone"
+
+#: src/components/forms/SearchInput.tsx:79
+msgid "Clear search query"
+msgstr "Clear search query"
 
 #: src/components/Dialog/index.web.tsx:156
 #: src/components/Dialog/index.web.tsx:373
 msgid "Close active dialog"
 msgstr "Close active dialog"
+
+#: src/components/settings/OptionDialog.tsx:105
+msgid "Close dialog"
+msgstr "Close dialog"
 
 #: src/components/Menu/index.tsx:381
 msgid "Close this dialog"
@@ -234,9 +322,33 @@ msgstr "Close this dialog"
 msgid "Closes Add expense without saving"
 msgstr "Closes Add expense without saving"
 
+#: src/components/settings/prefControls.tsx:66
+msgid "Color mode"
+msgstr "Color mode"
+
+#: src/components/settings/CategoryDialog.tsx:107
+msgid "Colour"
+msgstr "Colour"
+
+#: src/components/settings/CategoryDialog.tsx:116
+msgid "Colour {c}"
+msgstr "Colour {c}"
+
+#: src/components/settings/prefControls.tsx:118
+msgid "Comfortable"
+msgstr "Comfortable"
+
 #: src/screens/Profile.tsx:92
 msgid "Coming with sync"
 msgstr "Coming with sync"
+
+#: src/components/settings/prefControls.tsx:119
+msgid "Compact"
+msgstr "Compact"
+
+#: src/components/settings/prefControls.tsx:116
+msgid "Compact fits more people, groups and activity on screen."
+msgstr "Compact fits more people, groups and activity on screen."
 
 #: src/components/Prompt.tsx:212
 #: src/components/Prompt.tsx:215
@@ -247,20 +359,71 @@ msgstr "Confirm"
 msgid "Context menu backdrop, click to close the menu."
 msgstr "Context menu backdrop, click to close the menu."
 
-#: src/screens/Groups/components/GroupRow.tsx:47
+#: src/components/settings/prefControls.tsx:398
+msgid "Count shared group expenses in each person's balance"
+msgstr "Count shared group expenses in each person's balance"
+
+#: src/screens/Groups/components/GroupRow.tsx:49
 msgid "Couple"
 msgstr "Couple"
 
-#: src/components/HeaderAvatar.tsx:94
+#: src/components/settings/AccentPicker.tsx:107
+msgid "Custom colour"
+msgstr "Custom colour"
+
+#: src/components/settings/AccentPicker.tsx:100
+msgid "Custom colour {applied}"
+msgstr "Custom colour {applied}"
+
+#: src/components/settings/prefControls.tsx:70
+#: src/components/settings/prefControls.tsx:89
+msgid "Dark"
+msgstr "Dark"
+
 #: src/components/HeaderAvatar.tsx:98
+#: src/components/HeaderAvatar.tsx:102
+#: src/components/settings/prefControls.tsx:86
 msgid "Dark theme"
 msgstr "Dark theme"
 
-#: src/screens/People/components/PersonRow.tsx:65
+#: src/components/settings/prefControls.tsx:337
+msgid "Date format"
+msgstr "Date format"
+
+#: src/components/settings/prefControls.tsx:340
+msgid "Day first"
+msgstr "Day first"
+
+#: src/components/settings/prefControls.tsx:287
+msgid "Decides which day \"today\" is and where weeks and months begin in reports. Each expense keeps the date it happened."
+msgstr "Decides which day \"today\" is and where weeks and months begin in reports. Each expense keeps the date it happened."
+
+#: src/components/settings/prefControls.tsx:98
+msgid "Default"
+msgstr "Default"
+
+#: src/components/settings/prefControls.tsx:206
+#: src/components/settings/prefControls.tsx:217
+msgid "Default currency"
+msgstr "Default currency"
+
+#: src/components/settings/prefControls.tsx:233
+msgid "Default split"
+msgstr "Default split"
+
+#: src/components/settings/prefControls.tsx:409
+msgid "Delete from Activity"
+msgstr "Delete from Activity"
+
+#: src/components/settings/prefControls.tsx:88
+msgid "Dim"
+msgstr "Dim"
+
+#: src/screens/People/components/PersonRow.tsx:67
 msgid "Direct"
 msgstr "Direct"
 
-#: src/screens/People/components/PersonRow.tsx:164
+#: src/screens/People/components/PersonRow.tsx:166
 msgid "Direct expenses"
 msgstr "Direct expenses"
 
@@ -272,57 +435,264 @@ msgstr "Dismiss"
 msgid "Double tap to close the dialog"
 msgstr "Double tap to close the dialog"
 
-#: src/navigation/Navigation.tsx:68
+#: src/components/settings/CategoriesEditor.tsx:233
+msgid "Edit {name}"
+msgstr "Edit {name}"
+
+#: src/components/settings/CategoryDialog.tsx:76
+#: src/components/settings/CategoryDialog.tsx:82
+msgid "Edit category"
+msgstr "Edit category"
+
+#: src/navigation/Navigation.tsx:70
 #: src/screens/EditExpense.tsx:8
 msgid "Edit expense"
 msgstr "Edit expense"
 
-#: src/navigation/Navigation.tsx:67
+#: src/components/settings/AccentPicker.tsx:47
+msgid "Emerald"
+msgstr "Emerald"
+
+#: src/components/settings/CategoryIcon.tsx:127
+msgid "Entertainment"
+msgstr "Entertainment"
+
+#: src/components/settings/prefControls.tsx:236
+msgid "Equally"
+msgstr "Equally"
+
+#: src/components/settings/prefControls.tsx:366
+msgid "European"
+msgstr "European"
+
+#: src/components/settings/prefControls.tsx:421
+msgid "Every swipe action is also on the item's menu. Deleting only removes it from your feed, never from the record."
+msgstr "Every swipe action is also on the item's menu. Deleting only removes it from your feed, never from the record."
+
+#: src/screens/Settings/SettingsSection.tsx:126
+msgid "Everything on this page goes back to how Splito starts."
+msgstr "Everything on this page goes back to how Splito starts."
+
+#: src/components/settings/prefControls.tsx:237
+msgid "Exact amounts"
+msgstr "Exact amounts"
+
+#: src/navigation/Navigation.tsx:69
 #: src/screens/Expense.tsx:8
 msgid "Expense"
 msgstr "Expense"
+
+#: src/components/settings/CategoryIcon.tsx:123
+msgid "Food"
+msgstr "Food"
+
+#: src/components/settings/CategoryDialog.tsx:94
+msgid "For example, Rent"
+msgstr "For example, Rent"
 
 #: src/screens/People/index.tsx:135
 msgid "Friends"
 msgstr "Friends"
 
+#: src/components/settings/prefControls.tsx:141
+msgid "Full"
+msgstr "Full"
+
+#: src/components/settings/prefControls.tsx:156
+msgid "Gentle vibrations when you tap, toggle and save"
+msgstr "Gentle vibrations when you tap, toggle and save"
+
 #: src/components/Layout/Header/index.tsx:120
 msgid "Go back"
 msgstr "Go back"
 
-#: src/navigation/Navigation.tsx:64
+#: src/screens/Settings/SettingsSection.tsx:178
+#: src/screens/Settings/SettingsSection.tsx:183
+msgid "Go to Settings"
+msgstr "Go to Settings"
+
+#: src/components/settings/AccentPicker.tsx:53
+msgid "Graphite"
+msgstr "Graphite"
+
+#: src/components/settings/CategoryIcon.tsx:129
+msgid "Groceries"
+msgstr "Groceries"
+
+#: src/navigation/Navigation.tsx:66
 #: src/screens/Group.tsx:8
-#: src/screens/Groups/components/GroupRow.tsx:48
-#: src/screens/People/components/PersonRow.tsx:58
+#: src/screens/Groups/components/GroupRow.tsx:50
+#: src/screens/People/components/PersonRow.tsx:60
 msgid "Group"
 msgstr "Group"
 
+#: src/components/settings/TabsEditor.tsx:33
 #: src/components/TabGlyph.tsx:28
-#: src/navigation/Navigation.tsx:57
+#: src/navigation/Navigation.tsx:59
 #: src/screens/Groups/index.tsx:47
 #: src/view/shell/desktop/LeftNav.tsx:342
 msgid "Groups"
 msgstr "Groups"
 
-#: src/screens/Groups/components/GroupRow.tsx:46
+#: src/components/settings/prefControls.tsx:155
+msgid "Haptics"
+msgstr "Haptics"
+
+#: src/components/settings/AccentPicker.tsx:124
+#: src/components/settings/AccentPicker.tsx:129
+msgid "Hex colour"
+msgstr "Hex colour"
+
+#: src/components/settings/CategoriesEditor.tsx:193
+msgid "Hidden"
+msgstr "Hidden"
+
+#: src/components/settings/TabsEditor.tsx:230
+msgid "Hide {label}"
+msgstr "Hide {label}"
+
+#: src/components/settings/CategoriesEditor.tsx:223
+msgid "Hide {name}"
+msgstr "Hide {name}"
+
+#: src/components/settings/prefControls.tsx:408
+msgid "Hide from Activity"
+msgstr "Hide from Activity"
+
+#: src/screens/Groups/components/GroupRow.tsx:48
 msgid "Home"
 msgstr "Home"
 
-#: src/components/HeaderAvatar.tsx:94
+#: src/components/settings/prefControls.tsx:174
+msgid "Home tab"
+msgstr "Home tab"
+
+#: src/components/settings/prefControls.tsx:361
+msgid "How amounts are grouped and punctuated."
+msgstr "How amounts are grouped and punctuated."
+
+#: src/components/settings/prefControls.tsx:234
+msgid "How new expenses are divided until you change it."
+msgstr "How new expenses are divided until you change it."
+
+#: src/components/settings/CategoryDialog.tsx:145
+msgid "Icon"
+msgstr "Icon"
+
+#: src/components/settings/prefControls.tsx:397
+msgid "Include groups"
+msgstr "Include groups"
+
+#: src/components/settings/prefControls.tsx:364
+msgid "Indian"
+msgstr "Indian"
+
+#: src/components/settings/AccentPicker.tsx:48
+msgid "Indigo"
+msgstr "Indigo"
+
+#: src/components/settings/prefControls.tsx:365
+msgid "International"
+msgstr "International"
+
+#: src/components/settings/prefControls.tsx:471
+msgid "Invites"
+msgstr "Invites"
+
+#: src/screens/Settings/SettingsSection.tsx:175
+msgid "It may have moved. Everything is still in Settings."
+msgstr "It may have moved. Everything is still in Settings."
+
+#: src/components/settings/prefControls.tsx:253
+msgid "Language"
+msgstr "Language"
+
+#: src/components/settings/sections.ts:44
+msgid "Language and region"
+msgstr "Language and region"
+
+#: src/components/settings/prefControls.tsx:98
+msgid "Larger"
+msgstr "Larger"
+
+#: src/components/settings/prefControls.tsx:98
+msgid "Largest"
+msgstr "Largest"
+
+#: src/components/settings/prefControls.tsx:69
+msgid "Light"
+msgstr "Light"
+
 #: src/components/HeaderAvatar.tsx:98
+#: src/components/HeaderAvatar.tsx:102
 msgid "Light theme"
 msgstr "Light theme"
+
+#: src/components/settings/prefControls.tsx:115
+msgid "List density"
+msgstr "List density"
+
+#: src/components/settings/sections.ts:45
+msgid "Lists"
+msgstr "Lists"
+
+#: src/components/settings/prefControls.tsx:407
+msgid "Mark as read"
+msgstr "Mark as read"
 
 #: src/components/Menu/index.tsx:133
 msgid "Menu"
 msgstr "Menu"
+
+#: src/components/settings/prefControls.tsx:341
+msgid "Month first"
+msgstr "Month first"
+
+#: src/components/settings/sections.ts:41
+msgid "Motion and haptics"
+msgstr "Motion and haptics"
+
+#: src/components/settings/TabsEditor.tsx:215
+msgid "Move {label} down"
+msgstr "Move {label} down"
+
+#: src/components/settings/TabsEditor.tsx:204
+msgid "Move {label} up"
+msgstr "Move {label} up"
+
+#: src/components/settings/CategoriesEditor.tsx:210
+msgid "Move {name} down"
+msgstr "Move {name} down"
+
+#: src/components/settings/CategoriesEditor.tsx:200
+msgid "Move {name} up"
+msgstr "Move {name} up"
+
+#: src/components/settings/CategoryDialog.tsx:88
+#: src/components/settings/CategoryDialog.tsx:93
+#: src/components/settings/prefControls.tsx:384
+msgid "Name"
+msgstr "Name"
 
 #: src/screens/Groups/index.tsx:58
 msgctxt "action"
 msgid "New"
 msgstr "New"
 
-#: src/navigation/Navigation.tsx:70
+#: src/components/settings/CategoryDialog.tsx:76
+#: src/components/settings/CategoryDialog.tsx:82
+msgid "New category"
+msgstr "New category"
+
+#: src/components/settings/prefControls.tsx:447
+msgid "New expenses"
+msgstr "New expenses"
+
+#: src/components/settings/prefControls.tsx:207
+msgid "New expenses start in this currency. You can change it on any expense."
+msgstr "New expenses start in this currency. You can change it on any expense."
+
+#: src/navigation/Navigation.tsx:72
 #: src/screens/CreateGroup.tsx:8
 #: src/screens/Groups/index.tsx:52
 #: src/screens/Groups/index.tsx:94
@@ -334,21 +704,57 @@ msgstr "New group"
 msgid "No groups yet. A group keeps a trip’s or a flat’s expenses and balances in one place."
 msgstr "No groups yet. A group keeps a trip’s or a flat’s expenses and balances in one place."
 
-#: src/screens/People/components/PersonRow.tsx:162
+#: src/screens/People/components/PersonRow.tsx:164
 msgid "No open balances"
 msgstr "No open balances"
+
+#: src/components/settings/prefControls.tsx:410
+msgid "Nothing"
+msgstr "Nothing"
 
 #: src/screens/Activity.tsx:181
 msgid "Nothing here yet. Expenses, payments and group changes will show up here."
 msgstr "Nothing here yet. Expenses, payments and group changes will show up here."
 
+#: src/components/settings/OptionDialog.tsx:145
+msgid "Nothing matches “{search}”"
+msgstr "Nothing matches “{search}”"
+
+#: src/components/settings/sections.ts:46
+msgid "Notifications"
+msgstr "Notifications"
+
+#: src/screens/Settings/SettingsSection.tsx:99
+msgid "Notifications start once you sign in and turn on sync. Your choices are saved now and apply from then."
+msgstr "Notifications start once you sign in and turn on sync. Your choices are saved now and apply from then."
+
 #: src/lib/hooks/useTimeAgo.ts:136
 msgid "now"
 msgstr "now"
 
+#: src/components/settings/prefControls.tsx:360
+msgid "Number format"
+msgstr "Number format"
+
+#: src/components/settings/prefControls.tsx:143
+msgid "Off"
+msgstr "Off"
+
 #: src/components/Layout/Header/index.tsx:154
 msgid "Open drawer menu"
 msgstr "Open drawer menu"
+
+#: src/components/settings/AboutSettings.tsx:47
+msgid "Open source"
+msgstr "Open source"
+
+#: src/components/settings/AccentPicker.tsx:51
+msgid "Orange"
+msgstr "Orange"
+
+#: src/components/settings/CategoryIcon.tsx:130
+msgid "Other"
+msgstr "Other"
 
 #. placeholder {0}: formatAmount(owed, currency, locale)
 #: src/screens/People/components/BalanceSummary.tsx:195
@@ -359,84 +765,314 @@ msgstr "Owed to you <0>{0}</0>"
 msgid "owes you <0>{figure}</0>"
 msgstr "owes you <0>{figure}</0>"
 
+#: src/components/settings/prefControls.tsx:459
+msgid "Payments"
+msgstr "Payments"
+
+#: src/components/settings/TabsEditor.tsx:32
 #: src/components/TabGlyph.tsx:27
 #: src/view/shell/desktop/LeftNav.tsx:338
 msgid "People"
 msgstr "People"
 
-#: src/navigation/Navigation.tsx:63
+#: src/components/settings/prefControls.tsx:238
+msgid "Percentages"
+msgstr "Percentages"
+
+#: src/navigation/Navigation.tsx:65
 #: src/screens/Person.tsx:8
 msgid "Person"
 msgstr "Person"
 
-#: src/components/HeaderAvatar.tsx:64
+#: src/components/settings/CategoriesEditor.tsx:72
+msgid "Pick categories when you add an expense. Hidden ones stay on past expenses."
+msgstr "Pick categories when you add an expense. Hidden ones stay on past expenses."
+
+#: src/components/settings/AccentPicker.tsx:50
+msgid "Pink"
+msgstr "Pink"
+
 #: src/components/HeaderAvatar.tsx:68
-#: src/navigation/Navigation.tsx:60
+#: src/components/HeaderAvatar.tsx:72
+#: src/navigation/Navigation.tsx:62
 #: src/screens/Profile.tsx:34
 msgid "Profile"
 msgstr "Profile"
+
+#: src/components/settings/prefControls.tsx:385
+msgid "Recent activity"
+msgstr "Recent activity"
+
+#: src/components/settings/prefControls.tsx:142
+msgid "Reduced"
+msgstr "Reduced"
+
+#: src/components/settings/prefControls.tsx:138
+msgid "Reduced swaps movement for gentle fades. Off shows every change instantly."
+msgstr "Reduced swaps movement for gentle fades. Off shows every change instantly."
+
+#: src/components/settings/PrefSection.tsx:132
+#: src/screens/Settings/SettingsSection.tsx:127
+msgid "Reset"
+msgstr "Reset"
+
+#: src/screens/Settings/SettingsSection.tsx:115
+msgid "Reset {title}"
+msgstr "Reset {title}"
+
+#: src/components/settings/PrefSection.tsx:113
+msgid "Reset {title} to default"
+msgstr "Reset {title} to default"
+
+#: src/screens/Settings/SettingsSection.tsx:125
+msgid "Reset {title}?"
+msgstr "Reset {title}?"
+
+#: src/screens/Settings/index.tsx:93
+msgid "Reset all"
+msgstr "Reset all"
+
+#: src/screens/Settings/index.tsx:69
+#: src/screens/Settings/index.tsx:73
+msgid "Reset all settings"
+msgstr "Reset all settings"
+
+#: src/screens/Settings/index.tsx:91
+msgid "Reset all settings?"
+msgstr "Reset all settings?"
+
+#: src/screens/Settings/SettingsSection.tsx:119
+msgid "Reset this page"
+msgstr "Reset this page"
+
+#: src/components/settings/prefControls.tsx:271
+msgid "Same as this device"
+msgstr "Same as this device"
+
+#: src/components/settings/prefControls.tsx:280
+msgid "Same as this device ({deviceZone})"
+msgstr "Same as this device ({deviceZone})"
+
+#: src/components/settings/CategoryDialog.tsx:191
+msgid "Save"
+msgstr "Save"
 
 #: src/components/Composer/TopBar.tsx:59
 msgctxt "action"
 msgid "Save"
 msgstr "Save"
 
+#: src/components/settings/CategoryDialog.tsx:185
+msgid "Save category"
+msgstr "Save category"
+
 #: src/components/Composer/TopBar.tsx:50
 msgid "Save expense"
 msgstr "Save expense"
 
+#: src/components/settings/AboutSettings.tsx:40
 #: src/screens/Profile.tsx:131
 msgid "Saved on this device"
 msgstr "Saved on this device"
 
-#: src/components/HeaderAvatar.tsx:73
+#: src/components/forms/SearchInput.tsx:43
+#: src/components/forms/SearchInput.tsx:45
+msgid "Search"
+msgstr "Search"
+
+#: src/components/settings/prefControls.tsx:218
+msgid "Search currencies"
+msgstr "Search currencies"
+
+#: src/components/settings/prefControls.tsx:298
+msgid "Search timezones"
+msgstr "Search timezones"
+
 #: src/components/HeaderAvatar.tsx:77
-#: src/navigation/Navigation.tsx:61
-#: src/navigation/Navigation.tsx:62
+#: src/components/HeaderAvatar.tsx:81
+#: src/navigation/Navigation.tsx:63
+#: src/navigation/Navigation.tsx:64
 #: src/screens/Profile.tsx:70
 #: src/screens/Profile.tsx:73
-#: src/screens/Settings/index.tsx:8
-#: src/screens/Settings/SettingsSection.tsx:8
+#: src/screens/Settings/index.tsx:38
+#: src/screens/Settings/SettingsSection.tsx:53
 #: src/view/shell/desktop/LeftNav.tsx:372
 msgid "Settings"
 msgstr "Settings"
 
-#: src/navigation/Navigation.tsx:65
+#: src/screens/Settings/index.tsx:80
+msgid "Settings are saved on this device. Once you sign in, they follow you to your other devices."
+msgstr "Settings are saved on this device. Once you sign in, they follow you to your other devices."
+
+#: src/screens/Settings/index.tsx:98
+msgid "Settings reset"
+msgstr "Settings reset"
+
+#: src/navigation/Navigation.tsx:67
 #: src/screens/Settle.tsx:8
 msgid "Settle up"
 msgstr "Settle up"
 
 #: src/components/BalanceText.tsx:43
-#: src/screens/Groups/components/GroupRow.tsx:65
-#: src/screens/People/components/PersonRow.tsx:79
+#: src/screens/Groups/components/GroupRow.tsx:67
+#: src/screens/People/components/PersonRow.tsx:81
 msgid "settled up"
 msgstr "settled up"
+
+#: src/components/settings/prefControls.tsx:239
+msgid "Shares"
+msgstr "Shares"
+
+#: src/components/settings/CategoryIcon.tsx:126
+msgid "Shopping"
+msgstr "Shopping"
+
+#: src/components/settings/TabsEditor.tsx:230
+msgid "Show {label}"
+msgstr "Show {label}"
+
+#: src/components/settings/CategoriesEditor.tsx:223
+msgid "Show {name}"
+msgstr "Show {name}"
 
 #: src/screens/Profile.tsx:89
 msgid "Sign in and sync"
 msgstr "Sign in and sync"
 
+#: src/components/settings/prefControls.tsx:98
+msgid "Smaller"
+msgstr "Smaller"
+
 #: src/screens/Activity.tsx:95
 msgid "Someone"
 msgstr "Someone"
 
+#: src/components/settings/prefControls.tsx:381
+msgid "Sort people by"
+msgstr "Sort people by"
+
+#: src/components/settings/prefControls.tsx:367
+msgid "Spaced"
+msgstr "Spaced"
+
 #: src/screens/People/index.tsx:106
 msgid "Split anything with anyone. Add an expense or a friend to get started – friends don’t need the app."
 msgstr "Split anything with anyone. Add an expense or a friend to get started – friends don’t need the app."
+
+#: src/components/settings/AboutSettings.tsx:23
+msgid "Split expenses with anyone, even offline."
+msgstr "Split expenses with anyone, even offline."
 
 #: src/view/com/home/HomeHeaderLayoutMobile.tsx:41
 #: src/view/shell/desktop/LeftNav.tsx:104
 msgid "Splito - People"
 msgstr "Splito - People"
 
+#: src/components/settings/AboutSettings.tsx:50
+msgid "Splito's interface is built on Bluesky's social-app (MIT licence). Icons are Lucide (ISC licence). The Inter typeface is under the SIL Open Font License."
+msgstr "Splito's interface is built on Bluesky's social-app (MIT licence). Icons are Lucide (ISC licence). The Inter typeface is under the SIL Open Font License."
+
+#: src/components/settings/prefControls.tsx:254
+msgid "Splito's language. Names, notes and amounts you enter stay as you typed them."
+msgstr "Splito's language. Names, notes and amounts you enter stay as you typed them."
+
+#: src/components/settings/CategoryIcon.tsx:125
+msgid "Stay"
+msgstr "Stay"
+
+#: src/components/settings/prefControls.tsx:420
+msgid "Swipe left on Activity"
+msgstr "Swipe left on Activity"
+
+#: src/components/settings/prefControls.tsx:433
+msgid "Swipe right on Activity"
+msgstr "Swipe right on Activity"
+
+#: src/components/settings/prefControls.tsx:68
+msgid "System"
+msgstr "System"
+
+#: src/components/settings/TabsEditor.tsx:110
+msgid "Tabs"
+msgstr "Tabs"
+
+#: src/components/settings/sections.ts:42
+msgid "Tabs and defaults"
+msgstr "Tabs and defaults"
+
+#: src/components/settings/prefControls.tsx:103
+msgid "Text size"
+msgstr "Text size"
+
+#: src/components/settings/prefControls.tsx:399
+msgid "The starting point for the People filter; you can still switch it there."
+msgstr "The starting point for the People filter; you can still switch it there."
+
+#: src/components/settings/prefControls.tsx:175
+msgid "The tab Splito opens on."
+msgstr "The tab Splito opens on."
+
+#: src/screens/Settings/index.tsx:92
+msgid "Theme, tabs, categories, language and every other setting go back to how Splito starts. Your people, groups and expenses stay as they are."
+msgstr "Theme, tabs, categories, language and every other setting go back to how Splito starts. Your people, groups and expenses stay as they are."
+
 #: src/screens/AddExpense.tsx:36
 #: src/screens/StubScreen.tsx:36
 msgid "This screen is being built"
 msgstr "This screen is being built"
 
-#: src/screens/Groups/components/GroupRow.tsx:45
+#: src/screens/Settings/SettingsSection.tsx:172
+msgid "This settings page doesn't exist"
+msgstr "This settings page doesn't exist"
+
+#: src/components/settings/prefControls.tsx:286
+#: src/components/settings/prefControls.tsx:297
+msgid "Timezone"
+msgstr "Timezone"
+
+#: src/components/settings/AccentPicker.tsx:81
+msgid "Tints buttons, links and highlights. Money keeps its green and red."
+msgstr "Tints buttons, links and highlights. Money keeps its green and red."
+
+#: src/components/settings/CategoryIcon.tsx:124
+msgid "Transport"
+msgstr "Transport"
+
+#: src/screens/Groups/components/GroupRow.tsx:47
 msgid "Trip"
 msgstr "Trip"
+
+#: src/components/settings/AboutSettings.tsx:30
+msgid "Version"
+msgstr "Version"
+
+#: src/components/settings/AccentPicker.tsx:49
+msgid "Violet"
+msgstr "Violet"
+
+#: src/components/settings/prefControls.tsx:321
+msgid "Week starts on"
+msgstr "Week starts on"
+
+#: src/components/settings/prefControls.tsx:460
+msgid "When a payment to or from you is recorded"
+msgstr "When a payment to or from you is recorded"
+
+#: src/components/settings/prefControls.tsx:472
+msgid "When someone accepts your invite"
+msgstr "When someone accepts your invite"
+
+#: src/components/settings/prefControls.tsx:448
+msgid "When someone adds an expense that includes you"
+msgstr "When someone adds an expense that includes you"
+
+#: src/components/settings/AccentPicker.tsx:147
+msgid "White text is hard to read on this colour. A darker shade works better."
+msgstr "White text is hard to read on this colour. A darker shade works better."
+
+#: src/components/settings/prefControls.tsx:342
+msgid "Year first"
+msgstr "Year first"
 
 #: src/screens/Activity.tsx:95
 msgid "You"
@@ -463,6 +1099,14 @@ msgstr "You owe <0>{0}</0>"
 msgid "you owe <0>{figure}</0>"
 msgstr "you owe <0>{figure}</0>"
 
+#: src/components/settings/AboutSettings.tsx:37
+msgid "Your data"
+msgstr "Your data"
+
 #: src/screens/StubScreen.tsx:40
 msgid "Your data is safe on this device."
 msgstr "Your data is safe on this device."
+
+#: src/components/settings/prefControls.tsx:137
+msgid "Your device asks for reduced motion, so Splito keeps movement to gentle fades whatever you pick here."
+msgstr "Your device asks for reduced motion, so Splito keeps movement to gentle fades whatever you pick here."
