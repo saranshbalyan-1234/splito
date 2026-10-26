@@ -140,7 +140,7 @@ function LogoCard({minimal}: {minimal: boolean}) {
           native: {height: HEADER_HEIGHT.native},
           web: {height: HEADER_HEIGHT.web},
         }),
-        !minimal && [a.w_full, a.align_start],
+        !minimal && [a.w_full, a.align_center],
       ]}>
       <Link
         testID="logo"
