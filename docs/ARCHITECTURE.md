@@ -1627,7 +1627,9 @@ add anyway (only for you)"; "also i should be able to select from contacts". *Wh
   below the name; "basically in horizontal row"). Requests: Accept (check icon, primary) and Decline (X icon); Invites sent: Resend (send icon) and Cancel
   (X icon). On phones the actions are icon-only round buttons (with accessibility labels and a long-press
   tooltip); on rail/desktop each shows its icon and full text ("Accept", "Decline", "Resend", "Cancel"). *Why:*
-  "make accept decline like invites sent, on mobile only icon for both, for web complete text with icon".
+  "make accept decline like invites sent, on mobile only icon for both, for web complete text with icon" Activity's
+  friend-request rows use the same one-line layout: Accept / Decline on the right in place of the "..." menu,
+  whose items move to long-press / right-click on that row (assistant's call).
 - **Incoming requests** show in Activity (from others, unread badge) and at the top of People ("Requests":
   Accept / Decline). Declining is silent to the sender (stays "pending" until it expires after 30 days).
 - **Invite link and QR with limits, only inside "Invite people".** The Home header's person-plus button is
