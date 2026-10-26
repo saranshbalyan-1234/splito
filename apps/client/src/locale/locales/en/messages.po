@@ -4208,3 +4208,114 @@ msgstr "you lent {0}"
 #: src/components/people/CallItEvenDialog.tsx:127
 msgid "You let {0} off"
 msgstr "You let {0} off"
+
+#. placeholder {0}: firstName(payers[0]!)
+#: src/screens/Search/components/ResultRows.tsx:209
+msgid "{0} paid"
+msgstr "{0} paid"
+
+#. placeholder {0}: payers.length
+#: src/screens/Search/components/ResultRows.tsx:206
+msgid "{0} people paid"
+msgstr "{0} people paid"
+
+#. placeholder {0}: e.title
+#: src/screens/Search/components/ResultRows.tsx:228
+msgid "{0}, {total}, {date}"
+msgstr "{0}, {total}, {date}"
+
+#: src/screens/Search/components/SearchHistory.tsx:43
+msgid "A day: today or yesterday"
+msgstr "A day: today or yesterday"
+
+#: src/screens/Search/components/SearchHistory.tsx:44
+msgid "A month, with a year if you like: march 2026"
+msgstr "A month, with a year if you like: march 2026"
+
+#: src/screens/Search/components/SearchHistory.tsx:42
+msgid "Amounts over 1,000 (or under, with <)"
+msgstr "Amounts over 1,000 (or under, with <)"
+
+#: src/screens/Search/components/SearchHistory.tsx:41
+msgid "An exact amount, in any currency"
+msgstr "An exact amount, in any currency"
+
+#: src/screens/Search/components/SearchHistory.tsx:154
+msgctxt "action"
+msgid "Clear"
+msgstr "Clear"
+
+#: src/screens/Search/components/SearchHistory.tsx:76
+msgctxt "action"
+msgid "Clear all"
+msgstr "Clear all"
+
+#: src/screens/Search/components/SearchHistory.tsx:69
+msgid "Clear all recent searches"
+msgstr "Clear all recent searches"
+
+#: src/screens/Search/components/SearchHistory.tsx:151
+msgid "Clear all recent searches?"
+msgstr "Clear all recent searches?"
+
+#: src/screens/Search/components/SearchHistory.tsx:97
+msgid "Find any expense, friend or group on this device"
+msgstr "Find any expense, friend or group on this device"
+
+#: src/screens/Search/components/ResultRows.tsx:363
+msgid "No results found for “<0>{query}</0>”."
+msgstr "No results found for “<0>{query}</0>”."
+
+#: src/components/settings/prefControls.tsx:492
+#: src/screens/Search/components/SearchHistory.tsx:65
+msgid "Recent searches"
+msgstr "Recent searches"
+
+#: src/components/settings/prefControls.tsx:493
+msgid "Remember what you search for"
+msgstr "Remember what you search for"
+
+#: src/screens/Search/components/SearchHistory.tsx:203
+msgid "Remove {q}"
+msgstr "Remove {q}"
+
+#: src/screens/Search/index.tsx:202
+msgid "Search expenses, people and groups"
+msgstr "Search expenses, people and groups"
+
+#: src/screens/Search/index.tsx:203
+msgid "Search expenses, people, groups"
+msgstr "Search expenses, people, groups"
+
+#. placeholder {0}: tip.q
+#: src/screens/Search/components/SearchHistory.tsx:110
+msgid "Search for {0}"
+msgstr "Search for {0}"
+
+#: src/screens/Search/components/SearchHistory.tsx:178
+msgid "Search for {q}"
+msgstr "Search for {q}"
+
+#: src/components/settings/prefControls.tsx:494
+msgid "Search shows your last few searches, kept on this device only."
+msgstr "Search shows your last few searches, kept on this device only."
+
+#: src/screens/Search/components/SearchHistory.tsx:152
+msgid "This can’t be undone, and all of your recent searches will be removed."
+msgstr "This can’t be undone, and all of your recent searches will be removed."
+
+#: src/screens/Search/components/ResultRows.tsx:111
+msgid "Total {totalLine}"
+msgstr "Total {totalLine}"
+
+#: src/screens/Search/components/ResultRows.tsx:369
+msgid "Try fewer words, part of a word, an amount like 450 or a month like march."
+msgstr "Try fewer words, part of a word, an amount like 450 or a month like march."
+
+#: src/screens/Search/components/SearchHistory.tsx:104
+msgid "Try searching for"
+msgstr "Try searching for"
+
+#: src/screens/Search/components/SearchHistory.tsx:39
+msgid "Words in titles, notes, items, categories, people and groups"
+msgstr "Words in titles, notes, items, categories, people and groups"

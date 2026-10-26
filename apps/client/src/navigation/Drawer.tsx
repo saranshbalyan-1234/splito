@@ -39,6 +39,10 @@ import {
   HomeOpen_Filled_Corner0_Rounded as HomeFilledIcon,
   HomeOpen_Stoke2_Corner0_Rounded as HomeIcon,
 } from '#/components/icons/HomeOpen'
+import {
+  MagnifyingGlass_Filled_Stroke2_Corner0_Rounded as SearchFilledIcon,
+  MagnifyingGlass_Stroke2_Corner0_Rounded as SearchIcon,
+} from '#/components/icons/MagnifyingGlass'
 import {Moon_Stroke2_Corner0_Rounded as MoonIcon} from '#/components/icons/Moon'
 import {
   SettingsGear2_Filled_Corner0_Rounded as SettingsFilledIcon,
@@ -119,7 +123,7 @@ let DrawerProfileCard = ({
 }
 DrawerProfileCard = memo(DrawerProfileCard)
 
-type PushedRoute = 'Profile' | 'Settings' | 'SignIn' | 'RecentlyDeleted'
+type PushedRoute = 'Profile' | 'Settings' | 'SignIn' | 'RecentlyDeleted' | 'Search'
 
 /**
  * Bluesky's drawer, opened from the header avatar on every top-level page
@@ -213,6 +217,13 @@ function DrawerContentInner(): React.ReactNode {
           count={unreadCount}
           isActive={isAt('Activity')}
           onPress={() => onPressTab('Activity')}
+        />
+        <MenuItem
+          testID="drawer-search"
+          icons={[SearchIcon, SearchFilledIcon]}
+          label={l`Search`}
+          isActive={isAt('Search')}
+          onPress={() => onPressScreen('Search')}
         />
         <MenuItem
           testID="drawer-profile-item"

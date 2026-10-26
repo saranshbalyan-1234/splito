@@ -232,6 +232,13 @@ export function sumMinor(xs: Iterable<bigint>): bigint {
   return s
 }
 
+/** One total per currency; currencies are never added together. */
+export function sumByCurrency(xs: Iterable<{currency: string; amount: bigint}>): Record<string, bigint> {
+  const out: Record<string, bigint> = {}
+  for (const {currency, amount} of xs) out[currency] = (out[currency] ?? 0n) + amount
+  return out
+}
+
 /** What is still unassigned of `total` after `parts` (negative when over-assigned). */
 export function remainingMinor(total: bigint, parts: Iterable<bigint>): bigint {
   return total - sumMinor(parts)

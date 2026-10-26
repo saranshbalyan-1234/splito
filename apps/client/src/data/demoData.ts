@@ -28,6 +28,8 @@ export type DemoExpense = {
   bill?: DemoBill
   date: string
   category: string
+  /** What the payer wrote under the title (Search finds it). */
+  notes?: string
 }
 
 /** The expense's split with real ids; shared by the seeder and the e2e balance check. */
@@ -140,10 +142,10 @@ export const DEMO_EXPENSES: DemoExpense[] = [
   {title: 'Airbnb in Alfama', group: 'lisbon', currency: 'EUR', total: minor('72000'), payers: {lena: minor('72000')}, participants: LISBON, date: '2026-04-10', category: 'stay'},
   {title: 'Pastéis de Belém', group: 'lisbon', currency: 'EUR', total: minor('2400'), payers: {me: minor('2400')}, participants: LISBON, date: '2026-04-11', category: 'food'},
   {title: 'Tram 28 tickets', group: 'lisbon', currency: 'EUR', total: minor('1200'), payers: {diego: minor('1200')}, participants: LISBON, date: '2026-04-11', category: 'transport'},
-  {title: 'Fado night', group: 'lisbon', currency: 'EUR', total: minor('16000'), payers: {sam: minor('10000'), me: minor('6000')}, participants: LISBON, date: '2026-04-12', category: 'entertainment'},
-  {title: 'Seafood at Ramiro', group: 'lisbon', currency: 'EUR', total: minor('18400'), payers: {me: minor('18400')}, participants: LISBON, date: '2026-04-13', category: 'food'},
+  {title: 'Fado night', group: 'lisbon', currency: 'EUR', total: minor('16000'), payers: {sam: minor('10000'), me: minor('6000')}, participants: LISBON, date: '2026-04-12', category: 'entertainment', notes: 'Dinner and a show in Alfama'},
+  {title: 'Seafood at Ramiro', group: 'lisbon', currency: 'EUR', total: minor('18400'), payers: {me: minor('18400')}, participants: LISBON, date: '2026-04-13', category: 'food', notes: 'Farewell dinner, Sam picked the wine'},
   // Direct (no group)
   {title: 'Concert tickets', group: null, currency: 'INR', total: minor('500000'), payers: {me: minor('500000')}, participants: ['me', 'priya'], date: '2026-03-08', category: 'entertainment'},
   {title: 'Coffee beans', group: null, currency: 'EUR', total: minor('1800'), payers: {sam: minor('1800')}, participants: ['me', 'sam'], date: '2026-05-02', category: 'groceries'},
-  {title: 'Movie night', group: null, currency: 'INR', total: minor('90000'), payers: {riya: minor('90000')}, participants: ['me', 'riya'], date: '2026-06-14', category: 'entertainment'},
+  {title: 'Movie night', group: null, currency: 'INR', total: minor('90000'), payers: {riya: minor('90000')}, participants: ['me', 'riya'], date: '2026-06-14', category: 'entertainment', notes: 'Pizza dinner at Riya’s before the film'},
 ]

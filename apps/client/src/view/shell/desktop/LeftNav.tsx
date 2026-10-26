@@ -84,6 +84,10 @@ import {
   HomeOpen_Filled_Corner0_Rounded as HomeFilledIcon,
   HomeOpen_Stoke2_Corner0_Rounded as HomeIcon,
 } from '#/components/icons/HomeOpen'
+import {
+  MagnifyingGlass_Filled_Stroke2_Corner0_Rounded as SearchFilledIcon,
+  MagnifyingGlass_Stroke2_Corner0_Rounded as SearchIcon,
+} from '#/components/icons/MagnifyingGlass'
 import {PlusLarge_Stroke2_Corner0_Rounded as PlusIcon} from '#/components/icons/Plus'
 import {
   SettingsGear2_Filled_Corner0_Rounded as SettingsFilledIcon,
@@ -100,7 +104,7 @@ import {getComposeButtonLayout} from './composeButtonLayout'
 
 /** The left nav's tab destinations; the tab navigator's route names on native. */
 export type SidebarTab = keyof TabParams
-type NavClickItem = TabId | 'settings'
+type NavClickItem = TabId | 'search' | 'settings'
 
 const LARGE_ELEMENT_SIZE = 48
 const NAV_ICON_WIDTH = 28
@@ -744,6 +748,12 @@ export function DesktopLeftNav({
       href: tabHref(tab),
       navItem: tab,
     })),
+    {
+      label: l`Search`,
+      href: '/search',
+      navItem: 'search' as const,
+      icons: {inactive: SearchIcon, active: SearchFilledIcon},
+    },
     {
       label: l`Settings`,
       href: '/settings',

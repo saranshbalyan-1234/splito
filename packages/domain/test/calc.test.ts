@@ -7,9 +7,22 @@ import {
   assignedFraction,
   parseBasisPoints,
   remainingMinor,
+  sumByCurrency,
   sumMinor,
 } from '../src/calc'
 import {computeShares} from '../src/split'
+
+describe('sumByCurrency', () => {
+  test('keeps each currency apart and never converts', () =>
+    expect(
+      sumByCurrency([
+        {currency: 'INR', amount: 45000n},
+        {currency: 'EUR', amount: 1250n},
+        {currency: 'INR', amount: -5000n},
+      ]),
+    ).toEqual({INR: 40000n, EUR: 1250n}))
+  test('nothing in, nothing out', () => expect(sumByCurrency([])).toEqual({}))
+})
 
 describe('evaluateAmount', () => {
   test('plain amount behaves like parseAmount', () =>

@@ -4208,3 +4208,114 @@ msgstr "आपने {0} उधार दिए"
 #: src/components/people/CallItEvenDialog.tsx:127
 msgid "You let {0} off"
 msgstr "आप {0} का कर्ज़ माफ़ कर रहे हैं"
+
+#. placeholder {0}: firstName(payers[0]!)
+#: src/screens/Search/components/ResultRows.tsx:209
+msgid "{0} paid"
+msgstr "{0} ने भुगतान किया"
+
+#. placeholder {0}: payers.length
+#: src/screens/Search/components/ResultRows.tsx:206
+msgid "{0} people paid"
+msgstr "{0} लोगों ने भुगतान किया"
+
+#. placeholder {0}: e.title
+#: src/screens/Search/components/ResultRows.tsx:228
+msgid "{0}, {total}, {date}"
+msgstr "{0}, {total}, {date}"
+
+#: src/screens/Search/components/SearchHistory.tsx:43
+msgid "A day: today or yesterday"
+msgstr "एक दिन: today या yesterday"
+
+#: src/screens/Search/components/SearchHistory.tsx:44
+msgid "A month, with a year if you like: march 2026"
+msgstr "एक महीना, चाहें तो साल के साथ: march 2026"
+
+#: src/screens/Search/components/SearchHistory.tsx:42
+msgid "Amounts over 1,000 (or under, with <)"
+msgstr "1,000 से ज़्यादा की रकम (कम के लिए < लगाएँ)"
+
+#: src/screens/Search/components/SearchHistory.tsx:41
+msgid "An exact amount, in any currency"
+msgstr "किसी भी मुद्रा में ठीक यही रकम"
+
+#: src/screens/Search/components/SearchHistory.tsx:154
+msgctxt "action"
+msgid "Clear"
+msgstr "साफ़ करें"
+
+#: src/screens/Search/components/SearchHistory.tsx:76
+msgctxt "action"
+msgid "Clear all"
+msgstr "सब साफ़ करें"
+
+#: src/screens/Search/components/SearchHistory.tsx:69
+msgid "Clear all recent searches"
+msgstr "सभी हाल की खोजें साफ़ करें"
+
+#: src/screens/Search/components/SearchHistory.tsx:151
+msgid "Clear all recent searches?"
+msgstr "सभी हाल की खोजें साफ़ करें?"
+
+#: src/screens/Search/components/SearchHistory.tsx:97
+msgid "Find any expense, friend or group on this device"
+msgstr "इस डिवाइस पर कोई भी खर्च, दोस्त या ग्रुप खोजें"
+
+#: src/screens/Search/components/ResultRows.tsx:363
+msgid "No results found for “<0>{query}</0>”."
+msgstr "“<0>{query}</0>” के लिए कोई नतीजा नहीं मिला।"
+
+#: src/components/settings/prefControls.tsx:492
+#: src/screens/Search/components/SearchHistory.tsx:65
+msgid "Recent searches"
+msgstr "हाल की खोजें"
+
+#: src/components/settings/prefControls.tsx:493
+msgid "Remember what you search for"
+msgstr "आपकी खोजें याद रखें"
+
+#: src/screens/Search/components/SearchHistory.tsx:203
+msgid "Remove {q}"
+msgstr "{q} हटाएँ"
+
+#: src/screens/Search/index.tsx:202
+msgid "Search expenses, people and groups"
+msgstr "खर्च, लोग और ग्रुप खोजें"
+
+#: src/screens/Search/index.tsx:203
+msgid "Search expenses, people, groups"
+msgstr "खर्च, लोग, ग्रुप खोजें"
+
+#. placeholder {0}: tip.q
+#: src/screens/Search/components/SearchHistory.tsx:110
+msgid "Search for {0}"
+msgstr "{0} खोजें"
+
+#: src/screens/Search/components/SearchHistory.tsx:178
+msgid "Search for {q}"
+msgstr "{q} खोजें"
+
+#: src/components/settings/prefControls.tsx:494
+msgid "Search shows your last few searches, kept on this device only."
+msgstr "खोज आपकी पिछली कुछ खोजें दिखाती है, जो सिर्फ़ इसी डिवाइस पर रहती हैं।"
+
+#: src/screens/Search/components/SearchHistory.tsx:152
+msgid "This can’t be undone, and all of your recent searches will be removed."
+msgstr "इसे वापस नहीं किया जा सकता, और आपकी सभी हाल की खोजें हट जाएँगी।"
+
+#: src/screens/Search/components/ResultRows.tsx:111
+msgid "Total {totalLine}"
+msgstr "कुल {totalLine}"
+
+#: src/screens/Search/components/ResultRows.tsx:369
+msgid "Try fewer words, part of a word, an amount like 450 or a month like march."
+msgstr "कम शब्द, शब्द का हिस्सा, 450 जैसी रकम या march जैसा महीना आज़माएँ।"
+
+#: src/screens/Search/components/SearchHistory.tsx:104
+msgid "Try searching for"
+msgstr "इन्हें खोजकर देखें"
+
+#: src/screens/Search/components/SearchHistory.tsx:39
+msgid "Words in titles, notes, items, categories, people and groups"
+msgstr "शीर्षक, नोट, आइटम, श्रेणी, लोग और ग्रुप में शब्द"

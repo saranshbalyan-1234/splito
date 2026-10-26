@@ -16,6 +16,7 @@ export const ROUTE_PATHS = {
   Settings: '/settings',
   SignIn: '/signin',
   RecentlyDeleted: '/settings/recently-deleted',
+  Search: '/search',
   SettingsSection: '/settings/:section',
   AddFriend: '/friends/new',
   Person: '/people/:personId',

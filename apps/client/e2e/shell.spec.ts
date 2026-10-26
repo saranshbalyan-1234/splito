@@ -248,6 +248,7 @@ test.describe('drawer: Bluesky drawer from the header avatar', () => {
       'drawer-groups',
       'drawer-analytics',
       'drawer-activity',
+      'drawer-search',
       'drawer-profile-item',
       'drawer-settings',
       'drawer-theme',
@@ -361,17 +362,8 @@ test.describe('desktop: Bluesky left sidebar and full-width content', () => {
   }) => {
     await page.setViewportSize(LAPTOP)
     await open(page, '/', 'screen-people')
-    const items = await page
-      .getByRole('navigation')
-      .locator('[data-testid^="tab-"]')
-      .evaluateAll(els => els.map(e => e.getAttribute('data-testid')))
-    expect(items).toEqual([
-      'tab-people',
-      'tab-groups',
-      'tab-analytics',
-      'tab-activity',
-      'tab-settings',
-    ])
+    const items = await page.getByRole('navigation').locator('[data-testid^="tab-"]').evaluateAll(els => els.map(e => e.getAttribute('data-testid')))
+    expect(items).toEqual(['tab-people', 'tab-groups', 'tab-analytics', 'tab-activity', 'tab-search', 'tab-settings'])
     await expect(page.getByTestId('tab-people')).toContainText('People')
     await expect(page.getByTestId('tab-people')).toHaveAttribute(
       'aria-current',

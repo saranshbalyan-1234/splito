@@ -105,7 +105,7 @@ async function seed(store: Store, ctx: MutationCtx) {
       date: e.date,
       tz: e.group ? DEMO_GROUPS[e.group].tz : 'Asia/Kolkata',
       category: e.category,
-      notes: '',
+      notes: e.notes ?? '',
     }
     const topPayer = Object.entries(e.payers).sort(([, x], [, y]) =>
       x! > y! ? -1 : 1,
