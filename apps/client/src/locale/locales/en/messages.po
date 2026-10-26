@@ -2153,10 +2153,14 @@ msgstr "Open Analytics"
 msgid "Open balance {0}. Part payments are fine."
 msgstr "Open balance {0}. Part payments are fine."
 
-#: src/components/HeaderAvatar.tsx:39
+#: src/components/HeaderAvatar.tsx:47
 #: src/view/shell/desktop/LeftNav.tsx:182
 msgid "Open menu"
 msgstr "Open menu"
+
+#: src/components/HeaderAvatar.tsx:47
+msgid "Open profile"
+msgstr "Open profile"
 
 #: src/components/settings/AboutSettings.tsx:51
 msgid "Open source"

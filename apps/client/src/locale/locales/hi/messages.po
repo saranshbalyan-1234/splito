@@ -2153,10 +2153,14 @@ msgstr "एनालिटिक्स खोलें"
 msgid "Open balance {0}. Part payments are fine."
 msgstr "बकाया {0}। आंशिक भुगतान भी ठीक है।"
 
-#: src/components/HeaderAvatar.tsx:39
+#: src/components/HeaderAvatar.tsx:47
 #: src/view/shell/desktop/LeftNav.tsx:182
 msgid "Open menu"
 msgstr "मेन्यू खोलें"
+
+#: src/components/HeaderAvatar.tsx:47
+msgid "Open profile"
+msgstr "प्रोफ़ाइल खोलें"
 
 #: src/components/settings/AboutSettings.tsx:51
 msgid "Open source"
