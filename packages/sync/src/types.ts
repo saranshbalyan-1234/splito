@@ -1,4 +1,4 @@
-export type EntityType = 'person' | 'group' | 'expense'
+export type EntityType = 'person' | 'group' | 'expense' | 'preference'
 
 export interface Entity<T = unknown> {
   type: EntityType
