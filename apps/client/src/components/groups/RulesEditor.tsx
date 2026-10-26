@@ -169,6 +169,7 @@ export function RulesEditor({
                 from={from}
                 to={to}
                 toName={to === me ? l`You` : (names.get(to) ?? l`Someone`)}
+                isToMe={to === me}
                 rule={effectiveRule(rules, from, to)}
                 isDefault={!(`${from}>${to}` in rules.edges)}
                 onRuleChanged={rule => setRule(from, to, rule)}
@@ -200,6 +201,7 @@ function PairRow({
   from,
   to,
   toName,
+  isToMe,
   rule,
   isDefault,
   onRuleChanged,
@@ -207,6 +209,7 @@ function PairRow({
   from: string
   to: string
   toName: string
+  isToMe: boolean
   rule: EdgeRule
   isDefault: boolean
   onRuleChanged: (rule: EdgeRule) => void
@@ -233,7 +236,7 @@ function PairRow({
         <UserAvatar size={32} name={toName} type="user" />
         <View style={[a.flex_1]}>
           <Text emoji numberOfLines={1} style={[a.text_md, a.leading_snug]}>
-            <Trans>pays {toName}</Trans>
+            {isToMe ? <Trans>pays you</Trans> : <Trans>pays {toName}</Trans>}
           </Text>
           <Text
             style={[a.text_xs, a.leading_snug, t.atoms.text_contrast_medium]}>

@@ -5,7 +5,6 @@ import {Trans, useLingui} from '@lingui/react/macro'
 import {type RouteProp, useNavigation, useRoute} from '@react-navigation/native'
 import {
   fnv1a64,
-  getCurrency,
   type Plan,
   type PlanMode,
   planSettlement,
@@ -28,6 +27,7 @@ import {NO_RULES} from '#/components/groups/RulesEditor'
 import {ArrowRotateCounterClockwise_Stroke2_Corner0_Rounded as RefreshIcon} from '#/components/icons/ArrowRotate'
 import {CircleCheck_Stroke2_Corner0_Rounded as CheckIcon} from '#/components/icons/CircleCheck'
 import * as Layout from '#/components/Layout'
+import {currencyName} from '#/components/people/ledger'
 import {
   type PaymentDraft,
   RecordPaymentDialog,
@@ -56,7 +56,7 @@ type Item =
  */
 export function SettleScreen() {
   const t = useTheme()
-  const {t: l} = useLingui()
+  const {t: l, i18n} = useLingui()
   const {gtMobile} = useBreakpoints()
   const locale = useNumberLocale()
   const navigation = useNavigation<NavigationProp>()
@@ -296,7 +296,7 @@ export function SettleScreen() {
                       t.atoms.border_contrast_low,
                     ]}>
                     <Text style={[a.text_lg, a.font_bold]}>
-                      {getCurrency(item.currency).name}
+                      {currencyName(item.currency, i18n.locale)}
                     </Text>
                     {item.count !== null && (
                       <Text

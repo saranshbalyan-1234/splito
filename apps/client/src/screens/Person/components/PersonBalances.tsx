@@ -1,14 +1,10 @@
 import {View} from 'react-native'
 import {Trans, useLingui} from '@lingui/react/macro'
-import {
-  formatAmount,
-  getCurrency,
-  magnitude,
-  type PersonSummary,
-} from '@splito/domain'
+import {formatAmount, magnitude, type PersonSummary} from '@splito/domain'
 
 import {atoms as a, useTheme} from '#/alf'
 import {CircleCheck_Stroke2_Corner0_Rounded as CheckIcon} from '#/components/icons/CircleCheck'
+import {currencyName} from '#/components/people/ledger'
 import * as Skeleton from '#/components/Skeleton'
 import {Text} from '#/components/Typography'
 import {AnimatedAmount} from '#/motion/AnimatedAmount'
@@ -96,7 +92,7 @@ function BalanceCard({
   locale: string
 }) {
   const t = useTheme()
-  const {t: l} = useLingui()
+  const {t: l, i18n} = useLingui()
   const {total, direct, groups} = balance
   const color =
     total > 0n
@@ -152,7 +148,7 @@ function BalanceCard({
             t.atoms.bg_contrast_50,
           ]}>
           <Text
-            accessibilityLabel={getCurrency(currency).name}
+            accessibilityLabel={currencyName(currency, i18n.locale)}
             style={[a.text_xs, a.font_semi_bold, t.atoms.text_contrast_medium]}>
             {currency}
           </Text>

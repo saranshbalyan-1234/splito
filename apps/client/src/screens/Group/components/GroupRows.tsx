@@ -1,12 +1,13 @@
 import {View} from 'react-native'
 import Animated from 'react-native-reanimated'
-import {Trans} from '@lingui/react/macro'
-import {formatAmount, getCurrency, magnitude} from '@splito/domain'
+import {Trans, useLingui} from '@lingui/react/macro'
+import {formatAmount, magnitude} from '@splito/domain'
 
 import {Link} from '#/view/com/util/Link'
 import {UserAvatar} from '#/view/com/util/UserAvatar'
 import {atoms as a, useTheme} from '#/alf'
 import {ChevronRight_Stroke2_Corner0_Rounded as ChevronIcon} from '#/components/icons/Chevron'
+import {currencyName} from '#/components/people/ledger'
 import * as Pills from '#/components/Pills'
 import {Text} from '#/components/Typography'
 import {useListAnimations} from '#/motion/listAnimations'
@@ -17,6 +18,7 @@ const tabular = {fontVariant: ['tabular-nums' as const]}
 /** A currency heading above a group's member balances. */
 export function CurrencyHeader({currency}: {currency: string}) {
   const t = useTheme()
+  const {i18n} = useLingui()
   return (
     <View
       style={[
@@ -30,7 +32,7 @@ export function CurrencyHeader({currency}: {currency: string}) {
         t.atoms.border_contrast_low,
       ]}>
       <Text style={[a.text_sm, a.font_semi_bold, t.atoms.text_contrast_medium]}>
-        {getCurrency(currency).name}
+        {currencyName(currency, i18n.locale)}
       </Text>
       <View
         style={[

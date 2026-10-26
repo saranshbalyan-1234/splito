@@ -21,7 +21,11 @@ import * as SegmentedControl from '#/components/forms/SegmentedControl'
 import * as TextField from '#/components/forms/TextField'
 import {ArrowRight_Stroke2_Corner0_Rounded as ArrowRightIcon} from '#/components/icons/Arrow'
 import {ArrowRightLeft_Stroke2_Corner0_Rounded as SwapIcon} from '#/components/icons/Route'
-import {parseTypedAmount, todayLocal} from '#/components/people/ledger'
+import {
+  currencyName,
+  parseTypedAmount,
+  todayLocal,
+} from '#/components/people/ledger'
 import * as Toast from '#/components/Toast'
 import {Text} from '#/components/Typography'
 import {SuccessCheck} from '#/motion/SuccessCheck'
@@ -104,7 +108,7 @@ function Form({
   onPaymentRecorded?: () => void
 }) {
   const t = useTheme()
-  const {t: l} = useLingui()
+  const {t: l, i18n} = useLingui()
   const control = Dialog.useDialogContext()
   const store = useStore()
   const ctx = useMutationCtx()
@@ -299,7 +303,7 @@ function Form({
             placeholder="0"
             onSubmitEditing={() => void save()}
           />
-          <TextField.SuffixText label={getCurrency(currency).name}>
+          <TextField.SuffixText label={currencyName(currency, i18n.locale)}>
             {currency}
           </TextField.SuffixText>
         </TextField.Root>

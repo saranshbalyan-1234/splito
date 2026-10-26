@@ -2,12 +2,7 @@ import {useState} from 'react'
 import {View} from 'react-native'
 import {Trans, useLingui} from '@lingui/react/macro'
 import {useNavigation} from '@react-navigation/native'
-import {
-  CURRENCIES,
-  DomainError,
-  getCurrency,
-  parseLocalDate,
-} from '@splito/domain'
+import {CURRENCIES, DomainError, parseLocalDate} from '@splito/domain'
 import {createGroup, createPerson, type Group, type Person} from '@splito/sync'
 
 import {useHaptics} from '#/lib/haptics'
@@ -27,6 +22,7 @@ import {Group3_Stroke2_Corner0_Rounded as GroupIcon} from '#/components/icons/Gr
 import {PlusLarge_Stroke2_Corner0_Rounded as PlusIcon} from '#/components/icons/Plus'
 import * as Layout from '#/components/Layout'
 import {AvatarPreview} from '#/components/people/AvatarPreview'
+import {currencyName} from '#/components/people/ledger'
 import * as Toast from '#/components/Toast'
 import {Text} from '#/components/Typography'
 
@@ -40,7 +36,7 @@ type Kind = Group['kind']
  */
 export function CreateGroupScreen() {
   const t = useTheme()
-  const {t: l} = useLingui()
+  const {t: l, i18n} = useLingui()
   const navigation = useNavigation<NavigationProp>()
   const store = useStore()
   const ctx = useMutationCtx()
@@ -218,13 +214,13 @@ export function CreateGroupScreen() {
             </TextField.LabelText>
             <Button
               testID="create-group-currency"
-              label={l`Currency: ${getCurrency(currency).name}`}
+              label={l`Currency: ${currencyName(currency, i18n.locale)}`}
               size="large"
               color="secondary"
               style={[a.justify_between]}
               onPress={() => currencyControl.open()}>
               <ButtonText style={[a.flex_1, a.text_left]}>
-                {currency} · {getCurrency(currency).name}
+                {currency} · {currencyName(currency, i18n.locale)}
               </ButtonText>
               <ButtonIcon icon={ChevronIcon} />
             </Button>
@@ -393,10 +389,10 @@ function CurrencyDialog({
   value: string
   onCurrencyChosen: (code: string) => void
 }) {
-  const {t: l} = useLingui()
+  const {t: l, i18n} = useLingui()
   const {gtMobile} = useBreakpoints()
   const codes = Object.keys(CURRENCIES).sort((x, y) =>
-    getCurrency(x).name.localeCompare(getCurrency(y).name),
+    currencyName(x, i18n.locale).localeCompare(currencyName(y, i18n.locale)),
   )
   return (
     <Dialog.Outer control={control}>
@@ -417,11 +413,11 @@ function CurrencyDialog({
               key={code}
               testID={`currency-${code}`}
               name={code}
-              label={getCurrency(code).name}
+              label={currencyName(code, i18n.locale)}
               style={[a.py_sm, gtMobile && a.px_xs]}>
               <Toggle.Radio />
               <Toggle.LabelText style={[a.flex_1, a.text_md]}>
-                {getCurrency(code).name}
+                {currencyName(code, i18n.locale)}
               </Toggle.LabelText>
               <Text style={[a.text_sm, a.font_semi_bold]}>{code}</Text>
             </Toggle.Item>
