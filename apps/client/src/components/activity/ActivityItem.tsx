@@ -30,6 +30,7 @@ import {type Props as SVGIconProps} from '#/components/icons/common'
 import * as Menu from '#/components/Menu'
 import {SubtleHover} from '#/components/SubtleHover'
 import {Text} from '#/components/Typography'
+import {moneyGlyph, useMoneyStyle} from '#/components/MoneyDirection'
 import {IS_NATIVE, IS_WEB, IS_WEB_TOUCH_DEVICE} from '#/env'
 import {
   AddedBadge,
@@ -379,6 +380,7 @@ function useDescribe(
     id ? snapshot.groups.get(id)?.data.name : undefined
   const money = (amount: bigint, currency: string) =>
     formatAmount(amount, currency, locale)
+  const moneyStyle = useMoneyStyle()
 
   switch (event.entityType) {
     case 'expense': {
@@ -397,13 +399,10 @@ function useDescribe(
           style={[
             a.text_sm,
             a.font_semi_bold,
-            {
-              color:
-                net > ZERO ? t.palette.positive_600 : t.palette.negative_500,
-              fontVariant: ['tabular-nums'],
-            },
+            {fontVariant: ['tabular-nums']},
+            moneyStyle.style(net),
           ]}>
-          {money(magnitude(net), e.currency)}
+          {`${moneyGlyph(net)}\u00a0${money(magnitude(net), e.currency)}`}
         </Text>
       )
       return {

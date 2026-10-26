@@ -3,6 +3,7 @@ import {Trans, useLingui} from '@lingui/react/macro'
 import {formatAmount, getCurrency, toDecimalString, ZERO} from '@splito/domain'
 import {nanoid} from 'nanoid/non-secure'
 
+import {useMutationCtx, usePref} from '#/data/hooks'
 import {UserAvatar} from '#/view/com/util/UserAvatar'
 import {atoms as a, tokens, useBreakpoints, useTheme, web} from '#/alf'
 import {Button, ButtonIcon, ButtonText} from '#/components/Button'
@@ -24,11 +25,21 @@ import {
   SPLIT_MODES,
   type SplitMode,
 } from './form'
-import {MinusIcon} from './icons'
+import {CoinsIcon, MinusIcon} from './icons'
 import {PortionBadge} from './PortionBadge'
-import {useAvatarName, useDisplayName, useErrorText} from './shared'
+import {
+  cashUnitText,
+  useAvatarName,
+  useDisplayName,
+  useErrorText,
+} from './shared'
 
 type Update = (fn: (f: ExpenseForm) => ExpenseForm) => void
+
+/** Split modes whose shares can be rounded to cash (F-402); the others are typed amounts. */
+const ROUNDABLE: SplitMode[] = ['equal', 'shares', 'percent']
+/** The cash units on offer, in whole currency units (the `split.roundTo` choices). */
+const ROUND_UNITS = [1, 5, 10, 50, 100] as const
 
 /** A cap on one person's portions of one item, so a stray tap never runs away. */
 const MAX_PORTIONS = 9
@@ -148,6 +159,14 @@ export function SplitEditor({
               </ButtonText>
             </Button>
           </View>
+          {ROUNDABLE.includes(form.mode) ? (
+            <CashRounding
+              form={form}
+              update={update}
+              evaluation={evaluation}
+              locale={locale}
+            />
+          ) : null}
         </View>
       )}
     </View>
@@ -179,7 +198,9 @@ function SplitRow({
     (form.mode === 'equal' || form.mode === 'adjusted') && isExcluded
       ? l`Not splitting`
       : share !== undefined
-        ? formatAmount(share, form.currency, locale)
+        ? evaluation.cash?.remainderTo === id
+          ? l`${formatAmount(share, form.currency, locale)} · includes ${formatAmount(evaluation.cash.remainder, form.currency, locale)} left over`
+          : formatAmount(share, form.currency, locale)
         : form.mode === 'shares' && (form.shares[id] ?? 1) === 0
           ? l`Not splitting`
           : null
@@ -733,6 +754,113 @@ function ItemsEditor({
             </ButtonText>
           </Button>
         </View>
+      ) : null}
+    </View>
+  )
+}
+
+/**
+ * Cash rounding (F-402): a switch under the split that rounds every share to
+ * whole cash units (1, 5, 10, 50, 100 of the currency), and a line that
+ * shows what does not divide - the remainder and whose share carries it -
+ * so nothing is ever lost or hidden. The rounding itself is
+ * `@splito/domain` `allocateCash`; this only shows it.
+ */
+function CashRounding({
+  form,
+  update,
+  evaluation,
+  locale,
+}: {
+  form: ExpenseForm
+  update: Update
+  evaluation: FormEvaluation
+  locale: string
+}) {
+  const t = useTheme()
+  const {t: l} = useLingui()
+  const name = useDisplayName()
+  const [defaultUnit = 1] = usePref('split.roundTo')
+  const {actor} = useMutationCtx()
+  const roundTo = form.roundTo ?? 0
+  const isOn = roundTo > 0
+  const unitText = (n: number) => cashUnitText(form.currency, n)
+  const cash = evaluation.cash
+  const fmt = (v: bigint) => formatAmount(v, form.currency, locale)
+
+  return (
+    <View testID="cash-rounding" style={[a.px_lg, a.pt_lg, a.gap_sm]}>
+      <Toggle.Item
+        type="checkbox"
+        testID="cash-rounding-switch"
+        name="cash-rounding"
+        label={l`Round shares to cash`}
+        value={isOn}
+        onChange={on => update(f => ({...f, roundTo: on ? defaultUnit : 0}))}
+        style={[a.w_full, a.gap_md]}>
+        <View
+          style={[
+            a.align_center,
+            a.justify_center,
+            a.rounded_sm,
+            {width: 36, height: 36},
+            t.atoms.bg_contrast_25,
+          ]}>
+          <CoinsIcon size="md" fill={t.atoms.text_contrast_medium.color} />
+        </View>
+        <View style={[a.flex_1, a.gap_2xs]}>
+          <Text style={[a.text_md, a.font_medium]}>
+            <Trans>Round shares to cash</Trans>
+          </Text>
+          <Text
+            style={[a.text_sm, a.leading_snug, t.atoms.text_contrast_medium]}>
+            <Trans>Whole amounts that are easy to hand over</Trans>
+          </Text>
+        </View>
+        <Toggle.Platform />
+      </Toggle.Item>
+
+      {isOn ? (
+        <>
+          <View
+            role="radiogroup"
+            accessibilityLabel={l`Round to`}
+            style={[a.flex_row, a.flex_wrap, a.gap_xs, {paddingLeft: 48}]}>
+            {ROUND_UNITS.map(unit => {
+              const isPicked = roundTo === unit
+              return (
+                <Button
+                  key={unit}
+                  testID={`cash-unit-${unit}`}
+                  label={l`Round to ${unitText(unit)}`}
+                  role="radio"
+                  aria-checked={isPicked}
+                  accessibilityState={{checked: isPicked}}
+                  size="small"
+                  color={isPicked ? 'primary' : 'secondary'}
+                  onPress={() => update(f => ({...f, roundTo: unit}))}>
+                  <ButtonText>{unitText(unit)}</ButtonText>
+                </Button>
+              )
+            })}
+          </View>
+          {cash ? (
+            <Text
+              testID="cash-remainder"
+              style={[
+                a.text_sm,
+                a.leading_snug,
+                t.atoms.text_contrast_high,
+                {paddingLeft: 48, fontVariant: ['tabular-nums']},
+              ]}>
+              {cash.remainder !== ZERO && cash.remainderTo === actor
+                ? l`${fmt(cash.remainder)} doesn’t round to ${unitText(roundTo)}, so it goes on your share. Everything still adds up to ${fmt(evaluation.total!)}.`
+                : cash.remainder !== ZERO && cash.remainderTo
+                  ? l`${fmt(cash.remainder)} doesn’t round to ${unitText(roundTo)}, so it goes on ${name(cash.remainderTo)}’s share. Everything still adds up to ${fmt(evaluation.total!)}.`
+                  : l`Every share is a whole multiple of ${unitText(roundTo)} and they add up to ${fmt(evaluation.total!)}.`}
+            </Text>
+          ) : null}
+        </>
       ) : null}
     </View>
   )

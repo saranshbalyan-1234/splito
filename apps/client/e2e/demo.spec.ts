@@ -63,7 +63,7 @@ test('People shows each friend with real words and the right balance per currenc
       continue
     }
     for (const [currency, {total}] of Object.entries(summary.byCurrency)) {
-      const words = total > 0n ? 'owes you' : 'you owe'
+      const words = total > 0n ? 'owes you ↙' : 'you owe ↗'
       await expect(row.getByTestId(`balance-${currency}`)).toHaveText(`${words} ${formatAmount(magnitude(total), currency, LOCALE)}`)
     }
   }
@@ -99,8 +99,8 @@ test('Groups lists the demo groups with my balance in each', async ({page}) => {
   for (const name of ['Goa trip', 'Flat 4B', 'Lisbon']) {
     await expect(page.getByTestId(`group-${name}`)).toBeVisible()
   }
-  await expect(page.getByTestId('group-Lisbon').getByTestId('group-balance-EUR')).toHaveText(/^you owe €/)
-  await expect(page.getByTestId('group-Goa trip').getByTestId('group-balance-INR')).toHaveText(/^you are owed ₹/)
+  await expect(page.getByTestId('group-Lisbon').getByTestId('group-balance-EUR')).toHaveText(/^you owe ↗\s€/)
+  await expect(page.getByTestId('group-Goa trip').getByTestId('group-balance-INR')).toHaveText(/^you are owed ↙\s₹/)
   // An Overview on top, People's style: one cell per currency, never added together.
   await expect(page.getByTestId('groups-balances-title')).toHaveText('Overview')
   await expect(page.getByTestId('groups-balances').getByTestId('summary-INR-net')).toBeVisible()
@@ -116,7 +116,7 @@ test('Hindi renders translated words with Indian grouping, never message ids', a
   await expect(page.getByTestId('people-add-friend')).toHaveAttribute('aria-label', 'दोस्त जोड़ें')
   const arjun = byKey.get('arjun')!.byCurrency.INR!.total
   await expect(page.getByTestId('person-Arjun Mehta').getByTestId('balance-INR')).toHaveText(
-    `आपको मिलेंगे ${formatAmount(arjun, 'INR', 'hi-IN')}`,
+    `आपको मिलेंगे ↙ ${formatAmount(arjun, 'INR', 'hi-IN')}`,
   )
   await expectNoMessageIds(page)
 })

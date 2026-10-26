@@ -11,6 +11,8 @@ import {
   ChevronLeft,
   Circle,
   Coffee,
+  Coins,
+  Delete,
   Dog,
   Dumbbell,
   Folder,
@@ -53,6 +55,10 @@ export const ChevronDownIcon = createIcon(ChevronDown)
 export const ChevronLeftIcon = createIcon(ChevronLeft)
 export const HistoryIcon = createIcon(History)
 export const MinusIcon = createIcon(Minus)
+/** Backspace on the amount keypad. */
+export const DeleteIcon = createIcon(Delete)
+/** Cash rounding (F-402). */
+export const CoinsIcon = createIcon(Coins)
 export const ReceiptIcon = createIcon(ReceiptText)
 export const TripIcon = createIcon(Plane)
 export const HomeIcon = createIcon(House)

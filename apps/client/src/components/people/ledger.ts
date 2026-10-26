@@ -156,7 +156,10 @@ export function parseTypedAmount(
 ) {
   if (!/^[\d.,\s\u00a0\u202f']+$/.test(text) || !/\d/.test(text))
     throw new DomainError('INVALID_AMOUNT')
-  return evaluateAmount(text, currency, decimalMark(locale))
+  // A lone "1.234" in the locale's own mark reads as decimals here, as it always has; only the composer asks (F-310).
+  return evaluateAmount(text, currency, decimalMark(locale), {
+    reading: 'decimal',
+  })
 }
 
 /** `upi://pay` deep link (NPCI UPI linking spec): payee VPA, name, amount in rupees, INR. */

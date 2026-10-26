@@ -35,6 +35,7 @@ import {
 } from '#/components/people/RecordPaymentDialog'
 import * as Skeleton from '#/components/Skeleton'
 import {Text} from '#/components/Typography'
+import {MoneyArrow, useMoneyStyle} from '#/components/MoneyDirection'
 import {Shimmer} from '#/motion/Shimmer'
 import {TransferRow} from './components/TransferRow'
 
@@ -61,6 +62,9 @@ type Item =
  * change it is marked stale until the user updates it. A plan is never a
  * payment: each transfer is recorded only when the user says it happened.
  */
+/** A unit sign for the summary's arrow and colour: only the direction matters there. */
+const ONE = 1n
+
 export function SettleScreen() {
   const t = useTheme()
   const {t: l} = useLingui()
@@ -514,6 +518,7 @@ function SettleSummary({
   locale: string
 }) {
   const t = useTheme()
+  const money = useMoneyStyle()
   const lines = plans.flatMap(({currency, plan}) => {
     if (!plan || plan.status === 'infeasible') return []
     const sides = [
@@ -561,20 +566,19 @@ function SettleSummary({
               <Trans>You’ll pay, to {line.people} people</Trans>
             )}
           </Text>
-          <Text
-            style={[
-              a.text_3xl,
-              a.font_bold,
-              a.leading_tight,
-              {
-                color: line.isIncoming
-                  ? t.palette.positive_600
-                  : t.palette.negative_500,
-                fontVariant: ['tabular-nums'],
-              },
-            ]}>
-            {line.amount}
-          </Text>
+          <View style={[a.flex_row, a.align_center, a.gap_xs]}>
+            <MoneyArrow amount={line.isIncoming ? ONE : -ONE} size="lg" />
+            <Text
+              style={[
+                a.text_3xl,
+                a.font_bold,
+                a.leading_tight,
+                {fontVariant: ['tabular-nums']},
+                money.style(line.isIncoming ? ONE : -ONE),
+              ]}>
+              {line.amount}
+            </Text>
+          </View>
         </View>
       ))}
     </View>

@@ -1,6 +1,7 @@
 import {View} from 'react-native'
 import {type I18n} from '@lingui/core'
 import {useLingui} from '@lingui/react/macro'
+import {getCurrency} from '@splito/domain'
 import {
   type Category,
   DEFAULT_CATEGORIES,
@@ -131,6 +132,12 @@ export function CategoryTile({
   )
 }
 
+/** A cash unit as people say it: "₹10", "€5", "BD 1" (whole units, no decimals). */
+export function cashUnitText(currency: string, whole: number) {
+  const {symbol} = getCurrency(currency)
+  return symbol.length === 1 ? `${symbol}${whole}` : `${symbol} ${whole}`
+}
+
 /** Plain-words text for a domain or form error code. */
 export function useErrorText() {
   const {t: l} = useLingui()
@@ -146,6 +153,10 @@ export function useErrorText() {
         return l`That isn’t a number. Use digits, one decimal point and + − × ÷`
       case 'TOO_MANY_DECIMALS':
         return l`Too many digits after the decimal point for this currency`
+      case 'AMBIGUOUS_AMOUNT':
+        return l`Is that a thousands separator or decimals? Write it without the separator, like 1234`
+      case 'INVALID_ROUNDING':
+        return l`Pick a whole cash unit to round to`
       case 'INCOMPLETE':
         return l`Finish the sum – it ends with an operator`
       case 'DIVIDE_BY_ZERO':

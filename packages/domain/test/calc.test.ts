@@ -34,7 +34,9 @@ describe('evaluateAmount', () => {
   })
   test('expression results round, plain amounts never do', () => {
     expect(evaluateAmount('12.345+0', 'INR')).toBe(1235n)
-    expect(() => evaluateAmount('12.345', 'INR')).toThrow('TOO_MANY_DECIMALS')
+    expect(() => evaluateAmount('12.3456', 'INR')).toThrow('TOO_MANY_DECIMALS')
+    // Exactly three decimals could be a thousands group: F-310 asks instead.
+    expect(() => evaluateAmount('12.345', 'INR')).toThrow('AMBIGUOUS_AMOUNT')
   })
   test('divide by zero', () =>
     expect(() => evaluateAmount('10/0', 'INR')).toThrow('DIVIDE_BY_ZERO'))
@@ -54,7 +56,8 @@ describe('evaluateAmount', () => {
     expect(evaluateAmount('1.234,50', 'EUR', ',')).toBe(123450n)
     expect(evaluateAmount('1 234,5', 'EUR', ',')).toBe(123450n)
     expect(evaluateAmount('12,50+1,25', 'EUR', ',')).toBe(1375n)
-    expect(() => evaluateAmount('12,505', 'EUR', ',')).toThrow('TOO_MANY_DECIMALS')
+    expect(() => evaluateAmount('12,5055', 'EUR', ',')).toThrow('TOO_MANY_DECIMALS')
+    expect(() => evaluateAmount('12,505', 'EUR', ',')).toThrow('AMBIGUOUS_AMOUNT')
   })
   test("a decimal pad's comma reads as a decimal under '.' locales too, unless it groups thousands", () => {
     expect(evaluateAmount('12,50', 'INR')).toBe(1250n)
@@ -74,6 +77,8 @@ describe('evaluateAmount', () => {
     expect(isExpression('12.5')).toBe(false)
     expect(isExpression('12+5')).toBe(true)
     expect(isExpression('12 x 5')).toBe(true)
+    expect(isExpression('2k + 5')).toBe(true)
+    expect(isExpression('1.5L')).toBe(false)
   })
 })
 

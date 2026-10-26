@@ -10,6 +10,7 @@ import {ChevronRight_Stroke2_Corner0_Rounded as ChevronIcon} from '#/components/
 import {currencyName} from '#/components/people/ledger'
 import * as Pills from '#/components/Pills'
 import {Text} from '#/components/Typography'
+import {moneyGlyph, useMoneyStyle} from '#/components/MoneyDirection'
 import {useListAnimations} from '#/motion/listAnimations'
 import {usePressScale} from '#/motion/PressableScale'
 
@@ -71,13 +72,9 @@ export function MemberBalanceRow({
   locale: string
 }) {
   const t = useTheme()
-  const figure = formatAmount(magnitude(net), currency, locale)
-  const figureStyle = [
-    a.text_md,
-    a.font_semi_bold,
-    tabular,
-    {color: net > ZERO ? t.palette.positive_600 : t.palette.negative_500},
-  ]
+  const money = useMoneyStyle()
+  const figure = `${moneyGlyph(net)}\u00a0${formatAmount(magnitude(net), currency, locale)}`
+  const figureStyle = [a.text_md, a.font_semi_bold, tabular, money.style(net)]
 
   return (
     <View

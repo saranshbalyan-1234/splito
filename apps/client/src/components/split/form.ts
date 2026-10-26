@@ -1,5 +1,11 @@
 import {
   allocate,
+  type AmountOptions,
+  amountReadings,
+  type CashAllocation,
+  cashSplit,
+  cashUnit,
+  cashUnitWhole,
   computeShares,
   DomainError,
   evaluateAmount,
@@ -44,8 +50,10 @@ export type ItemForm = {
  */
 export type ExpenseForm = {
   title: string
-  /** Raw amount text; may be a calculator expression ("1200+300"). */
+  /** Raw amount text; may be a calculator expression ("1200+300"), shorthand ("1.5L") or a paste. */
   amount: string
+  /** How an ambiguous "1,234" was resolved (F-310); cleared whenever the amount text changes. */
+  amountReading?: AmountOptions['reading']
   currency: string
   date: string
   category: string
@@ -58,6 +66,12 @@ export type ExpenseForm = {
   payer: string
   paid: Record<string, string>
   mode: SplitMode
+  /**
+   * Cash rounding (F-402) for equal, shares and percent splits: whole
+   * currency units each share rounds to (1, 5, 10 ...); 0 is off. Drafts
+   * saved before rounding have none, which reads as off.
+   */
+  roundTo?: number
   /** Equal and adjusted modes: people on the expense who are not splitting it. */
   excluded: string[]
   exact: Record<string, string>
@@ -82,6 +96,7 @@ export function emptyForm({
   groupId,
   mode,
   category = 'other',
+  roundTo = 0,
 }: {
   me: string
   currency: string
@@ -90,6 +105,8 @@ export function emptyForm({
   groupId: string | null
   mode: SplitMode
   category?: string
+  /** Whole units new splits round to; 0 (the default) is off. */
+  roundTo?: number
 }): ExpenseForm {
   return {
     title: '',
@@ -104,6 +121,7 @@ export function emptyForm({
     payer: me,
     paid: {},
     mode,
+    roundTo,
     excluded: [],
     exact: {},
     percent: {},
@@ -162,6 +180,10 @@ export function formFromExpense(e: Expense, me: string): ExpenseForm {
           Object.entries(e.payers).map(([k, v]) => [k, money(v, scale)]),
         ),
     notes: e.notes,
+    roundTo:
+      'roundTo' in s && s.roundTo !== undefined
+        ? cashUnitWhole(e.currency, s.roundTo)
+        : 0,
   }
   switch (s.mode) {
     case 'equal':
@@ -214,6 +236,10 @@ export type FormEvaluation = {
   total?: bigint
   /** Why the amount text is not a valid amount (an error code). */
   amountError?: string
+  /** AMBIGUOUS_AMOUNT: what the amount could mean, for "Did you mean ...?". */
+  amountReadings?: {grouped: bigint; decimal?: bigint}
+  /** Cash rounding: the rounded shares, the remainder and who carries it. */
+  cash?: CashAllocation
   /** Per-input error codes: a person id (split rows), `paid:<id>`, `item:<key>`, `tax`, `tip`, `service`, `discount`. */
   rowErrors: Record<string, string>
   /** Multiple payers: what is still unpaid of the total. */
@@ -244,6 +270,7 @@ export function evaluateForm(
   f: ExpenseForm,
   tz: string,
   mark: '.' | ',' = '.',
+  {shorthand = true}: {shorthand?: boolean} = {},
 ): FormEvaluation {
   const r: FormEvaluation = {rowErrors: {}}
   const errors: string[] = []
@@ -260,7 +287,7 @@ export function evaluateForm(
   ): bigint | undefined => {
     if (!text?.trim()) return 0n
     try {
-      const v = evaluateAmount(text, f.currency, mark)
+      const v = evaluateAmount(text, f.currency, mark, {shorthand})
       if (v >= 0n || canBeNegative) return v
       r.rowErrors[key] = 'NEGATIVE_AMOUNT'
     } catch (e) {
@@ -274,11 +301,16 @@ export function evaluateForm(
   if (!f.amount.trim()) errors.push('AMOUNT_REQUIRED')
   else {
     try {
-      const total = evaluateAmount(f.amount, f.currency, mark)
+      const total = evaluateAmount(f.amount, f.currency, mark, {
+        shorthand,
+        reading: f.amountReading,
+      })
       if (total <= 0n) r.amountError = 'AMOUNT_NOT_POSITIVE'
       else r.total = total
     } catch (e) {
       r.amountError = codeOf(e)
+      if (r.amountError === 'AMBIGUOUS_AMOUNT')
+        r.amountReadings = amountReadings(f.amount, f.currency, mark)!
     }
     if (r.amountError) errors.push(r.amountError)
   }
@@ -315,10 +347,12 @@ export function evaluateForm(
   /* Split */
   let split: SplitInput | undefined
   const splitting = people.filter(p => !f.excluded.includes(p))
+  // Only set when on, so splits saved without rounding stay byte-for-byte as before.
+  const rounding = f.roundTo ? {roundTo: cashUnit(f.currency, f.roundTo)} : {}
   switch (f.mode) {
     case 'equal':
       if (splitting.length === 0) errors.push('NO_PARTICIPANTS')
-      else split = {mode: 'equal', participants: splitting}
+      else split = {mode: 'equal', participants: splitting, ...rounding}
       break
     case 'adjusted': {
       const adjustments: Record<string, bigint> = {}
@@ -372,7 +406,7 @@ export function evaluateForm(
         const used = Object.values(basisPoints).reduce((a, b) => a + b, 0)
         r.remaining = {kind: 'percent', value: 10000 - used}
         if (used !== 10000) errors.push('PERCENT_NOT_100')
-        else split = {mode: 'percent', basisPoints}
+        else split = {mode: 'percent', basisPoints, ...rounding}
       }
       break
     }
@@ -383,7 +417,7 @@ export function evaluateForm(
           .filter(([, w]) => (w as number) > 0),
       )
       if (Object.keys(shares).length === 0) errors.push('NO_PARTICIPANTS')
-      else split = {mode: 'shares', shares}
+      else split = {mode: 'shares', shares, ...rounding}
       break
     }
     case 'items': {
@@ -461,6 +495,7 @@ export function evaluateForm(
   if (total !== undefined && split) {
     try {
       r.shares = computeShares(total, split)
+      r.cash = cashSplit(total, split)
     } catch (e) {
       errors.push(codeOf(e))
     }

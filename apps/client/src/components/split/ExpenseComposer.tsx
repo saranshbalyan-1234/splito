@@ -13,7 +13,7 @@ import {
 
 import {type NavigationProp} from '#/lib/routes/types'
 import {useNumberLocale} from '#/locale/numberLocale'
-import {useEntities, useMutationCtx, useStore} from '#/data/hooks'
+import {useEntities, useMutationCtx, usePref, useStore} from '#/data/hooks'
 import {atoms as a, useBreakpoints, useTheme} from '#/alf'
 import {Button, ButtonText} from '#/components/Button'
 import * as FormSheet from '#/components/FormSheet'
@@ -106,7 +106,11 @@ export function ExpenseComposer({
   const [isSaving, setIsSaving] = useState(false)
   const [savedId, setSavedId] = useState<string>()
   const [isTitleFocused, setIsTitleFocused] = useState(false)
-  const evaluation = evaluateForm(form, tz, decimalMark(locale))
+  const [isShorthandOn = true] = usePref('amount.shorthand')
+  const [isKeypadOn = true] = usePref('amount.keypad')
+  const evaluation = evaluateForm(form, tz, decimalMark(locale), {
+    shorthand: isShorthandOn,
+  })
   const category = useCategory(form.category)
   const isEdit = !!expenseId
   const isDirty = form !== initialForm
@@ -464,13 +468,19 @@ export function ExpenseComposer({
 
       <AmountField
         value={form.amount}
-        onChangeText={amount => update(f => ({...f, amount}))}
+        onChangeText={amount =>
+          update(f => ({...f, amount, amountReading: undefined}))
+        }
         currency={form.currency}
         locale={locale}
         result={evaluation.total}
         errorText={
           evaluation.amountError ? errorText(evaluation.amountError) : undefined
         }
+        readings={evaluation.amountReadings}
+        reading={form.amountReading}
+        onReadingPicked={amountReading => update(f => ({...f, amountReading}))}
+        hasKeypad={isKeypadOn && !gtMobile}
         onPressCurrency={() => currencyControl.open()}
       />
 

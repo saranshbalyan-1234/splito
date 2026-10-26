@@ -64,6 +64,8 @@ export const PREFS = {
   accent: def('accent', 'appearance', 'account', 'Accent colour', '#006AFF', (v): v is string => typeof v === 'string' && HEX.test(v)),
   textScale: def('textScale', 'appearance', 'device', 'Text size', 1, (v): v is number => typeof v === 'number' && v >= 0.85 && v <= 1.3),
   density: def('density', 'appearance', 'account', 'List density', 'comfortable', oneOf('comfortable', 'compact')),
+  /** How money direction is coloured (F-1801); every palette also shows it by sign, arrow and words. */
+  moneyPalette: def('moneyPalette', 'appearance', 'account', 'Money colours', 'default', oneOf('default', 'colorblind', 'mono')),
   motion: def('motion', 'motion', 'device', 'Animations', 'full', oneOf('full', 'reduced', 'off')),
   haptics: def('haptics', 'motion', 'device', 'Haptics', true, isBool),
   tabs: def<TabId[]>(
@@ -78,6 +80,12 @@ export const PREFS = {
   homeTab: def<TabId>('homeTab', 'defaults', 'account', 'Home tab', 'people', oneOf(...TAB_IDS)),
   defaultCurrency: def('defaultCurrency', 'defaults', 'account', 'Default currency', 'INR', (v): v is string => typeof v === 'string' && v in CURRENCIES),
   defaultSplitMode: def('defaultSplitMode', 'defaults', 'account', 'Default split', 'equal', oneOf('equal', 'exact', 'percent', 'shares')),
+  /** F-402: new equal, shares and percent splits start rounded to whole cash units. */
+  'split.roundCash': def('split.roundCash', 'defaults', 'account', 'Round shares to cash', false, isBool),
+  /** The cash unit those splits round to, in whole currency units (INR 1, 5, 10 ...). */
+  'split.roundTo': def('split.roundTo', 'defaults', 'account', 'Round to', 1, oneOf(1, 5, 10, 50, 100)),
+  /** F-310: the calculator keypad replaces the system keyboard for amounts on phones (Expensify's number pad). */
+  'amount.keypad': def('amount.keypad', 'defaults', 'device', 'Amount keypad', true, isBool),
   analyticsPeriod: def('analyticsPeriod', 'defaults', 'account', 'Analytics period', 'year', oneOf('week', 'month', 'year', 'all')),
   analyticsView: def('analyticsView', 'defaults', 'device', 'Analytics view', 'charts', oneOf('charts', 'table')),
   categories: def<Category[]>(
@@ -98,6 +106,8 @@ export const PREFS = {
   weekStart: def('weekStart', 'regional', 'account', 'Week starts on', 1, oneOf(0, 1, 6)),
   dateFormat: def('dateFormat', 'regional', 'account', 'Date format', 'auto', oneOf('auto', 'dmy', 'mdy', 'ymd')),
   numberLocale: def('numberLocale', 'regional', 'account', 'Number format', 'auto', oneOf('auto', 'en-IN', 'en-US', 'de-DE', 'fr-FR')),
+  /** F-310: amounts read 2k, 1.5L, 1cr and 2m. */
+  'amount.shorthand': def('amount.shorthand', 'regional', 'account', 'Amount shortcuts', true, isBool),
   peopleSort: def('peopleSort', 'lists', 'account', 'Sort people by', 'amount', oneOf('amount', 'name', 'recent')),
   includeGroupsDefault: def('includeGroupsDefault', 'lists', 'account', 'Include groups by default', true, isBool),
   swipeLeft: def<SwipeAction>('swipeLeft', 'lists', 'account', 'Swipe left', 'delete', oneOf('markRead', 'hide', 'delete', 'none')),

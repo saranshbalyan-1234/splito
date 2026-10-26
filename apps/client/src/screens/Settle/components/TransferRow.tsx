@@ -1,13 +1,14 @@
 import {View} from 'react-native'
 import Animated from 'react-native-reanimated'
 import {Trans, useLingui} from '@lingui/react/macro'
-import {formatAmount, type Transfer} from '@splito/domain'
+import {formatAmount, type Transfer, ZERO} from '@splito/domain'
 
 import {UserAvatar} from '#/view/com/util/UserAvatar'
 import {atoms as a, useTheme} from '#/alf'
 import {Button, ButtonText} from '#/components/Button'
 import {ArrowRight_Stroke2_Corner0_Rounded as ArrowRightIcon} from '#/components/icons/Arrow'
 import {Text} from '#/components/Typography'
+import {moneyGlyph, useMoneyStyle} from '#/components/MoneyDirection'
 import {useListAnimations} from '#/motion/listAnimations'
 
 /**
@@ -42,6 +43,9 @@ export function TransferRow({
   const avatarName = (id: string) => (id === me ? meName : name(id))
   const isIncoming = to === me
   const isOutgoing = from === me
+  const money = useMoneyStyle()
+  /* The transfer from my side: positive comes to me, negative I pay, zero is between others. */
+  const mine = isIncoming ? amount : isOutgoing ? -amount : ZERO
   const sentence = isOutgoing
     ? l`You pay ${name(to)}`
     : isIncoming
@@ -88,16 +92,12 @@ export function TransferRow({
             a.text_md,
             a.font_semi_bold,
             a.leading_snug,
-            {
-              color: isIncoming
-                ? t.palette.positive_600
-                : isOutgoing
-                  ? t.palette.negative_500
-                  : t.atoms.text.color,
-              fontVariant: ['tabular-nums'],
-            },
+            {fontVariant: ['tabular-nums']},
+            money.style(mine),
           ]}>
-          {formatAmount(amount, currency, locale)}
+          {mine === ZERO
+            ? formatAmount(amount, currency, locale)
+            : `${moneyGlyph(mine)}\u00a0${formatAmount(amount, currency, locale)}`}
         </Text>
       </View>
       <Button

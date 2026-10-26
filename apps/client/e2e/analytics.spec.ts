@@ -242,7 +242,7 @@ test('this year: totals, every chart label, the list and the CSV agree', async (
 
   /* Balance: Riya owes 400 + 500 - 300 - 100 = 500; I owe Sam 3,000 - 500 = 2,500. Net -2,000. */
   await expect(page.getByTestId('analytics-trend-latest')).toHaveText(
-    `you owe ${inr(2000)}`,
+    `you owe ↗ ${inr(2000)}`,
   )
 
   /* The list: newest first, with my share of each. */

@@ -1,7 +1,14 @@
 import {useRef, useState} from 'react'
 import {TextInput, type TextInputProps, View} from 'react-native'
 import {Trans, useLingui} from '@lingui/react/macro'
-import {formatAmount, getCurrency, toDecimalString} from '@splito/domain'
+import {
+  cleanAmountText,
+  decimalMark,
+  formatAmount,
+  getCurrency,
+  isExpression,
+  toDecimalString,
+} from '@splito/domain'
 
 import {
   applyFonts,
@@ -19,6 +26,8 @@ import {ChevronRight_Stroke2_Corner0_Rounded as ChevronRightIcon} from '#/compon
 import {type Props as SVGIconProps} from '#/components/icons/common'
 import {Warning_Stroke2_Corner0_Rounded as WarningIcon} from '#/components/icons/Warning'
 import {Text} from '#/components/Typography'
+import {AmountKeypad} from './AmountKeypad'
+import {type AmountKey, applyAmountKey, type Selection} from './amountKeys'
 import {ChevronDownIcon} from './icons'
 
 /**
@@ -85,11 +94,18 @@ const OPERATORS = [
   {key: '÷', label: '÷'},
 ] as const
 
+/** Plain digits with at most one decimal mark: the text already is the amount, so no "= result" line. */
+const PLAIN_NUMBER = /^\d+([.,]\d*)?$/
+
 /**
  * The expense total: a large amount input with the currency chip on its
  * left. It doubles as a calculator - type or tap + − × ÷ and the result shows
- * underneath; "=" replaces the sum with its result. Parse errors read in
- * plain words.
+ * underneath; "=" replaces the sum with its result. It reads shorthand
+ * ("1.5L"), other digit scripts and pasted amounts ("₹1,20,000.50": the
+ * currency marks are dropped as they arrive), and asks "Did you mean ...?"
+ * for an ambiguous "1,234" (F-310). With `hasKeypad` (phones, the
+ * `amount.keypad` preference) Splito's keypad replaces the system keyboard,
+ * as Expensify's amount page does. Parse errors read in plain words.
  */
 export function AmountField({
   value,
@@ -98,6 +114,10 @@ export function AmountField({
   locale,
   result,
   errorText,
+  readings,
+  reading,
+  onReadingPicked,
+  hasKeypad = false,
   onPressCurrency,
 }: {
   value: string
@@ -108,20 +128,68 @@ export function AmountField({
   result: bigint | undefined
   /** Plain-words error, when the text is not a valid amount. */
   errorText: string | undefined
+  /** An ambiguous amount's readings ("Did you mean ...?"). */
+  readings?: {grouped: bigint; decimal?: bigint}
+  /** The reading picked for an ambiguous amount; the result line then confirms it. */
+  reading?: 'grouped' | 'decimal'
+  onReadingPicked?: (reading: 'grouped' | 'decimal') => void
+  hasKeypad?: boolean
   onPressCurrency: () => void
 }) {
   const t = useTheme()
   const {t: l} = useLingui()
   const [isFocused, setIsFocused] = useState(false)
   const inputRef = useRef<React.ComponentRef<typeof TextInput>>(null)
+  const selection = useRef<Selection>({start: value.length, end: value.length})
   const {scale, symbol} = getCurrency(currency)
-  const isExpression = /\d\s*[+\-−xX×*/÷]/.test(value)
-  const placeholder = scale ? `0.${'0'.repeat(scale)}` : '0'
+  const mark = decimalMark(locale)
+  const isSum = isExpression(value)
+  const shouldShowResult =
+    result !== undefined && (!!reading || !PLAIN_NUMBER.test(value.trim()))
+  /* A keypad key is being pressed: the input's blur is the key taking focus for a moment, not leaving. */
+  const isKeyDown = useRef(false)
+  /* Whether the input holds focus right now (the state above lags by the blur delay). */
+  const hasFocus = useRef(false)
+  const placeholder = scale ? `0${mark}${'0'.repeat(scale)}` : '0'
+  const format = (v: bigint) => formatAmount(v, currency, locale)
+
+  const changeText = (text: string) => onChangeText(cleanAmountText(text))
+
+  /* Put the caret after a keypad key (native TextInput, or the DOM input on web). */
+  const moveCaret = (caret: number) => {
+    selection.current = {start: caret, end: caret}
+    const input = inputRef.current as unknown as {
+      setSelection?: (start: number, end: number) => void
+      setSelectionRange?: (start: number, end: number) => void
+    } | null
+    requestAnimationFrame(() => {
+      if (input?.setSelection) input.setSelection(caret, caret)
+      else input?.setSelectionRange?.(caret, caret)
+    })
+  }
+
+  const pressKey = (key: AmountKey) => {
+    inputRef.current?.focus()
+    isKeyDown.current = false
+    const next = applyAmountKey(value, selection.current, key, {scale, mark})
+    if (!next) return
+    onChangeText(next.text)
+    moveCaret(next.caret)
+  }
 
   const append = (op: string) => {
     const trimmed = value.replace(/\s*[+\-−xX×*/÷]\s*$/, '')
     if (trimmed) onChangeText(`${trimmed} ${op} `)
     inputRef.current?.focus()
+  }
+
+  const applyResult = () => {
+    isKeyDown.current = false
+    inputRef.current?.focus()
+    if (result === undefined) return
+    const text = toDecimalString(result, scale).replace('.', mark)
+    onChangeText(text)
+    moveCaret(text.length)
   }
 
   return (
@@ -154,19 +222,32 @@ export function AmountField({
             testID="amount-input"
             ref={inputRef}
             value={value}
-            onChangeText={onChangeText}
-            onFocus={() => setIsFocused(true)}
+            onChangeText={changeText}
+            onSelectionChange={e => {
+              selection.current = e.nativeEvent.selection
+            }}
+            onFocus={() => {
+              hasFocus.current = true
+              setIsFocused(true)
+            }}
             /*
              * Blur late, so a tap on a calculator key (which takes focus for
              * a moment) lands before the keys hide; the key refocuses the
              * input. ponytail: fixed 200 ms, a focus-within check if it ever
              * misfires.
              */
-            onBlur={() => setTimeout(() => setIsFocused(false), 200)}
+            onBlur={() => {
+              hasFocus.current = false
+              setTimeout(() => {
+                if (!hasFocus.current && !isKeyDown.current) setIsFocused(false)
+              }, 200)
+            }}
             placeholder={placeholder}
             accessibilityLabel={l`Amount`}
-            accessibilityHint={l`You can type a sum, like 1200 + 300`}
-            inputMode="decimal"
+            accessibilityHint={l`You can type a sum, like 1200 + 300, or 2k or 1.5L`}
+            /* The keypad stands in for the system keyboard (Expensify: showSoftInputOnFocus off, inputMode none). */
+            showSoftInputOnFocus={!hasKeypad}
+            inputMode={hasKeypad ? 'none' : 'decimal'}
             keyboardType="decimal-pad"
             style={[
               a.text_4xl,
@@ -177,10 +258,43 @@ export function AmountField({
         </View>
       </View>
 
-      {errorText &&
-      (!isFocused || value.trim() === '' || !/[+\-−xX×*/÷]\s*$/.test(value)) ? (
+      {readings ? (
+        <View
+          testID="amount-readings"
+          style={[a.flex_row, a.flex_wrap, a.align_center, a.gap_sm, a.pt_sm]}>
+          <Text style={[a.text_sm, a.font_medium, t.atoms.text_contrast_high]}>
+            <Trans>Did you mean</Trans>
+          </Text>
+          {(['grouped', 'decimal'] as const).map(reading => {
+            const v = readings[reading]
+            if (v === undefined) return null
+            return (
+              <Button
+                key={reading}
+                testID={`amount-reading-${reading}`}
+                label={l`Use ${format(v)}`}
+                size="small"
+                variant="outline"
+                color="primary"
+                onPress={() => onReadingPicked?.(reading)}>
+                <ButtonText style={[{fontVariant: ['tabular-nums']}]}>
+                  {format(v)}
+                </ButtonText>
+              </Button>
+            )
+          })}
+          {readings.decimal === undefined ? (
+            <Text style={[a.text_sm, t.atoms.text_contrast_medium]}>
+              <Trans>This currency has no third decimal.</Trans>
+            </Text>
+          ) : null}
+        </View>
+      ) : errorText &&
+        (!isFocused ||
+          value.trim() === '' ||
+          !/[+\-−xX×*/÷]\s*$/.test(value)) ? (
         <FieldError testID="amount-error">{errorText}</FieldError>
-      ) : isExpression && result !== undefined ? (
+      ) : shouldShowResult ? (
         <View style={[a.flex_row, a.align_center, a.gap_sm, a.pt_xs]}>
           <Text
             testID="amount-result"
@@ -190,13 +304,29 @@ export function AmountField({
               t.atoms.text_contrast_medium,
               {fontVariant: ['tabular-nums']},
             ]}>
-            = {formatAmount(result, currency, locale)}
+            = {format(result)}
           </Text>
         </View>
       ) : null}
 
-      {/* The calculator keys show while the amount is being typed, like a keyboard accessory bar. */}
-      {isFocused || isExpression ? (
+      {hasKeypad && isFocused ? (
+        <AmountKeypad
+          mark={mark}
+          isExpression={isSum}
+          canUseResult={result !== undefined}
+          onKeyPressed={pressKey}
+          onKeyPressIn={() => {
+            isKeyDown.current = true
+          }}
+          onResultUsed={applyResult}
+          onDone={() => {
+            isKeyDown.current = false
+            inputRef.current?.blur()
+            setIsFocused(false)
+          }}
+        />
+      ) : !hasKeypad && (isFocused || isSum) ? (
+        /* The calculator keys show while the amount is being typed, like a keyboard accessory bar. */
         <View
           style={[a.flex_row, a.align_center, a.gap_sm, a.pt_md]}
           accessibilityLabel={l`Calculator`}>
@@ -215,17 +345,14 @@ export function AmountField({
               </ButtonText>
             </Button>
           ))}
-          {isExpression && (
+          {isSum && (
             <Button
               testID="calc-equals"
               label={l`Use the result`}
               size="small"
               color="primary"
               disabled={result === undefined}
-              onPress={() => {
-                if (result !== undefined)
-                  onChangeText(toDecimalString(result, scale))
-              }}
+              onPress={applyResult}
               style={[a.ml_auto]}>
               <ButtonText>
                 <Trans>= Use result</Trans>

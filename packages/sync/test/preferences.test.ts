@@ -121,3 +121,16 @@ test('analytics opens on this year as charts; both are choices with a reset', as
   await resetPref(s, ctx, 'analyticsView')
   expect(await getPref(s, 'analyticsView')).toBe('charts')
 })
+
+test('money input, cash rounding and money colours (F-310, F-402, F-1801)', async () => {
+  expect(await getPref(s, 'amount.shorthand')).toBe(true)
+  expect(await getPref(s, 'amount.keypad')).toBe(true)
+  expect(await getPref(s, 'split.roundCash')).toBe(false)
+  expect(await getPref(s, 'split.roundTo')).toBe(1)
+  expect(await getPref(s, 'moneyPalette')).toBe('default')
+  await setPref(s, ctx, 'split.roundTo', 10)
+  expect(await getPref(s, 'split.roundTo')).toBe(10)
+  await expect(setPref(s, ctx, 'split.roundTo', 3 as never)).rejects.toThrow('INVALID_PREF')
+  await expect(setPref(s, ctx, 'moneyPalette', 'red' as never)).rejects.toThrow('INVALID_PREF')
+  expect(PREFS['amount.keypad'].scope).toBe('device')
+})

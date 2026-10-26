@@ -87,7 +87,7 @@ test('amount errors read in plain words', async ({page}) => {
   await expect(page.getByTestId('amount-error')).toHaveText(
     'You can’t divide by zero',
   )
-  await amount.fill('12.345')
+  await amount.fill('12.3456')
   await page.getByTestId('expense-title').click()
   await expect(page.getByTestId('amount-error')).toContainText(
     'Too many digits after the decimal point',

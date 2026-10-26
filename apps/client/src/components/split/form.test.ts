@@ -183,8 +183,11 @@ describe('evaluateForm', () => {
     ).toEqual({me: 10000n, riya: 20000n})
   })
   test('bad row amounts are reported per person', () => {
-    const r = evaluateForm(base({mode: 'exact', exact: {me: '1.234'}}), 'UTC')
+    const r = evaluateForm(base({mode: 'exact', exact: {me: '1.2345'}}), 'UTC')
     expect(r.rowErrors.me).toBe('TOO_MANY_DECIMALS')
+    // Three decimals could be a thousands group (F-310): the row says it is unclear.
+    const r2 = evaluateForm(base({mode: 'exact', exact: {me: '1.234'}}), 'UTC')
+    expect(r2.rowErrors.me).toBe('AMBIGUOUS_AMOUNT')
   })
 })
 
@@ -238,4 +241,80 @@ describe('suggestCategory', () => {
     ))
   test('nothing to suggest', () =>
     expect(suggestCategory('Misc', ids)).toBeUndefined())
+})
+
+describe('F-310 smart amount in the form', () => {
+  test('shorthand and pasted symbols', () => {
+    expect(evaluateForm(base({amount: '1.5L'}), 'UTC').total).toBe(15000000n)
+    expect(evaluateForm(base({amount: '₹1,20,000.50'}), 'UTC').total).toBe(
+      12000050n,
+    )
+    expect(
+      evaluateForm(base({amount: '2k'}), 'UTC', '.', {shorthand: false})
+        .amountError,
+    ).toBe('INVALID_AMOUNT')
+  })
+  test('an ambiguous amount offers its readings and blocks Save until one is picked', () => {
+    const r = evaluateForm(base({amount: '1,234', currency: 'EUR'}), 'UTC', ',')
+    expect(r.amountError).toBe('AMBIGUOUS_AMOUNT')
+    expect(r.amountReadings).toEqual({grouped: 123400n})
+    expect(r.draft).toBeUndefined()
+    const picked = evaluateForm(
+      base({amount: '1,234', currency: 'EUR', amountReading: 'grouped'}),
+      'UTC',
+      ',',
+    )
+    expect(picked.total).toBe(123400n)
+    expect(picked.draft).toBeDefined()
+  })
+})
+
+describe('F-402 cash rounding in the form', () => {
+  test('1000 over 3 rounded to 1 gives 334/333/333 and the draft carries the unit', () => {
+    const r = evaluateForm(base({amount: '1000', roundTo: 1}), 'UTC')
+    expect(r.shares).toEqual({me: 33400n, riya: 33300n, sam: 33300n})
+    expect(r.draft?.split).toEqual({
+      mode: 'equal',
+      participants: ['me', 'riya', 'sam'],
+      roundTo: 100n,
+    })
+    expect(r.cash?.remainder).toBe(0n)
+  })
+  test('a remainder is shown with who carries it', () => {
+    const r = evaluateForm(base({amount: '1000.50', roundTo: 1}), 'UTC')
+    expect(r.cash).toEqual({
+      shares: r.shares!,
+      remainder: 50n,
+      remainderTo: 'riya',
+    })
+  })
+  test('rounding off leaves the split as before; exact mode never rounds', () => {
+    expect(evaluateForm(base({amount: '1000'}), 'UTC').draft?.split).toEqual({
+      mode: 'equal',
+      participants: ['me', 'riya', 'sam'],
+    })
+    const exact = evaluateForm(
+      base({mode: 'exact', roundTo: 5, exact: {me: '1000'}, amount: '1000'}),
+      'UTC',
+    )
+    expect(exact.cash).toBeUndefined()
+    expect(exact.draft?.split).toEqual({mode: 'exact', amounts: {me: 100000n}})
+  })
+  test('editing a rounded expense keeps the unit', () => {
+    const r = evaluateForm(
+      base({amount: '1000', roundTo: 10, mode: 'shares'}),
+      'UTC',
+    )
+    const form = formFromExpense(
+      {
+        ...r.draft!,
+        id: 'e',
+        shares: r.shares!,
+        deleted: false,
+        createdBy: 'me',
+      } as unknown as Expense,
+      'me',
+    )
+    expect(form.roundTo).toBe(10)
+  })
 })

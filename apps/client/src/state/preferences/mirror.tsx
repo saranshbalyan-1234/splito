@@ -33,7 +33,7 @@ function put<K extends keyof Device>(key: K, value: Device[K]) {
 
 /**
  * Applies app-wide preferences. Copies the ones that shape the first frame
- * (theme, accent, text size, density, home tab, haptics) from the registry into
+ * (theme, accent, text size, density, money colours, home tab, haptics) from the registry into
  * synchronous device storage after every store commit. The registry stays
  * the source of truth; the copy only exists so the next launch paints right
  * before the local store opens.
@@ -45,22 +45,32 @@ export function PrefsMirror() {
   useEffect(() => {
     let cancelled = false
     const sync = async () => {
-      const [theme, darkTheme, accent, textScale, haptics, density, homeTab] =
-        await Promise.all([
-          getPref(store, 'theme'),
-          getPref(store, 'darkTheme'),
-          getPref(store, 'accent'),
-          getPref(store, 'textScale'),
-          getPref(store, 'haptics'),
-          getPref(store, 'density'),
-          getPref(store, 'homeTab'),
-        ])
+      const [
+        theme,
+        darkTheme,
+        accent,
+        textScale,
+        haptics,
+        density,
+        homeTab,
+        moneyPalette,
+      ] = await Promise.all([
+        getPref(store, 'theme'),
+        getPref(store, 'darkTheme'),
+        getPref(store, 'accent'),
+        getPref(store, 'textScale'),
+        getPref(store, 'haptics'),
+        getPref(store, 'density'),
+        getPref(store, 'homeTab'),
+        getPref(store, 'moneyPalette'),
+      ])
       if (cancelled) return
       put('colorMode', theme)
       put('darkTheme', darkTheme)
       put('accent', accent)
       put('hapticsEnabled', haptics)
       put('density', density)
+      put('moneyPalette', moneyPalette)
       put('homeTab', homeTab)
       const scale = fontScaleFor(textScale)
       if (scale !== getFontScale()) setFontScale(scale)
