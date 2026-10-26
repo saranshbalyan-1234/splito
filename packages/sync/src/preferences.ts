@@ -3,7 +3,7 @@ import {CURRENCIES, DomainError} from '@splito/domain'
 import type {Store} from './store'
 import type {MutationCtx} from './types'
 
-export type PrefGroup = 'appearance' | 'motion' | 'defaults' | 'categories' | 'regional' | 'lists' | 'notifications'
+export type PrefGroup = 'appearance' | 'motion' | 'defaults' | 'categories' | 'regional' | 'lists' | 'notifications' | 'history'
 
 export interface PrefDef<T> {
   key: string
@@ -105,6 +105,8 @@ export const PREFS = {
   'notify.expense': def('notify.expense', 'notifications', 'account', 'New expenses', true, isBool),
   'notify.payment': def('notify.payment', 'notifications', 'account', 'Payments', true, isBool),
   'notify.invite': def('notify.invite', 'notifications', 'account', 'Invites', true, isBool),
+  /** How long Recently deleted lists a deleted expense, payment or write-off (F-1203). */
+  'history.binDays': def('history.binDays', 'history', 'account', 'Keep deleted items for', 30, oneOf(7, 30, 90, 365)),
 } as const
 
 export type PrefKey = keyof typeof PREFS

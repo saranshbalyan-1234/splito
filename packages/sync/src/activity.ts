@@ -1,4 +1,4 @@
-import type {Expense, Group, Person, Repayment} from './mutations'
+import type {Expense, Group, Person, Repayment, WriteOff} from './mutations'
 import type {Store} from './store'
 import type {EntityType, HistoryRow} from './types'
 
@@ -20,15 +20,18 @@ export type ActivityEvent = Base &
     | {entityType: 'person'; kind: 'person.added' | 'person.removed'; data: Person; prev?: Person}
     | {entityType: 'group'; kind: 'group.created' | 'group.edited' | 'group.archived' | 'group.deleted'; data: Group; prev?: Group}
     | {entityType: 'repayment'; kind: 'repayment.recorded' | 'repayment.edited' | 'repayment.removed'; data: Repayment; prev?: Repayment}
+    | {entityType: 'writeoff'; kind: 'writeoff.recorded' | 'writeoff.removed'; data: WriteOff; prev?: WriteOff}
   )
 
 export type ActivityKind = ActivityEvent['kind']
 
-const FEED_TYPES = ['person', 'group', 'expense', 'repayment'] as const satisfies EntityType[]
+const FEED_TYPES = ['person', 'group', 'expense', 'repayment', 'writeoff'] as const satisfies EntityType[]
 
 /** What a history row means, given the version before it. Undefined rows stay out of the feed. */
 function kindOf(row: HistoryRow, prev: HistoryRow | undefined): ActivityKind | undefined {
   const isNew = !prev || prev.deleted
+  // "Delete forever" re-writes a tombstone to tidy the bin; the delete already showed.
+  if (row.deleted && prev?.deleted) return undefined
   switch (row.entityType) {
     case 'expense':
       return !prev ? 'expense.created' : row.deleted ? 'expense.deleted' : prev.deleted ? 'expense.restored' : 'expense.edited'
@@ -42,6 +45,8 @@ function kindOf(row: HistoryRow, prev: HistoryRow | undefined): ActivityKind | u
       return (row.data as Group).archived && !(prev.data as Group).archived ? 'group.archived' : 'group.edited'
     case 'repayment':
       return row.deleted ? 'repayment.removed' : isNew ? 'repayment.recorded' : 'repayment.edited'
+    case 'writeoff':
+      return row.deleted ? 'writeoff.removed' : 'writeoff.recorded'
     default:
       // Preferences are settings, not activity.
       return undefined
