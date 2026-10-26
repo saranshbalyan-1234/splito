@@ -8,11 +8,9 @@ import {
   Eye,
   EyeOff,
   Pencil,
-  Send,
   Plus,
   RotateCcw,
   Trash2,
-  UserRoundCheck,
   UserRoundMinus,
   UserRoundPlus,
   Users,
@@ -40,5 +38,3 @@ export const FriendRemovedBadge = createIcon(UserRoundMinus, BADGE)
 export const GroupBadge = createIcon(Users, BADGE)
 export const ArchivedBadge = createIcon(Archive, BADGE)
 export const PaymentBadge = createIcon(Banknote, BADGE)
-export const FriendAcceptedBadge = createIcon(UserRoundCheck, BADGE)
-export const RequestSentBadge = createIcon(Send, BADGE)

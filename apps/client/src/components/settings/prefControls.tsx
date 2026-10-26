@@ -48,11 +48,6 @@ import {
   TextSizeIcon,
   VibrateIcon,
 } from '#/components/settings/icons'
-import {
-  ChainLink_Stroke2_Corner0_Rounded as LinkIcon,
-  PersonCheck_Stroke2_Corner0_Rounded as PersonCheckIcon,
-} from '#/components/icons/Invite'
-import {MagnifyingGlass_Stroke2_Corner0_Rounded as SearchIcon} from '#/components/icons/MagnifyingGlass'
 import {OptionDialog} from '#/components/settings/OptionDialog'
 import {PrefSection, usePrefControl} from '#/components/settings/PrefSection'
 import {TabsEditor, useTabLabels} from '#/components/settings/TabsEditor'
@@ -525,88 +520,6 @@ function NotifyInvitePref() {
   )
 }
 
-/* Privacy (26.18) */
-
-function FindablePref() {
-  const {t: l} = useLingui()
-  return (
-    <SwitchPref
-      pref={usePrefControl('findableByEmailPhone')}
-      icon={SearchIcon}
-      title={l`Find me by email or phone`}
-      label={l`Let people who know my email or number find me`}
-      description={l`They only learn that you’re on Splito, never anything else.`}
-    />
-  )
-}
-
-function FriendRequestsFromPref() {
-  const {t: l} = useLingui()
-  return (
-    <RadioPref
-      pref={usePrefControl('friendRequestsFrom')}
-      icon={PersonCheckIcon}
-      title={l`Who can send me friend requests`}
-      options={[
-        {value: 'everyone', label: l`Everyone`},
-        {value: 'link-only', label: l`Only people with my invite link`},
-      ]}
-    />
-  )
-}
-
-function useUsesOptions() {
-  const {t: l} = useLingui()
-  return [
-    {value: 1 as const, label: '1'},
-    {value: 5 as const, label: '5'},
-    {value: 25 as const, label: '25'},
-    {value: 'unlimited' as const, label: l`No limit`},
-  ]
-}
-
-function FriendInviteUsesPref() {
-  const {t: l} = useLingui()
-  return (
-    <SegmentedPref
-      pref={usePrefControl('inviteMaxUses.friend')}
-      icon={LinkIcon}
-      title={l`Friend invite links work for`}
-      description={l`How many people can use a new friend link. You can change it on each link.`}
-      options={useUsesOptions()}
-    />
-  )
-}
-
-function GroupInviteUsesPref() {
-  const {t: l} = useLingui()
-  return (
-    <SegmentedPref
-      pref={usePrefControl('inviteMaxUses.group')}
-      icon={GroupsIcon}
-      title={l`Group invite links work for`}
-      options={useUsesOptions()}
-    />
-  )
-}
-
-function InviteExpiryPref() {
-  const {t: l} = useLingui()
-  return (
-    <SegmentedPref
-      pref={usePrefControl('inviteExpiry')}
-      icon={ClockIcon}
-      title={l`New invite links expire after`}
-      options={[
-        {value: '24h', label: l`1 day`},
-        {value: '7d', label: l`7 days`},
-        {value: '30d', label: l`30 days`},
-        {value: 'never', label: l`Never`},
-      ]}
-    />
-  )
-}
-
 /**
  * The control for every preference in the registry. The Settings sections
  * are generated from `PREFS` (group and order); this map only says how each
@@ -640,9 +553,4 @@ export const PREF_CONTROLS = {
   'notify.expense': NotifyExpensePref,
   'notify.payment': NotifyPaymentPref,
   'notify.invite': NotifyInvitePref,
-  findableByEmailPhone: FindablePref,
-  friendRequestsFrom: FriendRequestsFromPref,
-  'inviteMaxUses.friend': FriendInviteUsesPref,
-  'inviteMaxUses.group': GroupInviteUsesPref,
-  inviteExpiry: InviteExpiryPref,
 } satisfies Record<PrefKey, React.ComponentType | null>

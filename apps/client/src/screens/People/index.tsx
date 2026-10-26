@@ -2,7 +2,7 @@ import {useState} from 'react'
 import {useWindowDimensions} from 'react-native'
 import {LayoutAnimationConfig} from 'react-native-reanimated'
 import {plural} from '@lingui/core/macro'
-import {Trans, useLingui} from '@lingui/react/macro'
+import {useLingui} from '@lingui/react/macro'
 import {useNavigation} from '@react-navigation/native'
 import {balanceTotals, personSummary, ZERO} from '@splito/domain'
 import {type Group, type Person} from '@splito/sync'
@@ -14,21 +14,14 @@ import {EmptyState} from '#/view/com/util/EmptyState'
 import {List} from '#/view/com/util/List'
 import {atoms as a} from '#/alf'
 import {AddExpenseFAB, AddExpenseFABInset} from '#/components/AddExpenseFAB'
-import {Button, ButtonIcon} from '#/components/Button'
 import {LogoMark} from '#/components/brand/Logo'
 import {useDialogControl} from '#/components/Dialog'
 import {myBalances} from '#/components/groups/net'
 import {HeaderAvatar} from '#/components/HeaderAvatar'
 import {PersonPlus_Filled_Stroke2_Corner0_Rounded as PersonPlusIcon} from '#/components/icons/Person'
-import {DotGrid3x1_Stroke2_Corner0_Rounded as DotsIcon} from '#/components/icons/DotGrid'
-import {
-  ChainLink_Stroke2_Corner0_Rounded as LinkIcon,
-  QrCode_Stroke2_Corner0_Rounded as QrIcon,
-} from '#/components/icons/Invite'
 import {MagnifyingGlass_Stroke2_Corner0_Rounded as SearchIcon} from '#/components/icons/MagnifyingGlass'
 import * as Layout from '#/components/Layout'
 import {ListToolsHeader} from '#/components/ListToolsHeader'
-import * as Menu from '#/components/Menu'
 import {PressableScale} from '#/motion/PressableScale'
 import {Shimmer} from '#/motion/Shimmer'
 import {
@@ -44,7 +37,6 @@ import {
   FriendsFilterDialog,
   type PeopleFilters,
 } from './components/FriendsFilterDialog'
-import {RequestsSection} from './components/RequestsSection'
 import {SectionHeader} from './components/SectionHeader'
 import {filterFriends, lastActivity, sortFriends} from './sort'
 
@@ -128,8 +120,6 @@ export function PeopleScreen() {
     <Layout.Screen testID="screen-people">
       <Layout.Header.Outer>
         <HeaderAvatar />
-        {/* Add friend and the overflow on the right, so the logo stays centred. */}
-        <Layout.Header.Slot />
         <Layout.Header.Content>
           {/* The home link, inactive here because this header is on People. */}
           <PressableScale
@@ -149,44 +139,6 @@ export function PeopleScreen() {
           edge
           onPress={() => navigation.navigate('AddFriend')}
         />
-        <Menu.Root>
-          <Menu.Trigger label={l`More options`}>
-            {({props}) => (
-              <Layout.Header.Slot>
-                <Button
-                  {...props}
-                  testID="people-more"
-                  label={props.accessibilityLabel}
-                  size="small"
-                  color="secondary"
-                  variant="ghost"
-                  shape="round">
-                  <ButtonIcon icon={DotsIcon} size="lg" />
-                </Button>
-              </Layout.Header.Slot>
-            )}
-          </Menu.Trigger>
-          <Menu.Outer>
-            <Menu.Item
-              testID="people-menu-invite-link"
-              label={l`Invite link or QR code`}
-              onPress={() => navigation.navigate('CreateInvite', {kind: 'friend'})}>
-              <Menu.ItemText>
-                <Trans>Invite link or QR code</Trans>
-              </Menu.ItemText>
-              <Menu.ItemIcon icon={QrIcon} position="right" />
-            </Menu.Item>
-            <Menu.Item
-              testID="people-menu-invite-links"
-              label={l`Manage invite links`}
-              onPress={() => navigation.navigate('InviteLinks')}>
-              <Menu.ItemText>
-                <Trans>Manage invite links</Trans>
-              </Menu.ItemText>
-              <Menu.ItemIcon icon={LinkIcon} position="right" />
-            </Menu.Item>
-          </Menu.Outer>
-        </Menu.Root>
       </Layout.Header.Outer>
       {isLoading ? (
         <Shimmer testID="people-loading">
@@ -208,7 +160,6 @@ export function PeopleScreen() {
             ListHeaderComponent={
               friends.length > 0 ? (
                 <>
-                  <RequestsSection />
                   <BalanceSummary
                     totals={totals}
                     locale={locale}
@@ -225,9 +176,7 @@ export function PeopleScreen() {
                     onFiltersPress={() => filterControl.open()}
                   />
                 </>
-              ) : (
-                <RequestsSection />
-              )
+              ) : undefined
             }
             ListEmptyComponent={
               friends.length > 0 && needle ? (

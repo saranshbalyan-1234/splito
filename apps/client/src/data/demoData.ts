@@ -7,7 +7,6 @@
  * id-ordered tie-break that real (random) ids would get for remainders.
  */
 import {type ItemParticipant, type SplitInput} from '@splito/domain'
-import {type demoDirectory} from '@splito/sync'
 
 /** An itemised bill: who had each item, with portions as `[person, n]`. */
 export type DemoBill = {
@@ -148,24 +147,3 @@ export const DEMO_EXPENSES: DemoExpense[] = [
   {title: 'Coffee beans', group: null, currency: 'EUR', total: 1800n, payers: {sam: 1800n}, participants: ['me', 'sam'], date: '2026-05-02', category: 'groceries'},
   {title: 'Movie night', group: null, currency: 'INR', total: 90000n, payers: {riya: 90000n}, participants: ['me', 'riya'], date: '2026-06-14', category: 'entertainment'},
 ]
-
-/**
- * The demo account directory (26.18): who is "on Splito" in demo mode, and an
- * invite code that opens someone else's invite. Invented people, example.com
- * addresses and fictional numbers only.
- */
-export const DEMO_DIRECTORY: Parameters<typeof demoDirectory>[0] = {
-  accounts: [
-    {accountId: 'demo-ananya', name: 'Ananya Gupta', contact: {kind: 'email', value: 'ananya@example.com'}},
-    {accountId: 'demo-kabir', name: 'Kabir Khan', contact: {kind: 'phone', value: '+919812345678'}},
-    {accountId: 'demo-maya', name: 'Maya Chen', contact: {kind: 'email', value: 'maya@example.com'}},
-    {accountId: 'demo-ishaan', name: 'Ishaan Verma', contact: {kind: 'email', value: 'ishaan@example.com'}},
-    {accountId: 'demo-sara', name: 'Sara Ali', contact: {kind: 'phone', value: '+14155550134'}},
-  ],
-  invites: {
-    ananya2026demo: {kind: 'friend', inviter: 'demo-ananya', groupName: null},
-  },
-}
-
-/** Someone not on Splito, already invited in the demo. */
-export const DEMO_INVITED = {name: 'Neha Joshi', contact: {kind: 'phone', value: '+919988776655'}} as const

@@ -37,9 +37,6 @@ import {DevTour, navigationRef} from '#/navigation/DevTour'
 import {linking} from '#/navigation/linking'
 import {AddExpenseScreen} from '#/screens/AddExpense'
 import {AddFriendScreen} from '#/screens/AddFriend'
-import {CreateInviteScreen} from '#/screens/Invites/CreateInvite'
-import {InviteScreen} from '#/screens/Invites/Invite'
-import {InviteLinksScreen} from '#/screens/Invites/InviteLinks'
 import {ActivityScreen} from '#/screens/Activity'
 import {AnalyticsScreen} from '#/screens/Analytics'
 import {CreateGroupScreen} from '#/screens/CreateGroup'
@@ -73,10 +70,6 @@ const TITLES: Partial<Record<keyof FlatNavigatorParams, MessageDescriptor>> = {
   Expense: msg`Expense`,
   EditExpense: msg`Edit expense`,
   AddFriend: msg`Add friend`,
-  InviteLinks: msg`Invite links`,
-  CreateInvite: msg`Invite link`,
-  ShareInvite: msg`Invite link`,
-  Invite: msg`Invite`,
   CreateGroup: msg`New group`,
 }
 
@@ -183,8 +176,6 @@ export function TabsNavigator({
       <Stack.Screen name="Group" component={GroupScreen} />
       <Stack.Screen name="Settle" component={SettleScreen} />
       <Stack.Screen name="Expense" component={ExpenseScreen} />
-      <Stack.Screen name="InviteLinks" component={InviteLinksScreen} />
-      <Stack.Screen name="Invite" component={InviteScreen} />
       {/* The composers (owner: one sheet layout for Add / Edit expense, Add friend, New group) open like Bluesky's composer. */}
       <Stack.Group
         screenOptions={
@@ -195,8 +186,6 @@ export function TabsNavigator({
         <Stack.Screen name="AddExpense" component={AddExpenseScreen} />
         <Stack.Screen name="EditExpense" component={EditExpenseScreen} />
         <Stack.Screen name="AddFriend" component={AddFriendScreen} />
-        <Stack.Screen name="CreateInvite" component={CreateInviteScreen} />
-        <Stack.Screen name="ShareInvite" component={CreateInviteScreen} />
         <Stack.Screen name="CreateGroup" component={CreateGroupScreen} />
       </Stack.Group>
     </Stack.Navigator>
@@ -291,26 +280,6 @@ export function FlatNavigator({
         name="AddFriend"
         component={AddFriendScreen}
         options={{...COMPOSER_WEB, title: title('AddFriend')}}
-      />
-      <Flat.Screen
-        name="InviteLinks"
-        component={InviteLinksScreen}
-        options={{title: title('InviteLinks')}}
-      />
-      <Flat.Screen
-        name="Invite"
-        component={InviteScreen}
-        options={{title: title('Invite')}}
-      />
-      <Flat.Screen
-        name="CreateInvite"
-        component={CreateInviteScreen}
-        options={{...COMPOSER_WEB, title: title('CreateInvite')}}
-      />
-      <Flat.Screen
-        name="ShareInvite"
-        component={CreateInviteScreen}
-        options={{...COMPOSER_WEB, title: title('ShareInvite')}}
       />
       <Flat.Screen
         name="CreateGroup"

@@ -23,6 +23,4 @@ export type Device = {
   hapticsEnabled: boolean
   /** Activity read/hidden marks: personal, so they stay on this device. */
   activityFeed: FeedState
-  /** Dev and e2e builds only: this install was opened with `?demo=1`, so the demo directory answers. */
-  demoMode: boolean
 }

@@ -32,7 +32,6 @@ import {Pencil_Stroke2_Corner0_Rounded as PencilIcon} from '#/components/icons/P
 import {Group3_Stroke2_Corner0_Rounded as GroupIcon} from '#/components/icons/Group'
 import {HandCoins_Stroke2_Corner0_Rounded as HandCoinsIcon} from '#/components/icons/Money'
 import {PersonPlus_Filled_Stroke2_Corner0_Rounded as PersonPlusIcon} from '#/components/icons/Person'
-import {QrCode_Stroke2_Corner0_Rounded as QrIcon} from '#/components/icons/Invite'
 import {PlusLarge_Stroke2_Corner0_Rounded as PlusIcon} from '#/components/icons/Plus'
 import * as Layout from '#/components/Layout'
 import * as Menu from '#/components/Menu'
@@ -513,17 +512,6 @@ export function GroupScreen() {
                   <Trans>Add members</Trans>
                 </Menu.ItemText>
                 <Menu.ItemIcon icon={PersonPlusIcon} position="right" />
-              </Menu.Item>
-              <Menu.Item
-                testID="group-menu-invite-link"
-                label={l`Invite link or QR code`}
-                onPress={() =>
-                  navigation.navigate('CreateInvite', {kind: 'group', groupId})
-                }>
-                <Menu.ItemText>
-                  <Trans>Invite link or QR code</Trans>
-                </Menu.ItemText>
-                <Menu.ItemIcon icon={QrIcon} position="right" />
               </Menu.Item>
               <Menu.Item
                 testID="group-menu-rules"
