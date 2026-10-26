@@ -1,333 +1,430 @@
 import {useState} from 'react'
-import {ScrollView, View} from 'react-native'
+import {View} from 'react-native'
 import {Trans, useLingui} from '@lingui/react/macro'
 import {useNavigation} from '@react-navigation/native'
-import {getCurrency} from '@splito/domain'
-import {createGroup, type Group, type Person} from '@splito/sync'
+import {CURRENCIES, DomainError, parseLocalDate} from '@splito/domain'
+import {createGroup, createPerson, type Group, type Person} from '@splito/sync'
 
+import {useHaptics} from '#/lib/haptics'
 import {type NavigationProp} from '#/lib/routes/types'
+import {logger} from '#/logger'
 import {useEntities, useMutationCtx, usePref, useStore} from '#/data/hooks'
 import {UserAvatar} from '#/view/com/util/UserAvatar'
 import {atoms as a, useBreakpoints, useTheme, web} from '#/alf'
-import {Button, ButtonText} from '#/components/Button'
-import * as Composer from '#/components/Composer'
+import {Button, ButtonIcon, ButtonText} from '#/components/Button'
 import * as Dialog from '#/components/Dialog'
-import {Divider} from '#/components/Divider'
-import {type Props as SVGIconProps} from '#/components/icons/common'
-import {DateDialog} from '#/components/split/DateDialog'
-import {DetailRow, FieldError, PlainInput} from '#/components/split/fields'
-import {
-  CalendarIcon,
-  CoupleIcon,
-  GroupIcon,
-  HomeIcon,
-  TripIcon,
-  WalletIcon,
-} from '#/components/split/icons'
-import {PeopleDialog} from '#/components/split/PeopleDialog'
-import {CurrencyDialog} from '#/components/split/pickers'
-import {
-  SectionLabel,
-  useDisplayName,
-  useErrorText,
-  useFormatDay,
-} from '#/components/split/shared'
+import {DateField} from '#/components/forms/DateField'
+import * as SegmentedControl from '#/components/forms/SegmentedControl'
+import * as TextField from '#/components/forms/TextField'
+import * as Toggle from '#/components/forms/Toggle'
+import {ChevronRight_Stroke2_Corner0_Rounded as ChevronIcon} from '#/components/icons/Chevron'
+import {Group3_Stroke2_Corner0_Rounded as GroupIcon} from '#/components/icons/Group'
+import {PlusLarge_Stroke2_Corner0_Rounded as PlusIcon} from '#/components/icons/Plus'
+import * as Layout from '#/components/Layout'
+import {AvatarPreview} from '#/components/people/AvatarPreview'
+import {currencyName} from '#/components/people/ledger'
 import * as Toast from '#/components/Toast'
 import {Text} from '#/components/Typography'
+
+const FORM_WIDTH = 560
 
 type Kind = Group['kind']
 
 /**
- * New group: name, type, currency, members and (for trips) dates. Presented
- * like the Add expense composer; saving opens the new group.
+ * New group: name, kind, currency, trip dates and members. You are always a
+ * member. Someone new can be added inline without leaving the form.
  */
 export function CreateGroupScreen() {
   const t = useTheme()
-  const {t: l} = useLingui()
-  const {gtMobile} = useBreakpoints()
+  const {t: l, i18n} = useLingui()
   const navigation = useNavigation<NavigationProp>()
   const store = useStore()
   const ctx = useMutationCtx()
-  const name = useDisplayName()
-  const errorText = useErrorText()
-  const formatDay = useFormatDay()
+  const haptics = useHaptics()
   const people = useEntities<Person>('person')
-  const [defaultCurrency = 'INR'] = usePref('defaultCurrency')
-
-  const [title, setTitle] = useState('')
+  const [defaultCurrency] = usePref('defaultCurrency')
+  const [name, setName] = useState('')
   const [kind, setKind] = useState<Kind>('trip')
-  const [currency, setCurrency] = useState<string>()
-  const [members, setMembers] = useState<string[]>([ctx.actor])
-  const [startDate, setStartDate] = useState<string | null>(null)
-  const [endDate, setEndDate] = useState<string | null>(null)
+  const [chosenCurrency, setCurrency] = useState<string | null>(null)
+  const currency = chosenCurrency ?? defaultCurrency ?? 'INR'
+  const [startDate, setStartDate] = useState('')
+  const [endDate, setEndDate] = useState('')
+  const [memberIds, setMemberIds] = useState<string[]>([])
+  const [newName, setNewName] = useState('')
+  const [error, setError] = useState<'name' | 'dates' | null>(null)
   const [isSaving, setIsSaving] = useState(false)
-
   const currencyControl = Dialog.useDialogControl()
-  const membersControl = Dialog.useDialogControl()
-  const startControl = Dialog.useDialogControl()
-  const endControl = Dialog.useDialogControl()
 
-  const code = currency ?? defaultCurrency
   const friends = (people ?? [])
     .filter(p => !p.data.isMe)
     .sort((x, y) => x.data.name.localeCompare(y.data.name))
-    .map(p => p.id)
-  const isTrip = kind === 'trip'
-  const isDateOrderWrong =
-    isTrip && !!startDate && !!endDate && endDate < startDate
-  const canSave = !!title.trim() && !isDateOrderWrong && !isSaving
 
-  const kinds: Array<{
-    kind: Kind
-    label: string
-    icon: React.ComponentType<SVGIconProps>
-  }> = [
-    {kind: 'trip', label: l`Trip`, icon: TripIcon},
-    {kind: 'home', label: l`Home`, icon: HomeIcon},
-    {kind: 'couple', label: l`Couple`, icon: CoupleIcon},
-    {kind: 'other', label: l`Other`, icon: GroupIcon},
-  ]
-
-  const close = () => {
-    if (navigation.canGoBack()) navigation.goBack()
-    else navigation.navigate('Groups')
-  }
-
-  const save = async () => {
-    if (!canSave) return
-    setIsSaving(true)
+  const addNewFriend = async () => {
+    if (!newName.trim()) return
     try {
-      const group = await createGroup(store, ctx, {
-        name: title,
-        kind,
-        currency: code,
-        startDate: isTrip ? startDate : null,
-        endDate: isTrip ? endDate : null,
-        memberIds: members,
-      })
-      close()
-      navigation.navigate('Group', {groupId: group.id})
-      Toast.show(l`${group.data.name} created`, {type: 'success'})
+      const p = await createPerson(store, ctx, {name: newName})
+      setMemberIds(ids => [...ids, p.id])
+      setNewName('')
+      haptics.confirm()
     } catch (e) {
-      setIsSaving(false)
-      Toast.show(errorText((e as {code?: string}).code ?? ''), {type: 'error'})
+      logger.error(e, {where: 'CreateGroup.addNewFriend'})
+      Toast.show(l`Couldn’t add that person. Please try again.`, {
+        type: 'error',
+      })
     }
   }
 
-  const others = members.filter(id => id !== ctx.actor)
-  const membersValue =
-    others.length === 0
-      ? l`Just you`
-      : others.length <= 1
-        ? [name(ctx.actor), ...others.map(name)].join(', ')
-        : l`You and ${others.length} others`
+  const save = async () => {
+    const isTrip = kind === 'trip'
+    try {
+      if (isTrip && startDate) parseLocalDate(startDate)
+      if (isTrip && endDate) parseLocalDate(endDate)
+      if (isTrip && startDate && endDate && endDate < startDate)
+        throw new DomainError('INVALID_DATE')
+    } catch {
+      haptics.error()
+      setError('dates')
+      return
+    }
+    setIsSaving(true)
+    try {
+      const group = await createGroup(store, ctx, {
+        name,
+        kind,
+        currency,
+        startDate: isTrip && startDate ? startDate : null,
+        endDate: isTrip && endDate ? endDate : null,
+        memberIds,
+      })
+      haptics.success()
+      Toast.show(l`${group.data.name} created`, {type: 'success'})
+      navigation.replace('Group', {groupId: group.id})
+    } catch (e) {
+      setIsSaving(false)
+      haptics.error()
+      if (e instanceof DomainError && e.code === 'INVALID_NAME')
+        setError('name')
+      else {
+        logger.error(e, {where: 'CreateGroup.save'})
+        Toast.show(l`Couldn’t create the group. Please try again.`, {
+          type: 'error',
+        })
+      }
+    }
+  }
+
+  const kinds: Array<[Kind, string]> = [
+    ['trip', l`Trip`],
+    ['home', l`Home`],
+    ['couple', l`Couple`],
+    ['other', l`Other`],
+  ]
 
   return (
-    <Composer.Outer testID="screen-create-group" onDismiss={close}>
-      <Composer.TopBar
-        onCancel={close}
-        onSave={() => void save()}
-        canSave={canSave}
-        isSaving={isSaving}
-        saveLabel={l`Create group`}
-        cancelHint={l`Closes without creating a group`}>
-        <Text style={[a.text_sm, a.pr_sm, t.atoms.text_contrast_medium]}>
-          <Trans>New group</Trans>
-        </Text>
-      </Composer.TopBar>
-      <ScrollView
-        keyboardShouldPersistTaps="handled"
-        style={[a.flex_1, web([a.flex_shrink, {minHeight: 0}])]}
-        contentContainerStyle={[a.pb_2xl]}>
+    <Layout.Screen testID="screen-create-group">
+      <Layout.Header.Outer>
+        <Layout.Header.BackButton />
+        <Layout.Header.Content>
+          <Layout.Header.TitleText>
+            <Trans>New group</Trans>
+          </Layout.Header.TitleText>
+        </Layout.Header.Content>
+        <Layout.Header.Slot />
+      </Layout.Header.Outer>
+      <Layout.Content keyboardShouldPersistTaps="handled">
         <View
           style={[
-            a.flex_row,
-            a.align_center,
-            a.gap_md,
             a.px_lg,
-            a.pt_sm,
-            a.pb_md,
+            a.pt_xl,
+            a.pb_2xl,
+            a.gap_xl,
+            {maxWidth: FORM_WIDTH},
           ]}>
-          <UserAvatar size={42} name={title.trim() || '?'} type="list" />
-          <PlainInput
-            testID="group-name"
-            value={title}
-            onChangeText={setTitle}
-            placeholder={l`Group name`}
-            accessibilityLabel={l`Group name`}
-            autoFocus={gtMobile}
-            maxLength={60}
-            style={[a.flex_1, a.text_xl, a.font_medium, {paddingVertical: 4}]}
-          />
-        </View>
+          <View style={[a.flex_row, a.align_center, a.gap_md]}>
+            <AvatarPreview name={name} type="list" />
+            <View style={[a.flex_1, a.gap_2xs]}>
+              <Text style={[a.text_xl, a.font_bold, a.leading_tight]}>
+                <Trans>One place for shared costs</Trans>
+              </Text>
+              <Text
+                style={[
+                  a.text_md,
+                  a.leading_snug,
+                  t.atoms.text_contrast_medium,
+                ]}>
+                <Trans>A trip, a flat or anything you split often.</Trans>
+              </Text>
+            </View>
+          </View>
 
-        <SectionLabel>
-          <Trans>Type</Trans>
-        </SectionLabel>
-        <View
-          style={[a.flex_row, a.flex_wrap, a.px_lg, {marginHorizontal: -4}]}
-          accessibilityRole="radiogroup">
-          {kinds.map(k => {
-            const isSelected = k.kind === kind
-            const Icon = k.icon
-            return (
-              <View
-                key={k.kind}
-                style={[a.p_xs, {width: gtMobile ? '25%' : '50%'}]}>
-                <Button
-                  testID={`group-kind-${k.kind}`}
-                  label={k.label}
-                  role="radio"
-                  accessibilityState={{selected: isSelected}}
-                  onPress={() => setKind(k.kind)}
-                  hoverStyle={isSelected ? undefined : t.atoms.bg_contrast_25}
-                  style={[
-                    a.w_full,
-                    a.flex_row,
-                    a.align_center,
-                    a.justify_start,
-                    a.gap_sm,
-                    a.px_md,
-                    a.py_md,
-                    a.rounded_md,
-                    a.border,
-                    isSelected
-                      ? {
-                          borderColor: t.palette.primary_500,
-                          backgroundColor: t.palette.primary_25,
-                        }
-                      : t.atoms.border_contrast_low,
-                  ]}>
-                  <Icon
-                    size="md"
-                    fill={
-                      isSelected
-                        ? t.palette.primary_500
-                        : t.atoms.text_contrast_medium.color
-                    }
+          <View>
+            <TextField.LabelText>
+              <Trans>Name</Trans>
+            </TextField.LabelText>
+            <TextField.Root isInvalid={error === 'name'}>
+              <TextField.Icon icon={GroupIcon} />
+              <TextField.Input
+                testID="create-group-name"
+                label={l`Group name`}
+                value={name}
+                onChangeText={v => {
+                  setName(v)
+                  setError(null)
+                }}
+                placeholder={l`e.g. Goa trip`}
+                autoFocus
+                maxLength={64}
+              />
+            </TextField.Root>
+            {error === 'name' && (
+              <Text
+                style={[a.pt_sm, a.text_sm, {color: t.palette.negative_500}]}>
+                <Trans>Enter a name.</Trans>
+              </Text>
+            )}
+          </View>
+
+          <View>
+            <TextField.LabelText>
+              <Trans>Type</Trans>
+            </TextField.LabelText>
+            <SegmentedControl.Root
+              label={l`Group type`}
+              type="radio"
+              size="small"
+              value={kind}
+              onChange={setKind}>
+              {kinds.map(([value, label]) => (
+                <SegmentedControl.Item
+                  key={value}
+                  value={value}
+                  label={label}
+                  testID={`create-group-kind-${value}`}>
+                  <SegmentedControl.ItemText style={[a.text_sm]}>
+                    {label}
+                  </SegmentedControl.ItemText>
+                </SegmentedControl.Item>
+              ))}
+            </SegmentedControl.Root>
+          </View>
+
+          <View>
+            <TextField.LabelText>
+              <Trans>Currency</Trans>
+            </TextField.LabelText>
+            <Button
+              testID="create-group-currency"
+              label={l`Currency: ${currencyName(currency, i18n.locale)}`}
+              size="large"
+              color="secondary"
+              style={[a.justify_between]}
+              onPress={() => currencyControl.open()}>
+              <ButtonText style={[a.flex_1, a.text_left]}>
+                {currency} · {currencyName(currency, i18n.locale)}
+              </ButtonText>
+              <ButtonIcon icon={ChevronIcon} />
+            </Button>
+          </View>
+
+          {kind === 'trip' && (
+            <View>
+              <TextField.LabelText>
+                <Trans>Dates (optional)</Trans>
+              </TextField.LabelText>
+              <View style={[a.flex_row, a.gap_sm]}>
+                <View style={[a.flex_1]}>
+                  <DateField
+                    testID="create-group-start"
+                    label={l`Start date`}
+                    value={startDate}
+                    onChangeDate={v => {
+                      setStartDate(v)
+                      setError(null)
+                    }}
+                    isInvalid={error === 'dates'}
                   />
-                  <Text
+                </View>
+                <View style={[a.flex_1]}>
+                  <DateField
+                    testID="create-group-end"
+                    label={l`End date`}
+                    value={endDate}
+                    onChangeDate={v => {
+                      setEndDate(v)
+                      setError(null)
+                    }}
+                    isInvalid={error === 'dates'}
+                  />
+                </View>
+              </View>
+              {error === 'dates' && (
+                <Text
+                  style={[a.pt_sm, a.text_sm, {color: t.palette.negative_500}]}>
+                  <Trans>
+                    Check the dates: the trip can’t end before it starts.
+                  </Trans>
+                </Text>
+              )}
+            </View>
+          )}
+
+          <View>
+            <TextField.LabelText>
+              <Trans>Members</Trans>
+            </TextField.LabelText>
+            <View
+              style={[
+                a.rounded_md,
+                a.border,
+                t.atoms.border_contrast_low,
+                a.overflow_hidden,
+              ]}>
+              <View
+                style={[
+                  a.flex_row,
+                  a.align_center,
+                  a.gap_md,
+                  a.px_md,
+                  a.py_sm,
+                ]}>
+                <UserAvatar size={32} name={l`You`} type="user" />
+                <Text style={[a.flex_1, a.text_md, a.font_semi_bold]}>
+                  <Trans>You</Trans>
+                </Text>
+                <Text style={[a.text_sm, t.atoms.text_contrast_medium]}>
+                  <Trans>Always in the group</Trans>
+                </Text>
+              </View>
+              <Toggle.Group
+                label={l`Members`}
+                type="checkbox"
+                values={memberIds}
+                onChange={setMemberIds}>
+                {friends.map(friend => (
+                  <Toggle.Item
+                    key={friend.id}
+                    testID={`create-group-member-${friend.data.name}`}
+                    name={friend.id}
+                    label={friend.data.name}
                     style={[
-                      a.text_md,
-                      a.font_medium,
-                      isSelected && {color: t.palette.primary_600},
+                      a.px_md,
+                      a.py_sm,
+                      a.border_t,
+                      t.atoms.border_contrast_low,
                     ]}>
-                    {k.label}
-                  </Text>
+                    <UserAvatar size={32} name={friend.data.name} type="user" />
+                    <Toggle.LabelText style={[a.flex_1, a.text_md]}>
+                      {friend.data.name}
+                    </Toggle.LabelText>
+                    <Toggle.Checkbox />
+                  </Toggle.Item>
+                ))}
+              </Toggle.Group>
+              <View
+                style={[
+                  a.flex_row,
+                  a.align_center,
+                  a.gap_sm,
+                  a.px_md,
+                  a.py_sm,
+                  a.border_t,
+                  t.atoms.border_contrast_low,
+                ]}>
+                <View style={[a.flex_1]}>
+                  <TextField.Root>
+                    <TextField.Input
+                      testID="create-group-new-member"
+                      label={l`Add someone new`}
+                      value={newName}
+                      onChangeText={setNewName}
+                      placeholder={l`Add someone new`}
+                      autoCapitalize="words"
+                      maxLength={64}
+                      onSubmitEditing={() => void addNewFriend()}
+                    />
+                  </TextField.Root>
+                </View>
+                <Button
+                  testID="create-group-add-member"
+                  label={l`Add member`}
+                  size="large"
+                  color="secondary"
+                  shape="round"
+                  disabled={!newName.trim()}
+                  onPress={() => void addNewFriend()}>
+                  <ButtonIcon icon={PlusIcon} />
                 </Button>
               </View>
-            )
-          })}
-        </View>
+            </View>
+          </View>
 
-        <View style={[a.pt_lg]}>
-          <Divider />
-          <DetailRow
-            testID="group-currency"
-            icon={WalletIcon}
-            label={l`Currency`}
-            value={`${getCurrency(code).symbol} ${code}`}
-            onPress={() => currencyControl.open()}
-          />
-          <DetailRow
-            testID="group-members"
-            icon={GroupIcon}
-            label={l`Members`}
-            value={membersValue}
-            onPress={() => membersControl.open()}
-          />
-          {isTrip ? (
-            <>
-              <DetailRow
-                testID="group-start"
-                icon={CalendarIcon}
-                label={l`Starts`}
-                value={
-                  startDate
-                    ? formatDay(startDate, {relative: false})
-                    : l`Not set`
-                }
-                onPress={() => startControl.open()}
-              />
-              <DetailRow
-                testID="group-end"
-                icon={CalendarIcon}
-                label={l`Ends`}
-                value={
-                  endDate ? formatDay(endDate, {relative: false}) : l`Not set`
-                }
-                onPress={() => endControl.open()}
-              />
-            </>
-          ) : null}
-          <Divider />
+          <Button
+            testID="create-group-save"
+            label={l`Create group`}
+            size="large"
+            color="primary"
+            disabled={isSaving}
+            onPress={() => void save()}>
+            <ButtonText>
+              <Trans>Create group</Trans>
+            </ButtonText>
+          </Button>
         </View>
-
-        <View style={[a.px_lg, a.pt_md, a.gap_sm]}>
-          {isDateOrderWrong ? (
-            <FieldError testID="group-date-error">{l`The trip can’t end before it starts`}</FieldError>
-          ) : null}
-          {isTrip && (startDate || endDate) ? (
-            <Button
-              testID="group-clear-dates"
-              label={l`Clear trip dates`}
-              size="small"
-              variant="ghost"
-              color="secondary"
-              style={[a.self_start, {marginLeft: -12}]}
-              onPress={() => {
-                setStartDate(null)
-                setEndDate(null)
-              }}>
-              <ButtonText>
-                <Trans>Clear dates</Trans>
-              </ButtonText>
-            </Button>
-          ) : null}
-          <Text
-            style={[a.text_sm, a.leading_snug, t.atoms.text_contrast_medium]}>
-            {isTrip ? (
-              <Trans>
-                Trip dates are optional. Expenses can still be added before or
-                after them.
-              </Trans>
-            ) : (
-              <Trans>
-                Members can change later. Past expenses keep the people they
-                were split with.
-              </Trans>
-            )}
-          </Text>
-        </View>
-      </ScrollView>
-
+      </Layout.Content>
       <CurrencyDialog
         control={currencyControl}
-        value={code}
-        onSelect={setCurrency}
+        value={currency}
+        onCurrencyChosen={setCurrency}
       />
-      <PeopleDialog
-        control={membersControl}
-        title={l`Members`}
-        description={l`Pick friends, or type a new name to add someone without an account.`}
-        candidates={[ctx.actor, ...friends]}
-        selected={members}
-        lockedIds={[ctx.actor]}
-        allowNew
-        onChange={setMembers}
-      />
-      <DateDialog
-        control={startControl}
-        title={l`Trip starts`}
-        value={startDate ?? ''}
-        onSelect={setStartDate}
-      />
-      <DateDialog
-        control={endControl}
-        title={l`Trip ends`}
-        value={endDate ?? startDate ?? ''}
-        onSelect={setEndDate}
-      />
-    </Composer.Outer>
+    </Layout.Screen>
+  )
+}
+
+function CurrencyDialog({
+  control,
+  value,
+  onCurrencyChosen,
+}: {
+  control: Dialog.DialogControlProps
+  value: string
+  onCurrencyChosen: (code: string) => void
+}) {
+  const {t: l, i18n} = useLingui()
+  const {gtMobile} = useBreakpoints()
+  const codes = Object.keys(CURRENCIES).sort((x, y) =>
+    currencyName(x, i18n.locale).localeCompare(currencyName(y, i18n.locale)),
+  )
+  return (
+    <Dialog.Outer control={control}>
+      <Dialog.Handle />
+      <Dialog.ScrollableInner label={l`Currency`} style={web({maxWidth: 400})}>
+        <Text style={[a.text_2xl, a.font_bold, a.pb_md, a.pr_2xl]}>
+          <Trans>Currency</Trans>
+        </Text>
+        <Toggle.Group
+          label={l`Currency`}
+          type="radio"
+          values={[value]}
+          onChange={([code]) => {
+            if (code) control.close(() => onCurrencyChosen(code))
+          }}>
+          {codes.map(code => (
+            <Toggle.Item
+              key={code}
+              testID={`currency-${code}`}
+              name={code}
+              label={currencyName(code, i18n.locale)}
+              style={[a.py_sm, gtMobile && a.px_xs]}>
+              <Toggle.Radio />
+              <Toggle.LabelText style={[a.flex_1, a.text_md]}>
+                {currencyName(code, i18n.locale)}
+              </Toggle.LabelText>
+              <Text style={[a.text_sm, a.font_semi_bold]}>{code}</Text>
+            </Toggle.Item>
+          ))}
+        </Toggle.Group>
+        <Dialog.Close />
+      </Dialog.ScrollableInner>
+    </Dialog.Outer>
   )
 }

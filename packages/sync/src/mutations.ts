@@ -1,10 +1,13 @@
 import {
+  assertInRange,
   computeShares,
   type CurrencyCode,
   DomainError,
+  type EdgeRule,
   getCurrency,
   type LocalDate,
   parseLocalDate,
+  type SettlementRules,
   type SplitInput,
   validateExpense,
 } from '@splito/domain'
@@ -15,6 +18,8 @@ import type {Entity, EntityType, MutationCtx} from './types'
 export interface Person {
   name: string
   isMe: boolean
+  /** UPI ID (VPA) used for `upi://pay` links. Optional; null or absent when unknown. */
+  upiId?: string | null
 }
 
 export interface Group {
@@ -25,6 +30,8 @@ export interface Group {
   startDate: LocalDate | null
   endDate: LocalDate | null
   archived: boolean
+  /** "Who you settle with" rules. Absent: every member pair is allowed. */
+  rules?: SettlementRules
 }
 
 export interface Expense {
@@ -42,6 +49,21 @@ export interface Expense {
 }
 
 export type ExpenseDraft = Omit<Expense, 'shares'>
+
+/** A payment recorded between two people. Splito records it; it never moves money. */
+export interface Repayment {
+  groupId: string | null
+  currency: CurrencyCode
+  from: string
+  to: string
+  amount: bigint
+  date: LocalDate
+  tz: string
+  note: string
+}
+
+/** `id` makes a retried save idempotent: the same id never records a second payment. */
+export type RepaymentInput = Repayment & {id?: string}
 
 /** Versioned write: entity, history row and outbox op, all inside the caller's transaction. */
 async function write<T>(tx: Tx, ctx: MutationCtx, type: EntityType, id: string, data: T, deleted: boolean, opType: string): Promise<Entity<T>> {
@@ -84,9 +106,28 @@ export async function ensureMe(store: Store, ctx: MutationCtx, name: string): Pr
   return store.transaction(async tx => (await tx.get<Person>('person', ctx.actor)) ?? write(tx, ctx, 'person', ctx.actor, {name: cleanName(name), isMe: true}, false, 'person.create'))
 }
 
-export async function createPerson(store: Store, ctx: MutationCtx, input: {name: string}): Promise<Entity<Person>> {
-  const data: Person = {name: cleanName(input.name), isMe: false}
+// ponytail: shape check only (handle@psp); the payer's UPI app is the real validator.
+const UPI_RE = /^[a-zA-Z0-9._-]{2,256}@[a-zA-Z][a-zA-Z0-9.-]{1,64}$/
+
+function cleanUpi(upiId: string | null | undefined): string | null {
+  const v = (upiId ?? '').trim()
+  if (!v) return null
+  if (!UPI_RE.test(v)) throw new DomainError('INVALID_UPI')
+  return v
+}
+
+export async function createPerson(store: Store, ctx: MutationCtx, input: {name: string; upiId?: string | null}): Promise<Entity<Person>> {
+  const data: Person = {name: cleanName(input.name), isMe: false, upiId: cleanUpi(input.upiId)}
   return store.transaction(tx => write(tx, ctx, 'person', ctx.newId(), data, false, 'person.create'))
+}
+
+export async function updatePerson(store: Store, ctx: MutationCtx, id: string, input: {name: string; upiId?: string | null}): Promise<Entity<Person>> {
+  const name = cleanName(input.name)
+  const upiId = cleanUpi(input.upiId)
+  return store.transaction(async tx => {
+    const p = await requireLive<Person>(tx, 'person', id)
+    return write(tx, ctx, 'person', id, {...p.data, name, upiId}, false, 'person.update')
+  })
 }
 
 export async function deletePerson(store: Store, ctx: MutationCtx, id: string): Promise<void> {
@@ -94,9 +135,11 @@ export async function deletePerson(store: Store, ctx: MutationCtx, id: string): 
   // reads mid-transaction). Fine for one local writer; the server re-checks once sync exists.
   const expenses = await store.getAll<Expense>('expense')
   const groups = await store.getAll<Group>('group')
+  const repayments = await store.getAll<Repayment>('repayment')
   const used =
     expenses.some(e => !e.deleted && (id in e.data.payers || id in e.data.shares)) ||
-    groups.some(g => !g.deleted && g.data.members.some(m => m.personId === id))
+    groups.some(g => !g.deleted && g.data.members.some(m => m.personId === id)) ||
+    repayments.some(r => !r.deleted && (r.data.from === id || r.data.to === id))
   if (used) throw new DomainError('PERSON_IN_USE')
   await store.transaction(async tx => {
     const p = await requireLive<Person>(tx, 'person', id)
@@ -163,5 +206,78 @@ export async function restoreExpense(store: Store, ctx: MutationCtx, id: string)
     const e = await tx.get<Expense>('expense', id)
     if (!e?.deleted) throw new DomainError('NOT_FOUND')
     await write(tx, ctx, 'expense', id, e.data, false, 'expense.restore')
+  })
+}
+
+export async function createRepayment(store: Store, ctx: MutationCtx, input: RepaymentInput): Promise<Entity<Repayment>> {
+  const {id: requestedId, ...rest} = input
+  getCurrency(rest.currency)
+  parseLocalDate(rest.date)
+  if (rest.amount <= 0n) throw new DomainError('INVALID_AMOUNT')
+  assertInRange(rest.amount)
+  if (rest.from === rest.to) throw new DomainError('SAME_PERSON')
+  const data: Repayment = {...rest, note: rest.note.trim()}
+  const id = requestedId ?? ctx.newId()
+  return store.transaction(async tx => {
+    const existing = await tx.get<Repayment>('repayment', id)
+    if (existing) return existing
+    for (const pid of [data.from, data.to]) await requireLive(tx, 'person', pid, 'UNKNOWN_PERSON')
+    if (data.groupId) {
+      // Former members can still settle what they owe from their time in the group.
+      const g = await requireLive<Group>(tx, 'group', data.groupId)
+      const members = new Set(g.data.members.map(m => m.personId))
+      if (!members.has(data.from) || !members.has(data.to)) throw new DomainError('NOT_A_MEMBER')
+    }
+    return write(tx, ctx, 'repayment', id, data, false, 'repayment.create')
+  })
+}
+
+export async function deleteRepayment(store: Store, ctx: MutationCtx, id: string): Promise<void> {
+  await store.transaction(async tx => {
+    const r = await requireLive<Repayment>(tx, 'repayment', id)
+    await write(tx, ctx, 'repayment', id, r.data, true, 'repayment.delete')
+  })
+}
+
+export async function restoreRepayment(store: Store, ctx: MutationCtx, id: string): Promise<void> {
+  await store.transaction(async tx => {
+    const r = await tx.get<Repayment>('repayment', id)
+    if (!r?.deleted) throw new DomainError('NOT_FOUND')
+    await write(tx, ctx, 'repayment', id, r.data, false, 'repayment.restore')
+  })
+}
+
+const EDGE_RULES: EdgeRule[] = ['allowed', 'preferred', 'excluded']
+
+/** Replaces a group's "Who you settle with" rules. Every edge must join two different members. */
+export async function updateGroupRules(store: Store, ctx: MutationCtx, groupId: string, rules: SettlementRules): Promise<Entity<Group>> {
+  return store.transaction(async tx => {
+    const g = await requireLive<Group>(tx, 'group', groupId)
+    const members = new Set(g.data.members.map(m => m.personId))
+    const valid =
+      typeof rules.allowListOnly === 'boolean' &&
+      Object.entries(rules.edges).every(([key, rule]) => {
+        const [from, to, ...extra] = key.split('>')
+        return extra.length === 0 && from !== to && members.has(from!) && members.has(to!) && EDGE_RULES.includes(rule)
+      })
+    if (!valid) throw new DomainError('INVALID_RULES')
+    const clean: SettlementRules = {allowListOnly: rules.allowListOnly, edges: {...rules.edges}}
+    return write(tx, ctx, 'group', groupId, {...g.data, rules: clean}, false, 'group.rules')
+  })
+}
+
+/** Adds people to a group from now on; earlier splits are untouched. A former member rejoins. */
+export async function addGroupMembers(store: Store, ctx: MutationCtx, groupId: string, personIds: string[]): Promise<Entity<Group>> {
+  return store.transaction(async tx => {
+    const g = await requireLive<Group>(tx, 'group', groupId)
+    const joinedAt = ctx.now()
+    const members = [...g.data.members]
+    for (const personId of new Set(personIds)) {
+      await requireLive(tx, 'person', personId, 'UNKNOWN_PERSON')
+      const i = members.findIndex(m => m.personId === personId)
+      if (i === -1) members.push({personId, joinedAt, leftAt: null})
+      else if (members[i]!.leftAt !== null) members[i] = {...members[i]!, leftAt: null}
+    }
+    return write(tx, ctx, 'group', groupId, {...g.data, members}, false, 'group.members')
   })
 }

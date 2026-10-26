@@ -1,15 +1,19 @@
+import {type SettlementRules} from '@splito/domain'
 import {
   createExpense,
   createGroup,
   createPerson,
+  createRepayment,
   deleteExpense,
   type ExpenseDraft,
   type MutationCtx,
   type PrefKey,
   type PrefValue,
+  type RepaymentInput,
   restoreExpense,
   setPref,
   type Store,
+  updateGroupRules,
 } from '@splito/sync'
 
 import {IS_DEV, IS_E2E} from '#/env'
@@ -41,6 +45,8 @@ export function installDevTools(store: Store, ctx: MutationCtx) {
     createExpense: (draft: unknown) => createExpense(store, ctx, toBig(draft) as ExpenseDraft).then(e => e.id),
     deleteExpense: (id: string) => deleteExpense(store, ctx, id),
     restoreExpense: (id: string) => restoreExpense(store, ctx, id),
+    createRepayment: (input: unknown) => createRepayment(store, ctx, toBig(input) as RepaymentInput).then(e => e.id),
+    updateGroupRules: (groupId: string, rules: SettlementRules) => updateGroupRules(store, ctx, groupId, rules).then(e => e.id),
     setPref: <K extends PrefKey>(key: K, value: PrefValue<K>) => setPref(store, ctx, key, value),
   }
 }

@@ -18,6 +18,8 @@ export interface PrefDef<T> {
 /** Bottom-bar / sidebar destinations. Profile and Settings open from the header avatar instead. */
 export type TabId = 'people' | 'groups' | 'analytics' | 'activity'
 export type SwipeAction = 'markRead' | 'hide' | 'delete' | 'none'
+/** direct: debtors pay creditors only. transit: payments may pass through other members. */
+export type SettleMode = 'direct' | 'transit'
 
 export interface Category {
   id: string
@@ -91,6 +93,7 @@ export const PREFS = {
   numberLocale: def('numberLocale', 'regional', 'account', 'Number format', 'auto', oneOf('auto', 'en-IN', 'en-US', 'de-DE', 'fr-FR')),
   peopleSort: def('peopleSort', 'lists', 'account', 'Sort people by', 'amount', oneOf('amount', 'name', 'recent')),
   includeGroupsDefault: def('includeGroupsDefault', 'lists', 'account', 'Include groups by default', true, isBool),
+  settleMode: def<SettleMode>('settleMode', 'defaults', 'account', 'Settle-up plan', 'direct', oneOf('direct', 'transit')),
   swipeLeft: def<SwipeAction>('swipeLeft', 'lists', 'account', 'Swipe left', 'delete', oneOf('markRead', 'hide', 'delete', 'none')),
   swipeRight: def<SwipeAction>('swipeRight', 'lists', 'account', 'Swipe right', 'markRead', oneOf('markRead', 'hide', 'delete', 'none')),
   'notify.expense': def('notify.expense', 'notifications', 'account', 'New expenses', true, isBool),

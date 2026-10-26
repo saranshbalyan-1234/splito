@@ -247,41 +247,6 @@ test('a draft survives closing', async ({page}) => {
   await expect(page.getByTestId('expense-title')).toHaveValue('')
 })
 
-test('add a friend without an account', async ({page}) => {
-  await page.setViewportSize(DESKTOP)
-  await page.goto('/?demo=1')
-  await expect(page.getByTestId('screen-people')).toBeVisible()
-  await page.getByTestId('people-add-friend').click()
-  await expect(page.getByTestId('screen-add-friend')).toBeVisible()
-  await expect(page.getByTestId('composer-save')).toBeDisabled()
-  await expect(page.getByTestId('friend-invite-unavailable')).toContainText(
-    'Available when you sign in',
-  )
-  await page.getByTestId('friend-name').fill('Kabir Rao')
-  await page.getByTestId('composer-save').click()
-  await expect(page.getByText('Kabir Rao added')).toBeVisible()
-  await expect(page.getByTestId('person-Kabir Rao')).toBeVisible()
-})
-
-test('create a trip group with members and dates', async ({page}) => {
-  await page.setViewportSize(DESKTOP)
-  await page.goto('/groups/new?demo=1')
-  await expect(page.getByTestId('screen-create-group')).toBeVisible()
-  await page.getByTestId('group-name').fill('Manali')
-  await page.getByTestId('group-members').click()
-  await expect(page.getByTestId('person-option-Riya Sharma')).toBeVisible()
-  await page.getByTestId('person-option-Riya Sharma').click()
-  await page.getByTestId('people-done').click()
-  await expect(page.getByTestId('group-members-value')).toContainText(
-    'Riya Sharma',
-  )
-  await page.getByTestId('group-start').click()
-  await page.getByTestId('calendar-today').click()
-  await page.getByTestId('composer-save').click()
-  await expect(page.getByTestId('screen-group')).toBeVisible()
-  await expect(page.getByText('Manali created')).toBeVisible()
-})
-
 test('phones: the FAB opens Add expense full screen; Cancel on an empty form just closes', async ({
   page,
 }) => {

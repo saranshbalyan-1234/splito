@@ -16,6 +16,7 @@ beforeEach(async () => {
 test('default returned when unset', async () => {
   expect(await getPref(s, 'defaultCurrency')).toBe('INR')
   expect(await getPref(s, 'includeGroupsDefault')).toBe(true)
+  expect(await getPref(s, 'settleMode')).toBe('direct')
   expect(await getPref(s, 'tabs')).toEqual(['people', 'groups', 'analytics', 'activity'])
 })
 

@@ -20,7 +20,8 @@ export type RootStackParams = {
   Settings: undefined
   SettingsSection: {section: string}
   Person: {personId: string}
-  Group: {groupId: string}
+  /** `tab` opens a section directly (`/groups/:groupId?tab=rules`). */
+  Group: {groupId: string; tab?: 'expenses' | 'balances' | 'members' | 'rules'}
   Settle: {groupId: string}
   AddExpense: {personId?: string; groupId?: string}
   Expense: {expenseId: string}
