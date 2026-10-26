@@ -87,9 +87,9 @@ Each phase ships a runnable app. Arithmetic, authorization, migrations and offli
 ### v1 — Core
 
 **App shell & navigation**
-- Destinations: People (default home, no redundant title), Groups, Analytics, Activity. Profile, Settings and a theme shortcut open from the account avatar at the top right of each top-level header (owner, 2026-10-26).
+- Destinations: People (default home, no redundant title), Groups, Analytics, Activity. Profile, Settings and a theme shortcut open from the account avatar at the top right of each top-level header.
 - Logo returns home and is inactive on home.
-- Add expense: Bluesky's FAB on phones, Bluesky's "New post" pill in the sidebar on tablet/desktop (owner, superseding the central +).
+- Add expense: Bluesky's FAB on phones, Bluesky's "New post" pill in the sidebar on tablet/desktop.
 - Person detail is a real page with deep link, back and browser history.
 - Responsive phone/tablet/desktop layouts. Native stack transitions, safe areas, keyboard handling.
 
@@ -240,10 +240,9 @@ Source: `docs/research/2026-10-26-gamerun-architecture-takeaways.md`. Adopted: k
 | Logo changed to a symmetrical cat: Lucide "cat" icon (ISC), filled, Bluesky blue, eyes/nose knocked out. Stock icon, so not registrable as a trademark - a bespoke mark can replace it later | Owner ("symmetrical cat", "don't draw", "Lucide", "fill") |
 | (superseded) Logo is the butterfly alone everywhere in the UI (no wordmark, no tile); store app icons keep a plain background because iOS/Android require an opaque square | Owner ("butterfly only"); icon background is a platform rule |
 | Web layout: Bluesky's left sidebar (logged-in LeftNav: icon + label rows, active item bold + filled icon, Add expense pill) plus main content filling the rest of the screen; no right column | Owner ("occupy complete screen", "keep my left sidebar and main content") |
-| (superseded) Phones keep the spec's central + inside Bluesky's bottom bar | Assistant's call (spec vs pixel-copy conflict) |
-| Add expense is Bluesky's FAB on phones and Bluesky's sidebar pill on tablet/desktop | Owner ("use the same flow of that FAB icon", "go with what Bluesky had") |
-| Profile avatar at the top right on every platform (32px, Bluesky avatar) opening a Bluesky menu: Profile, Settings, Analytics, theme switch. Profile left the bottom bar and the sidebar; the sidebar account block is gone; `/profile` stays | Owner ("move profile icon to top right") |
-| The avatar sits in the header of the four top-level pages; detail pages keep Bluesky's back + title header. Tabs no longer include Profile, so the `tabs` preference accepts any non-empty set (the avatar is the route to Settings) | Assistant's call |
+| Add expense follows Bluesky exactly: blue pill in the sidebar on desktop/tablet web (Bluesky's "New Post"), Bluesky FAB bottom-right on phone widths (native and web); both open like Bluesky's composer. Replaces the spec's mobile central + | Owner ("use the same flow of that FAB icon", then "go with what Bluesky had") |
+| Profile avatar sits top-right on every platform and opens a menu (Profile, Settings, Analytics, theme); no avatar block or Profile row in the web sidebar; no Profile tab in the phone bottom bar | Owner ("move profile icon to top right") |
+| The avatar sits in the header of the four top-level pages; detail pages keep Bluesky's back + title header. Profile is no longer a tab, so the `tabs` preference accepts any non-empty set (the avatar is the route to Settings) | Assistant's call |
 | Bluesky's licensed Central icon glyphs replaced by Lucide; buying a Central licence would make icons pixel-exact | Assistant's call (licence) |
 | Hindi is the second launch language | Assistant's call |
 | Phase placement (v1/v2/v3) of each feature | Assistant's call; owner did not object |
