@@ -194,19 +194,19 @@ msgid "{0}, {portions} portions"
 msgstr "{0}, {portions} portions"
 
 #. placeholder {0}: group.name
-#: src/view/shell/desktop/LeftNav.tsx:565
+#: src/view/shell/desktop/LeftNav.tsx:566
 msgid "{0}, settled up"
 msgstr "{0}, settled up"
 
 #. placeholder {0}: group.name
 #. placeholder {1}: formatAmount(amount, currency, locale)
-#: src/view/shell/desktop/LeftNav.tsx:563
+#: src/view/shell/desktop/LeftNav.tsx:564
 msgid "{0}, you are owed {1}"
 msgstr "{0}, you are owed {1}"
 
 #. placeholder {0}: group.name
 #. placeholder {1}: formatAmount(magnitude(amount), currency, locale)
-#: src/view/shell/desktop/LeftNav.tsx:564
+#: src/view/shell/desktop/LeftNav.tsx:565
 msgid "{0}, you owe {1}"
 msgstr "{0}, you owe {1}"
 
@@ -217,7 +217,7 @@ msgstr "{0}’s share"
 
 #. placeholder {0}: report.nameOfPerson(report.shareOf)
 #. placeholder {1}: formatAmount(report.rowsTotal, currency, locale)
-#: src/screens/Analytics/index.tsx:182
+#: src/screens/Analytics/index.tsx:183
 msgid "{0}’s share <0>{1}</0>"
 msgstr "{0}’s share <0>{1}</0>"
 
@@ -447,7 +447,7 @@ msgstr "A trip, a flat or anything you split often."
 #: src/screens/Settings/index.tsx:106
 #: src/screens/Settings/index.tsx:109
 #: src/screens/Settings/SettingsSection.tsx:47
-#: src/view/shell/desktop/LeftNav.tsx:670
+#: src/view/shell/desktop/LeftNav.tsx:671
 msgid "About"
 msgstr "About"
 
@@ -473,7 +473,7 @@ msgstr "Active"
 #: src/navigation/Drawer.tsx:208
 #: src/navigation/Navigation.tsx:62
 #: src/screens/Activity.tsx:98
-#: src/view/shell/desktop/LeftNav.tsx:754
+#: src/view/shell/desktop/LeftNav.tsx:755
 msgid "Activity"
 msgstr "Activity"
 
@@ -524,7 +524,7 @@ msgstr "Add category"
 #: src/screens/Group/index.tsx:422
 #: src/screens/Person/index.tsx:422
 #: src/screens/Person/index.tsx:423
-#: src/view/shell/desktop/LeftNav.tsx:477
+#: src/view/shell/desktop/LeftNav.tsx:478
 msgid "Add expense"
 msgstr "Add expense"
 
@@ -535,7 +535,7 @@ msgstr "Add expense"
 #: src/screens/Analytics/index.tsx:87
 #: src/screens/People/index.tsx:221
 #: src/screens/People/index.tsx:222
-#: src/view/shell/desktop/LeftNav.tsx:485
+#: src/view/shell/desktop/LeftNav.tsx:486
 msgctxt "action"
 msgid "Add expense"
 msgstr "Add expense"
@@ -690,7 +690,7 @@ msgstr "Amounts here can’t be below zero"
 #: src/navigation/Navigation.tsx:61
 #: src/screens/Analytics/index.tsx:60
 #: src/screens/People/components/BalanceSummary.tsx:122
-#: src/view/shell/desktop/LeftNav.tsx:750
+#: src/view/shell/desktop/LeftNav.tsx:751
 msgid "Analytics"
 msgstr "Analytics"
 
@@ -811,7 +811,7 @@ msgstr "Categories"
 
 #: src/components/split/pickers.tsx:168
 #: src/screens/Analytics/components/Charts.tsx:187
-#: src/screens/Analytics/index.tsx:205
+#: src/screens/Analytics/index.tsx:206
 msgid "Category"
 msgstr "Category"
 
@@ -880,7 +880,7 @@ msgid "Choose who shares each item"
 msgstr "Choose who shares each item"
 
 #. placeholder {0}: selection.label
-#: src/screens/Analytics/index.tsx:164
+#: src/screens/Analytics/index.tsx:165
 msgid "Clear filter: {0}"
 msgstr "Clear filter: {0}"
 
@@ -987,7 +987,7 @@ msgstr "Couldn’t create the group. Please try again."
 msgid "Couldn't delete this expense"
 msgstr "Couldn't delete this expense"
 
-#: src/screens/Analytics/index.tsx:226
+#: src/screens/Analytics/index.tsx:227
 msgid "Couldn’t export. Try again."
 msgstr "Couldn’t export. Try again."
 
@@ -1048,7 +1048,7 @@ msgstr "Create group"
 #: src/components/people/RecordPaymentDialog.tsx:321
 #: src/components/split/pickers.tsx:69
 #: src/components/split/pickers.tsx:80
-#: src/screens/Analytics/index.tsx:207
+#: src/screens/Analytics/index.tsx:208
 #: src/screens/Groups/components/GroupsFilterDialog.tsx:90
 #: src/screens/People/components/FriendsFilterDialog.tsx:98
 msgid "Currency"
@@ -1102,7 +1102,7 @@ msgstr "Dark theme"
 #: src/components/people/PaymentDetailsDialog.tsx:135
 #: src/components/split/ExpenseComposer.tsx:336
 #: src/components/split/ExpenseComposer.tsx:481
-#: src/screens/Analytics/index.tsx:203
+#: src/screens/Analytics/index.tsx:204
 msgid "Date"
 msgstr "Date"
 
@@ -1157,7 +1157,7 @@ msgstr "Delete from Activity"
 msgid "Delete payment"
 msgstr "Delete payment"
 
-#: src/screens/Analytics/index.tsx:204
+#: src/screens/Analytics/index.tsx:205
 msgid "Description"
 msgstr "Description"
 
@@ -1415,7 +1415,7 @@ msgstr "Expense options"
 #: src/screens/Analytics/components/Charts.tsx:279
 #: src/screens/Analytics/components/Charts.tsx:322
 #: src/screens/Analytics/components/Summary.tsx:174
-#: src/screens/Analytics/index.tsx:148
+#: src/screens/Analytics/index.tsx:149
 #: src/screens/Group/index.tsx:393
 #: src/screens/Profile.tsx:249
 msgid "Expenses"
@@ -1426,11 +1426,11 @@ msgid "Export CSV"
 msgstr "Export CSV"
 
 #. placeholder {0}: rows.length
-#: src/screens/Analytics/index.tsx:221
+#: src/screens/Analytics/index.tsx:222
 msgid "Exported {0} expenses"
 msgstr "Exported {0} expenses"
 
-#: src/screens/Analytics/index.tsx:220
+#: src/screens/Analytics/index.tsx:221
 msgid "Exported 1 expense"
 msgstr "Exported 1 expense"
 
@@ -1547,7 +1547,7 @@ msgstr "Groceries"
 #: src/components/split/pickers.tsx:260
 #: src/navigation/Navigation.tsx:67
 #: src/screens/Analytics/components/Charts.tsx:322
-#: src/screens/Analytics/index.tsx:206
+#: src/screens/Analytics/index.tsx:207
 #: src/screens/Analytics/useReport.ts:131
 #: src/screens/Analytics/useReport.ts:253
 #: src/screens/Group/index.tsx:142
@@ -1587,7 +1587,7 @@ msgstr "Group: {groupLabel}"
 #: src/screens/Groups/index.tsx:135
 #: src/screens/Groups/index.tsx:164
 #: src/screens/Profile.tsx:243
-#: src/view/shell/desktop/LeftNav.tsx:746
+#: src/view/shell/desktop/LeftNav.tsx:747
 msgid "Groups"
 msgstr "Groups"
 
@@ -1597,7 +1597,7 @@ msgstr "Haptics"
 
 #: src/navigation/Drawer.tsx:306
 #: src/screens/Settings/SettingsSection.tsx:54
-#: src/view/shell/desktop/LeftNav.tsx:669
+#: src/view/shell/desktop/LeftNav.tsx:670
 msgid "Help"
 msgstr "Help"
 
@@ -2153,8 +2153,8 @@ msgstr "Open Analytics"
 msgid "Open balance {0}. Part payments are fine."
 msgstr "Open balance {0}. Part payments are fine."
 
-#: src/components/HeaderAvatar.tsx:41
-#: src/view/shell/desktop/LeftNav.tsx:182
+#: src/components/HeaderAvatar.tsx:39
+#: src/view/shell/desktop/LeftNav.tsx:183
 msgid "Open menu"
 msgstr "Open menu"
 
@@ -2286,7 +2286,7 @@ msgstr "pays you"
 #: src/components/settings/TabsEditor.tsx:32
 #: src/components/TabGlyph.tsx:27
 #: src/navigation/Drawer.tsx:187
-#: src/view/shell/desktop/LeftNav.tsx:742
+#: src/view/shell/desktop/LeftNav.tsx:743
 msgid "People"
 msgstr "People"
 
@@ -2366,7 +2366,7 @@ msgid "Price of item {0}"
 msgstr "Price of item {0}"
 
 #: src/screens/Settings/SettingsSection.tsx:61
-#: src/view/shell/desktop/LeftNav.tsx:671
+#: src/view/shell/desktop/LeftNav.tsx:672
 msgid "Privacy"
 msgstr "Privacy"
 
@@ -2387,9 +2387,13 @@ msgstr "Recent"
 msgid "Recent activity"
 msgstr "Recent activity"
 
-#: src/view/shell/desktop/LeftNav.tsx:543
+#: src/view/shell/desktop/LeftNav.tsx:544
 msgid "Recent groups"
 msgstr "Recent groups"
+
+#: src/view/shell/desktop/RecentTransactions.tsx:65
+msgid "Recent transactions"
+msgstr "Recent transactions"
 
 #: src/screens/Settle/components/TransferRow.tsx:110
 msgid "Record"
@@ -2521,7 +2525,7 @@ msgstr "Saved"
 #: src/components/settings/AboutSettings.tsx:116
 #: src/navigation/Drawer.tsx:100
 #: src/screens/Profile.tsx:192
-#: src/view/shell/desktop/LeftNav.tsx:219
+#: src/view/shell/desktop/LeftNav.tsx:220
 msgid "Saved on this device"
 msgstr "Saved on this device"
 
@@ -2562,11 +2566,16 @@ msgstr "Search people"
 msgid "Search timezones"
 msgstr "Search timezones"
 
-#: src/view/shell/desktop/LeftNav.tsx:657
+#: src/view/shell/desktop/LeftNav.tsx:658
+#: src/view/shell/desktop/RecentTransactions.tsx:117
 msgid "See all"
 msgstr "See all"
 
-#: src/view/shell/desktop/LeftNav.tsx:630
+#: src/view/shell/desktop/RecentTransactions.tsx:109
+msgid "See all activity"
+msgstr "See all activity"
+
+#: src/view/shell/desktop/LeftNav.tsx:631
 msgid "See all groups"
 msgstr "See all groups"
 
@@ -2581,7 +2590,7 @@ msgstr "Set for this group"
 #: src/screens/Profile.tsx:67
 #: src/screens/Settings/index.tsx:44
 #: src/screens/Settings/SettingsSection.tsx:68
-#: src/view/shell/desktop/LeftNav.tsx:769
+#: src/view/shell/desktop/LeftNav.tsx:770
 msgid "Settings"
 msgstr "Settings"
 
@@ -2604,7 +2613,7 @@ msgstr "Settings reset"
 msgid "Settle up"
 msgstr "Settle up"
 
-#: src/view/shell/desktop/LeftNav.tsx:620
+#: src/view/shell/desktop/LeftNav.tsx:621
 msgid "settled"
 msgstr "settled"
 
@@ -2804,7 +2813,7 @@ msgid "Split with friends"
 msgstr "Split with friends"
 
 #: src/screens/People/index.tsx:129
-#: src/view/shell/desktop/LeftNav.tsx:149
+#: src/view/shell/desktop/LeftNav.tsx:150
 msgid "Splito - People"
 msgstr "Splito - People"
 
@@ -3016,7 +3025,7 @@ msgstr "Tomorrow"
 msgid "Too many digits after the decimal point for this currency"
 msgstr "Too many digits after the decimal point for this currency"
 
-#: src/screens/Analytics/index.tsx:208
+#: src/screens/Analytics/index.tsx:209
 msgid "Total"
 msgstr "Total"
 
@@ -3293,6 +3302,10 @@ msgstr "You can’t divide by zero"
 msgid "you get back <0>{figure}</0>"
 msgstr "you get back <0>{figure}</0>"
 
+#: src/view/shell/desktop/RecentTransactions.tsx:53
+msgid "You got paid"
+msgstr "You got paid"
+
 #: src/components/people/HistoryRow.tsx:203
 msgid "you lent"
 msgstr "you lent"
@@ -3337,7 +3350,8 @@ msgstr "you owe <0>{figure}</0>"
 #: src/screens/Analytics/components/Charts.tsx:248
 #: src/screens/Analytics/components/Charts.tsx:258
 #: src/screens/Analytics/components/Summary.tsx:161
-#: src/screens/Analytics/index.tsx:209
+#: src/screens/Analytics/index.tsx:210
+#: src/view/shell/desktop/RecentTransactions.tsx:53
 msgid "You paid"
 msgstr "You paid"
 
@@ -3447,12 +3461,12 @@ msgstr "Your profile · saved on this device"
 #: src/screens/Analytics/components/Charts.tsx:262
 #: src/screens/Analytics/components/Charts.tsx:322
 #: src/screens/Analytics/index.tsx:105
-#: src/screens/Analytics/index.tsx:210
+#: src/screens/Analytics/index.tsx:211
 msgid "Your share"
 msgstr "Your share"
 
 #. placeholder {0}: formatAmount(report.rowsTotal, currency, locale)
-#: src/screens/Analytics/index.tsx:175
+#: src/screens/Analytics/index.tsx:176
 msgid "Your share <0>{0}</0>"
 msgstr "Your share <0>{0}</0>"
 

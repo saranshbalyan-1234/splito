@@ -223,3 +223,8 @@ export function groupBalances(rows: BalanceRow[]): Record<string, Record<Currenc
   }
   return out
 }
+
+/** What one expense means for `person`: paid minus share (> 0 lent, < 0 borrowed). */
+export function personNet(record: Pick<ExpenseRecord, 'payers' | 'shares'>, person: string): bigint {
+  return (record.payers[person] ?? 0n) - (record.shares[person] ?? 0n)
+}
