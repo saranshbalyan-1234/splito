@@ -19,6 +19,7 @@ import {
   View,
   type ViewStyle,
 } from 'react-native'
+import Animated from 'react-native-reanimated'
 import {msg} from '@lingui/core/macro'
 import {useLingui} from '@lingui/react'
 import * as DismissableLayer from '@radix-ui/react-dismissable-layer'
@@ -32,6 +33,14 @@ import {useDialogStateControlContext} from '#/state/dialogs'
 import {type ListMethods} from '#/view/com/util/List'
 import {atoms as a, flatten, useBreakpoints, useTheme, web} from '#/alf'
 import {Context} from '#/components/Dialog/context'
+import {
+  DrawerContext,
+  DrawerHandle,
+  DrawerScrim,
+  useDrawer,
+  useDrawerContext,
+  useIsWebDrawer,
+} from '#/components/Dialog/drawer.web'
 import {
   type DialogControlProps,
   type DialogInnerProps,
@@ -62,17 +71,29 @@ export function Outer({
   const {gtMobile} = useBreakpoints()
   const [isOpen, setIsOpen] = useState(false)
   const {setDialogIsOpen} = useDialogStateControlContext()
+  /*
+   * Splito: on phones the dialog is a drawer that slides away before it
+   * unmounts; close callbacks wait for that, as they wait for the native
+   * sheet's dismissal.
+   */
+  const isDrawer = useIsWebDrawer()
+  const reduceMotion = useShouldReduceMotion()
+  const [isClosing, setIsClosing] = useState(false)
+  const pendingClose = useRef<{cb?: () => void} | null>(null)
 
   const open = useCallback(() => {
     onOpen?.()
     setDialogIsOpen(control.id, true)
+    pendingClose.current = null
+    setIsClosing(false)
     setIsOpen(true)
   }, [setIsOpen, setDialogIsOpen, control.id, onOpen])
 
-  const close = useCallback<DialogControlProps['close']>(
-    cb => {
+  const finishClose = useCallback(
+    (cb?: () => void) => {
       setDialogIsOpen(control.id, false)
       setIsOpen(false)
+      setIsClosing(false)
 
       try {
         /*
@@ -99,6 +120,26 @@ export function Outer({
     [control.id, onClose, setDialogIsOpen],
   )
 
+  const animateExit = isOpen && isDrawer && !reduceMotion
+  const close = useCallback<DialogControlProps['close']>(
+    cb => {
+      if (!animateExit) return finishClose(cb)
+      // A second close while sliding away keeps the first one's callback.
+      pendingClose.current = {cb: pendingClose.current?.cb ?? cb}
+      setIsClosing(true)
+    },
+    [animateExit, finishClose],
+  )
+  const onExited = useCallback(() => {
+    const pending = pendingClose.current
+    pendingClose.current = null
+    if (pending) finishClose(pending.cb)
+  }, [finishClose])
+  const drawer = useMemo(
+    () => ({isDrawer, isClosing, onExited}),
+    [isDrawer, isClosing, onExited],
+  )
+
   /*
    * When a press starts inside the dialog and ends on the backdrop, such as
    * a drag to select text in a field, the browser fires the click on their
@@ -112,9 +153,10 @@ export function Outer({
       const startTarget = pressStartTarget.current
       pressStartTarget.current = null
       if (startTarget && startTarget !== e.target) return
+      if (isClosing) return
       webOptions?.onBackgroundPress ? webOptions.onBackgroundPress(e) : close()
     },
-    [webOptions, close],
+    [webOptions, close, isClosing],
   )
 
   useImperativeHandle(
@@ -148,44 +190,53 @@ export function Outer({
       {isOpen && (
         <Portal>
           <Context.Provider value={context}>
-            <RemoveScrollBar />
-            <Pressable
-              accessibilityHint={undefined}
-              accessibilityLabel={_(msg`Close active dialog`)}
-              onPointerDown={e => {
-                pressStartTarget.current = e.target
-              }}
-              onPress={handleBackgroundPress}>
-              <View
-                style={[
-                  web(a.fixed),
-                  a.inset_0,
-                  a.z_10,
-                  a.px_xl,
-                  webOptions?.alignCenter ? a.justify_center : undefined,
-                  a.align_center,
-                  {
-                    overflowY: 'auto',
-                    paddingVertical: gtMobile ? '10vh' : a.pt_xl.paddingTop,
-                  },
-                ]}>
-                <Backdrop />
-                {/**
-                 * This is needed to prevent centered dialogs from overflowing
-                 * above the screen, and provides a "natural" centering so that
-                 * stacked dialogs appear relatively aligned.
-                 */}
+            <DrawerContext.Provider value={drawer}>
+              <RemoveScrollBar />
+              <Pressable
+                accessibilityHint={undefined}
+                accessibilityLabel={_(msg`Close active dialog`)}
+                onPointerDown={e => {
+                  pressStartTarget.current = e.target
+                }}
+                onPress={handleBackgroundPress}>
                 <View
                   style={[
-                    a.w_full,
-                    a.z_20,
+                    web(a.fixed),
+                    a.inset_0,
+                    a.z_10,
+                    !isDrawer && a.px_xl,
+                    webOptions?.alignCenter ? a.justify_center : undefined,
                     a.align_center,
-                    web({minHeight: '60vh', position: 'static'}),
+                    isDrawer
+                      ? {overflowY: 'hidden'}
+                      : {
+                          overflowY: 'auto',
+                          paddingVertical: gtMobile
+                            ? '10vh'
+                            : a.pt_xl.paddingTop,
+                        },
+                    // Clicks fall through to the page while a drawer slides away.
+                    isClosing && web({pointerEvents: 'none'}),
                   ]}>
-                  {children}
+                  {/* A drawer draws its own scrim, which follows the sheet. */}
+                  {!isDrawer && <Backdrop />}
+                  {/**
+                   * This is needed to prevent centered dialogs from overflowing
+                   * above the screen, and provides a "natural" centering so that
+                   * stacked dialogs appear relatively aligned.
+                   */}
+                  <View
+                    style={[
+                      a.w_full,
+                      a.z_20,
+                      a.align_center,
+                      web({minHeight: '60vh', position: 'static'}),
+                    ]}>
+                    {children}
+                  </View>
                 </View>
-              </View>
-            </Pressable>
+              </Pressable>
+            </DrawerContext.Provider>
           </Context.Provider>
         </Portal>
       )}
@@ -209,50 +260,102 @@ export function Inner({
   const t = useTheme()
   const {close} = useContext(Context)
   const {gtMobile} = useBreakpoints()
-  const reduceMotionEnabled = useShouldReduceMotion()
+  const {isDrawer, isClosing, onExited} = useDrawerContext()
+  /*
+   * Splito: a phone drawer. `close` is the context's, so a form sheet's
+   * "Discard changes?" check runs on a drag down too.
+   */
+  const drawer = useDrawer({
+    enabled: isDrawer,
+    onRequestClose: () => close(),
+    isClosing,
+    onExited,
+  })
+  const reduceMotionEnabled = drawer.reduceMotion
   FocusGuards.useFocusGuards()
   return (
-    <FocusScope.FocusScope loop asChild trapped>
-      <View
-        role="dialog"
-        aria-role="dialog"
-        aria-label={label}
-        aria-labelledby={accessibilityLabelledBy}
-        aria-describedby={accessibilityDescribedBy}
-        onClick={stopPropagation}
-        onStartShouldSetResponder={_ => true}
-        onTouchEnd={stopPropagation}
-        // note: flatten is required for some reason -sfn
-        style={flatten([
-          a.relative,
-          a.rounded_md,
-          a.w_full,
-          a.border,
-          t.atoms.bg,
-          {
-            cursor: 'default', // The overlay applies `cursor: 'pointer'` to all children.
-            maxWidth: 600,
-            borderColor: t.palette.contrast_200,
-            shadowColor: t.palette.black,
-            shadowOpacity: t.name === 'light' ? 0.1 : 0.4,
-            shadowRadius: 30,
-          },
-          !reduceMotionEnabled && a.zoom_fade_in,
-          style,
-        ])}>
-        <DismissableLayer.DismissableLayer
-          onInteractOutside={preventDefault}
-          onFocusOutside={preventDefault}
-          onDismiss={close}
-          style={{height: '100%', display: 'flex', flexDirection: 'column'}}>
-          {header}
-          <View style={[gtMobile ? a.p_2xl : a.p_xl, contentContainerStyle]}>
-            {children}
+    <>
+      {isDrawer && (
+        <DrawerScrim
+          scrimStyle={drawer.scrimStyle}
+          reduceMotion={reduceMotionEnabled}
+        />
+      )}
+      {/*
+       * The drawer's moving frame. Outside the focus scope: its Slot spreads a
+       * style array into an object, so the dialog's own style stays flat.
+       * Without a drawer it lays out nothing (`display: contents`).
+       */}
+      <Animated.View
+        onLayout={isDrawer ? drawer.onLayout : undefined}
+        style={[
+          isDrawer ? drawer.frameStyle : web({display: 'contents'}),
+          drawer.sheetStyle,
+        ]}>
+        <FocusScope.FocusScope loop asChild trapped>
+          <View
+            role="dialog"
+            aria-role="dialog"
+            aria-label={label}
+            aria-labelledby={accessibilityLabelledBy}
+            aria-describedby={accessibilityDescribedBy}
+            onClick={stopPropagation}
+            onStartShouldSetResponder={_ => true}
+            onTouchEnd={stopPropagation}
+            // note: flatten is required for some reason -sfn
+            style={flatten([
+              a.relative,
+              a.rounded_md,
+              a.w_full,
+              a.border,
+              t.atoms.bg,
+              {
+                cursor: 'default', // The overlay applies `cursor: 'pointer'` to all children.
+                maxWidth: 600,
+                borderColor: t.palette.contrast_200,
+                shadowColor: t.palette.black,
+                shadowOpacity: t.name === 'light' ? 0.1 : 0.4,
+                shadowRadius: 30,
+              },
+              isDrawer
+                ? reduceMotionEnabled && a.fade_in
+                : !reduceMotionEnabled && a.zoom_fade_in,
+              style,
+              // After `style`: a caller's popup width or radius never applies to the drawer.
+              isDrawer && drawer.sheetFrameStyle,
+            ])}>
+            {isDrawer && <DrawerHandle handleProps={drawer.handleProps} />}
+            <DismissableLayer.DismissableLayer
+              onInteractOutside={preventDefault}
+              onFocusOutside={preventDefault}
+              onDismiss={close}
+              style={
+                isDrawer
+                  ? {
+                      display: 'flex',
+                      flexDirection: 'column',
+                      flexGrow: 1,
+                      flexShrink: 1,
+                      minHeight: 0,
+                    }
+                  : {height: '100%', display: 'flex', flexDirection: 'column'}
+              }>
+              {header}
+              <View
+                style={[
+                  gtMobile ? a.p_2xl : a.p_xl,
+                  isDrawer &&
+                    web({flexShrink: 1, minHeight: 0, overflowY: 'auto'}),
+                  contentContainerStyle,
+                ]}>
+                {children}
+              </View>
+              {footer}
+            </DismissableLayer.DismissableLayer>
           </View>
-          {footer}
-        </DismissableLayer.DismissableLayer>
-      </View>
-    </FocusScope.FocusScope>
+        </FocusScope.FocusScope>
+      </Animated.View>
+    </>
   )
 }
 
@@ -289,6 +392,7 @@ export const InnerFlatList = forwardRef<
   ref,
 ) {
   const {gtMobile} = useBreakpoints()
+  const {isDrawer} = useDrawerContext()
   return (
     <Inner
       /*
@@ -300,6 +404,8 @@ export const InnerFlatList = forwardRef<
         a.overflow_hidden,
         a.px_0,
         web({maxHeight: WEB_DIALOG_HEIGHT}),
+        // A drawer's list gets a set height to scroll in; the drawer caps it above the keyboard.
+        isDrawer && web({height: WEB_DIALOG_HEIGHT}),
         webInnerStyle,
       ]}
       contentContainerStyle={[a.h_full, a.px_0, webInnerContentContainerStyle]}>
@@ -352,8 +458,8 @@ export function FlatListFooter({
 export {CloseButton as Close} from '#/components/Dialog/CloseButton'
 
 /*
- * The drag handle only exists on the native bottom sheet; props are accepted
- * for parity with the native variant.
+ * Splito: a phone drawer draws its handle inside `Inner`, where the drag
+ * lives; props are accepted for parity with the native variant.
  */
 export function Handle(_props: {difference?: boolean; fill?: string}) {
   return null
