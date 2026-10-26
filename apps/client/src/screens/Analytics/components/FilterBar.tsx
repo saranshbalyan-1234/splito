@@ -4,22 +4,29 @@ import {getCurrency} from '@splito/domain'
 
 import {atoms as a, useBreakpoints} from '#/alf'
 import {Button, ButtonIcon, ButtonText} from '#/components/Button'
-import {Check_Stroke2_Corner0_Rounded as CheckIcon} from '#/components/icons/Check'
+import * as Dialog from '#/components/Dialog'
+import {GroupAvatar} from '#/components/groups/GroupAvatar'
 import {ChevronBottom_Stroke2_Corner0_Rounded as ChevronDownIcon} from '#/components/icons/Chevron'
 import {Group3_Stroke2_Corner0_Rounded as GroupIcon} from '#/components/icons/Group'
+import {Person_Stroke2_Corner2_Rounded as PersonIcon} from '#/components/icons/Person'
 import {
   ChartColumn_Stroke2_Corner0_Rounded as ChartIcon,
   Table_Stroke2_Corner0_Rounded as TableIcon,
 } from '#/components/icons/Table'
 import * as Menu from '#/components/Menu'
+import {
+  LayersIcon,
+  ScopeDialog,
+} from '#/screens/Analytics/components/ScopeDialog'
+import {isEverything, scopeSummary} from '#/screens/Analytics/scope'
 import {type Report} from '#/screens/Analytics/useReport'
 
 /**
- * The one row of filters above everything they scope: currency, group and
- * Include groups (the period is the headline's own control). Charts,
- * totals, the list and the CSV all follow it. Wide screens keep one row
- * that scrolls sideways if it must, with the charts / table switch at its
- * end; phones wrap the chips instead, so none is ever cut in half.
+ * The one row of filters above everything they scope: currency and the
+ * scope chip (the period is the headline's own control). Charts, totals,
+ * the list and the CSV all follow it. Wide screens keep one row that
+ * scrolls sideways if it must, with the charts / table switch at its end;
+ * phones scroll the whole row, so no chip is ever cut in half.
  */
 export function FilterBar({
   report,
@@ -32,9 +39,6 @@ export function FilterBar({
 }) {
   const {t: l} = useLingui()
   const {gtMobile} = useBreakpoints()
-  const groupLabel = report.groupId
-    ? report.nameOfGroup(report.groupId)
-    : l`All groups`
 
   const chips = (
     <>
@@ -71,68 +75,7 @@ export function FilterBar({
         </Menu.Outer>
       </Menu.Root>
 
-      {report.groupChoices.length > 0 && (
-        <Menu.Root>
-          <Menu.Trigger label={l`Group: ${groupLabel}`}>
-            {({props}) => (
-              <Button
-                testID="analytics-group"
-                {...props}
-                label={props.accessibilityLabel}
-                size="small"
-                color="secondary">
-                <ButtonIcon icon={GroupIcon} />
-                <ButtonText>{groupLabel}</ButtonText>
-                <ButtonIcon icon={ChevronDownIcon} />
-              </Button>
-            )}
-          </Menu.Trigger>
-          <Menu.Outer>
-            <Menu.Group>
-              <Menu.Item
-                testID="analytics-group-all"
-                label={l`All groups`}
-                onPress={() => report.setGroupId(undefined)}>
-                <Menu.ItemText>
-                  <Trans>All groups</Trans>
-                </Menu.ItemText>
-                <Menu.ItemRadio selected={!report.groupId} />
-              </Menu.Item>
-            </Menu.Group>
-            <Menu.Divider />
-            <Menu.Group>
-              {report.groupChoices.map(g => (
-                <Menu.Item
-                  key={g.id}
-                  testID={`analytics-group-${g.name}`}
-                  label={g.name}
-                  onPress={() => report.setGroupId(g.id)}>
-                  <Menu.ItemText>{g.name}</Menu.ItemText>
-                  <Menu.ItemRadio selected={report.groupId === g.id} />
-                </Menu.Item>
-              ))}
-            </Menu.Group>
-          </Menu.Outer>
-        </Menu.Root>
-      )}
-
-      {!report.groupId && report.groupChoices.length > 0 && (
-        /* A filter chip that is on or off, like the others: filled with a tick when on. */
-        <Button
-          testID="analytics-include-groups"
-          label={l`Include groups`}
-          role="switch"
-          aria-checked={report.includeGroups}
-          accessibilityState={{checked: report.includeGroups}}
-          size="small"
-          color={report.includeGroups ? 'primary_subtle' : 'secondary'}
-          onPress={() => report.setIncludeGroups(!report.includeGroups)}>
-          {report.includeGroups && <ButtonIcon icon={CheckIcon} />}
-          <ButtonText>
-            <Trans>Include groups</Trans>
-          </ButtonText>
-        </Button>
-      )}
+      <ScopeChip report={report} />
     </>
   )
 
@@ -175,5 +118,75 @@ export function FilterBar({
       {chips}
       {viewToggle}
     </ScrollView>
+  )
+}
+
+/**
+ * One chip says what is counted ("Everything", "Non-group only", "Goa trip
+ * + 1" ...) and opens the "Show expenses from" sheet (26.16). Tinted while
+ * it narrows anything, as an active filter is.
+ */
+function ScopeChip({report}: {report: Report}) {
+  const {t: l} = useLingui()
+  const control = Dialog.useDialogControl()
+  const {scope, groupOptions, groupIds} = report
+  const summary = scopeSummary(scope, groupIds)
+  const name = (id: string) => report.nameOfGroup(id)
+
+  let label: string
+  let icon: React.ReactNode = <ButtonIcon icon={GroupIcon} />
+  switch (summary.kind) {
+    case 'everything':
+      label = l`Everything`
+      icon = <ButtonIcon icon={LayersIcon} />
+      break
+    case 'nonGroup':
+      label = l`Non-group only`
+      icon = <ButtonIcon icon={PersonIcon} />
+      break
+    case 'allGroups':
+      label = l`All groups`
+      break
+    case 'group': {
+      const g = groupOptions.find(x => x.id === summary.groupId)
+      label =
+        summary.more === 0
+          ? name(summary.groupId)
+          : l`${name(summary.groupId)} + ${summary.more}`
+      /* One group wears its own tile. */
+      if (summary.more === 0 && g)
+        icon = <GroupAvatar kind={g.kind} name={g.name} size={18} />
+      break
+    }
+    case 'groups':
+      label = l`${summary.count} groups`
+      break
+    case 'nonGroupPlus':
+      label =
+        summary.count === 1
+          ? l`Non-group + ${name(summary.groupId)}`
+          : l`Non-group + ${summary.count} groups`
+      break
+  }
+
+  return (
+    <>
+      <Button
+        testID="analytics-scope"
+        label={l`Show expenses from: ${label}`}
+        size="small"
+        color={isEverything(scope) ? 'secondary' : 'primary_subtle'}
+        onPress={control.open}>
+        {icon}
+        <ButtonText numberOfLines={1}>{label}</ButtonText>
+        <ButtonIcon icon={ChevronDownIcon} />
+      </Button>
+      <ScopeDialog
+        control={control}
+        scope={scope}
+        groups={groupOptions}
+        onScopeApplied={report.setScope}
+      />
+    </>
   )
 }

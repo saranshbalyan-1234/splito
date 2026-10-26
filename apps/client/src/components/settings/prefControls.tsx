@@ -736,6 +736,8 @@ export const PREF_CONTROLS = {
   'amount.keypad': AmountKeypadPref,
   analyticsPeriod: AnalyticsPeriodPref,
   analyticsView: AnalyticsViewPref,
+  // Chosen on Analytics' own scope chip, where its effect shows; Reset all resets it.
+  analyticsScope: null,
   categories: CategoriesEditor,
   language: LanguagePref,
   timezone: TimeZonePref,
