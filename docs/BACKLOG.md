@@ -230,6 +230,7 @@ Per-type stores, normalised relations, indexes for every query path, in-transact
   4. Home, People, Person, Groups, Group, right column, Activity and Analytics read through indexes/projections with cursor paging; no `getAll` on a money store in hot paths (an architecture rule test enforces it).
   5. With the large demo set (and a 10,000-expense fixture) cold open of Home < 150 ms and a write + UI update < 50 ms on web (F-109 budgets), measured and recorded.
   6. The shared store contract test covers both engines.
+  7. Every row in every store has `syncStatus` (local / pending / syncing / synced / failed) set atomically with its outbox op, a `bySyncStatus` index, and a per-item status marker in the UI (expense/repayment/comment/request rows and detail pages) consistent with the avatar dot (§ 9.8, decision 79).
 
 ### F-111 Amount entry and parsing correctness `spec: audit docs/audit/AUDIT-2026-10-27.md`
 

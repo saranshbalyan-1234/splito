@@ -553,6 +553,17 @@ with every hot screen reading by index, never by full scan (§ 17 budgets, F-109
 - **Every row** carries `id` (UUID), `version`, `createdAt` / `updatedAt` (UTC ms), `deleted` (+ `deletedAt`,
   `purgedAt`), and for money rows `currency` + amounts as bigint minor units encoded with the codec (§ 9.3);
   an expense also keeps its `date` (LocalDate in the user's timezone).
+- **Every row carries its own sync status** `syncStatus`: `local` (on this device only: no account yet, never
+  queued), `pending` (queued in the outbox), `syncing` (sent, waiting for the server), `synced` (acknowledged;
+  `serverVersion` and `syncedAt` stored), `failed` (refused or conflicted; `syncError` holds the reason and it
+  surfaces as "Needs attention", § 9.5). The mutation that writes a row sets it in the same transaction as the
+  outbox op; the sync engine moves it forward only on real acknowledgements, never optimistically to `synced`.
+  Every store has a `bySyncStatus` index so counts ("3 changes waiting") are index reads. The UI can show it
+  per item (expense, repayment, comment, friend request: a small dot/label on detail pages and a subtle marker
+  on rows, same colours as the avatar dot of § 26.7, with text for accessibility), and the avatar dot is the
+  aggregate of all rows. Outbox ops keep their own status (`queued`, `sending`, `acked`, `failed`) linked to
+  the row by `entityType` + `entityId`. *Why:* "every value can have status, whether it's outbox, pending,
+  success, synced, whatever".
 - **Normalised relations, not arrays inside JSON:** group membership lives in `group_members`
   (`[groupId, personId]`, `joinedAt`, `leftAt`, role); who paid / owes on an expense lives in
   `expense_parties` (`[expenseId, personId]`, `paid`, `share`, `groupId`, `currency`, `date`). The expense row
@@ -1785,6 +1796,7 @@ Every owner decision, in the order it was made (all 2026-10-26). "Replaced" name
 | 76 | "make accept decline like invites sent, on mobile only icon for both, for web complete text with icon" | Requests and Invites sent rows: actions on the right; icon-only on phones, icon + text on desktop | § 26.18 | Accept/Decline text buttons under the name |
 | 77 | "invite link and qr to show once i click on invite people, not outside" | Invite link / QR only inside the Invite people (Add friend) sheet and the group Add members sheet; header overflow entries removed | § 26.18 | Invite link in Home "..." and Group overflow |
 | 78 | "manage the indexeddb properly, a lot of different data is clubbed into a single table"; "the db level architecture is very important for scalability" | Local DB v2: one store per entity type, normalised members/parties, indexes per query, balance projection in-transaction, cursor paging, versioned migrations, Postgres mirrors it | § 9.8 | Single `entities` store with full scans |
+| 79 | "every value can have status, whether its outbox, pending success, synced whatever" | Per-row `syncStatus` (local / pending / syncing / synced / failed) with index, shown per item, aggregated in the avatar dot | §§ 9.8, 26.7 | Only a global status label |
 
 New decisions follow § 0 rule 9: rewrite the rule in its topic so only the current truth remains, then add a
 row here.
