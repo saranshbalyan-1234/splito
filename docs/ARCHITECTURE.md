@@ -1108,6 +1108,12 @@ labelled sidebar); **wide** = web 1300 px and up (Bluesky `gtTablet`, right colu
 - **Record every owner decision here in the same turn** (§ 0 rule 9). *Why:* "make sure this file updates on
   its own, whenever there is any such decision"; "make sure to add whatever we discussed so far". *Where:*
   `.claude/settings.json` UserPromptSubmit hook reminds on every prompt.
+- **Every request goes into the feature list first, then features are built one by one.** Each owner request
+  (new feature or change) becomes or updates an entry in `docs/BACKLOG.md` (ID, acceptance criteria, status)
+  and gets a slot in the build order, in the same turn as its § 26 rule. Work then takes the next feature from
+  the list and finishes it (built, tested, merged, screenshots, status updated in BACKLOG and
+  `COMPLETION_MATRIX.md`) before starting the next; parallel workers may split one feature, not run many
+  features at once. *Why:* "add everything to feature list and pick one by one".
 - **Large work fans out** into parallel throwaway worktrees (§ 20) with judges and review. *Why:* "Fanout".
 
 ### 26.2 Product scope, platforms and backend
@@ -1655,6 +1661,7 @@ Every owner decision, in the order it was made (all 2026-10-26). "Replaced" name
 | 60 | "remove me from drawer-profile"; "removed the other saved on device and me" | Drawer header shows real name, no "Me", no sync text | § 26.7 | "Saved on this device" in drawer header |
 | 61 | "add green icon for online, yellow for syncing, red for on device only ... on player avatar on sidebar drawer" | Sync-status dot on the user's avatar (drawer + header), with text label | § 26.7 | Sync status as text |
 | 62 | "mobile sidebar and desktop seems to be different, make them same" | One nav list + one footer for sidebar and drawer | §§ 26.3, 26.5, 26.7 | Drawer had Profile, theme toggle; sidebar had no footer |
+| 63 | "add everything to feature list and pick one by one" | Every request becomes a BACKLOG entry; build one feature at a time to done | § 26.1 | Many feature streams in parallel |
 
 New decisions follow § 0 rule 9: rewrite the rule in its topic so only the current truth remains, then add a
 row here.
