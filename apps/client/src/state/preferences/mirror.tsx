@@ -1,9 +1,9 @@
 import {useEffect} from 'react'
 import {ReducedMotionConfig, ReduceMotion} from 'react-native-reanimated'
-import {getPref, type PrefValue} from '@splito/sync'
+import {type PrefValue} from '@splito/sync'
 
 import {getFontScale, useAlf} from '#/alf'
-import {useStore} from '#/data/hooks'
+import {usePref} from '#/data/hooks'
 import {useShouldReduceMotion} from '#/motion/useShouldReduceMotion'
 import {type Device, device} from '#/storage'
 
@@ -34,44 +34,42 @@ function put<K extends keyof Device>(key: K, value: Device[K]) {
 /**
  * Applies app-wide preferences. Copies the ones that shape the first frame
  * (theme, accent, text size, density, home tab, haptics) from the registry into
- * synchronous device storage after every store commit. The registry stays
+ * synchronous device storage whenever one changes. The registry stays
  * the source of truth; the copy only exists so the next launch paints right
  * before the local store opens.
  */
 export function PrefsMirror() {
-  const store = useStore()
   const {setFontScale} = useAlf().fonts
+  // One shared read of the preference rows serves all seven (data/projections).
+  const [theme] = usePref('theme')
+  const [darkTheme] = usePref('darkTheme')
+  const [accent] = usePref('accent')
+  const [textScale] = usePref('textScale')
+  const [haptics] = usePref('haptics')
+  const [density] = usePref('density')
+  const [homeTab] = usePref('homeTab')
 
   useEffect(() => {
-    let cancelled = false
-    const sync = async () => {
-      const [theme, darkTheme, accent, textScale, haptics, density, homeTab] =
-        await Promise.all([
-          getPref(store, 'theme'),
-          getPref(store, 'darkTheme'),
-          getPref(store, 'accent'),
-          getPref(store, 'textScale'),
-          getPref(store, 'haptics'),
-          getPref(store, 'density'),
-          getPref(store, 'homeTab'),
-        ])
-      if (cancelled) return
-      put('colorMode', theme)
-      put('darkTheme', darkTheme)
-      put('accent', accent)
-      put('hapticsEnabled', haptics)
-      put('density', density)
-      put('homeTab', homeTab)
-      const scale = fontScaleFor(textScale)
-      if (scale !== getFontScale()) setFontScale(scale)
-    }
-    void sync()
-    const off = store.subscribe(() => void sync())
-    return () => {
-      cancelled = true
-      off()
-    }
-  }, [store, setFontScale])
+    // All seven come from the same rows, so they arrive together.
+    if (
+      theme === undefined ||
+      darkTheme === undefined ||
+      accent === undefined ||
+      textScale === undefined ||
+      haptics === undefined ||
+      density === undefined ||
+      homeTab === undefined
+    )
+      return
+    put('colorMode', theme)
+    put('darkTheme', darkTheme)
+    put('accent', accent)
+    put('hapticsEnabled', haptics)
+    put('density', density)
+    put('homeTab', homeTab)
+    const scale = fontScaleFor(textScale)
+    if (scale !== getFontScale()) setFontScale(scale)
+  }, [theme, darkTheme, accent, textScale, haptics, density, homeTab, setFontScale])
 
   /*
    * The Animations preference (or the OS setting) also reaches every

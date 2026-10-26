@@ -124,12 +124,12 @@
   },
   "packages/sync/src/activity.ts": {
     "import/consistent-type-specifier-style": {
-      "count": 3
+      "count": 2
     }
   },
   "packages/sync/src/idbStore.ts": {
     "import/consistent-type-specifier-style": {
-      "count": 2
+      "count": 1
     }
   },
   "packages/sync/src/mutations.ts": {
@@ -149,7 +149,7 @@
   },
   "packages/sync/src/sqlStore.ts": {
     "import/consistent-type-specifier-style": {
-      "count": 2
+      "count": 1
     }
   },
   "packages/sync/src/store.ts": {
@@ -184,7 +184,7 @@
   },
   "packages/sync/test/storeContract.ts": {
     "import/consistent-type-specifier-style": {
-      "count": 2
+      "count": 1
     }
   }
 }

@@ -1,5 +1,5 @@
 import {decode, encode} from './codec'
-import type {Store, Tx} from './store'
+import {changeRecorder, type Store, type StoreChange, type Tx} from './store'
 import type {Entity, EntityType, HistoryRow, OutboxOp} from './types'
 
 /** Minimal async SQLite surface; expo-sqlite on device, bun:sqlite in tests. */
@@ -75,7 +75,7 @@ export async function openSqlStore(db: SqlExecutor): Promise<Store> {
     return next
   }
 
-  const listeners = new Set<() => void>()
+  const listeners = new Set<(change: StoreChange) => void>()
   const tx: Tx = {
     async get<T>(type: EntityType, id: string) {
       const [r] = await db.all<EntityRow>('SELECT * FROM entities WHERE type = ? AND id = ?', [type, id])
@@ -114,8 +114,15 @@ export async function openSqlStore(db: SqlExecutor): Promise<Store> {
 
   return {
     async transaction(fn) {
-      const result = await serial(() => db.withTransaction(() => fn(tx)))
-      listeners.forEach(l => l())
+      const recorder = changeRecorder()
+      const recording: Tx = {
+        ...tx,
+        put: e => (recorder.record(e.type, e.id), tx.put(e)),
+        appendHistory: h => (recorder.record(h.entityType, h.entityId), tx.appendHistory(h)),
+      }
+      const result = await serial(() => db.withTransaction(() => fn(recording)))
+      const change = recorder.change()
+      listeners.forEach(l => l(change))
       return result
     },
     async getAll<T>(type: EntityType) {

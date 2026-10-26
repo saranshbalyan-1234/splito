@@ -1,7 +1,7 @@
 import {type IDBPDatabase, type IDBPTransaction, wrap} from 'idb'
 
 import {decode, encode} from './codec'
-import type {Store, Tx} from './store'
+import {changeFromJson, changeRecorder, changeToJson, type Store, type StoreChange, type Tx} from './store'
 import type {Entity, EntityType, HistoryRow, OutboxOp} from './types'
 
 const STORES = ['entities', 'history', 'outbox'] as const
@@ -26,20 +26,23 @@ export async function openIdbStore(name: string, factory: IDBFactory = indexedDB
   }
   const db = (await wrap(req)) as IDBPDatabase
 
-  const listeners = new Set<() => void>()
-  const notify = () => listeners.forEach(l => l())
+  const listeners = new Set<(change: StoreChange) => void>()
+  const notify = (change: StoreChange) => listeners.forEach(l => l(change))
   const channel = typeof BroadcastChannel === 'undefined' ? null : new BroadcastChannel(CHANNEL + ':' + name)
-  if (channel) channel.onmessage = notify
+  // Another tab's notice; an older build posts a bare string, which reads as 'unknown'.
+  if (channel) channel.onmessage = (e: MessageEvent) => notify(changeFromJson(e.data))
 
-  const makeTx = (t: IDBPTransaction<unknown, Stores, 'readwrite'>): Tx => ({
+  const makeTx = (t: IDBPTransaction<unknown, Stores, 'readwrite'>, recorder: ReturnType<typeof changeRecorder>): Tx => ({
     async get<T>(type: EntityType, id: string) {
       const r = (await t.objectStore('entities').get([type, id])) as EntityRec | undefined
       return r ? (toEntity(r) as Entity<T>) : undefined
     },
     async put(e) {
+      recorder.record(e.type, e.id)
       await t.objectStore('entities').put({...e, data: encode(e.data)} satisfies EntityRec)
     },
     async appendHistory(h) {
+      recorder.record(h.entityType, h.entityId)
       await t.objectStore('history').add({...h, data: encode(h.data)} satisfies HistoryRec)
     },
     async enqueue({seq: _seq, ...o}) {
@@ -53,9 +56,10 @@ export async function openIdbStore(name: string, factory: IDBFactory = indexedDB
       const t = db.transaction(STORES, 'readwrite')
       // Observe `done` now so an abort never surfaces as an unhandled rejection.
       const done = t.done.then(() => true, () => false)
+      const recorder = changeRecorder()
       let result
       try {
-        result = await fn(makeTx(t))
+        result = await fn(makeTx(t, recorder))
       } catch (e) {
         try {
           t.abort()
@@ -66,8 +70,9 @@ export async function openIdbStore(name: string, factory: IDBFactory = indexedDB
         throw e
       }
       if (!(await done)) throw new Error('IndexedDB transaction aborted')
-      notify()
-      channel?.postMessage('changed')
+      const change = recorder.change()
+      notify(change)
+      channel?.postMessage(changeToJson(change))
       return result
     },
     async getAll<T>(type: EntityType) {

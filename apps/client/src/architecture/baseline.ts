@@ -64,13 +64,9 @@ export const BASELINE: Record<RuleName, Record<string, number>> = {
   persistenceOutsideSync: {},
   storeAccess: {
     'apps/client/src/App.tsx': 1,
-    'apps/client/src/components/activity/useActivityFeed.ts': 1,
     'apps/client/src/components/settings/PrefSection.tsx': 2,
-    'apps/client/src/components/split/useExpense.ts': 2,
-    'apps/client/src/motion/useShouldReduceMotion.ts': 1,
     'apps/client/src/screens/Settings/SettingsSection.tsx': 2,
     'apps/client/src/screens/Settings/index.tsx': 2,
-    'apps/client/src/state/preferences/mirror.tsx': 1,
   },
   attribution: {},
 }

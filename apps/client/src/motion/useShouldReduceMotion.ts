@@ -1,8 +1,9 @@
 import {useSyncExternalStore} from 'react'
-import {getPref, PREFS, type Store} from '@splito/sync'
+import {PREFS, prefFrom, type Store} from '@splito/sync'
 
 import {useA11y} from '#/state/a11y'
 import {useStore} from '#/data/hooks'
+import {entitiesQuery, projectionFor} from '#/data/projections'
 
 type Source = {
   value: string
@@ -13,7 +14,7 @@ type Source = {
 const sources = new WeakMap<Store, Source>()
 
 /*
- * One pref read per store commit for the whole app, not one per animated
+ * One motion value for the whole app, not one subscription per animated
  * component (a list of PressableScale rows would otherwise multiply it).
  * ponytail: the store subscription lives as long as the store; add an
  * unsubscribe if stores ever get swapped at runtime (account switch).
@@ -30,14 +31,14 @@ function motionSource(store: Store): Source {
       return () => listeners.delete(fn)
     },
   }
-  const load = () =>
-    void getPref(store, 'motion').then(v => {
-      if (v === src.value) return
-      src.value = v
-      listeners.forEach(fn => fn())
-    })
-  load()
-  store.subscribe(load)
+  // Reads the shared preference projection: no store read of its own.
+  const prefs = projectionFor(store, entitiesQuery<{value: unknown}>('preference'))
+  prefs.subscribe(() => {
+    const v = prefFrom(prefs.get() ?? [], 'motion')
+    if (v === src.value) return
+    src.value = v
+    listeners.forEach(fn => fn())
+  })
   sources.set(store, src)
   return src
 }

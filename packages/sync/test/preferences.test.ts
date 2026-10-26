@@ -1,6 +1,6 @@
 import {beforeEach, expect, test} from 'bun:test'
 
-import {DEFAULT_CATEGORIES, getPref, PREFS, resetAllPrefs, resetPref, setPref} from '../src/preferences'
+import {DEFAULT_CATEGORIES, getPref, type PrefKey, prefFrom, PREFS, resetAllPrefs, resetPref, setPref} from '../src/preferences'
 import {openSqlStore} from '../src/sqlStore'
 import type {Store} from '../src/store'
 import type {MutationCtx} from '../src/types'
@@ -120,4 +120,23 @@ test('analytics opens on this year as charts; both are choices with a reset', as
   await expect(setPref(s, ctx, 'analyticsPeriod', 'decade' as never)).rejects.toThrow('INVALID_PREF')
   await resetPref(s, ctx, 'analyticsView')
   expect(await getPref(s, 'analyticsView')).toBe('charts')
+})
+
+test('prefFrom reads a value from loaded preference rows exactly as getPref reads the store', async () => {
+  const keys = Object.keys(PREFS) as PrefKey[]
+  const same = async () => {
+    const rows = await s.getAll<{value: unknown}>('preference')
+    for (const k of keys) expect(prefFrom(rows, k)).toEqual(await getPref(s, k))
+  }
+  await same()
+  await setPref(s, ctx, 'tabs', ['groups', 'people', 'analytics', 'activity'])
+  await setPref(s, ctx, 'homeTab', 'groups')
+  await setPref(s, ctx, 'accent', '#7c3aed')
+  await same()
+  await resetPref(s, ctx, 'accent')
+  await same()
+  // A stored home tab the tab list no longer holds falls back to the first tab.
+  await setPref(s, ctx, 'tabs', ['people', 'groups', 'analytics'])
+  await same()
+  expect(prefFrom([], 'defaultCurrency')).toBe('INR')
 })

@@ -1,6 +1,6 @@
 import {describe, expect, test} from 'bun:test'
 
-import type {Store} from '../src/store'
+import {type Store, type StoreChange, touches} from '../src/store'
 import type {Entity, OutboxOp} from '../src/types'
 
 export const ent = (type: Entity['type'], id: string, data: unknown = {n: 1n}): Entity => ({type, id, data, version: 1, deleted: false, updatedAt: 1})
@@ -106,6 +106,31 @@ export function runStoreContract(name: string, open: () => Promise<Store>, reope
       off()
       await s.transaction(async tx => tx.put(ent('person', 'c')))
       expect(calls).toBe(1)
+      await s.close()
+    })
+
+    test('the change notice names the entity types and ids the transaction touched', async () => {
+      const s = await open()
+      const changes: StoreChange[] = []
+      const off = s.subscribe(c => changes.push(c))
+      await s.transaction(async tx => {
+        await tx.put(ent('expense', 'e1'))
+        await tx.appendHistory({entityType: 'expense', entityId: 'e1', version: 1, data: {}, deleted: false, at: 1, actor: 'me'})
+        await tx.put(ent('person', 'p1'))
+      })
+      await s.transaction(async tx => tx.put(ent('preference', 'theme')))
+      // A transaction that writes no entity (only the outbox) still notifies, touching nothing.
+      await s.transaction(async tx => tx.enqueue(op('o9')))
+      off()
+      expect(changes).toHaveLength(3)
+      const [first, second, third] = changes
+      expect(touches(first!, 'expense', 'e1')).toBe(true)
+      expect(touches(first!, 'person')).toBe(true)
+      expect(touches(first!, 'expense', 'e2')).toBe(false)
+      expect(touches(first!, 'preference')).toBe(false)
+      expect(touches(second!, 'preference', 'theme')).toBe(true)
+      expect(touches(second!, 'expense')).toBe(false)
+      expect(touches(third!, 'expense')).toBe(false)
       await s.close()
     })
 
