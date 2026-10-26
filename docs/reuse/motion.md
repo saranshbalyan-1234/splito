@@ -32,14 +32,14 @@ Pinned sources:
 
 ## Original Splito work (no upstream)
 
-- `apps/client/scripts/brand.ts` and every PNG/SVG it writes: `apps/client/assets/brand/*.png`, `apps/client/public/*.png`, `apps/client/public/icons/*.png`, `apps/client/public/splash-mark*.svg`, `apps/client/public/manifest.json`. All are rendered from the four approved mark files (`apps/client/assets/brand/mark.svg`, `mark-white.svg`, `mark-dark.svg`, `mark-black.svg`), placed as-is; one-colour targets use `mark-dark.svg` as a luminance mask so the features stay knocked out.
-- `apps/client/scripts/lottie.ts` and `apps/client/assets/lottie/*.json`: hand-built Lottie JSON, with `meta.g = "splito/scripts/lottie.ts"`. Each animation ships as `<name>.json` (blue and white) and `<name>-dark.json` (white and black). The `loading` animation draws the cat from `mark.svg`'s own paths.
+- `apps/client/scripts/brand.ts` and every PNG/SVG it writes: `apps/client/assets/brand/*.png`, `apps/client/public/*.png`, `apps/client/public/icons/*.png`, `apps/client/public/splash-mark*.svg`, `apps/client/public/manifest.json`. All are rendered from the owner-provided mark `assets-owner/logo-owner-provided.svg` (owner rule 21: always blue `#1185fe`, white on blue tiles and for one-colour targets). That mark is Bluesky's butterfly, a Bluesky trademark, chosen by the owner for development only; replace the file and re-run `pnpm brand` before any public build.
+- `apps/client/scripts/lottie.ts` and `apps/client/assets/lottie/*.json`: hand-built Lottie JSON, with `meta.g = "splito/scripts/lottie.ts"`. Each animation ships as `<name>.json` (blue and white) and `<name>-dark.json` (white and black). The `loading` animation draws the Lucide cat, whose paths now live in `scripts/lottie.ts` (it still shows the cat, not the owner-provided mark).
 
 ## Third-party artwork
 
 | Source | Splito path | Modification | License |
 |---|---|---|---|
-| Lucide `cat` icon (lucide-static v1.61.0) | `apps/client/assets/brand/mark*.svg`, `apps/client/src/components/brand/Logo.tsx`, `loading` in `apps/client/scripts/lottie.ts` | Filled, recoloured (blue and white, or black and white), eyes and nose knocked out. | ISC (`LICENSES/lucide.txt`) |
+| Lucide `cat` icon (lucide-static v1.61.0) | `loading` in `apps/client/scripts/lottie.ts` | Filled, recoloured, eyes and nose knocked out. | ISC (`LICENSES/lucide.txt`) |
 - `apps/client/src/motion/amountSteps.ts`, `AnimatedAmount/`, `Shimmer.tsx`, `useShouldReduceMotion.ts`, `listAnimations.ts`.
 
 ## Not copied (license or trademark)

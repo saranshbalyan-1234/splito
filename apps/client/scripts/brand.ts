@@ -1,16 +1,10 @@
 /*
  * Renders every Splito brand raster (app icons, splash, favicons, PWA icons)
- * from the four approved mark files in assets/brand, with Playwright's
- * Chrome. The marks are placed as-is, never redrawn or recoloured here:
- *
- *   mark.svg        blue cat, white features   light backgrounds
- *   mark-white.svg  white cat, blue features   blue tiles
- *   mark-dark.svg   white cat, black features  dark backgrounds
- *   mark-black.svg  black cat, white features  monochrome / print
- *
- * One-colour targets (Android monochrome, notification, iOS tinted) use
- * mark-dark.svg as a luminance mask, so the eyes and nose stay knocked out.
- * Owner rule: blue and white, or black and white - never blue on dark.
+ * from the owner-provided mark, assets-owner/logo-owner-provided.svg (one
+ * path, viewBox 0 0 600 535), with Playwright's Chrome. Owner rule 21: that
+ * mark is Bluesky's butterfly, a Bluesky trademark, chosen by the owner for
+ * development only - replace the file before any public build and re-run.
+ * The mark is always blue (#1185fe); on blue tiles it is white.
  *
  *   node scripts/brand.ts [previewDir]
  *
@@ -24,21 +18,25 @@ import {fileURLToPath} from 'node:url'
 import {chromium, type Page} from '@playwright/test'
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..')
-const BRAND = join(ROOT, 'assets/brand')
 const PUBLIC = join(ROOT, 'public')
 
-/** Bluesky ALF palette primary_500, the brand blue. */
-const BLUE = '#006AFF'
+/** The owner-provided mark's colour (owner rule 21). */
+const BLUE = '#1185fe'
 const WHITE = '#FFFFFF'
 const BLACK = '#000000'
 
-const MARKS = {
-  blue: readFileSync(join(BRAND, 'mark.svg'), 'utf8'),
-  white: readFileSync(join(BRAND, 'mark-white.svg'), 'utf8'),
-  dark: readFileSync(join(BRAND, 'mark-dark.svg'), 'utf8'),
-  black: readFileSync(join(BRAND, 'mark-black.svg'), 'utf8'),
+const SOURCE = readFileSync(
+  join(ROOT, '../../assets-owner/logo-owner-provided.svg'),
+  'utf8',
+)
+const MARK_PATH = SOURCE.match(/<path d="([^"]+)"/)![1]!
+const VIEWBOX = '0 0 600 535'
+function markSvg(fill: string) {
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${VIEWBOX}"><path d="${MARK_PATH}" fill="${fill}"/></svg>`
 }
-type Mark = keyof typeof MARKS | {mono: string}
+/* Blue everywhere; white only on the blue tiles and for one-colour (alpha-only) targets. */
+const MARKS = {blue: markSvg(BLUE), white: markSvg(WHITE)}
+type Mark = keyof typeof MARKS
 
 type Asset = {
   out: string
@@ -73,15 +71,17 @@ const ASSETS: Asset[] = [
   {
     out: 'assets/brand/icon-dark.png',
     size: 1024,
-    mark: 'dark',
+    mark: 'blue',
     scale: ICON,
     bg: BLACK,
   },
+  /* iOS tints the grayscale glyph itself. */
   {
     out: 'assets/brand/icon-tinted.png',
     size: 1024,
-    mark: {mono: WHITE},
+    mark: 'white',
     scale: ICON,
+    bg: BLACK,
   },
   {
     out: 'assets/brand/adaptive-foreground.png',
@@ -100,7 +100,7 @@ const ASSETS: Asset[] = [
   {
     out: 'assets/brand/adaptive-monochrome.png',
     size: 1024,
-    mark: {mono: WHITE},
+    mark: 'white',
     scale: (ICON * 2) / 3,
     safe: 66 / 108,
   },
@@ -108,7 +108,7 @@ const ASSETS: Asset[] = [
   {
     out: 'assets/brand/notification-icon.png',
     size: 96,
-    mark: {mono: WHITE},
+    mark: 'white',
     scale: 20 / 24,
   },
   {
@@ -121,7 +121,7 @@ const ASSETS: Asset[] = [
   {
     out: 'assets/brand/splash-mark-dark.png',
     size: 600,
-    mark: 'dark',
+    mark: 'blue',
     scale: 0.46,
     safe: 2 / 3,
   },
@@ -129,6 +129,7 @@ const ASSETS: Asset[] = [
   {out: 'public/favicon-16.png', size: 16, mark: 'blue', scale: 1},
   {out: 'public/favicon-32.png', size: 32, mark: 'blue', scale: 1},
   {out: 'public/favicon-48.png', size: 48, mark: 'blue', scale: 1},
+  {out: 'public/favicon-64.png', size: 64, mark: 'blue', scale: 1},
   /* iOS rounds the corners itself, so the tile is full-bleed. */
   {
     out: 'public/apple-touch-icon.png',
@@ -195,7 +196,7 @@ const MANIFEST = {
   ],
 }
 
-/** Visible extent of the mark in its 24-unit viewBox: tight box plus the farthest point from the box centre. */
+/** Visible extent of the mark in its viewBox: tight box plus the farthest point from the box centre. */
 type Geometry = {
   x: number
   y: number
@@ -226,12 +227,7 @@ function svg(
   if (safe && g.radius * k > (safe * size) / 2 + 1e-9)
     throw new Error(`${out}: mark leaves the ${safe.toFixed(3)} safe circle`)
   const c = size / 2
-  let body = ''
-  if (mark && typeof mark === 'string') body = place(MARKS[mark], g, k, c, c)
-  else if (mark)
-    body =
-      `<mask id="knockout" maskUnits="userSpaceOnUse" x="0" y="0" width="${size}" height="${size}">${place(MARKS.dark, g, k, c, c)}</mask>` +
-      `<rect width="${size}" height="${size}" fill="${mark.mono}" mask="url(#knockout)"/>`
+  const body = mark ? place(MARKS[mark], g, k, c, c) : ''
   return (
     `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 ${size} ${size}">` +
     (bg
@@ -262,11 +258,10 @@ async function render(
   })
 }
 
-/** Measures the head outline of mark.svg in the browser; the round 2-unit stroke adds 1 unit all round. */
+/** Measures the mark's path in the browser. */
 async function measureMark(page: Page): Promise<Geometry> {
-  const head = MARKS.blue.match(/<path d="([^"]+)"/)![1]!
   await page.setContent(
-    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path id="h" d="${head}"/></svg>`,
+    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${VIEWBOX}"><path id="h" d="${MARK_PATH}"/></svg>`,
   )
   return page.evaluate(() => {
     const path = document.getElementById('h') as unknown as SVGPathElement
@@ -278,13 +273,7 @@ async function measureMark(page: Page): Promise<Geometry> {
       const p = path.getPointAtLength((i / 2000) * length)
       radius = Math.max(radius, Math.hypot(p.x - cx, p.y - cy))
     }
-    return {
-      x: b.x - 1,
-      y: b.y - 1,
-      width: b.width + 2,
-      height: b.height + 2,
-      radius: radius + 1,
-    }
+    return {x: b.x, y: b.y, width: b.width, height: b.height, radius}
   })
 }
 
@@ -313,9 +302,9 @@ function previewHtml(png: Record<string, Buffer>) {
     `<div style="display:flex;gap:14px;padding:14px;border-radius:16px;background:${bg}">${img('assets/brand/icon.png', 'width:60px;border-radius:13px')}<div style="width:60px;height:60px;border-radius:13px;background:#fff3"></div><div style="width:60px;height:60px;border-radius:13px;background:#0003"></div></div>`
   return `<!doctype html><html><body style="margin:0;padding:24px;background:#fff;font:14px system-ui;width:1180px">
 <h2 style="margin:0 0 4px">Splito brand kit</h2>
-<p style="margin:0 0 14px;color:#555">Rendered by scripts/brand.ts from assets/brand/mark*.svg. Rule: blue and white, or black and white - never blue on dark.</p>
+<p style="margin:0 0 14px;color:#555">Rendered by scripts/brand.ts from assets-owner/logo-owner-provided.svg (owner rule 21: always blue, white on blue tiles; dev-only, Bluesky trademark).</p>
 <div style="display:flex;flex-wrap:wrap;gap:12px">
-${cell('Source marks: mark / mark-white / mark-dark / mark-black', file('blue', WHITE) + file('white', BLUE) + file('dark', BLACK) + file('black', WHITE))}
+${cell('Source mark: on light / on blue tile / on dark', file('blue', WHITE) + file('white', BLUE) + file('blue', BLACK))}
 ${cell('iOS light', img('assets/brand/icon.png', ios), 'linear-gradient(#c9d6ff,#e2e2e2)')}
 ${cell('iOS dark', img('assets/brand/icon-dark.png', ios), '#0b0b0d', '#ddd')}
 ${cell('iOS tinted (simulated)', `<div style="${ios};background:linear-gradient(#1d2a3d,#0d1420);display:flex">${img('assets/brand/icon-tinted.png', `${ios};filter:sepia(1) hue-rotate(170deg) saturate(3)`)}</div>`, '#0b0b0d', '#ddd')}
@@ -358,7 +347,7 @@ async function main() {
   /* Web launch mark, shown by public/index.html until React's first commit replaces #root. */
   for (const [name, mark] of [
     ['splash-mark.svg', 'blue'],
-    ['splash-mark-dark.svg', 'dark'],
+    ['splash-mark-dark.svg', 'blue'],
   ] as const) {
     writeFileSync(
       join(PUBLIC, name),

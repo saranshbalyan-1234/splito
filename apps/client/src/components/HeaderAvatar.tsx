@@ -5,7 +5,7 @@ import {useLingui} from '@lingui/react/macro'
 import {useSetDrawerOpen} from '#/state/shell'
 import {useMe} from '#/data/hooks'
 import {UserAvatar} from '#/view/com/util/UserAvatar'
-import {atoms as a} from '#/alf'
+import {atoms as a, useBreakpoints} from '#/alf'
 import {Button} from '#/components/Button'
 import {HEADER_SLOT_SIZE} from '#/components/Layout/const'
 import * as Layout from '#/components/Layout'
@@ -22,6 +22,12 @@ export function HeaderAvatar() {
   const {t: l} = useLingui()
   const me = useMe()
   const setDrawerOpen = useSetDrawerOpen()
+  const {gtMobile} = useBreakpoints()
+
+  /* With the sidebar showing, its account card opens the drawer (owner rule 13); the slot keeps its width so the title stays centred. */
+  if (gtMobile) {
+    return <Layout.Header.Slot />
+  }
 
   const openDrawer = () => {
     Keyboard.dismiss()
