@@ -31,6 +31,7 @@ import {type Theme, useBreakpoints, useTheme} from '#/alf'
 import {IS_ANDROID, IS_IPAD} from '#/env'
 import {usePref} from '#/data/hooks'
 import {useShouldReduceMotion} from '#/motion/useShouldReduceMotion'
+import {DevTour, navigationRef} from '#/navigation/DevTour'
 import {linking} from '#/navigation/linking'
 import {AddExpenseScreen} from '#/screens/AddExpense'
 import {AddFriendScreen} from '#/screens/AddFriend'
@@ -300,6 +301,7 @@ export function RoutesContainer({children}: React.PropsWithChildren<{}>) {
   const base = t.scheme === 'dark' ? DarkTheme : DefaultTheme
   return (
     <NavigationContainer
+      ref={navigationRef}
       linking={linking}
       theme={{
         ...base,
@@ -312,6 +314,7 @@ export function RoutesContainer({children}: React.PropsWithChildren<{}>) {
         },
       }}>
       {children}
+      <DevTour />
     </NavigationContainer>
   )
 }
