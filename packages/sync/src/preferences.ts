@@ -59,6 +59,19 @@ function def<T>(key: string, group: PrefGroup, scope: PrefDef<T>['scope'], label
   return {key, group, scope, label, default: dflt, validate}
 }
 
+/** Invite-link limits (26.18): uses per link, and how long it works. */
+export type InviteMaxUses = 1 | 5 | 25 | 'unlimited'
+export type InviteExpiry = '24h' | '7d' | '30d' | 'never'
+const MAX_USES: InviteMaxUses[] = [1, 5, 25, 'unlimited']
+
+/** The expiry choice as a lifetime in ms (null: never). */
+export const INVITE_EXPIRY_MS: Record<InviteExpiry, number | null> = {
+  '24h': 86_400_000,
+  '7d': 7 * 86_400_000,
+  '30d': 30 * 86_400_000,
+  never: null,
+}
+
 export const PREFS = {
   theme: def('theme', 'appearance', 'account', 'Theme', 'system', oneOf('system', 'light', 'dark')),
   /** Which dark theme `dark` (and `system` at night) uses: Bluesky's dim or its blackish dark. */
@@ -134,6 +147,12 @@ export const PREFS = {
   sendDiagnostics: def('sendDiagnostics', 'privacy', 'device', 'Send diagnostics', true, isBool),
   /** How long Recently deleted lists a deleted expense, payment or write-off (F-1203). */
   'history.binDays': def('history.binDays', 'history', 'account', 'Keep deleted items for', 30, oneOf(7, 30, 90, 365)),
+  // Privacy: the directory server enforces these; saved now, applied once you sign in.
+  findableByEmailPhone: def('findableByEmailPhone', 'privacy', 'account', 'Let people find me by email or phone', true, isBool),
+  friendRequestsFrom: def('friendRequestsFrom', 'privacy', 'account', 'Who can send me friend requests', 'everyone', oneOf('everyone', 'link-only')),
+  'inviteMaxUses.friend': def<InviteMaxUses>('inviteMaxUses.friend', 'privacy', 'account', 'Friend invite link uses', 1, oneOf(...MAX_USES)),
+  'inviteMaxUses.group': def<InviteMaxUses>('inviteMaxUses.group', 'privacy', 'account', 'Group invite link uses', 25, oneOf(...MAX_USES)),
+  inviteExpiry: def<InviteExpiry>('inviteExpiry', 'privacy', 'account', 'Invite links expire after', '7d', oneOf('24h', '7d', '30d', 'never')),
 } as const
 
 export type PrefKey = keyof typeof PREFS

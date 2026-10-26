@@ -1,6 +1,6 @@
 import {beforeEach, expect, test} from 'bun:test'
 
-import {DEFAULT_CATEGORIES, getPref, type PrefKey, prefFrom, PREFS, resetAllPrefs, resetPref, setPref} from '../src/preferences'
+import {DEFAULT_CATEGORIES, getPref, INVITE_EXPIRY_MS, type PrefKey, prefFrom, PREFS, resetAllPrefs, resetPref, setPref} from '../src/preferences'
 import {openSqlStore} from '../src/sqlStore'
 import type {Store} from '../src/store'
 import type {MutationCtx} from '../src/types'
@@ -162,4 +162,18 @@ test('money input, cash rounding and money colours (F-310, F-402, F-1801)', asyn
   await expect(setPref(s, ctx, 'split.roundTo', 3 as never)).rejects.toThrow('INVALID_PREF')
   await expect(setPref(s, ctx, 'moneyPalette', 'red' as never)).rejects.toThrow('INVALID_PREF')
   expect(PREFS['amount.keypad'].scope).toBe('device')
+})
+
+test('privacy and invite-link defaults (26.18)', async () => {
+  expect(await getPref(s, 'findableByEmailPhone')).toBe(true)
+  expect(await getPref(s, 'friendRequestsFrom')).toBe('everyone')
+  expect(await getPref(s, 'inviteMaxUses.friend')).toBe(1)
+  expect(await getPref(s, 'inviteMaxUses.group')).toBe(25)
+  expect(await getPref(s, 'inviteExpiry')).toBe('7d')
+  await setPref(s, ctx, 'inviteMaxUses.group', 'unlimited')
+  expect(await getPref(s, 'inviteMaxUses.group')).toBe('unlimited')
+  await expect(setPref(s, ctx, 'inviteMaxUses.friend', 7 as never)).rejects.toThrow('INVALID_PREF')
+  await expect(setPref(s, ctx, 'inviteExpiry', '1y' as never)).rejects.toThrow('INVALID_PREF')
+  expect(PREFS.findableByEmailPhone.group).toBe('privacy')
+  expect(INVITE_EXPIRY_MS['7d']).toBe(7 * 86_400_000)
 })

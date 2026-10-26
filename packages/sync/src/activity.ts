@@ -1,3 +1,4 @@
+import type {FriendRequest} from './friends'
 import type {Expense, Group, Person, Repayment, WriteOff} from './mutations'
 import {type Store, type StoreChange, touches} from './store'
 import type {Entity, EntityType, HistoryRow} from './types'
@@ -21,11 +22,17 @@ export type ActivityEvent = Base &
     | {entityType: 'group'; kind: 'group.created' | 'group.edited' | 'group.archived' | 'group.deleted'; data: Group; prev?: Group}
     | {entityType: 'repayment'; kind: 'repayment.recorded' | 'repayment.edited' | 'repayment.removed'; data: Repayment; prev?: Repayment}
     | {entityType: 'writeoff'; kind: 'writeoff.recorded' | 'writeoff.removed'; data: WriteOff; prev?: WriteOff}
+    | {
+        entityType: 'friendRequest'
+        kind: 'friendRequest.sent' | 'friendRequest.received' | 'friendRequest.accepted'
+        data: FriendRequest
+        prev?: FriendRequest
+      }
   )
 
 export type ActivityKind = ActivityEvent['kind']
 
-const FEED_TYPES = ['person', 'group', 'expense', 'repayment', 'writeoff'] as const satisfies EntityType[]
+const FEED_TYPES = ['person', 'group', 'expense', 'repayment', 'writeoff', 'friendRequest'] as const satisfies EntityType[]
 
 /** What a history row means, given the version before it. Undefined rows stay out of the feed. */
 function kindOf(row: HistoryRow, prev: HistoryRow | undefined): ActivityKind | undefined {
@@ -38,6 +45,8 @@ function kindOf(row: HistoryRow, prev: HistoryRow | undefined): ActivityKind | u
     case 'person':
       // Your own profile row is setup, not activity; renames aren't shown.
       if ((row.data as Person).isMe) return undefined
+      // A friend who arrives by accepting is the request's "accepted" row, not a second one.
+      if (!prev && (row.data as Person).accountId) return undefined
       return row.deleted ? 'person.removed' : isNew ? 'person.added' : undefined
     case 'group':
       if (row.deleted) return 'group.deleted'
@@ -47,6 +56,12 @@ function kindOf(row: HistoryRow, prev: HistoryRow | undefined): ActivityKind | u
       return row.deleted ? 'repayment.removed' : isNew ? 'repayment.recorded' : 'repayment.edited'
     case 'writeoff':
       return row.deleted ? 'writeoff.removed' : 'writeoff.recorded'
+    case 'friendRequest': {
+      const r = row.data as FriendRequest
+      if (!prev) return r.direction === 'incoming' ? 'friendRequest.received' : 'friendRequest.sent'
+      // Resends, cancels and declines are housekeeping; only the moment you become friends is news.
+      return r.status === 'accepted' && (prev.data as FriendRequest).status !== 'accepted' ? 'friendRequest.accepted' : undefined
+    }
     default:
       // Preferences are settings, not activity.
       return undefined
