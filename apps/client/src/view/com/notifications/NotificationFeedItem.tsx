@@ -175,10 +175,12 @@ let NotificationFeedItem = ({
           <TimeElapsed timestamp={timestamp}>
             {({timeElapsed}) => (
               <>
-                {/* make sure there's whitespace around the middot -sfn */}
+                {/*
+                 * Whitespace around the middot, non-breaking so the time
+                 * wraps with the word before it instead of on its own line.
+                 */}
                 <Text style={[a.text_md, t.atoms.text_contrast_medium]}>
-                  {' '}
-                  &middot;{' '}
+                  {' '}&middot;{' '}
                 </Text>
                 <Text
                   style={[a.text_md, t.atoms.text_contrast_medium]}

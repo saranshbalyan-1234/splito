@@ -36,9 +36,23 @@ export function seedDemoIfRequested(store: Store, ctx: MutationCtx) {
 
 let seeding: Promise<void> | undefined
 
-async function seed(store: Store, ctx: MutationCtx) {
+const HOUR = 60 * 60 * 1000
+
+async function seed(store: Store, realCtx: MutationCtx) {
   const groups = await store.getAll<Group>('group')
   if (groups.some(g => g.data.name === DEMO_GROUPS.goa.name)) return
+
+  /*
+   * Spread the writes over the last four days, oldest first and 2-4h apart,
+   * so Notifications shows real relative times in a stable order. The clamp
+   * keeps every write in the past, so anything you do afterwards sorts above.
+   */
+  let at = realCtx.now() - 100 * HOUR
+  let step = 0
+  const ctx: MutationCtx = {
+    ...realCtx,
+    now: () => Math.min((at += (2 + (step++ % 3)) * HOUR), realCtx.now()),
+  }
 
   const ids = {me: ctx.actor} as Record<DemoPersonKey, string>
   for (const [key, name] of Object.entries(DEMO_FRIENDS)) {

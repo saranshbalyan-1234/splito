@@ -19,6 +19,7 @@ import {Link} from '#/view/com/util/Link'
 import {PressableWithHover} from '#/view/com/util/PressableWithHover'
 import {
   atoms as a,
+  platform,
   useBreakpoints,
   useLayoutBreakpoints,
   useTheme,
@@ -44,6 +45,7 @@ import {
   SettingsGear2_Filled_Corner0_Rounded as SettingsFilledIcon,
   SettingsGear2_Stroke2_Corner0_Rounded as SettingsIcon,
 } from '#/components/icons/Settings'
+import {HEADER_HEIGHT} from '#/components/Layout/const'
 import {Text} from '#/components/Typography'
 import {useAnalytics} from '#/analytics'
 import {IS_NATIVE} from '#/env'
@@ -79,7 +81,8 @@ export function useLeftNavWidth() {
 
 /*
  * The Splito logo heads the sidebar (owner directive). It returns to People
- * and is inactive on People (spec: App shell).
+ * and is inactive on People (spec: App shell). Its row is the header's
+ * height from the top edge, so the logo sits on the header's centre line.
  */
 function LogoCard({minimal}: {minimal: boolean}) {
   const {t: l} = useLingui()
@@ -92,7 +95,16 @@ function LogoCard({minimal}: {minimal: boolean}) {
   const isHome = isTab(currentRouteName, 'People')
 
   return (
-    <View style={[a.pb_sm, !minimal && [a.w_full, a.align_start]]}>
+    <View
+      style={[
+        a.justify_center,
+        a.mb_sm,
+        platform({
+          native: {height: HEADER_HEIGHT.native},
+          web: {height: HEADER_HEIGHT.web},
+        }),
+        !minimal && [a.w_full, a.align_start],
+      ]}>
       <Link
         testID="logo"
         href="/"
@@ -385,9 +397,10 @@ export function DesktopLeftNav({
         t.atoms.border_contrast_low,
         t.atoms.bg,
         styles.leftNav,
+        // No top padding: the logo row lines up with the header row.
         IS_NATIVE
-          ? [a.h_full, {paddingTop: insets.top + 16, paddingBottom: insets.bottom + 16}]
-          : [a.fixed, a.bottom_0],
+          ? [a.h_full, {paddingTop: insets.top, paddingBottom: insets.bottom + 16}]
+          : [a.fixed, a.bottom_0, a.pt_0],
         leftNavMinimal && [
           {width: LEFT_NAV_MINIMAL_WIDTH},
           a.align_center,

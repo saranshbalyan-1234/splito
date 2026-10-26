@@ -121,7 +121,7 @@ export function PersonRow({
           <View style={[a.flex_1, a.gap_2xs]}>
             {/* Phones: the balance shares the name's line so the chips get the full width. */}
             <View
-              style={[a.flex_row, a.align_center, a.justify_between, a.gap_md]}>
+              style={[a.flex_row, a.align_start, a.justify_between, a.gap_md]}>
               <View style={[a.flex_1]}>
                 <ProfileCard.Name profile={row} />
               </View>

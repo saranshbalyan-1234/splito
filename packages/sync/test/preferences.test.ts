@@ -48,6 +48,16 @@ test('tabs: any non-empty set of known tabs, no duplicates; Profile is not a tab
   await expect(setPref(s, ctx, 'tabs', ['groups', 'activity'] as never)).rejects.toThrow('INVALID_PREF')
 })
 
+test("a stored 'activity' tab is dropped on read, the rest of the order kept", async () => {
+  // Written by a build that still had the Activity tab, so setPref can't make it.
+  await s.transaction(async tx => {
+    await tx.put({type: 'preference', id: 'tabs', data: {value: ['groups', 'activity', 'people']}, version: 1, deleted: false, updatedAt: 1})
+    await tx.put({type: 'preference', id: 'homeTab', data: {value: 'activity'}, version: 1, deleted: false, updatedAt: 1})
+  })
+  expect(await getPref(s, 'tabs')).toEqual(['groups', 'people'])
+  expect(await getPref(s, 'homeTab')).toBe('people')
+})
+
 test('home tab must be a visible tab', async () => {
   await setPref(s, ctx, 'tabs', ['groups', 'analytics'])
   expect(await getPref(s, 'homeTab')).toBe('groups')

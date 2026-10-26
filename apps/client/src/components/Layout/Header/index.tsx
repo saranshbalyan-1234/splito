@@ -23,6 +23,7 @@ import {type Props as SVGIconProps} from '#/components/icons/common'
 import {ArrowLeft_Stroke2_Corner0_Rounded as ArrowLeft} from '#/components/icons/Arrow'
 import {
   BUTTON_VISUAL_ALIGNMENT_OFFSET,
+  HEADER_HEIGHT,
   HEADER_SLOT_SIZE,
 } from '#/components/Layout/const'
 import {useHeaderHideTransform} from '#/components/Layout/MainScrollProvider'
@@ -89,8 +90,8 @@ export function Outer({
         a.gap_sm,
         isWithinLeftPanel ? a.px_lg : gutters,
         platform({
-          native: [a.pb_xs, {minHeight: 48}],
-          web: [a.py_xs, {minHeight: 52}],
+          native: [a.pb_xs, {minHeight: HEADER_HEIGHT.native}],
+          web: [a.py_xs, {minHeight: HEADER_HEIGHT.web}],
         }),
         t.atoms.border_contrast_low,
         /* Full width beside the sidebar: no centred column (owner directive). */
@@ -183,6 +184,7 @@ export function ActionButton({
   onPress,
   edge = false,
   disabled = false,
+  hint,
   children,
 }: {
   testID: string
@@ -191,6 +193,8 @@ export function ActionButton({
   onPress: () => void
   edge?: boolean
   disabled?: boolean
+  /** Read after the label, e.g. why the action is disabled. */
+  hint?: string
   /** Drawn over the glyph, e.g. an unread badge. */
   children?: React.ReactElement | null
 }) {
@@ -205,6 +209,7 @@ export function ActionButton({
         shape="round"
         onPress={onPress}
         disabled={disabled}
+        accessibilityHint={hint}
         hitSlop={HEADER_BUTTON_HITSLOP}
         style={[
           edge && {marginLeft: BUTTON_VISUAL_ALIGNMENT_OFFSET},

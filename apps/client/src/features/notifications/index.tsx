@@ -38,8 +38,12 @@ async function loadChanges(store: Store): Promise<Change[]> {
     )
     rows.forEach((row, i) => changes.push({entity, row, prev: rows[i - 1]}))
   }
+  // Writes in the same ms tie on `at`; the id keeps their order stable.
   return changes.sort(
-    (x, y) => y.row.at - x.row.at || y.row.version - x.row.version,
+    (x, y) =>
+      y.row.at - x.row.at ||
+      y.row.version - x.row.version ||
+      x.entity.id.localeCompare(y.entity.id),
   )
 }
 
@@ -98,8 +102,11 @@ export function useNotifications(): ActivityItem[] | undefined {
   }
   const nameOf = (id: string) =>
     id === actor ? l`You` : (names.get(id) ?? l`Someone`)
-  const people = (ids: string[]) =>
-    ids.map(id => ({id, name: names.get(id) ?? ''}))
+  /* As Bluesky's rows: who acted first, then the others involved, never you. */
+  const people = (by: string, ids: string[]) =>
+    [...new Set([by, ...ids])]
+      .filter(id => id !== actor)
+      .map(id => ({id, name: names.get(id) ?? ''}))
 
   return changes.flatMap(({entity, row, prev}): ActivityItem[] => {
     const isFromOthers = row.actor !== actor
@@ -125,7 +132,7 @@ export function useNotifications(): ActivityItem[] | undefined {
           type,
           subject: e.title,
           amount: formatAmount(e.total, e.currency, locale),
-          authors: people(Object.keys(e.shares)),
+          authors: people(row.actor, Object.keys(e.shares)),
         },
       ]
     }
@@ -136,7 +143,7 @@ export function useNotifications(): ActivityItem[] | undefined {
           ...base,
           type: 'group-created',
           subject: g.name,
-          authors: people(g.members.map(m => m.personId)),
+          authors: people(row.actor, g.members.map(m => m.personId)),
         },
       ]
     }
@@ -146,7 +153,7 @@ export function useNotifications(): ActivityItem[] | undefined {
           ...base,
           type: 'person-added',
           subject: (row.data as Person).name,
-          authors: people([entity.id]),
+          authors: people(row.actor, [entity.id]),
         },
       ]
     }

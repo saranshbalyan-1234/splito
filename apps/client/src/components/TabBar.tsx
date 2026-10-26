@@ -9,8 +9,9 @@ import {Text} from '#/components/Typography'
  * Bluesky's feed tab bar: equal-width text tabs with a 3px indicator under
  * the selected one and a hairline beneath. Splito's tab sets are short, so
  * the horizontal scroller and its scroll-into-view are removed and the same
- * bar runs on native. On wide screens the tabs keep Bluesky's 600px column,
- * centred under the centred title.
+ * bar runs on native. Upstream caps the tabs at its 600px centre column;
+ * Splito's content is full width beside the sidebar (owner directive), so
+ * the tabs split that width like the list under them.
  */
 export function TabBar({
   testID,
@@ -101,9 +102,6 @@ const desktopStyles = StyleSheet.create({
   ...shared,
   contentContainer: {
     flexDirection: 'row',
-    width: '100%',
-    maxWidth: 600,
-    alignSelf: 'center',
   },
   item: {
     flexGrow: 1,

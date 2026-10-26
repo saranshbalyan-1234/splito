@@ -17,8 +17,8 @@ export interface PrefDef<T> {
 
 /**
  * Bottom-bar / sidebar destinations. Profile and Settings open from the
- * avatar's drawer; Notifications from the header bell. A stored list that
- * still names the old 'activity' tab fails validation and reads as the default.
+ * avatar's drawer; Notifications from the header bell. Stored values that
+ * still name the old 'activity' tab are upgraded on read (`upgrade`).
  */
 export type TabId = 'people' | 'groups' | 'analytics'
 export type SwipeAction = 'markRead' | 'hide' | 'delete' | 'none'
@@ -105,10 +105,19 @@ export const PREFS = {
 export type PrefKey = keyof typeof PREFS
 export type PrefValue<K extends PrefKey> = (typeof PREFS)[K] extends PrefDef<infer T> ? T : never
 
+/** Values an older build stored that this one renamed or dropped. */
+function upgrade(key: PrefKey, v: unknown): unknown {
+  // The Activity tab became the header bell: keep the rest of a custom order.
+  if (key === 'tabs' && Array.isArray(v)) return v.filter(t => t !== 'activity')
+  if (key === 'homeTab' && v === 'activity') return 'people'
+  return v
+}
+
 async function readRaw<K extends PrefKey>(store: Store, key: K): Promise<PrefValue<K>> {
   const def = PREFS[key] as PrefDef<PrefValue<K>>
   const e = (await store.getAll<{value: unknown}>('preference')).find(p => p.id === key)
-  return e && !e.deleted && def.validate(e.data.value) ? e.data.value : def.default
+  const value = e && !e.deleted ? upgrade(key, e.data.value) : undefined
+  return def.validate(value) ? value : def.default
 }
 
 /** Falls back to the default when unset or invalid. */

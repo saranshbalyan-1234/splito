@@ -39,11 +39,16 @@ export function HeaderBell() {
       edge
       onPress={() => navigation.navigate('Notifications')}>
       {count > 0 ? (
+        /*
+         * Above the glyph (ButtonIcon is z_20), and ringed in the page
+         * background so the pill is cut out of the bell's stroke.
+         */
         <View
           pointerEvents="none"
           style={[
             a.absolute,
-            {top: 0, left: countLabel.length === 1 ? 17 : 14},
+            a.z_30,
+            {top: '-10%', left: countLabel.length === 1 ? 15 : 12},
           ]}>
           <Text
             testID="header-notifications-badge"
@@ -57,10 +62,12 @@ export function HeaderBell() {
               {
                 backgroundColor: t.palette.primary_500,
                 color: t.palette.white,
+                borderWidth: 2,
+                borderColor: t.atoms.bg.backgroundColor,
                 lineHeight: a.text_sm.fontSize,
                 paddingHorizontal: 4,
                 paddingVertical: 1,
-                minWidth: 16,
+                minWidth: 20,
                 fontVariant: ['tabular-nums'],
               },
             ]}>
