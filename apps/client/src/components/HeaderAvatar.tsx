@@ -24,10 +24,8 @@ export function HeaderAvatar() {
   const setDrawerOpen = useSetDrawerOpen()
   const {gtMobile} = useBreakpoints()
 
-  /* With the sidebar showing, its account card opens the drawer (owner rule 13); the slot keeps its width so the title stays centred. */
-  if (gtMobile) {
-    return <Layout.Header.Slot />
-  }
+  /* Owner: no avatar in the sidebar - the header avatar opens the drawer on every width. */
+  void gtMobile
 
   const openDrawer = () => {
     Keyboard.dismiss()

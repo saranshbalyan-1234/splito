@@ -814,7 +814,6 @@ export function DesktopLeftNav({
         ]}>
         <LogoCard minimal={leftNavMinimal} />
         <View style={[a.pt_sm]} />
-        <ProfileCard minimal={leftNavMinimal} />
         <View style={[a.relative, !leftNavMinimal && a.w_full]}>
           <ActiveIndicator layout={selected ? layouts[selected] : undefined} />
           {items.map(item => (
