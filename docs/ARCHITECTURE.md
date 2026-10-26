@@ -539,6 +539,46 @@ The spec's labels are `Saved on this device`, `Waiting for connection`, `Syncing
   and is never merged into a real account or used as a fallback. [Built] `?demo=1` seeds only in dev/e2e
   builds (`data/demo.ts`).
 
+### 9.8 Local database schema (binding; scalability first)
+
+*Why:* "manage the indexeddb properly, a lot of different data is clubbed into a single table"; "the db level
+architecture is very important for scalability". Replaces the v1 layout (one `entities` store holding every
+type keyed by `[type, id]`, read with full scans). Target: 10,000+ expenses, 500 people, 100 groups per device
+with every hot screen reading by index, never by full scan (§ 17 budgets, F-109).
+
+- **One store / table per entity type** (IndexedDB object stores and SQLite tables share names and columns):
+  `people`, `groups`, `group_members`, `expenses`, `expense_parties`, `repayments`, `writeoffs`, `comments`,
+  `friend_requests`, `invite_links`, `feedback`, `preferences`, plus infrastructure `history`, `outbox`,
+  `meta`. A new entity type gets its own store and a migration; nothing is "clubbed" into a shared store.
+- **Every row** carries `id` (UUID), `version`, `createdAt` / `updatedAt` (UTC ms), `deleted` (+ `deletedAt`,
+  `purgedAt`), and for money rows `currency` + amounts as bigint minor units encoded with the codec (§ 9.3);
+  an expense also keeps its `date` (LocalDate in the user's timezone).
+- **Normalised relations, not arrays inside JSON:** group membership lives in `group_members`
+  (`[groupId, personId]`, `joinedAt`, `leftAt`, role); who paid / owes on an expense lives in
+  `expense_parties` (`[expenseId, personId]`, `paid`, `share`, `groupId`, `currency`, `date`). The expense row
+  keeps the split input for editing; `expense_parties` is its derived, indexed projection.
+- **Indexes for every query path** (name them `by<Field>`): people `byName`, `byUpdatedAt`; groups
+  `byUpdatedAt`, `byArchived`; group_members `byPerson`; expenses `byGroupDate` `[groupId, date]`, `byDate`,
+  `byUpdatedAt`, `byDeleted`; expense_parties `byPersonDate` `[personId, date]`, `byGroupPerson`; repayments and
+  writeoffs `byGroup`, `byFrom`, `byTo`, `byDate`; comments `byTarget` `[targetType, targetId]`; friend_requests
+  `byStatus`; history `byEntity` `[type, id]` and `byChangedAt`; outbox `opId` (unique), `byStatus`.
+- **Materialised balance projection** `balances` (`[personId, groupId|'', currency]` -> net minor units),
+  maintained in the SAME transaction as every money write (expense, repayment, write-off, delete, restore) by
+  the sync mutations, so Home, People, Groups and the right column read balances in O(rows shown) instead of
+  re-deriving from the whole ledger; a `rebuildProjections()` maintenance routine recomputes it from source rows
+  and a test asserts projection == recomputation after random operation sequences.
+- **Reads page by cursor** (`[date, id]` or `[updatedAt, id]`) for every list; selectors never `getAll` a money
+  store on a hot path (only maintenance, export and tests may).
+- **One transaction per mutation** spans the entity, its projections, history and outbox (atomic, § 9.3).
+- **Versioned migrations:** `meta.schemaVersion`; IndexedDB `onupgradeneeded` and SQLite `PRAGMA user_version`
+  run ordered, idempotent steps; v1 -> v2 copies rows from `entities` into the per-type stores, builds
+  `group_members`, `expense_parties` and `balances`, then drops `entities`. Each migration has a test that
+  loads a v1 fixture (incl. the large demo set) and checks every row and balance survives exactly.
+- **The Store interface stays the boundary** (§ 1): screens and hooks never touch IndexedDB/SQLite directly;
+  the per-type layout lives behind `packages/sync` (typed accessors per store + index queries).
+- **The server mirrors it:** the Postgres schema (backend batch) uses the same tables, keys and columns so sync is
+  row-to-row.
+
 ---
 
 ## 10. State and service boundaries
@@ -1744,6 +1784,7 @@ Every owner decision, in the order it was made (all 2026-10-26). "Replaced" name
 | 75 | "command + k opens this up" | Cmd/Ctrl+K opens and closes the Search & Ask drawer everywhere (web, hardware keyboards), hint shown on desktop | § 26.3 | "/" or Cmd/Ctrl+K on web only |
 | 76 | "make accept decline like invites sent, on mobile only icon for both, for web complete text with icon" | Requests and Invites sent rows: actions on the right; icon-only on phones, icon + text on desktop | § 26.18 | Accept/Decline text buttons under the name |
 | 77 | "invite link and qr to show once i click on invite people, not outside" | Invite link / QR only inside the Invite people (Add friend) sheet and the group Add members sheet; header overflow entries removed | § 26.18 | Invite link in Home "..." and Group overflow |
+| 78 | "manage the indexeddb properly, a lot of different data is clubbed into a single table"; "the db level architecture is very important for scalability" | Local DB v2: one store per entity type, normalised members/parties, indexes per query, balance projection in-transaction, cursor paging, versioned migrations, Postgres mirrors it | § 9.8 | Single `entities` store with full scans |
 
 New decisions follow § 0 rule 9: rewrite the rule in its topic so only the current truth remains, then add a
 row here.
