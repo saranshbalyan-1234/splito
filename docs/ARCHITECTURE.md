@@ -1498,7 +1498,7 @@ built yet.
   Export CSV. One chart per currency, or converted with the rate labelled. *Why:* "analytics also needed, with
   graphs and all". *Where:* `screens/Analytics`, § 25 "Analytics and export", spec § 4.
 - **One scope control, not a dropdown plus a toggle.** The filter row has a single "scope" chip whose label
-  says what is counted: "Everything" (default), "Non-group only", "Goa trip", "Goa trip + 2", "3 groups",
+  says what is counted: "Everything" (default), "Non-group only", "Goa trip", "Goa trip + 2" (up to 3 groups named), "4 groups" (a count from 4),
   "Non-group + 2 groups". Tapping it opens one sheet (bottom drawer on phones, popup on desktop) titled "Show
   expenses from" with one checklist: an "All" row at the top, then "Non-group expenses" (direct with friends),
   then every group (active first, archived under a fold; search when more than 8), each with its icon; Cancel /
