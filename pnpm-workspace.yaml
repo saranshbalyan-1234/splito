@@ -1,3 +1,36 @@
+# Settings adapted from bluesky-social/social-app@4e4ad9c (MIT) - pnpm-workspace.yaml
 packages:
   - apps/*
   - packages/*
+nodeLinker: 'hoisted'
+autoInstallPeers: true
+strictPeerDependencies: false
+trustPolicy: 'no-downgrade'
+trustPolicyIgnoreAfter: 10080
+pmOnFail: download
+overrides:
+  '@expo/cli': '58.1.14'
+  'expo-modules-core': '58.0.22'
+  '@react-native/babel-preset': '0.88.0'
+  '@react-native/normalize-colors': '0.88.0'
+  'react-native-reanimated': '4.7.1'
+  'react-native-worklets': '0.13.0'
+  'react-native-screens': '4.30.0'
+allowBuilds:
+  '@swc/core': false
+  'core-js': false
+  'core-js-pure': false
+  'esbuild': false
+  '@parcel/watcher': false
+  'protobufjs': false
+  'unrs-resolver': true
+patchedDependencies:
+  '@expo/cli@58.1.14': patches/@expo__cli@58.1.14.patch
+  'expo-modules-core@58.0.22': patches/expo-modules-core@58.0.22.patch
+  expo@58.0.14: patches/expo@58.0.14.patch
+  'metro-runtime@0.87.1': patches/metro-runtime@0.87.1.patch
+  'metro@0.87.1': patches/metro@0.87.1.patch
+  react-native-reanimated@4.7.1: patches/react-native-reanimated@4.7.1.patch
+  react-native-screens@4.30.0: patches/react-native-screens@4.30.0.patch
+  'react-native-svg@15.16.0': patches/react-native-svg@15.16.0.patch
+  react-native@0.88.0: patches/react-native@0.88.0.patch

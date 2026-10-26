@@ -7,3 +7,5 @@ ios/
 android/
 test-results/
 playwright-report/
+apps/client/dist/
+*.tmp.mjs

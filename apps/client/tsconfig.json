@@ -1,0 +1,15 @@
+{
+  "extends": "@react-native/typescript-config",
+  "compilerOptions": {
+    "jsx": "react-jsx",
+    "module": "esnext",
+    "moduleSuffixes": [".ios", ".android", ".native", ""],
+    "lib": ["dom", "esnext"],
+    "types": ["node"],
+    "paths": {
+      "#/*": ["./src/*"]
+    }
+  },
+  "include": ["index.ts", "src", "e2e", "app.config.ts"],
+  "exclude": ["dist", "node_modules"]
+}
