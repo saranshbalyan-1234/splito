@@ -2,7 +2,7 @@
 import {
   Bed,
   Car,
-  Circle,
+  Shapes,
   ReceiptText,
   ShoppingBag,
   ShoppingCart,
@@ -22,7 +22,8 @@ const ICONS = {
   ticket: createIcon(Ticket),
   receipt: createIcon(ReceiptText),
   'shopping-cart': createIcon(ShoppingCart),
-  circle: createIcon(Circle),
+  /* "Other": a plain circle read as an empty, broken tile, so it draws Lucide shapes. */
+  circle: createIcon(Shapes),
 }
 
 /**

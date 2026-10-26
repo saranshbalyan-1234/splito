@@ -1,6 +1,5 @@
 // Adapted from bluesky-social/social-app@4e4ad9c (MIT) - src/view/shell/desktop/LeftNav.tsx
 // Adapted from bluesky-social/social-app@4e4ad9c (MIT) - src/view/shell/desktop/Feeds.tsx (RecentGroups)
-// Adapted from bluesky-social/social-app@4e4ad9c (MIT) - src/view/shell/desktop/RightNav.tsx (Footer)
 import {useCallback, useEffect, useMemo, useState} from 'react'
 import {
   type LayoutChangeEvent,
@@ -350,8 +349,8 @@ function NavItem({
                 a.z_20,
                 {
                   // The pulse is only empty at its top right: start past the downstroke, end above the label's cap height ('30+' too).
-                  top: -9,
-                  left: 13,
+                  top: -10,
+                  left: 16,
                   backgroundColor: t.palette.primary_500,
                   color: t.palette.white,
                   lineHeight: a.text_sm.fontSize,
@@ -661,36 +660,6 @@ export function RecentGroups() {
   )
 }
 
-/* Bluesky's right-nav footer: muted links with dot separators. */
-function Footer() {
-  const t = useTheme()
-  const {t: l} = useLingui()
-  const links: [string, string, string][] = [
-    ['help', l`Help`, '/settings/help'],
-    ['about', l`About`, '/settings/about'],
-    ['privacy', l`Privacy`, '/settings/privacy'],
-  ]
-  return (
-    <View
-      testID="sidebar-footer"
-      style={[a.flex_row, a.flex_wrap, a.align_center, a.pt_md, a.px_md]}>
-      {links.map(([id, label, href], i) => (
-        <View key={id} style={[a.flex_row, a.align_center]}>
-          {i > 0 && <Text style={[t.atoms.text_contrast_low]}>{' ∙ '}</Text>}
-          <Link
-            testID={`sidebar-${id}`}
-            href={href}
-            accessibilityLabel={label}
-            accessibilityHint="">
-            <Text style={[a.leading_snug, t.atoms.text_contrast_medium]}>
-              {label}
-            </Text>
-          </Link>
-        </View>
-      ))}
-    </View>
-  )
-}
 
 /* Which item is lit: a pushed page keeps its section lit, as Bluesky's tabs do. */
 function selectedItem(
@@ -831,11 +800,6 @@ export function DesktopLeftNav({
         </View>
         <ComposeBtn minimal={leftNavMinimal} />
       </ScrollView>
-      {!leftNavMinimal && (
-        <View style={[a.px_lg, a.pb_lg, t.atoms.bg, web({flexShrink: 0})]}>
-          <Footer />
-        </View>
-      )}
     </View>
   )
 }

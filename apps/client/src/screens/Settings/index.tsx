@@ -17,7 +17,9 @@ import {useTabLabels} from '#/components/settings/TabsEditor'
 import * as Prompt from '#/components/Prompt'
 import {SETTINGS_SECTIONS, useSectionInfo} from '#/components/settings/sections'
 import * as Toast from '#/components/Toast'
+import {SignIn_Stroke2_Corner0_Rounded as SignInIcon} from '#/components/icons/Auth'
 import {Text} from '#/components/Typography'
+import {useSession} from '#/state/session'
 
 /**
  * Bluesky's Settings list, one row per preferences-registry group, then
@@ -33,6 +35,7 @@ export function SettingsScreen() {
   const summary = useSectionSummary()
   const resetPrompt = Prompt.usePromptControl()
   const me = useMe()
+  const {hasSession} = useSession()
 
   return (
     <Layout.Screen testID="screen-settings">
@@ -48,7 +51,33 @@ export function SettingsScreen() {
       </Layout.Header.Outer>
       <Layout.Content>
         <SettingsList.Container>
-          {/* Who these settings belong to, as Bluesky's settings open with the account. */}
+          {/* Account first, as Bluesky's settings open with the account (owner rule). */}
+          <SectionTitle>
+            <Trans>Account</Trans>
+          </SectionTitle>
+          {!hasSession && (
+            <SettingsList.LinkItem
+              testID="settings-sign-in"
+              to="/signin"
+              label={l`Sign in`}
+              contentContainerStyle={[a.py_md]}>
+              <SettingsList.ItemIcon icon={SignInIcon} />
+              <View style={[a.flex_1, a.gap_2xs]}>
+                <SettingsList.ItemText>
+                  <Trans>Sign in</Trans>
+                </SettingsList.ItemText>
+                <Text
+                  numberOfLines={1}
+                  style={[
+                    a.text_sm,
+                    a.leading_snug,
+                    t.atoms.text_contrast_medium,
+                  ]}>
+                  <Trans>Back up and share with friends</Trans>
+                </Text>
+              </View>
+            </SettingsList.LinkItem>
+          )}
           <SettingsList.LinkItem
             testID="settings-profile"
             to="/profile"
@@ -74,6 +103,9 @@ export function SettingsScreen() {
             </View>
           </SettingsList.LinkItem>
           <SettingsList.Divider />
+          <SectionTitle>
+            <Trans>Preferences</Trans>
+          </SectionTitle>
           {SETTINGS_SECTIONS.map(id => (
             <SettingsList.LinkItem
               key={id}
@@ -100,6 +132,9 @@ export function SettingsScreen() {
             </SettingsList.LinkItem>
           ))}
           <SettingsList.Divider />
+          <SectionTitle>
+            <Trans>About and data</Trans>
+          </SectionTitle>
           <SettingsList.LinkItem
             testID="settings-about"
             to="/settings/about"
@@ -109,7 +144,6 @@ export function SettingsScreen() {
               <Trans>About</Trans>
             </SettingsList.ItemText>
           </SettingsList.LinkItem>
-          <SettingsList.Divider />
           <SettingsList.PressableItem
             testID="settings-reset-all"
             destructive
@@ -187,4 +221,23 @@ function useSectionSummary(): Partial<Record<PrefGroup, string>> {
     }[sort],
     notifications: notifyOn === 3 ? l`On` : notifyOn === 0 ? l`Off` : l`Some`,
   }
+}
+
+/** A group's small heading in the list, as Bluesky's settings sub-pages title their groups. */
+function SectionTitle({children}: {children: React.ReactNode}) {
+  const t = useTheme()
+  return (
+    <Text
+      accessibilityRole="header"
+      style={[
+        a.px_xl,
+        a.pt_lg,
+        a.pb_xs,
+        a.text_sm,
+        a.font_semi_bold,
+        t.atoms.text_contrast_medium,
+      ]}>
+      {children}
+    </Text>
+  )
 }

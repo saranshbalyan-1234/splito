@@ -9,7 +9,7 @@ import {
   Briefcase,
   Bus,
   Car,
-  Circle,
+  Shapes,
   Coffee,
   Dumbbell,
   Film,
@@ -78,7 +78,8 @@ const GLYPHS: Record<string, LucideIcon> = {
   baby: Baby,
   'paw-print': PawPrint,
   tag: Tag,
-  circle: Circle,
+  /* "Other": a plain circle read as an empty, broken tile, so it draws Lucide shapes. */
+  circle: Shapes,
 }
 
 /** Icon ids offered when re-iconing a category, in picker order. */

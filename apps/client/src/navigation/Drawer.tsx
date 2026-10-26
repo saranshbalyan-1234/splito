@@ -12,6 +12,7 @@ import {type Group, type Person} from '@splito/sync'
 
 import {getCurrentRoute} from '#/lib/routes/helpers'
 import {type NavigationProp, type TabParams} from '#/lib/routes/types'
+import {useSession} from '#/state/session'
 import {useSetDrawerOpen} from '#/state/shell'
 import {useEntities, useMe, usePref} from '#/data/hooks'
 import {UserAvatar} from '#/view/com/util/UserAvatar'
@@ -27,6 +28,7 @@ import {
   ChartPie_Filled_Corner0_Rounded as ChartPieFilledIcon,
   ChartPie_Stroke2_Corner0_Rounded as ChartPieIcon,
 } from '#/components/icons/ChartPie'
+import {CircleInfo_Stroke2_Corner0_Rounded as CircleInfoIcon} from '#/components/icons/CircleInfo'
 import {CircleQuestion_Stroke2_Corner2_Rounded as CircleQuestionIcon} from '#/components/icons/CircleQuestion'
 import {type Props as SVGIconProps} from '#/components/icons/common'
 import {
@@ -116,7 +118,7 @@ let DrawerProfileCard = ({
 }
 DrawerProfileCard = memo(DrawerProfileCard)
 
-type PushedRoute = 'Profile' | 'Settings'
+type PushedRoute = 'Profile' | 'Settings' | 'SignIn'
 
 /**
  * Bluesky's drawer, opened from the header avatar on every top-level page
@@ -133,7 +135,7 @@ function DrawerContentInner(): React.ReactNode {
   const currentRouteName = useNavigationState(state =>
     state ? getCurrentRoute(state).name : 'People',
   )
-  const [, setTheme] = usePref('theme')
+  const [theme, setTheme] = usePref('theme')
   const isDark = t.scheme === 'dark'
   const unreadCount = useActivityBadge()
 
@@ -249,11 +251,25 @@ function DrawerContentInner(): React.ReactNode {
                 (hovered || pressed) && t.atoms.bg_contrast_25,
               ]}>
               <MoonIcon style={[t.atoms.text]} width={iconWidth} />
-              <Text
-                style={[a.flex_1, a.text_2xl, web(a.leading_snug)]}
-                numberOfLines={1}>
-                <Trans>Dark theme</Trans>
-              </Text>
+              <View style={[a.flex_1]}>
+                <Text
+                  style={[a.text_2xl, web(a.leading_snug)]}
+                  numberOfLines={1}>
+                  <Trans>Dark theme</Trans>
+                </Text>
+                {/* While the theme follows the device, the switch shows what the device chose; flipping it picks one. */}
+                {theme === 'system' && (
+                  <Text
+                    testID="drawer-theme-system"
+                    style={[
+                      a.text_sm,
+                      a.leading_snug,
+                      t.atoms.text_contrast_medium,
+                    ]}>
+                    <Trans>Matching your device</Trans>
+                  </Text>
+                )}
+              </View>
               <Toggle.Switch />
             </View>
           )}
@@ -261,6 +277,7 @@ function DrawerContentInner(): React.ReactNode {
       </ScrollView>
 
       <DrawerFooter
+        onPressSignIn={() => onPressScreen('SignIn')}
         onPressHelp={() => onPressSection('help')}
         onPressAbout={() => onPressSection('about')}
       />
@@ -271,22 +288,28 @@ const DrawerContent = memo(DrawerContentInner)
 export {DrawerContent}
 
 let DrawerFooter = ({
+  onPressSignIn,
   onPressHelp,
   onPressAbout,
 }: {
+  onPressSignIn: () => void
   onPressHelp: () => void
   onPressAbout: () => void
 }): React.ReactNode => {
+  const t = useTheme()
   const {t: l} = useLingui()
   const insets = useSafeAreaInsets()
+  const {hasSession} = useSession()
   return (
     <View
       style={[
         a.flex_row,
         a.gap_sm,
         a.flex_wrap,
-        a.pl_xl,
+        a.px_xl,
         a.pt_md,
+        a.border_t,
+        t.atoms.border_contrast_low,
         {
           paddingBottom: Math.max(
             insets.bottom + tokens.space.xs,
@@ -294,6 +317,20 @@ let DrawerFooter = ({
           ),
         },
       ]}>
+      {/* Signed out until the auth backend lands (owner rule: Sign in in the drawer footer). */}
+      {!hasSession && (
+        <Button
+          testID="drawer-sign-in"
+          label={l`Sign in`}
+          size="small"
+          variant="solid"
+          color="primary"
+          onPress={onPressSignIn}>
+          <ButtonText>
+            <Trans>Sign in</Trans>
+          </ButtonText>
+        </Button>
+      )}
       <Button
         testID="drawer-help"
         label={l`Get help`}
@@ -310,12 +347,10 @@ let DrawerFooter = ({
         testID="drawer-about"
         label={l`About Splito`}
         size="small"
-        variant="outline"
+        variant="solid"
         color="secondary"
-        onPress={onPressAbout}
-        style={{
-          backgroundColor: 'transparent',
-        }}>
+        onPress={onPressAbout}>
+        <ButtonIcon icon={CircleInfoIcon} position="left" />
         <ButtonText>
           <Trans>About</Trans>
         </ButtonText>
@@ -368,32 +403,38 @@ function MenuItem({
           <View style={[a.relative]}>
             <Glyph style={[t.atoms.text]} width={iconWidth} />
             {count ? (
+              /* Bluesky's drawer badge, verbatim: pinned to the glyph's top right corner. */
               <View
                 style={[
                   a.absolute,
-                  a.rounded_full,
-                  {
-                    // The pulse is only empty at its top right: start past the downstroke, clear of the label ('30+' too).
-                    top: -6,
-                    left: 13,
-                    paddingHorizontal: 4,
-                    paddingVertical: 1,
-                    backgroundColor: t.palette.primary_500,
-                  },
+                  a.inset_0,
+                  a.align_end,
+                  {top: -4, right: a.gap_sm.gap * -1},
                 ]}>
-                <Text
+                <View
                   style={[
-                    a.text_xs,
-                    a.leading_tight,
-                    a.font_semi_bold,
+                    a.rounded_full,
                     {
-                      fontVariant: ['tabular-nums'],
-                      color: t.palette.white,
+                      right: count.length === 1 ? 6 : 0,
+                      paddingHorizontal: 4,
+                      paddingVertical: 1,
+                      backgroundColor: t.palette.primary_500,
                     },
-                  ]}
-                  numberOfLines={1}>
-                  {count}
-                </Text>
+                  ]}>
+                  <Text
+                    style={[
+                      a.text_xs,
+                      a.leading_tight,
+                      a.font_semi_bold,
+                      {
+                        fontVariant: ['tabular-nums'],
+                        color: t.palette.white,
+                      },
+                    ]}
+                    numberOfLines={1}>
+                    {count}
+                  </Text>
+                </View>
               </View>
             ) : undefined}
           </View>

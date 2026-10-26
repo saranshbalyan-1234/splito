@@ -9,7 +9,7 @@ import {
   Car,
   ChevronDown,
   ChevronLeft,
-  Circle,
+  Shapes,
   Coffee,
   Dog,
   Dumbbell,
@@ -71,7 +71,8 @@ const CATEGORY_ICONS = {
   ticket: createIcon(Ticket),
   receipt: createIcon(ReceiptText),
   'shopping-cart': createIcon(ShoppingCart),
-  circle: createIcon(Circle),
+  /* "Other": a plain circle read as an empty, broken tile, so it draws Lucide shapes. */
+  circle: createIcon(Shapes),
   coffee: createIcon(Coffee),
   plane: createIcon(Plane),
   home: createIcon(House),

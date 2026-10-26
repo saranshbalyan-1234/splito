@@ -13,6 +13,7 @@ const SECTION: Record<string, string> = {
   Activity: 'Activity',
   Settings: 'Settings',
   SettingsSection: 'Settings',
+  SignIn: 'Settings',
 }
 
 /**
@@ -21,11 +22,15 @@ const SECTION: Record<string, string> = {
  * screen: an expense opened from a friend lights People, Profile opened from
  * the Groups header lights Groups.
  */
-export function currentSection(state: State | undefined): string {
+export function currentSection(
+  state: State | undefined,
+  /** Only these items exist (the bottom bar has no Settings): others are skipped. */
+  among?: readonly string[],
+): string {
   const routes = state?.routes ?? []
   for (let i = routes.length - 1; i >= 0; i--) {
     const section = SECTION[routes[i]!.name]
-    if (section) return section
+    if (section && (!among || among.includes(section))) return section
   }
-  return 'People'
+  return among?.[0] ?? 'People'
 }

@@ -21,6 +21,8 @@ export type RootStackParams = {
   Profile: undefined
   Settings: undefined
   SettingsSection: {section: string}
+  /** Settings > Account: honest until the auth backend exists. */
+  SignIn: undefined
   Person: {personId: string}
   /** `tab` opens a section directly (`/groups/:groupId?tab=rules`). */
   Group: {groupId: string; tab?: 'expenses' | 'balances' | 'members' | 'rules'}

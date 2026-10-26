@@ -89,8 +89,8 @@ export function PrefSection({
             {description}
           </Text>
         )}
-        {/* The settings container caps the page's width, so controls share the dividers' width. */}
-        <View style={[a.w_full]}>{children}</View>
+        {/* Controls stop at a readable width on wide screens; a segmented row never stretches across the page. */}
+        <View style={[a.w_full, {maxWidth: 480}]}>{children}</View>
       </SettingsList.Item>
     </View>
   )

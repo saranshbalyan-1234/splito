@@ -30,7 +30,7 @@ import {BottomBar} from '#/view/shell/bottom-bar/BottomBar'
 import {createNativeStackNavigatorWithAuth} from '#/view/shell/createNativeStackNavigatorWithAuth'
 import {DesktopLeftNav, type SidebarTab} from '#/view/shell/desktop/LeftNav'
 import {type Theme, useBreakpoints, useTheme} from '#/alf'
-import {IS_ANDROID, IS_IPAD} from '#/env'
+import {IS_ANDROID, IS_IOS, IS_IPAD} from '#/env'
 import {usePref} from '#/data/hooks'
 import {useShouldReduceMotion} from '#/motion/useShouldReduceMotion'
 import {DevTour, navigationRef} from '#/navigation/DevTour'
@@ -49,6 +49,7 @@ import {PersonScreen} from '#/screens/Person'
 import {ProfileScreen} from '#/screens/Profile'
 import {SettingsScreen} from '#/screens/Settings'
 import {SettingsSectionScreen} from '#/screens/Settings/SettingsSection'
+import {SignInScreen} from '#/screens/SignIn'
 import {SettleScreen} from '#/screens/Settle'
 
 const Stack = createNativeStackNavigator<RootStackParams>()
@@ -63,6 +64,7 @@ const TITLES: Partial<Record<keyof FlatNavigatorParams, MessageDescriptor>> = {
   Profile: msg`Profile`,
   Settings: msg`Settings`,
   SettingsSection: msg`Settings`,
+  SignIn: msg`Sign in`,
   Person: msg`Person`,
   Group: msg`Group`,
   Settle: msg`Settle up`,
@@ -86,11 +88,24 @@ function screenOptions(t: Theme) {
  * and a full-screen slide-up on Android. Web shows it as a dialog over the
  * page beneath, so the route is transparent there.
  */
-const COMPOSER_NATIVE: NativeStackNavigationOptions = {
-  presentation: IS_IPAD ? 'formSheet' : 'modal',
-  animation: IS_ANDROID ? 'slide_from_bottom' : 'default',
-  fullScreenGestureEnabled: false,
-}
+const COMPOSER_NATIVE: NativeStackNavigationOptions = IS_IOS
+  ? {
+      /*
+       * Owner rule (26.8): a bottom sheet with Bluesky's drag handle, full
+       * height when the form needs it, swipe down to close (the sheet's
+       * dirty check turns the gesture off while there are changes).
+       */
+      presentation: 'formSheet',
+      sheetGrabberVisible: true,
+      sheetAllowedDetents: IS_IPAD ? 'fitToContents' : [1],
+      sheetCornerRadius: 20,
+      fullScreenGestureEnabled: false,
+    }
+  : {
+      presentation: 'modal',
+      animation: IS_ANDROID ? 'slide_from_bottom' : 'default',
+      fullScreenGestureEnabled: false,
+    }
 const COMPOSER_WEB: NativeStackNavigationOptions = {
   presentation: 'transparentModal',
   contentStyle: {backgroundColor: 'transparent'},
@@ -172,6 +187,7 @@ export function TabsNavigator({
       <Stack.Screen name="Profile" component={ProfileScreen} />
       <Stack.Screen name="Settings" component={SettingsScreen} />
       <Stack.Screen name="SettingsSection" component={SettingsSectionScreen} />
+      <Stack.Screen name="SignIn" component={SignInScreen} />
       <Stack.Screen name="Person" component={PersonScreen} />
       <Stack.Screen name="Group" component={GroupScreen} />
       <Stack.Screen name="Settle" component={SettleScreen} />
@@ -250,6 +266,11 @@ export function FlatNavigator({
         name="SettingsSection"
         component={SettingsSectionScreen}
         options={{title: title('SettingsSection')}}
+      />
+      <Flat.Screen
+        name="SignIn"
+        component={SignInScreen}
+        options={{title: title('SignIn')}}
       />
       <Flat.Screen
         name="Person"

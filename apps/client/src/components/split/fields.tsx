@@ -116,7 +116,8 @@ export function AmountField({
   const inputRef = useRef<React.ComponentRef<typeof TextInput>>(null)
   const {scale, symbol} = getCurrency(currency)
   const isExpression = /\d\s*[+\-−xX×*/÷]/.test(value)
-  const placeholder = scale ? `0.${'0'.repeat(scale)}` : '0'
+  /* A placeholder is never a value (ARCHITECTURE 5): the word, never "0.00". */
+  const placeholder = l`Amount`
 
   const append = (op: string) => {
     const trimmed = value.replace(/\s*[+\-−xX×*/÷]\s*$/, '')
@@ -263,7 +264,8 @@ export function MoneyInput({
   allowSign?: boolean
 }) {
   const t = useTheme()
-  const {scale, symbol} = getCurrency(currency)
+  const {t: l} = useLingui()
+  const {symbol} = getCurrency(currency)
   return (
     <View style={{width}}>
       <TextField.Root isInvalid={isInvalid}>
@@ -276,7 +278,7 @@ export function MoneyInput({
           label={label}
           value={value}
           onChangeText={onChangeText}
-          placeholder={scale ? `0.${'0'.repeat(scale)}` : '0'}
+          placeholder={l`Amount`}
           inputMode={allowSign ? 'text' : 'decimal'}
           keyboardType={allowSign ? 'numbers-and-punctuation' : 'decimal-pad'}
           /* Left-aligned, so the figure sits right after its currency symbol. */
@@ -303,6 +305,7 @@ export function PercentInput({
   testID?: string
   width?: number
 }) {
+  const {t: l} = useLingui()
   return (
     <View style={{width}}>
       <TextField.Root isInvalid={isInvalid}>
@@ -311,7 +314,7 @@ export function PercentInput({
           label={label}
           value={value}
           onChangeText={onChangeText}
-          placeholder="0"
+          placeholder={l`Rate`}
           inputMode="decimal"
           keyboardType="decimal-pad"
           style={[a.text_right, {fontVariant: ['tabular-nums']}]}

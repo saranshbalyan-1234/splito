@@ -9,6 +9,7 @@ import {type TabId} from '@splito/sync'
 import {useMinimalShellFooterTransform} from '#/lib/hooks/useMinimalShellTransform'
 import {currentSection} from '#/lib/routes/section'
 import {TAB_ROUTE, tabHref, useTabs} from '#/lib/routes/tabs'
+
 import {useShellLayout} from '#/state/shell/shell-layout'
 import {Link} from '#/view/com/util/Link'
 import {atoms as a, useTheme} from '#/alf'
@@ -20,6 +21,8 @@ import {TAB_LABELS, TabGlyph} from '#/components/TabGlyph'
 import {Text} from '#/components/Typography'
 import {useAnalytics} from '#/analytics'
 import {styles} from './BottomBarStyles'
+
+const BOTTOM_BAR_SECTIONS = ['People', 'Groups', 'Analytics', 'Activity']
 
 type NavItemValue = TabId
 
@@ -88,7 +91,10 @@ const NavItem: React.FC<{
 }) => {
   const t = useTheme()
   const ax = useAnalytics()
-  const section = useNavigationState(currentSection)
+  /* Under Settings (not a bottom-bar item) the tab it was opened from stays lit, as Bluesky's does. */
+  const section = useNavigationState(state =>
+    currentSection(state, BOTTOM_BAR_SECTIONS),
+  )
 
   const onBeforePress = useCallback(() => {
     ax.metric('nav:click', {item: navItem, surface: 'bottomBar'})
