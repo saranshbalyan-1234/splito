@@ -1,0 +1,3838 @@
+# Splito master backlog
+
+Updated 2026-10-26. This is the single, complete list of Splito features: everything promised in the handoff prompt, the design spec, `COMPLETION_MATRIX.md` and the owner UI rules in `AGENTS.md`, plus 263 ideas from ten strategy lenses (travel, flatmates and households, couples and family, India and UPI, power users, capture and automation, social and sharing, trust and privacy, native platform, accessibility and simplicity), with duplicates merged.
+
+**23 epics, 296 features (141 tagged `spec`: already promised in the handoff, design spec, matrix or owner rules, some extended; 155 new), an architecture Batch 0, 31 front-end batches and 6 backend batches.** Status: 7 done, 19 in progress, 270 todo. 45 features need the backend.
+
+Completeness pass (2026-10-26): 32 features added after walking whole journeys (first launch, a 3-tap first expense, a 10-person trip abroad, a flat over a year, a couple, settling up, a dispute, switching phones, leaving a group, deleting the app), edge cases (refunds, partial and over-payments, currency changes, leavers, deleted and duplicate friends), accessibility, 10k-expense performance and the competitor gaps; 27 existing features got missing acceptance criteria, deps or descriptions, and 7 moved batch (F-108 to Batch 0; F-1102, F-1907, F-1605, F-705, F-1901 and F-1108 to where their deps and priority put them) so every dependency lands in an earlier batch.
+
+Sources: `../Splito-Claude-Prompt.txt`, `docs/superpowers/specs/2026-10-26-splito-design.md`, `docs/COMPLETION_MATRIX.md`, `docs/research/2026-10-26-competitors.md`, `AGENTS.md`.
+
+## How to use this file
+
+- Build in the order of [Build order](#build-order). Each batch holds 4-8 related features that touch different code areas (the Area column), so one builder per feature can work in parallel.
+- Never start a feature before its Deps are done. Backend features wait for the Backend foundation batch.
+- When a feature ships, change its Status here and its row in `COMPLETION_MATRIX.md` in the same change.
+- New ideas get the next free ID in the right epic and a slot in a batch after their deps.
+
+## Conventions
+
+- **ID** `F-EEnn`: epic `EE`, feature `nn` (F-101 is epic 1, F-1101 is epic 11).
+- **`spec` tag** after the title: the feature was already promised, and where (`spec v1`, `spec 4b`, `spec: owner rule 7`, `spec: matrix`). "(extended)" means this backlog version goes further than the promise. No tag = new from the strategy ideas.
+- **Effort**: S up to 1 day, M 2-4 days, L 1-2 weeks, XL more than 2 weeks, for one builder including tests.
+- **Impact**: 1-10, value to users relative to the rest of this list.
+- **Backend**: yes = needs the Splito server (accounts, sync, push, server storage). Third-party calls from the device (FX rate provider, place search) do not count.
+- **Status**: done / in progress / todo, matching `COMPLETION_MATRIX.md` ("built" on an unmerged branch counts as in progress).
+- **Prefs**: the preference-registry keys (`packages/sync/src/preferences.ts`) for every user-facing choice the feature adds. Plain `key` = account scope; `(device)` = device scope; `group:key` = per-group setting with its default in the registry as `groupDefaults.key`; `person:key` = per-friend setting with its default as `personDefaults.key`. `-` = no new choice.
+
+## Definition of done (applies to every feature)
+
+1. Money logic lives in `packages/domain` with bun tests; every write goes through a `packages/sync` mutation (entity + history + outbox in one transaction).
+2. Bluesky first (AGENTS rule 11): upstream searched and copied where an equivalent exists, with header and reuse row.
+3. Fast and animated (AGENTS rule 10): speed budgets measured and recorded; reduced-motion and `motion` pref honoured.
+4. Every user-facing choice has a registry entry; every string goes through Lingui with en and hi.
+5. Acceptance criteria below pass with recorded evidence (command, platform, result). Untested is not done.
+
+## Epics
+
+| Epic | Name | Features | Done | In progress | Todo | Needs backend |
+|---|---|---|---|---|---|---|
+| E1 | [Core ledger and foundations](#e1-core-ledger-and-foundations) | 10 | 4 | 0 | 6 | 0 |
+| E2 | [App shell, navigation and lists](#e2-app-shell-navigation-and-lists) | 21 | 0 | 7 | 14 | 0 |
+| E3 | [Expenses and composer](#e3-expenses-and-composer) | 17 | 0 | 2 | 15 | 0 |
+| E4 | [Itemize and receipt splitting](#e4-itemize-and-receipt-splitting) | 9 | 0 | 1 | 8 | 0 |
+| E5 | [Capture and automation](#e5-capture-and-automation) | 22 | 0 | 0 | 22 | 0 |
+| E6 | [People and groups](#e6-people-and-groups) | 17 | 0 | 2 | 15 | 0 |
+| E7 | [Trips and travel](#e7-trips-and-travel) | 9 | 0 | 0 | 9 | 0 |
+| E8 | [Home and household](#e8-home-and-household) | 16 | 0 | 0 | 16 | 0 |
+| E9 | [Couples and family](#e9-couples-and-family) | 10 | 0 | 0 | 10 | 0 |
+| E10 | [Currencies and FX](#e10-currencies-and-fx) | 11 | 1 | 0 | 10 | 0 |
+| E11 | [Settle up and payments](#e11-settle-up-and-payments) | 17 | 0 | 2 | 15 | 0 |
+| E12 | [Activity, history and trust](#e12-activity-history-and-trust) | 9 | 0 | 1 | 8 | 0 |
+| E13 | [Analytics, reports and budgets](#e13-analytics-reports-and-budgets) | 11 | 0 | 1 | 10 | 0 |
+| E14 | [Search, organisation and power tools](#e14-search-organisation-and-power-tools) | 11 | 0 | 0 | 11 | 0 |
+| E15 | [Sharing and summaries](#e15-sharing-and-summaries) | 6 | 0 | 0 | 6 | 0 |
+| E16 | [Privacy and security](#e16-privacy-and-security) | 10 | 0 | 0 | 10 | 0 |
+| E17 | [Customization, appearance and motion](#e17-customization-appearance-and-motion) | 10 | 0 | 2 | 8 | 0 |
+| E18 | [Accessibility and localization](#e18-accessibility-and-localization) | 15 | 1 | 0 | 14 | 0 |
+| E19 | [Platform integrations](#e19-platform-integrations) | 13 | 1 | 0 | 12 | 0 |
+| E20 | [Data portability](#e20-data-portability) | 6 | 0 | 0 | 6 | 0 |
+| E21 | [Backend foundation](#e21-backend-foundation) | 10 | 0 | 1 | 9 | 10 |
+| E22 | [Shared and collaborative](#e22-shared-and-collaborative) | 31 | 0 | 0 | 31 | 31 |
+| E23 | [AI](#e23-ai) | 5 | 0 | 0 | 5 | 4 |
+
+## E1 Core ledger and foundations
+
+Pure domain and storage pieces that every other epic builds on.
+
+### F-101 Exact money and split engine `spec v1`
+
+bigint minor units, currency scales 0/2/3, equal / exact / percent / shares / adjust / itemize splits, multiple payers, stable tie-break rounding.
+
+- **Effort** L · **Impact** 10 · **Backend** no · **Status** done (packages/domain, 68 tests) · **Deps** -
+- **Prefs** -
+- **Acceptance**
+  1. 100 split 3 ways gives 34/33/33 ordered by participant ID; property tests prove shares always sum to the total.
+  2. JPY (scale 0) and KWD (scale 3) amounts parse and format exactly.
+  3. validateExpense rejects any expense where paid, owed and total differ by one minor unit.
+
+### F-102 Settlement planner with routing rules `spec v1`
+
+Min-cost feasible flow per group per currency over allowed / preferred / excluded directed edges, direct-only mode, infeasibility explained.
+
+- **Effort** L · **Impact** 10 · **Backend** no · **Status** done (packages/domain) · **Deps** F-101
+- **Prefs** -
+- **Acceptance**
+  1. Acceptance A07 passes: A->C excluded, transit mode gives A->B and B->C of 100; direct-only reports infeasible with the blocking edge.
+  2. No excluded edge ever appears in a plan (property test).
+  3. The same input always yields the same plan.
+
+### F-103 Offline local store, history and outbox `spec v1`
+
+SQLite on native and IndexedDB on web behind one interface; each mutation writes entity, history row and outbox entry in one transaction; deletes are tombstones.
+
+- **Effort** L · **Impact** 10 · **Backend** no · **Status** done (packages/sync, 40 tests) · **Deps** -
+- **Prefs** -
+- **Acceptance**
+  1. Force-quit right after save keeps the record and its outbox row.
+  2. Delete writes a tombstone; history keeps every version.
+  3. The same repository test suite passes on SQLite and IndexedDB.
+
+### F-104 Preferences registry `spec 3a`
+
+Typed registry (key, type, default, scope device/account, group, label) drives storage, sync and the generated Settings screen; reset per key and reset all.
+
+- **Effort** M · **Impact** 9 · **Backend** no · **Status** done (packages/sync) · **Deps** F-103
+- **Prefs** registry itself
+- **Acceptance**
+  1. An invalid value is rejected by the key's validator.
+  2. Reset restores the default and writes a history row.
+  3. Device-scope keys never enter the outbox.
+
+### F-105 Pot ledger accounts
+
+One held-funds account type used by kitty, deposit, joint account, savings goal and collection: contributions, payouts, holder, per-currency balance, never counted as spending.
+
+- **Effort** M · **Impact** 8 · **Backend** no · **Status** todo · **Deps** F-101, F-103
+- **Prefs** -
+- **Acceptance**
+  1. Contribute 300 then pay 200 from the pot leaves 100 and moves member balances exactly.
+  2. Pot movements never appear in spending totals or charts.
+  3. Returning leftover allocates pro-rata to contributions with allocate() and conserves to the minor unit.
+
+### F-106 Day-weight allocation from date ranges
+
+Domain helper that turns member date ranges (inclusive local days, gaps allowed) plus optional room or guest weights into integer weights for allocate().
+
+- **Effort** S · **Impact** 8 · **Backend** no · **Status** todo · **Deps** F-101
+- **Prefs** -
+- **Acceptance**
+  1. Moving in on the 15th of a 30-day month counts 16 days.
+  2. Fractional weights (1.5 / 0.5) are stored as scaled integers and the shares still sum to the total.
+  3. Month-end and DST boundaries covered by bun tests.
+
+### F-107 Deterministic generated IDs and operation dedupe
+
+Records generated by rules get id = hash(ruleId + period); imported operations dedupe by operation ID, so two devices or two imports never double-post.
+
+- **Effort** S · **Impact** 7 · **Backend** no · **Status** todo · **Deps** F-103
+- **Prefs** -
+- **Acceptance**
+  1. Two devices that both generate October rent end with one expense after merge.
+  2. Importing the same operation bundle twice changes nothing.
+
+### F-108 Engineering guardrails `spec 4c`
+
+Architecture test with a per-file baseline that only goes down, one link resolver with goBack(fallback), one never-throwing telemetry module, OTA checks on launch and background-to-active only. Built as ARCHITECTURE-BACKLOG A-001, A-014 and A-019 (OTA rules with A-050 at M2), which docs/RESUME.md runs before Batch 1; this row only closes when those do. Do not build it twice.
+
+- **Effort** M · **Impact** 6 · **Backend** no · **Status** todo · **Deps** A-001, A-014, A-019 (ARCHITECTURE-BACKLOG)
+- **Prefs** -
+- **Acceptance**
+  1. CI fails when a raw hex colour outside alf/, a direct RN Modal or a direct expo-haptics import is added beyond the baseline.
+  2. An unknown deep link opens People.
+  3. Telemetry events carry an opaque account id and never an email or name.
+
+### F-109 Large-ledger performance at 10,000 expenses `spec A16 (extended)`
+
+A seeded fixture (10,000 expenses, 2,000 repayments, 50 groups, 200 friends, 5 currencies, 3 years) with incremental per-person / per-group / per-currency balance projections and indexed paged queries, measured on a mid-range Android phone and on desktop web. Every later feature that scans the ledger (reports, export, backup, import) adds a timed check against this fixture.
+
+- **Effort** L · **Impact** 9 · **Backend** no · **Status** todo · **Deps** F-103, A-016 (ARCHITECTURE-BACKLOG)
+- **Prefs** -
+- **Acceptance**
+  1. With the fixture loaded, cold start to an interactive People list stays under 1.5 s and local save p95 under 100 ms (numbers in COMPLETION_MATRIX).
+  2. Saving one expense updates balances by delta; a query-log test proves no read of the whole ledger.
+  3. A 10,000-row group list scrolls at 60 fps; search keystrokes and filter Apply return in under 100 ms.
+
+### F-110 Multi-tab web consistency `spec v1 web tab lock (extended)`
+
+BroadcastChannel change notices so every open tab refreshes its projections after a write in another tab; one Web Lock for background work (recurring generator now, sync loop later) so two tabs never run it at once.
+
+- **Effort** S · **Impact** 7 · **Backend** no · **Status** todo · **Deps** F-103
+- **Prefs** -
+- **Acceptance**
+  1. An expense added in tab A shows in tab B within 1 s without a reload.
+  2. Exactly one tab holds the background-work lock; closing it hands the lock to another tab.
+  3. Browsers without BroadcastChannel fall back to refresh on focus.
+
+## E2 App shell, navigation and lists
+
+Bluesky shell, owner UI rules 1-13 and first-run experience.
+
+### F-201 Bluesky shell: sidebar, bottom bar, FAB, avatar drawer, header rules, cat logo `spec: owner rules 1, 2, 4`
+
+LeftNav on desktop web, bottom bar + FAB on phones, avatar top-left opening Bluesky's drawer, one header rule set, cat logo on People.
+
+- **Effort** L · **Impact** 10 · **Backend** no · **Status** in progress (built on ui/preview-shell-fix, unmerged) · **Deps** -
+- **Prefs** `theme` (drawer toggle)
+- **Acceptance**
+  1. People shows the cat logo and the logo is inactive on home.
+  2. The avatar opens the drawer; scrim tap, swipe and Escape close it.
+  3. Every screen's header matches the rule-2 table (left avatar/back, centred title, one right action plus optional overflow).
+
+### F-202 Activity as a nav destination with unread badge `spec: owner rule 3`
+
+Pulse icon in bottom bar, sidebar and drawer with Bluesky's unread badge; no header bell.
+
+- **Effort** S · **Impact** 8 · **Backend** no · **Status** in progress (built, unmerged) · **Deps** F-201
+- **Prefs** -
+- **Acceptance**
+  1. /notifications redirects to /activity.
+  2. The badge counts unread items from others and updates without a reload.
+
+### F-203 Pager tabs and animated main-tab switches `spec: owner rule 12`
+
+Bluesky Pager and TabBar for every in-page tab set; direction-aware slide and sliding indicator for bottom-bar and sidebar switches.
+
+- **Effort** M · **Impact** 7 · **Backend** no · **Status** todo · **Deps** F-201
+- **Prefs** `motion`
+- **Acceptance**
+  1. Group and Activity tabs swipe between pages with the sliding underline.
+  2. A main-tab switch slides in from the side of the tapped tab in about 220 ms and re-tap scrolls to top.
+  3. motion = off gives instant switches and tab content is usable immediately.
+
+### F-204 Desktop LeftNav complete `spec: owner rule 13`
+
+Profile card, NavItems, Add expense pill, Recent groups with balance chips, pinned footer, minimal rail at 800-1000 px.
+
+- **Effort** M · **Impact** 7 · **Backend** no · **Status** todo · **Deps** F-201
+- **Prefs** `nav.showRecentGroups`
+- **Acceptance**
+  1. Recent groups lists up to 5 groups by last activity with a per-currency balance chip.
+  2. Widths 800-1000 px show the minimal rail with a round compose button.
+  3. The logo aligns with the content header row.
+
+### F-205 FormSheet for every sheet and dialog `spec: owner rule 7`
+
+Phones: bottom sheet with title left, X top-right, Cancel + primary pinned above the keyboard. Web: centred modal with X and bottom-right footer. Pickers: X only.
+
+- **Effort** M · **Impact** 8 · **Backend** no · **Status** in progress (next merge) · **Deps** F-201
+- **Prefs** -
+- **Acceptance**
+  1. Every listed sheet uses FormSheet (testIDs sheet-close, sheet-cancel, sheet-save).
+  2. Closing with unsaved changes asks "Discard changes?".
+  3. Primary stays disabled until the form is valid.
+
+### F-206 Overview, expanding search and filters on Friends and Groups `spec: owner rules 8, 9`
+
+Per-currency owed/owe overview cards with counts, icon-only search that expands, Filters sheet with Apply and an active dot.
+
+- **Effort** M · **Impact** 9 · **Backend** no · **Status** in progress (next merge) · **Deps** F-201
+- **Prefs** `includeGroupsDefault`, `peopleSort`, `groupsSort`
+- **Acceptance**
+  1. Overview cards never sum unlike currencies.
+  2. Search filters live by friend name, group name or member name, with a "No matches" state.
+  3. Filters change only on Apply and drive both the cards and the list.
+
+### F-207 People balances and person page `spec v1`
+
+Direct plus included group balances per currency with each group's contribution; person page with expense and settlement history; deep link and back.
+
+- **Effort** M · **Impact** 10 · **Backend** no · **Status** in progress · **Deps** F-201
+- **Prefs** `includeGroupsDefault`
+- **Acceptance**
+  1. A04: direct 100 plus group 50 shows 150; Include groups off shows 100 and also filters history; another currency stays separate.
+  2. A person deep link opens with working back and browser history.
+  3. Signs read "owes you" / "you owe".
+
+### F-208 Group page with Expenses, Balances, Members and Rules tabs `spec: owner rule 8`
+
+Group tabs; Balances shows each member's net per currency plus who-owes-whom and a Settle up button.
+
+- **Effort** M · **Impact** 9 · **Backend** no · **Status** in progress (built on main build) · **Deps** F-201
+- **Prefs** -
+- **Acceptance**
+  1. Balances equals groupNet per member per currency.
+  2. Settle up opens the plan for that group.
+
+### F-209 Custom navigation `spec v3`
+
+Choose and order destinations (People, Groups, Analytics, Activity) with a guaranteed recovery route to Settings.
+
+- **Effort** S · **Impact** 6 · **Backend** no · **Status** in progress (Settings) · **Deps** F-201
+- **Prefs** `tabs`, `homeTab`
+- **Acceptance**
+  1. Hiding every optional tab still leaves Settings reachable from the drawer.
+  2. Order persists, syncs (account scope) and resets to default.
+
+### F-210 Empty states that teach one next step
+
+Each empty screen gets its own copy, one primary action, optional secondary, and a Lottie with static fallback.
+
+- **Effort** S · **Impact** 6 · **Backend** no · **Status** todo · **Deps** F-1704
+- **Prefs** -
+- **Acceptance**
+  1. No friends shows "Add a friend, no account needed" (plus "Import from Splitwise" once F-2003 ships).
+  2. A filter with no results offers "Clear filters".
+  3. Reduced motion shows the static illustration.
+
+### F-211 60-second zero-signup onboarding
+
+Language picker in native scripts, name and avatar, region-prefilled currency / number format / week start, land on People with one FAB coach mark.
+
+- **Effort** M · **Impact** 8 · **Backend** no · **Status** todo · **Deps** F-1701
+- **Prefs** `language`, `defaultCurrency`, `numberLocale`, `weekStart`, `onboarding.done` (device)
+- **Acceptance**
+  1. A fresh install reaches People in 3 screens or fewer with no account.
+  2. Region India pre-fills INR, en-IN grouping and UPI on.
+  3. Every onboarding choice is editable later in Settings.
+  4. Onboarding says plainly that data lives only on this device until a backup or sign-in, with a link to backups.
+
+### F-212 Simple mode
+
+One switch for a pared-down app: larger text, equal and exact splits only, no Analytics tab, amount-who-Save composer, one Settle button per person.
+
+- **Effort** M · **Impact** 6 · **Backend** no · **Status** todo · **Deps** F-209
+- **Prefs** `simpleMode`
+- **Acceptance**
+  1. Turning it off restores the previous layout and preferences.
+  2. Expenses made in full mode still display correctly (read-only where the mode is hidden).
+  3. Suggested when OS text size is above 150%.
+
+### F-213 Handedness and reach
+
+Left/right-handed FAB placement and mirrored swipe defaults; optional search row above the tab bar; minimum touch targets enforced.
+
+- **Effort** S · **Impact** 4 · **Backend** no · **Status** todo · **Deps** F-201
+- **Prefs** `handedness`, `bottomSearch`
+- **Acceptance**
+  1. Left-handed moves the FAB bottom-left and swaps swipeLeft/swipeRight defaults.
+  2. The architecture test flags icon buttons below 44 pt (iOS) / 48 dp (Android) without hitSlop.
+
+### F-214 My profile and avatars
+
+Profile page for me (name, photo / emoji / initials avatar, home currency) and photo or emoji avatars for friends, copied from Bluesky's avatar editor and UserAvatar; images stay on the device, resized.
+
+- **Effort** M · **Impact** 7 · **Backend** no · **Status** todo · **Deps** F-201, F-601
+- **Prefs** -
+- **Acceptance**
+  1. Initials avatars get a stable colour per person that passes contrast checks.
+  2. A photo avatar is resized under 100 KB with EXIF stripped and shows wherever the person appears (lists, drawer, Activity actor).
+  3. Works fully offline.
+
+### F-215 Help, About, licences and privacy `spec: handoff 2 notices, owner rule 13 footer`
+
+Offline help (how balances, splits, payment rules and sync labels work), About with version, open-source licences generated from REUSE_MAP and NOTICE (MIT, OFL, Apache-2.0, ISC for Lucide), privacy policy and terms, What's new after an update, and Send feedback as an email draft with optional diagnostics (A-040).
+
+- **Effort** M · **Impact** 7 · **Backend** no · **Status** todo · **Deps** F-201
+- **Prefs** `whatsNew.show`
+- **Acceptance**
+  1. A test checks every REUSE_MAP row and every bundled font and icon set appears on the Licences screen.
+  2. Help works offline in en and hi; the sidebar footer and drawer Help / About / Privacy links open these pages.
+  3. The privacy policy says where data lives (this device until sign-in), how to export and delete it, and covers GDPR and India DPDP rights.
+  4. What's new shows once per version and can be turned off.
+
+### F-216 Permission primers and recovery
+
+One pre-permission sheet per permission (camera, photos, contacts, notifications, location, microphone), asked only at the moment of use, and a denied state with Open Settings plus a manual path.
+
+- **Effort** S · **Impact** 6 · **Backend** no · **Status** todo · **Deps** F-205
+- **Prefs** -
+- **Acceptance**
+  1. No OS permission prompt appears before the user taps the feature that needs it.
+  2. A denied permission shows the manual alternative (file import, type the name) and Open Settings; nothing dead-ends.
+  3. Notification permission is first requested when the user turns on a reminder, never at launch.
+
+### F-217 Tablet, landscape and foldable layouts `spec v1 responsive (extended)`
+
+Two-pane list and detail on iPad, Android tablets and wide web (Groups + group, People + person), landscape phones, Split View / Stage Manager / foldable resizing without losing drafts, full hardware-keyboard focus.
+
+- **Effort** M · **Impact** 6 · **Backend** no · **Status** todo · **Deps** F-201, F-204
+- **Prefs** `layout.twoPane` (device)
+- **Acceptance**
+  1. Resizing from phone to tablet width mid-edit keeps the open sheet and its draft.
+  2. From 768 px a selected group shows beside the list; narrow widths fall back to push navigation with working back.
+  3. Every screen passes the A-035 width matrix in portrait and landscape.
+
+### F-218 Sample group to explore `spec: handoff 4 demo mode`
+
+A clearly labelled sample trip a new user can open from the empty People screen, kept in its own store namespace, never synced, never counted, removable in one tap.
+
+- **Effort** S · **Impact** 5 · **Backend** no · **Status** todo · **Deps** F-603, F-210
+- **Prefs** -
+- **Acceptance**
+  1. Every screen inside the sample shows a "Sample" badge; no sample amount reaches People, Groups, Analytics, widgets or exports.
+  2. Removing the sample deletes it completely; it never enters the outbox.
+  3. Uses packages/test-fixtures data only in this explicit mode.
+
+### F-219 Contextual tips and feature discovery
+
+One-time tips at the moment a feature helps (third typed receipt suggests scanning, a long session suggests Save and add another, a pasted SMS suggests Quick add); each feature registers its own tips; a Tips list lives in Help.
+
+- **Effort** S · **Impact** 6 · **Backend** no · **Status** todo · **Deps** F-211, F-215
+- **Prefs** `tips.enabled`
+- **Acceptance**
+  1. At most one tip per screen visit and per day; a dismissed tip never returns.
+  2. Tips can be turned off and reset in Settings.
+  3. Tips are announced politely, never a blocking modal.
+
+### F-220 Group expense list: month sections, "involving me" filter and sort
+
+Sticky month headers with per-currency month totals, an "Only involving me" toggle, filters by member, payer and category, sort by date or amount; repayments show inline as distinct rows.
+
+- **Effort** S · **Impact** 7 · **Backend** no · **Status** todo · **Deps** F-208
+- **Prefs** `groupList.involvingMeDefault`
+- **Acceptance**
+  1. "Only involving me" hides expenses where I neither paid nor have a share, and says how many are hidden.
+  2. Month totals are per currency and match Analytics for that group and month.
+  3. Filters sit in the body filter row (rule 4) in a FormSheet with Apply (rule 7).
+
+### F-221 Pin and reorder friends and groups
+
+Pin friends and groups to the top of their lists and the sidebar Recent groups; manual order as a sort option.
+
+- **Effort** S · **Impact** 5 · **Backend** no · **Status** todo · **Deps** F-206
+- **Prefs** `peoplePinned`, `groupsPinned`, `peopleSort` and `groupsSort` (add "Manual")
+- **Acceptance**
+  1. Pinned rows stay on top under every sort and filter and show a pin glyph with an accessible label.
+  2. Manual order persists, syncs and resets.
+
+## E3 Expenses and composer
+
+Adding, editing and entering expenses fast.
+
+### F-301 Expense add / edit / delete / undo `spec v1`
+
+Personal, direct and group expenses with title, amount, currency, any date (future = "upcoming"), category, payers, participants, notes; edit history; tombstone delete with undo.
+
+- **Effort** L · **Impact** 10 · **Backend** no · **Status** in progress (feature branch) · **Deps** F-103
+- **Prefs** `defaultCurrency`, `defaultSplitMode`, `defaultPayer`
+- **Acceptance**
+  1. Editing keeps the prior version in history; delete is a tombstone with Undo.
+  2. A future date shows the "upcoming" label.
+  3. p95 local save under 100 ms recorded in COMPLETION_MATRIX.
+
+### F-302 Split editor, inline calculator, remaining readout, persistent drafts `spec v1 + 4b`
+
+Equal, exact, percent, shares and equal-with-adjustments; calculator in the amount field; live remaining; drafts survive close.
+
+- **Effort** M · **Impact** 9 · **Backend** no · **Status** in progress (feature branch) · **Deps** F-301
+- **Prefs** `defaultSplitMode`
+- **Acceptance**
+  1. Typing 1200+340 in the amount evaluates exactly to 1540.
+  2. Save stays disabled until remaining is zero.
+  3. Killing the app mid-entry and reopening restores the draft.
+
+### F-303 Refunds and reversals `spec v1`
+
+A refund linked to an expense flows back per the original split (or a chosen one); a reversal is an explicit negating entry.
+
+- **Effort** M · **Impact** 7 · **Backend** no · **Status** todo · **Deps** F-301
+- **Prefs** -
+- **Acceptance**
+  1. A 300 refund on a 3-way expense reduces each share by 100.
+  2. Refunds never show as negative spending in reports.
+  3. A refund in another currency requires an explicit rate.
+  4. A refund records who received it, which may differ from the original payer, and partial refunds of one expense add up without exceeding it.
+
+### F-304 Money-in entries (group income) `spec v1 refunds (extended)`
+
+Income received by one member (landlord refund, cashback, sublet, sold appliance) split back to members by a rule.
+
+- **Effort** S · **Impact** 5 · **Backend** no · **Status** todo · **Deps** F-301
+- **Prefs** -
+- **Acceptance**
+  1. 900 received by A and split 3 ways leaves A owing B and C 300 each.
+  2. Reports list it as income, never as negative spending, and keep it apart from repayments.
+
+### F-305 Saved split templates `spec v1`
+
+Name a split ("Flat 40/30/30"), apply in one tap, edit and delete.
+
+- **Effort** S · **Impact** 7 · **Backend** no · **Status** todo · **Deps** F-302
+- **Prefs** -
+- **Acceptance**
+  1. Applying "40/30/30" to 1000 gives 400/300/300 exactly.
+  2. A template that names a removed member warns and drops them.
+
+### F-306 Recurring expenses: fixed, variable, estimate then true-up `spec v1`
+
+Rules with due day (month-end clamp), skip, pause, end date, "amount changes from", participant subset; variable bills create an "enter amount" draft; estimate posts and trues up; generated on device.
+
+- **Effort** L · **Impact** 9 · **Backend** no · **Status** todo · **Deps** F-107, F-301, F-1907
+- **Prefs** `recurring.variablePrefill`, `notify.recurring`
+- **Acceptance**
+  1. A rule due on the 31st posts on 28 Feb or 29 Feb.
+  2. A variable bill never posts until an amount is entered (prefilled with last or 3-month average).
+  3. "Amount changes from 1 Jan" leaves earlier instances unchanged.
+  4. Two devices generating the same period produce one record.
+  5. A rule whose start date is in the past offers to back-fill the missed instances as one reviewed, undoable batch.
+
+### F-307 Category and emoji auto-suggest `spec 4b v1`
+
+Offline keyword map suggests a category and an emoji from the title; an override for that title is remembered.
+
+- **Effort** S · **Impact** 7 · **Backend** no · **Status** todo · **Deps** F-301
+- **Prefs** `autoSuggestCategory`, `expenseEmoji`
+- **Acceptance**
+  1. "Uber to airport" suggests Transport and a taxi emoji in airplane mode.
+  2. Overriding once makes the same title use the override next time.
+
+### F-308 Guest participants `spec v1`
+
+One-off people on a single expense without adding them as friends; promote to friend later.
+
+- **Effort** S · **Impact** 6 · **Backend** no · **Status** todo · **Deps** F-301
+- **Prefs** -
+- **Acceptance**
+  1. A guest appears only on that expense and its balances.
+  2. Promote to friend keeps the history attached.
+
+### F-309 Rapid entry: save and add another, duplicate, repeat last
+
+Save and add another keeps group, payer, participants, split, currency and date; Duplicate; Repeat last in this group; session counter.
+
+- **Effort** S · **Impact** 7 · **Backend** no · **Status** todo · **Deps** F-301
+- **Prefs** `composer.stickyFields`, `composer.advanceDate`
+- **Acceptance**
+  1. Save and add another clears title and amount and refocuses the amount field.
+  2. The counter shows "7 added, INR 18,450" per currency.
+  3. Which fields stay sticky is configurable.
+
+### F-310 Smart amount input
+
+Accepts locale separators, Devanagari / Arabic-Indic / Persian digits, a 000 key, k / L / cr / m suffixes and pasted "₹1,20,000.50"; ambiguous input asks.
+
+- **Effort** S · **Impact** 8 · **Backend** no · **Status** todo · **Deps** F-302
+- **Prefs** `numberLocale`, `amount.shorthand`
+- **Acceptance**
+  1. "1.5L" gives 150000.00 INR and "2k" gives 2000.
+  2. "१२००" gives 1200 and "1.234,56" under de-DE gives 1234.56.
+  3. "1,234" in a comma-decimal locale shows a which-did-you-mean prompt.
+
+### F-311 Amount typo and anomaly guard
+
+Non-blocking "Did you mean 250?" when an amount is far above the usual for that title/category or looks off by a zero.
+
+- **Effort** S · **Impact** 6 · **Backend** no · **Status** todo · **Deps** F-301
+- **Prefs** `anomalyGuard`, `anomalyGuard.multiplier`
+- **Acceptance**
+  1. "Coffee 2,500" with a usual 250 shows a one-tap fix.
+  2. The guard never blocks Save and can be turned off.
+
+### F-312 Attachments `spec v1`
+
+Photos, PDFs and text on any expense: preview, open, add/remove recorded in history, configurable size and type limits, stored locally until sync.
+
+- **Effort** M · **Impact** 7 · **Backend** no · **Status** todo · **Deps** F-301
+- **Prefs** `attachments.maxMB`, `attachments.types`
+- **Acceptance**
+  1. Wrong type or oversize is rejected with the reason.
+  2. Adding and removing an attachment appears in history.
+  3. Works fully offline.
+  4. EXIF GPS is stripped on import by default (full redaction tools come with F-1608).
+
+### F-313 Location `spec v1`
+
+Editable manual place; optional permission-aware automatic location; place search and optional map when online.
+
+- **Effort** M · **Impact** 4 · **Backend** no · **Status** todo · **Deps** F-301
+- **Prefs** `location.auto`
+- **Acceptance**
+  1. Permission denied falls back to manual entry.
+  2. Location is captured only when the user asks.
+
+### F-314 Three-tap add with sentence defaults
+
+The composer opens with the amount keypad focused and context defaults: from a group, its current members, currency and default split; from a person, a direct expense with them; from People, a "With whom?" chip. One sentence chip ("Paid by you, split equally") opens the split editor; the title is optional (category or emoji stands in). Target: FAB, amount, Save.
+
+- **Effort** M · **Impact** 10 · **Backend** no · **Status** todo · **Deps** F-302
+- **Prefs** `fab.action`, `composer.titleRequired`
+- **Acceptance**
+  1. From a group page, FAB, typing 450 and Save records an equal split among current members paid by me in 3 taps plus digits (tap count asserted in Playwright and Maestro).
+  2. From a person page the expense is direct with that person; an empty title saves as the category name.
+  3. `fab.action` chooses what a FAB tap opens; options appear as their features ship (scan, quick add).
+
+### F-315 Optional time of day on expenses
+
+An optional local time on an expense (off by default, auto-filled for captures) that orders same-day expenses and feeds trip day views.
+
+- **Effort** S · **Impact** 4 · **Backend** no · **Status** todo · **Deps** F-301
+- **Prefs** `composer.showTime`, `timeFormat`
+- **Acceptance**
+  1. Untimed expenses sort after timed ones on the same day; the local date never shifts.
+  2. Time shows in the chosen 12/24 h format and exports as its own CSV column.
+
+### F-316 Favourite expenses: one-tap tiles
+
+Star any expense as a favourite ("Milk 60", "Auto to office 120 with Sam"); tiles on the group page and in the composer re-create it dated today in one tap.
+
+- **Effort** S · **Impact** 7 · **Backend** no · **Status** todo · **Deps** F-309
+- **Prefs** `group:favourites`
+- **Acceptance**
+  1. A tile tap saves at once with a success toast and Undo; long-press opens it in the composer first.
+  2. A tile naming a removed member opens the composer instead of saving.
+  3. Tiles can be reordered, renamed and hidden per group.
+
+### F-317 Quick split by headcount
+
+Split a total among N people without naming anyone: each share, rounding and a pay-me QR at once; Save later turns the seats into guests or picked friends.
+
+- **Effort** S · **Impact** 7 · **Backend** no · **Status** todo · **Deps** F-302, F-308, F-1105
+- **Prefs** -
+- **Acceptance**
+  1. 1000 among 3 shows 334 / 333 / 333 with the same allocate() rounding as saved expenses.
+  2. Nothing is stored until Save.
+  3. Reachable from the composer and from the empty People screen.
+
+## E4 Itemize and receipt splitting
+
+Splitting a bill line by line, fairly.
+
+### F-401 Itemized bill with portions `spec: owner rule 5`
+
+Items with name, amount and people; tap again for x2/x3 portions; Everyone shortcut; tax / tip / service / discount pro-rata; remaining readout; items listed on detail.
+
+- **Effort** M · **Impact** 9 · **Backend** no · **Status** in progress (next merge) · **Deps** F-302
+- **Prefs** -
+- **Acceptance**
+  1. 2 of 3 beers via x2 portions allocates exactly with bun tests.
+  2. Tax and tip follow each person's item subtotal including weights.
+  3. Save stays disabled until every item is assigned.
+
+### F-402 Cash rounding with visible remainder
+
+Round shares to 1 / 5 / 10 units per group or expense and transfers to 10 for cash payers; the leftover shows as a carried line or an explicit adjustment entry.
+
+- **Effort** S · **Impact** 8 · **Backend** no · **Status** todo · **Deps** F-101
+- **Prefs** `split.roundTo`, `group:roundTo`, `person:prefersCash`
+- **Acceptance**
+  1. 1000 over 3 rounded to 1 gives 334/333/333 with no paise.
+  2. Conservation holds: the remainder is shown, never lost.
+  3. A friend marked "prefers cash" gets transfers rounded to 10.
+
+### F-403 GST-aware Indian bill lines `spec 4 (extended)`
+
+CGST / SGST / IGST, optional service charge (CCPA hint), packing, round-off; GST only on taxable items; liquor tax follows liquor lines only.
+
+- **Effort** M · **Impact** 8 · **Backend** no · **Status** todo · **Deps** F-401
+- **Prefs** `bill.serviceChargeDefault`
+- **Acceptance**
+  1. People who had no liquor pay no tax on liquor items.
+  2. The round-off line is spread so the total equals the bill.
+  3. A reconciliation line shows items + taxes + service + round-off = total.
+
+### F-404 Item memory and shared-item defaults
+
+Remember who had what at a merchant and pre-assign as dashed suggestions; sharing items (nachos, water, pitcher) default to Everyone.
+
+- **Effort** S · **Impact** 6 · **Backend** no · **Status** todo · **Deps** F-401
+- **Prefs** `itemMemory`
+- **Acceptance**
+  1. The next bill at the same merchant shows remembered items as suggestions to confirm.
+  2. Memory can be cleared and turned off.
+
+### F-405 Line-item cleanup
+
+"3 x Beer 450" expands to 3 units; modifier lines fold into their parent; zero-price lines drop; tax-inclusive receipts are not taxed twice; CGST + SGST merge.
+
+- **Effort** M · **Impact** 8 · **Backend** no · **Status** todo · **Deps** F-401, F-502
+- **Prefs** -
+- **Acceptance**
+  1. "3 x Kingfisher 450" becomes 3 units of 150 that can be portioned.
+  2. A "prices include GST" receipt adds no extra tax.
+  3. A table of real receipt line fixtures passes.
+
+### F-406 Receipt math checker `spec v2 (extended)`
+
+After OCR, check items + tax + service + tip - discounts = printed total; rank likely misread lines and offer one-tap fixes.
+
+- **Effort** S · **Impact** 8 · **Backend** no · **Status** todo · **Deps** F-502
+- **Prefs** -
+- **Acceptance**
+  1. A mismatch shows "Off by 50.00" with ranked culprit lines.
+  2. Fixes: change an item, add a difference item, treat the gap as service charge.
+
+### F-407 Tap-the-receipt painter assignment
+
+Assign items by picking a person as a brush and tapping or dragging over lines on the receipt photo.
+
+- **Effort** M · **Impact** 8 · **Backend** no · **Status** todo · **Deps** F-401, F-502
+- **Prefs** -
+- **Acceptance**
+  1. Tapping a line paints it in that person's colour; a second tap adds a portion.
+  2. Shared lines show striped tints; running per-person totals update live.
+
+### F-408 Delivery and ride e-receipt splitter
+
+Templates for Swiggy, Zomato, Blinkit, Zepto, Uber, Ola, Airbnb, Booking.com screenshots and emails; fees, coupon and tip spread by remembered rules.
+
+- **Effort** M · **Impact** 8 · **Backend** no · **Status** todo · **Deps** F-502, F-509
+- **Prefs** `receipts.feeRule`, `receipts.couponRule`, `receipts.tipRule`
+- **Acceptance**
+  1. The coupon is spread pro-rata to item subtotals.
+  2. Fees split equally by default; the rule is editable and remembered.
+  3. An unknown layout falls back to the generic OCR review.
+
+### F-409 Ticket split with partial cancellation
+
+Parse PNR, passengers and fares from IRCTC or airline confirmations; a cancellation records the refund minus the charge.
+
+- **Effort** M · **Impact** 6 · **Backend** no · **Status** todo · **Deps** F-303, F-509
+- **Prefs** `group:cancellationChargePaidBy`
+- **Acceptance**
+  1. Cancelling 1 of 4 passengers posts a refund entry minus the charge.
+  2. By default the canceller bears the charge; the policy is configurable.
+
+## E5 Capture and automation
+
+Getting expenses in without typing; every automated result lands in one review queue.
+
+### F-501 Receipt scanner `spec v2`
+
+Native document scanners (VisionKit, ML Kit Document Scanner), camera / library / file import, crop / rotate / replace, multi-page, batch mode.
+
+- **Effort** M · **Impact** 8 · **Backend** no · **Status** todo · **Deps** F-312
+- **Prefs** -
+- **Acceptance**
+  1. Camera permission denied still offers library and file import.
+  2. Batch-scanning 5 receipts creates 5 drafts.
+  3. Captures made offline are kept as drafts.
+  4. On web, dropping files onto the window or pasting an image creates drafts.
+
+### F-502 On-device OCR with review `spec v2`
+
+Apple Vision, ML Kit and WASM Tesseract read merchant, date, currency, total, items, tax and tip into an editable review; never auto-posts.
+
+- **Effort** L · **Impact** 9 · **Backend** no · **Status** todo · **Deps** F-501, F-401
+- **Prefs** -
+- **Acceptance**
+  1. A10: a real photo and a PDF produce an editable review.
+  2. Uncertain fields are highlighted and nothing saves without confirmation.
+  3. Read time under 2 s offline on the target device, recorded.
+
+### F-503 Review Inbox for automated drafts
+
+One "To review" queue for OCR, share-in, captures, due recurring items, imports and duplicate warnings, each with confidence and a "why" line.
+
+- **Effort** M · **Impact** 9 · **Backend** no · **Status** todo · **Deps** F-301
+- **Prefs** `inbox.swipeConfirm`
+- **Acceptance**
+  1. The badge on FAB / Activity equals the number of pending drafts.
+  2. Swipe right saves with predicted defaults (undoable); swipe left discards.
+  3. Drafts survive restart.
+
+### F-504 Unified duplicate detection `spec v2 (extended)`
+
+One fingerprint (receipt image hash, UTR / RRN, order ID, fuzzy amount + date + title + people) on save and after merge; warns, never blocks.
+
+- **Effort** M · **Impact** 9 · **Backend** no · **Status** todo · **Deps** F-301
+- **Prefs** -
+- **Acceptance**
+  1. The same dinner logged by two people offline is flagged after merge.
+  2. The same UTR recorded twice is flagged.
+  3. "Not a duplicate" is remembered.
+
+### F-505 Attach-to-existing matcher and missing-receipt nudge
+
+A scanned receipt that matches an expense without attachment offers "Attach to Hotel 12,000 (Mon)?"; expenses above a threshold nudge for a receipt.
+
+- **Effort** S · **Impact** 7 · **Backend** no · **Status** todo · **Deps** F-502
+- **Prefs** `receipts.missingThreshold`
+- **Acceptance**
+  1. Accepting attaches the image and fills items without changing who paid.
+  2. The missing-receipt list honours the threshold setting.
+
+### F-506 Receipt currency and number-format auto-detect `spec v2 (extended)`
+
+Infer currency from symbols, ISO codes, tax labels, address, phone prefix, active trip; parse every number style.
+
+- **Effort** S · **Impact** 7 · **Backend** no · **Status** todo · **Deps** F-502
+- **Prefs** -
+- **Acceptance**
+  1. A receipt with "MwSt" and "1.234,56" reads as EUR 1234.56.
+  2. An ambiguous "$" resolves from the active trip and shows a changeable chip.
+
+### F-507 Quick add by text v2 `spec v2`
+
+Offline parser for amounts (k, lakh, rs), relative dates, fuzzy people and nicknames, payer, split hints, group, several expenses per line, Hinglish; live parse chips; always reviewed.
+
+- **Effort** M · **Impact** 8 · **Backend** no · **Status** todo · **Deps** F-310, F-503
+- **Prefs** `quickAdd.reviewAlways`
+- **Acceptance**
+  1. "Dinner 1200 with Riya and Sam" makes a 3-person equal draft.
+  2. "petrol 2k kal" gives 2000, yesterday, with a date chip to confirm.
+  3. Table-driven bun tests cover English and Hinglish.
+
+### F-508 Push-to-talk voice add `spec v2 (extended)`
+
+Long-press the FAB to dictate; on-device speech recognition (en-IN, hi-IN) feeds the quick-add parser.
+
+- **Effort** M · **Impact** 7 · **Backend** no · **Status** todo · **Deps** F-507
+- **Prefs** `voice.language`
+- **Acceptance**
+  1. Dictation works offline where the OS supports on-device recognition and falls back to the text field.
+  2. The result is a draft card, never a saved expense.
+
+### F-509 Incoming share `spec v2`
+
+iOS share extension, Android intent and Web Share Target (file import elsewhere); direct-to-group share targets; images, PDFs, text and URLs; drafts survive login and offline.
+
+- **Effort** L · **Impact** 7 · **Backend** no · **Status** todo · **Deps** F-503
+- **Prefs** -
+- **Acceptance**
+  1. Sharing a photo from Photos lands as an Inbox draft.
+  2. An Android sharing shortcut "Splito - Goa trip" presets the group.
+  3. An unsupported browser offers file import instead.
+
+### F-510 Paste or share text into drafts `spec 4b (extended)`
+
+Bank SMS, UPI alerts, email text and chat lines become a checklist of parsed rows sent to the Inbox.
+
+- **Effort** M · **Impact** 7 · **Backend** no · **Status** todo · **Deps** F-507
+- **Prefs** -
+- **Acceptance**
+  1. Common Indian bank SMS formats parse amount, payee and date.
+  2. A multi-line paste gives one row per detected expense.
+  3. Unparsed text stays in the title, never lost.
+
+### F-511 Payment-screenshot split (RRN-aware) `spec 4b`
+
+UPI app screenshots: map UPI Ref / Transaction ID / UTR to one RRN; only "Success" accepted; payee VPA matched to a friend decides expense vs settlement.
+
+- **Effort** M · **Impact** 7 · **Backend** no · **Status** todo · **Deps** F-502, F-1106, F-509
+- **Prefs** -
+- **Acceptance**
+  1. A pending screenshot becomes a parked draft.
+  2. A payment to a friend's saved VPA proposes "Record as settlement".
+  3. The RRN is the duplicate key.
+
+### F-512 Payment notification and bank SMS capture (Android, opt-in)
+
+NotificationListener for allow-listed payment and bank apps plus opt-in SMS, parsed on device into "Split this?" drafts.
+
+- **Effort** L · **Impact** 8 · **Backend** no · **Status** todo · **Deps** F-510, F-1106
+- **Prefs** `capture.notifications`, `capture.sms`, `capture.packages`
+- **Acceptance**
+  1. Only allow-listed packages are read; raw text never leaves the device.
+  2. A payment to a friend's VPA suggests "Record as settlement with Riya?".
+  3. Play policy declaration documented; notification path works if SMS is refused.
+
+### F-513 Wallet tap to split draft (iOS Shortcuts)
+
+An App Intent run by the Wallet transaction automation creates an Inbox draft and an actionable local notification.
+
+- **Effort** M · **Impact** 7 · **Backend** no · **Status** todo · **Deps** F-1906
+- **Prefs** `capture.walletFilter`
+- **Acceptance**
+  1. Guided setup installs the automation in one flow.
+  2. The "only during trips / only these cards" filter suppresses other taps.
+
+### F-514 Merchant dictionary and name cleanup `spec 4b (extended)`
+
+Bundled merchant dictionary per market and learned renames turn "UBER *TRIP HELP.UBER.COM" into "Uber" with the right category; raw string kept for audit.
+
+- **Effort** M · **Impact** 6 · **Backend** no · **Status** todo · **Deps** F-307
+- **Prefs** -
+- **Acceptance**
+  1. Renaming a raw string once applies to every later capture of it.
+  2. The raw string stays in metadata and in duplicate matching.
+
+### F-515 Smart defaults predictor
+
+On-device counts and recency predict group, payer, participants, split and currency from title, time, location and active trip; each prediction shows why.
+
+- **Effort** M · **Impact** 9 · **Backend** no · **Status** todo · **Deps** F-301
+- **Prefs** `smartDefaults`
+- **Acceptance**
+  1. "Groceries" on a weekday predicts the flat group and its template.
+  2. Tapping the sparkle shows "Why: last 6 Groceries...".
+  3. Learning is per device, clearable, and can be switched off.
+
+### F-516 Automation rules engine `spec 4b (extended)`
+
+Ordered if/then rules (title, merchant, amount, source, card, group, weekday -> category, tags, template, payer, participants, skip Inbox); apply to past with preview and undo.
+
+- **Effort** M · **Impact** 7 · **Backend** no · **Status** todo · **Deps** F-305, F-503, F-1404
+- **Prefs** `automation.rules`
+- **Acceptance**
+  1. A rule runs on manual add, quick add, OCR, share-in and import.
+  2. "Apply to past" previews a diff and commits as one undoable batch.
+  3. The predictor offers "Make this a rule?".
+
+### F-517 Recurring pattern detection and price-change alerts
+
+Spot the same merchant at a regular cadence and offer a recurring rule; flag changed or missing amounts.
+
+- **Effort** S · **Impact** 7 · **Backend** no · **Status** todo · **Deps** F-306
+- **Prefs** -
+- **Acceptance**
+  1. 3 monthly Netflix entries suggest a prefilled recurring rule.
+  2. "Netflix went from 649 to 799, update the rule?" appears after a change.
+
+### F-518 Utility bill OCR
+
+Read billing period, due date, account number and units from utility bills to fill the variable bill, due board and proration period.
+
+- **Effort** M · **Impact** 6 · **Backend** no · **Status** todo · **Deps** F-502, F-306
+- **Prefs** -
+- **Acceptance**
+  1. A scanned electricity bill fills amount, period and due date of the due variable bill.
+  2. Uncertain fields are highlighted and nothing posts without review.
+
+### F-519 Booking confirmation to expense with dates
+
+Hotel, Airbnb or flight confirmations (PDF, email, screenshot) become drafts with amount, currency and check-in/out; stays prefill the nights split.
+
+- **Effort** L · **Impact** 6 · **Backend** no · **Status** todo · **Deps** F-509, F-702
+- **Prefs** -
+- **Acceptance**
+  1. An Airbnb PDF produces a draft with nights prefilled for present members.
+  2. Only money and dates are kept, never an itinerary.
+
+### F-520 Trip auto-detect from spending clusters
+
+Several expenses in 48 h in a new currency or with travel merchants suggest creating a trip with them.
+
+- **Effort** S · **Impact** 6 · **Backend** no · **Status** todo · **Deps** F-1405
+- **Prefs** `tripDetect`
+- **Acceptance**
+  1. Accepting creates the trip with dates and currency and moves the chosen expenses with history.
+  2. Dismissal is remembered for that cluster.
+
+### F-521 Composer suggestions from clipboard and latest screenshot
+
+Opening Add expense offers one chip: "Use INR 432 from clipboard" or "Split from screenshot".
+
+- **Effort** S · **Impact** 6 · **Backend** no · **Status** todo · **Deps** F-507, F-502
+- **Prefs** `composer.clipboardSuggestions`
+- **Acceptance**
+  1. Uses the OS paste control and limited photo access; no silent clipboard reads.
+  2. The chip is dismissible and the feature can be turned off.
+
+### F-522 Statement and CSV import with column mapper
+
+CSV, XLSX, OFX, QIF and PDF statements with a saved column mapper; rows go to the Inbox with an Ours / Mine / Theirs swipe.
+
+- **Effort** L · **Impact** 8 · **Backend** no · **Status** todo · **Deps** F-503, F-504
+- **Prefs** `import.profiles`
+- **Acceptance**
+  1. A mapping saved as "HDFC credit card" is reused on the next import.
+  2. Duplicates are caught by date + amount + normalised description.
+  3. Parsing runs on device.
+
+## E6 People and groups
+
+Who is in the ledger and how groups behave.
+
+### F-601 Private friends `spec v1`
+
+Add friends without accounts or invites.
+
+- **Effort** S · **Impact** 9 · **Backend** no · **Status** in progress · **Deps** F-103
+- **Prefs** -
+- **Acceptance**
+  1. A friend can be added offline with only a name.
+  2. Deleting a friend with ledger rows never erases history.
+  3. A deleted friend shows by name with a "former friend" label on every past record and can be restored from Recently deleted.
+
+### F-602 Add friend from device contacts
+
+System contact picker imports one person without full address-book permission or upload.
+
+- **Effort** S · **Impact** 7 · **Backend** no · **Status** todo · **Deps** F-601
+- **Prefs** -
+- **Acceptance**
+  1. Only the name and the phone/email the user ticks are stored.
+  2. The stored phone powers wa.me reminders.
+
+### F-603 Groups and trips `spec v1`
+
+Name, type, currency, members, roles, trip dates; membership changes never rewrite past splits.
+
+- **Effort** M · **Impact** 10 · **Backend** no · **Status** in progress · **Deps** F-601
+- **Prefs** -
+- **Acceptance**
+  1. A09: adding or removing a member leaves old splits unchanged.
+  2. Former members keep correct access to past records locally.
+
+### F-604 Archive groups `spec v1`
+
+Hide a group from lists while keeping its records, balances and search hits.
+
+- **Effort** S · **Impact** 6 · **Backend** no · **Status** todo · **Deps** F-603
+- **Prefs** -
+- **Acceptance**
+  1. An archived group is hidden from Groups but still counted in balances.
+  2. Unarchive restores it.
+
+### F-605 Group emoji and colour
+
+Emoji and colour per group, picked with Bluesky's expo-emoji-picker or suggested from type and name.
+
+- **Effort** S · **Impact** 6 · **Backend** no · **Status** todo · **Deps** F-603
+- **Prefs** -
+- **Acceptance**
+  1. "Goa" suggests a beach emoji; the user can override it.
+  2. Emoji shows in lists, sidebar recent groups and share cards.
+
+### F-606 Group templates
+
+Trip, Home, Couple, Family, Family trip, Co-parenting, Wedding/event and Collection presets for type, categories, cards, rules and cadence.
+
+- **Effort** S · **Impact** 7 · **Backend** no · **Status** todo · **Deps** F-603
+- **Prefs** -
+- **Acceptance**
+  1. A template only sets defaults; every value stays editable.
+  2. The group kind union is extended without breaking existing groups.
+
+### F-607 Households: a couple or family settles as one party
+
+Bundle members into households with effective-dated adult/child weights; balances and the settle plan show one line per household.
+
+- **Effort** M · **Impact** 9 · **Backend** no · **Status** todo · **Deps** F-102, F-603
+- **Prefs** `household.childWeight`, `group:showInsideHousehold`
+- **Acceptance**
+  1. "Sharma family, 2 adults + 2 kids at 0.5" gets weight 3 when splitting by heads.
+  2. The settle plan routes one payment per household.
+  3. A weight change from a date leaves earlier splits unchanged; items can still go to individuals.
+
+### F-608 Dependents: kids, pets and parents who never owe
+
+Dependents can be tagged on expenses but never carry a balance; their share rolls up to guardians by rule.
+
+- **Effort** M · **Impact** 8 · **Backend** no · **Status** todo · **Deps** F-607
+- **Prefs** -
+- **Acceptance**
+  1. A dependent's share rolls up 50/50, by ratio, or to one guardian.
+  2. The report shows "Spent on Aarav this year" by category.
+
+### F-609 Per-category split rules for a group `spec v3 (per-group default split)`
+
+"How we split": a rule per category, member default weights and an "include in new expenses" switch, all effective-dated.
+
+- **Effort** M · **Impact** 9 · **Backend** no · **Status** todo · **Deps** F-305
+- **Prefs** `group:splitRules`, `group:memberDefaults`
+- **Acceptance**
+  1. Picking Rent applies room weights and shows a "House rule" chip.
+  2. Overriding applies to that expense only.
+  3. A rule change from a date never rewrites past expenses.
+
+### F-610 Per-group permissions (local) `spec 4b gap 11`
+
+"Who can..." add, edit or delete others' expenses, manage members and rules, record payments for others; enforced locally now, on the server in F-2108.
+
+- **Effort** M · **Impact** 8 · **Backend** no · **Status** todo · **Deps** F-603
+- **Prefs** `group:perm.add`, `group:perm.editOthers`, `group:perm.manage`, `group:perm.recordForOthers`
+- **Acceptance**
+  1. Default: everyone adds; editing others is creator and admins.
+  2. A blocked action says who can do it.
+
+### F-611 Pinned group note and payment-handle directory
+
+Admin-editable pinned note; Members tab lists each member's handles with Copy and QR.
+
+- **Effort** S · **Impact** 5 · **Backend** no · **Status** todo · **Deps** F-1106
+- **Prefs** -
+- **Acceptance**
+  1. Handles from the directory flow into summaries and pay sheets.
+  2. Note edits appear in history.
+
+### F-612 Duplicate group as template
+
+Copy members, households, rules, currencies, categories, budget and kitty setup into a new group with no expenses.
+
+- **Effort** S · **Impact** 5 · **Backend** no · **Status** todo · **Deps** F-603
+- **Prefs** -
+- **Acceptance**
+  1. The copy has new dates and zero expenses.
+  2. The source group is unchanged.
+
+### F-613 Safe member removal and drop-out re-split wizard
+
+Removing a member with a balance offers settle, forgive or keep inactive; a wizard walks their expenses: still pays, refund, or re-split.
+
+- **Effort** M · **Impact** 7 · **Backend** no · **Status** todo · **Deps** F-1113
+- **Prefs** -
+- **Acceptance**
+  1. Each choice previews every member's balance change.
+  2. The wizard writes explicit revisions; history is kept.
+
+### F-614 Presence calendar: stay dates, away days, guest nights `spec v2 nights (extended)`
+
+Members get one or more presence ranges, away days and guest nights; new expenses default to members present on their date.
+
+- **Effort** M · **Impact** 8 · **Backend** no · **Status** todo · **Deps** F-106, F-603
+- **Prefs** -
+- **Acceptance**
+  1. An expense on day 5 defaults to the members present on day 5.
+  2. Editing a range never rewrites saved splits and offers a reviewed re-split.
+
+### F-615 Leave or delete a group
+
+Leave a group yourself or delete a whole group. A non-zero balance offers settle, forgive (F-1113) or stay as an inactive member; delete tombstones the group and its records into Recently deleted; the last admin hands admin on first.
+
+- **Effort** M · **Impact** 8 · **Backend** no · **Status** todo · **Deps** F-603, F-1113, F-1203
+- **Prefs** -
+- **Acceptance**
+  1. Deleting a group lists what goes, lands in Recently deleted and restores with every expense and payment intact.
+  2. Leaving with a balance never drops it silently; the choice is recorded in history.
+  3. The last admin cannot leave until admin is handed on; server enforcement of the leaver's read access arrives with F-2108.
+
+### F-616 Merge duplicate friends
+
+Merge two private people who are the same person ("Sam" and "Sam K"): preview every balance and history change, re-point records through explicit revisions, keep the old name as an alias.
+
+- **Effort** M · **Impact** 7 · **Backend** no · **Status** todo · **Deps** F-601
+- **Prefs** -
+- **Acceptance**
+  1. Balances after the merge equal the sum of both people's balances per currency; when both were on one expense their shares combine into one.
+  2. The merge is one undoable batch and appears in history.
+  3. Suggestions need a matching phone or email, never a display name alone, and the user always confirms.
+
+### F-617 Saved member subsets and a big-group picker
+
+Named subsets inside a group ("Car 1", "Room B", "Divers") picked in one tap; the participant picker gets search, select all / none / invert and recent combinations for groups of 10 or more.
+
+- **Effort** S · **Impact** 7 · **Backend** no · **Status** todo · **Deps** F-603
+- **Prefs** `group:subsets`
+- **Acceptance**
+  1. Picking "Room B" selects exactly its current members; a removed member is dropped with a note.
+  2. Select all, none and invert work by keyboard and screen reader.
+  3. The picker stays smooth with 50 members (virtualized, measured).
+
+## E7 Trips and travel
+
+Everything a group trip needs, from first booking to closing the books.
+
+### F-701 Trip kitty v2: multi-currency, holder hand-off, cash count `spec v2`
+
+Several currencies in one pot, named holder with recorded hand-off, "Count the kitty" turning gaps into unrecorded spend, top-ups, card kitty, leftover return.
+
+- **Effort** L · **Impact** 9 · **Backend** no · **Status** todo · **Deps** F-105
+- **Prefs** `group:kitty.lowBalance`, `group:kitty.defaultPayer`
+- **Acceptance**
+  1. The kitty shows one balance per currency.
+  2. "Hand kitty to Sam" is recorded and the holder shown.
+  3. Counting less than expected creates an "Unrecorded spend" to split or assign.
+  4. Leftover returns pro-rata per currency.
+
+### F-702 Split by nights or days present, with room weights `spec v2`
+
+Accommodation by nights stayed, per-day costs by days present, room weights for unequal rooms.
+
+- **Effort** M · **Impact** 8 · **Backend** no · **Status** todo · **Deps** F-614
+- **Prefs** -
+- **Acceptance**
+  1. A stays 3 nights and B 2 nights of a 5-night villa: 60/40.
+  2. Room weights 1.5 / 0.5 allocate exactly.
+
+### F-703 Trip dashboard and day-by-day timeline with budget pace `spec v2`
+
+Expenses grouped by trip day in the leg's timezone, day totals per currency, spent vs budget, pace per remaining day.
+
+- **Effort** M · **Impact** 7 · **Backend** no · **Status** todo · **Deps** F-1304, F-704
+- **Prefs** `trip.paceAlert`
+- **Acceptance**
+  1. Expenses before day 1 sit in "Before the trip".
+  2. Day headers show totals per currency and my share.
+  3. The pace line reads "JPY 8,200/day for 7 days" with an opt-in over-pace notification.
+
+### F-704 Trip legs and travel mode
+
+Legs with currency and IANA timezone; new expenses default from the leg of their date; a device timezone change offers to switch defaults.
+
+- **Effort** M · **Impact** 8 · **Backend** no · **Status** todo · **Deps** F-603, F-1002
+- **Prefs** `travelMode`
+- **Acceptance**
+  1. An expense dated in leg 2 defaults to THB and Asia/Bangkok.
+  2. A device timezone change offers "Default to THB?" with no location permission.
+  3. Single-leg trips show no leg UI.
+
+### F-705 Close the trip: wrap-up checklist `spec 4b gap 11`
+
+After the end date: grace window with "anything missing?" nudge, disputes, kitty count, settle currency, share plan; then freeze, reopen logged, auto-archive at zero.
+
+- **Effort** M · **Impact** 9 · **Backend** no · **Status** todo · **Deps** F-604, F-1205, F-701, F-1007
+- **Prefs** `group:closeGraceDays`
+- **Acceptance**
+  1. The card shows each step, skippable and remembered, and says what blocks it.
+  2. Close makes the group read-only; an admin reopen is logged in history.
+  3. The group auto-archives when every balance is zero.
+
+### F-706 What this trip cost me
+
+Private per-viewer total in home currency: my shares, my personal trip expenses and my card/ATM fees, by day and category.
+
+- **Effort** M · **Impact** 8 · **Backend** no · **Status** todo · **Deps** F-1302, F-1005
+- **Prefs** -
+- **Acceptance**
+  1. Repayments never count as spending.
+  2. Each component uses its own frozen rate.
+
+### F-707 Pre-trip bookings and refundable deposits
+
+Flag an expense as a refundable deposit with expected amount and date; it shows "pending refund" until recorded.
+
+- **Effort** M · **Impact** 7 · **Backend** no · **Status** todo · **Deps** F-303, F-705
+- **Prefs** -
+- **Acceptance**
+  1. The refund flows back per the original split.
+  2. The wrap-up checklist blocks on unreturned deposits.
+
+### F-708 Offline phone-to-phone exchange (QR and file)
+
+With no signal, move pending operations between phones as an animated multi-frame QR or a signed .splito bundle (AirDrop, Quick Share); dedupe by operation ID.
+
+- **Effort** XL · **Impact** 7 · **Backend** no · **Status** todo · **Deps** F-107
+- **Prefs** -
+- **Acceptance**
+  1. 50 operations transfer between two phones in airplane mode.
+  2. Re-importing a bundle changes nothing; conflicting edits surface as conflicts.
+  3. Imported operations are labelled "from Sam, not yet synced".
+
+### F-709 Road trip: fuel and distance split
+
+Fuel and tolls split by the distance each person rode (or per car with its riders, using F-617 subsets), with an optional per-km allowance for the car owner; km become integer weights for allocate().
+
+- **Effort** S · **Impact** 5 · **Backend** no · **Status** todo · **Deps** F-302, F-617
+- **Prefs** `group:carRatePerKm`
+- **Acceptance**
+  1. Fuel 3,000 with Riya 300 km and Sam 100 km gives 2,250 / 750 exactly.
+  2. A per-km allowance creates a labelled expense owed to the car owner.
+
+## E8 Home and household
+
+Flatshares and long-running homes.
+
+### F-801 Flat setup wizard
+
+Five skippable screens for rent, deposit, bills, house rules and move-in dates that create all rules in one local transaction.
+
+- **Effort** M · **Impact** 8 · **Backend** no · **Status** todo · **Deps** F-606, F-306, F-609, F-802
+- **Prefs** -
+- **Acceptance**
+  1. Finishing the wizard creates every recurring rule and category rule atomically.
+  2. Every value is editable later in group settings.
+
+### F-802 Fair rent calculator
+
+Split rent by room area, features, income or hybrid with a live money preview; saves as Rent rule weights.
+
+- **Effort** S · **Impact** 7 · **Backend** no · **Status** todo · **Deps** F-609
+- **Prefs** -
+- **Acceptance**
+  1. The preview uses allocate() and sums to the rent exactly.
+  2. Inputs are stored so the split can be recalculated.
+
+### F-803 Rent collector board
+
+Per-cycle board: collected vs due, landlord due date, one row per flatmate with a pay link netted against other house balances.
+
+- **Effort** M · **Impact** 9 · **Backend** no · **Status** todo · **Deps** F-306, F-1109, F-1104
+- **Prefs** `group:rentCollector`
+- **Acceptance**
+  1. Each cycle shows "30,000 of 45,000 collected - landlord due 5 Nov".
+  2. A row's pay amount nets other balances ("15,000 - 1,200 = 13,800").
+  3. Payments are normal repayments with no double count.
+
+### F-804 Billing periods with day proration
+
+Bills carry a period and split by inclusive days each member lived there; move-in month rent prorates.
+
+- **Effort** M · **Impact** 9 · **Backend** no · **Status** todo · **Deps** F-106, F-614
+- **Prefs** `group:prorateCategories`
+- **Acceptance**
+  1. "Alex: 19 of 30 days" explanation shown per share.
+  2. A category can opt out (e.g. fixed install fee).
+
+### F-805 Move-out checkout wizard
+
+Move-out date, trailing-bill holdback, deposit share, asset buyout, final balance and plan; the leaver keeps read access.
+
+- **Effort** L · **Impact** 9 · **Backend** no · **Status** todo · **Deps** F-804, F-806, F-810, F-613
+- **Prefs** -
+- **Acceptance**
+  1. A holdback estimate is trued up when the real bill arrives.
+  2. Deposit and asset steps write explicit ledger entries.
+  3. The leaver is excluded from new expenses; a final statement is shareable.
+
+### F-806 Security deposit ledger
+
+Deposit as a held-funds pot: contributors, holder, condition photos, refund with itemized deductions, handover to an incoming flatmate.
+
+- **Effort** M · **Impact** 8 · **Backend** no · **Status** todo · **Deps** F-105, F-312
+- **Prefs** -
+- **Acceptance**
+  1. The deposit never counts as spending.
+  2. Refund minus attributed deductions is allocated pro-rata to contributions.
+  3. Handover changes ownership without touching the landlord.
+
+### F-807 Bills due board and calendar `spec v1 upcoming (extended)`
+
+Upcoming bills by due date with an assigned payer, "paid to provider" separate from flatmate balances, local reminders, late-fee charge, duplicate subscription check.
+
+- **Effort** M · **Impact** 8 · **Backend** no · **Status** todo · **Deps** F-306, F-1907
+- **Prefs** `bills.remindDaysBefore`
+- **Acceptance**
+  1. "Paid to provider" is tracked separately from who owes whom.
+  2. Reminders fire offline N days before the due date.
+  3. "You both pay for Spotify" is flagged.
+
+### F-808 Month close and household statement
+
+Monthly cycle with a statement card; closing locks the month; edits need a reason recorded in history; open balances carry forward.
+
+- **Effort** M · **Impact** 8 · **Backend** no · **Status** todo · **Deps** F-1205
+- **Prefs** `group:cycleStartDay`
+- **Acceptance**
+  1. Editing a closed month requires an unlock reason, logged in history.
+  2. Unsettled balances carry forward as a labelled opening line.
+  3. Totals stay per currency.
+
+### F-809 Shared shopping list to itemized expense
+
+Offline group list with Shared / For-person tags and repeating staples; Checkout opens an itemized expense with ticked items.
+
+- **Effort** M · **Impact** 7 · **Backend** no · **Status** todo · **Deps** F-401, F-609
+- **Prefs** -
+- **Acceptance**
+  1. Shared items follow the category rule and personal items go to the requester.
+  2. Unticked items stay on the list.
+
+### F-810 Shared asset register with buyout
+
+Flag group purchases as assets with ownership shares and depreciation; buyout, sell or leaver-takes-it at move-out.
+
+- **Effort** M · **Impact** 6 · **Backend** no · **Status** todo · **Deps** F-301
+- **Prefs** -
+- **Acceptance**
+  1. Buyout pays the leaver their share of the current value.
+  2. The asset stays linked to its original expense.
+
+### F-811 Metered utility split
+
+Split by sub-meter readings or AC hours x tonnage with a common-area remainder by rule.
+
+- **Effort** M · **Impact** 6 · **Backend** no · **Status** todo · **Deps** F-609
+- **Prefs** -
+- **Acceptance**
+  1. Units become weights and the total still equals the bill exactly.
+  2. Last cycle's end reading prefills this cycle's start.
+
+### F-812 Household staff payroll
+
+Monthly salary rule with leave deductions, advances recovered and credited to whoever gave them, bonuses by rule.
+
+- **Effort** M · **Impact** 6 · **Backend** no · **Status** todo · **Deps** F-306
+- **Prefs** -
+- **Acceptance**
+  1. Leave deducts salary / days-in-month per day.
+  2. An advance is recovered from the next salary and credited to its giver.
+
+### F-813 Chore-cover payouts
+
+One tap records a transfer from the absent member to whoever covered a chore, at a per-chore amount; labelled household transfers, not spending.
+
+- **Effort** M · **Impact** 4 · **Backend** no · **Status** todo · **Deps** F-301
+- **Prefs** `group:coverPay`
+- **Acceptance**
+  1. Cover pay never counts as spending in reports.
+  2. The amount is set per chore and editable.
+
+### F-814 Presence-aware category rules
+
+Per category, choose whether away days and guest nights change the split (groceries yes, rent no).
+
+- **Effort** M · **Impact** 7 · **Backend** no · **Status** todo · **Deps** F-614, F-609
+- **Prefs** `group:presenceCategories`
+- **Acceptance**
+  1. Groceries weight by days present plus guest nights; rent ignores away days.
+  2. Each share explains "Sam: 16 of 31 days, +4 guest nights".
+
+### F-815 Household and joint pots `spec v2 kitty (extended)`
+
+Recurring contribution targets (equal or ratio), "Paid from: Joint account" payer, low-balance top-up, carry-over or refund at period end.
+
+- **Effort** M · **Impact** 8 · **Backend** no · **Status** todo · **Deps** F-105, F-306
+- **Prefs** `group:pot.contribution`, `group:pot.leftoverPolicy`
+- **Acceptance**
+  1. "Sam is Rs 2,000 short this month" shows against target.
+  2. Expenses paid from the pot move no member-to-member debt.
+
+### F-816 Daily quantity log: milk, tiffin and water cans
+
+Log daily quantities with skip days against a rate; at month end the log becomes one variable bill (F-306) with the computed amount, split by the group rule.
+
+- **Effort** S · **Impact** 5 · **Backend** no · **Status** todo · **Deps** F-306
+- **Prefs** -
+- **Acceptance**
+  1. 31 days with 3 skipped at 1.5 L x 60 gives the exact month amount and lists the skipped days.
+  2. A rate change from a date applies only from that date.
+  3. Nothing posts until the month's bill is confirmed.
+
+## E9 Couples and family
+
+Partners, kids and the wider family.
+
+### F-901 Ours / Mine / For you chips
+
+Three big chips: Ours (group rule), Mine (private, never synced to the group), For you (partner owes 100%), with a plain-language preview.
+
+- **Effort** S · **Impact** 8 · **Backend** no · **Status** todo · **Deps** F-609
+- **Prefs** `couple.defaultChip`
+- **Acceptance**
+  1. A Mine expense never syncs to the group or shows to the partner.
+  2. For you makes the partner owe 100%; the preview reads "Sam will owe you Rs 840".
+
+### F-902 Income-proportional fair-share ratio `spec v1 templates (extended)`
+
+Each partner's income stays on their device; only the derived ratio syncs, as a live, effective-dated template.
+
+- **Effort** S · **Impact** 9 · **Backend** no · **Status** todo · **Deps** F-305
+- **Prefs** `fairShare.income` (device), `fairShare.ratio`
+- **Acceptance**
+  1. allocate(10000, incomes) totals exactly 100.00%.
+  2. Incomes never leave the device (no outbox rows).
+  3. An income change affects new expenses only.
+
+### F-903 "Us" overview card with fairness meter
+
+Month together, net in one calm line, upcoming bills, top categories, and "you covered 58%, agreed share 62%".
+
+- **Effort** M · **Impact** 8 · **Backend** no · **Status** todo · **Deps** F-902, F-1302
+- **Prefs** -
+- **Acceptance**
+  1. The meter is per currency and computed from ledger data only.
+  2. Tapping it opens a breakdown by month and category.
+
+### F-904 Shared goals and savings pots
+
+A target with deadline and per-member monthly contributions; spending from the goal pot creates no debt.
+
+- **Effort** M · **Impact** 6 · **Backend** no · **Status** todo · **Deps** F-105
+- **Prefs** -
+- **Acceptance**
+  1. Progress shows "on track" or "2 months behind".
+  2. Spending the goal draws from the pot.
+
+### F-905 IOU loans and EMI splits
+
+Loan records with repayment schedules kept apart from everyday balances; group purchases on EMI post monthly shares.
+
+- **Effort** M · **Impact** 7 · **Backend** no · **Status** todo · **Deps** F-301
+- **Prefs** -
+- **Acceptance**
+  1. People shows "Loan: Rs 35,000 left" separately.
+  2. Partial repayments match instalments; EMI shows "paid 3 of 6".
+  3. Loans never count as spending.
+
+### F-906 Kids' allowance and pocket-money ledger
+
+Recurring allowance, chore bonuses, spending and advances repaid from future allowance; kid view behind a PIN.
+
+- **Effort** M · **Impact** 6 · **Backend** no · **Status** todo · **Deps** F-608, F-306
+- **Prefs** -
+- **Acceptance**
+  1. An advance of 200 deducts 50 from each of the next 4 allowances.
+  2. The kid view is read-only behind a PIN.
+
+### F-907 Co-parenting ledger
+
+Two households, fixed child categories with agreed ratios and receipt-required flags, reimbursement requests, neutral wording, dated export.
+
+- **Effort** L · **Impact** 6 · **Backend** no · **Status** todo · **Deps** F-606, F-609, F-1204
+- **Prefs** -
+- **Acceptance**
+  1. Medical 70/30 applies automatically to Medical expenses.
+  2. Approve / decline with reason works locally; shared approval arrives with F-2208.
+  3. Dated PDF and CSV export for a mediator.
+
+### F-908 Shagun / gift register
+
+Gifts given and received per family per occasion, separate from balances.
+
+- **Effort** M · **Impact** 5 · **Backend** no · **Status** todo · **Deps** F-301
+- **Prefs** `gifts.suggestShagun`
+- **Acceptance**
+  1. Gifts never affect balances.
+  2. "What did the Guptas give us?" lookup works offline.
+
+### F-909 Wedding and event mode
+
+Sides with a configurable ratio, functions as sub-events, vendor advance-and-balance schedules with reminders, budgets per head.
+
+- **Effort** L · **Impact** 6 · **Backend** no · **Status** todo · **Deps** F-606, F-607, F-1304
+- **Prefs** `group:sides.ratio`
+- **Acceptance**
+  1. One ledger with filters per side and per function.
+  2. Vendor balance due dates create local reminders.
+
+### F-910 Year-end tax pack and cost of living
+
+Per-person yearly report: rent paid (with monthly HRA rent receipts), tuition, insurance, home-loan EMIs; plus "my cost of living" per month.
+
+- **Effort** M · **Impact** 6 · **Backend** no · **Status** todo · **Deps** F-1302, F-1503
+- **Prefs** `tax.locale`
+- **Acceptance**
+  1. Rent receipts are generated only from recorded rent payments and marked "requires landlord signature".
+  2. Tax sections are configurable per locale.
+
+## E10 Currencies and FX
+
+Honest multi-currency, from card statements to settling abroad.
+
+### F-1001 Currency catalog and per-currency totals `spec v1`
+
+ISO 4217 catalog with scale, symbol and name; no API ever sums unlike currencies.
+
+- **Effort** M · **Impact** 9 · **Backend** no · **Status** done (packages/domain) · **Deps** F-101
+- **Prefs** `defaultCurrency`, `enabledCurrencies` (spec v1 "configurable enabled set"; picker UI still todo in F-1701)
+- **Acceptance**
+  1. Every catalog currency formats with its scale.
+  2. Tests prove totals stay per currency.
+
+### F-1002 Conversion records and exchange rates `spec v1`
+
+Rate fetch from a third-party provider when online; stored source, target, decimal rate, provider, time and rounding; labelled manual rate; stale/offline labels; frozen per transaction.
+
+- **Effort** M · **Impact** 9 · **Backend** no · **Status** todo · **Deps** F-1001
+- **Prefs** `fx.provider`, `fx.showConverted`
+- **Acceptance**
+  1. A11: repeating a calculation uses the stored rate.
+  2. An offline quote is labelled stale with its timestamp.
+  3. Original amounts never change.
+
+### F-1003 Offline rate pack and re-price review `spec v1 (extended)`
+
+Pre-fetch rates for a trip's currencies against every member's home currency; on reconnect, one review card offers to re-price offline entries.
+
+- **Effort** S · **Impact** 7 · **Backend** no · **Status** todo · **Deps** F-1002
+- **Prefs** -
+- **Acceptance**
+  1. Offline entries show "rate from Mon 3 Mar (offline)".
+  2. The review previews each member's change; settled expenses are excluded.
+
+### F-1004 Trip rate book
+
+One agreed rate per currency per trip with a labelled source; changes are versioned with a balance preview.
+
+- **Effort** M · **Impact** 8 · **Backend** no · **Status** todo · **Deps** F-1002, F-603
+- **Prefs** -
+- **Acceptance**
+  1. New expenses default to the trip rate offline.
+  2. A rate change asks "new expenses only" (default) or "re-price unsettled" and never touches settled history.
+
+### F-1005 Card-charged amount sets the real rate `spec v1 manual rate (extended)`
+
+Optional "charged to card" home-currency amount derives and freezes the effective rate; filled now or later; per-trip policy on who bears FX fees.
+
+- **Effort** M · **Impact** 9 · **Backend** no · **Status** todo · **Deps** F-1002
+- **Prefs** `group:cardFxPolicy`
+- **Acceptance**
+  1. JPY 4,500 charged as INR 2,512 stores the effective rate as a decimal string with source "card".
+  2. A "card amount pending" chip shows until it is filled.
+  3. The markup over market is shown.
+
+### F-1006 Cash wallets and forex lots
+
+ATM withdrawals and money-changer purchases create a cash pocket at its real rate; cash expenses use the weighted rate; reconcile the pocket.
+
+- **Effort** M · **Impact** 8 · **Backend** no · **Status** todo · **Deps** F-1005
+- **Prefs** `group:atmFeesShared`
+- **Acceptance**
+  1. "Paid from my cash" uses the pocket's weighted-average rate.
+  2. "I have JPY 4,100, app expects 5,000" turns the gap into an expense.
+
+### F-1007 Settle a trip in one currency with rate-policy preview `spec v1`
+
+Settle in one currency or each receiver's home currency; preview each member's result under frozen, rate-book and today's rates; confirm writes explicit conversion transactions.
+
+- **Effort** L · **Impact** 9 · **Backend** no · **Status** todo · **Deps** F-1004, F-1101
+- **Prefs** `group:settleCurrency`
+- **Acceptance**
+  1. The preview shows each person's difference between policies.
+  2. Confirming writes one conversion per currency pair so the plan is one payment per pair.
+  3. Settled history is never re-priced.
+
+### F-1008 Pay back with leftover foreign cash
+
+Record payment in a different currency than the debt; conversion and repayment written in one atomic, idempotent step.
+
+- **Effort** S · **Impact** 7 · **Backend** no · **Status** todo · **Deps** F-1007
+- **Prefs** -
+- **Acceptance**
+  1. "Covers INR 2,760 of INR 3,100 - INR 340 left" shows before saving.
+  2. Several partial payments in different currencies are allowed.
+
+### F-1009 Live home-currency hint
+
+"~ INR 3,890 at trip rate" under the amount as you type.
+
+- **Effort** S · **Impact** 7 · **Backend** no · **Status** todo · **Deps** F-1002, F-310
+- **Prefs** `fx.showHomeHint`
+- **Acceptance**
+  1. The hint is never stored or summed into totals.
+  2. The hint says which rate it uses (trip rate book or cached rate).
+
+### F-1010 Unambiguous currency display and compact amounts
+
+When two currencies share a symbol, show US$ / CA$ or codes; compact lakh/crore and K/M on cards and axes.
+
+- **Effort** S · **Impact** 6 · **Backend** no · **Status** todo · **Deps** F-1001
+- **Prefs** `currencyDisplay`, `compactAmounts`
+- **Acceptance**
+  1. A view with USD and CAD shows US$ and CA$.
+  2. en-IN shows ₹1.2 L and ₹3.4 Cr on summary cards.
+
+### F-1011 Change a group's or my home currency safely `spec v1 original amounts (extended)`
+
+Changing a group's default currency or my home currency changes only new expenses and display defaults; existing records keep their currency and frozen rates. Retired ISO codes (e.g. HRK) still display and convert at the official fixed rate only when the user chooses.
+
+- **Effort** S · **Impact** 6 · **Backend** no · **Status** todo · **Deps** F-1002
+- **Prefs** -
+- **Acceptance**
+  1. Switching a trip from EUR to CHF leaves every EUR expense and balance unchanged, and a banner says what changed.
+  2. Home-currency hints and converted views move to the new home currency without touching stored rates.
+  3. An HRK expense shows "HRK (retired)" and converts to EUR at 7.53450 only on request, labelled as the fixed rate.
+
+## E11 Settle up and payments
+
+From "who owes whom" to money actually changing hands.
+
+### F-1101 Settle up: plan, rules editor, record repayment `spec v1`
+
+Per-group plan in direct mode obeying payment rules, rules editor, partial/full repayment with optional proof.
+
+- **Effort** L · **Impact** 10 · **Backend** no · **Status** in progress · **Deps** F-102, F-603
+- **Prefs** -
+- **Acceptance**
+  1. The plan has a version hash and goes stale after any expense, payment, rule or membership change.
+  2. A08: a partial repayment reduces the balance exactly; a duplicate operation has no effect; a plan preview changes nothing.
+  3. A recorded repayment can be edited or deleted (tombstone + undo) with history, like an expense.
+
+### F-1102 Fewest-payments toggle `spec 4b v1`
+
+Separate exact solver for groups without rules, showing the payment count.
+
+- **Effort** M · **Impact** 7 · **Backend** no · **Status** todo · **Deps** F-1101
+- **Prefs** `group:fewestPayments`
+- **Acceptance**
+  1. Offered only when the group has no rules.
+  2. Never more payments than direct mode on the fixture set; bounded run time with an explained fallback.
+
+### F-1103 UPI pay link and "Mark as paid?" `spec v1`
+
+upi://pay with payee VPA and amount, then ask to record the payment.
+
+- **Effort** S · **Impact** 9 · **Backend** no · **Status** in progress · **Deps** F-1101
+- **Prefs** -
+- **Acceptance**
+  1. The link has pa, pn, am (exact, no grouping), cu=INR and tn.
+  2. On return it asks "Mark as paid?" and never claims money moved.
+
+### F-1104 UPI app chooser and fallback chain `spec v1 (extended)`
+
+iOS lists installed UPI apps; Android uses the chooser and reads the result; "Didn't work" falls back to QR, then copy VPA and amount.
+
+- **Effort** M · **Impact** 9 · **Backend** no · **Status** todo · **Deps** F-1103, F-1106
+- **Prefs** `upi.lastApp`
+- **Acceptance**
+  1. iOS shows only UPI apps that canOpenURL reports installed.
+  2. Android's returned txn reference prefills the proof.
+  3. No collect requests are ever sent.
+
+### F-1105 Pay-me QR at the table
+
+Full-screen UPI QR with exact amount and note; swipe through each debtor; other handles render as QR links; save as an image.
+
+- **Effort** S · **Impact** 9 · **Backend** no · **Status** todo · **Deps** F-1106
+- **Prefs** -
+- **Acceptance**
+  1. The QR scans in GPay, PhonePe and Paytm with the exact amount.
+  2. Brightness goes up and the screen stays awake while shown.
+
+### F-1106 Payment handles `spec 4b v2`
+
+UPI VPA typed or scanned from a QR image, plus PayPal.me, Venmo, Revolut, Monzo, Wise and Cash App; several per person, one preferred.
+
+- **Effort** M · **Impact** 8 · **Backend** no · **Status** todo · **Deps** F-601
+- **Prefs** -
+- **Acceptance**
+  1. Scanning a UPI QR parses pa and pn and asks to confirm.
+  2. Handle format is validated offline and labelled "from QR" or "typed".
+  3. Non-UPI links open the provider and then ask "Mark as paid?".
+
+### F-1107 Payment-handle change warning
+
+Show the handle large with the payee name before paying; warn if it changed in the last 14 days or was set by someone else.
+
+- **Effort** S · **Impact** 8 · **Backend** no · **Status** todo · **Deps** F-1106
+- **Prefs** -
+- **Acceptance**
+  1. A handle changed 3 days ago shows a warning before the pay link opens.
+  2. Handle history is kept per person.
+
+### F-1108 Payment method and UTR proof
+
+Each repayment records UPI / Cash / Bank / Card and an optional 12-digit UTR.
+
+- **Effort** S · **Impact** 6 · **Backend** no · **Status** todo · **Deps** F-1101
+- **Prefs** -
+- **Acceptance**
+  1. The same UTR cannot be recorded twice.
+  2. Analytics can filter by settlement method.
+
+### F-1109 Collections: who-has-paid tracker
+
+Ask each member for a sum (equal, weighted or per household) for a deposit, kitty, festival, society or office pool; rows show Paid / Partial / Not yet.
+
+- **Effort** M · **Impact** 8 · **Backend** no · **Status** todo · **Deps** F-105, F-1106
+- **Prefs** -
+- **Acceptance**
+  1. Each payment posts a real repayment to the organiser or pot.
+  2. "Nudge unpaid only" drafts messages for those not yet paid.
+  3. A "Collection" group type shows spending from the pool transparently.
+
+### F-1110 Next-to-pay suggestion
+
+"Next to pay: Sam (-EUR 84)" names who is furthest behind; optional default payer "whoever is behind"; per-category take-turns meter.
+
+- **Effort** S · **Impact** 7 · **Backend** no · **Status** todo · **Deps** F-1101
+- **Prefs** `group:nextToPay`, `group:defaultPayer`
+- **Acceptance**
+  1. The suggestion respects payment rules (and households once F-607 ships).
+  2. Tapping it opens Add expense with that payer.
+
+### F-1111 Reminder drafts that do not annoy `spec v2`
+
+Per-friend policy (tone, minimum amount, minimum age, cap per week, max total), drafts in the friend's language with the QR card, private "remind me", snooze to salary day.
+
+- **Effort** M · **Impact** 9 · **Backend** no · **Status** todo · **Deps** F-1106, F-1907
+- **Prefs** `reminders.defaultTone`, `person:reminderPolicy`, `person:messageLanguage`
+- **Acceptance**
+  1. The cap of one reminder per person per 7 days is enforced.
+  2. A Hindi-language friend gets a Hindi draft while the UI stays English.
+  3. "Remind me" notifies only me; opening a draft is never claimed as sending.
+
+### F-1112 Settle-up day for the group
+
+A group settle date (trip end + 1, monthly for homes) with one local notification carrying the exact plan.
+
+- **Effort** S · **Impact** 7 · **Backend** no · **Status** todo · **Deps** F-1907
+- **Prefs** `group:settleDay`
+- **Acceptance**
+  1. The group page shows "Settle up in 2 days".
+  2. An .ics event can be shared.
+
+### F-1113 Call it even: forgive or write off
+
+An explicit write-off ledger entry with a note, never a fake repayment or a deletion.
+
+- **Effort** S · **Impact** 7 · **Backend** no · **Status** todo · **Deps** F-101
+- **Prefs** `forgive.threshold`
+- **Acceptance**
+  1. The write-off is undoable and shows in Activity and history.
+  2. Write-offs never count as spending.
+  3. Optional auto-forgive below a threshold at month close.
+
+### F-1114 "Everyone settles with the organiser" preset
+
+One toggle writes allowed edges between members and the organiser into the rules engine.
+
+- **Effort** S · **Impact** 6 · **Backend** no · **Status** todo · **Deps** F-1101
+- **Prefs** -
+- **Acceptance**
+  1. The plan explains "4 payments, all to Raj".
+  2. Undo restores the previous rules.
+
+### F-1115 Transit routing with consent `spec v2`
+
+Multi-hop plans only through members marked as consenting; otherwise direct-only with an explanation.
+
+- **Effort** M · **Impact** 5 · **Backend** no · **Status** todo · **Deps** F-1101
+- **Prefs** `group:transitConsent`
+- **Acceptance**
+  1. Without consent, the plan falls back to direct and says why.
+  2. The selected mode is shown in the plan.
+
+### F-1116 Settlement statement
+
+One-page PDF or image when a group or pair reaches zero: paid, share and net per currency, every payment, "All settled on".
+
+- **Effort** S · **Impact** 5 · **Backend** no · **Status** todo · **Deps** F-1503
+- **Prefs** -
+- **Acceptance**
+  1. The statement is saved as an attachment to the settle checkpoint.
+  2. Shareable as PDF or image through the share sheet.
+
+### F-1117 Settle up with a person across groups
+
+From a person page, record one real transfer and split it into linked repayment records per context (direct and each group, per currency) with a visible, editable allocation (oldest first by default). Balances are never netted across groups (spec non-goal); overpaying leaves a visible reverse balance.
+
+- **Effort** M · **Impact** 9 · **Backend** no · **Status** todo · **Deps** F-1101, F-207
+- **Prefs** `settle.allocationOrder`
+- **Acceptance**
+  1. Paying Riya 1,500 when she is owed 1,000 in Goa and 800 direct creates linked repayments of 1,000 (Goa) and 500 (direct) in one atomic, idempotent step.
+  2. If I am owed in one group and owe in another, the sheet shows two separate settlements and never offsets them.
+  3. Paying more than owed warns first and records the excess as Riya owing me.
+  4. One undo removes every linked record.
+
+## E12 Activity, history and trust
+
+Nothing changes silently; every change is visible and reversible.
+
+### F-1201 Activity feed `spec v1, owner rule 6`
+
+Read/unread, All / From others, actor avatar, day headers, "you lent / you borrowed", row menu, swipe, hide, undo.
+
+- **Effort** M · **Impact** 9 · **Backend** no · **Status** in progress (feature branch; rule 6 rows next merge) · **Deps** F-103
+- **Prefs** `swipeLeft`, `swipeRight`
+- **Acceptance**
+  1. The row avatar is the actor, never the participants.
+  2. Hide changes the personal feed only; the audit history is untouched.
+  3. Every swipe has a button and keyboard alternative.
+
+### F-1202 Readable change history and "your share changed" `spec v1 (extended)`
+
+An expense History tab with plain diffs per version; an Activity row whenever an edit changes my share.
+
+- **Effort** M · **Impact** 9 · **Backend** no · **Status** todo · **Deps** F-103
+- **Prefs** -
+- **Acceptance**
+  1. "Riya changed amount 1,200 -> 1,500 and removed Sam" shows with time.
+  2. An edit that changes my share creates an Activity row with old and new share.
+
+### F-1203 Recently deleted bin `spec v1 (extended)`
+
+Tombstoned expenses and payments listed for a configurable window with who, when and effect; one-tap restore.
+
+- **Effort** S · **Impact** 8 · **Backend** no · **Status** todo · **Deps** F-103
+- **Prefs** `history.binDays`
+- **Acceptance**
+  1. Restore uses restoreExpense and is undoable.
+  2. After the window the tombstone stays in the audit trail.
+
+### F-1204 Comments and disputes `spec v2`
+
+A thread per expense and flags (not there, wrong amount, wrong payer, duplicate); disputed amounts stay visible but leave the plan by default until resolved.
+
+- **Effort** M · **Impact** 8 · **Backend** no · **Status** todo · **Deps** F-301
+- **Prefs** `group:excludeDisputed`
+- **Acceptance**
+  1. Balances show a "disputed" sub-total.
+  2. The settle plan excludes disputed amounts unless toggled.
+  3. The creator's resolution is recorded in history.
+
+### F-1205 Settle-up checkpoints `spec 4b gap 11`
+
+Reaching zero records a checkpoint; backdated edits post a visible "Adjustment after settle-up"; "Settle so far" scopes a plan to a date.
+
+- **Effort** M · **Impact** 8 · **Backend** no · **Status** todo · **Deps** F-1101
+- **Prefs** -
+- **Acceptance**
+  1. A backdated edit after a checkpoint needs one-tap acknowledgement.
+  2. "Settle so far" produces a plan for balances up to the chosen date.
+
+### F-1206 Ledger fingerprint and balance code
+
+A short code from a SHA-256 hash chain over ordered history so members can compare ledgers.
+
+- **Effort** M · **Impact** 6 · **Backend** no · **Status** todo · **Deps** F-103
+- **Prefs** -
+- **Acceptance**
+  1. Identical ledgers on two devices give the same code.
+  2. A mismatch opens "Find the difference".
+
+### F-1207 Reactions on activity items (local) `spec v3`
+
+Bluesky-style reaction palette on Activity rows; shared reactions arrive with F-2209.
+
+- **Effort** S · **Impact** 4 · **Backend** no · **Status** todo · **Deps** F-1201
+- **Prefs** `reactions.set`
+- **Acceptance**
+  1. The reaction set is customizable.
+  2. Reactions never change the ledger.
+
+### F-1208 "All square" moment
+
+When a person or group reaches zero in every currency: a one-time seal animation, success haptic and announcement, then a close/archive prompt for groups.
+
+- **Effort** S · **Impact** 6 · **Backend** no · **Status** todo · **Deps** F-1704
+- **Prefs** `celebrations`
+- **Acceptance**
+  1. Plays once per settle; reduced motion shows a static seal.
+  2. Screen readers hear "You and Riya are all square".
+
+### F-1209 Explain this balance
+
+Tap any balance to see a line-by-line running total per currency since the last zero point: each share, payment, refund and write-off with its group, ending at the number shown. The first stop in any dispute.
+
+- **Effort** S · **Impact** 8 · **Backend** no · **Status** todo · **Deps** F-207, F-1501
+- **Prefs** -
+- **Acceptance**
+  1. The final running total equals the displayed balance in every currency (property test over random ledgers).
+  2. The Include groups choice applies; each line opens its record.
+  3. Shareable as text with only that pair's lines.
+
+## E13 Analytics, reports and budgets
+
+Exact numbers from the ledger, never illustrative.
+
+### F-1301 Basic analytics `spec v1`
+
+Spending over time, by category, per person and group, paid vs share, filters, CSV.
+
+- **Effort** M · **Impact** 8 · **Backend** no · **Status** in progress · **Deps** F-301
+- **Prefs** -
+- **Acceptance**
+  1. One chart per currency, never mixed.
+  2. CSV export matches the on-screen filter.
+
+### F-1302 My Spending measure everywhere `spec v1 (extended)`
+
+One measure switch (My share, Paid by me, Group total, Net effect) for every chart, total, budget, search and export; a My Spending view.
+
+- **Effort** M · **Impact** 9 · **Backend** no · **Status** todo · **Deps** F-1301
+- **Prefs** `analytics.measure`
+- **Acceptance**
+  1. Repayments and write-offs never count as spending.
+  2. A12: a seeded ledger matches hand-computed totals in every measure.
+
+### F-1303 Full reports `spec v2`
+
+Week, month, year and custom periods, balance trend, tap a segment to see its expenses, table view, one filter state for list, totals, charts and CSV.
+
+- **Effort** M · **Impact** 8 · **Backend** no · **Status** todo · **Deps** F-1302
+- **Prefs** -
+- **Acceptance**
+  1. Period boundaries are cut in the viewer's timezone and an expense's local date never shifts.
+  2. Tapping a chart segment lists exactly its expenses.
+  3. A table view exists for every chart.
+
+### F-1304 Budgets `spec v2 trip budget (extended)`
+
+Personal, household and trip budgets per category or overall (per tag once F-1404 ships); weekly, monthly, pay-cycle or trip period; rollover; pace per day; local alerts.
+
+- **Effort** M · **Impact** 8 · **Backend** no · **Status** todo · **Deps** F-1302, F-1305, F-1907
+- **Prefs** `budgets.alertAt`, `budgets.measure`
+- **Acceptance**
+  1. "INR 310/day left for 9 days" pace shown.
+  2. Alerts fire at 80% and 100% as local notifications.
+  3. Budgets are per currency.
+
+### F-1305 Period presets
+
+Fiscal year with a start month (April under en-IN/hi), pay-cycle month, rolling 7/30/90 days, trip dates.
+
+- **Effort** S · **Impact** 5 · **Backend** no · **Status** todo · **Deps** F-1301
+- **Prefs** `fiscalYearStart`, `payCycleDay`
+- **Acceptance**
+  1. Reports, budgets, search and exports use the same presets.
+  2. Under en-IN and hi the fiscal year defaults to April-March.
+
+### F-1306 Deterministic insights `spec v2`
+
+A "What changed" card from real data only: above-average categories, biggest mover, new recurring charges, unusual expenses.
+
+- **Effort** S · **Impact** 5 · **Backend** no · **Status** todo · **Deps** F-1303
+- **Prefs** -
+- **Acceptance**
+  1. Every line links to the expenses behind it.
+  2. Shows nothing when data is insufficient; no AI involved.
+
+### F-1307 Receivables ageing and net position
+
+"Owed to me" per currency in 0-30 / 31-90 / 90+ day buckets, average days to repay, net position over time.
+
+- **Effort** S · **Impact** 6 · **Backend** no · **Status** todo · **Deps** F-1301
+- **Prefs** -
+- **Acceptance**
+  1. The oldest unpaid item shows first with a one-tap reminder.
+  2. Buckets are per currency and match the ledger.
+
+### F-1308 Subscriptions dashboard and 30-day forecast
+
+Every recurring item with monthly-equivalent share, next due date and annual total; 30-day forecast of recurring, future-dated and expected repayments.
+
+- **Effort** S · **Impact** 6 · **Backend** no · **Status** todo · **Deps** F-306
+- **Prefs** -
+- **Acceptance**
+  1. The forecast sums per currency only.
+  2. Price changes show on the dashboard.
+
+### F-1309 Custom report builder `spec v3 cards (extended)`
+
+Pick rows, columns, measure and filters; show as table, bar, line or donut; save as a customizable Analytics card.
+
+- **Effort** L · **Impact** 6 · **Backend** no · **Status** todo · **Deps** F-1303, F-1703
+- **Prefs** -
+- **Acceptance**
+  1. A saved report reappears as a card that can be hidden, reordered and renamed.
+  2. It exports to CSV and XLSX.
+
+### F-1310 Reimbursable and work expense claims
+
+Mark an expense or my share as reimbursable by an employer; Pending -> Submitted -> Reimbursed; claim PDF with receipts.
+
+- **Effort** M · **Impact** 6 · **Backend** no · **Status** todo · **Deps** F-1302, F-1503
+- **Prefs** -
+- **Acceptance**
+  1. Reimbursed amounts come off My Spending.
+  2. Claims never touch group balances.
+
+### F-1311 Payment accounts and reconciliation
+
+Optional "paid from" account on my payments; reconcile against a statement; lock personal records before a date.
+
+- **Effort** M · **Impact** 6 · **Backend** no · **Status** todo · **Deps** F-1302
+- **Prefs** `paymentAccounts`
+- **Acceptance**
+  1. Reconcile shows cleared total vs statement total.
+  2. Unlocking a locked period asks for confirmation.
+
+## E14 Search, organisation and power tools
+
+Find anything fast; change many things at once.
+
+### F-1401 Free search across expenses `spec 4b v1`
+
+Search titles, notes, people, groups and amounts, offline and indexed.
+
+- **Effort** S · **Impact** 8 · **Backend** no · **Status** todo · **Deps** F-301
+- **Prefs** -
+- **Acceptance**
+  1. Results show totals per currency.
+  2. No full-ledger scan per keystroke (measured).
+
+### F-1402 Advanced search operators `spec v2 saved views (extended)`
+
+amount>500, category:, tag:, with:, paid:me, group:, before:/after:, has:receipt, is:unsettled; chips build the same query on mobile.
+
+- **Effort** M · **Impact** 7 · **Backend** no · **Status** todo · **Deps** F-1401
+- **Prefs** -
+- **Acceptance**
+  1. "amount>500 category:food with:riya is:unsettled" returns the right set.
+  2. A query can be saved as a view or budget target.
+
+### F-1403 Saved views `spec v2`
+
+Built-in This month, a trip, Outstanding, Missing receipts, plus user views.
+
+- **Effort** S · **Impact** 6 · **Backend** no · **Status** todo · **Deps** F-1401
+- **Prefs** `savedViews`
+- **Acceptance**
+  1. The same filter state drives list, totals, charts and CSV.
+  2. Views can be created, renamed, reordered and deleted.
+
+### F-1404 Tags and occasion tags
+
+Multi-label #tags typed inline with autocomplete; rename, merge, recolour, archive; festival tags suggested from a bundled date table.
+
+- **Effort** M · **Impact** 7 · **Backend** no · **Status** todo · **Deps** F-301
+- **Prefs** -
+- **Acceptance**
+  1. "Cab 450 #work #goa" saves two tags.
+  2. A "Diwali 2026 vs last year" card compares by category.
+
+### F-1405 Bulk select and edit
+
+Multi-select on every list (long-press, checkbox, shift-click, select all matching); change category, tags, date, group, template; delete; export.
+
+- **Effort** M · **Impact** 8 · **Backend** no · **Status** todo · **Deps** F-301
+- **Prefs** -
+- **Acceptance**
+  1. Moving to a group where a participant is not a member is blocked with an explanation.
+  2. One undo reverts the whole batch.
+
+### F-1406 Category hierarchy and per-group sets `spec v1 categories (extended)`
+
+Two-level categories that roll up; merge with remap; per-group visible sets; import/export.
+
+- **Effort** M · **Impact** 5 · **Backend** no · **Status** todo · **Deps** F-1701
+- **Prefs** `categories`, `group:categorySet`
+- **Acceptance**
+  1. Merging remaps past expenses as one undoable batch.
+  2. Reports and budgets roll child categories up to the parent.
+
+### F-1407 Command palette and keyboard shortcuts
+
+Cmd/Ctrl+K fuzzy palette for people, groups, expenses, settings and actions; N, /, G-then-key, J/K, E, ? cheat sheet; skip link and visible focus.
+
+- **Effort** M · **Impact** 6 · **Backend** no · **Status** todo · **Deps** F-1401
+- **Prefs** `shortcuts`
+- **Acceptance**
+  1. Every action reachable from the palette.
+  2. Shortcuts are remappable and listed on "?".
+
+### F-1408 Spreadsheet grid view (web)
+
+Table of any filtered list with inline edits through normal mutations, keyboard navigation and paste from Sheets/Excel as drafts.
+
+- **Effort** L · **Impact** 5 · **Backend** no · **Status** todo · **Deps** F-1405, F-522
+- **Prefs** `grid.columns`
+- **Acceptance**
+  1. An invalid cell edit is rejected by validateExpense.
+  2. Pasted rows become drafts in the Inbox.
+
+### F-1409 Full-text receipt search
+
+Index OCR text and line items locally (FTS5 on native, inverted index on web).
+
+- **Effort** S · **Impact** 6 · **Backend** no · **Status** todo · **Deps** F-502, F-1401
+- **Prefs** -
+- **Acceptance**
+  1. Searching "sunscreen" finds the receipt and highlights the line.
+  2. The index updates on save and search works offline.
+
+### F-1410 Private overlay and private notes
+
+My own category, tags and note on a shared expense, visible only to me and never part of the group ledger.
+
+- **Effort** M · **Impact** 6 · **Backend** no · **Status** todo · **Deps** F-301
+- **Prefs** -
+- **Acceptance**
+  1. The overlay syncs with my account only and never conflicts with the group record.
+  2. My Spending uses my overlay category.
+
+### F-1411 Custom fields
+
+User-defined text, number, date, select and checkbox fields, global or per group, searchable and exportable.
+
+- **Effort** M · **Impact** 4 · **Backend** no · **Status** todo · **Deps** F-301
+- **Prefs** `customFields`
+- **Acceptance**
+  1. field:project=acme search works.
+  2. Custom fields export as columns.
+
+## E15 Sharing and summaries
+
+Get the numbers to people who do not have the app.
+
+### F-1501 Text summaries for WhatsApp `spec 4b v1`
+
+Whole-group or "only their part" summaries with WhatsApp markup, sent via wa.me in the recipient's language.
+
+- **Effort** S · **Impact** 8 · **Backend** no · **Status** todo · **Deps** F-1101
+- **Prefs** `person:messageLanguage`
+- **Acceptance**
+  1. "Only their part" contains only that person's lines and total.
+  2. Uses the friend's phone when known, the share sheet otherwise.
+
+### F-1502 Shareable image cards `spec v2 summary (extended)`
+
+On-device image for any balance, plan, expense or summary, with per-creditor UPI QR, hide-amounts and theme options.
+
+- **Effort** M · **Impact** 7 · **Backend** no · **Status** todo · **Deps** F-1105
+- **Prefs** `share.footer`, `share.theme`
+- **Acceptance**
+  1. Cards render offline.
+  2. "Hide amounts" shows percentages only.
+
+### F-1503 Trip summary PDF `spec v2`
+
+PDF with totals per currency, per-person paid vs share and the plan.
+
+- **Effort** M · **Impact** 6 · **Backend** no · **Status** todo · **Deps** F-1101
+- **Prefs** -
+- **Acceptance**
+  1. Totals match the ledger and are per currency.
+  2. Generated on device and works offline.
+
+### F-1504 Trip recap story and Year in Review
+
+Swipeable recap at trip end and an annual review built on device from real data.
+
+- **Effort** M · **Impact** 6 · **Backend** no · **Status** todo · **Deps** F-1502, F-1302
+- **Prefs** -
+- **Acceptance**
+  1. Every stat taps through to its expenses.
+  2. A "hide amounts" option exists.
+
+### F-1505 Share privacy presets
+
+One rule set for every outbound share: only the recipient's lines (default), hide items, notes, other balances.
+
+- **Effort** S · **Impact** 6 · **Backend** no · **Status** todo · **Deps** F-1501
+- **Prefs** `share.privacyPreset`
+- **Acceptance**
+  1. The default preset hides other members' balances on every share type.
+  2. A preview shows exactly what the recipient will see.
+
+### F-1506 Serverless balance link `spec v2 balance link (no-server version)`
+
+A link whose #fragment holds a compressed, optionally encrypted snapshot that the static PWA renders; needs only static hosting of the PWA, and the Splito server never sees the data.
+
+- **Effort** M · **Impact** 9 · **Backend** no · **Status** todo · **Deps** F-1505, F-1901
+- **Prefs** -
+- **Acceptance**
+  1. The friend sees their lines, total, pay buttons and an "as of" stamp without signup.
+  2. Network logs show no fragment data sent to any server.
+  3. Shows only the recipient's lines by default.
+
+## E16 Privacy and security
+
+Local protection that works without an account.
+
+### F-1601 App lock with step-up actions `spec v1`
+
+Off / lock the app / lock sensitive actions only; PIN, auto-lock, failed-attempt backoff, biometrics with fallback, encrypted native storage.
+
+- **Effort** M · **Impact** 8 · **Backend** no · **Status** todo · **Deps** F-1701
+- **Prefs** `lock.mode`, `lock.timeout` (device)
+- **Acceptance**
+  1. "Sensitive only" asks for PIN or biometrics before export, delete-for-everyone and pay links.
+  2. Web limits are documented honestly; PIN is not called encryption.
+  3. On iOS the first launch after a reinstall clears stale Keychain lock and PIN entries (Keychain survives uninstall).
+
+### F-1602 PIN recovery kit `spec v1 (extended)`
+
+A recovery code (words or QR) when setting a lock without an account.
+
+- **Effort** S · **Impact** 6 · **Backend** no · **Status** todo · **Deps** F-1601
+- **Prefs** -
+- **Acceptance**
+  1. The code resets a forgotten PIN.
+  2. The setup screen states plainly what is lost without it.
+
+### F-1603 Hide amounts (discreet mode)
+
+Eye toggle masks every amount app-wide, keeping signs and colours; optional on launch.
+
+- **Effort** S · **Impact** 7 · **Backend** no · **Status** todo · **Deps** -
+- **Prefs** `hideAmounts` (device), `hideAmounts.onLaunch`
+- **Acceptance**
+  1. Masking covers lists, cards, charts axes and share previews.
+  2. Screen readers announce "amount hidden".
+
+### F-1604 App-switcher privacy and screenshot blocking
+
+Cat logo over the background in the app switcher; optional screenshot block.
+
+- **Effort** S · **Impact** 6 · **Backend** no · **Status** todo · **Deps** -
+- **Prefs** `privacyScreen`, `blockScreenshots`
+- **Acceptance**
+  1. The app-switcher snapshot shows no balances when enabled.
+  2. On web/PWA content is hidden while the tab is hidden, if enabled.
+
+### F-1605 Notification privacy levels
+
+Full, partial or minimal notification text; partial by default when lock or hide amounts is on.
+
+- **Effort** S · **Impact** 5 · **Backend** no · **Status** todo · **Deps** F-1907
+- **Prefs** `notify.detail`
+- **Acceptance**
+  1. Applies to every local notification now and push later.
+  2. Defaults to partial when app lock or Hide amounts is on.
+
+### F-1606 Hand-off mode
+
+Pin the app to one group's Add expense and list so a friend can add; leaving needs PIN or biometrics.
+
+- **Effort** S · **Impact** 6 · **Backend** no · **Status** todo · **Deps** F-1601
+- **Prefs** -
+- **Acceptance**
+  1. Other groups, People, settings, payments and exports are hidden.
+  2. Expenses added are tagged "added on Saransh's phone by hand-off".
+
+### F-1607 Privacy and data safety center `spec v1 PWA storage (extended)`
+
+One screen: unsynced count, last backup, storage persistence, encryption status per platform in plain words.
+
+- **Effort** S · **Impact** 7 · **Backend** no · **Status** todo · **Deps** F-2001
+- **Prefs** -
+- **Acceptance**
+  1. Shows navigator.storage.persisted and offers Export when storage is not persistent.
+  2. Counts update after each sync or backup.
+
+### F-1608 Receipt privacy: EXIF strip and auto-redact
+
+Strip EXIF unless location is kept; detect card numbers, phones and emails and offer one-tap masking.
+
+- **Effort** M · **Impact** 6 · **Backend** no · **Status** todo · **Deps** F-502
+- **Prefs** `receipts.stripExif`, `receipts.autoRedact`
+- **Acceptance**
+  1. Shared copies carry the redaction; the original stays local if kept.
+  2. EXIF GPS is stripped by default before storing.
+
+### F-1609 Hidden personal expenses and groups
+
+A "hidden" flag that removes personal expenses or groups from lists until unlocked.
+
+- **Effort** S · **Impact** 5 · **Backend** no · **Status** todo · **Deps** F-1601
+- **Prefs** -
+- **Acceptance**
+  1. Hidden items are excluded from lists and widgets until unlock.
+  2. PIN or biometrics reveals them; the hidden flag is device scope.
+
+### F-1610 Erase this device `spec v1 (extended)`
+
+Offline erase of local data with an export offer and an unsynced-work warning.
+
+- **Effort** S · **Impact** 6 · **Backend** no · **Status** todo · **Deps** F-2001
+- **Prefs** -
+- **Acceptance**
+  1. Removes the local database, preferences and attachments.
+  2. Shows the number of unsynced changes before erasing.
+
+## E17 Customization, appearance and motion
+
+Everything customizable, everything smooth.
+
+### F-1701 Settings for every preference `spec 3a`
+
+Theme, accent with Apply, text size, density, motion, haptics, tabs, defaults, categories, language, timezone, formats, lists, notifications.
+
+- **Effort** M · **Impact** 9 · **Backend** no · **Status** in progress · **Deps** F-104
+- **Prefs** every registry key
+- **Acceptance**
+  1. Each setting has Reset to default; Reset all works.
+  2. Account-scope settings sync; device-scope stay local.
+  3. A search field finds any setting by label or synonym (en and hi), and changed-from-default settings are marked.
+
+### F-1702 Black-and-white theme and background overrides `spec v3`
+
+B&W theme and advanced background overrides kept separate from the accent.
+
+- **Effort** S · **Impact** 5 · **Backend** no · **Status** todo · **Deps** F-1701
+- **Prefs** `theme`, `backgroundOverride`
+- **Acceptance**
+  1. All screens pass contrast checks in B&W.
+  2. Background overrides reset independently of the accent.
+
+### F-1703 Card customization `spec v3`
+
+Hide, reorder, rename, resize and tint cards on People, group overview, Analytics and trip dashboard.
+
+- **Effort** L · **Impact** 7 · **Backend** no · **Status** todo · **Deps** F-1701
+- **Prefs** `cards.people`, `cards.group`, `cards.analytics`, `cards.trip`
+- **Acceptance**
+  1. Changes persist, sync and reset.
+  2. Dialog and form internals are not customizable.
+
+### F-1704 Motion: Lottie, animated balances, success check, list animations `spec v1, owner rule 10`
+
+Page illustrations, count-up balances, skeletons, success check, list enter/exit/reorder, all UI-thread.
+
+- **Effort** M · **Impact** 8 · **Backend** no · **Status** in progress (built on ui/brand, wiring) · **Deps** F-201
+- **Prefs** `motion`, `haptics`
+- **Acceptance**
+  1. Reduced motion and motion = off give static fallbacks.
+  2. No dropped frames on 1,000-row lists (profiled, numbers recorded).
+
+### F-1705 Haptic vocabulary `spec v1 haptics (extended)`
+
+One table mapping intents to haptics, e.g. a rigid tick when remaining hits zero.
+
+- **Effort** S · **Impact** 5 · **Backend** no · **Status** todo · **Deps** -
+- **Prefs** `haptics`
+- **Acceptance**
+  1. Every haptic call goes through useHaptics() by intent.
+  2. Turning the haptics pref off silences every haptic.
+
+### F-1706 Living cat mascot for sync states
+
+The header cat blinks on refresh, perks on sync ack, sleeps offline, raises a paw on conflict.
+
+- **Effort** M · **Impact** 5 · **Backend** no · **Status** todo · **Deps** F-1704
+- **Prefs** `mascotAnimations`
+- **Acceptance**
+  1. Every state also has a text and accessibility label.
+  2. Reduced motion shows static states.
+
+### F-1707 Alternate app icons
+
+Cat icon variants via Bluesky's AppIconSettings plumbing.
+
+- **Effort** M · **Impact** 4 · **Backend** no · **Status** todo · **Deps** -
+- **Prefs** `appIcon`
+- **Acceptance**
+  1. Works in dev/release builds and hides in Expo Go.
+  2. The chosen icon persists across restarts.
+
+### F-1708 Balance wording style per group
+
+Ledger style ("You owe Sam") or calm style ("Sam is ahead by"), numbers unchanged.
+
+- **Effort** S · **Impact** 5 · **Backend** no · **Status** todo · **Deps** -
+- **Prefs** `group:balanceWording`
+- **Acceptance**
+  1. Couple and Family templates default to calm.
+  2. Numbers and signs are identical in both styles.
+
+### F-1709 Lite mode `spec v1 performance (extended)`
+
+Turns off Lottie, blur and avatars, compresses receipts to about 200 KB, lazy-renders charts; default on 3 GB RAM or less.
+
+- **Effort** M · **Impact** 6 · **Backend** no · **Status** todo · **Deps** -
+- **Prefs** `liteMode` (device)
+- **Acceptance**
+  1. Measured on an Android Go-class device and recorded.
+  2. On by default with 3 GB RAM or less and can be turned off.
+
+### F-1710 Tabular numerals and font option
+
+tabular-nums on all money; Inter, System or Atkinson Hyperlegible.
+
+- **Effort** S · **Impact** 6 · **Backend** no · **Status** todo · **Deps** -
+- **Prefs** `fontFamily`
+- **Acceptance**
+  1. AnimatedAmount no longer jitters (digits keep width).
+  2. The font choice applies app-wide through setFontFamily and persists.
+
+## E18 Accessibility and localization
+
+Usable by everyone, in their language.
+
+### F-1801 Money direction never shown by colour alone
+
+Every balance has a word, an arrow and a sign; palettes: default, colour-blind safe, monochrome.
+
+- **Effort** S · **Impact** 8 · **Backend** no · **Status** todo · **Deps** -
+- **Prefs** `moneyPalette`
+- **Acceptance**
+  1. Balances read correctly in grayscale screenshots.
+  2. The monochrome palette shows direction by arrow and weight only.
+
+### F-1802 Screen-reader money sentences
+
+Each row is one accessible element whose label is a domain-built sentence with the currency spoken by name.
+
+- **Effort** M · **Impact** 9 · **Backend** no · **Status** todo · **Deps** F-1001
+- **Prefs** -
+- **Acceptance**
+  1. VoiceOver reads "Riya owes you 450 Indian rupees, from 2 groups".
+  2. en and hi sentences covered by tests.
+
+### F-1803 Accessibility actions for every swipe and long-press `spec v1`
+
+accessibilityActions on swipeable rows mirror the swipe prefs; web maps to the row menu.
+
+- **Effort** S · **Impact** 7 · **Backend** no · **Status** todo · **Deps** F-1201
+- **Prefs** `swipeLeft`, `swipeRight`
+- **Acceptance**
+  1. The VoiceOver rotor offers Mark read, Hide, Delete, Undo, Settle up.
+  2. On web every action is in the row menu and reachable by keyboard.
+
+### F-1804 Accessible portion editor and spoken remaining
+
+Portion chips become adjustable; remaining is a polite, throttled live region.
+
+- **Effort** S · **Impact** 7 · **Backend** no · **Status** todo · **Deps** F-401
+- **Prefs** -
+- **Acceptance**
+  1. Swipe up on a chip adds a portion and announces it.
+  2. Percent and shares fields get steppers with spoken values.
+
+### F-1805 Dynamic Type to 200% with reflow
+
+Follow the OS scale up to AX5 / 200% with layouts that reflow; money never truncates.
+
+- **Effort** M · **Impact** 8 · **Backend** no · **Status** todo · **Deps** -
+- **Prefs** `textScale` (adds "system")
+- **Acceptance**
+  1. At 200% no amount is truncated on People, Group or Expense.
+  2. At large scales bottom-bar labels collapse to icons with long-press tooltips.
+
+### F-1806 Increase-contrast mode
+
+Token set for OS high contrast or user choice: AAA text, thicker borders, no blur.
+
+- **Effort** M · **Impact** 6 · **Backend** no · **Status** todo · **Deps** -
+- **Prefs** `contrast`
+- **Acceptance**
+  1. Follows prefers-contrast and iOS Increase Contrast.
+  2. An automated check confirms AAA text contrast for the token set.
+
+### F-1807 Undo toasts that wait for assistive tech
+
+With a screen reader or large text, undo toasts stay until dismissed and are announced.
+
+- **Effort** S · **Impact** 6 · **Backend** no · **Status** todo · **Deps** -
+- **Prefs** -
+- **Acceptance**
+  1. Every undo is also reachable from the Activity row menu.
+  2. Focus returns to where the deleted row was.
+
+### F-1808 Contrast-guarded accent and category colours
+
+Live contrast check on accent and category colour pickers with "use nearest accessible shade".
+
+- **Effort** S · **Impact** 5 · **Backend** no · **Status** todo · **Deps** F-1701
+- **Prefs** -
+- **Acceptance**
+  1. Colours below 3:1 (UI) or 4.5:1 (text) get the nudge.
+  2. Button text switches to black or white automatically.
+
+### F-1809 Read my balances aloud
+
+On-device text-to-speech summary of balances in the app language.
+
+- **Effort** S · **Impact** 4 · **Backend** no · **Status** todo · **Deps** -
+- **Prefs** -
+- **Acceptance**
+  1. Works offline and stops on tap.
+  2. Speaks in the app language.
+
+### F-1810 English and Hindi `spec 5`
+
+Lingui strings with Hindi at launch; Indian number grouping under hi and en-IN.
+
+- **Effort** M · **Impact** 9 · **Backend** no · **Status** done (en + hi complete) · **Deps** -
+- **Prefs** `language`
+- **Acceptance**
+  1. Missing translations fall back to English.
+  2. Amounts use Indian grouping (₹1,00,000) under hi and en-IN.
+
+### F-1811 Hinglish and more Indian languages `spec v3`
+
+Hinglish, then Bengali, Marathi, Telugu, Tamil and more with subsetted Noto fonts; picker in native scripts; per-friend message language.
+
+- **Effort** L · **Impact** 7 · **Backend** no · **Status** todo · **Deps** F-1810
+- **Prefs** `language`, `nativeDigits`, `person:messageLanguage`
+- **Acceptance**
+  1. Each language passes a pseudo-locale and truncation check.
+  2. A friend's message language is independent of the UI language.
+
+### F-1812 Locale-correct plurals, dates, sorting and search
+
+ICU plurals, unambiguous relative dates, Intl.Collator sorting, accent-insensitive search.
+
+- **Effort** S · **Impact** 6 · **Backend** no · **Status** todo · **Deps** -
+- **Prefs** -
+- **Acceptance**
+  1. Hindi "कल" is always paired with a date.
+  2. Sorting uses Intl.Collator per locale and search ignores accents and case.
+
+### F-1813 RTL done properly `spec 5`
+
+Bidi isolation of names and amounts, mirrored flows and arrows, pseudo-locales in CI.
+
+- **Effort** M · **Impact** 6 · **Backend** no · **Status** todo · **Deps** -
+- **Prefs** -
+- **Acceptance**
+  1. "أحمد owes you ₹450" renders in the right order.
+  2. An RTL pseudo-locale run in CI catches unmirrored icons and arrows.
+
+### F-1814 Self-describing charts `spec v2`
+
+Pattern fills, direct labels and a domain-generated summary sentence per chart.
+
+- **Effort** M · **Impact** 6 · **Backend** no · **Status** todo · **Deps** F-1301
+- **Prefs** -
+- **Acceptance**
+  1. Every chart has a summary sentence equal to the table view's data.
+  2. Charts stay readable in grayscale (pattern fills, direct labels).
+
+### F-1815 Accessibility CI and release audit `spec A13 (extended)`
+
+axe-core on every route in Playwright (both themes, 320-1440 px), React Native accessibility lint, and a scripted VoiceOver / TalkBack / keyboard-only pass per release with results recorded.
+
+- **Effort** M · **Impact** 7 · **Backend** no · **Status** todo · **Deps** A-035 (ARCHITECTURE-BACKLOG)
+- **Prefs** -
+- **Acceptance**
+  1. CI fails on any new serious or critical axe violation against a baseline that only goes down.
+  2. Each release records a VoiceOver, TalkBack and keyboard-only run of add expense, settle up and filters.
+
+## E19 Platform integrations
+
+Native surfaces and the PWA.
+
+### F-1901 PWA: install, offline shell, updates, desktop integration `spec v1`
+
+Manifest, offline shell, update handling with pending outbox, persistent storage request; manifest shortcuts, badge, .splito file handler.
+
+- **Effort** M · **Impact** 7 · **Backend** no · **Status** todo · **Deps** -
+- **Prefs** -
+- **Acceptance**
+  1. A16: refresh on a deep route works offline; an update with a pending outbox loses nothing.
+  2. Private API responses are never cached.
+  3. Safari users not running the installed PWA see a one-time warning that Safari may erase site data after 7 days without a visit, with Install and Export actions.
+
+### F-1902 iOS simulator dev build `spec: matrix`
+
+Dev client build with Bluesky build settings and Intl polyfills.
+
+- **Effort** M · **Impact** 8 · **Backend** no · **Status** done (runs on iPhone 18 Pro simulator) · **Deps** -
+- **Prefs** -
+- **Acceptance**
+  1. App launches to People on the simulator.
+  2. Build settings and polyfills are recorded in REUSE_MAP.
+
+### F-1903 Android build and emulator run `spec: matrix`
+
+Java on PATH, dev client build, emulator run.
+
+- **Effort** S · **Impact** 8 · **Backend** no · **Status** todo · **Deps** -
+- **Prefs** -
+- **Acceptance**
+  1. The add-expense and settle-up smoke flow passes on the Android emulator.
+  2. The build steps are added to the AGENTS.md command list.
+
+### F-1904 Extension data bridge
+
+After each mutation write a small redacted snapshot to the iOS App Group / Android SharedPreferences (Bluesky SharedPrefs module).
+
+- **Effort** M · **Impact** 7 · **Backend** no · **Status** todo · **Deps** -
+- **Prefs** -
+- **Acceptance**
+  1. Per-currency totals are never summed in the snapshot.
+  2. The snapshot respects Hide amounts.
+
+### F-1905 Home and lock-screen widgets `spec v3`
+
+Small, medium and large widgets with per-currency balances, top people/groups and Add buttons.
+
+- **Effort** L · **Impact** 8 · **Backend** no · **Status** todo · **Deps** F-1904
+- **Prefs** `widget.content`
+- **Acceptance**
+  1. Widgets update after a local mutation without opening the app.
+  2. Totals are never summed across currencies and respect Hide amounts.
+
+### F-1906 App Intents, Siri, Shortcuts and Android App Actions
+
+Add expense, What does X owe me, Show group balance, Settle up with, Scan receipt; splito:// add URL on web.
+
+- **Effort** L · **Impact** 8 · **Backend** no · **Status** todo · **Deps** F-1904, F-503
+- **Prefs** `intents.saveWithoutReview`
+- **Acceptance**
+  1. "Split 600 cab with Sam" creates an Inbox draft unless the user opted into direct save.
+  2. Every intent works offline.
+
+### F-1907 Local scheduled notifications
+
+expo-notifications local scheduling for recurring due, settle nudges, digests and budgets; no server.
+
+- **Effort** M · **Impact** 7 · **Backend** no · **Status** todo · **Deps** -
+- **Prefs** `notify.recurring`, `notify.reminders`, `notify.digest`
+- **Acceptance**
+  1. Notifications fire in airplane mode.
+  2. Each type has its own toggle.
+
+### F-1908 Home-screen icon quick actions `spec v3`
+
+Add expense, Scan receipt, Settle up and two dynamic recent groups on long-press.
+
+- **Effort** S · **Impact** 6 · **Backend** no · **Status** todo · **Deps** -
+- **Prefs** `quickActions`
+- **Acceptance**
+  1. Order and pinned group are customizable.
+  2. The dynamic entries follow the two most recent groups.
+
+### F-1909 Quick add from Control Center, Action Button and Quick Settings
+
+iOS ControlWidget and Android TileService open the composer with the keypad focused.
+
+- **Effort** M · **Impact** 7 · **Backend** no · **Status** todo · **Deps** F-1906
+- **Prefs** -
+- **Acceptance**
+  1. Long-press opens the last-used group.
+  2. Works when the app is not running.
+
+### F-1910 Live Activity for a trip day
+
+Lock-screen / Dynamic Island card with today's spend, my balance per currency, kitty and budget left.
+
+- **Effort** L · **Impact** 6 · **Backend** no · **Status** todo · **Deps** F-1904, F-703
+- **Prefs** -
+- **Acceptance**
+  1. Updates locally on every mutation with no push.
+  2. Ends automatically after the trip end date.
+
+### F-1911 Spotlight and launcher search indexing
+
+People, groups and recent expenses indexed for system search.
+
+- **Effort** M · **Impact** 5 · **Backend** no · **Status** todo · **Deps** F-1906
+- **Prefs** `spotlight.showAmounts`
+- **Acceptance**
+  1. Amounts are hidden from system search by default.
+  2. A result opens the right screen through the link resolver.
+
+### F-1912 Apple Watch and Wear OS companion
+
+Complication with owed/owe per currency and a quick add that lands in the Inbox.
+
+- **Effort** XL · **Impact** 4 · **Backend** no · **Status** todo · **Deps** F-1904, F-503
+- **Prefs** -
+- **Acceptance**
+  1. Watch entries need no network and arrive as drafts.
+  2. The complication shows totals per currency, never summed.
+
+### F-1913 Store review prompt at happy moments
+
+Native review API only after a positive moment (all square, fifth saved expense), at most once per 120 days.
+
+- **Effort** S · **Impact** 3 · **Backend** no · **Status** todo · **Deps** F-1208
+- **Prefs** `reviewPrompt`
+- **Acceptance**
+  1. Never shown in a session that had an error, a conflict or a failed save.
+  2. Can be turned off; never shown on web.
+
+## E20 Data portability
+
+Your data in and out, safely.
+
+### F-2001 JSON backup export and restore `spec v2`
+
+Versioned JSON with schema validation, migration, dedupe, preview, merge/replace and rollback on failure.
+
+- **Effort** M · **Impact** 8 · **Backend** no · **Status** todo · **Deps** F-103
+- **Prefs** -
+- **Acceptance**
+  1. A12: round-trip preserves IDs, currencies and splits.
+  2. A corrupt file is rejected atomically with nothing applied.
+
+### F-2002 Encrypted and automatic backups
+
+Optional passphrase (AES-256-GCM, key derived on device), weekly/monthly auto-backup to a chosen folder, health reminders.
+
+- **Effort** M · **Impact** 8 · **Backend** no · **Status** todo · **Deps** F-2001, F-1907
+- **Prefs** `backup.schedule`, `backup.folder`, `backup.encrypt`
+- **Acceptance**
+  1. A wrong passphrase fails without partial import.
+  2. A missed backup triggers a reminder.
+
+### F-2003 Splitwise importer `spec 4b v2`
+
+Import Splitwise exports (and Tricount / Settle Up / Splid via mapper profiles) with people matching and duplicate checks.
+
+- **Effort** M · **Impact** 7 · **Backend** no · **Status** todo · **Deps** F-504
+- **Prefs** -
+- **Acceptance**
+  1. An imported group's balances match the source export.
+  2. Re-importing the same export creates no duplicates.
+
+### F-2004 Power exports `spec v2 CSV (extended)`
+
+Current filter across all groups; wide (paid + share columns), tidy, YNAB/Actual, Beancount/hledger; CSV, XLSX, PDF; formula-safe.
+
+- **Effort** M · **Impact** 7 · **Backend** no · **Status** todo · **Deps** F-1302
+- **Prefs** `export.layout`
+- **Acceptance**
+  1. Cells starting with = + - @ are escaped.
+  2. Columns are labelled with currency.
+
+### F-2005 Move to a new phone without an account
+
+Guided transfer of the whole local ledger, attachments and account-scope preferences to a new phone by a .splito file (AirDrop, Quick Share, cable or a cloud folder), plus OS backup integration (iCloud device backup, Android Auto Backup) with secrets and deviceId excluded.
+
+- **Effort** M · **Impact** 8 · **Backend** no · **Status** todo · **Deps** F-2001
+- **Prefs** -
+- **Acceptance**
+  1. After transfer both phones show the same record counts and per-currency totals, checked before the old phone offers to erase.
+  2. A restored or transferred install gets a new deviceId, so operations are never duplicated (A-048).
+  3. Lock PIN and tokens never transfer; the new phone asks for its own.
+
+### F-2006 Storage manager
+
+Space used by receipts, attachments and history per group; compress old images, clear caches. Offloading synced originals (keeping thumbnails) is added when F-2107 ships.
+
+- **Effort** S · **Impact** 5 · **Backend** no · **Status** todo · **Deps** F-312
+- **Prefs** `storage.compressAfterDays`
+- **Acceptance**
+  1. Space per group and per type matches the files on disk.
+  2. Compressing keeps the receipt readable and records the change in history.
+  3. Nothing unsynced or the only copy is ever deleted.
+
+## E21 Backend foundation
+
+Fastify on Bun + Postgres. Everything shared waits for this.
+
+### F-2101 API service `spec 9`
+
+Fastify on pinned Bun, Postgres migrations, versioned contracts, structured errors, health/readiness, graceful shutdown.
+
+- **Effort** L · **Impact** 10 · **Backend** yes · **Status** in progress (fan2/api paused, 13 open review findings) · **Deps** -
+- **Prefs** -
+- **Acceptance**
+  1. The 13 fan2/api review findings are closed.
+  2. Integration tests run against real Postgres under Bun.
+
+### F-2102 Sign-in and sessions `spec v1`
+
+Email OTP, mobile OTP, Google and Apple; refresh and revoke; OTP throttling; secure token storage; web httpOnly cookie + CSRF.
+
+- **Effort** L · **Impact** 10 · **Backend** yes · **Status** todo · **Deps** F-2101
+- **Prefs** -
+- **Acceptance**
+  1. A15: session expiry and revoke verified; OTP throttled.
+  2. No secrets in the client bundle or logs.
+  3. One account can add and remove sign-in methods (email, phone, Google, Apple) and change its email or phone; the last method cannot be removed.
+
+### F-2103 Sync push/pull and conflicts `spec v1`
+
+Bounded push with server idempotency, opaque-cursor pull with tombstones, snapshot rehydrate, structured conflicts, honest status labels, web tab lock.
+
+- **Effort** XL · **Impact** 10 · **Backend** yes · **Status** todo · **Deps** F-2102, F-103
+- **Prefs** -
+- **Acceptance**
+  1. A05: offline create/edit/delete, kill, reconnect; the second device sees each change exactly once, including crash injection.
+  2. A06: simultaneous edits raise an actionable conflict; no money lost.
+  3. "Synced" shows only after server acknowledgement; user switch never exposes another account's data.
+  4. A client older than the server's minimum contract version shows "Update required", keeps its outbox and resumes after updating.
+  5. First sync of the F-109 fixture finishes in under 60 s on a mid-range phone with progress shown and the app usable throughout.
+
+### F-2104 Move local data into an account `spec v1`
+
+Explicit, atomic migration of offline data into a new account.
+
+- **Effort** M · **Impact** 9 · **Backend** yes · **Status** todo · **Deps** F-2103
+- **Prefs** -
+- **Acceptance**
+  1. A failed migration leaves local data intact.
+  2. Every migrated record reaches the server exactly once.
+
+### F-2105 Invites `spec v1`
+
+Link and QR invites with server accept, expiry, revoke, role, max uses and approval queue; email/SMS drafts.
+
+- **Effort** M · **Impact** 9 · **Backend** yes · **Status** todo · **Deps** F-2103
+- **Prefs** `group:invite.defaultRole`
+- **Acceptance**
+  1. A09: expired or revoked invites fail; repeated acceptance is idempotent.
+  2. Opening a draft is never shown as sent.
+
+### F-2106 Link a private friend to a real account `spec v1`
+
+Identity confirmation and preview before linking; never by display name.
+
+- **Effort** M · **Impact** 8 · **Backend** yes · **Status** todo · **Deps** F-2105
+- **Prefs** -
+- **Acceptance**
+  1. A09: linking causes no duplicates or ownership leaks.
+  2. Cancelling the preview changes nothing.
+  3. Accepting an invite to a group that holds a private person for me offers "This is me: Sam" through the same confirm flow.
+
+### F-2107 Attachment upload `spec v1`
+
+Private object storage, dependency-aware transfer queue, server type/content validation, progress, retry, cancel.
+
+- **Effort** M · **Impact** 8 · **Backend** yes · **Status** todo · **Deps** F-2103, F-312
+- **Prefs** -
+- **Acceptance**
+  1. An interrupted upload resumes without duplicating the attachment.
+  2. Receipt text is redacted from routine logs.
+
+### F-2108 Server permissions and history visibility `spec 4b gap 11`
+
+Server-enforced group permissions and roles (incl. teen / dependent visibility); new members see all or only-since-join history; former members see up to their leave date.
+
+- **Effort** M · **Impact** 8 · **Backend** yes · **Status** todo · **Deps** F-2103, F-610
+- **Prefs** `group:history.visibleToNew`
+- **Acceptance**
+  1. A removed account cannot read or write disallowed data (A09).
+  2. Visibility choice shows on the invite preview and is enforced per cursor.
+
+### F-2109 Needs attention: conflicts and refused changes `spec v1 (handoff 8)`
+
+One screen for every operation the server refused or that conflicts: side-by-side versions with each member's balance effect, Keep mine (rebased as a new revision), Take theirs, or Edit; dependent operations shown waiting; writes blocked by removal from a group kept recoverable (move to personal, export or discard).
+
+- **Effort** M · **Impact** 9 · **Backend** yes · **Status** todo · **Deps** F-2103
+- **Prefs** -
+- **Acceptance**
+  1. A06: a conflicting edit to the same expense shows both versions and no option loses money.
+  2. Resolving a parent operation releases its waiting dependents in order.
+  3. Writes made after removal from a group are never dropped silently.
+
+### F-2110 Production operations `spec 9 (extended)`
+
+Deploy pipeline per tier, Postgres point-in-time backups with a monthly restore drill, object-storage versioning, uptime and error alerts, per-account and per-IP rate limits, incident runbook.
+
+- **Effort** M · **Impact** 9 · **Backend** yes · **Status** todo · **Deps** F-2101
+- **Prefs** -
+- **Acceptance**
+  1. A restore drill rebuilds a tier to a stated point in time and the recovery time is recorded.
+  2. Rate limits return structured retryable errors and the client backs off.
+  3. Secrets come from a secret store and a CI scan proves none reach logs.
+
+## E22 Shared and collaborative
+
+Features that need other people's devices or a server.
+
+### F-2201 Push notifications with actions `spec v1`
+
+Push for new group expense, payment recorded, invite accepted; Bluesky's NSE rewrites text, threads per group and adds actions.
+
+- **Effort** L · **Impact** 8 · **Backend** yes · **Status** todo · **Deps** F-2103
+- **Prefs** `notify.expense`, `notify.payment`, `notify.invite`, `notify.edit`, `notify.comment`
+- **Acceptance**
+  1. Payloads respect notification privacy levels (F-1605).
+  2. Each notification type obeys its notify.* toggle.
+  3. Edits or deletes that change my share notify me; text is in the recipient's app language.
+
+### F-2202 Notification digest, mute and "only if it affects me"
+
+Instant, daily, weekly or off per group; bursts batched; minimum balance change filter; quiet hours.
+
+- **Effort** M · **Impact** 7 · **Backend** yes · **Status** todo · **Deps** F-2201
+- **Prefs** `group:notifyMode`, `notify.minBalanceChange`, `quietHours`
+- **Acceptance**
+  1. Four quick expenses arrive as one batched notification.
+  2. Quiet hours delay delivery and never drop it.
+
+### F-2203 Hardened read-only balance link `spec v2`
+
+Server-hosted link showing only the viewer's lines with optional code, expiry, single/multi use and access log.
+
+- **Effort** M · **Impact** 7 · **Backend** yes · **Status** todo · **Deps** F-2103
+- **Prefs** `balanceLink.expiryDays`
+- **Acceptance**
+  1. Revoking stops access immediately; tenant isolation tested.
+  2. An expired link shows a clear expired page.
+
+### F-2204 Personal guest links `spec 4b v2`
+
+One link per member to add expenses, claim items, see lines and tap "I've paid" in the browser; changes tagged "via link"; revoke and undo all its changes.
+
+- **Effort** L · **Impact** 9 · **Backend** yes · **Status** todo · **Deps** F-2105, F-2108
+- **Prefs** -
+- **Acceptance**
+  1. A guest can edit only what they created through that link.
+  2. "Revoke link and undo all" reverses its operations atomically.
+
+### F-2205 Guest-to-member upgrade `spec v1 linking (extended)`
+
+A guest who installs the app lands in the group as themselves with history, claims and drafts.
+
+- **Effort** M · **Impact** 7 · **Backend** yes · **Status** todo · **Deps** F-2204, F-2106
+- **Prefs** -
+- **Acceptance**
+  1. No duplicate person is created.
+  2. History, pending claims and drafts are present after the upgrade.
+
+### F-2206 Live table mode `spec 4b v2`
+
+Everyone claims their own receipt items from a table QR and sees their running total live.
+
+- **Effort** L · **Impact** 8 · **Backend** yes · **Status** todo · **Deps** F-2204, F-401
+- **Prefs** -
+- **Acceptance**
+  1. Unclaimed items are highlighted; totals include pro-rata tax and tip.
+  2. Two people claiming the last portion at once never double-assign it.
+
+### F-2207 Two-sided payment confirmation
+
+"I've paid" claims and payee "Got it" / "Not received", with auto-confirm after N days.
+
+- **Effort** M · **Impact** 8 · **Backend** yes · **Status** todo · **Deps** F-2103
+- **Prefs** `group:pendingReducesBalance`, `group:autoConfirmDays`
+- **Acceptance**
+  1. Pending payments show separately from confirmed money.
+  2. The auto-confirm period is set per group.
+
+### F-2208 Shared comments, disputes and comments 2.0 `spec v2`
+
+Comments and disputes sync to members; quick replies, mentions, receipt requests.
+
+- **Effort** M · **Impact** 7 · **Backend** yes · **Status** todo · **Deps** F-2201, F-1204
+- **Prefs** -
+- **Acceptance**
+  1. A mention notifies only that member.
+  2. Resolved disputes collapse in the thread and stay in history.
+
+### F-2209 Shared reactions and "Say thanks" `spec v3`
+
+Reactions attached to records so every participant sees them; a thanks quick action after a payment.
+
+- **Effort** S · **Impact** 5 · **Backend** yes · **Status** todo · **Deps** F-2103, F-1207
+- **Prefs** `reactions.set`
+- **Acceptance**
+  1. Reactions never change the ledger.
+  2. Every participant sees the same reactions after sync.
+
+### F-2210 Automatic reminders (opt-in) `spec 4b v2`
+
+Server-sent reminders that follow the per-friend policy.
+
+- **Effort** M · **Impact** 6 · **Backend** yes · **Status** todo · **Deps** F-2201, F-1111
+- **Prefs** `person:reminderPolicy`
+- **Acceptance**
+  1. Off by default; the cap and quiet hours are enforced server-side.
+  2. Each sent reminder is listed on the person page.
+
+### F-2211 Gift pool / chip-in link
+
+One link where contributors without accounts see their amount, pay and tap "I've paid".
+
+- **Effort** M · **Impact** 7 · **Backend** yes · **Status** todo · **Deps** F-2204, F-1109
+- **Prefs** -
+- **Acceptance**
+  1. The organiser sees progress and confirms receipts.
+  2. Only unpaid contributors get nudges.
+
+### F-2212 Devices, sessions and lost-phone wipe `spec v1`
+
+List devices; sign out or sign out and wipe after pushing unsynced work; new sign-in alerts.
+
+- **Effort** M · **Impact** 7 · **Backend** yes · **Status** todo · **Deps** F-2102, F-2103
+- **Prefs** -
+- **Acceptance**
+  1. Wipe never loses an unsynced money record.
+  2. Signing a device out revokes its session on the server.
+
+### F-2213 Delete account with preview `spec 10`
+
+Preview what is deleted vs kept as "Former member" in shared groups, then delete.
+
+- **Effort** M · **Impact** 7 · **Backend** yes · **Status** todo · **Deps** F-2102, F-2103, F-2108
+- **Prefs** -
+- **Acceptance**
+  1. Shared group amounts remain balanced after deletion.
+  2. Personal data and attachments are removed and a confirmation is shown.
+
+### F-2214 Background sync and widget refresh `spec v1`
+
+BGTask / WorkManager / Background Sync flush the outbox and refresh widgets.
+
+- **Effort** M · **Impact** 6 · **Backend** yes · **Status** todo · **Deps** F-2103, F-1904
+- **Prefs** -
+- **Acceptance**
+  1. Best effort only; never claimed as guaranteed delivery.
+  2. The widget snapshot refreshes after a background pull.
+
+### F-2215 Passkey sign-in
+
+Passkeys as primary login with OTP fallback.
+
+- **Effort** M · **Impact** 5 · **Backend** yes · **Status** todo · **Deps** F-2102
+- **Prefs** -
+- **Acceptance**
+  1. Passkeys are listed and revocable.
+  2. OTP sign-in stays available as a fallback.
+
+### F-2216 Rich link previews
+
+Invite, guest and recap links unfurl as branded cards without amounts unless opted in.
+
+- **Effort** S · **Impact** 6 · **Backend** yes · **Status** todo · **Deps** F-2105
+- **Prefs** -
+- **Acceptance**
+  1. Fragment links show a generic card.
+  2. Amounts never appear in previews unless the sender opts in.
+
+### F-2217 "Friends already on Splito" matching
+
+Opt-in salted-hash contact matching that suggests links via the confirm flow.
+
+- **Effort** M · **Impact** 5 · **Backend** yes · **Status** todo · **Deps** F-2106, F-602
+- **Prefs** `contacts.matching`
+- **Acceptance**
+  1. Never merges automatically; non-users are never revealed.
+  2. Withdrawing permission deletes the uploaded hashes.
+
+### F-2218 App Clip for guest links and invites
+
+Bluesky BlueskyClip target adapted: add expense, claim items, see balance without install.
+
+- **Effort** L · **Impact** 6 · **Backend** yes · **Status** todo · **Deps** F-2204
+- **Prefs** -
+- **Acceptance**
+  1. "Get Splito" overlay hands off to the full app.
+  2. The clip works without the full app installed.
+
+### F-2219 Email-forward receipts
+
+Private inbound address per account and per group; forwarded receipts parsed server-side into the Inbox.
+
+- **Effort** L · **Impact** 7 · **Backend** yes · **Status** todo · **Deps** F-2103, F-503
+- **Prefs** -
+- **Acceptance**
+  1. Only verified sender addresses are accepted; aliases can be rotated.
+  2. Receipt text is redacted from server logs.
+
+### F-2220 Big-purchase proposals
+
+Propose a purchase over a threshold; members approve or decline; approved becomes an expense among approvers.
+
+- **Effort** M · **Impact** 5 · **Backend** yes · **Status** todo · **Deps** F-2103
+- **Prefs** `group:proposalThreshold`
+- **Acceptance**
+  1. Votes stay on the resulting expense.
+  2. Members who decline are left out of the split by default.
+
+### F-2221 Surprise expenses
+
+Hidden from one person until a reveal date, withheld by the server from their pull.
+
+- **Effort** M · **Impact** 6 · **Backend** yes · **Status** todo · **Deps** F-2103, F-2108
+- **Prefs** -
+- **Acceptance**
+  1. The hidden person's sync, balances and exports exclude it until reveal.
+  2. A server test proves the record is withheld, not just hidden in the UI.
+
+### F-2222 Roaming data saver
+
+On expensive connections sync small operations and hold attachments until Wi-Fi.
+
+- **Effort** S · **Impact** 6 · **Backend** yes · **Status** todo · **Deps** F-2107
+- **Prefs** `sync.wifiOnlyAttachments`
+- **Acceptance**
+  1. Status shows "3 receipts (4.2 MB) waiting for Wi-Fi" with Upload now.
+  2. "Upload now" overrides the hold.
+
+### F-2223 Send money via provider (sandbox) `spec v3`
+
+Provider adapter with sandbox integration and tests, labelled "sandbox" everywhere; live needs the owner's provider choice.
+
+- **Effort** L · **Impact** 5 · **Backend** yes · **Status** todo · **Deps** F-2103
+- **Prefs** -
+- **Acceptance**
+  1. No screen calls a sandbox transfer real money.
+  2. The adapter interface is tested against the sandbox only.
+
+### F-2224 Cosmetic unlocks
+
+Icons, palettes and celebration skins unlocked by invites or by use; nothing functional is gated.
+
+- **Effort** M · **Impact** 5 · **Backend** yes · **Status** todo · **Deps** F-2105, F-1707
+- **Prefs** -
+- **Acceptance**
+  1. Every cosmetic is also unlockable without inviting anyone.
+  2. No feature is gated behind a cosmetic.
+
+### F-2225 Apple / Google Wallet pass
+
+A pass per trip with balance and a join QR, relevant on trip dates.
+
+- **Effort** L · **Impact** 4 · **Backend** yes · **Status** todo · **Deps** F-2105
+- **Prefs** -
+- **Acceptance**
+  1. Balance updates arrive through pass updates.
+  2. The pass surfaces on the lock screen during the trip dates.
+
+### F-2226 iMessage app extension
+
+Interactive Splito cards in iMessage threads that update in place.
+
+- **Effort** L · **Impact** 3 · **Backend** yes · **Status** todo · **Deps** F-2218
+- **Prefs** -
+- **Acceptance**
+  1. Tapping a card opens the App Clip or app.
+  2. The card updates in place as members act.
+
+### F-2227 End-to-end encrypted groups (opt-in)
+
+Group operations encrypted on device with a group key; the server orders ciphertext only.
+
+- **Effort** XL · **Impact** 5 · **Backend** yes · **Status** todo · **Deps** F-2103
+- **Prefs** `group:e2ee`
+- **Acceptance**
+  1. Trade-offs (no server AI, no server PDF) are shown before enabling.
+  2. The database holds only ciphertext for the group (verified).
+
+### F-2228 Public API and webhooks
+
+Personal access tokens with scopes; read API for balances and expenses; writes through the same mutation, idempotency and change-log path as the app; signed webhooks for new expenses and payments.
+
+- **Effort** L · **Impact** 3 · **Backend** yes · **Status** todo · **Deps** F-2102, F-2108
+- **Prefs** -
+- **Acceptance**
+  1. API writes create the same change-log entries as app writes (no divergent path).
+  2. Tokens are scoped, revocable and rate limited; webhooks are signed and retried with backoff.
+
+### F-2229 Account switcher `spec v1 user switch (extended)`
+
+Bluesky's account switcher adapted: several Splito accounts on one device, each with its own isolated local database, outbox and lock.
+
+- **Effort** M · **Impact** 4 · **Backend** yes · **Status** todo · **Deps** F-2102, F-2103
+- **Prefs** -
+- **Acceptance**
+  1. Switching never shows another account's data, drafts or notifications (A15 isolation test).
+  2. The inactive account's unsynced work waits safely and is never mixed into the active outbox.
+
+### F-2230 Splitwise one-tap import via API `spec 4b importer (extended)`
+
+Connect Splitwise once (OAuth held by the Splito server, subject to Splitwise's API terms [?]) and import every friend, group, expense and payment with people matching and a preview.
+
+- **Effort** M · **Impact** 7 · **Backend** yes · **Status** todo · **Deps** F-2003, F-2101
+- **Prefs** -
+- **Acceptance**
+  1. Imported balances match Splitwise's for every group and friend.
+  2. Re-running imports only new records; the Splitwise token is deleted after import.
+
+### F-2231 Bank transaction feed (opt-in)
+
+Account Aggregator (India) or Plaid / Tink style feeds turn card and bank transactions into Inbox drafts with Ours / Mine / Theirs. Blocked until the owner picks a provider and countries.
+
+- **Effort** XL · **Impact** 6 · **Backend** yes · **Status** todo · **Deps** F-2103, F-522
+- **Prefs** `bankFeed.accounts`
+- **Acceptance**
+  1. Consent is revocable in one tap and stored transactions are deleted on revoke.
+  2. Feed items never post without review and dedupe against manual entries (F-504).
+
+## E23 AI
+
+Answers from real records, never invented numbers.
+
+### F-2301 Chat window and offline deterministic answers `spec v2`
+
+Floating window on desktop (page stays usable), sheet on mobile, persistent history and drafts; offline answers computed by domain functions with record links.
+
+- **Effort** M · **Impact** 8 · **Backend** no · **Status** todo · **Deps** F-1302
+- **Prefs** -
+- **Acceptance**
+  1. A14: closing and reopening keeps history and the draft.
+  2. "What does Riya owe me?" offline equals the People balance and is labelled "answered on this device".
+
+### F-2302 Server model with scoped tools `spec v2`
+
+Server-side model adapter, scoped read tools over the ledger, streaming, retry, cancel; proposed edits need review.
+
+- **Effort** L · **Impact** 9 · **Backend** yes · **Status** todo · **Deps** F-2103, F-2301
+- **Prefs** -
+- **Acceptance**
+  1. A14: an online answer equals the deterministic ledger result with record references.
+  2. A prompt-injected receipt cannot reach another group or write without review.
+  3. Stays behind a feature flag, off for users, until F-2303 consent, exclusion and retention controls ship (handoff 10).
+
+### F-2303 AI privacy controls
+
+Off until opted in; per-group "never send"; pseudonyms before model calls; "what was sent" viewer; retention.
+
+- **Effort** M · **Impact** 6 · **Backend** yes · **Status** todo · **Deps** F-2302
+- **Prefs** `ai.enabled`, `group:ai.exclude`, `ai.retentionDays`
+- **Acceptance**
+  1. An excluded group's records never appear in a model request (test).
+  2. The "what was sent" viewer shows the exact records for each answer.
+
+### F-2304 Cloud OCR re-read `spec v2`
+
+"Read again with AI" sends the image when online and opted in, showing a per-field diff to accept.
+
+- **Effort** M · **Impact** 7 · **Backend** yes · **Status** todo · **Deps** F-2302, F-502
+- **Prefs** `ocr.cloudReread`
+- **Acceptance**
+  1. Nothing changes without accepting the diff.
+  2. Runs only when online and opted in.
+
+### F-2305 AI-improved quick add `spec v2`
+
+When online, the model refines the local parse; the result is still a draft for review.
+
+- **Effort** S · **Impact** 6 · **Backend** yes · **Status** todo · **Deps** F-2302, F-507
+- **Prefs** -
+- **Acceptance**
+  1. Offline behaviour is unchanged.
+  2. The refined result is still a draft that needs review.
+
+## Build order
+
+Front-end features (Backend = no) come first, in batches, after the architecture prerequisites in Batch 0. Batches 1-3 finish the work already in progress (docs/RESUME.md) and, unlike later batches, contain dependency chains, so inside them follow the Deps column (Batch 1: F-201 first; Batch 2: F-301 -> F-302 -> F-401 and F-601 -> F-603 -> F-1101 -> F-1103); after that, batches are ordered by impact per effort (S=1, M=2, L=3, XL=5) while respecting dependencies. Inside a batch every feature touches a different area, so they can be built in parallel. Order inside a batch is the suggested pick order.
+
+### Front end
+
+### Batch 0: Architecture prerequisites
+
+Not feature work: ARCHITECTURE-BACKLOG A-001..A-010 run first (docs/RESUME.md). F-108 lives here so it is not built twice.
+
+| # | ID | Feature | Area | Effort | Impact | Deps |
+|---|---|---|---|---|---|---|
+| 1 | F-108 | Engineering guardrails | CI architecture test (A-001, A-014, A-019) | M | 6 | A-001, A-014, A-019 |
+
+### Batch 1: Finish M1 shell and lists
+
+Merge ui/preview-shell-fix into ui/polish-2 (docs/RESUME.md step 1).
+
+| # | ID | Feature | Area | Effort | Impact | Deps |
+|---|---|---|---|---|---|---|
+| 2 | F-201 | Bluesky shell: sidebar, bottom bar, FAB, avatar drawer, header rules, cat logo | navigation shell, LeftNav, drawer | L | 10 | - |
+| 3 | F-202 | Activity as a nav destination with unread badge | nav item + badge | S | 8 | F-201 |
+| 4 | F-205 | FormSheet for every sheet and dialog | components/FormSheet | M | 8 | F-201 |
+| 5 | F-206 | Overview, expanding search and filters on Friends and Groups | People and Groups list screens | M | 9 | F-201 |
+| 6 | F-207 | People balances and person page | Person screen, People selectors | M | 10 | F-201 |
+| 7 | F-1201 | Activity feed | Activity screen rows | M | 9 | F-103 |
+
+### Batch 2: Finish M1 money flows
+
+In-progress expense, group and settle work.
+
+| # | ID | Feature | Area | Effort | Impact | Deps |
+|---|---|---|---|---|---|---|
+| 8 | F-301 | Expense add / edit / delete / undo | AddExpense screen | L | 10 | F-103 |
+| 9 | F-302 | Split editor, inline calculator, remaining readout, persistent drafts | split editor component | M | 9 | F-301 |
+| 10 | F-401 | Itemized bill with portions | itemize editor component | M | 9 | F-302 |
+| 11 | F-601 | Private friends | Add friend sheet | S | 9 | F-103 |
+| 12 | F-603 | Groups and trips | Create/Edit group sheet | M | 10 | F-601 |
+| 13 | F-208 | Group page with Expenses, Balances, Members and Rules tabs | Group screen tabs | M | 9 | F-201 |
+| 14 | F-1101 | Settle up: plan, rules editor, record repayment | Settle screen + rules editor | L | 10 | F-102, F-603 |
+| 15 | F-1103 | UPI pay link and "Mark as paid?" | lib/upi | S | 9 | F-1101 |
+
+### Batch 3: Finish M1 polish
+
+Owner rules 10-13 and the remaining in-progress settings.
+
+| # | ID | Feature | Area | Effort | Impact | Deps |
+|---|---|---|---|---|---|---|
+| 16 | F-1301 | Basic analytics | Analytics screen | M | 8 | F-301 |
+| 17 | F-1701 | Settings for every preference | Settings screens | M | 9 | F-104 |
+| 18 | F-209 | Custom navigation | tabs pref + nav | S | 6 | F-201 |
+| 19 | F-1704 | Motion: Lottie, animated balances, success check, list animations | motion components | M | 8 | F-201 |
+| 20 | F-203 | Pager tabs and animated main-tab switches | pager component | M | 7 | F-201 |
+| 21 | F-204 | Desktop LeftNav complete | desktop LeftNav | M | 7 | F-201 |
+
+### Batch 4: Money quick wins
+
+Small, high-impact, independent.
+
+| # | ID | Feature | Area | Effort | Impact | Deps |
+|---|---|---|---|---|---|---|
+| 22 | F-310 | Smart amount input | composer amount field | S | 8 | F-302 |
+| 23 | F-402 | Cash rounding with visible remainder | domain allocate rounding | S | 8 | F-101 |
+| 24 | F-1801 | Money direction never shown by colour alone | balance display components | S | 8 | - |
+| 25 | F-1203 | Recently deleted bin | Recently deleted screen | S | 8 | F-103 |
+| 26 | F-1113 | Call it even: forgive or write off | write-off ledger kind + person action | S | 7 | F-101 |
+| 27 | F-1401 | Free search across expenses | expense search index | S | 8 | F-301 |
+| 28 | F-1903 | Android build and emulator run | Android build config | S | 8 | - |
+
+### Batch 5: First impressions and scale
+
+The 10-second first expense, 10k-expense speed, offline web, and the screens every real user meets.
+
+| # | ID | Feature | Area | Effort | Impact | Deps |
+|---|---|---|---|---|---|---|
+| 29 | F-314 | Three-tap add with sentence defaults | composer defaults + sentence chip | M | 10 | F-302 |
+| 30 | F-109 | Large-ledger performance at 10,000 expenses | projections + perf fixture | L | 9 | F-103, A-016 |
+| 31 | F-1901 | PWA: install, offline shell, updates, desktop integration | PWA | M | 7 | - |
+| 32 | F-215 | Help, About, licences and privacy | Help / About / Licences screens | M | 7 | F-201 |
+| 33 | F-214 | My profile and avatars | profile screen + avatars | M | 7 | F-201, F-601 |
+| 34 | F-220 | Group expense list: month sections, "involving me" filter and sort | group Expenses tab list | S | 7 | F-208 |
+| 35 | F-110 | Multi-tab web consistency | cross-tab channel + web lock | S | 7 | F-103 |
+| 36 | F-216 | Permission primers and recovery | permission primer sheets | S | 6 | F-205 |
+
+### Batch 6: Get paid
+
+Payment handles and the first settle helpers.
+
+| # | ID | Feature | Area | Effort | Impact | Deps |
+|---|---|---|---|---|---|---|
+| 37 | F-1106 | Payment handles | person payment handles | M | 8 | F-601 |
+| 38 | F-1117 | Settle up with a person across groups | person settle sheet | M | 9 | F-1101, F-207 |
+| 39 | F-1110 | Next-to-pay suggestion | group header next-to-pay selector | S | 7 | F-1101 |
+| 40 | F-1501 | Text summaries for WhatsApp | share text builder | S | 8 | F-1101 |
+| 41 | F-1114 | "Everyone settles with the organiser" preset | payment rules editor preset | S | 6 | F-1101 |
+| 42 | F-1102 | Fewest-payments toggle | fewest-payments solver | M | 7 | F-1101 |
+| 43 | F-107 | Deterministic generated IDs and operation dedupe | sync generated IDs | S | 7 | F-103 |
+| 44 | F-106 | Day-weight allocation from date ranges | domain day weights | S | 8 | F-101 |
+
+### Batch 7: Pay and entry speed
+
+QR, UPI handoff and faster entry.
+
+| # | ID | Feature | Area | Effort | Impact | Deps |
+|---|---|---|---|---|---|---|
+| 45 | F-1105 | Pay-me QR at the table | Get-paid QR screen | S | 9 | F-1106 |
+| 46 | F-1104 | UPI app chooser and fallback chain | native UPI module + pay sheet | M | 9 | F-1103, F-1106 |
+| 47 | F-305 | Saved split templates | split templates | S | 7 | F-302 |
+| 48 | F-309 | Rapid entry: save and add another, duplicate, repeat last | composer footer actions | S | 7 | F-301 |
+| 49 | F-1603 | Hide amounts (discreet mode) | amount formatter context | S | 7 | - |
+| 50 | F-1202 | Readable change history and "your share changed" | expense History tab | M | 9 | F-103 |
+| 51 | F-1907 | Local scheduled notifications | local notifications module | M | 7 | - |
+| 52 | F-210 | Empty states that teach one next step | empty states | S | 6 | F-1704 |
+
+### Batch 8: Rules and recurring
+
+Group rules, recurring engine, FX base.
+
+| # | ID | Feature | Area | Effort | Impact | Deps |
+|---|---|---|---|---|---|---|
+| 53 | F-306 | Recurring expenses: fixed, variable, estimate then true-up | recurring rules + generator | L | 9 | F-107, F-301, F-1907 |
+| 54 | F-609 | Per-category split rules for a group | group settings: How we split | M | 9 | F-305 |
+| 55 | F-902 | Income-proportional fair-share ratio | fair-share template | S | 9 | F-305 |
+| 56 | F-1107 | Payment-handle change warning | pay-link guard | S | 8 | F-1106 |
+| 57 | F-307 | Category and emoji auto-suggest | category field suggestions | S | 7 | F-301 |
+| 58 | F-1302 | My Spending measure everywhere | analytics measure | M | 9 | F-1301 |
+| 59 | F-316 | Favourite expenses: one-tap tiles | favourite tiles | S | 7 | F-309 |
+| 60 | F-1002 | Conversion records and exchange rates | FX rates module | M | 9 | F-1001 |
+
+### Batch 9: Inbox and pots
+
+The review queue, duplicates and pot accounts.
+
+| # | ID | Feature | Area | Effort | Impact | Deps |
+|---|---|---|---|---|---|---|
+| 61 | F-503 | Review Inbox for automated drafts | Inbox screen + FAB badge | M | 9 | F-301 |
+| 62 | F-504 | Unified duplicate detection | duplicate fingerprint engine | M | 9 | F-301 |
+| 63 | F-312 | Attachments | attachments | M | 7 | F-301 |
+| 64 | F-1111 | Reminder drafts that do not annoy | reminder drafts | M | 9 | F-1106, F-1907 |
+| 65 | F-1005 | Card-charged amount sets the real rate | card-charged fields | M | 9 | F-1002 |
+| 66 | F-105 | Pot ledger accounts | domain pot accounts | M | 8 | F-101, F-103 |
+| 67 | F-1802 | Screen-reader money sentences | a11y money sentences | M | 9 | F-1001 |
+| 68 | F-1305 | Period presets | period presets | S | 5 | F-1301 |
+
+### Batch 10: Households and groups
+
+Parties, presence, couples and trust basics.
+
+| # | ID | Feature | Area | Effort | Impact | Deps |
+|---|---|---|---|---|---|---|
+| 69 | F-607 | Households: a couple or family settles as one party | households (members + settle) | M | 9 | F-102, F-603 |
+| 70 | F-614 | Presence calendar: stay dates, away days, guest nights | presence calendar | M | 8 | F-106, F-603 |
+| 71 | F-901 | Ours / Mine / For you chips | composer ownership chips | S | 8 | F-609 |
+| 72 | F-1204 | Comments and disputes | expense thread + disputes | M | 8 | F-301 |
+| 73 | F-1205 | Settle-up checkpoints | settle checkpoints | M | 8 | F-1101 |
+| 74 | F-1109 | Collections: who-has-paid tracker | collections screen | M | 8 | F-105, F-1106 |
+| 75 | F-211 | 60-second zero-signup onboarding | onboarding flow | M | 8 | F-1701 |
+| 76 | F-606 | Group templates | group templates | S | 7 | F-603 |
+
+### Batch 11: Trips I
+
+Kitty, nights and trip money.
+
+| # | ID | Feature | Area | Effort | Impact | Deps |
+|---|---|---|---|---|---|---|
+| 77 | F-701 | Trip kitty v2: multi-currency, holder hand-off, cash count | kitty screens | L | 9 | F-105 |
+| 78 | F-702 | Split by nights or days present, with room weights | nights/days split mode | M | 8 | F-614 |
+| 79 | F-1003 | Offline rate pack and re-price review | FX cache | S | 7 | F-1002 |
+| 80 | F-1004 | Trip rate book | trip rate book | M | 8 | F-1002, F-603 |
+| 81 | F-604 | Archive groups | archive | S | 6 | F-603 |
+| 82 | F-1304 | Budgets | budgets engine + screen | M | 8 | F-1302, F-1305, F-1907 |
+| 83 | F-1601 | App lock with step-up actions | app lock | M | 8 | F-1701 |
+| 84 | F-1605 | Notification privacy levels | notification privacy | S | 5 | F-1907 |
+
+### Batch 12: Home I
+
+Proration, bills and pots for flats.
+
+| # | ID | Feature | Area | Effort | Impact | Deps |
+|---|---|---|---|---|---|---|
+| 85 | F-804 | Billing periods with day proration | billing period proration | M | 9 | F-106, F-614 |
+| 86 | F-802 | Fair rent calculator | rent calculator sheet | S | 7 | F-609 |
+| 87 | F-807 | Bills due board and calendar | bills due board | M | 8 | F-306, F-1907 |
+| 88 | F-815 | Household and joint pots | household pots | M | 8 | F-105, F-306 |
+| 89 | F-903 | "Us" overview card with fairness meter | Us overview card | M | 8 | F-902, F-1302 |
+| 90 | F-1006 | Cash wallets and forex lots | cash wallets | M | 8 | F-1005 |
+| 91 | F-2001 | JSON backup export and restore | backup export/import | M | 8 | F-103 |
+| 92 | F-308 | Guest participants | guest participants | S | 6 | F-301 |
+
+### Batch 13: Lifecycle and trust
+
+Disputes, leaving, duplicates, switching phones.
+
+| # | ID | Feature | Area | Effort | Impact | Deps |
+|---|---|---|---|---|---|---|
+| 93 | F-1209 | Explain this balance | balance explainer screen | S | 8 | F-207, F-1501 |
+| 94 | F-615 | Leave or delete a group | group leave / delete flow | M | 8 | F-603, F-1113, F-1203 |
+| 95 | F-2005 | Move to a new phone without an account | phone transfer flow | M | 8 | F-2001 |
+| 96 | F-616 | Merge duplicate friends | friend merge | M | 7 | F-601 |
+| 97 | F-617 | Saved member subsets and a big-group picker | member subsets + participant picker | S | 7 | F-603 |
+| 98 | F-1108 | Payment method and UTR proof | Record payment sheet | S | 6 | F-1101 |
+| 99 | F-1011 | Change a group's or my home currency safely | currency change flow | S | 6 | F-1002 |
+| 100 | F-2006 | Storage manager | storage manager screen | S | 5 | F-312 |
+
+### Batch 14: Trips II: settling in one currency
+
+Settle currency, legs, reports, refunds.
+
+| # | ID | Feature | Area | Effort | Impact | Deps |
+|---|---|---|---|---|---|---|
+| 101 | F-1007 | Settle a trip in one currency with rate-policy preview | settle-in-one-currency flow | L | 9 | F-1004, F-1101 |
+| 102 | F-704 | Trip legs and travel mode | trip legs | M | 8 | F-603, F-1002 |
+| 103 | F-317 | Quick split by headcount | headcount quick split | S | 7 | F-302, F-308, F-1105 |
+| 104 | F-1208 | "All square" moment | all-square celebration | S | 6 | F-1704 |
+| 105 | F-1303 | Full reports | reports | M | 8 | F-1302 |
+| 106 | F-1607 | Privacy and data safety center | privacy center screen | S | 7 | F-2001 |
+| 107 | F-303 | Refunds and reversals | refunds | M | 7 | F-301 |
+| 108 | F-605 | Group emoji and colour | group emoji | S | 6 | F-603 |
+
+### Batch 15: Capture I
+
+Scanner, quick add and the predictor.
+
+| # | ID | Feature | Area | Effort | Impact | Deps |
+|---|---|---|---|---|---|---|
+| 109 | F-501 | Receipt scanner | scanner module | M | 8 | F-312 |
+| 110 | F-403 | GST-aware Indian bill lines | itemize tax lines | M | 8 | F-401 |
+| 111 | F-507 | Quick add by text v2 | quick-add parser + chips | M | 8 | F-310, F-503 |
+| 112 | F-515 | Smart defaults predictor | defaults predictor | M | 9 | F-301 |
+| 113 | F-803 | Rent collector board | rent collector board | M | 9 | F-306, F-1109, F-1104 |
+| 114 | F-1010 | Unambiguous currency display and compact amounts | currency formatter | S | 6 | F-1001 |
+| 115 | F-1805 | Dynamic Type to 200% with reflow | dynamic type reflow | M | 8 | - |
+| 116 | F-2301 | Chat window and offline deterministic answers | chat window | M | 8 | F-1302 |
+
+### Batch 16: Capture II: OCR
+
+On-device OCR, closing a trip and trip spend views.
+
+| # | ID | Feature | Area | Effort | Impact | Deps |
+|---|---|---|---|---|---|---|
+| 117 | F-502 | On-device OCR with review | OCR engines + review | L | 9 | F-501, F-401 |
+| 118 | F-705 | Close the trip: wrap-up checklist | trip wrap-up card | M | 9 | F-604, F-1205, F-701, F-1007 |
+| 119 | F-1008 | Pay back with leftover foreign cash | cross-currency repayment | S | 7 | F-1007 |
+| 120 | F-706 | What this trip cost me | trip cost view | M | 8 | F-1302, F-1005 |
+| 121 | F-808 | Month close and household statement | month close | M | 8 | F-1205 |
+| 122 | F-1009 | Live home-currency hint | amount hint | S | 7 | F-1002, F-310 |
+| 123 | F-1502 | Shareable image cards | image card renderer | M | 7 | F-1105 |
+| 124 | F-602 | Add friend from device contacts | contacts picker | S | 7 | F-601 |
+
+### Batch 17: Receipt intelligence
+
+Make OCR results trustworthy.
+
+| # | ID | Feature | Area | Effort | Impact | Deps |
+|---|---|---|---|---|---|---|
+| 125 | F-406 | Receipt math checker | OCR math checker | S | 8 | F-502 |
+| 126 | F-405 | Line-item cleanup | line normaliser | M | 8 | F-401, F-502 |
+| 127 | F-506 | Receipt currency and number-format auto-detect | currency detector | S | 7 | F-502 |
+| 128 | F-505 | Attach-to-existing matcher and missing-receipt nudge | receipt matcher | S | 7 | F-502 |
+| 129 | F-509 | Incoming share | share extension / intent | L | 7 | F-503 |
+| 130 | F-1306 | Deterministic insights | insights card | S | 5 | F-1303 |
+| 131 | F-1803 | Accessibility actions for every swipe and long-press | row a11y actions | S | 7 | F-1201 |
+| 132 | F-612 | Duplicate group as template | duplicate group | S | 5 | F-603 |
+
+### Batch 18: Itemize power
+
+Faster, smarter item assignment.
+
+| # | ID | Feature | Area | Effort | Impact | Deps |
+|---|---|---|---|---|---|---|
+| 133 | F-407 | Tap-the-receipt painter assignment | painter view | M | 8 | F-401, F-502 |
+| 134 | F-404 | Item memory and shared-item defaults | item memory | S | 6 | F-401 |
+| 135 | F-408 | Delivery and ride e-receipt splitter | e-receipt templates | M | 8 | F-502, F-509 |
+| 136 | F-510 | Paste or share text into drafts | text-to-draft parser | M | 7 | F-507 |
+| 137 | F-1804 | Accessible portion editor and spoken remaining | portion chip a11y | S | 7 | F-401 |
+| 138 | F-1602 | PIN recovery kit | PIN recovery | S | 6 | F-1601 |
+| 139 | F-1307 | Receivables ageing and net position | receivables panel | S | 6 | F-1301 |
+| 140 | F-611 | Pinned group note and payment-handle directory | pinned note + handles directory | S | 5 | F-1106 |
+
+### Batch 19: Households II and family
+
+Dependents, loans, cards and the native bridge.
+
+| # | ID | Feature | Area | Effort | Impact | Deps |
+|---|---|---|---|---|---|---|
+| 141 | F-608 | Dependents: kids, pets and parents who never owe | dependents | M | 8 | F-607 |
+| 142 | F-814 | Presence-aware category rules | presence category rules | M | 7 | F-614, F-609 |
+| 143 | F-905 | IOU loans and EMI splits | loans | M | 7 | F-301 |
+| 144 | F-613 | Safe member removal and drop-out re-split wizard | member removal wizard | M | 7 | F-1113 |
+| 145 | F-1206 | Ledger fingerprint and balance code | balance code | M | 6 | F-103 |
+| 146 | F-1703 | Card customization | card customization | L | 7 | F-1701 |
+| 147 | F-1904 | Extension data bridge | extension data bridge | M | 7 | - |
+| 148 | F-1112 | Settle-up day for the group | settle-up day | S | 7 | F-1907 |
+
+### Batch 20: Organise and export
+
+Tags, bulk edit, views, PWA.
+
+| # | ID | Feature | Area | Effort | Impact | Deps |
+|---|---|---|---|---|---|---|
+| 149 | F-1404 | Tags and occasion tags | tags | M | 7 | F-301 |
+| 150 | F-1405 | Bulk select and edit | bulk select | M | 8 | F-301 |
+| 151 | F-1403 | Saved views | saved views | S | 6 | F-1401 |
+| 152 | F-1308 | Subscriptions dashboard and 30-day forecast | subscriptions dashboard | S | 6 | F-306 |
+| 153 | F-517 | Recurring pattern detection and price-change alerts | recurring pattern detection | S | 7 | F-306 |
+| 154 | F-2004 | Power exports | exports | M | 7 | F-1302 |
+| 155 | F-221 | Pin and reorder friends and groups | list pinning | S | 5 | F-206 |
+| 156 | F-610 | Per-group permissions (local) | group permissions | M | 8 | F-603 |
+
+### Batch 21: Automation and widgets
+
+Rules engine, search operators, widgets.
+
+| # | ID | Feature | Area | Effort | Impact | Deps |
+|---|---|---|---|---|---|---|
+| 157 | F-516 | Automation rules engine | rules engine | M | 7 | F-305, F-503, F-1404 |
+| 158 | F-1402 | Advanced search operators | search operators | M | 7 | F-1401 |
+| 159 | F-1505 | Share privacy presets | share privacy presets | S | 6 | F-1501 |
+| 160 | F-1905 | Home and lock-screen widgets | widgets | L | 8 | F-1904 |
+| 161 | F-806 | Security deposit ledger | deposit ledger | M | 8 | F-105, F-312 |
+| 162 | F-2002 | Encrypted and automatic backups | encrypted backups | M | 8 | F-2001, F-1907 |
+| 163 | F-1702 | Black-and-white theme and background overrides | B&W theme | S | 5 | F-1701 |
+| 164 | F-219 | Contextual tips and feature discovery | tips registry | S | 6 | F-211, F-215 |
+
+### Batch 22: Sharing and links
+
+Serverless balance link, PDF, intents.
+
+| # | ID | Feature | Area | Effort | Impact | Deps |
+|---|---|---|---|---|---|---|
+| 165 | F-1506 | Serverless balance link | balance link page | M | 9 | F-1505, F-1901 |
+| 166 | F-1503 | Trip summary PDF | trip PDF | M | 6 | F-1101 |
+| 167 | F-511 | Payment-screenshot split (RRN-aware) | payment screenshot parser | M | 7 | F-502, F-1106, F-509 |
+| 168 | F-1906 | App Intents, Siri, Shortcuts and Android App Actions | App Intents | L | 8 | F-1904, F-503 |
+| 169 | F-809 | Shared shopping list to itemized expense | shopping list | M | 7 | F-401, F-609 |
+| 170 | F-2003 | Splitwise importer | Splitwise importer | M | 7 | F-504 |
+| 171 | F-1710 | Tabular numerals and font option | font + tabular nums | S | 6 | - |
+| 172 | F-709 | Road trip: fuel and distance split | distance split | S | 5 | F-302, F-617 |
+
+### Batch 23: Statements and personal views
+
+PDF-based outputs and privacy.
+
+| # | ID | Feature | Area | Effort | Impact | Deps |
+|---|---|---|---|---|---|---|
+| 173 | F-1116 | Settlement statement | settlement statement | S | 5 | F-1503 |
+| 174 | F-910 | Year-end tax pack and cost of living | tax pack | M | 6 | F-1302, F-1503 |
+| 175 | F-1310 | Reimbursable and work expense claims | reimbursable claims | M | 6 | F-1302, F-1503 |
+| 176 | F-1504 | Trip recap story and Year in Review | recap story | M | 6 | F-1502, F-1302 |
+| 177 | F-1410 | Private overlay and private notes | private overlay | M | 6 | F-301 |
+| 178 | F-1604 | App-switcher privacy and screenshot blocking | app-switcher privacy | S | 6 | - |
+| 179 | F-1908 | Home-screen icon quick actions | icon quick actions | S | 6 | - |
+| 180 | F-816 | Daily quantity log: milk, tiffin and water cans | quantity log | S | 5 | F-306 |
+
+### Batch 24: Trip extras
+
+Timeline, deposits, tickets, income.
+
+| # | ID | Feature | Area | Effort | Impact | Deps |
+|---|---|---|---|---|---|---|
+| 181 | F-703 | Trip dashboard and day-by-day timeline with budget pace | trip timeline | M | 7 | F-1304, F-704 |
+| 182 | F-707 | Pre-trip bookings and refundable deposits | refundable deposits | M | 7 | F-303, F-705 |
+| 183 | F-409 | Ticket split with partial cancellation | ticket split | M | 6 | F-303, F-509 |
+| 184 | F-520 | Trip auto-detect from spending clusters | trip auto-detect | S | 6 | F-1405 |
+| 185 | F-1909 | Quick add from Control Center, Action Button and Quick Settings | Control Center / QS tile | M | 7 | F-1906 |
+| 186 | F-1806 | Increase-contrast mode | increase contrast | M | 6 | - |
+| 187 | F-304 | Money-in entries (group income) | money-in entries | S | 5 | F-301 |
+| 188 | F-810 | Shared asset register with buyout | asset register | M | 6 | F-301 |
+
+### Batch 25: Home III
+
+Flat wizard, move-out and utilities.
+
+| # | ID | Feature | Area | Effort | Impact | Deps |
+|---|---|---|---|---|---|---|
+| 189 | F-801 | Flat setup wizard | flat setup wizard | M | 8 | F-606, F-306, F-609, F-802 |
+| 190 | F-805 | Move-out checkout wizard | move-out wizard | L | 9 | F-804, F-806, F-810, F-613 |
+| 191 | F-811 | Metered utility split | metered split | M | 6 | F-609 |
+| 192 | F-812 | Household staff payroll | staff payroll | M | 6 | F-306 |
+| 193 | F-518 | Utility bill OCR | utility bill OCR | M | 6 | F-502, F-306 |
+| 194 | F-1309 | Custom report builder | report builder | L | 6 | F-1303, F-1703 |
+| 195 | F-1813 | RTL done properly | RTL | M | 6 | - |
+| 196 | F-519 | Booking confirmation to expense with dates | booking confirmation parser | L | 6 | F-509, F-702 |
+
+### Batch 26: Family and events
+
+Goals, allowance, co-parenting, weddings.
+
+| # | ID | Feature | Area | Effort | Impact | Deps |
+|---|---|---|---|---|---|---|
+| 197 | F-904 | Shared goals and savings pots | goals | M | 6 | F-105 |
+| 198 | F-906 | Kids' allowance and pocket-money ledger | allowance | M | 6 | F-608, F-306 |
+| 199 | F-907 | Co-parenting ledger | co-parenting | L | 6 | F-606, F-609, F-1204 |
+| 200 | F-909 | Wedding and event mode | wedding mode | L | 6 | F-606, F-607, F-1304 |
+| 201 | F-908 | Shagun / gift register | gift register | M | 5 | F-301 |
+| 202 | F-1311 | Payment accounts and reconciliation | payment accounts | M | 6 | F-1302 |
+| 203 | F-1910 | Live Activity for a trip day | Live Activity | L | 6 | F-1904, F-703 |
+| 204 | F-1913 | Store review prompt at happy moments | review prompt | S | 3 | F-1208 |
+
+### Batch 27: Capture everywhere
+
+Voice, notifications, Wallet, statements.
+
+| # | ID | Feature | Area | Effort | Impact | Deps |
+|---|---|---|---|---|---|---|
+| 205 | F-508 | Push-to-talk voice add | voice add | M | 7 | F-507 |
+| 206 | F-512 | Payment notification and bank SMS capture (Android, opt-in) | Android capture service | L | 8 | F-510, F-1106 |
+| 207 | F-513 | Wallet tap to split draft (iOS Shortcuts) | Wallet intent | M | 7 | F-1906 |
+| 208 | F-514 | Merchant dictionary and name cleanup | merchant dictionary | M | 6 | F-307 |
+| 209 | F-521 | Composer suggestions from clipboard and latest screenshot | clipboard chip | S | 6 | F-507, F-502 |
+| 210 | F-522 | Statement and CSV import with column mapper | statement importer | L | 8 | F-503, F-504 |
+| 211 | F-1409 | Full-text receipt search | receipt FTS | S | 6 | F-502, F-1401 |
+| 212 | F-315 | Optional time of day on expenses | expense time field | S | 4 | F-301 |
+
+### Batch 28: Accessibility and locale
+
+Inclusive by default.
+
+| # | ID | Feature | Area | Effort | Impact | Deps |
+|---|---|---|---|---|---|---|
+| 213 | F-1807 | Undo toasts that wait for assistive tech | undo toasts | S | 6 | - |
+| 214 | F-1808 | Contrast-guarded accent and category colours | contrast guard | S | 5 | F-1701 |
+| 215 | F-1812 | Locale-correct plurals, dates, sorting and search | plurals and collation | S | 6 | - |
+| 216 | F-1814 | Self-describing charts | chart summaries | M | 6 | F-1301 |
+| 217 | F-1811 | Hinglish and more Indian languages | more languages | L | 7 | F-1810 |
+| 218 | F-1809 | Read my balances aloud | read aloud | S | 4 | - |
+| 219 | F-1705 | Haptic vocabulary | haptic table | S | 5 | - |
+| 220 | F-1815 | Accessibility CI and release audit | axe + a11y lint in CI | M | 7 | A-035 |
+
+### Batch 29: Customization and polish
+
+Optional modes and personality.
+
+| # | ID | Feature | Area | Effort | Impact | Deps |
+|---|---|---|---|---|---|---|
+| 221 | F-212 | Simple mode | simple mode | M | 6 | F-209 |
+| 222 | F-213 | Handedness and reach | handedness | S | 4 | F-201 |
+| 223 | F-1706 | Living cat mascot for sync states | cat mascot | M | 5 | F-1704 |
+| 224 | F-1707 | Alternate app icons | alternate icons | M | 4 | - |
+| 225 | F-1708 | Balance wording style per group | balance wording | S | 5 | - |
+| 226 | F-1709 | Lite mode | lite mode | M | 6 | - |
+| 227 | F-217 | Tablet, landscape and foldable layouts | two-pane layouts | M | 6 | F-201, F-204 |
+| 228 | F-218 | Sample group to explore | sample namespace | S | 5 | F-603, F-210 |
+
+### Batch 30: Power user and privacy
+
+Keyboard, grid, fields, privacy extras.
+
+| # | ID | Feature | Area | Effort | Impact | Deps |
+|---|---|---|---|---|---|---|
+| 229 | F-1407 | Command palette and keyboard shortcuts | command palette | M | 6 | F-1401 |
+| 230 | F-1408 | Spreadsheet grid view (web) | grid view | L | 5 | F-1405, F-522 |
+| 231 | F-1406 | Category hierarchy and per-group sets | category hierarchy | M | 5 | F-1701 |
+| 232 | F-1411 | Custom fields | custom fields | M | 4 | F-301 |
+| 233 | F-311 | Amount typo and anomaly guard | composer anomaly guard | S | 6 | F-301 |
+| 234 | F-1606 | Hand-off mode | hand-off mode | S | 6 | F-1601 |
+| 235 | F-1609 | Hidden personal expenses and groups | hidden items | S | 5 | F-1601 |
+| 236 | F-1608 | Receipt privacy: EXIF strip and auto-redact | receipt redaction | M | 6 | F-502 |
+
+### Batch 31: Long tail
+
+Low impact-per-effort items.
+
+| # | ID | Feature | Area | Effort | Impact | Deps |
+|---|---|---|---|---|---|---|
+| 237 | F-708 | Offline phone-to-phone exchange (QR and file) | QR / file exchange | XL | 7 | F-107 |
+| 238 | F-1115 | Transit routing with consent | transit routing | M | 5 | F-1101 |
+| 239 | F-1207 | Reactions on activity items (local) | local reactions | S | 4 | F-1201 |
+| 240 | F-813 | Chore-cover payouts | chore cover pay | M | 4 | F-301 |
+| 241 | F-1610 | Erase this device | erase device | S | 6 | F-2001 |
+| 242 | F-1911 | Spotlight and launcher search indexing | Spotlight indexing | M | 5 | F-1906 |
+| 243 | F-313 | Location | location | M | 4 | F-301 |
+| 244 | F-1912 | Apple Watch and Wear OS companion | watch companion | XL | 4 | F-1904, F-503 |
+
+### Backend (after Backend foundation)
+
+Starts once the front-end batches that hold their front-end deps are done. Backend batch 1 is the foundation: API service, auth, sync, invites, and the operations that keep real users' data safe.
+
+Shared expenses are the core of the product, so the foundation need not wait for all front-end batches: F-2101 to F-2105 depend only on F-103 and touch apps/api and the sync client, not screens, so a separate builder may start them alongside front-end Batch 4 or later. F-2107 still waits for F-312 and F-2108 for F-610; no backend feature ships to users before F-2110.
+
+### Backend batch 1: Backend foundation (auth, sync, invites)
+
+Sequential inside: F-2101 -> F-2102 -> F-2103, then the rest in parallel.
+
+| # | ID | Feature | Area | Effort | Impact | Deps |
+|---|---|---|---|---|---|---|
+| 245 | F-2101 | API service | apps/api | L | 10 | - |
+| 246 | F-2110 | Production operations | deploy, backups, alerts, rate limits | M | 9 | F-2101 |
+| 247 | F-2102 | Sign-in and sessions | auth routes + client credential store | L | 10 | F-2101 |
+| 248 | F-2103 | Sync push/pull and conflicts | sync routes + client sync loop | XL | 10 | F-2102, F-103 |
+| 249 | F-2104 | Move local data into an account | migration flow | M | 9 | F-2103 |
+| 250 | F-2105 | Invites | invites | M | 9 | F-2103 |
+| 251 | F-2107 | Attachment upload | attachments service | M | 8 | F-2103, F-312 |
+| 252 | F-2108 | Server permissions and history visibility | authorization layer | M | 8 | F-2103, F-610 |
+
+### Backend batch 2: Shared basics
+
+First things people feel once sync exists.
+
+| # | ID | Feature | Area | Effort | Impact | Deps |
+|---|---|---|---|---|---|---|
+| 253 | F-2109 | Needs attention: conflicts and refused changes | conflict resolution screen | M | 9 | F-2103 |
+| 254 | F-2106 | Link a private friend to a real account | person linking | M | 8 | F-2105 |
+| 255 | F-2201 | Push notifications with actions | push + NSE | L | 8 | F-2103 |
+| 256 | F-2207 | Two-sided payment confirmation | payment claims | M | 8 | F-2103 |
+| 257 | F-2203 | Hardened read-only balance link | balance link service | M | 7 | F-2103 |
+| 258 | F-2204 | Personal guest links | guest links | L | 9 | F-2105, F-2108 |
+| 259 | F-2302 | Server model with scoped tools (flagged off until F-2303) | AI model adapter | L | 9 | F-2103, F-2301 |
+| 260 | F-2212 | Devices, sessions and lost-phone wipe | devices screen | M | 7 | F-2102, F-2103 |
+
+### Backend batch 3: Collaboration
+
+Built on push, guest links and the model.
+
+| # | ID | Feature | Area | Effort | Impact | Deps |
+|---|---|---|---|---|---|---|
+| 261 | F-2202 | Notification digest, mute and "only if it affects me" | notification digest | M | 7 | F-2201 |
+| 262 | F-2208 | Shared comments, disputes and comments 2.0 | shared comments | M | 7 | F-2201, F-1204 |
+| 263 | F-2205 | Guest-to-member upgrade | guest upgrade | M | 7 | F-2204, F-2106 |
+| 264 | F-2206 | Live table mode | live table | L | 8 | F-2204, F-401 |
+| 265 | F-2303 | AI privacy controls | AI privacy | M | 6 | F-2302 |
+| 266 | F-2304 | Cloud OCR re-read | cloud OCR | M | 7 | F-2302, F-502 |
+| 267 | F-2216 | Rich link previews | link previews | S | 6 | F-2105 |
+| 268 | F-2213 | Delete account with preview | account deletion | M | 7 | F-2102, F-2103, F-2108 |
+
+### Backend batch 4: Reach
+
+Reminders, pools and background work.
+
+| # | ID | Feature | Area | Effort | Impact | Deps |
+|---|---|---|---|---|---|---|
+| 269 | F-2210 | Automatic reminders (opt-in) | automatic reminders | M | 6 | F-2201, F-1111 |
+| 270 | F-2211 | Gift pool / chip-in link | gift pool | M | 7 | F-2204, F-1109 |
+| 271 | F-2209 | Shared reactions and "Say thanks" | shared reactions | S | 5 | F-2103, F-1207 |
+| 272 | F-2214 | Background sync and widget refresh | background sync | M | 6 | F-2103, F-1904 |
+| 273 | F-2222 | Roaming data saver | roaming saver | S | 6 | F-2107 |
+| 274 | F-2305 | AI-improved quick add | AI quick add | S | 6 | F-2302, F-507 |
+| 275 | F-2215 | Passkey sign-in | passkeys | M | 5 | F-2102 |
+| 276 | F-2230 | Splitwise one-tap import via API | Splitwise OAuth importer | M | 7 | F-2003, F-2101 |
+
+### Backend batch 5: Advanced shared
+
+Lower impact-per-effort shared features.
+
+| # | ID | Feature | Area | Effort | Impact | Deps |
+|---|---|---|---|---|---|---|
+| 277 | F-2219 | Email-forward receipts | email inbound | L | 7 | F-2103, F-503 |
+| 278 | F-2218 | App Clip for guest links and invites | App Clip | L | 6 | F-2204 |
+| 279 | F-2221 | Surprise expenses | surprise expenses | M | 6 | F-2103, F-2108 |
+| 280 | F-2220 | Big-purchase proposals | proposals | M | 5 | F-2103 |
+| 281 | F-2217 | "Friends already on Splito" matching | contact matching | M | 5 | F-2106, F-602 |
+| 282 | F-2223 | Send money via provider (sandbox) | provider sandbox | L | 5 | F-2103 |
+| 283 | F-2229 | Account switcher | account switcher | M | 4 | F-2102, F-2103 |
+
+### Backend batch 6: Extras
+
+Lowest priority.
+
+| # | ID | Feature | Area | Effort | Impact | Deps |
+|---|---|---|---|---|---|---|
+| 284 | F-2224 | Cosmetic unlocks | cosmetics | M | 5 | F-2105, F-1707 |
+| 285 | F-2225 | Apple / Google Wallet pass | Wallet pass | L | 4 | F-2105 |
+| 286 | F-2226 | iMessage app extension | iMessage extension | L | 3 | F-2218 |
+| 287 | F-2227 | End-to-end encrypted groups (opt-in) | E2E groups | XL | 5 | F-2103 |
+| 288 | F-2231 | Bank transaction feed (opt-in) | bank feed (needs provider) | XL | 6 | F-2103, F-522 |
+| 289 | F-2228 | Public API and webhooks | public API | L | 3 | F-2102, F-2108 |
+
+## Main merges
+
+Ideas proposed by several lenses that became one feature:
+
+| Feature | Merged ideas |
+|---|---|
+| F-607 | couples/households settle as one (travel), couple sub-unit in a flat (household), household units (couples), family units with adult-child weights (India) |
+| F-1109 | collect from everyone (travel), family occasion collection (couples), festival/society/office pools (India), bill collection tracker (social) |
+| F-1105 | show QR to get paid (India), pay-me QR at the table (social), pay-me UPI QR (platform) |
+| F-1104 | UPI pay sheet with fallback chain (India), smarter UPI handoff (platform), spec UPI link |
+| F-1110 | next to pay (travel), whose turn to buy (household), who pays next (couples) |
+| F-1113 | call it even (couples), let it go (social), forgive and write-off entries (trust) |
+| F-1005 | card-charged amount (travel), card FX (power), what my bank charged (capture) |
+| F-1006 | ATM cash wallet (travel), forex lot rates (India) |
+| F-701 | kitty 2.0 (travel), cash-custodian kitty (India), spec trip kitty |
+| F-306 | spec recurring, smart recurring bills (household), variable-amount recurring (capture) |
+| F-609 | per-category rules in a home group (household), per-category split rules (couples), spec v3 per-group default split |
+| F-807 | bills due board (household), bills calendar with assigned payer (couples) |
+| F-808 / F-1112 | month close (household), settle-up cadence (couples), settle-up day (social) |
+| F-815 | household pot (household), joint pots (couples) |
+| F-304 | money-in entries (household), shared income and refunds (couples) |
+| F-1304 | spec trip budget, monthly household budgets (household), recurring household budget (couples), budgets on my share (power) |
+| F-1302 | My Spending ledger (power), We spent vs My share (couples) |
+| F-1111 | polite nudges (India), reminders that do not annoy (social), reminders in the friend's language (accessibility), spec reminders |
+| F-1502 | trip wrap-up card (travel), WhatsApp summary card with QR (India), shareable image cards (social), summary card with UPI QR (platform) |
+| F-1504 | Year in Review (power), Trip Recap story (social) |
+| F-501 / F-502 | native scanner and hybrid OCR (capture), native scanner with on-device OCR (platform), spec receipt capture |
+| F-503 | Review Inbox (capture), "To split" inbox (power) |
+| F-507 | Hinglish quick add (India), quick-add parser v2 (capture), spec quick add |
+| F-310 | big-denomination entry (travel), lakh/crore input (India), locale digits and separators (accessibility) |
+| F-512 | bank SMS / UPI capture (India), Android payment-notification capture (capture, platform) |
+| F-516 | rules engine (power), user-editable automation rules (capture) |
+| F-522 | statement import with Ours/Mine/Theirs (couples), universal CSV import (power), paste or import statements (capture) |
+| F-408 | food-delivery order split (India), delivery and ride e-receipt splitter (capture) |
+| F-1906 | automation hooks (power), Siri and Shortcuts (capture), App Intents and App Actions (platform) |
+| F-1407 | keyboard-first web (power), keyboard shortcuts and palette (platform), shortcuts sheet (accessibility) |
+| F-1603 | hide amounts privacy mode (trust), privacy guard (platform), discreet mode (accessibility) |
+| F-1205 | settle-so-far checkpoints (travel), settle-up checkpoints and close trip (trust) |
+| F-708 | phone-to-phone QR (travel), trek mode merge (India), offline group handoff by file (social) |
+| F-1811 | regional languages (India), Hinglish and next Indian languages (accessibility), spec more languages |
+| F-2207 | two-sided payment confirmation (social), payee confirms (trust) |
+| F-602 | device contacts picker (platform), contacts stay on device (trust) |
+| F-1608 | auto-redact shared receipts (capture), receipt and attachment privacy (trust) |
+| F-1410 | private overlay (power), private notes (trust) |
