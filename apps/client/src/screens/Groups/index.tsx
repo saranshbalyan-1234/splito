@@ -1,5 +1,4 @@
 import {useState} from 'react'
-import {View} from 'react-native'
 import {LayoutAnimationConfig} from 'react-native-reanimated'
 import {plural} from '@lingui/core/macro'
 import {Trans, useLingui} from '@lingui/react/macro'
@@ -12,8 +11,7 @@ import {useNumberLocale} from '#/locale/numberLocale'
 import {useEntities, useLedger, useMe, usePref} from '#/data/hooks'
 import {EmptyState} from '#/view/com/util/EmptyState'
 import {List} from '#/view/com/util/List'
-import {useBreakpoints} from '#/alf'
-import {AddExpenseFAB} from '#/components/AddExpenseFAB'
+import {AddExpenseFAB, AddExpenseFABInset} from '#/components/AddExpenseFAB'
 import {useDialogControl} from '#/components/Dialog'
 import {myBalances} from '#/components/groups/net'
 import {HeaderAvatar} from '#/components/HeaderAvatar'
@@ -51,7 +49,6 @@ export function GroupsScreen() {
   const {t: l} = useLingui()
   const locale = useNumberLocale()
   const navigation = useNavigation<NavigationProp>()
-  const {gtMobile} = useBreakpoints()
   const me = useMe()
   const groups = useEntities<Group>('group')
   const people = useEntities<Person>('person')
@@ -213,9 +210,7 @@ export function GroupsScreen() {
                 />
               )
             }
-            ListFooterComponent={
-              !gtMobile ? <View style={{height: 100}} /> : undefined
-            }
+            ListFooterComponent={<AddExpenseFABInset />}
           />
         </LayoutAnimationConfig>
       )}

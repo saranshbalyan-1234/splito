@@ -9,7 +9,7 @@ import {useNumberLocale} from '#/locale/numberLocale'
 import {usePref} from '#/data/hooks'
 import {EmptyState} from '#/view/com/util/EmptyState'
 import {List} from '#/view/com/util/List'
-import {atoms as a, useBreakpoints, useTheme} from '#/alf'
+import {atoms as a, useTheme} from '#/alf'
 import {ActivityItem} from '#/components/activity/ActivityItem'
 import {type FeedRow} from '#/components/activity/feed'
 import {LoadingSkeleton} from '#/components/activity/LoadingSkeleton'
@@ -19,7 +19,7 @@ import {
 } from '#/components/activity/SectionHeader'
 import {useActivityActions} from '#/components/activity/useActivityActions'
 import {useActivityFeed} from '#/components/activity/useActivityFeed'
-import {AddExpenseFAB} from '#/components/AddExpenseFAB'
+import {AddExpenseFAB, AddExpenseFABInset} from '#/components/AddExpenseFAB'
 import {Button, ButtonText} from '#/components/Button'
 import {HeaderAvatar} from '#/components/HeaderAvatar'
 import {MarkAllReadIcon} from '#/components/activity/icons'
@@ -44,7 +44,6 @@ export function ActivityScreen() {
   const t = useTheme()
   const {t: l} = useLingui()
   const locale = useNumberLocale()
-  const {gtMobile} = useBreakpoints()
   const listAnimations = useListAnimations()
   const [tab, setTab] = useState(0)
   const feed = useActivityFeed(tab === 0 ? 'all' : 'others')
@@ -178,7 +177,7 @@ export function ActivityScreen() {
                   </View>
                 ) : null}
                 {/* Clears the FAB and bottom bar on phones. */}
-                {!gtMobile ? <View style={{height: 100}} /> : null}
+                <AddExpenseFABInset />
               </>
             }
           />

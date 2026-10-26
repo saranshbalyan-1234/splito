@@ -1,8 +1,10 @@
+import {View} from 'react-native'
 import {useLingui} from '@lingui/react/macro'
 import {useNavigation} from '@react-navigation/native'
 
 import {type NavigationProp} from '#/lib/routes/types'
 import {FAB} from '#/view/com/util/fab/FAB'
+import {useFabInset} from '#/view/com/util/fab/FABInner'
 import {useTheme} from '#/alf'
 import {PlusLarge_Stroke2_Corner0_Rounded as PlusIcon} from '#/components/icons/Plus'
 
@@ -32,4 +34,14 @@ export function AddExpenseFAB({
       accessibilityHint=""
     />
   )
+}
+
+/**
+ * A list's footer spacer on phones: the FAB's height plus a margin above
+ * the bottom bar, so the FAB never covers the last row once scrolled to
+ * the end (owner rule 9 polish). Renders nothing on wider screens.
+ */
+export function AddExpenseFABInset() {
+  const height = useFabInset()
+  return height > 0 ? <View testID="fab-inset" style={{height}} /> : null
 }

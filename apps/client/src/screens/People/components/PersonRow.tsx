@@ -74,28 +74,34 @@ export function PersonRow({
   })
   const isSettled = currencies.every(c => byCurrency[c]!.total === ZERO)
 
-  const balances = (
+  const open = currencies.filter(c => byCurrency[c]!.total !== ZERO)
+  const balanceColumn = (list: string[]) => (
     <View style={[a.align_end, a.gap_2xs, a.flex_shrink_0]}>
-      {isSettled ? (
-        <Text style={[a.text_sm, a.leading_snug, t.atoms.text_contrast_medium]}>
-          <Trans>settled up</Trans>
-        </Text>
-      ) : (
-        currencies
-          .filter(c => byCurrency[c]!.total !== ZERO)
-          .map(currency => (
-            <BalanceText
-              key={currency}
-              testID={`balance-${currency}`}
-              amount={byCurrency[currency]!.total}
-              currency={currency}
-              locale={locale}
-              style={a.text_right}
-            />
-          ))
-      )}
+      {list.map(currency => (
+        <BalanceText
+          key={currency}
+          testID={`balance-${currency}`}
+          amount={byCurrency[currency]!.total}
+          currency={currency}
+          locale={locale}
+          style={a.text_right}
+        />
+      ))}
     </View>
   )
+  const balances = isSettled ? (
+    <Text style={[a.text_sm, a.leading_snug, t.atoms.text_contrast_medium]}>
+      <Trans>settled up</Trans>
+    </Text>
+  ) : (
+    balanceColumn(open)
+  )
+  /*
+   * Phones: the first currency shares the name's line and any others share
+   * the chips' line, so a second currency never leaves a gap under the name.
+   */
+  const firstBalance = isSettled ? balances : balanceColumn(open.slice(0, 1))
+  const moreBalances = open.length > 1 ? balanceColumn(open.slice(1)) : null
 
   /* The row content shrinks on press; the separator stays put. */
   return (
@@ -136,46 +142,56 @@ export function PersonRow({
               <View style={[a.flex_1]}>
                 <ProfileCard.Name profile={row} />
               </View>
-              {!gtMobile && balances}
+              {!gtMobile && firstBalance}
             </View>
-            {chips.length > 0 ? (
-              <Pills.Row style={[a.pt_2xs]}>
-                {chips.map(chip => (
-                  <Pills.Tag key={chip.key}>
-                    {chip.name}{' '}
-                    <Text
-                      style={[
-                        a.text_xs,
-                        a.font_semi_bold,
-                        {
-                          color:
-                            chip.v > ZERO
-                              ? t.palette.positive_600
-                              : t.palette.negative_500,
-                          fontVariant: ['tabular-nums'],
-                        },
-                      ]}>
-                      {(chip.v > ZERO ? '+' : '−') +
-                        formatAmount(magnitude(chip.v), chip.currency, locale)}
-                    </Text>
-                  </Pills.Tag>
-                ))}
-              </Pills.Row>
-            ) : (
-              <Text
-                numberOfLines={1}
-                style={[
-                  a.text_sm,
-                  a.leading_snug,
-                  t.atoms.text_contrast_medium,
-                ]}>
-                {isSettled ? (
-                  <Trans>No open balances</Trans>
+            <View
+              style={[a.flex_row, a.align_start, a.justify_between, a.gap_md]}>
+              <View style={[a.flex_1]}>
+                {chips.length > 0 ? (
+                  <Pills.Row style={[a.pt_2xs]}>
+                    {chips.map(chip => (
+                      <Pills.Tag key={chip.key}>
+                        {chip.name}{' '}
+                        <Text
+                          style={[
+                            a.text_xs,
+                            a.font_semi_bold,
+                            {
+                              color:
+                                chip.v > ZERO
+                                  ? t.palette.positive_600
+                                  : t.palette.negative_500,
+                              fontVariant: ['tabular-nums'],
+                            },
+                          ]}>
+                          {(chip.v > ZERO ? '+' : '−') +
+                            formatAmount(
+                              magnitude(chip.v),
+                              chip.currency,
+                              locale,
+                            )}
+                        </Text>
+                      </Pills.Tag>
+                    ))}
+                  </Pills.Row>
                 ) : (
-                  <Trans>Direct expenses</Trans>
+                  <Text
+                    numberOfLines={1}
+                    style={[
+                      a.text_sm,
+                      a.leading_snug,
+                      t.atoms.text_contrast_medium,
+                    ]}>
+                    {isSettled ? (
+                      <Trans>No open balances</Trans>
+                    ) : (
+                      <Trans>Direct expenses</Trans>
+                    )}
+                  </Text>
                 )}
-              </Text>
-            )}
+              </View>
+              {!gtMobile && moreBalances}
+            </View>
           </View>
           {gtMobile && balances}
         </Animated.View>
