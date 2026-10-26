@@ -1571,6 +1571,11 @@ add anyway (only for you)"; "also i should be able to select from contacts". *Wh
     "Add anyway (only for you)" is still offered.
 - **Pending people are not selectable** in expenses or groups until they accept (they show greyed with
   "Waiting for <name> to accept"); a private "only for you" friend is selectable at once.
+- **Request and invite rows share one layout:** avatar, name, status line, and the actions on the right of the
+  row. Requests: Accept (check icon, primary) and Decline (X icon); Invites sent: Resend (send icon) and Cancel
+  (X icon). On phones the actions are icon-only round buttons (with accessibility labels and a long-press
+  tooltip); on rail/desktop each shows its icon and full text ("Accept", "Decline", "Resend", "Cancel"). *Why:*
+  "make accept decline like invites sent, on mobile only icon for both, for web complete text with icon".
 - **Incoming requests** show in Activity (from others, unread badge) and at the top of People ("Requests":
   Accept / Decline). Declining is silent to the sender (stays "pending" until it expires after 30 days).
 - **Invite link and QR with limits.** People header and the Add friend sheet have "Invite link / QR"; groups
@@ -1732,6 +1737,7 @@ Every owner decision, in the order it was made (all 2026-10-26). "Replaced" name
 | 73 | "this search should open a drawer instead which would support ai as well" | Search icon (every top-level header) opens the Search & Ask drawer: search results + Ask Splito chat in one place; no Search or Ask pages; bottom bar back to Home, Groups, Analytics, Activity | §§ 26.3, 26.4, 26.19 | Expanding header search (72), Ask Splito centre tab and screen (71) |
 | 74 | "make it as a ai icon like flash or something ... basically we are combining ai and search" | The Search & Ask header button uses the Lucide Sparkles AI icon (not a magnifier) | § 26.3 | Magnifier icon |
 | 75 | "command + k opens this up" | Cmd/Ctrl+K opens and closes the Search & Ask drawer everywhere (web, hardware keyboards), hint shown on desktop | § 26.3 | "/" or Cmd/Ctrl+K on web only |
+| 76 | "make accept decline like invites sent, on mobile only icon for both, for web complete text with icon" | Requests and Invites sent rows: actions on the right; icon-only on phones, icon + text on desktop | § 26.18 | Accept/Decline text buttons under the name |
 
 New decisions follow § 0 rule 9: rewrite the rule in its topic so only the current truth remains, then add a
 row here.
