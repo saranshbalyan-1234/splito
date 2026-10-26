@@ -5,7 +5,10 @@ import {
   deleteExpense,
   type ExpenseDraft,
   type MutationCtx,
+  type PrefKey,
+  type PrefValue,
   restoreExpense,
+  setPref,
   type Store,
 } from '@splito/sync'
 
@@ -38,5 +41,6 @@ export function installDevTools(store: Store, ctx: MutationCtx) {
     createExpense: (draft: unknown) => createExpense(store, ctx, toBig(draft) as ExpenseDraft).then(e => e.id),
     deleteExpense: (id: string) => deleteExpense(store, ctx, id),
     restoreExpense: (id: string) => restoreExpense(store, ctx, id),
+    setPref: <K extends PrefKey>(key: K, value: PrefValue<K>) => setPref(store, ctx, key, value),
   }
 }

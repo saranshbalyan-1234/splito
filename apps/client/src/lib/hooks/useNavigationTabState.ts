@@ -8,6 +8,7 @@ export function useNavigationTabState() {
     const res = {
       isAtPeople: getTabState(state, 'People') !== TabState.Outside,
       isAtGroups: getTabState(state, 'Groups') !== TabState.Outside,
+      isAtAnalytics: getTabState(state, 'Analytics') !== TabState.Outside,
       isAtActivity: getTabState(state, 'Activity') !== TabState.Outside,
       isAtProfile: getTabState(state, 'Profile') !== TabState.Outside,
     }
@@ -15,6 +16,7 @@ export function useNavigationTabState() {
     if (
       !res.isAtPeople &&
       !res.isAtGroups &&
+      !res.isAtAnalytics &&
       !res.isAtActivity &&
       !res.isAtProfile
     ) {

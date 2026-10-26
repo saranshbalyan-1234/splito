@@ -4,21 +4,28 @@ import {
 } from '@react-navigation/native'
 import {type NativeStackNavigationProp} from '@react-navigation/native-stack'
 
+/** The bottom bar / sidebar destinations, in display order. */
 export type TabParams = {
   People: undefined
   Groups: undefined
+  Analytics: undefined
   Activity: undefined
   Profile: undefined
 }
 
+/** Every route in the owner's route table (paths live in `#/routes` and `#/navigation/linking`). */
 export type RootStackParams = {
   Tabs: undefined
+  Settings: undefined
+  SettingsSection: {section: string}
   Person: {personId: string}
   Group: {groupId: string}
-  AddExpense: {personId?: string; groupId?: string; expenseId?: string}
-  AddPerson: undefined
+  Settle: {groupId: string}
+  AddExpense: {personId?: string; groupId?: string}
+  Expense: {expenseId: string}
+  EditExpense: {expenseId: string}
+  AddFriend: undefined
   CreateGroup: undefined
-  Settings: undefined
 }
 
 /** Web renders every route in one flat stack, like Bluesky's FlatNavigator. */

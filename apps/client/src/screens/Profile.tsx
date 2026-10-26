@@ -1,39 +1,36 @@
 // Adapted from bluesky-social/social-app@4e4ad9c (MIT) - src/screens/Settings/Settings.tsx
 import {View} from 'react-native'
-import {Trans} from '@lingui/react/macro'
+import {Trans, useLingui} from '@lingui/react/macro'
 
 import {useMe} from '#/data/hooks'
 import {UserAvatar} from '#/view/com/util/UserAvatar'
 import * as SettingsList from '#/screens/Settings/components/SettingsList'
 import {atoms as a, useBreakpoints, useTheme} from '#/alf'
-import {Accessibility_Stroke2_Corner2_Rounded as AccessibilityIcon} from '#/components/icons/Accessibility'
-import {Bell_Stroke2_Corner0_Rounded as NotificationIcon} from '#/components/icons/Bell'
-import {BulletList_Stroke2_Corner0_Rounded as ListIcon} from '#/components/icons/BulletList'
-import {Earth_Stroke2_Corner2_Rounded as EarthIcon} from '#/components/icons/Globe'
-import {PaintRoller_Stroke2_Corner2_Rounded as PaintRollerIcon} from '#/components/icons/PaintRoller'
-import {SettingsSliderVertical_Stroke2_Corner0_Rounded as SlidersIcon} from '#/components/icons/SettingsSlider'
-import {Shapes_Stroke2_Corner0_Rounded as ShapesIcon} from '#/components/icons/Shapes'
+import {ChartPie_Stroke2_Corner0_Rounded as ChartPieIcon} from '#/components/icons/ChartPie'
+import {CircleInfo_Stroke2_Corner0_Rounded as InfoIcon} from '#/components/icons/CircleInfo'
+import {Cloud_Stroke2_Corner0_Rounded as CloudIcon} from '#/components/icons/Cloud'
+import {SettingsGear2_Stroke2_Corner0_Rounded as SettingsIcon} from '#/components/icons/Settings'
 import * as Layout from '#/components/Layout'
+import * as Skeleton from '#/components/Skeleton'
 import {Text} from '#/components/Typography'
 
 /*
- * Bluesky's Settings index, as Splito's Profile tab. Account switching,
- * moderation, sign-out and developer options are removed. The rows are the
- * preference registry's groups; their pages are not built yet, so the rows
- * are plain items (no chevron, no press) until they are.
+ * Bluesky's Settings index, as Splito's Profile tab: the account block, then
+ * rows. Account switching, moderation, sign-out and developer options are
+ * removed; sign-in arrives with sync, and its row says so.
  */
 export function ProfileScreen() {
+  const {t: l} = useLingui()
   const me = useMe()
 
   return (
     <Layout.Screen testID="screen-profile">
       <Layout.Header.Outer>
-        <Layout.Header.Content>
+        <Layout.Header.Content align="left">
           <Layout.Header.TitleText>
             <Trans>Profile</Trans>
           </Layout.Header.TitleText>
         </Layout.Header.Content>
-        <Layout.Header.Slot />
       </Layout.Header.Outer>
       <Layout.Content>
         <SettingsList.Container>
@@ -47,50 +44,45 @@ export function ProfileScreen() {
               a.align_center,
               {minHeight: 160},
             ]}>
-            {me && <ProfilePreview name={me.data.name} />}
+            {me ? <ProfilePreview name={me.data.name} /> : <ProfilePreviewPlaceholder />}
           </View>
           <SettingsList.Divider />
-          <SettingsList.Item>
-            <SettingsList.ItemIcon icon={PaintRollerIcon} />
+          <SettingsList.LinkItem
+            testID="profile-analytics"
+            to="/analytics"
+            label={l`Analytics`}>
+            <SettingsList.ItemIcon icon={ChartPieIcon} />
             <SettingsList.ItemText>
-              <Trans>Appearance</Trans>
+              <Trans>Analytics</Trans>
             </SettingsList.ItemText>
-          </SettingsList.Item>
-          <SettingsList.Item>
-            <SettingsList.ItemIcon icon={AccessibilityIcon} />
+          </SettingsList.LinkItem>
+          <SettingsList.LinkItem
+            testID="profile-settings"
+            to="/settings"
+            label={l`Settings`}>
+            <SettingsList.ItemIcon icon={SettingsIcon} />
             <SettingsList.ItemText>
-              <Trans>Motion</Trans>
+              <Trans>Settings</Trans>
             </SettingsList.ItemText>
-          </SettingsList.Item>
-          <SettingsList.Item>
-            <SettingsList.ItemIcon icon={SlidersIcon} />
+          </SettingsList.LinkItem>
+          <SettingsList.LinkItem
+            testID="profile-about"
+            to="/settings/about"
+            label={l`About`}>
+            <SettingsList.ItemIcon icon={InfoIcon} />
             <SettingsList.ItemText>
-              <Trans>Defaults</Trans>
+              <Trans>About</Trans>
             </SettingsList.ItemText>
-          </SettingsList.Item>
+          </SettingsList.LinkItem>
+          <SettingsList.Divider />
           <SettingsList.Item>
-            <SettingsList.ItemIcon icon={ShapesIcon} />
+            <SettingsList.ItemIcon icon={CloudIcon} />
             <SettingsList.ItemText>
-              <Trans>Categories</Trans>
+              <Trans>Sign in and sync</Trans>
             </SettingsList.ItemText>
-          </SettingsList.Item>
-          <SettingsList.Item>
-            <SettingsList.ItemIcon icon={EarthIcon} />
-            <SettingsList.ItemText>
-              <Trans>Regional</Trans>
-            </SettingsList.ItemText>
-          </SettingsList.Item>
-          <SettingsList.Item>
-            <SettingsList.ItemIcon icon={ListIcon} />
-            <SettingsList.ItemText>
-              <Trans>Lists</Trans>
-            </SettingsList.ItemText>
-          </SettingsList.Item>
-          <SettingsList.Item>
-            <SettingsList.ItemIcon icon={NotificationIcon} />
-            <SettingsList.ItemText>
-              <Trans>Notifications</Trans>
-            </SettingsList.ItemText>
+            <SettingsList.BadgeText>
+              <Trans>Coming with sync</Trans>
+            </SettingsList.BadgeText>
           </SettingsList.Item>
         </SettingsList.Container>
       </Layout.Content>
@@ -130,6 +122,16 @@ function ProfilePreview({name}: {name: string}) {
       <Text style={[a.text_md, a.leading_snug, t.atoms.text_contrast_medium]}>
         <Trans>Saved on this device</Trans>
       </Text>
+    </>
+  )
+}
+
+function ProfilePreviewPlaceholder() {
+  return (
+    <>
+      <Skeleton.Circle size={80} />
+      <Skeleton.Text style={[a.text_3xl, a.mt_sm, {width: 160}]} />
+      <Skeleton.Text style={[a.text_md, {width: 140}]} />
     </>
   )
 }

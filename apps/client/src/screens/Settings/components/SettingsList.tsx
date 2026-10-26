@@ -1,5 +1,4 @@
 // Adapted from bluesky-social/social-app@4e4ad9c (MIT) - src/screens/Settings/components/SettingsList.tsx
-/* LinkItem is removed until Splito's settings sub-pages exist (rows must not look navigable before then). */
 import {createContext, useContext, useMemo} from 'react'
 import {
   type GestureResponderEvent,
@@ -10,6 +9,7 @@ import {
 import {useLingui} from '@lingui/react/macro'
 
 import {HITSLOP_10, UNREAD_NOTIFICATION_CAP} from '#/lib/constants'
+import {Link} from '#/view/com/util/Link'
 import {atoms as a, useTheme, type ViewStyleProp} from '#/alf'
 import * as Button from '#/components/Button'
 import {ChevronRight_Stroke2_Corner0_Rounded as ChevronRightIcon} from '#/components/icons/Chevron'
@@ -118,6 +118,48 @@ export function Item({
         {children}
       </ItemContext.Provider>
     </View>
+  )
+}
+
+/*
+ * Upstream builds this on `#/components/Link`; Splito has the older
+ * `#/view/com/util/Link`, which gives the same anchor-on-web, navigate-on-press
+ * behaviour for app routes.
+ */
+export function LinkItem({
+  children,
+  to,
+  label,
+  testID,
+  destructive = false,
+  contentContainerStyle,
+  chevronColor,
+}: {
+  children: React.ReactNode
+  to: string
+  label: string
+  testID?: string
+  contentContainerStyle?: StyleProp<ViewStyle>
+  destructive?: boolean
+  chevronColor?: string
+}) {
+  const t = useTheme()
+
+  return (
+    <Link
+      testID={testID}
+      href={to}
+      asAnchor
+      anchorNoUnderline
+      accessibilityLabel={label}
+      accessibilityHint=""
+      hoverStyle={t.atoms.bg_contrast_25}
+      style={[a.w_full]}>
+      <Item destructive={destructive} style={contentContainerStyle}>
+        {children}
+        <Chevron color={chevronColor} />
+      </Item>
+    </Link>
   )
 }
 

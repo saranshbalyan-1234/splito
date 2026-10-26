@@ -111,3 +111,44 @@ export function groupNet(records: LedgerRecord[], groupId: string): Record<Curre
   }
   return net
 }
+
+/** Absolute value of a minor-unit amount; screens show direction in words, not signs. */
+export function magnitude(v: bigint): bigint {
+  return v < 0n ? -v : v
+}
+
+export interface CurrencyTotal {
+  currency: CurrencyCode
+  /** What friends owe me (>= 0). */
+  owed: bigint
+  /** What I owe friends (>= 0). */
+  owe: bigint
+  /** owed - owe. */
+  net: bigint
+}
+
+/** Per currency, sorted by code: totals across every person's balance. Currencies are never mixed. */
+export function balanceTotals(people: PersonSummary[]): CurrencyTotal[] {
+  const totals = new Map<CurrencyCode, CurrencyTotal>()
+  for (const p of people) {
+    for (const [currency, {total}] of Object.entries(p.byCurrency)) {
+      const t = totals.get(currency) ?? {currency, owed: 0n, owe: 0n, net: 0n}
+      if (total > 0n) t.owed += total
+      else t.owe -= total
+      t.net += total
+      totals.set(currency, t)
+    }
+  }
+  return [...totals.values()].sort((a, b) => cmp(a.currency, b.currency))
+}
+
+/** My net balance in each group, per currency (> 0: the group owes me). Direct rows are ignored. */
+export function groupBalances(rows: BalanceRow[]): Record<string, Record<CurrencyCode, bigint>> {
+  const out: Record<string, Record<CurrencyCode, bigint>> = {}
+  for (const r of rows) {
+    if (r.groupId === null) continue
+    const g = (out[r.groupId] ??= {})
+    g[r.currency] = (g[r.currency] ?? 0n) + r.amount
+  }
+  return out
+}

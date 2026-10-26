@@ -10,6 +10,7 @@ import {
   type Store,
 } from '@splito/sync'
 
+import {useNumberLocale} from '#/locale/numberLocale'
 import {useMutationCtx, useStore} from '#/data/hooks'
 import {
   type ActivityItem,
@@ -18,6 +19,7 @@ import {
 import {Bell_Stroke2_Corner0_Rounded as BellIcon} from '#/components/icons/Bell'
 import {EmptyState} from '#/view/com/util/EmptyState'
 import {List} from '#/view/com/util/List'
+import {AddExpenseFAB} from '#/components/AddExpenseFAB'
 import * as Layout from '#/components/Layout'
 
 type Change = {entity: Entity; row: HistoryRow; prev: HistoryRow | undefined}
@@ -68,7 +70,8 @@ function useChanges() {
 
 /** Activity: changes from the local store's history, in Bluesky's notification rows. */
 export function ActivityScreen() {
-  const {t: l, i18n} = useLingui()
+  const {t: l} = useLingui()
+  const locale = useNumberLocale()
   const {actor} = useMutationCtx()
   const changes = useChanges()
 
@@ -101,7 +104,7 @@ export function ActivityScreen() {
             ...base,
             type,
             subject: e.title,
-            amount: formatAmount(e.total, e.currency, i18n.locale),
+            amount: formatAmount(e.total, e.currency, locale),
             authors: people(Object.keys(e.shares)),
           },
         ]
@@ -134,12 +137,11 @@ export function ActivityScreen() {
   return (
     <Layout.Screen testID="screen-activity">
       <Layout.Header.Outer>
-        <Layout.Header.Content>
+        <Layout.Header.Content align="left">
           <Layout.Header.TitleText>
             <Trans>Activity</Trans>
           </Layout.Header.TitleText>
         </Layout.Header.Content>
-        <Layout.Header.Slot />
       </Layout.Header.Outer>
       {changes === undefined ? null : (
         <List
@@ -156,6 +158,7 @@ export function ActivityScreen() {
           }
         />
       )}
+      <AddExpenseFAB />
     </Layout.Screen>
   )
 }

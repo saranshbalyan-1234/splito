@@ -12,55 +12,73 @@ import {
   isTab,
   TabState,
 } from '#/lib/routes/helpers'
-import {type NavigationProp} from '#/lib/routes/types'
+import {type NavigationProp, type TabParams} from '#/lib/routes/types'
+import {useA11y} from '#/state/a11y'
+import {useMe} from '#/data/hooks'
 import {Link} from '#/view/com/util/Link'
 import {PressableWithHover} from '#/view/com/util/PressableWithHover'
+import {UserAvatar} from '#/view/com/util/UserAvatar'
 import {
   atoms as a,
+  tokens,
   useBreakpoints,
   useLayoutBreakpoints,
   useTheme,
   web,
 } from '#/alf'
-import {Logo, LogoMark} from '#/components/brand/Logo'
+import {LogoMark} from '#/components/brand/Logo'
 import {Button, ButtonIcon, ButtonText} from '#/components/Button'
 import {
   Bell_Filled_Corner0_Rounded as BellFilledIcon,
   Bell_Stroke2_Corner0_Rounded as BellIcon,
 } from '#/components/icons/Bell'
+import {
+  ChartPie_Filled_Corner0_Rounded as ChartPieFilledIcon,
+  ChartPie_Stroke2_Corner0_Rounded as ChartPieIcon,
+} from '#/components/icons/ChartPie'
+import {Cloud_Stroke2_Corner0_Rounded as CloudIcon} from '#/components/icons/Cloud'
 import {type Props as SVGIconProps} from '#/components/icons/common'
+import {DotGrid3x1_Stroke2_Corner0_Rounded as EllipsisIcon} from '#/components/icons/DotGrid'
 import {
   Group3_Filled_Corner0_Rounded as GroupFilledIcon,
   Group3_Stroke2_Corner0_Rounded as GroupIcon,
 } from '#/components/icons/Group'
 import {
-  Person_Filled_Corner2_Rounded as PersonFilledIcon,
-  Person_Stroke2_Corner2_Rounded as PersonIcon,
-} from '#/components/icons/Person'
+  HomeOpen_Filled_Corner0_Rounded as HomeFilledIcon,
+  HomeOpen_Stoke2_Corner0_Rounded as HomeIcon,
+} from '#/components/icons/HomeOpen'
 import {PlusLarge_Stroke2_Corner0_Rounded as PlusIcon} from '#/components/icons/Plus'
+import {
+  SettingsGear2_Filled_Corner0_Rounded as SettingsFilledIcon,
+  SettingsGear2_Stroke2_Corner0_Rounded as SettingsIcon,
+} from '#/components/icons/Settings'
 import {
   UserCircle_Filled_Corner0_Rounded as UserCircleFilledIcon,
   UserCircle_Stroke2_Corner0_Rounded as UserCircleIcon,
 } from '#/components/icons/UserCircle'
-import {
-  CENTER_COLUMN_OFFSET,
-  CENTER_COLUMN_WIDTH,
-} from '#/components/Layout/const'
+import * as Menu from '#/components/Menu'
 import {Text} from '#/components/Typography'
 import {useAnalytics} from '#/analytics'
 import {IS_NATIVE} from '#/env'
 import {router} from '#/routes'
 import {getComposeButtonLayout} from './composeButtonLayout'
 
-/** The left nav's destinations; the tab navigator's route names on native. */
-export type SidebarTab = 'People' | 'Groups' | 'Activity' | 'Profile'
-type NavClickItem = 'people' | 'groups' | 'activity' | 'profile'
+/** The left nav's tab destinations; the tab navigator's route names on native. */
+export type SidebarTab = keyof TabParams
+type NavClickItem =
+  | 'people'
+  | 'groups'
+  | 'analytics'
+  | 'activity'
+  | 'profile'
+  | 'settings'
 
 const LARGE_ELEMENT_SIZE = 48
 const NAV_ICON_WIDTH = 28
-const NAV_ITEM_TO_TAB: Record<NavClickItem, SidebarTab> = {
+const NAV_ITEM_TO_TAB: Partial<Record<NavClickItem, SidebarTab>> = {
   people: 'People',
   groups: 'Groups',
+  analytics: 'Analytics',
   activity: 'Activity',
   profile: 'Profile',
 }
@@ -68,10 +86,17 @@ const NAV_ITEM_TO_TAB: Record<NavClickItem, SidebarTab> = {
 export const LEFT_NAV_STANDARD_WIDTH = 240
 export const LEFT_NAV_MINIMAL_WIDTH = 80
 
+/** The sidebar's width at the current window size (0 when it is hidden). */
+export function useLeftNavWidth() {
+  const {gtMobile} = useBreakpoints()
+  const {leftNavMinimal} = useLayoutBreakpoints()
+  if (!gtMobile) return 0
+  return leftNavMinimal ? LEFT_NAV_MINIMAL_WIDTH : LEFT_NAV_STANDARD_WIDTH
+}
+
 /*
- * Bluesky renders the signed-in account card (avatar + account switcher) in
- * this slot. Splito has no accounts here, so the slot holds the Splito logo,
- * which returns to People and is inactive on People (spec: App shell).
+ * The Splito logo heads the sidebar (owner directive). It returns to People
+ * and is inactive on People (spec: App shell).
  */
 function LogoCard({minimal}: {minimal: boolean}) {
   const {t: l} = useLingui()
@@ -84,7 +109,7 @@ function LogoCard({minimal}: {minimal: boolean}) {
   const isHome = isTab(currentRouteName, 'People')
 
   return (
-    <View style={[a.pb_md, !minimal && [a.w_full, a.align_start]]}>
+    <View style={[a.pb_sm, !minimal && [a.w_full, a.align_start]]}>
       <Link
         testID="logo"
         href="/"
@@ -95,12 +120,149 @@ function LogoCard({minimal}: {minimal: boolean}) {
         disabled={isHome}
         style={[
           a.justify_center,
-          {height: LARGE_ELEMENT_SIZE},
-          !minimal && a.pl_md,
+          a.align_center,
+          {height: LARGE_ELEMENT_SIZE, width: LARGE_ELEMENT_SIZE},
           web({cursor: isHome ? 'default' : 'pointer'}),
         ]}>
-        {minimal ? <LogoMark size={32} /> : <Logo size={32} />}
+        <LogoMark size={34} />
       </Link>
+    </View>
+  )
+}
+
+/*
+ * Bluesky's signed-in account card (avatar; name and handle fade in on
+ * hover; the menu switches accounts). Splito is local-only until sync ships,
+ * so the card shows the local profile and the menu says so honestly. Bluesky
+ * puts it at the top of the nav; here it sits at the bottom, because the
+ * logo heads the sidebar.
+ */
+function AccountCard({minimal}: {minimal: boolean}) {
+  const {t: l} = useLingui()
+  const t = useTheme()
+  const me = useMe()
+  const navigation = useNavigation<NavigationProp>()
+  const {reduceMotionEnabled} = useA11y()
+  const name = me?.data.name ?? ''
+
+  return (
+    <View style={[a.pt_lg, !minimal && [a.w_full, a.align_start]]}>
+      <Menu.Root>
+        <Menu.Trigger label={l`Account`}>
+          {({props, state, control}) => {
+            const active = state.hovered || state.focused || control.isOpen
+            return (
+              <Button
+                testID="sidebar-account"
+                label={props.accessibilityLabel}
+                {...props}
+                style={[
+                  a.w_full,
+                  a.transition_color,
+                  active ? t.atoms.bg_contrast_25 : a.transition_delay_50ms,
+                  a.rounded_full,
+                  a.justify_between,
+                  a.align_center,
+                  a.flex_row,
+                  {gap: 6},
+                  !minimal && [a.pl_lg, a.pr_md],
+                ]}>
+                <View
+                  style={[
+                    !reduceMotionEnabled && [
+                      a.transition_transform,
+                      {transitionDuration: '250ms'},
+                      !active && a.transition_delay_50ms,
+                    ],
+                    a.relative,
+                    a.z_10,
+                    active && {
+                      transform: [
+                        {scale: !minimal ? 2 / 3 : 0.8},
+                        {translateX: !minimal ? -22 : 0},
+                      ],
+                    },
+                  ]}>
+                  <UserAvatar
+                    name={name}
+                    size={LARGE_ELEMENT_SIZE}
+                    type="user"
+                  />
+                </View>
+                {!minimal && (
+                  <>
+                    <View
+                      style={[
+                        a.flex_1,
+                        a.transition_opacity,
+                        !active && a.transition_delay_50ms,
+                        {
+                          marginLeft: tokens.space.xl * -1,
+                          opacity: active ? 1 : 0,
+                        },
+                      ]}>
+                      <Text
+                        emoji
+                        style={[a.font_bold, a.text_sm, a.leading_snug]}
+                        numberOfLines={1}>
+                        {name}
+                      </Text>
+                      <Text
+                        style={[
+                          a.text_xs,
+                          a.leading_snug,
+                          t.atoms.text_contrast_medium,
+                        ]}
+                        numberOfLines={1}>
+                        <Trans>On this device</Trans>
+                      </Text>
+                    </View>
+                    <EllipsisIcon
+                      aria-hidden={true}
+                      style={[
+                        t.atoms.text_contrast_medium,
+                        a.transition_opacity,
+                        {opacity: active ? 1 : 0},
+                      ]}
+                      size="sm"
+                    />
+                  </>
+                )}
+              </Button>
+            )
+          }}
+        </Menu.Trigger>
+        <Menu.Outer>
+          <Menu.Group>
+            <Menu.Item
+              label={l`Go to profile`}
+              onPress={() => navigation.navigate('Profile')}>
+              <Menu.ItemIcon icon={UserCircleIcon} />
+              <Menu.ItemText>
+                <Trans>Go to profile</Trans>
+              </Menu.ItemText>
+            </Menu.Item>
+            <Menu.Item
+              label={l`Settings`}
+              onPress={() => navigation.navigate('Settings')}>
+              <Menu.ItemIcon icon={SettingsIcon} />
+              <Menu.ItemText>
+                <Trans>Settings</Trans>
+              </Menu.ItemText>
+            </Menu.Item>
+          </Menu.Group>
+          <Menu.Divider />
+          <Menu.Item
+            label={l`Sign in - available with sync`}
+            disabled
+            onPress={() => {}}>
+            <Menu.ItemIcon icon={CloudIcon} />
+            <Menu.ItemText>
+              <Trans>Sign in – coming with sync</Trans>
+            </Menu.ItemText>
+          </Menu.Item>
+        </Menu.Outer>
+      </Menu.Root>
     </View>
   )
 }
@@ -117,7 +279,6 @@ interface NavItemProps {
   minimal: boolean
   navItem: NavClickItem
   onNavigateTab?: (tab: SidebarTab) => void
-  testID?: string
 }
 function NavItem({
   count,
@@ -128,7 +289,6 @@ function NavItem({
   minimal,
   navItem,
   onNavigateTab,
-  testID,
 }: NavItemProps) {
   const t = useTheme()
   const {t: l} = useLingui()
@@ -157,7 +317,7 @@ function NavItem({
         onNavigateTab(tab)
         return
       }
-      // Splito screens have no soft reset yet, so pressing the current item is a no-op.
+      // Splito screens have no soft reset, so pressing the current item is a no-op.
       if (!isCurrent) {
         const [screen, params] = router.matchPath(href)
         // @ts-expect-error TODO: type matchPath well enough that it can be plugged into navigation.navigate directly
@@ -172,7 +332,7 @@ function NavItem({
 
   return (
     <PressableWithHover
-      testID={testID}
+      testID={`tab-${navItem}`}
       style={[
         a.flex_row,
         a.align_center,
@@ -188,6 +348,7 @@ function NavItem({
       href={href}
       dataSet={{noUnderline: 1}}
       role="link"
+      aria-current={isSelected ? 'page' : undefined}
       accessibilityLabel={accessibilityLabel}
       accessibilityState={IS_NATIVE ? {selected: isSelected} : undefined}
       accessibilityHint="">
@@ -267,7 +428,7 @@ function NavItem({
   )
 }
 
-/* Bluesky's "New post" compose button, opening Add expense instead. */
+/* Bluesky's "New post" compose button, opening Add expense the way Bluesky opens its composer. */
 function ComposeBtn({minimal}: {minimal: boolean}) {
   const navigation = useNavigation<NavigationProp>()
   const {t: l} = useLingui()
@@ -296,15 +457,20 @@ function ComposeBtn({minimal}: {minimal: boolean}) {
   )
 }
 
+/**
+ * Bluesky's signed-in desktop/tablet sidebar, pinned to the window's left
+ * edge (owner directive: sidebar plus full-width content, no centred column).
+ */
 export function DesktopLeftNav({
   onNavigateTab,
 }: {
   routeName: string
   onNavigateTab?: (tab: SidebarTab) => void
 }) {
+  const t = useTheme()
   const {t: l} = useLingui()
   const {gtMobile} = useBreakpoints()
-  const {leftNavMinimal, centerColumnOffset} = useLayoutBreakpoints()
+  const {leftNavMinimal} = useLayoutBreakpoints()
   const insets = useSafeAreaInsets()
 
   if (!gtMobile) {
@@ -313,47 +479,58 @@ export function DesktopLeftNav({
 
   const content = (
     <>
-      <LogoCard minimal={leftNavMinimal} />
-      <NavItem
-        testID="tab-people"
-        label={l`People`}
-        href="/"
-        navItem="people"
-        onNavigateTab={onNavigateTab}
-        minimal={leftNavMinimal}
-        icons={{
-          inactive: PersonIcon,
-          active: PersonFilledIcon,
-        }}
-      />
-      <NavItem
-        testID="tab-groups"
-        label={l`Groups`}
-        href="/groups"
-        navItem="groups"
-        onNavigateTab={onNavigateTab}
-        minimal={leftNavMinimal}
-        icons={{inactive: GroupIcon, active: GroupFilledIcon}}
-      />
-      <NavItem
-        testID="tab-activity"
-        label={l`Activity`}
-        href="/activity"
-        navItem="activity"
-        onNavigateTab={onNavigateTab}
-        minimal={leftNavMinimal}
-        icons={{inactive: BellIcon, active: BellFilledIcon}}
-      />
-      <NavItem
-        testID="tab-profile"
-        label={l`Profile`}
-        href="/profile"
-        navItem="profile"
-        onNavigateTab={onNavigateTab}
-        minimal={leftNavMinimal}
-        icons={{inactive: UserCircleIcon, active: UserCircleFilledIcon}}
-      />
-      <ComposeBtn minimal={leftNavMinimal} />
+      <View style={[!leftNavMinimal && a.w_full, leftNavMinimal && a.align_center]}>
+        <LogoCard minimal={leftNavMinimal} />
+        <NavItem
+          label={l`People`}
+          href="/"
+          navItem="people"
+          onNavigateTab={onNavigateTab}
+          minimal={leftNavMinimal}
+          icons={{inactive: HomeIcon, active: HomeFilledIcon}}
+        />
+        <NavItem
+          label={l`Groups`}
+          href="/groups"
+          navItem="groups"
+          onNavigateTab={onNavigateTab}
+          minimal={leftNavMinimal}
+          icons={{inactive: GroupIcon, active: GroupFilledIcon}}
+        />
+        <NavItem
+          label={l`Analytics`}
+          href="/analytics"
+          navItem="analytics"
+          onNavigateTab={onNavigateTab}
+          minimal={leftNavMinimal}
+          icons={{inactive: ChartPieIcon, active: ChartPieFilledIcon}}
+        />
+        <NavItem
+          label={l`Activity`}
+          href="/activity"
+          navItem="activity"
+          onNavigateTab={onNavigateTab}
+          minimal={leftNavMinimal}
+          icons={{inactive: BellIcon, active: BellFilledIcon}}
+        />
+        <NavItem
+          label={l`Profile`}
+          href="/profile"
+          navItem="profile"
+          onNavigateTab={onNavigateTab}
+          minimal={leftNavMinimal}
+          icons={{inactive: UserCircleIcon, active: UserCircleFilledIcon}}
+        />
+        <NavItem
+          label={l`Settings`}
+          href="/settings"
+          navItem="settings"
+          minimal={leftNavMinimal}
+          icons={{inactive: SettingsIcon, active: SettingsFilledIcon}}
+        />
+        <ComposeBtn minimal={leftNavMinimal} />
+      </View>
+      <AccountCard minimal={leftNavMinimal} />
     </>
   )
 
@@ -362,32 +539,30 @@ export function DesktopLeftNav({
       role="navigation"
       pointerEvents={IS_NATIVE ? 'box-none' : undefined}
       style={[
-        a.fixed,
         a.top_0,
+        a.left_0,
         a.p_lg,
+        a.justify_between,
+        a.border_r,
+        t.atoms.border_contrast_low,
+        t.atoms.bg,
         styles.leftNav,
-        IS_NATIVE && {top: insets.top, bottom: insets.bottom},
+        IS_NATIVE
+          ? [a.h_full, {paddingTop: insets.top + 16, paddingBottom: insets.bottom + 16}]
+          : [a.fixed, a.bottom_0],
         leftNavMinimal && [
           {width: LEFT_NAV_MINIMAL_WIDTH},
-          !IS_NATIVE && a.h_full,
           a.align_center,
           web(a.overflow_x_hidden),
         ],
         web({maxHeight: '100vh', overflowY: 'auto', scrollbarWidth: 'thin'}),
-        {
-          transform: [
-            {
-              translateX:
-                -(CENTER_COLUMN_WIDTH / 2) +
-                (centerColumnOffset ? CENTER_COLUMN_OFFSET : 0),
-            },
-            {translateX: '-100%'},
-            ...a.scrollbar_offset.transform,
-          ],
-        },
       ]}>
       {IS_NATIVE ? (
-        <ScrollView style={[a.flex_1, a.w_full]}>{content}</ScrollView>
+        <ScrollView
+          style={[a.flex_1, a.w_full]}
+          contentContainerStyle={[a.flex_grow, a.justify_between]}>
+          {content}
+        </ScrollView>
       ) : (
         content
       )}
@@ -397,7 +572,6 @@ export function DesktopLeftNav({
 
 const styles = StyleSheet.create({
   leftNav: {
-    left: '50%',
     width: LEFT_NAV_STANDARD_WIDTH,
   },
 })

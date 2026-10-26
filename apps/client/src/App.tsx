@@ -2,10 +2,10 @@ import {SafeAreaProvider} from 'react-native-safe-area-context'
 import {I18nProvider} from '@lingui/react'
 
 import {i18n} from '#/locale/i18n'
+import {LocaleFromPrefs} from '#/locale/LocaleFromPrefs'
 import {Provider as A11yProvider} from '#/state/a11y'
 import {Provider as DialogStateProvider} from '#/state/dialogs'
-import {Provider as ShellLayoutProvider} from '#/state/shell/shell-layout'
-import {Provider as TickEveryMinuteProvider} from '#/state/shell/tick-every-minute'
+import {Provider as ShellStateProvider} from '#/state/shell'
 import {ThemeProvider as Alf} from '#/alf'
 import {useColorModeTheme} from '#/alf/util/useColorModeTheme'
 import {Provider as PortalProvider} from '#/components/Portal'
@@ -19,14 +19,13 @@ function Themed() {
     <Alf theme={theme}>
       <PortalProvider>
         <DialogStateProvider>
-          <ShellLayoutProvider>
+          <ShellStateProvider>
             <StoreProvider>
-              <TickEveryMinuteProvider>
-                <Shell />
-              </TickEveryMinuteProvider>
+              <LocaleFromPrefs />
+              <Shell />
             </StoreProvider>
             <ToastOutlet />
-          </ShellLayoutProvider>
+          </ShellStateProvider>
         </DialogStateProvider>
       </PortalProvider>
     </Alf>

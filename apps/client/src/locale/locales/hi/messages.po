@@ -1,0 +1,478 @@
+msgid ""
+msgstr ""
+"POT-Creation-Date: 2026-10-26 10:06+0530\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: @lingui/cli\n"
+"Language: hi\n"
+"Project-Id-Version: \n"
+"Report-Msgid-Bugs-To: \n"
+"PO-Revision-Date: \n"
+"Last-Translator: \n"
+"Language-Team: \n"
+"Plural-Forms: \n"
+
+#. placeholder {0}: diff.value
+#: src/lib/hooks/useTimeAgo.ts:170
+msgid "{0, plural, one {# day} other {# days}}"
+msgstr "{0, plural, one {# दिन} other {# दिन}}"
+
+#. placeholder {0}: diff.value
+#: src/lib/hooks/useTimeAgo.ts:160
+msgid "{0, plural, one {# hour} other {# hours}}"
+msgstr "{0, plural, one {# घंटा} other {# घंटे}}"
+
+#. placeholder {0}: diff.value
+#: src/lib/hooks/useTimeAgo.ts:150
+msgid "{0, plural, one {# minute} other {# minutes}}"
+msgstr "{0, plural, one {# मिनट} other {# मिनट}}"
+
+#. placeholder {0}: diff.value
+#: src/lib/hooks/useTimeAgo.ts:181
+msgid "{0, plural, one {# month} other {# months}}"
+msgstr "{0, plural, one {# महीना} other {# महीने}}"
+
+#. placeholder {0}: diff.value
+#: src/lib/hooks/useTimeAgo.ts:140
+msgid "{0, plural, one {# second} other {# seconds}}"
+msgstr "{0, plural, one {# सेकंड} other {# सेकंड}}"
+
+#. How many months have passed, displayed in a narrow form
+#. placeholder {0}: diff.value
+#: src/lib/hooks/useTimeAgo.ts:183
+msgid "{0, plural, one {#mo} other {#mo}}"
+msgstr "{0, plural, one {#मा} other {#मा}}"
+
+#. placeholder {0}: item.actorName
+#. placeholder {1}: item.subject
+#: src/view/com/notifications/NotificationFeedItem.tsx:118
+msgid "{0} added {1}"
+msgstr "{0} ने {1} को जोड़ा"
+
+#. placeholder {0}: item.actorName
+#. placeholder {1}: item.subject
+#: src/view/com/notifications/NotificationFeedItem.tsx:74
+msgid "{0} added {1}{amount}"
+msgstr "{0} ने {1}{amount} जोड़ा"
+
+#. placeholder {0}: item.actorName
+#. placeholder {1}: item.subject
+#: src/view/com/notifications/NotificationFeedItem.tsx:110
+msgid "{0} created the group {1}"
+msgstr "{0} ने समूह {1} बनाया"
+
+#. placeholder {0}: item.actorName
+#. placeholder {1}: item.subject
+#: src/view/com/notifications/NotificationFeedItem.tsx:92
+msgid "{0} deleted {1}{amount}"
+msgstr "{0} ने {1}{amount} हटाया"
+
+#. placeholder {0}: item.actorName
+#. placeholder {1}: item.subject
+#: src/view/com/notifications/NotificationFeedItem.tsx:83
+msgid "{0} edited {1}{amount}"
+msgstr "{0} ने {1}{amount} बदला"
+
+#. placeholder {0}: item.actorName
+#. placeholder {1}: item.subject
+#: src/view/com/notifications/NotificationFeedItem.tsx:101
+msgid "{0} restored {1}{amount}"
+msgstr "{0} ने {1}{amount} वापस लाया"
+
+#. Displayed when the number of notifications exceeds the cap – for example, 99+
+#. placeholder {0}: i18n.number(UNREAD_NOTIFICATION_CAP - 1)
+#: src/screens/Settings/components/SettingsList.tsx:341
+msgid "{0}+"
+msgstr "{0}+"
+
+#. How many days have passed, displayed in a narrow form
+#. placeholder {0}: diff.value
+#: src/lib/hooks/useTimeAgo.ts:172
+msgid "{0}d"
+msgstr "{0}दि"
+
+#. How many hours have passed, displayed in a narrow form
+#. placeholder {0}: diff.value
+#: src/lib/hooks/useTimeAgo.ts:162
+msgid "{0}h"
+msgstr "{0}घं"
+
+#. How many minutes have passed, displayed in a narrow form
+#. placeholder {0}: diff.value
+#: src/lib/hooks/useTimeAgo.ts:152
+msgid "{0}m"
+msgstr "{0}मि"
+
+#. How many seconds have passed, displayed in a narrow form
+#. placeholder {0}: diff.value
+#: src/lib/hooks/useTimeAgo.ts:142
+msgid "{0}s"
+msgstr "{0}से"
+
+#: src/view/com/notifications/NotificationFeedItem.tsx:120
+msgid "{actor} added {subject}"
+msgstr "{actor} ने {subject} को जोड़ा"
+
+#: src/view/com/notifications/NotificationFeedItem.tsx:76
+msgid "{actor} added {subject}{amount}"
+msgstr "{actor} ने {subject}{amount} जोड़ा"
+
+#: src/view/com/notifications/NotificationFeedItem.tsx:112
+msgid "{actor} created the group {subject}"
+msgstr "{actor} ने समूह {subject} बनाया"
+
+#: src/view/com/notifications/NotificationFeedItem.tsx:94
+msgid "{actor} deleted {subject}{amount}"
+msgstr "{actor} ने {subject}{amount} हटाया"
+
+#: src/view/com/notifications/NotificationFeedItem.tsx:85
+msgid "{actor} edited {subject}{amount}"
+msgstr "{actor} ने {subject}{amount} बदला"
+
+#: src/view/com/notifications/NotificationFeedItem.tsx:103
+msgid "{actor} restored {subject}{amount}"
+msgstr "{actor} ने {subject}{amount} वापस लाया"
+
+#: src/view/shell/desktop/LeftNav.tsx:374
+msgid "{count, plural, one {# unread item} other {# unread items}}"
+msgstr "{count, plural, one {# अपठित} other {# अपठित}}"
+
+#: src/screens/People/components/BalanceSummary.tsx:111
+msgid "{currency} balance – open analytics"
+msgstr "{currency} बैलेंस – विश्लेषण खोलें"
+
+#: src/screens/Groups/components/GroupRow.tsx:49
+msgid "{memberCount} members"
+msgstr "{memberCount} सदस्य"
+
+#: src/view/shell/bottom-bar/BottomBarWeb.tsx:214
+msgid "{notificationCount, plural, one {# unread item} other {# unread items}}"
+msgstr "{notificationCount, plural, one {# अपठित} other {# अपठित}}"
+
+#: src/screens/Groups/components/GroupRow.tsx:49
+msgid "1 member"
+msgstr "1 सदस्य"
+
+#: src/screens/Profile.tsx:71
+#: src/screens/Profile.tsx:74
+msgid "About"
+msgstr "परिचय"
+
+#: src/view/shell/desktop/LeftNav.tsx:151
+msgid "Account"
+msgstr "खाता"
+
+#: src/navigation/Navigation.tsx:57
+#: src/screens/Activity.tsx:142
+#: src/view/shell/bottom-bar/BottomBar.tsx:196
+#: src/view/shell/bottom-bar/BottomBarWeb.tsx:113
+#: src/view/shell/desktop/LeftNav.tsx:509
+msgid "Activity"
+msgstr "गतिविधि"
+
+#: src/navigation/Navigation.tsx:64
+#: src/screens/AddExpense.tsx:33
+#: src/view/shell/desktop/LeftNav.tsx:444
+msgid "Add expense"
+msgstr "खर्च जोड़ें"
+
+#: src/components/AddExpenseFAB.tsx:31
+#: src/view/shell/desktop/LeftNav.tsx:452
+msgctxt "action"
+msgid "Add expense"
+msgstr "खर्च जोड़ें"
+
+#: src/navigation/Navigation.tsx:67
+#: src/screens/AddFriend.tsx:8
+#: src/screens/People/index.tsx:107
+#: src/screens/People/index.tsx:108
+#: src/screens/People/index.tsx:136
+#: src/screens/People/index.tsx:142
+msgid "Add friend"
+msgstr "दोस्त जोड़ें"
+
+#: src/screens/People/components/BalanceSummary.tsx:132
+msgid "All settled up"
+msgstr "सब हिसाब बराबर"
+
+#: src/navigation/Navigation.tsx:56
+#: src/screens/Analytics.tsx:8
+#: src/screens/People/components/BalanceSummary.tsx:75
+#: src/screens/People/components/BalanceSummary.tsx:79
+#: src/screens/Profile.tsx:53
+#: src/screens/Profile.tsx:56
+#: src/view/shell/bottom-bar/BottomBar.tsx:175
+#: src/view/shell/bottom-bar/BottomBarWeb.tsx:97
+#: src/view/shell/desktop/LeftNav.tsx:501
+msgid "Analytics"
+msgstr "विश्लेषण"
+
+#: src/screens/People/components/BalanceSummary.tsx:46
+#: src/screens/People/components/BalanceSummary.tsx:178
+msgid "Balances"
+msgstr "बैलेंस"
+
+#: src/components/Composer/TopBar.tsx:33
+#: src/components/Composer/TopBar.tsx:43
+#: src/components/Menu/index.tsx:387
+#: src/components/Prompt.tsx:153
+#: src/components/Prompt.tsx:155
+msgid "Cancel"
+msgstr "रद्द करें"
+
+#: src/components/Dialog/index.web.tsx:156
+#: src/components/Dialog/index.web.tsx:373
+msgid "Close active dialog"
+msgstr "खुला डायलॉग बंद करें"
+
+#: src/components/Menu/index.tsx:381
+msgid "Close this dialog"
+msgstr "यह डायलॉग बंद करें"
+
+#: src/components/Composer/TopBar.tsx:41
+msgid "Closes Add expense without saving"
+msgstr "बिना सहेजे खर्च जोड़ना बंद करता है"
+
+#: src/screens/Profile.tsx:84
+msgid "Coming with sync"
+msgstr "सिंक के साथ आ रहा है"
+
+#: src/components/Prompt.tsx:212
+#: src/components/Prompt.tsx:215
+msgid "Confirm"
+msgstr "पुष्टि करें"
+
+#: src/components/Menu/index.web.tsx:90
+msgid "Context menu backdrop, click to close the menu."
+msgstr "मेन्यू की पृष्ठभूमि, मेन्यू बंद करने के लिए क्लिक करें।"
+
+#: src/screens/Groups/components/GroupRow.tsx:41
+msgid "Couple"
+msgstr "जोड़ी"
+
+#: src/screens/People/components/PersonRow.tsx:49
+msgid "Direct"
+msgstr "सीधा"
+
+#: src/screens/People/components/PersonRow.tsx:115
+msgid "Direct expenses"
+msgstr "सीधे खर्च"
+
+#: src/components/Dialog/index.tsx:603
+msgid "Dismiss"
+msgstr "हटाएं"
+
+#: src/components/Dialog/index.tsx:604
+msgid "Double tap to close the dialog"
+msgstr "डायलॉग बंद करने के लिए दो बार टैप करें"
+
+#: src/navigation/Navigation.tsx:66
+#: src/screens/EditExpense.tsx:8
+msgid "Edit expense"
+msgstr "खर्च बदलें"
+
+#: src/navigation/Navigation.tsx:65
+#: src/screens/Expense.tsx:8
+msgid "Expense"
+msgstr "खर्च"
+
+#: src/screens/People/index.tsx:131
+msgid "Friends"
+msgstr "दोस्त"
+
+#: src/components/Layout/Header/index.tsx:120
+msgid "Go back"
+msgstr "वापस जाएं"
+
+#: src/view/shell/desktop/LeftNav.tsx:238
+#: src/view/shell/desktop/LeftNav.tsx:242
+msgid "Go to profile"
+msgstr "प्रोफ़ाइल पर जाएं"
+
+#: src/navigation/Navigation.tsx:62
+#: src/screens/Group.tsx:8
+#: src/screens/Groups/components/GroupRow.tsx:42
+#: src/screens/People/components/PersonRow.tsx:46
+msgid "Group"
+msgstr "समूह"
+
+#: src/navigation/Navigation.tsx:55
+#: src/screens/Groups/index.tsx:44
+#: src/view/shell/bottom-bar/BottomBar.tsx:154
+#: src/view/shell/bottom-bar/BottomBarWeb.tsx:81
+#: src/view/shell/desktop/LeftNav.tsx:493
+msgid "Groups"
+msgstr "समूह"
+
+#: src/screens/Groups/components/GroupRow.tsx:40
+msgid "Home"
+msgstr "घर"
+
+#: src/components/Menu/index.tsx:133
+msgid "Menu"
+msgstr "मेन्यू"
+
+#: src/screens/Groups/index.tsx:55
+msgctxt "action"
+msgid "New"
+msgstr "नया"
+
+#: src/navigation/Navigation.tsx:68
+#: src/screens/CreateGroup.tsx:8
+#: src/screens/Groups/index.tsx:49
+#: src/screens/Groups/index.tsx:83
+#: src/screens/Groups/index.tsx:84
+msgid "New group"
+msgstr "नया समूह"
+
+#: src/screens/Groups/index.tsx:81
+msgid "No groups yet. A group keeps a trip's or a flat's expenses and balances in one place."
+msgstr "अभी कोई समूह नहीं। समूह किसी यात्रा या फ़्लैट के खर्च और बैलेंस एक जगह रखता है।"
+
+#: src/screens/People/components/PersonRow.tsx:115
+msgid "No open balances"
+msgstr "कोई बकाया नहीं"
+
+#: src/screens/Activity.tsx:156
+msgid "Nothing here yet. Expenses, payments and group changes will show up here."
+msgstr "अभी यहां कुछ नहीं। खर्च, भुगतान और समूह के बदलाव यहां दिखेंगे।"
+
+#: src/lib/hooks/useTimeAgo.ts:136
+msgid "now"
+msgstr "अभी"
+
+#: src/view/shell/desktop/LeftNav.tsx:217
+msgid "On this device"
+msgstr "इस डिवाइस पर"
+
+#: src/components/Layout/Header/index.tsx:154
+msgid "Open drawer menu"
+msgstr "मेन्यू खोलें"
+
+#. placeholder {0}: formatAmount(owed, currency, locale)
+#: src/screens/People/components/BalanceSummary.tsx:152
+msgid "Owed to you <0>{0}</0>"
+msgstr "आपको मिलेंगे <0>{0}</0>"
+
+#: src/components/BalanceText.tsx:46
+msgid "owes you <0>{figure}</0>"
+msgstr "आपको मिलेंगे <0>{figure}</0>"
+
+#: src/view/shell/bottom-bar/BottomBar.tsx:134
+#: src/view/shell/bottom-bar/BottomBarWeb.tsx:65
+#: src/view/shell/desktop/LeftNav.tsx:485
+msgid "People"
+msgstr "लोग"
+
+#: src/navigation/Navigation.tsx:61
+#: src/screens/Person.tsx:8
+msgid "Person"
+msgstr "व्यक्ति"
+
+#: src/navigation/Navigation.tsx:58
+#: src/screens/Profile.tsx:31
+#: src/view/shell/bottom-bar/BottomBar.tsx:225
+#: src/view/shell/bottom-bar/BottomBarWeb.tsx:129
+#: src/view/shell/desktop/LeftNav.tsx:517
+msgid "Profile"
+msgstr "प्रोफ़ाइल"
+
+#: src/components/Composer/TopBar.tsx:59
+msgctxt "action"
+msgid "Save"
+msgstr "सहेजें"
+
+#: src/components/Composer/TopBar.tsx:50
+msgid "Save expense"
+msgstr "खर्च सहेजें"
+
+#: src/screens/Profile.tsx:123
+msgid "Saved on this device"
+msgstr "इस डिवाइस पर सहेजा गया"
+
+#: src/navigation/Navigation.tsx:59
+#: src/navigation/Navigation.tsx:60
+#: src/screens/Profile.tsx:62
+#: src/screens/Profile.tsx:65
+#: src/screens/Settings/index.tsx:8
+#: src/screens/Settings/SettingsSection.tsx:8
+#: src/view/shell/desktop/LeftNav.tsx:246
+#: src/view/shell/desktop/LeftNav.tsx:250
+#: src/view/shell/desktop/LeftNav.tsx:525
+msgid "Settings"
+msgstr "सेटिंग्स"
+
+#: src/navigation/Navigation.tsx:63
+#: src/screens/Settle.tsx:8
+msgid "Settle up"
+msgstr "हिसाब चुकाएं"
+
+#: src/components/BalanceText.tsx:43
+#: src/screens/Groups/components/GroupRow.tsx:78
+#: src/screens/People/components/PersonRow.tsx:76
+msgid "settled up"
+msgstr "हिसाब बराबर"
+
+#: src/view/shell/desktop/LeftNav.tsx:256
+msgid "Sign in - available with sync"
+msgstr "साइन इन – सिंक के साथ उपलब्ध"
+
+#: src/view/shell/desktop/LeftNav.tsx:261
+msgid "Sign in – coming with sync"
+msgstr "साइन इन – सिंक के साथ आ रहा है"
+
+#: src/screens/Profile.tsx:81
+msgid "Sign in and sync"
+msgstr "साइन इन और सिंक"
+
+#: src/screens/Activity.tsx:85
+msgid "Someone"
+msgstr "कोई"
+
+#: src/screens/People/index.tsx:105
+msgid "Split anything with anyone. Add an expense or a friend to get started – friends don't need the app."
+msgstr "किसी के भी साथ कुछ भी बांटें। शुरू करने के लिए खर्च या दोस्त जोड़ें – दोस्तों को ऐप की ज़रूरत नहीं।"
+
+#: src/view/com/home/HomeHeaderLayoutMobile.tsx:39
+#: src/view/shell/desktop/LeftNav.tsx:117
+msgid "Splito - People"
+msgstr "Splito - लोग"
+
+#: src/screens/AddExpense.tsx:36
+#: src/screens/StubScreen.tsx:34
+msgid "This screen is being built"
+msgstr "यह स्क्रीन बन रही है"
+
+#: src/screens/Groups/components/GroupRow.tsx:39
+msgid "Trip"
+msgstr "यात्रा"
+
+#: src/screens/Activity.tsx:85
+msgid "You"
+msgstr "आप"
+
+#: src/screens/People/components/BalanceSummary.tsx:128
+msgid "You are owed"
+msgstr "आपको मिलेंगे"
+
+#: src/components/BalanceText.tsx:50
+msgid "you are owed <0>{figure}</0>"
+msgstr "आपको मिलेंगे <0>{figure}</0>"
+
+#: src/screens/People/components/BalanceSummary.tsx:130
+msgid "You owe"
+msgstr "आपको देने हैं"
+
+#. placeholder {0}: formatAmount(owe, currency, locale)
+#: src/screens/People/components/BalanceSummary.tsx:160
+msgid "You owe <0>{0}</0>"
+msgstr "आपको देने हैं <0>{0}</0>"
+
+#: src/components/BalanceText.tsx:55
+msgid "you owe <0>{figure}</0>"
+msgstr "आपको देने हैं <0>{figure}</0>"
+
+#: src/screens/StubScreen.tsx:38
+msgid "Your data is safe on this device."
+msgstr "आपका डेटा इस डिवाइस पर सुरक्षित है।"

@@ -1,4 +1,6 @@
+import {useId} from 'react'
 import {type LucideIcon} from 'lucide-react-native'
+import Svg, {Defs, G, Mask, Rect} from 'react-native-svg'
 
 import {type Props, useCommonSVGProps} from '#/components/icons/common'
 
@@ -30,4 +32,49 @@ export function createIcon(
   }
   SplitoIcon.displayName = `Icon(${Icon.displayName ?? 'Lucide'})`
   return SplitoIcon
+}
+
+/**
+ * A filled glyph whose inner detail is cut out, like Bluesky's `_Filled_`
+ * icons (a solid house with its door open, a solid gear with its hub). The
+ * cut-outs are a mask, so they show whatever is behind the icon - a hover
+ * background included. Shapes use Lucide's 24x24 grid and path data.
+ */
+export function createFilledIcon(
+  name: string,
+  draw: (color: string) => {
+    /** Painted in the icon colour, then masked by `holes`. */
+    body: React.ReactNode
+    /** Painted black inside the mask: these areas become transparent. */
+    holes: React.ReactNode
+    /** Painted on top, unmasked. */
+    over?: React.ReactNode
+  },
+) {
+  function SplitoFilledIcon(props: Props) {
+    const {fill, size, style, gradient: _g, ...rest} = useCommonSVGProps(props)
+    const maskId = 'k' + useId().replace(/[^a-zA-Z0-9_-]/g, '')
+    const color = String(fill)
+    const {body, holes, over} = draw(color)
+    return (
+      <Svg
+        fill="none"
+        viewBox="0 0 24 24"
+        width={size}
+        height={size}
+        style={style}
+        {...rest}>
+        <Defs>
+          <Mask id={maskId} maskUnits="userSpaceOnUse" x="0" y="0" width="24" height="24">
+            <Rect x="0" y="0" width="24" height="24" fill="#fff" />
+            {holes}
+          </Mask>
+        </Defs>
+        <G mask={`url(#${maskId})`}>{body}</G>
+        {over}
+      </Svg>
+    )
+  }
+  SplitoFilledIcon.displayName = `Icon(${name}Filled)`
+  return SplitoFilledIcon
 }

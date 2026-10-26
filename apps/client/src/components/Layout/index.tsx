@@ -60,13 +60,12 @@ export const Screen = memo(function Screen({
 
   useEnableMinimalShellModeForScreen({enabled: minimalShell})
 
+  /*
+   * Bluesky draws the centre column's side borders here. Splito's content
+   * fills the space beside the sidebar, whose own border separates them.
+   */
   return (
     <>
-      {IS_WEB && !fullBleed && !isWithinSplitView ? (
-        <WebCenterBorders />
-      ) : !fullBleed && gtMobile && !isWithinSplitView ? (
-        <NativeCenterBorders />
-      ) : null}
       <View
         style={[
           a.util_screen_outer,
@@ -185,99 +184,22 @@ export const Content = memo(function Content({
 })
 
 /**
- * Utility component to center content within the screen
+ * Bluesky's centring wrapper. Splito's content is full width beside the
+ * sidebar (owner directive), so this only provides the offset context that
+ * adapted components read.
  */
 export const Center = memo(function LayoutCenter({
   children,
   style,
-  ignoreTabletLayoutOffset,
+  ignoreTabletLayoutOffset: _ignoreTabletLayoutOffset,
   ...props
 }: ViewProps & {ignoreTabletLayoutOffset?: boolean}) {
-  const {isWithinOffsetView} = useContext(ScrollbarOffsetContext)
-  const {gtMobile} = useBreakpoints()
-  const {centerColumnOffset} = useLayoutBreakpoints()
-  const {isWithinDialog} = useDialogContext()
-  const {isWithinSplitView} = useIsWithinSplitView()
   const ctx = useMemo(() => ({isWithinOffsetView: true}), [])
   return (
-    <View
-      style={[
-        a.w_full,
-        !isWithinSplitView && a.mx_auto,
-        gtMobile && {
-          maxWidth: CENTER_COLUMN_WIDTH,
-        },
-        !isWithinOffsetView &&
-          !isWithinSplitView && {
-            transform: [
-              {
-                translateX:
-                  centerColumnOffset &&
-                  !ignoreTabletLayoutOffset &&
-                  !isWithinDialog
-                    ? CENTER_COLUMN_OFFSET
-                    : 0,
-              },
-              {translateX: web(SCROLLBAR_OFFSET) ?? 0},
-            ],
-          },
-        style,
-      ]}
-      {...props}>
+    <View style={[a.w_full, style]} {...props}>
       <ScrollbarOffsetContext.Provider value={ctx}>
         {children}
       </ScrollbarOffsetContext.Provider>
     </View>
-  )
-})
-
-/**
- * Only used within `Layout.Screen`, not for reuse
- */
-const WebCenterBorders = memo(function LayoutWebCenterBorders() {
-  const t = useTheme()
-  const {gtMobile} = useBreakpoints()
-  const {centerColumnOffset} = useLayoutBreakpoints()
-  return gtMobile ? (
-    <View
-      style={[
-        a.fixed,
-        a.inset_0,
-        a.border_l,
-        a.border_r,
-        t.atoms.border_contrast_low,
-        web({
-          width: 602,
-          left: '50%',
-          transform: [
-            {translateX: '-50%'},
-            {translateX: centerColumnOffset ? CENTER_COLUMN_OFFSET : 0},
-            ...a.scrollbar_offset.transform,
-          ],
-        }),
-      ]}
-    />
-  ) : null
-})
-
-const NativeCenterBorders = memo(function LayoutNativeCenterBorders() {
-  const t = useTheme()
-  return (
-    <View
-      pointerEvents="none"
-      style={[
-        a.absolute,
-        a.top_0,
-        a.bottom_0,
-        a.border_l,
-        a.border_r,
-        t.atoms.border_contrast_low,
-        {
-          alignSelf: 'center',
-          width: CENTER_COLUMN_WIDTH + 2,
-          zIndex: 1,
-        },
-      ]}
-    />
   )
 })

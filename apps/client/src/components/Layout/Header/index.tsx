@@ -14,7 +14,6 @@ import {
   type TextStyleProp,
   useBreakpoints,
   useGutters,
-  useLayoutBreakpoints,
   useTheme,
   web,
 } from '#/alf'
@@ -23,12 +22,8 @@ import {ArrowLeft_Stroke2_Corner0_Rounded as ArrowLeft} from '#/components/icons
 import {Menu_Stroke2_Corner0_Rounded as Menu} from '#/components/icons/Menu'
 import {
   BUTTON_VISUAL_ALIGNMENT_OFFSET,
-  CENTER_COLUMN_OFFSET,
-  CENTER_COLUMN_WIDTH,
   HEADER_SLOT_SIZE,
-  SCROLLBAR_OFFSET,
 } from '#/components/Layout/const'
-import {ScrollbarOffsetContext} from '#/components/Layout/context'
 import {Text} from '#/components/Typography'
 import {useAnalytics} from '#/analytics'
 import {IS_IOS} from '#/env'
@@ -48,10 +43,7 @@ export function Outer({
 }) {
   const t = useTheme()
   const gutters = useGutters([0, 'base'])
-  const {gtMobile} = useBreakpoints()
-  const {isWithinOffsetView} = useContext(ScrollbarOffsetContext)
-  const {centerColumnOffset} = useLayoutBreakpoints()
-  const {isWithinSplitView, isWithinLeftPanel} = useIsWithinSplitView()
+  const {isWithinLeftPanel} = useIsWithinSplitView()
 
   return (
     <View
@@ -69,14 +61,7 @@ export function Outer({
           web: [a.py_xs, {minHeight: 52}],
         }),
         t.atoms.border_contrast_low,
-        gtMobile && [a.mx_auto, {maxWidth: CENTER_COLUMN_WIDTH}],
-        !isWithinOffsetView &&
-          !isWithinSplitView && {
-            transform: [
-              {translateX: centerColumnOffset ? CENTER_COLUMN_OFFSET : 0},
-              {translateX: web(SCROLLBAR_OFFSET) ?? 0},
-            ],
-          },
+        /* Full width beside the sidebar: no centred column (owner directive). */
       ]}>
       {children}
     </View>

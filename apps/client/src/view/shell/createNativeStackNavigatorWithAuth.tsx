@@ -27,10 +27,11 @@ import {
 } from '@react-navigation/native-stack'
 
 import {useWebMediaQueries} from '#/lib/hooks/useWebMediaQueries'
+import {useShellLayout} from '#/state/shell/shell-layout'
 import {atoms as a} from '#/alf'
 import {IS_WEB} from '#/env'
 import {BottomBarWeb} from './bottom-bar/BottomBarWeb'
-import {DesktopLeftNav} from './desktop/LeftNav'
+import {DesktopLeftNav, useLeftNavWidth} from './desktop/LeftNav'
 
 // On web, only this many screens (beyond Home + focused) stay mounted.
 // Older screens are unmounted to prevent memory growth during long sessions.
@@ -104,6 +105,12 @@ function NativeStackNavigator({
   const lruKeysRef = useRef<string[]>([])
   const activeRoute = state.routes[state.index]
   const {isMobile} = useWebMediaQueries()
+  const leftNavWidth = useLeftNavWidth()
+  const {footerHeight} = useShellLayout()
+  useEffect(() => {
+    // The bottom bar reports its height; nothing replaces it on wider windows.
+    if (!isMobile) footerHeight.set(0)
+  }, [isMobile, footerHeight])
   // Splito has no sign-in, sign-up queue or onboarding gate (Bluesky's auth branches are removed).
   // On web, limit how many screens stay mounted to prevent memory growth.
   // Home is always pinned, the focused screen is always mounted, and the
@@ -161,7 +168,10 @@ function NativeStackNavigator({
 
   return (
     <NavigationContent>
-      <View role="main" style={a.flex_1}>
+      {/* Splito: content fills the window beside the fixed sidebar (owner directive). */}
+      <View
+        role="main"
+        style={[a.flex_1, IS_WEB && {marginLeft: leftNavWidth}]}>
         <NativeStackView
           {...rest}
           state={state}

@@ -8,8 +8,8 @@ import {type BottomTabBarProps} from '@react-navigation/bottom-tabs'
 import {StackActions} from '@react-navigation/native'
 
 import {PressableScale} from '#/lib/custom-animations/PressableScale'
-import {useHaptics} from '#/lib/haptics'
 import {useDedupe} from '#/lib/hooks/useDedupe'
+import {useMinimalShellFooterTransform} from '#/lib/hooks/useMinimalShellTransform'
 import {useNavigationTabState} from '#/lib/hooks/useNavigationTabState'
 import {clamp} from '#/lib/numbers'
 import {getTabState, TabState} from '#/lib/routes/helpers'
@@ -18,20 +18,22 @@ import {useMe} from '#/data/hooks'
 import {UserAvatar} from '#/view/com/util/UserAvatar'
 import {type SidebarTab} from '#/view/shell/desktop/LeftNav'
 import {atoms as a, useTheme} from '#/alf'
-import {Button, ButtonIcon} from '#/components/Button'
 import {
   Bell_Filled_Corner0_Rounded as BellFilled,
   Bell_Stroke2_Corner0_Rounded as Bell,
 } from '#/components/icons/Bell'
 import {
+  ChartPie_Filled_Corner0_Rounded as ChartPieFilled,
+  ChartPie_Stroke2_Corner0_Rounded as ChartPie,
+} from '#/components/icons/ChartPie'
+import {
   Group3_Filled_Corner0_Rounded as GroupFilled,
   Group3_Stroke2_Corner0_Rounded as Group,
 } from '#/components/icons/Group'
 import {
-  Person_Filled_Corner2_Rounded as PersonFilled,
-  Person_Stroke2_Corner2_Rounded as Person,
-} from '#/components/icons/Person'
-import {PlusLarge_Stroke2_Corner0_Rounded as PlusIcon} from '#/components/icons/Plus'
+  HomeOpen_Filled_Corner0_Rounded as HomeFilled,
+  HomeOpen_Stoke2_Corner0_Rounded as Home,
+} from '#/components/icons/HomeOpen'
 import {Text} from '#/components/Typography'
 import {useAnalytics} from '#/analytics'
 import {styles} from './BottomBarStyles'
@@ -42,11 +44,11 @@ export function BottomBar({navigation}: BottomTabBarProps) {
   const ax = useAnalytics()
   const safeAreaInsets = useSafeAreaInsets()
   const {footerHeight} = useShellLayout()
-  const {isAtPeople, isAtGroups, isAtActivity, isAtProfile} =
+  const {isAtPeople, isAtGroups, isAtAnalytics, isAtActivity, isAtProfile} =
     useNavigationTabState()
   const me = useMe()
   const dedupe = useDedupe()
-  const haptics = useHaptics()
+  const footerMinimalShellTransform = useMinimalShellFooterTransform()
   const iconWidth = 28
 
   const onPressTab = useCallback(
@@ -86,6 +88,10 @@ export function BottomBar({navigation}: BottomTabBarProps) {
   )
   const onPressPeople = useCallback(() => onPressTab('People'), [onPressTab])
   const onPressGroups = useCallback(() => onPressTab('Groups'), [onPressTab])
+  const onPressAnalytics = useCallback(
+    () => onPressTab('Analytics'),
+    [onPressTab],
+  )
   const onPressActivity = useCallback(
     () => onPressTab('Activity'),
     [onPressTab],
@@ -93,10 +99,6 @@ export function BottomBar({navigation}: BottomTabBarProps) {
   const onPressProfile = useCallback(() => {
     onPressTab('Profile')
   }, [onPressTab])
-  const onPressAdd = useCallback(() => {
-    haptics.tap()
-    navigation.getParent()?.navigate('AddExpense', {})
-  }, [navigation, haptics])
 
   return (
     <>
@@ -106,6 +108,7 @@ export function BottomBar({navigation}: BottomTabBarProps) {
           t.atoms.bg,
           t.atoms.border_contrast_low,
           {paddingBottom: clamp(safeAreaInsets.bottom, 15, 60)},
+          footerMinimalShellTransform,
         ]}
         onLayout={e => {
           footerHeight.set(e.nativeEvent.layout.height)
@@ -115,12 +118,12 @@ export function BottomBar({navigation}: BottomTabBarProps) {
             testID="tab-people"
             icon={
               isAtPeople ? (
-                <PersonFilled
+                <HomeFilled
                   width={iconWidth + 1}
                   style={[styles.ctrlIcon, t.atoms.text, styles.homeIcon]}
                 />
               ) : (
-                <Person
+                <Home
                   width={iconWidth + 1}
                   style={[styles.ctrlIcon, t.atoms.text, styles.homeIcon]}
                 />
@@ -151,18 +154,27 @@ export function BottomBar({navigation}: BottomTabBarProps) {
             accessibilityLabel={l`Groups`}
             accessibilityHint=""
           />
-          {/* Spec: phones get a central +. Bluesky's compose action, in the middle slot. */}
-          <View style={[styles.ctrl, a.flex_1, a.align_center]}>
-            <Button
-              testID="tab-add"
-              label={l`Add expense`}
-              onPress={onPressAdd}
-              size="small"
-              shape="round"
-              color="primary">
-              <ButtonIcon icon={PlusIcon} size="md" />
-            </Button>
-          </View>
+          {/* No centre button: Add expense is the FAB, as Bluesky's compose action is. */}
+          <Btn
+            testID="tab-analytics"
+            icon={
+              isAtAnalytics ? (
+                <ChartPieFilled
+                  width={iconWidth}
+                  style={[styles.ctrlIcon, t.atoms.text]}
+                />
+              ) : (
+                <ChartPie
+                  width={iconWidth}
+                  style={[styles.ctrlIcon, t.atoms.text]}
+                />
+              )
+            }
+            onPress={onPressAnalytics}
+            accessibilityRole="tab"
+            accessibilityLabel={l`Analytics`}
+            accessibilityHint=""
+          />
           <Btn
             testID="tab-activity"
             icon={

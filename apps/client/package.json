@@ -11,7 +11,9 @@
     "build-web": "expo export -p web",
     "typecheck": "tsc --noEmit",
     "e2e": "playwright test",
-    "e2e:build": "EXPO_PUBLIC_ENV=e2e expo export -p web"
+    "e2e:build": "EXPO_PUBLIC_ENV=e2e expo export -p web",
+    "intl:extract": "lingui extract --clean",
+    "intl:compile": "lingui compile"
   },
   "dependencies": {
     "@bsky.app/alf": "^0.1.15",

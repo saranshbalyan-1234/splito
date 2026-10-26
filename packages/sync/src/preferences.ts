@@ -15,7 +15,7 @@ export interface PrefDef<T> {
   label: string
 }
 
-export type TabId = 'people' | 'groups' | 'activity' | 'profile'
+export type TabId = 'people' | 'groups' | 'analytics' | 'activity' | 'profile'
 export type SwipeAction = 'markRead' | 'hide' | 'delete' | 'none'
 
 export interface Category {
@@ -38,7 +38,7 @@ export const DEFAULT_CATEGORIES: Category[] = [
   ['other', 'Other', '#94a3b8', 'circle'],
 ].map(([id, name, color, icon], order) => ({id: id!, name: name!, color: color!, icon: icon!, order, hidden: false}))
 
-const TAB_IDS: TabId[] = ['people', 'groups', 'activity', 'profile']
+const TAB_IDS: TabId[] = ['people', 'groups', 'analytics', 'activity', 'profile']
 const HEX = /^#[0-9a-f]{6}$/i
 
 const oneOf =

@@ -34,16 +34,10 @@ export function useBreakpoints(): Record<Breakpoint, boolean> & {
  * Fine-tuned breakpoints for the shell layout
  */
 export function useLayoutBreakpoints() {
-  const rightNavVisible = useMediaQuery({minWidth: BREAKPOINTS.rightNav})
-  const centerColumnOffset = useMediaQuery({
-    minWidth: BREAKPOINTS.rightNav,
-    maxWidth: BREAKPOINTS.tablet,
-  })
-  const leftNavMinimal = useMediaQuery({maxWidth: BREAKPOINTS.tablet})
-
+  const leftNavMinimal = useMediaQuery({maxWidth: BREAKPOINTS.leftNavLabels - 1})
   return {
-    rightNavVisible,
-    centerColumnOffset,
+    rightNavVisible: false,
+    centerColumnOffset: false,
     leftNavMinimal,
   }
 }

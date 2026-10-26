@@ -1,0 +1,138 @@
+import {View} from 'react-native'
+import {Trans, useLingui} from '@lingui/react/macro'
+import {formatAmount, magnitude, type PersonSummary} from '@splito/domain'
+
+import {Link} from '#/view/com/util/Link'
+import {UserAvatar} from '#/view/com/util/UserAvatar'
+import {atoms as a, useTheme} from '#/alf'
+import {BalanceText} from '#/components/BalanceText'
+import * as Pills from '#/components/Pills'
+import * as ProfileCard from '#/components/ProfileCard'
+import {Text} from '#/components/Typography'
+
+export type PersonRowData = {
+  id: string
+  name: string
+  summary: PersonSummary | undefined
+}
+
+const AVATAR_SIZE = 42
+
+/**
+ * Bluesky's profile-card row: avatar, name, a secondary line (here the
+ * group chips), and on the right - where Bluesky has Follow - the balance
+ * per currency in words.
+ */
+export function PersonRow({
+  row,
+  groupNames,
+  locale,
+}: {
+  row: PersonRowData
+  groupNames: Map<string, string>
+  locale: string
+}) {
+  const t = useTheme()
+  const {t: l} = useLingui()
+  const byCurrency = row.summary?.byCurrency ?? {}
+  const currencies = Object.keys(byCurrency)
+    .filter(c => byCurrency[c]!.total !== 0n || Object.keys(byCurrency[c]!.groups).length > 0)
+    .sort()
+
+  const chips = currencies.flatMap(currency => {
+    const c = byCurrency[currency]!
+    const groups = Object.entries(c.groups)
+      .filter(([, v]) => v !== 0n)
+      .map(([groupId, v]) => ({key: `${currency}-${groupId}`, name: groupNames.get(groupId) ?? l`Group`, v}))
+      .sort((x, y) => x.name.localeCompare(y.name))
+    if (groups.length === 0) return []
+    return [...(c.direct !== 0n ? [{key: `${currency}-direct`, name: l`Direct`, v: c.direct}] : []), ...groups].map(chip => ({
+      ...chip,
+      currency,
+    }))
+  })
+  const isSettled = currencies.every(c => byCurrency[c]!.total === 0n)
+
+  return (
+    <Link
+      testID={`person-${row.name}`}
+      href={`/people/${row.id}`}
+      asAnchor
+      anchorNoUnderline
+      accessibilityLabel={row.name}
+      accessibilityHint=""
+      hoverStyle={t.atoms.bg_contrast_25}
+      style={[a.px_lg, a.py_md, a.border_t, t.atoms.border_contrast_low, a.transition_color]}>
+      <View style={[a.flex_row, a.align_center, a.gap_md]}>
+        <UserAvatar size={AVATAR_SIZE} name={row.name} type="user" />
+        <View style={[a.flex_1, a.gap_2xs]}>
+          <View style={[a.flex_row, a.align_start, a.justify_between, a.gap_md]}>
+            <View style={[a.flex_1, a.pt_2xs]}>
+              <ProfileCard.Name profile={row} />
+            </View>
+            <View style={[a.align_end, a.gap_2xs, a.flex_shrink_0]}>
+              {isSettled ? (
+                <Text style={[a.text_sm, a.leading_snug, a.pt_2xs, t.atoms.text_contrast_medium]}>
+                  <Trans>settled up</Trans>
+                </Text>
+              ) : (
+                currencies
+                  .filter(c => byCurrency[c]!.total !== 0n)
+                  .map(currency => (
+                    <BalanceText
+                      key={currency}
+                      testID={`balance-${currency}`}
+                      amount={byCurrency[currency]!.total}
+                      currency={currency}
+                      locale={locale}
+                      style={a.text_right}
+                    />
+                  ))
+              )}
+            </View>
+          </View>
+          {chips.length > 0 ? (
+            <Pills.Row style={[a.pt_2xs]}>
+              {chips.map(chip => (
+                <Pills.Tag key={chip.key}>
+                  {chip.name}{' '}
+                  <Text
+                    style={[
+                      a.text_xs,
+                      a.font_semi_bold,
+                      {
+                        color: chip.v > 0n ? t.palette.positive_600 : t.palette.negative_500,
+                        fontVariant: ['tabular-nums'],
+                      },
+                    ]}>
+                    {(chip.v > 0n ? '+' : '−') + formatAmount(magnitude(chip.v), chip.currency, locale)}
+                  </Text>
+                </Pills.Tag>
+              ))}
+            </Pills.Row>
+          ) : (
+            <Text numberOfLines={1} style={[a.text_sm, a.leading_snug, t.atoms.text_contrast_medium]}>
+              {isSettled ? <Trans>No open balances</Trans> : <Trans>Direct expenses</Trans>}
+            </Text>
+          )}
+        </View>
+      </View>
+    </Link>
+  )
+}
+
+/** Loading shape of one row. */
+export function PersonRowPlaceholder() {
+  const t = useTheme()
+  return (
+    <View style={[a.px_lg, a.py_md, a.border_t, t.atoms.border_contrast_low]}>
+      <View style={[a.flex_row, a.align_center, a.gap_md]}>
+        <ProfileCard.AvatarPlaceholder size={AVATAR_SIZE} />
+        <ProfileCard.NameAndHandlePlaceholder />
+        <View style={[a.align_end, {width: 120}]}>
+          <View style={[a.rounded_sm, t.atoms.bg_contrast_50, {height: 12, width: 100}]} />
+        </View>
+      </View>
+    </View>
+  )
+}
