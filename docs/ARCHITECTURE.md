@@ -1169,7 +1169,9 @@ labelled sidebar); **wide** = web 1300 px and up (Bluesky `gtTablet`, right colu
   live results (People, Groups, Expenses: title, notes, items, category, amounts like "> 1000", dates like
   "yesterday"; query highlighted) with an "Ask Splito: '<query>'" row first. Tapping that row, or pressing
   Enter on a question, turns the drawer into the Ask Splito conversation (§ 26.19) with a back arrow to the
-  results; tapping a result opens it and closes the drawer. On web "/" or Cmd/Ctrl+K opens it from anywhere.
+  results; tapping a result opens it and closes the drawer. **Cmd+K (Ctrl+K on Windows/Linux) opens it from
+  anywhere** on web and on iPad/Android with a hardware keyboard (also "/" on web); pressing it again or Escape
+  closes it. On desktop the header button's tooltip and the input's right edge show the hint "⌘K" / "Ctrl K".
   There is no Search page and no Search nav item; the old `/search` route opens the drawer with the query. The
   Friends section's own search icon is removed; Groups keeps its list search. *Why:* "the search option to be
   left of add people on the header, which expands on click"; "this search should open a drawer instead which
@@ -1729,6 +1731,7 @@ Every owner decision, in the order it was made (all 2026-10-26). "Replaced" name
 | 72 | "the search option to be left of add people on the header, which expands on click" | Global search is a header icon left of Add friend that expands into the search field | §§ 26.3, 26.4 | Search field always visible at the top of Home (row 71) |
 | 73 | "this search should open a drawer instead which would support ai as well" | Search icon (every top-level header) opens the Search & Ask drawer: search results + Ask Splito chat in one place; no Search or Ask pages; bottom bar back to Home, Groups, Analytics, Activity | §§ 26.3, 26.4, 26.19 | Expanding header search (72), Ask Splito centre tab and screen (71) |
 | 74 | "make it as a ai icon like flash or something ... basically we are combining ai and search" | The Search & Ask header button uses the Lucide Sparkles AI icon (not a magnifier) | § 26.3 | Magnifier icon |
+| 75 | "command + k opens this up" | Cmd/Ctrl+K opens and closes the Search & Ask drawer everywhere (web, hardware keyboards), hint shown on desktop | § 26.3 | "/" or Cmd/Ctrl+K on web only |
 
 New decisions follow § 0 rule 9: rewrite the rule in its topic so only the current truth remains, then add a
 row here.
