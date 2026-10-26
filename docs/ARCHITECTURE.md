@@ -1572,7 +1572,8 @@ add anyway (only for you)"; "also i should be able to select from contacts". *Wh
 - **Pending people are not selectable** in expenses or groups until they accept (they show greyed with
   "Waiting for <name> to accept"); a private "only for you" friend is selectable at once.
 - **Request and invite rows share one layout:** avatar, name, status line, and the actions on the right of the
-  row. Requests: Accept (check icon, primary) and Decline (X icon); Invites sent: Resend (send icon) and Cancel
+  row, all on ONE horizontal line (actions vertically centred with the name block, side by side, never wrapped
+  below the name; "basically in horizontal row"). Requests: Accept (check icon, primary) and Decline (X icon); Invites sent: Resend (send icon) and Cancel
   (X icon). On phones the actions are icon-only round buttons (with accessibility labels and a long-press
   tooltip); on rail/desktop each shows its icon and full text ("Accept", "Decline", "Resend", "Cancel"). *Why:*
   "make accept decline like invites sent, on mobile only icon for both, for web complete text with icon".
