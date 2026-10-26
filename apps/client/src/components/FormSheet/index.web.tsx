@@ -1,19 +1,16 @@
 import {useEffect} from 'react'
 import {ScrollView, View} from 'react-native'
 
-import {useShouldReduceMotion} from '#/motion/useShouldReduceMotion'
-import {atoms as a, web} from '#/alf'
+import {atoms as a} from '#/alf'
 import * as Dialog from '#/components/Dialog'
 import {Context as DialogContext} from '#/components/Dialog/context'
 import {
   Footer,
   type FooterProps,
   Header,
-  SLIDE_UP,
   useFormSheet,
   useIsScrolled,
   useIsSheet,
-  webSheetStyle,
 } from './shared'
 import {useSheetDrag, WebHandle} from './webDrag'
 
@@ -22,7 +19,7 @@ export {Screen} from './Screen'
 
 /**
  * Web: Bluesky's centred dialog (scrim, focus trap, Escape), or on a phone
- * a sheet risen from the bottom edge. The body scrolls between the fixed top
+ * Dialog's drawer from the bottom edge (handle, drag down to close). The body scrolls between the fixed top
  * bar and footer, so Cancel and Save stay at the bottom right however long
  * the form is.
  */
@@ -43,7 +40,6 @@ export function Inner({
   const {requestClose, setIsDirty, testID, inset} = useFormSheet()
   const dialog = Dialog.useDialogContext()
   const isSheet = useIsSheet()
-  const reduceMotion = useShouldReduceMotion()
   const [isScrolled, onScroll] = useIsScrolled()
   useEffect(() => setIsDirty(isDirty), [isDirty, setIsDirty])
   const drag = useSheetDrag({
@@ -62,16 +58,14 @@ export function Inner({
     <DialogContext.Provider value={{...dialog, close: () => requestClose()}}>
       <Dialog.Inner
         label={title}
-        style={[
-          isSheet ? webSheetStyle : {marginTop: 'auto', marginBottom: 'auto'},
-          isSheet && !reduceMotion && web({animation: SLIDE_UP}),
-        ]}
+        style={{marginTop: 'auto', marginBottom: 'auto'}}
         contentContainerStyle={[a.p_0]}>
         <DialogContext.Provider value={dialog}>
           <View
             testID={testID}
             style={[
-              {maxHeight: isSheet ? 'calc(100dvh - 48px)' : '80vh'},
+              /* The drawer caps its own height, above the keyboard too. */
+              isSheet ? {flexShrink: 1, minHeight: 0} : {maxHeight: '80vh'},
               a.overflow_hidden,
             ]}>
             {/* The handle and top bar drag the sheet down to close it (owner rule, 26.8). */}

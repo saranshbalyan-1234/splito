@@ -10,7 +10,7 @@ import {
 import {useSafeAreaInsets} from 'react-native-safe-area-context'
 import {Trans, useLingui} from '@lingui/react/macro'
 
-import {atoms as a, useBreakpoints, useTheme, web} from '#/alf'
+import {atoms as a, useBreakpoints, useTheme} from '#/alf'
 import {Button, ButtonIcon, ButtonText} from '#/components/Button'
 import * as Dialog from '#/components/Dialog'
 import {TimesLarge_Stroke2_Corner0_Rounded as XIcon} from '#/components/icons/Times'
@@ -35,26 +35,8 @@ import {IS_WEB} from '#/env'
  * centred popup with the buttons at its bottom right.
  */
 export function useIsSheet() {
-  const {gtPhone, gtMobile} = useBreakpoints()
-  return IS_WEB ? !gtPhone : !gtMobile
+  return !useBreakpoints().gtMobile
 }
-
-/** Web: the phone sheet's rise from the bottom edge; keyframes in public/index.html. */
-export const SLIDE_UP = 'slideInUp cubic-bezier(0.16, 1, 0.3, 1) 0.4s'
-
-/** Web: pinned to the bottom edge, full width, rounded only on top, like the native sheet. */
-export const webSheetStyle = web({
-  position: 'fixed',
-  left: 0,
-  right: 0,
-  bottom: 0,
-  maxWidth: '100%',
-  borderWidth: 0,
-  borderTopWidth: 1,
-  borderRadius: 0,
-  borderTopLeftRadius: 20,
-  borderTopRightRadius: 20,
-})
 
 type SheetContextValue = {
   /** Side padding shared by the top bar, body and footer, so their edges line up. */
@@ -271,7 +253,8 @@ export function Footer({
       style={[
         inset,
         a.pt_md,
-        {paddingBottom: Math.max(bottom, isSheet ? 12 : 16)},
+        /* Web: the drawer already sits above the home indicator. */
+        {paddingBottom: Math.max(IS_WEB ? 0 : bottom, isSheet ? 12 : 16)},
         a.border_t,
         t.atoms.border_contrast_low,
         t.atoms.bg,

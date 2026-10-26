@@ -3,7 +3,6 @@ import {useState} from 'react'
 import {View} from 'react-native'
 import {Trans} from '@lingui/react/macro'
 
-import {useShouldReduceMotion} from '#/motion/useShouldReduceMotion'
 import {atoms as a, tokens, useTheme, web} from '#/alf'
 import * as Dialog from '#/components/Dialog'
 import * as FormSheet from '#/components/FormSheet'
@@ -73,8 +72,6 @@ function DialogInner({
   testID?: string
 }) {
   const control = Dialog.useDialogContext()
-  const isSheet = FormSheet.useIsSheet()
-  const reduceMotion = useShouldReduceMotion()
   const t = useTheme()
   const [search, setSearch] = useState('')
   const [headerHeight, setHeaderHeight] = useState(0)
@@ -121,14 +118,8 @@ function DialogInner({
       style={web([a.contents])}>
       <Dialog.InnerFlatList
         testID={testID}
-        webInnerStyle={
-          isSheet
-            ? [
-                FormSheet.webSheetStyle,
-                !reduceMotion && web({animation: FormSheet.SLIDE_UP}),
-              ]
-            : web({marginTop: 'auto', marginBottom: 'auto'})
-        }
+        /* Centred as a popup; on phones Dialog draws the drawer. */
+        webInnerStyle={web({marginTop: 'auto', marginBottom: 'auto'})}
         /* The sheet header brings its own top space, as in every other sheet. */
         webInnerContentContainerStyle={{paddingTop: 0}}
         data={shown}

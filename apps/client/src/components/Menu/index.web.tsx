@@ -1,13 +1,28 @@
-// Adapted from bluesky-social/social-app@4e4ad9c (MIT) — src/components/Menu/index.web.tsx
-import {forwardRef, useCallback, useId, useMemo, useState} from 'react'
+// Adapted from bluesky-social/social-app@4e4ad9c (MIT) — src/components/Menu/index.web.tsx (phone drawer items and groups from src/components/Menu/index.tsx)
+import {
+  cloneElement,
+  createContext,
+  forwardRef,
+  Fragment,
+  isValidElement,
+  useCallback,
+  useContext,
+  useEffect,
+  useId,
+  useMemo,
+  useRef,
+  useState,
+} from 'react'
 import {Pressable, type StyleProp, type TextStyle, View} from 'react-native'
 import {msg} from '@lingui/core/macro'
 import {useLingui} from '@lingui/react'
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu'
+import flattenReactChildren from 'react-keyed-flatten-children'
 
 import {useShouldReduceMotion} from '#/motion/useShouldReduceMotion'
 import {atoms as a, flatten, flattenToCSS, useTheme, web} from '#/alf'
-import type * as Dialog from '#/components/Dialog'
+import * as Dialog from '#/components/Dialog'
+import {useIsWebDrawer} from '#/components/Dialog/drawer.web'
 import {useInteractionState} from '#/components/hooks/useInteractionState'
 import {
   Context,
@@ -31,6 +46,14 @@ import {Text} from '#/components/Typography'
 export {type DialogControlProps as MenuControlProps} from '#/components/Dialog'
 
 export {useMenuContext}
+
+/*
+ * Splito (owner rule: every modal on a phone is a drawer): below 800px the
+ * menu opens as Dialog's bottom drawer with Bluesky's native menu rows, not
+ * a Radix dropdown. Same control, same consumers.
+ */
+const InDrawer = createContext(false)
+InDrawer.displayName = 'MenuInDrawer'
 
 export function useMenuControl(): Dialog.DialogControlProps {
   const id = useId()
@@ -60,6 +83,7 @@ export function Root({
   control?: Dialog.DialogControlProps
 }>) {
   const {_} = useLingui()
+  const isDrawer = useIsWebDrawer()
   const defaultControl = useMenuControl()
   const context = useMemo<ContextType>(
     () => ({
@@ -80,7 +104,7 @@ export function Root({
 
   return (
     <Context.Provider value={context}>
-      {context.control.isOpen && (
+      {context.control.isOpen && !isDrawer && (
         <Portal>
           <Pressable
             style={[a.fixed, a.inset_0, a.z_50]}
@@ -93,7 +117,7 @@ export function Root({
         </Portal>
       )}
       <DropdownMenu.Root
-        open={context.control.isOpen}
+        open={context.control.isOpen && !isDrawer}
         onOpenChange={onOpenChange}>
         {children}
       </DropdownMenu.Root>
@@ -177,7 +201,52 @@ export function Trigger({
   )
 }
 
-export function Outer({
+export function Outer(props: OuterProps) {
+  return useIsWebDrawer() ? (
+    <DrawerOuter {...props} />
+  ) : (
+    <DropdownOuter {...props} />
+  )
+}
+
+/** Bluesky's native menu: Dialog (here the web drawer) driven by the menu's control. */
+function DrawerOuter({children}: OuterProps) {
+  const {_} = useLingui()
+  const context = useMenuContext()
+  const dialog = Dialog.useDialogControl()
+  const isOpen = Boolean(context.control.isOpen)
+  const shown = useRef(false)
+
+  useEffect(() => {
+    if (isOpen) {
+      shown.current = true
+      dialog.open()
+    } else if (shown.current) {
+      shown.current = false
+      dialog.close()
+    }
+  }, [isOpen, dialog])
+
+  return (
+    <Dialog.Outer
+      control={dialog}
+      onClose={() => {
+        shown.current = false
+        if (context.control.isOpen) context.control.close()
+      }}>
+      {/* Re-wrap with context since Dialogs are portal-ed to root */}
+      <Context.Provider value={context}>
+        <InDrawer.Provider value>
+          <Dialog.ScrollableInner label={_(msg`Menu`)}>
+            <View style={[a.gap_lg]}>{children}</View>
+          </Dialog.ScrollableInner>
+        </InDrawer.Provider>
+      </Context.Provider>
+    </Dialog.Outer>
+  )
+}
+
+function DropdownOuter({
   children,
   style,
   onCloseAutoFocus,
@@ -226,7 +295,75 @@ export function Outer({
   )
 }
 
-export function Item({
+export function Item(props: ItemProps) {
+  return useContext(InDrawer) ? (
+    <DrawerItem {...props} />
+  ) : (
+    <DropdownItem {...props} />
+  )
+}
+
+/** Bluesky's native menu row (bordered, 44pt tall), closing the menu after its action. */
+function DrawerItem({
+  children,
+  label,
+  style,
+  onPress,
+  destructive = false,
+  ...rest
+}: ItemProps) {
+  const t = useTheme()
+  const {control} = useMenuContext()
+  const {state: focused, onIn: onFocus, onOut: onBlur} = useInteractionState()
+  const {
+    state: pressed,
+    onIn: onPressIn,
+    onOut: onPressOut,
+  } = useInteractionState()
+
+  return (
+    <Pressable
+      {...rest}
+      role="menuitem"
+      accessibilityHint=""
+      accessibilityLabel={label}
+      onFocus={onFocus}
+      onBlur={onBlur}
+      onPress={e => {
+        onPress(e)
+        if (!e.defaultPrevented) control.close()
+      }}
+      onPressIn={e => {
+        onPressIn()
+        rest.onPressIn?.(e)
+      }}
+      onPressOut={e => {
+        onPressOut()
+        rest.onPressOut?.(e)
+      }}
+      style={[
+        a.flex_row,
+        a.align_center,
+        a.gap_sm,
+        a.px_md,
+        a.rounded_md,
+        a.overflow_hidden,
+        a.border,
+        t.atoms.bg_contrast_25,
+        t.atoms.border_contrast_low,
+        {minHeight: 44, paddingVertical: 10},
+        style,
+        (focused || pressed) && !rest.disabled && [t.atoms.bg_contrast_50],
+      ]}>
+      <ItemContext.Provider
+        value={{disabled: Boolean(rest.disabled), destructive}}>
+        {children}
+      </ItemContext.Provider>
+    </Pressable>
+  )
+}
+
+function DropdownItem({
   children,
   label,
   onPress,
@@ -298,10 +435,13 @@ export function Item({
 export function ItemText({children, style}: ItemTextProps) {
   const t = useTheme()
   const {disabled, destructive} = useMenuItemContext()
+  const inDrawer = useContext(InDrawer)
   return (
     <Text
+      numberOfLines={inDrawer ? 1 : undefined}
       style={[
         a.flex_1,
+        inDrawer && a.text_md,
         a.font_semi_bold,
         t.atoms.text_contrast_high,
         style,
@@ -316,6 +456,7 @@ export function ItemText({children, style}: ItemTextProps) {
 export function ItemIcon({icon: Comp, position = 'left', fill}: ItemIconProps) {
   const t = useTheme()
   const {disabled, destructive} = useMenuItemContext()
+  const inDrawer = useContext(InDrawer)
   return (
     <View
       style={[
@@ -328,7 +469,7 @@ export function ItemIcon({icon: Comp, position = 'left', fill}: ItemIconProps) {
         },
       ]}>
       <Comp
-        size="md"
+        size={inDrawer ? 'lg' : 'md'}
         fill={
           fill
             ? fill({disabled})
@@ -384,6 +525,19 @@ export function LabelText({
   style?: StyleProp<TextStyle>
 }) {
   const t = useTheme()
+  if (useContext(InDrawer)) {
+    return (
+      <Text
+        style={[
+          a.font_semi_bold,
+          t.atoms.text_contrast_medium,
+          {marginBottom: -8},
+          style,
+        ]}>
+        {children}
+      </Text>
+    )
+  }
   return (
     <Text
       style={[
@@ -399,12 +553,42 @@ export function LabelText({
   )
 }
 
-export function Group({children}: GroupProps) {
-  return children
+export function Group({children, style}: GroupProps) {
+  const t = useTheme()
+  if (!useContext(InDrawer)) return children
+  // Bluesky's native group: one bordered card, a hairline between rows.
+  return (
+    <View
+      style={[
+        a.rounded_lg,
+        a.curve_continuous,
+        a.overflow_hidden,
+        a.border,
+        t.atoms.border_contrast_low,
+        style,
+      ]}>
+      {flattenReactChildren(children).map((child, i) =>
+        isValidElement(child) && child.type === Item ? (
+          <Fragment key={i}>
+            {i > 0 ? (
+              <View style={[a.border_b, t.atoms.border_contrast_low]} />
+            ) : null}
+            {cloneElement(child, {
+              // @ts-expect-error cloneElement is not aware of the types
+              style: {borderRadius: 0, borderWidth: 0},
+            })}
+          </Fragment>
+        ) : (
+          child
+        ),
+      )}
+    </View>
+  )
 }
 
 export function Divider() {
   const t = useTheme()
+  if (useContext(InDrawer)) return null
   return (
     <DropdownMenu.Separator
       style={flattenToCSS([
