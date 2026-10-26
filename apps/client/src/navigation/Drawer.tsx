@@ -260,7 +260,7 @@ function DrawerContentInner(): React.ReactNode {
                 {/* While the theme follows the device, the switch shows what the device chose; flipping it picks one. */}
                 {theme === 'system' && (
                   <Text
-                    testID="drawer-theme-system"
+                    testID="theme-follows-device"
                     style={[
                       a.text_sm,
                       a.leading_snug,

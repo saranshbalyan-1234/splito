@@ -12,7 +12,6 @@ import {
   useIsScrolled,
   useIsSheet,
 } from './shared'
-import {useSheetDrag, WebHandle} from './webDrag'
 
 export * from './shared'
 export {Screen} from './Screen'
@@ -42,12 +41,6 @@ export function Inner({
   const isSheet = useIsSheet()
   const [isScrolled, onScroll] = useIsScrolled()
   useEffect(() => setIsDirty(isDirty), [isDirty, setIsDirty])
-  const drag = useSheetDrag({
-    isEnabled: isSheet,
-    isDirty,
-    reduceMotion,
-    onDismiss: requestClose,
-  })
 
   /*
    * Bluesky's dialog closes on Escape through its context; route that
@@ -68,16 +61,11 @@ export function Inner({
               isSheet ? {flexShrink: 1, minHeight: 0} : {maxHeight: '80vh'},
               a.overflow_hidden,
             ]}>
-            {/* The handle and top bar drag the sheet down to close it (owner rule, 26.8). */}
-            <View {...drag}>
-              {isSheet && <WebHandle />}
-              <Header
-                title={title}
-                onClose={requestClose}
-                isScrolled={isScrolled}
-                style={isSheet && a.pt_lg}
-              />
-            </View>
+            <Header
+              title={title}
+              onClose={requestClose}
+              isScrolled={isScrolled}
+            />
             <ScrollView
               keyboardShouldPersistTaps="handled"
               onScroll={onScroll}

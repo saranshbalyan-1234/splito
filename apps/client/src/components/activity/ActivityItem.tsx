@@ -257,7 +257,11 @@ export function ActivityItem({
             a.px_lg,
             rowPadding,
             {backgroundColor},
-            {paddingRight: IS_WEB ? actionsInset : ACTIONS_RIGHT + ACTION_BUTTON_SIZE + 4},
+            {
+              paddingRight: IS_WEB
+                ? actionsInset
+                : ACTIONS_RIGHT + ACTION_BUTTON_SIZE + 4,
+            },
           ]}>
           <SubtleHover hover={isHovered} />
           <Avatar
@@ -309,17 +313,21 @@ export function ActivityItem({
             // On the headline's line, so a long row never stacks them oddly.
             {top: rowPaddingTop - 6, right: ACTIONS_RIGHT},
           ]}>
-          {IS_WEB &&
-            webQuickActions.map(action => {
-              const {label, icon} = actions.info(action, isRead)
-              return (
-                <View
-                  key={action}
-                  style={[
-                    {opacity: isShowingActions ? 1 : 0},
-                    a.transition_opacity,
-                  ]}>
+          {IS_WEB && webQuickActions.length > 0 && (
+            <View
+              testID="activity-quick-actions"
+              style={[
+                a.flex_row,
+                a.align_center,
+                a.gap_xs,
+                {opacity: isShowingActions ? 1 : 0},
+                a.transition_opacity,
+              ]}>
+              {webQuickActions.map(action => {
+                const {label, icon} = actions.info(action, isRead)
+                return (
                   <Button
+                    key={action}
                     testID={`activity-action-${action}`}
                     label={label}
                     size="small"
@@ -331,9 +339,10 @@ export function ActivityItem({
                     onPress={() => run(action)}>
                     <ButtonIcon icon={icon} />
                   </Button>
-                </View>
-              )
-            })}
+                )
+              })}
+            </View>
+          )}
           <Menu.Root control={menuControl}>
             <Menu.Trigger label={l`More actions`}>
               {({props}) => (
@@ -749,11 +758,7 @@ function Avatar({
   const t = useTheme()
   return (
     <View style={SLOT_SIZE}>
-      <UserAvatar
-        type="user"
-        size={AVATAR_SIZE}
-        name={name}
-      />
+      <UserAvatar type="user" size={AVATAR_SIZE} name={name} />
       {/*
        * The ring is a padded circle behind the badge rather than a border on
        * it, so the badge's anti-aliased edge doesn't show the ring through.

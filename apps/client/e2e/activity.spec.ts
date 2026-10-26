@@ -95,7 +95,9 @@ test('changes by friends are unread with a badge; mark all read clears them, und
   await screen(page).getByTestId('activity-mark-all-read').click()
   await expect(dots).toHaveCount(0)
   // The header keeps its one action in place, disabled, so the title stays centred.
-  await expect(screen(page).getByTestId('activity-mark-all-read')).toBeDisabled()
+  await expect(
+    screen(page).getByTestId('activity-mark-all-read'),
+  ).toBeDisabled()
 
   await page.getByRole('button', {name: 'Undo'}).click()
   await expect(dots).toHaveCount(unread)
@@ -143,10 +145,17 @@ test('hover shows the swipe actions as buttons: mark read toggles, delete tombst
   await page.setViewportSize(DESKTOP)
   await openActivity(page)
   const movie = row(page, 'expense.created', 'Movie night')
-  // The buttons only show on hover (or keyboard focus) on desktop.
-  await expect(movie.getByTestId('activity-actions')).toHaveCSS('opacity', '0')
+  // The quick actions only show on hover (or keyboard focus) on desktop; the "..." is always there.
+  await expect(movie.getByTestId('activity-quick-actions')).toHaveCSS(
+    'opacity',
+    '0',
+  )
+  await expect(movie.getByTestId('activity-menu')).toBeVisible()
   await movie.hover()
-  await expect(movie.getByTestId('activity-actions')).toHaveCSS('opacity', '1')
+  await expect(movie.getByTestId('activity-quick-actions')).toHaveCSS(
+    'opacity',
+    '1',
+  )
   // Defaults: swipe right marks read, swipe left deletes.
   await movie.getByTestId('activity-action-markRead').click()
   await expect(unreadDot(movie)).toHaveCount(0)
@@ -276,7 +285,9 @@ test('phones: the menu button is always there, the FAB and the tab badge show', 
   await expect(peopleBadge(page)).toContainText(/\d+/)
 })
 
-test('an empty store shows the illustrated empty state; the old /notifications link still lands', async ({page}) => {
+test('an empty store shows the illustrated empty state; the old /notifications link still lands', async ({
+  page,
+}) => {
   await page.goto('/notifications')
   await expect(page.getByTestId('screen-activity')).toBeVisible()
   await expect(page.getByTestId('activity-empty')).toBeVisible()

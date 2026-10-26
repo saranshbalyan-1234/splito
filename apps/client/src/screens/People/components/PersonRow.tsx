@@ -96,7 +96,7 @@ export function PersonRow({
     </View>
   )
   const balances = isSettled ? (
-    <SettledPill testID="person-settled" />
+    <SettledPill testID="person-row-settled" />
   ) : (
     balanceColumn(open)
   )

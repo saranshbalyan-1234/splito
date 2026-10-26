@@ -336,9 +336,7 @@ test('itemize: charges as a percentage - discount first, then tax on the rest; t
   await saveAndView(page)
   await expect(page.getByTestId('expense-extra-tax')).toContainText('18%')
   await expect(page.getByTestId('expense-extra-tax')).toContainText('₹153.00')
-  await expect(page.getByTestId('expense-extra-discount')).toContainText(
-    '15%',
-  )
+  await expect(page.getByTestId('expense-extra-discount')).toContainText('15%')
 })
 
 test('expense page: an itemised bill lists every item with who had it, their portions and part', async ({

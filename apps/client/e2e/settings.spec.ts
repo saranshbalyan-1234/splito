@@ -61,10 +61,10 @@ test('an accent is only previewed until Apply, then tints the app and survives a
   await page.reload()
   await expect(page.getByTestId('screen-settings-section')).toBeVisible()
   expect(await background(page, 'sidebar-add')).toBe(EMERALD)
-  // The logo keeps the brand blue whatever the accent.
+  // Owner rule (26.11): the accent recolours the logo too.
   await expect(
     page.getByTestId('logo').locator('path').first(),
-  ).toHaveAttribute('fill', '#1185fe')
+  ).toHaveAttribute('fill', /^#0B8263$/i)
 
   await page.getByTestId('reset-accent').click()
   await expect.poll(() => background(page, 'sidebar-add')).toBe(BLUESKY_BLUE)

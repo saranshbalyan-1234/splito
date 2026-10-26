@@ -33,7 +33,10 @@ test('the cross closes a sheet, and so does Cancel', async ({page}) => {
   await page.setViewportSize(DESKTOP)
   await openDemo(page)
   let sheet = await openFilters(page)
-  await expect(sheet.getByTestId('sheet-close')).toHaveAttribute('aria-label', 'Close')
+  await expect(sheet.getByTestId('sheet-close')).toHaveAttribute(
+    'aria-label',
+    'Close',
+  )
   await sheet.getByTestId('sheet-close').click()
   await expect(sheet).toHaveCount(0)
 
@@ -56,7 +59,10 @@ test('closing with unsaved changes asks "Discard changes?" from the cross, Cance
   await page.getByRole('button', {name: 'Keep editing'}).click()
   await expect(page.getByText('Discard changes?')).toHaveCount(0)
   await expect(sheet).toBeVisible()
-  await expect(page.getByTestId('filter-show-youOwe')).toHaveAttribute('aria-checked', 'true')
+  await expect(page.getByTestId('filter-show-youOwe')).toHaveAttribute(
+    'aria-checked',
+    'true',
+  )
 
   // Escape asks too.
   await page.keyboard.press('Escape')
@@ -75,7 +81,9 @@ test('closing with unsaved changes asks "Discard changes?" from the cross, Cance
   await sheet.getByTestId('sheet-cancel').click()
   await page.getByTestId('confirmBtn').click()
   await expect(sheet).toHaveCount(0)
-  await expect(page.getByTestId('screen-people').getByTestId('person-Arjun Mehta')).toBeVisible()
+  await expect(
+    page.getByTestId('screen-people').getByTestId('person-Arjun Mehta'),
+  ).toBeVisible()
   await expect(page.getByTestId('list-filters-dot')).toHaveCount(0)
 })
 
@@ -107,8 +115,12 @@ test('web: a centred popup with the cross at the top right and Cancel then Save 
   const save = await boxOf(page, 'sheet-save')
 
   // Centred in the window, and no wider than Bluesky's dialog.
-  expect(Math.abs(sheet.x + sheet.width / 2 - DESKTOP.width / 2)).toBeLessThan(2)
-  expect(Math.abs(sheet.y + sheet.height / 2 - DESKTOP.height / 2)).toBeLessThan(24)
+  expect(Math.abs(sheet.x + sheet.width / 2 - DESKTOP.width / 2)).toBeLessThan(
+    2,
+  )
+  expect(
+    Math.abs(sheet.y + sheet.height / 2 - DESKTOP.height / 2),
+  ).toBeLessThan(24)
   expect(sheet.width).toBeLessThanOrEqual(600)
   // The cross at the top right.
   expect(close.x + close.width).toBeGreaterThan(sheet.x + sheet.width - 32)
@@ -121,7 +133,9 @@ test('web: a centred popup with the cross at the top right and Cancel then Save 
   expect(cancel.x).toBeGreaterThan(sheet.x + sheet.width / 2)
 })
 
-test('phones: a sheet from the bottom edge with Cancel and Save sharing the width', async ({page}) => {
+test('phones: a sheet from the bottom edge with Cancel and Save sharing the width', async ({
+  page,
+}) => {
   await page.setViewportSize(PHONE)
   await openDemo(page)
   await openFilters(page)
@@ -140,7 +154,9 @@ test('phones: a sheet from the bottom edge with Cancel and Save sharing the widt
   expect(cancel.x + cancel.width).toBeLessThan(save.x)
 })
 
-test('pickers close with the cross alone and apply the choice at once', async ({page}) => {
+test('pickers close with the cross alone and apply the choice at once', async ({
+  page,
+}) => {
   await page.setViewportSize(DESKTOP)
   await openDemo(page)
   await page.getByTestId('sidebar-add').click()
@@ -168,7 +184,9 @@ test('Add expense: the readout sits just above Cancel and Save expense; no Cance
   await openDemo(page)
   await page.getByTestId('fab-add').click()
   const composer = page.getByTestId('screen-add-expense')
-  await expect(composer.getByRole('heading', {name: 'Add expense'})).toBeVisible()
+  await expect(
+    composer.getByRole('heading', {name: 'Add expense'}),
+  ).toBeVisible()
   await expect(page.getByTestId('sheet-save')).toHaveText('Save expense')
   await expect(page.getByTestId('sheet-save')).toBeDisabled()
   await page.getByTestId('amount-input').fill('90')
@@ -184,12 +202,17 @@ test('Add expense: the readout sits just above Cancel and Save expense; no Cance
   await expect(composer.getByRole('button', {name: 'Cancel'})).toHaveCount(1)
 })
 
-test('the top bar shows its hairline only while the form is scrolled under it', async ({page}) => {
+test('the top bar shows its hairline only while the form is scrolled under it', async ({
+  page,
+}) => {
   await page.setViewportSize(PHONE)
   await openDemo(page)
   await page.getByTestId('fab-add').click()
-  const header = page.getByTestId('screen-add-expense').getByTestId('sheet-header')
-  const borderColor = () => header.evaluate(el => getComputedStyle(el).borderBottomColor)
+  const header = page
+    .getByTestId('screen-add-expense')
+    .getByTestId('sheet-header')
+  const borderColor = () =>
+    header.evaluate(el => getComputedStyle(el).borderBottomColor)
   await expect.poll(borderColor).toBe('rgba(0, 0, 0, 0)')
   // Itemize makes the form taller than the sheet; a wheel over the form scrolls it.
   await page.getByTestId('split-mode-items').click()
@@ -200,7 +223,9 @@ test('the top bar shows its hairline only while the form is scrolled under it', 
   await expect.poll(borderColor).toBe('rgba(0, 0, 0, 0)')
 })
 
-test('Edit group: the overflow opens it, Save waits for a change, and the page follows', async ({page}) => {
+test('Edit group: the overflow opens it, Save waits for a change, and the page follows', async ({
+  page,
+}) => {
   await page.setViewportSize(DESKTOP)
   await openDemo(page)
   await page.goto('/groups')

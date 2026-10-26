@@ -16,6 +16,7 @@ import {useSafeAreaInsets} from 'react-native-safe-area-context'
 import {scheduleOnRN} from 'react-native-worklets'
 
 import {useShouldReduceMotion} from '#/motion/useShouldReduceMotion'
+import {shouldDismissDrawer} from './drawerDismiss'
 import {atoms as a, tokens, useBreakpoints, useTheme, web} from '#/alf'
 
 /*
@@ -32,10 +33,6 @@ export const SHEET_SPRING: WithSpringConfig = {
   damping: 50,
   mass: 1,
 }
-/** A slow release this far down (of the sheet's height) closes it. */
-const DISMISS_FRACTION = 0.3
-/** Releases faster than this (px/s) are decided by direction instead of distance. */
-const DISMISS_VELOCITY = 500
 const EXIT_MS = 200
 /** Scrim kept visible above the tallest sheet, as the native page sheet. */
 export const DRAWER_TOP_GAP = 48
@@ -172,10 +169,7 @@ export function useDrawer({
     // A finger that stopped before letting go is not a flick.
     const v = e.nativeEvent.timeStamp - d.at > 100 ? 0 : d.v
     const dy = y.get()
-    const close =
-      Math.abs(v) > DISMISS_VELOCITY
-        ? v > 0
-        : dy > height.get() * DISMISS_FRACTION
+    const close = shouldDismissDrawer({dy, height: height.get(), velocity: v})
     const back = reduceMotion ? 0 : withSpring(0, SHEET_SPRING)
     if (close) {
       onRequestClose()

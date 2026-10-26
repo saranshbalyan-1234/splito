@@ -77,7 +77,9 @@ test('"From others" leaves out your own changes; the badge counts only unread fr
   expect(all.unreadCount).toBe(3)
   expect(all.unreadFromOthers).toBe(2)
   const others = buildRows(events, s, 'me', 'others')
-  expect(others.rows.flatMap(r => (r.type === 'event' ? [r.event.id] : []))).toEqual(['c', 'a'])
+  expect(
+    others.rows.flatMap(r => (r.type === 'event' ? [r.event.id] : [])),
+  ).toEqual(['c', 'a'])
   expect(others.unreadCount).toBe(2)
 })
 

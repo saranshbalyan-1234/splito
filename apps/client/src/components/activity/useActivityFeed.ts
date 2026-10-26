@@ -117,6 +117,9 @@ export function describeUnread(badge: string) {
   const count = Number.parseInt(badge, 10)
   if (!count) return ''
   return badge.endsWith('+')
-    ? plural(count, {one: '# or more unread items', other: '# or more unread items'})
+    ? plural(count, {
+        one: '# or more unread items',
+        other: '# or more unread items',
+      })
     : plural(count, {one: '# unread item', other: '# unread items'})
 }

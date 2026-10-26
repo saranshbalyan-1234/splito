@@ -35,7 +35,11 @@ async function addExpenseAndWatchTotal(page: Page) {
       const text = host.textContent ?? ''
       if (seen.at(-1) !== text) seen.push(text)
     })
-    observer.observe(host, {subtree: true, characterData: true, childList: true})
+    observer.observe(host, {
+      subtree: true,
+      characterData: true,
+      childList: true,
+    })
     const friend = await splito.createPerson('Zoe Park')
     await splito.createExpense({
       title: 'Cab',
@@ -84,7 +88,9 @@ function rowAnimates(page: Page, testID: string) {
   )
 }
 
-test('empty People, Groups and Activity show their animated illustration', async ({page}) => {
+test('empty People, Groups and Activity show their animated illustration', async ({
+  page,
+}) => {
   for (const [path, id] of [
     ['/', 'people-empty'],
     ['/groups', 'groups-empty'],
@@ -101,18 +107,31 @@ test('empty People, Groups and Activity show their animated illustration', async
 test('the OS reduce-motion setting freezes illustrations', async ({page}) => {
   await page.emulateMedia({reducedMotion: 'reduce'})
   await page.goto('/')
-  await expect(page.getByTestId('people-empty-illustration')).toHaveAttribute('data-static', 'true')
+  await expect(page.getByTestId('people-empty-illustration')).toHaveAttribute(
+    'data-static',
+    'true',
+  )
 })
 
-test('the Animations preference freezes illustrations without a reload', async ({page}) => {
+test('the Animations preference freezes illustrations without a reload', async ({
+  page,
+}) => {
   await ready(page, '/', 'people-empty-illustration')
   await setMotion(page, 'off')
-  await expect(page.getByTestId('people-empty-illustration')).toHaveAttribute('data-static', 'true')
+  await expect(page.getByTestId('people-empty-illustration')).toHaveAttribute(
+    'data-static',
+    'true',
+  )
   await setMotion(page, 'full')
-  await expect(page.getByTestId('people-empty-illustration')).toHaveAttribute('data-static', 'false')
+  await expect(page.getByTestId('people-empty-illustration')).toHaveAttribute(
+    'data-static',
+    'false',
+  )
 })
 
-test('a balance total counts to its new value and lands exactly on it', async ({page}) => {
+test('a balance total counts to its new value and lands exactly on it', async ({
+  page,
+}) => {
   await ready(page, '/?demo=1', 'summary-INR-net')
   const before = await page.getByTestId('summary-INR-net').innerText()
   const seen = await addExpenseAndWatchTotal(page)
@@ -136,10 +155,14 @@ test('with Animations off a total changes in one step', async ({page}) => {
   await expect(page.getByTestId('summary-INR-net')).toHaveText(seen[0]!)
 })
 
-test('rows on screen at load appear at once; a new row animates in', async ({page}) => {
+test('rows on screen at load appear at once; a new row animates in', async ({
+  page,
+}) => {
   await ready(page, '/?demo=1', 'person-Arjun Mehta')
   expect(await rowAnimates(page, 'person-Arjun Mehta')).toBe(false)
-  const id = page.evaluate(() => (window as unknown as {splito: Splito}).splito.createPerson('Nina Rossi'))
+  const id = page.evaluate(() =>
+    (window as unknown as {splito: Splito}).splito.createPerson('Nina Rossi'),
+  )
   expect(await rowAnimates(page, 'person-Nina Rossi')).toBe(true)
   await id
 })
@@ -147,7 +170,9 @@ test('rows on screen at load appear at once; a new row animates in', async ({pag
 test('with Animations off a new row just appears', async ({page}) => {
   await ready(page, '/?demo=1', 'person-Arjun Mehta')
   await setMotion(page, 'off')
-  const id = page.evaluate(() => (window as unknown as {splito: Splito}).splito.createPerson('Nina Rossi'))
+  const id = page.evaluate(() =>
+    (window as unknown as {splito: Splito}).splito.createPerson('Nina Rossi'),
+  )
   expect(await rowAnimates(page, 'person-Nina Rossi')).toBe(false)
   await id
 })
@@ -156,7 +181,9 @@ test('skeletons show while the local store loads', async ({page}) => {
   /* Records every skeleton that reaches the DOM, across page loads. */
   await page.addInitScript(() => {
     new MutationObserver(() => {
-      const seen = new Set<string>(JSON.parse(sessionStorage.getItem('skeletonsSeen') ?? '[]'))
+      const seen = new Set<string>(
+        JSON.parse(sessionStorage.getItem('skeletonsSeen') ?? '[]'),
+      )
       for (const el of document.querySelectorAll('[data-testid$="-loading"]'))
         seen.add(el.getAttribute('data-testid')!)
       sessionStorage.setItem('skeletonsSeen', JSON.stringify([...seen]))
@@ -171,16 +198,29 @@ test('skeletons show while the local store loads', async ({page}) => {
     await page.goto(path)
     await expect(page.getByTestId(screen).first()).toBeVisible()
   }
-  const seen: string[] = await page.evaluate(() => JSON.parse(sessionStorage.getItem('skeletonsSeen') ?? '[]'))
-  expect(seen.sort()).toEqual(['activity-loading', 'groups-loading', 'people-loading', 'profile-loading'])
+  const seen: string[] = await page.evaluate(() =>
+    JSON.parse(sessionStorage.getItem('skeletonsSeen') ?? '[]'),
+  )
+  expect(seen.sort()).toEqual([
+    'activity-loading',
+    'groups-loading',
+    'people-loading',
+    'profile-loading',
+  ])
   // Loading never lingers once data is in.
   await expect(page.locator('[data-testid$="-loading"]')).toHaveCount(0)
 })
 
 test.describe('touch screens', () => {
-  test.use({viewport: {width: 390, height: 844}, hasTouch: true, isMobile: true})
+  test.use({
+    viewport: {width: 390, height: 844},
+    hasTouch: true,
+    isMobile: true,
+  })
 
-  test('a row shrinks slightly while pressed and springs back', async ({page}) => {
+  test('a row shrinks slightly while pressed and springs back', async ({
+    page,
+  }) => {
     await ready(page, '/?demo=1', 'person-Arjun Mehta')
     const row = page.getByTestId('person-Arjun Mehta')
     const content = row.locator('> div').first()

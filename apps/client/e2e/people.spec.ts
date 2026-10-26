@@ -19,15 +19,45 @@ async function seedA04(page: Page) {
   return page.evaluate(async () => {
     const s = (window as unknown as {splito: Splito}).splito
     const kavya = await s.createPerson('Kavya Rao')
-    const group = await s.createGroup({name: 'Pune trip', kind: 'trip', currency: 'INR', startDate: null, endDate: null, memberIds: [kavya]})
-    const base = {currency: 'INR', tz: 'Asia/Kolkata', category: 'food', notes: ''}
-    await s.createExpense({...base, title: 'Concert', groupId: null, total: '20000', payers: {[s.me]: '20000'}, split: {mode: 'equal', participants: [s.me, kavya]}, date: '2026-10-20'})
-    await s.createExpense({...base, title: 'Snacks', groupId: group, total: '10000', payers: {[s.me]: '10000'}, split: {mode: 'equal', participants: [s.me, kavya]}, date: '2026-10-21'})
+    const group = await s.createGroup({
+      name: 'Pune trip',
+      kind: 'trip',
+      currency: 'INR',
+      startDate: null,
+      endDate: null,
+      memberIds: [kavya],
+    })
+    const base = {
+      currency: 'INR',
+      tz: 'Asia/Kolkata',
+      category: 'food',
+      notes: '',
+    }
+    await s.createExpense({
+      ...base,
+      title: 'Concert',
+      groupId: null,
+      total: '20000',
+      payers: {[s.me]: '20000'},
+      split: {mode: 'equal', participants: [s.me, kavya]},
+      date: '2026-10-20',
+    })
+    await s.createExpense({
+      ...base,
+      title: 'Snacks',
+      groupId: group,
+      total: '10000',
+      payers: {[s.me]: '10000'},
+      split: {mode: 'equal', participants: [s.me, kavya]},
+      date: '2026-10-21',
+    })
     return kavya
   })
 }
 
-test('A04: direct 100 + group 50 = 150; Include groups off = 100, totals and history', async ({page}) => {
+test('A04: direct 100 + group 50 = 150; Include groups off = 100, totals and history', async ({
+  page,
+}) => {
   await ready(page)
   const kavya = await seedA04(page)
   await page.goto(`/people/${kavya}`)
@@ -35,8 +65,12 @@ test('A04: direct 100 + group 50 = 150; Include groups off = 100, totals and his
   await expect(page.getByTestId('person-name')).toHaveText('Kavya Rao')
   await expect(page.getByTestId('person-direction-INR')).toHaveText('Owes you')
   await expect(page.getByTestId('person-total-INR')).toHaveText('₹150.00')
-  await expect(page.getByTestId('person-part-INR-direct')).toContainText('+₹100.00')
-  await expect(page.getByTestId('person-history-title')).toHaveText('History  2')
+  await expect(page.getByTestId('person-part-INR-direct')).toContainText(
+    '+₹100.00',
+  )
+  await expect(page.getByTestId('person-history-title')).toHaveText(
+    'History  2',
+  )
   await expect(page.getByText('Snacks')).toBeVisible()
 
   await page.getByTestId('person-filter').click()
@@ -46,11 +80,15 @@ test('A04: direct 100 + group 50 = 150; Include groups off = 100, totals and his
   await page.getByTestId('sheet-save').click()
 
   await expect(page.getByTestId('person-total-INR')).toHaveText('₹100.00')
-  await expect(page.getByTestId('person-history-title')).toHaveText('History  1')
+  await expect(page.getByTestId('person-history-title')).toHaveText(
+    'History  1',
+  )
   await expect(page.getByText('Direct only')).toBeVisible()
   await expect(page.getByText('Snacks')).toHaveCount(0)
   await expect(page.getByText('Concert')).toBeVisible()
-  const concert = page.locator('[data-testid^="history-"]', {hasText: 'Concert'})
+  const concert = page.locator('[data-testid^="history-"]', {
+    hasText: 'Concert',
+  })
   // An expense row says what it did (Splitwise's words); balances say "owes you".
   await expect(concert).toContainText('you lent')
   await expect(concert).toContainText('₹100.00')
@@ -59,20 +97,31 @@ test('A04: direct 100 + group 50 = 150; Include groups off = 100, totals and his
 test('the Include groups default comes from preferences', async ({page}) => {
   await ready(page)
   const kavya = await seedA04(page)
-  await page.evaluate(() => (window as unknown as {splito: Splito}).splito.setPref('includeGroupsDefault', false))
+  await page.evaluate(() =>
+    (window as unknown as {splito: Splito}).splito.setPref(
+      'includeGroupsDefault',
+      false,
+    ),
+  )
   await page.goto(`/people/${kavya}`)
   await expect(page.getByTestId('person-total-INR')).toHaveText('₹100.00')
-  await expect(page.getByTestId('screen-person').getByText('Direct only')).toBeVisible()
+  await expect(
+    page.getByTestId('screen-person').getByText('Direct only'),
+  ).toBeVisible()
 })
 
-test('recording a part payment moves the balance; deleting it is undoable', async ({page}) => {
+test('recording a part payment moves the balance; deleting it is undoable', async ({
+  page,
+}) => {
   await ready(page)
   const kavya = await seedA04(page)
   await page.goto(`/people/${kavya}`)
   await expect(page.getByTestId('person-total-INR')).toHaveText('₹150.00')
 
   await page.getByTestId('person-record-payment').click()
-  await expect(page.getByTestId('payment-sentence')).toHaveText('Kavya Rao paid you')
+  await expect(page.getByTestId('payment-sentence')).toHaveText(
+    'Kavya Rao paid you',
+  )
   await expect(page.getByTestId('payment-amount')).toHaveValue('150.00')
   await page.getByTestId('payment-amount').fill('40')
   await page.getByTestId('payment-note').fill('Cash')
@@ -97,19 +146,25 @@ test('swapping the direction records what I paid them', async ({page}) => {
   await page.goto(`/people/${kavya}`)
   await page.getByTestId('person-record-payment').click()
   await page.getByTestId('payment-swap').click()
-  await expect(page.getByTestId('payment-sentence')).toHaveText('You paid Kavya Rao')
+  await expect(page.getByTestId('payment-sentence')).toHaveText(
+    'You paid Kavya Rao',
+  )
   await page.getByTestId('payment-amount').fill('25')
   await page.getByTestId('sheet-save').click()
   await expect(page.getByTestId('person-total-INR')).toHaveText('₹175.00')
 })
 
-test('paying the whole balance from a friend’s page settles the group part too, so nobody pays twice', async ({page}) => {
+test('paying the whole balance from a friend’s page settles the group part too, so nobody pays twice', async ({
+  page,
+}) => {
   await ready(page)
   const kavya = await seedA04(page)
   await page.goto(`/people/${kavya}`)
   await page.getByTestId('person-record-payment').click()
   await expect(page.getByTestId('payment-amount')).toHaveValue('150.00')
-  await expect(page.getByTestId('payment-settles')).toHaveText('Counts towards: Direct ₹100.00 · Pune trip ₹50.00')
+  await expect(page.getByTestId('payment-settles')).toHaveText(
+    'Counts towards: Direct ₹100.00 · Pune trip ₹50.00',
+  )
   await page.getByTestId('sheet-save').click()
   await expect(page.getByTestId('payment-recorded')).toBeVisible()
   await expect(page.getByTestId('person-settled')).toBeVisible()
@@ -120,7 +175,9 @@ test('paying the whole balance from a friend’s page settles the group part too
   await expect(page.getByTestId('group-settle')).toBeDisabled()
 })
 
-test('People: the Include groups filter changes the totals only on Apply', async ({page}) => {
+test('People: the Include groups filter changes the totals only on Apply', async ({
+  page,
+}) => {
   await ready(page)
   await seedA04(page)
   await page.goto('/')
@@ -134,10 +191,15 @@ test('People: the Include groups filter changes the totals only on Apply', async
   await expect(row.getByTestId('balance-INR')).toHaveText('owes you ₹100.00')
   // The button carries a dot and says how many filters differ from the defaults.
   await expect(page.getByTestId('list-filters-dot')).toBeVisible()
-  await expect(page.getByTestId('list-filters')).toHaveAttribute('aria-label', 'Filters, 1 on')
+  await expect(page.getByTestId('list-filters')).toHaveAttribute(
+    'aria-label',
+    'Filters, 1 on',
+  )
 })
 
-test('People filters: one currency, which way, and the order drive the list and the summary', async ({page}) => {
+test('People filters: one currency, which way, and the order drive the list and the summary', async ({
+  page,
+}) => {
   await page.goto('/?demo=1')
   const people = page.getByTestId('screen-people')
   await expect(people.getByTestId('person-Arjun Mehta')).toBeVisible()
@@ -153,9 +215,14 @@ test('People filters: one currency, which way, and the order drive the list and 
   // Only friends I owe in euros, and only euros in the summary.
   await expect(people.getByTestId('person-Arjun Mehta')).toHaveCount(0)
   await expect(people.getByTestId('person-Sam Carter')).toBeVisible()
-  await expect(people.getByTestId('person-Sam Carter').getByTestId('balance-INR')).toHaveCount(0)
+  await expect(
+    people.getByTestId('person-Sam Carter').getByTestId('balance-INR'),
+  ).toHaveCount(0)
   await expect(people.getByTestId('summary-INR-net')).toHaveCount(0)
-  await expect(people.getByTestId('list-filters')).toHaveAttribute('aria-label', 'Filters, 2 on')
+  await expect(people.getByTestId('list-filters')).toHaveAttribute(
+    'aria-label',
+    'Filters, 2 on',
+  )
 
   // Cancel leaves the applied filters alone; nobody matching shows a way back.
   await people.getByTestId('list-filters').click()
@@ -173,34 +240,87 @@ test('People filters: one currency, which way, and the order drive the list and 
   await expect(people.getByTestId('person-Arjun Mehta')).toBeVisible()
 })
 
-test('People sorts by the biggest balance, recent activity or name (preference)', async ({page}) => {
+test('People sorts by the biggest balance, recent activity or name (preference)', async ({
+  page,
+}) => {
   await ready(page)
   await page.evaluate(async () => {
     const s = (window as unknown as {splito: Splito}).splito
-    const base = {currency: 'INR', tz: 'Asia/Kolkata', category: 'food', notes: '', groupId: null}
+    const base = {
+      currency: 'INR',
+      tz: 'Asia/Kolkata',
+      category: 'food',
+      notes: '',
+      groupId: null,
+    }
     const small = await s.createPerson('Aarav Small')
     const big = await s.createPerson('Zoya Big')
-    await s.createExpense({...base, title: 'Tea', total: '2000', payers: {[s.me]: '2000'}, split: {mode: 'equal', participants: [s.me, small]}, date: '2026-10-25'})
-    await s.createExpense({...base, title: 'Rent', total: '200000', payers: {[s.me]: '200000'}, split: {mode: 'equal', participants: [s.me, big]}, date: '2026-09-01'})
+    await s.createExpense({
+      ...base,
+      title: 'Tea',
+      total: '2000',
+      payers: {[s.me]: '2000'},
+      split: {mode: 'equal', participants: [s.me, small]},
+      date: '2026-10-25',
+    })
+    await s.createExpense({
+      ...base,
+      title: 'Rent',
+      total: '200000',
+      payers: {[s.me]: '200000'},
+      split: {mode: 'equal', participants: [s.me, big]},
+      date: '2026-09-01',
+    })
   })
   const order = () =>
-    page.locator('[data-testid^="person-"][data-testid$="Small"], [data-testid^="person-"][data-testid$="Big"]').evaluateAll(els => els.map(e => e.getAttribute('data-testid')))
+    page
+      .locator(
+        '[data-testid^="person-"][data-testid$="Small"], [data-testid^="person-"][data-testid$="Big"]',
+      )
+      .evaluateAll(els => els.map(e => e.getAttribute('data-testid')))
   await page.goto('/')
   await expect(page.getByTestId('person-Zoya Big')).toBeVisible()
   expect(await order()).toEqual(['person-Zoya Big', 'person-Aarav Small'])
-  await page.evaluate(() => (window as unknown as {splito: Splito}).splito.setPref('peopleSort', 'recent'))
+  await page.evaluate(() =>
+    (window as unknown as {splito: Splito}).splito.setPref(
+      'peopleSort',
+      'recent',
+    ),
+  )
   await expect.poll(order).toEqual(['person-Aarav Small', 'person-Zoya Big'])
 })
 
-test('UPI pay link shows only when I owe them rupees, and asks before recording', async ({page}) => {
+test('UPI pay link shows only when I owe them rupees, and asks before recording', async ({
+  page,
+}) => {
   await ready(page)
   const [owedINR, owedUSD] = await page.evaluate(async () => {
     const s = (window as unknown as {splito: Splito}).splito
     const a = await s.createPerson('Meera Iyer')
     const b = await s.createPerson('Tom Hale')
-    const base = {groupId: null, tz: 'Asia/Kolkata', category: 'food', notes: '', date: '2026-10-20'}
-    await s.createExpense({...base, title: 'Lunch', currency: 'INR', total: '30000', payers: {[a]: '30000'}, split: {mode: 'equal', participants: [s.me, a]}})
-    await s.createExpense({...base, title: 'Taxi', currency: 'USD', total: '3000', payers: {[b]: '3000'}, split: {mode: 'equal', participants: [s.me, b]}})
+    const base = {
+      groupId: null,
+      tz: 'Asia/Kolkata',
+      category: 'food',
+      notes: '',
+      date: '2026-10-20',
+    }
+    await s.createExpense({
+      ...base,
+      title: 'Lunch',
+      currency: 'INR',
+      total: '30000',
+      payers: {[a]: '30000'},
+      split: {mode: 'equal', participants: [s.me, a]},
+    })
+    await s.createExpense({
+      ...base,
+      title: 'Taxi',
+      currency: 'USD',
+      total: '3000',
+      payers: {[b]: '3000'},
+      split: {mode: 'equal', participants: [s.me, b]},
+    })
     return [a, b]
   })
 
@@ -224,20 +344,27 @@ test('UPI pay link shows only when I owe them rupees, and asks before recording'
         const link = (e.target as Element).closest?.('a[href^="upi:"]')
         if (!link) return
         e.preventDefault()
-        ;(window as unknown as {upiLink: string}).upiLink = link.getAttribute('href')!
+        ;(window as unknown as {upiLink: string}).upiLink =
+          link.getAttribute('href')!
       },
       true,
     ),
   )
   await page.getByTestId('sheet-save').click()
-  await expect.poll(() => page.evaluate(() => (window as unknown as {upiLink?: string}).upiLink)).toBe(
-    'upi://pay?pa=meera%40okhdfc&pn=Meera%20Iyer&am=150.00&cu=INR&tn=Splito',
-  )
+  await expect
+    .poll(() =>
+      page.evaluate(() => (window as unknown as {upiLink?: string}).upiLink),
+    )
+    .toBe(
+      'upi://pay?pa=meera%40okhdfc&pn=Meera%20Iyer&am=150.00&cu=INR&tn=Splito',
+    )
   await expect(page.getByTestId('upi-confirm')).toBeVisible()
   // Nothing is recorded until the user says it went through.
   await expect(page.getByTestId('person-total-INR')).toHaveText('₹150.00')
   await page.getByTestId('upi-sheet').getByTestId('sheet-save').click()
-  await expect(page.getByTestId('payment-sentence')).toHaveText('You paid Meera Iyer')
+  await expect(page.getByTestId('payment-sentence')).toHaveText(
+    'You paid Meera Iyer',
+  )
   await expect(page.getByTestId('payment-amount')).toHaveValue('150.00')
   await page.getByTestId('sheet-save').click()
   await expect(page.getByTestId('person-settled')).toBeVisible()
@@ -259,7 +386,9 @@ test('add a friend, then land on their page', async ({page}) => {
   await expect(page.getByTestId('person-history-empty')).toBeVisible()
 })
 
-test('compose brings the friend: the sidebar pill on desktop, the page’s own button on phones (no FAB on pushed pages)', async ({page}) => {
+test('compose brings the friend: the sidebar pill on desktop, the page’s own button on phones (no FAB on pushed pages)', async ({
+  page,
+}) => {
   await ready(page)
   const kavya = await seedA04(page)
   await page.setViewportSize({width: 1280, height: 800})
@@ -271,7 +400,9 @@ test('compose brings the friend: the sidebar pill on desktop, the page’s own b
   await page.setViewportSize({width: 390, height: 844})
   await page.goto(`/people/${kavya}`)
   await expect(page.getByTestId('screen-person')).toBeVisible()
-  await expect(page.getByTestId('screen-person').getByTestId('fab-add')).toHaveCount(0)
+  await expect(
+    page.getByTestId('screen-person').getByTestId('fab-add'),
+  ).toHaveCount(0)
   await page.getByTestId('person-add-expense').click()
   await expect(page).toHaveURL(new RegExp(`/expense/new\\?personId=${kavya}`))
 })
