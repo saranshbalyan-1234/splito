@@ -24,7 +24,7 @@ msgid "{0, plural, one {# friend} other {# friends}}"
 msgstr "{0, plural, one {# friend} other {# friends}}"
 
 #. placeholder {0}: listed.length
-#: src/screens/Groups/index.tsx:111
+#: src/screens/Groups/index.tsx:121
 msgid "{0, plural, one {# group} other {# groups}}"
 msgstr "{0, plural, one {# group} other {# groups}}"
 
@@ -194,19 +194,19 @@ msgid "{0}, {portions} portions"
 msgstr "{0}, {portions} portions"
 
 #. placeholder {0}: group.name
-#: src/view/shell/desktop/LeftNav.tsx:565
+#: src/view/shell/desktop/LeftNav.tsx:575
 msgid "{0}, settled up"
 msgstr "{0}, settled up"
 
 #. placeholder {0}: group.name
 #. placeholder {1}: formatAmount(amount, currency, locale)
-#: src/view/shell/desktop/LeftNav.tsx:563
+#: src/view/shell/desktop/LeftNav.tsx:573
 msgid "{0}, you are owed {1}"
 msgstr "{0}, you are owed {1}"
 
 #. placeholder {0}: group.name
 #. placeholder {1}: formatAmount(magnitude(amount), currency, locale)
-#: src/view/shell/desktop/LeftNav.tsx:564
+#: src/view/shell/desktop/LeftNav.tsx:574
 msgid "{0}, you owe {1}"
 msgstr "{0}, you owe {1}"
 
@@ -359,7 +359,7 @@ msgstr "{n, plural, one {# person} other {# people}}"
 msgid "{name}’s UPI ID"
 msgstr "{name}’s UPI ID"
 
-#: src/screens/Groups/index.tsx:112
+#: src/screens/Groups/index.tsx:122
 #: src/screens/People/index.tsx:116
 msgid "{settledCount} settled"
 msgstr "{settledCount} settled"
@@ -447,7 +447,7 @@ msgstr "A trip, a flat or anything you split often."
 #: src/screens/Settings/index.tsx:106
 #: src/screens/Settings/index.tsx:109
 #: src/screens/Settings/SettingsSection.tsx:47
-#: src/view/shell/desktop/LeftNav.tsx:670
+#: src/view/shell/desktop/LeftNav.tsx:680
 msgid "About"
 msgstr "About"
 
@@ -473,7 +473,7 @@ msgstr "Active"
 #: src/navigation/Drawer.tsx:208
 #: src/navigation/Navigation.tsx:62
 #: src/screens/Activity.tsx:98
-#: src/view/shell/desktop/LeftNav.tsx:754
+#: src/view/shell/desktop/LeftNav.tsx:764
 msgid "Activity"
 msgstr "Activity"
 
@@ -524,7 +524,7 @@ msgstr "Add category"
 #: src/screens/Group/index.tsx:422
 #: src/screens/Person/index.tsx:422
 #: src/screens/Person/index.tsx:423
-#: src/view/shell/desktop/LeftNav.tsx:477
+#: src/view/shell/desktop/LeftNav.tsx:482
 msgid "Add expense"
 msgstr "Add expense"
 
@@ -535,7 +535,7 @@ msgstr "Add expense"
 #: src/screens/Analytics/index.tsx:87
 #: src/screens/People/index.tsx:221
 #: src/screens/People/index.tsx:222
-#: src/view/shell/desktop/LeftNav.tsx:485
+#: src/view/shell/desktop/LeftNav.tsx:490
 msgctxt "action"
 msgid "Add expense"
 msgstr "Add expense"
@@ -690,7 +690,7 @@ msgstr "Amounts here can’t be below zero"
 #: src/navigation/Navigation.tsx:61
 #: src/screens/Analytics/index.tsx:60
 #: src/screens/People/components/BalanceSummary.tsx:122
-#: src/view/shell/desktop/LeftNav.tsx:750
+#: src/view/shell/desktop/LeftNav.tsx:760
 msgid "Analytics"
 msgstr "Analytics"
 
@@ -796,8 +796,8 @@ msgstr "By person"
 msgid "Calculator"
 msgstr "Calculator"
 
-#: src/components/FormSheet/shared.tsx:303
-#: src/components/FormSheet/shared.tsx:309
+#: src/components/FormSheet/shared.tsx:286
+#: src/components/FormSheet/shared.tsx:292
 #: src/components/Menu/index.tsx:387
 #: src/components/Prompt.tsx:153
 #: src/components/Prompt.tsx:155
@@ -884,8 +884,8 @@ msgstr "Choose who shares each item"
 msgid "Clear filter: {0}"
 msgstr "Clear filter: {0}"
 
-#: src/screens/Groups/index.tsx:190
-#: src/screens/Groups/index.tsx:191
+#: src/screens/Groups/index.tsx:200
+#: src/screens/Groups/index.tsx:201
 #: src/screens/People/index.tsx:195
 #: src/screens/People/index.tsx:196
 msgid "Clear filters"
@@ -896,11 +896,11 @@ msgid "Clear search query"
 msgstr "Clear search query"
 
 #: src/components/Dialog/CloseButton.tsx:32
-#: src/components/FormSheet/shared.tsx:213
+#: src/components/FormSheet/shared.tsx:195
 msgid "Close"
 msgstr "Close"
 
-#: src/components/Dialog/index.web.tsx:154
+#: src/components/Dialog/index.web.tsx:197
 msgid "Close active dialog"
 msgstr "Close active dialog"
 
@@ -925,7 +925,7 @@ msgstr "Closes without adding anyone"
 msgid "Closes without creating the group"
 msgstr "Closes without creating the group"
 
-#: src/components/FormSheet/shared.tsx:214
+#: src/components/FormSheet/shared.tsx:196
 msgid "Closes without saving"
 msgstr "Closes without saving"
 
@@ -962,7 +962,7 @@ msgstr "Compact fits more people, groups and activity on screen."
 msgid "Confirm"
 msgstr "Confirm"
 
-#: src/components/Menu/index.web.tsx:90
+#: src/components/Menu/index.web.tsx:114
 msgid "Context menu backdrop, click to close the menu."
 msgstr "Context menu backdrop, click to close the menu."
 
@@ -1040,7 +1040,7 @@ msgid "Couple"
 msgstr "Couple"
 
 #: src/screens/CreateGroup.tsx:134
-#: src/screens/Groups/index.tsx:126
+#: src/screens/Groups/index.tsx:136
 msgid "Create group"
 msgstr "Create group"
 
@@ -1192,12 +1192,12 @@ msgstr "Direct only"
 msgid "Direct, no group"
 msgstr "Direct, no group"
 
-#: src/components/FormSheet/shared.tsx:151
+#: src/components/FormSheet/shared.tsx:133
 #: src/components/split/ExpenseComposer.tsx:572
 msgid "Discard"
 msgstr "Discard"
 
-#: src/components/FormSheet/shared.tsx:149
+#: src/components/FormSheet/shared.tsx:131
 #: src/components/split/ExpenseComposer.tsx:563
 msgid "Discard changes?"
 msgstr "Discard changes?"
@@ -1583,11 +1583,11 @@ msgstr "Group: {groupLabel}"
 #: src/components/TabGlyph.tsx:28
 #: src/navigation/Drawer.tsx:194
 #: src/navigation/Navigation.tsx:60
-#: src/screens/Groups/index.tsx:121
-#: src/screens/Groups/index.tsx:135
-#: src/screens/Groups/index.tsx:164
+#: src/screens/Groups/index.tsx:131
+#: src/screens/Groups/index.tsx:145
+#: src/screens/Groups/index.tsx:174
 #: src/screens/Profile.tsx:243
-#: src/view/shell/desktop/LeftNav.tsx:746
+#: src/view/shell/desktop/LeftNav.tsx:756
 msgid "Groups"
 msgstr "Groups"
 
@@ -1597,7 +1597,7 @@ msgstr "Haptics"
 
 #: src/navigation/Drawer.tsx:306
 #: src/screens/Settings/SettingsSection.tsx:54
-#: src/view/shell/desktop/LeftNav.tsx:669
+#: src/view/shell/desktop/LeftNav.tsx:679
 msgid "Help"
 msgstr "Help"
 
@@ -1738,7 +1738,7 @@ msgstr "Items, tax and tip come to {0}"
 msgid "Just between you and friends"
 msgstr "Just between you and friends"
 
-#: src/components/FormSheet/shared.tsx:153
+#: src/components/FormSheet/shared.tsx:135
 #: src/components/split/ExpenseComposer.tsx:582
 msgid "Keep editing"
 msgstr "Keep editing"
@@ -1820,6 +1820,7 @@ msgid "Members of {0}"
 msgstr "Members of {0}"
 
 #: src/components/Menu/index.tsx:133
+#: src/components/Menu/index.web.tsx:240
 #: src/view/shell/index.web.tsx:127
 msgid "Menu"
 msgstr "Menu"
@@ -1921,8 +1922,8 @@ msgstr "New friend – no account needed"
 
 #: src/navigation/Navigation.tsx:73
 #: src/screens/CreateGroup.tsx:128
-#: src/screens/Groups/index.tsx:203
-#: src/screens/Groups/index.tsx:204
+#: src/screens/Groups/index.tsx:213
+#: src/screens/Groups/index.tsx:214
 msgid "New group"
 msgstr "New group"
 
@@ -1979,16 +1980,16 @@ msgstr "No friends match these filters."
 msgid "No group"
 msgstr "No group"
 
-#: src/screens/Groups/index.tsx:187
+#: src/screens/Groups/index.tsx:197
 msgid "No groups match these filters."
 msgstr "No groups match these filters."
 
-#: src/screens/Groups/index.tsx:201
+#: src/screens/Groups/index.tsx:211
 msgid "No groups yet. A group keeps a trip’s or a flat’s expenses and balances in one place."
 msgstr "No groups yet. A group keeps a trip’s or a flat’s expenses and balances in one place."
 
 #. placeholder {0}: query.trim()
-#: src/screens/Groups/index.tsx:181
+#: src/screens/Groups/index.tsx:191
 #: src/screens/People/index.tsx:186
 msgid "No matches for “{0}”"
 msgstr "No matches for “{0}”"
@@ -2062,7 +2063,7 @@ msgstr "Nothing from other people yet. When someone else adds or changes somethi
 msgid "Nothing here yet. Expenses, payments and group changes will show up here."
 msgstr "Nothing here yet. Expenses, payments and group changes will show up here."
 
-#: src/components/settings/OptionDialog.tsx:154
+#: src/components/settings/OptionDialog.tsx:145
 msgid "Nothing matches “{search}”"
 msgstr "Nothing matches “{search}”"
 
@@ -2154,7 +2155,7 @@ msgid "Open balance {0}. Part payments are fine."
 msgstr "Open balance {0}. Part payments are fine."
 
 #: src/components/HeaderAvatar.tsx:47
-#: src/view/shell/desktop/LeftNav.tsx:182
+#: src/view/shell/desktop/LeftNav.tsx:187
 msgid "Open menu"
 msgstr "Open menu"
 
@@ -2290,7 +2291,7 @@ msgstr "pays you"
 #: src/components/settings/TabsEditor.tsx:32
 #: src/components/TabGlyph.tsx:27
 #: src/navigation/Drawer.tsx:187
-#: src/view/shell/desktop/LeftNav.tsx:742
+#: src/view/shell/desktop/LeftNav.tsx:752
 msgid "People"
 msgstr "People"
 
@@ -2370,7 +2371,7 @@ msgid "Price of item {0}"
 msgstr "Price of item {0}"
 
 #: src/screens/Settings/SettingsSection.tsx:61
-#: src/view/shell/desktop/LeftNav.tsx:671
+#: src/view/shell/desktop/LeftNav.tsx:681
 msgid "Privacy"
 msgstr "Privacy"
 
@@ -2391,13 +2392,13 @@ msgstr "Recent"
 msgid "Recent activity"
 msgstr "Recent activity"
 
-#: src/view/shell/desktop/LeftNav.tsx:543
-msgid "Recent groups"
-msgstr "Recent groups"
-
 #: src/view/shell/desktop/RecentTransactions.tsx:65
 msgid "Recent transactions"
 msgstr "Recent transactions"
+
+#: src/view/shell/desktop/LeftNav.tsx:553
+msgid "Recently active groups"
+msgstr "Recently active groups"
 
 #: src/screens/Settle/components/TransferRow.tsx:110
 msgid "Record"
@@ -2529,7 +2530,7 @@ msgstr "Saved"
 #: src/components/settings/AboutSettings.tsx:116
 #: src/navigation/Drawer.tsx:100
 #: src/screens/Profile.tsx:192
-#: src/view/shell/desktop/LeftNav.tsx:219
+#: src/view/shell/desktop/LeftNav.tsx:224
 msgid "Saved on this device"
 msgstr "Saved on this device"
 
@@ -2552,7 +2553,7 @@ msgstr "Search currencies"
 msgid "Search friends"
 msgstr "Search friends"
 
-#: src/screens/Groups/index.tsx:169
+#: src/screens/Groups/index.tsx:179
 msgid "Search groups or members"
 msgstr "Search groups or members"
 
@@ -2570,7 +2571,7 @@ msgstr "Search people"
 msgid "Search timezones"
 msgstr "Search timezones"
 
-#: src/view/shell/desktop/LeftNav.tsx:657
+#: src/view/shell/desktop/LeftNav.tsx:667
 #: src/view/shell/desktop/RecentTransactions.tsx:117
 msgid "See all"
 msgstr "See all"
@@ -2579,7 +2580,7 @@ msgstr "See all"
 msgid "See all activity"
 msgstr "See all activity"
 
-#: src/view/shell/desktop/LeftNav.tsx:630
+#: src/view/shell/desktop/LeftNav.tsx:640
 msgid "See all groups"
 msgstr "See all groups"
 
@@ -2594,7 +2595,7 @@ msgstr "Set for this group"
 #: src/screens/Profile.tsx:67
 #: src/screens/Settings/index.tsx:44
 #: src/screens/Settings/SettingsSection.tsx:68
-#: src/view/shell/desktop/LeftNav.tsx:769
+#: src/view/shell/desktop/LeftNav.tsx:779
 msgid "Settings"
 msgstr "Settings"
 
@@ -2617,7 +2618,7 @@ msgstr "Settings reset"
 msgid "Settle up"
 msgstr "Settle up"
 
-#: src/view/shell/desktop/LeftNav.tsx:620
+#: src/view/shell/desktop/LeftNav.tsx:630
 msgid "settled"
 msgstr "settled"
 
@@ -2817,7 +2818,7 @@ msgid "Split with friends"
 msgstr "Split with friends"
 
 #: src/screens/People/index.tsx:129
-#: src/view/shell/desktop/LeftNav.tsx:149
+#: src/view/shell/desktop/LeftNav.tsx:154
 msgid "Splito - People"
 msgstr "Splito - People"
 
@@ -3169,7 +3170,7 @@ msgstr "What people paid needs to add up to the total"
 msgid "What was it for?"
 msgstr "What was it for?"
 
-#: src/components/FormSheet/shared.tsx:150
+#: src/components/FormSheet/shared.tsx:132
 msgid "What you changed here won’t be saved."
 msgstr "What you changed here won’t be saved."
 

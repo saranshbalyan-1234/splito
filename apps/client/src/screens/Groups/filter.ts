@@ -1,5 +1,5 @@
-import {type LedgerRecord, magnitude, ZERO} from '@splito/domain'
-import {type Group} from '@splito/sync'
+import {magnitude, ZERO} from '@splito/domain'
+import {type Entity, type Group} from '@splito/sync'
 
 /** One group on the Groups list: my balance in it per currency, and who is in it (for search). */
 export type GroupRowData = {
@@ -58,14 +58,14 @@ export function filterGroups(
 }
 
 /**
- * `recent`: latest record in the group first. `amount`: biggest balance in
+ * `recent`: most recently active group first (see `groupLastActive`). `amount`: biggest balance in
  * `currency` first (other currencies can't be ranked against it, so those
  * groups follow, open before settled). Ties, and `name`, go by name.
  */
 export function sortGroups(
   rows: GroupRowData[],
   sort: GroupFilters['sort'],
-  {currency, activity}: {currency: string; activity: Map<string, string>},
+  {currency, activity}: {currency: string; activity: Map<string, number>},
 ): GroupRowData[] {
   const size = (row: GroupRowData) => magnitude(row.balances[currency] ?? ZERO)
   const isOpen = (row: GroupRowData) =>
@@ -77,8 +77,8 @@ export function sortGroups(
       if (dx !== dy) return dx > dy ? -1 : 1
       if (isOpen(x) !== isOpen(y)) return isOpen(x) ? -1 : 1
     } else if (sort === 'recent') {
-      const ax = activity.get(x.id) ?? ''
-      const ay = activity.get(y.id) ?? ''
+      const ax = activity.get(x.id) ?? 0
+      const ay = activity.get(y.id) ?? 0
       if (ax !== ay) return ax > ay ? -1 : 1
     }
     return x.name.localeCompare(y.name)
@@ -94,12 +94,19 @@ export function matchesGroupSearch(row: GroupRowData, query: string): boolean {
   )
 }
 
-/** The latest date (`YYYY-MM-DD`) of a live record in each group. */
-export function groupActivity(records: LedgerRecord[]): Map<string, string> {
-  const latest = new Map<string, string>()
+/**
+ * When each group last saw activity: the newest change (add, edit, delete) to
+ * the group itself or to any expense or repayment in it. Uses the change time,
+ * not the expense date, so a backdated expense added today still counts today.
+ */
+export function groupLastActive(
+  groups: Entity<Group>[],
+  records: Entity<{groupId: string | null}>[],
+): Map<string, number> {
+  const latest = new Map(groups.map(g => [g.id, g.updatedAt]))
   for (const r of records) {
-    if (r.deleted || !r.groupId) continue
-    if ((latest.get(r.groupId) ?? '') < r.date) latest.set(r.groupId, r.date)
+    const id = r.data.groupId
+    if (id && (latest.get(id) ?? 0) < r.updatedAt) latest.set(id, r.updatedAt)
   }
   return latest
 }

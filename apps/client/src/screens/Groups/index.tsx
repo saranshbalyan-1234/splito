@@ -4,7 +4,13 @@ import {plural} from '@lingui/core/macro'
 import {Trans, useLingui} from '@lingui/react/macro'
 import {useNavigation} from '@react-navigation/native'
 import {groupBalances, magnitude, sumMinor, ZERO} from '@splito/domain'
-import {type Entity, type Group, type Person} from '@splito/sync'
+import {
+  type Entity,
+  type Expense,
+  type Group,
+  type Person,
+  type Repayment,
+} from '@splito/sync'
 
 import {type NavigationProp} from '#/lib/routes/types'
 import {useNumberLocale} from '#/locale/numberLocale'
@@ -30,7 +36,7 @@ import {GroupsFilterDialog} from './components/GroupsFilterDialog'
 import {
   DEFAULT_GROUP_FILTERS,
   filterGroups,
-  groupActivity,
+  groupLastActive,
   type GroupFilters,
   type GroupRowData,
   matchesGroupSearch,
@@ -53,6 +59,8 @@ export function GroupsScreen() {
   const groups = useEntities<Group>('group')
   const people = useEntities<Person>('person')
   const ledger = useLedger()
+  const expenses = useEntities<Expense>('expense')
+  const repayments = useEntities<Repayment>('repayment')
   const [defaultCurrency = 'INR'] = usePref('defaultCurrency')
   const [applied, setApplied] = useState<GroupFilters | null>(null)
   const filters = applied ?? DEFAULT_GROUP_FILTERS
@@ -86,7 +94,9 @@ export function GroupsScreen() {
   const listed = sortGroups(filterGroups(all, filters), filters.sort, {
     currency: filters.currency === 'all' ? defaultCurrency : filters.currency,
     activity:
-      filters.sort === 'recent' && ledger ? groupActivity(ledger) : new Map(),
+      filters.sort === 'recent' && groups
+        ? groupLastActive(groups, [...(expenses ?? []), ...(repayments ?? [])])
+        : new Map(),
   })
   /* Search narrows the list only; the Overview keeps showing what the filters chose. */
   const shown = listed.filter(g => matchesGroupSearch(g, query))
