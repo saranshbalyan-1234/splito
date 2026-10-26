@@ -199,7 +199,8 @@ export function HitColumns({
   bottom: number
   selectedKey: string | undefined
   describe: (p: Point) => string
-  onActive: (key: string | undefined) => void
+  /** The hovered or focused point; a state setter, so leaving one column never clears its neighbour. */
+  onActive: React.Dispatch<React.SetStateAction<string | undefined>>
   onSelect?: (key: string | null) => void
   testID: string
 }) {
@@ -218,9 +219,9 @@ export function HitColumns({
             disabled={!onSelect}
             onPress={() => onSelect?.(isSelected ? null : p.key)}
             onHoverIn={() => onActive(p.key)}
-            onHoverOut={() => onActive(undefined)}
+            onHoverOut={() => onActive(k => (k === p.key ? undefined : k))}
             onFocus={() => onActive(p.key)}
-            onBlur={() => onActive(undefined)}
+            onBlur={() => onActive(k => (k === p.key ? undefined : k))}
             style={[
               a.absolute,
               {left: gutter + slot * i, width: slot, top: 0, height: bottom},

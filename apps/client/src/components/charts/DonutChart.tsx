@@ -159,7 +159,7 @@ export function DonutChart({
               accessibilityState={{selected: isSelected}}
               onPress={() => select(s.key)}
               onHoverIn={() => setHoverKey(s.key)}
-              onHoverOut={() => setHoverKey(undefined)}
+              onHoverOut={() => setHoverKey(k => (k === s.key ? undefined : k))}
               style={({hovered, focused}) => [
                 a.flex_row,
                 a.align_center,
