@@ -21,6 +21,7 @@ import * as Toggle from '#/components/forms/Toggle'
 import {PlusLarge_Stroke2_Corner0_Rounded as PlusIcon} from '#/components/icons/Plus'
 import * as Toast from '#/components/Toast'
 import * as FormSheet from '#/components/FormSheet'
+import {PendingPeople} from '#/components/people/PendingPeople'
 
 /**
  * Adds friends (or someone new) to a group from now on. Earlier expenses
@@ -144,6 +145,14 @@ function Form({group}: {group: Entity<Group>}) {
             ))}
           </Toggle.Group>
         )}
+        <PendingPeople
+          avatarSize={32}
+          rowStyle={[
+            a.px_md,
+            candidates.length > 0 && a.border_t,
+            t.atoms.border_contrast_low,
+          ]}
+        />
         <View
           style={[
             a.flex_row,

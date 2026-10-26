@@ -362,6 +362,7 @@ export function ExpenseComposer({
             candidates={candidates}
             selected={form.people}
             allowNew={!group}
+            showPending={!group}
             onChange={setPeople}
           />
           <PayersDialog

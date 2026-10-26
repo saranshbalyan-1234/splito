@@ -4,6 +4,7 @@ import {
   type ActivityEvent,
   type Entity,
   type Expense,
+  type FriendRequest,
   type Group,
   loadActivity,
   type Person,
@@ -25,6 +26,8 @@ export type ActivitySnapshot = {
   people: Map<string, Entity<Person>>
   groups: Map<string, Entity<Group>>
   expenses: Map<string, Entity<Expense>>
+  /** Friend requests by id, for their current state (a request row shows Accept until answered). */
+  requests: Map<string, Entity<FriendRequest>>
 }
 
 type Source = {
@@ -52,7 +55,8 @@ function sourceFor(store: Store): Source {
       store.getAll<Person>('person'),
       store.getAll<Group>('group'),
       store.getAll<Expense>('expense'),
-    ]).then(([events, people, groups, expenses]) => {
+      store.getAll<FriendRequest>('friendRequest'),
+    ]).then(([events, people, groups, expenses, requests]) => {
       // A newer load has started; it will report.
       if (current !== generation) return
       snapshot = {
@@ -60,6 +64,7 @@ function sourceFor(store: Store): Source {
         people: new Map(people.map(p => [p.id, p])),
         groups: new Map(groups.map(g => [g.id, g])),
         expenses: new Map(expenses.map(e => [e.id, e])),
+        requests: new Map(requests.map(r => [r.id, r])),
       }
       listeners.forEach(l => l())
     })

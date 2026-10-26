@@ -7,6 +7,7 @@ import {type Props as SVGIconProps} from '#/components/icons/common'
 import {Earth_Stroke2_Corner2_Rounded as EarthIcon} from '#/components/icons/Globe'
 import {PaintRoller_Stroke2_Corner2_Rounded as PaintRollerIcon} from '#/components/icons/PaintRoller'
 import {Shapes_Stroke2_Corner0_Rounded as ShapesIcon} from '#/components/icons/Shapes'
+import {Shield_Stroke2_Corner0_Rounded as ShieldIcon} from '#/components/icons/Invite'
 import {SparklesIcon, TabsIcon} from '#/components/settings/icons'
 
 /** Settings pages, one per preferences-registry group, in the order the Settings list shows them. */
@@ -18,6 +19,7 @@ export const SETTINGS_SECTIONS = [
   'regional',
   'lists',
   'notifications',
+  'privacy',
 ] as const satisfies readonly PrefGroup[]
 
 export function isSettingsSection(id: string): id is PrefGroup {
@@ -46,5 +48,6 @@ export function useSectionInfo(): Record<
     /* What the People list shows and in what order; "Lists" alone said nothing. */
     lists: {title: l`Sorting and filters`, icon: ListIcon},
     notifications: {title: l`Notifications`, icon: BellIcon},
+    privacy: {title: l`Privacy`, icon: ShieldIcon},
   }
 }

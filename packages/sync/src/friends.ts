@@ -258,8 +258,12 @@ export function inviteLinkState(link: InviteLink, now: number): InviteLinkState 
   return usesLeft(link) === 0 ? 'used-up' : 'active'
 }
 
-/** 16 lower-case characters from a fresh UUID (60 random bits). */
-function mintCode(ctx: MutationCtx) {
+/**
+ * A new link code: 16 lower-case characters from a fresh UUID (60 random
+ * bits), minted on the device like every id (section 9.3) and registered with
+ * the directory before the link is recorded.
+ */
+export function mintInviteCode(ctx: Pick<MutationCtx, 'newId'>) {
   return ctx.newId().toLowerCase().replace(/[^a-z0-9]/g, '').slice(0, 16)
 }
 
@@ -270,12 +274,21 @@ function mintCode(ctx: MutationCtx) {
 export async function createInviteLink(
   store: Store,
   ctx: MutationCtx,
-  input: {kind: InviteLink['kind']; groupId: string | null; maxUses: number | null; expiresInMs: number | null; approveJoins: boolean},
+  input: {
+    kind: InviteLink['kind']
+    groupId: string | null
+    maxUses: number | null
+    expiresInMs: number | null
+    approveJoins: boolean
+    /** The code the directory accepted (`mintInviteCode`); minted here when absent. */
+    code?: string
+  },
 ): Promise<Entity<InviteLink>> {
   const {maxUses, expiresInMs} = input
   if (maxUses !== null && !(Number.isInteger(maxUses) && maxUses >= 1 && maxUses <= MAX_USES_CAP)) throw new DomainError('INVALID_LIMIT')
   if (expiresInMs !== null && !(Number.isFinite(expiresInMs) && expiresInMs > 0)) throw new DomainError('INVALID_LIMIT')
-  const code = mintCode(ctx)
+  const code = input.code ?? mintInviteCode(ctx)
+  if (!isInviteCode(code)) throw new DomainError('INVALID_INVITE')
   return store.transaction(async tx => {
     if (input.kind === 'group') await requireLive(tx, 'group', input.groupId ?? '')
     const now = ctx.now()

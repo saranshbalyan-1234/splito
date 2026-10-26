@@ -14,6 +14,7 @@ import {atoms as a, useTheme} from '#/alf'
 import {Button, ButtonText} from '#/components/Button'
 import {ArrowRotateCounterClockwise_Stroke2_Corner0_Rounded as ResetIcon} from '#/components/icons/ArrowRotate'
 import {CircleInfo_Stroke2_Corner0_Rounded as InfoIcon} from '#/components/icons/CircleInfo'
+import {ChainLink_Stroke2_Corner0_Rounded as LinkIcon} from '#/components/icons/Invite'
 import * as Layout from '#/components/Layout'
 import * as Prompt from '#/components/Prompt'
 import {
@@ -33,8 +34,8 @@ import {Text} from '#/components/Typography'
 /**
  * One Settings page. Pages are generated from the preferences registry: the
  * route's section is a registry group, and each preference in it renders its
- * control, in registry order. `/settings/about`, `/help` and `/privacy` are
- * the pages that are not groups.
+ * control, in registry order. `/settings/about` and `/help` are the pages
+ * that are not groups; Privacy is a group that also links invite links.
  */
 export function SettingsSectionScreen() {
   const {t: l} = useLingui()
@@ -53,13 +54,6 @@ export function SettingsSectionScreen() {
     return (
       <Frame title={l`Help`}>
         <HelpSettings />
-      </Frame>
-    )
-  }
-  if (section === 'privacy') {
-    return (
-      <Frame title={l`Privacy`}>
-        <PrivacySettings />
       </Frame>
     )
   }
@@ -117,12 +111,36 @@ function Section({group, title}: {group: PrefGroup; title: string}) {
           </Trans>
         </Notice>
       )}
+      {group === 'privacy' && (
+        <Notice>
+          <Trans>
+            Finding and friend requests use Splito’s directory, which arrives
+            with sign-in. Your choices are saved now and apply from then.
+          </Trans>
+        </Notice>
+      )}
       {controls.map(({key, Control}, i) => (
         <Fragment key={key}>
           {i > 0 && <SettingsList.Divider />}
           <Control />
         </Fragment>
       ))}
+      {group === 'privacy' && (
+        <>
+          <SettingsList.Divider />
+          <SettingsList.LinkItem
+            testID="settings-invite-links"
+            to="/invites"
+            label={l`Manage invite links`}>
+            <SettingsList.ItemIcon icon={LinkIcon} />
+            <SettingsList.ItemText>
+              <Trans>Manage invite links</Trans>
+            </SettingsList.ItemText>
+          </SettingsList.LinkItem>
+          <SettingsList.Divider />
+          <PrivacySettings />
+        </>
+      )}
       <SettingsList.Divider />
       <SettingsList.PressableItem
         testID="settings-section-reset"

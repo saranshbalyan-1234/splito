@@ -25,6 +25,7 @@ import {PlusLarge_Stroke2_Corner0_Rounded as PlusIcon} from '#/components/icons/
 import * as FormSheet from '#/components/FormSheet'
 import {GroupFields} from '#/components/groups/GroupFields'
 import {AvatarPreview} from '#/components/people/AvatarPreview'
+import {PendingPeople} from '#/components/people/PendingPeople'
 import {CurrencyDialog} from '#/components/split/pickers'
 import * as Toast from '#/components/Toast'
 import {Text} from '#/components/Typography'
@@ -217,6 +218,10 @@ export function CreateGroupScreen() {
                 </Toggle.Item>
               ))}
             </Toggle.Group>
+            <PendingPeople
+              avatarSize={32}
+              rowStyle={[a.px_md, a.border_t, t.atoms.border_contrast_low]}
+            />
             <View
               style={[
                 a.flex_row,

@@ -15,6 +15,7 @@ import {
   type InviteLink,
   inviteLinkState,
   isInviteCode,
+  mintInviteCode,
   outgoingRequests,
   receiveFriendRequest,
   recordInviteUse,
@@ -191,6 +192,15 @@ test('group invite links need a live group and validate their limits', async () 
 test('isInviteCode sanitises link params', () => {
   expect(isInviteCode('k3j2h1g0f9e8')).toBe(true)
   for (const bad of ['', 'ab', 'A'.repeat(4), 'abc/def', 'x'.repeat(33), '../etc']) expect(isInviteCode(bad)).toBe(false)
+  const minted = mintInviteCode({newId: () => '3F2504E0-4F89-41D3-9A0C-0305E82C3301'})
+  expect(minted).toBe('3f2504e04f8941d3')
+  expect(isInviteCode(minted)).toBe(true)
+})
+
+test('a link takes the code the directory accepted', async () => {
+  const link = await createInviteLink(s, ctx, {kind: 'friend', groupId: null, maxUses: 1, expiresInMs: null, approveJoins: false, code: 'k3j2h1g0f9e8'})
+  expect(link.id).toBe('k3j2h1g0f9e8')
+  expect(await createInviteLink(s, ctx, {kind: 'friend', groupId: null, maxUses: 1, expiresInMs: null, approveJoins: false, code: 'BAD/'}).catch(code)).toBe('INVALID_INVITE')
 })
 
 test('pickers: friends (private or linked) are selectable; pending requests are listed apart', async () => {

@@ -29,6 +29,14 @@ export type RootStackParams = {
   Expense: {expenseId: string}
   EditExpense: {expenseId: string}
   AddFriend: undefined
+  /** Manage invite links. */
+  InviteLinks: undefined
+  /** The invite link / QR sheet: a new link (friend, or `groupId`'s group). */
+  CreateInvite: {kind?: 'friend' | 'group'; groupId?: string} | undefined
+  /** The same sheet for a link you already made. */
+  ShareInvite: {code: string}
+  /** Someone else's invite link, opened (`splito://invite/<code>`, `https://splito.app/invite/<code>`). */
+  Invite: {code: string}
   CreateGroup: undefined
 }
 

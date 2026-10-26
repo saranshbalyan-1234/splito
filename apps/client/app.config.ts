@@ -48,6 +48,14 @@ const config: ExpoConfig = {
   },
   plugins: [
     'expo-sqlite',
+    /* Adapted from bluesky-social/social-app@4e4ad9c (MIT) - app.config.js (expo-contacts). Asked only after Splito's primer (26.18, F-216). */
+    [
+      'expo-contacts',
+      {
+        contactsPermission:
+          'Splito opens your contacts so you can pick a friend to add. Only the email or number you choose is used.',
+      },
+    ],
     /* Adapted from bluesky-social/social-app@4e4ad9c (MIT) - app.config.js. Building React Native from
        source is what Bluesky ships; the prebuilt binaries hide headers its native modules import (RCTBridge.h). */
     [

@@ -1,20 +1,27 @@
 import {
   createExpense,
   createGroup,
+  createInviteLink,
   createPerson,
   deleteExpense,
   type ExpenseDraft,
   type Group,
   type MutationCtx,
+  receiveFriendRequest,
+  recordInviteUse,
   restoreExpense,
+  sendFriendRequest,
   type Store,
   updateExpense,
 } from '@splito/sync'
 
+import {device} from '#/storage'
 import {
+  DEMO_DIRECTORY,
   DEMO_EXPENSES,
   DEMO_FRIENDS,
   DEMO_GROUPS,
+  DEMO_INVITED,
   demoSplit,
   type DemoGroupKey,
   type DemoPersonKey,
@@ -27,6 +34,15 @@ function isDemoRequested() {
   if (typeof window === 'undefined' || !window.location?.search) return false
   return new URLSearchParams(window.location.search).get('demo') === '1'
 }
+
+/**
+ * Demo mode: a dev or e2e build opened with `?demo=1` (now or earlier on this
+ * install). It seeds the demo data and swaps in the demo directory; production
+ * builds are never in demo mode (the env check is first).
+ */
+export const IS_DEMO =
+  (IS_DEV || IS_E2E) && (isDemoRequested() || device.get(['demoMode']) === true)
+if (IS_DEMO) device.set(['demoMode'], true)
 
 /**
  * Dev and E2E builds only: with `?demo=1`, seeds the demo friends, groups and
@@ -133,4 +149,69 @@ async function seed(store: Store, ctx: MutationCtx) {
   // Groceries deleted by mistake and put back: both show in Activity.
   await deleteExpense(store, at(now - 40 * MINUTE), expenseIds.Groceries!)
   await restoreExpense(store, at(now - 38 * MINUTE), expenseIds.Groceries!)
+
+  await seedFriendInvites(store, ctx, groupIds.goa, at, now)
+}
+
+/*
+ * 26.18 in the demo: two requests waiting for you (from people on Splito),
+ * two of yours waiting for them (one on Splito, one invited by SMS), and
+ * invite links with limits, one of them already partly used.
+ */
+async function seedFriendInvites(
+  store: Store,
+  ctx: MutationCtx,
+  goaId: string,
+  at: (time: number, actor?: string) => MutationCtx,
+  now: number,
+) {
+  const account = (id: string) =>
+    DEMO_DIRECTORY.accounts.find(a => a.accountId === id)!
+  for (const [id, ago] of [
+    ['demo-sara', 26 * HOUR],
+    ['demo-ishaan', 25 * MINUTE],
+  ] as const) {
+    const a = account(id)
+    await receiveFriendRequest(store, at(now - ago, a.accountId), {
+      id: ctx.newId(),
+      accountId: a.accountId,
+      name: a.name,
+      contact: a.contact,
+    })
+  }
+  const kabir = account('demo-kabir')
+  await sendFriendRequest(store, at(now - 2 * DAY), {
+    contact: kabir.contact!,
+    name: 'Kabir',
+    reach: 'on-splito',
+  })
+  const personal = await createInviteLink(store, at(now - 5 * DAY), {
+    kind: 'friend',
+    groupId: null,
+    maxUses: 1,
+    expiresInMs: 7 * DAY,
+    approveJoins: false,
+  })
+  await sendFriendRequest(store, at(now - 5 * DAY), {
+    contact: DEMO_INVITED.contact,
+    name: DEMO_INVITED.name,
+    reach: 'invited',
+    inviteCode: personal.id,
+  })
+  await createInviteLink(store, at(now - 3 * HOUR), {
+    kind: 'friend',
+    groupId: null,
+    maxUses: 5,
+    expiresInMs: 30 * DAY,
+    approveJoins: false,
+  })
+  const goa = await createInviteLink(store, at(now - 4 * DAY), {
+    kind: 'group',
+    groupId: goaId,
+    maxUses: 25,
+    expiresInMs: 30 * DAY,
+    approveJoins: true,
+  })
+  for (const id of ['demo-maya', 'demo-ananya', 'demo-sara'])
+    await recordInviteUse(store, at(now - 3 * DAY, id), goa.id)
 }
