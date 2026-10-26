@@ -1079,7 +1079,7 @@ Friends without accounts or invites, visible and usable only on your side: the "
 
 "Choose from contacts" in the Add friend sheet: the native contacts picker (expo-contacts) after a permission primer; on web the Contact Picker API where the browser has it, otherwise the button is hidden. Contacts stay on the device.
 
-- **Effort** S · **Impact** 7 · **Backend** no · **Status** in progress (partially built on feat/friend-invites, unverified) · **Deps** F-618
+- **Effort** S · **Impact** 7 · **Backend** no · **Status** done (feat/4b-31-33, 2026-10-27; web Contact Picker path in e2e `friends.spec.ts`; the native primer and expo-contacts picker are built but not yet run on a simulator) · **Deps** F-618
 - **Prefs** -
 - **Acceptance**
   1. Native: the button shows a pre-permission primer (the F-216 pattern, built here for contacts if F-216 has not shipped), then the system picker; a denied permission falls back to typing, with Open Settings; nothing dead-ends.
