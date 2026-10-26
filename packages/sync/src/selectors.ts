@@ -1,6 +1,6 @@
-import type {ExpenseRecord, LedgerRecord} from '@splito/domain'
+import type {ExpenseRecord, LedgerRecord, RepaymentRecord} from '@splito/domain'
 
-import type {Expense} from './mutations'
+import type {Expense, Repayment} from './mutations'
 import type {Store} from './store'
 import type {Entity} from './types'
 
@@ -16,8 +16,23 @@ export const toExpenseRecord = (e: Entity<Expense>): ExpenseRecord => ({
   deleted: e.deleted,
 })
 
+export const toRepaymentRecord = (e: Entity<Repayment>): RepaymentRecord => ({
+  kind: 'repayment',
+  id: e.id,
+  groupId: e.data.groupId,
+  currency: e.data.currency,
+  from: e.data.from,
+  to: e.data.to,
+  amount: e.data.amount,
+  date: e.data.date,
+  deleted: e.deleted,
+})
+
+/** Every expense and repayment, tombstones included (flagged `deleted`). */
 export async function loadLedger(store: Store): Promise<LedgerRecord[]> {
-  return (await store.getAll<Expense>('expense')).map(toExpenseRecord)
+  const expenses = await store.getAll<Expense>('expense')
+  const repayments = await store.getAll<Repayment>('repayment')
+  return [...expenses.map(toExpenseRecord), ...repayments.map(toRepaymentRecord)]
 }
 
 export type SyncStatus = 'Saved on this device' | 'Waiting for connection' | 'Syncing' | 'Synced' | 'Needs attention'

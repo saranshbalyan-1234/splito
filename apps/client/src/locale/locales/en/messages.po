@@ -44,6 +44,11 @@ msgstr "{0, plural, one {# second} other {# seconds}}"
 msgid "{0, plural, one {#mo} other {#mo}}"
 msgstr "{0, plural, one {#mo} other {#mo}}"
 
+#. placeholder {0}: person.data.name
+#: src/screens/AddFriend.tsx:46
+msgid "{0} added"
+msgstr "{0} added"
+
 #. placeholder {0}: item.actorName
 #. placeholder {1}: item.subject
 #: src/view/com/notifications/NotificationFeedItem.tsx:122
@@ -55,6 +60,11 @@ msgstr "{0} added {1}"
 #: src/view/com/notifications/NotificationFeedItem.tsx:78
 msgid "{0} added {1}{amount}"
 msgstr "{0} added {1}{amount}"
+
+#. placeholder {0}: group.data.name
+#: src/screens/CreateGroup.tsx:104
+msgid "{0} created"
+msgstr "{0} created"
 
 #. placeholder {0}: item.actorName
 #. placeholder {1}: item.subject
@@ -73,6 +83,60 @@ msgstr "{0} deleted {1}{amount}"
 #: src/view/com/notifications/NotificationFeedItem.tsx:87
 msgid "{0} edited {1}{amount}"
 msgstr "{0} edited {1}{amount}"
+
+#. placeholder {0}: person?.data.name ?? ''
+#: src/screens/Person/index.tsx:210
+msgid "{0} has expenses, payments or groups, so they can’t be removed."
+msgstr "{0} has expenses, payments or groups, so they can’t be removed."
+
+#. placeholder {0}: selected.length
+#: src/components/groups/AddMembersDialog.tsx:92
+msgid "{0} members added"
+msgstr "{0} members added"
+
+#. placeholder {0}: name(from)
+#. placeholder {0}: name(r.from)
+#. placeholder {1}: name(r.to)
+#. placeholder {1}: name(to)
+#: src/components/people/HistoryRow.tsx:91
+#: src/components/people/PaymentDetailsDialog.tsx:86
+#: src/components/people/RecordPaymentDialog.tsx:137
+msgid "{0} paid {1}"
+msgstr "{0} paid {1}"
+
+#. placeholder {0}: name(payers[0]!)
+#: src/components/people/HistoryRow.tsx:75
+msgid "{0} paid {total}"
+msgstr "{0} paid {total}"
+
+#. placeholder {0}: name(from)
+#. placeholder {0}: name(r.from)
+#: src/components/people/HistoryRow.tsx:90
+#: src/components/people/PaymentDetailsDialog.tsx:85
+#: src/components/people/RecordPaymentDialog.tsx:136
+msgid "{0} paid you"
+msgstr "{0} paid you"
+
+#. placeholder {0}: item.count
+#: src/screens/Settle/index.tsx:308
+msgid "{0} payments"
+msgstr "{0} payments"
+
+#. placeholder {0}: name(from)
+#. placeholder {1}: name(to)
+#: src/screens/Settle/components/TransferRow.tsx:43
+msgid "{0} pays {1}"
+msgstr "{0} pays {1}"
+
+#. placeholder {0}: name(from)
+#: src/screens/Settle/components/TransferRow.tsx:42
+msgid "{0} pays you"
+msgstr "{0} pays you"
+
+#. placeholder {0}: payers.length
+#: src/components/people/HistoryRow.tsx:72
+msgid "{0} people paid {total}"
+msgstr "{0} people paid {total}"
 
 #. placeholder {0}: item.actorName
 #. placeholder {1}: item.subject
@@ -142,17 +206,43 @@ msgstr "{count, plural, one {# unread item} other {# unread items}}"
 msgid "{currency} balance – open analytics"
 msgstr "{currency} balance – open analytics"
 
+#: src/screens/Group/index.tsx:205
 #: src/screens/Groups/components/GroupRow.tsx:55
 msgid "{memberCount} members"
 msgstr "{memberCount} members"
+
+#: src/screens/Person/components/PersonBalances.tsx:140
+msgid "{name} owes you"
+msgstr "{name} owes you"
+
+#: src/components/people/UpiPayDialog.tsx:186
+msgid "{name}’s UPI ID"
+msgstr "{name}’s UPI ID"
 
 #: src/view/shell/bottom-bar/BottomBarWeb.tsx:121
 msgid "{notificationCount, plural, one {# unread item} other {# unread items}}"
 msgstr "{notificationCount, plural, one {# unread item} other {# unread items}}"
 
+#: src/screens/Group/index.tsx:205
 #: src/screens/Groups/components/GroupRow.tsx:55
 msgid "1 member"
 msgstr "1 member"
+
+#: src/components/groups/AddMembersDialog.tsx:91
+msgid "1 member added"
+msgstr "1 member added"
+
+#: src/screens/Settle/index.tsx:306
+msgid "1 payment"
+msgstr "1 payment"
+
+#: src/components/people/PaymentDetailsDialog.tsx:142
+msgid "A record of money that changed hands outside Splito. Deleting it puts the balance back as it was."
+msgstr "A record of money that changed hands outside Splito. Deleting it puts the balance back as it was."
+
+#: src/screens/CreateGroup.tsx:159
+msgid "A trip, a flat or anything you split often."
+msgstr "A trip, a flat or anything you split often."
 
 #: src/screens/Profile.tsx:79
 #: src/screens/Profile.tsx:82
@@ -172,18 +262,36 @@ msgstr "Activity"
 
 #: src/navigation/Navigation.tsx:66
 #: src/screens/AddExpense.tsx:33
+#: src/screens/Group/index.tsx:398
+#: src/screens/Group/index.tsx:399
+#: src/screens/Person/index.tsx:436
+#: src/screens/Person/index.tsx:437
 #: src/view/shell/desktop/LeftNav.tsx:296
 msgid "Add expense"
 msgstr "Add expense"
 
 #: src/components/AddExpenseFAB.tsx:31
+#: src/screens/Group/index.tsx:325
+#: src/screens/Person/index.tsx:248
 #: src/view/shell/desktop/LeftNav.tsx:304
 msgctxt "action"
 msgid "Add expense"
 msgstr "Add expense"
 
+#. placeholder {0}: group.data.name
+#: src/screens/Group/index.tsx:319
+msgid "Add expense to {0}"
+msgstr "Add expense to {0}"
+
+#. placeholder {0}: person!.data.name
+#: src/screens/Person/index.tsx:242
+msgid "Add expense with {0}"
+msgstr "Add expense with {0}"
+
 #: src/navigation/Navigation.tsx:69
-#: src/screens/AddFriend.tsx:8
+#: src/screens/AddFriend.tsx:70
+#: src/screens/AddFriend.tsx:178
+#: src/screens/AddFriend.tsx:184
 #: src/screens/People/index.tsx:108
 #: src/screens/People/index.tsx:109
 #: src/screens/People/index.tsx:141
@@ -191,12 +299,52 @@ msgstr "Add expense"
 msgid "Add friend"
 msgstr "Add friend"
 
+#: src/components/groups/AddMembersDialog.tsx:177
+#: src/screens/CreateGroup.tsx:353
+msgid "Add member"
+msgstr "Add member"
+
+#: src/components/groups/AddMembersDialog.tsx:41
+#: src/components/groups/AddMembersDialog.tsx:107
+#: src/components/groups/AddMembersDialog.tsx:190
+#: src/screens/Group/index.tsx:464
+#: src/screens/Group/index.tsx:470
+msgid "Add members"
+msgstr "Add members"
+
+#: src/components/groups/AddMembersDialog.tsx:165
+#: src/components/groups/AddMembersDialog.tsx:168
+#: src/screens/CreateGroup.tsx:341
+#: src/screens/CreateGroup.tsx:344
+msgid "Add someone new"
+msgstr "Add someone new"
+
+#: src/components/groups/AddMembersDialog.tsx:196
+msgid "Add to group"
+msgstr "Add to group"
+
+#: src/screens/Group/index.tsx:339
 #: src/screens/People/components/BalanceSummary.tsx:158
 msgid "All settled up"
 msgstr "All settled up"
 
-#: src/components/HeaderAvatar.tsx:82
+#: src/components/groups/RulesEditor.tsx:218
+msgid "Allowed"
+msgstr "Allowed"
+
+#: src/screens/CreateGroup.tsx:299
+msgid "Always in the group"
+msgstr "Always in the group"
+
+#: src/components/people/RecordPaymentDialog.tsx:286
+#: src/components/people/RecordPaymentDialog.tsx:291
+#: src/components/people/UpiPayDialog.tsx:212
+#: src/components/people/UpiPayDialog.tsx:217
+msgid "Amount"
+msgstr "Amount"
+
 #: src/components/HeaderAvatar.tsx:86
+#: src/components/HeaderAvatar.tsx:90
 #: src/components/TabGlyph.tsx:29
 #: src/navigation/Navigation.tsx:58
 #: src/screens/Analytics.tsx:8
@@ -208,10 +356,32 @@ msgstr "All settled up"
 msgid "Analytics"
 msgstr "Analytics"
 
+#: src/screens/Person/components/HistoryFilterDialog.tsx:88
+#: src/screens/Person/components/HistoryFilterDialog.tsx:93
+msgid "Apply"
+msgstr "Apply"
+
+#: src/screens/Group/index.tsx:117
+#: src/screens/Group/index.tsx:118
+#: src/screens/Settle/index.tsx:133
+#: src/screens/Settle/index.tsx:134
+msgid "Back to Groups"
+msgstr "Back to Groups"
+
+#: src/screens/Person/index.tsx:137
+#: src/screens/Person/index.tsx:138
+msgid "Back to People"
+msgstr "Back to People"
+
+#: src/screens/Group/index.tsx:358
 #: src/screens/People/components/BalanceSummary.tsx:56
 #: src/screens/People/components/BalanceSummary.tsx:224
 msgid "Balances"
 msgstr "Balances"
+
+#: src/screens/Settle/index.tsx:241
+msgid "Balances or rules changed since this plan was made."
+msgstr "Balances or rules changed since this plan was made."
 
 #: src/components/Composer/TopBar.tsx:33
 #: src/components/Composer/TopBar.tsx:43
@@ -220,6 +390,14 @@ msgstr "Balances"
 #: src/components/Prompt.tsx:155
 msgid "Cancel"
 msgstr "Cancel"
+
+#: src/screens/CreateGroup.tsx:267
+msgid "Check the dates: the trip can’t end before it starts."
+msgstr "Check the dates: the trip can’t end before it starts."
+
+#: src/components/groups/RulesEditor.tsx:102
+msgid "Choose who can pay whom when this group settles up. With no rules, anyone can pay anyone. Preferred pairs are used first. Excluded pairs are never used, so a plan may need a different route or may not be possible."
+msgstr "Choose who can pay whom when this group settles up. With no rules, anyone can pay anyone. Preferred pairs are used first. Excluded pairs are never used, so a plan may need a different route or may not be possible."
 
 #: src/components/Dialog/index.web.tsx:156
 #: src/components/Dialog/index.web.tsx:373
@@ -247,22 +425,107 @@ msgstr "Confirm"
 msgid "Context menu backdrop, click to close the menu."
 msgstr "Context menu backdrop, click to close the menu."
 
+#: src/components/groups/AddMembersDialog.tsx:99
+msgid "Couldn’t add members. Please try again."
+msgstr "Couldn’t add members. Please try again."
+
+#: src/components/groups/AddMembersDialog.tsx:77
+#: src/screens/CreateGroup.tsx:75
+msgid "Couldn’t add that person. Please try again."
+msgstr "Couldn’t add that person. Please try again."
+
+#: src/screens/AddFriend.tsx:57
+msgid "Couldn’t add your friend. Please try again."
+msgstr "Couldn’t add your friend. Please try again."
+
+#: src/screens/CreateGroup.tsx:113
+msgid "Couldn’t create the group. Please try again."
+msgstr "Couldn’t create the group. Please try again."
+
+#: src/screens/Person/index.tsx:211
+msgid "Couldn’t remove this friend. Please try again."
+msgstr "Couldn’t remove this friend. Please try again."
+
+#: src/components/groups/RulesEditor.tsx:85
+msgid "Couldn’t save the rule. Please try again."
+msgstr "Couldn’t save the rule. Please try again."
+
+#: src/components/people/EditFriendDialog.tsx:63
+msgid "Couldn’t save. Please try again."
+msgstr "Couldn’t save. Please try again."
+
+#: src/screens/Person/components/HistoryFilterDialog.tsx:75
+msgid "Count expenses and payments from groups you share with {name}. Off shows only what is between the two of you."
+msgstr "Count expenses and payments from groups you share with {name}. Off shows only what is between the two of you."
+
+#: src/screens/CreateGroup.tsx:123
+#: src/screens/Group/index.tsx:195
 #: src/screens/Groups/components/GroupRow.tsx:47
 msgid "Couple"
 msgstr "Couple"
 
-#: src/components/HeaderAvatar.tsx:94
+#: src/screens/CreateGroup.tsx:367
+#: src/screens/CreateGroup.tsx:373
+msgid "Create group"
+msgstr "Create group"
+
+#: src/components/people/RecordPaymentDialog.tsx:265
+#: src/screens/CreateGroup.tsx:217
+#: src/screens/CreateGroup.tsx:404
+#: src/screens/CreateGroup.tsx:406
+#: src/screens/CreateGroup.tsx:409
+msgid "Currency"
+msgstr "Currency"
+
+#. placeholder {0}: getCurrency(currency).name
+#: src/screens/CreateGroup.tsx:221
+msgid "Currency: {0}"
+msgstr "Currency: {0}"
+
 #: src/components/HeaderAvatar.tsx:98
+#: src/components/HeaderAvatar.tsx:102
 msgid "Dark theme"
 msgstr "Dark theme"
 
+#: src/components/people/PaymentDetailsDialog.tsx:137
+msgid "Date"
+msgstr "Date"
+
+#: src/screens/CreateGroup.tsx:236
+msgid "Dates (optional)"
+msgstr "Dates (optional)"
+
+#: src/components/groups/RulesEditor.tsx:241
+msgid "Default"
+msgstr "Default"
+
+#: src/components/people/PaymentDetailsDialog.tsx:149
+#: src/components/people/PaymentDetailsDialog.tsx:155
+msgid "Delete payment"
+msgstr "Delete payment"
+
+#: src/components/people/UpiPayDialog.tsx:135
+msgid "Did the payment go through?"
+msgstr "Did the payment go through?"
+
 #: src/screens/People/components/PersonRow.tsx:65
+#: src/screens/Person/components/PersonBalances.tsx:108
+#: src/screens/Settle/index.tsx:196
+#: src/screens/Settle/index.tsx:199
 msgid "Direct"
 msgstr "Direct"
 
 #: src/screens/People/components/PersonRow.tsx:164
 msgid "Direct expenses"
 msgstr "Direct expenses"
+
+#: src/screens/Person/index.tsx:318
+msgid "Direct only"
+msgstr "Direct only"
+
+#: src/components/people/PaymentDetailsDialog.tsx:138
+msgid "Direct, no group"
+msgstr "Direct, no group"
 
 #: src/components/Dialog/index.tsx:603
 msgid "Dismiss"
@@ -272,30 +535,142 @@ msgstr "Dismiss"
 msgid "Double tap to close the dialog"
 msgstr "Double tap to close the dialog"
 
+#: src/screens/CreateGroup.tsx:178
+msgid "e.g. Goa trip"
+msgstr "e.g. Goa trip"
+
+#: src/components/people/RecordPaymentDialog.tsx:332
+msgid "e.g. Paid by UPI"
+msgstr "e.g. Paid by UPI"
+
+#: src/screens/AddFriend.tsx:115
+msgid "e.g. Riya Sharma"
+msgstr "e.g. Riya Sharma"
+
 #: src/navigation/Navigation.tsx:68
 #: src/screens/EditExpense.tsx:8
 msgid "Edit expense"
 msgstr "Edit expense"
+
+#: src/components/people/EditFriendDialog.tsx:30
+#: src/components/people/EditFriendDialog.tsx:71
+#: src/screens/Person/index.tsx:366
+#: src/screens/Person/index.tsx:369
+msgid "Edit friend"
+msgstr "Edit friend"
+
+#: src/screens/Settle/index.tsx:414
+msgid "Edit rules"
+msgstr "Edit rules"
+
+#: src/screens/Settle/index.tsx:405
+msgid "Edit who you settle with"
+msgstr "Edit who you settle with"
+
+#: src/screens/CreateGroup.tsx:254
+msgid "End date"
+msgstr "End date"
+
+#: src/components/people/EditFriendDialog.tsx:92
+#: src/screens/AddFriend.tsx:125
+#: src/screens/CreateGroup.tsx:186
+msgid "Enter a name."
+msgstr "Enter a name."
+
+#: src/components/people/EditFriendDialog.tsx:125
+#: src/components/people/UpiPayDialog.tsx:205
+#: src/screens/AddFriend.tsx:160
+msgid "Enter a UPI ID like name@bank."
+msgstr "Enter a UPI ID like name@bank."
+
+#: src/components/people/RecordPaymentDialog.tsx:147
+#: src/components/people/UpiPayDialog.tsx:232
+msgid "Enter an amount greater than zero."
+msgstr "Enter an amount greater than zero."
+
+#: src/screens/Settle/index.tsx:347
+msgid "Everyone is settled up."
+msgstr "Everyone is settled up."
+
+#: src/screens/Settle/index.tsx:221
+msgid "Everyone who owes pays the people who are owed, straight to them."
+msgstr "Everyone who owes pays the people who are owed, straight to them."
+
+#: src/components/groups/RulesEditor.tsx:220
+msgid "Excluded"
+msgstr "Excluded"
 
 #: src/navigation/Navigation.tsx:67
 #: src/screens/Expense.tsx:8
 msgid "Expense"
 msgstr "Expense"
 
+#: src/screens/Group/index.tsx:357
+msgid "Expenses"
+msgstr "Expenses"
+
+#: src/screens/Person/components/HistoryFilterDialog.tsx:31
+#: src/screens/Person/components/HistoryFilterDialog.tsx:60
+#: src/screens/Person/index.tsx:323
+#: src/screens/Person/index.tsx:329
+msgid "Filter"
+msgstr "Filter"
+
+#: src/components/people/RecordPaymentDialog.tsx:218
+msgid "For money that changed hands outside Splito – cash, UPI or a bank transfer. Splito keeps the record; it never moves money."
+msgstr "For money that changed hands outside Splito – cash, UPI or a bank transfer. Splito keeps the record; it never moves money."
+
+#: src/screens/Person/index.tsx:128
+#: src/screens/Person/index.tsx:344
+msgid "Friend"
+msgstr "Friend"
+
+#: src/screens/Person/index.tsx:293
+msgid "Friend on this device"
+msgstr "Friend on this device"
+
+#: src/screens/Person/index.tsx:206
+msgid "Friend removed"
+msgstr "Friend removed"
+
+#: src/components/groups/AddMembersDialog.tsx:126
 #: src/screens/People/index.tsx:135
 msgid "Friends"
 msgstr "Friends"
+
+#: src/screens/AddFriend.tsx:96
+msgid "Friends don’t need Splito. Only you see them."
+msgstr "Friends don’t need Splito. Only you see them."
+
+#: src/screens/Group/components/GroupRows.tsx:108
+msgid "gets back <0>{figure}</0>"
+msgstr "gets back <0>{figure}</0>"
 
 #: src/components/Layout/Header/index.tsx:120
 msgid "Go back"
 msgstr "Go back"
 
 #: src/navigation/Navigation.tsx:64
-#: src/screens/Group.tsx:8
+#: src/screens/Group/index.tsx:108
+#: src/screens/Group/index.tsx:195
+#: src/screens/Group/index.tsx:416
 #: src/screens/Groups/components/GroupRow.tsx:48
 #: src/screens/People/components/PersonRow.tsx:58
+#: src/screens/Person/components/PersonBalances.tsx:111
 msgid "Group"
 msgstr "Group"
+
+#: src/screens/CreateGroup.tsx:172
+msgid "Group name"
+msgstr "Group name"
+
+#: src/screens/Group/index.tsx:350
+msgid "Group sections"
+msgstr "Group sections"
+
+#: src/screens/CreateGroup.tsx:196
+msgid "Group type"
+msgstr "Group type"
 
 #: src/components/TabGlyph.tsx:28
 #: src/navigation/Navigation.tsx:57
@@ -304,18 +679,64 @@ msgstr "Group"
 msgid "Groups"
 msgstr "Groups"
 
+#: src/screens/Person/index.tsx:311
+msgid "History"
+msgstr "History"
+
+#: src/screens/CreateGroup.tsx:122
+#: src/screens/Group/index.tsx:195
 #: src/screens/Groups/components/GroupRow.tsx:46
 msgid "Home"
 msgstr "Home"
 
-#: src/components/HeaderAvatar.tsx:94
+#: src/screens/Person/components/HistoryFilterDialog.tsx:65
+#: src/screens/Person/components/HistoryFilterDialog.tsx:71
+msgid "Include groups"
+msgstr "Include groups"
+
+#: src/components/people/UpiPayDialog.tsx:226
+msgid "Indian Rupee"
+msgstr "Indian Rupee"
+
+#: src/screens/AddFriend.tsx:170
+msgid "Inviting friends to Splito by link or QR is available when you sign in, coming with sync."
+msgstr "Inviting friends to Splito by link or QR is available when you sign in, coming with sync."
+
+#: src/screens/Group/components/GroupRows.tsx:152
+msgid "Left the group"
+msgstr "Left the group"
+
+#: src/screens/AddFriend.tsx:162
+msgid "Lets you open your UPI app when you pay them in rupees."
+msgstr "Lets you open your UPI app when you pay them in rupees."
+
 #: src/components/HeaderAvatar.tsx:98
+#: src/components/HeaderAvatar.tsx:102
 msgid "Light theme"
 msgstr "Light theme"
+
+#: src/screens/CreateGroup.tsx:277
+#: src/screens/CreateGroup.tsx:303
+#: src/screens/Group/index.tsx:359
+#: src/screens/Group/index.tsx:459
+msgid "Members"
+msgstr "Members"
 
 #: src/components/Menu/index.tsx:133
 msgid "Menu"
 msgstr "Menu"
+
+#: src/screens/Person/index.tsx:349
+msgid "More options"
+msgstr "More options"
+
+#: src/components/people/EditFriendDialog.tsx:75
+#: src/components/people/EditFriendDialog.tsx:80
+#: src/screens/AddFriend.tsx:103
+#: src/screens/AddFriend.tsx:109
+#: src/screens/CreateGroup.tsx:166
+msgid "Name"
+msgstr "Name"
 
 #: src/screens/Groups/index.tsx:58
 msgctxt "action"
@@ -323,12 +744,43 @@ msgid "New"
 msgstr "New"
 
 #: src/navigation/Navigation.tsx:70
-#: src/screens/CreateGroup.tsx:8
+#: src/screens/CreateGroup.tsx:133
 #: src/screens/Groups/index.tsx:52
 #: src/screens/Groups/index.tsx:94
 #: src/screens/Groups/index.tsx:95
 msgid "New group"
 msgstr "New group"
+
+#. placeholder {0}: nameList(item.stuck)
+#: src/screens/Settle/index.tsx:372
+msgid "No allowed pair to pay anyone who is owed: {0}"
+msgstr "No allowed pair to pay anyone who is owed: {0}"
+
+#. placeholder {0}: nameList(item.stuck)
+#: src/screens/Settle/index.tsx:377
+msgid "No allowed route to anyone who is owed, even through other members: {0}"
+msgstr "No allowed route to anyone who is owed, even through other members: {0}"
+
+#: src/components/people/HistoryRow.tsx:214
+msgid "no balance change"
+msgstr "no balance change"
+
+#: src/screens/Group/index.tsx:388
+msgid "No balances yet. They appear once the group has an expense."
+msgstr "No balances yet. They appear once the group has an expense."
+
+#. placeholder {0}: person!.data.name
+#: src/screens/Person/index.tsx:431
+msgid "No direct expenses with {0}. Group expenses are hidden by the filter."
+msgstr "No direct expenses with {0}. Group expenses are hidden by the filter."
+
+#: src/screens/Settle/index.tsx:361
+msgid "No direct plan works with these rules"
+msgstr "No direct plan works with these rules"
+
+#: src/screens/Group/index.tsx:394
+msgid "No expenses in this group yet. Add the first one and everyone’s share is worked out for you."
+msgstr "No expenses in this group yet. Add the first one and everyone’s share is worked out for you."
 
 #: src/screens/Groups/index.tsx:92
 msgid "No groups yet. A group keeps a trip’s or a flat’s expenses and balances in one place."
@@ -338,26 +790,142 @@ msgstr "No groups yet. A group keeps a trip’s or a flat’s expenses and balan
 msgid "No open balances"
 msgstr "No open balances"
 
+#: src/screens/Settle/index.tsx:365
+msgid "No plan works with these rules"
+msgstr "No plan works with these rules"
+
+#: src/components/people/UpiPayDialog.tsx:124
+msgid "No UPI app on this device can open the payment."
+msgstr "No UPI app on this device can open the payment."
+
+#: src/components/people/HistoryRow.tsx:216
+msgid "not involved"
+msgstr "not involved"
+
+#: src/components/people/UpiPayDialog.tsx:157
+#: src/components/people/UpiPayDialog.tsx:162
+msgid "Not yet"
+msgstr "Not yet"
+
+#: src/components/people/PaymentDetailsDialog.tsx:139
+#: src/components/people/RecordPaymentDialog.tsx:329
+msgid "Note"
+msgstr "Note"
+
+#: src/components/people/RecordPaymentDialog.tsx:324
+msgid "Note (optional)"
+msgstr "Note (optional)"
+
 #: src/screens/Activity.tsx:181
 msgid "Nothing here yet. Expenses, payments and group changes will show up here."
 msgstr "Nothing here yet. Expenses, payments and group changes will show up here."
+
+#: src/screens/Settle/index.tsx:429
+msgid "Nothing to settle. This group has no expenses yet."
+msgstr "Nothing to settle. This group has no expenses yet."
+
+#. placeholder {0}: person!.data.name
+#: src/screens/Person/index.tsx:430
+msgid "Nothing with {0} yet. Add an expense you shared and it shows up here."
+msgstr "Nothing with {0} yet. Add an expense you shared and it shows up here."
 
 #: src/lib/hooks/useTimeAgo.ts:136
 msgid "now"
 msgstr "now"
 
+#: src/screens/CreateGroup.tsx:151
+msgid "One place for shared costs"
+msgstr "One place for shared costs"
+
+#: src/components/groups/RulesEditor.tsx:124
+#: src/components/groups/RulesEditor.tsx:130
+msgid "Only allowed pairs"
+msgstr "Only allowed pairs"
+
+#: src/screens/Person/index.tsx:517
+msgid "Only friends with no expenses, payments or groups can be removed."
+msgstr "Only friends with no expenses, payments or groups can be removed."
+
+#: src/screens/Settle/index.tsx:230
+msgid "Only pairs allowed in Who you settle with are used, preferred pairs first, so the plan isn’t always the fewest payments."
+msgstr "Only pairs allowed in Who you settle with are used, preferred pairs first, so the plan isn’t always the fewest payments."
+
+#. placeholder {0}: formatAmount(suggestion, currency, locale)
+#: src/components/people/RecordPaymentDialog.tsx:317
+msgid "Open balance {0}. Part payments are fine."
+msgstr "Open balance {0}. Part payments are fine."
+
 #: src/components/Layout/Header/index.tsx:154
 msgid "Open drawer menu"
 msgstr "Open drawer menu"
+
+#: src/components/people/UpiPayDialog.tsx:248
+#: src/components/people/UpiPayDialog.tsx:254
+msgid "Open UPI app"
+msgstr "Open UPI app"
+
+#: src/components/people/UpiPayDialog.tsx:177
+msgid "Opens your UPI app with {name} and the amount filled in. You confirm the payment there."
+msgstr "Opens your UPI app with {name} and the amount filled in. You confirm the payment there."
+
+#: src/screens/CreateGroup.tsx:124
+msgid "Other"
+msgstr "Other"
 
 #. placeholder {0}: formatAmount(owed, currency, locale)
 #: src/screens/People/components/BalanceSummary.tsx:195
 msgid "Owed to you <0>{0}</0>"
 msgstr "Owed to you <0>{0}</0>"
 
+#: src/screens/Group/components/GroupRows.tsx:117
+msgid "owes <0>{figure}</0>"
+msgstr "owes <0>{figure}</0>"
+
 #: src/components/BalanceText.tsx:46
+#: src/components/people/HistoryRow.tsx:220
 msgid "owes you <0>{figure}</0>"
 msgstr "owes you <0>{figure}</0>"
+
+#: src/components/groups/RulesEditor.tsx:134
+msgid "Pairs you haven’t marked Allowed or Preferred are treated as excluded."
+msgstr "Pairs you haven’t marked Allowed or Preferred are treated as excluded."
+
+#: src/components/people/RecordPaymentDialog.tsx:318
+msgid "Part payments are fine."
+msgstr "Part payments are fine."
+
+#: src/components/people/UpiPayDialog.tsx:45
+#: src/components/people/UpiPayDialog.tsx:174
+#: src/screens/Person/index.tsx:266
+#: src/screens/Person/index.tsx:272
+msgid "Pay with UPI"
+msgstr "Pay with UPI"
+
+#: src/components/people/HistoryRow.tsx:92
+#: src/components/people/PaymentDetailsDialog.tsx:119
+msgid "Payment"
+msgstr "Payment"
+
+#: src/components/people/PaymentDetailsDialog.tsx:97
+msgid "Payment deleted"
+msgstr "Payment deleted"
+
+#: src/components/people/PaymentDetailsDialog.tsx:45
+msgid "Payment details"
+msgstr "Payment details"
+
+#: src/components/people/RecordPaymentDialog.tsx:183
+#: src/components/people/RecordPaymentDialog.tsx:191
+msgid "Payment recorded"
+msgstr "Payment recorded"
+
+#: src/screens/Settle/index.tsx:225
+msgid "Payments may pass through other members when a direct pair isn’t allowed. Everyone still ends up even."
+msgstr "Payments may pass through other members when a direct pair isn’t allowed. Everyone still ends up even."
+
+#: src/components/groups/RulesEditor.tsx:236
+msgid "pays {toName}"
+msgstr "pays {toName}"
 
 #: src/components/TabGlyph.tsx:27
 #: src/view/shell/desktop/LeftNav.tsx:338
@@ -365,16 +933,84 @@ msgid "People"
 msgstr "People"
 
 #: src/navigation/Navigation.tsx:63
-#: src/screens/Person.tsx:8
 msgid "Person"
 msgstr "Person"
 
-#: src/components/HeaderAvatar.tsx:64
+#. placeholder {0}: snapshot.hash.slice(0, 8)
+#: src/screens/Settle/index.tsx:462
+msgid "Plan {0}"
+msgstr "Plan {0}"
+
+#: src/screens/Settle/index.tsx:190
+msgid "Plan type"
+msgstr "Plan type"
+
+#: src/components/groups/RulesEditor.tsx:219
+msgid "Preferred"
+msgstr "Preferred"
+
 #: src/components/HeaderAvatar.tsx:68
+#: src/components/HeaderAvatar.tsx:72
 #: src/navigation/Navigation.tsx:60
 #: src/screens/Profile.tsx:34
 msgid "Profile"
 msgstr "Profile"
+
+#: src/screens/Settle/components/TransferRow.tsx:92
+msgid "Record"
+msgstr "Record"
+
+#: src/components/people/RecordPaymentDialog.tsx:72
+#: src/components/people/RecordPaymentDialog.tsx:215
+#: src/screens/Person/index.tsx:254
+msgid "Record a payment"
+msgstr "Record a payment"
+
+#: src/components/people/RecordPaymentDialog.tsx:340
+#: src/components/people/RecordPaymentDialog.tsx:346
+#: src/screens/Person/index.tsx:260
+msgid "Record payment"
+msgstr "Record payment"
+
+#: src/screens/Settle/components/TransferRow.tsx:84
+#: src/screens/Settle/components/TransferRow.tsx:90
+msgid "Record this payment"
+msgstr "Record this payment"
+
+#: src/screens/Person/index.tsx:518
+msgid "Remove"
+msgstr "Remove"
+
+#. placeholder {0}: person.data.name
+#: src/screens/Person/index.tsx:516
+msgid "Remove {0}?"
+msgstr "Remove {0}?"
+
+#: src/screens/Person/index.tsx:375
+#: src/screens/Person/index.tsx:379
+msgid "Remove friend"
+msgstr "Remove friend"
+
+#: src/components/groups/RulesEditor.tsx:184
+msgid "Reset rules"
+msgstr "Reset rules"
+
+#: src/components/groups/RulesEditor.tsx:190
+msgid "Reset to anyone pays anyone"
+msgstr "Reset to anyone pays anyone"
+
+#: src/components/groups/RulesEditor.tsx:250
+msgid "Rule for this pair"
+msgstr "Rule for this pair"
+
+#: src/screens/Group/index.tsx:360
+msgid "Rules"
+msgstr "Rules"
+
+#: src/components/people/EditFriendDialog.tsx:135
+#: src/components/people/EditFriendDialog.tsx:140
+msgid "Save"
+msgstr "Save"
 
 #: src/components/Composer/TopBar.tsx:59
 msgctxt "action"
@@ -385,12 +1021,20 @@ msgstr "Save"
 msgid "Save expense"
 msgstr "Save expense"
 
+#: src/components/people/EditFriendDialog.tsx:54
+msgid "Saved"
+msgstr "Saved"
+
 #: src/screens/Profile.tsx:131
 msgid "Saved on this device"
 msgstr "Saved on this device"
 
-#: src/components/HeaderAvatar.tsx:73
+#: src/components/groups/RulesEditor.tsx:243
+msgid "Set for this group"
+msgstr "Set for this group"
+
 #: src/components/HeaderAvatar.tsx:77
+#: src/components/HeaderAvatar.tsx:81
 #: src/navigation/Navigation.tsx:61
 #: src/navigation/Navigation.tsx:62
 #: src/screens/Profile.tsx:70
@@ -402,21 +1046,40 @@ msgid "Settings"
 msgstr "Settings"
 
 #: src/navigation/Navigation.tsx:65
-#: src/screens/Settle.tsx:8
+#: src/screens/Group/index.tsx:331
+#: src/screens/Group/index.tsx:341
+#: src/screens/Settle/index.tsx:124
+#: src/screens/Settle/index.tsx:268
 msgid "Settle up"
 msgstr "Settle up"
 
 #: src/components/BalanceText.tsx:43
+#: src/screens/Group/components/GroupRows.tsx:101
 #: src/screens/Groups/components/GroupRow.tsx:65
 #: src/screens/People/components/PersonRow.tsx:79
 msgid "settled up"
 msgstr "settled up"
 
+#: src/screens/Person/components/PersonBalances.tsx:144
+msgid "Settled up"
+msgstr "Settled up"
+
+#: src/components/people/HistoryRow.tsx:174
+msgid "Shows the payment and lets you delete it"
+msgstr "Shows the payment and lets you delete it"
+
 #: src/screens/Profile.tsx:89
 msgid "Sign in and sync"
 msgstr "Sign in and sync"
 
+#: src/components/groups/RulesEditor.tsx:171
+#: src/components/people/HistoryRow.tsx:59
+#: src/components/people/PaymentDetailsDialog.tsx:80
+#: src/components/people/RecordPaymentDialog.tsx:131
 #: src/screens/Activity.tsx:95
+#: src/screens/Group/index.tsx:449
+#: src/screens/Group/index.tsx:480
+#: src/screens/Settle/components/TransferRow.tsx:37
 msgid "Someone"
 msgstr "Someone"
 
@@ -424,23 +1087,149 @@ msgstr "Someone"
 msgid "Split anything with anyone. Add an expense or a friend to get started – friends don’t need the app."
 msgstr "Split anything with anyone. Add an expense or a friend to get started – friends don’t need the app."
 
+#: src/screens/AddFriend.tsx:88
+msgid "Split with anyone"
+msgstr "Split with anyone"
+
 #: src/view/com/home/HomeHeaderLayoutMobile.tsx:41
 #: src/view/shell/desktop/LeftNav.tsx:104
 msgid "Splito - People"
 msgstr "Splito - People"
+
+#: src/components/people/UpiPayDialog.tsx:139
+msgid "Splito can’t see your UPI app. Record the payment only once your app shows it as successful."
+msgstr "Splito can’t see your UPI app. Record the payment only once your app shows it as successful."
+
+#: src/screens/Settle/index.tsx:450
+msgid "Splito never moves money. Record each payment once it has happened – part payments are fine."
+msgstr "Splito never moves money. Record each payment once it has happened – part payments are fine."
+
+#: src/screens/CreateGroup.tsx:242
+msgid "Start date"
+msgstr "Start date"
+
+#: src/components/people/RecordPaymentDialog.tsx:249
+msgid "Swap who paid"
+msgstr "Swap who paid"
+
+#: src/components/people/PaymentDetailsDialog.tsx:108
+msgid "The payment couldn’t be deleted. Please try again."
+msgstr "The payment couldn’t be deleted. Please try again."
+
+#: src/components/people/RecordPaymentDialog.tsx:168
+msgid "The payment couldn’t be saved. Please try again."
+msgstr "The payment couldn’t be saved. Please try again."
+
+#: src/screens/Person/components/HistoryFilterDialog.tsx:84
+msgid "The starting value is set in Settings › Lists."
+msgstr "The starting value is set in Settings › Lists."
+
+#: src/components/groups/AddMembersDialog.tsx:110
+msgid "They join from now on. Expenses already in the group keep their splits."
+msgstr "They join from now on. Expenses already in the group keep their splits."
+
+#: src/screens/Person/index.tsx:135
+msgid "This friend isn’t on this device. They may have been removed."
+msgstr "This friend isn’t on this device. They may have been removed."
+
+#: src/screens/Group/index.tsx:115
+#: src/screens/Settle/index.tsx:131
+msgid "This group isn’t on this device. It may have been removed."
+msgstr "This group isn’t on this device. It may have been removed."
 
 #: src/screens/AddExpense.tsx:36
 #: src/screens/StubScreen.tsx:36
 msgid "This screen is being built"
 msgstr "This screen is being built"
 
+#: src/screens/CreateGroup.tsx:121
+#: src/screens/Group/index.tsx:195
 #: src/screens/Groups/components/GroupRow.tsx:45
 msgid "Trip"
 msgstr "Trip"
 
+#: src/screens/Settle/index.tsx:395
+#: src/screens/Settle/index.tsx:399
+msgid "Try via others"
+msgstr "Try via others"
+
+#: src/screens/CreateGroup.tsx:193
+msgid "Type"
+msgstr "Type"
+
+#: src/components/people/PaymentDetailsDialog.tsx:99
+#: src/components/people/PaymentDetailsDialog.tsx:101
+msgid "Undo"
+msgstr "Undo"
+
+#: src/screens/Settle/index.tsx:248
+#: src/screens/Settle/index.tsx:253
+msgid "Update plan"
+msgstr "Update plan"
+
+#: src/components/people/EditFriendDialog.tsx:103
+#: src/components/people/UpiPayDialog.tsx:191
+#: src/screens/AddFriend.tsx:137
+msgid "UPI ID"
+msgstr "UPI ID"
+
+#: src/components/people/EditFriendDialog.tsx:98
+#: src/screens/AddFriend.tsx:132
+msgid "UPI ID (optional)"
+msgstr "UPI ID (optional)"
+
+#: src/components/people/UpiPayDialog.tsx:239
+msgid "UPI links open on a phone with a UPI app. On a computer, nothing may happen."
+msgstr "UPI links open on a phone with a UPI app. On a computer, nothing may happen."
+
+#: src/components/people/EditFriendDialog.tsx:127
+msgid "Used to open your UPI app when you pay them in rupees."
+msgstr "Used to open your UPI app when you pay them in rupees."
+
+#: src/screens/Settle/index.tsx:204
+#: src/screens/Settle/index.tsx:207
+msgid "Via others"
+msgstr "Via others"
+
+#. placeholder {0}: names.get(from) ?? ''
+#: src/components/groups/RulesEditor.tsx:160
+msgid "When {0} pays"
+msgstr "When {0} pays"
+
+#: src/components/groups/RulesEditor.tsx:158
+msgid "When you pay"
+msgstr "When you pay"
+
+#: src/components/people/PaymentDetailsDialog.tsx:138
+msgid "Where"
+msgstr "Where"
+
+#: src/components/groups/RulesEditor.tsx:99
+msgid "Who you settle with"
+msgstr "Who you settle with"
+
+#. placeholder {0}: formatAmount(opened, 'INR', locale)
+#: src/components/people/UpiPayDialog.tsx:153
+msgid "Yes, record {0}"
+msgstr "Yes, record {0}"
+
+#: src/components/people/UpiPayDialog.tsx:148
+msgid "Yes, record the payment"
+msgstr "Yes, record the payment"
+
+#: src/components/groups/RulesEditor.tsx:171
 #: src/screens/Activity.tsx:95
+#: src/screens/CreateGroup.tsx:294
+#: src/screens/CreateGroup.tsx:296
+#: src/screens/Group/index.tsx:129
+#: src/screens/Person/index.tsx:149
+#: src/screens/Settle/index.tsx:79
 msgid "You"
 msgstr "You"
+
+#: src/screens/Person/components/PersonBalances.tsx:58
+msgid "You and {name} are settled up."
+msgstr "You and {name} are settled up."
 
 #: src/screens/People/components/BalanceSummary.tsx:154
 msgid "You are owed"
@@ -450,9 +1239,25 @@ msgstr "You are owed"
 msgid "you are owed <0>{figure}</0>"
 msgstr "you are owed <0>{figure}</0>"
 
+#: src/components/people/HistoryRow.tsx:233
+msgid "you borrowed <0>{figure}</0>"
+msgstr "you borrowed <0>{figure}</0>"
+
+#: src/screens/Group/components/GroupRows.tsx:104
+msgid "you get back <0>{figure}</0>"
+msgstr "you get back <0>{figure}</0>"
+
+#: src/components/people/HistoryRow.tsx:224
+msgid "you lent <0>{figure}</0>"
+msgstr "you lent <0>{figure}</0>"
+
 #: src/screens/People/components/BalanceSummary.tsx:156
 msgid "You owe"
 msgstr "You owe"
+
+#: src/screens/Person/components/PersonBalances.tsx:142
+msgid "You owe {name}"
+msgstr "You owe {name}"
 
 #. placeholder {0}: formatAmount(owe, currency, locale)
 #: src/screens/People/components/BalanceSummary.tsx:204
@@ -460,8 +1265,31 @@ msgid "You owe <0>{0}</0>"
 msgstr "You owe <0>{0}</0>"
 
 #: src/components/BalanceText.tsx:55
+#: src/components/people/HistoryRow.tsx:229
+#: src/screens/Group/components/GroupRows.tsx:113
 msgid "you owe <0>{figure}</0>"
 msgstr "you owe <0>{figure}</0>"
+
+#. placeholder {0}: name(r.to)
+#. placeholder {0}: name(to)
+#: src/components/people/HistoryRow.tsx:88
+#: src/components/people/PaymentDetailsDialog.tsx:83
+#: src/components/people/RecordPaymentDialog.tsx:134
+msgid "You paid {0}"
+msgstr "You paid {0}"
+
+#: src/components/people/HistoryRow.tsx:74
+msgid "You paid {total}"
+msgstr "You paid {total}"
+
+#. placeholder {0}: name(to)
+#: src/screens/Settle/components/TransferRow.tsx:40
+msgid "You pay {0}"
+msgstr "You pay {0}"
+
+#: src/screens/Group/index.tsx:298
+msgid "You’re settled up in this group."
+msgstr "You’re settled up in this group."
 
 #: src/screens/StubScreen.tsx:40
 msgid "Your data is safe on this device."

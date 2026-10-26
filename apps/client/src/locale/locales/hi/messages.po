@@ -44,6 +44,11 @@ msgstr "{0, plural, one {# सेकंड} other {# सेकंड}}"
 msgid "{0, plural, one {#mo} other {#mo}}"
 msgstr "{0, plural, one {#मा} other {#मा}}"
 
+#. placeholder {0}: person.data.name
+#: src/screens/AddFriend.tsx:46
+msgid "{0} added"
+msgstr "{0} जोड़े गए"
+
 #. placeholder {0}: item.actorName
 #. placeholder {1}: item.subject
 #: src/view/com/notifications/NotificationFeedItem.tsx:122
@@ -55,6 +60,11 @@ msgstr "{0} ने {1} को जोड़ा"
 #: src/view/com/notifications/NotificationFeedItem.tsx:78
 msgid "{0} added {1}{amount}"
 msgstr "{0} ने {1}{amount} जोड़ा"
+
+#. placeholder {0}: group.data.name
+#: src/screens/CreateGroup.tsx:104
+msgid "{0} created"
+msgstr "{0} बनाया गया"
 
 #. placeholder {0}: item.actorName
 #. placeholder {1}: item.subject
@@ -73,6 +83,60 @@ msgstr "{0} ने {1}{amount} हटाया"
 #: src/view/com/notifications/NotificationFeedItem.tsx:87
 msgid "{0} edited {1}{amount}"
 msgstr "{0} ने {1}{amount} बदला"
+
+#. placeholder {0}: person?.data.name ?? ''
+#: src/screens/Person/index.tsx:210
+msgid "{0} has expenses, payments or groups, so they can’t be removed."
+msgstr "{0} के खर्च, भुगतान या समूह हैं, इसलिए उन्हें हटाया नहीं जा सकता।"
+
+#. placeholder {0}: selected.length
+#: src/components/groups/AddMembersDialog.tsx:92
+msgid "{0} members added"
+msgstr "{0} सदस्य जोड़े गए"
+
+#. placeholder {0}: name(from)
+#. placeholder {0}: name(r.from)
+#. placeholder {1}: name(r.to)
+#. placeholder {1}: name(to)
+#: src/components/people/HistoryRow.tsx:91
+#: src/components/people/PaymentDetailsDialog.tsx:86
+#: src/components/people/RecordPaymentDialog.tsx:137
+msgid "{0} paid {1}"
+msgstr "{0} ने {1} को भुगतान किया"
+
+#. placeholder {0}: name(payers[0]!)
+#: src/components/people/HistoryRow.tsx:75
+msgid "{0} paid {total}"
+msgstr "{0} ने {total} चुकाए"
+
+#. placeholder {0}: name(from)
+#. placeholder {0}: name(r.from)
+#: src/components/people/HistoryRow.tsx:90
+#: src/components/people/PaymentDetailsDialog.tsx:85
+#: src/components/people/RecordPaymentDialog.tsx:136
+msgid "{0} paid you"
+msgstr "{0} ने आपको भुगतान किया"
+
+#. placeholder {0}: item.count
+#: src/screens/Settle/index.tsx:308
+msgid "{0} payments"
+msgstr "{0} भुगतान"
+
+#. placeholder {0}: name(from)
+#. placeholder {1}: name(to)
+#: src/screens/Settle/components/TransferRow.tsx:43
+msgid "{0} pays {1}"
+msgstr "{0}, {1} को देंगे"
+
+#. placeholder {0}: name(from)
+#: src/screens/Settle/components/TransferRow.tsx:42
+msgid "{0} pays you"
+msgstr "{0} आपको देंगे"
+
+#. placeholder {0}: payers.length
+#: src/components/people/HistoryRow.tsx:72
+msgid "{0} people paid {total}"
+msgstr "{0} लोगों ने {total} चुकाए"
 
 #. placeholder {0}: item.actorName
 #. placeholder {1}: item.subject
@@ -142,17 +206,43 @@ msgstr "{count, plural, one {# अपठित} other {# अपठित}}"
 msgid "{currency} balance – open analytics"
 msgstr "{currency} बैलेंस – विश्लेषण खोलें"
 
+#: src/screens/Group/index.tsx:205
 #: src/screens/Groups/components/GroupRow.tsx:55
 msgid "{memberCount} members"
 msgstr "{memberCount} सदस्य"
+
+#: src/screens/Person/components/PersonBalances.tsx:140
+msgid "{name} owes you"
+msgstr "{name} से आपको मिलेंगे"
+
+#: src/components/people/UpiPayDialog.tsx:186
+msgid "{name}’s UPI ID"
+msgstr "{name} की UPI ID"
 
 #: src/view/shell/bottom-bar/BottomBarWeb.tsx:121
 msgid "{notificationCount, plural, one {# unread item} other {# unread items}}"
 msgstr "{notificationCount, plural, one {# अपठित} other {# अपठित}}"
 
+#: src/screens/Group/index.tsx:205
 #: src/screens/Groups/components/GroupRow.tsx:55
 msgid "1 member"
 msgstr "1 सदस्य"
+
+#: src/components/groups/AddMembersDialog.tsx:91
+msgid "1 member added"
+msgstr "1 सदस्य जोड़ा गया"
+
+#: src/screens/Settle/index.tsx:306
+msgid "1 payment"
+msgstr "1 भुगतान"
+
+#: src/components/people/PaymentDetailsDialog.tsx:142
+msgid "A record of money that changed hands outside Splito. Deleting it puts the balance back as it was."
+msgstr "Splito के बाहर हुए लेन-देन का रिकॉर्ड। इसे हटाने पर बैलेंस पहले जैसा हो जाएगा।"
+
+#: src/screens/CreateGroup.tsx:159
+msgid "A trip, a flat or anything you split often."
+msgstr "कोई यात्रा, फ़्लैट या कुछ भी जिसे आप अक्सर बांटते हैं।"
 
 #: src/screens/Profile.tsx:79
 #: src/screens/Profile.tsx:82
@@ -172,18 +262,36 @@ msgstr "गतिविधि"
 
 #: src/navigation/Navigation.tsx:66
 #: src/screens/AddExpense.tsx:33
+#: src/screens/Group/index.tsx:398
+#: src/screens/Group/index.tsx:399
+#: src/screens/Person/index.tsx:436
+#: src/screens/Person/index.tsx:437
 #: src/view/shell/desktop/LeftNav.tsx:296
 msgid "Add expense"
 msgstr "खर्च जोड़ें"
 
 #: src/components/AddExpenseFAB.tsx:31
+#: src/screens/Group/index.tsx:325
+#: src/screens/Person/index.tsx:248
 #: src/view/shell/desktop/LeftNav.tsx:304
 msgctxt "action"
 msgid "Add expense"
 msgstr "खर्च जोड़ें"
 
+#. placeholder {0}: group.data.name
+#: src/screens/Group/index.tsx:319
+msgid "Add expense to {0}"
+msgstr "{0} में खर्च जोड़ें"
+
+#. placeholder {0}: person!.data.name
+#: src/screens/Person/index.tsx:242
+msgid "Add expense with {0}"
+msgstr "{0} के साथ खर्च जोड़ें"
+
 #: src/navigation/Navigation.tsx:69
-#: src/screens/AddFriend.tsx:8
+#: src/screens/AddFriend.tsx:70
+#: src/screens/AddFriend.tsx:178
+#: src/screens/AddFriend.tsx:184
 #: src/screens/People/index.tsx:108
 #: src/screens/People/index.tsx:109
 #: src/screens/People/index.tsx:141
@@ -191,12 +299,52 @@ msgstr "खर्च जोड़ें"
 msgid "Add friend"
 msgstr "दोस्त जोड़ें"
 
+#: src/components/groups/AddMembersDialog.tsx:177
+#: src/screens/CreateGroup.tsx:353
+msgid "Add member"
+msgstr "सदस्य जोड़ें"
+
+#: src/components/groups/AddMembersDialog.tsx:41
+#: src/components/groups/AddMembersDialog.tsx:107
+#: src/components/groups/AddMembersDialog.tsx:190
+#: src/screens/Group/index.tsx:464
+#: src/screens/Group/index.tsx:470
+msgid "Add members"
+msgstr "सदस्य जोड़ें"
+
+#: src/components/groups/AddMembersDialog.tsx:165
+#: src/components/groups/AddMembersDialog.tsx:168
+#: src/screens/CreateGroup.tsx:341
+#: src/screens/CreateGroup.tsx:344
+msgid "Add someone new"
+msgstr "किसी नए को जोड़ें"
+
+#: src/components/groups/AddMembersDialog.tsx:196
+msgid "Add to group"
+msgstr "समूह में जोड़ें"
+
+#: src/screens/Group/index.tsx:339
 #: src/screens/People/components/BalanceSummary.tsx:158
 msgid "All settled up"
 msgstr "सब हिसाब बराबर"
 
-#: src/components/HeaderAvatar.tsx:82
+#: src/components/groups/RulesEditor.tsx:218
+msgid "Allowed"
+msgstr "अनुमति है"
+
+#: src/screens/CreateGroup.tsx:299
+msgid "Always in the group"
+msgstr "हमेशा समूह में"
+
+#: src/components/people/RecordPaymentDialog.tsx:286
+#: src/components/people/RecordPaymentDialog.tsx:291
+#: src/components/people/UpiPayDialog.tsx:212
+#: src/components/people/UpiPayDialog.tsx:217
+msgid "Amount"
+msgstr "राशि"
+
 #: src/components/HeaderAvatar.tsx:86
+#: src/components/HeaderAvatar.tsx:90
 #: src/components/TabGlyph.tsx:29
 #: src/navigation/Navigation.tsx:58
 #: src/screens/Analytics.tsx:8
@@ -208,10 +356,32 @@ msgstr "सब हिसाब बराबर"
 msgid "Analytics"
 msgstr "विश्लेषण"
 
+#: src/screens/Person/components/HistoryFilterDialog.tsx:88
+#: src/screens/Person/components/HistoryFilterDialog.tsx:93
+msgid "Apply"
+msgstr "लागू करें"
+
+#: src/screens/Group/index.tsx:117
+#: src/screens/Group/index.tsx:118
+#: src/screens/Settle/index.tsx:133
+#: src/screens/Settle/index.tsx:134
+msgid "Back to Groups"
+msgstr "समूहों पर वापस जाएं"
+
+#: src/screens/Person/index.tsx:137
+#: src/screens/Person/index.tsx:138
+msgid "Back to People"
+msgstr "लोग पर वापस जाएं"
+
+#: src/screens/Group/index.tsx:358
 #: src/screens/People/components/BalanceSummary.tsx:56
 #: src/screens/People/components/BalanceSummary.tsx:224
 msgid "Balances"
 msgstr "बैलेंस"
+
+#: src/screens/Settle/index.tsx:241
+msgid "Balances or rules changed since this plan was made."
+msgstr "यह योजना बनने के बाद बैलेंस या नियम बदल गए हैं।"
 
 #: src/components/Composer/TopBar.tsx:33
 #: src/components/Composer/TopBar.tsx:43
@@ -220,6 +390,14 @@ msgstr "बैलेंस"
 #: src/components/Prompt.tsx:155
 msgid "Cancel"
 msgstr "रद्द करें"
+
+#: src/screens/CreateGroup.tsx:267
+msgid "Check the dates: the trip can’t end before it starts."
+msgstr "तारीखें जांचें: यात्रा शुरू होने से पहले खत्म नहीं हो सकती।"
+
+#: src/components/groups/RulesEditor.tsx:102
+msgid "Choose who can pay whom when this group settles up. With no rules, anyone can pay anyone. Preferred pairs are used first. Excluded pairs are never used, so a plan may need a different route or may not be possible."
+msgstr "चुनें कि हिसाब चुकाते समय कौन किसे भुगतान कर सकता है। कोई नियम न हो तो कोई भी किसी को भी दे सकता है। पसंदीदा जोड़ियाँ पहले इस्तेमाल होती हैं। बाहर रखी जोड़ियाँ कभी इस्तेमाल नहीं होतीं, इसलिए योजना को दूसरा रास्ता चाहिए हो सकता है या वह संभव न हो।"
 
 #: src/components/Dialog/index.web.tsx:156
 #: src/components/Dialog/index.web.tsx:373
@@ -247,22 +425,107 @@ msgstr "पुष्टि करें"
 msgid "Context menu backdrop, click to close the menu."
 msgstr "मेन्यू की पृष्ठभूमि, मेन्यू बंद करने के लिए क्लिक करें।"
 
+#: src/components/groups/AddMembersDialog.tsx:99
+msgid "Couldn’t add members. Please try again."
+msgstr "सदस्य नहीं जोड़ सके। कृपया फिर कोशिश करें।"
+
+#: src/components/groups/AddMembersDialog.tsx:77
+#: src/screens/CreateGroup.tsx:75
+msgid "Couldn’t add that person. Please try again."
+msgstr "उस व्यक्ति को नहीं जोड़ सके। कृपया फिर कोशिश करें।"
+
+#: src/screens/AddFriend.tsx:57
+msgid "Couldn’t add your friend. Please try again."
+msgstr "आपके दोस्त को नहीं जोड़ सके। कृपया फिर कोशिश करें।"
+
+#: src/screens/CreateGroup.tsx:113
+msgid "Couldn’t create the group. Please try again."
+msgstr "समूह नहीं बना सके। कृपया फिर कोशिश करें।"
+
+#: src/screens/Person/index.tsx:211
+msgid "Couldn’t remove this friend. Please try again."
+msgstr "इस दोस्त को नहीं हटा सके। कृपया फिर कोशिश करें।"
+
+#: src/components/groups/RulesEditor.tsx:85
+msgid "Couldn’t save the rule. Please try again."
+msgstr "नियम सहेजा नहीं जा सका। कृपया फिर कोशिश करें।"
+
+#: src/components/people/EditFriendDialog.tsx:63
+msgid "Couldn’t save. Please try again."
+msgstr "सहेजा नहीं जा सका। कृपया फिर कोशिश करें।"
+
+#: src/screens/Person/components/HistoryFilterDialog.tsx:75
+msgid "Count expenses and payments from groups you share with {name}. Off shows only what is between the two of you."
+msgstr "{name} के साथ वाले समूहों के खर्च और भुगतान भी गिनें। बंद होने पर सिर्फ़ आप दोनों के बीच का हिसाब दिखता है।"
+
+#: src/screens/CreateGroup.tsx:123
+#: src/screens/Group/index.tsx:195
 #: src/screens/Groups/components/GroupRow.tsx:47
 msgid "Couple"
 msgstr "जोड़ी"
 
-#: src/components/HeaderAvatar.tsx:94
+#: src/screens/CreateGroup.tsx:367
+#: src/screens/CreateGroup.tsx:373
+msgid "Create group"
+msgstr "समूह बनाएं"
+
+#: src/components/people/RecordPaymentDialog.tsx:265
+#: src/screens/CreateGroup.tsx:217
+#: src/screens/CreateGroup.tsx:404
+#: src/screens/CreateGroup.tsx:406
+#: src/screens/CreateGroup.tsx:409
+msgid "Currency"
+msgstr "मुद्रा"
+
+#. placeholder {0}: getCurrency(currency).name
+#: src/screens/CreateGroup.tsx:221
+msgid "Currency: {0}"
+msgstr "मुद्रा: {0}"
+
 #: src/components/HeaderAvatar.tsx:98
+#: src/components/HeaderAvatar.tsx:102
 msgid "Dark theme"
 msgstr "डार्क थीम"
 
+#: src/components/people/PaymentDetailsDialog.tsx:137
+msgid "Date"
+msgstr "तारीख"
+
+#: src/screens/CreateGroup.tsx:236
+msgid "Dates (optional)"
+msgstr "तारीखें (वैकल्पिक)"
+
+#: src/components/groups/RulesEditor.tsx:241
+msgid "Default"
+msgstr "डिफ़ॉल्ट"
+
+#: src/components/people/PaymentDetailsDialog.tsx:149
+#: src/components/people/PaymentDetailsDialog.tsx:155
+msgid "Delete payment"
+msgstr "भुगतान हटाएं"
+
+#: src/components/people/UpiPayDialog.tsx:135
+msgid "Did the payment go through?"
+msgstr "क्या भुगतान हो गया?"
+
 #: src/screens/People/components/PersonRow.tsx:65
+#: src/screens/Person/components/PersonBalances.tsx:108
+#: src/screens/Settle/index.tsx:196
+#: src/screens/Settle/index.tsx:199
 msgid "Direct"
 msgstr "सीधा"
 
 #: src/screens/People/components/PersonRow.tsx:164
 msgid "Direct expenses"
 msgstr "सीधे खर्च"
+
+#: src/screens/Person/index.tsx:318
+msgid "Direct only"
+msgstr "सिर्फ़ सीधे"
+
+#: src/components/people/PaymentDetailsDialog.tsx:138
+msgid "Direct, no group"
+msgstr "सीधा, कोई समूह नहीं"
 
 #: src/components/Dialog/index.tsx:603
 msgid "Dismiss"
@@ -272,30 +535,142 @@ msgstr "हटाएं"
 msgid "Double tap to close the dialog"
 msgstr "डायलॉग बंद करने के लिए दो बार टैप करें"
 
+#: src/screens/CreateGroup.tsx:178
+msgid "e.g. Goa trip"
+msgstr "जैसे गोवा यात्रा"
+
+#: src/components/people/RecordPaymentDialog.tsx:332
+msgid "e.g. Paid by UPI"
+msgstr "जैसे UPI से दिया"
+
+#: src/screens/AddFriend.tsx:115
+msgid "e.g. Riya Sharma"
+msgstr "जैसे रिया शर्मा"
+
 #: src/navigation/Navigation.tsx:68
 #: src/screens/EditExpense.tsx:8
 msgid "Edit expense"
 msgstr "खर्च बदलें"
+
+#: src/components/people/EditFriendDialog.tsx:30
+#: src/components/people/EditFriendDialog.tsx:71
+#: src/screens/Person/index.tsx:366
+#: src/screens/Person/index.tsx:369
+msgid "Edit friend"
+msgstr "दोस्त बदलें"
+
+#: src/screens/Settle/index.tsx:414
+msgid "Edit rules"
+msgstr "नियम बदलें"
+
+#: src/screens/Settle/index.tsx:405
+msgid "Edit who you settle with"
+msgstr "किसके साथ हिसाब चुकाएं, बदलें"
+
+#: src/screens/CreateGroup.tsx:254
+msgid "End date"
+msgstr "अंतिम तारीख"
+
+#: src/components/people/EditFriendDialog.tsx:92
+#: src/screens/AddFriend.tsx:125
+#: src/screens/CreateGroup.tsx:186
+msgid "Enter a name."
+msgstr "नाम लिखें।"
+
+#: src/components/people/EditFriendDialog.tsx:125
+#: src/components/people/UpiPayDialog.tsx:205
+#: src/screens/AddFriend.tsx:160
+msgid "Enter a UPI ID like name@bank."
+msgstr "name@bank जैसी UPI ID लिखें।"
+
+#: src/components/people/RecordPaymentDialog.tsx:147
+#: src/components/people/UpiPayDialog.tsx:232
+msgid "Enter an amount greater than zero."
+msgstr "शून्य से ज़्यादा राशि लिखें।"
+
+#: src/screens/Settle/index.tsx:347
+msgid "Everyone is settled up."
+msgstr "सबका हिसाब बराबर है।"
+
+#: src/screens/Settle/index.tsx:221
+msgid "Everyone who owes pays the people who are owed, straight to them."
+msgstr "जिन्हें पैसे देने हैं, वे सीधे उन्हें देते हैं जिन्हें पैसे मिलने हैं।"
+
+#: src/components/groups/RulesEditor.tsx:220
+msgid "Excluded"
+msgstr "बाहर"
 
 #: src/navigation/Navigation.tsx:67
 #: src/screens/Expense.tsx:8
 msgid "Expense"
 msgstr "खर्च"
 
+#: src/screens/Group/index.tsx:357
+msgid "Expenses"
+msgstr "खर्च"
+
+#: src/screens/Person/components/HistoryFilterDialog.tsx:31
+#: src/screens/Person/components/HistoryFilterDialog.tsx:60
+#: src/screens/Person/index.tsx:323
+#: src/screens/Person/index.tsx:329
+msgid "Filter"
+msgstr "फ़िल्टर"
+
+#: src/components/people/RecordPaymentDialog.tsx:218
+msgid "For money that changed hands outside Splito – cash, UPI or a bank transfer. Splito keeps the record; it never moves money."
+msgstr "Splito के बाहर हुए लेन-देन के लिए – नकद, UPI या बैंक ट्रांसफ़र। Splito सिर्फ़ रिकॉर्ड रखता है; वह कभी पैसे नहीं भेजता।"
+
+#: src/screens/Person/index.tsx:128
+#: src/screens/Person/index.tsx:344
+msgid "Friend"
+msgstr "दोस्त"
+
+#: src/screens/Person/index.tsx:293
+msgid "Friend on this device"
+msgstr "इस डिवाइस पर दोस्त"
+
+#: src/screens/Person/index.tsx:206
+msgid "Friend removed"
+msgstr "दोस्त हटाया गया"
+
+#: src/components/groups/AddMembersDialog.tsx:126
 #: src/screens/People/index.tsx:135
 msgid "Friends"
 msgstr "दोस्त"
+
+#: src/screens/AddFriend.tsx:96
+msgid "Friends don’t need Splito. Only you see them."
+msgstr "दोस्तों को Splito की ज़रूरत नहीं। उन्हें सिर्फ़ आप देखते हैं।"
+
+#: src/screens/Group/components/GroupRows.tsx:108
+msgid "gets back <0>{figure}</0>"
+msgstr "को मिलेंगे <0>{figure}</0>"
 
 #: src/components/Layout/Header/index.tsx:120
 msgid "Go back"
 msgstr "वापस जाएं"
 
 #: src/navigation/Navigation.tsx:64
-#: src/screens/Group.tsx:8
+#: src/screens/Group/index.tsx:108
+#: src/screens/Group/index.tsx:195
+#: src/screens/Group/index.tsx:416
 #: src/screens/Groups/components/GroupRow.tsx:48
 #: src/screens/People/components/PersonRow.tsx:58
+#: src/screens/Person/components/PersonBalances.tsx:111
 msgid "Group"
 msgstr "समूह"
+
+#: src/screens/CreateGroup.tsx:172
+msgid "Group name"
+msgstr "समूह का नाम"
+
+#: src/screens/Group/index.tsx:350
+msgid "Group sections"
+msgstr "समूह के हिस्से"
+
+#: src/screens/CreateGroup.tsx:196
+msgid "Group type"
+msgstr "समूह का प्रकार"
 
 #: src/components/TabGlyph.tsx:28
 #: src/navigation/Navigation.tsx:57
@@ -304,18 +679,64 @@ msgstr "समूह"
 msgid "Groups"
 msgstr "समूह"
 
+#: src/screens/Person/index.tsx:311
+msgid "History"
+msgstr "इतिहास"
+
+#: src/screens/CreateGroup.tsx:122
+#: src/screens/Group/index.tsx:195
 #: src/screens/Groups/components/GroupRow.tsx:46
 msgid "Home"
 msgstr "घर"
 
-#: src/components/HeaderAvatar.tsx:94
+#: src/screens/Person/components/HistoryFilterDialog.tsx:65
+#: src/screens/Person/components/HistoryFilterDialog.tsx:71
+msgid "Include groups"
+msgstr "समूह शामिल करें"
+
+#: src/components/people/UpiPayDialog.tsx:226
+msgid "Indian Rupee"
+msgstr "भारतीय रुपया"
+
+#: src/screens/AddFriend.tsx:170
+msgid "Inviting friends to Splito by link or QR is available when you sign in, coming with sync."
+msgstr "लिंक या QR से दोस्तों को Splito पर बुलाना साइन इन करने पर मिलेगा, सिंक के साथ आ रहा है।"
+
+#: src/screens/Group/components/GroupRows.tsx:152
+msgid "Left the group"
+msgstr "समूह छोड़ दिया"
+
+#: src/screens/AddFriend.tsx:162
+msgid "Lets you open your UPI app when you pay them in rupees."
+msgstr "रुपयों में भुगतान करते समय आपका UPI ऐप खोलने देता है।"
+
 #: src/components/HeaderAvatar.tsx:98
+#: src/components/HeaderAvatar.tsx:102
 msgid "Light theme"
 msgstr "लाइट थीम"
+
+#: src/screens/CreateGroup.tsx:277
+#: src/screens/CreateGroup.tsx:303
+#: src/screens/Group/index.tsx:359
+#: src/screens/Group/index.tsx:459
+msgid "Members"
+msgstr "सदस्य"
 
 #: src/components/Menu/index.tsx:133
 msgid "Menu"
 msgstr "मेन्यू"
+
+#: src/screens/Person/index.tsx:349
+msgid "More options"
+msgstr "और विकल्प"
+
+#: src/components/people/EditFriendDialog.tsx:75
+#: src/components/people/EditFriendDialog.tsx:80
+#: src/screens/AddFriend.tsx:103
+#: src/screens/AddFriend.tsx:109
+#: src/screens/CreateGroup.tsx:166
+msgid "Name"
+msgstr "नाम"
 
 #: src/screens/Groups/index.tsx:58
 msgctxt "action"
@@ -323,12 +744,43 @@ msgid "New"
 msgstr "नया"
 
 #: src/navigation/Navigation.tsx:70
-#: src/screens/CreateGroup.tsx:8
+#: src/screens/CreateGroup.tsx:133
 #: src/screens/Groups/index.tsx:52
 #: src/screens/Groups/index.tsx:94
 #: src/screens/Groups/index.tsx:95
 msgid "New group"
 msgstr "नया समूह"
+
+#. placeholder {0}: nameList(item.stuck)
+#: src/screens/Settle/index.tsx:372
+msgid "No allowed pair to pay anyone who is owed: {0}"
+msgstr "जिन्हें पैसे मिलने हैं, उनमें से किसी को देने के लिए अनुमति वाली जोड़ी नहीं: {0}"
+
+#. placeholder {0}: nameList(item.stuck)
+#: src/screens/Settle/index.tsx:377
+msgid "No allowed route to anyone who is owed, even through other members: {0}"
+msgstr "दूसरे सदस्यों के ज़रिए भी, पैसे पाने वाले किसी व्यक्ति तक अनुमति वाला रास्ता नहीं: {0}"
+
+#: src/components/people/HistoryRow.tsx:214
+msgid "no balance change"
+msgstr "बैलेंस नहीं बदला"
+
+#: src/screens/Group/index.tsx:388
+msgid "No balances yet. They appear once the group has an expense."
+msgstr "अभी कोई बैलेंस नहीं। समूह में खर्च जुड़ते ही दिखेंगे।"
+
+#. placeholder {0}: person!.data.name
+#: src/screens/Person/index.tsx:431
+msgid "No direct expenses with {0}. Group expenses are hidden by the filter."
+msgstr "{0} के साथ कोई सीधा खर्च नहीं। समूह के खर्च फ़िल्टर से छिपे हैं।"
+
+#: src/screens/Settle/index.tsx:361
+msgid "No direct plan works with these rules"
+msgstr "इन नियमों से कोई सीधी योजना नहीं बनती"
+
+#: src/screens/Group/index.tsx:394
+msgid "No expenses in this group yet. Add the first one and everyone’s share is worked out for you."
+msgstr "इस समूह में अभी कोई खर्च नहीं। पहला जोड़ें, सबका हिस्सा अपने आप निकल आएगा।"
 
 #: src/screens/Groups/index.tsx:92
 msgid "No groups yet. A group keeps a trip’s or a flat’s expenses and balances in one place."
@@ -338,26 +790,142 @@ msgstr "अभी कोई समूह नहीं। समूह किस�
 msgid "No open balances"
 msgstr "कोई बकाया नहीं"
 
+#: src/screens/Settle/index.tsx:365
+msgid "No plan works with these rules"
+msgstr "इन नियमों से कोई योजना नहीं बनती"
+
+#: src/components/people/UpiPayDialog.tsx:124
+msgid "No UPI app on this device can open the payment."
+msgstr "इस डिवाइस पर कोई UPI ऐप यह भुगतान नहीं खोल सकता।"
+
+#: src/components/people/HistoryRow.tsx:216
+msgid "not involved"
+msgstr "शामिल नहीं"
+
+#: src/components/people/UpiPayDialog.tsx:157
+#: src/components/people/UpiPayDialog.tsx:162
+msgid "Not yet"
+msgstr "अभी नहीं"
+
+#: src/components/people/PaymentDetailsDialog.tsx:139
+#: src/components/people/RecordPaymentDialog.tsx:329
+msgid "Note"
+msgstr "नोट"
+
+#: src/components/people/RecordPaymentDialog.tsx:324
+msgid "Note (optional)"
+msgstr "नोट (वैकल्पिक)"
+
 #: src/screens/Activity.tsx:181
 msgid "Nothing here yet. Expenses, payments and group changes will show up here."
 msgstr "अभी यहां कुछ नहीं। खर्च, भुगतान और समूह के बदलाव यहां दिखेंगे।"
+
+#: src/screens/Settle/index.tsx:429
+msgid "Nothing to settle. This group has no expenses yet."
+msgstr "चुकाने को कुछ नहीं। इस समूह में अभी कोई खर्च नहीं।"
+
+#. placeholder {0}: person!.data.name
+#: src/screens/Person/index.tsx:430
+msgid "Nothing with {0} yet. Add an expense you shared and it shows up here."
+msgstr "{0} के साथ अभी कुछ नहीं। साझा खर्च जोड़ें, वह यहां दिखेगा।"
 
 #: src/lib/hooks/useTimeAgo.ts:136
 msgid "now"
 msgstr "अभी"
 
+#: src/screens/CreateGroup.tsx:151
+msgid "One place for shared costs"
+msgstr "साझा खर्च के लिए एक जगह"
+
+#: src/components/groups/RulesEditor.tsx:124
+#: src/components/groups/RulesEditor.tsx:130
+msgid "Only allowed pairs"
+msgstr "सिर्फ़ अनुमति वाली जोड़ियाँ"
+
+#: src/screens/Person/index.tsx:517
+msgid "Only friends with no expenses, payments or groups can be removed."
+msgstr "सिर्फ़ वे दोस्त हटाए जा सकते हैं जिनका कोई खर्च, भुगतान या समूह नहीं है।"
+
+#: src/screens/Settle/index.tsx:230
+msgid "Only pairs allowed in Who you settle with are used, preferred pairs first, so the plan isn’t always the fewest payments."
+msgstr "सिर्फ़ “किसके साथ हिसाब चुकाएं” में अनुमति वाली जोड़ियाँ इस्तेमाल होती हैं, पसंदीदा पहले, इसलिए योजना में हमेशा सबसे कम भुगतान नहीं होते।"
+
+#. placeholder {0}: formatAmount(suggestion, currency, locale)
+#: src/components/people/RecordPaymentDialog.tsx:317
+msgid "Open balance {0}. Part payments are fine."
+msgstr "बकाया {0}। आंशिक भुगतान भी ठीक है।"
+
 #: src/components/Layout/Header/index.tsx:154
 msgid "Open drawer menu"
 msgstr "मेन्यू खोलें"
+
+#: src/components/people/UpiPayDialog.tsx:248
+#: src/components/people/UpiPayDialog.tsx:254
+msgid "Open UPI app"
+msgstr "UPI ऐप खोलें"
+
+#: src/components/people/UpiPayDialog.tsx:177
+msgid "Opens your UPI app with {name} and the amount filled in. You confirm the payment there."
+msgstr "आपका UPI ऐप {name} और राशि भरकर खुलेगा। भुगतान की पुष्टि वहीं करें।"
+
+#: src/screens/CreateGroup.tsx:124
+msgid "Other"
+msgstr "अन्य"
 
 #. placeholder {0}: formatAmount(owed, currency, locale)
 #: src/screens/People/components/BalanceSummary.tsx:195
 msgid "Owed to you <0>{0}</0>"
 msgstr "आपको मिलेंगे <0>{0}</0>"
 
+#: src/screens/Group/components/GroupRows.tsx:117
+msgid "owes <0>{figure}</0>"
+msgstr "को देने हैं <0>{figure}</0>"
+
 #: src/components/BalanceText.tsx:46
+#: src/components/people/HistoryRow.tsx:220
 msgid "owes you <0>{figure}</0>"
 msgstr "आपको मिलेंगे <0>{figure}</0>"
+
+#: src/components/groups/RulesEditor.tsx:134
+msgid "Pairs you haven’t marked Allowed or Preferred are treated as excluded."
+msgstr "जिन जोड़ियों को आपने अनुमति या पसंदीदा नहीं चुना, वे बाहर मानी जाएंगी।"
+
+#: src/components/people/RecordPaymentDialog.tsx:318
+msgid "Part payments are fine."
+msgstr "आंशिक भुगतान भी ठीक है।"
+
+#: src/components/people/UpiPayDialog.tsx:45
+#: src/components/people/UpiPayDialog.tsx:174
+#: src/screens/Person/index.tsx:266
+#: src/screens/Person/index.tsx:272
+msgid "Pay with UPI"
+msgstr "UPI से भुगतान करें"
+
+#: src/components/people/HistoryRow.tsx:92
+#: src/components/people/PaymentDetailsDialog.tsx:119
+msgid "Payment"
+msgstr "भुगतान"
+
+#: src/components/people/PaymentDetailsDialog.tsx:97
+msgid "Payment deleted"
+msgstr "भुगतान हटाया गया"
+
+#: src/components/people/PaymentDetailsDialog.tsx:45
+msgid "Payment details"
+msgstr "भुगतान का विवरण"
+
+#: src/components/people/RecordPaymentDialog.tsx:183
+#: src/components/people/RecordPaymentDialog.tsx:191
+msgid "Payment recorded"
+msgstr "भुगतान दर्ज हुआ"
+
+#: src/screens/Settle/index.tsx:225
+msgid "Payments may pass through other members when a direct pair isn’t allowed. Everyone still ends up even."
+msgstr "सीधी जोड़ी की अनुमति न हो तो भुगतान दूसरे सदस्यों से होकर जा सकते हैं। आखिर में सबका हिसाब बराबर रहता है।"
+
+#: src/components/groups/RulesEditor.tsx:236
+msgid "pays {toName}"
+msgstr "{toName} को देता है"
 
 #: src/components/TabGlyph.tsx:27
 #: src/view/shell/desktop/LeftNav.tsx:338
@@ -365,16 +933,84 @@ msgid "People"
 msgstr "लोग"
 
 #: src/navigation/Navigation.tsx:63
-#: src/screens/Person.tsx:8
 msgid "Person"
 msgstr "व्यक्ति"
 
-#: src/components/HeaderAvatar.tsx:64
+#. placeholder {0}: snapshot.hash.slice(0, 8)
+#: src/screens/Settle/index.tsx:462
+msgid "Plan {0}"
+msgstr "योजना {0}"
+
+#: src/screens/Settle/index.tsx:190
+msgid "Plan type"
+msgstr "योजना का प्रकार"
+
+#: src/components/groups/RulesEditor.tsx:219
+msgid "Preferred"
+msgstr "पसंदीदा"
+
 #: src/components/HeaderAvatar.tsx:68
+#: src/components/HeaderAvatar.tsx:72
 #: src/navigation/Navigation.tsx:60
 #: src/screens/Profile.tsx:34
 msgid "Profile"
 msgstr "प्रोफ़ाइल"
+
+#: src/screens/Settle/components/TransferRow.tsx:92
+msgid "Record"
+msgstr "दर्ज करें"
+
+#: src/components/people/RecordPaymentDialog.tsx:72
+#: src/components/people/RecordPaymentDialog.tsx:215
+#: src/screens/Person/index.tsx:254
+msgid "Record a payment"
+msgstr "भुगतान दर्ज करें"
+
+#: src/components/people/RecordPaymentDialog.tsx:340
+#: src/components/people/RecordPaymentDialog.tsx:346
+#: src/screens/Person/index.tsx:260
+msgid "Record payment"
+msgstr "भुगतान दर्ज करें"
+
+#: src/screens/Settle/components/TransferRow.tsx:84
+#: src/screens/Settle/components/TransferRow.tsx:90
+msgid "Record this payment"
+msgstr "यह भुगतान दर्ज करें"
+
+#: src/screens/Person/index.tsx:518
+msgid "Remove"
+msgstr "हटाएं"
+
+#. placeholder {0}: person.data.name
+#: src/screens/Person/index.tsx:516
+msgid "Remove {0}?"
+msgstr "{0} को हटाएं?"
+
+#: src/screens/Person/index.tsx:375
+#: src/screens/Person/index.tsx:379
+msgid "Remove friend"
+msgstr "दोस्त हटाएं"
+
+#: src/components/groups/RulesEditor.tsx:184
+msgid "Reset rules"
+msgstr "नियम रीसेट करें"
+
+#: src/components/groups/RulesEditor.tsx:190
+msgid "Reset to anyone pays anyone"
+msgstr "रीसेट करें: कोई भी किसी को भी दे"
+
+#: src/components/groups/RulesEditor.tsx:250
+msgid "Rule for this pair"
+msgstr "इस जोड़ी का नियम"
+
+#: src/screens/Group/index.tsx:360
+msgid "Rules"
+msgstr "नियम"
+
+#: src/components/people/EditFriendDialog.tsx:135
+#: src/components/people/EditFriendDialog.tsx:140
+msgid "Save"
+msgstr "सहेजें"
 
 #: src/components/Composer/TopBar.tsx:59
 msgctxt "action"
@@ -385,12 +1021,20 @@ msgstr "सहेजें"
 msgid "Save expense"
 msgstr "खर्च सहेजें"
 
+#: src/components/people/EditFriendDialog.tsx:54
+msgid "Saved"
+msgstr "सहेजा गया"
+
 #: src/screens/Profile.tsx:131
 msgid "Saved on this device"
 msgstr "इस डिवाइस पर सहेजा गया"
 
-#: src/components/HeaderAvatar.tsx:73
+#: src/components/groups/RulesEditor.tsx:243
+msgid "Set for this group"
+msgstr "इस समूह के लिए तय"
+
 #: src/components/HeaderAvatar.tsx:77
+#: src/components/HeaderAvatar.tsx:81
 #: src/navigation/Navigation.tsx:61
 #: src/navigation/Navigation.tsx:62
 #: src/screens/Profile.tsx:70
@@ -402,21 +1046,40 @@ msgid "Settings"
 msgstr "सेटिंग्स"
 
 #: src/navigation/Navigation.tsx:65
-#: src/screens/Settle.tsx:8
+#: src/screens/Group/index.tsx:331
+#: src/screens/Group/index.tsx:341
+#: src/screens/Settle/index.tsx:124
+#: src/screens/Settle/index.tsx:268
 msgid "Settle up"
 msgstr "हिसाब चुकाएं"
 
 #: src/components/BalanceText.tsx:43
+#: src/screens/Group/components/GroupRows.tsx:101
 #: src/screens/Groups/components/GroupRow.tsx:65
 #: src/screens/People/components/PersonRow.tsx:79
 msgid "settled up"
 msgstr "हिसाब बराबर"
 
+#: src/screens/Person/components/PersonBalances.tsx:144
+msgid "Settled up"
+msgstr "हिसाब बराबर"
+
+#: src/components/people/HistoryRow.tsx:174
+msgid "Shows the payment and lets you delete it"
+msgstr "भुगतान दिखाता है और उसे हटाने देता है"
+
 #: src/screens/Profile.tsx:89
 msgid "Sign in and sync"
 msgstr "साइन इन और सिंक"
 
+#: src/components/groups/RulesEditor.tsx:171
+#: src/components/people/HistoryRow.tsx:59
+#: src/components/people/PaymentDetailsDialog.tsx:80
+#: src/components/people/RecordPaymentDialog.tsx:131
 #: src/screens/Activity.tsx:95
+#: src/screens/Group/index.tsx:449
+#: src/screens/Group/index.tsx:480
+#: src/screens/Settle/components/TransferRow.tsx:37
 msgid "Someone"
 msgstr "कोई"
 
@@ -424,23 +1087,149 @@ msgstr "कोई"
 msgid "Split anything with anyone. Add an expense or a friend to get started – friends don’t need the app."
 msgstr "किसी के भी साथ कुछ भी बांटें। शुरू करने के लिए खर्च या दोस्त जोड़ें – दोस्तों को ऐप की ज़रूरत नहीं।"
 
+#: src/screens/AddFriend.tsx:88
+msgid "Split with anyone"
+msgstr "किसी के भी साथ बांटें"
+
 #: src/view/com/home/HomeHeaderLayoutMobile.tsx:41
 #: src/view/shell/desktop/LeftNav.tsx:104
 msgid "Splito - People"
 msgstr "Splito - लोग"
+
+#: src/components/people/UpiPayDialog.tsx:139
+msgid "Splito can’t see your UPI app. Record the payment only once your app shows it as successful."
+msgstr "Splito आपका UPI ऐप नहीं देख सकता। भुगतान तभी दर्ज करें जब ऐप उसे सफल दिखाए।"
+
+#: src/screens/Settle/index.tsx:450
+msgid "Splito never moves money. Record each payment once it has happened – part payments are fine."
+msgstr "Splito कभी पैसे नहीं भेजता। हर भुगतान होने के बाद उसे दर्ज करें – आंशिक भुगतान भी ठीक है।"
+
+#: src/screens/CreateGroup.tsx:242
+msgid "Start date"
+msgstr "शुरू की तारीख"
+
+#: src/components/people/RecordPaymentDialog.tsx:249
+msgid "Swap who paid"
+msgstr "भुगतान करने वाला बदलें"
+
+#: src/components/people/PaymentDetailsDialog.tsx:108
+msgid "The payment couldn’t be deleted. Please try again."
+msgstr "भुगतान हटाया नहीं जा सका। कृपया फिर कोशिश करें।"
+
+#: src/components/people/RecordPaymentDialog.tsx:168
+msgid "The payment couldn’t be saved. Please try again."
+msgstr "भुगतान सहेजा नहीं जा सका। कृपया फिर कोशिश करें।"
+
+#: src/screens/Person/components/HistoryFilterDialog.tsx:84
+msgid "The starting value is set in Settings › Lists."
+msgstr "शुरुआती मान सेटिंग्स › सूचियाँ में तय होता है।"
+
+#: src/components/groups/AddMembersDialog.tsx:110
+msgid "They join from now on. Expenses already in the group keep their splits."
+msgstr "वे अभी से जुड़ेंगे। समूह के पुराने खर्चों का बंटवारा नहीं बदलेगा।"
+
+#: src/screens/Person/index.tsx:135
+msgid "This friend isn’t on this device. They may have been removed."
+msgstr "यह दोस्त इस डिवाइस पर नहीं है। शायद हटा दिया गया है।"
+
+#: src/screens/Group/index.tsx:115
+#: src/screens/Settle/index.tsx:131
+msgid "This group isn’t on this device. It may have been removed."
+msgstr "यह समूह इस डिवाइस पर नहीं है। शायद हटा दिया गया है।"
 
 #: src/screens/AddExpense.tsx:36
 #: src/screens/StubScreen.tsx:36
 msgid "This screen is being built"
 msgstr "यह स्क्रीन बन रही है"
 
+#: src/screens/CreateGroup.tsx:121
+#: src/screens/Group/index.tsx:195
 #: src/screens/Groups/components/GroupRow.tsx:45
 msgid "Trip"
 msgstr "यात्रा"
 
+#: src/screens/Settle/index.tsx:395
+#: src/screens/Settle/index.tsx:399
+msgid "Try via others"
+msgstr "दूसरों के ज़रिए आज़माएं"
+
+#: src/screens/CreateGroup.tsx:193
+msgid "Type"
+msgstr "प्रकार"
+
+#: src/components/people/PaymentDetailsDialog.tsx:99
+#: src/components/people/PaymentDetailsDialog.tsx:101
+msgid "Undo"
+msgstr "पूर्ववत करें"
+
+#: src/screens/Settle/index.tsx:248
+#: src/screens/Settle/index.tsx:253
+msgid "Update plan"
+msgstr "योजना अपडेट करें"
+
+#: src/components/people/EditFriendDialog.tsx:103
+#: src/components/people/UpiPayDialog.tsx:191
+#: src/screens/AddFriend.tsx:137
+msgid "UPI ID"
+msgstr "UPI ID"
+
+#: src/components/people/EditFriendDialog.tsx:98
+#: src/screens/AddFriend.tsx:132
+msgid "UPI ID (optional)"
+msgstr "UPI ID (वैकल्पिक)"
+
+#: src/components/people/UpiPayDialog.tsx:239
+msgid "UPI links open on a phone with a UPI app. On a computer, nothing may happen."
+msgstr "UPI लिंक UPI ऐप वाले फ़ोन पर खुलते हैं। कंप्यूटर पर शायद कुछ न हो।"
+
+#: src/components/people/EditFriendDialog.tsx:127
+msgid "Used to open your UPI app when you pay them in rupees."
+msgstr "रुपयों में भुगतान करते समय आपका UPI ऐप खोलने के लिए।"
+
+#: src/screens/Settle/index.tsx:204
+#: src/screens/Settle/index.tsx:207
+msgid "Via others"
+msgstr "दूसरों के ज़रिए"
+
+#. placeholder {0}: names.get(from) ?? ''
+#: src/components/groups/RulesEditor.tsx:160
+msgid "When {0} pays"
+msgstr "जब {0} देते हैं"
+
+#: src/components/groups/RulesEditor.tsx:158
+msgid "When you pay"
+msgstr "जब आप देते हैं"
+
+#: src/components/people/PaymentDetailsDialog.tsx:138
+msgid "Where"
+msgstr "कहां"
+
+#: src/components/groups/RulesEditor.tsx:99
+msgid "Who you settle with"
+msgstr "किसके साथ हिसाब चुकाएं"
+
+#. placeholder {0}: formatAmount(opened, 'INR', locale)
+#: src/components/people/UpiPayDialog.tsx:153
+msgid "Yes, record {0}"
+msgstr "हां, {0} दर्ज करें"
+
+#: src/components/people/UpiPayDialog.tsx:148
+msgid "Yes, record the payment"
+msgstr "हां, भुगतान दर्ज करें"
+
+#: src/components/groups/RulesEditor.tsx:171
 #: src/screens/Activity.tsx:95
+#: src/screens/CreateGroup.tsx:294
+#: src/screens/CreateGroup.tsx:296
+#: src/screens/Group/index.tsx:129
+#: src/screens/Person/index.tsx:149
+#: src/screens/Settle/index.tsx:79
 msgid "You"
 msgstr "आप"
+
+#: src/screens/Person/components/PersonBalances.tsx:58
+msgid "You and {name} are settled up."
+msgstr "आपका और {name} का हिसाब बराबर है।"
 
 #: src/screens/People/components/BalanceSummary.tsx:154
 msgid "You are owed"
@@ -450,9 +1239,25 @@ msgstr "आपको मिलेंगे"
 msgid "you are owed <0>{figure}</0>"
 msgstr "आपको मिलेंगे <0>{figure}</0>"
 
+#: src/components/people/HistoryRow.tsx:233
+msgid "you borrowed <0>{figure}</0>"
+msgstr "आपने उधार लिए <0>{figure}</0>"
+
+#: src/screens/Group/components/GroupRows.tsx:104
+msgid "you get back <0>{figure}</0>"
+msgstr "आपको मिलेंगे <0>{figure}</0>"
+
+#: src/components/people/HistoryRow.tsx:224
+msgid "you lent <0>{figure}</0>"
+msgstr "आपने दिए <0>{figure}</0>"
+
 #: src/screens/People/components/BalanceSummary.tsx:156
 msgid "You owe"
 msgstr "आपको देने हैं"
+
+#: src/screens/Person/components/PersonBalances.tsx:142
+msgid "You owe {name}"
+msgstr "आपको {name} को देने हैं"
 
 #. placeholder {0}: formatAmount(owe, currency, locale)
 #: src/screens/People/components/BalanceSummary.tsx:204
@@ -460,8 +1265,31 @@ msgid "You owe <0>{0}</0>"
 msgstr "आपको देने हैं <0>{0}</0>"
 
 #: src/components/BalanceText.tsx:55
+#: src/components/people/HistoryRow.tsx:229
+#: src/screens/Group/components/GroupRows.tsx:113
 msgid "you owe <0>{figure}</0>"
 msgstr "आपको देने हैं <0>{figure}</0>"
+
+#. placeholder {0}: name(r.to)
+#. placeholder {0}: name(to)
+#: src/components/people/HistoryRow.tsx:88
+#: src/components/people/PaymentDetailsDialog.tsx:83
+#: src/components/people/RecordPaymentDialog.tsx:134
+msgid "You paid {0}"
+msgstr "आपने {0} को भुगतान किया"
+
+#: src/components/people/HistoryRow.tsx:74
+msgid "You paid {total}"
+msgstr "आपने {total} चुकाए"
+
+#. placeholder {0}: name(to)
+#: src/screens/Settle/components/TransferRow.tsx:40
+msgid "You pay {0}"
+msgstr "आप {0} को देंगे"
+
+#: src/screens/Group/index.tsx:298
+msgid "You’re settled up in this group."
+msgstr "इस समूह में आपका हिसाब बराबर है।"
 
 #: src/screens/StubScreen.tsx:40
 msgid "Your data is safe on this device."
