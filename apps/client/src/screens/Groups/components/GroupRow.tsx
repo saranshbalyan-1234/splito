@@ -110,8 +110,9 @@ export function GroupRow({
               style={[a.text_md, a.font_semi_bold, a.leading_snug]}>
               {name}
             </Text>
+            {/* Two lines at most, so a trip's dates are never cut off by the balance beside them. */}
             <Text
-              numberOfLines={1}
+              numberOfLines={2}
               style={[a.text_sm, a.leading_snug, t.atoms.text_contrast_medium]}>
               {byline}
             </Text>

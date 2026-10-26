@@ -86,7 +86,7 @@ export function GroupAvatar({
       </View>
     )
   }
-  const badge = Math.round(size * 0.42)
+  const badge = Math.min(Math.round(size * 0.42), 20)
   return (
     <View style={{width: size, height: size}}>
       <View

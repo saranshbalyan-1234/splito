@@ -111,6 +111,7 @@ export function Charts({
     key: b.key,
     value: b.share,
     axisLabel: b.axisLabel,
+    axisLabelNarrow: b.axisLabelNarrow,
     label: b.label,
     isCurrent: b.from <= report.today && report.today <= b.to,
     isFuture: b.from > report.today,
@@ -384,6 +385,7 @@ export function Charts({
               key: b.key,
               value: b.balance,
               axisLabel: b.axisLabel,
+              axisLabelNarrow: b.axisLabelNarrow,
               label: b.label,
             }))}
             currency={currency}

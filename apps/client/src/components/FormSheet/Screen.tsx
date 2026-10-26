@@ -1,6 +1,6 @@
 // Adapted from bluesky-social/social-app@4e4ad9c (MIT) - src/view/com/composer/Composer.tsx (KeyboardAvoidingView, useKeyboardVerticalOffset)
 import {useRef} from 'react'
-import {ScrollView} from 'react-native'
+import {ScrollView, View} from 'react-native'
 import {KeyboardAvoidingView} from 'react-native-keyboard-controller'
 import {useSafeAreaInsets} from 'react-native-safe-area-context'
 import {
@@ -12,7 +12,8 @@ import {
 import {atoms as a, web} from '#/alf'
 import * as Composer from '#/components/Composer'
 import * as Prompt from '#/components/Prompt'
-import {IS_IOS, IS_IPAD, IS_LIQUID_GLASS, IS_NATIVE} from '#/env'
+import {IS_IOS, IS_IPAD, IS_LIQUID_GLASS, IS_NATIVE, IS_WEB} from '#/env'
+import {useShouldReduceMotion} from '#/motion/useShouldReduceMotion'
 import {
   DiscardPrompt,
   Footer,
@@ -20,7 +21,9 @@ import {
   Header,
   SheetContext,
   useIsScrolled,
+  useIsSheet,
 } from './shared'
+import {useSheetDrag, WebHandle} from './webDrag'
 
 /**
  * A form sheet that is a route of its own (Add / Edit expense, Add friend,
@@ -69,6 +72,9 @@ export function Screen({
   const keyboardVerticalOffset = useKeyboardVerticalOffset()
   const pendingAction = useRef<NavigationAction | null>(null)
   const [isScrolled, onScroll] = useIsScrolled()
+  const isSheet = useIsSheet()
+  const isWebSheet = IS_WEB && isSheet
+  const reduceMotion = useShouldReduceMotion()
 
   /* Native: a swipe down or Back is a route removal, so ask before it happens. */
   usePreventRemove(IS_NATIVE && isDirty, ({data}) => {
@@ -80,6 +86,12 @@ export function Screen({
     if (!isDirty || IS_NATIVE) onClose()
     else discardControl.open()
   }
+  const drag = useSheetDrag({
+    isEnabled: isWebSheet,
+    isDirty,
+    reduceMotion,
+    onDismiss: requestClose,
+  })
   const leave = () => {
     const action = pendingAction.current
     pendingAction.current = null
@@ -90,12 +102,17 @@ export function Screen({
   return (
     <SheetContext.Provider value={{requestClose, setIsDirty: () => {}, testID}}>
       <Composer.Outer testID={testID} onDismiss={requestClose}>
-        <Header
-          title={title}
-          onClose={requestClose}
-          closeHint={closeHint}
-          isScrolled={isScrolled}
-        />
+        {/* Phone-width web: Bluesky's handle, and the top bar drags the sheet down to close. */}
+        <View {...drag}>
+          {isWebSheet && <WebHandle />}
+          <Header
+            title={title}
+            onClose={requestClose}
+            closeHint={closeHint}
+            isScrolled={isScrolled}
+            style={isWebSheet && a.pt_lg}
+          />
+        </View>
         <KeyboardAvoidingView
           behavior={IS_IOS ? 'padding' : 'height'}
           keyboardVerticalOffset={keyboardVerticalOffset}
