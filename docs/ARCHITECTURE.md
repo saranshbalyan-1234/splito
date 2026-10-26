@@ -1220,7 +1220,7 @@ show what: centre may be page name, right maybe some basic action, and left may 
   | Analytics | Search & Ask + overflow (Export CSV) |
   | Activity | Search & Ask + Mark all read |
   | Person | Settle up + overflow (Remind, Export statement, Edit, Delete) |
-  | Group | Settle up + overflow (Edit group, Members, Payment rules, Invite link, Export) |
+  | Group | Settle up + overflow (Edit group, Members, Payment rules, Export) |
   | Expense | Edit + overflow (Delete) |
   | Settings, Profile, Settle | none |
 
@@ -1579,8 +1579,12 @@ add anyway (only for you)"; "also i should be able to select from contacts". *Wh
   "make accept decline like invites sent, on mobile only icon for both, for web complete text with icon".
 - **Incoming requests** show in Activity (from others, unread badge) and at the top of People ("Requests":
   Accept / Decline). Declining is silent to the sender (stays "pending" until it expires after 30 days).
-- **Invite link and QR with limits.** People header and the Add friend sheet have "Invite link / QR"; groups
-  have the same for joining a group. Creating one sets: max uses (1, 5, 25, unlimited; default 1 for friends,
+- **Invite link and QR with limits, only inside "Invite people".** The Home header's person-plus button is
+  "Invite people" (it opens the Add friend sheet); the invite link / QR row lives only inside that sheet. On a
+  group, it lives only inside the group's "Add members / Invite people" sheet. No header overflow, menu or page
+  shows invite links outside these flows (the Home "..." overflow and the Group overflow entries are removed;
+  "Manage invite links" is reached from the invite-link sheet's "Manage links" button and from Settings >
+  Privacy). *Why:* "invite link and qr to show once i click on invite people, not outside". Creating one sets: max uses (1, 5, 25, unlimited; default 1 for friends,
   25 for groups), expiry (24 hours, 7 days, 30 days, never; default 7 days), and for groups "approve each join"
   (default off). The sheet shows the QR (scannable, accent-coloured logo in the centre), the link, Copy and
   Share. "Manage invite links" lists active links with uses left, expiry, and Revoke. Opening a link: if the
@@ -1739,6 +1743,7 @@ Every owner decision, in the order it was made (all 2026-10-26). "Replaced" name
 | 74 | "make it as a ai icon like flash or something ... basically we are combining ai and search" | The Search & Ask header button uses the Lucide Sparkles AI icon (not a magnifier) | § 26.3 | Magnifier icon |
 | 75 | "command + k opens this up" | Cmd/Ctrl+K opens and closes the Search & Ask drawer everywhere (web, hardware keyboards), hint shown on desktop | § 26.3 | "/" or Cmd/Ctrl+K on web only |
 | 76 | "make accept decline like invites sent, on mobile only icon for both, for web complete text with icon" | Requests and Invites sent rows: actions on the right; icon-only on phones, icon + text on desktop | § 26.18 | Accept/Decline text buttons under the name |
+| 77 | "invite link and qr to show once i click on invite people, not outside" | Invite link / QR only inside the Invite people (Add friend) sheet and the group Add members sheet; header overflow entries removed | § 26.18 | Invite link in Home "..." and Group overflow |
 
 New decisions follow § 0 rule 9: rewrite the rule in its topic so only the current truth remains, then add a
 row here.
