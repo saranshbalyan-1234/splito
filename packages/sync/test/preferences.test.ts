@@ -1,6 +1,6 @@
 import {beforeEach, expect, test} from 'bun:test'
 
-import {DEFAULT_CATEGORIES, getPref, PREFS, resetAllPrefs, resetPref, setPref} from '../src/preferences'
+import {DEFAULT_CATEGORIES, getPref, INVITE_EXPIRY_MS, PREFS, resetAllPrefs, resetPref, setPref} from '../src/preferences'
 import {openSqlStore} from '../src/sqlStore'
 import type {Store} from '../src/store'
 import type {MutationCtx} from '../src/types'
@@ -120,4 +120,18 @@ test('analytics opens on this year as charts; both are choices with a reset', as
   await expect(setPref(s, ctx, 'analyticsPeriod', 'decade' as never)).rejects.toThrow('INVALID_PREF')
   await resetPref(s, ctx, 'analyticsView')
   expect(await getPref(s, 'analyticsView')).toBe('charts')
+})
+
+test('privacy and invite-link defaults (26.18)', async () => {
+  expect(await getPref(s, 'findableByEmailPhone')).toBe(true)
+  expect(await getPref(s, 'friendRequestsFrom')).toBe('everyone')
+  expect(await getPref(s, 'inviteMaxUses.friend')).toBe(1)
+  expect(await getPref(s, 'inviteMaxUses.group')).toBe(25)
+  expect(await getPref(s, 'inviteExpiry')).toBe('7d')
+  await setPref(s, ctx, 'inviteMaxUses.group', 'unlimited')
+  expect(await getPref(s, 'inviteMaxUses.group')).toBe('unlimited')
+  await expect(setPref(s, ctx, 'inviteMaxUses.friend', 7 as never)).rejects.toThrow('INVALID_PREF')
+  await expect(setPref(s, ctx, 'inviteExpiry', '1y' as never)).rejects.toThrow('INVALID_PREF')
+  expect(PREFS.findableByEmailPhone.group).toBe('privacy')
+  expect(INVITE_EXPIRY_MS['7d']).toBe(7 * 86_400_000)
 })

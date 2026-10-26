@@ -1,6 +1,9 @@
 import {
   assertInRange,
   computeShares,
+  type Contact,
+  formatContact,
+  isContact,
   type CurrencyCode,
   DomainError,
   type EdgeRule,
@@ -20,6 +23,10 @@ export interface Person {
   isMe: boolean
   /** UPI ID (VPA) used for `upi://pay` links. Optional; null or absent when unknown. */
   upiId?: string | null
+  /** How to reach them (F-601: a private friend may have one). Absent on older rows. */
+  contact?: Contact | null
+  /** Their Splito account once linked (they accepted). Absent/null: a private "only for you" friend. */
+  accountId?: string | null
 }
 
 export interface Group {
@@ -65,13 +72,28 @@ export interface Repayment {
 /** `id` makes a retried save idempotent: the same id never records a second payment. */
 export type RepaymentInput = Repayment & {id?: string}
 
-/** Versioned write: entity, history row and outbox op, all inside the caller's transaction. */
-async function write<T>(tx: Tx, ctx: MutationCtx, type: EntityType, id: string, data: T, deleted: boolean, opType: string): Promise<Entity<T>> {
+/**
+ * Versioned write: entity, history row and outbox op, all inside the caller's
+ * transaction. `remote` applies a change that came from someone else (a pull,
+ * or the demo directory): history, but no outbox op.
+ * @internal shared by the mutation modules of this package.
+ */
+export async function write<T>(
+  tx: Tx,
+  ctx: MutationCtx,
+  type: EntityType,
+  id: string,
+  data: T,
+  deleted: boolean,
+  opType: string,
+  {remote = false}: {remote?: boolean} = {},
+): Promise<Entity<T>> {
   const prev = await tx.get<T>(type, id)
   const at = ctx.now()
   const e: Entity<T> = {type, id, data, version: (prev?.version ?? 0) + 1, deleted, updatedAt: at}
   await tx.put(e)
   await tx.appendHistory({entityType: type, entityId: id, version: e.version, data, deleted, at, actor: ctx.actor})
+  if (remote) return e
   await tx.enqueue({
     opId: ctx.newId(),
     deviceId: ctx.deviceId,
@@ -90,13 +112,15 @@ async function write<T>(tx: Tx, ctx: MutationCtx, type: EntityType, id: string, 
   return e
 }
 
-function cleanName(name: string) {
+/** @internal */
+export function cleanName(name: string) {
   const n = name.trim()
   if (!n) throw new DomainError('INVALID_NAME')
   return n
 }
 
-async function requireLive<T>(tx: Tx, type: EntityType, id: string, code = 'NOT_FOUND'): Promise<Entity<T>> {
+/** @internal */
+export async function requireLive<T>(tx: Tx, type: EntityType, id: string, code = 'NOT_FOUND'): Promise<Entity<T>> {
   const e = await tx.get<T>(type, id)
   if (!e || e.deleted) throw new DomainError(code)
   return e
@@ -116,8 +140,19 @@ function cleanUpi(upiId: string | null | undefined): string | null {
   return v
 }
 
-export async function createPerson(store: Store, ctx: MutationCtx, input: {name: string; upiId?: string | null}): Promise<Entity<Person>> {
-  const data: Person = {name: cleanName(input.name), isMe: false, upiId: cleanUpi(input.upiId)}
+/**
+ * A private friend (F-601): only you see them, usable at once. With a
+ * contact and no name, the contact is the name.
+ */
+export async function createPerson(
+  store: Store,
+  ctx: MutationCtx,
+  input: {name: string; upiId?: string | null; contact?: Contact | null},
+): Promise<Entity<Person>> {
+  const contact = input.contact ?? null
+  if (contact && !isContact(contact)) throw new DomainError('INVALID_CONTACT')
+  const name = input.name.trim() || (contact ? formatContact(contact) : '')
+  const data: Person = {name: cleanName(name), isMe: false, upiId: cleanUpi(input.upiId), ...(contact ? {contact} : {})}
   return store.transaction(tx => write(tx, ctx, 'person', ctx.newId(), data, false, 'person.create'))
 }
 
