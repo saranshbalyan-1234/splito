@@ -1,38 +1,30 @@
 import {View} from 'react-native'
-import Svg, {Circle, Defs, LinearGradient, Path, Stop} from 'react-native-svg'
+import Svg, {Path} from 'react-native-svg'
 
+import {useTheme} from '#/alf'
+
+const HEAD =
+  'M12 5c.67 0 1.35.09 2 .26 1.78-2 5.03-2.84 6.42-2.26 1.4.58-.42 7-.42 7 .57 1.07 1 2.24 1 3.44C21 17.9 16.97 21 12 21s-9-3-9-7.56c0-1.25.5-2.4 1-3.44 0 0-1.89-6.42-.5-7 1.39-.58 4.72.23 6.5 2.23A9.04 9.04 0 0 1 12 5Z'
 
 /**
- * Splito mark: an original butterfly with antennae whose right wings are split
- * off, shifted down and lighter - the "split". Source: assets/brand/mark.svg. Deliberately
- * not Bluesky's butterfly (their trademark).
+ * Splito mark: Lucide's "cat" icon (ISC, lucide-static v1.61.0 - see
+ * LICENSES/lucide.txt), filled, with eyes and nose knocked out. Source file:
+ * assets/brand/mark.svg.
  */
-export function LogoMark({size = 32}: {size?: number}) {
+export function LogoMark({size = 32, color, featureColor = '#FFFFFF'}: {size?: number; color?: string; featureColor?: string}) {
+  const t = useTheme()
+  const fill = color ?? t.palette.primary_500
   return (
-    <Svg width={size} height={size} viewBox="0 0 64 64">
-      <Defs>
-        <LinearGradient id="splitoL" x1="0" y1="0" x2="0" y2="1">
-          <Stop offset="0" stopColor="#4291FF" />
-          <Stop offset="1" stopColor="#0048AD" />
-        </LinearGradient>
-        <LinearGradient id="splitoR" x1="0" y1="0" x2="0" y2="1">
-          <Stop offset="0" stopColor="#A8CCFF" />
-          <Stop offset="1" stopColor="#4291FF" />
-        </LinearGradient>
-      </Defs>
-      <Path d="M31.3 28.5C31 21.5 29.6 15.5 27.2 11" fill="none" stroke="#1F6FE5" strokeWidth={1.8} strokeLinecap="round" />
-      <Circle cx={26.7} cy={10.2} r={1.9} fill="#1F6FE5" />
-      <Path d="M32.7 28.5C33 21.5 34.4 15.5 36.8 11" fill="none" stroke="#75AFFF" strokeWidth={1.8} strokeLinecap="round" />
-      <Circle cx={37.3} cy={10.2} r={1.9} fill="#75AFFF" />
-      <Path d="M30.5 30.5C26 17 13 8.5 6.5 12.5 1 16 5.5 29 30.5 31.5Z" fill="url(#splitoL)" />
-      <Path d="M30.5 33.5C15 34 8.5 42 11.5 48.5 14.5 55 26 50 30.5 36Z" fill="url(#splitoL)" />
-      <Path d="M33.5 34.5C38 21 51 12.5 57.5 16.5 63 20 58.5 33 33.5 35.5Z" fill="url(#splitoR)" />
-      <Path d="M33.5 37.5C49 38 55.5 46 52.5 52.5 49.5 59 38 54 33.5 40Z" fill="url(#splitoR)" />
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" strokeLinecap="round" strokeLinejoin="round">
+      <Path d={HEAD} fill={fill} stroke={fill} strokeWidth={2} />
+      <Path d="M8 14v.5" stroke={featureColor} strokeWidth={2} />
+      <Path d="M16 14v.5" stroke={featureColor} strokeWidth={2} />
+      <Path d="M11.25 16.25h1.5L12 17l-.75-.75Z" fill={featureColor} stroke={featureColor} strokeWidth={2} />
     </Svg>
   )
 }
 
-/** The logo is the butterfly alone - no wordmark, no tile (owner, 2026-10-26). */
+/** The logo is the mark alone - no wordmark, no tile. */
 export function Logo({size = 28}: {size?: number}) {
   return (
     <View accessibilityRole="image" accessibilityLabel="Splito">

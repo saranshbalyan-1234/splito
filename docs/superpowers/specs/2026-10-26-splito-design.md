@@ -237,7 +237,8 @@ Source: `docs/research/2026-10-26-gamerun-architecture-takeaways.md`. Adopted: k
 | UI is Bluesky's design copied pixel for pixel; only required replacements (routes, data, logo, licensed icon glyphs, copy, social-only code) | Owner |
 | Bluesky blue palette is the default theme; Splito emerald becomes an optional accent | Owner ("same Bluesky design") |
 | Splito logo is an original split-butterfly, visibly different from Bluesky's mark | Owner asked for a butterfly; the split design is the assistant's call |
-| Logo is the butterfly alone everywhere in the UI (no wordmark, no tile); store app icons keep a plain background because iOS/Android require an opaque square | Owner ("butterfly only"); icon background is a platform rule |
+| Logo changed to a symmetrical cat: Lucide "cat" icon (ISC), filled, Bluesky blue, eyes/nose knocked out. Stock icon, so not registrable as a trademark - a bespoke mark can replace it later | Owner ("symmetrical cat", "don't draw", "Lucide", "fill") |
+| (superseded) Logo is the butterfly alone everywhere in the UI (no wordmark, no tile); store app icons keep a plain background because iOS/Android require an opaque square | Owner ("butterfly only"); icon background is a platform rule |
 | Phones keep the spec's central + inside Bluesky's bottom bar | Assistant's call (spec vs pixel-copy conflict) |
 | Bluesky's licensed Central icon glyphs replaced by Lucide; buying a Central licence would make icons pixel-exact | Assistant's call (licence) |
 | Hindi is the second launch language | Assistant's call |
