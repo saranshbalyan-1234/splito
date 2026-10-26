@@ -3,8 +3,9 @@ dist/
 .expo/
 .superpowers/
 *.log
-ios/
-android/
+# Generated native projects (prebuild); local Expo modules keep their native code.
+/apps/client/ios/
+/apps/client/android/
 test-results/
 playwright-report/
 apps/client/dist/

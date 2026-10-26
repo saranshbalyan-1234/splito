@@ -27,7 +27,7 @@ function normalize(hex: string) {
 function useAccentNames(): Record<AccentId, string> {
   const {t: l} = useLingui()
   return {
-    blue: l`Bluesky blue`,
+    blue: l`Blue`,
     emerald: l`Emerald`,
     indigo: l`Indigo`,
     violet: l`Violet`,

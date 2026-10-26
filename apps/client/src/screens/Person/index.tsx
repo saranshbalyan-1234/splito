@@ -29,7 +29,6 @@ import {List} from '#/view/com/util/List'
 import {UserAvatar} from '#/view/com/util/UserAvatar'
 import {SectionHeader} from '#/screens/People/components/SectionHeader'
 import {atoms as a, useBreakpoints, useTheme} from '#/alf'
-import {AddExpenseFAB, AddExpenseFABInset} from '#/components/AddExpenseFAB'
 import {Button, ButtonIcon, ButtonText} from '#/components/Button'
 import {useDialogControl} from '#/components/Dialog'
 import {myBalances} from '#/components/groups/net'
@@ -252,6 +251,19 @@ export function PersonScreen() {
             name={person!.data.name}
             type="user"
           />
+          <View style={a.flex_1} />
+          {/* Bluesky's profile action row; pushed pages have no FAB (owner rule 17). */}
+          <Button
+            testID="person-add-expense"
+            label={l({message: 'Add expense', context: 'action'})}
+            size="small"
+            color="primary"
+            onPress={() => navigation.navigate('AddExpense', {personId})}>
+            <ButtonIcon icon={PlusIcon} />
+            <ButtonText>
+              <Trans context="action">Add expense</Trans>
+            </ButtonText>
+          </Button>
           {owedInr !== null && (
             <Button
               testID="person-upi"
@@ -432,10 +444,8 @@ export function PersonScreen() {
               />
             )
           }
-          ListFooterComponent={<AddExpenseFABInset />}
         />
       </LayoutAnimationConfig>
-      <AddExpenseFAB personId={personId} />
 
       {person && me && (
         <>

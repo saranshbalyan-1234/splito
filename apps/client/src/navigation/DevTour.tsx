@@ -1,5 +1,8 @@
 import {useEffect, useRef} from 'react'
 import {createNavigationContainerRef} from '@react-navigation/native'
+import {type Group} from '@splito/sync'
+
+import {useEntities} from '#/data/hooks'
 
 import {type RootStackParams} from '#/lib/routes/types'
 import {useSetDrawerOpen} from '#/state/shell/drawer-open'
@@ -21,6 +24,9 @@ export function DevTour() {
   /* Read through a ref: the setter's identity changes with drawer state, which must not restart the tour. */
   const setDrawerOpenRef = useRef(setDrawerOpen)
   setDrawerOpenRef.current = setDrawerOpen
+  /* The busiest active group, read when its step runs (demo data seeds after mount). */
+  const groupIdRef = useRef<string>(undefined)
+  groupIdRef.current = useEntities<Group>('group')?.find(g => !g.data.archived)?.id
   useEffect(() => {
     if (!(__DEV__ && process.env.EXPO_PUBLIC_TOUR === '1')) return
     const go = (name: string, params?: object) => () =>
@@ -30,6 +36,9 @@ export function DevTour() {
       () => setDrawerOpenRef.current(true),
       () => setDrawerOpenRef.current(false),
       go('Tabs', {screen: 'Groups'}),
+      () => {
+        if (groupIdRef.current) go('Group', {groupId: groupIdRef.current, tab: 'balances'})()
+      },
       go('Tabs', {screen: 'Analytics'}),
       go('Tabs', {screen: 'Activity'}),
       go('Settings'),

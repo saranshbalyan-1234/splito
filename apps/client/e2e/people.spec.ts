@@ -259,7 +259,7 @@ test('add a friend, then land on their page', async ({page}) => {
   await expect(page.getByTestId('person-history-empty')).toBeVisible()
 })
 
-test('compose follows Bluesky: the sidebar pill on desktop and the FAB on phones both bring the friend', async ({page}) => {
+test('compose brings the friend: the sidebar pill on desktop, the page’s own button on phones (no FAB on pushed pages)', async ({page}) => {
   await ready(page)
   const kavya = await seedA04(page)
   await page.setViewportSize({width: 1280, height: 800})
@@ -270,7 +270,9 @@ test('compose follows Bluesky: the sidebar pill on desktop and the FAB on phones
 
   await page.setViewportSize({width: 390, height: 844})
   await page.goto(`/people/${kavya}`)
-  await page.getByTestId('screen-person').getByTestId('fab-add').click()
+  await expect(page.getByTestId('screen-person')).toBeVisible()
+  await expect(page.getByTestId('screen-person').getByTestId('fab-add')).toHaveCount(0)
+  await page.getByTestId('person-add-expense').click()
   await expect(page).toHaveURL(new RegExp(`/expense/new\\?personId=${kavya}`))
 })
 

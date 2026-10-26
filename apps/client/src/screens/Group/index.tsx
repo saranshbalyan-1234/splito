@@ -20,7 +20,6 @@ import {UserAvatar} from '#/view/com/util/UserAvatar'
 import {GroupBalanceCards} from '#/screens/Group/components/GroupBalanceCards'
 import {SectionHeader} from '#/screens/People/components/SectionHeader'
 import {atoms as a, useBreakpoints, useTheme, web} from '#/alf'
-import {AddExpenseFAB, AddExpenseFABInset} from '#/components/AddExpenseFAB'
 import {Button, ButtonIcon, ButtonText} from '#/components/Button'
 import {useDialogControl} from '#/components/Dialog'
 import {AddMembersDialog} from '#/components/groups/AddMembersDialog'
@@ -383,6 +382,19 @@ export function GroupScreen() {
             mine={mine}
             locale={locale}
           />
+          {/* Pushed pages have no FAB (owner rule 17); adding here pre-selects the group. */}
+          <Button
+            testID="group-add-expense"
+            label={l({message: 'Add expense', context: 'action'})}
+            size="small"
+            color="primary"
+            style={[a.self_start]}
+            onPress={() => navigation.navigate('AddExpense', {groupId})}>
+            <ButtonIcon icon={PlusIcon} />
+            <ButtonText>
+              <Trans context="action">Add expense</Trans>
+            </ButtonText>
+          </Button>
         </View>
 
         {/* Bluesky's pager tab bar, pinned under the header while the list scrolls (web). */}
@@ -643,10 +655,8 @@ export function GroupScreen() {
           }}
           ListHeaderComponent={header}
           ListEmptyComponent={empty}
-          ListFooterComponent={<AddExpenseFABInset />}
         />
       </LayoutAnimationConfig>
-      <AddExpenseFAB groupId={groupId} />
       {group && <AddMembersDialog control={addMembersControl} group={group} />}
       {group && <EditGroupDialog control={editControl} group={group} />}
       {group && me && (

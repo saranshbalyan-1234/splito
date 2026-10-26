@@ -84,11 +84,11 @@ function DarkThemePref() {
       <SegmentedPref
         pref={pref}
         icon={MoonIcon}
-        title={l`Dark theme`}
+        title={l`Dark mode style`}
         description={l`Used whenever Splito is in dark mode.`}
         options={[
           {value: 'dim', label: l`Dim`},
-          {value: 'dark', label: l`Dark`},
+          {value: 'dark', label: l`Black`},
         ]}
       />
     </Animated.View>

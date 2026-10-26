@@ -331,6 +331,15 @@ test.describe('desktop: Bluesky left sidebar and full-width content', () => {
     await page.getByTestId('sidebar-add').click()
     await expect(page).toHaveURL(/\/expense\/new$/)
     await expect(page.getByRole('dialog')).toBeVisible()
+    // Measure once the popup's scale-in (0.96 to 1, owner rule 18) has settled.
+    const dialogBox = page.getByTestId('screen-add-expense')
+    await expect
+      .poll(async () => {
+        const before = (await dialogBox.boundingBox())!.width
+        await page.waitForTimeout(50)
+        return (await dialogBox.boundingBox())!.width === before
+      })
+      .toBe(true)
     // One sheet layout: the close cross at the top right, Cancel then Save at the bottom right.
     const close = (await page.getByTestId('sheet-close').boundingBox())!
     const cancel = (await page.getByTestId('sheet-cancel').boundingBox())!

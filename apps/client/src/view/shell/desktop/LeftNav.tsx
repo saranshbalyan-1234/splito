@@ -25,7 +25,7 @@ import {
   useTheme,
   web,
 } from '#/alf'
-import {LogoMark} from '#/components/brand/Logo'
+import {Logo} from '#/components/brand/Logo'
 import {
   describeUnread,
   useActivityBadge,
@@ -116,10 +116,10 @@ function LogoCard({minimal}: {minimal: boolean}) {
         style={[
           a.justify_center,
           a.align_center,
-          {height: LARGE_ELEMENT_SIZE, width: LARGE_ELEMENT_SIZE},
+          {height: LARGE_ELEMENT_SIZE, minWidth: LARGE_ELEMENT_SIZE},
           web({cursor: isHome ? 'default' : 'pointer'}),
         ]}>
-        <LogoMark size={34} />
+        <Logo size={34} withWordmark={!minimal} />
       </Link>
     </View>
   )
