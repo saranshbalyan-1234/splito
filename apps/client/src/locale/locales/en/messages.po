@@ -3903,7 +3903,7 @@ msgstr "Send by email to {0}"
 msgid "Send by SMS to {0}"
 msgstr "Send by SMS to {0}"
 
-#: src/components/invites/InviteShare.tsx:95
+#: src/components/invites/InviteShare.tsx:97
 msgid "Send email"
 msgstr "Send email"
 
@@ -3921,7 +3921,7 @@ msgstr "Send invite"
 msgid "Send request"
 msgstr "Send request"
 
-#: src/components/invites/InviteShare.tsx:95
+#: src/components/invites/InviteShare.tsx:97
 msgid "Send SMS"
 msgstr "Send SMS"
 
@@ -3985,12 +3985,12 @@ msgstr "settled up"
 msgid "Settled up"
 msgstr "Settled up"
 
-#: src/components/invites/InviteShare.tsx:105
+#: src/components/invites/InviteShare.tsx:110
 #: src/screens/Analytics/components/Charts.tsx:280
 msgid "Share"
 msgstr "Share"
 
-#: src/components/invites/InviteShare.tsx:100
+#: src/components/invites/InviteShare.tsx:103
 msgid "Share invite link"
 msgstr "Share invite link"
 

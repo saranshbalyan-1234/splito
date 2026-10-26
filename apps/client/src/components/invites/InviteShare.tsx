@@ -1,4 +1,4 @@
-// Adapted from bluesky-social/social-app@4e4ad9c (MIT) - src/screens/Messages/components/InviteLinkDialog.tsx (Step.MANAGE: copy field, stacked share buttons) and src/components/StarterPack/QrCodeDialog.tsx
+// Adapted from bluesky-social/social-app@4e4ad9c (MIT) - src/screens/Messages/components/InviteLinkDialog.tsx (Step.MANAGE: copy field, share buttons; one or two actions, so Bluesky's standard Button rather than its three-up StackedButton) and src/components/StarterPack/QrCodeDialog.tsx
 import {View} from 'react-native'
 import {type Contact} from '@splito/domain'
 import {formatContact} from '@splito/sync'
@@ -6,7 +6,7 @@ import {Trans, useLingui} from '@lingui/react/macro'
 
 import {canSendSms, openComposeLink, shareUrl} from '#/lib/sharing'
 import {atoms as a, useBreakpoints, useTheme} from '#/alf'
-import {StackedButton} from '#/components/Button'
+import {Button, ButtonIcon, ButtonText} from '#/components/Button'
 import {CopyTextButton} from '#/components/invites/CopyTextButton'
 import {
   ArrowShareRight_Stroke2_Corner2_Rounded as ShareIcon,
@@ -79,31 +79,37 @@ export function InviteShare({
       </CopyTextButton>
       <View style={[a.flex_row, a.gap_sm, !gtMobile && a.w_full]}>
         {channel && to ? (
-          <StackedButton
+          <Button
             testID={`invite-${channel}`}
             label={
               channel === 'sms'
                 ? l`Send by SMS to ${formatContact(to)}`
                 : l`Send by email to ${formatContact(to)}`
             }
-            icon={channel === 'sms' ? SmsIcon : MailIcon}
+            size="large"
             color="primary"
-            style={[a.flex_1, a.rounded_full]}
+            style={[a.flex_1]}
             onPress={() =>
               void openComposeLink({channel, to: to.value, subject, body})
             }>
-            {channel === 'sms' ? <Trans>Send SMS</Trans> : <Trans>Send email</Trans>}
-          </StackedButton>
+            <ButtonIcon icon={channel === 'sms' ? SmsIcon : MailIcon} />
+            <ButtonText>
+              {channel === 'sms' ? <Trans>Send SMS</Trans> : <Trans>Send email</Trans>}
+            </ButtonText>
+          </Button>
         ) : null}
-        <StackedButton
+        <Button
           testID="invite-share"
           label={l`Share invite link`}
-          icon={ShareIcon}
+          size="large"
           color="primary_subtle"
-          style={[a.flex_1, a.rounded_full]}
+          style={[a.flex_1]}
           onPress={() => void shareUrl(url, message)}>
-          <Trans>Share</Trans>
-        </StackedButton>
+          <ButtonIcon icon={ShareIcon} />
+          <ButtonText>
+            <Trans>Share</Trans>
+          </ButtonText>
+        </Button>
       </View>
     </View>
   )

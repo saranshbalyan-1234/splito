@@ -3903,7 +3903,7 @@ msgstr "{0} को ईमेल से भेजें"
 msgid "Send by SMS to {0}"
 msgstr "{0} को SMS से भेजें"
 
-#: src/components/invites/InviteShare.tsx:95
+#: src/components/invites/InviteShare.tsx:97
 msgid "Send email"
 msgstr "ईमेल भेजें"
 
@@ -3921,7 +3921,7 @@ msgstr "आमंत्रण भेजें"
 msgid "Send request"
 msgstr "अनुरोध भेजें"
 
-#: src/components/invites/InviteShare.tsx:95
+#: src/components/invites/InviteShare.tsx:97
 msgid "Send SMS"
 msgstr "SMS भेजें"
 
@@ -3985,12 +3985,12 @@ msgstr "हिसाब बराबर"
 msgid "Settled up"
 msgstr "हिसाब बराबर"
 
-#: src/components/invites/InviteShare.tsx:105
+#: src/components/invites/InviteShare.tsx:110
 #: src/screens/Analytics/components/Charts.tsx:280
 msgid "Share"
 msgstr "हिस्सा"
 
-#: src/components/invites/InviteShare.tsx:100
+#: src/components/invites/InviteShare.tsx:103
 msgid "Share invite link"
 msgstr "आमंत्रण लिंक शेयर करें"
 

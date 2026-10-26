@@ -1260,8 +1260,8 @@ Add friend asks for an email or mobile number (one field, auto-detected) plus an
 
 Personal and group invite links with a QR, use and expiry limits, a manage list and revoke; using a link always counts as accepting. Front end; links work across devices once F-2105 ships.
 
-- **Effort** M · **Impact** 8 · **Backend** no · **Status** in progress (partially built on feat/friend-invites, unverified) · **Deps** F-618, F-603
-- **Prefs** `invites.defaultMaxUses`, `invites.defaultExpiry`, `group:invites.approveJoins`
+- **Effort** M · **Impact** 8 · **Backend** no · **Status** done (feat/4b-31-33, 2026-10-27; e2e `friends.spec.ts`; links are minted only in demo until F-2105, production says they need a connection) · **Deps** F-618, F-603
+- **Prefs** `invites.defaultMaxUses.friend`, `invites.defaultMaxUses.group`, `invites.defaultExpiry`, `invites.approveJoins` (default for new group links; each link can override)
 - **Acceptance**
   1. "Invite link / QR" is offered from the People (Home) header and the Add friend sheet; groups offer the same for joining a group (Group overflow "Invite link").
   2. Creating one sets max uses (1, 5, 25, unlimited; default 1 for friends, 25 for groups), expiry (24 hours, 7 days, 30 days, never; default 7 days) and, for groups, "approve each join" (default off); the defaults are editable in Settings.
