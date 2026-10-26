@@ -43,7 +43,6 @@ import {PlusLarge_Stroke2_Corner0_Rounded as PlusIcon} from '#/components/icons/
 import {SettingsSliderVertical_Stroke2_Corner0_Rounded as FilterIcon} from '#/components/icons/SettingsSlider'
 import {Trash_Stroke2_Corner0_Rounded as TrashIcon} from '#/components/icons/Trash'
 import * as Layout from '#/components/Layout'
-import {ScrollTitle, useScrollTitle} from '#/components/Layout/ScrollTitle'
 import * as Menu from '#/components/Menu'
 import {EditFriendDialog} from '#/components/people/EditFriendDialog'
 import {
@@ -103,7 +102,6 @@ export function PersonScreen() {
   const [applied, setApplied] = useState<boolean | null>(null)
   const includeGroups = applied ?? includeDefault ?? true
 
-  const scrollTitle = useScrollTitle()
   const filterControl = useDialogControl()
   const paymentControl = useDialogControl()
   const upiControl = useDialogControl()
@@ -243,66 +241,30 @@ export function PersonScreen() {
   ) : (
     <>
       {/*
-       * Bluesky's profile header: avatar, name, a byline, then the page's
-       * one primary action; the balance cards follow in the same column, so
-       * every label sits beside its amount.
+       * Bluesky's profile header block: the avatar, then my balance with
+       * them. The name and byline are the page header's title and subtitle,
+       * and Settle up is its action (owner header rule).
        */}
       <View style={[a.gap_lg, a.px_lg, a.pt_lg, a.pb_lg]}>
-        <View style={[a.gap_md]}>
+        <View style={[a.flex_row, a.align_center, a.gap_md]}>
           <UserAvatar
-            size={gtMobile ? 88 : 72}
+            size={gtMobile ? 64 : 56}
             name={person!.data.name}
             type="user"
           />
-          <View style={[a.gap_2xs]}>
-            <Text
-              emoji
-              testID="person-name"
-              style={[
-                gtMobile ? a.text_4xl : a.text_3xl,
-                a.font_bold,
-                a.leading_tight,
-                t.atoms.text,
-              ]}>
-              {person!.data.name}
-            </Text>
-            <Text
-              testID="person-byline"
-              numberOfLines={1}
-              style={[a.text_md, a.leading_snug, t.atoms.text_contrast_medium]}>
-              {byline}
-            </Text>
-          </View>
-          <View style={[a.flex_row, a.flex_wrap, a.gap_sm, a.pt_xs]}>
+          {owedInr !== null && (
             <Button
-              testID="person-record-payment"
-              label={hasOpenBalance ? l`Settle up` : l`Record a payment`}
-              size="large"
-              color={hasOpenBalance ? 'primary' : 'secondary'}
-              onPress={() => recordPayment()}>
-              <ButtonIcon icon={HandCoinsIcon} />
+              testID="person-upi"
+              label={l`Pay with UPI`}
+              size="small"
+              color="secondary"
+              onPress={() => upiControl.open()}>
+              <ButtonIcon icon={RupeeIcon} />
               <ButtonText>
-                {hasOpenBalance ? (
-                  <Trans>Settle up</Trans>
-                ) : (
-                  <Trans>Record payment</Trans>
-                )}
+                <Trans>Pay with UPI</Trans>
               </ButtonText>
             </Button>
-            {owedInr !== null && (
-              <Button
-                testID="person-upi"
-                label={l`Pay with UPI`}
-                size="large"
-                color="secondary"
-                onPress={() => upiControl.open()}>
-                <ButtonIcon icon={RupeeIcon} />
-                <ButtonText>
-                  <Trans>Pay with UPI</Trans>
-                </ButtonText>
-              </Button>
-            )}
-          </View>
+          )}
         </View>
         <View>
           <PersonBalances
@@ -345,27 +307,42 @@ export function PersonScreen() {
     <Layout.Screen testID="screen-person">
       <Layout.Header.Outer>
         <Layout.Header.BackButton />
+        {/* Balances Settle up and the overflow on the right, so the title stays centred. */}
+        <Layout.Header.Slot />
         <Layout.Header.Content>
-          <ScrollTitle isShown={scrollTitle.isShown}>
-            <Layout.Header.TitleText>
-              {person?.data.name ?? <Trans>Friend</Trans>}
-            </Layout.Header.TitleText>
-          </ScrollTitle>
+          <Layout.Header.TitleText testID="person-name">
+            {person?.data.name ?? <Trans>Friend</Trans>}
+          </Layout.Header.TitleText>
+          {person ? (
+            <Layout.Header.SubtitleText testID="person-byline">
+              {byline}
+            </Layout.Header.SubtitleText>
+          ) : null}
         </Layout.Header.Content>
+        {/* Header rule set: Settle up (Record payment once settled), then the overflow (Edit, Remove). */}
+        <Layout.Header.ActionButton
+          testID="person-record-payment"
+          label={hasOpenBalance ? l`Settle up` : l`Record payment`}
+          icon={HandCoinsIcon}
+          disabled={!person}
+          onPress={() => recordPayment()}
+        />
         {person ? (
           <Menu.Root>
             <Menu.Trigger label={l`More options`}>
               {({props}) => (
-                <Button
-                  {...props}
-                  testID="person-more"
-                  label={props.accessibilityLabel}
-                  size="small"
-                  color="secondary"
-                  variant="ghost"
-                  shape="round">
-                  <ButtonIcon icon={DotsIcon} size="lg" />
-                </Button>
+                <Layout.Header.Slot>
+                  <Button
+                    {...props}
+                    testID="person-more"
+                    label={props.accessibilityLabel}
+                    size="small"
+                    color="secondary"
+                    variant="ghost"
+                    shape="round">
+                    <ButtonIcon icon={DotsIcon} size="lg" />
+                  </Button>
+                </Layout.Header.Slot>
               )}
             </Menu.Trigger>
             <Menu.Outer>
@@ -396,7 +373,6 @@ export function PersonScreen() {
       </Layout.Header.Outer>
       <LayoutAnimationConfig skipEntering skipExiting>
         <List
-          onScrolledDownChange={scrollTitle.onScrolledDownChange}
           data={isLoading ? [] : items}
           keyExtractor={(item: HistoryItem) => item.key}
           renderItem={({item, index}: {item: HistoryItem; index: number}) =>

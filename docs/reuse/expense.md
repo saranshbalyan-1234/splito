@@ -10,7 +10,6 @@ glyphs, illustrations, logos or `assets/images` are copied.
 | `src/components/forms/SegmentedControl.tsx` | `src/components/forms/SegmentedControl.tsx` | `scrollable` prop: items keep their natural width and the row scrolls sideways (six split modes on a phone); `#/` import for Button |
 | `src/components/forms/SearchInput.tsx` | `src/components/forms/SearchInput.tsx` | Focus-search hotkey removed (no global search event in Splito) |
 | `src/components/icons/MagnifyingGlass.tsx` | (export name of `src/components/icons/MagnifyingGlass.tsx`) | Lucide `Search` glyph under Bluesky's export name; no Bluesky glyph copied |
-| `src/components/Composer/TopBar.tsx` (shell file, edited) | `src/view/com/composer/Composer.tsx (ComposerTopBar)` | Optional `saveLabel` / `cancelHint` so Edit expense, Add friend and New group reuse the bar |
 
 Patterns followed without copying a file (written for Splito, shaped on upstream):
 

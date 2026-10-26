@@ -8,7 +8,7 @@ import {useMe, usePref} from '#/data/hooks'
 import {useData} from '#/data/StoreProvider'
 import {UserAvatar} from '#/view/com/util/UserAvatar'
 import * as SettingsList from '#/screens/Settings/components/SettingsList'
-import {atoms as a, useBreakpoints, useTheme} from '#/alf'
+import {atoms as a, useTheme} from '#/alf'
 import {ArrowRotateCounterClockwise_Stroke2_Corner0_Rounded as ResetIcon} from '#/components/icons/ArrowRotate'
 import {CircleInfo_Stroke2_Corner0_Rounded as InfoIcon} from '#/components/icons/CircleInfo'
 import {Cloud_Stroke2_Corner0_Rounded as CloudIcon} from '#/components/icons/Cloud'
@@ -32,14 +32,13 @@ export function SettingsScreen() {
   const sections = useSectionInfo()
   const summary = useSectionSummary()
   const resetPrompt = Prompt.usePromptControl()
-  const {gtMobile} = useBreakpoints()
   const me = useMe()
 
   return (
     <Layout.Screen testID="screen-settings">
       <Layout.Header.Outer>
-        {/* Wide screens reach Settings from the sidebar, where it is a root: no Back there. */}
-        {gtMobile ? <Layout.Header.Slot /> : <Layout.Header.BackButton />}
+        {/* A pushed page on every width (header rule set), sidebar item or not. */}
+        <Layout.Header.BackButton />
         <Layout.Header.Content>
           <Layout.Header.TitleText>
             <Trans>Settings</Trans>

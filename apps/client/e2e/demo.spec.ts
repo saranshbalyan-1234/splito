@@ -67,7 +67,7 @@ test('People shows each friend with real words and the right balance per currenc
       await expect(row.getByTestId(`balance-${currency}`)).toHaveText(`${words} ${formatAmount(magnitude(total), currency, LOCALE)}`)
     }
   }
-  await expect(page.getByTestId('people-balances-title')).toHaveText('Balances')
+  await expect(page.getByTestId('people-balances-title')).toHaveText('Overview')
   await expect(page.getByTestId('people-friends-title')).toHaveText(
     `Friends  ${Object.keys(DEMO_FRIENDS).length}`,
   )
@@ -101,8 +101,8 @@ test('Groups lists the demo groups with my balance in each', async ({page}) => {
   }
   await expect(page.getByTestId('group-Lisbon').getByTestId('group-balance-EUR')).toHaveText(/^you owe €/)
   await expect(page.getByTestId('group-Goa trip').getByTestId('group-balance-INR')).toHaveText(/^you are owed ₹/)
-  // A Balances card on top, People's style: one cell per currency, never added together.
-  await expect(page.getByTestId('groups-balances-title')).toHaveText('Balances')
+  // An Overview on top, People's style: one cell per currency, never added together.
+  await expect(page.getByTestId('groups-balances-title')).toHaveText('Overview')
   await expect(page.getByTestId('groups-balances').getByTestId('summary-INR-net')).toBeVisible()
   await expect(page.getByTestId('groups-balances').getByTestId('summary-EUR-net')).toBeVisible()
   await expectNoMessageIds(page)
@@ -111,7 +111,7 @@ test('Groups lists the demo groups with my balance in each', async ({page}) => {
 test('Hindi renders translated words with Indian grouping, never message ids', async ({page}) => {
   await openDemo(page)
   await page.evaluate(() => (window as any).splito.setPref('language', 'hi'))
-  await expect(page.getByTestId('people-balances-title')).toHaveText('बैलेंस')
+  await expect(page.getByTestId('people-balances-title')).toHaveText('सारांश')
   await expect(page.getByTestId('people-friends-title')).toHaveText(/^दोस्त/)
   await expect(page.getByTestId('people-add-friend')).toHaveAttribute('aria-label', 'दोस्त जोड़ें')
   const arjun = byKey.get('arjun')!.byCurrency.INR!.total
@@ -135,4 +135,57 @@ test('Profile holds identity: name prompt, counts, then Settings and About; no d
   await expect(page.getByTestId('profile-about')).toBeVisible()
   await page.getByTestId('profile-settings').click()
   await expect(page.getByTestId('screen-settings')).toBeVisible()
+})
+
+test('People: the Overview counts friends; search is an icon that grows into a field and filters live', async ({page}) => {
+  await page.setViewportSize({width: 390, height: 844})
+  await openDemo(page)
+  const people = page.getByTestId('screen-people')
+  const settled = Object.keys(DEMO_FRIENDS).filter(k => !byKey.has(k)).length
+  await expect(people.getByTestId('people-summary-counts')).toHaveText(
+    `${Object.keys(DEMO_FRIENDS).length} friends · ${settled} settled`,
+  )
+  await expect(people.getByTestId('overview-analytics')).toBeVisible()
+  // Icon only until tapped.
+  await expect(people.getByTestId('list-search-input')).toHaveCount(0)
+  await people.getByTestId('list-search').click()
+  const field = people.getByTestId('list-search-input')
+  await expect(field).toBeFocused()
+  await field.fill('ri')
+  await expect(people.getByTestId('person-Riya Sharma')).toBeVisible()
+  await expect(people.getByTestId('person-Arjun Mehta')).toHaveCount(0)
+  await field.fill('zz')
+  await expect(people.getByTestId('people-search-empty')).toContainText('No matches for “zz”')
+  // The one cross clears and folds it back.
+  await people.getByTestId('searchTextInputClearBtn').click()
+  await expect(people.getByTestId('list-search-input')).toHaveCount(0)
+  await expect(people.getByTestId('person-Arjun Mehta')).toBeVisible()
+})
+
+test('Groups: Overview, search by member, and type / status filters', async ({page}) => {
+  await openDemo(page)
+  await page.goto('/groups')
+  const groups = page.getByTestId('screen-groups')
+  await expect(groups.getByTestId('group-Lisbon')).toBeVisible()
+  await expect(groups.getByTestId('groups-balances-counts')).toHaveText(/^3 groups · \d+ settled$/)
+  // Search finds a group by who is in it.
+  await groups.getByTestId('list-search').click()
+  await groups.getByTestId('list-search-input').fill('lena')
+  await expect(groups.getByTestId('group-Lisbon')).toBeVisible()
+  await expect(groups.getByTestId('group-Goa trip')).toHaveCount(0)
+  await groups.getByTestId('searchTextInputClearBtn').click()
+
+  await groups.getByTestId('list-filters').click()
+  await page.getByTestId('filter-type-home').click()
+  await page.getByTestId('filter-apply').click()
+  await expect(groups.getByTestId('group-Flat 4B')).toBeVisible()
+  await expect(groups.getByTestId('group-Lisbon')).toHaveCount(0)
+  await expect(groups.getByTestId('list-filters-dot')).toBeVisible()
+  await groups.getByTestId('list-filters').click()
+  await page.getByTestId('filter-type-all').click()
+  await page.getByTestId('filter-status-archived').click()
+  await page.getByTestId('filter-apply').click()
+  await expect(groups.getByTestId('groups-filtered-empty')).toBeVisible()
+  await groups.getByTestId('groups-clear-filters').click()
+  await expect(groups.getByTestId('group-Lisbon')).toBeVisible()
 })

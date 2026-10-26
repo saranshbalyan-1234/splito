@@ -18,14 +18,23 @@ type Props = Omit<TextField.InputProps, 'label'> & {
    * Called when the user presses the (X) button
    */
   onClearText?: () => void
+  /** Splito: keep the (X) on an empty field, for a search that collapses with it. */
+  shouldShowClear?: boolean
   ref?: React.Ref<React.ComponentRef<typeof TextInput>>
 }
 
 /* Bluesky's global search hotkey (`hotkey` prop, `#/state/events`) is dropped: Splito has no global search yet. */
-export function SearchInput({value, label, onClearText, ref, ...rest}: Props) {
+export function SearchInput({
+  value,
+  label,
+  onClearText,
+  shouldShowClear,
+  ref,
+  ...rest
+}: Props) {
   const t = useTheme()
   const {t: l} = useLingui()
-  const showClear = !!value && value.length > 0
+  const showClear = shouldShowClear ?? (!!value && value.length > 0)
   const internalRef = useRef<React.ComponentRef<typeof TextInput>>(null)
 
   return (

@@ -15,10 +15,8 @@ glyphs, illustrations, logos or `assets/images` are copied.
 | `src/view/shell/createNativeStackNavigatorWithAuth.tsx` | `src/view/shell/createNativeStackNavigatorWithAuth.tsx` | Auth gates removed; main content offset by the sidebar width; footer height reset off phones |
 | `src/view/shell/index.tsx` | `src/view/shell/index.tsx` | Composer, global dialogs, OTA and push hooks removed (drawer: see `preview-shell.md`) |
 | `src/view/shell/index.web.tsx` | `src/view/shell/index.web.tsx` | As above |
-| `src/components/TabBar.tsx` | `src/view/com/pager/TabBar.web.tsx` | Used on every platform without the Pager: a press switches the tab; no horizontal scroller or drag-following indicator (the short tab sets always fit); tabs split the full content width |
 | `src/components/Composer/index.tsx` | `src/view/shell/Composer.tsx` | A route body (the stack presents it like the composer modal) instead of a state-driven overlay |
 | `src/components/Composer/index.web.tsx` | `src/view/shell/Composer.web.tsx` | Rendered through the shell portal from the `/expense/new` route; fills the height on phones |
-| `src/components/Composer/TopBar.tsx` | `src/view/com/composer/Composer.tsx (ComposerTopBar)` | Cancel / Save pill only (drafts, thread and publishing stages removed) |
 | `src/view/com/util/fab/FAB.tsx` | `src/view/com/util/fab/FAB.tsx` | - |
 | `src/view/com/util/fab/FAB.web.tsx` | `src/view/com/util/fab/FAB.web.tsx` | - |
 | `src/view/com/util/fab/FABInner.tsx` | `src/view/com/util/fab/FABInner.tsx` | - |
@@ -51,7 +49,7 @@ glyphs, illustrations, logos or `assets/images` are copied.
 | `src/components/Fill.tsx` | `src/components/Fill.tsx` | - |
 | `src/components/MediaInsetBorder.tsx` | `src/components/MediaInsetBorder.tsx` | - |
 | `src/components/SubtleHover.tsx` | `src/components/SubtleHover.tsx` | - |
-| `src/screens/Profile.tsx` | `src/screens/Settings/Settings.tsx` | Profile page, opened from the drawer (back button header): account block, Analytics / Settings / About rows, sign-in row marked "Coming with sync" |
+| `src/screens/Profile.tsx` | `src/screens/Settings/Settings.tsx` | Profile page, opened from the drawer (back button header): account block, what I have in Splito, Settings / About rows, a plain note that sign-in arrives with sync |
 | `src/screens/Settings/components/SettingsList.tsx` | `src/screens/Settings/components/SettingsList.tsx` | `LinkItem` built on `#/view/com/util/Link` |
 | `src/view/com/util/EmptyState.tsx` | `src/view/com/util/EmptyState.tsx` | Optional animated `Illustration` in place of the icon |
 | `src/view/com/util/Link.tsx` | `src/view/com/util/Link.tsx` | App routes only |

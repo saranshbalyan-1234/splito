@@ -1,9 +1,10 @@
 import {useState} from 'react'
 import {useWindowDimensions, View} from 'react-native'
 import {LayoutAnimationConfig} from 'react-native-reanimated'
-import {Trans, useLingui} from '@lingui/react/macro'
+import {plural} from '@lingui/core/macro'
+import {useLingui} from '@lingui/react/macro'
 import {useNavigation} from '@react-navigation/native'
-import {balanceTotals, personSummary} from '@splito/domain'
+import {balanceTotals, personSummary, ZERO} from '@splito/domain'
 import {type Group, type Person} from '@splito/sync'
 
 import {type NavigationProp} from '#/lib/routes/types'
@@ -11,18 +12,16 @@ import {useNumberLocale} from '#/locale/numberLocale'
 import {useEntities, useLedger, useMe, usePref} from '#/data/hooks'
 import {EmptyState} from '#/view/com/util/EmptyState'
 import {List} from '#/view/com/util/List'
-import {atoms as a, useBreakpoints, useTheme} from '#/alf'
+import {atoms as a, useBreakpoints} from '#/alf'
 import {AddExpenseFAB} from '#/components/AddExpenseFAB'
 import {LogoMark} from '#/components/brand/Logo'
-import {Button, ButtonIcon, ButtonText} from '#/components/Button'
 import {useDialogControl} from '#/components/Dialog'
 import {myBalances} from '#/components/groups/net'
 import {HeaderAvatar} from '#/components/HeaderAvatar'
 import {PersonPlus_Filled_Stroke2_Corner0_Rounded as PersonPlusIcon} from '#/components/icons/Person'
-import {SettingsSliderVertical_Stroke2_Corner0_Rounded as FilterIcon} from '#/components/icons/SettingsSlider'
+import {MagnifyingGlass_Stroke2_Corner0_Rounded as SearchIcon} from '#/components/icons/MagnifyingGlass'
 import * as Layout from '#/components/Layout'
-import * as Pills from '#/components/Pills'
-import {Text} from '#/components/Typography'
+import {ListToolsHeader} from '#/components/ListToolsHeader'
 import {PressableScale} from '#/motion/PressableScale'
 import {Shimmer} from '#/motion/Shimmer'
 import {
@@ -44,14 +43,14 @@ import {filterFriends, lastActivity, sortFriends} from './sort'
 const PLACEHOLDER_ROWS = 6
 
 /**
- * Home: balances per currency, then one row per friend with their balance
- * per currency and each group's part. No page title, by spec: the header
+ * Home: the Overview (balances per currency, counts, Analytics), then one
+ * row per friend with their balance per currency and each group's part,
+ * under a heading with search and filters. No page title, by spec: the header
  * centres the logo, as Bluesky's home header does. The Include groups
  * filter (default from preferences, applied with Apply) drives the totals
  * and the rows.
  */
 export function PeopleScreen() {
-  const t = useTheme()
   const {t: l} = useLingui()
   const locale = useNumberLocale()
   const navigation = useNavigation<NavigationProp>()
@@ -104,51 +103,19 @@ export function PeopleScreen() {
   const totals = balanceTotals(
     rows.flatMap(row => (row.summary ? [row.summary] : [])),
   )
-  const isFiltered = activeCount > 0
-  const friendsAction = (
-    <View style={[a.flex_row, a.align_center, a.gap_sm]}>
-      {!includeGroups && (
-        <Pills.Tag>
-          <Trans>Direct only</Trans>
-        </Pills.Tag>
-      )}
-      <Button
-        testID="friends-filters"
-        label={activeCount > 0 ? l`Filters, ${activeCount} on` : l`Filters`}
-        size="small"
-        color={activeCount > 0 ? 'primary_subtle' : 'secondary'}
-        onPress={() => filterControl.open()}>
-        <ButtonIcon icon={FilterIcon} />
-        <ButtonText>
-          <Trans>Filters</Trans>
-        </ButtonText>
-        {activeCount > 0 && (
-          <View
-            testID="friends-filters-count"
-            style={[
-              a.rounded_full,
-              a.align_center,
-              a.justify_center,
-              {
-                minWidth: 18,
-                height: 18,
-                paddingHorizontal: 5,
-                backgroundColor: t.palette.primary_500,
-              },
-            ]}>
-            <Text
-              style={[
-                a.text_xs,
-                a.font_semi_bold,
-                {color: t.palette.white, lineHeight: 14},
-              ]}>
-              {activeCount}
-            </Text>
-          </View>
-        )}
-      </Button>
-    </View>
-  )
+  const [query, setQuery] = useState('')
+  const needle = query.trim().toLocaleLowerCase()
+  /* Search narrows the list only; the Overview keeps showing what the filters chose. */
+  const shown = needle
+    ? rows.filter(row => row.name.toLocaleLowerCase().includes(needle))
+    : rows
+  const settledCount = rows.filter(row =>
+    Object.values(row.summary?.byCurrency ?? {}).every(c => c.total === ZERO),
+  ).length
+  const counts = [
+    plural(rows.length, {one: '# friend', other: '# friends'}),
+    l`${settledCount} settled`,
+  ].join(' · ')
 
   return (
     <Layout.Screen testID="screen-people">
@@ -186,23 +153,40 @@ export function PeopleScreen() {
         /* Upstream's list idiom: rows already there on mount appear at once; later inserts and removals animate. */
         <LayoutAnimationConfig skipEntering skipExiting>
           <List
-            data={rows}
+            data={shown}
             keyExtractor={(row: PersonRowData) => row.id}
             renderItem={({item}: {item: PersonRowData}) => (
               <PersonRow row={item} groupNames={groupNames} locale={locale} />
             )}
             ListHeaderComponent={
-              rows.length > 0 || isFiltered ? (
+              friends.length > 0 ? (
                 <>
-                  {totals.length > 0 && (
-                    <BalanceSummary totals={totals} locale={locale} />
-                  )}
-                  <FriendsHeader count={rows.length} action={friendsAction} />
+                  <BalanceSummary
+                    totals={totals}
+                    locale={locale}
+                    counts={counts}
+                  />
+                  <ListToolsHeader
+                    title={l`Friends`}
+                    titleTestID="people-friends-title"
+                    count={shown.length}
+                    query={query}
+                    onQueryChange={setQuery}
+                    searchLabel={l`Search friends`}
+                    activeFilterCount={activeCount}
+                    onFiltersPress={() => filterControl.open()}
+                  />
                 </>
               ) : undefined
             }
             ListEmptyComponent={
-              friends.length > 0 ? (
+              friends.length > 0 && needle ? (
+                <EmptyState
+                  testID="people-search-empty"
+                  icon={SearchIcon}
+                  message={l`No matches for “${query.trim()}”`}
+                />
+              ) : friends.length > 0 ? (
                 <EmptyState
                   testID="people-filtered-empty"
                   icon={null}
@@ -262,21 +246,14 @@ export function PeopleScreen() {
   )
 }
 
-/* The friends list heading with the filter; Add friend is the header's action (owner header rule). */
-function FriendsHeader({
-  count,
-  action,
-}: {
-  count: number | undefined
-  action?: React.ReactNode
-}) {
+/* The friends list heading while loading; Add friend is the header's action (owner header rule). */
+function FriendsHeader({count}: {count: number | undefined}) {
   const {t: l} = useLingui()
   return (
     <SectionHeader
       title={l`Friends`}
       testID="people-friends-title"
       count={count}
-      action={action}
     />
   )
 }

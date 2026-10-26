@@ -9,20 +9,17 @@ import {AnimatedAmount} from '#/motion/AnimatedAmount'
 
 /**
  * My balance in a group: one card with a cell per currency (never added
- * together), as People's summary, and the page's primary action (Settle up)
- * as the card's trailing button, so the hero stays short on phones.
+ * together), as People's summary. Settle up is the page header's action
+ * (owner header rule), so the card has none of its own.
  */
 export function GroupBalanceCards({
   openCurrencies,
   mine,
   locale,
-  action,
 }: {
   openCurrencies: string[]
   mine: Record<string, bigint>
   locale: string
-  /** Settle up, at the card's right edge. */
-  action: React.ReactNode
 }) {
   const t = useTheme()
   const {gtMobile} = useBreakpoints()
@@ -34,7 +31,6 @@ export function GroupBalanceCards({
         a.flex_row,
         a.align_center,
         a.gap_md,
-        a.pr_md,
         a.rounded_md,
         a.border,
         t.atoms.border_contrast_low,
@@ -99,7 +95,6 @@ export function GroupBalanceCards({
           })
         )}
       </View>
-      {action}
     </View>
   )
 }

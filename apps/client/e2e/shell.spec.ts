@@ -116,12 +116,43 @@ test.describe('header rule set', () => {
       ['/settings', 'screen-settings'],
       ['/people/p1', 'screen-person'],
       ['/groups/g1', 'screen-group'],
-      ['/friends/new', 'screen-add-friend'],
+      ['/groups/g1/settle', 'screen-settle'],
+      ['/expense/e1', 'screen-expense'],
+      ['/settings/appearance', 'screen-settings-section'],
     ]) {
       await open(page, path, screen)
       await expect(on(page, screen, 'header-back')).toBeVisible()
       await expect(on(page, screen, 'header-avatar')).toHaveCount(0)
     }
+    // Form sheets (owner rule 7) close with the cross instead of Back.
+    for (const [path, screen] of [
+      ['/friends/new', 'screen-add-friend'],
+      ['/groups/new', 'screen-create-group'],
+      ['/expense/new', 'screen-add-expense'],
+    ]) {
+      await open(page, path, screen)
+      await expect(page.getByTestId('sheet-close')).toBeVisible()
+      await expect(on(page, screen, 'header-avatar')).toHaveCount(0)
+    }
+  })
+
+  test('detail pages: the name and subtitle centred, then the one action and the overflow', async ({page}) => {
+    await page.setViewportSize(PHONE)
+    await openDemo(page)
+    await page.getByTestId('person-Riya Sharma').click()
+    await expect(on(page, 'screen-person', 'person-name')).toHaveText('Riya Sharma')
+    await expect(on(page, 'screen-person', 'person-byline')).toBeVisible()
+    await expect(on(page, 'screen-person', 'person-record-payment')).toHaveAttribute('aria-label', /Settle up|Record payment/)
+    await expect(on(page, 'screen-person', 'person-more')).toBeVisible()
+    const title = await box(page, 'screen-person', 'person-name')
+    expect(Math.abs(title.x + title.width / 2 - PHONE.width / 2)).toBeLessThan(2)
+
+    await open(page, '/groups', 'screen-groups')
+    await on(page, 'screen-groups', 'group-Goa trip').click()
+    await expect(on(page, 'screen-group', 'group-name')).toHaveText('Goa trip')
+    await expect(on(page, 'screen-group', 'group-byline')).toHaveText('Trip · 5 members')
+    await expect(on(page, 'screen-group', 'group-settle')).toBeVisible()
+    await expect(on(page, 'screen-group', 'group-more')).toBeVisible()
   })
 
   test('on phones the header hides on scroll down and returns on scroll up', async ({page}) => {

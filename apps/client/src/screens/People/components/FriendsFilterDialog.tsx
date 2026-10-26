@@ -141,7 +141,7 @@ function Form({
 }
 
 /** One single-choice row of chips, as the split modes pick. */
-function Choices<V extends string>({
+export function Choices<V extends string>({
   testID,
   title,
   value,

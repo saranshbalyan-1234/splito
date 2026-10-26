@@ -224,12 +224,14 @@ export function ActionButton({
 export function TitleText({
   children,
   style,
-}: {children: React.ReactNode} & TextStyleProp) {
+  testID,
+}: {children: React.ReactNode; testID?: string} & TextStyleProp) {
   const {gtMobile} = useBreakpoints()
   const {isWithinLeftPanel} = useIsWithinSplitView()
   const align = useContext(AlignmentContext)
   return (
     <Text
+      testID={testID}
       style={[
         isWithinLeftPanel
           ? [a.text_xl, a.font_bold]
@@ -247,11 +249,18 @@ export function TitleText({
   )
 }
 
-export function SubtitleText({children}: {children: React.ReactNode}) {
+export function SubtitleText({
+  children,
+  testID,
+}: {
+  children: React.ReactNode
+  testID?: string
+}) {
   const t = useTheme()
   const align = useContext(AlignmentContext)
   return (
     <Text
+      testID={testID}
       style={[
         a.text_sm,
         a.leading_snug,

@@ -33,7 +33,6 @@ import {HandCoins_Stroke2_Corner0_Rounded as HandCoinsIcon} from '#/components/i
 import {PersonPlus_Filled_Stroke2_Corner0_Rounded as PersonPlusIcon} from '#/components/icons/Person'
 import {PlusLarge_Stroke2_Corner0_Rounded as PlusIcon} from '#/components/icons/Plus'
 import * as Layout from '#/components/Layout'
-import {ScrollTitle, useScrollTitle} from '#/components/Layout/ScrollTitle'
 import * as Menu from '#/components/Menu'
 import {
   HistoryRow,
@@ -103,7 +102,6 @@ export function GroupScreen() {
   const route = useRoute<RouteProp<AllNavigatorParams, 'Group'>>()
   const {groupId} = route.params
   const [tab, setTab] = useState<Tab>(route.params.tab ?? 'expenses')
-  const scrollTitle = useScrollTitle()
   const me = useMe()
   const people = useEntities<Person>('person')
   const groups = useEntities<Group>('group')
@@ -223,8 +221,7 @@ export function GroupScreen() {
             ]
           : []),
       ]
-    }
-    else if (tab === 'members')
+    } else if (tab === 'members')
       items = [
         {
           type: 'membersHeader' as const,
@@ -262,21 +259,6 @@ export function GroupScreen() {
   /* The faces' names; the +N chip beside them already counts the rest. */
   const memberSummary = memberNames.slice(0, AVATAR_STACK).join(', ')
 
-  const settleButton = (
-    <Button
-      testID="group-settle"
-      label={l`Settle up`}
-      size="small"
-      color="primary"
-      disabled={isSettled}
-      onPress={() => navigation.navigate('Settle', {groupId})}>
-      <ButtonIcon icon={HandCoinsIcon} />
-      <ButtonText>
-        <Trans>Settle up</Trans>
-      </ButtonText>
-    </Button>
-  )
-
   const header =
     isLoading || !group ? (
       <Shimmer testID="group-loading">
@@ -292,120 +274,94 @@ export function GroupScreen() {
       </Shimmer>
     ) : (
       <>
-        {/* As a friend's page: one column - identity, members, then my balance with Settle up in its card. */}
+        {/* The name and kind are the header's title and subtitle; the hero shows who is in it, the dates, then my balance. */}
         <View style={[a.px_lg, a.pt_lg, a.pb_lg, a.gap_lg]}>
-          <View style={[a.gap_lg]}>
-            <View style={[a.flex_row, a.align_center, a.gap_md]}>
-              <GroupAvatar
-                kind={group.data.kind}
-                name={group.data.name}
-                size={gtMobile ? 72 : 64}
-              />
-              <View style={[a.flex_1, a.gap_2xs]}>
+          <View style={[a.flex_row, a.align_center, a.gap_md]}>
+            <GroupAvatar
+              kind={group.data.kind}
+              name={group.data.name}
+              size={gtMobile ? 64 : 56}
+            />
+            <View style={[a.flex_1, a.gap_xs]}>
+              <View style={[a.flex_row, a.align_center, a.gap_sm]}>
+                <View style={[a.flex_row, a.align_center]}>
+                  {stack.map((m, i) => (
+                    <View
+                      key={m.personId}
+                      style={[
+                        a.rounded_full,
+                        {
+                          marginLeft: i === 0 ? 0 : -6,
+                          borderWidth: 2,
+                          borderColor: t.atoms.bg.backgroundColor,
+                          zIndex: AVATAR_STACK - i,
+                        },
+                      ]}>
+                      <UserAvatar
+                        size={32}
+                        name={
+                          m.personId === me?.id
+                            ? me.data.name
+                            : names.get(m.personId)
+                        }
+                        type="user"
+                        noBorder
+                      />
+                    </View>
+                  ))}
+                  {moreCount > 0 && (
+                    <View
+                      style={[
+                        a.rounded_full,
+                        a.align_center,
+                        a.justify_center,
+                        t.atoms.bg_contrast_50,
+                        {
+                          marginLeft: -6,
+                          height: 36,
+                          minWidth: 36,
+                          paddingHorizontal: 6,
+                          borderWidth: 2,
+                          borderColor: t.atoms.bg.backgroundColor,
+                        },
+                      ]}>
+                      <Text
+                        style={[
+                          a.text_xs,
+                          a.font_semi_bold,
+                          t.atoms.text_contrast_medium,
+                        ]}>
+                        +{moreCount}
+                      </Text>
+                    </View>
+                  )}
+                </View>
                 <Text
                   emoji
-                  testID="group-name"
-                  numberOfLines={2}
-                  style={[
-                    gtMobile ? a.text_3xl : a.text_2xl,
-                    a.font_bold,
-                    a.leading_tight,
-                  ]}>
-                  {group.data.name}
+                  numberOfLines={1}
+                  style={[a.flex_1, a.text_sm, t.atoms.text_contrast_medium]}>
+                  {memberSummary}
                 </Text>
+              </View>
+              {dates && (
                 <Text
-                  testID="group-byline"
+                  testID="group-dates"
                   numberOfLines={1}
                   style={[
-                    a.text_md,
+                    a.text_sm,
                     a.leading_snug,
                     t.atoms.text_contrast_medium,
                   ]}>
-                  {byline}
+                  {dates}
                 </Text>
-                {dates && (
-                  <Text
-                    testID="group-dates"
-                    numberOfLines={1}
-                    style={[
-                      a.text_sm,
-                      a.leading_snug,
-                      t.atoms.text_contrast_medium,
-                    ]}>
-                    {dates}
-                  </Text>
-                )}
-              </View>
+              )}
             </View>
-
-            <View style={[a.flex_row, a.align_center, a.gap_sm]}>
-              <View style={[a.flex_row, a.align_center]}>
-                {stack.map((m, i) => (
-                  <View
-                    key={m.personId}
-                    style={[
-                      a.rounded_full,
-                      {
-                        marginLeft: i === 0 ? 0 : -6,
-                        borderWidth: 2,
-                        borderColor: t.atoms.bg.backgroundColor,
-                        zIndex: AVATAR_STACK - i,
-                      },
-                    ]}>
-                    <UserAvatar
-                      size={32}
-                      name={
-                        m.personId === me?.id
-                          ? me.data.name
-                          : names.get(m.personId)
-                      }
-                      type="user"
-                      noBorder
-                    />
-                  </View>
-                ))}
-                {moreCount > 0 && (
-                  <View
-                    style={[
-                      a.rounded_full,
-                      a.align_center,
-                      a.justify_center,
-                      t.atoms.bg_contrast_50,
-                      {
-                        marginLeft: -6,
-                        height: 36,
-                        minWidth: 36,
-                        paddingHorizontal: 6,
-                        borderWidth: 2,
-                        borderColor: t.atoms.bg.backgroundColor,
-                      },
-                    ]}>
-                    <Text
-                      style={[
-                        a.text_xs,
-                        a.font_semi_bold,
-                        t.atoms.text_contrast_medium,
-                      ]}>
-                      +{moreCount}
-                    </Text>
-                  </View>
-                )}
-              </View>
-              <Text
-                emoji
-                numberOfLines={1}
-                style={[a.flex_1, a.text_sm, t.atoms.text_contrast_medium]}>
-                {memberSummary}
-              </Text>
-            </View>
-
           </View>
 
           <GroupBalanceCards
             openCurrencies={openCurrencies}
             mine={mine}
             locale={locale}
-            action={settleButton}
           />
         </View>
 
@@ -458,14 +414,27 @@ export function GroupScreen() {
     <Layout.Screen testID="screen-group">
       <Layout.Header.Outer>
         <Layout.Header.BackButton />
+        {/* Balances Settle up and the overflow on the right, so the title stays centred. */}
+        <Layout.Header.Slot />
         <Layout.Header.Content>
-          <ScrollTitle isShown={scrollTitle.isShown}>
-            <Layout.Header.TitleText>
-              {group?.data.name ?? <Trans>Group</Trans>}
-            </Layout.Header.TitleText>
-          </ScrollTitle>
+          <Layout.Header.TitleText testID="group-name">
+            {group?.data.name ?? <Trans>Group</Trans>}
+          </Layout.Header.TitleText>
+          {group ? (
+            <Layout.Header.SubtitleText testID="group-byline">
+              {byline}
+            </Layout.Header.SubtitleText>
+          ) : null}
         </Layout.Header.Content>
-        {/* Settle up and Add expense are the page's own buttons, so the header keeps only the overflow (owner header rule). */}
+        {/* Header rule set: Settle up, then the overflow (Members, Add members, Payment rules). */}
+        <Layout.Header.ActionButton
+          testID="group-settle"
+          label={l`Settle up`}
+          icon={HandCoinsIcon}
+          disabled={!group || isSettled}
+          hint={isSettled ? l`Everyone is settled up.` : undefined}
+          onPress={() => navigation.navigate('Settle', {groupId})}
+        />
         {group ? (
           <Menu.Root>
             <Menu.Trigger label={l`More options`}>
@@ -520,7 +489,6 @@ export function GroupScreen() {
       </Layout.Header.Outer>
       <LayoutAnimationConfig skipEntering skipExiting>
         <List
-          onScrolledDownChange={scrollTitle.onScrolledDownChange}
           data={items}
           keyExtractor={(item: Item) => item.key}
           renderItem={({item, index}: {item: Item; index: number}) => {

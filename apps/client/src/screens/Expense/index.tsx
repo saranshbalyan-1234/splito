@@ -31,10 +31,6 @@ import {DotGrid3x1_Stroke2_Corner0_Rounded as DotsIcon} from '#/components/icons
 import {Pencil_Stroke2_Corner0_Rounded as PencilIcon} from '#/components/icons/Pencil'
 import {Trash_Stroke2_Corner0_Rounded as TrashIcon} from '#/components/icons/Trash'
 import * as Layout from '#/components/Layout'
-import {
-  ScrollTitle,
-  useContentScrollTitle,
-} from '#/components/Layout/ScrollTitle'
 import * as Menu from '#/components/Menu'
 import * as Skeleton from '#/components/Skeleton'
 import {
@@ -64,7 +60,6 @@ export function ExpenseScreen() {
   const {params} = useRoute<RouteProp<AllNavigatorParams, 'Expense'>>()
   const navigation = useNavigation<NavigationProp>()
   const {expense, history} = useExpense(params.expenseId)
-  const scrollTitle = useContentScrollTitle()
 
   return (
     <Layout.Screen testID="screen-expense">
@@ -73,11 +68,9 @@ export function ExpenseScreen() {
         {/* Balances Edit and the overflow on the right, so the title stays centred. */}
         <Layout.Header.Slot />
         <Layout.Header.Content>
-          <ScrollTitle isShown={scrollTitle.isShown}>
-            <Layout.Header.TitleText>
-              {expense?.data.title ?? <Trans>Expense</Trans>}
-            </Layout.Header.TitleText>
-          </ScrollTitle>
+          <Layout.Header.TitleText testID="expense-detail-title">
+            {expense?.data.title ?? <Trans>Expense</Trans>}
+          </Layout.Header.TitleText>
         </Layout.Header.Content>
         {expense && !expense.deleted ? (
           <>
@@ -114,11 +107,7 @@ export function ExpenseScreen() {
           }}
         />
       ) : (
-        <Detail
-          expense={expense}
-          history={history}
-          onScroll={scrollTitle.onScroll}
-        />
+        <Detail expense={expense} history={history} />
       )}
     </Layout.Screen>
   )
@@ -199,11 +188,9 @@ function ExpenseMenu({expense}: {expense: Entity<Expense>}) {
 function Detail({
   expense,
   history,
-  onScroll,
 }: {
   expense: Entity<Expense>
   history: Parameters<typeof History>[0]['history']
-  onScroll: React.ComponentProps<typeof Layout.Content>['onScroll']
 }) {
   const t = useTheme()
   const {t: l, i18n} = useLingui()
@@ -244,13 +231,8 @@ function Detail({
     <View style={[a.px_lg, a.pt_xl, a.pb_lg, a.gap_lg]}>
       <View style={[a.flex_row, a.align_center, a.gap_md]}>
         <CategoryTile category={category} size={52} />
+        {/* The title is the page header's (owner header rule). */}
         <View style={[a.flex_1, a.gap_2xs]}>
-          <Text
-            testID="expense-detail-title"
-            style={[a.text_2xl, a.font_bold, a.leading_tight]}
-            numberOfLines={3}>
-            {e.title}
-          </Text>
           <View style={[a.flex_row, a.align_center, a.flex_wrap, a.gap_xs]}>
             <Text style={[a.text_md, t.atoms.text_contrast_medium]}>
               {category.name}
@@ -506,10 +488,7 @@ function Detail({
   ) : null
 
   return (
-    <Layout.Content
-      contentContainerStyle={[a.pb_5xl]}
-      onScroll={onScroll}
-      scrollEventThrottle={32}>
+    <Layout.Content contentContainerStyle={[a.pb_5xl]}>
       {deletedBanner}
       {gtTablet ? (
         /* Two columns filling the page, tops aligned: the expense, then its history as a rail. */

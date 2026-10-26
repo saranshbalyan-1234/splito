@@ -11,6 +11,8 @@ import {
 
 import {Link} from '#/view/com/util/Link'
 import {atoms as a, useBreakpoints, useTheme} from '#/alf'
+import {ChevronRight_Stroke2_Corner0_Rounded as ChevronIcon} from '#/components/icons/Chevron'
+import {CircleCheck_Stroke2_Corner0_Rounded as CheckIcon} from '#/components/icons/CircleCheck'
 import * as Skeleton from '#/components/Skeleton'
 import {Text} from '#/components/Typography'
 import {AnimatedAmount} from '#/motion/AnimatedAmount'
@@ -20,22 +22,24 @@ import {SectionHeader} from './SectionHeader'
 const tabular = {fontVariant: ['tabular-nums' as const]}
 
 /**
- * The top of People: one card holding a cell per currency with the net
- * balance (and both sides when both are open). Currencies are never added
- * together. Each cell opens Analytics. Cells sit side by side - two to a
- * row on phones - so the card stays one compact block above the list.
+ * The Overview at the top of People and Groups (owner: "add overview in
+ * both friends and groups"): one card holding a cell per currency with the
+ * net balance (and both sides when both are open), a line of counts under
+ * it, and Analytics on the heading's right. Currencies are never added
+ * together. Each cell opens Analytics too. Cells sit side by side - two to
+ * a row on phones - so the card stays one compact block above the list.
  */
 export function BalanceSummary({
   totals,
   locale,
-  title,
+  counts,
   testID = 'people-summary',
   titleTestID = 'people-balances-title',
 }: {
   totals: CurrencyTotal[]
   locale: string
-  /** Default "Balances"; Groups heads it "Across your groups". */
-  title?: string
+  /** "6 friends · 2 settled", under the card. */
+  counts: string
   testID?: string
   titleTestID?: string
 }) {
@@ -44,8 +48,12 @@ export function BalanceSummary({
 
   return (
     <View testID={testID}>
-      <SectionHeader testID={titleTestID} title={title ?? l`Balances`} />
-      <View style={[a.px_lg, a.pb_md]}>
+      <SectionHeader
+        testID={titleTestID}
+        title={l`Overview`}
+        action={<AnalyticsLink />}
+      />
+      <View style={[a.px_lg, a.pb_sm, a.gap_sm]}>
         <View
           style={[
             a.flex_row,
@@ -55,17 +63,66 @@ export function BalanceSummary({
             a.overflow_hidden,
             t.atoms.border_contrast_low,
           ]}>
-          {totals.map((total, i) => (
-            <SummaryCell
-              key={total.currency}
-              total={total}
-              locale={locale}
-              hasDivider={i > 0}
-            />
-          ))}
+          {totals.length === 0 ? (
+            <View
+              testID="summary-settled"
+              style={[a.flex_row, a.align_center, a.gap_sm, a.px_lg, a.py_md]}>
+              <CheckIcon size="md" fill={t.palette.positive_600} />
+              <Text style={[a.text_md, a.leading_snug]}>
+                <Trans>You’re all settled up.</Trans>
+              </Text>
+            </View>
+          ) : (
+            totals.map((total, i) => (
+              <SummaryCell
+                key={total.currency}
+                total={total}
+                locale={locale}
+                hasDivider={i > 0}
+              />
+            ))
+          )}
         </View>
+        <Text
+          testID={`${testID}-counts`}
+          style={[a.text_sm, a.leading_snug, t.atoms.text_contrast_medium]}>
+          {counts}
+        </Text>
       </View>
     </View>
+  )
+}
+
+/** "Analytics ›" on the Overview heading, as Bluesky's section headers link out. */
+function AnalyticsLink() {
+  const t = useTheme()
+  const {t: l} = useLingui()
+  return (
+    <Link
+      testID="overview-analytics"
+      href="/analytics"
+      title={l`Open Analytics`}
+      accessibilityLabel={l`Open Analytics`}
+      asAnchor
+      anchorNoUnderline
+      accessibilityHint=""
+      hoverStyle={t.atoms.bg_contrast_25}
+      style={[
+        a.flex_row,
+        a.align_center,
+        a.gap_2xs,
+        a.rounded_full,
+        a.pl_sm,
+        a.pr_xs,
+        a.py_xs,
+        a.transition_color,
+      ]}>
+      <Text
+        style={[a.text_sm, a.font_semi_bold, {color: t.palette.primary_500}]}>
+        <Trans>Analytics</Trans>
+      </Text>
+      <ChevronIcon size="sm" fill={t.palette.primary_500} />
+    </Link>
   )
 }
 
@@ -167,7 +224,7 @@ export function BalanceSummaryPlaceholder() {
   const {t: l} = useLingui()
   return (
     <View>
-      <SectionHeader title={l`Balances`} />
+      <SectionHeader title={l`Overview`} />
       <View style={[a.px_lg, a.pb_md]}>
         <View
           style={[

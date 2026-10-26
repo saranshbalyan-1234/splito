@@ -126,14 +126,15 @@ test('People: the Include groups filter changes the totals only on Apply', async
   await page.goto('/')
   const row = page.getByTestId('person-Kavya Rao')
   await expect(row.getByTestId('balance-INR')).toHaveText('owes you ₹150.00')
-  await page.getByTestId('friends-filters').click()
+  await expect(page.getByTestId('list-filters-dot')).toHaveCount(0)
+  await page.getByTestId('list-filters').click()
   await page.getByTestId('filter-include-groups').click()
   await expect(row.getByTestId('balance-INR')).toHaveText('owes you ₹150.00')
   await page.getByTestId('filter-apply').click()
   await expect(row.getByTestId('balance-INR')).toHaveText('owes you ₹100.00')
-  await expect(page.getByTestId('screen-people').getByText('Direct only')).toBeVisible()
-  // The button counts the filters that differ from the defaults.
-  await expect(page.getByTestId('friends-filters-count')).toHaveText('1')
+  // The button carries a dot and says how many filters differ from the defaults.
+  await expect(page.getByTestId('list-filters-dot')).toBeVisible()
+  await expect(page.getByTestId('list-filters')).toHaveAttribute('aria-label', 'Filters, 1 on')
 })
 
 test('People filters: one currency, which way, and the order drive the list and the summary', async ({page}) => {
@@ -142,7 +143,7 @@ test('People filters: one currency, which way, and the order drive the list and 
   await expect(people.getByTestId('person-Arjun Mehta')).toBeVisible()
   await expect(people.getByTestId('summary-EUR-net')).toBeVisible()
 
-  await people.getByTestId('friends-filters').click()
+  await people.getByTestId('list-filters').click()
   await page.getByTestId('filter-currency-EUR').click()
   await page.getByTestId('filter-show-youOwe').click()
   // Nothing changes before Apply.
@@ -154,14 +155,14 @@ test('People filters: one currency, which way, and the order drive the list and 
   await expect(people.getByTestId('person-Sam Carter')).toBeVisible()
   await expect(people.getByTestId('person-Sam Carter').getByTestId('balance-INR')).toHaveCount(0)
   await expect(people.getByTestId('summary-INR-net')).toHaveCount(0)
-  await expect(people.getByTestId('friends-filters-count')).toHaveText('2')
+  await expect(people.getByTestId('list-filters')).toHaveAttribute('aria-label', 'Filters, 2 on')
 
   // Cancel leaves the applied filters alone; nobody matching shows a way back.
-  await people.getByTestId('friends-filters').click()
+  await people.getByTestId('list-filters').click()
   await page.getByTestId('filter-show-settled').click()
   await page.getByTestId('filter-cancel').click()
   await expect(people.getByTestId('person-Sam Carter')).toBeVisible()
-  await people.getByTestId('friends-filters').click()
+  await people.getByTestId('list-filters').click()
   await page.getByTestId('filter-show-settled').click()
   await page.getByTestId('filter-apply').click()
   await expect(people.getByTestId('people-filtered-empty')).toBeVisible()

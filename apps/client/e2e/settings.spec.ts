@@ -80,9 +80,9 @@ test('hiding Groups removes it from the bar and sidebar; Settings stays reachabl
   await open(page, '/', 'screen-people')
   await expect(page.getByTestId('tab-people')).toBeVisible()
   await expect(page.getByTestId('tab-groups')).toHaveCount(0)
-  // The avatar menu is the guaranteed way back to Settings.
+  // The avatar's drawer is the guaranteed way back to Settings.
   await page.getByTestId('screen-people').getByTestId('header-avatar').click()
-  await page.getByTestId('header-menu-settings').click()
+  await page.getByTestId('drawer-settings').click()
   await expect(page.getByTestId('screen-settings')).toBeVisible()
 
   await page.setViewportSize(LAPTOP)

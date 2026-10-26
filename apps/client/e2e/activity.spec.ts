@@ -94,9 +94,8 @@ test('changes by friends are unread with a badge; mark all read clears them, und
 
   await screen(page).getByTestId('activity-mark-all-read').click()
   await expect(dots).toHaveCount(0)
-  await expect(screen(page).getByTestId('activity-mark-all-read')).toHaveCount(
-    0,
-  )
+  // The header keeps its one action in place, disabled, so the title stays centred.
+  await expect(screen(page).getByTestId('activity-mark-all-read')).toBeDisabled()
 
   await page.getByRole('button', {name: 'Undo'}).click()
   await expect(dots).toHaveCount(unread)
