@@ -120,7 +120,8 @@ describe('writeOffParts', () => {
       fc.property(fc.array(fc.bigInt({min: -10_000n, max: 10_000n}), {minLength: 1, maxLength: 5}), xs => {
         const parts = xs.map((amount, i) => ({groupId: i === 0 ? null : `g${i}`, amount}))
         const net = xs.reduce((a, b) => a + b, 0n)
-        if (net === 0n) return
+        // A zero net with open parts clears too (F-113 m7).
+        if (xs.every(x => x === 0n)) return
         const out = writeOffParts(parts, net < 0n ? -net : net)
         for (const p of parts) {
           const w = out.filter(o => o.groupId === p.groupId).reduce((a, o) => a + o.amount, 0n)

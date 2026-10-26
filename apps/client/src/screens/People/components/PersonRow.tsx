@@ -1,7 +1,14 @@
 import {View} from 'react-native'
 import Animated from 'react-native-reanimated'
 import {Trans, useLingui} from '@lingui/react/macro'
-import {formatAmount, magnitude, type PersonSummary, ZERO} from '@splito/domain'
+import {
+  balanceSides,
+  formatAmount,
+  isSettledBalance,
+  magnitude,
+  type PersonSummary,
+  ZERO,
+} from '@splito/domain'
 
 import {useRowPadding} from '#/state/preferences/density'
 import {Link} from '#/view/com/util/Link'
@@ -80,21 +87,43 @@ export function PersonRow({
           ...groups,
         ].map(chip => ({...chip, currency}))
       })
-  const isSettled = currencies.every(c => byCurrency[c]!.total === ZERO)
+  /* Settled means every part is zero, not just the net (audit M10). */
+  const isSettled = currencies.every(c => isSettledBalance(byCurrency[c]!))
 
-  const open = currencies.filter(c => byCurrency[c]!.total !== ZERO)
+  const open = currencies.filter(c => !isSettledBalance(byCurrency[c]!))
+  /*
+   * Each way on its own line, never netted across direct and groups (as
+   * the Overview adds them and a payment settles them): owed 10 directly
+   * and owing 10 in a group reads both, not "Settled".
+   */
+  const lines = (currency: string) => {
+    const {owed, owe} = balanceSides(byCurrency[currency]!)
+    const isBoth = owed !== ZERO && owe !== ZERO
+    return [
+      {
+        amount: owed,
+        testID: isBoth ? `balance-${currency}-owed` : `balance-${currency}`,
+      },
+      {
+        amount: -owe,
+        testID: isBoth ? `balance-${currency}-owe` : `balance-${currency}`,
+      },
+    ].filter(line => line.amount !== ZERO)
+  }
   const balanceColumn = (list: string[]) => (
     <View style={[a.align_end, a.gap_2xs, a.flex_shrink_0]}>
-      {list.map(currency => (
-        <BalanceText
-          key={currency}
-          testID={`balance-${currency}`}
-          amount={byCurrency[currency]!.total}
-          currency={currency}
-          locale={locale}
-          style={a.text_right}
-        />
-      ))}
+      {list.flatMap(currency =>
+        lines(currency).map(line => (
+          <BalanceText
+            key={line.testID}
+            testID={line.testID}
+            amount={line.amount}
+            currency={currency}
+            locale={locale}
+            style={a.text_right}
+          />
+        )),
+      )}
     </View>
   )
   const balances = isSettled ? (

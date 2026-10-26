@@ -129,6 +129,9 @@ function BalanceCard({
             <Trans>Owes you</Trans>
           ) : total < ZERO ? (
             <Trans>You owe</Trans>
+          ) : showParts ? (
+            /* Parts that net to zero are still open, each in its own place (audit M10). */
+            <Trans>Even overall, open both ways</Trans>
           ) : (
             <Trans>Settled up</Trans>
           )}

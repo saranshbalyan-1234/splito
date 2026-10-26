@@ -57,6 +57,20 @@ export function setHidden(
   return {...s, hidden: hidden ? [...others, id] : others}
 }
 
+/**
+ * Who a write-off row is about, told from whoever recorded it (the row's
+ * avatar): the other side when the actor is one of the two, else both
+ * (audit m5: never from `to`'s side when `from` recorded it).
+ */
+export function writeOffParties(
+  w: {from: string; to: string},
+  actor: string,
+): {kind: 'pair'; other: string} | {kind: 'third'} {
+  if (actor === w.from) return {kind: 'pair', other: w.to}
+  if (actor === w.to) return {kind: 'pair', other: w.from}
+  return {kind: 'third'}
+}
+
 /** Local midnight of the day `at` falls on. */
 export function startOfDay(at: number) {
   const d = new Date(at)

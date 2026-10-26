@@ -48,7 +48,7 @@ import {
   RestoredBadge,
   WriteOffBadge,
 } from './icons'
-import {daysAgo} from './feed'
+import {daysAgo, writeOffParties} from './feed'
 import {type ActivityActions, type RowAction} from './useActivityActions'
 import {type ActivitySnapshot} from './useActivityFeed'
 
@@ -313,7 +313,8 @@ export function ActivityItem({
               a.pr_lg,
               {
                 backgroundColor,
-                paddingLeft: a.px_lg.paddingLeft + SLOT_SIZE.width + a.gap_lg.gap,
+                paddingLeft:
+                  a.px_lg.paddingLeft + SLOT_SIZE.width + a.gap_lg.gap,
                 marginTop: -4,
               },
             ]}>
@@ -519,7 +520,8 @@ function useDescribe(
       const r = event.data
       const current = snapshot.requests.get(event.entityId)?.data ?? r
       const friendName = current.personId
-        ? (snapshot.people.get(current.personId)?.data.name ?? requestName(current))
+        ? (snapshot.people.get(current.personId)?.data.name ??
+          requestName(current))
         : requestName(current)
       const subject = <Strong>{friendName}</Strong>
       const openPerson = current.personId
@@ -531,11 +533,7 @@ function useDescribe(
           avatarName: friendName,
           icon: FriendAddedBadge,
           tone: 'primary',
-          headline: (
-            <Trans>
-              {subject} sent you a friend request
-            </Trans>
-          ),
+          headline: <Trans>{subject} sent you a friend request</Trans>,
           detail: (
             <Detail>
               {current.status === 'accepted' ? (
@@ -563,13 +561,9 @@ function useDescribe(
           tone: 'primary',
           headline:
             r.direction === 'outgoing' ? (
-              <Trans>
-                {subject} accepted your friend request
-              </Trans>
+              <Trans>{subject} accepted your friend request</Trans>
             ) : (
-              <Trans>
-                You accepted {subject}’s friend request
-              </Trans>
+              <Trans>You accepted {subject}’s friend request</Trans>
             ),
           detail: (
             <Detail>
@@ -770,23 +764,46 @@ function useDescribe(
       const creditor = <Strong>{nameOf(w.to)}</Strong>
       const other = w.from === me ? w.to : w.from
       const isRemoved = event.kind === 'writeoff.removed'
+      // Told from whoever recorded it, the avatar on the row (audit m5).
+      const parties = writeOffParties(w, event.actor)
+      const counterpart =
+        parties.kind === 'pair' ? (
+          <Strong>{nameOf(parties.other)}</Strong>
+        ) : null
+      // Who let whom off: the headline alone does not say which way.
+      const direction =
+        w.to === me ? (
+          <Trans>You let {debtor} off</Trans>
+        ) : w.from === me ? (
+          <Trans>{creditor} let you off</Trans>
+        ) : (
+          <Trans>
+            {creditor} let {debtor} off
+          </Trans>
+        )
       return {
         avatarName: actorAvatar,
         icon: isRemoved ? DeletedBadge : WriteOffBadge,
         tone: isRemoved ? 'negative' : 'primary',
         headline: isRemoved ? (
           <Trans>{actor} undid a write-off</Trans>
-        ) : w.to === me ? (
-          <Trans>You called it even with {debtor}</Trans>
-        ) : w.from === me ? (
-          <Trans>{creditor} called it even with you</Trans>
+        ) : parties.kind === 'third' ? (
+          <Trans>
+            {actor} called it even between {debtor} and {creditor}
+          </Trans>
+        ) : parties.other === me ? (
+          <Trans>{actor} called it even with you</Trans>
         ) : (
           <Trans>
-            {creditor} called it even with {debtor}
+            {actor} called it even with {counterpart}
           </Trans>
         ),
         detail: (
           <Detail>
+            <Text style={[a.text_sm, t.atoms.text_contrast_medium]}>
+              {direction}
+            </Text>
+            <Dot />
             <Text
               style={[
                 a.text_sm,

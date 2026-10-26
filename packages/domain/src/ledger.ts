@@ -1,7 +1,7 @@
 import type {CurrencyCode} from './currency'
 import type {LocalDate} from './date'
 import {DomainError} from './errors'
-import {planSettlement, type SettlementRules} from './settlement'
+import {directPlan, NO_RULES, planSettlement, type SettlementRules} from './settlement'
 
 export interface ExpenseRecord {
   kind: 'expense'
@@ -108,8 +108,6 @@ export function pairwiseBalances(records: LedgerRecord[], me: string): BalanceRo
 
 const cmp = (a: string, b: string) => (a < b ? -1 : a > b ? 1 : 0)
 
-const NO_RULES: SettlementRules = {allowListOnly: false, edges: {}}
-
 function directTransfers(net: Record<string, bigint>) {
   const plan = planSettlement(net, NO_RULES, 'direct')
   return plan.status === 'ok' ? plan.transfers : []
@@ -119,9 +117,9 @@ function directTransfers(net: Record<string, bigint>) {
  * My balance with each person, per group and currency: the one source every
  * screen shows. Direct records count pair by pair (`pairwiseBalances`).
  * Inside a group, my rows are the transfers of the group's settle-up plan
- * (`planSettlement` over `groupNet`, direct, the group's rules - or no rules
- * when those leave no plan), so my group rows add up to my group net and
- * recording the plan clears People, the group and Settle up together.
+ * (`directPlan` over `groupNet`: the group's rules, or no rules when those
+ * leave no plan), so my group rows add up to my group net and recording the
+ * plan clears People, the group and Settle up together.
  */
 export function balanceRows(
   records: LedgerRecord[],
@@ -136,10 +134,7 @@ export function balanceRows(
   for (const groupId of [...groupIds].sort()) {
     for (const [currency, net] of Object.entries(groupNet(records, groupId)).sort(([x], [y]) => cmp(x, y))) {
       if (!net[me]) continue
-      let plan = planSettlement(net, rules[groupId] ?? NO_RULES, 'direct')
-      if (plan.status !== 'ok') plan = planSettlement(net, NO_RULES, 'direct')
-      if (plan.status !== 'ok') continue
-      for (const t of plan.transfers) {
+      for (const t of directPlan(net, rules[groupId] ?? NO_RULES).transfers) {
         if (t.from === me) rows.push({person: t.to, groupId, currency, amount: -t.amount})
         else if (t.to === me) rows.push({person: t.from, groupId, currency, amount: t.amount})
       }
@@ -184,13 +179,15 @@ export function splitPayment(amount: bigint, owed: BalancePart[]): BalancePart[]
  * them). The whole balance (`amount` = |net|) clears every part, each in its
  * own direction, so the pair ends at zero in that currency. Less forgives
  * only in the net's direction, direct first, then each group, up to what is
- * owed there. More than |net|, or nothing, is `INVALID_AMOUNT`.
+ * owed there. When the parts net to zero (owed one way directly, the other
+ * way in a group), the whole balance is 0 and clears every part (audit m7).
+ * More than |net|, a negative amount, or nothing open is `INVALID_AMOUNT`.
  */
 export function writeOffParts(parts: BalancePart[], amount: bigint): BalancePart[] {
   const live = [...parts.filter(p => p.groupId === null), ...parts.filter(p => p.groupId !== null)].filter(p => p.amount !== 0n)
   const net = live.reduce((s, p) => s + p.amount, 0n)
   const full = magnitude(net)
-  if (amount <= 0n || amount > full) throw new DomainError('INVALID_AMOUNT')
+  if (live.length === 0 || amount < 0n || amount > full || (amount === 0n && full !== 0n)) throw new DomainError('INVALID_AMOUNT')
   if (amount === full) return live.map(p => ({...p}))
   const sign = net < 0n ? -1n : 1n
   const out: BalancePart[] = []
@@ -259,15 +256,44 @@ export interface CurrencyTotal {
   net: bigint
 }
 
-/** Per currency, sorted by code: totals across every person's balance. Currencies are never mixed. */
+/** One person's balance in one currency: the net, and its direct and per-group parts. */
+export type CurrencyBalance = PersonSummary['byCurrency'][CurrencyCode]
+
+/**
+ * What a balance's parts owe each way (both >= 0), never netted across
+ * direct and groups (audit M10): owed directly 10 and owing 10 in a group is
+ * owed 10, owe 10, not settled.
+ */
+export function balanceSides(c: Pick<CurrencyBalance, 'direct' | 'groups'>): {owed: bigint; owe: bigint} {
+  let owed = 0n
+  let owe = 0n
+  for (const v of [c.direct, ...Object.values(c.groups)]) {
+    if (v > 0n) owed += v
+    else owe -= v
+  }
+  return {owed, owe}
+}
+
+/** Settled means every part is zero, not just the net (audit M10). */
+export function isSettledBalance(c: Pick<CurrencyBalance, 'direct' | 'groups'>): boolean {
+  const {owed, owe} = balanceSides(c)
+  return owed === 0n && owe === 0n
+}
+
+/**
+ * Per currency, sorted by code: totals across every person's balance, each
+ * part in its own direction (`balanceSides`), as `groupTotals` does for
+ * groups. Currencies are never mixed.
+ */
 export function balanceTotals(people: PersonSummary[]): CurrencyTotal[] {
   const totals = new Map<CurrencyCode, CurrencyTotal>()
   for (const p of people) {
-    for (const [currency, {total}] of Object.entries(p.byCurrency)) {
+    for (const [currency, c] of Object.entries(p.byCurrency)) {
       const t = totals.get(currency) ?? {currency, owed: 0n, owe: 0n, net: 0n}
-      if (total > 0n) t.owed += total
-      else t.owe -= total
-      t.net += total
+      const {owed, owe} = balanceSides(c)
+      t.owed += owed
+      t.owe += owe
+      t.net += c.total
       totals.set(currency, t)
     }
   }

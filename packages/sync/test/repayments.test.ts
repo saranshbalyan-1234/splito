@@ -165,7 +165,7 @@ test('A07: rules stored per group; A->C excluded is infeasible direct, feasible 
   const net = {me: 0n, [b.id]: 0n, [c.id]: 0n, ...groupNet(await loadLedger(s), g.id).INR}
   const direct = planSettlement(net, updated.data.rules!, 'direct')
   expect(direct).toMatchObject({status: 'infeasible', stuck: ['me']})
-  const transit = planSettlement(net, updated.data.rules!, 'transit')
+  const transit = planSettlement(net, updated.data.rules!, 'transit', [b.id])
   expect(transit.status).toBe('ok')
   if (transit.status === 'ok')
     expect([...transit.transfers].sort((x, y) => (x.from === 'me' ? -1 : y.from === 'me' ? 1 : 0))).toEqual([

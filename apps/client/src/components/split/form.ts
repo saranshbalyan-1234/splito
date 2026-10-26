@@ -155,6 +155,40 @@ export function emptyForm({
   }
 }
 
+/** Who paid: the single payer, or everyone with a paid amount typed. */
+export function formPayers(f: ExpenseForm): string[] {
+  return f.payerMode === 'single'
+    ? [f.payer]
+    : f.people.filter(p => (f.paid[p] ?? '').trim() !== '')
+}
+
+/**
+ * "Split with" applied: who is on the expense, in `candidates` order (new
+ * people last). Payers always stay, so unticking someone never silently
+ * makes someone else the payer (audit M6); the dialog shows them locked.
+ * Exclusions and item picks of people who left go with them.
+ */
+export function withPeople(
+  f: ExpenseForm,
+  ids: string[],
+  candidates: string[],
+): ExpenseForm {
+  const keep = new Set([...ids, ...formPayers(f)])
+  const people = [
+    ...candidates.filter(id => keep.has(id)),
+    ...[...keep].filter(id => !candidates.includes(id)),
+  ]
+  return {
+    ...f,
+    people,
+    excluded: f.excluded.filter(p => keep.has(p)),
+    items: f.items.map(i => ({
+      ...i,
+      people: i.people.filter(p => keep.has(p)),
+    })),
+  }
+}
+
 /**
  * The edit form for a stored expense, every amount written in the locale's
  * decimal mark `mark` (`decimalMark`); `evaluateForm` of the result with the

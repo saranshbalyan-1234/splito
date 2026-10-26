@@ -736,8 +736,7 @@ function ItemsEditor({
                       [x.key]: '',
                       adjustModes: {...f.adjustModes, [x.key]: next},
                     }))
-                    if (savedModes)
-                      saveModes({...savedModes, [x.key]: next})
+                    if (savedModes) saveModes({...savedModes, [x.key]: next})
                   }}>
                   <SegmentedControl.Item
                     testID={`item-${x.key}-mode-amount`}

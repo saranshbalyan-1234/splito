@@ -29,6 +29,7 @@ export function PeopleDialog({
   candidates,
   selected,
   lockedIds = [],
+  lockedNote,
   allowNew = false,
   showPending = false,
   onChange,
@@ -40,6 +41,8 @@ export function PeopleDialog({
   selected: string[]
   /** Always selected; shown but not toggleable (you, in your own group). */
   lockedIds?: string[]
+  /** Why the locked people can't be unticked, under their names. */
+  lockedNote?: string
   allowNew?: boolean
   /** Choosing from friends: list people who haven't accepted yet, greyed (26.18). */
   showPending?: boolean
@@ -53,6 +56,7 @@ export function PeopleDialog({
         candidates={candidates}
         selected={selected}
         lockedIds={lockedIds}
+        lockedNote={lockedNote}
         allowNew={allowNew}
         showPending={showPending}
         onChange={onChange}
@@ -67,6 +71,7 @@ function PeopleInner({
   candidates,
   selected,
   lockedIds,
+  lockedNote,
   allowNew,
   showPending,
   onChange,
@@ -76,6 +81,7 @@ function PeopleInner({
   candidates: string[]
   selected: string[]
   lockedIds: string[]
+  lockedNote?: string
   allowNew: boolean
   showPending: boolean
   onChange: (ids: string[]) => void
@@ -186,11 +192,19 @@ function PeopleInner({
               a.gap_md,
             ]}>
             <UserAvatar size={36} name={avatarName(id)} type="user" />
-            <Text
-              style={[a.flex_1, a.text_md, a.font_medium]}
-              numberOfLines={1}>
-              {name(id)}
-            </Text>
+            <View style={[a.flex_1]}>
+              <Text style={[a.text_md, a.font_medium]} numberOfLines={1}>
+                {name(id)}
+              </Text>
+              {lockedNote && lockedIds.includes(id) ? (
+                <Text
+                  testID={`person-option-locked-${name(id)}`}
+                  numberOfLines={1}
+                  style={[a.text_sm, t.atoms.text_contrast_medium]}>
+                  {lockedNote}
+                </Text>
+              ) : null}
+            </View>
             <Toggle.Checkbox />
           </Toggle.Item>
         ))}

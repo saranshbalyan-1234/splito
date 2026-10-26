@@ -40,8 +40,8 @@ describe('planSettlement (A07)', () => {
   const net = {A: -100n, B: 0n, C: 100n}
   const rules: SettlementRules = {allowListOnly: false, edges: {'A>C': 'excluded'}}
 
-  test('transit routes via B', () =>
-    expect(planSettlement(net, rules, 'transit')).toMatchObject({
+  test('transit routes via B, who consents', () =>
+    expect(planSettlement(net, rules, 'transit', ['B'])).toMatchObject({
       status: 'ok',
       transfers: [
         {from: 'A', to: 'B', amount: 100n},

@@ -107,3 +107,22 @@ test('filterFriends: one currency keeps only that currency; show picks a directi
     [],
   )
 })
+
+/* F-113 M10: owed directly and owing in a group is open both ways, not settled. */
+test('a friend whose direct and group parts net to zero is open both ways', () => {
+  const both: FriendRow[] = [
+    {
+      id: 'e',
+      name: 'Esha',
+      summary: {
+        person: 'e',
+        byCurrency: {INR: {total: 0n, direct: 1000n, groups: {g: -1000n}}},
+      },
+    },
+  ]
+  const kept = (show: 'owesYou' | 'youOwe' | 'settled') =>
+    filterFriends(both, {currency: 'all', show}).map(r => r.id)
+  expect(kept('settled')).toEqual([])
+  expect(kept('owesYou')).toEqual(['e'])
+  expect(kept('youOwe')).toEqual(['e'])
+})

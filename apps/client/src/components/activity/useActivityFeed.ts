@@ -36,10 +36,21 @@ function snapshotOf(state: ActivityState): ActivitySnapshot {
   if (!snapshot) {
     snapshot = {
       events: state.events,
-      people: new Map((state.entities.person as Entity<Person>[]).map(p => [p.id, p])),
-      groups: new Map((state.entities.group as Entity<Group>[]).map(g => [g.id, g])),
-      expenses: new Map((state.entities.expense as Entity<Expense>[]).map(e => [e.id, e])),
-      requests: new Map((state.entities.friendRequest as Entity<FriendRequest>[]).map(r => [r.id, r])),
+      people: new Map(
+        (state.entities.person as Entity<Person>[]).map(p => [p.id, p]),
+      ),
+      groups: new Map(
+        (state.entities.group as Entity<Group>[]).map(g => [g.id, g]),
+      ),
+      expenses: new Map(
+        (state.entities.expense as Entity<Expense>[]).map(e => [e.id, e]),
+      ),
+      requests: new Map(
+        (state.entities.friendRequest as Entity<FriendRequest>[]).map(r => [
+          r.id,
+          r,
+        ]),
+      ),
     }
     snapshots.set(state, snapshot)
   }

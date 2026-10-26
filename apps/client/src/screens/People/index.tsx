@@ -4,7 +4,7 @@ import {LayoutAnimationConfig} from 'react-native-reanimated'
 import {plural} from '@lingui/core/macro'
 import {Trans, useLingui} from '@lingui/react/macro'
 import {useNavigation} from '@react-navigation/native'
-import {balanceTotals, personSummary, ZERO} from '@splito/domain'
+import {balanceTotals, isSettledBalance, personSummary} from '@splito/domain'
 import {type Group, type Person} from '@splito/sync'
 
 import {type NavigationProp} from '#/lib/routes/types'
@@ -118,15 +118,17 @@ export function PeopleScreen() {
   const shown = needle
     ? rows.filter(row => row.name.toLocaleLowerCase().includes(needle))
     : rows
+  /* Settled means every part is zero, not just the net (audit M10). */
   const settledCount = rows.filter(row =>
-    Object.values(row.summary?.byCurrency ?? {}).every(c => c.total === ZERO),
+    Object.values(row.summary?.byCurrency ?? {}).every(isSettledBalance),
   ).length
   /* Per currency: how many friends the cell's figure is made of. */
   const captions = Object.fromEntries(
     totals.map(({currency: c}) => {
-      const n = rows.filter(
-        row => (row.summary?.byCurrency[c]?.total ?? ZERO) !== ZERO,
-      ).length
+      const n = rows.filter(row => {
+        const balance = row.summary?.byCurrency[c]
+        return !!balance && !isSettledBalance(balance)
+      }).length
       return [c, plural(n, {one: '# friend', other: '# friends'})]
     }),
   )
@@ -186,7 +188,9 @@ export function PeopleScreen() {
             <Menu.Item
               testID="people-menu-invite-link"
               label={l`Invite link or QR code`}
-              onPress={() => navigation.navigate('CreateInvite', {kind: 'friend'})}>
+              onPress={() =>
+                navigation.navigate('CreateInvite', {kind: 'friend'})
+              }>
               <Menu.ItemText>
                 <Trans>Invite link or QR code</Trans>
               </Menu.ItemText>

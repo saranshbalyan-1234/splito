@@ -243,7 +243,7 @@ Fixes for logic-audit findings M5, M8, M12, M15, m2, m3, m21 (M13 is fixed by F-
 
 Fixes for logic-audit findings M6, M10, M11, m5, m7, m10, m16 (see the report for scenario, evidence and fix per finding).
 
-- **Effort** M · **Impact** 9 · **Backend** no · **Status** todo · **Deps** merge row 30
+- **Effort** M · **Impact** 9 · **Backend** no · **Status** done (feat/4b-33d) · **Deps** merge row 30
 - **Prefs** -
 - **Acceptance**
   1. Unticking yourself never silently changes the payer; Home shows a friend's direct and group balances without netting them into "Settled" when debts stay open; Group Balances and People use the same plan (and explain infeasible rules); write-off rows name the actor correctly; cross-direction write-offs work; preferred-route costs never beat an allowed direct transfer without consent; undoing Call it even is one transaction.

@@ -7,6 +7,8 @@ import {
   evaluateForm,
   type ExpenseForm,
   formFromExpense,
+  formPayers,
+  withPeople,
 } from './form'
 import {suggestCategory} from './suggestCategory'
 
@@ -529,5 +531,41 @@ describe('F-111 M7: percent rows take the comma decimal mark', () => {
     )
     expect(r.rowErrors).toEqual({})
     expect(r.adjustments?.service).toBe(1250n)
+  })
+})
+
+/* F-113 M6: unticking yourself in "Split with" never makes someone else the payer. */
+describe('withPeople', () => {
+  const candidates = ['me', 'riya', 'sam']
+  test('the single payer stays on the expense and stays the payer', () => {
+    const f = withPeople(base({amount: '900'}), ['riya', 'sam'], candidates)
+    expect(f.payer).toBe('me')
+    expect(f.people).toEqual(['me', 'riya', 'sam'])
+    expect(evaluateForm(f, 'UTC').draft?.payers).toEqual({me: 90000n})
+  })
+  test('with several payers, everyone with a paid amount stays', () => {
+    const f = base({
+      payerMode: 'multiple',
+      paid: {me: '100', riya: '200', sam: ''},
+    })
+    expect(formPayers(f)).toEqual(['me', 'riya'])
+    expect(withPeople(f, ['sam'], candidates).people).toEqual([
+      'me',
+      'riya',
+      'sam',
+    ])
+  })
+  test('anyone else can be unticked; their exclusions and item picks go too', () => {
+    const f = withPeople(
+      base({
+        excluded: ['sam'],
+        items: [{key: 'i', name: 'Beer', amount: '9', people: ['riya', 'sam']}],
+      }),
+      ['me', 'riya'],
+      candidates,
+    )
+    expect(f.people).toEqual(['me', 'riya'])
+    expect(f.excluded).toEqual([])
+    expect(f.items[0]!.people).toEqual(['riya'])
   })
 })

@@ -11,6 +11,7 @@ import {
   deleteExpense,
   deleteRepayment,
   deleteWriteOff,
+  deleteWriteOffs,
   ensureMe,
   type ExpenseDraft,
   purgeDeleted,
@@ -115,6 +116,21 @@ test('a group write-off moves the group net, and undo (delete) puts it back; res
   await restoreWriteOff(s, ctx, w!.id)
   expect(groupNet(await loadLedger(s), g.id)).toEqual({INR: {me: 0n, [x.id]: 0n}})
   expect((await s.history('writeoff', w!.id)).map(h => h.deleted)).toEqual([false, true, false])
+})
+
+/* F-113 m16: undoing Call it even is one transaction. */
+test('undoing several write-offs is all or none', async () => {
+  const x = await createPerson(s, ctx, {name: 'Riya'})
+  const g = await createGroup(s, ctx, {name: 'Goa', kind: 'trip', currency: 'INR', memberIds: [x.id], startDate: null, endDate: null})
+  const written = await createWriteOffs(s, ctx, [off({id: 'w1', from: x.id, to: 'me'}), off({id: 'w2', groupId: g.id, from: x.id, to: 'me'})])
+  // The second id is already gone: nothing may be undone.
+  await deleteWriteOff(s, ctx, 'w2')
+  await expect(deleteWriteOffs(s, ctx, ['w1', 'w2'])).rejects.toThrow('NOT_FOUND')
+  expect((await s.getAll('writeoff')).find(w => w.id === 'w1')?.deleted).toBe(false)
+  await restoreWriteOff(s, ctx, 'w2')
+  await deleteWriteOffs(s, ctx, written.map(w => w.id))
+  expect((await s.getAll('writeoff')).map(w => w.deleted)).toEqual([true, true])
+  expect((await s.outbox()).filter(o => o.opType === 'writeoff.delete').map(o => o.entityId)).toEqual(['w2', 'w1', 'w2'])
 })
 
 test('write-offs show in Activity as recorded and removed', async () => {

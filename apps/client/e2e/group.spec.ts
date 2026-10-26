@@ -107,7 +107,7 @@ test('group page: header, my balance, expenses, member balances and members', as
   await expect(page.getByTestId('person-name')).toHaveText('Bela Joshi')
 })
 
-test('A07: A->C excluded makes the direct plan infeasible and says why (routing via others waits for v2)', async ({
+test('A07 / F-113 M11: when A->C is excluded the plan goes outside the rules, says why, and People, Balances and Settle up agree', async ({
   page,
 }) => {
   await ready(page)
@@ -125,13 +125,23 @@ test('A07: A->C excluded makes the direct plan infeasible and says why (routing 
   await sheet.getByTestId('sheet-save').click()
   await expect(sheet).toHaveCount(0)
 
-  await page.goto(`/groups/${group}/settle`)
+  // Balances tab: the same plan as People, with a note that it goes outside the rules.
+  await page.goto(`/groups/${group}?tab=balances`)
+  await expect(page.getByTestId('group-outside-rules')).toBeVisible()
+  await expect(page.getByTestId('group-owe-You-Chirag Shah')).toBeVisible()
+  await page.goto('/')
   await expect(
-    page.getByText('No direct plan works with these rules'),
-  ).toBeVisible()
+    page.getByTestId('person-Chirag Shah').getByTestId('balance-INR'),
+  ).toHaveText('you owe ↗ ₹100.00')
+
+  await page.goto(`/groups/${group}/settle`)
+  await expect(page.getByText('This plan goes outside your rules')).toBeVisible()
   await expect(page.getByTestId('settle-stuck-INR')).toHaveText(
-    'No allowed pair to pay anyone who is owed: You',
+    'Your payment rules give no allowed pair to pay anyone who is owed: You. These payments still settle everyone up.',
   )
+  await expect(
+    page.getByTestId('transfer-You-Chirag Shah').getByTestId('transfer-amount'),
+  ).toHaveText('↗ ₹100.00')
 
   // Spec v1 is direct-only: no plan routes money through members who never agreed to it.
   await expect(page.getByTestId('settle-mode-transit')).toHaveCount(0)
