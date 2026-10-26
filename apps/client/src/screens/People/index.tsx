@@ -111,6 +111,15 @@ export function PeopleScreen() {
   const settledCount = rows.filter(row =>
     Object.values(row.summary?.byCurrency ?? {}).every(c => c.total === ZERO),
   ).length
+  /* Per currency: how many friends the cell's figure is made of. */
+  const captions = Object.fromEntries(
+    totals.map(({currency: c}) => {
+      const n = rows.filter(
+        row => (row.summary?.byCurrency[c]?.total ?? ZERO) !== ZERO,
+      ).length
+      return [c, plural(n, {one: '# friend', other: '# friends'})]
+    }),
+  )
   const counts = [
     plural(rows.length, {one: '# friend', other: '# friends'}),
     l`${settledCount} settled`,
@@ -164,11 +173,13 @@ export function PeopleScreen() {
                     totals={totals}
                     locale={locale}
                     counts={counts}
+                    captions={captions}
                   />
                   <ListToolsHeader
                     title={l`Friends`}
                     titleTestID="people-friends-title"
                     count={shown.length}
+                    total={rows.length}
                     query={query}
                     onQueryChange={setQuery}
                     searchLabel={l`Search friends`}

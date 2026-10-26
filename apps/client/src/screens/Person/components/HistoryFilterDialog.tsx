@@ -85,7 +85,7 @@ function Form({
               )}
             </Text>
           </View>
-          <Toggle.Platform />
+          <Toggle.Switch />
         </Toggle.Item>
         <Text style={[a.text_sm, a.leading_snug, t.atoms.text_contrast_medium]}>
           <Trans>The starting value is set in Settings › Lists.</Trans>

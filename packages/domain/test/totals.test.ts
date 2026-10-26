@@ -1,6 +1,6 @@
 import {describe, expect, test} from 'bun:test'
 
-import {type BalanceRow, balanceTotals, groupBalances, magnitude, personSummary} from '../src/ledger'
+import {type BalanceRow, balanceTotals, groupBalances, groupTotals, magnitude, personSummary} from '../src/ledger'
 
 const row = (person: string, groupId: string | null, currency: string, amount: bigint): BalanceRow => ({person, groupId, currency, amount})
 
@@ -36,4 +36,14 @@ describe('magnitude', () => {
     expect(magnitude(25n)).toBe(25n)
     expect(magnitude(0n)).toBe(0n)
   })
+})
+
+describe('groupTotals', () => {
+  test('a group that owes me and one I owe stay apart: owed 100 and owe 100, not settled', () =>
+    expect(groupTotals([{INR: 100n}, {INR: -100n}])).toEqual([{currency: 'INR', owed: 100n, owe: 100n, net: 0n}]))
+  test('per currency, never mixing; settled currencies drop out', () =>
+    expect(groupTotals([{INR: 300n, EUR: -7n}, {INR: 200n, USD: 0n}])).toEqual([
+      {currency: 'EUR', owed: 0n, owe: 7n, net: -7n},
+      {currency: 'INR', owed: 500n, owe: 0n, net: 500n},
+    ]))
 })

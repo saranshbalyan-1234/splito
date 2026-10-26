@@ -30,7 +30,7 @@ import {NO_RULES, RulesDialog} from '#/components/groups/RulesEditor'
 import {DotGrid3x1_Stroke2_Corner0_Rounded as DotsIcon} from '#/components/icons/DotGrid'
 import {Pencil_Stroke2_Corner0_Rounded as PencilIcon} from '#/components/icons/Pencil'
 import {Group3_Stroke2_Corner0_Rounded as GroupIcon} from '#/components/icons/Group'
-import {HandCoins_Stroke2_Corner0_Rounded as HandCoinsIcon} from '#/components/icons/Money'
+import {Handshake_Stroke2_Corner0_Rounded as HandCoinsIcon} from '#/components/icons/Money'
 import {PersonPlus_Filled_Stroke2_Corner0_Rounded as PersonPlusIcon} from '#/components/icons/Person'
 import {PlusLarge_Stroke2_Corner0_Rounded as PlusIcon} from '#/components/icons/Plus'
 import * as Layout from '#/components/Layout'
@@ -59,7 +59,7 @@ import {
   MemberRow,
   OweRow,
 } from './components/GroupRows'
-import {planSettlement, ZERO} from '@splito/domain'
+import {magnitude, planSettlement, ZERO} from '@splito/domain'
 
 type Tab = 'expenses' | 'balances' | 'members'
 
@@ -79,7 +79,7 @@ type Item =
       to: string
       amount: bigint
     }
-  | {type: 'settleCta'; key: string}
+  | {type: 'settleCta'; key: string; payments: number}
 
 const AVATAR_STACK = 3
 /* Payment rules open from the overflow menu, so they are not a tab (owner: Expenses / Balances / Members). */
@@ -221,10 +221,26 @@ export function GroupScreen() {
           }))
       })
       items = [
+        /* Settle up leads the tab, so its one action is never below the fold. */
+        ...(owes.length > 0
+          ? [
+              {
+                type: 'settleCta' as const,
+                key: 'settle-cta',
+                payments: owes.length,
+              },
+            ]
+          : []),
         ...Object.entries(nets).flatMap(([currency, net]) => [
           {type: 'currency' as const, key: `cur-${currency}`, currency},
           ...Object.entries(net)
-            .sort(([, x], [, y]) => (x === y ? 0 : x > y ? -1 : 1))
+            /* Who is owed first, then who owes; each largest first. */
+            .sort(
+              ([, x], [, y]) =>
+                Number(y > ZERO) - Number(x > ZERO) ||
+                Number(magnitude(y) > magnitude(x)) -
+                  Number(magnitude(x) > magnitude(y)),
+            )
             .map(([personId, v]) => ({
               type: 'net' as const,
               key: `net-${currency}-${personId}`,
@@ -234,11 +250,7 @@ export function GroupScreen() {
             })),
         ]),
         ...(owes.length > 0
-          ? [
-              {type: 'owesHeader' as const, key: 'owes-header'},
-              ...owes,
-              {type: 'settleCta' as const, key: 'settle-cta'},
-            ]
+          ? [{type: 'owesHeader' as const, key: 'owes-header'}, ...owes]
           : []),
       ]
     } else
@@ -295,106 +307,106 @@ export function GroupScreen() {
       <>
         {/* The name and kind are the header's title and subtitle; the hero shows who is in it, the dates, then my balance. */}
         <View style={[a.px_lg, a.pt_lg, a.pb_lg, a.gap_lg]}>
-          <View style={[a.flex_row, a.align_center, a.gap_md]}>
+          {/* Bluesky's profile header: the avatar on the left, the page's action on the right. */}
+          <View
+            style={[a.flex_row, a.align_center, a.justify_between, a.gap_md]}>
             <GroupAvatar
               kind={group.data.kind}
               name={group.data.name}
               size={gtMobile ? 64 : 56}
             />
-            <View style={[a.flex_1, a.gap_xs]}>
-              <View style={[a.flex_row, a.align_center, a.gap_sm]}>
-                <View style={[a.flex_row, a.align_center]}>
-                  {stack.map((m, i) => (
-                    <View
-                      key={m.personId}
-                      style={[
-                        a.rounded_full,
-                        {
-                          marginLeft: i === 0 ? 0 : -6,
-                          borderWidth: 2,
-                          borderColor: t.atoms.bg.backgroundColor,
-                          zIndex: AVATAR_STACK - i,
-                        },
-                      ]}>
-                      <UserAvatar
-                        size={32}
-                        name={
-                          m.personId === me?.id
-                            ? me.data.name
-                            : names.get(m.personId)
-                        }
-                        type="user"
-                        noBorder
-                      />
-                    </View>
-                  ))}
-                  {moreCount > 0 && (
-                    <View
-                      style={[
-                        a.rounded_full,
-                        a.align_center,
-                        a.justify_center,
-                        t.atoms.bg_contrast_50,
-                        {
-                          marginLeft: -6,
-                          height: 36,
-                          minWidth: 36,
-                          paddingHorizontal: 6,
-                          borderWidth: 2,
-                          borderColor: t.atoms.bg.backgroundColor,
-                        },
-                      ]}>
-                      <Text
-                        style={[
-                          a.text_xs,
-                          a.font_semi_bold,
-                          t.atoms.text_contrast_medium,
-                        ]}>
-                        +{moreCount}
-                      </Text>
-                    </View>
-                  )}
-                </View>
-                <Text
-                  emoji
-                  numberOfLines={1}
-                  style={[a.flex_1, a.text_sm, t.atoms.text_contrast_medium]}>
-                  {memberSummary}
-                </Text>
-              </View>
-              {dates && (
-                <Text
-                  testID="group-dates"
-                  numberOfLines={1}
-                  style={[
-                    a.text_sm,
-                    a.leading_snug,
-                    t.atoms.text_contrast_medium,
-                  ]}>
-                  {dates}
-                </Text>
-              )}
-            </View>
+            {/* Pushed pages have no FAB (owner rule); adding here pre-selects the group. */}
+            <Button
+              testID="group-add-expense"
+              label={l({message: 'Add expense', context: 'action'})}
+              size="small"
+              color="primary"
+              onPress={() => navigation.navigate('AddExpense', {groupId})}>
+              <ButtonIcon icon={PlusIcon} />
+              <ButtonText>
+                <Trans context="action">Add expense</Trans>
+              </ButtonText>
+            </Button>
           </View>
-
+          <View style={[a.gap_xs]}>
+            <View style={[a.flex_row, a.align_center, a.gap_sm]}>
+              <View style={[a.flex_row, a.align_center]}>
+                {stack.map((m, i) => (
+                  <View
+                    key={m.personId}
+                    style={[
+                      a.rounded_full,
+                      {
+                        marginLeft: i === 0 ? 0 : -6,
+                        borderWidth: 2,
+                        borderColor: t.atoms.bg.backgroundColor,
+                        zIndex: AVATAR_STACK - i,
+                      },
+                    ]}>
+                    <UserAvatar
+                      size={32}
+                      name={
+                        m.personId === me?.id
+                          ? me.data.name
+                          : names.get(m.personId)
+                      }
+                      type="user"
+                      noBorder
+                    />
+                  </View>
+                ))}
+                {moreCount > 0 && (
+                  <View
+                    style={[
+                      a.rounded_full,
+                      a.align_center,
+                      a.justify_center,
+                      t.atoms.bg_contrast_50,
+                      {
+                        marginLeft: -6,
+                        height: 36,
+                        minWidth: 36,
+                        paddingHorizontal: 6,
+                        borderWidth: 2,
+                        borderColor: t.atoms.bg.backgroundColor,
+                      },
+                    ]}>
+                    <Text
+                      style={[
+                        a.text_xs,
+                        a.font_semi_bold,
+                        t.atoms.text_contrast_medium,
+                      ]}>
+                      +{moreCount}
+                    </Text>
+                  </View>
+                )}
+              </View>
+              <Text
+                emoji
+                numberOfLines={1}
+                style={[a.flex_1, a.text_sm, t.atoms.text_contrast_medium]}>
+                {memberSummary}
+              </Text>
+            </View>
+            {dates && (
+              <Text
+                testID="group-dates"
+                numberOfLines={1}
+                style={[
+                  a.text_sm,
+                  a.leading_snug,
+                  t.atoms.text_contrast_medium,
+                ]}>
+                {dates}
+              </Text>
+            )}
+          </View>
           <GroupBalanceCards
             openCurrencies={openCurrencies}
             mine={mine}
             locale={locale}
           />
-          {/* Pushed pages have no FAB (owner rule 17); adding here pre-selects the group. */}
-          <Button
-            testID="group-add-expense"
-            label={l({message: 'Add expense', context: 'action'})}
-            size="small"
-            color="primary"
-            style={[a.self_start]}
-            onPress={() => navigation.navigate('AddExpense', {groupId})}>
-            <ButtonIcon icon={PlusIcon} />
-            <ButtonText>
-              <Trans context="action">Add expense</Trans>
-            </ButtonText>
-          </Button>
         </View>
 
         {/* Bluesky's pager tab bar, pinned under the header while the list scrolls (web). */}
@@ -622,6 +634,13 @@ export function GroupScreen() {
                     avatarName={
                       item.from === me?.id ? (me?.data.name ?? from) : from
                     }
+                    direction={
+                      item.to === me?.id
+                        ? 'toMe'
+                        : item.from === me?.id
+                          ? 'fromMe'
+                          : null
+                    }
                     amount={item.amount}
                     currency={item.currency}
                     locale={locale}
@@ -632,17 +651,28 @@ export function GroupScreen() {
                 return (
                   <View
                     style={[
+                      a.flex_row,
+                      a.align_center,
+                      a.gap_md,
                       a.px_lg,
-                      a.py_lg,
-                      a.border_t,
-                      t.atoms.border_contrast_low,
+                      a.py_md,
                     ]}>
+                    <Text
+                      style={[
+                        a.flex_1,
+                        a.text_sm,
+                        a.leading_snug,
+                        t.atoms.text_contrast_medium,
+                      ]}>
+                      {item.payments === 1
+                        ? l`1 payment settles everyone up.`
+                        : l`${item.payments} payments settle everyone up.`}
+                    </Text>
                     <Button
                       testID="group-balances-settle"
                       label={l`Settle up`}
-                      size="large"
+                      size="small"
                       color="primary"
-                      style={[a.self_start]}
                       onPress={() => navigation.navigate('Settle', {groupId})}>
                       <ButtonIcon icon={HandCoinsIcon} />
                       <ButtonText>

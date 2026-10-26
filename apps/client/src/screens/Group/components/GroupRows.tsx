@@ -51,8 +51,9 @@ export function CurrencyHeader({currency}: {currency: string}) {
 }
 
 /**
- * One member's net in the group for one currency: "gets back" (paid more
- * than their share) or "owes", coloured by direction.
+ * One member's net in the group for one currency, in the same words as
+ * every other balance: "is owed" / "owes" ("you are owed" / "you owe" for
+ * me), coloured by direction.
  */
 export function MemberBalanceRow({
   name,
@@ -107,11 +108,11 @@ export function MemberBalanceRow({
         ) : net > ZERO ? (
           isMe ? (
             <Trans>
-              you get back <Text style={figureStyle}>{figure}</Text>
+              you are owed <Text style={figureStyle}>{figure}</Text>
             </Trans>
           ) : (
             <Trans>
-              gets back <Text style={figureStyle}>{figure}</Text>
+              is owed <Text style={figureStyle}>{figure}</Text>
             </Trans>
           )
         ) : isMe ? (
@@ -132,6 +133,7 @@ export function MemberBalanceRow({
 export function OweRow({
   sentence,
   avatarName,
+  direction,
   amount,
   currency,
   locale,
@@ -140,12 +142,21 @@ export function OweRow({
   /** "Arjun owes you", "You owe Riya", "Sam owes Priya". */
   sentence: string
   avatarName: string
+  /** My side of the payment, for its colour; `null` when I am not in it. */
+  direction: 'toMe' | 'fromMe' | null
   amount: bigint
   currency: string
   locale: string
   testID?: string
 }) {
   const t = useTheme()
+  /* Same colours as the balances above: green comes to me, red leaves me; others' payments stay neutral. */
+  const color =
+    direction === 'toMe'
+      ? t.palette.positive_600
+      : direction === 'fromMe'
+        ? t.palette.negative_500
+        : t.atoms.text.color
   return (
     <View
       testID={testID}
@@ -165,7 +176,7 @@ export function OweRow({
         style={[a.flex_1, a.text_md, a.font_semi_bold]}>
         {sentence}
       </Text>
-      <Text style={[a.text_md, a.font_semi_bold, tabular]}>
+      <Text style={[a.text_md, a.font_semi_bold, tabular, {color}]}>
         {formatAmount(amount, currency, locale)}
       </Text>
     </View>

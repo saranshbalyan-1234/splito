@@ -1,3 +1,4 @@
+import {View} from 'react-native'
 import Animated, {FadeInUp, FadeOutUp} from 'react-native-reanimated'
 import {CURRENCIES} from '@splito/domain'
 import {PREFS, type PrefKey, type SwipeAction} from '@splito/sync'
@@ -16,8 +17,9 @@ import {
 } from '#/locale/dates'
 import {resolveNumberLocale} from '#/locale/numberLocale'
 import {useDateLocale, useTimeZone} from '#/locale/useDates'
-import {native} from '#/alf'
+import {atoms as a, native} from '#/alf'
 import {useDialogControl} from '#/components/Dialog'
+import * as SegmentedControl from '#/components/forms/SegmentedControl'
 import {ChartPie_Stroke2_Corner0_Rounded as ChartIcon} from '#/components/icons/ChartPie'
 import {HomeOpen_Stoke2_Corner0_Rounded as HomeIcon} from '#/components/icons/HomeOpen'
 import {Moon_Stroke2_Corner0_Rounded as MoonIcon} from '#/components/icons/Moon'
@@ -51,6 +53,7 @@ import {
 import {OptionDialog} from '#/components/settings/OptionDialog'
 import {PrefSection, usePrefControl} from '#/components/settings/PrefSection'
 import {TabsEditor, useTabLabels} from '#/components/settings/TabsEditor'
+import {Text} from '#/components/Typography'
 import {IS_WEB} from '#/env'
 
 /* Appearance */
@@ -227,6 +230,65 @@ function CurrencyPref() {
         value={pref.value}
         onSelect={code => void pref.set(code)}
       />
+    </PrefSection>
+  )
+}
+
+/** Whether Itemize's tax, tip, service charge and discount start as an amount or a percentage. */
+function ItemizeChargesPref() {
+  const {t: l} = useLingui()
+  const pref = usePrefControl('itemizeAdjustmentModes')
+  if (pref.value === undefined) return null
+  const modes = pref.value
+  const kinds = [
+    {key: 'tax', label: l`Tax`},
+    {key: 'tip', label: l`Tip`},
+    {key: 'service', label: l`Service charge`},
+    {key: 'discount', label: l`Discount`},
+  ] as const
+  return (
+    <PrefSection
+      pref={pref}
+      icon={SplitIcon}
+      title={l`Itemize charges`}
+      description={l`Whether each charge on an itemised bill starts as an amount or a percentage. The last choice you make in a bill is remembered.`}>
+      <View style={[a.gap_sm]}>
+        {kinds.map(kind => (
+          <View
+            key={kind.key}
+            style={[a.flex_row, a.align_center, a.justify_between, a.gap_md]}>
+            <Text style={[a.text_md]}>{kind.label}</Text>
+            <View style={{width: 180}}>
+              <SegmentedControl.Root
+                type="radio"
+                size="small"
+                label={kind.label}
+                value={modes[kind.key]}
+                onChange={value =>
+                  void pref.set({
+                    ...modes,
+                    [kind.key]: value as 'amount' | 'percent',
+                  })
+                }>
+                <SegmentedControl.Item
+                  testID={`itemizeAdjustmentModes-${kind.key}-amount`}
+                  label={l`Amount`}
+                  value="amount">
+                  <SegmentedControl.ItemText>
+                    {l`Amount`}
+                  </SegmentedControl.ItemText>
+                </SegmentedControl.Item>
+                <SegmentedControl.Item
+                  testID={`itemizeAdjustmentModes-${kind.key}-percent`}
+                  label="%"
+                  value="percent">
+                  <SegmentedControl.ItemText>%</SegmentedControl.ItemText>
+                </SegmentedControl.Item>
+              </SegmentedControl.Root>
+            </View>
+          </View>
+        ))}
+      </View>
     </PrefSection>
   )
 }
@@ -537,6 +599,7 @@ export const PREF_CONTROLS = {
   tabs: TabsEditor,
   homeTab: HomeTabPref,
   defaultCurrency: CurrencyPref,
+  itemizeAdjustmentModes: ItemizeChargesPref,
   defaultSplitMode: SplitModePref,
   analyticsPeriod: AnalyticsPeriodPref,
   analyticsView: AnalyticsViewPref,

@@ -34,7 +34,7 @@ import {useDialogControl} from '#/components/Dialog'
 import {myBalances} from '#/components/groups/net'
 import {DotGrid3x1_Stroke2_Corner0_Rounded as DotsIcon} from '#/components/icons/DotGrid'
 import {
-  HandCoins_Stroke2_Corner0_Rounded as HandCoinsIcon,
+  Handshake_Stroke2_Corner0_Rounded as HandCoinsIcon,
   IndianRupee_Stroke2_Corner0_Rounded as RupeeIcon,
 } from '#/components/icons/Money'
 import {Pencil_Stroke2_Corner0_Rounded as PencilIcon} from '#/components/icons/Pencil'

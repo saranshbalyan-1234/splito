@@ -294,15 +294,17 @@ export function PercentInput({
   label,
   isInvalid = false,
   testID,
+  width = 104,
 }: {
   value: string
   onChangeText: (v: string) => void
   label: string
   isInvalid?: boolean
   testID?: string
+  width?: number
 }) {
   return (
-    <View style={{width: 104}}>
+    <View style={{width}}>
       <TextField.Root isInvalid={isInvalid}>
         <TextField.Input
           testID={testID}

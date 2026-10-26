@@ -173,6 +173,8 @@ test('itemised split with tax, shares and equal-with-adjustments', async ({
   await expect(page.getByTestId('item-0-portions-Riya Sharma')).toHaveText('×2')
   await page.getByTestId('item-0-everyone').click()
   await expect(page.getByTestId('item-0-portions-Riya Sharma')).toHaveCount(0)
+  // Tax starts as a percentage (preference default); this bill gives it as an amount.
+  await page.getByTestId('item-tax-mode-amount').click()
   await page.getByTestId('item-tax').fill('30')
   await expect(page.getByTestId('split-readout')).toHaveText(
     'All ₹330.00 assigned',
@@ -296,6 +298,7 @@ test('itemize: portions badge, each item’s parts, service charge and everyone�
     'You ₹600.00  ·  Riya Sharma ₹300.00',
   )
   await expect(page.getByTestId('sheet-save')).toBeDisabled()
+  await page.getByTestId('item-service-mode-amount').click()
   await page.getByTestId('item-service').fill('200')
   // Service follows each subtotal, 600 : 300.
   await expect(page.getByTestId('split-readout')).toHaveText(
@@ -308,6 +311,33 @@ test('itemize: portions badge, each item’s parts, service charge and everyone�
   await expect(page.getByTestId('expense-item-0-You')).toContainText('×2')
   await expect(page.getByTestId('expense-extra-service')).toContainText(
     '₹200.00',
+  )
+})
+
+test('itemize: charges as a percentage - discount first, then tax on the rest; the expense page shows the rate', async ({
+  page,
+}) => {
+  await openAddExpense(page)
+  await page.getByTestId('expense-title').fill('Thali lunch')
+  await page.getByTestId('amount-input').fill('1003')
+  await splitWith(page, ['Riya Sharma'])
+  await page.getByTestId('split-mode-items').click()
+  await page.getByTestId('item-add').click()
+  await page.getByTestId('item-0-name').fill('Thalis')
+  await page.getByTestId('item-0-amount').fill('1000')
+  // Discount defaults to an amount; this one is 15% off. GST is 18% (tax defaults to %).
+  await page.getByTestId('item-discount-mode-percent').click()
+  await page.getByTestId('item-discount').fill('15')
+  await page.getByTestId('item-tax').fill('18')
+  await expect(page.getByTestId('item-tax-resolved')).toHaveText('₹153.00')
+  await expect(page.getByTestId('split-readout')).toHaveText(
+    'All ₹1,003.00 assigned',
+  )
+  await saveAndView(page)
+  await expect(page.getByTestId('expense-extra-tax')).toContainText('18%')
+  await expect(page.getByTestId('expense-extra-tax')).toContainText('₹153.00')
+  await expect(page.getByTestId('expense-extra-discount')).toContainText(
+    '15%',
   )
 })
 

@@ -1,6 +1,6 @@
 import {View} from 'react-native'
 import {Trans, useLingui} from '@lingui/react/macro'
-import {formatAmount, magnitude, ZERO} from '@splito/domain'
+import {formatAmount, magnitude, sumMinor, ZERO} from '@splito/domain'
 
 import {useMe} from '#/data/hooks'
 import {UserAvatar} from '#/view/com/util/UserAvatar'
@@ -287,6 +287,7 @@ export function Charts({
               testID="analytics-by-person-chart"
               currency={currency}
               locale={locale}
+              shareOf={sumMinor(people.map(p => p.value))}
               bars={people.map(p => ({
                 ...p,
                 /* My own name, not "You", so my avatar matches everywhere else. */

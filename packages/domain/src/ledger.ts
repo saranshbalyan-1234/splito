@@ -227,6 +227,26 @@ export function balanceTotals(people: PersonSummary[]): CurrencyTotal[] {
   return [...totals.values()].sort((a, b) => cmp(a.currency, b.currency))
 }
 
+/**
+ * Overview totals across groups (each `Record` is my net in one group, per
+ * currency). Groups that owe me and groups I owe are summed apart, so a
+ * group owing me 100 and one I owe 100 read "owed 100, owe 100", as People
+ * does, never "settled". Currencies with nothing either way drop out.
+ */
+export function groupTotals(groups: ReadonlyArray<Record<CurrencyCode, bigint>>): CurrencyTotal[] {
+  const totals = new Map<CurrencyCode, CurrencyTotal>()
+  for (const g of groups) {
+    for (const [currency, v] of Object.entries(g)) {
+      const t = totals.get(currency) ?? {currency, owed: 0n, owe: 0n, net: 0n}
+      if (v > 0n) t.owed += v
+      else t.owe -= v
+      t.net += v
+      totals.set(currency, t)
+    }
+  }
+  return [...totals.values()].filter(t => t.owed !== 0n || t.owe !== 0n).sort((a, b) => cmp(a.currency, b.currency))
+}
+
 /** My net balance in each group, per currency (> 0: the group owes me). Direct rows are ignored. */
 export function groupBalances(rows: BalanceRow[]): Record<string, Record<CurrencyCode, bigint>> {
   const out: Record<string, Record<CurrencyCode, bigint>> = {}

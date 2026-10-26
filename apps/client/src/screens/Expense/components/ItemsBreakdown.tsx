@@ -5,6 +5,7 @@ import {
   participantId,
   participantWeight,
   type SplitInput,
+  sumMinor,
   ZERO,
 } from '@splito/domain'
 
@@ -34,18 +35,30 @@ export function ItemsBreakdown({
   avatarName: (id: string) => string
 }) {
   const t = useTheme()
-  const {t: l} = useLingui()
-  const {items} = itemBreakdown(split)
+  const {t: l, i18n} = useLingui()
+  const {items, subtotals} = itemBreakdown(split)
+  /* "Tax 18%": the rate a charge was entered as, when it was a percentage. */
+  const rate = (key: keyof NonNullable<typeof split.rates>) => {
+    const bp = split.rates?.[key]
+    return bp === undefined
+      ? ''
+      : ` ${i18n.number(bp / 10000, {style: 'percent', maximumFractionDigits: 2})}`
+  }
   const extras = [
-    {key: 'tax', label: l`Tax`, value: split.tax, sign: ''},
-    {key: 'tip', label: l`Tip`, value: split.tip, sign: ''},
+    {
+      key: 'discount',
+      label: l`Discount` + rate('discount'),
+      value: split.discount,
+      sign: '−',
+    },
     {
       key: 'service',
-      label: l`Service charge`,
+      label: l`Service charge` + rate('service'),
       value: split.service ?? ZERO,
       sign: '',
     },
-    {key: 'discount', label: l`Discount`, value: split.discount, sign: '−'},
+    {key: 'tax', label: l`Tax` + rate('tax'), value: split.tax, sign: ''},
+    {key: 'tip', label: l`Tip` + rate('tip'), value: split.tip, sign: ''},
   ].filter(x => x.value !== ZERO)
 
   return (
@@ -103,11 +116,13 @@ export function ItemsBreakdown({
                     <Text style={[a.text_sm, a.font_medium]} numberOfLines={1}>
                       {name(id)}
                     </Text>
-                    {weight > 1 ? (
-                      <PortionBadge portions={weight} />
-                    ) : null}
+                    {weight > 1 ? <PortionBadge portions={weight} /> : null}
                     <Text
-                      style={[a.text_sm, t.atoms.text_contrast_medium, tabular]}>
+                      style={[
+                        a.text_sm,
+                        t.atoms.text_contrast_medium,
+                        tabular,
+                      ]}>
                       {fmt(items[item.id]![id]!)}
                     </Text>
                   </View>
@@ -126,6 +141,16 @@ export function ItemsBreakdown({
               t.atoms.border_contrast_low,
               t.atoms.bg_contrast_25,
             ]}>
+            <View
+              testID="expense-extra-subtotal"
+              style={[a.flex_row, a.justify_between, a.py_2xs]}>
+              <Text style={[a.text_sm, t.atoms.text_contrast_medium]}>
+                <Trans>Items subtotal</Trans>
+              </Text>
+              <Text style={[a.text_sm, t.atoms.text_contrast_medium, tabular]}>
+                {fmt(sumMinor(Object.values(subtotals)))}
+              </Text>
+            </View>
             {extras.map(x => (
               <View
                 key={x.key}

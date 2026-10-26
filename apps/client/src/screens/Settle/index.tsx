@@ -180,9 +180,7 @@ export function SettleScreen() {
         count: plan.transfers.length,
         /* With one currency the summary above already gives the total. */
         total:
-          shown.length > 1
-            ? sumMinor(plan.transfers.map(x => x.amount))
-            : null,
+          shown.length > 1 ? sumMinor(plan.transfers.map(x => x.amount)) : null,
       },
       // Biggest payments first, then by payer, so the order never depends on member ids.
       ...[...plan.transfers]
@@ -459,21 +457,21 @@ export function SettleScreen() {
                   a.px_lg,
                   a.pt_lg,
                   a.gap_2xs,
-                  a.border_t,
-                  t.atoms.border_contrast_low,
                   {paddingBottom: gtMobile ? 40 : 100},
                 ]}>
-                <Text
-                  style={[
-                    a.text_sm,
-                    a.leading_snug,
-                    t.atoms.text_contrast_medium,
-                  ]}>
-                  <Trans>
-                    Splito never moves money. Record each payment once it has
-                    happened – part payments are fine.
-                  </Trans>
-                </Text>
+                <Admonition.Outer type="info">
+                  <Admonition.Row>
+                    <Admonition.Icon />
+                    <Admonition.Content>
+                      <Admonition.Text>
+                        <Trans>
+                          Splito never moves money. Record each payment once it
+                          has happened – part payments are fine.
+                        </Trans>
+                      </Admonition.Text>
+                    </Admonition.Content>
+                  </Admonition.Row>
+                </Admonition.Outer>
               </View>
             ) : undefined
           }
@@ -547,18 +545,11 @@ function SettleSummary({
     <View testID="settle-summary" style={[a.flex_row, a.flex_wrap, a.gap_2xl]}>
       {lines.map(line => (
         <View key={line.key} style={[a.gap_2xs]}>
-          <Text
-            style={[a.text_sm, a.font_semi_bold, t.atoms.text_contrast_medium]}>
+          <Text style={[a.text_md, a.font_semi_bold, a.leading_snug]}>
             {line.isIncoming ? (
-              line.people === 1 ? (
-                <Trans>You’ll get, from 1 person</Trans>
-              ) : (
-                <Trans>You’ll get, from {line.people} people</Trans>
-              )
-            ) : line.people === 1 ? (
-              <Trans>You’ll pay, to 1 person</Trans>
+              <Trans>You’ll get</Trans>
             ) : (
-              <Trans>You’ll pay, to {line.people} people</Trans>
+              <Trans>You’ll pay</Trans>
             )}
           </Text>
           <Text
@@ -574,6 +565,20 @@ function SettleSummary({
               },
             ]}>
             {line.amount}
+          </Text>
+          <Text
+            style={[a.text_sm, a.leading_snug, t.atoms.text_contrast_medium]}>
+            {line.isIncoming ? (
+              line.people === 1 ? (
+                <Trans>From 1 person</Trans>
+              ) : (
+                <Trans>From {line.people} people</Trans>
+              )
+            ) : line.people === 1 ? (
+              <Trans>To 1 person</Trans>
+            ) : (
+              <Trans>To {line.people} people</Trans>
+            )}
           </Text>
         </View>
       ))}

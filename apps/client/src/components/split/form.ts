@@ -1,4 +1,6 @@
 import {
+  type AdjustmentInput,
+  type AdjustmentKind,
   allocate,
   computeShares,
   DomainError,
@@ -10,6 +12,7 @@ import {
   participantWeight,
   parseLocalDate,
   remainingMinor,
+  resolveItemAdjustments,
   type SplitInput,
   sumMinor,
   toDecimalString,
@@ -28,6 +31,16 @@ export const SPLIT_MODES: SplitMode[] = [
   'adjusted',
   'items',
 ]
+
+/** Itemize's charges, in the order the form shows them. */
+export const ADJUSTMENT_KINDS: AdjustmentKind[] = [
+  'tax',
+  'tip',
+  'service',
+  'discount',
+]
+/** How each charge is typed; a missing kind is an amount (drafts from before percentages). */
+export type AdjustModes = Partial<Record<AdjustmentKind, 'amount' | 'percent'>>
 
 export type ItemForm = {
   key: string
@@ -71,6 +84,8 @@ export type ExpenseForm = {
   /** Service charge; older drafts may not have it. */
   service: string
   discount: string
+  /** Which charges are typed as a percentage of the items. */
+  adjustModes?: AdjustModes
   notes: string
 }
 
@@ -82,6 +97,7 @@ export function emptyForm({
   groupId,
   mode,
   category = 'other',
+  adjustModes,
 }: {
   me: string
   currency: string
@@ -90,6 +106,8 @@ export function emptyForm({
   groupId: string | null
   mode: SplitMode
   category?: string
+  /** The remembered amount / % choice per charge (preference). */
+  adjustModes?: AdjustModes
 }): ExpenseForm {
   return {
     title: '',
@@ -114,6 +132,7 @@ export function emptyForm({
     tip: '',
     service: '',
     discount: '',
+    adjustModes,
     notes: '',
   }
 }
@@ -197,10 +216,17 @@ export function formFromExpense(e: Expense, me: string): ExpenseForm {
             .map(p => [participantId(p), participantWeight(p)]),
         ),
       }))
-      form.tax = blankIfZero(s.tax, scale)
-      form.tip = blankIfZero(s.tip, scale)
-      form.service = blankIfZero(s.service ?? 0n, scale)
-      form.discount = blankIfZero(s.discount, scale)
+      form.adjustModes = {}
+      for (const kind of ADJUSTMENT_KINDS) {
+        const rate = s.rates?.[kind]
+        form.adjustModes[kind] = rate === undefined ? 'amount' : 'percent'
+        form[kind] =
+          rate === undefined
+            ? blankIfZero(s[kind] ?? 0n, scale)
+            : rate === 0
+              ? ''
+              : percentText(rate)
+      }
       break
   }
   return form
@@ -222,6 +248,8 @@ export type FormEvaluation = {
   remaining?: Remaining
   /** Items mode: items + tax + tip + service - discount. */
   itemsTotal?: bigint
+  /** Items mode: each charge in money, percentages already applied. */
+  adjustments?: Record<AdjustmentKind, bigint>
   /** Items mode: each priced, assigned item split by its portions, by item key then person. */
   itemParts?: Record<string, Record<string, bigint>>
   /** Each person's share once the split is complete. */
@@ -423,24 +451,42 @@ export function evaluateForm(
           })
         }
       }
-      const tax = rowAmount(f.tax, 'tax')
-      const tip = rowAmount(f.tip, 'tip')
-      const service = rowAmount(f.service, 'service')
-      const discount = rowAmount(f.discount, 'discount')
+      /* Each charge as typed: an amount, or a percentage turned into money by the domain. */
+      const inputs: Partial<Record<AdjustmentKind, AdjustmentInput>> = {}
+      const rates: Partial<Record<AdjustmentKind, number>> = {}
+      for (const kind of ADJUSTMENT_KINDS) {
+        if (f.adjustModes?.[kind] === 'percent') {
+          try {
+            const basisPoints = parseBasisPoints(f[kind] ?? '')
+            inputs[kind] = {mode: 'percent', basisPoints}
+            if (basisPoints > 0) rates[kind] = basisPoints
+          } catch (e) {
+            r.rowErrors[kind] = codeOf(e)
+          }
+        } else {
+          const minor = rowAmount(f[kind], kind)
+          if (minor !== undefined) inputs[kind] = {mode: 'amount', minor}
+        }
+      }
       if (
         !isComplete ||
-        tax === undefined ||
-        tip === undefined ||
-        service === undefined ||
-        discount === undefined
+        ADJUSTMENT_KINDS.some(kind => inputs[kind] === undefined)
       ) {
         errors.push(
           Object.values(r.rowErrors).includes('UNASSIGNED_ITEM')
             ? 'UNASSIGNED_ITEM'
-            : 'INVALID_ROW_AMOUNT',
+            : Object.values(r.rowErrors).includes('INVALID_PERCENT')
+              ? 'INVALID_PERCENT'
+              : 'INVALID_ROW_AMOUNT',
         )
         break
       }
+      const adjustments = resolveItemAdjustments(
+        sumMinor(items.map(i => i.amount)),
+        inputs as Record<AdjustmentKind, AdjustmentInput>,
+      )
+      r.adjustments = adjustments
+      const {tax, tip, service, discount} = adjustments
       r.itemsTotal = remainingMinor(
         sumMinor([...items.map(i => i.amount), tax, tip, service]),
         [discount],
@@ -453,7 +499,16 @@ export function evaluateForm(
       if (items.length === 0) errors.push('NO_ITEMS')
       else if (r.remaining && r.remaining.value !== 0n)
         errors.push('TOTAL_MISMATCH')
-      else split = {mode: 'items', items, tax, tip, service, discount}
+      else
+        split = {
+          mode: 'items',
+          items,
+          tax,
+          tip,
+          service,
+          discount,
+          ...(Object.keys(rates).length > 0 ? {rates} : {}),
+        }
       break
     }
   }

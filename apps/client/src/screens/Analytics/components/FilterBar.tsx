@@ -165,18 +165,15 @@ export function FilterBar({
       {viewToggle}
     </View>
   ) : (
-    <View
+    /* Phones: one row that scrolls sideways, so no chip is ever orphaned on a second line. */
+    <ScrollView
       testID="analytics-filters"
-      style={[
-        a.flex_row,
-        a.flex_wrap,
-        a.align_center,
-        a.gap_sm,
-        a.pt_md,
-        a.px_lg,
-      ]}>
+      horizontal
+      showsHorizontalScrollIndicator={false}
+      style={[a.pt_md]}
+      contentContainerStyle={[a.flex_row, a.align_center, a.gap_sm, a.px_lg]}>
       {chips}
       {viewToggle}
-    </View>
+    </ScrollView>
   )
 }

@@ -26,6 +26,7 @@ export function AddExpenseScreen() {
   const groups = useEntities<Group>('group')
   const [currency] = usePref('defaultCurrency')
   const [mode] = usePref('defaultSplitMode')
+  const [adjustModes] = usePref('itemizeAdjustmentModes')
   const tz = useExpenseTz()
 
   const close = () => {
@@ -33,7 +34,7 @@ export function AddExpenseScreen() {
     else navigation.navigate('People')
   }
 
-  if (!me || !people || !groups || !currency || !mode) {
+  if (!me || !people || !groups || !currency || !mode || !adjustModes) {
     return (
       <ComposerSkeleton
         testID="screen-add-expense"
@@ -50,6 +51,7 @@ export function AddExpenseScreen() {
       groups={groups}
       currency={currency}
       mode={mode}
+      adjustModes={adjustModes}
       tz={tz}
       personId={params?.personId}
       groupId={params?.groupId}
@@ -64,6 +66,7 @@ function AddExpenseForm({
   groups,
   currency,
   mode,
+  adjustModes,
   tz,
   personId,
   groupId,
@@ -74,6 +77,7 @@ function AddExpenseForm({
   groups: Entity<Group>[]
   currency: string
   mode: ExpenseForm['mode']
+  adjustModes: ExpenseForm['adjustModes']
   tz: string
   personId?: string
   groupId?: string
@@ -93,6 +97,7 @@ function AddExpenseForm({
         people: members,
         groupId: group.id,
         mode,
+        adjustModes,
       })
     }
     const person = people.find(p => p.id === personId)
@@ -103,6 +108,7 @@ function AddExpenseForm({
       people: person ? [person.id] : [],
       groupId: null,
       mode,
+      adjustModes,
     })
   })
   const [draft] = useState(() => {

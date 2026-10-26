@@ -21,6 +21,8 @@ export type Point = {
   value: bigint
   /** Short label under the axis ("Mar", "26"). */
   axisLabel: string
+  /** Splito: a one-letter label ("M"), used so every bucket keeps a label when short ones would collide. */
+  axisLabelNarrow?: string
   /** Full label for tooltips and screen readers ("March 2026"). */
   label: string
   /** Splito: the bucket that holds today, drawn strongest. */
@@ -153,7 +155,12 @@ export function XLabels({
   const t = useTheme()
   const plotW = slot * points.length
   const fit = Math.max(1, Math.floor(plotW / 36))
-  const every = Math.ceil(points.length / fit)
+  /* Skipping buckets reads as missing data: when narrow labels fit, label every one. */
+  const isNarrow =
+    points.length > fit &&
+    slot >= 14 &&
+    points.every(p => p.axisLabelNarrow !== undefined)
+  const every = isNarrow ? 1 : Math.ceil(points.length / fit)
   const w = slot * every
   /* Labels step from the first bucket, so the axis always starts labelled; "now" also has its dot. */
   const anchor = 0
@@ -181,7 +188,7 @@ export function XLabels({
                 lineHeight: LABEL_HEIGHT,
               },
             ]}>
-            {p.axisLabel}
+            {isNarrow ? p.axisLabelNarrow : p.axisLabel}
           </Text>
         ) : null,
       )}

@@ -29,9 +29,12 @@ export function HBarList({
   locale,
   selectedKey,
   onSelect,
+  shareOf,
   testID,
 }: {
   bars: HBar[]
+  /** Splito: shows each bar's share of this whole ("28%") beside its amount. */
+  shareOf?: bigint
   currency: string
   locale: string
   selectedKey?: string
@@ -74,6 +77,13 @@ export function HBarList({
                 style={[a.flex_1, a.text_sm, a.font_medium, t.atoms.text]}>
                 {b.label}
               </Text>
+              {shareOf !== undefined && shareOf > ZERO ? (
+                <Text
+                  testID={`${testID}-${b.label}-share`}
+                  style={[a.text_xs, t.atoms.text_contrast_medium, tabular]}>
+                  {`${Math.round(fraction(b.value, shareOf) * 100)}%`}
+                </Text>
+              ) : null}
               <Text
                 testID={`${testID}-${b.label}-amount`}
                 style={[a.text_sm, a.font_semi_bold, tabular]}>

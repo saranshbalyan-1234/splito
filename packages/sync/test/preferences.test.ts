@@ -121,3 +121,13 @@ test('analytics opens on this year as charts; both are choices with a reset', as
   await resetPref(s, ctx, 'analyticsView')
   expect(await getPref(s, 'analyticsView')).toBe('charts')
 })
+
+test('itemize charges remember amount or % per kind: tax, tip and service %, discount amount by default', async () => {
+  expect(await getPref(s, 'itemizeAdjustmentModes')).toEqual({tax: 'percent', tip: 'percent', service: 'percent', discount: 'amount'})
+  await setPref(s, ctx, 'itemizeAdjustmentModes', {tax: 'amount', tip: 'percent', service: 'percent', discount: 'percent'})
+  expect((await getPref(s, 'itemizeAdjustmentModes')).tax).toBe('amount')
+  await expect(setPref(s, ctx, 'itemizeAdjustmentModes', {tax: 'percent'} as never)).rejects.toThrow('INVALID_PREF')
+  await expect(
+    setPref(s, ctx, 'itemizeAdjustmentModes', {tax: 'rate', tip: 'percent', service: 'percent', discount: 'amount'} as never),
+  ).rejects.toThrow('INVALID_PREF')
+})

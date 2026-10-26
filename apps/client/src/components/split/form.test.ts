@@ -168,6 +168,67 @@ describe('evaluateForm', () => {
     )
     expect(back.service).toBe('30.00')
   })
+  test('charges as percentages: discount first, then tax on the rest; rates survive a round trip', () => {
+    const items = [
+      {key: 'a', name: 'Thali', amount: '600', people: ['me', 'riya']},
+      {key: 'b', name: 'Biryani', amount: '400', people: ['sam']},
+    ]
+    // 1,000.00 of items; 15% off = 150.00; 18% GST on 850.00 = 153.00; total 1,003.00.
+    const r = evaluateForm(
+      base({
+        mode: 'items',
+        items,
+        amount: '1003',
+        discount: '15',
+        tax: '18',
+        adjustModes: {discount: 'percent', tax: 'percent'},
+      }),
+      'UTC',
+    )
+    expect(r.error).toBeUndefined()
+    expect(r.itemsTotal).toBe(100300n)
+    expect(r.adjustments).toEqual({
+      discount: 15000n,
+      tax: 15300n,
+      tip: 0n,
+      service: 0n,
+    })
+    const split = r.draft!.split
+    expect(split.mode === 'items' && [split.tax, split.discount]).toEqual([
+      15300n,
+      15000n,
+    ])
+    expect(split.mode === 'items' && split.rates).toEqual({
+      discount: 1500,
+      tax: 1800,
+    })
+    const back = formFromExpense(
+      {...r.draft!, shares: r.shares!} as unknown as Expense,
+      'me',
+    )
+    expect([back.tax, back.discount]).toEqual(['18', '15'])
+    expect(back.adjustModes).toEqual({
+      tax: 'percent',
+      tip: 'amount',
+      service: 'amount',
+      discount: 'percent',
+    })
+  })
+  test('a percentage with three decimals is refused on its own field', () => {
+    const items = [{key: 'a', name: 'Tea', amount: '100', people: ['me']}]
+    const r = evaluateForm(
+      base({
+        mode: 'items',
+        items,
+        amount: '100',
+        tip: '12.555',
+        adjustModes: {tip: 'percent'},
+      }),
+      'UTC',
+    )
+    expect(r.rowErrors.tip).toBe('INVALID_PERCENT')
+    expect(r.draft).toBeUndefined()
+  })
   test('multiple payers must add up', () => {
     const r = evaluateForm(
       base({payerMode: 'multiple', paid: {me: '100', riya: '100'}}),

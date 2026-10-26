@@ -1,9 +1,20 @@
 import {useEffect, useState} from 'react'
 import {View} from 'react-native'
+import Animated, {
+  useAnimatedStyle,
+  useSharedValue,
+  withTiming,
+} from 'react-native-reanimated'
 import {plural} from '@lingui/core/macro'
 import {Trans, useLingui} from '@lingui/react/macro'
 import {useNavigation} from '@react-navigation/native'
-import {decimalMark, formatAmount, magnitude, ZERO} from '@splito/domain'
+import {
+  assignedFraction,
+  decimalMark,
+  formatAmount,
+  magnitude,
+  ZERO,
+} from '@splito/domain'
 import {
   createExpense,
   type Group,
@@ -23,6 +34,7 @@ import * as Prompt from '#/components/Prompt'
 import * as Toast from '#/components/Toast'
 import {Text} from '#/components/Typography'
 import {SuccessCheck} from '#/motion/SuccessCheck'
+import {useShouldReduceMotion} from '#/motion/useShouldReduceMotion'
 import {DateDialog} from './DateDialog'
 import {clearDraft, type DraftContext, writeDraft} from './drafts'
 import {AmountField, DetailRow, FieldError, PlainInput} from './fields'
@@ -682,59 +694,119 @@ function Readout({
   }
 
   return (
-    <View style={[a.flex_row, a.align_center, a.pb_sm, {minHeight: 28}]}>
-      {need ? (
-        <Text
-          testID="save-needs"
-          style={[
-            a.flex_1,
-            a.text_sm,
-            a.font_medium,
-            t.atoms.text_contrast_medium,
-          ]}
-          numberOfLines={1}>
-          {need}
-        </Text>
-      ) : null}
-      {text ? (
-        tone === 'off' && !remaining ? (
-          <View style={[a.flex_1]}>
-            <FieldError testID="split-readout">{text}</FieldError>
-          </View>
-        ) : (
-          <View
+    <View style={[a.pb_sm]}>
+      <View style={[a.flex_row, a.align_center, {minHeight: 28}]}>
+        {need ? (
+          <Text
+            testID="save-needs"
             style={[
-              need ? null : a.flex_1,
-              a.flex_row,
-              a.align_center,
-              a.gap_xs,
-            ]}>
-            {/* A status mark: green check when the split adds up, red when it does not. */}
-            {remaining && tone === 'ok' ? (
-              <CheckIcon size="sm" fill={t.palette.positive_600} />
-            ) : remaining && tone === 'off' ? (
-              <WarningIcon size="sm" fill={t.palette.negative_500} />
-            ) : null}
-            <Text
-              testID="split-readout"
+              a.flex_1,
+              a.text_sm,
+              a.font_medium,
+              t.atoms.text_contrast_medium,
+            ]}
+            numberOfLines={1}>
+            {need}
+          </Text>
+        ) : null}
+        {text ? (
+          tone === 'off' && !remaining ? (
+            <View style={[a.flex_1]}>
+              <FieldError testID="split-readout">{text}</FieldError>
+            </View>
+          ) : (
+            <View
               style={[
-                need ? a.text_right : a.flex_1,
-                a.text_sm,
-                a.font_medium,
-                {fontVariant: ['tabular-nums']},
-                tone === 'off'
-                  ? {color: t.palette.negative_500}
-                  : remaining && tone === 'ok'
-                    ? {color: t.palette.positive_600}
-                    : tone === 'ok'
-                      ? t.atoms.text_contrast_high
-                      : t.atoms.text_contrast_medium,
+                need ? null : a.flex_1,
+                a.flex_row,
+                a.align_center,
+                a.gap_xs,
               ]}>
-              {text}
-            </Text>
-          </View>
-        )
+              {/* A status mark: green check when the split adds up, red when it does not. */}
+              {remaining && tone === 'ok' ? (
+                <CheckIcon size="sm" fill={t.palette.positive_600} />
+              ) : remaining && tone === 'off' ? (
+                <WarningIcon size="sm" fill={t.palette.negative_500} />
+              ) : null}
+              <Text
+                testID="split-readout"
+                style={[
+                  need ? a.text_right : a.flex_1,
+                  a.text_sm,
+                  a.font_medium,
+                  {fontVariant: ['tabular-nums']},
+                  tone === 'off'
+                    ? {color: t.palette.negative_500}
+                    : remaining && tone === 'ok'
+                      ? {color: t.palette.positive_600}
+                      : tone === 'ok'
+                        ? t.atoms.text_contrast_high
+                        : t.atoms.text_contrast_medium,
+                ]}>
+                {text}
+              </Text>
+            </View>
+          )
+        ) : null}
+      </View>
+      {/* How much is assigned, as a bar: money readouts only, once there is a total. */}
+      {remaining?.kind === 'money' && total !== undefined ? (
+        <AssignedBar
+          fraction={assignedFraction(total, remaining.value)}
+          tone={
+            remaining.value < ZERO
+              ? 'off'
+              : remaining.value === ZERO
+                ? 'ok'
+                : 'partial'
+          }
+        />
       ) : null}
+    </View>
+  )
+}
+
+/** A thin track filling as the split is assigned; green when complete, red when over. */
+function AssignedBar({
+  fraction,
+  tone,
+}: {
+  fraction: number
+  tone: 'ok' | 'partial' | 'off'
+}) {
+  const t = useTheme()
+  const reduceMotion = useShouldReduceMotion()
+  const width = useSharedValue(fraction)
+  useEffect(() => {
+    width.set(reduceMotion ? fraction : withTiming(fraction, {duration: 220}))
+  }, [fraction, reduceMotion, width])
+  const fill = useAnimatedStyle(() => ({width: `${width.get() * 100}%`}))
+  return (
+    <View
+      testID="split-progress"
+      aria-hidden
+      style={[
+        a.mt_2xs,
+        a.rounded_full,
+        a.overflow_hidden,
+        t.atoms.bg_contrast_50,
+        {height: 3},
+      ]}>
+      <Animated.View
+        style={[
+          a.h_full,
+          a.rounded_full,
+          {
+            backgroundColor:
+              tone === 'ok'
+                ? t.palette.positive_600
+                : tone === 'off'
+                  ? t.palette.negative_500
+                  : t.palette.primary_500,
+          },
+          fill,
+        ]}
+      />
     </View>
   )
 }

@@ -34,7 +34,6 @@ export function GroupBalanceCards({
         a.rounded_md,
         a.border,
         t.atoms.border_contrast_low,
-        gtMobile && {maxWidth: 640},
       ]}>
       <View style={[a.flex_1, a.flex_row, a.flex_wrap]}>
         {isSettled ? (

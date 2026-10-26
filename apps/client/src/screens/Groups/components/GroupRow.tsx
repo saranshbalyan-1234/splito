@@ -1,14 +1,14 @@
 // Adapted from bluesky-social/social-app@4e4ad9c (MIT) - src/components/FeedCard.tsx (list card layout)
 import {View} from 'react-native'
 import Animated from 'react-native-reanimated'
-import {Trans, useLingui} from '@lingui/react/macro'
+import {useLingui} from '@lingui/react/macro'
 import {ZERO} from '@splito/domain'
 import {type Entity, type Group} from '@splito/sync'
 
 import {useRowPadding} from '#/state/preferences/density'
 import {Link} from '#/view/com/util/Link'
-import {atoms as a, useBreakpoints, useTheme} from '#/alf'
-import {BalanceText} from '#/components/BalanceText'
+import {atoms as a, useTheme} from '#/alf'
+import {BalanceBlock, SettledPill} from '#/components/BalanceText'
 import {GroupAvatar} from '#/components/groups/GroupAvatar'
 import * as Skeleton from '#/components/Skeleton'
 import {Text} from '#/components/Typography'
@@ -23,9 +23,9 @@ function utcDate(d: string) {
 }
 
 /**
- * Bluesky's list card as a row: the group's kind tile, title, byline (kind,
- * trip dates, members), and my balance in the group per currency on the
- * right.
+ * Bluesky's list card as a row: the group's tile, title, byline (kind,
+ * trip dates, members), and my balance in the group per currency as a
+ * right-aligned label-over-amount block.
  */
 export function GroupRow({
   group,
@@ -41,7 +41,6 @@ export function GroupRow({
   const t = useTheme()
   const rowPadding = useRowPadding()
   const {t: l, i18n} = useLingui()
-  const {gtMobile} = useBreakpoints()
   const listAnimations = useListAnimations()
   const press = usePressScale()
   const {name, kind, startDate, endDate, members} = group.data
@@ -63,22 +62,18 @@ export function GroupRow({
     .sort()
 
   const balanceView = (
-    <View style={[a.align_end, a.gap_2xs, a.flex_shrink_0]}>
+    <View style={[a.align_end, a.gap_xs, a.flex_shrink_0]}>
       {open.length === 0 ? (
-        <Text style={[a.text_sm, a.leading_snug, t.atoms.text_contrast_medium]}>
-          <Trans>settled up</Trans>
-        </Text>
+        <SettledPill testID="group-settled" />
       ) : (
         open.map(currency => (
-          <BalanceText
+          <BalanceBlock
             key={currency}
             testID={`group-balance-${currency}`}
             amount={balances[currency]!}
             currency={currency}
             locale={locale}
             subject="group"
-            isCompact
-            style={a.text_right}
           />
         ))
       )}
@@ -109,24 +104,19 @@ export function GroupRow({
           style={[a.flex_row, a.align_center, a.gap_md, press.style]}>
           <GroupAvatar kind={kind} name={name} size={AVATAR_SIZE} />
           <View style={[a.flex_1, a.gap_2xs]}>
-            {/* Phones: the balance shares the title's line so the byline gets the full width. */}
-            <View
-              style={[a.flex_row, a.align_center, a.justify_between, a.gap_md]}>
-              <Text
-                emoji
-                numberOfLines={1}
-                style={[a.flex_1, a.text_md, a.font_semi_bold, a.leading_snug]}>
-                {name}
-              </Text>
-              {!gtMobile && balanceView}
-            </View>
+            <Text
+              emoji
+              numberOfLines={1}
+              style={[a.text_md, a.font_semi_bold, a.leading_snug]}>
+              {name}
+            </Text>
             <Text
               numberOfLines={1}
               style={[a.text_sm, a.leading_snug, t.atoms.text_contrast_medium]}>
               {byline}
             </Text>
           </View>
-          {gtMobile && balanceView}
+          {balanceView}
         </Animated.View>
       </Link>
     </Animated.View>

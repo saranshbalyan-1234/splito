@@ -7,7 +7,7 @@ import {useRowPadding} from '#/state/preferences/density'
 import {Link} from '#/view/com/util/Link'
 import {UserAvatar} from '#/view/com/util/UserAvatar'
 import {atoms as a, useBreakpoints, useTheme} from '#/alf'
-import {BalanceText} from '#/components/BalanceText'
+import {BalanceText, SettledPill} from '#/components/BalanceText'
 import * as Pills from '#/components/Pills'
 import * as ProfileCard from '#/components/ProfileCard'
 import {Text} from '#/components/Typography'
@@ -51,27 +51,33 @@ export function PersonRow({
     )
     .sort()
 
-  const chips = currencies.flatMap(currency => {
-    const c = byCurrency[currency]!
-    const groups = Object.entries(c.groups)
-      .filter(([, v]) => v !== ZERO)
-      .map(([groupId, v]) => ({
-        key: `${currency}-${groupId}`,
-        name: groupNames.get(groupId) ?? l`Group`,
-        v,
-      }))
-      .sort((x, y) => x.name.localeCompare(y.name))
-    if (groups.length === 0) return []
-    return [
-      ...(c.direct !== ZERO
-        ? [{key: `${currency}-direct`, name: l`Direct`, v: c.direct}]
-        : []),
-      ...groups,
-    ].map(chip => ({
-      ...chip,
-      currency,
-    }))
-  })
+  /*
+   * Chips explain the balance, so once any group is involved every part
+   * shows - direct ones included, in every currency - and they add up to
+   * the amounts on the right.
+   */
+  const hasGroupPart = currencies.some(c =>
+    Object.values(byCurrency[c]!.groups).some(v => v !== ZERO),
+  )
+  const chips = !hasGroupPart
+    ? []
+    : currencies.flatMap(currency => {
+        const c = byCurrency[currency]!
+        const groups = Object.entries(c.groups)
+          .filter(([, v]) => v !== ZERO)
+          .map(([groupId, v]) => ({
+            key: `${currency}-${groupId}`,
+            name: groupNames.get(groupId) ?? l`Group`,
+            v,
+          }))
+          .sort((x, y) => x.name.localeCompare(y.name))
+        return [
+          ...(c.direct !== ZERO
+            ? [{key: `${currency}-direct`, name: l`Direct`, v: c.direct}]
+            : []),
+          ...groups,
+        ].map(chip => ({...chip, currency}))
+      })
   const isSettled = currencies.every(c => byCurrency[c]!.total === ZERO)
 
   const open = currencies.filter(c => byCurrency[c]!.total !== ZERO)
@@ -90,9 +96,7 @@ export function PersonRow({
     </View>
   )
   const balances = isSettled ? (
-    <Text style={[a.text_sm, a.leading_snug, t.atoms.text_contrast_medium]}>
-      <Trans>settled up</Trans>
-    </Text>
+    <SettledPill testID="person-settled" />
   ) : (
     balanceColumn(open)
   )
@@ -126,7 +130,8 @@ export function PersonRow({
         <Animated.View
           style={[
             a.flex_row,
-            gtMobile ? a.align_center : a.align_start,
+            /* Top-aligned at every width: the amount reads on the name's line. */
+            a.align_start,
             a.gap_md,
             press.style,
           ]}>

@@ -138,3 +138,14 @@ export function sumMinor(xs: Iterable<bigint>): bigint {
 export function remainingMinor(total: bigint, parts: Iterable<bigint>): bigint {
   return total - sumMinor(parts)
 }
+
+/**
+ * How much of `total` is assigned when `remaining` is left, from 0 to 1
+ * (display only: a progress bar's width, never money).
+ */
+export function assignedFraction(total: bigint, remaining: bigint): number {
+  if (total <= 0n) return 0
+  if (remaining <= 0n) return 1
+  if (remaining >= total) return 0
+  return Number(((total - remaining) * 10000n) / total) / 10000
+}

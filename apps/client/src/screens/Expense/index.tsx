@@ -23,7 +23,7 @@ import {useEntities, useMutationCtx, useStore} from '#/data/hooks'
 import {Link} from '#/view/com/util/Link'
 import {EmptyState} from '#/view/com/util/EmptyState'
 import {UserAvatar} from '#/view/com/util/UserAvatar'
-import {atoms as a, useBreakpoints, useTheme} from '#/alf'
+import {atoms as a, useBreakpoints, useTheme, utils} from '#/alf'
 import {Button, ButtonIcon, ButtonText} from '#/components/Button'
 import {ArrowRotateCounterClockwise_Stroke2_Corner0_Rounded as UndoIcon} from '#/components/icons/ArrowRotate'
 import {DotGrid3x1_Stroke2_Corner0_Rounded as DotsIcon} from '#/components/icons/DotGrid'
@@ -311,12 +311,17 @@ function Detail({
             a.px_md,
             a.py_sm,
             a.rounded_full,
-            /* Dark themes invert the palette, so _25 is the deep tint there. */
-            myNet > ZERO
-              ? {backgroundColor: t.palette.positive_25}
-              : myNet < ZERO
-                ? {backgroundColor: t.palette.negative_25}
-                : t.atoms.bg_contrast_25,
+            /* A light wash of the money colour, so the text keeps its contrast on Dim and Black too. */
+            myNet !== ZERO
+              ? {
+                  backgroundColor: utils.alpha(
+                    myNet > ZERO
+                      ? t.palette.positive_600
+                      : t.palette.negative_500,
+                    t.scheme === 'light' ? 0.1 : 0.16,
+                  ),
+                }
+              : t.atoms.bg_contrast_25,
           ]}>
           <Text
             style={[
@@ -325,7 +330,7 @@ function Detail({
               myNet > ZERO
                 ? {color: t.palette.positive_600}
                 : myNet < ZERO
-                  ? {color: t.palette.negative_600}
+                  ? {color: t.palette.negative_500}
                   : t.atoms.text,
               {fontVariant: ['tabular-nums']},
             ]}>
@@ -438,12 +443,14 @@ function Detail({
   ) : null
 
   return (
-    <Layout.Content contentContainerStyle={[a.pb_5xl]}>
+    <Layout.Content
+      contentContainerStyle={[gtTablet ? a.flex_grow : a.pb_5xl]}>
       {deletedBanner}
       {gtTablet ? (
         /* Two columns filling the page, tops aligned: the expense, then its history as a rail. */
-        <View style={[a.flex_row, a.align_start]}>
-          <View style={[a.flex_1, {flexGrow: 3}]}>
+        /* Stretched, so the history rail's hairline runs the page's full height. */
+        <View style={[a.flex_row, a.align_stretch, a.flex_grow]}>
+          <View style={[a.flex_1, a.pb_5xl, {flexGrow: 3}]}>
             {hero}
             {breakdown}
           </View>
@@ -529,10 +536,12 @@ function PersonAmount({
         a.flex_row,
         a.align_center,
         a.gap_md,
-        a.px_lg,
         a.py_sm,
         {minHeight: 56},
-        isMe && t.atoms.bg_contrast_25,
+        /* My share sits on a soft inset card instead of a full-bleed band. */
+        isMe
+          ? [a.mx_sm, a.px_md, a.rounded_md, t.atoms.bg_contrast_25]
+          : a.px_lg,
       ]}>
       <UserAvatar size={36} name={avatar} type="user" />
       <View style={[a.flex_1]}>

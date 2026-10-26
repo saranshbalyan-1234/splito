@@ -3,9 +3,11 @@ import {Trans, useLingui} from '@lingui/react/macro'
 import {formatAmount, getCurrency, toDecimalString, ZERO} from '@splito/domain'
 import {nanoid} from 'nanoid/non-secure'
 
+import {usePref} from '#/data/hooks'
 import {UserAvatar} from '#/view/com/util/UserAvatar'
 import {atoms as a, tokens, useBreakpoints, useTheme, web} from '#/alf'
 import {Button, ButtonIcon, ButtonText} from '#/components/Button'
+import * as SegmentedControl from '#/components/forms/SegmentedControl'
 import * as TextField from '#/components/forms/TextField'
 import * as Toggle from '#/components/forms/Toggle'
 import {
@@ -17,6 +19,7 @@ import {PersonPlus_Filled_Stroke2_Corner0_Rounded as PersonPlusIcon} from '#/com
 import {PlusLarge_Stroke2_Corner0_Rounded as PlusIcon} from '#/components/icons/Plus'
 import {TimesLarge_Stroke2_Corner0_Rounded as XIcon} from '#/components/icons/Times'
 import {Text} from '#/components/Typography'
+import {IS_WEB} from '#/env'
 import {FieldError, MoneyInput, PercentInput} from './fields'
 import {
   type ExpenseForm,
@@ -32,6 +35,8 @@ type Update = (fn: (f: ExpenseForm) => ExpenseForm) => void
 
 /** A cap on one person's portions of one item, so a stray tap never runs away. */
 const MAX_PORTIONS = 9
+/** One width for every money field in Itemize, so items and charges line up. */
+const ITEM_AMOUNT_WIDTH = 120
 
 /**
  * The split section of the expense form: a segmented control for the mode
@@ -53,6 +58,8 @@ export function SplitEditor({
 }) {
   const t = useTheme()
   const {t: l} = useLingui()
+  const {gtMobile} = useBreakpoints()
+  const isPointer = IS_WEB && gtMobile
 
   const labels: Record<SplitMode, string> = {
     equal: l`Equally`,
@@ -68,7 +75,10 @@ export function SplitEditor({
     percent: l`Give each person a percentage.`,
     shares: l`Split by shares – say 2 for a couple, 1 for everyone else.`,
     adjusted: l`Split equally, then add or take away an amount for someone.`,
-    items: l`Add the bill’s items and pick who had each. Tap a name again for one more portion; hold or right-click it to take them off. Tax, tip, service and discount follow what each person had.`,
+    /* One line; the way to take someone off matches the device (hold on touch, right-click with a mouse). */
+    items: isPointer
+      ? l`Add each item and who had it. Tap a name again for another portion; right-click to take them off.`
+      : l`Add each item and who had it. Tap a name again for another portion; hold to take them off.`,
   }
 
   return (
@@ -394,6 +404,7 @@ function ItemsEditor({
       return {...f, items}
     })
 
+  const [savedModes, saveModes] = usePref('itemizeAdjustmentModes')
   const extras = [
     {key: 'tax', label: l`Tax`},
     {key: 'tip', label: l`Tip`},
@@ -458,8 +469,8 @@ function ItemsEditor({
             key={item.key}
             testID={`item-${index}`}
             style={[a.p_md, a.gap_sm, a.rounded_md, t.atoms.bg_contrast_25]}>
-            {/* Phones: reorder and remove get their own line, so the name keeps the row's width. */}
-            {!gtMobile && (
+            {/* "Item N" with reorder and remove on its own line at every width, so the name keeps the row's width. */}
+            {
               <View style={[a.flex_row, a.align_center, a.justify_between]}>
                 <Text
                   style={[
@@ -471,7 +482,7 @@ function ItemsEditor({
                 </Text>
                 {controls}
               </View>
-            )}
+            }
             <View style={[a.flex_row, a.align_center, a.gap_xs]}>
               <View style={[a.flex_1]}>
                 <TextField.Root>
@@ -490,10 +501,9 @@ function ItemsEditor({
                 currency={form.currency}
                 value={item.amount}
                 isInvalid={!!error && error !== 'UNASSIGNED_ITEM'}
-                width={120}
+                width={ITEM_AMOUNT_WIDTH}
                 onChangeText={v => setItem(item.key, {amount: v})}
               />
-              {gtMobile && controls}
             </View>
             {/*
              * Who had it: a tap adds someone, another tap gives them one more
@@ -639,23 +649,98 @@ function ItemsEditor({
         </ButtonText>
       </Button>
 
-      <View style={[a.pt_sm]}>
-        {extras.map(x => (
-          <View
-            key={x.key}
-            style={[a.flex_row, a.align_center, a.justify_between, a.py_xs]}>
-            <Text style={[a.text_md]}>{x.label}</Text>
-            <MoneyInput
-              testID={`item-${x.key}`}
-              label={x.label}
-              currency={form.currency}
-              value={form[x.key] ?? ''}
-              isInvalid={!!evaluation.rowErrors[x.key]}
-              width={140}
-              onChangeText={v => update(f => ({...f, [x.key]: v}))}
-            />
-          </View>
-        ))}
+      {/*
+       * Charges, each as an amount or a percentage of the items (owner rule).
+       * The choice per charge is remembered for the next bill.
+       */}
+      <View style={[a.pt_sm, a.gap_xs]}>
+        <Text style={[a.text_md, a.font_semi_bold, a.leading_snug]}>
+          <Trans>Charges</Trans>
+        </Text>
+        <Text style={[a.text_sm, a.leading_snug, t.atoms.text_contrast_medium]}>
+          <Trans>
+            Discount comes off the items first; service, tax and tip are then
+            worked out on what is left.
+          </Trans>
+        </Text>
+        {extras.map(x => {
+          const isPercent = form.adjustModes?.[x.key] === 'percent'
+          const resolved = evaluation.adjustments?.[x.key]
+          return (
+            <View
+              key={x.key}
+              style={[a.flex_row, a.align_center, a.gap_sm, a.py_xs]}>
+              <View style={[a.flex_1, a.gap_2xs]}>
+                <Text style={[a.text_md]}>{x.label}</Text>
+                {/* A percentage shows what it comes to. */}
+                {isPercent && resolved !== undefined && resolved !== ZERO ? (
+                  <Text
+                    testID={`item-${x.key}-resolved`}
+                    style={[
+                      a.text_xs,
+                      t.atoms.text_contrast_medium,
+                      {fontVariant: ['tabular-nums']},
+                    ]}>
+                    {formatAmount(resolved, form.currency, locale)}
+                  </Text>
+                ) : null}
+              </View>
+              <View style={{width: 96}}>
+                <SegmentedControl.Root
+                  type="radio"
+                  size="small"
+                  label={l`${x.label} as`}
+                  value={isPercent ? 'percent' : 'amount'}
+                  onChange={value => {
+                    const next = value as 'amount' | 'percent'
+                    update(f => ({
+                      ...f,
+                      /* The figure meant something else in the other unit. */
+                      [x.key]: '',
+                      adjustModes: {...f.adjustModes, [x.key]: next},
+                    }))
+                    if (savedModes)
+                      void saveModes({...savedModes, [x.key]: next})
+                  }}>
+                  <SegmentedControl.Item
+                    testID={`item-${x.key}-mode-amount`}
+                    label={l`${x.label} as an amount in ${form.currency}`}
+                    value="amount">
+                    <SegmentedControl.ItemText>
+                      {form.currency}
+                    </SegmentedControl.ItemText>
+                  </SegmentedControl.Item>
+                  <SegmentedControl.Item
+                    testID={`item-${x.key}-mode-percent`}
+                    label={l`${x.label} as a percentage`}
+                    value="percent">
+                    <SegmentedControl.ItemText>%</SegmentedControl.ItemText>
+                  </SegmentedControl.Item>
+                </SegmentedControl.Root>
+              </View>
+              {isPercent ? (
+                <PercentInput
+                  testID={`item-${x.key}`}
+                  label={x.label}
+                  value={form[x.key] ?? ''}
+                  isInvalid={!!evaluation.rowErrors[x.key]}
+                  width={ITEM_AMOUNT_WIDTH}
+                  onChangeText={v => update(f => ({...f, [x.key]: v}))}
+                />
+              ) : (
+                <MoneyInput
+                  testID={`item-${x.key}`}
+                  label={x.label}
+                  currency={form.currency}
+                  value={form[x.key] ?? ''}
+                  isInvalid={!!evaluation.rowErrors[x.key]}
+                  width={ITEM_AMOUNT_WIDTH}
+                  onChangeText={v => update(f => ({...f, [x.key]: v}))}
+                />
+              )}
+            </View>
+          )
+        })}
       </View>
 
       {evaluation.shares ? (

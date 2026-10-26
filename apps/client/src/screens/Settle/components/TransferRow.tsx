@@ -104,7 +104,7 @@ export function TransferRow({
         testID="transfer-record"
         label={l`Record this payment`}
         size="small"
-        color="secondary"
+        color="primary"
         onPress={onRecordPress}>
         <ButtonText>
           <Trans>Record</Trans>

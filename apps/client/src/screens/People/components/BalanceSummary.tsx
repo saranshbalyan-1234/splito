@@ -33,13 +33,16 @@ export function BalanceSummary({
   totals,
   locale,
   counts,
+  captions = {},
   testID = 'people-summary',
   titleTestID = 'people-balances-title',
 }: {
   totals: CurrencyTotal[]
   locale: string
-  /** "6 friends · 2 settled", under the card. */
+  /** "6 friends · 2 settled", the card's footer row. */
   counts: string
+  /** Per currency, who the cell's figure comes from ("5 friends"). */
+  captions?: Record<string, string>
   testID?: string
   titleTestID?: string
 }) {
@@ -78,16 +81,28 @@ export function BalanceSummary({
                 key={total.currency}
                 total={total}
                 locale={locale}
+                caption={captions[total.currency]}
                 hasDivider={i > 0}
               />
             ))
           )}
+          {/* The counts belong to the card, so they sit in its footer row. */}
+          <View
+            style={[
+              a.w_full,
+              a.px_lg,
+              a.py_sm,
+              a.border_t,
+              t.atoms.border_contrast_low,
+              t.atoms.bg_contrast_25,
+            ]}>
+            <Text
+              testID={`${testID}-counts`}
+              style={[a.text_sm, a.leading_snug, t.atoms.text_contrast_medium]}>
+              {counts}
+            </Text>
+          </View>
         </View>
-        <Text
-          testID={`${testID}-counts`}
-          style={[a.text_sm, a.leading_snug, t.atoms.text_contrast_medium]}>
-          {counts}
-        </Text>
       </View>
     </View>
   )
@@ -129,10 +144,12 @@ function AnalyticsLink() {
 function SummaryCell({
   total,
   locale,
+  caption,
   hasDivider,
 }: {
   total: CurrencyTotal
   locale: string
+  caption: string | undefined
   hasDivider: boolean
 }) {
   const t = useTheme()
@@ -165,17 +182,42 @@ function SummaryCell({
         accessibilityHint=""
         hoverStyle={t.atoms.bg_contrast_25}
         style={[a.flex_1, a.px_lg, a.py_md, a.transition_color]}>
-        <Text
-          numberOfLines={1}
-          style={[a.text_sm, a.font_medium, t.atoms.text_contrast_medium]}>
-          {net > ZERO ? (
-            <Trans>You are owed</Trans>
-          ) : net < ZERO ? (
-            <Trans>You owe</Trans>
-          ) : (
-            <Trans>All settled up</Trans>
-          )}
-        </Text>
+        <View style={[a.flex_row, a.align_center, a.justify_between, a.gap_sm]}>
+          <Text
+            numberOfLines={1}
+            style={[
+              a.flex_shrink,
+              a.text_sm,
+              a.font_medium,
+              t.atoms.text_contrast_medium,
+            ]}>
+            {net > ZERO ? (
+              <Trans>You are owed</Trans>
+            ) : net < ZERO ? (
+              <Trans>You owe</Trans>
+            ) : (
+              <Trans>All settled up</Trans>
+            )}
+          </Text>
+          {/* Which currency this cell is: cells are never added together. */}
+          <View
+            style={[
+              a.rounded_xs,
+              a.px_xs,
+              {paddingVertical: 1},
+              t.atoms.bg_contrast_50,
+            ]}>
+            <Text
+              style={[
+                a.text_2xs,
+                a.font_semi_bold,
+                {letterSpacing: 0.4},
+                t.atoms.text_contrast_medium,
+              ]}>
+              {currency}
+            </Text>
+          </View>
+        </View>
         <View style={a.pt_2xs}>
           <AnimatedAmount
             testID={`summary-${currency}-net`}
@@ -190,6 +232,13 @@ function SummaryCell({
             ]}
           />
         </View>
+        {caption !== undefined && !(owed !== ZERO && owe !== ZERO) && (
+          <Text
+            testID={`summary-${currency}-caption`}
+            style={[a.pt_2xs, a.text_xs, t.atoms.text_contrast_medium]}>
+            {caption}
+          </Text>
+        )}
         {/* Both sides only when both are open; otherwise they repeat the headline. */}
         {owed !== ZERO && owe !== ZERO && (
           <View style={[a.pt_xs, a.gap_2xs]}>

@@ -21,6 +21,8 @@ export interface PrefDef<T> {
  * then still name 'activity' and read back unchanged.
  */
 export type TabId = 'people' | 'groups' | 'analytics' | 'activity'
+/** How each itemised-bill charge is typed: money, or a percentage of the items. */
+export type AdjustmentModes = Record<'tax' | 'tip' | 'service' | 'discount', 'amount' | 'percent'>
 export type SwipeAction = 'markRead' | 'hide' | 'delete' | 'none'
 
 export interface Category {
@@ -38,7 +40,7 @@ export const DEFAULT_CATEGORIES: Category[] = [
   ['stay', 'Stay', '#8b5cf6', 'bed'],
   ['shopping', 'Shopping', '#ec4899', 'shopping-bag'],
   ['entertainment', 'Entertainment', '#f59e0b', 'ticket'],
-  ['bills', 'Bills', '#6366f1', 'receipt'],
+  ['bills', 'Bills', '#84cc16', 'receipt'],
   ['groceries', 'Groceries', '#14b8a6', 'shopping-cart'],
   ['other', 'Other', '#94a3b8', 'circle'],
 ].map(([id, name, color, icon], order) => ({id: id!, name: name!, color: color!, icon: icon!, order, hidden: false}))
@@ -77,6 +79,17 @@ export const PREFS = {
   ),
   homeTab: def<TabId>('homeTab', 'defaults', 'account', 'Home tab', 'people', oneOf(...TAB_IDS)),
   defaultCurrency: def('defaultCurrency', 'defaults', 'account', 'Default currency', 'INR', (v): v is string => typeof v === 'string' && v in CURRENCIES),
+  itemizeAdjustmentModes: def<AdjustmentModes>(
+    'itemizeAdjustmentModes',
+    'defaults',
+    'account',
+    'Itemize charges',
+    {tax: 'percent', tip: 'percent', service: 'percent', discount: 'amount'},
+    (v): v is AdjustmentModes =>
+      typeof v === 'object' &&
+      v !== null &&
+      (['tax', 'tip', 'service', 'discount'] as const).every(k => ['amount', 'percent'].includes((v as Record<string, unknown>)[k] as string)),
+  ),
   defaultSplitMode: def('defaultSplitMode', 'defaults', 'account', 'Default split', 'equal', oneOf('equal', 'exact', 'percent', 'shares')),
   analyticsPeriod: def('analyticsPeriod', 'defaults', 'account', 'Analytics period', 'year', oneOf('week', 'month', 'year', 'all')),
   analyticsView: def('analyticsView', 'defaults', 'device', 'Analytics view', 'charts', oneOf('charts', 'table')),

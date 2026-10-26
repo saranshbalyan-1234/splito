@@ -1,3 +1,4 @@
+import type {AdjustmentKind} from './adjustments'
 import {allocate} from './allocate'
 import {assertInRange, DomainError} from './errors'
 
@@ -21,7 +22,16 @@ export type SplitInput =
   | {mode: 'percent'; basisPoints: Record<string, number>}
   | {mode: 'shares'; shares: Record<string, number>}
   /** A bill of items; tax, tip, service charge (optional, older records have none) and discount follow each person's item subtotal. */
-  | {mode: 'items'; items: Array<{id: string; name?: string; amount: bigint; participants: ItemParticipant[]}>; tax: bigint; tip: bigint; service?: bigint; discount: bigint}
+  | {
+      mode: 'items'
+      items: Array<{id: string; name?: string; amount: bigint; participants: ItemParticipant[]}>
+      tax: bigint
+      tip: bigint
+      service?: bigint
+      discount: bigint
+      /** The rates (basis points) charges were entered as, for "Tax 18%" lines; the money above is what counts. */
+      rates?: Partial<Record<AdjustmentKind, number>>
+    }
   /** Equal with adjustments: each adjustment is added to (or taken from) that person, the rest is split equally. */
   | {mode: 'adjusted'; participants: string[]; adjustments: Record<string, bigint>}
 

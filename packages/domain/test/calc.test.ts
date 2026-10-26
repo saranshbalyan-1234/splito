@@ -4,6 +4,7 @@ import {
   decimalMark,
   evaluateAmount,
   isExpression,
+  assignedFraction,
   parseBasisPoints,
   remainingMinor,
   sumMinor,
@@ -139,4 +140,16 @@ describe('adjusted split (equal with adjustments)', () => {
         adjustments: {z: 10n},
       }),
     ).toThrow('NOT_A_PARTICIPANT'))
+})
+
+describe('assignedFraction', () => {
+  test('how much of a total is assigned, 0 to 1, for a progress bar', () => {
+    expect(assignedFraction(110000n, 55000n)).toBe(0.5)
+    expect(assignedFraction(110000n, 0n)).toBe(1)
+    expect(assignedFraction(110000n, 110000n)).toBe(0)
+  })
+  test('over-assigned and empty totals stay in range', () => {
+    expect(assignedFraction(100n, -50n)).toBe(1)
+    expect(assignedFraction(0n, 0n)).toBe(0)
+  })
 })

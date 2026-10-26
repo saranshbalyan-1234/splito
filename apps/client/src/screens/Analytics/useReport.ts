@@ -227,6 +227,9 @@ export function useReport() {
             b.key,
             isMultiYear ? {month: 'short', year: '2-digit'} : {month: 'short'},
           ),
+          ...(isMultiYear
+            ? {}
+            : {axisLabelNarrow: date(b.key, {month: 'narrow'})}),
           label: date(b.key, {month: 'long', year: 'numeric'}),
         }
       case 'year':

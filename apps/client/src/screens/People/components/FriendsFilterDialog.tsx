@@ -89,7 +89,7 @@ function Form({
               </Trans>
             </Text>
           </View>
-          <Toggle.Platform />
+          <Toggle.Switch />
         </Toggle.Item>
 
         {currencies.length > 1 && (
@@ -149,9 +149,8 @@ export function Choices<V extends string>({
   const t = useTheme()
   return (
     <View style={[a.gap_sm]}>
-      <Text style={[a.text_sm, a.font_semi_bold, t.atoms.text_contrast_medium]}>
-        {title}
-      </Text>
+      {/* One section-label style for every block of the sheet, Include groups included. */}
+      <Text style={[a.text_md, a.font_semi_bold, a.leading_snug]}>{title}</Text>
       <View
         role="radiogroup"
         accessibilityLabel={title}

@@ -21,6 +21,7 @@ import {Text} from '#/components/Typography'
 import {useShouldReduceMotion} from '#/motion/useShouldReduceMotion'
 
 const ICON = 36
+const GAP = 4
 const EASE = Easing.out(Easing.cubic)
 
 /**
@@ -28,12 +29,14 @@ const EASE = Easing.out(Easing.cubic)
  * right (owner: "search icon only, expands once I click"). The search icon
  * grows into Bluesky's `SearchInput` across the row (width and opacity on
  * the UI thread; instant under reduced motion), focused, with a cross that
- * clears and collapses it. The filter button carries a dot while filters
- * differ from the defaults.
+ * clears and collapses it. The filter button stays beside the field, so
+ * search and filters combine, and a "2 of 6" line answers each query. The
+ * filter button carries a dot while filters differ from the defaults.
  */
 export function ListToolsHeader({
   title,
   count,
+  total,
   titleTestID,
   query,
   onQueryChange,
@@ -43,6 +46,8 @@ export function ListToolsHeader({
 }: {
   title: string
   count: number | undefined
+  /** Rows before search, for the "2 of 6" readout while searching. */
+  total?: number
   titleTestID?: string
   query: string
   onQueryChange: (query: string) => void
@@ -80,25 +85,35 @@ export function ListToolsHeader({
 
   return (
     <View
-      onLayout={e => setRowWidth(e.nativeEvent.layout.width - 32)}
+      onLayout={e => setRowWidth(e.nativeEvent.layout.width - 32 - ICON - GAP)}
       style={[a.px_lg, a.pt_md, a.pb_sm, a.justify_center, {minHeight: 60}]}>
-      <Animated.View
-        pointerEvents={isSearching ? 'none' : 'auto'}
-        aria-hidden={isSearching}
-        style={[a.flex_row, a.align_center, a.justify_between, restStyle]}>
-        <Text
-          testID={titleTestID}
-          style={[a.text_lg, a.font_bold, a.leading_snug]}>
-          {title}
-          {count !== undefined && (
-            <Text
-              style={[a.text_lg, a.font_normal, t.atoms.text_contrast_medium]}>
-              {'  '}
-              {count}
-            </Text>
-          )}
-        </Text>
-        <View style={[a.flex_row, a.align_center, a.gap_xs]}>
+      <View style={[a.flex_row, a.align_center, {gap: GAP}]}>
+        <Animated.View
+          pointerEvents={isSearching ? 'none' : 'auto'}
+          aria-hidden={isSearching}
+          style={[
+            a.flex_1,
+            a.flex_row,
+            a.align_center,
+            a.justify_between,
+            restStyle,
+          ]}>
+          <Text
+            testID={titleTestID}
+            style={[a.text_lg, a.font_bold, a.leading_snug]}>
+            {title}
+            {count !== undefined && (
+              <Text
+                style={[
+                  a.text_lg,
+                  a.font_normal,
+                  t.atoms.text_contrast_medium,
+                ]}>
+                {'  '}
+                {count}
+              </Text>
+            )}
+          </Text>
           <Button
             testID="list-search"
             label={searchLabel}
@@ -110,51 +125,51 @@ export function ListToolsHeader({
             onPress={() => setIsSearching(true)}>
             <ButtonIcon icon={SearchIcon} size="md" />
           </Button>
-          <Button
-            testID="list-filters"
-            label={
-              activeFilterCount > 0
-                ? l`Filters, ${activeFilterCount} on`
-                : l`Filters`
-            }
-            size="small"
-            variant="ghost"
-            color="secondary"
-            shape="round"
-            hitSlop={HITSLOP_10}
-            style={[a.overflow_visible]}
-            onPress={onFiltersPress}>
-            <ButtonIcon icon={FilterIcon} size="md" />
-            {activeFilterCount > 0 && (
-              <Animated.View
-                testID="list-filters-dot"
-                entering={shouldReduceMotion ? undefined : ZoomIn.springify()}
-                exiting={shouldReduceMotion ? undefined : ZoomOut}
-                style={[
-                  a.absolute,
-                  a.rounded_full,
-                  {
-                    top: 5,
-                    right: 5,
-                    width: 9,
-                    height: 9,
-                    borderWidth: 1.5,
-                    borderColor: t.atoms.bg.backgroundColor,
-                    backgroundColor: t.palette.primary_500,
-                  },
-                ]}
-              />
-            )}
-          </Button>
-        </View>
-      </Animated.View>
+        </Animated.View>
+        <Button
+          testID="list-filters"
+          label={
+            activeFilterCount > 0
+              ? l`Filters, ${activeFilterCount} on`
+              : l`Filters`
+          }
+          size="small"
+          variant="ghost"
+          color="secondary"
+          shape="round"
+          hitSlop={HITSLOP_10}
+          style={[a.overflow_visible]}
+          onPress={onFiltersPress}>
+          <ButtonIcon icon={FilterIcon} size="md" />
+          {activeFilterCount > 0 && (
+            <Animated.View
+              testID="list-filters-dot"
+              entering={shouldReduceMotion ? undefined : ZoomIn.springify()}
+              exiting={shouldReduceMotion ? undefined : ZoomOut}
+              style={[
+                a.absolute,
+                a.rounded_full,
+                {
+                  top: 5,
+                  right: 5,
+                  width: 9,
+                  height: 9,
+                  borderWidth: 1.5,
+                  borderColor: t.atoms.bg.backgroundColor,
+                  backgroundColor: t.palette.primary_500,
+                },
+              ]}
+            />
+          )}
+        </Button>
+      </View>
       {isSearching && (
         /* Grows leftwards from the search icon's spot to the full row. */
         <Animated.View
           style={[
             a.absolute,
             a.justify_center,
-            {right: 16, top: 12, bottom: 8},
+            {right: 16 + ICON + GAP, top: 8, height: 44},
             fieldStyle,
           ]}>
           <SearchInput
@@ -172,6 +187,19 @@ export function ListToolsHeader({
             }}
           />
         </Animated.View>
+      )}
+      {isSearching && query.trim() !== '' && total !== undefined && (
+        <Text
+          testID="list-search-count"
+          aria-live="polite"
+          style={[
+            a.pt_sm,
+            a.text_sm,
+            a.leading_snug,
+            t.atoms.text_contrast_medium,
+          ]}>
+          {l`${count ?? 0} of ${total}`}
+        </Text>
       )}
     </View>
   )

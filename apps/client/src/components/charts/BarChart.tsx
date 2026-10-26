@@ -6,7 +6,7 @@ import Animated, {
   useSharedValue,
   withTiming,
 } from 'react-native-reanimated'
-import Svg, {Circle, Path} from 'react-native-svg'
+import Svg, {Path} from 'react-native-svg'
 import {axisTicks, formatAmount, ZERO} from '@splito/domain'
 
 import {atoms as a, useTheme} from '#/alf'
@@ -25,6 +25,8 @@ import {useShouldReduceMotion} from '#/motion/useShouldReduceMotion'
 /** Thin marks: never wider than this, whatever the slot. */
 const MAX_BAR = 24
 const RADIUS = 4
+/** A non-zero bucket never draws thinner than this, so small months stay visible. */
+const MIN_BAR_HEIGHT = 4
 
 /** A bar with a rounded data end and a square foot on the baseline. */
 function barPath(x: number, w: number, top: number, base: number) {
@@ -104,22 +106,12 @@ export function BarChart({
   const activeIndex = points.findIndex(p => p.key === activeKey)
   const active = points[activeIndex]
   const hasSelection = selectedKey !== undefined
-  /* Today's bucket gets a small dot under its bar (and a tinted label), so "now" reads at a glance. */
-  const currentIndex = points.findIndex(p => p.isCurrent)
 
   return (
     <View testID={testID} style={[a.w_full, {height}]} onLayout={onLayout}>
       {width > 0 && (
         <>
           <Svg width={width} height={height} style={a.absolute}>
-            {currentIndex >= 0 && (
-              <Circle
-                cx={cx(currentIndex)}
-                cy={bottom + 4}
-                r={2}
-                fill={t.palette.primary_500}
-              />
-            )}
             <Grid ticks={ticks} width={width} gutter={gutter} y={y} />
           </Svg>
           <Animated.View
@@ -133,7 +125,14 @@ export function BarChart({
               {points.map((p, i) => (
                 <Path
                   key={p.key}
-                  d={barPath(cx(i) - barW / 2, barW, y(p.value), y(ZERO))}
+                  d={barPath(
+                    cx(i) - barW / 2,
+                    barW,
+                    p.value > ZERO
+                      ? Math.min(y(p.value), y(ZERO) - MIN_BAR_HEIGHT)
+                      : y(p.value),
+                    y(ZERO),
+                  )}
                   fill={t.palette.primary_500}
                   opacity={
                     hasSelection && p.key !== selectedKey

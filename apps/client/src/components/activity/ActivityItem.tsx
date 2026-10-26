@@ -83,7 +83,7 @@ type BadgeTone = 'primary' | 'negative' | 'neutral'
 /**
  * The background of a row, faintly tinted while unread; the accent bar on
  * the row's edge carries the state. Light themes use `primary_25`; dark
- * themes mix 12% of the
+ * themes mix 6% of the
  * accent into the page colour, as the inverted palette's tints read too
  * strong there. Opaque, so the avatar badge's ring can take it.
  */
@@ -94,7 +94,8 @@ export function useRowBackgroundColor(isRead: boolean) {
   const bg = hexToRgb(String(t.atoms.bg.backgroundColor))
   const tint = hexToRgb(t.palette.primary_500)
   if (!bg || !tint) return t.palette.primary_25
-  const mix = (x: number, y: number) => x + (y - x) * 0.12
+  /* 6%: enough to read as unread on Dim and Black without turning the row navy. */
+  const mix = (x: number, y: number) => x + (y - x) * 0.06
   return rgbToHex(mix(bg.r, tint.r), mix(bg.g, tint.g), mix(bg.b, tint.b))
 }
 
@@ -256,7 +257,7 @@ export function ActivityItem({
             a.px_lg,
             rowPadding,
             {backgroundColor},
-            IS_WEB && {paddingRight: actionsInset},
+            {paddingRight: IS_WEB ? actionsInset : ACTIONS_RIGHT + ACTION_BUTTON_SIZE + 4},
           ]}>
           <SubtleHover hover={isHovered} />
           <Avatar
@@ -293,59 +294,65 @@ export function ActivityItem({
             />
           )}
         </Pressable>
-        {IS_WEB ? (
-          <View
-            testID="activity-actions"
-            style={[
-              a.absolute,
-              a.flex_row,
-              a.align_center,
-              a.gap_xs,
-              // On the headline's line, so a long row never stacks them oddly.
-              {top: rowPaddingTop - 6, right: ACTIONS_RIGHT},
-              {opacity: isShowingActions ? 1 : 0},
-              a.transition_opacity,
-            ]}>
-            {webQuickActions.map(action => {
+        {/*
+         * The "..." is always there, on every platform, so the row's actions
+         * are discoverable; on web with a mouse the quick actions join it on
+         * hover or focus.
+         */}
+        <View
+          testID="activity-actions"
+          style={[
+            a.absolute,
+            a.flex_row,
+            a.align_center,
+            a.gap_xs,
+            // On the headline's line, so a long row never stacks them oddly.
+            {top: rowPaddingTop - 6, right: ACTIONS_RIGHT},
+          ]}>
+          {IS_WEB &&
+            webQuickActions.map(action => {
               const {label, icon} = actions.info(action, isRead)
               return (
-                <Button
+                <View
                   key={action}
-                  testID={`activity-action-${action}`}
-                  label={label}
-                  size="small"
-                  shape="round"
-                  variant="ghost"
-                  color="secondary"
-                  // Blends into the unread tint; hover still highlights it.
-                  style={a.bg_transparent}
-                  onPress={() => run(action)}>
-                  <ButtonIcon icon={icon} />
-                </Button>
-              )
-            })}
-            <Menu.Root control={menuControl}>
-              <Menu.Trigger label={l`More actions`}>
-                {({props}) => (
+                  style={[
+                    {opacity: isShowingActions ? 1 : 0},
+                    a.transition_opacity,
+                  ]}>
                   <Button
-                    testID="activity-menu"
-                    label={props.accessibilityLabel}
-                    {...props}
+                    testID={`activity-action-${action}`}
+                    label={label}
                     size="small"
                     shape="round"
                     variant="ghost"
                     color="secondary"
-                    style={a.bg_transparent}>
-                    <ButtonIcon icon={DotsIcon} />
+                    // Blends into the unread tint; hover still highlights it.
+                    style={a.bg_transparent}
+                    onPress={() => run(action)}>
+                    <ButtonIcon icon={icon} />
                   </Button>
-                )}
-              </Menu.Trigger>
-              {menu}
-            </Menu.Root>
-          </View>
-        ) : (
-          <Menu.Root control={menuControl}>{menu}</Menu.Root>
-        )}
+                </View>
+              )
+            })}
+          <Menu.Root control={menuControl}>
+            <Menu.Trigger label={l`More actions`}>
+              {({props}) => (
+                <Button
+                  testID="activity-menu"
+                  label={props.accessibilityLabel}
+                  {...props}
+                  size="small"
+                  shape="round"
+                  variant="ghost"
+                  color="secondary"
+                  style={a.bg_transparent}>
+                  <ButtonIcon icon={DotsIcon} />
+                </Button>
+              )}
+            </Menu.Trigger>
+            {menu}
+          </Menu.Root>
+        </View>
       </View>
     </GestureActionView>
   )
