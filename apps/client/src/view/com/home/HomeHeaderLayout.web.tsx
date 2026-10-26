@@ -4,6 +4,7 @@ import {type JSX} from 'react'
 import {useShellHeaderLayout} from '#/state/shell/shell-layout'
 import {HomeHeaderLayoutMobile} from '#/view/com/home/HomeHeaderLayoutMobile'
 import {atoms as a, useBreakpoints, useTheme} from '#/alf'
+import {HeaderAvatar} from '#/components/HeaderAvatar'
 import * as Layout from '#/components/Layout'
 
 export function HomeHeaderLayout(props: {
@@ -20,8 +21,8 @@ export function HomeHeaderLayout(props: {
 
 /*
  * Bluesky's desktop home header is the centred logo above the feed tabs.
- * Splito's logo already heads the sidebar (owner directive), so only the
- * sticky slot for the tabs remains.
+ * Splito's logo already heads the sidebar, so the row holds only the account
+ * avatar at its right (owner directive), then the sticky slot for the tabs.
  */
 function HomeHeaderLayoutDesktopAndTablet({
   children,
@@ -35,6 +36,11 @@ function HomeHeaderLayoutDesktopAndTablet({
 
   return (
     <>
+      {/* Bordered like every other page's header, so the bar and avatar hold still across tabs. */}
+      <Layout.Header.Outer>
+        <Layout.Header.Content />
+        <HeaderAvatar />
+      </Layout.Header.Outer>
       {tabBarAnchor}
       {children ? (
         <Layout.Center

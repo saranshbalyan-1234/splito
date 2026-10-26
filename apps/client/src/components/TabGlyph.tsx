@@ -1,9 +1,7 @@
-import {StyleSheet, View} from 'react-native'
+import {StyleSheet} from 'react-native'
 import {msg} from '@lingui/core/macro'
 import {type TabId} from '@splito/sync'
 
-import {useMe} from '#/data/hooks'
-import {UserAvatar} from '#/view/com/util/UserAvatar'
 import {styles} from '#/view/shell/bottom-bar/BottomBarStyles'
 import {useTheme} from '#/alf'
 import {
@@ -30,12 +28,11 @@ export const TAB_LABELS = {
   groups: msg`Groups`,
   analytics: msg`Analytics`,
   activity: msg`Activity`,
-  profile: msg`Profile`,
 } satisfies Record<TabId, unknown>
 
 /* Glyphs per tab, nudged as upstream nudges its bottom-bar glyphs. */
 const GLYPHS: Record<
-  Exclude<TabId, 'profile'>,
+  TabId,
   {
     icon: React.ComponentType<SVGIconProps>
     filled: React.ComponentType<SVGIconProps>
@@ -49,10 +46,7 @@ const GLYPHS: Record<
   activity: {icon: Bell, filled: BellFilled, widthAdjust: 0, style: styles.bellIcon},
 }
 
-/**
- * A bottom-bar tab's glyph, filled when active. Profile shows the avatar,
- * ringed when active, as Bluesky's bottom bar does.
- */
+/** A bottom-bar tab's glyph, filled when active. */
 export function TabGlyph({
   tab,
   isActive,
@@ -63,27 +57,6 @@ export function TabGlyph({
   size: number
 }) {
   const t = useTheme()
-  const me = useMe()
-
-  if (tab === 'profile') {
-    return (
-      <View style={styles.ctrlIconSizingWrapper}>
-        <View
-          style={[
-            styles.ctrlIcon,
-            styles.profileIcon,
-            isActive && [styles.onProfile, {borderColor: t.atoms.text.color}],
-          ]}>
-          <UserAvatar
-            name={me?.data.name}
-            size={size - (isActive ? 3 : 2)}
-            type="user"
-          />
-        </View>
-      </View>
-    )
-  }
-
   const glyph = GLYPHS[tab]
   const Icon = isActive ? glyph.filled : glyph.icon
   return (

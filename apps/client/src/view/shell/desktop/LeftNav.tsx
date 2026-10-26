@@ -15,14 +15,10 @@ import {
 } from '#/lib/routes/helpers'
 import {TAB_ROUTE, tabHref, useTabs} from '#/lib/routes/tabs'
 import {type NavigationProp, type TabParams} from '#/lib/routes/types'
-import {useA11y} from '#/state/a11y'
-import {useMe} from '#/data/hooks'
 import {Link} from '#/view/com/util/Link'
 import {PressableWithHover} from '#/view/com/util/PressableWithHover'
-import {UserAvatar} from '#/view/com/util/UserAvatar'
 import {
   atoms as a,
-  tokens,
   useBreakpoints,
   useLayoutBreakpoints,
   useTheme,
@@ -38,9 +34,7 @@ import {
   ChartPie_Filled_Corner0_Rounded as ChartPieFilledIcon,
   ChartPie_Stroke2_Corner0_Rounded as ChartPieIcon,
 } from '#/components/icons/ChartPie'
-import {Cloud_Stroke2_Corner0_Rounded as CloudIcon} from '#/components/icons/Cloud'
 import {type Props as SVGIconProps} from '#/components/icons/common'
-import {DotGrid3x1_Stroke2_Corner0_Rounded as EllipsisIcon} from '#/components/icons/DotGrid'
 import {
   Group3_Filled_Corner0_Rounded as GroupFilledIcon,
   Group3_Stroke2_Corner0_Rounded as GroupIcon,
@@ -54,11 +48,6 @@ import {
   SettingsGear2_Filled_Corner0_Rounded as SettingsFilledIcon,
   SettingsGear2_Stroke2_Corner0_Rounded as SettingsIcon,
 } from '#/components/icons/Settings'
-import {
-  UserCircle_Filled_Corner0_Rounded as UserCircleFilledIcon,
-  UserCircle_Stroke2_Corner0_Rounded as UserCircleIcon,
-} from '#/components/icons/UserCircle'
-import * as Menu from '#/components/Menu'
 import {Text} from '#/components/Typography'
 import {useAnalytics} from '#/analytics'
 import {IS_NATIVE} from '#/env'
@@ -124,143 +113,6 @@ function LogoCard({minimal}: {minimal: boolean}) {
         ]}>
         <LogoMark size={34} />
       </Link>
-    </View>
-  )
-}
-
-/*
- * Bluesky's signed-in account card (avatar; name and handle fade in on
- * hover; the menu switches accounts). Splito is local-only until sync ships,
- * so the card shows the local profile and the menu says so honestly. Bluesky
- * puts it at the top of the nav; here it sits at the bottom, because the
- * logo heads the sidebar.
- */
-function AccountCard({minimal}: {minimal: boolean}) {
-  const {t: l} = useLingui()
-  const t = useTheme()
-  const me = useMe()
-  const navigation = useNavigation<NavigationProp>()
-  const {reduceMotionEnabled} = useA11y()
-  const name = me?.data.name ?? ''
-
-  return (
-    <View style={[a.pt_lg, !minimal && [a.w_full, a.align_start]]}>
-      <Menu.Root>
-        <Menu.Trigger label={l`Account`}>
-          {({props, state, control}) => {
-            const active = state.hovered || state.focused || control.isOpen
-            return (
-              <Button
-                testID="sidebar-account"
-                label={props.accessibilityLabel}
-                {...props}
-                style={[
-                  a.w_full,
-                  a.transition_color,
-                  active ? t.atoms.bg_contrast_25 : a.transition_delay_50ms,
-                  a.rounded_full,
-                  a.justify_between,
-                  a.align_center,
-                  a.flex_row,
-                  {gap: 6},
-                  !minimal && [a.pl_lg, a.pr_md],
-                ]}>
-                <View
-                  style={[
-                    !reduceMotionEnabled && [
-                      a.transition_transform,
-                      {transitionDuration: '250ms'},
-                      !active && a.transition_delay_50ms,
-                    ],
-                    a.relative,
-                    a.z_10,
-                    active && {
-                      transform: [
-                        {scale: !minimal ? 2 / 3 : 0.8},
-                        {translateX: !minimal ? -22 : 0},
-                      ],
-                    },
-                  ]}>
-                  <UserAvatar
-                    name={name}
-                    size={LARGE_ELEMENT_SIZE}
-                    type="user"
-                  />
-                </View>
-                {!minimal && (
-                  <>
-                    <View
-                      style={[
-                        a.flex_1,
-                        a.transition_opacity,
-                        !active && a.transition_delay_50ms,
-                        {
-                          marginLeft: tokens.space.xl * -1,
-                          opacity: active ? 1 : 0,
-                        },
-                      ]}>
-                      <Text
-                        emoji
-                        style={[a.font_bold, a.text_sm, a.leading_snug]}
-                        numberOfLines={1}>
-                        {name}
-                      </Text>
-                      <Text
-                        style={[
-                          a.text_xs,
-                          a.leading_snug,
-                          t.atoms.text_contrast_medium,
-                        ]}
-                        numberOfLines={1}>
-                        <Trans>On this device</Trans>
-                      </Text>
-                    </View>
-                    <EllipsisIcon
-                      aria-hidden={true}
-                      style={[
-                        t.atoms.text_contrast_medium,
-                        a.transition_opacity,
-                        {opacity: active ? 1 : 0},
-                      ]}
-                      size="sm"
-                    />
-                  </>
-                )}
-              </Button>
-            )
-          }}
-        </Menu.Trigger>
-        <Menu.Outer>
-          <Menu.Group>
-            <Menu.Item
-              label={l`Go to profile`}
-              onPress={() => navigation.navigate('Profile')}>
-              <Menu.ItemIcon icon={UserCircleIcon} />
-              <Menu.ItemText>
-                <Trans>Go to profile</Trans>
-              </Menu.ItemText>
-            </Menu.Item>
-            <Menu.Item
-              label={l`Settings`}
-              onPress={() => navigation.navigate('Settings')}>
-              <Menu.ItemIcon icon={SettingsIcon} />
-              <Menu.ItemText>
-                <Trans>Settings</Trans>
-              </Menu.ItemText>
-            </Menu.Item>
-          </Menu.Group>
-          <Menu.Divider />
-          <Menu.Item
-            label={l`Sign in - available with sync`}
-            disabled
-            onPress={() => {}}>
-            <Menu.ItemIcon icon={CloudIcon} />
-            <Menu.ItemText>
-              <Trans>Sign in – coming with sync</Trans>
-            </Menu.ItemText>
-          </Menu.Item>
-        </Menu.Outer>
-      </Menu.Root>
     </View>
   )
 }
@@ -498,12 +350,9 @@ export function DesktopLeftNav({
       label: l`Activity`,
       icons: {inactive: BellIcon, active: BellFilledIcon},
     },
-    profile: {
-      label: l`Profile`,
-      icons: {inactive: UserCircleIcon, active: UserCircleFilledIcon},
-    },
   }
 
+  /* Bluesky's account card is gone: the account avatar sits at the top right of the content (owner directive). */
   const content = (
     <>
       <View style={[!leftNavMinimal && a.w_full, leftNavMinimal && a.align_center]}>
@@ -528,7 +377,6 @@ export function DesktopLeftNav({
         />
         <ComposeBtn minimal={leftNavMinimal} />
       </View>
-      <AccountCard minimal={leftNavMinimal} />
     </>
   )
 

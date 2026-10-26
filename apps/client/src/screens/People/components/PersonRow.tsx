@@ -1,4 +1,5 @@
 import {View} from 'react-native'
+import Animated from 'react-native-reanimated'
 import {Trans, useLingui} from '@lingui/react/macro'
 import {formatAmount, magnitude, type PersonSummary} from '@splito/domain'
 
@@ -9,6 +10,8 @@ import {BalanceText} from '#/components/BalanceText'
 import * as Pills from '#/components/Pills'
 import * as ProfileCard from '#/components/ProfileCard'
 import {Text} from '#/components/Typography'
+import {useListAnimations} from '#/motion/listAnimations'
+import {usePressScale} from '#/motion/PressableScale'
 
 export type PersonRowData = {
   id: string
@@ -35,19 +38,34 @@ export function PersonRow({
   const t = useTheme()
   const {t: l} = useLingui()
   const {gtMobile} = useBreakpoints()
+  const listAnimations = useListAnimations()
+  const press = usePressScale()
   const byCurrency = row.summary?.byCurrency ?? {}
   const currencies = Object.keys(byCurrency)
-    .filter(c => byCurrency[c]!.total !== 0n || Object.keys(byCurrency[c]!.groups).length > 0)
+    .filter(
+      c =>
+        byCurrency[c]!.total !== 0n ||
+        Object.keys(byCurrency[c]!.groups).length > 0,
+    )
     .sort()
 
   const chips = currencies.flatMap(currency => {
     const c = byCurrency[currency]!
     const groups = Object.entries(c.groups)
       .filter(([, v]) => v !== 0n)
-      .map(([groupId, v]) => ({key: `${currency}-${groupId}`, name: groupNames.get(groupId) ?? l`Group`, v}))
+      .map(([groupId, v]) => ({
+        key: `${currency}-${groupId}`,
+        name: groupNames.get(groupId) ?? l`Group`,
+        v,
+      }))
       .sort((x, y) => x.name.localeCompare(y.name))
     if (groups.length === 0) return []
-    return [...(c.direct !== 0n ? [{key: `${currency}-direct`, name: l`Direct`, v: c.direct}] : []), ...groups].map(chip => ({
+    return [
+      ...(c.direct !== 0n
+        ? [{key: `${currency}-direct`, name: l`Direct`, v: c.direct}]
+        : []),
+      ...groups,
+    ].map(chip => ({
       ...chip,
       currency,
     }))
@@ -77,54 +95,81 @@ export function PersonRow({
     </View>
   )
 
+  /* The row content shrinks on press; the separator stays put. */
   return (
-    <Link
-      testID={`person-${row.name}`}
-      href={`/people/${row.id}`}
-      asAnchor
-      anchorNoUnderline
-      accessibilityLabel={row.name}
-      accessibilityHint=""
-      hoverStyle={t.atoms.bg_contrast_25}
-      style={[a.px_lg, a.py_md, a.border_t, t.atoms.border_contrast_low, a.transition_color]}>
-      <View style={[a.flex_row, a.align_center, a.gap_md]}>
-        <UserAvatar size={AVATAR_SIZE} name={row.name} type="user" />
-        <View style={[a.flex_1, a.gap_2xs]}>
-          {/* Phones: the balance shares the name's line so the chips get the full width. */}
-          <View style={[a.flex_row, a.align_center, a.justify_between, a.gap_md]}>
-            <View style={[a.flex_1]}>
-              <ProfileCard.Name profile={row} />
+    <Animated.View {...listAnimations}>
+      <Link
+        testID={`person-${row.name}`}
+        onPressIn={press.onPressIn}
+        onPressOut={press.onPressOut}
+        href={`/people/${row.id}`}
+        asAnchor
+        anchorNoUnderline
+        accessibilityLabel={row.name}
+        accessibilityHint=""
+        hoverStyle={t.atoms.bg_contrast_25}
+        style={[
+          a.px_lg,
+          a.py_md,
+          a.border_t,
+          t.atoms.border_contrast_low,
+          a.transition_color,
+        ]}>
+        <Animated.View
+          style={[a.flex_row, a.align_center, a.gap_md, press.style]}>
+          <UserAvatar size={AVATAR_SIZE} name={row.name} type="user" />
+          <View style={[a.flex_1, a.gap_2xs]}>
+            {/* Phones: the balance shares the name's line so the chips get the full width. */}
+            <View
+              style={[a.flex_row, a.align_center, a.justify_between, a.gap_md]}>
+              <View style={[a.flex_1]}>
+                <ProfileCard.Name profile={row} />
+              </View>
+              {!gtMobile && balances}
             </View>
-            {!gtMobile && balances}
+            {chips.length > 0 ? (
+              <Pills.Row style={[a.pt_2xs]}>
+                {chips.map(chip => (
+                  <Pills.Tag key={chip.key}>
+                    {chip.name}{' '}
+                    <Text
+                      style={[
+                        a.text_xs,
+                        a.font_semi_bold,
+                        {
+                          color:
+                            chip.v > 0n
+                              ? t.palette.positive_600
+                              : t.palette.negative_500,
+                          fontVariant: ['tabular-nums'],
+                        },
+                      ]}>
+                      {(chip.v > 0n ? '+' : '−') +
+                        formatAmount(magnitude(chip.v), chip.currency, locale)}
+                    </Text>
+                  </Pills.Tag>
+                ))}
+              </Pills.Row>
+            ) : (
+              <Text
+                numberOfLines={1}
+                style={[
+                  a.text_sm,
+                  a.leading_snug,
+                  t.atoms.text_contrast_medium,
+                ]}>
+                {isSettled ? (
+                  <Trans>No open balances</Trans>
+                ) : (
+                  <Trans>Direct expenses</Trans>
+                )}
+              </Text>
+            )}
           </View>
-          {chips.length > 0 ? (
-            <Pills.Row style={[a.pt_2xs]}>
-              {chips.map(chip => (
-                <Pills.Tag key={chip.key}>
-                  {chip.name}{' '}
-                  <Text
-                    style={[
-                      a.text_xs,
-                      a.font_semi_bold,
-                      {
-                        color: chip.v > 0n ? t.palette.positive_600 : t.palette.negative_500,
-                        fontVariant: ['tabular-nums'],
-                      },
-                    ]}>
-                    {(chip.v > 0n ? '+' : '−') + formatAmount(magnitude(chip.v), chip.currency, locale)}
-                  </Text>
-                </Pills.Tag>
-              ))}
-            </Pills.Row>
-          ) : (
-            <Text numberOfLines={1} style={[a.text_sm, a.leading_snug, t.atoms.text_contrast_medium]}>
-              {isSettled ? <Trans>No open balances</Trans> : <Trans>Direct expenses</Trans>}
-            </Text>
-          )}
-        </View>
-        {gtMobile && balances}
-      </View>
-    </Link>
+          {gtMobile && balances}
+        </Animated.View>
+      </Link>
+    </Animated.View>
   )
 }
 
@@ -137,7 +182,13 @@ export function PersonRowPlaceholder() {
         <ProfileCard.AvatarPlaceholder size={AVATAR_SIZE} />
         <ProfileCard.NameAndHandlePlaceholder />
         <View style={[a.align_end, {width: 120}]}>
-          <View style={[a.rounded_sm, t.atoms.bg_contrast_50, {height: 12, width: 100}]} />
+          <View
+            style={[
+              a.rounded_sm,
+              t.atoms.bg_contrast_50,
+              {height: 12, width: 100},
+            ]}
+          />
         </View>
       </View>
     </View>

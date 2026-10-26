@@ -8,7 +8,6 @@ const TABS: RouteName[] = [
   'Groups',
   'Analytics',
   'Activity',
-  'Profile',
 ] satisfies (keyof TabParams)[]
 
 function pathsFor(names: RouteName[]) {

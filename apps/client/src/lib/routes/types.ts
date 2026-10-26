@@ -10,12 +10,13 @@ export type TabParams = {
   Groups: undefined
   Analytics: undefined
   Activity: undefined
-  Profile: undefined
 }
 
 /** Every route in the owner's route table (paths live in `#/routes` and `#/navigation/linking`). */
 export type RootStackParams = {
   Tabs: undefined
+  /** Opened from the header avatar menu, so it is pushed like Settings. */
+  Profile: undefined
   Settings: undefined
   SettingsSection: {section: string}
   Person: {personId: string}

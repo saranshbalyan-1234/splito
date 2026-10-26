@@ -11,7 +11,7 @@ Pinned sources:
 
 | Upstream path | Destination | Modification | License |
 |---|---|---|---|
-| bluesky-social/social-app@4e4ad9c `src/lib/custom-animations/PressableScale.tsx` | `apps/client/src/motion/PressableScale.tsx` | Reduced motion comes from `useShouldReduceMotion` (the OS setting plus the Animations preference) instead of Reanimated's `useReducedMotion`. Behaviour (0.98 scale on touch, 100 ms timing) is unchanged. | MIT |
+| bluesky-social/social-app@4e4ad9c `src/lib/custom-animations/PressableScale.tsx` | `apps/client/src/motion/PressableScale.tsx` | Reduced motion comes from `useShouldReduceMotion` (the OS setting plus the Animations preference) instead of Reanimated's `useReducedMotion`. Behaviour (0.98 scale on touch, 100 ms timing) is unchanged. `usePressScale` exposes the same shrink for rows and cards that are already `Link`s. Replaces the shell's copy at `src/lib/custom-animations/PressableScale.tsx`. | MIT |
 | Expensify/App@a60491f `src/components/Lottie/index.tsx` | `apps/client/src/motion/Illustration/index.tsx` | Kept from Expensify: pause on navigation `blur` and resume on `focus`; an empty box of the same size when the animation fails; no autoplay under reduce motion. Added: a fixed `staticFrame` under reduce motion. Dropped: splash state, app state, network, interaction and side-modal gating, which Splito does not have. | MIT |
 | Expensify/App@a60491f `src/components/Lottie/index.tsx` | `apps/client/src/motion/Illustration/index.web.tsx` | Same behaviour as the native file, but it renders with `lottie-web` (light SVG build) instead of lottie-react-native's dotLottie web player, which loads its WASM from a CDN and so breaks the offline PWA. Adds `data-testid` and `data-static`. | MIT |
 

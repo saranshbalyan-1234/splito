@@ -7,7 +7,7 @@ import {useLingui} from '@lingui/react'
 import {type BottomTabBarProps} from '@react-navigation/bottom-tabs'
 import {StackActions} from '@react-navigation/native'
 
-import {PressableScale} from '#/lib/custom-animations/PressableScale'
+import {PressableScale} from '#/motion/PressableScale'
 import {useDedupe} from '#/lib/hooks/useDedupe'
 import {useMinimalShellFooterTransform} from '#/lib/hooks/useMinimalShellTransform'
 import {useNavigationTabState} from '#/lib/hooks/useNavigationTabState'
@@ -44,7 +44,6 @@ export function BottomBar({navigation}: BottomTabBarProps) {
     Groups: tabState.isAtGroups,
     Analytics: tabState.isAtAnalytics,
     Activity: tabState.isAtActivity,
-    Profile: tabState.isAtProfile,
   }
 
   const onPressTab = useCallback(

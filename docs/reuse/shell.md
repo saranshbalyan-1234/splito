@@ -7,7 +7,7 @@ glyphs, illustrations, logos or `assets/images` are copied.
 
 | Splito file | Upstream file | Splito changes |
 |---|---|---|
-| `src/view/shell/desktop/LeftNav.tsx` | `src/view/shell/desktop/LeftNav.tsx` | Pinned to the window's left edge (no centred column); Splito logo on top; tab items from the `tabs` preference plus Settings; "New post" pill labelled Add expense; account card moved to the bottom with a local-only menu |
+| `src/view/shell/desktop/LeftNav.tsx` | `src/view/shell/desktop/LeftNav.tsx` | Pinned to the window's left edge (no centred column); Splito logo on top; tab items from the `tabs` preference plus Settings; "New post" pill labelled Add expense; account card removed (the account avatar moved to the top right of the content, see `HeaderAvatar`) |
 | `src/view/shell/desktop/composeButtonLayout.ts` | `src/view/shell/desktop/composeButtonLayout.ts` | - |
 | `src/view/shell/bottom-bar/BottomBar.tsx` | `src/view/shell/bottom-bar/BottomBar.tsx` | Splito tabs from the `tabs` preference; no centre button; account switching, chat and badges removed |
 | `src/view/shell/bottom-bar/BottomBarWeb.tsx` | `src/view/shell/bottom-bar/BottomBarWeb.tsx` | As BottomBar |
@@ -36,7 +36,6 @@ glyphs, illustrations, logos or `assets/images` are copied.
 | `src/lib/hooks/useWebScrollRestoration.ts` | `src/lib/hooks/useWebScrollRestoration.ts` | - |
 | `src/lib/hooks/useWebScrollRestoration.native.ts` | `src/lib/hooks/useWebScrollRestoration.native.ts` | - |
 | `src/lib/hooks/useTimeAgo.ts` | `src/lib/hooks/useTimeAgo.ts` | - |
-| `src/lib/custom-animations/PressableScale.tsx` | `src/lib/custom-animations/PressableScale.tsx` | - |
 | `src/lib/numbers.ts` | `src/lib/numbers.ts` | - |
 | `src/lib/constants.ts` | `src/lib/constants.ts (subset)` | Subset |
 | `src/alf/breakpoints.ts` | `src/alf/breakpoints.ts` | Labels from 1000px, icon rail 800-999px; no right rail or centre offset |
@@ -51,13 +50,14 @@ glyphs, illustrations, logos or `assets/images` are copied.
 | `src/components/Fill.tsx` | `src/components/Fill.tsx` | - |
 | `src/components/MediaInsetBorder.tsx` | `src/components/MediaInsetBorder.tsx` | - |
 | `src/components/SubtleHover.tsx` | `src/components/SubtleHover.tsx` | - |
-| `src/screens/Profile.tsx` | `src/screens/Settings/Settings.tsx` | Profile tab: account block, Analytics / Settings / About rows, sign-in row marked "Coming with sync" |
+| `src/components/HeaderAvatar.tsx` | `src/view/shell/desktop/LeftNav.tsx (ProfileCard account menu)` | The account card's avatar and menu, moved to the top right of each top-level header (32px); menu: Profile, Settings, Analytics, light/dark theme shortcut (the `theme` preference) |
+| `src/screens/Profile.tsx` | `src/screens/Settings/Settings.tsx` | Profile page, opened from the header avatar menu (back button header): account block, Analytics / Settings / About rows, sign-in row marked "Coming with sync" |
 | `src/screens/Settings/components/SettingsList.tsx` | `src/screens/Settings/components/SettingsList.tsx` | `LinkItem` built on `#/view/com/util/Link` |
 | `src/view/com/home/HomeHeaderLayout.tsx` | `src/view/com/home/HomeHeaderLayout.tsx` | - |
-| `src/view/com/home/HomeHeaderLayout.web.tsx` | `src/view/com/home/HomeHeaderLayout.web.tsx` | Desktop drops the centred logo (the sidebar carries it) |
-| `src/view/com/home/HomeHeaderLayoutMobile.tsx` | `src/view/com/home/HomeHeaderLayoutMobile.tsx` | Drawer and feeds buttons removed |
-| `src/view/com/notifications/NotificationFeedItem.tsx` | `src/view/com/notifications/NotificationFeedItem.tsx` | Activity rows |
-| `src/view/com/util/EmptyState.tsx` | `src/view/com/util/EmptyState.tsx` | - |
+| `src/view/com/home/HomeHeaderLayout.web.tsx` | `src/view/com/home/HomeHeaderLayout.web.tsx` | Desktop drops the centred logo (the sidebar carries it); the row holds the account avatar at the right |
+| `src/view/com/home/HomeHeaderLayoutMobile.tsx` | `src/view/com/home/HomeHeaderLayoutMobile.tsx` | Drawer button removed; the feeds button's slot holds the account avatar |
+| `src/view/com/notifications/NotificationFeedItem.tsx` | `src/view/com/notifications/NotificationFeedItem.tsx` | Activity rows; list enter/exit animations; loading row adapted from `src/view/com/util/LoadingPlaceholder.tsx` (NotificationLoadingPlaceholder) with a neutral circle for its licensed glyph |
+| `src/view/com/util/EmptyState.tsx` | `src/view/com/util/EmptyState.tsx` | Optional animated `Illustration` in place of the icon |
 | `src/view/com/util/Link.tsx` | `src/view/com/util/Link.tsx` | App routes only |
 | `src/view/com/util/PressableWithHover.tsx` | `src/view/com/util/PressableWithHover.tsx` | - |
 | `src/view/com/util/TimeElapsed.tsx` | `src/view/com/util/TimeElapsed.tsx` | - |

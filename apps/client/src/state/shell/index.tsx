@@ -25,7 +25,7 @@ export function Provider({children}: React.PropsWithChildren<{}>) {
   )
 }
 
-/** Theme mode comes from the Splito `theme` preference, mirrored to device storage for first paint. */
+/** Theme mode comes from the Splito `theme` preference, mirrored to device storage for first paint (see App.tsx). */
 export function useThemePrefs() {
   const [colorMode = 'system'] = useStorage(device, ['colorMode'])
   return {colorMode, darkTheme: 'dark' as const}

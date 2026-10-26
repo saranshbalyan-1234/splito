@@ -10,7 +10,6 @@ export const TAB_ROUTE = {
   groups: 'Groups',
   analytics: 'Analytics',
   activity: 'Activity',
-  profile: 'Profile',
 } as const satisfies Record<TabId, keyof TabParams>
 
 /** Each tab's path. */
@@ -21,7 +20,7 @@ export function tabHref(tab: TabId) {
 /**
  * The tabs the bottom bar and sidebar show, in the user's order (the `tabs`
  * preference). Hidden tabs keep their routes, so links to them still work;
- * the preference always keeps Profile, which leads to Settings.
+ * Profile and Settings open from the header avatar on every tab.
  */
 export function useTabs(): TabId[] {
   const [tabs] = usePref('tabs')

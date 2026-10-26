@@ -5,7 +5,7 @@ import * as FocusGuards from '@radix-ui/react-focus-guards'
 import * as FocusScope from '@radix-ui/react-focus-scope'
 import {RemoveScrollBar} from 'react-remove-scroll-bar'
 
-import {useA11y} from '#/state/a11y'
+import {useShouldReduceMotion} from '#/motion/useShouldReduceMotion'
 import {atoms as a, flatten, useBreakpoints, useTheme} from '#/alf'
 import {Portal} from '#/components/Portal'
 
@@ -32,7 +32,7 @@ export function Outer({
 }) {
   const t = useTheme()
   const {gtMobile} = useBreakpoints()
-  const {reduceMotionEnabled} = useA11y()
+  const reduceMotionEnabled = useShouldReduceMotion()
 
   FocusGuards.useFocusGuards()
 

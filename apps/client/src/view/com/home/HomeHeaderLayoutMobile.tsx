@@ -3,18 +3,20 @@ import {View} from 'react-native'
 import Animated from 'react-native-reanimated'
 import {useLingui} from '@lingui/react/macro'
 
-import {PressableScale} from '#/lib/custom-animations/PressableScale'
+import {PressableScale} from '#/motion/PressableScale'
 import {useShellHeaderLayout} from '#/state/shell/shell-layout'
 import {atoms as a, useTheme} from '#/alf'
 import {LogoMark} from '#/components/brand/Logo'
+import {HeaderAvatar} from '#/components/HeaderAvatar'
 import * as Layout from '#/components/Layout'
 
 /*
  * Bluesky fixes this header to the top and slides it away on scroll (minimal
  * shell mode). Splito keeps navigation visible, so the header stays in flow
- * (Layout.Header.Outer is sticky on web). The drawer menu button and feeds
- * link are removed; their slots stay so the logo keeps its centre position.
- * The logo is the home link, inactive here because this header is on People.
+ * (Layout.Header.Outer is sticky on web). The drawer menu button is removed
+ * (its slot stays so the logo keeps its centre position) and the feeds link's
+ * slot on the right holds the account avatar (owner directive). The logo is
+ * the home link, inactive here because this header is on People.
  */
 export function HomeHeaderLayoutMobile({
   children,
@@ -43,7 +45,9 @@ export function HomeHeaderLayoutMobile({
           </PressableScale>
         </View>
 
-        <Layout.Header.Slot />
+        <Layout.Header.Slot>
+          <HeaderAvatar />
+        </Layout.Header.Slot>
       </Layout.Header.Outer>
       {children}
     </Animated.View>

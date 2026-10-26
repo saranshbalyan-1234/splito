@@ -1,6 +1,7 @@
 // Adapted from bluesky-social/social-app@4e4ad9c (MIT) - src/view/com/notifications/NotificationFeedItem.tsx
 import {memo} from 'react'
 import {StyleSheet, View} from 'react-native'
+import Animated from 'react-native-reanimated'
 import {Trans, useLingui} from '@lingui/react/macro'
 
 import {TimeElapsed} from '#/view/com/util/TimeElapsed'
@@ -12,7 +13,9 @@ import {Group3_Stroke2_Corner0_Rounded as GroupIcon} from '#/components/icons/Gr
 import {Pencil_Stroke2_Corner0_Rounded as EditedIcon} from '#/components/icons/Pencil'
 import {PersonPlus_Filled_Stroke2_Corner0_Rounded as PersonPlusIcon} from '#/components/icons/Person'
 import {Trash_Stroke2_Corner0_Rounded as TrashIcon} from '#/components/icons/Trash'
+import * as Skeleton from '#/components/Skeleton'
 import {Text} from '#/components/Typography'
+import {useListAnimations} from '#/motion/listAnimations'
 
 const MAX_AUTHORS = 5
 
@@ -52,6 +55,7 @@ let NotificationFeedItem = ({
 }): React.ReactNode => {
   const t = useTheme()
   const {t: l, i18n} = useLingui()
+  const listAnimations = useListAnimations()
   const timestamp = new Date(item.at).toISOString()
   const niceTimestamp = i18n.date(new Date(item.at), {
     dateStyle: 'medium',
@@ -128,7 +132,8 @@ let NotificationFeedItem = ({
   a11yLabel += ` · ${niceTimestamp}`
 
   return (
-    <View
+    <Animated.View
+      {...listAnimations}
       accessible={true}
       accessibilityLabel={a11yLabel}
       testID={`activityItem-${item.key}`}
@@ -177,17 +182,48 @@ let NotificationFeedItem = ({
           </TimeElapsed>
         </Text>
       </View>
-    </View>
+    </Animated.View>
   )
 }
 NotificationFeedItem = memo(NotificationFeedItem)
 export {NotificationFeedItem}
 
-function CondensedAuthorsList({
-  authors,
+/**
+ * Loading shape of one row. Adapted from upstream's
+ * NotificationLoadingPlaceholder (src/view/com/util/LoadingPlaceholder.tsx):
+ * same columns and bars, with a neutral circle in place of its licensed
+ * heart glyph, built from Bluesky's Skeleton blocks.
+ */
+export function NotificationFeedItemPlaceholder({
+  hideTopBorder = false,
 }: {
-  authors: ActivityItem['authors']
+  hideTopBorder?: boolean
 }) {
+  const t = useTheme()
+  return (
+    <View
+      style={[
+        a.flex_row,
+        {padding: 10},
+        a.pr_lg,
+        t.atoms.border_contrast_low,
+        !hideTopBorder && a.border_t,
+      ]}>
+      <View style={[styles.layoutIcon, a.pr_sm]}>
+        <Skeleton.Circle size={28} />
+      </View>
+      <View style={[a.flex_1, a.gap_sm]}>
+        <Skeleton.Circle size={35} />
+        <View>
+          <Skeleton.Text style={[a.text_md, {width: '90%'}]} />
+          <Skeleton.Text style={[a.text_md, {width: '70%'}]} />
+        </View>
+      </View>
+    </View>
+  )
+}
+
+function CondensedAuthorsList({authors}: {authors: ActivityItem['authors']}) {
   const t = useTheme()
 
   if (authors.length === 0) {

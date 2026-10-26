@@ -29,6 +29,8 @@ import {createNativeStackNavigatorWithAuth} from '#/view/shell/createNativeStack
 import {DesktopLeftNav, type SidebarTab} from '#/view/shell/desktop/LeftNav'
 import {type Theme, useBreakpoints, useTheme} from '#/alf'
 import {IS_ANDROID, IS_IPAD} from '#/env'
+import {usePref} from '#/data/hooks'
+import {useShouldReduceMotion} from '#/motion/useShouldReduceMotion'
 import {linking} from '#/navigation/linking'
 import {ActivityScreen} from '#/screens/Activity'
 import {AddExpenseScreen} from '#/screens/AddExpense'
@@ -135,7 +137,6 @@ function Tabs() {
       <Tab.Screen name="Groups" component={GroupsScreen} />
       <Tab.Screen name="Analytics" component={AnalyticsScreen} />
       <Tab.Screen name="Activity" component={ActivityScreen} />
-      <Tab.Screen name="Profile" component={ProfileScreen} />
     </Tab.Navigator>
   )
 }
@@ -146,9 +147,19 @@ function Tabs() {
  */
 export function TabsNavigator() {
   const t = useTheme()
+  const [motion] = usePref('motion')
+  const shouldReduceMotion = useShouldReduceMotion()
+  /* Reduced motion swaps pushes and sheets for a cross-fade, as iOS does; "Off" cuts them. */
+  const reducedAnimation =
+    motion === 'off' ? 'none' : shouldReduceMotion ? 'fade' : undefined
   return (
-    <Stack.Navigator screenOptions={screenOptions(t)}>
+    <Stack.Navigator
+      screenOptions={{
+        ...screenOptions(t),
+        ...(reducedAnimation && {animation: reducedAnimation}),
+      }}>
       <Stack.Screen name="Tabs" component={Tabs} />
+      <Stack.Screen name="Profile" component={ProfileScreen} />
       <Stack.Screen name="Settings" component={SettingsScreen} />
       <Stack.Screen name="SettingsSection" component={SettingsSectionScreen} />
       <Stack.Screen name="Person" component={PersonScreen} />
@@ -161,7 +172,11 @@ export function TabsNavigator() {
       <Stack.Screen
         name="AddExpense"
         component={AddExpenseScreen}
-        options={COMPOSER_NATIVE}
+        options={
+          reducedAnimation
+            ? {...COMPOSER_NATIVE, animation: reducedAnimation}
+            : COMPOSER_NATIVE
+        }
       />
     </Stack.Navigator>
   )

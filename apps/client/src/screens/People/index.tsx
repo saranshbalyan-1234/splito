@@ -1,4 +1,5 @@
 import {View} from 'react-native'
+import {LayoutAnimationConfig} from 'react-native-reanimated'
 import {Trans, useLingui} from '@lingui/react/macro'
 import {useNavigation} from '@react-navigation/native'
 import {balanceTotals, pairwiseBalances, personSummary} from '@splito/domain'
@@ -13,11 +14,9 @@ import {List} from '#/view/com/util/List'
 import {useBreakpoints} from '#/alf'
 import {AddExpenseFAB} from '#/components/AddExpenseFAB'
 import {Button, ButtonIcon, ButtonText} from '#/components/Button'
-import {
-  PersonPlus_Filled_Stroke2_Corner0_Rounded as PersonPlusIcon,
-  Person_Stroke2_Corner2_Rounded as PersonIcon,
-} from '#/components/icons/Person'
+import {PersonPlus_Filled_Stroke2_Corner0_Rounded as PersonPlusIcon} from '#/components/icons/Person'
 import * as Layout from '#/components/Layout'
+import {Shimmer} from '#/motion/Shimmer'
 import {
   BalanceSummary,
   BalanceSummaryPlaceholder,
@@ -74,47 +73,52 @@ export function PeopleScreen() {
     <Layout.Screen testID="screen-people">
       <HomeHeaderLayout tabBarAnchor={null}>{null}</HomeHeaderLayout>
       {isLoading ? (
-        <View>
+        <Shimmer testID="people-loading">
           <BalanceSummaryPlaceholder />
           <FriendsHeader count={undefined} />
           {Array.from({length: PLACEHOLDER_ROWS}, (_, i) => (
             <PersonRowPlaceholder key={i} />
           ))}
-        </View>
+        </Shimmer>
       ) : (
-        <List
-          data={rows}
-          keyExtractor={(row: PersonRowData) => row.id}
-          renderItem={({item}: {item: PersonRowData}) => (
-            <PersonRow row={item} groupNames={groupNames} locale={locale} />
-          )}
-          ListHeaderComponent={
-            rows.length > 0 ? (
-              <>
-                {totals.length > 0 && (
-                  <BalanceSummary totals={totals} locale={locale} />
-                )}
-                <FriendsHeader count={rows.length} />
-              </>
-            ) : undefined
-          }
-          ListEmptyComponent={
-            <EmptyState
-              testID="people-empty"
-              icon={PersonIcon}
-              message={l`Split anything with anyone. Add an expense or a friend to get started – friends don’t need the app.`}
-              button={{
-                label: l`Add friend`,
-                text: l`Add friend`,
-                icon: PersonPlusIcon,
-                onPress: () => navigation.navigate('AddFriend'),
-                size: 'small',
-                color: 'secondary',
-              }}
-            />
-          }
-          ListFooterComponent={!gtMobile ? <View style={{height: 100}} /> : undefined}
-        />
+        /* Upstream's list idiom: rows already there on mount appear at once; later inserts and removals animate. */
+        <LayoutAnimationConfig skipEntering skipExiting>
+          <List
+            data={rows}
+            keyExtractor={(row: PersonRowData) => row.id}
+            renderItem={({item}: {item: PersonRowData}) => (
+              <PersonRow row={item} groupNames={groupNames} locale={locale} />
+            )}
+            ListHeaderComponent={
+              rows.length > 0 ? (
+                <>
+                  {totals.length > 0 && (
+                    <BalanceSummary totals={totals} locale={locale} />
+                  )}
+                  <FriendsHeader count={rows.length} />
+                </>
+              ) : undefined
+            }
+            ListEmptyComponent={
+              <EmptyState
+                testID="people-empty"
+                illustration="empty-people"
+                message={l`Split anything with anyone. Add an expense or a friend to get started – friends don’t need the app.`}
+                button={{
+                  label: l`Add friend`,
+                  text: l`Add friend`,
+                  icon: PersonPlusIcon,
+                  onPress: () => navigation.navigate('AddFriend'),
+                  size: 'small',
+                  color: 'secondary',
+                }}
+              />
+            }
+            ListFooterComponent={
+              !gtMobile ? <View style={{height: 100}} /> : undefined
+            }
+          />
+        </LayoutAnimationConfig>
       )}
       <AddExpenseFAB />
     </Layout.Screen>

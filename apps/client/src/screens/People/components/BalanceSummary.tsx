@@ -1,12 +1,20 @@
 import {ScrollView, useWindowDimensions, View} from 'react-native'
+import Animated from 'react-native-reanimated'
 import {Trans, useLingui} from '@lingui/react/macro'
-import {type CurrencyTotal, formatAmount, getCurrency, magnitude} from '@splito/domain'
+import {
+  type CurrencyTotal,
+  formatAmount,
+  getCurrency,
+  magnitude,
+} from '@splito/domain'
 
 import {Link} from '#/view/com/util/Link'
 import {atoms as a, tokens, useBreakpoints, useTheme, web} from '#/alf'
 import {ChevronRight_Stroke2_Corner0_Rounded as ChevronIcon} from '#/components/icons/Chevron'
 import * as Skeleton from '#/components/Skeleton'
 import {Text} from '#/components/Typography'
+import {AnimatedAmount} from '#/motion/AnimatedAmount'
+import {usePressScale} from '#/motion/PressableScale'
 import {SectionHeader} from './SectionHeader'
 
 const tabular = {fontVariant: ['tabular-nums' as const]}
@@ -43,19 +51,27 @@ export function BalanceSummary({
 
   return (
     <View testID="people-summary">
-      <SectionHeader testID="people-balances-title" title={l`Balances`} action={<AnalyticsLink />} />
+      <SectionHeader
+        testID="people-balances-title"
+        title={l`Balances`}
+        action={<AnalyticsLink />}
+      />
       {isCarousel ? (
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
           snapToInterval={cardWidth + CARD_GAP}
           decelerationRate="fast"
-          style={web({scrollSnapType: 'x mandatory', scrollPaddingLeft: tokens.space.lg})}
+          style={web({
+            scrollSnapType: 'x mandatory',
+            scrollPaddingLeft: tokens.space.lg,
+          })}
           contentContainerStyle={[a.px_lg, a.pb_md, {gap: CARD_GAP}]}>
           {cards}
         </ScrollView>
       ) : (
-        <View style={[a.px_lg, a.pb_md, a.flex_row, a.flex_wrap, {gap: CARD_GAP}]}>
+        <View
+          style={[a.px_lg, a.pb_md, a.flex_row, a.flex_wrap, {gap: CARD_GAP}]}>
           {cards}
         </View>
       )}
@@ -75,7 +91,8 @@ function AnalyticsLink() {
       accessibilityLabel={l`Analytics`}
       accessibilityHint=""
       style={[a.flex_row, a.align_center, a.gap_2xs, a.py_xs]}>
-      <Text style={[a.text_sm, a.font_semi_bold, {color: t.palette.primary_500}]}>
+      <Text
+        style={[a.text_sm, a.font_semi_bold, {color: t.palette.primary_500}]}>
         <Trans>Analytics</Trans>
       </Text>
       <ChevronIcon size="sm" fill={t.palette.primary_500} />
@@ -95,6 +112,7 @@ function SummaryCard({
   const t = useTheme()
   const {t: l} = useLingui()
   const {currency, owed, owe, net} = total
+  const press = usePressScale()
   const netColor =
     net > 0n
       ? t.palette.positive_600
@@ -102,70 +120,98 @@ function SummaryCard({
         ? t.palette.negative_500
         : t.atoms.text.color
 
+  /* The wrapper takes the card's place in the row so the whole card, border included, shrinks on press. */
   return (
-    <Link
-      testID={`summary-${currency}`}
-      href="/analytics"
-      asAnchor
-      anchorNoUnderline
-      accessibilityLabel={l`${currency} balance – open analytics`}
-      accessibilityHint=""
-      hoverStyle={t.atoms.bg_contrast_25}
+    <Animated.View
       style={[
-        a.rounded_md,
-        a.border,
-        t.atoms.border_contrast_low,
-        a.px_lg,
-        a.py_md,
-        a.transition_color,
         width === undefined
           ? {flexBasis: 300, flexGrow: 1, maxWidth: 400}
           : [{width}, web({scrollSnapAlign: 'start'})],
+        press.style,
       ]}>
-      <View style={[a.flex_row, a.align_center, a.justify_between, a.gap_sm]}>
-        <Text style={[a.text_sm, a.font_semi_bold, t.atoms.text_contrast_medium]}>
-          {net > 0n ? (
-            <Trans>You are owed</Trans>
-          ) : net < 0n ? (
-            <Trans>You owe</Trans>
-          ) : (
-            <Trans>All settled up</Trans>
-          )}
-        </Text>
-        <View
-          style={[a.rounded_xs, a.px_xs, {paddingVertical: 1}, t.atoms.bg_contrast_50]}>
+      <Link
+        testID={`summary-${currency}`}
+        onPressIn={press.onPressIn}
+        onPressOut={press.onPressOut}
+        href="/analytics"
+        asAnchor
+        anchorNoUnderline
+        accessibilityLabel={l`${currency} balance – open analytics`}
+        accessibilityHint=""
+        hoverStyle={t.atoms.bg_contrast_25}
+        style={[
+          a.rounded_md,
+          a.border,
+          t.atoms.border_contrast_low,
+          a.px_lg,
+          a.py_md,
+          a.transition_color,
+        ]}>
+        <View style={[a.flex_row, a.align_center, a.justify_between, a.gap_sm]}>
           <Text
-            accessibilityLabel={getCurrency(currency).name}
-            style={[a.text_xs, a.font_semi_bold, t.atoms.text_contrast_medium]}>
-            {currency}
+            style={[a.text_sm, a.font_semi_bold, t.atoms.text_contrast_medium]}>
+            {net > 0n ? (
+              <Trans>You are owed</Trans>
+            ) : net < 0n ? (
+              <Trans>You owe</Trans>
+            ) : (
+              <Trans>All settled up</Trans>
+            )}
+          </Text>
+          <View
+            style={[
+              a.rounded_xs,
+              a.px_xs,
+              {paddingVertical: 1},
+              t.atoms.bg_contrast_50,
+            ]}>
+            <Text
+              accessibilityLabel={getCurrency(currency).name}
+              style={[
+                a.text_xs,
+                a.font_semi_bold,
+                t.atoms.text_contrast_medium,
+              ]}>
+              {currency}
+            </Text>
+          </View>
+        </View>
+        <View style={a.pt_xs}>
+          <AnimatedAmount
+            testID={`summary-${currency}-net`}
+            minor={magnitude(net)}
+            currency={currency}
+            locale={locale}
+            style={[
+              a.text_3xl,
+              a.font_bold,
+              a.leading_tight,
+              {color: netColor},
+            ]}
+          />
+        </View>
+        <View style={[a.flex_row, a.flex_wrap, a.pt_sm, a.gap_md]}>
+          <Text style={[a.text_sm, t.atoms.text_contrast_medium]}>
+            <Trans>
+              Owed to you{' '}
+              <Text
+                style={[a.text_sm, a.font_semi_bold, t.atoms.text, tabular]}>
+                {formatAmount(owed, currency, locale)}
+              </Text>
+            </Trans>
+          </Text>
+          <Text style={[a.text_sm, t.atoms.text_contrast_medium]}>
+            <Trans>
+              You owe{' '}
+              <Text
+                style={[a.text_sm, a.font_semi_bold, t.atoms.text, tabular]}>
+                {formatAmount(owe, currency, locale)}
+              </Text>
+            </Trans>
           </Text>
         </View>
-      </View>
-      <Text
-        testID={`summary-${currency}-net`}
-        numberOfLines={1}
-        style={[a.pt_xs, a.text_3xl, a.font_bold, a.leading_tight, tabular, {color: netColor}]}>
-        {formatAmount(magnitude(net), currency, locale)}
-      </Text>
-      <View style={[a.flex_row, a.flex_wrap, a.pt_sm, a.gap_md]}>
-        <Text style={[a.text_sm, t.atoms.text_contrast_medium]}>
-          <Trans>
-            Owed to you{' '}
-            <Text style={[a.text_sm, a.font_semi_bold, t.atoms.text, tabular]}>
-              {formatAmount(owed, currency, locale)}
-            </Text>
-          </Trans>
-        </Text>
-        <Text style={[a.text_sm, t.atoms.text_contrast_medium]}>
-          <Trans>
-            You owe{' '}
-            <Text style={[a.text_sm, a.font_semi_bold, t.atoms.text, tabular]}>
-              {formatAmount(owe, currency, locale)}
-            </Text>
-          </Trans>
-        </Text>
-      </View>
-    </Link>
+      </Link>
+    </Animated.View>
   )
 }
 

@@ -45,8 +45,7 @@ export function isStateAtTabRoot(state: State | undefined) {
     isTab(currentRoute.name, 'People') ||
     isTab(currentRoute.name, 'Groups') ||
     isTab(currentRoute.name, 'Analytics') ||
-    isTab(currentRoute.name, 'Activity') ||
-    isTab(currentRoute.name, 'Profile')
+    isTab(currentRoute.name, 'Activity')
   )
 }
 

@@ -10,7 +10,7 @@ import {
 import Animated from 'react-native-reanimated'
 import {useSafeAreaInsets} from 'react-native-safe-area-context'
 
-import {PressableScale} from '#/lib/custom-animations/PressableScale'
+import {PressableScale} from '#/motion/PressableScale'
 import {useHaptics} from '#/lib/haptics'
 import {useMinimalShellFabTransform} from '#/lib/hooks/useMinimalShellTransform'
 import {clamp} from '#/lib/numbers'

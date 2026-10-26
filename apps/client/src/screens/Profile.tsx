@@ -13,11 +13,13 @@ import {SettingsGear2_Stroke2_Corner0_Rounded as SettingsIcon} from '#/component
 import * as Layout from '#/components/Layout'
 import * as Skeleton from '#/components/Skeleton'
 import {Text} from '#/components/Typography'
+import {Shimmer} from '#/motion/Shimmer'
 
 /*
- * Bluesky's Settings index, as Splito's Profile tab: the account block, then
- * rows. Account switching, moderation, sign-out and developer options are
- * removed; sign-in arrives with sync, and its row says so.
+ * Bluesky's Settings index, as Splito's Profile page (opened from the header
+ * avatar menu): the account block, then rows. Account switching, moderation,
+ * sign-out and developer options are removed; sign-in arrives with sync, and
+ * its row says so.
  */
 export function ProfileScreen() {
   const {t: l} = useLingui()
@@ -26,11 +28,13 @@ export function ProfileScreen() {
   return (
     <Layout.Screen testID="screen-profile">
       <Layout.Header.Outer>
-        <Layout.Header.Content align="left">
+        <Layout.Header.BackButton />
+        <Layout.Header.Content>
           <Layout.Header.TitleText>
             <Trans>Profile</Trans>
           </Layout.Header.TitleText>
         </Layout.Header.Content>
+        <Layout.Header.Slot />
       </Layout.Header.Outer>
       <Layout.Content>
         <SettingsList.Container>
@@ -44,7 +48,11 @@ export function ProfileScreen() {
               a.align_center,
               {minHeight: 160},
             ]}>
-            {me ? <ProfilePreview name={me.data.name} /> : <ProfilePreviewPlaceholder />}
+            {me ? (
+              <ProfilePreview name={me.data.name} />
+            ) : (
+              <ProfilePreviewPlaceholder />
+            )}
           </View>
           <SettingsList.Divider />
           <SettingsList.LinkItem
@@ -128,10 +136,12 @@ function ProfilePreview({name}: {name: string}) {
 
 function ProfilePreviewPlaceholder() {
   return (
-    <>
+    <Shimmer
+      testID="profile-loading"
+      style={[a.w_full, a.gap_2xs, a.align_center]}>
       <Skeleton.Circle size={80} />
       <Skeleton.Text style={[a.text_3xl, a.mt_sm, {width: 160}]} />
       <Skeleton.Text style={[a.text_md, {width: 140}]} />
-    </>
+    </Shimmer>
   )
 }

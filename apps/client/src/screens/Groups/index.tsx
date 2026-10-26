@@ -1,4 +1,5 @@
 import {View} from 'react-native'
+import {LayoutAnimationConfig} from 'react-native-reanimated'
 import {Trans, useLingui} from '@lingui/react/macro'
 import {useNavigation} from '@react-navigation/native'
 import {groupBalances, pairwiseBalances} from '@splito/domain'
@@ -12,9 +13,10 @@ import {List} from '#/view/com/util/List'
 import {useBreakpoints} from '#/alf'
 import {AddExpenseFAB} from '#/components/AddExpenseFAB'
 import {Button, ButtonIcon, ButtonText} from '#/components/Button'
-import {Group3_Stroke2_Corner0_Rounded as GroupIcon} from '#/components/icons/Group'
+import {HeaderAvatar} from '#/components/HeaderAvatar'
 import {PlusLarge_Stroke2_Corner0_Rounded as PlusIcon} from '#/components/icons/Plus'
 import * as Layout from '#/components/Layout'
+import {Shimmer} from '#/motion/Shimmer'
 import {GroupRow, GroupRowPlaceholder} from './components/GroupRow'
 
 const PLACEHOLDER_ROWS = 4
@@ -30,7 +32,8 @@ export function GroupsScreen() {
   const ledger = useLedger()
 
   const isLoading = !me || !groups || !ledger
-  const balances = me && ledger ? groupBalances(pairwiseBalances(ledger, me.id)) : {}
+  const balances =
+    me && ledger ? groupBalances(pairwiseBalances(ledger, me.id)) : {}
   const rows = (groups ?? [])
     .filter(g => !g.data.archived)
     .sort((x, y) => x.data.name.localeCompare(y.data.name))
@@ -55,42 +58,53 @@ export function GroupsScreen() {
             <Trans context="action">New</Trans>
           </ButtonText>
         </Button>
+        <HeaderAvatar />
       </Layout.Header.Outer>
       {isLoading ? (
-        <View>
+        <Shimmer testID="groups-loading">
           {Array.from({length: PLACEHOLDER_ROWS}, (_, i) => (
             <GroupRowPlaceholder key={i} hideTopBorder={i === 0} />
           ))}
-        </View>
+        </Shimmer>
       ) : (
-        <List
-          data={rows}
-          keyExtractor={(group: Entity<Group>) => group.id}
-          renderItem={({item, index}: {item: Entity<Group>; index: number}) => (
-            <GroupRow
-              group={item}
-              balances={balances[item.id] ?? {}}
-              locale={locale}
-              hideTopBorder={index === 0}
-            />
-          )}
-          ListEmptyComponent={
-            <EmptyState
-              testID="groups-empty"
-              icon={GroupIcon}
-              message={l`No groups yet. A group keeps a trip’s or a flat’s expenses and balances in one place.`}
-              button={{
-                label: l`New group`,
-                text: l`New group`,
-                icon: PlusIcon,
-                onPress: createGroup,
-                size: 'small',
-                color: 'secondary',
-              }}
-            />
-          }
-          ListFooterComponent={!gtMobile ? <View style={{height: 100}} /> : undefined}
-        />
+        <LayoutAnimationConfig skipEntering skipExiting>
+          <List
+            data={rows}
+            keyExtractor={(group: Entity<Group>) => group.id}
+            renderItem={({
+              item,
+              index,
+            }: {
+              item: Entity<Group>
+              index: number
+            }) => (
+              <GroupRow
+                group={item}
+                balances={balances[item.id] ?? {}}
+                locale={locale}
+                hideTopBorder={index === 0}
+              />
+            )}
+            ListEmptyComponent={
+              <EmptyState
+                testID="groups-empty"
+                illustration="empty-groups"
+                message={l`No groups yet. A group keeps a trip’s or a flat’s expenses and balances in one place.`}
+                button={{
+                  label: l`New group`,
+                  text: l`New group`,
+                  icon: PlusIcon,
+                  onPress: createGroup,
+                  size: 'small',
+                  color: 'secondary',
+                }}
+              />
+            }
+            ListFooterComponent={
+              !gtMobile ? <View style={{height: 100}} /> : undefined
+            }
+          />
+        </LayoutAnimationConfig>
       )}
       <AddExpenseFAB />
     </Layout.Screen>

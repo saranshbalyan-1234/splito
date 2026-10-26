@@ -46,37 +46,37 @@ msgstr "{0, plural, one {#mo} other {#mo}}"
 
 #. placeholder {0}: item.actorName
 #. placeholder {1}: item.subject
-#: src/view/com/notifications/NotificationFeedItem.tsx:118
+#: src/view/com/notifications/NotificationFeedItem.tsx:122
 msgid "{0} added {1}"
 msgstr "{0} added {1}"
 
 #. placeholder {0}: item.actorName
 #. placeholder {1}: item.subject
-#: src/view/com/notifications/NotificationFeedItem.tsx:74
+#: src/view/com/notifications/NotificationFeedItem.tsx:78
 msgid "{0} added {1}{amount}"
 msgstr "{0} added {1}{amount}"
 
 #. placeholder {0}: item.actorName
 #. placeholder {1}: item.subject
-#: src/view/com/notifications/NotificationFeedItem.tsx:110
+#: src/view/com/notifications/NotificationFeedItem.tsx:114
 msgid "{0} created the group {1}"
 msgstr "{0} created the group {1}"
 
 #. placeholder {0}: item.actorName
 #. placeholder {1}: item.subject
-#: src/view/com/notifications/NotificationFeedItem.tsx:92
+#: src/view/com/notifications/NotificationFeedItem.tsx:96
 msgid "{0} deleted {1}{amount}"
 msgstr "{0} deleted {1}{amount}"
 
 #. placeholder {0}: item.actorName
 #. placeholder {1}: item.subject
-#: src/view/com/notifications/NotificationFeedItem.tsx:83
+#: src/view/com/notifications/NotificationFeedItem.tsx:87
 msgid "{0} edited {1}{amount}"
 msgstr "{0} edited {1}{amount}"
 
 #. placeholder {0}: item.actorName
 #. placeholder {1}: item.subject
-#: src/view/com/notifications/NotificationFeedItem.tsx:101
+#: src/view/com/notifications/NotificationFeedItem.tsx:105
 msgid "{0} restored {1}{amount}"
 msgstr "{0} restored {1}{amount}"
 
@@ -110,39 +110,39 @@ msgstr "{0}m"
 msgid "{0}s"
 msgstr "{0}s"
 
-#: src/view/com/notifications/NotificationFeedItem.tsx:120
+#: src/view/com/notifications/NotificationFeedItem.tsx:124
 msgid "{actor} added {subject}"
 msgstr "{actor} added {subject}"
 
-#: src/view/com/notifications/NotificationFeedItem.tsx:76
+#: src/view/com/notifications/NotificationFeedItem.tsx:80
 msgid "{actor} added {subject}{amount}"
 msgstr "{actor} added {subject}{amount}"
 
-#: src/view/com/notifications/NotificationFeedItem.tsx:112
+#: src/view/com/notifications/NotificationFeedItem.tsx:116
 msgid "{actor} created the group {subject}"
 msgstr "{actor} created the group {subject}"
 
-#: src/view/com/notifications/NotificationFeedItem.tsx:94
+#: src/view/com/notifications/NotificationFeedItem.tsx:98
 msgid "{actor} deleted {subject}{amount}"
 msgstr "{actor} deleted {subject}{amount}"
 
-#: src/view/com/notifications/NotificationFeedItem.tsx:85
+#: src/view/com/notifications/NotificationFeedItem.tsx:89
 msgid "{actor} edited {subject}{amount}"
 msgstr "{actor} edited {subject}{amount}"
 
-#: src/view/com/notifications/NotificationFeedItem.tsx:103
+#: src/view/com/notifications/NotificationFeedItem.tsx:107
 msgid "{actor} restored {subject}{amount}"
 msgstr "{actor} restored {subject}{amount}"
 
-#: src/view/shell/desktop/LeftNav.tsx:374
+#: src/view/shell/desktop/LeftNav.tsx:226
 msgid "{count, plural, one {# unread item} other {# unread items}}"
 msgstr "{count, plural, one {# unread item} other {# unread items}}"
 
-#: src/screens/People/components/BalanceSummary.tsx:111
+#: src/screens/People/components/BalanceSummary.tsx:139
 msgid "{currency} balance – open analytics"
 msgstr "{currency} balance – open analytics"
 
-#: src/screens/Groups/components/GroupRow.tsx:50
+#: src/screens/Groups/components/GroupRow.tsx:55
 msgid "{memberCount} members"
 msgstr "{memberCount} members"
 
@@ -150,64 +150,66 @@ msgstr "{memberCount} members"
 msgid "{notificationCount, plural, one {# unread item} other {# unread items}}"
 msgstr "{notificationCount, plural, one {# unread item} other {# unread items}}"
 
-#: src/screens/Groups/components/GroupRow.tsx:50
+#: src/screens/Groups/components/GroupRow.tsx:55
 msgid "1 member"
 msgstr "1 member"
 
-#: src/screens/Profile.tsx:71
-#: src/screens/Profile.tsx:74
+#: src/screens/Profile.tsx:79
+#: src/screens/Profile.tsx:82
 msgid "About"
 msgstr "About"
 
-#: src/view/shell/desktop/LeftNav.tsx:149
-msgid "Account"
-msgstr "Account"
+#: src/components/HeaderAvatar.tsx:37
+msgid "Account menu"
+msgstr "Account menu"
 
-#: src/components/TabGlyph.tsx:32
-#: src/navigation/Navigation.tsx:57
-#: src/screens/Activity.tsx:142
-#: src/view/shell/desktop/LeftNav.tsx:498
+#: src/components/TabGlyph.tsx:30
+#: src/navigation/Navigation.tsx:59
+#: src/screens/Activity.tsx:152
+#: src/view/shell/desktop/LeftNav.tsx:350
 msgid "Activity"
 msgstr "Activity"
 
-#: src/navigation/Navigation.tsx:64
+#: src/navigation/Navigation.tsx:66
 #: src/screens/AddExpense.tsx:33
-#: src/view/shell/desktop/LeftNav.tsx:444
+#: src/view/shell/desktop/LeftNav.tsx:296
 msgid "Add expense"
 msgstr "Add expense"
 
 #: src/components/AddExpenseFAB.tsx:31
-#: src/view/shell/desktop/LeftNav.tsx:452
+#: src/view/shell/desktop/LeftNav.tsx:304
 msgctxt "action"
 msgid "Add expense"
 msgstr "Add expense"
 
-#: src/navigation/Navigation.tsx:67
+#: src/navigation/Navigation.tsx:69
 #: src/screens/AddFriend.tsx:8
-#: src/screens/People/index.tsx:107
 #: src/screens/People/index.tsx:108
-#: src/screens/People/index.tsx:137
-#: src/screens/People/index.tsx:143
+#: src/screens/People/index.tsx:109
+#: src/screens/People/index.tsx:141
+#: src/screens/People/index.tsx:147
 msgid "Add friend"
 msgstr "Add friend"
 
-#: src/screens/People/components/BalanceSummary.tsx:132
+#: src/screens/People/components/BalanceSummary.tsx:158
 msgid "All settled up"
 msgstr "All settled up"
 
-#: src/components/TabGlyph.tsx:31
-#: src/navigation/Navigation.tsx:56
+#: src/components/HeaderAvatar.tsx:82
+#: src/components/HeaderAvatar.tsx:86
+#: src/components/TabGlyph.tsx:29
+#: src/navigation/Navigation.tsx:58
 #: src/screens/Analytics.tsx:8
-#: src/screens/People/components/BalanceSummary.tsx:75
-#: src/screens/People/components/BalanceSummary.tsx:79
-#: src/screens/Profile.tsx:53
-#: src/screens/Profile.tsx:56
-#: src/view/shell/desktop/LeftNav.tsx:494
+#: src/screens/People/components/BalanceSummary.tsx:91
+#: src/screens/People/components/BalanceSummary.tsx:96
+#: src/screens/Profile.tsx:61
+#: src/screens/Profile.tsx:64
+#: src/view/shell/desktop/LeftNav.tsx:346
 msgid "Analytics"
 msgstr "Analytics"
 
-#: src/screens/People/components/BalanceSummary.tsx:46
-#: src/screens/People/components/BalanceSummary.tsx:178
+#: src/screens/People/components/BalanceSummary.tsx:56
+#: src/screens/People/components/BalanceSummary.tsx:224
 msgid "Balances"
 msgstr "Balances"
 
@@ -232,7 +234,7 @@ msgstr "Close this dialog"
 msgid "Closes Add expense without saving"
 msgstr "Closes Add expense without saving"
 
-#: src/screens/Profile.tsx:84
+#: src/screens/Profile.tsx:92
 msgid "Coming with sync"
 msgstr "Coming with sync"
 
@@ -245,15 +247,20 @@ msgstr "Confirm"
 msgid "Context menu backdrop, click to close the menu."
 msgstr "Context menu backdrop, click to close the menu."
 
-#: src/screens/Groups/components/GroupRow.tsx:42
+#: src/screens/Groups/components/GroupRow.tsx:47
 msgid "Couple"
 msgstr "Couple"
 
-#: src/screens/People/components/PersonRow.tsx:50
+#: src/components/HeaderAvatar.tsx:94
+#: src/components/HeaderAvatar.tsx:98
+msgid "Dark theme"
+msgstr "Dark theme"
+
+#: src/screens/People/components/PersonRow.tsx:65
 msgid "Direct"
 msgstr "Direct"
 
-#: src/screens/People/components/PersonRow.tsx:121
+#: src/screens/People/components/PersonRow.tsx:164
 msgid "Direct expenses"
 msgstr "Direct expenses"
 
@@ -265,17 +272,17 @@ msgstr "Dismiss"
 msgid "Double tap to close the dialog"
 msgstr "Double tap to close the dialog"
 
-#: src/navigation/Navigation.tsx:66
+#: src/navigation/Navigation.tsx:68
 #: src/screens/EditExpense.tsx:8
 msgid "Edit expense"
 msgstr "Edit expense"
 
-#: src/navigation/Navigation.tsx:65
+#: src/navigation/Navigation.tsx:67
 #: src/screens/Expense.tsx:8
 msgid "Expense"
 msgstr "Expense"
 
-#: src/screens/People/index.tsx:131
+#: src/screens/People/index.tsx:135
 msgid "Friends"
 msgstr "Friends"
 
@@ -283,55 +290,55 @@ msgstr "Friends"
 msgid "Go back"
 msgstr "Go back"
 
-#: src/view/shell/desktop/LeftNav.tsx:236
-#: src/view/shell/desktop/LeftNav.tsx:240
-msgid "Go to profile"
-msgstr "Go to profile"
-
-#: src/navigation/Navigation.tsx:62
+#: src/navigation/Navigation.tsx:64
 #: src/screens/Group.tsx:8
-#: src/screens/Groups/components/GroupRow.tsx:43
-#: src/screens/People/components/PersonRow.tsx:47
+#: src/screens/Groups/components/GroupRow.tsx:48
+#: src/screens/People/components/PersonRow.tsx:58
 msgid "Group"
 msgstr "Group"
 
-#: src/components/TabGlyph.tsx:30
-#: src/navigation/Navigation.tsx:55
-#: src/screens/Groups/index.tsx:44
-#: src/view/shell/desktop/LeftNav.tsx:490
+#: src/components/TabGlyph.tsx:28
+#: src/navigation/Navigation.tsx:57
+#: src/screens/Groups/index.tsx:47
+#: src/view/shell/desktop/LeftNav.tsx:342
 msgid "Groups"
 msgstr "Groups"
 
-#: src/screens/Groups/components/GroupRow.tsx:41
+#: src/screens/Groups/components/GroupRow.tsx:46
 msgid "Home"
 msgstr "Home"
+
+#: src/components/HeaderAvatar.tsx:94
+#: src/components/HeaderAvatar.tsx:98
+msgid "Light theme"
+msgstr "Light theme"
 
 #: src/components/Menu/index.tsx:133
 msgid "Menu"
 msgstr "Menu"
 
-#: src/screens/Groups/index.tsx:55
+#: src/screens/Groups/index.tsx:58
 msgctxt "action"
 msgid "New"
 msgstr "New"
 
-#: src/navigation/Navigation.tsx:68
+#: src/navigation/Navigation.tsx:70
 #: src/screens/CreateGroup.tsx:8
-#: src/screens/Groups/index.tsx:49
-#: src/screens/Groups/index.tsx:83
-#: src/screens/Groups/index.tsx:84
+#: src/screens/Groups/index.tsx:52
+#: src/screens/Groups/index.tsx:94
+#: src/screens/Groups/index.tsx:95
 msgid "New group"
 msgstr "New group"
 
-#: src/screens/Groups/index.tsx:81
+#: src/screens/Groups/index.tsx:92
 msgid "No groups yet. A group keeps a trip’s or a flat’s expenses and balances in one place."
 msgstr "No groups yet. A group keeps a trip’s or a flat’s expenses and balances in one place."
 
-#: src/screens/People/components/PersonRow.tsx:121
+#: src/screens/People/components/PersonRow.tsx:162
 msgid "No open balances"
 msgstr "No open balances"
 
-#: src/screens/Activity.tsx:156
+#: src/screens/Activity.tsx:181
 msgid "Nothing here yet. Expenses, payments and group changes will show up here."
 msgstr "Nothing here yet. Expenses, payments and group changes will show up here."
 
@@ -339,16 +346,12 @@ msgstr "Nothing here yet. Expenses, payments and group changes will show up here
 msgid "now"
 msgstr "now"
 
-#: src/view/shell/desktop/LeftNav.tsx:215
-msgid "On this device"
-msgstr "On this device"
-
 #: src/components/Layout/Header/index.tsx:154
 msgid "Open drawer menu"
 msgstr "Open drawer menu"
 
 #. placeholder {0}: formatAmount(owed, currency, locale)
-#: src/screens/People/components/BalanceSummary.tsx:152
+#: src/screens/People/components/BalanceSummary.tsx:195
 msgid "Owed to you <0>{0}</0>"
 msgstr "Owed to you <0>{0}</0>"
 
@@ -356,20 +359,20 @@ msgstr "Owed to you <0>{0}</0>"
 msgid "owes you <0>{figure}</0>"
 msgstr "owes you <0>{figure}</0>"
 
-#: src/components/TabGlyph.tsx:29
-#: src/view/shell/desktop/LeftNav.tsx:486
+#: src/components/TabGlyph.tsx:27
+#: src/view/shell/desktop/LeftNav.tsx:338
 msgid "People"
 msgstr "People"
 
-#: src/navigation/Navigation.tsx:61
+#: src/navigation/Navigation.tsx:63
 #: src/screens/Person.tsx:8
 msgid "Person"
 msgstr "Person"
 
-#: src/components/TabGlyph.tsx:33
-#: src/navigation/Navigation.tsx:58
-#: src/screens/Profile.tsx:31
-#: src/view/shell/desktop/LeftNav.tsx:502
+#: src/components/HeaderAvatar.tsx:64
+#: src/components/HeaderAvatar.tsx:68
+#: src/navigation/Navigation.tsx:60
+#: src/screens/Profile.tsx:34
 msgid "Profile"
 msgstr "Profile"
 
@@ -382,72 +385,64 @@ msgstr "Save"
 msgid "Save expense"
 msgstr "Save expense"
 
-#: src/screens/Profile.tsx:123
+#: src/screens/Profile.tsx:131
 msgid "Saved on this device"
 msgstr "Saved on this device"
 
-#: src/navigation/Navigation.tsx:59
-#: src/navigation/Navigation.tsx:60
-#: src/screens/Profile.tsx:62
-#: src/screens/Profile.tsx:65
+#: src/components/HeaderAvatar.tsx:73
+#: src/components/HeaderAvatar.tsx:77
+#: src/navigation/Navigation.tsx:61
+#: src/navigation/Navigation.tsx:62
+#: src/screens/Profile.tsx:70
+#: src/screens/Profile.tsx:73
 #: src/screens/Settings/index.tsx:8
 #: src/screens/Settings/SettingsSection.tsx:8
-#: src/view/shell/desktop/LeftNav.tsx:244
-#: src/view/shell/desktop/LeftNav.tsx:248
-#: src/view/shell/desktop/LeftNav.tsx:523
+#: src/view/shell/desktop/LeftNav.tsx:372
 msgid "Settings"
 msgstr "Settings"
 
-#: src/navigation/Navigation.tsx:63
+#: src/navigation/Navigation.tsx:65
 #: src/screens/Settle.tsx:8
 msgid "Settle up"
 msgstr "Settle up"
 
 #: src/components/BalanceText.tsx:43
-#: src/screens/Groups/components/GroupRow.tsx:60
-#: src/screens/People/components/PersonRow.tsx:61
+#: src/screens/Groups/components/GroupRow.tsx:65
+#: src/screens/People/components/PersonRow.tsx:79
 msgid "settled up"
 msgstr "settled up"
 
-#: src/view/shell/desktop/LeftNav.tsx:254
-msgid "Sign in - available with sync"
-msgstr "Sign in - available with sync"
-
-#: src/view/shell/desktop/LeftNav.tsx:259
-msgid "Sign in – coming with sync"
-msgstr "Sign in – coming with sync"
-
-#: src/screens/Profile.tsx:81
+#: src/screens/Profile.tsx:89
 msgid "Sign in and sync"
 msgstr "Sign in and sync"
 
-#: src/screens/Activity.tsx:85
+#: src/screens/Activity.tsx:95
 msgid "Someone"
 msgstr "Someone"
 
-#: src/screens/People/index.tsx:105
+#: src/screens/People/index.tsx:106
 msgid "Split anything with anyone. Add an expense or a friend to get started – friends don’t need the app."
 msgstr "Split anything with anyone. Add an expense or a friend to get started – friends don’t need the app."
 
-#: src/view/com/home/HomeHeaderLayoutMobile.tsx:39
-#: src/view/shell/desktop/LeftNav.tsx:115
+#: src/view/com/home/HomeHeaderLayoutMobile.tsx:41
+#: src/view/shell/desktop/LeftNav.tsx:104
 msgid "Splito - People"
 msgstr "Splito - People"
 
 #: src/screens/AddExpense.tsx:36
-#: src/screens/StubScreen.tsx:34
+#: src/screens/StubScreen.tsx:36
 msgid "This screen is being built"
 msgstr "This screen is being built"
 
-#: src/screens/Groups/components/GroupRow.tsx:40
+#: src/screens/Groups/components/GroupRow.tsx:45
 msgid "Trip"
 msgstr "Trip"
 
-#: src/screens/Activity.tsx:85
+#: src/screens/Activity.tsx:95
 msgid "You"
 msgstr "You"
 
-#: src/screens/People/components/BalanceSummary.tsx:128
+#: src/screens/People/components/BalanceSummary.tsx:154
 msgid "You are owed"
 msgstr "You are owed"
 
@@ -455,12 +450,12 @@ msgstr "You are owed"
 msgid "you are owed <0>{figure}</0>"
 msgstr "you are owed <0>{figure}</0>"
 
-#: src/screens/People/components/BalanceSummary.tsx:130
+#: src/screens/People/components/BalanceSummary.tsx:156
 msgid "You owe"
 msgstr "You owe"
 
 #. placeholder {0}: formatAmount(owe, currency, locale)
-#: src/screens/People/components/BalanceSummary.tsx:160
+#: src/screens/People/components/BalanceSummary.tsx:204
 msgid "You owe <0>{0}</0>"
 msgstr "You owe <0>{0}</0>"
 
@@ -468,6 +463,6 @@ msgstr "You owe <0>{0}</0>"
 msgid "you owe <0>{figure}</0>"
 msgstr "you owe <0>{figure}</0>"
 
-#: src/screens/StubScreen.tsx:38
+#: src/screens/StubScreen.tsx:40
 msgid "Your data is safe on this device."
 msgstr "Your data is safe on this device."

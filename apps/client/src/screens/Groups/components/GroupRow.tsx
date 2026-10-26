@@ -1,5 +1,6 @@
 // Adapted from bluesky-social/social-app@4e4ad9c (MIT) - src/components/FeedCard.tsx (list card layout)
 import {View} from 'react-native'
+import Animated from 'react-native-reanimated'
 import {Trans, useLingui} from '@lingui/react/macro'
 import {type Entity, type Group} from '@splito/sync'
 
@@ -9,6 +10,8 @@ import {atoms as a, useBreakpoints, useTheme} from '#/alf'
 import {BalanceText} from '#/components/BalanceText'
 import * as Skeleton from '#/components/Skeleton'
 import {Text} from '#/components/Typography'
+import {useListAnimations} from '#/motion/listAnimations'
+import {usePressScale} from '#/motion/PressableScale'
 
 const AVATAR_SIZE = 42
 
@@ -35,6 +38,8 @@ export function GroupRow({
   const t = useTheme()
   const {t: l, i18n} = useLingui()
   const {gtMobile} = useBreakpoints()
+  const listAnimations = useListAnimations()
+  const press = usePressScale()
   const {name, kind, startDate, endDate, members} = group.data
   const kindLabel = {
     trip: l`Trip`,
@@ -75,43 +80,73 @@ export function GroupRow({
     </View>
   )
 
+  /* The row content shrinks on press; the separator stays put. */
   return (
-    <Link
-      testID={`group-${name}`}
-      href={`/groups/${group.id}`}
-      asAnchor
-      anchorNoUnderline
-      accessibilityLabel={name}
-      accessibilityHint=""
-      hoverStyle={t.atoms.bg_contrast_25}
-      style={[a.px_lg, a.py_md, !hideTopBorder && a.border_t, t.atoms.border_contrast_low, a.transition_color]}>
-      <View style={[a.flex_row, a.align_center, a.gap_md]}>
-        <UserAvatar size={AVATAR_SIZE} name={name} type="list" />
-        <View style={[a.flex_1, a.gap_2xs]}>
-          {/* Phones: the balance shares the title's line so the byline gets the full width. */}
-          <View style={[a.flex_row, a.align_center, a.justify_between, a.gap_md]}>
-            <Text emoji numberOfLines={1} style={[a.flex_1, a.text_md, a.font_semi_bold, a.leading_snug]}>
-              {name}
+    <Animated.View {...listAnimations}>
+      <Link
+        testID={`group-${name}`}
+        onPressIn={press.onPressIn}
+        onPressOut={press.onPressOut}
+        href={`/groups/${group.id}`}
+        asAnchor
+        anchorNoUnderline
+        accessibilityLabel={name}
+        accessibilityHint=""
+        hoverStyle={t.atoms.bg_contrast_25}
+        style={[
+          a.px_lg,
+          a.py_md,
+          !hideTopBorder && a.border_t,
+          t.atoms.border_contrast_low,
+          a.transition_color,
+        ]}>
+        <Animated.View
+          style={[a.flex_row, a.align_center, a.gap_md, press.style]}>
+          <UserAvatar size={AVATAR_SIZE} name={name} type="list" />
+          <View style={[a.flex_1, a.gap_2xs]}>
+            {/* Phones: the balance shares the title's line so the byline gets the full width. */}
+            <View
+              style={[a.flex_row, a.align_center, a.justify_between, a.gap_md]}>
+              <Text
+                emoji
+                numberOfLines={1}
+                style={[a.flex_1, a.text_md, a.font_semi_bold, a.leading_snug]}>
+                {name}
+              </Text>
+              {!gtMobile && balanceView}
+            </View>
+            <Text
+              numberOfLines={1}
+              style={[a.text_sm, a.leading_snug, t.atoms.text_contrast_medium]}>
+              {byline}
             </Text>
-            {!gtMobile && balanceView}
           </View>
-          <Text numberOfLines={1} style={[a.text_sm, a.leading_snug, t.atoms.text_contrast_medium]}>
-            {byline}
-          </Text>
-        </View>
-        {gtMobile && balanceView}
-      </View>
-    </Link>
+          {gtMobile && balanceView}
+        </Animated.View>
+      </Link>
+    </Animated.View>
   )
 }
 
 /** Loading shape of one row. */
-export function GroupRowPlaceholder({hideTopBorder = false}: {hideTopBorder?: boolean}) {
+export function GroupRowPlaceholder({
+  hideTopBorder = false,
+}: {
+  hideTopBorder?: boolean
+}) {
   const t = useTheme()
   return (
-    <View style={[a.px_lg, a.py_md, !hideTopBorder && a.border_t, t.atoms.border_contrast_low]}>
+    <View
+      style={[
+        a.px_lg,
+        a.py_md,
+        !hideTopBorder && a.border_t,
+        t.atoms.border_contrast_low,
+      ]}>
       <View style={[a.flex_row, a.align_center, a.gap_md]}>
-        <Skeleton.Block style={{width: AVATAR_SIZE, height: AVATAR_SIZE, borderRadius: 8}} />
+        <Skeleton.Block
+          style={{width: AVATAR_SIZE, height: AVATAR_SIZE, borderRadius: 8}}
+        />
         <View style={[a.flex_1, a.gap_xs]}>
           <Skeleton.Text style={[a.text_md, {width: 140}]} />
           <Skeleton.Text style={[a.text_sm, {width: 220}]} />

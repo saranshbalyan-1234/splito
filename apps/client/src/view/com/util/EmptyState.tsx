@@ -12,6 +12,8 @@ import {
 } from '#/components/Button'
 import {EditBig_Stroke1_Corner0_Rounded as EditIcon} from '#/components/icons/EditBig'
 import {Text} from '#/components/Typography'
+import {Illustration} from '#/motion/Illustration'
+import {type IllustrationName} from '#/motion/illustrations'
 
 export type EmptyStateButtonProps = Omit<ButtonProps, 'children' | 'label'> & {
   label: string
@@ -21,6 +23,7 @@ export type EmptyStateButtonProps = Omit<ButtonProps, 'children' | 'label'> & {
 
 export function EmptyState({
   testID,
+  illustration,
   icon,
   iconSize = '3xl',
   iconColor,
@@ -30,6 +33,11 @@ export function EmptyState({
   button,
 }: {
   testID?: string
+  /**
+   * Splito: an animated illustration in place of the icon (main pages' empty
+   * states). Static under reduce motion.
+   */
+  illustration?: IllustrationName
   icon?: React.ComponentType<any> | React.ReactElement | null
   iconSize?: 'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl' | '3xl' | '4xl'
   iconColor?: string
@@ -76,21 +84,31 @@ export function EmptyState({
 
   return (
     <View testID={testID} style={[a.w_full, style]}>
-      <View
-        style={[
-          a.flex_row,
-          a.align_center,
-          a.justify_center,
-          a.self_center,
-          a.rounded_full,
-          a.mt_5xl,
-          {height: 64, width: 64},
-          isValidElement(icon)
-            ? a.bg_transparent
-            : [gtTablet && {marginTop: 50}],
-        ]}>
-        {renderIcon()}
-      </View>
+      {illustration ? (
+        <View style={[a.self_center, a.mt_3xl, gtTablet && {marginTop: 50}]}>
+          <Illustration
+            name={illustration}
+            size={gtMobile ? 200 : 168}
+            testID={testID && `${testID}-illustration`}
+          />
+        </View>
+      ) : (
+        <View
+          style={[
+            a.flex_row,
+            a.align_center,
+            a.justify_center,
+            a.self_center,
+            a.rounded_full,
+            a.mt_5xl,
+            {height: 64, width: 64},
+            isValidElement(icon)
+              ? a.bg_transparent
+              : [gtTablet && {marginTop: 50}],
+          ]}>
+          {renderIcon()}
+        </View>
+      )}
       <Text
         style={[
           t.atoms.text_contrast_high,

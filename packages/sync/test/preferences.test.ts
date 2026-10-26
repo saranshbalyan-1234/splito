@@ -16,7 +16,7 @@ beforeEach(async () => {
 test('default returned when unset', async () => {
   expect(await getPref(s, 'defaultCurrency')).toBe('INR')
   expect(await getPref(s, 'includeGroupsDefault')).toBe(true)
-  expect(await getPref(s, 'tabs')).toEqual(['people', 'groups', 'analytics', 'activity', 'profile'])
+  expect(await getPref(s, 'tabs')).toEqual(['people', 'groups', 'analytics', 'activity'])
 })
 
 test('set then get', async () => {
@@ -38,14 +38,16 @@ test('account pref enqueues an outbox op, device pref does not', async () => {
   expect(await getPref(s, 'haptics')).toBe(false)
 })
 
-test('tabs must keep a route to Settings', async () => {
-  await expect(setPref(s, ctx, 'tabs', ['people', 'groups'])).rejects.toThrow('INVALID_PREF')
-  await setPref(s, ctx, 'tabs', ['groups', 'profile'])
-  expect(await getPref(s, 'tabs')).toEqual(['groups', 'profile'])
+test('tabs: any non-empty set of known tabs, no duplicates; Profile is not a tab', async () => {
+  await setPref(s, ctx, 'tabs', ['groups'])
+  expect(await getPref(s, 'tabs')).toEqual(['groups'])
+  await expect(setPref(s, ctx, 'tabs', [])).rejects.toThrow('INVALID_PREF')
+  await expect(setPref(s, ctx, 'tabs', ['groups', 'groups'])).rejects.toThrow('INVALID_PREF')
+  await expect(setPref(s, ctx, 'tabs', ['groups', 'profile'] as never)).rejects.toThrow('INVALID_PREF')
 })
 
 test('home tab must be a visible tab', async () => {
-  await setPref(s, ctx, 'tabs', ['groups', 'profile'])
+  await setPref(s, ctx, 'tabs', ['groups', 'activity'])
   expect(await getPref(s, 'homeTab')).toBe('groups')
 })
 

@@ -5,7 +5,7 @@ import {msg} from '@lingui/core/macro'
 import {useLingui} from '@lingui/react'
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu'
 
-import {useA11y} from '#/state/a11y'
+import {useShouldReduceMotion} from '#/motion/useShouldReduceMotion'
 import {atoms as a, flatten, flattenToCSS, useTheme, web} from '#/alf'
 import type * as Dialog from '#/components/Dialog'
 import {useInteractionState} from '#/components/hooks/useInteractionState'
@@ -179,7 +179,7 @@ export function Trigger({
 
 export function Outer({children, style, onCloseAutoFocus}: OuterProps) {
   const t = useTheme()
-  const {reduceMotionEnabled} = useA11y()
+  const reduceMotionEnabled = useShouldReduceMotion()
 
   return (
     <DropdownMenu.Portal>

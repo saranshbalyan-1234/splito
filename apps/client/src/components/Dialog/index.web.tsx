@@ -27,7 +27,7 @@ import * as FocusScope from '@radix-ui/react-focus-scope'
 import {RemoveScrollBar} from 'react-remove-scroll-bar'
 
 import {logger} from '#/logger'
-import {useA11y} from '#/state/a11y'
+import {useShouldReduceMotion} from '#/motion/useShouldReduceMotion'
 import {useDialogStateControlContext} from '#/state/dialogs'
 import {type ListMethods} from '#/view/com/util/List'
 import {atoms as a, flatten, useBreakpoints, useTheme, web} from '#/alf'
@@ -211,7 +211,7 @@ export function Inner({
   const t = useTheme()
   const {close} = useContext(Context)
   const {gtMobile} = useBreakpoints()
-  const {reduceMotionEnabled} = useA11y()
+  const reduceMotionEnabled = useShouldReduceMotion()
   FocusGuards.useFocusGuards()
   return (
     <FocusScope.FocusScope loop asChild trapped>
@@ -387,7 +387,7 @@ export function Handle(_props: {difference?: boolean; fill?: string}) {
 
 export function Backdrop() {
   const t = useTheme()
-  const {reduceMotionEnabled} = useA11y()
+  const reduceMotionEnabled = useShouldReduceMotion()
   return (
     <View style={{opacity: 0.8}}>
       <View

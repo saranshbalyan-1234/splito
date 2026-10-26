@@ -1,3 +1,4 @@
+import {useEffect} from 'react'
 import {SafeAreaProvider} from 'react-native-safe-area-context'
 import {I18nProvider} from '@lingui/react'
 
@@ -10,8 +11,25 @@ import {ThemeProvider as Alf} from '#/alf'
 import {useColorModeTheme} from '#/alf/util/useColorModeTheme'
 import {Provider as PortalProvider} from '#/components/Portal'
 import {ToastOutlet} from '#/components/Toast'
+import {usePref} from '#/data/hooks'
 import {StoreProvider} from '#/data/StoreProvider'
+import {device} from '#/storage'
 import {Shell} from '#/view/shell'
+
+/*
+ * The theme reads device storage synchronously so the first paint is right;
+ * the `theme` preference (Settings, the avatar menu's shortcut) is the source
+ * of truth and is mirrored there.
+ */
+function ThemeFromPrefs() {
+  const [theme] = usePref('theme')
+  useEffect(() => {
+    if (theme && device.get(['colorMode']) !== theme) {
+      device.set(['colorMode'], theme)
+    }
+  }, [theme])
+  return null
+}
 
 function Themed() {
   const theme = useColorModeTheme()
@@ -22,6 +40,7 @@ function Themed() {
           <ShellStateProvider>
             <StoreProvider>
               <LocaleFromPrefs />
+              <ThemeFromPrefs />
               <Shell />
             </StoreProvider>
             <ToastOutlet />

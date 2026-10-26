@@ -1,4 +1,6 @@
 import {useEffect, useState} from 'react'
+import {View} from 'react-native'
+import {LayoutAnimationConfig} from 'react-native-reanimated'
 import {Trans, useLingui} from '@lingui/react/macro'
 import {formatAmount} from '@splito/domain'
 import {
@@ -15,12 +17,17 @@ import {useMutationCtx, useStore} from '#/data/hooks'
 import {
   type ActivityItem,
   NotificationFeedItem,
+  NotificationFeedItemPlaceholder,
 } from '#/view/com/notifications/NotificationFeedItem'
-import {Bell_Stroke2_Corner0_Rounded as BellIcon} from '#/components/icons/Bell'
 import {EmptyState} from '#/view/com/util/EmptyState'
 import {List} from '#/view/com/util/List'
+import {useBreakpoints} from '#/alf'
 import {AddExpenseFAB} from '#/components/AddExpenseFAB'
+import {HeaderAvatar} from '#/components/HeaderAvatar'
 import * as Layout from '#/components/Layout'
+import {Shimmer} from '#/motion/Shimmer'
+
+const PLACEHOLDER_ROWS = 8
 
 type Change = {entity: Entity; row: HistoryRow; prev: HistoryRow | undefined}
 
@@ -45,7 +52,9 @@ async function loadChanges(store: Store): Promise<Change[]> {
     )
     rows.forEach((row, i) => changes.push({entity, row, prev: rows[i - 1]}))
   }
-  return changes.sort((x, y) => y.row.at - x.row.at || y.row.version - x.row.version)
+  return changes.sort(
+    (x, y) => y.row.at - x.row.at || y.row.version - x.row.version,
+  )
 }
 
 /** Live history, re-read after every committed store transaction. */
@@ -74,6 +83,7 @@ export function ActivityScreen() {
   const locale = useNumberLocale()
   const {actor} = useMutationCtx()
   const changes = useChanges()
+  const {gtMobile} = useBreakpoints()
 
   const names = new Map<string, string>()
   for (const c of changes ?? []) {
@@ -142,21 +152,40 @@ export function ActivityScreen() {
             <Trans>Activity</Trans>
           </Layout.Header.TitleText>
         </Layout.Header.Content>
+        <HeaderAvatar />
       </Layout.Header.Outer>
-      {changes === undefined ? null : (
-        <List
-          data={items}
-          keyExtractor={(item: ActivityItem) => item.key}
-          renderItem={({item, index}: {item: ActivityItem; index: number}) => (
-            <NotificationFeedItem item={item} hideTopBorder={index === 0} />
-          )}
-          ListEmptyComponent={
-            <EmptyState
-              icon={BellIcon}
-              message={l`Nothing here yet. Expenses, payments and group changes will show up here.`}
-            />
-          }
-        />
+      {changes === undefined ? (
+        <Shimmer testID="activity-loading">
+          {Array.from({length: PLACEHOLDER_ROWS}, (_, i) => (
+            <NotificationFeedItemPlaceholder key={i} hideTopBorder={i === 0} />
+          ))}
+        </Shimmer>
+      ) : (
+        <LayoutAnimationConfig skipEntering skipExiting>
+          <List
+            data={items}
+            keyExtractor={(item: ActivityItem) => item.key}
+            renderItem={({
+              item,
+              index,
+            }: {
+              item: ActivityItem
+              index: number
+            }) => (
+              <NotificationFeedItem item={item} hideTopBorder={index === 0} />
+            )}
+            ListEmptyComponent={
+              <EmptyState
+                testID="activity-empty"
+                illustration="empty-activity"
+                message={l`Nothing here yet. Expenses, payments and group changes will show up here.`}
+              />
+            }
+            ListFooterComponent={
+              !gtMobile ? <View style={{height: 100}} /> : undefined
+            }
+          />
+        </LayoutAnimationConfig>
       )}
       <AddExpenseFAB />
     </Layout.Screen>
