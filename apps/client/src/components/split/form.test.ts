@@ -1,4 +1,5 @@
 import {describe, expect, test} from 'bun:test'
+import {computeShares} from '@splito/domain'
 import {type Expense} from '@splito/sync'
 
 import {
@@ -246,9 +247,9 @@ describe('evaluateForm', () => {
   test('bad row amounts are reported per person', () => {
     const r = evaluateForm(base({mode: 'exact', exact: {me: '1.2345'}}), 'UTC')
     expect(r.rowErrors.me).toBe('TOO_MANY_DECIMALS')
-    // Three decimals could be a thousands group (F-310): the row says it is unclear.
+    // Rows read the locale's mark as decimals (F-111 M3): three are too many in INR.
     const r2 = evaluateForm(base({mode: 'exact', exact: {me: '1.234'}}), 'UTC')
-    expect(r2.rowErrors.me).toBe('AMBIGUOUS_AMOUNT')
+    expect(r2.rowErrors.me).toBe('TOO_MANY_DECIMALS')
   })
 })
 
@@ -377,5 +378,156 @@ describe('F-402 cash rounding in the form', () => {
       'me',
     )
     expect(form.roundTo).toBe(10)
+  })
+})
+
+/* F-111: logic-audit regressions (docs/audit/AUDIT-2026-10-27.md). */
+describe('F-111 C2: editing an expense never changes its money, in any locale', () => {
+  const stored = (currency: string, over: Partial<Expense>): Expense => {
+    const e: Expense = {
+      title: 'Dinner',
+      groupId: null,
+      currency,
+      total: 0n,
+      payers: {},
+      split: {mode: 'equal', participants: ['me', 'riya']},
+      shares: {},
+      date: '2026-10-26',
+      tz: 'UTC',
+      category: 'food',
+      notes: '',
+      ...over,
+    }
+    return {...e, shares: computeShares(e.total, e.split)}
+  }
+  /* One expense per mode, with amounts that have every decimal place. */
+  const expenses = (currency: string, unit: bigint): Expense[] => [
+    stored(currency, {
+      total: 12345n * unit,
+      payers: {me: 12345n * unit},
+      split: {mode: 'equal', participants: ['me', 'riya']},
+    }),
+    stored(currency, {
+      total: 10001n * unit,
+      payers: {me: 5001n * unit, riya: 5000n * unit},
+      split: {mode: 'exact', amounts: {me: 5001n * unit, riya: 5000n * unit}},
+    }),
+    stored(currency, {
+      total: 3003n * unit,
+      payers: {riya: 3003n * unit},
+      split: {
+        mode: 'adjusted',
+        participants: ['me', 'riya'],
+        adjustments: {me: 1003n * unit},
+      },
+    }),
+    stored(currency, {
+      total: 1234n * unit + 1000n * unit,
+      payers: {me: 2234n * unit},
+      split: {
+        mode: 'items',
+        items: [
+          {id: 'a', name: 'Fish', amount: 1234n * unit, participants: ['me']},
+        ],
+        tax: 1000n * unit,
+        tip: 0n,
+        service: 0n,
+        discount: 0n,
+      },
+    }),
+    stored(currency, {
+      total: 9000n * unit,
+      payers: {me: 9000n * unit},
+      split: {mode: 'percent', basisPoints: {me: 3333, riya: 6667}},
+    }),
+  ]
+  const cases: Array<[string, bigint]> = [
+    ['JPY', 1n],
+    ['INR', 1n],
+    ['BHD', 1n],
+  ]
+  for (const mark of ['.', ','] as const)
+    for (const [code, unit] of cases)
+      test(`${code} under "${mark}": every mode reads back as stored`, () => {
+        for (const e of expenses(code, unit)) {
+          const r = evaluateForm(formFromExpense(e, 'me', mark), 'UTC', mark)
+          expect(r.error).toBeUndefined()
+          expect(r.total).toBe(e.total)
+          expect(r.draft?.payers).toEqual(e.payers)
+          expect(r.draft?.split).toEqual(e.split)
+          expect(r.shares).toEqual(e.shares)
+        }
+      })
+  test('written in the locale mark', () => {
+    const [equal] = expenses('BHD', 1n)
+    expect(formFromExpense(equal!, 'me', ',').amount).toBe('12,345')
+    expect(formFromExpense(equal!, 'me', '.').amount).toBe('12.345')
+  })
+})
+
+describe('F-111 M3: split rows with three decimals can be typed', () => {
+  test('BHD exact rows 5.001 and 5.000 under "."', () => {
+    const r = evaluateForm(
+      base({
+        currency: 'BHD',
+        amount: '10.001',
+        amountReading: 'decimal',
+        mode: 'exact',
+        exact: {me: '5.001', riya: '5.000'},
+      }),
+      'UTC',
+    )
+    expect(r.rowErrors).toEqual({})
+    expect(r.draft?.split).toEqual({
+      mode: 'exact',
+      amounts: {me: 5001n, riya: 5000n},
+    })
+  })
+  test('paid rows too, under ","', () => {
+    const r = evaluateForm(
+      base({
+        currency: 'KWD',
+        amount: '2,500',
+        amountReading: 'decimal',
+        payerMode: 'multiple',
+        paid: {me: '1,250', riya: '1,250'},
+      }),
+      'UTC',
+      ',',
+    )
+    expect(r.draft?.payers).toEqual({me: 1250n, riya: 1250n})
+  })
+})
+
+describe('F-111 M7: percent rows take the comma decimal mark', () => {
+  test('33,33 / 33,33 / 33,34 is 100 %', () => {
+    const r = evaluateForm(
+      base({
+        mode: 'percent',
+        percent: {me: '33,33', riya: '33,33', sam: '33,34'},
+      }),
+      'UTC',
+      ',',
+    )
+    expect(r.rowErrors).toEqual({})
+    expect(r.draft?.split).toEqual({
+      mode: 'percent',
+      basisPoints: {me: 3333, riya: 3333, sam: 3334},
+    })
+  })
+  test('12,5 % service in itemize', () => {
+    const r = evaluateForm(
+      base({
+        mode: 'items',
+        amount: '112,50',
+        items: [{key: 'a', name: 'Tea', amount: '100', people: ['me']}],
+        service: '12,5',
+        adjustModes: {service: 'percent'},
+      }),
+      'UTC',
+      ',',
+    )
+    expect(r.rowErrors).toEqual({})
+    expect(r.adjustments?.service).toBe(1250n)
   })
 })

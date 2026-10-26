@@ -1,4 +1,4 @@
-import {CURRENCIES, type CurrencyCode, getCurrency, parseAmount} from './currency'
+import {CURRENCIES, type CurrencyCode, getCurrency, parseAmount, toDecimalString} from './currency'
 import {assertInRange, DomainError} from './errors'
 
 /** Calculator operators as people type them: x, ×, * multiply; /, ÷ divide; -, − subtract. */
@@ -79,22 +79,84 @@ export function decimalMark(locale: string): '.' | ',' {
   return mark === ',' ? ',' : '.'
 }
 
+/** Grouped digits: 1-3 first, then groups of 2 or 3 (1,00,000 or 1.000.000), the last of 3. */
+const GROUPED = /^\d{1,3}(?:[.,]\d{2,3})*[.,]\d{3}$/
+
 /**
  * One typed number to a plain decimal ("1.234,5" -> "1234.5"). The last "."
- * or "," is the decimal mark when it is the locale's own mark, or when the
- * digits after it fit the currency's scale and aren't three - so "1,200" is
- * 1200 and "12,50" is 12.50 whichever mark a decimal pad shows. Every other
- * mark groups digits.
+ * or "," is the decimal mark when it appears once and is the locale's own
+ * mark, or when the digits after it are not three (a 1-2 digit tail is never
+ * a thousands group, whatever the currency's scale) - so "1,200" is 1200 and
+ * "12,50" is 12.50 whichever mark a decimal pad shows. Every other mark
+ * groups digits; malformed groups ("1.2.3", "12,34,56") are INVALID_AMOUNT,
+ * never a guess. A trailing mark ("12.", mid-entry) is dropped.
  */
-function plainNumber(num: string, scale: number, mark: '.' | ','): string {
+function plainNumber(num: string, mark: '.' | ','): string {
   const last = Math.max(num.lastIndexOf('.'), num.lastIndexOf(','))
   if (last < 0) return num
   const tail = num.slice(last + 1)
   const isDecimal =
     tail.length > 0 &&
-    (num[last] === mark || (tail.length <= scale && tail.length !== 3))
-  const whole = (isDecimal ? num.slice(0, last) : num).replace(/[.,]/g, '')
-  return isDecimal ? `${whole || '0'}.${tail}` : whole
+    num.indexOf(num[last]!) === last &&
+    (num[last] === mark || tail.length !== 3)
+  const whole = isDecimal || !tail ? num.slice(0, last) : num
+  if (/[.,]/.test(whole) && !GROUPED.test(whole))
+    throw new DomainError('INVALID_AMOUNT')
+  const digits = whole.replace(/[.,]/g, '')
+  return isDecimal ? `${digits || '0'}.${tail}` : digits
+}
+
+/** "1,234" in the locale's own mark: a thousands group, or three decimals. */
+const AMBIGUOUS = /^([1-9]\d{0,2})([.,])(\d{3})$/
+
+/**
+ * `plainNumber`, except that an ambiguous "1,234" (the locale's mark and
+ * exactly three digits) needs `reading`: AMBIGUOUS_AMOUNT without one, and
+ * TOO_MANY_DECIMALS for `decimal` when `canBeDecimal` is false (a plain
+ * amount in a currency with fewer than three decimals).
+ */
+function readNumber(
+  num: string,
+  mark: '.' | ',',
+  reading: AmountOptions['reading'],
+  canBeDecimal: boolean,
+): string {
+  const m = AMBIGUOUS.exec(num)
+  if (!m || m[2] !== mark) return plainNumber(num, mark)
+  if (!reading) throw new DomainError('AMBIGUOUS_AMOUNT')
+  if (reading === 'grouped') return m[1]! + m[3]!
+  if (!canBeDecimal) throw new DomainError('TOO_MANY_DECIMALS')
+  return `${m[1]}.${m[3]}`
+}
+
+/**
+ * Minor units as amount-field text in the locale's decimal mark ("12,345"
+ * for BHD 12.345 under ","), so a prefill reads back as written. Read it
+ * with `reading: 'decimal'`: with three decimals it looks like "1,234".
+ */
+export function amountInputText(
+  minor: bigint,
+  code: CurrencyCode,
+  mark: '.' | ',' = '.',
+): string {
+  return toDecimalString(minor, getCurrency(code).scale).replace('.', mark)
+}
+
+/**
+ * Every plain decimal a typed number can mean, for lookups that may try
+ * them all (search): "1.000" under "." is 1000 or 1.000; under "," it is
+ * 1000. A malformed number has none.
+ */
+export function numberReadings(input: string, mark: '.' | ','): string[] {
+  const s = normalize(input)
+  if (!/^[\d.,]*\d[\d.,]*$/.test(s)) return []
+  const m = AMBIGUOUS.exec(s)
+  if (m && m[2] === mark) return [m[1]! + m[3]!, `${m[1]}.${m[3]}`]
+  try {
+    return [plainNumber(s, mark)]
+  } catch {
+    return []
+  }
 }
 
 /** True when the input has an operator, i.e. the amount field should show a computed result. */
@@ -111,25 +173,38 @@ function toRatio(num: string, suffix?: string): Ratio {
 }
 
 /**
- * A plain "1,234" or "1.234" where the one mark is the locale's decimal mark
- * and exactly three digits follow: it may be a thousands group or three
- * decimals. Returns both readings in minor units (`decimal` only when the
- * currency has three decimals), or null when the input is not ambiguous.
- * The amount field asks "Did you mean ...?" instead of guessing.
+ * An amount holding an ambiguous "1,234" (the locale's decimal mark and
+ * exactly three digits after it, alone or as an operand of a sum): both
+ * readings in minor units (`decimal` only when it is a valid amount; a
+ * plain number needs a 3-decimal currency), or null when nothing is
+ * ambiguous. The amount field asks "Did you mean ...?" instead of guessing.
  */
 export function amountReadings(
   input: string,
   code: CurrencyCode,
   mark: '.' | ',' = '.',
+  {shorthand = true}: Pick<AmountOptions, 'shorthand'> = {},
 ): {grouped: bigint; decimal?: bigint} | null {
-  const m = /^([-−]?)([1-9]\d{0,2})([.,])(\d{3})$/.exec(normalize(input))
-  if (!m || m[3] !== mark) return null
-  const sign = m[1] ? '-' : ''
-  const {scale} = getCurrency(code)
-  const grouped = parseAmount(`${sign}${m[2]}${m[4]}`, code)
-  return scale >= 3
-    ? {grouped, decimal: parseAmount(`${sign}${m[2]}.${m[4]}`, code)}
-    : {grouped}
+  const read = (reading?: AmountOptions['reading']) =>
+    evaluateAmount(input, code, mark, {shorthand, reading})
+  try {
+    read()
+    return null
+  } catch (e) {
+    if (!(e instanceof DomainError) || e.code !== 'AMBIGUOUS_AMOUNT')
+      return null
+  }
+  let grouped: bigint
+  try {
+    grouped = read('grouped')
+  } catch {
+    return null
+  }
+  try {
+    return {grouped, decimal: read('decimal')}
+  } catch {
+    return {grouped}
+  }
 }
 
 /**
@@ -155,28 +230,34 @@ export function evaluateAmount(
     const m = PLAIN.exec(s)
     if (!m || (m[3] && !shorthand)) throw new DomainError('INVALID_AMOUNT')
     const sign = m[1] ? '-' : ''
-    if (!m[3]) {
-      const readings = amountReadings(s, code, mark)
-      if (readings) {
-        if (!reading) throw new DomainError('AMBIGUOUS_AMOUNT')
-        const v = readings[reading]
-        if (v === undefined) throw new DomainError('TOO_MANY_DECIMALS')
-        return v
-      }
-      return parseAmount(`${sign}${plainNumber(m[2]!, scale, mark)}`, code)
-    }
-    const {n, d} = toRatio(plainNumber(m[2]!, scale, mark), m[3])
+    if (!m[3])
+      return parseAmount(
+        `${sign}${readNumber(m[2]!, mark, reading, scale >= 3)}`,
+        code,
+      )
+    const {n, d} = toRatio(plainNumber(m[2]!, mark), m[3])
     const scaled = n * 10n ** BigInt(scale)
     if (scaled % d !== 0n) throw new DomainError('TOO_MANY_DECIMALS')
     return assertInRange(sign ? -scaled / d : scaled / d)
   }
 
+  // A leading minus negates the first operand ("-5+3").
+  const isNegative = /^[-−]/.test(s)
+  const body = isNegative ? s.slice(1) : s
   const tokens: Array<{num: string; suffix?: string} | string> = []
   TOKEN.lastIndex = 0
-  while (TOKEN.lastIndex < s.length) {
-    const m = TOKEN.exec(s)
+  while (TOKEN.lastIndex < body.length) {
+    const m = TOKEN.exec(body)
     if (!m || (m[2] && !shorthand)) throw new DomainError('INVALID_AMOUNT')
-    tokens.push(m[1] ? {num: plainNumber(m[1], scale, mark), suffix: m[2]} : m[0])
+    /* Operands get the plain number's checks; a sum's result rounds, so "1,234" may read as decimal in any currency. */
+    if (!m[1]) tokens.push(m[0])
+    else
+      tokens.push({
+        num: m[2]
+          ? plainNumber(m[1], mark)
+          : readNumber(m[1], mark, reading, true),
+        suffix: m[2],
+      })
   }
   // Must alternate number, operator, number ...
   tokens.forEach((tok, i) => {
@@ -192,6 +273,7 @@ export function evaluateAmount(
   let total: Ratio = {n: 0n, d: 1n}
   let sign = 1n
   let term = operand(0)
+  if (isNegative) term = {n: -term.n, d: term.d}
   for (let i = 1; i < tokens.length; i += 2) {
     const op = OPS[tokens[i] as string]!
     const next = operand(i + 1)
@@ -215,9 +297,10 @@ export function evaluateAmount(
   return assertInRange(total.n < 0n ? -rounded : rounded)
 }
 
-/** Percent text ("33.33") to integer basis points (3333); empty is 0. Two decimals at most, 0 to 100. */
+/** Percent text ("33.33" or "33,33") to integer basis points (3333); empty is 0. Two decimals at most, 0 to 100. */
 export function parseBasisPoints(input: string): number {
-  const s = input.trim()
+  // A percent has no grouping, so "," is only ever the decimal mark (de-DE "12,5").
+  const s = input.trim().replace(',', '.')
   if (!s) return 0
   const m = /^(\d{1,3})(?:\.(\d{1,2}))?$/.exec(s)
   if (!m) throw new DomainError('INVALID_PERCENT')

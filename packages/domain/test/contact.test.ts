@@ -1,6 +1,13 @@
 import {describe, expect, test} from 'bun:test'
 
-import {isEmail, isSignInCode, normalizePhone} from '../src/contact'
+import {
+  contactKey,
+  detectContactKind,
+  isContactEmail,
+  isEmail,
+  isSignInCode,
+  normalizePhone,
+} from '../src/contact'
 
 describe('sign-in fields', () => {
   test('email: one @, a dotted domain, no spaces', () => {
@@ -24,4 +31,17 @@ describe('sign-in fields', () => {
     expect(isSignInCode('42195')).toBe(false)
     expect(isSignInCode('04219a')).toBe(false)
   })
+})
+
+test('kind is detected while typing, before the value is valid', () => {
+  expect(detectContactKind('riya@')).toBe('email')
+  expect(detectContactKind('+91 98')).toBe('phone')
+  expect(detectContactKind('Riya')).toBeNull()
+  expect(detectContactKind('')).toBeNull()
+})
+
+test('contact email shape and keys', () => {
+  expect(isContactEmail('a@b.co')).toBe(true)
+  expect(isContactEmail('riya@example')).toBe(false)
+  expect(contactKey({kind: 'phone', value: '+919876543210'})).toBe('phone:+919876543210')
 })

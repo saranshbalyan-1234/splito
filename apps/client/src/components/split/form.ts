@@ -3,6 +3,7 @@ import {
   type AdjustmentKind,
   type AmountOptions,
   amountReadings,
+  amountInputText,
   type CashAllocation,
   cashSplit,
   cashUnit,
@@ -10,7 +11,6 @@ import {
   computeShares,
   DomainError,
   evaluateAmount,
-  getCurrency,
   type ItemParticipant,
   parseBasisPoints,
   participantId,
@@ -21,7 +21,6 @@ import {
   type SplitInput,
   splitItem,
   sumMinor,
-  toDecimalString,
   validateExpense,
   ZERO,
 } from '@splito/domain'
@@ -156,22 +155,29 @@ export function emptyForm({
   }
 }
 
-const money = (minor: bigint, scale: number) => toDecimalString(minor, scale)
-const blankIfZero = (minor: bigint, scale: number) =>
-  minor === ZERO ? '' : money(minor, scale)
-const percentText = (bp: number) =>
-  `${Math.floor(bp / 100)}${
-    bp % 100
-      ? '.' +
-        String(bp % 100)
-          .padStart(2, '0')
-          .replace(/0$/, '')
-      : ''
-  }`
-
-/** The edit form for a stored expense; `evaluateForm` of the result rebuilds the same split. */
-export function formFromExpense(e: Expense, me: string): ExpenseForm {
-  const {scale} = getCurrency(e.currency)
+/**
+ * The edit form for a stored expense, every amount written in the locale's
+ * decimal mark `mark` (`decimalMark`); `evaluateForm` of the result with the
+ * same mark rebuilds the same split. A 3-decimal amount ("12.345") looks
+ * like a thousands group, so the total carries `amountReading: 'decimal'`
+ * and rows always read as decimals (F-111 C2).
+ */
+export function formFromExpense(
+  e: Expense,
+  me: string,
+  mark: '.' | ',' = '.',
+): ExpenseForm {
+  const money = (minor: bigint) => amountInputText(minor, e.currency, mark)
+  const blankIfZero = (minor: bigint) => (minor === ZERO ? '' : money(minor))
+  const percentText = (bp: number) =>
+    `${Math.floor(bp / 100)}${
+      bp % 100
+        ? mark +
+          String(bp % 100)
+            .padStart(2, '0')
+            .replace(/0$/, '')
+        : ''
+    }`
   const people = [
     ...new Set([me, ...Object.keys(e.payers), ...Object.keys(e.shares)]),
   ].filter(p => p !== me || me in e.payers || me in e.shares)
@@ -190,14 +196,15 @@ export function formFromExpense(e: Expense, me: string): ExpenseForm {
     }),
     people,
     title: e.title,
-    amount: money(e.total, scale),
+    amount: money(e.total),
+    amountReading: 'decimal',
     isCategoryPicked: true,
     payerMode: single ? 'single' : 'multiple',
     payer: single ? payerIds[0]! : (payerIds[0] ?? me),
     paid: single
       ? {}
       : Object.fromEntries(
-          Object.entries(e.payers).map(([k, v]) => [k, money(v, scale)]),
+          Object.entries(e.payers).map(([k, v]) => [k, money(v)]),
         ),
     notes: e.notes,
     roundTo:
@@ -211,12 +218,12 @@ export function formFromExpense(e: Expense, me: string): ExpenseForm {
       form.excluded = people.filter(p => !s.participants.includes(p))
       if (s.mode === 'adjusted')
         form.adjust = Object.fromEntries(
-          Object.entries(s.adjustments).map(([k, v]) => [k, money(v, scale)]),
+          Object.entries(s.adjustments).map(([k, v]) => [k, money(v)]),
         )
       break
     case 'exact':
       form.exact = Object.fromEntries(
-        Object.entries(s.amounts).map(([k, v]) => [k, money(v, scale)]),
+        Object.entries(s.amounts).map(([k, v]) => [k, money(v)]),
       )
       break
     case 'percent':
@@ -231,7 +238,7 @@ export function formFromExpense(e: Expense, me: string): ExpenseForm {
       form.items = s.items.map(i => ({
         key: i.id,
         name: i.name ?? '',
-        amount: money(i.amount, scale),
+        amount: money(i.amount),
         people: i.participants.map(participantId),
         portions: Object.fromEntries(
           i.participants
@@ -245,7 +252,7 @@ export function formFromExpense(e: Expense, me: string): ExpenseForm {
         form.adjustModes[kind] = rate === undefined ? 'amount' : 'percent'
         form[kind] =
           rate === undefined
-            ? blankIfZero(s[kind] ?? ZERO, scale)
+            ? blankIfZero(s[kind] ?? ZERO)
             : rate === 0
               ? ''
               : percentText(rate)
@@ -307,7 +314,9 @@ export function evaluateForm(
   /*
    * Optional amount in a row: blank is zero; a bad one is reported against
    * its key. Only adjustments may go below zero (validateExpense refuses a
-   * payer or share against the total's sign).
+   * payer or share against the total's sign). Rows have no "Did you mean"
+   * picker and their keypad types no grouping marks, so "5.001" in the
+   * locale's mark is decimals (F-111 M3).
    */
   const rowAmount = (
     text: string | undefined,
@@ -316,7 +325,10 @@ export function evaluateForm(
   ): bigint | undefined => {
     if (!text?.trim()) return ZERO
     try {
-      const v = evaluateAmount(text, f.currency, mark, {shorthand})
+      const v = evaluateAmount(text, f.currency, mark, {
+        shorthand,
+        reading: 'decimal',
+      })
       if (v >= ZERO || canBeNegative) return v
       r.rowErrors[key] = 'NEGATIVE_AMOUNT'
     } catch (e) {
@@ -339,7 +351,9 @@ export function evaluateForm(
     } catch (e) {
       r.amountError = codeOf(e)
       if (r.amountError === 'AMBIGUOUS_AMOUNT')
-        r.amountReadings = amountReadings(f.amount, f.currency, mark)!
+        r.amountReadings = amountReadings(f.amount, f.currency, mark, {
+          shorthand,
+        })!
     }
     if (r.amountError) errors.push(r.amountError)
   }

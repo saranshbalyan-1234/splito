@@ -2,11 +2,11 @@ import {useRef, useState} from 'react'
 import {View} from 'react-native'
 import {Trans, useLingui} from '@lingui/react/macro'
 import {
+  amountInputText,
   type BalancePart,
+  decimalMark,
   formatAmount,
-  getCurrency,
   splitPayment,
-  toDecimalString,
   ZERO,
 } from '@splito/domain'
 import {createRepayments} from '@splito/sync'
@@ -134,7 +134,8 @@ function Form({
       : suggestions[c]
   const prefill = (c: string) => {
     const s = suggestionFor(c)
-    return s ? toDecimalString(s, getCurrency(c).scale) : ''
+    // In the number format's own mark: parseTypedAmount reads it back exactly (F-111 C1).
+    return s ? amountInputText(s, c, decimalMark(locale)) : ''
   }
   const [amountText, setAmountText] = useState(() => prefill(draft.currency))
   const [note, setNote] = useState('')

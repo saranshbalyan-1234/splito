@@ -28,6 +28,7 @@ Status words are the same as `docs/BACKLOG.md`: **done** (built, tested and merg
 | Expenses | Add / edit / delete / undo, all split modes, multiple payers, calculator, currencies, any date, categories | F-301, F-302 | in progress (built and tested on the unmerged UI line) |
 | Expenses | Itemize: portions, Everyone, tax / tip / service / discount visible with amount / % toggle | F-401 | in progress (built and tested on the unmerged UI line) |
 | Expenses | Smart amount input | F-310 | in progress (built and tested on feat/b-*, unmerged) |
+| Expenses | Amount entry and parsing correctness (audit C1, C2, M1, M2, M3, M7, M14, m8, m9, m13) | F-111 | done (feat/4b-33c; domain/sync/client bun tests + e2e `amountLocale.spec.ts` in de-DE and en-US with BHD; web verified, native not yet run) |
 | Expenses | Cash rounding with visible remainder | F-402 | in progress (built and tested on feat/b-*, unmerged) |
 | Settle up | Plan per group, payment rules, record repayment, UPI link and "Mark as paid?" | F-1101, F-1103 | in progress (built and tested on the unmerged UI line) |
 | Settle up | Call it even: forgive or write off | F-1113 | in progress (built and tested on feat/b-*, unmerged) |
@@ -37,9 +38,9 @@ Status words are the same as `docs/BACKLOG.md`: **done** (built, tested and merg
 | Settings | Every preference incl. Dim / Black dark style, accent, timezone | F-1701 | in progress (built and tested on the unmerged UI line) |
 | Settings | Account section: Sign in (honest until sync) / Log out | F-225 | todo |
 | Friends | Private friends ("Add anyway (only for you)") | F-601 | in progress (built on the unmerged UI line) |
-| Friends | Add friend by email or mobile, Splito directory check, consent, Requests and Invites sent | F-618 | in progress (partially built on feat/friend-invites, unverified) |
-| Friends | Invite link and QR with use / expiry limits, manage and revoke | F-619 | in progress (partially built on feat/friend-invites, unverified) |
-| Friends | Choose from contacts | F-602 | in progress (partially built on feat/friend-invites, unverified) |
+| Friends | Add friend by email or mobile, Splito directory check, consent, Requests and Invites sent | F-618 | done (feat/4b-31-33; directory answers in demo only, production says "We'll check when you're online" until F-2111) |
+| Friends | Invite link and QR with use / expiry limits, manage and revoke | F-619 | done (feat/4b-31-33; links fail closed outside demo until F-2105) |
+| Friends | Choose from contacts | F-602 | done (feat/4b-31-33; web verified, native picker not yet run on a device) |
 | Friends | Directory lookup and friend requests on the server | F-2111 | todo (needs backend) |
 | Friends | Invites and invite links on the server; link a private friend to a real account | F-2105, F-2106 | todo (needs backend) |
 | Support | Feedback: drawer + footer + Settings > Support, Send feedback sheet, Your feedback, saved on device + email draft | F-226 | in progress (partially built on feat/feedback, unverified) |

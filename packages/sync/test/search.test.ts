@@ -62,15 +62,15 @@ const ids = (q: string) => search(index, q, {today}).expenses.map(e => e.id)
 describe('parseSearchQuery', () => {
   test('splits words, amounts, comparisons and dates', () => {
     expect(parseSearchQuery('Dinner > 1,000 march 2026')).toEqual([
-      {kind: 'compare', op: '>', amount: '1000'},
+      {kind: 'compare', op: '>', amounts: ['1000']},
       {kind: 'text', text: 'dinner'},
       {kind: 'month', month: '03', year: '2026', text: 'march'},
     ])
     expect(parseSearchQuery('₹450 yesterday')).toEqual([
-      {kind: 'amount', amount: '450', text: '450'},
+      {kind: 'amount', amounts: ['450'], text: '450'},
       {kind: 'day', offset: -1, text: 'yesterday'},
     ])
-    expect(parseSearchQuery('<=12,50')).toEqual([{kind: 'compare', op: '<=', amount: '12.50'}])
+    expect(parseSearchQuery('<=12,50')).toEqual([{kind: 'compare', op: '<=', amounts: ['12.50']}])
     expect(parseSearchQuery('   ')).toEqual([])
   })
 })
@@ -175,4 +175,25 @@ describe('speed', () => {
     expect(worst).toBeLessThan(50)
     expect(buildMs).toBeLessThan(500)
   })
+})
+
+describe('F-111 M14: amounts in the user number format', () => {
+  const local = buildSearchIndex({
+    expenses: [
+      expense('rent', {title: 'Rent', total: 10000000n}),
+      expense('k', {title: 'Hotel', currency: 'EUR', total: 100000n, payers: {me: 100000n}}),
+      expense('one', {title: 'Coffee', currency: 'EUR', total: 100n, payers: {me: 100n}}),
+      expense('odd', {title: 'Flights', currency: 'EUR', total: 123456n, payers: {me: 123456n}}),
+    ],
+    people,
+    groups,
+    categories,
+  })
+  const found = (q: string, mark: '.' | ',' = '.') => search(local, q, {today, mark}).expenses.map(e => e.id).sort()
+
+  test('Indian grouping finds the ₹1,00,000 rent', () => expect(found('1,00,000')).toEqual(['rent']))
+  test('de-DE "1.000" is a thousand, not one', () => expect(found('1.000', ',')).toEqual(['k']))
+  test('de-DE "1.234,56" is one amount', () => expect(found('1.234,56', ',')).toEqual(['odd']))
+  test('en "1.000" could be either, so both match', () => expect(found('1.000')).toEqual(['k', 'one']))
+  test('comparisons read the format too', () => expect(found('>1.000,00', ',')).toEqual(['odd', 'rent']))
 })

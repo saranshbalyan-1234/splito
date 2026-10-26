@@ -375,13 +375,11 @@ test('UPI pay link shows only when I owe them rupees, and asks before recording'
 test('add a friend, then land on their page', async ({page}) => {
   await ready(page)
   await page.goto('/friends/new')
-  // A sheet: the primary action at the bottom, off until there is a name.
+  // A sheet: the primary action at the bottom, off until there is a name. A name alone is a private friend (26.18).
   await expect(page.getByTestId('sheet-save')).toBeDisabled()
   await page.getByTestId('add-friend-name').fill('Nikhil Das')
-  await page.getByTestId('add-friend-upi').fill('nikhil@ybl')
   await page.getByTestId('sheet-save').click()
   await expect(page.getByTestId('person-name')).toHaveText('Nikhil Das')
-  await expect(page.getByText('nikhil@ybl')).toBeVisible()
   await expect(page.getByTestId('person-settled')).toBeVisible()
   await expect(page.getByTestId('person-history-empty')).toBeVisible()
 })

@@ -26,3 +26,28 @@ export function normalizePhone(input: string): string | null {
 export function isSignInCode(input: string): boolean {
   return /^\d{6}$/.test(input.trim())
 }
+
+/** How to reach someone: a lower-cased email or an E.164 mobile number. */
+export type Contact = {kind: 'email'; value: string} | {kind: 'phone'; value: string}
+
+// ponytail: shape check only; the directory (or the mail server) is the real validator.
+const EMAIL_RE = /^[^\s@]+@[^\s@.]+(\.[^\s@.]+)*\.[^\s@.]{2,}$/
+
+/** An email's shape: name@domain.tld, with a top-level domain of 2+ characters. */
+export function isContactEmail(v: string): boolean {
+  return EMAIL_RE.test(v)
+}
+const PHONE_CHARS = /^\+?[\d\s().-]+$/
+
+/** What the user is typing into the one "Email or mobile number" field, before it is valid. */
+export function detectContactKind(raw: string): Contact['kind'] | null {
+  const v = raw.trim()
+  if (v.includes('@')) return 'email'
+  if (PHONE_CHARS.test(v) && /\d/.test(v)) return 'phone'
+  return null
+}
+
+/** Equality key: two contacts are the same person to the directory when keys match. */
+export function contactKey(c: Contact): string {
+  return `${c.kind}:${c.value}`
+}

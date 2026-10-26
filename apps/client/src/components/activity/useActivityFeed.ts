@@ -4,6 +4,7 @@ import {
   type ActivityState,
   type Entity,
   type Expense,
+  type FriendRequest,
   type Group,
   type Person,
 } from '@splito/sync'
@@ -23,6 +24,8 @@ export type ActivitySnapshot = {
   people: Map<string, Entity<Person>>
   groups: Map<string, Entity<Group>>
   expenses: Map<string, Entity<Expense>>
+  /** Friend requests by id, for their current state (a request row shows Accept until answered). */
+  requests: Map<string, Entity<FriendRequest>>
 }
 
 const snapshots = new WeakMap<ActivityState, ActivitySnapshot>()
@@ -36,6 +39,7 @@ function snapshotOf(state: ActivityState): ActivitySnapshot {
       people: new Map((state.entities.person as Entity<Person>[]).map(p => [p.id, p])),
       groups: new Map((state.entities.group as Entity<Group>[]).map(g => [g.id, g])),
       expenses: new Map((state.entities.expense as Entity<Expense>[]).map(e => [e.id, e])),
+      requests: new Map((state.entities.friendRequest as Entity<FriendRequest>[]).map(r => [r.id, r])),
     }
     snapshots.set(state, snapshot)
   }

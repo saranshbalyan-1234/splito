@@ -380,6 +380,7 @@ export function ExpenseComposer({
             candidates={candidates}
             selected={form.people}
             allowNew={!group}
+            showPending={!group}
             onChange={setPeople}
           />
           <PayersDialog
@@ -482,8 +483,8 @@ export function ExpenseComposer({
 
       <AmountField
         value={form.amount}
-        onChangeText={amount =>
-          update(f => ({...f, amount, amountReading: undefined}))
+        onChangeText={(amount, amountReading) =>
+          update(f => ({...f, amount, amountReading}))
         }
         currency={form.currency}
         locale={locale}

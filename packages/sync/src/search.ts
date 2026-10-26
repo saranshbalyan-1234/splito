@@ -1,4 +1,4 @@
-import {addDays, type CurrencyCode, DomainError, type LocalDate, parseAmount, sumByCurrency} from '@splito/domain'
+import {addDays, type CurrencyCode, DomainError, type LocalDate, numberReadings, parseAmount, sumByCurrency} from '@splito/domain'
 
 import {type Expense, type Group, type Person} from './mutations'
 import {type Entity} from './types'
@@ -15,9 +15,13 @@ import {type Entity} from './types'
 
 export type SearchToken =
   | {kind: 'text'; text: string}
-  /** A plain number ("450", "12.50", "1,000"): an amount in each expense's own currency, or text. */
-  | {kind: 'amount'; amount: string; text: string}
-  | {kind: 'compare'; op: CompareOp; amount: string}
+  /**
+   * A plain number in the user's number format ("450", "12,50", "1,00,000"):
+   * an amount in each expense's own currency, or text. `amounts` holds every
+   * reading as a plain decimal ("1.000" under "." is 1000 or 1.000).
+   */
+  | {kind: 'amount'; amounts: string[]; text: string}
+  | {kind: 'compare'; op: CompareOp; amounts: string[]}
   /** "today" (0) or "yesterday" (-1). */
   | {kind: 'day'; offset: number; text: string}
   | {kind: 'month'; month: string; year?: string; text: string}
@@ -52,8 +56,6 @@ const MARKS = /[̀-ͯ]/g
 const WORD = /[\p{L}\p{N}\p{M}]+/gu
 const WORD_CHAR = /[\p{L}\p{N}\p{M}]/u
 const COMPARE = /([<>]=?)\s*([^\s<>=]+)/g
-/** "1,000" (grouping), "12,50" or "12.50" (decimal), with a leading currency sign allowed. */
-const NUMBER = /^[^\p{L}\p{N}]*(\d{1,3}(?:,\d{3})+|\d+)(?:[.,](\d+))?$/u
 const YEAR = /^(19|20)\d\d$/
 
 /* English date words; the rest of a query is matched as written, in any script. */
@@ -75,26 +77,25 @@ function wordsOf(s: string): string[] {
   return fold(s).match(WORD) ?? []
 }
 
-function plainNumber(s: string): string | undefined {
-  const m = NUMBER.exec(s)
-  if (!m) return undefined
-  return m[1]!.replaceAll(',', '') + (m[2] ? '.' + m[2] : '')
-}
-
-export function parseSearchQuery(query: string): SearchToken[] {
+/**
+ * Splits a query into tokens. Numbers are read as the amount field reads
+ * them (`numberReadings`, a currency sign allowed), under `mark`, the number
+ * locale's decimal mark.
+ */
+export function parseSearchQuery(query: string, mark: '.' | ',' = '.'): SearchToken[] {
   const compares: SearchToken[] = []
   const rest = fold(query).replace(COMPARE, (_, op: CompareOp, num: string) => {
-    const amount = plainNumber(num)
-    if (!amount) return ` ${num} `
-    compares.push({kind: 'compare', op, amount})
+    const amounts = numberReadings(num, mark)
+    if (amounts.length === 0) return ` ${num} `
+    compares.push({kind: 'compare', op, amounts})
     return ' '
   })
   const tokens = compares
   const chunks = rest.split(/\s+/).filter(Boolean)
   for (let i = 0; i < chunks.length; i++) {
-    const amount = plainNumber(chunks[i]!)
-    if (amount) {
-      tokens.push({kind: 'amount', amount, text: amount})
+    const amounts = numberReadings(chunks[i]!, mark)
+    if (amounts.length > 0) {
+      tokens.push({kind: 'amount', amounts, text: amounts[0]!})
       continue
     }
     for (const word of chunks[i]!.match(WORD) ?? []) {
@@ -190,7 +191,9 @@ function addPrefix(index: SearchIndex, prefix: string, out: Set<number>) {
     for (const i of index.postings[w]!) out.add(i)
 }
 
-function addAmount(index: SearchIndex, amount: string, op: CompareOp | '=', out: Set<number>) {
+function addAmount(index: SearchIndex, typed: string, op: CompareOp | '=', out: Set<number>) {
+  // Zeros after the last decimal digit change no value ("1.000" is 1 in EUR too).
+  const amount = typed.includes('.') ? typed.replace(/\.?0+$/, '') : typed
   for (const [currency, {totals, at}] of index.amounts) {
     let minor: bigint
     try {
@@ -215,11 +218,11 @@ function matches(token: SearchToken, index: SearchIndex, today: LocalDate): Set<
   const out = new Set<number>()
   switch (token.kind) {
     case 'compare':
-      addAmount(index, token.amount, token.op, out)
+      for (const amount of token.amounts) addAmount(index, amount, token.op, out)
       return out
     case 'amount':
-      addAmount(index, token.amount, '=', out)
-      if (YEAR.test(token.amount)) addDate(index, token.amount, out)
+      for (const amount of token.amounts) addAmount(index, amount, '=', out)
+      if (YEAR.test(token.text)) addDate(index, token.text, out)
       break
     case 'day':
       addDate(index, addDays(today, token.offset), out)
@@ -240,8 +243,9 @@ function nameMatches(words: string[], tokens: SearchToken[]): boolean {
 
 const EMPTY: SearchResults = {expenses: [], people: [], groups: [], totals: {}, terms: []}
 
-export function search(index: SearchIndex, query: string, {today}: {today: LocalDate}): SearchResults {
-  const tokens = parseSearchQuery(query)
+/** `mark` is the number locale's decimal mark (`decimalMark`), so "1.000" means what the user's format says. */
+export function search(index: SearchIndex, query: string, {today, mark = '.'}: {today: LocalDate; mark?: '.' | ','}): SearchResults {
+  const tokens = parseSearchQuery(query, mark)
   if (tokens.length === 0) return EMPTY
   // Intersect from the smallest set so a broad word costs little.
   const sets = tokens.map(t => matches(t, index, today)).sort((x, y) => x.size - y.size)

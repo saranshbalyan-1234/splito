@@ -221,7 +221,7 @@ BroadcastChannel change notices so every open tab refreshes its projections afte
 
 Fixes for logic-audit findings C1, C2, M1, M2, M3, M7, M14, m8, m9, m13 (see the report for scenario, evidence and fix per finding).
 
-- **Effort** L · **Impact** 10 · **Backend** no · **Status** todo · **Deps** merge row 30
+- **Effort** L · **Impact** 10 · **Backend** no · **Status** done (feat/4b-33c, 2026-10-27; domain `amountAudit.test.ts`, client `form.test.ts`, sync `search.test.ts` / `preferences.test.ts`, e2e `amountLocale.spec.ts` in de-DE and en-US with BHD) · **Deps** merge row 30
 - **Prefs** -
 - **Acceptance**
   1. Critical money fixes first: 3-decimal currencies (BHD, KWD, OMR) never change value when the app reads back text it wrote, in any locale; repeated or non-locale decimal marks parse correctly for 0-, 2- and 3-decimal currencies; split rows and percents accept the locale decimal mark; amount search understands the user number format; expressions allow grouping in operands and a leading minus; prototype keys are never currency codes. Each finding gets a failing test first (domain/sync bun tests and an e2e for C1/C2 in a comma locale).
@@ -1145,7 +1145,7 @@ Friends without accounts or invites, visible and usable only on your side: the "
 
 "Choose from contacts" in the Add friend sheet: the native contacts picker (expo-contacts) after a permission primer; on web the Contact Picker API where the browser has it, otherwise the button is hidden. Contacts stay on the device.
 
-- **Effort** S · **Impact** 7 · **Backend** no · **Status** in progress (partially built on feat/friend-invites, unverified) · **Deps** F-618
+- **Effort** S · **Impact** 7 · **Backend** no · **Status** done (feat/4b-31-33, 2026-10-27; web Contact Picker path in e2e `friends.spec.ts`; the native primer and expo-contacts picker are built but not yet run on a simulator) · **Deps** F-618
 - **Prefs** -
 - **Acceptance**
   1. Native: the button shows a pre-permission primer (the F-216 pattern, built here for contacts if F-216 has not shipped), then the system picker; a denied permission falls back to typing, with Open Settings; nothing dead-ends.
@@ -1312,7 +1312,7 @@ Named subsets inside a group ("Car 1", "Room B", "Divers") picked in one tap; th
 
 Add friend asks for an email or mobile number (one field, auto-detected) plus an optional display name, checks the account directory before inviting, and never makes anyone a friend without their consent. Front end and directory client; live lookups and requests need F-2111.
 
-- **Effort** L · **Impact** 9 · **Backend** no · **Status** in progress (partially built on feat/friend-invites, unverified) · **Deps** F-601, F-205
+- **Effort** L · **Impact** 9 · **Backend** no · **Status** done (feat/4b-31-33, 2026-10-27; e2e `friends.spec.ts`; live lookups and sends wait for F-2111) · **Deps** F-601, F-205
 - **Prefs** `privacy.findByContact`, `privacy.friendRequestsFrom`
 - **Acceptance**
   1. One field detects email or mobile and validates it; phone numbers are stored in E.164 with the user's region as the default; an optional display name.
@@ -1326,8 +1326,8 @@ Add friend asks for an email or mobile number (one field, auto-detected) plus an
 
 Personal and group invite links with a QR, use and expiry limits, a manage list and revoke; using a link always counts as accepting. Front end; links work across devices once F-2105 ships.
 
-- **Effort** M · **Impact** 8 · **Backend** no · **Status** in progress (partially built on feat/friend-invites, unverified) · **Deps** F-618, F-603
-- **Prefs** `invites.defaultMaxUses`, `invites.defaultExpiry`, `group:invites.approveJoins`
+- **Effort** M · **Impact** 8 · **Backend** no · **Status** done (feat/4b-31-33, 2026-10-27; e2e `friends.spec.ts`; links are minted only in demo until F-2105, production says they need a connection) · **Deps** F-618, F-603
+- **Prefs** `invites.defaultMaxUses.friend`, `invites.defaultMaxUses.group`, `invites.defaultExpiry`, `invites.approveJoins` (default for new group links; each link can override)
 - **Acceptance**
   1. "Invite link / QR" is offered from the People (Home) header and the Add friend sheet; groups offer the same for joining a group (Group overflow "Invite link").
   2. Creating one sets max uses (1, 5, 25, unlimited; default 1 for friends, 25 for groups), expiry (24 hours, 7 days, 30 days, never; default 7 days) and, for groups, "approve each join" (default off); the defaults are editable in Settings.

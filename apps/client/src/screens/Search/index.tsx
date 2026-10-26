@@ -3,6 +3,7 @@ import {useEffect, useRef, useState} from 'react'
 import {type TextInput, type TextInputKeyPressEvent, View} from 'react-native'
 import {Trans, useLingui} from '@lingui/react/macro'
 import {useNavigation, useRoute} from '@react-navigation/native'
+import {decimalMark} from '@splito/domain'
 import {search} from '@splito/sync'
 
 import {type NavigationProp} from '#/lib/routes/types'
@@ -63,7 +64,9 @@ export function SearchScreen() {
     if (rememberSearches === false && history.length > 0) setHistory([])
   }, [rememberSearches, history, setHistory])
 
-  const results = index ? search(index, query, {today}) : undefined
+  const results = index
+    ? search(index, query, {today, mark: decimalMark(locale)})
+    : undefined
   const rows = results ? searchRows(results) : []
   const navRows = rows.filter((r): r is SearchResultRow => r.type !== 'header')
 

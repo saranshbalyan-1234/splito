@@ -12,23 +12,25 @@ import {defineMessage} from '@lingui/core/macro'
 import {Trans, useLingui} from '@lingui/react/macro'
 import {useNavigation} from '@react-navigation/native'
 import {expenseNet, formatAmount, magnitude, ZERO} from '@splito/domain'
-import {type ActivityEvent, type SwipeAction} from '@splito/sync'
+import {type ActivityEvent, requestName, type SwipeAction} from '@splito/sync'
 
 import {useHaptics} from '#/lib/haptics'
 import {GestureActionView} from '#/lib/custom-animations/GestureActionView'
 import {type GestureActions} from '#/lib/custom-animations/GestureActionView.shared'
 import {dateDiff, formatDateDiff} from '#/lib/hooks/useTimeAgo'
 import {type NavigationProp} from '#/lib/routes/types'
+import {logger} from '#/logger'
 import {useRowPadding} from '#/state/preferences/density'
 import {TimeElapsed} from '#/view/com/util/TimeElapsed'
 import {UserAvatar} from '#/view/com/util/UserAvatar'
 import {atoms as a, useBreakpoints, useTheme} from '#/alf'
 import {hexToRgb, rgbToHex} from '#/alf/util/colorGeneration'
-import {Button, ButtonIcon} from '#/components/Button'
+import {Button, ButtonIcon, ButtonText} from '#/components/Button'
 import {DotGrid3x1_Stroke2_Corner0_Rounded as DotsIcon} from '#/components/icons/DotGrid'
 import {type Props as SVGIconProps} from '#/components/icons/common'
 import * as Menu from '#/components/Menu'
 import {SubtleHover} from '#/components/SubtleHover'
+import * as Toast from '#/components/Toast'
 import {Text} from '#/components/Typography'
 import {moneyGlyph, useMoneyStyle} from '#/components/MoneyDirection'
 import {IS_NATIVE, IS_WEB, IS_WEB_TOUCH_DEVICE} from '#/env'
@@ -37,10 +39,12 @@ import {
   ArchivedBadge,
   DeletedBadge,
   EditedBadge,
+  FriendAcceptedBadge,
   FriendAddedBadge,
   FriendRemovedBadge,
   GroupBadge,
   PaymentBadge,
+  RequestSentBadge,
   RestoredBadge,
   WriteOffBadge,
 } from './icons'
@@ -141,7 +145,7 @@ export function ActivityItem({
   const menuControl = Menu.useMenuControl()
   const [isHovered, setIsHovered] = useState(false)
   const [isFocusWithin, setIsFocusWithin] = useState(false)
-  const content = useDescribe(event, snapshot, me, locale, navigation)
+  const content = useDescribe(event, snapshot, me, locale, navigation, actions)
 
   const menuActions = (['markRead', 'hide', 'delete'] as const).filter(x =>
     actions.isAvailable(x, event),
@@ -300,6 +304,22 @@ export function ActivityItem({
             />
           )}
         </Pressable>
+        {content.actions ? (
+          <View
+            style={[
+              a.flex_row,
+              a.gap_sm,
+              a.pb_md,
+              a.pr_lg,
+              {
+                backgroundColor,
+                paddingLeft: a.px_lg.paddingLeft + SLOT_SIZE.width + a.gap_lg.gap,
+                marginTop: -4,
+              },
+            ]}>
+            {content.actions}
+          </View>
+        ) : null}
         {/*
          * The "..." is always there, on every platform, so the row's actions
          * are discoverable; on web with a mouse the quick actions join it on
@@ -376,12 +396,15 @@ function useDescribe(
   me: string,
   locale: string,
   navigation: NavigationProp,
+  actions: ActivityActions,
 ): {
   avatarName: string | undefined
   icon: React.ComponentType<SVGIconProps>
   tone: BadgeTone
   headline: React.ReactNode
   detail?: React.ReactNode
+  /** Buttons under the row (Accept / Decline), siblings of its pressable (section 2). */
+  actions?: React.ReactNode
   /** Opens what the change is about; undefined when nothing is left to open. */
   open?: () => void
 } {
@@ -490,6 +513,87 @@ function useDescribe(
           </Detail>
         ),
         open: () => navigation.push('Expense', {expenseId: event.entityId}),
+      }
+    }
+    case 'friendRequest': {
+      const r = event.data
+      const current = snapshot.requests.get(event.entityId)?.data ?? r
+      const friendName = current.personId
+        ? (snapshot.people.get(current.personId)?.data.name ?? requestName(current))
+        : requestName(current)
+      const subject = <Strong>{friendName}</Strong>
+      const openPerson = current.personId
+        ? () => navigation.push('Person', {personId: current.personId!})
+        : () => navigation.navigate('People')
+      if (event.kind === 'friendRequest.received') {
+        const isPending = current.status === 'pending'
+        return {
+          avatarName: friendName,
+          icon: FriendAddedBadge,
+          tone: 'primary',
+          headline: (
+            <Trans>
+              {subject} sent you a friend request
+            </Trans>
+          ),
+          detail: (
+            <Detail>
+              {current.status === 'accepted' ? (
+                <Trans>You’re friends now</Trans>
+              ) : current.status === 'declined' ? (
+                <Trans>You declined</Trans>
+              ) : (
+                <Trans>Accept to split expenses together</Trans>
+              )}
+            </Detail>
+          ),
+          actions: isPending ? (
+            <FriendRequestActions
+              name={friendName}
+              onAnswer={accept => actions.answerRequest(event.entityId, accept)}
+            />
+          ) : undefined,
+          open: openPerson,
+        }
+      }
+      if (event.kind === 'friendRequest.accepted') {
+        return {
+          avatarName: friendName,
+          icon: FriendAcceptedBadge,
+          tone: 'primary',
+          headline:
+            r.direction === 'outgoing' ? (
+              <Trans>
+                {subject} accepted your friend request
+              </Trans>
+            ) : (
+              <Trans>
+                You accepted {subject}’s friend request
+              </Trans>
+            ),
+          detail: (
+            <Detail>
+              <Trans>You can now split anything together</Trans>
+            </Detail>
+          ),
+          open: openPerson,
+        }
+      }
+      return {
+        avatarName: nameOf(event.actor),
+        icon: RequestSentBadge,
+        tone: 'neutral',
+        headline:
+          r.reach === 'invited' ? (
+            <Trans>
+              {actor} invited {subject} to Splito
+            </Trans>
+          ) : (
+            <Trans>
+              {actor} sent {subject} a friend request
+            </Trans>
+          ),
+        open: openPerson,
       }
     }
     case 'person': {
@@ -842,5 +946,63 @@ function Avatar({
         </View>
       </View>
     </View>
+  )
+}
+
+/** Accept / Decline on a request row; the same mutations as People > Requests. */
+function FriendRequestActions({
+  name,
+  onAnswer,
+}: {
+  name: string
+  onAnswer: (accept: boolean) => Promise<void>
+}) {
+  const {t: l} = useLingui()
+  const haptics = useHaptics()
+  const [isBusy, setIsBusy] = useState(false)
+  const act = async (accept: boolean) => {
+    if (isBusy) return
+    setIsBusy(true)
+    try {
+      await onAnswer(accept)
+      if (accept) {
+        haptics.success()
+        Toast.show(l`You and ${name} are friends now`, {type: 'success'})
+      } else {
+        haptics.confirm()
+        Toast.show(l`Request declined. ${name} isn’t told.`)
+      }
+    } catch (e) {
+      haptics.error()
+      logger.error(e, {where: 'ActivityItem.friendRequest'})
+      Toast.show(l`That didn’t work. Please try again.`, {type: 'error'})
+      setIsBusy(false)
+    }
+  }
+  return (
+    <>
+      <Button
+        testID="activity-request-accept"
+        label={l`Accept ${name}’s friend request`}
+        size="small"
+        color="primary"
+        disabled={isBusy}
+        onPress={() => void act(true)}>
+        <ButtonText>
+          <Trans context="button">Accept</Trans>
+        </ButtonText>
+      </Button>
+      <Button
+        testID="activity-request-decline"
+        label={l`Decline ${name}’s friend request`}
+        size="small"
+        color="secondary"
+        disabled={isBusy}
+        onPress={() => void act(false)}>
+        <ButtonText>
+          <Trans context="button">Decline</Trans>
+        </ButtonText>
+      </Button>
+    </>
   )
 }

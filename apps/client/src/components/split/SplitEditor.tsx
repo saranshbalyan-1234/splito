@@ -1,6 +1,6 @@
 import {ScrollView, View} from 'react-native'
 import {Trans, useLingui} from '@lingui/react/macro'
-import {formatAmount, getCurrency, toDecimalString, ZERO} from '@splito/domain'
+import {amountInputText, decimalMark, formatAmount, ZERO} from '@splito/domain'
 import {type AdjustmentModes} from '@splito/sync'
 import {nanoid} from 'nanoid/non-secure'
 
@@ -844,10 +844,13 @@ function ItemsEditor({
             onPress={() =>
               update(f => ({
                 ...f,
-                amount: toDecimalString(
+                // Written by the app, so it is never asked about (F-111 C2).
+                amount: amountInputText(
                   evaluation.itemsTotal!,
-                  getCurrency(f.currency).scale,
+                  f.currency,
+                  decimalMark(locale),
                 ),
+                amountReading: 'decimal',
               }))
             }>
             <ButtonText>

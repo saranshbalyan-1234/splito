@@ -3,7 +3,7 @@ import {View} from 'react-native'
 import {Trans, useLingui} from '@lingui/react/macro'
 import {createPerson} from '@splito/sync'
 
-import {useMutationCtx, useStore} from '#/data/hooks'
+import {useMutationCtx, usePendingRequests, useStore} from '#/data/hooks'
 import {UserAvatar} from '#/view/com/util/UserAvatar'
 import {atoms as a, useTheme} from '#/alf'
 import {Button} from '#/components/Button'
@@ -12,6 +12,7 @@ import * as FormSheet from '#/components/FormSheet'
 import {SearchInput} from '#/components/forms/SearchInput'
 import * as Toggle from '#/components/forms/Toggle'
 import {PersonPlus_Filled_Stroke2_Corner0_Rounded as PersonPlusIcon} from '#/components/icons/Person'
+import {PendingPeople} from '#/components/people/PendingPeople'
 import * as Toast from '#/components/Toast'
 import {Text} from '#/components/Typography'
 import {useAvatarName, useDisplayName, useErrorText} from './shared'
@@ -29,6 +30,7 @@ export function PeopleDialog({
   selected,
   lockedIds = [],
   allowNew = false,
+  showPending = false,
   onChange,
 }: {
   control: Dialog.DialogControlProps
@@ -39,6 +41,8 @@ export function PeopleDialog({
   /** Always selected; shown but not toggleable (you, in your own group). */
   lockedIds?: string[]
   allowNew?: boolean
+  /** Choosing from friends: list people who haven't accepted yet, greyed (26.18). */
+  showPending?: boolean
   onChange: (ids: string[]) => void
 }) {
   return (
@@ -50,6 +54,7 @@ export function PeopleDialog({
         selected={selected}
         lockedIds={lockedIds}
         allowNew={allowNew}
+        showPending={showPending}
         onChange={onChange}
       />
     </FormSheet.Outer>
@@ -63,6 +68,7 @@ function PeopleInner({
   selected,
   lockedIds,
   allowNew,
+  showPending,
   onChange,
 }: {
   title: string
@@ -71,9 +77,11 @@ function PeopleInner({
   selected: string[]
   lockedIds: string[]
   allowNew: boolean
+  showPending: boolean
   onChange: (ids: string[]) => void
 }) {
   const t = useTheme()
+  const {outgoing: pending} = usePendingRequests()
   const {t: l} = useLingui()
   const store = useStore()
   const ctx = useMutationCtx()
@@ -187,6 +195,12 @@ function PeopleInner({
           </Toggle.Item>
         ))}
       </Toggle.Group>
+      {showPending && !q ? (
+        <PendingPeople
+          pending={pending}
+          rowStyle={[a.border_t, t.atoms.border_contrast_low]}
+        />
+      ) : null}
       {rows.length === 0 && !allowNew ? (
         <Text
           style={[

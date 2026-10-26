@@ -11,7 +11,7 @@ import {
 
 import {useHaptics} from '#/lib/haptics'
 import {logger} from '#/logger'
-import {useEntities, useMutationCtx, useStore} from '#/data/hooks'
+import {useEntities, useMutationCtx, usePendingRequests, useStore} from '#/data/hooks'
 import {UserAvatar} from '#/view/com/util/UserAvatar'
 import {atoms as a, useTheme} from '#/alf'
 import {Button, ButtonIcon} from '#/components/Button'
@@ -21,6 +21,7 @@ import * as Toggle from '#/components/forms/Toggle'
 import {PlusLarge_Stroke2_Corner0_Rounded as PlusIcon} from '#/components/icons/Plus'
 import * as Toast from '#/components/Toast'
 import * as FormSheet from '#/components/FormSheet'
+import {PendingPeople} from '#/components/people/PendingPeople'
 
 /**
  * Adds friends (or someone new) to a group from now on. Earlier expenses
@@ -42,6 +43,7 @@ export function AddMembersDialog({
 
 function Form({group}: {group: Entity<Group>}) {
   const t = useTheme()
+  const {outgoing: pending} = usePendingRequests()
   const {t: l} = useLingui()
   const control = Dialog.useDialogContext()
   const store = useStore()
@@ -144,6 +146,15 @@ function Form({group}: {group: Entity<Group>}) {
             ))}
           </Toggle.Group>
         )}
+        <PendingPeople
+          pending={pending}
+          avatarSize={32}
+          rowStyle={[
+            a.px_md,
+            candidates.length > 0 && a.border_t,
+            t.atoms.border_contrast_low,
+          ]}
+        />
         <View
           style={[
             a.flex_row,
