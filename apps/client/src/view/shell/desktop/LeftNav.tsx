@@ -28,6 +28,10 @@ import {
 import {LogoMark} from '#/components/brand/Logo'
 import {Button, ButtonIcon, ButtonText} from '#/components/Button'
 import {
+  Activity_Filled_Corner0_Rounded as ActivityFilledIcon,
+  Activity_Stroke2_Corner0_Rounded as ActivityIcon,
+} from '#/components/icons/Activity'
+import {
   ChartPie_Filled_Corner0_Rounded as ChartPieFilledIcon,
   ChartPie_Stroke2_Corner0_Rounded as ChartPieIcon,
 } from '#/components/icons/ChartPie'
@@ -49,6 +53,7 @@ import {HEADER_HEIGHT} from '#/components/Layout/const'
 import {Text} from '#/components/Typography'
 import {useAnalytics} from '#/analytics'
 import {IS_NATIVE} from '#/env'
+import {useUnreadCount} from '#/features/notifications'
 import {router} from '#/routes'
 import {getComposeButtonLayout} from './composeButtonLayout'
 
@@ -231,6 +236,7 @@ function NavItem({
               {right: -20}, // more breathing room
             ]}>
             <Text
+              testID={`nav-badge-${navItem}`}
               accessibilityLabel={l`${plural(count, {
                 one: '# unread item',
                 other: '# unread items',
@@ -247,8 +253,9 @@ function NavItem({
                 a.leading_tight,
                 a.z_20,
                 {
-                  top: '-10%',
-                  left: count.length === 1 ? 12 : 8,
+                  // Higher and further right than upstream's bell: the pulse glyph is only empty at its top right.
+                  top: -6,
+                  left: count.length === 1 ? 12 : 10,
                   backgroundColor: t.palette.primary_500,
                   color: t.palette.white,
                   lineHeight: a.text_sm.fontSize,
@@ -333,6 +340,7 @@ export function DesktopLeftNav({
   const {leftNavMinimal} = useLayoutBreakpoints()
   const insets = useSafeAreaInsets()
   const tabs = useTabs()
+  const numUnreadNotifications = useUnreadCount()
 
   if (!gtMobile) {
     return null
@@ -340,7 +348,7 @@ export function DesktopLeftNav({
 
   const tabItems: Record<
     TabId,
-    {label: string; icons: NavItemProps['icons']}
+    {label: string; icons: NavItemProps['icons']; count?: string}
   > = {
     people: {
       label: l`People`,
@@ -353,6 +361,11 @@ export function DesktopLeftNav({
     analytics: {
       label: l`Analytics`,
       icons: {inactive: ChartPieIcon, active: ChartPieFilledIcon},
+    },
+    activity: {
+      label: l`Activity`,
+      icons: {inactive: ActivityIcon, active: ActivityFilledIcon},
+      count: numUnreadNotifications,
     },
   }
 
@@ -370,6 +383,7 @@ export function DesktopLeftNav({
             onNavigateTab={onNavigateTab}
             minimal={leftNavMinimal}
             icons={tabItems[tab].icons}
+            count={tabItems[tab].count}
           />
         ))}
         <NavItem

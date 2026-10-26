@@ -7,13 +7,12 @@ import {type Props as SVGIconProps} from '#/components/icons/common'
 import {Shapes_Stroke2_Corner0_Rounded as ShapesIcon} from '#/components/icons/Shapes'
 import * as Layout from '#/components/Layout'
 import {Text} from '#/components/Typography'
-import {HeaderBell} from '#/features/notifications/HeaderBell'
 
 /**
  * Temporary body for routes whose feature stream has not landed yet: the
  * header rule set plus an honest note. Every file that renders this carries
  * a `STUB-OWNER` comment naming the stream that replaces it. Pushed routes
- * get Back; top-level routes get the avatar, their `action` and the bell.
+ * get Back; top-level routes get the avatar and their `action`.
  */
 export function StubScreen({
   testID,
@@ -34,25 +33,11 @@ export function StubScreen({
   return (
     <Layout.Screen testID={testID}>
       <Layout.Header.Outer>
-        {canGoBack ? (
-          <Layout.Header.BackButton />
-        ) : (
-          <>
-            <HeaderAvatar />
-            <Layout.Header.Slot />
-          </>
-        )}
+        {canGoBack ? <Layout.Header.BackButton /> : <HeaderAvatar />}
         <Layout.Header.Content>
           <Layout.Header.TitleText>{title}</Layout.Header.TitleText>
         </Layout.Header.Content>
-        {canGoBack ? (
-          <Layout.Header.Slot />
-        ) : (
-          <>
-            {action ?? <Layout.Header.Slot />}
-            <HeaderBell />
-          </>
-        )}
+        {(!canGoBack && action) || <Layout.Header.Slot />}
       </Layout.Header.Outer>
       <View style={[a.px_xl, a.pt_5xl, a.pb_2xl, a.gap_xs, a.align_center]}>
         <Icon

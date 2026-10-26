@@ -1,4 +1,4 @@
-# Reuse record - preview shell (avatar drawer, header rule set, notifications bell)
+# Reuse record - preview shell (avatar drawer, header rule set, Activity tab)
 
 Upstream: `bluesky-social/social-app@4e4ad9c5f5cc584bd06473ab6f16318fd0bd8465` (MIT).
 Every file below starts with `// Adapted from bluesky-social/social-app@4e4ad9c (MIT) - <upstream path>`.
@@ -9,7 +9,7 @@ Bluesky pins, for the native drawer.
 
 | Splito file | Upstream file | Splito changes |
 |---|---|---|
-| `src/navigation/Drawer.tsx` | `src/view/shell/Drawer.tsx` | Account card shows name, "Saved on this device" and friend / group counts (no handle or followers); rows People, Groups, Analytics, Profile, Settings, Notifications, then a Dark theme switch (the `theme` preference); footer Help and About in place of Feedback and Help; filled glyph and bold label for the current page; no invite, OTA notice, sign-up card or extra links |
+| `src/navigation/Drawer.tsx` | `src/view/shell/Drawer.tsx` | Account card shows name, "Saved on this device" and friend / group counts (no handle or followers); rows People, Groups, Analytics, Activity (Bluesky's unread count from its Notifications row), Profile, Settings, then a Dark theme switch (the `theme` preference); footer Help and About in place of Feedback and Help; filled glyph and bold label for the current page; no invite, OTA notice, sign-up card or extra links |
 | `src/state/shell/drawer-open.tsx` | `src/state/shell/drawer-open.tsx` | - |
 | `src/state/shell/index.tsx` | `src/state/shell/index.tsx` | Drawer-open provider mounted; drawer-swipe, onboarding and color-mode providers still removed |
 | `src/view/shell/index.web.tsx` | `src/view/shell/index.web.tsx` | Drawer layout kept and shown at every width (the avatar opens it on desktop too); focus trap and Escape (Radix, as Splito's web dialogs); scrim above the sticky headers; no slide under reduced motion |
@@ -18,5 +18,4 @@ Bluesky pins, for the native drawer.
 | `src/components/Layout/Header/index.tsx` | `src/components/Layout/Header/index.tsx` | Title centred on every platform; `Sticky` wrapper that hides on scroll on phones; `ActionButton` for a page's one header action; `MenuButton` replaced by `HeaderAvatar` |
 | `src/components/Layout/MainScrollProvider.tsx` | `src/view/com/util/MainScrollProvider.tsx` | One header mode per screen (mounted by `Layout.Screen`) instead of Home's; native slides the in-flow header with a margin; listener set in place of EventEmitter |
 | `src/components/TabBar.tsx` | `src/view/com/pager/TabBar.web.tsx` | Fixed row of equal tabs (no scroller), same on native; 600px column centred on wide screens |
-| `src/screens/Notifications.tsx` | `src/view/screens/Notifications.tsx` | Back / "Notifications" / Mark all read header; tabs All and From others filter one list (no pager); rows from the local store's history |
-| `src/features/notifications/HeaderBell.tsx` | `src/view/shell/desktop/LeftNav.tsx (NavItem unread count)` | Bell icon button at the far right of top-level headers with the unread badge (capped at 30+) |
+| `src/screens/Activity.tsx` | `src/view/screens/Notifications.tsx` | Named Activity, a tab at `/activity` (`/notifications` redirects); avatar / "Activity" / Mark all read header; tabs All and From others filter one list (no pager); rows from the local store's history |

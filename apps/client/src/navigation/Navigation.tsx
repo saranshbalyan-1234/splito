@@ -33,6 +33,7 @@ import {usePref} from '#/data/hooks'
 import {useShouldReduceMotion} from '#/motion/useShouldReduceMotion'
 import {DevTour, navigationRef} from '#/navigation/DevTour'
 import {linking} from '#/navigation/linking'
+import {ActivityScreen} from '#/screens/Activity'
 import {AddExpenseScreen} from '#/screens/AddExpense'
 import {AddFriendScreen} from '#/screens/AddFriend'
 import {AnalyticsScreen} from '#/screens/Analytics'
@@ -41,7 +42,6 @@ import {EditExpenseScreen} from '#/screens/EditExpense'
 import {ExpenseScreen} from '#/screens/Expense'
 import {GroupScreen} from '#/screens/Group'
 import {GroupsScreen} from '#/screens/Groups'
-import {NotificationsScreen} from '#/screens/Notifications'
 import {PeopleScreen} from '#/screens/People'
 import {PersonScreen} from '#/screens/Person'
 import {ProfileScreen} from '#/screens/Profile'
@@ -57,7 +57,7 @@ const Flat = createNativeStackNavigatorWithAuth<FlatNavigatorParams>()
 const TITLES: Partial<Record<keyof FlatNavigatorParams, MessageDescriptor>> = {
   Groups: msg`Groups`,
   Analytics: msg`Analytics`,
-  Notifications: msg`Notifications`,
+  Activity: msg`Activity`,
   Profile: msg`Profile`,
   Settings: msg`Settings`,
   SettingsSection: msg`Settings`,
@@ -137,6 +137,7 @@ function Tabs() {
       <Tab.Screen name="People" component={PeopleScreen} />
       <Tab.Screen name="Groups" component={GroupsScreen} />
       <Tab.Screen name="Analytics" component={AnalyticsScreen} />
+      <Tab.Screen name="Activity" component={ActivityScreen} />
     </Tab.Navigator>
   )
 }
@@ -165,7 +166,6 @@ export function TabsNavigator({
         ...(reducedAnimation && {animation: reducedAnimation}),
       }}>
       <Stack.Screen name="Tabs" component={Tabs} />
-      <Stack.Screen name="Notifications" component={NotificationsScreen} />
       <Stack.Screen name="Profile" component={ProfileScreen} />
       <Stack.Screen name="Settings" component={SettingsScreen} />
       <Stack.Screen name="SettingsSection" component={SettingsSectionScreen} />
@@ -229,9 +229,9 @@ export function FlatNavigator({
         options={{title: title('Analytics')}}
       />
       <Flat.Screen
-        name="Notifications"
-        component={NotificationsScreen}
-        options={{title: title('Notifications')}}
+        name="Activity"
+        component={ActivityScreen}
+        options={{title: title('Activity')}}
       />
       <Flat.Screen
         name="Profile"

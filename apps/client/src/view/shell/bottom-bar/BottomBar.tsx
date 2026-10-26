@@ -3,6 +3,7 @@ import {type JSX, useCallback} from 'react'
 import {type GestureResponderEvent, View} from 'react-native'
 import Animated from 'react-native-reanimated'
 import {useSafeAreaInsets} from 'react-native-safe-area-context'
+import {plural} from '@lingui/core/macro'
 import {useLingui} from '@lingui/react'
 import {type BottomTabBarProps} from '@react-navigation/bottom-tabs'
 import {StackActions} from '@react-navigation/native'
@@ -20,6 +21,7 @@ import {atoms as a, useTheme} from '#/alf'
 import {TAB_LABELS, TabGlyph} from '#/components/TabGlyph'
 import {Text} from '#/components/Typography'
 import {useAnalytics} from '#/analytics'
+import {useUnreadCount} from '#/features/notifications'
 import {styles} from './BottomBarStyles'
 
 /*
@@ -37,12 +39,14 @@ export function BottomBar({navigation}: BottomTabBarProps) {
   const tabs = useTabs()
   const dedupe = useDedupe()
   const footerMinimalShellTransform = useMinimalShellFooterTransform()
+  const numUnreadNotifications = useUnreadCount()
   const iconWidth = 28
 
   const isAt: Record<SidebarTab, boolean> = {
     People: tabState.isAtPeople,
     Groups: tabState.isAtGroups,
     Analytics: tabState.isAtAnalytics,
+    Activity: tabState.isAtActivity,
   }
 
   const onPressTab = useCallback(
@@ -106,9 +110,20 @@ export function BottomBar({navigation}: BottomTabBarProps) {
               />
             }
             onPress={() => onPressTab(TAB_ROUTE[tab])}
+            /* Bluesky's unread badge, on the tab its Notifications became. */
+            notificationCount={
+              tab === 'activity' ? numUnreadNotifications : undefined
+            }
             accessibilityRole="tab"
             accessibilityLabel={_(TAB_LABELS[tab])}
-            accessibilityHint=""
+            accessibilityHint={
+              tab === 'activity' && numUnreadNotifications
+                ? plural(numUnreadNotifications, {
+                    one: '# unread item',
+                    other: '# unread items',
+                  })
+                : ''
+            }
           />
         ))}
       </Animated.View>

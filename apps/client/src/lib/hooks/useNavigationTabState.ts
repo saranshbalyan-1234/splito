@@ -9,9 +9,15 @@ export function useNavigationTabState() {
       isAtPeople: getTabState(state, 'People') !== TabState.Outside,
       isAtGroups: getTabState(state, 'Groups') !== TabState.Outside,
       isAtAnalytics: getTabState(state, 'Analytics') !== TabState.Outside,
+      isAtActivity: getTabState(state, 'Activity') !== TabState.Outside,
     }
 
-    if (!res.isAtPeople && !res.isAtGroups && !res.isAtAnalytics) {
+    if (
+      !res.isAtPeople &&
+      !res.isAtGroups &&
+      !res.isAtAnalytics &&
+      !res.isAtActivity
+    ) {
       // HACK for some reason useNavigationState will give us pre-hydration results
       //      and not update after, so we force isAtHome if all came back false
       //      -prf

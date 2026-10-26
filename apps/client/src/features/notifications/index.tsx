@@ -51,9 +51,9 @@ const ChangesContext = createContext<Change[] | undefined>(undefined)
 ChangesContext.displayName = 'NotificationsChangesContext'
 
 /**
- * Reads the history once for the whole app: the header bell on every
- * top-level page and the Notifications screen share it, re-read after every
- * committed store transaction.
+ * Reads the history once for the whole app: the Activity nav item's badge
+ * and the Activity screen share it, re-read after every committed store
+ * transaction.
  */
 export function Provider({children}: {children: React.ReactNode}) {
   const store = useStore()
@@ -161,9 +161,13 @@ export function useNotifications(): ActivityItem[] | undefined {
   })
 }
 
-/** The header bell's badge: unread changes from others. */
+/**
+ * The Activity nav item's badge: unread changes from others, as Bluesky's
+ * `useUnreadNotifications` formats it ('' when none, capped at '30+').
+ */
 export function useUnreadCount() {
-  return useNotifications()?.filter(item => item.isUnread).length ?? 0
+  const count = useNotifications()?.filter(item => item.isUnread).length ?? 0
+  return count >= 30 ? '30+' : count === 0 ? '' : String(count)
 }
 
 /** Marks everything up to now as read on this device. */

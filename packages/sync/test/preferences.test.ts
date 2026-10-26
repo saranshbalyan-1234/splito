@@ -16,7 +16,7 @@ beforeEach(async () => {
 test('default returned when unset', async () => {
   expect(await getPref(s, 'defaultCurrency')).toBe('INR')
   expect(await getPref(s, 'includeGroupsDefault')).toBe(true)
-  expect(await getPref(s, 'tabs')).toEqual(['people', 'groups', 'analytics'])
+  expect(await getPref(s, 'tabs')).toEqual(['people', 'groups', 'analytics', 'activity'])
 })
 
 test('set then get', async () => {
@@ -44,18 +44,18 @@ test('tabs: any non-empty set of known tabs, no duplicates; Profile is not a tab
   await expect(setPref(s, ctx, 'tabs', [])).rejects.toThrow('INVALID_PREF')
   await expect(setPref(s, ctx, 'tabs', ['groups', 'groups'])).rejects.toThrow('INVALID_PREF')
   await expect(setPref(s, ctx, 'tabs', ['groups', 'profile'] as never)).rejects.toThrow('INVALID_PREF')
-  // Notifications moved to the header bell, so the old Activity tab is gone.
-  await expect(setPref(s, ctx, 'tabs', ['groups', 'activity'] as never)).rejects.toThrow('INVALID_PREF')
+  await setPref(s, ctx, 'tabs', ['activity', 'people'])
+  expect(await getPref(s, 'tabs')).toEqual(['activity', 'people'])
 })
 
-test("a stored 'activity' tab is dropped on read, the rest of the order kept", async () => {
-  // Written by a build that still had the Activity tab, so setPref can't make it.
+test("a list stored before the header-bell build keeps Activity where it was", async () => {
+  // The bell build dropped 'activity' on read only, so the stored value still names it.
   await s.transaction(async tx => {
     await tx.put({type: 'preference', id: 'tabs', data: {value: ['groups', 'activity', 'people']}, version: 1, deleted: false, updatedAt: 1})
     await tx.put({type: 'preference', id: 'homeTab', data: {value: 'activity'}, version: 1, deleted: false, updatedAt: 1})
   })
-  expect(await getPref(s, 'tabs')).toEqual(['groups', 'people'])
-  expect(await getPref(s, 'homeTab')).toBe('people')
+  expect(await getPref(s, 'tabs')).toEqual(['groups', 'activity', 'people'])
+  expect(await getPref(s, 'homeTab')).toBe('activity')
 })
 
 test('home tab must be a visible tab', async () => {

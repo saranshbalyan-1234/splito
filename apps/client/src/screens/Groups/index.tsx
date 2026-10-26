@@ -16,7 +16,6 @@ import {HeaderAvatar} from '#/components/HeaderAvatar'
 import {PlusLarge_Stroke2_Corner0_Rounded as PlusIcon} from '#/components/icons/Plus'
 import * as Layout from '#/components/Layout'
 import {Shimmer} from '#/motion/Shimmer'
-import {HeaderBell} from '#/features/notifications/HeaderBell'
 import {GroupRow, GroupRowPlaceholder} from './components/GroupRow'
 
 const PLACEHOLDER_ROWS = 4
@@ -43,7 +42,6 @@ export function GroupsScreen() {
     <Layout.Screen testID="screen-groups">
       <Layout.Header.Outer>
         <HeaderAvatar />
-        <Layout.Header.Slot />
         <Layout.Header.Content>
           <Layout.Header.TitleText>
             <Trans>Groups</Trans>
@@ -53,9 +51,9 @@ export function GroupsScreen() {
           testID="groups-new"
           label={l`Create group`}
           icon={PlusIcon}
+          edge
           onPress={createGroup}
         />
-        <HeaderBell />
       </Layout.Header.Outer>
       {isLoading ? (
         <Shimmer testID="groups-loading">

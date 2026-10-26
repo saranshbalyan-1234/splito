@@ -17,10 +17,10 @@ export interface PrefDef<T> {
 
 /**
  * Bottom-bar / sidebar destinations. Profile and Settings open from the
- * avatar's drawer; Notifications from the header bell. Stored values that
- * still name the old 'activity' tab are upgraded on read (`upgrade`).
+ * avatar's drawer. Activity was briefly a header bell; lists stored before
+ * then still name 'activity' and read back unchanged.
  */
-export type TabId = 'people' | 'groups' | 'analytics'
+export type TabId = 'people' | 'groups' | 'analytics' | 'activity'
 export type SwipeAction = 'markRead' | 'hide' | 'delete' | 'none'
 
 export interface Category {
@@ -43,7 +43,7 @@ export const DEFAULT_CATEGORIES: Category[] = [
   ['other', 'Other', '#94a3b8', 'circle'],
 ].map(([id, name, color, icon], order) => ({id: id!, name: name!, color: color!, icon: icon!, order, hidden: false}))
 
-const TAB_IDS: TabId[] = ['people', 'groups', 'analytics']
+const TAB_IDS: TabId[] = ['people', 'groups', 'analytics', 'activity']
 const HEX = /^#[0-9a-f]{6}$/i
 
 const oneOf =
@@ -105,18 +105,10 @@ export const PREFS = {
 export type PrefKey = keyof typeof PREFS
 export type PrefValue<K extends PrefKey> = (typeof PREFS)[K] extends PrefDef<infer T> ? T : never
 
-/** Values an older build stored that this one renamed or dropped. */
-function upgrade(key: PrefKey, v: unknown): unknown {
-  // The Activity tab became the header bell: keep the rest of a custom order.
-  if (key === 'tabs' && Array.isArray(v)) return v.filter(t => t !== 'activity')
-  if (key === 'homeTab' && v === 'activity') return 'people'
-  return v
-}
-
 async function readRaw<K extends PrefKey>(store: Store, key: K): Promise<PrefValue<K>> {
   const def = PREFS[key] as PrefDef<PrefValue<K>>
   const e = (await store.getAll<{value: unknown}>('preference')).find(p => p.id === key)
-  const value = e && !e.deleted ? upgrade(key, e.data.value) : undefined
+  const value = e && !e.deleted ? e.data.value : undefined
   return def.validate(value) ? value : def.default
 }
 

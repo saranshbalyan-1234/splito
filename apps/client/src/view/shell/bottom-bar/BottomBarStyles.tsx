@@ -31,6 +31,8 @@ export const styles = StyleSheet.create({
     zIndex: 1,
   },
   notificationCountWeb: {
+    // Above upstream's 8: the Activity pulse is only empty at its top right.
+    top: 2,
     paddingTop: 3,
     paddingBottom: 3,
     borderRadius: 12,

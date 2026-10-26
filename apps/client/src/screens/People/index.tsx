@@ -18,7 +18,6 @@ import {PersonPlus_Filled_Stroke2_Corner0_Rounded as PersonPlusIcon} from '#/com
 import * as Layout from '#/components/Layout'
 import {PressableScale} from '#/motion/PressableScale'
 import {Shimmer} from '#/motion/Shimmer'
-import {HeaderBell} from '#/features/notifications/HeaderBell'
 import {
   BalanceSummary,
   BalanceSummaryPlaceholder,
@@ -78,7 +77,6 @@ export function PeopleScreen() {
     <Layout.Screen testID="screen-people">
       <Layout.Header.Outer>
         <HeaderAvatar />
-        <Layout.Header.Slot />
         <Layout.Header.Content>
           {/* The home link, inactive here because this header is on People. */}
           <PressableScale
@@ -95,9 +93,9 @@ export function PeopleScreen() {
           testID="people-add-friend"
           label={l`Add friend`}
           icon={PersonPlusIcon}
+          edge
           onPress={addFriend}
         />
-        <HeaderBell />
       </Layout.Header.Outer>
       {isLoading ? (
         <Shimmer testID="people-loading">

@@ -1,4 +1,4 @@
-/* STUB-OWNER: analytics - placeholder route body until the analytics stream replaces this file. The header (avatar | Analytics | Export CSV + bell) is the shell's and stays. */
+/* STUB-OWNER: analytics - placeholder route body until the analytics stream replaces this file. The header (avatar | Analytics | Export CSV) is the shell's and stays. */
 import {useLingui} from '@lingui/react/macro'
 
 import {ChartPie_Stroke2_Corner0_Rounded as ChartPieIcon} from '#/components/icons/ChartPie'
@@ -19,6 +19,7 @@ export function AnalyticsScreen() {
           testID="analytics-export"
           label={l`Export CSV`}
           icon={DownloadIcon}
+          edge
           // Nothing to export until the analytics stream lands.
           disabled
           hint={l`CSV export arrives with Analytics.`}

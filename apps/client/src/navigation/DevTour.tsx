@@ -31,7 +31,7 @@ export function DevTour() {
       () => setDrawerOpenRef.current(false),
       go('Tabs', {screen: 'Groups'}),
       go('Tabs', {screen: 'Analytics'}),
-      go('Notifications'),
+      go('Tabs', {screen: 'Activity'}),
       go('Settings'),
       go('AddExpense', {}),
     ]

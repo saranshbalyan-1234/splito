@@ -134,7 +134,7 @@ msgstr "{actor} ने {subject}{amount} बदला"
 msgid "{actor} restored {subject}{amount}"
 msgstr "{actor} ने {subject}{amount} वापस लाया"
 
-#: src/view/shell/desktop/LeftNav.tsx:222
+#: src/view/shell/desktop/LeftNav.tsx:240
 msgid "{count, plural, one {# unread item} other {# unread items}}"
 msgstr "{count, plural, one {# अपठित} other {# अपठित}}"
 
@@ -146,15 +146,23 @@ msgstr "{currency} बैलेंस – विश्लेषण खोले�
 msgid "{memberCount} members"
 msgstr "{memberCount} सदस्य"
 
-#: src/view/shell/bottom-bar/BottomBarWeb.tsx:121
+#: src/view/shell/bottom-bar/BottomBarWeb.tsx:126
 msgid "{notificationCount, plural, one {# unread item} other {# unread items}}"
 msgstr "{notificationCount, plural, one {# अपठित} other {# अपठित}}"
 
-#: src/navigation/Drawer.tsx:100
+#: src/view/shell/bottom-bar/BottomBar.tsx:121
+msgid "{numUnreadNotifications, plural, one {# unread item} other {# unread items}}"
+msgstr "{numUnreadNotifications, plural, one {# अपठित} other {# अपठित}}"
+
+#: src/navigation/Drawer.tsx:209
+msgid "{unreadCount, plural, one {# unread item} other {# unread items}}"
+msgstr "{unreadCount, plural, one {# अपठित} other {# अपठित}}"
+
+#: src/navigation/Drawer.tsx:102
 msgid "<0>{friendCount}</0> {friendCount, plural, one {friend} other {friends}}"
 msgstr "<0>{friendCount}</0> {friendCount, plural, one {दोस्त} other {दोस्त}}"
 
-#: src/navigation/Drawer.tsx:105
+#: src/navigation/Drawer.tsx:107
 msgid "<0>{groupCount}</0> {groupCount, plural, one {group} other {groups}}"
 msgstr "<0>{groupCount}</0> {groupCount, plural, one {समूह} other {समूह}}"
 
@@ -162,41 +170,49 @@ msgstr "<0>{groupCount}</0> {groupCount, plural, one {समूह} other {स�
 msgid "1 member"
 msgstr "1 सदस्य"
 
-#: src/navigation/Drawer.tsx:313
+#: src/navigation/Drawer.tsx:325
 #: src/screens/Profile.tsx:79
 #: src/screens/Profile.tsx:82
 msgid "About"
 msgstr "परिचय"
 
-#: src/navigation/Drawer.tsx:304
+#: src/navigation/Drawer.tsx:316
 msgid "About Splito"
 msgstr "Splito के बारे में"
 
-#: src/navigation/Navigation.tsx:66
+#: src/components/TabGlyph.tsx:30
+#: src/navigation/Drawer.tsx:206
+#: src/navigation/Navigation.tsx:60
+#: src/screens/Activity.tsx:64
+#: src/view/shell/desktop/LeftNav.tsx:366
+msgid "Activity"
+msgstr "गतिविधि"
+
+#: src/navigation/Navigation.tsx:67
 #: src/screens/AddExpense.tsx:33
-#: src/view/shell/desktop/LeftNav.tsx:292
+#: src/view/shell/desktop/LeftNav.tsx:311
 msgid "Add expense"
 msgstr "खर्च जोड़ें"
 
 #: src/components/AddExpenseFAB.tsx:31
-#: src/view/shell/desktop/LeftNav.tsx:300
+#: src/view/shell/desktop/LeftNav.tsx:319
 msgctxt "action"
 msgid "Add expense"
 msgstr "खर्च जोड़ें"
 
-#: src/navigation/Navigation.tsx:69
+#: src/navigation/Navigation.tsx:70
 #: src/screens/AddFriend.tsx:8
-#: src/screens/People/index.tsx:96
-#: src/screens/People/index.tsx:135
-#: src/screens/People/index.tsx:136
+#: src/screens/People/index.tsx:94
+#: src/screens/People/index.tsx:133
+#: src/screens/People/index.tsx:134
 msgid "Add friend"
 msgstr "दोस्त जोड़ें"
 
-#: src/screens/Notifications.tsx:77
+#: src/screens/Activity.tsx:78
 msgid "All"
 msgstr "सभी"
 
-#: src/screens/Notifications.tsx:50
+#: src/screens/Activity.tsx:51
 msgid "All caught up"
 msgstr "सब पढ़ लिया"
 
@@ -204,15 +220,15 @@ msgstr "सब पढ़ लिया"
 msgid "All settled up"
 msgstr "सब हिसाब बराबर"
 
-#: src/components/TabGlyph.tsx:25
-#: src/navigation/Drawer.tsx:196
-#: src/navigation/Navigation.tsx:58
-#: src/screens/Analytics.tsx:15
+#: src/components/TabGlyph.tsx:29
+#: src/navigation/Drawer.tsx:199
+#: src/navigation/Navigation.tsx:59
+#: src/screens/Analytics.tsx:14
 #: src/screens/People/components/BalanceSummary.tsx:91
 #: src/screens/People/components/BalanceSummary.tsx:96
 #: src/screens/Profile.tsx:61
 #: src/screens/Profile.tsx:64
-#: src/view/shell/desktop/LeftNav.tsx:342
+#: src/view/shell/desktop/LeftNav.tsx:362
 msgid "Analytics"
 msgstr "विश्लेषण"
 
@@ -264,18 +280,18 @@ msgstr "मेन्यू की पृष्ठभूमि, मेन्य�
 msgid "Couple"
 msgstr "जोड़ी"
 
-#: src/screens/Groups/index.tsx:54
-#: src/screens/Groups/index.tsx:91
-#: src/screens/Groups/index.tsx:92
+#: src/screens/Groups/index.tsx:52
+#: src/screens/Groups/index.tsx:89
+#: src/screens/Groups/index.tsx:90
 msgid "Create group"
 msgstr "समूह बनाएं"
 
-#: src/screens/Analytics.tsx:23
+#: src/screens/Analytics.tsx:25
 msgid "CSV export arrives with Analytics."
 msgstr "CSV एक्सपोर्ट विश्लेषण के साथ आएगा।"
 
-#: src/navigation/Drawer.tsx:229
-#: src/navigation/Drawer.tsx:248
+#: src/navigation/Drawer.tsx:241
+#: src/navigation/Drawer.tsx:260
 msgid "Dark theme"
 msgstr "डार्क थीम"
 
@@ -295,29 +311,29 @@ msgstr "हटाएं"
 msgid "Double tap to close the dialog"
 msgstr "डायलॉग बंद करने के लिए दो बार टैप करें"
 
-#: src/navigation/Navigation.tsx:68
+#: src/navigation/Navigation.tsx:69
 #: src/screens/EditExpense.tsx:8
 msgid "Edit expense"
 msgstr "खर्च बदलें"
 
-#: src/navigation/Navigation.tsx:67
+#: src/navigation/Navigation.tsx:68
 #: src/screens/Expense.tsx:8
 msgid "Expense"
 msgstr "खर्च"
 
-#: src/screens/Analytics.tsx:21
+#: src/screens/Analytics.tsx:20
 msgid "Export CSV"
 msgstr "CSV एक्सपोर्ट करें"
 
-#: src/screens/People/index.tsx:160
+#: src/screens/People/index.tsx:158
 msgid "Friends"
 msgstr "दोस्त"
 
-#: src/screens/Notifications.tsx:77
+#: src/screens/Activity.tsx:78
 msgid "From others"
 msgstr "दूसरों से"
 
-#: src/navigation/Drawer.tsx:292
+#: src/navigation/Drawer.tsx:304
 msgid "Get help"
 msgstr "मदद लें"
 
@@ -325,22 +341,22 @@ msgstr "मदद लें"
 msgid "Go back"
 msgstr "वापस जाएं"
 
-#: src/navigation/Navigation.tsx:64
+#: src/navigation/Navigation.tsx:65
 #: src/screens/Group.tsx:8
 #: src/screens/Groups/components/GroupRow.tsx:48
 #: src/screens/People/components/PersonRow.tsx:58
 msgid "Group"
 msgstr "समूह"
 
-#: src/components/TabGlyph.tsx:24
-#: src/navigation/Drawer.tsx:189
-#: src/navigation/Navigation.tsx:57
-#: src/screens/Groups/index.tsx:49
-#: src/view/shell/desktop/LeftNav.tsx:338
+#: src/components/TabGlyph.tsx:28
+#: src/navigation/Drawer.tsx:192
+#: src/navigation/Navigation.tsx:58
+#: src/screens/Groups/index.tsx:47
+#: src/view/shell/desktop/LeftNav.tsx:358
 msgid "Groups"
 msgstr "समूह"
 
-#: src/navigation/Drawer.tsx:299
+#: src/navigation/Drawer.tsx:311
 msgid "Help"
 msgstr "मदद"
 
@@ -348,7 +364,7 @@ msgstr "मदद"
 msgid "Home"
 msgstr "घर"
 
-#: src/screens/Notifications.tsx:68
+#: src/screens/Activity.tsx:69
 msgid "Mark all read"
 msgstr "सभी को पढ़ा हुआ मार्क करें"
 
@@ -357,12 +373,12 @@ msgstr "सभी को पढ़ा हुआ मार्क करें"
 msgid "Menu"
 msgstr "मेन्यू"
 
-#: src/navigation/Navigation.tsx:70
+#: src/navigation/Navigation.tsx:71
 #: src/screens/CreateGroup.tsx:8
 msgid "New group"
 msgstr "नया समूह"
 
-#: src/screens/Groups/index.tsx:89
+#: src/screens/Groups/index.tsx:87
 msgid "No groups yet. A group keeps a trip’s or a flat’s expenses and balances in one place."
 msgstr "अभी कोई समूह नहीं। समूह किसी यात्रा या फ़्लैट के खर्च और बैलेंस एक जगह रखता है।"
 
@@ -370,24 +386,13 @@ msgstr "अभी कोई समूह नहीं। समूह किस�
 msgid "No open balances"
 msgstr "कोई बकाया नहीं"
 
-#: src/screens/Notifications.tsx:109
+#: src/screens/Activity.tsx:110
 msgid "Nothing from others yet. When friends add or change expenses, you’ll see it here."
 msgstr "दूसरों से अभी कुछ नहीं। जब दोस्त खर्च जोड़ेंगे या बदलेंगे, तो यहां दिखेगा।"
 
-#: src/screens/Notifications.tsx:108
+#: src/screens/Activity.tsx:109
 msgid "Nothing here yet. Expenses, payments and group changes will show up here."
 msgstr "अभी यहां कुछ नहीं। खर्च, भुगतान और समूह के बदलाव यहां दिखेंगे।"
-
-#: src/features/notifications/HeaderBell.tsx:36
-#: src/navigation/Drawer.tsx:217
-#: src/navigation/Navigation.tsx:59
-#: src/screens/Notifications.tsx:63
-msgid "Notifications"
-msgstr "सूचनाएं"
-
-#: src/features/notifications/HeaderBell.tsx:32
-msgid "Notifications, {count, plural, one {# unread item} other {# unread items}}"
-msgstr "सूचनाएं, {count, plural, one {# अपठित} other {# अपठित}}"
 
 #: src/lib/hooks/useTimeAgo.ts:136
 msgid "now"
@@ -397,7 +402,7 @@ msgstr "अभी"
 msgid "Open menu"
 msgstr "मेन्यू खोलें"
 
-#: src/navigation/Drawer.tsx:76
+#: src/navigation/Drawer.tsx:78
 msgid "Opens your profile"
 msgstr "आपकी प्रोफ़ाइल खोलता है"
 
@@ -410,20 +415,20 @@ msgstr "आपको मिलेंगे <0>{0}</0>"
 msgid "owes you <0>{figure}</0>"
 msgstr "आपको मिलेंगे <0>{figure}</0>"
 
-#: src/components/TabGlyph.tsx:23
-#: src/navigation/Drawer.tsx:182
-#: src/view/shell/desktop/LeftNav.tsx:334
+#: src/components/TabGlyph.tsx:27
+#: src/navigation/Drawer.tsx:185
+#: src/view/shell/desktop/LeftNav.tsx:354
 msgid "People"
 msgstr "लोग"
 
-#: src/navigation/Navigation.tsx:63
+#: src/navigation/Navigation.tsx:64
 #: src/screens/Person.tsx:8
 msgid "Person"
 msgstr "व्यक्ति"
 
-#: src/navigation/Drawer.tsx:75
-#: src/navigation/Drawer.tsx:203
-#: src/navigation/Navigation.tsx:60
+#: src/navigation/Drawer.tsx:77
+#: src/navigation/Drawer.tsx:222
+#: src/navigation/Navigation.tsx:61
 #: src/screens/Profile.tsx:34
 msgid "Profile"
 msgstr "प्रोफ़ाइल"
@@ -437,23 +442,23 @@ msgstr "सहेजें"
 msgid "Save expense"
 msgstr "खर्च सहेजें"
 
-#: src/navigation/Drawer.tsx:96
+#: src/navigation/Drawer.tsx:98
 #: src/screens/Profile.tsx:131
 msgid "Saved on this device"
 msgstr "इस डिवाइस पर सहेजा गया"
 
-#: src/navigation/Drawer.tsx:210
-#: src/navigation/Navigation.tsx:61
+#: src/navigation/Drawer.tsx:229
 #: src/navigation/Navigation.tsx:62
+#: src/navigation/Navigation.tsx:63
 #: src/screens/Profile.tsx:70
 #: src/screens/Profile.tsx:73
 #: src/screens/Settings/index.tsx:8
 #: src/screens/Settings/SettingsSection.tsx:8
-#: src/view/shell/desktop/LeftNav.tsx:364
+#: src/view/shell/desktop/LeftNav.tsx:390
 msgid "Settings"
 msgstr "सेटिंग्स"
 
-#: src/navigation/Navigation.tsx:65
+#: src/navigation/Navigation.tsx:66
 #: src/screens/Settle.tsx:8
 msgid "Settle up"
 msgstr "हिसाब चुकाएं"
@@ -468,21 +473,21 @@ msgstr "हिसाब बराबर"
 msgid "Sign in and sync"
 msgstr "साइन इन और सिंक"
 
-#: src/features/notifications/index.tsx:100
+#: src/features/notifications/index.tsx:104
 msgid "Someone"
 msgstr "कोई"
 
-#: src/screens/People/index.tsx:133
+#: src/screens/People/index.tsx:131
 msgid "Split anything with anyone. Add an expense or a friend to get started – friends don’t need the app."
 msgstr "किसी के भी साथ कुछ भी बांटें। शुरू करने के लिए खर्च या दोस्त जोड़ें – दोस्तों को ऐप की ज़रूरत नहीं।"
 
-#: src/screens/People/index.tsx:88
-#: src/view/shell/desktop/LeftNav.tsx:100
+#: src/screens/People/index.tsx:86
+#: src/view/shell/desktop/LeftNav.tsx:117
 msgid "Splito - People"
 msgstr "Splito - लोग"
 
 #: src/screens/AddExpense.tsx:36
-#: src/screens/StubScreen.tsx:63
+#: src/screens/StubScreen.tsx:48
 msgid "This screen is being built"
 msgstr "यह स्क्रीन बन रही है"
 
@@ -490,7 +495,7 @@ msgstr "यह स्क्रीन बन रही है"
 msgid "Trip"
 msgstr "यात्रा"
 
-#: src/features/notifications/index.tsx:100
+#: src/features/notifications/index.tsx:104
 msgid "You"
 msgstr "आप"
 
@@ -515,6 +520,6 @@ msgstr "आपको देने हैं <0>{0}</0>"
 msgid "you owe <0>{figure}</0>"
 msgstr "आपको देने हैं <0>{figure}</0>"
 
-#: src/screens/StubScreen.tsx:66
+#: src/screens/StubScreen.tsx:51
 msgid "Your data is safe on this device."
 msgstr "आपका डेटा इस डिवाइस पर सुरक्षित है।"

@@ -7,11 +7,11 @@ glyphs, illustrations, logos or `assets/images` are copied.
 
 | Splito file | Upstream file | Splito changes |
 |---|---|---|
-| `src/view/shell/desktop/LeftNav.tsx` | `src/view/shell/desktop/LeftNav.tsx` | Pinned to the window's left edge (no centred column); Splito logo on top; tab items from the `tabs` preference plus Settings; "New post" pill labelled Add expense; account card removed (the account avatar sits at the top left of the content and opens the drawer, see `preview-shell.md`); no Activity item |
+| `src/view/shell/desktop/LeftNav.tsx` | `src/view/shell/desktop/LeftNav.tsx` | Pinned to the window's left edge (no centred column); Splito logo on top; tab items from the `tabs` preference plus Settings; "New post" pill labelled Add expense; account card removed (the account avatar sits at the top left of the content and opens the drawer, see `preview-shell.md`); Activity (lucide pulse glyph) carries Bluesky's Notifications unread count |
 | `src/view/shell/desktop/composeButtonLayout.ts` | `src/view/shell/desktop/composeButtonLayout.ts` | - |
-| `src/view/shell/bottom-bar/BottomBar.tsx` | `src/view/shell/bottom-bar/BottomBar.tsx` | Splito tabs from the `tabs` preference; no centre button; account switching, chat and badges removed |
+| `src/view/shell/bottom-bar/BottomBar.tsx` | `src/view/shell/bottom-bar/BottomBar.tsx` | Splito tabs from the `tabs` preference; no centre button; account switching and chat removed; Bluesky's Notifications unread badge on the Activity tab |
 | `src/view/shell/bottom-bar/BottomBarWeb.tsx` | `src/view/shell/bottom-bar/BottomBarWeb.tsx` | As BottomBar |
-| `src/view/shell/bottom-bar/BottomBarStyles.tsx` | `src/view/shell/bottom-bar/BottomBarStyles.tsx` | - |
+| `src/view/shell/bottom-bar/BottomBarStyles.tsx` | `src/view/shell/bottom-bar/BottomBarStyles.tsx` | Web unread badge sits 6px higher, clear of the Activity pulse glyph |
 | `src/view/shell/createNativeStackNavigatorWithAuth.tsx` | `src/view/shell/createNativeStackNavigatorWithAuth.tsx` | Auth gates removed; main content offset by the sidebar width; footer height reset off phones |
 | `src/view/shell/index.tsx` | `src/view/shell/index.tsx` | Composer, global dialogs, OTA and push hooks removed (drawer: see `preview-shell.md`) |
 | `src/view/shell/index.web.tsx` | `src/view/shell/index.web.tsx` | As above |

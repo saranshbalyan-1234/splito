@@ -61,8 +61,7 @@ export function Sticky({children}: {children: React.ReactNode}) {
  * Splito's header rule set (owner directive): the left slot holds the
  * avatar on top-level pages or Back on pushed ones, the title is centred on
  * every platform, and the right holds at most one action (plus an overflow
- * menu, plus the bell on top-level pages). Empty slots keep their width so
- * the title stays centred.
+ * menu). Empty slots keep their width so the title stays centred.
  */
 export function Outer({
   children,

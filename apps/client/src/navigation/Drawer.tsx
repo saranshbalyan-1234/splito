@@ -2,6 +2,7 @@
 import {type JSX, memo} from 'react'
 import {ScrollView, TouchableOpacity, View} from 'react-native'
 import {useSafeAreaInsets} from 'react-native-safe-area-context'
+import {plural} from '@lingui/core/macro'
 import {Plural, Trans, useLingui} from '@lingui/react/macro'
 import {
   StackActions,
@@ -20,9 +21,9 @@ import {Button, ButtonIcon, ButtonText} from '#/components/Button'
 import {Divider} from '#/components/Divider'
 import * as Toggle from '#/components/forms/Toggle'
 import {
-  Bell_Filled_Corner0_Rounded as BellFilledIcon,
-  Bell_Stroke2_Corner0_Rounded as BellIcon,
-} from '#/components/icons/Bell'
+  Activity_Filled_Corner0_Rounded as ActivityFilledIcon,
+  Activity_Stroke2_Corner0_Rounded as ActivityIcon,
+} from '#/components/icons/Activity'
 import {
   ChartPie_Filled_Corner0_Rounded as ChartPieFilledIcon,
   ChartPie_Stroke2_Corner0_Rounded as ChartPieIcon,
@@ -48,6 +49,7 @@ import {
 } from '#/components/icons/UserCircle'
 import {Text} from '#/components/Typography'
 import {IS_WEB} from '#/env'
+import {useUnreadCount} from '#/features/notifications'
 
 const iconWidth = 26
 
@@ -112,13 +114,13 @@ let DrawerProfileCard = ({
 }
 DrawerProfileCard = memo(DrawerProfileCard)
 
-type PushedRoute = 'Profile' | 'Settings' | 'Notifications'
+type PushedRoute = 'Profile' | 'Settings'
 
 /**
  * Bluesky's drawer, opened from the header avatar on every top-level page
- * (owner directive). Its rows: the three tabs, then Profile, Settings and
- * Notifications, then a dark-theme switch; Help and About sit in the footer
- * where Bluesky has Feedback and Help.
+ * (owner directive). Its rows: the four tabs (Activity with Bluesky's unread
+ * count), then Profile and Settings, then a dark-theme switch; Help and
+ * About sit in the footer where Bluesky has Feedback and Help.
  */
 function DrawerContentInner(): React.ReactNode {
   const t = useTheme()
@@ -131,6 +133,7 @@ function DrawerContentInner(): React.ReactNode {
   )
   const [, setTheme] = usePref('theme')
   const isDark = t.scheme === 'dark'
+  const unreadCount = useUnreadCount()
 
   /*
    * A tab goes back to its page if it's already in the stack, as Bluesky's
@@ -198,6 +201,22 @@ function DrawerContentInner(): React.ReactNode {
           onPress={() => onPressTab('Analytics')}
         />
         <MenuItem
+          testID="drawer-activity"
+          icons={[ActivityIcon, ActivityFilledIcon]}
+          label={l`Activity`}
+          accessibilityHint={
+            unreadCount
+              ? plural(unreadCount, {
+                  one: '# unread item',
+                  other: '# unread items',
+                })
+              : ''
+          }
+          count={unreadCount}
+          isActive={isAt('Activity')}
+          onPress={() => onPressTab('Activity')}
+        />
+        <MenuItem
           testID="drawer-profile-item"
           icons={[UserCircleIcon, UserCircleFilledIcon]}
           label={l`Profile`}
@@ -210,13 +229,6 @@ function DrawerContentInner(): React.ReactNode {
           label={l`Settings`}
           isActive={isAt('Settings') || isAt('SettingsSection')}
           onPress={() => onPressScreen('Settings')}
-        />
-        <MenuItem
-          testID="drawer-notifications"
-          icons={[BellIcon, BellFilledIcon]}
-          label={l`Notifications`}
-          isActive={isAt('Notifications')}
-          onPress={() => onPressScreen('Notifications')}
         />
 
         <View style={[a.px_xl]}>
@@ -322,6 +334,8 @@ function MenuItem({
   testID,
   icons: [Icon, ActiveIcon],
   label,
+  accessibilityHint,
+  count,
   isActive,
   onPress,
 }: {
@@ -329,6 +343,9 @@ function MenuItem({
   /** Outline glyph, then the filled one for the current page. */
   icons: [React.ComponentType<SVGIconProps>, React.ComponentType<SVGIconProps>]
   label: string
+  accessibilityHint?: string
+  /** Bluesky's unread badge over the glyph ('' or absent hides it). */
+  count?: string
   isActive: boolean
   onPress: () => void
 }): JSX.Element {
@@ -340,6 +357,7 @@ function MenuItem({
       onPress={onPress}
       accessibilityRole="tab"
       accessibilityState={{selected: isActive}}
+      accessibilityHint={accessibilityHint}
       label={label}>
       {({hovered, pressed}) => (
         <View
@@ -352,7 +370,43 @@ function MenuItem({
             a.px_xl,
             (hovered || pressed) && t.atoms.bg_contrast_25,
           ]}>
-          <Glyph style={[t.atoms.text]} width={iconWidth} />
+          <View style={[a.relative]}>
+            <Glyph style={[t.atoms.text]} width={iconWidth} />
+            {count ? (
+              <View
+                style={[
+                  a.absolute,
+                  a.inset_0,
+                  a.align_end,
+                  {top: -4, right: a.gap_sm.gap * -1},
+                ]}>
+                <View
+                  style={[
+                    a.rounded_full,
+                    {
+                      right: count.length === 1 ? 6 : 0,
+                      paddingHorizontal: 4,
+                      paddingVertical: 1,
+                      backgroundColor: t.palette.primary_500,
+                    },
+                  ]}>
+                  <Text
+                    style={[
+                      a.text_xs,
+                      a.leading_tight,
+                      a.font_semi_bold,
+                      {
+                        fontVariant: ['tabular-nums'],
+                        color: t.palette.white,
+                      },
+                    ]}
+                    numberOfLines={1}>
+                    {count}
+                  </Text>
+                </View>
+              </View>
+            ) : undefined}
+          </View>
           <Text
             style={[
               a.flex_shrink,

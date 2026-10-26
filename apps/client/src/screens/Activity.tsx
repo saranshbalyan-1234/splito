@@ -13,6 +13,7 @@ import {EmptyState} from '#/view/com/util/EmptyState'
 import {List} from '#/view/com/util/List'
 import {useBreakpoints} from '#/alf'
 import {AddExpenseFAB} from '#/components/AddExpenseFAB'
+import {HeaderAvatar} from '#/components/HeaderAvatar'
 import {CheckDouble_Stroke2_Corner0_Rounded as MarkReadIcon} from '#/components/icons/Check'
 import * as Layout from '#/components/Layout'
 import {TabBar} from '#/components/TabBar'
@@ -26,13 +27,13 @@ const PLACEHOLDER_ROWS = 8
 let lastActiveTab = 0
 
 /**
- * Bluesky's Notifications screen over the local store's history: Back,
- * the title and "Mark all read" in the header, then the "All" / "From
- * others" tabs (Bluesky's All / Mentions). Upstream pages between the tabs
- * with a pager; Splito's tabs filter one list, so there is no swipe between
- * them on native.
+ * Activity: Bluesky's Notifications screen over the local store's history,
+ * a bottom-bar / sidebar tab. The avatar, the title and "Mark all read" in
+ * the header, then the "All" / "From others" tabs (Bluesky's All /
+ * Mentions). Upstream pages between the tabs with a pager; Splito's tabs
+ * filter one list, so there is no swipe between them on native.
  */
-export function NotificationsScreen() {
+export function ActivityScreen() {
   const {t: l} = useLingui()
   const {gtMobile} = useBreakpoints()
   const items = useNotifications()
@@ -54,17 +55,17 @@ export function NotificationsScreen() {
     activeTab === 0 ? items : items?.filter(item => item.isFromOthers)
 
   return (
-    <Layout.Screen testID="screen-notifications">
+    <Layout.Screen testID="screen-activity">
       <Layout.Header.Sticky>
         <Layout.Header.Outer noBottomBorder sticky={false}>
-          <Layout.Header.BackButton />
+          <HeaderAvatar />
           <Layout.Header.Content>
             <Layout.Header.TitleText>
-              <Trans>Notifications</Trans>
+              <Trans>Activity</Trans>
             </Layout.Header.TitleText>
           </Layout.Header.Content>
           <Layout.Header.ActionButton
-            testID="notifications-mark-read"
+            testID="activity-mark-read"
             label={l`Mark all read`}
             icon={MarkReadIcon}
             edge
@@ -73,14 +74,14 @@ export function NotificationsScreen() {
           />
         </Layout.Header.Outer>
         <TabBar
-          testID="notifications-tabs"
+          testID="activity-tabs"
           items={[l`All`, l`From others`]}
           selectedPage={activeTab}
           onSelect={selectTab}
         />
       </Layout.Header.Sticky>
       {shown === undefined ? (
-        <Shimmer testID="notifications-loading">
+        <Shimmer testID="activity-loading">
           {Array.from({length: PLACEHOLDER_ROWS}, (_, i) => (
             <NotificationFeedItemPlaceholder key={i} hideTopBorder={i === 0} />
           ))}
@@ -101,7 +102,7 @@ export function NotificationsScreen() {
             )}
             ListEmptyComponent={
               <EmptyState
-                testID="notifications-empty"
+                testID="activity-empty"
                 illustration="empty-activity"
                 message={
                   activeTab === 0

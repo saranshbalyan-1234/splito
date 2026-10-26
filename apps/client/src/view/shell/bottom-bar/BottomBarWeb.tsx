@@ -16,6 +16,7 @@ import {atoms as a, useTheme} from '#/alf'
 import {TAB_LABELS, TabGlyph} from '#/components/TabGlyph'
 import {Text} from '#/components/Typography'
 import {useAnalytics} from '#/analytics'
+import {useUnreadCount} from '#/features/notifications'
 import {styles} from './BottomBarStyles'
 
 type NavItemValue = TabId
@@ -31,6 +32,7 @@ export function BottomBarWeb() {
   const footerMinimalShellTransform = useMinimalShellFooterTransform()
   const {footerHeight} = useShellLayout()
   const tabs = useTabs()
+  const notificationCountStr = useUnreadCount()
   const iconWidth = 26
 
   return (
@@ -51,7 +53,10 @@ export function BottomBarWeb() {
             routeName={TAB_ROUTE[tab]}
             label={_(TAB_LABELS[tab])}
             href={tabHref(tab)}
-            navItem={tab}>
+            navItem={tab}
+            notificationCount={
+              tab === 'activity' ? notificationCountStr : undefined
+            }>
             {({isActive}) => (
               <TabGlyph tab={tab} isActive={isActive} size={iconWidth} />
             )}
@@ -123,7 +128,11 @@ const NavItem: React.FC<{
               other: '# unread items',
             })}`,
           )}>
-          <Text style={styles.notificationCountLabel}>{notificationCount}</Text>
+          <Text
+            testID={`nav-badge-${navItem}`}
+            style={styles.notificationCountLabel}>
+            {notificationCount}
+          </Text>
         </View>
       ) : hasNew ? (
         <View
