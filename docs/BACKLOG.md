@@ -3640,8 +3640,8 @@ From the whole-app logic audit (`docs/audit/AUDIT-2026-10-27.md`: 50 confirmed f
 | 33g | F-115 | Timezone, dates and number formats everywhere | locale, activity, payments | M | 8 | F-114 |
 | 33h | F-116 | Web navigation and sheet robustness | routes, Dialog/drawer, FormSheet, drafts | M | 8 | F-115 |
 | 33i | F-604, F-613, F-615 | Archive group, safe member removal, leave group (audit m4) | sync mutations + Group screens | M | 8 | F-116 |
-| 45 | F-2301 | Ask Splito: chat screen and on-device answers | screens/Ask, lib/ask | L | 8 | F-1301, F-222, F-1401 |
 | 35 | F-222 | One navigation list for sidebar and drawer, Home label and title | navigationItems + NavFooterLinks, drawer header | S | 8 | F-201, F-204 |
+| 45 | F-2301 | Ask Splito: chat screen and on-device answers | screens/Ask, lib/ask | L | 8 | F-1301, F-222, F-1401 |
 
 ### Batch 4b: Owner requests (2026-10-26/27)
 
