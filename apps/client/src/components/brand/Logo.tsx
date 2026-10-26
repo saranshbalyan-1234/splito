@@ -1,10 +1,10 @@
 import {View} from 'react-native'
-import Svg, {Defs, LinearGradient, Path, Stop} from 'react-native-svg'
+import Svg, {Circle, Defs, LinearGradient, Path, Stop} from 'react-native-svg'
 
 
 /**
- * Splito mark: an original butterfly whose right wings are split off, shifted
- * down and lighter - the "split". Source: assets/brand/mark.svg. Deliberately
+ * Splito mark: an original butterfly with antennae whose right wings are split
+ * off, shifted down and lighter - the "split". Source: assets/brand/mark.svg. Deliberately
  * not Bluesky's butterfly (their trademark).
  */
 export function LogoMark({size = 32}: {size?: number}) {
@@ -20,6 +20,10 @@ export function LogoMark({size = 32}: {size?: number}) {
           <Stop offset="1" stopColor="#4291FF" />
         </LinearGradient>
       </Defs>
+      <Path d="M31.3 28.5C31 21.5 29.6 15.5 27.2 11" fill="none" stroke="#1F6FE5" strokeWidth={1.8} strokeLinecap="round" />
+      <Circle cx={26.7} cy={10.2} r={1.9} fill="#1F6FE5" />
+      <Path d="M32.7 28.5C33 21.5 34.4 15.5 36.8 11" fill="none" stroke="#75AFFF" strokeWidth={1.8} strokeLinecap="round" />
+      <Circle cx={37.3} cy={10.2} r={1.9} fill="#75AFFF" />
       <Path d="M30.5 30.5C26 17 13 8.5 6.5 12.5 1 16 5.5 29 30.5 31.5Z" fill="url(#splitoL)" />
       <Path d="M30.5 33.5C15 34 8.5 42 11.5 48.5 14.5 55 26 50 30.5 36Z" fill="url(#splitoL)" />
       <Path d="M33.5 34.5C38 21 51 12.5 57.5 16.5 63 20 58.5 33 33.5 35.5Z" fill="url(#splitoR)" />
