@@ -9,6 +9,7 @@ import {ThemeProvider as Alf} from '#/alf'
 import {useColorModeTheme} from '#/alf/util/useColorModeTheme'
 import {Provider as PortalProvider} from '#/components/Portal'
 import {ToastOutlet} from '#/components/Toast'
+import {StoreProvider} from '#/data/StoreProvider'
 import {Navigation} from '#/navigation/Navigation'
 
 function Themed() {
@@ -18,7 +19,9 @@ function Themed() {
       <PortalProvider>
         <DialogStateProvider>
           <ShellLayoutProvider>
-            <Navigation />
+            <StoreProvider>
+              <Navigation />
+            </StoreProvider>
             <ToastOutlet />
           </ShellLayoutProvider>
         </DialogStateProvider>
