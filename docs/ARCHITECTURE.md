@@ -56,7 +56,7 @@ them do yet.
    This covers product, UI, UX, behaviour, branding, stack and process decisions, including corrections
    ("it should be there", "move X", "keep Y"). Rewrite the rule in its § 26 topic so only the current truth
    remains (never append a rule that contradicts an older one), update every other place that restates it,
-   and add one row to the § 26.20 decision log (owner's words, decision, rule, what it replaced). Never record
+   and add one row to the § 26.23 decision log (owner's words, decision, rule, what it replaced). Never record
    owner decisions in `AGENTS.md`. A `UserPromptSubmit` hook in the repo's `.claude/settings.json` injects
    this reminder on every prompt. Reason: owner, 2026-10-26: "make sure this file updates on its own,
    whenever there is any such decision".
@@ -1057,7 +1057,7 @@ permission is asked only from a tap.
 Everything the owner has decided about the product, its UI and how work is done, consolidated to the current
 truth. These rules win over everything else in this document, the design spec and Bluesky's defaults (binding
 order at the top), and over any task text that says otherwise. Where a decision replaced an earlier one, only
-the current rule is written here; the history is in the decision log (§ 26.20). Every decision so far is dated
+the current rule is written here; the history is in the decision log (§ 26.23). Every decision so far is dated
 2026-10-26.
 
 Format: **rule**, then *Why* (the owner's words), then *Where* (paths on `ui/preview-latest` at `0546097`, the
@@ -1134,10 +1134,14 @@ labelled sidebar); **wide** = web 1300 px and up (Bluesky `gtTablet`, right colu
 - **Bluesky's shell on every width.** Web fills the whole screen: left sidebar plus main content (plus the
   right column when wide, § 26.17). *Why:* "on web it should occupy complete screen", "the navigation should
   be like Bluesky", "for web, keep my left sidebar and main content".
-- **Destinations:** phone bottom bar = People, Groups, Analytics, Activity, plus the FAB (§ 26.6). Rail and
-  desktop sidebar = People, Groups, Analytics, Activity, Settings, plus the "Add expense" pill (§ 26.5). The
-  drawer (§ 26.7) lists People, Groups, Analytics, Activity, Profile, Settings. People is home. One
-  `navigationItems` array feeds all three (§ 3). Profile is never a bottom-bar tab. *Why:* "make notification
+- **Destinations:** the home destination is labelled **"Home"** (house icon; it holds the Overview and the
+  friends list). Phone bottom bar = Home, Groups, Analytics, Activity, plus the FAB (§ 26.6). **The desktop/rail
+  sidebar and the phone drawer show the same list, in the same order, with the same icons and labels:** Home,
+  Groups, Analytics, Ask Splito, Activity, Settings, then the same footer links (Feedback · Help · Privacy ·
+  About). The sidebar adds only the logo and the "Add expense" pill; the drawer adds only its profile header
+  (§ 26.7) and Sign in / Log out. One `navigationItems` array and one `NavFooterLinks` component feed all of
+  them (§ 3). Profile is never a nav item (the avatar opens it). *Why:* "mobile sidebar and desktop seems to be
+  different, make them same". *Why:* "make notification
   as activity and move to bottom". *Where:* `view/shell/bottom-bar/`, `view/shell/desktop/LeftNav.tsx`,
   `navigation/Drawer.tsx`.
 - **Activity's route is `/activity`; `/notifications` redirects to it.**
@@ -1161,8 +1165,9 @@ show what: centre may be page name, right maybe some basic action, and left may 
   and no avatar dropdown menu. *Why:* "it should open the drawer like Bluesky where all menu appears like the
   hamburger", "and move this to left, where hamburger icon was there in Bluesky"; "on desktop when sidebar is
   opened completely don't open sidebar on avatar click".
-- **Centre:** the page name, centred on all platforms (`TitleText`). People shows the logo mark (§ 26.11)
-  instead of a "People" title. Person and Group show the entity name with a `SubtitleText` ("Trip · 5
+- **Centre:** the page name, centred on all platforms (`TitleText`). Home shows the logo mark (§ 26.11) on
+  phones only; on rail and desktop, where the sidebar already shows the logo, it shows the title "Home". *Why:*
+  "on desktop, show home instead of branding as branding is there on left". Person and Group show the entity name with a `SubtitleText` ("Trip · 5
   members"); Expense shows its title. Empty slots keep their width so the title stays centred.
 - **Right:** at most one basic action (Bluesky header icon button), optionally followed by a Bluesky "..."
   overflow Menu. No bell and no other header icon: anything else lives in the page body (Analytics' chart /
@@ -1171,12 +1176,12 @@ show what: centre may be page name, right maybe some basic action, and left may 
 
   | Screen | Right slot |
   |---|---|
-  | People | Add friend |
+  | Home | Add friend |
   | Groups | Create group |
-  | Analytics | Export CSV |
+  | Analytics | Ask Splito + overflow (Export CSV) |
   | Activity | Mark all read |
-  | Person | Settle up + overflow (Edit, Delete) |
-  | Group | Settle up + overflow (Edit group, Members, Payment rules) |
+  | Person | Settle up + overflow (Remind, Export statement, Edit, Delete) |
+  | Group | Settle up + overflow (Edit group, Members, Payment rules, Invite link, Export) |
   | Expense | Edit + overflow (Delete) |
   | Settings, Profile, Settle | none |
 
@@ -1191,14 +1196,16 @@ show what: centre may be page name, right maybe some basic action, and left may 
 Bluesky's `LeftNav`, copied as closely as possible. *Why:* "you need to improve left sidebar, it doesn't look
 good"; "the left sidebar looks bad on desktop". *Where:* `view/shell/desktop/LeftNav.tsx`.
 
-- **It holds only three things:** the logo mark, the nav items, the "Add expense" pill. No avatar or
+- **It holds:** the logo mark, the shared nav items (§ 26.3), the "Add expense" pill, and the shared footer
+  links pinned at the bottom (Feedback · Help · Privacy · About; same component as the drawer). No avatar or
   `ProfileCard`, no "Splito" wordmark, no recent groups or transactions (those live in the right column,
-  § 26.17), no footer links. *Why:* "remove the avatar from sidebar"; "remove label from logo".
+  § 26.17). *Why:* "remove the avatar from sidebar"; "remove label from logo".
 - **Logo:** the mark only (§ 26.11), 40 px, horizontally centred in the sidebar column, vertically aligned with
   the content header row (same top padding and height as `Layout.Header`). *Why:* "make the branding in
   centre".
 - **Nav items:** Bluesky `NavItem` exactly (24 px icon, `text_xl`, active = bold + filled icon,
-  `rounded_full` hover background, Bluesky badge/dot): People, Groups, Analytics, Activity, Settings. The
+  `rounded_full` hover background, Bluesky badge/dot): Home, Groups, Analytics, Ask Splito, Activity,
+  Settings (§ 26.3). The
   sliding active indicator (§ 26.9) sits beside the active item.
 - **Add expense:** Bluesky `ComposeBtn` as a large full-width pill with a plus icon; it opens the Add expense
   popup (§ 26.8). *Why:* "go with what Bluesky had".
@@ -1227,9 +1234,21 @@ good"; "the left sidebar looks bad on desktop". *Where:* `view/shell/desktop/Lef
   web. testID `drawer`. *Why:* "it should open the drawer like Bluesky where all menu appears like the
   hamburger".
 - **Opened by** the header avatar on phone and rail (on desktop the avatar opens Profile, § 26.4).
-- **Contents:** header with avatar, name, sync status ("Saved on this device") and a link to Profile; items
-  (icon + label) People, Groups, Analytics, Activity, Profile, Settings; a Dark theme toggle; Help and About;
-  "Sign in" or "Log out" in the footer (§ 26.15).
+- **Contents, the same as the desktop sidebar (§ 26.3):** a profile header (avatar with the sync-status dot,
+  the person's real name; tapping it opens Profile; no "Me" label and no "Saved on this device" text); the
+  shared nav items Home, Groups, Analytics, Ask Splito, Activity, Settings; the shared footer links Feedback ·
+  Help · Privacy · About; "Sign in" or "Log out" (§ 26.15). No separate Profile item and no theme toggle
+  (Appearance lives in Settings). *Why:* "remove me from drawer profile"; "removed the other saved on device and
+  me"; "make them same".
+- **Sync-status dot on the user's avatar** (drawer header and the header avatar at every width): **green** =
+  signed in, online, everything synced; **yellow** = syncing or waiting to sync (changes in the outbox, or
+  offline with unsynced changes); **red** = on this device only (no account yet, nothing backed up). Bluesky
+  presence-dot geometry (bottom-right, ring in the background colour). Never colour alone (§ F-1801): the avatar's
+  accessibility label says the state ("Synced" / "Syncing" / "On this device only"), and a long-press or hover
+  shows it as a tooltip; tapping the dot area in the drawer opens Settings > Account/Sync. It replaces every
+  other "Saved on this device" text in the shell. Until the backend exists the honest state is red. *Why:* "add
+  green icon for online, add a yellow icon for syncing, add a red icon for on device only ... add this icon on
+  player avatar on sidebar drawer".
 - *Where:* `navigation/Drawer.tsx`, `state/shell/drawer-open.tsx`.
 
 ### 26.8 Sheets, popups and prompts
@@ -1329,11 +1348,14 @@ pages". § 17 holds the engineering rules that meet these budgets.
   splash, favicon, app icons (brand kit generated by `apps/client/scripts/brand.ts`). It is the mark alone: no
   "Splito" wordmark or label, no tile, and Bluesky's name appears nowhere. *Why:* "I have a logo.svg file in
   downloads, use that", "just use that" (after being told it is Bluesky's trademark); "use it everywhere, even
-  for the favicons"; "remove label from logo". Release blocker: § 26.19.
+  for the favicons"; "remove label from logo". Release blocker: § 26.22.
 - **In the UI the mark is drawn in the current accent (`t.palette.primary_500`) on every theme and surface**
   (light, Dim, Black, sidebar, header): changing the accent recolours the logo everywhere. Static assets
   (favicon, app icons, native splash) keep the SVG's default blue (`#1185fe`). *Why:* "changing accent color
   should change logo color as well" (replaces "keep it blue always").
+- **Splash in dark mode uses the Dim background, never pure black** (native splash `dark.backgroundColor` and
+  the web launch screen take ALF Dim's background token, logo centred); light mode keeps the light background.
+  *Why:* "on splash show the dim instead of black".
 - **Icons are Lucide** (Bluesky's licensed Central glyphs are not copied; assistant's call). Bluesky's
   logos, artwork and trademarks are not shipped except the dev-only mark above.
 
@@ -1427,7 +1449,7 @@ built yet.
   backend lands.
 - **Feedback** ("add one feedback section as well"). Placement copied from Bluesky: a "Feedback" item in the
   drawer (Bluesky `Drawer.tsx` onPressFeedback), a "Support" section in Settings ("Send feedback", "Your
-  feedback", "Help", "About"), and on desktop the right column ends with Bluesky's footer links
+  feedback", "Help", "About"), and the shared footer links at the bottom of the left sidebar and the drawer (§ 26.3)
   "Feedback · Help · Privacy · About" (`desktop/RightNav.tsx`); below 1300 px desktop reaches them through the
   drawer and Settings. "Send feedback" opens a FormSheet (bottom drawer on phones, centred popup on desktop):
   type chips Bug / Idea / Question / Other, a required message, optional screenshot or photo, "Include app
@@ -1499,7 +1521,62 @@ add anyway (only for you)"; "also i should be able to select from contacts". *Wh
 - Demo mode (`?demo=1`) ships a fake directory so every branch of the flow can be seen; production uses the
   backend directory API (backend batch). No fake "sent" states in production builds.
 
-### 26.19 Release blockers
+### 26.19 Ask Splito (AI chat)
+
+*Why:* "add one ai chart option, think about the placement" (read as AI chat; answers include charts).
+*Where:* `screens/Ask/`, `lib/ask/`, backend AI endpoint (backend batch).
+
+- **One AI entry point, "Ask Splito"** (Lucide sparkles icon). Placement: a nav item in the shared sidebar /
+  drawer list between Analytics and Activity (§ 26.3); Analytics' header right action; an "Ask Splito about
+  '<query>'" row at the top of Search results. Phones keep four bottom-bar tabs; Custom navigation (F-209) can
+  pin Ask Splito there.
+- **Chat screen copies Bluesky's DM conversation screen** (message list, composer bar above the keyboard, day
+  separators). Empty state: suggested question chips ("How much did I spend on food this month?", "Who owes
+  me the most?", "Split last night's dinner 3 ways", "Show my Goa trip spending by day").
+- **Answers can carry rich cards:** an inline chart (same chart components as Analytics), a small table, a
+  balance card, or an action card ("Add this expense", "Record payment", "Remind Riya") that opens the normal
+  sheet pre-filled; the AI never writes data without that confirmation.
+- **Honest capability:** questions over your own data (totals, who owes whom, spend by category / person /
+  group / period, trends) are answered on the device by a deterministic engine in `lib/ask` using
+  `@splito/domain` (exact money, never summing currencies). Free-form language goes to an AI model through the
+  backend (Claude, latest model) once it exists; until then unsupported questions get "I can answer this once
+  you sign in" with the closest supported suggestion. No fake answers.
+- **Privacy:** AI is opt-in (preference "Ask Splito uses AI", default off until signed in); the first use
+  shows exactly what data is sent; nothing is sent for on-device answers.
+
+### 26.20 Comments, reminders and export
+
+*Why:* "add comment feature, remind, export etc". *Where:* `components/comments/`, `lib/remind/`,
+`lib/export/`, `screens/Settings/Data`.
+
+- **Comments** on every expense and repayment: a thread at the bottom of the expense detail using Bluesky's
+  reply rows and a composer bar (Bluesky DM composer); @mention of participants, emoji, edit and delete your
+  own; a comment count on expense rows; new comments from others show in Activity (unread). Local and in the
+  outbox now; shared once sync exists.
+- **Remind:** "Remind" on the Person page (overflow), on each debtor row in group Balances and in the Settle
+  plan. It writes a friendly message with the amount per currency and the UPI / payment link (F-1501 text)
+  and opens the share sheet (WhatsApp, SMS, email); once the friend is on Splito and the backend exists it
+  also sends an in-app reminder. "Remind me" schedules a local notification for yourself (date/time, repeat).
+  Gentle limits: one in-app reminder per person per 3 days; every reminder is logged in Activity.
+- **Export:** Settings > Data > Export (CSV, PDF statement, full JSON backup; filters: date range, group,
+  person, currency) with Import (JSON backup restore); plus Group overflow "Export", Person overflow "Export
+  statement", Analytics overflow "Export CSV". Exports are generated on the device; amounts exact, per
+  currency.
+
+### 26.21 Offline web app (service worker and PWA)
+
+*Why:* "also add service worker for cache and pwa". *Where:* `apps/client/web/`, export post-step.
+
+- **A service worker in production web builds** (off in dev and e2e): precaches the hashed app shell and
+  assets, stale-while-revalidate for fonts and images, navigation falls back to the cached shell so the app
+  opens offline. It never caches API responses (data lives in IndexedDB, § 9).
+- **Updates:** a new version installs in the background; Bluesky-style toast "New version available ·
+  Reload"; never reloads on its own while a sheet has unsaved input.
+- **PWA:** web manifest (name, short name, icons from the brand kit, Dim dark background, standalone display),
+  install via the browser prompt captured once and offered as "Install app" in Settings (and a one-time,
+  dismissible hint); iOS shows "Add to Home Screen" instructions.
+
+### 26.22 Release blockers
 
 - **The butterfly logo must be replaced before any public release** (public web deploy, TestFlight / App
   Store, Play Store). It is Bluesky's trademark, excluded from Bluesky's MIT licence, and stores reject
@@ -1509,7 +1586,7 @@ add anyway (only for you)"; "also i should be able to select from contacts". *Wh
 - The other release blockers (dev-only switches inert, real auth and sync live) are listed in
   `docs/RELEASE_CHECKLIST.md`.
 
-### 26.20 Decision log
+### 26.23 Decision log
 
 Every owner decision, in the order it was made (all 2026-10-26). "Replaced" names what the decision overrode;
 "AGENTS rN" is the rule's number in the old `AGENTS.md` list (see git history before this section existed).
@@ -1561,7 +1638,7 @@ Every owner decision, in the order it was made (all 2026-10-26). "Replaced" name
 | 43 | "all the sheets should have animation"; "closable if I drag it down" | Animated sheets, drag to close (AGENTS r18) | §§ 26.8, 26.10 | - |
 | 44 | "add signin option, and logout as well in settings" | Account section, honest sign-in (AGENTS r19) | § 26.15 | - |
 | 45 | "keep it blue always" | Logo always blue (AGENTS r20) | § 26.11 | #16; replaced by #49 |
-| 46 | "I have a logo.svg file in downloads, use that", "you can change the color", "just use that", "use it everywhere, even for the favicons" | Owner butterfly, dev only, release blocker (AGENTS r21) | §§ 26.11, 26.19 | Cat (#15); r20's "butterfly not used" |
+| 46 | "I have a logo.svg file in downloads, use that", "you can change the color", "just use that", "use it everywhere, even for the favicons" | Owner butterfly, dev only, release blocker (AGENTS r21) | §§ 26.11, 26.22 | Cat (#15); r20's "butterfly not used" |
 | 47 | "let's have recent transactions instead of recent groups" -> "or have both, do we need a right sidebar" -> "right sidebar ... recent transactions, and recent groups", "max to 5" | Right column, 5 + 5 (AGENTS r23) | § 26.17 | #19; recent groups in the left sidebar (r13d) |
 | 48 | "show the brand text on desktop" -> "make the branding in centre" -> "remove the avatar from sidebar" -> "remove label from logo" | Centred mark only; no sidebar avatar (AGENTS r22) | § 26.5 | #39; ProfileCard (r13a) |
 | 49 | "changing accent color should change logo color ... don't open sidebar on avatar click ... fab should not be visible on desktop" | Accent logo; avatar -> Profile on desktop; phone-only FAB (AGENTS r24) | §§ 26.4, 26.6, 26.11 | #45; desktop FAB (#42) |
@@ -1570,6 +1647,14 @@ Every owner decision, in the order it was made (all 2026-10-26). "Replaced" name
 | 52 | "to add the friend, it should ask the email or mobile, and try to invite, once they accept they can be used anywhere"; "invite link, or qr, with limits"; "they should accept"; "if they are not there show the warning, and one option to add anyway (only for you)"; "select from contacts" | Add friend by email/mobile or contacts, directory check first, consent required, not-on-Splito warning with Send invite / Add anyway (only for you), invite link + QR with use and expiry limits | § 26.18 | Add friend = local name only (F-601) |
 | 53 | "add one feedback section as well" | Feedback in drawer, Settings > Support and desktop right-column footer (Bluesky placement); in-app feedback sheet, saved locally + email draft until backend | § 26.15 | Feedback as email draft only (BACKLOG F-215) |
 | 54 | "in the recent group, make it recently active groups" | Right column section "Recently active groups", ordered by last change time | § 26.17 | "Recent groups" by latest expense date |
+| 55 | "on desktop, show home instead of branding as branding is there on left" | Desktop/rail home header shows the title "Home"; home destination labelled Home | §§ 26.3, 26.4 | Logo in the People header at every width |
+| 56 | "on splash show the dim instead of black" | Dark splash uses Dim background | § 26.11 | Black dark splash |
+| 57 | "add one ai chart option, think about the placement" | Ask Splito AI chat: sidebar/drawer item, Analytics header, Search row; on-device answers + backend AI | § 26.19 | - |
+| 58 | "also add service worker for cache and pwa" | Production service worker, update toast, manifest, install | § 26.21 | PWA in Batch 5 |
+| 59 | "add comment feature, remind, export etc" | Comments on expenses, Remind (share + in-app + remind me), Export/Import | § 26.20 | - |
+| 60 | "remove me from drawer-profile"; "removed the other saved on device and me" | Drawer header shows real name, no "Me", no sync text | § 26.7 | "Saved on this device" in drawer header |
+| 61 | "add green icon for online, yellow for syncing, red for on device only ... on player avatar on sidebar drawer" | Sync-status dot on the user's avatar (drawer + header), with text label | § 26.7 | Sync status as text |
+| 62 | "mobile sidebar and desktop seems to be different, make them same" | One nav list + one footer for sidebar and drawer | §§ 26.3, 26.5, 26.7 | Drawer had Profile, theme toggle; sidebar had no footer |
 
 New decisions follow § 0 rule 9: rewrite the rule in its topic so only the current truth remains, then add a
 row here.

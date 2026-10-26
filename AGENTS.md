@@ -155,4 +155,4 @@ logos or `assets/images/`.
 
 Moved. The owner's UI and product rules (formerly numbered 1-24 here) are consolidated, with superseded rules
 resolved, in `docs/ARCHITECTURE.md` § 26 "Product & UI rules (owner decisions, binding)"; history is in its
-decision log (§ 26.20). Read that section before any UI change.
+decision log (§ 26.23). Read that section before any UI change.
