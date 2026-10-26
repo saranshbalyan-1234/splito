@@ -44,42 +44,6 @@ msgstr "{0, plural, one {# second} other {# seconds}}"
 msgid "{0, plural, one {#mo} other {#mo}}"
 msgstr "{0, plural, one {#mo} other {#mo}}"
 
-#. placeholder {0}: item.actorName
-#. placeholder {1}: item.subject
-#: src/view/com/notifications/NotificationFeedItem.tsx:122
-msgid "{0} added {1}"
-msgstr "{0} added {1}"
-
-#. placeholder {0}: item.actorName
-#. placeholder {1}: item.subject
-#: src/view/com/notifications/NotificationFeedItem.tsx:78
-msgid "{0} added {1}{amount}"
-msgstr "{0} added {1}{amount}"
-
-#. placeholder {0}: item.actorName
-#. placeholder {1}: item.subject
-#: src/view/com/notifications/NotificationFeedItem.tsx:114
-msgid "{0} created the group {1}"
-msgstr "{0} created the group {1}"
-
-#. placeholder {0}: item.actorName
-#. placeholder {1}: item.subject
-#: src/view/com/notifications/NotificationFeedItem.tsx:96
-msgid "{0} deleted {1}{amount}"
-msgstr "{0} deleted {1}{amount}"
-
-#. placeholder {0}: item.actorName
-#. placeholder {1}: item.subject
-#: src/view/com/notifications/NotificationFeedItem.tsx:87
-msgid "{0} edited {1}{amount}"
-msgstr "{0} edited {1}{amount}"
-
-#. placeholder {0}: item.actorName
-#. placeholder {1}: item.subject
-#: src/view/com/notifications/NotificationFeedItem.tsx:105
-msgid "{0} restored {1}{amount}"
-msgstr "{0} restored {1}{amount}"
-
 #. Displayed when the number of notifications exceeds the cap – for example, 99+
 #. placeholder {0}: i18n.number(UNREAD_NOTIFICATION_CAP - 1)
 #: src/screens/Settings/components/SettingsList.tsx:341
@@ -110,31 +74,59 @@ msgstr "{0}m"
 msgid "{0}s"
 msgstr "{0}s"
 
-#: src/view/com/notifications/NotificationFeedItem.tsx:124
+#: src/components/activity/ActivityItem.tsx:406
 msgid "{actor} added {subject}"
 msgstr "{actor} added {subject}"
 
-#: src/view/com/notifications/NotificationFeedItem.tsx:80
-msgid "{actor} added {subject}{amount}"
-msgstr "{actor} added {subject}{amount}"
+#: src/components/activity/ActivityItem.tsx:469
+msgid "{actor} added {subject} as a friend"
+msgstr "{actor} added {subject} as a friend"
 
-#: src/view/com/notifications/NotificationFeedItem.tsx:116
+#: src/components/activity/ActivityItem.tsx:521
+msgid "{actor} archived the group {subject}"
+msgstr "{actor} archived the group {subject}"
+
+#: src/components/activity/ActivityItem.tsx:511
 msgid "{actor} created the group {subject}"
 msgstr "{actor} created the group {subject}"
 
-#: src/view/com/notifications/NotificationFeedItem.tsx:98
-msgid "{actor} deleted {subject}{amount}"
-msgstr "{actor} deleted {subject}{amount}"
+#: src/components/activity/ActivityItem.tsx:416
+msgid "{actor} deleted {subject}"
+msgstr "{actor} deleted {subject}"
 
-#: src/view/com/notifications/NotificationFeedItem.tsx:89
-msgid "{actor} edited {subject}{amount}"
-msgstr "{actor} edited {subject}{amount}"
+#: src/components/activity/ActivityItem.tsx:526
+msgid "{actor} deleted the group {subject}"
+msgstr "{actor} deleted the group {subject}"
 
-#: src/view/com/notifications/NotificationFeedItem.tsx:107
-msgid "{actor} restored {subject}{amount}"
-msgstr "{actor} restored {subject}{amount}"
+#: src/components/activity/ActivityItem.tsx:411
+msgid "{actor} edited {subject}"
+msgstr "{actor} edited {subject}"
 
-#: src/view/shell/desktop/LeftNav.tsx:226
+#: src/components/activity/ActivityItem.tsx:586
+msgid "{actor} edited a payment"
+msgstr "{actor} edited a payment"
+
+#: src/components/activity/ActivityItem.tsx:473
+msgid "{actor} removed {subject} from friends"
+msgstr "{actor} removed {subject} from friends"
+
+#: src/components/activity/ActivityItem.tsx:588
+msgid "{actor} removed a payment"
+msgstr "{actor} removed a payment"
+
+#: src/components/activity/ActivityItem.tsx:505
+msgid "{actor} renamed {oldName} to {subject}"
+msgstr "{actor} renamed {oldName} to {subject}"
+
+#: src/components/activity/ActivityItem.tsx:421
+msgid "{actor} restored {subject}"
+msgstr "{actor} restored {subject}"
+
+#: src/components/activity/ActivityItem.tsx:516
+msgid "{actor} updated the group {subject}"
+msgstr "{actor} updated the group {subject}"
+
+#: src/view/shell/desktop/LeftNav.tsx:227
 msgid "{count, plural, one {# unread item} other {# unread items}}"
 msgstr "{count, plural, one {# unread item} other {# unread items}}"
 
@@ -142,11 +134,28 @@ msgstr "{count, plural, one {# unread item} other {# unread items}}"
 msgid "{currency} balance – open analytics"
 msgstr "{currency} balance – open analytics"
 
+#. How long ago an activity happened, e.g. "7m ago". The time is already abbreviated and translated.
+#: src/components/activity/ActivityItem.tsx:699
+msgid "{formatted} ago"
+msgstr "{formatted} ago"
+
+#: src/components/activity/ActivityItem.tsx:581
+msgid "{from} paid {to}"
+msgstr "{from} paid {to}"
+
+#: src/components/activity/ActivityItem.tsx:579
+msgid "{from} paid you"
+msgstr "{from} paid you"
+
+#: src/screens/Activity.tsx:148
+msgid "{hiddenCount, plural, one {# change hidden from your activity} other {# changes hidden from your activity}}"
+msgstr "{hiddenCount, plural, one {# change hidden from your activity} other {# changes hidden from your activity}}"
+
 #: src/screens/Groups/components/GroupRow.tsx:55
 msgid "{memberCount} members"
 msgstr "{memberCount} members"
 
-#: src/view/shell/bottom-bar/BottomBarWeb.tsx:121
+#: src/view/shell/bottom-bar/BottomBarWeb.tsx:124
 msgid "{notificationCount, plural, one {# unread item} other {# unread items}}"
 msgstr "{notificationCount, plural, one {# unread item} other {# unread items}}"
 
@@ -165,19 +174,19 @@ msgstr "Account menu"
 
 #: src/components/TabGlyph.tsx:30
 #: src/navigation/Navigation.tsx:59
-#: src/screens/Activity.tsx:152
-#: src/view/shell/desktop/LeftNav.tsx:350
+#: src/screens/Activity.tsx:89
+#: src/view/shell/desktop/LeftNav.tsx:352
 msgid "Activity"
 msgstr "Activity"
 
 #: src/navigation/Navigation.tsx:66
 #: src/screens/AddExpense.tsx:33
-#: src/view/shell/desktop/LeftNav.tsx:296
+#: src/view/shell/desktop/LeftNav.tsx:297
 msgid "Add expense"
 msgstr "Add expense"
 
 #: src/components/AddExpenseFAB.tsx:31
-#: src/view/shell/desktop/LeftNav.tsx:304
+#: src/view/shell/desktop/LeftNav.tsx:305
 msgctxt "action"
 msgid "Add expense"
 msgstr "Add expense"
@@ -195,8 +204,8 @@ msgstr "Add friend"
 msgid "All settled up"
 msgstr "All settled up"
 
-#: src/components/HeaderAvatar.tsx:82
 #: src/components/HeaderAvatar.tsx:86
+#: src/components/HeaderAvatar.tsx:90
 #: src/components/TabGlyph.tsx:29
 #: src/navigation/Navigation.tsx:58
 #: src/screens/Analytics.tsx:8
@@ -204,7 +213,7 @@ msgstr "All settled up"
 #: src/screens/People/components/BalanceSummary.tsx:96
 #: src/screens/Profile.tsx:61
 #: src/screens/Profile.tsx:64
-#: src/view/shell/desktop/LeftNav.tsx:346
+#: src/view/shell/desktop/LeftNav.tsx:348
 msgid "Analytics"
 msgstr "Analytics"
 
@@ -247,14 +256,26 @@ msgstr "Confirm"
 msgid "Context menu backdrop, click to close the menu."
 msgstr "Context menu backdrop, click to close the menu."
 
+#: src/components/activity/useActivityActions.tsx:100
+msgid "Couldn't delete this expense"
+msgstr "Couldn't delete this expense"
+
+#: src/components/activity/useActivityActions.tsx:96
+msgid "Couldn't restore this expense"
+msgstr "Couldn't restore this expense"
+
 #: src/screens/Groups/components/GroupRow.tsx:47
 msgid "Couple"
 msgstr "Couple"
 
-#: src/components/HeaderAvatar.tsx:94
 #: src/components/HeaderAvatar.tsx:98
+#: src/components/HeaderAvatar.tsx:102
 msgid "Dark theme"
 msgstr "Dark theme"
+
+#: src/components/activity/useActivityActions.tsx:68
+msgid "Delete expense"
+msgstr "Delete expense"
 
 #: src/screens/People/components/PersonRow.tsx:65
 msgid "Direct"
@@ -282,6 +303,10 @@ msgstr "Edit expense"
 msgid "Expense"
 msgstr "Expense"
 
+#: src/components/activity/useActivityActions.tsx:94
+msgid "Expense deleted"
+msgstr "Expense deleted"
+
 #: src/screens/People/index.tsx:135
 msgid "Friends"
 msgstr "Friends"
@@ -300,22 +325,59 @@ msgstr "Group"
 #: src/components/TabGlyph.tsx:28
 #: src/navigation/Navigation.tsx:57
 #: src/screens/Groups/index.tsx:47
-#: src/view/shell/desktop/LeftNav.tsx:342
+#: src/view/shell/desktop/LeftNav.tsx:344
 msgid "Groups"
 msgstr "Groups"
+
+#: src/components/activity/useActivityActions.tsx:86
+msgid "Hidden from your activity"
+msgstr "Hidden from your activity"
+
+#: src/components/activity/useActivityActions.tsx:62
+msgid "Hide from activity"
+msgstr "Hide from activity"
 
 #: src/screens/Groups/components/GroupRow.tsx:46
 msgid "Home"
 msgstr "Home"
 
-#: src/components/HeaderAvatar.tsx:94
 #: src/components/HeaderAvatar.tsx:98
+#: src/components/HeaderAvatar.tsx:102
 msgid "Light theme"
 msgstr "Light theme"
+
+#: src/screens/Activity.tsx:95
+msgid "Mark all as read"
+msgstr "Mark all as read"
+
+#: src/screens/Activity.tsx:101
+msgid "Mark all read"
+msgstr "Mark all read"
+
+#: src/components/activity/useActivityActions.tsx:56
+msgid "Mark as read"
+msgstr "Mark as read"
+
+#: src/components/activity/useActivityActions.tsx:51
+msgid "Mark as unread"
+msgstr "Mark as unread"
+
+#: src/components/activity/useActivityActions.tsx:109
+msgid "Marked everything as read"
+msgstr "Marked everything as read"
+
+#: src/components/activity/ActivityItem.tsx:226
+msgid "Marks it as read"
+msgstr "Marks it as read"
 
 #: src/components/Menu/index.tsx:133
 msgid "Menu"
 msgstr "Menu"
+
+#: src/components/activity/ActivityItem.tsx:235
+#: src/components/activity/ActivityItem.tsx:314
+msgid "More actions"
+msgstr "More actions"
 
 #: src/screens/Groups/index.tsx:58
 msgctxt "action"
@@ -338,7 +400,11 @@ msgstr "No groups yet. A group keeps a trip’s or a flat’s expenses and balan
 msgid "No open balances"
 msgstr "No open balances"
 
-#: src/screens/Activity.tsx:181
+#: src/components/activity/ActivityItem.tsx:447
+msgid "not involved"
+msgstr "not involved"
+
+#: src/screens/Activity.tsx:126
 msgid "Nothing here yet. Expenses, payments and group changes will show up here."
 msgstr "Nothing here yet. Expenses, payments and group changes will show up here."
 
@@ -350,6 +416,10 @@ msgstr "now"
 msgid "Open drawer menu"
 msgstr "Open drawer menu"
 
+#: src/components/activity/ActivityItem.tsx:226
+msgid "Opens what changed"
+msgstr "Opens what changed"
+
 #. placeholder {0}: formatAmount(owed, currency, locale)
 #: src/screens/People/components/BalanceSummary.tsx:195
 msgid "Owed to you <0>{0}</0>"
@@ -360,7 +430,7 @@ msgid "owes you <0>{figure}</0>"
 msgstr "owes you <0>{figure}</0>"
 
 #: src/components/TabGlyph.tsx:27
-#: src/view/shell/desktop/LeftNav.tsx:338
+#: src/view/shell/desktop/LeftNav.tsx:340
 msgid "People"
 msgstr "People"
 
@@ -369,8 +439,8 @@ msgstr "People"
 msgid "Person"
 msgstr "Person"
 
-#: src/components/HeaderAvatar.tsx:64
 #: src/components/HeaderAvatar.tsx:68
+#: src/components/HeaderAvatar.tsx:72
 #: src/navigation/Navigation.tsx:60
 #: src/screens/Profile.tsx:34
 msgid "Profile"
@@ -389,15 +459,15 @@ msgstr "Save expense"
 msgid "Saved on this device"
 msgstr "Saved on this device"
 
-#: src/components/HeaderAvatar.tsx:73
 #: src/components/HeaderAvatar.tsx:77
+#: src/components/HeaderAvatar.tsx:81
 #: src/navigation/Navigation.tsx:61
 #: src/navigation/Navigation.tsx:62
 #: src/screens/Profile.tsx:70
 #: src/screens/Profile.tsx:73
 #: src/screens/Settings/index.tsx:8
 #: src/screens/Settings/SettingsSection.tsx:8
-#: src/view/shell/desktop/LeftNav.tsx:372
+#: src/view/shell/desktop/LeftNav.tsx:375
 msgid "Settings"
 msgstr "Settings"
 
@@ -412,11 +482,19 @@ msgstr "Settle up"
 msgid "settled up"
 msgstr "settled up"
 
+#: src/screens/Activity.tsx:156
+msgid "Show hidden changes"
+msgstr "Show hidden changes"
+
+#: src/screens/Activity.tsx:162
+msgid "Show them"
+msgstr "Show them"
+
 #: src/screens/Profile.tsx:89
 msgid "Sign in and sync"
 msgstr "Sign in and sync"
 
-#: src/screens/Activity.tsx:95
+#: src/components/activity/ActivityItem.tsx:360
 msgid "Someone"
 msgstr "Someone"
 
@@ -425,7 +503,7 @@ msgid "Split anything with anyone. Add an expense or a friend to get started –
 msgstr "Split anything with anyone. Add an expense or a friend to get started – friends don’t need the app."
 
 #: src/view/com/home/HomeHeaderLayoutMobile.tsx:41
-#: src/view/shell/desktop/LeftNav.tsx:104
+#: src/view/shell/desktop/LeftNav.tsx:105
 msgid "Splito - People"
 msgstr "Splito - People"
 
@@ -434,11 +512,38 @@ msgstr "Splito - People"
 msgid "This screen is being built"
 msgstr "This screen is being built"
 
+#: src/components/activity/SectionHeader.tsx:54
+msgctxt "Activity section header"
+msgid "Today"
+msgstr "Today"
+
 #: src/screens/Groups/components/GroupRow.tsx:45
 msgid "Trip"
 msgstr "Trip"
 
-#: src/screens/Activity.tsx:95
+#: src/components/activity/useActivityActions.tsx:126
+msgid "Undo"
+msgstr "Undo"
+
+#: src/components/activity/useActivityActions.tsx:127
+msgctxt "action"
+msgid "Undo"
+msgstr "Undo"
+
+#: src/components/activity/ActivityItem.tsx:273
+msgid "Unread"
+msgstr "Unread"
+
+#: src/components/activity/SectionHeader.tsx:56
+msgctxt "Activity section header"
+msgid "Yesterday"
+msgstr "Yesterday"
+
+#: src/components/activity/ActivityItem.tsx:594
+msgid "you"
+msgstr "you"
+
+#: src/components/activity/ActivityItem.tsx:361
 msgid "You"
 msgstr "You"
 
@@ -449,6 +554,14 @@ msgstr "You are owed"
 #: src/components/BalanceText.tsx:50
 msgid "you are owed <0>{figure}</0>"
 msgstr "you are owed <0>{figure}</0>"
+
+#: src/components/activity/ActivityItem.tsx:451
+msgid "you borrowed {figure}"
+msgstr "you borrowed {figure}"
+
+#: src/components/activity/ActivityItem.tsx:449
+msgid "you lent {figure}"
+msgstr "you lent {figure}"
 
 #: src/screens/People/components/BalanceSummary.tsx:156
 msgid "You owe"
@@ -462,6 +575,10 @@ msgstr "You owe <0>{0}</0>"
 #: src/components/BalanceText.tsx:55
 msgid "you owe <0>{figure}</0>"
 msgstr "you owe <0>{figure}</0>"
+
+#: src/screens/Activity.tsx:125
+msgid "You've hidden everything here. New expenses, payments and group changes will show up as they happen."
+msgstr "You've hidden everything here. New expenses, payments and group changes will show up as they happen."
 
 #: src/screens/StubScreen.tsx:40
 msgid "Your data is safe on this device."

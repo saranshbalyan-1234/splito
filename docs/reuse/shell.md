@@ -56,7 +56,6 @@ glyphs, illustrations, logos or `assets/images` are copied.
 | `src/view/com/home/HomeHeaderLayout.tsx` | `src/view/com/home/HomeHeaderLayout.tsx` | - |
 | `src/view/com/home/HomeHeaderLayout.web.tsx` | `src/view/com/home/HomeHeaderLayout.web.tsx` | Desktop drops the centred logo (the sidebar carries it); the row holds the account avatar at the right |
 | `src/view/com/home/HomeHeaderLayoutMobile.tsx` | `src/view/com/home/HomeHeaderLayoutMobile.tsx` | Drawer button removed; the feeds button's slot holds the account avatar |
-| `src/view/com/notifications/NotificationFeedItem.tsx` | `src/view/com/notifications/NotificationFeedItem.tsx` | Activity rows; list enter/exit animations; loading row adapted from `src/view/com/util/LoadingPlaceholder.tsx` (NotificationLoadingPlaceholder) with a neutral circle for its licensed glyph |
 | `src/view/com/util/EmptyState.tsx` | `src/view/com/util/EmptyState.tsx` | Optional animated `Illustration` in place of the icon |
 | `src/view/com/util/Link.tsx` | `src/view/com/util/Link.tsx` | App routes only |
 | `src/view/com/util/PressableWithHover.tsx` | `src/view/com/util/PressableWithHover.tsx` | - |

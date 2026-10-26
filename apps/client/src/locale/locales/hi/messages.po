@@ -44,42 +44,6 @@ msgstr "{0, plural, one {# सेकंड} other {# सेकंड}}"
 msgid "{0, plural, one {#mo} other {#mo}}"
 msgstr "{0, plural, one {#मा} other {#मा}}"
 
-#. placeholder {0}: item.actorName
-#. placeholder {1}: item.subject
-#: src/view/com/notifications/NotificationFeedItem.tsx:122
-msgid "{0} added {1}"
-msgstr "{0} ने {1} को जोड़ा"
-
-#. placeholder {0}: item.actorName
-#. placeholder {1}: item.subject
-#: src/view/com/notifications/NotificationFeedItem.tsx:78
-msgid "{0} added {1}{amount}"
-msgstr "{0} ने {1}{amount} जोड़ा"
-
-#. placeholder {0}: item.actorName
-#. placeholder {1}: item.subject
-#: src/view/com/notifications/NotificationFeedItem.tsx:114
-msgid "{0} created the group {1}"
-msgstr "{0} ने समूह {1} बनाया"
-
-#. placeholder {0}: item.actorName
-#. placeholder {1}: item.subject
-#: src/view/com/notifications/NotificationFeedItem.tsx:96
-msgid "{0} deleted {1}{amount}"
-msgstr "{0} ने {1}{amount} हटाया"
-
-#. placeholder {0}: item.actorName
-#. placeholder {1}: item.subject
-#: src/view/com/notifications/NotificationFeedItem.tsx:87
-msgid "{0} edited {1}{amount}"
-msgstr "{0} ने {1}{amount} बदला"
-
-#. placeholder {0}: item.actorName
-#. placeholder {1}: item.subject
-#: src/view/com/notifications/NotificationFeedItem.tsx:105
-msgid "{0} restored {1}{amount}"
-msgstr "{0} ने {1}{amount} वापस लाया"
-
 #. Displayed when the number of notifications exceeds the cap – for example, 99+
 #. placeholder {0}: i18n.number(UNREAD_NOTIFICATION_CAP - 1)
 #: src/screens/Settings/components/SettingsList.tsx:341
@@ -110,31 +74,59 @@ msgstr "{0}मि"
 msgid "{0}s"
 msgstr "{0}से"
 
-#: src/view/com/notifications/NotificationFeedItem.tsx:124
+#: src/components/activity/ActivityItem.tsx:406
 msgid "{actor} added {subject}"
 msgstr "{actor} ने {subject} को जोड़ा"
 
-#: src/view/com/notifications/NotificationFeedItem.tsx:80
-msgid "{actor} added {subject}{amount}"
-msgstr "{actor} ने {subject}{amount} जोड़ा"
+#: src/components/activity/ActivityItem.tsx:469
+msgid "{actor} added {subject} as a friend"
+msgstr "{actor} ने {subject} को दोस्त के रूप में जोड़ा"
 
-#: src/view/com/notifications/NotificationFeedItem.tsx:116
+#: src/components/activity/ActivityItem.tsx:521
+msgid "{actor} archived the group {subject}"
+msgstr "{actor} ने समूह {subject} को संग्रहित किया"
+
+#: src/components/activity/ActivityItem.tsx:511
 msgid "{actor} created the group {subject}"
 msgstr "{actor} ने समूह {subject} बनाया"
 
-#: src/view/com/notifications/NotificationFeedItem.tsx:98
-msgid "{actor} deleted {subject}{amount}"
-msgstr "{actor} ने {subject}{amount} हटाया"
+#: src/components/activity/ActivityItem.tsx:416
+msgid "{actor} deleted {subject}"
+msgstr "{actor} ने {subject} को हटाया"
 
-#: src/view/com/notifications/NotificationFeedItem.tsx:89
-msgid "{actor} edited {subject}{amount}"
-msgstr "{actor} ने {subject}{amount} बदला"
+#: src/components/activity/ActivityItem.tsx:526
+msgid "{actor} deleted the group {subject}"
+msgstr "{actor} ने समूह {subject} को हटाया"
 
-#: src/view/com/notifications/NotificationFeedItem.tsx:107
-msgid "{actor} restored {subject}{amount}"
-msgstr "{actor} ने {subject}{amount} वापस लाया"
+#: src/components/activity/ActivityItem.tsx:411
+msgid "{actor} edited {subject}"
+msgstr "{actor} ने {subject} में बदलाव किया"
 
-#: src/view/shell/desktop/LeftNav.tsx:226
+#: src/components/activity/ActivityItem.tsx:586
+msgid "{actor} edited a payment"
+msgstr "{actor} ने एक भुगतान में बदलाव किया"
+
+#: src/components/activity/ActivityItem.tsx:473
+msgid "{actor} removed {subject} from friends"
+msgstr "{actor} ने {subject} को दोस्तों से हटाया"
+
+#: src/components/activity/ActivityItem.tsx:588
+msgid "{actor} removed a payment"
+msgstr "{actor} ने एक भुगतान हटाया"
+
+#: src/components/activity/ActivityItem.tsx:505
+msgid "{actor} renamed {oldName} to {subject}"
+msgstr "{actor} ने {oldName} का नाम बदलकर {subject} किया"
+
+#: src/components/activity/ActivityItem.tsx:421
+msgid "{actor} restored {subject}"
+msgstr "{actor} ने {subject} को वापस लाया"
+
+#: src/components/activity/ActivityItem.tsx:516
+msgid "{actor} updated the group {subject}"
+msgstr "{actor} ने समूह {subject} को अपडेट किया"
+
+#: src/view/shell/desktop/LeftNav.tsx:227
 msgid "{count, plural, one {# unread item} other {# unread items}}"
 msgstr "{count, plural, one {# अपठित} other {# अपठित}}"
 
@@ -142,11 +134,28 @@ msgstr "{count, plural, one {# अपठित} other {# अपठित}}"
 msgid "{currency} balance – open analytics"
 msgstr "{currency} बैलेंस – विश्लेषण खोलें"
 
+#. How long ago an activity happened, e.g. "7m ago". The time is already abbreviated and translated.
+#: src/components/activity/ActivityItem.tsx:699
+msgid "{formatted} ago"
+msgstr "{formatted} पहले"
+
+#: src/components/activity/ActivityItem.tsx:581
+msgid "{from} paid {to}"
+msgstr "{from} ने {to} को भुगतान किया"
+
+#: src/components/activity/ActivityItem.tsx:579
+msgid "{from} paid you"
+msgstr "{from} ने आपको भुगतान किया"
+
+#: src/screens/Activity.tsx:148
+msgid "{hiddenCount, plural, one {# change hidden from your activity} other {# changes hidden from your activity}}"
+msgstr "{hiddenCount, plural, one {# बदलाव आपकी गतिविधि से छिपा है} other {# बदलाव आपकी गतिविधि से छिपे हैं}}"
+
 #: src/screens/Groups/components/GroupRow.tsx:55
 msgid "{memberCount} members"
 msgstr "{memberCount} सदस्य"
 
-#: src/view/shell/bottom-bar/BottomBarWeb.tsx:121
+#: src/view/shell/bottom-bar/BottomBarWeb.tsx:124
 msgid "{notificationCount, plural, one {# unread item} other {# unread items}}"
 msgstr "{notificationCount, plural, one {# अपठित} other {# अपठित}}"
 
@@ -165,19 +174,19 @@ msgstr "खाता मेनू"
 
 #: src/components/TabGlyph.tsx:30
 #: src/navigation/Navigation.tsx:59
-#: src/screens/Activity.tsx:152
-#: src/view/shell/desktop/LeftNav.tsx:350
+#: src/screens/Activity.tsx:89
+#: src/view/shell/desktop/LeftNav.tsx:352
 msgid "Activity"
 msgstr "गतिविधि"
 
 #: src/navigation/Navigation.tsx:66
 #: src/screens/AddExpense.tsx:33
-#: src/view/shell/desktop/LeftNav.tsx:296
+#: src/view/shell/desktop/LeftNav.tsx:297
 msgid "Add expense"
 msgstr "खर्च जोड़ें"
 
 #: src/components/AddExpenseFAB.tsx:31
-#: src/view/shell/desktop/LeftNav.tsx:304
+#: src/view/shell/desktop/LeftNav.tsx:305
 msgctxt "action"
 msgid "Add expense"
 msgstr "खर्च जोड़ें"
@@ -195,8 +204,8 @@ msgstr "दोस्त जोड़ें"
 msgid "All settled up"
 msgstr "सब हिसाब बराबर"
 
-#: src/components/HeaderAvatar.tsx:82
 #: src/components/HeaderAvatar.tsx:86
+#: src/components/HeaderAvatar.tsx:90
 #: src/components/TabGlyph.tsx:29
 #: src/navigation/Navigation.tsx:58
 #: src/screens/Analytics.tsx:8
@@ -204,7 +213,7 @@ msgstr "सब हिसाब बराबर"
 #: src/screens/People/components/BalanceSummary.tsx:96
 #: src/screens/Profile.tsx:61
 #: src/screens/Profile.tsx:64
-#: src/view/shell/desktop/LeftNav.tsx:346
+#: src/view/shell/desktop/LeftNav.tsx:348
 msgid "Analytics"
 msgstr "विश्लेषण"
 
@@ -247,14 +256,26 @@ msgstr "पुष्टि करें"
 msgid "Context menu backdrop, click to close the menu."
 msgstr "मेन्यू की पृष्ठभूमि, मेन्यू बंद करने के लिए क्लिक करें।"
 
+#: src/components/activity/useActivityActions.tsx:100
+msgid "Couldn't delete this expense"
+msgstr "यह खर्च हटाया नहीं जा सका"
+
+#: src/components/activity/useActivityActions.tsx:96
+msgid "Couldn't restore this expense"
+msgstr "यह खर्च वापस नहीं लाया जा सका"
+
 #: src/screens/Groups/components/GroupRow.tsx:47
 msgid "Couple"
 msgstr "जोड़ी"
 
-#: src/components/HeaderAvatar.tsx:94
 #: src/components/HeaderAvatar.tsx:98
+#: src/components/HeaderAvatar.tsx:102
 msgid "Dark theme"
 msgstr "डार्क थीम"
+
+#: src/components/activity/useActivityActions.tsx:68
+msgid "Delete expense"
+msgstr "खर्च हटाएँ"
 
 #: src/screens/People/components/PersonRow.tsx:65
 msgid "Direct"
@@ -282,6 +303,10 @@ msgstr "खर्च बदलें"
 msgid "Expense"
 msgstr "खर्च"
 
+#: src/components/activity/useActivityActions.tsx:94
+msgid "Expense deleted"
+msgstr "खर्च हटाया गया"
+
 #: src/screens/People/index.tsx:135
 msgid "Friends"
 msgstr "दोस्त"
@@ -300,22 +325,59 @@ msgstr "समूह"
 #: src/components/TabGlyph.tsx:28
 #: src/navigation/Navigation.tsx:57
 #: src/screens/Groups/index.tsx:47
-#: src/view/shell/desktop/LeftNav.tsx:342
+#: src/view/shell/desktop/LeftNav.tsx:344
 msgid "Groups"
 msgstr "समूह"
+
+#: src/components/activity/useActivityActions.tsx:86
+msgid "Hidden from your activity"
+msgstr "आपकी गतिविधि से छिपाया गया"
+
+#: src/components/activity/useActivityActions.tsx:62
+msgid "Hide from activity"
+msgstr "गतिविधि से छिपाएँ"
 
 #: src/screens/Groups/components/GroupRow.tsx:46
 msgid "Home"
 msgstr "घर"
 
-#: src/components/HeaderAvatar.tsx:94
 #: src/components/HeaderAvatar.tsx:98
+#: src/components/HeaderAvatar.tsx:102
 msgid "Light theme"
 msgstr "लाइट थीम"
+
+#: src/screens/Activity.tsx:95
+msgid "Mark all as read"
+msgstr "सभी को पढ़ा हुआ मार्क करें"
+
+#: src/screens/Activity.tsx:101
+msgid "Mark all read"
+msgstr "सब पढ़ा हुआ"
+
+#: src/components/activity/useActivityActions.tsx:56
+msgid "Mark as read"
+msgstr "पढ़ा हुआ मार्क करें"
+
+#: src/components/activity/useActivityActions.tsx:51
+msgid "Mark as unread"
+msgstr "अपठित मार्क करें"
+
+#: src/components/activity/useActivityActions.tsx:109
+msgid "Marked everything as read"
+msgstr "सब कुछ पढ़ा हुआ मार्क किया गया"
+
+#: src/components/activity/ActivityItem.tsx:226
+msgid "Marks it as read"
+msgstr "इसे पढ़ा हुआ मार्क करता है"
 
 #: src/components/Menu/index.tsx:133
 msgid "Menu"
 msgstr "मेन्यू"
+
+#: src/components/activity/ActivityItem.tsx:235
+#: src/components/activity/ActivityItem.tsx:314
+msgid "More actions"
+msgstr "और विकल्प"
 
 #: src/screens/Groups/index.tsx:58
 msgctxt "action"
@@ -338,7 +400,11 @@ msgstr "अभी कोई समूह नहीं। समूह किस�
 msgid "No open balances"
 msgstr "कोई बकाया नहीं"
 
-#: src/screens/Activity.tsx:181
+#: src/components/activity/ActivityItem.tsx:447
+msgid "not involved"
+msgstr "आप शामिल नहीं"
+
+#: src/screens/Activity.tsx:126
 msgid "Nothing here yet. Expenses, payments and group changes will show up here."
 msgstr "अभी यहां कुछ नहीं। खर्च, भुगतान और समूह के बदलाव यहां दिखेंगे।"
 
@@ -350,6 +416,10 @@ msgstr "अभी"
 msgid "Open drawer menu"
 msgstr "मेन्यू खोलें"
 
+#: src/components/activity/ActivityItem.tsx:226
+msgid "Opens what changed"
+msgstr "जो बदला, उसे खोलता है"
+
 #. placeholder {0}: formatAmount(owed, currency, locale)
 #: src/screens/People/components/BalanceSummary.tsx:195
 msgid "Owed to you <0>{0}</0>"
@@ -360,7 +430,7 @@ msgid "owes you <0>{figure}</0>"
 msgstr "आपको मिलेंगे <0>{figure}</0>"
 
 #: src/components/TabGlyph.tsx:27
-#: src/view/shell/desktop/LeftNav.tsx:338
+#: src/view/shell/desktop/LeftNav.tsx:340
 msgid "People"
 msgstr "लोग"
 
@@ -369,8 +439,8 @@ msgstr "लोग"
 msgid "Person"
 msgstr "व्यक्ति"
 
-#: src/components/HeaderAvatar.tsx:64
 #: src/components/HeaderAvatar.tsx:68
+#: src/components/HeaderAvatar.tsx:72
 #: src/navigation/Navigation.tsx:60
 #: src/screens/Profile.tsx:34
 msgid "Profile"
@@ -389,15 +459,15 @@ msgstr "खर्च सहेजें"
 msgid "Saved on this device"
 msgstr "इस डिवाइस पर सहेजा गया"
 
-#: src/components/HeaderAvatar.tsx:73
 #: src/components/HeaderAvatar.tsx:77
+#: src/components/HeaderAvatar.tsx:81
 #: src/navigation/Navigation.tsx:61
 #: src/navigation/Navigation.tsx:62
 #: src/screens/Profile.tsx:70
 #: src/screens/Profile.tsx:73
 #: src/screens/Settings/index.tsx:8
 #: src/screens/Settings/SettingsSection.tsx:8
-#: src/view/shell/desktop/LeftNav.tsx:372
+#: src/view/shell/desktop/LeftNav.tsx:375
 msgid "Settings"
 msgstr "सेटिंग्स"
 
@@ -412,11 +482,19 @@ msgstr "हिसाब चुकाएं"
 msgid "settled up"
 msgstr "हिसाब बराबर"
 
+#: src/screens/Activity.tsx:156
+msgid "Show hidden changes"
+msgstr "छिपे बदलाव दिखाएँ"
+
+#: src/screens/Activity.tsx:162
+msgid "Show them"
+msgstr "दिखाएँ"
+
 #: src/screens/Profile.tsx:89
 msgid "Sign in and sync"
 msgstr "साइन इन और सिंक"
 
-#: src/screens/Activity.tsx:95
+#: src/components/activity/ActivityItem.tsx:360
 msgid "Someone"
 msgstr "कोई"
 
@@ -425,7 +503,7 @@ msgid "Split anything with anyone. Add an expense or a friend to get started –
 msgstr "किसी के भी साथ कुछ भी बांटें। शुरू करने के लिए खर्च या दोस्त जोड़ें – दोस्तों को ऐप की ज़रूरत नहीं।"
 
 #: src/view/com/home/HomeHeaderLayoutMobile.tsx:41
-#: src/view/shell/desktop/LeftNav.tsx:104
+#: src/view/shell/desktop/LeftNav.tsx:105
 msgid "Splito - People"
 msgstr "Splito - लोग"
 
@@ -434,11 +512,38 @@ msgstr "Splito - लोग"
 msgid "This screen is being built"
 msgstr "यह स्क्रीन बन रही है"
 
+#: src/components/activity/SectionHeader.tsx:54
+msgctxt "Activity section header"
+msgid "Today"
+msgstr "आज"
+
 #: src/screens/Groups/components/GroupRow.tsx:45
 msgid "Trip"
 msgstr "यात्रा"
 
-#: src/screens/Activity.tsx:95
+#: src/components/activity/useActivityActions.tsx:126
+msgid "Undo"
+msgstr "पूर्ववत करें"
+
+#: src/components/activity/useActivityActions.tsx:127
+msgctxt "action"
+msgid "Undo"
+msgstr "पूर्ववत करें"
+
+#: src/components/activity/ActivityItem.tsx:273
+msgid "Unread"
+msgstr "अपठित"
+
+#: src/components/activity/SectionHeader.tsx:56
+msgctxt "Activity section header"
+msgid "Yesterday"
+msgstr "कल"
+
+#: src/components/activity/ActivityItem.tsx:594
+msgid "you"
+msgstr "आप"
+
+#: src/components/activity/ActivityItem.tsx:361
 msgid "You"
 msgstr "आप"
 
@@ -449,6 +554,14 @@ msgstr "आपको मिलेंगे"
 #: src/components/BalanceText.tsx:50
 msgid "you are owed <0>{figure}</0>"
 msgstr "आपको मिलेंगे <0>{figure}</0>"
+
+#: src/components/activity/ActivityItem.tsx:451
+msgid "you borrowed {figure}"
+msgstr "आपने {figure} उधार लिए"
+
+#: src/components/activity/ActivityItem.tsx:449
+msgid "you lent {figure}"
+msgstr "आपने {figure} उधार दिए"
 
 #: src/screens/People/components/BalanceSummary.tsx:156
 msgid "You owe"
@@ -462,6 +575,10 @@ msgstr "आपको देने हैं <0>{0}</0>"
 #: src/components/BalanceText.tsx:55
 msgid "you owe <0>{figure}</0>"
 msgstr "आपको देने हैं <0>{figure}</0>"
+
+#: src/screens/Activity.tsx:125
+msgid "You've hidden everything here. New expenses, payments and group changes will show up as they happen."
+msgstr "आपने यहाँ सब कुछ छिपा दिया है। नए खर्च, भुगतान और समूह के बदलाव होते ही यहाँ दिखेंगे।"
 
 #: src/screens/StubScreen.tsx:40
 msgid "Your data is safe on this device."

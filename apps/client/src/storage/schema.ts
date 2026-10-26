@@ -1,3 +1,5 @@
+import {type FeedState} from '#/components/activity/feed'
+
 /** Per-device settings read synchronously at startup (fonts must be known before first paint). */
 export type Device = {
   fontScale: '-2' | '-1' | '0' | '1' | '2'
@@ -7,4 +9,6 @@ export type Device = {
   meId: string
   colorMode: 'system' | 'light' | 'dark'
   hapticsEnabled: boolean
+  /** Activity read/hidden marks: personal, so they stay on this device. */
+  activityFeed: FeedState
 }
