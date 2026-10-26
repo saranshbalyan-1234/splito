@@ -1569,7 +1569,9 @@ add anyway (only for you)"; "also i should be able to select from contacts". *Wh
 - **One AI entry point, "Ask Splito"** (Lucide sparkles icon). Placement: a nav item in the shared sidebar /
   drawer list between Analytics and Activity (§ 26.3); Analytics' header right action; an "Ask Splito about
   '<query>'" row at the top of Search results. On phones Ask Splito is reached from the drawer, the Analytics
-  header and Search (the bottom bar stays at five tabs); Custom navigation (F-209) can pin it to the bar.
+  header, and the Search tab (an "Ask Splito" chip under the search field opens the chat with the typed text,
+  and the empty Search screen shows the suggested questions); the bottom bar stays at five tabs. Both entries
+  (Search and Ask Splito) exist on web, iOS and Android alike; Custom navigation (F-209) can pin it to the bar.
 - **Chat screen copies Bluesky's DM conversation screen** (message list, composer bar above the keyboard, day
   separators). Empty state: suggested question chips ("How much did I spend on food this month?", "Who owes
   me the most?", "Split last night's dinner 3 ways", "Show my Goa trip spending by day").
@@ -1701,6 +1703,7 @@ Every owner decision, in the order it was made (all 2026-10-26). "Replaced" name
 | 66 | "where is the ai chat placement, and why i see a new search, its also not visible on mobile" | Search becomes the second phone bottom-bar tab (Bluesky); Ask Splito placement unchanged (sidebar/drawer, Analytics header, Search row) | §§ 26.3, 26.19 | Search only in the drawer on phones |
 | 67 | "analytics group selection needs to be rethought, one dropdown and one selection doesn't make sense" | One scope chip + one checklist sheet (All / Non-group / each group); Include groups toggle removed | § 26.16 | Group dropdown + "Include groups" toggle |
 | 68 | "add multiple currency examples for everything, like group (if logically makes sense or group should have one currency), friends" | Group currency is only a default; any currency per expense; everything shown per currency, never summed; demo data multi-currency everywhere | § 26.13 | - |
+| 69 | "why i see a search section on sidebar but only on web, whats the placement for ai chat, and i need on both platforms" | Search tab on phones + Ask Splito chip/suggestions in Search; both on web and mobile; nav unification and Ask Splito built next, right after the audit fixes | §§ 26.3, 26.19 | Ask Splito last in the queue |
 
 New decisions follow § 0 rule 9: rewrite the rule in its topic so only the current truth remains, then add a
 row here.

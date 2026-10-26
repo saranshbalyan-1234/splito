@@ -3640,6 +3640,8 @@ From the whole-app logic audit (`docs/audit/AUDIT-2026-10-27.md`: 50 confirmed f
 | 33g | F-115 | Timezone, dates and number formats everywhere | locale, activity, payments | M | 8 | F-114 |
 | 33h | F-116 | Web navigation and sheet robustness | routes, Dialog/drawer, FormSheet, drafts | M | 8 | F-115 |
 | 33i | F-604, F-613, F-615 | Archive group, safe member removal, leave group (audit m4) | sync mutations + Group screens | M | 8 | F-116 |
+| 45 | F-2301 | Ask Splito: chat screen and on-device answers | screens/Ask, lib/ask | L | 8 | F-1301, F-222, F-1401 |
+| 35 | F-222 | One navigation list for sidebar and drawer, Home label and title | navigationItems + NavFooterLinks, drawer header | S | 8 | F-201, F-204 |
 
 ### Batch 4b: Owner requests (2026-10-26/27)
 
@@ -3655,7 +3657,6 @@ Every owner request from ARCHITECTURE § 26 (decision log rows 47-63) that was n
 | 33b | F-1301 | Analytics scope: one chip + checklist sheet (§ 26.16) | screens/Analytics FilterBar + useReport | S | 8 | merge row 30 |
 | 33a | F-225 | Sign in / Create account: Bluesky LoggedOut, Login and Signup screens copied (§ 26.15) | screens/Login, screens/Signup, view/com/auth | M | 7 | merge row 30 |
 | 34 | F-226 | Feedback: Send feedback and "Your feedback" | Settings Support + feedback sheet (finish feat/feedback) | M | 7 | F-201, F-205 |
-| 35 | F-222 | One navigation list for sidebar and drawer, Home label and title | navigationItems + NavFooterLinks, drawer header | S | 8 | F-201, F-204 |
 | 36 | F-223 | Sync-status dot on the user's avatar | avatar dot + session/outbox state | S | 7 | F-222, F-1801 |
 | 37 | F-1711 | Dim splash and brand kit on every platform | splash config + brand kit | S | 5 | F-201 |
 | 38 | F-1901 | PWA: service worker, offline shell, updates and install | apps/client/web, export post-step | M | 8 | F-201 |
@@ -3665,7 +3666,6 @@ Every owner request from ARCHITECTURE § 26 (decision log rows 47-63) that was n
 | 42 | F-1119 | Remind me | remind-me scheduler | S | 7 | F-1118, F-1907 |
 | 43 | F-2001 | JSON backup export and import | lib/export backup + Settings > Data | M | 8 | F-103, F-1701 |
 | 44 | F-2007 | Export centre: CSV and PDF statements | lib/export CSV / PDF + overflow entries | M | 8 | F-1301, F-2001 |
-| 45 | F-2301 | Ask Splito: chat screen and on-device answers | screens/Ask, lib/ask | L | 8 | F-1301, F-222, F-1401 |
 
 ### Batch 5: First impressions and scale
 
