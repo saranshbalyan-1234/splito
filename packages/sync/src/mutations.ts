@@ -65,13 +65,17 @@ export interface Repayment {
 /** `id` makes a retried save idempotent: the same id never records a second payment. */
 export type RepaymentInput = Repayment & {id?: string}
 
-/** Versioned write: entity, history row and outbox op, all inside the caller's transaction. */
-async function write<T>(tx: Tx, ctx: MutationCtx, type: EntityType, id: string, data: T, deleted: boolean, opType: string): Promise<Entity<T>> {
+/**
+ * Versioned write: entity, history row and outbox op, all inside the caller's transaction.
+ * `opType: null` keeps the write on this device (no outbox op), for records no server takes yet.
+ */
+export async function write<T>(tx: Tx, ctx: MutationCtx, type: EntityType, id: string, data: T, deleted: boolean, opType: string | null): Promise<Entity<T>> {
   const prev = await tx.get<T>(type, id)
   const at = ctx.now()
   const e: Entity<T> = {type, id, data, version: (prev?.version ?? 0) + 1, deleted, updatedAt: at}
   await tx.put(e)
   await tx.appendHistory({entityType: type, entityId: id, version: e.version, data, deleted, at, actor: ctx.actor})
+  if (opType === null) return e
   await tx.enqueue({
     opId: ctx.newId(),
     deviceId: ctx.deviceId,
@@ -96,7 +100,7 @@ function cleanName(name: string) {
   return n
 }
 
-async function requireLive<T>(tx: Tx, type: EntityType, id: string, code = 'NOT_FOUND'): Promise<Entity<T>> {
+export async function requireLive<T>(tx: Tx, type: EntityType, id: string, code = 'NOT_FOUND'): Promise<Entity<T>> {
   const e = await tx.get<T>(type, id)
   if (!e || e.deleted) throw new DomainError(code)
   return e
