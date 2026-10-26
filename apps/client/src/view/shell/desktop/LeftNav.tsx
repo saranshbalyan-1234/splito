@@ -276,12 +276,31 @@ function NavItem({
   )
 }
 
-/* Bluesky's "New post" compose button, opening Add expense the way Bluesky opens its composer. */
+/*
+ * Bluesky's "New post" compose button, opening Add expense the way Bluesky
+ * opens its composer. As upstream mentions the profile being viewed, it
+ * prefills the friend or group whose page is open.
+ */
 function ComposeBtn({minimal}: {minimal: boolean}) {
   const navigation = useNavigation<NavigationProp>()
   const {t: l} = useLingui()
 
-  const onPressCompose = () => navigation.navigate('AddExpense', {})
+  const onPressCompose = () => {
+    const routes = navigation.getState()?.routes
+    const current = routes?.[routes.length - 1]
+    const params = (current?.params ?? {}) as {
+      personId?: string
+      groupId?: string
+    }
+    navigation.navigate(
+      'AddExpense',
+      current?.name === 'Person'
+        ? {personId: params.personId}
+        : current?.name === 'Group'
+          ? {groupId: params.groupId}
+          : {},
+    )
+  }
 
   const layout = getComposeButtonLayout({minimal, isNative: IS_NATIVE})
 
@@ -326,28 +345,27 @@ export function DesktopLeftNav({
     return null
   }
 
-  const tabItems: Record<
-    TabId,
-    {label: string; icons: NavItemProps['icons']}
-  > = {
-    people: {
-      label: l`People`,
-      icons: {inactive: HomeIcon, active: HomeFilledIcon},
-    },
-    groups: {
-      label: l`Groups`,
-      icons: {inactive: GroupIcon, active: GroupFilledIcon},
-    },
-    analytics: {
-      label: l`Analytics`,
-      icons: {inactive: ChartPieIcon, active: ChartPieFilledIcon},
-    },
-  }
+  const tabItems: Record<TabId, {label: string; icons: NavItemProps['icons']}> =
+    {
+      people: {
+        label: l`People`,
+        icons: {inactive: HomeIcon, active: HomeFilledIcon},
+      },
+      groups: {
+        label: l`Groups`,
+        icons: {inactive: GroupIcon, active: GroupFilledIcon},
+      },
+      analytics: {
+        label: l`Analytics`,
+        icons: {inactive: ChartPieIcon, active: ChartPieFilledIcon},
+      },
+    }
 
-  /* Bluesky's account card is gone: the account avatar sits at the top right of the content (owner directive). */
+  /* Bluesky's account card is gone: the account avatar sits at the top right of each top-level header (owner directive). */
   const content = (
     <>
-      <View style={[!leftNavMinimal && a.w_full, leftNavMinimal && a.align_center]}>
+      <View
+        style={[!leftNavMinimal && a.w_full, leftNavMinimal && a.align_center]}>
         <LogoCard minimal={leftNavMinimal} />
         {tabs.map(tab => (
           <NavItem
@@ -386,7 +404,10 @@ export function DesktopLeftNav({
         t.atoms.bg,
         styles.leftNav,
         IS_NATIVE
-          ? [a.h_full, {paddingTop: insets.top + 16, paddingBottom: insets.bottom + 16}]
+          ? [
+              a.h_full,
+              {paddingTop: insets.top + 16, paddingBottom: insets.bottom + 16},
+            ]
           : [a.fixed, a.bottom_0],
         leftNavMinimal && [
           {width: LEFT_NAV_MINIMAL_WIDTH},

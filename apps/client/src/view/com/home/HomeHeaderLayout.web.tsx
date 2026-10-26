@@ -45,7 +45,9 @@ function HomeHeaderLayoutDesktopAndTablet({
     <>
       {/* Bordered like every other page's header, so the bar and avatar hold still across tabs. */}
       <Layout.Header.Outer>
-        <HeaderAvatar />
+        {/* Empty slots as wide as the action, bell and avatar on the right, so the title stays centred. */}
+        <Layout.Header.Slot />
+        <Layout.Header.Slot />
         <Layout.Header.Slot />
         <Layout.Header.Content>
           <View role="img" aria-label="Splito" style={[a.align_center]}>
@@ -54,6 +56,7 @@ function HomeHeaderLayoutDesktopAndTablet({
         </Layout.Header.Content>
         <AddFriendButton />
         <NotificationsBell />
+        <HeaderAvatar />
       </Layout.Header.Outer>
       {tabBarAnchor}
       {children ? (

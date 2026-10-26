@@ -1,12 +1,11 @@
 // Adapted from bluesky-social/social-app@4e4ad9c (MIT) — src/components/Layout/Header/index.tsx
 import {createContext, useCallback, useContext} from 'react'
-import {type GestureResponderEvent, Keyboard, View} from 'react-native'
+import {type GestureResponderEvent, View} from 'react-native'
 import {msg} from '@lingui/core/macro'
 import {useLingui} from '@lingui/react'
 import {useNavigation} from '@react-navigation/native'
 
 import {type NavigationProp} from '#/lib/routes/types'
-import {useSetDrawerOpen} from '#/state/shell'
 import {useIsWithinSplitView} from '#/lib/splitView'
 import {
   atoms as a,
@@ -19,7 +18,6 @@ import {
 } from '#/alf'
 import {Button, ButtonIcon, type ButtonProps} from '#/components/Button'
 import {ArrowLeft_Stroke2_Corner0_Rounded as ArrowLeft} from '#/components/icons/Arrow'
-import {Menu_Stroke2_Corner0_Rounded as Menu} from '#/components/icons/Menu'
 import {
   BUTTON_VISUAL_ALIGNMENT_OFFSET,
   HEADER_SLOT_SIZE,
@@ -130,38 +128,6 @@ export function BackButton({onPress, style, ...props}: Partial<ButtonProps>) {
         ]}
         {...props}>
         <ButtonIcon icon={ArrowLeft} size="lg" />
-      </Button>
-    </Slot>
-  )
-}
-
-export function MenuButton() {
-  const {_} = useLingui()
-  const ax = useAnalytics()
-  const setDrawerOpen = useSetDrawerOpen()
-  const {gtMobile} = useBreakpoints()
-
-  const onPress = useCallback(() => {
-    ax.metric('nav:click', {item: 'menu', surface: 'topBar'})
-    Keyboard.dismiss()
-    setDrawerOpen(true)
-  }, [setDrawerOpen, ax])
-
-  return gtMobile ? null : (
-    <Slot>
-      <Button
-        label={_(msg`Open drawer menu`)}
-        size="small"
-        variant="ghost"
-        color="secondary"
-        shape="square"
-        onPress={onPress}
-        hitSlop={HEADER_BUTTON_HITSLOP}
-        style={[
-          {marginLeft: -BUTTON_VISUAL_ALIGNMENT_OFFSET},
-          a.bg_transparent,
-        ]}>
-        <ButtonIcon icon={Menu} size="lg" />
       </Button>
     </Slot>
   )

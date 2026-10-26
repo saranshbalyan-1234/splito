@@ -1,60 +1,116 @@
-// Adapted from bluesky-social/social-app@4e4ad9c (MIT) - src/components/Layout/Header/index.tsx (MenuButton)
-import {Keyboard, View} from 'react-native'
-import {useLingui} from '@lingui/react/macro'
+// Adapted from bluesky-social/social-app@4e4ad9c (MIT) - src/view/shell/desktop/LeftNav.tsx (ProfileCard account menu)
+import {Trans, useLingui} from '@lingui/react/macro'
+import {useNavigation} from '@react-navigation/native'
 
-import {useSetDrawerOpen} from '#/state/shell'
-import {useMe} from '#/data/hooks'
+import {HITSLOP_10} from '#/lib/constants'
+import {type NavigationProp} from '#/lib/routes/types'
+import {useMe, usePref} from '#/data/hooks'
 import {UserAvatar} from '#/view/com/util/UserAvatar'
 import {atoms as a, tokens, useTheme} from '#/alf'
 import {Button} from '#/components/Button'
-import {Slot} from '#/components/Layout/Header'
+import {ChartPie_Stroke2_Corner0_Rounded as ChartPieIcon} from '#/components/icons/ChartPie'
+import {Moon_Stroke2_Corner0_Rounded as MoonIcon} from '#/components/icons/Moon'
+import {SettingsGear2_Stroke2_Corner0_Rounded as SettingsIcon} from '#/components/icons/Settings'
+import {Sun_Stroke2_Corner0_Rounded as SunIcon} from '#/components/icons/Sun'
+import {UserCircle_Stroke2_Corner0_Rounded as UserCircleIcon} from '#/components/icons/UserCircle'
+import {HEADER_SLOT_SIZE} from '#/components/Layout/const'
+import * as Menu from '#/components/Menu'
 
-const HEADER_BUTTON_HITSLOP = {top: 30, bottom: 10, left: 30, right: 30}
 const AVATAR_SIZE = 32
 
 /**
- * The account avatar in Bluesky's drawer-button spot at the left of each
- * top-level header (owner directive). It opens the drawer on every platform
- * and width.
+ * The account avatar in the last right-hand slot of each top-level header
+ * (owner: "move profile icon to top right"; it replaces Bluesky's sidebar
+ * account card and the Profile tab). It opens Bluesky's account menu - a
+ * dropdown on web, a bottom sheet on native - with Profile, Settings,
+ * Analytics and a theme shortcut that sets the `theme` preference.
  */
 export function HeaderAvatar() {
   const {t: l} = useLingui()
   const t = useTheme()
   const me = useMe()
-  const setDrawerOpen = useSetDrawerOpen()
+  const navigation = useNavigation<NavigationProp>()
+  const [, setTheme] = usePref('theme')
+  const isDark = t.scheme === 'dark'
 
   return (
-    <Slot>
-      <Button
-        testID="header-avatar"
-        label={l`Open drawer menu`}
-        hitSlop={HEADER_BUTTON_HITSLOP}
-        onPress={() => {
-          Keyboard.dismiss()
-          setDrawerOpen(true)
+    <Menu.Root>
+      <Menu.Trigger label={l`Account menu`}>
+        {({props, state, control}) => {
+          const isActive =
+            state.hovered || state.focused || state.pressed || control.isOpen
+          return (
+            <Button
+              testID="header-avatar"
+              label={props.accessibilityLabel}
+              {...props}
+              hitSlop={HITSLOP_10}
+              /*
+               * A halo around the avatar on hover, as Bluesky's ghost header
+               * buttons highlight. It overhangs the gutter so the avatar
+               * itself stays on it, and the left margin trims the button to
+               * one header slot, so the empty slots on the left keep the
+               * title centred.
+               */
+              style={[
+                a.rounded_full,
+                a.p_xs,
+                {
+                  marginVertical: -tokens.space.xs,
+                  marginRight: -tokens.space.xs,
+                  marginLeft: HEADER_SLOT_SIZE - AVATAR_SIZE - tokens.space.xs,
+                },
+                a.transition_color,
+                isActive && t.atoms.bg_contrast_25,
+              ]}>
+              <UserAvatar name={me?.data.name} size={AVATAR_SIZE} type="user" />
+            </Button>
+          )
         }}
-        /*
-         * A halo around the avatar on hover, as Bluesky's ghost header
-         * buttons highlight. It overhangs the gutter so the avatar itself
-         * lines up with the page's left edge, like Bluesky's menu button.
-         */
-        style={[
-          a.rounded_full,
-          a.self_start,
-          {marginVertical: -tokens.space.xs, marginLeft: -tokens.space.xs},
-        ]}>
-        {({hovered, focused, pressed}) => (
-          <View
-            style={[
-              a.rounded_full,
-              a.p_xs,
-              a.transition_color,
-              (hovered || focused || pressed) && t.atoms.bg_contrast_25,
-            ]}>
-            <UserAvatar name={me?.data.name} size={AVATAR_SIZE} type="user" />
-          </View>
-        )}
-      </Button>
-    </Slot>
+      </Menu.Trigger>
+      <Menu.Outer>
+        <Menu.Group>
+          <Menu.Item
+            testID="header-menu-profile"
+            label={l`Profile`}
+            onPress={() => navigation.navigate('Profile')}>
+            <Menu.ItemIcon icon={UserCircleIcon} />
+            <Menu.ItemText>
+              <Trans>Profile</Trans>
+            </Menu.ItemText>
+          </Menu.Item>
+          <Menu.Item
+            testID="header-menu-settings"
+            label={l`Settings`}
+            onPress={() => navigation.navigate('Settings')}>
+            <Menu.ItemIcon icon={SettingsIcon} />
+            <Menu.ItemText>
+              <Trans>Settings</Trans>
+            </Menu.ItemText>
+          </Menu.Item>
+          <Menu.Item
+            testID="header-menu-analytics"
+            label={l`Analytics`}
+            onPress={() => navigation.navigate('Analytics')}>
+            <Menu.ItemIcon icon={ChartPieIcon} />
+            <Menu.ItemText>
+              <Trans>Analytics</Trans>
+            </Menu.ItemText>
+          </Menu.Item>
+        </Menu.Group>
+        <Menu.Divider />
+        <Menu.Group>
+          <Menu.Item
+            testID="header-menu-theme"
+            label={isDark ? l`Light theme` : l`Dark theme`}
+            onPress={() => void setTheme(isDark ? 'light' : 'dark')}>
+            <Menu.ItemIcon icon={isDark ? SunIcon : MoonIcon} />
+            <Menu.ItemText>
+              {isDark ? <Trans>Light theme</Trans> : <Trans>Dark theme</Trans>}
+            </Menu.ItemText>
+          </Menu.Item>
+        </Menu.Group>
+      </Menu.Outer>
+    </Menu.Root>
   )
 }

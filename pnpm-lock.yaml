@@ -334,9 +334,6 @@ importers:
       react-native:
         specifier: 0.88.0
         version: 0.88.0(patch_hash=dc5394dccd29a3cc7ec7079a8fae133938d92a99a5f7fdd73ed5ef94dd868a96)(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/metro-config@0.88.0(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.3.0)(react@19.3.0)(supports-color@8.1.1)
-      react-native-drawer-layout:
-        specifier: 5.0.0-alpha.19
-        version: 5.0.0-alpha.19(33f69aaaed39849d3e89a8bb07a05106)
       react-native-gesture-handler:
         specifier: ~3.3.0
         version: 3.3.0(react-native@0.88.0(patch_hash=dc5394dccd29a3cc7ec7079a8fae133938d92a99a5f7fdd73ed5ef94dd868a96)(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/metro-config@0.88.0(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.3.0)(react@19.3.0)(supports-color@8.1.1))(react@19.3.0)
@@ -3564,15 +3561,6 @@ packages:
       react: '>=18.0.0'
       react-is: '>=18.0.0'
 
-  react-native-drawer-layout@5.0.0-alpha.19:
-    resolution: {integrity: sha512-WBO10LyQw2b7j1XmhtXHQ5obH2HIb1tBCQSFbUlJxYSzkvw1+W35B+pblyNGa6v3Fdo5qXXfF/yFBz59gaVdSw==}
-    peerDependencies:
-      react: '>= 19.2.0'
-      react-native: '*'
-      react-native-gesture-handler: '>= 3.0.0'
-      react-native-reanimated: 4.7.1
-      react-native-worklets: 0.13.0
-
   react-native-gesture-handler@3.3.0:
     resolution: {integrity: sha512-ZCTlJ09nE3GPbm7J74lvwpxmx1TQ/7MDlHZNLARVYTN82k21mJUJ7BmI9eWjEi8eevHiAudI5O1Cpnt0rJfoJA==}
     peerDependencies:
@@ -4050,11 +4038,6 @@ packages:
 
   use-latest-callback@0.2.6:
     resolution: {integrity: sha512-FvRG9i1HSo0wagmX63Vrm8SnlUU3LMM3WyZkQ76RnslpBrX694AdG4A0zQBx2B3ZifFA0yv/BaEHGBnEax5rZg==}
-    peerDependencies:
-      react: '>=16.8'
-
-  use-latest-callback@0.3.5:
-    resolution: {integrity: sha512-YDTKaeth5egzJLLKxGDvfoajkiZbNbLEaZnvnHXjSt5FDVy1WgPLwXXKdtBDIXDeakBrE4wBJuf2FTFBXzVw4Q==}
     peerDependencies:
       react: '>=16.8'
 
@@ -7497,15 +7480,6 @@ snapshots:
       react: 19.3.0
       react-is: 19.3.1
 
-  react-native-drawer-layout@5.0.0-alpha.19(33f69aaaed39849d3e89a8bb07a05106):
-    dependencies:
-      react: 19.3.0
-      react-native: 0.88.0(patch_hash=dc5394dccd29a3cc7ec7079a8fae133938d92a99a5f7fdd73ed5ef94dd868a96)(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/metro-config@0.88.0(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.3.0)(react@19.3.0)(supports-color@8.1.1)
-      react-native-gesture-handler: 3.3.0(react-native@0.88.0(patch_hash=dc5394dccd29a3cc7ec7079a8fae133938d92a99a5f7fdd73ed5ef94dd868a96)(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/metro-config@0.88.0(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.3.0)(react@19.3.0)(supports-color@8.1.1))(react@19.3.0)
-      react-native-reanimated: 4.7.1(patch_hash=557541b187597797db03adf716a768717a574dbdff8b221683f4b3f7bd912185)(react-native-worklets@0.13.0(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/metro-config@0.88.0(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(react-native@0.88.0(patch_hash=dc5394dccd29a3cc7ec7079a8fae133938d92a99a5f7fdd73ed5ef94dd868a96)(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/metro-config@0.88.0(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.3.0)(react@19.3.0)(supports-color@8.1.1))(react@19.3.0)(supports-color@8.1.1))(react-native@0.88.0(patch_hash=dc5394dccd29a3cc7ec7079a8fae133938d92a99a5f7fdd73ed5ef94dd868a96)(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/metro-config@0.88.0(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.3.0)(react@19.3.0)(supports-color@8.1.1))(react@19.3.0)
-      react-native-worklets: 0.13.0(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/metro-config@0.88.0(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(react-native@0.88.0(patch_hash=dc5394dccd29a3cc7ec7079a8fae133938d92a99a5f7fdd73ed5ef94dd868a96)(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/metro-config@0.88.0(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.3.0)(react@19.3.0)(supports-color@8.1.1))(react@19.3.0)(supports-color@8.1.1)
-      use-latest-callback: 0.3.5(react@19.3.0)
-
   react-native-gesture-handler@3.3.0(react-native@0.88.0(patch_hash=dc5394dccd29a3cc7ec7079a8fae133938d92a99a5f7fdd73ed5ef94dd868a96)(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/metro-config@0.88.0(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.3.0)(react@19.3.0)(supports-color@8.1.1))(react@19.3.0):
     dependencies:
       '@types/react-test-renderer': 19.3.0
@@ -7993,10 +7967,6 @@ snapshots:
       '@types/react': 19.3.0
 
   use-latest-callback@0.2.6(react@19.3.0):
-    dependencies:
-      react: 19.3.0
-
-  use-latest-callback@0.3.5(react@19.3.0):
     dependencies:
       react: 19.3.0
 

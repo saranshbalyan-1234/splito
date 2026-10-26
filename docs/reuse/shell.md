@@ -7,16 +7,14 @@ glyphs, illustrations, logos or `assets/images` are copied.
 
 | Splito file | Upstream file | Splito changes |
 |---|---|---|
-| `src/view/shell/desktop/LeftNav.tsx` | `src/view/shell/desktop/LeftNav.tsx` | Pinned to the window's left edge (no centred column); Splito logo on top; tab items from the `tabs` preference plus Settings; "New post" pill labelled Add expense; account card removed (the account avatar opens the drawer from the top left of each header, see `HeaderAvatar`); no Notifications item (the header bell, see `NotificationsBell`) |
+| `src/view/shell/desktop/LeftNav.tsx` | `src/view/shell/desktop/LeftNav.tsx` | Pinned to the window's left edge (no centred column); Splito logo on top; tab items from the `tabs` preference plus Settings; "New post" pill labelled Add expense; account card removed (the account avatar sits at the top right of each top-level header, see `HeaderAvatar`); the pill prefills the friend or group whose page is open, as upstream's mentions the profile being viewed; no Notifications item (the header bell, see `NotificationsBell`) |
 | `src/view/shell/desktop/composeButtonLayout.ts` | `src/view/shell/desktop/composeButtonLayout.ts` | - |
 | `src/view/shell/bottom-bar/BottomBar.tsx` | `src/view/shell/bottom-bar/BottomBar.tsx` | Splito tabs from the `tabs` preference (People, Groups, Analytics); no centre button; account switching, chat and badges removed |
 | `src/view/shell/bottom-bar/BottomBarWeb.tsx` | `src/view/shell/bottom-bar/BottomBarWeb.tsx` | As BottomBar |
 | `src/view/shell/bottom-bar/BottomBarStyles.tsx` | `src/view/shell/bottom-bar/BottomBarStyles.tsx` | - |
 | `src/view/shell/createNativeStackNavigatorWithAuth.tsx` | `src/view/shell/createNativeStackNavigatorWithAuth.tsx` | Auth gates removed; main content offset by the sidebar width; footer height reset off phones |
-| `src/view/shell/index.tsx` | `src/view/shell/index.tsx` | Composer, global dialogs, OTA and push hooks removed; the drawer (react-native-drawer-layout, as upstream) also opens on tablets from the avatar, swipe only on phones at a tab root |
-| `src/view/shell/index.web.tsx` | `src/view/shell/index.web.tsx` | Composer and global dialogs removed; the drawer opens at every width (not only below the tablet breakpoint), with Escape to close and a focus trap (`@radix-ui/react-focus-scope`, as the web Dialog) |
-| `src/view/shell/Drawer.tsx` | `src/view/shell/Drawer.tsx` | Profile card shows name and "Saved on this device"; items People, Groups, Analytics, Profile, Settings, Notifications (unread badge); a Dark theme switch (the `theme` preference); footer About (Settings > About) and Help (a short how-it-works prompt); sign-up card, feeds, lists, chat, analytics metrics and invite dialog removed |
-| `src/state/shell/drawer-open.tsx` | `src/state/shell/drawer-open.tsx` | Hotkey scope handling removed (Splito has no global hotkeys) |
+| `src/view/shell/index.tsx` | `src/view/shell/index.tsx` | Drawer, composer, global dialogs, OTA and push hooks removed |
+| `src/view/shell/index.web.tsx` | `src/view/shell/index.web.tsx` | Mobile drawer, composer and global dialogs removed |
 | `src/components/TabBar.tsx` | `src/view/com/pager/TabBar.web.tsx` | Used on every platform without the Pager: a press switches the tab; no horizontal scroller or drag-following indicator (two short tabs always fit) |
 | `src/components/NotificationsBell.tsx` | `src/view/shell/bottom-bar/BottomBar.tsx (Btn notification badge)` | Bluesky's bell with its unread badge as a header icon button on every top-level page; counts only unread changes by other people |
 | `src/components/Composer/index.tsx` | `src/view/shell/Composer.tsx` | A route body (the stack presents it like the composer modal) instead of a state-driven overlay |
@@ -54,12 +52,13 @@ glyphs, illustrations, logos or `assets/images` are copied.
 | `src/components/Fill.tsx` | `src/components/Fill.tsx` | - |
 | `src/components/MediaInsetBorder.tsx` | `src/components/MediaInsetBorder.tsx` | - |
 | `src/components/SubtleHover.tsx` | `src/components/SubtleHover.tsx` | - |
-| `src/components/HeaderAvatar.tsx` | `src/components/Layout/Header/index.tsx (MenuButton)` | The 32px account avatar in the menu button's place at the left of each top-level header; it opens the drawer at every width |
+| `src/components/HeaderAvatar.tsx` | `src/view/shell/desktop/LeftNav.tsx (ProfileCard account menu)` | The 32px account avatar in the last right-hand slot of each top-level header (owner: "move profile icon to top right"); Bluesky's account Menu (dropdown on web, bottom sheet on native) with Profile, Settings, Analytics and a theme shortcut |
 | `src/screens/Profile.tsx` | `src/screens/Settings/Settings.tsx` | Profile page, opened from the header avatar menu (back button header): account block, Analytics / Settings / About rows, sign-in row marked "Coming with sync" |
 | `src/screens/Settings/components/SettingsList.tsx` | `src/screens/Settings/components/SettingsList.tsx` | `LinkItem` built on `#/view/com/util/Link` |
 | `src/view/com/home/HomeHeaderLayout.tsx` | `src/view/com/home/HomeHeaderLayout.tsx` | - |
-| `src/view/com/home/HomeHeaderLayout.web.tsx` | `src/view/com/home/HomeHeaderLayout.web.tsx` | Desktop drops the centred logo (the sidebar carries it); the row holds the account avatar at the right |
-| `src/view/com/home/HomeHeaderLayoutMobile.tsx` | `src/view/com/home/HomeHeaderLayoutMobile.tsx` | Drawer button removed; the feeds button's slot holds the account avatar |
+| `src/view/com/home/HomeHeaderLayout.web.tsx` | `src/view/com/home/HomeHeaderLayout.web.tsx` | The logo is a mark (the sidebar's logo is the home link); the row holds Add friend, the notifications bell and the account avatar at the right, balanced by empty slots on the left |
+| `src/view/com/home/HomeHeaderLayoutMobile.tsx` | `src/view/com/home/HomeHeaderLayoutMobile.tsx` | Drawer button removed; Add friend, the bell and the account avatar on the right; fixed and hidden on scroll through `HidingHeader` |
+| `src/lib/MainScrollProvider.tsx` | `src/view/com/util/MainScrollProvider.tsx` | Kept outside `src/view/` (AGENTS.md); eventemitter3 replaced by a listener set; adds `HidingHeader` (upstream's fixed, transformed `HomeHeaderLayoutMobile` wrapper, shared by People, Groups and Analytics) and `HIDING_HEADER_HEIGHT` (upstream's `useHeaderOffset`) |
 | `src/view/com/util/EmptyState.tsx` | `src/view/com/util/EmptyState.tsx` | Optional animated `Illustration` in place of the icon |
 | `src/view/com/util/Link.tsx` | `src/view/com/util/Link.tsx` | App routes only |
 | `src/view/com/util/PressableWithHover.tsx` | `src/view/com/util/PressableWithHover.tsx` | - |

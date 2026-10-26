@@ -147,11 +147,7 @@ function Tabs() {
  * The TabsNavigator is used by native mobile to represent the routes
  * as tabs, with every other route pushed above them.
  */
-export function TabsNavigator({
-  layout,
-}: {
-  layout: React.ComponentProps<typeof Stack.Navigator>['layout']
-}) {
+export function TabsNavigator() {
   const t = useTheme()
   const [motion] = usePref('motion')
   const shouldReduceMotion = useShouldReduceMotion()
@@ -160,7 +156,6 @@ export function TabsNavigator({
     motion === 'off' ? 'none' : shouldReduceMotion ? 'fade' : undefined
   return (
     <Stack.Navigator
-      layout={layout}
       screenOptions={{
         ...screenOptions(t),
         ...(reducedAnimation && {animation: reducedAnimation}),
@@ -194,11 +189,7 @@ export function TabsNavigator({
  * The FlatNavigator is used by Web to represent the routes
  * in a single ("flat") stack.
  */
-export function FlatNavigator({
-  layout,
-}: {
-  layout: React.ComponentProps<typeof Flat.Navigator>['layout']
-}) {
+export function FlatNavigator() {
   const t = useTheme()
   const {_} = useLingui()
   const screenListeners = useWebScrollRestoration()
@@ -210,7 +201,6 @@ export function FlatNavigator({
 
   return (
     <Flat.Navigator
-      layout={layout}
       screenListeners={screenListeners}
       screenOptions={screenOptions(t)}>
       <Flat.Screen

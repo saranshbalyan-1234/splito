@@ -18,10 +18,11 @@
     <style>
       @font-face { font-family: 'InterVariable'; src: url('/fonts/InterVariable.woff2') format('woff2'); font-weight: 300 1000; font-style: normal; font-display: swap; }
       @font-face { font-family: 'InterVariableItalic'; src: url('/fonts/InterVariable-Italic.woff2') format('woff2'); font-weight: 300 1000; font-style: italic; font-display: swap; }
-      html, body, #root { height: 100%; }
-      body { margin: 0; overflow: hidden; background: #ffffff; }
+      /* As Bluesky's bskyweb/templates/base.html: the window scrolls (lists use full-window scroll), and the scrollbar is always there so pages never shift. */
+      html, body, #root { display: flex; flex: 1 0 auto; min-height: 100%; width: 100%; }
+      html, body { margin: 0; padding: 0; -webkit-text-size-adjust: 100%; -webkit-font-smoothing: antialiased; }
+      body { overflow-y: scroll; background: #ffffff; }
       @media (prefers-color-scheme: dark) { body { background: #000000; } }
-      #root { display: flex; }
       button, input, textarea { font: inherit; line-height: inherit; }
       /* As Bluesky's src/style.css: fields draw their own focus state. */
       textarea:focus, input:focus { outline: 0; }

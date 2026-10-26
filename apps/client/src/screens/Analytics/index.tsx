@@ -4,6 +4,12 @@ import {Trans, useLingui} from '@lingui/react/macro'
 import {useNavigation} from '@react-navigation/native'
 import {formatAmount, type ReportExpense, reportCsv} from '@splito/domain'
 
+import {
+  HIDING_HEADER_HEIGHT,
+  HidingHeader,
+  HomeHeaderModeProvider,
+  MainScrollProvider,
+} from '#/lib/MainScrollProvider'
 import {type NavigationProp} from '#/lib/routes/types'
 import {useNumberLocale} from '#/locale/numberLocale'
 import {usePref} from '#/data/hooks'
@@ -55,88 +61,102 @@ export function AnalyticsScreen() {
 
   return (
     <Layout.Screen testID="screen-analytics">
-      <Layout.Header.Outer>
-        <HeaderAvatar />
-        {/* Balances the action and bell on the right, so the title stays centred. */}
-        <Layout.Header.Slot />
-        <Layout.Header.Content>
-          <Layout.Header.TitleText>
-            <Trans>Analytics</Trans>
-          </Layout.Header.TitleText>
-        </Layout.Header.Content>
-        <Layout.Header.IconButton
-          testID="analytics-export"
-          icon={DownloadIcon}
-          label={l`Export CSV`}
-          disabled={!report || report.rows.length === 0}
-          onPress={() => report && void exportRows(report)}
-        />
-        <NotificationsBell />
-      </Layout.Header.Outer>
-      {!report ? (
-        <Shimmer testID="analytics-loading">
-          <SummaryPlaceholder />
-          <ChartsPlaceholder />
-          {Array.from({length: PLACEHOLDER_ROWS}, (_, i) => (
-            <ExpenseRowPlaceholder key={i} />
-          ))}
-        </Shimmer>
-      ) : !report.hasExpenses ? (
-        <EmptyState
-          testID="analytics-empty"
-          illustration="empty-analytics"
-          message={l`Your spending shows up here – by month, category, person and group – once you add an expense.`}
-          button={{
-            label: l({message: 'Add expense', context: 'action'}),
-            text: l({message: 'Add expense', context: 'action'}),
-            icon: PlusIcon,
-            onPress: () => navigation.navigate('AddExpense', {}),
-            size: 'small',
-            color: 'secondary',
-          }}
-        />
-      ) : (
-        <LayoutAnimationConfig skipEntering skipExiting>
-          <List
-            data={report.rows}
-            keyExtractor={(e: ReportExpense) => e.id}
-            renderItem={({item}: {item: ReportExpense}) => (
-              <ExpenseRow
-                expense={item}
-                shareOf={report.shareOf}
-                shareLabel={
-                  report.shareOf === report.me
-                    ? l`Your share`
-                    : l`${report.nameOfPerson(report.shareOf)}’s share`
-                }
-                category={report.category(item.category ?? 'other')}
-                groupName={
-                  item.groupId ? report.nameOfGroup(item.groupId) : null
-                }
-                locale={locale}
-              />
-            )}
-            ListHeaderComponent={
-              <>
-                <FilterBar
-                  report={report}
-                  isTable={isTable}
-                  onToggleView={() => void setView(isTable ? 'charts' : 'table')}
-                />
-                <Summary report={report} locale={locale} />
-                <Charts report={report} locale={locale} isTable={isTable} />
-                {report.totals.count > 0 && (
-                  <ExpensesHeader report={report} locale={locale} />
-                )}
-              </>
-            }
-            ListFooterComponent={
-              !gtMobile ? <View style={{height: 100}} /> : undefined
-            }
+      <HomeHeaderModeProvider>
+        <HidingHeader>
+          <Layout.Header.Outer>
+            {/* Empty slots as wide as the action, bell and avatar on the right, so the title stays centred. */}
+            <Layout.Header.Slot />
+            <Layout.Header.Slot />
+            <Layout.Header.Slot />
+            <Layout.Header.Content>
+              <Layout.Header.TitleText>
+                <Trans>Analytics</Trans>
+              </Layout.Header.TitleText>
+            </Layout.Header.Content>
+            <Layout.Header.IconButton
+              testID="analytics-export"
+              icon={DownloadIcon}
+              label={l`Export CSV`}
+              disabled={!report || report.rows.length === 0}
+              onPress={() => report && void exportRows(report)}
+            />
+            <NotificationsBell />
+            <HeaderAvatar />
+          </Layout.Header.Outer>
+        </HidingHeader>
+        {!report ? (
+          <Shimmer
+            testID="analytics-loading"
+            style={!gtMobile && {paddingTop: HIDING_HEADER_HEIGHT}}>
+            <SummaryPlaceholder />
+            <ChartsPlaceholder />
+            {Array.from({length: PLACEHOLDER_ROWS}, (_, i) => (
+              <ExpenseRowPlaceholder key={i} />
+            ))}
+          </Shimmer>
+        ) : !report.hasExpenses ? (
+          <EmptyState
+            style={!gtMobile && {paddingTop: HIDING_HEADER_HEIGHT}}
+            testID="analytics-empty"
+            illustration="empty-analytics"
+            message={l`Your spending shows up here – by month, category, person and group – once you add an expense.`}
+            button={{
+              label: l({message: 'Add expense', context: 'action'}),
+              text: l({message: 'Add expense', context: 'action'}),
+              icon: PlusIcon,
+              onPress: () => navigation.navigate('AddExpense', {}),
+              size: 'small',
+              color: 'secondary',
+            }}
           />
-        </LayoutAnimationConfig>
-      )}
-      <AddExpenseFAB />
+        ) : (
+          <LayoutAnimationConfig skipEntering skipExiting>
+            <MainScrollProvider>
+              <List
+                headerOffset={gtMobile ? undefined : HIDING_HEADER_HEIGHT}
+                data={report.rows}
+                keyExtractor={(e: ReportExpense) => e.id}
+                renderItem={({item}: {item: ReportExpense}) => (
+                  <ExpenseRow
+                    expense={item}
+                    shareOf={report.shareOf}
+                    shareLabel={
+                      report.shareOf === report.me
+                        ? l`Your share`
+                        : l`${report.nameOfPerson(report.shareOf)}’s share`
+                    }
+                    category={report.category(item.category ?? 'other')}
+                    groupName={
+                      item.groupId ? report.nameOfGroup(item.groupId) : null
+                    }
+                    locale={locale}
+                  />
+                )}
+                ListHeaderComponent={
+                  <>
+                    <FilterBar
+                      report={report}
+                      isTable={isTable}
+                      onToggleView={() =>
+                        void setView(isTable ? 'charts' : 'table')
+                      }
+                    />
+                    <Summary report={report} locale={locale} />
+                    <Charts report={report} locale={locale} isTable={isTable} />
+                    {report.totals.count > 0 && (
+                      <ExpensesHeader report={report} locale={locale} />
+                    )}
+                  </>
+                }
+                ListFooterComponent={
+                  !gtMobile ? <View style={{height: 100}} /> : undefined
+                }
+              />
+            </MainScrollProvider>
+          </LayoutAnimationConfig>
+        )}
+        <AddExpenseFAB />
+      </HomeHeaderModeProvider>
     </Layout.Screen>
   )
 }
