@@ -1,0 +1,9 @@
+node_modules/
+dist/
+.expo/
+.superpowers/
+*.log
+ios/
+android/
+test-results/
+playwright-report/
