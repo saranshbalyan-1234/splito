@@ -122,6 +122,18 @@ test('analytics opens on this year as charts; both are choices with a reset', as
   expect(await getPref(s, 'analyticsView')).toBe('charts')
 })
 
+test('analytics scope: Everything by default, stays on this device, never empty', async () => {
+  expect(PREFS.analyticsScope.scope).toBe('device')
+  expect(await getPref(s, 'analyticsScope')).toBe('everything')
+  await setPref(s, ctx, 'analyticsScope', {nonGroup: false, groups: ['g1', 'g2']})
+  expect(await getPref(s, 'analyticsScope')).toEqual({nonGroup: false, groups: ['g1', 'g2']})
+  await setPref(s, ctx, 'analyticsScope', {nonGroup: true, groups: 'all'})
+  for (const bad of [{nonGroup: false, groups: []}, {nonGroup: true, groups: ['g1', 'g1']}, {nonGroup: 'yes', groups: 'all'}, {groups: 'all'}, 'some'])
+    await expect(setPref(s, ctx, 'analyticsScope', bad as never)).rejects.toThrow('INVALID_PREF')
+  await resetPref(s, ctx, 'analyticsScope')
+  expect(await getPref(s, 'analyticsScope')).toBe('everything')
+})
+
 test('itemize charges remember amount or % per kind: tax, tip and service %, discount amount by default', async () => {
   expect(await getPref(s, 'itemizeAdjustmentModes')).toEqual({tax: 'percent', tip: 'percent', service: 'percent', discount: 'amount'})
   await setPref(s, ctx, 'itemizeAdjustmentModes', {tax: 'amount', tip: 'percent', service: 'percent', discount: 'percent'})

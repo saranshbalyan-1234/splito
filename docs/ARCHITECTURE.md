@@ -1426,6 +1426,16 @@ dishes etc and each item can be assigned to each in split"; "in itemize don't sh
 - **Expense detail lists every item with its people and portions, each person's resulting share, and
   adjustment lines** ("Tax 18% - INR 216.00").
 
+- **Many currencies everywhere, never mixed.** A group has a home currency (set on create, editable) that only
+  pre-fills new expenses; any expense, repayment or write-off in a group, with a friend, or alone can use any
+  currency (a Lisbon trip from India holds EUR and INR). Every balance, total, chart, overview card and settle
+  plan is kept and shown per currency, side by side ("₹1,200 · €45"); amounts in different currencies are never
+  added together. Settle up plans each currency separately; settling everything in one currency is an explicit,
+  reviewed conversion with the rate shown (BACKLOG Trips II). Friends show one line per currency they share
+  with you. Demo data (small and large sets) includes multi-currency groups, friends and direct expenses so
+  every screen is seen with more than one currency. *Why:* "add multiple currency examples for everything,
+  like group (if logically makes sense or group should have one currency), friends, etc".
+
 ### 26.14 Activity
 
 *Why:* "make notification as activity and move to bottom". *Where:* `screens/Activity.tsx`,
@@ -1487,6 +1497,15 @@ built yet.
   group; the chart/table toggle sits in that filter row, never in the header; the header's one action is
   Export CSV. One chart per currency, or converted with the rate labelled. *Why:* "analytics also needed, with
   graphs and all". *Where:* `screens/Analytics`, § 25 "Analytics and export", spec § 4.
+- **One scope control, not a dropdown plus a toggle.** The filter row has a single "scope" chip whose label
+  says what is counted: "Everything" (default), "Non-group only", "Goa trip", "Goa trip + 2" (up to 3 groups named), "4 groups" (a count from 4),
+  "Non-group + 2 groups". Tapping it opens one sheet (bottom drawer on phones, popup on desktop) titled "Show
+  expenses from" with one checklist: an "All" row at the top, then "Non-group expenses" (direct with friends),
+  then every group (active first, archived under a fold; search when more than 8), each with its icon; Cancel /
+  Apply in the footer, Apply disabled when nothing is ticked. The separate "Include groups" toggle is gone.
+  Tapping a group in the "By group" chart narrows the scope to that group. The last scope is remembered per
+  device (`analyticsScope`, device pref). *Why:* "analytics group selection needs to be rethought, one dropdown
+  and one selection doesn't make sense".
 
 ### 26.17 Desktop right column (wide, 1300 px and up)
 
@@ -1680,6 +1699,8 @@ Every owner decision, in the order it was made (all 2026-10-26). "Replaced" name
 | 64 | "add a lot of demo data to my account" | Large deterministic demo dataset, `?demo=large` + Settings > Data (dev/e2e only), removable | § 26.1 | Small `?demo=1` set only |
 | 65 | "there is signin page already there in bluesky, use that" | Sign in / Create account copy Bluesky LoggedOut + Login + Signup screens | § 26.15 | Own method-picker sign-in screen (email/phone code, Apple/Google) |
 | 66 | "where is the ai chat placement, and why i see a new search, its also not visible on mobile" | Search becomes the second phone bottom-bar tab (Bluesky); Ask Splito placement unchanged (sidebar/drawer, Analytics header, Search row) | §§ 26.3, 26.19 | Search only in the drawer on phones |
+| 67 | "analytics group selection needs to be rethought, one dropdown and one selection doesn't make sense" | One scope chip + one checklist sheet (All / Non-group / each group); Include groups toggle removed | § 26.16 | Group dropdown + "Include groups" toggle |
+| 68 | "add multiple currency examples for everything, like group (if logically makes sense or group should have one currency), friends" | Group currency is only a default; any currency per expense; everything shown per currency, never summed; demo data multi-currency everywhere | § 26.13 | - |
 
 New decisions follow § 0 rule 9: rewrite the rule in its topic so only the current truth remains, then add a
 row here.

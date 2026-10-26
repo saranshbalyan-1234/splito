@@ -85,6 +85,12 @@ msgstr "{0, plural, one {Expires in # hour} other {Expires in # hours}}"
 msgid "{0} · includes {1} left over"
 msgstr "{0} · includes {1} left over"
 
+#. placeholder {0}: name(summary.groupId)
+#. placeholder {1}: summary.more
+#: src/screens/Analytics/components/FilterBar.tsx:155
+msgid "{0} + {1}"
+msgstr "{0} + {1}"
+
 #. placeholder {0}: fmt(items)
 #. placeholder {1}: fmt(extra)
 #: src/screens/Expense/index.tsx:515
@@ -174,6 +180,11 @@ msgstr "{0} forgave {1}"
 #: src/screens/RecentlyDeleted/describe.ts:51
 msgid "{0} forgave you"
 msgstr "{0} forgave you"
+
+#. placeholder {0}: summary.count
+#: src/screens/Analytics/components/FilterBar.tsx:162
+msgid "{0} groups"
+msgstr "{0} groups"
 
 #. placeholder {0}: person?.data.name ?? ''
 #: src/screens/Person/index.tsx:260
@@ -964,6 +975,8 @@ msgid "After that they leave this list. Their history stays in each record’s a
 msgstr "After that they leave this list. Their history stays in each record’s audit trail."
 
 #: src/screens/Activity.tsx:113
+#: src/screens/Analytics/components/ScopeDialog.tsx:134
+#: src/screens/Analytics/components/ScopeDialog.tsx:145
 #: src/screens/Groups/components/GroupsFilterDialog.tsx:69
 #: src/screens/Groups/components/GroupsFilterDialog.tsx:93
 #: src/screens/Groups/components/GroupsFilterDialog.tsx:104
@@ -981,9 +994,7 @@ msgstr "All {0} assigned"
 msgid "All even"
 msgstr "All even"
 
-#: src/screens/Analytics/components/FilterBar.tsx:37
-#: src/screens/Analytics/components/FilterBar.tsx:94
-#: src/screens/Analytics/components/FilterBar.tsx:97
+#: src/screens/Analytics/components/FilterBar.tsx:148
 msgid "All groups"
 msgstr "All groups"
 
@@ -994,7 +1005,7 @@ msgstr "All settled up"
 
 #: src/components/settings/prefControls.tsx:414
 #: src/screens/Analytics/components/Summary.tsx:195
-#: src/screens/Analytics/useReport.ts:244
+#: src/screens/Analytics/useReport.ts:258
 msgid "All time"
 msgstr "All time"
 
@@ -1063,7 +1074,7 @@ msgstr "Amount to let go"
 msgid "Amount: {0} → {1}"
 msgstr "Amount: {0} → {1}"
 
-#: src/screens/Analytics/components/FilterBar.tsx:57
+#: src/screens/Analytics/components/FilterBar.tsx:61
 msgid "Amounts are never added across currencies."
 msgstr "Amounts are never added across currencies."
 
@@ -1119,6 +1130,7 @@ msgstr "Appearance"
 
 #: src/components/settings/AccentPicker.tsx:125
 #: src/screens/Analytics/components/RangeDialog.tsx:112
+#: src/screens/Analytics/components/ScopeDialog.tsx:108
 #: src/screens/Groups/components/GroupsFilterDialog.tsx:60
 #: src/screens/People/components/FriendsFilterDialog.tsx:69
 #: src/screens/Person/components/HistoryFilterDialog.tsx:58
@@ -1138,6 +1150,15 @@ msgstr "Approve group joins"
 #: src/screens/Search/components/ResultRows.tsx:329
 msgid "Archived"
 msgstr "Archived"
+
+#. placeholder {0}: archived.length
+#: src/screens/Analytics/components/ScopeDialog.tsx:191
+msgid "Archived · {0}"
+msgstr "Archived · {0}"
+
+#: src/screens/Analytics/components/ScopeDialog.tsx:180
+msgid "Archived groups"
+msgstr "Archived groups"
 
 #: src/components/settings/prefControls.tsx:535
 #: src/components/settings/prefControls.tsx:559
@@ -1172,11 +1193,11 @@ msgstr "Back up and share"
 msgid "Back up and share with friends"
 msgstr "Back up and share with friends"
 
-#: src/screens/Analytics/components/Charts.tsx:375
+#: src/screens/Analytics/components/Charts.tsx:370
 msgid "Balance"
 msgstr "Balance"
 
-#: src/screens/Analytics/components/Charts.tsx:359
+#: src/screens/Analytics/components/Charts.tsx:354
 msgid "Balance over time"
 msgstr "Balance over time"
 
@@ -1229,7 +1250,7 @@ msgstr "By amount"
 msgid "By category"
 msgstr "By category"
 
-#: src/screens/Analytics/components/Charts.tsx:318
+#: src/screens/Analytics/components/Charts.tsx:319
 msgid "By group"
 msgstr "By group"
 
@@ -1319,7 +1340,7 @@ msgid "Charges"
 msgstr "Charges"
 
 #: src/components/settings/prefControls.tsx:428
-#: src/screens/Analytics/components/FilterBar.tsx:149
+#: src/screens/Analytics/components/FilterBar.tsx:92
 msgid "Charts"
 msgstr "Charts"
 
@@ -1675,7 +1696,7 @@ msgstr "Currency"
 #. placeholder {0}: currencyName(value.currency, i18n.locale)
 #. placeholder {0}: report.currency
 #: src/components/groups/GroupFields.tsx:104
-#: src/screens/Analytics/components/FilterBar.tsx:42
+#: src/screens/Analytics/components/FilterBar.tsx:46
 msgid "Currency: {0}"
 msgstr "Currency: {0}"
 
@@ -1849,7 +1870,6 @@ msgid "Dim"
 msgstr "Dim"
 
 #: src/features/settlement/CallItEvenDialog.tsx:145
-#: src/screens/Analytics/useReport.ts:256
 #: src/screens/People/components/PersonRow.tsx:78
 #: src/screens/Person/components/PersonBalances.tsx:95
 msgid "Direct"
@@ -1872,6 +1892,10 @@ msgstr "Direct only"
 #: src/screens/RecentlyDeleted/components/RestoreDialog.tsx:163
 msgid "Direct, no group"
 msgstr "Direct, no group"
+
+#: src/screens/Analytics/components/ScopeDialog.tsx:164
+msgid "Directly with friends, outside any group"
+msgstr "Directly with friends, outside any group"
 
 #: src/components/FormSheet/shared.tsx:133
 #: src/components/split/ExpenseComposer.tsx:601
@@ -2109,6 +2133,10 @@ msgstr "Everyone’s share of these expenses"
 msgid "Everyone’s shares"
 msgstr "Everyone’s shares"
 
+#: src/screens/Analytics/components/FilterBar.tsx:140
+msgid "Everything"
+msgstr "Everything"
+
 #: src/screens/Profile.tsx:95
 msgid "Everything is saved on this device. Sign-in, and sync across your devices, are on the way."
 msgstr "Everything is saved on this device. Sign-in, and sync across your devices, are on the way."
@@ -2120,6 +2148,10 @@ msgstr "Everything on this page goes back to how Splito starts."
 #: src/components/settings/AboutSettings.tsx:117
 msgid "Everything you add stays on this device. Splito has no account or server yet, so nothing is sent anywhere."
 msgstr "Everything you add stays on this device. Splito has no account or server yet, so nothing is sent anywhere."
+
+#: src/screens/Analytics/components/ScopeDialog.tsx:146
+msgid "Everything, including groups you add later"
+msgstr "Everything, including groups you add later"
 
 #: src/components/split/SplitEditor.tsx:87
 msgid "Exact"
@@ -2162,7 +2194,7 @@ msgstr "Expense restored"
 #: src/screens/Analytics/components/Charts.tsx:148
 #: src/screens/Analytics/components/Charts.tsx:188
 #: src/screens/Analytics/components/Charts.tsx:280
-#: src/screens/Analytics/components/Charts.tsx:324
+#: src/screens/Analytics/components/Charts.tsx:325
 #: src/screens/Analytics/components/Summary.tsx:174
 #: src/screens/Analytics/index.tsx:149
 #: src/screens/Group/index.tsx:436
@@ -2353,10 +2385,9 @@ msgstr "Groceries"
 #: src/components/split/pickers.tsx:260
 #: src/features/settlement/CallItEvenDialog.tsx:145
 #: src/navigation/Navigation.tsx:76
-#: src/screens/Analytics/components/Charts.tsx:324
+#: src/screens/Analytics/components/Charts.tsx:325
 #: src/screens/Analytics/index.tsx:207
-#: src/screens/Analytics/useReport.ts:131
-#: src/screens/Analytics/useReport.ts:256
+#: src/screens/Analytics/useReport.ts:270
 #: src/screens/Group/index.tsx:159
 #: src/screens/Group/index.tsx:292
 #: src/screens/Group/index.tsx:484
@@ -2394,10 +2425,6 @@ msgstr "Group type"
 #: src/components/groups/EditGroupDialog.tsx:69
 msgid "Group updated"
 msgstr "Group updated"
-
-#: src/screens/Analytics/components/FilterBar.tsx:76
-msgid "Group: {groupLabel}"
-msgstr "Group: {groupLabel}"
 
 #: src/components/settings/TabsEditor.tsx:33
 #: src/components/TabGlyph.tsx:28
@@ -2507,8 +2534,6 @@ msgid "In this period"
 msgstr "In this period"
 
 #: src/components/settings/prefControls.tsx:606
-#: src/screens/Analytics/components/FilterBar.tsx:123
-#: src/screens/Analytics/components/FilterBar.tsx:132
 #: src/screens/People/components/FriendsFilterDialog.tsx:76
 #: src/screens/People/components/FriendsFilterDialog.tsx:82
 #: src/screens/Person/components/HistoryFilterDialog.tsx:65
@@ -3042,6 +3067,10 @@ msgstr "No friends match these filters."
 msgid "No group"
 msgstr "No group"
 
+#: src/screens/Analytics/components/ScopeDialog.tsx:212
+msgid "No groups match “{query}”"
+msgstr "No groups match “{query}”"
+
 #: src/screens/Groups/index.tsx:201
 msgid "No groups match these filters."
 msgstr "No groups match these filters."
@@ -3092,6 +3121,28 @@ msgstr "Nobody matches “{query}”"
 #: src/components/split/ExpenseComposer.tsx:254
 msgid "Nobody yet"
 msgstr "Nobody yet"
+
+#: src/screens/Analytics/useReport.ts:270
+msgid "Non-group"
+msgstr "Non-group"
+
+#. placeholder {0}: name(summary.groupId)
+#: src/screens/Analytics/components/FilterBar.tsx:167
+msgid "Non-group + {0}"
+msgstr "Non-group + {0}"
+
+#. placeholder {0}: summary.count
+#: src/screens/Analytics/components/FilterBar.tsx:168
+msgid "Non-group + {0} groups"
+msgstr "Non-group + {0} groups"
+
+#: src/screens/Analytics/components/ScopeDialog.tsx:163
+msgid "Non-group expenses"
+msgstr "Non-group expenses"
+
+#: src/screens/Analytics/components/FilterBar.tsx:144
+msgid "Non-group only"
+msgstr "Non-group only"
 
 #: src/components/activity/ActivityItem.tsx:505
 #: src/components/people/HistoryRow.tsx:233
@@ -3299,7 +3350,7 @@ msgstr "Or keep them as a draft to finish later."
 
 #: src/components/groups/GroupFields.tsx:46
 #: src/components/settings/CategoryIcon.tsx:132
-#: src/screens/Analytics/useReport.ts:260
+#: src/screens/Analytics/useReport.ts:274
 #: src/screens/Groups/components/GroupsFilterDialog.tsx:73
 msgid "Other"
 msgstr "Other"
@@ -3443,7 +3494,7 @@ msgid "Percentages need to add up to 100%"
 msgstr "Percentages need to add up to 100%"
 
 #: src/screens/Analytics/components/Charts.tsx:148
-#: src/screens/Analytics/components/Charts.tsx:375
+#: src/screens/Analytics/components/Charts.tsx:370
 msgid "Period"
 msgstr "Period"
 
@@ -3858,6 +3909,11 @@ msgstr "Search for {q}"
 msgid "Search friends"
 msgstr "Search friends"
 
+#: src/screens/Analytics/components/ScopeDialog.tsx:124
+#: src/screens/Analytics/components/ScopeDialog.tsx:125
+msgid "Search groups"
+msgstr "Search groups"
+
 #: src/screens/Groups/index.tsx:183
 msgid "Search groups or members"
 msgstr "Search groups or members"
@@ -4026,17 +4082,26 @@ msgstr "Show {name}"
 msgid "Show all time"
 msgstr "Show all time"
 
-#: src/screens/Analytics/components/FilterBar.tsx:143
+#: src/screens/Analytics/components/FilterBar.tsx:86
 msgid "Show as tables"
 msgstr "Show as tables"
 
-#: src/screens/Analytics/components/FilterBar.tsx:143
+#: src/screens/Analytics/components/FilterBar.tsx:86
 msgid "Show charts"
 msgstr "Show charts"
 
 #: src/components/split/DateDialog.tsx:110
 msgid "Show days"
 msgstr "Show days"
+
+#: src/screens/Analytics/components/ScopeDialog.tsx:102
+#: src/screens/Analytics/components/ScopeDialog.tsx:153
+msgid "Show expenses from"
+msgstr "Show expenses from"
+
+#: src/screens/Analytics/components/FilterBar.tsx:176
+msgid "Show expenses from: {label}"
+msgstr "Show expenses from: {label}"
 
 #: src/screens/Activity.tsx:168
 msgid "Show hidden changes"
@@ -4103,7 +4168,7 @@ msgstr "Some"
 #: src/components/people/RecordPaymentDialog.tsx:145
 #: src/components/split/shared.tsx:78
 #: src/features/settlement/CallItEvenDialog.tsx:120
-#: src/screens/Analytics/useReport.ts:254
+#: src/screens/Analytics/useReport.ts:268
 #: src/screens/Group/index.tsx:603
 #: src/screens/Group/index.tsx:637
 #: src/screens/Group/index.tsx:653
@@ -4270,7 +4335,7 @@ msgid "System"
 msgstr "System"
 
 #: src/components/settings/prefControls.tsx:429
-#: src/screens/Analytics/components/FilterBar.tsx:149
+#: src/screens/Analytics/components/FilterBar.tsx:92
 msgid "Table"
 msgstr "Table"
 
@@ -4499,6 +4564,10 @@ msgstr "Total"
 #: src/screens/Search/components/ResultRows.tsx:109
 msgid "Total {totalLine}"
 msgstr "Total {totalLine}"
+
+#: src/screens/Analytics/components/ScopeDialog.tsx:115
+msgid "Totals, charts, the list and the export count only these."
+msgstr "Totals, charts, the list and the export count only these."
 
 #: src/components/settings/CategoryIcon.tsx:126
 msgid "Transport"
@@ -4853,7 +4922,7 @@ msgstr "you"
 #: src/components/activity/ActivityItem.tsx:415
 #: src/components/groups/RulesEditor.tsx:219
 #: src/components/split/shared.tsx:78
-#: src/screens/Analytics/useReport.ts:254
+#: src/screens/Analytics/useReport.ts:268
 #: src/screens/CreateGroup.tsx:192
 #: src/screens/Group/index.tsx:180
 #: src/screens/Person/index.tsx:166
@@ -5148,7 +5217,7 @@ msgstr "Your profile · saved on this device"
 #: src/screens/Analytics/components/Charts.tsx:204
 #: src/screens/Analytics/components/Charts.tsx:250
 #: src/screens/Analytics/components/Charts.tsx:263
-#: src/screens/Analytics/components/Charts.tsx:324
+#: src/screens/Analytics/components/Charts.tsx:325
 #: src/screens/Analytics/index.tsx:105
 #: src/screens/Analytics/index.tsx:211
 msgid "Your share"
@@ -5175,7 +5244,7 @@ msgstr "Your share each week"
 msgid "Your share each year"
 msgstr "Your share each year"
 
-#: src/screens/Analytics/components/Charts.tsx:319
+#: src/screens/Analytics/components/Charts.tsx:320
 msgid "Your share in each group"
 msgstr "Your share in each group"
 

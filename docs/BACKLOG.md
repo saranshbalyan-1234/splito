@@ -217,6 +217,72 @@ BroadcastChannel change notices so every open tab refreshes its projections afte
   2. Exactly one tab holds the background-work lock; closing it hands the lock to another tab.
   3. Browsers without BroadcastChannel fall back to refresh on focus.
 
+### F-111 Amount entry and parsing correctness `spec: audit docs/audit/AUDIT-2026-10-27.md`
+
+Fixes for logic-audit findings C1, C2, M1, M2, M3, M7, M14, m8, m9, m13 (see the report for scenario, evidence and fix per finding).
+
+- **Effort** L · **Impact** 10 · **Backend** no · **Status** todo · **Deps** merge row 30
+- **Prefs** -
+- **Acceptance**
+  1. Critical money fixes first: 3-decimal currencies (BHD, KWD, OMR) never change value when the app reads back text it wrote, in any locale; repeated or non-locale decimal marks parse correctly for 0-, 2- and 3-decimal currencies; split rows and percents accept the locale decimal mark; amount search understands the user number format; expressions allow grouping in operands and a leading minus; prototype keys are never currency codes. Each finding gets a failing test first (domain/sync bun tests and an e2e for C1/C2 in a comma locale).
+  2. Every listed finding has a regression test that failed before the fix and passes after; the audit report marks it fixed with the commit.
+  3. Full checks green (typecheck, lint, arch rules, domain/sync/client tests, full e2e).
+
+### F-112 Many-currency completeness `spec: audit docs/audit/AUDIT-2026-10-27.md`
+
+Fixes for logic-audit findings M5, M8, M12, M15, m2, m3, m21 (M13 is fixed by F-227) (see the report for scenario, evidence and fix per finding).
+
+- **Effort** M · **Impact** 9 · **Backend** no · **Status** todo · **Deps** merge row 30
+- **Prefs** -
+- **Acceptance**
+  1. Picking a group never silently changes an entered amount's currency (ask, or keep the currency); Record payment offers every currency and pre-selects the open ones; sidebar and right column show every open currency of a group; the cash-rounding unit is set per currency; compact chips never round small amounts to zero; a settled currency stays filterable; Overview currency cards open Analytics in that currency (§ 26.13).
+  2. Every listed finding has a regression test that failed before the fix and passes after; the audit report marks it fixed with the commit.
+  3. Full checks green (typecheck, lint, arch rules, domain/sync/client tests, full e2e).
+
+### F-113 Balances and settle consistency `spec: audit docs/audit/AUDIT-2026-10-27.md`
+
+Fixes for logic-audit findings M6, M10, M11, m5, m7, m10, m16 (see the report for scenario, evidence and fix per finding).
+
+- **Effort** M · **Impact** 9 · **Backend** no · **Status** todo · **Deps** merge row 30
+- **Prefs** -
+- **Acceptance**
+  1. Unticking yourself never silently changes the payer; Home shows a friend's direct and group balances without netting them into "Settled" when debts stay open; Group Balances and People use the same plan (and explain infeasible rules); write-off rows name the actor correctly; cross-direction write-offs work; preferred-route costs never beat an allowed direct transfer without consent; undoing Call it even is one transaction.
+  2. Every listed finding has a regression test that failed before the fix and passes after; the audit report marks it fixed with the commit.
+  3. Full checks green (typecheck, lint, arch rules, domain/sync/client tests, full e2e).
+
+### F-114 History, bin and sync integrity `spec: audit docs/audit/AUDIT-2026-10-27.md`
+
+Fixes for logic-audit findings M4, m1, m11, m15, m17, m18, m19, m20 (see the report for scenario, evidence and fix per finding).
+
+- **Effort** M · **Impact** 8 · **Backend** no · **Status** todo · **Deps** merge row 30
+- **Prefs** -
+- **Acceptance**
+  1. Restore never brings back records that point to a deleted person (restore the person too, or block with an explanation); restored payments/write-offs show as "restored" in Activity; idempotent retries never return a tombstone or stale amount; search ties broken by creation time; purge outbox ops keep purgedAt; demo seed uses local dates and is idempotent; "recently active" counts deletes; People "Recent" sort uses change time, only records I am in, and honours Include groups.
+  2. Every listed finding has a regression test that failed before the fix and passes after; the audit report marks it fixed with the commit.
+  3. Full checks green (typecheck, lint, arch rules, domain/sync/client tests, full e2e).
+
+### F-115 Timezone, dates and number-format preferences everywhere `spec: audit docs/audit/AUDIT-2026-10-27.md`
+
+Fixes for logic-audit findings M9, M17, M18, m14, m23, m24, m25, m28, m29 (see the report for scenario, evidence and fix per finding).
+
+- **Effort** M · **Impact** 8 · **Backend** no · **Status** todo · **Deps** merge row 30
+- **Prefs** -
+- **Acceptance**
+  1. Payments, write-offs and Activity use the Timezone preference; native honours the Number format preference and en-IN grouping; the Date format preference applies on every screen; invalid zones are rejected; day arithmetic is DST-safe; percents and counts use Number format; the native zone picker lists all zones; "today" refreshes across midnight and on app resume.
+  2. Every listed finding has a regression test that failed before the fix and passes after; the audit report marks it fixed with the commit.
+  3. Full checks green (typecheck, lint, arch rules, domain/sync/client tests, full e2e).
+
+### F-116 Web navigation and sheet robustness `spec: audit docs/audit/AUDIT-2026-10-27.md`
+
+Fixes for logic-audit findings M16, m6, m12, m26, m27, m30 (see the report for scenario, evidence and fix per finding).
+
+- **Effort** M · **Impact** 8 · **Backend** no · **Status** todo · **Deps** merge row 30
+- **Prefs** -
+- **Acceptance**
+  1. Back fallbacks work after a deep link or refresh on web; reset-all survives removed preferences; groups reject end before start; a drawer reopened during its exit animation shows; browser Back on a dirty sheet asks "Discard changes?"; composer drafts are per-entry and prune every removed reference.
+  2. Every listed finding has a regression test that failed before the fix and passes after; the audit report marks it fixed with the commit.
+  3. Full checks green (typecheck, lint, arch rules, domain/sync/client tests, full e2e).
+
 ## E2 App shell, navigation and lists
 
 Bluesky shell and the owner's shell, header, sidebar, drawer, sheet and list rules (ARCHITECTURE §§ 26.3-26.17), plus the first-run experience.
@@ -2085,12 +2151,13 @@ Exact numbers from the ledger, never illustrative.
 
 Spending over time, by category, per person and group, paid vs share, filters, CSV.
 
-- **Effort** M · **Impact** 8 · **Backend** no · **Status** done (built and tested on ui/r1-polish-2 / ui/preview-latest, unmerged) · **Deps** F-301
+- **Effort** M · **Impact** 8 · **Backend** no · **Status** in progress (built and tested on ui/r1-polish-2 / ui/preview-latest, unmerged) · **Deps** F-301
 - **Prefs** -
 - **Acceptance**
   1. One chart per currency, never mixed.
   2. CSV export matches the on-screen filter.
   3. Charts and a table view, filtered by period, currency and group; the chart / table toggle sits in that filter row, never in the header. The header holds Ask Splito (F-2301) and an overflow with Export CSV. A converted view labels the rate used.
+  9. Scope is one chip + one "Show expenses from" checklist sheet (All, Non-group expenses, each group); no separate group dropdown or "Include groups" toggle; By-group chart taps narrow the scope; last scope remembered per device (§ 26.16, decision 67).
 
 ### F-1302 My Spending measure everywhere `spec v1 (extended)`
 
@@ -3560,6 +3627,20 @@ Small, high-impact, independent.
 | 28 | F-1401 | Free search across expenses | expense search index | S | 8 | F-301 |
 | 29 | F-1903 | Android build and emulator run | Android build config | S | 8 | - |
 
+### Batch 4c: Logic-audit fixes (2026-10-27)
+
+From the whole-app logic audit (`docs/audit/AUDIT-2026-10-27.md`: 50 confirmed findings, 2 critical, 18 major, 30 minor). Built right after row 33 (friend invites), before the rest of Batch 4b, money first. One feature at a time (§ 26.1).
+
+| # | ID | Feature | Area | Effort | Impact | Deps |
+|---|---|---|---|---|---|---|
+| 33c | F-111 | Amount entry and parsing correctness (both criticals) | domain currency/calc, composer, settle, search | L | 10 | row 30 |
+| 33d | F-113 | Balances and settle consistency | People/Home balances, Settle, write-offs | M | 9 | F-111 |
+| 33e | F-112 | Many-currency completeness | composer, Record payment, sidebar, rounding | M | 9 | F-111, F-227 |
+| 33f | F-114 | History, bin and sync integrity | sync mutations, bin, activity, search | M | 8 | F-113 |
+| 33g | F-115 | Timezone, dates and number formats everywhere | locale, activity, payments | M | 8 | F-114 |
+| 33h | F-116 | Web navigation and sheet robustness | routes, Dialog/drawer, FormSheet, drafts | M | 8 | F-115 |
+| 33i | F-604, F-613, F-615 | Archive group, safe member removal, leave group (audit m4) | sync mutations + Group screens | M | 8 | F-116 |
+
 ### Batch 4b: Owner requests (2026-10-26/27)
 
 Every owner request from ARCHITECTURE § 26 (decision log rows 47-63) that was not built yet, in the owner's order. ARCHITECTURE § 26.1 applies strictly here: one feature at a time, top to bottom; each is built, tested, merged into m1-foundation, screenshotted (light and Dim, phone and desktop) and marked done here and in `COMPLETION_MATRIX.md` before the next starts; parallel workers may split one feature, never run two. The merge row comes first: nothing else starts until every built branch is merged. Backend parts of these requests sit in the backend batches (F-2111, F-2105, F-2112, F-2208, F-2210, F-2302, F-2303).
@@ -3571,6 +3652,7 @@ Every owner request from ARCHITECTURE § 26 (decision log rows 47-63) that was n
 | 31 | F-618 | Add friend by email or mobile, with a Splito check and consent | Add friend sheet, People requests, directory client (finish feat/friend-invites) | L | 9 | F-601, F-205 |
 | 32 | F-619 | Invite link and QR with limits | screens/Invites (finish feat/friend-invites) | M | 8 | F-618, F-603 |
 | 33 | F-602 | Add friend from device contacts | contacts picker (finish feat/friend-invites) | S | 7 | F-618 |
+| 33b | F-1301 | Analytics scope: one chip + checklist sheet (§ 26.16) | screens/Analytics FilterBar + useReport | S | 8 | merge row 30 |
 | 33a | F-225 | Sign in / Create account: Bluesky LoggedOut, Login and Signup screens copied (§ 26.15) | screens/Login, screens/Signup, view/com/auth | M | 7 | merge row 30 |
 | 34 | F-226 | Feedback: Send feedback and "Your feedback" | Settings Support + feedback sheet (finish feat/feedback) | M | 7 | F-201, F-205 |
 | 35 | F-222 | One navigation list for sidebar and drawer, Home label and title | navigationItems + NavFooterLinks, drawer header | S | 8 | F-201, F-204 |
