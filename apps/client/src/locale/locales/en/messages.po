@@ -933,7 +933,7 @@ msgstr "Close"
 msgid "Close active dialog"
 msgstr "Close active dialog"
 
-#: src/view/shell/index.tsx:95
+#: src/view/shell/index.tsx:103
 #: src/view/shell/index.web.tsx:81
 msgid "Close drawer menu"
 msgstr "Close drawer menu"
