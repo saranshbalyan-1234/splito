@@ -225,6 +225,9 @@ export function Item({
         onPress={onPress}
         role={ctx.type === 'tabs' ? 'tab' : 'radio'}
         accessibilityState={{selected: active}}
+        // Splito: RN Web drops `accessibilityState.selected`; expose the state to the browser too.
+        aria-checked={ctx.type === 'radio' ? active : undefined}
+        aria-selected={ctx.type === 'tabs' ? active : undefined}
         style={[
           !ctx.isScrollable && a.flex_1,
           a.bg_transparent,

@@ -1,5 +1,6 @@
 import {View} from 'react-native'
 import Svg, {Path} from 'react-native-svg'
+import {DEFAULT_PALETTE} from '@bsky.app/alf'
 
 import {useTheme} from '#/alf'
 
@@ -11,18 +12,40 @@ const HEAD =
  * LICENSES/lucide.txt), filled, with eyes and nose knocked out. Source file:
  * assets/brand/mark.svg.
  */
-export function LogoMark({size = 32, color, featureColor}: {size?: number; color?: string; featureColor?: string}) {
+export function LogoMark({
+  size = 32,
+  color,
+  featureColor,
+}: {
+  size?: number
+  color?: string
+  featureColor?: string
+}) {
   const t = useTheme()
-  /* Owner rule: blue and white, or black and white - never blue on dark. */
+  /*
+   * Owner rule: blue and white, or black and white - never blue on dark. The
+   * blue is the brand's, so the Accent colour preference never recolours it.
+   */
   const isDark = t.scheme === 'dark'
-  const fill = color ?? (isDark ? '#FFFFFF' : t.palette.primary_500)
+  const fill = color ?? (isDark ? '#FFFFFF' : DEFAULT_PALETTE.primary_500)
   featureColor ??= isDark ? '#000000' : '#FFFFFF'
   return (
-    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" strokeLinecap="round" strokeLinejoin="round">
+    <Svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      strokeLinecap="round"
+      strokeLinejoin="round">
       <Path d={HEAD} fill={fill} stroke={fill} strokeWidth={2} />
       <Path d="M8 14v.5" stroke={featureColor} strokeWidth={2} />
       <Path d="M16 14v.5" stroke={featureColor} strokeWidth={2} />
-      <Path d="M11.25 16.25h1.5L12 17l-.75-.75Z" fill={featureColor} stroke={featureColor} strokeWidth={2} />
+      <Path
+        d="M11.25 16.25h1.5L12 17l-.75-.75Z"
+        fill={featureColor}
+        stroke={featureColor}
+        strokeWidth={2}
+      />
     </Svg>
   )
 }

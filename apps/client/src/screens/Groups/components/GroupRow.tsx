@@ -4,6 +4,7 @@ import Animated from 'react-native-reanimated'
 import {Trans, useLingui} from '@lingui/react/macro'
 import {type Entity, type Group} from '@splito/sync'
 
+import {useRowPadding} from '#/state/preferences/density'
 import {Link} from '#/view/com/util/Link'
 import {UserAvatar} from '#/view/com/util/UserAvatar'
 import {atoms as a, useBreakpoints, useTheme} from '#/alf'
@@ -36,6 +37,7 @@ export function GroupRow({
   hideTopBorder?: boolean
 }) {
   const t = useTheme()
+  const rowPadding = useRowPadding()
   const {t: l, i18n} = useLingui()
   const {gtMobile} = useBreakpoints()
   const listAnimations = useListAnimations()
@@ -95,7 +97,7 @@ export function GroupRow({
         hoverStyle={t.atoms.bg_contrast_25}
         style={[
           a.px_lg,
-          a.py_md,
+          rowPadding,
           !hideTopBorder && a.border_t,
           t.atoms.border_contrast_low,
           a.transition_color,

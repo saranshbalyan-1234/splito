@@ -21,6 +21,7 @@ type Props = Omit<TextField.InputProps, 'label'> & {
   ref?: React.Ref<React.ComponentRef<typeof TextInput>>
 }
 
+/* Bluesky's global search hotkey (`hotkey` prop, `#/state/events`) is dropped: Splito has no global search yet. */
 export function SearchInput({value, label, onClearText, ref, ...rest}: Props) {
   const t = useTheme()
   const {t: l} = useLingui()

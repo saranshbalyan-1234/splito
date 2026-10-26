@@ -73,6 +73,13 @@ test('categories rename keeps id', async () => {
 test('categories with duplicate ids rejected', async () =>
   expect(setPref(s, ctx, 'categories', [DEFAULT_CATEGORIES[0]!, DEFAULT_CATEGORIES[0]!])).rejects.toThrow('INVALID_PREF'))
 
+test('dark theme: Bluesky dim or dark, blackish dark by default', async () => {
+  expect(await getPref(s, 'darkTheme')).toBe('dark')
+  await setPref(s, ctx, 'darkTheme', 'dim')
+  expect(await getPref(s, 'darkTheme')).toBe('dim')
+  await expect(setPref(s, ctx, 'darkTheme', 'light' as never)).rejects.toThrow('INVALID_PREF')
+})
+
 test('every default passes its own validator', () => {
   for (const def of Object.values(PREFS)) expect(def.validate(def.default)).toBe(true)
 })
