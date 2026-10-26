@@ -102,6 +102,8 @@ export const PREFS = {
   includeGroupsDefault: def('includeGroupsDefault', 'lists', 'account', 'Include groups by default', true, isBool),
   swipeLeft: def<SwipeAction>('swipeLeft', 'lists', 'account', 'Swipe left', 'delete', oneOf('markRead', 'hide', 'delete', 'none')),
   swipeRight: def<SwipeAction>('swipeRight', 'lists', 'account', 'Swipe right', 'markRead', oneOf('markRead', 'hide', 'delete', 'none')),
+  /** Search keeps your last searches on this device only, like Bluesky's history. */
+  rememberSearches: def('rememberSearches', 'lists', 'device', 'Remember recent searches', true, isBool),
   'notify.expense': def('notify.expense', 'notifications', 'account', 'New expenses', true, isBool),
   'notify.payment': def('notify.payment', 'notifications', 'account', 'Payments', true, isBool),
   'notify.invite': def('notify.invite', 'notifications', 'account', 'Invites', true, isBool),

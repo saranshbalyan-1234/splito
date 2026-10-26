@@ -23,4 +23,6 @@ export type Device = {
   hapticsEnabled: boolean
   /** Activity read/hidden marks: personal, so they stay on this device. */
   activityFeed: FeedState
+  /** Search's recent queries, newest first (Bluesky's `searchTermHistory`). */
+  searchHistory: string[]
 }

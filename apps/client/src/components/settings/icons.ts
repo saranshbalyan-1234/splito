@@ -18,6 +18,7 @@ import {
   Smartphone,
   Sparkles,
   Split,
+  TextSearch,
   Users,
   Vibrate,
 } from 'lucide-react-native'
@@ -44,3 +45,4 @@ export const SwipeRightIcon = createIcon(ArrowRightToLine)
 export const NotifyIcon = createIcon(BellRing)
 export const EyeIcon = createIcon(Eye)
 export const EyeOffIcon = createIcon(EyeOff)
+export const SearchHistoryIcon = createIcon(TextSearch)

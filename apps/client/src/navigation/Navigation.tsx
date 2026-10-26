@@ -49,6 +49,7 @@ import {PersonScreen} from '#/screens/Person'
 import {ProfileScreen} from '#/screens/Profile'
 import {SettingsScreen} from '#/screens/Settings'
 import {SettingsSectionScreen} from '#/screens/Settings/SettingsSection'
+import {SearchScreen} from '#/screens/Search'
 import {SettleScreen} from '#/screens/Settle'
 
 const Stack = createNativeStackNavigator<RootStackParams>()
@@ -63,6 +64,7 @@ const TITLES: Partial<Record<keyof FlatNavigatorParams, MessageDescriptor>> = {
   Profile: msg`Profile`,
   Settings: msg`Settings`,
   SettingsSection: msg`Settings`,
+  Search: msg`Search`,
   Person: msg`Person`,
   Group: msg`Group`,
   Settle: msg`Settle up`,
@@ -171,6 +173,7 @@ export function TabsNavigator({
       <Stack.Screen name="Tabs" component={Tabs} />
       <Stack.Screen name="Profile" component={ProfileScreen} />
       <Stack.Screen name="Settings" component={SettingsScreen} />
+      <Stack.Screen name="Search" component={SearchScreen} />
       <Stack.Screen name="SettingsSection" component={SettingsSectionScreen} />
       <Stack.Screen name="Person" component={PersonScreen} />
       <Stack.Screen name="Group" component={GroupScreen} />
@@ -245,6 +248,11 @@ export function FlatNavigator({
         name="Settings"
         component={SettingsScreen}
         options={{title: title('Settings')}}
+      />
+      <Flat.Screen
+        name="Search"
+        component={SearchScreen}
+        options={{title: title('Search')}}
       />
       <Flat.Screen
         name="SettingsSection"

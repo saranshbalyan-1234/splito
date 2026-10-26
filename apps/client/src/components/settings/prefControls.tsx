@@ -40,6 +40,7 @@ import {
   NotifyIcon,
   NumberIcon,
   PhoneIcon,
+  SearchHistoryIcon,
   SortIcon,
   SparklesIcon,
   SplitIcon,
@@ -482,6 +483,19 @@ function SwipeRightPref() {
   )
 }
 
+function RememberSearchesPref() {
+  const {t: l} = useLingui()
+  return (
+    <SwitchPref
+      pref={usePrefControl('rememberSearches')}
+      icon={SearchHistoryIcon}
+      title={l`Recent searches`}
+      label={l`Remember what you search for`}
+      description={l`Search shows your last few searches, kept on this device only.`}
+    />
+  )
+}
+
 /* Notifications */
 
 function NotifyExpensePref() {
@@ -550,6 +564,7 @@ export const PREF_CONTROLS = {
   includeGroupsDefault: IncludeGroupsPref,
   swipeLeft: SwipeLeftPref,
   swipeRight: SwipeRightPref,
+  rememberSearches: RememberSearchesPref,
   'notify.expense': NotifyExpensePref,
   'notify.payment': NotifyPaymentPref,
   'notify.invite': NotifyInvitePref,

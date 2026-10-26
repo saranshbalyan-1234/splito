@@ -20,6 +20,8 @@ export type RootStackParams = {
   /** Opened from the avatar's drawer, so it is pushed like Settings. */
   Profile: undefined
   Settings: undefined
+  /** `q` opens Search with that query (`/search?q=dinner`). */
+  Search: {q?: string} | undefined
   SettingsSection: {section: string}
   Person: {personId: string}
   /** `tab` opens a section directly (`/groups/:groupId?tab=rules`). */
