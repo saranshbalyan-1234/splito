@@ -32,6 +32,7 @@ import {atoms as a} from '#/alf'
 import {IS_WEB} from '#/env'
 import {BottomBarWeb} from './bottom-bar/BottomBarWeb'
 import {DesktopLeftNav, useLeftNavWidth} from './desktop/LeftNav'
+import {DesktopRightNav, useRightNavWidth} from './desktop/RightNav'
 
 // On web, only this many screens (beyond Home + focused) stay mounted.
 // Older screens are unmounted to prevent memory growth during long sessions.
@@ -106,6 +107,7 @@ function NativeStackNavigator({
   const activeRoute = state.routes[state.index]
   const {isMobile} = useWebMediaQueries()
   const leftNavWidth = useLeftNavWidth()
+  const rightNavWidth = useRightNavWidth()
   const {footerHeight} = useShellLayout()
   useEffect(() => {
     // The bottom bar reports its height; nothing replaces it on wider windows.
@@ -171,7 +173,7 @@ function NativeStackNavigator({
       {/* Splito: content fills the window beside the fixed sidebar (owner directive). */}
       <View
         role="main"
-        style={[a.flex_1, IS_WEB && {marginLeft: leftNavWidth}]}>
+        style={[a.flex_1, IS_WEB && {marginLeft: leftNavWidth, marginRight: rightNavWidth}]}>
         <NativeStackView
           {...rest}
           state={state}
@@ -185,7 +187,10 @@ function NativeStackNavigator({
           {showBottomBar ? (
             <BottomBarWeb />
           ) : (
-            <DesktopLeftNav routeName={activeRoute.name} />
+            <>
+              <DesktopLeftNav routeName={activeRoute.name} />
+              <DesktopRightNav />
+            </>
           )}
         </>
       )}

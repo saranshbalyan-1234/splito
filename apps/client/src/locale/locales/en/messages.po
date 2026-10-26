@@ -194,19 +194,19 @@ msgid "{0}, {portions} portions"
 msgstr "{0}, {portions} portions"
 
 #. placeholder {0}: group.name
-#: src/view/shell/desktop/LeftNav.tsx:566
+#: src/view/shell/desktop/LeftNav.tsx:565
 msgid "{0}, settled up"
 msgstr "{0}, settled up"
 
 #. placeholder {0}: group.name
 #. placeholder {1}: formatAmount(amount, currency, locale)
-#: src/view/shell/desktop/LeftNav.tsx:564
+#: src/view/shell/desktop/LeftNav.tsx:563
 msgid "{0}, you are owed {1}"
 msgstr "{0}, you are owed {1}"
 
 #. placeholder {0}: group.name
 #. placeholder {1}: formatAmount(magnitude(amount), currency, locale)
-#: src/view/shell/desktop/LeftNav.tsx:565
+#: src/view/shell/desktop/LeftNav.tsx:564
 msgid "{0}, you owe {1}"
 msgstr "{0}, you owe {1}"
 
@@ -447,7 +447,7 @@ msgstr "A trip, a flat or anything you split often."
 #: src/screens/Settings/index.tsx:106
 #: src/screens/Settings/index.tsx:109
 #: src/screens/Settings/SettingsSection.tsx:47
-#: src/view/shell/desktop/LeftNav.tsx:671
+#: src/view/shell/desktop/LeftNav.tsx:670
 msgid "About"
 msgstr "About"
 
@@ -473,7 +473,7 @@ msgstr "Active"
 #: src/navigation/Drawer.tsx:208
 #: src/navigation/Navigation.tsx:62
 #: src/screens/Activity.tsx:98
-#: src/view/shell/desktop/LeftNav.tsx:755
+#: src/view/shell/desktop/LeftNav.tsx:754
 msgid "Activity"
 msgstr "Activity"
 
@@ -524,7 +524,7 @@ msgstr "Add category"
 #: src/screens/Group/index.tsx:422
 #: src/screens/Person/index.tsx:422
 #: src/screens/Person/index.tsx:423
-#: src/view/shell/desktop/LeftNav.tsx:478
+#: src/view/shell/desktop/LeftNav.tsx:477
 msgid "Add expense"
 msgstr "Add expense"
 
@@ -535,7 +535,7 @@ msgstr "Add expense"
 #: src/screens/Analytics/index.tsx:87
 #: src/screens/People/index.tsx:221
 #: src/screens/People/index.tsx:222
-#: src/view/shell/desktop/LeftNav.tsx:486
+#: src/view/shell/desktop/LeftNav.tsx:485
 msgctxt "action"
 msgid "Add expense"
 msgstr "Add expense"
@@ -690,7 +690,7 @@ msgstr "Amounts here can’t be below zero"
 #: src/navigation/Navigation.tsx:61
 #: src/screens/Analytics/index.tsx:60
 #: src/screens/People/components/BalanceSummary.tsx:122
-#: src/view/shell/desktop/LeftNav.tsx:751
+#: src/view/shell/desktop/LeftNav.tsx:750
 msgid "Analytics"
 msgstr "Analytics"
 
@@ -1587,7 +1587,7 @@ msgstr "Group: {groupLabel}"
 #: src/screens/Groups/index.tsx:135
 #: src/screens/Groups/index.tsx:164
 #: src/screens/Profile.tsx:243
-#: src/view/shell/desktop/LeftNav.tsx:747
+#: src/view/shell/desktop/LeftNav.tsx:746
 msgid "Groups"
 msgstr "Groups"
 
@@ -1597,7 +1597,7 @@ msgstr "Haptics"
 
 #: src/navigation/Drawer.tsx:306
 #: src/screens/Settings/SettingsSection.tsx:54
-#: src/view/shell/desktop/LeftNav.tsx:670
+#: src/view/shell/desktop/LeftNav.tsx:669
 msgid "Help"
 msgstr "Help"
 
@@ -2154,7 +2154,7 @@ msgid "Open balance {0}. Part payments are fine."
 msgstr "Open balance {0}. Part payments are fine."
 
 #: src/components/HeaderAvatar.tsx:39
-#: src/view/shell/desktop/LeftNav.tsx:183
+#: src/view/shell/desktop/LeftNav.tsx:182
 msgid "Open menu"
 msgstr "Open menu"
 
@@ -2286,7 +2286,7 @@ msgstr "pays you"
 #: src/components/settings/TabsEditor.tsx:32
 #: src/components/TabGlyph.tsx:27
 #: src/navigation/Drawer.tsx:187
-#: src/view/shell/desktop/LeftNav.tsx:743
+#: src/view/shell/desktop/LeftNav.tsx:742
 msgid "People"
 msgstr "People"
 
@@ -2366,7 +2366,7 @@ msgid "Price of item {0}"
 msgstr "Price of item {0}"
 
 #: src/screens/Settings/SettingsSection.tsx:61
-#: src/view/shell/desktop/LeftNav.tsx:672
+#: src/view/shell/desktop/LeftNav.tsx:671
 msgid "Privacy"
 msgstr "Privacy"
 
@@ -2387,7 +2387,7 @@ msgstr "Recent"
 msgid "Recent activity"
 msgstr "Recent activity"
 
-#: src/view/shell/desktop/LeftNav.tsx:544
+#: src/view/shell/desktop/LeftNav.tsx:543
 msgid "Recent groups"
 msgstr "Recent groups"
 
@@ -2525,7 +2525,7 @@ msgstr "Saved"
 #: src/components/settings/AboutSettings.tsx:116
 #: src/navigation/Drawer.tsx:100
 #: src/screens/Profile.tsx:192
-#: src/view/shell/desktop/LeftNav.tsx:220
+#: src/view/shell/desktop/LeftNav.tsx:219
 msgid "Saved on this device"
 msgstr "Saved on this device"
 
@@ -2566,7 +2566,7 @@ msgstr "Search people"
 msgid "Search timezones"
 msgstr "Search timezones"
 
-#: src/view/shell/desktop/LeftNav.tsx:658
+#: src/view/shell/desktop/LeftNav.tsx:657
 #: src/view/shell/desktop/RecentTransactions.tsx:117
 msgid "See all"
 msgstr "See all"
@@ -2575,7 +2575,7 @@ msgstr "See all"
 msgid "See all activity"
 msgstr "See all activity"
 
-#: src/view/shell/desktop/LeftNav.tsx:631
+#: src/view/shell/desktop/LeftNav.tsx:630
 msgid "See all groups"
 msgstr "See all groups"
 
@@ -2590,7 +2590,7 @@ msgstr "Set for this group"
 #: src/screens/Profile.tsx:67
 #: src/screens/Settings/index.tsx:44
 #: src/screens/Settings/SettingsSection.tsx:68
-#: src/view/shell/desktop/LeftNav.tsx:770
+#: src/view/shell/desktop/LeftNav.tsx:769
 msgid "Settings"
 msgstr "Settings"
 
@@ -2613,7 +2613,7 @@ msgstr "Settings reset"
 msgid "Settle up"
 msgstr "Settle up"
 
-#: src/view/shell/desktop/LeftNav.tsx:621
+#: src/view/shell/desktop/LeftNav.tsx:620
 msgid "settled"
 msgstr "settled"
 
@@ -2813,7 +2813,7 @@ msgid "Split with friends"
 msgstr "Split with friends"
 
 #: src/screens/People/index.tsx:129
-#: src/view/shell/desktop/LeftNav.tsx:150
+#: src/view/shell/desktop/LeftNav.tsx:149
 msgid "Splito - People"
 msgstr "Splito - People"
 

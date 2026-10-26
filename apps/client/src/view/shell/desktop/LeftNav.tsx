@@ -55,7 +55,6 @@ import {
   web,
 } from '#/alf'
 import {Logo} from '#/components/brand/Logo'
-import {RecentTransactions} from './RecentTransactions'
 import {
   describeUnread,
   useActivityBadge,
@@ -103,7 +102,7 @@ const LARGE_ELEMENT_SIZE = 48
 const NAV_ICON_WIDTH = 28
 const NAV_ITEM_TO_TAB: Partial<Record<NavClickItem, SidebarTab>> = TAB_ROUTE
 const LOGO_SIZE = 40
-const RECENT_GROUPS = 3
+const RECENT_GROUPS = 5
 const INDICATOR_HEIGHT = 24
 
 export const LEFT_NAV_STANDARD_WIDTH = 240
@@ -496,7 +495,7 @@ function ComposeBtn({minimal}: {minimal: boolean}) {
  * rows and the "More feeds" link) as the five most recently active groups,
  * each with my balance in it.
  */
-function RecentGroups() {
+export function RecentGroups() {
   const t = useTheme()
   const {t: l} = useLingui()
   const locale = useNumberLocale()
@@ -831,8 +830,6 @@ export function DesktopLeftNav({
           ))}
         </View>
         <ComposeBtn minimal={leftNavMinimal} />
-        {!leftNavMinimal && <RecentTransactions />}
-        {!leftNavMinimal && <RecentGroups />}
       </ScrollView>
       {!leftNavMinimal && (
         <View style={[a.px_lg, a.pb_lg, t.atoms.bg, web({flexShrink: 0})]}>
