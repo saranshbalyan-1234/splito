@@ -1,0 +1,22 @@
+{
+  "name": "splito",
+  "private": true,
+  "packageManager": "pnpm@11.28.5",
+  "devEngines": {
+    "packageManager": {
+      "name": "pnpm",
+      "version": "11.28.5",
+      "onFail": "warn"
+    },
+    "runtime": {
+      "name": "node",
+      "version": "^24.22.1",
+      "onFail": "download"
+    }
+  },
+  "scripts": {
+    "test": "pnpm -r --filter './packages/*' test",
+    "typecheck": "pnpm -r typecheck"
+  },
+  "devDependencies": {}
+}
