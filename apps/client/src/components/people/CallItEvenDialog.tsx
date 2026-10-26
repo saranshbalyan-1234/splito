@@ -135,15 +135,29 @@ function Form({
   const isFull = isValid && typed === full
   const pieces = isValid ? writeOffParts(parts, typed) : []
   const money = (v: bigint) => formatAmount(v, currency, locale)
+  /*
+   * Each part it clears, with its direction when parts go both ways (owed to
+   * me in a group, owed by me directly), so no part reads as the other way.
+   */
+  const isMixed = new Set(pieces.map(p => p.amount > ZERO)).size > 1
+  const piece = (p: BalancePart) => {
+    const where =
+      p.groupId === null ? l`Direct` : (groupNames?.get(p.groupId) ?? l`Group`)
+    const amount = money(magnitude(p.amount))
+    if (!isMixed) return `${where} ${amount}`
+    const debtorName =
+      p.amount > ZERO
+        ? draft.b === ctx.actor
+          ? l`you`
+          : name(draft.b)
+        : draft.a === ctx.actor
+          ? l`you`
+          : name(draft.a)
+    return l`${where} ${amount} owed by ${debtorName}`
+  }
   const clears =
     pieces.length > 1 || pieces.some(p => p.groupId !== null)
-      ? pieces
-          .map(p =>
-            p.groupId === null
-              ? l`Direct ${money(magnitude(p.amount))}`
-              : `${groupNames?.get(p.groupId) ?? l`Group`} ${money(magnitude(p.amount))}`,
-          )
-          .join(' · ')
+      ? pieces.map(piece).join(' · ')
       : null
 
   const idFor = (i: number) => {

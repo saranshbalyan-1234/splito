@@ -87,7 +87,7 @@ msgid "{0} balance - open analytics"
 msgstr "{0} balance - open analytics"
 
 #. placeholder {0}: i18n.date(new Date(item.deletedAt), { dateStyle: 'medium', timeStyle: 'short', })
-#: src/screens/RecentlyDeleted/components/RestoreDialog.tsx:163
+#: src/screens/RecentlyDeleted/components/RestoreDialog.tsx:167
 msgid "{0} by {deletedByName}"
 msgstr "{0} by {deletedByName}"
 
@@ -110,7 +110,7 @@ msgstr "{0} each · {1}"
 #. placeholder {1}: name(w.from)
 #: src/components/people/HistoryRow.tsx:94
 #: src/components/people/PaymentDetailsDialog.tsx:94
-#: src/screens/RecentlyDeleted/describe.ts:59
+#: src/screens/RecentlyDeleted/describe.ts:52
 msgid "{0} forgave {1}"
 msgstr "{0} forgave {1}"
 
@@ -119,7 +119,7 @@ msgstr "{0} forgave {1}"
 #. placeholder {0}: name(w.to)
 #: src/components/people/HistoryRow.tsx:93
 #: src/components/people/PaymentDetailsDialog.tsx:93
-#: src/screens/RecentlyDeleted/describe.ts:58
+#: src/screens/RecentlyDeleted/describe.ts:51
 msgid "{0} forgave you"
 msgstr "{0} forgave you"
 
@@ -188,7 +188,7 @@ msgstr "{0} over the total"
 #: src/components/people/HistoryRow.tsx:116
 #: src/components/people/PaymentDetailsDialog.tsx:99
 #: src/components/people/RecordPaymentDialog.tsx:154
-#: src/screens/RecentlyDeleted/describe.ts:64
+#: src/screens/RecentlyDeleted/describe.ts:57
 msgid "{0} paid {1}"
 msgstr "{0} paid {1}"
 
@@ -202,7 +202,7 @@ msgstr "{0} paid {total}"
 #: src/components/people/HistoryRow.tsx:115
 #: src/components/people/PaymentDetailsDialog.tsx:98
 #: src/components/people/RecordPaymentDialog.tsx:153
-#: src/screens/RecentlyDeleted/describe.ts:63
+#: src/screens/RecentlyDeleted/describe.ts:56
 msgid "{0} paid you"
 msgstr "{0} paid you"
 
@@ -377,7 +377,7 @@ msgstr "{actor} updated the group {subject}"
 msgid "{binDays, plural, one {# day} other {# days}}"
 msgstr "{binDays, plural, one {# day} other {# days}}"
 
-#: src/screens/RecentlyDeleted/index.tsx:180
+#: src/screens/RecentlyDeleted/index.tsx:186
 msgid "{count, plural, one {# item} other {# items}}"
 msgstr "{count, plural, one {# item} other {# items}}"
 
@@ -397,7 +397,7 @@ msgstr "{creditor} called it even with {debtor}"
 msgid "{creditor} called it even with you"
 msgstr "{creditor} called it even with you"
 
-#: src/screens/RecentlyDeleted/index.tsx:242
+#: src/screens/RecentlyDeleted/index.tsx:247
 msgid "{days, plural, one {Nothing deleted in the last day.} other {Nothing deleted in the last # days.}}"
 msgstr "{days, plural, one {Nothing deleted in the last day.} other {Nothing deleted in the last # days.}}"
 
@@ -430,7 +430,7 @@ msgstr "{from} paid you"
 msgid "{hiddenCount, plural, one {# change hidden from your activity} other {# changes hidden from your activity}}"
 msgstr "{hiddenCount, plural, one {# change hidden from your activity} other {# changes hidden from your activity}}"
 
-#: src/screens/RecentlyDeleted/index.tsx:366
+#: src/screens/RecentlyDeleted/index.tsx:373
 msgid "{left, plural, one {# day left} other {# days left}}"
 msgstr "{left, plural, one {# day left} other {# days left}}"
 
@@ -463,6 +463,10 @@ msgstr "{title}, {byline}, {shareLabel} {shareText} of {totalText}"
 #: src/screens/Settings/index.tsx:202
 msgid "{visible} categories"
 msgstr "{visible} categories"
+
+#: src/components/people/CallItEvenDialog.tsx:156
+msgid "{where} {amount} owed by {debtorName}"
+msgstr "{where} {amount} owed by {debtorName}"
 
 #: src/screens/Expense/components/History.tsx:81
 msgid "{who} added this expense"
@@ -740,8 +744,8 @@ msgstr "All"
 msgid "All {0} assigned"
 msgstr "All {0} assigned"
 
-#: src/components/people/CallItEvenDialog.tsx:211
-#: src/components/people/CallItEvenDialog.tsx:228
+#: src/components/people/CallItEvenDialog.tsx:225
+#: src/components/people/CallItEvenDialog.tsx:242
 msgid "All even"
 msgstr "All even"
 
@@ -791,8 +795,8 @@ msgstr "Amount {0} paid"
 msgid "Amount for {0}"
 msgstr "Amount for {0}"
 
-#: src/components/people/CallItEvenDialog.tsx:317
-#: src/components/people/CallItEvenDialog.tsx:322
+#: src/components/people/CallItEvenDialog.tsx:331
+#: src/components/people/CallItEvenDialog.tsx:336
 msgid "Amount to let go"
 msgstr "Amount to let go"
 
@@ -926,8 +930,8 @@ msgstr "By person"
 msgid "Calculator"
 msgstr "Calculator"
 
-#: src/components/people/CallItEvenDialog.tsx:193
-#: src/components/people/CallItEvenDialog.tsx:253
+#: src/components/people/CallItEvenDialog.tsx:207
+#: src/components/people/CallItEvenDialog.tsx:267
 #: src/screens/Group/components/GroupRows.tsx:200
 #: src/screens/Group/components/GroupRows.tsx:203
 #: src/screens/Person/index.tsx:398
@@ -1039,7 +1043,7 @@ msgstr "Clear filters"
 msgid "Clear search query"
 msgstr "Clear search query"
 
-#: src/components/people/CallItEvenDialog.tsx:362
+#: src/components/people/CallItEvenDialog.tsx:376
 msgid "Clears: {clears}"
 msgstr "Clears: {clears}"
 
@@ -1127,7 +1131,7 @@ msgstr "Couldn’t add that person. Please try again."
 msgid "Couldn’t add your friend. Please try again."
 msgstr "Couldn’t add your friend. Please try again."
 
-#: src/components/people/CallItEvenDialog.tsx:181
+#: src/components/people/CallItEvenDialog.tsx:195
 msgid "Couldn’t call it even. Please try again."
 msgstr "Couldn’t call it even. Please try again."
 
@@ -1139,7 +1143,7 @@ msgstr "Couldn’t create the group. Please try again."
 msgid "Couldn't delete this expense"
 msgstr "Couldn't delete this expense"
 
-#: src/screens/RecentlyDeleted/index.tsx:144
+#: src/screens/RecentlyDeleted/index.tsx:151
 msgid "Couldn’t delete this. Please try again."
 msgstr "Couldn’t delete this. Please try again."
 
@@ -1163,7 +1167,7 @@ msgstr "Couldn't restore this expense"
 msgid "Couldn’t restore this payment"
 msgstr "Couldn’t restore this payment"
 
-#: src/screens/RecentlyDeleted/index.tsx:133
+#: src/screens/RecentlyDeleted/index.tsx:140
 msgid "Couldn’t restore this. Please try again."
 msgstr "Couldn’t restore this. Please try again."
 
@@ -1179,11 +1183,11 @@ msgstr "Couldn’t save the rules. Please try again."
 msgid "Couldn’t save. Please try again."
 msgstr "Couldn’t save. Please try again."
 
-#: src/components/people/CallItEvenDialog.tsx:189
+#: src/components/people/CallItEvenDialog.tsx:203
 msgid "Couldn’t undo the write-off"
 msgstr "Couldn’t undo the write-off"
 
-#: src/screens/RecentlyDeleted/index.tsx:120
+#: src/screens/RecentlyDeleted/index.tsx:127
 msgid "Couldn’t undo. Please try again."
 msgstr "Couldn’t undo. Please try again."
 
@@ -1217,7 +1221,7 @@ msgid "Create group"
 msgstr "Create group"
 
 #: src/components/groups/GroupFields.tsx:100
-#: src/components/people/CallItEvenDialog.tsx:296
+#: src/components/people/CallItEvenDialog.tsx:310
 #: src/components/people/RecordPaymentDialog.tsx:321
 #: src/components/split/pickers.tsx:69
 #: src/components/split/pickers.tsx:80
@@ -1278,7 +1282,7 @@ msgstr "Dark theme"
 #: src/components/split/ExpenseComposer.tsx:336
 #: src/components/split/ExpenseComposer.tsx:481
 #: src/screens/Analytics/index.tsx:204
-#: src/screens/RecentlyDeleted/components/RestoreDialog.tsx:154
+#: src/screens/RecentlyDeleted/components/RestoreDialog.tsx:155
 msgid "Date"
 msgstr "Date"
 
@@ -1324,13 +1328,13 @@ msgstr "Default split"
 msgid "Delete expense"
 msgstr "Delete expense"
 
-#: src/screens/RecentlyDeleted/components/RestoreDialog.tsx:185
-#: src/screens/RecentlyDeleted/components/RestoreDialog.tsx:191
-#: src/screens/RecentlyDeleted/index.tsx:272
+#: src/screens/RecentlyDeleted/components/RestoreDialog.tsx:188
+#: src/screens/RecentlyDeleted/components/RestoreDialog.tsx:194
+#: src/screens/RecentlyDeleted/index.tsx:279
 msgid "Delete forever"
 msgstr "Delete forever"
 
-#: src/screens/RecentlyDeleted/index.tsx:270
+#: src/screens/RecentlyDeleted/index.tsx:277
 msgid "Delete forever?"
 msgstr "Delete forever?"
 
@@ -1343,20 +1347,20 @@ msgstr "Delete from Activity"
 msgid "Delete payment"
 msgstr "Delete payment"
 
-#: src/screens/RecentlyDeleted/components/RestoreDialog.tsx:162
+#: src/screens/RecentlyDeleted/components/RestoreDialog.tsx:166
 msgid "Deleted"
 msgstr "Deleted"
 
 #. placeholder {0}: deletedBy(item.deletedBy)
-#: src/screens/RecentlyDeleted/index.tsx:217
+#: src/screens/RecentlyDeleted/index.tsx:222
 msgid "Deleted by {0} · {ago}"
 msgstr "Deleted by {0} · {ago}"
 
-#: src/screens/RecentlyDeleted/index.tsx:158
+#: src/screens/RecentlyDeleted/index.tsx:165
 msgid "Deleted expenses, payments and write-offs wait here before they leave for good. Restore one and its balances come back."
 msgstr "Deleted expenses, payments and write-offs wait here before they leave for good. Restore one and its balances come back."
 
-#: src/screens/RecentlyDeleted/index.tsx:141
+#: src/screens/RecentlyDeleted/index.tsx:148
 msgid "Deleted forever"
 msgstr "Deleted forever"
 
@@ -1372,6 +1376,7 @@ msgstr "Did the payment go through?"
 msgid "Dim"
 msgstr "Dim"
 
+#: src/components/people/CallItEvenDialog.tsx:145
 #: src/screens/Analytics/useReport.ts:253
 #: src/screens/People/components/PersonRow.tsx:67
 #: src/screens/Person/components/PersonBalances.tsx:99
@@ -1379,8 +1384,6 @@ msgid "Direct"
 msgstr "Direct"
 
 #. placeholder {0}: formatAmount(p.amount, currency, locale)
-#. placeholder {0}: money(magnitude(p.amount))
-#: src/components/people/CallItEvenDialog.tsx:143
 #: src/components/people/RecordPaymentDialog.tsx:170
 msgid "Direct {0}"
 msgstr "Direct {0}"
@@ -1394,7 +1397,7 @@ msgid "Direct only"
 msgstr "Direct only"
 
 #: src/components/people/PaymentDetailsDialog.tsx:167
-#: src/screens/RecentlyDeleted/components/RestoreDialog.tsx:160
+#: src/screens/RecentlyDeleted/components/RestoreDialog.tsx:163
 msgid "Direct, no group"
 msgstr "Direct, no group"
 
@@ -1421,7 +1424,7 @@ msgstr "Dismiss"
 msgid "Double tap to close the dialog"
 msgstr "Double tap to close the dialog"
 
-#: src/components/people/CallItEvenDialog.tsx:377
+#: src/components/people/CallItEvenDialog.tsx:391
 msgid "e.g. Birthday treat"
 msgstr "e.g. Birthday treat"
 
@@ -1607,7 +1610,7 @@ msgstr "Excluded"
 #: src/navigation/Navigation.tsx:72
 #: src/screens/Analytics/components/ExpenseRow.tsx:42
 #: src/screens/Expense/index.tsx:72
-#: src/screens/RecentlyDeleted/components/RestoreDialog.tsx:93
+#: src/screens/RecentlyDeleted/components/RestoreDialog.tsx:94
 msgid "Expense"
 msgstr "Expense"
 
@@ -1618,7 +1621,7 @@ msgstr "Expense added"
 
 #: src/components/activity/useActivityActions.tsx:94
 #: src/screens/Expense/index.tsx:136
-#: src/screens/RecentlyDeleted/index.tsx:101
+#: src/screens/RecentlyDeleted/index.tsx:108
 msgid "Expense deleted"
 msgstr "Expense deleted"
 
@@ -1626,7 +1629,7 @@ msgstr "Expense deleted"
 msgid "Expense options"
 msgstr "Expense options"
 
-#: src/screens/RecentlyDeleted/index.tsx:96
+#: src/screens/RecentlyDeleted/index.tsx:103
 msgid "Expense restored"
 msgstr "Expense restored"
 
@@ -1690,7 +1693,7 @@ msgstr "For example, Rent"
 msgid "For money that changed hands outside Splito – cash, UPI or a bank transfer. Splito keeps the record; it never moves money."
 msgstr "For money that changed hands outside Splito – cash, UPI or a bank transfer. Splito keeps the record; it never moves money."
 
-#: src/screens/RecentlyDeleted/components/RestoreDialog.tsx:144
+#: src/screens/RecentlyDeleted/components/RestoreDialog.tsx:145
 msgid "For you"
 msgstr "For you"
 
@@ -1765,7 +1768,7 @@ msgstr "Graphite"
 msgid "Groceries"
 msgstr "Groceries"
 
-#: src/components/people/CallItEvenDialog.tsx:144
+#: src/components/people/CallItEvenDialog.tsx:145
 #: src/components/people/RecordPaymentDialog.tsx:171
 #: src/components/split/ExpenseComposer.tsx:489
 #: src/components/split/pickers.tsx:256
@@ -1930,7 +1933,7 @@ msgstr "Invites"
 msgid "Inviting friends to Splito by link or QR is available when you sign in, coming with sync."
 msgstr "Inviting friends to Splito by link or QR is available when you sign in, coming with sync."
 
-#: src/screens/RecentlyDeleted/index.tsx:271
+#: src/screens/RecentlyDeleted/index.tsx:278
 msgid "It leaves Recently deleted and can’t be restored. Its history stays in the record’s audit trail."
 msgstr "It leaves Recently deleted and can’t be restored. Its history stays in the record’s audit trail."
 
@@ -2004,7 +2007,7 @@ msgstr "Later years"
 msgid "Left the group"
 msgstr "Left the group"
 
-#: src/components/people/CallItEvenDialog.tsx:259
+#: src/components/people/CallItEvenDialog.tsx:273
 msgid "Let a debt go without any money changing hands. It shows in history and Activity, never counts as spending, and you can undo it."
 msgstr "Let a debt go without any money changing hands. It shows in history and Activity, never counts as spending, and you can undo it."
 
@@ -2021,7 +2024,7 @@ msgstr "Light"
 msgid "List density"
 msgstr "List density"
 
-#: src/screens/RecentlyDeleted/index.tsx:181
+#: src/screens/RecentlyDeleted/index.tsx:186
 msgid "Loading…"
 msgstr "Loading…"
 
@@ -2284,13 +2287,13 @@ msgstr "Not splitting"
 msgid "Not yet"
 msgstr "Not yet"
 
-#: src/components/people/CallItEvenDialog.tsx:374
+#: src/components/people/CallItEvenDialog.tsx:388
 #: src/components/people/PaymentDetailsDialog.tsx:168
 #: src/components/people/RecordPaymentDialog.tsx:397
 msgid "Note"
 msgstr "Note"
 
-#: src/components/people/CallItEvenDialog.tsx:369
+#: src/components/people/CallItEvenDialog.tsx:383
 #: src/components/people/RecordPaymentDialog.tsx:392
 msgid "Note (optional)"
 msgstr "Note (optional)"
@@ -2400,7 +2403,7 @@ msgid "Open Analytics"
 msgstr "Open Analytics"
 
 #. placeholder {0}: money(full)
-#: src/components/people/CallItEvenDialog.tsx:289
+#: src/components/people/CallItEvenDialog.tsx:303
 msgid "Open balance {0}"
 msgstr "Open balance {0}"
 
@@ -2426,7 +2429,7 @@ msgstr "Open source"
 msgid "Open UPI app"
 msgstr "Open UPI app"
 
-#: src/screens/RecentlyDeleted/index.tsx:311
+#: src/screens/RecentlyDeleted/index.tsx:318
 msgid "Opens it to restore or delete forever"
 msgstr "Opens it to restore or delete forever"
 
@@ -2499,7 +2502,7 @@ msgid "Pairs you haven’t marked Allowed or Preferred are treated as excluded."
 msgstr "Pairs you haven’t marked Allowed or Preferred are treated as excluded."
 
 #. placeholder {0}: money(remainingMinor(full, [typed ?? ZERO]))
-#: src/components/people/CallItEvenDialog.tsx:351
+#: src/components/people/CallItEvenDialog.tsx:365
 msgid "Part of it: {0} stays open."
 msgstr "Part of it: {0} stays open."
 
@@ -2514,12 +2517,12 @@ msgid "Pay with UPI"
 msgstr "Pay with UPI"
 
 #: src/components/people/HistoryRow.tsx:117
-#: src/screens/RecentlyDeleted/components/RestoreDialog.tsx:95
+#: src/screens/RecentlyDeleted/components/RestoreDialog.tsx:96
 msgid "Payment"
 msgstr "Payment"
 
 #: src/components/people/PaymentDetailsDialog.tsx:115
-#: src/screens/RecentlyDeleted/index.tsx:102
+#: src/screens/RecentlyDeleted/index.tsx:109
 msgid "Payment deleted"
 msgstr "Payment deleted"
 
@@ -2532,7 +2535,7 @@ msgstr "Payment details"
 msgid "Payment recorded"
 msgstr "Payment recorded"
 
-#: src/screens/RecentlyDeleted/index.tsx:97
+#: src/screens/RecentlyDeleted/index.tsx:104
 msgid "Payment restored"
 msgstr "Payment restored"
 
@@ -2673,7 +2676,7 @@ msgstr "Recent transactions"
 #: src/components/settings/sections.ts:50
 #: src/navigation/Drawer.tsx:232
 #: src/navigation/Navigation.tsx:67
-#: src/screens/RecentlyDeleted/index.tsx:193
+#: src/screens/RecentlyDeleted/index.tsx:198
 #: src/screens/Settings/index.tsx:110
 #: src/screens/Settings/index.tsx:113
 msgid "Recently deleted"
@@ -2767,28 +2770,28 @@ msgid "Reset to anyone pays anyone"
 msgstr "Reset to anyone pays anyone"
 
 #: src/screens/Expense/index.tsx:434
-#: src/screens/RecentlyDeleted/components/RestoreDialog.tsx:102
+#: src/screens/RecentlyDeleted/components/RestoreDialog.tsx:103
 msgid "Restore"
 msgstr "Restore"
 
 #: src/screens/Expense/index.tsx:422
-#: src/screens/RecentlyDeleted/components/RestoreDialog.tsx:87
+#: src/screens/RecentlyDeleted/components/RestoreDialog.tsx:88
 msgid "Restore expense"
 msgstr "Restore expense"
 
-#: src/screens/RecentlyDeleted/components/RestoreDialog.tsx:89
+#: src/screens/RecentlyDeleted/components/RestoreDialog.tsx:90
 msgid "Restore payment"
 msgstr "Restore payment"
 
-#: src/screens/RecentlyDeleted/components/RestoreDialog.tsx:90
+#: src/screens/RecentlyDeleted/components/RestoreDialog.tsx:91
 msgid "Restore write-off"
 msgstr "Restore write-off"
 
-#: src/screens/RecentlyDeleted/components/RestoreDialog.tsx:177
+#: src/screens/RecentlyDeleted/components/RestoreDialog.tsx:180
 msgid "Restoring puts it back in balances, history and Activity. It stays here for {left} more days."
 msgstr "Restoring puts it back in balances, history and Activity. It stays here for {left} more days."
 
-#: src/screens/RecentlyDeleted/components/RestoreDialog.tsx:172
+#: src/screens/RecentlyDeleted/components/RestoreDialog.tsx:175
 msgid "Restoring puts it back in balances, history and Activity. It stays here for 1 more day."
 msgstr "Restoring puts it back in balances, history and Activity. It stays here for 1 more day."
 
@@ -3033,8 +3036,8 @@ msgstr "Some"
 #: src/screens/Group/index.tsx:613
 #: src/screens/Group/index.tsx:629
 #: src/screens/Group/index.tsx:630
-#: src/screens/RecentlyDeleted/describe.ts:33
-#: src/screens/RecentlyDeleted/index.tsx:92
+#: src/screens/RecentlyDeleted/describe.ts:26
+#: src/screens/RecentlyDeleted/index.tsx:99
 #: src/screens/Settle/components/TransferRow.tsx:41
 msgid "Someone"
 msgstr "Someone"
@@ -3224,7 +3227,7 @@ msgid "That isn’t a number. Use digits, one decimal point and + − × ÷"
 msgstr "That isn’t a number. Use digits, one decimal point and + − × ÷"
 
 #. placeholder {0}: money(full)
-#: src/components/people/CallItEvenDialog.tsx:348
+#: src/components/people/CallItEvenDialog.tsx:362
 msgid "That’s more than the open balance of {0}."
 msgstr "That’s more than the open balance of {0}."
 
@@ -3264,7 +3267,7 @@ msgstr "The starting value is set in Settings › Lists."
 msgid "The tab Splito opens on."
 msgstr "The tab Splito opens on."
 
-#: src/components/people/CallItEvenDialog.tsx:350
+#: src/components/people/CallItEvenDialog.tsx:364
 msgid "The whole balance: you’ll be even in {currency}. Other currencies stay as they are."
 msgstr "The whole balance: you’ll be even in {currency}. Other currencies stay as they are."
 
@@ -3377,18 +3380,18 @@ msgid "Type what each person owes."
 msgstr "Type what each person owes."
 
 #: src/components/activity/useActivityActions.tsx:126
-#: src/components/people/CallItEvenDialog.tsx:214
+#: src/components/people/CallItEvenDialog.tsx:228
 #: src/components/people/PaymentDetailsDialog.tsx:118
 #: src/components/people/PaymentDetailsDialog.tsx:134
 #: src/screens/Expense/index.tsx:139
 #: src/screens/Expense/index.tsx:147
-#: src/screens/RecentlyDeleted/index.tsx:116
+#: src/screens/RecentlyDeleted/index.tsx:123
 msgid "Undo"
 msgstr "Undo"
 
 #: src/components/activity/useActivityActions.tsx:127
-#: src/components/people/CallItEvenDialog.tsx:216
-#: src/screens/RecentlyDeleted/index.tsx:125
+#: src/components/people/CallItEvenDialog.tsx:230
+#: src/screens/RecentlyDeleted/index.tsx:132
 msgctxt "action"
 msgid "Undo"
 msgstr "Undo"
@@ -3535,7 +3538,7 @@ msgid "When you pay"
 msgstr "When you pay"
 
 #: src/components/people/PaymentDetailsDialog.tsx:167
-#: src/screens/RecentlyDeleted/components/RestoreDialog.tsx:160
+#: src/screens/RecentlyDeleted/components/RestoreDialog.tsx:162
 msgid "Where"
 msgstr "Where"
 
@@ -3556,25 +3559,25 @@ msgstr "Who paid?"
 msgid "Who you settle with"
 msgstr "Who you settle with"
 
-#: src/components/people/CallItEvenDialog.tsx:253
+#: src/components/people/CallItEvenDialog.tsx:267
 msgid "Write off"
 msgstr "Write off"
 
-#: src/screens/RecentlyDeleted/components/RestoreDialog.tsx:96
+#: src/screens/RecentlyDeleted/components/RestoreDialog.tsx:97
 msgid "Write-off"
 msgstr "Write-off"
 
-#: src/screens/RecentlyDeleted/index.tsx:98
+#: src/screens/RecentlyDeleted/index.tsx:105
 msgid "Write-off restored"
 msgstr "Write-off restored"
 
 #: src/components/people/PaymentDetailsDialog.tsx:115
-#: src/screens/RecentlyDeleted/index.tsx:103
+#: src/screens/RecentlyDeleted/index.tsx:110
 msgid "Write-off undone"
 msgstr "Write-off undone"
 
-#: src/components/people/CallItEvenDialog.tsx:211
-#: src/components/people/CallItEvenDialog.tsx:228
+#: src/components/people/CallItEvenDialog.tsx:225
+#: src/components/people/CallItEvenDialog.tsx:242
 msgid "Written off"
 msgstr "Written off"
 
@@ -3604,6 +3607,8 @@ msgid "Yesterday"
 msgstr "Yesterday"
 
 #: src/components/activity/ActivityItem.tsx:621
+#: src/components/people/CallItEvenDialog.tsx:151
+#: src/components/people/CallItEvenDialog.tsx:154
 msgid "you"
 msgstr "you"
 
@@ -3614,8 +3619,8 @@ msgstr "you"
 #: src/screens/CreateGroup.tsx:189
 #: src/screens/Group/index.tsx:179
 #: src/screens/Person/index.tsx:166
-#: src/screens/RecentlyDeleted/describe.ts:33
-#: src/screens/RecentlyDeleted/index.tsx:92
+#: src/screens/RecentlyDeleted/describe.ts:26
+#: src/screens/RecentlyDeleted/index.tsx:99
 #: src/screens/Settle/index.tsx:84
 msgid "You"
 msgstr "You"
@@ -3639,7 +3644,7 @@ msgid "you borrowed"
 msgstr "you borrowed"
 
 #. placeholder {0}: money(magnitude(net), e.currency)
-#: src/screens/RecentlyDeleted/describe.ts:46
+#: src/screens/RecentlyDeleted/describe.ts:39
 msgid "you borrowed {0}"
 msgstr "you borrowed {0}"
 
@@ -3669,7 +3674,7 @@ msgstr "You can’t divide by zero"
 #. placeholder {0}: name(w.from)
 #: src/components/people/HistoryRow.tsx:91
 #: src/components/people/PaymentDetailsDialog.tsx:91
-#: src/screens/RecentlyDeleted/describe.ts:56
+#: src/screens/RecentlyDeleted/describe.ts:49
 msgid "You forgave {0}"
 msgstr "You forgave {0}"
 
@@ -3686,7 +3691,7 @@ msgid "you lent"
 msgstr "you lent"
 
 #. placeholder {0}: money(net, e.currency)
-#: src/screens/RecentlyDeleted/describe.ts:45
+#: src/screens/RecentlyDeleted/describe.ts:38
 msgid "you lent {0}"
 msgstr "you lent {0}"
 
@@ -3745,7 +3750,7 @@ msgstr "You paid"
 #: src/components/people/HistoryRow.tsx:113
 #: src/components/people/PaymentDetailsDialog.tsx:96
 #: src/components/people/RecordPaymentDialog.tsx:151
-#: src/screens/RecentlyDeleted/describe.ts:61
+#: src/screens/RecentlyDeleted/describe.ts:54
 msgid "You paid {0}"
 msgstr "You paid {0}"
 

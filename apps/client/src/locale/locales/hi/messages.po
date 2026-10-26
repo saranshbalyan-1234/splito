@@ -87,7 +87,7 @@ msgid "{0} balance - open analytics"
 msgstr "{0} बैलेंस - एनालिटिक्स खोलें"
 
 #. placeholder {0}: i18n.date(new Date(item.deletedAt), { dateStyle: 'medium', timeStyle: 'short', })
-#: src/screens/RecentlyDeleted/components/RestoreDialog.tsx:163
+#: src/screens/RecentlyDeleted/components/RestoreDialog.tsx:167
 msgid "{0} by {deletedByName}"
 msgstr "{0}, {deletedByName} द्वारा"
 
@@ -110,7 +110,7 @@ msgstr "हर एक {0} · {1}"
 #. placeholder {1}: name(w.from)
 #: src/components/people/HistoryRow.tsx:94
 #: src/components/people/PaymentDetailsDialog.tsx:94
-#: src/screens/RecentlyDeleted/describe.ts:59
+#: src/screens/RecentlyDeleted/describe.ts:52
 msgid "{0} forgave {1}"
 msgstr "{0} ने {1} का कर्ज़ माफ़ किया"
 
@@ -119,7 +119,7 @@ msgstr "{0} ने {1} का कर्ज़ माफ़ किया"
 #. placeholder {0}: name(w.to)
 #: src/components/people/HistoryRow.tsx:93
 #: src/components/people/PaymentDetailsDialog.tsx:93
-#: src/screens/RecentlyDeleted/describe.ts:58
+#: src/screens/RecentlyDeleted/describe.ts:51
 msgid "{0} forgave you"
 msgstr "{0} ने आपका कर्ज़ माफ़ किया"
 
@@ -188,7 +188,7 @@ msgstr "कुल से {0} ज़्यादा"
 #: src/components/people/HistoryRow.tsx:116
 #: src/components/people/PaymentDetailsDialog.tsx:99
 #: src/components/people/RecordPaymentDialog.tsx:154
-#: src/screens/RecentlyDeleted/describe.ts:64
+#: src/screens/RecentlyDeleted/describe.ts:57
 msgid "{0} paid {1}"
 msgstr "{0} ने {1} को भुगतान किया"
 
@@ -202,7 +202,7 @@ msgstr "{0} ने {total} चुकाए"
 #: src/components/people/HistoryRow.tsx:115
 #: src/components/people/PaymentDetailsDialog.tsx:98
 #: src/components/people/RecordPaymentDialog.tsx:153
-#: src/screens/RecentlyDeleted/describe.ts:63
+#: src/screens/RecentlyDeleted/describe.ts:56
 msgid "{0} paid you"
 msgstr "{0} ने आपको भुगतान किया"
 
@@ -377,7 +377,7 @@ msgstr "{actor} ने समूह {subject} को अपडेट किय�
 msgid "{binDays, plural, one {# day} other {# days}}"
 msgstr "{binDays, plural, one {# दिन} other {# दिन}}"
 
-#: src/screens/RecentlyDeleted/index.tsx:180
+#: src/screens/RecentlyDeleted/index.tsx:186
 msgid "{count, plural, one {# item} other {# items}}"
 msgstr "{count, plural, one {# आइटम} other {# आइटम}}"
 
@@ -397,7 +397,7 @@ msgstr "{creditor} ने {debtor} के साथ हिसाब बराब
 msgid "{creditor} called it even with you"
 msgstr "{creditor} ने आपके साथ हिसाब बराबर किया"
 
-#: src/screens/RecentlyDeleted/index.tsx:242
+#: src/screens/RecentlyDeleted/index.tsx:247
 msgid "{days, plural, one {Nothing deleted in the last day.} other {Nothing deleted in the last # days.}}"
 msgstr "{days, plural, one {पिछले एक दिन में कुछ नहीं हटाया गया।} other {पिछले # दिनों में कुछ नहीं हटाया गया।}}"
 
@@ -430,7 +430,7 @@ msgstr "{from} ने आपको भुगतान किया"
 msgid "{hiddenCount, plural, one {# change hidden from your activity} other {# changes hidden from your activity}}"
 msgstr "{hiddenCount, plural, one {# बदलाव आपकी गतिविधि से छिपा है} other {# बदलाव आपकी गतिविधि से छिपे हैं}}"
 
-#: src/screens/RecentlyDeleted/index.tsx:366
+#: src/screens/RecentlyDeleted/index.tsx:373
 msgid "{left, plural, one {# day left} other {# days left}}"
 msgstr "{left, plural, one {# दिन बाकी} other {# दिन बाकी}}"
 
@@ -463,6 +463,10 @@ msgstr "{title}, {byline}, {totalText} में से {shareLabel} {shareText}
 #: src/screens/Settings/index.tsx:202
 msgid "{visible} categories"
 msgstr "{visible} श्रेणियाँ"
+
+#: src/components/people/CallItEvenDialog.tsx:156
+msgid "{where} {amount} owed by {debtorName}"
+msgstr "{where} {amount}, {debtorName} पर बकाया"
 
 #: src/screens/Expense/components/History.tsx:81
 msgid "{who} added this expense"
@@ -740,8 +744,8 @@ msgstr "सभी"
 msgid "All {0} assigned"
 msgstr "पूरे {0} बँट गए"
 
-#: src/components/people/CallItEvenDialog.tsx:211
-#: src/components/people/CallItEvenDialog.tsx:228
+#: src/components/people/CallItEvenDialog.tsx:225
+#: src/components/people/CallItEvenDialog.tsx:242
 msgid "All even"
 msgstr "हिसाब बराबर"
 
@@ -791,8 +795,8 @@ msgstr "{0} ने कितना दिया"
 msgid "Amount for {0}"
 msgstr "{0} की रकम"
 
-#: src/components/people/CallItEvenDialog.tsx:317
-#: src/components/people/CallItEvenDialog.tsx:322
+#: src/components/people/CallItEvenDialog.tsx:331
+#: src/components/people/CallItEvenDialog.tsx:336
 msgid "Amount to let go"
 msgstr "माफ़ की जाने वाली रक़म"
 
@@ -926,8 +930,8 @@ msgstr "व्यक्ति के अनुसार"
 msgid "Calculator"
 msgstr "कैलकुलेटर"
 
-#: src/components/people/CallItEvenDialog.tsx:193
-#: src/components/people/CallItEvenDialog.tsx:253
+#: src/components/people/CallItEvenDialog.tsx:207
+#: src/components/people/CallItEvenDialog.tsx:267
 #: src/screens/Group/components/GroupRows.tsx:200
 #: src/screens/Group/components/GroupRows.tsx:203
 #: src/screens/Person/index.tsx:398
@@ -1039,7 +1043,7 @@ msgstr "फ़िल्टर हटाएँ"
 msgid "Clear search query"
 msgstr "खोज साफ़ करें"
 
-#: src/components/people/CallItEvenDialog.tsx:362
+#: src/components/people/CallItEvenDialog.tsx:376
 msgid "Clears: {clears}"
 msgstr "साफ़ होगा: {clears}"
 
@@ -1127,7 +1131,7 @@ msgstr "उस व्यक्ति को नहीं जोड़ सके�
 msgid "Couldn’t add your friend. Please try again."
 msgstr "आपके दोस्त को नहीं जोड़ सके। कृपया फिर कोशिश करें।"
 
-#: src/components/people/CallItEvenDialog.tsx:181
+#: src/components/people/CallItEvenDialog.tsx:195
 msgid "Couldn’t call it even. Please try again."
 msgstr "हिसाब बराबर नहीं हो सका। कृपया फिर से कोशिश करें।"
 
@@ -1139,7 +1143,7 @@ msgstr "समूह नहीं बना सके। कृपया फि�
 msgid "Couldn't delete this expense"
 msgstr "यह खर्च हटाया नहीं जा सका"
 
-#: src/screens/RecentlyDeleted/index.tsx:144
+#: src/screens/RecentlyDeleted/index.tsx:151
 msgid "Couldn’t delete this. Please try again."
 msgstr "इसे हटाया नहीं जा सका। कृपया फिर से कोशिश करें।"
 
@@ -1163,7 +1167,7 @@ msgstr "यह खर्च वापस नहीं लाया जा सक
 msgid "Couldn’t restore this payment"
 msgstr "यह भुगतान वापस नहीं आ सका"
 
-#: src/screens/RecentlyDeleted/index.tsx:133
+#: src/screens/RecentlyDeleted/index.tsx:140
 msgid "Couldn’t restore this. Please try again."
 msgstr "इसे वापस नहीं लाया जा सका। कृपया फिर से कोशिश करें।"
 
@@ -1179,11 +1183,11 @@ msgstr "नियम सहेजे नहीं जा सके। फिर 
 msgid "Couldn’t save. Please try again."
 msgstr "सहेजा नहीं जा सका। कृपया फिर कोशिश करें।"
 
-#: src/components/people/CallItEvenDialog.tsx:189
+#: src/components/people/CallItEvenDialog.tsx:203
 msgid "Couldn’t undo the write-off"
 msgstr "माफ़ी वापस नहीं ली जा सकी"
 
-#: src/screens/RecentlyDeleted/index.tsx:120
+#: src/screens/RecentlyDeleted/index.tsx:127
 msgid "Couldn’t undo. Please try again."
 msgstr "पहले जैसा नहीं किया जा सका। कृपया फिर से कोशिश करें।"
 
@@ -1217,7 +1221,7 @@ msgid "Create group"
 msgstr "समूह बनाएँ"
 
 #: src/components/groups/GroupFields.tsx:100
-#: src/components/people/CallItEvenDialog.tsx:296
+#: src/components/people/CallItEvenDialog.tsx:310
 #: src/components/people/RecordPaymentDialog.tsx:321
 #: src/components/split/pickers.tsx:69
 #: src/components/split/pickers.tsx:80
@@ -1278,7 +1282,7 @@ msgstr "डार्क थीम"
 #: src/components/split/ExpenseComposer.tsx:336
 #: src/components/split/ExpenseComposer.tsx:481
 #: src/screens/Analytics/index.tsx:204
-#: src/screens/RecentlyDeleted/components/RestoreDialog.tsx:154
+#: src/screens/RecentlyDeleted/components/RestoreDialog.tsx:155
 msgid "Date"
 msgstr "तारीख"
 
@@ -1324,13 +1328,13 @@ msgstr "डिफ़ॉल्ट बँटवारा"
 msgid "Delete expense"
 msgstr "खर्च हटाएँ"
 
-#: src/screens/RecentlyDeleted/components/RestoreDialog.tsx:185
-#: src/screens/RecentlyDeleted/components/RestoreDialog.tsx:191
-#: src/screens/RecentlyDeleted/index.tsx:272
+#: src/screens/RecentlyDeleted/components/RestoreDialog.tsx:188
+#: src/screens/RecentlyDeleted/components/RestoreDialog.tsx:194
+#: src/screens/RecentlyDeleted/index.tsx:279
 msgid "Delete forever"
 msgstr "हमेशा के लिए हटाएँ"
 
-#: src/screens/RecentlyDeleted/index.tsx:270
+#: src/screens/RecentlyDeleted/index.tsx:277
 msgid "Delete forever?"
 msgstr "हमेशा के लिए हटाएँ?"
 
@@ -1343,20 +1347,20 @@ msgstr "गतिविधि से हटाएँ"
 msgid "Delete payment"
 msgstr "भुगतान हटाएं"
 
-#: src/screens/RecentlyDeleted/components/RestoreDialog.tsx:162
+#: src/screens/RecentlyDeleted/components/RestoreDialog.tsx:166
 msgid "Deleted"
 msgstr "हटाया गया"
 
 #. placeholder {0}: deletedBy(item.deletedBy)
-#: src/screens/RecentlyDeleted/index.tsx:217
+#: src/screens/RecentlyDeleted/index.tsx:222
 msgid "Deleted by {0} · {ago}"
 msgstr "{0} ने हटाया · {ago}"
 
-#: src/screens/RecentlyDeleted/index.tsx:158
+#: src/screens/RecentlyDeleted/index.tsx:165
 msgid "Deleted expenses, payments and write-offs wait here before they leave for good. Restore one and its balances come back."
 msgstr "हटाए गए ख़र्च, भुगतान और माफ़ियाँ हमेशा के लिए जाने से पहले यहाँ रहते हैं। किसी को वापस लाएँ, तो उसके बैलेंस भी लौट आते हैं।"
 
-#: src/screens/RecentlyDeleted/index.tsx:141
+#: src/screens/RecentlyDeleted/index.tsx:148
 msgid "Deleted forever"
 msgstr "हमेशा के लिए हटा दिया गया"
 
@@ -1372,6 +1376,7 @@ msgstr "क्या भुगतान हो गया?"
 msgid "Dim"
 msgstr "मद्धम"
 
+#: src/components/people/CallItEvenDialog.tsx:145
 #: src/screens/Analytics/useReport.ts:253
 #: src/screens/People/components/PersonRow.tsx:67
 #: src/screens/Person/components/PersonBalances.tsx:99
@@ -1379,8 +1384,6 @@ msgid "Direct"
 msgstr "सीधा"
 
 #. placeholder {0}: formatAmount(p.amount, currency, locale)
-#. placeholder {0}: money(magnitude(p.amount))
-#: src/components/people/CallItEvenDialog.tsx:143
 #: src/components/people/RecordPaymentDialog.tsx:170
 msgid "Direct {0}"
 msgstr "सीधा {0}"
@@ -1394,7 +1397,7 @@ msgid "Direct only"
 msgstr "सिर्फ़ सीधे"
 
 #: src/components/people/PaymentDetailsDialog.tsx:167
-#: src/screens/RecentlyDeleted/components/RestoreDialog.tsx:160
+#: src/screens/RecentlyDeleted/components/RestoreDialog.tsx:163
 msgid "Direct, no group"
 msgstr "सीधा, कोई समूह नहीं"
 
@@ -1421,7 +1424,7 @@ msgstr "हटाएं"
 msgid "Double tap to close the dialog"
 msgstr "डायलॉग बंद करने के लिए दो बार टैप करें"
 
-#: src/components/people/CallItEvenDialog.tsx:377
+#: src/components/people/CallItEvenDialog.tsx:391
 msgid "e.g. Birthday treat"
 msgstr "जैसे जन्मदिन की ट्रीट"
 
@@ -1607,7 +1610,7 @@ msgstr "बाहर"
 #: src/navigation/Navigation.tsx:72
 #: src/screens/Analytics/components/ExpenseRow.tsx:42
 #: src/screens/Expense/index.tsx:72
-#: src/screens/RecentlyDeleted/components/RestoreDialog.tsx:93
+#: src/screens/RecentlyDeleted/components/RestoreDialog.tsx:94
 msgid "Expense"
 msgstr "खर्च"
 
@@ -1618,7 +1621,7 @@ msgstr "खर्च जोड़ा गया"
 
 #: src/components/activity/useActivityActions.tsx:94
 #: src/screens/Expense/index.tsx:136
-#: src/screens/RecentlyDeleted/index.tsx:101
+#: src/screens/RecentlyDeleted/index.tsx:108
 msgid "Expense deleted"
 msgstr "खर्च हटाया गया"
 
@@ -1626,7 +1629,7 @@ msgstr "खर्च हटाया गया"
 msgid "Expense options"
 msgstr "खर्च के विकल्प"
 
-#: src/screens/RecentlyDeleted/index.tsx:96
+#: src/screens/RecentlyDeleted/index.tsx:103
 msgid "Expense restored"
 msgstr "ख़र्च वापस लाया गया"
 
@@ -1690,7 +1693,7 @@ msgstr "जैसे, किराया"
 msgid "For money that changed hands outside Splito – cash, UPI or a bank transfer. Splito keeps the record; it never moves money."
 msgstr "Splito के बाहर हुए लेन-देन के लिए – नकद, UPI या बैंक ट्रांसफ़र। Splito सिर्फ़ रिकॉर्ड रखता है; वह कभी पैसे नहीं भेजता।"
 
-#: src/screens/RecentlyDeleted/components/RestoreDialog.tsx:144
+#: src/screens/RecentlyDeleted/components/RestoreDialog.tsx:145
 msgid "For you"
 msgstr "आपके लिए"
 
@@ -1765,7 +1768,7 @@ msgstr "ग्रेफ़ाइट"
 msgid "Groceries"
 msgstr "किराना"
 
-#: src/components/people/CallItEvenDialog.tsx:144
+#: src/components/people/CallItEvenDialog.tsx:145
 #: src/components/people/RecordPaymentDialog.tsx:171
 #: src/components/split/ExpenseComposer.tsx:489
 #: src/components/split/pickers.tsx:256
@@ -1930,7 +1933,7 @@ msgstr "आमंत्रण"
 msgid "Inviting friends to Splito by link or QR is available when you sign in, coming with sync."
 msgstr "लिंक या QR से दोस्तों को Splito पर बुलाना साइन इन करने पर मिलेगा, सिंक के साथ आ रहा है।"
 
-#: src/screens/RecentlyDeleted/index.tsx:271
+#: src/screens/RecentlyDeleted/index.tsx:278
 msgid "It leaves Recently deleted and can’t be restored. Its history stays in the record’s audit trail."
 msgstr "यह हाल ही में हटाए गए से निकल जाएगा और वापस नहीं लाया जा सकेगा। इसका इतिहास रिकॉर्ड के ऑडिट ट्रेल में बना रहेगा।"
 
@@ -2004,7 +2007,7 @@ msgstr "अगले साल"
 msgid "Left the group"
 msgstr "समूह छोड़ दिया"
 
-#: src/components/people/CallItEvenDialog.tsx:259
+#: src/components/people/CallItEvenDialog.tsx:273
 msgid "Let a debt go without any money changing hands. It shows in history and Activity, never counts as spending, and you can undo it."
 msgstr "बिना पैसे के लेन-देन के कोई कर्ज़ माफ़ करें। यह इतिहास और गतिविधि में दिखता है, कभी ख़र्च में नहीं गिना जाता, और आप इसे वापस ले सकते हैं।"
 
@@ -2021,7 +2024,7 @@ msgstr "लाइट"
 msgid "List density"
 msgstr "सूची का घनापन"
 
-#: src/screens/RecentlyDeleted/index.tsx:181
+#: src/screens/RecentlyDeleted/index.tsx:186
 msgid "Loading…"
 msgstr "लोड हो रहा है…"
 
@@ -2284,13 +2287,13 @@ msgstr "बाँट नहीं रहे"
 msgid "Not yet"
 msgstr "अभी नहीं"
 
-#: src/components/people/CallItEvenDialog.tsx:374
+#: src/components/people/CallItEvenDialog.tsx:388
 #: src/components/people/PaymentDetailsDialog.tsx:168
 #: src/components/people/RecordPaymentDialog.tsx:397
 msgid "Note"
 msgstr "नोट"
 
-#: src/components/people/CallItEvenDialog.tsx:369
+#: src/components/people/CallItEvenDialog.tsx:383
 #: src/components/people/RecordPaymentDialog.tsx:392
 msgid "Note (optional)"
 msgstr "नोट (वैकल्पिक)"
@@ -2400,7 +2403,7 @@ msgid "Open Analytics"
 msgstr "एनालिटिक्स खोलें"
 
 #. placeholder {0}: money(full)
-#: src/components/people/CallItEvenDialog.tsx:289
+#: src/components/people/CallItEvenDialog.tsx:303
 msgid "Open balance {0}"
 msgstr "बकाया बैलेंस {0}"
 
@@ -2426,7 +2429,7 @@ msgstr "ओपन सोर्स"
 msgid "Open UPI app"
 msgstr "UPI ऐप खोलें"
 
-#: src/screens/RecentlyDeleted/index.tsx:311
+#: src/screens/RecentlyDeleted/index.tsx:318
 msgid "Opens it to restore or delete forever"
 msgstr "वापस लाने या हमेशा के लिए हटाने के लिए खोलता है"
 
@@ -2499,7 +2502,7 @@ msgid "Pairs you haven’t marked Allowed or Preferred are treated as excluded."
 msgstr "जिन जोड़ियों को आपने अनुमति या पसंदीदा नहीं चुना, वे बाहर मानी जाएंगी।"
 
 #. placeholder {0}: money(remainingMinor(full, [typed ?? ZERO]))
-#: src/components/people/CallItEvenDialog.tsx:351
+#: src/components/people/CallItEvenDialog.tsx:365
 msgid "Part of it: {0} stays open."
 msgstr "इसका एक हिस्सा: {0} बकाया रहेगा।"
 
@@ -2514,12 +2517,12 @@ msgid "Pay with UPI"
 msgstr "UPI से भुगतान करें"
 
 #: src/components/people/HistoryRow.tsx:117
-#: src/screens/RecentlyDeleted/components/RestoreDialog.tsx:95
+#: src/screens/RecentlyDeleted/components/RestoreDialog.tsx:96
 msgid "Payment"
 msgstr "भुगतान"
 
 #: src/components/people/PaymentDetailsDialog.tsx:115
-#: src/screens/RecentlyDeleted/index.tsx:102
+#: src/screens/RecentlyDeleted/index.tsx:109
 msgid "Payment deleted"
 msgstr "भुगतान हटाया गया"
 
@@ -2532,7 +2535,7 @@ msgstr "भुगतान का विवरण"
 msgid "Payment recorded"
 msgstr "भुगतान दर्ज हुआ"
 
-#: src/screens/RecentlyDeleted/index.tsx:97
+#: src/screens/RecentlyDeleted/index.tsx:104
 msgid "Payment restored"
 msgstr "भुगतान वापस लाया गया"
 
@@ -2673,7 +2676,7 @@ msgstr "हाल के लेन-देन"
 #: src/components/settings/sections.ts:50
 #: src/navigation/Drawer.tsx:232
 #: src/navigation/Navigation.tsx:67
-#: src/screens/RecentlyDeleted/index.tsx:193
+#: src/screens/RecentlyDeleted/index.tsx:198
 #: src/screens/Settings/index.tsx:110
 #: src/screens/Settings/index.tsx:113
 msgid "Recently deleted"
@@ -2767,28 +2770,28 @@ msgid "Reset to anyone pays anyone"
 msgstr "रीसेट करें: कोई भी किसी को भी दे"
 
 #: src/screens/Expense/index.tsx:434
-#: src/screens/RecentlyDeleted/components/RestoreDialog.tsx:102
+#: src/screens/RecentlyDeleted/components/RestoreDialog.tsx:103
 msgid "Restore"
 msgstr "वापस लाएँ"
 
 #: src/screens/Expense/index.tsx:422
-#: src/screens/RecentlyDeleted/components/RestoreDialog.tsx:87
+#: src/screens/RecentlyDeleted/components/RestoreDialog.tsx:88
 msgid "Restore expense"
 msgstr "खर्च वापस लाएँ"
 
-#: src/screens/RecentlyDeleted/components/RestoreDialog.tsx:89
+#: src/screens/RecentlyDeleted/components/RestoreDialog.tsx:90
 msgid "Restore payment"
 msgstr "भुगतान वापस लाएँ"
 
-#: src/screens/RecentlyDeleted/components/RestoreDialog.tsx:90
+#: src/screens/RecentlyDeleted/components/RestoreDialog.tsx:91
 msgid "Restore write-off"
 msgstr "माफ़ी वापस लाएँ"
 
-#: src/screens/RecentlyDeleted/components/RestoreDialog.tsx:177
+#: src/screens/RecentlyDeleted/components/RestoreDialog.tsx:180
 msgid "Restoring puts it back in balances, history and Activity. It stays here for {left} more days."
 msgstr "वापस लाने पर यह बैलेंस, इतिहास और गतिविधि में लौट आता है। यह यहाँ {left} दिन और रहेगा।"
 
-#: src/screens/RecentlyDeleted/components/RestoreDialog.tsx:172
+#: src/screens/RecentlyDeleted/components/RestoreDialog.tsx:175
 msgid "Restoring puts it back in balances, history and Activity. It stays here for 1 more day."
 msgstr "वापस लाने पर यह बैलेंस, इतिहास और गतिविधि में लौट आता है। यह यहाँ 1 दिन और रहेगा।"
 
@@ -3033,8 +3036,8 @@ msgstr "कुछ"
 #: src/screens/Group/index.tsx:613
 #: src/screens/Group/index.tsx:629
 #: src/screens/Group/index.tsx:630
-#: src/screens/RecentlyDeleted/describe.ts:33
-#: src/screens/RecentlyDeleted/index.tsx:92
+#: src/screens/RecentlyDeleted/describe.ts:26
+#: src/screens/RecentlyDeleted/index.tsx:99
 #: src/screens/Settle/components/TransferRow.tsx:41
 msgid "Someone"
 msgstr "कोई"
@@ -3224,7 +3227,7 @@ msgid "That isn’t a number. Use digits, one decimal point and + − × ÷"
 msgstr "यह संख्या नहीं है। अंक, एक दशमलव बिंदु और + − × ÷ इस्तेमाल करें"
 
 #. placeholder {0}: money(full)
-#: src/components/people/CallItEvenDialog.tsx:348
+#: src/components/people/CallItEvenDialog.tsx:362
 msgid "That’s more than the open balance of {0}."
 msgstr "यह बकाया बैलेंस {0} से ज़्यादा है।"
 
@@ -3264,7 +3267,7 @@ msgstr "शुरुआती मान सेटिंग्स › सूच�
 msgid "The tab Splito opens on."
 msgstr "Splito खुलते समय यही टैब दिखेगा।"
 
-#: src/components/people/CallItEvenDialog.tsx:350
+#: src/components/people/CallItEvenDialog.tsx:364
 msgid "The whole balance: you’ll be even in {currency}. Other currencies stay as they are."
 msgstr "पूरा बैलेंस: {currency} में हिसाब बराबर हो जाएगा। दूसरी मुद्राएँ जैसी हैं वैसी रहेंगी।"
 
@@ -3377,18 +3380,18 @@ msgid "Type what each person owes."
 msgstr "लिखें कि हर व्यक्ति पर कितना बनता है।"
 
 #: src/components/activity/useActivityActions.tsx:126
-#: src/components/people/CallItEvenDialog.tsx:214
+#: src/components/people/CallItEvenDialog.tsx:228
 #: src/components/people/PaymentDetailsDialog.tsx:118
 #: src/components/people/PaymentDetailsDialog.tsx:134
 #: src/screens/Expense/index.tsx:139
 #: src/screens/Expense/index.tsx:147
-#: src/screens/RecentlyDeleted/index.tsx:116
+#: src/screens/RecentlyDeleted/index.tsx:123
 msgid "Undo"
 msgstr "पहले जैसा करें"
 
 #: src/components/activity/useActivityActions.tsx:127
-#: src/components/people/CallItEvenDialog.tsx:216
-#: src/screens/RecentlyDeleted/index.tsx:125
+#: src/components/people/CallItEvenDialog.tsx:230
+#: src/screens/RecentlyDeleted/index.tsx:132
 msgctxt "action"
 msgid "Undo"
 msgstr "पूर्ववत करें"
@@ -3535,7 +3538,7 @@ msgid "When you pay"
 msgstr "जब आप देते हैं"
 
 #: src/components/people/PaymentDetailsDialog.tsx:167
-#: src/screens/RecentlyDeleted/components/RestoreDialog.tsx:160
+#: src/screens/RecentlyDeleted/components/RestoreDialog.tsx:162
 msgid "Where"
 msgstr "कहां"
 
@@ -3556,25 +3559,25 @@ msgstr "किसने दिया?"
 msgid "Who you settle with"
 msgstr "किसके साथ हिसाब चुकाएं"
 
-#: src/components/people/CallItEvenDialog.tsx:253
+#: src/components/people/CallItEvenDialog.tsx:267
 msgid "Write off"
 msgstr "माफ़ करें"
 
-#: src/screens/RecentlyDeleted/components/RestoreDialog.tsx:96
+#: src/screens/RecentlyDeleted/components/RestoreDialog.tsx:97
 msgid "Write-off"
 msgstr "माफ़ी"
 
-#: src/screens/RecentlyDeleted/index.tsx:98
+#: src/screens/RecentlyDeleted/index.tsx:105
 msgid "Write-off restored"
 msgstr "माफ़ी वापस लाई गई"
 
 #: src/components/people/PaymentDetailsDialog.tsx:115
-#: src/screens/RecentlyDeleted/index.tsx:103
+#: src/screens/RecentlyDeleted/index.tsx:110
 msgid "Write-off undone"
 msgstr "माफ़ी वापस ली गई"
 
-#: src/components/people/CallItEvenDialog.tsx:211
-#: src/components/people/CallItEvenDialog.tsx:228
+#: src/components/people/CallItEvenDialog.tsx:225
+#: src/components/people/CallItEvenDialog.tsx:242
 msgid "Written off"
 msgstr "माफ़ किया गया"
 
@@ -3604,6 +3607,8 @@ msgid "Yesterday"
 msgstr "कल"
 
 #: src/components/activity/ActivityItem.tsx:621
+#: src/components/people/CallItEvenDialog.tsx:151
+#: src/components/people/CallItEvenDialog.tsx:154
 msgid "you"
 msgstr "आप"
 
@@ -3614,8 +3619,8 @@ msgstr "आप"
 #: src/screens/CreateGroup.tsx:189
 #: src/screens/Group/index.tsx:179
 #: src/screens/Person/index.tsx:166
-#: src/screens/RecentlyDeleted/describe.ts:33
-#: src/screens/RecentlyDeleted/index.tsx:92
+#: src/screens/RecentlyDeleted/describe.ts:26
+#: src/screens/RecentlyDeleted/index.tsx:99
 #: src/screens/Settle/index.tsx:84
 msgid "You"
 msgstr "आप"
@@ -3639,7 +3644,7 @@ msgid "you borrowed"
 msgstr "आपने उधार लिए"
 
 #. placeholder {0}: money(magnitude(net), e.currency)
-#: src/screens/RecentlyDeleted/describe.ts:46
+#: src/screens/RecentlyDeleted/describe.ts:39
 msgid "you borrowed {0}"
 msgstr "आपने {0} उधार लिए"
 
@@ -3669,7 +3674,7 @@ msgstr "शून्य से भाग नहीं दे सकते"
 #. placeholder {0}: name(w.from)
 #: src/components/people/HistoryRow.tsx:91
 #: src/components/people/PaymentDetailsDialog.tsx:91
-#: src/screens/RecentlyDeleted/describe.ts:56
+#: src/screens/RecentlyDeleted/describe.ts:49
 msgid "You forgave {0}"
 msgstr "आपने {0} का कर्ज़ माफ़ किया"
 
@@ -3686,7 +3691,7 @@ msgid "you lent"
 msgstr "आपने उधार दिए"
 
 #. placeholder {0}: money(net, e.currency)
-#: src/screens/RecentlyDeleted/describe.ts:45
+#: src/screens/RecentlyDeleted/describe.ts:38
 msgid "you lent {0}"
 msgstr "आपने {0} उधार दिए"
 
@@ -3745,7 +3750,7 @@ msgstr "आपने चुकाया"
 #: src/components/people/HistoryRow.tsx:113
 #: src/components/people/PaymentDetailsDialog.tsx:96
 #: src/components/people/RecordPaymentDialog.tsx:151
-#: src/screens/RecentlyDeleted/describe.ts:61
+#: src/screens/RecentlyDeleted/describe.ts:54
 msgid "You paid {0}"
 msgstr "आपने {0} को भुगतान किया"
 
