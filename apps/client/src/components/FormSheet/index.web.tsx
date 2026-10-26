@@ -11,6 +11,7 @@ import {
   Header,
   SLIDE_UP,
   useFormSheet,
+  useIsScrolled,
   useIsSheet,
   webSheetStyle,
 } from './shared'
@@ -42,6 +43,7 @@ export function Inner({
   const dialog = Dialog.useDialogContext()
   const isSheet = useIsSheet()
   const reduceMotion = useShouldReduceMotion()
+  const [isScrolled, onScroll] = useIsScrolled()
   useEffect(() => setIsDirty(isDirty), [isDirty, setIsDirty])
 
   /*
@@ -65,9 +67,15 @@ export function Inner({
               {maxHeight: isSheet ? 'calc(100dvh - 48px)' : '80vh'},
               a.overflow_hidden,
             ]}>
-            <Header title={title} onClose={requestClose} />
+            <Header
+              title={title}
+              onClose={requestClose}
+              isScrolled={isScrolled}
+            />
             <ScrollView
               keyboardShouldPersistTaps="handled"
+              onScroll={onScroll}
+              scrollEventThrottle={50}
               style={[a.flex_shrink, {minHeight: 0}]}
               contentContainerStyle={[inset, a.pt_xs, a.pb_xl]}>
               {children}

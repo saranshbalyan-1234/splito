@@ -357,9 +357,12 @@ export function ScrollableInner({
   header,
   footer,
   style,
+  onScroll: onScrollProp,
   ...props
 }: DialogInnerProps & {
   ref?: React.Ref<React.ComponentRef<typeof ScrollView>>
+  /** Splito: told of every scroll (FormSheet's header hairline). */
+  onScroll?: (e: NativeSyntheticEvent<NativeScrollEvent>) => void
 }) {
   const {
     nativeSnapPoint,
@@ -443,7 +446,10 @@ export function ScrollableInner({
         // set drag state based on scroll on android.
         // we want to detect if it's at the top or not, so watch
         // scrollEndDrag and momentumScrollEnd as well
-        onScroll={android(onScroll)}
+        onScroll={e => {
+          onScrollProp?.(e)
+          if (IS_ANDROID) onScroll(e)
+        }}
         onScrollEndDrag={android(onScroll)}
         onMomentumScrollEnd={android(onScroll)}
         onContentSizeChange={(_, height) => {

@@ -773,8 +773,8 @@ msgstr "व्यक्ति के अनुसार"
 msgid "Calculator"
 msgstr "कैलकुलेटर"
 
-#: src/components/FormSheet/shared.tsx:280
-#: src/components/FormSheet/shared.tsx:286
+#: src/components/FormSheet/shared.tsx:303
+#: src/components/FormSheet/shared.tsx:309
 #: src/components/Menu/index.tsx:387
 #: src/components/Prompt.tsx:153
 #: src/components/Prompt.tsx:155
@@ -873,7 +873,7 @@ msgid "Clear search query"
 msgstr "खोज साफ़ करें"
 
 #: src/components/Dialog/CloseButton.tsx:32
-#: src/components/FormSheet/shared.tsx:190
+#: src/components/FormSheet/shared.tsx:213
 msgid "Close"
 msgstr "बंद करें"
 
@@ -902,7 +902,7 @@ msgstr "किसी को जोड़े बिना बंद करता 
 msgid "Closes without creating the group"
 msgstr "ग्रुप बनाए बिना बंद करता है"
 
-#: src/components/FormSheet/shared.tsx:191
+#: src/components/FormSheet/shared.tsx:214
 msgid "Closes without saving"
 msgstr "सेव किए बिना बंद करता है"
 
@@ -1169,12 +1169,12 @@ msgstr "सिर्फ़ सीधे"
 msgid "Direct, no group"
 msgstr "सीधा, कोई समूह नहीं"
 
-#: src/components/FormSheet/shared.tsx:145
+#: src/components/FormSheet/shared.tsx:151
 #: src/components/split/ExpenseComposer.tsx:572
 msgid "Discard"
 msgstr "छोड़ दें"
 
-#: src/components/FormSheet/shared.tsx:143
+#: src/components/FormSheet/shared.tsx:149
 #: src/components/split/ExpenseComposer.tsx:563
 msgid "Discard changes?"
 msgstr "बदलाव छोड़ दें?"
@@ -1184,11 +1184,11 @@ msgstr "बदलाव छोड़ दें?"
 msgid "Discount"
 msgstr "छूट"
 
-#: src/components/Dialog/index.tsx:603
+#: src/components/Dialog/index.tsx:609
 msgid "Dismiss"
 msgstr "हटाएं"
 
-#: src/components/Dialog/index.tsx:604
+#: src/components/Dialog/index.tsx:610
 msgid "Double tap to close the dialog"
 msgstr "डायलॉग बंद करने के लिए दो बार टैप करें"
 
@@ -1709,7 +1709,7 @@ msgstr "चीज़ें, टैक्स और टिप मिलाकर 
 msgid "Just between you and friends"
 msgstr "सिर्फ़ आप और दोस्तों के बीच"
 
-#: src/components/FormSheet/shared.tsx:147
+#: src/components/FormSheet/shared.tsx:153
 #: src/components/split/ExpenseComposer.tsx:582
 msgid "Keep editing"
 msgstr "बदलाव जारी रखें"
@@ -3082,7 +3082,7 @@ msgstr "लोगों ने जो दिया वह मिलाकर क
 msgid "What was it for?"
 msgstr "किस लिए था?"
 
-#: src/components/FormSheet/shared.tsx:144
+#: src/components/FormSheet/shared.tsx:150
 msgid "What you changed here won’t be saved."
 msgstr "यहाँ किए गए बदलाव सहेजे नहीं जाएँगे।"
 

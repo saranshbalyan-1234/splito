@@ -19,6 +19,7 @@ import {
   type FooterProps,
   Header,
   SheetContext,
+  useIsScrolled,
 } from './shared'
 
 /**
@@ -67,6 +68,7 @@ export function Screen({
   const discardControl = Prompt.usePromptControl()
   const keyboardVerticalOffset = useKeyboardVerticalOffset()
   const pendingAction = useRef<NavigationAction | null>(null)
+  const [isScrolled, onScroll] = useIsScrolled()
 
   /* Native: a swipe down or Back is a route removal, so ask before it happens. */
   usePreventRemove(IS_NATIVE && isDirty, ({data}) => {
@@ -88,7 +90,12 @@ export function Screen({
   return (
     <SheetContext.Provider value={{requestClose, setIsDirty: () => {}, testID}}>
       <Composer.Outer testID={testID} onDismiss={requestClose}>
-        <Header title={title} onClose={requestClose} closeHint={closeHint} />
+        <Header
+          title={title}
+          onClose={requestClose}
+          closeHint={closeHint}
+          isScrolled={isScrolled}
+        />
         <KeyboardAvoidingView
           behavior={IS_IOS ? 'padding' : 'height'}
           keyboardVerticalOffset={keyboardVerticalOffset}
@@ -97,6 +104,8 @@ export function Screen({
           <ScrollView
             testID={scrollTestID}
             keyboardShouldPersistTaps="handled"
+            onScroll={onScroll}
+            scrollEventThrottle={50}
             style={[a.flex_1, web([a.flex_shrink, {minHeight: 0}])]}
             contentContainerStyle={[a.pb_2xl]}>
             {children}

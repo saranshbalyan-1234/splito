@@ -773,8 +773,8 @@ msgstr "By person"
 msgid "Calculator"
 msgstr "Calculator"
 
-#: src/components/FormSheet/shared.tsx:280
-#: src/components/FormSheet/shared.tsx:286
+#: src/components/FormSheet/shared.tsx:303
+#: src/components/FormSheet/shared.tsx:309
 #: src/components/Menu/index.tsx:387
 #: src/components/Prompt.tsx:153
 #: src/components/Prompt.tsx:155
@@ -873,7 +873,7 @@ msgid "Clear search query"
 msgstr "Clear search query"
 
 #: src/components/Dialog/CloseButton.tsx:32
-#: src/components/FormSheet/shared.tsx:190
+#: src/components/FormSheet/shared.tsx:213
 msgid "Close"
 msgstr "Close"
 
@@ -902,7 +902,7 @@ msgstr "Closes without adding anyone"
 msgid "Closes without creating the group"
 msgstr "Closes without creating the group"
 
-#: src/components/FormSheet/shared.tsx:191
+#: src/components/FormSheet/shared.tsx:214
 msgid "Closes without saving"
 msgstr "Closes without saving"
 
@@ -1169,12 +1169,12 @@ msgstr "Direct only"
 msgid "Direct, no group"
 msgstr "Direct, no group"
 
-#: src/components/FormSheet/shared.tsx:145
+#: src/components/FormSheet/shared.tsx:151
 #: src/components/split/ExpenseComposer.tsx:572
 msgid "Discard"
 msgstr "Discard"
 
-#: src/components/FormSheet/shared.tsx:143
+#: src/components/FormSheet/shared.tsx:149
 #: src/components/split/ExpenseComposer.tsx:563
 msgid "Discard changes?"
 msgstr "Discard changes?"
@@ -1184,11 +1184,11 @@ msgstr "Discard changes?"
 msgid "Discount"
 msgstr "Discount"
 
-#: src/components/Dialog/index.tsx:603
+#: src/components/Dialog/index.tsx:609
 msgid "Dismiss"
 msgstr "Dismiss"
 
-#: src/components/Dialog/index.tsx:604
+#: src/components/Dialog/index.tsx:610
 msgid "Double tap to close the dialog"
 msgstr "Double tap to close the dialog"
 
@@ -1709,7 +1709,7 @@ msgstr "Items, tax and tip come to {0}"
 msgid "Just between you and friends"
 msgstr "Just between you and friends"
 
-#: src/components/FormSheet/shared.tsx:147
+#: src/components/FormSheet/shared.tsx:153
 #: src/components/split/ExpenseComposer.tsx:582
 msgid "Keep editing"
 msgstr "Keep editing"
@@ -3082,7 +3082,7 @@ msgstr "What people paid needs to add up to the total"
 msgid "What was it for?"
 msgstr "What was it for?"
 
-#: src/components/FormSheet/shared.tsx:144
+#: src/components/FormSheet/shared.tsx:150
 msgid "What you changed here won’t be saved."
 msgstr "What you changed here won’t be saved."
 

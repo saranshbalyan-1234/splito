@@ -184,6 +184,22 @@ test('Add expense: the readout sits just above Cancel and Save expense; no Cance
   await expect(composer.getByRole('button', {name: 'Cancel'})).toHaveCount(1)
 })
 
+test('the top bar shows its hairline only while the form is scrolled under it', async ({page}) => {
+  await page.setViewportSize(PHONE)
+  await openDemo(page)
+  await page.getByTestId('fab-add').click()
+  const header = page.getByTestId('screen-add-expense').getByTestId('sheet-header')
+  const borderColor = () => header.evaluate(el => getComputedStyle(el).borderBottomColor)
+  await expect.poll(borderColor).toBe('rgba(0, 0, 0, 0)')
+  // Itemize makes the form taller than the sheet; a wheel over the form scrolls it.
+  await page.getByTestId('split-mode-items').click()
+  await page.getByTestId('expense-form').hover()
+  await page.mouse.wheel(0, 200)
+  await expect.poll(borderColor).not.toBe('rgba(0, 0, 0, 0)')
+  await page.getByTestId('expense-form').evaluate(el => el.scrollTo(0, 0))
+  await expect.poll(borderColor).toBe('rgba(0, 0, 0, 0)')
+})
+
 test('Edit group: the overflow opens it, Save waits for a change, and the page follows', async ({page}) => {
   await page.setViewportSize(DESKTOP)
   await openDemo(page)

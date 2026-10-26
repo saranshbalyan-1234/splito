@@ -1,6 +1,12 @@
 // Adapted from bluesky-social/social-app@4e4ad9c (MIT) - src/screens/Profile/Header/EditProfileDialog.tsx (dirty close: preventDismiss, onBackgroundPress, "Discard changes?" prompt)
 import {createContext, useContext, useState} from 'react'
-import {type StyleProp, View, type ViewStyle} from 'react-native'
+import {
+  type NativeScrollEvent,
+  type NativeSyntheticEvent,
+  type StyleProp,
+  View,
+  type ViewStyle,
+} from 'react-native'
 import {useSafeAreaInsets} from 'react-native-safe-area-context'
 import {Trans, useLingui} from '@lingui/react/macro'
 
@@ -150,15 +156,29 @@ export function DiscardPrompt({
   )
 }
 
+/**
+ * Whether the body has scrolled under the top bar, so the bar can show
+ * Bluesky's Dialog.Header hairline only while something is underneath it.
+ */
+export function useIsScrolled() {
+  const [isScrolled, setIsScrolled] = useState(false)
+  const onScroll = (e: NativeSyntheticEvent<NativeScrollEvent>) =>
+    setIsScrolled(e.nativeEvent.contentOffset.y > 0)
+  return [isScrolled, onScroll] as const
+}
+
 /** Title on the left, a round grey close cross at the top right. */
 export function Header({
   title,
   onClose,
   closeHint,
+  isScrolled = false,
   style,
 }: {
   title: string
   onClose: () => void
+  /** Draws the hairline under the bar while the body is scrolled under it. */
+  isScrolled?: boolean
   /** Accessibility hint of the cross (default: closes without saving). */
   closeHint?: string
   style?: StyleProp<ViewStyle>
@@ -168,6 +188,7 @@ export function Header({
   const {inset = a.px_lg} = useFormSheet()
   return (
     <View
+      testID="sheet-header"
       style={[
         a.flex_row,
         a.align_center,
@@ -177,6 +198,8 @@ export function Header({
         a.pb_sm,
         t.atoms.bg,
         {minHeight: 56},
+        a.border_b,
+        isScrolled ? t.atoms.border_contrast_low : {borderColor: 'transparent'},
         style,
       ]}>
       <Text

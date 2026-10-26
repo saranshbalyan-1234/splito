@@ -8,7 +8,13 @@ import {useSafeAreaInsets} from 'react-native-safe-area-context'
 import {atoms as a, ios} from '#/alf'
 import * as Dialog from '#/components/Dialog'
 import {IS_IOS} from '#/env'
-import {Footer, type FooterProps, Header, useFormSheet} from './shared'
+import {
+  Footer,
+  type FooterProps,
+  Header,
+  useFormSheet,
+  useIsScrolled,
+} from './shared'
 
 export * from './shared'
 export {Screen} from './Screen'
@@ -33,13 +39,17 @@ export function Inner({
   children: React.ReactNode
 }) {
   const {requestClose, setIsDirty, inset} = useFormSheet()
+  const [isScrolled, onScroll] = useIsScrolled()
   useEffect(() => setIsDirty(isDirty), [isDirty, setIsDirty])
 
   return (
     <Dialog.ScrollableInner
       label={title}
       contentContainerStyle={[a.pt_0, a.px_0]}
-      header={<Header title={title} onClose={requestClose} />}
+      onScroll={onScroll}
+      header={
+        <Header title={title} onClose={requestClose} isScrolled={isScrolled} />
+      }
       footer={
         footer ? (
           <KeyboardSticky>
