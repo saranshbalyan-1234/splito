@@ -1150,7 +1150,7 @@ labelled sidebar); **wide** = web 1300 px and up (Bluesky `gtTablet`, right colu
   right column when wide, § 26.17). *Why:* "on web it should occupy complete screen", "the navigation should
   be like Bluesky", "for web, keep my left sidebar and main content".
 - **Destinations:** the home destination is labelled **"Home"** (house icon; it holds the Overview and the
-  friends list). Phone bottom bar by default = Home, Groups, Ask Splito, Analytics, Activity (Ask Splito in the centre), plus the FAB (§ 26.6). **Search is not a page or a nav item:** it is one global search field on Home (see "Global search on Home" below). *Why:* "that search to be available globally on home section instead of a separate page" (replaces "Search as the second tab"). **The desktop/rail
+  friends list). Phone bottom bar by default = Home, Groups, Analytics, Activity, plus the FAB (§ 26.6). **Search and AI are not pages:** both live in the Search & Ask drawer opened from the header icon (below). *Why:* "that search to be available globally on home section instead of a separate page" (replaces "Search as the second tab"). **The desktop/rail
   sidebar and the phone drawer show the same list, in the same order, with the same icons and labels:** Home,
   Groups, Analytics, Ask Splito, Activity, Settings, then the same footer links (Feedback · Help · Privacy ·
   About). The sidebar adds only the logo and the "Add expense" pill; the drawer adds only its profile header
@@ -1159,21 +1159,24 @@ labelled sidebar); **wide** = web 1300 px and up (Bluesky `gtTablet`, right colu
   different, make them same". *Why:* "make notification
   as activity and move to bottom". *Where:* `view/shell/bottom-bar/`, `view/shell/desktop/LeftNav.tsx`,
   `navigation/Drawer.tsx`.
-- **Global search on Home, opened from the header.** Home's header right side has a search icon to the LEFT of
-  Add friend, on every platform. Tapping it expands (Reanimated, reduced-motion aware) into a Bluesky
-  `SearchInput` ("Search friends, groups, expenses") across the header, autofocused, with an X / Cancel that
-  collapses it. Typing replaces Home's content in place (no navigation) with
-  grouped live results: People, Groups, Expenses (title, notes, items, category, amount like "> 1000", dates
-  like "yesterday"), with the query highlighted, plus an "Ask Splito about '<query>'" row first. Clearing (X) or
-  Escape restores Home with its scroll position. On web, "/" or Cmd/Ctrl+K focuses it from anywhere (switching
-  to Home). Recent searches show when the field is focused and empty. The Friends section's own expanding search
-  icon is removed (the global field replaces it); Groups keeps its list search. The old `/search` route
-  redirects to Home with the query in the field.
+- **Search & Ask: one drawer for search and AI.** A search icon sits in the header of every top-level page
+  (Home, Groups, Analytics, Activity), to the LEFT of that page's action (on Home, left of Add friend), on every
+  platform. Tapping it opens the **Search & Ask drawer**: a full-height drag-to-close bottom drawer on phones,
+  a large centred popup (command-palette style, ~720 px) on rail/desktop. Top: one Bluesky `SearchInput`
+  ("Search or ask anything"), autofocused. Empty: recent searches and suggested questions. Typing shows grouped
+  live results (People, Groups, Expenses: title, notes, items, category, amounts like "> 1000", dates like
+  "yesterday"; query highlighted) with an "Ask Splito: '<query>'" row first. Tapping that row, or pressing
+  Enter on a question, turns the drawer into the Ask Splito conversation (§ 26.19) with a back arrow to the
+  results; tapping a result opens it and closes the drawer. On web "/" or Cmd/Ctrl+K opens it from anywhere.
+  There is no Search page and no Search nav item; the old `/search` route opens the drawer with the query. The
+  Friends section's own search icon is removed; Groups keeps its list search. *Why:* "the search option to be
+  left of add people on the header, which expands on click"; "this search should open a drawer instead which
+  would support ai as well".
 - **Settings > Navigation lets the user choose the phone bottom bar from every sidebar item.** All items of the
   shared list (Home, Groups, Analytics, Ask Splito, Activity, Settings) are offered, each with a toggle
   and a drag handle (Bluesky's reorderable list): what is on and its order is the bottom bar (2 to 5 tabs, as in
   Bluesky; Home cannot be turned off; a sixth is refused with a short note). Items not in the bar stay in the
-  drawer. Default bar: Home, Groups, Ask Splito, Analytics, Activity. Desktop and rail always show the full list.
+  drawer. Default bar: Home, Groups, Analytics, Activity. "Ask Splito" placed in the bar opens the Search & Ask drawer in Ask mode instead of switching tab. Desktop and rail always show the full list.
   "Reset" restores the default. Stored in the existing `tabs` preference. *Why:* "all of the sidebar options to
   be available in settings to be added in navigation bar".
 - **Activity's route is `/activity`; `/notifications` redirects to it.**
@@ -1201,17 +1204,17 @@ show what: centre may be page name, right maybe some basic action, and left may 
   phones only; on rail and desktop, where the sidebar already shows the logo, it shows the title "Home". *Why:*
   "on desktop, show home instead of branding as branding is there on left". Person and Group show the entity name with a `SubtitleText` ("Trip · 5
   members"); Expense shows its title. Empty slots keep their width so the title stays centred.
-- **Right:** at most one basic action (exception: Home has Search to the left of Add friend, § 26.3) (Bluesky header icon button), optionally followed by a Bluesky "..."
+- **Right:** at most one basic action (exception: top-level pages add the Search & Ask icon to its left, § 26.3) (Bluesky header icon button), optionally followed by a Bluesky "..."
   overflow Menu. No bell and no other header icon: anything else lives in the page body (Analytics' chart /
   table toggle sits in its filter row). Body primary actions are not repeated in the header. *Why:* "what's
   the second icon on header left of avatar".
 
   | Screen | Right slot |
   |---|---|
-  | Home | Search (expands in place) + Add friend |
-  | Groups | Create group |
-  | Analytics | Ask Splito + overflow (Export CSV) |
-  | Activity | Mark all read |
+  | Home | Search & Ask + Add friend |
+  | Groups | Search & Ask + Create group |
+  | Analytics | Search & Ask + overflow (Export CSV) |
+  | Activity | Search & Ask + Mark all read |
   | Person | Settle up + overflow (Remind, Export statement, Edit, Delete) |
   | Group | Settle up + overflow (Edit group, Members, Payment rules, Invite link, Export) |
   | Expense | Edit + overflow (Delete) |
@@ -1581,14 +1584,13 @@ add anyway (only for you)"; "also i should be able to select from contacts". *Wh
 ### 26.19 Ask Splito (AI chat)
 
 *Why:* "add one ai chart option, think about the placement" (read as AI chat; answers include charts).
-*Where:* `screens/Ask/`, `lib/ask/`, backend AI endpoint (backend batch).
+*Where:* `components/SearchAsk/`, `lib/ask/`, backend AI endpoint (backend batch).
 
-- **One AI entry point, "Ask Splito"** (Lucide sparkles icon). Placement: a nav item in the shared sidebar /
-  drawer list between Analytics and Activity (§ 26.3); Analytics' header right action; an "Ask Splito about
-  '<query>'" row at the top of Home's global search results. On phones Ask Splito is a bottom-bar tab by
-  default (centre), plus the drawer item and the Analytics header; the same entries exist on web, iOS and
-  Android alike.
-- **Chat screen copies Bluesky's DM conversation screen** (message list, composer bar above the keyboard, day
+- **Ask Splito lives inside the Search & Ask drawer (§ 26.3)**, reached on every platform from the header
+  search icon of every top-level page, from the "Ask Splito" item in the shared sidebar / drawer list (between
+  Analytics and Activity; opens the drawer straight in Ask mode, Lucide sparkles icon), and from web "/" or
+  Cmd/Ctrl+K. There is no separate Ask page.
+- **The conversation copies Bluesky's DM conversation layout** inside the drawer (message list, composer bar above the keyboard, day
   separators). Empty state: suggested question chips ("How much did I spend on food this month?", "Who owes
   me the most?", "Split last night's dinner 3 ways", "Show my Goa trip spending by day").
 - **Answers can carry rich cards:** an inline chart (same chart components as Analytics), a small table, a
@@ -1723,6 +1725,7 @@ Every owner decision, in the order it was made (all 2026-10-26). "Replaced" name
 | 70 | "all of the sidebar options to be available in settings to be added in navigation bar" | Settings > Navigation: every sidebar item can go in the phone bottom bar (2-5 tabs, reorder, Home fixed) | § 26.3 | Fixed bottom bar; Custom navigation offered only some tabs |
 | 71 | "that search to be available globally on home section instead of a separate page" | Global search field at the top of Home with in-place grouped results; Search is no longer a page or nav item; freed bottom-bar slot goes to Ask Splito (centre) | §§ 26.3, 26.12, 26.19 | Search page + Search tab (rows 66, 69) |
 | 72 | "the search option to be left of add people on the header, which expands on click" | Global search is a header icon left of Add friend that expands into the search field | §§ 26.3, 26.4 | Search field always visible at the top of Home (row 71) |
+| 73 | "this search should open a drawer instead which would support ai as well" | Search icon (every top-level header) opens the Search & Ask drawer: search results + Ask Splito chat in one place; no Search or Ask pages; bottom bar back to Home, Groups, Analytics, Activity | §§ 26.3, 26.4, 26.19 | Expanding header search (72), Ask Splito centre tab and screen (71) |
 
 New decisions follow § 0 rule 9: rewrite the rule in its topic so only the current truth remains, then add a
 row here.
