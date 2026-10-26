@@ -99,17 +99,6 @@ export function sumMinor(xs: Iterable<bigint>): bigint {
   return s
 }
 
-/** Each person's net position on one expense: what they paid minus their share (> 0: they are owed). */
-export function expenseNet(e: {
-  payers: Record<string, bigint>
-  shares: Record<string, bigint>
-}): Record<string, bigint> {
-  const net: Record<string, bigint> = {}
-  for (const [id, v] of Object.entries(e.payers)) net[id] = (net[id] ?? 0n) + v
-  for (const [id, v] of Object.entries(e.shares)) net[id] = (net[id] ?? 0n) - v
-  return net
-}
-
 /** What is still unassigned of `total` after `parts` (negative when over-assigned). */
 export function remainingMinor(total: bigint, parts: Iterable<bigint>): bigint {
   return total - sumMinor(parts)

@@ -1,21 +1,6 @@
-import type {CurrencyCode, LocalDate} from '@splito/domain'
-
-import type {Expense, Group, Person} from './mutations'
+import type {Expense, Group, Person, Repayment} from './mutations'
 import type {Store} from './store'
 import type {EntityType, HistoryRow} from './types'
-
-/**
- * What a repayment entity stores. Its mutations belong to settle-up; the
- * fields match `@splito/domain`'s `RepaymentRecord` so the ledger can read it.
- */
-export interface Repayment {
-  from: string
-  to: string
-  amount: bigint
-  currency: CurrencyCode
-  groupId: string | null
-  date: LocalDate
-}
 
 type Base = {
   /** `<entityType>:<entityId>:<version>`: one per history row, stable forever. */

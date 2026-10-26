@@ -18,8 +18,10 @@ import {resolveNumberLocale} from '#/locale/numberLocale'
 import {useDateLocale, useTimeZone} from '#/locale/useDates'
 import {native} from '#/alf'
 import {useDialogControl} from '#/components/Dialog'
+import {ChartPie_Stroke2_Corner0_Rounded as ChartIcon} from '#/components/icons/ChartPie'
 import {HomeOpen_Stoke2_Corner0_Rounded as HomeIcon} from '#/components/icons/HomeOpen'
 import {Moon_Stroke2_Corner0_Rounded as MoonIcon} from '#/components/icons/Moon'
+import {Route_Stroke2_Corner0_Rounded as RouteIcon} from '#/components/icons/Route'
 import {AccentPicker} from '#/components/settings/AccentPicker'
 import {CategoriesEditor} from '#/components/settings/CategoriesEditor'
 import {
@@ -242,6 +244,55 @@ function SplitModePref() {
         {value: 'exact', label: l`Exact amounts`},
         {value: 'percent', label: l`Percentages`},
         {value: 'shares', label: l`Shares`},
+      ]}
+    />
+  )
+}
+
+function SettleModePref() {
+  const {t: l} = useLingui()
+  return (
+    <SegmentedPref
+      pref={usePrefControl('settleMode')}
+      icon={RouteIcon}
+      title={l`Settle-up plan`}
+      description={l`Direct pays each person you owe. Via others uses fewer payments by routing through group members.`}
+      options={[
+        {value: 'direct', label: l`Direct`},
+        {value: 'transit', label: l`Via others`},
+      ]}
+    />
+  )
+}
+
+function AnalyticsPeriodPref() {
+  const {t: l} = useLingui()
+  return (
+    <RadioPref
+      pref={usePrefControl('analyticsPeriod')}
+      icon={CalendarIcon}
+      title={l`Analytics period`}
+      description={l`The range Analytics opens with.`}
+      options={[
+        {value: 'week', label: l`Week`},
+        {value: 'month', label: l`Month`},
+        {value: 'year', label: l`Year`},
+        {value: 'all', label: l`All time`},
+      ]}
+    />
+  )
+}
+
+function AnalyticsViewPref() {
+  const {t: l} = useLingui()
+  return (
+    <SegmentedPref
+      pref={usePrefControl('analyticsView')}
+      icon={ChartIcon}
+      title={l`Analytics view`}
+      options={[
+        {value: 'charts', label: l`Charts`},
+        {value: 'table', label: l`Table`},
       ]}
     />
   )
@@ -503,6 +554,9 @@ export const PREF_CONTROLS = {
   homeTab: HomeTabPref,
   defaultCurrency: CurrencyPref,
   defaultSplitMode: SplitModePref,
+  settleMode: SettleModePref,
+  analyticsPeriod: AnalyticsPeriodPref,
+  analyticsView: AnalyticsViewPref,
   categories: CategoriesEditor,
   language: LanguagePref,
   timezone: TimeZonePref,

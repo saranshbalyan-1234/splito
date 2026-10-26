@@ -2,7 +2,6 @@ import {describe, expect, test} from 'bun:test'
 
 import {
   evaluateAmount,
-  expenseNet,
   isExpression,
   parseBasisPoints,
   remainingMinor,
@@ -75,13 +74,6 @@ describe('sums', () => {
     expect(sumMinor([1n, 2n, 3n])).toBe(6n)
     expect(remainingMinor(10n, [3n, 4n])).toBe(3n)
   })
-})
-
-describe('expenseNet', () => {
-  test('paid minus share', () =>
-    expect(
-      expenseNet({payers: {a: 300n}, shares: {a: 100n, b: 100n, c: 100n}}),
-    ).toEqual({a: 200n, b: -100n, c: -100n}))
 })
 
 describe('adjusted split (equal with adjustments)', () => {

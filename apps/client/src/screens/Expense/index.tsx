@@ -209,7 +209,10 @@ function Detail({
   const category = useCategory(e.category)
   const group = e.groupId ? groups?.find(g => g.id === e.groupId) : undefined
   const fmt = (v: bigint) => formatAmount(v, e.currency, locale)
-  const myNet = expenseNet(e)[ctx.actor]
+  const myNet =
+    ctx.actor in e.payers || ctx.actor in e.shares
+      ? expenseNet(e, ctx.actor)
+      : undefined
   const isUpcoming = e.date > localToday(tz)
   const splitLabel = {
     equal: l`Split equally`,
