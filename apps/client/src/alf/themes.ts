@@ -5,8 +5,11 @@ import {
   DEFAULT_SUBDUED_PALETTE,
 } from '@bsky.app/alf'
 
-/** Splito brand primary (emerald-teal) replaces Bluesky blue; neutrals stay ALF's. */
-const SPLITO_PRIMARY = {
+/**
+ * Splito emerald-teal ramp. Unused for now: the shell ships Bluesky's palette
+ * as-is; this becomes an optional accent in Settings later.
+ */
+export const SPLITO_PRIMARY = {
   primary_25: '#F2FBF8',
   primary_50: '#E3F6EF',
   primary_100: '#C4ECDD',
@@ -23,8 +26,8 @@ const SPLITO_PRIMARY = {
 }
 
 const DEFAULT_THEMES = createThemes({
-  defaultPalette: {...DEFAULT_PALETTE, ...SPLITO_PRIMARY},
-  subduedPalette: {...DEFAULT_SUBDUED_PALETTE, ...SPLITO_PRIMARY},
+  defaultPalette: DEFAULT_PALETTE,
+  subduedPalette: DEFAULT_SUBDUED_PALETTE,
 })
 
 export const themes = {

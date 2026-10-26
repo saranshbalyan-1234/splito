@@ -41,7 +41,11 @@ module.exports = function (api) {
       ],
     ],
     plugins: [
-      '@lingui/babel-plugin-lingui-macro',
+      /*
+       * Keep source strings in production bundles: no compiled catalogs are
+       * loaded yet, so without them Lingui would render message ids.
+       */
+      ['@lingui/babel-plugin-lingui-macro', {stripMessageField: false}],
       ['babel-plugin-react-compiler', {target: '19'}],
       [
         'module-resolver',

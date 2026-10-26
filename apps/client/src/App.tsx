@@ -5,12 +5,13 @@ import {i18n} from '#/locale/i18n'
 import {Provider as A11yProvider} from '#/state/a11y'
 import {Provider as DialogStateProvider} from '#/state/dialogs'
 import {Provider as ShellLayoutProvider} from '#/state/shell/shell-layout'
+import {Provider as TickEveryMinuteProvider} from '#/state/shell/tick-every-minute'
 import {ThemeProvider as Alf} from '#/alf'
 import {useColorModeTheme} from '#/alf/util/useColorModeTheme'
 import {Provider as PortalProvider} from '#/components/Portal'
 import {ToastOutlet} from '#/components/Toast'
 import {StoreProvider} from '#/data/StoreProvider'
-import {Navigation} from '#/navigation/Navigation'
+import {Shell} from '#/view/shell'
 
 function Themed() {
   const theme = useColorModeTheme()
@@ -20,7 +21,9 @@ function Themed() {
         <DialogStateProvider>
           <ShellLayoutProvider>
             <StoreProvider>
-              <Navigation />
+              <TickEveryMinuteProvider>
+                <Shell />
+              </TickEveryMinuteProvider>
             </StoreProvider>
             <ToastOutlet />
           </ShellLayoutProvider>
