@@ -23,6 +23,27 @@ import {IS_WEB} from '#/env'
  */
 const MIN_HAPTIC_GAP_MS = 50
 
+/* The phone FAB's lift above the bottom bar (the minimal-shell transform's resting offset). */
+const FAB_BAR_LIFT = 44
+const FAB_SIZE = 56
+/* Air between the last row and the FAB, so a row's amount is never under it. */
+const FAB_CLEARANCE = 16
+
+/**
+ * Splito: the bottom content inset a phone list needs so the FAB never
+ * covers its last row - the FAB's distance from the screen bottom (safe
+ * area, bottom-bar lift) plus its height plus a margin. Zero where the
+ * FAB is hidden (tablet and desktop, where the sidebar pill composes).
+ */
+export function useFabInset() {
+  const insets = useSafeAreaInsets()
+  const {gtMobile} = useBreakpoints()
+  if (gtMobile) return 0
+  return (
+    clamp(insets.bottom, 15, 60) + 15 + FAB_BAR_LIFT + FAB_SIZE + FAB_CLEARANCE
+  )
+}
+
 export interface FABProps extends ComponentProps<typeof Pressable> {
   testID?: string
   icon: JSX.Element
@@ -88,8 +109,8 @@ export function FABInner({testID, icon, onPress, style, ...props}: FABProps) {
 
 const styles = StyleSheet.create({
   sizeRegular: {
-    width: 56,
-    height: 56,
+    width: FAB_SIZE,
+    height: FAB_SIZE,
     borderRadius: 30,
   },
   sizeLarge: {

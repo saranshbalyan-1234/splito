@@ -1,5 +1,5 @@
 import {useState} from 'react'
-import {useWindowDimensions, View} from 'react-native'
+import {useWindowDimensions} from 'react-native'
 import {LayoutAnimationConfig} from 'react-native-reanimated'
 import {plural} from '@lingui/core/macro'
 import {useLingui} from '@lingui/react/macro'
@@ -12,8 +12,8 @@ import {useNumberLocale} from '#/locale/numberLocale'
 import {useEntities, useLedger, useMe, usePref} from '#/data/hooks'
 import {EmptyState} from '#/view/com/util/EmptyState'
 import {List} from '#/view/com/util/List'
-import {atoms as a, useBreakpoints} from '#/alf'
-import {AddExpenseFAB} from '#/components/AddExpenseFAB'
+import {atoms as a} from '#/alf'
+import {AddExpenseFAB, AddExpenseFABInset} from '#/components/AddExpenseFAB'
 import {LogoMark} from '#/components/brand/Logo'
 import {useDialogControl} from '#/components/Dialog'
 import {myBalances} from '#/components/groups/net'
@@ -54,7 +54,6 @@ export function PeopleScreen() {
   const {t: l} = useLingui()
   const locale = useNumberLocale()
   const navigation = useNavigation<NavigationProp>()
-  const {gtMobile} = useBreakpoints()
   const {height} = useWindowDimensions()
   const me = useMe()
   const people = useEntities<Person>('person')
@@ -228,9 +227,7 @@ export function PeopleScreen() {
                 />
               )
             }
-            ListFooterComponent={
-              !gtMobile ? <View style={{height: 100}} /> : undefined
-            }
+            ListFooterComponent={<AddExpenseFABInset />}
           />
         </LayoutAnimationConfig>
       )}

@@ -19,7 +19,7 @@ glyphs, illustrations, logos or `assets/images` are copied.
 | `src/components/Composer/index.web.tsx` | `src/view/shell/Composer.web.tsx` | Rendered through the shell portal from the `/expense/new` route; centred, and a sheet from the bottom edge on phones (see `sheets.md`) |
 | `src/view/com/util/fab/FAB.tsx` | `src/view/com/util/fab/FAB.tsx` | - |
 | `src/view/com/util/fab/FAB.web.tsx` | `src/view/com/util/fab/FAB.web.tsx` | - |
-| `src/view/com/util/fab/FABInner.tsx` | `src/view/com/util/fab/FABInner.tsx` | - |
+| `src/view/com/util/fab/FABInner.tsx` | `src/view/com/util/fab/FABInner.tsx` | Adds `useFabInset()` (written here: Bluesky's feeds only pad for the bottom bar via `useBottomBarOffset`, with no FAB clearance) - the phone list footer that keeps the FAB off the last row; geometry constants named |
 | `src/state/shell/minimal-mode.tsx` | `src/state/shell/minimal-mode.tsx` | - |
 | `src/lib/hooks/useMinimalShellTransform.ts` | `src/lib/hooks/useMinimalShellTransform.ts` | - |
 | `src/state/shell/index.tsx` | `src/state/shell/index.tsx` | Onboarding and color-mode providers removed (drawer: see `preview-shell.md`) |

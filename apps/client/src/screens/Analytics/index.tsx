@@ -9,7 +9,8 @@ import {useNumberLocale} from '#/locale/numberLocale'
 import {usePref} from '#/data/hooks'
 import {EmptyState} from '#/view/com/util/EmptyState'
 import {List} from '#/view/com/util/List'
-import {atoms as a, useBreakpoints, useTheme} from '#/alf'
+import {atoms as a, useTheme} from '#/alf'
+import {AddExpenseFABInset} from '#/components/AddExpenseFAB'
 import {Button, ButtonIcon, ButtonText} from '#/components/Button'
 import {HeaderAvatar} from '#/components/HeaderAvatar'
 import {Download_Stroke2_Corner0_Rounded as DownloadIcon} from '#/components/icons/Download'
@@ -45,7 +46,6 @@ export function AnalyticsScreen() {
   const {t: l} = useLingui()
   const locale = useNumberLocale()
   const navigation = useNavigation<NavigationProp>()
-  const {gtMobile} = useBreakpoints()
   const report = useReport()
   const [view = 'charts', setView] = usePref('analyticsView')
   const isTable = view === 'table'
@@ -128,9 +128,7 @@ export function AnalyticsScreen() {
                 )}
               </>
             }
-            ListFooterComponent={
-              !gtMobile ? <View style={{height: 100}} /> : undefined
-            }
+            ListFooterComponent={<AddExpenseFABInset />}
           />
         </LayoutAnimationConfig>
       )}
