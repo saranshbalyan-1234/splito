@@ -5,12 +5,12 @@ import {formatAmount, magnitude, ZERO} from '@splito/domain'
 import {UserAvatar} from '#/view/com/util/UserAvatar'
 import {atoms as a, useTheme} from '#/alf'
 import * as Dialog from '#/components/Dialog'
+import * as FormSheet from '#/components/FormSheet'
 import * as SegmentedControl from '#/components/forms/SegmentedControl'
 import * as Toggle from '#/components/forms/Toggle'
 import {Text} from '#/components/Typography'
 import {MoneyInput} from './fields'
 import {type ExpenseForm, type FormEvaluation} from './form'
-import {DialogHeading, DoneButton} from './pickers'
 import {useAvatarName, useDisplayName} from './shared'
 
 type Update = (fn: (f: ExpenseForm) => ExpenseForm) => void
@@ -33,15 +33,14 @@ export function PayersDialog({
   locale: string
 }) {
   return (
-    <Dialog.Outer control={control} testID="payers-dialog">
-      <Dialog.Handle />
+    <FormSheet.Outer control={control} testID="payers-dialog">
       <PayersInner
         form={form}
         update={update}
         evaluation={evaluation}
         locale={locale}
       />
-    </Dialog.Outer>
+    </FormSheet.Outer>
   )
 }
 
@@ -64,8 +63,7 @@ function PayersInner({
   const left = evaluation.payersRemaining
 
   return (
-    <Dialog.ScrollableInner label={l`Who paid?`}>
-      <DialogHeading title={l`Who paid?`} />
+    <FormSheet.Inner title={l`Who paid?`}>
       <SegmentedControl.Root
         label={l`Number of payers`}
         type="radio"
@@ -188,10 +186,8 @@ function PayersInner({
               <Trans>Enter the total first, then what each person paid.</Trans>
             </Text>
           )}
-          <DoneButton testID="payers-done" onPress={() => control.close()} />
         </View>
       )}
-      <Dialog.Close />
-    </Dialog.ScrollableInner>
+    </FormSheet.Inner>
   )
 }

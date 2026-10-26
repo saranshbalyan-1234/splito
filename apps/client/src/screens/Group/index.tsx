@@ -1,4 +1,4 @@
-import {useState} from 'react'
+import {useEffect, useState} from 'react'
 import {View} from 'react-native'
 import {LayoutAnimationConfig} from 'react-native-reanimated'
 import {Trans, useLingui} from '@lingui/react/macro'
@@ -26,8 +26,10 @@ import {useDialogControl} from '#/components/Dialog'
 import {AddMembersDialog} from '#/components/groups/AddMembersDialog'
 import {GroupAvatar} from '#/components/groups/GroupAvatar'
 import {memberNets} from '#/components/groups/net'
-import {NO_RULES, RulesEditor} from '#/components/groups/RulesEditor'
+import {EditGroupDialog} from '#/components/groups/EditGroupDialog'
+import {NO_RULES, RulesDialog} from '#/components/groups/RulesEditor'
 import {DotGrid3x1_Stroke2_Corner0_Rounded as DotsIcon} from '#/components/icons/DotGrid'
+import {Pencil_Stroke2_Corner0_Rounded as PencilIcon} from '#/components/icons/Pencil'
 import {Group3_Stroke2_Corner0_Rounded as GroupIcon} from '#/components/icons/Group'
 import {HandCoins_Stroke2_Corner0_Rounded as HandCoinsIcon} from '#/components/icons/Money'
 import {PersonPlus_Filled_Stroke2_Corner0_Rounded as PersonPlusIcon} from '#/components/icons/Person'
@@ -60,7 +62,7 @@ import {
 } from './components/GroupRows'
 import {planSettlement, ZERO} from '@splito/domain'
 
-type Tab = 'expenses' | 'balances' | 'members' | 'rules'
+type Tab = 'expenses' | 'balances' | 'members'
 
 type Item =
   | {type: 'month'; key: string; month: string}
@@ -69,7 +71,6 @@ type Item =
   | {type: 'net'; key: string; currency: string; personId: string; net: bigint}
   | {type: 'membersHeader'; key: string; count: number}
   | {type: 'member'; key: string; personId: string; hasLeft: boolean}
-  | {type: 'rules'; key: string}
   | {type: 'owesHeader'; key: string}
   | {
       type: 'owe'
@@ -101,7 +102,12 @@ export function GroupScreen() {
   const navigation = useNavigation<NavigationProp>()
   const route = useRoute<RouteProp<AllNavigatorParams, 'Group'>>()
   const {groupId} = route.params
-  const [tab, setTab] = useState<Tab>(route.params.tab ?? 'expenses')
+  /* `?tab=rules` (Settle up's "Edit rules") opens the Payment rules sheet over Expenses. */
+  const [tab, setTab] = useState<Tab>(
+    route.params.tab === 'rules'
+      ? 'expenses'
+      : (route.params.tab ?? 'expenses'),
+  )
   const me = useMe()
   const people = useEntities<Person>('person')
   const groups = useEntities<Group>('group')
@@ -110,12 +116,20 @@ export function GroupScreen() {
   const ledger = useLedger()
   const detailsControl = useDialogControl()
   const addMembersControl = useDialogControl()
+  const editControl = useDialogControl()
+  const rulesControl = useDialogControl()
   const [openRepayment, setOpenRepayment] = useState<Entity<Repayment> | null>(
     null,
   )
 
   const isLoading =
     !me || !people || !groups || !expenses || !repayments || !ledger
+  const wantsRules = route.params.tab === 'rules'
+  useEffect(() => {
+    if (!wantsRules || isLoading) return
+    rulesControl.open()
+    navigation.setParams({tab: undefined})
+  }, [wantsRules, isLoading, rulesControl, navigation])
   const group = groups?.find(g => g.id === groupId)
 
   if (!isLoading && !group) {
@@ -221,7 +235,7 @@ export function GroupScreen() {
             ]
           : []),
       ]
-    } else if (tab === 'members')
+    } else
       items = [
         {
           type: 'membersHeader' as const,
@@ -235,7 +249,6 @@ export function GroupScreen() {
           hasLeft: m.leftAt !== null,
         })),
       ]
-    else items = [{type: 'rules', key: 'rules'}]
   }
 
   const kindLabel = group
@@ -426,7 +439,7 @@ export function GroupScreen() {
             </Layout.Header.SubtitleText>
           ) : null}
         </Layout.Header.Content>
-        {/* Header rule set: Settle up, then the overflow (Members, Add members, Payment rules). */}
+        {/* Header rule set: Settle up, then the overflow (Edit group, Members, Add members, Payment rules). */}
         <Layout.Header.ActionButton
           testID="group-settle"
           label={l`Settle up`}
@@ -455,6 +468,15 @@ export function GroupScreen() {
             </Menu.Trigger>
             <Menu.Outer>
               <Menu.Item
+                testID="group-menu-edit"
+                label={l`Edit group`}
+                onPress={() => editControl.open()}>
+                <Menu.ItemText>
+                  <Trans>Edit group</Trans>
+                </Menu.ItemText>
+                <Menu.ItemIcon icon={PencilIcon} position="right" />
+              </Menu.Item>
+              <Menu.Item
                 testID="group-menu-members"
                 label={l`Members`}
                 onPress={() => setTab('members')}>
@@ -475,7 +497,7 @@ export function GroupScreen() {
               <Menu.Item
                 testID="group-menu-rules"
                 label={l`Payment rules`}
-                onPress={() => setTab('rules')}>
+                onPress={() => rulesControl.open()}>
                 <Menu.ItemText>
                   <Trans>Payment rules</Trans>
                 </Menu.ItemText>
@@ -558,16 +580,6 @@ export function GroupScreen() {
                     hasLeft={item.hasLeft}
                   />
                 )
-              case 'rules':
-                return (
-                  <>
-                    <SectionHeader
-                      testID="group-rules-title"
-                      title={l`Payment rules`}
-                    />
-                    <RulesEditor group={group!} names={names} me={me!.id} />
-                  </>
-                )
               case 'owesHeader':
                 return (
                   <SectionHeader
@@ -631,6 +643,15 @@ export function GroupScreen() {
       </LayoutAnimationConfig>
       <AddExpenseFAB groupId={groupId} />
       {group && <AddMembersDialog control={addMembersControl} group={group} />}
+      {group && <EditGroupDialog control={editControl} group={group} />}
+      {group && me && (
+        <RulesDialog
+          control={rulesControl}
+          group={group}
+          names={names}
+          me={me.id}
+        />
+      )}
       {me && (
         <PaymentDetailsDialog
           control={detailsControl}

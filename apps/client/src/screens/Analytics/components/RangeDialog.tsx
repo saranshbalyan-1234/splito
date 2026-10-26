@@ -1,12 +1,13 @@
 import {useState} from 'react'
 import {View} from 'react-native'
-import {Trans, useLingui} from '@lingui/react/macro'
+import {useLingui} from '@lingui/react/macro'
 import {addDays, type DateRange, type WeekStart} from '@splito/domain'
 
-import {atoms as a, useBreakpoints, useTheme, web} from '#/alf'
+import {atoms as a, useTheme} from '#/alf'
 import {Pressable} from '#/components/Pressable'
-import {Button, ButtonIcon, ButtonText} from '#/components/Button'
+import {Button, ButtonIcon} from '#/components/Button'
 import * as Dialog from '#/components/Dialog'
+import * as FormSheet from '#/components/FormSheet'
 import {
   ChevronLeft_Stroke2_Corner0_Rounded as ChevronLeftIcon,
   ChevronRight_Stroke2_Corner0_Rounded as ChevronRightIcon,
@@ -40,25 +41,15 @@ export function RangeDialog({
   weekStart: WeekStart
   onApply: (range: DateRange) => void
 }) {
-  const {t: l} = useLingui()
   return (
-    <Dialog.Outer
-      control={control}
-      testID="analytics-range-dialog"
-      nativeOptions={{preventExpansion: true}}>
-      <Dialog.Handle />
-      <Dialog.ScrollableInner
-        label={l`Custom range`}
-        style={web({maxWidth: 400})}>
-        <Calendar
-          initial={initial}
-          today={today}
-          weekStart={weekStart}
-          onApply={range => control.close(() => onApply(range))}
-          onCancel={() => control.close()}
-        />
-      </Dialog.ScrollableInner>
-    </Dialog.Outer>
+    <FormSheet.Outer control={control} testID="analytics-range-dialog">
+      <Calendar
+        initial={initial}
+        today={today}
+        weekStart={weekStart}
+        onApply={range => control.close(() => onApply(range))}
+      />
+    </FormSheet.Outer>
   )
 }
 
@@ -67,17 +58,14 @@ function Calendar({
   today,
   weekStart,
   onApply,
-  onCancel,
 }: {
   initial: DateRange | undefined
   today: string
   weekStart: WeekStart
   onApply: (range: DateRange) => void
-  onCancel: () => void
 }) {
   const t = useTheme()
   const {t: l, i18n} = useLingui()
-  const {gtMobile} = useBreakpoints()
   /* Open on the month the range ends in, or this month; never a future month the range merely reaches. */
   const [month, setMonth] = useState(
     (initial && initial.to < today ? initial.to : today).slice(0, 7),
@@ -117,160 +105,138 @@ function Calendar({
     : l`Pick the first day`
 
   return (
-    <View style={[a.gap_lg]}>
-      <View style={a.gap_xs}>
-        <Text style={[a.text_2xl, a.font_bold, a.leading_snug]}>
-          <Trans>Custom range</Trans>
-        </Text>
-        <Text
-          testID="analytics-range-summary"
-          style={[a.text_md, a.leading_snug, t.atoms.text_contrast_medium]}>
-          {summary}
-        </Text>
-      </View>
-
-      <View style={[a.gap_sm, a.align_center]}>
-        <View
-          style={[
-            a.flex_row,
-            a.align_center,
-            a.justify_between,
-            {width: CELL * 7},
-          ]}>
-          <Button
-            testID="analytics-range-prev-month"
-            label={l`Previous month`}
-            size="small"
-            color="secondary"
-            variant="ghost"
-            shape="round"
-            onPress={() => setMonth(m => shiftMonth(m, -1))}>
-            <ButtonIcon icon={ChevronLeftIcon} />
-          </Button>
-          <Text style={[a.text_md, a.font_semi_bold]}>
-            {date(first, {month: 'long', year: 'numeric'})}
+    <FormSheet.Inner
+      title={l`Custom range`}
+      isDirty={from !== initial?.from || to !== initial?.to}
+      footer={{
+        saveLabel: l`Apply`,
+        canSave: !!from,
+        onSave: () => from && onApply({from, to: to ?? from}),
+      }}>
+      <View style={[a.gap_lg]}>
+        <View style={a.gap_xs}>
+          <Text
+            testID="analytics-range-summary"
+            style={[a.text_md, a.leading_snug, t.atoms.text_contrast_medium]}>
+            {summary}
           </Text>
-          <Button
-            testID="analytics-range-next-month"
-            label={l`Next month`}
-            size="small"
-            color="secondary"
-            variant="ghost"
-            shape="round"
-            onPress={() => setMonth(m => shiftMonth(m, 1))}>
-            <ButtonIcon icon={ChevronRightIcon} />
-          </Button>
         </View>
-        <View style={[a.flex_row, {width: CELL * 7}]}>
-          {weekdays.map((w, i) => (
-            <Text
-              key={i}
-              aria-hidden
-              style={[
-                a.text_xs,
-                a.font_semi_bold,
-                a.text_center,
-                t.atoms.text_contrast_low,
-                {width: CELL},
-              ]}>
-              {w}
-            </Text>
-          ))}
-        </View>
-        <View style={[a.flex_row, a.flex_wrap, {width: CELL * 7}]}>
-          {cells.map((d, i) => {
-            if (!d)
-              return (
-                <View key={`lead-${i}`} style={{width: CELL, height: CELL}} />
-              )
-            const isEnd = d === from || d === end
-            const isInside = !!from && !!end && d > from && d < end
-            return (
-              <View
-                key={d}
-                style={[
-                  {width: CELL, height: CELL},
-                  isInside && {backgroundColor: t.palette.primary_50},
-                  d === from &&
-                    end !== from && {
-                      backgroundColor: t.palette.primary_50,
-                      borderTopLeftRadius: CELL / 2,
-                      borderBottomLeftRadius: CELL / 2,
-                    },
-                  d === end &&
-                    end !== from && {
-                      backgroundColor: t.palette.primary_50,
-                      borderTopRightRadius: CELL / 2,
-                      borderBottomRightRadius: CELL / 2,
-                    },
-                ]}>
-                <Pressable
-                  testID={`analytics-range-day-${d}`}
-                  accessibilityRole="button"
-                  accessibilityLabel={date(d, {
-                    weekday: 'long',
-                    day: 'numeric',
-                    month: 'long',
-                    year: 'numeric',
-                  })}
-                  accessibilityHint=""
-                  accessibilityState={{selected: isEnd}}
-                  onPress={() => pick(d)}
-                  style={({hovered, pressed}) => [
-                    a.flex_1,
-                    a.align_center,
-                    a.justify_center,
-                    a.rounded_full,
-                    isEnd
-                      ? {backgroundColor: t.palette.primary_500}
-                      : (hovered || pressed) && t.atoms.bg_contrast_50,
-                  ]}>
-                  <Text
-                    style={[
-                      a.text_sm,
-                      d === today && a.font_bold,
-                      isEnd
-                        ? {color: t.palette.white}
-                        : d === today
-                          ? {color: t.palette.primary_500}
-                          : t.atoms.text,
-                    ]}>
-                    {date(d, {day: 'numeric'})}
-                  </Text>
-                </Pressable>
-              </View>
-            )
-          })}
-        </View>
-      </View>
 
-      <View
-        style={[
-          gtMobile ? [a.flex_row, a.justify_end] : a.flex_col_reverse,
-          a.gap_sm,
-        ]}>
-        <Button
-          testID="analytics-range-cancel"
-          label={l`Cancel`}
-          size={gtMobile ? 'small' : 'large'}
-          color="secondary"
-          onPress={onCancel}>
-          <ButtonText>
-            <Trans>Cancel</Trans>
-          </ButtonText>
-        </Button>
-        <Button
-          testID="analytics-range-apply"
-          label={l`Apply`}
-          size={gtMobile ? 'small' : 'large'}
-          color="primary"
-          disabled={!from}
-          onPress={() => from && onApply({from, to: to ?? from})}>
-          <ButtonText>
-            <Trans>Apply</Trans>
-          </ButtonText>
-        </Button>
+        <View style={[a.gap_sm, a.align_center]}>
+          <View
+            style={[
+              a.flex_row,
+              a.align_center,
+              a.justify_between,
+              {width: CELL * 7},
+            ]}>
+            <Button
+              testID="analytics-range-prev-month"
+              label={l`Previous month`}
+              size="small"
+              color="secondary"
+              variant="ghost"
+              shape="round"
+              onPress={() => setMonth(m => shiftMonth(m, -1))}>
+              <ButtonIcon icon={ChevronLeftIcon} />
+            </Button>
+            <Text style={[a.text_md, a.font_semi_bold]}>
+              {date(first, {month: 'long', year: 'numeric'})}
+            </Text>
+            <Button
+              testID="analytics-range-next-month"
+              label={l`Next month`}
+              size="small"
+              color="secondary"
+              variant="ghost"
+              shape="round"
+              onPress={() => setMonth(m => shiftMonth(m, 1))}>
+              <ButtonIcon icon={ChevronRightIcon} />
+            </Button>
+          </View>
+          <View style={[a.flex_row, {width: CELL * 7}]}>
+            {weekdays.map((w, i) => (
+              <Text
+                key={i}
+                aria-hidden
+                style={[
+                  a.text_xs,
+                  a.font_semi_bold,
+                  a.text_center,
+                  t.atoms.text_contrast_low,
+                  {width: CELL},
+                ]}>
+                {w}
+              </Text>
+            ))}
+          </View>
+          <View style={[a.flex_row, a.flex_wrap, {width: CELL * 7}]}>
+            {cells.map((d, i) => {
+              if (!d)
+                return (
+                  <View key={`lead-${i}`} style={{width: CELL, height: CELL}} />
+                )
+              const isEnd = d === from || d === end
+              const isInside = !!from && !!end && d > from && d < end
+              return (
+                <View
+                  key={d}
+                  style={[
+                    {width: CELL, height: CELL},
+                    isInside && {backgroundColor: t.palette.primary_50},
+                    d === from &&
+                      end !== from && {
+                        backgroundColor: t.palette.primary_50,
+                        borderTopLeftRadius: CELL / 2,
+                        borderBottomLeftRadius: CELL / 2,
+                      },
+                    d === end &&
+                      end !== from && {
+                        backgroundColor: t.palette.primary_50,
+                        borderTopRightRadius: CELL / 2,
+                        borderBottomRightRadius: CELL / 2,
+                      },
+                  ]}>
+                  <Pressable
+                    testID={`analytics-range-day-${d}`}
+                    accessibilityRole="button"
+                    accessibilityLabel={date(d, {
+                      weekday: 'long',
+                      day: 'numeric',
+                      month: 'long',
+                      year: 'numeric',
+                    })}
+                    accessibilityHint=""
+                    accessibilityState={{selected: isEnd}}
+                    onPress={() => pick(d)}
+                    style={({hovered, pressed}) => [
+                      a.flex_1,
+                      a.align_center,
+                      a.justify_center,
+                      a.rounded_full,
+                      isEnd
+                        ? {backgroundColor: t.palette.primary_500}
+                        : (hovered || pressed) && t.atoms.bg_contrast_50,
+                    ]}>
+                    <Text
+                      style={[
+                        a.text_sm,
+                        d === today && a.font_bold,
+                        isEnd
+                          ? {color: t.palette.white}
+                          : d === today
+                            ? {color: t.palette.primary_500}
+                            : t.atoms.text,
+                      ]}>
+                      {date(d, {day: 'numeric'})}
+                    </Text>
+                  </Pressable>
+                </View>
+              )
+            })}
+          </View>
+        </View>
       </View>
-    </View>
+    </FormSheet.Inner>
   )
 }

@@ -16,7 +16,7 @@ async function splitWith(page: Page, names: string[]) {
   await page.getByTestId('expense-people').click()
   for (const name of names)
     await page.getByTestId(`person-option-${name}`).click()
-  await page.getByTestId('dialog-close').click()
+  await page.getByTestId('people-dialog').getByTestId('sheet-close').click()
   await expect(page.getByTestId('people-dialog')).toHaveCount(0)
 }
 
@@ -122,7 +122,8 @@ test('a group expense uses the group members and currency; multiple payers must 
   await expect(page.getByTestId('payers-readout')).toHaveText(
     'Adds up to the total',
   )
-  await page.getByTestId('payers-done').click()
+  // A picker: the cross closes it and the amounts stay.
+  await page.getByTestId('payers-dialog').getByTestId('sheet-close').click()
   await expect(page.getByTestId('expense-payers-value')).toHaveText('2 people')
 
   await page.getByTestId('split-mode-percent').click()
@@ -259,7 +260,7 @@ test('a draft survives closing', async ({page}) => {
   await expect(page.getByTestId('expense-title')).toHaveValue('')
 })
 
-test('phones: the FAB opens Add expense full screen; Cancel on an empty form just closes', async ({
+test('phones: the FAB opens Add expense as a sheet from the bottom edge; the cross on an empty form just closes', async ({
   page,
 }) => {
   await page.setViewportSize(PHONE)
@@ -268,8 +269,11 @@ test('phones: the FAB opens Add expense full screen; Cancel on an empty form jus
   await page.getByTestId('fab-add').click()
   const composer = page.getByTestId('screen-add-expense')
   await expect(composer).toBeVisible()
-  const box = await composer.boundingBox()
-  expect(box!.width).toBe(PHONE.width)
+  await page.waitForTimeout(500)
+  const box = (await composer.boundingBox())!
+  expect(box.width).toBe(PHONE.width)
+  expect(Math.round(box.y + box.height)).toBe(PHONE.height)
+  expect(box.y).toBeGreaterThan(0)
   await page.getByTestId('sheet-close').click()
   await expect(composer).toHaveCount(0)
 })

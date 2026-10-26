@@ -16,7 +16,7 @@ import {logger} from '#/logger'
 import {useMutationCtx, useStore} from '#/data/hooks'
 import {useNumberLocale} from '#/locale/numberLocale'
 import {UserAvatar} from '#/view/com/util/UserAvatar'
-import {atoms as a, useTheme, web} from '#/alf'
+import {atoms as a, useTheme} from '#/alf'
 import {Button, ButtonIcon} from '#/components/Button'
 import * as Dialog from '#/components/Dialog'
 import * as SegmentedControl from '#/components/forms/SegmentedControl'
@@ -79,27 +79,20 @@ export function RecordPaymentDialog({
   groupNames?: Map<string, string>
   onPaymentRecorded?: () => void
 }) {
-  const {t: l} = useLingui()
   return (
-    <Dialog.Outer control={control} nativeOptions={{preventExpansion: true}}>
-      <Dialog.Handle />
-      <Dialog.ScrollableInner
-        label={l`Record a payment`}
-        style={web({maxWidth: 440})}>
-        <Form
-          draft={draft}
-          currencies={currencies ?? [draft.currency]}
-          suggestions={suggestions}
-          me={me}
-          names={names}
-          canSwap={canSwap}
-          balance={balance}
-          groupNames={groupNames}
-          onPaymentRecorded={onPaymentRecorded}
-        />
-        <Dialog.Close />
-      </Dialog.ScrollableInner>
-    </Dialog.Outer>
+    <FormSheet.Outer control={control} testID="record-payment-sheet">
+      <Form
+        draft={draft}
+        currencies={currencies ?? [draft.currency]}
+        suggestions={suggestions}
+        me={me}
+        names={names}
+        canSwap={canSwap}
+        balance={balance}
+        groupNames={groupNames}
+        onPaymentRecorded={onPaymentRecorded}
+      />
+    </FormSheet.Outer>
   )
 }
 
@@ -215,193 +208,199 @@ function Form({
     }
   }
 
+  const title = l`Record a payment`
   if (isDone) {
     return (
-      <View
-        testID="payment-recorded"
-        style={[a.align_center, a.gap_md, a.py_xl]}>
-        <SuccessCheck
-          size={72}
-          onCheckShown={() =>
-            setTimeout(
-              () =>
-                control.close(() => {
-                  Toast.show(l`Payment recorded`, {type: 'success'})
-                  onPaymentRecorded?.()
-                }),
-              400,
-            )
-          }
-        />
-        <Text style={[a.text_xl, a.font_bold, a.text_center]}>
-          <Trans>Payment recorded</Trans>
-        </Text>
-        <Text
-          style={[
-            a.text_md,
-            a.leading_snug,
-            a.text_center,
-            t.atoms.text_contrast_medium,
-          ]}>
-          {sentence}{' '}
-          {formatAmount(
-            parseTypedAmount(amountText, currency, locale),
-            currency,
-            locale,
-          )}
-        </Text>
-      </View>
+      <FormSheet.Inner title={title}>
+        <View
+          testID="payment-recorded"
+          style={[a.align_center, a.gap_md, a.py_xl]}>
+          <SuccessCheck
+            size={72}
+            onCheckShown={() =>
+              setTimeout(
+                () =>
+                  control.close(() => {
+                    Toast.show(l`Payment recorded`, {type: 'success'})
+                    onPaymentRecorded?.()
+                  }),
+                400,
+              )
+            }
+          />
+          <Text style={[a.text_xl, a.font_bold, a.text_center]}>
+            <Trans>Payment recorded</Trans>
+          </Text>
+          <Text
+            style={[
+              a.text_md,
+              a.leading_snug,
+              a.text_center,
+              t.atoms.text_contrast_medium,
+            ]}>
+            {sentence}{' '}
+            {formatAmount(
+              parseTypedAmount(amountText, currency, locale),
+              currency,
+              locale,
+            )}
+          </Text>
+        </View>
+      </FormSheet.Inner>
     )
   }
 
   return (
-    <View style={[a.gap_lg]}>
-      <View style={[a.gap_xs, a.pr_2xl]}>
-        <Text style={[a.text_2xl, a.font_bold, a.leading_tight]}>
-          <Trans>Record a payment</Trans>
-        </Text>
-        <Text style={[a.text_md, a.leading_snug, t.atoms.text_contrast_medium]}>
-          <Trans>
-            For money that changed hands outside Splito – cash, UPI or a bank
-            transfer. Splito keeps the record; it never moves money.
-          </Trans>
-        </Text>
-      </View>
-
-      <View
-        style={[
-          a.flex_row,
-          a.align_center,
-          a.gap_md,
-          a.p_md,
-          a.rounded_md,
-          t.atoms.bg_contrast_25,
-        ]}>
-        <View style={[a.flex_row, a.align_center, a.gap_xs]}>
-          <UserAvatar size={32} name={name(from)} type="user" />
-          <ArrowRightIcon size="sm" fill={t.atoms.text_contrast_medium.color} />
-          <UserAvatar size={32} name={name(to)} type="user" />
-        </View>
-        <Text
-          testID="payment-sentence"
-          emoji
-          numberOfLines={2}
-          style={[a.flex_1, a.text_md, a.font_semi_bold, a.leading_snug]}>
-          {sentence}
-        </Text>
-        {canSwap && (
-          <Button
-            testID="payment-swap"
-            label={l`Swap who paid`}
-            size="small"
-            color="secondary"
-            shape="round"
-            onPress={() => {
-              haptics.tap()
-              setFrom(to)
-              setTo(from)
-            }}>
-            <ButtonIcon icon={SwapIcon} />
-          </Button>
-        )}
-      </View>
-
-      {currencies.length > 1 && (
-        <SegmentedControl.Root
-          label={l`Currency`}
-          type="radio"
-          size="small"
-          value={currency}
-          onChange={c => {
-            // The control reports its current value once on layout.
-            if (c === currency) return
-            setCurrency(c)
-            setAmountText(prefill(c))
-            setError(null)
-          }}>
-          {currencies.map(c => (
-            <SegmentedControl.Item key={c} value={c} label={c}>
-              <SegmentedControl.ItemText>{c}</SegmentedControl.ItemText>
-            </SegmentedControl.Item>
-          ))}
-        </SegmentedControl.Root>
-      )}
-
-      <View>
-        <TextField.LabelText>
-          <Trans>Amount</Trans>
-        </TextField.LabelText>
-        <TextField.Root isInvalid={!!error}>
-          <Dialog.Input
-            testID="payment-amount"
-            label={l`Amount`}
-            value={amountText}
-            onChangeText={text => {
-              setAmountText(text)
-              setError(null)
-            }}
-            keyboardType="decimal-pad"
-            inputMode="decimal"
-            placeholder="0"
-            onSubmitEditing={() => void save()}
-          />
-          <TextField.SuffixText label={currencyName(currency, i18n.locale)}>
-            {currency}
-          </TextField.SuffixText>
-        </TextField.Root>
-        <Text
+    <FormSheet.Inner
+      title={title}
+      isDirty={
+        from !== draft.from ||
+        currency !== draft.currency ||
+        amountText !== prefill(draft.currency) ||
+        note !== ''
+      }
+      footer={{
+        saveLabel: l`Record payment`,
+        canSave: typed !== null && typed > ZERO,
+        isSaving,
+        onSave: () => void save(),
+      }}>
+      <FormSheet.Description>
+        <Trans>
+          For money that changed hands outside Splito – cash, UPI or a bank
+          transfer. Splito keeps the record; it never moves money.
+        </Trans>
+      </FormSheet.Description>
+      <View style={[a.gap_lg]}>
+        <View
           style={[
-            a.pt_sm,
-            a.text_sm,
-            a.leading_snug,
-            error
-              ? {color: t.palette.negative_500}
-              : t.atoms.text_contrast_medium,
+            a.flex_row,
+            a.align_center,
+            a.gap_md,
+            a.p_md,
+            a.rounded_md,
+            t.atoms.bg_contrast_25,
           ]}>
-          {error ??
-            (suggestion
-              ? l`Open balance ${formatAmount(suggestion, currency, locale)}. Part payments are fine.`
-              : l`Part payments are fine.`)}
-        </Text>
-        {!error && settles && (
+          <View style={[a.flex_row, a.align_center, a.gap_xs]}>
+            <UserAvatar size={32} name={name(from)} type="user" />
+            <ArrowRightIcon
+              size="sm"
+              fill={t.atoms.text_contrast_medium.color}
+            />
+            <UserAvatar size={32} name={name(to)} type="user" />
+          </View>
           <Text
-            testID="payment-settles"
+            testID="payment-sentence"
+            emoji
+            numberOfLines={2}
+            style={[a.flex_1, a.text_md, a.font_semi_bold, a.leading_snug]}>
+            {sentence}
+          </Text>
+          {canSwap && (
+            <Button
+              testID="payment-swap"
+              label={l`Swap who paid`}
+              size="small"
+              color="secondary"
+              shape="round"
+              onPress={() => {
+                haptics.tap()
+                setFrom(to)
+                setTo(from)
+              }}>
+              <ButtonIcon icon={SwapIcon} />
+            </Button>
+          )}
+        </View>
+
+        {currencies.length > 1 && (
+          <SegmentedControl.Root
+            label={l`Currency`}
+            type="radio"
+            size="small"
+            value={currency}
+            onChange={c => {
+              // The control reports its current value once on layout.
+              if (c === currency) return
+              setCurrency(c)
+              setAmountText(prefill(c))
+              setError(null)
+            }}>
+            {currencies.map(c => (
+              <SegmentedControl.Item key={c} value={c} label={c}>
+                <SegmentedControl.ItemText>{c}</SegmentedControl.ItemText>
+              </SegmentedControl.Item>
+            ))}
+          </SegmentedControl.Root>
+        )}
+
+        <View>
+          <TextField.LabelText>
+            <Trans>Amount</Trans>
+          </TextField.LabelText>
+          <TextField.Root isInvalid={!!error}>
+            <Dialog.Input
+              testID="payment-amount"
+              label={l`Amount`}
+              value={amountText}
+              onChangeText={text => {
+                setAmountText(text)
+                setError(null)
+              }}
+              keyboardType="decimal-pad"
+              inputMode="decimal"
+              placeholder="0"
+              onSubmitEditing={() => void save()}
+            />
+            <TextField.SuffixText label={currencyName(currency, i18n.locale)}>
+              {currency}
+            </TextField.SuffixText>
+          </TextField.Root>
+          <Text
             style={[
-              a.pt_xs,
+              a.pt_sm,
               a.text_sm,
               a.leading_snug,
-              t.atoms.text_contrast_medium,
+              error
+                ? {color: t.palette.negative_500}
+                : t.atoms.text_contrast_medium,
             ]}>
-            <Trans>Counts towards: {settles}</Trans>
+            {error ??
+              (suggestion
+                ? l`Open balance ${formatAmount(suggestion, currency, locale)}. Part payments are fine.`
+                : l`Part payments are fine.`)}
           </Text>
-        )}
-      </View>
+          {!error && settles && (
+            <Text
+              testID="payment-settles"
+              style={[
+                a.pt_xs,
+                a.text_sm,
+                a.leading_snug,
+                t.atoms.text_contrast_medium,
+              ]}>
+              <Trans>Counts towards: {settles}</Trans>
+            </Text>
+          )}
+        </View>
 
-      <View>
-        <TextField.LabelText>
-          <Trans>Note (optional)</Trans>
-        </TextField.LabelText>
-        <TextField.Root>
-          <Dialog.Input
-            testID="payment-note"
-            label={l`Note`}
-            value={note}
-            onChangeText={setNote}
-            placeholder={l`e.g. Paid by UPI`}
-            maxLength={140}
-          />
-        </TextField.Root>
+        <View>
+          <TextField.LabelText>
+            <Trans>Note (optional)</Trans>
+          </TextField.LabelText>
+          <TextField.Root>
+            <Dialog.Input
+              testID="payment-note"
+              label={l`Note`}
+              value={note}
+              onChangeText={setNote}
+              placeholder={l`e.g. Paid by UPI`}
+              maxLength={140}
+            />
+          </TextField.Root>
+        </View>
       </View>
-
-      <FormSheet.Actions
-        saveTestID="payment-save"
-        cancelTestID="payment-cancel"
-        saveLabel={l`Record payment`}
-        isSaving={isSaving}
-        onCancel={() => control.close()}
-        onSave={() => void save()}
-      />
-    </View>
+    </FormSheet.Inner>
   )
 }
 

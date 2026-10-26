@@ -1,5 +1,5 @@
 import {useEffect, useState} from 'react'
-import {KeyboardAvoidingView, ScrollView, View} from 'react-native'
+import {View} from 'react-native'
 import {plural} from '@lingui/core/macro'
 import {Trans, useLingui} from '@lingui/react/macro'
 import {useNavigation} from '@react-navigation/native'
@@ -14,16 +14,14 @@ import {
 import {type NavigationProp} from '#/lib/routes/types'
 import {useNumberLocale} from '#/locale/numberLocale'
 import {useEntities, useMutationCtx, useStore} from '#/data/hooks'
-import {atoms as a, useBreakpoints, useTheme, web} from '#/alf'
+import {atoms as a, useBreakpoints, useTheme} from '#/alf'
 import {Button, ButtonText} from '#/components/Button'
-import * as Composer from '#/components/Composer'
 import * as FormSheet from '#/components/FormSheet'
 import * as Dialog from '#/components/Dialog'
 import {Divider} from '#/components/Divider'
 import * as Prompt from '#/components/Prompt'
 import * as Toast from '#/components/Toast'
 import {Text} from '#/components/Typography'
-import {IS_IOS} from '#/env'
 import {SuccessCheck} from '#/motion/SuccessCheck'
 import {DateDialog} from './DateDialog'
 import {clearDraft, type DraftContext, writeDraft} from './drafts'
@@ -121,7 +119,6 @@ export function ExpenseComposer({
   const groupControl = Dialog.useDialogControl()
   const peopleControl = Dialog.useDialogControl()
   const payersControl = Dialog.useDialogControl()
-  const closePromptControl = Prompt.usePromptControl()
 
   /* Drafts survive closing: every change is kept on the device until Save or Discard. */
   useEffect(() => {
@@ -129,11 +126,6 @@ export function ExpenseComposer({
     if (hasContent(form)) writeDraft(form, draftContext)
     else clearDraft()
   }, [form, draftContext, savedId, initialForm])
-
-  /* Edits have no draft, so a swipe-down on the iOS sheet must not drop them silently. */
-  useEffect(() => {
-    if (isEdit) navigation.setOptions({gestureEnabled: !isDirty})
-  }, [isEdit, isDirty, navigation])
 
   const group = form.groupId
     ? groups?.find(g => g.id === form.groupId)
@@ -236,12 +228,6 @@ export function ExpenseComposer({
     }
   }
 
-  const requestClose = () => {
-    if (savedId) return
-    if (isDirty && (isEdit || hasContent(form))) closePromptControl.open()
-    else onClose()
-  }
-
   const first = form.people[0] ? name(form.people[0]) : ''
   const second = form.people[1] ? name(form.people[1]) : ''
   const rest = form.people.length - 2
@@ -269,333 +255,333 @@ export function ExpenseComposer({
     evaluation.payersRemaining !== ZERO
 
   return (
-    <Composer.Outer testID={testID} onDismiss={requestClose}>
-      <FormSheet.Header
-        onClose={requestClose}
-        closeHint={
-          isEdit
-            ? l`Closes without saving your changes`
-            : l`Closes Add expense; your draft is kept`
-        }
-        title={
-          isEdit
-            ? l`Edit expense`
-            : l({message: 'Add expense', context: 'action'})
-        }
-      />
-
-      <KeyboardAvoidingView
-        behavior={IS_IOS ? 'padding' : undefined}
-        style={[a.flex_1, web(a.flex_shrink)]}>
-        <ScrollView
-          testID="expense-form"
-          keyboardShouldPersistTaps="handled"
-          style={[a.flex_1, web([a.flex_shrink, {minHeight: 0}])]}
-          contentContainerStyle={[a.pb_2xl]}>
-          {showRestored && freshForm ? (
-            <View
-              style={[
-                a.mx_lg,
-                a.mb_sm,
-                a.px_md,
-                a.py_sm,
-                a.rounded_sm,
-                a.flex_row,
-                a.align_center,
-                a.gap_sm,
-                t.atoms.bg_contrast_25,
-              ]}>
-              <Text
-                style={[
-                  a.flex_1,
-                  a.text_sm,
-                  a.leading_snug,
-                  t.atoms.text_contrast_high,
-                ]}>
-                <Trans>We kept your unsaved expense.</Trans>
-              </Text>
-              <Button
-                testID="draft-start-over"
-                label={l`Start over`}
-                size="tiny"
-                variant="ghost"
-                color="primary"
-                onPress={() => {
+    <FormSheet.Screen
+      testID={testID}
+      scrollTestID="expense-form"
+      title={
+        isEdit
+          ? l`Edit expense`
+          : l({message: 'Add expense', context: 'action'})
+      }
+      closeHint={
+        isEdit
+          ? l`Closes without saving your changes`
+          : l`Closes Add expense; your draft is kept`
+      }
+      isDirty={!savedId && isDirty && (isEdit || hasContent(form))}
+      onClose={onClose}
+      discardDescription={l`Your edits to this expense won’t be saved.`}
+      renderDiscardPrompt={
+        isEdit
+          ? undefined
+          : ({control, onDiscardConfirmed}) => (
+              <DraftPrompt
+                control={control}
+                onDraftKept={onDiscardConfirmed}
+                onDraftDiscarded={() => {
                   clearDraft()
-                  setShowRestored(false)
-                  setForm(freshForm)
-                }}>
-                <ButtonText>
-                  <Trans>Start over</Trans>
-                </ButtonText>
-              </Button>
+                  onDiscardConfirmed()
+                }}
+              />
+            )
+      }
+      footer={{
+        saveLabel: l`Save expense`,
+        onSave: () => void save(),
+        canSave: !!evaluation.draft && !savedId,
+        isSaving,
+      }}
+      readout={
+        <Readout
+          form={form}
+          evaluation={evaluation}
+          locale={locale}
+          isDirty={isDirty}
+        />
+      }
+      overlay={
+        <>
+          {savedId ? (
+            <View
+              testID="expense-saved"
+              style={[
+                a.absolute,
+                a.inset_0,
+                a.z_50,
+                a.align_center,
+                a.justify_center,
+                a.gap_lg,
+                t.atoms.bg,
+              ]}>
+              <SuccessCheck
+                size={72}
+                onCheckShown={() => setTimeout(() => finish(savedId), 350)}
+              />
+              <Text style={[a.text_xl, a.font_semi_bold]}>
+                {isEdit ? (
+                  <Trans>Changes saved</Trans>
+                ) : (
+                  <Trans>Expense added</Trans>
+                )}
+              </Text>
             </View>
           ) : null}
-
-          {/* Title, with the category where Bluesky's composer has the avatar. */}
-          <View style={[a.flex_row, a.align_start, a.gap_md, a.px_lg, a.pt_sm]}>
-            <Button
-              testID="expense-category"
-              label={l`Category: ${category.name}. Change`}
-              onPress={() => categoryControl.open()}
-              style={[a.rounded_sm]}>
-              <CategoryTile category={category} size={42} />
-            </Button>
-            <View style={[a.flex_1, a.gap_2xs]}>
-              <View
-                style={[
-                  {
-                    borderBottomWidth: isTitleFocused ? 2 : 1,
-                    marginBottom: isTitleFocused ? 0 : 1,
-                    borderColor: isTitleFocused
-                      ? t.palette.primary_500
-                      : t.atoms.border_contrast_medium.borderColor,
-                  },
-                ]}>
-                <PlainInput
-                  testID="expense-title"
-                  value={form.title}
-                  onChangeText={setTitle}
-                  onFocus={() => setIsTitleFocused(true)}
-                  onBlur={() => setIsTitleFocused(false)}
-                  placeholder={l`What was it for?`}
-                  accessibilityLabel={l`Title`}
-                  autoFocus={!isEdit && gtMobile}
-                  maxLength={120}
-                  spellCheck={false}
-                  returnKeyType="next"
-                  style={[a.text_xl, a.font_medium, {paddingVertical: 4}]}
-                />
-              </View>
-              <Text
-                testID="expense-category-name"
-                style={[a.text_sm, t.atoms.text_contrast_medium]}
-                numberOfLines={1}>
-                {category.name}
-                {!form.isCategoryPicked &&
-                form.title.trim() &&
-                category.id !== 'other'
-                  ? ` · ${l`suggested`}`
-                  : ''}
-              </Text>
-            </View>
-          </View>
-
-          <AmountField
-            value={form.amount}
-            onChangeText={amount => update(f => ({...f, amount}))}
-            currency={form.currency}
-            locale={locale}
-            result={evaluation.total}
-            errorText={
-              evaluation.amountError
-                ? errorText(evaluation.amountError)
-                : undefined
+          <CurrencyDialog
+            control={currencyControl}
+            value={form.currency}
+            onSelect={currency => update(f => ({...f, currency}))}
+          />
+          <DateDialog
+            control={dateControl}
+            title={l`Date`}
+            value={form.date}
+            onSelect={date => update(f => ({...f, date}))}
+          />
+          <CategoryDialog
+            control={categoryControl}
+            categories={categories}
+            value={form.category}
+            onSelect={id =>
+              update(f => ({...f, category: id, isCategoryPicked: true}))
             }
-            onPressCurrency={() => currencyControl.open()}
           />
-
-          <Divider />
-          <DetailRow
-            testID="expense-date"
-            icon={CalendarIcon}
-            label={l`Date`}
-            value={formatDay(form.date)}
-            onPress={() => dateControl.open()}
-            accessory={isUpcoming ? <UpcomingTag /> : null}
+          <GroupDialog
+            control={groupControl}
+            groups={groups ?? []}
+            value={form.groupId}
+            onSelect={selectGroup}
           />
-          <DetailRow
-            testID="expense-group"
-            icon={FolderIcon}
-            label={l`Group`}
-            value={group ? group.data.name : l`No group`}
-            onPress={() => groupControl.open()}
+          <PeopleDialog
+            control={peopleControl}
+            title={l`Split with`}
+            description={
+              group
+                ? l`Members of ${group.data.name}`
+                : l`Add friends, or type a new name to add someone without an account.`
+            }
+            candidates={candidates}
+            selected={form.people}
+            allowNew={!group}
+            onChange={setPeople}
           />
-          <DetailRow
-            testID="expense-people"
-            icon={GroupIcon}
-            label={l`Split with`}
-            value={peopleSummary}
-            onPress={() => peopleControl.open()}
-          />
-          <DetailRow
-            testID="expense-payers"
-            icon={WalletIcon}
-            label={l`Paid by`}
-            value={payersValue}
-            valueColor={isPayersOff ? t.palette.negative_500 : undefined}
-            onPress={() => payersControl.open()}
-          />
-          <Divider />
-
-          <SectionLabel>
-            <Trans>Split</Trans>
-          </SectionLabel>
-          <SplitEditor
+          <PayersDialog
+            control={payersControl}
             form={form}
             update={update}
             evaluation={evaluation}
             locale={locale}
-            onAddPeople={() => peopleControl.open()}
           />
-
-          <SectionLabel>
-            <Trans>Notes</Trans>
-          </SectionLabel>
-          <View style={[a.flex_row, a.align_start, a.gap_md, a.px_lg]}>
-            <NotesIcon
-              size="md"
-              fill={t.atoms.text_contrast_medium.color}
-              style={[{marginTop: 2}]}
-            />
-            <PlainInput
-              testID="expense-notes"
-              value={form.notes}
-              onChangeText={notes => update(f => ({...f, notes}))}
-              placeholder={l`Add a note (optional)`}
-              accessibilityLabel={l`Notes`}
-              multiline
-              maxLength={1000}
-              style={[a.flex_1, {lineHeight: 20, minHeight: 44, paddingTop: 0}]}
-            />
-          </View>
-        </ScrollView>
-
-        {/* Cancel and Save at the bottom, the split's readout right above them (owner: one sheet layout). */}
-        <FormSheet.Footer
-          onCancel={requestClose}
-          saveLabel={isEdit ? l`Save changes` : l`Save expense`}
-          onSave={() => void save()}
-          canSave={!!evaluation.draft && !savedId}
-          isSaving={isSaving}
-          readout={
-            <Footer
-              form={form}
-              evaluation={evaluation}
-              locale={locale}
-              isDirty={isDirty}
-            />
-          }
-        />
-      </KeyboardAvoidingView>
-
-      {savedId ? (
+        </>
+      }>
+      {showRestored && freshForm ? (
         <View
-          testID="expense-saved"
           style={[
-            a.absolute,
-            a.inset_0,
-            a.z_50,
+            a.mx_lg,
+            a.mb_sm,
+            a.px_md,
+            a.py_sm,
+            a.rounded_sm,
+            a.flex_row,
             a.align_center,
-            a.justify_center,
-            a.gap_lg,
-            t.atoms.bg,
+            a.gap_sm,
+            t.atoms.bg_contrast_25,
           ]}>
-          <SuccessCheck
-            size={72}
-            onCheckShown={() => setTimeout(() => finish(savedId), 350)}
-          />
-          <Text style={[a.text_xl, a.font_semi_bold]}>
-            {isEdit ? (
-              <Trans>Changes saved</Trans>
-            ) : (
-              <Trans>Expense added</Trans>
-            )}
+          <Text
+            style={[
+              a.flex_1,
+              a.text_sm,
+              a.leading_snug,
+              t.atoms.text_contrast_high,
+            ]}>
+            <Trans>We kept your unsaved expense.</Trans>
           </Text>
+          <Button
+            testID="draft-start-over"
+            label={l`Start over`}
+            size="tiny"
+            variant="ghost"
+            color="primary"
+            onPress={() => {
+              clearDraft()
+              setShowRestored(false)
+              setForm(freshForm)
+            }}>
+            <ButtonText>
+              <Trans>Start over</Trans>
+            </ButtonText>
+          </Button>
         </View>
       ) : null}
 
-      <CurrencyDialog
-        control={currencyControl}
-        value={form.currency}
-        onSelect={currency => update(f => ({...f, currency}))}
-      />
-      <DateDialog
-        control={dateControl}
-        title={l`Date`}
-        value={form.date}
-        onSelect={date => update(f => ({...f, date}))}
-      />
-      <CategoryDialog
-        control={categoryControl}
-        categories={categories}
-        value={form.category}
-        onSelect={id =>
-          update(f => ({...f, category: id, isCategoryPicked: true}))
+      {/* Title, with the category where Bluesky's composer has the avatar. */}
+      <View style={[a.flex_row, a.align_start, a.gap_md, a.px_lg, a.pt_sm]}>
+        <Button
+          testID="expense-category"
+          label={l`Category: ${category.name}. Change`}
+          onPress={() => categoryControl.open()}
+          style={[a.rounded_sm]}>
+          <CategoryTile category={category} size={42} />
+        </Button>
+        <View style={[a.flex_1, a.gap_2xs]}>
+          <View
+            style={[
+              {
+                borderBottomWidth: isTitleFocused ? 2 : 1,
+                marginBottom: isTitleFocused ? 0 : 1,
+                borderColor: isTitleFocused
+                  ? t.palette.primary_500
+                  : t.atoms.border_contrast_medium.borderColor,
+              },
+            ]}>
+            <PlainInput
+              testID="expense-title"
+              value={form.title}
+              onChangeText={setTitle}
+              onFocus={() => setIsTitleFocused(true)}
+              onBlur={() => setIsTitleFocused(false)}
+              placeholder={l`What was it for?`}
+              accessibilityLabel={l`Title`}
+              autoFocus={!isEdit && gtMobile}
+              maxLength={120}
+              spellCheck={false}
+              returnKeyType="next"
+              style={[a.text_xl, a.font_medium, {paddingVertical: 4}]}
+            />
+          </View>
+          <Text
+            testID="expense-category-name"
+            style={[a.text_sm, t.atoms.text_contrast_medium]}
+            numberOfLines={1}>
+            {category.name}
+            {!form.isCategoryPicked &&
+            form.title.trim() &&
+            category.id !== 'other'
+              ? ` · ${l`suggested`}`
+              : ''}
+          </Text>
+        </View>
+      </View>
+
+      <AmountField
+        value={form.amount}
+        onChangeText={amount => update(f => ({...f, amount}))}
+        currency={form.currency}
+        locale={locale}
+        result={evaluation.total}
+        errorText={
+          evaluation.amountError ? errorText(evaluation.amountError) : undefined
         }
+        onPressCurrency={() => currencyControl.open()}
       />
-      <GroupDialog
-        control={groupControl}
-        groups={groups ?? []}
-        value={form.groupId}
-        onSelect={selectGroup}
+
+      <Divider />
+      <DetailRow
+        testID="expense-date"
+        icon={CalendarIcon}
+        label={l`Date`}
+        value={formatDay(form.date)}
+        onPress={() => dateControl.open()}
+        accessory={isUpcoming ? <UpcomingTag /> : null}
       />
-      <PeopleDialog
-        control={peopleControl}
-        title={l`Split with`}
-        description={
-          group
-            ? l`Members of ${group.data.name}`
-            : l`Add friends, or type a new name to add someone without an account.`
-        }
-        candidates={candidates}
-        selected={form.people}
-        allowNew={!group}
-        onChange={setPeople}
+      <DetailRow
+        testID="expense-group"
+        icon={FolderIcon}
+        label={l`Group`}
+        value={group ? group.data.name : l`No group`}
+        onPress={() => groupControl.open()}
       />
-      <PayersDialog
-        control={payersControl}
+      <DetailRow
+        testID="expense-people"
+        icon={GroupIcon}
+        label={l`Split with`}
+        value={peopleSummary}
+        onPress={() => peopleControl.open()}
+      />
+      <DetailRow
+        testID="expense-payers"
+        icon={WalletIcon}
+        label={l`Paid by`}
+        value={payersValue}
+        valueColor={isPayersOff ? t.palette.negative_500 : undefined}
+        onPress={() => payersControl.open()}
+      />
+      <Divider />
+
+      <SectionLabel>
+        <Trans>Split</Trans>
+      </SectionLabel>
+      <SplitEditor
         form={form}
         update={update}
         evaluation={evaluation}
         locale={locale}
+        onAddPeople={() => peopleControl.open()}
       />
 
-      {isEdit ? (
-        <Prompt.Basic
-          control={closePromptControl}
-          title={l`Discard changes?`}
-          description={l`Your edits to this expense won’t be saved.`}
-          confirmButtonCta={l`Discard`}
-          confirmButtonColor="negative"
-          cancelButtonCta={l`Keep editing`}
-          onConfirm={onClose}
+      <SectionLabel>
+        <Trans>Notes</Trans>
+      </SectionLabel>
+      <View style={[a.flex_row, a.align_start, a.gap_md, a.px_lg]}>
+        <NotesIcon
+          size="md"
+          fill={t.atoms.text_contrast_medium.color}
+          style={[{marginTop: 2}]}
         />
-      ) : (
-        <Prompt.Outer
-          control={closePromptControl}
-          testID="expense-close-prompt">
-          <Prompt.Content>
-            <Prompt.TitleText>
-              <Trans>Save draft?</Trans>
-            </Prompt.TitleText>
-            <Prompt.DescriptionText>
-              <Trans>
-                Would you like to keep this as a draft to finish later?
-              </Trans>
-            </Prompt.DescriptionText>
-          </Prompt.Content>
-          <Prompt.Actions>
-            <Prompt.Action
-              testID="draft-save"
-              cta={l`Save draft`}
-              color="primary"
-              onPress={onClose}
-            />
-            <Prompt.Cancel cta={l`Keep editing`} />
-            <Prompt.Action
-              testID="draft-discard"
-              cta={l`Discard`}
-              color="negative_subtle"
-              onPress={() => {
-                clearDraft()
-                onClose()
-              }}
-            />
-          </Prompt.Actions>
-        </Prompt.Outer>
-      )}
-    </Composer.Outer>
+        <PlainInput
+          testID="expense-notes"
+          value={form.notes}
+          onChangeText={notes => update(f => ({...f, notes}))}
+          placeholder={l`Add a note (optional)`}
+          accessibilityLabel={l`Notes`}
+          multiline
+          maxLength={1000}
+          style={[a.flex_1, {lineHeight: 20, minHeight: 44, paddingTop: 0}]}
+        />
+      </View>
+    </FormSheet.Screen>
+  )
+}
+
+/**
+ * Add expense keeps a device draft, so closing with something typed offers
+ * to keep it (Bluesky's composer asks the same) besides discarding it.
+ */
+function DraftPrompt({
+  control,
+  onDraftKept,
+  onDraftDiscarded,
+}: {
+  control: Prompt.PromptControlProps
+  onDraftKept: () => void
+  onDraftDiscarded: () => void
+}) {
+  const {t: l} = useLingui()
+  return (
+    <Prompt.Outer control={control} testID="expense-close-prompt">
+      <Prompt.Content>
+        <Prompt.TitleText>
+          <Trans>Discard changes?</Trans>
+        </Prompt.TitleText>
+        <Prompt.DescriptionText>
+          <Trans>Or keep them as a draft to finish later.</Trans>
+        </Prompt.DescriptionText>
+      </Prompt.Content>
+      <Prompt.Actions>
+        <Prompt.Action
+          testID="draft-discard"
+          cta={l`Discard`}
+          color="negative"
+          onPress={onDraftDiscarded}
+        />
+        <Prompt.Action
+          testID="draft-save"
+          cta={l`Save draft`}
+          color="secondary"
+          onPress={onDraftKept}
+        />
+        <Prompt.Cancel cta={l`Keep editing`} />
+      </Prompt.Actions>
+    </Prompt.Outer>
   )
 }
 
@@ -622,8 +608,8 @@ function UpcomingTag() {
   )
 }
 
-/** The composer footer: the split's live readout, like Bluesky's character counter. */
-function Footer({
+/** The split's live readout above the footer, like Bluesky's character counter. */
+function Readout({
   form,
   evaluation,
   locale,

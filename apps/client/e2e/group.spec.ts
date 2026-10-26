@@ -55,7 +55,7 @@ test('group page: header, my balance, expenses, member balances and members', as
   await page.getByTestId('group-add-members').click()
   await page.getByTestId('add-member-new').fill('Dev Malik')
   await page.getByTestId('add-member-new-save').click()
-  await page.getByTestId('add-members-save').click()
+  await page.getByTestId('sheet-save').click()
   await expect(page.getByTestId('member-Dev Malik')).toBeVisible()
   await expect(page.getByTestId('group-byline')).toHaveText('Trip · 4 members')
   await page.getByTestId('member-Bela Joshi').click()
@@ -66,11 +66,17 @@ test('A07: A->C excluded makes the direct plan infeasible and says why (routing 
   await ready(page)
   const {group, me, c} = await seedA07(page)
 
-  // Rule set in the "Who you settle with" editor, as a user would.
-  await page.goto(`/groups/${group}?tab=rules`)
-  await expect(page.getByText('Who you settle with')).toBeVisible()
+  // Rule set in the Payment rules sheet ("Who you settle with"), as a user would.
+  await page.goto(`/groups/${group}`)
+  await page.getByTestId('group-more').click()
+  await page.getByTestId('group-menu-rules').click()
+  const sheet = page.getByTestId('rules-sheet')
+  await expect(sheet.getByText('Who you settle with')).toBeVisible()
+  await expect(sheet.getByTestId('sheet-save')).toBeDisabled()
   await page.getByTestId(`rule-${me}-${c}-excluded`).click()
   await expect(page.getByText('Set for this group')).toHaveCount(1)
+  await sheet.getByTestId('sheet-save').click()
+  await expect(sheet).toHaveCount(0)
 
   await page.goto(`/groups/${group}/settle`)
   await expect(page.getByText('No direct plan works with these rules')).toBeVisible()
@@ -79,8 +85,10 @@ test('A07: A->C excluded makes the direct plan infeasible and says why (routing 
   // Spec v1 is direct-only: no plan routes money through members who never agreed to it.
   await expect(page.getByTestId('settle-mode-transit')).toHaveCount(0)
   await expect(page.getByTestId('settle-try-transit')).toHaveCount(0)
+  // "Edit rules" goes back to the group with its Payment rules sheet open.
   await page.getByTestId('settle-edit-rules').click()
-  await expect(page.getByTestId('screen-group').getByText('Who you settle with', {exact: true})).toBeVisible()
+  await expect(page.getByTestId('rules-sheet').getByText('Who you settle with', {exact: true})).toBeVisible()
+  await expect(page.getByTestId('screen-group')).toBeVisible()
 })
 
 test('a plan goes stale when the ledger changes, and updates on request', async ({page}) => {
@@ -125,7 +133,7 @@ test('"Record this payment" records a part payment and the plan follows', async 
   await expect(page.getByTestId('payment-sentence')).toHaveText('You paid Chirag Shah')
   await expect(page.getByTestId('payment-amount')).toHaveValue('100.00')
   await page.getByTestId('payment-amount').fill('60')
-  await page.getByTestId('payment-save').click()
+  await page.getByTestId('sheet-save').click()
   await expect(page.getByTestId('payment-recorded')).toBeVisible()
 
   await expect(transfer.getByTestId('transfer-amount')).toHaveText('₹40.00')

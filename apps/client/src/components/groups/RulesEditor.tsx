@@ -1,4 +1,4 @@
-import {useRef} from 'react'
+import {useState} from 'react'
 import {View} from 'react-native'
 import {Trans, useLingui} from '@lingui/react/macro'
 import {type EdgeRule, type SettlementRules} from '@splito/domain'
@@ -10,6 +10,8 @@ import {useMutationCtx, useStore} from '#/data/hooks'
 import {UserAvatar} from '#/view/com/util/UserAvatar'
 import {atoms as a, useBreakpoints, useTheme} from '#/alf'
 import {Button, ButtonIcon, ButtonText} from '#/components/Button'
+import * as Dialog from '#/components/Dialog'
+import * as FormSheet from '#/components/FormSheet'
 import * as SegmentedControl from '#/components/forms/SegmentedControl'
 import * as Toggle from '#/components/forms/Toggle'
 import {ArrowRotateCounterClockwise_Stroke2_Corner0_Rounded as ResetIcon} from '#/components/icons/ArrowRotate'
@@ -31,12 +33,31 @@ export function effectiveRule(
 }
 
 /**
- * "Who you settle with": per directed pair (payer -> receiver) allowed,
- * preferred or excluded, plus the allow-list switch. Each change is saved
- * at once through `updateGroupRules`. The defaults are spelled out, and an
- * excluded pair is never turned into a preference.
+ * "Who you settle with" (the group page's Payment rules sheet): per directed
+ * pair (payer -> receiver) allowed, preferred or excluded, plus the
+ * allow-list switch. Changes stay in the sheet until Save
+ * (`updateGroupRules`); Cancel drops them. The defaults are spelled out, and
+ * an excluded pair is never turned into a preference.
  */
-export function RulesEditor({
+export function RulesDialog({
+  control,
+  group,
+  names,
+  me,
+}: {
+  control: Dialog.DialogControlProps
+  group: Entity<Group>
+  names: Map<string, string>
+  me: string
+}) {
+  return (
+    <FormSheet.Outer control={control} testID="rules-sheet" fullHeight>
+      <RulesForm group={group} names={names} me={me} />
+    </FormSheet.Outer>
+  )
+}
+
+function RulesForm({
   group,
   names,
   me,
@@ -45,12 +66,69 @@ export function RulesEditor({
   names: Map<string, string>
   me: string
 }) {
-  const t = useTheme()
   const {t: l} = useLingui()
+  const control = Dialog.useDialogContext()
   const store = useStore()
   const ctx = useMutationCtx()
   const haptics = useHaptics()
-  const rules = group.data.rules ?? NO_RULES
+  const [initial] = useState(group.data.rules ?? NO_RULES)
+  const [rules, setRules] = useState(initial)
+  const [isSaving, setIsSaving] = useState(false)
+  const isDirty = JSON.stringify(rules) !== JSON.stringify(initial)
+
+  const save = async () => {
+    setIsSaving(true)
+    try {
+      await updateGroupRules(store, ctx, group.id, rules)
+      haptics.success()
+      control.close(() => Toast.show(l`Payment rules saved`, {type: 'success'}))
+    } catch (e) {
+      logger.error(e, {where: 'RulesDialog.save'})
+      setIsSaving(false)
+      haptics.error()
+      Toast.show(l`Couldn’t save the rules. Please try again.`, {
+        type: 'error',
+      })
+    }
+  }
+
+  return (
+    <FormSheet.Inner
+      title={l`Payment rules`}
+      isDirty={isDirty}
+      footer={{
+        saveLabel: l`Save`,
+        canSave: isDirty,
+        isSaving,
+        onSave: () => void save(),
+      }}>
+      <RulesEditor
+        group={group}
+        names={names}
+        me={me}
+        rules={rules}
+        onRulesChange={setRules}
+      />
+    </FormSheet.Inner>
+  )
+}
+
+/** The rules themselves: the allow-list switch, then every pair. */
+function RulesEditor({
+  group,
+  names,
+  me,
+  rules,
+  onRulesChange,
+}: {
+  group: Entity<Group>
+  names: Map<string, string>
+  me: string
+  rules: SettlementRules
+  onRulesChange: (rules: SettlementRules) => void
+}) {
+  const t = useTheme()
+  const {t: l} = useLingui()
   const members = group.data.members
     .map(m => m.personId)
     .sort((x, y) =>
@@ -61,40 +139,15 @@ export function RulesEditor({
           : (names.get(x) ?? '').localeCompare(names.get(y) ?? ''),
     )
   const hasRules = rules.allowListOnly || Object.keys(rules.edges).length > 0
-
-  /*
-   * Saves run one at a time on the latest stored rules, so quick taps on
-   * different pairs never overwrite each other.
-   */
-  const queue = useRef(Promise.resolve())
-  const save = (change: (current: SettlementRules) => SettlementRules) => {
-    queue.current = queue.current.then(async () => {
-      try {
-        const latest = (await store.getAll<Group>('group')).find(
-          g => g.id === group.id,
-        )
-        await updateGroupRules(
-          store,
-          ctx,
-          group.id,
-          change(latest?.data.rules ?? NO_RULES),
-        )
-      } catch (e) {
-        logger.error(e, {where: 'RulesEditor.save'})
-        haptics.error()
-        Toast.show(l`Couldn’t save the rule. Please try again.`, {
-          type: 'error',
-        })
-      }
-    })
-  }
+  const save = (change: (current: SettlementRules) => SettlementRules) =>
+    onRulesChange(change(rules))
 
   const setRule = (from: string, to: string, rule: EdgeRule) =>
     save(r => ({...r, edges: {...r.edges, [`${from}>${to}`]: rule}}))
 
   return (
     <View style={[a.pb_lg]}>
-      <View style={[a.px_lg, a.pt_md, a.pb_lg, a.gap_xs, {maxWidth: 720}]}>
+      <View style={[a.pb_lg, a.gap_xs]}>
         <Text style={[a.text_lg, a.font_bold, a.leading_snug]}>
           <Trans>Who you settle with</Trans>
         </Text>
@@ -110,7 +163,6 @@ export function RulesEditor({
 
       <View
         style={[
-          a.mx_lg,
           a.mb_lg,
           a.px_lg,
           a.py_md,
@@ -144,14 +196,7 @@ export function RulesEditor({
       {members.map(from => (
         <View key={from} style={[a.pb_md]}>
           <View
-            style={[
-              a.flex_row,
-              a.align_center,
-              a.gap_sm,
-              a.px_lg,
-              a.pt_md,
-              a.pb_sm,
-            ]}>
+            style={[a.flex_row, a.align_center, a.gap_sm, a.pt_md, a.pb_sm]}>
             <UserAvatar size={24} name={names.get(from)} type="user" />
             <Text emoji style={[a.text_md, a.font_semi_bold]}>
               {from === me ? (
@@ -179,7 +224,7 @@ export function RulesEditor({
       ))}
 
       {hasRules && (
-        <View style={[a.px_lg, a.pt_sm, a.flex_row]}>
+        <View style={[a.pt_sm, a.flex_row]}>
           <Button
             testID="rules-reset"
             label={l`Reset rules`}
@@ -226,7 +271,6 @@ function PairRow({
   return (
     <View
       style={[
-        a.px_lg,
         a.py_sm,
         a.border_t,
         t.atoms.border_contrast_low,

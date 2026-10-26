@@ -1,14 +1,14 @@
 // Adapted from bluesky-social/social-app@4e4ad9c (MIT) - src/components/dialogs/LanguageSelectDialog.tsx
 import {useState} from 'react'
 import {View} from 'react-native'
-import {Trans, useLingui} from '@lingui/react/macro'
+import {Trans} from '@lingui/react/macro'
 
+import {useShouldReduceMotion} from '#/motion/useShouldReduceMotion'
 import {atoms as a, tokens, useTheme, web} from '#/alf'
-import {Button, ButtonIcon} from '#/components/Button'
 import * as Dialog from '#/components/Dialog'
+import * as FormSheet from '#/components/FormSheet'
 import {SearchInput} from '#/components/forms/SearchInput'
 import * as Toggle from '#/components/forms/Toggle'
-import {TimesLarge_Stroke2_Corner0_Rounded as XIcon} from '#/components/icons/Times'
 import {Text} from '#/components/Typography'
 import {IS_NATIVE, IS_WEB} from '#/env'
 
@@ -44,8 +44,7 @@ export function OptionDialog({
   testID?: string
 }) {
   return (
-    <Dialog.Outer control={control} nativeOptions={{fullHeight: true}}>
-      <Dialog.Handle />
+    <FormSheet.Outer control={control} fullHeight>
       <DialogInner
         title={title}
         searchLabel={searchLabel}
@@ -54,7 +53,7 @@ export function OptionDialog({
         onSelect={onSelect}
         testID={testID}
       />
-    </Dialog.Outer>
+    </FormSheet.Outer>
   )
 }
 
@@ -74,8 +73,9 @@ function DialogInner({
   testID?: string
 }) {
   const control = Dialog.useDialogContext()
+  const isSheet = FormSheet.useIsSheet()
+  const reduceMotion = useShouldReduceMotion()
   const t = useTheme()
-  const {t: l} = useLingui()
   const [search, setSearch] = useState('')
   const [headerHeight, setHeaderHeight] = useState(0)
 
@@ -90,32 +90,14 @@ function DialogInner({
 
   const listHeader = (
     <View
-      style={[a.pb_xs, t.atoms.bg, IS_NATIVE && a.pt_2xl]}
+      style={[a.pb_xs, t.atoms.bg, IS_NATIVE ? a.pt_lg : a.pt_sm]}
       onLayout={evt => setHeaderHeight(evt.nativeEvent.layout.height)}>
-      <View style={[a.flex_row, a.w_full, a.justify_between, a.align_start]}>
-        <Text
-          nativeID="dialog-title"
-          style={[
-            t.atoms.text,
-            a.text_left,
-            a.font_semi_bold,
-            a.text_xl,
-            a.mb_md,
-          ]}>
-          {title}
-        </Text>
-        {IS_WEB && (
-          <Button
-            variant="ghost"
-            size="small"
-            color="secondary"
-            shape="round"
-            label={l`Close dialog`}
-            onPress={() => control.close()}>
-            <ButtonIcon icon={XIcon} />
-          </Button>
-        )}
-      </View>
+      {/* Owner rule 7: the sheet's title on the left, the round cross at the top right. */}
+      <FormSheet.Header
+        title={title}
+        onClose={() => control.close()}
+        style={[a.px_0, a.pt_0]}
+      />
       <SearchInput
         testID={testID ? `${testID}-search` : undefined}
         value={search}
@@ -139,6 +121,14 @@ function DialogInner({
       style={web([a.contents])}>
       <Dialog.InnerFlatList
         testID={testID}
+        webInnerStyle={
+          isSheet
+            ? [
+                FormSheet.webSheetStyle,
+                !reduceMotion && web({animation: FormSheet.SLIDE_UP}),
+              ]
+            : web({marginTop: 'auto', marginBottom: 'auto'})
+        }
         data={shown}
         keyExtractor={(o: DialogOption) => o.value}
         ListHeaderComponent={listHeader}

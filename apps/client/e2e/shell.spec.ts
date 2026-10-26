@@ -396,13 +396,14 @@ test.describe('phone: Bluesky bottom bar and FAB', () => {
     await expect(on(page, 'screen-analytics', 'fab-add')).toHaveCount(0)
   })
 
-  test('the composer covers the whole phone screen, top bar and tab bar included', async ({page}) => {
+  test('the composer is a sheet over the page: full width, from the bottom edge, below a strip of the page', async ({page}) => {
     await page.setViewportSize(PHONE)
     await open(page, '/expense/new', 'screen-add-expense')
+    await page.waitForTimeout(500)
     const box = (await page.getByTestId('screen-add-expense').boundingBox())!
-    expect(box.y).toBe(0)
-    expect(box.height).toBe(PHONE.height)
     expect(box.width).toBe(PHONE.width)
+    expect(Math.round(box.y + box.height)).toBe(PHONE.height)
+    expect(box.y).toBeGreaterThanOrEqual(40)
   })
 
   test('the FAB opens Add expense like the composer; the close cross returns', async ({page}) => {

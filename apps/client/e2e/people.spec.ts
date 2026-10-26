@@ -43,7 +43,7 @@ test('A04: direct 100 + group 50 = 150; Include groups off = 100, totals and his
   await page.getByTestId('filter-include-groups').click()
   // Nothing changes before Apply.
   await expect(page.getByTestId('person-total-INR')).toHaveText('₹150.00')
-  await page.getByTestId('filter-apply').click()
+  await page.getByTestId('sheet-save').click()
 
   await expect(page.getByTestId('person-total-INR')).toHaveText('₹100.00')
   await expect(page.getByTestId('person-history-title')).toHaveText('History  1')
@@ -76,7 +76,7 @@ test('recording a part payment moves the balance; deleting it is undoable', asyn
   await expect(page.getByTestId('payment-amount')).toHaveValue('150.00')
   await page.getByTestId('payment-amount').fill('40')
   await page.getByTestId('payment-note').fill('Cash')
-  await page.getByTestId('payment-save').click()
+  await page.getByTestId('sheet-save').click()
   await expect(page.getByTestId('payment-recorded')).toBeVisible()
   await expect(page.getByTestId('person-total-INR')).toHaveText('₹110.00')
 
@@ -99,7 +99,7 @@ test('swapping the direction records what I paid them', async ({page}) => {
   await page.getByTestId('payment-swap').click()
   await expect(page.getByTestId('payment-sentence')).toHaveText('You paid Kavya Rao')
   await page.getByTestId('payment-amount').fill('25')
-  await page.getByTestId('payment-save').click()
+  await page.getByTestId('sheet-save').click()
   await expect(page.getByTestId('person-total-INR')).toHaveText('₹175.00')
 })
 
@@ -110,7 +110,7 @@ test('paying the whole balance from a friend’s page settles the group part too
   await page.getByTestId('person-record-payment').click()
   await expect(page.getByTestId('payment-amount')).toHaveValue('150.00')
   await expect(page.getByTestId('payment-settles')).toHaveText('Counts towards: Direct ₹100.00 · Pune trip ₹50.00')
-  await page.getByTestId('payment-save').click()
+  await page.getByTestId('sheet-save').click()
   await expect(page.getByTestId('payment-recorded')).toBeVisible()
   await expect(page.getByTestId('person-settled')).toBeVisible()
 
@@ -130,7 +130,7 @@ test('People: the Include groups filter changes the totals only on Apply', async
   await page.getByTestId('list-filters').click()
   await page.getByTestId('filter-include-groups').click()
   await expect(row.getByTestId('balance-INR')).toHaveText('owes you ₹150.00')
-  await page.getByTestId('filter-apply').click()
+  await page.getByTestId('sheet-save').click()
   await expect(row.getByTestId('balance-INR')).toHaveText('owes you ₹100.00')
   // The button carries a dot and says how many filters differ from the defaults.
   await expect(page.getByTestId('list-filters-dot')).toBeVisible()
@@ -148,7 +148,7 @@ test('People filters: one currency, which way, and the order drive the list and 
   await page.getByTestId('filter-show-youOwe').click()
   // Nothing changes before Apply.
   await expect(people.getByTestId('person-Arjun Mehta')).toBeVisible()
-  await page.getByTestId('filter-apply').click()
+  await page.getByTestId('sheet-save').click()
 
   // Only friends I owe in euros, and only euros in the summary.
   await expect(people.getByTestId('person-Arjun Mehta')).toHaveCount(0)
@@ -160,11 +160,14 @@ test('People filters: one currency, which way, and the order drive the list and 
   // Cancel leaves the applied filters alone; nobody matching shows a way back.
   await people.getByTestId('list-filters').click()
   await page.getByTestId('filter-show-settled').click()
-  await page.getByTestId('filter-cancel').click()
+  // A changed sheet asks before it drops the change.
+  await page.getByTestId('sheet-cancel').click()
+  await expect(page.getByText('Discard changes?')).toBeVisible()
+  await page.getByTestId('confirmBtn').click()
   await expect(people.getByTestId('person-Sam Carter')).toBeVisible()
   await people.getByTestId('list-filters').click()
   await page.getByTestId('filter-show-settled').click()
-  await page.getByTestId('filter-apply').click()
+  await page.getByTestId('sheet-save').click()
   await expect(people.getByTestId('people-filtered-empty')).toBeVisible()
   await people.getByTestId('people-clear-filters').click()
   await expect(people.getByTestId('person-Arjun Mehta')).toBeVisible()
@@ -209,8 +212,9 @@ test('UPI pay link shows only when I owe them rupees, and asks before recording'
   await expect(page.getByTestId('person-direction-INR')).toHaveText('You owe')
   await page.getByTestId('person-upi').click()
   await expect(page.getByTestId('upi-amount')).toHaveValue('150.00')
-  await page.getByTestId('upi-open').click()
-  await expect(page.getByText('Enter a UPI ID like name@bank.')).toBeVisible()
+  // No UPI ID yet, so the sheet's primary action waits for one.
+  await expect(page.getByTestId('sheet-save')).toHaveText('Open UPI app')
+  await expect(page.getByTestId('sheet-save')).toBeDisabled()
   await page.getByTestId('upi-id').fill('meera@okhdfc')
   // Keep the page here: record the UPI link instead of handing it to the OS.
   await page.evaluate(() =>
@@ -225,17 +229,17 @@ test('UPI pay link shows only when I owe them rupees, and asks before recording'
       true,
     ),
   )
-  await page.getByTestId('upi-open').click()
+  await page.getByTestId('sheet-save').click()
   await expect.poll(() => page.evaluate(() => (window as unknown as {upiLink?: string}).upiLink)).toBe(
     'upi://pay?pa=meera%40okhdfc&pn=Meera%20Iyer&am=150.00&cu=INR&tn=Splito',
   )
   await expect(page.getByTestId('upi-confirm')).toBeVisible()
   // Nothing is recorded until the user says it went through.
   await expect(page.getByTestId('person-total-INR')).toHaveText('₹150.00')
-  await page.getByTestId('upi-mark-paid').click()
+  await page.getByTestId('upi-sheet').getByTestId('sheet-save').click()
   await expect(page.getByTestId('payment-sentence')).toHaveText('You paid Meera Iyer')
   await expect(page.getByTestId('payment-amount')).toHaveValue('150.00')
-  await page.getByTestId('payment-save').click()
+  await page.getByTestId('sheet-save').click()
   await expect(page.getByTestId('person-settled')).toBeVisible()
   // The UPI ID is remembered on the friend.
   await expect(page.getByText('meera@okhdfc')).toBeVisible()

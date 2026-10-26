@@ -1,4 +1,5 @@
 import {useState} from 'react'
+import {useLingui} from '@lingui/react/macro'
 import {useNavigation, useRoute, type RouteProp} from '@react-navigation/native'
 import {type Entity, type Group, type Person} from '@splito/sync'
 
@@ -17,6 +18,7 @@ import {localToday, useExpenseTz} from '#/components/split/shared'
  * with them (and the group's currency).
  */
 export function AddExpenseScreen() {
+  const {t: l} = useLingui()
   const navigation = useNavigation<NavigationProp>()
   const {params} = useRoute<RouteProp<AllNavigatorParams, 'AddExpense'>>()
   const me = useMe()
@@ -32,7 +34,13 @@ export function AddExpenseScreen() {
   }
 
   if (!me || !people || !groups || !currency || !mode) {
-    return <ComposerSkeleton testID="screen-add-expense" onClose={close} />
+    return (
+      <ComposerSkeleton
+        testID="screen-add-expense"
+        title={l({message: 'Add expense', context: 'action'})}
+        onClose={close}
+      />
+    )
   }
 
   return (

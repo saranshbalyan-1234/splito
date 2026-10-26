@@ -16,7 +16,7 @@ glyphs, illustrations, logos or `assets/images` are copied.
 | `src/view/shell/index.tsx` | `src/view/shell/index.tsx` | Composer, global dialogs, OTA and push hooks removed (drawer: see `preview-shell.md`) |
 | `src/view/shell/index.web.tsx` | `src/view/shell/index.web.tsx` | As above |
 | `src/components/Composer/index.tsx` | `src/view/shell/Composer.tsx` | A route body (the stack presents it like the composer modal) instead of a state-driven overlay |
-| `src/components/Composer/index.web.tsx` | `src/view/shell/Composer.web.tsx` | Rendered through the shell portal from the `/expense/new` route; fills the height on phones |
+| `src/components/Composer/index.web.tsx` | `src/view/shell/Composer.web.tsx` | Rendered through the shell portal from the `/expense/new` route; centred, and a sheet from the bottom edge on phones (see `sheets.md`) |
 | `src/view/com/util/fab/FAB.tsx` | `src/view/com/util/fab/FAB.tsx` | - |
 | `src/view/com/util/fab/FAB.web.tsx` | `src/view/com/util/fab/FAB.web.tsx` | - |
 | `src/view/com/util/fab/FABInner.tsx` | `src/view/com/util/fab/FABInner.tsx` | - |

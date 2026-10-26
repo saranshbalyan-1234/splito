@@ -1,3 +1,4 @@
+import {KeyboardProvider as KeyboardControllerProvider} from 'react-native-keyboard-controller'
 import {SafeAreaProvider} from 'react-native-safe-area-context'
 import {I18nProvider} from '@lingui/react'
 
@@ -48,7 +49,10 @@ export default function App() {
       <SafeAreaProvider>
         <I18nProvider i18n={i18n}>
           <A11yProvider>
-            <Themed />
+            {/* As Bluesky's App.tsx: form sheets keep their footer above the keyboard. */}
+            <KeyboardControllerProvider preload={false}>
+              <Themed />
+            </KeyboardControllerProvider>
           </A11yProvider>
         </I18nProvider>
       </SafeAreaProvider>

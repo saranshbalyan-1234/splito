@@ -11,6 +11,8 @@ import {
   ensureMe,
   restoreExpense,
   updateExpense,
+  updateGroup,
+  updateGroupRules,
 } from '../src/mutations'
 import {loadLedger, syncStatus} from '../src/selectors'
 import {openSqlStore} from '../src/sqlStore'
@@ -121,6 +123,21 @@ test('group always includes me; group expense with non-member payer rejected', a
   const ok = await createExpense(s, ctx, draft(x.id, {groupId: g.id}))
   expect(pairwiseBalances(await loadLedger(s), 'me')).toEqual([{person: x.id, groupId: g.id, currency: 'INR', amount: 50n}])
   expect(ok.data.groupId).toBe(g.id)
+})
+
+test('updateGroup edits name, type, currency and dates; members and rules stay', async () => {
+  const x = await createPerson(s, ctx, {name: 'Riya'})
+  const g = await createGroup(s, ctx, {name: 'Goa', kind: 'trip', currency: 'INR', memberIds: [x.id], startDate: '2026-10-01', endDate: null})
+  await updateGroupRules(s, ctx, g.id, {allowListOnly: true, edges: {}})
+  const u = await updateGroup(s, ctx, g.id, {name: '  Flat 4B ', kind: 'home', currency: 'EUR', startDate: null, endDate: null})
+  expect(u.data).toMatchObject({name: 'Flat 4B', kind: 'home', currency: 'EUR', startDate: null, endDate: null, archived: false})
+  expect(u.data.members).toEqual(g.data.members)
+  expect(u.data.rules).toEqual({allowListOnly: true, edges: {}})
+  expect(u.version).toBe(3)
+  await expect(updateGroup(s, ctx, g.id, {name: ' ', kind: 'home', currency: 'EUR', startDate: null, endDate: null})).rejects.toThrow('INVALID_NAME')
+  await expect(updateGroup(s, ctx, g.id, {name: 'Goa', kind: 'trip', currency: 'INR', startDate: '2026-10-05', endDate: '2026-10-01'})).rejects.toThrow('INVALID_DATE')
+  await expect(updateGroup(s, ctx, g.id, {name: 'Goa', kind: 'trip', currency: 'XXX', startDate: null, endDate: null})).rejects.toThrow()
+  await expect(updateGroup(s, ctx, 'nope', {name: 'Goa', kind: 'trip', currency: 'INR', startDate: null, endDate: null})).rejects.toThrow('NOT_FOUND')
 })
 
 test('dates outside October 2026 accepted, invalid dates rejected', async () => {

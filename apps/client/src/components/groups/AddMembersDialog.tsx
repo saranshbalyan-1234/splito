@@ -13,14 +13,13 @@ import {useHaptics} from '#/lib/haptics'
 import {logger} from '#/logger'
 import {useEntities, useMutationCtx, useStore} from '#/data/hooks'
 import {UserAvatar} from '#/view/com/util/UserAvatar'
-import {atoms as a, useTheme, web} from '#/alf'
+import {atoms as a, useTheme} from '#/alf'
 import {Button, ButtonIcon} from '#/components/Button'
 import * as Dialog from '#/components/Dialog'
 import * as TextField from '#/components/forms/TextField'
 import * as Toggle from '#/components/forms/Toggle'
 import {PlusLarge_Stroke2_Corner0_Rounded as PlusIcon} from '#/components/icons/Plus'
 import * as Toast from '#/components/Toast'
-import {Text} from '#/components/Typography'
 import * as FormSheet from '#/components/FormSheet'
 
 /**
@@ -34,17 +33,10 @@ export function AddMembersDialog({
   control: Dialog.DialogControlProps
   group: Entity<Group>
 }) {
-  const {t: l} = useLingui()
   return (
-    <Dialog.Outer control={control}>
-      <Dialog.Handle />
-      <Dialog.ScrollableInner
-        label={l`Add members`}
-        style={web({maxWidth: 440})}>
-        <Form group={group} />
-        <Dialog.Close />
-      </Dialog.ScrollableInner>
-    </Dialog.Outer>
+    <FormSheet.Outer control={control} testID="add-members-sheet">
+      <Form group={group} />
+    </FormSheet.Outer>
   )
 }
 
@@ -102,18 +94,21 @@ function Form({group}: {group: Entity<Group>}) {
   }
 
   return (
-    <View style={[a.gap_lg]}>
-      <View style={[a.gap_xs, a.pr_2xl]}>
-        <Text style={[a.text_2xl, a.font_bold, a.leading_tight]}>
-          <Trans>Add members</Trans>
-        </Text>
-        <Text style={[a.text_md, a.leading_snug, t.atoms.text_contrast_medium]}>
-          <Trans>
-            They join from now on. Expenses already in the group keep their
-            splits.
-          </Trans>
-        </Text>
-      </View>
+    <FormSheet.Inner
+      title={l`Add members`}
+      isDirty={selected.length > 0 || newName.trim() !== ''}
+      footer={{
+        saveLabel: l`Add to group`,
+        canSave: selected.length > 0,
+        isSaving,
+        onSave: () => void save(),
+      }}>
+      <FormSheet.Description>
+        <Trans>
+          They join from now on. Expenses already in the group keep their
+          splits.
+        </Trans>
+      </FormSheet.Description>
 
       <View
         style={[
@@ -185,16 +180,6 @@ function Form({group}: {group: Entity<Group>}) {
           </Button>
         </View>
       </View>
-
-      <FormSheet.Actions
-        saveTestID="add-members-save"
-        cancelTestID="add-members-cancel"
-        saveLabel={l`Add to group`}
-        canSave={selected.length > 0}
-        isSaving={isSaving}
-        onCancel={() => control.close()}
-        onSave={() => void save()}
-      />
-    </View>
+    </FormSheet.Inner>
   )
 }

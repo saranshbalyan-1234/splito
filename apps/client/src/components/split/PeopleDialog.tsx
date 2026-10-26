@@ -8,12 +8,12 @@ import {UserAvatar} from '#/view/com/util/UserAvatar'
 import {atoms as a, useTheme} from '#/alf'
 import {Button} from '#/components/Button'
 import * as Dialog from '#/components/Dialog'
+import * as FormSheet from '#/components/FormSheet'
 import {SearchInput} from '#/components/forms/SearchInput'
 import * as Toggle from '#/components/forms/Toggle'
 import {PersonPlus_Filled_Stroke2_Corner0_Rounded as PersonPlusIcon} from '#/components/icons/Person'
 import * as Toast from '#/components/Toast'
 import {Text} from '#/components/Typography'
-import {DialogHeading} from './pickers'
 import {useAvatarName, useDisplayName, useErrorText} from './shared'
 
 /**
@@ -42,11 +42,7 @@ export function PeopleDialog({
   onChange: (ids: string[]) => void
 }) {
   return (
-    <Dialog.Outer
-      control={control}
-      nativeOptions={{fullHeight: true}}
-      testID="people-dialog">
-      <Dialog.Handle />
+    <FormSheet.Outer control={control} testID="people-dialog" fullHeight>
       <PeopleInner
         title={title}
         description={description}
@@ -56,7 +52,7 @@ export function PeopleDialog({
         allowNew={allowNew}
         onChange={onChange}
       />
-    </Dialog.Outer>
+    </FormSheet.Outer>
   )
 }
 
@@ -108,8 +104,10 @@ function PeopleInner({
   }
 
   return (
-    <Dialog.ScrollableInner label={title}>
-      <DialogHeading title={title} description={description} />
+    <FormSheet.Inner title={title}>
+      {description ? (
+        <FormSheet.Description>{description}</FormSheet.Description>
+      ) : null}
       <SearchInput
         testID="people-search"
         value={query}
@@ -201,7 +199,6 @@ function PeopleInner({
         </Text>
       ) : null}
       {/* A picker: choices apply as they are made, so the cross is all it needs (owner sheet rule). */}
-      <Dialog.Close />
-    </Dialog.ScrollableInner>
+    </FormSheet.Inner>
   )
 }

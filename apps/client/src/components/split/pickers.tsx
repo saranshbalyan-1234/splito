@@ -5,60 +5,14 @@ import {CURRENCIES, type CurrencyInfo} from '@splito/domain'
 import {type Category, type Entity, type Group} from '@splito/sync'
 
 import {UserAvatar} from '#/view/com/util/UserAvatar'
-import {atoms as a, useBreakpoints, useTheme, web} from '#/alf'
-import {Button, ButtonText} from '#/components/Button'
+import {atoms as a, useBreakpoints, useTheme} from '#/alf'
+import {Button} from '#/components/Button'
 import * as Dialog from '#/components/Dialog'
+import * as FormSheet from '#/components/FormSheet'
 import {SearchInput} from '#/components/forms/SearchInput'
 import * as Toggle from '#/components/forms/Toggle'
 import {Text} from '#/components/Typography'
 import {CategoryTile} from './shared'
-
-/** Title (and optional line of help) at the top of every expense-flow dialog, as Bluesky's dialogs. */
-export function DialogHeading({
-  title,
-  description,
-}: {
-  title: string
-  description?: string
-}) {
-  const t = useTheme()
-  return (
-    <View style={[a.gap_xs, a.pb_lg, web(a.pr_4xl)]}>
-      <Text style={[a.text_2xl, a.font_semi_bold, a.leading_snug]}>
-        {title}
-      </Text>
-      {description ? (
-        <Text style={[a.text_md, a.leading_snug, t.atoms.text_contrast_medium]}>
-          {description}
-        </Text>
-      ) : null}
-    </View>
-  )
-}
-
-/** Bluesky's full-width primary button that ends a dialog. */
-export function DoneButton({
-  label,
-  onPress,
-  testID,
-}: {
-  label?: string
-  onPress: () => void
-  testID?: string
-}) {
-  const {t: l} = useLingui()
-  return (
-    <Button
-      testID={testID}
-      label={label ?? l`Done`}
-      color="primary"
-      size="large"
-      onPress={onPress}
-      style={[a.mt_lg]}>
-      <ButtonText>{label ?? <Trans>Done</Trans>}</ButtonText>
-    </Button>
-  )
-}
 
 /** Separator rule between Toggle rows, as in upstream's LanguageSelectDialog. */
 function rowStyle(t: ReturnType<typeof useTheme>, isLast: boolean) {
@@ -86,13 +40,9 @@ export function CurrencyDialog({
   onSelect: (code: string) => void
 }) {
   return (
-    <Dialog.Outer
-      control={control}
-      nativeOptions={{fullHeight: true}}
-      testID="currency-dialog">
-      <Dialog.Handle />
+    <FormSheet.Outer control={control} testID="currency-dialog" fullHeight>
       <CurrencyInner value={value} onSelect={onSelect} />
-    </Dialog.Outer>
+    </FormSheet.Outer>
   )
 }
 
@@ -116,8 +66,7 @@ function CurrencyInner({
   ].filter((c): c is CurrencyInfo => !!c && matches(c))
 
   return (
-    <Dialog.ScrollableInner label={l`Choose a currency`}>
-      <DialogHeading title={l`Currency`} />
+    <FormSheet.Inner title={l`Currency`}>
       <SearchInput
         testID="currency-search"
         value={query}
@@ -172,8 +121,7 @@ function CurrencyInner({
           </Text>
         )}
       </Toggle.Group>
-      <Dialog.Close />
-    </Dialog.ScrollableInner>
+    </FormSheet.Inner>
   )
 }
 
@@ -191,14 +139,13 @@ export function CategoryDialog({
   onSelect: (id: string) => void
 }) {
   return (
-    <Dialog.Outer control={control} testID="category-dialog">
-      <Dialog.Handle />
+    <FormSheet.Outer control={control} testID="category-dialog">
       <CategoryInner
         categories={categories}
         value={value}
         onSelect={onSelect}
       />
-    </Dialog.Outer>
+    </FormSheet.Outer>
   )
 }
 
@@ -218,11 +165,8 @@ function CategoryInner({
   const columns = gtMobile ? 4 : 3
 
   return (
-    <Dialog.ScrollableInner label={l`Choose a category`}>
-      <DialogHeading
-        title={l`Category`}
-        description={l`Change categories in Settings.`}
-      />
+    <FormSheet.Inner title={l`Category`}>
+      <FormSheet.Description>{l`Change categories in Settings.`}</FormSheet.Description>
       <View style={[a.flex_row, a.flex_wrap, {marginHorizontal: -4}]}>
         {categories.map(c => {
           const isSelected = c.id === value
@@ -260,8 +204,7 @@ function CategoryInner({
           )
         })}
       </View>
-      <Dialog.Close />
-    </Dialog.ScrollableInner>
+    </FormSheet.Inner>
   )
 }
 
@@ -279,10 +222,9 @@ export function GroupDialog({
   onSelect: (groupId: string | null) => void
 }) {
   return (
-    <Dialog.Outer control={control} testID="group-dialog">
-      <Dialog.Handle />
+    <FormSheet.Outer control={control} testID="group-dialog">
       <GroupInner groups={groups} value={value} onSelect={onSelect} />
-    </Dialog.Outer>
+    </FormSheet.Outer>
   )
 }
 
@@ -311,11 +253,8 @@ function GroupInner({
   ]
 
   return (
-    <Dialog.ScrollableInner label={l`Choose a group`}>
-      <DialogHeading
-        title={l`Group`}
-        description={l`A group expense splits between the group’s members and uses its currency.`}
-      />
+    <FormSheet.Inner title={l`Group`}>
+      <FormSheet.Description>{l`A group expense splits between the group’s members and uses its currency.`}</FormSheet.Description>
       <Toggle.Group
         type="radio"
         label={l`Group`}
@@ -349,7 +288,6 @@ function GroupInner({
           </Toggle.Item>
         ))}
       </Toggle.Group>
-      <Dialog.Close />
-    </Dialog.ScrollableInner>
+    </FormSheet.Inner>
   )
 }

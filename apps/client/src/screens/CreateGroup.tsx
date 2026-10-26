@@ -1,8 +1,8 @@
 import {useState} from 'react'
-import {KeyboardAvoidingView, ScrollView, View} from 'react-native'
+import {View} from 'react-native'
 import {Trans, useLingui} from '@lingui/react/macro'
 import {useNavigation} from '@react-navigation/native'
-import {CURRENCIES, DomainError, parseLocalDate} from '@splito/domain'
+import {DomainError, parseLocalDate} from '@splito/domain'
 import {createGroup, createPerson, type Group, type Person} from '@splito/sync'
 
 import {useHaptics} from '#/lib/haptics'
@@ -16,25 +16,18 @@ import {
   useStore,
 } from '#/data/hooks'
 import {UserAvatar} from '#/view/com/util/UserAvatar'
-import {atoms as a, useBreakpoints, useTheme, web} from '#/alf'
-import {Button, ButtonIcon, ButtonText} from '#/components/Button'
+import {atoms as a, useTheme} from '#/alf'
+import {Button, ButtonIcon} from '#/components/Button'
 import * as Dialog from '#/components/Dialog'
-import {DateField} from '#/components/forms/DateField'
-import * as SegmentedControl from '#/components/forms/SegmentedControl'
 import * as TextField from '#/components/forms/TextField'
 import * as Toggle from '#/components/forms/Toggle'
-import {ChevronRight_Stroke2_Corner0_Rounded as ChevronIcon} from '#/components/icons/Chevron'
-import {Group3_Stroke2_Corner0_Rounded as GroupIcon} from '#/components/icons/Group'
 import {PlusLarge_Stroke2_Corner0_Rounded as PlusIcon} from '#/components/icons/Plus'
-import * as Composer from '#/components/Composer'
 import * as FormSheet from '#/components/FormSheet'
+import {GroupFields} from '#/components/groups/GroupFields'
 import {AvatarPreview} from '#/components/people/AvatarPreview'
-import {currencyName} from '#/components/people/ledger'
-import * as Prompt from '#/components/Prompt'
+import {CurrencyDialog} from '#/components/split/pickers'
 import * as Toast from '#/components/Toast'
 import {Text} from '#/components/Typography'
-import {IS_IOS} from '#/env'
-
 
 type Kind = Group['kind']
 
@@ -44,7 +37,7 @@ type Kind = Group['kind']
  */
 export function CreateGroupScreen() {
   const t = useTheme()
-  const {t: l, i18n} = useLingui()
+  const {t: l} = useLingui()
   const navigation = useNavigation<NavigationProp>()
   const store = useStore()
   const ctx = useMutationCtx()
@@ -63,7 +56,6 @@ export function CreateGroupScreen() {
   const [error, setError] = useState<'name' | 'dates' | null>(null)
   const [isSaving, setIsSaving] = useState(false)
   const currencyControl = Dialog.useDialogControl()
-  const discardControl = Prompt.usePromptControl()
   const isDirty =
     name.trim() !== '' || memberIds.length > 0 || !!startDate || !!endDate
 
@@ -71,11 +63,6 @@ export function CreateGroupScreen() {
     if (navigation.canGoBack()) navigation.goBack()
     else navigation.navigate('Groups')
   }
-  const requestClose = () => {
-    if (isDirty && !isSaving) discardControl.open()
-    else close()
-  }
-
   const friends = (people ?? [])
     .filter(p => !p.data.isMe)
     .sort((x, y) => x.data.name.localeCompare(y.data.name))
@@ -135,317 +122,139 @@ export function CreateGroupScreen() {
     }
   }
 
-  const kinds: Array<[Kind, string]> = [
-    ['trip', l`Trip`],
-    ['home', l`Home`],
-    ['couple', l`Couple`],
-    ['other', l`Other`],
-  ]
-
   return (
-    <Composer.Outer testID="screen-create-group" onDismiss={requestClose}>
-      <FormSheet.Header
-        title={l`New group`}
-        onClose={requestClose}
-        closeHint={l`Closes without creating the group`}
-      />
-      <KeyboardAvoidingView
-        behavior={IS_IOS ? 'padding' : undefined}
-        style={[a.flex_1, web(a.flex_shrink)]}>
-        <ScrollView
-          keyboardShouldPersistTaps="handled"
-          style={[a.flex_1, web([a.flex_shrink, {minHeight: 0}])]}
-          contentContainerStyle={[a.px_lg, a.pt_md, a.pb_xl, a.gap_xl]}>
-          <View style={[a.flex_row, a.align_center, a.gap_md]}>
-            <AvatarPreview name={name} type="list" />
-            <View style={[a.flex_1, a.gap_2xs]}>
-              <Text style={[a.text_xl, a.font_bold, a.leading_tight]}>
-                <Trans>One place for shared costs</Trans>
+    <FormSheet.Screen
+      testID="screen-create-group"
+      title={l`New group`}
+      closeHint={l`Closes without creating the group`}
+      isDirty={isDirty && !isSaving}
+      onClose={close}
+      discardDescription={l`What you filled in won’t be kept. Anyone you added as a new friend stays in People.`}
+      footer={{
+        saveLabel: l`Create group`,
+        canSave: name.trim() !== '',
+        isSaving,
+        onSave: () => void save(),
+      }}
+      overlay={
+        <CurrencyDialog
+          control={currencyControl}
+          value={currency}
+          onSelect={setCurrency}
+        />
+      }>
+      <View style={[a.px_lg, a.pt_md, a.gap_xl]}>
+        <View style={[a.flex_row, a.align_center, a.gap_md]}>
+          <AvatarPreview name={name} type="list" />
+          <View style={[a.flex_1, a.gap_2xs]}>
+            <Text style={[a.text_xl, a.font_bold, a.leading_tight]}>
+              <Trans>One place for shared costs</Trans>
+            </Text>
+            <Text
+              style={[a.text_md, a.leading_snug, t.atoms.text_contrast_medium]}>
+              <Trans>A trip, a flat or anything you split often.</Trans>
+            </Text>
+          </View>
+        </View>
+
+        <GroupFields
+          value={{name, kind, currency, startDate, endDate}}
+          error={error}
+          onChange={patch => {
+            if (patch.name !== undefined) setName(patch.name)
+            if (patch.kind) setKind(patch.kind)
+            if (patch.startDate !== undefined) setStartDate(patch.startDate)
+            if (patch.endDate !== undefined) setEndDate(patch.endDate)
+            setError(null)
+          }}
+          onPressCurrency={() => currencyControl.open()}
+          autoFocus
+        />
+
+        <View>
+          <TextField.LabelText>
+            <Trans>Members</Trans>
+          </TextField.LabelText>
+          <View
+            style={[
+              a.rounded_md,
+              a.border,
+              t.atoms.border_contrast_low,
+              a.overflow_hidden,
+            ]}>
+            <View
+              style={[a.flex_row, a.align_center, a.gap_md, a.px_md, a.py_sm]}>
+              <UserAvatar size={32} name={me?.data.name} type="user" />
+              <Text style={[a.flex_1, a.text_md, a.font_semi_bold]}>
+                <Trans>You</Trans>
               </Text>
-              <Text
-                style={[
-                  a.text_md,
-                  a.leading_snug,
-                  t.atoms.text_contrast_medium,
-                ]}>
-                <Trans>A trip, a flat or anything you split often.</Trans>
+              <Text style={[a.text_sm, t.atoms.text_contrast_medium]}>
+                <Trans>Always in the group</Trans>
               </Text>
             </View>
-          </View>
-
-          <View>
-            <TextField.LabelText>
-              <Trans>Name</Trans>
-            </TextField.LabelText>
-            <TextField.Root isInvalid={error === 'name'}>
-              <TextField.Icon icon={GroupIcon} />
-              <TextField.Input
-                testID="create-group-name"
-                label={l`Group name`}
-                value={name}
-                onChangeText={v => {
-                  setName(v)
-                  setError(null)
-                }}
-                placeholder={l`e.g. Goa trip`}
-                autoFocus
-                maxLength={64}
-              />
-            </TextField.Root>
-            {error === 'name' && (
-              <Text
-                style={[a.pt_sm, a.text_sm, {color: t.palette.negative_500}]}>
-                <Trans>Enter a name.</Trans>
-              </Text>
-            )}
-          </View>
-
-          <View>
-            <TextField.LabelText>
-              <Trans>Type</Trans>
-            </TextField.LabelText>
-            <SegmentedControl.Root
-              label={l`Group type`}
-              type="radio"
-              size="small"
-              value={kind}
-              onChange={setKind}>
-              {kinds.map(([value, label]) => (
-                <SegmentedControl.Item
-                  key={value}
-                  value={value}
-                  label={label}
-                  testID={`create-group-kind-${value}`}>
-                  <SegmentedControl.ItemText style={[a.text_sm]}>
-                    {label}
-                  </SegmentedControl.ItemText>
-                </SegmentedControl.Item>
+            <Toggle.Group
+              label={l`Members`}
+              type="checkbox"
+              values={memberIds}
+              onChange={setMemberIds}>
+              {friends.map(friend => (
+                <Toggle.Item
+                  key={friend.id}
+                  testID={`create-group-member-${friend.data.name}`}
+                  name={friend.id}
+                  label={friend.data.name}
+                  style={[
+                    a.px_md,
+                    a.py_sm,
+                    a.border_t,
+                    t.atoms.border_contrast_low,
+                  ]}>
+                  <UserAvatar size={32} name={friend.data.name} type="user" />
+                  <Toggle.LabelText style={[a.flex_1, a.text_md]}>
+                    {friend.data.name}
+                  </Toggle.LabelText>
+                  <Toggle.Checkbox />
+                </Toggle.Item>
               ))}
-            </SegmentedControl.Root>
-          </View>
-
-          <View>
-            <TextField.LabelText>
-              <Trans>Currency</Trans>
-            </TextField.LabelText>
-            <Button
-              testID="create-group-currency"
-              label={l`Currency: ${currencyName(currency, i18n.locale)}`}
-              size="large"
-              color="secondary"
-              style={[a.justify_between]}
-              onPress={() => currencyControl.open()}>
-              <ButtonText style={[a.flex_1, a.text_left]}>
-                {currency} · {currencyName(currency, i18n.locale)}
-              </ButtonText>
-              <ButtonIcon icon={ChevronIcon} />
-            </Button>
-          </View>
-
-          {kind === 'trip' && (
-            <View>
-              <TextField.LabelText>
-                <Trans>Dates (optional)</Trans>
-              </TextField.LabelText>
-              <View style={[a.flex_row, a.gap_sm]}>
-                <View style={[a.flex_1]}>
-                  <DateField
-                    testID="create-group-start"
-                    label={l`Start date`}
-                    value={startDate}
-                    onChangeDate={v => {
-                      setStartDate(v)
-                      setError(null)
-                    }}
-                    isInvalid={error === 'dates'}
-                  />
-                </View>
-                <View style={[a.flex_1]}>
-                  <DateField
-                    testID="create-group-end"
-                    label={l`End date`}
-                    value={endDate}
-                    onChangeDate={v => {
-                      setEndDate(v)
-                      setError(null)
-                    }}
-                    isInvalid={error === 'dates'}
-                  />
-                </View>
-              </View>
-              {error === 'dates' && (
-                <Text
-                  style={[a.pt_sm, a.text_sm, {color: t.palette.negative_500}]}>
-                  <Trans>
-                    Check the dates: the trip can’t end before it starts.
-                  </Trans>
-                </Text>
-              )}
-            </View>
-          )}
-
-          <View>
-            <TextField.LabelText>
-              <Trans>Members</Trans>
-            </TextField.LabelText>
+            </Toggle.Group>
             <View
               style={[
-                a.rounded_md,
-                a.border,
+                a.flex_row,
+                a.align_center,
+                a.gap_sm,
+                a.px_md,
+                a.py_sm,
+                a.border_t,
                 t.atoms.border_contrast_low,
-                a.overflow_hidden,
               ]}>
-              <View
-                style={[
-                  a.flex_row,
-                  a.align_center,
-                  a.gap_md,
-                  a.px_md,
-                  a.py_sm,
-                ]}>
-                <UserAvatar size={32} name={me?.data.name} type="user" />
-                <Text style={[a.flex_1, a.text_md, a.font_semi_bold]}>
-                  <Trans>You</Trans>
-                </Text>
-                <Text style={[a.text_sm, t.atoms.text_contrast_medium]}>
-                  <Trans>Always in the group</Trans>
-                </Text>
+              <View style={[a.flex_1]}>
+                <TextField.Root>
+                  <TextField.Input
+                    testID="create-group-new-member"
+                    label={l`Add someone new`}
+                    value={newName}
+                    onChangeText={setNewName}
+                    placeholder={l`Add someone new`}
+                    autoCapitalize="words"
+                    maxLength={64}
+                    onSubmitEditing={() => void addNewFriend()}
+                  />
+                </TextField.Root>
               </View>
-              <Toggle.Group
-                label={l`Members`}
-                type="checkbox"
-                values={memberIds}
-                onChange={setMemberIds}>
-                {friends.map(friend => (
-                  <Toggle.Item
-                    key={friend.id}
-                    testID={`create-group-member-${friend.data.name}`}
-                    name={friend.id}
-                    label={friend.data.name}
-                    style={[
-                      a.px_md,
-                      a.py_sm,
-                      a.border_t,
-                      t.atoms.border_contrast_low,
-                    ]}>
-                    <UserAvatar size={32} name={friend.data.name} type="user" />
-                    <Toggle.LabelText style={[a.flex_1, a.text_md]}>
-                      {friend.data.name}
-                    </Toggle.LabelText>
-                    <Toggle.Checkbox />
-                  </Toggle.Item>
-                ))}
-              </Toggle.Group>
-              <View
-                style={[
-                  a.flex_row,
-                  a.align_center,
-                  a.gap_sm,
-                  a.px_md,
-                  a.py_sm,
-                  a.border_t,
-                  t.atoms.border_contrast_low,
-                ]}>
-                <View style={[a.flex_1]}>
-                  <TextField.Root>
-                    <TextField.Input
-                      testID="create-group-new-member"
-                      label={l`Add someone new`}
-                      value={newName}
-                      onChangeText={setNewName}
-                      placeholder={l`Add someone new`}
-                      autoCapitalize="words"
-                      maxLength={64}
-                      onSubmitEditing={() => void addNewFriend()}
-                    />
-                  </TextField.Root>
-                </View>
-                <Button
-                  testID="create-group-add-member"
-                  label={l`Add member`}
-                  size="large"
-                  color="secondary"
-                  shape="round"
-                  disabled={!newName.trim()}
-                  onPress={() => void addNewFriend()}>
-                  <ButtonIcon icon={PlusIcon} />
-                </Button>
-              </View>
+              <Button
+                testID="create-group-add-member"
+                label={l`Add member`}
+                size="large"
+                color="secondary"
+                shape="round"
+                disabled={!newName.trim()}
+                onPress={() => void addNewFriend()}>
+                <ButtonIcon icon={PlusIcon} />
+              </Button>
             </View>
           </View>
-
-        </ScrollView>
-        <FormSheet.Footer
-          onCancel={requestClose}
-          saveLabel={l`Create group`}
-          canSave={name.trim() !== ''}
-          isSaving={isSaving}
-          onSave={() => void save()}
-        />
-      </KeyboardAvoidingView>
-      <CurrencyDialog
-        control={currencyControl}
-        value={currency}
-        onCurrencyChosen={setCurrency}
-      />
-      <Prompt.Basic
-        control={discardControl}
-        title={l`Discard changes?`}
-        description={l`What you filled in won’t be kept. Anyone you added as a new friend stays in People.`}
-        confirmButtonCta={l`Discard`}
-        confirmButtonColor="negative"
-        cancelButtonCta={l`Keep editing`}
-        onConfirm={close}
-      />
-    </Composer.Outer>
-  )
-}
-
-function CurrencyDialog({
-  control,
-  value,
-  onCurrencyChosen,
-}: {
-  control: Dialog.DialogControlProps
-  value: string
-  onCurrencyChosen: (code: string) => void
-}) {
-  const {t: l, i18n} = useLingui()
-  const {gtMobile} = useBreakpoints()
-  const codes = Object.keys(CURRENCIES).sort((x, y) =>
-    currencyName(x, i18n.locale).localeCompare(currencyName(y, i18n.locale)),
-  )
-  return (
-    <Dialog.Outer control={control}>
-      <Dialog.Handle />
-      <Dialog.ScrollableInner label={l`Currency`} style={web({maxWidth: 400})}>
-        <Text style={[a.text_2xl, a.font_bold, a.pb_md, a.pr_2xl]}>
-          <Trans>Currency</Trans>
-        </Text>
-        <Toggle.Group
-          label={l`Currency`}
-          type="radio"
-          values={[value]}
-          onChange={([code]) => {
-            if (code) control.close(() => onCurrencyChosen(code))
-          }}>
-          {codes.map(code => (
-            <Toggle.Item
-              key={code}
-              testID={`currency-${code}`}
-              name={code}
-              label={currencyName(code, i18n.locale)}
-              style={[a.py_sm, gtMobile && a.px_xs]}>
-              <Toggle.Radio />
-              <Toggle.LabelText style={[a.flex_1, a.text_md]}>
-                {currencyName(code, i18n.locale)}
-              </Toggle.LabelText>
-              <Text style={[a.text_sm, a.font_semi_bold]}>{code}</Text>
-            </Toggle.Item>
-          ))}
-        </Toggle.Group>
-        <Dialog.Close />
-      </Dialog.ScrollableInner>
-    </Dialog.Outer>
+        </View>
+      </View>
+    </FormSheet.Screen>
   )
 }

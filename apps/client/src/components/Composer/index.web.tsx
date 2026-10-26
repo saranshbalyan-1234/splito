@@ -1,4 +1,5 @@
 // Adapted from bluesky-social/social-app@4e4ad9c (MIT) - src/view/shell/Composer.web.tsx
+import {useRef} from 'react'
 import {StyleSheet, View} from 'react-native'
 import * as DismissableLayer from '@radix-ui/react-dismissable-layer'
 import * as FocusGuards from '@radix-ui/react-focus-guards'
@@ -6,14 +7,16 @@ import * as FocusScope from '@radix-ui/react-focus-scope'
 import {RemoveScrollBar} from 'react-remove-scroll-bar'
 
 import {useShouldReduceMotion} from '#/motion/useShouldReduceMotion'
-import {atoms as a, flatten, useBreakpoints, useTheme} from '#/alf'
+import {atoms as a, flatten, useTheme, web} from '#/alf'
+import {SLIDE_UP, useIsSheet} from '#/components/FormSheet/shared'
 import {Portal} from '#/components/Portal'
 
 /**
  * Bluesky's web composer: a dimmed full-window layer with the composer
- * centred near the top, and full screen on phones as Bluesky's native
- * composer, covering the top and bottom bars. Escape
- * asks the composer to cancel; outside clicks are ignored, as upstream.
+ * over it. Splito centres it like Bluesky's dialogs, and on phones it rises
+ * from the bottom edge as a sheet (owner rule 7: one sheet layout). Escape
+ * and a click on the scrim ask the composer to close; clicks in nested
+ * dialogs (pickers, prompts) are ignored, as upstream.
  *
  * Bluesky mounts its composer at the shell's top level. This is a route, so
  * it renders through the shell's portal outlet to sit above the sidebar.
@@ -28,8 +31,10 @@ export function Outer({
   testID?: string
 }) {
   const t = useTheme()
-  const {gtMobile} = useBreakpoints()
+  const isSheet = useIsSheet()
   const reduceMotionEnabled = useShouldReduceMotion()
+  /* Only a press that starts and ends on the scrim closes (not a text drag out of a field). */
+  const pressStart = useRef<EventTarget | null>(null)
 
   FocusGuards.useFocusGuards()
 
@@ -49,6 +54,16 @@ export function Outer({
             a.align_center,
             !reduceMotionEnabled && a.fade_in,
           ])}
+          onPointerDown={e => {
+            pressStart.current = e.target
+          }}
+          onClick={e => {
+            if (
+              e.target === e.currentTarget &&
+              pressStart.current === e.currentTarget
+            )
+              onDismiss()
+          }}
           onFocusOutside={evt => evt.preventDefault()}
           onInteractOutside={evt => evt.preventDefault()}
           onDismiss={onDismiss}>
@@ -56,14 +71,17 @@ export function Outer({
             testID={testID}
             style={[
               styles.container,
-              !gtMobile && styles.containerMobile,
+              isSheet && styles.containerSheet,
               t.atoms.bg,
               t.atoms.border_contrast_medium,
-              !reduceMotionEnabled && [
-                a.zoom_fade_in,
-                {animationDelay: 0.1},
-                {animationFillMode: 'backwards'},
-              ],
+              !reduceMotionEnabled &&
+                (isSheet
+                  ? web({animation: SLIDE_UP})
+                  : [
+                      a.zoom_fade_in,
+                      {animationDelay: 0.1},
+                      {animationFillMode: 'backwards'},
+                    ]),
             ]}>
             {children}
           </View>
@@ -75,23 +93,25 @@ export function Outer({
 
 const styles = StyleSheet.create({
   container: {
-    marginTop: 50,
+    marginTop: 'auto',
+    marginBottom: 'auto',
     maxWidth: 600,
     width: '100%',
     paddingVertical: 0,
     borderRadius: 8,
-    marginBottom: 0,
     borderWidth: 1,
     maxHeight: 'calc(100% - (40px * 2))',
     overflow: 'hidden',
   },
-  /* Splito: on phones the composer fills the screen, as Bluesky's native composer does (owner: full-screen on phones). */
-  containerMobile: {
-    flex: 1,
-    marginTop: 0,
-    borderRadius: 0,
-    borderWidth: 0,
+  /* Splito: on phones the composer is a sheet from the bottom edge, as the dialog sheets are. */
+  containerSheet: {
+    marginBottom: 0,
     maxWidth: '100%',
-    maxHeight: '100%',
+    maxHeight: 'calc(100% - 48px)',
+    borderWidth: 0,
+    borderTopWidth: 1,
+    borderRadius: 0,
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
   },
 })

@@ -1,11 +1,10 @@
 import {useState} from 'react'
 import {View} from 'react-native'
-import {Trans, useLingui} from '@lingui/react/macro'
+import {useLingui} from '@lingui/react/macro'
 
-import {atoms as a, web} from '#/alf'
+import {atoms as a} from '#/alf'
 import * as Dialog from '#/components/Dialog'
 import * as FormSheet from '#/components/FormSheet'
-import {Text} from '#/components/Typography'
 import {Choices} from '#/screens/People/components/FriendsFilterDialog'
 import {type GroupFilters} from '../filter'
 
@@ -27,19 +26,14 @@ export function GroupsFilterDialog({
   currencies: string[]
   onFiltersApplied: (filters: GroupFilters) => void
 }) {
-  const {t: l} = useLingui()
   return (
-    <Dialog.Outer control={control} nativeOptions={{preventExpansion: true}}>
-      <Dialog.Handle />
-      <Dialog.ScrollableInner label={l`Filters`} style={web({maxWidth: 480})}>
-        <Form
-          filters={filters}
-          currencies={currencies}
-          onFiltersApplied={onFiltersApplied}
-        />
-        <Dialog.Close />
-      </Dialog.ScrollableInner>
-    </Dialog.Outer>
+    <FormSheet.Outer control={control} testID="groups-filters-sheet">
+      <Form
+        filters={filters}
+        currencies={currencies}
+        onFiltersApplied={onFiltersApplied}
+      />
+    </FormSheet.Outer>
   )
 }
 
@@ -59,76 +53,73 @@ function Form({
     setDraft(d => ({...d, ...patch}))
 
   return (
-    <View style={[a.gap_lg]}>
-      <Text style={[a.text_2xl, a.font_bold, a.leading_tight, a.pr_2xl]}>
-        <Trans>Filters</Trans>
-      </Text>
-      <Choices
-        testID="filter-type"
-        title={l`Type`}
-        value={draft.type}
-        options={[
-          {value: 'all', label: l`All`},
-          {value: 'trip', label: l`Trip`},
-          {value: 'home', label: l`Home`},
-          {value: 'couple', label: l`Couple`},
-          {value: 'other', label: l`Other`},
-        ]}
-        onChange={type => set({type})}
-      />
-      <Choices
-        testID="filter-status"
-        title={l`Status`}
-        value={draft.status}
-        options={[
-          {value: 'active', label: l`Active`},
-          {value: 'archived', label: l`Archived`},
-        ]}
-        onChange={status => set({status})}
-      />
-      {currencies.length > 1 && (
+    <FormSheet.Inner
+      title={l`Filters`}
+      isDirty={JSON.stringify(draft) !== JSON.stringify(filters)}
+      footer={{
+        saveLabel: l`Apply`,
+        onSave: () => control.close(() => onFiltersApplied(draft)),
+      }}>
+      <View style={[a.gap_lg]}>
         <Choices
-          testID="filter-currency"
-          title={l`Currency`}
-          value={draft.currency}
+          testID="filter-type"
+          title={l`Type`}
+          value={draft.type}
           options={[
             {value: 'all', label: l`All`},
-            ...currencies.map(c => ({value: c, label: c})),
+            {value: 'trip', label: l`Trip`},
+            {value: 'home', label: l`Home`},
+            {value: 'couple', label: l`Couple`},
+            {value: 'other', label: l`Other`},
           ]}
-          onChange={currency => set({currency})}
+          onChange={type => set({type})}
         />
-      )}
-      <Choices
-        testID="filter-show"
-        title={l`Show`}
-        value={draft.show}
-        options={[
-          {value: 'all', label: l`All`},
-          {value: 'owed', label: l`You are owed`},
-          {value: 'owe', label: l`You owe`},
-          {value: 'settled', label: l`Settled`},
-        ]}
-        onChange={show => set({show})}
-      />
-      <Choices
-        testID="filter-sort"
-        title={l`Sort by`}
-        value={draft.sort}
-        options={[
-          {value: 'recent', label: l`Recent activity`},
-          {value: 'name', label: l`Name`},
-          {value: 'amount', label: l`Amount`},
-        ]}
-        onChange={sort => set({sort})}
-      />
-
-      <FormSheet.Actions
-        saveTestID="filter-apply"
-        cancelTestID="filter-cancel"
-        saveLabel={l`Apply`}
-        onCancel={() => control.close()}
-        onSave={() => control.close(() => onFiltersApplied(draft))}
-      />
-    </View>
+        <Choices
+          testID="filter-status"
+          title={l`Status`}
+          value={draft.status}
+          options={[
+            {value: 'active', label: l`Active`},
+            {value: 'archived', label: l`Archived`},
+          ]}
+          onChange={status => set({status})}
+        />
+        {currencies.length > 1 && (
+          <Choices
+            testID="filter-currency"
+            title={l`Currency`}
+            value={draft.currency}
+            options={[
+              {value: 'all', label: l`All`},
+              ...currencies.map(c => ({value: c, label: c})),
+            ]}
+            onChange={currency => set({currency})}
+          />
+        )}
+        <Choices
+          testID="filter-show"
+          title={l`Show`}
+          value={draft.show}
+          options={[
+            {value: 'all', label: l`All`},
+            {value: 'owed', label: l`You are owed`},
+            {value: 'owe', label: l`You owe`},
+            {value: 'settled', label: l`Settled`},
+          ]}
+          onChange={show => set({show})}
+        />
+        <Choices
+          testID="filter-sort"
+          title={l`Sort by`}
+          value={draft.sort}
+          options={[
+            {value: 'recent', label: l`Recent activity`},
+            {value: 'name', label: l`Name`},
+            {value: 'amount', label: l`Amount`},
+          ]}
+          onChange={sort => set({sort})}
+        />
+      </View>
+    </FormSheet.Inner>
   )
 }

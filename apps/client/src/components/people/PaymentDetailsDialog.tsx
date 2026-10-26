@@ -12,9 +12,10 @@ import {useHaptics} from '#/lib/haptics'
 import {logger} from '#/logger'
 import {useMutationCtx, useStore} from '#/data/hooks'
 import {useNumberLocale} from '#/locale/numberLocale'
-import {atoms as a, useTheme, web} from '#/alf'
+import {atoms as a, useTheme} from '#/alf'
 import {Button, ButtonIcon, ButtonText} from '#/components/Button'
 import * as Dialog from '#/components/Dialog'
+import * as FormSheet from '#/components/FormSheet'
 import {Trash_Stroke2_Corner0_Rounded as TrashIcon} from '#/components/icons/Trash'
 import {utcDate} from '#/components/people/ledger'
 import * as Toast from '#/components/Toast'
@@ -39,11 +40,8 @@ export function PaymentDetailsDialog({
 }) {
   const {t: l} = useLingui()
   return (
-    <Dialog.Outer control={control} nativeOptions={{preventExpansion: true}}>
-      <Dialog.Handle />
-      <Dialog.ScrollableInner
-        label={l`Payment details`}
-        style={web({maxWidth: 400})}>
+    <FormSheet.Outer control={control} testID="payment-details-sheet">
+      <FormSheet.Inner title={l`Payment details`}>
         {repayment && (
           <Details
             repayment={repayment}
@@ -52,9 +50,8 @@ export function PaymentDetailsDialog({
             groupName={groupName}
           />
         )}
-        <Dialog.Close />
-      </Dialog.ScrollableInner>
-    </Dialog.Outer>
+      </FormSheet.Inner>
+    </FormSheet.Outer>
   )
 }
 
@@ -118,12 +115,8 @@ function Details({
 
   return (
     <View style={[a.gap_lg]}>
-      <View style={[a.gap_xs, a.pr_2xl]}>
-        <Text
-          style={[a.text_sm, a.font_semi_bold, t.atoms.text_contrast_medium]}>
-          <Trans>Payment</Trans>
-        </Text>
-        <Text emoji style={[a.text_2xl, a.font_bold, a.leading_tight]}>
+      <View style={[a.gap_xs]}>
+        <Text emoji style={[a.text_xl, a.font_semi_bold, a.leading_tight]}>
           {title}
         </Text>
         <Text

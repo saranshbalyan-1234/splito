@@ -7,7 +7,6 @@ import {type Entity, type Expense} from '@splito/sync'
 import {type AllNavigatorParams, type NavigationProp} from '#/lib/routes/types'
 import {useMutationCtx} from '#/data/hooks'
 import {atoms as a, useTheme} from '#/alf'
-import * as Composer from '#/components/Composer'
 import * as FormSheet from '#/components/FormSheet'
 import {ComposerSkeleton} from '#/components/split/ComposerSkeleton'
 import {ExpenseComposer} from '#/components/split/ExpenseComposer'
@@ -17,6 +16,7 @@ import {Text} from '#/components/Typography'
 
 /** Edit an expense in the same composer as Add expense, prefilled. */
 export function EditExpenseScreen() {
+  const {t: l} = useLingui()
   const navigation = useNavigation<NavigationProp>()
   const {params} = useRoute<RouteProp<AllNavigatorParams, 'EditExpense'>>()
   const {expense} = useExpense(params.expenseId)
@@ -27,7 +27,13 @@ export function EditExpenseScreen() {
   }
 
   if (expense === undefined) {
-    return <ComposerSkeleton testID="screen-edit-expense" onClose={close} />
+    return (
+      <ComposerSkeleton
+        testID="screen-edit-expense"
+        title={l`Edit expense`}
+        onClose={close}
+      />
+    )
   }
   if (expense === null || expense.deleted) {
     return <Missing onClose={close} />
@@ -59,8 +65,11 @@ function Missing({onClose}: {onClose: () => void}) {
   const t = useTheme()
   const {t: l} = useLingui()
   return (
-    <Composer.Outer testID="screen-edit-expense" onDismiss={onClose}>
-      <FormSheet.Header title={l`Edit expense`} onClose={onClose} />
+    <FormSheet.Screen
+      testID="screen-edit-expense"
+      title={l`Edit expense`}
+      isDirty={false}
+      onClose={onClose}>
       <View style={[a.px_xl, a.py_4xl, a.gap_xs, a.align_center]}>
         <Text style={[a.text_lg, a.font_semi_bold, a.text_center]}>
           <Trans>This expense can’t be edited</Trans>
@@ -75,6 +84,6 @@ function Missing({onClose}: {onClose: () => void}) {
           <Trans>It was deleted, or the link is wrong.</Trans>
         </Text>
       </View>
-    </Composer.Outer>
+    </FormSheet.Screen>
   )
 }

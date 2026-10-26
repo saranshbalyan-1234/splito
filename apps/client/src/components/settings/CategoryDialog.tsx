@@ -5,7 +5,7 @@ import {Trans, useLingui} from '@lingui/react/macro'
 
 import {useHaptics} from '#/lib/haptics'
 import {CATEGORY_COLORS} from '#/alf/swatches'
-import {atoms as a, useTheme, web} from '#/alf'
+import {atoms as a, useTheme} from '#/alf'
 import {Button} from '#/components/Button'
 import * as Dialog from '#/components/Dialog'
 import * as TextField from '#/components/forms/TextField'
@@ -37,15 +37,14 @@ export function CategoryDialog({
   onCategorySaved: (draft: Pick<Category, 'name' | 'color' | 'icon'>) => void
 }) {
   return (
-    <Dialog.Outer control={control}>
-      <Dialog.Handle />
+    <FormSheet.Outer control={control} testID="category-sheet">
       {/* Keyed so the form starts from the category being edited. The dialog itself must not remount, or it would lose its open state. */}
       <Inner
         key={category?.id ?? 'new'}
         category={category}
         onCategorySaved={onCategorySaved}
       />
-    </Dialog.Outer>
+    </FormSheet.Outer>
   )
 }
 
@@ -81,17 +80,24 @@ function Inner({
   }
 
   return (
-    <Dialog.ScrollableInner
-      label={category ? l`Edit category` : l`New category`}
-      style={[web({maxWidth: 440})]}>
+    <FormSheet.Inner
+      title={category ? l`Edit category` : l`New category`}
+      isDirty={
+        name !== shownName ||
+        color !== (category?.color ?? CATEGORY_COLORS[0]) ||
+        icon !== (category?.icon ?? 'tag')
+      }
+      footer={{saveLabel: l`Save`, canSave: isValid, onSave: save}}>
       <View style={[a.gap_xl]}>
         <View style={[a.flex_row, a.align_center, a.gap_md]}>
           <CategoryIcon category={{color, icon}} size={48} />
-          <Text style={[a.flex_1, a.text_2xl, a.font_bold]} numberOfLines={1}>
-            {category ? (
-              <Trans>Edit category</Trans>
-            ) : (
-              <Trans>New category</Trans>
+          <Text
+            style={[a.flex_1, a.text_lg, a.font_semi_bold]}
+            numberOfLines={1}>
+            {trimmed || (
+              <Text style={[a.text_lg, t.atoms.text_contrast_low]}>
+                <Trans>Preview</Trans>
+              </Text>
             )}
           </Text>
         </View>
@@ -201,17 +207,7 @@ function Inner({
             })}
           </View>
         </View>
-
-        <FormSheet.Actions
-          saveTestID="category-save"
-          cancelTestID="category-cancel"
-          saveLabel={l`Save`}
-          canSave={isValid}
-          onCancel={() => control.close()}
-          onSave={save}
-        />
       </View>
-      <Dialog.Close />
-    </Dialog.ScrollableInner>
+    </FormSheet.Inner>
   )
 }

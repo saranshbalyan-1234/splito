@@ -15,6 +15,6 @@ Patterns followed without copying a file (written for Splito, shaped on upstream
 
 | Splito file | Upstream pattern |
 |---|---|
-| `src/components/split/ExpenseComposer.tsx` | `src/view/com/composer/Composer.tsx`: avatar-beside-text layout (category tile in the avatar slot), footer counter (split readout), "Save draft? / Keep editing / Discard" prompt copy and actions |
+| `src/components/split/ExpenseComposer.tsx` | `src/view/com/composer/Composer.tsx`: avatar-beside-text layout (category tile in the avatar slot), footer counter (split readout), "Discard changes?" prompt with Save draft / Discard / Keep editing actions; top bar and footer from the shared `FormSheet` (see `sheets.md`) |
 | `src/components/split/pickers.tsx`, `PeopleDialog.tsx` | `src/components/dialogs/LanguageSelectDialog.tsx`: title, search, Toggle rows with bottom rules, Done button |
 | `src/screens/Expense/index.tsx` | Post thread header menu (`...` with Edit/Delete) and Toast with Undo action (`src/screens/Profile/components/GermButton.tsx`) |

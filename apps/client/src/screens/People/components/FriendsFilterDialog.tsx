@@ -2,7 +2,7 @@ import {useState} from 'react'
 import {View} from 'react-native'
 import {Trans, useLingui} from '@lingui/react/macro'
 
-import {atoms as a, useTheme, web} from '#/alf'
+import {atoms as a, useTheme} from '#/alf'
 import {Button, ButtonText} from '#/components/Button'
 import * as Dialog from '#/components/Dialog'
 import * as Toggle from '#/components/forms/Toggle'
@@ -34,19 +34,14 @@ export function FriendsFilterDialog({
   currencies: string[]
   onFiltersApplied: (filters: PeopleFilters) => void
 }) {
-  const {t: l} = useLingui()
   return (
-    <Dialog.Outer control={control} nativeOptions={{preventExpansion: true}}>
-      <Dialog.Handle />
-      <Dialog.ScrollableInner label={l`Filters`} style={web({maxWidth: 480})}>
-        <Form
-          filters={filters}
-          currencies={currencies}
-          onFiltersApplied={onFiltersApplied}
-        />
-        <Dialog.Close />
-      </Dialog.ScrollableInner>
-    </Dialog.Outer>
+    <FormSheet.Outer control={control} testID="friends-filters-sheet">
+      <Form
+        filters={filters}
+        currencies={currencies}
+        onFiltersApplied={onFiltersApplied}
+      />
+    </FormSheet.Outer>
   )
 }
 
@@ -67,76 +62,73 @@ function Form({
     setDraft(d => ({...d, ...patch}))
 
   return (
-    <View style={[a.gap_lg]}>
-      <Text style={[a.text_2xl, a.font_bold, a.leading_tight, a.pr_2xl]}>
-        <Trans>Filters</Trans>
-      </Text>
-      <Toggle.Item
-        testID="filter-include-groups"
-        name="includeGroups"
-        label={l`Include groups`}
-        value={draft.includeGroups}
-        onChange={includeGroups => set({includeGroups})}
-        style={[a.w_full]}>
-        <View style={[a.flex_1, a.gap_2xs, a.pr_md]}>
-          <Toggle.LabelText style={[a.text_md, a.font_semi_bold]}>
-            <Trans>Include groups</Trans>
-          </Toggle.LabelText>
-          <Text
-            style={[a.text_sm, a.leading_snug, t.atoms.text_contrast_medium]}>
-            <Trans>
-              Count balances from groups you share with each friend. Off shows
-              only what is between you and them.
-            </Trans>
-          </Text>
-        </View>
-        <Toggle.Platform />
-      </Toggle.Item>
+    <FormSheet.Inner
+      title={l`Filters`}
+      isDirty={JSON.stringify(draft) !== JSON.stringify(filters)}
+      footer={{
+        saveLabel: l`Apply`,
+        onSave: () => control.close(() => onFiltersApplied(draft)),
+      }}>
+      <View style={[a.gap_lg]}>
+        <Toggle.Item
+          testID="filter-include-groups"
+          name="includeGroups"
+          label={l`Include groups`}
+          value={draft.includeGroups}
+          onChange={includeGroups => set({includeGroups})}
+          style={[a.w_full]}>
+          <View style={[a.flex_1, a.gap_2xs, a.pr_md]}>
+            <Toggle.LabelText style={[a.text_md, a.font_semi_bold]}>
+              <Trans>Include groups</Trans>
+            </Toggle.LabelText>
+            <Text
+              style={[a.text_sm, a.leading_snug, t.atoms.text_contrast_medium]}>
+              <Trans>
+                Count balances from groups you share with each friend. Off shows
+                only what is between you and them.
+              </Trans>
+            </Text>
+          </View>
+          <Toggle.Platform />
+        </Toggle.Item>
 
-      {currencies.length > 1 && (
+        {currencies.length > 1 && (
+          <Choices
+            testID="filter-currency"
+            title={l`Currency`}
+            value={draft.currency}
+            options={[
+              {value: 'all', label: l`All`},
+              ...currencies.map(c => ({value: c, label: c})),
+            ]}
+            onChange={currency => set({currency})}
+          />
+        )}
         <Choices
-          testID="filter-currency"
-          title={l`Currency`}
-          value={draft.currency}
+          testID="filter-show"
+          title={l`Show`}
+          value={draft.show}
           options={[
-            {value: 'all', label: l`All`},
-            ...currencies.map(c => ({value: c, label: c})),
+            {value: 'all', label: l`Everyone`},
+            {value: 'owesYou', label: l`Owes you`},
+            {value: 'youOwe', label: l`You owe`},
+            {value: 'settled', label: l`Settled`},
           ]}
-          onChange={currency => set({currency})}
+          onChange={show => set({show})}
         />
-      )}
-      <Choices
-        testID="filter-show"
-        title={l`Show`}
-        value={draft.show}
-        options={[
-          {value: 'all', label: l`Everyone`},
-          {value: 'owesYou', label: l`Owes you`},
-          {value: 'youOwe', label: l`You owe`},
-          {value: 'settled', label: l`Settled`},
-        ]}
-        onChange={show => set({show})}
-      />
-      <Choices
-        testID="filter-sort"
-        title={l`Sort by`}
-        value={draft.sort}
-        options={[
-          {value: 'amount', label: l`Amount`},
-          {value: 'name', label: l`Name`},
-          {value: 'recent', label: l`Recent`},
-        ]}
-        onChange={sort => set({sort})}
-      />
-
-      <FormSheet.Actions
-        saveTestID="filter-apply"
-        cancelTestID="filter-cancel"
-        saveLabel={l`Apply`}
-        onCancel={() => control.close()}
-        onSave={() => control.close(() => onFiltersApplied(draft))}
-      />
-    </View>
+        <Choices
+          testID="filter-sort"
+          title={l`Sort by`}
+          value={draft.sort}
+          options={[
+            {value: 'amount', label: l`Amount`},
+            {value: 'name', label: l`Name`},
+            {value: 'recent', label: l`Recent`},
+          ]}
+          onChange={sort => set({sort})}
+        />
+      </View>
+    </FormSheet.Inner>
   )
 }
 

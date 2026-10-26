@@ -8,12 +8,11 @@ import {useHaptics} from '#/lib/haptics'
 import {logger} from '#/logger'
 import {useMutationCtx, useStore} from '#/data/hooks'
 import {useNumberLocale} from '#/locale/numberLocale'
-import {atoms as a, useTheme, web} from '#/alf'
+import {atoms as a, useTheme} from '#/alf'
 import {Admonition} from '#/components/Admonition'
-import {Button, ButtonIcon, ButtonText} from '#/components/Button'
 import * as Dialog from '#/components/Dialog'
+import * as FormSheet from '#/components/FormSheet'
 import * as TextField from '#/components/forms/TextField'
-import {IndianRupee_Stroke2_Corner0_Rounded as RupeeIcon} from '#/components/icons/Money'
 import {parseTypedAmount, upiPayUrl} from '#/components/people/ledger'
 import * as Toast from '#/components/Toast'
 import {Text} from '#/components/Typography'
@@ -37,21 +36,10 @@ export function UpiPayDialog({
   /** The user says the UPI payment went through; record it. */
   onPaidConfirmed: (amount: bigint) => void
 }) {
-  const {t: l} = useLingui()
   return (
-    <Dialog.Outer control={control} nativeOptions={{preventExpansion: true}}>
-      <Dialog.Handle />
-      <Dialog.ScrollableInner
-        label={l`Pay with UPI`}
-        style={web({maxWidth: 440})}>
-        <Form
-          person={person}
-          amount={amount}
-          onPaidConfirmed={onPaidConfirmed}
-        />
-        <Dialog.Close />
-      </Dialog.ScrollableInner>
-    </Dialog.Outer>
+    <FormSheet.Outer control={control} testID="upi-sheet">
+      <Form person={person} amount={amount} onPaidConfirmed={onPaidConfirmed} />
+    </FormSheet.Outer>
   )
 }
 
@@ -129,131 +117,107 @@ function Form({
 
   if (opened !== null) {
     return (
-      <View style={[a.gap_lg]} testID="upi-confirm">
-        <View style={[a.gap_xs, a.pr_2xl]}>
-          <Text style={[a.text_2xl, a.font_bold, a.leading_tight]}>
-            <Trans>Did the payment go through?</Trans>
-          </Text>
-          <Text
-            style={[a.text_md, a.leading_snug, t.atoms.text_contrast_medium]}>
+      <FormSheet.Inner
+        title={l`Did the payment go through?`}
+        footer={{
+          saveLabel: l`Yes, record ${formatAmount(opened, 'INR', locale)}`,
+          onSave: () => control.close(() => onPaidConfirmed(opened)),
+          cancelLabel: l`Not yet`,
+          onCancel: () => control.close(),
+        }}>
+        <View testID="upi-confirm">
+          <FormSheet.Description>
             <Trans>
               Splito can’t see your UPI app. Record the payment only once your
               app shows it as successful.
             </Trans>
-          </Text>
+          </FormSheet.Description>
         </View>
-        <View style={[a.gap_sm]}>
-          <Button
-            testID="upi-mark-paid"
-            label={l`Yes, record the payment`}
-            size="large"
-            color="primary"
-            onPress={() => control.close(() => onPaidConfirmed(opened))}>
-            <ButtonText>
-              <Trans>Yes, record {formatAmount(opened, 'INR', locale)}</Trans>
-            </ButtonText>
-          </Button>
-          <Button
-            label={l`Not yet`}
-            size="large"
-            color="secondary"
-            onPress={() => control.close()}>
-            <ButtonText>
-              <Trans>Not yet</Trans>
-            </ButtonText>
-          </Button>
-        </View>
-      </View>
+      </FormSheet.Inner>
     )
   }
 
   return (
-    <View style={[a.gap_lg]}>
-      <View style={[a.gap_xs, a.pr_2xl]}>
-        <Text style={[a.text_2xl, a.font_bold, a.leading_tight]}>
-          <Trans>Pay with UPI</Trans>
-        </Text>
-        <Text style={[a.text_md, a.leading_snug, t.atoms.text_contrast_medium]}>
-          <Trans>
-            Opens your UPI app with {name} and the amount filled in. You confirm
-            the payment there.
-          </Trans>
-        </Text>
-      </View>
+    <FormSheet.Inner
+      title={l`Pay with UPI`}
+      isDirty={
+        upiId !== (person.data.upiId ?? '') ||
+        amountText !== toDecimalString(amount, 2)
+      }
+      footer={{
+        saveLabel: l`Open UPI app`,
+        canSave: upiId.trim() !== '' && amountText.trim() !== '',
+        onSave: () => void open(),
+      }}>
+      <FormSheet.Description>
+        <Trans>
+          Opens your UPI app with {name} and the amount filled in. You confirm
+          the payment there.
+        </Trans>
+      </FormSheet.Description>
+      <View style={[a.gap_lg]}>
+        <View>
+          <TextField.LabelText>
+            <Trans>{name}’s UPI ID</Trans>
+          </TextField.LabelText>
+          <TextField.Root isInvalid={error === 'upi'}>
+            <Dialog.Input
+              testID="upi-id"
+              label={l`UPI ID`}
+              value={upiId}
+              onChangeText={v => {
+                setUpiId(v)
+                setError(null)
+              }}
+              placeholder="name@bank"
+              autoCapitalize="none"
+              autoCorrect={false}
+              keyboardType="email-address"
+            />
+          </TextField.Root>
+          {error === 'upi' && (
+            <Text style={[a.pt_sm, a.text_sm, {color: t.palette.negative_500}]}>
+              <Trans>Enter a UPI ID like name@bank.</Trans>
+            </Text>
+          )}
+        </View>
 
-      <View>
-        <TextField.LabelText>
-          <Trans>{name}’s UPI ID</Trans>
-        </TextField.LabelText>
-        <TextField.Root isInvalid={error === 'upi'}>
-          <Dialog.Input
-            testID="upi-id"
-            label={l`UPI ID`}
-            value={upiId}
-            onChangeText={v => {
-              setUpiId(v)
-              setError(null)
-            }}
-            placeholder="name@bank"
-            autoCapitalize="none"
-            autoCorrect={false}
-            keyboardType="email-address"
-          />
-        </TextField.Root>
-        {error === 'upi' && (
-          <Text style={[a.pt_sm, a.text_sm, {color: t.palette.negative_500}]}>
-            <Trans>Enter a UPI ID like name@bank.</Trans>
-          </Text>
+        <View>
+          <TextField.LabelText>
+            <Trans>Amount</Trans>
+          </TextField.LabelText>
+          <TextField.Root isInvalid={error === 'amount'}>
+            <Dialog.Input
+              testID="upi-amount"
+              label={l`Amount`}
+              value={amountText}
+              onChangeText={v => {
+                setAmountText(v)
+                setError(null)
+              }}
+              keyboardType="decimal-pad"
+              inputMode="decimal"
+            />
+            <TextField.SuffixText label={l`Indian Rupee`}>
+              INR
+            </TextField.SuffixText>
+          </TextField.Root>
+          {error === 'amount' && (
+            <Text style={[a.pt_sm, a.text_sm, {color: t.palette.negative_500}]}>
+              <Trans>Enter an amount greater than zero.</Trans>
+            </Text>
+          )}
+        </View>
+
+        {IS_WEB && (
+          <Admonition type="info">
+            <Trans>
+              UPI links open on a phone with a UPI app. On a computer, nothing
+              may happen.
+            </Trans>
+          </Admonition>
         )}
       </View>
-
-      <View>
-        <TextField.LabelText>
-          <Trans>Amount</Trans>
-        </TextField.LabelText>
-        <TextField.Root isInvalid={error === 'amount'}>
-          <Dialog.Input
-            testID="upi-amount"
-            label={l`Amount`}
-            value={amountText}
-            onChangeText={v => {
-              setAmountText(v)
-              setError(null)
-            }}
-            keyboardType="decimal-pad"
-            inputMode="decimal"
-          />
-          <TextField.SuffixText label={l`Indian Rupee`}>
-            INR
-          </TextField.SuffixText>
-        </TextField.Root>
-        {error === 'amount' && (
-          <Text style={[a.pt_sm, a.text_sm, {color: t.palette.negative_500}]}>
-            <Trans>Enter an amount greater than zero.</Trans>
-          </Text>
-        )}
-      </View>
-
-      {IS_WEB && (
-        <Admonition type="info">
-          <Trans>
-            UPI links open on a phone with a UPI app. On a computer, nothing may
-            happen.
-          </Trans>
-        </Admonition>
-      )}
-
-      <Button
-        testID="upi-open"
-        label={l`Open UPI app`}
-        size="large"
-        color="primary"
-        onPress={() => void open()}>
-        <ButtonIcon icon={RupeeIcon} />
-        <ButtonText>
-          <Trans>Open UPI app</Trans>
-        </ButtonText>
-      </Button>
-    </View>
+    </FormSheet.Inner>
   )
 }

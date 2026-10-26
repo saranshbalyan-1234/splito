@@ -166,6 +166,25 @@ export async function createGroup(
   })
 }
 
+/** Edits a group's name, type, currency and trip dates; members, rules and history stay. */
+export async function updateGroup(
+  store: Store,
+  ctx: MutationCtx,
+  groupId: string,
+  input: Pick<Group, 'name' | 'kind' | 'currency' | 'startDate' | 'endDate'>,
+): Promise<Entity<Group>> {
+  const name = cleanName(input.name)
+  getCurrency(input.currency)
+  if (input.startDate) parseLocalDate(input.startDate)
+  if (input.endDate) parseLocalDate(input.endDate)
+  if (input.startDate && input.endDate && input.endDate < input.startDate) throw new DomainError('INVALID_DATE')
+  return store.transaction(async tx => {
+    const g = await requireLive<Group>(tx, 'group', groupId)
+    const {kind, currency, startDate, endDate} = input
+    return write(tx, ctx, 'group', groupId, {...g.data, name, kind, currency, startDate, endDate}, false, 'group.update')
+  })
+}
+
 /** Validates a draft against domain rules and current people/group state; returns the stored shape. */
 async function buildExpense(tx: Tx, d: ExpenseDraft): Promise<Expense> {
   cleanName(d.title)

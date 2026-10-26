@@ -6,10 +6,10 @@ import {usePref} from '#/data/hooks'
 import {atoms as a, useTheme} from '#/alf'
 import {Button, ButtonIcon, ButtonText} from '#/components/Button'
 import * as Dialog from '#/components/Dialog'
+import * as FormSheet from '#/components/FormSheet'
 import {ChevronRight_Stroke2_Corner0_Rounded as ChevronRightIcon} from '#/components/icons/Chevron'
 import {Text} from '#/components/Typography'
 import {ChevronDownIcon, ChevronLeftIcon} from './icons'
-import {DialogHeading} from './pickers'
 import {localToday, useExpenseTz} from './shared'
 
 const MIN_YEAR = 1900
@@ -37,10 +37,9 @@ export function DateDialog({
   onSelect: (date: string) => void
 }) {
   return (
-    <Dialog.Outer control={control} testID="date-dialog">
-      <Dialog.Handle />
+    <FormSheet.Outer control={control} testID="date-dialog">
       <Calendar title={title} value={value} onSelect={onSelect} />
-    </Dialog.Outer>
+    </FormSheet.Outer>
   )
 }
 
@@ -104,9 +103,7 @@ function Calendar({
   const isLastMonth = view.y === MAX_YEAR && view.m === 11
 
   return (
-    <Dialog.ScrollableInner label={title} style={[{maxWidth: 420}]}>
-      <DialogHeading title={title} />
-
+    <FormSheet.Inner title={title}>
       <View style={[a.flex_row, a.align_center, a.justify_between, a.pb_md]}>
         <Button
           testID="calendar-title"
@@ -274,7 +271,6 @@ function Calendar({
           Future dates are fine – they show as upcoming until the day arrives.
         </Trans>
       </Text>
-      <Dialog.Close />
-    </Dialog.ScrollableInner>
+    </FormSheet.Inner>
   )
 }

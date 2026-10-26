@@ -7,7 +7,7 @@ import {type Entity, type Person, updatePerson} from '@splito/sync'
 import {useHaptics} from '#/lib/haptics'
 import {logger} from '#/logger'
 import {useMutationCtx, useStore} from '#/data/hooks'
-import {atoms as a, useTheme, web} from '#/alf'
+import {atoms as a, useTheme} from '#/alf'
 import * as Dialog from '#/components/Dialog'
 import * as TextField from '#/components/forms/TextField'
 import * as Toast from '#/components/Toast'
@@ -25,17 +25,10 @@ export function EditFriendDialog({
   control: Dialog.DialogControlProps
   person: Entity<Person>
 }) {
-  const {t: l} = useLingui()
   return (
-    <Dialog.Outer control={control} nativeOptions={{preventExpansion: true}}>
-      <Dialog.Handle />
-      <Dialog.ScrollableInner
-        label={person.data.isMe ? l`Edit profile` : l`Edit friend`}
-        style={web({maxWidth: 440})}>
-        <Form person={person} />
-        <Dialog.Close />
-      </Dialog.ScrollableInner>
-    </Dialog.Outer>
+    <FormSheet.Outer control={control} testID="edit-friend-sheet">
+      <Form person={person} />
+    </FormSheet.Outer>
   )
 }
 
@@ -70,89 +63,88 @@ function Form({person}: {person: Entity<Person>}) {
   }
 
   return (
-    <View style={[a.gap_lg]}>
-      <Text style={[a.text_2xl, a.font_bold, a.leading_tight, a.pr_2xl]}>
-        {isMe ? <Trans>Edit profile</Trans> : <Trans>Edit friend</Trans>}
-      </Text>
-      <View>
-        <TextField.LabelText>
-          <Trans>Name</Trans>
-        </TextField.LabelText>
-        <TextField.Root isInvalid={error === 'name'}>
-          <Dialog.Input
-            testID="friend-name"
-            label={l`Name`}
-            value={name}
-            onChangeText={v => {
-              setName(v)
-              setError(null)
-            }}
-            autoCapitalize="words"
-            maxLength={64}
-          />
-        </TextField.Root>
-        {error === 'name' ? (
-          <Text style={[a.pt_sm, a.text_sm, {color: t.palette.negative_500}]}>
-            <Trans>Enter a name.</Trans>
-          </Text>
-        ) : isMe ? (
-          <Text
-            style={[
-              a.pt_sm,
-              a.text_sm,
-              a.leading_snug,
-              t.atoms.text_contrast_medium,
-            ]}>
-            <Trans>Shown on your expenses and payments.</Trans>
-          </Text>
-        ) : null}
-      </View>
-      {!isMe && (
+    <FormSheet.Inner
+      title={isMe ? l`Edit profile` : l`Edit friend`}
+      isDirty={name !== person.data.name || upiId !== (person.data.upiId ?? '')}
+      footer={{
+        saveLabel: l`Save`,
+        canSave: name.trim() !== '',
+        onSave: () => void save(),
+      }}>
+      <View style={[a.gap_lg]}>
         <View>
           <TextField.LabelText>
-            <Trans>UPI ID (optional)</Trans>
+            <Trans>Name</Trans>
           </TextField.LabelText>
-          <TextField.Root isInvalid={error === 'upi'}>
+          <TextField.Root isInvalid={error === 'name'}>
             <Dialog.Input
-              testID="friend-upi"
-              label={l`UPI ID`}
-              value={upiId}
+              testID="friend-name"
+              label={l`Name`}
+              value={name}
               onChangeText={v => {
-                setUpiId(v)
+                setName(v)
                 setError(null)
               }}
-              placeholder="name@bank"
-              autoCapitalize="none"
-              autoCorrect={false}
-              keyboardType="email-address"
+              autoCapitalize="words"
+              maxLength={64}
             />
           </TextField.Root>
-          <Text
-            style={[
-              a.pt_sm,
-              a.text_sm,
-              a.leading_snug,
-              error === 'upi'
-                ? {color: t.palette.negative_500}
-                : t.atoms.text_contrast_medium,
-            ]}>
-            {error === 'upi' ? (
-              <Trans>Enter a UPI ID like name@bank.</Trans>
-            ) : (
-              <Trans>
-                Used to open your UPI app when you pay them in rupees.
-              </Trans>
-            )}
-          </Text>
+          {error === 'name' ? (
+            <Text style={[a.pt_sm, a.text_sm, {color: t.palette.negative_500}]}>
+              <Trans>Enter a name.</Trans>
+            </Text>
+          ) : isMe ? (
+            <Text
+              style={[
+                a.pt_sm,
+                a.text_sm,
+                a.leading_snug,
+                t.atoms.text_contrast_medium,
+              ]}>
+              <Trans>Shown on your expenses and payments.</Trans>
+            </Text>
+          ) : null}
         </View>
-      )}
-      <FormSheet.Actions
-        saveTestID="friend-save"
-        cancelTestID="friend-cancel"
-        saveLabel={l`Save`}
-        onCancel={() => control.close()}
-        onSave={() => void save()}
-      />
-    </View>
+        {!isMe && (
+          <View>
+            <TextField.LabelText>
+              <Trans>UPI ID (optional)</Trans>
+            </TextField.LabelText>
+            <TextField.Root isInvalid={error === 'upi'}>
+              <Dialog.Input
+                testID="friend-upi"
+                label={l`UPI ID`}
+                value={upiId}
+                onChangeText={v => {
+                  setUpiId(v)
+                  setError(null)
+                }}
+                placeholder="name@bank"
+                autoCapitalize="none"
+                autoCorrect={false}
+                keyboardType="email-address"
+              />
+            </TextField.Root>
+            <Text
+              style={[
+                a.pt_sm,
+                a.text_sm,
+                a.leading_snug,
+                error === 'upi'
+                  ? {color: t.palette.negative_500}
+                  : t.atoms.text_contrast_medium,
+              ]}>
+              {error === 'upi' ? (
+                <Trans>Enter a UPI ID like name@bank.</Trans>
+              ) : (
+                <Trans>
+                  Used to open your UPI app when you pay them in rupees.
+                </Trans>
+              )}
+            </Text>
+          </View>
+        )}
+      </View>
+    </FormSheet.Inner>
   )
 }

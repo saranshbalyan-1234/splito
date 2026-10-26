@@ -46,13 +46,16 @@ test('an accent is only previewed until Apply, then tints the app and survives a
   await open(page, '/settings/appearance', 'screen-settings-section')
   expect(await background(page, 'sidebar-add')).toBe(BLUESKY_BLUE)
 
+  // The Accent color sheet: Apply is off until another colour is chosen.
+  await page.getByTestId('accent-open').click()
+  await expect(page.getByTestId('sheet-save')).toBeDisabled()
   await page.getByTestId('accent-emerald').click()
-  // Choosing previews the colour on the Apply button only.
-  expect(await background(page, 'accent-apply')).toBe(EMERALD)
+  // Choosing previews the colour inside the sheet only.
+  expect(await background(page, 'accent-preview')).toBe(EMERALD)
   expect(await background(page, 'sidebar-add')).toBe(BLUESKY_BLUE)
 
-  await page.getByTestId('accent-apply').click()
-  await expect(page.getByTestId('accent-apply')).toHaveCount(0)
+  await page.getByTestId('sheet-save').click()
+  await expect(page.getByTestId('accent-sheet')).toHaveCount(0)
   await expect.poll(() => background(page, 'sidebar-add')).toBe(EMERALD)
 
   await page.reload()
@@ -186,14 +189,14 @@ test('categories: rename one, add one, then hide it', async ({page}) => {
   await page.getByTestId('category-edit-food').click()
   await expect(page.getByTestId('category-name')).toHaveValue('Food')
   await page.getByTestId('category-name').fill('Eating out')
-  await page.getByTestId('category-save').click()
+  await page.getByTestId('sheet-save').click()
   await expect(page.getByTestId('category-food')).toContainText('Eating out')
 
   await page.getByTestId('category-add').click()
   await expect(page.getByTestId('category-name')).toHaveValue('')
   await page.getByTestId('category-name').fill('Rent')
   await page.getByTestId('category-icon-house').click()
-  await page.getByTestId('category-save').click()
+  await page.getByTestId('sheet-save').click()
   const row = page
     .locator('[data-testid^="category-"]')
     .filter({hasText: 'Rent'})

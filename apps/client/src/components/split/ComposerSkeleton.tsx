@@ -1,9 +1,6 @@
 import {View} from 'react-native'
 
-import {useLingui} from '@lingui/react/macro'
-
 import {atoms as a} from '#/alf'
-import * as Composer from '#/components/Composer'
 import * as FormSheet from '#/components/FormSheet'
 import * as Skeleton from '#/components/Skeleton'
 import {Shimmer} from '#/motion/Shimmer'
@@ -11,18 +8,19 @@ import {Shimmer} from '#/motion/Shimmer'
 /** The composer while the local store loads: same chrome, skeleton body (Bluesky's placeholders). */
 export function ComposerSkeleton({
   testID,
+  title,
   onClose,
 }: {
   testID: string
+  title: string
   onClose: () => void
 }) {
-  const {t: l} = useLingui()
   return (
-    <Composer.Outer testID={testID} onDismiss={onClose}>
-      <FormSheet.Header
-        title={l({message: 'Add expense', context: 'action'})}
-        onClose={onClose}
-      />
+    <FormSheet.Screen
+      testID={testID}
+      title={title}
+      isDirty={false}
+      onClose={onClose}>
       <Shimmer
         testID="composer-loading"
         style={[a.px_lg, a.pt_sm, a.pb_2xl, a.gap_lg]}>
@@ -46,6 +44,6 @@ export function ComposerSkeleton({
           </View>
         ))}
       </Shimmer>
-    </Composer.Outer>
+    </FormSheet.Screen>
   )
 }
