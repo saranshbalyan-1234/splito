@@ -29,7 +29,7 @@ async function openActivity(page: Page) {
 /* Web keeps earlier pages of the stack mounted (hidden), so scope to Activity. */
 const screen = (page: Page) => page.getByTestId('screen-activity')
 /* The Activity item's unread badge in the sidebar. */
-const peopleBadge = (page: Page) => page.getByTestId('tab-activity-badge')
+const peopleBadge = (page: Page) => page.getByTestId('nav-badge-activity')
 const row = (page: Page, kind: string, text: string) =>
   screen(page).getByTestId(`activity-${kind}`).filter({hasText: text})
 const unreadDot = (r: Locator) => r.getByTestId('activity-unread-dot')

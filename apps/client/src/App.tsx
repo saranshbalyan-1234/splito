@@ -19,7 +19,7 @@ import {Shell} from '#/view/shell'
 /*
  * Theme, accent and text size read device storage synchronously so the first
  * paint is right; `PrefsMirror` keeps that copy in step with the preferences
- * registry (Settings, the avatar menu's theme shortcut).
+ * registry (Settings, the drawer's dark-theme switch).
  */
 function Themed() {
   const theme = useColorModeTheme()

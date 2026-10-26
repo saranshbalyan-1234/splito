@@ -5,12 +5,14 @@ const LAPTOP = {width: 1280, height: 800}
 const RAIL = {width: 900, height: 800}
 const PHONE = {width: 390, height: 844}
 
+const SIDEBAR = 240
 const TABS = ['people', 'groups', 'analytics', 'activity']
-const TOP_LEVEL: [string, string][] = [
-  ['/', 'screen-people'],
-  ['/groups', 'screen-groups'],
-  ['/analytics', 'screen-analytics'],
-  ['/activity', 'screen-activity'],
+/* Top-level pages and their one header action, at the far right. */
+const TOP_LEVEL: [string, string, string][] = [
+  ['/', 'screen-people', 'people-add-friend'],
+  ['/groups', 'screen-groups', 'groups-new'],
+  ['/analytics', 'screen-analytics', 'analytics-export'],
+  ['/activity', 'screen-activity', 'activity-mark-all-read'],
 ]
 
 async function open(page: Page, path: string, screen: string) {
@@ -18,15 +20,27 @@ async function open(page: Page, path: string, screen: string) {
   await expect(page.getByTestId(screen)).toBeVisible()
 }
 
-/* Web keeps earlier pages of the stack mounted (hidden), so scope to the page on screen. */
-function avatarOn(page: Page, screen: string) {
-  return page.getByTestId(screen).getByTestId('header-avatar')
+async function openDemo(page: Page) {
+  await page.goto('/?demo=1')
+  await expect(page.getByTestId('person-Arjun Mehta')).toBeVisible()
 }
 
-test('People is the initial route; phones head it with the logo, not a title', async ({page}) => {
-  await page.setViewportSize(PHONE)
+/* Web keeps earlier pages of the stack mounted (hidden), so scope to the page on screen. */
+function on(page: Page, screen: string, testID: string) {
+  return page.getByTestId(screen).getByTestId(testID)
+}
+
+/* Activity rows are `activity-<kind>`, and every kind has a dot (`expense.created`). */
+function activityRows(page: Page) {
+  return page.getByTestId('screen-activity').locator('[data-testid^="activity-"][data-testid*="."]')
+}
+
+async function box(page: Page, screen: string, testID: string) {
+  return (await on(page, screen, testID).boundingBox())!
+}
+
+test('People is the initial route with no People title', async ({page}) => {
   await open(page, '/', 'screen-people')
-  await expect(page.getByTestId('screen-people').getByTestId('logo')).toBeVisible()
   await expect(page.getByRole('heading', {name: 'People'})).toHaveCount(0)
 })
 
@@ -42,9 +56,8 @@ test('every route in the route table resolves, including after a reload', async 
   const routes: [string, string][] = [
     ['/', 'screen-people'],
     ['/groups', 'screen-groups'],
-    ['/activity', 'screen-activity'],
-    ['/notifications', 'screen-activity'],
     ['/analytics', 'screen-analytics'],
+    ['/activity', 'screen-activity'],
     ['/profile', 'screen-profile'],
     ['/settings', 'screen-settings'],
     ['/settings/appearance', 'screen-settings-section'],
@@ -64,108 +77,211 @@ test('every route in the route table resolves, including after a reload', async 
   await expect(page.getByTestId('screen-create-group')).toBeVisible()
 })
 
-test.describe('desktop: Bluesky left sidebar and full-width content', () => {
-  test('labelled nav, the Add expense pill, no FAB, no bottom bar', async ({page}) => {
-    await page.setViewportSize(LAPTOP)
-    await open(page, '/', 'screen-people')
-    for (const tab of [...TABS, 'settings']) {
-      await expect(page.getByTestId(`tab-${tab}`)).toBeVisible()
-    }
-    await expect(page.getByTestId('tab-people')).toContainText('People')
-    await expect(page.getByTestId('tab-people')).toHaveAttribute('aria-current', 'page')
-    await expect(page.getByTestId('sidebar-add')).toContainText('Add expense')
-    // Profile and the account card left the sidebar for the header avatar; there is no header bell.
-    await expect(page.getByTestId('tab-profile')).toHaveCount(0)
-    await expect(page.getByTestId('sidebar-account')).toHaveCount(0)
-    await expect(page.getByTestId('header-notifications')).toHaveCount(0)
-    await expect(page.getByTestId('fab-add')).toHaveCount(0)
-  })
+test('/notifications redirects to Activity', async ({page}) => {
+  await open(page, '/notifications', 'screen-activity')
+  await expect(page).toHaveURL(/\/activity$/)
+})
 
-  test('every top-level header: centred title, then the action and the avatar at the top right', async ({page}) => {
+test.describe('header rule set', () => {
+  test('top-level pages: avatar left, centred title, the one page action at the far right, no bell', async ({page}) => {
     await page.setViewportSize(DESKTOP)
-    for (const [path, screen] of TOP_LEVEL) {
+    for (const [path, screen, action] of TOP_LEVEL) {
       await open(page, path, screen)
-      const avatar = (await avatarOn(page, screen).boundingBox())!
-      // 32px avatar in a 4px halo; the avatar itself sits on the 20px desktop gutter, in the header row.
-      expect(avatar.width).toBe(40)
-      expect(DESKTOP.width - (avatar.x + avatar.width)).toBe(20 - 4)
+      const avatar = await box(page, screen, 'header-avatar')
+      // The avatar sits on the 20px desktop gutter, left of the title, in the header row.
+      expect(avatar.x - SIDEBAR).toBe(20)
       expect(avatar.y).toBeLessThan(20)
+      const act = await box(page, screen, action)
+      // The action's glyph sits on the right gutter (Bluesky's 3px visual offset).
+      expect(DESKTOP.width - (act.x + act.width)).toBe(20 - 3)
+      expect(Math.abs(act.y + act.height / 2 - (avatar.y + avatar.height / 2))).toBeLessThan(1)
+      await expect(page.getByTestId('header-notifications')).toHaveCount(0)
     }
-    // The sidebar has the logo, so the desktop People header has its title.
-    await open(page, '/', 'screen-people')
-    await expect(page.getByTestId('screen-people').getByText('People', {exact: true})).toBeVisible()
-    // Pushed pages have a back button instead, and no avatar.
-    await open(page, '/settings', 'screen-settings')
-    await expect(avatarOn(page, 'screen-settings')).toHaveCount(0)
+    // Titles are centred over the content.
+    for (const [path, screen, name] of [
+      ['/groups', 'screen-groups', 'Groups'],
+      ['/activity', 'screen-activity', 'Activity'],
+    ]) {
+      await open(page, path, screen)
+      const title = (await page.getByTestId(screen).getByText(name, {exact: true}).boundingBox())!
+      const centre = SIDEBAR + (DESKTOP.width - SIDEBAR) / 2
+      expect(Math.abs(title.x + title.width / 2 - centre)).toBeLessThan(1)
+    }
   })
 
-  test('the avatar menu opens Profile, Settings and Analytics and switches the theme', async ({page}) => {
+  test('pushed pages: Back on the left, no avatar', async ({page}) => {
     await page.setViewportSize(LAPTOP)
-    await open(page, '/groups', 'screen-groups')
-    await avatarOn(page, 'screen-groups').click()
-    for (const item of ['profile', 'settings', 'analytics', 'theme']) {
-      await expect(page.getByTestId(`header-menu-${item}`)).toBeVisible()
+    for (const [path, screen] of [
+      ['/profile', 'screen-profile'],
+      ['/settings', 'screen-settings'],
+      ['/people/p1', 'screen-person'],
+      ['/groups/g1', 'screen-group'],
+      ['/friends/new', 'screen-add-friend'],
+    ]) {
+      await open(page, path, screen)
+      await expect(on(page, screen, 'header-back')).toBeVisible()
+      await expect(on(page, screen, 'header-avatar')).toHaveCount(0)
     }
-    // A dropdown under the avatar, its right edge on the avatar's (the gutter), clear of the header; no drawer.
-    const menu = (await page.getByTestId('header-menu-profile').boundingBox())!
-    expect(menu.x + menu.width).toBeGreaterThan(LAPTOP.width - 40)
-    const account = (await page.getByTestId('header-menu-account').boundingBox())!
-    expect(account.y).toBeGreaterThan(52)
-    await expect(page.getByTestId('drawer')).toHaveCount(0)
-    await page.getByTestId('header-menu-profile').click()
-    await expect(page).toHaveURL(/\/profile$/)
-    await expect(page.getByTestId('screen-profile')).toBeVisible()
-    await page.goBack()
-    await expect(page.getByTestId('screen-groups')).toBeVisible()
+  })
 
-    // Escape closes it.
-    await avatarOn(page, 'screen-groups').click()
-    await expect(page.getByTestId('header-menu-settings')).toBeVisible()
+  test('on phones the header hides on scroll down and returns on scroll up', async ({page}) => {
+    await page.setViewportSize(PHONE)
+    await openDemo(page)
+    await page.getByTestId('tab-activity').click()
+    await expect(activityRows(page).first()).toBeVisible()
+    await page.mouse.move(200, 400)
+    // As upstream, the first scroll after the page's own scroll restoration is ignored.
+    await page.mouse.wheel(0, 400)
+    await page.mouse.wheel(0, 400)
+    await expect.poll(async () => (await box(page, 'screen-activity', 'header-avatar')).y).toBeLessThan(0)
+    await page.mouse.wheel(0, -100)
+    await expect.poll(async () => (await box(page, 'screen-activity', 'header-avatar')).y).toBeGreaterThanOrEqual(0)
+  })
+
+  test('on desktop the header stays put', async ({page}) => {
+    await page.setViewportSize(LAPTOP)
+    await openDemo(page)
+    await page.getByTestId('tab-activity').click()
+    await expect(activityRows(page).first()).toBeVisible()
+    await page.mouse.move(700, 400)
+    await page.mouse.wheel(0, 800)
+    await page.waitForTimeout(600)
+    expect(await page.evaluate(() => window.scrollY)).toBeGreaterThan(400)
+    expect((await box(page, 'screen-activity', 'header-avatar')).y).toBeGreaterThanOrEqual(0)
+  })
+})
+
+test.describe('drawer: Bluesky drawer from the header avatar', () => {
+  test('slides in from the left with the account card, the rows and the footer', async ({page}) => {
+    await page.setViewportSize(DESKTOP)
+    await openDemo(page)
+    await on(page, 'screen-people', 'header-avatar').click()
+    const drawer = page.getByTestId('drawer')
+    await expect(drawer).toBeVisible()
+    await expect.poll(async () => (await drawer.boundingBox())!.x).toBe(0)
+    await expect(page.getByTestId('drawer-profile')).toContainText('Saved on this device')
+    await expect(page.getByTestId('drawer-profile')).toContainText('6 friends · 3 groups')
+    const rows = await drawer.locator('[data-testid^="drawer-"]').evaluateAll(els => els.map(e => e.getAttribute('data-testid')))
+    expect(rows).toEqual([
+      'drawer-profile',
+      'drawer-people',
+      'drawer-groups',
+      'drawer-analytics',
+      'drawer-activity',
+      'drawer-profile-item',
+      'drawer-settings',
+      'drawer-theme',
+      'drawer-help',
+      'drawer-about',
+    ])
+    // Escape closes it (focus is trapped inside while it's open).
     await page.keyboard.press('Escape')
-    await expect(page.getByTestId('header-menu-settings')).toHaveCount(0)
-
-    await avatarOn(page, 'screen-groups').click()
-    await page.getByTestId('header-menu-settings').click()
-    await expect(page.getByTestId('screen-settings')).toBeVisible()
-
-    await open(page, '/', 'screen-people')
-    await avatarOn(page, 'screen-people').click()
-    await page.getByTestId('header-menu-analytics').click()
-    await expect(page.getByTestId('screen-analytics')).toBeVisible()
-
-    await expect(page.locator('html')).toHaveClass(/theme--light/)
-    await avatarOn(page, 'screen-analytics').click()
-    await expect(page.getByTestId('header-menu-theme')).toContainText('Dark theme')
-    await page.getByTestId('header-menu-theme').click()
-    await expect(page.locator('html')).toHaveClass(/theme--dark/)
-    // The shortcut is the `theme` preference, so it survives a reload.
-    await page.reload()
-    await expect(page.getByTestId('screen-analytics')).toBeVisible()
-    await expect(page.locator('html')).toHaveClass(/theme--dark/)
-    await avatarOn(page, 'screen-analytics').click()
-    await expect(page.getByTestId('header-menu-theme')).toContainText('Light theme')
-    await page.getByTestId('header-menu-theme').click()
-    await expect(page.locator('html')).toHaveClass(/theme--light/)
+    await expect(drawer).toHaveCount(0)
   })
 
-  test('Activity is a sidebar item with the unread badge; pushed pages keep their section lit', async ({page}) => {
+  test('the scrim closes it; rows navigate and close it', async ({page}) => {
+    await page.setViewportSize(PHONE)
+    await open(page, '/', 'screen-people')
+    await on(page, 'screen-people', 'header-avatar').click()
+    await expect(page.getByTestId('drawer')).toBeVisible()
+    await page.mouse.click(PHONE.width - 10, PHONE.height / 2)
+    await expect(page.getByTestId('drawer')).toHaveCount(0)
+
+    for (const [row, screen, url] of [
+      ['drawer-groups', 'screen-groups', /\/groups$/],
+      ['drawer-profile-item', 'screen-profile', /\/profile$/],
+      ['drawer-settings', 'screen-settings', /\/settings$/],
+      ['drawer-activity', 'screen-activity', /\/activity$/],
+      ['drawer-about', 'screen-settings-section', /\/settings\/about$/],
+    ] as const) {
+      await open(page, '/analytics', 'screen-analytics')
+      await on(page, 'screen-analytics', 'header-avatar').click()
+      await page.getByTestId(row).click()
+      await expect(page).toHaveURL(url)
+      await expect(page.getByTestId(screen)).toBeVisible()
+      await expect(page.getByTestId('drawer')).toHaveCount(0)
+    }
+  })
+
+  test('the dark theme switch sets the theme preference', async ({page}) => {
     await page.setViewportSize(LAPTOP)
     await open(page, '/groups', 'screen-groups')
+    await expect(page.locator('html')).toHaveClass(/theme--light/)
+    await on(page, 'screen-groups', 'header-avatar').click()
+    await page.getByTestId('drawer-theme').click()
+    await expect(page.locator('html')).toHaveClass(/theme--dark/)
+    // It's the `theme` preference, so it survives a reload.
+    await page.reload()
+    await expect(page.getByTestId('screen-groups')).toBeVisible()
+    await expect(page.locator('html')).toHaveClass(/theme--dark/)
+    await on(page, 'screen-groups', 'header-avatar').click()
+    await expect(page.getByTestId('drawer-theme')).toHaveAttribute('aria-checked', 'true')
+    await page.getByTestId('drawer-theme').click()
+    await expect(page.locator('html')).toHaveClass(/theme--light/)
+  })
+})
+
+test.describe("activity: a tab with Bluesky's unread badge", () => {
+  test('the badge counts unread changes from others; Mark all read clears it', async ({page}) => {
+    await page.setViewportSize(LAPTOP)
+    await openDemo(page)
+    const badge = page.getByTestId('nav-badge-activity')
+    await expect(badge).toHaveText(/^\d+$/)
+    const unread = Number(await badge.innerText())
+    expect(unread).toBeGreaterThan(0)
+    await expect(badge).toHaveAttribute('aria-label', `${unread} unread items`)
     await page.getByTestId('tab-activity').click()
     await expect(page).toHaveURL(/\/activity$/)
     await expect(page.getByTestId('screen-activity')).toBeVisible()
     await expect(page.getByTestId('tab-activity')).toHaveAttribute('aria-current', 'page')
-    // A friend's page lights People, as Bluesky's tab stays lit under a pushed screen.
-    await open(page, '/people/p1', 'screen-person')
+
+    // "From others" drops your own changes; the badge counted exactly those.
+    const rows = activityRows(page)
+    const all = await rows.count()
+    await page.getByTestId('activity-tabs-selector-1').click()
+    await expect(page.getByTestId('activity-tabs-selector-1')).toHaveAttribute('aria-selected', 'true')
+    await expect.poll(() => rows.count()).toBe(unread)
+    expect(unread).toBeLessThan(all)
+    await expect(rows.filter({hasText: 'You added'})).toHaveCount(0)
+
+    // Mark all read clears the badge, and it stays cleared after a reload.
+    await page.getByTestId('activity-mark-all-read').click()
+    await expect(page.getByTestId('activity-mark-all-read')).toBeDisabled()
+    await expect(page.getByTestId('nav-badge-activity')).toHaveCount(0)
+    await page.reload()
+    await expect(rows.first()).toBeVisible()
+    await expect(page.getByTestId('nav-badge-activity')).toHaveCount(0)
+  })
+
+  test('on phones the bottom bar carries the badge', async ({page}) => {
+    await page.setViewportSize(PHONE)
+    await openDemo(page)
+    await expect(page.getByTestId('nav-badge-activity')).toHaveText(/^\d+$/)
+    await page.getByTestId('tab-activity').click()
+    await expect(page).toHaveURL(/\/activity$/)
+    await expect(page.getByTestId('screen-activity')).toBeVisible()
+  })
+})
+
+test.describe('desktop: Bluesky left sidebar and full-width content', () => {
+  test('labelled nav with Activity, the Add expense pill, no FAB, no bottom bar', async ({page}) => {
+    await page.setViewportSize(LAPTOP)
+    await open(page, '/', 'screen-people')
+    const items = await page.getByRole('navigation').locator('[data-testid^="tab-"]').evaluateAll(els => els.map(e => e.getAttribute('data-testid')))
+    expect(items).toEqual(['tab-people', 'tab-groups', 'tab-analytics', 'tab-activity', 'tab-settings'])
+    await expect(page.getByTestId('tab-people')).toContainText('People')
     await expect(page.getByTestId('tab-people')).toHaveAttribute('aria-current', 'page')
+    await expect(page.getByTestId('sidebar-add')).toContainText('Add expense')
+    await expect(page.getByTestId('sidebar-account')).toHaveCount(0)
+    await expect(page.getByTestId('fab-add')).toHaveCount(0)
   })
 
   test('content fills the window beside the sidebar (no centred column)', async ({page}) => {
     await page.setViewportSize(DESKTOP)
     await open(page, '/groups', 'screen-groups')
     const box = (await page.getByTestId('screen-groups').boundingBox())!
-    expect(box.x).toBe(240)
-    expect(box.width).toBe(DESKTOP.width - 240)
+    expect(box.x).toBe(SIDEBAR)
+    expect(box.width).toBe(DESKTOP.width - SIDEBAR)
   })
 
   test('800-999px is an icon rail without labels', async ({page}) => {
@@ -201,6 +317,12 @@ test.describe('desktop: Bluesky left sidebar and full-width content', () => {
     await expect(page.getByRole('dialog')).toHaveCount(0)
   })
 
+  test('a pushed page keeps its section lit, as Bluesky tabs stay lit under a pushed screen', async ({page}) => {
+    await page.setViewportSize(LAPTOP)
+    await open(page, '/people/p1', 'screen-person')
+    await expect(page.getByTestId('tab-people')).toHaveAttribute('aria-current', 'page')
+  })
+
   test('Settings is a sidebar item', async ({page}) => {
     await page.setViewportSize(LAPTOP)
     await open(page, '/', 'screen-people')
@@ -213,12 +335,9 @@ test.describe('desktop: Bluesky left sidebar and full-width content', () => {
 test.describe('phone: Bluesky bottom bar and FAB', () => {
   test('four tabs with Activity, no Profile tab, no centre button, the FAB, no sidebar', async ({page}) => {
     await page.setViewportSize(PHONE)
-    await open(page, '/?demo=1', 'screen-people')
-    for (const tab of TABS) {
-      await expect(page.getByTestId(`tab-${tab}`)).toBeVisible()
-    }
-    await expect(page.getByTestId('tab-profile')).toHaveCount(0)
-    await expect(page.getByTestId('tab-add')).toHaveCount(0)
+    await openDemo(page)
+    const items = await page.getByRole('navigation').locator('[data-testid^="tab-"]').evaluateAll(els => els.map(e => e.getAttribute('data-testid')))
+    expect(items).toEqual(TABS.map(tab => `tab-${tab}`))
     await expect(page.getByTestId('sidebar-add')).toHaveCount(0)
     const fab = page.getByTestId('fab-add')
     await expect(fab).toBeVisible()
@@ -231,20 +350,19 @@ test.describe('phone: Bluesky bottom bar and FAB', () => {
     expect(box.y + box.height).toBeLessThan(bar.y)
   })
 
-  test('the FAB shows where Bluesky has one (feeds, profiles, notifications), not on Groups (Lists) or Analytics (Search)', async ({page}) => {
+  test('the FAB is on the tab pages that add expenses, not on Analytics or empty People', async ({page}) => {
     await page.setViewportSize(PHONE)
     // Empty People has its own Add a friend / Add expense buttons, so no third Add.
     await open(page, '/', 'screen-people')
     await expect(page.getByTestId('people-empty')).toBeVisible()
-    await expect(page.getByTestId('screen-people').getByTestId('fab-add')).toHaveCount(0)
-    for (const [path, screen] of [['/?demo=1', 'screen-people'], ['/activity', 'screen-activity']]) {
+    await expect(on(page, 'screen-people', 'fab-add')).toHaveCount(0)
+    await openDemo(page)
+    for (const [path, screen] of [['/?demo=1', 'screen-people'], ['/groups', 'screen-groups'], ['/activity', 'screen-activity']]) {
       await open(page, path, screen)
-      await expect(page.getByTestId(screen).getByTestId('fab-add')).toBeVisible()
+      await expect(on(page, screen, 'fab-add')).toBeVisible()
     }
-    for (const [path, screen] of [['/groups', 'screen-groups'], ['/analytics', 'screen-analytics']]) {
-      await open(page, path, screen)
-      await expect(page.getByTestId(screen).getByTestId('fab-add')).toHaveCount(0)
-    }
+    await open(page, '/analytics', 'screen-analytics')
+    await expect(on(page, 'screen-analytics', 'fab-add')).toHaveCount(0)
   })
 
   test('the composer covers the whole phone screen, top bar and tab bar included', async ({page}) => {
@@ -258,7 +376,7 @@ test.describe('phone: Bluesky bottom bar and FAB', () => {
 
   test('the FAB opens Add expense like the composer; the close cross returns', async ({page}) => {
     await page.setViewportSize(PHONE)
-    await open(page, '/?demo=1', 'screen-people')
+    await openDemo(page)
     await page.getByTestId('fab-add').click()
     await expect(page).toHaveURL(/\/expense\/new$/)
     await expect(page.getByTestId('screen-add-expense')).toBeVisible()
@@ -267,33 +385,21 @@ test.describe('phone: Bluesky bottom bar and FAB', () => {
     await expect(page.getByTestId('screen-add-expense')).toHaveCount(0)
   })
 
-  test('the avatar is at the top right of the top bar; the logo stays centred', async ({page}) => {
+  test("the avatar is in Bluesky's hamburger spot at the top left; the logo stays centred", async ({page}) => {
     await page.setViewportSize(PHONE)
     for (const [path, screen] of TOP_LEVEL) {
       await open(page, path, screen)
-      const box = (await avatarOn(page, screen).boundingBox())!
-      // The avatar sits on the 16px phone gutter (its 4px halo overhangs it).
-      expect(PHONE.width - (box.x + box.width)).toBe(16 - 4)
-      expect(box.y).toBeLessThan(20)
+      const avatar = await box(page, screen, 'header-avatar')
+      // On the 16px phone gutter.
+      expect(avatar.x).toBe(16)
+      expect(avatar.y).toBeLessThan(20)
     }
     await open(page, '/', 'screen-people')
-    const logo = (await page.getByTestId('logo').boundingBox())!
+    const logo = await box(page, 'screen-people', 'header-logo')
     expect(Math.abs(logo.x + logo.width / 2 - PHONE.width / 2)).toBeLessThan(1)
   })
 
-  test('the top bar slides away on scroll down and comes back on scroll up', async ({page}) => {
-    await page.setViewportSize(PHONE)
-    await open(page, '/analytics?demo=1', 'screen-analytics')
-    await expect(page.getByTestId('analytics-expenses-title')).toBeVisible()
-    const avatar = avatarOn(page, 'screen-analytics')
-    await expect(avatar).toBeInViewport()
-    await page.mouse.wheel(0, 900)
-    await expect(avatar).not.toBeInViewport()
-    await page.mouse.wheel(0, -300)
-    await expect(avatar).toBeInViewport()
-  })
-
-  test('tabs navigate; Profile and Settings open from the avatar menu', async ({page}) => {
+  test('tabs navigate; Profile and Settings open from the drawer', async ({page}) => {
     await page.setViewportSize(PHONE)
     await open(page, '/', 'screen-people')
     await page.getByTestId('tab-groups').click()
@@ -302,8 +408,8 @@ test.describe('phone: Bluesky bottom bar and FAB', () => {
     await expect(page.getByTestId('screen-activity')).toBeVisible()
     await page.getByTestId('tab-analytics').click()
     await expect(page.getByTestId('screen-analytics')).toBeVisible()
-    await avatarOn(page, 'screen-analytics').click()
-    await page.getByTestId('header-menu-profile').click()
+    await on(page, 'screen-analytics', 'header-avatar').click()
+    await page.getByTestId('drawer-profile').click()
     await expect(page.getByTestId('screen-profile')).toBeVisible()
     await page.getByTestId('profile-settings').click()
     await expect(page.getByTestId('screen-settings')).toBeVisible()
@@ -316,11 +422,12 @@ test('the tabs preference orders and hides tabs; hidden routes still open', asyn
   await page.waitForFunction(() => 'splito' in window)
   await page.evaluate(() => (window as any).splito.setPref('tabs', ['groups', 'people']))
   await expect(page.getByTestId('tab-analytics')).toHaveCount(0)
-  await expect(page.getByTestId('tab-activity')).toHaveCount(0)
   const order = await page.getByRole('navigation').locator('[data-testid^="tab-"]').evaluateAll(els => els.map(e => e.getAttribute('data-testid')))
   expect(order).toEqual(['tab-groups', 'tab-people'])
-  // Hiding tabs never strands Settings: the avatar menu still reaches it.
-  await expect(avatarOn(page, 'screen-people')).toBeVisible()
+  // Hiding tabs never strands anything: the drawer still reaches every page.
+  await on(page, 'screen-people', 'header-avatar').click()
+  await page.getByTestId('drawer-analytics').click()
+  await expect(page.getByTestId('screen-analytics')).toBeVisible()
 
   await page.setViewportSize(LAPTOP)
   await expect(page.getByTestId('tab-analytics')).toHaveCount(0)
@@ -333,17 +440,4 @@ test('dev tools seed data in e2e builds', async ({page}) => {
   await page.waitForFunction(() => 'splito' in window)
   const id = await page.evaluate(() => (window as any).splito.createPerson('Riya'))
   expect(typeof id).toBe('string')
-})
-
-test('Profile: Edit profile renames me (only my name, no UPI field)', async ({page}) => {
-  await open(page, '/profile', 'screen-profile')
-  // Until a real name is set, the name's place asks for one.
-  await expect(page.getByTestId('profileHeaderDisplayName')).toHaveText('Add your name')
-  await page.getByTestId('profile-edit').click()
-  await expect(page.getByTestId('friend-upi')).toHaveCount(0)
-  await page.getByTestId('friend-name').fill('Saransh Balyan')
-  await page.getByTestId('friend-save').click()
-  await expect(page.getByTestId('profileHeaderDisplayName')).toHaveText('Saransh Balyan')
-  await page.reload()
-  await expect(page.getByTestId('profileHeaderDisplayName')).toHaveText('Saransh Balyan')
 })

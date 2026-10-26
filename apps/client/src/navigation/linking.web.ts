@@ -1,8 +1,8 @@
-import {type LinkingOptions} from '@react-navigation/native'
+import {getStateFromPath, type LinkingOptions} from '@react-navigation/native'
 
 import {tabHref} from '#/lib/routes/tabs'
 import {type FlatNavigatorParams} from '#/lib/routes/types'
-import {ROUTE_PATHS} from '#/routes'
+import {redirectOldPath, ROUTE_PATHS} from '#/routes'
 import {device} from '#/storage'
 
 /*
@@ -26,14 +26,12 @@ if (homeTab && homeTab !== 'people' && window.location.pathname === '/') {
  */
 export const linking: LinkingOptions<FlatNavigatorParams> = {
   prefixes: ['https://splito.app'],
+  getStateFromPath: (path, options) =>
+    getStateFromPath(redirectOldPath(path), options),
   config: {
     initialRouteName: 'People',
-    screens: {
-      ...Object.fromEntries(
-        Object.entries(ROUTE_PATHS).map(([name, path]) => [name, path.slice(1)]),
-      ),
-      // Activity was briefly Notifications; those links still land.
-      Activity: {path: 'activity', alias: ['notifications']},
-    },
+    screens: Object.fromEntries(
+      Object.entries(ROUTE_PATHS).map(([name, path]) => [name, path.slice(1)]),
+    ),
   },
 }

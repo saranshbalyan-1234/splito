@@ -15,7 +15,11 @@ export interface PrefDef<T> {
   label: string
 }
 
-/** Bottom bar / sidebar destinations. Profile and Settings open from the header avatar's menu. */
+/**
+ * Bottom-bar / sidebar destinations. Profile and Settings open from the
+ * avatar's drawer. Activity was briefly a header bell; lists stored before
+ * then still name 'activity' and read back unchanged.
+ */
 export type TabId = 'people' | 'groups' | 'analytics' | 'activity'
 export type SwipeAction = 'markRead' | 'hide' | 'delete' | 'none'
 
@@ -68,7 +72,7 @@ export const PREFS = {
     'account',
     'Tabs and order',
     [...TAB_IDS],
-    // Any non-empty set works: Settings stays reachable from the header avatar on every tab.
+    // Any non-empty set works: Settings stays reachable from the avatar's drawer on every tab.
     (v): v is TabId[] => Array.isArray(v) && v.length > 0 && new Set(v).size === v.length && v.every(t => TAB_IDS.includes(t)),
   ),
   homeTab: def<TabId>('homeTab', 'defaults', 'account', 'Home tab', 'people', oneOf(...TAB_IDS)),

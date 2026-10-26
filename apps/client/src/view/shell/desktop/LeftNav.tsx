@@ -3,7 +3,6 @@ import {useCallback, useMemo} from 'react'
 import {ScrollView, StyleSheet, View} from 'react-native'
 import {useSafeAreaInsets} from 'react-native-safe-area-context'
 import {type TabId} from '@splito/sync'
-import {plural} from '@lingui/core/macro'
 import {Trans, useLingui} from '@lingui/react/macro'
 import {useNavigation, useNavigationState} from '@react-navigation/native'
 
@@ -20,13 +19,17 @@ import {Link} from '#/view/com/util/Link'
 import {PressableWithHover} from '#/view/com/util/PressableWithHover'
 import {
   atoms as a,
+  platform,
   useBreakpoints,
   useLayoutBreakpoints,
   useTheme,
   web,
 } from '#/alf'
 import {LogoMark} from '#/components/brand/Logo'
-import {useActivityBadge} from '#/components/activity/useActivityFeed'
+import {
+  describeUnread,
+  useActivityBadge,
+} from '#/components/activity/useActivityFeed'
 import {Button, ButtonIcon, ButtonText} from '#/components/Button'
 import {
   Activity_Filled_Corner0_Rounded as ActivityFilledIcon,
@@ -50,6 +53,7 @@ import {
   SettingsGear2_Filled_Corner0_Rounded as SettingsFilledIcon,
   SettingsGear2_Stroke2_Corner0_Rounded as SettingsIcon,
 } from '#/components/icons/Settings'
+import {HEADER_HEIGHT} from '#/components/Layout/const'
 import {Text} from '#/components/Typography'
 import {useAnalytics} from '#/analytics'
 import {IS_NATIVE} from '#/env'
@@ -77,7 +81,8 @@ export function useLeftNavWidth() {
 
 /*
  * The Splito logo heads the sidebar (owner directive). It returns to People
- * and is inactive on People (spec: App shell).
+ * and is inactive on People (spec: App shell). Its row is the header's
+ * height from the top edge, so the logo sits on the header's centre line.
  */
 function LogoCard({minimal}: {minimal: boolean}) {
   const {t: l} = useLingui()
@@ -90,7 +95,16 @@ function LogoCard({minimal}: {minimal: boolean}) {
   const isHome = isTab(currentRouteName, 'People')
 
   return (
-    <View style={[a.pb_sm, !minimal && [a.w_full, a.align_start]]}>
+    <View
+      style={[
+        a.justify_center,
+        a.mb_sm,
+        platform({
+          native: {height: HEADER_HEIGHT.native},
+          web: {height: HEADER_HEIGHT.web},
+        }),
+        !minimal && [a.w_full, a.align_start],
+      ]}>
       <Link
         testID="logo"
         href="/"
@@ -135,7 +149,6 @@ function NavItem({
   onNavigateTab,
 }: NavItemProps) {
   const t = useTheme()
-  const {t: l} = useLingui()
   const accessibilityLabel = label
   const ax = useAnalytics()
 
@@ -214,11 +227,8 @@ function NavItem({
               {right: -20}, // more breathing room
             ]}>
             <Text
-              testID={`tab-${navItem}-badge`}
-              accessibilityLabel={l`${plural(count, {
-                one: '# unread item',
-                other: '# unread items',
-              })}`}
+              testID={`nav-badge-${navItem}`}
+              accessibilityLabel={describeUnread(count)}
               accessibilityHint=""
               accessible={true}
               numberOfLines={1}
@@ -231,8 +241,9 @@ function NavItem({
                 a.leading_tight,
                 a.z_20,
                 {
-                  top: '-10%',
-                  left: count.length === 1 ? 12 : 8,
+                  // The pulse is only empty at its top right: start past the downstroke, end above the label's cap height ('30+' too).
+                  top: -9,
+                  left: 13,
                   backgroundColor: t.palette.primary_500,
                   color: t.palette.white,
                   lineHeight: a.text_sm.fontSize,
@@ -342,27 +353,30 @@ export function DesktopLeftNav({
     return null
   }
 
-  const tabItems: Record<TabId, {label: string; icons: NavItemProps['icons']}> =
-    {
-      people: {
-        label: l`People`,
-        icons: {inactive: HomeIcon, active: HomeFilledIcon},
-      },
-      groups: {
-        label: l`Groups`,
-        icons: {inactive: GroupIcon, active: GroupFilledIcon},
-      },
-      analytics: {
-        label: l`Analytics`,
-        icons: {inactive: ChartPieIcon, active: ChartPieFilledIcon},
-      },
-      activity: {
-        label: l`Activity`,
-        icons: {inactive: ActivityIcon, active: ActivityFilledIcon},
-      },
-    }
+  const tabItems: Record<
+    TabId,
+    {label: string; icons: NavItemProps['icons']; count?: string}
+  > = {
+    people: {
+      label: l`People`,
+      icons: {inactive: HomeIcon, active: HomeFilledIcon},
+    },
+    groups: {
+      label: l`Groups`,
+      icons: {inactive: GroupIcon, active: GroupFilledIcon},
+    },
+    analytics: {
+      label: l`Analytics`,
+      icons: {inactive: ChartPieIcon, active: ChartPieFilledIcon},
+    },
+    activity: {
+      label: l`Activity`,
+      icons: {inactive: ActivityIcon, active: ActivityFilledIcon},
+      count: activityBadge,
+    },
+  }
 
-  /* Bluesky's account card is gone: the account avatar sits at the top right of each top-level header (owner directive). */
+  /* Bluesky's account card is gone: the account avatar sits at the top left of the content and opens the drawer (owner directive). */
   const content = (
     <>
       <View
@@ -377,7 +391,7 @@ export function DesktopLeftNav({
             onNavigateTab={onNavigateTab}
             minimal={leftNavMinimal}
             icons={tabItems[tab].icons}
-            count={tab === 'activity' ? activityBadge : undefined}
+            count={tabItems[tab].count}
           />
         ))}
         <NavItem
@@ -405,12 +419,13 @@ export function DesktopLeftNav({
         t.atoms.border_contrast_low,
         t.atoms.bg,
         styles.leftNav,
+        // No top padding: the logo row lines up with the header row.
         IS_NATIVE
           ? [
               a.h_full,
-              {paddingTop: insets.top + 16, paddingBottom: insets.bottom + 16},
+              {paddingTop: insets.top, paddingBottom: insets.bottom + 16},
             ]
-          : [a.fixed, a.bottom_0],
+          : [a.fixed, a.bottom_0, a.pt_0],
         leftNavMinimal && [
           {width: LEFT_NAV_MINIMAL_WIDTH},
           a.align_center,

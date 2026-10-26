@@ -1,4 +1,4 @@
-/* Lucide glyphs (ISC); export names mirror Bluesky's so adapted components import them unchanged. */
+/* Lucide "download" (ISC); export name mirrors Bluesky's so adapted components import it unchanged. */
 import {Download} from 'lucide-react-native'
 
 import {createIcon} from '#/components/icons/lucide'

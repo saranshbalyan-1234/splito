@@ -48,6 +48,15 @@ const config: ExpoConfig = {
   },
   plugins: [
     'expo-sqlite',
+    /* Adapted from bluesky-social/social-app@4e4ad9c (MIT) - app.config.js. Building React Native from
+       source is what Bluesky ships; the prebuilt binaries hide headers its native modules import (RCTBridge.h). */
+    [
+      'expo-build-properties',
+      {
+        ios: {deploymentTarget: '16.4', buildReactNativeFromSource: true, cxxLanguageStandard: 'c++23'},
+        android: {compileSdkVersion: 37, targetSdkVersion: 36, buildToolsVersion: '37.0.0', buildReactNativeFromSource: true, enableMinifyInReleaseBuilds: true},
+      },
+    ],
     [
       'expo-splash-screen',
       {

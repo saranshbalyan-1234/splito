@@ -1,3 +1,4 @@
+// Adapted from bluesky-social/social-app@4e4ad9c (MIT) - src/view/screens/Notifications.tsx
 import {useState} from 'react'
 import {View} from 'react-native'
 import Animated, {LayoutAnimationConfig} from 'react-native-reanimated'
@@ -8,7 +9,7 @@ import {useNumberLocale} from '#/locale/numberLocale'
 import {usePref} from '#/data/hooks'
 import {EmptyState} from '#/view/com/util/EmptyState'
 import {List} from '#/view/com/util/List'
-import {atoms as a, useBreakpoints, useTheme, web} from '#/alf'
+import {atoms as a, useBreakpoints, useTheme} from '#/alf'
 import {ActivityItem} from '#/components/activity/ActivityItem'
 import {type FeedRow} from '#/components/activity/feed'
 import {LoadingSkeleton} from '#/components/activity/LoadingSkeleton'
@@ -89,35 +90,31 @@ export function ActivityScreen() {
 
   return (
     <Layout.Screen testID="screen-activity">
-      <Layout.Header.Outer noBottomBorder sticky={false}>
-        {/* Empty slots as wide as the action and avatar on the right, so the title stays centred. */}
-        <Layout.Header.Slot />
-        <Layout.Header.Slot />
-        <Layout.Header.Content>
-          <Layout.Header.TitleText>
-            <Trans>Activity</Trans>
-          </Layout.Header.TitleText>
-        </Layout.Header.Content>
-        {unreadCount > 0 ? (
-          <Layout.Header.IconButton
+      {/* Rule set: avatar | Activity | Mark all read; the tabs travel with the header. */}
+      <Layout.Header.Sticky>
+        <Layout.Header.Outer noBottomBorder sticky={false}>
+          <HeaderAvatar />
+          <Layout.Header.Content>
+            <Layout.Header.TitleText>
+              <Trans>Activity</Trans>
+            </Layout.Header.TitleText>
+          </Layout.Header.Content>
+          <Layout.Header.ActionButton
             testID="activity-mark-all-read"
+            label={l`Mark all read`}
             icon={MarkAllReadIcon}
-            label={l`Mark all as read`}
+            edge
+            disabled={unreadCount === 0}
             onPress={actions.markEverythingRead}
           />
-        ) : (
-          <Layout.Header.Slot />
-        )}
-        <HeaderAvatar />
-      </Layout.Header.Outer>
-      <View style={[a.z_10, web([a.sticky, {top: 0}])]}>
+        </Layout.Header.Outer>
         <TabBar
           testID="activity-tabs"
           selectedPage={tab}
           items={[l`All`, l`From others`]}
           onSelect={setTab}
         />
-      </View>
+      </Layout.Header.Sticky>
       {snapshot === undefined ? (
         <Shimmer testID="activity-loading">
           <LoadingSkeleton />

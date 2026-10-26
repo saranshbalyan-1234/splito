@@ -71,6 +71,7 @@ test('People shows each friend with real words and the right balance per currenc
   await expect(page.getByTestId('people-friends-title')).toHaveText(
     `Friends  ${Object.keys(DEMO_FRIENDS).length}`,
   )
+  // Add friend is the header's one action (an icon button), not repeated in the list.
   await expect(page.getByTestId('people-add-friend')).toHaveAttribute('aria-label', 'Add friend')
   await expectNoMessageIds(page)
 })

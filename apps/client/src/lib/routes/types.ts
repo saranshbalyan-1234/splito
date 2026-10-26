@@ -1,5 +1,6 @@
 import {
   type NavigationState,
+  type NavigatorScreenParams,
   type PartialState,
 } from '@react-navigation/native'
 import {type NativeStackNavigationProp} from '@react-navigation/native-stack'
@@ -14,8 +15,9 @@ export type TabParams = {
 
 /** Every route in the owner's route table (paths live in `#/routes` and `#/navigation/linking`). */
 export type RootStackParams = {
-  Tabs: undefined
-  /** Opened from the header avatar's menu, so it is pushed like Settings. */
+  /** Native only: the drawer names a tab through here, since v7 doesn't navigate into children by name. */
+  Tabs: NavigatorScreenParams<TabParams> | undefined
+  /** Opened from the avatar's drawer, so it is pushed like Settings. */
   Profile: undefined
   Settings: undefined
   SettingsSection: {section: string}

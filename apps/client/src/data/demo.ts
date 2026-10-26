@@ -20,9 +20,10 @@ import {
 } from '#/data/demoData'
 import {IS_DEV, IS_E2E} from '#/env'
 
-/** True when this page load asked for demo data (`?demo=1`). */
+/** True when this load asked for demo data: `?demo=1` on web, `EXPO_PUBLIC_DEMO=1` for native dev builds. */
 function isDemoRequested() {
-  if (typeof window === 'undefined' || !window.location) return false
+  if (process.env.EXPO_PUBLIC_DEMO === '1') return true
+  if (typeof window === 'undefined' || !window.location?.search) return false
   return new URLSearchParams(window.location.search).get('demo') === '1'
 }
 

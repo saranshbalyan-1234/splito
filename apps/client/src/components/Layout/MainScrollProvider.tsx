@@ -1,7 +1,7 @@
 // Adapted from bluesky-social/social-app@4e4ad9c (MIT) - src/view/com/util/MainScrollProvider.tsx
 import {createContext, useCallback, useContext, useEffect} from 'react'
 import {type NativeScrollEvent} from 'react-native'
-import Animated, {
+import {
   clamp,
   interpolate,
   Reanimated3DefaultSpringConfig,
@@ -10,125 +10,57 @@ import Animated, {
   useSharedValue,
   withSpring,
 } from 'react-native-reanimated'
-import {useSafeAreaInsets} from 'react-native-safe-area-context'
-import {useFocusEffect} from '@react-navigation/native'
 
 import {ScrollProvider} from '#/lib/ScrollContext'
-import {useShellHeaderLayout, useShellLayout} from '#/state/shell/shell-layout'
-import {atoms as a, platform, useBreakpoints, useTheme} from '#/alf'
-import {IS_LIQUID_GLASS, IS_NATIVE, IS_WEB} from '#/env'
+import {useShellLayout} from '#/state/shell/shell-layout'
+import {IS_NATIVE, IS_WEB} from '#/env'
 
 const WEB_HIDE_SHELL_THRESHOLD = 200
 
-/**
- * The phone top bar's height: `Layout.Header.Outer`'s minimum (48 native,
- * 52 web). Lists under a `HidingHeader` start this far down, as Bluesky's
- * feeds take `useHeaderOffset`.
+/*
+ * Bluesky keeps one header mode for Home. Every Splito screen has its own
+ * header, so `Layout.Screen` mounts a provider per screen and the header
+ * comes back whenever a screen is opened fresh.
  */
-export const HIDING_HEADER_HEIGHT = platform({native: 48, default: 52})
+const HeaderModeContext = createContext<SharedValue<number> | null>(null)
+HeaderModeContext.displayName = 'HeaderModeContext'
 
-const HomeHeaderModeContext = createContext<SharedValue<number> | null>(null)
-HomeHeaderModeContext.displayName = 'HomeHeaderModeContext'
-
-export function HomeHeaderModeProvider({
-  children,
-}: {
-  children: React.ReactNode
-}) {
+/** 0 is shown, 1 is hidden; the screen's lists drive it as they scroll. */
+export function HeaderModeProvider({children}: {children: React.ReactNode}) {
   const headerMode = useSharedValue(0)
   return (
-    <HomeHeaderModeContext.Provider value={headerMode}>
+    <HeaderModeContext.Provider value={headerMode}>
       {children}
-    </HomeHeaderModeContext.Provider>
+    </HeaderModeContext.Provider>
   )
 }
 
-export function useHomeHeaderMode() {
-  const headerMode = useContext(HomeHeaderModeContext)
-  if (!headerMode) {
-    throw new Error(
-      'useHomeHeaderMode must be used within a HomeHeaderModeProvider',
-    )
-  }
-  return headerMode
-}
-
-export function useHomeHeaderTransform() {
-  const headerMode = useHomeHeaderMode()
-  const {headerHeight} = useShellLayout()
-  const {top: topInset} = useSafeAreaInsets()
-
-  const headerPinnedHeight = IS_LIQUID_GLASS ? topInset : 0
+/**
+ * Bluesky's minimal-shell header transform: slides the header up and fades
+ * it as the screen scrolls down. Web translates the sticky header; native
+ * pulls the in-flow header up so the list takes its room.
+ * ponytail: the native margin re-lays the screen each frame of the slide;
+ * Bluesky's fixed header plus a list `headerOffset` avoids that if it shows
+ * up in a profile.
+ */
+export function useHeaderHideTransform(height: SharedValue<number>) {
+  const headerMode = useContext(HeaderModeContext)
 
   return useAnimatedStyle(() => {
-    const headerModeValue = headerMode.get()
-    const hHeight = headerHeight.get()
-
+    const mode = headerMode?.get() ?? 0
+    const offset = interpolate(mode, [0, 1], [0, -height.get()])
     return {
-      pointerEvents: headerModeValue === 0 ? 'auto' : 'none',
-      opacity: Math.pow(1 - headerModeValue, 2),
-      transform: [
-        {
-          translateY: interpolate(
-            headerModeValue,
-            [0, 1],
-            [0, headerPinnedHeight - hHeight],
-          ),
-        },
-      ],
+      pointerEvents: mode === 0 ? 'auto' : 'none',
+      opacity: Math.pow(1 - mode, 2),
+      ...(IS_WEB ? {transform: [{translateY: offset}]} : {marginTop: offset}),
     }
   })
 }
 
-/**
- * A top-level screen's header (People, Groups, Analytics). On phones it is
- * fixed to the top and slides away on scroll down and back on scroll up, as
- * Bluesky's home header (`HomeHeaderLayoutMobile`); the list below sits in
- * a `MainScrollProvider` and starts `HIDING_HEADER_HEIGHT` down. Wider
- * windows keep the header in flow (sticky on web).
- */
-export function HidingHeader({children}: {children: React.ReactNode}) {
-  const t = useTheme()
-  const {gtMobile} = useBreakpoints()
-  const {onLayout} = useShellHeaderLayout()
-  const headerMode = useHomeHeaderMode()
-  const transform = useHomeHeaderTransform()
-
-  // As Bluesky's Home: leaving the screen brings its header back.
-  useFocusEffect(
-    useCallback(() => {
-      return () => {
-        headerMode.set(
-          withSpring(0, {
-            ...Reanimated3DefaultSpringConfig,
-            overshootClamping: true,
-          }),
-        )
-      }
-    }, [headerMode]),
-  )
-
-  if (gtMobile) return children
-  return (
-    <Animated.View
-      style={[
-        a.fixed,
-        a.z_10,
-        t.atoms.bg,
-        {top: 0, left: 0, right: 0},
-        transform,
-      ]}
-      onLayout={onLayout}>
-      {children}
-    </Animated.View>
-  )
-}
-
 export function MainScrollProvider({children}: {children: React.ReactNode}) {
   const {headerHeight} = useShellLayout()
-  const headerMode = useHomeHeaderMode()
-  const {top: topInset} = useSafeAreaInsets()
-  const headerPinnedHeight = IS_LIQUID_GLASS ? topInset : 0
+  const fallbackMode = useSharedValue(0)
+  const headerMode = useContext(HeaderModeContext) ?? fallbackMode
   const startDragOffset = useSharedValue<number | null>(null)
   const startMode = useSharedValue<number | null>(null)
   const didJustRestoreScroll = useSharedValue<boolean>(false)
@@ -238,7 +170,7 @@ export function MainScrollProvider({children}: {children: React.ReactNode}) {
         // The "mode" value is always between 0 and 1.
         // Figure out how much to move it based on the current dragged distance.
         const dy = offsetY - startDragOffsetValue
-        const hideDistance = headerHeight.get() - headerPinnedHeight
+        const hideDistance = headerHeight.get()
         const dProgress = interpolate(
           dy,
           [-hideDistance, hideDistance],
@@ -269,7 +201,6 @@ export function MainScrollProvider({children}: {children: React.ReactNode}) {
     },
     [
       headerHeight,
-      headerPinnedHeight,
       headerMode,
       setMode,
       startDragOffset,
@@ -289,24 +220,17 @@ export function MainScrollProvider({children}: {children: React.ReactNode}) {
   )
 }
 
-/* Upstream uses eventemitter3; a listener set does the same here. */
+/* Bluesky uses an EventEmitter here; a listener set does the same job. */
 const forcedScrollListeners = new Set<() => void>()
 
-if (IS_WEB) {
-  const originalScroll = window.scroll
-  window.scroll = function (this: Window, ...args: unknown[]) {
-    forcedScrollListeners.forEach(l => l())
-    return originalScroll.apply(this, args as Parameters<typeof window.scroll>)
-  } as typeof window.scroll
-
-  const originalScrollTo = window.scrollTo
-  window.scrollTo = function (this: Window, ...args: unknown[]) {
-    forcedScrollListeners.forEach(l => l())
-    return originalScrollTo.apply(
-      this,
-      args as Parameters<typeof window.scrollTo>,
-    )
-  } as typeof window.scrollTo
+if (IS_WEB && typeof window !== 'undefined') {
+  for (const name of ['scroll', 'scrollTo'] as const) {
+    const original = window[name] as (...args: unknown[]) => void
+    window[name] = function (this: Window, ...args: unknown[]) {
+      forcedScrollListeners.forEach(listener => listener())
+      return original.apply(this, args)
+    } as typeof window.scroll
+  }
 }
 
 function listenToForcedWindowScroll(listener: () => void) {

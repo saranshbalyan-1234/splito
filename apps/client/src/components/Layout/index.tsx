@@ -28,6 +28,10 @@ import {
   CENTER_COLUMN_WIDTH,
 } from '#/components/Layout/const'
 import {ScrollbarOffsetContext} from '#/components/Layout/context'
+import {
+  HeaderModeProvider,
+  MainScrollProvider,
+} from '#/components/Layout/MainScrollProvider'
 import {IS_IPAD, IS_WEB} from '#/env'
 
 export * from '#/components/Layout/const'
@@ -49,6 +53,7 @@ export const Screen = memo(function Screen({
   noInsetTop,
   minimalShell = false,
   fullBleed: _fullBleed = false,
+  children,
   ...props
 }: ScreenProps) {
   const {top} = useSafeAreaInsets()
@@ -59,19 +64,21 @@ export const Screen = memo(function Screen({
   /*
    * Bluesky draws the centre column's side borders here. Splito's content
    * fills the space beside the sidebar, whose own border separates them.
+   * Each screen owns its header's hide-on-scroll state (Header.Sticky).
    */
   return (
-    <>
-      <View
-        style={[
-          a.util_screen_outer,
-          {paddingTop: noInsetTop ? 0 : top},
-          isWithinSplitView && {maxHeight: '100%'},
-          style,
-        ]}
-        {...props}
-      />
-    </>
+    <View
+      style={[
+        a.util_screen_outer,
+        {paddingTop: noInsetTop ? 0 : top},
+        isWithinSplitView && {maxHeight: '100%'},
+        style,
+      ]}
+      {...props}>
+      <HeaderModeProvider>
+        <MainScrollProvider>{children}</MainScrollProvider>
+      </HeaderModeProvider>
+    </View>
   )
 })
 

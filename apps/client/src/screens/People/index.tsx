@@ -6,27 +6,24 @@ import {useNavigation} from '@react-navigation/native'
 import {balanceTotals, personSummary} from '@splito/domain'
 import {type Group, type Person} from '@splito/sync'
 
-import {
-  HIDING_HEADER_HEIGHT,
-  HomeHeaderModeProvider,
-  MainScrollProvider,
-} from '#/lib/MainScrollProvider'
 import {type NavigationProp} from '#/lib/routes/types'
 import {useNumberLocale} from '#/locale/numberLocale'
 import {useEntities, useLedger, useMe, usePref} from '#/data/hooks'
-import {HomeHeaderLayout} from '#/view/com/home/HomeHeaderLayout'
 import {EmptyState} from '#/view/com/util/EmptyState'
 import {List} from '#/view/com/util/List'
 import {atoms as a, useBreakpoints, useTheme} from '#/alf'
 import {AddExpenseFAB} from '#/components/AddExpenseFAB'
+import {LogoMark} from '#/components/brand/Logo'
 import {Button, ButtonIcon, ButtonText} from '#/components/Button'
 import {useDialogControl} from '#/components/Dialog'
 import {myBalances} from '#/components/groups/net'
+import {HeaderAvatar} from '#/components/HeaderAvatar'
 import {PersonPlus_Filled_Stroke2_Corner0_Rounded as PersonPlusIcon} from '#/components/icons/Person'
 import {SettingsSliderVertical_Stroke2_Corner0_Rounded as FilterIcon} from '#/components/icons/SettingsSlider'
 import * as Layout from '#/components/Layout'
 import * as Pills from '#/components/Pills'
 import {Text} from '#/components/Typography'
+import {PressableScale} from '#/motion/PressableScale'
 import {Shimmer} from '#/motion/Shimmer'
 import {
   BalanceSummary,
@@ -48,9 +45,10 @@ const PLACEHOLDER_ROWS = 6
 
 /**
  * Home: balances per currency, then one row per friend with their balance
- * per currency and each group's part. No page title, by spec. The Include
- * groups filter (default from preferences, applied with Apply) drives the
- * totals and the rows.
+ * per currency and each group's part. No page title, by spec: the header
+ * centres the logo, as Bluesky's home header does. The Include groups
+ * filter (default from preferences, applied with Apply) drives the totals
+ * and the rows.
  */
 export function PeopleScreen() {
   const t = useTheme()
@@ -154,99 +152,106 @@ export function PeopleScreen() {
 
   return (
     <Layout.Screen testID="screen-people">
-      <HomeHeaderModeProvider>
-        <HomeHeaderLayout tabBarAnchor={null}>{null}</HomeHeaderLayout>
-        {isLoading ? (
-          <Shimmer
-            testID="people-loading"
-            style={!gtMobile && {paddingTop: HIDING_HEADER_HEIGHT}}>
-            <BalanceSummaryPlaceholder />
-            <FriendsHeader count={undefined} />
-            {Array.from({length: PLACEHOLDER_ROWS}, (_, i) => (
-              <PersonRowPlaceholder key={i} />
-            ))}
-          </Shimmer>
-        ) : (
-          /* Upstream's list idiom: rows already there on mount appear at once; later inserts and removals animate. */
-          <LayoutAnimationConfig skipEntering skipExiting>
-            <MainScrollProvider>
-              <List
-                headerOffset={gtMobile ? undefined : HIDING_HEADER_HEIGHT}
-                data={rows}
-                keyExtractor={(row: PersonRowData) => row.id}
-                renderItem={({item}: {item: PersonRowData}) => (
-                  <PersonRow
-                    row={item}
-                    groupNames={groupNames}
-                    locale={locale}
-                  />
-                )}
-                ListHeaderComponent={
-                  rows.length > 0 || isFiltered ? (
-                    <>
-                      {totals.length > 0 && (
-                        <BalanceSummary totals={totals} locale={locale} />
-                      )}
-                      <FriendsHeader
-                        count={rows.length}
-                        action={friendsAction}
-                      />
-                    </>
-                  ) : undefined
-                }
-                ListEmptyComponent={
-                  friends.length > 0 ? (
-                    <EmptyState
-                      testID="people-filtered-empty"
-                      icon={null}
-                      message={l`No friends match these filters.`}
-                      button={{
-                        testID: 'people-clear-filters',
-                        label: l`Clear filters`,
-                        text: l`Clear filters`,
-                        onPress: () => setApplied(null),
-                        size: 'small',
-                        color: 'secondary',
-                      }}
-                    />
-                  ) : (
-                    <EmptyState
-                      testID="people-empty"
-                      /* Centred in the space under the header, as Bluesky's empty states sit. */
-                      style={[a.justify_center, {minHeight: height - 160}]}
-                      illustration="empty-people"
-                      title={l`Split with friends`}
-                      message={l`Add a friend, then split any bill with them. They don’t need the app.`}
-                      button={{
-                        testID: 'people-empty-add-friend',
-                        label: l`Add a friend`,
-                        text: l`Add a friend`,
-                        icon: PersonPlusIcon,
-                        onPress: () => navigation.navigate('AddFriend'),
-                        size: 'large',
-                        color: 'primary',
-                      }}
-                      secondaryButton={{
-                        testID: 'people-empty-add-expense',
-                        label: l({message: 'Add expense', context: 'action'}),
-                        text: l({message: 'Add expense', context: 'action'}),
-                        onPress: () => navigation.navigate('AddExpense', {}),
-                        size: 'large',
-                        color: 'secondary',
-                      }}
-                    />
-                  )
-                }
-                ListFooterComponent={
-                  !gtMobile ? <View style={{height: 100}} /> : undefined
-                }
-              />
-            </MainScrollProvider>
-          </LayoutAnimationConfig>
-        )}
-        {/* The empty state's own buttons are the actions; a FAB would be a third Add. */}
-        {(isLoading || friends.length > 0) && <AddExpenseFAB />}
-      </HomeHeaderModeProvider>
+      <Layout.Header.Outer>
+        <HeaderAvatar />
+        <Layout.Header.Content>
+          {/* The home link, inactive here because this header is on People. */}
+          <PressableScale
+            testID="header-logo"
+            targetScale={0.9}
+            accessibilityRole="link"
+            accessibilityLabel={l`Splito - People`}
+            aria-disabled={true}
+            disabled={true}>
+            <LogoMark size={30} />
+          </PressableScale>
+        </Layout.Header.Content>
+        <Layout.Header.ActionButton
+          testID="people-add-friend"
+          label={l`Add friend`}
+          icon={PersonPlusIcon}
+          edge
+          onPress={() => navigation.navigate('AddFriend')}
+        />
+      </Layout.Header.Outer>
+      {isLoading ? (
+        <Shimmer testID="people-loading">
+          <BalanceSummaryPlaceholder />
+          <FriendsHeader count={undefined} />
+          {Array.from({length: PLACEHOLDER_ROWS}, (_, i) => (
+            <PersonRowPlaceholder key={i} />
+          ))}
+        </Shimmer>
+      ) : (
+        /* Upstream's list idiom: rows already there on mount appear at once; later inserts and removals animate. */
+        <LayoutAnimationConfig skipEntering skipExiting>
+          <List
+            data={rows}
+            keyExtractor={(row: PersonRowData) => row.id}
+            renderItem={({item}: {item: PersonRowData}) => (
+              <PersonRow row={item} groupNames={groupNames} locale={locale} />
+            )}
+            ListHeaderComponent={
+              rows.length > 0 || isFiltered ? (
+                <>
+                  {totals.length > 0 && (
+                    <BalanceSummary totals={totals} locale={locale} />
+                  )}
+                  <FriendsHeader count={rows.length} action={friendsAction} />
+                </>
+              ) : undefined
+            }
+            ListEmptyComponent={
+              friends.length > 0 ? (
+                <EmptyState
+                  testID="people-filtered-empty"
+                  icon={null}
+                  message={l`No friends match these filters.`}
+                  button={{
+                    testID: 'people-clear-filters',
+                    label: l`Clear filters`,
+                    text: l`Clear filters`,
+                    onPress: () => setApplied(null),
+                    size: 'small',
+                    color: 'secondary',
+                  }}
+                />
+              ) : (
+                <EmptyState
+                  testID="people-empty"
+                  /* Centred in the space under the header, as Bluesky's empty states sit. */
+                  style={[a.justify_center, {minHeight: height - 160}]}
+                  illustration="empty-people"
+                  title={l`Split with friends`}
+                  message={l`Add a friend, then split any bill with them. They don’t need the app.`}
+                  button={{
+                    testID: 'people-empty-add-friend',
+                    label: l`Add a friend`,
+                    text: l`Add a friend`,
+                    icon: PersonPlusIcon,
+                    onPress: () => navigation.navigate('AddFriend'),
+                    size: 'large',
+                    color: 'primary',
+                  }}
+                  secondaryButton={{
+                    testID: 'people-empty-add-expense',
+                    label: l({message: 'Add expense', context: 'action'}),
+                    text: l({message: 'Add expense', context: 'action'}),
+                    onPress: () => navigation.navigate('AddExpense', {}),
+                    size: 'large',
+                    color: 'secondary',
+                  }}
+                />
+              )
+            }
+            ListFooterComponent={
+              !gtMobile ? <View style={{height: 100}} /> : undefined
+            }
+          />
+        </LayoutAnimationConfig>
+      )}
+      {/* The empty state's own buttons are the actions; a FAB would be a third Add. */}
+      {(isLoading || friends.length > 0) && <AddExpenseFAB />}
       <FriendsFilterDialog
         control={filterControl}
         filters={filters}

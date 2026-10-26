@@ -190,8 +190,8 @@ test('edit, then delete with undo', async ({page}) => {
   await page.getByTestId('amount-input').fill('600')
   const id = await saveAndView(page)
 
-  await page.getByTestId('expense-menu').click()
-  await page.getByTestId('expense-edit').click()
+  // Edit is the header's one action; the overflow holds Delete.
+  await page.getByTestId('expense-edit-button').click()
   await expect(page.getByTestId('screen-edit-expense')).toBeVisible()
   await expect(page.getByTestId('expense-title')).toHaveValue('Cab to airport')
   await page.getByTestId('amount-input').fill('750')

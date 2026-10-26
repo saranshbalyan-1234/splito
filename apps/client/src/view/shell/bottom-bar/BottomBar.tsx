@@ -17,7 +17,10 @@ import {TAB_ROUTE, useTabs} from '#/lib/routes/tabs'
 import {useShellLayout} from '#/state/shell/shell-layout'
 import {type SidebarTab} from '#/view/shell/desktop/LeftNav'
 import {atoms as a, useTheme} from '#/alf'
-import {useActivityBadge} from '#/components/activity/useActivityFeed'
+import {
+  describeUnread,
+  useActivityBadge,
+} from '#/components/activity/useActivityFeed'
 import {TAB_LABELS, TabGlyph} from '#/components/TabGlyph'
 import {Text} from '#/components/Typography'
 import {useAnalytics} from '#/analytics'
@@ -108,11 +111,14 @@ export function BottomBar({navigation}: BottomTabBarProps) {
                 size={iconWidth}
               />
             }
-            notificationCount={tab === 'activity' ? activityBadge : undefined}
             onPress={() => onPressTab(TAB_ROUTE[tab])}
+            /* Bluesky's unread badge, on the tab its Notifications became. */
+            notificationCount={tab === 'activity' ? activityBadge : undefined}
             accessibilityRole="tab"
             accessibilityLabel={_(TAB_LABELS[tab])}
-            accessibilityHint=""
+            accessibilityHint={
+              tab === 'activity' ? describeUnread(activityBadge) : ''
+            }
           />
         ))}
       </Animated.View>

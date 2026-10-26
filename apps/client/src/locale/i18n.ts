@@ -1,4 +1,17 @@
 // Adapted from bluesky-social/social-app@4e4ad9c (MIT) - src/locale/i18n.ts
+/*
+ * Native only (web uses i18n.web.ts). Hermes lacks Intl.PluralRules and a full
+ * Intl.NumberFormat, so load formatjs polyfills as Bluesky does. Keep -force:
+ * detection is very slow on low-end Android (formatjs/formatjs#4463).
+ */
+import '@formatjs/intl-locale/polyfill-force.js'
+import '@formatjs/intl-pluralrules/polyfill-force.js'
+import '@formatjs/intl-numberformat/polyfill-force.js'
+import '@formatjs/intl-pluralrules/locale-data/en.js'
+import '@formatjs/intl-pluralrules/locale-data/hi.js'
+import '@formatjs/intl-numberformat/locale-data/en.js'
+import '@formatjs/intl-numberformat/locale-data/hi.js'
+
 import {i18n} from '@lingui/core'
 
 import {messages as messagesEn} from '#/locale/locales/en/messages'

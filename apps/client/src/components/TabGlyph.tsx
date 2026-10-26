@@ -5,13 +5,13 @@ import {type TabId} from '@splito/sync'
 import {styles} from '#/view/shell/bottom-bar/BottomBarStyles'
 import {useTheme} from '#/alf'
 import {
-  Activity_Filled_Corner0_Rounded as ActivityFilled,
-  Activity_Stroke2_Corner0_Rounded as Activity,
-} from '#/components/icons/Activity'
-import {
   ChartPie_Filled_Corner0_Rounded as ChartPieFilled,
   ChartPie_Stroke2_Corner0_Rounded as ChartPie,
 } from '#/components/icons/ChartPie'
+import {
+  Activity_Filled_Corner0_Rounded as ActivityFilled,
+  Activity_Stroke2_Corner0_Rounded as Activity,
+} from '#/components/icons/Activity'
 import {type Props as SVGIconProps} from '#/components/icons/common'
 import {
   Group3_Filled_Corner0_Rounded as GroupFilled,

@@ -35,9 +35,15 @@ export function StoreProvider({children, fallback = null}: {children: React.Reac
 
   useEffect(() => {
     let store: Store | undefined
+    let cancelled = false
     const ctx = getMutationCtx()
     openStore()
       .then(async s => {
+        /* Dev StrictMode mounts twice: a store opened for the discarded mount is closed, never used. */
+        if (cancelled) {
+          void s.close()
+          return
+        }
         store = s
         await ensureMe(s, ctx, 'Me')
         installDevTools(s, ctx)
@@ -49,6 +55,7 @@ export function StoreProvider({children, fallback = null}: {children: React.Reac
         setError(e)
       })
     return () => {
+      cancelled = true
       void store?.close()
     }
   }, [])

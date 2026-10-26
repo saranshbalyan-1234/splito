@@ -1,4 +1,5 @@
 import {useSyncExternalStore} from 'react'
+import {plural} from '@lingui/core/macro'
 import {
   type ActivityEvent,
   type Entity,
@@ -102,11 +103,19 @@ export function useActivityFeed(filter: FeedFilter = 'all') {
 }
 
 /**
- * The header bell's badge, as Bluesky badges Notifications: unread changes
- * by other people, capped at "30+" as upstream does; empty when there's
- * nothing new.
+ * The Activity nav item's badge, as Bluesky badges Notifications: unread
+ * changes by other people, capped at "30+" as upstream's
+ * `useUnreadNotifications`; empty when there's nothing new.
  */
 export function useActivityBadge() {
   const {unreadFromOthers: n} = useActivityFeed()
-  return n > 30 ? '30+' : n > 0 ? String(n) : ''
+  return n >= 30 ? '30+' : n > 0 ? String(n) : ''
+}
+
+/** "13 unread items" for screen readers. The badge can read '30+', which plural() would read as NaN, so it gets a number. */
+export function describeUnread(badge: string) {
+  const count = Number.parseInt(badge, 10)
+  return count
+    ? plural(count, {one: '# unread item', other: '# unread items'})
+    : ''
 }

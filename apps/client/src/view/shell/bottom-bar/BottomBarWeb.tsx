@@ -2,7 +2,6 @@
 import {useCallback} from 'react'
 import {View} from 'react-native'
 import Animated from 'react-native-reanimated'
-import {msg, plural} from '@lingui/core/macro'
 import {useLingui} from '@lingui/react'
 import {useNavigationState} from '@react-navigation/native'
 import {type TabId} from '@splito/sync'
@@ -13,7 +12,10 @@ import {TAB_ROUTE, tabHref, useTabs} from '#/lib/routes/tabs'
 import {useShellLayout} from '#/state/shell/shell-layout'
 import {Link} from '#/view/com/util/Link'
 import {atoms as a, useTheme} from '#/alf'
-import {useActivityBadge} from '#/components/activity/useActivityFeed'
+import {
+  describeUnread,
+  useActivityBadge,
+} from '#/components/activity/useActivityFeed'
 import {TAB_LABELS, TabGlyph} from '#/components/TabGlyph'
 import {Text} from '#/components/Typography'
 import {useAnalytics} from '#/analytics'
@@ -85,7 +87,6 @@ const NavItem: React.FC<{
   onLongPress,
 }) => {
   const t = useTheme()
-  const {_} = useLingui()
   const ax = useAnalytics()
   const section = useNavigationState(currentSection)
 
@@ -110,19 +111,17 @@ const NavItem: React.FC<{
       {children({isActive})}
       {notificationCount ? (
         <View
-          testID={`tab-${navItem}-badge`}
           style={[
             styles.notificationCount,
             styles.notificationCountWeb,
             {backgroundColor: t.palette.primary_500},
           ]}
-          aria-label={_(
-            msg`${plural(notificationCount, {
-              one: '# unread item',
-              other: '# unread items',
-            })}`,
-          )}>
-          <Text style={styles.notificationCountLabel}>{notificationCount}</Text>
+          aria-label={describeUnread(notificationCount)}>
+          <Text
+            testID={`nav-badge-${navItem}`}
+            style={styles.notificationCountLabel}>
+            {notificationCount}
+          </Text>
         </View>
       ) : hasNew ? (
         <View

@@ -81,10 +81,9 @@ export function ExpenseScreen() {
         </Layout.Header.Content>
         {expense && !expense.deleted ? (
           <>
-            <Layout.Header.IconButton
+            <Layout.Header.ActionButton
               testID="expense-edit-button"
               icon={PencilIcon}
-              iconSize="md"
               label={l`Edit expense`}
               onPress={() =>
                 navigation.navigate('EditExpense', {expenseId: expense.id})
@@ -182,17 +181,6 @@ function ExpenseMenu({expense}: {expense: Entity<Expense>}) {
       </Menu.Trigger>
       <Menu.Outer>
         <Menu.Group>
-          <Menu.Item
-            testID="expense-edit"
-            label={l`Edit expense`}
-            onPress={() =>
-              navigation.navigate('EditExpense', {expenseId: expense.id})
-            }>
-            <Menu.ItemText>
-              <Trans>Edit expense</Trans>
-            </Menu.ItemText>
-            <Menu.ItemIcon icon={PencilIcon} position="right" />
-          </Menu.Item>
           <Menu.Item
             testID="expense-delete"
             label={l`Delete expense`}

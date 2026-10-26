@@ -17,6 +17,12 @@ export const BUTTON_VISUAL_ALIGNMENT_OFFSET = 3
 export const HEADER_SLOT_SIZE = 33
 
 /**
+ * Min height of the header row (`Layout.Header.Outer`). The sidebar's logo
+ * row uses it too, so the logo lines up with the header beside it.
+ */
+export const HEADER_HEIGHT = {native: 48, web: 52}
+
+/**
  * How far to shift the center column when in the tablet breakpoint
  */
 export const CENTER_COLUMN_OFFSET = -105

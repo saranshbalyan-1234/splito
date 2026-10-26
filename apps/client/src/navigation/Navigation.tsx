@@ -33,6 +33,7 @@ import {type Theme, useBreakpoints, useTheme} from '#/alf'
 import {IS_ANDROID, IS_IPAD} from '#/env'
 import {usePref} from '#/data/hooks'
 import {useShouldReduceMotion} from '#/motion/useShouldReduceMotion'
+import {DevTour, navigationRef} from '#/navigation/DevTour'
 import {linking} from '#/navigation/linking'
 import {AddExpenseScreen} from '#/screens/AddExpense'
 import {AddFriendScreen} from '#/screens/AddFriend'
@@ -148,7 +149,12 @@ function Tabs() {
  * The TabsNavigator is used by native mobile to represent the routes
  * as tabs, with every other route pushed above them.
  */
-export function TabsNavigator() {
+export function TabsNavigator({
+  layout,
+}: {
+  /** Wraps the navigator's content, inside its navigation state (the drawer). */
+  layout?: React.ComponentProps<typeof Stack.Navigator>['layout']
+}) {
   const t = useTheme()
   const [motion] = usePref('motion')
   const shouldReduceMotion = useShouldReduceMotion()
@@ -157,6 +163,7 @@ export function TabsNavigator() {
     motion === 'off' ? 'none' : shouldReduceMotion ? 'fade' : undefined
   return (
     <Stack.Navigator
+      layout={layout}
       screenOptions={{
         ...screenOptions(t),
         ...(reducedAnimation && {animation: reducedAnimation}),
@@ -189,7 +196,12 @@ export function TabsNavigator() {
  * The FlatNavigator is used by Web to represent the routes
  * in a single ("flat") stack.
  */
-export function FlatNavigator() {
+export function FlatNavigator({
+  layout,
+}: {
+  /** Wraps the navigator's content, inside its navigation state (the drawer). */
+  layout?: React.ComponentProps<typeof Flat.Navigator>['layout']
+}) {
   const t = useTheme()
   const {_} = useLingui()
   const screenListeners = useWebScrollRestoration()
@@ -201,6 +213,7 @@ export function FlatNavigator() {
 
   return (
     <Flat.Navigator
+      layout={layout}
       screenListeners={screenListeners}
       screenOptions={screenOptions(t)}>
       <Flat.Screen
@@ -291,6 +304,7 @@ export function RoutesContainer({children}: React.PropsWithChildren<{}>) {
   const base = t.scheme === 'dark' ? DarkTheme : DefaultTheme
   return (
     <NavigationContainer
+      ref={navigationRef}
       linking={linking}
       theme={{
         ...base,
@@ -303,6 +317,7 @@ export function RoutesContainer({children}: React.PropsWithChildren<{}>) {
         },
       }}>
       {children}
+      <DevTour />
     </NavigationContainer>
   )
 }
