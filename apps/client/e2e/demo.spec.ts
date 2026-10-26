@@ -12,7 +12,7 @@ import {
   personSummary,
 } from '@splito/domain'
 
-import {DEMO_EXPENSES, DEMO_FRIENDS} from '../src/data/demoData'
+import {DEMO_EXPENSES, DEMO_FRIENDS, demoSplit} from '../src/data/demoData'
 
 /* Expected balances, recomputed from the demo dataset with the same domain rules the app uses. */
 const LOCALE = 'en-US' // Playwright's default browser locale; `auto` number format follows it.
@@ -23,7 +23,7 @@ const records: ExpenseRecord[] = DEMO_EXPENSES.map((e, i) => ({
   currency: e.currency,
   total: e.total,
   payers: e.payers as Record<string, bigint>,
-  shares: computeShares(e.total, {mode: 'equal', participants: e.participants}),
+  shares: computeShares(e.total, demoSplit(e, k => k)),
   date: e.date,
   deleted: false,
 }))

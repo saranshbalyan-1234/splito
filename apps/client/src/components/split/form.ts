@@ -1,4 +1,5 @@
 import {
+  allocate,
   computeShares,
   DomainError,
   evaluateAmount,
@@ -67,6 +68,8 @@ export type ExpenseForm = {
   items: ItemForm[]
   tax: string
   tip: string
+  /** Service charge; older drafts may not have it. */
+  service: string
   discount: string
   notes: string
 }
@@ -109,6 +112,7 @@ export function emptyForm({
     items: [],
     tax: '',
     tip: '',
+    service: '',
     discount: '',
     notes: '',
   }
@@ -195,6 +199,7 @@ export function formFromExpense(e: Expense, me: string): ExpenseForm {
       }))
       form.tax = blankIfZero(s.tax, scale)
       form.tip = blankIfZero(s.tip, scale)
+      form.service = blankIfZero(s.service ?? 0n, scale)
       form.discount = blankIfZero(s.discount, scale)
       break
   }
@@ -209,14 +214,16 @@ export type FormEvaluation = {
   total?: bigint
   /** Why the amount text is not a valid amount (an error code). */
   amountError?: string
-  /** Per-input error codes: a person id (split rows), `paid:<id>`, `item:<key>`, `tax`, `tip`, `discount`. */
+  /** Per-input error codes: a person id (split rows), `paid:<id>`, `item:<key>`, `tax`, `tip`, `service`, `discount`. */
   rowErrors: Record<string, string>
   /** Multiple payers: what is still unpaid of the total. */
   payersRemaining?: bigint
   /** Exact, percent and items modes: what is still unassigned. */
   remaining?: Remaining
-  /** Items mode: items + tax + tip - discount. */
+  /** Items mode: items + tax + tip + service - discount. */
   itemsTotal?: bigint
+  /** Items mode: each priced, assigned item split by its portions, by item key then person. */
+  itemParts?: Record<string, Record<string, bigint>>
   /** Each person's share once the split is complete. */
   shares?: Record<string, bigint>
   /** Present only when the expense passes `validateExpense`; Save stays disabled until then. */
@@ -395,6 +402,16 @@ export function evaluateForm(
             r.rowErrors[`item:${item.key}`] = 'UNASSIGNED_ITEM'
             isComplete = false
           }
+          if (item.people.length > 0) {
+            r.itemParts ??= {}
+            r.itemParts[item.key] = allocate(
+              v,
+              item.people.map(id => ({
+                id,
+                weight: BigInt(item.portions?.[id] ?? 1),
+              })),
+            )
+          }
           items.push({
             id: item.key,
             name: item.name.trim(),
@@ -408,11 +425,13 @@ export function evaluateForm(
       }
       const tax = rowAmount(f.tax, 'tax')
       const tip = rowAmount(f.tip, 'tip')
+      const service = rowAmount(f.service, 'service')
       const discount = rowAmount(f.discount, 'discount')
       if (
         !isComplete ||
         tax === undefined ||
         tip === undefined ||
+        service === undefined ||
         discount === undefined
       ) {
         errors.push(
@@ -423,7 +442,7 @@ export function evaluateForm(
         break
       }
       r.itemsTotal = remainingMinor(
-        sumMinor([...items.map(i => i.amount), tax, tip]),
+        sumMinor([...items.map(i => i.amount), tax, tip, service]),
         [discount],
       )
       if (total !== undefined)
@@ -434,7 +453,7 @@ export function evaluateForm(
       if (items.length === 0) errors.push('NO_ITEMS')
       else if (r.remaining && r.remaining.value !== 0n)
         errors.push('TOTAL_MISMATCH')
-      else split = {mode: 'items', items, tax, tip, discount}
+      else split = {mode: 'items', items, tax, tip, service, discount}
       break
     }
   }

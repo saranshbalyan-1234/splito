@@ -25,6 +25,7 @@ import {
   type SplitMode,
 } from './form'
 import {MinusIcon} from './icons'
+import {PortionBadge} from './PortionBadge'
 import {useAvatarName, useDisplayName, useErrorText} from './shared'
 
 type Update = (fn: (f: ExpenseForm) => ExpenseForm) => void
@@ -67,7 +68,7 @@ export function SplitEditor({
     percent: l`Give each person a percentage.`,
     shares: l`Split by shares – say 2 for a couple, 1 for everyone else.`,
     adjusted: l`Split equally, then add or take away an amount for someone.`,
-    items: l`Add the bill’s items and pick who had each. Tax and tip follow what people had.`,
+    items: l`Add the bill’s items and pick who had each. Tap a name again for one more portion; hold or right-click it to take them off. Tax, tip, service and discount follow what each person had.`,
   }
 
   return (
@@ -396,6 +397,7 @@ function ItemsEditor({
   const extras = [
     {key: 'tax', label: l`Tax`},
     {key: 'tip', label: l`Tip`},
+    {key: 'service', label: l`Service charge`},
     {key: 'discount', label: l`Discount`},
   ] as const
 
@@ -579,15 +581,10 @@ function ItemsEditor({
                     <UserAvatar size={20} name={avatarName(id)} type="user" />
                     <ButtonText>{name(id)}</ButtonText>
                     {isOn && portions > 1 ? (
-                      <Text
+                      <PortionBadge
+                        portions={portions}
                         testID={`item-${index}-portions-${name(id)}`}
-                        style={[
-                          a.text_xs,
-                          a.font_bold,
-                          {color: t.palette.primary_500},
-                        ]}>
-                        ×{portions}
-                      </Text>
+                      />
                     ) : isOn ? (
                       <ButtonIcon icon={CheckIcon} size="xs" />
                     ) : null}
@@ -595,6 +592,27 @@ function ItemsEditor({
                 )
               })}
             </View>
+            {/* What each person's portions of this item come to. */}
+            {evaluation.itemParts?.[item.key] ? (
+              <Text
+                testID={`item-${index}-parts`}
+                style={[
+                  a.text_sm,
+                  a.leading_snug,
+                  t.atoms.text_contrast_medium,
+                  {fontVariant: ['tabular-nums']},
+                ]}>
+                {item.people
+                  .map(id =>
+                    // Non-breaking, so a name never wraps away from its amount.
+                    `${name(id)} ${formatAmount(evaluation.itemParts![item.key]![id]!, form.currency, locale)}`.replace(
+                      / /g,
+                      '\u00a0',
+                    ),
+                  )
+                  .join('  ·  ')}
+              </Text>
+            ) : null}
             {error ? <FieldError>{errorText(error)}</FieldError> : null}
           </View>
         )
@@ -631,7 +649,7 @@ function ItemsEditor({
               testID={`item-${x.key}`}
               label={x.label}
               currency={form.currency}
-              value={form[x.key]}
+              value={form[x.key] ?? ''}
               isInvalid={!!evaluation.rowErrors[x.key]}
               width={140}
               onChangeText={v => update(f => ({...f, [x.key]: v}))}
@@ -639,6 +657,36 @@ function ItemsEditor({
           </View>
         ))}
       </View>
+
+      {evaluation.shares ? (
+        <View testID="items-shares" style={[a.pt_sm, a.gap_xs]}>
+          <Text
+            style={[a.text_sm, a.font_semi_bold, t.atoms.text_contrast_medium]}>
+            <Trans>Each person’s share</Trans>
+          </Text>
+          {form.people
+            .filter(id => evaluation.shares![id] !== undefined)
+            .map(id => (
+              <View
+                key={id}
+                style={[a.flex_row, a.align_center, a.gap_sm, a.py_2xs]}>
+                <UserAvatar size={24} name={avatarName(id)} type="user" />
+                <Text style={[a.flex_1, a.text_md]} numberOfLines={1}>
+                  {name(id)}
+                </Text>
+                <Text
+                  testID={`share-${name(id)}`}
+                  style={[
+                    a.text_md,
+                    a.font_semi_bold,
+                    {fontVariant: ['tabular-nums']},
+                  ]}>
+                  {formatAmount(evaluation.shares![id]!, form.currency, locale)}
+                </Text>
+              </View>
+            ))}
+        </View>
+      ) : null}
 
       {evaluation.itemsTotal !== undefined &&
       evaluation.itemsTotal > ZERO &&
@@ -662,7 +710,7 @@ function ItemsEditor({
               t.atoms.text_contrast_high,
             ]}>
             <Trans>
-              Items, tax and tip come to{' '}
+              Items and charges come to{' '}
               {formatAmount(evaluation.itemsTotal, form.currency, locale)}
             </Trans>
           </Text>

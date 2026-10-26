@@ -261,7 +261,6 @@ export function ActivityItem({
           <SubtleHover hover={isHovered} />
           <Avatar
             name={content.avatarName}
-            shape={content.avatarShape}
             icon={content.icon}
             tone={content.tone}
             ringColor={backgroundColor}
@@ -352,7 +351,7 @@ export function ActivityItem({
   )
 }
 
-/** Everything that differs by kind: who's pictured, the sentence, the money line, where it goes. */
+/** Everything that differs by kind: the badge, the sentence, the money line, where it goes. */
 function useDescribe(
   event: ActivityEvent,
   snapshot: ActivitySnapshot,
@@ -361,7 +360,6 @@ function useDescribe(
   navigation: NavigationProp,
 ): {
   avatarName: string | undefined
-  avatarShape: 'circle' | 'square'
   icon: React.ComponentType<SVGIconProps>
   tone: BadgeTone
   headline: React.ReactNode
@@ -375,7 +373,8 @@ function useDescribe(
     snapshot.people.get(id)?.data.name ?? l`Someone`
   const shownName = (id: string) => (id === me ? l`You` : nameOf(id))
   const actor = <Strong>{shownName(event.actor)}</Strong>
-  const actorAvatar = event.actor === me ? nameOf(me) : nameOf(event.actor)
+  // The row's avatar is always who made the change (owner rule 6), never who it is about.
+  const actorAvatar = nameOf(event.actor)
   const groupName = (id: string | null) =>
     id ? snapshot.groups.get(id)?.data.name : undefined
   const money = (amount: bigint, currency: string) =>
@@ -409,7 +408,6 @@ function useDescribe(
       )
       return {
         avatarName: actorAvatar,
-        avatarShape: 'circle',
         icon: {
           'expense.created': AddedBadge,
           'expense.edited': EditedBadge,
@@ -482,8 +480,7 @@ function useDescribe(
       const subject = <Strong>{event.data.name}</Strong>
       const isAdded = event.kind === 'person.added'
       return {
-        avatarName: event.data.name,
-        avatarShape: 'circle',
+        avatarName: actorAvatar,
         icon: isAdded ? FriendAddedBadge : FriendRemovedBadge,
         tone: isAdded ? 'primary' : 'negative',
         headline: isAdded ? (
@@ -511,8 +508,7 @@ function useDescribe(
         event.prev.name !== g.name
       const members = g.members.filter(m => m.leftAt === null)
       return {
-        avatarName: g.name,
-        avatarShape: 'square',
+        avatarName: actorAvatar,
         icon:
           event.kind === 'group.archived'
             ? ArchivedBadge
@@ -590,8 +586,7 @@ function useDescribe(
       const to = <Strong>{nameOf(r.to)}</Strong>
       const other = r.from === me ? r.to : r.from
       return {
-        avatarName: nameOf(r.from),
-        avatarShape: 'circle',
+        avatarName: actorAvatar,
         icon:
           event.kind === 'repayment.removed'
             ? DeletedBadge
@@ -730,18 +725,16 @@ function formatTimeAgo(i18n: I18n, timestamp: string) {
 }
 
 /**
- * The avatar of who or what the change is about, with a badge overlapping
+ * The avatar of who made the change, with a badge overlapping
  * its bottom-end corner that says what kind of change it is.
  */
 function Avatar({
   name,
-  shape,
   icon: Icon,
   tone,
   ringColor,
 }: {
   name: string | undefined
-  shape: 'circle' | 'square'
   icon: React.ComponentType<SVGIconProps>
   tone: BadgeTone
   ringColor: string
@@ -750,7 +743,7 @@ function Avatar({
   return (
     <View style={SLOT_SIZE}>
       <UserAvatar
-        type={shape === 'square' ? 'list' : 'user'}
+        type="user"
         size={AVATAR_SIZE}
         name={name}
       />

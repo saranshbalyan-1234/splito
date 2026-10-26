@@ -18,7 +18,7 @@ import {
 
 import {IS_DEV, IS_E2E} from '#/env'
 
-const MONEY_KEYS = new Set(['total', 'amount', 'tax', 'tip', 'discount'])
+const MONEY_KEYS = new Set(['total', 'amount', 'tax', 'tip', 'service', 'discount'])
 const MONEY_MAPS = new Set(['payers', 'amounts'])
 
 /** E2E passes amounts as decimal-integer strings (minor units); convert them to bigint. */

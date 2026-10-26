@@ -6,6 +6,17 @@
  * units. Every split divides exactly, so balances don't depend on the
  * id-ordered tie-break that real (random) ids would get for remainders.
  */
+import {type ItemParticipant, type SplitInput} from '@splito/domain'
+
+/** An itemised bill: who had each item, with portions as `[person, n]`. */
+export type DemoBill = {
+  items: Array<{name: string; amount: bigint; people: Array<DemoPersonKey | [DemoPersonKey, number]>}>
+  tax: bigint
+  tip: bigint
+  service: bigint
+  discount: bigint
+}
+
 export type DemoExpense = {
   title: string
   group: DemoGroupKey | null
@@ -13,8 +24,28 @@ export type DemoExpense = {
   total: bigint
   payers: Partial<Record<DemoPersonKey, bigint>>
   participants: DemoPersonKey[]
+  /** Itemised instead of equal (`participants` then lists everyone on the bill). */
+  bill?: DemoBill
   date: string
   category: string
+}
+
+/** The expense's split with real ids; shared by the seeder and the e2e balance check. */
+export function demoSplit(e: DemoExpense, id: (key: DemoPersonKey) => string): SplitInput {
+  if (!e.bill) return {mode: 'equal', participants: e.participants.map(id)}
+  return {
+    mode: 'items',
+    items: e.bill.items.map((item, i) => ({
+      id: `item-${i}`,
+      name: item.name,
+      amount: item.amount,
+      participants: item.people.map((p): ItemParticipant => (typeof p === 'string' ? id(p) : {id: id(p[0]), weight: p[1]})),
+    })),
+    tax: e.bill.tax,
+    tip: e.bill.tip,
+    service: e.bill.service,
+    discount: e.bill.discount,
+  }
 }
 
 export type DemoPersonKey = 'me' | keyof typeof DEMO_FRIENDS
@@ -70,6 +101,32 @@ export const DEMO_EXPENSES: DemoExpense[] = [
   {title: 'Groceries', group: 'goa', currency: 'INR', total: 320000n, payers: {me: 320000n}, participants: GOA, date: '2025-12-21', category: 'groceries'},
   {title: 'Dinner at Thalassa', group: 'goa', currency: 'INR', total: 1250000n, payers: {riya: 750000n, priya: 500000n}, participants: GOA, date: '2025-12-22', category: 'food'},
   {title: 'Parasailing', group: 'goa', currency: 'INR', total: 900000n, payers: {sam: 900000n}, participants: ['me', 'riya', 'sam'], date: '2025-12-23', category: 'entertainment'},
+  /*
+   * Itemised, with portions (owner rule 5): beers 2:3:1, 5% tax and 10% service on top.
+   * Subtotals 720 / 1,020 / 1,020 / 870 / 270 take 15% extras each, so every share is whole.
+   */
+  {
+    title: 'Bar tab at Britto’s',
+    group: 'goa',
+    currency: 'INR',
+    total: 448500n,
+    payers: {riya: 448500n},
+    participants: GOA,
+    bill: {
+      items: [
+        {name: 'Kingfisher, 6 pints', amount: 180000n, people: [['me', 2], ['sam', 3], 'riya']},
+        {name: 'Cocktails', amount: 120000n, people: ['riya', 'priya']},
+        {name: 'Nachos', amount: 60000n, people: ['me', 'riya', 'arjun', 'priya', 'sam']},
+        {name: 'Masala fries', amount: 30000n, people: ['arjun', 'priya']},
+      ],
+      tax: 19500n,
+      tip: 0n,
+      service: 39000n,
+      discount: 0n,
+    },
+    date: '2025-12-23',
+    category: 'food',
+  },
   {title: 'Beach shack lunch', group: 'goa', currency: 'INR', total: 450000n, payers: {priya: 450000n}, participants: GOA, date: '2025-12-24', category: 'food'},
   {title: 'Cab to airport', group: 'goa', currency: 'INR', total: 240000n, payers: {me: 120000n, arjun: 120000n}, participants: ['me', 'riya', 'arjun', 'priya'], date: '2025-12-27', category: 'transport'},
   // Flat 4B (INR)

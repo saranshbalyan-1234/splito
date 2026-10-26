@@ -1,13 +1,12 @@
 import {View} from 'react-native'
-import {plural} from '@lingui/core/macro'
+import {msg, plural} from '@lingui/core/macro'
 import {Trans, useLingui} from '@lingui/react/macro'
 import {useNavigation, useRoute, type RouteProp} from '@react-navigation/native'
 import {
   expenseNet,
   formatAmount,
   magnitude,
-  participantId,
-  participantWeight,
+  itemBreakdown,
   ZERO,
 } from '@splito/domain'
 import {
@@ -49,6 +48,7 @@ import * as Toast from '#/components/Toast'
 import {Text} from '#/components/Typography'
 import {Shimmer} from '#/motion/Shimmer'
 import {History} from './components/History'
+import {ItemsBreakdown} from './components/ItemsBreakdown'
 
 /**
  * One expense: what it was, who paid, everyone's share, notes and its edit
@@ -375,62 +375,12 @@ function Detail({
       ))}
 
       {e.split.mode === 'items' ? (
-        <View
-          style={[
-            a.mx_lg,
-            a.mt_sm,
-            a.p_md,
-            a.rounded_md,
-            a.gap_sm,
-            t.atoms.bg_contrast_25,
-          ]}>
-          {e.split.items.map((item, i) => (
-            <View key={item.id} style={[a.flex_row, a.gap_md]}>
-              <View style={[a.flex_1]}>
-                <Text style={[a.text_md, a.font_medium]}>
-                  {item.name || l`Item ${i + 1}`}
-                </Text>
-                <Text
-                  style={[a.text_sm, t.atoms.text_contrast_medium]}
-                  numberOfLines={2}>
-                  {/* Portions show as "Riya ×2", so an unequal item reads at a glance. */}
-                  {item.participants
-                    .map(p =>
-                      participantWeight(p) > 1
-                        ? `${name(participantId(p))} ×${participantWeight(p)}`
-                        : name(participantId(p)),
-                    )
-                    .join(', ')}
-                </Text>
-              </View>
-              <Text style={[a.text_md, {fontVariant: ['tabular-nums']}]}>
-                {fmt(item.amount)}
-              </Text>
-            </View>
-          ))}
-          {[
-            {label: l`Tax`, value: e.split.tax, sign: ''},
-            {label: l`Tip`, value: e.split.tip, sign: ''},
-            {label: l`Discount`, value: e.split.discount, sign: '−'},
-          ]
-            .filter(x => x.value !== ZERO)
-            .map(x => (
-              <View key={x.label} style={[a.flex_row, a.justify_between]}>
-                <Text style={[a.text_md, t.atoms.text_contrast_medium]}>
-                  {x.label}
-                </Text>
-                <Text
-                  style={[
-                    a.text_md,
-                    t.atoms.text_contrast_medium,
-                    {fontVariant: ['tabular-nums']},
-                  ]}>
-                  {x.sign}
-                  {fmt(x.value)}
-                </Text>
-              </View>
-            ))}
-        </View>
+        <ItemsBreakdown
+          split={e.split}
+          fmt={fmt}
+          name={name}
+          avatarName={avatarName}
+        />
       ) : null}
 
       {e.notes ? (
@@ -538,6 +488,17 @@ function shareDetail(
     case 'adjusted': {
       const adj = s.adjustments[id]
       return adj ? (adj > ZERO ? `+${fmt(adj)}` : `−${fmt(-adj)}`) : undefined
+    }
+    case 'items': {
+      // Their items, then their part of tax, tip, service and discount.
+      const {subtotals, extras} = itemBreakdown(s)
+      const items = subtotals[id] ?? ZERO
+      const extra = extras[id] ?? ZERO
+      return extra > ZERO
+        ? i18n._(msg`${fmt(items)} + ${fmt(extra)} charges`)
+        : extra < ZERO
+          ? i18n._(msg`${fmt(items)} − ${fmt(magnitude(extra))} discount`)
+          : i18n._(msg`${fmt(items)} of items`)
     }
     default:
       return undefined

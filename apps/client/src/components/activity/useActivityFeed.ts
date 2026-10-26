@@ -115,7 +115,8 @@ export function useActivityBadge() {
 /** "13 unread items" for screen readers. The badge can read '30+', which plural() would read as NaN, so it gets a number. */
 export function describeUnread(badge: string) {
   const count = Number.parseInt(badge, 10)
-  return count
-    ? plural(count, {one: '# unread item', other: '# unread items'})
-    : ''
+  if (!count) return ''
+  return badge.endsWith('+')
+    ? plural(count, {one: '# or more unread items', other: '# or more unread items'})
+    : plural(count, {one: '# unread item', other: '# unread items'})
 }

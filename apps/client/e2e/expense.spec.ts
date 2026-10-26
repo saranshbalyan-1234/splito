@@ -277,3 +277,71 @@ test('phones: the FAB opens Add expense as a sheet from the bottom edge; the cro
   await page.getByTestId('sheet-close').click()
   await expect(composer).toHaveCount(0)
 })
+
+test('itemize: portions badge, each item’s parts, service charge and everyone’s share before saving', async ({
+  page,
+}) => {
+  await openAddExpense(page)
+  await page.getByTestId('expense-title').fill('Dinner at Gunpowder')
+  await page.getByTestId('amount-input').fill('1100')
+  await splitWith(page, ['Riya Sharma'])
+  await page.getByTestId('split-mode-items').click()
+  await page.getByTestId('item-add').click()
+  await page.getByTestId('item-0-name').fill('Kingfisher, 3 pints')
+  await page.getByTestId('item-0-amount').fill('900')
+  // You had two of the three.
+  await page.getByTestId('item-0-person-You').click()
+  await expect(page.getByTestId('item-0-portions-You')).toHaveText('×2')
+  await expect(page.getByTestId('item-0-parts')).toHaveText(
+    'You ₹600.00  ·  Riya Sharma ₹300.00',
+  )
+  await expect(page.getByTestId('sheet-save')).toBeDisabled()
+  await page.getByTestId('item-service').fill('200')
+  // Service follows each subtotal, 600 : 300.
+  await expect(page.getByTestId('split-readout')).toHaveText(
+    'All ₹1,100.00 assigned',
+  )
+  await expect(page.getByTestId('items-shares')).toContainText('₹733.33')
+  await expect(page.getByTestId('items-shares')).toContainText('₹366.67')
+
+  await saveAndView(page)
+  await expect(page.getByTestId('expense-item-0-You')).toContainText('×2')
+  await expect(page.getByTestId('expense-extra-service')).toContainText(
+    '₹200.00',
+  )
+})
+
+test('expense page: an itemised bill lists every item with who had it, their portions and part', async ({
+  page,
+}) => {
+  await page.setViewportSize(DESKTOP)
+  await page.goto('/?demo=1')
+  await expect(page.getByTestId('person-Riya Sharma')).toBeVisible()
+  await page.goto('/groups')
+  await page.getByTestId('screen-groups').getByTestId('group-Goa trip').click()
+  await page
+    .getByTestId('screen-group')
+    .getByText('Bar tab at Britto’s')
+    .first()
+    .click()
+  const screen = page.getByTestId('screen-expense')
+  await expect(screen.getByTestId('expense-items')).toBeVisible()
+  await expect(screen.getByTestId('expense-item-0')).toContainText(
+    'Kingfisher, 6 pints',
+  )
+  await expect(screen.getByTestId('expense-item-0-Sam Carter')).toHaveText(
+    'SCSam Carter×3₹900.00',
+  )
+  await expect(screen.getByTestId('expense-item-0-You')).toHaveText(
+    'MYou×2₹600.00',
+  )
+  await expect(screen.getByTestId('expense-extra-tax')).toContainText('₹195.00')
+  await expect(screen.getByTestId('expense-extra-service')).toContainText(
+    '₹390.00',
+  )
+  // Each share says what it is made of.
+  await expect(screen.getByTestId('share-row-You')).toContainText(
+    '₹720.00 + ₹108.00 charges',
+  )
+  await expect(screen.getByTestId('share-row-You')).toContainText('₹828.00')
+})

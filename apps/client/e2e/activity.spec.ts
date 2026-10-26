@@ -111,6 +111,21 @@ test('changes by friends are unread with a badge; mark all read clears them, und
   await expect(peopleBadge(page)).toHaveCount(0)
 })
 
+test('every row pictures who made the change, never who it is about', async ({
+  page,
+}) => {
+  await page.setViewportSize(DESKTOP)
+  await openActivity(page)
+  const avatar = (r: Locator) => r.getByTestId('userAvatarFallback').first()
+  // You added Riya and created Goa trip: your avatar ("Me"), not hers or the group's.
+  await expect(avatar(row(page, 'person.added', 'Riya Sharma'))).toHaveText('M')
+  await expect(avatar(row(page, 'group.created', 'Goa trip'))).toHaveText('M')
+  // Riya edited the dinner: hers.
+  await expect(
+    avatar(row(page, 'expense.edited', 'Dinner at Thalassa')),
+  ).toHaveText('RS')
+})
+
 test('"From others" leaves out your own changes', async ({page}) => {
   await page.setViewportSize(DESKTOP)
   await openActivity(page)

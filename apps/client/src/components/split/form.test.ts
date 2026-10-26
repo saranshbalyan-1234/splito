@@ -135,6 +135,7 @@ describe('evaluateForm', () => {
     const r = evaluateForm(base({mode: 'items', items}), 'UTC')
     expect(r.error).toBeUndefined()
     expect(r.shares).toEqual({me: 10000n, riya: 20000n})
+    expect(r.itemParts).toEqual({a: {me: 10000n, riya: 20000n}})
     const split = r.draft!.split
     expect(split.mode === 'items' && split.items[0]!.participants).toEqual([
       'me',
@@ -146,6 +147,26 @@ describe('evaluateForm', () => {
     )
     expect(back.items[0]!.people).toEqual(['me', 'riya'])
     expect(back.items[0]!.portions).toEqual({riya: 2})
+  })
+  test('service charge joins tax and tip, and survives a round trip', () => {
+    const items = [
+      {key: 'a', name: 'Pizza', amount: '200', people: ['me', 'riya']},
+      {key: 'b', name: 'Juice', amount: '100', people: ['sam']},
+    ]
+    const r = evaluateForm(
+      base({mode: 'items', items, amount: '330', service: '30'}),
+      'UTC',
+    )
+    expect(r.error).toBeUndefined()
+    expect(r.itemsTotal).toBe(33000n)
+    expect(r.shares).toEqual({me: 11000n, riya: 11000n, sam: 11000n})
+    const split = r.draft!.split
+    expect(split.mode === 'items' && split.service).toBe(3000n)
+    const back = formFromExpense(
+      {...r.draft!, shares: r.shares!} as unknown as Expense,
+      'me',
+    )
+    expect(back.service).toBe('30.00')
   })
   test('multiple payers must add up', () => {
     const r = evaluateForm(

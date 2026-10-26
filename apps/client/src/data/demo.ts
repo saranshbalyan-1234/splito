@@ -15,6 +15,7 @@ import {
   DEMO_EXPENSES,
   DEMO_FRIENDS,
   DEMO_GROUPS,
+  demoSplit,
   type DemoGroupKey,
   type DemoPersonKey,
 } from '#/data/demoData'
@@ -95,7 +96,7 @@ async function seed(store: Store, ctx: MutationCtx) {
       payers: Object.fromEntries(
         Object.entries(e.payers).map(([k, v]) => [ids[k as DemoPersonKey], v]),
       ),
-      split: {mode: 'equal', participants: e.participants.map(p => ids[p])},
+      split: demoSplit(e, p => ids[p]),
       date: e.date,
       tz: e.group ? DEMO_GROUPS[e.group].tz : 'Asia/Kolkata',
       category: e.category,
