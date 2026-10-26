@@ -164,7 +164,7 @@ function SummaryCell({
         accessibilityLabel={l`${getCurrency(currency).name} balance - open analytics`}
         accessibilityHint=""
         hoverStyle={t.atoms.bg_contrast_25}
-        style={[a.h_full, a.px_lg, a.py_md, a.transition_color]}>
+        style={[a.flex_1, a.px_lg, a.py_md, a.transition_color]}>
         <Text
           numberOfLines={1}
           style={[a.text_sm, a.font_medium, t.atoms.text_contrast_medium]}>
