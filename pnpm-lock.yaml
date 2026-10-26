@@ -313,6 +313,9 @@ importers:
       lottie-react-native:
         specifier: 7.5.0
         version: 7.5.0(react-native@0.88.0(patch_hash=dc5394dccd29a3cc7ec7079a8fae133938d92a99a5f7fdd73ed5ef94dd868a96)(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/metro-config@0.88.0(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.3.0)(react@19.3.0)(supports-color@8.1.1))(react@19.3.0)
+      lottie-web:
+        specifier: 5.12.2
+        version: 5.12.2
       lucide-react-native:
         specifier: 1.61.0
         version: 1.61.0(@types/react@19.3.0)(react-native-svg@15.16.0(patch_hash=ff404c031ff8a5d4ae26dcd41c3b59ddbad9953e4fabfc1df7368cb969e5032e)(react-native@0.88.0(patch_hash=dc5394dccd29a3cc7ec7079a8fae133938d92a99a5f7fdd73ed5ef94dd868a96)(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/metro-config@0.88.0(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.3.0)(react@19.3.0)(supports-color@8.1.1))(react@19.3.0))(react-native@0.88.0(patch_hash=dc5394dccd29a3cc7ec7079a8fae133938d92a99a5f7fdd73ed5ef94dd868a96)(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/metro-config@0.88.0(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.3.0)(react@19.3.0)(supports-color@8.1.1))(react@19.3.0)
@@ -2980,6 +2983,9 @@ packages:
         optional: true
       react-native-windows:
         optional: true
+
+  lottie-web@5.12.2:
+    resolution: {integrity: sha512-uvhvYPC8kGPjXT3MyKMrL3JitEAmDMp30lVkuq/590Mw9ok6pWcFCwXJveo0t5uqYw1UREQHofD+jVpdjBv8wg==}
 
   lru-cache@10.4.3:
     resolution: {integrity: sha512-JNAzZcXrCt42VGLuYz0zfAzDfAvJWW6AfYlDBQyDV5DClI2m5sAmK+OIO7s59XfsRsWHp02jAJrRadPRGTt6SQ==}
@@ -6950,6 +6956,8 @@ snapshots:
     dependencies:
       react: 19.3.0
       react-native: 0.88.0(patch_hash=dc5394dccd29a3cc7ec7079a8fae133938d92a99a5f7fdd73ed5ef94dd868a96)(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/metro-config@0.88.0(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.3.0)(react@19.3.0)(supports-color@8.1.1)
+
+  lottie-web@5.12.2: {}
 
   lru-cache@10.4.3: {}
 
