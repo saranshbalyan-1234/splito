@@ -29,6 +29,9 @@ pnpm lint                          # oxlint, errors only; oxlint-suppressions.js
 pnpm check                         # lint + typecheck + package tests + client tests (incl. architecture rules)
 pnpm --filter @splito/client web   # Expo web dev server
 pnpm --filter @splito/client ios   # dev client build (needs Xcode)
+# Android (JDK 17 + SDK + emulator setup: docs/ANDROID.md), from apps/client:
+EXPO_PUBLIC_DEMO=1 CI=1 npx expo run:android --port 8226 --device emulator-5584   # build, install, run
+ANDROID_SERIAL=emulator-5584 METRO_PORT=8226 pnpm android:smoke <outDir>        # add expense + settle up
 pnpm --filter @splito/client e2e   # Playwright against the web build
 ```
 

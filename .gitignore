@@ -6,6 +6,8 @@ dist/
 # Generated native projects (prebuild); local Expo modules keep their native code.
 /apps/client/ios/
 /apps/client/android/
+# Gradle output inside local Expo modules (Bluesky's .gitignore ignores build/).
+/apps/client/modules/*/android/build/
 test-results/
 playwright-report/
 apps/client/dist/

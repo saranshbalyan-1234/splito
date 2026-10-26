@@ -1,16 +1,21 @@
 // Adapted from bluesky-social/social-app@4e4ad9c (MIT) - src/view/shell/index.tsx
+import {useEffect} from 'react'
 import {useWindowDimensions, View} from 'react-native'
 import {Drawer} from 'react-native-drawer-layout'
+import {SystemBars} from 'react-native-edge-to-edge'
+import * as SystemUI from 'expo-system-ui'
+import {BottomSheetOutlet, BottomSheetProvider} from '@bsky.app/bottom-sheet'
 import {useLingui} from '@lingui/react/macro'
 import {useNavigationState} from '@react-navigation/native'
 
 import {isStateAtTabRoot} from '#/lib/routes/helpers'
+import {useDialogFullyExpandedCountContext} from '#/state/dialogs'
 import {useIsDrawerOpen, useSetDrawerOpen} from '#/state/shell'
 import {DrawerContent} from '#/navigation/Drawer'
 import {RoutesContainer, TabsNavigator} from '#/navigation/Navigation'
 import {atoms as a, select, useBreakpoints, useTheme} from '#/alf'
 import {Outlet as PortalOutlet} from '#/components/Portal'
-import {IS_ANDROID, IS_IOS} from '#/env'
+import {IS_ANDROID, IS_IOS, IS_LIQUID_GLASS} from '#/env'
 
 /* As upstream: the drawer is the navigator's layout, so it can read the navigation state. */
 function drawerLayout({children}: {children: React.ReactNode}) {
@@ -19,9 +24,11 @@ function drawerLayout({children}: {children: React.ReactNode}) {
 
 /*
  * Bluesky's native shell also mounts the composer, global dialogs,
- * push-notification and OTA hooks, system bars and account status screens.
- * Splito has none of those yet, so the navigator, drawer and portal outlet
- * remain.
+ * push-notification and OTA hooks and account status screens. Splito has
+ * none of those yet, so the navigator, drawer and portal outlets remain; the
+ * system bars are mounted in Shell below, as upstream. Upstream's native
+ * App.tsx holds BottomSheetProvider; Splito's App.tsx also serves web, so the
+ * native shell holds it: without it every Dialog sheet fails to render.
  */
 function ShellInner() {
   return (
@@ -30,6 +37,7 @@ function ShellInner() {
         <TabsNavigator layout={drawerLayout} />
       </View>
       <PortalOutlet />
+      <BottomSheetOutlet />
     </>
   )
 }
@@ -113,11 +121,34 @@ function DrawerLayout({children}: {children: React.ReactNode}) {
 
 export function Shell() {
   const t = useTheme()
+  const fullyExpandedCount = useDialogFullyExpandedCountContext()
+
+  /* Upstream's setSystemUITheme (src/alf/util/systemUI.ts): the root view shows behind the keyboard and sheets on Android. */
+  useEffect(() => {
+    if (!IS_ANDROID) return
+    SystemUI.setBackgroundColorAsync(t.atoms.bg.backgroundColor).catch(() => {
+      /* Rejects with 'The current activity is no longer available' - no big deal. */
+    })
+  }, [t])
+
   return (
     <View testID="mobileShellView" style={[a.h_full, t.atoms.bg]}>
-      <RoutesContainer>
-        <ShellInner />
-      </RoutesContainer>
+      <SystemBars
+        hidden={{statusBar: false, navigationBar: false}}
+        style={{
+          statusBar:
+            t.name !== 'light' ||
+            (IS_IOS && !IS_LIQUID_GLASS && fullyExpandedCount > 0)
+              ? 'light'
+              : 'dark',
+          navigationBar: t.name !== 'light' ? 'light' : 'dark',
+        }}
+      />
+      <BottomSheetProvider>
+        <RoutesContainer>
+          <ShellInner />
+        </RoutesContainer>
+      </BottomSheetProvider>
     </View>
   )
 }

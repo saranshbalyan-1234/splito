@@ -48,6 +48,8 @@ const config: ExpoConfig = {
   },
   plugins: [
     'expo-sqlite',
+    /* Adapted from bluesky-social/social-app@4e4ad9c (MIT) - app.config.js. The shell's SystemBars sets the bar icon colours per theme. */
+    ['react-native-edge-to-edge', {android: {enforceNavigationBarContrast: false}}],
     /* Adapted from bluesky-social/social-app@4e4ad9c (MIT) - app.config.js. Building React Native from
        source is what Bluesky ships; the prebuilt binaries hide headers its native modules import (RCTBridge.h). */
     [
