@@ -49,6 +49,9 @@ function updateDocument(theme: ThemeName) {
     html.classList.add(`theme--${theme}`)
     // set color to 'theme-color' meta tag
     meta?.setAttribute('content', getBackgroundColor(theme))
+    /* The page behind scrolling content must match the theme (Dim/Black/Light), not the HTML default. */
+    html.style.backgroundColor = getBackgroundColor(theme)
+    window.document.body.style.backgroundColor = getBackgroundColor(theme)
     window.localStorage.setItem('ALF_THEME', theme)
   }
 }

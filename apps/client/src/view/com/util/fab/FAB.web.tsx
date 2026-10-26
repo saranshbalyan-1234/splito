@@ -5,11 +5,8 @@ import {useBreakpoints} from '#/alf'
 import {FABInner, type FABProps} from './FABInner'
 
 export const FAB = (props: FABProps) => {
+  /* Desktop/tablet use the sidebar's Add expense pill; the FAB is for phone widths (owner). */
   const {gtMobile} = useBreakpoints()
-
-  if (!gtMobile) {
-    return <FABInner {...props} />
-  }
-
-  return <View />
+  if (gtMobile) return <View />
+  return <FABInner {...props} />
 }

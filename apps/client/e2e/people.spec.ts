@@ -116,7 +116,7 @@ test('paying the whole balance from a friend’s page settles the group part too
 
   // The group agrees: nothing left to settle there.
   await page.goto('/groups')
-  await page.getByText('Pune trip').click()
+  await page.getByTestId('screen-groups').getByText('Pune trip').click()
   await expect(page.getByTestId('group-settle')).toBeDisabled()
 })
 

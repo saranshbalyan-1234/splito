@@ -10,7 +10,7 @@ import {usePref} from '#/data/hooks'
 import {EmptyState} from '#/view/com/util/EmptyState'
 import {List} from '#/view/com/util/List'
 import {atoms as a, useTheme} from '#/alf'
-import {AddExpenseFABInset} from '#/components/AddExpenseFAB'
+import {AddExpenseFAB, AddExpenseFABInset} from '#/components/AddExpenseFAB'
 import {Button, ButtonIcon, ButtonText} from '#/components/Button'
 import {HeaderAvatar} from '#/components/HeaderAvatar'
 import {Download_Stroke2_Corner0_Rounded as DownloadIcon} from '#/components/icons/Download'
@@ -132,6 +132,7 @@ export function AnalyticsScreen() {
           />
         </LayoutAnimationConfig>
       )}
+      <AddExpenseFAB />
     </Layout.Screen>
   )
 }

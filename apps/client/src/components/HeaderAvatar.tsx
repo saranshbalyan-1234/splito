@@ -1,11 +1,14 @@
 // Adapted from bluesky-social/social-app@4e4ad9c (MIT) - src/components/Layout/Header/index.tsx (MenuButton)
 import {Keyboard} from 'react-native'
 import {useLingui} from '@lingui/react/macro'
+import {useNavigation} from '@react-navigation/native'
+
+import {type NavigationProp} from '#/lib/routes/types'
 
 import {useSetDrawerOpen} from '#/state/shell'
 import {useMe} from '#/data/hooks'
 import {UserAvatar} from '#/view/com/util/UserAvatar'
-import {atoms as a} from '#/alf'
+import {atoms as a, useBreakpoints, useLayoutBreakpoints} from '#/alf'
 import {Button} from '#/components/Button'
 import {HEADER_SLOT_SIZE} from '#/components/Layout/const'
 import * as Layout from '#/components/Layout'
@@ -22,9 +25,18 @@ export function HeaderAvatar() {
   const {t: l} = useLingui()
   const me = useMe()
   const setDrawerOpen = useSetDrawerOpen()
+  const {gtMobile} = useBreakpoints()
+  const {leftNavMinimal} = useLayoutBreakpoints()
+  const navigation = useNavigation<NavigationProp>()
+  /* With the full sidebar showing, every menu item is already visible - the avatar opens Profile instead of the drawer (owner). */
+  const sidebarFull = gtMobile && !leftNavMinimal
 
   const openDrawer = () => {
     Keyboard.dismiss()
+    if (sidebarFull) {
+      navigation.navigate('Profile')
+      return
+    }
     setDrawerOpen(true)
   }
 
@@ -32,7 +44,7 @@ export function HeaderAvatar() {
     <Layout.Header.Slot>
       <Button
         testID="header-avatar"
-        label={l`Open menu`}
+        label={sidebarFull ? l`Open profile` : l`Open menu`}
         onPress={openDrawer}
         hitSlop={HITSLOP}
         style={[

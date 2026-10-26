@@ -1,5 +1,6 @@
 // Adapted from bluesky-social/social-app@4e4ad9c (MIT) - src/view/com/util/fab/FABInner.tsx
 import {type ComponentProps, type JSX, useRef} from 'react'
+import {useRightNavWidth} from '#/view/shell/desktop/RightNav'
 import {
   type GestureResponderEvent,
   type Pressable,
@@ -60,8 +61,9 @@ export function FABInner({testID, icon, onPress, style, ...props}: FABProps) {
 
   const size = gtMobile ? styles.sizeLarge : styles.sizeRegular
 
+  const rightNavWidth = useRightNavWidth()
   const tabletSpacing = gtMobile
-    ? {right: 50, bottom: 50}
+    ? {right: 50 + rightNavWidth, bottom: 50}
     : {right: 24, bottom: clamp(insets.bottom, 15, 60) + 15}
 
   return (

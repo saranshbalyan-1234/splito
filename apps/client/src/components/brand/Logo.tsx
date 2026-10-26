@@ -1,55 +1,37 @@
 import {View} from 'react-native'
 import Svg, {Path} from 'react-native-svg'
-import {DEFAULT_PALETTE} from '@bsky.app/alf'
 
 import {atoms as a, useTheme} from '#/alf'
 import {Text} from '#/components/Typography'
 
-const HEAD =
-  'M12 5c.67 0 1.35.09 2 .26 1.78-2 5.03-2.84 6.42-2.26 1.4.58-.42 7-.42 7 .57 1.07 1 2.24 1 3.44C21 17.9 16.97 21 12 21s-9-3-9-7.56c0-1.25.5-2.4 1-3.44 0 0-1.89-6.42-.5-7 1.39-.58 4.72.23 6.5 2.23A9.04 9.04 0 0 1 12 5Z'
-
-/**
- * Splito mark: Lucide's "cat" icon (ISC, lucide-static v1.61.0 - see
- * LICENSES/lucide.txt), filled, with eyes and nose knocked out. Source file:
- * assets/brand/mark.svg.
+/*
+ * Owner rule 21: the mark is the owner-provided SVG
+ * (assets-owner/logo-owner-provided.svg, viewBox 0 0 600 535, always blue).
+ * It is Bluesky's butterfly, a Bluesky trademark; the owner chose it for
+ * development only. It must be replaced before any public build - this
+ * component is the one place to swap it.
  */
-export function LogoMark({
-  size = 32,
-  color = DEFAULT_PALETTE.primary_500,
-  featureColor = '#FFFFFF',
-}: {
-  size?: number
-  color?: string
-  featureColor?: string
-}) {
-  /*
-   * Owner rule 20: blue with white features on every theme. The blue is the
-   * brand's, so the Accent colour preference never recolours it.
-   */
+const MARK =
+  'm299.75 238.48c-26.326-51.007-97.736-146.28-164.21-193.17-63.677-44.919-88.028-37.186-103.82-29.946-18.428 8.3915-21.719 36.692-21.719 53.311s9.0496 136.57 15.138 156.48c19.745 66.145 89.674 88.522 154.17 81.282 3.2908-0.49362 6.5816-0.98723 10.037-1.3163-3.2908 0.49362-6.7461 0.98723-10.037 1.3163-94.445 13.986-178.52 48.374-68.284 170.96 121.1 125.38 166.02-26.82 189.06-104.15 23.035 77.169 49.526 223.94 186.75 104.15 103.17-104.15 28.301-156.97-66.145-170.96-3.2908-0.32908-6.7461-0.82269-10.037-1.3163 3.4553 0.49362 6.7461 0.82269 10.037 1.3163 64.499 7.2397 134.59-15.138 154.17-81.282 5.9234-20.074 15.138-139.86 15.138-156.48s-3.2908-44.919-21.719-53.311c-15.96-7.2397-40.148-14.973-103.82 29.946-66.967 47.058-138.38 142.16-164.7 193.17z'
+const MARK_ASPECT = 535 / 600
+
+/** The Splito mark, `size` wide, in the theme's accent (primary) colour on every theme (owner: accent changes the logo). */
+export function LogoMark({size = 32}: {size?: number}) {
+  const t = useTheme()
   return (
     <Svg
       width={size}
-      height={size}
-      viewBox="0 0 24 24"
-      fill="none"
-      strokeLinecap="round"
-      strokeLinejoin="round">
-      <Path d={HEAD} fill={color} stroke={color} strokeWidth={2} />
-      <Path d="M8 14v.5" stroke={featureColor} strokeWidth={2} />
-      <Path d="M16 14v.5" stroke={featureColor} strokeWidth={2} />
-      <Path
-        d="M11.25 16.25h1.5L12 17l-.75-.75Z"
-        fill={featureColor}
-        stroke={featureColor}
-        strokeWidth={2}
-      />
+      height={Math.round(size * MARK_ASPECT)}
+      viewBox="0 0 600 535">
+      <Path d={MARK} fill={t.palette.primary_500} />
     </Svg>
   )
 }
 
 /**
- * The mark, plus the name "Splito" beside it where the desktop sidebar has
- * room (owner rule 15). Phones and the icon rail show the mark alone.
+ * The mark, followed by the "Splito" wordmark on the desktop sidebar (owner
+ * rule 15). The wordmark takes the theme's text colour (owner rule 20); only
+ * the mark is always blue (owner rule 21).
  */
 export function Logo({
   size = 28,
@@ -63,14 +45,20 @@ export function Logo({
     <View
       accessibilityRole="image"
       accessibilityLabel="Splito"
-      style={[a.flex_row, a.align_center, a.gap_sm]}>
+      style={[a.flex_row, a.align_center, {gap: Math.round(size * 0.2)}]}>
       <LogoMark size={size} />
       {withWordmark && (
         <Text
+          testID="logo-wordmark"
+          aria-hidden={true}
           style={[
             a.font_bold,
+            {
+              fontSize: Math.round(size * 0.65),
+              lineHeight: size,
+              letterSpacing: -0.5,
+            },
             t.atoms.text,
-            {fontSize: Math.round(size * 0.75), letterSpacing: -0.5},
           ]}>
           Splito
         </Text>

@@ -16,7 +16,11 @@ import {ArrowRotateCounterClockwise_Stroke2_Corner0_Rounded as ResetIcon} from '
 import {CircleInfo_Stroke2_Corner0_Rounded as InfoIcon} from '#/components/icons/CircleInfo'
 import * as Layout from '#/components/Layout'
 import * as Prompt from '#/components/Prompt'
-import {AboutSettings} from '#/components/settings/AboutSettings'
+import {
+  AboutSettings,
+  HelpSettings,
+  PrivacySettings,
+} from '#/components/settings/AboutSettings'
 import {PREF_CONTROLS} from '#/components/settings/prefControls'
 import {
   isSettingsSection,
@@ -29,8 +33,8 @@ import {Text} from '#/components/Typography'
 /**
  * One Settings page. Pages are generated from the preferences registry: the
  * route's section is a registry group, and each preference in it renders its
- * control, in registry order. `/settings/about` is the only page that is not
- * a group.
+ * control, in registry order. `/settings/about`, `/help` and `/privacy` are
+ * the pages that are not groups.
  */
 export function SettingsSectionScreen() {
   const {t: l} = useLingui()
@@ -42,6 +46,20 @@ export function SettingsSectionScreen() {
     return (
       <Frame title={l`About`}>
         <AboutSettings />
+      </Frame>
+    )
+  }
+  if (section === 'help') {
+    return (
+      <Frame title={l`Help`}>
+        <HelpSettings />
+      </Frame>
+    )
+  }
+  if (section === 'privacy') {
+    return (
+      <Frame title={l`Privacy`}>
+        <PrivacySettings />
       </Frame>
     )
   }

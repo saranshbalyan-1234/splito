@@ -44,6 +44,8 @@ test('web launch mark is served and the app replaces it on first render', async 
     const res = await request.get(src)
     expect(res.status(), src).toBe(200)
     expect(res.headers()['content-type'], src).toContain('image/svg+xml')
+    // Owner rule 21: the mark is always blue, on the dark launch screen too.
+    expect(await res.text(), src).toContain('fill="#1185fe"')
   }
   await page.goto('/')
   await expect(page.getByTestId('screen-people')).toBeVisible()
@@ -72,6 +74,7 @@ test('index.html links the manifest, favicons and apple touch icon, and they loa
     '/favicon-16.png',
     '/favicon-32.png',
     '/favicon-48.png',
+    '/favicon-64.png',
     '/apple-touch-icon.png',
     '/favicon.ico',
   ])
