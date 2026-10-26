@@ -1097,6 +1097,15 @@ labelled sidebar); **wide** = web 1300 px and up (Bluesky `gtTablet`, right colu
   simplicity. Previews show seeded, populated screens (demo data in dev/e2e builds only), never empty shells.
   *Why:* "make sure this is best in terms of features, looks, simplicity"; "this is way too basic like 10th
   class app"; "make it look professional not some third grade project".
+- **A large demo dataset for the owner's own testing** (dev and e2e builds only, never production): a
+  deterministic generator (fixed seed) that writes a year of realistic use through the real mutations: about
+  30 friends, 12 groups (trips abroad, flat, office lunch, family, wedding, sports), ~1,500 expenses in 6
+  currencies with every split mode (equal, exact, percent, shares, itemised with portions, multiple payers),
+  repayments, write-offs, notes, categories, recurring rent and subscriptions, and deleted items for the bin.
+  It is loaded with `?demo=large` (web) / `EXPO_PUBLIC_DEMO=large` (native) or from Settings > Data > "Add
+  demo data" (shown only in dev/e2e builds), adds to whatever is already on the device, and has a matching
+  "Remove demo data". The small `?demo=1` set stays unchanged for e2e. *Why:* "add a lot of demo data to my
+  account".
 - **Don't ask; decide.** The owner has delegated every open choice: make the call, record it (spec decision
   table or here), deliver the final version, and do not interrupt with questions. *Why:* "don't ask me
   anything, take your own decisions, give final version"; "do what you want to do, take own decisions, don't
@@ -1661,6 +1670,7 @@ Every owner decision, in the order it was made (all 2026-10-26). "Replaced" name
 | 61 | "add green icon for online, yellow for syncing, red for on device only ... on player avatar on sidebar drawer" | Sync-status dot on the user's avatar (drawer + header), with text label | § 26.7 | Sync status as text |
 | 62 | "mobile sidebar and desktop seems to be different, make them same" | One nav list + one footer for sidebar and drawer | §§ 26.3, 26.5, 26.7 | Drawer had Profile, theme toggle; sidebar had no footer |
 | 63 | "add everything to feature list and pick one by one" | Every request becomes a BACKLOG entry; build one feature at a time to done | § 26.1 | Many feature streams in parallel |
+| 64 | "add a lot of demo data to my account" | Large deterministic demo dataset, `?demo=large` + Settings > Data (dev/e2e only), removable | § 26.1 | Small `?demo=1` set only |
 
 New decisions follow § 0 rule 9: rewrite the rule in its topic so only the current truth remains, then add a
 row here.

@@ -508,6 +508,18 @@ Settings starts with an "Account" section copied from Bluesky's Settings account
   3. Auth state comes from one `useSession()` (Bluesky `src/state/session` pattern), signed out until the backend lands; the drawer footer shows "Sign in" (and "Log out" once signed in).
   4. The signed-in account row and the "Log out?" prompt ship with F-2102 (criteria there).
 
+### F-227 Large demo dataset for testing `spec: owner § 26.1`
+
+A year of realistic Splito use, generated deterministically, for the owner and for performance checks. Dev and e2e builds only.
+
+- **Effort** S · **Impact** 7 · **Backend** no · **Status** in progress · **Deps** F-103, F-1203, F-1113
+- **Prefs** -
+- **Acceptance**
+  1. `?demo=large` (web) / `EXPO_PUBLIC_DEMO=large` (native) and Settings > Data > "Add demo data" (visible only in dev/e2e builds) write ~30 friends, 12 groups, ~1,500 expenses in 6 currencies over 12 months (all split modes incl. itemised with portions and multiple payers), repayments, write-offs, notes, recurring rent/subscriptions and some deleted items, through the real mutations.
+  2. Same seed gives the same data; adding twice does not duplicate; "Remove demo data" removes exactly what it added.
+  3. Generation of the full set takes under 10 s on web and the app stays responsive (batched transactions); every screen stays within § 26.10 budgets with it loaded.
+  4. Production builds contain no path to it.
+
 ### F-226 Feedback: Send feedback and "Your feedback" `spec: owner § 26.15`
 
 Bluesky's placement: a "Feedback" item in the drawer and the shared footer links, and a Settings "Support" section (Send feedback, Your feedback, Help, About). Feedback is kept on the device, with an email fallback, until the backend endpoint (F-2112).
@@ -3554,6 +3566,7 @@ Every owner request from ARCHITECTURE § 26 (decision log rows 47-63) that was n
 | # | ID | Feature | Area | Effort | Impact | Deps |
 |---|---|---|---|---|---|---|
 | 30 | - | Merge UI line + Batch 4 + drawers into m1-foundation | git: ui/r1-polish-2, ui/preview-latest (incl. phone bottom drawers), feat/b-* into m1-foundation; full test + e2e run | M | 10 | Batches 0-4 built |
+| 30a | F-227 | Large demo dataset for testing | data/demoLarge.ts, Settings > Data (dev only) | S | 7 | merge row 30 |
 | 31 | F-618 | Add friend by email or mobile, with a Splito check and consent | Add friend sheet, People requests, directory client (finish feat/friend-invites) | L | 9 | F-601, F-205 |
 | 32 | F-619 | Invite link and QR with limits | screens/Invites (finish feat/friend-invites) | M | 8 | F-618, F-603 |
 | 33 | F-602 | Add friend from device contacts | contacts picker (finish feat/friend-invites) | S | 7 | F-618 |
