@@ -3,6 +3,7 @@ import {useContext, useEffect, useRef} from 'react'
 import {NavigationContext} from '@react-navigation/native'
 import lottie from 'lottie-web/build/player/lottie_light'
 
+import {useTheme} from '#/alf'
 import {ILLUSTRATIONS, type IllustrationProps} from '#/motion/illustrations'
 import {useShouldReduceMotion} from '#/motion/useShouldReduceMotion'
 
@@ -20,7 +21,9 @@ import {useShouldReduceMotion} from '#/motion/useShouldReduceMotion'
  * says which mode rendered.
  */
 export function Illustration({name, size, loop, testID}: IllustrationProps) {
-  const {source, staticFrame, isLoop} = ILLUSTRATIONS[name]
+  const t = useTheme()
+  const {staticFrame, isLoop, ...sources} = ILLUSTRATIONS[name]
+  const source = t.scheme === 'dark' ? sources.sourceDark : sources.source
   const shouldReduceMotion = useShouldReduceMotion()
   const navigation = useContext(NavigationContext)
   const container = useRef<HTMLDivElement>(null)

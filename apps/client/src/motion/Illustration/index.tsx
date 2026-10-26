@@ -4,6 +4,7 @@ import {View} from 'react-native'
 import LottieView from 'lottie-react-native'
 import {NavigationContext} from '@react-navigation/native'
 
+import {useTheme} from '#/alf'
 import {ILLUSTRATIONS, type IllustrationProps} from '#/motion/illustrations'
 import {useShouldReduceMotion} from '#/motion/useShouldReduceMotion'
 
@@ -13,7 +14,9 @@ import {useShouldReduceMotion} from '#/motion/useShouldReduceMotion'
  * adjacent text. Shows a fixed frame under reduce motion.
  */
 export function Illustration({name, size, loop, testID}: IllustrationProps) {
-  const {source, staticFrame, isLoop} = ILLUSTRATIONS[name]
+  const t = useTheme()
+  const {staticFrame, isLoop, ...sources} = ILLUSTRATIONS[name]
+  const source = t.scheme === 'dark' ? sources.sourceDark : sources.source
   const shouldReduceMotion = useShouldReduceMotion()
   const [hasFailed, setHasFailed] = useState(false)
   const ref = useRef<LottieView>(null)

@@ -1,8 +1,8 @@
 import {type ExpoConfig} from 'expo/config'
 
 /*
- * Brand assets are generated from assets/brand/mark.svg by
- * `node scripts/brand.ts` - edit the script, not the PNGs.
+ * Brand assets are generated from assets/brand/mark*.svg by
+ * `pnpm brand` (scripts/brand.ts) - edit the script, not the PNGs.
  */
 const SPLASH = {
   light: {image: './assets/brand/splash-mark.png', backgroundColor: '#FFFFFF'},
@@ -35,7 +35,7 @@ const config: ExpoConfig = {
       foregroundImage: './assets/brand/adaptive-foreground.png',
       backgroundImage: './assets/brand/adaptive-background.png',
       monochromeImage: './assets/brand/adaptive-monochrome.png',
-      backgroundColor: '#FFFFFF',
+      backgroundColor: '#006AFF',
     },
   },
   /* public/index.html carries theme-color (light and dark) and public/manifest.json the PWA fields; `favicon` adds /favicon.ico. */

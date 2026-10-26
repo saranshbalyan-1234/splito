@@ -1,12 +1,16 @@
 /*
  * Builds Splito's original Lottie animations as plain Lottie JSON (no
- * After Effects), in Bluesky palette blues, and renders frame strips with
- * lottie-web in Playwright's Chrome for review.
+ * After Effects), and renders frame strips with lottie-web in Playwright's
+ * Chrome for review.
  *
  *   node scripts/lottie.ts [previewDir]
  *
- * Writes assets/lottie/<name>.json. Every file carries
- * meta.g = "splito/scripts/lottie.ts" so its origin is traceable.
+ * Colours follow the logo rule - blue and white, or black and white, never
+ * blue on dark - so every animation is written twice:
+ *   assets/lottie/<name>.json       brand blue + white, for light themes
+ *   assets/lottie/<name>-dark.json  white + black, for dark and dim themes
+ * Every file carries meta.g = "splito/scripts/lottie.ts" so its origin is
+ * traceable.
  */
 import {mkdirSync, readFileSync, writeFileSync} from 'node:fs'
 import {createRequire} from 'node:module'
@@ -22,22 +26,33 @@ const W = 240
 const C = W / 2
 const FPS = 60
 
-/** Bluesky ALF default palette (MIT, @bsky.app/alf). */
-const P = {
-  p50: '#E5F0FF',
-  p100: '#CCE1FF',
-  p200: '#A8CCFF',
-  p300: '#75AFFF',
-  p400: '#4291FF',
-  p500: '#006AFF',
-  p700: '#0048AD',
-  white: '#FFFFFF',
+/**
+ * Two colours per variant. `t(a)` mixes `a` of the ink into the paper, so
+ * light tints are the brand blue lightened with white (t(0.74), t(0.54) and
+ * t(0.34) match Bluesky's primary_400/300/200) and dark tints are greys.
+ */
+type Palette = {ink: string; paper: string; t: (a: number) => string}
+function palette(ink: string, paper: string): Palette {
+  const [i, p] = [rgb(ink), rgb(paper)]
+  const hex = (v: number) =>
+    Math.round(v * 255)
+      .toString(16)
+      .padStart(2, '0')
+  return {
+    ink,
+    paper,
+    t: a => '#' + i.map((v, k) => hex(p[k]! + (v - p[k]!) * a)).join(''),
+  }
+}
+const VARIANTS = {
+  light: palette('#006AFF', '#FFFFFF'),
+  dark: palette('#FFFFFF', '#000000'),
 }
 
 /** cubic-bezier(x1, y1, x2, y2) */
 type Curve = readonly [number, number, number, number]
 const EASE = {
-  inOut: [0.65, 0, 0.35, 1], // easeInOutCubic: wing beats, hops
+  inOut: [0.65, 0, 0.35, 1], // easeInOutCubic: hops, beats
   out: [0.22, 1, 0.36, 1], // easeOutQuint: things arriving
   in: [0.55, 0, 1, 0.45], // easeInCirc-ish: things leaving
   back: [0.34, 1.56, 0.64, 1], // easeOutBack: pops with a small overshoot
@@ -134,20 +149,6 @@ const stroke = (
     ],
   }),
 })
-const gradientFill = (
-  top: string,
-  bottom: string,
-  s: number[],
-  e: number[],
-) => ({
-  ty: 'gf',
-  o: st(100),
-  r: 1,
-  t: 1,
-  s: st(s),
-  e: st(e),
-  g: {p: 2, k: st([0, ...rgb(top), 1, ...rgb(bottom)])},
-})
 const trim = (e: unknown) => ({ty: 'tm', s: st(0), e, o: st(0), m: 1})
 
 type Bezier = {v: number[][]; i: number[][]; o: number[][]; c: boolean}
@@ -210,37 +211,194 @@ function animation(nm: string, frames: number, layers: Layer[]) {
 
 /* ---------- the Splito mark as Lottie paths ---------- */
 
-/** Parses the absolute M/C/Z wing paths of mark.svg into Lottie beziers. */
-function svgPath(d: string, map: (x: number, y: number) => number[]): Bezier {
-  const nums = d.match(/-?\d*\.?\d+/g)!.map(Number)
-  const pts: number[][] = []
-  for (let i = 0; i < nums.length; i += 2) pts.push(map(nums[i]!, nums[i + 1]!))
-  /* M p0, then cubic triples (c1, c2, p) - mark.svg uses only these, closed by Z with a straight line. */
-  const v = [pts[0]!]
-  const o: number[][] = []
+type Pt = [number, number]
+/** One cubic segment from the current point: control 1, control 2, end. */
+type Seg = [c1: Pt, c2: Pt, p: Pt]
+type SubPath = {start: Pt; segs: Seg[]; isClosed: boolean}
+
+/** SVG elliptical arc (endpoint form, SVG 1.1 F.6.5) as cubics of at most 90 degrees each. */
+function arcToCubics(
+  p0: Pt,
+  rxIn: number,
+  ryIn: number,
+  angle: number,
+  isLarge: boolean,
+  isSweep: boolean,
+  p: Pt,
+): Seg[] {
+  let [rx, ry] = [Math.abs(rxIn), Math.abs(ryIn)]
+  if (!rx || !ry) return [[p0, p, p]]
+  const [cos, sin] = [
+    Math.cos((angle * Math.PI) / 180),
+    Math.sin((angle * Math.PI) / 180),
+  ]
+  const [dx, dy] = [(p0[0] - p[0]) / 2, (p0[1] - p[1]) / 2]
+  const [x1, y1] = [cos * dx + sin * dy, -sin * dx + cos * dy]
+  const lambda = (x1 * x1) / (rx * rx) + (y1 * y1) / (ry * ry)
+  if (lambda > 1) [rx, ry] = [rx * Math.sqrt(lambda), ry * Math.sqrt(lambda)]
+  const sq =
+    (rx * rx * ry * ry - rx * rx * y1 * y1 - ry * ry * x1 * x1) /
+    (rx * rx * y1 * y1 + ry * ry * x1 * x1)
+  const f = (isLarge === isSweep ? -1 : 1) * Math.sqrt(Math.max(0, sq))
+  const [cxp, cyp] = [(f * rx * y1) / ry, (-f * ry * x1) / rx]
+  const cx = cos * cxp - sin * cyp + (p0[0] + p[0]) / 2
+  const cy = sin * cxp + cos * cyp + (p0[1] + p[1]) / 2
+  const ang = (ux: number, uy: number, vx: number, vy: number) =>
+    Math.atan2(ux * vy - uy * vx, ux * vx + uy * vy)
+  const t0 = ang(1, 0, (x1 - cxp) / rx, (y1 - cyp) / ry)
+  let dt = ang(
+    (x1 - cxp) / rx,
+    (y1 - cyp) / ry,
+    (-x1 - cxp) / rx,
+    (-y1 - cyp) / ry,
+  )
+  if (!isSweep && dt > 0) dt -= 2 * Math.PI
+  if (isSweep && dt < 0) dt += 2 * Math.PI
+  const at = (t: number): Pt => [
+    cx + rx * Math.cos(t) * cos - ry * Math.sin(t) * sin,
+    cy + rx * Math.cos(t) * sin + ry * Math.sin(t) * cos,
+  ]
+  const tangent = (t: number): Pt => [
+    -rx * Math.sin(t) * cos - ry * Math.cos(t) * sin,
+    -rx * Math.sin(t) * sin + ry * Math.cos(t) * cos,
+  ]
+  const n = Math.max(1, Math.ceil(Math.abs(dt) / (Math.PI / 2)))
+  return Array.from({length: n}, (_, k): Seg => {
+    const [a, b] = [t0 + (dt * k) / n, t0 + (dt * (k + 1)) / n]
+    const h = (4 / 3) * Math.tan((b - a) / 4)
+    const [pa, pb, ta, tb] = [at(a), at(b), tangent(a), tangent(b)]
+    return [
+      [pa[0] + h * ta[0], pa[1] + h * ta[1]],
+      [pb[0] - h * tb[0], pb[1] - h * tb[1]],
+      k === n - 1 ? p : pb,
+    ]
+  })
+}
+
+/** Parses an SVG path (M L H V C S A Z, absolute or relative - all Lucide's cat uses) into cubic subpaths. */
+function parsePath(d: string): SubPath[] {
+  const tokens = d.match(/[a-zA-Z]|-?(?:\d+\.?\d*|\.\d+)(?:e[-+]?\d+)?/g) ?? []
+  const subs: SubPath[] = []
+  let [i, cmd] = [0, '']
+  let [cur, start]: Pt[] = [
+    [0, 0],
+    [0, 0],
+  ]
+  let prevC2: Pt | null = null
+  const num = () => {
+    const v = Number(tokens[i++])
+    if (Number.isNaN(v)) throw new Error(`path: expected a number in "${d}"`)
+    return v
+  }
+  while (i < tokens.length) {
+    if (/[a-zA-Z]/.test(tokens[i]!)) cmd = tokens[i++]!
+    const isRel = cmd === cmd.toLowerCase()
+    const pt = (): Pt => {
+      const [x, y] = [num(), num()]
+      return isRel ? [cur[0] + x, cur[1] + y] : [x, y]
+    }
+    const segs: Seg[] = []
+    switch (cmd.toUpperCase()) {
+      case 'M':
+        cur = start = pt()
+        subs.push({start, segs: [], isClosed: false})
+        cmd = isRel ? 'l' : 'L' // extra pairs after M are lines
+        prevC2 = null
+        continue
+      case 'L': {
+        const p = pt()
+        segs.push([cur, p, p])
+        break
+      }
+      case 'H': {
+        const x = num()
+        const p: Pt = [isRel ? cur[0] + x : x, cur[1]]
+        segs.push([cur, p, p])
+        break
+      }
+      case 'V': {
+        const y = num()
+        const p: Pt = [cur[0], isRel ? cur[1] + y : y]
+        segs.push([cur, p, p])
+        break
+      }
+      case 'C':
+        segs.push([pt(), pt(), pt()])
+        break
+      case 'S': {
+        const c1: Pt = prevC2
+          ? [2 * cur[0] - prevC2[0], 2 * cur[1] - prevC2[1]]
+          : cur
+        segs.push([c1, pt(), pt()])
+        break
+      }
+      case 'A': {
+        const [rx, ry, angle, large, sweep] = [
+          num(),
+          num(),
+          num(),
+          num(),
+          num(),
+        ]
+        segs.push(...arcToCubics(cur, rx, ry, angle, !!large, !!sweep, pt()))
+        break
+      }
+      case 'Z':
+        if (cur[0] !== start[0] || cur[1] !== start[1])
+          segs.push([cur, start, start])
+        subs.at(-1)!.isClosed = true
+        break
+      default:
+        throw new Error(`path: unsupported command "${cmd}"`)
+    }
+    const sub = subs.at(-1)
+    if (!sub) throw new Error(`path: "${d}" does not start with M`)
+    sub.segs.push(...segs)
+    if (segs.length) cur = segs.at(-1)![2]
+    prevC2 = /[CS]/i.test(cmd) ? segs.at(-1)![1] : null
+    if (cmd.toUpperCase() === 'Z') {
+      cur = start
+      if (i < tokens.length && !/[a-zA-Z]/.test(tokens[i]!))
+        throw new Error(`path: numbers after Z in "${d}"`)
+    }
+  }
+  return subs
+}
+
+/** A parsed subpath as a Lottie bezier (vertices with relative in/out tangents), mapped into layer space. */
+function toBezier(sub: SubPath, map: (p: Pt) => Pt): Bezier {
+  const v: number[][] = [map(sub.start)]
   const inn: number[][] = [[0, 0]]
-  for (let k = 1; k + 2 < pts.length + 1; k += 3) {
-    const prev = v.at(-1)!
-    const [c1, c2, p] = [pts[k]!, pts[k + 1]!, pts[k + 2]!]
-    o.push([c1[0]! - prev[0]!, c1[1]! - prev[1]!])
-    v.push(p)
-    inn.push([c2[0]! - p[0]!, c2[1]! - p[1]!])
+  const o: number[][] = []
+  for (const [c1, c2, p] of sub.segs) {
+    const [prev, a, b, end] = [v.at(-1)!, map(c1), map(c2), map(p)]
+    o.push([a[0] - prev[0]!, a[1] - prev[1]!])
+    v.push(end)
+    inn.push([b[0] - end[0], b[1] - end[1]])
   }
   o.push([0, 0])
-  return {v, i: inn, o, c: true}
+  if (sub.isClosed) {
+    /* Z ends on the start point: fold that duplicate vertex back into the first. */
+    v.pop()
+    o.pop()
+    inn[0] = inn.pop()!
+  }
+  return {v, i: inn, o, c: sub.isClosed}
 }
 
 function bounds(b: Bezier) {
   const xs: number[] = []
   const ys: number[] = []
-  b.v.forEach((p, k) => {
+  const n = b.c ? b.v.length : b.v.length - 1
+  for (let k = 0; k < n; k++) {
+    const p = b.v[k]!
     const next = b.v[(k + 1) % b.v.length]!
     const c1 = [p[0]! + b.o[k]![0]!, p[1]! + b.o[k]![1]!]
     const c2 = [
       next[0]! + b.i[(k + 1) % b.v.length]![0]!,
       next[1]! + b.i[(k + 1) % b.v.length]![1]!,
     ]
-    for (let t = 0; t <= 1; t += 0.05) {
+    for (let t = 0; t <= 1; t += 0.01) {
       const u = 1 - t
       xs.push(
         u ** 3 * p[0]! +
@@ -255,7 +413,7 @@ function bounds(b: Bezier) {
           t ** 3 * next[1]!,
       )
     }
-  })
+  }
   return {
     x0: Math.min(...xs),
     x1: Math.max(...xs),
@@ -264,47 +422,75 @@ function bounds(b: Bezier) {
   }
 }
 
-const MARK_GRADIENT = {
-  l: [
-    ...MARK.matchAll(/<linearGradient id="l"[\s\S]*?<\/linearGradient>/g),
-  ][0]![0].match(/#[0-9A-Fa-f]{6}/g)!,
-  r: [
-    ...MARK.matchAll(/<linearGradient id="r"[\s\S]*?<\/linearGradient>/g),
-  ][0]![0].match(/#[0-9A-Fa-f]{6}/g)!,
+/* The mark's four paths in file order: head outline, left eye, right eye, nose. */
+const MARK_PATHS = [...MARK.matchAll(/<path d="([^"]+)"/g)].map(
+  m => parsePath(m[1]!)[0]!,
+)
+if (MARK_PATHS.length !== 4)
+  throw new Error(`mark.svg: expected 4 paths, found ${MARK_PATHS.length}`)
+{
+  /* Self-check of the parser against the head's known extent (Lucide cat: x 3..21, y 3..21, ear tops at y 2.82). */
+  const b = bounds(toBezier(MARK_PATHS[0]!, p => p))
+  const want = {x0: 3, x1: 21, y0: 2.82, y1: 21}
+  for (const [k, v] of Object.entries(want))
+    if (Math.abs(b[k as keyof typeof b] - v) > 0.03)
+      throw new Error(
+        `mark.svg head parsed wrong: ${k} = ${b[k as keyof typeof b]}, want ${v}`,
+      )
 }
 
-/** The four wings, centred on the canvas at `k` px per mark unit, grouped by side. */
-function markWings(k: number) {
-  const map = (x: number, y: number) => [(x - 32) * k + C, (y - 33.5) * k + C]
-  const wings = [
-    ...MARK.matchAll(/<path d="([^"]+)" fill="url\(#(l|r)\)"\/>/g),
-  ].map(m => ({b: svgPath(m[1]!, map), side: m[2] as 'l' | 'r'}))
-  const side = (s: 'l' | 'r') =>
-    wings
-      .filter(w => w.side === s)
-      .map((w, i) => {
-        const bb = bounds(w.b)
-        const [top, bottom] = MARK_GRADIENT[s] as [string, string]
-        const mid = (bb.x0 + bb.x1) / 2
-        return group(`wing-${s}${i}`, [
-          pathShape(w.b),
-          gradientFill(top, bottom, [mid, bb.y0], [mid, bb.y1]),
-        ])
-      })
-  /* Each side folds toward its own inner edge (x = 30.5 and 33.5 in mark.svg). */
+/**
+ * The Splito cat at `k` px per mark unit, centred on the layer origin, drawn
+ * exactly like mark.svg: filled head with a 2-unit round stroke, eyes as
+ * round-capped strokes, nose filled and stroked. Returns the eye group
+ * separately so callers can animate a blink, plus the cat's bottom edge.
+ */
+function cat(c: Palette, k: number, eyeScale?: unknown) {
+  const [head, eyeL, eyeR, nose] = MARK_PATHS as [
+    SubPath,
+    SubPath,
+    SubPath,
+    SubPath,
+  ]
+  /* Centre of the visible mark (outline plus the stroke's 1 unit) in mark units. */
+  const [cx, cy] = [12, (2.82 - 1 + 21 + 1) / 2]
+  const map = (p: Pt): Pt => [(p[0] - cx) * k, (p[1] - cy) * k]
+  const eyeCentre = map([12, 14.25])
   return {
-    left: side('l'),
-    right: side('r'),
-    leftHinge: map(30.5, 33.5),
-    rightHinge: map(33.5, 33.5),
+    shapes: [
+      group(
+        'eyes',
+        [
+          pathShape(toBezier(eyeL, map)),
+          pathShape(toBezier(eyeR, map)),
+          stroke(c.paper, 2 * k),
+        ],
+        {
+          a: st(eyeCentre),
+          p: st(eyeCentre),
+          s: eyeScale ?? st([100, 100]),
+        },
+      ),
+      group('nose', [
+        pathShape(toBezier(nose, map)),
+        fill(c.paper),
+        stroke(c.paper, 2 * k),
+      ]),
+      group('head', [
+        pathShape(toBezier(head, map)),
+        fill(c.ink),
+        stroke(c.ink, 2 * k),
+      ]),
+    ],
+    bottom: map([12, 22])[1],
   }
 }
 
 /* ---------- shared figures ---------- */
 
-const backdrop = (r = 100): Layer => ({
+const backdrop = (c: Palette, r = 100): Layer => ({
   nm: 'backdrop',
-  shapes: [group('disc', [ellipse(r * 2), fill(P.p400, st(12))])],
+  shapes: [group('disc', [ellipse(r * 2), fill(c.t(0.74), st(12))])],
 })
 
 /** Head and shoulders, centred on its own origin (head above, shoulders below). */
@@ -336,72 +522,95 @@ function person(color: string, scale = 1) {
 
 /* ---------- animations ---------- */
 
-/** Splito mark beating its wings: the split side trails by a beat. 2 s loop. */
-function loading() {
-  const {left, right, leftHinge, rightHinge} = markWings(2.6)
-  const beat = (delay: number): Key[] => [
-    [delay, [100, 100]],
-    [delay + 30, [28, 100]],
-    [delay + 60, [100, 100]],
-    [delay + 90, [28, 100]],
-    [delay + 120, [100, 100]],
+/**
+ * The Splito cat hops twice a loop: it rises and slows, falls and speeds
+ * up, stretches a little into the landing and settles with a small squash.
+ * It blinks at the top of the second hop; its shadow tightens while it is
+ * in the air. 2 s loop.
+ */
+function loading(c: Palette) {
+  const LIFT = 14
+  const ground = C - 8
+  /* Keys for one hop starting at t: take-off, apex, touchdown, squash (the next hop or the loop end recovers). */
+  const hop = (
+    t: number,
+    rest: Value,
+    apex: Value,
+    touch: Value,
+    squash: Value,
+  ): Key[] => [
+    [t, rest, EASE.out],
+    [t + 26, apex, EASE.in],
+    [t + 48, touch, EASE.out],
+    [t + 53, squash, EASE.inOut],
   ]
-  const lift: Key[] = [
-    [0, [C, C]],
-    [30, [C, C - 8]],
-    [60, [C, C]],
-    [90, [C, C - 8]],
-    [120, [C, C]],
-  ]
-  const wingLayer = (
-    nm: string,
-    shapes: unknown[],
-    hinge: number[],
-    delay: number,
-  ): Layer => ({
-    nm,
-    shapes: [
-      group(nm, shapes, {
-        a: st(hinge),
-        p: st(hinge),
-        s: delay
-          ? kf([[0, [76, 100]], ...beat(delay).slice(1, -1), [120, [76, 100]]])
-          : kf(beat(0)),
-      }),
-    ],
-    p: kf(lift, true),
-    a: st([C, C, 0]),
-  })
+  const twice = (
+    rest: Value,
+    apex: Value,
+    touch: Value,
+    squash: Value,
+    isSpatial = false,
+  ) =>
+    kf(
+      [
+        ...hop(0, rest, apex, touch, squash),
+        ...hop(60, rest, apex, touch, squash),
+        [120, rest],
+      ],
+      isSpatial,
+    )
+  const {shapes, bottom} = cat(
+    c,
+    5.6,
+    kf([
+      [0, [100, 100]],
+      [80, [100, 100], EASE.inOut],
+      [85, [100, 12], EASE.inOut],
+      [92, [100, 100]],
+      [120, [100, 100]],
+    ]),
+  )
+  const feet = [C, ground + bottom]
   return animation('loading', 120, [
     {
       nm: 'shadow',
-      shapes: [
-        group('shadow', [ellipse(120, 14, [0, 86]), fill(P.p400, st(18))], {
-          s: kf([
-            [0, [100, 100]],
-            [30, [80, 100]],
-            [60, [100, 100]],
-            [90, [80, 100]],
-            [120, [100, 100]],
-          ]),
-        }),
-      ],
+      shapes: [group('shadow', [ellipse(84, 10), fill(c.t(0.74), st(20))])],
+      p: st([C, ground + bottom + 10, 0]),
+      s: twice(
+        [100, 100, 100],
+        [70, 70, 100],
+        [100, 100, 100],
+        [104, 100, 100],
+      ),
     },
-    wingLayer('wings-left', left, leftHinge, 0),
-    /* The right wings start 8 frames behind; their first/last keys sit mid-beat so the loop stays seamless. */
-    wingLayer('wings-right', right, rightHinge, 8),
+    {
+      nm: 'cat',
+      shapes,
+      /* Anchored at its feet so the squash stays on the ground. */
+      a: st([0, bottom, 0]),
+      p: twice(feet, [feet[0]!, feet[1]! - LIFT], feet, feet, true),
+      s: twice(
+        [100, 100, 100],
+        [100, 100, 100],
+        [97, 103, 100],
+        [105, 95, 100],
+      ),
+    },
   ])
 }
 
 /** Disc pops, ring pulses, check draws, sparkles burst. 1.6 s, holds the last frame. */
-function success() {
+function success(c: Palette) {
   const sparkles: Layer[] = Array.from({length: 8}, (_, i) => {
     const a = (i / 8) * Math.PI * 2 - Math.PI / 2
     const at = (r: number) => [C + Math.cos(a) * r, C + Math.sin(a) * r]
     return {
       nm: `sparkle-${i}`,
       shapes: [
-        group('dot', [ellipse(i % 2 ? 10 : 14), fill(i % 2 ? P.p200 : P.p300)]),
+        group('dot', [
+          ellipse(i % 2 ? 10 : 14),
+          fill(i % 2 ? c.t(0.34) : c.t(0.54)),
+        ]),
       ],
       p: kf(
         [
@@ -432,7 +641,7 @@ function success() {
             ]),
           ),
           stroke(
-            P.p300,
+            c.t(0.54),
             6,
             kf([
               [0, 0],
@@ -447,7 +656,7 @@ function success() {
     ...sparkles,
     {
       nm: 'disc',
-      shapes: [group('disc', [ellipse(144), fill(P.p500)])],
+      shapes: [group('disc', [ellipse(144), fill(c.ink)])],
       s: kf([
         [0, [0, 0, 100], EASE.back],
         [26, [100, 100, 100]],
@@ -470,7 +679,7 @@ function success() {
               [46, 100],
             ]),
           ),
-          stroke(P.white, 14),
+          stroke(c.paper, 14),
         ]),
       ],
     },
@@ -478,7 +687,7 @@ function success() {
 }
 
 /** A coin hops between two friends and back, flipping as it goes. 3 s loop. */
-function emptyPeople() {
+function emptyPeople(c: Palette) {
   const L = [C - 46, 176]
   const R = [C + 46, 176]
   const coinY = 70
@@ -494,11 +703,11 @@ function emptyPeople() {
     [180, [100, 100]],
   ]
   return animation('empty-people', 180, [
-    backdrop(),
+    backdrop(c),
     {
       nm: 'friend-left',
       shapes: [
-        group('person', person(P.p500), {
+        group('person', person(c.ink), {
           p: st(L),
           a: st([0, 40]),
           s: kf(bounce(140)),
@@ -509,7 +718,7 @@ function emptyPeople() {
     {
       nm: 'friend-right',
       shapes: [
-        group('person', person(P.p300), {
+        group('person', person(c.t(0.54)), {
           p: st(R),
           a: st([0, 40]),
           s: kf(bounce(70)),
@@ -522,7 +731,7 @@ function emptyPeople() {
       shapes: [
         group(
           'coin',
-          [ellipse(30), fill(P.p200), ellipse(16), stroke(P.p500, 3.5)],
+          [ellipse(30), fill(c.t(0.34)), ellipse(16), stroke(c.ink, 3.5)],
           {
             s: kf([
               [20, [100, 100]],
@@ -563,22 +772,22 @@ function emptyPeople() {
 }
 
 /** Three members around a slowly turning dashed ring, greeting in turn. 3 s loop. */
-function emptyGroups() {
+function emptyGroups(c: Palette) {
   /* 24 dashes round the ring, so the 90 degree turn per loop lands on an identical pattern. */
   const DASH = (Math.PI * 176) / 24
   const seats = [
-    {p: [C, 82], color: P.p500, t: 0},
-    {p: [C - 50, 158], color: P.p400, t: 20},
-    {p: [C + 50, 158], color: P.p300, t: 40},
+    {p: [C, 82], color: c.ink, t: 0},
+    {p: [C - 50, 158], color: c.t(0.74), t: 20},
+    {p: [C + 50, 158], color: c.t(0.54), t: 40},
   ]
   return animation('empty-groups', 180, [
-    backdrop(),
+    backdrop(c),
     {
       nm: 'ring',
       shapes: [
         group('ring', [
           ellipse(176),
-          stroke(P.p300, 4, st(80), [DASH * 0.42, DASH * 0.58]),
+          stroke(c.t(0.54), 4, st(80), [DASH * 0.42, DASH * 0.58]),
         ]),
       ],
       r: kf([
@@ -605,20 +814,20 @@ function emptyGroups() {
 }
 
 /** A feed card fills with rows one by one, pings, then clears. 3 s loop. */
-function emptyActivity() {
+function emptyActivity(c: Palette) {
   const rows = [-38, 0, 38].map((y, i): Layer => {
     const t = 12 + i * 16
     return {
       nm: `row-${i}`,
       shapes: [
-        group('dot', [ellipse(20), fill(i === 0 ? P.p500 : P.p400)], {
+        group('dot', [ellipse(20), fill(i === 0 ? c.ink : c.t(0.74))], {
           p: st([-46, 0]),
         }),
         group(
           'bar',
           [
             rect(i === 1 ? 52 : 72, 12, 6, [i === 1 ? 26 : 36, 0]),
-            fill(P.p300),
+            fill(c.t(0.54)),
           ],
           {
             p: st([-28, 0]),
@@ -647,21 +856,21 @@ function emptyActivity() {
     }
   })
   return animation('empty-activity', 180, [
-    backdrop(),
+    backdrop(c),
     {
       nm: 'card',
       shapes: [
         group('card', [
           rect(148, 148, 22),
-          fill(P.p500, st(10)),
-          stroke(P.p400, 3, st(70)),
+          fill(c.ink, st(10)),
+          stroke(c.t(0.74), 3, st(70)),
         ]),
       ],
     },
     ...rows,
     {
       nm: 'ping',
-      shapes: [group('ping', [ellipse(22), fill(P.p500)])],
+      shapes: [group('ping', [ellipse(22), fill(c.ink)])],
       p: st([C + 66, C - 66, 0]),
       s: kf([
         [0, [0, 0, 100]],
@@ -686,7 +895,7 @@ function emptyActivity() {
             ]),
           ),
           stroke(
-            P.p400,
+            c.t(0.74),
             3,
             kf([
               [0, 0],
@@ -702,38 +911,47 @@ function emptyActivity() {
   ])
 }
 
-/** name -> [builder, frames to sample in the preview] */
-const ANIMATIONS = {
-  loading: loading(),
-  success: success(),
-  'empty-people': emptyPeople(),
-  'empty-groups': emptyGroups(),
-  'empty-activity': emptyActivity(),
+const BUILDERS = {
+  loading,
+  success,
+  'empty-people': emptyPeople,
+  'empty-groups': emptyGroups,
+  'empty-activity': emptyActivity,
 }
+/** name -> {light, dark} Lottie JSON */
+const ANIMATIONS = Object.fromEntries(
+  Object.entries(BUILDERS).map(([name, build]) => [
+    name,
+    {light: build(VARIANTS.light), dark: build(VARIANTS.dark)},
+  ]),
+)
 
 async function preview(dir: string) {
   const lottiePath = createRequire(import.meta.url).resolve(
     'lottie-web/build/player/lottie_light.min.js',
   )
   const browser = await chromium.launch({channel: 'chrome'})
-  const page = await browser.newPage({deviceScaleFactor: 1})
+  const page = await browser.newPage({deviceScaleFactor: 2})
   const errors: string[] = []
   page.on('pageerror', e => errors.push(e.message))
   page.on('console', m => m.type() === 'error' && errors.push(m.text()))
   const COLS = 8
-  await page.setViewportSize({width: COLS * 130 + 20, height: 1400})
+  await page.setViewportSize({width: COLS * 130 + 20, height: 100})
   await page.setContent(
     '<!doctype html><html><body style="margin:0;font:12px system-ui"></body></html>',
   )
   await page.addScriptTag({path: lottiePath})
-  for (const [name, data] of Object.entries(ANIMATIONS)) {
+  for (const [name, variants] of Object.entries(ANIMATIONS)) {
     const frames = Array.from({length: COLS}, (_, i) =>
-      Math.round((i * (data.op - 1)) / (COLS - 1)),
+      Math.round((i * (variants.light.op - 1)) / (COLS - 1)),
     )
     await page.evaluate(
-      ({data, frames}) => {
+      ({variants, frames}) => {
         document.body.innerHTML = ''
-        for (const bg of ['#ffffff', '#000000']) {
+        for (const [bg, data] of [
+          ['#ffffff', variants.light],
+          ['#000000', variants.dark],
+        ] as const) {
           const row = document.createElement('div')
           row.style.cssText = `display:flex;gap:10px;padding:10px;background:${bg};color:${bg === '#000000' ? '#aaa' : '#555'}`
           for (const f of frames) {
@@ -760,7 +978,7 @@ async function preview(dir: string) {
           document.body.append(row)
         }
       },
-      {data, frames},
+      {variants, frames},
     )
     const file = join(dir, `lottie-${name}.png`)
     await page.screenshot({path: file, fullPage: true})
@@ -772,8 +990,11 @@ async function preview(dir: string) {
 }
 
 mkdirSync(OUT, {recursive: true})
-for (const [name, data] of Object.entries(ANIMATIONS)) {
-  writeFileSync(join(OUT, `${name}.json`), JSON.stringify(data))
-  console.log(`assets/lottie/${name}.json ${(data.op / FPS).toFixed(1)}s`)
+for (const [name, {light, dark}] of Object.entries(ANIMATIONS)) {
+  writeFileSync(join(OUT, `${name}.json`), JSON.stringify(light))
+  writeFileSync(join(OUT, `${name}-dark.json`), JSON.stringify(dark))
+  console.log(
+    `assets/lottie/${name}{,-dark}.json ${(light.op / FPS).toFixed(1)}s`,
+  )
 }
 if (process.argv[2]) await preview(process.argv[2])

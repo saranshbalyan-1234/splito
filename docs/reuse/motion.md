@@ -22,7 +22,7 @@ Pinned sources:
 | Expensify/App@a60491f `src/components/LottieAnimations/index.tsx` | `apps/client/src/motion/illustrations.ts` | The idea of one typed registry of animations with their metadata. | MIT |
 | Expensify/App@a60491f `src/components/LoadingBar.tsx` | `apps/client/src/motion/Shimmer.tsx`, `apps/client/scripts/lottie.ts` (`EASE.inOut`) | The easing curve `cubic-bezier(0.65, 0, 0.35, 1)`. | MIT |
 | Bluesky upstream idiom (`entering={FadeIn}`, `exiting={FadeOut}`, `layout={native(LinearTransition)}`, used across `src/`) | `apps/client/src/motion/listAnimations.ts` | The choice of presets, and layout transitions on native only. | MIT |
-| `@bsky.app/alf` `dist/palette.js` (primary_50 to primary_700) | `apps/client/scripts/lottie.ts` (`P`), `apps/client/scripts/brand.ts` (dark-surface mark gradient) | Palette hex values. | MIT |
+| `@bsky.app/alf` `dist/palette.js` (primary_500) | `apps/client/scripts/lottie.ts` (`VARIANTS.light`), `apps/client/scripts/brand.ts` (`BLUE`) | The brand blue `#006AFF`. Lottie tints mix it with white, which reproduces primary_400/300/200 exactly. | MIT |
 
 ## Used in place (already in the tree, not copied by this stream)
 
@@ -32,8 +32,14 @@ Pinned sources:
 
 ## Original Splito work (no upstream)
 
-- `apps/client/scripts/brand.ts` and every PNG/SVG it writes: `apps/client/assets/brand/*.png`, `apps/client/public/*.png`, `apps/client/public/icons/*.png`, `apps/client/public/splash-mark*.svg`, `apps/client/public/manifest.json`. All are derived from the approved `apps/client/assets/brand/mark.svg`; the script only recolours the mark's four wing paths.
-- `apps/client/scripts/lottie.ts` and `apps/client/assets/lottie/*.json`: hand-built Lottie JSON, with `meta.g = "splito/scripts/lottie.ts"`. The `loading` animation uses the Splito mark's own paths.
+- `apps/client/scripts/brand.ts` and every PNG/SVG it writes: `apps/client/assets/brand/*.png`, `apps/client/public/*.png`, `apps/client/public/icons/*.png`, `apps/client/public/splash-mark*.svg`, `apps/client/public/manifest.json`. All are rendered from the four approved mark files (`apps/client/assets/brand/mark.svg`, `mark-white.svg`, `mark-dark.svg`, `mark-black.svg`), placed as-is; one-colour targets use `mark-dark.svg` as a luminance mask so the features stay knocked out.
+- `apps/client/scripts/lottie.ts` and `apps/client/assets/lottie/*.json`: hand-built Lottie JSON, with `meta.g = "splito/scripts/lottie.ts"`. Each animation ships as `<name>.json` (blue and white) and `<name>-dark.json` (white and black). The `loading` animation draws the cat from `mark.svg`'s own paths.
+
+## Third-party artwork
+
+| Source | Splito path | Modification | License |
+|---|---|---|---|
+| Lucide `cat` icon (lucide-static v1.61.0) | `apps/client/assets/brand/mark*.svg`, `apps/client/src/components/brand/Logo.tsx`, `loading` in `apps/client/scripts/lottie.ts` | Filled, recoloured (blue and white, or black and white), eyes and nose knocked out. | ISC (`LICENSES/lucide.txt`) |
 - `apps/client/src/motion/amountSteps.ts`, `AnimatedAmount/`, `Shimmer.tsx`, `useShouldReduceMotion.ts`, `listAnimations.ts`.
 
 ## Not copied (license or trademark)
