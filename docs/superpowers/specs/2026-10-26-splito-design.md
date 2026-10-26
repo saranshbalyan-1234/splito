@@ -240,7 +240,7 @@ Source: `docs/research/2026-10-26-gamerun-architecture-takeaways.md`. Adopted: k
 | Logo changed to a symmetrical cat: Lucide "cat" icon (ISC), filled, Bluesky blue, eyes/nose knocked out. Stock icon, so not registrable as a trademark - a bespoke mark can replace it later | Owner ("symmetrical cat", "don't draw", "Lucide", "fill") |
 | (superseded) Logo is the butterfly alone everywhere in the UI (no wordmark, no tile); store app icons keep a plain background because iOS/Android require an opaque square | Owner ("butterfly only"); icon background is a platform rule |
 | Web layout: Bluesky's left sidebar (logged-in LeftNav: icon + label rows, active item bold + filled icon, Add expense pill) plus main content filling the rest of the screen; no right column | Owner ("occupy complete screen", "keep my left sidebar and main content") |
-| Phones keep the spec's central + inside Bluesky's bottom bar | Assistant's call (spec vs pixel-copy conflict) |
+| Phones use Bluesky's floating action button (bottom-right) for Add expense, opening like Bluesky's composer; replaces the spec's central + | Owner ("use the same flow of that FAB icon") |
 | Bluesky's licensed Central icon glyphs replaced by Lucide; buying a Central licence would make icons pixel-exact | Assistant's call (licence) |
 | Hindi is the second launch language | Assistant's call |
 | Phase placement (v1/v2/v3) of each feature | Assistant's call; owner did not object |
