@@ -1,29 +1,42 @@
+import {KeyboardProvider as KeyboardControllerProvider} from 'react-native-keyboard-controller'
 import {SafeAreaProvider} from 'react-native-safe-area-context'
 import {I18nProvider} from '@lingui/react'
 
 import {i18n} from '#/locale/i18n'
+import {LocaleFromPrefs} from '#/locale/LocaleFromPrefs'
 import {Provider as A11yProvider} from '#/state/a11y'
 import {Provider as DialogStateProvider} from '#/state/dialogs'
-import {Provider as ShellLayoutProvider} from '#/state/shell/shell-layout'
+import {PrefsMirror} from '#/state/preferences/mirror'
+import {Provider as ShellStateProvider} from '#/state/shell'
+import {useAccentThemes} from '#/state/theme'
 import {ThemeProvider as Alf} from '#/alf'
 import {useColorModeTheme} from '#/alf/util/useColorModeTheme'
+import {GestureRoot} from '#/components/GestureRoot'
 import {Provider as PortalProvider} from '#/components/Portal'
 import {ToastOutlet} from '#/components/Toast'
 import {StoreProvider} from '#/data/StoreProvider'
-import {Navigation} from '#/navigation/Navigation'
+import {Shell} from '#/view/shell'
 
+/*
+ * Theme, accent and text size read device storage synchronously so the first
+ * paint is right; `PrefsMirror` keeps that copy in step with the preferences
+ * registry (Settings, the drawer's dark-theme switch).
+ */
 function Themed() {
   const theme = useColorModeTheme()
+  const themesOverride = useAccentThemes()
   return (
-    <Alf theme={theme}>
+    <Alf theme={theme} themesOverride={themesOverride}>
       <PortalProvider>
         <DialogStateProvider>
-          <ShellLayoutProvider>
+          <ShellStateProvider>
             <StoreProvider>
-              <Navigation />
+              <LocaleFromPrefs />
+              <PrefsMirror />
+              <Shell />
             </StoreProvider>
             <ToastOutlet />
-          </ShellLayoutProvider>
+          </ShellStateProvider>
         </DialogStateProvider>
       </PortalProvider>
     </Alf>
@@ -32,12 +45,17 @@ function Themed() {
 
 export default function App() {
   return (
-    <SafeAreaProvider>
-      <I18nProvider i18n={i18n}>
-        <A11yProvider>
-          <Themed />
-        </A11yProvider>
-      </I18nProvider>
-    </SafeAreaProvider>
+    <GestureRoot>
+      <SafeAreaProvider>
+        <I18nProvider i18n={i18n}>
+          <A11yProvider>
+            {/* As Bluesky's App.tsx: form sheets keep their footer above the keyboard. */}
+            <KeyboardControllerProvider preload={false}>
+              <Themed />
+            </KeyboardControllerProvider>
+          </A11yProvider>
+        </I18nProvider>
+      </SafeAreaProvider>
+    </GestureRoot>
   )
 }

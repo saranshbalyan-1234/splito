@@ -1,7 +1,15 @@
+import {recordMetric} from '#/logger'
+
+const analytics = {
+  /** Bluesky's `ax.metric(event, data)`, recorded as a scrubbed metric (enums, booleans, numbers only). */
+  metric: (event: string, data?: Record<string, unknown>) => recordMetric(event, data),
+}
+
 /**
- * Bluesky ships product metrics; Splito collects none in M1. Adapted components
- * call `ax.metric(...)`, so this keeps their call sites unchanged.
+ * Adapted components call `ax.metric(...)` as in Bluesky; the call enqueues a
+ * metric in `#/logger`, which sends nothing anywhere until a vendor exists
+ * and Send diagnostics is on.
  */
 export function useAnalytics() {
-  return {metric: (_event: string, _data?: Record<string, unknown>) => {}}
+  return analytics
 }

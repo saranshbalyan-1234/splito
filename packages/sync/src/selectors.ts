@@ -1,6 +1,6 @@
-import type {ExpenseRecord, LedgerRecord} from '@splito/domain'
+import type {ExpenseRecord, LedgerRecord, RepaymentRecord, WriteOffRecord} from '@splito/domain'
 
-import type {Expense} from './mutations'
+import type {BinType, Expense, Purged, Repayment, WriteOff} from './mutations'
 import type {Store} from './store'
 import type {Entity} from './types'
 
@@ -16,8 +16,55 @@ export const toExpenseRecord = (e: Entity<Expense>): ExpenseRecord => ({
   deleted: e.deleted,
 })
 
+export const toRepaymentRecord = (e: Entity<Repayment>): RepaymentRecord => ({
+  kind: 'repayment',
+  id: e.id,
+  groupId: e.data.groupId,
+  currency: e.data.currency,
+  from: e.data.from,
+  to: e.data.to,
+  amount: e.data.amount,
+  date: e.data.date,
+  deleted: e.deleted,
+})
+
+export const toWriteOffRecord = (e: Entity<WriteOff>): WriteOffRecord => ({...toRepaymentRecord(e), kind: 'writeoff'})
+
+/** Every expense, repayment and write-off, tombstones included (flagged `deleted`). */
 export async function loadLedger(store: Store): Promise<LedgerRecord[]> {
-  return (await store.getAll<Expense>('expense')).map(toExpenseRecord)
+  const expenses = await store.getAll<Expense>('expense')
+  const repayments = await store.getAll<Repayment>('repayment')
+  const writeOffs = await store.getAll<WriteOff>('writeoff')
+  return [...expenses.map(toExpenseRecord), ...repayments.map(toRepaymentRecord), ...writeOffs.map(toWriteOffRecord)]
+}
+
+/** One item in Recently deleted. */
+export type BinItem = {deletedAt: number; deletedBy: string} & (
+  | {type: 'expense'; entity: Entity<Expense>}
+  | {type: 'repayment'; entity: Entity<Repayment>}
+  | {type: 'writeoff'; entity: Entity<WriteOff>}
+)
+
+const BIN_TYPES: BinType[] = ['expense', 'repayment', 'writeoff']
+const DAY_MS = 86_400_000
+
+/**
+ * Recently deleted: tombstoned expenses, payments and write-offs deleted in
+ * the last `days` (the `history.binDays` preference) and not deleted forever,
+ * newest first, each with who deleted it (from its history). Older tombstones
+ * are only out of the list: they stay in the store and its audit trail.
+ */
+export async function loadBin(store: Store, now: number, days: number): Promise<BinItem[]> {
+  const since = now - days * DAY_MS
+  const items: BinItem[] = []
+  for (const type of BIN_TYPES) {
+    for (const entity of await store.getAll<Purged>(type)) {
+      if (!entity.deleted || entity.data.purgedAt !== undefined || entity.updatedAt < since) continue
+      const last = (await store.history(type, entity.id)).at(-1)
+      items.push({type, entity, deletedAt: entity.updatedAt, deletedBy: last?.actor ?? ''} as BinItem)
+    }
+  }
+  return items.sort((x, y) => y.deletedAt - x.deletedAt || (x.entity.id < y.entity.id ? -1 : 1))
 }
 
 export type SyncStatus = 'Saved on this device' | 'Waiting for connection' | 'Syncing' | 'Synced' | 'Needs attention'

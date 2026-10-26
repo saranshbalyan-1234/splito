@@ -1,8 +1,6 @@
 // Adapted from bluesky-social/social-app@4e4ad9c (MIT) — src/alf/breakpoints.shared.ts
 import {createContext} from 'react'
 
-import {IS_WEB} from '#/env'
-
 export type Breakpoint = 'gtPhone' | 'gtMobile' | 'gtTablet'
 
 export const BREAKPOINTS = {
@@ -10,6 +8,8 @@ export const BREAKPOINTS = {
   mobile: 800,
   tablet: 1300,
   rightNav: 1100,
+  /** Splito: the sidebar shows labels from here up, an icon rail below (owner directive). */
+  leftNavLabels: 1000,
 } as const
 
 /** The available width inside a native sheet or other contained surface. */
@@ -38,37 +38,29 @@ export function getBreakpoints(width: number): Record<Breakpoint, boolean> & {
   }
 }
 
+/*
+ * Splito's shell is the sidebar plus full-width content (owner directive), so
+ * there is no right rail and no centred column to offset.
+ */
 export function getLayoutBreakpoints(width: number) {
   return {
-    rightNavVisible: width >= BREAKPOINTS.rightNav,
-    centerColumnOffset:
-      width >= BREAKPOINTS.rightNav && width <= BREAKPOINTS.tablet,
-    leftNavMinimal: width <= BREAKPOINTS.tablet,
+    rightNavVisible: false,
+    centerColumnOffset: false,
+    leftNavMinimal: width < BREAKPOINTS.leftNavLabels,
   }
 }
 
 /**
- * Always false on web, where `Layout.Center` centers and offsets the column.
+ * Bluesky centres tablet content in a 600px column. Splito's content fills
+ * the space beside the sidebar on every platform (owner directive), so this
+ * is always false; it stays so adapted components keep their upstream shape.
  */
-export function shouldCenterNativeTabletContent({
-  gtMobile,
-  isWithinDialog,
-  isWithinSplitView,
-  isWithinOffsetView,
-  disabled = false,
-}: {
+export function shouldCenterNativeTabletContent(_opts: {
   gtMobile: boolean
   isWithinDialog: boolean
   isWithinSplitView: boolean
   isWithinOffsetView: boolean
   disabled?: boolean
 }) {
-  return (
-    !IS_WEB &&
-    gtMobile &&
-    !isWithinDialog &&
-    !isWithinSplitView &&
-    !isWithinOffsetView &&
-    !disabled
-  )
+  return false
 }

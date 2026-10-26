@@ -11,4 +11,8 @@ export default defineConfig({
     },
   ],
   format: 'po',
+  // Compiled catalogs are TypeScript modules, as upstream.
+  compileNamespace: 'ts',
+  // A Hindi string without a translation renders its English source, never its id.
+  fallbackLocales: {default: 'en'},
 })

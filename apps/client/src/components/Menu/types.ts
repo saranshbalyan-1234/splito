@@ -30,6 +30,13 @@ export type OuterProps = React.PropsWithChildren<
      */
     popover?: BottomSheetPopoverMode
     onCloseAutoFocus?: (event: Event) => void
+    /**
+     * Web only (Radix): which edge of the trigger the menu lines up with,
+     * and its gap below the trigger. Splito: a header menu lines up with the
+     * page gutter and clears the header's hairline.
+     */
+    align?: 'start' | 'center' | 'end'
+    sideOffset?: number
   }
 >
 

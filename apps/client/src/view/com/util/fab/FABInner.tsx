@@ -1,0 +1,129 @@
+// Adapted from bluesky-social/social-app@4e4ad9c (MIT) - src/view/com/util/fab/FABInner.tsx
+import {type ComponentProps, type JSX, useRef} from 'react'
+import {useRightNavWidth} from '#/view/shell/desktop/RightNav'
+import {
+  type GestureResponderEvent,
+  type Pressable,
+  type StyleProp,
+  StyleSheet,
+  type ViewStyle,
+} from 'react-native'
+import Animated from 'react-native-reanimated'
+import {useSafeAreaInsets} from 'react-native-safe-area-context'
+
+import {PressableScale} from '#/motion/PressableScale'
+import {useHaptics} from '#/lib/haptics'
+import {useMinimalShellFabTransform} from '#/lib/hooks/useMinimalShellTransform'
+import {clamp} from '#/lib/numbers'
+import {atoms as a, ios, useBreakpoints, useTheme} from '#/alf'
+import {IS_WEB} from '#/env'
+
+/**
+ * Minimum time between the press-in and release haptics on iOS, so a quick tap
+ * still plays two distinct taps.
+ */
+const MIN_HAPTIC_GAP_MS = 50
+
+/* The phone FAB's lift above the bottom bar (the minimal-shell transform's resting offset). */
+const FAB_BAR_LIFT = 44
+const FAB_SIZE = 56
+/* Air between the last row and the FAB, so a row's amount is never under it. */
+const FAB_CLEARANCE = 16
+
+/**
+ * Splito: the bottom content inset a phone list needs so the FAB never
+ * covers its last row - the FAB's distance from the screen bottom (safe
+ * area, bottom-bar lift) plus its height plus a margin. Zero where the
+ * FAB is hidden (tablet and desktop, where the sidebar pill composes).
+ */
+export function useFabInset() {
+  const insets = useSafeAreaInsets()
+  const {gtMobile} = useBreakpoints()
+  if (gtMobile) return 0
+  return (
+    clamp(insets.bottom, 15, 60) + 15 + FAB_BAR_LIFT + FAB_SIZE + FAB_CLEARANCE
+  )
+}
+
+export interface FABProps extends ComponentProps<typeof Pressable> {
+  testID?: string
+  icon: JSX.Element
+  style?: StyleProp<ViewStyle>
+}
+
+export function FABInner({testID, icon, onPress, style, ...props}: FABProps) {
+  const insets = useSafeAreaInsets()
+  const {gtMobile} = useBreakpoints()
+  const t = useTheme()
+  const haptics = useHaptics()
+  const pressInHapticAt = useRef(0)
+  const fabMinimalShellTransform = useMinimalShellFabTransform()
+
+  const size = gtMobile ? styles.sizeLarge : styles.sizeRegular
+
+  const rightNavWidth = useRightNavWidth()
+  const tabletSpacing = gtMobile
+    ? {right: 50 + rightNavWidth, bottom: 50}
+    : {right: 24, bottom: clamp(insets.bottom, 15, 60) + 15}
+
+  return (
+    <Animated.View
+      style={[
+        styles.outer,
+        size,
+        tabletSpacing,
+        !gtMobile && fabMinimalShellTransform,
+      ]}>
+      <PressableScale
+        testID={testID}
+        onPressIn={ios(() => {
+          pressInHapticAt.current = Date.now()
+          haptics.tap()
+        })}
+        onPress={evt => {
+          onPress?.(evt)
+          const elapsed = Date.now() - pressInHapticAt.current
+          if (elapsed < MIN_HAPTIC_GAP_MS) {
+            setTimeout(haptics.tap, MIN_HAPTIC_GAP_MS - elapsed)
+          } else {
+            haptics.tap()
+          }
+        }}
+        onLongPress={ios((evt: GestureResponderEvent) => {
+          onPress?.(evt)
+          haptics.longPress()
+        })}
+        targetScale={0.9}
+        style={[
+          a.rounded_full,
+          size,
+          {backgroundColor: t.palette.primary_500},
+          a.align_center,
+          a.justify_center,
+          style,
+        ]}
+        {...props}>
+        {icon}
+      </PressableScale>
+    </Animated.View>
+  )
+}
+
+const styles = StyleSheet.create({
+  sizeRegular: {
+    width: FAB_SIZE,
+    height: FAB_SIZE,
+    borderRadius: 30,
+  },
+  sizeLarge: {
+    width: 70,
+    height: 70,
+    borderRadius: 35,
+  },
+  outer: {
+    // @ts-expect-error web-only
+    position: IS_WEB ? 'fixed' : 'absolute',
+    zIndex: 1,
+    cursor: 'pointer',
+  },
+})

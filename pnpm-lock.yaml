@@ -232,9 +232,21 @@ importers:
       '@bsky.app/react-native-uitextview':
         specifier: ^2.7.1
         version: 2.7.1(react-native@0.88.0(patch_hash=dc5394dccd29a3cc7ec7079a8fae133938d92a99a5f7fdd73ed5ef94dd868a96)(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/metro-config@0.88.0(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.3.0)(react@19.3.0)(supports-color@8.1.1))(react@19.3.0)
+      '@formatjs/intl-locale':
+        specifier: ^5.3.8
+        version: 5.3.12
+      '@formatjs/intl-numberformat':
+        specifier: ^9.3.10
+        version: 9.4.3
+      '@formatjs/intl-pluralrules':
+        specifier: ^6.3.9
+        version: 6.3.16
       '@lingui/core':
         specifier: ^5.9.2
         version: 5.9.5(@lingui/babel-plugin-lingui-macro@5.9.5(@typescript/typescript6@6.0.2)(supports-color@8.1.1))
+      '@lingui/message-utils':
+        specifier: 5.9.5
+        version: 5.9.5
       '@lingui/react':
         specifier: ^5.9.2
         version: 5.9.5(@lingui/babel-plugin-lingui-macro@5.9.5(@typescript/typescript6@6.0.2)(supports-color@8.1.1))(react@19.3.0)
@@ -310,6 +322,9 @@ importers:
       lottie-react-native:
         specifier: 7.5.0
         version: 7.5.0(react-native@0.88.0(patch_hash=dc5394dccd29a3cc7ec7079a8fae133938d92a99a5f7fdd73ed5ef94dd868a96)(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/metro-config@0.88.0(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.3.0)(react@19.3.0)(supports-color@8.1.1))(react@19.3.0)
+      lottie-web:
+        specifier: 5.12.2
+        version: 5.12.2
       lucide-react-native:
         specifier: 1.61.0
         version: 1.61.0(@types/react@19.3.0)(react-native-svg@15.16.0(patch_hash=ff404c031ff8a5d4ae26dcd41c3b59ddbad9953e4fabfc1df7368cb969e5032e)(react-native@0.88.0(patch_hash=dc5394dccd29a3cc7ec7079a8fae133938d92a99a5f7fdd73ed5ef94dd868a96)(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/metro-config@0.88.0(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.3.0)(react@19.3.0)(supports-color@8.1.1))(react@19.3.0))(react-native@0.88.0(patch_hash=dc5394dccd29a3cc7ec7079a8fae133938d92a99a5f7fdd73ed5ef94dd868a96)(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/metro-config@0.88.0(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.3.0)(react@19.3.0)(supports-color@8.1.1))(react@19.3.0)
@@ -328,6 +343,12 @@ importers:
       react-native:
         specifier: 0.88.0
         version: 0.88.0(patch_hash=dc5394dccd29a3cc7ec7079a8fae133938d92a99a5f7fdd73ed5ef94dd868a96)(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/metro-config@0.88.0(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.3.0)(react@19.3.0)(supports-color@8.1.1)
+      react-native-drawer-layout:
+        specifier: 5.0.0-alpha.19
+        version: 5.0.0-alpha.19(33f69aaaed39849d3e89a8bb07a05106)
+      react-native-edge-to-edge:
+        specifier: 1.8.1
+        version: 1.8.1(react-native@0.88.0(patch_hash=dc5394dccd29a3cc7ec7079a8fae133938d92a99a5f7fdd73ed5ef94dd868a96)(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/metro-config@0.88.0(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.3.0)(react@19.3.0)(supports-color@8.1.1))(react@19.3.0)
       react-native-gesture-handler:
         specifier: ~3.3.0
         version: 3.3.0(react-native@0.88.0(patch_hash=dc5394dccd29a3cc7ec7079a8fae133938d92a99a5f7fdd73ed5ef94dd868a96)(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/metro-config@0.88.0(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.3.0)(react@19.3.0)(supports-color@8.1.1))(react@19.3.0)
@@ -1201,6 +1222,30 @@ packages:
 
   '@floating-ui/utils@0.2.12':
     resolution: {integrity: sha512-HpCo8tmWzLVad5s2d19EhAz5zqrrQ6s69qd6moPMQvkOuSwDT1YgRfWSVuc4ennqrgv3OHppiOGMQ7oC13yIww==}
+
+  '@formatjs/bigdecimal@0.2.7':
+    resolution: {integrity: sha512-B4+XY/e4u5v261r3a37Kq2ax91gPZSKGyVpx8X5dygAggLlUz+6MeBpmAhaBFGB8WQ4JB1qD+QtKHk9aJkEb9Q==}
+
+  '@formatjs/fast-memoize@3.1.7':
+    resolution: {integrity: sha512-zXfhLpvA6T7+efdt9JLbBwZ00tT7NsBMDVnDu8rpHeNNv8KfRZAMo2gkG0k9lK/Nzc//3kJ9pImsfuJxk3KhUA==}
+
+  '@formatjs/intl-getcanonicallocales@3.2.12':
+    resolution: {integrity: sha512-THqQLTJUH2z2A7oE1guW8VzpGpsGFxwWZ+l8cI8Bk75xUU8DxtJoLfKl+5a6fYK26GeDWDWE0UbDhE5SwcLoFg==}
+
+  '@formatjs/intl-locale@5.3.12':
+    resolution: {integrity: sha512-bI5CrvuC6A5PMOIiHX+6ETTHXzUofHw1U/fkI59sQJ+BFbkglxIVVncFPxHf4IHmAqAs/Rlp2bdzTEcLaq2tQw==}
+
+  '@formatjs/intl-localematcher@0.9.0':
+    resolution: {integrity: sha512-Z7TD3ssNry1Av1dVDoq/mzpxGyxqWwU0ClWEo+BB3k0JQTeQvUGmeK9WZGYvlqStS0UqkaKXk3dfjsb6NaHAxw==}
+
+  '@formatjs/intl-numberformat@9.4.3':
+    resolution: {integrity: sha512-absVu2I7FlWl+Buictw2PL8Fl385uab3bEA3TCCTu+0DBHHFE+RTbmPmj0nUVO82U1b2Qw3/OA2I7KKLI48EpQ==}
+
+  '@formatjs/intl-pluralrules@6.3.16':
+    resolution: {integrity: sha512-iOqCpBM2fo7bbbWqno+yN9WioepV01N2q3KawFZhRYADzijpzmIIA6cbFXrriCI1Mt2q5c7mceiKHoQkEFf0/Q==}
+
+  '@formatjs/intl-supportedvaluesof@2.3.11':
+    resolution: {integrity: sha512-oRzzAbJA08psr6AO0jgXAdx4HZ2vGNeja1fgaio2R2ne8DLtGPV+fa3gxI/t8J2dNPOndrwVAZVVfbH6GDFDwA==}
 
   '@isaacs/cliui@9.0.0':
     resolution: {integrity: sha512-AokJm4tuBHillT+FpMtxQ60n8ObyXBatq7jD2/JA9dxbDDokKQm8KMht5ibGzLVU9IJDIKK4TPKgMHEYMn3lMg==}
@@ -2978,6 +3023,9 @@ packages:
       react-native-windows:
         optional: true
 
+  lottie-web@5.12.2:
+    resolution: {integrity: sha512-uvhvYPC8kGPjXT3MyKMrL3JitEAmDMp30lVkuq/590Mw9ok6pWcFCwXJveo0t5uqYw1UREQHofD+jVpdjBv8wg==}
+
   lru-cache@10.4.3:
     resolution: {integrity: sha512-JNAzZcXrCt42VGLuYz0zfAzDfAvJWW6AfYlDBQyDV5DClI2m5sAmK+OIO7s59XfsRsWHp02jAJrRadPRGTt6SQ==}
 
@@ -3552,6 +3600,22 @@ packages:
       react: '>=18.0.0'
       react-is: '>=18.0.0'
 
+  react-native-drawer-layout@5.0.0-alpha.19:
+    resolution: {integrity: sha512-WBO10LyQw2b7j1XmhtXHQ5obH2HIb1tBCQSFbUlJxYSzkvw1+W35B+pblyNGa6v3Fdo5qXXfF/yFBz59gaVdSw==}
+    peerDependencies:
+      react: '>= 19.2.0'
+      react-native: '*'
+      react-native-gesture-handler: '>= 3.0.0'
+      react-native-reanimated: 4.7.1
+      react-native-worklets: 0.13.0
+
+  react-native-edge-to-edge@1.8.1:
+    resolution: {integrity: sha512-bhvsKqeX9PGkY9wBUk9vni/tJNJdKtLPbs/j3e/3CdV4JmUWfTXYYoL+4Hc8Wmej+5eJxkc8KOFa454ruFWBCA==}
+    deprecated: This package is deprecated. Set edgeToEdgeEnabled=true in android/gradle.properties instead.
+    peerDependencies:
+      react: '*'
+      react-native: '*'
+
   react-native-gesture-handler@3.3.0:
     resolution: {integrity: sha512-ZCTlJ09nE3GPbm7J74lvwpxmx1TQ/7MDlHZNLARVYTN82k21mJUJ7BmI9eWjEi8eevHiAudI5O1Cpnt0rJfoJA==}
     peerDependencies:
@@ -4029,6 +4093,11 @@ packages:
 
   use-latest-callback@0.2.6:
     resolution: {integrity: sha512-FvRG9i1HSo0wagmX63Vrm8SnlUU3LMM3WyZkQ76RnslpBrX694AdG4A0zQBx2B3ZifFA0yv/BaEHGBnEax5rZg==}
+    peerDependencies:
+      react: '>=16.8'
+
+  use-latest-callback@0.3.5:
+    resolution: {integrity: sha512-YDTKaeth5egzJLLKxGDvfoajkiZbNbLEaZnvnHXjSt5FDVy1WgPLwXXKdtBDIXDeakBrE4wBJuf2FTFBXzVw4Q==}
     peerDependencies:
       react: '>=16.8'
 
@@ -5157,6 +5226,35 @@ snapshots:
       react-dom: 19.3.0(react@19.3.0)
 
   '@floating-ui/utils@0.2.12': {}
+
+  '@formatjs/bigdecimal@0.2.7': {}
+
+  '@formatjs/fast-memoize@3.1.7': {}
+
+  '@formatjs/intl-getcanonicallocales@3.2.12': {}
+
+  '@formatjs/intl-locale@5.3.12':
+    dependencies:
+      '@formatjs/intl-getcanonicallocales': 3.2.12
+      '@formatjs/intl-supportedvaluesof': 2.3.11
+
+  '@formatjs/intl-localematcher@0.9.0':
+    dependencies:
+      '@formatjs/fast-memoize': 3.1.7
+
+  '@formatjs/intl-numberformat@9.4.3':
+    dependencies:
+      '@formatjs/bigdecimal': 0.2.7
+      '@formatjs/intl-localematcher': 0.9.0
+
+  '@formatjs/intl-pluralrules@6.3.16':
+    dependencies:
+      '@formatjs/bigdecimal': 0.2.7
+      '@formatjs/intl-localematcher': 0.9.0
+
+  '@formatjs/intl-supportedvaluesof@2.3.11':
+    dependencies:
+      '@formatjs/fast-memoize': 3.1.7
 
   '@isaacs/cliui@9.0.0': {}
 
@@ -6948,6 +7046,8 @@ snapshots:
       react: 19.3.0
       react-native: 0.88.0(patch_hash=dc5394dccd29a3cc7ec7079a8fae133938d92a99a5f7fdd73ed5ef94dd868a96)(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/metro-config@0.88.0(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.3.0)(react@19.3.0)(supports-color@8.1.1)
 
+  lottie-web@5.12.2: {}
+
   lru-cache@10.4.3: {}
 
   lru-cache@11.5.3: {}
@@ -7469,6 +7569,20 @@ snapshots:
       react: 19.3.0
       react-is: 19.3.1
 
+  react-native-drawer-layout@5.0.0-alpha.19(33f69aaaed39849d3e89a8bb07a05106):
+    dependencies:
+      react: 19.3.0
+      react-native: 0.88.0(patch_hash=dc5394dccd29a3cc7ec7079a8fae133938d92a99a5f7fdd73ed5ef94dd868a96)(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/metro-config@0.88.0(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.3.0)(react@19.3.0)(supports-color@8.1.1)
+      react-native-gesture-handler: 3.3.0(react-native@0.88.0(patch_hash=dc5394dccd29a3cc7ec7079a8fae133938d92a99a5f7fdd73ed5ef94dd868a96)(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/metro-config@0.88.0(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.3.0)(react@19.3.0)(supports-color@8.1.1))(react@19.3.0)
+      react-native-reanimated: 4.7.1(patch_hash=557541b187597797db03adf716a768717a574dbdff8b221683f4b3f7bd912185)(react-native-worklets@0.13.0(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/metro-config@0.88.0(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(react-native@0.88.0(patch_hash=dc5394dccd29a3cc7ec7079a8fae133938d92a99a5f7fdd73ed5ef94dd868a96)(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/metro-config@0.88.0(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.3.0)(react@19.3.0)(supports-color@8.1.1))(react@19.3.0)(supports-color@8.1.1))(react-native@0.88.0(patch_hash=dc5394dccd29a3cc7ec7079a8fae133938d92a99a5f7fdd73ed5ef94dd868a96)(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/metro-config@0.88.0(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.3.0)(react@19.3.0)(supports-color@8.1.1))(react@19.3.0)
+      react-native-worklets: 0.13.0(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/metro-config@0.88.0(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(react-native@0.88.0(patch_hash=dc5394dccd29a3cc7ec7079a8fae133938d92a99a5f7fdd73ed5ef94dd868a96)(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/metro-config@0.88.0(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.3.0)(react@19.3.0)(supports-color@8.1.1))(react@19.3.0)(supports-color@8.1.1)
+      use-latest-callback: 0.3.5(react@19.3.0)
+
+  react-native-edge-to-edge@1.8.1(react-native@0.88.0(patch_hash=dc5394dccd29a3cc7ec7079a8fae133938d92a99a5f7fdd73ed5ef94dd868a96)(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/metro-config@0.88.0(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.3.0)(react@19.3.0)(supports-color@8.1.1))(react@19.3.0):
+    dependencies:
+      react: 19.3.0
+      react-native: 0.88.0(patch_hash=dc5394dccd29a3cc7ec7079a8fae133938d92a99a5f7fdd73ed5ef94dd868a96)(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/metro-config@0.88.0(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.3.0)(react@19.3.0)(supports-color@8.1.1)
+
   react-native-gesture-handler@3.3.0(react-native@0.88.0(patch_hash=dc5394dccd29a3cc7ec7079a8fae133938d92a99a5f7fdd73ed5ef94dd868a96)(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/metro-config@0.88.0(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.3.0)(react@19.3.0)(supports-color@8.1.1))(react@19.3.0):
     dependencies:
       '@types/react-test-renderer': 19.3.0
@@ -7956,6 +8070,10 @@ snapshots:
       '@types/react': 19.3.0
 
   use-latest-callback@0.2.6(react@19.3.0):
+    dependencies:
+      react: 19.3.0
+
+  use-latest-callback@0.3.5(react@19.3.0):
     dependencies:
       react: 19.3.0
 

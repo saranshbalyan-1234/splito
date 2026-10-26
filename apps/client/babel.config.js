@@ -41,6 +41,7 @@ module.exports = function (api) {
       ],
     ],
     plugins: [
+      // Production bundles carry message ids only; src/locale/i18n.ts loads the compiled catalogs.
       '@lingui/babel-plugin-lingui-macro',
       ['babel-plugin-react-compiler', {target: '19'}],
       [

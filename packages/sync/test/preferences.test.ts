@@ -1,6 +1,6 @@
 import {beforeEach, expect, test} from 'bun:test'
 
-import {DEFAULT_CATEGORIES, getPref, PREFS, resetAllPrefs, resetPref, setPref} from '../src/preferences'
+import {DEFAULT_CATEGORIES, getPref, type PrefKey, prefFrom, PREFS, resetAllPrefs, resetPref, setPref} from '../src/preferences'
 import {openSqlStore} from '../src/sqlStore'
 import type {Store} from '../src/store'
 import type {MutationCtx} from '../src/types'
@@ -16,7 +16,7 @@ beforeEach(async () => {
 test('default returned when unset', async () => {
   expect(await getPref(s, 'defaultCurrency')).toBe('INR')
   expect(await getPref(s, 'includeGroupsDefault')).toBe(true)
-  expect(await getPref(s, 'tabs')).toEqual(['people', 'groups', 'activity', 'profile'])
+  expect(await getPref(s, 'tabs')).toEqual(['people', 'groups', 'analytics', 'activity'])
 })
 
 test('set then get', async () => {
@@ -38,15 +38,47 @@ test('account pref enqueues an outbox op, device pref does not', async () => {
   expect(await getPref(s, 'haptics')).toBe(false)
 })
 
-test('tabs must keep a route to Settings', async () => {
-  await expect(setPref(s, ctx, 'tabs', ['people', 'groups'])).rejects.toThrow('INVALID_PREF')
-  await setPref(s, ctx, 'tabs', ['groups', 'profile'])
-  expect(await getPref(s, 'tabs')).toEqual(['groups', 'profile'])
+test('tabs: any non-empty set of known tabs, no duplicates; Profile is not a tab', async () => {
+  await setPref(s, ctx, 'tabs', ['groups'])
+  expect(await getPref(s, 'tabs')).toEqual(['groups'])
+  await expect(setPref(s, ctx, 'tabs', [])).rejects.toThrow('INVALID_PREF')
+  await expect(setPref(s, ctx, 'tabs', ['groups', 'groups'])).rejects.toThrow('INVALID_PREF')
+  await expect(setPref(s, ctx, 'tabs', ['groups', 'profile'] as never)).rejects.toThrow('INVALID_PREF')
+  await setPref(s, ctx, 'tabs', ['activity', 'people'])
+  expect(await getPref(s, 'tabs')).toEqual(['activity', 'people'])
+})
+
+test("a list stored before the header-bell build keeps Activity where it was", async () => {
+  // The bell build dropped 'activity' on read only, so the stored value still names it.
+  await s.transaction(async tx => {
+    await tx.put({type: 'preference', id: 'tabs', data: {value: ['groups', 'activity', 'people']}, version: 1, deleted: false, updatedAt: 1})
+    await tx.put({type: 'preference', id: 'homeTab', data: {value: 'activity'}, version: 1, deleted: false, updatedAt: 1})
+  })
+  expect(await getPref(s, 'tabs')).toEqual(['groups', 'activity', 'people'])
+  expect(await getPref(s, 'homeTab')).toBe('activity')
 })
 
 test('home tab must be a visible tab', async () => {
-  await setPref(s, ctx, 'tabs', ['groups', 'profile'])
+  await setPref(s, ctx, 'tabs', ['groups', 'analytics'])
   expect(await getPref(s, 'homeTab')).toBe('groups')
+})
+
+test('Activity is a tab again: a stored order keeps it and its place', async () => {
+  const stored = (id: string, value: unknown) =>
+    s.transaction(async tx => tx.put({type: 'preference', id, data: {value}, version: 1, deleted: false, updatedAt: 1}))
+  await stored('tabs', ['activity', 'analytics', 'people'])
+  await stored('homeTab', 'activity')
+  expect(await getPref(s, 'tabs')).toEqual(['activity', 'analytics', 'people'])
+  expect(await getPref(s, 'homeTab')).toBe('activity')
+  await setPref(s, ctx, 'tabs', ['groups', 'activity'])
+  expect(await getPref(s, 'tabs')).toEqual(['groups', 'activity'])
+})
+
+test('an order saved while Profile was a tab predates the Analytics tab, so Analytics joins it', async () => {
+  await s.transaction(async tx =>
+    tx.put({type: 'preference', id: 'tabs', data: {value: ['people', 'groups', 'activity', 'profile']}, version: 1, deleted: false, updatedAt: 1}),
+  )
+  expect(await getPref(s, 'tabs')).toEqual(['people', 'groups', 'activity', 'analytics'])
 })
 
 test('reset restores default', async () => {
@@ -70,6 +102,64 @@ test('categories rename keeps id', async () => {
 test('categories with duplicate ids rejected', async () =>
   expect(setPref(s, ctx, 'categories', [DEFAULT_CATEGORIES[0]!, DEFAULT_CATEGORIES[0]!])).rejects.toThrow('INVALID_PREF'))
 
+test('dark theme: Bluesky dim or dark, Dim by default (owner rule 14)', async () => {
+  expect(await getPref(s, 'darkTheme')).toBe('dim')
+  await setPref(s, ctx, 'darkTheme', 'dark')
+  expect(await getPref(s, 'darkTheme')).toBe('dark')
+  await expect(setPref(s, ctx, 'darkTheme', 'light' as never)).rejects.toThrow('INVALID_PREF')
+})
+
 test('every default passes its own validator', () => {
   for (const def of Object.values(PREFS)) expect(def.validate(def.default)).toBe(true)
+})
+
+test('analytics opens on this year as charts; both are choices with a reset', async () => {
+  expect(await getPref(s, 'analyticsPeriod')).toBe('year')
+  expect(await getPref(s, 'analyticsView')).toBe('charts')
+  await setPref(s, ctx, 'analyticsView', 'table')
+  await expect(setPref(s, ctx, 'analyticsPeriod', 'decade' as never)).rejects.toThrow('INVALID_PREF')
+  await resetPref(s, ctx, 'analyticsView')
+  expect(await getPref(s, 'analyticsView')).toBe('charts')
+})
+
+test('itemize charges remember amount or % per kind: tax, tip and service %, discount amount by default', async () => {
+  expect(await getPref(s, 'itemizeAdjustmentModes')).toEqual({tax: 'percent', tip: 'percent', service: 'percent', discount: 'amount'})
+  await setPref(s, ctx, 'itemizeAdjustmentModes', {tax: 'amount', tip: 'percent', service: 'percent', discount: 'percent'})
+  expect((await getPref(s, 'itemizeAdjustmentModes')).tax).toBe('amount')
+  await expect(setPref(s, ctx, 'itemizeAdjustmentModes', {tax: 'percent'} as never)).rejects.toThrow('INVALID_PREF')
+  await expect(
+    setPref(s, ctx, 'itemizeAdjustmentModes', {tax: 'rate', tip: 'percent', service: 'percent', discount: 'amount'} as never),
+  ).rejects.toThrow('INVALID_PREF')
+})
+
+test('prefFrom reads a value from loaded preference rows exactly as getPref reads the store', async () => {
+  const keys = Object.keys(PREFS) as PrefKey[]
+  const same = async () => {
+    const rows = await s.getAll<{value: unknown}>('preference')
+    for (const k of keys) expect(prefFrom(rows, k)).toEqual(await getPref(s, k))
+  }
+  await same()
+  await setPref(s, ctx, 'tabs', ['groups', 'people', 'analytics', 'activity'])
+  await setPref(s, ctx, 'homeTab', 'groups')
+  await setPref(s, ctx, 'accent', '#7c3aed')
+  await same()
+  await resetPref(s, ctx, 'accent')
+  await same()
+  // A stored home tab the tab list no longer holds falls back to the first tab.
+  await setPref(s, ctx, 'tabs', ['people', 'groups', 'analytics'])
+  await same()
+  expect(prefFrom([], 'defaultCurrency')).toBe('INR')
+})
+
+test('money input, cash rounding and money colours (F-310, F-402, F-1801)', async () => {
+  expect(await getPref(s, 'amount.shorthand')).toBe(true)
+  expect(await getPref(s, 'amount.keypad')).toBe(true)
+  expect(await getPref(s, 'split.roundCash')).toBe(false)
+  expect(await getPref(s, 'split.roundTo')).toBe(1)
+  expect(await getPref(s, 'moneyPalette')).toBe('default')
+  await setPref(s, ctx, 'split.roundTo', 10)
+  expect(await getPref(s, 'split.roundTo')).toBe(10)
+  await expect(setPref(s, ctx, 'split.roundTo', 3 as never)).rejects.toThrow('INVALID_PREF')
+  await expect(setPref(s, ctx, 'moneyPalette', 'red' as never)).rejects.toThrow('INVALID_PREF')
+  expect(PREFS['amount.keypad'].scope).toBe('device')
 })

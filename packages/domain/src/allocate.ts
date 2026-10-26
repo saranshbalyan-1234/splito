@@ -1,3 +1,4 @@
+import {getCurrency} from './currency'
 import {DomainError} from './errors'
 
 /**
@@ -22,4 +23,49 @@ export function allocate(total: bigint, weights: ReadonlyArray<{id: string; weig
     leftover -= 1n
   }
   return Object.fromEntries(parts.map(p => [p.id, neg ? -p.quota : p.quota]))
+}
+
+/** One cash unit of a currency in minor units: `roundTo` whole units (1, 5, 10 ...), so INR 10 is 1000n and JPY 10 is 10n. */
+export function cashUnit(code: string, roundTo: number): bigint {
+  if (!Number.isInteger(roundTo) || roundTo <= 0) throw new DomainError('INVALID_ROUNDING')
+  return BigInt(roundTo) * 10n ** BigInt(getCurrency(code).scale)
+}
+
+/** `cashUnit` back to whole currency units (INR 1000n -> 10), for labels and edit forms. */
+export function cashUnitWhole(code: string, unit: bigint): number {
+  return Number(unit / 10n ** BigInt(getCurrency(code).scale))
+}
+
+/** A cash-rounded split: whole-unit shares plus the visible remainder and who carries it. */
+export type CashAllocation = {shares: Record<string, bigint>; remainder: bigint; remainderTo?: string}
+
+/**
+ * Cash rounding: every share is a whole multiple of `unit` (from `cashUnit`)
+ * and the part of `total` that is not a whole unit is a visible remainder,
+ * never dropped. Whole units go out by `allocate` (largest remainder, ties by
+ * id); the remainder joins the share rounded furthest below its exact value
+ * (ties by id), so the result is the same whatever the input order and always
+ * sums to `total`. A negative total (a refund) mirrors a positive one.
+ */
+export function allocateCash(total: bigint, weights: ReadonlyArray<{id: string; weight: bigint}>, unit: bigint): CashAllocation {
+  if (unit <= 0n) throw new DomainError('INVALID_ROUNDING')
+  const neg = total < 0n
+  const t = neg ? -total : total
+  const units = t / unit
+  const remainder = t - units * unit
+  const shares = allocate(units, weights)
+  for (const id in shares) shares[id] = shares[id]! * unit
+  let remainderTo: string | undefined
+  if (remainder !== 0n) {
+    const W = weights.reduce((a, w) => a + w.weight, 0n)
+    // Shortfall in units of 1/W: the exact share t*w/W minus the rounded one.
+    let best: bigint | undefined
+    for (const w of [...weights].sort((x, y) => (x.id < y.id ? -1 : 1))) {
+      const short = t * w.weight - shares[w.id]! * W
+      if (best === undefined || short > best) [best, remainderTo] = [short, w.id]
+    }
+    shares[remainderTo!] = shares[remainderTo!]! + remainder
+  }
+  if (neg) for (const id in shares) shares[id] = -shares[id]!
+  return {shares, remainder: neg ? -remainder : remainder, ...(remainderTo === undefined ? {} : {remainderTo})}
 }

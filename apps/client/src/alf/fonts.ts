@@ -14,7 +14,8 @@ const fontScaleMultipliers: Record<Device['fontScale'], number> = {
   '-1': 1 - factor * 1,
   '0': 1, // default
   '1': 1 + factor * 1,
-  '2': 1 + factor * 1, // unused
+  // Splito offers a fourth size, "Largest" (Settings > Appearance > Text size).
+  '2': 1 + factor * 2,
 }
 
 export function computeFontScaleMultiplier(scale: Device['fontScale']) {

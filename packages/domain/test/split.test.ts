@@ -72,6 +72,43 @@ describe('computeShares', () => {
         discount: 50n,
       }),
     ).toEqual({a: 920n, b: 230n}))
+  test('item portions: 2 of 3 beers go to one person', () =>
+    expect(
+      computeShares(900n, {
+        mode: 'items',
+        items: [{id: 'beers', amount: 900n, participants: [{id: 'a', weight: 2}, 'b']}],
+        tax: 0n,
+        tip: 0n,
+        discount: 0n,
+      }),
+    ).toEqual({a: 600n, b: 300n}))
+  test('item portions: tax follows each subtotal, and every minor unit is kept', () => {
+    const shares = computeShares(1001n, {
+      mode: 'items',
+      items: [
+        {id: 'beers', amount: 700n, participants: [{id: 'a', weight: 2}, 'b']},
+        {id: 'chips', amount: 201n, participants: ['b', {id: 'c', weight: 1}]},
+      ],
+      tax: 100n,
+      tip: 0n,
+      discount: 0n,
+    })
+    // Beers 467 / 233 (2:1, remainder to the larger), chips 101 / 100; tax 100 pro rata to 467 : 334 : 100.
+    expect(shares).toEqual({a: 519n, b: 371n, c: 111n})
+    expect(Object.values(shares).reduce((x, y) => x + y, 0n)).toBe(1001n)
+  })
+  test('item portions must be whole and positive', () => {
+    for (const weight of [0, -1, 1.5])
+      expect(() =>
+        computeShares(100n, {
+          mode: 'items',
+          items: [{id: 'i', amount: 100n, participants: [{id: 'a', weight}]}],
+          tax: 0n,
+          tip: 0n,
+          discount: 0n,
+        }),
+      ).toThrow('NON_POSITIVE_WEIGHT')
+  })
   test('items total mismatch', () =>
     expect(() =>
       computeShares(999n, {mode: 'items', items: [{id: 'i', amount: 100n, participants: ['a']}], tax: 0n, tip: 0n, discount: 0n}),
@@ -99,4 +136,12 @@ describe('validateExpense', () => {
     expect(() => validateExpense({total: 100n, payers: {a: 100n}, shares: {a: 50n}})).toThrow('TOTAL_MISMATCH'))
   test('payerNotParticipant', () =>
     expect(() => validateExpense({total: 100n, payers: {z: 100n}, shares: {a: 50n, b: 50n}})).not.toThrow())
+  test('a payer with the opposite sign to the total is refused', () =>
+    expect(() => validateExpense({total: 100n, payers: {a: 150n, b: -50n}, shares: {a: 50n, b: 50n}})).toThrow('SIGN_MISMATCH'))
+  test('a share with the opposite sign to the total is refused', () =>
+    expect(() => validateExpense({total: 100n, payers: {a: 100n}, shares: {a: -25n, b: 125n}})).toThrow('SIGN_MISMATCH'))
+  test('a refund (negative total) keeps every part negative', () => {
+    expect(() => validateExpense({total: -100n, payers: {a: -100n}, shares: {a: -50n, b: -50n}})).not.toThrow()
+    expect(() => validateExpense({total: -100n, payers: {a: -100n}, shares: {a: 50n, b: -150n}})).toThrow('SIGN_MISMATCH')
+  })
 })

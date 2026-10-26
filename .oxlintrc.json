@@ -1,0 +1,140 @@
+{
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  // Adapted from bluesky-social/social-app@4e4ad9c (MIT) - .oxlintrc.json.
+  // Errors only (ARCHITECTURE.md 20): Bluesky's warn rules are errors here; its type-aware rules wait for oxlint-tsgolint; its jsPlugins (bsky-internal, react-native-a11y, simple-import-sort) are not installed.
+  // Existing violations live in oxlint-suppressions.json (oxlint reads it; new and stale entries both fail; `oxlint --prune-suppressions` shrinks it).
+  "plugins": ["typescript", "react", "import"],
+  "categories": {
+    "correctness": "off"
+  },
+  "env": {
+    "builtin": true,
+    "es2026": true,
+    "browser": true,
+    "node": true
+  },
+  "ignorePatterns": [
+    "**/node_modules/**",
+    "**/dist/**",
+    "**/locales/**",
+    "apps/client/modules/**",
+    "patches/**"
+  ],
+  "rules": {
+    "for-direction": "error",
+    "no-async-promise-executor": "error",
+    "no-compare-neg-zero": "error",
+    "no-cond-assign": "error",
+    "no-constant-binary-expression": "error",
+    "no-constant-condition": "error",
+    "no-debugger": "error",
+    "no-delete-var": "error",
+    "no-dupe-else-if": "error",
+    "no-duplicate-case": "error",
+    "no-empty-character-class": "error",
+    "no-empty-static-block": "error",
+    "no-ex-assign": "error",
+    "no-extra-boolean-cast": "error",
+    "no-global-assign": "error",
+    "no-invalid-regexp": "error",
+    "no-loss-of-precision": "error",
+    "no-misleading-character-class": "error",
+    "no-nonoctal-decimal-escape": "error",
+    "no-regex-spaces": "error",
+    "no-self-assign": "error",
+    "no-shadow-restricted-names": "error",
+    "no-unexpected-multiline": "error",
+    "no-unsafe-finally": "error",
+    "no-unused-labels": "error",
+    "no-unused-private-class-members": "error",
+    "no-useless-backreference": "error",
+    "no-useless-catch": "error",
+    "require-yield": "error",
+    "use-isnan": "error",
+    "valid-typeof": "error",
+    "no-array-constructor": "error",
+    "no-var": "error",
+    "prefer-rest-params": "error",
+    "prefer-spread": "error",
+    "no-unused-vars": [
+      "error",
+      {
+        "argsIgnorePattern": "^_",
+        "varsIgnorePattern": "^_.+",
+        "caughtErrors": "none",
+        "ignoreRestSiblings": true
+      }
+    ],
+    "no-unused-expressions": ["error", {"allowTernary": true}],
+    "no-restricted-imports": [
+      "error",
+      {
+        "paths": [
+          {
+            "name": "react",
+            "importNames": ["React", "default"],
+            "message": "React is already in the global type namespace. Use named imports for runtime modules."
+          },
+          {
+            "name": "react-native",
+            "importNames": ["Modal"],
+            "message": "Use #/components/Dialog or #/components/FormSheet (ARCHITECTURE.md 4)."
+          },
+          {
+            "name": "expo-haptics",
+            "message": "Use useHaptics() from #/lib/haptics."
+          }
+        ]
+      }
+    ],
+    "import/default": "error",
+    "import/no-named-as-default": "error",
+    "import/no-duplicates": "error",
+    "import/consistent-type-specifier-style": ["error", "prefer-inline"],
+    "react/rules-of-hooks": "error",
+    "react/exhaustive-deps": "error",
+    "react/display-name": "error",
+    "react/jsx-key": "error",
+    "react/jsx-no-comment-textnodes": "error",
+    "react/jsx-no-duplicate-props": "error",
+    "react/jsx-no-target-blank": "error",
+    "react/jsx-no-undef": "error",
+    "react/no-children-prop": "error",
+    "react/no-danger-with-children": "error",
+    "react/no-direct-mutation-state": "error",
+    "react/no-find-dom-node": "error",
+    "react/no-is-mounted": "error",
+    "react/no-render-return-value": "error",
+    "react/no-string-refs": "error",
+    "react/no-unknown-property": "error",
+    "typescript/ban-ts-comment": ["error", {"ts-expect-error": "allow-with-description"}],
+    "typescript/consistent-type-imports": ["error", {"prefer": "type-imports", "fixStyle": "inline-type-imports"}],
+    "typescript/no-duplicate-enum-values": "error",
+    "typescript/no-explicit-any": "error",
+    "typescript/no-extra-non-null-assertion": "error",
+    "typescript/no-misused-new": "error",
+    "typescript/no-namespace": "error",
+    "typescript/no-non-null-asserted-optional-chain": "error",
+    "typescript/no-this-alias": "error",
+    "typescript/no-unnecessary-type-constraint": "error",
+    "typescript/no-unsafe-declaration-merging": "error",
+    "typescript/no-wrapper-object-types": "error",
+    "typescript/prefer-as-const": "error",
+    "typescript/prefer-namespace-keyword": "error",
+    "typescript/triple-slash-reference": "error"
+  },
+  "overrides": [
+    {
+      "files": ["**/*.test.{ts,tsx}", "**/e2e/**", "**/scripts/**", "packages/*/test/**"],
+      "rules": {
+        "typescript/no-explicit-any": "off"
+      }
+    },
+    {
+      "files": ["apps/client/src/lib/haptics/**"],
+      "rules": {
+        "no-restricted-imports": "off"
+      }
+    }
+  ]
+}

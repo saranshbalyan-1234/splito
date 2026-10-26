@@ -1,23 +1,38 @@
-import {type LinkingOptions} from '@react-navigation/native'
+import {getStateFromPath, type LinkingOptions} from '@react-navigation/native'
 
-import {type RootStackParams} from '#/lib/routes/types'
+import {type RootStackParams, type TabParams} from '#/lib/routes/types'
+import {redirectOldPath, ROUTE_PATHS, type RouteName} from '#/routes'
 
+const TABS: RouteName[] = [
+  'People',
+  'Groups',
+  'Analytics',
+  'Activity',
+] satisfies (keyof TabParams)[]
+
+function pathsFor(names: RouteName[]) {
+  return Object.fromEntries(
+    names.map(name => [name, ROUTE_PATHS[name].slice(1)]),
+  )
+}
+
+/*
+ * Native nests the tab routes in `Tabs`. `initialRouteName` puts the tabs
+ * under a deep-linked screen, so its back button returns into the app.
+ */
 export const linking: LinkingOptions<RootStackParams> = {
   prefixes: ['splito://', 'https://splito.app'],
+  getStateFromPath: (path, options) =>
+    getStateFromPath(redirectOldPath(path), options),
   config: {
+    initialRouteName: 'Tabs',
     screens: {
-      Tabs: {
-        screens: {
-          People: '',
-          Groups: 'groups',
-          Activity: 'activity',
-          Profile: 'profile',
-        },
-      },
-      Person: 'people/:personId',
-      Group: 'groups/:groupId',
-      AddExpense: 'expense/new',
-      Settings: 'settings',
+      Tabs: {screens: pathsFor(TABS)},
+      ...pathsFor(
+        (Object.keys(ROUTE_PATHS) as RouteName[]).filter(
+          name => !TABS.includes(name),
+        ),
+      ),
     },
   },
 }
