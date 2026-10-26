@@ -1159,9 +1159,11 @@ labelled sidebar); **wide** = web 1300 px and up (Bluesky `gtTablet`, right colu
   different, make them same". *Why:* "make notification
   as activity and move to bottom". *Where:* `view/shell/bottom-bar/`, `view/shell/desktop/LeftNav.tsx`,
   `navigation/Drawer.tsx`.
-- **Search & Ask: one drawer for search and AI.** A search icon sits in the header of every top-level page
+- **Search & Ask: one drawer for search and AI.** An AI icon (Lucide `Sparkles`, the widely recognised AI
+  mark; not a magnifier, not `Zap`, which reads as "fast") sits in the header of every top-level page
   (Home, Groups, Analytics, Activity), to the LEFT of that page's action (on Home, left of Add friend), on every
-  platform. Tapping it opens the **Search & Ask drawer**: a full-height drag-to-close bottom drawer on phones,
+  platform; accessibility label "Search or ask Splito", tooltip on web. Tapping it opens the **Search & Ask
+  drawer**: a full-height drag-to-close bottom drawer on phones,
   a large centred popup (command-palette style, ~720 px) on rail/desktop. Top: one Bluesky `SearchInput`
   ("Search or ask anything"), autofocused. Empty: recent searches and suggested questions. Typing shows grouped
   live results (People, Groups, Expenses: title, notes, items, category, amounts like "> 1000", dates like
@@ -1726,6 +1728,7 @@ Every owner decision, in the order it was made (all 2026-10-26). "Replaced" name
 | 71 | "that search to be available globally on home section instead of a separate page" | Global search field at the top of Home with in-place grouped results; Search is no longer a page or nav item; freed bottom-bar slot goes to Ask Splito (centre) | §§ 26.3, 26.12, 26.19 | Search page + Search tab (rows 66, 69) |
 | 72 | "the search option to be left of add people on the header, which expands on click" | Global search is a header icon left of Add friend that expands into the search field | §§ 26.3, 26.4 | Search field always visible at the top of Home (row 71) |
 | 73 | "this search should open a drawer instead which would support ai as well" | Search icon (every top-level header) opens the Search & Ask drawer: search results + Ask Splito chat in one place; no Search or Ask pages; bottom bar back to Home, Groups, Analytics, Activity | §§ 26.3, 26.4, 26.19 | Expanding header search (72), Ask Splito centre tab and screen (71) |
+| 74 | "make it as a ai icon like flash or something ... basically we are combining ai and search" | The Search & Ask header button uses the Lucide Sparkles AI icon (not a magnifier) | § 26.3 | Magnifier icon |
 
 New decisions follow § 0 rule 9: rewrite the rule in its topic so only the current truth remains, then add a
 row here.
