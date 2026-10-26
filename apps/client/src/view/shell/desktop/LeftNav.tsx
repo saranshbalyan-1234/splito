@@ -20,7 +20,12 @@ import {
   magnitude,
   ZERO,
 } from '@splito/domain'
-import {type Group, type TabId} from '@splito/sync'
+import {
+  type Expense,
+  type Group,
+  type Repayment,
+  type TabId,
+} from '@splito/sync'
 import {Trans, useLingui} from '@lingui/react/macro'
 import {useNavigation, useNavigationState} from '@react-navigation/native'
 
@@ -90,7 +95,7 @@ import {useAnalytics} from '#/analytics'
 import {IS_NATIVE} from '#/env'
 import {useShouldReduceMotion} from '#/motion/useShouldReduceMotion'
 import {router} from '#/routes'
-import {groupActivity, sortGroups} from '#/screens/Groups/filter'
+import {groupLastActive, sortGroups} from '#/screens/Groups/filter'
 import {getComposeButtonLayout} from './composeButtonLayout'
 
 /** The left nav's tab destinations; the tab navigator's route names on native. */
@@ -500,6 +505,8 @@ export function RecentGroups() {
   const locale = useNumberLocale()
   const me = useMe()
   const groups = useEntities<Group>('group')
+  const expenses = useEntities<Expense>('expense')
+  const repayments = useEntities<Repayment>('repayment')
   const ledger = useLedger()
   const [defaultCurrency = 'INR'] = usePref('defaultCurrency')
   const route = useNavigationState(state => getCurrentRoute(state))
@@ -509,7 +516,7 @@ export function RecentGroups() {
       : undefined
 
   const recent = useMemo(() => {
-    if (!me || !groups || !ledger) return []
+    if (!me || !groups || !ledger || !expenses || !repayments) return []
     const live = groups.filter(g => !g.data.archived)
     const balances = groupBalances(myBalances(ledger, me.id, live))
     return sortGroups(
@@ -522,9 +529,12 @@ export function RecentGroups() {
         members: [],
       })),
       'recent',
-      {currency: defaultCurrency, activity: groupActivity(ledger)},
+      {
+        currency: defaultCurrency,
+        activity: groupLastActive(groups, [...expenses, ...repayments]),
+      },
     ).slice(0, RECENT_GROUPS)
-  }, [me, groups, ledger, defaultCurrency])
+  }, [me, groups, expenses, repayments, ledger, defaultCurrency])
 
   if (recent.length === 0) return null
 
@@ -539,7 +549,7 @@ export function RecentGroups() {
           a.leading_snug,
           t.atoms.text_contrast_medium,
         ]}>
-        <Trans>Recent groups</Trans>
+        <Trans>Recently active groups</Trans>
       </Text>
       {recent.map(group => {
         const current = group.id === openGroupId

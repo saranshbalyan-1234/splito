@@ -1,11 +1,11 @@
 import {expect, test} from 'bun:test'
-import {type LedgerRecord} from '@splito/domain'
+import {type Entity, type Group} from '@splito/sync'
 
 import {
   DEFAULT_GROUP_FILTERS,
   filterGroups,
   type GroupRowData,
-  groupActivity,
+  groupLastActive,
   matchesGroupSearch,
   sortGroups,
 } from './filter'
@@ -55,8 +55,8 @@ test('sort: name, biggest balance in the currency, latest activity', () => {
   const ctx = {
     currency: 'INR',
     activity: new Map([
-      ['date', '2026-10-20'],
-      ['goa', '2026-10-01'],
+      ['date', 2000],
+      ['goa', 1000],
     ]),
   }
   expect(ids(sortGroups(active, 'name', ctx))).toEqual(['date', 'flat', 'goa'])
@@ -79,29 +79,32 @@ test('search matches the group name or any member, ignoring case', () => {
   expect(matchesGroupSearch(rows[1]!, '')).toBe(true)
 })
 
-test('activity is the latest live record date per group', () => {
-  const rec = (
-    id: string,
-    groupId: string | null,
-    date: string,
-    deleted = false,
-  ) =>
+test('last active is the newest change to the group or anything in it', () => {
+  const ent = <T>(id: string, updatedAt: number, data: T) =>
     ({
-      kind: 'repayment',
+      type: 'group',
       id,
-      groupId,
-      currency: 'INR',
-      from: 'a',
-      to: 'b',
-      amount: 1n,
-      date,
-      deleted,
-    }) as LedgerRecord
-  const latest = groupActivity([
-    rec('1', 'goa', '2026-10-01'),
-    rec('2', 'goa', '2026-10-05'),
-    rec('3', 'goa', '2026-10-09', true),
-    rec('4', null, '2026-10-10'),
+      data,
+      version: 1,
+      deleted: false,
+      updatedAt,
+    }) as Entity<T>
+  const groups = [
+    ent('goa', 100, {} as Group),
+    ent('flat', 300, {} as Group),
+    ent('idle', 50, {} as Group),
+  ]
+  const latest = groupLastActive(groups, [
+    ent('e1', 200, {groupId: 'goa'}),
+    ent('e2', 900, {groupId: 'goa'}),
+    ent('r1', 400, {groupId: 'flat'}),
+    ent('e3', 999, {groupId: null}),
   ])
-  expect(latest).toEqual(new Map([['goa', '2026-10-05']]))
+  expect(latest).toEqual(
+    new Map([
+      ['goa', 900],
+      ['flat', 400],
+      ['idle', 50],
+    ]),
+  )
 })
