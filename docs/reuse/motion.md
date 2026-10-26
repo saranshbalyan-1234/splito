@@ -39,7 +39,7 @@ Pinned sources:
 
 | Source | Splito path | Modification | License |
 |---|---|---|---|
-| Lucide `cat` icon (lucide-static v1.61.0) | `apps/client/assets/brand/mark*.svg`, `apps/client/src/components/brand/Logo.tsx`, `loading` in `apps/client/scripts/lottie.ts` | Filled, recoloured (blue and white, or black and white), eyes and nose knocked out. | ISC (`LICENSES/lucide.txt`) |
+| Lucide `cat` icon (lucide-static v1.61.0) | `apps/client/assets/brand/mark*.svg`, `loading` in `apps/client/scripts/lottie.ts` | Filled, recoloured (blue and white, or black and white), eyes and nose knocked out. | ISC (`LICENSES/lucide.txt`) |
 - `apps/client/src/motion/amountSteps.ts`, `AnimatedAmount/`, `Shimmer.tsx`, `useShouldReduceMotion.ts`, `listAnimations.ts`.
 
 ## Not copied (license or trademark)

@@ -6,7 +6,11 @@ import * as SettingsList from '#/screens/Settings/components/SettingsList'
 import {atoms as a, useTheme} from '#/alf'
 import {LogoMark} from '#/components/brand/Logo'
 import {CircleInfo_Stroke2_Corner0_Rounded as InfoIcon} from '#/components/icons/CircleInfo'
+import {ChartPie_Stroke2_Corner0_Rounded as ChartPieIcon} from '#/components/icons/ChartPie'
+import {CirclePlus_Stroke2_Corner0_Rounded as CirclePlusIcon} from '#/components/icons/CirclePlus'
 import {Cloud_Stroke2_Corner0_Rounded as CloudIcon} from '#/components/icons/Cloud'
+import {type Props as SVGIconProps} from '#/components/icons/common'
+import {HandCoins_Stroke2_Corner0_Rounded as HandCoinsIcon} from '#/components/icons/Money'
 import {Shapes_Stroke2_Corner0_Rounded as ShapesIcon} from '#/components/icons/Shapes'
 import {Text} from '#/components/Typography'
 import {APP_VERSION} from '#/env'
@@ -54,6 +58,70 @@ export function AboutSettings() {
           </Trans>
         </Text>
       </SettingsList.Group>
+    </>
+  )
+}
+
+/* One titled paragraph, as About's "Open source" group. */
+function Topic({
+  icon,
+  title,
+  children,
+}: {
+  icon: React.ComponentType<SVGIconProps>
+  title: React.ReactNode
+  children: React.ReactNode
+}) {
+  const t = useTheme()
+  return (
+    <SettingsList.Group iconInset={true}>
+      <SettingsList.ItemIcon icon={icon} />
+      <SettingsList.ItemText>{title}</SettingsList.ItemText>
+      <Text style={[a.text_sm, a.leading_snug, t.atoms.text_contrast_medium]}>
+        {children}
+      </Text>
+    </SettingsList.Group>
+  )
+}
+
+/** The sidebar footer's and drawer's Help page. */
+export function HelpSettings() {
+  return (
+    <>
+      <Topic icon={CirclePlusIcon} title={<Trans>Add an expense</Trans>}>
+        <Trans>
+          Use Add expense in the sidebar, or the + button on phones. Choose who
+          paid and how to split it.
+        </Trans>
+      </Topic>
+      <Topic icon={HandCoinsIcon} title={<Trans>Settle up</Trans>}>
+        <Trans>
+          Open a friend or a group and choose Settle up to record a payment.
+        </Trans>
+      </Topic>
+      <Topic icon={ChartPieIcon} title={<Trans>Balances</Trans>}>
+        <Trans>
+          People and Groups show who owes whom in each currency. Different
+          currencies are never added together.
+        </Trans>
+      </Topic>
+    </>
+  )
+}
+
+/** The sidebar footer's Privacy page. */
+export function PrivacySettings() {
+  return (
+    <>
+      <Topic icon={CloudIcon} title={<Trans>Saved on this device</Trans>}>
+        <Trans>
+          Everything you add stays on this device. Splito has no account or
+          server yet, so nothing is sent anywhere.
+        </Trans>
+      </Topic>
+      <Topic icon={InfoIcon} title={<Trans>No tracking</Trans>}>
+        <Trans>Splito collects no analytics and shows no ads.</Trans>
+      </Topic>
     </>
   )
 }
