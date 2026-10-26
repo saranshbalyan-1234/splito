@@ -201,7 +201,13 @@ test('edit, then delete with undo', async ({page}) => {
   await expect(page.getByText('Expense deleted')).toBeVisible()
   await page.getByRole('button', {name: 'Undo'}).click()
 
-  await page.goto(`/expense/${id}`)
+  /*
+   * Undo writes in the background; a full reload right after the click can
+   * abort that write. Go forward to the expense in-app instead, and let the
+   * live page show the restore when it lands.
+   */
+  await page.goForward()
+  await expect(page).toHaveURL(new RegExp(`/expense/${id}$`))
   await expect(page.getByTestId('expense-detail-title')).toHaveText(
     'Cab to airport',
   )
