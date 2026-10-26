@@ -13,7 +13,7 @@ import {createRepayments} from '@splito/sync'
 
 import {useHaptics} from '#/lib/haptics'
 import {logger} from '#/logger'
-import {useMutationCtx, useStore} from '#/data/hooks'
+import {useMe, useMutationCtx, useStore} from '#/data/hooks'
 import {useNumberLocale} from '#/locale/numberLocale'
 import {UserAvatar} from '#/view/com/util/UserAvatar'
 import {atoms as a, useTheme} from '#/alf'
@@ -143,6 +143,9 @@ function Form({
   const [isDone, setIsDone] = useState(false)
 
   const name = (pid: string) => names.get(pid) ?? l`Someone`
+  /* My avatar shows my own initial, as everywhere else; the sentence still says "you". */
+  const myName = useMe()?.data.name
+  const avatarName = (pid: string) => (pid === me ? myName : name(pid))
   const sentence =
     from === me
       ? l`You paid ${name(to)}`
@@ -282,12 +285,12 @@ function Form({
             t.atoms.bg_contrast_25,
           ]}>
           <View style={[a.flex_row, a.align_center, a.gap_xs]}>
-            <UserAvatar size={32} name={name(from)} type="user" />
+            <UserAvatar size={32} name={avatarName(from)} type="user" />
             <ArrowRightIcon
               size="sm"
               fill={t.atoms.text_contrast_medium.color}
             />
-            <UserAvatar size={32} name={name(to)} type="user" />
+            <UserAvatar size={32} name={avatarName(to)} type="user" />
           </View>
           <Text
             testID="payment-sentence"

@@ -90,13 +90,13 @@ function DialogInner({
 
   const listHeader = (
     <View
-      style={[a.pb_xs, t.atoms.bg, IS_NATIVE ? a.pt_lg : a.pt_sm]}
+      style={[a.pb_xs, t.atoms.bg, IS_NATIVE && a.pt_lg]}
       onLayout={evt => setHeaderHeight(evt.nativeEvent.layout.height)}>
       {/* Owner rule 7: the sheet's title on the left, the round cross at the top right. */}
       <FormSheet.Header
         title={title}
         onClose={() => control.close()}
-        style={[a.px_0, a.pt_0]}
+        style={[a.px_0, IS_NATIVE && a.pt_0]}
       />
       <SearchInput
         testID={testID ? `${testID}-search` : undefined}
@@ -129,6 +129,8 @@ function DialogInner({
               ]
             : web({marginTop: 'auto', marginBottom: 'auto'})
         }
+        /* The sheet header brings its own top space, as in every other sheet. */
+        webInnerContentContainerStyle={{paddingTop: 0}}
         data={shown}
         keyExtractor={(o: DialogOption) => o.value}
         ListHeaderComponent={listHeader}

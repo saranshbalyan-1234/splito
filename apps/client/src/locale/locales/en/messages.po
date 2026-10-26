@@ -133,7 +133,7 @@ msgstr "{0} over the total"
 #. placeholder {1}: name(to)
 #: src/components/people/HistoryRow.tsx:90
 #: src/components/people/PaymentDetailsDialog.tsx:83
-#: src/components/people/RecordPaymentDialog.tsx:151
+#: src/components/people/RecordPaymentDialog.tsx:154
 msgid "{0} paid {1}"
 msgstr "{0} paid {1}"
 
@@ -146,7 +146,7 @@ msgstr "{0} paid {total}"
 #. placeholder {0}: name(r.from)
 #: src/components/people/HistoryRow.tsx:89
 #: src/components/people/PaymentDetailsDialog.tsx:82
-#: src/components/people/RecordPaymentDialog.tsx:150
+#: src/components/people/RecordPaymentDialog.tsx:153
 msgid "{0} paid you"
 msgstr "{0} paid you"
 
@@ -619,7 +619,7 @@ msgstr "All settled up"
 msgid "All time"
 msgstr "All time"
 
-#: src/components/groups/RulesEditor.tsx:266
+#: src/components/groups/RulesEditor.tsx:272
 msgid "Allowed"
 msgstr "Allowed"
 
@@ -627,8 +627,8 @@ msgstr "Allowed"
 msgid "Always in the group"
 msgstr "Always in the group"
 
-#: src/components/people/RecordPaymentDialog.tsx:339
-#: src/components/people/RecordPaymentDialog.tsx:344
+#: src/components/people/RecordPaymentDialog.tsx:342
+#: src/components/people/RecordPaymentDialog.tsx:347
 #: src/components/people/UpiPayDialog.tsx:187
 #: src/components/people/UpiPayDialog.tsx:192
 #: src/components/split/fields.tsx:167
@@ -848,7 +848,7 @@ msgstr "Choose the tabs you see and their order. Settings and your profile stay 
 msgid "Choose timezone"
 msgstr "Choose timezone"
 
-#: src/components/groups/RulesEditor.tsx:155
+#: src/components/groups/RulesEditor.tsx:158
 msgid "Choose who can pay whom when this group settles up. With no rules, anyone can pay anyone. Preferred pairs are used first. Excluded pairs are never used, so a plan may need a different route or may not be possible."
 msgstr "Choose who can pay whom when this group settles up. With no rules, anyone can pay anyone. Preferred pairs are used first. Excluded pairs are never used, so a plan may need a different route or may not be possible."
 
@@ -1005,7 +1005,7 @@ msgstr "Count expenses and payments from groups you share with {name}. Off shows
 msgid "Count shared group expenses in each person's balance"
 msgstr "Count shared group expenses in each person's balance"
 
-#: src/components/people/RecordPaymentDialog.tsx:382
+#: src/components/people/RecordPaymentDialog.tsx:385
 msgid "Counts towards: {settles}"
 msgstr "Counts towards: {settles}"
 
@@ -1022,7 +1022,7 @@ msgid "Create group"
 msgstr "Create group"
 
 #: src/components/groups/GroupFields.tsx:100
-#: src/components/people/RecordPaymentDialog.tsx:318
+#: src/components/people/RecordPaymentDialog.tsx:321
 #: src/components/split/pickers.tsx:69
 #: src/components/split/pickers.tsx:80
 #: src/screens/Analytics/index.tsx:209
@@ -1105,7 +1105,7 @@ msgstr "Day first"
 msgid "Decides which day \"today\" is and where weeks and months begin in reports. Each expense keeps the date it happened."
 msgstr "Decides which day \"today\" is and where weeks and months begin in reports. Each expense keeps the date it happened."
 
-#: src/components/groups/RulesEditor.tsx:288
+#: src/components/groups/RulesEditor.tsx:294
 #: src/components/settings/prefControls.tsx:100
 msgid "Default"
 msgstr "Default"
@@ -1153,7 +1153,7 @@ msgid "Direct"
 msgstr "Direct"
 
 #. placeholder {0}: formatAmount(p.amount, currency, locale)
-#: src/components/people/RecordPaymentDialog.tsx:167
+#: src/components/people/RecordPaymentDialog.tsx:170
 msgid "Direct {0}"
 msgstr "Direct {0}"
 
@@ -1196,7 +1196,7 @@ msgstr "Double tap to close the dialog"
 msgid "e.g. Goa trip"
 msgstr "e.g. Goa trip"
 
-#: src/components/people/RecordPaymentDialog.tsx:397
+#: src/components/people/RecordPaymentDialog.tsx:400
 msgid "e.g. Paid by UPI"
 msgstr "e.g. Paid by UPI"
 
@@ -1279,7 +1279,7 @@ msgstr "Enter a UPI ID like name@bank."
 msgid "Enter an amount"
 msgstr "Enter an amount"
 
-#: src/components/people/RecordPaymentDialog.tsx:182
+#: src/components/people/RecordPaymentDialog.tsx:185
 #: src/components/people/UpiPayDialog.tsx:207
 msgid "Enter an amount greater than zero."
 msgstr "Enter an amount greater than zero."
@@ -1359,7 +1359,7 @@ msgstr "Exact"
 msgid "Exact amounts"
 msgstr "Exact amounts"
 
-#: src/components/groups/RulesEditor.tsx:268
+#: src/components/groups/RulesEditor.tsx:274
 msgid "Excluded"
 msgstr "Excluded"
 
@@ -1439,7 +1439,7 @@ msgstr "Food"
 msgid "For example, Rent"
 msgstr "For example, Rent"
 
-#: src/components/people/RecordPaymentDialog.tsx:269
+#: src/components/people/RecordPaymentDialog.tsx:272
 msgid "For money that changed hands outside Splito – cash, UPI or a bank transfer. Splito keeps the record; it never moves money."
 msgstr "For money that changed hands outside Splito – cash, UPI or a bank transfer. Splito keeps the record; it never moves money."
 
@@ -1514,7 +1514,7 @@ msgstr "Graphite"
 msgid "Groceries"
 msgstr "Groceries"
 
-#: src/components/people/RecordPaymentDialog.tsx:168
+#: src/components/people/RecordPaymentDialog.tsx:171
 #: src/components/split/ExpenseComposer.tsx:489
 #: src/components/split/pickers.tsx:256
 #: src/components/split/pickers.tsx:260
@@ -2003,11 +2003,11 @@ msgid "Not yet"
 msgstr "Not yet"
 
 #: src/components/people/PaymentDetailsDialog.tsx:137
-#: src/components/people/RecordPaymentDialog.tsx:394
+#: src/components/people/RecordPaymentDialog.tsx:397
 msgid "Note"
 msgstr "Note"
 
-#: src/components/people/RecordPaymentDialog.tsx:389
+#: src/components/people/RecordPaymentDialog.tsx:392
 msgid "Note (optional)"
 msgstr "Note (optional)"
 
@@ -2029,7 +2029,7 @@ msgstr "Nothing from other people yet. When someone else adds or changes somethi
 msgid "Nothing here yet. Expenses, payments and group changes will show up here."
 msgstr "Nothing here yet. Expenses, payments and group changes will show up here."
 
-#: src/components/settings/OptionDialog.tsx:152
+#: src/components/settings/OptionDialog.tsx:154
 msgid "Nothing matches “{search}”"
 msgstr "Nothing matches “{search}”"
 
@@ -2097,8 +2097,8 @@ msgstr "One person"
 msgid "One place for shared costs"
 msgstr "One place for shared costs"
 
-#: src/components/groups/RulesEditor.tsx:176
-#: src/components/groups/RulesEditor.tsx:182
+#: src/components/groups/RulesEditor.tsx:179
+#: src/components/groups/RulesEditor.tsx:185
 msgid "Only allowed pairs"
 msgstr "Only allowed pairs"
 
@@ -2112,7 +2112,7 @@ msgid "Open Analytics"
 msgstr "Open Analytics"
 
 #. placeholder {0}: formatAmount(suggestion, currency, locale)
-#: src/components/people/RecordPaymentDialog.tsx:370
+#: src/components/people/RecordPaymentDialog.tsx:373
 msgid "Open balance {0}. Part payments are fine."
 msgstr "Open balance {0}. Part payments are fine."
 
@@ -2192,11 +2192,11 @@ msgstr "Paid by"
 msgid "Paid vs your share"
 msgstr "Paid vs your share"
 
-#: src/components/groups/RulesEditor.tsx:186
+#: src/components/groups/RulesEditor.tsx:189
 msgid "Pairs you haven’t marked Allowed or Preferred are treated as excluded."
 msgstr "Pairs you haven’t marked Allowed or Preferred are treated as excluded."
 
-#: src/components/people/RecordPaymentDialog.tsx:371
+#: src/components/people/RecordPaymentDialog.tsx:374
 msgid "Part payments are fine."
 msgstr "Part payments are fine."
 
@@ -2218,8 +2218,8 @@ msgstr "Payment deleted"
 msgid "Payment details"
 msgstr "Payment details"
 
-#: src/components/people/RecordPaymentDialog.tsx:224
-#: src/components/people/RecordPaymentDialog.tsx:232
+#: src/components/people/RecordPaymentDialog.tsx:227
+#: src/components/people/RecordPaymentDialog.tsx:235
 msgid "Payment recorded"
 msgstr "Payment recorded"
 
@@ -2237,11 +2237,11 @@ msgstr "Payment rules saved"
 msgid "Payments"
 msgstr "Payments"
 
-#: src/components/groups/RulesEditor.tsx:283
+#: src/components/groups/RulesEditor.tsx:289
 msgid "pays {toName}"
 msgstr "pays {toName}"
 
-#: src/components/groups/RulesEditor.tsx:283
+#: src/components/groups/RulesEditor.tsx:289
 msgid "pays you"
 msgstr "pays you"
 
@@ -2300,7 +2300,7 @@ msgstr "Pick the first day"
 msgid "Pink"
 msgstr "Pink"
 
-#: src/components/groups/RulesEditor.tsx:267
+#: src/components/groups/RulesEditor.tsx:273
 msgid "Preferred"
 msgstr "Preferred"
 
@@ -2344,11 +2344,11 @@ msgstr "Recent activity"
 msgid "Record"
 msgstr "Record"
 
-#: src/components/people/RecordPaymentDialog.tsx:211
+#: src/components/people/RecordPaymentDialog.tsx:214
 msgid "Record a payment"
 msgstr "Record a payment"
 
-#: src/components/people/RecordPaymentDialog.tsx:263
+#: src/components/people/RecordPaymentDialog.tsx:266
 #: src/screens/Person/index.tsx:325
 msgid "Record payment"
 msgstr "Record payment"
@@ -2415,7 +2415,7 @@ msgstr "Reset all settings"
 msgid "Reset all settings?"
 msgstr "Reset all settings?"
 
-#: src/components/groups/RulesEditor.tsx:230
+#: src/components/groups/RulesEditor.tsx:234
 msgid "Reset rules"
 msgstr "Reset rules"
 
@@ -2423,7 +2423,7 @@ msgstr "Reset rules"
 msgid "Reset this page"
 msgstr "Reset this page"
 
-#: src/components/groups/RulesEditor.tsx:236
+#: src/components/groups/RulesEditor.tsx:240
 msgid "Reset to anyone pays anyone"
 msgstr "Reset to anyone pays anyone"
 
@@ -2435,7 +2435,7 @@ msgstr "Restore"
 msgid "Restore expense"
 msgstr "Restore expense"
 
-#: src/components/groups/RulesEditor.tsx:297
+#: src/components/groups/RulesEditor.tsx:303
 msgid "Rule for this pair"
 msgstr "Rule for this pair"
 
@@ -2509,7 +2509,7 @@ msgstr "Search people"
 msgid "Search timezones"
 msgstr "Search timezones"
 
-#: src/components/groups/RulesEditor.tsx:290
+#: src/components/groups/RulesEditor.tsx:296
 msgid "Set for this group"
 msgstr "Set for this group"
 
@@ -2636,7 +2636,7 @@ msgid "Some"
 msgstr "Some"
 
 #: src/components/activity/ActivityItem.tsx:375
-#: src/components/groups/RulesEditor.tsx:216
+#: src/components/groups/RulesEditor.tsx:219
 #: src/components/people/HistoryRow.tsx:56
 #: src/components/people/PaymentDetailsDialog.tsx:77
 #: src/components/people/RecordPaymentDialog.tsx:145
@@ -2779,7 +2779,7 @@ msgstr "Stay"
 msgid "suggested"
 msgstr "suggested"
 
-#: src/components/people/RecordPaymentDialog.tsx:302
+#: src/components/people/RecordPaymentDialog.tsx:305
 msgid "Swap who paid"
 msgstr "Swap who paid"
 
@@ -2842,7 +2842,7 @@ msgstr "The amount needs to be more than zero"
 msgid "The payment couldn’t be deleted. Please try again."
 msgstr "The payment couldn’t be deleted. Please try again."
 
-#: src/components/people/RecordPaymentDialog.tsx:207
+#: src/components/people/RecordPaymentDialog.tsx:210
 msgid "The payment couldn’t be saved. Please try again."
 msgstr "The payment couldn’t be saved. Please try again."
 
@@ -3099,7 +3099,7 @@ msgid "What you typed won’t be kept."
 msgstr "What you typed won’t be kept."
 
 #. placeholder {0}: names.get(from) ?? ''
-#: src/components/groups/RulesEditor.tsx:205
+#: src/components/groups/RulesEditor.tsx:208
 msgid "When {0} pays"
 msgstr "When {0} pays"
 
@@ -3115,7 +3115,7 @@ msgstr "When someone accepts your invite"
 msgid "When someone adds an expense that includes you"
 msgstr "When someone adds an expense that includes you"
 
-#: src/components/groups/RulesEditor.tsx:203
+#: src/components/groups/RulesEditor.tsx:206
 msgid "When you pay"
 msgstr "When you pay"
 
@@ -3136,7 +3136,7 @@ msgstr "Who owes whom"
 msgid "Who paid?"
 msgstr "Who paid?"
 
-#: src/components/groups/RulesEditor.tsx:152
+#: src/components/groups/RulesEditor.tsx:155
 msgid "Who you settle with"
 msgstr "Who you settle with"
 
@@ -3170,7 +3170,7 @@ msgid "you"
 msgstr "you"
 
 #: src/components/activity/ActivityItem.tsx:376
-#: src/components/groups/RulesEditor.tsx:216
+#: src/components/groups/RulesEditor.tsx:219
 #: src/components/split/shared.tsx:77
 #: src/screens/Analytics/useReport.ts:251
 #: src/screens/CreateGroup.tsx:189
@@ -3271,7 +3271,7 @@ msgstr "You paid"
 #. placeholder {0}: name(to)
 #: src/components/people/HistoryRow.tsx:87
 #: src/components/people/PaymentDetailsDialog.tsx:80
-#: src/components/people/RecordPaymentDialog.tsx:148
+#: src/components/people/RecordPaymentDialog.tsx:151
 msgid "You paid {0}"
 msgstr "You paid {0}"
 

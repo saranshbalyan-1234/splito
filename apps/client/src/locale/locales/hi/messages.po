@@ -133,7 +133,7 @@ msgstr "कुल से {0} ज़्यादा"
 #. placeholder {1}: name(to)
 #: src/components/people/HistoryRow.tsx:90
 #: src/components/people/PaymentDetailsDialog.tsx:83
-#: src/components/people/RecordPaymentDialog.tsx:151
+#: src/components/people/RecordPaymentDialog.tsx:154
 msgid "{0} paid {1}"
 msgstr "{0} ने {1} को भुगतान किया"
 
@@ -146,7 +146,7 @@ msgstr "{0} ने {total} चुकाए"
 #. placeholder {0}: name(r.from)
 #: src/components/people/HistoryRow.tsx:89
 #: src/components/people/PaymentDetailsDialog.tsx:82
-#: src/components/people/RecordPaymentDialog.tsx:150
+#: src/components/people/RecordPaymentDialog.tsx:153
 msgid "{0} paid you"
 msgstr "{0} ने आपको भुगतान किया"
 
@@ -619,7 +619,7 @@ msgstr "सब हिसाब बराबर"
 msgid "All time"
 msgstr "अब तक"
 
-#: src/components/groups/RulesEditor.tsx:266
+#: src/components/groups/RulesEditor.tsx:272
 msgid "Allowed"
 msgstr "अनुमति है"
 
@@ -627,8 +627,8 @@ msgstr "अनुमति है"
 msgid "Always in the group"
 msgstr "हमेशा समूह में"
 
-#: src/components/people/RecordPaymentDialog.tsx:339
-#: src/components/people/RecordPaymentDialog.tsx:344
+#: src/components/people/RecordPaymentDialog.tsx:342
+#: src/components/people/RecordPaymentDialog.tsx:347
 #: src/components/people/UpiPayDialog.tsx:187
 #: src/components/people/UpiPayDialog.tsx:192
 #: src/components/split/fields.tsx:167
@@ -848,7 +848,7 @@ msgstr "चुनें कि कौन-से टैब दिखें और
 msgid "Choose timezone"
 msgstr "समय क्षेत्र चुनें"
 
-#: src/components/groups/RulesEditor.tsx:155
+#: src/components/groups/RulesEditor.tsx:158
 msgid "Choose who can pay whom when this group settles up. With no rules, anyone can pay anyone. Preferred pairs are used first. Excluded pairs are never used, so a plan may need a different route or may not be possible."
 msgstr "चुनें कि हिसाब चुकाते समय कौन किसे भुगतान कर सकता है। कोई नियम न हो तो कोई भी किसी को भी दे सकता है। पसंदीदा जोड़ियाँ पहले इस्तेमाल होती हैं। बाहर रखी जोड़ियाँ कभी इस्तेमाल नहीं होतीं, इसलिए योजना को दूसरा रास्ता चाहिए हो सकता है या वह संभव न हो।"
 
@@ -1005,7 +1005,7 @@ msgstr "{name} के साथ वाले समूहों के खर्
 msgid "Count shared group expenses in each person's balance"
 msgstr "हर व्यक्ति के बैलेंस में साझा समूह खर्च गिनें"
 
-#: src/components/people/RecordPaymentDialog.tsx:382
+#: src/components/people/RecordPaymentDialog.tsx:385
 msgid "Counts towards: {settles}"
 msgstr "इसमें गिना जाएगा: {settles}"
 
@@ -1022,7 +1022,7 @@ msgid "Create group"
 msgstr "समूह बनाएँ"
 
 #: src/components/groups/GroupFields.tsx:100
-#: src/components/people/RecordPaymentDialog.tsx:318
+#: src/components/people/RecordPaymentDialog.tsx:321
 #: src/components/split/pickers.tsx:69
 #: src/components/split/pickers.tsx:80
 #: src/screens/Analytics/index.tsx:209
@@ -1105,7 +1105,7 @@ msgstr "पहले दिन"
 msgid "Decides which day \"today\" is and where weeks and months begin in reports. Each expense keeps the date it happened."
 msgstr "तय करता है कि \"आज\" कौन-सा दिन है और रिपोर्ट में हफ़्ते और महीने कहाँ से शुरू होते हैं। हर खर्च अपनी असली तारीख़ रखता है।"
 
-#: src/components/groups/RulesEditor.tsx:288
+#: src/components/groups/RulesEditor.tsx:294
 #: src/components/settings/prefControls.tsx:100
 msgid "Default"
 msgstr "डिफ़ॉल्ट"
@@ -1153,7 +1153,7 @@ msgid "Direct"
 msgstr "सीधा"
 
 #. placeholder {0}: formatAmount(p.amount, currency, locale)
-#: src/components/people/RecordPaymentDialog.tsx:167
+#: src/components/people/RecordPaymentDialog.tsx:170
 msgid "Direct {0}"
 msgstr "सीधा {0}"
 
@@ -1196,7 +1196,7 @@ msgstr "डायलॉग बंद करने के लिए दो बा
 msgid "e.g. Goa trip"
 msgstr "जैसे गोवा यात्रा"
 
-#: src/components/people/RecordPaymentDialog.tsx:397
+#: src/components/people/RecordPaymentDialog.tsx:400
 msgid "e.g. Paid by UPI"
 msgstr "जैसे UPI से दिया"
 
@@ -1279,7 +1279,7 @@ msgstr "name@bank जैसी UPI ID लिखें।"
 msgid "Enter an amount"
 msgstr "रकम लिखें"
 
-#: src/components/people/RecordPaymentDialog.tsx:182
+#: src/components/people/RecordPaymentDialog.tsx:185
 #: src/components/people/UpiPayDialog.tsx:207
 msgid "Enter an amount greater than zero."
 msgstr "शून्य से ज़्यादा राशि लिखें।"
@@ -1359,7 +1359,7 @@ msgstr "सटीक"
 msgid "Exact amounts"
 msgstr "सटीक रकम"
 
-#: src/components/groups/RulesEditor.tsx:268
+#: src/components/groups/RulesEditor.tsx:274
 msgid "Excluded"
 msgstr "बाहर"
 
@@ -1439,7 +1439,7 @@ msgstr "खाना"
 msgid "For example, Rent"
 msgstr "जैसे, किराया"
 
-#: src/components/people/RecordPaymentDialog.tsx:269
+#: src/components/people/RecordPaymentDialog.tsx:272
 msgid "For money that changed hands outside Splito – cash, UPI or a bank transfer. Splito keeps the record; it never moves money."
 msgstr "Splito के बाहर हुए लेन-देन के लिए – नकद, UPI या बैंक ट्रांसफ़र। Splito सिर्फ़ रिकॉर्ड रखता है; वह कभी पैसे नहीं भेजता।"
 
@@ -1514,7 +1514,7 @@ msgstr "ग्रेफ़ाइट"
 msgid "Groceries"
 msgstr "किराना"
 
-#: src/components/people/RecordPaymentDialog.tsx:168
+#: src/components/people/RecordPaymentDialog.tsx:171
 #: src/components/split/ExpenseComposer.tsx:489
 #: src/components/split/pickers.tsx:256
 #: src/components/split/pickers.tsx:260
@@ -2003,11 +2003,11 @@ msgid "Not yet"
 msgstr "अभी नहीं"
 
 #: src/components/people/PaymentDetailsDialog.tsx:137
-#: src/components/people/RecordPaymentDialog.tsx:394
+#: src/components/people/RecordPaymentDialog.tsx:397
 msgid "Note"
 msgstr "नोट"
 
-#: src/components/people/RecordPaymentDialog.tsx:389
+#: src/components/people/RecordPaymentDialog.tsx:392
 msgid "Note (optional)"
 msgstr "नोट (वैकल्पिक)"
 
@@ -2029,7 +2029,7 @@ msgstr "अभी दूसरों की ओर से कुछ नहीं
 msgid "Nothing here yet. Expenses, payments and group changes will show up here."
 msgstr "अभी यहां कुछ नहीं। खर्च, भुगतान और समूह के बदलाव यहां दिखेंगे।"
 
-#: src/components/settings/OptionDialog.tsx:152
+#: src/components/settings/OptionDialog.tsx:154
 msgid "Nothing matches “{search}”"
 msgstr "“{search}” से कुछ नहीं मिला"
 
@@ -2097,8 +2097,8 @@ msgstr "एक व्यक्ति"
 msgid "One place for shared costs"
 msgstr "साझा खर्च के लिए एक जगह"
 
-#: src/components/groups/RulesEditor.tsx:176
-#: src/components/groups/RulesEditor.tsx:182
+#: src/components/groups/RulesEditor.tsx:179
+#: src/components/groups/RulesEditor.tsx:185
 msgid "Only allowed pairs"
 msgstr "सिर्फ़ अनुमति वाली जोड़ियाँ"
 
@@ -2112,7 +2112,7 @@ msgid "Open Analytics"
 msgstr "एनालिटिक्स खोलें"
 
 #. placeholder {0}: formatAmount(suggestion, currency, locale)
-#: src/components/people/RecordPaymentDialog.tsx:370
+#: src/components/people/RecordPaymentDialog.tsx:373
 msgid "Open balance {0}. Part payments are fine."
 msgstr "बकाया {0}। आंशिक भुगतान भी ठीक है।"
 
@@ -2192,11 +2192,11 @@ msgstr "किसने दिया"
 msgid "Paid vs your share"
 msgstr "चुकाया बनाम आपका हिस्सा"
 
-#: src/components/groups/RulesEditor.tsx:186
+#: src/components/groups/RulesEditor.tsx:189
 msgid "Pairs you haven’t marked Allowed or Preferred are treated as excluded."
 msgstr "जिन जोड़ियों को आपने अनुमति या पसंदीदा नहीं चुना, वे बाहर मानी जाएंगी।"
 
-#: src/components/people/RecordPaymentDialog.tsx:371
+#: src/components/people/RecordPaymentDialog.tsx:374
 msgid "Part payments are fine."
 msgstr "आंशिक भुगतान भी ठीक है।"
 
@@ -2218,8 +2218,8 @@ msgstr "भुगतान हटाया गया"
 msgid "Payment details"
 msgstr "भुगतान का विवरण"
 
-#: src/components/people/RecordPaymentDialog.tsx:224
-#: src/components/people/RecordPaymentDialog.tsx:232
+#: src/components/people/RecordPaymentDialog.tsx:227
+#: src/components/people/RecordPaymentDialog.tsx:235
 msgid "Payment recorded"
 msgstr "भुगतान दर्ज हुआ"
 
@@ -2237,11 +2237,11 @@ msgstr "भुगतान के नियम सहेजे गए"
 msgid "Payments"
 msgstr "भुगतान"
 
-#: src/components/groups/RulesEditor.tsx:283
+#: src/components/groups/RulesEditor.tsx:289
 msgid "pays {toName}"
 msgstr "{toName} को देता है"
 
-#: src/components/groups/RulesEditor.tsx:283
+#: src/components/groups/RulesEditor.tsx:289
 msgid "pays you"
 msgstr "आपको देता है"
 
@@ -2300,7 +2300,7 @@ msgstr "पहला दिन चुनें"
 msgid "Pink"
 msgstr "गुलाबी"
 
-#: src/components/groups/RulesEditor.tsx:267
+#: src/components/groups/RulesEditor.tsx:273
 msgid "Preferred"
 msgstr "पसंदीदा"
 
@@ -2344,11 +2344,11 @@ msgstr "हाल की गतिविधि"
 msgid "Record"
 msgstr "दर्ज करें"
 
-#: src/components/people/RecordPaymentDialog.tsx:211
+#: src/components/people/RecordPaymentDialog.tsx:214
 msgid "Record a payment"
 msgstr "भुगतान दर्ज करें"
 
-#: src/components/people/RecordPaymentDialog.tsx:263
+#: src/components/people/RecordPaymentDialog.tsx:266
 #: src/screens/Person/index.tsx:325
 msgid "Record payment"
 msgstr "भुगतान दर्ज करें"
@@ -2415,7 +2415,7 @@ msgstr "सभी सेटिंग्स रीसेट करें"
 msgid "Reset all settings?"
 msgstr "सभी सेटिंग्स रीसेट करें?"
 
-#: src/components/groups/RulesEditor.tsx:230
+#: src/components/groups/RulesEditor.tsx:234
 msgid "Reset rules"
 msgstr "नियम रीसेट करें"
 
@@ -2423,7 +2423,7 @@ msgstr "नियम रीसेट करें"
 msgid "Reset this page"
 msgstr "यह पेज रीसेट करें"
 
-#: src/components/groups/RulesEditor.tsx:236
+#: src/components/groups/RulesEditor.tsx:240
 msgid "Reset to anyone pays anyone"
 msgstr "रीसेट करें: कोई भी किसी को भी दे"
 
@@ -2435,7 +2435,7 @@ msgstr "वापस लाएँ"
 msgid "Restore expense"
 msgstr "खर्च वापस लाएँ"
 
-#: src/components/groups/RulesEditor.tsx:297
+#: src/components/groups/RulesEditor.tsx:303
 msgid "Rule for this pair"
 msgstr "इस जोड़ी का नियम"
 
@@ -2509,7 +2509,7 @@ msgstr "लोग खोजें"
 msgid "Search timezones"
 msgstr "समय क्षेत्र खोजें"
 
-#: src/components/groups/RulesEditor.tsx:290
+#: src/components/groups/RulesEditor.tsx:296
 msgid "Set for this group"
 msgstr "इस समूह के लिए तय"
 
@@ -2636,7 +2636,7 @@ msgid "Some"
 msgstr "कुछ"
 
 #: src/components/activity/ActivityItem.tsx:375
-#: src/components/groups/RulesEditor.tsx:216
+#: src/components/groups/RulesEditor.tsx:219
 #: src/components/people/HistoryRow.tsx:56
 #: src/components/people/PaymentDetailsDialog.tsx:77
 #: src/components/people/RecordPaymentDialog.tsx:145
@@ -2779,7 +2779,7 @@ msgstr "ठहरना"
 msgid "suggested"
 msgstr "सुझाया गया"
 
-#: src/components/people/RecordPaymentDialog.tsx:302
+#: src/components/people/RecordPaymentDialog.tsx:305
 msgid "Swap who paid"
 msgstr "भुगतान करने वाला बदलें"
 
@@ -2842,7 +2842,7 @@ msgstr "रकम शून्य से ज़्यादा होनी च�
 msgid "The payment couldn’t be deleted. Please try again."
 msgstr "भुगतान हटाया नहीं जा सका। कृपया फिर कोशिश करें।"
 
-#: src/components/people/RecordPaymentDialog.tsx:207
+#: src/components/people/RecordPaymentDialog.tsx:210
 msgid "The payment couldn’t be saved. Please try again."
 msgstr "भुगतान सहेजा नहीं जा सका। कृपया फिर कोशिश करें।"
 
@@ -3099,7 +3099,7 @@ msgid "What you typed won’t be kept."
 msgstr "आपने जो लिखा वह नहीं रखा जाएगा।"
 
 #. placeholder {0}: names.get(from) ?? ''
-#: src/components/groups/RulesEditor.tsx:205
+#: src/components/groups/RulesEditor.tsx:208
 msgid "When {0} pays"
 msgstr "जब {0} देते हैं"
 
@@ -3115,7 +3115,7 @@ msgstr "जब कोई आपका आमंत्रण स्वीका�
 msgid "When someone adds an expense that includes you"
 msgstr "जब कोई ऐसा खर्च जोड़े जिसमें आप शामिल हों"
 
-#: src/components/groups/RulesEditor.tsx:203
+#: src/components/groups/RulesEditor.tsx:206
 msgid "When you pay"
 msgstr "जब आप देते हैं"
 
@@ -3136,7 +3136,7 @@ msgstr "किसे किसको देना है"
 msgid "Who paid?"
 msgstr "किसने दिया?"
 
-#: src/components/groups/RulesEditor.tsx:152
+#: src/components/groups/RulesEditor.tsx:155
 msgid "Who you settle with"
 msgstr "किसके साथ हिसाब चुकाएं"
 
@@ -3170,7 +3170,7 @@ msgid "you"
 msgstr "आप"
 
 #: src/components/activity/ActivityItem.tsx:376
-#: src/components/groups/RulesEditor.tsx:216
+#: src/components/groups/RulesEditor.tsx:219
 #: src/components/split/shared.tsx:77
 #: src/screens/Analytics/useReport.ts:251
 #: src/screens/CreateGroup.tsx:189
@@ -3271,7 +3271,7 @@ msgstr "आपने चुकाया"
 #. placeholder {0}: name(to)
 #: src/components/people/HistoryRow.tsx:87
 #: src/components/people/PaymentDetailsDialog.tsx:80
-#: src/components/people/RecordPaymentDialog.tsx:148
+#: src/components/people/RecordPaymentDialog.tsx:151
 msgid "You paid {0}"
 msgstr "आपने {0} को भुगतान किया"
 

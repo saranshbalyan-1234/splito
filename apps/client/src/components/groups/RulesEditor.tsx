@@ -6,7 +6,7 @@ import {type Entity, type Group, updateGroupRules} from '@splito/sync'
 
 import {useHaptics} from '#/lib/haptics'
 import {logger} from '#/logger'
-import {useMutationCtx, useStore} from '#/data/hooks'
+import {useMe, useMutationCtx, useStore} from '#/data/hooks'
 import {UserAvatar} from '#/view/com/util/UserAvatar'
 import {atoms as a, useBreakpoints, useTheme} from '#/alf'
 import {Button, ButtonIcon, ButtonText} from '#/components/Button'
@@ -129,6 +129,9 @@ function RulesEditor({
 }) {
   const t = useTheme()
   const {t: l} = useLingui()
+  /* Avatars show my own initial, as everywhere else; the words still say "you". */
+  const myName = useMe()?.data.name
+  const avatarName = (id: string) => (id === me ? myName : names.get(id))
   const members = group.data.members
     .map(m => m.personId)
     .sort((x, y) =>
@@ -197,7 +200,7 @@ function RulesEditor({
         <View key={from} style={[a.pb_md]}>
           <View
             style={[a.flex_row, a.align_center, a.gap_sm, a.pt_md, a.pb_sm]}>
-            <UserAvatar size={24} name={names.get(from)} type="user" />
+            <UserAvatar size={24} name={avatarName(from)} type="user" />
             <Text emoji style={[a.text_md, a.font_semi_bold]}>
               {from === me ? (
                 <Trans>When you pay</Trans>
@@ -214,6 +217,7 @@ function RulesEditor({
                 from={from}
                 to={to}
                 toName={to === me ? l`You` : (names.get(to) ?? l`Someone`)}
+                avatarName={avatarName(to)}
                 isToMe={to === me}
                 rule={effectiveRule(rules, from, to)}
                 isDefault={!(`${from}>${to}` in rules.edges)}
@@ -246,6 +250,7 @@ function PairRow({
   from,
   to,
   toName,
+  avatarName,
   isToMe,
   rule,
   isDefault,
@@ -254,6 +259,7 @@ function PairRow({
   from: string
   to: string
   toName: string
+  avatarName?: string
   isToMe: boolean
   rule: EdgeRule
   isDefault: boolean
@@ -277,7 +283,7 @@ function PairRow({
         gtMobile ? [a.flex_row, a.align_center, a.gap_md] : a.gap_sm,
       ]}>
       <View style={[a.flex_1, a.flex_row, a.align_center, a.gap_sm]}>
-        <UserAvatar size={32} name={toName} type="user" />
+        <UserAvatar size={32} name={avatarName ?? toName} type="user" />
         <View style={[a.flex_1]}>
           <Text emoji numberOfLines={1} style={[a.text_md, a.leading_snug]}>
             {isToMe ? <Trans>pays you</Trans> : <Trans>pays {toName}</Trans>}
