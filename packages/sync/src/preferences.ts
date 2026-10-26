@@ -148,11 +148,13 @@ export const PREFS = {
   /** How long Recently deleted lists a deleted expense, payment or write-off (F-1203). */
   'history.binDays': def('history.binDays', 'history', 'account', 'Keep deleted items for', 30, oneOf(7, 30, 90, 365)),
   // Privacy: the directory server enforces these; saved now, applied once you sign in.
-  findableByEmailPhone: def('findableByEmailPhone', 'privacy', 'account', 'Let people find me by email or phone', true, isBool),
-  friendRequestsFrom: def('friendRequestsFrom', 'privacy', 'account', 'Who can send me friend requests', 'everyone', oneOf('everyone', 'link-only')),
-  'inviteMaxUses.friend': def<InviteMaxUses>('inviteMaxUses.friend', 'privacy', 'account', 'Friend invite link uses', 1, oneOf(...MAX_USES)),
-  'inviteMaxUses.group': def<InviteMaxUses>('inviteMaxUses.group', 'privacy', 'account', 'Group invite link uses', 25, oneOf(...MAX_USES)),
-  inviteExpiry: def<InviteExpiry>('inviteExpiry', 'privacy', 'account', 'Invite links expire after', '7d', oneOf('24h', '7d', '30d', 'never')),
+  'privacy.findByContact': def('privacy.findByContact', 'privacy', 'account', 'Let people find me by email or phone', true, isBool),
+  'privacy.friendRequestsFrom': def('privacy.friendRequestsFrom', 'privacy', 'account', 'Who can send me friend requests', 'everyone', oneOf('everyone', 'link-only')),
+  'invites.defaultMaxUses.friend': def<InviteMaxUses>('invites.defaultMaxUses.friend', 'privacy', 'account', 'Friend invite link uses', 1, oneOf(...MAX_USES)),
+  'invites.defaultMaxUses.group': def<InviteMaxUses>('invites.defaultMaxUses.group', 'privacy', 'account', 'Group invite link uses', 25, oneOf(...MAX_USES)),
+  /** Groups: new invite links make each join wait for an admin (26.18, default off). */
+  'invites.approveJoins': def('invites.approveJoins', 'privacy', 'account', 'Approve each group join', false, isBool),
+  'invites.defaultExpiry': def<InviteExpiry>('invites.defaultExpiry', 'privacy', 'account', 'Invite links expire after', '7d', oneOf('24h', '7d', '30d', 'never')),
 } as const
 
 export type PrefKey = keyof typeof PREFS

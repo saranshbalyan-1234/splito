@@ -1,5 +1,8 @@
 import {parseMinor, type SettlementRules} from '@splito/domain'
 import {
+  applyFriendRequestAccepted,
+  type FriendRequest,
+  outgoingRequests,
   createExpense,
   createGroup,
   createPerson,
@@ -48,5 +51,14 @@ export function installDevTools(store: Store, ctx: MutationCtx) {
     createRepayment: (input: unknown) => createRepayment(store, ctx, toBig(input) as RepaymentInput).then(e => e.id),
     updateGroupRules: (groupId: string, rules: SettlementRules) => updateGroupRules(store, ctx, groupId, rules).then(e => e.id),
     setPref: <K extends PrefKey>(key: K, value: PrefValue<K>) => setPref(store, ctx, key, value),
+    /** The other side accepts your pending request to `contactValue` (stands in for the pull). */
+    acceptOutgoing: async (contactValue: string, name = 'Friend') => {
+      const requests = await store.getAll<FriendRequest>('friendRequest')
+      const r = outgoingRequests(requests, Date.now()).find(x => x.data.contact?.value === contactValue)
+      if (!r) throw new Error('no pending request to ' + contactValue)
+      const accountId = 'acc-' + contactValue.replace(/[^a-z0-9]/gi, '')
+      const {person} = await applyFriendRequestAccepted(store, {...ctx, actor: accountId}, r.id, {accountId, name})
+      return person.id
+    },
   }
 }

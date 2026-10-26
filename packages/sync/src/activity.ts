@@ -1,7 +1,7 @@
-import type {FriendRequest} from './friends'
-import type {Expense, Group, Person, Repayment, WriteOff} from './mutations'
+import {type FriendRequest} from './friends'
+import {type Expense, type Group, type Person, type Repayment, type WriteOff} from './mutations'
 import {type Store, type StoreChange, touches} from './store'
-import type {Entity, EntityType, HistoryRow} from './types'
+import {type Entity, type EntityType, type HistoryRow} from './types'
 
 type Base = {
   /** `<entityType>:<entityId>:<version>`: one per history row, stable forever. */

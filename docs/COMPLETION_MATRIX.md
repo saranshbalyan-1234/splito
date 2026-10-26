@@ -37,7 +37,7 @@ Status words are the same as `docs/BACKLOG.md`: **done** (built, tested and merg
 | Settings | Every preference incl. Dim / Black dark style, accent, timezone | F-1701 | in progress (built and tested on the unmerged UI line) |
 | Settings | Account section: Sign in (honest until sync) / Log out | F-225 | todo |
 | Friends | Private friends ("Add anyway (only for you)") | F-601 | in progress (built on the unmerged UI line) |
-| Friends | Add friend by email or mobile, Splito directory check, consent, Requests and Invites sent | F-618 | in progress (partially built on feat/friend-invites, unverified) |
+| Friends | Add friend by email or mobile, Splito directory check, consent, Requests and Invites sent | F-618 | done (feat/4b-31-33; directory answers in demo only, production says "We'll check when you're online" until F-2111) |
 | Friends | Invite link and QR with use / expiry limits, manage and revoke | F-619 | in progress (partially built on feat/friend-invites, unverified) |
 | Friends | Choose from contacts | F-602 | in progress (partially built on feat/friend-invites, unverified) |
 | Friends | Directory lookup and friend requests on the server | F-2111 | todo (needs backend) |

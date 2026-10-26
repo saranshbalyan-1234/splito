@@ -11,14 +11,15 @@ import {
   declineFriendRequest,
   type Entity,
   type FriendRequest,
+  requestName,
   resendFriendRequest,
 } from '@splito/sync'
 
 import {useHaptics} from '#/lib/haptics'
 import {type NavigationProp} from '#/lib/routes/types'
 import {logger} from '#/logger'
-import {directory, requestName, usePendingRequests} from '#/data/friends'
-import {useMutationCtx, useStore} from '#/data/hooks'
+import {directory} from '#/data/friends'
+import {useMutationCtx, usePendingRequests, useStore} from '#/data/hooks'
 import {UserAvatar} from '#/view/com/util/UserAvatar'
 import {atoms as a, useTheme} from '#/alf'
 import {Button, ButtonIcon, ButtonText} from '#/components/Button'

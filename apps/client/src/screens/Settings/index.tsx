@@ -224,6 +224,7 @@ function useSectionSummary(): Partial<Record<PrefGroup, string>> {
   const [notifyExpense = true] = usePref('notify.expense')
   const [notifyPayment = true] = usePref('notify.payment')
   const [notifyInvite = true] = usePref('notify.invite')
+  const [findable = true] = usePref('privacy.findByContact')
   const visible = (categories ?? []).filter(c => !c.hidden).length
   const notifyOn = [notifyExpense, notifyPayment, notifyInvite].filter(
     Boolean,
@@ -241,6 +242,7 @@ function useSectionSummary(): Partial<Record<PrefGroup, string>> {
       recent: l`Most recent`,
     }[sort],
     notifications: notifyOn === 3 ? l`On` : notifyOn === 0 ? l`Off` : l`Some`,
+    privacy: findable ? l`Findable` : l`Hidden`,
   }
 }
 

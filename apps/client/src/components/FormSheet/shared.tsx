@@ -288,7 +288,7 @@ function Actions({
         size={size}
         style={[isSheet && a.flex_1]}
         onPress={onCancel ?? requestClose}>
-        <ButtonText maxFontSizeMultiplier={2}>
+        <ButtonText maxFontSizeMultiplier={2} numberOfLines={1}>
           {cancelLabel ?? <Trans>Cancel</Trans>}
         </ButtonText>
       </Button>
@@ -303,7 +303,7 @@ function Actions({
         {isSaving ? (
           <Loader size="sm" />
         ) : (
-          <ButtonText maxFontSizeMultiplier={2}>{saveLabel}</ButtonText>
+          <ButtonText maxFontSizeMultiplier={2} numberOfLines={1}>{saveLabel}</ButtonText>
         )}
       </Button>
     </View>

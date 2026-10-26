@@ -7,7 +7,7 @@ illustrations, logos or `assets/images` are copied (Bluesky's QR code embeds its
 dialog a WebP illustration: neither is used; the QR centre is Splito's one `LogoMark`).
 
 Dependencies taken from Bluesky's `package.json` at the same versions: `expo-contacts` (^58), `expo-clipboard`
-(~58), `react-native-qrcode-styled` (^0.3.3), `libphonenumber-js` (^1.12, in `packages/domain`).
+(~58), `react-native-qrcode-styled` (^0.3.3), `libphonenumber-js` (^1.12, in `packages/sync`: `packages/domain` imports nothing, ARCHITECTURE 1).
 
 ## Copied / adapted files
 
@@ -23,7 +23,7 @@ Dependencies taken from Bluesky's `package.json` at the same versions: `expo-con
 | `src/screens/People/components/RequestsSection.tsx` | `src/screens/Messages/JoinRequests.tsx` (avatar, name, Accept / Reject buttons) | Incoming rows keep Bluesky's layout; Invites sent rows are compact (one line, round Resend and X) |
 | `src/screens/AddFriend.tsx` | `src/components/contacts/screens/GetContacts.tsx` (permission check, denied alert -> primer, `expo-contacts/legacy`), `src/components/contacts/screens/PhoneInput.tsx` (one field, live validation) | One field for email or mobile; primer, which-one and invite are steps inside the sheet (one native modal, ARCHITECTURE 4) |
 | `src/components/people/contactPicker/index.ts` | `src/components/contacts/screens/GetContacts.tsx` (`Contacts.getPermissionsAsync` / `requestPermissionsAsync`) | `presentContactPickerAsync` (one contact) instead of reading the whole book |
-| `packages/domain/src/contact.ts` | `src/components/contacts/phone-number.ts` (`normalizePhoneNumber`) | Email or phone auto-detect; E.164 with region default; `libphonenumber-js` default (min) metadata instead of `/max` to keep the bundle small (so mobile-vs-landline type is not checked) |
+| `packages/sync/src/contact.ts` (parse, check, format; the `Contact` shape, kind detection and key stay in `packages/domain/src/contact.ts`) | `src/components/contacts/phone-number.ts` (`normalizePhoneNumber`) | Email or phone auto-detect; E.164 with region default; `libphonenumber-js` default (min) metadata instead of `/max` to keep the bundle small (so mobile-vs-landline type is not checked) |
 | `app.config.ts` (`expo-contacts` plugin) | `app.config.js` | Splito's own permission string |
 
 ## Layouts followed (Splito code, Bluesky structure)
@@ -39,5 +39,5 @@ Dependencies taken from Bluesky's `package.json` at the same versions: `expo-con
 - `packages/sync/src/friends.ts`, `packages/sync/src/directory.ts`: friend requests, invite links, the directory
   client (Bluesky's follow graph and chat join links live on its server; Splito keeps them in the local store and
   outbox).
-- `src/data/friends.ts`: shared one-read-per-commit sources for requests and links.
+- `src/data/friends.ts`: the directory client choice (demo or offline), invite-link minting and URLs. Request and link reads are `data/hooks` projections (`useFriendRequests`, `usePendingRequests`, `useInviteLinks`, `useSortedInviteLinks`, `useAnswerFriendRequest`), so components never import `data/friends` (ARCHITECTURE 1 layer rule).
 - `src/components/invites/describe.ts`: uses-left and expiry wording.

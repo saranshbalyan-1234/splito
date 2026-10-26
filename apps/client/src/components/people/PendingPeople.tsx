@@ -1,7 +1,7 @@
 import {View} from 'react-native'
 import {Trans, useLingui} from '@lingui/react/macro'
+import {type Entity, type FriendRequest, requestName} from '@splito/sync'
 
-import {requestName, usePendingRequests} from '#/data/friends'
 import {UserAvatar} from '#/view/com/util/UserAvatar'
 import {atoms as a, useTheme} from '#/alf'
 import {Clock_Stroke2_Corner0_Rounded as ClockIcon} from '#/components/icons/Invite'
@@ -14,19 +14,21 @@ import {Text} from '#/components/Typography'
  * there are none. Mount it inside the open sheet only (section 4).
  */
 export function PendingPeople({
+  pending,
   rowStyle,
   avatarSize = 36,
 }: {
+  /** Your requests still waiting (`usePendingRequests().outgoing`). */
+  pending: Entity<FriendRequest>[]
   rowStyle?: React.ComponentProps<typeof View>['style']
   avatarSize?: number
 }) {
   const t = useTheme()
   const {t: l} = useLingui()
-  const {outgoing} = usePendingRequests()
-  if (outgoing.length === 0) return null
+  if (pending.length === 0) return null
   return (
     <View testID="pending-people">
-      {outgoing.map(r => {
+      {pending.map(r => {
         const name = requestName(r.data)
         return (
           <View

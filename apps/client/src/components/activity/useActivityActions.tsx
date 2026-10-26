@@ -5,7 +5,7 @@ import {useHaptics} from '#/lib/haptics'
 import {useTheme} from '#/alf'
 import {type Props as SVGIconProps} from '#/components/icons/common'
 import * as Toast from '#/components/Toast'
-import {useMutationCtx, useStore} from '#/data/hooks'
+import {useAnswerFriendRequest, useMutationCtx, useStore} from '#/data/hooks'
 import {markAllRead, setHidden, setRead} from './feed'
 import {DeleteIcon, HideIcon, MarkReadIcon, MarkUnreadIcon} from './icons'
 import {type useActivityFeed} from './useActivityFeed'
@@ -33,6 +33,8 @@ export function useActivityActions(feed: ReturnType<typeof useActivityFeed>) {
   const ctx = useMutationCtx()
   const haptics = useHaptics()
   const {snapshot, update} = feed
+  /** Accept / Decline on a friend request row (26.18). */
+  const answerRequest = useAnswerFriendRequest()
 
   const isAvailable = (action: RowAction, event: ActivityEvent) => {
     if (action !== 'delete') return true
@@ -131,7 +133,7 @@ export function useActivityActions(feed: ReturnType<typeof useActivityFeed>) {
     )
   }
 
-  return {isAvailable, info, perform, markEverythingRead, unhideAll}
+  return {isAvailable, info, perform, markEverythingRead, unhideAll, answerRequest}
 }
 
 export type ActivityActions = ReturnType<typeof useActivityActions>

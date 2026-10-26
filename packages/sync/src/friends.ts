@@ -1,8 +1,9 @@
-import {type Contact, contactKey, DomainError, isContact} from '@splito/domain'
+import {type Contact, contactKey, DomainError} from '@splito/domain'
 
+import {formatContact, isContact} from './contact'
 import {cleanName, type Person, requireLive, write} from './mutations'
-import type {Store, Tx} from './store'
-import type {Entity, MutationCtx} from './types'
+import {type Store, type Tx} from './store'
+import {type Entity, type MutationCtx} from './types'
 
 /*
  * Friends by consent (ARCHITECTURE 26.18). Nobody becomes your friend until
@@ -38,6 +39,11 @@ export interface FriendRequest {
 }
 
 export type RequestState = RequestStatus | 'expired'
+
+/** The name a request shows: the one you gave (or theirs), else their number or email. */
+export function requestName(r: FriendRequest) {
+  return r.name || (r.contact ? formatContact(r.contact) : '')
+}
 
 /** Derived, never stored: a pending request past its 30 days reads as expired. */
 export function requestState(r: FriendRequest, now: number): RequestState {

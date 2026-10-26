@@ -12,6 +12,7 @@ import {
   useEntities,
   useMe,
   useMutationCtx,
+  usePendingRequests,
   usePref,
   useStore,
 } from '#/data/hooks'
@@ -25,6 +26,7 @@ import {PlusLarge_Stroke2_Corner0_Rounded as PlusIcon} from '#/components/icons/
 import * as FormSheet from '#/components/FormSheet'
 import {GroupFields} from '#/components/groups/GroupFields'
 import {AvatarPreview} from '#/components/people/AvatarPreview'
+import {PendingPeople} from '#/components/people/PendingPeople'
 import {CurrencyDialog} from '#/components/split/pickers'
 import * as Toast from '#/components/Toast'
 import {Text} from '#/components/Typography'
@@ -37,6 +39,7 @@ type Kind = Group['kind']
  */
 export function CreateGroupScreen() {
   const t = useTheme()
+  const {outgoing: pending} = usePendingRequests()
   const {t: l} = useLingui()
   const navigation = useNavigation<NavigationProp>()
   const store = useStore()
@@ -217,6 +220,11 @@ export function CreateGroupScreen() {
                 </Toggle.Item>
               ))}
             </Toggle.Group>
+            <PendingPeople
+              pending={pending}
+              avatarSize={32}
+              rowStyle={[a.px_md, a.border_t, t.atoms.border_contrast_low]}
+            />
             <View
               style={[
                 a.flex_row,

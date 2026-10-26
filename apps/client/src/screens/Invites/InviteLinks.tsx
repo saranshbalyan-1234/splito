@@ -8,6 +8,7 @@ import {
   type Entity,
   type Group,
   type InviteLink,
+  requestName,
   revokeInviteLink,
 } from '@splito/sync'
 
@@ -15,14 +16,8 @@ import {useHaptics} from '#/lib/haptics'
 import {copyText} from '#/lib/sharing'
 import {type NavigationProp} from '#/lib/routes/types'
 import {logger} from '#/logger'
-import {
-  directory,
-  inviteUrl,
-  requestName,
-  useFriendRequests,
-  useSortedInviteLinks,
-} from '#/data/friends'
-import {useEntities, useMutationCtx, useStore} from '#/data/hooks'
+import {directory, inviteUrl} from '#/data/friends'
+import {useEntities, useFriendRequests, useMutationCtx, useSortedInviteLinks, useStore} from '#/data/hooks'
 import {EmptyState} from '#/view/com/util/EmptyState'
 import {List} from '#/view/com/util/List'
 import {atoms as a, useTheme} from '#/alf'

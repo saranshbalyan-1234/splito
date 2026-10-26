@@ -16,13 +16,8 @@ import {
 import {useHaptics} from '#/lib/haptics'
 import {type AllNavigatorParams, type NavigationProp} from '#/lib/routes/types'
 import {logger} from '#/logger'
-import {
-  directory,
-  inviteUrl,
-  makeInviteLink,
-  useInviteLinks,
-} from '#/data/friends'
-import {useEntities, useMutationCtx, usePref, useStore} from '#/data/hooks'
+import {directory, inviteUrl, makeInviteLink} from '#/data/friends'
+import {useEntities, useInviteLinks, useMutationCtx, usePref, useStore} from '#/data/hooks'
 import * as SettingsList from '#/screens/Settings/components/SettingsList'
 import {atoms as a, useTheme} from '#/alf'
 import {Admonition} from '#/components/Admonition'
@@ -72,11 +67,13 @@ export function CreateInviteScreen() {
   const groupId = link?.groupId ?? params.groupId ?? null
   const group = groupId ? groups?.find(g => g.id === groupId) : undefined
 
-  const [defaultUses] = usePref(kind === 'group' ? 'inviteMaxUses.group' : 'inviteMaxUses.friend')
-  const [defaultExpiry] = usePref('inviteExpiry')
+  const [defaultUses] = usePref(kind === 'group' ? 'invites.defaultMaxUses.group' : 'invites.defaultMaxUses.friend')
+  const [defaultExpiry] = usePref('invites.defaultExpiry')
   const [uses, setUses] = useState<InviteMaxUses | null>(null)
   const [expiry, setExpiry] = useState<InviteExpiry | null>(null)
-  const [approveJoins, setApproveJoins] = useState(false)
+  const [defaultApproveJoins = false] = usePref('invites.approveJoins')
+  const [approveJoinsChoice, setApproveJoins] = useState<boolean | null>(null)
+  const approveJoins = approveJoinsChoice ?? defaultApproveJoins
   const [isSaving, setIsSaving] = useState(false)
   const busy = useRef(false)
   const chosenUses = uses ?? defaultUses ?? (kind === 'group' ? 25 : 1)

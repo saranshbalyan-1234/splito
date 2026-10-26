@@ -29,8 +29,8 @@ import {
 } from '../src/friends'
 import {createExpense, createGroup, createPerson, ensureMe, type Person} from '../src/mutations'
 import {openSqlStore} from '../src/sqlStore'
-import type {Store} from '../src/store'
-import type {MutationCtx} from '../src/types'
+import {type Store} from '../src/store'
+import {type MutationCtx} from '../src/types'
 import {bunExecutor} from './bunExecutor'
 
 let s: Store

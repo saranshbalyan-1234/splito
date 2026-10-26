@@ -1,12 +1,19 @@
 import {useSyncExternalStore} from 'react'
 import {type LedgerRecord} from '@splito/domain'
 import {
+  acceptFriendRequest,
   type ActivityState,
+  declineFriendRequest,
   type Entity,
   type EntityType,
   type Expense,
+  type FriendRequest,
   type HistoryRow,
+  incomingRequests,
+  type InviteLink,
+  inviteLinkState,
   type MutationCtx,
+  outgoingRequests,
   type Person,
   type PrefKey,
   prefFrom,
@@ -28,6 +35,8 @@ import {
   type Query,
 } from '#/data/projections'
 import {useData} from '#/data/StoreProvider'
+import {directory} from '#/data/friends'
+import {useTickEveryMinute} from '#/state/shell/tick-every-minute'
 
 export function useStore(): Store {
   return useData().store
@@ -140,4 +149,55 @@ export function usePref<K extends PrefKey>(
   const {store, ctx} = useData()
   const rows = useAllEntities<{value: unknown}>('preference')
   return [rows && prefOf(rows, key), v => setPref(store, ctx, key, v)]
+}
+
+/* Friends by consent and invite links (26.18) */
+
+/** Every friend request, both directions, any state. Undefined while loading. */
+export function useFriendRequests() {
+  return useEntities<FriendRequest>('friendRequest')
+}
+
+/** Every invite link you made. Undefined while loading. */
+export function useInviteLinks() {
+  return useEntities<InviteLink>('inviteLink')
+}
+
+/** People > Requests and Invites sent; expired ones drop out on the minute tick. */
+export function usePendingRequests() {
+  const requests = useFriendRequests()
+  const now = useTickEveryMinute()
+  return {
+    isLoading: requests === undefined,
+    incoming: incomingRequests(requests ?? [], now),
+    outgoing: outgoingRequests(requests ?? [], now),
+  }
+}
+
+/** Active links first (newest first), then the rest. */
+export function useSortedInviteLinks() {
+  const links = useInviteLinks()
+  const now = useTickEveryMinute()
+  const all = [...(links ?? [])].sort(
+    (x, y) => y.data.createdAt - x.data.createdAt,
+  )
+  return {
+    isLoading: links === undefined,
+    active: all.filter(l => inviteLinkState(l.data, now) === 'active'),
+    inactive: all.filter(l => inviteLinkState(l.data, now) !== 'active'),
+    now,
+  }
+}
+
+/**
+ * Accept or decline an incoming friend request: the mutation, then the
+ * directory (declining is silent, so it tells nobody). Callers guard taps.
+ */
+export function useAnswerFriendRequest() {
+  const {store, ctx} = useData()
+  return async (requestId: string, accept: boolean) => {
+    if (!accept) return void (await declineFriendRequest(store, ctx, requestId))
+    await acceptFriendRequest(store, ctx, requestId)
+    await directory.accept(requestId)
+  }
 }

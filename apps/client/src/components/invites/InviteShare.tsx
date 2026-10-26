@@ -1,6 +1,7 @@
 // Adapted from bluesky-social/social-app@4e4ad9c (MIT) - src/screens/Messages/components/InviteLinkDialog.tsx (Step.MANAGE: copy field, stacked share buttons) and src/components/StarterPack/QrCodeDialog.tsx
 import {View} from 'react-native'
-import {type Contact, formatContact} from '@splito/domain'
+import {type Contact} from '@splito/domain'
+import {formatContact} from '@splito/sync'
 import {Trans, useLingui} from '@lingui/react/macro'
 
 import {canSendSms, openComposeLink, shareUrl} from '#/lib/sharing'

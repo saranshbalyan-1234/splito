@@ -1246,7 +1246,7 @@ Named subsets inside a group ("Car 1", "Room B", "Divers") picked in one tap; th
 
 Add friend asks for an email or mobile number (one field, auto-detected) plus an optional display name, checks the account directory before inviting, and never makes anyone a friend without their consent. Front end and directory client; live lookups and requests need F-2111.
 
-- **Effort** L · **Impact** 9 · **Backend** no · **Status** in progress (partially built on feat/friend-invites, unverified) · **Deps** F-601, F-205
+- **Effort** L · **Impact** 9 · **Backend** no · **Status** done (feat/4b-31-33, 2026-10-27; e2e `friends.spec.ts`; live lookups and sends wait for F-2111) · **Deps** F-601, F-205
 - **Prefs** `privacy.findByContact`, `privacy.friendRequestsFrom`
 - **Acceptance**
   1. One field detects email or mobile and validates it; phone numbers are stored in E.164 with the user's region as the default; an optional display name.

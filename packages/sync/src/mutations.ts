@@ -2,8 +2,6 @@ import {
   assertInRange,
   computeShares,
   type Contact,
-  formatContact,
-  isContact,
   type CurrencyCode,
   DomainError,
   type EdgeRule,
@@ -15,6 +13,7 @@ import {
   validateExpense,
 } from '@splito/domain'
 
+import {formatContact, isContact} from './contact'
 import type {Store, Tx} from './store'
 import type {Entity, EntityType, MutationCtx} from './types'
 
