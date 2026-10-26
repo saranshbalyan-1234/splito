@@ -25,10 +25,13 @@ import {TimeElapsed} from '#/view/com/util/TimeElapsed'
 import {UserAvatar} from '#/view/com/util/UserAvatar'
 import {atoms as a, useBreakpoints, useTheme} from '#/alf'
 import {hexToRgb, rgbToHex} from '#/alf/util/colorGeneration'
-import {Button, ButtonIcon, ButtonText} from '#/components/Button'
+import {Button, ButtonIcon} from '#/components/Button'
+import {Check_Stroke2_Corner0_Rounded as CheckIcon} from '#/components/icons/Check'
+import {TimesLarge_Stroke2_Corner0_Rounded as XIcon} from '#/components/icons/Times'
 import {DotGrid3x1_Stroke2_Corner0_Rounded as DotsIcon} from '#/components/icons/DotGrid'
 import {type Props as SVGIconProps} from '#/components/icons/common'
 import * as Menu from '#/components/Menu'
+import {RequestAction} from '#/components/people/RequestRow'
 import {SubtleHover} from '#/components/SubtleHover'
 import * as Toast from '#/components/Toast'
 import {Text} from '#/components/Typography'
@@ -998,28 +1001,23 @@ function FriendRequestActions({
   }
   return (
     <>
-      <Button
+      <RequestAction
         testID="activity-request-accept"
         label={l`Accept ${name}’s friend request`}
-        size="small"
+        text={l({message: 'Accept', context: 'button'})}
+        icon={CheckIcon}
         color="primary"
         disabled={isBusy}
-        onPress={() => void act(true)}>
-        <ButtonText>
-          <Trans context="button">Accept</Trans>
-        </ButtonText>
-      </Button>
-      <Button
+        onPress={() => void act(true)}
+      />
+      <RequestAction
         testID="activity-request-decline"
         label={l`Decline ${name}’s friend request`}
-        size="small"
-        color="secondary"
+        text={l({message: 'Decline', context: 'button'})}
+        icon={XIcon}
         disabled={isBusy}
-        onPress={() => void act(false)}>
-        <ButtonText>
-          <Trans context="button">Decline</Trans>
-        </ButtonText>
-      </Button>
+        onPress={() => void act(false)}
+      />
     </>
   )
 }

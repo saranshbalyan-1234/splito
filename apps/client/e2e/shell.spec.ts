@@ -11,8 +11,8 @@ const RIGHT_COLUMN = 320
 const TABS = ['people', 'groups', 'analytics', 'activity']
 /* Top-level pages and their one header action, at the far right. */
 const TOP_LEVEL: [string, string, string][] = [
-  // Home: Add friend, then the overflow (Invite link / QR, Manage invite links) at the far right (26.4, 26.18).
-  ['/', 'screen-people', 'people-more'],
+  // Home: Invite people is the one action; no overflow (invite links live only in its sheet, 26.18 decision 77).
+  ['/', 'screen-people', 'people-add-friend'],
   ['/groups', 'screen-groups', 'groups-new'],
   ['/analytics', 'screen-analytics', 'analytics-export'],
   ['/activity', 'screen-activity', 'activity-mark-all-read'],
