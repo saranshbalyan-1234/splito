@@ -1,41 +1,104 @@
-/* STUB-OWNER: expense - the form body is a placeholder until the expense stream replaces it. The presentation (Composer.Outer + TopBar) is the shell's and stays. */
-import {View} from 'react-native'
-import {Trans} from '@lingui/react/macro'
-import {useNavigation} from '@react-navigation/native'
+import {useState} from 'react'
+import {useNavigation, useRoute, type RouteProp} from '@react-navigation/native'
+import {type Entity, type Group, type Person} from '@splito/sync'
 
-import {type NavigationProp} from '#/lib/routes/types'
-import {atoms as a, useTheme} from '#/alf'
-import * as Composer from '#/components/Composer'
-import {Text} from '#/components/Typography'
+import {type AllNavigatorParams, type NavigationProp} from '#/lib/routes/types'
+import {useEntities, useMe, usePref} from '#/data/hooks'
+import {ComposerSkeleton} from '#/components/split/ComposerSkeleton'
+import {readDraft} from '#/components/split/drafts'
+import {ExpenseComposer} from '#/components/split/ExpenseComposer'
+import {emptyForm, type ExpenseForm} from '#/components/split/form'
+import {localToday, useExpenseTz} from '#/components/split/shared'
 
 /**
  * Add expense, opened from the sidebar pill or the FAB exactly the way
  * Bluesky opens its composer: a modal route on native, a centred dialog
- * over the current page on web.
+ * over the current page on web. Opened from a group or a person, it starts
+ * with them (and the group's currency).
  */
 export function AddExpenseScreen() {
-  const t = useTheme()
   const navigation = useNavigation<NavigationProp>()
+  const {params} = useRoute<RouteProp<AllNavigatorParams, 'AddExpense'>>()
+  const me = useMe()
+  const people = useEntities<Person>('person')
+  const groups = useEntities<Group>('group')
+  const [currency] = usePref('defaultCurrency')
+  const [mode] = usePref('defaultSplitMode')
+  const tz = useExpenseTz()
 
   const close = () => {
-    if (navigation.canGoBack()) {
-      navigation.goBack()
-    } else {
-      navigation.navigate('People')
-    }
+    if (navigation.canGoBack()) navigation.goBack()
+    else navigation.navigate('People')
+  }
+
+  if (!me || !people || !groups || !currency || !mode) {
+    return <ComposerSkeleton testID="screen-add-expense" onClose={close} />
   }
 
   return (
-    <Composer.Outer testID="screen-add-expense" onDismiss={close}>
-      <Composer.TopBar onCancel={close} onSave={() => {}} canSave={false} />
-      <View style={[a.px_xl, a.pt_md, a.pb_2xl, a.gap_xs]}>
-        <Text style={[a.text_2xl, a.font_bold]}>
-          <Trans>Add expense</Trans>
-        </Text>
-        <Text style={[a.text_md, a.leading_snug, t.atoms.text_contrast_medium]}>
-          <Trans>This screen is being built</Trans>
-        </Text>
-      </View>
-    </Composer.Outer>
+    <AddExpenseForm
+      me={me.id}
+      people={people}
+      groups={groups}
+      currency={currency}
+      mode={mode}
+      tz={tz}
+      personId={params?.personId}
+      groupId={params?.groupId}
+      onClose={close}
+    />
+  )
+}
+
+function AddExpenseForm({
+  me,
+  people,
+  groups,
+  currency,
+  mode,
+  tz,
+  personId,
+  groupId,
+  onClose,
+}: {
+  me: string
+  people: Entity<Person>[]
+  groups: Entity<Group>[]
+  currency: string
+  mode: ExpenseForm['mode']
+  tz: string
+  personId?: string
+  groupId?: string
+  onClose: () => void
+}) {
+  const context = {personId, groupId}
+  const [fresh] = useState(() => {
+    const group = groups.find(g => g.id === groupId)
+    if (group) {
+      const members = group.data.members.filter(m => m.leftAt === null).map(m => m.personId)
+      return emptyForm({me, currency: group.data.currency, date: localToday(tz), people: members, groupId: group.id, mode})
+    }
+    const person = people.find(p => p.id === personId)
+    return emptyForm({me, currency, date: localToday(tz), people: person ? [person.id] : [], groupId: null, mode})
+  })
+  const [draft] = useState(() => {
+    const d = readDraft(context)
+    if (!d) return undefined
+    // People removed since the draft was written drop out of it.
+    const alive = new Set(people.map(p => p.id))
+    const isGroupAlive = !d.groupId || groups.some(g => g.id === d.groupId)
+    return isGroupAlive ? {...d, people: d.people.filter(p => alive.has(p))} : undefined
+  })
+
+  return (
+    <ExpenseComposer
+      testID="screen-add-expense"
+      initialForm={draft ?? fresh}
+      freshForm={fresh}
+      tz={tz}
+      draftContext={context}
+      isDraftRestored={!!draft}
+      onClose={onClose}
+    />
   )
 }

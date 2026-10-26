@@ -16,12 +16,18 @@ export function TopBar({
   onSave,
   canSave,
   isSaving = false,
+  saveLabel,
+  cancelHint,
   children,
 }: {
   onCancel: () => void
   onSave: () => void
   canSave: boolean
   isSaving?: boolean
+  /** Accessible name of the Save pill (default "Save expense"). */
+  saveLabel?: string
+  /** Accessibility hint of Cancel (default "Closes Add expense without saving"). */
+  cancelHint?: string
   children?: React.ReactNode
 }) {
   const {t: l} = useLingui()
@@ -38,7 +44,7 @@ export function TopBar({
         style={[{paddingLeft: 7, paddingRight: 7}]}
         hoverStyle={[a.bg_transparent, {opacity: 0.5}]}
         onPress={onCancel}
-        accessibilityHint={l`Closes Add expense without saving`}>
+        accessibilityHint={cancelHint ?? l`Closes Add expense without saving`}>
         <ButtonText style={[a.text_md]} maxFontSizeMultiplier={2}>
           <Trans>Cancel</Trans>
         </ButtonText>
@@ -47,7 +53,7 @@ export function TopBar({
       {children}
       <Button
         testID="composer-save"
-        label={l`Save expense`}
+        label={saveLabel ?? l`Save expense`}
         color="primary"
         size="small"
         onPress={onSave}

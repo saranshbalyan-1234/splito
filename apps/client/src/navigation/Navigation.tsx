@@ -166,18 +166,18 @@ export function TabsNavigator() {
       <Stack.Screen name="Group" component={GroupScreen} />
       <Stack.Screen name="Settle" component={SettleScreen} />
       <Stack.Screen name="Expense" component={ExpenseScreen} />
-      <Stack.Screen name="EditExpense" component={EditExpenseScreen} />
-      <Stack.Screen name="AddFriend" component={AddFriendScreen} />
-      <Stack.Screen name="CreateGroup" component={CreateGroupScreen} />
-      <Stack.Screen
-        name="AddExpense"
-        component={AddExpenseScreen}
-        options={
+      {/* Add/Edit expense, Add friend and New group all open like Bluesky's composer. */}
+      <Stack.Group
+        screenOptions={
           reducedAnimation
             ? {...COMPOSER_NATIVE, animation: reducedAnimation}
             : COMPOSER_NATIVE
-        }
-      />
+        }>
+        <Stack.Screen name="AddExpense" component={AddExpenseScreen} />
+        <Stack.Screen name="EditExpense" component={EditExpenseScreen} />
+        <Stack.Screen name="AddFriend" component={AddFriendScreen} />
+        <Stack.Screen name="CreateGroup" component={CreateGroupScreen} />
+      </Stack.Group>
     </Stack.Navigator>
   )
 }
@@ -258,17 +258,17 @@ export function FlatNavigator() {
       <Flat.Screen
         name="EditExpense"
         component={EditExpenseScreen}
-        options={{title: title('EditExpense')}}
+        options={{...COMPOSER_WEB, title: title('EditExpense')}}
       />
       <Flat.Screen
         name="AddFriend"
         component={AddFriendScreen}
-        options={{title: title('AddFriend')}}
+        options={{...COMPOSER_WEB, title: title('AddFriend')}}
       />
       <Flat.Screen
         name="CreateGroup"
         component={CreateGroupScreen}
-        options={{title: title('CreateGroup')}}
+        options={{...COMPOSER_WEB, title: title('CreateGroup')}}
       />
       <Flat.Screen
         name="AddExpense"
