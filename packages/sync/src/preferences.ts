@@ -24,6 +24,11 @@ export type TabId = 'people' | 'groups' | 'analytics' | 'activity'
 /** How each itemised-bill charge is typed: money, or a percentage of the items. */
 export type AdjustmentModes = Record<'tax' | 'tip' | 'service' | 'discount', 'amount' | 'percent'>
 export type SwipeAction = 'markRead' | 'hide' | 'delete' | 'none'
+/**
+ * Which expenses Analytics counts (ARCHITECTURE 26.16): 'everything', or
+ * non-group expenses on or off plus every group or a chosen list. Never empty.
+ */
+export type AnalyticsScope = 'everything' | {nonGroup: boolean; groups: 'all' | string[]}
 
 export interface Category {
   id: string
@@ -54,6 +59,15 @@ const oneOf =
     xs.includes(v as T)
 const isBool = (v: unknown): v is boolean => typeof v === 'boolean'
 const isString = (v: unknown): v is string => typeof v === 'string' && v.length > 0 && v.length <= 64
+
+const isAnalyticsScope = (v: unknown): v is AnalyticsScope => {
+  if (v === 'everything') return true
+  if (typeof v !== 'object' || v === null) return false
+  const {nonGroup, groups} = v as {nonGroup?: unknown; groups?: unknown}
+  if (!isBool(nonGroup)) return false
+  if (groups === 'all') return true
+  return Array.isArray(groups) && groups.length <= 1000 && groups.every(isString) && new Set(groups).size === groups.length && (nonGroup || groups.length > 0)
+}
 
 function def<T>(key: string, group: PrefGroup, scope: PrefDef<T>['scope'], label: string, dflt: T, validate: (v: unknown) => v is T): PrefDef<T> {
   return {key, group, scope, label, default: dflt, validate}
@@ -101,6 +115,8 @@ export const PREFS = {
   'amount.keypad': def('amount.keypad', 'defaults', 'device', 'Amount keypad', true, isBool),
   analyticsPeriod: def('analyticsPeriod', 'defaults', 'account', 'Analytics period', 'year', oneOf('week', 'month', 'year', 'all')),
   analyticsView: def('analyticsView', 'defaults', 'device', 'Analytics view', 'charts', oneOf('charts', 'table')),
+  /** The last scope chosen on Analytics' scope chip; set there, not in Settings. */
+  analyticsScope: def<AnalyticsScope>('analyticsScope', 'defaults', 'device', 'Analytics scope', 'everything', isAnalyticsScope),
   categories: def<Category[]>(
     'categories',
     'categories',

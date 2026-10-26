@@ -312,7 +312,8 @@ export function Charts({
         </ChartCard>
       )}
 
-      {!report.groupId && groups.length > 0 && (
+      {/* One bar would only repeat the scope chip. */}
+      {groups.length > 1 && (
         <ChartCard
           testID="analytics-by-group"
           title={l`By group`}
@@ -333,21 +334,15 @@ export function Charts({
               currency={currency}
               locale={locale}
               bars={groups}
-              selectedKey={
-                selection?.kind === 'group' ? selection.key : undefined
-              }
+              /* A group's bar narrows the scope to it (26.16), so every chart follows, not just the list. */
               onSelect={key => {
                 const g = groups.find(x => x.key === key)
-                select(
-                  g
-                    ? {
-                        kind: 'group',
-                        key: g.key,
-                        groupId: g.groupId,
-                        label: g.label,
-                      }
-                    : null,
-                )
+                if (g)
+                  report.setScope(
+                    g.groupId === null
+                      ? {nonGroup: true, groups: []}
+                      : {nonGroup: false, groups: [g.groupId]},
+                  )
               }}
             />
           )}

@@ -28,6 +28,12 @@ import {
 } from '@splito/sync'
 
 import {useEntities, useLedger, useMutationCtx, usePref} from '#/data/hooks'
+import {
+  inScope,
+  type Scope,
+  scopeFromPref,
+  scopeToPref,
+} from '#/screens/Analytics/scope'
 
 export type PeriodChoice = 'week' | 'month' | 'year' | 'all' | 'custom'
 
@@ -36,7 +42,6 @@ export type Selection =
   | {kind: 'time'; key: string; from: string; to: string; label: string}
   | {kind: 'category'; key: string; label: string}
   | {kind: 'person'; key: string; label: string}
-  | {kind: 'group'; key: string; groupId: string | null; label: string}
 
 /** The filter bar's own choices; unset fields fall back to the preferences. */
 type FilterState = {
@@ -44,9 +49,14 @@ type FilterState = {
   offset: number
   custom?: DateRange
   currency?: string
-  /** undefined: every group. */
-  groupId?: string
-  includeGroups?: boolean
+}
+
+/** A group as the scope sheet lists it. */
+export type GroupOption = {
+  id: string
+  name: string
+  kind: Group['kind']
+  isArchived: boolean
 }
 
 /** `key` for the non-group slice in the by-group chart (group ids are never empty). */
@@ -75,7 +85,7 @@ export function useReport() {
   const people = useEntities<Person>('person')
   const [categories = DEFAULT_CATEGORIES] = usePref('categories')
   const [defaultPeriod] = usePref('analyticsPeriod')
-  const [includeGroupsDefault] = usePref('includeGroupsDefault')
+  const [scopePref, setScopePref] = usePref('analyticsScope')
   const [defaultCurrency] = usePref('defaultCurrency')
   const [weekStartPref] = usePref('weekStart')
   const [timezonePref] = usePref('timezone')
@@ -107,6 +117,23 @@ export function useReport() {
     (r): r is ReportExpense => r.kind === 'expense' && !r.deleted,
   )
 
+  /* Active groups first, then archived; by name within each. Deleted groups are gone from both. */
+  const groupOptions: GroupOption[] = groups
+    .map(g => ({
+      id: g.id,
+      name: g.data.name,
+      kind: g.data.kind,
+      isArchived: g.data.archived,
+    }))
+    .sort(
+      (x, y) =>
+        Number(x.isArchived) - Number(y.isArchived) ||
+        x.name.localeCompare(y.name),
+    )
+  const groupIds = groupOptions.map(g => g.id)
+  const scope = scopeFromPref(scopePref, groupIds)
+  const scoped = records.filter(r => inScope(r.groupId, scope))
+
   /* Currencies with expenses, most used first; never mixed. */
   const counts = new Map<string, number>()
   for (const r of live)
@@ -122,19 +149,8 @@ export function useReport() {
         : currencies[0]
 
   const groupName = new Map(groups.map(g => [g.id, g.data.name]))
-  const inCurrency = records.filter(r => r.currency === currency)
-  const groupChoices = [
-    ...new Set(
-      inCurrency.flatMap(r => (r.groupId && !r.deleted ? [r.groupId] : [])),
-    ),
-  ]
-    .map(id => ({id, name: groupName.get(id) ?? l`Group`}))
-    .sort((x, y) => x.name.localeCompare(y.name))
-  const groupId =
-    state.groupId && groupChoices.some(g => g.id === state.groupId)
-      ? state.groupId
-      : undefined
-  const includeGroups = state.includeGroups ?? includeGroupsDefault ?? true
+  /* "All time" spans what the scope holds, so one group's trip is its own dates. */
+  const inCurrency = scoped.filter(r => r.currency === currency)
 
   const bounds = dataRange(inCurrency, today) ?? {from: today, to: today}
   const period: PeriodChoice =
@@ -154,24 +170,24 @@ export function useReport() {
         ? 'month'
         : granularityFor(range)
 
+  /* The scope is applied to the records first, so the domain filter only picks currency and dates. */
   const filter: ReportFilter = {
     currency: currency ?? '',
     range,
-    groupId,
-    includeGroups,
+    includeGroups: true,
   }
-  const selected = currency ? selectExpenses(records, filter) : []
+  const selected = currency ? selectExpenses(scoped, filter) : []
   const totals = spendingTotals(selected, me)
   const overTime = spendingOverTime(selected, me, range, granularity, weekStart)
   const byCategory = spendingByCategory(selected, me)
   const byPerson = spendingByPerson(selected)
   const byGroup = spendingByGroup(selected, me)
   const trend = currency
-    ? balanceTrend(records, me, filter, granularity, weekStart)
+    ? balanceTrend(scoped, me, filter, granularity, weekStart)
     : []
 
   /* A selection belongs to the filter it was made under; any filter change clears it. */
-  const filterKey = JSON.stringify([currency, range, groupId, includeGroups])
+  const filterKey = JSON.stringify([currency, range, scope])
   const selection = picked?.filterKey === filterKey ? picked.selection : null
   const select = (s: Selection | null) =>
     setPicked(s ? {filterKey, selection: s} : undefined)
@@ -186,8 +202,6 @@ export function useReport() {
         return e.date >= selection.from && e.date <= selection.to
       case 'category':
         return myShare !== ZERO && (e.category ?? 'other') === selection.key
-      case 'group':
-        return myShare !== ZERO && e.groupId === selection.groupId
       case 'person':
         return (e.shares[selection.key] ?? ZERO) !== ZERO
     }
@@ -253,7 +267,7 @@ export function useReport() {
   const nameOfPerson = (id: string) =>
     id === me ? l`You` : (personName.get(id) ?? l`Someone`)
   const nameOfGroup = (id: string | null) =>
-    id === null ? l`Direct` : (groupName.get(id) ?? l`Group`)
+    id === null ? l`Non-group` : (groupName.get(id) ?? l`Group`)
   /* A category deleted since its expenses were saved shows as Other. */
   const other = categoryById.get('other') ?? DEFAULT_CATEGORIES.at(-1)!
   const category = (id: string) =>
@@ -265,9 +279,9 @@ export function useReport() {
     hasExpenses: live.length > 0,
     currencies,
     currency: currency ?? '',
-    groupChoices,
-    groupId,
-    includeGroups,
+    groupOptions,
+    groupIds,
+    scope,
     period,
     offset: state.offset,
     range,
@@ -302,10 +316,8 @@ export function useReport() {
       setState(s => ({...s, period: 'custom', custom, offset: 0})),
     step: (by: number) => setState(s => ({...s, offset: s.offset + by})),
     setCurrency: (currency: string) => setState(s => ({...s, currency})),
-    setGroupId: (groupId: string | undefined) =>
-      setState(s => ({...s, groupId})),
-    setIncludeGroups: (includeGroups: boolean) =>
-      setState(s => ({...s, includeGroups})),
+    /** Remembered on this device (`analyticsScope`). */
+    setScope: (next: Scope) => void setScopePref(scopeToPref(next)),
   }
 }
 
