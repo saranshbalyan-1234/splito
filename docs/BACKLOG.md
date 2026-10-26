@@ -3568,10 +3568,10 @@ Every owner request from ARCHITECTURE § 26 (decision log rows 47-63) that was n
 |---|---|---|---|---|---|---|
 | 30 | - | ~~Merge UI line + Batch 4 + drawers into m1-foundation~~ done 2026-10-27 (d397576) | git: ui/r1-polish-2, ui/preview-latest (incl. phone bottom drawers), feat/b-* into m1-foundation; full test + e2e run | M | 10 | Batches 0-4 built |
 | 30a | F-227 | Large demo dataset for testing | data/demoLarge.ts, Settings > Data (dev only) | S | 7 | merge row 30 |
-| 30b | F-225 | Sign in / Create account: Bluesky LoggedOut, Login and Signup screens copied (§ 26.15) | screens/Login, screens/Signup, view/com/auth | M | 7 | merge row 30 |
 | 31 | F-618 | Add friend by email or mobile, with a Splito check and consent | Add friend sheet, People requests, directory client (finish feat/friend-invites) | L | 9 | F-601, F-205 |
 | 32 | F-619 | Invite link and QR with limits | screens/Invites (finish feat/friend-invites) | M | 8 | F-618, F-603 |
 | 33 | F-602 | Add friend from device contacts | contacts picker (finish feat/friend-invites) | S | 7 | F-618 |
+| 33a | F-225 | Sign in / Create account: Bluesky LoggedOut, Login and Signup screens copied (§ 26.15) | screens/Login, screens/Signup, view/com/auth | M | 7 | merge row 30 |
 | 34 | F-226 | Feedback: Send feedback and "Your feedback" | Settings Support + feedback sheet (finish feat/feedback) | M | 7 | F-201, F-205 |
 | 35 | F-222 | One navigation list for sidebar and drawer, Home label and title | navigationItems + NavFooterLinks, drawer header | S | 8 | F-201, F-204 |
 | 36 | F-223 | Sync-status dot on the user's avatar | avatar dot + session/outbox state | S | 7 | F-222, F-1801 |
