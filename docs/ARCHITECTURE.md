@@ -1454,7 +1454,9 @@ built yet.
   1300 px. Content fills the space between the two columns.
 - **"Recent transactions":** the 5 newest expenses and repayments involving me: category tile, title, my net
   chip (lent / borrowed, from domain `personNet`); a row opens the expense; "See all" -> Activity.
-- **"Recent groups":** 5 groups by last activity with balance chips; "See all" -> Groups.
+- **"Recently active groups":** the 5 groups with the newest change (an expense or repayment added, edited
+  or deleted in it, or the group itself edited), by change time, not expense date; balance chips; "See all" ->
+  Groups. The Groups list "Recent activity" sort uses the same rule.
 
 ### 26.18 Adding friends, invites and contacts
 
@@ -1567,6 +1569,7 @@ Every owner decision, in the order it was made (all 2026-10-26). "Replaced" name
 | 51 | "make sure this file updates on its own"; "add whatever we discussed so far" | Decisions recorded here in the same turn; hook reminder | § 0 rule 9, § 26.1 | Numbered list in `AGENTS.md` |
 | 52 | "to add the friend, it should ask the email or mobile, and try to invite, once they accept they can be used anywhere"; "invite link, or qr, with limits"; "they should accept"; "if they are not there show the warning, and one option to add anyway (only for you)"; "select from contacts" | Add friend by email/mobile or contacts, directory check first, consent required, not-on-Splito warning with Send invite / Add anyway (only for you), invite link + QR with use and expiry limits | § 26.18 | Add friend = local name only (F-601) |
 | 53 | "add one feedback section as well" | Feedback in drawer, Settings > Support and desktop right-column footer (Bluesky placement); in-app feedback sheet, saved locally + email draft until backend | § 26.15 | Feedback as email draft only (BACKLOG F-215) |
+| 54 | "in the recent group, make it recently active groups" | Right column section "Recently active groups", ordered by last change time | § 26.17 | "Recent groups" by latest expense date |
 
 New decisions follow § 0 rule 9: rewrite the rule in its topic so only the current truth remains, then add a
 row here.
