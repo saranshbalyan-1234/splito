@@ -538,7 +538,8 @@ One `navigationItems` array and one `NavFooterLinks` component feed the desktop/
   2. Profile is never a nav item (the avatar opens it). The drawer has no Profile row, no theme toggle, no "Me" label and no "Saved on this device" text; its header shows the avatar (with the F-223 dot) and the real name, and tapping it opens Profile.
   3. The home destination is labelled "Home" with a house icon in the bottom bar, sidebar and drawer; the Home header shows the logo mark on phones and the centred title "Home" on rail and desktop.
   4. Ask Splito sits between Analytics and Activity; until F-2301 ships the item is hidden rather than a dead link.
-  9. Settings > Navigation offers every shared sidebar item (Home, Search, Groups, Analytics, Ask Splito, Activity, Settings) for the phone bottom bar with toggles + drag reorder, 2-5 tabs, Home fixed, default Home/Search/Groups/Analytics/Activity, items not in the bar stay in the drawer, Reset restores default (`tabs` pref; § 26.3, decision 70).
+  9. Settings > Navigation offers every shared sidebar item (Home, Groups, Analytics, Ask Splito, Activity, Settings) for the phone bottom bar with toggles + drag reorder, 2-5 tabs, Home fixed, default Home/Groups/Ask Splito/Analytics/Activity, items not in the bar stay in the drawer, Reset restores default (`tabs` pref; § 26.3, decision 70).
+  10. Global search field at the top of Home (all platforms) with in-place grouped results (People, Groups, Expenses, "Ask Splito about ..."), recent searches, "/" and Cmd/Ctrl+K on web; Search page and nav item removed, `/search` redirects to Home; Friends section search icon removed (§ 26.3, decision 71).
 
 ### F-223 Sync-status dot on the user's avatar `spec: owner § 26.7`
 
