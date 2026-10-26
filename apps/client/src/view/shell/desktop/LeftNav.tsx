@@ -157,7 +157,7 @@ function LogoCard({minimal}: {minimal: boolean}) {
           !minimal && {marginLeft: tokens.space.md + 12 - LOGO_SIZE / 2},
           web({cursor: isHome ? 'default' : 'pointer'}),
         ]}>
-        <Logo size={LOGO_SIZE} withWordmark={!minimal} />
+        <Logo size={LOGO_SIZE} />
       </Link>
     </View>
   )
