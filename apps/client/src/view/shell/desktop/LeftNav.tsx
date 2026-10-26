@@ -154,7 +154,7 @@ function LogoCard({minimal}: {minimal: boolean}) {
         testID="logo"
         href="/"
         navigationAction="navigate"
-        accessibilityLabel={l`Splito - People`}
+        accessibilityLabel={l`Splito - Home`}
         accessibilityHint=""
         aria-disabled={isHome}
         disabled={isHome}
@@ -722,7 +722,7 @@ export function DesktopLeftNav({
     {label: string; icons: NavItemProps['icons']; count?: string}
   > = {
     people: {
-      label: l`People`,
+      label: l`Home`,
       icons: {inactive: HomeIcon, active: HomeFilledIcon},
     },
     groups: {

@@ -12,7 +12,7 @@ import {useNumberLocale} from '#/locale/numberLocale'
 import {useEntities, useLedger, useMe, usePref} from '#/data/hooks'
 import {EmptyState} from '#/view/com/util/EmptyState'
 import {List} from '#/view/com/util/List'
-import {atoms as a} from '#/alf'
+import {atoms as a, useBreakpoints} from '#/alf'
 import {AddExpenseFAB, AddExpenseFABInset} from '#/components/AddExpenseFAB'
 import {LogoMark} from '#/components/brand/Logo'
 import {useDialogControl} from '#/components/Dialog'
@@ -52,6 +52,7 @@ const PLACEHOLDER_ROWS = 6
  */
 export function PeopleScreen() {
   const {t: l} = useLingui()
+  const {gtMobile} = useBreakpoints()
   const locale = useNumberLocale()
   const navigation = useNavigation<NavigationProp>()
   const {height} = useWindowDimensions()
@@ -130,16 +131,20 @@ export function PeopleScreen() {
       <Layout.Header.Outer>
         <HeaderAvatar />
         <Layout.Header.Content>
-          {/* The home link, inactive here because this header is on People. */}
-          <PressableScale
-            testID="header-logo"
-            targetScale={0.9}
-            accessibilityRole="link"
-            accessibilityLabel={l`Splito - People`}
-            aria-disabled={true}
-            disabled={true}>
-            <LogoMark size={30} />
-          </PressableScale>
+          {/* Phones show the home mark (inactive here); rail and desktop already show it in the sidebar, so the title (ARCHITECTURE 26.4). */}
+          {gtMobile ? (
+            <Layout.Header.TitleText>{l`Home`}</Layout.Header.TitleText>
+          ) : (
+            <PressableScale
+              testID="header-logo"
+              targetScale={0.9}
+              accessibilityRole="link"
+              accessibilityLabel={l`Splito - Home`}
+              aria-disabled={true}
+              disabled={true}>
+              <LogoMark size={30} />
+            </PressableScale>
+          )}
         </Layout.Header.Content>
         <Layout.Header.ActionButton
           testID="people-add-friend"

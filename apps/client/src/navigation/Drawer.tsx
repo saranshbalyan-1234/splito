@@ -190,7 +190,7 @@ function DrawerContentInner(): React.ReactNode {
         <MenuItem
           testID="drawer-people"
           icons={[HomeIcon, HomeFilledIcon]}
-          label={l`People`}
+          label={l`Home`}
           isActive={isAt('People')}
           onPress={() => onPressTab('People')}
         />

@@ -364,7 +364,10 @@ test.describe('desktop: Bluesky left sidebar and full-width content', () => {
     await open(page, '/', 'screen-people')
     const items = await page.getByRole('navigation').locator('[data-testid^="tab-"]').evaluateAll(els => els.map(e => e.getAttribute('data-testid')))
     expect(items).toEqual(['tab-people', 'tab-groups', 'tab-analytics', 'tab-activity', 'tab-search', 'tab-settings'])
-    await expect(page.getByTestId('tab-people')).toContainText('People')
+    await expect(page.getByTestId('tab-people')).toContainText('Home')
+    // The sidebar already shows the mark, so the home header shows its title (26.4).
+    await expect(on(page, 'screen-people', 'header-logo')).toHaveCount(0)
+    await expect(page.getByTestId('screen-people').getByText('Home', {exact: true})).toBeVisible()
     await expect(page.getByTestId('tab-people')).toHaveAttribute(
       'aria-current',
       'page',

@@ -29,7 +29,7 @@ const ROW_HEIGHT = 56
 export function useTabLabels(): Record<TabId, string> {
   const {t: l} = useLingui()
   return {
-    people: l`People`,
+    people: l`Home`,
     groups: l`Groups`,
     analytics: l`Analytics`,
     activity: l`Activity`,

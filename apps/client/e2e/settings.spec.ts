@@ -134,13 +134,13 @@ test('choosing Hindi switches the whole UI live and persists', async ({
   await open(page, '/settings/regional', 'screen-settings-section')
   await page.getByTestId('language-hi').click()
   await expect(page.getByText('भाषा और क्षेत्र').first()).toBeVisible()
-  await expect(page.getByTestId('tab-people')).toContainText('लोग')
+  await expect(page.getByTestId('tab-people')).toContainText('घर')
   await expect(page.getByTestId('pref-timezone')).toContainText('समय क्षेत्र')
 
   await page.reload()
-  await expect(page.getByTestId('tab-people')).toContainText('लोग')
+  await expect(page.getByTestId('tab-people')).toContainText('घर')
   await page.getByTestId('language-en').click()
-  await expect(page.getByTestId('tab-people')).toContainText('People')
+  await expect(page.getByTestId('tab-people')).toContainText('Home')
 })
 
 test('Reset restores one default, and Reset all restores every default', async ({

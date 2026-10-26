@@ -24,7 +24,7 @@ import {
 
 /** Each tab's accessibility label (bottom bars have no visible labels). */
 export const TAB_LABELS = {
-  people: msg`People`,
+  people: msg`Home`,
   groups: msg`Groups`,
   analytics: msg`Analytics`,
   activity: msg`Activity`,
