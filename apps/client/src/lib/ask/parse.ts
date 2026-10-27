@@ -314,7 +314,7 @@ export function parseQuestion(question: string, vocab: Vocab): Intent {
 
   // Who owes me / whom do I owe / who owes whom
   if (hasOwe && hasWho && !person) {
-    if (group && (hasAny(words, ['whom', 'kisko', 'kisne']) || hasPhrase(words, 'owes whom'))) return {kind: 'groupBalance', group}
+    if (group && (hasAny(words, ['whom', 'kisko', 'kisne', 'किसको', 'किसने', 'किसे']) || hasPhrase(words, 'owes whom'))) return {kind: 'groupBalance', group}
     if (hasAny(words, BOTH)) return {kind: 'ranking', direction: 'both'}
     if (hasAny(words, I_OWE) && !hasAny(words, OWED_TO_ME)) return {kind: 'ranking', direction: 'iOwe'}
     return {kind: 'ranking', direction: 'owedToMe'}
