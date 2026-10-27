@@ -423,6 +423,8 @@ function RoundToPref() {
     keywords: c.name,
   }))
   const setUnit = (unit: number) => {
+    // The control reports its current value once on layout: nothing to write.
+    if (unit === roundToFor(units, currency)) return
     const {[currency]: _, ...rest} = units
     void pref.set(unit === 1 ? rest : {...rest, [currency]: unit})
   }

@@ -410,6 +410,13 @@ function ComposeBtn({minimal}: {minimal: boolean}) {
   )
 }
 
+/* A spoken list in the app language; Hermes has no Intl.ListFormat, so phones fall back to commas (ponytail: add a polyfill if a language needs its own "and"). */
+function joinList(items: string[], locale: string): string {
+  return typeof Intl.ListFormat === 'function'
+    ? new Intl.ListFormat(locale, {style: 'long', type: 'conjunction'}).format(items)
+    : items.join(', ')
+}
+
 /*
  * Bluesky's pinned-feeds list (src/view/shell/desktop/Feeds.tsx: FeedItem
  * rows and the "More feeds" link) as the five most recently active groups,
@@ -417,7 +424,7 @@ function ComposeBtn({minimal}: {minimal: boolean}) {
  */
 export function RecentGroups() {
   const t = useTheme()
-  const {t: l} = useLingui()
+  const {t: l, i18n} = useLingui()
   const locale = useNumberLocale()
   const me = useMe()
   const groups = useEntities<Group>('group')
@@ -479,7 +486,8 @@ export function RecentGroups() {
               ? l`you are owed ${formatAmount(amount, c, locale)}`
               : l`you owe ${formatAmount(magnitude(amount), c, locale)}`
           })
-          .join(', ')
+        // Joined in the app language ("you owe €7.00 and you are owed ₹63,000.00").
+        const spokenList = joinList(spoken, i18n.locale)
         return (
           <Link
             key={group.id}
@@ -489,7 +497,7 @@ export function RecentGroups() {
             anchorNoUnderline
             accessibilityLabel={
               open.length > 0
-                ? `${group.name}, ${spoken}`
+                ? l`${group.name}, ${spokenList}`
                 : l`${group.name}, settled up`
             }
             accessibilityHint=""

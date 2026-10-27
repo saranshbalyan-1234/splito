@@ -214,6 +214,14 @@ test('M15: the cash unit is chosen per currency in Settings and a unit too big f
   await page.goto('/settings/defaults')
   await page.getByTestId('split.roundCash-switch').click()
   await expect(page.getByTestId('round-to-currency')).toContainText('INR')
+  // Showing the control writes nothing: the segmented control reports its value on layout.
+  await page.waitForTimeout(500)
+  const rowsAtLayout = await page.evaluate(async () =>
+    (
+      await (window as unknown as {splito: Splito}).splito.list('preference')
+    ).map(r => r.id),
+  )
+  expect(rowsAtLayout).not.toContain('split.roundTo')
   await page.getByTestId('round-to-10').click()
   await page.getByTestId('round-to-currency').click()
   await page.getByTestId('round-to-currency-dialog-JPY').click()
