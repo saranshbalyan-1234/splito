@@ -23,8 +23,8 @@ import {
 import {setPref} from '../src/preferences'
 import {searchStore} from '../src/search'
 import {openSqlStore} from '../src/sqlStore'
-import type {Store} from '../src/store'
-import type {MutationCtx} from '../src/types'
+import {type Store} from '../src/store'
+import {type MutationCtx} from '../src/types'
 import {bunExecutor} from './bunExecutor'
 
 let s: Store

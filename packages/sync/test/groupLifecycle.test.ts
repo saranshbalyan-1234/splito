@@ -30,8 +30,8 @@ import {
 } from '../src/mutations'
 import {loadBin} from '../src/selectors'
 import {openSqlStore} from '../src/sqlStore'
-import type {Store} from '../src/store'
-import type {MutationCtx} from '../src/types'
+import {type Store} from '../src/store'
+import {type MutationCtx} from '../src/types'
 import {bunExecutor} from './bunExecutor'
 import {expectDerivedTablesMatch, expectProjectionsMatchLedger} from './projectionCheck'
 

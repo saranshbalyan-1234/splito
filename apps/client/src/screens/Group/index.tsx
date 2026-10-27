@@ -6,6 +6,7 @@ import {type RouteProp, useNavigation, useRoute} from '@react-navigation/native'
 import {
   type Entity,
   type Group,
+  groupAdmins,
   type Person,
   type Repayment,
   type WriteOff,
@@ -64,6 +65,12 @@ import * as Skeleton from '#/components/Skeleton'
 import {TabBar} from '#/components/TabBar'
 import {Text} from '#/components/Typography'
 import {Shimmer} from '#/motion/Shimmer'
+import {
+  GroupLifecycleDialogs,
+  GroupLifecycleItems,
+  GroupNotices,
+  useGroupLifecycle,
+} from './components/GroupLifecycle'
 import {
   CurrencyHeader,
   MemberBalanceRow,
@@ -136,6 +143,7 @@ export function GroupScreen() {
   const addMembersControl = useDialogControl()
   const editControl = useDialogControl()
   const rulesControl = useDialogControl()
+  const lifecycle = useGroupLifecycle()
   const [openRepayment, setOpenRepayment] = useState<Entity<
     Repayment | WriteOff
   > | null>(null)
@@ -442,6 +450,7 @@ export function GroupScreen() {
               </Text>
             )}
           </View>
+          {me && <GroupNotices group={group} me={me.id} />}
           <GroupBalanceCards
             openCurrencies={openCurrencies}
             mine={mine}
@@ -581,6 +590,7 @@ export function GroupScreen() {
                 </Menu.ItemText>
                 <Menu.ItemIcon icon={RouteIcon} position="right" />
               </Menu.Item>
+              {me && <GroupLifecycleItems lifecycle={lifecycle} group={group} me={me.id} />}
             </Menu.Outer>
           </Menu.Root>
         ) : (
@@ -658,6 +668,8 @@ export function GroupScreen() {
                     }
                     isMe={item.personId === me?.id}
                     hasLeft={item.hasLeft}
+                    isAdmin={!!group && groupAdmins(group.data).includes(item.personId)}
+                    onExitPressed={() => lifecycle.openExit(item.personId)}
                   />
                 )
               case 'owesHeader':
@@ -804,6 +816,7 @@ export function GroupScreen() {
       )}
       <CallItEvenDialog control={evenControl} draft={evenDraft} names={names} />
       {group && <EditGroupDialog control={editControl} group={group} />}
+      {group && me && <GroupLifecycleDialogs lifecycle={lifecycle} group={group} me={me.id} names={names} nets={nets} locale={locale} />}
       {group && me && (
         <RulesDialog
           control={rulesControl}

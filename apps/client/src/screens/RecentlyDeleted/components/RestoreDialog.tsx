@@ -8,6 +8,7 @@ import {Button, ButtonIcon, ButtonText} from '#/components/Button'
 import * as Dialog from '#/components/Dialog'
 import * as FormSheet from '#/components/FormSheet'
 import {Trash_Stroke2_Corner0_Rounded as TrashIcon} from '#/components/icons/Trash'
+import {GroupAvatar} from '#/components/groups/GroupAvatar'
 import {EntryIcon} from '#/components/people/EntryIcon'
 import {useFormatDay, useTimeZone} from '#/locale/useDates'
 import {Text} from '#/components/Typography'
@@ -85,18 +86,19 @@ function Body({
   const control = Dialog.useDialogContext()
   const [isSaving, setIsSaving] = useState(false)
   const left = daysLeft(item.deletedAt, days, readAt)
-  const title =
-    item.type === 'expense'
-      ? l`Restore expense`
-      : item.type === 'repayment'
-        ? l`Restore payment`
-        : l`Restore write-off`
-  const kindLabel =
-    item.type === 'expense'
-      ? l`Expense`
-      : item.type === 'repayment'
-        ? l`Payment`
-        : l`Write-off`
+  const title = {
+    expense: l`Restore expense`,
+    repayment: l`Restore payment`,
+    writeoff: l`Restore write-off`,
+    group: l`Restore group`,
+  }[item.type]
+  const kindLabel = {
+    expense: l`Expense`,
+    repayment: l`Payment`,
+    writeoff: l`Write-off`,
+    group: l`Group`,
+  }[item.type]
+  const removed = item.type === 'group' ? item.entity.data.removed : undefined
 
   return (
     <FormSheet.Inner
@@ -111,13 +113,21 @@ function Body({
       }}>
       <View style={[a.gap_lg]}>
         <View style={[a.flex_row, a.align_center, a.gap_md]}>
-          <EntryIcon
-            category={
-              item.type === 'expense' ? item.entity.data.category : undefined
-            }
-            isPayment={item.type === 'repayment'}
-            isWriteOff={item.type === 'writeoff'}
-          />
+          {item.type === 'group' ? (
+            <GroupAvatar
+              kind={item.entity.data.kind}
+              name={item.entity.data.name}
+              size={42}
+            />
+          ) : (
+            <EntryIcon
+              category={
+                item.type === 'expense' ? item.entity.data.category : undefined
+              }
+              isPayment={item.type === 'repayment'}
+              isWriteOff={item.type === 'writeoff'}
+            />
+          )}
           <View style={[a.flex_1, a.gap_2xs]}>
             <Text
               testID="restore-title"
@@ -131,16 +141,18 @@ function Body({
             </Text>
           </View>
         </View>
-        <Text
-          testID="restore-amount"
-          style={[
-            a.text_4xl,
-            a.font_bold,
-            a.leading_tight,
-            {fontVariant: ['tabular-nums']},
-          ]}>
-          {model.amount}
-        </Text>
+        {item.type === 'group' ? null : (
+          <Text
+            testID="restore-amount"
+            style={[
+              a.text_4xl,
+              a.font_bold,
+              a.leading_tight,
+              {fontVariant: ['tabular-nums']},
+            ]}>
+            {model.amount}
+          </Text>
+        )}
         <View style={[a.rounded_md, a.border, t.atoms.border_contrast_low]}>
           {model.effect ? (
             <DetailRow
@@ -153,14 +165,40 @@ function Body({
               }
             />
           ) : null}
-          <DetailRow
-            label={l`Date`}
-            value={formatDay(model.date, {intl: {dateStyle: 'long'}})}
-          />
-          <DetailRow
-            label={l`Where`}
-            value={groupName ?? l`Direct, no group`}
-          />
+          {item.type === 'group' ? (
+            <>
+              <DetailRow
+                label={l`Expenses`}
+                value={String(removed?.expenses ?? 0)}
+              />
+              <DetailRow
+                label={l`Payments`}
+                value={String(removed?.repayments ?? 0)}
+              />
+              <DetailRow
+                label={l`Write-offs`}
+                value={String(removed?.writeoffs ?? 0)}
+              />
+              <DetailRow
+                label={l`Members`}
+                value={String(
+                  item.entity.data.members.filter(m => m.leftAt === null)
+                    .length,
+                )}
+              />
+            </>
+          ) : (
+            <>
+              <DetailRow
+                label={l`Date`}
+                value={formatDay(model.date, {intl: {dateStyle: 'long'}})}
+              />
+              <DetailRow
+                label={l`Where`}
+                value={groupName ?? l`Direct, no group`}
+              />
+            </>
+          )}
           <DetailRow
             label={l`Deleted`}
             value={l`${i18n.date(new Date(item.deletedAt), {
@@ -171,7 +209,12 @@ function Body({
           />
         </View>
         <Text style={[a.text_sm, a.leading_snug, t.atoms.text_contrast_medium]}>
-          {left === 1 ? (
+          {item.type === 'group' ? (
+            <Trans>
+              Restoring brings the group back with every expense, payment and
+              write-off that went with it.
+            </Trans>
+          ) : left === 1 ? (
             <Trans>
               Restoring puts it back in balances, history and Activity. It stays
               here for 1 more day.

@@ -1,4 +1,5 @@
 import {useLingui} from '@lingui/react/macro'
+import {plural} from '@lingui/core/macro'
 import {formatAmount, magnitude, personNet, ZERO} from '@splito/domain'
 import {type BinItem} from '@splito/sync'
 
@@ -25,6 +26,20 @@ export function useDescribeBinItem() {
     const name = (id: string) =>
       id === me ? l`You` : (names.get(id) ?? l`Someone`)
     const money = (v: bigint, c: string) => formatAmount(v, c, locale)
+    if (item.type === 'group') {
+      // The group is one entry; what went with it is counted on its tombstone (F-615).
+      const g = item.entity.data
+      const r = g.removed ?? {expenses: 0, repayments: 0, writeoffs: 0}
+      const records = r.expenses + r.repayments + r.writeoffs
+      return {
+        title: g.name,
+        amount: plural(records, {one: '# record', other: '# records'}),
+        effect: null,
+        effectSign: 0,
+        groupId: null,
+        date: '',
+      }
+    }
     if (item.type === 'expense') {
       const e = item.entity.data
       const net = personNet(e, me)

@@ -4,17 +4,20 @@ import {View} from 'react-native'
 import Animated, {LayoutAnimationConfig} from 'react-native-reanimated'
 import {plural} from '@lingui/core/macro'
 import {Trans, useLingui} from '@lingui/react/macro'
+import {DomainError} from '@splito/domain'
 import {
   type BinItem,
-  type BinType,
   deleteExpense,
+  deleteGroup,
   deleteRepayment,
   deleteWriteOff,
   type Group,
   type MutationCtx,
   type Person,
   purgeDeleted,
+  purgeDeletedGroup,
   restoreExpense,
+  restoreGroup,
   restoreRepayment,
   restoreWriteOff,
   type Store,
@@ -33,6 +36,7 @@ import {Admonition} from '#/components/Admonition'
 import {useDialogControl} from '#/components/Dialog'
 import {Trash_Stroke2_Corner0_Rounded as TrashIcon} from '#/components/icons/Trash'
 import * as Layout from '#/components/Layout'
+import {GroupAvatar} from '#/components/groups/GroupAvatar'
 import {EntryIcon} from '#/components/people/EntryIcon'
 import {HistoryRowPlaceholder} from '#/components/people/HistoryRow'
 import * as Prompt from '#/components/Prompt'
@@ -49,21 +53,25 @@ import {useBin} from '#/data/useBin'
 
 const BinDaysPref = PREF_CONTROLS['history.binDays']
 
+type BinKind = BinItem['type']
 const RESTORE: Record<
-  BinType,
+  BinKind,
   (s: Store, c: MutationCtx, id: string) => Promise<void>
 > = {
   expense: restoreExpense,
   repayment: restoreRepayment,
   writeoff: restoreWriteOff,
+  group: restoreGroup,
 }
+/** Undo of a restore: delete it again (a group takes its records with it, as the first delete did). */
 const DELETE: Record<
-  BinType,
-  (s: Store, c: MutationCtx, id: string) => Promise<void>
+  BinKind,
+  (s: Store, c: MutationCtx, id: string) => Promise<unknown>
 > = {
   expense: deleteExpense,
   repayment: deleteRepayment,
   writeoff: deleteWriteOff,
+  group: deleteGroup,
 }
 
 /**
@@ -97,17 +105,19 @@ export function RecentlyDeletedScreen() {
   const meId = me?.id ?? ''
   const deletedBy = (id: string) =>
     id === meId ? l`You` : (names.get(id) ?? l`Someone`)
-  const kindToast = (type: BinType, restored: boolean) =>
+  const kindToast = (type: BinKind, restored: boolean) =>
     restored
       ? {
           expense: l`Expense restored`,
           repayment: l`Payment restored`,
           writeoff: l`Write-off restored`,
+          group: l`Group restored`,
         }[type]
       : {
           expense: l`Expense deleted`,
           repayment: l`Payment deleted`,
           writeoff: l`Write-off undone`,
+          group: l`Group deleted`,
         }[type]
 
   const restore = async (item: BinItem) => {
@@ -137,13 +147,23 @@ export function RecentlyDeletedScreen() {
       )
     } catch (e) {
       logger.error(e, {where: 'RecentlyDeleted.restore'})
-      Toast.show(l`Couldn’t restore this. Please try again.`, {type: 'error'})
+      // A refusal says why (audit M4): a person or group it points to is gone.
+      const code = e instanceof DomainError ? e.code : ''
+      Toast.show(
+        code === 'UNKNOWN_PERSON'
+          ? l`Can’t restore this: someone in it has been removed. Add them as a friend again first.`
+          : code === 'GROUP_DELETED'
+            ? l`Can’t restore this: its group is deleted. Restore the group first.`
+            : l`Couldn’t restore this. Please try again.`,
+        {type: 'error'},
+      )
     }
   }
 
   const purge = async (item: BinItem) => {
     try {
-      await purgeDeleted(store, ctx, item.type, item.entity.id)
+      if (item.type === 'group') await purgeDeletedGroup(store, ctx, item.entity.id)
+      else await purgeDeleted(store, ctx, item.type, item.entity.id)
       haptics.confirm()
       Toast.show(l`Deleted forever`)
     } catch (e) {
@@ -163,8 +183,9 @@ export function RecentlyDeletedScreen() {
       <View style={[a.px_lg, a.pt_lg, a.pb_sm]}>
         <Admonition type="tip">
           <Trans>
-            Deleted expenses, payments and write-offs wait here before they
-            leave for good. Restore one and its balances come back.
+            Deleted expenses, payments, write-offs and groups wait here before
+            they leave for good. Restore one and its balances come back; a
+            group comes back with everything that was deleted with it.
           </Trans>
         </Admonition>
       </View>
@@ -326,13 +347,23 @@ function BinRow({
         <Animated.View
           style={[a.flex_row, a.align_center, a.gap_md, press.style]}>
           <View style={{opacity: 0.85}}>
-            <EntryIcon
-              category={
-                item.type === 'expense' ? item.entity.data.category : undefined
-              }
-              isPayment={item.type === 'repayment'}
-              isWriteOff={item.type === 'writeoff'}
-            />
+            {item.type === 'group' ? (
+              <GroupAvatar
+                kind={item.entity.data.kind}
+                name={item.entity.data.name}
+                size={42}
+              />
+            ) : (
+              <EntryIcon
+                category={
+                  item.type === 'expense'
+                    ? item.entity.data.category
+                    : undefined
+                }
+                isPayment={item.type === 'repayment'}
+                isWriteOff={item.type === 'writeoff'}
+              />
+            )}
           </View>
           <View style={[a.flex_1, a.gap_2xs]}>
             <Text
