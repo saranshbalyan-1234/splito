@@ -1305,12 +1305,15 @@ show what: centre may be page name, right maybe some basic action, and left may 
   | Settings, Profile, Settle | none |
 
 - **Behaviour (exactly Bluesky's minimal shell):** on phones (native and mobile web) the header scrolls away
-  with the content as you scroll down (the bottom bar and FAB slide away with it) and slides back in as soon
+  with the content as you scroll down and slides back in as soon
   as you scroll up a little (Bluesky `useMinimalShellMode` / `useMinimalShellHeaderTransform` /
   `useMinimalShellFooterTransform`, its thresholds and springs, driven on the UI thread from the list's scroll
   handler); reaching the top always shows it; switching tabs or opening a sheet resets it to shown. On
   rail/desktop the header stays sticky (as Bluesky). Bluesky bottom border. *Why:* "just like in bluesky, even
-  the header should scroll but once i scroll up a little it should appear". On rail and desktop it sits at the top of the main content, separate from the
+  the header should scroll but once i scroll up a little it should appear".
+  **Only the header hides: the bottom bar and the FAB stay visible while scrolling** (they hide only where
+  Bluesky hides its footer: full-screen pages, open keyboard). *Why:* "during scrolling don't hide bottom
+  navigation, only header needs to be hidden" (owner 87, replaces the bar/FAB part of 81). On rail and desktop it sits at the top of the main content, separate from the
   sidebar.
 - **Add expense and Edit expense are sheets (§ 26.8), so they have no header;** no header anywhere carries a
   "Cancel" text button or a "Save" pill.
@@ -1345,7 +1348,7 @@ good"; "the left sidebar looks bad on desktop". *Where:* `view/shell/desktop/Lef
   bar, basically if back button is not there show it"; "home and activity also should show the fab"; "the fab
   icon should not be visible on desktop as we have it on sidebar".
 - **Decided once, in the shell, from the header's left-slot state** (no per-screen flags). It keeps Bluesky's
-  hide on scroll down / show on scroll up, and lists pad their bottom by the FAB clearance.
+  stays in place while scrolling (owner 87), and lists pad their bottom by the FAB clearance.
 - **Tapping it opens Add expense as a bottom sheet** (§ 26.8). On a Group page (pushed, no FAB) "Add expense"
   lives in the body and pre-selects the group. *Why:* "use the same flow of that FAB icon".
 - *Where:* `components/AddExpenseFAB.tsx`, `view/com/util/fab/`.
@@ -1876,6 +1879,7 @@ Every owner decision, in the order it was made (all 2026-10-26). "Replaced" name
 | 84 | "in navigation any number of options can be there" | Bottom bar takes any number of tabs (Home alone up to all items); labels hide above 5 | § 26.3 | 2 to 5 tabs |
 | 85 | "make sure to pull features from Expensify and blusky whatever you think is better for user experience and features" | Per feature, take the better of Bluesky and Expensify (UX and features); Expensify leads money flows, Bluesky leads shell and client code; visual language stays Bluesky | § 26.1 | Bluesky first, Expensify for practice only |
 | 86 | "See this bill, it has both alcohol and food and diff tax is applied on both ... how to split such bill ... the taxation we added was overall on the bill" | Items carry tax classes; ordered charges each apply to all items, chosen classes or chosen items and can stack on earlier charges; each charge spread only over who had those items; round-off and reconciliation to the printed total; presets and per-merchant memory | § 26.13 | One overall tax on the whole bill |
+| 87 | "during scrolling don't hide bottom navigation, only header needs to be hidden" | On phones only the header scrolls away; bottom bar and FAB stay visible while scrolling | §§ 26.4, 26.6 | Bar and FAB hid with the header (row 81) |
 
 New decisions follow § 0 rule 9: rewrite the rule in its topic so only the current truth remains, then add a
 row here.
