@@ -8,6 +8,8 @@ import {Trans, useLingui} from '@lingui/react/macro'
 import {useHaptics} from '#/lib/haptics'
 import {bottomBarItems} from '#/lib/routes/navigationItems'
 import {useEntities, useMe, usePref} from '#/data/hooks'
+import {useExportSheet} from '#/features/export/ExportSheet'
+import {useImportSheet} from '#/features/export/ImportSheet'
 import {useOpenFeedback} from '#/features/feedback/FeedbackProvider'
 import {useData} from '#/data/StoreProvider'
 import {UserAvatar} from '#/view/com/util/UserAvatar'
@@ -18,8 +20,9 @@ import {ArrowRotateCounterClockwise_Stroke2_Corner0_Rounded as ResetIcon} from '
 import {CircleInfo_Stroke2_Corner0_Rounded as InfoIcon} from '#/components/icons/CircleInfo'
 import {CircleQuestion_Stroke2_Corner2_Rounded as HelpIcon} from '#/components/icons/CircleQuestion'
 import {Cloud_Stroke2_Corner0_Rounded as CloudIcon} from '#/components/icons/Cloud'
+import {FileExport_Stroke2_Corner0_Rounded as ExportIcon, Upload_Stroke2_Corner0_Rounded as ImportIcon} from '#/components/icons/Export'
 import {Inbox_Stroke2_Corner0_Rounded as InboxIcon} from '#/components/icons/Feedback'
-import {Message_Stroke2_Corner0_Rounded as MessageIcon} from '#/components/icons/Invite'
+import {Message_Stroke2_Corner0_Rounded as MessageIcon, PeopleGroup_Stroke2_Corner0_Rounded as FriendsIcon} from '#/components/icons/Invite'
 import {Trash_Stroke2_Corner0_Rounded as TrashIcon} from '#/components/icons/Trash'
 import * as Layout from '#/components/Layout'
 import {useTabLabels} from '#/components/settings/NavigationEditor'
@@ -59,6 +62,8 @@ export function SettingsScreen() {
   const {hasSession} = useSession()
   const [binDays] = usePref('history.binDays')
   const openFeedback = useOpenFeedback()
+  const exportSheet = useExportSheet()
+  const importSheet = useImportSheet()
   const feedbackCount = useEntities<Feedback>('feedback')?.length ?? 0
 
   return (
@@ -125,6 +130,15 @@ export function SettingsScreen() {
                 <Trans>Your profile · saved on this device</Trans>
               </Text>
             </View>
+          </SettingsList.LinkItem>
+          <SettingsList.LinkItem
+            testID="settings-friends"
+            to="/settings/friends"
+            label={l`Friends and invites`}>
+            <SettingsList.ItemIcon icon={FriendsIcon} />
+            <SettingsList.ItemText>
+              <Trans>Friends and invites</Trans>
+            </SettingsList.ItemText>
           </SettingsList.LinkItem>
           <SettingsList.Divider />
           <SectionTitle>
@@ -220,6 +234,25 @@ export function SettingsScreen() {
               </Text>
             ) : null}
           </SettingsList.LinkItem>
+          {/* F-2007 and F-2001: CSV, PDF and the full JSON backup out; a backup back in. */}
+          <SettingsList.PressableItem
+            testID="settings-export"
+            label={l`Export`}
+            onPress={exportSheet.open}>
+            <SettingsList.ItemIcon icon={ExportIcon} />
+            <SettingsList.ItemText>
+              <Trans>Export</Trans>
+            </SettingsList.ItemText>
+          </SettingsList.PressableItem>
+          <SettingsList.PressableItem
+            testID="settings-import"
+            label={l`Import`}
+            onPress={importSheet.open}>
+            <SettingsList.ItemIcon icon={ImportIcon} />
+            <SettingsList.ItemText>
+              <Trans>Import</Trans>
+            </SettingsList.ItemText>
+          </SettingsList.PressableItem>
           <InstallAppItem />
           {/* Dev and e2e builds only: the large demo set (ARCHITECTURE 26.1). */}
           {DemoDataRows && (
@@ -255,6 +288,8 @@ export function SettingsScreen() {
         </SettingsList.Container>
       </Layout.Content>
 
+      {exportSheet.element}
+      {importSheet.element}
       <Prompt.Basic
         control={resetPrompt}
         title={l`Reset all settings?`}

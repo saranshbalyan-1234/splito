@@ -1,15 +1,9 @@
-import {Share} from 'react-native'
+import {saveFile} from '#/lib/export/saveFile'
 
 /**
- * Hands the CSV to the system share sheet (save to Files, mail, Drive...).
- * Resolves true when the user shared it, false when they dismissed the sheet.
- * ponytail: shared as text, not a file attachment; add expo-file-system +
- * expo-sharing when a real .csv file in the share sheet is needed.
+ * Saves the CSV as a real .csv file and opens the share sheet (Files, Drive,
+ * mail...). Resolves true once the sheet was shown.
  */
-export async function exportCsv(
-  filename: string,
-  csv: string,
-): Promise<boolean> {
-  const result = await Share.share({title: filename, message: csv})
-  return result.action === Share.sharedAction
+export function exportCsv(filename: string, csv: string): Promise<boolean> {
+  return saveFile(filename, 'text/csv', csv)
 }
