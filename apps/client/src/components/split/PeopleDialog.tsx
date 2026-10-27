@@ -3,6 +3,7 @@ import {View} from 'react-native'
 import {Trans, useLingui} from '@lingui/react/macro'
 import {createPerson} from '@splito/sync'
 
+import {useSingleFlight} from '#/lib/hooks/useSingleFlight'
 import {useMutationCtx, usePendingRequests, useStore} from '#/data/hooks'
 import {UserAvatar} from '#/view/com/util/UserAvatar'
 import {atoms as a, useTheme} from '#/alf'
@@ -96,6 +97,7 @@ function PeopleInner({
   const errorText = useErrorText()
   const [query, setQuery] = useState('')
   const [isAdding, setIsAdding] = useState(false)
+  const runOnce = useSingleFlight()
   const q = query.trim()
   const rows = candidates.filter(
     id => !q || name(id).toLowerCase().includes(q.toLowerCase()),
@@ -104,18 +106,21 @@ function PeopleInner({
     id => name(id).toLowerCase() === q.toLowerCase(),
   )
 
-  const addPerson = async () => {
-    setIsAdding(true)
-    try {
-      const person = await createPerson(store, ctx, {name: q})
-      onChange([...selected, person.id])
-      setQuery('')
-    } catch (e) {
-      Toast.show(errorText((e as {code?: string}).code ?? ''), {type: 'error'})
-    } finally {
-      setIsAdding(false)
-    }
-  }
+  const addPerson = () =>
+    runOnce(async () => {
+      setIsAdding(true)
+      try {
+        const person = await createPerson(store, ctx, {name: q})
+        onChange([...selected, person.id])
+        setQuery('')
+      } catch (e) {
+        Toast.show(errorText((e as {code?: string}).code ?? ''), {
+          type: 'error',
+        })
+      } finally {
+        setIsAdding(false)
+      }
+    })
 
   return (
     <FormSheet.Inner title={title}>

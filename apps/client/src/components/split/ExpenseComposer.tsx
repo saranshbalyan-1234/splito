@@ -44,6 +44,7 @@ import {
   formPayers,
   type FormEvaluation,
   hasContent,
+  keepItemPeople,
   withPeople,
 } from './form'
 import {CircleCheck_Stroke2_Corner0_Rounded as CheckIcon} from '#/components/icons/CircleCheck'
@@ -144,7 +145,7 @@ export function ExpenseComposer({
   useEffect(() => {
     if (!draftContext || savedId || form === initialForm) return
     if (hasContent(form)) writeDraft(form, draftContext)
-    else clearDraft()
+    else clearDraft(draftContext)
   }, [form, draftContext, savedId, initialForm])
 
   const group = form.groupId
@@ -181,10 +182,7 @@ export function ExpenseComposer({
         people: next,
         payer: next.includes(f.payer) ? f.payer : (next[0] ?? ctx.actor),
         excluded: [],
-        items: f.items.map(i => ({
-          ...i,
-          people: i.people.filter(p => next.includes(p)),
-        })),
+        items: keepItemPeople(f.items, new Set(next)),
       }
     })
 
@@ -225,7 +223,7 @@ export function ExpenseComposer({
       const saved = expenseId
         ? await updateExpense(store, ctx, expenseId, draft)
         : await createExpense(store, ctx, draft)
-      if (draftContext) clearDraft()
+      if (draftContext) clearDraft(draftContext)
       setSavedId(saved.id)
     } catch (e) {
       setIsSaving(false)
@@ -284,7 +282,7 @@ export function ExpenseComposer({
                 control={control}
                 onDraftKept={onDiscardConfirmed}
                 onDraftDiscarded={() => {
-                  clearDraft()
+                  if (draftContext) clearDraft(draftContext)
                   onDiscardConfirmed()
                 }}
               />
@@ -410,7 +408,7 @@ export function ExpenseComposer({
             variant="ghost"
             color="primary"
             onPress={() => {
-              clearDraft()
+              if (draftContext) clearDraft(draftContext)
               setShowRestored(false)
               setForm(freshForm)
             }}>

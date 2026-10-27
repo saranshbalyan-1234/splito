@@ -112,3 +112,21 @@ test('m27: browser Back on a dirty Add friend sheet asks "Discard changes?"', as
   await expect(page.getByTestId('screen-add-friend')).toHaveCount(0)
   await expect(page.getByTestId('screen-people')).toBeVisible()
 })
+
+test('m30d: Enter twice in "Add someone new" makes one friend', async ({
+  page,
+}) => {
+  await ready(page)
+  await page.goto('/groups/new')
+  const input = page.getByTestId('create-group-new-member')
+  await input.fill('Dup Dev')
+  await input.evaluate(el => {
+    for (let i = 0; i < 2; i++)
+      el.dispatchEvent(
+        new KeyboardEvent('keydown', {key: 'Enter', bubbles: true}),
+      )
+  })
+  await expect(page.getByTestId('create-group-member-Dup Dev')).toHaveCount(1)
+  await page.waitForTimeout(500)
+  await expect(page.getByTestId('create-group-member-Dup Dev')).toHaveCount(1)
+})

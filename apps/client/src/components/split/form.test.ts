@@ -8,6 +8,7 @@ import {
   type ExpenseForm,
   formFromExpense,
   formPayers,
+  pruneForm,
   withPeople,
 } from './form'
 import {suggestCategory} from './suggestCategory'
@@ -567,5 +568,52 @@ describe('withPeople', () => {
     expect(f.people).toEqual(['me', 'riya'])
     expect(f.excluded).toEqual([])
     expect(f.items[0]!.people).toEqual(['riya'])
+  })
+})
+
+/* F-116 m30(c): removing a person drops their item portions; they do not come back when re-added. */
+describe('withPeople portions', () => {
+  test('a removed person keeps no portions on an item', () => {
+    const f = withPeople(
+      base({items: [{key: 'i', name: 'Beer', amount: '9', people: ['riya', 'sam'], portions: {riya: 2, sam: 3}}]}),
+      ['me', 'riya'],
+      ['me', 'riya', 'sam'],
+    )
+    expect(f.items[0]!.portions).toEqual({riya: 2})
+    const back = withPeople({...f, items: [{...f.items[0]!, people: ['riya', 'sam']}]}, ['me', 'riya', 'sam'], ['me', 'riya', 'sam'])
+    expect(back.items[0]!.portions).toEqual({riya: 2})
+  })
+})
+
+/* F-116 m30(b): a restored draft drops every reference to a person who no longer exists. */
+describe('pruneForm', () => {
+  test('payer, paid, exact, percent, shares, adjust, excluded and items lose the deleted person', () => {
+    const f = pruneForm(
+      base({
+        payer: 'sam',
+        payerMode: 'multiple',
+        paid: {me: '10', sam: '20'},
+        exact: {riya: '1', sam: '2'},
+        percent: {sam: '50'},
+        shares: {sam: 2},
+        adjust: {sam: '3'},
+        excluded: ['sam'],
+        items: [{key: 'i', name: 'Beer', amount: '9', people: ['riya', 'sam'], portions: {sam: 2}}],
+      }),
+      new Set(['me', 'riya']),
+    )
+    expect(f.people).toEqual(['me', 'riya'])
+    expect(f.payer).toBe('me')
+    expect(f.paid).toEqual({me: '10'})
+    expect(f.exact).toEqual({riya: '1'})
+    expect(f.percent).toEqual({})
+    expect(f.shares).toEqual({})
+    expect(f.adjust).toEqual({})
+    expect(f.excluded).toEqual([])
+    expect(f.items[0]).toMatchObject({people: ['riya'], portions: {}})
+  })
+  test('a form with nobody removed is unchanged', () => {
+    const f = base()
+    expect(pruneForm(f, new Set(f.people))).toEqual(f)
   })
 })
