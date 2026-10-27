@@ -189,3 +189,34 @@ test.describe('phone', () => {
     await expect(page.getByTestId('screen-people')).toBeVisible()
   })
 })
+
+test.describe('a broad query pages: the first page at once, the totals after, more by cursor', () => {
+  test('600 matches show 30 rows, "Calculating totals…" then the count and totals, and Show more adds a page', async ({page}) => {
+    await page.goto('/')
+    await page.waitForFunction(() => 'splito' in window)
+    await page.evaluate(() =>
+      (window as unknown as {splito: {seedBulk(i: {friends: number; groups: number; expenses: number}): Promise<number>}}).splito.seedBulk({friends: 20, groups: 5, expenses: 600}),
+    )
+    await page.reload()
+    await page.getByTestId('header-search-ask').last().click()
+    const screen = page.getByTestId('search-ask')
+    await expect(screen).toBeVisible()
+    await page.getByTestId('search-input').fill('bulk')
+    // The first page: 30 expenses (and the people and groups), however many match.
+    await expect(screen.getByTestId('search-row-0')).toBeVisible()
+    const rows = screen.locator('[data-testid^="search-row-"]')
+    const people = await screen.locator('[data-testid^="search-row-"]').count()
+    expect(people).toBeLessThan(80)
+    await expect(screen.getByTestId('search-show-more')).toBeVisible()
+    // Totals fill in after it: the heading's count becomes the real one, with one total per currency.
+    await expect(screen.getByTestId('search-totals')).toBeVisible({timeout: 30_000})
+    await expect(screen.getByTestId('search-totals-pending')).toHaveCount(0)
+    await expect(screen.getByTestId('search-section-expenses')).toContainText('600')
+    const before = await rows.count()
+    await screen.getByTestId('search-show-more').click()
+    await expect.poll(() => rows.count()).toBeGreaterThan(before)
+    // A new keystroke starts over with one page.
+    await page.getByTestId('search-input').fill('bulk friend 1')
+    await expect(screen.getByTestId('search-row-0')).toBeVisible()
+  })
+})
