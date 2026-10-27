@@ -1497,6 +1497,9 @@ expands once I click". *Where:* `screens/People`, `screens/Groups`, `screens/Gro
 - **The list section header row** ("Friends 6" / "Groups 3") carries icon buttons on its RIGHT: on Groups,
   search (Lucide `Search`, testID `list-search`; on Home the global search field replaces it) and Filters (`list-filters`, with a dot/count when non-default
   filters are active). Both hide while the list is empty (§ 25).
+- **The Friends list has its own search, besides Search & Ask** (owner 91; F-222 removed the icon, F-1414
+  restores it; not built yet). It filters only the list it sits on, combines with the filters, and the query is
+  not kept after leaving the screen.
 - **Search is an icon until tapped,** then expands (Reanimated width/opacity, reduced-motion aware) into a
   full-width Bluesky `SearchInput` in the same row, autofocused, with an X that collapses and clears. Results
   filter live: friends by name, groups by group or member name; no match shows Bluesky's empty state "No
@@ -1915,6 +1918,7 @@ Every owner decision, in the order it was made (all 2026-10-26). "Replaced" name
 | 88 | "add archive group option as well, when archived it stops showing in main view and no expense can be added" | Archived groups leave the Groups list, recent groups and pickers (reachable via filter, Archived fold, search); no new, edited, moved or restored expenses (enforced in the mutation); settle, payments and comments stay; balances still count | § 26.12 | Archive only hid the group from Groups |
 | 89 | "or make it as active inactive and hide show instead of archive" | Two controls: Active/Inactive (group-wide; inactive takes no new expenses, enforced in mutations; settle stays; Inactive fold) and Show/Hide (personal pref `groups.hidden`); balances never hidden; old `archived` reads as Inactive | § 26.12 | One "Archive" (row 88) |
 | 90 | "by default hide settled, in filters option for show settled, every setting that we choose to be stored in db" | Settled friends and groups hidden by default with a "Show settled" filter switch; every user choice (filters, sorts, scopes) persists as a database preference; device-scope prefs move from MMKV/localStorage into the DB | § 26.12 | Settled shown; filters in screen state; device prefs in MMKV |
+| 91 | "add search on friends as well" | Friends list keeps its own inline search (icon that expands, live filter by name) next to its filters, in addition to the Search & Ask drawer | § 26.12 | Search & Ask only (F-222 removed the Friends search icon) |
 
 New decisions follow § 0 rule 9: rewrite the rule in its topic so only the current truth remains, then add a
 row here.

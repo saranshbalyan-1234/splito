@@ -2676,6 +2676,18 @@ Settled friends and groups are hidden by default with a "Show settled" filter sw
   4. An architecture rule test fails when a screen keeps a user-visible filter/sort choice only in component state.
   5. Settings > Reset restores every one of these to its default.
 
+### F-1414 Search on the Friends list `spec: owner § 26.12 (decision 91)`
+
+Restore the Friends list's own search (removed by F-222) next to its filters on Home / People, in addition to the Search & Ask drawer. Queued by the owner; build only when the owner says so.
+
+- **Effort** S · **Impact** 6 · **Backend** no · **Status** todo · **Deps** F-222
+- **Prefs** -
+- **Acceptance**
+  1. A search icon in the Friends section header expands into Bluesky's SearchInput (Reanimated, reduced-motion aware) with an X that collapses and clears.
+  2. Live filter by friend name (and nickname, folded case and accents), combined with the active filters and Show settled; "No matches for '...'" empty state.
+  3. The query is cleared on leaving the screen; Search & Ask is unchanged.
+  4. e2e at phone and desktop widths; Hindi 0 missing.
+
 ### F-1501 Text summaries for WhatsApp `spec 4b v1`
 
 Whole-group or "only their part" summaries with WhatsApp markup, sent via wa.me in the recipient's language.
