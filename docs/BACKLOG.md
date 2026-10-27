@@ -2310,15 +2310,15 @@ An expense History tab with plain diffs per version; an Activity row whenever an
 No Recently deleted bin. A deleted expense, payment, write-off, comment, group or friend stays in its own list, struck through with a clock and "Deleted <time>", never purged and never counted; it opens read-only with Restore. Replaces the bin (and decision 102's per-item purge).
 
 - **Effort** M · **Impact** 8 · **Backend** no · **Status** todo (built on feat/wB-B3x) · **Deps** F-114, F-615
-- **Prefs** `lists.showDeleted` (account, default on); `history.binDays` removed (migration drops it)
+- **Prefs** `lists.hiddenItems` (account, set of ids, default empty); `history.binDays` removed (migration drops it)
 - **Acceptance**
   1. The Recently deleted screen, route (`/settings/recently-deleted` redirects to Settings > Data with a short note), Settings row, purge code (`purgeDeleted`, auto-purge, "Delete forever", days-left lines) and `history.binDays` are removed; no code path hard-deletes a record (architecture rule test).
   2. Deleted records render in place in the group Expenses tab, person history, Activity, search results, Groups list and People list, in date order, with decision 98's look; their amounts are excluded from every balance, total, chart, export total and settle plan (projection tests unchanged: tombstones already contribute nothing).
   3. A deleted group stays in the Groups list (struck, chip "Deleted"), its page opens read-only with its records struck and a Restore action; restoring a group restores exactly the records deleted with it (existing deletedWithGroup logic).
   4. A deleted expense/payment opens read-only with history and Restore (same guards: missing person or group, GROUP_INACTIVE); Undo toasts still work.
-  5. "Show deleted" filter on People, Groups, the Group Expenses tab and the Person history (default on, remembered per decision 90).
+  5. Deleted items always show. Each deleted row and page has "Hide" (personal, per item, Undo) writing `lists.hiddenItems`; one "Show hidden" filter (default off) on People, Groups, the Group Expenses tab and Person history reveals hidden items (with "Unhide") and also hidden groups (replaces the Groups "Visibility" filter); no global hide-all-deleted switch (decisions 104, 105).
   6. deletePerson no longer counts "bin items"; a person named on any record (deleted or not) is kept as a struck friend rather than removed from records.
-  7. e2e: delete an expense, it stays struck in the group list with clock and time and balances drop it; restore from its page; delete a group, it stays struck in Groups, opens read-only, restores; Show deleted off hides them. Phone and desktop.
+  7. e2e: delete an expense, it stays struck in the group list with clock and time and balances drop it; restore from its page; delete a group, it stays struck in Groups, opens read-only, restores; Hide one deleted expense, it disappears; "Show hidden" brings it back with Unhide. Phone and desktop.
 
 ### F-1204 Comments on expenses and repayments `spec v2, owner § 26.20`
 

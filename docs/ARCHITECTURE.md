@@ -1678,8 +1678,12 @@ dishes etc and each item can be assigned to each in split"; "in itemize don't sh
   struck. Deleted items never count in any balance, total, chart, export total or settle plan. Nothing is ever
   purged: no bin, no "days left", no `history.binDays` setting, no "Delete forever". Opening a deleted item shows
   it read-only with "Restore" (and its history); Restore keeps the same checks as before (a missing person or
-  group, an inactive group). A list filter "Show deleted" (preference `lists.showDeleted`, account, default on)
-  can hide them; shown by default (owner 104). Only "Erase this device's data" (Settings > Data) removes data, and it says so. *Why:* "lets
+  group, an inactive group). **Deleted items always show; hiding is a manual, per-item choice** (owners 104,
+  105): each deleted row (and its page) has "Hide" (row menu / long-press / right-click; Undo toast), which hides
+  that one item for me only (account preference `lists.hiddenItems`, a set of ids synced across my devices; it
+  never changes anything for others). Lists gain one "Show hidden" filter (default off) that brings back
+  everything I hid, each with "Unhide"; it is the same filter that shows groups hidden under decision 89 (the
+  Groups "Visibility" filter becomes this "Show hidden" switch). No global "hide all deleted" switch. Only "Erase this device's data" (Settings > Data) removes data, and it says so. *Why:* "lets
   remove this deleted items and keep deleted items inside their actual place with a stroke, like a deleted
   expense and keep it forever, and same for groups".
 
@@ -1999,6 +2003,7 @@ Every owner decision, in the order it was made (all 2026-10-26). "Replaced" name
 | 102 | "if i deleted an item and setting is for 90 days, and i change the setting to 7 days, the old item should still follow its own rule" | Each tombstone stores its own purgeAfter from the bin setting at delete time; changing the setting affects only later deletes | § 26.14 | Purge computed from the current setting |
 | 103 | "lets remove this deleted items and keep deleted items inside their actual place with a stroke, like a deleted expense and keep it forever, and same for groups" | No Recently deleted bin; deleted expenses, payments, write-offs, comments, groups and friends stay in their own lists, struck through, never purged, never counted; open read-only with Restore; "Show deleted" filter (default on) | § 26.14 | Recently deleted bin with timed purge (F-1203, decision 102) |
 | 104 | "by default show deleted as well" | Deleted items are shown by default; "Show deleted" filter defaults on | § 26.14 | (confirms 103's default) |
+| 105 | "they need to manually hide, and then, show hidden to be used" | Deleted items always show; each can be hidden manually (personal, per item, Undo); one "Show hidden" filter (default off) reveals hidden items and hidden groups | § 26.14, § 26.12 | Global "Show deleted" filter (row 103) |
 
 New decisions follow § 0 rule 9: rewrite the rule in its topic so only the current truth remains, then add a
 row here.
