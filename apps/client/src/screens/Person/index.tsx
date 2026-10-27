@@ -79,6 +79,8 @@ import * as Skeleton from '#/components/Skeleton'
 import * as Toast from '#/components/Toast'
 import {Text} from '#/components/Typography'
 import {Shimmer} from '#/motion/Shimmer'
+import {PersonReminders} from '#/features/remind/PersonReminders'
+import {RemindMenuItems} from '#/features/remind/RemindMenuItems'
 import {HistoryFilterDialog} from './components/HistoryFilterDialog'
 import {
   PersonBalances,
@@ -306,6 +308,7 @@ export function PersonScreen() {
             groupNames={groupNames}
             locale={locale}
           />
+          <PersonReminders personId={personId} />
         </View>
       </View>
       <SectionHeader
@@ -395,6 +398,7 @@ export function PersonScreen() {
                   <Menu.ItemIcon icon={HandshakeIcon} position="right" />
                 </Menu.Item>
               )}
+              <RemindMenuItems personId={personId} />
               <Menu.Item
                 testID="person-edit"
                 label={l`Edit friend`}

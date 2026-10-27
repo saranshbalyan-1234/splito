@@ -14,6 +14,7 @@ import {useColorModeTheme} from '#/alf/util/useColorModeTheme'
 import {GestureRoot} from '#/components/GestureRoot'
 import {Provider as PortalProvider} from '#/components/Portal'
 import {PwaHost} from '#/features/pwa/PwaHost'
+import {RemindHost} from '#/features/remind/RemindHost'
 import {ToastOutlet} from '#/components/Toast'
 import {StoreProvider} from '#/data/StoreProvider'
 import {Shell} from '#/view/shell'
@@ -35,6 +36,7 @@ function Themed() {
               <LocaleFromPrefs />
               <PrefsMirror />
               <PwaHost />
+              <RemindHost />
               <Shell />
             </StoreProvider>
             <ToastOutlet />
