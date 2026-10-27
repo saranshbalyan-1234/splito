@@ -3,7 +3,7 @@ import {CURRENCIES, DomainError} from '@splito/domain'
 import type {Store} from './store'
 import type {Entity, MutationCtx} from './types'
 
-export type PrefGroup = 'appearance' | 'motion' | 'defaults' | 'categories' | 'regional' | 'lists' | 'notifications' | 'privacy' | 'history'
+export type PrefGroup = 'appearance' | 'motion' | 'navigation' | 'defaults' | 'categories' | 'regional' | 'lists' | 'notifications' | 'privacy' | 'history'
 
 export interface PrefDef<T> {
   key: string
@@ -16,11 +16,16 @@ export interface PrefDef<T> {
 }
 
 /**
- * Bottom-bar / sidebar destinations. Profile and Settings open from the
- * avatar's drawer. Activity was briefly a header bell; lists stored before
- * then still name 'activity' and read back unchanged.
+ * The tab destinations (routes of their own). Activity was briefly a header
+ * bell; lists stored before then still name 'activity' and read back unchanged.
  */
 export type TabId = 'people' | 'groups' | 'analytics' | 'activity'
+/**
+ * Every item of the shared sidebar / drawer list (ARCHITECTURE 26.3), in its
+ * order. The phone bottom bar shows 2 to 5 of them, Home first; 'ask' opens
+ * the Search & Ask drawer and 'settings' the Settings page.
+ */
+export type NavItemId = TabId | 'ask' | 'settings'
 /** How each itemised-bill charge is typed: money, or a percentage of the items. */
 export type AdjustmentModes = Record<'tax' | 'tip' | 'service' | 'discount', 'amount' | 'percent'>
 export type SwipeAction = 'markRead' | 'hide' | 'delete' | 'none'
@@ -51,6 +56,11 @@ export const DEFAULT_CATEGORIES: Category[] = [
 ].map(([id, name, color, icon], order) => ({id: id!, name: name!, color: color!, icon: icon!, order, hidden: false}))
 
 const TAB_IDS: TabId[] = ['people', 'groups', 'analytics', 'activity']
+/** The shared list's order: Home, Groups, Analytics, Ask Splito, Activity, Settings. */
+export const NAV_ITEM_IDS: readonly NavItemId[] = ['people', 'groups', 'analytics', 'ask', 'activity', 'settings']
+/** The bottom bar holds 2 to 5 tabs, as Bluesky's. */
+export const MIN_TABS = 2
+export const MAX_TABS = 5
 const HEX = /^#[0-9a-f]{6}$/i
 
 const oneOf =
@@ -97,16 +107,22 @@ export const PREFS = {
   moneyPalette: def('moneyPalette', 'appearance', 'account', 'Money colours', 'default', oneOf('default', 'colorblind', 'mono')),
   motion: def('motion', 'motion', 'device', 'Animations', 'full', oneOf('full', 'reduced', 'off')),
   haptics: def('haptics', 'motion', 'device', 'Haptics', true, isBool),
-  tabs: def<TabId[]>(
+  /* The phone bottom bar: 2-5 items of the shared nav list, Home first and always on (26.3). */
+  tabs: def<NavItemId[]>(
     'tabs',
-    'defaults',
+    'navigation',
     'account',
-    'Tabs and order',
+    'Bottom bar',
     [...TAB_IDS],
-    // Any non-empty set works: Settings stays reachable from the avatar's drawer on every tab.
-    (v): v is TabId[] => Array.isArray(v) && v.length > 0 && new Set(v).size === v.length && v.every(t => TAB_IDS.includes(t)),
+    (v): v is NavItemId[] =>
+      Array.isArray(v) &&
+      v.length >= MIN_TABS &&
+      v.length <= MAX_TABS &&
+      v[0] === 'people' &&
+      new Set(v).size === v.length &&
+      v.every(t => NAV_ITEM_IDS.includes(t)),
   ),
-  homeTab: def<TabId>('homeTab', 'defaults', 'account', 'Home tab', 'people', oneOf(...TAB_IDS)),
+  homeTab: def<TabId>('homeTab', 'navigation', 'account', 'Open on', 'people', oneOf(...TAB_IDS)),
   defaultCurrency: def('defaultCurrency', 'defaults', 'account', 'Default currency', 'INR', (v): v is string => typeof v === 'string' && v in CURRENCIES),
   itemizeAdjustmentModes: def<AdjustmentModes>(
     'itemizeAdjustmentModes',
@@ -186,8 +202,10 @@ function readRaw<K extends PrefKey>(rows: ReadonlyArray<PrefRow>, key: K): PrefV
     // Orders saved while Profile was a tab predate the Analytics tab, so it joins them.
     const isPreAnalytics = value.includes('profile')
     // Profile left the tabs for the header avatar; the rest keep their order.
-    value = value.filter(t => TAB_IDS.includes(t))
+    value = value.filter(t => NAV_ITEM_IDS.includes(t))
     if (isPreAnalytics && !(value as TabId[]).includes('analytics')) value = [...(value as TabId[]), 'analytics']
+    // Home became fixed (26.3): orders saved before then keep their tabs, with Home first.
+    value = ['people', ...(value as NavItemId[]).filter(t => t !== 'people')]
   }
   return value !== undefined && def.validate(value) ? (value as PrefValue<K>) : def.default
 }
@@ -200,7 +218,7 @@ export function prefFrom<K extends PrefKey>(rows: ReadonlyArray<PrefRow>, key: K
   const value = readRaw(rows, key)
   if (key === 'homeTab') {
     const tabs = readRaw(rows, 'tabs')
-    return (tabs.includes(value as TabId) ? value : tabs[0]) as PrefValue<K>
+    return (tabs.includes(value as TabId) ? value : 'people') as PrefValue<K>
   }
   return value
 }

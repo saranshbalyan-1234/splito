@@ -1,5 +1,6 @@
-import {PREFS, type TabId} from '@splito/sync'
+import {type NavItemId, PREFS, type TabId} from '@splito/sync'
 
+import {bottomBarItems} from '#/lib/routes/navigationItems'
 import {type TabParams} from '#/lib/routes/types'
 import {usePref} from '#/data/hooks'
 import {ROUTE_PATHS} from '#/routes'
@@ -18,11 +19,11 @@ export function tabHref(tab: TabId) {
 }
 
 /**
- * The tabs the bottom bar and sidebar show, in the user's order (the `tabs`
- * preference). Hidden tabs keep their routes, so links to them still work;
- * Profile and Settings open from the avatar's drawer on every tab.
+ * The phone bottom bar's items, in the user's order (the `tabs` preference,
+ * Settings > Navigation). Items not in the bar stay in the drawer, and the
+ * sidebar always shows the full list (ARCHITECTURE 26.3).
  */
-export function useTabs(): TabId[] {
+export function useTabs(): NavItemId[] {
   const [tabs] = usePref('tabs')
-  return tabs ?? PREFS.tabs.default
+  return bottomBarItems(tabs ?? PREFS.tabs.default)
 }

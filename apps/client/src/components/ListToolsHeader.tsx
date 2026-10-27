@@ -49,17 +49,21 @@ export function ListToolsHeader({
   /** Rows before search, for the "2 of 6" readout while searching. */
   total?: number
   titleTestID?: string
-  query: string
-  onQueryChange: (query: string) => void
-  /** What the field searches, e.g. "Search friends". */
-  searchLabel: string
+  /*
+   * The list's own search; without it the row has no search icon (Home's
+   * friends: the header's Search & Ask drawer searches everything, 26.3).
+   */
+  query?: string
+  onQueryChange?: (query: string) => void
+  /** What the field searches, e.g. "Search groups or members". */
+  searchLabel?: string
   activeFilterCount: number
   onFiltersPress: () => void
 }) {
   const t = useTheme()
   const {t: l} = useLingui()
   const shouldReduceMotion = useShouldReduceMotion()
-  const [isSearching, setIsSearching] = useState(query !== '')
+  const [isSearching, setIsSearching] = useState(!!query)
   const [rowWidth, setRowWidth] = useState(0)
   const progress = useSharedValue(isSearching ? 1 : 0)
   const input = useRef<React.ComponentRef<typeof TextInput>>(null)
@@ -79,7 +83,7 @@ export function ListToolsHeader({
   const restStyle = useAnimatedStyle(() => ({opacity: 1 - progress.get()}))
 
   const collapse = () => {
-    onQueryChange('')
+    onQueryChange?.('')
     setIsSearching(false)
   }
 
@@ -114,17 +118,19 @@ export function ListToolsHeader({
               </Text>
             )}
           </Text>
-          <Button
-            testID="list-search"
-            label={searchLabel}
-            size="small"
-            variant="ghost"
-            color="secondary"
-            shape="round"
-            hitSlop={HITSLOP_10}
-            onPress={() => setIsSearching(true)}>
-            <ButtonIcon icon={SearchIcon} size="md" />
-          </Button>
+          {onQueryChange && searchLabel && (
+            <Button
+              testID="list-search"
+              label={searchLabel}
+              size="small"
+              variant="ghost"
+              color="secondary"
+              shape="round"
+              hitSlop={HITSLOP_10}
+              onPress={() => setIsSearching(true)}>
+              <ButtonIcon icon={SearchIcon} size="md" />
+            </Button>
+          )}
         </Animated.View>
         <Button
           testID="list-filters"
@@ -188,7 +194,7 @@ export function ListToolsHeader({
           />
         </Animated.View>
       )}
-      {isSearching && query.trim() !== '' && total !== undefined && (
+      {isSearching && !!query?.trim() && total !== undefined && (
         <Text
           testID="list-search-count"
           aria-live="polite"

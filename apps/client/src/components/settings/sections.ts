@@ -8,12 +8,18 @@ import {Earth_Stroke2_Corner2_Rounded as EarthIcon} from '#/components/icons/Glo
 import {PaintRoller_Stroke2_Corner2_Rounded as PaintRollerIcon} from '#/components/icons/PaintRoller'
 import {Shapes_Stroke2_Corner0_Rounded as ShapesIcon} from '#/components/icons/Shapes'
 import {Shield_Stroke2_Corner0_Rounded as ShieldIcon} from '#/components/icons/Invite'
-import {BinIcon, SparklesIcon, TabsIcon} from '#/components/settings/icons'
+import {
+  BinIcon,
+  DefaultsIcon,
+  SparklesIcon,
+  TabsIcon,
+} from '#/components/settings/icons'
 
 /** Settings pages, one per preferences-registry group, in the order the Settings list shows them. */
 export const SETTINGS_SECTIONS = [
   'appearance',
   'motion',
+  'navigation',
   'defaults',
   'categories',
   'regional',
@@ -42,7 +48,9 @@ export function useSectionInfo(): Record<
   return {
     appearance: {title: l`Appearance`, icon: PaintRollerIcon},
     motion: {title: l`Motion and haptics`, icon: SparklesIcon},
-    defaults: {title: l`Tabs and defaults`, icon: TabsIcon},
+    /* The phone bottom bar and where Splito opens (26.3). */
+    navigation: {title: l`Navigation`, icon: TabsIcon},
+    defaults: {title: l`Defaults`, icon: DefaultsIcon},
     categories: {title: l`Categories`, icon: ShapesIcon},
     regional: {title: l`Language and region`, icon: EarthIcon},
     /* What the People list shows and in what order; "Lists" alone said nothing. */

@@ -708,9 +708,7 @@ export function GroupScreen() {
               }
               case 'outsideRules':
                 return (
-                  <View
-                    testID="group-outside-rules"
-                    style={[a.px_lg, a.pb_md]}>
+                  <View testID="group-outside-rules" style={[a.px_lg, a.pb_md]}>
                     <Admonition.Outer type="warning">
                       <Admonition.Row>
                         <Admonition.Icon />

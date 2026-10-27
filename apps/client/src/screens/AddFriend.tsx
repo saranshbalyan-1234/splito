@@ -1,7 +1,11 @@
 // Adapted from bluesky-social/social-app@4e4ad9c (MIT) - src/components/contacts/screens/GetContacts.tsx (permission primer, denied state) and src/components/contacts/screens/PhoneInput.tsx (one field, live validation)
 import {useEffect, useRef, useState} from 'react'
 import {View} from 'react-native'
-import Animated, {FadeIn, FadeOut, LinearTransition} from 'react-native-reanimated'
+import Animated, {
+  FadeIn,
+  FadeOut,
+  LinearTransition,
+} from 'react-native-reanimated'
 import {Trans, useLingui} from '@lingui/react/macro'
 import {useNavigation} from '@react-navigation/native'
 import {
@@ -25,8 +29,19 @@ import {
 import {useHaptics} from '#/lib/haptics'
 import {type NavigationProp} from '#/lib/routes/types'
 import {logger} from '#/logger'
-import {deviceRegion, directory, inviteUrl, makeInviteLink} from '#/data/friends'
-import {useEntities, useMutationCtx, usePendingRequests, usePref, useStore} from '#/data/hooks'
+import {
+  deviceRegion,
+  directory,
+  inviteUrl,
+  makeInviteLink,
+} from '#/data/friends'
+import {
+  useEntities,
+  useMutationCtx,
+  usePendingRequests,
+  usePref,
+  useStore,
+} from '#/data/hooks'
 import {UserAvatar} from '#/view/com/util/UserAvatar'
 import * as SettingsList from '#/screens/Settings/components/SettingsList'
 import {atoms as a, native, useBreakpoints, useTheme} from '#/alf'
@@ -101,7 +116,9 @@ export function AddFriendScreen() {
   const [raw, setRaw] = useState('')
   const [name, setName] = useState('')
   const [isBlurred, setIsBlurred] = useState(false)
-  const [lookup, setLookup] = useState<{key: string; result: Lookup} | null>(null)
+  const [lookup, setLookup] = useState<{key: string; result: Lookup} | null>(
+    null,
+  )
   const [step, setStep] = useState<Step>({name: 'form'})
   const [isSaving, setIsSaving] = useState(false)
   const busy = useRef(false)
@@ -217,9 +234,12 @@ export function AddFriendScreen() {
         approveJoins: false,
       })
       if (link === 'unavailable') {
-        Toast.show(l`Invites need a connection. Try again when you’re online.`, {
-          type: 'error',
-        })
+        Toast.show(
+          l`Invites need a connection. Try again when you’re online.`,
+          {
+            type: 'error',
+          },
+        )
         return
       }
       await sendFriendRequest(store, ctx, {
@@ -321,7 +341,9 @@ export function AddFriendScreen() {
           saveLabel: gtMobile ? l`Send friend request` : l`Send request`,
           isSaving,
           onSave: () =>
-            void sendRequest(check.state === 'on-splito' ? 'on-splito' : 'unchecked'),
+            void sendRequest(
+              check.state === 'on-splito' ? 'on-splito' : 'unchecked',
+            ),
         }
       default:
         return {
@@ -340,7 +362,9 @@ export function AddFriendScreen() {
         {kind === 'email' ? (
           <Trans>Enter a full email address, like name@example.com.</Trans>
         ) : (
-          <Trans>Enter a mobile number with its country code, like +91 98765 43210.</Trans>
+          <Trans>
+            Enter a mobile number with its country code, like +91 98765 43210.
+          </Trans>
         )}
       </Text>
     ) : undefined
@@ -403,7 +427,11 @@ export function AddFriendScreen() {
                 <Trans>Add by email or number</Trans>
               </Text>
               <Text
-                style={[a.text_sm, a.leading_snug, t.atoms.text_contrast_medium]}>
+                style={[
+                  a.text_sm,
+                  a.leading_snug,
+                  t.atoms.text_contrast_medium,
+                ]}>
                 <Trans>
                   They get a request to accept. Once they do, you can split
                   anything together.
@@ -417,9 +445,7 @@ export function AddFriendScreen() {
               <Trans>Email or mobile number</Trans>
             </TextField.LabelText>
             <TextField.Root isInvalid={check.state === 'invalid' && isBlurred}>
-              <TextField.Icon
-                icon={kind === 'phone' ? PhoneIcon : MailIcon}
-              />
+              <TextField.Icon icon={kind === 'phone' ? PhoneIcon : MailIcon} />
               <TextField.Input
                 testID="add-friend-contact"
                 label={l`Email or mobile number`}
@@ -474,7 +500,10 @@ export function AddFriendScreen() {
             </TextField.Root>
           </View>
 
-          <Animated.View key={check.state} testID={`add-friend-status-${check.state}`} {...motion}>
+          <Animated.View
+            key={check.state}
+            testID={`add-friend-status-${check.state}`}
+            {...motion}>
             <Status
               check={check}
               value={contact ? formatContact(contact) : raw.trim()}
@@ -492,7 +521,9 @@ export function AddFriendScreen() {
               testID="add-friend-invite-link"
               label={l`Invite with a link or QR code`}
               contentContainerStyle={[a.px_0]}
-              onPress={() => navigation.replace('CreateInvite', {kind: 'friend'})}>
+              onPress={() =>
+                navigation.replace('CreateInvite', {kind: 'friend'})
+              }>
               <SettingsList.ItemIcon icon={QrIcon} />
               <SettingsList.ItemText>
                 <Trans>Invite link or QR code</Trans>
@@ -537,8 +568,7 @@ function Status({
   switch (check.state) {
     case 'empty':
       return (
-        <Text
-          style={[a.text_sm, a.leading_snug, t.atoms.text_contrast_medium]}>
+        <Text style={[a.text_sm, a.leading_snug, t.atoms.text_contrast_medium]}>
           <Trans>
             No email or number? Add just a name and they’re only for you.
           </Trans>
@@ -548,8 +578,7 @@ function Status({
       return null
     case 'checking':
       return (
-        <View
-          style={[a.flex_row, a.align_center, a.gap_sm, a.py_xs]}>
+        <View style={[a.flex_row, a.align_center, a.gap_sm, a.py_xs]}>
           <Loader size="sm" />
           <Text style={[a.text_sm, t.atoms.text_contrast_medium]}>
             <Trans>Checking Splito…</Trans>
@@ -666,7 +695,12 @@ function ContactsPrimer({isDenied}: {isDenied: boolean}) {
         )}
       </Text>
       <Text
-        style={[a.text_md, a.leading_snug, a.text_center, t.atoms.text_contrast_medium]}>
+        style={[
+          a.text_md,
+          a.leading_snug,
+          a.text_center,
+          t.atoms.text_contrast_medium,
+        ]}>
         {isDenied ? (
           <Trans>
             Splito can’t open your contacts. Turn on Contacts for Splito in
@@ -724,7 +758,9 @@ function PickValue({
             label={l`Use ${formatContact(c)}`}
             contentContainerStyle={[a.px_0]}
             onPress={() => onPick(c)}>
-            <SettingsList.ItemIcon icon={c.kind === 'phone' ? PhoneIcon : MailIcon} />
+            <SettingsList.ItemIcon
+              icon={c.kind === 'phone' ? PhoneIcon : MailIcon}
+            />
             <SettingsList.ItemText>{formatContact(c)}</SettingsList.ItemText>
             <SettingsList.Chevron />
           </SettingsList.PressableItem>

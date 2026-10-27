@@ -4,11 +4,12 @@ import {View} from 'react-native'
 import Animated from 'react-native-reanimated'
 import {useLingui} from '@lingui/react'
 import {useNavigationState} from '@react-navigation/native'
-import {type TabId} from '@splito/sync'
+import {type NavItemId} from '@splito/sync'
 
 import {useMinimalShellFooterTransform} from '#/lib/hooks/useMinimalShellTransform'
 import {currentSection} from '#/lib/routes/section'
-import {TAB_ROUTE, tabHref, useTabs} from '#/lib/routes/tabs'
+import {NAV_ITEM_HREF, NAV_ITEM_ROUTE} from '#/lib/routes/navigationItems'
+import {useTabs} from '#/lib/routes/tabs'
 
 import {useShellLayout} from '#/state/shell/shell-layout'
 import {Link} from '#/view/com/util/Link'
@@ -17,19 +18,20 @@ import {
   describeUnread,
   useActivityBadge,
 } from '#/components/activity/useActivityFeed'
-import {TAB_LABELS, TabGlyph} from '#/components/TabGlyph'
+import {PressableScale} from '#/motion/PressableScale'
+import {useSearchAsk} from '#/components/SearchAsk/context'
+import {NAV_LABELS, TabGlyph} from '#/components/TabGlyph'
 import {Text} from '#/components/Typography'
 import {useAnalytics} from '#/analytics'
 import {styles} from './BottomBarStyles'
 
-const BOTTOM_BAR_SECTIONS = ['People', 'Groups', 'Analytics', 'Activity']
-
-type NavItemValue = TabId
+type NavItemValue = NavItemId
 
 /*
- * Bluesky's signed-in mobile-web bottom bar with Splito's tabs, in the order
- * the `tabs` preference sets. There is no centre button: Add expense is the
- * FAB, as Bluesky's compose action is.
+ * Bluesky's signed-in mobile-web bottom bar with the items the `tabs`
+ * preference picks from the shared nav list (Settings > Navigation), in its
+ * order. Ask Splito opens the Search & Ask drawer instead of a page. There is
+ * no centre button: Add expense is the FAB, as Bluesky's compose action is.
  */
 export function BottomBarWeb() {
   const {_} = useLingui()
@@ -39,6 +41,9 @@ export function BottomBarWeb() {
   const tabs = useTabs()
   const iconWidth = 26
   const activityBadge = useActivityBadge()
+  const searchAsk = useSearchAsk()
+  /* Only the bar's own pages light up; under any other page the tab it was opened from stays lit. */
+  const sections = tabs.flatMap(tab => NAV_ITEM_ROUTE[tab] ?? [])
 
   return (
     <>
@@ -52,19 +57,42 @@ export function BottomBarWeb() {
           footerMinimalShellTransform,
         ]}
         onLayout={event => footerHeight.set(event.nativeEvent.layout.height)}>
-        {tabs.map(tab => (
-          <NavItem
-            key={tab}
-            routeName={TAB_ROUTE[tab]}
-            label={_(TAB_LABELS[tab])}
-            href={tabHref(tab)}
-            navItem={tab}
-            notificationCount={tab === 'activity' ? activityBadge : undefined}>
-            {({isActive}) => (
-              <TabGlyph tab={tab} isActive={isActive} size={iconWidth} />
-            )}
-          </NavItem>
-        ))}
+        {tabs.map(tab => {
+          const routeName = NAV_ITEM_ROUTE[tab]
+          const href = NAV_ITEM_HREF[tab]
+          if (!routeName || !href) {
+            return (
+              <PressableScale
+                key={tab}
+                testID={`tab-${tab}`}
+                style={[styles.ctrl, a.pb_lg]}
+                accessibilityRole="button"
+                accessibilityLabel={_(NAV_LABELS[tab])}
+                accessibilityHint=""
+                targetScale={0.8}
+                // TODO(F-2301): open straight in Ask mode.
+                onPress={() => searchAsk.open()}>
+                <TabGlyph tab={tab} isActive={false} size={iconWidth} />
+              </PressableScale>
+            )
+          }
+          return (
+            <NavItem
+              key={tab}
+              routeName={routeName}
+              sections={sections}
+              label={_(NAV_LABELS[tab])}
+              href={href}
+              navItem={tab}
+              notificationCount={
+                tab === 'activity' ? activityBadge : undefined
+              }>
+              {({isActive}) => (
+                <TabGlyph tab={tab} isActive={isActive} size={iconWidth} />
+              )}
+            </NavItem>
+          )
+        })}
       </Animated.View>
     </>
   )
@@ -74,6 +102,8 @@ const NavItem: React.FC<{
   children: (props: {isActive: boolean}) => React.ReactNode
   href: string
   routeName: string
+  /** The bar's pages, so a page outside them keeps its tab lit. */
+  sections: readonly string[]
   label: string
   navItem: NavItemValue
   hasNew?: boolean
@@ -83,6 +113,7 @@ const NavItem: React.FC<{
   children,
   href,
   routeName,
+  sections,
   label,
   navItem,
   hasNew,
@@ -91,10 +122,8 @@ const NavItem: React.FC<{
 }) => {
   const t = useTheme()
   const ax = useAnalytics()
-  /* Under Settings (not a bottom-bar item) the tab it was opened from stays lit, as Bluesky's does. */
-  const section = useNavigationState(state =>
-    currentSection(state, BOTTOM_BAR_SECTIONS),
-  )
+  /* Under a page that is not in the bar (Settings, unless added) the tab it was opened from stays lit, as Bluesky's does. */
+  const section = useNavigationState(state => currentSection(state, sections))
 
   const onBeforePress = useCallback(() => {
     ax.metric('nav:click', {item: navItem, surface: 'bottomBar'})

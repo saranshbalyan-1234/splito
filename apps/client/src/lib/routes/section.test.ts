@@ -18,7 +18,10 @@ test('a pushed page keeps the section it was opened from lit', () => {
 test('the bottom bar, which has no Settings, keeps lit the tab Settings was opened from', () => {
   const tabs = ['People', 'Groups', 'Analytics', 'Activity']
   expect(
-    currentSection(stack('People', 'Groups', 'Settings', 'SettingsSection'), tabs),
+    currentSection(
+      stack('People', 'Groups', 'Settings', 'SettingsSection'),
+      tabs,
+    ),
   ).toBe('Groups')
   expect(currentSection(stack('Settings'), tabs)).toBe('People')
 })

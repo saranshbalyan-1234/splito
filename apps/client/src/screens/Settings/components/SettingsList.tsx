@@ -227,9 +227,7 @@ export function ItemIcon({
   /* Splito: row icons a step quieter than their labels, so the words lead. */
   const color =
     colorProp ??
-    (destructive
-      ? t.palette.negative_500
-      : t.atoms.text_contrast_medium.color)
+    (destructive ? t.palette.negative_500 : t.atoms.text_contrast_medium.color)
 
   const content = (
     <View style={[a.z_20, {width: iconSize, height: iconSize}]}>

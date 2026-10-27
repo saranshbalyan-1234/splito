@@ -2,7 +2,13 @@
 import {useMemo} from 'react'
 import {View} from 'react-native'
 import {utils} from '@bsky.app/alf'
-import {formatAmountCompact, magnitude, personNet, repaymentFlow, ZERO} from '@splito/domain'
+import {
+  formatAmountCompact,
+  magnitude,
+  personNet,
+  repaymentFlow,
+  ZERO,
+} from '@splito/domain'
 import {type Expense, type Repayment} from '@splito/sync'
 import {Trans, useLingui} from '@lingui/react/macro'
 
@@ -47,15 +53,39 @@ export function RecentTransactions() {
       const net = personNet(e.data, me.id)
       const involved = me.id in e.data.payers || me.id in e.data.shares
       if (!involved) continue
-      out.push({id: e.id, href: `/expense/${e.id}`, title: e.data.title, category: e.data.category, currency: e.data.currency, net, date: e.data.date, updatedAt: e.updatedAt})
+      out.push({
+        id: e.id,
+        href: `/expense/${e.id}`,
+        title: e.data.title,
+        category: e.data.category,
+        currency: e.data.currency,
+        net,
+        date: e.data.date,
+        updatedAt: e.updatedAt,
+      })
     }
     for (const r of repayments ?? []) {
       if (r.data.from !== me.id && r.data.to !== me.id) continue
       const net = repaymentFlow(r.data, me.id)
-      out.push({id: r.id, href: '/activity', title: r.data.from === me.id ? l`You paid` : l`You got paid`, category: null, currency: r.data.currency, net, date: r.data.date, updatedAt: r.updatedAt})
+      out.push({
+        id: r.id,
+        href: '/activity',
+        title: r.data.from === me.id ? l`You paid` : l`You got paid`,
+        category: null,
+        currency: r.data.currency,
+        net,
+        date: r.data.date,
+        updatedAt: r.updatedAt,
+      })
     }
     return out
-      .sort((x, y) => (x.date === y.date ? y.updatedAt - x.updatedAt : x.date < y.date ? 1 : -1))
+      .sort((x, y) =>
+        x.date === y.date
+          ? y.updatedAt - x.updatedAt
+          : x.date < y.date
+            ? 1
+            : -1,
+      )
       .slice(0, RECENT)
   }, [me, expenses, repayments, l])
 
@@ -63,13 +93,26 @@ export function RecentTransactions() {
 
   return (
     <View testID="sidebar-recent-transactions" style={[a.pt_2xl, {gap: 2}]}>
-      <Text style={[a.px_md, a.pb_xs, a.text_sm, a.font_semi_bold, a.leading_snug, t.atoms.text_contrast_medium]}>
+      <Text
+        style={[
+          a.px_md,
+          a.pb_xs,
+          a.text_sm,
+          a.font_semi_bold,
+          a.leading_snug,
+          t.atoms.text_contrast_medium,
+        ]}>
         <Trans>Recent transactions</Trans>
       </Text>
       {rows.map(row => {
-        const category = row.category ? categories.find(c => c.id === row.category) : undefined
+        const category = row.category
+          ? categories.find(c => c.id === row.category)
+          : undefined
         const positive = row.net > ZERO
-        const color = row.net === ZERO ? t.atoms.text_contrast_medium.color : money.color(row.net)
+        const color =
+          row.net === ZERO
+            ? t.atoms.text_contrast_medium.color
+            : money.color(row.net)
         return (
           <Link
             key={row.id}
@@ -80,13 +123,30 @@ export function RecentTransactions() {
             accessibilityLabel={row.title}
             accessibilityHint=""
             hoverStyle={t.atoms.bg_contrast_25}
-            style={[a.flex_row, a.align_center, a.gap_sm, a.rounded_sm, a.transition_color, a.px_md, {paddingVertical: 6}]}>
+            style={[
+              a.flex_row,
+              a.align_center,
+              a.gap_sm,
+              a.rounded_sm,
+              a.transition_color,
+              a.px_md,
+              {paddingVertical: 6},
+            ]}>
             {category ? (
               <CategoryTile category={category} size={24} />
             ) : (
-              <View style={[a.rounded_xs, t.atoms.bg_contrast_50, {width: 24, height: 24}]} />
+              <View
+                style={[
+                  a.rounded_xs,
+                  t.atoms.bg_contrast_50,
+                  {width: 24, height: 24},
+                ]}
+              />
             )}
-            <Text emoji numberOfLines={1} style={[a.flex_1, a.text_md, a.leading_snug, t.atoms.text]}>
+            <Text
+              emoji
+              numberOfLines={1}
+              style={[a.flex_1, a.text_md, a.leading_snug, t.atoms.text]}>
               {row.title}
             </Text>
             {row.net !== ZERO && (
@@ -96,9 +156,19 @@ export function RecentTransactions() {
                   a.text_xs,
                   a.font_semi_bold,
                   a.rounded_full,
-                  {color, backgroundColor: utils.alpha(color, t.scheme === 'light' ? 0.1 : 0.18), paddingHorizontal: 6, paddingVertical: 2, fontVariant: ['tabular-nums']},
+                  {
+                    color,
+                    backgroundColor: utils.alpha(
+                      color,
+                      t.scheme === 'light' ? 0.1 : 0.18,
+                    ),
+                    paddingHorizontal: 6,
+                    paddingVertical: 2,
+                    fontVariant: ['tabular-nums'],
+                  },
                 ]}>
-                {(positive ? '+' : '−') + formatAmountCompact(magnitude(row.net), row.currency, locale)}
+                {(positive ? '+' : '−') +
+                  formatAmountCompact(magnitude(row.net), row.currency, locale)}
               </Text>
             )}
           </Link>
@@ -111,9 +181,28 @@ export function RecentTransactions() {
         accessibilityLabel={l`See all activity`}
         accessibilityHint=""
         hoverStyle={t.atoms.bg_contrast_25}
-        style={[a.flex_row, a.align_center, a.gap_sm, a.self_start, a.rounded_sm, a.transition_color, a.px_md, {paddingVertical: 6}]}>
-        <View style={[a.align_center, a.justify_center, a.rounded_xs, t.atoms.bg_contrast_50, {width: 24, height: 24}]}>
-          <ChevronRightIcon style={{width: 16, height: 16}} fill={t.atoms.text_contrast_medium.color} />
+        style={[
+          a.flex_row,
+          a.align_center,
+          a.gap_sm,
+          a.self_start,
+          a.rounded_sm,
+          a.transition_color,
+          a.px_md,
+          {paddingVertical: 6},
+        ]}>
+        <View
+          style={[
+            a.align_center,
+            a.justify_center,
+            a.rounded_xs,
+            t.atoms.bg_contrast_50,
+            {width: 24, height: 24},
+          ]}>
+          <ChevronRightIcon
+            style={{width: 16, height: 16}}
+            fill={t.atoms.text_contrast_medium.color}
+          />
         </View>
         <Text style={[a.text_md, a.leading_snug, t.atoms.text_contrast_medium]}>
           <Trans>See all</Trans>

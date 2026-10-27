@@ -20,6 +20,7 @@ import {
   Palette,
   Rows3,
   Sigma,
+  SlidersHorizontal,
   Smartphone,
   Sparkles,
   Split,
@@ -37,6 +38,7 @@ export const DensityIcon = createIcon(Rows3)
 export const SparklesIcon = createIcon(Sparkles)
 export const VibrateIcon = createIcon(Vibrate)
 export const TabsIcon = createIcon(LayoutGrid)
+export const DefaultsIcon = createIcon(SlidersHorizontal)
 export const CurrencyIcon = createIcon(Coins)
 export const SplitIcon = createIcon(Split)
 export const LanguageIcon = createIcon(Languages)

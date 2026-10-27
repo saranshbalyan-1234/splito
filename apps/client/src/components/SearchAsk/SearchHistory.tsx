@@ -6,7 +6,6 @@ import {atoms as a, useTheme} from '#/alf'
 import {Button, ButtonIcon, ButtonText} from '#/components/Button'
 import {MagnifyingGlass_Stroke2_Corner0_Rounded as SearchIcon} from '#/components/icons/MagnifyingGlass'
 import {TimesLarge_Stroke2_Corner0_Rounded as XIcon} from '#/components/icons/Times'
-import * as Layout from '#/components/Layout'
 import * as Prompt from '#/components/Prompt'
 import {Text} from '#/components/Typography'
 
@@ -45,10 +44,8 @@ export function SearchHistory({
   ]
 
   return (
-    <Layout.Content
-      testID="search-history"
-      keyboardDismissMode="interactive"
-      keyboardShouldPersistTaps="handled">
+    /* The drawer's list scrolls it, so a plain block (Bluesky's page scrolls its own). */
+    <View testID="search-history" style={[a.pb_lg]}>
       <View style={[a.w_full, a.gap_md]}>
         {searchHistory.length > 0 ? (
           <View>
@@ -174,7 +171,7 @@ export function SearchHistory({
         cancelButtonCta={l`Cancel`}
         confirmButtonColor="negative"
       />
-    </Layout.Content>
+    </View>
   )
 }
 

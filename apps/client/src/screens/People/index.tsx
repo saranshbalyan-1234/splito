@@ -18,6 +18,7 @@ import {Button, ButtonIcon} from '#/components/Button'
 import {LogoMark} from '#/components/brand/Logo'
 import {useDialogControl} from '#/components/Dialog'
 import {myBalances} from '#/components/groups/net'
+import {SearchAskButton} from '#/components/SearchAsk/SearchAskButton'
 import {HeaderAvatar} from '#/components/HeaderAvatar'
 import {PersonPlus_Filled_Stroke2_Corner0_Rounded as PersonPlusIcon} from '#/components/icons/Person'
 import {DotGrid3x1_Stroke2_Corner0_Rounded as DotsIcon} from '#/components/icons/DotGrid'
@@ -25,7 +26,6 @@ import {
   ChainLink_Stroke2_Corner0_Rounded as LinkIcon,
   QrCode_Stroke2_Corner0_Rounded as QrIcon,
 } from '#/components/icons/Invite'
-import {MagnifyingGlass_Stroke2_Corner0_Rounded as SearchIcon} from '#/components/icons/MagnifyingGlass'
 import * as Layout from '#/components/Layout'
 import {BUTTON_VISUAL_ALIGNMENT_OFFSET} from '#/components/Layout/const'
 import {ListToolsHeader} from '#/components/ListToolsHeader'
@@ -112,12 +112,6 @@ export function PeopleScreen() {
   const totals = balanceTotals(
     rows.flatMap(row => (row.summary ? [row.summary] : [])),
   )
-  const [query, setQuery] = useState('')
-  const needle = query.trim().toLocaleLowerCase()
-  /* Search narrows the list only; the Overview keeps showing what the filters chose. */
-  const shown = needle
-    ? rows.filter(row => row.name.toLocaleLowerCase().includes(needle))
-    : rows
   /* Settled means every part is zero, not just the net (audit M10). */
   const settledCount = rows.filter(row =>
     Object.values(row.summary?.byCurrency ?? {}).every(isSettledBalance),
@@ -141,7 +135,8 @@ export function PeopleScreen() {
     <Layout.Screen testID="screen-people">
       <Layout.Header.Outer>
         <HeaderAvatar />
-        {/* Add friend and the overflow on the right, so the logo stays centred. */}
+        {/* Search & Ask, Add friend and the overflow on the right, so the logo stays centred. */}
+        <Layout.Header.Slot />
         <Layout.Header.Slot />
         <Layout.Header.Content>
           {/* Phones show the home mark (inactive here); rail and desktop already show it in the sidebar, so the title (ARCHITECTURE 26.4). */}
@@ -159,6 +154,7 @@ export function PeopleScreen() {
             </PressableScale>
           )}
         </Layout.Header.Content>
+        <SearchAskButton />
         <Layout.Header.ActionButton
           testID="people-add-friend"
           label={l`Add friend`}
@@ -220,7 +216,7 @@ export function PeopleScreen() {
         /* Upstream's list idiom: rows already there on mount appear at once; later inserts and removals animate. */
         <LayoutAnimationConfig skipEntering skipExiting>
           <List
-            data={shown}
+            data={rows}
             keyExtractor={(row: PersonRowData) => row.id}
             renderItem={({item}: {item: PersonRowData}) => (
               <PersonRow row={item} groupNames={groupNames} locale={locale} />
@@ -238,11 +234,7 @@ export function PeopleScreen() {
                   <ListToolsHeader
                     title={l`Friends`}
                     titleTestID="people-friends-title"
-                    count={shown.length}
-                    total={rows.length}
-                    query={query}
-                    onQueryChange={setQuery}
-                    searchLabel={l`Search friends`}
+                    count={rows.length}
                     activeFilterCount={activeCount}
                     onFiltersPress={() => filterControl.open()}
                   />
@@ -252,13 +244,7 @@ export function PeopleScreen() {
               )
             }
             ListEmptyComponent={
-              friends.length > 0 && needle ? (
-                <EmptyState
-                  testID="people-search-empty"
-                  icon={SearchIcon}
-                  message={l`No matches for “${query.trim()}”`}
-                />
-              ) : friends.length > 0 ? (
+              friends.length > 0 ? (
                 <EmptyState
                   testID="people-filtered-empty"
                   icon={null}

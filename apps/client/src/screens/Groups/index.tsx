@@ -23,6 +23,7 @@ import {AddExpenseFAB, AddExpenseFABInset} from '#/components/AddExpenseFAB'
 import {Button, ButtonIcon, ButtonText} from '#/components/Button'
 import {useDialogControl} from '#/components/Dialog'
 import {myBalances} from '#/components/groups/net'
+import {SearchAskButton} from '#/components/SearchAsk/SearchAskButton'
 import {HeaderAvatar} from '#/components/HeaderAvatar'
 import {MagnifyingGlass_Stroke2_Corner0_Rounded as SearchIcon} from '#/components/icons/MagnifyingGlass'
 import {PlusLarge_Stroke2_Corner0_Rounded as PlusIcon} from '#/components/icons/Plus'
@@ -128,11 +129,14 @@ export function GroupsScreen() {
     <Layout.Screen testID="screen-groups">
       <Layout.Header.Outer>
         <HeaderAvatar />
+        {/* Balances Search & Ask on the right, so the title stays centred. */}
+        <Layout.Header.Slot />
         <Layout.Header.Content>
           <Layout.Header.TitleText>
             <Trans>Groups</Trans>
           </Layout.Header.TitleText>
         </Layout.Header.Content>
+        <SearchAskButton />
         <Layout.Header.ActionButton
           testID="groups-new"
           label={l`Create group`}

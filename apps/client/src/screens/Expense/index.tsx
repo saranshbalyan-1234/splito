@@ -453,8 +453,7 @@ function Detail({
   ) : null
 
   return (
-    <Layout.Content
-      contentContainerStyle={[gtTablet ? a.flex_grow : a.pb_5xl]}>
+    <Layout.Content contentContainerStyle={[gtTablet ? a.flex_grow : a.pb_5xl]}>
       {deletedBanner}
       {gtTablet ? (
         /* Two columns filling the page, tops aligned: the expense, then its history as a rail. */
@@ -504,7 +503,11 @@ function shareDetail(
         : undefined
     case 'adjusted': {
       const adj = s.adjustments[id]
-      return adj ? (adj > ZERO ? `+${fmt(adj)}` : `−${fmt(magnitude(adj))}`) : undefined
+      return adj
+        ? adj > ZERO
+          ? `+${fmt(adj)}`
+          : `−${fmt(magnitude(adj))}`
+        : undefined
     }
     case 'items': {
       // Their items, then their part of tax, tip, service and discount.
