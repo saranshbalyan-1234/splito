@@ -1179,9 +1179,10 @@ labelled sidebar); **wide** = web 1300 px and up (Bluesky `gtTablet`, right colu
   with its own preferences, history and outbox). Turning it on switches the app to the demo database, seeded
   once with the one demo dataset; turning it off switches back to the real data, which demo mode never reads
   or writes. Demo data never syncs and never merges into an account. While on, a persistent "Demo mode ·
-  Switch back" banner shows on every screen; "Reset demo" reseeds it. `?demo=1`, `?demo=large`,
-  `EXPO_PUBLIC_DEMO` and Add/Remove demo data are removed; e2e turns demo mode on through a test-only hook that
-  runs the same switch (F-228a, queued right after the Wave B merge). Dev and e2e builds only for now
+  Switch back" banner shows on every screen; "Reset demo" reseeds it. There is ONE demo dataset and ONE
+  switch: no small set, no URL (`?demo=1`, `?demo=large` gone), no `EXPO_PUBLIC_DEMO`, no Add/Remove demo
+  data; e2e turns demo mode on only through a test-only hook (`window.__splitoTest.demoMode`) that runs the same
+  switch (F-228a, being built on feat/demo-mode). Dev and e2e builds only for now
   (production ships none, F-227 c4). *Why:* "add a lot of demo data to my
   account".
 - **Don't ask; decide.** The owner has delegated every open choice: make the call, record it (spec decision
@@ -1963,6 +1964,7 @@ Every owner decision, in the order it was made (all 2026-10-26). "Replaced" name
 | 96 | "also add animations on svg icons or animations like Expensify wherever we can" | Meaningful animated SVG icons (tab fill morph, check draw, trash lid, sync pulse, FAB rotate, sparkles, chevrons) on the UI thread plus Expensify-style success/empty/celebration animations; reduced motion and `motion` pref respected | § 26.10 | Static icons; Lottie only for page illustrations |
 | 97 | "on the home page and group page add option for recent transactions as well; home shows all, group shows only group level recent txns" | "Recent transactions" section in the Home body (everything) and on each Group page (that group only), customizable | § 26.17 | Right column only (desktop 1300 px and up) |
 | 98 | "deleted item should show a stroke and clock symbol and time" | Deleted records show struck-through title and amount plus a Clock icon and "Deleted <time>" everywhere they appear | § 26.14 | Plain rows (strikethrough removed in B3 polish) |
+| 99 | "only when demo i said, with a switch with diff data"; "no small demo or anything, only one switch" | One demo dataset, one Settings switch over a separate database; no small set, no ?demo=1 or any URL alias; e2e uses a test-only hook | § 26.1 | Small ?demo=1 set kept as a test alias (row 95 plan) |
 
 New decisions follow § 0 rule 9: rewrite the rule in its topic so only the current truth remains, then add a
 row here.
