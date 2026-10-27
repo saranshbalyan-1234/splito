@@ -99,18 +99,6 @@ test('M4: a deleted item older than the bin window no longer holds its person', 
   await deletePerson(s, ctx, bob.id)
 })
 
-test('decision 102: an item deleted under 90 days still holds its person after the setting drops to 7', async () => {
-  await setPref(s, ctx, 'history.binDays', 90)
-  const bob = await createPerson(s, ctx, {name: 'Bob'})
-  const e = await createExpense(s, ctx, expense({split: {mode: 'equal', participants: ['me', bob.id]}}))
-  await deleteExpense(s, ctx, e.id)
-  await setPref(s, ctx, 'history.binDays', 7)
-  clock += 10 * 86_400_000
-  expect(await codeOf(deletePerson(s, ctx, bob.id))).toBe('PERSON_IN_USE')
-  clock += 81 * 86_400_000
-  await deletePerson(s, ctx, bob.id)
-})
-
 test('M4: restore refuses a record whose person is gone, with an explanation code', async () => {
   const bob = await createPerson(s, ctx, {name: 'Bob'})
   const e = await createExpense(s, ctx, expense({split: {mode: 'equal', participants: ['me', bob.id]}}))
@@ -187,10 +175,9 @@ test('m17: the outbox op of a purge keeps purgedAt, so other devices cannot rest
   await purgeDeleted(s, ctx, 'expense', e.id)
   const ops = (await s.outbox()).filter(o => o.entityId === e.id)
   expect(ops.map(o => o.opType)).toEqual(['expense.create', 'expense.delete', 'expense.purge'])
-  expect(ops[1]!.payload).toEqual({deleted: true, purgeAfter: expect.any(Number)})
+  expect(ops[1]!.payload).toEqual({deleted: true})
   const purge = ops[2]!.payload as {deleted: boolean; purgedAt: number}
   expect(purge.deleted).toBe(true)
-  expect(ops[2]!.payload).toMatchObject({purgeAfter: (ops[1]!.payload as {purgeAfter: number}).purgeAfter})
   expect(purge.purgedAt).toBe(((await s.get('expense', e.id))!.data as {purgedAt: number}).purgedAt)
 })
 

@@ -308,7 +308,7 @@ test('deleted-with-group outbox ops carry the mark so another device restores th
   const { g, e } = await flat()
   await deleteGroup(s, ctx, g.id)
   const op = (await s.outbox()).find(o => o.entityId === e.id && o.opType === 'expense.delete')!
-  expect(op.payload).toEqual({deleted: true, deletedWithGroup: g.id, purgeAfter: expect.any(Number)})
+  expect(op.payload).toEqual({deleted: true, deletedWithGroup: g.id})
 })
 
 test('a person in a deleted group cannot be deleted until the group is purged', async () => {

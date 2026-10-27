@@ -14,8 +14,7 @@ import {
 } from '@splito/domain'
 
 import {formatContact, isContact} from './contact'
-import {DAY_MS, MAX_BIN_DAYS, purgeAfterOf} from './bin'
-import {getPref, prefFrom} from './preferences'
+import {getPref} from './preferences'
 import {type Key} from './schema'
 import {type Page, type Store, type Tx} from './store'
 import {type Entity, type EntityType, type MutationCtx} from './types'
@@ -135,21 +134,15 @@ export type BinType = 'expense' | 'repayment' | 'writeoff'
 
 /**
  * Marks on a tombstone. `purgedAt`: set by "Delete forever", out of the bin and kept in the audit trail.
- * `purgeAfter`: when it leaves Recently deleted, stamped at delete time from `history.binDays` (decision 102).
  * `deletedWithGroup`: the group whose deletion took this record with it, so restoring the group
  * brings back exactly these (F-615) and the bin shows the group as one entry.
  */
-export type Purged = {purgedAt?: number; deletedWithGroup?: string; purgeAfter?: number}
+export type Purged = {purgedAt?: number; deletedWithGroup?: string}
 
 /** What a tombstone sends to the server: the delete, and the marks that decide whether others may restore it. */
 function tombstonePayload(data: unknown): Purged & {deleted: true} {
-  const {purgedAt, deletedWithGroup, purgeAfter} = (data ?? {}) as Purged
-  return {
-    deleted: true,
-    ...(purgedAt !== undefined && {purgedAt}),
-    ...(deletedWithGroup !== undefined && {deletedWithGroup}),
-    ...(purgeAfter !== undefined && {purgeAfter}),
-  }
+  const {purgedAt, deletedWithGroup} = (data ?? {}) as Purged
+  return {deleted: true, ...(purgedAt !== undefined && {purgedAt}), ...(deletedWithGroup !== undefined && {deletedWithGroup})}
 }
 
 /**
@@ -172,12 +165,6 @@ export async function write<T>(
   const prev = await tx.get<T>(type, id)
   const at = ctx.now()
   const version = (prev?.version ?? 0) + 1
-  // A tombstone carries its own end date, from the bin window of the day it is deleted (decision 102): a later
-  // change of the setting never moves it. Purge and restore re-writes keep what is there.
-  if (deleted && !prev?.deleted && type !== 'preference' && typeof data === 'object' && data !== null && (data as Purged).purgeAfter === undefined) {
-    const pref = await tx.get<{value: unknown}>('preference', 'history.binDays')
-    data = {...data, purgeAfter: at + prefFrom(pref ? [pref] : [], 'history.binDays') * DAY_MS} as T
-  }
   // A local change waits for the server (`pending`, then `tx.enqueue` below). Only a real server
   // acknowledgement ever moves a row to `synced` (ARCHITECTURE 9.8): a change applied from someone else's
   // side (`remote`) has none yet, and a device-only write (`opType` null: feedback, device preferences) is
@@ -287,6 +274,7 @@ async function isPersonUsed(store: Store, id: string): Promise<boolean> {
   return false
 }
 
+const DAY_MS = 86_400_000
 /** @internal */
 export const BIN_TYPES: BinType[] = ['expense', 'repayment', 'writeoff']
 
@@ -300,25 +288,22 @@ function namedIn(type: BinType | 'group', data: unknown): string[] {
 
 /**
  * Whether Recently deleted still holds an expense, payment, write-off or group that names the person
- * (audit M4): restoring it would bring back a record that points at someone who is gone. Items past their own
- * `purgeAfter` (decision 102), and "Delete forever" ones, can no longer be restored and do not count. Reads
- * only tombstones (`byDeleted`) of the last year, and the small groups store.
+ * (audit M4): restoring it would bring back a record that points at someone who is gone. Items older
+ * than the bin window, and "Delete forever" ones, can no longer be restored and do not count. Reads
+ * only tombstones (`byDeleted`), and the small groups store.
  */
 async function isPersonInBin(store: Store, now: number, id: string): Promise<boolean> {
-  const days = await getPref(store, 'history.binDays')
-  // No tombstone outlives the longest choice, so a year back covers every item that is still in the bin.
-  const since = now - MAX_BIN_DAYS * DAY_MS
-  const isHeld = (e: Entity<Purged>) => e.data.purgedAt === undefined && purgeAfterOf(e, days) > now
+  const since = now - (await getPref(store, 'history.binDays')) * DAY_MS
   for (const type of BIN_TYPES) {
     let after: Key | null = null
     do {
       const page: Page<Entity<Purged>> = await store.page<Purged>(type, {index: 'byDeleted', eq: [1], min: since, after, limit: 100})
-      if (page.items.some(e => isHeld(e) && namedIn(type, e.data).includes(id))) return true
+      if (page.items.some(e => e.data.purgedAt === undefined && namedIn(type, e.data).includes(id))) return true
       after = page.next
     } while (after)
   }
   // ponytail: groups have no tombstone index; the store is small (about 100 rows), so one read.
-  return (await store.getAll<Group & Purged>('group')).some(g => g.deleted && isHeld(g) && namedIn('group', g.data).includes(id))
+  return (await store.getAll<Group & Purged>('group')).some(g => g.deleted && g.updatedAt >= since && g.data.purgedAt === undefined && namedIn('group', g.data).includes(id))
 }
 
 export async function createGroup(
@@ -425,14 +410,12 @@ async function restore(store: Store, ctx: MutationCtx, type: BinType, id: string
   await store.transaction(async tx => {
     const e = await tx.get<Purged>(type, id)
     if (!e?.deleted || e.data.purgedAt !== undefined) throw new DomainError('NOT_FOUND')
-    // Past its own end date it has left Recently deleted (decision 102).
-    if (e.data.purgeAfter !== undefined && e.data.purgeAfter <= ctx.now()) throw new DomainError('NOT_FOUND')
     await requireRestorable(tx, type, e.data)
     // Restoring an expense into an inactive group is a new expense there (decision 89). Payments may come back.
     const groupId = (e.data as {groupId?: string | null}).groupId
     const into = type === 'expense' && groupId ? (await tx.get<Group>('group', groupId))?.data : undefined
     if (into && isGroupInactive(into)) throw new DomainError('GROUP_INACTIVE')
-    const {deletedWithGroup: _g, purgeAfter: _p, ...data} = e.data
+    const {deletedWithGroup: _g, ...data} = e.data
     await write(tx, ctx, type, id, data, false, `${type}.restore`)
   })
 }

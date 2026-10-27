@@ -1,8 +1,6 @@
 import {describe, expect, test} from 'bun:test'
 
-import {deleteGroup, makeGroupActive, makeGroupInactive, restoreGroup} from '../src/groupLifecycle'
-import {setPref} from '../src/preferences'
-import {loadBin} from '../src/selectors'
+import {makeGroupActive, makeGroupInactive} from '../src/groupLifecycle'
 import {
   createExpense,
   createGroup,
@@ -324,69 +322,6 @@ export function runV2Contract(name: string, open: () => Promise<Store>) {
       await makeGroupActive(s, ctx, g.id)
       expect(await code(updateExpense(s, ctx, inGroup.id, draft({with: [a.id], groupId: null})))).toBe('ok')
       expect(await code(createExpense(s, ctx, draft({with: [a.id], groupId: g.id})))).toBe('ok')
-      await s.close()
-    })
-
-    test('a deleted item follows the bin window of the day it was deleted, not the current setting (decision 102)', async () => {
-      const { s, a, g } = await seeded()
-      const DAY = 86_400_000
-      let at = 1_700_000_000_000
-      const ctx: MutationCtx = {deviceId: 'dev1', actor: 'me', now: () => at, newId: (() => { let n = 0; return () => `t${++n}` })()}
-      await setPref(s, ctx, 'history.binDays', 90)
-      const old = await createExpense(s, ctx, draft({with: [a.id], date: '2026-10-01'}))
-      await deleteExpense(s, ctx, old.id)
-      const t0 = at
-      expect(((await s.get<{purgeAfter?: number}>('expense', old.id))!.data).purgeAfter).toBe(t0 + 90 * DAY)
-      // The setting drops to 7 days; the old item keeps its own date, and what is deleted now gets 7.
-      at = t0 + DAY
-      await setPref(s, ctx, 'history.binDays', 7)
-      const fresh = await createExpense(s, ctx, draft({with: [a.id], date: '2026-10-02'}))
-      await deleteExpense(s, ctx, fresh.id)
-      expect(((await s.get<{purgeAfter?: number}>('expense', fresh.id))!.data).purgeAfter).toBe(at + 7 * DAY)
-      const listed = async (when: number) => (await loadBin(s, when, 7)).map(i => i.entity.id).sort()
-      expect(await listed(t0 + 2 * DAY)).toEqual([fresh.id, old.id].sort())
-      expect(await listed(t0 + 9 * DAY)).toEqual([old.id])
-      expect(await listed(t0 + 89 * DAY)).toEqual([old.id])
-      expect((await loadBin(s, t0 + 89 * DAY, 7))[0]!.purgeAfter).toBe(t0 + 90 * DAY)
-      expect(await listed(t0 + 91 * DAY)).toEqual([])
-      // Once it is past its own date it can no longer be restored.
-      at = t0 + 91 * DAY
-      expect(await restoreExpense(s, ctx, old.id).then(() => 'ok', (e: { code?: string }) => e.code)).toBe('NOT_FOUND')
-      // A group's deletion stamps the group and every record it takes, and a restore clears the stamp.
-      at = t0 + 100 * DAY
-      await setPref(s, ctx, 'history.binDays', 30)
-      const inGroup = await createExpense(s, ctx, draft({with: [a.id], groupId: g.id}))
-      await deleteGroup(s, ctx, g.id)
-      expect(((await s.get<{purgeAfter?: number}>('group', g.id))!.data).purgeAfter).toBe(at + 30 * DAY)
-      expect(((await s.get<{purgeAfter?: number}>('expense', inGroup.id))!.data).purgeAfter).toBe(at + 30 * DAY)
-      await restoreGroup(s, ctx, g.id)
-      expect('purgeAfter' in ((await s.get('expense', inGroup.id))!.data as object)).toBe(false)
-      expect('purgeAfter' in ((await s.get('group', g.id))!.data as object)).toBe(false)
-      await s.close()
-    })
-
-    test('a row deleted before the rule gets its purgeAfter once, from the setting at that read (decision 102)', async () => {
-      const { s, ctx, a } = await seeded()
-      const DAY = 86_400_000
-      const e = await createExpense(s, ctx, draft({with: [a.id]}))
-      await deleteExpense(s, ctx, e.id)
-      // Make it a legacy tombstone: strip the stamp the delete wrote.
-      await s.transaction(async tx => {
-        const row = (await tx.get<{purgeAfter?: number}>('expense', e.id))!
-        const {purgeAfter: _p, ...data} = row.data
-        await tx.put({...row, data})
-      })
-      const before = (await s.get('expense', e.id))!
-      const stamped = (await loadBin(s, before.updatedAt + DAY, 30))[0]!
-      expect(stamped.purgeAfter).toBe(before.updatedAt + 30 * DAY)
-      const after = (await s.get<{purgeAfter?: number}>('expense', e.id))!
-      expect(after.data.purgeAfter).toBe(before.updatedAt + 30 * DAY)
-      // Stamped quietly: same version and time, no new history or op.
-      expect(after.version).toBe(before.version)
-      expect(after.updatedAt).toBe(before.updatedAt)
-      expect((await s.history('expense', e.id)).length).toBe(before.version)
-      // Later reads, under any setting, keep it.
-      expect((await loadBin(s, before.updatedAt + DAY, 7))[0]!.purgeAfter).toBe(before.updatedAt + 30 * DAY)
       await s.close()
     })
 

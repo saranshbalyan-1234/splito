@@ -229,15 +229,13 @@ export async function restoreGroup(store: Store, ctx: MutationCtx, groupId: stri
     const g = (await tx.get<Group & Purged>('group', groupId))!
     if (g.version !== deleted.version) throw new DomainError('NOT_FOUND')
     await requireRestorable(tx, 'group', g.data)
-    // Past its own end date it has left Recently deleted (decision 102).
-    if (g.data.purgeAfter !== undefined && g.data.purgeAfter <= ctx.now()) throw new DomainError('NOT_FOUND')
-    const {removed: _removed, purgeAfter: _purge, ...data} = g.data
+    const {removed: _removed, ...data} = g.data
     await write(tx, ctx, 'group', groupId, data, false, 'group.restore')
     for (const type of MONEY) {
       for (const { id } of kids[type]) {
         const e = (await tx.get<Purged>(type, id))!
         await requireRestorable(tx, type, e.data)
-        const {deletedWithGroup: _g, purgeAfter: _p, ...rest} = e.data
+        const {deletedWithGroup: _g, ...rest} = e.data
         await write(tx, ctx, type, id, rest, false, `${type}.restore`)
       }
     }
