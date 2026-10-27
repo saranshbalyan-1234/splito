@@ -36,7 +36,7 @@ test('the drawer footer opens the Send feedback sheet as a bottom drawer on phon
   await page.goto('/?demo=1')
   await expect(page.getByTestId('person-Arjun Mehta')).toBeVisible()
   await page.getByTestId('header-avatar').click()
-  await page.getByTestId('drawer-feedback').click()
+  await page.getByTestId('nav-footer-feedback').click()
   const sheet = page.getByTestId('feedback-sheet')
   await expect(sheet).toBeVisible()
   /* The sheet rises from the bottom edge; wait for it to come to rest. */
