@@ -1670,6 +1670,14 @@ dishes etc and each item can be assigned to each in split"; "in itemize don't sh
   the screen reader says "Deleted, <time>"). Counts and helper lines ("8 records", "Gone in 28 days") are not
   struck. *Why:* "deleted item should show a stroke and clock symbol and time".
 
+- **Each deleted item keeps the bin period it was deleted under** (owner 102). Deleting stamps the tombstone
+  with its own `purgeAfter` (deletedAt + the `history.binDays` value at that moment); purging, the "N days left"
+  line, the bin window that keeps a person from being deleted, and restore all read the item's own `purgeAfter`.
+  Changing `history.binDays` (say 90 -> 7) applies only to items deleted afterwards; items already in Recently
+  deleted keep their date (Settings says so under the control). Rows deleted before this rule read their
+  `purgeAfter` as deletedAt + the setting at the time of upgrade, once. *Why:* "if i deleted an item and setting
+  is for 90 days, and i change the setting to 7 days, the old item should still follow its own rule".
+
 ### 26.15 Settings, sign in and log out
 
 *Why:* "add sign in option, and logout as well in settings". *Where:* `screens/Settings`; `useSession()` not
@@ -1983,6 +1991,7 @@ Every owner decision, in the order it was made (all 2026-10-26). "Replaced" name
 | 99 | "only when demo i said, with a switch with diff data"; "no small demo or anything, only one switch" | One demo dataset, one Settings switch over a separate database; no small set, no ?demo=1 or any URL alias; e2e uses a test-only hook | § 26.1 | Small ?demo=1 set kept as a test alias (row 95 plan) |
 | 100 | "for every tab, every popup it should be via url, so that even if i copy paste the url i land on same place" | Every page, tab, sheet/popup and meaningful list state has a URL (web) / deep link (native); open pushes, close goes back, paste/refresh restores; prompts and menus excluded; URLs never act | § 26.3 | Sheets and tabs held in screen state |
 | 101 | "even the drawer or sheet should have same rule" | The side drawer, the Search & Ask drawer and every bottom sheet, including pickers inside sheets, are URL-addressable too | § 26.3 | Rule 100 named pages, tabs, sheets and popups only |
+| 102 | "if i deleted an item and setting is for 90 days, and i change the setting to 7 days, the old item should still follow its own rule" | Each tombstone stores its own purgeAfter from the bin setting at delete time; changing the setting affects only later deletes | § 26.14 | Purge computed from the current setting |
 
 New decisions follow § 0 rule 9: rewrite the rule in its topic so only the current truth remains, then add a
 row here.

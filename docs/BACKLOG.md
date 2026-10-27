@@ -2315,6 +2315,7 @@ Tombstoned expenses and payments listed for a configurable window with who, when
   1. Restore uses restoreExpense and is undoable.
   2. After the window the tombstone stays in the audit trail.
   4. Owner 98: every deleted record (bin, Activity deleted rows, deleted detail pages, deleted group entry) shows its title and amount struck through plus a Clock icon and "Deleted <relative time>" (exact time on hover / long-press, screen-reader text); counts and helper lines are not struck.
+  5. Owner 102: each tombstone stores `purgeAfter` = deletedAt + `history.binDays` at delete time; purge, "N days left", the deletePerson bin window and restore read it; changing the setting affects only later deletes (test: delete at 90, change to 7, item still has its 90-day date); legacy rows get purgeAfter once at upgrade.
 
 ### F-1204 Comments on expenses and repayments `spec v2, owner § 26.20`
 
