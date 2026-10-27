@@ -5,15 +5,14 @@ import {remindDevice} from './storage'
 
 /*
  * Keeps the OS holding exactly the live reminders (native). One run at a time, so two quick edits never
- * race on the stored ids; `resync` repeats the last run (the app returned to the foreground: a one-shot
- * standing in for a repeat may be due to be swapped).
+ * race on the stored ids; `resync` repeats the last run and tops up the repeats' windows.
  */
 let queue: Promise<void> = Promise.resolve()
 let last: LiveReminder[] = []
 
-async function run(live: LiveReminder[]) {
+async function run(live: LiveReminder[], refresh: boolean) {
   const armed = remindDevice.get(['armed']) ?? {}
-  const {cancel: stale, arm} = planSync(live, armed, Date.now())
+  const {cancel: stale, arm} = planSync(live, armed, Date.now(), {refresh})
   for (const id of stale) {
     await cancel(armed[id]!.osIds)
     delete armed[id]
@@ -26,10 +25,11 @@ async function run(live: LiveReminder[]) {
   }
 }
 
-export function syncNotifications(live: LiveReminder[]): Promise<void> {
+export function syncNotifications(live: LiveReminder[], {refresh = false}: {refresh?: boolean} = {}): Promise<void> {
   last = live
-  queue = queue.then(() => run(live)).catch(e => logger.warn('syncing local notifications failed', {safeMessage: String(e)}))
+  queue = queue.then(() => run(live, refresh)).catch(e => logger.warn('syncing local notifications failed', {safeMessage: String(e)}))
   return queue
 }
 
-export const resyncNotifications = () => syncNotifications(last)
+/** Tops up every repeat's window of alerts (Splito returned to the foreground, or an alert arrived). */
+export const resyncNotifications = () => syncNotifications(last, {refresh: true})

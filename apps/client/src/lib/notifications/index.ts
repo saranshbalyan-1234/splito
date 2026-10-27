@@ -1,8 +1,8 @@
 // Adapted from bluesky-social/social-app@4e4ad9c (MIT) - src/lib/notifications/notifications.ts (expo-notifications setup, permission calls)
 import {Linking, Platform} from 'react-native'
 import * as Notifications from 'expo-notifications'
-import {nextOccurrence} from '@splito/sync'
 
+import {alertWindow, rearmTime} from './plan'
 import {type LocalNotification, type NotificationTarget, type PermissionState} from './types'
 
 /*
@@ -14,7 +14,6 @@ import {type LocalNotification, type NotificationTarget, type PermissionState} f
 export const canFireWhenClosed = true
 
 const CHANNEL = 'reminders'
-const DAY = 86_400_000
 const SCHEDULE_TYPES = Notifications.SchedulableTriggerInputTypes
 
 Notifications.setNotificationHandler({
@@ -46,33 +45,22 @@ export function openSystemSettings() {
 }
 
 /**
- * Arms one notification and returns the OS ids and when to plan it again. A repeat uses the OS's own
- * daily / weekly / monthly trigger when its first time is within one period (so the first fire is right);
- * otherwise a one-shot stands in until `planSync` swaps it. ponytail: a monthly reminder on the 29th to 31st
- * is a one-shot per month, re-armed whenever Splito opens; use a calendar trigger per month if that proves too lazy.
+ * Arms one reminder as a window of one-time alerts (`alertWindow`: the next occurrences, up to 8 within 60
+ * days) and returns the OS ids and when to plan it again. A repeat is never an OS repeating trigger: those
+ * cannot start later than their next match or land on the last day of a short month. The window is topped up
+ * whenever Splito comes to the foreground or an alert arrives (`resyncNotifications`).
  */
 export async function schedule(n: LocalNotification): Promise<{osIds: string[]; rearmAt: number | null}> {
-  const first = nextOccurrence(n.at, n.repeat, Date.now())
-  if (first === null) return {osIds: [], rearmAt: null}
+  const now = Date.now()
+  const alerts = alertWindow(n.at, n.repeat, now)
+  if (alerts.length === 0) return {osIds: [], rearmAt: null}
   await ensureChannel()
-  const when = new Date(first)
   const content = {title: n.title, body: n.body, data: n.target as unknown as Record<string, unknown>}
-  const hour = when.getHours()
-  const minute = when.getMinutes()
-  const channelId = CHANNEL
-  const wait = first - Date.now()
-  const repeating =
-    n.repeat === 'daily' && wait <= DAY
-      ? {type: SCHEDULE_TYPES.DAILY, hour, minute, channelId}
-      : n.repeat === 'weekly' && wait <= 7 * DAY
-        ? {type: SCHEDULE_TYPES.WEEKLY, weekday: when.getDay() + 1, hour, minute, channelId}
-        : n.repeat === 'monthly' && wait <= 28 * DAY && when.getDate() <= 28
-          ? {type: SCHEDULE_TYPES.MONTHLY, day: when.getDate(), hour, minute, channelId}
-          : null
-  const trigger = repeating ?? {type: SCHEDULE_TYPES.DATE, date: when, channelId}
-  const id = await Notifications.scheduleNotificationAsync({content, trigger})
-  // A one-shot standing in for a repeat is swapped once it has passed.
-  return {osIds: [id], rearmAt: repeating || n.repeat === 'none' ? null : first + 60_000}
+  const osIds: string[] = []
+  for (const at of alerts) {
+    osIds.push(await Notifications.scheduleNotificationAsync({content, trigger: {type: SCHEDULE_TYPES.DATE, date: new Date(at), channelId: CHANNEL}}))
+  }
+  return {osIds, rearmAt: n.repeat === 'none' ? null : rearmTime(alerts, now)}
 }
 
 export async function cancel(osIds: string[]): Promise<void> {
@@ -88,7 +76,10 @@ export function showNow(_n: unknown, _onOpen: (target: NotificationTarget) => vo
 export function listenForTaps(onOpen: (target: NotificationTarget) => void): () => void {
   const read = (r: Notifications.NotificationResponse | null) => {
     const data = r?.notification.request.content.data as Partial<NotificationTarget> | undefined
-    if (data?.personId !== undefined) onOpen({personId: data.personId, groupId: data.groupId ?? null})
+    if (data?.personId === undefined) return
+    onOpen({personId: data.personId, groupId: data.groupId ?? null})
+    // Handled: the launching tap must not reopen the page on the next listener (a remount, a resumed app).
+    void Notifications.clearLastNotificationResponseAsync()
   }
   void Notifications.getLastNotificationResponseAsync().then(read)
   const sub = Notifications.addNotificationResponseReceivedListener(read)

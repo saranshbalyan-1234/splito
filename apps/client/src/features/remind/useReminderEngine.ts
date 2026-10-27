@@ -43,22 +43,27 @@ export function useReminderEngine() {
   const {state: permission} = useNotificationPermission()
 
   const ready = !!reminders && !!people && !!groups
+  // A reminder whose friend or group is gone (removed, deleted) has nothing to open: it is left out, so the OS drops it.
   const live: LiveReminder[] = !ready
     ? []
-    : reminders.map(r => {
-        const person = people.find(p => p.id === r.data.personId)?.data.name
+    : reminders.flatMap(r => {
+        const person = r.data.personId ? people.find(p => p.id === r.data.personId)?.data.name : undefined
         const group = r.data.groupId ? groups.find(g => g.id === r.data.groupId)?.data.name : undefined
-        return {
-          id: r.id,
-          dueAt: r.data.dueAt ?? 0,
-          repeat: r.data.repeat,
-          personId: r.data.personId,
-          groupId: r.data.groupId,
-          title: l`Splito reminder`,
-          body: person && group ? l`Settle up with ${person} in ${group}` : person ? l`Settle up with ${person}` : group ? l`Check the balances in ${group}` : l`Time to settle up`,
-        }
+        if ((r.data.personId && person === undefined) || (r.data.groupId && group === undefined)) return []
+        return [
+          {
+            id: r.id,
+            dueAt: r.data.dueAt ?? 0,
+            repeat: r.data.repeat,
+            personId: r.data.personId,
+            groupId: r.data.groupId,
+            title: l`Splito reminder`,
+            body: person && group ? l`Settle up with ${person} in ${group}` : person ? l`Settle up with ${person}` : group ? l`Check the balances in ${group}` : l`Time to settle up`,
+          },
+        ]
       })
   const liveRef = useRef(live)
+  const hasCaughtUp = useRef(false)
   liveRef.current = live
   const armKey = JSON.stringify(live) + String(isOn) + String(permission) + i18n.locale
 
@@ -113,7 +118,9 @@ export function useReminderEngine() {
         }
       }
     }
-    check(true)
+    // What came due while closed is shown once per page load; later runs only look for what is due now.
+    check(!hasCaughtUp.current)
+    hasCaughtUp.current = true
     const timer = setInterval(() => check(false), TICK_MS)
     return () => clearInterval(timer)
   }, [armKey, ready, isOn, permission, l])
