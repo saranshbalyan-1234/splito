@@ -14,6 +14,7 @@ import {
 } from '@splito/domain'
 
 import {formatContact, isContact} from './contact'
+import {getPref} from './preferences'
 import {type Key} from './schema'
 import {type Page, type Store, type Tx} from './store'
 import {type Entity, type EntityType, type MutationCtx} from './types'
@@ -85,8 +86,18 @@ export type WriteOffInput = WriteOff & {id?: string}
 /** Entity types the Recently deleted bin holds. */
 export type BinType = 'expense' | 'repayment' | 'writeoff'
 
-/** Set on a tombstone by "Delete forever": out of the bin, kept in the audit trail. */
-export type Purged = {purgedAt?: number}
+/**
+ * Marks on a tombstone. `purgedAt`: set by "Delete forever", out of the bin and kept in the audit trail.
+ * `deletedWithGroup`: the group whose deletion took this record with it, so restoring the group
+ * brings back exactly these (F-615) and the bin shows the group as one entry.
+ */
+export type Purged = {purgedAt?: number; deletedWithGroup?: string}
+
+/** What a tombstone sends to the server: the delete, and the marks that decide whether others may restore it. */
+function tombstonePayload(data: unknown): Purged & {deleted: true} {
+  const {purgedAt, deletedWithGroup} = (data ?? {}) as Purged
+  return {deleted: true, ...(purgedAt !== undefined && {purgedAt}), ...(deletedWithGroup !== undefined && {deletedWithGroup})}
+}
 
 /**
  * Versioned write: entity, history row and outbox op, all inside the caller's
@@ -127,7 +138,7 @@ export async function write<T>(
     entityId: id,
     opType,
     baseVersion: prev?.version ?? 0,
-    payload: deleted ? {deleted: true} : data,
+    payload: deleted ? tombstonePayload(data) : data,
     schemaVersion: 1,
     deps: [],
     attempts: 0,
@@ -193,7 +204,7 @@ export async function updatePerson(store: Store, ctx: MutationCtx, id: string, i
 export async function deletePerson(store: Store, ctx: MutationCtx, id: string): Promise<void> {
   // ponytail: reference check reads outside the write transaction (IndexedDB can't await other
   // reads mid-transaction). Fine for one local writer; the server re-checks once sync exists.
-  if (await isPersonUsed(store, id)) throw new DomainError('PERSON_IN_USE')
+  if ((await isPersonUsed(store, id)) || (await isPersonInBin(store, ctx.now(), id))) throw new DomainError('PERSON_IN_USE')
   await store.transaction(async tx => {
     const p = await requireLive<Person>(tx, 'person', id)
     if (p.data.isMe) throw new DomainError('PERSON_IN_USE')
@@ -215,6 +226,37 @@ async function isPersonUsed(store: Store, id: string): Promise<boolean> {
       } while (after)
     }
   return false
+}
+
+const DAY_MS = 86_400_000
+const BIN_TYPES: BinType[] = ['expense', 'repayment', 'writeoff']
+
+/** Who a money record or a group names, as stored. */
+function namedIn(type: BinType | 'group', data: unknown): string[] {
+  const d = data as Partial<Expense & Repayment & Group> | null
+  if (type === 'group') return (d?.members ?? []).map(m => m.personId)
+  if (type === 'expense') return [...Object.keys(d?.payers ?? {}), ...Object.keys(d?.shares ?? {})]
+  return [d?.from, d?.to].filter((p): p is string => typeof p === 'string')
+}
+
+/**
+ * Whether Recently deleted still holds an expense, payment, write-off or group that names the person
+ * (audit M4): restoring it would bring back a record that points at someone who is gone. Items older
+ * than the bin window, and "Delete forever" ones, can no longer be restored and do not count. Reads
+ * only tombstones (`byDeleted`), and the small groups store.
+ */
+async function isPersonInBin(store: Store, now: number, id: string): Promise<boolean> {
+  const since = now - (await getPref(store, 'history.binDays')) * DAY_MS
+  for (const type of BIN_TYPES) {
+    let after: Key | null = null
+    do {
+      const page: Page<Entity<Purged>> = await store.page<Purged>(type, {index: 'byDeleted', eq: [1], min: since, after, limit: 100})
+      if (page.items.some(e => e.data.purgedAt === undefined && namedIn(type, e.data).includes(id))) return true
+      after = page.next
+    } while (after)
+  }
+  // ponytail: groups have no tombstone index; the store is small (about 100 rows), so one read.
+  return (await store.getAll<Group & Purged>('group')).some(g => g.deleted && g.updatedAt >= since && g.data.purgedAt === undefined && namedIn('group', g.data).includes(id))
 }
 
 export async function createGroup(
@@ -299,12 +341,24 @@ async function softDelete(store: Store, ctx: MutationCtx, type: BinType, id: str
   })
 }
 
+/**
+ * A tombstone comes back only if everything it names is live, as when it was created (audit M4):
+ * UNKNOWN_PERSON for a person who is gone, GROUP_DELETED for a deleted group (restore the group first).
+ */
+async function requireRestorable(tx: Tx, type: BinType, data: unknown) {
+  for (const pid of new Set(namedIn(type, data))) await requireLive(tx, 'person', pid, 'UNKNOWN_PERSON')
+  const groupId = (data as {groupId?: string | null}).groupId
+  if (groupId) await requireLive(tx, 'group', groupId, 'GROUP_DELETED')
+}
+
 /** Brings a tombstone back as a new version. A purged one ("Delete forever") stays gone. */
 async function restore(store: Store, ctx: MutationCtx, type: BinType, id: string) {
   await store.transaction(async tx => {
     const e = await tx.get<Purged>(type, id)
     if (!e?.deleted || e.data.purgedAt !== undefined) throw new DomainError('NOT_FOUND')
-    await write(tx, ctx, type, id, e.data, false, `${type}.restore`)
+    await requireRestorable(tx, type, e.data)
+    const {deletedWithGroup: _g, ...data} = e.data
+    await write(tx, ctx, type, id, data, false, `${type}.restore`)
   })
 }
 
@@ -343,6 +397,9 @@ export async function createWriteOffs(store: Store, ctx: MutationCtx, inputs: Wr
   return recordTransfers(store, ctx, 'writeoff', inputs)
 }
 
+const isSameTransfer = (x: Repayment, y: Repayment) =>
+  x.groupId === y.groupId && x.currency === y.currency && x.from === y.from && x.to === y.to && x.amount === y.amount && x.date === y.date && x.tz === y.tz && x.note === y.note
+
 /** Payments and write-offs: validated alike, written as `<type>.create`. */
 async function recordTransfers(store: Store, ctx: MutationCtx, type: 'repayment' | 'writeoff', inputs: RepaymentInput[]): Promise<Entity<Repayment>[]> {
   const parts = inputs.map(({id, ...rest}) => {
@@ -358,6 +415,8 @@ async function recordTransfers(store: Store, ctx: MutationCtx, type: 'repayment'
     for (const {id, data} of parts) {
       const existing = await tx.get<Repayment>(type, id)
       if (existing) {
+        // A retry returns what is stored. A tombstone or different data under the same id is not a retry (audit m11).
+        if (existing.deleted || !isSameTransfer(existing.data, data)) throw new DomainError('IDEMPOTENCY_CONFLICT')
         written.push(existing)
         continue
       }
