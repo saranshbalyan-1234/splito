@@ -18,9 +18,25 @@ export function formWithCurrency(
   return {...f, currency, ...(f.roundTo ? {roundTo: roundToFor(currency)} : {})}
 }
 
+/** Whether any money field already holds text, in the currency the form is in. */
+export function hasMoneyText(f: ExpenseForm): boolean {
+  const texts = [
+    f.amount,
+    f.tax,
+    f.tip,
+    f.service,
+    f.discount,
+    ...f.items.map(i => i.amount),
+    ...Object.values(f.exact),
+    ...Object.values(f.paid),
+    ...Object.values(f.adjust),
+  ]
+  return texts.some(t => t?.trim())
+}
+
 /**
  * The form after picking `group`. The group's home currency only pre-fills a
- * new expense that has no amount yet and no currency the user chose; typed
+ * new expense with no money typed yet (amount, items, exact, paid, adjustments, charges) and no currency the user chose; typed
  * numbers keep their currency and edits never change it (audit M5, § 26.13).
  * Unticked people stay unticked while they are still in the split.
  */
@@ -39,7 +55,7 @@ export function formWithGroup(
     ...ids.filter(id => id === me),
     ...ids.filter(id => id !== me),
   ]
-  const isPrefill = !isEdit && !isCurrencyPicked && !f.amount.trim()
+  const isPrefill = !isEdit && !isCurrencyPicked && !hasMoneyText(f)
   return {
     ...(isPrefill ? formWithCurrency(f, group.currency, roundToFor) : f),
     groupId: group.id,

@@ -1,7 +1,7 @@
 import {describe, expect, test} from 'bun:test'
 
 import {emptyForm, type ExpenseForm} from './form'
-import {formWithCurrency, formWithGroup} from './formPick'
+import {formWithCurrency, formWithGroup, hasMoneyText} from './formPick'
 
 const base = (over: Partial<ExpenseForm> = {}): ExpenseForm => ({
   ...emptyForm({
@@ -81,4 +81,30 @@ describe('formWithCurrency (audit M15)', () => {
     const f = formWithGroup(base({roundTo: 5}), goa, 'me', unitOf, {})
     expect(f).toMatchObject({currency: 'INR', roundTo: 100})
   })
+})
+
+describe('pre-filling the group currency (audit M5)', () => {
+  const typed: Array<[string, Partial<ExpenseForm>]> = [
+    [
+      'an item amount',
+      {items: [{key: 'i', name: '', amount: '12', people: []}]},
+    ],
+    ['an exact amount', {exact: {sam: '5'}}],
+    ['a paid amount', {paid: {me: '10'}}],
+    ['an adjustment', {adjust: {sam: '1'}}],
+    ['tax', {tax: '3'}],
+    ['a tip', {tip: '3'}],
+    ['a service charge', {service: '3'}],
+    ['a discount', {discount: '3'}],
+  ]
+  test('blank fields hold no money text', () => {
+    expect(hasMoneyText(base())).toBe(false)
+    expect(hasMoneyText(base({exact: {sam: '  '}}))).toBe(false)
+  })
+  for (const [name, over] of typed)
+    test(`${name} typed keeps the form's currency`, () => {
+      const f = base(over)
+      expect(hasMoneyText(f)).toBe(true)
+      expect(formWithGroup(f, goa, 'me', one, {}).currency).toBe('EUR')
+    })
 })
