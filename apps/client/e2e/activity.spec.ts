@@ -65,15 +65,13 @@ test('the demo history reads as a feed grouped by day, in real words', async ({
   await expect(row(page, 'expense.restored', 'Groceries')).toContainText(
     'You restored Groceries',
   )
-  await expect(row(page, 'group.created', 'Goa trip')).toContainText(
-    'You created the group Goa trip',
-  )
+  await expect(
+    await loaded(page, row(page, 'group.created', 'Goa trip')),
+  ).toContainText('You created the group Goa trip')
   const added = await loaded(page, row(page, 'person.added', 'Riya Sharma'))
   await expect(added).toContainText('You added Riya Sharma as a friend')
   // Earlier days show the time of day, not "Nd ago", under their header.
-  await expect(added).toContainText(
-    /\d{1,2}:\d{2}\s?(AM|PM)/,
-  )
+  await expect(added).toContainText(/\d{1,2}:\d{2}\s?(AM|PM)/)
 
   const words = new Set((await screen(page).innerText()).split(/\s+/))
   expect(MESSAGE_IDS.filter(id => words.has(id))).toEqual([])
@@ -265,7 +263,9 @@ test('a row opens what it is about and becomes read', async ({page}) => {
     unreadDot(row(page, 'expense.edited', 'Dinner at Thalassa')),
   ).toHaveCount(0)
 
-  await row(page, 'group.created', 'Goa trip')
+  await (
+    await loaded(page, row(page, 'group.created', 'Goa trip'))
+  )
     .getByText('created the group')
     .click()
   await expect(page.getByTestId('screen-group')).toBeVisible()
