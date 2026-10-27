@@ -63,7 +63,7 @@ export function MainScrollProvider({children}: {children: React.ReactNode}) {
   const {headerHeight} = useShellLayout()
   const fallbackMode = useSharedValue(0)
   const headerMode = useContext(HeaderModeContext) ?? fallbackMode
-  /* The bottom bar and FAB follow the focused screen's header (ARCHITECTURE 26.4). */
+  /* Shared scroll state: a tab switch or sheet resets it, and the header follows (ARCHITECTURE 26.4). */
   const {scrollMode} = useMinimalShellMode()
   const startDragOffset = useSharedValue<number | null>(null)
   const startMode = useSharedValue<number | null>(null)

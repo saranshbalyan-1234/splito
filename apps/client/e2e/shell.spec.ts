@@ -209,7 +209,7 @@ test.describe('header rule set', () => {
       .toBeGreaterThanOrEqual(0)
   })
 
-  test('owner 81: header, bottom bar and FAB leave after 300px down and return after 30px up (Home, mobile web)', async ({
+  test('owner 81 + 87: only the header leaves after 300px down and returns after 30px up; bottom bar and FAB stay (Home, mobile web)', async ({
     page,
   }) => {
     await page.setViewportSize(PHONE)
@@ -226,27 +226,22 @@ test.describe('header rule set', () => {
     await page.waitForTimeout(400)
     await page.mouse.move(200, 400)
     await page.mouse.wheel(0, 300)
-    // Header slides up out of view, the bottom bar slides down, the FAB follows the bar.
     await expect
       .poll(async () => (await header.boundingBox())!.y)
       .toBeLessThan(0)
-    await expect
-      .poll(async () => (await bar.boundingBox())!.y)
-      .toBeGreaterThan(barY + 20)
-    await expect
-      .poll(async () => (await fab.boundingBox())!.y)
-      .toBeGreaterThan(fabY + 20)
+    // Let any spring finish, then the bar and FAB must not have moved.
+    await page.waitForTimeout(600)
+    expect(Math.abs((await bar.boundingBox())!.y - barY)).toBeLessThan(2)
+    expect(Math.abs((await fab.boundingBox())!.y - fabY)).toBeLessThan(2)
+    await expect(bar).toBeVisible()
+    await expect(fab).toBeVisible()
     await page.mouse.wheel(0, -30)
     await expect
       .poll(async () => (await header.boundingBox())!.y)
       .toBeGreaterThanOrEqual(0)
-    await expect
-      .poll(async () => Math.abs((await bar.boundingBox())!.y - barY))
-      .toBeLessThan(2)
-    await expect
-      .poll(async () => Math.abs((await fab.boundingBox())!.y - fabY))
-      .toBeLessThan(2)
+    expect(Math.abs((await bar.boundingBox())!.y - barY)).toBeLessThan(2)
   })
+
 
   test('owner 81: a sheet opening or a tab switch brings the shell back', async ({
     page,

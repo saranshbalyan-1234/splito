@@ -19,9 +19,9 @@ type StateContext = {
   footerMode: SharedValue<number>
   /**
    * Splito addition (ARCHITECTURE 26.4): how far the focused screen has
-   * scrolled the shell away, 0 shown to 1 hidden. The bottom bar and FAB
-   * follow it with the header; Bluesky's footer only hides for full-screen
-   * pages (`footerMode`).
+   * scrolled the header away, 0 shown to 1 hidden. Only the header follows
+   * it; the bottom bar and FAB stay put while scrolling (owner 87) and hide
+   * only for full-screen pages (`footerMode`), as upstream.
    */
   scrollMode: SharedValue<number>
 }
