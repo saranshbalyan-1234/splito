@@ -1,7 +1,7 @@
 import {type Feedback, feedbackMailto} from '@splito/sync'
 
 import {FEEDBACK_EMAIL} from '#/env'
-import {openExternalUrl} from '#/lib/externalUrl'
+import {openExternal} from '#/lib/openExternal'
 
 /**
  * Opens a prefilled email draft to the support address. Resolves false when
@@ -11,7 +11,7 @@ import {openExternalUrl} from '#/lib/externalUrl'
 export async function openFeedbackEmail(f: Feedback): Promise<boolean> {
   const url = feedbackMailto(f, FEEDBACK_EMAIL)
   try {
-    await openExternalUrl(url)
+    await openExternal(url)
     return true
   } catch {
     return false

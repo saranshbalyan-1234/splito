@@ -11,7 +11,7 @@ const HAND_OFF = /^(mailto|tel|sms|upi|whatsapp):/i
  * test run never launches the owner's Mail. On the web a hand-off is an
  * anchor click (the page stays; `Linking.openURL` would open a blank tab).
  */
-export async function openExternalUrl(url: string): Promise<void> {
+export async function openExternal(url: string): Promise<void> {
   if (IS_E2E && typeof window !== 'undefined' && HAND_OFF.test(url)) {
     const w = window as unknown as {__splitoTest?: {externalUrls: string[]}}
     ;(w.__splitoTest ??= {externalUrls: []}).externalUrls.push(url)

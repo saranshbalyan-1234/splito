@@ -11,7 +11,7 @@ import {
 } from 'react-native'
 import {StackActions} from '@react-navigation/native'
 
-import {openExternalUrl} from '#/lib/externalUrl'
+import {openExternal} from '#/lib/openExternal'
 import {
   type DebouncedNavigationProp,
   useNavigationDeduped,
@@ -186,7 +186,7 @@ function onPressInner(
       href.startsWith('mailto') ||
       EXEMPT_PATHS.some(path => href.startsWith(path))
     ) {
-      void openExternalUrl(href)
+      void openExternal(href)
     } else {
       const [routeName, params] = router.matchPath(href)
       if (navigationAction === 'push') {

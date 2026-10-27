@@ -337,28 +337,19 @@ test('UPI pay link shows only when I owe them rupees, and asks before recording'
   await expect(page.getByTestId('sheet-save')).toHaveText('Open UPI app')
   await expect(page.getByTestId('sheet-save')).toBeDisabled()
   await page.getByTestId('upi-id').fill('meera@okhdfc')
-  // Keep the page here: record the UPI link instead of handing it to the OS.
-  await page.evaluate(() =>
-    document.addEventListener(
-      'click',
-      e => {
-        const link = (e.target as Element).closest?.('a[href^="upi:"]')
-        if (!link) return
-        e.preventDefault()
-        ;(window as unknown as {upiLink: string}).upiLink =
-          link.getAttribute('href')!
-      },
-      true,
-    ),
-  )
   await page.getByTestId('sheet-save').click()
+  // The e2e build records the hand-off instead of opening a UPI app.
   await expect
     .poll(() =>
-      page.evaluate(() => (window as unknown as {upiLink?: string}).upiLink),
+      page.evaluate(
+        () =>
+          (window as unknown as {__splitoTest?: {externalUrls: string[]}})
+            .__splitoTest?.externalUrls,
+      ),
     )
-    .toBe(
+    .toEqual([
       'upi://pay?pa=meera%40okhdfc&pn=Meera%20Iyer&am=150.00&cu=INR&tn=Splito',
-    )
+    ])
   await expect(page.getByTestId('upi-confirm')).toBeVisible()
   // Nothing is recorded until the user says it went through.
   await expect(page.getByTestId('person-total-INR')).toHaveText('₹150.00')

@@ -23,7 +23,7 @@ import {parseTypedAmount, upiPayUrl} from '#/components/people/ledger'
 import * as Toast from '#/components/Toast'
 import {Text} from '#/components/Typography'
 import {IS_WEB} from '#/env'
-import {openExternalUrl} from '#/lib/externalUrl'
+import {openExternal} from '#/lib/openExternal'
 
 /**
  * Pay a friend what you owe in rupees from your UPI app. Splito only opens
@@ -100,7 +100,7 @@ function Form({
     const url = upiPayUrl({upiId: upiId.trim(), name, amount: minor})
     try {
       /* On the web an anchor click hands the scheme to the installed app; the page stays. */
-      await openExternalUrl(url)
+      await openExternal(url)
       haptics.tap()
       setOpened(minor)
     } catch (e) {
