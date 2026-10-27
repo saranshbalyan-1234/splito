@@ -1505,25 +1505,30 @@ expands once I click". *Where:* `screens/People`, `screens/Groups`, `screens/Gro
   overview cards and the list. Filters and search combine. Friends: "Include groups" (default from the
   `includeGroupsDefault` preference, on), currency (All / each present), show (All / Owes you / You owe /
   Settled), sort (Amount / Name / Recent, default from `peopleSort`). Groups: type (Trip / Home / Couple /
-  Other), status (Active / Archived), currency, show (All / You are owed / You owe / Settled), sort (Recent
+  Other), status (Active / Inactive / All), show (Shown / Hidden / All), currency, show (All / You are owed / You owe / Settled), sort (Recent
   activity / Name / Amount). The Person page's history obeys the same Include groups choice.
-- **Archive group: out of the main view, closed to new expenses.** "Archive group" is in the group's header
-  overflow (any member; recorded in the group history and Activity; "Unarchive" undoes it, with an Undo
-  toast). An archived group:
-  - **leaves the main view:** it is not in the Groups list's default Active view, the sidebar / right column
-    "Recently active groups", or any group picker (Add expense, Record payment's group choice, Analytics
-    scope defaults). It stays reachable through the Groups filter Status = Archived, an "Archived (N)" fold at
-    the end of the Groups list (preference `groups.showArchivedFold`, default on), search, and links from
-    history;
-  - **takes no new expenses:** Add expense is gone from its page, replaced by a banner "Archived · Unarchive to
-    add expenses"; adding, editing, moving an expense into it or restoring one into it is rejected by the sync
-    mutation itself (`GROUP_ARCHIVED`), not only hidden in the UI;
-  - **can still close its money:** balances keep counting on Home and People (never hidden), with the group's
-    chip marked "Archived"; Settle up, Record payment and Call it even stay available so open balances can be
-    closed; comments stay open.
-  Archiving with an open balance is allowed after a prompt that lists the open amounts per currency and offers
-  "Settle up first". *Why:* "add archive group option as well, when archived it stops showing in main view and
-  no expense can be added".
+- **Groups are Active or Inactive, and Shown or Hidden: two separate controls, no "Archive"** (owner 89,
+  replaces 88's single Archive). Both live in the group's header overflow, are recorded in history, and have an
+  Undo toast.
+  - **Active / Inactive is the group's state, for every member** (synced; any member can change it; Activity
+    row). An inactive group takes no new expenses: its page shows "Inactive · Make active to add expenses"
+    instead of Add expense; adding, editing, moving an expense into it or restoring one into it is rejected by
+    the sync mutation itself (`GROUP_INACTIVE`), not only hidden in the UI. Settle up, Record payment, Call it
+    even and comments still work, so open money can be closed. Making a group inactive with an open balance is
+    allowed after a prompt that lists the open amounts per currency and offers "Settle up first". Inactive
+    groups leave the main view: the Groups list shows them only in an "Inactive (N)" fold at the end
+    (preference `groups.showInactiveFold`, default on), and they are out of recent groups and every group
+    picker.
+  - **Show / Hide is personal** (my account only, never changes the group for others; preference
+    `groups.hidden`, a list of group ids synced across my own devices). A hidden group leaves my Groups list,
+    sidebar and right-column recent groups and group pickers; it stays reachable through the Groups filter
+    Show = Hidden, search and links from history, and I can still add expenses from its page if it is active.
+  - **Money is never hidden:** balances of inactive and hidden groups keep counting on Home, People and the
+    overview, with the group's chip marked "Inactive" or "Hidden".
+  - **Groups filter:** Status (Active / Inactive / All, default Active) and Show (Shown / Hidden / All, default
+    Shown). The old `archived` flag reads as Inactive (read-time adapter, no schema change).
+  *Why:* "add archive group option as well, when archived it stops showing in main view and no expense can be
+  added", then "or make it as active inactive and hide show instead of archive".
 - **Group page:** Pager tabs Expenses / Balances / Members (§ 26.9). Balances shows each member's net per
   currency, a "who owes whom" list (pairwise, from the direct-mode settlement plan) and "Settle up".
   Payment rules are reached from the header overflow (§ 26.4). testIDs `friends-filters`, `groups-balances`,
@@ -1898,6 +1903,7 @@ Every owner decision, in the order it was made (all 2026-10-26). "Replaced" name
 | 86 | "See this bill, it has both alcohol and food and diff tax is applied on both ... how to split such bill ... the taxation we added was overall on the bill" | Items carry tax classes; ordered charges each apply to all items, chosen classes or chosen items and can stack on earlier charges; each charge spread only over who had those items; round-off and reconciliation to the printed total; presets and per-merchant memory | § 26.13 | One overall tax on the whole bill |
 | 87 | "during scrolling don't hide bottom navigation, only header needs to be hidden" | On phones only the header scrolls away; bottom bar and FAB stay visible while scrolling | §§ 26.4, 26.6 | Bar and FAB hid with the header (row 81) |
 | 88 | "add archive group option as well, when archived it stops showing in main view and no expense can be added" | Archived groups leave the Groups list, recent groups and pickers (reachable via filter, Archived fold, search); no new, edited, moved or restored expenses (enforced in the mutation); settle, payments and comments stay; balances still count | § 26.12 | Archive only hid the group from Groups |
+| 89 | "or make it as active inactive and hide show instead of archive" | Two controls: Active/Inactive (group-wide; inactive takes no new expenses, enforced in mutations; settle stays; Inactive fold) and Show/Hide (personal pref `groups.hidden`); balances never hidden; old `archived` reads as Inactive | § 26.12 | One "Archive" (row 88) |
 
 New decisions follow § 0 rule 9: rewrite the rule in its topic so only the current truth remains, then add a
 row here.

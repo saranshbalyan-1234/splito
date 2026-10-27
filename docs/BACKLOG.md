@@ -1376,20 +1376,21 @@ Name, type, currency, members, roles, trip dates; membership changes never rewri
   1. A09: adding or removing a member leaves old splits unchanged.
   2. Former members keep correct access to past records locally.
 
-### F-604 Archive groups `spec: owner § 26.12 (decision 88)`
+### F-604 Active / inactive and show / hide groups `spec: owner § 26.12 (decisions 88, 89)`
 
-Archive a group: it leaves the main view and takes no new expenses, while its records, balances, settle-up and search hits stay.
+Two controls instead of "Archive": Active / Inactive is the group's state for every member (inactive takes no new expenses but can still settle), Show / Hide is personal visibility. Balances are never hidden.
 
 - **Effort** M · **Impact** 7 · **Backend** no · **Status** todo · **Deps** F-603
-- **Prefs** `groups.showArchivedFold` (account, default on): the "Archived (N)" fold at the end of the Groups list
+- **Prefs** `groups.showInactiveFold` (account, default on), `groups.hidden` (account, default empty list of group ids)
 - **Acceptance**
-  1. "Archive group" / "Unarchive" in the group header overflow; one transaction with history and outbox; Activity row; Undo toast.
-  2. An archived group is absent from the Groups default view, sidebar and right-column recent groups, and every group picker; it shows under Status = Archived, the Archived (N) fold and search.
-  3. Its page shows the "Archived · Unarchive to add expenses" banner instead of Add expense; the FAB and the Add expense sheet cannot target it.
-  4. Sync mutations reject add, edit, move-into and restore-into for an archived group with `GROUP_ARCHIVED` (bun tests on both engines), so no path adds an expense.
-  5. Balances still count on Home, People and the overview with the group chip marked "Archived"; Settle up, Record payment, Call it even and comments still work.
-  6. Archiving with an open balance shows the open amounts per currency and offers "Settle up first".
-  7. Unarchive restores every surface; e2e covers archive, blocked add, settle in an archived group and unarchive at phone and desktop widths.
+  1. "Make inactive" / "Make active" and "Hide group" / "Show group" in the group header overflow; state change in one transaction with history and outbox, Activity row for inactive/active; hide/show writes only the preference; Undo toast for both.
+  2. Inactive: page banner "Inactive · Make active to add expenses" instead of Add expense; the FAB and Add expense sheet cannot target it; sync mutations reject add, edit, move-into and restore-into with `GROUP_INACTIVE` (bun tests, both engines).
+  3. Inactive: Settle up, Record payment, Call it even and comments still work; making inactive with an open balance shows open amounts per currency and offers "Settle up first".
+  4. Inactive groups appear only in the "Inactive (N)" fold at the end of the Groups list, not in recent groups or pickers.
+  5. Hidden (personal): absent from my Groups list, recent groups and pickers; reachable by filter Show = Hidden, search and history links; still accepts expenses from its page if active; other members are unaffected.
+  6. Balances of inactive and hidden groups still count on Home, People and the overview, with chips marked "Inactive" / "Hidden".
+  7. Groups filter: Status Active / Inactive / All (default Active) and Show Shown / Hidden / All (default Shown); the old `archived` flag reads as Inactive (adapter test).
+  8. e2e at phone and desktop widths: make inactive, blocked add, settle in an inactive group, make active; hide, find via filter, show.
 
 ### F-605 Group emoji and colour
 
