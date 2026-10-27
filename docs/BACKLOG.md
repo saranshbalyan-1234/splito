@@ -2,11 +2,13 @@
 
 Updated 2026-10-27. This is the single, complete list of Splito features: everything promised in the handoff prompt, the design spec, `COMPLETION_MATRIX.md` and every owner decision in `docs/ARCHITECTURE.md` § 26 (decision log rows 1-63), plus 263 ideas from ten strategy lenses (travel, flatmates and households, couples and family, India and UPI, power users, capture and automation, social and sharing, trust and privacy, native platform, accessibility and simplicity), with duplicates merged.
 
-**23 epics, 311 features (158 tagged `spec`: already promised in the handoff, design spec, matrix or owner rules (ARCHITECTURE § 26), some extended; 153 new), an architecture Batch 0, 32 front-end batches (Batch 4b holds the 2026-10-26/27 owner requests) and 6 backend batches.** Status: 7 done, 34 in progress, 270 todo. 47 features need the backend.
+**23 epics, 338 features (185 tagged `spec`: already promised in the handoff, design spec, matrix or owner rules (ARCHITECTURE § 26), some extended; 153 new), an architecture Batch 0, 33 front-end batches (Batch 4b holds the 2026-10-26/27 owner requests, Batch 4d the best-of-both scouting additions) and 6 backend batches.** Status (recounted 2026-10-27 from the Status lines): 38 done, 10 in progress, 290 todo. 47 features need the backend.
 
 Completeness pass (2026-10-26): 32 features added after walking whole journeys (first launch, a 3-tap first expense, a 10-person trip abroad, a flat over a year, a couple, settling up, a dispute, switching phones, leaving a group, deleting the app), edge cases (refunds, partial and over-payments, currency changes, leavers, deleted and duplicate friends), accessibility, 10k-expense performance and the competitor gaps; 27 existing features got missing acceptance criteria, deps or descriptions, and 7 moved batch (F-108 to Batch 0; F-1102, F-1907, F-1605, F-705, F-1901 and F-1108 to where their deps and priority put them) so every dependency lands in an earlier batch.
 
 Owner-request pass (2026-10-27): every owner decision in ARCHITECTURE § 26 now maps to a feature with acceptance criteria matching the binding rule, a status and a build slot ([Owner decisions to features](#owner-decisions-to-features)); 15 features added (F-222..F-226, F-618, F-619, F-1118, F-1119, F-1210, F-1711, F-1712, F-2007, F-2111, F-2112; F-1210 is the disputes half split out of F-1204) and the unbuilt requests ordered in Batch 4b.
+
+Best-of-both pass (2026-10-27, ARCHITECTURE § 26.1, decision row 85): Bluesky and Expensify App compared feature by feature in `docs/scouting/2026-10-27-bluesky-expensify.md` (both inventories with paths, winner and reason per feature, exclusions). 18 features added, all front end (F-229..F-236, F-318..F-321, F-620, F-1211, F-1212, F-1412, F-1507, F-1816; F-1816 is Bluesky's AppLanguageDropdown on the web sign-in splash, sign-up and desktop right column), 16 of them in [Batch 4d](#batch-4d-best-of-both-bluesky-and-expensify-2026-10-27); 18 todo features amended where the other app does it better (F-211, F-214, F-219, F-312, F-501, F-502, F-504, F-516, F-709, F-1204, F-1207, F-1210, F-1402, F-1403, F-1405, F-1407, F-2202, F-2208), each marked "Best of both (2026-10-27)" with new acceptance criteria.
 
 Sources: `../Splito-Claude-Prompt.txt`, `docs/superpowers/specs/2026-10-26-splito-design.md`, `docs/COMPLETION_MATRIX.md`, `docs/research/2026-10-26-competitors.md`, `docs/ARCHITECTURE.md` § 26 (binding owner rules; wins over this file).
 
@@ -75,29 +77,30 @@ Every row of the ARCHITECTURE § 26.23 decision log (rows 1-63) and the feature(
 | 58 service worker and PWA | § 26.21 | F-1901 |
 | 59 comments, remind, export | § 26.20 | F-1204, F-2208, F-1118, F-1119, F-1111, F-2210, F-2001, F-2007, F-2004 |
 | 61 sync-status dot on the avatar | § 26.7 | F-223, F-2103 |
+| 85 best of both per feature: pull features from Expensify and Bluesky, whichever is better | § 26.1 | F-229..F-236, F-318..F-321, F-620, F-1211, F-1212, F-1412, F-1507, F-1816 (Batch 4d), amendments to F-211, F-214, F-219, F-312, F-501, F-502, F-504, F-516, F-709, F-1204, F-1207, F-1210, F-1402, F-1403, F-1405, F-1407, F-2202, F-2208; `docs/scouting/2026-10-27-bluesky-expensify.md` |
 
 ## Epics
 
 | Epic | Name | Features | Done | In progress | Todo | Needs backend |
 |---|---|---|---|---|---|---|
 | E1 | [Core ledger and foundations](#e1-core-ledger-and-foundations) | 10 | 4 | 1 | 5 | 0 |
-| E2 | [App shell, navigation and lists](#e2-app-shell-navigation-and-lists) | 26 | 0 | 11 | 15 | 0 |
-| E3 | [Expenses and composer](#e3-expenses-and-composer) | 17 | 0 | 3 | 14 | 0 |
+| E2 | [App shell, navigation and lists](#e2-app-shell-navigation-and-lists) | 34 | 0 | 11 | 23 | 0 |
+| E3 | [Expenses and composer](#e3-expenses-and-composer) | 21 | 0 | 3 | 18 | 0 |
 | E4 | [Itemize and receipt splitting](#e4-itemize-and-receipt-splitting) | 9 | 0 | 2 | 7 | 0 |
 | E5 | [Capture and automation](#e5-capture-and-automation) | 22 | 0 | 0 | 22 | 0 |
-| E6 | [People and groups](#e6-people-and-groups) | 19 | 0 | 5 | 14 | 0 |
+| E6 | [People and groups](#e6-people-and-groups) | 20 | 0 | 5 | 15 | 0 |
 | E7 | [Trips and travel](#e7-trips-and-travel) | 9 | 0 | 0 | 9 | 0 |
 | E8 | [Home and household](#e8-home-and-household) | 16 | 0 | 0 | 16 | 0 |
 | E9 | [Couples and family](#e9-couples-and-family) | 10 | 0 | 0 | 10 | 0 |
 | E10 | [Currencies and FX](#e10-currencies-and-fx) | 11 | 1 | 0 | 10 | 0 |
 | E11 | [Settle up and payments](#e11-settle-up-and-payments) | 19 | 0 | 3 | 16 | 0 |
-| E12 | [Activity, history and trust](#e12-activity-history-and-trust) | 10 | 0 | 2 | 8 | 0 |
+| E12 | [Activity, history and trust](#e12-activity-history-and-trust) | 12 | 0 | 2 | 10 | 0 |
 | E13 | [Analytics, reports and budgets](#e13-analytics-reports-and-budgets) | 11 | 0 | 1 | 10 | 0 |
-| E14 | [Search, organisation and power tools](#e14-search-organisation-and-power-tools) | 11 | 0 | 1 | 10 | 0 |
-| E15 | [Sharing and summaries](#e15-sharing-and-summaries) | 6 | 0 | 0 | 6 | 0 |
+| E14 | [Search, organisation and power tools](#e14-search-organisation-and-power-tools) | 12 | 0 | 1 | 11 | 0 |
+| E15 | [Sharing and summaries](#e15-sharing-and-summaries) | 7 | 0 | 0 | 7 | 0 |
 | E16 | [Privacy and security](#e16-privacy-and-security) | 10 | 0 | 0 | 10 | 0 |
 | E17 | [Customization, appearance and motion](#e17-customization-appearance-and-motion) | 12 | 0 | 2 | 10 | 0 |
-| E18 | [Accessibility and localization](#e18-accessibility-and-localization) | 15 | 1 | 1 | 13 | 0 |
+| E18 | [Accessibility and localization](#e18-accessibility-and-localization) | 16 | 1 | 1 | 14 | 0 |
 | E19 | [Platform integrations](#e19-platform-integrations) | 13 | 1 | 1 | 11 | 0 |
 | E20 | [Data portability](#e20-data-portability) | 7 | 0 | 0 | 7 | 0 |
 | E21 | [Backend foundation](#e21-backend-foundation) | 12 | 0 | 1 | 11 | 12 |
@@ -423,15 +426,17 @@ Each empty screen gets its own copy, one primary action, optional secondary, and
 
 ### F-211 60-second zero-signup onboarding
 
-Language picker in native scripts, name and avatar, region-prefilled currency / number format / week start, land on People with one FAB coach mark.
+Language picker in native scripts, name and avatar, region-prefilled currency / number format / week start, land on People with one FAB coach mark. **Best of both (2026-10-27, docs/scouting/2026-10-27-bluesky-expensify.md):** Expensify's purpose picker (`src/pages/OnboardingPurpose/BaseOnboardingPurpose.tsx`) joins the name step as chips: "What will you use Splito for?" (Trip, Flat or home, Couple, Friends, Just me). The answer sets defaults (default split, category set, group template once F-606 ships) and the first suggested action. Steps use Bluesky's direction-aware slide and persisted step (`src/screens/Onboarding/index.tsx`, `src/state/shell/onboarding.tsx`), and onboarding ends by starting the Getting started checklist (F-231).
 
 - **Effort** M · **Impact** 8 · **Backend** no · **Status** todo · **Deps** F-1701
-- **Prefs** `language`, `defaultCurrency`, `numberLocale`, `weekStart`, `onboarding.done` (device)
+- **Prefs** `language`, `defaultCurrency`, `numberLocale`, `weekStart`, `onboarding.done` (device), `onboarding.purpose`
 - **Acceptance**
   1. A fresh install reaches People in 3 screens or fewer with no account.
   2. Region India pre-fills INR, en-IN grouping and UPI on.
   3. Every onboarding choice is editable later in Settings.
   4. Onboarding says plainly that data lives only on this device until a backup or sign-in, with a link to backups.
+  5. The purpose chips share the name screen, so criterion 1's three-screen limit holds; skipping is allowed; each purpose's defaults live in one typed map with a bun test, and changing the purpose later changes only future defaults.
+  6. Killing the app mid-onboarding resumes on the same step.
 
 ### F-212 Simple mode
 
@@ -456,7 +461,7 @@ Left/right-handed FAB placement and mirrored swipe defaults; optional search row
 
 ### F-214 My profile and avatars
 
-Profile page for me (name, photo / emoji / initials avatar, home currency) and photo or emoji avatars for friends, copied from Bluesky's avatar editor and UserAvatar; images stay on the device, resized.
+Profile page for me (name, photo / emoji / initials avatar, home currency) and photo or emoji avatars for friends, copied from Bluesky's avatar editor and UserAvatar; images stay on the device, resized. **Best of both (2026-10-27, docs/scouting/2026-10-27-bluesky-expensify.md):** Bluesky's avatar creator (`src/screens/Onboarding/StepProfile/AvatarCreatorItems.tsx`, `AvatarCreatorCircle.tsx`): "Give them a face" builds an emoji-and-colour avatar for me, friends and groups, with "Upload a photo instead".
 
 - **Effort** M · **Impact** 7 · **Backend** no · **Status** todo · **Deps** F-201, F-601
 - **Prefs** -
@@ -464,6 +469,7 @@ Profile page for me (name, photo / emoji / initials avatar, home currency) and p
   1. Initials avatars get a stable colour per person that passes contrast checks.
   2. A photo avatar is resized under 100 KB with EXIF stripped and shows wherever the person appears (lists, drawer, Activity actor).
   3. Works fully offline.
+  4. The avatar creator (emoji grid and the contrast-checked colour set, no Bluesky artwork) previews live and is reachable from Profile, Add friend and the group editor.
 
 ### F-215 Help, About, licences and privacy `spec: handoff 2 notices, owner § 26.3 footer`
 
@@ -512,14 +518,16 @@ A clearly labelled sample trip a new user can open from the empty People screen,
 
 ### F-219 Contextual tips and feature discovery
 
-One-time tips at the moment a feature helps (third typed receipt suggests scanning, a long session suggests Save and add another, a pasted SMS suggests Quick add); each feature registers its own tips; a Tips list lives in Help.
+One-time tips at the moment a feature helps (third typed receipt suggests scanning, a long session suggests Save and add another, a pasted SMS suggests Quick add); each feature registers its own tips; a Tips list lives in Help. **Best of both (2026-10-27, docs/scouting/2026-10-27-bluesky-expensify.md):** Bluesky's NUX mechanics (`src/state/queries/nuxs/definitions.ts`, `src/components/dialogs/nuxs/index.tsx`: typed tip ids with an `enabled()` rule, a completion record, a priority queue that shows one at a time) with Expensify's product-training tooltips anchored to the control they explain (`src/components/ProductTrainingContext/TOOLTIPS.ts`). Tips render as anchored tooltips or inline cards, never self-opening dialogs (ARCHITECTURE § 10).
 
 - **Effort** S · **Impact** 6 · **Backend** no · **Status** todo · **Deps** F-211, F-215
-- **Prefs** `tips.enabled`
+- **Prefs** `tips.enabled`, `tips.state` (device)
 - **Acceptance**
   1. At most one tip per screen visit and per day; a dismissed tip never returns.
   2. Tips can be turned off and reset in Settings.
   3. Tips are announced politely, never a blocking modal.
+  4. Tip ids and their rules live in one typed definitions map; a dismissed or completed tip is recorded and never returns; the queue shows at most one tip within criterion 1's limits.
+  5. An anchored tooltip follows its target on resize and rotation and becomes an inline card when the target is off-screen.
 
 ### F-220 Group expense list: month sections, "involving me" filter and sort
 
@@ -626,6 +634,106 @@ Bluesky's placement: a "Feedback" item in the drawer and the shared footer links
   2. "Send feedback" opens a FormSheet (bottom drawer on phones, centred popup on desktop): type chips Bug / Idea / Question / Other, a required message, an optional screenshot or photo, an "Include app info" toggle (default on: version, platform, OS, language, current screen; never amounts, names, notes or receipts) with the sheet showing exactly what is attached, and an optional reply email (prefilled once signed in).
   3. Until the backend endpoint exists, Send saves the feedback on the device (status "Saved on this device") and offers "Send by email" (a prefilled draft to `FEEDBACK_EMAIL`, a release-checklist item); opening the draft is never shown as sent. Once F-2112 ships, feedback goes through the outbox.
   4. "Your feedback" lists every sent item with its status; "Shake to send feedback" (phones, default off) opens the sheet.
+
+### F-229 Focus mode and attention markers on Home and Groups `spec: owner § 26.1 best of both (Expensify)`
+
+Expensify's priority mode and left-hand-nav attention markers (`src/pages/settings/Preferences/PriorityModePage.tsx`, `src/libs/SidebarUtils.ts`, `src/components/LHNOptionsList/OptionRowLHN`) on Splito's Friends and Groups lists. Each list has a mode: "Most recent" (every row, current sort) or "Focus" (only rows that are unsettled in any currency, changed since I last opened them, or pinned once F-221 ships, then a "Show all N" row). Rows with unseen changes show a bold name and Bluesky's unread dot; rows that need me carry a short text marker ("You owe", "Review"); rows with a failed sync show "Needs attention" from the per-row `syncStatus` (ARCHITECTURE § 9.8). When a list passes 20 rows Splito offers Focus once, with Undo, as Expensify does.
+
+- **Effort** M · **Impact** 7 · **Backend** no · **Status** todo · **Deps** F-206, F-1201
+- **Prefs** `peopleListMode`, `groupsListMode` (most recent | focus; default most recent), `listUnseenMarkers` (default on), `listMode.focusOffered` (device)
+- **Acceptance**
+  1. Focus hides settled rows without unseen changes and ends with "Show all N"; switching mode keeps search and filters; overview cards still count every row (figures before filters, ARCHITECTURE § 9.6).
+  2. Opening a person or group clears its unseen marker; my own changes never mark a row unseen.
+  3. No marker is colour alone: each has text and an accessibility label (F-1801).
+  4. The once-only Focus offer appears at 21 or more rows and never again after Undo or a manual choice.
+  5. bun tests for the Focus predicate (unsettled per currency, unseen since last opened, pinned) and the unseen tracker; Playwright on phone and desktop with the large demo set (F-227).
+
+### F-230 "For you" to-do card on Home and the right column `spec: owner § 26.1 best of both (Expensify)`
+
+Expensify Home's "For you" section and Inbox "To-do" tab (`src/pages/home/ForYouSection`, `src/pages/inbox/sidebar/InboxTabSelector.tsx`), rebuilt as one Bluesky card at the top of Home (under the Overview) and as the first right-column section on wide web: the next things only I can do, each one tap away. Sources, each shown once its feature exists: settle with the person I owe most, per currency (F-1101); friends to remind (owe me and past the reminder policy age, F-1118, F-1111); unfinished drafts (F-320); scans and captures to review (F-503); possible duplicates (F-504); held or disputed expenses (F-1210); recurring bills due (F-306); Remind me items due (F-1119); payments to confirm (F-2207); sync items needing attention (F-2109). At most 3 rows, then "See all (N)"; each row has Snooze (1 day / 7 days). An empty list hides the card.
+
+- **Effort** M · **Impact** 8 · **Backend** no · **Status** todo · **Deps** F-207, F-1101, F-1118, F-224
+- **Prefs** `home.forYou` (on), `home.forYou.sources` (every source on), `home.forYou.maxRows` (3), `rightColumn.forYou` (on)
+- **Acceptance**
+  1. A pure `forYouItems(store, today)` selector in `packages/sync` with bun tests per source, ordered by money at stake per currency, then age; it never sums currencies.
+  2. It reads projections and indexes only (balances, `bySyncStatus`, drafts), never the whole ledger (measured with the large demo set).
+  3. Every row's action opens the existing flow pre-filled (Settle, Remind share sheet, draft, Review Inbox, duplicate review); finishing it removes the row live.
+  4. Per-source toggles and snoozes live in Settings > Home; the card can be hidden and reordered with the other Home cards (F-1703).
+  5. Playwright: demo data shows Settle and Remind rows on phone Home and in the right column at 1440 px; a snoozed row stays hidden after reload until the snooze ends.
+
+### F-231 Getting started checklist with milestone toasts `spec: owner § 26.1 best of both (Bluesky + Expensify)`
+
+Bluesky's ProgressGuide (`src/state/shell/progress-guide.tsx`, `src/components/ProgressGuide/`) with Expensify's guided setup tasks (`src/libs/buildOnboardingMessages.ts`, `src/pages/home/GettingStartedSection`). A dismissible "Get started" card, first on Home and in the right column, with five tasks checked off automatically: add a friend, add your first expense, create a group or trip, add your payment handle (F-1106; skipped until it exists), settle up once. A progress bar and avatar slots fill with the friends added (Bluesky `List.tsx`); each completion shows Bluesky's milestone toast with `AnimatedCheck`. Finishing or dismissing ends it.
+
+- **Effort** S · **Impact** 7 · **Backend** no · **Status** todo · **Deps** F-201, F-1704
+- **Prefs** `gettingStarted.enabled` (on), `gettingStarted.state` (device: active / done / dismissed)
+- **Acceptance**
+  1. Completion is derived from the store (counts), never from button taps, so an imported backup completes the tasks it satisfies.
+  2. A device that already has a friend, an expense and a group when this ships never sees the card; demo builds show it only after "Show getting started again".
+  3. Toasts honour reduced motion (static check) and are announced politely; the card is an inline card, never a dialog (ARCHITECTURE § 10).
+  4. Settings > Help has "Show getting started again".
+  5. bun test for the task derivation; Playwright fresh install completes every task and the card leaves.
+
+### F-232 Swipe actions on friend, group and expense rows `spec: owner § 26.1 best of both (Bluesky)`
+
+Bluesky's `GestureActionView` (`src/lib/custom-animations/GestureActionView.tsx`, used in `src/screens/Messages/components/ChatListItem.tsx`) on Home friend rows, Groups rows, a group's expense rows and Person history rows. Defaults: friend row left = Settle up, right = Remind (only when they owe me); group row left = Settle up, right = Archive (Pin once F-221 ships); expense row left = Delete (undo toast), right = Comment (Duplicate once F-309 ships). Swipes are shortcuts only: every action stays in the row menu and long-press (F-1803). Activity rows keep their own swipe prefs (F-1201).
+
+- **Effort** M · **Impact** 7 · **Backend** no · **Status** todo · **Deps** F-206, F-208, F-1118, F-1201
+- **Prefs** `swipe.enabled` (on), `swipe.friendLeft`, `swipe.friendRight`, `swipe.groupLeft`, `swipe.groupRight`, `swipe.expenseLeft`, `swipe.expenseRight` (each an action or off; mirrored by F-213 handedness)
+- **Acceptance**
+  1. Copied with its attribution header and reuse row; the threshold haptic uses `useHaptics` (`threshold`); gesture-handler is not imported on web, where the same actions show in the row menu and on hover.
+  2. Swipe actions are siblings of the row's Pressable (ARCHITECTURE § 2); a destructive action always gets the undo toast.
+  3. Every swipe action is also an accessibility action and a row-menu item.
+  4. Swipes do not fight the drawer edge-swipe (Bluesky `BlockDrawerGesture`) or vertical scroll; 60 fps on 1,000 rows, profiled and recorded.
+  5. iOS simulator and Android emulator runs recorded; Playwright covers the web menu fallback.
+
+### F-233 Tap the active tab to scroll to top; pull to refresh `spec: owner § 26.9 re-tap, ARCHITECTURE § 9.3 pull-to-refresh`
+
+Bluesky's soft reset (`emitSoftReset` in `src/view/shell/bottom-bar/BottomBar.tsx`, listeners via `src/state/events.ts`) and the refresh props of its `List` (`src/view/com/util/List.tsx`). Tapping the active bottom-bar or sidebar item scrolls that page's list to the top and shows the minimal-shell header; tapping again at the top refreshes. Pull to refresh on Home, Groups, Group, Person and Activity calls one `syncNow()` (ARCHITECTURE § 9.3): it refreshes FX rates when online and, once signed in, drains the outbox and pulls; offline or signed out it ends at once with the status label.
+
+- **Effort** S · **Impact** 5 · **Backend** no · **Status** todo · **Deps** F-201, F-203
+- **Prefs** `tabReselect` (scroll to top | off; default scroll to top), `pullToRefresh` (on)
+- **Acceptance**
+  1. Re-tap scrolls with animation (instant under reduced motion) on every top-level page.
+  2. Re-tap at the top runs the same refresh as a pull.
+  3. Refresh never shows an error toast offline and never shows "Synced" before an acknowledgement (ARCHITECTURE § 9.1).
+  4. Playwright: scroll Home, tap Home, the list is at offset 0; native pull checked on the iOS simulator.
+
+### F-234 Hover cards for people and groups on web `spec: owner § 26.1 best of both (Bluesky)`
+
+Bluesky's `ProfileHoverCard` (`src/components/ProfileHoverCard/index.web.tsx`: opens after 500 ms, closes 150 ms after leaving) on desktop web. Hovering a person or group name or avatar (lists, Activity, expense participants, right column) shows avatar, name, balance per currency with me, last activity, and Add expense / Settle up / Remind. Touch and keyboard users get no card; tapping or Enter navigates as today.
+
+- **Effort** S · **Impact** 5 · **Backend** no · **Status** todo · **Deps** F-207, F-208
+- **Prefs** `hoverCards` (device, on)
+- **Acceptance**
+  1. Copied with Bluesky's delays; native resolves to a no-op twin.
+  2. The card mounts on open only and reads balances from the projection, never the ledger.
+  3. Buttons open the normal sheets pre-filled; Escape closes; screen readers skip the card (its content is on the page already).
+  4. Playwright at 1440 px: hover a friend, the card shows the balance and buttons; leaving closes it.
+
+### F-235 FAB long-press quick menu with Quick action `spec: owner § 26.1 best of both (Expensify)`
+
+Expensify's create menu and Quick action (`src/pages/inbox/sidebar/FloatingActionButtonAndPopover.tsx`, `.../FABPopoverContent/menuItems/QuickActionMenuItem.tsx`, `src/libs/QuickActionUtils.ts`), kept off the tap: tapping the FAB still opens Add expense (§ 26.6). Long-pressing it opens a Bluesky Menu (bottom sheet on phones): Quick action "Add expense in <last group>" or "with <last person>", Scan receipt (once F-501 ships), Record payment, Create group, Invite people. On rail and desktop the same entries are in the command palette (F-1407); the sidebar pill stays Bluesky's `ComposeBtn` (§ 26.5).
+
+- **Effort** S · **Impact** 7 · **Backend** no · **Status** todo · **Deps** F-201, F-205
+- **Prefs** `fab.longPressMenu` (on), `fab.quickAction` (on), `fab.menuItems` (order and visibility)
+- **Acceptance**
+  1. Tap behaviour is unchanged (e2e); long-press opens the menu with the `longPress` haptic; the FAB exposes the menu as an accessibility action.
+  2. Quick action names the last group or person of an expense saved on this device and opens Add expense pre-filled; it hides when there is no history or that group is archived or left.
+  3. Menu items are reorderable and hideable in Settings > Navigation (same list component as F-209).
+  4. Long-press checked on iOS and Android; Playwright long-press on mobile web.
+
+### F-236 Troubleshoot: diagnostics, repair and caches `spec: owner § 26.1 best of both (Expensify + Bluesky), ARCHITECTURE § 16.3 Diagnostics`
+
+Expensify's Troubleshoot page (`src/pages/settings/Troubleshoot/TroubleshootPage.tsx`) with Bluesky About's system log and clear image cache (`src/screens/Settings/AboutSettings.tsx`), for a local-first app whose data support cannot see. Settings > Help > Troubleshoot shows storage engine and schema version, rows per store, outbox depth per status and recent errors, with "Rebuild balances" (runs `rebuildProjections()` and reports differences), "Clear image cache", "Share diagnostics" and the app version and build.
+
+- **Effort** S · **Impact** 5 · **Backend** no · **Status** todo · **Deps** F-1701, F-117
+- **Prefs** -
+- **Acceptance**
+  1. Rebuild balances is idempotent, runs in chunks with no JS long task over 50 ms on the large demo set, and reports "No differences" or what it corrected.
+  2. A bun test fails if the diagnostics JSON contains any amount, name, note, title or receipt field (ARCHITECTURE § 16.1).
+  3. Clear image cache never deletes an attachment that is not uploaded or backed up (ARCHITECTURE § 13).
+  4. Playwright: open Troubleshoot, rebuild, share diagnostics (download on web).
 
 ## E3 Expenses and composer
 
@@ -752,15 +860,18 @@ Non-blocking "Did you mean 250?" when an amount is far above the usual for that 
 
 ### F-312 Attachments `spec v1`
 
-Photos, PDFs and text on any expense: preview, open, add/remove recorded in history, configurable size and type limits, stored locally until sync.
+Photos, PDFs and text on any expense: preview, open, add/remove recorded in history, configurable size and type limits, stored locally until sync. **Best of both (2026-10-27, docs/scouting/2026-10-27-bluesky-expensify.md):** Viewing uses Bluesky's Lightbox (`src/components/Lightbox/`: pinch zoom, swipe to dismiss, a pager across all of the expense's attachments, share and save) with Expensify's receipt actions (replace, download, PDF pages; `src/pages/media/`) and its web hover-zoom (`src/components/ReceiptHoverZoom/index.web.tsx`). Each attachment can carry a description read by screen readers (Bluesky alt text).
 
 - **Effort** M · **Impact** 7 · **Backend** no · **Status** todo · **Deps** F-301
-- **Prefs** `attachments.maxMB`, `attachments.types`
+- **Prefs** `attachments.maxMB`, `attachments.types`, `attachments.hoverZoom` (device, on)
 - **Acceptance**
   1. Wrong type or oversize is rejected with the reason.
   2. Adding and removing an attachment appears in history.
   3. Works fully offline.
   4. EXIF GPS is stripped on import by default (full redaction tools come with F-1608).
+  5. The viewer pages through every attachment of the expense with pinch zoom and swipe to dismiss (a fade under reduced motion), with Replace, Download and Delete; PDFs page inside it.
+  6. On desktop web, hovering a receipt thumbnail shows a magnified preview after 300 ms.
+  7. An attachment description, when set, is its accessibility label.
 
 ### F-313 Location `spec v1`
 
@@ -814,6 +925,57 @@ Split a total among N people without naming anyone: each share, rounding and a p
   1. 1000 among 3 shows 334 / 333 / 333 with the same allocate() rounding as saved expenses.
   2. Nothing is stored until Save.
   3. Reachable from the composer and from the empty People screen.
+
+### F-318 Move an expense to another group, a friend or non-group `spec: owner § 26.1 best of both (Expensify track and move)`
+
+Expensify lets people track an expense first and share it later, and move expenses between reports (`src/pages/TrackExpensePage.tsx`, `src/libs/actions/IOU/TrackExpense.ts`, bulk "move" in `src/components/BulkActionBar/`). In Splito, "Move to…" on the expense overflow (and in bulk, F-1405) picks a group, a friend (direct) or "Just me". A preview shows the balance effect per person and currency before confirming; people not in the target are flagged and the split is re-chosen (ARCHITECTURE § 5). After saving a personal expense, the success toast offers "Share it" (Expensify's track whisper).
+
+- **Effort** S · **Impact** 7 · **Backend** no · **Status** todo · **Deps** F-301, F-603
+- **Prefs** `expense.offerShareAfterPersonal` (on)
+- **Acceptance**
+  1. A `moveExpense` mutation updates the expense, `expense_parties`, the balance projection, history ("moved from Goa trip to Flat") and the outbox in one transaction; Undo restores it exactly.
+  2. Moving into a group where a participant is not a member asks to add them or re-split; a share is never dropped silently.
+  3. The preview equals the balances after the move (bun property test over random moves).
+  4. Activity shows the move for the source and the target.
+  5. Playwright: move a personal expense into a group; both pages update.
+
+### F-319 Split one expense into several `spec: owner § 26.1 best of both (Expensify split expense)`
+
+Expensify's split expense (`src/pages/iou/DynamicSplitExpensePage.tsx`, `DynamicSplitExpenseCreateDateRangePage.tsx`, `src/libs/SplitExpenseUtils.ts`). "Split into parts" on the expense overflow turns one expense into two or more by Amount, Percentage or Date range (one part per day or month across a range, such as an annual bill into 12 months), each part with its own title, category, group or friend and split; "Make even" and a live exact remaining readout. The original is replaced by its parts in one undoable change; history links them ("split from Big Bazaar 4,820"). Itemized bills also offer "Split by items".
+
+- **Effort** M · **Impact** 7 · **Backend** no · **Status** todo · **Deps** F-302, F-318
+- **Prefs** `splitParts.defaultMode` (amount)
+- **Acceptance**
+  1. Domain `splitIntoParts(amount, mode, input)` with bun tests: conservation for amount, percent (basis points) and date range (by days, month-end clamp), including JPY (scale 0) and BHD (scale 3).
+  2. Save stays disabled until the parts sum exactly to the original; the remaining readout follows § 26.8.
+  3. One mutation tombstones the original and creates the parts with a shared `splitFromId`; Undo restores the original and removes the parts.
+  4. "Split by items" makes one part per item or item group of an itemized bill (F-401).
+  5. Playwright: split 4,820 into 1,200 personal and 3,620 for Flat; balances and Activity are right.
+
+### F-320 Drafts: several unfinished expenses, Save as draft on close `spec: owner § 26.1 best of both (Bluesky drafts)`
+
+Bluesky's composer drafts (`src/view/com/composer/drafts/DraftsButton.tsx`, `DraftsListDialog.tsx`, `DraftItem.tsx`) replace F-302's single silent draft per place. Closing a dirty Add expense shows § 26.8's "Discard changes?" prompt with three actions: Save as draft, Discard, Keep editing. A "Drafts (N)" button in the sheet's top bar lists saved drafts (title, amount, group, age; tap resumes, menu discards with "Discard draft? This draft will be permanently deleted."), and drafts appear in the For you card (F-230). Drafts never count (ARCHITECTURE § 5).
+
+- **Effort** S · **Impact** 7 · **Backend** no · **Status** todo · **Deps** F-302, F-205
+- **Prefs** `drafts.askOnClose` (on; off keeps today's silent single draft), `drafts.max` (20), `drafts.keepDays` (30)
+- **Acceptance**
+  1. Drafts live in device storage beside today's draft (MMKV natively, localStorage on web), never in balances, lists, search, analytics or CSV; today's per-place draft migrates to one saved draft.
+  2. Closing by X, Cancel, scrim or drag offers Save as draft / Discard / Keep editing; nothing destructive runs from a drag.
+  3. At the maximum, saving asks to discard the oldest; drafts older than the limit are removed with a one-line notice.
+  4. Resuming restores every field, itemize portions and payers included; saving the expense deletes its draft.
+  5. bun tests for the draft list and migration; Playwright: start two expenses, save both as drafts, resume and save one; the list shows one.
+
+### F-321 Edit one field from the expense page `spec: owner § 26.1 best of both (Expensify MoneyRequestView)`
+
+Expensify's expense view makes every field a row that opens just that field (`src/components/ReportActionItem/MoneyRequestView.tsx`, `src/libs/ModifiedExpenseMessage.ts`). Splito's expense page rows (amount, title, date, category, paid by, split, group, notes, time, attachments) open the matching editor sheet, the same editors as the composer (ARCHITECTURE § 4, editors don't write). Save writes one update with only the changed field (§ 5), and history records the change (worded "changed the date from 3 Oct to 4 Oct" once F-1202 ships, shown in the F-1204 timeline). The header's Edit still opens the full sheet.
+
+- **Effort** S · **Impact** 6 · **Backend** no · **Status** todo · **Deps** F-301, F-205
+- **Prefs** -
+- **Acceptance**
+  1. Each row has a chevron and the label "Edit <field>"; rows are read-only on deleted expenses and on expenses locked by a checkpoint (F-1205 once built).
+  2. Changing the amount or currency opens the split editor when the split would no longer balance; an unbalanced expense is never saved.
+  3. The mutation payload holds only the changed field and the base version (bun test).
+  4. Playwright: change the category from the expense page in two taps; the history line appears.
 
 ## E4 Itemize and receipt splitting
 
@@ -922,19 +1084,21 @@ Getting expenses in without typing; every automated result lands in one review q
 
 ### F-501 Receipt scanner `spec v2`
 
-Native document scanners (VisionKit, ML Kit Document Scanner), camera / library / file import, crop / rotate / replace, multi-page, batch mode.
+Native document scanners (VisionKit, ML Kit Document Scanner), camera / library / file import, crop / rotate / replace, multi-page, batch mode. **Best of both (2026-10-27, docs/scouting/2026-10-27-bluesky-expensify.md):** Expensify's scan flow (`src/pages/iou/request/IOURequestStartPage.tsx`, `IOURequestStepScan/components/MultiScanContext.tsx`, `MultiScanEducationalModal.tsx`): Scan is a tab at the top of the Add expense sheet (Manual | Scan) and the last tab used is remembered; batch mode shows a thumbnail strip of captures with remove, and a one-time explainer the first time it is turned on.
 
 - **Effort** M · **Impact** 8 · **Backend** no · **Status** todo · **Deps** F-312
-- **Prefs** -
+- **Prefs** `composer.lastTab` (device), `scan.batchDefault` (off)
 - **Acceptance**
   1. Camera permission denied still offers library and file import.
   2. Batch-scanning 5 receipts creates 5 drafts.
   3. Captures made offline are kept as drafts.
   4. On web, dropping files onto the window or pasting an image creates drafts.
+  5. Manual / Scan use Bluesky's TabBar inside the sheet; reopening the sheet opens the last tab used.
+  6. In batch mode a thumbnail strip shows every capture with remove before finishing; the explainer shows once.
 
 ### F-502 On-device OCR with review `spec v2`
 
-Apple Vision, ML Kit and WASM Tesseract read merchant, date, currency, total, items, tax and tip into an editable review; never auto-posts.
+Apple Vision, ML Kit and WASM Tesseract read merchant, date, currency, total, items, tax and tip into an editable review; never auto-posts. **Best of both (2026-10-27, docs/scouting/2026-10-27-bluesky-expensify.md):** Expensify's SmartScan pending state (`src/libs/ReceiptUtils.ts`, `src/components/PulsingView.tsx`, `src/hooks/useRestartOnReceiptFailure.ts`): reading runs in the background, the draft shows "Reading receipt…" with a shimmer on the fields being read, the user can type meanwhile (typed fields win), and a failed read offers Retry or Enter manually.
 
 - **Effort** L · **Impact** 9 · **Backend** no · **Status** todo · **Deps** F-501, F-401
 - **Prefs** -
@@ -942,6 +1106,8 @@ Apple Vision, ML Kit and WASM Tesseract read merchant, date, currency, total, it
   1. A10: a real photo and a PDF produce an editable review.
   2. Uncertain fields are highlighted and nothing saves without confirmation.
   3. Read time under 2 s offline on the target device, recorded.
+  4. Fields typed during a read are never overwritten by its result; the shimmer stops when the read ends and rests under reduced motion.
+  5. A failed or timed-out read keeps the photo and the draft, with Retry and Enter manually.
 
 ### F-503 Review Inbox for automated drafts
 
@@ -956,7 +1122,7 @@ One "To review" queue for OCR, share-in, captures, due recurring items, imports 
 
 ### F-504 Unified duplicate detection `spec v2 (extended)`
 
-One fingerprint (receipt image hash, UTR / RRN, order ID, fuzzy amount + date + title + people) on save and after merge; warns, never blocks.
+One fingerprint (receipt image hash, UTR / RRN, order ID, fuzzy amount + date + title + people) on save and after merge; warns, never blocks. **Best of both (2026-10-27, docs/scouting/2026-10-27-bluesky-expensify.md):** Expensify's review-duplicates and merge flows (`src/pages/TransactionDuplicate/`, `src/pages/TransactionMerge/`, `src/libs/MergeTransactionUtils.ts`): a flagged expense shows "Possible duplicate · Review"; review shows the candidates side by side with Keep all or Merge; Merge asks only about fields that differ (amount, date, title, category, payer, split, receipt), then confirms with the balance effect.
 
 - **Effort** M · **Impact** 9 · **Backend** no · **Status** todo · **Deps** F-301
 - **Prefs** -
@@ -964,6 +1130,9 @@ One fingerprint (receipt image hash, UTR / RRN, order ID, fuzzy amount + date + 
   1. The same dinner logged by two people offline is flagged after merge.
   2. The same UTR recorded twice is flagged.
   3. "Not a duplicate" is remembered.
+  4. Merge is one mutation: the kept expense takes the chosen fields, the other is tombstoned with history linking both, and comments and attachments move to the kept one; one Undo reverts it.
+  5. The merge step asks only about differing fields; identical fields are kept silently.
+  6. Possible duplicates feed the For you card (F-230) and the "Possible duplicates" view (F-1403).
 
 ### F-505 Attach-to-existing matcher and missing-receipt nudge
 
@@ -1083,7 +1252,7 @@ On-device counts and recency predict group, payer, participants, split and curre
 
 ### F-516 Automation rules engine `spec 4b (extended)`
 
-Ordered if/then rules (title, merchant, amount, source, card, group, weekday -> category, tags, template, payer, participants, skip Inbox); apply to past with preview and undo.
+Ordered if/then rules (title, merchant, amount, source, card, group, weekday -> category, tags, template, payer, participants, skip Inbox); apply to past with preview and undo. **Best of both (2026-10-27, docs/scouting/2026-10-27-bluesky-expensify.md):** Expensify's rule suggestion (`src/components/MerchantRuleSuggestionBanner.tsx`): after the user changes a predicted field, an inline banner on the expense page offers "Always use Food for Swiggy?" with Create rule / Not now.
 
 - **Effort** M · **Impact** 7 · **Backend** no · **Status** todo · **Deps** F-305, F-503, F-1404
 - **Prefs** `automation.rules`
@@ -1091,6 +1260,7 @@ Ordered if/then rules (title, merchant, amount, source, card, group, weekday -> 
   1. A rule runs on manual add, quick add, OCR, share-in and import.
   2. "Apply to past" previews a diff and commits as one undoable batch.
   3. The predictor offers "Make this a rule?".
+  4. The banner shows at most once per merchant and field, never as a dialog, and Not now is remembered.
 
 ### F-517 Recurring pattern detection and price-change alerts
 
@@ -1362,6 +1532,18 @@ Personal and group invite links with a QR, use and expiry limits, a manage list 
   3. The sheet shows a scannable QR with the accent-coloured logo in the centre, the link, Copy and Share; "Manage invite links" lists active links with uses left and expiry, and Revoke.
   4. Opening a link: a person with Splito sees who invited them and Accept / Decline; without Splito, web onboarding then the same prompt. Expired, used-up or revoked links say so and add nobody.
 
+### F-620 Themed invite QR card, Save to Photos and an in-app QR scanner `spec: owner § 26.1 best of both (Bluesky inviteFriends)`
+
+Bluesky's invite dialog (`src/features/inviteFriends/InviteFriendsDialogInner.tsx`, `themes.ts`, `components/ThemedQrCard.tsx`, `components/ActionButtons.tsx`) for Splito's invite sheet (F-619) and Pay-me QR (F-1105): the QR sits on a themed card (six themes rebuilt from Splito's ALF tokens, no Bluesky artwork) with the person's or group's name, and the actions Share (as an image), Save to Photos (write-only permission) and Copy link with a toast. Plus Bluesky's `InviteScannerScreen.tsx`: "Scan QR" in the Invite people sheet opens the camera and accepts Splito invite links (opens the accept flow) and UPI QR codes (offers to save the handle on a friend, F-1106).
+
+- **Effort** M · **Impact** 6 · **Backend** no · **Status** todo · **Deps** F-619
+- **Prefs** `qr.theme` (default theme)
+- **Acceptance**
+  1. Copied with attribution headers and reuse rows; the camera sits behind a lazy boundary (ARCHITECTURE § 2); the camera permission is asked from a tap with Bluesky's explainer (F-216 later reuses it); a denied camera offers "Choose image" to read a QR from a photo.
+  2. Unknown or unsafe QR content is shown as text, never opened (`safeExternalUrl`, § 11); a scanned link only navigates (§ 14).
+  3. The saved image holds the QR and the name only, never an amount unless the user chose a Pay-me QR with one.
+  4. iOS simulator and Android emulator runs recorded; web saves as a download and hides Scan without a camera.
+
 ## E7 Trips and travel
 
 Everything a group trip needs, from first booking to closing the books.
@@ -1454,13 +1636,14 @@ With no signal, move pending operations between phones as an animated multi-fram
 
 ### F-709 Road trip: fuel and distance split
 
-Fuel and tolls split by the distance each person rode (or per car with its riders, using F-617 subsets), with an optional per-km allowance for the car owner; km become integer weights for allocate().
+Fuel and tolls split by the distance each person rode (or per car with its riders, using F-617 subsets), with an optional per-km allowance for the car owner; km become integer weights for allocate(). **Best of both (2026-10-27, docs/scouting/2026-10-27-bluesky-expensify.md):** Expensify's distance flow (`src/pages/iou/request/step/IOURequestStepDistanceMap.tsx`, `IOURequestStepReuseRoute.tsx`): km can be typed or, once F-313's place search exists, computed from a route of reorderable stops with riders marked per leg; recent routes can be reused. Live GPS tracking and odometer photos are excluded (scouting file).
 
 - **Effort** S · **Impact** 5 · **Backend** no · **Status** todo · **Deps** F-302, F-617
 - **Prefs** `group:carRatePerKm`
 - **Acceptance**
   1. Fuel 3,000 with Riya 300 km and Sam 100 km gives 2,250 / 750 exactly.
   2. A per-km allowance creates a labelled expense owed to the car owner.
+  3. A route with riders per leg gives the same integer km weights as typing them; offline, typed km always work.
 
 ## E8 Home and household
 
@@ -2099,15 +2282,18 @@ Tombstoned expenses and payments listed for a configurable window with who, when
 
 ### F-1204 Comments on expenses and repayments `spec v2, owner § 26.20`
 
-A comment thread at the bottom of every expense and repayment detail, using Bluesky's reply rows and the Bluesky DM composer bar. Local and in the outbox now; shared once sync exists (F-2208). Disputes are F-1210.
+A comment thread at the bottom of every expense and repayment detail, using Bluesky's reply rows and the Bluesky DM composer bar. Local and in the outbox now; shared once sync exists (F-2208). Disputes are F-1210. **Best of both (2026-10-27, docs/scouting/2026-10-27-bluesky-expensify.md):** The expense page shows one timeline, as Expensify does (`src/pages/inbox/report/ReportActionsList.tsx`, `src/libs/ModifiedExpenseMessage.ts`): comments interleaved with F-1202 history lines ("Riya changed the amount from 1,200 to 1,250") under Bluesky DM date dividers (Today / Yesterday, `src/components/dms/DateDivider.tsx`). Long-press or right-click opens Bluesky's ContextMenu (`src/components/ContextMenu/`) with Expensify's actions (Copy, Edit, Delete, React, Copy link); on web, Up arrow in an empty composer edits my last comment.
 
 - **Effort** M · **Impact** 8 · **Backend** no · **Status** todo · **Deps** F-301, F-1201
-- **Prefs** -
+- **Prefs** `comments.showHistory` (on)
 - **Acceptance**
   1. Every expense and repayment detail ends with a thread (Bluesky reply rows) and a composer bar above the keyboard (Bluesky DM composer) with emoji and @mention of the expense's participants.
   2. I can edit and delete only my own comments; edits and deletes keep history (tombstones); every write is a `packages/sync` mutation with an outbox row.
   3. Expense rows show a comment count.
   4. New comments from others show in Activity as unread (From others) once sync delivers them (F-2208).
+  5. History lines and comments merge in time order from the comments `byTarget` and history `byEntity` indexes, never a full scan; the preference hides history lines.
+  6. The context menu offers only the actions allowed on that comment (no Edit or Delete on others'); each action also has a keyboard and screen-reader path.
+  7. On web, Up arrow in the empty composer edits my last comment and Escape cancels.
 
 ### F-1205 Settle-up checkpoints `spec 4b gap 11`
 
@@ -2131,13 +2317,15 @@ A short code from a SHA-256 hash chain over ordered history so members can compa
 
 ### F-1207 Reactions on activity items (local) `spec v3`
 
-Bluesky-style reaction palette on Activity rows; shared reactions arrive with F-2209.
+Bluesky-style reaction palette on Activity rows; shared reactions arrive with F-2209. **Best of both (2026-10-27, docs/scouting/2026-10-27-bluesky-expensify.md):** Reactions also go on comments and expenses (Expensify `src/components/Reactions/`), with Bluesky's DM reaction picker and "who reacted" dialog (`src/components/dms/EmojiReactionPicker.tsx`, `ReactionsDialog.tsx`); on web, hovering a comment shows quick reactions (Expensify `MiniReportActionContextMenu`).
 
 - **Effort** S · **Impact** 4 · **Backend** no · **Status** todo · **Deps** F-1201
 - **Prefs** `reactions.set`
 - **Acceptance**
   1. The reaction set is customizable.
   2. Reactions never change the ledger.
+  3. Comments and expenses show reaction counts; tapping a count opens who reacted.
+  4. On web, hovering a comment shows up to 4 quick reactions from the customizable set.
 
 ### F-1208 "All square" moment
 
@@ -2160,16 +2348,44 @@ Tap any balance to see a line-by-line running total per currency since the last 
   2. The Include groups choice applies; each line opens its record.
   3. Shareable as text with only that pair's lines.
 
-### F-1210 Disputes and flags `spec v2`
+### F-1210 Disputes, flags and hold `spec v2 (extended)`
 
-Flags on an expense (not there, wrong amount, wrong payer, duplicate) raised in its comment thread; disputed amounts stay visible but leave the plan by default until resolved.
+Flags on an expense (not there, wrong amount, wrong payer, duplicate) raised in its comment thread; disputed amounts stay visible but leave the plan by default until resolved. **Best of both (2026-10-27, docs/scouting/2026-10-27-bluesky-expensify.md):** Expensify's hold (`src/pages/iou/DynamicHoldReasonPage.tsx`, `src/libs/actions/IOU/Hold.ts`, `ProcessMoneyReportHoldMenu.tsx`): any participant can put an expense on hold ("waiting for the refund") with a required reason posted as a comment; it gets a "Held" badge, leaves the settle plan by default with Settle all / Settle without held in Settle up, and the first hold shows a one-time explainer. Unhold is one tap and recorded.
 
 - **Effort** M · **Impact** 7 · **Backend** no · **Status** todo · **Deps** F-1204
-- **Prefs** `group:excludeDisputed`
+- **Prefs** `group:excludeDisputed`, `group:excludeHeld` (on)
 - **Acceptance**
   1. Balances show a "disputed" sub-total.
   2. The settle plan excludes disputed amounts unless toggled.
   3. The creator's resolution is recorded in history.
+  4. Hold and unhold are mutations with history and an outbox row; the reason is required and becomes a comment.
+  5. Settle up shows held totals per currency and the Settle all / Settle without held choice; holding or releasing changes the plan hash (F-1101).
+  6. Held expenses appear in the "On hold" view (F-1403) and the For you card (F-230).
+
+### F-1211 Group discussion thread `spec: owner § 26.1 best of both (Expensify group chats, Bluesky group chats)`
+
+Both apps let a group talk (Expensify `src/pages/NewChatPage/`, rooms and trip rooms; Bluesky `src/screens/Messages/`). Splito keeps it light: an optional "Discussion" Pager tab on the group page, after Members, using F-1204's comment rows and composer, for plans and questions not tied to one expense ("who has the hotel booking?"). An expense or payment linked in a message shows as a compact card. **Off by default** so the group tabs stay § 26.12's Expenses / Balances / Members unless the user turns it on. Local and in the outbox now; shared with F-2208.
+
+- **Effort** M · **Impact** 5 · **Backend** no · **Status** todo · **Deps** F-1204, F-208
+- **Prefs** `group:discussionTab` (default off)
+- **Acceptance**
+  1. Group comments reuse the `comments` store with `targetType` group and the `byTarget` index (ARCHITECTURE § 9.8), with F-1204's edit, delete and tombstone rules.
+  2. The tab mounts lazily; discussion comments from others count in Activity once synced.
+  3. Turning the tab off keeps the comments; turning it on shows them again.
+  4. Playwright: post, edit and delete a group comment; Activity shows it.
+
+### F-1212 Grouped Activity rows, filter pills, new-items pill and mute `spec: owner § 26.1 best of both (Bluesky notifications)`
+
+Bluesky's notifications screen (`src/screens/Notifications/components/NotificationItem/Item/`, `src/state/queries/notifications/grouped/`, `components/TabPills.tsx`, `components/RefreshPill.tsx`, `src/state/cache/thread-mutes.tsx`) on Splito's Activity. Consecutive items of the same kind in the same group within a window are grouped ("Riya and 2 others added 5 expenses in Goa trip · you borrowed ₹1,240 · €18") with an expandable avatar stack. Under § 26.14's All / From others tabs sit scrollable filter pills: Expenses, Payments, Comments, Requests (arrows on web). A session seen-snapshot keeps new items tinted for the visit they arrived in; items that arrive while scrolled show an "N new" pill instead of moving the list. The row menu gains "Mute <group or person> in Activity" with Undo and a Muted list in Settings.
+
+- **Effort** M · **Impact** 6 · **Backend** no · **Status** todo · **Deps** F-1201
+- **Prefs** `activity.grouping` (on), `activity.groupWindowMinutes` (60), `activity.filters` (pills shown and their order), `activity.muted` (list)
+- **Acceptance**
+  1. A pure `groupActivity(items)` in `components/activity/feed.ts` with bun tests: same kind, same group and inside the window only; my effect is totalled per currency, never across currencies; expanding lists every item.
+  2. A grouped row's effect equals the sum of its items per currency.
+  3. Muting removes items from Activity and its unread badge only; balances, lists and history are untouched; Settings lists and unmutes.
+  4. The "N new" pill shows only when scrolled away from the top; tapping it scrolls up and clears it.
+  5. Playwright with the large demo set: a 6-expense burst shows as one row and expands.
 
 ## E13 Analytics, reports and budgets
 
@@ -2306,23 +2522,26 @@ Search titles, notes, people, groups and amounts, offline and indexed.
 
 ### F-1402 Advanced search operators `spec v2 saved views (extended)`
 
-amount>500, category:, tag:, with:, paid:me, group:, before:/after:, has:receipt, is:unsettled; chips build the same query on mobile.
+amount>500, category:, tag:, with:, paid:me, group:, before:/after:, has:receipt, is:unsettled; chips build the same query on mobile. **Best of both (2026-10-27, docs/scouting/2026-10-27-bluesky-expensify.md):** Expensify's search autocomplete (`src/components/Search/SearchAutocompleteList.tsx`, `src/libs/SearchAutocompleteUtils.ts`): typing in the Search & Ask input suggests operator keys and then their values (categories, people, groups, currencies), and operators can be negated (`-category:food`).
 
 - **Effort** M · **Impact** 7 · **Backend** no · **Status** todo · **Deps** F-1401
 - **Prefs** -
 - **Acceptance**
   1. "amount>500 category:food with:riya is:unsettled" returns the right set.
   2. A query can be saved as a view or budget target.
+  3. Typing "cat" suggests `category:` and then matching categories; Tab or Enter accepts, and phones get tappable suggestions.
+  4. A negated operator returns exactly the complement set (bun test).
 
 ### F-1403 Saved views `spec v2`
 
-Built-in This month, a trip, Outstanding, Missing receipts, plus user views.
+Built-in This month, a trip, Outstanding, Missing receipts, plus user views. **Best of both (2026-10-27, docs/scouting/2026-10-27-bluesky-expensify.md):** Expensify's suggested searches and save flow (`src/pages/Search/SearchTypeMenuWide.tsx`, `SearchSavePage.tsx`, `SavedSearchList.tsx`): built-in views also include Unsettled with me, On hold, Possible duplicates and Drafts, and any search in the Search & Ask drawer can be kept with "Save search".
 
 - **Effort** S · **Impact** 6 · **Backend** no · **Status** todo · **Deps** F-1401
 - **Prefs** `savedViews`
 - **Acceptance**
   1. The same filter state drives list, totals, charts and CSV.
   2. Views can be created, renamed, reordered and deleted.
+  3. "Save search" in the drawer stores the current query as a named view; built-in views can be hidden but not deleted.
 
 ### F-1404 Tags and occasion tags
 
@@ -2336,13 +2555,15 @@ Multi-label #tags typed inline with autocomplete; rename, merge, recolour, archi
 
 ### F-1405 Bulk select and edit
 
-Multi-select on every list (long-press, checkbox, shift-click, select all matching); change category, tags, date, group, template; delete; export.
+Multi-select on every list (long-press, checkbox, shift-click, select all matching); change category, tags, date, group, template; delete; export. **Best of both (2026-10-27, docs/scouting/2026-10-27-bluesky-expensify.md):** Expensify's selection mode (`src/components/BulkActionBar/`, `src/libs/actions/MobileSelectionMode.ts`): long-press enters selection mode on phones with a bottom action bar (Move F-318, Merge two F-504, Duplicate, Hold F-1210, Category, Delete, Export), a count, Select all matching and Cancel; web uses checkboxes and Shift-click.
 
 - **Effort** M · **Impact** 8 · **Backend** no · **Status** todo · **Deps** F-301
 - **Prefs** -
 - **Acceptance**
   1. Moving to a group where a participant is not a member is blocked with an explanation.
   2. One undo reverts the whole batch.
+  3. Selection mode hides the FAB and the header shows the count; Back or Escape leaves it with nothing changed.
+  4. Actions that do not fit the selection are disabled with the reason (Merge needs exactly two).
 
 ### F-1406 Category hierarchy and per-group sets `spec v1 categories (extended)`
 
@@ -2356,13 +2577,14 @@ Two-level categories that roll up; merge with remap; per-group visible sets; imp
 
 ### F-1407 Command palette and keyboard shortcuts
 
-Cmd/Ctrl+K fuzzy palette for people, groups, expenses, settings and actions; N, /, G-then-key, J/K, E, ? cheat sheet; skip link and visible focus.
+Cmd/Ctrl+K fuzzy palette for people, groups, expenses, settings and actions; N, /, G-then-key, J/K, E, ? cheat sheet; skip link and visible focus. **Best of both (2026-10-27, docs/scouting/2026-10-27-bluesky-expensify.md):** Bluesky's `n` (new expense) and `/` with its rule that hotkeys are off while a dialog or the drawer is open (`src/lib/hotkeys/index.tsx`), plus Expensify's Cmd/Ctrl+J shortcuts dialog, Shift+Esc mark all read, Cmd/Ctrl+Enter to save the open sheet and Up arrow to edit the last comment (`CONST.KEYBOARD_SHORTCUTS`, `src/pages/settings/DynamicKeyboardShortcutsPage.tsx`).
 
 - **Effort** M · **Impact** 6 · **Backend** no · **Status** todo · **Deps** F-1401
 - **Prefs** `shortcuts`
 - **Acceptance**
   1. Every action reachable from the palette.
   2. Shortcuts are remappable and listed on "?".
+  3. N, /, Cmd/Ctrl+J and Shift+Esc work on web and with hardware keyboards (F-228) and never fire while typing in a field; Cmd/Ctrl+Enter saves the open sheet when Save is enabled.
 
 ### F-1408 Spreadsheet grid view (web)
 
@@ -2403,6 +2625,18 @@ User-defined text, number, date, select and checkbox fields, global or per group
 - **Acceptance**
   1. field:project=acme search works.
   2. Custom fields export as columns.
+
+### F-1412 Pin saved views and groups as Home tabs `spec: owner § 26.1 best of both (Bluesky saved feeds)`
+
+Bluesky's pinned feeds become its home tabs (`src/screens/SavedFeeds.tsx`, `src/view/com/pager/`). In Splito a saved view (F-1403) or a group can be pinned as an extra Home tab beside "Friends" (Bluesky TabBar over Home's list). With no pins Home is exactly § 26.3's Overview and friends list. Settings > Home tabs lists pins with drag to reorder (Bluesky `DraggableList`) and unpin; pin from a group's overflow or a saved view's menu.
+
+- **Effort** M · **Impact** 5 · **Backend** no · **Status** todo · **Deps** F-1403, F-203
+- **Prefs** `home.pinnedTabs` (ordered list, default empty)
+- **Acceptance**
+  1. No pins renders today's Home exactly (existing e2e unchanged).
+  2. A pinned group shows that group's expense list with its balances; a pinned view shows its filtered list and per-currency totals.
+  3. Tabs swipe with the Pager and mount lazily; reordering animates with a haptic.
+  4. An archived or deleted group, or a deleted view, leaves the pins with a note.
 
 ## E15 Sharing and summaries
 
@@ -2468,6 +2702,18 @@ A link whose #fragment holds a compressed, optionally encrypted snapshot that th
   1. The friend sees their lines, total, pay buttons and an "as of" stamp without signup.
   2. Network logs show no fragment data sent to any server.
   3. Shows only the recipient's lines by default.
+
+### F-1507 Expense image card (e-receipt) `spec: owner § 26.1 best of both (Expensify e-receipts)`
+
+Expensify draws an e-receipt for expenses without a photo (`src/components/EReceipt.tsx`, `DistanceEReceipt.tsx`). Splito's "Share as image" on the expense or repayment overflow renders one card: title, date, total, who paid, each person's share (or only the chosen recipient's), group, an optional UPI pay QR for what that person owes (F-1105), and the Splito mark, handed to the share helper. Optionally the same card is the thumbnail of expenses without a receipt.
+
+- **Effort** S · **Impact** 6 · **Backend** no · **Status** todo · **Deps** F-301
+- **Prefs** `eReceipt.showAllShares` (on), `eReceipt.includePayQr` (on when I have a UPI handle), `eReceipt.asThumbnail` (off)
+- **Acceptance**
+  1. Amounts go through `formatAmount` per currency; the card renders off-screen with one renderer shared with F-1502 (a new capture dependency passes the ARCHITECTURE § 2 gate); works offline.
+  2. With "show all shares" off, a "For" picker chooses the recipient and only their share shows.
+  3. The image never holds notes, receipts or anyone else's payment handle.
+  4. Checked on iOS, Android and web (download).
 
 ## E16 Privacy and security
 
@@ -2856,6 +3102,25 @@ axe-core on every route in Playwright (both themes, 320-1440 px), React Native a
   1. CI fails on any new serious or critical axe violation against a baseline that only goes down.
   2. Each release records a VoiceOver, TalkBack and keyboard-only run of add expense, settle up and filters.
 
+### F-1816 App language dropdown on the web splash, sign-up and the desktop right column `spec: owner § 26.1 best of both (Bluesky AppLanguageDropdown), § 26.2 multi-language`
+
+Bluesky's `src/components/AppLanguageDropdown.tsx` (no props): a ghost button with a globe icon (Lucide `Globe`), the current language's name and a chevron, `tiny` on web and `small` on native, built on Bluesky's `Select` (dropdown on web, sheet on native). Splito renders it where Bluesky does, mapped to Splito's screens:
+
+1. **Web sign-in splash:** right end of the footer of `screens/LoggedOut/SplashScreen.web.tsx` (Bluesky `src/view/com/auth/SplashScreen.web.tsx:186`). The native splash stays without it, as in Bluesky.
+2. **Sign-up:** the footer row under every sign-up step, beside "Having trouble?" (`screens/Signup/index.tsx`; Bluesky `src/screens/Signup/index.tsx:226`), on every platform.
+3. **Desktop right column:** a footer row at the bottom of `view/shell/desktop/RightNav.tsx` (Bluesky `src/view/shell/desktop/RightNav.tsx:152`). Bluesky shows it there only when signed out at tablet width; Splito shows it at every session state on wide web, because Splito is used signed out.
+
+Bluesky's fourth placement, the logged-out `NavSignupCard` in the LeftNav and drawer, is not copied: Splito's sidebar and drawer already carry Sign in (§ 26.3). Choosing a language writes the existing `language` preference (the same value as Settings > Language and onboarding, F-1810, F-211), activates its Lingui catalog without a reload (Bluesky `dynamicActivate`) and sets `document.documentElement.lang` on web. Options come from the one supported-language list, each labelled in its own script plus English ("हिन्दी – Hindi"), so languages added by F-1811 appear automatically.
+
+- **Effort** S · **Impact** 7 · **Backend** no · **Status** todo · **Deps** F-1810, F-225, F-224
+- **Prefs** `language` (existing, no new value); `rightColumn.languageDropdown` (device, on)
+- **Acceptance**
+  1. Copied from Bluesky with the attribution header; the reuse row names Bluesky's version (won) and Expensify's (a Preferences page only, `src/pages/settings/Preferences/`).
+  2. Rendered in exactly the three places above.
+  3. Choosing Hindi on the web splash shows the splash, sign-up and the app in Hindi with Indian grouping, with no flash or reload; the choice survives a restart and equals Settings > Language.
+  4. Accessible: label "App language, current: English"; keyboard operable on web; on native a sheet with the current option checked (not colour alone).
+  5. Playwright: web splash -> Hindi -> Create account shows Hindi sign-up; at 1440 px the right-column dropdown switches the sidebar labels; native sign-up checked on the iOS simulator.
+
 ## E19 Platform integrations
 
 Native surfaces and the PWA.
@@ -3226,13 +3491,15 @@ Push for new group expense, payment recorded, invite accepted; Bluesky's NSE rew
 
 ### F-2202 Notification digest, mute and "only if it affects me"
 
-Instant, daily, weekly or off per group; bursts batched; minimum balance change filter; quiet hours.
+Instant, daily, weekly or off per group; bursts batched; minimum balance change filter; quiet hours. **Best of both (2026-10-27, docs/scouting/2026-10-27-bluesky-expensify.md):** Bluesky's per-type settings (`src/screens/Settings/NotificationSettings/`): each type (new expense, edit affecting me, comment, mention, payment, reminder, friend request) has separate push and in-app toggles; plus Expensify's per-group mode (`src/pages/settings/Report/DynamicNotificationPreferencePage.tsx`: Instantly, Daily digest, Mute) in the group overflow.
 
 - **Effort** M · **Impact** 7 · **Backend** yes · **Status** todo · **Deps** F-2201
-- **Prefs** `group:notifyMode`, `notify.minBalanceChange`, `quietHours`
+- **Prefs** `group:notifyMode`, `notify.minBalanceChange`, `quietHours`, `notify.types`
 - **Acceptance**
   1. Four quick expenses arrive as one batched notification.
   2. Quiet hours delay delivery and never drop it.
+  3. Every type has push and in-app toggles; in-app off keeps the item in Activity but out of the badge.
+  4. Mute in a group's overflow equals notify mode off and shows a muted icon on the group row.
 
 ### F-2203 Hardened read-only balance link `spec v2`
 
@@ -3286,7 +3553,7 @@ Everyone claims their own receipt items from a table QR and sees their running t
 
 ### F-2208 Shared comments, disputes and comments 2.0 `spec v2, owner § 26.20`
 
-Comments (F-1204) and disputes (F-1210) sync to members; comments from others arrive in Activity as unread; quick replies, mentions, receipt requests.
+Comments (F-1204) and disputes (F-1210) sync to members; comments from others arrive in Activity as unread; quick replies, mentions, receipt requests. **Best of both (2026-10-27, docs/scouting/2026-10-27-bluesky-expensify.md):** Expensify's unread marker line and Bluesky's new-messages pill (`src/components/UnreadActionIndicator.tsx`, `src/components/dms/NewMessagesPill.tsx`); comments send through Bluesky's pending queue (`src/state/messages/convo/agent.ts`) with Sending / Failed · Retry on each comment.
 
 - **Effort** M · **Impact** 7 · **Backend** yes · **Status** todo · **Deps** F-2201, F-1204, F-1210
 - **Prefs** -
@@ -3294,6 +3561,8 @@ Comments (F-1204) and disputes (F-1210) sync to members; comments from others ar
   1. A mention notifies only that member.
   2. Resolved disputes collapse in the thread and stay in history.
   3. A comment written offline reaches every participant after sync and shows in their Activity as unread.
+  4. Opening a thread marks the first unread comment with a "New" line; an "N new comments" pill appears only when new comments arrive below the fold.
+  5. A failed comment stays visible with Retry and Delete and never duplicates on retry (op id).
 
 ### F-2209 Shared reactions and "Say thanks" `spec v3`
 
@@ -3697,6 +3966,29 @@ Every owner request from ARCHITECTURE § 26 (decision log rows 47-63) that was n
 | 43 | F-2001 | JSON backup export and import | lib/export backup + Settings > Data | M | 8 | F-103, F-1701 |
 | 44 | F-2007 | Export centre: CSV and PDF statements | lib/export CSV / PDF + overflow entries | M | 8 | F-1301, F-2001 |
 
+### Batch 4d: Best of both, Bluesky and Expensify (2026-10-27)
+
+From the best-of-both scouting (ARCHITECTURE § 26.1, decision row 85; `docs/scouting/2026-10-27-bluesky-expensify.md`). All front end, after Batch 4b and before Batch 5 (client-only work before backend). The language dropdown comes first; the rest by impact per effort. F-319 waits for F-318 in the same batch; F-230 and F-231 share Home and the right column, so they are built one after the other, not in parallel. Each reuse row names both apps' versions and why one won.
+
+| # | ID | Feature | Area | Effort | Impact | Deps |
+|---|---|---|---|---|---|---|
+| 44a | F-1816 | App language dropdown on the web splash, sign-up and the desktop right column | components/AppLanguageDropdown + splash, sign-up and RightNav footers | S | 7 | F-1810, F-225, F-224 |
+| 44b | F-235 | FAB long-press quick menu with Quick action | AddExpenseFAB menu | S | 7 | F-201, F-205 |
+| 44c | F-318 | Move an expense to another group, a friend or non-group | moveExpense mutation + Move sheet | S | 7 | F-301, F-603 |
+| 44d | F-320 | Drafts: several unfinished expenses, Save as draft on close | composer drafts list | S | 7 | F-302, F-205 |
+| 44e | F-231 | Getting started checklist with milestone toasts | Home / right-column guide card | S | 7 | F-201, F-1704 |
+| 44f | F-321 | Edit one field from the expense page | expense page field rows | S | 6 | F-301, F-205 |
+| 44g | F-1507 | Expense image card (e-receipt) | e-receipt card renderer | S | 6 | F-301 |
+| 44h | F-230 | "For you" to-do card on Home and the right column | forYouItems selector + Home / right-column card | M | 8 | F-207, F-1101, F-1118, F-224 |
+| 44i | F-229 | Focus mode and attention markers on Home and Groups | list mode + row markers | M | 7 | F-206, F-1201 |
+| 44j | F-232 | Swipe actions on friend, group and expense rows | GestureActionView rows | M | 7 | F-206, F-208, F-1118, F-1201 |
+| 44k | F-319 | Split one expense into several | domain splitIntoParts + parts sheet | M | 7 | F-302, F-318 |
+| 44l | F-620 | Themed invite QR card, Save to Photos and an in-app QR scanner | features/inviteFriends | M | 6 | F-619 |
+| 44m | F-1212 | Grouped Activity rows, filter pills, new-items pill and mute | activity feed grouping + pills | M | 6 | F-1201 |
+| 44n | F-233 | Tap the active tab to scroll to top; pull to refresh | shell soft reset + List refresh | S | 5 | F-201, F-203 |
+| 44o | F-234 | Hover cards for people and groups on web | ProfileHoverCard (web) | S | 5 | F-207, F-208 |
+| 44p | F-236 | Troubleshoot: diagnostics, repair and caches | Settings > Help > Troubleshoot | S | 5 | F-1701, F-117 |
+
 ### Batch 5: First impressions and scale
 
 The 10-second first expense, 10k-expense speed, sign-in screens, and the screens every real user meets (offline web moved to Batch 4b).
@@ -3781,7 +4073,7 @@ Parties, presence, couples and trust basics.
 | 86 | F-607 | Households: a couple or family settles as one party | households (members + settle) | M | 9 | F-102, F-603 |
 | 87 | F-614 | Presence calendar: stay dates, away days, guest nights | presence calendar | M | 8 | F-106, F-603 |
 | 88 | F-901 | Ours / Mine / For you chips | composer ownership chips | S | 8 | F-609 |
-| 89 | F-1210 | Disputes and flags | expense disputes | M | 7 | F-1204 |
+| 89 | F-1210 | Disputes, flags and hold | expense disputes + hold | M | 7 | F-1204 |
 | 90 | F-1205 | Settle-up checkpoints | settle checkpoints | M | 8 | F-1101 |
 | 91 | F-1109 | Collections: who-has-paid tracker | collections screen | M | 8 | F-105, F-1106 |
 | 92 | F-211 | 60-second zero-signup onboarding | onboarding flow | M | 8 | F-1701 |
@@ -3830,6 +4122,7 @@ Disputes, leaving, duplicates, switching phones.
 | 114 | F-1108 | Payment method and UTR proof | Record payment sheet | S | 6 | F-1101 |
 | 115 | F-1011 | Change a group's or my home currency safely | currency change flow | S | 6 | F-1002 |
 | 116 | F-2006 | Storage manager | storage manager screen | S | 5 | F-312 |
+| 116a | F-1211 | Group discussion thread | group Discussion tab (off by default) | M | 5 | F-1204, F-208 |
 
 ### Batch 14: Trips II: settling in one currency
 
@@ -3942,6 +4235,7 @@ Rules engine, search operators, widgets.
 |---|---|---|---|---|---|---|
 | 171 | F-516 | Automation rules engine | rules engine | M | 7 | F-305, F-503, F-1404 |
 | 172 | F-1402 | Advanced search operators | search operators | M | 7 | F-1401 |
+| 172a | F-1412 | Pin saved views and groups as Home tabs | Home pinned tabs | M | 5 | F-1403, F-203 |
 | 173 | F-1505 | Share privacy presets | share privacy presets | S | 6 | F-1501 |
 | 174 | F-1905 | Home and lock-screen widgets | widgets | L | 8 | F-1904 |
 | 175 | F-806 | Security deposit ledger | deposit ledger | M | 8 | F-105, F-312 |
