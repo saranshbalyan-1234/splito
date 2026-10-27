@@ -20,14 +20,14 @@ import {
   type WeekStart,
   ZERO,
 } from '@splito/domain'
-import {
-  DEFAULT_CATEGORIES,
-  type Expense,
-  type Group,
-  type Person,
-} from '@splito/sync'
+import {DEFAULT_CATEGORIES, type Group, type Person} from '@splito/sync'
 
-import {useEntities, useLedger, useMutationCtx, usePref} from '#/data/hooks'
+import {
+  useEntities,
+  useLedgerMirror,
+  useMutationCtx,
+  usePref,
+} from '#/data/hooks'
 import {
   inScope,
   type Scope,
@@ -79,8 +79,8 @@ function deviceTimezone() {
 export function useReport() {
   const {t: l, i18n} = useLingui()
   const {actor: me} = useMutationCtx()
-  const ledger = useLedger()
-  const expenses = useEntities<Expense>('expense')
+  /* Analytics looks at the whole ledger: read by index in pages once, then kept current (data/ledgerQueries). */
+  const mirror = useLedgerMirror()
   const groups = useEntities<Group>('group')
   const people = useEntities<Person>('person')
   const [categories = DEFAULT_CATEGORIES] = usePref('categories')
@@ -95,7 +95,8 @@ export function useReport() {
     selection: Selection
   }>()
 
-  if (!ledger || !expenses || !groups || !people) return undefined
+  if (!mirror || !groups || !people) return undefined
+  const {ledger, expenses} = mirror
 
   const weekStart = (weekStartPref ?? 1) as WeekStart
   const tz =

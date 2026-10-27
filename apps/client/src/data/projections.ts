@@ -1,9 +1,11 @@
 import {
+  ACTIVITY_PAGE,
   type ActivityState,
   activityTracker,
   type Entity,
   type EntityType,
   type HistoryRow,
+  MONEY_TYPES,
   mergeChanges,
   type Store,
   type StoreChange,
@@ -26,9 +28,17 @@ export type Query<T> = {
    * Makes a loader for one subscription lifetime (state such as an
    * incremental reader lives in its closure). The loader gets what changed
    * since the last load and the previous value, to keep equal parts.
+   * `controls.reload` asks for another load without a commit (a pager
+   * wanting its next page).
    */
-  loader: (store: Store) => (change: StoreChange, prev: T | undefined) => Promise<T>
+  loader: (store: Store, controls: Controls) => (change: StoreChange, prev: T | undefined) => Promise<T>
 }
+
+/** What a loader may ask of its projection. */
+export type Controls = {reload: (change?: StoreChange) => void}
+
+/** A load that no commit caused: "extend what you hold" (a pager's next page). */
+export const MORE: StoreChange = {}
 
 export type Projection<T> = {
   subscribe: (onChange: () => void) => () => void
@@ -84,7 +94,7 @@ function create<T>(store: Store, query: Query<T>): Projection<T> {
       listeners.add(onChange)
       if (listeners.size === 1 && !isLive) {
         isLive = true
-        load = query.loader(store)
+        load = query.loader(store, {reload: change => isLive && run(change ?? 'unknown')})
         offStore = store.subscribe(change => {
           if (query.isTouchedBy(change)) run(change)
         })
@@ -143,8 +153,13 @@ export function shareRows<T>(prev: Entity<T>[] | undefined, next: Entity<T>[]): 
 
 const entityQueries = new Map<EntityType, Query<Entity[]>>()
 
-/** Every row of one entity type, tombstones included, ordered by id. */
+/**
+ * Every row of one entity type, tombstones included, ordered by id. Small
+ * stores only (people, groups, preferences, requests, links): a money store
+ * is read through indexes, projections and cursors (ARCHITECTURE 9.8).
+ */
 export function entitiesQuery<T>(type: EntityType): Query<Entity<T>[]> {
+  if ((MONEY_TYPES as readonly string[]).includes(type)) throw new Error(`${type} is a money store: read it by index, not whole`)
   let q = entityQueries.get(type)
   if (!q) {
     q = {
@@ -155,6 +170,26 @@ export function entitiesQuery<T>(type: EntityType): Query<Entity<T>[]> {
     entityQueries.set(type, q)
   }
   return q as unknown as Query<Entity<T>[]>
+}
+
+const oneQueries = new Map<string, Query<Entity | null>>()
+
+/** One row by id, tombstone included; null when there is none. */
+export function entityQuery<T>(type: EntityType, id: string): Query<Entity<T> | null> {
+  const key = `entity:${type}:${id}`
+  let q = oneQueries.get(key)
+  if (!q) {
+    q = {
+      key,
+      isTouchedBy: change => touches(change, type, id),
+      loader: store => async (_change, prev) => {
+        const next = (await store.get(type, id)) ?? null
+        return prev && next && isSameRow(prev, next) ? prev : next
+      },
+    }
+    oneQueries.set(key, q)
+  }
+  return q as unknown as Query<Entity<T> | null>
 }
 
 const historyQueries = new Map<string, Query<HistoryRow[]>>()
@@ -174,15 +209,27 @@ export function historyQuery(type: EntityType, id: string): Query<HistoryRow[]> 
   return q
 }
 
-/** The Activity feed, re-reading only the entities and histories each commit touched. */
-export const activityQuery: Query<ActivityState> = {
+/** The Activity feed value: the newest events, and a way to ask for older ones. */
+export type ActivityFeed = ActivityState & {loadMore: () => void}
+
+/**
+ * The Activity feed: the newest events by cursor, re-reading only the
+ * histories each commit touched; `loadMore` widens the window by a page.
+ */
+export const activityQuery: Query<ActivityFeed> = {
   key: 'activity',
   isTouchedBy: change =>
     touches(change, 'person') || touches(change, 'group') || touches(change, 'expense') ||
     touches(change, 'repayment') ||
-    touches(change, 'writeoff'),
-  loader: store => {
-    const track = activityTracker(store)
-    return change => track(change)
+    touches(change, 'writeoff') ||
+    touches(change, 'friendRequest'),
+  loader: (store, controls) => {
+    let want = ACTIVITY_PAGE
+    const track = activityTracker(store, () => want)
+    const loadMore = () => {
+      want += ACTIVITY_PAGE
+      controls.reload()
+    }
+    return async change => ({...(await track(change)), loadMore})
   },
 }

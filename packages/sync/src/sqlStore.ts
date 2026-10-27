@@ -1,8 +1,8 @@
 import {createStore} from './core'
-import type {Engine, RangeQuery, RowAccess} from './engine'
+import {type Engine, type RangeQuery, type RowAccess} from './engine'
 import {type LegacyV1, migrateV1ToV2, stampSchemaVersion} from './migrate'
 import {type ColumnType, indexColumns, type Row, SCHEMA_VERSION, STORES, type StoreName, type StoreSpec} from './schema'
-import type {Store} from './store'
+import {type Store} from './store'
 
 /** Minimal async SQLite surface; expo-sqlite on device, bun:sqlite in tests. */
 export interface SqlExecutor {
@@ -38,9 +38,18 @@ function rangeSql(store: StoreName, query: RangeQuery) {
   const eq = query.eq ?? []
   const where: string[] = []
   const params: unknown[] = []
-  eq.forEach((v, i) => (where.push(`${q(cols[i]!)} = ?`), params.push(v)))
-  if (query.min !== undefined) (where.push(`${q(cols[eq.length]!)} >= ?`), params.push(query.min))
-  if (query.max !== undefined) (where.push(`${q(cols[eq.length]!)} <= ?`), params.push(query.max))
+  for (const [i, v] of eq.entries()) {
+    where.push(`${q(cols[i]!)} = ?`)
+    params.push(v)
+  }
+  if (query.min !== undefined) {
+    where.push(`${q(cols[eq.length]!)} >= ?`)
+    params.push(query.min)
+  }
+  if (query.max !== undefined) {
+    where.push(`${q(cols[eq.length]!)} <= ?`)
+    params.push(query.max)
+  }
   const dir = query.dir ?? 'next'
   if (query.after) {
     where.push(`(${cols.map(q).join(', ')}) ${dir === 'next' ? '>' : '<'} (${cols.map(() => '?').join(', ')})`)

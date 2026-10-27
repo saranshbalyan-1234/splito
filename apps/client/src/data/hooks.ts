@@ -1,8 +1,7 @@
 import {useSyncExternalStore} from 'react'
-import {type LedgerRecord} from '@splito/domain'
+import {type BalanceRow, pairBalance, ZERO} from '@splito/domain'
 import {
   acceptFriendRequest,
-  type ActivityState,
   declineFriendRequest,
   type Entity,
   type EntityType,
@@ -22,16 +21,34 @@ import {
   setPref,
   type Store,
   toExpenseRecord,
-  toRepaymentRecord,
-  toWriteOffRecord,
+  touches,
   type WriteOff,
 } from '@splito/sync'
 
+import {type DemoCounts, demoCounts} from '#/data/demoLarge'
 import {
+  type GroupBalances,
+  groupActivityQuery,
+  groupNetsQuery,
+  type HistoryPager,
+  historyPagerQuery,
+  indexStream,
+  type LedgerMirror,
+  ledgerMirrorQuery,
+  lastActivityQuery,
+  myGroupBalancesQuery,
+  balanceRowsQuery,
+  countQuery,
+  partyStream,
+} from '#/data/ledgerQueries'
+import {
+  type ActivityFeed,
   activityQuery,
   entitiesQuery,
+  entityQuery,
   historyQuery,
   projectionFor,
+  type Projection,
   type Query,
 } from '#/data/projections'
 import {useData} from '#/data/StoreProvider'
@@ -46,9 +63,12 @@ export function useMutationCtx(): MutationCtx {
   return useData().ctx
 }
 
-/** A shared projection's current value; undefined until its first load. */
-function useProjection<T>(query: Query<T>): T | undefined {
-  const projection = projectionFor(useStore(), query)
+const IDLE: Projection<never> = {subscribe: () => () => {}, get: () => undefined}
+
+/** A shared projection's current value; undefined until its first load (or always, for a null query: nothing is read). */
+function useProjection<T>(query: Query<T> | null): T | undefined {
+  const store = useStore()
+  const projection = query ? projectionFor(store, query) : IDLE
   return useSyncExternalStore(projection.subscribe, projection.get)
 }
 
@@ -64,42 +84,6 @@ function liveRows<T>(all: Entity<T>[]): Entity<T>[] {
   return live as Entity<T>[]
 }
 
-const recordCache = new WeakMap<Entity, LedgerRecord>()
-function recordOf(
-  e: Entity<Expense> | Entity<Repayment> | Entity<WriteOff>,
-  kind: 'expense' | 'repayment' | 'writeoff',
-) {
-  let r = recordCache.get(e)
-  if (!r) {
-    r =
-      kind === 'expense'
-        ? toExpenseRecord(e as Entity<Expense>)
-        : kind === 'repayment'
-          ? toRepaymentRecord(e as Entity<Repayment>)
-          : toWriteOffRecord(e as Entity<WriteOff>)
-    recordCache.set(e, r)
-  }
-  return r
-}
-
-const ledgerCache = new WeakMap<Entity[], WeakMap<Entity[], WeakMap<Entity[], LedgerRecord[]>>>()
-function ledgerOf(expenses: Entity<Expense>[], repayments: Entity<Repayment>[], writeOffs: Entity<WriteOff>[]) {
-  let byRepayments = ledgerCache.get(expenses)
-  if (!byRepayments) ledgerCache.set(expenses, (byRepayments = new WeakMap()))
-  let byWriteOffs = byRepayments.get(repayments)
-  if (!byWriteOffs) byRepayments.set(repayments, (byWriteOffs = new WeakMap()))
-  let ledger = byWriteOffs.get(writeOffs)
-  if (!ledger) {
-    ledger = [
-      ...expenses.map(e => recordOf(e, 'expense')),
-      ...repayments.map(r => recordOf(r, 'repayment')),
-      ...writeOffs.map(w => recordOf(w, 'writeoff')),
-    ]
-    byWriteOffs.set(writeOffs, ledger)
-  }
-  return ledger
-}
-
 const prefCache = new WeakMap<Entity[], Map<PrefKey, unknown>>()
 function prefOf<K extends PrefKey>(rows: Entity<{value: unknown}>[], key: K): PrefValue<K> {
   let byKey = prefCache.get(rows)
@@ -108,23 +92,135 @@ function prefOf<K extends PrefKey>(rows: Entity<{value: unknown}>[], key: K): Pr
   return byKey.get(key) as PrefValue<K>
 }
 
-/** Every row of one type, tombstones included. Undefined while loading. */
+/**
+ * Every row of one small type (people, groups, preferences, requests,
+ * links), tombstones included. Undefined while loading. A money type throws:
+ * those are read by index (see the hooks below).
+ */
 export function useAllEntities<T>(type: EntityType): Entity<T>[] | undefined {
   return useProjection(entitiesQuery<T>(type))
 }
 
-/** Live list of non-deleted entities of one type. Undefined while loading. */
+/** Live list of non-deleted entities of one small type. Undefined while loading. */
 export function useEntities<T>(type: EntityType): Entity<T>[] | undefined {
   const all = useAllEntities<T>(type)
   return all && liveRows(all)
 }
 
-/** Live ledger records (tombstoned records included, flagged `deleted`). */
-export function useLedger(): LedgerRecord[] | undefined {
-  const expenses = useAllEntities<Expense>('expense')
-  const repayments = useAllEntities<Repayment>('repayment')
-  const writeOffs = useAllEntities<WriteOff>('writeoff')
-  return expenses && repayments && writeOffs ? ledgerOf(expenses, repayments, writeOffs) : undefined
+/** One row by id, tombstone included: undefined while loading, null when there is none. */
+export function useEntity<T>(type: EntityType, id: string): Entity<T> | null | undefined {
+  return useProjection(entityQuery<T>(type, id))
+}
+
+/* Balances and history, from the stored sums and indexes (ARCHITECTURE 9.8) */
+
+/** My balance with each person, per group and currency: what People, Person and the right column show. Undefined while loading. */
+export function useBalanceRows(): BalanceRow[] | undefined {
+  const {actor} = useMutationCtx()
+  return useProjection(balanceRowsQuery(actor))
+}
+
+/** My net in each group I am not settled in, per currency. */
+export function useMyGroupBalances(): GroupBalances | undefined {
+  const {actor} = useMutationCtx()
+  return useProjection(myGroupBalancesQuery(actor))
+}
+
+/** One group's net per currency and person (no zero-fill; people with no records are absent). */
+export function useGroupNets(groupId: string) {
+  return useProjection(groupNetsQuery(groupId))
+}
+
+/** When each group last saw activity (epoch ms), for "recent" ordering. */
+export function useGroupActivity() {
+  return useProjection(groupActivityQuery)
+}
+
+/** The latest shared date per person, read only while `enabled` (the "recent" friends sort). */
+export function useLastActivity(enabled: boolean) {
+  return useProjection(enabled ? lastActivityQuery : null)
+}
+
+/** One group's expenses, payments and write-offs, newest first, a page at a time. */
+export function useGroupHistory(groupId: string): HistoryPager | undefined {
+  return useProjection(
+    historyPagerQuery(`history:group:${groupId}`, store => [
+      indexStream<Expense>(store, 'expense', {index: 'byGroupDate', eq: [groupId]}),
+      indexStream<Repayment>(store, 'repayment', {index: 'byGroup', eq: [groupId]}),
+      indexStream<WriteOff>(store, 'writeoff', {index: 'byGroup', eq: [groupId]}),
+    ]),
+  )
+}
+
+/**
+ * The expenses and payments between me and one friend that move their
+ * balance, newest first, a page at a time; `includeGroups` off keeps only
+ * those outside groups.
+ */
+export function usePairHistory(personId: string, includeGroups: boolean): HistoryPager | undefined {
+  const {actor: me} = useMutationCtx()
+  return useProjection(
+    historyPagerQuery(`history:pair:${me}:${personId}:${includeGroups}`, store => {
+      const inScope = (groupId: string | null) => includeGroups || groupId === null
+      const movesBalance = (e: Entity<Expense>) =>
+        e.data.payers[me] !== undefined || e.data.shares[me] !== undefined
+          ? pairBalance([toExpenseRecord(e)], me, personId) !== ZERO
+          : false
+      const both = (e: Entity<Expense>) =>
+        (personId in e.data.payers || personId in e.data.shares) && inScope(e.data.groupId) && movesBalance(e)
+      const between = (from: string, to: string) => (r: Entity<Repayment>) =>
+        r.data.from === from && r.data.to === to && inScope(r.data.groupId)
+      return [
+        partyStream(store, {index: 'byPersonDate', eq: [personId]}, both, !includeGroups),
+        indexStream<Repayment>(store, 'repayment', {index: 'byFrom', eq: [personId]}, between(personId, me)),
+        indexStream<Repayment>(store, 'repayment', {index: 'byTo', eq: [personId]}, between(me, personId)),
+        indexStream<WriteOff>(store, 'writeoff', {index: 'byFrom', eq: [personId]}, between(personId, me)),
+        indexStream<WriteOff>(store, 'writeoff', {index: 'byTo', eq: [personId]}, between(me, personId)),
+      ]
+    }),
+  )
+}
+
+/** The few newest expenses and payments I am on (the sidebar's "Recent transactions"). */
+export function useRecentTransactions(size: number): HistoryPager | undefined {
+  const {actor: me} = useMutationCtx()
+  return useProjection(
+    historyPagerQuery(
+      `history:recent:${me}:${size}`,
+      store => [
+        partyStream(store, {index: 'byPersonDate', eq: [me]}, () => true),
+        indexStream<Repayment>(store, 'repayment', {index: 'byFrom', eq: [me]}),
+        indexStream<Repayment>(store, 'repayment', {index: 'byTo', eq: [me]}),
+      ],
+      undefined,
+      size,
+    ),
+  )
+}
+
+/** The whole ledger in memory, for Analytics and search only (read by index in pages, then kept current). */
+export function useLedgerMirror(): LedgerMirror | undefined {
+  return useProjection(ledgerMirrorQuery)
+}
+
+const demoCountsQuery: Query<DemoCounts> = {
+  key: 'demoCounts',
+  isTouchedBy: c => touches(c, 'person') || touches(c, 'group') || touches(c, 'expense'),
+  loader: store => async (_c, prev) => {
+    const next = await demoCounts(store)
+    return prev && prev.friends === next.friends && prev.groups === next.groups && prev.expenses === next.expenses ? prev : next
+  },
+}
+
+/** What the large demo set holds right now (Settings > Data; dev and e2e builds only). */
+export function useDemoCounts(): DemoCounts | undefined {
+  return useProjection(demoCountsQuery)
+}
+
+/** How many rows an index range holds (`count`), live. */
+export function useCount(type: EntityType, q: Parameters<Store['count']>[1] = {}): number | undefined {
+  const key = `count:${type}:${JSON.stringify(q)}`
+  return useProjection(countQuery(key, type, q))
 }
 
 export function useMe(): Entity<Person> | undefined {
@@ -138,7 +234,7 @@ export function useHistory(type: EntityType, id: string): HistoryRow[] | undefin
 }
 
 /** The Activity feed's events and entities. Undefined while loading. */
-export function useActivityState(): ActivityState | undefined {
+export function useActivityState(): ActivityFeed | undefined {
   return useProjection(activityQuery)
 }
 

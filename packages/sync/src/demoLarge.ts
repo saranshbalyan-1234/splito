@@ -40,8 +40,8 @@ import {
   type RepaymentInput,
   updateExpense,
 } from './mutations'
-import type {Store, Tx} from './store'
-import type {MutationCtx} from './types'
+import {type Store, type Tx} from './store'
+import {type MutationCtx} from './types'
 
 export const DEMO_LARGE_PREFIX = 'demo-large-'
 export const DEMO_LARGE_SEED = 0x5911_7000

@@ -1,7 +1,7 @@
 import {describe, expect, test} from 'bun:test'
 
 import {type Store, type StoreChange, touches} from '../src/store'
-import type {Entity, OutboxOp} from '../src/types'
+import {type Entity, type OutboxOp} from '../src/types'
 
 export const ent = (type: Entity['type'], id: string, data: unknown = {n: 1n}): Entity => ({
   type,

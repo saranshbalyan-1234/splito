@@ -68,5 +68,6 @@ export const BASELINE: Record<RuleName, Record<string, number>> = {
     'apps/client/src/screens/Settings/SettingsSection.tsx': 2,
     'apps/client/src/screens/Settings/index.tsx': 2,
   },
+  moneyFullRead: {},
   attribution: {},
 }

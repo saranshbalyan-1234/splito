@@ -61,7 +61,7 @@ function changes<T>(store: Store, query: Query<T>) {
 const settle = () => new Promise(r => setTimeout(r, 50))
 
 test('shareRows keeps unchanged rows and the array itself when nothing changed', () => {
-  const row = (id: string, version = 1): Entity => ({type: 'person', id, data: {}, version, deleted: false, updatedAt: version})
+  const row = (id: string, version = 1): Entity => ({type: 'person', id, data: {}, version, deleted: false, createdAt: 1, updatedAt: version, syncStatus: 'local', serverVersion: null, syncedAt: null, syncError: null})
   const prev = [row('a'), row('b')]
   expect(shareRows(prev, [row('a'), row('b')])).toBe(prev)
   const next = shareRows(prev, [row('a'), row('b', 2)])

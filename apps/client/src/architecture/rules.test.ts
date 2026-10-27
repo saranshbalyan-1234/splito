@@ -65,6 +65,18 @@ describe('scanner', () => {
 })
 
 describe('counters', () => {
+  test('moneyFullRead', () => {
+    const screen = `${CLIENT}screens/People/index.tsx`
+    expect(count('moneyFullRead', "const all = await store.getAll<Expense>('expense')", screen)).toBe(1)
+    expect(count('moneyFullRead', "const e = useEntities<Expense>('expense'); const l = useLedger()", screen)).toBe(2)
+    expect(count('moneyFullRead', "entitiesQuery('repayment')", `${CLIENT}data/projections.ts`)).toBe(1)
+    expect(count('moneyFullRead', "const rows = await store.getAll('writeoff')", 'packages/sync/src/activity.ts')).toBe(1)
+    // Small stores, index reads, comments and the one maintenance reader are fine.
+    expect(count('moneyFullRead', "useEntities<Person>('person'); store.page('expense', {index: 'byDate'})", screen)).toBe(0)
+    expect(count('moneyFullRead', "// getAll('expense') is forbidden here", screen)).toBe(0)
+    expect(count('moneyFullRead', 'export async function loadLedger(store) {}', 'packages/sync/src/selectors.ts')).toBe(0)
+  })
+
   test('rawColour', () => {
     expect(count('rawColour', "const c = '#1185fe'; const d = 'rgba(0,0,0,0.5)'")).toBe(2)
     expect(count('rawColour', "// '#fff'\nconst c = t.palette.primary_500")).toBe(0)

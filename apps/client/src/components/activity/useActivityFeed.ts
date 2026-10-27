@@ -20,7 +20,7 @@ import {
 
 export type ActivitySnapshot = {
   events: ActivityEvent[]
-  /** Every person, group and expense, deleted ones included, by id. */
+  /** Every person and group, and the expenses and requests the events name, deleted ones included, by id. */
   people: Map<string, Entity<Person>>
   groups: Map<string, Entity<Group>>
   expenses: Map<string, Entity<Expense>>
@@ -73,7 +73,16 @@ export function useActivityFeed(filter: FeedFilter = 'all') {
   const update = (fn: (s: FeedState) => FeedState) =>
     setStored(fn(device.get(FEED_KEY) ?? EMPTY_FEED_STATE))
   const feed = buildRows(snapshot?.events ?? [], state, me, filter)
-  return {me, snapshot, state, update, ...feed}
+  return {
+    me,
+    snapshot,
+    state,
+    update,
+    /** Reads the next page of older history (a no-op once there is none). */
+    loadMore: loaded?.loadMore,
+    isDone: loaded?.isDone ?? false,
+    ...feed,
+  }
 }
 
 /**

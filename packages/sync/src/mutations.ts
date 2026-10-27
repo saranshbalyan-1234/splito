@@ -14,9 +14,9 @@ import {
 } from '@splito/domain'
 
 import {formatContact, isContact} from './contact'
-import type {Key} from './schema'
-import type {Page, Store, Tx} from './store'
-import type {Entity, EntityType, MutationCtx} from './types'
+import {type Key} from './schema'
+import {type Page, type Store, type Tx} from './store'
+import {type Entity, type EntityType, type MutationCtx} from './types'
 
 export interface Person {
   name: string

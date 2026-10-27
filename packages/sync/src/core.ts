@@ -5,7 +5,7 @@
  * (`idbStore.ts`, `sqlStore.ts`) only implements rows, indexes and
  * transactions, so one contract test covers both and they cannot differ.
  */
-import type {Engine, RowAccess} from './engine'
+import {type Engine, type RowAccess} from './engine'
 import {projectEntity, rebuildProjections} from './ledgerProjection'
 import {
   completeEntity,
@@ -24,7 +24,7 @@ import {
   STORES,
 } from './schema'
 import {changeRecorder, DEFAULT_PAGE, type ExpenseParty, type GroupMember, type NetBalance, type Page, type PageQuery, type PairBalance, type Store, type StoreChange, type Tx} from './store'
-import type {Entity, EntityType, RowSyncStatus} from './types'
+import {type Entity, type EntityType, type HistoryRow, type RowSyncStatus} from './types'
 import {ROW_SYNC_STATUSES} from './types'
 
 const SYNC_STORES = (Object.keys(STORES) as StoreName[]).filter(s => 'bySyncStatus' in STORES[s].indexes)
@@ -33,6 +33,20 @@ const SYNC_STORES = (Object.keys(STORES) as StoreName[]).filter(s => 'bySyncStat
 async function loadEntity(rows: RowAccess, type: EntityType, id: string): Promise<Entity | undefined> {
   const r = await rows.get(ENTITY_STORE[type], [id])
   return r ? entityOfRow(type, r) : undefined
+}
+
+/** Writes an entity row; a group keeps the activity time its records have raised. */
+async function writeEntity(rows: RowAccess, next: Entity, prevRow?: Row) {
+  const row = rowOfEntity(next)
+  if (next.type === 'group') row.activityAt = Math.max((prevRow?.activityAt as number | undefined) ?? 0, next.updatedAt)
+  await rows.put(ENTITY_STORE[next.type], row)
+}
+
+/** Changes only an entity's sync fields (its relation rows follow). */
+async function setSync(rows: RowAccess, e: Entity, sync: Partial<Pick<Entity, 'syncStatus' | 'syncError' | 'serverVersion' | 'syncedAt'>>) {
+  const next: Entity = {...e, ...sync}
+  await writeEntity(rows, next, await rows.get(ENTITY_STORE[e.type], [e.id]))
+  await projectEntity(rows, e, next)
 }
 
 /** Every row of an entity type, by id. */
@@ -44,10 +58,11 @@ function makeTx(rows: RowAccess, recorder: ReturnType<typeof changeRecorder>): T
       return (await loadEntity(rows, type, id)) as Entity<T> | undefined
     },
     async put(input) {
-      const prev = await loadEntity(rows, input.type, input.id)
+      const prevRow = await rows.get(ENTITY_STORE[input.type], [input.id])
+      const prev = prevRow ? entityOfRow(input.type, prevRow) : undefined
       const next = completeEntity(input, prev)
       recorder.record(next.type, next.id)
-      await rows.put(ENTITY_STORE[next.type], rowOfEntity(next))
+      await writeEntity(rows, next, prevRow)
       await projectEntity(rows, prev, next)
     },
     async appendHistory(h) {
@@ -58,11 +73,7 @@ function makeTx(rows: RowAccess, recorder: ReturnType<typeof changeRecorder>): T
       await rows.add('outbox', outboxRow(op))
       // The row waits for the server from the moment its op is queued.
       const e = await loadEntity(rows, op.entityType, op.entityId)
-      if (e && e.syncStatus !== 'pending') {
-        const next: Entity = {...e, syncStatus: 'pending', syncError: null}
-        await rows.put(ENTITY_STORE[e.type], rowOfEntity(next))
-        await projectEntity(rows, e, next)
-      }
+      if (e && e.syncStatus !== 'pending') await setSync(rows, e, {syncStatus: 'pending', syncError: null})
     },
   }
 }
@@ -200,6 +211,18 @@ export function createStore(engine: Engine): Store {
 
     outboxByStatus: status => read(async rows => (await rows.range('outbox', {index: 'byStatus', eq: [status]})).map(outboxOfRow)),
 
+    count: (type, q = {}) => read(rows => rows.count(ENTITY_STORE[type], q)),
+
+    groupActivity: () =>
+      read(async rows => new Map((await rows.range('groups', {index: 'byActivity', dir: 'prev'})).map(r => [r.id as string, r.activityAt as number]))),
+
+    historyMany: refs =>
+      read(async rows => {
+        const out: HistoryRow[] = []
+        for (const {type, id} of refs) out.push(...(await rows.range('history', {eq: [type, id]})).map(historyOfRow))
+        return out
+      }),
+
     syncCounts: () =>
       read(async rows => {
         const out: Partial<Record<StoreName, Record<RowSyncStatus, number>>> = {}
@@ -220,19 +243,14 @@ export function createStore(engine: Engine): Store {
         await rows.put('outbox', outboxRow({...op, status, attempts, lastError: status === 'failed' ? (info.error ?? 'failed') : null}))
         const e = await loadEntity(rows, op.entityType, op.entityId)
         if (!e) return
-        let next: Entity = e
-        if (status === 'sending') next = {...e, syncStatus: 'syncing'}
-        else if (status === 'failed') next = {...e, syncStatus: 'failed', syncError: info.error ?? 'failed'}
+        if (status === 'sending') await setSync(rows, e, {syncStatus: 'syncing'})
+        else if (status === 'failed') await setSync(rows, e, {syncStatus: 'failed', syncError: info.error ?? 'failed'})
+        else if (status === 'queued') await setSync(rows, e, {syncStatus: 'pending', syncError: null})
         else if (status === 'acked') {
           // Later ops for the row are still waiting: it stays pending.
           const later = (await rows.range('outbox', {index: 'byEntity', eq: [op.entityType, op.entityId], min: op.seq! + 1})).some(r => r.status !== 'acked')
-          next = later
-            ? {...e, syncStatus: 'pending'}
-            : {...e, syncStatus: 'synced', syncError: null, serverVersion: info.serverVersion ?? e.version, syncedAt: info.at ?? e.updatedAt}
-        } else if (status === 'queued') next = {...e, syncStatus: 'pending', syncError: null}
-        if (next !== e) {
-          await rows.put(ENTITY_STORE[e.type], rowOfEntity(next))
-          await projectEntity(rows, e, next)
+          if (later) await setSync(rows, e, {syncStatus: 'pending'})
+          else await setSync(rows, e, {syncStatus: 'synced', syncError: null, serverVersion: info.serverVersion ?? e.version, syncedAt: info.at ?? e.updatedAt})
         }
       }),
 

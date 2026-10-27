@@ -9,42 +9,18 @@ import {
   toDecimalString,
 } from '@splito/domain'
 import {
-  type Entity,
-  type Expense,
-  type Repayment,
+  type HistoryEntry,
   toExpenseRecord,
   toRepaymentRecord,
   toWriteOffRecord,
-  type WriteOff,
 } from '@splito/sync'
 
-/** One dated entry of a person's or a group's history. */
-export type HistoryEntry =
-  | {kind: 'expense'; entity: Entity<Expense>}
-  | {kind: 'repayment'; entity: Entity<Repayment>}
-  | {kind: 'writeoff'; entity: Entity<WriteOff>}
+export type {HistoryEntry}
 
 /** History rows with a month heading before each new month. */
 export type HistoryItem =
   | {type: 'month'; key: string; month: string}
   | {type: 'entry'; key: string; entry: HistoryEntry}
-
-/** Live expenses, repayments and write-offs as one list, newest first. */
-export function toHistory(
-  expenses: Entity<Expense>[],
-  repayments: Entity<Repayment>[],
-  writeOffs: Entity<WriteOff>[] = [],
-): HistoryEntry[] {
-  return [
-    ...expenses.map(entity => ({kind: 'expense' as const, entity})),
-    ...repayments.map(entity => ({kind: 'repayment' as const, entity})),
-    ...writeOffs.map(entity => ({kind: 'writeoff' as const, entity})),
-  ].sort(
-    (x, y) =>
-      y.entity.data.date.localeCompare(x.entity.data.date) ||
-      y.entity.updatedAt - x.entity.updatedAt,
-  )
-}
 
 /** Inserts a month heading (`YYYY-MM`) before each month's first entry. */
 export function withMonths(entries: HistoryEntry[]): HistoryItem[] {

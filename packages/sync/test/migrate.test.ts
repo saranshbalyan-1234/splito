@@ -10,7 +10,7 @@ import {IDBFactory} from 'fake-indexeddb'
 
 import {Database} from 'bun:sqlite'
 import {beforeAll, describe, expect, test} from 'bun:test'
-import {wrap} from 'idb'
+import {type IDBPDatabase, wrap} from 'idb'
 import {mkdtempSync} from 'node:fs'
 import {tmpdir} from 'node:os'
 import {join} from 'node:path'
@@ -32,7 +32,7 @@ import {setPref} from '../src/preferences'
 import {createInviteLink, sendFriendRequest} from '../src/friends'
 import {SCHEMA_VERSION} from '../src/schema'
 import {openSqlStore, type SqlExecutor} from '../src/sqlStore'
-import type {Store, StoreDump} from '../src/store'
+import {type Store, type StoreDump} from '../src/store'
 import {bunExecutor} from './bunExecutor'
 import {expectProjectionsMatchLedger} from './projectionCheck'
 import {makeCtx} from './storeV2Contract'
@@ -103,7 +103,7 @@ async function writeV1Idb(factory: IDBFactory, name: string, dump: StoreDump) {
     db.createObjectStore('history', {keyPath: ['entityType', 'entityId', 'version']})
     db.createObjectStore('outbox', {keyPath: 'seq', autoIncrement: true}).createIndex('opId', 'opId', {unique: true})
   }
-  const db = await wrap(req)
+  const db = (await wrap(req)) as IDBPDatabase
   const t = db.transaction(['entities', 'history', 'outbox'], 'readwrite')
   for (const e of dump.entities) void t.objectStore('entities').put(v1Entity(e))
   for (const h of dump.history) void t.objectStore('history').put(v1History(h))
@@ -179,7 +179,7 @@ const open: Record<string, (name: string, dump: StoreDump) => Promise<{store: ()
       store: () => openIdbStore(name, factory),
       version: async () => {
         const req = factory.open(name)
-        const db = await wrap(req)
+        const db = (await wrap(req)) as IDBPDatabase
         const v = db.version
         db.close()
         return v
@@ -264,12 +264,12 @@ describe('a migration that fails leaves v1 exactly as it was', () => {
     await writeV1Idb(factory, 'bad', bad)
     // Corrupt one row after writing: its data is not codec JSON.
     const req = factory.open('bad', 1)
-    const raw = await wrap(req)
+    const raw = (await wrap(req)) as IDBPDatabase
     const person = bad.entities.find(e => e.type === 'person')!
     await raw.put('entities', {...v1Entity(person), data: '{not json'})
     raw.close()
     await expect(openIdbStore('bad', factory)).rejects.toThrow()
-    const again = await wrap(factory.open('bad', 1))
+    const again = (await wrap(factory.open('bad', 1))) as IDBPDatabase
     expect(again.version).toBe(1)
     expect(await again.count('entities')).toBe(dump.entities.length)
     expect(await again.count('outbox')).toBe(dump.outbox.length)

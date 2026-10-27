@@ -1,0 +1,443 @@
+import {
+  type BalanceRow,
+  balanceRowsFromNets,
+  type CurrencyCode,
+  type LedgerRecord,
+  ZERO,
+} from '@splito/domain'
+import {
+  type Entity,
+  type EntityType,
+  type Expense,
+  type Group,
+  type Key,
+  type NetBalance,
+  type Page,
+  type Repayment,
+  type Store,
+  toExpenseRecord,
+  toRepaymentRecord,
+  toWriteOffRecord,
+  touches,
+  type WriteOff,
+} from '@splito/sync'
+
+import {MORE as MORE_CHANGE, type Query} from '#/data/projections'
+import {
+  type HistoryEntry,
+  type HistoryStream,
+  mergeHistory,
+  PAGE,
+  shareEntries,
+} from './historyMerge'
+
+/*
+ * Balance and history reads over the local database's indexes and
+ * projections (ARCHITECTURE 9.8). Nothing here reads a whole money store:
+ * balances come from the `balances` / `pair_balances` sums the mutations keep,
+ * lists from cursor-paged index reads. Every query keeps its previous answer
+ * when the new one is equal, so memoised rows and figures stay put.
+ */
+
+const isMoney = (c: Parameters<typeof touches>[0]) =>
+  touches(c, 'expense') || touches(c, 'repayment') || touches(c, 'writeoff')
+
+const sameBig = (a: bigint, b: bigint) => a === b
+
+/* -------------------------------------------------------------------------- */
+/* Balances                                                                   */
+/* -------------------------------------------------------------------------- */
+
+type Nets = Record<CurrencyCode, Record<string, bigint>>
+
+function sameRows(prev: BalanceRow[] | undefined, next: BalanceRow[]) {
+  return (
+    !!prev &&
+    prev.length === next.length &&
+    prev.every((r, i) => {
+      const n = next[i]!
+      return (
+        r.person === n.person &&
+        r.groupId === n.groupId &&
+        r.currency === n.currency &&
+        sameBig(r.amount, n.amount)
+      )
+    })
+  )
+}
+
+function netsOf(rows: NetBalance[]): Nets {
+  const nets: Nets = {}
+  for (const r of rows) (nets[r.currency] ??= {})[r.personId] = r.amount
+  return nets
+}
+
+const balanceRowQueries = new Map<string, Query<BalanceRow[]>>()
+
+/**
+ * My balance with each person, per group and currency (`balanceRows`):
+ * outside groups from the pair sums, inside a group from the plan over that
+ * group's stored net under its rules. Reads only the groups I have a balance
+ * in.
+ */
+export function balanceRowsQuery(me: string): Query<BalanceRow[]> {
+  const key = `balanceRows:${me}`
+  let q = balanceRowQueries.get(key)
+  if (!q) {
+    q = {
+      key,
+      isTouchedBy: c => isMoney(c) || touches(c, 'group'),
+      loader: store => async (_c, prev) => {
+        const [pairs, mine] = await Promise.all([
+          store.pairBalances(me),
+          store.balances({personId: me}),
+        ])
+        const groupIds = [
+          ...new Set(
+            mine.flatMap(b => (b.groupId && b.amount !== ZERO ? [b.groupId] : [])),
+          ),
+        ]
+        const [nets, groups] = await Promise.all([
+          Promise.all(groupIds.map(id => store.balances({groupId: id}))),
+          store.getMany<Group>('group', groupIds),
+        ])
+        const rows = balanceRowsFromNets(
+          me,
+          pairs.map(p => ({
+            person: p.otherId,
+            groupId: null,
+            currency: p.currency,
+            amount: p.amount,
+          })),
+          Object.fromEntries(groupIds.map((id, i) => [id, netsOf(nets[i]!)])),
+          Object.fromEntries(groups.map(g => [g.id, g.data.rules])),
+        )
+        return sameRows(prev, rows) ? prev! : rows
+      },
+    }
+    balanceRowQueries.set(key, q)
+  }
+  return q
+}
+
+/** My net per group and currency (> 0: the group owes me); settled groups are left out. */
+export type GroupBalances = Record<string, Record<CurrencyCode, bigint>>
+
+const myGroupQueries = new Map<string, Query<GroupBalances>>()
+
+export function myGroupBalancesQuery(me: string): Query<GroupBalances> {
+  const key = `myGroupBalances:${me}`
+  let q = myGroupQueries.get(key)
+  if (!q) {
+    q = {
+      key,
+      isTouchedBy: isMoney,
+      loader: store => async (_c, prev) => {
+        const out: GroupBalances = {}
+        for (const b of await store.balances({personId: me}))
+          if (b.groupId && b.amount !== ZERO)
+            (out[b.groupId] ??= {})[b.currency] = b.amount
+        return prev && sameGroupBalances(prev, out) ? prev : out
+      },
+    }
+    myGroupQueries.set(key, q)
+  }
+  return q
+}
+
+function sameGroupBalances(a: GroupBalances, b: GroupBalances) {
+  const ka = Object.keys(a)
+  if (ka.length !== Object.keys(b).length) return false
+  return ka.every(g => {
+    const x = a[g]!
+    const y = b[g]
+    if (!y) return false
+    const kx = Object.keys(x)
+    return kx.length === Object.keys(y).length && kx.every(c => y[c] !== undefined && sameBig(x[c]!, y[c]!))
+  })
+}
+
+const groupNetQueries = new Map<string, Query<Nets>>()
+
+/** One group's stored net per currency and person (`groupNet`), people with nothing left out. */
+export function groupNetsQuery(groupId: string): Query<Nets> {
+  const key = `groupNets:${groupId}`
+  let q = groupNetQueries.get(key)
+  if (!q) {
+    q = {
+      key,
+      isTouchedBy: isMoney,
+      loader: store => async (_c, prev) => {
+        const nets = netsOf(await store.balances({groupId}))
+        return prev && sameNets(prev, nets) ? prev : nets
+      },
+    }
+    groupNetQueries.set(key, q)
+  }
+  return q
+}
+
+function sameNets(a: Nets, b: Nets) {
+  const ka = Object.keys(a)
+  if (ka.length !== Object.keys(b).length) return false
+  return ka.every(c => {
+    const x = a[c]!
+    const y = b[c]
+    if (!y) return false
+    const kx = Object.keys(x)
+    return kx.length === Object.keys(y).length && kx.every(p => y[p] !== undefined && sameBig(x[p]!, y[p]!))
+  })
+}
+
+/* -------------------------------------------------------------------------- */
+/* Activity times                                                             */
+/* -------------------------------------------------------------------------- */
+
+const sameMap = <V>(a: Map<string, V>, b: Map<string, V>) =>
+  a.size === b.size && [...a].every(([k, v]) => b.get(k) === v)
+
+/** When each group last saw activity (epoch ms): its own change or any record's in it, a delete included (26.17). */
+export const groupActivityQuery: Query<Map<string, number>> = {
+  key: 'groupActivity',
+  isTouchedBy: c => isMoney(c) || touches(c, 'group'),
+  loader: store => async (_c, prev) => {
+    const next = await store.groupActivity()
+    return prev && sameMap(prev, next) ? prev : next
+  },
+}
+
+/** The latest date (`YYYY-MM-DD`) of a live record each person is on: for the "recent" friends sort only. */
+export const lastActivityQuery: Query<Map<string, string>> = {
+  key: 'lastActivity',
+  isTouchedBy: c => isMoney(c) || touches(c, 'person'),
+  loader: store => async (_c, prev) => {
+    const ids = (await store.getAll('person')).map(p => p.id)
+    const next = await store.lastActivity(ids)
+    return prev && sameMap(prev, next) ? prev : next
+  },
+}
+
+/* -------------------------------------------------------------------------- */
+/* Paged history                                                              */
+/* -------------------------------------------------------------------------- */
+
+/** A merged, newest-first list of ledger entries and how to read further into it. */
+export type HistoryPager = {
+  entries: HistoryEntry[]
+  /** True when nothing older exists. */
+  isDone: boolean
+  loadMore: () => void
+}
+
+/**
+ * Cursor-paged history over several indexed streams (one group's records, or
+ * the records between two people). A commit that touches the ledger starts
+ * the streams again at the length the screen already shows; `loadMore` adds
+ * a page. Rows that did not change keep their objects.
+ */
+export function historyPagerQuery(
+  key: string,
+  makeStreams: (store: Store) => HistoryStream[],
+  isTouchedBy: Query<unknown>['isTouchedBy'] = isMoney,
+  size = PAGE,
+): Query<HistoryPager> {
+  return {
+    key,
+    isTouchedBy,
+    loader: (store, controls) => {
+      let want = size
+      let streams = makeStreams(store)
+      const loadMore = () => {
+        want += PAGE
+        controls.reload(MORE_CHANGE)
+      }
+      return async (change, prev) => {
+        if (change !== MORE_CHANGE) streams = makeStreams(store)
+        const {entries, isDone} = await mergeHistory(streams, want)
+        const shared = shareEntries(prev?.entries, entries)
+        return prev && shared === prev.entries && prev.isDone === isDone
+          ? prev
+          : {entries: shared, isDone, loadMore}
+      }
+    },
+  }
+}
+
+const countQueries = new Map<string, Query<number>>()
+
+/** How many rows an index range of one type holds: an index count, no rows read. */
+export function countQuery(key: string, type: EntityType, q: Parameters<Store['count']>[1]): Query<number> {
+  let query = countQueries.get(key)
+  if (!query) {
+    query = {key, isTouchedBy: c => touches(c, type), loader: store => () => store.count(type, q)}
+    countQueries.set(key, query)
+  }
+  return query
+}
+
+/* -------------------------------------------------------------------------- */
+/* Streams                                                                    */
+/* -------------------------------------------------------------------------- */
+
+type IndexRead = {index: string; eq: Key}
+
+/** A few more rows than wanted (some are filtered out), never more than a page. */
+const pageFor = (want: number) => Math.min(PAGE, Math.max(want * 2, 8))
+
+/** The live rows of one money type through one index, newest date first, kept if `accept` says so. */
+export function indexStream<T extends Expense | Repayment | WriteOff>(
+  store: Store,
+  kind: HistoryEntry['kind'],
+  read: IndexRead,
+  accept: (e: Entity<T>) => boolean = () => true,
+): HistoryStream {
+  let after: Key | null = null
+  return {
+    items: [],
+    isDone: false,
+    async read(want) {
+      let added = 0
+      while (added < want && !this.isDone) {
+        const page: Page<Entity<T>> = await store.page<T>(kind, {...read, dir: 'prev', after, limit: pageFor(want)})
+        after = page.next
+        this.isDone = !page.next
+        for (const entity of page.items) {
+          if (entity.deleted || !accept(entity)) continue
+          this.items.push({kind, entity} as HistoryEntry)
+          added++
+        }
+      }
+    },
+  }
+}
+
+/**
+ * A person's live expenses, newest date first, through their `expense_parties`
+ * rows (one index read, then the expenses by id), kept if `accept` says so.
+ * `onlyDirect` skips group expenses before reading them.
+ */
+export function partyStream(
+  store: Store,
+  read: IndexRead,
+  accept: (e: Entity<Expense>) => boolean,
+  onlyDirect = false,
+): HistoryStream {
+  let after: Key | null = null
+  return {
+    items: [],
+    isDone: false,
+    async read(want) {
+      let added = 0
+      while (added < want && !this.isDone) {
+        const page = await store.parties({...read, dir: 'prev', after, limit: pageFor(want)})
+        after = page.next
+        this.isDone = !page.next
+        const ids = page.items.filter(p => !onlyDirect || p.groupId === null).map(p => p.expenseId)
+        for (const entity of await store.getMany<Expense>('expense', ids)) {
+          if (entity.deleted || !accept(entity)) continue
+          this.items.push({kind: 'expense', entity})
+          added++
+        }
+      }
+    },
+  }
+}
+
+/* -------------------------------------------------------------------------- */
+/* The ledger in memory (Analytics and search)                                */
+/* -------------------------------------------------------------------------- */
+
+/** Every record of the ledger as screens that look at all of it need it: Analytics and search. */
+export type LedgerMirror = {
+  /** Live expenses, repayments and write-offs, ordered by id. */
+  expenses: Entity<Expense>[]
+  repayments: Entity<Repayment>[]
+  writeOffs: Entity<WriteOff>[]
+  /** Every record, tombstones flagged `deleted`, as the domain's reports read them. */
+  ledger: LedgerRecord[]
+}
+
+const MIRROR_PAGE = 500
+type MoneyKind = 'expense' | 'repayment' | 'writeoff'
+const KINDS: MoneyKind[] = ['expense', 'repayment', 'writeoff']
+
+const recordCache = new WeakMap<Entity, LedgerRecord>()
+function recordOf(e: Entity, kind: MoneyKind): LedgerRecord {
+  let r = recordCache.get(e)
+  if (!r) {
+    r =
+      kind === 'expense'
+        ? toExpenseRecord(e as Entity<Expense>)
+        : kind === 'repayment'
+          ? toRepaymentRecord(e as Entity<Repayment>)
+          : toWriteOffRecord(e as Entity<WriteOff>)
+    recordCache.set(e, r)
+  }
+  return r
+}
+
+const sameEntity = (a: Entity, b: Entity) =>
+  a.version === b.version && a.deleted === b.deleted && a.updatedAt === b.updatedAt
+
+/**
+ * The whole ledger held in memory, for the two screens that need all of it
+ * (Analytics' history-long charts, and free-text search). Read once by index
+ * in pages of 500, then kept current from change notices by reading only the
+ * rows a commit names. It exists only while one of those screens is open.
+ */
+export const ledgerMirrorQuery: Query<LedgerMirror> = {
+  key: 'ledgerMirror',
+  isTouchedBy: isMoney,
+  loader: store => {
+    const rows: Record<MoneyKind, Map<string, Entity>> = {expense: new Map(), repayment: new Map(), writeoff: new Map()}
+    let isLoaded = false
+    const arrays: Partial<Record<MoneyKind, Entity[]>> = {}
+
+    const loadAll = async () => {
+      for (const kind of KINDS) {
+        rows[kind].clear()
+        delete arrays[kind]
+        let after: Key | null = null
+        do {
+          const page: Page<Entity> = await store.page(kind, {index: 'byUpdatedAt', after, limit: MIRROR_PAGE})
+          for (const e of page.items) rows[kind].set(e.id, e)
+          after = page.next
+        } while (after)
+      }
+      isLoaded = true
+    }
+    const patch = async (kind: MoneyKind, ids: ReadonlySet<string>) => {
+      const found = new Map((await store.getMany(kind, [...ids])).map(e => [e.id, e]))
+      for (const id of ids) {
+        const e = found.get(id)
+        const old = rows[kind].get(id)
+        if (!e) rows[kind].delete(id)
+        else if (!old || !sameEntity(old, e)) rows[kind].set(id, e)
+        else continue
+        delete arrays[kind]
+      }
+    }
+    const list = (kind: MoneyKind) =>
+      (arrays[kind] ??= [...rows[kind].values()].sort((x, y) => (x.id < y.id ? -1 : 1)))
+
+    return async (change, prev) => {
+      if (!isLoaded || change === 'unknown') await loadAll()
+      else await Promise.all(KINDS.map(kind => (change[kind] ? patch(kind, change[kind]) : undefined)))
+      const all = KINDS.map(kind => list(kind))
+      const live = all.map(a => a.filter(e => !e.deleted))
+      const next: LedgerMirror = {
+        expenses: live[0] as Entity<Expense>[],
+        repayments: live[1] as Entity<Repayment>[],
+        writeOffs: live[2] as Entity<WriteOff>[],
+        ledger: KINDS.flatMap((kind, i) => all[i]!.map(e => recordOf(e, kind))),
+      }
+      if (
+        prev &&
+        prev.ledger.length === next.ledger.length &&
+        prev.ledger.every((r, i) => r === next.ledger[i])
+      )
+        return prev
+      return next
+    }
+  },
+}

@@ -35,7 +35,7 @@ import {
   updateExpense,
 } from '../src/mutations'
 import {openSqlStore} from '../src/sqlStore'
-import type {Store} from '../src/store'
+import {type Store} from '../src/store'
 import {bunExecutor} from './bunExecutor'
 import {expectProjectionsMatchLedger} from './projectionCheck'
 import {makeCtx} from './storeV2Contract'

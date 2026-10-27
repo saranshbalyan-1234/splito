@@ -3,11 +3,10 @@ import {useMemo} from 'react'
 import {View} from 'react-native'
 import {utils} from '@bsky.app/alf'
 import {formatAmountCompact, magnitude, personNet, repaymentFlow, ZERO} from '@splito/domain'
-import {type Expense, type Repayment} from '@splito/sync'
 import {Trans, useLingui} from '@lingui/react/macro'
 
 import {useNumberLocale} from '#/locale/numberLocale'
-import {useEntities, useMe} from '#/data/hooks'
+import {useMe, useRecentTransactions} from '#/data/hooks'
 import {Link} from '#/view/com/util/Link'
 import {atoms as a, useTheme} from '#/alf'
 import {ChevronRight_Stroke2_Corner0_Rounded as ChevronRightIcon} from '#/components/icons/Chevron'
@@ -36,28 +35,24 @@ export function RecentTransactions() {
   const {t: l} = useLingui()
   const locale = useNumberLocale()
   const me = useMe()
-  const expenses = useEntities<Expense>('expense')
-  const repayments = useEntities<Repayment>('repayment')
+  /* The five newest, merged from my parties and payments by index (never the whole ledger). */
+  const recent = useRecentTransactions(RECENT)
   const categories = useCategories()
 
   const rows = useMemo<Row[]>(() => {
-    if (!me || !expenses) return []
+    if (!me || !recent) return []
     const out: Row[] = []
-    for (const e of expenses) {
-      const net = personNet(e.data, me.id)
-      const involved = me.id in e.data.payers || me.id in e.data.shares
-      if (!involved) continue
-      out.push({id: e.id, href: `/expense/${e.id}`, title: e.data.title, category: e.data.category, currency: e.data.currency, net, date: e.data.date, updatedAt: e.updatedAt})
-    }
-    for (const r of repayments ?? []) {
-      if (r.data.from !== me.id && r.data.to !== me.id) continue
-      const net = repaymentFlow(r.data, me.id)
-      out.push({id: r.id, href: '/activity', title: r.data.from === me.id ? l`You paid` : l`You got paid`, category: null, currency: r.data.currency, net, date: r.data.date, updatedAt: r.updatedAt})
+    for (const entry of recent.entries) {
+      if (entry.kind === 'expense') {
+        const e = entry.entity
+        out.push({id: e.id, href: `/expense/${e.id}`, title: e.data.title, category: e.data.category, currency: e.data.currency, net: personNet(e.data, me.id), date: e.data.date, updatedAt: e.updatedAt})
+      } else if (entry.kind === 'repayment') {
+        const r = entry.entity
+        out.push({id: r.id, href: '/activity', title: r.data.from === me.id ? l`You paid` : l`You got paid`, category: null, currency: r.data.currency, net: repaymentFlow(r.data, me.id), date: r.data.date, updatedAt: r.updatedAt})
+      }
     }
     return out
-      .sort((x, y) => (x.date === y.date ? y.updatedAt - x.updatedAt : x.date < y.date ? 1 : -1))
-      .slice(0, RECENT)
-  }, [me, expenses, repayments, l])
+  }, [me, recent, l])
 
   if (rows.length === 0) return null
 

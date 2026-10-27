@@ -62,14 +62,10 @@ async function isAutoLarge(store: Store, ctx: MutationCtx) {
   if (process.env.EXPO_PUBLIC_DEMO_AUTO !== 'large') return false
   const [people, groups, expenses] = await Promise.all([
     store.getAll('person'),
-    store.getAll('group'),
-    store.getAll('expense'),
+    store.count('group'),
+    store.count('expense'),
   ])
-  return (
-    people.every(p => p.id === ctx.actor) &&
-    groups.length === 0 &&
-    expenses.length === 0
-  )
+  return people.every(p => p.id === ctx.actor) && groups === 0 && expenses === 0
 }
 
 /**

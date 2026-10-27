@@ -7,10 +7,10 @@
  * over a `RowAccess` on the new layout.
  */
 import {decode} from './codec'
-import type {RowAccess} from './engine'
+import {type RowAccess} from './engine'
 import {rebuildProjections} from './ledgerProjection'
 import {completeEntity, ENTITY_STORE, historyRow, outboxRow, rowOfEntity, SCHEMA_VERSION} from './schema'
-import type {Entity, EntityType, HistoryRow, OutboxOp} from './types'
+import {type Entity, type EntityType, type HistoryRow, type OutboxOp} from './types'
 
 /** Version 1: one `entities` store for every type, keyed `[type, id]`, plus `history` and `outbox`. */
 export interface LegacyV1 {

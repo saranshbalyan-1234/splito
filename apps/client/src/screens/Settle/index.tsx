@@ -12,12 +12,13 @@ import {
   repaymentFlow,
   sumMinor,
   type Transfer,
+  zeroFillNets,
   ZERO,
 } from '@splito/domain'
 import {type Group, type Person} from '@splito/sync'
 
 import {type AllNavigatorParams, type NavigationProp} from '#/lib/routes/types'
-import {useEntities, useLedger, useMe} from '#/data/hooks'
+import {useEntities, useGroupNets, useMe} from '#/data/hooks'
 import {useNumberLocale} from '#/locale/numberLocale'
 import {EmptyState} from '#/view/com/util/EmptyState'
 import {List} from '#/view/com/util/List'
@@ -25,7 +26,6 @@ import {atoms as a, useBreakpoints, useTheme} from '#/alf'
 import * as Admonition from '#/components/Admonition'
 import {Button, ButtonIcon, ButtonText} from '#/components/Button'
 import {useDialogControl} from '#/components/Dialog'
-import {memberNets} from '#/components/groups/net'
 import {NO_RULES} from '#/components/groups/RulesEditor'
 import {ArrowRotateCounterClockwise_Stroke2_Corner0_Rounded as RefreshIcon} from '#/components/icons/ArrowRotate'
 import {CircleCheck_Stroke2_Corner0_Rounded as CheckIcon} from '#/components/icons/CircleCheck'
@@ -76,14 +76,14 @@ export function SettleScreen() {
   const me = useMe()
   const people = useEntities<Person>('person')
   const groups = useEntities<Group>('group')
-  const ledger = useLedger()
+  const storedNets = useGroupNets(groupId)
   const [snapshot, setSnapshot] = useState<Snapshot | null>(null)
   const [isAdopting, setIsAdopting] = useState(false)
   const [isExplained, setIsExplained] = useState(false)
   const paymentControl = useDialogControl()
   const [draft, setDraft] = useState<PaymentDraft | null>(null)
 
-  const isLoading = !me || !people || !groups || !ledger
+  const isLoading = !me || !people || !groups || !storedNets
   const group = groups?.find(g => g.id === groupId)
   const names = new Map(
     (people ?? []).map(p => [p.id, p.id === me?.id ? l`You` : p.data.name]),
@@ -92,7 +92,12 @@ export function SettleScreen() {
   let current: Snapshot | null = null
   if (!isLoading && group) {
     const rules = group.data.rules ?? NO_RULES
-    const plans = Object.entries(memberNets(ledger, groupId, group.data)).map(
+    const plans = Object.entries(
+      zeroFillNets(
+        storedNets,
+        group.data.members.map(m => m.personId),
+      ),
+    ).map(
       ([currency, net]) => ({
         currency,
         plan: Object.values(net).some(v => v !== ZERO)

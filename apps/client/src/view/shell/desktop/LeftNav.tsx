@@ -16,16 +16,10 @@ import {useSafeAreaInsets} from 'react-native-safe-area-context'
 import {
   formatAmountCompact,
   formatAmount,
-  groupBalances,
   magnitude,
   ZERO,
 } from '@splito/domain'
-import {
-  type Expense,
-  type Group,
-  type Repayment,
-  type TabId,
-} from '@splito/sync'
+import {type Group, type TabId} from '@splito/sync'
 import {Trans, useLingui} from '@lingui/react/macro'
 import {useNavigation, useNavigationState} from '@react-navigation/native'
 
@@ -44,7 +38,13 @@ import {
 } from '#/lib/routes/types'
 import {useNumberLocale} from '#/locale/numberLocale'
 import {useSetDrawerOpen} from '#/state/shell'
-import {useEntities, useLedger, useMe, usePref} from '#/data/hooks'
+import {
+  useEntities,
+  useGroupActivity,
+  useMe,
+  useMyGroupBalances,
+  usePref,
+} from '#/data/hooks'
 import {Link} from '#/view/com/util/Link'
 import {PressableWithHover} from '#/view/com/util/PressableWithHover'
 import {UserAvatar} from '#/view/com/util/UserAvatar'
@@ -65,7 +65,6 @@ import {
 } from '#/components/activity/useActivityFeed'
 import {Button, ButtonIcon, ButtonText} from '#/components/Button'
 import {GroupAvatar} from '#/components/groups/GroupAvatar'
-import {myBalances} from '#/components/groups/net'
 import {
   Activity_Filled_Corner0_Rounded as ActivityFilledIcon,
   Activity_Stroke2_Corner0_Rounded as ActivityIcon,
@@ -99,7 +98,7 @@ import {useAnalytics} from '#/analytics'
 import {IS_NATIVE} from '#/env'
 import {useShouldReduceMotion} from '#/motion/useShouldReduceMotion'
 import {router} from '#/routes'
-import {groupLastActive, sortGroups} from '#/screens/Groups/filter'
+import {sortGroups} from '#/screens/Groups/filter'
 import {getComposeButtonLayout} from './composeButtonLayout'
 
 /** The left nav's tab destinations; the tab navigator's route names on native. */
@@ -509,9 +508,8 @@ export function RecentGroups() {
   const locale = useNumberLocale()
   const me = useMe()
   const groups = useEntities<Group>('group')
-  const expenses = useEntities<Expense>('expense')
-  const repayments = useEntities<Repayment>('repayment')
-  const ledger = useLedger()
+  const myBalances = useMyGroupBalances()
+  const groupActivity = useGroupActivity()
   const [defaultCurrency = 'INR'] = usePref('defaultCurrency')
   const route = useNavigationState(state => getCurrentRoute(state))
   const openGroupId =
@@ -520,9 +518,9 @@ export function RecentGroups() {
       : undefined
 
   const recent = useMemo(() => {
-    if (!me || !groups || !ledger || !expenses || !repayments) return []
+    if (!me || !groups || !myBalances || !groupActivity) return []
     const live = groups.filter(g => !g.data.archived)
-    const balances = groupBalances(myBalances(ledger, me.id, live))
+    const balances = myBalances
     return sortGroups(
       live.map(g => ({
         id: g.id,
@@ -535,10 +533,10 @@ export function RecentGroups() {
       'recent',
       {
         currency: defaultCurrency,
-        activity: groupLastActive(groups, [...expenses, ...repayments]),
+        activity: groupActivity,
       },
     ).slice(0, RECENT_GROUPS)
-  }, [me, groups, expenses, repayments, ledger, defaultCurrency])
+  }, [me, groups, myBalances, groupActivity, defaultCurrency])
 
   if (recent.length === 0) return null
 

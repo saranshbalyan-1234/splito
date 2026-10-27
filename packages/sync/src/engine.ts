@@ -1,5 +1,5 @@
-import type {Key, Row, Scalar, StoreName} from './schema'
-import type {StoreChange} from './store'
+import {type Key, type Row, type Scalar, type StoreName} from './schema'
+import {type StoreChange} from './store'
 
 /**
  * One index (or primary key) range read. The same query means the same rows

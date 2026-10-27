@@ -1,9 +1,9 @@
-import type {ExpenseRecord, LedgerRecord, RepaymentRecord, WriteOffRecord} from '@splito/domain'
+import {type ExpenseRecord, type LedgerRecord, type RepaymentRecord, type WriteOffRecord} from '@splito/domain'
 
-import type {BinType, Expense, Purged, Repayment, WriteOff} from './mutations'
-import type {Key} from './schema'
-import type {Page, Store} from './store'
-import type {Entity} from './types'
+import {type BinType, type Expense, type Purged, type Repayment, type WriteOff} from './mutations'
+import {type Key} from './schema'
+import {type Page, type Store} from './store'
+import {type Entity} from './types'
 
 export const toExpenseRecord = (e: Entity<Expense>): ExpenseRecord => ({
   kind: 'expense',
@@ -42,6 +42,12 @@ export async function loadLedger(store: Store): Promise<LedgerRecord[]> {
   const writeOffs = await store.getAll<WriteOff>('writeoff')
   return [...expenses.map(toExpenseRecord), ...repayments.map(toRepaymentRecord), ...writeOffs.map(toWriteOffRecord)]
 }
+
+/** One dated entry of a person's or a group's history: an expense, a payment or a write-off. */
+export type HistoryEntry =
+  | {kind: 'expense'; entity: Entity<Expense>}
+  | {kind: 'repayment'; entity: Entity<Repayment>}
+  | {kind: 'writeoff'; entity: Entity<WriteOff>}
 
 /** One item in Recently deleted. */
 export type BinItem = {deletedAt: number; deletedBy: string} & (

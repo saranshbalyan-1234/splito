@@ -1,5 +1,6 @@
 import {type FriendRequest} from './friends'
 import {type Expense, type Group, type Person, type Repayment, type WriteOff} from './mutations'
+import {type Key} from './schema'
 import {type Store, type StoreChange, touches} from './store'
 import {type Entity, type EntityType, type HistoryRow} from './types'
 
@@ -103,9 +104,8 @@ export function activityFromHistory(rows: HistoryRow[]): ActivityEvent[] {
 
 /**
  * The whole feed from the local store, deleted entities included (their
- * deletes and restores are activity too).
- * ponytail: one history read per entity; add a store-wide "history since"
- * query when histories get long.
+ * deletes and restores are activity too). Reads every entity: for tests,
+ * export and maintenance only; the app reads `activityTracker`.
  */
 export async function loadActivity(store: Store): Promise<ActivityEvent[]> {
   const entities = (await Promise.all(FEED_TYPES.map(type => store.getAll(type)))).flat()
@@ -115,37 +115,98 @@ export async function loadActivity(store: Store): Promise<ActivityEvent[]> {
 
 export type FeedType = (typeof FEED_TYPES)[number]
 
-/** The feed plus every feed entity (deleted ones included), as of one load. */
-export type ActivityState = {events: ActivityEvent[]; entities: Record<FeedType, Entity[]>}
+/** How many events the feed holds at first, and how many each "more" adds. */
+export const ACTIVITY_PAGE = 100
 
 /**
- * `loadActivity` kept current from store change notices: a load re-reads only
- * the entity types the change touched and only the histories of the ids it
- * names (the first load reads everything). Loads run one at a time, so a
- * slow one never overwrites a newer read. Equal to `loadActivity` after every
- * load (tested).
+ * The newest events as of one load, and the entities they refer to. People
+ * and groups are small and come whole; expenses and friend requests only
+ * those the events name (deleted ones included). `isDone`: nothing older exists.
  */
-export function activityTracker(store: Store): (change: StoreChange) => Promise<ActivityState> {
-  let entities: Partial<Record<FeedType, Entity[]>> = {}
-  const histories = new Map<string, HistoryRow[]>()
+export type ActivityState = {events: ActivityEvent[]; entities: Record<FeedType, Entity[]>; isDone: boolean}
+
+const FEED_SET = new Set<EntityType>(FEED_TYPES)
+
+/**
+ * The newest `want()` events, read by cursor from the history's
+ * `byChangedAt` index, kept current from store change notices: a change
+ * re-reads only the histories of the entities it names; asking for more
+ * (`want()` grew) or an unknown change rebuilds the window. A history is read
+ * whole per entity, so every event can tell what it changed (it needs the
+ * version before). Loads run one at a time, so a slow one never overwrites a
+ * newer read. Equal to the top of `loadActivity` after every load (tested).
+ */
+export function activityTracker(store: Store, want: () => number = () => ACTIVITY_PAGE): (change: StoreChange) => Promise<ActivityState> {
+  const pool = new Map<string, HistoryRow[]>()
+  let cursor: Key | null | undefined
+  let isDone = false
+  let held = 0
+  let people: Entity[] | undefined
+  let groups: Entity[] | undefined
+  const known = new Map<string, Entity>()
   let queue: Promise<unknown> = Promise.resolve()
+  const keyOf = (type: EntityType, id: string) => `${type}:${id}`
+
+  const readHistories = async (refs: Array<{type: EntityType; id: string}>) => {
+    const rows = await store.historyMany(refs)
+    for (const r of refs) pool.set(keyOf(r.type, r.id), [])
+    for (const row of rows) pool.get(keyOf(row.entityType, row.entityId))!.push(row)
+  }
+  const events = () => activityFromHistory([...pool.values()].flat())
+
   const load = async (change: StoreChange): Promise<ActivityState> => {
-    const fresh = await Promise.all(
-      FEED_TYPES.map(type => (!entities[type] || touches(change, type) ? store.getAll(type) : Promise.resolve(entities[type]!))),
-    )
-    entities = Object.fromEntries(FEED_TYPES.map((type, i) => [type, fresh[i]!]))
-    // Rows erased outright (the demo set's "Remove") take their history with them.
-    if (change === 'unknown' || FEED_TYPES.some(type => touches(change, type))) {
-      const live = new Set(fresh.flat().map(e => `${e.type}:${e.id}`))
-      for (const key of histories.keys()) if (!live.has(key)) histories.delete(key)
+    const size = want()
+    if (change === 'unknown' || size > held || held === 0) {
+      pool.clear()
+      known.clear()
+      cursor = undefined
+      isDone = false
+      people = groups = undefined
+    } else {
+      const touched = FEED_TYPES.flatMap(type => [...(change[type] ?? [])].map(id => ({type, id})))
+      if (touched.length) await readHistories(touched)
+      if (touches(change, 'person')) people = undefined
+      if (touches(change, 'group')) groups = undefined
+      for (const t of touched) known.delete(keyOf(t.type, t.id))
     }
-    await Promise.all(
-      fresh.flat().map(async e => {
-        const key = `${e.type}:${e.id}`
-        if (!histories.has(key) || touches(change, e.type, e.id)) histories.set(key, await store.history(e.type, e.id))
-      }),
-    )
-    return {events: activityFromHistory([...histories.values()].flat()), entities: entities as Record<FeedType, Entity[]>}
+    held = size
+    let list = events()
+    while (list.length < size && !isDone) {
+      const page = await store.historyPage({after: cursor, limit: ACTIVITY_PAGE})
+      cursor = page.next
+      isDone = page.next === null
+      const fresh = new Map<string, {type: EntityType; id: string}>()
+      for (const h of page.items) {
+        const key = keyOf(h.entityType, h.entityId)
+        if (FEED_SET.has(h.entityType) && !pool.has(key)) fresh.set(key, {type: h.entityType, id: h.entityId})
+      }
+      if (fresh.size) await readHistories([...fresh.values()])
+      list = events()
+    }
+    const hasMore = list.length > size
+    list = list.slice(0, size)
+    people ??= await store.getAll('person')
+    groups ??= await store.getAll('group')
+    // Only what the events name: an expense or a request row shows its current state.
+    const wanted = new Map<EntityType, string[]>()
+    for (const e of list) {
+      if (e.entityType !== 'expense' && e.entityType !== 'friendRequest') continue
+      if (known.has(keyOf(e.entityType, e.entityId))) continue
+      const ids = wanted.get(e.entityType) ?? []
+      ids.push(e.entityId)
+      wanted.set(e.entityType, ids)
+    }
+    for (const [type, ids] of wanted) for (const row of await store.getMany(type, ids)) known.set(keyOf(type, row.id), row)
+    const named = (type: EntityType) => [...new Set(list.filter(e => e.entityType === type).map(e => e.entityId))].map(id => known.get(keyOf(type, id))).filter((e): e is Entity => !!e)
+    const entities = {
+      person: people,
+      group: groups,
+      expense: named('expense'),
+      repayment: [],
+      writeoff: [],
+      friendRequest: named('friendRequest'),
+    } satisfies Record<FeedType, Entity[]>
+    return {events: list, entities, isDone: isDone && !hasMore}
   }
   return change => {
     const next = queue.then(() => load(change))

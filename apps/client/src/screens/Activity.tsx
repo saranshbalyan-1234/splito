@@ -52,7 +52,12 @@ export function ActivityScreen() {
   const [swipeLeft = PREFS.swipeLeft.default] = usePref('swipeLeft')
   const [swipeRight = PREFS.swipeRight.default] = usePref('swipeRight')
   const {snapshot, rows, hiddenCount, unreadCount, me} = feed
-  const {shown, onEndReached} = usePagedRows(tab)(rows)
+  const {shown, onEndReached: showMore} = usePagedRows(tab)(rows)
+  /* Rows already loaded appear a page at a time; past the last one, older history is read by cursor. */
+  const onEndReached = () => {
+    if (shown.length < rows.length) showMore()
+    else if (!feed.isDone) feed.loadMore?.()
+  }
 
   const renderItem = ({item: row, index}: {item: FeedRow; index: number}) => {
     if (!snapshot) return null

@@ -18,8 +18,8 @@
  *   list pages by "the last key seen" on both engines with the same order.
  */
 import {decode, encode} from './codec'
-import type {Expense, Group, Person, Repayment} from './mutations'
-import type {Entity, EntityInput, EntityType, HistoryRow, OutboxOp, OutboxInput, RowSyncStatus} from './types'
+import {type Expense, type Group, type Person, type Repayment} from './mutations'
+import {type Entity, type EntityInput, type EntityType, type HistoryRow, type OutboxOp, type OutboxInput, type RowSyncStatus} from './types'
 
 export const SCHEMA_VERSION = 2
 
@@ -83,9 +83,11 @@ export const STORES = {
   },
   groups: {
     key: ['id'],
-    columns: {...ENTITY_COLUMNS, name: 'text', kind: 'text', currency: 'text', archived: 'int'},
+    // `activityAt`: the newest change to the group or to anything recorded in it (a projection column, 26.17).
+    columns: {...ENTITY_COLUMNS, name: 'text', kind: 'text', currency: 'text', archived: 'int', activityAt: 'int'},
     indexes: {
       byUpdatedAt: ix('updatedAt', 'id'),
+      byActivity: ix('activityAt', 'id'),
       byArchived: ix('archived', 'updatedAt', 'id'),
       bySyncStatus: ix('syncStatus', 'id'),
     },
@@ -286,33 +288,51 @@ export function indexKey(store: StoreName, index: string | undefined, row: Row):
 /* -------------------------------------------------------------------------- */
 
 /** Extra query columns per entity type. Forward-compatible: a malformed `data` never throws. */
-const EXTRA: Record<EntityType, (data: any) => Row> = {
-  person: (d: Partial<Person>) => ({
-    name: d?.name ?? '',
-    nameKey: (d?.name ?? '').toLocaleLowerCase(),
-    isMe: d?.isMe ? 1 : 0,
-    accountId: d?.accountId ?? null,
-  }),
-  group: (d: Partial<Group>) => ({name: d?.name ?? '', kind: d?.kind ?? 'other', currency: d?.currency ?? '', archived: d?.archived ? 1 : 0}),
-  expense: (d: Partial<Expense>) => ({
-    groupId: d?.groupId ?? '',
-    date: d?.date ?? '',
-    currency: d?.currency ?? '',
-    total: String(d?.total ?? 0n),
-    tz: d?.tz ?? '',
-    category: d?.category ?? '',
-    title: d?.title ?? '',
-  }),
-  repayment: (d: Partial<Repayment>) => moneyTransfer(d),
-  writeoff: (d: Partial<Repayment>) => moneyTransfer(d),
-  comment: (d: {targetType?: string; targetId?: string}) => ({targetType: d?.targetType ?? '', targetId: d?.targetId ?? ''}),
-  friendRequest: (d: {status?: string; direction?: string}) => ({status: d?.status ?? '', direction: d?.direction ?? ''}),
-  inviteLink: (d: {groupId?: string | null; revoked?: boolean}) => ({groupId: d?.groupId ?? '', revoked: d?.revoked ? 1 : 0}),
+const EXTRA: Record<EntityType, (data: unknown) => Row> = {
+  person: data => {
+    const d = data as Partial<Person> | null
+    return {
+      name: d?.name ?? '',
+      nameKey: (d?.name ?? '').toLocaleLowerCase(),
+      isMe: d?.isMe ? 1 : 0,
+      accountId: d?.accountId ?? null,
+    }
+  },
+  group: data => {
+    const d = data as Partial<Group> | null
+    return {name: d?.name ?? '', kind: d?.kind ?? 'other', currency: d?.currency ?? '', archived: d?.archived ? 1 : 0}
+  },
+  expense: data => {
+    const d = data as Partial<Expense> | null
+    return {
+      groupId: d?.groupId ?? '',
+      date: d?.date ?? '',
+      currency: d?.currency ?? '',
+      total: String(d?.total ?? 0n),
+      tz: d?.tz ?? '',
+      category: d?.category ?? '',
+      title: d?.title ?? '',
+    }
+  },
+  repayment: data => moneyTransfer(data as Partial<Repayment> | null),
+  writeoff: data => moneyTransfer(data as Partial<Repayment> | null),
+  comment: data => {
+    const d = data as {targetType?: string; targetId?: string} | null
+    return {targetType: d?.targetType ?? '', targetId: d?.targetId ?? ''}
+  },
+  friendRequest: data => {
+    const d = data as {status?: string; direction?: string} | null
+    return {status: d?.status ?? '', direction: d?.direction ?? ''}
+  },
+  inviteLink: data => {
+    const d = data as {groupId?: string | null; revoked?: boolean} | null
+    return {groupId: d?.groupId ?? '', revoked: d?.revoked ? 1 : 0}
+  },
   feedback: () => ({}),
   preference: () => ({}),
 }
 
-function moneyTransfer(d: Partial<Repayment> | undefined): Row {
+function moneyTransfer(d: Partial<Repayment> | null | undefined): Row {
   return {
     groupId: d?.groupId ?? '',
     fromId: d?.from ?? '',
@@ -357,6 +377,8 @@ export function rowOfEntity(e: Entity): Row {
     syncError: e.syncError,
     data: encode(e.data),
     ...EXTRA[e.type](e.data),
+    // A group's own change is activity; the store raises it further as records land in the group.
+    ...(e.type === 'group' ? {activityAt: e.updatedAt} : {}),
   }
 }
 

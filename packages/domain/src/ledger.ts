@@ -1,5 +1,5 @@
-import type {CurrencyCode} from './currency'
-import type {LocalDate} from './date'
+import {type CurrencyCode} from './currency'
+import {type LocalDate} from './date'
 import {DomainError} from './errors'
 import {directPlan, NO_RULES, planSettlement, type SettlementRules} from './settlement'
 
@@ -413,9 +413,14 @@ export function groupMemberNet(records: LedgerRecord[], groupId: string, currenc
  * they have no records yet, so a settlement plan can route through them.
  */
 export function memberNets(records: LedgerRecord[], groupId: string, members: string[]): Record<CurrencyCode, Record<string, bigint>> {
+  return zeroFillNets(groupNet(records, groupId), members)
+}
+
+/** Per-currency nets (sorted by code) with every member listed, zero when they have none (the stored nets, or `groupNet`). */
+export function zeroFillNets(nets: Record<CurrencyCode, Record<string, bigint>>, members: string[]): Record<CurrencyCode, Record<string, bigint>> {
   const zero = Object.fromEntries(members.map(m => [m, 0n]))
   return Object.fromEntries(
-    Object.entries(groupNet(records, groupId))
+    Object.entries(nets)
       .sort(([x], [y]) => x.localeCompare(y))
       .map(([currency, net]) => [currency, {...zero, ...net}]),
   )

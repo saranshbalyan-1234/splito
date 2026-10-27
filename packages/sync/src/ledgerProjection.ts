@@ -11,11 +11,11 @@
  */
 import {type LedgerRecord, recordEffects} from '@splito/domain'
 
-import type {RowAccess} from './engine'
-import type {Expense, Group, Repayment} from './mutations'
-import type {Key, Row} from './schema'
+import {type RowAccess} from './engine'
+import {type Expense, type Group, type Repayment} from './mutations'
+import {type Key, type Row} from './schema'
 import {toExpenseRecord, toRepaymentRecord, toWriteOffRecord} from './selectors'
-import type {Entity, EntityType} from './types'
+import {type Entity, type EntityType} from './types'
 
 type Sums = Map<string, {key: Key; amount: bigint; count: number}>
 
@@ -148,7 +148,16 @@ export async function projectEntity(rows: RowAccess, prev: Entity | undefined, n
     addEffects(recordOf(prev), -1, nets, pairs)
     addEffects(recordOf(next), 1, nets, pairs)
     await writeSums(rows, nets, pairs, (next ?? prev)!.updatedAt)
+    // Any change to a record in a group, a delete included, is the group's latest activity (26.17).
+    if (next) for (const groupId of new Set([groupOf(prev), groupOf(next)])) if (groupId) await bumpActivity(rows, groupId, next.updatedAt)
   }
+}
+
+const groupOf = (e: Entity | undefined) => (e?.data as {groupId?: string | null} | undefined)?.groupId ?? null
+
+async function bumpActivity(rows: RowAccess, groupId: string, at: number) {
+  const g = await rows.get('groups', [groupId])
+  if (g && (g.activityAt as number) < at) await rows.put('groups', {...g, activityAt: at})
 }
 
 /**
@@ -160,13 +169,25 @@ export async function rebuildProjections(rows: RowAccess, entities: (type: Entit
   for (const g of (await entities('group')) as Entity<Group>[]) for (const r of memberRows(g)) await rows.put('group_members', r)
   const nets: Sums = new Map()
   const pairs: Sums = new Map()
+  const activity = new Map<string, number>()
   let latest = 0
   for (const type of ['expense', 'repayment', 'writeoff'] as const) {
     for (const e of await entities(type)) {
       if (type === 'expense') for (const r of partyRows(e as Entity<Expense>)) await rows.put('expense_parties', r)
       addEffects(recordOf(e), 1, nets, pairs)
       latest = Math.max(latest, e.updatedAt)
+      const groupId = groupOf(e)
+      if (groupId) activity.set(groupId, Math.max(activity.get(groupId) ?? 0, e.updatedAt))
     }
   }
   await writeSums(rows, nets, pairs, latest)
+  await raiseGroupActivity(rows, activity)
+}
+
+/** Sets each group's `activityAt` to the newest of its own change and any record's in it. */
+async function raiseGroupActivity(rows: RowAccess, activity: Map<string, number>) {
+  for (const g of await rows.range('groups', {})) {
+    const at = Math.max(g.updatedAt as number, activity.get(g.id as string) ?? 0)
+    if (g.activityAt !== at) await rows.put('groups', {...g, activityAt: at})
+  }
 }

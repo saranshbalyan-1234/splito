@@ -33,7 +33,7 @@ describe('M10: a friend owed one way directly and the other way in a group is no
   test('Overview totals add each part in its own direction', () =>
     expect(balanceTotals([bob!])).toEqual([{currency: 'INR', owed: 10n, owe: 10n, net: 0n}]))
   test('only parts that are all zero are settled', () =>
-    expect(isSettledBalance({total: 0n, direct: 0n, groups: {G: 0n}})).toBe(true))
+    expect(isSettledBalance({direct: 0n, groups: {G: 0n}})).toBe(true))
 })
 
 describe('M11: one plan policy when the rules leave no plan', () => {

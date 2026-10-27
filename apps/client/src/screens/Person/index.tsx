@@ -14,21 +14,20 @@ import {
 import {
   deletePerson,
   type Entity,
-  type Expense,
   type Group,
   type Person,
   type Repayment,
   type WriteOff,
 } from '@splito/sync'
 
-import {usePagedRows} from '#/lib/hooks/usePagedRows'
 import {type AllNavigatorParams, type NavigationProp} from '#/lib/routes/types'
 import {goBack} from '#/navigation/goBack'
 import {
+  useBalanceRows,
   useEntities,
-  useLedger,
   useMe,
   useMutationCtx,
+  usePairHistory,
   usePref,
   useStore,
 } from '#/data/hooks'
@@ -40,7 +39,6 @@ import {SectionHeader} from '#/screens/People/components/SectionHeader'
 import {atoms as a, useBreakpoints, useTheme} from '#/alf'
 import {Button, ButtonIcon, ButtonText} from '#/components/Button'
 import {useDialogControl} from '#/components/Dialog'
-import {myBalances} from '#/components/groups/net'
 import {DotGrid3x1_Stroke2_Corner0_Rounded as DotsIcon} from '#/components/icons/DotGrid'
 import {
   Handshake_Stroke2_Corner0_Rounded as HandshakeIcon,
@@ -66,9 +64,7 @@ import {
   balanceParts,
   effectWithPerson,
   type HistoryItem,
-  involvesPair,
   partsOwedBy,
-  toHistory,
   withMonths,
 } from '#/components/people/ledger'
 import {PaymentDetailsDialog} from '#/components/people/PaymentDetailsDialog'
@@ -107,14 +103,13 @@ export function PersonScreen() {
   const me = useMe()
   const people = useEntities<Person>('person')
   const groups = useEntities<Group>('group')
-  const expenses = useEntities<Expense>('expense')
-  const repayments = useEntities<Repayment>('repayment')
-  const writeOffs = useEntities<WriteOff>('writeoff')
-  const ledger = useLedger()
+  const balanceRows = useBalanceRows()
   const [includeDefault] = usePref('includeGroupsDefault')
   const [defaultCurrency] = usePref('defaultCurrency')
   const [applied, setApplied] = useState<boolean | null>(null)
   const includeGroups = applied ?? includeDefault ?? true
+  /* The expenses and payments between us, newest first, a page at a time (by index). */
+  const pairHistory = usePairHistory(personId, includeGroups)
 
   const filterControl = useDialogControl()
   const paymentControl = useDialogControl()
@@ -132,17 +127,9 @@ export function PersonScreen() {
     'repayment',
   )
 
-  const isLoading =
-    !me ||
-    !people ||
-    !groups ||
-    !expenses ||
-    !repayments ||
-    !writeOffs ||
-    !ledger
+  const isLoading = !me || !people || !groups || !balanceRows || !pairHistory
   const person = people?.find(p => p.id === personId)
 
-  const pageOf = usePagedRows()
   if (!isLoading && (!person || person.data.isMe)) {
     return (
       <Layout.Screen testID="screen-person">
@@ -174,21 +161,12 @@ export function PersonScreen() {
     (people ?? []).map(p => [p.id, p.id === me?.id ? l`You` : p.data.name]),
   )
   const groupNames = new Map((groups ?? []).map(g => [g.id, g.data.name]))
-  const summary =
-    me && ledger
-      ? personSummary(myBalances(ledger, me.id, groups ?? []), {
-          includeGroups,
-        }).find(s => s.person === personId)
-      : undefined
-  const history =
-    me && expenses && repayments
-      ? toHistory(expenses, repayments, writeOffs).filter(
-          e =>
-            involvesPair(e, me.id, personId) &&
-            effectWithPerson(e, me.id, personId) !== ZERO &&
-            (includeGroups || e.entity.data.groupId === null),
-        )
-      : []
+  const summary = balanceRows
+    ? personSummary(balanceRows, {includeGroups}).find(
+        s => s.person === personId,
+      )
+    : undefined
+  const history = pairHistory?.entries ?? []
   const items = withMonths(history)
   const sharedGroups = (groups ?? []).filter(
     g =>
@@ -333,7 +311,7 @@ export function PersonScreen() {
       <SectionHeader
         title={l`History`}
         testID="person-history-title"
-        count={history.length}
+        count={pairHistory?.isDone ? history.length : undefined}
         action={
           <View style={[a.flex_row, a.align_center, a.gap_sm]}>
             {!includeGroups && (
@@ -358,7 +336,10 @@ export function PersonScreen() {
     </>
   )
 
-  const {shown, onEndReached} = pageOf(isLoading ? [] : items)
+  /* The next page of history is read when the end comes near (Bluesky's feed paging). */
+  const onEndReached = () => {
+    if (pairHistory && !pairHistory.isDone) pairHistory.loadMore()
+  }
 
   return (
     <Layout.Screen testID="screen-person">
@@ -441,7 +422,7 @@ export function PersonScreen() {
       </Layout.Header.Outer>
       <LayoutAnimationConfig skipEntering skipExiting>
         <List
-          data={shown}
+          data={isLoading ? [] : items}
           onEndReached={onEndReached}
           keyExtractor={(item: HistoryItem) => item.key}
           renderItem={({item, index}: {item: HistoryItem; index: number}) =>

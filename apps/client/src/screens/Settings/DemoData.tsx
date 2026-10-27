@@ -1,14 +1,14 @@
 import {useSyncExternalStore} from 'react'
 import {View} from 'react-native'
 import {DatabaseZap} from 'lucide-react-native'
-import {DEMO_LARGE_PREFIX, type MutationCtx, type Store} from '@splito/sync'
+import {type MutationCtx, type Store} from '@splito/sync'
 import {plural, t} from '@lingui/core/macro'
 import {Trans, useLingui} from '@lingui/react/macro'
 
 import {useHaptics} from '#/lib/haptics'
 import {logger} from '#/logger'
 import {addLargeDemo, removeLargeDemo} from '#/data/demoLarge'
-import {useEntities, useMutationCtx, useStore} from '#/data/hooks'
+import {useDemoCounts, useMutationCtx, useStore} from '#/data/hooks'
 import * as SettingsList from '#/screens/Settings/components/SettingsList'
 import {atoms as a, useTheme} from '#/alf'
 import {Trash_Stroke2_Corner0_Rounded as TrashIcon} from '#/components/icons/Trash'
@@ -112,10 +112,7 @@ export function DemoDataRows() {
   const addPrompt = Prompt.usePromptControl()
   const removePrompt = Prompt.usePromptControl()
   const busy = useProgress()
-  const isDemo = (e: {id: string}) => e.id.startsWith(DEMO_LARGE_PREFIX)
-  const friends = useEntities('person')?.filter(isDemo).length ?? 0
-  const groups = useEntities('group')?.filter(isDemo).length ?? 0
-  const expenses = useEntities('expense')?.filter(isDemo).length ?? 0
+  const {friends = 0, groups = 0, expenses = 0} = useDemoCounts() ?? {}
   const isLoaded = friends + groups > 0
 
   const run = (action: 'add' | 'remove') => {

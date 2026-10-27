@@ -13,9 +13,9 @@ import {
   restoreExpense,
   updateExpense,
 } from '../src/mutations'
-import type {Key} from '../src/schema'
-import type {Store} from '../src/store'
-import type {Entity, MutationCtx} from '../src/types'
+import {type Key} from '../src/schema'
+import {type Store} from '../src/store'
+import {type Entity, type MutationCtx} from '../src/types'
 import {expectProjectionsMatchLedger} from './projectionCheck'
 
 export function makeCtx(): MutationCtx {
@@ -269,6 +269,43 @@ export function runV2Contract(name: string, open: () => Promise<Store>) {
       expect(last.get(a.id)).toBe('2026-10-05')
       expect(last.get('me')).toBe('2026-10-05')
       expect(last.has(b.id)).toBe(false) // their only payment was deleted
+      await s.close()
+    })
+
+    test('a group is active when it or anything recorded in it changes, a delete included', async () => {
+      const { s, ctx, a, g } = await seeded()
+      const g2 = await createGroup(s, ctx, {name: 'Later', kind: 'home', currency: 'INR', memberIds: [a.id], startDate: null, endDate: null})
+      const born = await s.groupActivity()
+      expect([...born.keys()]).toEqual([g2.id, g.id]) // newest first
+      const e = await createExpense(s, ctx, draft({with: [a.id], groupId: g.id}))
+      const afterExpense = await s.groupActivity()
+      expect([...afterExpense.keys()]).toEqual([g.id, g2.id])
+      expect(afterExpense.get(g.id)).toBe(e.updatedAt)
+      await deleteExpense(s, ctx, e.id)
+      const afterDelete = (await s.groupActivity()).get(g.id)!
+      expect(afterDelete).toBeGreaterThan(e.updatedAt)
+      await s.rebuildProjections()
+      expect((await s.groupActivity()).get(g.id)).toBe(afterDelete)
+      // Moving an expense to another group is activity for both.
+      const m = await createExpense(s, ctx, draft({with: [a.id], groupId: g.id}))
+      await updateExpense(s, ctx, m.id, draft({with: [a.id], groupId: g2.id}))
+      const moved = await s.groupActivity()
+      expect(moved.get(g2.id)).toBe(moved.get(g.id))
+      await s.close()
+    })
+
+    test('count reads an index range without reading rows; historyMany reads several entities at once', async () => {
+      const { s, ctx, a, g } = await seeded()
+      const e1 = await createExpense(s, ctx, draft({with: [a.id], groupId: g.id, date: '2026-10-01'}))
+      const e2 = await createExpense(s, ctx, draft({with: [a.id], groupId: g.id, date: '2026-10-05'}))
+      await deleteExpense(s, ctx, e2.id)
+      expect(await s.count('expense', {index: 'byDeleted', eq: [0]})).toBe(1)
+      expect(await s.count('expense', {index: 'byDeleted', eq: [1]})).toBe(1)
+      expect(await s.count('expense', {index: 'byDate', min: '2026-10-02'})).toBe(1)
+      expect(await s.count('expense', {})).toBe(2)
+      expect(await s.count('expense', {min: e1.id, max: e1.id})).toBe(1)
+      const rows = await s.historyMany([{type: 'expense', id: e1.id}, {type: 'expense', id: e2.id}])
+      expect(rows.map(r => `${r.entityId}:${r.version}`)).toEqual([`${e1.id}:1`, `${e2.id}:1`, `${e2.id}:2`])
       await s.close()
     })
 

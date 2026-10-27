@@ -1,10 +1,10 @@
 import {expect} from 'bun:test'
 import {groupNet, type LedgerRecord, pairwiseBalances} from '@splito/domain'
 
-import type {Expense, Repayment} from '../src/mutations'
+import {type Expense, type Repayment} from '../src/mutations'
 import {toExpenseRecord, toRepaymentRecord, toWriteOffRecord} from '../src/selectors'
-import type {Store} from '../src/store'
-import type {Entity} from '../src/types'
+import {type Store} from '../src/store'
+import {type Entity} from '../src/types'
 
 const DIRECT = '__direct__'
 

@@ -1,7 +1,7 @@
 import {type IDBPDatabase, type IDBPTransaction, wrap} from 'idb'
 
 import {createStore} from './core'
-import type {Engine, RangeQuery, RowAccess} from './engine'
+import {type Engine, type RangeQuery, type RowAccess} from './engine'
 import {type LegacyV1, migrateV1ToV2, stampSchemaVersion} from './migrate'
 import {indexColumns, type Key, type Row, SCHEMA_VERSION, STORES, type StoreName} from './schema'
 import {changeFromJson, changeToJson, type Store, type StoreChange} from './store'

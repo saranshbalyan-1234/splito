@@ -8,12 +8,15 @@
 import {
   applyDemoOp,
   DEMO_LARGE_PREFIX,
-  type DemoCounts,
+  type DemoCounts as PlanCounts,
+  type Entity,
   type EntityType,
   generateLargeDemo,
   insideTransaction,
+  type Key,
   localToday,
   type MutationCtx,
+  type Page,
   type Store,
 } from '@splito/sync'
 
@@ -26,14 +29,39 @@ const DEMO_TYPES: EntityType[] = [
   'writeoff',
 ]
 
+/** Every demo id starts with the tag, so the demo rows are one id range of each store. */
+const DEMO_RANGE = {min: DEMO_LARGE_PREFIX, max: DEMO_LARGE_PREFIX + '\uffff'}
+
 /** True when the large demo set (or part of it) is in the store. */
 export async function hasLargeDemo(store: Store): Promise<boolean> {
   return (
-    (await store.getAll('group')).some(g =>
-      g.id.startsWith(DEMO_LARGE_PREFIX),
-    ) ||
-    (await store.getAll('person')).some(p => p.id.startsWith(DEMO_LARGE_PREFIX))
+    (await store.count('group', DEMO_RANGE)) > 0 ||
+    (await store.count('person', DEMO_RANGE)) > 0
   )
+}
+
+/** What the large demo set holds right now: friends, groups and live expenses (counts, no rows read). */
+export type DemoCounts = {friends: number; groups: number; expenses: number}
+
+export async function demoCounts(store: Store): Promise<DemoCounts> {
+  // Tombstoned demo expenses (the "deleted items" of the set) are in the range but not in the count.
+  let deleted = 0
+  let after: Key | null = null
+  do {
+    const page: Page<Entity> = await store.page('expense', {
+      index: 'byDeleted',
+      eq: [1],
+      after,
+      limit: 200,
+    })
+    deleted += page.items.filter(e => e.id.startsWith(DEMO_LARGE_PREFIX)).length
+    after = page.next
+  } while (after)
+  return {
+    friends: await store.count('person', DEMO_RANGE),
+    groups: await store.count('group', DEMO_RANGE),
+    expenses: (await store.count('expense', DEMO_RANGE)) - deleted,
+  }
 }
 
 let running: Promise<unknown> | undefined
@@ -56,7 +84,7 @@ export function addLargeDemo(
   store: Store,
   ctx: MutationCtx,
   onProgress?: (done: number) => void,
-): Promise<DemoCounts | null> {
+): Promise<PlanCounts | null> {
   return exclusive(async () => {
     if (await hasLargeDemo(store)) return null
     const now = Date.now()
@@ -80,10 +108,16 @@ export function addLargeDemo(
 /** Erases every row the large demo set wrote (entities, history, outbox), nothing else. */
 export function removeLargeDemo(store: Store): Promise<number> {
   return exclusive(async () => {
-    const refs = (await Promise.all(DEMO_TYPES.map(type => store.getAll(type))))
-      .flat()
-      .filter(e => e.id.startsWith(DEMO_LARGE_PREFIX))
-      .map(e => ({type: e.type, id: e.id}))
+    const refs: Array<{type: EntityType; id: string}> = []
+    for (const type of DEMO_TYPES) {
+      let after: Key | null = null
+      do {
+        // The demo rows are one id range of the store: read it by cursor, never the whole store.
+        const page: Page<Entity> = await store.page(type, {...DEMO_RANGE, after, limit: 500})
+        for (const e of page.items) refs.push({type: e.type, id: e.id})
+        after = page.next
+      } while (after)
+    }
     if (refs.length) await store.erase(refs)
     return refs.length
   })

@@ -1,7 +1,6 @@
 import {
   balanceSides,
   isSettledBalance,
-  type LedgerRecord,
   magnitude,
   type PersonSummary,
   ZERO,
@@ -9,21 +8,6 @@ import {
 
 /** One friend on People: their balance with me, if any. */
 export type FriendRow = {id: string; name: string; summary?: PersonSummary}
-
-/** The latest date (`YYYY-MM-DD`) of a live record each person is on. */
-export function lastActivity(records: LedgerRecord[]): Map<string, string> {
-  const latest = new Map<string, string>()
-  for (const r of records) {
-    if (r.deleted) continue
-    const people =
-      r.kind !== 'expense'
-        ? [r.from, r.to]
-        : [...Object.keys(r.payers), ...Object.keys(r.shares)]
-    for (const p of people)
-      if ((latest.get(p) ?? '') < r.date) latest.set(p, r.date)
-  }
-  return latest
-}
 
 /**
  * The `peopleSort` preference applied. `amount`: biggest balance in the

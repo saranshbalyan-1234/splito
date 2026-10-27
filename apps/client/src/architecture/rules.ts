@@ -367,11 +367,22 @@ export const RULES = {
       importsOf(s).filter(m => m === 'expo-sqlite' || m === 'idb').length + countMatches(code(s), /\bindexedDB\b/g),
   },
   storeAccess: {
-    why: 'Raw store access outside src/data/: store.getAll/transaction/history/outbox/subscribe, useData() or #/data/store (read through data/ hooks).',
+    why: 'Raw store access outside src/data/: store.getAll/get/page/parties/balances/transaction/history/outbox/subscribe/count..., useData() or #/data/store (read through data/ hooks).',
     appliesTo: p => isClient(p) && !under(p, 'data/'),
     count: (_p, s) =>
-      countMatches(code(s), /\bstore\.(?:getAll|transaction|history|outbox|subscribe)\s*\(|\buseData\s*\(/g) +
+      countMatches(
+        code(s),
+        /\bstore\.(?:getAll|get|getMany|page|parties|members|balances|pairBalances|lastActivity|historyPage|historyMany|count|groupActivity|syncCounts|setOpStatus|rebuildProjections|dump|erase|transaction|history|outbox|outboxByStatus|subscribe)\s*\(|\buseData\s*\(/g,
+      ) +
       importsOf(s).filter(m => m === '#/data/store' || m === '#/data/StoreProvider').length,
+  },
+  moneyFullRead: {
+    why: 'A whole money store read on a hot path: getAll / useEntities / useAllEntities / entitiesQuery of expense, repayment or writeoff, useLedger or loadLedger. Read through indexes, projections and cursors (ARCHITECTURE 9.8).',
+    // loadLedger (export, maintenance, tests) is defined in selectors.ts; nothing else may read a money store whole.
+    appliesTo: p => (isClient(p) || p.startsWith(SYNC)) && p !== `${SYNC}selectors.ts`,
+    count: (_p, s) =>
+      countMatches(noComments(s), /\b(?:getAll|useEntities|useAllEntities|entitiesQuery)\s*(?:<[^>()]*>)?\s*\(\s*['"`](?:expense|repayment|writeoff)['"`]/g) +
+      countMatches(code(s), /\b(?:useLedger|loadLedger)\s*\(/g),
   },
   attribution: {
     why: 'Bluesky/Expensify code without the `// Adapted from <repo>@<sha> (MIT) - <path>` first line, or without a docs/reuse row.',

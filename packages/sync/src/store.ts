@@ -1,5 +1,5 @@
-import type {Key, Scalar, StoreName} from './schema'
-import type {Entity, EntityInput, EntityType, HistoryRow, OpStatus, OutboxInput, OutboxOp, RowSyncStatus} from './types'
+import {type Key, type Scalar, type StoreName} from './schema'
+import {type Entity, type EntityInput, type EntityType, type HistoryRow, type OpStatus, type OutboxInput, type OutboxOp, type RowSyncStatus} from './types'
 
 export interface Tx {
   get<T>(type: EntityType, id: string): Promise<Entity<T> | undefined>
@@ -25,7 +25,8 @@ export interface Page<T> {
 
 /** Index read: rows whose first index columns equal `eq`, optionally bounded on the next column, paged by cursor. */
 export interface PageQuery<I extends string = string> {
-  index: I
+  /** Index name; omitted: the primary key (an id range). */
+  index?: I
   eq?: Key
   min?: Scalar
   max?: Scalar
@@ -167,6 +168,12 @@ export interface Store {
   pairBalances(personId: string): Promise<PairBalance[]>
   /** Latest `YYYY-MM-DD` of a live expense, payment or write-off each person is on. */
   lastActivity(personIds: readonly string[]): Promise<Map<string, string>>
+  /** How many rows of one type an index range holds (a count, not a read). */
+  count(type: EntityType, q?: {index?: string; eq?: Key; min?: Scalar; max?: Scalar}): Promise<number>
+  /** When each group last saw activity: its own change or any record's in it, newest first (26.17). */
+  groupActivity(): Promise<Map<string, number>>
+  /** The stored versions of several entities in one read. */
+  historyMany(refs: ReadonlyArray<{type: EntityType; id: string}>): Promise<HistoryRow[]>
   /** History rows newest change first (`byChangedAt`), by cursor. */
   historyPage(q?: {after?: Key | null; limit?: number}): Promise<Page<HistoryRow>>
   history(type: EntityType, id: string): Promise<HistoryRow[]>

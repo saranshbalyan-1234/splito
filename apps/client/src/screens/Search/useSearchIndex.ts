@@ -2,12 +2,11 @@ import {useMemo} from 'react'
 import {
   buildSearchIndex,
   DEFAULT_CATEGORIES,
-  type Expense,
   type Group,
   type Person,
 } from '@splito/sync'
 
-import {useEntities, usePref} from '#/data/hooks'
+import {useEntities, useLedgerMirror, usePref} from '#/data/hooks'
 
 /**
  * The search index, rebuilt only when expenses, people, groups or category
@@ -15,7 +14,8 @@ import {useEntities, usePref} from '#/data/hooks'
  * things up. Undefined until the store has loaded.
  */
 export function useSearchIndex() {
-  const expenses = useEntities<Expense>('expense')
+  /* Free-text search covers every expense: the ledger is read by index in pages, once, while search is open. */
+  const expenses = useLedgerMirror()?.expenses
   const people = useEntities<Person>('person')
   const groups = useEntities<Group>('group')
   const [categories = DEFAULT_CATEGORIES] = usePref('categories')
