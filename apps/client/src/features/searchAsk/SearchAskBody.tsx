@@ -194,7 +194,8 @@ export function SearchAskBody({initialQuery}: {initialQuery: string}) {
         a.align_center,
         a.gap_sm,
         a.px_lg,
-        a.pt_md,
+        /* Phones: clear of the sheet's drag handle. */
+        gtMobile ? a.pt_md : a.pt_xl,
         a.pb_md,
         a.border_b,
         t.atoms.bg,
