@@ -34,6 +34,17 @@ export function backFallback(route: {name: string; params?: object}): Fallback {
   }
 }
 
+/**
+ * The routes to put under a deep-linked page so Back has somewhere to go
+ * (web has no stack history after a deep link or refresh): its parents from
+ * `backFallback`, outermost first, then the page itself. People is always
+ * at the bottom.
+ */
+export function backChain<R extends {name: string; params?: object}>(route: R): Array<R | Fallback> {
+  const parent = backFallback(route)
+  return parent.name === route.name ? [route] : [...backChain(parent), route]
+}
+
 /** Back one page, or to `fallback` when this page was opened directly. Every Back and close path uses it. */
 export function goBack(navigation: BackNavigation, fallback: Fallback) {
   if (navigation.canGoBack()) navigation.goBack()
