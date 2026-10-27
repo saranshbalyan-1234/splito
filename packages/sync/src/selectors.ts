@@ -1,6 +1,7 @@
 import {type ExpenseRecord, type LedgerRecord, type RepaymentRecord, type WriteOffRecord} from '@splito/domain'
 
-import {type BinType, type Expense, type Group, type Purged, type Repayment, type WriteOff} from './mutations'
+import {BIN_TYPES, type BinType, type Expense, type Group, type Purged, type Repayment, type WriteOff} from './mutations'
+import {DAY_MS, MAX_BIN_DAYS, purgeAfterOf} from './bin'
 import {type Key} from './schema'
 import {type Page, type Store} from './store'
 import {type Entity} from './types'
@@ -52,44 +53,55 @@ export type HistoryEntry =
   | {kind: 'writeoff'; entity: Entity<WriteOff>}
 
 /** One item in Recently deleted. A deleted group is one item; the records it took with it are not listed apart. */
-export type BinItem = {deletedAt: number; deletedBy: string} & (
+export type BinItem = {deletedAt: number; deletedBy: string; purgeAfter: number} & (
   | {type: 'expense'; entity: Entity<Expense>}
   | {type: 'repayment'; entity: Entity<Repayment>}
   | {type: 'writeoff'; entity: Entity<WriteOff>}
   | {type: 'group'; entity: Entity<Group>}
 )
 
-const BIN_TYPES: BinType[] = ['expense', 'repayment', 'writeoff']
-const DAY_MS = 86_400_000
 
 /**
- * Recently deleted: tombstoned expenses, payments, write-offs and groups deleted in
- * the last `days` (the `history.binDays` preference) and not deleted forever,
- * newest first, each with who deleted it (from its history). Older tombstones
- * are only out of the list: they stay in the store and its audit trail.
+ * Recently deleted: tombstoned expenses, payments, write-offs and groups not yet past their own `purgeAfter`
+ * (decision 102: stamped when they were deleted, so changing `history.binDays` later never moves them) and not
+ * deleted forever, newest first, each with who deleted it (from its history). `days` is the setting now: it
+ * only dates a tombstone from before the rule that has no `purgeAfter`, and that date is written down here,
+ * quietly (same version and time, no history or op), the first time such a row is read. Older tombstones are
+ * only out of the list: they stay in the store and its audit trail.
  */
 export async function loadBin(store: Store, now: number, days: number): Promise<BinItem[]> {
-  const since = now - days * DAY_MS
+  // No tombstone outlives the longest choice, so a year back reads every item that can still be listed.
+  const since = now - MAX_BIN_DAYS * DAY_MS
   const items: BinItem[] = []
+  const legacy: Array<{type: BinType | 'group'; id: string}> = []
+  const consider = async (type: BinType | 'group', entity: Entity<Purged>) => {
+    // A record a group's deletion took is part of the group's entry (F-615).
+    if (entity.data.purgedAt !== undefined || entity.data.deletedWithGroup !== undefined) return
+    if (entity.data.purgeAfter === undefined) legacy.push({type, id: entity.id})
+    const purgeAfter = purgeAfterOf(entity, days)
+    if (purgeAfter <= now) return
+    const last = (await store.history(type, entity.id)).at(-1)
+    items.push({type, entity, deletedAt: entity.updatedAt, deletedBy: last?.actor ?? '', purgeAfter} as BinItem)
+  }
   for (const type of BIN_TYPES) {
-    // `byDeleted` is [deleted, updatedAt, id]: this reads only tombstones from inside the window.
+    // `byDeleted` is [deleted, updatedAt, id]: this reads only tombstones from the last year.
     let after: Key | null = null
     do {
       const page: Page<Entity<Purged>> = await store.page<Purged>(type, {index: 'byDeleted', eq: [1], min: since, after, limit: 100})
-      for (const entity of page.items) {
-        // A record a group's deletion took is part of the group's entry (F-615).
-        if (entity.data.purgedAt !== undefined || entity.data.deletedWithGroup !== undefined) continue
-        const last = (await store.history(type, entity.id)).at(-1)
-        items.push({type, entity, deletedAt: entity.updatedAt, deletedBy: last?.actor ?? ''} as BinItem)
-      }
+      for (const entity of page.items) await consider(type, entity)
       after = page.next
     } while (after)
   }
   // ponytail: groups have no tombstone index; the store is small (about 100 rows), so one read.
-  for (const entity of await store.getAll<Group & Purged>('group')) {
-    if (!entity.deleted || entity.updatedAt < since || entity.data.purgedAt !== undefined) continue
-    const last = (await store.history('group', entity.id)).at(-1)
-    items.push({type: 'group', entity, deletedAt: entity.updatedAt, deletedBy: last?.actor ?? ''} as BinItem)
+  for (const entity of await store.getAll<Group & Purged>('group')) if (entity.deleted && entity.updatedAt >= since) await consider('group', entity)
+  if (legacy.length > 0) {
+    await store.transaction(async tx => {
+      for (const {type, id} of legacy) {
+        const row = await tx.get<Purged>(type, id)
+        if (!row?.deleted || row.data.purgeAfter !== undefined) continue
+        await tx.put({...row, data: {...row.data, purgeAfter: purgeAfterOf(row, days)}})
+      }
+    })
   }
   return items.sort((x, y) => y.deletedAt - x.deletedAt || (x.entity.id < y.entity.id ? -1 : 1))
 }

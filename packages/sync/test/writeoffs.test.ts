@@ -164,8 +164,8 @@ test('the bin lists deleted expenses, payments and write-offs inside the window,
     ['expense', e.id],
   ])
   expect(bin.find(b => b.entity.id === e.id)).toMatchObject({deletedBy: x.id})
-  // A longer window reaches the older delete.
-  expect((await loadBin(s, clock + 10, 90)).map(b => b.entity.id)).toContain(old.id)
+  // The older delete followed the window of its own day (30): a longer setting now does not bring it back (decision 102).
+  expect((await loadBin(s, clock + 10, 90)).map(b => b.entity.id)).not.toContain(old.id)
 })
 
 test('restore takes an item out of the bin and its balance comes back; restoring twice fails', async () => {
