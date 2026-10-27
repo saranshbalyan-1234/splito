@@ -387,7 +387,9 @@ function BinRow({
                 a.leading_snug,
                 t.atoms.text_contrast_medium,
                 {
-                  textDecorationLine: 'line-through',
+                  // A deleted amount is struck through; a group's record count is not an amount.
+                  textDecorationLine:
+                    item.type === 'group' ? 'none' : 'line-through',
                   fontVariant: ['tabular-nums'],
                 },
               ]}>
