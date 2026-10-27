@@ -189,3 +189,91 @@ test('a balance shows each way on its own, never netted across direct and groups
   expect(a.lines[0]).toMatchObject({currency: 'INR', owed: 602800n, owe: 45000n, direct: -45000n})
   expect(a.lines[0]!.groups).toEqual([{group: {id: 'g1', name: 'Goa trip'}, amount: 602800n}])
 })
+
+test('a friend\'s spend is their share and counts only the records they are in', async () => {
+  // Two records: one shared with Asha, one that is only mine. Whole-record counts and totals would include both.
+  const cells = [
+    ...recordCells({kind: 'expense', id: 'x1', groupId: null, currency: 'INR', total: 10000n, payers: {[ME]: 10000n}, shares: {[ME]: 5000n, a: 5000n}, date: '2026-10-03', deleted: false, ...({category: 'food'} as object)} as never),
+    ...recordCells({kind: 'expense', id: 'x2', groupId: null, currency: 'INR', total: 90000n, payers: {[ME]: 90000n}, shares: {[ME]: 90000n}, date: '2026-10-04', deleted: false, ...({category: 'food'} as object)} as never),
+  ]
+  const e = env({source: source({currencies: async () => ['INR'], cells: async () => cells})})
+  const asha = {id: 'a', name: 'Asha Rao'}
+  for (const measure of ['share', 'total', 'paid'] as const) {
+    const a = await answerIntent({kind: 'spend', measure, person: asha, period: {kind: 'month', offset: 0}}, e)
+    if (a.kind !== 'spend') throw new Error(a.kind)
+    expect(a.measure, measure).toBe('share')
+    expect(a.currencies.map(c => [c.share, c.count]), measure).toEqual([[5000n, 1]])
+  }
+  // Someone in none of the records has no spending, not "2 expenses".
+  const nobody = await answerIntent({kind: 'spend', measure: 'share', person: {id: 'zed', name: 'Zed'}, period: {kind: 'month', offset: 0}}, e)
+  if (nobody.kind !== 'spend') throw new Error(nobody.kind)
+  expect(nobody.currencies).toEqual([])
+})
+
+/** A source that records what the engine asked it to read. */
+function spy() {
+  const reads: Array<{currency: string; range: DateRange; exact: boolean; groupId?: string}> = []
+  const src = source({
+    cells: async (currency, range, exact, groupId) => {
+      reads.push({currency, range, exact, groupId})
+      return (CELLS[currency] ?? []).filter(c => c.date >= range.from && c.date <= range.to && (!groupId || c.groupId === groupId))
+    },
+  })
+  return {reads, src}
+}
+
+test('"weekly spending all time" is drawn by month from the stored aggregates, one range for every currency', async () => {
+  const {reads, src} = spy()
+  const a = await ask('weekly spending all time', env({source: src}))
+  if (a.kind !== 'trend') throw new Error(a.kind)
+  expect(a.bucket).toBe('month')
+  expect(a.isCoarsened).toBe(true)
+  // No currency was read by day or week (that is a date-index read of every record), and all read the same dates.
+  expect(reads.map(r => r.exact)).toEqual([false, false])
+  expect(new Set(reads.map(r => `${r.range.from}:${r.range.to}`)).size).toBe(1)
+  expect(a.currencies.every(c => c.points.every(p => p.key.endsWith('-01')))).toBe(true)
+})
+
+test('a trend uses Analytics\' limits: days up to 31 (92 in a group), weeks up to 183, otherwise months', async () => {
+  // The trip runs 47 days: more than a month of days, fewer than a trip's 92.
+  const trip = env({source: source({bounds: async (_c, groupId) => (groupId ? {from: '2026-03-05', to: '2026-04-20'} : {from: '2026-03-05', to: '2026-10-10'})})})
+  const bucketOf = async (q: string) => {
+    const a = await ask(q, trip)
+    if (a.kind !== 'trend') throw new Error(a.kind)
+    return [a.bucket, a.isCoarsened]
+  }
+  expect(await bucketOf('daily spending in the last 30 days')).toEqual(['day', false])
+  expect(await bucketOf('daily spending in the last 40 days')).toEqual(['month', true])
+  expect(await bucketOf('Goa trip spending by day')).toEqual(['day', false])
+  expect(await bucketOf('spending by day in the last 47 days')).toEqual(['month', true])
+  expect(await bucketOf('weekly spending in the last 3 months')).toEqual(['week', false])
+  expect(await bucketOf('weekly spending this year')).toEqual(['month', true])
+  // Nothing asked: the natural width for the dates (a month of days, a half year of weeks).
+  expect(await bucketOf('spending trend in the last 60 days')).toEqual(['week', false])
+})
+
+test('a group in scope is read through its own date index', async () => {
+  const {reads, src} = spy()
+  const a = await ask('Show my Goa trip spending by day', env({source: src}))
+  if (a.kind !== 'trend') throw new Error(a.kind)
+  expect(reads.length).toBeGreaterThan(0)
+  expect(reads.every(r => r.groupId === 'g1')).toBe(true)
+  expect(a.currencies.map(c => c.currency)).toEqual(['INR'])
+})
+
+test('who owes whom says when the plan goes outside the rules, and when a currency has no plan', async () => {
+  const closed = {allowListOnly: true, edges: {}}
+  const e = env({
+    source: source({
+      groupNets: async () => ({
+        nets: {INR: {[ME]: 3000n, a: -3000n}, EUR: {a: 100n}},
+        rules: closed,
+      }),
+    }),
+  })
+  const a = await ask('Who owes whom in Goa trip?', e)
+  if (a.kind !== 'groupBalance') throw new Error(a.kind)
+  expect(a.outside).toEqual(['INR'])
+  // EUR does not add up to zero, so it has no plan: it is named, never dropped.
+  expect(a.unplanned).toEqual(['EUR'])
+})

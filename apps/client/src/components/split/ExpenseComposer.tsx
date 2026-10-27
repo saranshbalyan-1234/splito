@@ -266,7 +266,7 @@ export function ExpenseComposer({
           : l({message: 'Add expense', context: 'action'})
       }
       closeHint={
-        isEdit
+        isEdit || !draftContext
           ? l`Closes without saving your changes`
           : l`Closes Add expense; your draft is kept`
       }
@@ -274,7 +274,8 @@ export function ExpenseComposer({
       onClose={onClose}
       discardDescription={l`Your edits to this expense won’t be saved.`}
       renderDiscardPrompt={
-        isEdit
+        /* No draft slot (an Ask prefill): the sheet's own discard prompt, there is nothing to keep. */
+        isEdit || !draftContext
           ? undefined
           : ({control, onDiscardConfirmed}) => (
               <DraftPrompt

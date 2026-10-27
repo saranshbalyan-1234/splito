@@ -31,8 +31,8 @@ export function storeAskSource(
     async currencies() {
       return (await once(store, overviewQuery)).currencies
     },
-    async cells(currency, range, exact) {
-      return (await once(store, cellsQuery(currency, range, exact))).period
+    async cells(currency, range, exact, groupId) {
+      return (await once(store, cellsQuery(currency, range, exact, groupId))).period
     },
     bounds(currency, groupId): Promise<DateRange | null> {
       return once(store, boundsQuery(currency, groupId ? `ask:${groupId}` : 'ask:all', g => (groupId ? g === groupId : true)))

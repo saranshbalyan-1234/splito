@@ -26,8 +26,11 @@ export interface AskSource {
   groupNets(groupId: string): Promise<{nets: Record<CurrencyCode, Record<string, bigint>>; rules: SettlementRules}>
   /** Currencies with live expenses, most used first. */
   currencies(): Promise<CurrencyCode[]>
-  /** The cells dated `range` in one currency (whole months stored, edges and `exact` by date index): what Analytics reads. */
-  cells(currency: CurrencyCode, range: DateRange, exact: boolean): Promise<SpendCell[]>
+  /**
+   * The cells dated `range` in one currency (whole months stored, edges and `exact` by date index): what
+   * Analytics reads. With `groupId`, only that group's records are read (`byGroupDate`).
+   */
+  cells(currency: CurrencyCode, range: DateRange, exact: boolean, groupId?: string): Promise<SpendCell[]>
   /** First and last dated record in one currency (inside one group, if given); null when there is none. */
   bounds(currency: CurrencyCode, groupId?: string): Promise<DateRange | null>
   /** The first `limit` matches of the Search & Ask drawer's search for `query`. */

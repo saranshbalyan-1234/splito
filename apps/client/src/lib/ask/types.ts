@@ -120,6 +120,10 @@ export type Answer =
       /** My net in the group; > 0 the group owes me. */
       mine: Money[]
       owes: Array<{from: Ref; to: Ref; currency: CurrencyCode; amount: bigint}>
+      /** Currencies whose plan goes outside the group's payment rules because they leave no way to settle. */
+      outside?: CurrencyCode[]
+      /** Currencies whose balances do not add up, so no plan could be worked out (named, never dropped). */
+      unplanned?: CurrencyCode[]
     }
   | {
       kind: 'spend'

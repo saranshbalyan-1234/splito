@@ -67,10 +67,14 @@ export const overviewQuery: Query<Overview> = {
 /* Cells                                                                      */
 /* -------------------------------------------------------------------------- */
 
-/** The cells of the live records dated `from` to `to` (inclusive) in one currency, read by the date indexes. */
-async function cellsBetween(store: Store, from: string, to: string, currency: string): Promise<SpendCell[]> {
+/**
+ * The cells of the live records dated `from` to `to` (inclusive) in one currency, read by the date indexes
+ * (`byGroupDate` / `byGroup` for one group, so another group's records are never read).
+ */
+async function cellsBetween(store: Store, from: string, to: string, currency: string, groupId?: string): Promise<SpendCell[]> {
   if (from > to) return []
-  const dated = <T>(type: 'expense' | 'repayment' | 'writeoff') => store.page<T>(type, {index: 'byDate', min: from, max: to, limit: ALL})
+  const dated = <T>(type: 'expense' | 'repayment' | 'writeoff') =>
+    store.page<T>(type, groupId === undefined ? {index: 'byDate', min: from, max: to, limit: ALL} : {index: type === 'expense' ? 'byGroupDate' : 'byGroup', eq: [groupId], min: from, max: to, limit: ALL})
   const [expenses, repayments, writeOffs] = await Promise.all([dated<Expense>('expense'), dated<Repayment>('repayment'), dated<WriteOff>('writeoff')])
   // The same guard as the stored sums use (deleted rows, rows of a shape this build does not know), so the two agree.
   return [...expenses.items, ...repayments.items, ...writeOffs.items].flatMap(e => cellsOfEntity(e)).filter(c => c.currency === currency)
@@ -85,8 +89,8 @@ export type CellData = {currency: string; range: DateRange; period: SpendCell[];
  * indexes. Everything before `range.from` is read the same way, for the
  * balance line, which counts every earlier record.
  */
-export function cellsQuery(currency: string, range: DateRange, exact: boolean): Query<CellData> {
-  const key = `analytics:cells:${currency}:${range.from}:${range.to}:${exact}`
+export function cellsQuery(currency: string, range: DateRange, exact: boolean, groupId?: string): Query<CellData> {
+  const key = `analytics:cells:${currency}:${range.from}:${range.to}:${exact}${groupId === undefined ? '' : `:${groupId}`}`
   let q = cellQueries.get(key)
   if (!q) {
     q = {
@@ -95,13 +99,13 @@ export function cellsQuery(currency: string, range: DateRange, exact: boolean): 
       loader: store => async (_c, prev) => {
         const m0 = month(range.from)
         const m1 = month(range.to)
-        const stored = await store.aggregates({currency})
+        const stored = (await store.aggregates({currency})).filter(c => groupId === undefined || c.groupId === groupId)
         const before = [
           ...stored.filter(c => month(c.date) < m0),
-          ...(range.from === first(m0) ? [] : await cellsBetween(store, first(m0), dayBefore(range.from), currency)),
+          ...(range.from === first(m0) ? [] : await cellsBetween(store, first(m0), dayBefore(range.from), currency, groupId)),
         ]
         let period: SpendCell[]
-        if (exact) period = await cellsBetween(store, range.from, range.to, currency)
+        if (exact) period = await cellsBetween(store, range.from, range.to, currency, groupId)
         else {
           // Whole months are stored; a month the range only partly covers is read from the records.
           const isHeadPartial = range.from !== first(m0)
@@ -116,7 +120,7 @@ export function cellsQuery(currency: string, range: DateRange, exact: boolean): 
             if (isHeadPartial) reads.push([range.from, last(m0)])
             if (isTailPartial) reads.push([first(m1), range.to])
           }
-          for (const [from, to] of reads) period.push(...(await cellsBetween(store, from, to, currency)))
+          for (const [from, to] of reads) period.push(...(await cellsBetween(store, from, to, currency, groupId)))
         }
         return prev && sameCells(prev.period, period) && sameCells(prev.before, before) ? prev : {currency, range, period, before}
       },

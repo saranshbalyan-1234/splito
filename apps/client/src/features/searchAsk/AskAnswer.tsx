@@ -2,12 +2,12 @@ import {View} from 'react-native'
 import {plural} from '@lingui/core/macro'
 import {useLingui} from '@lingui/react/macro'
 import {useNavigation} from '@react-navigation/native'
-import {formatAmount, getCurrency, magnitude, toDecimalString, ZERO} from '@splito/domain'
+import {amountInputText, decimalMark, formatAmount, magnitude, ZERO} from '@splito/domain'
 
 import {type Answer, type PeriodInfo, type Ref, type Suggestion} from '#/lib/ask/types'
 import {type NavigationProp} from '#/lib/routes/types'
 import {useNumberLocale} from '#/locale/numberLocale'
-import {useFormatDay} from '#/locale/useDates'
+import {useFormatDay, useToday} from '#/locale/useDates'
 import {useMe, usePref} from '#/data/hooks'
 import {atoms as a, useTheme} from '#/alf'
 import * as Dialog from '#/components/Dialog'
@@ -52,6 +52,7 @@ export function AskAnswer({answer, me, question, onAsk, onSearch}: Props) {
   const {close} = Dialog.useDialogContext()
   const questions = useAskQuestions()
   const formatDay = useFormatDay()
+  const today = useToday()
   /* The Analytics view preference: charts, or the same numbers as tables. */
   const [view] = usePref('analyticsView')
   const isTable = view === 'table'
@@ -231,8 +232,12 @@ export function AskAnswer({answer, me, question, onAsk, onSearch}: Props) {
     case 'groupBalance': {
       const g = answer.group.name
       const only = answer.mine.length === 1 ? answer.mine[0]! : undefined
+      const unplanned = answer.unplanned ?? []
+      const outside = answer.outside ?? []
       const sentence =
-        answer.owes.length === 0
+        answer.owes.length === 0 && unplanned.length > 0
+          ? l`I could not work out who owes whom in ${g}.`
+          : answer.owes.length === 0
           ? l`${g} is settled up.`
           : only && only.amount > ZERO
             ? l`In ${g}, you are owed ${money(only.amount, only.currency)}.`
@@ -242,6 +247,16 @@ export function AskAnswer({answer, me, question, onAsk, onSearch}: Props) {
       return (
         <View style={[a.gap_md]}>
           {lead(sentence)}
+          {outside.length > 0 && (
+            <Text testID="ask-plan-outside" style={[a.text_sm, a.leading_snug, t.atoms.text_contrast_medium]}>
+              {l`Your payment rules leave no way to settle up in ${outside.join(', ')}, so that plan goes outside them.`}
+            </Text>
+          )}
+          {unplanned.length > 0 && (
+            <Text testID="ask-plan-unplanned" style={[a.text_sm, a.leading_snug, t.atoms.text_contrast_medium]}>
+              {l`The balances in ${unplanned.join(', ')} do not add up, so there is no plan to show for them.`}
+            </Text>
+          )}
           {answer.owes.length > 0 && (
             <Card title={l`Who owes whom`} testID="ask-plan-card">
               <PlanRows
@@ -278,7 +293,8 @@ export function AskAnswer({answer, me, question, onAsk, onSearch}: Props) {
           : answer.measure === 'total'
             ? l`Everyone's total`
             : l`Your share`
-      const headlineOf = (c: (typeof answer.currencies)[number]) => (answer.measure === 'paid' && !answer.person ? c.paid : answer.measure === 'total' ? c.total : c.share)
+      /* A person's figure is their share, whatever an older stored answer says: whole-record totals and my paid are not theirs. */
+      const headlineOf = (c: (typeof answer.currencies)[number]) => (answer.person ? c.share : answer.measure === 'paid' ? c.paid : answer.measure === 'total' ? c.total : c.share)
       if (answer.currencies.length === 0) return lead(clean(l`You have no expenses ${scope} ${period}.`))
       const single = answer.currencies.length === 1 ? answer.currencies[0]! : undefined
       const amount = single ? money(headlineOf(single), single.currency) : ''
@@ -324,7 +340,6 @@ export function AskAnswer({answer, me, question, onAsk, onSearch}: Props) {
       const bucketWord = answer.bucket === 'day' ? l`by day` : answer.bucket === 'week' ? l`by week` : l`by month`
       const what = answer.person ? l`${name(answer.person)}'s spending` : answer.measure === 'paid' ? l`What you paid` : answer.measure === 'total' ? l`Total spending` : l`Your spending`
       if (answer.currencies.length === 0) return lead(clean(l`There is no spending ${scope} ${period} to chart.`))
-      const today = answer.period.to
       const labelOf = (key: string, from: string, to: string) => {
         if (answer.bucket === 'day') return date(key, {weekday: 'short', day: 'numeric', month: 'short', year: 'numeric'})
         if (answer.bucket === 'week') return `${date(from, {day: 'numeric', month: 'short'})} – ${date(to, {day: 'numeric', month: 'short', year: 'numeric'})}`
@@ -355,7 +370,7 @@ export function AskAnswer({answer, me, question, onAsk, onSearch}: Props) {
                 axisLabel: axis(p.key),
                 ...(answer.bucket === 'month' && !isMultiYear ? {axisLabelNarrow: date(p.key, {month: 'narrow'})} : {}),
                 label: labelOf(p.key, p.from, p.to),
-                isCurrent: p.from <= today && today <= p.to && p.to >= answer.period.to,
+                isCurrent: p.from <= today && today <= p.to,
               }))}
             />
           ))}
@@ -407,7 +422,7 @@ export function AskAnswer({answer, me, question, onAsk, onSearch}: Props) {
               go(() =>
                 navigation.navigate('AddExpense', {
                   title,
-                  amount: amount ? toDecimalString(amount.amount, getCurrency(amount.currency).scale) : undefined,
+                  amount: amount ? amountInputText(amount.amount, amount.currency, decimalMark(locale)) : undefined,
                   currency: amount?.currency,
                 }),
               )

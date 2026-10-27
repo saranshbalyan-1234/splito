@@ -97,6 +97,31 @@ test('suggestion chips answer; charts and plan cards appear; a split opens the e
   await expect(page.getByTestId('amount-input')).toHaveValue('1200.00')
 })
 
+test('an Ask prefill never writes over or clears the draft the user saved', async ({page}) => {
+  await home(page)
+  await page.getByTestId('sidebar-add').click()
+  await page.getByTestId('expense-title').fill('Half-typed groceries')
+  await page.getByTestId('sheet-close').click()
+  await page.getByTestId('draft-save').click()
+  await expect(page.getByTestId('screen-add-expense')).toHaveCount(0)
+
+  await page.getByTestId('tab-ask').click()
+  await ask(page, 'split 1200 4 ways')
+  await page.getByTestId('ask-action-add').click()
+  await expect(page.getByTestId('amount-input')).toHaveValue('1200.00')
+  // Typing in the prefilled form and walking away keeps nothing: there is no draft to keep, only the sheet's own discard.
+  await page.getByTestId('expense-title').fill('From Ask')
+  await page.getByTestId('sheet-close').click()
+  await expect(page.getByTestId('draft-save')).toHaveCount(0)
+  await page.getByRole('button', {name: 'Discard', exact: true}).click()
+  await expect(page.getByTestId('screen-add-expense')).toHaveCount(0)
+
+  // The saved draft is exactly as it was.
+  await page.reload()
+  await page.getByTestId('sidebar-add').click()
+  await expect(page.getByTestId('expense-title')).toHaveValue('Half-typed groceries')
+})
+
 test('the chat and the draft survive closing, and Clear chat empties it', async ({page}) => {
   await home(page)
   await page.getByTestId('tab-ask').click()

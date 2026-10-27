@@ -6,9 +6,10 @@ import {type Entity, type Group, type Person} from '@splito/sync'
 import {type AllNavigatorParams, type NavigationProp} from '#/lib/routes/types'
 import {useEntities, useMe, usePref} from '#/data/hooks'
 import {ComposerSkeleton} from '#/components/split/ComposerSkeleton'
+import {draftContextFor} from '#/components/split/draftKey'
 import {readDraft} from '#/components/split/drafts'
 import {ExpenseComposer} from '#/components/split/ExpenseComposer'
-import {emptyForm, type ExpenseForm, pruneForm} from '#/components/split/form'
+import {emptyForm, type ExpenseForm, knownCurrency, pruneForm} from '#/components/split/form'
 import {todayIn} from '#/locale/dates'
 import {useTimeZone} from '#/locale/useDates'
 
@@ -99,7 +100,7 @@ function AddExpenseForm({
   tz: string
   personId?: string
   groupId?: string
-  /** An Ask Splito action card starts the form with these; the saved draft then waits (ARCHITECTURE 26.19). */
+  /** An Ask Splito action card starts the form with these; the saved draft then waits, untouched (ARCHITECTURE 26.19). */
   prefill?: {title?: string; amount?: string; currency?: string}
   onClose: () => void
 }) {
@@ -108,7 +109,7 @@ function AddExpenseForm({
   const [fresh] = useState(() => {
     const form = freshFormFor()
     return isPrefilled
-      ? {...form, title: prefill?.title ?? form.title, amount: prefill?.amount ?? form.amount, currency: prefill?.currency ?? form.currency}
+      ? {...form, title: prefill?.title ?? form.title, amount: prefill?.amount ?? form.amount, currency: knownCurrency(prefill?.currency) ?? form.currency}
       : form
   })
   function freshFormFor() {
@@ -156,7 +157,8 @@ function AddExpenseForm({
       initialForm={draft ?? fresh}
       freshForm={fresh}
       tz={tz}
-      draftContext={context}
+      /* A prefilled form owns no draft slot: it never writes over, or clears, the draft the user saved. */
+      draftContext={draftContextFor(context, isPrefilled)}
       isDraftRestored={!!draft}
       onClose={onClose}
     />

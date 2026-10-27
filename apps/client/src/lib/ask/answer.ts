@@ -56,9 +56,13 @@ export type AskEnv = {
 
 /** Largest rows shown per currency in a ranking. */
 const RANK_ROWS = 5
-/** A chart by day or week that would be longer than this is drawn by month. */
-const MAX_DAY_BUCKETS = 92
-const MAX_WEEK_BUCKETS = 400
+/**
+ * Analytics' limits for a chart (`granularityFor`): days up to 31, weeks up to 183, otherwise
+ * months, which come from the stored aggregates. A group's trip may be drawn by day up to 92.
+ */
+const MAX_DAYS = 31
+const MAX_TRIP_DAYS = 92
+const MAX_WEEKS = 183
 /** Search matches read before the answer says "more": one search page. */
 const FIND_READ = 30
 const FIND_SHOWN = 5
@@ -144,6 +148,8 @@ async function answerGroupBalance(env: AskEnv, group: Ref): Promise<Answer> {
   const {nets, rules} = await env.source.groupNets(group.id)
   const mine: Money[] = []
   const owes: Extract<Answer, {kind: 'groupBalance'}>['owes'] = []
+  const outside: CurrencyCode[] = []
+  const unplanned: CurrencyCode[] = []
   for (const [currency, net] of Object.entries(nets).sort(([a], [b]) => a.localeCompare(b))) {
     if (!Object.values(net).some(v => v !== ZERO)) continue
     if (net[env.me]) mine.push({currency, amount: net[env.me]!})
@@ -151,15 +157,19 @@ async function answerGroupBalance(env: AskEnv, group: Ref): Promise<Answer> {
     try {
       plan = directPlan(net, rules ?? NO_RULES)
     } catch (e) {
-      if (e instanceof DomainError) continue
-      throw e
+      // No plan (the balances do not add up): the currency is named, never left out as if it were settled.
+      if (!(e instanceof DomainError)) throw e
+      unplanned.push(currency)
+      continue
     }
+    // The rules left no plan, so this one goes outside them, as the group page says.
+    if (plan.stuck.length > 0) outside.push(currency)
     // Biggest payments first, as Settle up lists them.
     for (const t of [...plan.transfers].sort(byAmountDesc(x => x.amount, x => x.from))) {
       owes.push({from: refOf(env, t.from), to: refOf(env, t.to), currency, amount: t.amount})
     }
   }
-  return {kind: 'groupBalance', group, mine, owes}
+  return {kind: 'groupBalance', group, mine, owes, outside, unplanned}
 }
 
 /* -------------------------------------------------------------------------- */
@@ -170,7 +180,7 @@ type Scoped = {category?: string; group?: Ref; person?: Ref}
 
 /** The cells of one currency over a period, narrowed to the group and category asked for. */
 async function scopedCells(env: AskEnv, currency: CurrencyCode, range: DateRange, exact: boolean, scope: Scoped): Promise<SpendCell[]> {
-  const cells = await env.source.cells(currency, range, exact)
+  const cells = await env.source.cells(currency, range, exact, scope.group?.id)
   return cells.filter(c => (!scope.group || c.groupId === scope.group.id) && (!scope.category || c.kind !== 'expense' || c.category === scope.category))
 }
 
@@ -215,6 +225,8 @@ function slicesOf(env: AskEnv, cells: SpendCell[], breakdown: 'category' | 'pers
 async function answerSpend(env: AskEnv, intent: Extract<Intent, {kind: 'spend'}>): Promise<Answer> {
   const spec: PeriodSpec = intent.period ?? (intent.group ? {kind: 'all'} : {kind: 'month', offset: 0})
   const who = intent.person?.id ?? env.me
+  // A person has one figure here, their share: whole-record totals and what I paid are not theirs to filter by participant.
+  const measure: Measure = intent.person ? 'share' : intent.measure
   // A category or group already narrows the answer: only an open question gets the category split.
   const breakdown = intent.breakdown ?? (intent.category || intent.group ? undefined : 'category')
   const currencies: SpendCurrency[] = []
@@ -225,12 +237,14 @@ async function answerSpend(env: AskEnv, intent: Extract<Intent, {kind: 'spend'}>
     period = widen(period, r.info)
     const cells = await scopedCells(env, currency, r.range, false, intent)
     const t = cellTotals(cells, who)
-    if (t.count === 0) continue
-    currencies.push({currency, share: t.share, paid: t.paid, total: t.total, count: t.count, slices: slicesOf(env, cells, breakdown, intent.measure, who).slice(0, SLICES)})
+    // A person's records are the ones they have a share in, not every record in scope.
+    const count = intent.person ? cells.filter(c => c.kind === 'expense' && c.person === who && c.share !== ZERO).reduce((n, c) => n + c.count, 0) : t.count
+    if (count === 0) continue
+    currencies.push({currency, share: t.share, paid: t.paid, total: t.total, count, slices: slicesOf(env, cells, breakdown, measure, who).slice(0, SLICES)})
   }
   return {
     kind: 'spend',
-    measure: intent.measure,
+    measure,
     period: period ?? resolvePeriod({kind: 'month', offset: 0}, env.today, env.weekStart)!,
     category: intent.category ? categoryRef(env, intent.category) : undefined,
     group: intent.group,
@@ -242,38 +256,36 @@ async function answerSpend(env: AskEnv, intent: Extract<Intent, {kind: 'spend'}>
 
 async function answerTrend(env: AskEnv, intent: Extract<Intent, {kind: 'trend'}>): Promise<Answer> {
   const who = intent.person?.id ?? env.me
+  const measure: Measure = intent.person ? 'share' : intent.measure
   const spec: PeriodSpec =
     intent.period ?? (intent.group ? {kind: 'all'} : intent.by === 'month' ? {kind: 'year', offset: 0} : intent.by === 'week' ? {kind: 'months', n: 3} : {kind: 'month', offset: 0})
-  const out: Extract<Answer, {kind: 'trend'}>['currencies'] = []
+  // One range for the whole answer ("all time" spans every currency's records), so every currency is drawn in the same buckets.
+  const currencies = await env.source.currencies()
   let period: PeriodInfo | undefined
-  let bucket: Bucket | 'year' = intent.by ?? 'day'
-  let isCoarsened = false
-  for (const currency of await env.source.currencies()) {
+  for (const currency of currencies) {
     const r = await rangeFor(env, spec, currency, intent)
-    if (!r) continue
-    period = widen(period, r.info)
-    const days = Math.round((Date.parse(r.range.to) - Date.parse(r.range.from)) / 86_400_000) + 1
-    const natural = granularityFor(r.range)
-    let g: Bucket | 'year' = intent.by ?? (natural === 'year' ? 'month' : natural)
-    if (g === 'day' && days > MAX_DAY_BUCKETS) {
-      g = 'month'
-      isCoarsened = !!intent.by
-    } else if (g === 'week' && days > MAX_WEEK_BUCKETS) {
-      g = 'month'
-      isCoarsened = true
-    }
-    bucket = g
-    const cells = await scopedCells(env, currency, r.range, g === 'day' || g === 'week', intent)
-    const points = cellsOverTime(cells, who, r.range, g, env.weekStart).map(b => ({key: b.key, from: b.from, to: b.to, value: valueOf(b, intent.measure)}))
+    if (r) period = widen(period, r.info)
+  }
+  const range: DateRange = period ? {from: period.from, to: period.to} : {from: env.today, to: env.today}
+  const days = Math.round((Date.parse(range.to) - Date.parse(range.from)) / 86_400_000) + 1
+  const natural = granularityFor(range)
+  const asked: Bucket = intent.by ?? (natural === 'year' ? 'month' : natural)
+  // Finer than Analytics draws for these dates: by month, from the stored aggregates, not by reading every record.
+  const isTooFine = (asked === 'day' && days > (intent.group ? MAX_TRIP_DAYS : MAX_DAYS)) || (asked === 'week' && days > MAX_WEEKS)
+  const bucket: Bucket = isTooFine ? 'month' : asked
+  const out: Extract<Answer, {kind: 'trend'}>['currencies'] = []
+  for (const currency of currencies) {
+    const cells = await scopedCells(env, currency, range, bucket === 'day' || bucket === 'week', intent)
+    const points = cellsOverTime(cells, who, range, bucket, env.weekStart).map(b => ({key: b.key, from: b.from, to: b.to, value: valueOf(b, measure)}))
     const total = sumMinor(points.map(p => p.value))
     if (total === ZERO) continue
     out.push({currency, total, points})
   }
   return {
     kind: 'trend',
-    measure: intent.measure,
+    measure,
     bucket,
-    isCoarsened,
+    isCoarsened: isTooFine && !!intent.by,
     period: period ?? resolvePeriod({kind: 'month', offset: 0}, env.today, env.weekStart)!,
     category: intent.category ? categoryRef(env, intent.category) : undefined,
     group: intent.group,

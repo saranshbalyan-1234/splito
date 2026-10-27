@@ -8,6 +8,7 @@ import {
   type ExpenseForm,
   formFromExpense,
   formPayers,
+  knownCurrency,
   pruneForm,
   withPeople,
 } from './form'
@@ -616,4 +617,11 @@ describe('pruneForm', () => {
     const f = base()
     expect(pruneForm(f, new Set(f.people))).toEqual(f)
   })
+})
+
+test('a currency in a route parameter is used only when this build knows it', () => {
+  expect(knownCurrency('INR')).toBe('INR')
+  expect(knownCurrency('XYZ')).toBeUndefined()
+  expect(knownCurrency('')).toBeUndefined()
+  expect(knownCurrency(undefined)).toBeUndefined()
 })
