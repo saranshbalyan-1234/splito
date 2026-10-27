@@ -88,29 +88,50 @@ export function AskChat({
     else device.remove(['askDraft'])
   }
 
-  const send = async (text: string) => {
-    const q = text.trim()
-    if (!q || isBusy.current) return
+  /*
+   * Questions wait their turn: one asked before the store has loaded, or while an
+   * answer is being worked out, is answered next instead of being dropped.
+   */
+  const queue = useRef<string[]>([])
+  const isReadyNow = useRef(isReady)
+  isReadyNow.current = isReady
+  const drain = async () => {
+    if (isBusy.current || !isReadyNow.current) return
     isBusy.current = true
-    commit(appendMessages(kept.current, {id: newId(), at: Date.now(), role: 'user', text: q}))
     try {
-      const answer = await ask(q)
-      commit(appendMessages(kept.current, {id: newId(), at: Date.now(), role: 'ask', answer}))
-    } catch (e) {
-      logger.error(e, {where: 'AskChat.send'})
-      Toast.show(l`Couldn't read your data just now. Try asking again.`, {type: 'error'})
+      for (let q = queue.current.shift(); q !== undefined; q = queue.current.shift()) {
+        commit(appendMessages(kept.current, {id: newId(), at: Date.now(), role: 'user', text: q}))
+        try {
+          const answer = await ask(q)
+          commit(appendMessages(kept.current, {id: newId(), at: Date.now(), role: 'ask', answer}))
+        } catch (e) {
+          logger.error(e, {where: 'AskChat.send'})
+          Toast.show(l`Couldn't read your data just now. Try asking again.`, {type: 'error'})
+        }
+      }
     } finally {
       isBusy.current = false
     }
   }
 
-  // A question from the results row, once the store has loaded to answer it.
+  const send = (text: string) => {
+    const q = text.trim()
+    if (!q) return
+    queue.current.push(q)
+    void drain()
+  }
+
+  // A question from the results row waits like any other until the store has loaded.
   useEffect(() => {
-    if (!initialQuestion || didAskInitial.current || !isReady) return
+    if (!initialQuestion || didAskInitial.current) return
     didAskInitial.current = true
-    void send(initialQuestion)
+    send(initialQuestion)
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [initialQuestion, isReady])
+  }, [initialQuestion])
+  useEffect(() => {
+    if (isReady) void drain()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isReady])
 
   const items: Item[] = []
   if (messages.length === 0) items.push({type: 'empty', key: 'empty'})
@@ -188,14 +209,14 @@ export function AskChat({
         data={items}
         keyExtractor={(item: Item) => item.key}
         renderItem={({item}: {item: Item}) => {
-          if (item.type === 'empty') return <EmptyState chips={chips} onAsk={q => void send(q)} />
+          if (item.type === 'empty') return <EmptyState chips={chips} onAsk={send} />
           if (item.type === 'divider') return <DateDivider at={item.at} />
           return (
             <MessageItem
               message={item.message}
               me={me}
               question={item.question}
-              onAsk={q => void send(q)}
+              onAsk={send}
               onSearch={onSearch}
             />
           )
@@ -214,7 +235,7 @@ export function AskChat({
         webInnerContentContainerStyle={[a.p_0]}
         footer={
           <Dialog.FlatListFooter border={false} onLayout={e => setFooterHeight(e.nativeEvent.layout.height)}>
-            <AskComposer draft={draft} onDraftChange={changeDraft} onSend={text => void send(text)} />
+            <AskComposer draft={draft} onDraftChange={changeDraft} onSend={send} />
           </Dialog.FlatListFooter>
         }
       />

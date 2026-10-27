@@ -122,6 +122,33 @@ test('an Ask prefill never writes over or clears the draft the user saved', asyn
   await expect(page.getByTestId('expense-title')).toHaveValue('Half-typed groceries')
 })
 
+test('questions asked in quick succession are all answered, in order', async ({page}) => {
+  await home(page)
+  await page.getByTestId('tab-ask').click()
+  await ask(page, 'Who owes me the most?')
+  await ask(page, 'how much did I spend today')
+  await ask(page, 'my balance')
+  await expect(page.getByTestId('ask-message-user')).toHaveCount(3)
+  await expect(page.getByTestId('ask-message-ask')).toHaveCount(3)
+  await expect(page.getByTestId('ask-message-user').first()).toContainText('Who owes me the most?')
+  await expect(page.getByTestId('ask-message-user').last()).toContainText('my balance')
+})
+
+test('a question that is not about me, or about a place nothing here knows, is not answered as if it were', async ({page}) => {
+  await home(page)
+  await page.getByTestId('tab-ask').click()
+  await ask(page, 'Who owes Riya?')
+  await expect(page.getByTestId('ask-lead').last()).toContainText('I can answer this once you sign in')
+  await expect(page.getByTestId('ask-balance-card')).toHaveCount(0)
+  await ask(page, 'Can you delete the dinner expense?')
+  await expect(page.getByTestId('ask-lead').last()).toContainText('I can answer this once you sign in')
+  await expect(page.getByTestId('ask-spend-INR')).toHaveCount(0)
+  // Unknown words in a spend question become a search, which says what it searched for.
+  await ask(page, 'How much did I spend at Udaipur?')
+  await expect(page.getByTestId('ask-action-search')).toBeVisible()
+  await expect(page.getByTestId('ask-lead').last()).toContainText('Udaipur'.toLowerCase())
+})
+
 test('the chat and the draft survive closing, and Clear chat empties it', async ({page}) => {
   await home(page)
   await page.getByTestId('tab-ask').click()
