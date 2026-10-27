@@ -190,7 +190,7 @@ test('Profile holds identity: name prompt, counts, then Settings and About; no d
   await expect(page.getByTestId('screen-settings')).toBeVisible()
 })
 
-test('People: the Overview counts friends; search is an icon that grows into a field and filters live', async ({
+test('People: the Overview counts friends; search lives in the Search & Ask drawer, not in the list', async ({
   page,
 }) => {
   await page.setViewportSize({width: 390, height: 844})
@@ -201,22 +201,9 @@ test('People: the Overview counts friends; search is an icon that grows into a f
     `${Object.keys(DEMO_FRIENDS).length} friends · ${settled} settled`,
   )
   await expect(people.getByTestId('overview-analytics')).toBeVisible()
-  // Icon only until tapped.
-  await expect(people.getByTestId('list-search-input')).toHaveCount(0)
-  await people.getByTestId('list-search').click()
-  const field = people.getByTestId('list-search-input')
-  await expect(field).toBeFocused()
-  await field.fill('ri')
-  await expect(people.getByTestId('person-Riya Sharma')).toBeVisible()
-  await expect(people.getByTestId('person-Arjun Mehta')).toHaveCount(0)
-  await field.fill('zz')
-  await expect(people.getByTestId('people-search-empty')).toContainText(
-    'No matches for “zz”',
-  )
-  // The one cross clears and folds it back.
-  await people.getByTestId('searchTextInputClearBtn').click()
-  await expect(people.getByTestId('list-search-input')).toHaveCount(0)
-  await expect(people.getByTestId('person-Arjun Mehta')).toBeVisible()
+  // Home has no list search of its own: the header's Search & Ask drawer searches everything.
+  await expect(people.getByTestId('list-search')).toHaveCount(0)
+  await expect(people.getByTestId('header-search-ask')).toBeVisible()
 })
 
 test('Groups: Overview, search by member, and type / status filters', async ({

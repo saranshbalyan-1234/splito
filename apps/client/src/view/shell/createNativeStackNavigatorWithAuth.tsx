@@ -173,7 +173,10 @@ function NativeStackNavigator({
       {/* Splito: content fills the window beside the fixed sidebar (owner directive). */}
       <View
         role="main"
-        style={[a.flex_1, IS_WEB && {marginLeft: leftNavWidth, marginRight: rightNavWidth}]}>
+        style={[
+          a.flex_1,
+          IS_WEB && {marginLeft: leftNavWidth, marginRight: rightNavWidth},
+        ]}>
         <NativeStackView
           {...rest}
           state={state}

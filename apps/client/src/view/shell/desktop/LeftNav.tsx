@@ -23,10 +23,11 @@ import {
 import {
   type Expense,
   type Group,
+  type NavItemId,
   type Repayment,
-  type TabId,
 } from '@splito/sync'
 import {Trans, useLingui} from '@lingui/react/macro'
+import {useLingui as useLinguiCore} from '@lingui/react'
 import {useNavigation, useNavigationState} from '@react-navigation/native'
 
 import {
@@ -36,18 +37,17 @@ import {
   TabState,
 } from '#/lib/routes/helpers'
 import {currentSection} from '#/lib/routes/section'
-import {TAB_ROUTE, tabHref, useTabs} from '#/lib/routes/tabs'
+import {NAV_ITEM_HREF, navigationItems} from '#/lib/routes/navigationItems'
+import {TAB_ROUTE} from '#/lib/routes/tabs'
 import {
   type NavigationProp,
   type State,
   type TabParams,
 } from '#/lib/routes/types'
 import {useNumberLocale} from '#/locale/numberLocale'
-import {useSetDrawerOpen} from '#/state/shell'
 import {useEntities, useLedger, useMe, usePref} from '#/data/hooks'
 import {Link} from '#/view/com/util/Link'
 import {PressableWithHover} from '#/view/com/util/PressableWithHover'
-import {UserAvatar} from '#/view/com/util/UserAvatar'
 import {
   atoms as a,
   platform,
@@ -66,34 +66,13 @@ import {
 import {Button, ButtonIcon, ButtonText} from '#/components/Button'
 import {GroupAvatar} from '#/components/groups/GroupAvatar'
 import {myBalances} from '#/components/groups/net'
-import {
-  Activity_Filled_Corner0_Rounded as ActivityFilledIcon,
-  Activity_Stroke2_Corner0_Rounded as ActivityIcon,
-} from '#/components/icons/Activity'
-import {
-  ChartPie_Filled_Corner0_Rounded as ChartPieFilledIcon,
-  ChartPie_Stroke2_Corner0_Rounded as ChartPieIcon,
-} from '#/components/icons/ChartPie'
 import {ChevronRight_Stroke2_Corner0_Rounded as ChevronRightIcon} from '#/components/icons/Chevron'
 import {type Props as SVGIconProps} from '#/components/icons/common'
-import {
-  Group3_Filled_Corner0_Rounded as GroupFilledIcon,
-  Group3_Stroke2_Corner0_Rounded as GroupIcon,
-} from '#/components/icons/Group'
-import {
-  HomeOpen_Filled_Corner0_Rounded as HomeFilledIcon,
-  HomeOpen_Stoke2_Corner0_Rounded as HomeIcon,
-} from '#/components/icons/HomeOpen'
-import {
-  MagnifyingGlass_Filled_Stroke2_Corner0_Rounded as SearchFilledIcon,
-  MagnifyingGlass_Stroke2_Corner0_Rounded as SearchIcon,
-} from '#/components/icons/MagnifyingGlass'
 import {PlusLarge_Stroke2_Corner0_Rounded as PlusIcon} from '#/components/icons/Plus'
-import {
-  SettingsGear2_Filled_Corner0_Rounded as SettingsFilledIcon,
-  SettingsGear2_Stroke2_Corner0_Rounded as SettingsIcon,
-} from '#/components/icons/Settings'
 import {HEADER_HEIGHT} from '#/components/Layout/const'
+import {NavFooterLinks} from '#/components/NavFooterLinks'
+import {useSearchAsk} from '#/components/SearchAsk/context'
+import {GLYPHS, NAV_LABELS} from '#/components/TabGlyph'
 import {Text} from '#/components/Typography'
 import {useAnalytics} from '#/analytics'
 import {IS_NATIVE} from '#/env'
@@ -104,7 +83,7 @@ import {getComposeButtonLayout} from './composeButtonLayout'
 
 /** The left nav's tab destinations; the tab navigator's route names on native. */
 export type SidebarTab = keyof TabParams
-type NavClickItem = TabId | 'search' | 'settings'
+type NavClickItem = NavItemId
 
 const LARGE_ELEMENT_SIZE = 48
 const NAV_ICON_WIDTH = 28
@@ -171,77 +150,6 @@ function LogoCard({minimal}: {minimal: boolean}) {
   )
 }
 
-/*
- * Bluesky's account card: the avatar, then the name and a second line. It
- * opens Splito's account drawer (owner rule 13: on desktop it replaces the
- * header avatar). Bluesky reveals the name on hover; the owner's spec shows
- * it at rest, with a chevron in place of Bluesky's ellipsis.
- */
-function ProfileCard({minimal}: {minimal: boolean}) {
-  const {t: l} = useLingui()
-  const t = useTheme()
-  const me = useMe()
-  const setDrawerOpen = useSetDrawerOpen()
-
-  return (
-    <View style={[a.pb_md, !minimal && [a.w_full, a.align_start]]}>
-      <Button
-        testID="sidebar-profile"
-        label={l`Open menu`}
-        onPress={() => setDrawerOpen(true)}
-        style={[a.w_full, a.rounded_full]}>
-        {({hovered, focused, pressed}) => {
-          const active = hovered || focused || pressed
-          return (
-            <View
-              style={[
-                a.flex_1,
-                a.flex_row,
-                a.align_center,
-                a.rounded_full,
-                a.transition_color,
-                active ? t.atoms.bg_contrast_25 : a.transition_delay_50ms,
-                !minimal && [a.gap_sm, a.p_xs, a.pr_md, {marginLeft: -4}],
-              ]}>
-              <UserAvatar
-                name={me?.data.name}
-                size={LARGE_ELEMENT_SIZE}
-                type="user"
-              />
-              {!minimal && (
-                <>
-                  <View style={[a.flex_1]}>
-                    <Text
-                      emoji
-                      style={[a.font_bold, a.text_sm, a.leading_snug]}
-                      numberOfLines={1}>
-                      {me?.data.name ?? ''}
-                    </Text>
-                    <Text
-                      style={[
-                        a.text_xs,
-                        a.leading_snug,
-                        t.atoms.text_contrast_medium,
-                      ]}
-                      numberOfLines={1}>
-                      <Trans>Saved on this device</Trans>
-                    </Text>
-                  </View>
-                  <ChevronRightIcon
-                    aria-hidden={true}
-                    size="sm"
-                    style={t.atoms.text_contrast_medium}
-                  />
-                </>
-              )}
-            </View>
-          )
-        }}
-      </Button>
-    </View>
-  )
-}
-
 interface NavItemProps {
   count?: string
   hasNew?: boolean
@@ -278,6 +186,7 @@ function NavItem({
   const tab = NAV_ITEM_TO_TAB[navItem]
   const isCurrent = isTab(currentRouteInfo.name, pathName)
   const navigation = useNavigation<NavigationProp>()
+  const searchAsk = useSearchAsk()
   const onPressWrapped = useCallback(
     (e: React.MouseEvent<HTMLAnchorElement, MouseEvent>) => {
       ax.metric('nav:click', {item: navItem, surface: 'leftNav'})
@@ -285,6 +194,11 @@ function NavItem({
         return
       }
       e.preventDefault?.()
+      if (navItem === 'ask') {
+        // TODO(F-2301): open straight in Ask mode.
+        searchAsk.open()
+        return
+      }
       if (tab && onNavigateTab) {
         onNavigateTab(tab)
         return
@@ -296,7 +210,7 @@ function NavItem({
         navigation.navigate(screen, params, {pop: true})
       }
     },
-    [navigation, href, isCurrent, ax, navItem, onNavigateTab, tab],
+    [navigation, href, isCurrent, ax, navItem, onNavigateTab, tab, searchAsk],
   )
 
   const Icon = isSelected ? icons.active : icons.inactive
@@ -674,7 +588,6 @@ export function RecentGroups() {
   )
 }
 
-
 /* Which item is lit: a pushed page keeps its section lit, as Bluesky's tabs do. */
 function selectedItem(
   state: State | undefined,
@@ -702,11 +615,10 @@ export function DesktopLeftNav({
   onNavigateTab?: (tab: SidebarTab) => void
 }) {
   const t = useTheme()
-  const {t: l} = useLingui()
+  const {_} = useLinguiCore()
   const {gtMobile} = useBreakpoints()
   const {leftNavMinimal} = useLayoutBreakpoints()
   const insets = useSafeAreaInsets()
-  const tabs = useTabs()
   const activityBadge = useActivityBadge()
   const navigationState = useNavigationState(state => state)
   const [layouts, setLayouts] = useState<
@@ -717,50 +629,17 @@ export function DesktopLeftNav({
     return null
   }
 
-  const tabItems: Record<
-    TabId,
-    {label: string; icons: NavItemProps['icons']; count?: string}
-  > = {
-    people: {
-      label: l`Home`,
-      icons: {inactive: HomeIcon, active: HomeFilledIcon},
-    },
-    groups: {
-      label: l`Groups`,
-      icons: {inactive: GroupIcon, active: GroupFilledIcon},
-    },
-    analytics: {
-      label: l`Analytics`,
-      icons: {inactive: ChartPieIcon, active: ChartPieFilledIcon},
-    },
-    activity: {
-      label: l`Activity`,
-      icons: {inactive: ActivityIcon, active: ActivityFilledIcon},
-      count: activityBadge,
-    },
-  }
+  /* The one shared list (26.3): the drawer renders the same items. Desktop and rail always show all of them. */
   const items: (Omit<
     NavItemProps,
     'isSelected' | 'minimal' | 'onLayout' | 'onNavigateTab'
-  > & {navItem: NavClickItem})[] = [
-    ...tabs.map(tab => ({
-      ...tabItems[tab],
-      href: tabHref(tab),
-      navItem: tab,
-    })),
-    {
-      label: l`Search`,
-      href: '/search',
-      navItem: 'search' as const,
-      icons: {inactive: SearchIcon, active: SearchFilledIcon},
-    },
-    {
-      label: l`Settings`,
-      href: '/settings',
-      navItem: 'settings' as const,
-      icons: {inactive: SettingsIcon, active: SettingsFilledIcon},
-    },
-  ]
+  > & {navItem: NavClickItem})[] = navigationItems().map(id => ({
+    navItem: id,
+    label: _(NAV_LABELS[id]),
+    href: NAV_ITEM_HREF[id] ?? '',
+    icons: {inactive: GLYPHS[id].icon, active: GLYPHS[id].filled},
+    count: id === 'activity' ? activityBadge : undefined,
+  }))
   const selected = selectedItem(navigationState, items)
   const onItemLayout = (navItem: NavClickItem) => (e: LayoutChangeEvent) => {
     const {y, height} = e.nativeEvent.layout
@@ -820,6 +699,12 @@ export function DesktopLeftNav({
         </View>
         <ComposeBtn minimal={leftNavMinimal} />
       </ScrollView>
+      {/* The drawer's footer links, pinned at the bottom (26.5); the icon rail has no room, its drawer has them. */}
+      {!leftNavMinimal && (
+        <NavFooterLinks
+          style={[a.px_xl, a.pt_md, web(a.pb_lg), {paddingLeft: 26}]}
+        />
+      )}
     </View>
   )
 }

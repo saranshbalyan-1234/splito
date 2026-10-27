@@ -70,13 +70,17 @@ test('A04 on People: the Overview reads 150 with groups and 100 without, the row
   await page.goto('/')
   const people = page.getByTestId('screen-people')
   await expect(people.getByTestId('summary-INR-net')).toHaveText('₹150.00')
-  await expect(people.getByTestId('person-Kavya Rao').getByTestId('balance-INR')).toHaveText('owes you ↙ ₹150.00')
+  await expect(
+    people.getByTestId('person-Kavya Rao').getByTestId('balance-INR'),
+  ).toHaveText('owes you ↙ ₹150.00')
 
   await people.getByTestId('list-filters').click()
   await page.getByTestId('filter-include-groups').click()
   await page.getByTestId('sheet-save').click()
   await expect(people.getByTestId('summary-INR-net')).toHaveText('₹100.00')
-  await expect(people.getByTestId('person-Kavya Rao').getByTestId('balance-INR')).toHaveText('owes you ↙ ₹100.00')
+  await expect(
+    people.getByTestId('person-Kavya Rao').getByTestId('balance-INR'),
+  ).toHaveText('owes you ↙ ₹100.00')
   await expect(people.getByTestId('list-filters-dot')).toBeVisible()
 
   // Back on: the defaults again, so the dot goes.
@@ -92,37 +96,38 @@ test('search grows from the icon to the row width, Escape folds it, and it combi
 }) => {
   await page.setViewportSize(PHONE)
   await openDemo(page)
-  const people = page.getByTestId('screen-people')
-  const icon = (await people.getByTestId('list-search').boundingBox())!
-  await people.getByTestId('list-search').click()
-  const field = people.getByTestId('list-search-input')
+  await page.goto('/groups')
+  const groups = page.getByTestId('screen-groups')
+  await expect(groups.getByTestId('group-Lisbon')).toBeVisible()
+  const icon = (await groups.getByTestId('list-search').boundingBox())!
+  await groups.getByTestId('list-search').click()
+  const field = groups.getByTestId('list-search-input')
   await expect(field).toBeFocused()
   // Fully open, the field spans the row (16px gutters) up to the Filters button, which stays beside it.
   await expect
     .poll(async () => (await field.boundingBox())!.width)
     .toBeGreaterThan(PHONE.width - 32 - 40 - 80)
   expect(icon.width).toBeLessThan(60)
-  await expect(people.getByTestId('list-filters')).toBeVisible()
-  await field.fill('ri')
-  await expect(people.getByTestId('list-search-count')).toHaveText('2 of 6')
+  await expect(groups.getByTestId('list-filters')).toBeVisible()
+  await field.fill('lena')
+  await expect(groups.getByTestId('list-search-count')).toHaveText('1 of 3')
 
   await field.press('Escape')
   await expect(field).toHaveCount(0)
 
-  // Filters and search combine: only who I owe, then "a" among them.
-  await people.getByTestId('list-filters').click()
-  await page.getByTestId('filter-show-youOwe').click()
+  // Filters and search combine: only Home groups, then "flat" among them.
+  await groups.getByTestId('list-filters').click()
+  await page.getByTestId('filter-type-home').click()
   await page.getByTestId('sheet-save').click()
-  await expect(people.getByTestId('person-Arjun Mehta')).toHaveCount(0)
-  await people.getByTestId('list-search').click()
-  await people.getByTestId('list-search-input').fill('lena')
-  await expect(people.getByTestId('person-Lena Fischer')).toBeVisible()
-  await expect(people.getByTestId('person-Sam Carter')).toHaveCount(0)
-  await expect(people.getByTestId('list-filters-dot')).toHaveCount(1)
+  await expect(groups.getByTestId('group-Lisbon')).toHaveCount(0)
+  await groups.getByTestId('list-search').click()
+  await groups.getByTestId('list-search-input').fill('flat')
+  await expect(groups.getByTestId('group-Flat 4B')).toBeVisible()
+  await expect(groups.getByTestId('list-filters-dot')).toHaveCount(1)
 
-  await people.getByTestId('list-search-input').press('Escape')
-  await expect(people.getByTestId('list-search-input')).toHaveCount(0)
-  await expect(people.getByTestId('list-search')).toBeVisible()
+  await groups.getByTestId('list-search-input').press('Escape')
+  await expect(groups.getByTestId('list-search-input')).toHaveCount(0)
+  await expect(groups.getByTestId('list-search')).toBeVisible()
 })
 
 test('Groups: Cancel leaves the filters as they were; Apply sets the dot', async ({

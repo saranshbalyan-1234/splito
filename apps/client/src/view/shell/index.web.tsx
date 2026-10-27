@@ -8,6 +8,7 @@ import * as FocusScope from '@radix-ui/react-focus-scope'
 import {RemoveScrollBar} from 'react-remove-scroll-bar'
 
 import {useIsDrawerOpen, useSetDrawerOpen} from '#/state/shell'
+import {SearchAskProvider} from '#/features/searchAsk/SearchAskProvider'
 import {DrawerContent} from '#/navigation/Drawer'
 import {FlatNavigator, RoutesContainer} from '#/navigation/Navigation'
 import {atoms as a, flatten, select, useTheme} from '#/alf'
@@ -16,7 +17,12 @@ import {useShouldReduceMotion} from '#/motion/useShouldReduceMotion'
 
 /* As upstream: the drawer is the navigator's layout, so it can read the navigation state. */
 function drawerLayout({children}: {children: React.ReactNode}) {
-  return <DrawerLayout>{children}</DrawerLayout>
+  return (
+    /* Inside the navigator, so a search result can navigate; one drawer for every page. */
+    <SearchAskProvider>
+      <DrawerLayout>{children}</DrawerLayout>
+    </SearchAskProvider>
+  )
 }
 
 /*

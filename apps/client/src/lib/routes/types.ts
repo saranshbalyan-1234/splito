@@ -20,7 +20,7 @@ export type RootStackParams = {
   /** Opened from the avatar's drawer, so it is pushed like Settings. */
   Profile: undefined
   Settings: undefined
-  /** `q` opens Search with that query (`/search?q=dinner`). */
+  /** The old Search page's link: opens the Search & Ask drawer with `q` typed in (`/search?q=dinner`). */
   Search: {q?: string} | undefined
   SettingsSection: {section: string}
   /** Settings > Account: honest until the auth backend exists. */

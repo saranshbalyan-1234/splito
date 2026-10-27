@@ -12,6 +12,7 @@ import {List} from '#/view/com/util/List'
 import {atoms as a, useTheme} from '#/alf'
 import {AddExpenseFAB, AddExpenseFABInset} from '#/components/AddExpenseFAB'
 import {Button, ButtonIcon, ButtonText} from '#/components/Button'
+import {SearchAskButton} from '#/components/SearchAsk/SearchAskButton'
 import {HeaderAvatar} from '#/components/HeaderAvatar'
 import {Download_Stroke2_Corner0_Rounded as DownloadIcon} from '#/components/icons/Download'
 import {PlusLarge_Stroke2_Corner0_Rounded as PlusIcon} from '#/components/icons/Plus'
@@ -55,11 +56,14 @@ export function AnalyticsScreen() {
     <Layout.Screen testID="screen-analytics">
       <Layout.Header.Outer>
         <HeaderAvatar />
+        {/* Balances Search & Ask on the right, so the title stays centred. */}
+        <Layout.Header.Slot />
         <Layout.Header.Content>
           <Layout.Header.TitleText>
             <Trans>Analytics</Trans>
           </Layout.Header.TitleText>
         </Layout.Header.Content>
+        <SearchAskButton />
         <Layout.Header.ActionButton
           testID="analytics-export"
           label={l`Export CSV`}

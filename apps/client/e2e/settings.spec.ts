@@ -24,6 +24,7 @@ test('the Settings list has a page for every preference group, plus About', asyn
   for (const id of [
     'appearance',
     'motion',
+    'navigation',
     'defaults',
     'categories',
     'regional',
@@ -70,11 +71,11 @@ test('an accent is only previewed until Apply, then tints the app and survives a
   await expect.poll(() => background(page, 'sidebar-add')).toBe(BLUESKY_BLUE)
 })
 
-test('hiding Groups removes it from the bar and sidebar; Settings stays reachable', async ({
+test('hiding Groups removes it from the phone bar only; the sidebar and drawer keep it', async ({
   page,
 }) => {
   await page.setViewportSize(PHONE)
-  await open(page, '/settings/defaults', 'screen-settings-section')
+  await open(page, '/settings/navigation', 'screen-settings-section')
   await expect(page.getByTestId('tab-groups')).toBeVisible()
   await page.getByTestId('tabs-toggle-groups').click()
   // The bottom bar is on screen here too, and follows the saved preference.
@@ -83,48 +84,80 @@ test('hiding Groups removes it from the bar and sidebar; Settings stays reachabl
   await open(page, '/', 'screen-people')
   await expect(page.getByTestId('tab-people')).toBeVisible()
   await expect(page.getByTestId('tab-groups')).toHaveCount(0)
-  // The avatar's drawer is the guaranteed way back to Settings.
+  // The avatar's drawer still lists every item and reaches Settings.
   await page.getByTestId('screen-people').getByTestId('header-avatar').click()
+  await expect(page.getByTestId('drawer-groups')).toBeVisible()
   await page.getByTestId('drawer-settings').click()
   await expect(page.getByTestId('screen-settings')).toBeVisible()
 
   await page.setViewportSize(LAPTOP)
   await open(page, '/', 'screen-people')
-  await expect(page.getByTestId('tab-groups')).toHaveCount(0)
+  await expect(page.getByTestId('tab-groups')).toBeVisible()
   await expect(page.getByTestId('tab-settings')).toBeVisible()
-  // /groups itself still works; only the tab is hidden.
   await open(page, '/groups', 'screen-groups')
 })
 
-test('the arrow buttons reorder the sidebar tabs', async ({page}) => {
+test('Settings can join the phone bar (5 at most), with arrows to reorder and Reset', async ({
+  page,
+}) => {
   await page.setViewportSize(LAPTOP)
-  await open(page, '/settings/defaults', 'screen-settings-section')
+  await open(page, '/settings/navigation', 'screen-settings-section')
   const top = async (tab: string) =>
-    (await page.getByTestId(`tab-${tab}`).boundingBox())!.y
+    (await page.getByTestId(`tabs-toggle-${tab}`).boundingBox())!.y
   expect(await top('people')).toBeLessThan(await top('groups'))
-  await page.getByTestId('tabs-up-groups').click()
+  await page.getByTestId('tabs-up-analytics').click()
   await expect
-    .poll(async () => (await top('groups')) < (await top('people')))
+    .poll(async () => (await top('analytics')) < (await top('groups')))
     .toBe(true)
+  // Home stays first: nothing moves above it.
+  await expect(page.getByTestId('tabs-up-analytics')).toBeDisabled()
+
+  await page.getByTestId('tabs-toggle-settings').click()
+  await expect(page.getByTestId('tabs-limit-note')).toContainText('up to 5')
+  await page.setViewportSize(PHONE)
+  const order = await page
+    .getByRole('navigation')
+    .locator('[data-testid^="tab-"]')
+    .evaluateAll(els => els.map(e => e.getAttribute('data-testid')))
+  expect(order).toEqual([
+    'tab-people',
+    'tab-analytics',
+    'tab-groups',
+    'tab-activity',
+    'tab-settings',
+  ])
+
+  await page.setViewportSize(LAPTOP)
   await page.getByTestId('reset-tabs').click()
+  await expect(page.getByTestId('tabs-toggle-settings')).toHaveAttribute(
+    'aria-checked',
+    'false',
+  )
   await expect
-    .poll(async () => (await top('people')) < (await top('groups')))
+    .poll(async () => (await top('groups')) < (await top('analytics')))
     .toBe(true)
 })
 
-test('the last visible tab cannot be hidden', async ({page}) => {
-  await open(page, '/settings/defaults', 'screen-settings-section')
-  for (const tab of ['groups', 'analytics', 'activity']) {
+test('the bar keeps at least two tabs and Home cannot be hidden', async ({
+  page,
+}) => {
+  await open(page, '/settings/navigation', 'screen-settings-section')
+  for (const tab of ['groups', 'analytics']) {
     await page.getByTestId(`tabs-toggle-${tab}`).click()
     await expect(page.getByTestId(`tabs-toggle-${tab}`)).toHaveAttribute(
       'aria-checked',
       'false',
     )
   }
+  await expect(page.getByTestId('tabs-toggle-activity')).toHaveAttribute(
+    'aria-disabled',
+    'true',
+  )
   await expect(page.getByTestId('tabs-toggle-people')).toHaveAttribute(
     'aria-disabled',
     'true',
   )
+  await expect(page.getByTestId('tabs-limit-note')).toContainText('at least 2')
 })
 
 test('choosing Hindi switches the whole UI live and persists', async ({

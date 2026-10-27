@@ -5,6 +5,7 @@ import {plural} from '@lingui/core/macro'
 import {Trans, useLingui} from '@lingui/react/macro'
 
 import {useHaptics} from '#/lib/haptics'
+import {bottomBarItems} from '#/lib/routes/navigationItems'
 import {useMe, usePref} from '#/data/hooks'
 import {useData} from '#/data/StoreProvider'
 import {UserAvatar} from '#/view/com/util/UserAvatar'
@@ -15,7 +16,7 @@ import {CircleInfo_Stroke2_Corner0_Rounded as InfoIcon} from '#/components/icons
 import {Cloud_Stroke2_Corner0_Rounded as CloudIcon} from '#/components/icons/Cloud'
 import {Trash_Stroke2_Corner0_Rounded as TrashIcon} from '#/components/icons/Trash'
 import * as Layout from '#/components/Layout'
-import {useTabLabels} from '#/components/settings/TabsEditor'
+import {useTabLabels} from '#/components/settings/NavigationEditor'
 import * as Prompt from '#/components/Prompt'
 import {SETTINGS_SECTIONS, useSectionInfo} from '#/components/settings/sections'
 import * as Toast from '#/components/Toast'
@@ -217,6 +218,8 @@ function useSectionSummary(): Partial<Record<PrefGroup, string>> {
   const [motion = 'full'] = usePref('motion')
   const [currency = 'INR'] = usePref('defaultCurrency')
   const [homeTab = 'people'] = usePref('homeTab')
+  const [tabs] = usePref('tabs')
+  const tabCount = tabs && bottomBarItems(tabs).length
   const tabLabels = useTabLabels()
   const [categories] = usePref('categories')
   const [language = 'en'] = usePref('language')
@@ -232,8 +235,13 @@ function useSectionSummary(): Partial<Record<PrefGroup, string>> {
   return {
     appearance: {system: l`System`, light: l`Light`, dark: l`Dark`}[theme],
     motion: {full: l`Full`, reduced: l`Reduced`, off: l`Off`}[motion],
-    /* Both halves of the page: where the app opens, and the currency new expenses start in. */
-    defaults: `${tabLabels[homeTab]} · ${currency}`,
+    /* How many tabs the bottom bar holds, and where the app opens. */
+    navigation:
+      tabCount === undefined
+        ? undefined
+        : `${plural(tabCount, {one: '# tab', other: '# tabs'})} · ${tabLabels[homeTab]}`,
+    /* The currency new expenses start in. */
+    defaults: currency,
     categories: visible === 1 ? l`1 category` : l`${visible} categories`,
     regional: {en: 'English', hi: 'हिन्दी'}[language],
     lists: {

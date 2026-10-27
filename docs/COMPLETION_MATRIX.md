@@ -16,9 +16,9 @@ Status words are the same as `docs/BACKLOG.md`: **done** (built, tested and merg
 | Shell | Pager tabs and animated main-tab switches | F-203 | in progress (built and tested on the unmerged UI line) |
 | Shell | Desktop LeftNav: centred mark, nav items, Add expense pill, footer links, rail | F-204 | in progress (built and tested on the unmerged UI line) |
 | Shell | Desktop right column: 5 recent transactions + 5 recently active groups (by last change time) | F-224 | in progress (built on ui/preview-latest, unmerged) |
-| Shell | One nav list for sidebar and drawer; "Home" label; desktop/rail Home title; drawer shows real name only | F-222 | todo (Batch 4b) |
-| Shell | Sync-status dot on the user's avatar (green / yellow / red, with text label) | F-223 | todo (Batch 4b) |
-| Branding | Dim splash in dark mode; brand kit on iOS, Android, web | F-1711 | todo (Batch 4b) |
+| Shell | One nav list for sidebar and drawer; "Home" label; desktop/rail Home title; drawer shows real name only | F-222 | done (Search & Ask drawer, Settings > Navigation; web e2e) |
+| Shell | Sync-status dot on the user's avatar (green / yellow / red, with text label) | F-223 | done (red until the backend; web e2e; native not run) |
+| Branding | Dim splash in dark mode; brand kit on iOS, Android, web | F-1711 | done (config and web launch screen; native splash not run on a device) |
 | Branding | Original Splito mark replaces the dev butterfly (release blocker) | F-1712 | todo |
 | Sheets | Every phone modal (forms, pickers, filters, menus, prompts) is a bottom drawer with drag to close; desktop popups with X top-right, Cancel + Save bottom-right | F-205 | in progress (built and tested on the unmerged UI line) |
 | Lists | Overview, expanding search and filters on Friends and Groups | F-206 | in progress (built and tested on the unmerged UI line) |

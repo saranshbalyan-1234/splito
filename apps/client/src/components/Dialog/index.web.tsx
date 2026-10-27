@@ -30,6 +30,7 @@ import {RemoveScrollBar} from 'react-remove-scroll-bar'
 import {logger} from '#/logger'
 import {useShouldReduceMotion} from '#/motion/useShouldReduceMotion'
 import {useDialogStateControlContext} from '#/state/dialogs'
+import {useShowShell} from '#/state/shell/minimal-mode'
 import {type ListMethods} from '#/view/com/util/List'
 import {atoms as a, flatten, useBreakpoints, useTheme, web} from '#/alf'
 import {Context} from '#/components/Dialog/context'
@@ -71,6 +72,8 @@ export function Outer({
   const {gtMobile} = useBreakpoints()
   const [isOpen, setIsOpen] = useState(false)
   const {setDialogIsOpen} = useDialogStateControlContext()
+  /* A dialog opening shows the header, bottom bar and FAB again (ARCHITECTURE 26.4). */
+  const showShell = useShowShell()
   /*
    * Splito: on phones the dialog is a drawer that slides away before it
    * unmounts; close callbacks wait for that, as they wait for the native
@@ -82,12 +85,13 @@ export function Outer({
   const pendingClose = useRef<{cb?: () => void} | null>(null)
 
   const open = useCallback(() => {
+    showShell()
     onOpen?.()
     setDialogIsOpen(control.id, true)
     pendingClose.current = null
     setIsClosing(false)
     setIsOpen(true)
-  }, [setIsOpen, setDialogIsOpen, control.id, onOpen])
+  }, [setIsOpen, setDialogIsOpen, control.id, onOpen, showShell])
 
   const finishClose = useCallback(
     (cb?: () => void) => {

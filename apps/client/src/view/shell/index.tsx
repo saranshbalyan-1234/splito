@@ -11,6 +11,7 @@ import {useNavigationState} from '@react-navigation/native'
 import {isStateAtTabRoot} from '#/lib/routes/helpers'
 import {useDialogFullyExpandedCountContext} from '#/state/dialogs'
 import {useIsDrawerOpen, useSetDrawerOpen} from '#/state/shell'
+import {SearchAskProvider} from '#/features/searchAsk/SearchAskProvider'
 import {DrawerContent} from '#/navigation/Drawer'
 import {RoutesContainer, TabsNavigator} from '#/navigation/Navigation'
 import {atoms as a, select, useBreakpoints, useTheme} from '#/alf'
@@ -19,7 +20,12 @@ import {IS_ANDROID, IS_IOS, IS_LIQUID_GLASS} from '#/env'
 
 /* As upstream: the drawer is the navigator's layout, so it can read the navigation state. */
 function drawerLayout({children}: {children: React.ReactNode}) {
-  return <DrawerLayout>{children}</DrawerLayout>
+  return (
+    /* Inside the navigator, so a search result can navigate; one drawer for every page. */
+    <SearchAskProvider>
+      <DrawerLayout>{children}</DrawerLayout>
+    </SearchAskProvider>
+  )
 }
 
 /*

@@ -4,6 +4,7 @@ import {type NativeScrollEvent} from 'react-native'
 import {
   clamp,
   interpolate,
+  useAnimatedReaction,
   Reanimated3DefaultSpringConfig,
   type SharedValue,
   useAnimatedStyle,
@@ -12,6 +13,7 @@ import {
 } from 'react-native-reanimated'
 
 import {ScrollProvider} from '#/lib/ScrollContext'
+import {useMinimalShellMode} from '#/state/shell/minimal-mode'
 import {useShellLayout} from '#/state/shell/shell-layout'
 import {IS_NATIVE, IS_WEB} from '#/env'
 
@@ -61,6 +63,8 @@ export function MainScrollProvider({children}: {children: React.ReactNode}) {
   const {headerHeight} = useShellLayout()
   const fallbackMode = useSharedValue(0)
   const headerMode = useContext(HeaderModeContext) ?? fallbackMode
+  /* The bottom bar and FAB follow the focused screen's header (ARCHITECTURE 26.4). */
+  const {scrollMode} = useMinimalShellMode()
   const startDragOffset = useSharedValue<number | null>(null)
   const startMode = useSharedValue<number | null>(null)
   const didJustRestoreScroll = useSharedValue<boolean>(false)
@@ -68,25 +72,54 @@ export function MainScrollProvider({children}: {children: React.ReactNode}) {
   const setMode = useCallback(
     (v: boolean) => {
       'worklet'
-      headerMode.set(
-        withSpring(v ? 1 : 0, {
-          ...Reanimated3DefaultSpringConfig,
-          overshootClamping: true,
-        }),
-      )
+      const config = {...Reanimated3DefaultSpringConfig, overshootClamping: true}
+      headerMode.set(withSpring(v ? 1 : 0, config))
+      scrollMode.set(withSpring(v ? 1 : 0, config))
     },
-    [headerMode],
+    [headerMode, scrollMode],
+  )
+
+  /*
+   * Something outside the list (a tab switch, a sheet opening) brought the
+   * shell back: this screen's header comes with it.
+   */
+  useAnimatedReaction(
+    () => scrollMode.get(),
+    mode => {
+      if (mode === 0 && headerMode.get() !== 0) {
+        headerMode.set(
+          withSpring(0, {
+            ...Reanimated3DefaultSpringConfig,
+            overshootClamping: true,
+          }),
+        )
+      }
+    },
   )
 
   useEffect(() => {
     if (IS_WEB) {
-      return listenToForcedWindowScroll(() => {
+      let timer: ReturnType<typeof setTimeout> | undefined
+      const stop = listenToForcedWindowScroll(() => {
         startDragOffset.set(null)
         startMode.set(null)
         didJustRestoreScroll.set(true)
+        /*
+         * Splito: a programmatic scroll that moves nothing (already at the
+         * top) fires no scroll event, which would leave the flag set and
+         * swallow the person's first real scroll (owner 81: the header never
+         * hid). The restored scroll's own event arrives within a few frames.
+         */
+        clearTimeout(timer)
+        timer = setTimeout(() => didJustRestoreScroll.set(false), 250)
       })
+      return () => {
+        stop()
+        clearTimeout(timer)
+        didJustRestoreScroll.set(false)
+      }
     }
-  })
+  }, [startDragOffset, startMode, didJustRestoreScroll])
 
   const snapToClosestState = useCallback(
     (e: NativeScrollEvent) => {
@@ -180,6 +213,7 @@ export function MainScrollProvider({children}: {children: React.ReactNode}) {
         if (newValue !== headerMode.get()) {
           // Manually adjust the value. This won't be (and shouldn't be) animated.
           headerMode.set(newValue)
+          scrollMode.set(newValue)
         }
       } else {
         if (didJustRestoreScroll.get()) {
@@ -202,6 +236,7 @@ export function MainScrollProvider({children}: {children: React.ReactNode}) {
     [
       headerHeight,
       headerMode,
+      scrollMode,
       setMode,
       startDragOffset,
       startMode,

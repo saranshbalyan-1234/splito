@@ -104,7 +104,7 @@ test.describe('header rule set', () => {
       // Owner rule 26.4: the avatar at the top left at every width; with the full sidebar it opens Profile.
       await expect(on(page, screen, 'header-avatar')).toHaveAttribute(
         'aria-label',
-        'Open profile',
+        /^Open profile\. /,
       )
       await expect(page.getByTestId('sidebar-profile')).toHaveCount(0)
       const act = await box(page, screen, action)
@@ -209,6 +209,88 @@ test.describe('header rule set', () => {
       .toBeGreaterThanOrEqual(0)
   })
 
+  test('owner 81: header, bottom bar and FAB leave after 300px down and return after 30px up (Home, mobile web)', async ({
+    page,
+  }) => {
+    await page.setViewportSize(PHONE)
+    await openDemo(page)
+    const header = on(page, 'screen-people', 'header-avatar')
+    const bar = page.getByTestId('tab-groups')
+    const fab = page.getByTestId('fab-add')
+    await expect(header).toBeVisible()
+    await expect(bar).toBeVisible()
+    await expect(fab).toBeVisible()
+    const barY = (await bar.boundingBox())!.y
+    const fabY = (await fab.boundingBox())!.y
+    // Scroll restoration at load swallows one scroll event, as upstream; settle first.
+    await page.waitForTimeout(400)
+    await page.mouse.move(200, 400)
+    await page.mouse.wheel(0, 300)
+    // Header slides up out of view, the bottom bar slides down, the FAB follows the bar.
+    await expect
+      .poll(async () => (await header.boundingBox())!.y)
+      .toBeLessThan(0)
+    await expect
+      .poll(async () => (await bar.boundingBox())!.y)
+      .toBeGreaterThan(barY + 20)
+    await expect
+      .poll(async () => (await fab.boundingBox())!.y)
+      .toBeGreaterThan(fabY + 20)
+    await page.mouse.wheel(0, -30)
+    await expect
+      .poll(async () => (await header.boundingBox())!.y)
+      .toBeGreaterThanOrEqual(0)
+    await expect
+      .poll(async () => Math.abs((await bar.boundingBox())!.y - barY))
+      .toBeLessThan(2)
+    await expect
+      .poll(async () => Math.abs((await fab.boundingBox())!.y - fabY))
+      .toBeLessThan(2)
+  })
+
+  test('owner 81: a sheet opening or a tab switch brings the shell back', async ({
+    page,
+  }) => {
+    await page.setViewportSize(PHONE)
+    await openDemo(page)
+    const bar = page.getByTestId('tab-groups')
+    const barY = (await bar.boundingBox())!.y
+    const hide = async () => {
+      await page.mouse.move(200, 400)
+      await page.mouse.wheel(0, 300)
+      await expect
+        .poll(async () => (await bar.boundingBox())!.y)
+        .toBeGreaterThan(barY + 20)
+    }
+    await page.waitForTimeout(400)
+    await hide()
+    // Cmd/Ctrl+K opens the Search & Ask sheet.
+    await page.keyboard.press('Control+k')
+    await expect(page.getByTestId('search-input')).toBeVisible()
+    await expect
+      .poll(async () => Math.abs((await bar.boundingBox())!.y - barY))
+      .toBeLessThan(2)
+    await page.keyboard.press('Escape')
+    await expect(page.getByTestId('search-input')).toHaveCount(0)
+
+    // A tab switch: the hidden bar's Groups tab is activated directly.
+    await page.mouse.move(200, 400)
+    await page.mouse.wheel(0, 100)
+    await page.mouse.wheel(0, -30)
+    await page.mouse.wheel(0, 300)
+    await expect
+      .poll(async () => (await bar.boundingBox())!.y)
+      .toBeGreaterThan(barY + 20)
+    await bar.dispatchEvent('click')
+    await expect(on(page, 'screen-groups', 'header-avatar')).toBeVisible()
+    await expect
+      .poll(async () => Math.abs((await bar.boundingBox())!.y - barY))
+      .toBeLessThan(2)
+    await expect
+      .poll(async () => (await on(page, 'screen-groups', 'header-avatar').boundingBox())!.y)
+      .toBeGreaterThanOrEqual(0)
+  })
+
   test('on desktop the header stays put', async ({page}) => {
     await page.setViewportSize(LAPTOP)
     await openDemo(page)
@@ -234,12 +316,11 @@ test.describe('drawer: Bluesky drawer from the header avatar', () => {
     const drawer = page.getByTestId('drawer')
     await expect(drawer).toBeVisible()
     await expect.poll(async () => (await drawer.boundingBox())!.x).toBe(0)
-    await expect(page.getByTestId('drawer-profile')).toContainText(
+    // Real name only: no "Me", no "Saved on this device" (26.7).
+    await expect(page.getByTestId('drawer-profile')).not.toContainText(
       'Saved on this device',
     )
-    await expect(page.getByTestId('drawer-profile')).toContainText(
-      '6 friends · 3 groups',
-    )
+    await expect(page.getByTestId('drawer-profile')).not.toHaveText('Me')
     const rows = await drawer
       .locator('[data-testid^="drawer-"]')
       .evaluateAll(els => els.map(e => e.getAttribute('data-testid')))
@@ -249,16 +330,37 @@ test.describe('drawer: Bluesky drawer from the header avatar', () => {
       'drawer-groups',
       'drawer-analytics',
       'drawer-activity',
-      'drawer-search',
-      'drawer-profile-item',
       'drawer-settings',
-      'drawer-theme',
       'drawer-sign-in',
-      'drawer-help',
-      'drawer-about',
     ])
+    // The footer links are the sidebar's component (26.3).
+    await expect(drawer.getByTestId('nav-footer-links')).toContainText(
+      'Help ∙ Privacy ∙ About',
+    )
     // Escape closes it (focus is trapped inside while it's open).
     await page.keyboard.press('Escape')
+    await expect(drawer).toHaveCount(0)
+  })
+
+  test('the sync dot is red (on this device only) on the header avatar and the drawer avatar, and says so in words', async ({
+    page,
+  }) => {
+    await page.setViewportSize(PHONE)
+    await openDemo(page)
+    const avatar = on(page, 'screen-people', 'header-avatar')
+    await expect(avatar.getByTestId('sync-dot-local')).toBeVisible()
+    // Never colour alone: the label carries the state, and web shows a tooltip.
+    await expect(avatar).toHaveAttribute('aria-label', /On this device only/)
+    await expect(avatar.getByTestId('sync-dot')).toHaveAttribute(
+      'title',
+      'On this device only',
+    )
+    await avatar.click()
+    const drawer = page.getByTestId('drawer')
+    await expect(drawer.getByTestId('sync-dot-local')).toBeVisible()
+    // Tapping the dot opens Settings.
+    await drawer.getByTestId('sync-dot').click()
+    await expect(page.getByTestId('screen-settings')).toBeVisible()
     await expect(drawer).toHaveCount(0)
   })
 
@@ -272,10 +374,10 @@ test.describe('drawer: Bluesky drawer from the header avatar', () => {
 
     for (const [row, screen, url] of [
       ['drawer-groups', 'screen-groups', /\/groups$/],
-      ['drawer-profile-item', 'screen-profile', /\/profile$/],
+      ['drawer-profile', 'screen-profile', /\/profile$/],
       ['drawer-settings', 'screen-settings', /\/settings$/],
       ['drawer-activity', 'screen-activity', /\/activity$/],
-      ['drawer-about', 'screen-settings-section', /\/settings\/about$/],
+      ['nav-footer-about', 'screen-settings-section', /\/settings\/about$/],
     ] as const) {
       await open(page, '/analytics', 'screen-analytics')
       await on(page, 'screen-analytics', 'header-avatar').click()
@@ -284,26 +386,6 @@ test.describe('drawer: Bluesky drawer from the header avatar', () => {
       await expect(page.getByTestId(screen)).toBeVisible()
       await expect(page.getByTestId('drawer')).toHaveCount(0)
     }
-  })
-
-  test('the dark theme switch sets the theme preference', async ({page}) => {
-    await page.setViewportSize(RAIL)
-    await open(page, '/groups', 'screen-groups')
-    await expect(page.locator('html')).toHaveClass(/theme--light/)
-    await on(page, 'screen-groups', 'header-avatar').click()
-    await page.getByTestId('drawer-theme').click()
-    await expect(page.locator('html')).toHaveClass(/theme--dim/)
-    // It's the `theme` preference, so it survives a reload.
-    await page.reload()
-    await expect(page.getByTestId('screen-groups')).toBeVisible()
-    await expect(page.locator('html')).toHaveClass(/theme--dim/)
-    await on(page, 'screen-groups', 'header-avatar').click()
-    await expect(page.getByTestId('drawer-theme')).toHaveAttribute(
-      'aria-checked',
-      'true',
-    )
-    await page.getByTestId('drawer-theme').click()
-    await expect(page.locator('html')).toHaveClass(/theme--light/)
   })
 })
 
@@ -363,12 +445,23 @@ test.describe('desktop: Bluesky left sidebar and full-width content', () => {
   }) => {
     await page.setViewportSize(LAPTOP)
     await open(page, '/', 'screen-people')
-    const items = await page.getByRole('navigation').locator('[data-testid^="tab-"]').evaluateAll(els => els.map(e => e.getAttribute('data-testid')))
-    expect(items).toEqual(['tab-people', 'tab-groups', 'tab-analytics', 'tab-activity', 'tab-search', 'tab-settings'])
+    const items = await page
+      .getByRole('navigation')
+      .locator('[data-testid^="tab-"]')
+      .evaluateAll(els => els.map(e => e.getAttribute('data-testid')))
+    expect(items).toEqual([
+      'tab-people',
+      'tab-groups',
+      'tab-analytics',
+      'tab-activity',
+      'tab-settings',
+    ])
     await expect(page.getByTestId('tab-people')).toContainText('Home')
     // The sidebar already shows the mark, so the home header shows its title (26.4).
     await expect(on(page, 'screen-people', 'header-logo')).toHaveCount(0)
-    await expect(page.getByTestId('screen-people').getByText('Home', {exact: true})).toBeVisible()
+    await expect(
+      page.getByTestId('screen-people').getByText('Home', {exact: true}),
+    ).toBeVisible()
     await expect(page.getByTestId('tab-people')).toHaveAttribute(
       'aria-current',
       'page',
@@ -396,7 +489,7 @@ test.describe('desktop: Bluesky left sidebar and full-width content', () => {
       .toBe(LAPTOP.width - SIDEBAR)
   })
 
-  test('the sidebar holds only the mark, the nav and Add expense; no wordmark, account card or footer', async ({
+  test('the sidebar holds the mark, the nav, Add expense and the footer links; no wordmark or account card', async ({
     page,
   }) => {
     await page.setViewportSize(DESKTOP)
@@ -408,7 +501,10 @@ test.describe('desktop: Bluesky left sidebar and full-width content', () => {
       ys.push((await nav.getByTestId(id).boundingBox())!.y)
     expect([...ys].sort((x, y) => x - y)).toEqual(ys)
     await expect(page.getByTestId('logo-wordmark')).toHaveCount(0)
-    for (const gone of ['sidebar-profile', 'sidebar-footer', 'sidebar-help'])
+    await expect(nav.getByTestId('nav-footer-links')).toContainText(
+      'Help ∙ Privacy ∙ About',
+    )
+    for (const gone of ['sidebar-profile'])
       await expect(nav.getByTestId(gone)).toHaveCount(0)
     // The mark is centred in the sidebar column.
     const logo = (await nav.getByTestId('logo').boundingBox())!
@@ -496,7 +592,7 @@ test.describe('desktop: Bluesky left sidebar and full-width content', () => {
     await expect(page.getByTestId('logo-wordmark')).toHaveCount(0)
     await expect(on(page, 'screen-people', 'header-avatar')).toHaveAttribute(
       'aria-label',
-      'Open menu',
+      /^Open menu\. /,
     )
     await expect(page.getByTestId('sidebar-recent-groups')).toHaveCount(0)
     await expect(page.getByTestId('sidebar-footer')).toHaveCount(0)
@@ -673,21 +769,22 @@ test('the tabs preference orders and hides tabs; hidden routes still open', asyn
   await open(page, '/', 'screen-people')
   await page.waitForFunction(() => 'splito' in window)
   await page.evaluate(() =>
-    (window as any).splito.setPref('tabs', ['groups', 'people']),
+    (window as any).splito.setPref('tabs', ['people', 'groups']),
   )
   await expect(page.getByTestId('tab-analytics')).toHaveCount(0)
   const order = await page
     .getByRole('navigation')
     .locator('[data-testid^="tab-"]')
     .evaluateAll(els => els.map(e => e.getAttribute('data-testid')))
-  expect(order).toEqual(['tab-groups', 'tab-people'])
+  expect(order).toEqual(['tab-people', 'tab-groups'])
   // Hiding tabs never strands anything: the drawer still reaches every page.
   await on(page, 'screen-people', 'header-avatar').click()
   await page.getByTestId('drawer-analytics').click()
   await expect(page.getByTestId('screen-analytics')).toBeVisible()
 
+  // The sidebar always lists every item, whatever the phone bar holds (26.3).
   await page.setViewportSize(LAPTOP)
-  await expect(page.getByTestId('tab-analytics')).toHaveCount(0)
+  await expect(page.getByTestId('tab-analytics')).toBeVisible()
   await expect(page.getByTestId('tab-settings')).toBeVisible()
   await open(page, '/analytics', 'screen-analytics')
 })

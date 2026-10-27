@@ -12,8 +12,10 @@ import Animated, {
   useAnimatedStyle,
 } from 'react-native-reanimated'
 import {useSafeAreaInsets} from 'react-native-safe-area-context'
+import {useFocusEffect} from '@react-navigation/native'
 
 import {useEnableMinimalShellModeForScreen} from '#/state/shell'
+import {useShowShell} from '#/state/shell/minimal-mode'
 import {useShellLayout} from '#/state/shell/shell-layout'
 import {useIsWithinSplitView} from '#/lib/splitView'
 import {
@@ -60,6 +62,9 @@ export const Screen = memo(function Screen({
   const {isWithinSplitView} = useIsWithinSplitView()
 
   useEnableMinimalShellModeForScreen({enabled: minimalShell})
+  /* A tab switch or a page opening shows the header, bottom bar and FAB again (ARCHITECTURE 26.4). */
+  const showShell = useShowShell()
+  useFocusEffect(showShell)
 
   /*
    * Bluesky draws the centre column's side borders here. Splito's content

@@ -40,40 +40,41 @@ test('account pref enqueues an outbox op, device pref does not', async () => {
   expect(await getPref(s, 'haptics')).toBe(false)
 })
 
-test('tabs: any non-empty set of known tabs, no duplicates; Profile is not a tab', async () => {
-  await setPref(s, ctx, 'tabs', ['groups'])
-  expect(await getPref(s, 'tabs')).toEqual(['groups'])
+test('tabs: 2 to 5 items from the shared nav list, Home first, no duplicates (26.3)', async () => {
+  await setPref(s, ctx, 'tabs', ['people', 'settings'])
+  expect(await getPref(s, 'tabs')).toEqual(['people', 'settings'])
+  await setPref(s, ctx, 'tabs', ['people', 'groups', 'analytics', 'ask', 'activity'])
+  expect(await getPref(s, 'tabs')).toEqual(['people', 'groups', 'analytics', 'ask', 'activity'])
   await expect(setPref(s, ctx, 'tabs', [])).rejects.toThrow('INVALID_PREF')
-  await expect(setPref(s, ctx, 'tabs', ['groups', 'groups'])).rejects.toThrow('INVALID_PREF')
-  await expect(setPref(s, ctx, 'tabs', ['groups', 'profile'] as never)).rejects.toThrow('INVALID_PREF')
-  await setPref(s, ctx, 'tabs', ['activity', 'people'])
-  expect(await getPref(s, 'tabs')).toEqual(['activity', 'people'])
+  await expect(setPref(s, ctx, 'tabs', ['people'])).rejects.toThrow('INVALID_PREF')
+  await expect(setPref(s, ctx, 'tabs', ['people', 'groups', 'analytics', 'ask', 'activity', 'settings'])).rejects.toThrow('INVALID_PREF')
+  await expect(setPref(s, ctx, 'tabs', ['people', 'groups', 'groups'])).rejects.toThrow('INVALID_PREF')
+  await expect(setPref(s, ctx, 'tabs', ['people', 'profile'] as never)).rejects.toThrow('INVALID_PREF')
+  // Home is fixed: never off, always first.
+  await expect(setPref(s, ctx, 'tabs', ['groups', 'activity'])).rejects.toThrow('INVALID_PREF')
+  await expect(setPref(s, ctx, 'tabs', ['groups', 'people'])).rejects.toThrow('INVALID_PREF')
 })
 
-test("a list stored before the header-bell build keeps Activity where it was", async () => {
-  // The bell build dropped 'activity' on read only, so the stored value still names it.
-  await s.transaction(async tx => {
-    await tx.put({type: 'preference', id: 'tabs', data: {value: ['groups', 'activity', 'people']}, version: 1, deleted: false, updatedAt: 1})
-    await tx.put({type: 'preference', id: 'homeTab', data: {value: 'activity'}, version: 1, deleted: false, updatedAt: 1})
-  })
-  expect(await getPref(s, 'tabs')).toEqual(['groups', 'activity', 'people'])
-  expect(await getPref(s, 'homeTab')).toBe('activity')
-})
-
-test('home tab must be a visible tab', async () => {
-  await setPref(s, ctx, 'tabs', ['groups', 'analytics'])
-  expect(await getPref(s, 'homeTab')).toBe('groups')
-})
-
-test('Activity is a tab again: a stored order keeps it and its place', async () => {
+test('an order stored before Home was fixed keeps its tabs, with Home moved first', async () => {
   const stored = (id: string, value: unknown) =>
     s.transaction(async tx => tx.put({type: 'preference', id, data: {value}, version: 1, deleted: false, updatedAt: 1}))
-  await stored('tabs', ['activity', 'analytics', 'people'])
+  // The bell build dropped 'activity' on read only, so the stored value still names it.
+  await stored('tabs', ['groups', 'activity', 'people'])
   await stored('homeTab', 'activity')
-  expect(await getPref(s, 'tabs')).toEqual(['activity', 'analytics', 'people'])
+  expect(await getPref(s, 'tabs')).toEqual(['people', 'groups', 'activity'])
   expect(await getPref(s, 'homeTab')).toBe('activity')
-  await setPref(s, ctx, 'tabs', ['groups', 'activity'])
-  expect(await getPref(s, 'tabs')).toEqual(['groups', 'activity'])
+  // Without Home, Home joins at the front.
+  await stored('tabs', ['activity', 'analytics'])
+  expect(await getPref(s, 'tabs')).toEqual(['people', 'activity', 'analytics'])
+  // A single tab is below the 2-tab minimum once Home joins it alone: the default.
+  await stored('tabs', ['people'])
+  expect(await getPref(s, 'tabs')).toEqual(['people', 'groups', 'analytics', 'activity'])
+})
+
+test('home tab must be a visible destination', async () => {
+  await setPref(s, ctx, 'homeTab', 'groups')
+  await setPref(s, ctx, 'tabs', ['people', 'analytics', 'settings'])
+  expect(await getPref(s, 'homeTab')).toBe('people')
 })
 
 test('an order saved while Profile was a tab predates the Analytics tab, so Analytics joins it', async () => {
@@ -153,14 +154,14 @@ test('prefFrom reads a value from loaded preference rows exactly as getPref read
     for (const k of keys) expect(prefFrom(rows, k)).toEqual(await getPref(s, k))
   }
   await same()
-  await setPref(s, ctx, 'tabs', ['groups', 'people', 'analytics', 'activity'])
+  await setPref(s, ctx, 'tabs', ['people', 'groups', 'analytics', 'activity'])
   await setPref(s, ctx, 'homeTab', 'groups')
   await setPref(s, ctx, 'accent', '#7c3aed')
   await same()
   await resetPref(s, ctx, 'accent')
   await same()
   // A stored home tab the tab list no longer holds falls back to the first tab.
-  await setPref(s, ctx, 'tabs', ['people', 'groups', 'analytics'])
+  await setPref(s, ctx, 'tabs', ['people', 'analytics', 'settings'])
   await same()
   expect(prefFrom([], 'defaultCurrency')).toBe('INR')
 })

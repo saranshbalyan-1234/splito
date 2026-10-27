@@ -46,6 +46,7 @@ import {ScrollProvider} from '#/lib/ScrollContext'
 import {logger} from '#/logger'
 import {useA11y} from '#/state/a11y'
 import {useDialogStateControlContext} from '#/state/dialogs'
+import {useShowShell} from '#/state/shell/minimal-mode'
 import {List, type ListMethods, type ListProps} from '#/view/com/util/List'
 import {
   android,
@@ -94,6 +95,8 @@ export function Outer({
   const {setDialogIsOpen, setFullyExpandedCount} =
     useDialogStateControlContext()
   const safeAreaInsets = useSafeAreaInsets()
+  /* A sheet opening shows the header, bottom bar and FAB again (ARCHITECTURE 26.4). */
+  const showShell = useShowShell()
 
   const prevSnapPoint = useRef<BottomSheetSnapPoint>(
     BottomSheetSnapPoint.Hidden,
@@ -150,6 +153,7 @@ export function Outer({
           ? BottomSheetSnapPoint.Full
           : BottomSheetSnapPoint.Partial,
       )
+      showShell()
       onOpen?.()
       setDialogIsOpen(control.id, true)
       ref.current?.present()
@@ -159,6 +163,7 @@ export function Outer({
       control.id,
       callQueuedCallbacks,
       onOpen,
+      showShell,
       nativeOptions?.popover,
       nativeOptions?.sourceViewTag,
       nativeOptions?.fullHeight,

@@ -1,6 +1,6 @@
 import {StyleSheet} from 'react-native'
 import {msg} from '@lingui/core/macro'
-import {type TabId} from '@splito/sync'
+import {type NavItemId} from '@splito/sync'
 
 import {styles} from '#/view/shell/bottom-bar/BottomBarStyles'
 import {useTheme} from '#/alf'
@@ -21,18 +21,31 @@ import {
   HomeOpen_Filled_Corner0_Rounded as HomeFilled,
   HomeOpen_Stoke2_Corner0_Rounded as Home,
 } from '#/components/icons/HomeOpen'
+import {
+  SettingsGear2_Filled_Corner0_Rounded as SettingsFilled,
+  SettingsGear2_Stroke2_Corner0_Rounded as Settings,
+} from '#/components/icons/Settings'
+import {
+  Sparkles_Filled_Corner0_Rounded as SparklesFilled,
+  Sparkles_Stroke2_Corner0_Rounded as Sparkles,
+} from '#/components/icons/Sparkles'
 
-/** Each tab's accessibility label (bottom bars have no visible labels). */
-export const TAB_LABELS = {
+/**
+ * Each shared nav item's label (ARCHITECTURE 26.3): the sidebar and drawer
+ * show it, the bottom bar reads it out (it has no visible labels).
+ */
+export const NAV_LABELS = {
   people: msg`Home`,
   groups: msg`Groups`,
   analytics: msg`Analytics`,
+  ask: msg`Ask Splito`,
   activity: msg`Activity`,
-} satisfies Record<TabId, unknown>
+  settings: msg`Settings`,
+} satisfies Record<NavItemId, unknown>
 
-/* Glyphs per tab, nudged as upstream nudges its bottom-bar glyphs. */
-const GLYPHS: Record<
-  TabId,
+/* Glyphs per item, nudged as upstream nudges its bottom-bar glyphs. */
+export const GLYPHS: Record<
+  NavItemId,
   {
     icon: React.ComponentType<SVGIconProps>
     filled: React.ComponentType<SVGIconProps>
@@ -40,10 +53,17 @@ const GLYPHS: Record<
     style?: object
   }
 > = {
-  people: {icon: Home, filled: HomeFilled, widthAdjust: 1, style: styles.homeIcon},
+  people: {
+    icon: Home,
+    filled: HomeFilled,
+    widthAdjust: 1,
+    style: styles.homeIcon,
+  },
   groups: {icon: Group, filled: GroupFilled, widthAdjust: 1},
   analytics: {icon: ChartPie, filled: ChartPieFilled, widthAdjust: 0},
+  ask: {icon: Sparkles, filled: SparklesFilled, widthAdjust: 0},
   activity: {icon: Activity, filled: ActivityFilled, widthAdjust: 0},
+  settings: {icon: Settings, filled: SettingsFilled, widthAdjust: 0},
 }
 
 /** A bottom-bar tab's glyph, filled when active. */
@@ -52,7 +72,7 @@ export function TabGlyph({
   isActive,
   size,
 }: {
-  tab: TabId
+  tab: NavItemId
   isActive: boolean
   size: number
 }) {

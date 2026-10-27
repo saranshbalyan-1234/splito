@@ -22,7 +22,7 @@ import {EntryIcon} from '#/components/people/EntryIcon'
 import {Text} from '#/components/Typography'
 import {useListAnimations} from '#/motion/listAnimations'
 import {usePressScale} from '#/motion/PressableScale'
-import {type SearchSection} from '../model'
+import {type SearchSection} from './model'
 
 const tabular = {fontVariant: ['tabular-nums' as const]}
 

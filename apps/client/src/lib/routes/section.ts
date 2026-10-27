@@ -16,7 +16,6 @@ const SECTION: Record<string, string> = {
   Analytics: 'Analytics',
   Activity: 'Activity',
   Settings: 'Settings',
-  Search: 'Search',
   SettingsSection: 'Settings',
   SignIn: 'Settings',
   RecentlyDeleted: 'Settings',

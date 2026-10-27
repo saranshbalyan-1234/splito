@@ -1,7 +1,7 @@
 import {View} from 'react-native'
 import Animated, {FadeInUp, FadeOutUp} from 'react-native-reanimated'
 import {CURRENCIES} from '@splito/domain'
-import {PREFS, type PrefKey, type SwipeAction} from '@splito/sync'
+import {PREFS, type PrefKey, type SwipeAction, type TabId} from '@splito/sync'
 import {useLingui} from '@lingui/react/macro'
 import {getLocales} from 'expo-localization'
 
@@ -63,7 +63,10 @@ import {
 import {MagnifyingGlass_Stroke2_Corner0_Rounded as SearchIcon} from '#/components/icons/MagnifyingGlass'
 import {OptionDialog} from '#/components/settings/OptionDialog'
 import {PrefSection, usePrefControl} from '#/components/settings/PrefSection'
-import {TabsEditor, useTabLabels} from '#/components/settings/TabsEditor'
+import {
+  NavigationEditor,
+  useTabLabels,
+} from '#/components/settings/NavigationEditor'
 import {Text} from '#/components/Typography'
 import {IS_WEB} from '#/env'
 
@@ -212,22 +215,28 @@ function HapticsPref() {
   )
 }
 
-/* Defaults */
+/* Navigation */
 
 function HomeTabPref() {
   const {t: l} = useLingui()
   const labels = useTabLabels()
   const [tabs = PREFS.tabs.default] = usePref('tabs')
+  /* Only a bar item with a page of its own can be where Splito opens. */
+  const destinations = tabs.filter(
+    (tab): tab is TabId => tab !== 'ask' && tab !== 'settings',
+  )
   return (
     <RadioPref
       pref={usePrefControl('homeTab')}
       icon={HomeIcon}
-      title={l`Home tab`}
+      title={l`Open on`}
       description={l`The tab Splito opens on.`}
-      options={tabs.map(tab => ({value: tab, label: labels[tab]}))}
+      options={destinations.map(tab => ({value: tab, label: labels[tab]}))}
     />
   )
 }
+
+/* Defaults */
 
 function useCurrencyName() {
   const [language = 'en'] = usePref('language')
@@ -824,7 +833,7 @@ export const PREF_CONTROLS = {
   moneyPalette: MoneyPalettePref,
   motion: MotionPref,
   haptics: HapticsPref,
-  tabs: TabsEditor,
+  tabs: NavigationEditor,
   homeTab: HomeTabPref,
   defaultCurrency: CurrencyPref,
   itemizeAdjustmentModes: ItemizeChargesPref,

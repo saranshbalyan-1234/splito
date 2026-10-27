@@ -21,15 +21,17 @@ import {
   describeUnread,
   useActivityBadge,
 } from '#/components/activity/useActivityFeed'
-import {TAB_LABELS, TabGlyph} from '#/components/TabGlyph'
+import {useSearchAsk} from '#/components/SearchAsk/context'
+import {NAV_LABELS, TabGlyph} from '#/components/TabGlyph'
 import {Text} from '#/components/Typography'
 import {useAnalytics} from '#/analytics'
 import {styles} from './BottomBarStyles'
 
 /*
- * Bluesky's signed-in native bottom bar with Splito's tabs, in the order the
- * `tabs` preference sets. There is no centre button: Add expense is the FAB,
- * as Bluesky's compose action is.
+ * Bluesky's signed-in native bottom bar with the items the `tabs` preference
+ * picks from the shared nav list (Settings > Navigation), in its order.
+ * Settings opens its page; Ask Splito opens the Search & Ask drawer. There is
+ * no centre button: Add expense is the FAB, as Bluesky's compose action is.
  */
 export function BottomBar({navigation}: BottomTabBarProps) {
   const t = useTheme()
@@ -43,6 +45,7 @@ export function BottomBar({navigation}: BottomTabBarProps) {
   const footerMinimalShellTransform = useMinimalShellFooterTransform()
   const iconWidth = 28
   const activityBadge = useActivityBadge()
+  const searchAsk = useSearchAsk()
 
   const isAt: Record<SidebarTab, boolean> = {
     People: tabState.isAtPeople,
@@ -107,15 +110,25 @@ export function BottomBar({navigation}: BottomTabBarProps) {
             icon={
               <TabGlyph
                 tab={tab}
-                isActive={isAt[TAB_ROUTE[tab]]}
+                isActive={
+                  tab !== 'ask' && tab !== 'settings' && isAt[TAB_ROUTE[tab]]
+                }
                 size={iconWidth}
               />
             }
-            onPress={() => onPressTab(TAB_ROUTE[tab])}
+            onPress={() => {
+              if (tab === 'settings') {
+                ax.metric('nav:click', {item: tab, surface: 'bottomBar'})
+                dedupe(() => navigation.navigate('Settings'))
+              } else if (tab === 'ask') {
+                // TODO(F-2301): open straight in Ask mode.
+                searchAsk.open()
+              } else onPressTab(TAB_ROUTE[tab])
+            }}
             /* Bluesky's unread badge, on the tab its Notifications became. */
             notificationCount={tab === 'activity' ? activityBadge : undefined}
             accessibilityRole="tab"
-            accessibilityLabel={_(TAB_LABELS[tab])}
+            accessibilityLabel={_(NAV_LABELS[tab])}
             accessibilityHint={
               tab === 'activity' ? describeUnread(activityBadge) : ''
             }

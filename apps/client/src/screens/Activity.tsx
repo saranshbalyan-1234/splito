@@ -21,6 +21,7 @@ import {useActivityActions} from '#/components/activity/useActivityActions'
 import {useActivityFeed} from '#/components/activity/useActivityFeed'
 import {AddExpenseFAB, AddExpenseFABInset} from '#/components/AddExpenseFAB'
 import {Button, ButtonText} from '#/components/Button'
+import {SearchAskButton} from '#/components/SearchAsk/SearchAskButton'
 import {HeaderAvatar} from '#/components/HeaderAvatar'
 import {MarkAllReadIcon} from '#/components/activity/icons'
 import * as Layout from '#/components/Layout'
@@ -93,11 +94,14 @@ export function ActivityScreen() {
       <Layout.Header.Sticky>
         <Layout.Header.Outer noBottomBorder sticky={false}>
           <HeaderAvatar />
+          {/* Balances Search & Ask on the right, so the title stays centred. */}
+          <Layout.Header.Slot />
           <Layout.Header.Content>
             <Layout.Header.TitleText>
               <Trans>Activity</Trans>
             </Layout.Header.TitleText>
           </Layout.Header.Content>
+          <SearchAskButton />
           <Layout.Header.ActionButton
             testID="activity-mark-all-read"
             label={l`Mark all read`}
