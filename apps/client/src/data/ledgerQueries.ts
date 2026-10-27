@@ -153,9 +153,12 @@ function sameGroupBalances(a: GroupBalances, b: GroupBalances) {
   })
 }
 
+/** A currency a person has had with me, and where: in a group, or outside groups (`groupId` null). */
+export type SeenCurrency = {currency: string; groupId: string | null}
+
 /** Currencies each person and each group of mine has had, settled ones included (a stored net row stays while records exist). */
 export type SeenCurrencies = {
-  people: Record<string, string[]>
+  people: Record<string, SeenCurrency[]>
   groups: Record<string, string[]>
 }
 
@@ -164,7 +167,8 @@ const seenQueries = new Map<string, Query<SeenCurrencies>>()
 /**
  * Which currencies a friend or a group has ever had with me, so a currency
  * that is square now still filters (audit m3). One read of the small `balances`
- * projection (a row per person, group and currency), never of the ledger.
+ * projection (a row per person, group and currency), never of the ledger. A
+ * friend's entries keep their group, so Include groups off can leave them out.
  */
 export function seenCurrenciesQuery(me: string): Query<SeenCurrencies> {
   const key = `seenCurrencies:${me}`
@@ -174,15 +178,21 @@ export function seenCurrenciesQuery(me: string): Query<SeenCurrencies> {
       key,
       isTouchedBy: isMoney,
       loader: store => async (_c, prev) => {
-        const people = new Map<string, Set<string>>()
+        const people = new Map<string, Map<string, SeenCurrency>>()
         const groups = new Map<string, Set<string>>()
-        const add = (m: Map<string, Set<string>>, id: string, c: string) => m.set(id, (m.get(id) ?? new Set()).add(c))
         for (const b of await store.balances()) {
-          if (b.personId !== me) add(people, b.personId, b.currency)
-          else if (b.groupId) add(groups, b.groupId, b.currency)
+          if (b.personId !== me) {
+            const own = people.get(b.personId) ?? new Map<string, SeenCurrency>()
+            own.set(JSON.stringify([b.currency, b.groupId]), {currency: b.currency, groupId: b.groupId || null})
+            people.set(b.personId, own)
+          } else if (b.groupId) groups.set(b.groupId, (groups.get(b.groupId) ?? new Set()).add(b.currency))
         }
-        const sorted = (m: Map<string, Set<string>>) => Object.fromEntries([...m].map(([id, cs]) => [id, [...cs].sort()]))
-        const next = {people: sorted(people), groups: sorted(groups)}
+        const next: SeenCurrencies = {
+          people: Object.fromEntries(
+            [...people].map(([id, m]) => [id, [...m.values()].sort((x, y) => x.currency.localeCompare(y.currency) || (x.groupId ?? '').localeCompare(y.groupId ?? ''))]),
+          ),
+          groups: Object.fromEntries([...groups].map(([id, cs]) => [id, [...cs].sort()])),
+        }
         return prev && JSON.stringify(prev) === JSON.stringify(next) ? prev : next
       },
     }

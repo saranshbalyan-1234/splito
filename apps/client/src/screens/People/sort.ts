@@ -86,3 +86,24 @@ export function filterFriends<T extends FriendRow>(
     return keep ? [{...row, summary}] : []
   })
 }
+
+/**
+ * Each friend's settled-or-open currencies as the filter reads them. With
+ * Include groups off, a currency a friend only has in groups is left out, so
+ * it is neither offered nor matched (audit m3).
+ */
+export function seenByPerson(
+  seen: Record<string, {currency: string; groupId: string | null}[]>,
+  includeGroups: boolean,
+): Map<string, Set<string>> {
+  return new Map(
+    Object.entries(seen).map(([id, entries]) => [
+      id,
+      new Set(
+        entries
+          .filter(e => includeGroups || e.groupId === null)
+          .map(e => e.currency),
+      ),
+    ]),
+  )
+}

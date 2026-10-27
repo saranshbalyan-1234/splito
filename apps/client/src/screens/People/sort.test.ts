@@ -1,7 +1,7 @@
 import {expect, test} from 'bun:test'
 import {type PersonSummary} from '@splito/domain'
 
-import {filterFriends, type FriendRow, sortFriends} from './sort'
+import {filterFriends, type FriendRow, seenByPerson, sortFriends} from './sort'
 
 const summary = (
   person: string,
@@ -99,13 +99,58 @@ test('a friend whose direct and group parts net to zero is open both ways', () =
 /* F-112 m3: a currency a friend has had stays filterable once it is settled. */
 test('a settled currency still filters, and is found under Settled', () => {
   const ids = (xs: FriendRow[]) => xs.map(r => r.id)
-  const bob: FriendRow = {id: 'bob', name: 'Bob', summary: summary('bob', {INR: 500n})}
+  const bob: FriendRow = {
+    id: 'bob',
+    name: 'Bob',
+    summary: summary('bob', {INR: 500n}),
+  }
   const seen = new Map([['bob', new Set(['INR', 'EUR'])]])
   const eur = filterFriends([bob], {currency: 'EUR', show: 'settled'}, seen)
   expect(ids(eur)).toEqual(['bob'])
-  expect(eur[0]!.summary!.byCurrency.EUR).toEqual({total: 0n, direct: 0n, groups: {}})
+  expect(eur[0]!.summary!.byCurrency.EUR).toEqual({
+    total: 0n,
+    direct: 0n,
+    groups: {},
+  })
   // Only a currency the friend has had counts, and a settled one is not "owes you".
-  expect(ids(filterFriends([bob], {currency: 'USD', show: 'all'}, seen))).toEqual([])
-  expect(ids(filterFriends([bob], {currency: 'EUR', show: 'owesYou'}, seen))).toEqual([])
-  expect(ids(filterFriends([bob], {currency: 'EUR', show: 'settled'}))).toEqual([])
+  expect(
+    ids(filterFriends([bob], {currency: 'USD', show: 'all'}, seen)),
+  ).toEqual([])
+  expect(
+    ids(filterFriends([bob], {currency: 'EUR', show: 'owesYou'}, seen)),
+  ).toEqual([])
+  expect(ids(filterFriends([bob], {currency: 'EUR', show: 'settled'}))).toEqual(
+    [],
+  )
+})
+
+/* F-112 m3: with Include groups off, a currency a friend only has in groups does not count. */
+test('seenByPerson leaves group-only currencies out when Include groups is off', () => {
+  const seen = {
+    bob: [
+      {currency: 'EUR', groupId: 'lisbon'},
+      {currency: 'INR', groupId: null},
+      {currency: 'INR', groupId: 'goa'},
+    ],
+  }
+  expect([...seenByPerson(seen, true).get('bob')!].sort()).toEqual([
+    'EUR',
+    'INR',
+  ])
+  expect([...seenByPerson(seen, false).get('bob')!]).toEqual(['INR'])
+  const bob: FriendRow = {id: 'bob', name: 'Bob'}
+  expect(
+    filterFriends(
+      [bob],
+      {currency: 'EUR', show: 'settled'},
+      seenByPerson(seen, false),
+    ),
+  ).toEqual([])
+  expect(
+    filterFriends(
+      [bob],
+      {currency: 'EUR', show: 'settled'},
+      seenByPerson(seen, true),
+    ).map(r => r.id),
+  ).toEqual(['bob'])
 })

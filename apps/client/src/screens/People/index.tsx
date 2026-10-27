@@ -46,7 +46,7 @@ import {
 } from './components/FriendsFilterDialog'
 import {RequestsSection} from './components/RequestsSection'
 import {SectionHeader} from './components/SectionHeader'
-import {filterFriends, sortFriends} from './sort'
+import {filterFriends, seenByPerson, sortFriends} from './sort'
 
 const PLACEHOLDER_ROWS = 6
 
@@ -102,17 +102,15 @@ export function PeopleScreen() {
     .filter(p => !p.data.isMe)
     .map(p => ({id: p.id, name: p.data.name, summary: byPerson.get(p.id)}))
   /* Settled currencies stay on offer and filterable (audit m3). */
-  const seenByPerson = new Map(
-    Object.entries(seen?.people ?? {}).map(([id, cs]) => [id, new Set(cs)]),
-  )
+  const seenCurrencies = seenByPerson(seen?.people ?? {}, includeGroups)
   const currencies = [
     ...new Set([
       ...summaries.flatMap(s => Object.keys(s.byCurrency)),
-      ...friends.flatMap(f => [...(seenByPerson.get(f.id) ?? [])]),
+      ...friends.flatMap(f => [...(seenCurrencies.get(f.id) ?? [])]),
     ]),
   ].sort()
   const rows: PersonRowData[] = sortFriends(
-    filterFriends(friends, filters, seenByPerson),
+    filterFriends(friends, filters, seenCurrencies),
     sort,
     {
       currency: filters.currency === 'all' ? currency : filters.currency,
