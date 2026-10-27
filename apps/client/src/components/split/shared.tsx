@@ -137,6 +137,10 @@ export function useErrorText() {
         return l`Someone on this expense was removed`
       case 'NOT_FOUND':
         return l`This expense no longer exists`
+      case 'BILL_GAP':
+        return l`The total doesn’t match the items and charges`
+      case 'CHARGE_NO_ITEMS':
+        return l`A fixed charge needs items to apply to`
       case 'INVALID_NAME':
         return l`Add a name`
       default:

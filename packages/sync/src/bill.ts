@@ -1,4 +1,4 @@
-import type {ChargeKind} from '@splito/domain'
+import {type ChargeKind} from '@splito/domain'
 
 /* Itemize tax classes and charge setups (F-403): the shapes the bill.* preferences hold. Plain JSON, no bigint. */
 

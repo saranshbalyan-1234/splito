@@ -1,3 +1,4 @@
+import {useState} from 'react'
 import {ScrollView, View} from 'react-native'
 import {Trans, useLingui} from '@lingui/react/macro'
 import {amountInputText, decimalMark, formatAmount, ZERO} from '@splito/domain'
@@ -5,11 +6,13 @@ import {type AdjustmentModes} from '@splito/sync'
 import {nanoid} from 'nanoid/non-secure'
 
 import {UserAvatar} from '#/view/com/util/UserAvatar'
+import {usePref} from '#/data/hooks'
 import {atoms as a, tokens, useBreakpoints, useTheme, web} from '#/alf'
 import {Button, ButtonIcon, ButtonText} from '#/components/Button'
 import * as SegmentedControl from '#/components/forms/SegmentedControl'
 import * as TextField from '#/components/forms/TextField'
 import * as Toggle from '#/components/forms/Toggle'
+import {useDialogControl} from '#/components/Dialog'
 import {
   ArrowBottom_Stroke2_Corner0_Rounded as ArrowDownIcon,
   ArrowTop_Stroke2_Corner0_Rounded as ArrowUpIcon,
@@ -20,6 +23,14 @@ import {PlusLarge_Stroke2_Corner0_Rounded as PlusIcon} from '#/components/icons/
 import {TimesLarge_Stroke2_Corner0_Rounded as XIcon} from '#/components/icons/Times'
 import {Text} from '#/components/Typography'
 import {IS_WEB} from '#/env'
+import {startItemize} from './charges/chargeForm'
+import {ChargeList, ChargePresets} from './charges/ChargesSection'
+import {useChargePresets} from './charges/hooks'
+import {
+  ClassPickerDialog,
+  ClassSelectionBar,
+  ItemClassChip,
+} from './charges/ItemClass'
 import {FieldError, MoneyInput, PercentInput} from './fields'
 import {
   type ExpenseForm,
@@ -81,6 +92,9 @@ export function SplitEditor({
   const {t: l} = useLingui()
   const {gtMobile} = useBreakpoints()
   const isPointer = IS_WEB && gtMobile
+  const presets = useChargePresets()
+  const [defaultPresetId = 'simple'] = usePref('bill.defaultPreset')
+  const [serviceBasisPoints = 0] = usePref('bill.serviceChargeDefault')
 
   const labels: Record<SplitMode, string> = {
     equal: l`Equally`,
@@ -128,7 +142,23 @@ export function SplitEditor({
                   size="small"
                   color={isOn ? 'primary' : 'secondary'}
                   onPress={() =>
-                    update(f => (f.mode === mode ? f : {...f, mode}))
+                    update(f =>
+                      f.mode === mode
+                        ? f
+                        : mode === 'items'
+                          ? startItemize(
+                              {...f, mode},
+                              {
+                                preset: presets.find(
+                                  p => p.id === defaultPresetId,
+                                ),
+                                serviceBasisPoints,
+                                newKey: () => nanoid(8),
+                                mark: decimalMark(locale),
+                              },
+                            )
+                          : {...f, mode},
+                    )
                   }>
                   <ButtonText>{labels[mode]}</ButtonText>
                 </Button>
@@ -427,6 +457,10 @@ function ItemsEditor({
   const name = useDisplayName()
   const avatarName = useAvatarName()
   const errorText = useErrorText()
+  /* Tax classes (F-403): the item whose picker is open, and a multi-select of items. */
+  const classPicker = useDialogControl()
+  const [pickingFor, setPickingFor] = useState<string>()
+  const [selection, setSelection] = useState<string[]>()
 
   const setItem = (key: string, patch: Partial<ExpenseForm['items'][number]>) =>
     update(f => ({
@@ -451,10 +485,46 @@ function ItemsEditor({
 
   return (
     <View style={[a.px_lg, a.gap_sm]}>
+      {form.charges && selection ? (
+        <ClassSelectionBar
+          count={selection.length}
+          onClassApplied={taxClass => {
+            update(f => ({
+              ...f,
+              items: f.items.map(i =>
+                selection.includes(i.key) ? {...i, taxClass} : i,
+              ),
+            }))
+            setSelection(undefined)
+          }}
+          onDone={() => setSelection(undefined)}
+        />
+      ) : null}
       {form.items.map((item, index) => {
         const error = evaluation.rowErrors[`item:${item.key}`]
         const controls = (
           <View style={[a.flex_row, a.align_center]}>
+            {form.charges ? (
+              <ItemClassChip
+                testID={`item-${index}-class`}
+                classId={item.taxClass}
+                isSelecting={!!selection}
+                isSelected={!!selection?.includes(item.key)}
+                onPress={() => {
+                  if (selection)
+                    setSelection(
+                      selection.includes(item.key)
+                        ? selection.filter(k => k !== item.key)
+                        : [...selection, item.key],
+                    )
+                  else {
+                    setPickingFor(item.key)
+                    classPicker.open()
+                  }
+                }}
+                onSelectionStarted={() => setSelection([item.key])}
+              />
+            ) : null}
             {form.items.length > 1 && (
               <>
                 <Button
@@ -675,7 +745,16 @@ function ItemsEditor({
             ...f,
             items: [
               ...f.items,
-              {key: nanoid(8), name: '', amount: '', people: [...f.people]},
+              {
+                key: nanoid(8),
+                name: '',
+                amount: '',
+                people: [...f.people],
+                /* A run of dishes shares a class, so the next item starts with the last one's. */
+                ...(f.charges && f.items.at(-1)?.taxClass
+                  ? {taxClass: f.items.at(-1)!.taxClass}
+                  : {}),
+              },
             ],
           }))
         }
@@ -687,20 +766,42 @@ function ItemsEditor({
       </Button>
 
       {/*
-       * Charges, each as an amount or a percentage of the items (owner rule).
-       * The choice per charge is remembered for the next bill.
+       * Charges (F-403): the four plain rows (Simple), or an ordered list of
+       * scoped, stacked charges once a preset or "Add charge" is chosen.
+       * Each plain row is an amount or a percentage of the items (owner
+       * rule), remembered per kind for the next bill.
        */}
       <View style={[a.pt_sm, a.gap_xs]}>
         <Text style={[a.text_md, a.font_semi_bold, a.leading_snug]}>
           <Trans>Charges</Trans>
         </Text>
-        <Text style={[a.text_sm, a.leading_snug, t.atoms.text_contrast_medium]}>
-          <Trans>
-            Discount comes off the items first; service, tax and tip are then
-            worked out on what is left.
-          </Trans>
-        </Text>
-        {extras.map(x => {
+        <ChargePresets form={form} update={update} locale={locale} />
+        {form.charges ? (
+          <Text style={[a.text_sm, a.leading_snug, t.atoms.text_contrast_medium]}>
+            <Trans>
+              Each charge is shared only by the people who had the items it
+              applies to. Drag to reorder: a charge can stack on the ones above
+              it.
+            </Trans>
+          </Text>
+        ) : (
+          <Text style={[a.text_sm, a.leading_snug, t.atoms.text_contrast_medium]}>
+            <Trans>
+              Discount comes off the items first; service, tax and tip are then
+              worked out on what is left.
+            </Trans>
+          </Text>
+        )}
+        {form.charges ? (
+          <ChargeList
+            form={form}
+            update={update}
+            evaluation={evaluation}
+            locale={locale}
+          />
+        ) : null}
+        {!form.charges
+          ? extras.map(x => {
           const isPercent = form.adjustModes?.[x.key] === 'percent'
           const resolved = evaluation.adjustments?.[x.key]
           return (
@@ -776,7 +877,8 @@ function ItemsEditor({
               )}
             </View>
           )
-        })}
+        })
+          : null}
       </View>
 
       {evaluation.shares ? (
@@ -809,7 +911,8 @@ function ItemsEditor({
         </View>
       ) : null}
 
-      {evaluation.itemsTotal !== undefined &&
+      {!form.charges &&
+      evaluation.itemsTotal !== undefined &&
       evaluation.itemsTotal > ZERO &&
       evaluation.remaining?.kind === 'money' &&
       evaluation.remaining.value !== ZERO ? (
@@ -858,6 +961,14 @@ function ItemsEditor({
           </Button>
         </View>
       ) : null}
+
+      <ClassPickerDialog
+        control={classPicker}
+        value={form.items.find(i => i.key === pickingFor)?.taxClass}
+        onClassPicked={taxClass =>
+          pickingFor && setItem(pickingFor, {taxClass})
+        }
+      />
     </View>
   )
 }

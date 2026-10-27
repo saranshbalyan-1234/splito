@@ -79,7 +79,8 @@ function inclusivePortion(base: bigint, basisPoints: number): bigint {
 
 type Cell = {item: string; person: string; amount: bigint; stack: bigint}
 
-function isInScope(scope: ChargeScope, item: BillItem): boolean {
+/** Whether a charge with this scope applies to the item. */
+export function isInScope(scope: ChargeScope, item: Pick<BillItem, 'id' | 'taxClass'>): boolean {
   switch (scope.type) {
     case 'all':
       return true

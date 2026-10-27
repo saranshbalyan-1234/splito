@@ -25,6 +25,8 @@ import {HomeOpen_Stoke2_Corner0_Rounded as HomeIcon} from '#/components/icons/Ho
 import {Moon_Stroke2_Corner0_Rounded as MoonIcon} from '#/components/icons/Moon'
 import {AccentPicker} from '#/components/settings/AccentPicker'
 import {CategoriesEditor} from '#/components/settings/CategoriesEditor'
+import {TaxClassesEditor} from '#/components/settings/TaxClassesEditor'
+import {useChargePresets} from '#/components/split/charges/hooks'
 import {
   type Option,
   PickerTrigger,
@@ -668,6 +670,91 @@ function BinDaysPref() {
   )
 }
 
+/* Itemize bills (F-403) */
+
+function DefaultBillPresetPref() {
+  const {t: l} = useLingui()
+  const presets = useChargePresets()
+  return (
+    <RadioPref
+      pref={usePrefControl('bill.defaultPreset')}
+      icon={SplitIcon}
+      title={l`New bills start with`}
+      description={l`The charge setup a new itemised bill opens with. You can change it on each bill.`}
+      options={presets.map(p => ({value: p.id, label: p.name}))}
+    />
+  )
+}
+
+function ServiceChargeDefaultPref() {
+  const {t: l} = useLingui()
+  return (
+    <SegmentedPref
+      pref={usePrefControl('bill.serviceChargeDefault')}
+      icon={CashIcon}
+      title={l`Service charge on new bills`}
+      description={l`For Simple bills. Start with this service charge already filled in.`}
+      options={[
+        {value: 0, label: l`Off`},
+        {value: 500, label: '5%'},
+        {value: 1000, label: '10%'},
+        {value: 1250, label: '12.5%'},
+        {value: 1500, label: '15%'},
+      ]}
+    />
+  )
+}
+
+function RoundOffSpreadPref() {
+  const {t: l} = useLingui()
+  return (
+    <SegmentedPref
+      pref={usePrefControl('bill.roundOffSpread')}
+      icon={CashIcon}
+      title={l`Bill round-off goes to`}
+      description={l`When a bill’s printed total differs by a few paise from the items and charges, the round-off is shared like this.`}
+      options={[
+        {value: 'shares', label: l`Everyone, by share`},
+        {value: 'payer', label: l`The payer`},
+      ]}
+    />
+  )
+}
+
+function RememberPerMerchantPref() {
+  const {t: l} = useLingui()
+  return (
+    <SwitchPref
+      pref={usePrefControl('bill.rememberPerMerchant')}
+      icon={SearchHistoryIcon}
+      title={l`Charges per merchant`}
+      label={l`Offer the charges you saved for a merchant`}
+      description={l`Use Save as preset on a bill; next time that title is typed, the setup is suggested.`}
+    />
+  )
+}
+
+/** The merchants remembered so far; Reset on the title clears them. */
+function MerchantSetupsPref() {
+  const {t: l} = useLingui()
+  const pref = usePrefControl('bill.merchantSetups')
+  if (!pref.value || pref.value.length === 0) return null
+  const count = pref.value.length
+  return (
+    <PrefSection
+      pref={pref}
+      icon={GroupsIcon}
+      title={l`Remembered merchants`}
+      description={
+        count === 1
+          ? l`1 merchant has saved charges. Reset forgets them.`
+          : l`${count} merchants have saved charges. Reset forgets them.`
+      }>
+      <></>
+    </PrefSection>
+  )
+}
+
 function useSwipeOptions(): Option<SwipeAction>[] {
   const {t: l} = useLingui()
   return [
@@ -879,6 +966,14 @@ export const PREF_CONTROLS = {
   analyticsScope: null,
   'pwa.installHintDismissed': null,
   categories: CategoriesEditor,
+  'bill.taxClasses': TaxClassesEditor,
+  // Chosen with the setup chips on a bill; the shipped ones are not edited in Settings.
+  'bill.chargePresets': null,
+  'bill.defaultPreset': DefaultBillPresetPref,
+  'bill.serviceChargeDefault': ServiceChargeDefaultPref,
+  'bill.roundOffSpread': RoundOffSpreadPref,
+  'bill.rememberPerMerchant': RememberPerMerchantPref,
+  'bill.merchantSetups': MerchantSetupsPref,
   language: LanguagePref,
   timezone: TimeZonePref,
   weekStart: WeekStartPref,
