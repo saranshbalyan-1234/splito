@@ -4,6 +4,7 @@ import {type ActivityEvent} from '@splito/sync'
 
 import {
   buildRows,
+  dayOf,
   daysAgo,
   EMPTY_FEED_STATE,
   isRead,
@@ -13,7 +14,7 @@ import {
   writeOffParties,
 } from './feed'
 
-const at = (day: number, hour: number) => new Date(2026, 9, day, hour).getTime()
+const at = (day: number, hour: number) => Date.UTC(2026, 9, day, hour)
 const ev = (id: string, time: number, actor = 'riya') =>
   ({id, at: time, actor, kind: 'expense.created'}) as ActivityEvent
 
@@ -46,7 +47,7 @@ test('rows: one header per local day, dividers only between rows of a day, hidde
     ev('a', at(20, 12)),
   ]
   const s = setHidden(EMPTY_FEED_STATE, 'x', true)
-  const {rows, hiddenCount, unreadCount} = buildRows(events, s, 'me')
+  const {rows, hiddenCount, unreadCount} = buildRows(events, s, 'me', 'all', 'UTC')
   expect(
     rows.map(r =>
       r.type === 'section'
@@ -54,16 +55,16 @@ test('rows: one header per local day, dividers only between rows of a day, hidde
         : `${r.event.id}${r.hasDivider ? '|' : ''}`,
     ),
   ).toEqual([
-    `#${new Date(2026, 9, 26).getTime()}`,
+    '#2026-10-26',
     'c',
     'b|',
-    `#${new Date(2026, 9, 20).getTime()}`,
+    '#2026-10-20',
     'a',
   ])
   expect(hiddenCount).toBe(1)
   // Hidden rows don't count as unread.
   expect(unreadCount).toBe(2)
-  expect(buildRows(events, setHidden(s, 'x', false), 'me').hiddenCount).toBe(0)
+  expect(buildRows(events, setHidden(s, 'x', false), 'me', 'all', 'UTC').hiddenCount).toBe(0)
 })
 
 test('"From others" leaves out your own changes; the badge counts only unread from others', () => {
@@ -74,10 +75,10 @@ test('"From others" leaves out your own changes; the badge counts only unread fr
   ]
   // Your own change marked unread again shows as unread in All, but never badges.
   const s = setRead(EMPTY_FEED_STATE, events[1]!, false)
-  const all = buildRows(events, s, 'me')
+  const all = buildRows(events, s, 'me', 'all', 'UTC')
   expect(all.unreadCount).toBe(3)
   expect(all.unreadFromOthers).toBe(2)
-  const others = buildRows(events, s, 'me', 'others')
+  const others = buildRows(events, s, 'me', 'others', 'UTC')
   expect(
     others.rows.flatMap(r => (r.type === 'event' ? [r.event.id] : [])),
   ).toEqual(['c', 'a'])
@@ -85,12 +86,22 @@ test('"From others" leaves out your own changes; the badge counts only unread fr
 })
 
 test('daysAgo counts calendar days, not 24-hour periods', () => {
-  const now = at(26, 0) + 60_000
-  expect(daysAgo(at(26, 0), now)).toBe(0)
-  expect(daysAgo(at(25, 23), now)).toBe(1)
-  expect(daysAgo(at(19, 1), now)).toBe(7)
+  expect(daysAgo('2026-10-26', '2026-10-26')).toBe(0)
+  expect(daysAgo('2026-10-25', '2026-10-26')).toBe(1)
+  expect(daysAgo('2026-10-19', '2026-10-26')).toBe(7)
   // Across the end of a month.
-  expect(daysAgo(new Date(2026, 8, 30, 12).getTime(), now)).toBe(26)
+  expect(daysAgo('2026-09-30', '2026-10-26')).toBe(26)
+})
+
+/* F-115 m23: days follow the Timezone preference, not the device's. */
+test('events are grouped by the day they fall on in the chosen timezone', () => {
+  // 20:00Z on the 25th is 01:30 on the 26th in Kolkata but still the 25th in London.
+  const events = [ev('a', at(25, 20))]
+  const ist = buildRows(events, EMPTY_FEED_STATE, 'me', 'all', 'Asia/Kolkata')
+  const la = buildRows(events, EMPTY_FEED_STATE, 'me', 'all', 'America/Los_Angeles')
+  expect(ist.rows[0]).toMatchObject({type: 'section', day: '2026-10-26'})
+  expect(la.rows[0]).toMatchObject({type: 'section', day: '2026-10-25'})
+  expect(dayOf(at(25, 20), 'Asia/Kolkata')).toBe('2026-10-26')
 })
 
 /* F-113 m5: a write-off row is told from who recorded it. */

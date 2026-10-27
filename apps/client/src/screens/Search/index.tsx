@@ -7,9 +7,8 @@ import {decimalMark} from '@splito/domain'
 import {search} from '@splito/sync'
 
 import {type NavigationProp} from '#/lib/routes/types'
-import {todayIn} from '#/locale/dates'
 import {useNumberLocale} from '#/locale/numberLocale'
-import {useFormatLocalDate, useTimeZone} from '#/locale/useDates'
+import {useFormatDay, useToday} from '#/locale/useDates'
 import {useMutationCtx, usePref} from '#/data/hooks'
 import {device, useStorage} from '#/storage'
 import {List} from '#/view/com/util/List'
@@ -52,8 +51,8 @@ export function SearchScreen() {
   const {index, names, groupNames} = useSearchIndex()
   const {actor: me} = useMutationCtx()
   const locale = useNumberLocale()
-  const formatDate = useFormatLocalDate()
-  const today = todayIn(useTimeZone())
+  const formatDay = useFormatDay()
+  const today = useToday()
 
   const [history = [], setHistory] = useStorage(device, HISTORY_KEY)
   const [rememberSearches] = usePref('rememberSearches')
@@ -168,7 +167,7 @@ export function SearchScreen() {
             names={names}
             groupNames={groupNames}
             locale={locale}
-            date={formatDate(row.expense.data.date)}
+            date={formatDay(row.expense.data.date)}
             isActive={row.nav === activeNav}
             onPress={() => open(row)}
           />

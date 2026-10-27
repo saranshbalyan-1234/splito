@@ -11,6 +11,17 @@ import '@formatjs/intl-pluralrules/locale-data/en.js'
 import '@formatjs/intl-pluralrules/locale-data/hi.js'
 import '@formatjs/intl-numberformat/locale-data/en.js'
 import '@formatjs/intl-numberformat/locale-data/hi.js'
+/*
+ * The Number format preference (en-IN, en-US, de-DE, fr-FR) and en-IN devices
+ * need their own data, or Hermes falls back to plain `en` grouping (F-115 M17).
+ * Plural rules for en-IN resolve to `en`; `de` and `fr` are listed for their
+ * own marks and for completeness.
+ */
+import '@formatjs/intl-pluralrules/locale-data/de.js'
+import '@formatjs/intl-pluralrules/locale-data/fr.js'
+import '@formatjs/intl-numberformat/locale-data/en-IN.js'
+import '@formatjs/intl-numberformat/locale-data/de.js'
+import '@formatjs/intl-numberformat/locale-data/fr.js'
 
 import {i18n} from '@lingui/core'
 

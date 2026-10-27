@@ -22,6 +22,7 @@ import {
 
 import {type AllNavigatorParams, type NavigationProp} from '#/lib/routes/types'
 import {useNumberLocale} from '#/locale/numberLocale'
+import {useFormatDay, useToday} from '#/locale/useDates'
 import {useEntities, useMutationCtx, useStore} from '#/data/hooks'
 import {Link} from '#/view/com/util/Link'
 import {EmptyState} from '#/view/com/util/EmptyState'
@@ -38,13 +39,11 @@ import * as Skeleton from '#/components/Skeleton'
 import {
   cashUnitText,
   CategoryTile,
-  localToday,
   SectionLabel,
   useAvatarName,
   useCategory,
   useDisplayName,
   useErrorText,
-  useExpenseTz,
 } from '#/components/split/shared'
 import {ReceiptIcon} from '#/components/split/icons'
 import {useExpense} from '#/components/split/useExpense'
@@ -203,7 +202,8 @@ function Detail({
   const store = useStore()
   const ctx = useMutationCtx()
   const locale = useNumberLocale()
-  const tz = useExpenseTz()
+  const today = useToday()
+  const formatDay = useFormatDay()
   const name = useDisplayName()
   const avatarName = useAvatarName()
   const errorText = useErrorText()
@@ -216,7 +216,7 @@ function Detail({
     ctx.actor in e.payers || ctx.actor in e.shares
       ? expenseNet(e, ctx.actor)
       : undefined
-  const isUpcoming = e.date > localToday(tz)
+  const isUpcoming = e.date > today
   const money = useMoneyStyle()
   const splitLabel = {
     equal: l`Split equally`,
@@ -274,13 +274,16 @@ function Detail({
           {fmt(e.total)}
         </Text>
         <View style={[a.flex_row, a.align_center, a.gap_sm, a.flex_wrap]}>
-          <Text style={[a.text_md, t.atoms.text_contrast_medium]}>
-            {i18n.date(new Date(`${e.date}T00:00:00Z`), {
-              weekday: 'long',
-              day: 'numeric',
-              month: 'long',
-              year: 'numeric',
-              timeZone: 'UTC',
+          <Text
+            testID="expense-detail-date"
+            style={[a.text_md, t.atoms.text_contrast_medium]}>
+            {formatDay(e.date, {
+              intl: {
+                weekday: 'long',
+                day: 'numeric',
+                month: 'long',
+                year: 'numeric',
+              },
             })}
           </Text>
           {isUpcoming ? (
@@ -374,7 +377,7 @@ function Detail({
           avatar={avatarName(id)}
           name={name(id)}
           amount={fmt(e.shares[id]!)}
-          detail={shareDetail(e, id, fmt, i18n)}
+          detail={shareDetail(e, id, fmt, i18n, locale)}
           isMe={id === ctx.actor}
           testID={`share-row-${name(id)}`}
         />
@@ -491,12 +494,13 @@ function shareDetail(
   id: string,
   fmt: (v: bigint) => string,
   i18n: ReturnType<typeof useLingui>['i18n'],
+  numberLocale: string,
 ) {
   const s = e.split
   switch (s.mode) {
     case 'percent':
       return s.basisPoints[id]
-        ? `${i18n.number(s.basisPoints[id] / 100, {maximumFractionDigits: 2})}%`
+        ? `${new Intl.NumberFormat(numberLocale, {maximumFractionDigits: 2}).format(s.basisPoints[id] / 100)}%`
         : undefined
     case 'shares':
       return s.shares[id]

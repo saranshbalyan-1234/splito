@@ -9,6 +9,7 @@ import {
   type Person,
 } from '@splito/sync'
 
+import {useTimeZone} from '#/locale/useDates'
 import {useActivityState, useMutationCtx} from '#/data/hooks'
 import {device, useStorage} from '#/storage'
 import {
@@ -66,13 +67,14 @@ const FEED_KEY: ['activityFeed'] = ['activityFeed']
  */
 export function useActivityFeed(filter: FeedFilter = 'all') {
   const {actor: me} = useMutationCtx()
+  const tz = useTimeZone()
   const loaded = useActivityState()
   const snapshot = loaded && snapshotOf(loaded)
   const [stored, setStored] = useStorage(device, FEED_KEY)
   const state = stored ?? EMPTY_FEED_STATE
   const update = (fn: (s: FeedState) => FeedState) =>
     setStored(fn(device.get(FEED_KEY) ?? EMPTY_FEED_STATE))
-  const feed = buildRows(snapshot?.events ?? [], state, me, filter)
+  const feed = buildRows(snapshot?.events ?? [], state, me, filter, tz)
   return {me, snapshot, state, update, ...feed}
 }
 

@@ -30,6 +30,7 @@ Status words are the same as `docs/BACKLOG.md`: **done** (built, tested and merg
 | Expenses | Smart amount input | F-310 | in progress (built and tested on feat/b-*, unmerged) |
 | Expenses | Amount entry and parsing correctness (audit C1, C2, M1, M2, M3, M7, M14, m8, m9, m13) | F-111 | done (feat/4b-33c; domain/sync/client bun tests + e2e `amountLocale.spec.ts` in de-DE and en-US with BHD; web verified, native not yet run) |
 | Settle up | Balances and settle consistency (audit M6, M10, M11, m5, m7, m10, m16) | F-113 | done (feat/4b-33d; domain `balanceAudit.test.ts`, sync `writeoffs.test.ts`, client `form.test.ts` / `sort.test.ts` / `feed.test.ts`, e2e `balances.spec.ts` + `group.spec.ts` A07 + `demo.spec.ts`; web verified, native not yet run) |
+| Settings | Timezone, date and number formats everywhere (audit M9, M17, M18, m14, m23, m24, m25, m28, m29) | F-115 | done (feat/wA-33g; client `dates.test.ts` / `feed.test.ts` / `numberFormatNative.test.ts`, sync `preferences.test.ts`, e2e `dates.spec.ts`; web verified, native only checked under Bun's polyfill run, not yet on a device) |
 | Expenses | Cash rounding with visible remainder | F-402 | in progress (built and tested on feat/b-*, unmerged) |
 | Settle up | Plan per group, payment rules, record repayment, UPI link and "Mark as paid?" | F-1101, F-1103 | in progress (built and tested on the unmerged UI line) |
 | Settle up | Call it even: forgive or write off | F-1113 | in progress (built and tested on feat/b-*, unmerged) |

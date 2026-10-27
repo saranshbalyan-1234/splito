@@ -9,7 +9,7 @@ import * as Dialog from '#/components/Dialog'
 import * as FormSheet from '#/components/FormSheet'
 import {Trash_Stroke2_Corner0_Rounded as TrashIcon} from '#/components/icons/Trash'
 import {EntryIcon} from '#/components/people/EntryIcon'
-import {utcDate} from '#/components/people/ledger'
+import {useFormatDay, useTimeZone} from '#/locale/useDates'
 import {Text} from '#/components/Typography'
 import {daysLeft} from '../days'
 import {type BinRowModel} from '../describe'
@@ -80,6 +80,8 @@ function Body({
 }) {
   const t = useTheme()
   const {t: l, i18n} = useLingui()
+  const formatDay = useFormatDay()
+  const tz = useTimeZone()
   const control = Dialog.useDialogContext()
   const [isSaving, setIsSaving] = useState(false)
   const left = daysLeft(item.deletedAt, days, readAt)
@@ -153,10 +155,7 @@ function Body({
           ) : null}
           <DetailRow
             label={l`Date`}
-            value={i18n.date(utcDate(model.date), {
-              dateStyle: 'long',
-              timeZone: 'UTC',
-            })}
+            value={formatDay(model.date, {intl: {dateStyle: 'long'}})}
           />
           <DetailRow
             label={l`Where`}
@@ -167,6 +166,7 @@ function Body({
             value={l`${i18n.date(new Date(item.deletedAt), {
               dateStyle: 'medium',
               timeStyle: 'short',
+              timeZone: tz,
             })} by ${deletedByName}`}
           />
         </View>
