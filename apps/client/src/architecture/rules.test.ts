@@ -1,7 +1,7 @@
 import {describe, expect, test} from 'bun:test'
 
 import {BASELINE} from './baseline'
-import {blank, CLIENT, importsOf, moneyOperators, reuseContext, type RuleContext, type RuleName, RULES} from './rules'
+import {blank, CLIENT, importsOf, moneyOperators, moneyPageReads, reuseContext, type RuleContext, type RuleName, RULES} from './rules'
 import {countAll} from './scan'
 
 /**
@@ -65,6 +65,74 @@ describe('scanner', () => {
 })
 
 describe('counters', () => {
+  test('moneyFullRead', () => {
+    const screen = `${CLIENT}screens/People/index.tsx`
+    expect(count('moneyFullRead', "const all = await store.getAll<Expense>('expense')", screen)).toBe(1)
+    expect(count('moneyFullRead', "const e = useEntities<Expense>('expense'); const l = useLedger()", screen)).toBe(2)
+    expect(count('moneyFullRead', "entitiesQuery('repayment')", `${CLIENT}data/projections.ts`)).toBe(1)
+    expect(count('moneyFullRead', "const rows = await store.getAll('writeoff')", 'packages/sync/src/activity.ts')).toBe(1)
+    // Small stores, index reads, comments and the one maintenance reader are fine.
+    expect(count('moneyFullRead', "useEntities<Person>('person'); store.page('expense', {index: 'byDate', min: from})", screen)).toBe(0)
+    expect(count('moneyFullRead', "// getAll('expense') is forbidden here", screen)).toBe(0)
+    expect(count('moneyFullRead', '// full-read-ok: export\nexport async function loadLedger(store) {}', 'packages/sync/src/selectors.ts')).toBe(0)
+    expect(count('moneyFullRead', 'export async function loadLedger(store) {}', 'packages/sync/src/selectors.ts')).toBe(1)
+  })
+
+  test('moneyFullRead: any page, parties or row range of a money store with no bound, loop or not', () => {
+    const screen = `${CLIENT}screens/Analytics/useReport.ts`
+    // The in-memory mirror this rule exists to keep out: every page of every money store.
+    const mirror = `for (const kind of KINDS) {
+      let after: Key | null = null
+      do {
+        const page = await store.page(kind, {index: 'byUpdatedAt', after, limit: 500})
+        after = page.next
+      } while (after)
+    }`
+    expect(count('moneyFullRead', mirror, screen)).toBe(1)
+    expect(count('moneyFullRead', "while (!isDone) { const p = await store.page('expense', {after, limit: 50}); isDone = !p.next }", screen)).toBe(1)
+    expect(count('moneyFullRead', "for (;;) { const p = await store.parties({index: 'byPersonDate', after}); if (!p.next) break }", screen)).toBe(1)
+    expect(count('moneyFullRead', "do { const p = await store.page('writeoff', {after}); after = p.next } while (true)", 'packages/sync/src/x.ts')).toBe(1)
+    // The ways round the old loop-only rule: one call with a huge limit, a loop whose condition is a function,
+    // a helper or recursion, an empty bound, a row-level range of the table.
+    expect(count('moneyFullRead', "const all = await store.page('expense', {index: 'byDate', limit: 1_000_000})", screen)).toBe(1)
+    expect(count('moneyFullRead', "const all = await store.page('expense', {limit: ALL})", screen)).toBe(1)
+    expect(count('moneyFullRead', "while ((async () => (p = await store.page('expense', {after})))()) {}", screen)).toBe(1)
+    expect(count('moneyFullRead', "const next = (after) => store.page('repayment', {after}).then(p => p.next && next(p.next))", screen)).toBe(1)
+    expect(count('moneyFullRead', "store.page('expense', {index: 'byDate', min: '', limit: 50})", screen)).toBe(1)
+    expect(count('moneyFullRead', "store.page('expense', {index: 'byFrom', eq: [], limit: 50})", screen)).toBe(1)
+    expect(count('moneyFullRead', "store.page('expense', {index: 'byDate', min: undefined})", screen)).toBe(1)
+    expect(count('moneyFullRead', "const all = await rows.range('expenses', {})", 'packages/sync/src/x.ts')).toBe(1)
+    expect(count('moneyFullRead', "const all = await rows.range(ENTITY_STORE[type], {})", 'packages/sync/src/x.ts')).toBe(1)
+    expect(count('moneyFullRead', "const all = await rows.range('expense_parties', {index: 'byPersonDate', dir: 'prev'})", 'packages/sync/src/x.ts')).toBe(1)
+    // A key range (eq, min, max) is not the whole store; small stores page freely.
+    expect(count('moneyFullRead', "do { const p = await store.page(type, {index: 'byFrom', eq: [id], after, limit: 20}); after = p.next } while (after)", screen)).toBe(0)
+    expect(count('moneyFullRead', "do { const p = await store.page('expense', {index: 'byDate', min: a, max: b, after}); after = p.next } while (after)", screen)).toBe(0)
+    expect(count('moneyFullRead', "const r = await rows.range('expenses', {index: 'byDate', min: from, max: to})", 'packages/sync/src/x.ts')).toBe(0)
+    expect(count('moneyFullRead', "do { const p = await store.page('person', {after}); after = p.next } while (after)", screen)).toBe(0)
+    expect(count('moneyFullRead', "await rows.range('people', {})", 'packages/sync/src/x.ts')).toBe(0)
+    expect(count('moneyFullRead', 'do { await work() } while (after)', screen)).toBe(0)
+    // Migration and the dev tools are the file allowlist; anything else says so beside the call.
+    expect(count('moneyFullRead', mirror, `${CLIENT}data/demoLarge.ts`)).toBe(0)
+    expect(count('moneyFullRead', mirror, 'packages/sync/src/migrate.ts')).toBe(0)
+    expect(count('moneyFullRead', mirror, 'packages/sync/src/selectors.ts')).toBe(1)
+    expect(count('moneyFullRead', "// full-read-ok: export reads everything\nconst all = await store.page('expense', {limit: 500})", 'packages/sync/src/selectors.ts')).toBe(0)
+    expect(count('moneyFullRead', "const all = await store.page('expense', {limit: 500}) // full-read-ok: a scrolled pager", screen)).toBe(0)
+    expect(count('moneyFullRead', "// full-read-ok:\nconst all = await store.page('expense', {limit: 500})", screen)).toBe(1) // a reason is required
+    expect(count('moneyFullRead', "// full-read-ok: old\n\n\n\n\nconst all = await store.page('expense', {limit: 500})", screen)).toBe(1) // beside the call, not far above
+    expect(moneyPageReads("// store.page('expense')")).toEqual([])
+  })
+
+  test('demoStaticImport', () => {
+    expect(count('demoStaticImport', "import {runLargeDemo} from '#/screens/Settings/DemoData'")).toBe(1)
+    expect(count('demoStaticImport', "import {demoCounts} from '#/data/demoLarge'\nexport {x} from '@splito/sync/demoLarge'")).toBe(2)
+    expect(count('demoStaticImport', "const m = await import('#/screens/Settings/DemoData')")).toBe(0)
+    expect(count('demoStaticImport', "import {x} from '#/data/demoLarge'", `${CLIENT}screens/Settings/DemoData.tsx`)).toBe(0)
+    // Side-effect imports and require() bundle it too; a comment does not.
+    expect(count('demoStaticImport', "import '#/data/demoLarge'\nimport \"@splito/sync/demoLarge\"")).toBe(2)
+    expect(count('demoStaticImport', "const m = require('#/screens/Settings/DemoData')")).toBe(1)
+    expect(count('demoStaticImport', "// import '#/data/demoLarge'\nconst m = import('#/data/demoLarge')")).toBe(0)
+  })
+
   test('rawColour', () => {
     expect(count('rawColour', "const c = '#1185fe'; const d = 'rgba(0,0,0,0.5)'")).toBe(2)
     expect(count('rawColour', "// '#fff'\nconst c = t.palette.primary_500")).toBe(0)

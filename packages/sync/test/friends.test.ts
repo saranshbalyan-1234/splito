@@ -101,6 +101,25 @@ test('when they accept, a friend linked to their account appears and is selectab
   })
 })
 
+test('changes applied from their side never claim to be synced: nothing acknowledged them', async () => {
+  const r = await sendFriendRequest(s, ctx, {contact: ananya, name: 'Ananya', reach: 'on-splito'})
+  expect(r.syncStatus).toBe('pending')
+  const {person, request} = await applyFriendRequestAccepted(s, them('acc-a'), r.id, {accountId: 'acc-a', name: 'Ananya Gupta'})
+  // A new row from their side has no server behind it: only on this device.
+  expect(person).toMatchObject({syncStatus: 'local', serverVersion: null, syncedAt: null})
+  // A request I queued still waits for its own op.
+  expect(request.syncStatus).toBe('pending')
+  const incoming = await receiveFriendRequest(s, them('acc-i'), {id: 'req-i', accountId: 'acc-i', name: 'Ishaan', contact: null})
+  expect(incoming).toMatchObject({syncStatus: 'local', serverVersion: null, syncedAt: null})
+  // Linking my own queued private friend keeps it queued.
+  const priv = await createPerson(s, ctx, {name: 'Riya', contact: phone})
+  const r2 = await sendFriendRequest(s, ctx, {contact: phone, name: 'Riya', reach: 'on-splito'})
+  const linked = await applyFriendRequestAccepted(s, them('acc-r'), r2.id, {accountId: 'acc-r', name: 'Riya S'})
+  expect(linked.person.id).toBe(priv.id)
+  expect(linked.person.syncStatus).toBe('pending')
+  expect((await s.syncCounts()).people?.synced).toBe(0)
+})
+
 test('a private friend with the same contact is linked on accept, not duplicated (F-616)', async () => {
   const priv = await createPerson(s, ctx, {name: 'Riya', contact: phone})
   expect(priv.data.accountId).toBeUndefined()

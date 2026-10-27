@@ -1,4 +1,4 @@
-import {useState} from 'react'
+import {useEffect, useState} from 'react'
 import {useWindowDimensions} from 'react-native'
 import {LayoutAnimationConfig} from 'react-native-reanimated'
 import {plural} from '@lingui/core/macro'
@@ -8,15 +8,21 @@ import {balanceTotals, isSettledBalance, personSummary} from '@splito/domain'
 import {type Group, type Person} from '@splito/sync'
 
 import {type NavigationProp} from '#/lib/routes/types'
+import {perfMark} from '#/lib/perfMark'
 import {useNumberLocale} from '#/locale/numberLocale'
-import {useEntities, useLedger, useMe, usePref} from '#/data/hooks'
+import {
+  useBalanceRows,
+  useEntities,
+  useLastActivity,
+  useMe,
+  usePref,
+} from '#/data/hooks'
 import {EmptyState} from '#/view/com/util/EmptyState'
 import {List} from '#/view/com/util/List'
 import {atoms as a, useBreakpoints} from '#/alf'
 import {AddExpenseFAB, AddExpenseFABInset} from '#/components/AddExpenseFAB'
 import {LogoMark} from '#/components/brand/Logo'
 import {useDialogControl} from '#/components/Dialog'
-import {myBalances} from '#/components/groups/net'
 import {SearchAskButton} from '#/components/SearchAsk/SearchAskButton'
 import {HeaderAvatar} from '#/components/HeaderAvatar'
 import {PersonPlus_Filled_Stroke2_Corner0_Rounded as PersonPlusIcon} from '#/components/icons/Person'
@@ -39,7 +45,7 @@ import {
 } from './components/FriendsFilterDialog'
 import {RequestsSection} from './components/RequestsSection'
 import {SectionHeader} from './components/SectionHeader'
-import {filterFriends, lastActivity, sortFriends} from './sort'
+import {filterFriends, sortFriends} from './sort'
 
 const PLACEHOLDER_ROWS = 6
 
@@ -60,7 +66,7 @@ export function PeopleScreen() {
   const me = useMe()
   const people = useEntities<Person>('person')
   const groups = useEntities<Group>('group')
-  const ledger = useLedger()
+  const balanceRows = useBalanceRows()
   const [sortDefault = 'amount'] = usePref('peopleSort')
   const [currency = 'INR'] = usePref('defaultCurrency')
   const [includeDefault] = usePref('includeGroupsDefault')
@@ -73,17 +79,21 @@ export function PeopleScreen() {
   const [applied, setApplied] = useState<PeopleFilters | null>(null)
   const filters = applied ?? defaults
   const {includeGroups, sort} = filters
+  const lastActivity = useLastActivity(sort === 'recent')
   /* The filter button counts what differs from the defaults (Settings › Sorting and filters). */
   const activeCount = (
     ['includeGroups', 'currency', 'show', 'sort'] as const
   ).filter(k => filters[k] !== defaults[k]).length
   const filterControl = useDialogControl()
 
-  const isLoading = !me || !people || !groups || !ledger
-  const summaries =
-    me && ledger && groups
-      ? personSummary(myBalances(ledger, me.id, groups), {includeGroups})
-      : []
+  const isLoading = !me || !people || !groups || !balanceRows
+  /* The launch budget's end point: Home has its figures (perf spec reads the mark). */
+  useEffect(() => {
+    if (!isLoading) perfMark('splito:home-ready')
+  }, [isLoading])
+  const summaries = balanceRows
+    ? personSummary(balanceRows, {includeGroups})
+    : []
   const byPerson = new Map(summaries.map(s => [s.person, s]))
   const groupNames = new Map((groups ?? []).map(g => [g.id, g.data.name]))
   const friends = (people ?? [])
@@ -97,7 +107,7 @@ export function PeopleScreen() {
     sort,
     {
       currency: filters.currency === 'all' ? currency : filters.currency,
-      activity: sort === 'recent' && ledger ? lastActivity(ledger) : new Map(),
+      activity: lastActivity ?? new Map(),
     },
   )
   /* The summary follows the filters too, so its figures always match the list. */

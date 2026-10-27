@@ -56,6 +56,12 @@ test('saves feedback on the device: status saved, trimmed, with history, nothing
   expect(await s.history('feedback', fb.id)).toHaveLength(1)
   // No backend endpoint yet: nothing may wait in the outbox pretending to send.
   expect((await s.outbox()).length).toBe(outboxBefore)
+  // A row nothing will ever send is `local`, not `pending` (schema v3 keeps it in its own `feedback` store).
+  expect(fb.syncStatus).toBe('local')
+  expect((await s.get('feedback', fb.id))!.syncStatus).toBe('local')
+  expect((await s.syncCounts()).feedback!.pending).toBe(0)
+  await deleteFeedback(s, ctx, fb.id)
+  expect((await s.get('feedback', fb.id))!.syncStatus).toBe('local')
 })
 
 test('validates type, message length and reply email', async () => {

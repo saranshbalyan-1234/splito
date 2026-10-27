@@ -4,8 +4,8 @@ import {activityFromHistory, activityTracker, loadActivity} from '../src/activit
 import {createExpense, createGroup, createPerson, deleteExpense, deletePerson, type ExpenseDraft, ensureMe, restoreExpense, updateExpense} from '../src/mutations'
 import {setPref} from '../src/preferences'
 import {openSqlStore} from '../src/sqlStore'
-import type {Store, StoreChange} from '../src/store'
-import type {HistoryRow, MutationCtx} from '../src/types'
+import {type Store, type StoreChange} from '../src/store'
+import {type HistoryRow, type MutationCtx} from '../src/types'
 import {bunExecutor} from './bunExecutor'
 
 let s: Store
@@ -105,18 +105,22 @@ test('rows out of order still pair each version with the one before it; ties kee
   expect(feed[0]!.prev as unknown).toEqual({title: 'A1'})
 })
 
-test('the tracker re-reads only what each change touched and always equals a full load', async () => {
+test('the tracker re-reads only what each change touched and always equals the top of a full load', async () => {
   const track = activityTracker(s)
   const changes: StoreChange[] = []
   s.subscribe(c => changes.push(c))
-  const reads = {getAll: 0, history: 0}
+  const reads = {getAllMoney: 0, historyMany: [] as string[]}
   const getAll = s.getAll.bind(s)
-  const history = s.history.bind(s)
-  s.getAll = (t => (reads.getAll++, getAll(t))) as Store['getAll']
-  s.history = ((t, id) => (reads.history++, history(t, id))) as Store['history']
+  const historyMany = s.historyMany.bind(s)
+  s.getAll = (t => (['expense', 'repayment', 'writeoff'].includes(t) && reads.getAllMoney++, getAll(t))) as Store['getAll']
+  s.historyMany = (refs => (reads.historyMany.push(...refs.map(r => `${r.type}:${r.id}`)), historyMany(refs))) as Store['historyMany']
   const expectFull = async (state: Awaited<ReturnType<typeof track>>) => {
     expect(state.events).toEqual(await loadActivity(s))
-    expect(state.entities.expense).toEqual(await getAll('expense'))
+    expect(state.isDone).toBe(true)
+    // The expense rows the events name, current: a deleted one is in, flagged.
+    const named = new Set(state.events.filter(e => e.entityType === 'expense').map(e => e.entityId))
+    expect(state.entities.expense.map(e => e.id).sort()).toEqual([...named].sort())
+    expect(state.entities.person).toEqual(await getAll('person'))
   }
   await expectFull(await track('unknown'))
   const riya = await createPerson(s, ctx, {name: 'Riya'})
@@ -126,20 +130,46 @@ test('the tracker re-reads only what each change touched and always equals a ful
   let state = await track(changes.shift()!)
   for (const c of changes.splice(0)) state = await track(c)
   await expectFull(state)
-  reads.getAll = 0
-  reads.history = 0
+  reads.historyMany = []
+  reads.getAllMoney = 0
   await deleteExpense(s, ctx, e.id)
   const [deleted] = changes.splice(0)
   state = await track(deleted!)
-  // One type re-read and one history: not every entity's.
-  expect(reads).toEqual({getAll: 1, history: 1})
+  // One history: not every entity's. And never a whole money store.
+  expect(reads.historyMany).toEqual([`expense:${e.id}`])
+  expect(reads.getAllMoney).toBe(0)
   await expectFull(state)
-  reads.getAll = 0
-  reads.history = 0
+  reads.historyMany = []
   await setPref(s, ctx, 'accent', '#7c3aed')
   const [pref] = changes.splice(0)
   state = await track(pref!)
   // Preferences are not in the feed: nothing is read.
-  expect(reads).toEqual({getAll: 0, history: 0})
+  expect(reads.historyMany).toEqual([])
   await expectFull(state)
+})
+
+test('the feed is a window of the newest events; asking for more reads older history by cursor', async () => {
+  const riya = await createPerson(s, ctx, {name: 'Riya'})
+  for (let i = 0; i < 12; i++) await createExpense(s, ctx, draft(riya.id, {title: `Lunch ${i}`}))
+  const full = await loadActivity(s)
+  let want = 5
+  const track = activityTracker(s, () => want)
+  let state = await track('unknown')
+  expect(state.events).toEqual(full.slice(0, 5))
+  expect(state.isDone).toBe(false)
+  want = 9
+  state = await track({})
+  expect(state.events).toEqual(full.slice(0, 9))
+  want = 500
+  state = await track({})
+  expect(state.events).toEqual(full)
+  expect(state.isDone).toBe(true)
+  // A new change lands on top of the window.
+  want = 5
+  const again = activityTracker(s, () => want)
+  await again('unknown')
+  const added = await createExpense(s, ctx, draft(riya.id, {title: 'Newest'}))
+  const next = await again({expense: new Set([added.id])})
+  expect(next.events[0]).toMatchObject({kind: 'expense.created', entityId: added.id})
+  expect(next.events).toHaveLength(5)
 })

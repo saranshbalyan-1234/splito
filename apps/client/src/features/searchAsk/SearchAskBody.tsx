@@ -4,12 +4,11 @@ import {type TextInput, type TextInputKeyPressEvent, View} from 'react-native'
 import {Trans, useLingui} from '@lingui/react/macro'
 import {useNavigation} from '@react-navigation/native'
 import {decimalMark} from '@splito/domain'
-import {search} from '@splito/sync'
 
 import {type NavigationProp} from '#/lib/routes/types'
 import {useNumberLocale} from '#/locale/numberLocale'
 import {useFormatDay, useToday} from '#/locale/useDates'
-import {useMutationCtx, usePref} from '#/data/hooks'
+import {useMutationCtx, usePref, useSearch} from '#/data/hooks'
 import {device, useStorage} from '#/storage'
 import {atoms as a, useBreakpoints, useTheme, web} from '#/alf'
 import {Button, ButtonText} from '#/components/Button'
@@ -32,7 +31,7 @@ import {SearchHistory} from '#/components/SearchAsk/SearchHistory'
 import {SHORTCUT_HINT} from '#/components/SearchAsk/useSearchAskHotkey'
 import {Text} from '#/components/Typography'
 import {IS_WEB} from '#/env'
-import {useSearchIndex} from './useSearchIndex'
+import {useSearchNames} from './useSearchNames'
 
 const HISTORY_KEY: ['searchHistory'] = ['searchHistory']
 /* Bluesky keeps six and shows five. */
@@ -60,7 +59,7 @@ export function SearchAskBody({initialQuery}: {initialQuery: string}) {
   const [query, setQuery] = useState(initialQuery)
   const [activeNav, setActiveNav] = useState(-1)
 
-  const {index, names, groupNames} = useSearchIndex()
+  const {names, groupNames} = useSearchNames()
   const {actor: me} = useMutationCtx()
   const locale = useNumberLocale()
   const formatDay = useFormatDay()
@@ -75,10 +74,15 @@ export function SearchAskBody({initialQuery}: {initialQuery: string}) {
     if (rememberSearches === false && history.length > 0) setHistory([])
   }, [rememberSearches, history, setHistory])
 
-  const results = index
-    ? search(index, query, {today, mark: decimalMark(locale)})
-    : undefined
-  const rows = results ? searchRows(results) : []
+  const results = useSearch(query, today, decimalMark(locale))
+  const rows = results
+    ? searchRows(
+        results,
+        results.summary
+          ? {count: results.summary.count, isPartial: false}
+          : {count: results.expenses.length, isPartial: true},
+      )
+    : []
   const navRows = rows.filter((r): r is SearchResultRow => r.type !== 'header')
   const isEmptyQuery = query.trim() === ''
 
@@ -144,7 +148,11 @@ export function SearchAskBody({initialQuery}: {initialQuery: string}) {
           <SectionHeader
             section={row.section}
             count={row.count}
-            totals={row.section === 'expenses' ? results?.totals : undefined}
+            isPartial={row.isPartial}
+            totals={
+              row.section === 'expenses' ? results?.summary?.totals : undefined
+            }
+            isCalculating={row.section === 'expenses' && !results?.summary}
             locale={locale}
           />
         )
@@ -285,8 +293,27 @@ export function SearchAskBody({initialQuery}: {initialQuery: string}) {
             }
             onClearAll={() => setHistory([])}
           />
-        ) : results ? (
+        ) : results?.isDone ? (
           <NoResults query={query.trim()} />
+        ) : undefined
+      }
+      onEndReached={results?.hasMore ? results.loadMore : undefined}
+      onEndReachedThreshold={2}
+      ListFooterComponent={
+        results?.hasMore && rows.length > 0 ? (
+          <View style={[a.align_center, a.pt_md, a.pb_sm]}>
+            <Button
+              testID="search-show-more"
+              label={l`Show more results`}
+              size="small"
+              variant="ghost"
+              color="secondary"
+              onPress={results.loadMore}>
+              <ButtonText>
+                <Trans>Show more</Trans>
+              </ButtonText>
+            </Button>
+          </View>
         ) : undefined
       }
       keyboardShouldPersistTaps="handled"

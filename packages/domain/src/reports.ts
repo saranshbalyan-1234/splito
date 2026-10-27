@@ -255,6 +255,130 @@ export function balanceTrend(records: ReadonlyArray<ReportRecord>, me: string, f
   })
 }
 
+/* -------------------------------------------------------------------------- */
+/* Spending cells                                                             */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * One person's part of one live record, or the whole expense (`person` ''):
+ * the unit the local database's `aggregates` projection stores (ARCHITECTURE
+ * 9.8), folded to its month. A report over cells equals the report over the
+ * records they came from, to the minor unit (tested), so a period made of
+ * whole months can be read from stored aggregates and its edges from records.
+ *
+ * - expense, `person` '': `total` (everyone's spending) and `count` (expenses).
+ * - expense, a person: `paid`, `share`, `net` (paid - share) and `count` (1
+ *   when their share is not zero, so slices count only who took part).
+ * - transfer (payment or write-off), a person: `net` (+ they gave, - they
+ *   received) and `count` (1); `person` '' is the record itself (`count` 1,
+ *   so every record has one whole-record cell). It moves balances but is
+ *   never spending.
+ */
+export interface SpendCell {
+  /** The record's date; for a stored month, its first day. */
+  date: LocalDate
+  currency: CurrencyCode
+  /** '' outside groups. */
+  groupId: string
+  /** The expense's category; '' for a transfer. */
+  category: string
+  person: string
+  kind: 'expense' | 'transfer'
+  total: bigint
+  paid: bigint
+  share: bigint
+  net: bigint
+  count: number
+}
+
+const isEmptyCell = (c: SpendCell) => c.count === 0 && c.total === 0n && c.paid === 0n && c.share === 0n && c.net === 0n
+
+/** The cells of one record; a deleted record has none. */
+export function recordCells(r: ReportRecord): SpendCell[] {
+  if (r.deleted) return []
+  const base = {date: r.date, currency: r.currency, groupId: r.groupId ?? ''}
+  if (r.kind !== 'expense')
+    return [
+      {...base, category: '', person: '', kind: 'transfer', total: 0n, paid: 0n, share: 0n, net: 0n, count: 1},
+      {...base, category: '', person: r.from, kind: 'transfer', total: 0n, paid: 0n, share: 0n, net: r.amount, count: 1},
+      {...base, category: '', person: r.to, kind: 'transfer', total: 0n, paid: 0n, share: 0n, net: -r.amount, count: 1},
+    ]
+  const category = r.category ?? 'other'
+  const whole: SpendCell = {...base, category, person: '', kind: 'expense', total: r.total, paid: 0n, share: 0n, net: 0n, count: 1}
+  const people = [...new Set([...Object.keys(r.payers), ...Object.keys(r.shares)])]
+  const parts = people.map((person): SpendCell => {
+    const paid = r.payers[person] ?? 0n
+    const share = r.shares[person] ?? 0n
+    return {...base, category, person, kind: 'expense', total: 0n, paid, share, net: paid - share, count: share === 0n ? 0 : 1}
+  })
+  return [whole, ...parts].filter(c => !isEmptyCell(c))
+}
+
+const expenseCells = (cells: ReadonlyArray<SpendCell>, person: string) => cells.filter(c => c.kind === 'expense' && c.person === person)
+
+/** `spendingTotals` over cells (already limited to one currency, scope and period). */
+export function cellTotals(cells: ReadonlyArray<SpendCell>, me: string): SpendingTotals {
+  const t: SpendingTotals = {share: 0n, paid: 0n, total: 0n, covered: 0n, count: 0}
+  for (const c of expenseCells(cells, '')) {
+    t.total += c.total
+    t.count += c.count
+  }
+  for (const c of expenseCells(cells, me)) {
+    t.share += c.share
+    t.paid += c.paid
+  }
+  t.covered = t.paid - t.share
+  return t
+}
+
+/** `spendingOverTime` over cells. */
+export function cellsOverTime(cells: ReadonlyArray<SpendCell>, me: string, range: DateRange, g: Granularity, weekStart: WeekStart): TimeBucket[] {
+  return buckets(range, g, weekStart).map(b => ({...b, ...cellTotals(cells.filter(c => c.date >= b.from && c.date <= b.to), me)}))
+}
+
+function cellSlices<K extends string | null>(entries: Iterable<[K, bigint, number]>): Slice<K>[] {
+  const map = new Map<K, Slice<K>>()
+  for (const [key, share, count] of entries) {
+    const s = map.get(key) ?? {key, share: 0n, count: 0}
+    s.share += share
+    s.count += count
+    map.set(key, s)
+  }
+  const id = (k: K) => k ?? ''
+  return [...map.values()]
+    .filter(s => s.share !== 0n)
+    .sort((x, y) => (x.share === y.share ? (id(x.key) < id(y.key) ? -1 : 1) : x.share > y.share ? -1 : 1))
+}
+
+/** `spendingByCategory` over cells. */
+export function cellsByCategory(cells: ReadonlyArray<SpendCell>, me: string): Slice<string>[] {
+  return cellSlices(expenseCells(cells, me).map((c): [string, bigint, number] => [c.category, c.share, c.count]))
+}
+
+/** `spendingByPerson` over cells. */
+export function cellsByPerson(cells: ReadonlyArray<SpendCell>): Slice<string>[] {
+  return cellSlices(cells.filter(c => c.kind === 'expense' && c.person !== '').map((c): [string, bigint, number] => [c.person, c.share, c.count]))
+}
+
+/** `spendingByGroup` over cells; non-group spending under `null`. */
+export function cellsByGroup(cells: ReadonlyArray<SpendCell>, me: string): Slice<string | null>[] {
+  return cellSlices(expenseCells(cells, me).map((c): [string | null, bigint, number] => [c.groupId || null, c.share, c.count]))
+}
+
+/**
+ * `balanceTrend` over cells: `cells` must hold every earlier record's cells
+ * too (expenses and transfers), limited to one currency and scope.
+ */
+export function cellBalanceTrend(cells: ReadonlyArray<SpendCell>, me: string, range: DateRange, g: Granularity, weekStart: WeekStart): TrendPoint[] {
+  const effects = cells.filter(c => c.person === me).sort((x, y) => (x.date < y.date ? -1 : x.date > y.date ? 1 : 0))
+  let i = 0
+  let balance = 0n
+  return buckets(range, g, weekStart).map(b => {
+    while (i < effects.length && effects[i]!.date <= b.to) balance += effects[i++]!.net
+    return {...b, balance}
+  })
+}
+
 const ceilDiv = (a: bigint, b: bigint) => (a >= 0n ? (a + b - 1n) / b : a / b)
 const floorDiv = (a: bigint, b: bigint) => (a >= 0n ? a / b : -ceilDiv(-a, b))
 

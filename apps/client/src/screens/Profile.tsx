@@ -1,9 +1,9 @@
 // Adapted from bluesky-social/social-app@4e4ad9c (MIT) - src/screens/Settings/Settings.tsx
 import {Pressable, View} from 'react-native'
 import {Trans, useLingui} from '@lingui/react/macro'
-import {type Entity, type Expense, type Group, type Person} from '@splito/sync'
+import {type Entity, type Group, type Person} from '@splito/sync'
 
-import {useEntities, useMe} from '#/data/hooks'
+import {useCount, useEntities, useMe} from '#/data/hooks'
 import {Link} from '#/view/com/util/Link'
 import {UserAvatar} from '#/view/com/util/UserAvatar'
 import * as SettingsList from '#/screens/Settings/components/SettingsList'
@@ -229,7 +229,7 @@ function ProfileStats() {
   const {t: l, i18n} = useLingui()
   const people = useEntities<Person>('person')
   const groups = useEntities<Group>('group')
-  const expenses = useEntities<Expense>('expense')
+  const expenseCount = useCount('expense', {index: 'byDeleted', eq: [0]})
   const stats = [
     {
       key: 'friends',
@@ -247,7 +247,7 @@ function ProfileStats() {
       key: 'expenses',
       to: '/analytics',
       label: l`Expenses`,
-      value: (expenses ?? []).filter(e => !e.deleted).length,
+      value: expenseCount ?? 0,
     },
   ]
   return (

@@ -64,12 +64,18 @@ export function Highlight({
 export function SectionHeader({
   section,
   count,
+  isPartial = false,
   totals,
+  isCalculating = false,
   locale,
 }: {
   section: SearchSection
   count: number
+  /** Only what has been found so far: shown as "30+". */
+  isPartial?: boolean
   totals?: Record<string, bigint>
+  /** The count and totals of a broad match are still being worked out. */
+  isCalculating?: boolean
   locale: string
 }) {
   const t = useTheme()
@@ -101,9 +107,23 @@ export function SectionHeader({
         <Text style={[a.text_lg, a.font_normal, t.atoms.text_contrast_medium]}>
           {'  '}
           {count}
+          {isPartial ? '+' : ''}
         </Text>
       </Text>
-      {totalLine ? (
+      {isCalculating ? (
+        <Text
+          testID="search-totals-pending"
+          numberOfLines={1}
+          style={[
+            a.flex_shrink,
+            a.text_sm,
+            a.leading_snug,
+            a.text_right,
+            t.atoms.text_contrast_medium,
+          ]}>
+          <Trans>Calculating totals…</Trans>
+        </Text>
+      ) : totalLine ? (
         <Text
           testID="search-totals"
           accessibilityLabel={l`Total ${totalLine}`}

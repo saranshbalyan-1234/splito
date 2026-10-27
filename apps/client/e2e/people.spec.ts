@@ -257,19 +257,20 @@ test('People sorts by the biggest balance, recent activity or name (preference)'
     const big = await s.createPerson('Zoya Big')
     await s.createExpense({
       ...base,
-      title: 'Tea',
-      total: '2000',
-      payers: {[s.me]: '2000'},
-      split: {mode: 'equal', participants: [s.me, small]},
-      date: '2026-10-25',
-    })
-    await s.createExpense({
-      ...base,
       title: 'Rent',
       total: '200000',
       payers: {[s.me]: '200000'},
       split: {mode: 'equal', participants: [s.me, big]},
       date: '2026-09-01',
+    })
+    // Recent is the newest change to a record they are on (like a group's Recent activity), so Tea comes second.
+    await s.createExpense({
+      ...base,
+      title: 'Tea',
+      total: '2000',
+      payers: {[s.me]: '2000'},
+      split: {mode: 'equal', participants: [s.me, small]},
+      date: '2026-10-25',
     })
   })
   const order = () =>

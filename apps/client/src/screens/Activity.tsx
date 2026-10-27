@@ -6,6 +6,7 @@ import {Plural, Trans, useLingui} from '@lingui/react/macro'
 import {PREFS} from '@splito/sync'
 
 import {useNumberLocale} from '#/locale/numberLocale'
+import {usePagedRows} from '#/lib/hooks/usePagedRows'
 import {usePref} from '#/data/hooks'
 import {EmptyState} from '#/view/com/util/EmptyState'
 import {List} from '#/view/com/util/List'
@@ -52,6 +53,12 @@ export function ActivityScreen() {
   const [swipeLeft = PREFS.swipeLeft.default] = usePref('swipeLeft')
   const [swipeRight = PREFS.swipeRight.default] = usePref('swipeRight')
   const {snapshot, rows, hiddenCount, unreadCount, me} = feed
+  const {shown, onEndReached: showMore} = usePagedRows(tab)(rows)
+  /* Rows already loaded appear a page at a time; past the last one, older history is read by cursor. */
+  const onEndReached = () => {
+    if (shown.length < rows.length) showMore()
+    else if (!feed.isDone) feed.loadMore?.()
+  }
 
   const renderItem = ({item: row, index}: {item: FeedRow; index: number}) => {
     if (!snapshot) return null
@@ -126,7 +133,8 @@ export function ActivityScreen() {
         <LayoutAnimationConfig skipEntering skipExiting>
           <List
             testID="activity-list"
-            data={rows}
+            data={shown}
+            onEndReached={onEndReached}
             keyExtractor={(row: FeedRow) => row.key}
             renderItem={renderItem}
             sideBorders={false}
@@ -155,9 +163,9 @@ export function ActivityScreen() {
                       a.gap_sm,
                       a.px_lg,
                       a.py_lg,
-                      rows.length > 0 && [
+                      shown.length > 0 && [
                         a.border_t,
-                        getBorderColor(t, isUnreadRow(rows.at(-1))),
+                        getBorderColor(t, isUnreadRow(shown.at(-1))),
                       ],
                     ]}>
                     <Text style={[a.text_sm, t.atoms.text_contrast_medium]}>

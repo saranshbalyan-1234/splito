@@ -5,15 +5,20 @@ import {Trans, useLingui} from '@lingui/react/macro'
 import {type RouteProp, useNavigation, useRoute} from '@react-navigation/native'
 import {
   type Entity,
-  type Expense,
   type Group,
   type Person,
   type Repayment,
   type WriteOff,
 } from '@splito/sync'
 
+import {usePagedRows} from '#/lib/hooks/usePagedRows'
 import {type AllNavigatorParams, type NavigationProp} from '#/lib/routes/types'
-import {useEntities, useLedger, useMe} from '#/data/hooks'
+import {
+  useEntities,
+  useGroupHistory,
+  useGroupNets,
+  useMe,
+} from '#/data/hooks'
 import {useNumberLocale} from '#/locale/numberLocale'
 import {useFormatDay} from '#/locale/useDates'
 import {EmptyState} from '#/view/com/util/EmptyState'
@@ -27,7 +32,6 @@ import {Button, ButtonIcon, ButtonText} from '#/components/Button'
 import {useDialogControl} from '#/components/Dialog'
 import {AddMembersDialog} from '#/components/groups/AddMembersDialog'
 import {GroupAvatar} from '#/components/groups/GroupAvatar'
-import {memberNets} from '#/components/groups/net'
 import {EditGroupDialog} from '#/components/groups/EditGroupDialog'
 import {NO_RULES, RulesDialog} from '#/components/groups/RulesEditor'
 import {DotGrid3x1_Stroke2_Corner0_Rounded as DotsIcon} from '#/components/icons/DotGrid'
@@ -48,7 +52,6 @@ import {
 import {
   effectInGroup,
   type HistoryEntry,
-  toHistory,
   withMonths,
 } from '#/components/people/ledger'
 import {
@@ -67,7 +70,13 @@ import {
   MemberRow,
   OweRow,
 } from './components/GroupRows'
-import {compareMinor, directPlan, magnitude, ZERO} from '@splito/domain'
+import {
+  compareMinor,
+  directPlan,
+  magnitude,
+  zeroFillNets,
+  ZERO,
+} from '@splito/domain'
 
 type Tab = 'expenses' | 'balances' | 'members'
 
@@ -120,10 +129,9 @@ export function GroupScreen() {
   const me = useMe()
   const people = useEntities<Person>('person')
   const groups = useEntities<Group>('group')
-  const expenses = useEntities<Expense>('expense')
-  const repayments = useEntities<Repayment>('repayment')
-  const writeOffs = useEntities<WriteOff>('writeoff')
-  const ledger = useLedger()
+  /* The group's net per currency and person (stored sums) and its expenses and payments, a page at a time (by index). */
+  const storedNets = useGroupNets(groupId)
+  const groupHistory = useGroupHistory(groupId)
   const detailsControl = useDialogControl()
   const addMembersControl = useDialogControl()
   const editControl = useDialogControl()
@@ -138,13 +146,7 @@ export function GroupScreen() {
   const [evenDraft, setEvenDraft] = useState<EvenDraft | null>(null)
 
   const isLoading =
-    !me ||
-    !people ||
-    !groups ||
-    !expenses ||
-    !repayments ||
-    !writeOffs ||
-    !ledger
+    !me || !people || !groups || !storedNets || !groupHistory
   const wantsRules = route.params.tab === 'rules'
   useEffect(() => {
     if (!wantsRules || isLoading) return
@@ -153,6 +155,7 @@ export function GroupScreen() {
   }, [wantsRules, isLoading, rulesControl, navigation])
   const group = groups?.find(g => g.id === groupId)
 
+  const pageOf = usePagedRows(tab)
   if (!isLoading && !group) {
     return (
       <Layout.Screen testID="screen-group">
@@ -183,15 +186,15 @@ export function GroupScreen() {
   const names = new Map(
     (people ?? []).map(p => [p.id, p.id === me?.id ? l`You` : p.data.name]),
   )
-  const history =
-    expenses && repayments && writeOffs
-      ? toHistory(
-          expenses.filter(e => e.data.groupId === groupId),
-          repayments.filter(r => r.data.groupId === groupId),
-          writeOffs.filter(w => w.data.groupId === groupId),
+  const history = groupHistory?.entries ?? []
+  /* Every member listed, zero when they have no records yet, so a settlement plan can route through them. */
+  const nets =
+    group && storedNets
+      ? zeroFillNets(
+          storedNets,
+          group.data.members.map(m => m.personId),
         )
-      : []
-  const nets = group && ledger ? memberNets(ledger, groupId, group.data) : {}
+      : {}
   // My balance here is my group net, as on the Balances tab and in Settle up.
   const mine: Record<string, bigint> = Object.fromEntries(
     Object.entries(nets).map(([c, net]) => [
@@ -491,6 +494,13 @@ export function GroupScreen() {
     />
   )
 
+  const {shown, onEndReached: showMore} = pageOf(items)
+  /* Expenses page by index (the next page is read as the end comes near); the other tabs hold few rows. */
+  const onEndReached = () => {
+    if (tab !== 'expenses') showMore()
+    else if (groupHistory && !groupHistory.isDone) groupHistory.loadMore()
+  }
+
   return (
     <Layout.Screen testID="screen-group">
       <Layout.Header.Outer>
@@ -579,7 +589,8 @@ export function GroupScreen() {
       </Layout.Header.Outer>
       <LayoutAnimationConfig skipEntering skipExiting>
         <List
-          data={items}
+          data={tab === 'expenses' ? items : shown}
+          onEndReached={onEndReached}
           keyExtractor={(item: Item) => item.key}
           renderItem={({item, index}: {item: Item; index: number}) => {
             switch (item.type) {

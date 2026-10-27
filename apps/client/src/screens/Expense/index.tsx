@@ -51,6 +51,7 @@ import * as Toast from '#/components/Toast'
 import {Text} from '#/components/Typography'
 import {MoneyArrow, useMoneyStyle} from '#/components/MoneyDirection'
 import {Shimmer} from '#/motion/Shimmer'
+import {SyncStatusLine} from '#/components/SyncStatus'
 import {History} from './components/History'
 import {ItemsBreakdown} from './components/ItemsBreakdown'
 
@@ -286,6 +287,7 @@ function Detail({
               },
             })}
           </Text>
+          <SyncStatusLine row={expense} testID="expense-sync-chip" />
           {isUpcoming ? (
             <View
               testID="expense-upcoming"
@@ -473,14 +475,14 @@ function Detail({
               a.border_l,
               t.atoms.border_contrast_low,
             ]}>
-            <History history={history} />
+            <History history={history} sync={expense} />
           </View>
         </View>
       ) : (
         <>
           {hero}
           {breakdown}
-          <History history={history} />
+          <History history={history} sync={expense} />
         </>
       )}
     </Layout.Content>
