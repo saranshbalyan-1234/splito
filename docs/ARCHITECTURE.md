@@ -1710,6 +1710,12 @@ built yet.
   1300 px. Content fills the space between the two columns.
 - **"Recent transactions":** the 5 newest expenses and repayments involving me: category tile, title, my net
   chip (lent / borrowed, from domain `personNet`); a row opens the expense; "See all" -> Activity.
+- **Recent transactions also live in the page body** (owner 97; F-1415, queued): Home gets a "Recent
+  transactions" section with the newest expenses and repayments across everything (all friends, all groups);
+  a Group page gets the same section scoped to that group only. Same rows and "See all" as the right column
+  (Home -> Activity; Group -> the group's Expenses tab). On desktop, where the right column already shows them,
+  the body section is still shown on Group pages (group-scoped) and on Home follows the preference. Count,
+  visibility and position are preferences.
 - **"Recently active groups":** the 5 groups with the newest change (an expense or repayment added, edited
   or deleted in it, or the group itself edited), by change time, not expense date; balance chips; "See all" ->
   Groups. The Groups list "Recent activity" sort uses the same rule.
@@ -1948,6 +1954,7 @@ Every owner decision, in the order it was made (all 2026-10-26). "Replaced" name
 | 94 | "now we have import and remove demo data, why do i have ?demo=1, only one demo mode from settings" | One demo dataset, added and removed only from Settings > Data; `?demo=1`, `?demo=large`, `EXPO_PUBLIC_DEMO` removed; e2e seeds via a test-only hook running the same path | § 26.1 | `?demo=1` small set + `?demo=large` + Settings |
 | 95 | "instead of add/remove demo data, make it a switch like switch to demo mode, so that it doesn't add data to current account, both accounts keep different" | Demo mode is an on/off switch over its own separate local database (own prefs, history, outbox); real data untouched; banner while on; Reset demo; never syncs | § 26.1 | Add/Remove demo data into the current account (row 94) |
 | 96 | "also add animations on svg icons or animations like Expensify wherever we can" | Meaningful animated SVG icons (tab fill morph, check draw, trash lid, sync pulse, FAB rotate, sparkles, chevrons) on the UI thread plus Expensify-style success/empty/celebration animations; reduced motion and `motion` pref respected | § 26.10 | Static icons; Lottie only for page illustrations |
+| 97 | "on the home page and group page add option for recent transactions as well; home shows all, group shows only group level recent txns" | "Recent transactions" section in the Home body (everything) and on each Group page (that group only), customizable | § 26.17 | Right column only (desktop 1300 px and up) |
 
 New decisions follow § 0 rule 9: rewrite the rule in its topic so only the current truth remains, then add a
 row here.

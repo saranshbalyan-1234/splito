@@ -2714,6 +2714,19 @@ Restore the Friends list's own search (removed by F-222) next to its filters on 
   3. The query is cleared on leaving the screen; Search & Ask is unchanged.
   4. e2e at phone and desktop widths; Hindi 0 missing.
 
+### F-1415 Recent transactions on Home and Group pages `spec: owner § 26.17 (decision 97)`
+
+A "Recent transactions" section in the Home body (all expenses and repayments involving me, across friends and groups) and on every Group page (that group's only). Queued by the owner; build only when the owner says so.
+
+- **Effort** S · **Impact** 7 · **Backend** no · **Status** todo · **Deps** F-117
+- **Prefs** `home.recentTransactions` (account, default on), `group.recentTransactions` (account, default on), `recentTransactions.count` (account, default 5, 3-10), position via the existing Home section order
+- **Acceptance**
+  1. Home shows the newest N expenses and repayments involving me (category tile, title, my net chip per currency, never summed); "See all" opens Activity.
+  2. A Group page shows the newest N of that group only, above the Expenses / Balances / Members tabs; "See all" opens its Expenses tab.
+  3. Reads are cursor-paged index reads (`byDate`, `byGroupDate`; § 9.8), live-updating on writes.
+  4. Hidden by its preference; count and Home position respected; the right column is unchanged.
+  5. e2e at phone and desktop widths with the demo set; Hindi 0 missing.
+
 ### F-1501 Text summaries for WhatsApp `spec 4b v1`
 
 Whole-group or "only their part" summaries with WhatsApp markup, sent via wa.me in the recipient's language.
