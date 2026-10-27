@@ -135,10 +135,18 @@ const FEED_SET = new Set<EntityType>(FEED_TYPES)
  * whole per entity, so every event can tell what it changed (it needs the
  * version before). Loads run one at a time, so a slow one never overwrites a
  * newer read. Equal to the top of `loadActivity` after every load (tested).
+ *
+ * A pooled entity brings its whole history, old events included, so an event
+ * only counts once it is final: newer than the last history row read (every
+ * unread row is at or before it), or the history is exhausted. Reading goes on
+ * until `size` events are final, so old edits of recently touched entities and
+ * rows that make no event (renames, housekeeping) never crowd out newer events.
  */
 export function activityTracker(store: Store, want: () => number = () => ACTIVITY_PAGE): (change: StoreChange) => Promise<ActivityState> {
   const pool = new Map<string, HistoryRow[]>()
   let cursor: Key | null | undefined
+  /** The `at` of the last history row read: unread rows are no newer. */
+  let readUpTo = Infinity
   let isDone = false
   let held = 0
   let people: Entity[] | undefined
@@ -152,7 +160,11 @@ export function activityTracker(store: Store, want: () => number = () => ACTIVIT
     for (const r of refs) pool.set(keyOf(r.type, r.id), [])
     for (const row of rows) pool.get(keyOf(row.entityType, row.entityId))!.push(row)
   }
-  const events = () => activityFromHistory([...pool.values()].flat())
+  /** Events no unread history row can come before (strictly newer than the last row read; a tie may hide one). */
+  const finalEvents = () => {
+    const all = activityFromHistory([...pool.values()].flat())
+    return isDone ? all : all.filter(e => e.at > readUpTo)
+  }
 
   const load = async (change: StoreChange): Promise<ActivityState> => {
     const size = want()
@@ -160,6 +172,7 @@ export function activityTracker(store: Store, want: () => number = () => ACTIVIT
       pool.clear()
       known.clear()
       cursor = undefined
+      readUpTo = Infinity
       isDone = false
       people = groups = undefined
     } else {
@@ -170,18 +183,19 @@ export function activityTracker(store: Store, want: () => number = () => ACTIVIT
       for (const t of touched) known.delete(keyOf(t.type, t.id))
     }
     held = size
-    let list = events()
+    let list = finalEvents()
     while (list.length < size && !isDone) {
       const page = await store.historyPage({after: cursor, limit: ACTIVITY_PAGE})
       cursor = page.next
       isDone = page.next === null
+      if (page.items.length) readUpTo = page.items[page.items.length - 1]!.at
       const fresh = new Map<string, {type: EntityType; id: string}>()
       for (const h of page.items) {
         const key = keyOf(h.entityType, h.entityId)
         if (FEED_SET.has(h.entityType) && !pool.has(key)) fresh.set(key, {type: h.entityType, id: h.entityId})
       }
       if (fresh.size) await readHistories([...fresh.values()])
-      list = events()
+      list = finalEvents()
     }
     const hasMore = list.length > size
     list = list.slice(0, size)
