@@ -504,11 +504,11 @@ msgstr "{actor} undid a write-off"
 msgid "{actor} updated the group {subject}"
 msgstr "{actor} updated the group {subject}"
 
-#: src/components/comments/CommentRow.tsx:109
+#: src/components/comments/CommentRow.tsx:110
 msgid "{authorName}: {body}"
 msgstr "{authorName}: {body}"
 
-#: src/components/comments/CommentRow.tsx:108
+#: src/components/comments/CommentRow.tsx:109
 msgid "{authorName}: deleted comment"
 msgstr "{authorName}: deleted comment"
 
@@ -649,7 +649,7 @@ msgstr "{subject} sent you a friend request"
 msgid "{tabCount, plural, one {# tab} other {# tabs}}"
 msgstr "{tabCount, plural, one {# tab} other {# tabs}}"
 
-#: src/components/comments/CommentRow.tsx:246
+#: src/components/comments/CommentRow.tsx:247
 msgid "{time} · Edited"
 msgstr "{time} · Edited"
 
@@ -885,11 +885,11 @@ msgstr "Add “{q}”"
 msgid "Add {q}"
 msgstr "Add {q}"
 
-#: src/components/comments/CommentComposer.tsx:268
+#: src/components/comments/CommentComposer.tsx:284
 msgid "Add a comment"
 msgstr "Add a comment"
 
-#: src/components/comments/CommentComposer.tsx:270
+#: src/components/comments/CommentComposer.tsx:286
 msgctxt "placeholder"
 msgid "Add a comment"
 msgstr "Add a comment"
@@ -1274,7 +1274,7 @@ msgstr "Archived · {0}"
 msgid "Archived groups"
 msgstr "Archived groups"
 
-#: src/components/comments/Discussion.tsx:284
+#: src/components/comments/Discussion.tsx:282
 msgid "Ask a question or leave a note about this. Use @ to mention someone."
 msgstr "Ask a question or leave a note about this. Use @ to mention someone."
 
@@ -1444,7 +1444,7 @@ msgctxt "button"
 msgid "Cancel"
 msgstr "Cancel"
 
-#: src/components/comments/CommentComposer.tsx:196
+#: src/components/comments/CommentComposer.tsx:212
 msgid "Cancel editing"
 msgstr "Cancel editing"
 
@@ -1670,7 +1670,7 @@ msgstr "Colour-blind safe"
 msgid "Comfortable"
 msgstr "Comfortable"
 
-#: src/components/comments/CommentRow.tsx:309
+#: src/components/comments/CommentRow.tsx:310
 msgid "Comment options"
 msgstr "Comment options"
 
@@ -1719,16 +1719,16 @@ msgstr "Copy"
 msgid "Copy invite link"
 msgstr "Copy invite link"
 
-#: src/components/comments/CommentRow.tsx:122
-#: src/components/comments/CommentRow.tsx:278
-#: src/components/comments/CommentRow.tsx:281
+#: src/components/comments/CommentRow.tsx:123
+#: src/components/comments/CommentRow.tsx:279
+#: src/components/comments/CommentRow.tsx:282
 #: src/screens/Invites/InviteLinks.tsx:144
 msgid "Copy link"
 msgstr "Copy link"
 
-#: src/components/comments/CommentRow.tsx:121
-#: src/components/comments/CommentRow.tsx:258
-#: src/components/comments/CommentRow.tsx:261
+#: src/components/comments/CommentRow.tsx:122
+#: src/components/comments/CommentRow.tsx:259
+#: src/components/comments/CommentRow.tsx:262
 msgid "Copy text"
 msgstr "Copy text"
 
@@ -2024,9 +2024,9 @@ msgstr "Default split"
 msgid "Defaults"
 msgstr "Defaults"
 
-#: src/components/comments/CommentRow.tsx:126
-#: src/components/comments/CommentRow.tsx:288
-#: src/components/comments/CommentRow.tsx:292
+#: src/components/comments/CommentRow.tsx:127
+#: src/components/comments/CommentRow.tsx:289
+#: src/components/comments/CommentRow.tsx:293
 #: src/components/comments/Discussion.tsx:149
 #: src/components/split/AmountKeypad.tsx:66
 #: src/features/feedback/FeedbackList.tsx:89
@@ -2209,9 +2209,9 @@ msgstr "Each person’s share"
 msgid "Earlier years"
 msgstr "Earlier years"
 
-#: src/components/comments/CommentRow.tsx:125
-#: src/components/comments/CommentRow.tsx:268
-#: src/components/comments/CommentRow.tsx:271
+#: src/components/comments/CommentRow.tsx:126
+#: src/components/comments/CommentRow.tsx:269
+#: src/components/comments/CommentRow.tsx:272
 msgid "Edit"
 msgstr "Edit"
 
@@ -2223,7 +2223,7 @@ msgstr "Edit {name}"
 msgid "Edit category"
 msgstr "Edit category"
 
-#: src/components/comments/CommentComposer.tsx:268
+#: src/components/comments/CommentComposer.tsx:284
 msgid "Edit comment"
 msgstr "Edit comment"
 
@@ -2272,7 +2272,7 @@ msgstr "Edit who you settle with"
 msgid "Edited the notes"
 msgstr "Edited the notes"
 
-#: src/components/comments/CommentComposer.tsx:191
+#: src/components/comments/CommentComposer.tsx:207
 msgid "Editing comment"
 msgstr "Editing comment"
 
@@ -3171,7 +3171,7 @@ msgstr "List density"
 msgid "Loading…"
 msgstr "Loading…"
 
-#: src/components/comments/CommentRow.tsx:182
+#: src/components/comments/CommentRow.tsx:183
 msgid "Long press for options"
 msgstr "Long press for options"
 
@@ -3232,7 +3232,7 @@ msgid "Members of {0}"
 msgstr "Members of {0}"
 
 #. placeholder {0}: p.name
-#: src/components/comments/CommentComposer.tsx:233
+#: src/components/comments/CommentComposer.tsx:249
 msgid "Mention {0}"
 msgstr "Mention {0}"
 
@@ -3458,11 +3458,11 @@ msgstr "No balances yet. They appear once the group has an expense."
 msgid "No colour: arrows and bold type show the direction"
 msgstr "No colour: arrows and bold type show the direction"
 
-#: src/components/comments/Discussion.tsx:273
+#: src/components/comments/Discussion.tsx:271
 msgid "No comments"
 msgstr "No comments"
 
-#: src/components/comments/Discussion.tsx:271
+#: src/components/comments/Discussion.tsx:269
 msgid "No comments yet"
 msgstr "No comments yet"
 
@@ -4452,7 +4452,7 @@ msgstr "Same as this device ({deviceZone})"
 msgid "Save"
 msgstr "Save"
 
-#: src/components/comments/CommentComposer.tsx:313
+#: src/components/comments/CommentComposer.tsx:331
 msgid "Save comment"
 msgstr "Save comment"
 
@@ -4605,7 +4605,7 @@ msgstr "Send by email to {0}"
 msgid "Send by SMS to {0}"
 msgstr "Send by SMS to {0}"
 
-#: src/components/comments/CommentComposer.tsx:313
+#: src/components/comments/CommentComposer.tsx:331
 msgid "Send comment"
 msgstr "Send comment"
 
@@ -4778,8 +4778,8 @@ msgstr "Show charts"
 msgid "Show days"
 msgstr "Show days"
 
-#: src/components/comments/Discussion.tsx:213
-#: src/components/comments/Discussion.tsx:218
+#: src/components/comments/Discussion.tsx:211
+#: src/components/comments/Discussion.tsx:216
 msgid "Show earlier comments"
 msgstr "Show earlier comments"
 
@@ -5259,7 +5259,7 @@ msgstr "This can’t be undone, and all of your recent searches will be removed.
 msgid "This comment or its expense no longer exists"
 msgstr "This comment or its expense no longer exists"
 
-#: src/components/comments/CommentRow.tsx:221
+#: src/components/comments/CommentRow.tsx:222
 msgid "This comment was deleted"
 msgstr "This comment was deleted"
 

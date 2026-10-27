@@ -9,7 +9,7 @@ import {copyText} from '#/lib/sharing'
 import {useTimeZone} from '#/locale/useDates'
 import {UserAvatar} from '#/view/com/util/UserAvatar'
 import {isOnlyEmoji} from '#/alf/typography'
-import {atoms as a, platform, useTheme} from '#/alf'
+import {atoms as a, platform, useBreakpoints, useTheme} from '#/alf'
 import {
   ChainLink_Stroke2_Corner0_Rounded as LinkIcon,
   SquareBehindSquare_Stroke2_Corner2_Rounded as CopyIcon,
@@ -66,6 +66,7 @@ let CommentRow = ({
   const {t: l, i18n} = useLingui()
   const haptics = useHaptics()
   const timeZone = useTimeZone()
+  const {gtMobile} = useBreakpoints()
   const control = Menu.useMenuControl()
   const {body, mentions, editedAt} = comment.data
   const isDeleted = comment.deleted
@@ -148,7 +149,7 @@ let CommentRow = ({
             a.gap_sm,
             isMine ? a.justify_end : a.justify_start,
           ]}>
-          {IS_WEB && canAct && isMine ? <RowMenuButton /> : null}
+          {IS_WEB && gtMobile && canAct && isMine ? <RowMenuButton /> : null}
           {!isMine ? (
             <View style={{width: AVATAR_SIZE}}>
               {isLastInCluster ? (
@@ -248,7 +249,7 @@ let CommentRow = ({
             ) : null}
           </View>
           {/* Web: the same menu from a focusable button (keyboard and screen readers), quiet until the row is hovered or focused. */}
-          {IS_WEB && canAct && !isMine ? <RowMenuButton /> : null}
+          {IS_WEB && gtMobile && canAct && !isMine ? <RowMenuButton /> : null}
         </View>
       </View>
       <Menu.Outer>

@@ -35,6 +35,8 @@ import {IS_WEB} from '#/env'
 const MIN_HEIGHT = 40
 const MAX_HEIGHT = 140
 
+const clamp = (h: number) => Math.max(MIN_HEIGHT, Math.min(MAX_HEIGHT, h))
+
 export interface Editing {
   id: string
   body: string
@@ -89,6 +91,17 @@ export function CommentComposer({
     setForcedSelection({start: editing.body.length, end: editing.body.length})
     input.current?.focus()
   }, [editing])
+
+  // The web's field has a fixed height, so it can't report a smaller content size: measure it as `auto`.
+  useEffect(() => {
+    const el = input.current as unknown as HTMLTextAreaElement | null
+    if (!IS_WEB || !el?.style) return
+    const was = el.style.height
+    el.style.height = 'auto'
+    const content = el.scrollHeight
+    el.style.height = was
+    setHeight(clamp(content))
+  }, [text])
 
   const token = activeMention(text, caret)
   const options = token ? matchPeople(people, token.query) : []
@@ -291,17 +304,12 @@ export function CommentComposer({
               }}
               onSelectionChange={onSelectionChange}
               onKeyPress={onKeyPress}
-              onContentSizeChange={e =>
-                setHeight(
-                  Math.max(
-                    MIN_HEIGHT,
-                    Math.min(
-                      MAX_HEIGHT,
-                      Math.ceil(e.nativeEvent.contentSize.height) + 20,
-                    ),
-                  ),
-                )
-              }
+              onContentSizeChange={e => {
+                if (!IS_WEB)
+                  setHeight(
+                    clamp(Math.ceil(e.nativeEvent.contentSize.height) + 20),
+                  )
+              }}
               style={[
                 a.text_md,
                 a.leading_snug,
