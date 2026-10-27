@@ -153,6 +153,44 @@ function sameGroupBalances(a: GroupBalances, b: GroupBalances) {
   })
 }
 
+/** Currencies each person and each group of mine has had, settled ones included (a stored net row stays while records exist). */
+export type SeenCurrencies = {
+  people: Record<string, string[]>
+  groups: Record<string, string[]>
+}
+
+const seenQueries = new Map<string, Query<SeenCurrencies>>()
+
+/**
+ * Which currencies a friend or a group has ever had with me, so a currency
+ * that is square now still filters (audit m3). One read of the small `balances`
+ * projection (a row per person, group and currency), never of the ledger.
+ */
+export function seenCurrenciesQuery(me: string): Query<SeenCurrencies> {
+  const key = `seenCurrencies:${me}`
+  let q = seenQueries.get(key)
+  if (!q) {
+    q = {
+      key,
+      isTouchedBy: isMoney,
+      loader: store => async (_c, prev) => {
+        const people = new Map<string, Set<string>>()
+        const groups = new Map<string, Set<string>>()
+        const add = (m: Map<string, Set<string>>, id: string, c: string) => m.set(id, (m.get(id) ?? new Set()).add(c))
+        for (const b of await store.balances()) {
+          if (b.personId !== me) add(people, b.personId, b.currency)
+          else if (b.groupId) add(groups, b.groupId, b.currency)
+        }
+        const sorted = (m: Map<string, Set<string>>) => Object.fromEntries([...m].map(([id, cs]) => [id, [...cs].sort()]))
+        const next = {people: sorted(people), groups: sorted(groups)}
+        return prev && JSON.stringify(prev) === JSON.stringify(next) ? prev : next
+      },
+    }
+    seenQueries.set(key, q)
+  }
+  return q
+}
+
 const groupNetQueries = new Map<string, Query<Nets>>()
 
 /** One group's stored net per currency and person (`groupNet`), people with nothing left out. */

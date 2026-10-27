@@ -76,3 +76,14 @@ test('search matches the group name or any member, ignoring case', () => {
   expect(matchesGroupSearch(rows[1]!, 'arj')).toBe(false)
   expect(matchesGroupSearch(rows[1]!, '')).toBe(true)
 })
+
+/* F-112 m3: a settled currency stays filterable. */
+test('a currency a group has had stays filterable once settled', () => {
+  const lisbon = {...row('lis', 'Lisbon', 'trip', {INR: 100n}), currencies: ['EUR', 'INR']}
+  const f = {...DEFAULT_GROUP_FILTERS, currency: 'EUR'}
+  const settled = filterGroups([lisbon], {...f, show: 'settled'})
+  expect(ids(settled)).toEqual(['lis'])
+  expect(settled[0]!.balances).toEqual({EUR: 0n})
+  expect(ids(filterGroups([lisbon], {...f, show: 'owed'}))).toEqual([])
+  expect(ids(filterGroups([lisbon], {...f, currency: 'USD'}))).toEqual([])
+})

@@ -12,6 +12,7 @@ import {perfMark} from '#/lib/perfMark'
 import {useNumberLocale} from '#/locale/numberLocale'
 import {
   useBalanceRows,
+  useSeenCurrencies,
   useEntities,
   useLastActivity,
   useMe,
@@ -67,6 +68,7 @@ export function PeopleScreen() {
   const people = useEntities<Person>('person')
   const groups = useEntities<Group>('group')
   const balanceRows = useBalanceRows()
+  const seen = useSeenCurrencies()
   const [sortDefault = 'amount'] = usePref('peopleSort')
   const [currency = 'INR'] = usePref('defaultCurrency')
   const [includeDefault] = usePref('includeGroupsDefault')
@@ -99,11 +101,18 @@ export function PeopleScreen() {
   const friends = (people ?? [])
     .filter(p => !p.data.isMe)
     .map(p => ({id: p.id, name: p.data.name, summary: byPerson.get(p.id)}))
+  /* Settled currencies stay on offer and filterable (audit m3). */
+  const seenByPerson = new Map(
+    Object.entries(seen?.people ?? {}).map(([id, cs]) => [id, new Set(cs)]),
+  )
   const currencies = [
-    ...new Set(summaries.flatMap(s => Object.keys(s.byCurrency))),
+    ...new Set([
+      ...summaries.flatMap(s => Object.keys(s.byCurrency)),
+      ...friends.flatMap(f => [...(seenByPerson.get(f.id) ?? [])]),
+    ]),
   ].sort()
   const rows: PersonRowData[] = sortFriends(
-    filterFriends(friends, filters),
+    filterFriends(friends, filters, seenByPerson),
     sort,
     {
       currency: filters.currency === 'all' ? currency : filters.currency,

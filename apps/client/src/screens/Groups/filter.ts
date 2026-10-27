@@ -8,6 +8,8 @@ export type GroupRowData = {
   kind: Group['kind']
   archived: boolean
   balances: Record<string, bigint>
+  /** Every currency the group has had, settled ones too (a filter offers them). */
+  currencies?: string[]
   /** Member names, so search finds a group by who is in it. */
   members: string[]
 }
@@ -44,8 +46,9 @@ export function filterGroups(
     if (row.archived !== (status === 'archived')) return []
     let balances = row.balances
     if (currency !== 'all') {
-      if (!(currency in balances)) return []
-      balances = {[currency]: balances[currency]!}
+      if (!(currency in balances) && !row.currencies?.includes(currency))
+        return []
+      balances = {[currency]: balances[currency] ?? ZERO}
     }
     const nets = Object.values(balances)
     const keep =
