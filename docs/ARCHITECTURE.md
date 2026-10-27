@@ -1651,17 +1651,21 @@ add anyway (only for you)"; "also i should be able to select from contacts". *Wh
   group, it lives only inside the group's "Add members / Invite people" sheet. No header overflow, menu or page
   shows invite links outside these flows (the Home "..." overflow and the Group overflow entries are removed;
   "Manage invite links" is reached from the invite-link sheet's "Manage links" button and from Settings).
-- **Settings > "Invites and requests"** (its own Settings row and page, Bluesky settings-list layout): Requests
-  received (Accept / Decline), Invites sent (Resend / Cancel), Invite links (every friend and group link with
-  uses left, expiry, Revoke, and "Create invite link"), and the defaults (max uses for friend and group links,
-  expiry, approve each join, who can send me friend requests). Same rows and components as Home and the invite
-  sheet; Settings > Privacy keeps "Let people find me by email / phone" and links here. *Why:* "add invite
-  management in settings as well". *Why:* "invite link and qr to show once i click on invite people, not outside". Creating one sets: max uses (1, 5, 25, unlimited; default 1 for friends,
-  25 for groups), expiry (24 hours, 7 days, 30 days, never; default 7 days), and for groups "approve each join"
-  (default off). The sheet shows the QR (scannable, accent-coloured logo in the centre), the link, Copy and
-  Share. "Manage invite links" lists active links with uses left, expiry, and Revoke. Opening a link: if the
-  person has Splito they see who invited them and Accept / Decline; otherwise web onboarding then the same
-  prompt. Using a link always counts as accepting (consent).
+- **Settings > "Friends and invites"** (its own Settings row and page, Bluesky settings-list layout) manages
+  friends and invites in one place:
+  - **Friends:** every friend (search when more than 10) with "Add friend" at the top (opens the Invite people
+    sheet) and **Remove friend** per row (row menu on phones, button on desktop). Removing asks for confirmation
+    (bottom drawer on phones). A friend with an open balance in any currency cannot be removed until it is
+    settled or written off: the prompt shows the open amounts per currency and offers "Settle up" and "Call it
+    even". Removing keeps every past expense and payment (the name stays, marked "Removed"), takes them out of
+    pickers and lists, and can be undone; they can be added again later. Removing someone from a shared group is
+    a group action (F-613), not this.
+  - **Invites and requests:** Requests received (Accept / Decline), Invites sent (Resend / Cancel), Invite
+    links (every friend and group link with uses left, expiry, Revoke, "Create invite link"), and the defaults
+    (max uses for friend and group links, expiry, approve each join, who can send me friend requests).
+  Same row components as Home and the invite sheet; Settings > Privacy keeps "Let people find me by email /
+  phone" and links here. *Why:* "add invite management in settings as well"; "add one option in settings of
+  friends, where you can add remove friends as well, and invite management as well".
 - **Privacy settings (preferences registry):** "Let people find me by email / phone" (default on),
   "Who can send me friend requests" (everyone / people with my link only), default invite-link limits.
 - Demo mode (`?demo=1`) ships a fake directory so every branch of the flow can be seen; production uses the
@@ -1821,7 +1825,7 @@ Every owner decision, in the order it was made (all 2026-10-26). "Replaced" name
 | 80 | "use sonnet for all implementation and opus for decisions and reviews" | Sonnet builds and fixes; Opus decides, reviews, audits, judges; every feature gets an Opus review before the next | § 26.1 | One model for everything |
 | 81 | "just like in bluesky, even the header should scroll but once i scroll up a little it should appear" | Bluesky minimal shell on phones (header, bottom bar, FAB hide on scroll down, return on slight scroll up), sticky on desktop | § 26.4 | (rule existed but was not working) |
 | 82 | "fanout with sonnet and get done" | Independent features build in parallel Sonnet worktrees in dependency waves, Opus review per feature, one assemble per wave | § 26.1 | Strictly one feature at a time (row 63) |
-| 83 | "add invite management in settings as well" | Settings > Invites and requests page: requests, invites sent, invite links, defaults | § 26.18 | Only "Manage invite links" under Privacy |
+| 83 | "add invite management in settings as well"; "add one option in settings of friends, where you can add remove friends as well, and invite management as well" | Settings > Friends and invites: friends (add, remove with open-balance guard, undo), requests, invites sent, invite links, defaults | § 26.18 | Only "Manage invite links" under Privacy |
 
 New decisions follow § 0 rule 9: rewrite the rule in its topic so only the current truth remains, then add a
 row here.
