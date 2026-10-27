@@ -293,6 +293,7 @@ export function indexStream<T extends Expense | Repayment | WriteOff>(
     async read(want) {
       let added = 0
       while (added < want && !this.isDone) {
+        // full-read-ok: `read` carries the eq / min / max range; the pager reads only as far as was asked (`want`)
         const page: Page<Entity<T>> = await store.page<T>(kind, {...read, dir: 'prev', after, limit: pageFor(want)})
         after = page.next
         this.isDone = !page.next
@@ -324,6 +325,7 @@ export function partyStream(
     async read(want) {
       let added = 0
       while (added < want && !this.isDone) {
+        // full-read-ok: `read` carries the eq range; the pager reads only as far as was asked (`want`)
         const page = await store.parties({...read, dir: 'prev', after, limit: pageFor(want)})
         after = page.next
         this.isDone = !page.next

@@ -70,6 +70,7 @@ async function setSync(
 }
 
 /** Every row of an entity type, by id. */
+// full-read-ok: only `rebuildProjections` calls this (maintenance and migration), never a mutation or a read path
 const allOf = async (rows: RowAccess, type: EntityType) => (await rows.range(ENTITY_STORE[type], {})).map(r => entityOfRow(type, r))
 
 function makeTx(rows: RowAccess, recorder: ReturnType<typeof changeRecorder>): Tx {

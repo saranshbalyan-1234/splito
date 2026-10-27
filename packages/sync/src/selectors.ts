@@ -36,7 +36,9 @@ export const toWriteOffRecord = (e: Entity<WriteOff>): WriteOffRecord => ({...to
  * Reads the whole ledger: for export, maintenance and tests only, never a hot
  * path (the architecture rule test keeps it out of screens and hooks).
  */
+// full-read-ok: export, maintenance and tests read the whole ledger by design
 export async function loadLedger(store: Store): Promise<LedgerRecord[]> {
+  // full-read-ok: the three reads below are that same whole-ledger read
   const expenses = await store.getAll<Expense>('expense')
   const repayments = await store.getAll<Repayment>('repayment')
   const writeOffs = await store.getAll<WriteOff>('writeoff')
