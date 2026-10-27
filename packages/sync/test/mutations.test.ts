@@ -151,3 +151,8 @@ test('syncStatus is Saved on this device after create', async () => {
   const e = await createExpense(s, ctx, draft(x.id))
   expect(await syncStatus(s, e.id)).toBe('Saved on this device')
 })
+
+test('createGroup rejects an end date before the start date (audit m12)', async () => {
+  const x = await createPerson(s, ctx, {name: 'Riya'})
+  await expect(createGroup(s, ctx, {name: 'Goa', kind: 'trip', currency: 'INR', memberIds: [x.id], startDate: '2026-10-05', endDate: '2026-10-01'})).rejects.toThrow('INVALID_DATE')
+})

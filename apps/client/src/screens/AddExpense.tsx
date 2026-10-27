@@ -8,7 +8,7 @@ import {useEntities, useMe, usePref} from '#/data/hooks'
 import {ComposerSkeleton} from '#/components/split/ComposerSkeleton'
 import {readDraft} from '#/components/split/drafts'
 import {ExpenseComposer} from '#/components/split/ExpenseComposer'
-import {emptyForm, type ExpenseForm} from '#/components/split/form'
+import {emptyForm, type ExpenseForm, pruneForm} from '#/components/split/form'
 import {todayIn} from '#/locale/dates'
 import {useTimeZone} from '#/locale/useDates'
 
@@ -132,12 +132,10 @@ function AddExpenseForm({
   const [draft] = useState(() => {
     const d = readDraft(context)
     if (!d) return undefined
-    // People removed since the draft was written drop out of it.
+    // People removed since the draft was written drop out of every field of it.
     const alive = new Set(people.map(p => p.id))
     const isGroupAlive = !d.groupId || groups.some(g => g.id === d.groupId)
-    return isGroupAlive
-      ? {...d, people: d.people.filter(p => alive.has(p))}
-      : undefined
+    return isGroupAlive ? pruneForm(d, alive) : undefined
   })
 
   return (

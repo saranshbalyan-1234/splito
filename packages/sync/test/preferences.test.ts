@@ -204,3 +204,10 @@ test('timezone: device or a real IANA zone', async () => {
   expect(PREFS.timezone.validate(5)).toBe(false)
   await expect(setPref(s, ctx, 'timezone', 'Not/AZone')).rejects.toThrow('INVALID_PREF')
 })
+
+test('reset all skips a stored row for a removed preference (audit m6)', async () => {
+  await setPref(s, ctx, 'theme', 'dark')
+  await s.transaction(tx => tx.put({type: 'preference', id: 'settleMode', data: {value: 'x'}, version: 1, deleted: false, updatedAt: 1}))
+  await resetAllPrefs(s, ctx)
+  expect(await getPref(s, 'theme')).toBe('system')
+})

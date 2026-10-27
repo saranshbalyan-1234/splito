@@ -147,9 +147,12 @@ export function ActivityItem({
   const rowPadding = useRowPadding()
   const rowPaddingTop = (rowPadding as {paddingTop?: number}).paddingTop ?? 12
   const menuControl = Menu.useMenuControl()
+  const [menuAt, setMenuAt] = useState({x: 0, y: 0})
   const [isHovered, setIsHovered] = useState(false)
   const [isFocusWithin, setIsFocusWithin] = useState(false)
   const content = useDescribe(event, snapshot, me, locale, navigation, actions)
+  /* A request awaiting an answer is one line: the answers on the right in place of "...", whose items are long-press / right-click (ARCHITECTURE 26.18). */
+  const isRequestRow = !!content.actions
 
   const menuActions = (['markRead', 'hide', 'delete'] as const).filter(x =>
     actions.isAvailable(x, event),
@@ -239,7 +242,28 @@ export function ActivityItem({
               onBlur: () => setIsFocusWithin(false),
             }
           : {})}
-        style={[a.relative, {backgroundColor}, style]}>
+        {...(IS_WEB && isRequestRow
+          ? {
+              onContextMenu: (e: {
+                preventDefault(): void
+                clientX: number
+                clientY: number
+                currentTarget: Element
+              }) => {
+                e.preventDefault()
+                const box = e.currentTarget.getBoundingClientRect()
+                setMenuAt({x: e.clientX - box.left, y: e.clientY - box.top})
+                haptics.longPress()
+                menuControl.open()
+              },
+            }
+          : {})}
+        style={[
+          a.relative,
+          isRequestRow ? [a.flex_row, a.align_center] : undefined,
+          {backgroundColor},
+          style,
+        ]}>
         <Pressable
           accessibilityRole={content.open ? 'link' : 'button'}
           accessibilityHint={
@@ -263,14 +287,16 @@ export function ActivityItem({
             a.flex_row,
             a.align_start,
             a.gap_lg,
-            a.w_full,
+            isRequestRow ? [a.flex_1, {minWidth: 0}] : a.w_full,
             a.px_lg,
             rowPadding,
             {backgroundColor},
             {
-              paddingRight: IS_WEB
-                ? actionsInset
-                : ACTIONS_RIGHT + ACTION_BUTTON_SIZE + 4,
+              paddingRight: isRequestRow
+                ? a.gap_md.gap
+                : IS_WEB
+                  ? actionsInset
+                  : ACTIONS_RIGHT + ACTION_BUTTON_SIZE + 4,
             },
           ]}>
           <SubtleHover hover={isHovered} />
@@ -310,26 +336,38 @@ export function ActivityItem({
         </Pressable>
         {content.actions ? (
           <View
-            style={[
-              a.flex_row,
-              a.gap_sm,
-              a.pb_md,
-              a.pr_lg,
-              {
-                backgroundColor,
-                paddingLeft:
-                  a.px_lg.paddingLeft + SLOT_SIZE.width + a.gap_lg.gap,
-                marginTop: -4,
-              },
-            ]}>
+            testID="activity-request-actions"
+            style={[a.flex_row, a.align_center, a.gap_xs, a.flex_shrink_0, a.pr_lg]}>
             {content.actions}
           </View>
         ) : null}
         {/*
-         * The "..." is always there, on every platform, so the row's actions
-         * are discoverable; on web with a mouse the quick actions join it on
-         * hover or focus.
+         * The "..." is on every row, so its actions are discoverable; on web
+         * with a mouse the quick actions join it on hover or focus. A request
+         * row has no "...": Accept / Decline take its place and the menu opens
+         * on long-press or right-click.
          */}
+        {isRequestRow ? (
+          <Menu.Root control={menuControl}>
+            {IS_WEB ? (
+              /* An invisible anchor where the right-click landed. */
+              <Menu.Trigger label={l`More actions`}>
+                {({props}) => (
+                  <Pressable
+                    {...props}
+                    accessible={false}
+                    pointerEvents="none"
+                    style={[
+                      a.absolute,
+                      {left: menuAt.x, top: menuAt.y, width: 1, height: 1, opacity: 0},
+                    ]}
+                  />
+                )}
+              </Menu.Trigger>
+            ) : null}
+            {menu}
+          </Menu.Root>
+        ) : (
         <View
           testID="activity-actions"
           style={[
@@ -389,6 +427,7 @@ export function ActivityItem({
             {menu}
           </Menu.Root>
         </View>
+        )}
       </View>
     </GestureActionView>
   )

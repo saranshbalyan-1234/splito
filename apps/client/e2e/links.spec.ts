@@ -19,10 +19,10 @@ test('a known path still opens its screen', async ({page}) => {
   await expect(page.getByTestId('screen-groups')).toBeVisible()
 })
 
-test('Back on a page opened directly never leaves a blank page', async ({page}) => {
-  // Web keeps People under every deep-linked page (linking.web.ts), so Back lands there;
-  // with no history at all (native cold start) goBack() uses the per-route parent (goBack.test.ts).
+test('Back on a page opened directly goes to its parent, never a blank page (audit M16)', async ({page}) => {
+  // Web puts the page's parents under a deep link (linking.web.ts), so Back runs the per-route fallback:
+  // Group -> Groups -> People.
   await page.goto('/groups/nope')
   await page.getByTestId('header-back').click()
-  await expect(page.getByTestId('screen-people')).toBeVisible()
+  await expect(page.getByTestId('screen-groups')).toBeVisible()
 })
