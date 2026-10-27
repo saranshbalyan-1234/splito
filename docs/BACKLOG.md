@@ -1376,15 +1376,20 @@ Name, type, currency, members, roles, trip dates; membership changes never rewri
   1. A09: adding or removing a member leaves old splits unchanged.
   2. Former members keep correct access to past records locally.
 
-### F-604 Archive groups `spec v1`
+### F-604 Archive groups `spec: owner § 26.12 (decision 88)`
 
-Hide a group from lists while keeping its records, balances and search hits.
+Archive a group: it leaves the main view and takes no new expenses, while its records, balances, settle-up and search hits stay.
 
-- **Effort** S · **Impact** 6 · **Backend** no · **Status** todo · **Deps** F-603
-- **Prefs** -
+- **Effort** M · **Impact** 7 · **Backend** no · **Status** todo · **Deps** F-603
+- **Prefs** `groups.showArchivedFold` (account, default on): the "Archived (N)" fold at the end of the Groups list
 - **Acceptance**
-  1. An archived group is hidden from Groups but still counted in balances.
-  2. Unarchive restores it.
+  1. "Archive group" / "Unarchive" in the group header overflow; one transaction with history and outbox; Activity row; Undo toast.
+  2. An archived group is absent from the Groups default view, sidebar and right-column recent groups, and every group picker; it shows under Status = Archived, the Archived (N) fold and search.
+  3. Its page shows the "Archived · Unarchive to add expenses" banner instead of Add expense; the FAB and the Add expense sheet cannot target it.
+  4. Sync mutations reject add, edit, move-into and restore-into for an archived group with `GROUP_ARCHIVED` (bun tests on both engines), so no path adds an expense.
+  5. Balances still count on Home, People and the overview with the group chip marked "Archived"; Settle up, Record payment, Call it even and comments still work.
+  6. Archiving with an open balance shows the open amounts per currency and offers "Settle up first".
+  7. Unarchive restores every surface; e2e covers archive, blocked add, settle in an archived group and unarchive at phone and desktop widths.
 
 ### F-605 Group emoji and colour
 

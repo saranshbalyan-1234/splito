@@ -1507,6 +1507,23 @@ expands once I click". *Where:* `screens/People`, `screens/Groups`, `screens/Gro
   Settled), sort (Amount / Name / Recent, default from `peopleSort`). Groups: type (Trip / Home / Couple /
   Other), status (Active / Archived), currency, show (All / You are owed / You owe / Settled), sort (Recent
   activity / Name / Amount). The Person page's history obeys the same Include groups choice.
+- **Archive group: out of the main view, closed to new expenses.** "Archive group" is in the group's header
+  overflow (any member; recorded in the group history and Activity; "Unarchive" undoes it, with an Undo
+  toast). An archived group:
+  - **leaves the main view:** it is not in the Groups list's default Active view, the sidebar / right column
+    "Recently active groups", or any group picker (Add expense, Record payment's group choice, Analytics
+    scope defaults). It stays reachable through the Groups filter Status = Archived, an "Archived (N)" fold at
+    the end of the Groups list (preference `groups.showArchivedFold`, default on), search, and links from
+    history;
+  - **takes no new expenses:** Add expense is gone from its page, replaced by a banner "Archived · Unarchive to
+    add expenses"; adding, editing, moving an expense into it or restoring one into it is rejected by the sync
+    mutation itself (`GROUP_ARCHIVED`), not only hidden in the UI;
+  - **can still close its money:** balances keep counting on Home and People (never hidden), with the group's
+    chip marked "Archived"; Settle up, Record payment and Call it even stay available so open balances can be
+    closed; comments stay open.
+  Archiving with an open balance is allowed after a prompt that lists the open amounts per currency and offers
+  "Settle up first". *Why:* "add archive group option as well, when archived it stops showing in main view and
+  no expense can be added".
 - **Group page:** Pager tabs Expenses / Balances / Members (§ 26.9). Balances shows each member's net per
   currency, a "who owes whom" list (pairwise, from the direct-mode settlement plan) and "Settle up".
   Payment rules are reached from the header overflow (§ 26.4). testIDs `friends-filters`, `groups-balances`,
@@ -1880,6 +1897,7 @@ Every owner decision, in the order it was made (all 2026-10-26). "Replaced" name
 | 85 | "make sure to pull features from Expensify and blusky whatever you think is better for user experience and features" | Per feature, take the better of Bluesky and Expensify (UX and features); Expensify leads money flows, Bluesky leads shell and client code; visual language stays Bluesky | § 26.1 | Bluesky first, Expensify for practice only |
 | 86 | "See this bill, it has both alcohol and food and diff tax is applied on both ... how to split such bill ... the taxation we added was overall on the bill" | Items carry tax classes; ordered charges each apply to all items, chosen classes or chosen items and can stack on earlier charges; each charge spread only over who had those items; round-off and reconciliation to the printed total; presets and per-merchant memory | § 26.13 | One overall tax on the whole bill |
 | 87 | "during scrolling don't hide bottom navigation, only header needs to be hidden" | On phones only the header scrolls away; bottom bar and FAB stay visible while scrolling | §§ 26.4, 26.6 | Bar and FAB hid with the header (row 81) |
+| 88 | "add archive group option as well, when archived it stops showing in main view and no expense can be added" | Archived groups leave the Groups list, recent groups and pickers (reachable via filter, Archived fold, search); no new, edited, moved or restored expenses (enforced in the mutation); settle, payments and comments stay; balances still count | § 26.12 | Archive only hid the group from Groups |
 
 New decisions follow § 0 rule 9: rewrite the rule in its topic so only the current truth remains, then add a
 row here.
