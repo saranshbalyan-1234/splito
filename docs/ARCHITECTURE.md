@@ -1443,6 +1443,13 @@ good"; "the left sidebar looks bad on desktop". *Where:* `view/shell/desktop/Lef
   drawers to have cross button like this and cancel and save button at bottom, drawers become modal/popup on
   web, with a cross button on top right and save and cancel on bottom right".
 - **Pickers** show only the X; a selection applies at once; no footer.
+- **Alerts (toasts) appear at the top right and every one has a close button** (owner 110). Rail and desktop:
+  stacked in the top-right corner, below the header line, newest on top, max 3 visible. Phones (native and phone
+  web): at the top, full width inside the side gutters, below the safe area / status bar (a corner makes no sense
+  at 390 px). Every toast has a round X (label "Dismiss", 44 px hit area) besides its action (Undo, Reload ...);
+  it can also be swiped up/aside on phones; it still auto-hides after its time unless it holds an action the user
+  must see (update toast stays until dismissed). Bluesky's toast look and animation (sliding in from the top),
+  reduced-motion aware. *Why:* "the alerts I receive, move them to top right and add one close button as well".
 - **Prompts** keep Bluesky `Prompt`'s content and buttons; on phones they present as a bottom sheet like
   everything else (Bluesky's native Prompt already does; phone-width web must too). Dragging a prompt down is
   Cancel; a destructive action never runs from a drag.
@@ -2038,6 +2045,7 @@ Every owner decision, in the order it was made (all 2026-10-26). "Replaced" name
 | 107 | "keep performance in mind, it should be lightning fast no delays in rendering anywhere" | Performance budgets become a merge gate: first frame < 100 ms with real content or a skeleton, no blank/spinner, no dropped keystrokes; perf spec + render counts on 10k fixture at every merge, fail on budget miss or >10 % regression | § 26.10 | Budgets measured and recorded only |
 | 108 | "also check wasted renders or rerendering everytime, remember in architecture"; "why did you render" | why-did-you-render in dev builds tracks every avoidable re-render; a Playwright render scenario fails on any report or a count above baseline; part of the merge gate | § 17, § 26.10 | Render counts recorded, no wasted-render check |
 | 109 | "make sure to update the demo data again and again, with all the changes, add it in architecture" | Every feature adds realistic demo data in the same change; a demoCoverage test fails when a feature has no demo record; assemble re-seeds and re-screenshots | § 26.1 | Demo data updated ad hoc |
+| 110 | "the alerts i receive, move them to top right and add one close button as well" | Toasts at top right (rail/desktop), top full-width on phones, each with a close X, swipe to dismiss on phones | § 26.8 | Bottom-left web toasts without close |
 
 New decisions follow § 0 rule 9: rewrite the rule in its topic so only the current truth remains, then add a
 row here.

@@ -2772,6 +2772,18 @@ Add `@welldone-software/why-did-you-render` to dev builds and a Playwright rende
   3. Every report found on the merged Wave B app is fixed at the root (stable props, memoised rows, narrow selectors, stable context, equal snapshots kept), each with a before/after count in `docs/COMPLETION_MATRIX.md`.
   4. The scenario is part of every merge's checks (decision 107).
 
+### F-243 Toasts at the top right with a close button `spec: owner § 26.8 (decision 110)`
+
+Move every toast to the top right (rail/desktop; top full-width on phones) and give each a close X. Done in the Wave B assemble step (small, one component).
+
+- **Effort** S · **Impact** 6 · **Backend** no · **Status** todo · **Deps** -
+- **Prefs** -
+- **Acceptance**
+  1. Web sonner `position="top-right"` with offset below the header; native toasts slide in from the top below the safe area; phone web top full width.
+  2. Every toast shows a round X ("Dismiss", 44 px hit area) next to its action; swipe up/aside dismisses on phones; max 3 stacked, newest on top.
+  3. Auto-hide unchanged except toasts that must be acted on (update toast) stay until dismissed.
+  4. Toasts never cover the header's actions or the FAB; reduced motion respected; e2e at 390 and 1440 px checks position and the X.
+
 ### F-1501 Text summaries for WhatsApp `spec 4b v1`
 
 Whole-group or "only their part" summaries with WhatsApp markup, sent via wa.me in the recipient's language.
