@@ -9,7 +9,6 @@ import {PaintRoller_Stroke2_Corner2_Rounded as PaintRollerIcon} from '#/componen
 import {Shapes_Stroke2_Corner0_Rounded as ShapesIcon} from '#/components/icons/Shapes'
 import {Shield_Stroke2_Corner0_Rounded as ShieldIcon} from '#/components/icons/Invite'
 import {
-  BinIcon,
   DefaultsIcon,
   SparklesIcon,
   TabsIcon,
@@ -57,7 +56,5 @@ export function useSectionInfo(): Record<
     lists: {title: l`Sorting and filters`, icon: ListIcon},
     notifications: {title: l`Notifications`, icon: BellIcon},
     privacy: {title: l`Privacy`, icon: ShieldIcon},
-    /* Not a generated page: its one preference heads the Recently deleted screen. */
-    history: {title: l`Recently deleted`, icon: BinIcon},
   }
 }

@@ -6,27 +6,22 @@ import {
   createExpense,
   createGroup,
   createPerson,
-  createRepayment,
   createWriteOffs,
   deleteExpense,
-  deleteRepayment,
   deleteWriteOff,
   deleteWriteOffs,
   ensureMe,
   type ExpenseDraft,
   restoreExpense,
-  restoreRepayment,
   restoreWriteOff,
   type WriteOffInput,
 } from '../src/mutations'
-import {getPref, setPref} from '../src/preferences'
 import {loadLedger} from '../src/selectors'
 import {openSqlStore} from '../src/sqlStore'
 import {type Store} from '../src/store'
 import {type MutationCtx} from '../src/types'
 import {bunExecutor} from './bunExecutor'
 
-const DAY = 86_400_000
 let s: Store
 let ctx: MutationCtx
 let n = 0

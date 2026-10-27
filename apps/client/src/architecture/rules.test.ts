@@ -65,6 +65,20 @@ describe('scanner', () => {
 })
 
 describe('counters', () => {
+  test('hardDelete: erase, a row delete of a record table or SQL DELETE outside migration and the engines', () => {
+    const screen = `${CLIENT}screens/Group/index.tsx`
+    expect(count('hardDelete', 'await store.erase(refs)', screen)).toBe(1)
+    expect(count('hardDelete', "await rows.delete('expenses', [id])", 'packages/sync/src/mutations.ts')).toBe(1)
+    expect(count('hardDelete', 'await rows.delete(ENTITY_STORE[type], [id])', 'packages/sync/src/groupLifecycle.ts')).toBe(1)
+    expect(count('hardDelete', 'await db.run(`DELETE FROM groups WHERE id = ?`, [id])', 'packages/sync/src/mutations.ts')).toBe(1)
+    // Projection rows, Maps and Sets, comments, migration, the erase primitive and the dev tools are fine.
+    expect(count('hardDelete', "await rows.delete('balances', key); listeners.delete(fn); known.delete(id)", 'packages/sync/src/ledgerProjection.ts')).toBe(0)
+    expect(count('hardDelete', '// store.erase(refs) is forbidden here', screen)).toBe(0)
+    expect(count('hardDelete', 'await rows.delete(ENTITY_STORE.preference, [id])', 'packages/sync/src/migrate.ts')).toBe(0)
+    expect(count('hardDelete', 'await rows.delete(ENTITY_STORE[type], [id])', 'packages/sync/src/core.ts')).toBe(0)
+    expect(count('hardDelete', 'if (refs.length) await store.erase(refs)', `${CLIENT}data/demoLarge.ts`)).toBe(0)
+  })
+
   test('moneyFullRead', () => {
     const screen = `${CLIENT}screens/People/index.tsx`
     expect(count('moneyFullRead', "const all = await store.getAll<Expense>('expense')", screen)).toBe(1)

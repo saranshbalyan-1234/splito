@@ -9,7 +9,7 @@ import {
   type GroupRemoval,
 } from '@splito/sync'
 
-import {usePref, useStore} from '#/data/hooks'
+import {useStore} from '#/data/hooks'
 import {atoms as a, useTheme} from '#/alf'
 import {type DialogControlProps} from '#/components/Dialog'
 import {Trash_Stroke2_Corner0_Rounded as TrashIcon} from '#/components/icons/Trash'
@@ -18,7 +18,7 @@ import {Text} from '#/components/Typography'
 
 /**
  * Delete group (F-615): says what goes - the live expenses, payments and write-offs in it - and that all of it
- * waits in Recently deleted and comes back together. Confirming runs `onConfirm` after the sheet closes.
+ * stays in the Groups list, struck through, and comes back together on Restore. Confirming runs `onConfirm` after the sheet closes.
  */
 export function DeleteGroupPrompt({
   control,
@@ -40,7 +40,6 @@ function Body({group, onConfirm}: {group: Entity<Group>; onConfirm: () => void})
   const t = useTheme()
   const {t: l} = useLingui()
   const store = useStore()
-  const [days = 30] = usePref('history.binDays')
   const [contents, setContents] = useState<GroupRemoval | null>(null)
   useEffect(() => {
     let isCancelled = false
@@ -99,8 +98,8 @@ function Body({group, onConfirm}: {group: Entity<Group>; onConfirm: () => void})
         </View>
         <Text style={[a.text_md, a.leading_snug, t.atoms.text_contrast_high, a.pb_lg]}>
           <Trans>
-            It all waits in Recently deleted for {days} days. Restore the group
-            there and every expense and payment comes back with it.
+            The group and everything in it stay in your lists, struck through.
+            Restore the group and every expense and payment comes back with it.
           </Trans>
         </Text>
       </Prompt.Content>

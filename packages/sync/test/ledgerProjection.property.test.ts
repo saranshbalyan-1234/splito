@@ -304,7 +304,7 @@ describe('projection == recomputation over random operation sequences', () => {
     const s = await openSqlStore(bunExecutor(':memory:'))
     await run(s, 777, 300, {erases: false})
     await expectProjectionsMatchLedger(s)
-    const { entities, history } = await s.dump()
+    const { history } = await s.dump()
     const places = new Map<string, Set<string | null>>()
     for (const h of history.filter(h => h.entityType === 'expense')) places.set(h.entityId, (places.get(h.entityId) ?? new Set()).add((h.data as {groupId: string | null}).groupId))
     expect([...places.values()].filter(p => p.size > 1).length).toBeGreaterThan(0)

@@ -14,7 +14,6 @@ import {
   Eye,
   EyeOff,
   Hash,
-  History,
   Languages,
   LayoutGrid,
   Palette,
@@ -56,6 +55,4 @@ export const CashIcon = createIcon(Banknote)
 export const KeypadIcon = createIcon(Calculator)
 export const ShorthandIcon = createIcon(Sigma)
 export const ContrastIcon = createIcon(Contrast)
-/** Recently deleted: how long deleted items stay. */
-export const BinIcon = createIcon(History)
 export const SearchHistoryIcon = createIcon(TextSearch)

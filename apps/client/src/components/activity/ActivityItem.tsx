@@ -458,7 +458,7 @@ export function ActivityItem({
   )
 }
 
-/** Changes that put a record in Recently deleted: shown struck through with when it was deleted. */
+/** Changes that delete a record (it stays in its list): shown struck through with when it was deleted. */
 const DELETED_KINDS = new Set<ActivityEvent['kind']>([
   'expense.deleted',
   'repayment.removed',

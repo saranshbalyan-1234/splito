@@ -4,6 +4,7 @@ import {View} from 'react-native'
 import {type Feedback, type PrefGroup, resetAllPrefs} from '@splito/sync'
 import {plural} from '@lingui/core/macro'
 import {Trans, useLingui} from '@lingui/react/macro'
+import {useRoute} from '@react-navigation/native'
 
 import {useHaptics} from '#/lib/haptics'
 import {bottomBarItems} from '#/lib/routes/navigationItems'
@@ -20,7 +21,6 @@ import {CircleQuestion_Stroke2_Corner2_Rounded as HelpIcon} from '#/components/i
 import {Cloud_Stroke2_Corner0_Rounded as CloudIcon} from '#/components/icons/Cloud'
 import {Inbox_Stroke2_Corner0_Rounded as InboxIcon} from '#/components/icons/Feedback'
 import {Message_Stroke2_Corner0_Rounded as MessageIcon} from '#/components/icons/Invite'
-import {Trash_Stroke2_Corner0_Rounded as TrashIcon} from '#/components/icons/Trash'
 import * as Layout from '#/components/Layout'
 import {useTabLabels} from '#/components/settings/NavigationEditor'
 import * as Prompt from '#/components/Prompt'
@@ -57,7 +57,7 @@ export function SettingsScreen() {
   const resetPrompt = Prompt.usePromptControl()
   const me = useMe()
   const {hasSession} = useSession()
-  const [binDays] = usePref('history.binDays')
+  const note = (useRoute().params as {note?: string} | undefined)?.note
   const openFeedback = useOpenFeedback()
   const feedbackCount = useEntities<Feedback>('feedback')?.length ?? 0
 
@@ -202,24 +202,14 @@ export function SettingsScreen() {
           <SectionTitle>
             <Trans>Data</Trans>
           </SectionTitle>
-          {/* Not a preference page: the bin itself, with its window setting on top. */}
-          <SettingsList.LinkItem
-            testID="settings-recently-deleted"
-            to="/settings/recently-deleted"
-            label={l`Recently deleted`}>
-            <SettingsList.ItemIcon icon={TrashIcon} />
-            <SettingsList.ItemText>
-              <Trans>Recently deleted</Trans>
-            </SettingsList.ItemText>
-            {binDays ? (
-              <Text
-                testID="settings-recently-deleted-value"
-                numberOfLines={1}
-                style={[a.text_md, a.text_right, t.atoms.text_contrast_medium]}>
-                {plural(binDays, {one: '# day', other: '# days'})}
+          {note === 'deleted-stay' && (
+            <View testID="settings-deleted-note" style={[a.flex_row, a.gap_sm, a.px_xl, a.pb_sm]}>
+              <InfoIcon size="sm" fill={t.atoms.text_contrast_medium.color} />
+              <Text style={[a.flex_1, a.text_sm, a.leading_snug, t.atoms.text_contrast_medium]}>
+                <Trans>Deleted items now stay in their lists.</Trans>
               </Text>
-            ) : null}
-          </SettingsList.LinkItem>
+            </View>
+          )}
           <InstallAppItem />
           {/* Dev and e2e builds only: the large demo set (ARCHITECTURE 26.1). */}
           {DemoDataRows && (
