@@ -1,5 +1,7 @@
 import {expect, type Locator, type Page, test} from '@playwright/test'
 
+import {openDemo} from './openDemo'
+
 /*
  * Owner rule: every modal on a phone is a drawer. Below 800px a prompt, a
  * form sheet and a menu rise from the bottom edge at full width with a
@@ -46,7 +48,7 @@ async function openResetPrompt(page: Page) {
 }
 
 async function openFilters(page: Page) {
-  await page.goto('/?demo=1')
+  await openDemo(page)
   await expect(page.getByTestId('person-Arjun Mehta')).toBeVisible()
   await page.getByTestId('screen-people').getByTestId('list-filters').click()
   return page
@@ -135,7 +137,7 @@ test('phone: a menu opens as a drawer and its rows still act', async ({
   page,
 }) => {
   await page.setViewportSize(PHONE)
-  await page.goto('/?demo=1')
+  await openDemo(page)
   /* The demo seed must have landed before navigating away, or /groups loads empty. */
   await expect(page.getByTestId('person-Arjun Mehta')).toBeVisible()
   await page.goto('/groups')
@@ -154,7 +156,7 @@ test.describe('touch phone', () => {
   test.use({viewport: PHONE, hasTouch: true, isMobile: true})
 
   test('Add expense rises as a drawer with a handle', async ({page}) => {
-    await page.goto('/?demo=1')
+    await openDemo(page)
     await page.getByTestId('fab-add').click()
     const sheet = page.getByTestId('screen-add-expense')
     await expectAtBottom(sheet)

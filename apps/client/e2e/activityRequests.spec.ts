@@ -1,5 +1,7 @@
 import {expect, test} from '@playwright/test'
 
+import {openDemo} from './openDemo'
+
 /*
  * ARCHITECTURE 26.18: Activity's friend-request rows are the one-line
  * RequestRow layout. Accept / Decline sit on the right (icon-only on phones,
@@ -13,7 +15,7 @@ for (const viewport of [{width: 320, height: 800}, {width: 390, height: 844}, DE
     page,
   }) => {
     await page.setViewportSize(viewport)
-    await page.goto('/?demo=1')
+    await openDemo(page)
     await expect(page.getByTestId('person-Arjun Mehta')).toBeVisible()
     await page.getByTestId('tab-activity').click()
     const row = page

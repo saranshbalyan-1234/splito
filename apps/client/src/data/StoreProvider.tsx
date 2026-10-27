@@ -95,7 +95,6 @@ export function StoreProvider({children, fallback = null}: {children: React.Reac
   /* Web only: another tab holds an older version open (`blocked`), or a newer build took the database over (`changed`). */
   const [notice, setNotice] = useState<'blocked' | 'changed' | null>(null)
   const live = useRef<Live | null>(null)
-  const running = useRef(false)
   const booted = useRef<Promise<void>>(Promise.resolve())
   const notices = useRef({onBlocked: () => setNotice('blocked'), onVersionChange: () => setNotice('changed')})
 
@@ -107,17 +106,19 @@ export function StoreProvider({children, fallback = null}: {children: React.Reac
     const unwire = next.demo ? (setDiagnosticsEnabled(false), () => {}) : wireTelemetry(next.store, next.ctx)
     live.current = {...next, unwire}
     installDevTools(next.store, next.ctx)
+    perfMark('splito:store-adopt')
     setValue({store: next.store, ctx: next.ctx})
     setDemoFlag(next.demo)
     setNotice(current => (current === 'blocked' ? null : current))
     if (prev) setTimeout(() => void prev.store.close(), 300)
   }, [])
 
-  const openReal = useCallback(async () => {
+  /** The real store. `ensure: false` skips the "me" write for a start that is about to open the demo database instead. */
+  const openReal = useCallback(async (ensure = true) => {
     const ctx = getMutationCtx()
     const store = await openStore(notices.current)
     try {
-      await ensureMe(store, ctx, 'Me')
+      if (ensure) await ensureMe(store, ctx, 'Me')
     } catch (e) {
       void store.close()
       throw e
@@ -129,17 +130,29 @@ export function StoreProvider({children, fallback = null}: {children: React.Reac
     let cancelled = false
     perfMark('splito:store-open')
     booted.current = (async () => {
-      const real = await openReal()
+      const real = await openReal(!loadDemo)
       /* Dev StrictMode mounts twice: a store opened for the discarded mount is closed, never used. */
       if (cancelled) return void real.store.close()
-      const m = loadDemo && (await loadDemo())
-      if (m && (await m.readDemoMode(real.store))) {
+      /*
+       * Only the one preference row is read here, inline under the folded dev/e2e condition (the key is
+       * `demoMode.ts`'s MODE_ID), so a start in real mode never waits for the demo chunk.
+       */
+      const demoOn =
+        (__DEV__ || process.env.EXPO_PUBLIC_ENV === 'e2e') &&
+        (await real.store.get<{value: unknown}>('preference', 'demo.mode'))?.data.value === true
+      if (demoOn && loadDemo) {
         // A reload keeps the mode: the real database said so; the demo one opens, the real one closes.
+        const m = await loadDemo()
         const opened = await m.openDemo(real.ctx, notices.current)
         if (cancelled) return void Promise.all([opened.store.close(), real.store.close()])
         adopt({...opened, demo: true})
         setTimeout(() => void real.store.close(), 300)
-      } else adopt({...real, demo: false})
+      } else {
+        if (loadDemo) await ensureMe(real.store, real.ctx, 'Me')
+        adopt({...real, demo: false})
+        // Fetch the demo chunk in the background so the first switch does not wait for it.
+        void loadDemo?.()
+      }
       perfMark('splito:store-ready')
     })().catch(e => {
       logger.error(e, {where: 'StoreProvider.open'})
@@ -154,14 +167,28 @@ export function StoreProvider({children, fallback = null}: {children: React.Reac
     }
   }, [adopt, openReal])
 
+  /* A switch and a reset never overlap: each waits for the one before it (a double tap, the e2e hook, a banner press). */
+  const queue = useRef<Promise<unknown>>(Promise.resolve())
+  const pending = useRef(0)
+  const serial = useCallback(<T,>(work: () => Promise<T>): Promise<T> => {
+    pending.current++
+    setBusy(true)
+    const run = queue.current.then(work)
+    queue.current = run.then(
+      () => undefined,
+      () => undefined,
+    )
+    return run.finally(() => {
+      if (--pending.current === 0) setBusy(false)
+    })
+  }, [])
+
   const setDemo = useCallback(
-    async (on: boolean, onProgress?: (done: number) => void) => {
-      await booted.current
-      const cur = live.current
-      if (!loadDemo || !cur || running.current || cur.demo === on) return
-      running.current = true
-      setBusy(true)
-      try {
+    (on: boolean, onProgress?: (done: number) => void) =>
+      serial(async () => {
+        await booted.current
+        const cur = live.current
+        if (!loadDemo || !cur || cur.demo === on) return
         const m = await loadDemo()
         if (on) {
           // Seeded and ready before anything changes; the real database learns of the mode last, so a failure leaves it untouched.
@@ -185,28 +212,21 @@ export function StoreProvider({children, fallback = null}: {children: React.Reac
           setStorageScope('')
           adopt({...real, demo: false})
         }
-      } finally {
-        running.current = false
-        setBusy(false)
-      }
-    },
-    [adopt, openReal],
+      }),
+    [adopt, openReal, serial],
   )
 
-  const resetDemo = useCallback(async (onProgress?: (done: number) => void) => {
-    await booted.current
-    const cur = live.current
-    if (!loadDemo || !cur?.demo || running.current) return
-    running.current = true
-    setBusy(true)
-    try {
-      const m = await loadDemo()
-      await m.openDemo(cur.ctx, notices.current, onProgress, cur.store, true)
-    } finally {
-      running.current = false
-      setBusy(false)
-    }
-  }, [])
+  const resetDemo = useCallback(
+    (onProgress?: (done: number) => void) =>
+      serial(async () => {
+        await booted.current
+        const cur = live.current
+        if (!loadDemo || !cur?.demo) return
+        const m = await loadDemo()
+        await m.openDemo(cur.ctx, notices.current, onProgress, cur.store, true)
+      }),
+    [serial],
+  )
 
   useEffect(() => {
     if (loadDemo) void loadDemo().then(m => m.installTestHook(setDemo))

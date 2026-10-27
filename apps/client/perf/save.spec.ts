@@ -1,5 +1,7 @@
 import {type CDPSession, expect, type Page, test} from '@playwright/test'
 
+import {openDemo} from '../e2e/openDemo'
+
 /*
  * What one save costs on a 500-expense ledger, with People open at desktop
  * width (sidebar, right column and the Activity badge mounted): IndexedDB
@@ -119,7 +121,7 @@ const median = (xs: number[]) => [...xs].sort((a, b) => a - b)[Math.floor(xs.len
 test('one save on a 500-expense ledger', async ({page}) => {
   await page.setViewportSize({width: 1440, height: 900})
   await page.addInitScript(instrument)
-  await page.goto('/?demo=1')
+  await openDemo(page)
   await expect(page.getByTestId('screen-people')).toBeVisible({timeout: 60_000})
 
   const seedStart = Date.now()

@@ -1,5 +1,7 @@
 import {expect, type Page, test} from '@playwright/test'
 
+import {openDemo} from './openDemo'
+
 /* F-310 smart amount input, F-402 cash rounding, F-1801 money direction. */
 
 const DESKTOP = {width: 1440, height: 900}
@@ -7,7 +9,7 @@ const PHONE = {width: 390, height: 844}
 
 async function openAddExpense(page: Page) {
   await page.setViewportSize(DESKTOP)
-  await page.goto('/?demo=1')
+  await openDemo(page)
   await expect(page.getByTestId('person-Riya Sharma')).toBeVisible()
   await page.getByTestId('sidebar-add').click()
   await expect(page.getByTestId('screen-add-expense')).toBeVisible()
@@ -88,7 +90,7 @@ test('phones: the keypad replaces the keyboard and works as a calculator', async
   page,
 }) => {
   await page.setViewportSize(PHONE)
-  await page.goto('/?demo=1')
+  await openDemo(page)
   await expect(page.getByTestId('person-Riya Sharma')).toBeVisible()
   await page.getByTestId('fab-add').click()
   await expect(page.getByTestId('screen-add-expense')).toBeVisible()
@@ -115,7 +117,7 @@ test('money direction is never colour alone: arrows and words on balances', asyn
   page,
 }) => {
   await page.setViewportSize(DESKTOP)
-  await page.goto('/?demo=1')
+  await openDemo(page)
   const row = page.getByTestId('person-Riya Sharma')
   await expect(row).toBeVisible()
   await expect(row).toContainText(/(owes you|you owe) [↙↗]/)

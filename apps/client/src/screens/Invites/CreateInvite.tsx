@@ -10,13 +10,12 @@ import {
   INVITE_EXPIRY_MS,
   type InviteLink,
   type InviteMaxUses,
-  offlineDirectory,
 } from '@splito/sync'
 
 import {useHaptics} from '#/lib/haptics'
 import {type AllNavigatorParams, type NavigationProp} from '#/lib/routes/types'
 import {logger} from '#/logger'
-import {directory, inviteUrl, makeInviteLink} from '#/data/friends'
+import {inviteUrl, isDirectoryAvailable, makeInviteLink} from '#/data/friends'
 import {useEntities, useInviteLinks, useMutationCtx, usePref, useStore} from '#/data/hooks'
 import * as SettingsList from '#/screens/Settings/components/SettingsList'
 import {atoms as a, useTheme} from '#/alf'
@@ -79,7 +78,7 @@ export function CreateInviteScreen() {
   const chosenUses = uses ?? defaultUses ?? (kind === 'group' ? 25 : 1)
   const chosenExpiry = expiry ?? defaultExpiry ?? '7d'
   /* Invite links need the server (section 10: they fail closed, never a made-up URL). */
-  const isLinkAvailable = directory !== offlineDirectory
+  const isLinkAvailable = isDirectoryAvailable()
 
   const close = () => {
     if (navigation.canGoBack()) navigation.goBack()

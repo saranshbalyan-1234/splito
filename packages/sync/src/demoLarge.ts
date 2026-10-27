@@ -373,13 +373,13 @@ const NOTES: Record<string, string[]> = {
  * Three small groups and six friends with fixed, hand-checked numbers (ARCHITECTURE 26.1: the one demo set
  * folds in what the old `?demo=1` set held). They stand beside the year of generated use, share none of its
  * groups or people (so each friend's balance is exactly what is written here), and are never settled up.
- * Dates are written as of `CURATED_ANCHOR` and shift with `today`, so the story always lies in the past.
+ * Their dates are fixed (the e2e specs search and read them), so over time they age like any old trip.
  */
-const CURATED_ANCHOR = '2026-10-28'
 
 type CuratedGroup = 'goa' | 'flat' | 'lisbon'
 type CuratedFriend = 'riya' | 'arjun' | 'priya' | 'sam' | 'lena' | 'diego'
 type CuratedWho = CuratedFriend | 'me'
+const STORY_FRIENDS: readonly CuratedFriend[] = ['riya', 'arjun', 'priya', 'sam', 'lena', 'diego']
 
 const CURATED_GROUPS: Record<CuratedGroup, {name: string; kind: Group['kind']; currency: CurrencyCode; start: string | null; end: string | null; tz: string; members: CuratedFriend[]}> = {
   goa: {name: 'Goa trip', kind: 'trip', currency: 'INR', start: '2025-12-20', end: '2025-12-27', tz: 'Asia/Kolkata', members: ['riya', 'arjun', 'priya', 'sam']},
@@ -518,6 +518,8 @@ export function generateLargeDemo({me, today, now, seed = DEMO_LARGE_SEED}: {me:
   /* People, then groups: a year ago, a few minutes apart. */
   let clock = T - 372 * DAY + 19 * HOUR
   for (const [key, [name, upiId]] of Object.entries(FRIENDS)) {
+    // The story's six friends join two weeks ago, with their groups (below), so Activity opens on them.
+    if (STORY_FRIENDS.includes(key as CuratedFriend)) continue
     clock += rng.int(2, 40) * MINUTE
     ops.push({kind: 'person', at: clock, actor: me, id: pid(key as Friend), name, upiId})
     counts.people++
@@ -961,11 +963,15 @@ export function generateLargeDemo({me, today, now, seed = DEMO_LARGE_SEED}: {me:
 
   {
     const MINUTE_ = MINUTE
-    const daysBefore = (date: string) => Math.round((Date.parse(CURATED_ANCHOR) - Date.parse(date)) / DAY)
-    const cdate = (date: string) => dayAgo(daysBefore(date))
+    const cdate = (date: LocalDate) => date
     const cid = (w: CuratedWho) => pid(w)
     const gidOf = (key: CuratedGroup) => `${DEMO_LARGE_PREFIX}g-story-${key}`
     let at = now - 14 * DAY
+    for (const key of STORY_FRIENDS) {
+      at += 7 * MINUTE_
+      ops.push({kind: 'person', at, actor: me, id: pid(key), name: FRIENDS[key][0], upiId: null})
+      counts.people++
+    }
     for (const [key, g] of Object.entries(CURATED_GROUPS) as Array<[CuratedGroup, (typeof CURATED_GROUPS)[CuratedGroup]]>) {
       at += 5 * HOUR
       ops.push({

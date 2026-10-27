@@ -1,8 +1,10 @@
 import {expect, type Page, test} from '@playwright/test'
 
+import {openDemo as enterDemo} from './openDemo'
+
 /*
  * 26.18: adding friends by email or number, consent, invites and invite
- * links. Demo mode (?demo=1) has the fake directory: ananya@example.com is
+ * links. Demo mode has the fake directory: ananya@example.com is
  * on Splito, anything else is not. Without demo the directory is unavailable,
  * as production is until the backend exists.
  */
@@ -14,7 +16,7 @@ type Splito = {acceptOutgoing(contactValue: string, name: string): Promise<strin
 
 async function openDemo(page: Page) {
   await page.setViewportSize(DESKTOP)
-  await page.goto('/?demo=1')
+  await enterDemo(page)
   await expect(page.getByTestId('person-Riya Sharma')).toBeVisible()
 }
 
@@ -86,7 +88,7 @@ const ROWS: [string, string, [string, string][]][] = [
 for (const viewport of [{width: 320, height: 800}, {width: 393, height: 852}, DESKTOP]) {
   test(`request and invite rows are one horizontal line at ${viewport.width}px`, async ({page}) => {
     await page.setViewportSize(viewport)
-    await page.goto('/?demo=1')
+    await enterDemo(page)
     const isPhone = viewport.width < 800
     for (const [rowID, name, actions] of ROWS) {
       const row = page.getByTestId(rowID)
@@ -265,7 +267,7 @@ test('without the Contact Picker API the contacts button is hidden', async ({pag
 
 test('phone: Add friend is a bottom sheet, full width from the bottom edge', async ({page}) => {
   await page.setViewportSize(PHONE)
-  await page.goto('/?demo=1')
+  await enterDemo(page)
   await page.getByTestId('people-add-friend').click()
   const sheet = page.getByTestId('screen-add-friend')
   await expect(sheet).toBeVisible()

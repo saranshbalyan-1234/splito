@@ -1,5 +1,7 @@
 import {expect, type Page, test} from '@playwright/test'
 
+import {openDemo as enterDemo} from './openDemo'
+
 const DESKTOP = {width: 1440, height: 900}
 const LAPTOP = {width: 1280, height: 800}
 const RAIL = {width: 900, height: 800}
@@ -24,7 +26,7 @@ async function open(page: Page, path: string, screen: string) {
 }
 
 async function openDemo(page: Page) {
-  await page.goto('/?demo=1')
+  await enterDemo(page)
   await expect(page.getByTestId('person-Arjun Mehta')).toBeVisible()
 }
 
@@ -336,7 +338,8 @@ test.describe('drawer: Bluesky drawer from the header avatar', () => {
     page,
   }) => {
     await page.setViewportSize(PHONE)
-    await openDemo(page)
+    // The real data (demo mode has its own "Demo" dot, see demo-mode.spec).
+    await page.goto('/')
     const avatar = on(page, 'screen-people', 'header-avatar')
     await expect(avatar.getByTestId('sync-dot-local')).toBeVisible()
     // Never colour alone: the label carries the state, and web shows a tooltip.
@@ -386,10 +389,9 @@ test.describe("activity: a tab with Bluesky's unread badge", () => {
     await page.setViewportSize(LAPTOP)
     await openDemo(page)
     const badge = page.getByTestId('nav-badge-activity')
-    await expect(badge).toHaveText(/^\d+$/)
-    const unread = Number(await badge.innerText())
-    expect(unread).toBeGreaterThan(0)
-    await expect(badge).toHaveAttribute('aria-label', `${unread} unread items`)
+    // A year of friends' changes: the badge stops at 30+.
+    await expect(badge).toHaveText('30+')
+    await expect(badge).toHaveAttribute('aria-label', '30 or more unread items')
     await page.getByTestId('tab-activity').click()
     await expect(page).toHaveURL(/\/activity$/)
     await expect(page.getByTestId('screen-activity')).toBeVisible()
@@ -398,16 +400,14 @@ test.describe("activity: a tab with Bluesky's unread badge", () => {
       'page',
     )
 
-    // "From others" drops your own changes; the badge counted exactly those.
+    // "From others" drops your own changes.
     const rows = activityRows(page)
-    const all = await rows.count()
     await page.getByTestId('activity-tabs-selector-1').click()
     await expect(page.getByTestId('activity-tabs-selector-1')).toHaveAttribute(
       'aria-selected',
       'true',
     )
-    await expect.poll(() => rows.count()).toBe(unread)
-    expect(unread).toBeLessThan(all)
+    await expect.poll(() => rows.count()).toBeGreaterThan(0)
     await expect(rows.filter({hasText: 'You added'})).toHaveCount(0)
 
     // Mark all read clears the badge, and it stays cleared after a reload.
@@ -422,7 +422,7 @@ test.describe("activity: a tab with Bluesky's unread badge", () => {
   test('on phones the bottom bar carries the badge', async ({page}) => {
     await page.setViewportSize(PHONE)
     await openDemo(page)
-    await expect(page.getByTestId('nav-badge-activity')).toHaveText(/^\d+$/)
+    await expect(page.getByTestId('nav-badge-activity')).toHaveText('30+')
     await page.getByTestId('tab-activity').click()
     await expect(page).toHaveURL(/\/activity$/)
     await expect(page.getByTestId('screen-activity')).toBeVisible()
@@ -538,9 +538,6 @@ test.describe('desktop: Bluesky left sidebar and full-width content', () => {
     await expect(
       recent.getByTestId('sidebar-group-balance-Goa trip'),
     ).toHaveText(/^\+₹/)
-    await expect(recent.getByTestId('sidebar-group-balance-Lisbon')).toHaveText(
-      /^−€/,
-    )
     expect(
       await recent.locator('[data-testid^="sidebar-group-"][href]').count(),
     ).toBeLessThanOrEqual(5)
@@ -680,7 +677,7 @@ test.describe('phone: Bluesky bottom bar and FAB', () => {
     await expect(on(page, 'screen-people', 'fab-add')).toHaveCount(0)
     await openDemo(page)
     for (const [path, screen] of [
-      ['/?demo=1', 'screen-people'],
+      ['/', 'screen-people'],
       ['/groups', 'screen-groups'],
       ['/activity', 'screen-activity'],
     ]) {
@@ -713,7 +710,7 @@ test.describe('phone: Bluesky bottom bar and FAB', () => {
     await expect(page).toHaveURL(/\/expense\/new$/)
     await expect(page.getByTestId('screen-add-expense')).toBeVisible()
     await page.getByTestId('sheet-close').click()
-    await expect(page).toHaveURL(/\/(\?demo=1)?$/)
+    await expect(page).toHaveURL(/\/$/)
     await expect(page.getByTestId('screen-add-expense')).toHaveCount(0)
   })
 

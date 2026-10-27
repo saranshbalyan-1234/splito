@@ -1,5 +1,7 @@
 import {expect, type Page, test} from '@playwright/test'
 
+import {openDemo} from './openDemo'
+
 /* The motion layer wired into the shell: illustrations, counting totals, row animations, skeletons, press scale. */
 
 type Splito = {
@@ -10,7 +12,9 @@ type Splito = {
 }
 
 async function ready(page: Page, path: string, testID: string) {
-  await page.goto(path)
+  // A path ending `?demo=1` here means "in demo mode" (the hook turns it on), not a URL switch.
+  if (path.endsWith('?demo=1')) await openDemo(page, path.slice(0, -'?demo=1'.length))
+  else await page.goto(path)
   await expect(page.getByTestId(testID)).toBeVisible()
   await page.waitForFunction(() => 'splito' in window)
 }
@@ -190,12 +194,12 @@ test('skeletons show while the local store loads', async ({page}) => {
     }).observe(document, {subtree: true, childList: true})
   })
   for (const [path, screen] of [
-    ['/?demo=1', 'person-Arjun Mehta'],
+    ['/', 'person-Arjun Mehta'],
     ['/groups', 'group-Goa trip'],
     ['/activity', 'screen-activity'],
     ['/profile', 'profileHeaderDisplayName'],
   ] as const) {
-    await page.goto(path)
+    await openDemo(page, path)
     await expect(page.getByTestId(screen).first()).toBeVisible()
   }
   const seen: string[] = await page.evaluate(() =>

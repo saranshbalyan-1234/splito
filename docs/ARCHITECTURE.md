@@ -536,8 +536,9 @@ The spec's labels are `Saved on this device`, `Waiting for connection`, `Syncing
   not. If IndexedDB cannot open or persist (private mode, quota, eviction), show a persistent notice that
   data will not be kept on this device. [Planned]
 - **Sample data never counts.** Demo data is built through real mutations, uses invented names, is labelled,
-  and is never merged into a real account or used as a fallback. [Built] `?demo=1` seeds only in dev/e2e
-  builds (`data/demo.ts`).
+  and is never merged into a real account or used as a fallback. [Built] Demo mode (dev/e2e builds only) is a
+  switch over a separate database, `splito-demo` (`data/demoMode.ts`, `data/demoSeed.ts`); the real database's
+  only footprint is the one `demo.mode` preference row.
 
 ### 9.8 Local database schema (binding; scalability first)
 
@@ -1790,7 +1791,7 @@ add anyway (only for you)"; "also i should be able to select from contacts". *Wh
   friends, where you can add remove friends as well, and invite management as well".
 - **Privacy settings (preferences registry):** "Let people find me by email / phone" (default on),
   "Who can send me friend requests" (everyone / people with my link only), default invite-link limits.
-- Demo mode (`?demo=1`) ships a fake directory so every branch of the flow can be seen; production uses the
+- Demo mode (the Settings switch) ships a fake directory so every branch of the flow can be seen; production uses the
   backend directory API (backend batch). No fake "sent" states in production builds.
 
 ### 26.19 Ask Splito (AI chat)

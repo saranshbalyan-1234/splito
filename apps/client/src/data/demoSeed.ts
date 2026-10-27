@@ -17,6 +17,7 @@ import {
   type Page,
   receiveFriendRequest,
   recordInviteUse,
+  saveFeedback,
   sendFriendRequest,
   type Store,
 } from '@splito/sync'
@@ -94,6 +95,15 @@ async function seedFriendInvites(store: Store, ctx: MutationCtx, goaId: string, 
   for (const id of ['demo-maya', 'demo-ananya', 'demo-sara']) await recordInviteUse(store, at(now - 3 * DAY, id), goa.id)
 }
 
+/** "Your feedback" (Settings > Send feedback): three records saved on this device, one with a reply address. */
+async function seedFeedback(store: Store, ctx: MutationCtx, now: number) {
+  const at = (time: number): MutationCtx => ({...ctx, now: () => time})
+  const info = {version: '1.0.0', platform: 'web', os: 'Demo', language: 'en', screen: '/'}
+  await saveFeedback(store, at(now - 6 * DAY), {type: 'idea', message: 'Let me split a bill by dragging items onto people.', attachment: null, appInfo: info, replyEmail: null})
+  await saveFeedback(store, at(now - 3 * DAY), {type: 'bug', message: 'The total on the Goa trip flickers when I scroll the balances.', attachment: null, appInfo: info, replyEmail: 'riya@example.com'})
+  await saveFeedback(store, at(now - 40 * HOUR), {type: 'question', message: 'Can I settle in a currency the group did not use?', attachment: null, appInfo: null, replyEmail: null})
+}
+
 /* -------------------------------------------------------------------------- */
 /* Seeding                                                                    */
 /* -------------------------------------------------------------------------- */
@@ -127,6 +137,10 @@ export async function seedDemo(store: Store, ctx: MutationCtx, onProgress?: (don
   if ((await store.count('friendRequest')) === 0) {
     wrote = true
     await seedFriendInvites(store, ctx, STORY_GOA, now)
+  }
+  if ((await store.count('feedback')) === 0) {
+    wrote = true
+    await seedFeedback(store, ctx, now)
   }
   onProgress?.(1)
   return wrote

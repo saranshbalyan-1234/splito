@@ -617,7 +617,7 @@ A year of realistic Splito use, generated deterministically, for the owner and f
 - **Effort** S · **Impact** 7 · **Backend** no · **Status** in progress · **Deps** F-103, F-1203, F-1113
 - **Prefs** -
 - **Acceptance**
-  1. `?demo=large` (web) / `EXPO_PUBLIC_DEMO=large` (native) and Settings > Data > "Add demo data" (visible only in dev/e2e builds) write ~30 friends, 12 groups, ~1,500 expenses in 6 currencies over 12 months (all split modes incl. itemised with portions and multiple payers), repayments, write-offs, notes, recurring rent/subscriptions and some deleted items, through the real mutations.
+  1. (Reshaped by F-228a: the set is written by Demo mode's seeding, not by `?demo=large` or Add demo data.) Demo mode writes ~30 friends, 12 groups, ~1,500 expenses in 6 currencies over 12 months (all split modes incl. itemised with portions and multiple payers), repayments, write-offs, notes, recurring rent/subscriptions and some deleted items, through the real mutations.
   2. Same seed gives the same data; adding twice does not duplicate; "Remove demo data" removes exactly what it added.
   3. Generation of the full set takes under 10 s on web and the app stays responsive (batched transactions); every screen stays within § 26.10 budgets with it loaded.
   4. Production builds contain no path to it.
@@ -626,7 +626,8 @@ A year of realistic Splito use, generated deterministically, for the owner and f
 
 Demo is a Settings > Data switch, not data added to the current account: demo mode opens its own separate local database seeded with the one demo dataset, and switching back returns to the untouched real data. Queued first after the Wave B merge (every e2e spec uses `?demo=1` today).
 
-- **Effort** M · **Impact** 8 · **Backend** no · **Status** todo · **Deps** F-227, F-117, Wave B merged
+- **Effort** M · **Impact** 8 · **Backend** no · **Status** done (feat/demo-mode, 2026-10-28; sync `demoLarge.test`; client `demoSeed.test` (both engines), `rules.test` `demoStaticImport`, `syncState.test`; e2e `demo-mode.spec`, `demo.spec`, every spec through `openDemo`; perf `schema-v2.spec` "demo switch") · **Deps** F-227, F-117, Wave B merged
+- **Measured** (web, Chrome, 1440 px, median of 5, `pnpm perf schema-v2`, m1-foundation vs this branch on the same machine): Home cold open on the large demo set 44 vs 48 ms (the set grew from 1,499 to 1,599 expenses and 30 to 36 friends; opening the demo database adds about 2 ms), on 10,000 expenses in real mode 54 vs 53 ms; write + UI 16 vs 16 ms; switching demo mode on or off to Home holding its figures 24 / 25 ms after the other store is open (budget 100 ms).
 - **Prefs** `demo.mode` (device, default off; stored in the real database, the switch's only footprint there)
 - **Acceptance**
   1. Settings > Data > "Demo mode" switch; on: the store opens a separate database (IndexedDB name / SQLite file `splito-demo`), seeds the one demo dataset once, and every screen reads it; off: the real database comes back exactly as it was (test: real rows, prefs, history and outbox byte-identical before and after a demo session with edits).

@@ -1,5 +1,7 @@
 import {expect, type Page, test} from '@playwright/test'
 
+import {openDemo} from './openDemo'
+
 /* F-226: Send feedback, Your feedback, the drawer item and the Settings Support section. */
 
 const PHONE = {width: 390, height: 844}
@@ -33,7 +35,7 @@ test('the drawer footer opens the Send feedback sheet as a bottom drawer on phon
   page,
 }) => {
   await page.setViewportSize(PHONE)
-  await page.goto('/?demo=1')
+  await openDemo(page)
   await expect(page.getByTestId('person-Arjun Mehta')).toBeVisible()
   await page.getByTestId('header-avatar').click()
   await page.getByTestId('nav-footer-feedback').click()
