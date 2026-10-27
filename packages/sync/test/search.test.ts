@@ -294,6 +294,39 @@ describe.each(ENGINES)('paged search on a broad match (%s)', (_engine, open) => 
   })
 })
 
+describe.each(ENGINES)('what an expense can be found by is what the keys say (%s)', (_engine, open) => {
+  test('a deleted person or group, and a category id that is not in the list, are not words, on the broad read path too', async () => {
+    const store = await open()
+    clock = 0
+    const group = (id: string, name: string, deleted = false) => entity<Group>('group', id, {name, kind: 'trip', currency: 'INR', members: [], startDate: null, endDate: null, archived: false}, deleted)
+    await put(store, [
+      ...people,
+      entity<Person>('person', 'samir', {name: 'Samir Khan', isMe: false}),
+      entity<Person>('person', 'sam2', {name: 'Sam Gone', isMe: false}, true),
+      group('lisbonne', 'Lisbonne'),
+      group('lis2', 'Lisbon gone', true),
+    ])
+    // 200 fillers by live Samir in live Lisbonne, category Transportation: every word below reaches 200 expenses (broad).
+    await put(
+      store,
+      Array.from({length: 200}, (_, i) =>
+        expense(`f${i}`, {title: `Filler ${i}`, groupId: 'lisbonne', payers: {samir: 10000n}, shares: {samir: 10000n}, split: {mode: 'equal', participants: ['samir']}, category: 'tr2', date: '2026-02-01'}),
+      ),
+    )
+    // One more, naming only the deleted person and group and a category id the list does not have.
+    await put(store, [expense('x', {title: 'Filler x', groupId: 'lis2', payers: {sam2: 10000n}, shares: {sam2: 10000n}, split: {mode: 'equal', participants: ['sam2']}, category: 'transport', date: '2026-02-02'})])
+    const cats = [{id: 'tr2', name: 'Transportation'}]
+    const f = (q: string) => searchStore(store, q, {today, categories: cats}).then(r => r.expenses.map(e => e.id))
+    for (const q of ['filler sam', 'filler lisbon', 'filler transport']) {
+      const found = await f(q)
+      expect(found).toHaveLength(200)
+      expect(found).not.toContain('x')
+    }
+    expect(await f('filler x')).toEqual(['x'])
+    await store.close()
+  })
+})
+
 describe('highlightRanges', () => {
   test('marks word prefixes in the original text', () => {
     expect(highlightRanges('Dinner at Thalassa', ['din', 'th'])).toEqual([

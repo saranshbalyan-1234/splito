@@ -254,6 +254,21 @@ export async function openSearch(store: Store, query: string, {today, mark = '.'
     }
   }
 
+  /**
+   * How many expenses a word can reach, counted without reading them: its own `w` keys, the expenses of the
+   * groups and people it names (`byGroupDate`, and each person's record count from `balances`), and the category keys.
+   * A word that is a group or a person's name reaches all of their expenses, however few `w` keys it has.
+   */
+  async function textEstimate(prefix: string): Promise<number> {
+    const [own, groupHits, personHits] = await Promise.all([wordCount(prefix), wordHits('g', prefix), wordHits('p', prefix)])
+    const counts = await Promise.all([
+      ...groupHits.map(h => store.count('expense', {index: 'byGroupDate', eq: [h.entityId]})),
+      ...personHits.map(async h => (await store.balances({personId: h.entityId})).reduce((n, b) => n + b.count, 0)),
+      ...categories.filter(c => startsWith(wordsOf(c.name), prefix)).map(c => store.termCount({kind: 'c', min: c.id, max: c.id})),
+    ])
+    return counts.reduce((a, b) => a + b, own)
+  }
+
   /** How many rows (at most) the token's own keys hold, and a way to read the candidates. */
   async function plan(token: SearchToken): Promise<{estimate: number; candidates: () => Promise<string[]>}> {
     if (token.kind === 'compare') {
@@ -267,7 +282,7 @@ export async function openSearch(store: Store, query: string, {today, mark = '.'
         },
       }
     }
-    const own = await wordCount(token.text)
+    const own = await textEstimate(token.text)
     const text = () => textCandidates(token.text)
     if (token.kind === 'text') return {estimate: own, candidates: text}
     if (token.kind === 'amount') {
@@ -342,12 +357,19 @@ export async function openSearch(store: Store, query: string, {today, mark = '.'
   }
   const categoryNames = new Map(categories.map(c => [c.id, c.name]))
 
-  /** The words an expense can be found by: its own text, category, group and people (as the keys do, but current). */
+  /**
+   * The words an expense can be found by, exactly as the keys say: its own text, its category's name (only a category in
+   * the list: an id with no entry is not a word), and the names of its group and people while they are live.
+   */
   const wordsOfExpense = (e: Entity<Expense>) => {
     const d = e.data
-    const text = [d.title, d.notes, categoryNames.get(d.category) ?? d.category, d.groupId ? groups.get(d.groupId)?.data.name : '']
+    const group = d.groupId ? groups.get(d.groupId) : undefined
+    const text = [d.title, d.notes, categoryNames.get(d.category) ?? '', group && !group.deleted ? group.data.name : '']
     if (d.split.mode === 'items') for (const item of d.split.items) text.push(item.name ?? '')
-    for (const id of new Set([...Object.keys(d.payers), ...Object.keys(d.shares)])) text.push(people.get(id)?.data.name ?? '')
+    for (const id of new Set([...Object.keys(d.payers), ...Object.keys(d.shares)])) {
+      const person = people.get(id)
+      if (person && !person.deleted) text.push(person.data.name)
+    }
     return wordsOf(text.join(' '))
   }
 
@@ -403,6 +425,7 @@ export async function openSearch(store: Store, query: string, {today, mark = '.'
   }
   let inFlight: Promise<void> | undefined
   const read = async () => {
+    // full-read-ok: one chunk newest first; the first page needs one, "Show more" and the totals walk (`searchTotals`, cancelled by the next keystroke) read on
     const page: Page<Entity<Expense>> = await store.page<Expense>('expense', {index: 'byDate', dir: 'prev', after: cursor, limit: CHUNK})
     cursor = page.next
     await loadNames(page.items)
