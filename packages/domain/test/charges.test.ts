@@ -340,13 +340,14 @@ describe('property: random bills', () => {
     expect(b.lines[0]!.byPerson).toEqual({a: 6n, b: 4n})
   })
 
-  test('the same bill splits identically whatever the item ids are', () => {
+  test('the same bill splits identically whatever the item and person ids are', () => {
     const {items, charges} = supperFactory()
     const base = billShares(billBreakdown(items, charges), {minor: 39n})
     for (const seed of [1, 2, 3, 4, 5, 6, 7]) {
-      const ids = items.map((_, n) => `${((n + 1) * seed * 2654435761) % 4294967296}-${seed}`)
-      const renamed = items.map((i, n) => ({...i, id: ids[n]!}))
-      expect(billShares(billBreakdown(renamed.reverse(), charges), {minor: 39n})).toEqual(base)
+      const rename = (id: string) => `${(id.split('').reduce((h, ch) => (h * 31 + ch.charCodeAt(0) * seed) % 4294967291, seed)).toString(36)}-${seed}`
+      const renamed = items.map(i => ({id: rename(i.id), taxClass: i.taxClass, parts: Object.fromEntries(Object.entries(i.parts).map(([p, v]) => [rename(p), v]))}))
+      const shares = billShares(billBreakdown(renamed, charges), {minor: 39n})
+      expect(Object.fromEntries(Object.keys(base).map(p => [p, shares[rename(p)]]))).toEqual(base)
     }
   })
 
