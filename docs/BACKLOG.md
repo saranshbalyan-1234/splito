@@ -2663,6 +2663,19 @@ Bluesky's pinned feeds become its home tabs (`src/screens/SavedFeeds.tsx`, `src/
 
 Get the numbers to people who do not have the app.
 
+### F-1413 Hide settled by default; every choice stored in the database `spec: owner § 26.12 (decision 90)`
+
+Settled friends and groups are hidden by default with a "Show settled" filter switch, and every choice the user makes is a database preference that survives reload. Queued by the owner for later ("store and pick later"); not in Wave B.
+
+- **Effort** M · **Impact** 8 · **Backend** no · **Status** todo · **Deps** F-117
+- **Prefs** `people.showSettled` (account, default off), `groups.showSettled` (account, default off), plus a preference for every filter and sort field on People, Groups, Analytics, Activity and Search (account scope unless device-specific)
+- **Acceptance**
+  1. Home / People and Groups hide fully settled rows by default; the filter sheet has "Show settled" (off); the counts line still shows "N settled"; balances and overview totals are unchanged.
+  2. Every filter, sort, scope and toggle on People, Groups, Analytics, Activity and Search reads from and writes to the preferences store; after a reload or app restart the same view comes back (e2e on web and a native run).
+  3. Device-scope preferences live in the local database's preferences store (not synced), migrated once from MMKV / localStorage with a test; secrets stay in the OS secure store; a theme boot mirror is allowed but the database wins on conflict.
+  4. An architecture rule test fails when a screen keeps a user-visible filter/sort choice only in component state.
+  5. Settings > Reset restores every one of these to its default.
+
 ### F-1501 Text summaries for WhatsApp `spec 4b v1`
 
 Whole-group or "only their part" summaries with WhatsApp markup, sent via wa.me in the recipient's language.

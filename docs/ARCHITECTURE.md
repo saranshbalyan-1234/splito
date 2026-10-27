@@ -1529,6 +1529,16 @@ expands once I click". *Where:* `screens/People`, `screens/Groups`, `screens/Gro
     Shown). The old `archived` flag reads as Inactive (read-time adapter, no schema change).
   *Why:* "add archive group option as well, when archived it stops showing in main view and no expense can be
   added", then "or make it as active inactive and hide show instead of archive".
+- **Settled is hidden by default; every choice is remembered in the database** (owner 90; not built yet,
+  BACKLOG F-1413). Friends and groups that are fully settled (every currency at zero) are hidden from the Home /
+  People and Groups lists by default; each filter sheet gets a "Show settled" switch (default off) and the
+  counts line keeps saying "N settled" so nothing looks lost. Balances and totals are unaffected. Every choice a
+  user makes (filters, sorts, Show settled, Include groups, currency, scope chips, tab choices) is stored in the
+  local database as a preference and is still applied after a reload or restart, instead of living in screen
+  state. Device-scope preferences also move from MMKV / localStorage into the database's preferences store
+  (device scope = not synced, but in the database); only secrets stay in the OS secure store, and a boot copy
+  may mirror theme for a flash-free first paint while the database stays the source of truth. *Why:* "by default
+  hide settled, in filters option for show settled, every setting that we choose to be stored in db".
 - **Group page:** Pager tabs Expenses / Balances / Members (§ 26.9). Balances shows each member's net per
   currency, a "who owes whom" list (pairwise, from the direct-mode settlement plan) and "Settle up".
   Payment rules are reached from the header overflow (§ 26.4). testIDs `friends-filters`, `groups-balances`,
@@ -1904,6 +1914,7 @@ Every owner decision, in the order it was made (all 2026-10-26). "Replaced" name
 | 87 | "during scrolling don't hide bottom navigation, only header needs to be hidden" | On phones only the header scrolls away; bottom bar and FAB stay visible while scrolling | §§ 26.4, 26.6 | Bar and FAB hid with the header (row 81) |
 | 88 | "add archive group option as well, when archived it stops showing in main view and no expense can be added" | Archived groups leave the Groups list, recent groups and pickers (reachable via filter, Archived fold, search); no new, edited, moved or restored expenses (enforced in the mutation); settle, payments and comments stay; balances still count | § 26.12 | Archive only hid the group from Groups |
 | 89 | "or make it as active inactive and hide show instead of archive" | Two controls: Active/Inactive (group-wide; inactive takes no new expenses, enforced in mutations; settle stays; Inactive fold) and Show/Hide (personal pref `groups.hidden`); balances never hidden; old `archived` reads as Inactive | § 26.12 | One "Archive" (row 88) |
+| 90 | "by default hide settled, in filters option for show settled, every setting that we choose to be stored in db" | Settled friends and groups hidden by default with a "Show settled" filter switch; every user choice (filters, sorts, scopes) persists as a database preference; device-scope prefs move from MMKV/localStorage into the DB | § 26.12 | Settled shown; filters in screen state; device prefs in MMKV |
 
 New decisions follow § 0 rule 9: rewrite the rule in its topic so only the current truth remains, then add a
 row here.
