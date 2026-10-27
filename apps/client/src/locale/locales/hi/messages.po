@@ -4187,8 +4187,8 @@ msgid "pays you"
 msgstr "आपको देता है"
 
 #: src/features/export/ExportSheet.tsx:148
-msgid "PDF statement"
-msgstr "PDF स्टेटमेंट"
+msgid "PDF"
+msgstr "PDF"
 
 #: src/components/SearchAsk/ResultRows.tsx:83
 #: src/features/export/ImportSheet.tsx:127

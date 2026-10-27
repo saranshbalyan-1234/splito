@@ -145,7 +145,7 @@ function Form({preset}: {preset?: ExportPreset}) {
   }
 
   const FORMATS: Array<{value: Format; label: string; icon: typeof CsvIcon; hint: string}> = [
-    {value: 'pdf', label: l`PDF statement`, icon: PdfIcon, hint: l`A tidy statement with a running balance for each currency. Print it or save it as a PDF.`},
+    {value: 'pdf', label: l`PDF`, icon: PdfIcon, hint: l`A tidy statement with a running balance for each currency. Print it or save it as a PDF.`},
     {value: 'csv', label: l`CSV`, icon: CsvIcon, hint: l`One row per record, for a spreadsheet. Amounts are exact, with their currency beside them.`},
     {value: 'backup', label: l`Backup`, icon: BackupIcon, hint: l`Everything on this device in one file: people, groups, expenses, payments, settings and history. Restore it from Settings > Import.`},
   ]
