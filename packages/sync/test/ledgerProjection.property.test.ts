@@ -31,12 +31,16 @@ import {
   deleteRepayment,
   deleteWriteOff,
   type ExpenseDraft,
+  type Group,
   ensureMe,
   purgeDeleted,
   restoreExpense,
   restoreRepayment,
   restoreWriteOff,
   updateExpense,
+  updateGroup,
+  updatePerson,
+  deletePerson,
 } from '../src/mutations'
 import {openSqlStore} from '../src/sqlStore'
 import {type Store} from '../src/store'
@@ -84,23 +88,36 @@ async function run(s: Store, seed: number, steps: number, {erases = true}: {eras
   const stats = {erased: 0, demoRemoved: 0}
   const date = () => `2026-0${r.int(1, 9)}-${String(r.int(10, 28))}`
 
+  const WORDS = ['dinner', 'cab', 'rent', 'Pastéis', 'trip', 'beer', 'coffee', 'ticket', 'Zürich', 'snacks']
+  const CATEGORIES = ['food', 'transport', 'rent', 'fun', 'unlisted-category']
+  const words = (min: number, max: number) => Array.from({length: r.int(min, max)}, () => r.pick(WORDS)).join(' ')
   const draft = (members: string[], groupId: string | null): ExpenseDraft => {
     const currency = r.pick(CURRENCIES)
     const total = BigInt(r.int(1, 2_000_000))
     const payers = r.some(members, 1, 2)
+    // Now and then a bill of items (named, split between some of the members); its total is what the items add up to.
+    if (r.next() < 0.15) {
+      const items = Array.from({length: r.int(1, 3)}, (_, i) => ({id: `i${i}`, name: words(1, 2), amount: BigInt(r.int(1, 90_000)), participants: r.some(members, 1, members.length)}))
+      const sum = items.reduce((a, i) => a + i.amount, 0n)
+      return {
+        title: words(1, 3), groupId, currency, total: sum, payers: {[payers[0]!]: sum},
+        split: {mode: 'items', items, tax: 0n, tip: 0n, discount: 0n},
+        date: date(), tz: 'UTC', category: r.pick(CATEGORIES), notes: r.next() < 0.5 ? words(0, 4) : '',
+      }
+    }
     const each = total / BigInt(payers.length)
     const paid: Record<string, bigint> = {}
     payers.forEach((p, i) => (paid[p] = i === payers.length - 1 ? total - each * BigInt(i) : each))
     return {
-      title: 'Spend', groupId, currency, total, payers: paid,
+      title: words(1, 3), groupId, currency, total, payers: paid,
       split: {mode: 'equal', participants: r.some(members, 1, members.length)},
-      date: date(), tz: 'UTC', category: 'food', notes: '',
+      date: date(), tz: 'UTC', category: r.pick(CATEGORIES), notes: r.next() < 0.5 ? words(0, 4) : '',
     }
   }
 
   for (let step = 0; step < steps; step++) {
     try {
-      switch (r.int(0, 17)) {
+      switch (r.int(0, 21)) {
         case 0: {
           const members = r.some(people.filter(p => p !== 'me'), 2, 4)
           const g = await createGroup(s, mint(), {name: `G${groups.length}`, kind: 'trip', currency: r.pick(CURRENCIES), memberIds: members, startDate: null, endDate: null})
@@ -178,6 +195,32 @@ async function run(s: Store, seed: number, steps: number, {erases = true}: {eras
             await s.erase(refs)
             stats.erased += refs.length
           }
+          break
+        }
+        case 18: {
+          // A person renamed: their own search terms change, the expenses' do not.
+          const id = r.pick(people.filter(p => p !== 'me'))
+          await updatePerson(s, ctx, id, {name: `${words(1, 2)} ${r.int(0, 9)}`})
+          break
+        }
+        case 19: {
+          // A group renamed.
+          if (!groups.length) break
+          const g = await s.get<Group>('group', r.pick(groups).id)
+          if (!g || g.deleted) break
+          await updateGroup(s, ctx, g.id, {...g.data, name: `${words(1, 2)} ${r.int(0, 9)}`})
+          break
+        }
+        case 20: {
+          // A person nobody is on is deleted (the rules refuse the others).
+          await deletePerson(s, ctx, r.pick(people.filter(p => p !== 'me')))
+          break
+        }
+        case 21: {
+          // A group deleted (a tombstone; there is no screen for it yet, the projections must still follow).
+          if (!groups.length) break
+          const g = await s.get<Group>('group', r.pick(groups).id)
+          if (g && !g.deleted) await s.transaction(tx => tx.put({...g, version: g.version + 1, updatedAt: g.updatedAt + 1, deleted: true}))
           break
         }
         case 15: {
