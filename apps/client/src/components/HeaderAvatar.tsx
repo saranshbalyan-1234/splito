@@ -1,5 +1,5 @@
 // Adapted from bluesky-social/social-app@4e4ad9c (MIT) - src/components/Layout/Header/index.tsx (MenuButton)
-import {Keyboard} from 'react-native'
+import {Keyboard, View} from 'react-native'
 import {useLingui} from '@lingui/react/macro'
 import {useNavigation} from '@react-navigation/native'
 
@@ -10,6 +10,8 @@ import {useMe} from '#/data/hooks'
 import {UserAvatar} from '#/view/com/util/UserAvatar'
 import {atoms as a, useBreakpoints, useLayoutBreakpoints} from '#/alf'
 import {Button} from '#/components/Button'
+import * as Toast from '#/components/Toast'
+import {SyncStatusDot, useSyncLabel} from '#/components/SyncStatusDot'
 import {HEADER_SLOT_SIZE} from '#/components/Layout/const'
 import * as Layout from '#/components/Layout'
 
@@ -28,6 +30,7 @@ export function HeaderAvatar() {
   const {gtMobile} = useBreakpoints()
   const {leftNavMinimal} = useLayoutBreakpoints()
   const navigation = useNavigation<NavigationProp>()
+  const {state, label: syncLabel} = useSyncLabel()
   /* With the full sidebar showing, every menu item is already visible - the avatar opens Profile instead of the drawer (owner). */
   const sidebarFull = gtMobile && !leftNavMinimal
 
@@ -44,20 +47,29 @@ export function HeaderAvatar() {
     <Layout.Header.Slot>
       <Button
         testID="header-avatar"
-        label={sidebarFull ? l`Open profile` : l`Open menu`}
+        label={`${sidebarFull ? l`Open profile` : l`Open menu`}. ${syncLabel}`}
         onPress={openDrawer}
+        /* Native has no hover: a long press says the sync state (web shows it as a tooltip). */
+        onLongPress={() => Toast.show(syncLabel, {type: 'info'})}
         hitSlop={HITSLOP}
         style={[
           a.rounded_full,
           {width: HEADER_SLOT_SIZE, height: HEADER_SLOT_SIZE},
         ]}>
         {({hovered, pressed, focused}) => (
-          <UserAvatar
-            name={me?.data.name}
-            size={AVATAR_SIZE}
-            type="user"
-            style={(hovered || pressed || focused) && {opacity: 0.85}}
-          />
+          <View>
+            <UserAvatar
+              name={me?.data.name}
+              size={AVATAR_SIZE}
+              type="user"
+              style={(hovered || pressed || focused) && {opacity: 0.85}}
+            />
+            <SyncStatusDot
+              avatarSize={AVATAR_SIZE}
+              state={state}
+              label={syncLabel}
+            />
+          </View>
         )}
       </Button>
     </Layout.Header.Slot>

@@ -342,6 +342,28 @@ test.describe('drawer: Bluesky drawer from the header avatar', () => {
     await expect(drawer).toHaveCount(0)
   })
 
+  test('the sync dot is red (on this device only) on the header avatar and the drawer avatar, and says so in words', async ({
+    page,
+  }) => {
+    await page.setViewportSize(PHONE)
+    await openDemo(page)
+    const avatar = on(page, 'screen-people', 'header-avatar')
+    await expect(avatar.getByTestId('sync-dot-local')).toBeVisible()
+    // Never colour alone: the label carries the state, and web shows a tooltip.
+    await expect(avatar).toHaveAttribute('aria-label', /On this device only/)
+    await expect(avatar.getByTestId('sync-dot')).toHaveAttribute(
+      'title',
+      'On this device only',
+    )
+    await avatar.click()
+    const drawer = page.getByTestId('drawer')
+    await expect(drawer.getByTestId('sync-dot-local')).toBeVisible()
+    // Tapping the dot opens Settings.
+    await drawer.getByTestId('sync-dot').click()
+    await expect(page.getByTestId('screen-settings')).toBeVisible()
+    await expect(drawer).toHaveCount(0)
+  })
+
   test('the scrim closes it; rows navigate and close it', async ({page}) => {
     await page.setViewportSize(PHONE)
     await open(page, '/', 'screen-people')

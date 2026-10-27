@@ -27,6 +27,7 @@ import {Button, ButtonText} from '#/components/Button'
 import {Divider} from '#/components/Divider'
 import {type Props as SVGIconProps} from '#/components/icons/common'
 import {NavFooterLinks} from '#/components/NavFooterLinks'
+import {SyncStatusDot, useSyncLabel} from '#/components/SyncStatusDot'
 import {useSearchAsk} from '#/components/SearchAsk/context'
 import {GLYPHS, NAV_LABELS} from '#/components/TabGlyph'
 import {Text} from '#/components/Typography'
@@ -41,12 +42,15 @@ const iconWidth = 26
  */
 let DrawerProfileCard = ({
   onPressProfile,
+  onPressSync,
 }: {
   onPressProfile: () => void
+  onPressSync: () => void
 }): React.ReactNode => {
   const {t: l} = useLingui()
   const t = useTheme()
   const me = useMe()
+  const {state, label: syncLabel} = useSyncLabel()
   const name = me?.data.name ?? ''
   /* "Me" is the name Splito starts with (Profile asks for a real one the same way). */
   const hasDefaultName = name.trim() === '' || name === 'Me'
@@ -54,11 +58,19 @@ let DrawerProfileCard = ({
   return (
     <TouchableOpacity
       testID="drawer-profile"
-      accessibilityLabel={hasDefaultName ? l`Profile` : name}
+      accessibilityLabel={`${hasDefaultName ? l`Profile` : name}. ${syncLabel}`}
       accessibilityHint={l`Opens your profile`}
       onPress={onPressProfile}
       style={[a.gap_sm, a.pr_lg]}>
-      <UserAvatar size={52} name={me ? name : undefined} type="user" />
+      <View style={[a.self_start]}>
+        <UserAvatar size={52} name={me ? name : undefined} type="user" />
+        <SyncStatusDot
+          avatarSize={52}
+          state={state}
+          label={syncLabel}
+          onPress={onPressSync}
+        />
+      </View>
       <Text
         emoji
         style={[
@@ -141,6 +153,10 @@ function DrawerContentInner(): React.ReactNode {
             onPressProfile={() => {
               setDrawerOpen(false)
               navigation.navigate('Profile')
+            }}
+            onPressSync={() => {
+              setDrawerOpen(false)
+              navigation.navigate('Settings')
             }}
           />
           <Divider style={[a.mt_xl, a.mb_sm]} />

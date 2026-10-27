@@ -12,9 +12,10 @@ glyphs, illustrations, logos or `assets/images` are copied.
 | `src/components/SearchAsk/SearchHistory.tsx` | `src/screens/Search/components/SearchHistory.tsx` | As in the former Search page row (docs/reuse/search.md); moved with the drawer |
 | `src/components/SearchAsk/ResultRows.tsx` | `src/screens/Search/components/ModuleHeader.tsx`, `SearchProfileCard.tsx`, `SearchResults.tsx` | As in docs/reuse/search.md; moved with the drawer |
 | `src/components/SearchAsk/useSearchAskHotkey.web.ts` | `src/components/Lightbox/Lightbox.web.tsx` | Window `keydown` listener: Cmd/Ctrl+K toggles the drawer, "/" opens it outside text fields |
+| `src/components/SyncStatusDot.tsx` | `src/view/com/util/UserAvatar.tsx` (the alert badge pinned bottom-right on an avatar) | The sync-status dot (F-223): Bluesky's bottom-right badge geometry, scaled to the avatar, with a ring in the background colour; green / yellow / red from `lib/syncState.ts`, a pop between states (instant under reduced motion), the state as the avatar's accessibility label and a web hover tooltip |
 | `src/components/settings/NavigationEditor.tsx` | `src/screens/SavedFeeds.tsx` (`PinnedFeedItem`, move up/down) | Bluesky's pinned list for the phone bottom bar: every shared nav item with a toggle and a drag handle, 2 to 5 tabs, Home fixed, arrows on wide web / screen readers |
 
-Written for Splito (no Bluesky equivalent): `src/lib/routes/navigationItems.ts` (the one nav list),
+Written for Splito (no Bluesky equivalent): `src/lib/routes/navigationItems.ts` (the one nav list), `src/lib/syncState.ts` and `useSyncDot.ts` (the dot's rule),
 `src/components/SearchAsk/context.ts`, `hotkeyAction.ts`, `useSearchAskHotkey.ts`, `SearchAskButton.tsx`,
 `src/features/searchAsk/SearchAskProvider.tsx`, `src/components/icons/Sparkles.tsx` (Lucide `Sparkles` through
 `createIcon`).
@@ -23,3 +24,8 @@ Edited shared files: `navigation/Drawer.tsx`, `view/shell/desktop/LeftNav.tsx`, 
 `view/shell/index(.web).tsx`, `screens/{People,Groups,Analytics,Activity}`, `screens/Search/index.tsx` (now a
 redirect), `components/TabGlyph.tsx`, `components/ListToolsHeader.tsx`, `components/settings/*`,
 `packages/sync/src/preferences.ts` (`tabs` takes the shared items, group `navigation`).
+
+Minimal shell (owner 81, ARCHITECTURE 26.4): `src/state/shell/minimal-mode.tsx` and
+`src/lib/hooks/useMinimalShellTransform.ts` (Bluesky's, extended with a `scrollMode` shared value so the bottom bar and
+FAB follow the header; `useShowShell` resets it), `src/components/Layout/MainScrollProvider.tsx` (writes `scrollMode`
+beside the header mode; the forced-scroll flag now expires, otherwise it swallowed the first real scroll).

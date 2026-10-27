@@ -561,7 +561,7 @@ One `navigationItems` array and one `NavFooterLinks` component feed the desktop/
 
 A Bluesky presence-style dot on the user's avatar in the drawer header and on the header avatar at every width: green synced, yellow syncing, red on this device only.
 
-- **Effort** S · **Impact** 7 · **Backend** no · **Status** todo · **Deps** F-222, F-1801
+- **Effort** S · **Impact** 7 · **Backend** no · **Status** done · **Deps** F-222, F-1801
 - **Prefs** -
 - **Acceptance**
   1. Green = signed in, online and everything acknowledged by the server; yellow = syncing or waiting to sync (changes in the outbox, or offline with unsynced changes); red = on this device only (no account, nothing backed up). Until the backend exists the state is red; green never shows before server acknowledgement.
