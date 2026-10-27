@@ -1,3 +1,4 @@
+import {useMemo} from 'react'
 import {plural} from '@lingui/core/macro'
 import {
   type ActivityEvent,
@@ -58,6 +59,7 @@ function snapshotOf(state: ActivityState): ActivitySnapshot {
   return snapshot
 }
 
+const NO_EVENTS: ActivityEvent[] = []
 const FEED_KEY: ['activityFeed'] = ['activityFeed']
 
 /**
@@ -74,7 +76,11 @@ export function useActivityFeed(filter: FeedFilter = 'all') {
   const state = stored ?? EMPTY_FEED_STATE
   const update = (fn: (s: FeedState) => FeedState) =>
     setStored(fn(device.get(FEED_KEY) ?? EMPTY_FEED_STATE))
-  const feed = buildRows(snapshot?.events ?? [], state, me, filter, tz)
+  const events = snapshot?.events ?? NO_EVENTS
+  const feed = useMemo(
+    () => buildRows(events, state, me, filter, tz),
+    [events, state, me, filter, tz],
+  )
   return {me, snapshot, state, update, ...feed}
 }
 

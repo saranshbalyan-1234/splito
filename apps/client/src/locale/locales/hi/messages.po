@@ -510,11 +510,11 @@ msgstr "{binDays, plural, one {# दिन} other {# दिन}}"
 msgid "{count, plural, one {# item} other {# items}}"
 msgstr "{count, plural, one {# आइटम} other {# आइटम}}"
 
-#: src/components/activity/useActivityFeed.ts:96
+#: src/components/activity/useActivityFeed.ts:102
 msgid "{count, plural, one {# or more unread items} other {# or more unread items}}"
 msgstr "{count, plural, one {# या अधिक अपठित} other {# या अधिक अपठित}}"
 
-#: src/components/activity/useActivityFeed.ts:100
+#: src/components/activity/useActivityFeed.ts:106
 msgid "{count, plural, one {# unread item} other {# unread items}}"
 msgstr "{count, plural, one {# अपठित} other {# अपठित}}"
 
