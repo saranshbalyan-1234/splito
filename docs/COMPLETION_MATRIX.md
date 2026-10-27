@@ -39,7 +39,7 @@ Status words are the same as `docs/BACKLOG.md`: **done** (built, tested and merg
 | Activity | Recently deleted bin | F-1203 | in progress (built and tested on feat/b-*, unmerged) |
 | Analytics | Charts + table, period / currency / group filters, Export CSV in the header overflow | F-1301 | in progress (built and tested on the unmerged UI line) |
 | Settings | Every preference incl. Dim / Black dark style, accent, timezone | F-1701 | in progress (built and tested on the unmerged UI line) |
-| Settings | Account section: Sign in (honest until sync) / Log out | F-225 | todo |
+| Settings | Account section: Sign in / Create account (Bluesky LoggedOut, Login, Signup copied; honest until sync; Log out ships with F-2102) | F-225 | done (feat/wA-30b; backend submit answers "arrives with sync" until F-2102) |
 | Friends | Private friends ("Add anyway (only for you)") | F-601 | in progress (built on the unmerged UI line) |
 | Friends | Add friend by email or mobile, Splito directory check, consent, Requests and Invites sent | F-618 | done (feat/4b-31-33; directory answers in demo only, production says "We'll check when you're online" until F-2111) |
 | Friends | Invite link and QR with use / expiry limits, manage and revoke | F-619 | done (feat/4b-31-33; links fail closed outside demo until F-2105) |
