@@ -6,6 +6,7 @@ import {join} from 'node:path'
 import {openSqlStore} from '../src/sqlStore'
 import {bunExecutor} from './bunExecutor'
 import {ent, op, runStoreContract} from './storeContract'
+import {runV2Contract} from './storeV2Contract'
 
 let path = ''
 runStoreContract(
@@ -18,6 +19,7 @@ runStoreContract(
 )
 
 const fresh = () => openSqlStore(bunExecutor(join(mkdtempSync(join(tmpdir(), 'splito-')), 'db.sqlite')))
+runV2Contract('SqlStore', fresh)
 const tick = () => new Promise(r => setTimeout(r, 1))
 
 /*

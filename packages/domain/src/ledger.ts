@@ -61,6 +61,36 @@ export interface PersonSummary {
   byCurrency: Record<CurrencyCode, {total: bigint; direct: bigint; groups: Record<string, bigint>}>
 }
 
+/** One debt: `debtor` owes `creditor` `amount` (> 0) in the record's currency. */
+export interface Debt {
+  debtor: string
+  creditor: string
+  amount: bigint
+}
+
+/**
+ * The direct debts one expense creates. Pairs come from each person's net in
+ * the expense (paid - share), so someone who paid exactly their share owes
+ * nobody and no per-payer rounding leaves 1-minor-unit residues. One creditor
+ * (the usual single payer) needs no plan; several use the exact direct
+ * settle-up plan.
+ */
+export function expenseDebts(r: Pick<ExpenseRecord, 'payers' | 'shares'>): Debt[] {
+  const net: Record<string, bigint> = {}
+  for (const [id, v] of Object.entries(r.payers)) net[id] = (net[id] ?? 0n) + v
+  for (const [id, v] of Object.entries(r.shares)) net[id] = (net[id] ?? 0n) - v
+  const creditors = Object.keys(net).filter(id => net[id]! > 0n)
+  const transfers =
+    creditors.length === 1
+      ? Object.keys(net)
+          .filter(id => net[id]! < 0n)
+          .map(id => ({from: id, to: creditors[0]!, amount: -net[id]!}))
+      : creditors.length === 0
+        ? []
+        : directTransfers(net)
+  return transfers.map(t => ({debtor: t.from, creditor: t.to, amount: t.amount}))
+}
+
 export function pairwiseBalances(records: LedgerRecord[], me: string): BalanceRow[] {
   const rows = new Map<string, BalanceRow>()
   const add = (person: string, groupId: string | null, currency: string, amount: bigint) => {
@@ -77,33 +107,46 @@ export function pairwiseBalances(records: LedgerRecord[], me: string): BalanceRo
       else if (r.from === me) add(r.to, r.groupId, r.currency, r.amount)
       continue
     }
-    /*
-     * Pairs come from each person's net in this expense (paid - share), so
-     * someone who paid exactly their share owes nobody and no per-payer
-     * rounding leaves 1-minor-unit residues. One creditor (the usual single
-     * payer) needs no plan; several use the exact direct settle-up plan.
-     */
-    const net: Record<string, bigint> = {}
-    for (const [id, v] of Object.entries(r.payers)) net[id] = (net[id] ?? 0n) + v
-    for (const [id, v] of Object.entries(r.shares)) net[id] = (net[id] ?? 0n) - v
-    const creditors = Object.keys(net).filter(id => net[id]! > 0n)
-    const transfers =
-      creditors.length === 1
-        ? Object.keys(net)
-            .filter(id => net[id]! < 0n)
-            .map(id => ({from: id, to: creditors[0]!, amount: -net[id]!}))
-        : creditors.length === 0
-          ? []
-          : directTransfers(net)
-    for (const t of transfers) {
-      if (t.to === me) add(t.from, r.groupId, r.currency, t.amount)
-      else if (t.from === me) add(t.to, r.groupId, r.currency, -t.amount)
+    for (const t of expenseDebts(r)) {
+      if (t.creditor === me) add(t.debtor, r.groupId, r.currency, t.amount)
+      else if (t.debtor === me) add(t.creditor, r.groupId, r.currency, -t.amount)
     }
   }
 
   return [...rows.values()]
     .filter(r => r.amount !== 0n)
     .sort((a, b) => cmp(a.person, b.person) || cmp(a.groupId ?? '', b.groupId ?? '') || cmp(a.currency, b.currency))
+}
+
+/**
+ * What one live record does to the stored balances (the local database's
+ * `balances` and `pair_balances` projections, ARCHITECTURE 9.8). `net` lists
+ * one entry per payer, sharer, sender and receiver, as `groupNet` adds them;
+ * `debts` is the pairwise view, kept for records outside groups only (inside
+ * a group the plan over the group's net is the pairwise view).
+ */
+export interface RecordEffects {
+  net: Array<{person: string; amount: bigint}>
+  debts: Debt[]
+}
+
+export function recordEffects(r: LedgerRecord): RecordEffects {
+  if (r.kind !== 'expense')
+    return {
+      net: [
+        {person: r.from, amount: r.amount},
+        {person: r.to, amount: -r.amount},
+      ],
+      // A payment from -> to lowers what `from` owes `to`: as a debt, `to` owes `from`.
+      debts: r.groupId === null ? [{debtor: r.to, creditor: r.from, amount: r.amount}] : [],
+    }
+  return {
+    net: [
+      ...Object.entries(r.payers).map(([person, amount]) => ({person, amount})),
+      ...Object.entries(r.shares).map(([person, amount]) => ({person, amount: -amount})),
+    ],
+    debts: r.groupId === null ? expenseDebts(r) : [],
+  }
 }
 
 const cmp = (a: string, b: string) => (a < b ? -1 : a > b ? 1 : 0)
@@ -126,13 +169,32 @@ export function balanceRows(
   me: string,
   rules: Record<string, SettlementRules | undefined> = {},
 ): BalanceRow[] {
-  const rows = pairwiseBalances(
+  const direct = pairwiseBalances(
     records.filter(r => r.groupId === null),
     me,
   )
   const groupIds = new Set(records.flatMap(r => (r.groupId === null || r.deleted ? [] : [r.groupId])))
-  for (const groupId of [...groupIds].sort()) {
-    for (const [currency, net] of Object.entries(groupNet(records, groupId)).sort(([x], [y]) => cmp(x, y))) {
+  const groupNets: Record<string, Record<CurrencyCode, Record<string, bigint>>> = {}
+  for (const groupId of groupIds) groupNets[groupId] = groupNet(records, groupId)
+  return balanceRowsFromNets(me, direct, groupNets, rules)
+}
+
+/**
+ * `balanceRows` from stored sums instead of the ledger: `direct` is my rows
+ * with each person outside groups (what the `pair_balances` projection
+ * holds, > 0 they owe me) and `groupNets` each group's `groupNet` (what the
+ * `balances` projection holds). Equal to `balanceRows` over the same records
+ * (tested), so a screen reads O(rows shown), not the whole ledger.
+ */
+export function balanceRowsFromNets(
+  me: string,
+  direct: ReadonlyArray<BalanceRow>,
+  groupNets: Record<string, Record<CurrencyCode, Record<string, bigint>>>,
+  rules: Record<string, SettlementRules | undefined> = {},
+): BalanceRow[] {
+  const rows: BalanceRow[] = direct.filter(r => r.amount !== 0n).map(r => ({...r, groupId: null}))
+  for (const groupId of Object.keys(groupNets).sort()) {
+    for (const [currency, net] of Object.entries(groupNets[groupId]!).sort(([x], [y]) => cmp(x, y))) {
       if (!net[me]) continue
       for (const t of directPlan(net, rules[groupId] ?? NO_RULES).transfers) {
         if (t.from === me) rows.push({person: t.to, groupId, currency, amount: -t.amount})

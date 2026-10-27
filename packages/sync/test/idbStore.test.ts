@@ -6,6 +6,7 @@ import {expect, test} from 'bun:test'
 import {openIdbStore} from '../src/idbStore'
 import {changeFromJson, changeToJson, mergeChanges, type StoreChange, touches} from '../src/store'
 import {ent, runStoreContract} from './storeContract'
+import {runV2Contract} from './storeV2Contract'
 
 let factory = new IDBFactory()
 runStoreContract(
@@ -16,6 +17,8 @@ runStoreContract(
   },
   () => openIdbStore('splito', factory),
 )
+
+runV2Contract('IdbStore', () => openIdbStore('splito-v2', new IDBFactory()))
 
 test('another tab hears what a transaction touched; an old-build notice reads as unknown', async () => {
   const f = new IDBFactory()

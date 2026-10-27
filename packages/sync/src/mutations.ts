@@ -14,7 +14,8 @@ import {
 } from '@splito/domain'
 
 import {formatContact, isContact} from './contact'
-import type {Store, Tx} from './store'
+import type {Key} from './schema'
+import type {Page, Store, Tx} from './store'
 import type {Entity, EntityType, MutationCtx} from './types'
 
 export interface Person {
@@ -105,7 +106,13 @@ export async function write<T>(
 ): Promise<Entity<T>> {
   const prev = await tx.get<T>(type, id)
   const at = ctx.now()
-  const e: Entity<T> = {type, id, data, version: (prev?.version ?? 0) + 1, deleted, updatedAt: at}
+  const version = (prev?.version ?? 0) + 1
+  // A local change waits for the server (`pending`, then `tx.enqueue` below); a change that came from the
+  // server is `synced`. Only a real acknowledgement ever moves a row to `synced` (ARCHITECTURE 9.8).
+  const sync = remote
+    ? ({syncStatus: 'synced', serverVersion: version, syncedAt: at, syncError: null} as const)
+    : ({syncStatus: 'pending', serverVersion: prev?.serverVersion ?? null, syncedAt: prev?.syncedAt ?? null, syncError: null} as const)
+  const e: Entity<T> = {type, id, data, version, deleted, createdAt: prev?.createdAt ?? at, updatedAt: at, ...sync}
   await tx.put(e)
   await tx.appendHistory({entityType: type, entityId: id, version: e.version, data, deleted, at, actor: ctx.actor})
   if (remote) return e
@@ -183,19 +190,28 @@ export async function updatePerson(store: Store, ctx: MutationCtx, id: string, i
 export async function deletePerson(store: Store, ctx: MutationCtx, id: string): Promise<void> {
   // ponytail: reference check reads outside the write transaction (IndexedDB can't await other
   // reads mid-transaction). Fine for one local writer; the server re-checks once sync exists.
-  const expenses = await store.getAll<Expense>('expense')
-  const groups = await store.getAll<Group>('group')
-  const repayments = [...(await store.getAll<Repayment>('repayment')), ...(await store.getAll<WriteOff>('writeoff'))]
-  const used =
-    expenses.some(e => !e.deleted && (id in e.data.payers || id in e.data.shares)) ||
-    groups.some(g => !g.deleted && g.data.members.some(m => m.personId === id)) ||
-    repayments.some(r => !r.deleted && (r.data.from === id || r.data.to === id))
-  if (used) throw new DomainError('PERSON_IN_USE')
+  if (await isPersonUsed(store, id)) throw new DomainError('PERSON_IN_USE')
   await store.transaction(async tx => {
     const p = await requireLive<Person>(tx, 'person', id)
     if (p.data.isMe) throw new DomainError('PERSON_IN_USE')
     await write(tx, ctx, 'person', id, p.data, true, 'person.delete')
   })
+}
+
+/** Whether any live expense, group or payment names the person: index reads, no scan. */
+async function isPersonUsed(store: Store, id: string): Promise<boolean> {
+  if ((await store.parties({index: 'byPersonDate', eq: [id], limit: 1})).items.length > 0) return true
+  if ((await store.members({personId: id})).length > 0) return true
+  for (const type of ['repayment', 'writeoff'] as const)
+    for (const index of ['byFrom', 'byTo']) {
+      let after: Key | null = null
+      do {
+        const page: Page<Entity> = await store.page(type, {index, eq: [id], after, limit: 20})
+        if (page.items.some(r => !r.deleted)) return true
+        after = page.next
+      } while (after)
+    }
+  return false
 }
 
 export async function createGroup(

@@ -4,7 +4,7 @@ import {type Expense, type Group, type Person} from '../src/mutations'
 import {buildSearchIndex, highlightRanges, parseSearchQuery, search} from '../src/search'
 import {type Entity} from '../src/types'
 
-const entity = <T>(type: Entity['type'], id: string, data: T, deleted = false): Entity<T> => ({type, id, data, version: 1, deleted, updatedAt: 1})
+const entity = <T>(type: Entity['type'], id: string, data: T, deleted = false): Entity<T> => ({type, id, data, version: 1, deleted, createdAt: 1, updatedAt: 1, syncStatus: 'local', serverVersion: null, syncedAt: null, syncError: null})
 
 const people = [
   entity<Person>('person', 'me', {name: 'Asha Rao', isMe: true}),

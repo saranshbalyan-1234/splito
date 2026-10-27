@@ -6,23 +6,15 @@
  * "Remove demo data" finds exactly them.
  */
 import {
-  createExpense,
-  createGroup,
-  createPerson,
-  createRepayments,
-  createWriteOffs,
+  applyDemoOp,
   DEMO_LARGE_PREFIX,
   type DemoCounts,
-  type DemoOp,
-  deleteExpense,
-  deleteRepayment,
-  deleteWriteOff,
   type EntityType,
   generateLargeDemo,
+  insideTransaction,
   localToday,
   type MutationCtx,
   type Store,
-  updateExpense,
 } from '@splito/sync'
 
 const BATCH = 150
@@ -53,57 +45,6 @@ function exclusive<T>(fn: () => Promise<T>): Promise<T> {
   return next
 }
 
-/** A store whose transactions run inside `tx`: the real mutations then batch into one commit. */
-function inside(
-  store: Store,
-  tx: Parameters<Parameters<Store['transaction']>[0]>[0],
-): Store {
-  return {...store, transaction: fn => fn(tx)}
-}
-
-async function apply(store: Store, base: MutationCtx, op: DemoOp) {
-  // A create that mints its id asks for it first; every other id asked for is an outbox op id.
-  let pending: string | undefined =
-    op.kind === 'person' || op.kind === 'group' || op.kind === 'expense'
-      ? op.id
-      : undefined
-  const ctx: MutationCtx = {
-    ...base,
-    actor: op.actor,
-    now: () => op.at,
-    newId: () => {
-      const id = pending ?? base.newId()
-      pending = undefined
-      return id
-    },
-  }
-  const check = (e: {id: string}) => {
-    if (e.id !== op.id) throw new Error(`demo id mismatch: ${e.id} != ${op.id}`)
-  }
-  switch (op.kind) {
-    case 'person':
-      return check(
-        await createPerson(store, ctx, {name: op.name, upiId: op.upiId}),
-      )
-    case 'group':
-      return check(await createGroup(store, ctx, op.input))
-    case 'expense':
-      return check(await createExpense(store, ctx, op.draft))
-    case 'expense.update':
-      return void (await updateExpense(store, ctx, op.id, op.draft))
-    case 'expense.delete':
-      return deleteExpense(store, ctx, op.id)
-    case 'repayment':
-      return void (await createRepayments(store, ctx, [op.input]))
-    case 'writeoff':
-      return void (await createWriteOffs(store, ctx, [op.input]))
-    case 'repayment.delete':
-      return deleteRepayment(store, ctx, op.id)
-    case 'writeoff.delete':
-      return deleteWriteOff(store, ctx, op.id)
-  }
-}
-
 const yieldToUi = () => new Promise<void>(resolve => setTimeout(resolve, 0))
 
 /**
@@ -126,8 +67,8 @@ export function addLargeDemo(
     })
     for (let i = 0; i < ops.length; i += BATCH) {
       await store.transaction(async tx => {
-        const batched = inside(store, tx)
-        for (const op of ops.slice(i, i + BATCH)) await apply(batched, ctx, op)
+        const batched = insideTransaction(store, tx)
+        for (const op of ops.slice(i, i + BATCH)) await applyDemoOp(batched, ctx, op)
       })
       onProgress?.(Math.min(1, (i + BATCH) / ops.length))
       await yieldToUi()

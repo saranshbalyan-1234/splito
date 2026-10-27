@@ -1,7 +1,8 @@
 import type {ExpenseRecord, LedgerRecord, RepaymentRecord, WriteOffRecord} from '@splito/domain'
 
 import type {BinType, Expense, Purged, Repayment, WriteOff} from './mutations'
-import type {Store} from './store'
+import type {Key} from './schema'
+import type {Page, Store} from './store'
 import type {Entity} from './types'
 
 export const toExpenseRecord = (e: Entity<Expense>): ExpenseRecord => ({
@@ -30,7 +31,11 @@ export const toRepaymentRecord = (e: Entity<Repayment>): RepaymentRecord => ({
 
 export const toWriteOffRecord = (e: Entity<WriteOff>): WriteOffRecord => ({...toRepaymentRecord(e), kind: 'writeoff'})
 
-/** Every expense, repayment and write-off, tombstones included (flagged `deleted`). */
+/**
+ * Every expense, repayment and write-off, tombstones included (flagged `deleted`).
+ * Reads the whole ledger: for export, maintenance and tests only, never a hot
+ * path (the architecture rule test keeps it out of screens and hooks).
+ */
 export async function loadLedger(store: Store): Promise<LedgerRecord[]> {
   const expenses = await store.getAll<Expense>('expense')
   const repayments = await store.getAll<Repayment>('repayment')
@@ -58,11 +63,17 @@ export async function loadBin(store: Store, now: number, days: number): Promise<
   const since = now - days * DAY_MS
   const items: BinItem[] = []
   for (const type of BIN_TYPES) {
-    for (const entity of await store.getAll<Purged>(type)) {
-      if (!entity.deleted || entity.data.purgedAt !== undefined || entity.updatedAt < since) continue
-      const last = (await store.history(type, entity.id)).at(-1)
-      items.push({type, entity, deletedAt: entity.updatedAt, deletedBy: last?.actor ?? ''} as BinItem)
-    }
+    // `byDeleted` is [deleted, updatedAt, id]: this reads only tombstones from inside the window.
+    let after: Key | null = null
+    do {
+      const page: Page<Entity<Purged>> = await store.page<Purged>(type, {index: 'byDeleted', eq: [1], min: since, after, limit: 100})
+      for (const entity of page.items) {
+        if (entity.data.purgedAt !== undefined) continue
+        const last = (await store.history(type, entity.id)).at(-1)
+        items.push({type, entity, deletedAt: entity.updatedAt, deletedBy: last?.actor ?? ''} as BinItem)
+      }
+      after = page.next
+    } while (after)
   }
   return items.sort((x, y) => y.deletedAt - x.deletedAt || (x.entity.id < y.entity.id ? -1 : 1))
 }

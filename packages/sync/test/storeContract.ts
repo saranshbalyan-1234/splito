@@ -3,7 +3,19 @@ import {describe, expect, test} from 'bun:test'
 import {type Store, type StoreChange, touches} from '../src/store'
 import type {Entity, OutboxOp} from '../src/types'
 
-export const ent = (type: Entity['type'], id: string, data: unknown = {n: 1n}): Entity => ({type, id, data, version: 1, deleted: false, updatedAt: 1})
+export const ent = (type: Entity['type'], id: string, data: unknown = {n: 1n}): Entity => ({
+  type,
+  id,
+  data,
+  version: 1,
+  deleted: false,
+  createdAt: 1,
+  updatedAt: 1,
+  syncStatus: 'local',
+  serverVersion: null,
+  syncedAt: null,
+  syncError: null,
+})
 export const op = (opId: string): OutboxOp => ({
   opId,
   deviceId: 'd',
@@ -18,6 +30,7 @@ export const op = (opId: string): OutboxOp => ({
   attempts: 0,
   nextAttemptAt: null,
   lastError: null,
+  status: 'queued',
 })
 
 /** Behaviour every Store implementation must share. `open` gives a fresh empty store; `reopen` reopens the same one. */

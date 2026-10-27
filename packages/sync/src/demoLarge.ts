@@ -26,7 +26,22 @@ import {
   validateExpense,
 } from '@splito/domain'
 
-import {type createGroup, type ExpenseDraft, type Group, type RepaymentInput} from './mutations'
+import {
+  createExpense,
+  createGroup,
+  createPerson,
+  createRepayments,
+  createWriteOffs,
+  deleteExpense,
+  deleteRepayment,
+  deleteWriteOff,
+  type ExpenseDraft,
+  type Group,
+  type RepaymentInput,
+  updateExpense,
+} from './mutations'
+import type {Store, Tx} from './store'
+import type {MutationCtx} from './types'
 
 export const DEMO_LARGE_PREFIX = 'demo-large-'
 export const DEMO_LARGE_SEED = 0x5911_7000
@@ -847,3 +862,50 @@ export function planRecords(plan: DemoPlan): ExpenseRecord[] {
   return [...live].map(([id, d]) => ({kind: 'expense', id, groupId: d.groupId, currency: d.currency, total: d.total, payers: d.payers, shares: computeShares(d.total, d.split), date: d.date, deleted: false}))
 }
 
+
+/** A store whose transactions run inside `tx`: the real mutations then batch into one commit. */
+export function insideTransaction(store: Store, tx: Tx): Store {
+  return {...store, transaction: fn => fn(tx)}
+}
+
+/**
+ * Applies one write of the plan through the real mutations, as its actor at
+ * its time. A create that mints its id asks for it first (the plan's id);
+ * every other id asked for is an outbox op id.
+ */
+export async function applyDemoOp(store: Store, base: MutationCtx, op: DemoOp): Promise<void> {
+  let pending: string | undefined = op.kind === 'person' || op.kind === 'group' || op.kind === 'expense' ? op.id : undefined
+  const ctx: MutationCtx = {
+    ...base,
+    actor: op.actor,
+    now: () => op.at,
+    newId: () => {
+      const id = pending ?? base.newId()
+      pending = undefined
+      return id
+    },
+  }
+  const check = (e: {id: string}) => {
+    if (e.id !== op.id) throw new Error(`demo id mismatch: ${e.id} != ${op.id}`)
+  }
+  switch (op.kind) {
+    case 'person':
+      return check(await createPerson(store, ctx, {name: op.name, upiId: op.upiId}))
+    case 'group':
+      return check(await createGroup(store, ctx, op.input))
+    case 'expense':
+      return check(await createExpense(store, ctx, op.draft))
+    case 'expense.update':
+      return void (await updateExpense(store, ctx, op.id, op.draft))
+    case 'expense.delete':
+      return deleteExpense(store, ctx, op.id)
+    case 'repayment':
+      return void (await createRepayments(store, ctx, [op.input]))
+    case 'writeoff':
+      return void (await createWriteOffs(store, ctx, [op.input]))
+    case 'repayment.delete':
+      return deleteRepayment(store, ctx, op.id)
+    case 'writeoff.delete':
+      return deleteWriteOff(store, ctx, op.id)
+  }
+}
