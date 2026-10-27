@@ -41,13 +41,23 @@ export function AskComposer({
   const haptics = useHaptics()
   const input = useRef<InputRef>(null)
   const [height, setHeight] = useState(MIN_HEIGHT)
+  /*
+   * What is in the field right now. Enter can arrive before React has drawn the last
+   * keystroke, and a send that read the drawn draft would drop it (or the whole question).
+   */
+  const typed = useRef(draft)
+  typed.current = draft
+  const change = (text: string) => {
+    typed.current = text
+    onDraftChange(text)
+  }
   const canSend = draft.trim().length > 0 && !isDisabled
 
   const send = () => {
-    if (!canSend) return
+    const text = typed.current
+    if (!text.trim() || isDisabled) return
     haptics.confirm()
-    const text = draft
-    onDraftChange('')
+    change('')
     setHeight(MIN_HEIGHT)
     onSend(text)
     if (IS_WEB) input.current?.focus()
@@ -74,7 +84,7 @@ export function AskComposer({
         <Input
           ref={input}
           value={draft}
-          onChangeText={onDraftChange}
+          onChangeText={change}
           onKeyPress={onKeyPress}
           onContentSizeChange={h => !IS_WEB && setHeight(Math.min(Math.max(h, MIN_HEIGHT), MAX_HEIGHT))}
           height={IS_WEB ? webHeight(draft) : height}
