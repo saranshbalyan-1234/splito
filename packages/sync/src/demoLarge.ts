@@ -38,6 +38,7 @@ import {
   type ExpenseDraft,
   type Group,
   type RepaymentInput,
+  restoreExpense,
   updateExpense,
 } from './mutations'
 import {type Store} from './store'
@@ -124,6 +125,13 @@ const FRIENDS = {
   oliver: ['Oliver Bennett', null],
   emma: ['Emma Clarke', null],
   maya: ['Maya Thompson', null],
+  /* The six friends of the curated story (below): the e2e specs, screenshots and the first-run tour lean on them. */
+  riya: ['Riya Sharma', null],
+  arjun: ['Arjun Mehta', null],
+  priya: ['Priya Nair', null],
+  sam: ['Sam Carter', null],
+  lena: ['Lena Fischer', null],
+  diego: ['Diego Alves', null],
 } as const satisfies Record<string, readonly [string, string | null]>
 
 type Friend = keyof typeof FRIENDS
@@ -157,7 +165,7 @@ const GROUPS: Ctx[] = [
   {key: 'tokyo', name: 'Tokyo', kind: 'trip', currency: 'JPY', tz: 'Asia/Tokyo', members: ['kenji', 'yuki', 'vihaan', 'sneha', 'rahul'], span: [84, 8]},
   {key: 'roadtrip', name: 'Coorg road trip', kind: 'trip', currency: 'INR', tz: 'Asia/Kolkata', members: ['kabir', 'zara', 'neha', 'ishaan'], span: [48, 5]},
   {key: 'london', name: 'London', kind: 'trip', currency: 'GBP', tz: 'Europe/London', members: ['oliver', 'emma', 'aanya', 'vihaan'], span: [24, 6]},
-  {key: 'flat', name: 'Flat 4B', kind: 'home', currency: 'INR', tz: 'Asia/Kolkata', members: ['aanya', 'vihaan']},
+  {key: 'flat', name: 'Koramangala flat', kind: 'home', currency: 'INR', tz: 'Asia/Kolkata', members: ['aanya', 'vihaan']},
   {key: 'office', name: 'Office lunch', kind: 'other', currency: 'INR', tz: 'Asia/Kolkata', members: ['vikram', 'sneha', 'rahul', 'pooja', 'karan', 'nisha', 'aditya']},
   {key: 'family', name: 'Family', kind: 'other', currency: 'INR', tz: 'Asia/Kolkata', members: ['mom', 'dad', 'ananya']},
   {key: 'football', name: 'Sunday football', kind: 'other', currency: 'INR', tz: 'Asia/Kolkata', members: ['dev', 'faisal', 'joseph', 'varun', 'karan', 'ishaan', 'rahul', 'aditya', 'vihaan']},
@@ -358,6 +366,108 @@ const NOTES: Record<string, string[]> = {
 }
 
 /* -------------------------------------------------------------------------- */
+/* The curated story                                                          */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * Three small groups and six friends with fixed, hand-checked numbers (ARCHITECTURE 26.1: the one demo set
+ * folds in what the old `?demo=1` set held). They stand beside the year of generated use, share none of its
+ * groups or people (so each friend's balance is exactly what is written here), and are never settled up.
+ * Dates are written as of `CURATED_ANCHOR` and shift with `today`, so the story always lies in the past.
+ */
+const CURATED_ANCHOR = '2026-10-28'
+
+type CuratedGroup = 'goa' | 'flat' | 'lisbon'
+type CuratedFriend = 'riya' | 'arjun' | 'priya' | 'sam' | 'lena' | 'diego'
+type CuratedWho = CuratedFriend | 'me'
+
+const CURATED_GROUPS: Record<CuratedGroup, {name: string; kind: Group['kind']; currency: CurrencyCode; start: string | null; end: string | null; tz: string; members: CuratedFriend[]}> = {
+  goa: {name: 'Goa trip', kind: 'trip', currency: 'INR', start: '2025-12-20', end: '2025-12-27', tz: 'Asia/Kolkata', members: ['riya', 'arjun', 'priya', 'sam']},
+  flat: {name: 'Flat 4B', kind: 'home', currency: 'INR', start: null, end: null, tz: 'Asia/Kolkata', members: ['riya', 'arjun']},
+  lisbon: {name: 'Lisbon', kind: 'trip', currency: 'EUR', start: '2026-04-10', end: '2026-04-15', tz: 'Europe/Lisbon', members: ['sam', 'lena', 'diego']},
+}
+
+type CuratedBill = {
+  items: Array<{name: string; amount: bigint; people: Array<CuratedWho | [CuratedWho, number]>}>
+  tax: bigint
+  tip: bigint
+  service: bigint
+  discount: bigint
+}
+type CuratedExpense = {
+  title: string
+  group: CuratedGroup | null
+  currency: CurrencyCode
+  total: bigint
+  payers: Partial<Record<CuratedWho, bigint>>
+  participants: CuratedWho[]
+  /** Itemised instead of equal (`participants` then lists everyone on the bill). */
+  bill?: CuratedBill
+  date: string
+  category: string
+  notes?: string
+}
+
+const GOA: CuratedWho[] = ['me', 'riya', 'arjun', 'priya', 'sam']
+const FLAT: CuratedWho[] = ['me', 'riya', 'arjun']
+const LISBON: CuratedWho[] = ['me', 'sam', 'lena', 'diego']
+
+/** Every split divides exactly, so balances never depend on the id-ordered tie-break for remainders. */
+const CURATED_EXPENSES: CuratedExpense[] = [
+  // Goa trip (INR)
+  {title: 'Villa, 4 nights', group: 'goa', currency: 'INR', total: 4000000n, payers: {me: 4000000n}, participants: GOA, date: '2025-12-20', category: 'stay'},
+  {title: 'Scooter rentals', group: 'goa', currency: 'INR', total: 600000n, payers: {arjun: 600000n}, participants: GOA, date: '2025-12-21', category: 'transport'},
+  {title: 'Groceries', group: 'goa', currency: 'INR', total: 320000n, payers: {me: 320000n}, participants: GOA, date: '2025-12-21', category: 'groceries'},
+  {title: 'Dinner at Thalassa', group: 'goa', currency: 'INR', total: 1250000n, payers: {riya: 750000n, priya: 500000n}, participants: GOA, date: '2025-12-22', category: 'food'},
+  {title: 'Parasailing', group: 'goa', currency: 'INR', total: 900000n, payers: {sam: 900000n}, participants: ['me', 'riya', 'sam'], date: '2025-12-23', category: 'entertainment'},
+  /*
+   * Itemised, with portions (owner rule 5): beers 2:3:1, 5% tax and 10% service on top.
+   * Subtotals 720 / 1,020 / 1,020 / 870 / 270 take 15% extras each, so every share is whole.
+   */
+  {
+    title: 'Bar tab at Britto’s',
+    group: 'goa',
+    currency: 'INR',
+    total: 448500n,
+    payers: {riya: 448500n},
+    participants: GOA,
+    bill: {
+      items: [
+        {name: 'Kingfisher, 6 pints', amount: 180000n, people: [['me', 2], ['sam', 3], 'riya']},
+        {name: 'Cocktails', amount: 120000n, people: ['riya', 'priya']},
+        {name: 'Nachos', amount: 60000n, people: ['me', 'riya', 'arjun', 'priya', 'sam']},
+        {name: 'Masala fries', amount: 30000n, people: ['arjun', 'priya']},
+      ],
+      tax: 19500n,
+      tip: 0n,
+      service: 39000n,
+      discount: 0n,
+    },
+    date: '2025-12-23',
+    category: 'food',
+  },
+  {title: 'Beach shack lunch', group: 'goa', currency: 'INR', total: 450000n, payers: {priya: 450000n}, participants: GOA, date: '2025-12-24', category: 'food'},
+  {title: 'Cab to airport', group: 'goa', currency: 'INR', total: 240000n, payers: {me: 120000n, arjun: 120000n}, participants: ['me', 'riya', 'arjun', 'priya'], date: '2025-12-27', category: 'transport'},
+  // Flat 4B (INR)
+  {title: 'Rent, January', group: 'flat', currency: 'INR', total: 6000000n, payers: {me: 6000000n}, participants: FLAT, date: '2026-01-01', category: 'stay'},
+  {title: 'Electricity bill', group: 'flat', currency: 'INR', total: 345000n, payers: {riya: 345000n}, participants: FLAT, date: '2026-01-10', category: 'bills'},
+  {title: 'Wi-Fi', group: 'flat', currency: 'INR', total: 119700n, payers: {arjun: 119700n}, participants: FLAT, date: '2026-01-12', category: 'bills'},
+  {title: 'Rent, February', group: 'flat', currency: 'INR', total: 6000000n, payers: {riya: 6000000n}, participants: FLAT, date: '2026-02-01', category: 'stay'},
+  {title: 'BigBasket order', group: 'flat', currency: 'INR', total: 276000n, payers: {me: 276000n}, participants: FLAT, date: '2026-02-02', category: 'groceries'},
+  {title: 'Cleaning supplies', group: 'flat', currency: 'INR', total: 84000n, payers: {arjun: 84000n}, participants: FLAT, date: '2026-02-15', category: 'shopping'},
+  // Lisbon (EUR)
+  {title: 'Airbnb in Alfama', group: 'lisbon', currency: 'EUR', total: 72000n, payers: {lena: 72000n}, participants: LISBON, date: '2026-04-10', category: 'stay'},
+  {title: 'Pastéis de Belém', group: 'lisbon', currency: 'EUR', total: 2400n, payers: {me: 2400n}, participants: LISBON, date: '2026-04-11', category: 'food'},
+  {title: 'Tram 28 tickets', group: 'lisbon', currency: 'EUR', total: 1200n, payers: {diego: 1200n}, participants: LISBON, date: '2026-04-11', category: 'transport'},
+  {title: 'Fado night', group: 'lisbon', currency: 'EUR', total: 16000n, payers: {sam: 10000n, me: 6000n}, participants: LISBON, date: '2026-04-12', category: 'entertainment', notes: 'Dinner and a show in Alfama'},
+  {title: 'Seafood at Ramiro', group: 'lisbon', currency: 'EUR', total: 18400n, payers: {me: 18400n}, participants: LISBON, date: '2026-04-13', category: 'food', notes: 'Farewell dinner, Sam picked the wine'},
+  // Direct (no group)
+  {title: 'Concert tickets', group: null, currency: 'INR', total: 500000n, payers: {me: 500000n}, participants: ['me', 'priya'], date: '2026-03-08', category: 'entertainment'},
+  {title: 'Coffee beans', group: null, currency: 'EUR', total: 1800n, payers: {sam: 1800n}, participants: ['me', 'sam'], date: '2026-05-02', category: 'groceries'},
+  {title: 'Movie night', group: null, currency: 'INR', total: 90000n, payers: {riya: 90000n}, participants: ['me', 'riya'], date: '2026-06-14', category: 'entertainment', notes: 'Pizza dinner at Riya’s before the film'},
+]
+
+/* -------------------------------------------------------------------------- */
 /* The plan                                                                   */
 /* -------------------------------------------------------------------------- */
 
@@ -366,7 +476,7 @@ export type DemoOp =
   | {kind: 'group'; at: number; actor: string; id: string; input: Parameters<typeof createGroup>[2]}
   | {kind: 'expense'; at: number; actor: string; id: string; draft: ExpenseDraft}
   | {kind: 'expense.update'; at: number; actor: string; id: string; draft: ExpenseDraft}
-  | {kind: 'expense.delete' | 'repayment.delete' | 'writeoff.delete'; at: number; actor: string; id: string}
+  | {kind: 'expense.delete' | 'expense.restore' | 'repayment.delete' | 'writeoff.delete'; at: number; actor: string; id: string}
   | {kind: 'repayment' | 'writeoff'; at: number; actor: string; id: string; input: RepaymentInput}
 
 export type DemoPlan = {ops: DemoOp[]; counts: DemoCounts}
@@ -735,6 +845,7 @@ export function generateLargeDemo({me, today, now, seed = DEMO_LARGE_SEED}: {me:
     ['zara', 'GBP', 'Theatre tickets for December', 'entertainment', 90, 160, 'Europe/London'],
     ['faisal', 'BHD', 'Dinner in Manama', 'food', 18, 42, 'Asia/Bahrain'],
     ['faisal', 'BHD', 'Souq shopping', 'shopping', 9, 30, 'Asia/Bahrain'],
+    ['faisal', 'KWD', 'Stopover dinner in Kuwait City', 'food', 8, 20, 'Asia/Kuwait'],
     ['karan', 'USD', 'Concert tickets in Dubai', 'entertainment', 120, 220, 'Asia/Dubai'],
     ['kenji', 'INR', 'Dinner in Bandra', 'food', 2400, 4800, 'Asia/Kolkata'],
     ['maya', 'INR', 'Old Delhi food walk', 'food', 1800, 3600, 'Asia/Kolkata'],
@@ -846,6 +957,97 @@ export function generateLargeDemo({me, today, now, seed = DEMO_LARGE_SEED}: {me:
     counts.deleted++
   }
 
+  /* ----------------------- the curated story (fixed numbers) -------------------- */
+
+  {
+    const MINUTE_ = MINUTE
+    const daysBefore = (date: string) => Math.round((Date.parse(CURATED_ANCHOR) - Date.parse(date)) / DAY)
+    const cdate = (date: string) => dayAgo(daysBefore(date))
+    const cid = (w: CuratedWho) => pid(w)
+    const gidOf = (key: CuratedGroup) => `${DEMO_LARGE_PREFIX}g-story-${key}`
+    let at = now - 14 * DAY
+    for (const [key, g] of Object.entries(CURATED_GROUPS) as Array<[CuratedGroup, (typeof CURATED_GROUPS)[CuratedGroup]]>) {
+      at += 5 * HOUR
+      ops.push({
+        kind: 'group',
+        at,
+        actor: me,
+        id: gidOf(key),
+        input: {name: g.name, kind: g.kind, currency: g.currency, startDate: g.start && cdate(g.start), endDate: g.end && cdate(g.end), memberIds: [me, ...g.members.map(cid)]},
+      })
+      counts.groups++
+    }
+    const start = now - 12 * DAY
+    const step = (12 * DAY - 2 * HOUR) / CURATED_EXPENSES.length
+    const ids: Record<string, string> = {}
+    for (const [i, e] of CURATED_EXPENSES.entries()) {
+      const split: SplitInput = e.bill
+        ? {
+            mode: 'items',
+            items: e.bill.items.map((item, k) => ({
+              id: `item-${k}`,
+              name: item.name,
+              amount: item.amount,
+              participants: item.people.map(p => (typeof p === 'string' ? cid(p) : {id: cid(p[0]), weight: p[1]})),
+            })),
+            tax: e.bill.tax,
+            tip: e.bill.tip,
+            service: e.bill.service,
+            discount: e.bill.discount,
+          }
+        : {mode: 'equal', participants: e.participants.map(cid)}
+      const draft: ExpenseDraft = {
+        title: e.title,
+        groupId: e.group ? gidOf(e.group) : null,
+        currency: e.currency,
+        total: e.total,
+        payers: Object.fromEntries(Object.entries(e.payers).map(([k, v]) => [cid(k as CuratedWho), v!])),
+        split,
+        date: cdate(e.date),
+        tz: e.group ? CURATED_GROUPS[e.group].tz : 'Asia/Kolkata',
+        category: e.category,
+        notes: e.notes ?? '',
+      }
+      const top = Object.entries(e.payers).sort(([, x], [, y]) => (x! > y! ? -1 : 1))[0]![0] as CuratedWho
+      const when = start + i * step + (i % 3) * 40 * MINUTE_
+      const id = nextId('e')
+      ids[e.title] = id
+      // The dinner went in with the wrong total and was fixed an hour ago (shows as an edit in Activity).
+      if (e.title === 'Dinner at Thalassa') {
+        ops.push({kind: 'expense', at: when, actor: cid(top), id, draft: {...draft, total: 1_000_000n, payers: {[cid('riya')]: 500_000n, [cid('priya')]: 500_000n}}})
+        ops.push({kind: 'expense.update', at: now - 70 * MINUTE_, actor: cid(top), id, draft})
+        counts.edits++
+      } else ops.push({kind: 'expense', at: when, actor: cid(top), id, draft})
+      counts.expenses++
+    }
+    // Groceries deleted by mistake and put back: both show in Activity.
+    ops.push({kind: 'expense.delete', at: now - 40 * MINUTE_, actor: me, id: ids.Groceries!})
+    ops.push({kind: 'expense.restore', at: now - 38 * MINUTE_, actor: me, id: ids.Groceries!})
+    /* Recently deleted: added and then deleted, so balances are unchanged and the bin has one of each kind. */
+    const binned = (title: string, group: CuratedGroup, total: bigint, payer: CuratedWho, added: number, deleted: number, category: string) => {
+      const id = nextId('e')
+      const g = CURATED_GROUPS[group]
+      ops.push({
+        kind: 'expense',
+        at: added,
+        actor: cid(payer),
+        id,
+        draft: {title, groupId: gidOf(group), currency: 'INR', total, payers: {[cid(payer)]: total}, split: {mode: 'equal', participants: [me, ...g.members.map(cid)]}, date: dateOf(added), tz: g.tz, category, notes: ''},
+      })
+      ops.push({kind: 'expense.delete', at: deleted, actor: cid(payer), id})
+      counts.deleted++
+    }
+    binned('Sunset cruise', 'goa', 300_000n, 'arjun', now - 3 * DAY, now - 2 * DAY, 'entertainment')
+    binned('Takeout pizza', 'flat', 135_000n, 'me', now - 26 * HOUR, now - 20 * HOUR, 'food')
+    const paid = nextId('r')
+    ops.push({kind: 'repayment', at: now - 2 * DAY, actor: cid('priya'), id: paid, input: {id: paid, groupId: null, currency: 'INR', from: cid('priya'), to: me, amount: 250_000n, date: dateOf(now - 2 * DAY), tz: 'Asia/Kolkata', note: 'UPI'}})
+    ops.push({kind: 'repayment.delete', at: now - 5 * HOUR, actor: me, id: paid})
+    const forgiven = nextId('w')
+    ops.push({kind: 'writeoff', at: now - 4 * DAY, actor: cid('sam'), id: forgiven, input: {id: forgiven, groupId: null, currency: 'EUR', from: cid('sam'), to: me, amount: 900n, date: dateOf(now - 4 * DAY), tz: 'Europe/Lisbon', note: 'Coffee on me'}})
+    ops.push({kind: 'writeoff.delete', at: now - 3 * DAY, actor: me, id: forgiven})
+    counts.deleted += 2
+  }
+
   // Stable time order: people and groups first (they come first in the list and in time).
   const order = new Map(ops.map((o, i) => [o, i]))
   ops.sort((x, y) => x.at - y.at || order.get(x)! - order.get(y)!)
@@ -855,13 +1057,27 @@ export function generateLargeDemo({me, today, now, seed = DEMO_LARGE_SEED}: {me:
 /** For tests: the plan's expenses as ledger records, as the app would read them back. */
 export function planRecords(plan: DemoPlan): ExpenseRecord[] {
   const live = new Map<string, ExpenseDraft>()
+  const gone = new Set<string>()
   for (const op of plan.ops) {
     if (op.kind === 'expense' || op.kind === 'expense.update') live.set(op.id, op.draft)
-    else if (op.kind === 'expense.delete') live.delete(op.id)
+    else if (op.kind === 'expense.delete') gone.add(op.id)
+    else if (op.kind === 'expense.restore') gone.delete(op.id)
   }
-  return [...live].map(([id, d]) => ({kind: 'expense', id, groupId: d.groupId, currency: d.currency, total: d.total, payers: d.payers, shares: computeShares(d.total, d.split), date: d.date, deleted: false}))
+  return [...live]
+    .filter(([id]) => !gone.has(id))
+    .map(([id, d]) => ({kind: 'expense', id, groupId: d.groupId, currency: d.currency, total: d.total, payers: d.payers, shares: computeShares(d.total, d.split), date: d.date, deleted: false}))
 }
 
+/** For tests and e2e: the plan's whole final ledger, live expenses plus payments and write-offs not taken back. */
+export function planLedger(plan: DemoPlan): LedgerRecord[] {
+  const taken = new Set(plan.ops.filter(o => o.kind === 'repayment.delete' || o.kind === 'writeoff.delete').map(o => o.id))
+  return [
+    ...planRecords(plan),
+    ...plan.ops
+      .filter((o): o is Extract<DemoOp, {kind: 'repayment' | 'writeoff'}> => (o.kind === 'repayment' || o.kind === 'writeoff') && !taken.has(o.id))
+      .map(o => ({...o.input, kind: o.kind, id: o.id, deleted: false}) as LedgerRecord),
+  ]
+}
 
 /**
  * Applies one write of the plan through the real mutations, as its actor at
@@ -894,6 +1110,8 @@ export async function applyDemoOp(store: Store, base: MutationCtx, op: DemoOp): 
       return void (await updateExpense(store, ctx, op.id, op.draft))
     case 'expense.delete':
       return deleteExpense(store, ctx, op.id)
+    case 'expense.restore':
+      return restoreExpense(store, ctx, op.id)
     case 'repayment':
       return void (await createRepayments(store, ctx, [op.input]))
     case 'writeoff':
