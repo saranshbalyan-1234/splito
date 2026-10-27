@@ -8,6 +8,7 @@ import {
   type ExpenseForm,
   formFromExpense,
   formPayers,
+  pruneDraft,
   pruneForm,
   withPeople,
 } from './form'
@@ -615,5 +616,24 @@ describe('pruneForm', () => {
   test('a form with nobody removed is unchanged', () => {
     const f = base()
     expect(pruneForm(f, new Set(f.people))).toEqual(f)
+  })
+})
+
+describe('pruneDraft', () => {
+  const inGroup = base({groupId: 'g1', title: 'Cab'})
+  const alive = new Set(['me', 'riya', 'sam'])
+  test('a live group keeps the draft as it was', () => {
+    const r = pruneDraft(inGroup, alive, {isFound: true, isInactive: false})
+    expect(r.draft?.groupId).toBe('g1')
+    expect(r.isGroupDropped).toBe(false)
+  })
+  test('a group made inactive since: the draft stays, outside the group, and says so', () => {
+    const r = pruneDraft(inGroup, alive, {isFound: true, isInactive: true})
+    expect(r.draft).toMatchObject({title: 'Cab', amount: '300', groupId: null})
+    expect(r.isGroupDropped).toBe(true)
+  })
+  test('a group that is gone drops the draft; no group keeps it', () => {
+    expect(pruneDraft(inGroup, alive, {isFound: false, isInactive: false}).draft).toBeUndefined()
+    expect(pruneDraft(base(), alive, undefined).draft?.title).toBe('Dinner')
   })
 })

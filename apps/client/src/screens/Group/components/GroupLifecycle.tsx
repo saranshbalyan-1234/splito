@@ -7,6 +7,7 @@ import {
   deleteGroup,
   type Entity,
   type Group,
+  groupAdmins,
   isGroupInactive,
   makeGroupActive,
   makeGroupInactive,
@@ -101,6 +102,7 @@ export function GroupLifecycleItems({
   const isInactive = isGroupInactive(group.data)
   const isHidden = hiddenIds.has(group.id)
   const isMember = group.data.members.some(m => m.personId === me && m.leftAt === null)
+  const isAdmin = groupAdmins(group.data).includes(me)
   const groupName = group.data.name
   const failed = (e: unknown, where: string) => {
     logger.error(e, {where})
@@ -173,16 +175,19 @@ export function GroupLifecycleItems({
           <Menu.ItemIcon icon={LogOutIcon} position="right" />
         </Menu.Item>
       )}
-      <Menu.Item
-        testID="group-menu-delete"
-        label={l`Delete group`}
-        destructive
-        onPress={() => lifecycle.deleteControl.open()}>
-        <Menu.ItemText>
-          <Trans>Delete group</Trans>
-        </Menu.ItemText>
-        <Menu.ItemIcon icon={TrashIcon} position="right" />
-      </Menu.Item>
+      {/* Only an admin deletes the group (26.12); the mutation refuses anyone else too. */}
+      {isAdmin && (
+        <Menu.Item
+          testID="group-menu-delete"
+          label={l`Delete group`}
+          destructive
+          onPress={() => lifecycle.deleteControl.open()}>
+          <Menu.ItemText>
+            <Trans>Delete group</Trans>
+          </Menu.ItemText>
+          <Menu.ItemIcon icon={TrashIcon} position="right" />
+        </Menu.Item>
+      )}
     </>
   )
 }
@@ -235,7 +240,12 @@ export function GroupLifecycleDialogs({
     } catch (e) {
       logger.error(e, {where: 'GroupLifecycle.delete'})
       haptics.error()
-      Toast.show(l`Couldn’t delete the group. Please try again.`, {type: 'error'})
+      Toast.show(
+        (e as {code?: string}).code === 'NOT_ADMIN'
+          ? l`Only a group admin can do that.`
+          : l`Couldn’t delete the group. Please try again.`,
+        {type: 'error'},
+      )
     }
   }
 

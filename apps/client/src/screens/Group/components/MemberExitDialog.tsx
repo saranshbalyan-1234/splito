@@ -164,6 +164,8 @@ function Body({
       haptics.error()
       if (e instanceof DomainError && e.code === 'LAST_ADMIN')
         Toast.show(l`Choose who runs the group first.`, {type: 'error'})
+      else if (e instanceof DomainError && e.code === 'NOT_ADMIN')
+        Toast.show(l`Only a group admin can do that.`, {type: 'error'})
       else {
         logger.error(e, {where: 'MemberExitDialog.save'})
         Toast.show(

@@ -163,6 +163,7 @@ export function GroupScreen() {
     navigation.setParams({tab: undefined})
   }, [wantsRules, isLoading, rulesControl, navigation])
   const group = groups?.find(g => g.id === groupId)
+  const isMeAdmin = !!group && !!me && groupAdmins(group.data).includes(me.id)
 
   const pageOf = usePagedRows(tab)
   if (!isLoading && !group) {
@@ -673,7 +674,12 @@ export function GroupScreen() {
                     isMe={item.personId === me?.id}
                     hasLeft={item.hasLeft}
                     isAdmin={!!group && groupAdmins(group.data).includes(item.personId)}
-                    onExitPressed={() => lifecycle.openExit(item.personId)}
+                    /* Anyone may leave; only an admin removes somebody else. */
+                    onExitPressed={
+                      item.personId === me?.id || isMeAdmin
+                        ? () => lifecycle.openExit(item.personId)
+                        : undefined
+                    }
                   />
                 )
               case 'owesHeader':

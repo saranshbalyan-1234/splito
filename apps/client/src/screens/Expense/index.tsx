@@ -17,6 +17,7 @@ import {
   type Entity,
   type Expense,
   type Group,
+  isGroupInactive,
   restoreExpense,
 } from '@splito/sync'
 
@@ -65,6 +66,13 @@ export function ExpenseScreen() {
   const {params} = useRoute<RouteProp<AllNavigatorParams, 'Expense'>>()
   const navigation = useNavigation<NavigationProp>()
   const {expense, history} = useExpense(params.expenseId)
+  const groups = useEntities<Group>('group')
+  /* An expense in an inactive group cannot be edited: that would change the group's balances (decision 89). */
+  const isInInactiveGroup =
+    !!expense?.data.groupId &&
+    !!groups?.some(
+      g => g.id === expense.data.groupId && isGroupInactive(g.data),
+    )
 
   return (
     <Layout.Screen testID="screen-expense">
@@ -79,14 +87,18 @@ export function ExpenseScreen() {
         </Layout.Header.Content>
         {expense && !expense.deleted ? (
           <>
-            <Layout.Header.ActionButton
-              testID="expense-edit-button"
-              icon={PencilIcon}
-              label={l`Edit expense`}
-              onPress={() =>
-                navigation.navigate('EditExpense', {expenseId: expense.id})
-              }
-            />
+            {isInInactiveGroup ? (
+              <Layout.Header.Slot />
+            ) : (
+              <Layout.Header.ActionButton
+                testID="expense-edit-button"
+                icon={PencilIcon}
+                label={l`Edit expense`}
+                onPress={() =>
+                  navigation.navigate('EditExpense', {expenseId: expense.id})
+                }
+              />
+            )}
             <ExpenseMenu expense={expense} />
           </>
         ) : (

@@ -84,6 +84,8 @@ for (const {name, width, height} of WIDTHS) {
     await page.goto('/groups')
     const groups = page.getByTestId('screen-groups')
     await expect(groups.getByTestId('groups-inactive-fold-toggle')).toContainText('Inactive (1)')
+    // Money is never hidden: the Overview still counts the inactive group, and its caption agrees with the totals.
+    await expect(groups.getByTestId('groups-balances-counts')).toContainText('1 group')
     await expect(groups.getByTestId('group-Rishikesh')).toHaveCount(0)
     await groups.getByTestId('groups-inactive-fold-toggle').click()
     await expect(groups.getByTestId('group-Rishikesh')).toContainText('Inactive')
@@ -182,6 +184,11 @@ test('leaving as the last admin asks who takes over; then I am out and told so',
   await expect(page.getByTestId('group-left-notice')).toBeVisible()
   await page.getByTestId('group-tab-members').click()
   await expect(page.getByTestId('member-Chirag Shah')).toContainText('Admin')
+  // I am no admin now: no remove menu on anyone's row, and no Delete group.
+  await expect(page.getByTestId('member-Chirag Shah-more')).toHaveCount(0)
+  await page.getByTestId('group-more').click()
+  await expect(page.getByTestId('group-menu-hide')).toBeVisible()
+  await expect(page.getByTestId('group-menu-delete')).toHaveCount(0)
 })
 
 test('delete group lists what goes, shows as one Recently deleted entry, and restores everything', async ({page}) => {

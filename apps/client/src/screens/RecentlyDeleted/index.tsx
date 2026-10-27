@@ -154,7 +154,9 @@ export function RecentlyDeletedScreen() {
           ? l`Can’t restore this: someone in it has been removed. Add them as a friend again first.`
           : code === 'GROUP_DELETED'
             ? l`Can’t restore this: its group is deleted. Restore the group first.`
-            : l`Couldn’t restore this. Please try again.`,
+            : code === 'GROUP_INACTIVE'
+              ? l`This group is inactive. Make it active first.`
+              : l`Couldn’t restore this. Please try again.`,
         {type: 'error'},
       )
     }

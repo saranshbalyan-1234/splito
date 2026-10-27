@@ -135,6 +135,10 @@ export function useErrorText() {
         return l`Everyone on a group expense needs to be in the group`
       case 'UNKNOWN_PERSON':
         return l`Someone on this expense was removed`
+      case 'GROUP_INACTIVE':
+        return l`This group is inactive. Make it active first.`
+      case 'NOT_ADMIN':
+        return l`Only a group admin can do that.`
       case 'NOT_FOUND':
         return l`This expense no longer exists`
       case 'INVALID_NAME':

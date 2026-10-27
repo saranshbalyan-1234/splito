@@ -1,3 +1,4 @@
+import {useMemo} from 'react'
 import {useLingui} from '@lingui/react/macro'
 import {type Entity, type Group, isGroupInactive} from '@splito/sync'
 
@@ -5,8 +6,9 @@ import {usePref} from '#/data/hooks'
 
 /** The groups I have hidden from my own lists (decision 89): personal, from the account preference `groups.hidden`. */
 export function useHiddenGroups(): ReadonlySet<string> {
-  const [ids = []] = usePref('groups.hidden')
-  return new Set(ids)
+  const [ids] = usePref('groups.hidden')
+  // One Set per change of the list, so memoised rows that take it are not redrawn every render.
+  return useMemo(() => new Set(ids ?? []), [ids])
 }
 
 /**

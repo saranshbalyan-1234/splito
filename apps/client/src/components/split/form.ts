@@ -228,6 +228,21 @@ export function pruneForm(f: ExpenseForm, alive: ReadonlySet<string>): ExpenseFo
 }
 
 /**
+ * A saved draft against what is true now. `group` is the state of the draft's group (undefined when it names
+ * none): gone drops the draft; inactive (decision 89) keeps what was typed but takes it out of the group, and
+ * `isGroupDropped` lets the screen say so. People who left drop out of every field (`pruneForm`).
+ */
+export function pruneDraft(
+  f: ExpenseForm,
+  alive: ReadonlySet<string>,
+  group: {isFound: boolean; isInactive: boolean} | undefined,
+): {draft: ExpenseForm | undefined; isGroupDropped: boolean} {
+  if (f.groupId && !group?.isFound) return {draft: undefined, isGroupDropped: false}
+  if (group?.isInactive) return {draft: {...pruneForm(f, alive), groupId: null}, isGroupDropped: true}
+  return {draft: pruneForm(f, alive), isGroupDropped: false}
+}
+
+/**
  * The edit form for a stored expense, every amount written in the locale's
  * decimal mark `mark` (`decimalMark`); `evaluateForm` of the result with the
  * same mark rebuilds the same split. A 3-decimal amount ("12.345") looks

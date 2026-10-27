@@ -123,24 +123,26 @@ export function GroupsScreen() {
   const createGroup = () => navigation.navigate('CreateGroup')
   /* Per currency, never across currencies; owed and owe summed apart (domain). */
   /* Money is never hidden: inactive and hidden groups count in the Overview whatever the status and visibility filters say. */
-  const overall = groupTotals(
-    filterGroups(all, {...filters, status: 'all', visibility: 'all'}).map(
-      g => g.balances,
-    ),
-  )
-  const settledCount = listed.filter(g =>
+  const overviewRows = filterGroups(all, {
+    ...filters,
+    status: 'all',
+    visibility: 'all',
+  })
+  const overall = groupTotals(overviewRows.map(g => g.balances))
+  /* The captions and the count line cover the same groups as the totals above them. */
+  const settledCount = overviewRows.filter(g =>
     Object.values(g.balances).every(v => v === ZERO),
   ).length
   const captions = Object.fromEntries(
     overall.map(({currency}) => {
-      const n = listed.filter(
+      const n = overviewRows.filter(
         g => (g.balances[currency] ?? ZERO) !== ZERO,
       ).length
       return [currency, plural(n, {one: '# group', other: '# groups'})]
     }),
   )
   const counts = [
-    plural(listed.length, {one: '# group', other: '# groups'}),
+    plural(overviewRows.length, {one: '# group', other: '# groups'}),
     l`${settledCount} settled`,
   ].join(' · ')
 
