@@ -3,6 +3,8 @@ import fc from 'fast-check'
 
 import {
   billBreakdown,
+  assertCharge,
+  assertRoundOff,
   billGap,
   type BillItem,
   billShares,
@@ -344,8 +346,7 @@ describe('property: random bills', () => {
     for (const seed of [1, 2, 3, 4, 5, 6, 7]) {
       const ids = items.map((_, n) => `${((n + 1) * seed * 2654435761) % 4294967296}-${seed}`)
       const renamed = items.map((i, n) => ({...i, id: ids[n]!}))
-      const rescoped = charges.map(c => c.appliesTo.type === 'items' ? c : c)
-      expect(billShares(billBreakdown(renamed.reverse(), rescoped), {minor: 39n})).toEqual(base)
+      expect(billShares(billBreakdown(renamed.reverse(), charges), {minor: 39n})).toEqual(base)
     }
   })
 
@@ -401,5 +402,34 @@ describe('items splits with charges', () => {
     const {subtotals, extras} = itemBreakdown(split)
     const shares = computeShares(252200n, split)
     for (const id of Object.keys(shares)) expect(subtotals[id]! + (extras[id] ?? 0n)).toBe(shares[id]!)
+  })
+})
+
+describe('charge validation', () => {
+  const ok = charge({id: 'a', kind: 'tax', value: pct(1250)})
+  const bad = (c: Charge) => () => assertCharge(c)
+  test('a sound charge passes', () => {
+    expect(bad(ok)).not.toThrow()
+    expect(bad(charge({id: 'd', kind: 'discount', value: fixed(500n)}))).not.toThrow()
+    expect(bad(charge({id: 'p', value: pct(10000)}))).not.toThrow()
+  })
+  test('rates must be whole basis points from 0 to 10,000', () => {
+    for (const bp of [-1, 10001, 12.5, Number.NaN]) expect(bad(charge({id: 'a', value: pct(bp)}))).toThrow('INVALID_CHARGE')
+  })
+  test('money is not negative (except a discount) and in range; kind and scope are known', () => {
+    expect(bad(charge({id: 'a', value: fixed(-1n)}))).toThrow('INVALID_CHARGE')
+    expect(bad(charge({id: 'a', value: fixed(10n ** 15n)}))).toThrow('OUT_OF_RANGE')
+    expect(bad(charge({id: 'a', kind: 'bribe' as ChargeKind, value: fixed(1n)}))).toThrow('INVALID_CHARGE')
+    expect(bad(charge({id: 'a', value: fixed(1n), appliesTo: {type: 'nobody'} as never}))).toThrow('INVALID_CHARGE')
+  })
+  test('billBreakdown refuses an unsound charge', () => {
+    const items: BillItem[] = [{id: 'i', parts: {a: 1000n}}]
+    expect(() => billBreakdown(items, [charge({id: 'a', value: pct(20000)})])).toThrow('INVALID_CHARGE')
+  })
+  test('round-off stays within one whole unit of the currency', () => {
+    expect(() => assertRoundOff({minor: 100n}, 'INR')).not.toThrow()
+    expect(() => assertRoundOff({minor: -101n}, 'INR')).toThrow('ROUND_OFF_TOO_LARGE')
+    expect(() => assertRoundOff({minor: 2n}, 'JPY')).toThrow('ROUND_OFF_TOO_LARGE')
+    expect(() => assertRoundOff(undefined, 'INR')).not.toThrow()
   })
 })

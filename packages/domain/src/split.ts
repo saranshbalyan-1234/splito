@@ -1,6 +1,6 @@
 import {type AdjustmentKind} from './adjustments'
 import {allocate, allocateCash, type CashAllocation} from './allocate'
-import {type BillBreakdown, billBreakdown, billShares, type Charge, type RoundOff} from './charges'
+import {assertCharge, assertRoundOff, type BillBreakdown, billBreakdown, billShares, type Charge, type RoundOff} from './charges'
 import {assertInRange, DomainError} from './errors'
 
 /** Who had an item: a person id (one portion), or an id with a whole number of portions ("2 of 3 beers"). */
@@ -197,8 +197,17 @@ export function itemBreakdown(split: ItemsSplit): {
  * total's sign (a +150 / -50 payer pair would make pairwise and group
  * balances disagree). Every write goes through here via `buildExpense`.
  */
-export function validateExpense(e: {total: bigint; payers: Record<string, bigint>; shares: Record<string, bigint>}): void {
+export function validateExpense(e: {
+  total: bigint
+  payers: Record<string, bigint>
+  shares: Record<string, bigint>
+  charges?: Charge[]
+  roundOff?: RoundOff
+  currency?: string
+}): void {
   assertInRange(e.total)
+  e.charges?.forEach(assertCharge)
+  if (e.currency) assertRoundOff(e.roundOff, e.currency)
   const isAgainstTotal = (v: bigint) => (e.total >= 0n ? v < 0n : v > 0n)
   if ([...Object.values(e.payers), ...Object.values(e.shares)].some(isAgainstTotal)) throw new DomainError('SIGN_MISMATCH')
   if (sum(Object.values(e.payers)) !== e.total) throw new DomainError('PAYERS_MISMATCH')

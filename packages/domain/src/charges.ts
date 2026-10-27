@@ -1,7 +1,7 @@
 import {type AdjustmentInput, percentOfMinor} from './adjustments'
 import {allocate} from './allocate'
 import {getCurrency} from './currency'
-import {DomainError} from './errors'
+import {assertInRange, DomainError} from './errors'
 
 /** What a charge is for; a discount comes off, every other kind is added. */
 export type ChargeKind = 'service' | 'tax' | 'packing' | 'delivery' | 'other' | 'discount'
@@ -76,6 +76,34 @@ export function billGap(b: BillBreakdown, total: bigint, currency: string): {gap
   return {gap, canRoundOff: gap !== 0n && abs(gap) <= roundOffLimit(currency)}
 }
 
+const CHARGE_KINDS: ChargeKind[] = ['service', 'tax', 'packing', 'delivery', 'other', 'discount']
+
+/**
+ * A charge that can be worked out: a known kind and scope, a whole number of
+ * basis points from 0 to 10,000, or a money value in range and not below
+ * zero (a discount's sign comes from its kind, not its value).
+ */
+export function assertCharge(c: Charge): void {
+  if (!CHARGE_KINDS.includes(c.kind)) throw new DomainError('INVALID_CHARGE')
+  const scope = c.appliesTo
+  if (scope.type !== 'all' && scope.type !== 'classes' && scope.type !== 'items') throw new DomainError('INVALID_CHARGE')
+  if (c.stacksOn !== 'items' && c.stacksOn !== 'earlier') throw new DomainError('INVALID_CHARGE')
+  if (c.value.mode === 'percent') {
+    const bp = c.value.basisPoints
+    if (!Number.isInteger(bp) || bp < 0 || bp > 10000) throw new DomainError('INVALID_CHARGE')
+  } else if (c.value.mode === 'amount') {
+    assertInRange(c.value.minor)
+    if (c.value.minor < 0n && c.kind !== 'discount') throw new DomainError('INVALID_CHARGE')
+  } else {
+    throw new DomainError('INVALID_CHARGE')
+  }
+}
+
+/** A round-off line within the printed-total tolerance (one whole unit of the currency). */
+export function assertRoundOff(roundOff: RoundOff | undefined, currency: string): void {
+  if (roundOff && abs(roundOff.minor) > roundOffLimit(currency)) throw new DomainError('ROUND_OFF_TOO_LARGE')
+}
+
 /** The tax inside a price that includes `basisPoints` of tax: base * r / (1 + r), half away from zero. */
 function inclusivePortion(base: bigint, basisPoints: number): bigint {
   const denom = 10000n + BigInt(basisPoints)
@@ -123,6 +151,7 @@ export function billBreakdown(items: BillItem[], charges: Charge[]): BillBreakdo
   const lines: BillLine[] = []
   const extras: Record<string, bigint> = {}
   for (const charge of charges) {
+    assertCharge(charge)
     const inScope = items.filter(i => isInScope(charge.appliesTo, i)).flatMap(i => cells.get(i.id)!)
     const isInclusive = !!charge.inclusive && charge.kind !== 'discount'
     const stacks = charge.stacksOn === 'earlier' && !isInclusive

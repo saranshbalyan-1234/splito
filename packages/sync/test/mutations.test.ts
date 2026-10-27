@@ -43,6 +43,28 @@ const draft = (x: string, over: Partial<ExpenseDraft> = {}): ExpenseDraft => ({
   ...over,
 })
 
+test('a charged bill with an unsound charge or an oversized round-off is refused, nothing is written', async () => {
+  const x = await createPerson(s, ctx, {name: 'Riya'})
+  const charged = (charge: object, roundOff?: {minor: bigint}, total = 1100n) =>
+    draft(x.id, {
+      total,
+      payers: {me: total},
+      split: {
+        mode: 'items',
+        items: [{id: 'i', amount: 1000n, participants: ['me', x.id]}],
+        tax: 0n,
+        tip: 0n,
+        discount: 0n,
+        charges: [{id: 'c', name: 'GST', kind: 'tax', appliesTo: {type: 'all'}, stacksOn: 'items', value: {mode: 'percent', basisPoints: 1000}, ...charge}],
+        ...(roundOff ? {roundOff} : {}),
+      },
+    })
+  await expect(createExpense(s, ctx, charged({value: {mode: 'percent', basisPoints: 20000}}))).rejects.toMatchObject({code: 'INVALID_CHARGE'})
+  await expect(createExpense(s, ctx, charged({}, {minor: 1000n}, 2100n))).rejects.toMatchObject({code: 'ROUND_OFF_TOO_LARGE'})
+  expect(await s.getAll('expense')).toHaveLength(0)
+  expect((await createExpense(s, ctx, charged({}))).data.shares).toEqual({me: 550n, [x.id]: 550n})
+})
+
 test('ensureMe is idempotent', async () => {
   await ensureMe(s, ctx, 'Me again')
   expect((await s.getAll('person')).map(p => p.id)).toEqual(['me'])
