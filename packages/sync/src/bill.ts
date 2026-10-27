@@ -82,9 +82,9 @@ export interface MerchantSetup {
 /** The merchant memory keeps this many setups, most recent first. */
 export const MERCHANT_SETUPS_MAX = 200
 
-/** Expense title to merchant key: lower case, single spaces. */
+/** Expense title to merchant key: lower case, single spaces, at most 120 characters (what a stored setup accepts). */
 export function merchantKey(title: string): string {
-  return title.trim().replace(/\s+/g, ' ').toLowerCase()
+  return title.trim().replace(/\s+/g, ' ').toLowerCase().slice(0, 120)
 }
 
 const isStr = (v: unknown, max = 64): v is string => typeof v === 'string' && v.length > 0 && v.length <= max
@@ -135,6 +135,20 @@ export function isMerchantSetups(v: unknown): v is MerchantSetup[] {
     new Set(v.map(m => m?.key)).size === v.length &&
     v.every(m => isStr(m?.key, 120) && isStr(m?.name, 120) && areTemplates(m?.charges))
   )
+}
+
+/**
+ * A setup as the preference accepts it: key and name cut to 120 characters,
+ * charge names to 64, at most 12 charges (a longer title or list would make
+ * the whole write refused, and the setup silently not saved).
+ */
+export function merchantSetupOf(title: string, charges: ChargeTemplate[]): MerchantSetup {
+  const name = title.trim().slice(0, 120)
+  return {
+    key: merchantKey(title),
+    name,
+    charges: charges.slice(0, 12).map(c => ({...c, name: c.name.slice(0, 64)})),
+  }
 }
 
 /** The service charge new Simple bills start with, in basis points: 0 is off. */

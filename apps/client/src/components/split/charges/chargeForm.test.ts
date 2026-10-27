@@ -5,6 +5,7 @@ import {DEFAULT_CHARGE_PRESETS, type Expense} from '@splito/sync'
 import {emptyForm, evaluateForm, type ExpenseForm, formFromExpense} from '../form'
 import {
   bpText,
+  chargesFromSimple,
   chargesFromTemplates,
   templatesFromCharges,
 } from './chargeForm'
@@ -213,5 +214,37 @@ describe('presets and merchant setups', () => {
       const f = bill({amount: '', charges: chargesFromTemplates(p.charges, key)})
       expect(evaluateForm(f, 'UTC').bill).toBeDefined()
     }
+  })
+})
+
+describe('Simple to Custom keeps what was typed', () => {
+  const simple = (): ExpenseForm => {
+    const f = bill({charges: undefined, amount: '1330', tax: '18', service: '10', tip: '50', discount: ''})
+    f.adjustModes = {tax: 'percent', service: 'percent'}
+    f.items = [{key: 'i', name: 'Pizza', amount: '1000', people: ['me', 'raj']}]
+    return f
+  }
+
+  test('percent rows keep their rate, an amount row its money, empty rows are left out', () => {
+    const rows = chargesFromSimple(simple(), {mark: '.', shorthand: true})
+    expect(rows.map(r => [r.kind, r.mode, r.value])).toEqual([
+      ['service', 'percent', '10'],
+      ['tax', 'percent', '18'],
+      ['other', 'amount', '50.00'],
+    ])
+  })
+
+  test('the seeded list prices the bill exactly as the Simple rows did', () => {
+    const f = simple()
+    const before = evaluateForm(f, 'UTC')
+    const after = evaluateForm({...f, charges: chargesFromSimple(f, {mark: '.', shorthand: true})}, 'UTC')
+    expect(before.error).toBeUndefined()
+    expect(after.error).toBeUndefined()
+    expect(after.bill?.computedTotal).toBe(before.itemsTotal)
+    expect(computeShares(after.draft!.total, after.draft!.split)).toEqual(computeShares(before.draft!.total, before.draft!.split))
+  })
+
+  test('nothing typed seeds an empty list', () => {
+    expect(chargesFromSimple(bill({charges: undefined, tax: '', tip: '', service: '', discount: ''}), {mark: '.', shorthand: true})).toEqual([])
   })
 })

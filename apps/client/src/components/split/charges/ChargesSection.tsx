@@ -6,6 +6,7 @@ import {
   type ChargeTemplate,
   merchantKey,
   MERCHANT_SETUPS_MAX,
+  merchantSetupOf,
   PREFS,
 } from '@splito/sync'
 import {nanoid} from 'nanoid/non-secure'
@@ -29,6 +30,7 @@ import {IS_WEB} from '#/env'
 import {type ExpenseForm, type FormEvaluation} from '../form'
 import {
   type ChargeForm,
+  chargesFromSimple,
   chargesFromTemplates,
   emptyCharge,
   templatesFromCharges,
@@ -94,6 +96,7 @@ export function ChargePresets({
   const isRemembering = usePrefControl('bill.rememberPerMerchant').value ?? true
   const setups = usePrefControl('bill.merchantSetups').value ?? []
   const mark = decimalMark(locale)
+  const isShorthandOn = usePrefControl('amount.shorthand').value ?? true
 
   const current = form.charges ? templatesFromCharges(form.charges) : undefined
   const activeId = current
@@ -153,8 +156,23 @@ export function ChargePresets({
             size="small"
             color={activeId === 'custom' ? 'primary' : 'secondary'}
             onPress={() => {
-              /* An open list of your own: keep the charges you have, or start empty. */
-              if (form.charges === undefined) apply([])
+              /* An open list of your own: keep the charges you have; from Simple, start from the rows typed there. */
+              if (form.charges !== undefined) return
+              haptics.selection()
+              update(f => ({
+                ...f,
+                charges: chargesFromSimple(f, {
+                  mark,
+                  shorthand: isShorthandOn,
+                  names: {
+                    tax: l`Tax`,
+                    tip: l`Tip`,
+                    service: l`Service charge`,
+                    discount: l`Discount`,
+                  },
+                }),
+                roundOff: undefined,
+              }))
             }}>
             <ButtonText>
               <Trans>Custom</Trans>
@@ -252,17 +270,24 @@ export function ChargeList({
         ? c.scope.classes.map(nameOf).join(' + ')
         : l`${c.scope.items.length} chosen items`
 
-  const saveSetup = () => {
+  const saveSetup = async () => {
     const templates = templatesFromCharges(charges)
     if (templates.length === 0) return
+    const setup = merchantSetupOf(title, templates)
+    try {
+      await saveSetups(
+        [setup, ...setups.filter(s => s.key !== setup.key)].slice(
+          0,
+          MERCHANT_SETUPS_MAX,
+        ),
+      )
+    } catch {
+      Toast.show(l`Couldn’t save the charges for ${title}. Try again.`, {
+        type: 'error',
+      })
+      return
+    }
     haptics.success()
-    const key = merchantKey(title)
-    void saveSetups(
-      [
-        {key, name: title, charges: templates},
-        ...setups.filter(s => s.key !== key),
-      ].slice(0, MERCHANT_SETUPS_MAX),
-    )
     Toast.show(l`Saved the charges for ${title}`, {type: 'success'})
   }
 

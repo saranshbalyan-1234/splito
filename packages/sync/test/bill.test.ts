@@ -1,6 +1,6 @@
 import {describe, expect, test} from 'bun:test'
 
-import {DEFAULT_CHARGE_PRESETS, DEFAULT_TAX_CLASSES, isChargePresets, isMerchantSetups, isTaxClasses, merchantKey, MERCHANT_SETUPS_MAX} from '../src/bill'
+import {DEFAULT_CHARGE_PRESETS, DEFAULT_TAX_CLASSES, isChargePresets, isMerchantSetups, isTaxClasses, merchantKey, merchantSetupOf, MERCHANT_SETUPS_MAX} from '../src/bill'
 import {PREFS} from '../src/preferences'
 
 describe('bill preferences (F-403)', () => {
@@ -33,5 +33,14 @@ describe('bill preferences (F-403)', () => {
     expect(isMerchantSetups(Array.from({length: MERCHANT_SETUPS_MAX}, (_, n) => setup(n)))).toBe(true)
     expect(isMerchantSetups(Array.from({length: MERCHANT_SETUPS_MAX + 1}, (_, n) => setup(n)))).toBe(false)
     expect(isMerchantSetups([setup(1), setup(1)])).toBe(false)
+  })
+
+  test('a very long title or charge list is cut to what the preference accepts, so the save is not refused', () => {
+    const t = (n: number) => ({name: 'x'.repeat(100) + n, kind: 'tax' as const, mode: 'percent' as const, basisPoints: 500, stacksOn: 'items' as const})
+    const setup = merchantSetupOf('  ' + 'Very Long Merchant '.repeat(20), Array.from({length: 15}, (_, n) => t(n)))
+    expect(setup.key.length).toBeLessThanOrEqual(120)
+    expect(setup.name.length).toBeLessThanOrEqual(120)
+    expect(setup.charges).toHaveLength(12)
+    expect(isMerchantSetups([setup])).toBe(true)
   })
 })

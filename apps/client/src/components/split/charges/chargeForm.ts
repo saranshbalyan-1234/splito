@@ -1,6 +1,7 @@
 import {
   amountInputText,
   type Charge,
+  chargesOf,
   type ChargeKind,
   DomainError,
   evaluateAmount,
@@ -207,4 +208,49 @@ export function startItemize(
       adjustModes: {...f.adjustModes, service: 'percent'},
     }
   return f
+}
+
+/**
+ * The Simple rows as typed (a rate or an amount each for tax, tip, service
+ * and discount) as an editable charge list, so going to Custom keeps them.
+ * A row that does not read yet is left out, as an empty one is.
+ */
+export function chargesFromSimple(
+  f: ExpenseForm,
+  {
+    mark,
+    shorthand,
+    names,
+  }: {
+    mark: '.' | ','
+    shorthand: boolean
+    /** Row names in the person's language, by `chargesOf` id (tax, tip, service, discount). */
+    names?: Partial<Record<'tax' | 'tip' | 'service' | 'discount', string>>
+  },
+): ChargeForm[] {
+  const money = {tax: ZERO, tip: ZERO, service: ZERO, discount: ZERO}
+  const rates: Partial<Record<keyof typeof money, number>> = {}
+  for (const kind of ['tax', 'tip', 'service', 'discount'] as const) {
+    try {
+      if (f.adjustModes?.[kind] === 'percent') {
+        const bp = parseBasisPoints(f[kind] ?? '')
+        if (bp > 0) rates[kind] = bp
+      } else if ((f[kind] ?? '').trim()) {
+        money[kind] = evaluateAmount(f[kind], f.currency, mark, {
+          shorthand,
+          reading: 'decimal',
+        })
+      }
+    } catch {
+      // Not readable yet: the row is left out.
+    }
+  }
+  return formsFromCharges(
+    chargesOf({...money, rates}).map(c => ({
+      ...c,
+      name: names?.[c.id as keyof typeof money] ?? c.name,
+    })),
+    f.currency,
+    mark,
+  )
 }
