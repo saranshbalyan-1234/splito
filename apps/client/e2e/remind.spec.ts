@@ -140,6 +140,8 @@ test('Remind me: primer before the permission, listed on the Person page, edited
   // Honest about the web: it only fires while open.
   await expect(page.getByText('On the web, Splito can only remind you while it’s open.')).toBeVisible()
   await expect(page.getByTestId('remind-next')).toBeVisible()
+  // The Timezone preference is the device's, so no zone note.
+  await expect(page.getByTestId('remind-zone')).toHaveCount(0)
   await page.getByTestId('remind-pick-in3days').click()
 
   // A time that is not real stops the save.
@@ -206,6 +208,7 @@ test('a reminder that comes due while Splito is open shows itself, and one misse
 test('Settings: one switch for reminders, none yet for features that do not exist', async ({page}) => {
   await ready(page)
   await page.goto('/settings/notifications')
+  await expect(page.getByText('Reminders you set with Remind me work now, on this device.')).toBeVisible()
   await expect(page.getByTestId('pref-notify.reminders')).toBeVisible()
   await expect(page.getByTestId('pref-notify.recurring')).toHaveCount(0)
   await expect(page.getByTestId('pref-notify.digest')).toHaveCount(0)
