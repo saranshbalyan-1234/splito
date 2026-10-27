@@ -583,11 +583,13 @@ with every hot screen reading by index, never by full scan (§ 17 budgets, F-109
   A loop that pages a money store from end to end is a full read and is banned the same way.
 - **Analytics and Search never load the ledger** (assistant's ruling, 2026-10-27, after the F-117 review).
   Analytics reads the selected period by `byDate` / `byGroupDate` range and reads history-long charts from an
-  `aggregates` projection (`[currency, month, groupId|'', categoryId]` -> sum and count in minor units), kept in
+  `aggregates` projection (`[currency, month, groupId|'', categoryId, personId|'', kind]` -> sum and count in minor units; `personId` '' is the whole record, a person id is that person's share, `kind` separates expenses from transfers), kept in
   the same transaction as `balances` and covered by `rebuildProjections()` and the property test. Search reads
   a `search_terms` store (normalised prefix tokens of description, notes, merchant, person and group names,
   plus an amount key per currency -> entity id), also maintained in the mutation transaction, and loads only
-  the matching rows. No in-memory ledger mirror.
+  the matching rows, paged: the first page renders within the § 26.10 budget whatever the match count, and
+  per-currency totals of a broad match fill in after it. No in-memory ledger mirror. Person and group names
+  resolve at query time, so a rename rewrites no terms.
 - **One transaction per mutation** spans the entity, its projections, history and outbox (atomic, § 9.3).
 - **Versioned migrations:** `meta.schemaVersion`; IndexedDB `onupgradeneeded` and SQLite `PRAGMA user_version`
   run ordered, idempotent steps; v1 -> v2 copies rows from `entities` into the per-type stores, builds
