@@ -1174,6 +1174,12 @@ labelled sidebar); **wide** = web 1300 px and up (Bluesky `gtTablet`, right colu
   the list and finishes it (built, tested, merged, screenshots, status updated in BACKLOG and
   `COMPLETION_MATRIX.md`) before starting the next; parallel workers may split one feature, not run many
   features at once. *Why:* "add everything to feature list and pick one by one".
+- **Model split: Sonnet implements, Opus decides and reviews.** Every implementation agent (building,
+  fixing, migrating, merging) runs on Sonnet (latest); every decision (design, rulings, planning), review,
+  audit, judge and verification agent runs on Opus (latest). Each feature in the build chain is built by Sonnet,
+  then reviewed by Opus against § 26 and its BACKLOG criteria; a "fix-first" verdict sends it back to a Sonnet
+  fixer once before the next feature starts. *Why:* "use sonnet for all implementation and opus for decisions
+  and reviews".
 - **Large work fans out** into parallel throwaway worktrees (§ 20) with judges and review. *Why:* "Fanout".
 
 ### 26.2 Product scope, platforms and backend
@@ -1799,6 +1805,7 @@ Every owner decision, in the order it was made (all 2026-10-26). "Replaced" name
 | 77 | "invite link and qr to show once i click on invite people, not outside" | Invite link / QR only inside the Invite people (Add friend) sheet and the group Add members sheet; header overflow entries removed | § 26.18 | Invite link in Home "..." and Group overflow |
 | 78 | "manage the indexeddb properly, a lot of different data is clubbed into a single table"; "the db level architecture is very important for scalability" | Local DB v2: one store per entity type, normalised members/parties, indexes per query, balance projection in-transaction, cursor paging, versioned migrations, Postgres mirrors it | § 9.8 | Single `entities` store with full scans |
 | 79 | "every value can have status, whether its outbox, pending success, synced whatever" | Per-row `syncStatus` (local / pending / syncing / synced / failed) with index, shown per item, aggregated in the avatar dot | §§ 9.8, 26.7 | Only a global status label |
+| 80 | "use sonnet for all implementation and opus for decisions and reviews" | Sonnet builds and fixes; Opus decides, reviews, audits, judges; every feature gets an Opus review before the next | § 26.1 | One model for everything |
 
 New decisions follow § 0 rule 9: rewrite the rule in its topic so only the current truth remains, then add a
 row here.
