@@ -1,5 +1,5 @@
 // Adapted from bluesky-social/social-app@4e4ad9c (MIT) - src/screens/Settings/Settings.tsx (settings page frame and rows)
-import {useRef, useState} from 'react'
+import {useEffect, useRef, useState} from 'react'
 import {View} from 'react-native'
 import {LayoutAnimationConfig} from 'react-native-reanimated'
 import {Plural, Trans, useLingui} from '@lingui/react/macro'
@@ -111,6 +111,18 @@ export function FriendsAndInvitesScreen() {
   items.push({type: 'header', key: 'h-defaults', title: l`Defaults for new links and requests`})
   items.push({type: 'defaults', key: 'defaults'})
 
+  /* Arriving from the invite sheet's "Manage links": land on the links once the rows exist, never before (an index past the data throws on native). */
+  const wantsLinks = route.params?.section === 'links'
+  const isReady = !!people && items.length > linksAt
+  useEffect(() => {
+    if (!wantsLinks || !isReady || scrolled.current) return
+    const frame = requestAnimationFrame(() => {
+      scrolled.current = true
+      list.current?.scrollToIndex({index: linksAt, animated: false})
+    })
+    return () => cancelAnimationFrame(frame)
+  }, [wantsLinks, isReady, linksAt])
+
   const openRemove = (p: Entity<Person>) => {
     setRemoving(p)
     removeControl.open()
@@ -132,12 +144,10 @@ export function FriendsAndInvitesScreen() {
           ref={list}
           data={people ? items : []}
           keyExtractor={(item: Item) => item.key}
-          onLayout={() => {
-            // Arriving from the invite sheet's "Manage links": land on the links once.
-            if (route.params?.section === 'links' && !scrolled.current) {
-              scrolled.current = true
-              list.current?.scrollToIndex({index: linksAt, animated: false})
-            }
+          /* Rows are not measured up front: fall back to an estimated offset, then try the index again once it is on screen. */
+          onScrollToIndexFailed={info => {
+            list.current?.scrollToOffset({offset: info.averageItemLength * info.index, animated: false})
+            setTimeout(() => list.current?.scrollToIndex({index: info.index, animated: false}), 120)
           }}
           renderItem={({item}: {item: Item}) => {
             switch (item.type) {
@@ -224,8 +234,8 @@ export function FriendsAndInvitesScreen() {
       <RemoveFriendDialog
         control={removeControl}
         person={removing}
-        onSettleUp={() => removing && navigation.navigate('Person', {personId: removing.id})}
-        onCallItEven={() => removing && navigation.navigate('Person', {personId: removing.id})}
+        onSettleUp={() => removing && navigation.navigate('Person', {personId: removing.id, action: 'settle'})}
+        onCallItEven={() => removing && navigation.navigate('Person', {personId: removing.id, action: 'even'})}
       />
     </Layout.Screen>
   )

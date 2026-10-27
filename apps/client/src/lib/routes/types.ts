@@ -29,7 +29,8 @@ export type RootStackParams = {
   RecentlyDeleted: undefined
   /** Settings > Friends and invites; `section: 'links'` scrolls to the invite links. */
   FriendsAndInvites: {section?: 'links'} | undefined
-  Person: {personId: string}
+  /** `action` opens that flow once the page has its balances (Friends and invites uses it). */
+  Person: {personId: string; action?: 'settle' | 'even'}
   /** `tab` opens a section directly (`/groups/:groupId?tab=rules`). */
   Group: {groupId: string; tab?: 'expenses' | 'balances' | 'members' | 'rules'}
   Settle: {groupId: string}

@@ -1,4 +1,4 @@
-import {useState} from 'react'
+import {useEffect, useRef, useState} from 'react'
 import {View} from 'react-native'
 import {LayoutAnimationConfig} from 'react-native-reanimated'
 import {plural} from '@lingui/core/macro'
@@ -98,7 +98,7 @@ export function PersonScreen() {
   const {gtMobile} = useBreakpoints()
   const locale = useNumberLocale()
   const navigation = useNavigation<NavigationProp>()
-  const {personId} = useRoute<RouteProp<AllNavigatorParams, 'Person'>>().params
+  const {personId, action} = useRoute<RouteProp<AllNavigatorParams, 'Person'>>().params
   const store = useStore()
   const ctx = useMutationCtx()
   const me = useMe()
@@ -541,6 +541,7 @@ export function PersonScreen() {
                 : null
             }
           />
+          <OpenOnArrival action={action} onSettle={() => recordPayment()} onEven={callItEven} />
           {exportSheet.element}
           <EditFriendDialog control={editControl} person={person} />
           <CallItEvenDialog
@@ -560,6 +561,21 @@ export function PersonScreen() {
       )}
     </Layout.Screen>
   )
+}
+
+/**
+ * Arrived from "Settle up" or "Call it even" in the removal prompt: opens that
+ * flow once, now that the page has its balances.
+ */
+function OpenOnArrival({action, onSettle, onEven}: {action?: 'settle' | 'even'; onSettle: () => void; onEven: () => void}) {
+  const didAct = useRef(false)
+  useEffect(() => {
+    if (!action || didAct.current) return
+    didAct.current = true
+    if (action === 'settle') onSettle()
+    else onEven()
+  })
+  return null
 }
 
 function PersonHeroPlaceholder() {

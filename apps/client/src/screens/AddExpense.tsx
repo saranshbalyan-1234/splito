@@ -1,7 +1,7 @@
 import {useState} from 'react'
 import {useLingui} from '@lingui/react/macro'
 import {useNavigation, useRoute, type RouteProp} from '@react-navigation/native'
-import {type Entity, type Group, type Person} from '@splito/sync'
+import {type Entity, type Group, isRemovedFriend, type Person} from '@splito/sync'
 
 import {type AllNavigatorParams, type NavigationProp} from '#/lib/routes/types'
 import {useEntities, useMe, usePref} from '#/data/hooks'
@@ -103,8 +103,9 @@ function AddExpenseForm({
   const [fresh] = useState(() => {
     const group = groups.find(g => g.id === groupId)
     if (group) {
+      const removed = new Set(people.filter(p => isRemovedFriend(p.data)).map(p => p.id))
       const members = group.data.members
-        .filter(m => m.leftAt === null)
+        .filter(m => m.leftAt === null && !removed.has(m.personId))
         .map(m => m.personId)
       return emptyForm({
         me,
@@ -117,7 +118,7 @@ function AddExpenseForm({
         roundTo,
       })
     }
-    const person = people.find(p => p.id === personId)
+    const person = people.find(p => p.id === personId && !isRemovedFriend(p.data))
     return emptyForm({
       me,
       currency,

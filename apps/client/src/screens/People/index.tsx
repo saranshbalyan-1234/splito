@@ -5,7 +5,7 @@ import {plural} from '@lingui/core/macro'
 import {Trans, useLingui} from '@lingui/react/macro'
 import {useNavigation} from '@react-navigation/native'
 import {balanceTotals, isSettledBalance, personSummary} from '@splito/domain'
-import {type Group, isRemovedFriend, type Person} from '@splito/sync'
+import {type Group, type Person} from '@splito/sync'
 
 import {type NavigationProp} from '#/lib/routes/types'
 import {perfMark} from '#/lib/perfMark'
@@ -46,7 +46,7 @@ import {
 } from './components/FriendsFilterDialog'
 import {RequestsSection} from './components/RequestsSection'
 import {SectionHeader} from './components/SectionHeader'
-import {filterFriends, sortFriends} from './sort'
+import {filterFriends, listedFriends, sortFriends} from './sort'
 
 const PLACEHOLDER_ROWS = 6
 
@@ -97,9 +97,7 @@ export function PeopleScreen() {
     : []
   const byPerson = new Map(summaries.map(s => [s.person, s]))
   const groupNames = new Map((groups ?? []).map(g => [g.id, g.data.name]))
-  const friends = (people ?? [])
-    .filter(p => !p.data.isMe && !isRemovedFriend(p.data))
-    .map(p => ({id: p.id, name: p.data.name, summary: byPerson.get(p.id)}))
+  const friends = listedFriends(people ?? [], byPerson).map(f => ({...f, summary: f.summary}))
   const currencies = [
     ...new Set(summaries.flatMap(s => Object.keys(s.byCurrency))),
   ].sort()

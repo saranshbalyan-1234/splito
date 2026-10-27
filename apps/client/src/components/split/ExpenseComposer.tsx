@@ -151,8 +151,11 @@ export function ExpenseComposer({
   const group = form.groupId
     ? groups?.find(g => g.id === form.groupId)
     : undefined
+  /* A removed friend can still be in a group: they take no new expense (editing an old one keeps them). */
+  const removedIds = new Set((people ?? []).filter(p => isRemovedFriend(p.data)).map(p => p.id))
+  const isOffered = (id: string) => isEdit || !removedIds.has(id)
   const members = group?.data.members
-    .filter(m => m.leftAt === null)
+    .filter(m => m.leftAt === null && isOffered(m.personId))
     .map(m => m.personId)
   const friends = (people ?? [])
     .filter(p => !p.data.isMe && !isRemovedFriend(p.data))
@@ -169,7 +172,7 @@ export function ExpenseComposer({
       const g = groups?.find(x => x.id === groupId)
       if (!g) return f
       const ids = g.data.members
-        .filter(m => m.leftAt === null)
+        .filter(m => m.leftAt === null && isOffered(m.personId))
         .map(m => m.personId)
       const next = [
         ...ids.filter(id => id === ctx.actor),

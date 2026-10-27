@@ -21,8 +21,10 @@ import {
   type Entity,
   type InviteLink,
   INVITE_EXPIRY_MS,
+  isRemovedFriend,
   type Lookup,
   type Person,
+  restoreFriend,
   sendFriendRequest,
 } from '@splito/sync'
 
@@ -87,6 +89,7 @@ type Check =
   | {state: 'empty'}
   | {state: 'invalid'}
   | {state: 'friend'; person: Entity<Person>}
+  | {state: 'removed'; person: Entity<Person>}
   | {state: 'requested'}
   | {state: 'checking'}
   | {state: Lookup}
@@ -143,7 +146,7 @@ export function AddFriendScreen() {
     : !contact
       ? {state: 'invalid'}
       : friend
-        ? {state: 'friend', person: friend}
+        ? {state: isRemovedFriend(friend.data) ? 'removed' : 'friend', person: friend}
         : isRequested
           ? {state: 'requested'}
           : lookup?.key === key
@@ -513,6 +516,16 @@ export function AddFriendScreen() {
                 close()
                 navigation.navigate('Person', {personId})
               }}
+              onAddBack={personId =>
+                void restoreFriend(store, ctx, personId).then(
+                  () => {
+                    haptics.success()
+                    close()
+                    navigation.navigate('Person', {personId})
+                  },
+                  () => Toast.show(l`Couldn’t add them back. Please try again.`, {type: 'error'}),
+                )
+              }
             />
           </Animated.View>
 
@@ -544,12 +557,14 @@ function Status({
   isSaving,
   onAddAnyway,
   onOpenFriend,
+  onAddBack,
 }: {
   check: Check
   value: string
   isSaving: boolean
   onAddAnyway: () => void
   onOpenFriend: (personId: string) => void
+  onAddBack: (personId: string) => void
 }) {
   const t = useTheme()
   const {t: l} = useLingui()
@@ -652,6 +667,30 @@ function Status({
                   onPress={() => onOpenFriend(check.person.id)}>
                   <ButtonText>
                     <Trans>Open</Trans>
+                  </ButtonText>
+                </Admonition.Button>
+              </View>
+            </Admonition.Content>
+          </Admonition.Row>
+        </Admonition.Outer>
+      )
+    case 'removed':
+      return (
+        <Admonition.Outer type="info">
+          <Admonition.Row>
+            <Admonition.Icon />
+            <Admonition.Content>
+              <Admonition.Text>
+                <Trans>You removed {check.person.data.name}. Their history is still here.</Trans>
+              </Admonition.Text>
+              <View style={[a.flex_row]}>
+                <Admonition.Button
+                  testID="add-friend-add-back"
+                  label={l`Add ${check.person.data.name} back`}
+                  color="primary"
+                  onPress={() => onAddBack(check.person.id)}>
+                  <ButtonText>
+                    <Trans>Add back</Trans>
                   </ButtonText>
                 </Admonition.Button>
               </View>
