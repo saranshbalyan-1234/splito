@@ -3,9 +3,9 @@ import {Share} from 'react-native'
 import {setStringAsync} from 'expo-clipboard'
 import {t} from '@lingui/core/macro'
 
+import {openExternal} from '#/lib/openExternal'
 import * as Toast from '#/components/Toast'
 import {IS_ANDROID, IS_IOS, IS_NATIVE} from '#/env'
-import {openExternal} from '#/lib/openExternal'
 
 /**
  * Shares a link with a line of text: the native share sheet on iOS and

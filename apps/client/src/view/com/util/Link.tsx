@@ -11,11 +11,11 @@ import {
 } from 'react-native'
 import {StackActions} from '@react-navigation/native'
 
-import {openExternal} from '#/lib/openExternal'
 import {
   type DebouncedNavigationProp,
   useNavigationDeduped,
 } from '#/lib/hooks/useNavigationDeduped'
+import {openExternal} from '#/lib/openExternal'
 import {getTabState, TabState} from '#/lib/routes/helpers'
 import {WebAuxClickWrapper} from '#/view/com/util/WebAuxClickWrapper'
 import {useTheme} from '#/alf'

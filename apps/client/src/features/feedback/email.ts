@@ -1,7 +1,7 @@
 import {type Feedback, feedbackMailto} from '@splito/sync'
 
-import {FEEDBACK_EMAIL} from '#/env'
 import {openExternal} from '#/lib/openExternal'
+import {FEEDBACK_EMAIL} from '#/env'
 
 /**
  * Opens a prefilled email draft to the support address. Resolves false when

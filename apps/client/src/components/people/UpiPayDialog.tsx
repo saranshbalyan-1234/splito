@@ -11,6 +11,7 @@ import {
 import {type Entity, type Person, updatePerson} from '@splito/sync'
 
 import {useHaptics} from '#/lib/haptics'
+import {openExternal} from '#/lib/openExternal'
 import {logger} from '#/logger'
 import {useMutationCtx, useStore} from '#/data/hooks'
 import {useNumberLocale} from '#/locale/numberLocale'
@@ -23,7 +24,6 @@ import {parseTypedAmount, upiPayUrl} from '#/components/people/ledger'
 import * as Toast from '#/components/Toast'
 import {Text} from '#/components/Typography'
 import {IS_WEB} from '#/env'
-import {openExternal} from '#/lib/openExternal'
 
 /**
  * Pay a friend what you owe in rupees from your UPI app. Splito only opens
@@ -99,7 +99,6 @@ function Form({
     }
     const url = upiPayUrl({upiId: upiId.trim(), name, amount: minor})
     try {
-      /* On the web an anchor click hands the scheme to the installed app; the page stays. */
       await openExternal(url)
       haptics.tap()
       setOpened(minor)
