@@ -3,9 +3,9 @@ import {expect, type Page, test} from '@playwright/test'
 import {DEMO_EXPENSES} from '../src/data/demoData'
 
 /*
- * F-1401 free search: reached from the sidebar and the drawer, results
- * grouped with totals per currency, amount and date words, recent searches,
- * and arrow-key navigation on web.
+ * F-1401 free search inside the Search & Ask drawer (F-222): opened by the
+ * header Sparkles button, Cmd/Ctrl+K or "/", results grouped with totals per
+ * currency, amount and date words, recent searches, arrow-key navigation.
  */
 
 const PHONE = {width: 390, height: 844}
@@ -14,8 +14,8 @@ const DESKTOP = {width: 1440, height: 900}
 async function openSearch(page: Page) {
   await page.goto('/?demo=1')
   await expect(page.getByTestId('person-Arjun Mehta')).toBeVisible()
-  await page.getByTestId('tab-search').click()
-  const screen = page.getByTestId('screen-search')
+  await page.getByTestId('header-search-ask').click()
+  const screen = page.getByTestId('search-ask')
   await expect(screen).toBeVisible()
   await expect(page.getByTestId('search-input')).toBeFocused()
   return screen
@@ -23,15 +23,13 @@ async function openSearch(page: Page) {
 
 test.use({viewport: DESKTOP})
 
-test('the sidebar opens Search; "dinner" finds titles and notes, with one total per currency', async ({
+test('the header button opens the drawer; "dinner" finds titles and notes, with one total per currency', async ({
   page,
 }) => {
   const screen = await openSearch(page)
-  await expect(page).toHaveURL(/\/search/)
-  await expect(page.getByTestId('tab-search')).toHaveAttribute(
-    'aria-current',
-    'page',
-  )
+  // There is no Search page or nav item (26.3).
+  await expect(page.getByTestId('tab-search')).toHaveCount(0)
+  await expect(page.getByTestId('screen-search')).toHaveCount(0)
 
   await page.getByTestId('search-input').fill('dinner')
   const expenses = screen.getByTestId('search-section-expenses')
@@ -107,7 +105,6 @@ test('recent searches: kept on submit, reopened with a tap, cleared behind a pro
   const input = page.getByTestId('search-input')
   await input.fill('dinner')
   await input.press('Enter')
-  await expect(page).toHaveURL(/q=dinner/)
   await input.fill('goa')
   await input.press('Enter')
   await input.fill('')
@@ -117,7 +114,9 @@ test('recent searches: kept on submit, reopened with a tap, cleared behind a pro
   await expect(input).toHaveValue('dinner')
   await expect(screen.getByTestId('search-section-expenses')).toBeVisible()
 
-  await page.goto('/search')
+  await page.keyboard.press('Escape')
+  await expect(page.getByTestId('search-ask')).toHaveCount(0)
+  await page.getByTestId('header-search-ask').click()
   await expect(page.getByTestId('search-recent-dinner')).toBeVisible()
   await page.getByTestId('searchHistoryClearAllBtn').click()
   await page.getByTestId('confirmBtn').click()
@@ -125,19 +124,69 @@ test('recent searches: kept on submit, reopened with a tap, cleared behind a pro
   await expect(page.getByTestId('search-tips')).toBeVisible()
 })
 
+test('Ctrl+K toggles the drawer from anywhere and "/" opens it; the button tooltip and input show the hint', async ({
+  page,
+}) => {
+  await page.goto('/groups?demo=1')
+  await expect(page.getByTestId('group-Lisbon')).toBeVisible()
+  await expect(page.getByTestId('header-search-ask')).toBeVisible()
+  await expect(
+    page.getByTestId('header-search-ask').locator('..'),
+  ).toHaveAttribute('title', /Search or ask Splito \((⌘K|Ctrl K)\)/)
+  await page.keyboard.press('Control+k')
+  await expect(page.getByTestId('search-ask')).toBeVisible()
+  await expect(page.getByTestId('search-ask-shortcut')).toHaveText(/⌘K|Ctrl K/)
+  await page.keyboard.press('Control+k')
+  await expect(page.getByTestId('search-ask')).toHaveCount(0)
+  await page.keyboard.press('/')
+  await expect(page.getByTestId('search-input')).toBeFocused()
+  await page.keyboard.press('Escape')
+  await expect(page.getByTestId('search-ask')).toHaveCount(0)
+})
+
+test('/search opens the drawer with the query; tapping a result opens it and closes the drawer', async ({
+  page,
+}) => {
+  await page.goto('/search?q=goa&demo=1')
+  await expect(page.getByTestId('search-input')).toHaveValue('goa')
+  await page.getByTestId('search-row-0').click()
+  await expect(page.getByTestId('search-ask')).toHaveCount(0)
+  await expect(page.getByTestId('screen-group')).toBeVisible()
+})
+
 test.describe('phone', () => {
   test.use({viewport: PHONE})
 
-  test('the drawer opens Search, and Back returns', async ({page}) => {
+  test('every top-level header has the button left of its action; it opens the full-height drawer', async ({
+    page,
+  }) => {
     await page.goto('/?demo=1')
     await expect(page.getByTestId('person-Arjun Mehta')).toBeVisible()
-    await page.getByTestId('screen-people').getByTestId('header-avatar').click()
-    await page.getByTestId('drawer-search').click()
-    const screen = page.getByTestId('screen-search')
-    await expect(screen).toBeVisible()
+    for (const [path, screen, action] of [
+      ['/', 'screen-people', 'people-add-friend'],
+      ['/groups', 'screen-groups', 'groups-new'],
+      ['/analytics', 'screen-analytics', 'analytics-export'],
+      ['/activity', 'screen-activity', 'activity-mark-all-read'],
+    ] as const) {
+      await page.goto(`${path}?demo=1`)
+      const button = page.getByTestId(screen).getByTestId('header-search-ask')
+      await expect(button).toBeVisible()
+      await expect(button).toHaveAttribute('aria-label', 'Search or ask Splito')
+      const b = (await button.boundingBox())!
+      const act = (await page
+        .getByTestId(screen)
+        .getByTestId(action)
+        .boundingBox())!
+      expect(b.x + b.width).toBeLessThanOrEqual(act.x + 1)
+    }
+    await page.goto('/?demo=1')
+    await page.getByTestId('header-search-ask').click()
+    const sheet = page.getByTestId('search-ask')
+    await expect(sheet).toBeVisible()
     await page.getByTestId('search-input').fill('goa')
-    await expect(screen.getByTestId('search-section-groups')).toBeVisible()
-    await screen.getByTestId('header-back').click()
+    await expect(sheet.getByTestId('search-section-groups')).toBeVisible()
+    await page.getByTestId('search-ask-cancel').click()
+    await expect(sheet).toHaveCount(0)
     await expect(page.getByTestId('screen-people')).toBeVisible()
   })
 })

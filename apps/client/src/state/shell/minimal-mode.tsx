@@ -17,6 +17,13 @@ import {useFocusEffect} from '@react-navigation/native'
 
 type StateContext = {
   footerMode: SharedValue<number>
+  /**
+   * Splito addition (ARCHITECTURE 26.4): how far the focused screen has
+   * scrolled the shell away, 0 shown to 1 hidden. The bottom bar and FAB
+   * follow it with the header; Bluesky's footer only hides for full-screen
+   * pages (`footerMode`).
+   */
+  scrollMode: SharedValue<number>
 }
 type SetContext = {
   add: () => void
@@ -30,6 +37,7 @@ setContext.displayName = 'MinimalModeSetContext'
 
 export function Provider({children}: React.PropsWithChildren<{}>) {
   const footerMode = useSharedValue(0)
+  const scrollMode = useSharedValue(0)
 
   const setModeWorklet = useCallback(
     (v: boolean) => {
@@ -71,8 +79,9 @@ export function Provider({children}: React.PropsWithChildren<{}>) {
   const value = useMemo(
     () => ({
       footerMode,
+      scrollMode,
     }),
-    [footerMode],
+    [footerMode, scrollMode],
   )
   return (
     <stateContext.Provider value={value}>
@@ -121,4 +130,17 @@ export function useEnableMinimalShellModeForScreen(
       }
     }, [enabled, setters]),
   )
+}
+
+/**
+ * Brings the header, bottom bar and FAB back (a sheet opened, a tab was
+ * switched). Safe outside the provider, where there is nothing to show.
+ */
+export function useShowShell() {
+  const context = useContext(stateContext)
+  return useCallback(() => {
+    context?.scrollMode.set(
+      withSpring(0, {...Reanimated3DefaultSpringConfig, overshootClamping: true}),
+    )
+  }, [context])
 }

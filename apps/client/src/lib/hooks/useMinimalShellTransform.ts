@@ -7,11 +7,11 @@ import {useShellLayout} from '#/state/shell/shell-layout'
 // Keep these separated so that we only pay for useAnimatedStyle that gets used.
 
 export function useMinimalShellFooterTransform() {
-  const {footerMode} = useMinimalShellMode()
+  const {footerMode, scrollMode} = useMinimalShellMode()
   const {footerHeight} = useShellLayout()
 
   const footerTransform = useAnimatedStyle(() => {
-    const footerModeValue = footerMode.get()
+    const footerModeValue = Math.max(footerMode.get(), scrollMode.get())
     return {
       pointerEvents: footerModeValue === 0 ? 'auto' : 'none',
       opacity: Math.pow(1 - footerModeValue, 2),
@@ -31,13 +31,17 @@ export function useMinimalShellFooterTransform() {
 }
 
 export function useMinimalShellFabTransform() {
-  const {footerMode} = useMinimalShellMode()
+  const {footerMode, scrollMode} = useMinimalShellMode()
 
   const fabTransform = useAnimatedStyle(() => {
     return {
       transform: [
         {
-          translateY: interpolate(footerMode.get(), [0, 1], [-44, 0]),
+          translateY: interpolate(
+            Math.max(footerMode.get(), scrollMode.get()),
+            [0, 1],
+            [-44, 0],
+          ),
         },
       ],
     }
