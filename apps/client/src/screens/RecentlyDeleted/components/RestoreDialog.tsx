@@ -28,7 +28,6 @@ export function RestoreDialog({
   model,
   deletedByName,
   groupName,
-  days,
   readAt,
   onRestorePressed,
   onDeleteForeverPressed,
@@ -38,7 +37,6 @@ export function RestoreDialog({
   model: BinRowModel | null
   deletedByName: string
   groupName: string | null
-  days: number
   readAt: number
   onRestorePressed: (item: BinItem) => Promise<void>
   onDeleteForeverPressed: (item: BinItem) => void
@@ -51,7 +49,6 @@ export function RestoreDialog({
           model={model}
           deletedByName={deletedByName}
           groupName={groupName}
-          days={days}
           readAt={readAt}
           onRestorePressed={onRestorePressed}
           onDeleteForeverPressed={onDeleteForeverPressed}
@@ -66,7 +63,6 @@ function Body({
   model,
   deletedByName,
   groupName,
-  days,
   readAt,
   onRestorePressed,
   onDeleteForeverPressed,
@@ -75,7 +71,6 @@ function Body({
   model: BinRowModel
   deletedByName: string
   groupName: string | null
-  days: number
   readAt: number
   onRestorePressed: (item: BinItem) => Promise<void>
   onDeleteForeverPressed: (item: BinItem) => void
@@ -87,7 +82,7 @@ function Body({
   const tz = useTimeZone()
   const control = Dialog.useDialogContext()
   const [isSaving, setIsSaving] = useState(false)
-  const left = daysLeft(item.deletedAt, days, readAt)
+  const left = daysLeft(item.purgeAfter, readAt)
   const title = {
     expense: l`Restore expense`,
     repayment: l`Restore payment`,

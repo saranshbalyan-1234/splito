@@ -223,8 +223,10 @@ test('the bin window comes from history.binDays and Settings reaches the bin on 
   await page.getByTestId('drawer-settings').click()
   await page.getByTestId('settings-recently-deleted').click()
   await expect(page.getByTestId('screen-recently-deleted')).toBeVisible()
+  // Decision 102: Pizza was deleted under the 30-day setting and keeps its own date when it changes.
+  await expect(page.getByText('Items already in Recently deleted keep their date.')).toBeVisible()
   await page.getByTestId('history.binDays-7').click()
   await expect(
     page.locator('[data-testid^="bin-row-"]', {hasText: 'Pizza'}),
-  ).toContainText('7 days left')
+  ).toContainText('30 days left')
 })

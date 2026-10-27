@@ -181,7 +181,7 @@ msgid "{0} balance - open analytics"
 msgstr "{0} balance - open analytics"
 
 #. placeholder {0}: i18n.date(new Date(item.deletedAt), { dateStyle: 'medium', timeStyle: 'short', timeZone: tz, })
-#: src/screens/RecentlyDeleted/components/RestoreDialog.tsx:208
+#: src/screens/RecentlyDeleted/components/RestoreDialog.tsx:203
 msgid "{0} by {deletedByName}"
 msgstr "{0} by {deletedByName}"
 
@@ -672,7 +672,7 @@ msgstr "{groups, plural, one {# group} other {# groups}}"
 msgid "{hiddenCount, plural, one {# change hidden from your activity} other {# changes hidden from your activity}}"
 msgstr "{hiddenCount, plural, one {# change hidden from your activity} other {# changes hidden from your activity}}"
 
-#: src/screens/RecentlyDeleted/index.tsx:417
+#: src/screens/RecentlyDeleted/index.tsx:416
 msgid "{left, plural, one {# day left} other {# days left}}"
 msgstr "{left, plural, one {# day left} other {# days left}}"
 
@@ -1317,6 +1317,10 @@ msgstr "Anyone with this link or QR code can become your friend on Splito. Using
 #: src/components/settings/sections.ts:49
 msgid "Appearance"
 msgstr "Appearance"
+
+#: src/components/settings/prefControls.tsx:673
+msgid "Applies to items you delete from now on. Items already in Recently deleted keep their date."
+msgstr "Applies to items you delete from now on. Items already in Recently deleted keep their date."
 
 #: src/components/settings/AccentPicker.tsx:125
 #: src/screens/Analytics/components/RangeDialog.tsx:112
@@ -2034,7 +2038,7 @@ msgstr "Data"
 #: src/components/split/ExpenseComposer.tsx:339
 #: src/components/split/ExpenseComposer.tsx:494
 #: src/screens/Analytics/index.tsx:214
-#: src/screens/RecentlyDeleted/components/RestoreDialog.tsx:197
+#: src/screens/RecentlyDeleted/components/RestoreDialog.tsx:192
 msgid "Date"
 msgstr "Date"
 
@@ -2119,13 +2123,13 @@ msgstr "Delete {0}?"
 msgid "Delete expense"
 msgstr "Delete expense"
 
-#: src/screens/RecentlyDeleted/components/RestoreDialog.tsx:235
-#: src/screens/RecentlyDeleted/components/RestoreDialog.tsx:241
-#: src/screens/RecentlyDeleted/index.tsx:295
+#: src/screens/RecentlyDeleted/components/RestoreDialog.tsx:230
+#: src/screens/RecentlyDeleted/components/RestoreDialog.tsx:236
+#: src/screens/RecentlyDeleted/index.tsx:294
 msgid "Delete forever"
 msgstr "Delete forever"
 
-#: src/screens/RecentlyDeleted/index.tsx:293
+#: src/screens/RecentlyDeleted/index.tsx:292
 msgid "Delete forever?"
 msgstr "Delete forever?"
 
@@ -2148,7 +2152,7 @@ msgstr "Delete payment"
 msgid "Delete this feedback?"
 msgstr "Delete this feedback?"
 
-#: src/screens/RecentlyDeleted/components/RestoreDialog.tsx:207
+#: src/screens/RecentlyDeleted/components/RestoreDialog.tsx:202
 msgid "Deleted"
 msgstr "Deleted"
 
@@ -2223,7 +2227,7 @@ msgid "Direct only"
 msgstr "Direct only"
 
 #: src/components/people/PaymentDetailsDialog.tsx:169
-#: src/screens/RecentlyDeleted/components/RestoreDialog.tsx:202
+#: src/screens/RecentlyDeleted/components/RestoreDialog.tsx:197
 msgid "Direct, no group"
 msgstr "Direct, no group"
 
@@ -2542,7 +2546,7 @@ msgstr "Excluded"
 #: src/navigation/Navigation.tsx:79
 #: src/screens/Analytics/components/ExpenseRow.tsx:43
 #: src/screens/Expense/index.tsx:89
-#: src/screens/RecentlyDeleted/components/RestoreDialog.tsx:98
+#: src/screens/RecentlyDeleted/components/RestoreDialog.tsx:93
 msgid "Expense"
 msgstr "Expense"
 
@@ -2574,7 +2578,7 @@ msgstr "Expense restored"
 #: src/screens/Analytics/index.tsx:157
 #: src/screens/Group/index.tsx:471
 #: src/screens/Profile.tsx:249
-#: src/screens/RecentlyDeleted/components/RestoreDialog.tsx:175
+#: src/screens/RecentlyDeleted/components/RestoreDialog.tsx:170
 msgid "Expenses"
 msgstr "Expenses"
 
@@ -2659,7 +2663,7 @@ msgstr "For example, Rent"
 msgid "For money that changed hands outside Splito – cash, UPI or a bank transfer. Splito keeps the record; it never moves money."
 msgstr "For money that changed hands outside Splito – cash, UPI or a bank transfer. Splito keeps the record; it never moves money."
 
-#: src/screens/RecentlyDeleted/components/RestoreDialog.tsx:163
+#: src/screens/RecentlyDeleted/components/RestoreDialog.tsx:158
 msgid "For you"
 msgstr "For you"
 
@@ -2800,7 +2804,7 @@ msgstr "Groceries"
 #: src/screens/Groups/components/GroupRow.tsx:52
 #: src/screens/People/components/PersonRow.tsx:79
 #: src/screens/Person/components/PersonBalances.tsx:98
-#: src/screens/RecentlyDeleted/components/RestoreDialog.tsx:101
+#: src/screens/RecentlyDeleted/components/RestoreDialog.tsx:96
 msgid "Group"
 msgstr "Group"
 
@@ -3147,7 +3151,7 @@ msgstr "It hasn't been sent anywhere yet. Send it by email now, or find it later
 msgid "It is removed from Your feedback. If you already emailed it, that email isn't affected."
 msgstr "It is removed from Your feedback. If you already emailed it, that email isn't affected."
 
-#: src/screens/RecentlyDeleted/index.tsx:294
+#: src/screens/RecentlyDeleted/index.tsx:293
 msgid "It leaves Recently deleted and can’t be restored. Its history stays in the record’s audit trail."
 msgstr "It leaves Recently deleted and can’t be restored. Its history stays in the record’s audit trail."
 
@@ -3380,7 +3384,7 @@ msgstr "Measure"
 #: src/screens/Group/index.tsx:573
 #: src/screens/Group/index.tsx:576
 #: src/screens/Group/index.tsx:649
-#: src/screens/RecentlyDeleted/components/RestoreDialog.tsx:187
+#: src/screens/RecentlyDeleted/components/RestoreDialog.tsx:182
 msgid "Members"
 msgstr "Members"
 
@@ -3979,7 +3983,7 @@ msgstr "Opens flow to sign in to your existing Splito account"
 msgid "Opens full screen from your Home Screen and works offline."
 msgstr "Opens full screen from your Home Screen and works offline."
 
-#: src/screens/RecentlyDeleted/index.tsx:336
+#: src/screens/RecentlyDeleted/index.tsx:335
 msgid "Opens it to restore or delete forever"
 msgstr "Opens it to restore or delete forever"
 
@@ -4100,7 +4104,7 @@ msgid "Pay with UPI"
 msgstr "Pay with UPI"
 
 #: src/components/people/HistoryRow.tsx:119
-#: src/screens/RecentlyDeleted/components/RestoreDialog.tsx:99
+#: src/screens/RecentlyDeleted/components/RestoreDialog.tsx:94
 msgid "Payment"
 msgstr "Payment"
 
@@ -4133,7 +4137,7 @@ msgid "Payment rules saved"
 msgstr "Payment rules saved"
 
 #: src/components/settings/prefControls.tsx:752
-#: src/screens/RecentlyDeleted/components/RestoreDialog.tsx:179
+#: src/screens/RecentlyDeleted/components/RestoreDialog.tsx:174
 msgid "Payments"
 msgstr "Payments"
 
@@ -4533,36 +4537,36 @@ msgid "Reset your password by sending a code to your email or phone"
 msgstr "Reset your password by sending a code to your email or phone"
 
 #: src/screens/Expense/index.tsx:476
-#: src/screens/RecentlyDeleted/components/RestoreDialog.tsx:109
+#: src/screens/RecentlyDeleted/components/RestoreDialog.tsx:104
 msgid "Restore"
 msgstr "Restore"
 
 #: src/screens/Expense/index.tsx:464
-#: src/screens/RecentlyDeleted/components/RestoreDialog.tsx:92
+#: src/screens/RecentlyDeleted/components/RestoreDialog.tsx:87
 msgid "Restore expense"
 msgstr "Restore expense"
 
-#: src/screens/RecentlyDeleted/components/RestoreDialog.tsx:95
+#: src/screens/RecentlyDeleted/components/RestoreDialog.tsx:90
 msgid "Restore group"
 msgstr "Restore group"
 
-#: src/screens/RecentlyDeleted/components/RestoreDialog.tsx:93
+#: src/screens/RecentlyDeleted/components/RestoreDialog.tsx:88
 msgid "Restore payment"
 msgstr "Restore payment"
 
-#: src/screens/RecentlyDeleted/components/RestoreDialog.tsx:94
+#: src/screens/RecentlyDeleted/components/RestoreDialog.tsx:89
 msgid "Restore write-off"
 msgstr "Restore write-off"
 
-#: src/screens/RecentlyDeleted/components/RestoreDialog.tsx:217
+#: src/screens/RecentlyDeleted/components/RestoreDialog.tsx:212
 msgid "Restoring brings the group back with every expense, payment and write-off that went with it."
 msgstr "Restoring brings the group back with every expense, payment and write-off that went with it."
 
-#: src/screens/RecentlyDeleted/components/RestoreDialog.tsx:227
+#: src/screens/RecentlyDeleted/components/RestoreDialog.tsx:222
 msgid "Restoring puts it back in balances, history and Activity. It stays here for {left} more days."
 msgstr "Restoring puts it back in balances, history and Activity. It stays here for {left} more days."
 
-#: src/screens/RecentlyDeleted/components/RestoreDialog.tsx:222
+#: src/screens/RecentlyDeleted/components/RestoreDialog.tsx:217
 msgid "Restoring puts it back in balances, history and Activity. It stays here for 1 more day."
 msgstr "Restoring puts it back in balances, history and Activity. It stays here for 1 more day."
 
@@ -5902,7 +5906,7 @@ msgid "When you pay"
 msgstr "When you pay"
 
 #: src/components/people/PaymentDetailsDialog.tsx:169
-#: src/screens/RecentlyDeleted/components/RestoreDialog.tsx:201
+#: src/screens/RecentlyDeleted/components/RestoreDialog.tsx:196
 msgid "Where"
 msgstr "Where"
 
@@ -5963,7 +5967,7 @@ msgstr "Write at least {FEEDBACK_MIN_LENGTH} characters."
 msgid "Write off"
 msgstr "Write off"
 
-#: src/screens/RecentlyDeleted/components/RestoreDialog.tsx:100
+#: src/screens/RecentlyDeleted/components/RestoreDialog.tsx:95
 msgid "Write-off"
 msgstr "Write-off"
 
@@ -5976,7 +5980,7 @@ msgstr "Write-off restored"
 msgid "Write-off undone"
 msgstr "Write-off undone"
 
-#: src/screens/RecentlyDeleted/components/RestoreDialog.tsx:183
+#: src/screens/RecentlyDeleted/components/RestoreDialog.tsx:178
 msgid "Write-offs"
 msgstr "Write-offs"
 
