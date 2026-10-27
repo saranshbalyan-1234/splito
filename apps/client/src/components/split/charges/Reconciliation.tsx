@@ -106,7 +106,7 @@ export function Reconciliation({
         ),
       )}
       {roundOff ? (
-        <View style={[a.flex_row, a.align_center]}>
+        <View style={[a.flex_row, a.align_center, a.gap_sm]}>
           <View style={[a.flex_1]}>
             {row('round-off', l`Round-off`, fmt(roundOff.minor))}
           </View>

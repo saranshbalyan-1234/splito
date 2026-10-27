@@ -314,7 +314,7 @@ export function ChargeList({
                         {charge.name}
                       </Text>
                       <Text
-                        numberOfLines={1}
+                        numberOfLines={2}
                         style={[
                           a.text_sm,
                           a.leading_snug,
