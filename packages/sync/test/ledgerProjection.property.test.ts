@@ -2,11 +2,14 @@
  * ARCHITECTURE 9.8: the balance projection equals a full recomputation after
  * any sequence of money writes. Random operation sequences (add, edit,
  * delete, restore for expenses; add, delete, restore for payments and
- * write-offs; members and groups; many currencies, three of them with
+ * write-offs; members and groups; moving an expense between groups and
+ * between a group and direct; "delete forever"; erasing rows outright, the
+ * demo set's removal among them; many currencies, three of them with
  * non-two-decimal scales) run through the real mutations on both engines;
- * after each sequence the stored sums are compared with the domain's own
+ * after each sequence the stored sums, the monthly aggregates, the search
+ * terms and the activity times of groups and people are compared with a
  * recomputation (`projectionCheck.ts`), and `rebuildProjections` must
- * reproduce them exactly.
+ * reproduce every one of them exactly.
  */
 import 'fake-indexeddb/auto'
 import {IDBFactory} from 'fake-indexeddb'
@@ -29,6 +32,7 @@ import {
   deleteWriteOff,
   type ExpenseDraft,
   ensureMe,
+  purgeDeleted,
   restoreExpense,
   restoreRepayment,
   restoreWriteOff,
@@ -37,7 +41,7 @@ import {
 import {openSqlStore} from '../src/sqlStore'
 import {type Store} from '../src/store'
 import {bunExecutor} from './bunExecutor'
-import {expectProjectionsMatchLedger} from './projectionCheck'
+import {expectProjectionsMatchLedger, storedAggregates, storedTerms} from './projectionCheck'
 import {makeCtx} from './storeV2Contract'
 
 const CURRENCIES = ['INR', 'EUR', 'USD', 'GBP', 'JPY', 'BHD']
@@ -63,16 +67,21 @@ function rng(seed: number) {
   return {next, int, pick, some}
 }
 
-async function run(s: Store, seed: number, steps: number) {
+async function run(s: Store, seed: number, steps: number, {erases = true}: {erases?: boolean} = {}) {
   const r = rng(seed)
   const ctx = makeCtx()
+  /* Some rows get the demo set's id tag, so "remove demo data" has something to erase. */
+  let tagged = 0
+  const demoCtx = {...ctx, newId: () => `demo-large-${String(++tagged).padStart(5, '0')}`}
+  const mint = () => (r.next() < 0.3 ? demoCtx : ctx)
   await ensureMe(s, ctx, 'Me')
   const people = ['me']
-  for (let i = 0; i < 5; i++) people.push((await createPerson(s, ctx, {name: `P${i}`})).id)
+  for (let i = 0; i < 5; i++) people.push((await createPerson(s, mint(), {name: `P${i}`})).id)
   const groups: Array<{id: string; members: string[]}> = []
   const expenses: string[] = []
   const repayments: string[] = []
   const writeOffs: string[] = []
+  const stats = {erased: 0, demoRemoved: 0}
   const date = () => `2026-0${r.int(1, 9)}-${String(r.int(10, 28))}`
 
   const draft = (members: string[], groupId: string | null): ExpenseDraft => {
@@ -91,10 +100,10 @@ async function run(s: Store, seed: number, steps: number) {
 
   for (let step = 0; step < steps; step++) {
     try {
-      switch (r.int(0, 11)) {
+      switch (r.int(0, 17)) {
         case 0: {
           const members = r.some(people.filter(p => p !== 'me'), 2, 4)
-          const g = await createGroup(s, ctx, {name: `G${groups.length}`, kind: 'trip', currency: r.pick(CURRENCIES), memberIds: members, startDate: null, endDate: null})
+          const g = await createGroup(s, mint(), {name: `G${groups.length}`, kind: 'trip', currency: r.pick(CURRENCIES), memberIds: members, startDate: null, endDate: null})
           groups.push({id: g.id, members: ['me', ...members]})
           break
         }
@@ -110,14 +119,15 @@ async function run(s: Store, seed: number, steps: number) {
         case 3:
         case 4: {
           const g = groups.length && r.next() < 0.6 ? r.pick(groups) : undefined
-          expenses.push((await createExpense(s, ctx, draft(g ? g.members : people, g?.id ?? null))).id)
+          expenses.push((await createExpense(s, mint(), draft(g ? g.members : people, g?.id ?? null))).id)
           break
         }
         case 5: {
           if (!expenses.length) break
           const id = r.pick(expenses)
           const e = await s.get<ExpenseDraft>('expense', id)
-          const g = groups.find(x => x.id === e!.data.groupId)
+          if (!e) break
+          const g = groups.find(x => x.id === e.data.groupId)
           await updateExpense(s, ctx, id, draft(g ? g.members : people, g?.id ?? null))
           break
         }
@@ -144,12 +154,49 @@ async function run(s: Store, seed: number, steps: number) {
           if (r.next() < 0.5 && repayments.length) await restoreRepayment(s, ctx, r.pick(repayments))
           else if (writeOffs.length) await restoreWriteOff(s, ctx, r.pick(writeOffs))
           break
+        case 12:
+        case 16:
+        case 17: {
+          // Moves an expense to another group, out of its group, or into one: activity for both ends.
+          if (!expenses.length) break
+          const target = r.next() < 0.3 ? undefined : groups.length ? r.pick(groups) : undefined
+          await updateExpense(s, ctx, r.pick(expenses), draft(target ? target.members : people, target?.id ?? null))
+          break
+        }
+        case 13: {
+          // "Delete forever" of something already deleted.
+          const types = [['expense', expenses], ['repayment', repayments], ['writeoff', writeOffs]] as const
+          const [type, ids] = r.pick(types)
+          if (ids.length) await purgeDeleted(s, ctx, type, r.pick(ids))
+          break
+        }
+        case 14: {
+          // Erases a few rows outright (any type), with their history and ops.
+          const { entities } = await s.dump()
+          if (erases && r.next() < 0.5 && entities.length) {
+            const refs = r.some(entities, 1, 4).map(e => ({type: e.type, id: e.id}))
+            await s.erase(refs)
+            stats.erased += refs.length
+          }
+          break
+        }
+        case 15: {
+          // "Remove demo data": everything carrying the demo tag, in one go.
+          const { entities } = await s.dump()
+          const tagged = entities.filter(e => e.id.startsWith('demo-large-')).map(e => ({type: e.type, id: e.id}))
+          if (erases && r.next() < 0.4 && tagged.length) {
+            await s.erase(tagged)
+            stats.demoRemoved += tagged.length
+          }
+          break
+        }
       }
     } catch (e) {
       // Operations the rules refuse (restore of a live row, a pair of one) are part of the sequence.
       if (!(e instanceof DomainError)) throw e
     }
   }
+  return stats
 }
 
 async function check(open: () => Promise<Store>, seed: number, steps: number) {
@@ -159,6 +206,10 @@ async function check(open: () => Promise<Store>, seed: number, steps: number) {
   const keep = async () => ({
     balances: (await s.balances()).sort((x, y) => (encode(x) < encode(y) ? -1 : 1)),
     pairs: (await Promise.all(['me', ...(await s.getAll('person')).map(p => p.id)].map(id => s.pairBalances(id)))).flat(),
+    aggregates: await storedAggregates(s),
+    terms: await storedTerms(s),
+    groupActivity: [...(await s.groupActivity())].sort(),
+    lastActivity: [...(await s.lastActivity())].sort(),
   })
   const before = await keep()
   await s.rebuildProjections()
@@ -183,7 +234,7 @@ describe('projection == recomputation over random operation sequences', () => {
 
   test('the generator reaches real states: live and deleted expenses, payments, write-offs, balances in many currencies', async () => {
     const s = await openSqlStore(bunExecutor(':memory:'))
-    await run(s, 12345, 120)
+    await run(s, 12345, 260, {erases: false})
     await expectProjectionsMatchLedger(s)
     const { entities } = await s.dump()
     const of = (type: string, deleted: boolean) => entities.filter(e => e.type === type && e.deleted === deleted).length
@@ -192,5 +243,32 @@ describe('projection == recomputation over random operation sequences', () => {
     expect(of('repayment', false) + of('writeoff', false)).toBeGreaterThan(2)
     expect(new Set((await s.balances()).map(b => b.currency)).size).toBeGreaterThan(2)
     await s.close()
+  })
+
+  test('the generator moves expenses between groups and direct, and deletes forever', async () => {
+    const s = await openSqlStore(bunExecutor(':memory:'))
+    await run(s, 777, 300, {erases: false})
+    await expectProjectionsMatchLedger(s)
+    const { entities, history } = await s.dump()
+    const places = new Map<string, Set<string | null>>()
+    for (const h of history.filter(h => h.entityType === 'expense')) places.set(h.entityId, (places.get(h.entityId) ?? new Set()).add((h.data as {groupId: string | null}).groupId))
+    expect([...places.values()].filter(p => p.size > 1).length).toBeGreaterThan(0)
+    expect([...places.values()].some(p => p.has(null) && p.size > 1)).toBe(true)
+    expect(entities.filter(e => (e.data as {purgedAt?: number}).purgedAt !== undefined).length).toBeGreaterThan(0)
+    await s.close()
+  })
+
+  test('erasing rows outright (the demo set among them) leaves every derived table exact', async () => {
+    const total = {erased: 0, demoRemoved: 0}
+    for (const seed of [1, 2, 3, 4, 5, 6]) {
+      const s = await openSqlStore(bunExecutor(':memory:'))
+      const stats = await run(s, seed, 120)
+      await expectProjectionsMatchLedger(s)
+      total.erased += stats.erased
+      total.demoRemoved += stats.demoRemoved
+      await s.close()
+    }
+    expect(total.erased).toBeGreaterThan(0)
+    expect(total.demoRemoved).toBeGreaterThan(0)
   })
 })

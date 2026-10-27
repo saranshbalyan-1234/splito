@@ -5,8 +5,10 @@
  * (`idbStore.ts`, `sqlStore.ts`) only implements rows, indexes and
  * transactions, so one contract test covers both and they cannot differ.
  */
+import {type SpendCell} from '@splito/domain'
+
 import {type Engine, type RowAccess} from './engine'
-import {projectEntity, rebuildProjections} from './ledgerProjection'
+import {projectEntity, rebuildActivity, rebuildProjections} from './ledgerProjection'
 import {
   completeEntity,
   ENTITY_STORE,
@@ -16,6 +18,7 @@ import {
   historyRow,
   indexKey,
   type Key,
+  MONEY_TYPES,
   outboxOfRow,
   outboxRow,
   type Row,
@@ -24,7 +27,8 @@ import {
   STORES,
 } from './schema'
 import {transactionRows} from './txRows'
-import {changeRecorder, DEFAULT_PAGE, type ExpenseParty, type GroupMember, type NetBalance, type Page, type PageQuery, type PairBalance, type Store, type StoreChange, type Tx} from './store'
+import {changeRecorder, DEFAULT_PAGE, type TermQuery, type ExpenseParty, type GroupMember, type NetBalance, type Page, type PageQuery, type PairBalance, type Store, type StoreChange, type Tx} from './store'
+import {type SearchTerm, type TermEntity, type TermKind} from './searchTerms'
 import {type Entity, type EntityType, type HistoryRow, type RowSyncStatus} from './types'
 import {ROW_SYNC_STATUSES} from './types'
 
@@ -44,10 +48,11 @@ async function loadEntity(rows: RowAccess, type: EntityType, id: string): Promis
   return r ? decode(type, r) : undefined
 }
 
-/** Writes an entity row; a group keeps the activity time its records have raised. */
+/** Writes an entity row; a group or person keeps the activity time its records have raised. */
 async function writeEntity(rows: RowAccess, next: Entity, prevRow?: Row) {
   const row = rowOfEntity(next)
   if (next.type === 'group') row.activityAt = Math.max((prevRow?.activityAt as number | undefined) ?? 0, next.updatedAt)
+  if (next.type === 'person') row.lastActivityAt = (prevRow?.lastActivityAt as number | undefined) ?? 0
   await rows.put(ENTITY_STORE[next.type], row)
 }
 
@@ -126,6 +131,24 @@ const toNet = (r: Row): NetBalance => ({
   count: r.count as number,
 })
 
+const toCell = (r: Row): SpendCell => ({
+  date: `${r.month as string}-01`,
+  currency: r.currency as string,
+  groupId: r.groupId as string,
+  category: r.categoryId as string,
+  person: r.personId as string,
+  kind: r.kind as SpendCell['kind'],
+  total: BigInt(r.total as string),
+  paid: BigInt(r.paid as string),
+  share: BigInt(r.share as string),
+  net: BigInt(r.net as string),
+  count: r.count as number,
+})
+
+const toTerm = (r: Row): SearchTerm => ({kind: r.kind as TermKind, term: r.term as string, entityType: r.entityType as TermEntity, entityId: r.entityId as string})
+
+const termQuery = (q: TermQuery) => ({eq: [q.kind], min: q.min, max: q.max, limit: q.limit})
+
 const toPair = (r: Row): PairBalance => ({personId: r.personId as string, otherId: r.otherId as string, currency: r.currency as string, amount: BigInt(r.amount as string)})
 
 /** One page of `store` rows: reads `limit + 1` so the cursor is exact. */
@@ -203,31 +226,21 @@ export function createStore(engine: Engine): Store {
 
     pairBalances: personId => read(async rows => (await rows.range('pair_balances', {eq: [personId]})).map(toPair)),
 
-    lastActivity: personIds =>
+    lastActivity: () =>
+      read(async rows => new Map((await rows.range('people', {index: 'byActivity', min: 1, dir: 'prev'})).map(r => [r.id as string, r.lastActivityAt as number]))),
+
+    aggregates: (q = {}) =>
       read(async rows => {
-        const latest = new Map<string, string>()
-        const keep = (id: string, date: string) => {
-          if (date && (latest.get(id) ?? '') < date) latest.set(id, date)
-        }
-        for (const id of personIds) {
-          // Parties exist for live expenses only; payments and write-offs need a live check.
-          const [p] = await rows.range('expense_parties', {index: 'byPersonDate', eq: [id], dir: 'prev', limit: 1})
-          if (p) keep(id, p.date as string)
-          for (const store of ['repayments', 'writeoffs'] as const) {
-            for (const index of ['byFrom', 'byTo'] as const) {
-              let after: Key | null = null
-              for (;;) {
-                const batch: Row[] = await rows.range(store, {index, eq: [id], dir: 'prev', limit: 20, after})
-                const hit = batch.find(r => !r.deleted)
-                if (hit) keep(id, hit.date as string)
-                if (hit || batch.length < 20) break
-                after = indexKey(store, index, batch[batch.length - 1]!)
-              }
-            }
-          }
-        }
-        return latest
+        const found =
+          q.personId !== undefined
+            ? await rows.range('aggregates', {index: 'byPerson', eq: q.currency !== undefined ? [q.personId, q.currency] : [q.personId]})
+            : await rows.range('aggregates', {eq: q.currency !== undefined ? [q.currency] : undefined})
+        return found.map(toCell)
       }),
+
+    terms: q => read(async rows => (await rows.range('search_terms', termQuery(q))).map(toTerm)),
+
+    termCount: q => read(rows => rows.count('search_terms', termQuery(q))),
 
     historyPage: ({after, limit = DEFAULT_PAGE} = {}) =>
       read(rows => pageOf(rows, 'history', {index: 'byChangedAt', dir: 'prev', after, limit}, historyOfRow)),
@@ -292,6 +305,7 @@ export function createStore(engine: Engine): Store {
 
     erase: refs =>
       write(async (rows, recorder) => {
+        let isMoney = false
         for (const {type, id} of refs) {
           recorder.record(type, id)
           const prev = await loadEntity(rows, type, id)
@@ -299,7 +313,10 @@ export function createStore(engine: Engine): Store {
           if (prev) await projectEntity(rows, prev, undefined)
           for (const h of await rows.range('history', {eq: [type, id]})) await rows.delete('history', [type, id, h.version as number])
           for (const o of await rows.range('outbox', {index: 'byEntity', eq: [type, id]})) await rows.delete('outbox', [o.seq as number])
+          isMoney ||= (MONEY_TYPES as readonly string[]).includes(type)
         }
+        // What was erased no longer counts as anyone's activity: recompute it from what remains.
+        if (isMoney) await rebuildActivity(rows, (await Promise.all(MONEY_TYPES.map(type => allOf(rows, type)))).flat())
       }),
 
     subscribe(fn) {

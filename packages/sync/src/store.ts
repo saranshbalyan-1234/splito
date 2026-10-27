@@ -1,4 +1,7 @@
+import {type SpendCell} from '@splito/domain'
+
 import {type Key, type Scalar, type StoreName} from './schema'
+import {type SearchTerm, type TermKind} from './searchTerms'
 import {type Entity, type EntityInput, type EntityType, type HistoryRow, type OpStatus, type OutboxInput, type OutboxOp, type RowSyncStatus} from './types'
 
 export interface Tx {
@@ -84,6 +87,14 @@ export interface PairBalance {
   amount: bigint
 }
 
+/** A range of one kind of search term. */
+export interface TermQuery {
+  kind: TermKind
+  min?: string
+  max?: string
+  limit?: number
+}
+
 /** Every stored row, for backup, export and tests (never a hot path). */
 export interface StoreDump {
   entities: Entity[]
@@ -166,8 +177,22 @@ export interface Store {
   balances(q?: {personId?: string; groupId?: string | null}): Promise<NetBalance[]>
   /** What each other person owes `personId` outside groups, per currency. */
   pairBalances(personId: string): Promise<PairBalance[]>
-  /** Latest `YYYY-MM-DD` of a live expense, payment or write-off each person is on. */
-  lastActivity(personIds: readonly string[]): Promise<Map<string, string>>
+  /**
+   * When each person last saw activity (epoch ms): any change to an expense,
+   * payment or write-off they are on, a delete included, newest first. People
+   * with none are left out. An index read of `people.lastActivityAt`.
+   */
+  lastActivity(): Promise<Map<string, number>>
+  /**
+   * Stored spending cells (`aggregates`, folded to months, each dated the
+   * first of its month), for one person and/or one currency, or all. Reads
+   * the projection, never the ledger.
+   */
+  aggregates(q?: {personId?: string; currency?: string}): Promise<SpendCell[]>
+  /** `search_terms` of one kind in key order, optionally bounded on the term (inclusive). */
+  terms(q: TermQuery): Promise<SearchTerm[]>
+  /** How many `search_terms` rows a range holds (a count, not a read). */
+  termCount(q: Omit<TermQuery, 'limit'>): Promise<number>
   /** How many rows of one type an index range holds (a count, not a read). */
   count(type: EntityType, q?: {index?: string; eq?: Key; min?: Scalar; max?: Scalar}): Promise<number>
   /** When each group last saw activity: its own change or any record's in it, newest first (26.17). */

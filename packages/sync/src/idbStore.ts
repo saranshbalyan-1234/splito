@@ -2,8 +2,9 @@ import {type IDBPDatabase, type IDBPTransaction, wrap} from 'idb'
 
 import {createStore} from './core'
 import {type Engine, type RangeQuery, type RowAccess} from './engine'
-import {type LegacyV1, migrateV1ToV2, stampSchemaVersion} from './migrate'
+import {type LegacyV1, migrateFromV1, migrateV2ToV3, stampSchemaVersion} from './migrate'
 import {indexColumns, type Key, type Row, SCHEMA_VERSION, STORES, type StoreName} from './schema'
+import {transactionRows} from './txRows'
 import {changeFromJson, changeToJson, type Store, type StoreChange} from './store'
 
 const CHANNEL = 'splito-store'
@@ -15,9 +16,9 @@ type Tx = IDBPTransaction<unknown, string[], 'readwrite'>
 /** The primary key as IndexedDB holds it: an array, except the outbox's auto-increment `seq`. */
 const pk = (store: StoreName, key: Key): IDBValidKey => ((STORES[store] as {auto?: boolean}).auto ? (key[0] as IDBValidKey) : (key as IDBValidKey))
 
-/** Creates every v2 object store and index (a fresh database, or v1's stores already removed). */
-function createStores(raw: IDBDatabase) {
-  for (const name of STORE_NAMES) {
+/** Creates object stores and their indexes: every one (a fresh database, or v1's stores already removed), or just `only`. */
+function createStores(raw: IDBDatabase, only: readonly StoreName[] = STORE_NAMES) {
+  for (const name of only) {
     const spec = STORES[name] as {key: readonly string[]; auto?: boolean; indexes: Record<string, {columns: readonly string[]; unique?: boolean}>}
     const store = spec.auto
       ? raw.createObjectStore(name, {keyPath: spec.key[0]!, autoIncrement: true})
@@ -94,6 +95,13 @@ async function readV1(t: Tx): Promise<LegacyV1> {
   return {entities, history, outbox} as LegacyV1
 }
 
+/** Runs a migration step with its writes issued without waiting for each (the upgrade transaction orders them). */
+async function pipelined(t: Tx, cmp: (a: unknown, b: unknown) => number, step: (rows: RowAccess) => Promise<void>) {
+  const tx = transactionRows(idbRows(t, cmp), {isPipelined: true})
+  await step(tx.rows)
+  await tx.flush()
+}
+
 export async function openIdbStore(name: string, factory: IDBFactory = indexedDB): Promise<Store> {
   const cmp = (a: unknown, b: unknown) => factory.cmp(a, b)
   const req = factory.open(name, SCHEMA_VERSION)
@@ -110,11 +118,16 @@ export async function openIdbStore(name: string, factory: IDBFactory = indexedDB
         createStores(raw)
         await stampSchemaVersion(idbRows(t, cmp))
       } else if (e.oldVersion === 1) {
-        // v1 -> v2: read the old layout whole, replace it, write every row back in the new one.
+        // v1 -> current: read the old layout whole, replace it, write every row back in the new one.
         const legacy = await readV1(t)
         for (const old of ['entities', 'history', 'outbox']) raw.deleteObjectStore(old)
         createStores(raw)
-        await migrateV1ToV2(legacy, idbRows(t, cmp))
+        await pipelined(t, cmp, rows => migrateFromV1(legacy, rows))
+      } else if (e.oldVersion === 2) {
+        // v2 -> v3: two new stores and one new index; every older row is rewritten by the rebuild.
+        createStores(raw, ['aggregates', 'search_terms'])
+        req.transaction!.objectStore('people').createIndex('byActivity', [...STORES.people.indexes.byActivity.columns])
+        await pipelined(t, cmp, rows => migrateV2ToV3(rows))
       }
     })().catch(error => {
       // Aborting the upgrade leaves the v1 database exactly as it was.

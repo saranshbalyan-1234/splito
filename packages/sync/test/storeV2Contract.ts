@@ -269,10 +269,13 @@ export function runV2Contract(name: string, open: () => Promise<Store>) {
       expect(first.next).not.toBeNull()
       const rest = await s.historyPage({limit: 100, after: first.next})
       expect(first.items.length + rest.items.length).toBe((await s.dump()).history.length)
-      const last = await s.lastActivity(['me', a.id, b.id])
-      expect(last.get(a.id)).toBe('2026-10-05')
-      expect(last.get('me')).toBe('2026-10-05')
-      expect(last.has(b.id)).toBe(false) // their only payment was deleted
+      const last = await s.lastActivity()
+      // Newest change to anything they are on; a delete is activity too.
+      expect(last.get(a.id)).toBeGreaterThan(0)
+      expect(last.get('me')).toBe(last.get(b.id)!)
+      expect(last.get(b.id)).toBeGreaterThan(last.get(a.id)!)
+      expect([...last.keys()][0]).toBe('me') // newest first
+      expect(last.size).toBe(3)
       await s.close()
     })
 

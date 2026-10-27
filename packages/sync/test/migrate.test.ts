@@ -30,11 +30,11 @@ import {
 } from '../src/mutations'
 import {setPref} from '../src/preferences'
 import {createInviteLink, sendFriendRequest} from '../src/friends'
-import {SCHEMA_VERSION} from '../src/schema'
+import {SCHEMA_VERSION, STORES} from '../src/schema'
 import {openSqlStore, type SqlExecutor} from '../src/sqlStore'
 import {type Store, type StoreDump} from '../src/store'
 import {bunExecutor} from './bunExecutor'
-import {expectProjectionsMatchLedger} from './projectionCheck'
+import {expectDerivedTablesMatch, expectProjectionsMatchLedger, storedAggregates, storedTerms} from './projectionCheck'
 import {makeCtx} from './storeV2Contract'
 
 /* -------------------------------------------------------------------------- */
@@ -180,6 +180,7 @@ const open: Record<string, (name: string, dump: StoreDump) => Promise<{store: ()
     const factory = new IDBFactory()
     await writeV1Idb(factory, name, dump)
     return {
+      factory,
       store: () => openIdbStore(name, factory),
       version: async () => {
         const req = factory.open(name)
@@ -194,6 +195,7 @@ const open: Record<string, (name: string, dump: StoreDump) => Promise<{store: ()
     const path = join(mkdtempSync(join(tmpdir(), 'splito-v1-')), 'db.sqlite')
     writeV1Sql(path, dump)
     return {
+      path,
       store: () => openSqlStore(bunExecutor(path)),
       version: async () => {
         const db = new Database(path)
@@ -205,12 +207,13 @@ const open: Record<string, (name: string, dump: StoreDump) => Promise<{store: ()
   },
 }
 
-describe.each(Object.keys(open))('%s v1 -> v2', engine => {
+describe.each(Object.keys(open))('%s v1 -> current', engine => {
   test('a small set with every kind of row survives exactly', async () => {
     const dump = await smallSet()
     const v1 = await open[engine]!('small', dump)
     const store = await v1.store()
     await expectSameAsV1(store, dump)
+    await expectDerivedTablesMatch(store)
     expect(await v1.version()).toBe(SCHEMA_VERSION)
     // The tombstone that was purged is still in the audit trail.
     const purged = (await store.dump()).entities.find(e => e.type === 'expense' && e.deleted)
@@ -257,6 +260,95 @@ describe.each(Object.keys(open))('%s v1 -> v2', engine => {
     await expectProjectionsMatchLedger(store)
     await store.close()
   })
+})
+
+/* -------------------------------------------------------------------------- */
+/* v2 -> v3                                                                    */
+/* -------------------------------------------------------------------------- */
+
+/** Rewrites a current (v3) IndexedDB database as the v2 layout that shipped before: no aggregates, no search terms, no people activity. */
+async function downgradeIdb(from: IDBFactory, name: string): Promise<IDBFactory> {
+  const source = (await wrap(from.open(name))) as IDBPDatabase
+  const to = new IDBFactory()
+  const req = to.open(name, 2)
+  const kept = Object.keys(STORES).filter(n => n !== 'aggregates' && n !== 'search_terms') as Array<keyof typeof STORES>
+  req.onupgradeneeded = () => {
+    for (const store of kept) {
+      const spec = STORES[store] as {key: readonly string[]; auto?: boolean; indexes: Record<string, {columns: readonly string[]; unique?: boolean}>}
+      const os = spec.auto ? req.result.createObjectStore(store, {keyPath: spec.key[0]!, autoIncrement: true}) : req.result.createObjectStore(store, {keyPath: [...spec.key]})
+      for (const [ix, def] of Object.entries(spec.indexes)) if (!(store === 'people' && ix === 'byActivity')) os.createIndex(ix, [...def.columns], {unique: !!def.unique})
+    }
+  }
+  const target = (await wrap(req)) as IDBPDatabase
+  const rows = new Map<string, Array<Record<string, unknown>>>()
+  for (const store of kept) rows.set(store, (await source.getAll(store)) as Array<Record<string, unknown>>)
+  const t = target.transaction(kept, 'readwrite')
+  for (const store of kept)
+    for (const row of rows.get(store)!) {
+      const { lastActivityAt: _skip, ...v2 } = row
+      void t.objectStore(store).put(store === 'people' ? v2 : row)
+    }
+  await t.done
+  source.close()
+  target.close()
+  return to
+}
+
+/** The same for SQLite: drop what v3 added and stamp version 2. */
+function downgradeSql(path: string) {
+  const db = new Database(path)
+  db.run('DROP TABLE aggregates')
+  db.run('DROP TABLE search_terms')
+  db.run('DROP INDEX ix_people_byActivity')
+  db.run('ALTER TABLE people DROP COLUMN lastActivityAt')
+  db.run("UPDATE meta SET value = '2' WHERE key = 'schemaVersion'")
+  db.run('PRAGMA user_version = 2')
+  db.close()
+}
+
+describe.each(['IndexedDB', 'SQLite'])('%s v2 -> v3', engine => {
+  const fixtures: Array<[string, () => StoreDump]> = [['a small set', () => smallDump], ['the large demo set', () => large]]
+  let smallDump: StoreDump
+  beforeAll(async () => {
+    smallDump = await smallSet()
+  })
+
+  test.each(fixtures)('%s: every row survives, and the new projections equal a fresh build', async (_name, dump) => {
+    const set = dump()
+    // The v3 reference: the v1 fixture migrated straight to the current layout.
+    const handle = await open[engine]!('v2', set)
+    const reference = await handle.store()
+    const want = {aggregates: await storedAggregates(reference), terms: await storedTerms(reference), groups: [...(await reference.groupActivity())].sort(), people: [...(await reference.lastActivity())].sort()}
+    expect(want.aggregates.length).toBeGreaterThan(0)
+    expect(want.terms.length).toBeGreaterThan(0)
+    await reference.close()
+
+    let upgraded: Store
+    if (engine === 'IndexedDB') {
+      const name = 'v2'
+      const factory = (handle as unknown as {factory: IDBFactory}).factory
+      upgraded = await openIdbStore(name, await downgradeIdb(factory, name))
+    } else {
+      const path = (handle as unknown as {path: string}).path
+      downgradeSql(path)
+      upgraded = await openSqlStore(bunExecutor(path))
+    }
+    await expectSameAsV1(upgraded, set)
+    await expectDerivedTablesMatch(upgraded)
+    expect(await storedAggregates(upgraded)).toEqual(want.aggregates)
+    expect(await storedTerms(upgraded)).toEqual(want.terms)
+    expect([...(await upgraded.groupActivity())].sort()).toEqual(want.groups)
+    expect([...(await upgraded.lastActivity())].sort()).toEqual(want.people)
+    // New writes keep every derived table exact.
+    const me = set.entities.find(e => e.type === 'person' && (e.data as {isMe: boolean}).isMe)!.id
+    const friend = set.entities.find(e => e.type === 'person' && !e.deleted && !(e.data as {isMe: boolean}).isMe)!.id
+    const ctx = {...makeCtx(), actor: me, newId: () => 'later-' + Math.random().toString(36).slice(2)}
+    await createExpense(upgraded, ctx, {
+      title: 'After the upgrade', groupId: null, currency: 'INR', total: 600n, payers: {[me]: 600n}, split: {mode: 'equal', participants: [me, friend]}, date: '2026-11-01', tz: 'UTC', category: 'food', notes: '',
+    })
+    await expectDerivedTablesMatch(upgraded)
+    await upgraded.close()
+  }, 120_000)
 })
 
 describe('a migration that fails leaves v1 exactly as it was', () => {

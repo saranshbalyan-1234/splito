@@ -2,7 +2,7 @@ import {type RowAccess} from './engine'
 import {type Key, type Row, STORES, type StoreName} from './schema'
 
 /** Projection sums: written once per transaction, however many records moved them. */
-const DEFERRED = new Set<StoreName>(['balances', 'pair_balances'])
+const DEFERRED = new Set<StoreName>(['balances', 'pair_balances', 'aggregates'])
 
 const idOf = (store: StoreName, key: Key) => store + '\u0000' + JSON.stringify(key)
 const keyOf = (store: StoreName, row: Row): Key => STORES[store].key.map(c => row[c] as string | number)

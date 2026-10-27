@@ -1,5 +1,5 @@
 /**
- * The local database schema, version 2 (ARCHITECTURE 9.8). One definition
+ * The local database schema, version 3 (ARCHITECTURE 9.8). One definition
  * drives both engines: IndexedDB object stores and SQLite tables share names,
  * columns, keys and indexes, and the Postgres mirror (backend batch) is cut
  * from the same list.
@@ -21,7 +21,12 @@ import {decode, encode} from './codec'
 import {type Expense, type Group, type Person, type Repayment} from './mutations'
 import {type Entity, type EntityInput, type EntityType, type HistoryRow, type OutboxOp, type OutboxInput, type RowSyncStatus} from './types'
 
-export const SCHEMA_VERSION = 2
+/**
+ * 1: one `entities` store. 2: a store per entity type, relations and balance
+ * projections. 3: the `aggregates` and `search_terms` projections and
+ * `people.lastActivityAt` (so Analytics and Search never load the ledger).
+ */
+export const SCHEMA_VERSION = 3
 
 export type Scalar = string | number
 export type Key = Scalar[]
@@ -74,10 +79,12 @@ const RELATION_COLUMNS = {
 export const STORES = {
   people: {
     key: ['id'],
-    columns: {...ENTITY_COLUMNS, name: 'text', nameKey: 'text', isMe: 'int', accountId: 'text?'},
+    // `lastActivityAt`: the newest change to anything this person is on (a projection column, like a group's `activityAt`).
+    columns: {...ENTITY_COLUMNS, name: 'text', nameKey: 'text', isMe: 'int', accountId: 'text?', lastActivityAt: 'int'},
     indexes: {
       byName: ix('nameKey', 'id'),
       byUpdatedAt: ix('updatedAt', 'id'),
+      byActivity: ix('lastActivityAt', 'id'),
       bySyncStatus: ix('syncStatus', 'id'),
     },
   },
@@ -231,6 +238,15 @@ export const STORES = {
     columns: {key: 'text', value: 'text'},
     indexes: {},
   },
+  /*
+   * `history`, `meta`, `balances`, `pair_balances`, `aggregates` and
+   * `search_terms` have no `syncStatus` by design (9.8 reading, F-117): history
+   * is an append-only audit trail of rows that carry their own status, `meta`
+   * is local bookkeeping, and the last four are projections derived from rows
+   * (rebuilt by `rebuildProjections`, never sent), so they are exactly as
+   * synced as the rows behind them. Every store holding data a user wrote
+   * (the entity and relation stores) has the column and its index.
+   */
   balances: {
     key: ['personId', 'groupId', 'currency'],
     columns: {personId: 'text', groupId: 'text', currency: 'text', amount: 'text', count: 'int', updatedAt: 'int'},
@@ -239,6 +255,39 @@ export const STORES = {
   pair_balances: {
     key: ['personId', 'otherId', 'currency'],
     columns: {personId: 'text', otherId: 'text', currency: 'text', amount: 'text', updatedAt: 'int'},
+    indexes: {},
+  },
+  /*
+   * Spending and balance sums per `[currency, month, groupId|'', categoryId, personId, kind]`
+   * (the cells of `recordCells`, folded to a month; minor units as decimal strings), kept in the same
+   * transaction as `balances`. Analytics reads history-long charts from here. `personId` '' is the
+   * whole expense (`total`, `count`); a person row holds that person's `paid`, `share` and `net`.
+   */
+  aggregates: {
+    key: ['currency', 'month', 'groupId', 'categoryId', 'personId', 'kind'],
+    columns: {
+      currency: 'text',
+      month: 'text',
+      groupId: 'text',
+      categoryId: 'text',
+      personId: 'text',
+      kind: 'text',
+      total: 'text',
+      paid: 'text',
+      share: 'text',
+      net: 'text',
+      count: 'int',
+      updatedAt: 'int',
+    },
+    indexes: {byPerson: ix('personId', 'currency', 'month', 'groupId', 'categoryId', 'kind')},
+  },
+  /*
+   * Search terms (`kind`: 'w' word prefix token, 'a' amount key per currency, 'm' month of the year,
+   * 'c' category id) -> the expense, person or group they find. Kept in the mutation transaction.
+   */
+  search_terms: {
+    key: ['kind', 'term', 'entityType', 'entityId'],
+    columns: {kind: 'text', term: 'text', entityType: 'text', entityId: 'text'},
     indexes: {},
   },
 } as const satisfies Record<string, StoreSpec>
@@ -379,6 +428,8 @@ export function rowOfEntity(e: Entity): Row {
     ...EXTRA[e.type](e.data),
     // A group's own change is activity; the store raises it further as records land in the group.
     ...(e.type === 'group' ? {activityAt: e.updatedAt} : {}),
+    // A person's activity is raised as records they are on change; a new row starts with none.
+    ...(e.type === 'person' ? {lastActivityAt: 0} : {}),
   }
 }
 

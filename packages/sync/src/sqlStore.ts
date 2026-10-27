@@ -1,6 +1,6 @@
 import {createStore} from './core'
 import {type Engine, type RangeQuery, type RowAccess} from './engine'
-import {type LegacyV1, migrateV1ToV2, stampSchemaVersion} from './migrate'
+import {type LegacyV1, migrateFromV1, migrateV2ToV3, stampSchemaVersion} from './migrate'
 import {type ColumnType, indexColumns, type Row, SCHEMA_VERSION, STORES, type StoreName, type StoreSpec} from './schema'
 import {type Store} from './store'
 
@@ -139,8 +139,8 @@ async function readV1(db: SqlExecutor): Promise<LegacyV1> {
 }
 
 /**
- * Brings the database to the current layout, once: a fresh file gets the v2
- * tables; a v1 file (`PRAGMA user_version` 0 with an `entities` table) is
+ * Brings the database to the current layout, once: a fresh file gets the
+ * tables; a v2 file gets the v3 additions and a rebuild; a v1 file (`PRAGMA user_version` 0 with an `entities` table) is
  * read whole, its tables replaced and every row written back in the new
  * layout, all inside one transaction that also sets `user_version`, so a
  * crash leaves v1 untouched and a finished migration is never run again.
@@ -149,6 +149,14 @@ async function migrate(db: SqlExecutor) {
   const [{user_version: version = 0} = {}] = await db.all<{user_version: number}>('PRAGMA user_version', [])
   if (version >= SCHEMA_VERSION) return
   await db.withTransaction(async () => {
+    // v2 -> v3: the older tables are kept (their indexes already exist); the new column is added before its index.
+    if (version === 2) {
+      await db.exec('ALTER TABLE "people" ADD COLUMN "lastActivityAt" INTEGER NOT NULL DEFAULT 0')
+      for (const sql of schemaSql()) await db.exec(sql)
+      await migrateV2ToV3(sqlRows(db))
+      await db.exec(`PRAGMA user_version = ${SCHEMA_VERSION}`)
+      return
+    }
     const [v1] = await db.all<{name: string}>("SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'entities'", [])
     const legacy = v1 ? await readV1(db) : undefined
     if (v1) for (const old of ['entities', 'history', 'outbox']) await db.exec(`DROP TABLE IF EXISTS ${old}`)
@@ -157,7 +165,7 @@ async function migrate(db: SqlExecutor) {
     const rows = sqlRows(db)
     if (legacy) {
       await db.run("DELETE FROM meta WHERE key = 'schema_version'", [])
-      await migrateV1ToV2(legacy, rows)
+      await migrateFromV1(legacy, rows)
     } else await stampSchemaVersion(rows)
     await db.exec(`PRAGMA user_version = ${SCHEMA_VERSION}`)
   })
