@@ -6,12 +6,12 @@ import {type AdjustmentModes} from '@splito/sync'
 import {nanoid} from 'nanoid/non-secure'
 
 import {UserAvatar} from '#/view/com/util/UserAvatar'
-import {usePref} from '#/data/hooks'
 import {atoms as a, tokens, useBreakpoints, useTheme, web} from '#/alf'
 import {Button, ButtonIcon, ButtonText} from '#/components/Button'
 import * as SegmentedControl from '#/components/forms/SegmentedControl'
 import * as TextField from '#/components/forms/TextField'
 import * as Toggle from '#/components/forms/Toggle'
+import {usePrefControl} from '#/components/settings/PrefSection'
 import {useDialogControl} from '#/components/Dialog'
 import {
   ArrowBottom_Stroke2_Corner0_Rounded as ArrowDownIcon,
@@ -93,8 +93,9 @@ export function SplitEditor({
   const {gtMobile} = useBreakpoints()
   const isPointer = IS_WEB && gtMobile
   const presets = useChargePresets()
-  const [defaultPresetId = 'simple'] = usePref('bill.defaultPreset')
-  const [serviceBasisPoints = 0] = usePref('bill.serviceChargeDefault')
+  const defaultPresetId = usePrefControl('bill.defaultPreset').value ?? 'simple'
+  const serviceBasisPoints =
+    usePrefControl('bill.serviceChargeDefault').value ?? 0
 
   const labels: Record<SplitMode, string> = {
     equal: l`Equally`,

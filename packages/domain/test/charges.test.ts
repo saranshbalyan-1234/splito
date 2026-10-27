@@ -3,6 +3,7 @@ import fc from 'fast-check'
 
 import {
   billBreakdown,
+  billGap,
   type BillItem,
   billShares,
   type Charge,
@@ -94,6 +95,9 @@ describe('the Supper Factory bill (owner sample)', () => {
     expect(roundOffLimit('INR')).toBe(100n)
     expect(roundOffLimit('JPY')).toBe(1n)
     expect(roundOffLimit('BHD')).toBe(1000n)
+    expect(billGap(bill, 252200n, 'INR')).toEqual({gap: 39n, canRoundOff: true})
+    expect(billGap(bill, 252161n, 'INR')).toEqual({gap: 0n, canRoundOff: false})
+    expect(billGap(bill, 262000n, 'INR').canRoundOff).toBe(false)
   })
 })
 

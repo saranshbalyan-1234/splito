@@ -1,11 +1,11 @@
 import {useState} from 'react'
 import {View} from 'react-native'
 import {type TaxClass} from '@splito/sync'
+import {nanoid} from 'nanoid/non-secure'
 import {Trans, useLingui} from '@lingui/react/macro'
 
 import {useHaptics} from '#/lib/haptics'
 import {useA11y} from '#/state/a11y'
-import {useMutationCtx} from '#/data/hooks'
 import {atoms as a, useBreakpoints, useTheme} from '#/alf'
 import {Button, ButtonIcon, ButtonText} from '#/components/Button'
 import {useDialogControl} from '#/components/Dialog'
@@ -37,7 +37,6 @@ export function TaxClassesEditor() {
   const t = useTheme()
   const {t: l} = useLingui()
   const haptics = useHaptics()
-  const {newId} = useMutationCtx()
   const {screenReaderEnabled} = useA11y()
   const {gtMobile} = useBreakpoints()
   const pref = usePrefControl('bill.taxClasses')
@@ -134,7 +133,7 @@ export function TaxClassesEditor() {
           else
             save([
               ...classes,
-              {id: newId(), name, order: classes.length, hidden: false},
+              {id: nanoid(8), name, order: classes.length, hidden: false},
             ])
         }}
       />

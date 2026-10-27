@@ -70,6 +70,12 @@ export function roundOffLimit(code: string): bigint {
   return 10n ** BigInt(getCurrency(code).scale)
 }
 
+/** The printed total against the charged bill: the gap, and whether it is small enough to add as round-off. */
+export function billGap(b: BillBreakdown, total: bigint, currency: string): {gap: bigint; canRoundOff: boolean} {
+  const gap = total - b.computedTotal
+  return {gap, canRoundOff: gap !== 0n && abs(gap) <= roundOffLimit(currency)}
+}
+
 /** The tax inside a price that includes `basisPoints` of tax: base * r / (1 + r), half away from zero. */
 function inclusivePortion(base: bigint, basisPoints: number): bigint {
   const denom = 10000n + BigInt(basisPoints)

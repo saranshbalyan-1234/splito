@@ -9,9 +9,9 @@ import {
   ZERO,
 } from '@splito/domain'
 
-import {usePref} from '#/data/hooks'
 import {atoms as a, useTheme} from '#/alf'
 import {Button, ButtonText} from '#/components/Button'
+import {usePrefControl} from '#/components/settings/PrefSection'
 import {Text} from '#/components/Typography'
 import {FieldError} from '../fields'
 import {type ExpenseForm, type FormEvaluation} from '../form'
@@ -38,7 +38,7 @@ export function Reconciliation({
 }) {
   const t = useTheme()
   const {t: l} = useLingui()
-  const [spread = 'shares'] = usePref('bill.roundOffSpread')
+  const spread = usePrefControl('bill.roundOffSpread').value ?? 'shares'
   const [isChecking, setIsChecking] = useState(false)
   const {bill, gap, total, roundOff} = evaluation
   if (!bill) return null

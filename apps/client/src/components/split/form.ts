@@ -21,7 +21,7 @@ import {
   remainingMinor,
   resolveItemAdjustments,
   type RoundOff,
-  roundOffLimit,
+  billGap,
   type SplitInput,
   splitItem,
   sumMinor,
@@ -649,10 +649,9 @@ export function evaluateForm(
         }
         let roundOff: RoundOff | undefined
         if (total !== undefined) {
-          const gap = total - bill.computedTotal
+          const {gap, canRoundOff} = billGap(bill, total, f.currency)
           r.gap = gap
-          const limit = roundOffLimit(f.currency)
-          r.canRoundOff = gap !== ZERO && (gap < ZERO ? -gap : gap) <= limit
+          r.canRoundOff = canRoundOff
           if (f.roundOff && r.canRoundOff)
             roundOff = {
               minor: gap,

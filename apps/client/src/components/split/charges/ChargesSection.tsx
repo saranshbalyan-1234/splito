@@ -12,7 +12,6 @@ import {nanoid} from 'nanoid/non-secure'
 
 import {useHaptics} from '#/lib/haptics'
 import {useA11y} from '#/state/a11y'
-import {usePref} from '#/data/hooks'
 import {atoms as a, tokens, useBreakpoints, useTheme} from '#/alf'
 import {Button, ButtonIcon, ButtonText} from '#/components/Button'
 import {useDialogControl} from '#/components/Dialog'
@@ -23,6 +22,7 @@ import {
 } from '#/components/icons/Arrow'
 import {PlusLarge_Stroke2_Corner0_Rounded as PlusIcon} from '#/components/icons/Plus'
 import {TimesLarge_Stroke2_Corner0_Rounded as XIcon} from '#/components/icons/Times'
+import {usePrefControl} from '#/components/settings/PrefSection'
 import * as Toast from '#/components/Toast'
 import {Text} from '#/components/Typography'
 import {IS_WEB} from '#/env'
@@ -91,13 +91,14 @@ export function ChargePresets({
   const haptics = useHaptics()
   const presets = useChargePresets()
   const summary = useSetupSummary()
-  const [isRemembering = true] = usePref('bill.rememberPerMerchant')
-  const [setups = []] = usePref('bill.merchantSetups')
+  const isRemembering = usePrefControl('bill.rememberPerMerchant').value ?? true
+  const setups = usePrefControl('bill.merchantSetups').value ?? []
   const mark = decimalMark(locale)
 
   const current = form.charges ? templatesFromCharges(form.charges) : undefined
   const activeId = current
-    ? presets.find(p => p.id !== 'simple' && isSameSetup(p.charges, current))?.id
+    ? (presets.find(p => p.id !== 'simple' && isSameSetup(p.charges, current))
+        ?.id ?? 'custom')
     : 'simple'
   const setup = isRemembering
     ? setups.find(s => s.key === merchantKey(form.title))
@@ -143,6 +144,22 @@ export function ChargePresets({
               </Button>
             )
           })}
+          <Button
+            testID="charge-preset-custom"
+            label={l`Custom`}
+            role="radio"
+            aria-checked={activeId === 'custom'}
+            accessibilityState={{checked: activeId === 'custom'}}
+            size="small"
+            color={activeId === 'custom' ? 'primary' : 'secondary'}
+            onPress={() => {
+              /* An open list of your own: keep the charges you have, or start empty. */
+              if (form.charges === undefined) apply([])
+            }}>
+            <ButtonText>
+              <Trans>Custom</Trans>
+            </ButtonText>
+          </Button>
         </View>
       </ScrollView>
       {isSuggesting ? (
@@ -204,9 +221,10 @@ export function ChargeList({
   const {nameOf} = useTaxClasses()
   const dialog = useDialogControl()
   const [editing, setEditing] = useState<ChargeForm>(() => emptyCharge('new'))
-  const [isRemembering = true] = usePref('bill.rememberPerMerchant')
-  const [setups = PREFS['bill.merchantSetups'].default, saveSetups] =
-    usePref('bill.merchantSetups')
+  const isRemembering = usePrefControl('bill.rememberPerMerchant').value ?? true
+  const merchants = usePrefControl('bill.merchantSetups')
+  const setups = merchants.value ?? PREFS['bill.merchantSetups'].default
+  const saveSetups = merchants.set
   const charges = form.charges ?? []
   const showArrows = (IS_WEB && gtMobile) || screenReaderEnabled
   const fmt = (v: bigint) => formatAmount(v, form.currency, locale)

@@ -3,9 +3,11 @@ import {Trans, useLingui} from '@lingui/react/macro'
 import {
   billOf,
   isInScope,
+  magnitude,
   roundOffByPerson,
   type SplitInput,
   splitItem,
+  sumMinor,
   ZERO,
 } from '@splito/domain'
 
@@ -45,6 +47,7 @@ export function ChargedBreakdown({
   const roundOff = split.roundOff
   const roundOffShares = roundOff ? roundOffByPerson(bill, roundOff) : {}
   const pct = new Intl.NumberFormat(locale, {maximumFractionDigits: 2})
+  const signed = (v: bigint) => (v < ZERO ? '−' : '') + fmt(magnitude(v))
 
   /* Items by class, in the person's class order; classes no longer listed come last. */
   const classIds = [...new Set(split.items.map(i => i.taxClass ?? 'standard'))]
@@ -80,7 +83,7 @@ export function ChargedBreakdown({
   }
   const rate = (n: number) => {
     const v = bill.lines[n]!.charge.value
-    return v.mode === 'percent' ? ` ${pct.format(v.basisPoints / 100)}%` : ''
+    return v.mode === 'percent' ? `${pct.format(v.basisPoints / 100)}%` : ''
   }
 
   const people = Object.keys(
@@ -101,7 +104,7 @@ export function ChargedBreakdown({
           const group = split.items
             .map((item, index) => ({item, index}))
             .filter(x => (x.item.taxClass ?? 'standard') === classId)
-          const subtotal = group.reduce((s, x) => s + x.item.amount, ZERO)
+          const subtotal = sumMinor(group.map(x => x.item.amount))
           return (
             <View key={classId} testID={`expense-class-${classId}`}>
               <View
@@ -154,13 +157,15 @@ export function ChargedBreakdown({
             <ChargeRow
               key={line.charge.id}
               testID={`expense-charge-${n}`}
-              label={`${line.charge.name}${rate(n)}`}
-              detail={
-                line.isInclusive
-                  ? l`${scopeOf(n)} · included in the prices`
-                  : scopeOf(n)
-              }
-              value={(line.amount < ZERO ? '−' : '') + fmt(line.amount < ZERO ? -line.amount : line.amount)}
+              label={line.charge.name}
+              detail={[
+                rate(n),
+                scopeOf(n),
+                ...(line.isInclusive ? [l`included in the prices`] : []),
+              ]
+                .filter(Boolean)
+                .join(' · ')}
+              value={signed(line.amount)}
               isMuted={line.isInclusive}
             />
           ),
@@ -180,7 +185,7 @@ export function ChargedBreakdown({
         <ChargeRow
           testID="expense-charge-total"
           label={l`Total`}
-          value={fmt(bill.computedTotal + (roundOff?.minor ?? ZERO))}
+          value={fmt(sumMinor([bill.computedTotal, roundOff?.minor ?? ZERO]))}
           isBold
         />
       </View>
@@ -198,7 +203,7 @@ export function ChargedBreakdown({
               .map(x => ({key: x.charge.id, label: x.charge.name, value: x.byPerson[id]!})),
             ...(roundOffShares[id] ? [{key: 'round-off', label: l`Round-off`, value: roundOffShares[id]!}] : []),
           ]
-          const total = rows.reduce((s, r) => s + r.value, ZERO)
+          const total = sumMinor(rows.map(r => r.value))
           return (
             <View
               key={id}
@@ -217,7 +222,7 @@ export function ChargedBreakdown({
                     {r.label}
                   </Text>
                   <Text style={[a.text_sm, t.atoms.text_contrast_medium, tabular]}>
-                    {(r.value < ZERO ? '−' : '') + fmt(r.value < ZERO ? -r.value : r.value)}
+                    {signed(r.value)}
                   </Text>
                 </View>
               ))}

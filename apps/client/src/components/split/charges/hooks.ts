@@ -9,7 +9,7 @@ import {
 } from '@splito/sync'
 import {type ChargeKind} from '@splito/domain'
 
-import {usePref} from '#/data/hooks'
+import {usePrefControl} from '#/components/settings/PrefSection'
 
 /** A tax class by the name a person sees: built-in names follow the UI language until renamed. */
 export function useTaxClassName() {
@@ -33,7 +33,7 @@ export function useTaxClasses(): {
   visible: TaxClass[]
   nameOf: (id: string | undefined) => string
 } {
-  const [classes = PREFS['bill.taxClasses'].default] = usePref('bill.taxClasses')
+  const classes = usePrefControl('bill.taxClasses').value ?? PREFS['bill.taxClasses'].default
   const displayName = useTaxClassName()
   const all = [...classes].sort((x, y) => x.order - y.order)
   return {
@@ -63,7 +63,7 @@ export function useKindName() {
 /** The presets in the person's list, names in the UI language while they are the shipped ones. */
 export function useChargePresets(): ChargePreset[] {
   const {t: l} = useLingui()
-  const [presets = PREFS['bill.chargePresets'].default] = usePref('bill.chargePresets')
+  const presets = usePrefControl('bill.chargePresets').value ?? PREFS['bill.chargePresets'].default
   const names: Record<string, string> = {
     simple: l`Simple`,
     'restaurant-india': l`Restaurant India`,
