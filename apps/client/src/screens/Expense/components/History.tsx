@@ -19,36 +19,35 @@ import {Cloud_Stroke2_Corner0_Rounded as CloudIcon} from '#/components/icons/Clo
 import {type Props as SVGIconProps} from '#/components/icons/common'
 import {Pencil_Stroke2_Corner0_Rounded as PencilIcon} from '#/components/icons/Pencil'
 import {Trash_Stroke2_Corner0_Rounded as TrashIcon} from '#/components/icons/Trash'
-import {SectionLabel, useDisplayName} from '#/components/split/shared'
+import {useDisplayName} from '#/components/split/shared'
 import {useRowStatus} from '#/components/SyncStatus'
 import {Text} from '#/components/Typography'
 
 type Kind = 'created' | 'edited' | 'deleted' | 'restored'
 
+/** One stored version of the expense as a timeline line (F-1204): who did what, when, and what changed. */
+export interface HistoryLineData {
+  key: string
+  at: number
+  kind: Kind
+  actor: string
+  changes: string[]
+}
+
 /**
- * Every stored version of the expense, newest first: who added, edited,
- * deleted or restored it, when, and what changed. Versions are local until
- * sync exists, which the footer says plainly.
+ * Every stored version of the expense as a line for the discussion's one
+ * timeline: who added, edited, deleted or restored it, when, and what changed
+ * ("Amount: ₹600.00 → ₹750.00"). Oldest first.
  */
-export function History({
-  history,
-  sync,
-}: {
-  history: HistoryRow[]
-  /** The expense's own sync state: the footer says what it means, in the same words as the marker. */
-  sync: Pick<RowSync, 'syncStatus'>
-}) {
-  const t = useTheme()
-  const {t: l, i18n} = useLingui()
+export function useHistoryLines(history: HistoryRow[]): HistoryLineData[] {
+  const {t: l} = useLingui()
   const locale = useNumberLocale()
   const formatDay = useFormatDay()
-  const tz = useTimeZone()
-  const name = useDisplayName()
   const [categories = PREFS.categories.default] = usePref('categories')
   const categoryName = (id: string) =>
     categories.find(c => c.id === id)?.name ?? id
 
-  const entries = history.map((row, i) => {
+  return history.map((row, i) => {
     const prev = history[i - 1]
     const kind: Kind = !prev
       ? 'created'
@@ -68,9 +67,7 @@ export function History({
           l`Amount: ${formatAmount(was.total, was.currency, locale)} → ${formatAmount(now.total, now.currency, locale)}`,
         )
       if (was.date !== now.date)
-        changes.push(
-          l`Date: ${formatDay(was.date)} → ${formatDay(now.date)}`,
-        )
+        changes.push(l`Date: ${formatDay(was.date)} → ${formatDay(now.date)}`)
       if (was.category !== now.category)
         changes.push(
           l`Category: ${categoryName(was.category)} → ${categoryName(now.category)}`,
@@ -87,9 +84,94 @@ export function History({
         changes.push(l`Changed the split`)
       if (was.notes !== now.notes) changes.push(l`Edited the notes`)
     }
-    return {row, kind, changes}
+    return {
+      key: `history:${row.version}`,
+      at: row.at,
+      kind,
+      actor: row.actor,
+      changes,
+    }
   })
+}
 
+/**
+ * A history line inside the timeline, drawn like Bluesky's system messages in a
+ * chat: centred, quiet, with a small glyph for what happened.
+ */
+export function HistoryLine({line}: {line: HistoryLineData}) {
+  const t = useTheme()
+  const {t: l, i18n} = useLingui()
+  const tz = useTimeZone()
+  const name = useDisplayName()
+  const who = name(line.actor)
+  const title = {
+    created: l`${who} added this expense`,
+    edited: l`${who} edited this expense`,
+    deleted: l`${who} deleted this expense`,
+    restored: l`${who} restored this expense`,
+  }[line.kind]
+  const icons: Record<Kind, React.ComponentType<SVGIconProps>> = {
+    created: CreatedIcon,
+    edited: PencilIcon,
+    deleted: TrashIcon,
+    restored: UndoIcon,
+  }
+  const Icon = icons[line.kind]
+  return (
+    <View
+      testID={`history-${line.kind}`}
+      style={[a.align_center, a.gap_2xs, a.px_xl, a.pt_md]}>
+      <View
+        style={[
+          a.flex_row,
+          a.align_center,
+          a.justify_center,
+          a.gap_xs,
+          a.flex_wrap,
+        ]}>
+        <Icon
+          size="xs"
+          fill={
+            line.kind === 'deleted'
+              ? t.palette.negative_500
+              : t.atoms.text_contrast_medium.color
+          }
+        />
+        <Text
+          style={[
+            a.text_sm,
+            a.font_medium,
+            a.leading_snug,
+            a.text_center,
+            t.atoms.text_contrast_high,
+          ]}>
+          {title}
+          <Text style={[a.text_sm, t.atoms.text_contrast_medium]}>
+            {' · '}
+            {i18n.date(new Date(line.at), {timeStyle: 'short', timeZone: tz})}
+          </Text>
+        </Text>
+      </View>
+      {line.changes.map(c => (
+        <Text
+          key={c}
+          style={[
+            a.text_xs,
+            a.leading_snug,
+            a.text_center,
+            t.atoms.text_contrast_medium,
+          ]}>
+          {c}
+        </Text>
+      ))}
+    </View>
+  )
+}
+
+/** What the expense's sync state means, in the same words as the marker; local until sync exists. */
+export function SyncFooter({sync}: {sync: Pick<RowSync, 'syncStatus'>}) {
+  const t = useTheme()
+  const {t: l} = useLingui()
   const {kind: syncKind} = useRowStatus(sync)
   const footer = {
     local: l`Only on this device. Sign in to sync it to your other devices.`,
@@ -99,103 +181,25 @@ export function History({
     synced: l`Synced to your other devices.`,
     attention: l`This expense needs attention: it hasn’t synced.`,
   }[syncKind]
-
-  const titles: Record<Kind, (who: string) => string> = {
-    created: who => l`${who} added this expense`,
-    edited: who => l`${who} edited this expense`,
-    deleted: who => l`${who} deleted this expense`,
-    restored: who => l`${who} restored this expense`,
-  }
-  const icons: Record<Kind, React.ComponentType<SVGIconProps>> = {
-    created: CreatedIcon,
-    edited: PencilIcon,
-    deleted: TrashIcon,
-    restored: UndoIcon,
-  }
-
   return (
-    <View testID="expense-history">
-      <SectionLabel>{l`History`}</SectionLabel>
-      {[...entries].reverse().map(({row, kind, changes}, i, all) => {
-        const Icon = icons[kind]
-        return (
-          <View
-            key={row.version}
-            testID={`history-${kind}`}
-            style={[a.flex_row, a.gap_md, a.px_lg]}>
-            <View style={[a.align_center]}>
-              <View
-                style={[
-                  a.align_center,
-                  a.justify_center,
-                  a.rounded_full,
-                  t.atoms.bg_contrast_25,
-                  {width: 32, height: 32},
-                ]}>
-                <Icon
-                  size="sm"
-                  fill={
-                    kind === 'deleted'
-                      ? t.palette.negative_500
-                      : t.atoms.text_contrast_medium.color
-                  }
-                />
-              </View>
-              {i < all.length - 1 ? (
-                <View
-                  style={[
-                    a.flex_1,
-                    {width: 2, minHeight: 12},
-                    t.atoms.bg_contrast_50,
-                  ]}
-                />
-              ) : null}
-            </View>
-            <View style={[a.flex_1, a.gap_2xs, a.pb_lg, {paddingTop: 6}]}>
-              <Text style={[a.text_md, a.font_medium, a.leading_snug]}>
-                {titles[kind](name(row.actor))}
-              </Text>
-              {changes.map(c => (
-                <Text
-                  key={c}
-                  style={[
-                    a.text_sm,
-                    a.leading_snug,
-                    t.atoms.text_contrast_high,
-                  ]}>
-                  {c}
-                </Text>
-              ))}
-              <Text style={[a.text_sm, t.atoms.text_contrast_medium]}>
-                {i18n.date(new Date(row.at), {
-                  dateStyle: 'medium',
-                  timeStyle: 'short',
-                  timeZone: tz,
-                })}
-              </Text>
-            </View>
-          </View>
-        )
-      })}
-      <View
-        testID="expense-sync-status"
-        style={[a.flex_row, a.align_start, a.gap_sm, a.px_lg, a.pt_xs]}>
-        {/* Nudged onto the first line's centre (20px line, 16px glyph). */}
-        <CloudIcon
-          size="sm"
-          fill={t.atoms.text_contrast_medium.color}
-          style={{marginTop: 2}}
-        />
-        <Text
-          style={[
-            a.flex_1,
-            a.text_sm,
-            a.leading_snug,
-            t.atoms.text_contrast_medium,
-          ]}>
-          {footer}
-        </Text>
-      </View>
+    <View
+      testID="expense-sync-status"
+      style={[a.flex_row, a.align_start, a.gap_sm, a.px_lg, a.pt_xs]}>
+      {/* Nudged onto the first line's centre (20px line, 16px glyph). */}
+      <CloudIcon
+        size="sm"
+        fill={t.atoms.text_contrast_medium.color}
+        style={{marginTop: 2}}
+      />
+      <Text
+        style={[
+          a.flex_1,
+          a.text_sm,
+          a.leading_snug,
+          t.atoms.text_contrast_medium,
+        ]}>
+        {footer}
+      </Text>
     </View>
   )
 }

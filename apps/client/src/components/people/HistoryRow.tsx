@@ -8,6 +8,7 @@ import {Link} from '#/view/com/util/Link'
 import {PressableWithHover} from '#/view/com/util/PressableWithHover'
 import {atoms as a, useTheme} from '#/alf'
 import {EntryIcon} from '#/components/people/EntryIcon'
+import {CommentCount} from '#/components/comments/CommentCount'
 import {SyncDot} from '#/components/SyncStatus'
 import {type HistoryEntry, utcDate} from '#/components/people/ledger'
 import * as Skeleton from '#/components/Skeleton'
@@ -167,6 +168,9 @@ export function HistoryRow({
             {byline.join(' · ')}
           </Text>
           <SyncDot row={entry.entity} testID={`sync-${entry.entity.id}`} />
+          {entry.kind !== 'writeoff' ? (
+            <CommentCount targetType={entry.kind} targetId={entry.entity.id} />
+          ) : null}
         </View>
       </View>
       <View style={[a.align_end, a.flex_shrink_0, {maxWidth: '45%'}]}>

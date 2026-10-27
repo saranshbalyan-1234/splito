@@ -61,6 +61,7 @@ import {
   PersonCheck_Stroke2_Corner0_Rounded as PersonCheckIcon,
 } from '#/components/icons/Invite'
 import {MagnifyingGlass_Stroke2_Corner0_Rounded as SearchIcon} from '#/components/icons/MagnifyingGlass'
+import {CommentsShowHistoryPref} from '#/components/comments/CommentsPref'
 import {OptionDialog} from '#/components/settings/OptionDialog'
 import {PrefSection, usePrefControl} from '#/components/settings/PrefSection'
 import {
@@ -899,6 +900,7 @@ export const PREF_CONTROLS = {
   // Remembers the switch in the Send feedback sheet, where its effect shows.
   'feedback.includeAppInfo': null,
   'history.binDays': BinDaysPref,
+  'comments.showHistory': CommentsShowHistoryPref,
   'privacy.findByContact': FindablePref,
   'privacy.friendRequestsFrom': FriendRequestsFromPref,
   'invites.defaultMaxUses.friend': FriendInviteUsesPref,

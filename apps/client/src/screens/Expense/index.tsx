@@ -1,4 +1,7 @@
-import {View} from 'react-native'
+import {useRef} from 'react'
+import {ScrollView, View} from 'react-native'
+import {useAnimatedRef} from 'react-native-reanimated'
+import type Animated from 'react-native-reanimated'
 import {msg, plural} from '@lingui/core/macro'
 import {Trans, useLingui} from '@lingui/react/macro'
 import {useNavigation, useRoute, type RouteProp} from '@react-navigation/native'
@@ -17,18 +20,24 @@ import {
   type Entity,
   type Expense,
   type Group,
+  type HistoryRow,
   restoreExpense,
 } from '@splito/sync'
 
 import {type AllNavigatorParams, type NavigationProp} from '#/lib/routes/types'
 import {useNumberLocale} from '#/locale/numberLocale'
 import {useFormatDay, useToday} from '#/locale/useDates'
-import {useEntities, useMutationCtx, useStore} from '#/data/hooks'
+import {useEntities, useMutationCtx, usePref, useStore} from '#/data/hooks'
 import {Link} from '#/view/com/util/Link'
 import {EmptyState} from '#/view/com/util/EmptyState'
 import {UserAvatar} from '#/view/com/util/UserAvatar'
 import {atoms as a, useBreakpoints, useTheme, utils} from '#/alf'
 import {Button, ButtonIcon, ButtonText} from '#/components/Button'
+import {
+  DiscussionComposer,
+  DiscussionProvider,
+  DiscussionTimeline,
+} from '#/components/comments/Discussion'
 import {ArrowRotateCounterClockwise_Stroke2_Corner0_Rounded as UndoIcon} from '#/components/icons/ArrowRotate'
 import {DotGrid3x1_Stroke2_Corner0_Rounded as DotsIcon} from '#/components/icons/DotGrid'
 import {Pencil_Stroke2_Corner0_Rounded as PencilIcon} from '#/components/icons/Pencil'
@@ -52,13 +61,18 @@ import {Text} from '#/components/Typography'
 import {MoneyArrow, useMoneyStyle} from '#/components/MoneyDirection'
 import {Shimmer} from '#/motion/Shimmer'
 import {SyncStatusLine} from '#/components/SyncStatus'
-import {History} from './components/History'
+import {
+  HistoryLine,
+  type HistoryLineData,
+  SyncFooter,
+  useHistoryLines,
+} from './components/History'
 import {ItemsBreakdown} from './components/ItemsBreakdown'
 
 /**
- * One expense: what it was, who paid, everyone's share, notes and its edit
- * history. Edit and Delete sit in the header menu, as Bluesky's post menu;
- * Delete leaves a tombstone and offers Undo.
+ * One expense: what it was, who paid, everyone's share, notes, and one
+ * timeline of its comments and edit history (F-1204). Edit and Delete sit in
+ * the header menu, as Bluesky's post menu; Delete leaves a tombstone and offers Undo.
  */
 export function ExpenseScreen() {
   const {t: l} = useLingui()
@@ -195,7 +209,7 @@ function Detail({
   history,
 }: {
   expense: Entity<Expense>
-  history: Parameters<typeof History>[0]['history']
+  history: HistoryRow[]
 }) {
   const t = useTheme()
   const {t: l, i18n} = useLingui()
@@ -209,6 +223,10 @@ function Detail({
   const avatarName = useAvatarName()
   const errorText = useErrorText()
   const groups = useEntities<Group>('group')
+  const lines = useHistoryLines(history)
+  const [showHistory = true] = usePref('comments.showHistory')
+  const scroll = useAnimatedRef<Animated.ScrollView>()
+  const panel = useRef<React.ComponentRef<typeof ScrollView>>(null)
   const e = expense.data
   const category = useCategory(e.category)
   const group = e.groupId ? groups?.find(g => g.id === e.groupId) : undefined
@@ -233,6 +251,22 @@ function Detail({
   const payers = Object.keys(e.payers).sort((x, y) =>
     x === ctx.actor ? -1 : y === ctx.actor ? 1 : name(x).localeCompare(name(y)),
   )
+
+  /* Who @mention can name: everyone on the expense but me. */
+  const mentionable = [
+    ...new Set([...Object.keys(e.payers), ...Object.keys(e.shares)]),
+  ]
+    .filter(id => id !== ctx.actor)
+    .map(id => ({id, name: avatarName(id), avatarName: avatarName(id)}))
+  const scrollToEnd = () =>
+    setTimeout(() => {
+      ;(
+        scroll.current as unknown as {
+          scrollToEnd?: (o: {animated: boolean}) => void
+        } | null
+      )?.scrollToEnd?.({animated: true})
+      panel.current?.scrollToEnd({animated: true})
+    }, 60)
 
   const hero = (
     <View style={[a.px_lg, a.pt_xl, a.pb_lg, a.gap_lg]}>
@@ -457,35 +491,66 @@ function Detail({
     </View>
   ) : null
 
+  const discussion = (
+    <>
+      <SectionLabel>
+        <Trans>Discussion</Trans>
+      </SectionLabel>
+      <DiscussionTimeline
+        lines={lines}
+        showHistory={showHistory}
+        renderLine={(line: HistoryLineData) => <HistoryLine line={line} />}
+      />
+      <SyncFooter sync={expense} />
+    </>
+  )
+
   return (
-    <Layout.Content contentContainerStyle={[gtTablet ? a.flex_grow : a.pb_5xl]}>
-      {deletedBanner}
+    <DiscussionProvider
+      targetType="expense"
+      targetId={expense.id}
+      canComment={!expense.deleted}
+      people={mentionable}
+      onSent={scrollToEnd}>
       {gtTablet ? (
-        /* Two columns filling the page, tops aligned: the expense, then its history as a rail. */
-        /* Stretched, so the history rail's hairline runs the page's full height. */
-        <View style={[a.flex_row, a.align_stretch, a.flex_grow]}>
-          <View style={[a.flex_1, a.pb_5xl, {flexGrow: 3}]}>
-            {hero}
-            {breakdown}
+        /* Two panes filling the page: the expense scrolls on the left, the discussion is a chat panel with the composer at its foot. */
+        <View style={[a.flex_1, a.flex_row, a.align_stretch, {minHeight: 0}]}>
+          <View style={[a.flex_1, {flexGrow: 3, flexBasis: 0, minWidth: 0}]}>
+            <Layout.Content contentContainerStyle={[a.pb_5xl]}>
+              {deletedBanner}
+              {hero}
+              {breakdown}
+            </Layout.Content>
           </View>
           <View
             style={[
               a.flex_1,
-              {flexGrow: 2},
+              {flexGrow: 2, flexBasis: 0, minWidth: 0},
               a.border_l,
               t.atoms.border_contrast_low,
             ]}>
-            <History history={history} sync={expense} />
+            <ScrollView
+              ref={panel}
+              testID="expense-discussion-panel"
+              style={[a.flex_1]}
+              contentContainerStyle={[a.pb_lg]}>
+              {discussion}
+            </ScrollView>
+            <DiscussionComposer />
           </View>
         </View>
       ) : (
         <>
-          {hero}
-          {breakdown}
-          <History history={history} sync={expense} />
+          <Layout.Content ref={scroll} contentContainerStyle={[a.pb_5xl]}>
+            {deletedBanner}
+            {hero}
+            {breakdown}
+            {discussion}
+          </Layout.Content>
+          <DiscussionComposer />
         </>
       )}
-    </Layout.Content>
+    </DiscussionProvider>
   )
 }
 
