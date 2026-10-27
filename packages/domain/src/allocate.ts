@@ -37,7 +37,7 @@ export function cashUnitWhole(code: string, unit: bigint): number {
 }
 
 /** A cash-rounded split: whole-unit shares plus the visible remainder and who carries it. */
-export type CashAllocation = {shares: Record<string, bigint>; remainder: bigint; remainderTo?: string}
+export type CashAllocation = {shares: Record<string, bigint>; remainder: bigint; remainderTo?: string; /** Rounding was skipped: the total holds fewer whole units than people. */ isExact?: true}
 
 /**
  * Cash rounding: every share is a whole multiple of `unit` (from `cashUnit`)
@@ -45,13 +45,22 @@ export type CashAllocation = {shares: Record<string, bigint>; remainder: bigint;
  * never dropped. Whole units go out by `allocate` (largest remainder, ties by
  * id); the remainder joins the share rounded furthest below its exact value
  * (ties by id), so the result is the same whatever the input order and always
- * sums to `total`. A negative total (a refund) mirrors a positive one.
+ * sums to `total`. A negative total (a refund) mirrors a positive one. When
+ * `total` holds fewer whole units than there are people, rounding would leave
+ * some of them nothing (EUR 45 for 3 at a unit of 100), so it is skipped and
+ * the split is exact (audit M15).
  */
 export function allocateCash(total: bigint, weights: ReadonlyArray<{id: string; weight: bigint}>, unit: bigint): CashAllocation {
   if (unit <= 0n) throw new DomainError('INVALID_ROUNDING')
   const neg = total < 0n
   const t = neg ? -total : total
   const units = t / unit
+  const people = weights.filter(w => w.weight > 0n).length
+  if (units < BigInt(people)) {
+    const exact = allocate(t, weights)
+    if (neg) for (const id in exact) exact[id] = -exact[id]!
+    return {shares: exact, remainder: 0n, isExact: true}
+  }
   const remainder = t - units * unit
   const shares = allocate(units, weights)
   for (const id in shares) shares[id] = shares[id]! * unit

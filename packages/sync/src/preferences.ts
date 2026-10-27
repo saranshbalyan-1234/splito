@@ -91,6 +91,15 @@ const isAnalyticsScope = (v: unknown): v is AnalyticsScope => {
   return Array.isArray(groups) && groups.length <= 1000 && groups.every(isString) && new Set(groups).size === groups.length && (nonGroup || groups.length > 0)
 }
 
+/** The cash units on offer, in whole currency units. */
+export const ROUND_TO_UNITS = [1, 5, 10, 50, 100] as const
+export type RoundToByCurrency = Record<string, number>
+const isRoundToByCurrency = (v: unknown): v is RoundToByCurrency =>
+  typeof v === 'object' && v !== null && !Array.isArray(v) && Object.entries(v).every(([c, n]) => Object.hasOwn(CURRENCIES, c) && (ROUND_TO_UNITS as readonly unknown[]).includes(n))
+
+/** The cash unit `currency` rounds to, in whole units (1 when none is set). */
+export const roundToFor = (units: RoundToByCurrency, currency: string): number => (Object.hasOwn(units, currency) ? units[currency]! : 1)
+
 function def<T>(key: string, group: PrefGroup, scope: PrefDef<T>['scope'], label: string, dflt: T, validate: (v: unknown) => v is T): PrefDef<T> {
   return {key, group, scope, label, default: dflt, validate}
 }
@@ -154,8 +163,8 @@ export const PREFS = {
   defaultSplitMode: def('defaultSplitMode', 'defaults', 'account', 'Default split', 'equal', oneOf('equal', 'exact', 'percent', 'shares')),
   /** F-402: new equal, shares and percent splits start rounded to whole cash units. */
   'split.roundCash': def('split.roundCash', 'defaults', 'account', 'Round shares to cash', false, isBool),
-  /** The cash unit those splits round to, in whole currency units (INR 1, 5, 10 ...). */
-  'split.roundTo': def('split.roundTo', 'defaults', 'account', 'Round to', 1, oneOf(1, 5, 10, 50, 100)),
+  /** The cash unit those splits round to, per currency, in whole units (INR 10 is ₹10, JPY 100 is ¥100); a currency not listed rounds to 1 (F-112, audit M15). */
+  'split.roundTo': def<RoundToByCurrency>('split.roundTo', 'defaults', 'account', 'Round to', {}, isRoundToByCurrency),
   /** F-310: the calculator keypad replaces the system keyboard for amounts on phones (Expensify's number pad). */
   'amount.keypad': def('amount.keypad', 'defaults', 'device', 'Amount keypad', true, isBool),
   analyticsPeriod: def('analyticsPeriod', 'defaults', 'account', 'Analytics period', 'year', oneOf('week', 'month', 'year', 'all')),

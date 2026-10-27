@@ -19,6 +19,7 @@ import {
   createExpense,
   type Group,
   type Person,
+  roundToFor,
   updateExpense,
 } from '@splito/sync'
 
@@ -47,7 +48,7 @@ import {
   hasContent,
   withPeople,
 } from './form'
-import {formWithGroup} from './groupPick'
+import {formWithCurrency, formWithGroup} from './formPick'
 import {CircleCheck_Stroke2_Corner0_Rounded as CheckIcon} from '#/components/icons/CircleCheck'
 import {Warning_Stroke2_Corner0_Rounded as WarningIcon} from '#/components/icons/Warning'
 import {
@@ -111,7 +112,8 @@ export function ExpenseComposer({
   const categories = useCategories()
   const groups = useEntities<Group>('group')
   const [adjustModes, saveAdjustModes] = usePref('itemizeAdjustmentModes')
-  const [defaultRoundTo = 1] = usePref('split.roundTo')
+  const [roundToUnits = {}] = usePref('split.roundTo')
+  const unitOf = (currency: string) => roundToFor(roundToUnits, currency)
   const people = useEntities<Person>('person')
   const name = useDisplayName()
   const errorText = useErrorText()
@@ -173,6 +175,7 @@ export function ExpenseComposer({
         f,
         {id: g.id, currency: g.data.currency, members: g.data.members},
         ctx.actor,
+        unitOf,
         {isEdit, isCurrencyPicked},
       )
     })
@@ -325,7 +328,7 @@ export function ExpenseComposer({
             value={form.currency}
             onSelect={currency => {
               setIsCurrencyPicked(true)
-              update(f => ({...f, currency}))
+              update(f => formWithCurrency(f, currency, unitOf))
             }}
           />
           <DateDialog
@@ -524,7 +527,7 @@ export function ExpenseComposer({
         onAddPeople={() => peopleControl.open()}
         adjustModes={adjustModes}
         onAdjustModesChanged={saveAdjustModes}
-        defaultRoundTo={defaultRoundTo}
+        defaultRoundTo={unitOf(form.currency)}
         me={ctx.actor}
       />
 

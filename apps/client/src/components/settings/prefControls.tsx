@@ -1,7 +1,15 @@
+import {useState} from 'react'
 import {View} from 'react-native'
 import Animated, {FadeInUp, FadeOutUp} from 'react-native-reanimated'
 import {CURRENCIES} from '@splito/domain'
-import {PREFS, type PrefKey, type SwipeAction, type TabId} from '@splito/sync'
+import {
+  PREFS,
+  type PrefKey,
+  ROUND_TO_UNITS,
+  roundToFor,
+  type SwipeAction,
+  type TabId,
+} from '@splito/sync'
 import {useLingui} from '@lingui/react/macro'
 import {getLocales} from 'expo-localization'
 
@@ -396,19 +404,69 @@ function RoundCashPref() {
   )
 }
 
+/** The cash unit is kept per currency, so a ₹100 unit never rounds euros (audit M15). */
 function RoundToPref() {
   const {t: l} = useLingui()
+  const pref = usePrefControl('split.roundTo')
+  const [defaultCurrency = 'INR'] = usePref('defaultCurrency')
+  const [picked, setPicked] = useState<string>()
+  const currency = picked ?? defaultCurrency
+  const control = useDialogControl()
+  const nameOf = useCurrencyName()
+  if (!pref.value) return null
+  const units = pref.value
+  const options = Object.values(CURRENCIES).map(c => ({
+    value: c.code,
+    label: nameOf(c.code),
+    hint: `${c.code} · ${c.symbol}`,
+    keywords: c.name,
+  }))
+  const setUnit = (unit: number) => {
+    const {[currency]: _, ...rest} = units
+    void pref.set(unit === 1 ? rest : {...rest, [currency]: unit})
+  }
   return (
-    <SegmentedPref
-      pref={usePrefControl('split.roundTo')}
+    <PrefSection
+      pref={pref}
       icon={CashIcon}
       title={l`Round to`}
-      description={l`Whole units of the expense’s currency.`}
-      options={([1, 5, 10, 50, 100] as const).map(unit => ({
-        value: unit,
-        label: String(unit),
-      }))}
-    />
+      description={l`Pick a currency, then the whole amount its shares round to. Each currency keeps its own.`}>
+      <View style={[a.gap_sm]}>
+        <PickerTrigger
+          testID="round-to-currency"
+          label={l`Choose the currency to set`}
+          value={`${nameOf(currency)} (${currency})`}
+          onPress={control.open}
+        />
+        <SegmentedControl.Root
+          type="radio"
+          size="small"
+          label={l`Round to`}
+          value={String(roundToFor(units, currency))}
+          onChange={value => setUnit(Number(value))}>
+          {ROUND_TO_UNITS.map(unit => (
+            <SegmentedControl.Item
+              key={unit}
+              testID={`round-to-${unit}`}
+              label={String(unit)}
+              value={String(unit)}>
+              <SegmentedControl.ItemText>
+                {String(unit)}
+              </SegmentedControl.ItemText>
+            </SegmentedControl.Item>
+          ))}
+        </SegmentedControl.Root>
+      </View>
+      <OptionDialog
+        testID="round-to-currency-dialog"
+        control={control}
+        title={l`Currency`}
+        searchLabel={l`Search currencies`}
+        options={options}
+        value={currency}
+        onSelect={setPicked}
+      />
+    </PrefSection>
   )
 }
 

@@ -7,6 +7,18 @@ type PickedGroup = {
 }
 
 /**
+ * The form in `currency`. Cash rounding, when on, moves to that currency's
+ * own unit so a unit meant for rupees never rounds euros (audit M15).
+ */
+export function formWithCurrency(
+  f: ExpenseForm,
+  currency: string,
+  roundToFor: (currency: string) => number,
+): ExpenseForm {
+  return {...f, currency, ...(f.roundTo ? {roundTo: roundToFor(currency)} : {})}
+}
+
+/**
  * The form after picking `group`. The group's home currency only pre-fills a
  * new expense that has no amount yet and no currency the user chose; typed
  * numbers keep their currency and edits never change it (audit M5, § 26.13).
@@ -16,6 +28,7 @@ export function formWithGroup(
   f: ExpenseForm,
   group: PickedGroup,
   me: string,
+  roundToFor: (currency: string) => number,
   {
     isEdit = false,
     isCurrencyPicked = false,
@@ -28,9 +41,8 @@ export function formWithGroup(
   ]
   const isPrefill = !isEdit && !isCurrencyPicked && !f.amount.trim()
   return {
-    ...f,
+    ...(isPrefill ? formWithCurrency(f, group.currency, roundToFor) : f),
     groupId: group.id,
-    currency: isPrefill ? group.currency : f.currency,
     people,
     payer: people.includes(f.payer) ? f.payer : (people[0] ?? me),
     excluded: f.excluded.filter(p => people.includes(p)),

@@ -1,7 +1,13 @@
 import {useState} from 'react'
 import {useLingui} from '@lingui/react/macro'
 import {useNavigation, useRoute, type RouteProp} from '@react-navigation/native'
-import {type Entity, type Group, type Person} from '@splito/sync'
+import {
+  type Entity,
+  type Group,
+  type Person,
+  type RoundToByCurrency,
+  roundToFor,
+} from '@splito/sync'
 
 import {type AllNavigatorParams, type NavigationProp} from '#/lib/routes/types'
 import {useEntities, useMe, usePref} from '#/data/hooks'
@@ -64,7 +70,7 @@ export function AddExpenseScreen() {
       currency={currency}
       mode={mode}
       adjustModes={adjustModes}
-      roundTo={isRoundingCash ? roundTo : 0}
+      roundTo={isRoundingCash ? roundTo : null}
       tz={tz}
       personId={params?.personId}
       groupId={params?.groupId}
@@ -92,8 +98,8 @@ function AddExpenseForm({
   currency: string
   mode: ExpenseForm['mode']
   adjustModes: ExpenseForm['adjustModes']
-  /** Cash rounding new splits start with (the `split.roundCash` / `split.roundTo` preferences); 0 is off. */
-  roundTo: number
+  /** Cash units per currency new splits start rounded to (`split.roundTo`); null when `split.roundCash` is off. */
+  roundTo: RoundToByCurrency | null
   tz: string
   personId?: string
   groupId?: string
@@ -114,7 +120,7 @@ function AddExpenseForm({
         groupId: group.id,
         mode,
         adjustModes,
-        roundTo,
+        roundTo: roundTo ? roundToFor(roundTo, group.data.currency) : 0,
       })
     }
     const person = people.find(p => p.id === personId)
@@ -126,7 +132,7 @@ function AddExpenseForm({
       groupId: null,
       mode,
       adjustModes,
-      roundTo,
+      roundTo: roundTo ? roundToFor(roundTo, currency) : 0,
     })
   })
   const [draft] = useState(() => {
