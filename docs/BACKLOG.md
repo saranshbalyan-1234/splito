@@ -281,7 +281,7 @@ Fixes for logic-audit findings M6, M10, M11, m5, m7, m10, m16 (see the report fo
 
 Fixes for logic-audit findings M4, m1, m11, m15, m17, m18, m19, m20 (see the report for scenario, evidence and fix per finding).
 
-- **Effort** M · **Impact** 8 · **Backend** no · **Status** todo · **Deps** merge row 30
+- **Effort** M · **Impact** 8 · **Backend** no · **Status** done (feat/wB-B3; sync `historyIntegrity.test.ts`, `activity.test.ts`, `ledgerProjection.property.test.ts`, client `demoSeed.test.ts`; m20's Include groups part left open, see the audit; m15 and m19 were already fixed by F-117 and now have regression tests) · **Deps** merge row 30
 - **Prefs** -
 - **Acceptance**
   1. Restore never brings back records that point to a deleted person (restore the person too, or block with an explanation); restored payments/write-offs show as "restored" in Activity; idempotent retries never return a tombstone or stale amount; search ties broken by creation time; purge outbox ops keep purgedAt; demo seed uses local dates and is idempotent; "recently active" counts deletes; People "Recent" sort uses change time, only records I am in, and honours Include groups.
@@ -1376,15 +1376,21 @@ Name, type, currency, members, roles, trip dates; membership changes never rewri
   1. A09: adding or removing a member leaves old splits unchanged.
   2. Former members keep correct access to past records locally.
 
-### F-604 Archive groups `spec v1`
+### F-604 Active / inactive and show / hide groups `spec: owner § 26.12 (decisions 88, 89)`
 
-Hide a group from lists while keeping its records, balances and search hits.
+Two controls instead of "Archive": Active / Inactive is the group's state for every member (inactive takes no new expenses but can still settle), Show / Hide is personal visibility. Balances are never hidden.
 
-- **Effort** S · **Impact** 6 · **Backend** no · **Status** todo · **Deps** F-603
-- **Prefs** -
+- **Effort** M · **Impact** 7 · **Backend** no · **Status** done (feat/wB-B3; sync `groupLifecycle.test.ts` + the shared store contract on SQLite and IndexedDB, `activity.test.ts`, `preferences`; client `filter.test.ts`; e2e `groupLifecycle.spec.ts` at phone and desktop widths; web verified, native not yet run) · **Deps** F-603
+- **Prefs** `groups.showInactiveFold` (account, default on), `groups.hidden` (account, default empty list of group ids)
 - **Acceptance**
-  1. An archived group is hidden from Groups but still counted in balances.
-  2. Unarchive restores it.
+  1. "Make inactive" / "Make active" and "Hide group" / "Show group" in the group header overflow; state change in one transaction with history and outbox, Activity row for inactive/active; hide/show writes only the preference; Undo toast for both.
+  2. Inactive: page banner "Inactive · Make active to add expenses" instead of Add expense; the FAB and Add expense sheet cannot target it; sync mutations reject add, edit, move-into and restore-into with `GROUP_INACTIVE` (bun tests, both engines).
+  3. Inactive: Settle up, Record payment, Call it even and comments still work; making inactive with an open balance shows open amounts per currency and offers "Settle up first".
+  4. Inactive groups appear only in the "Inactive (N)" fold at the end of the Groups list, not in recent groups or pickers.
+  5. Hidden (personal): absent from my Groups list, recent groups and pickers; reachable by filter Show = Hidden, search and history links; still accepts expenses from its page if active; other members are unaffected.
+  6. Balances of inactive and hidden groups still count on Home, People and the overview, with chips marked "Inactive" / "Hidden".
+  7. Groups filter: Status Active / Inactive / All (default Active) and Show Shown / Hidden / All (default Shown); the old `archived` flag reads as Inactive (adapter test).
+  8. e2e at phone and desktop widths: make inactive, blocked add, settle in an inactive group, make active; hide, find via filter, show.
 
 ### F-605 Group emoji and colour
 
@@ -1472,7 +1478,7 @@ Copy members, households, rules, currencies, categories, budget and kitty setup 
 
 Removing a member with a balance offers settle, forgive or keep inactive; a wizard walks their expenses: still pays, refund, or re-split.
 
-- **Effort** M · **Impact** 7 · **Backend** no · **Status** todo · **Deps** F-1113
+- **Effort** M · **Impact** 7 · **Backend** no · **Status** part 1 done (feat/wB-B3: settle, forgive or keep inactive from the Members tab with a balance preview; sync `groupLifecycle.test.ts`, domain `memberExit.test.ts`, e2e `groupLifecycle.spec.ts`); the drop-out re-split wizard (criterion 2) moves to Wave C · **Deps** F-1113
 - **Prefs** -
 - **Acceptance**
   1. Each choice previews every member's balance change.
@@ -1492,7 +1498,7 @@ Members get one or more presence ranges, away days and guest nights; new expense
 
 Leave a group yourself or delete a whole group. A non-zero balance offers settle, forgive (F-1113) or stay as an inactive member; delete tombstones the group and its records into Recently deleted; the last admin hands admin on first.
 
-- **Effort** M · **Impact** 8 · **Backend** no · **Status** todo · **Deps** F-603, F-1113, F-1203
+- **Effort** M · **Impact** 8 · **Backend** no · **Status** done (feat/wB-B3; sync `groupLifecycle.test.ts`, e2e `groupLifecycle.spec.ts`; web verified, native not yet run; server enforcement of the leaver's read access waits for F-2108) · **Deps** F-603, F-1113, F-1203
 - **Prefs** -
 - **Acceptance**
   1. Deleting a group lists what goes, lands in Recently deleted and restores with every expense and payment intact.

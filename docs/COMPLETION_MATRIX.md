@@ -73,7 +73,10 @@ Status words are the same as `docs/BACKLOG.md`: **done** (built, tested and merg
 | Expenses+ | Receipt capture: camera / photo / file, on-device OCR, review before saving | F-501, F-502 | todo |
 | Expenses+ | Attachments (photos, PDFs) | F-312 | todo |
 | Expenses+ | Location: manual place, optional automatic | F-313 | todo |
-| Groups+ | Archive groups | F-604 | todo |
+| Groups+ | Active / inactive and show / hide groups (decision 89) | F-604 | done (feat/wB-B3; sync `groupLifecycle.test.ts` + store contract on both engines, client `filter.test.ts`, e2e `groupLifecycle.spec.ts` phone + desktop; web verified, native not yet run) |
+| Groups+ | Leave a group, delete a group (restores whole), hand over admin | F-615 | done (feat/wB-B3; sync `groupLifecycle.test.ts`, e2e `groupLifecycle.spec.ts`; web verified) |
+| Groups+ | Safe member removal: settle, forgive or keep inactive, with a balance preview | F-613 part 1 | done (feat/wB-B3; domain `memberExit.test.ts`, sync `groupLifecycle.test.ts`, e2e); re-split wizard is Wave C |
+| Groups+ | History, bin and sync integrity (audit M4, m1, m11, m15, m17, m18, m19, m20) | F-114 | done (feat/wB-B3; sync `historyIntegrity.test.ts`; m20 Include groups part open) |
 | Groups+ | Trip kitty (shared cash pot) | F-701 | todo |
 | Groups+ | Split accommodation by nights stayed | F-702 | todo |
 | Groups+ | Trip budget (total + per category) | F-1304 | todo |
