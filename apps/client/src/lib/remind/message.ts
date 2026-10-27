@@ -55,3 +55,12 @@ export function whatsappUrl(phone: string | null | undefined, text: string): str
   const digits = (phone ?? '').replace(/\D/g, '')
   return digits.length >= 6 ? `https://wa.me/${digits}?text=${encodeURIComponent(text)}` : null
 }
+
+/**
+ * Drops the payee name (`pn`) from a `upi://pay` link while my name is still the setup placeholder ("Me" or
+ * empty): a friend would see "Pay Me" in their UPI app. A real name stays.
+ */
+export function upiLinkWithoutPlaceholderName(link: string, myName: string): string {
+  const name = myName.trim()
+  return name === '' || name === 'Me' ? link.replace(/([?&])pn=[^&]*&?/, '$1').replace(/[?&]$/, '') : link
+}

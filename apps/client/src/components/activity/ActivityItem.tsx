@@ -470,7 +470,6 @@ function useDescribe(
 } {
   const t = useTheme()
   const {t: l, i18n} = useLingui()
-  const tz = useTimeZone()
   const nameOf = (id: string) =>
     snapshot.people.get(id)?.data.name ?? l`Someone`
   const shownName = (id: string) => (id === me ? l`You` : nameOf(id))
@@ -937,9 +936,9 @@ function useDescribe(
             {r.dueAt === null
               ? ''
               : i18n.date(new Date(r.dueAt), {
+                  // A reminder fires on the device clock, so it is shown in the device's own zone (not the Timezone preference).
                   dateStyle: 'medium',
                   timeStyle: 'short',
-                  timeZone: tz,
                 })}
             {r.repeat === 'none' ? null : (
               <>

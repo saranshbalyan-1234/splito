@@ -56,6 +56,7 @@ function Form({request}: {request: RemindMe}) {
   const groups = useEntities<Group>('group')
   const self = useSelfReminders()
   const [isOn = true] = usePref('notify.reminders')
+  const [zonePref = 'device'] = usePref('timezone')
   const permission = useNotificationPermission()
   const existing = request.editId ? self?.find(r => r.id === request.editId) : undefined
 
@@ -77,6 +78,7 @@ function Form({request}: {request: RemindMe}) {
   const picks = quickPicks(Date.now())
   const isDirty = date !== dateInput(initial) || time !== timeInput(initial) || repeat !== (existing?.data.repeat ?? 'none')
   const when = (ms: number) => i18n.date(new Date(ms), {dateStyle: 'full', timeStyle: 'short'})
+  const deviceZone = Intl.DateTimeFormat().resolvedOptions().timeZone
   const firesAt = next === null ? '' : when(next)
 
   const pick = (ms: number) => {
@@ -132,8 +134,8 @@ function Form({request}: {request: RemindMe}) {
         <View testID="remind-primer" style={[a.gap_md]}>
           <FormSheet.Description>
             <Trans>
-              Splito needs your permission to show this reminder. It is only used for reminders you set, and nothing
-              leaves this device.
+              Splito needs your permission to show this reminder. It’s used only for reminders you set; the alert is
+              scheduled on this device, not sent from a server.
             </Trans>
           </FormSheet.Description>
           <Text style={[a.text_sm, a.leading_snug, t.atoms.text_contrast_medium]}>
@@ -218,6 +220,12 @@ function Form({request}: {request: RemindMe}) {
             ))}
           </SegmentedControl.Root>
         </View>
+
+        {zonePref !== 'device' ? (
+          <Text testID="remind-zone" style={[a.text_sm, t.atoms.text_contrast_medium]}>
+            <Trans>Times are in this device’s time zone ({deviceZone}).</Trans>
+          </Text>
+        ) : null}
 
         {error === 'invalid' ? (
           <Text testID="remind-error" style={[a.text_sm, {color: t.palette.negative_500}]}>

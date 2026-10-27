@@ -1,7 +1,7 @@
 import 'fake-indexeddb/auto'
 import {IDBFactory} from 'fake-indexeddb'
 
-import {beforeEach, describe, expect, test} from 'bun:test'
+import {afterAll, beforeAll, beforeEach, describe, expect, test} from 'bun:test'
 
 import {loadActivity} from '../src/activity'
 import {openIdbStore} from '../src/idbStore'
@@ -129,5 +129,32 @@ describe('nextOccurrence', () => {
     expect(nextOccurrence(first, 'monthly', local(2026, 2, 1))).toBe(local(2026, 2, 28))
     expect(nextOccurrence(first, 'monthly', local(2026, 3, 1))).toBe(local(2026, 3, 31))
     expect(nextOccurrence(first, 'monthly', local(2026, 4, 1))).toBe(local(2026, 4, 30))
+  })
+})
+
+describe('nextOccurrence across a DST change (America/New_York)', () => {
+  const prev = process.env.TZ
+  beforeAll(() => void (process.env.TZ = 'America/New_York'))
+  afterAll(() => {
+    if (prev === undefined) delete process.env.TZ
+    else process.env.TZ = prev
+  })
+  const local = (y: number, m: number, d: number, h = 9, min = 0) => new Date(y, m - 1, d, h, min).getTime()
+
+  test('daily keeps its local time when clocks go back (1 Nov 2026) and forward (8 Mar 2026)', () => {
+    expect(nextOccurrence(local(2026, 10, 30), 'daily', local(2026, 10, 31, 10))).toBe(local(2026, 11, 1))
+    expect(new Date(nextOccurrence(local(2026, 10, 30), 'daily', local(2026, 11, 1, 10))!).getHours()).toBe(9)
+    // 23-hour day: 7 March 9:00 to 8 March 9:00.
+    expect(nextOccurrence(local(2026, 3, 1), 'daily', local(2026, 3, 7, 10))).toBe(local(2026, 3, 8))
+    expect(nextOccurrence(local(2026, 3, 8), 'daily', local(2026, 3, 8, 10)) === local(2026, 3, 9)).toBe(true)
+  })
+
+  test('weekly keeps its weekday and local time across the change', () => {
+    // Mondays at 09:00 from 26 October: 2 Nov is the first after the clocks went back.
+    expect(nextOccurrence(local(2026, 10, 26), 'weekly', local(2026, 10, 27))).toBe(local(2026, 11, 2))
+    const next = new Date(nextOccurrence(local(2026, 10, 26), 'weekly', local(2026, 11, 3))!)
+    expect([next.getDay(), next.getHours(), next.getDate()]).toEqual([1, 9, 9])
+    // Spring forward on Sunday 8 March: Monday 9 March still at 09:00.
+    expect(nextOccurrence(local(2026, 3, 2), 'weekly', local(2026, 3, 3))).toBe(local(2026, 3, 9))
   })
 })

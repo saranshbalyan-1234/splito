@@ -426,83 +426,83 @@ msgstr "{0}m"
 msgid "{0}s"
 msgstr "{0}s"
 
-#: src/components/activity/ActivityItem.tsx:525
+#: src/components/activity/ActivityItem.tsx:524
 msgid "{actor} added {subject}"
 msgstr "{actor} added {subject}"
 
-#: src/components/activity/ActivityItem.tsx:661
+#: src/components/activity/ActivityItem.tsx:660
 msgid "{actor} added {subject} as a friend"
 msgstr "{actor} added {subject} as a friend"
 
-#: src/components/activity/ActivityItem.tsx:717
+#: src/components/activity/ActivityItem.tsx:716
 msgid "{actor} archived the group {subject}"
 msgstr "{actor} archived the group {subject}"
 
-#: src/components/activity/ActivityItem.tsx:851
+#: src/components/activity/ActivityItem.tsx:850
 msgid "{actor} called it even between {debtor} and {creditor}"
 msgstr "{actor} called it even between {debtor} and {creditor}"
 
-#: src/components/activity/ActivityItem.tsx:857
+#: src/components/activity/ActivityItem.tsx:856
 msgid "{actor} called it even with {counterpart}"
 msgstr "{actor} called it even with {counterpart}"
 
-#: src/components/activity/ActivityItem.tsx:855
+#: src/components/activity/ActivityItem.tsx:854
 msgid "{actor} called it even with you"
 msgstr "{actor} called it even with you"
 
-#: src/components/activity/ActivityItem.tsx:707
+#: src/components/activity/ActivityItem.tsx:706
 msgid "{actor} created the group {subject}"
 msgstr "{actor} created the group {subject}"
 
-#: src/components/activity/ActivityItem.tsx:535
+#: src/components/activity/ActivityItem.tsx:534
 msgid "{actor} deleted {subject}"
 msgstr "{actor} deleted {subject}"
 
-#: src/components/activity/ActivityItem.tsx:722
+#: src/components/activity/ActivityItem.tsx:721
 msgid "{actor} deleted the group {subject}"
 msgstr "{actor} deleted the group {subject}"
 
-#: src/components/activity/ActivityItem.tsx:530
+#: src/components/activity/ActivityItem.tsx:529
 msgid "{actor} edited {subject}"
 msgstr "{actor} edited {subject}"
 
-#: src/components/activity/ActivityItem.tsx:786
+#: src/components/activity/ActivityItem.tsx:785
 msgid "{actor} edited a payment"
 msgstr "{actor} edited a payment"
 
-#: src/components/activity/ActivityItem.tsx:642
+#: src/components/activity/ActivityItem.tsx:641
 msgid "{actor} invited {subject} to Splito"
 msgstr "{actor} invited {subject} to Splito"
 
-#: src/components/activity/ActivityItem.tsx:909
+#: src/components/activity/ActivityItem.tsx:908
 msgid "{actor} reminded {subject}"
 msgstr "{actor} reminded {subject}"
 
-#: src/components/activity/ActivityItem.tsx:665
+#: src/components/activity/ActivityItem.tsx:664
 msgid "{actor} removed {subject} from friends"
 msgstr "{actor} removed {subject} from friends"
 
-#: src/components/activity/ActivityItem.tsx:788
+#: src/components/activity/ActivityItem.tsx:787
 msgid "{actor} removed a payment"
 msgstr "{actor} removed a payment"
 
-#: src/components/activity/ActivityItem.tsx:701
+#: src/components/activity/ActivityItem.tsx:700
 msgid "{actor} renamed {oldName} to {subject}"
 msgstr "{actor} renamed {oldName} to {subject}"
 
-#: src/components/activity/ActivityItem.tsx:540
+#: src/components/activity/ActivityItem.tsx:539
 msgid "{actor} restored {subject}"
 msgstr "{actor} restored {subject}"
 
-#: src/components/activity/ActivityItem.tsx:646
+#: src/components/activity/ActivityItem.tsx:645
 msgid "{actor} sent {subject} a friend request"
 msgstr "{actor} sent {subject} a friend request"
 
-#: src/components/activity/ActivityItem.tsx:849
+#: src/components/activity/ActivityItem.tsx:848
 msgid "{actor} undid a write-off"
 msgstr "{actor} undid a write-off"
 
-#: src/components/activity/ActivityItem.tsx:712
+#: src/components/activity/ActivityItem.tsx:711
 msgid "{actor} updated the group {subject}"
 msgstr "{actor} updated the group {subject}"
 
@@ -522,15 +522,15 @@ msgstr "{count, plural, one {# or more unread items} other {# or more unread ite
 msgid "{count, plural, one {# unread item} other {# unread items}}"
 msgstr "{count, plural, one {# unread item} other {# unread items}}"
 
-#: src/features/remind/useReminderEngine.ts:102
+#: src/features/remind/useReminderEngine.ts:107
 msgid "{count} reminders came due while Splito was closed. First: {firstBody}"
 msgstr "{count} reminders came due while Splito was closed. First: {firstBody}"
 
-#: src/components/activity/ActivityItem.tsx:840
+#: src/components/activity/ActivityItem.tsx:839
 msgid "{creditor} let {debtor} off"
 msgstr "{creditor} let {debtor} off"
 
-#: src/components/activity/ActivityItem.tsx:838
+#: src/components/activity/ActivityItem.tsx:837
 msgid "{creditor} let you off"
 msgstr "{creditor} let you off"
 
@@ -551,7 +551,7 @@ msgid "{first}, {second} +{rest}"
 msgstr "{first}, {second} +{rest}"
 
 #. How long ago an activity happened, e.g. "7m ago". The time is already abbreviated and translated.
-#: src/components/activity/ActivityItem.tsx:1043
+#: src/components/activity/ActivityItem.tsx:1042
 msgid "{formatted} ago"
 msgstr "{formatted} ago"
 
@@ -567,11 +567,11 @@ msgstr "{from} owes {to}"
 msgid "{from} owes you"
 msgstr "{from} owes you"
 
-#: src/components/activity/ActivityItem.tsx:781
+#: src/components/activity/ActivityItem.tsx:780
 msgid "{from} paid {to}"
 msgstr "{from} paid {to}"
 
-#: src/components/activity/ActivityItem.tsx:779
+#: src/components/activity/ActivityItem.tsx:778
 msgid "{from} paid you"
 msgstr "{from} paid you"
 
@@ -631,11 +631,11 @@ msgstr "{name}’s UPI ID"
 msgid "{settledCount} settled"
 msgstr "{settledCount} settled"
 
-#: src/components/activity/ActivityItem.tsx:624
+#: src/components/activity/ActivityItem.tsx:623
 msgid "{subject} accepted your friend request"
 msgstr "{subject} accepted your friend request"
 
-#: src/components/activity/ActivityItem.tsx:596
+#: src/components/activity/ActivityItem.tsx:595
 msgid "{subject} sent you a friend request"
 msgstr "{subject} sent you a friend request"
 
@@ -643,7 +643,7 @@ msgstr "{subject} sent you a friend request"
 msgid "{tabCount, plural, one {# tab} other {# tabs}}"
 msgstr "{tabCount, plural, one {# tab} other {# tabs}}"
 
-#: src/screens/Settings/SettingsSection.tsx:174
+#: src/screens/Settings/SettingsSection.tsx:175
 msgid "{title} reset"
 msgstr "{title} reset"
 
@@ -767,7 +767,7 @@ msgstr "A friendly reminder from Splito: you owe me the following for {group}:"
 msgid "A friendly reminder from Splito: you owe me the following:"
 msgstr "A friendly reminder from Splito: you owe me the following:"
 
-#: src/components/activity/ActivityItem.tsx:898
+#: src/components/activity/ActivityItem.tsx:897
 msgid "a group"
 msgstr "a group"
 
@@ -791,7 +791,7 @@ msgstr "A link and QR code that makes people your friends when they use it. You 
 msgid "A month, with a year if you like: march 2026"
 msgstr "A month, with a year if you like: march 2026"
 
-#: src/features/remind/RemindMeSheet.tsx:159
+#: src/features/remind/RemindMeSheet.tsx:161
 msgid "A notification for you about {subject}. Nothing is sent to anyone."
 msgstr "A notification for you about {subject}. Nothing is sent to anyone."
 
@@ -829,13 +829,13 @@ msgstr "Accent color: {name}. Change"
 msgid "Accept"
 msgstr "Accept"
 
-#: src/components/activity/ActivityItem.tsx:1139
+#: src/components/activity/ActivityItem.tsx:1138
 #: src/screens/People/components/RequestsSection.tsx:112
 msgctxt "button"
 msgid "Accept"
 msgstr "Accept"
 
-#: src/components/activity/ActivityItem.tsx:1138
+#: src/components/activity/ActivityItem.tsx:1137
 #: src/screens/People/components/RequestsSection.tsx:111
 msgid "Accept {name}’s friend request"
 msgstr "Accept {name}’s friend request"
@@ -848,7 +848,7 @@ msgstr "Accept invite"
 msgid "Accept to see the group’s expenses and split with its members."
 msgstr "Accept to see the group’s expenses and split with its members."
 
-#: src/components/activity/ActivityItem.tsx:604
+#: src/components/activity/ActivityItem.tsx:603
 msgid "Accept to split expenses together"
 msgstr "Accept to split expenses together"
 
@@ -1048,8 +1048,8 @@ msgid "Adding… {0}%"
 msgstr "Adding… {0}%"
 
 #: src/features/remind/RemindSheet.tsx:200
-msgid "Adds a link {name} can tap to pay you in a UPI app. Saved on this device."
-msgstr "Adds a link {name} can tap to pay you in a UPI app. Saved on this device."
+msgid "Adds a link {name} can tap to pay you in a UPI app."
+msgstr "Adds a link {name} can tap to pay you in a UPI app."
 
 #: src/screens/Settings/DemoData.tsx:184
 msgid "Adds about 30 friends, 12 groups and 1,500 expenses from the past year next to your own data. You can remove exactly this later."
@@ -1115,7 +1115,7 @@ msgstr "All time"
 msgid "All uses taken"
 msgstr "All uses taken"
 
-#: src/features/remind/RemindMeSheet.tsx:126
+#: src/features/remind/RemindMeSheet.tsx:128
 msgid "Allow"
 msgstr "Allow"
 
@@ -1123,7 +1123,7 @@ msgstr "Allow"
 msgid "Allow access to contacts"
 msgstr "Allow access to contacts"
 
-#: src/features/remind/RemindMeSheet.tsx:124
+#: src/features/remind/RemindMeSheet.tsx:126
 msgid "Allow notifications?"
 msgstr "Allow notifications?"
 
@@ -1492,7 +1492,7 @@ msgstr "Charges"
 msgid "Charts"
 msgstr "Charts"
 
-#: src/features/remind/useReminderEngine.ts:58
+#: src/features/remind/useReminderEngine.ts:61
 msgid "Check the balances in {group}"
 msgstr "Check the balances in {group}"
 
@@ -1700,7 +1700,7 @@ msgstr "Copied to clipboard"
 msgid "Copied!"
 msgstr "Copied!"
 
-#: src/features/remind/RemindSheet.tsx:217
+#: src/features/remind/RemindSheet.tsx:218
 #: src/screens/Invites/InviteLinks.tsx:150
 msgid "Copy"
 msgstr "Copy"
@@ -1713,7 +1713,7 @@ msgstr "Copy invite link"
 msgid "Copy link"
 msgstr "Copy link"
 
-#: src/features/remind/RemindSheet.tsx:214
+#: src/features/remind/RemindSheet.tsx:215
 msgid "Copy the message"
 msgstr "Copy the message"
 
@@ -1818,7 +1818,7 @@ msgstr "Couldn’t save the group. Please try again."
 msgid "Couldn’t save the rules. Please try again."
 msgstr "Couldn’t save the rules. Please try again."
 
-#: src/features/remind/RemindMeSheet.tsx:95
+#: src/features/remind/RemindMeSheet.tsx:97
 msgid "Couldn’t save this reminder. Please try again."
 msgstr "Couldn’t save this reminder. Please try again."
 
@@ -1936,7 +1936,7 @@ msgstr "Custom range"
 msgid "Custom range…"
 msgstr "Custom range…"
 
-#: src/features/remind/RemindMeSheet.tsx:210
+#: src/features/remind/RemindMeSheet.tsx:212
 msgid "Daily"
 msgstr "Daily"
 
@@ -1956,8 +1956,8 @@ msgstr "Data"
 #: src/components/people/PaymentDetailsDialog.tsx:168
 #: src/components/split/ExpenseComposer.tsx:338
 #: src/components/split/ExpenseComposer.tsx:492
-#: src/features/remind/RemindMeSheet.tsx:190
 #: src/features/remind/RemindMeSheet.tsx:192
+#: src/features/remind/RemindMeSheet.tsx:194
 #: src/screens/Analytics/index.tsx:214
 #: src/screens/RecentlyDeleted/components/RestoreDialog.tsx:157
 msgid "Date"
@@ -1993,13 +1993,13 @@ msgstr "Decimal point"
 msgid "Decline"
 msgstr "Decline"
 
-#: src/components/activity/ActivityItem.tsx:1148
+#: src/components/activity/ActivityItem.tsx:1147
 #: src/screens/People/components/RequestsSection.tsx:130
 msgctxt "button"
 msgid "Decline"
 msgstr "Decline"
 
-#: src/components/activity/ActivityItem.tsx:1147
+#: src/components/activity/ActivityItem.tsx:1146
 #: src/screens/People/components/RequestsSection.tsx:129
 msgid "Decline {name}’s friend request"
 msgstr "Decline {name}’s friend request"
@@ -2233,7 +2233,7 @@ msgid "Edit profile"
 msgstr "Edit profile"
 
 #: src/features/remind/PersonReminders.tsx:86
-#: src/features/remind/RemindMeSheet.tsx:149
+#: src/features/remind/RemindMeSheet.tsx:151
 msgid "Edit reminder"
 msgstr "Edit reminder"
 
@@ -2301,7 +2301,7 @@ msgstr "Enter a name."
 msgid "Enter a password"
 msgstr "Enter a password"
 
-#: src/features/remind/RemindMeSheet.tsx:224
+#: src/features/remind/RemindMeSheet.tsx:232
 msgid "Enter a real date (YYYY-MM-DD) and time (HH:MM)."
 msgstr "Enter a real date (YYYY-MM-DD) and time (HH:MM)."
 
@@ -2377,12 +2377,12 @@ msgstr "European"
 msgid "Even overall, open both ways"
 msgstr "Even overall, open both ways"
 
-#: src/components/activity/ActivityItem.tsx:948
+#: src/components/activity/ActivityItem.tsx:947
 #: src/features/remind/PersonReminders.tsx:74
 msgid "Every day"
 msgstr "Every day"
 
-#: src/components/activity/ActivityItem.tsx:952
+#: src/components/activity/ActivityItem.tsx:951
 #: src/features/remind/PersonReminders.tsx:74
 msgid "Every month"
 msgstr "Every month"
@@ -2397,7 +2397,7 @@ msgstr "Every share is a whole multiple of {0} and they add up to {1}."
 msgid "Every swipe action is also on the item's menu. Deleting only removes it from your feed, never from the record."
 msgstr "Every swipe action is also on the item's menu. Deleting only removes it from your feed, never from the record."
 
-#: src/components/activity/ActivityItem.tsx:950
+#: src/components/activity/ActivityItem.tsx:949
 #: src/features/remind/PersonReminders.tsx:74
 msgid "Every week"
 msgstr "Every week"
@@ -2445,7 +2445,7 @@ msgstr "Everything"
 msgid "Everything is saved on this device. Sign-in, and sync across your devices, are on the way."
 msgstr "Everything is saved on this device. Sign-in, and sync across your devices, are on the way."
 
-#: src/screens/Settings/SettingsSection.tsx:167
+#: src/screens/Settings/SettingsSection.tsx:168
 msgid "Everything on this page goes back to how Splito starts."
 msgstr "Everything on this page goes back to how Splito starts."
 
@@ -2568,7 +2568,7 @@ msgstr "Find me by email or phone"
 msgid "Findable"
 msgstr "Findable"
 
-#: src/screens/Settings/SettingsSection.tsx:124
+#: src/screens/Settings/SettingsSection.tsx:125
 msgid "Finding and friend requests use Splito’s directory, which arrives with sign-in. Your choices are saved now and apply from then."
 msgstr "Finding and friend requests use Splito’s directory, which arrives with sign-in. Your choices are saved now and apply from then."
 
@@ -2688,8 +2688,8 @@ msgstr "Go to next"
 msgid "Go to People"
 msgstr "Go to People"
 
-#: src/screens/Settings/SettingsSection.tsx:225
-#: src/screens/Settings/SettingsSection.tsx:230
+#: src/screens/Settings/SettingsSection.tsx:226
+#: src/screens/Settings/SettingsSection.tsx:231
 msgid "Go to Settings"
 msgstr "Go to Settings"
 
@@ -2871,11 +2871,11 @@ msgstr "Icon"
 msgid "Idea"
 msgstr "Idea"
 
-#: src/features/remind/RemindMeSheet.tsx:140
+#: src/features/remind/RemindMeSheet.tsx:142
 msgid "If you choose Not now, the reminder is still saved, but it can’t alert you until you allow notifications."
 msgstr "If you choose Not now, the reminder is still saved, but it can’t alert you until you allow notifications."
 
-#: src/features/remind/RemindMeSheet.tsx:166
+#: src/features/remind/RemindMeSheet.tsx:168
 msgid "In 3 days"
 msgstr "In 3 days"
 
@@ -3036,7 +3036,7 @@ msgstr "It leaves Recently deleted and can’t be restored. Its history stays in
 msgid "It may have expired, been used up or revoked. Ask for a new one."
 msgstr "It may have expired, been used up or revoked. Ask for a new one."
 
-#: src/screens/Settings/SettingsSection.tsx:222
+#: src/screens/Settings/SettingsSection.tsx:223
 msgid "It may have moved. Everything is still in Settings."
 msgstr "It may have moved. Everything is still in Settings."
 
@@ -3180,8 +3180,8 @@ msgstr "Make a link or QR code to add friends or fill a group without typing any
 #: src/screens/Invites/CreateInvite.tsx:287
 #: src/screens/Invites/Invite.tsx:267
 #: src/screens/Invites/Invite.tsx:273
-#: src/screens/Settings/SettingsSection.tsx:142
-#: src/screens/Settings/SettingsSection.tsx:145
+#: src/screens/Settings/SettingsSection.tsx:143
+#: src/screens/Settings/SettingsSection.tsx:146
 msgid "Manage invite links"
 msgstr "Manage invite links"
 
@@ -3259,7 +3259,7 @@ msgstr "Month"
 msgid "Month first"
 msgstr "Month first"
 
-#: src/features/remind/RemindMeSheet.tsx:212
+#: src/features/remind/RemindMeSheet.tsx:214
 msgid "Monthly"
 msgstr "Monthly"
 
@@ -3429,12 +3429,12 @@ msgstr "New version available"
 msgid "Next"
 msgstr "Next"
 
-#: src/features/remind/RemindMeSheet.tsx:167
+#: src/features/remind/RemindMeSheet.tsx:169
 msgid "Next Monday"
 msgstr "Next Monday"
 
 #: src/components/split/DateDialog.tsx:140
-#: src/features/remind/RemindMeSheet.tsx:168
+#: src/features/remind/RemindMeSheet.tsx:170
 #: src/screens/Analytics/components/RangeDialog.tsx:148
 msgid "Next month"
 msgstr "Next month"
@@ -3575,12 +3575,12 @@ msgstr "Non-group expenses"
 msgid "Non-group only"
 msgstr "Non-group only"
 
-#: src/components/activity/ActivityItem.tsx:566
+#: src/components/activity/ActivityItem.tsx:565
 #: src/components/people/HistoryRow.tsx:243
 msgid "not involved"
 msgstr "not involved"
 
-#: src/features/remind/RemindMeSheet.tsx:127
+#: src/features/remind/RemindMeSheet.tsx:129
 #: src/screens/AddFriend.tsx:299
 msgid "Not now"
 msgstr "Not now"
@@ -3644,21 +3644,17 @@ msgstr "Nothing with {0} yet. Add an expense you shared and it shows up here."
 msgid "Notifications"
 msgstr "Notifications"
 
-#: src/features/remind/RemindMeSheet.tsx:243
+#: src/features/remind/RemindMeSheet.tsx:251
 msgid "Notifications are blocked for Splito. The reminder is saved but can’t alert you until you allow them in your phone’s Settings."
 msgstr "Notifications are blocked for Splito. The reminder is saved but can’t alert you until you allow them in your phone’s Settings."
 
-#: src/features/remind/RemindMeSheet.tsx:245
+#: src/features/remind/RemindMeSheet.tsx:253
 msgid "Notifications are blocked for this site. The reminder is saved but can’t alert you until you allow them in your browser’s site settings."
 msgstr "Notifications are blocked for this site. The reminder is saved but can’t alert you until you allow them in your browser’s site settings."
 
 #: src/components/settings/NotifyRemindersPref.tsx:38
 msgid "Notifications are blocked. Open Settings"
 msgstr "Notifications are blocked. Open Settings"
-
-#: src/screens/Settings/SettingsSection.tsx:116
-msgid "Notifications start once you sign in and turn on sync. Your choices are saved now and apply from then."
-msgstr "Notifications start once you sign in and turn on sync. Your choices are saved now and apply from then."
 
 #: src/lib/hooks/useTimeAgo.ts:136
 msgid "now"
@@ -3702,7 +3698,7 @@ msgstr "On"
 msgid "On the web these alert you only while Splito is open; if it’s closed you’ll see them the next time you open it."
 msgstr "On the web these alert you only while Splito is open; if it’s closed you’ll see them the next time you open it."
 
-#: src/features/remind/RemindMeSheet.tsx:254
+#: src/features/remind/RemindMeSheet.tsx:262
 msgid "On the web, Splito can only remind you while it’s open. If it’s closed, you’ll see the reminder the next time you open it."
 msgstr "On the web, Splito can only remind you while it’s open. If it’s closed, you’ll see the reminder the next time you open it."
 
@@ -3711,7 +3707,7 @@ msgstr "On the web, Splito can only remind you while it’s open. If it’s clos
 msgid "On this device only"
 msgstr "On this device only"
 
-#: src/features/remind/RemindMeSheet.tsx:209
+#: src/features/remind/RemindMeSheet.tsx:211
 msgid "Once"
 msgstr "Once"
 
@@ -3797,8 +3793,8 @@ msgid "Open profile"
 msgstr "Open profile"
 
 #: src/components/settings/NotifyRemindersPref.tsx:36
-#: src/features/remind/RemindMeSheet.tsx:259
-#: src/features/remind/RemindMeSheet.tsx:261
+#: src/features/remind/RemindMeSheet.tsx:267
+#: src/features/remind/RemindMeSheet.tsx:269
 #: src/screens/AddFriend.tsx:292
 msgid "Open Settings"
 msgstr "Open Settings"
@@ -4054,7 +4050,7 @@ msgstr "Pick a date between 1900 and 2200"
 msgid "Pick a friend from your contacts"
 msgstr "Pick a friend from your contacts"
 
-#: src/features/remind/RemindMeSheet.tsx:228
+#: src/features/remind/RemindMeSheet.tsx:236
 msgid "Pick a time that hasn’t passed yet."
 msgstr "Pick a time that hasn’t passed yet."
 
@@ -4244,7 +4240,7 @@ msgstr "Remind {name}"
 
 #: src/features/remind/RemindMenuItems.tsx:53
 #: src/features/remind/RemindMenuItems.tsx:56
-#: src/features/remind/RemindMeSheet.tsx:149
+#: src/features/remind/RemindMeSheet.tsx:151
 msgid "Remind me"
 msgstr "Remind me"
 
@@ -4260,27 +4256,27 @@ msgstr "Reminder copied. Paste it in a chat with {name}."
 msgid "Reminder opened for {name}. Splito can’t see whether it was sent."
 msgstr "Reminder opened for {name}. Splito can’t see whether it was sent."
 
-#: src/features/remind/RemindMeSheet.tsx:109
+#: src/features/remind/RemindMeSheet.tsx:111
 msgid "Reminder saved. Notifications are off, so it won’t alert you until you allow them."
 msgstr "Reminder saved. Notifications are off, so it won’t alert you until you allow them."
 
-#: src/features/remind/RemindMeSheet.tsx:104
+#: src/features/remind/RemindMeSheet.tsx:106
 msgid "Reminder saved. Reminders are off in Settings, so it won’t alert you."
 msgstr "Reminder saved. Reminders are off in Settings, so it won’t alert you."
 
-#: src/features/remind/RemindMeSheet.tsx:107
+#: src/features/remind/RemindMeSheet.tsx:109
 msgid "Reminder set for {firesAt}"
 msgstr "Reminder set for {firesAt}"
 
-#: src/features/remind/RemindMeSheet.tsx:108
+#: src/features/remind/RemindMeSheet.tsx:110
 msgid "Reminder set for {firesAt}. It alerts you while Splito is open."
 msgstr "Reminder set for {firesAt}. It alerts you while Splito is open."
 
-#: src/components/activity/ActivityItem.tsx:934
+#: src/components/activity/ActivityItem.tsx:933
 msgid "Reminder set for {subject}"
 msgstr "Reminder set for {subject}"
 
-#: src/features/remind/RemindMeSheet.tsx:238
+#: src/features/remind/RemindMeSheet.tsx:246
 msgid "Reminders are turned off in Settings, Notifications. This one is saved but won’t alert you."
 msgstr "Reminders are turned off in Settings, Notifications. This one is saved but won’t alert you."
 
@@ -4288,7 +4284,11 @@ msgstr "Reminders are turned off in Settings, Notifications. This one is saved b
 msgid "Reminders I set"
 msgstr "Reminders I set"
 
-#: src/features/remind/RemindMeSheet.tsx:232
+#: src/screens/Settings/SettingsSection.tsx:116
+msgid "Reminders you set with Remind me work now, on this device. New expense, payment and invite notifications start once you sign in and turn on sync; those choices are saved now and apply from then."
+msgstr "Reminders you set with Remind me work now, on this device. New expense, payment and invite notifications start once you sign in and turn on sync; those choices are saved now and apply from then."
+
+#: src/features/remind/RemindMeSheet.tsx:240
 msgid "Reminds you {firesAt}"
 msgstr "Reminds you {firesAt}"
 
@@ -4338,8 +4338,8 @@ msgstr "Removes the demo friends, groups, expenses and payments, with their hist
 msgid "Removing demo data…"
 msgstr "Removing demo data…"
 
-#: src/features/remind/RemindMeSheet.tsx:204
 #: src/features/remind/RemindMeSheet.tsx:206
+#: src/features/remind/RemindMeSheet.tsx:208
 msgid "Repeat"
 msgstr "Repeat"
 
@@ -4351,7 +4351,7 @@ msgstr "Reply email"
 msgid "Reply email (optional)"
 msgstr "Reply email (optional)"
 
-#: src/components/activity/ActivityItem.tsx:1125
+#: src/components/activity/ActivityItem.tsx:1124
 #: src/screens/People/components/RequestsSection.tsx:137
 msgid "Request declined. {name} isn’t told."
 msgstr "Request declined. {name} isn’t told."
@@ -4383,11 +4383,11 @@ msgid "Resend to {name}"
 msgstr "Resend to {name}"
 
 #: src/components/settings/PrefSection.tsx:132
-#: src/screens/Settings/SettingsSection.tsx:168
+#: src/screens/Settings/SettingsSection.tsx:169
 msgid "Reset"
 msgstr "Reset"
 
-#: src/screens/Settings/SettingsSection.tsx:156
+#: src/screens/Settings/SettingsSection.tsx:157
 msgid "Reset {title}"
 msgstr "Reset {title}"
 
@@ -4395,7 +4395,7 @@ msgstr "Reset {title}"
 msgid "Reset {title} to default"
 msgstr "Reset {title} to default"
 
-#: src/screens/Settings/SettingsSection.tsx:166
+#: src/screens/Settings/SettingsSection.tsx:167
 msgid "Reset {title}?"
 msgstr "Reset {title}?"
 
@@ -4424,7 +4424,7 @@ msgstr "Reset password"
 msgid "Reset rules"
 msgstr "Reset rules"
 
-#: src/screens/Settings/SettingsSection.tsx:160
+#: src/screens/Settings/SettingsSection.tsx:161
 msgid "Reset this page"
 msgstr "Reset this page"
 
@@ -4534,7 +4534,7 @@ msgstr "Same as this device ({deviceZone})"
 #: src/components/groups/RulesEditor.tsx:100
 #: src/components/people/EditFriendDialog.tsx:70
 #: src/components/settings/CategoryDialog.tsx:90
-#: src/features/remind/RemindMeSheet.tsx:152
+#: src/features/remind/RemindMeSheet.tsx:154
 msgid "Save"
 msgstr "Save"
 
@@ -4563,6 +4563,7 @@ msgstr "Saved"
 msgid "Saved on this device"
 msgstr "Saved on this device"
 
+#: src/features/remind/RemindSheet.tsx:201
 #: src/screens/Expense/components/History.tsx:97
 msgid "Saved on this device. It syncs to your other devices when you are online."
 msgstr "Saved on this device. It syncs to your other devices when you are online."
@@ -4711,7 +4712,7 @@ msgstr "Send friend request"
 msgid "Send invite"
 msgstr "Send invite"
 
-#: src/features/remind/RemindSheet.tsx:207
+#: src/features/remind/RemindSheet.tsx:208
 msgid "Send on WhatsApp"
 msgstr "Send on WhatsApp"
 
@@ -4742,7 +4743,7 @@ msgstr "Set for this group"
 msgid "Set new password"
 msgstr "Set new password"
 
-#: src/features/remind/RemindMeSheet.tsx:152
+#: src/features/remind/RemindMeSheet.tsx:154
 msgid "Set reminder"
 msgstr "Set reminder"
 
@@ -4779,11 +4780,11 @@ msgstr "Settings reset"
 msgid "Settle up"
 msgstr "Settle up"
 
-#: src/features/remind/useReminderEngine.ts:58
+#: src/features/remind/useReminderEngine.ts:61
 msgid "Settle up with {person}"
 msgstr "Settle up with {person}"
 
-#: src/features/remind/useReminderEngine.ts:58
+#: src/features/remind/useReminderEngine.ts:61
 msgid "Settle up with {person} in {group}"
 msgstr "Settle up with {person} in {group}"
 
@@ -4958,7 +4959,7 @@ msgstr "So friends know it’s you."
 msgid "Some"
 msgstr "Some"
 
-#: src/components/activity/ActivityItem.tsx:475
+#: src/components/activity/ActivityItem.tsx:474
 #: src/components/groups/RulesEditor.tsx:219
 #: src/components/people/HistoryRow.tsx:62
 #: src/components/people/PaymentDetailsDialog.tsx:90
@@ -5088,7 +5089,7 @@ msgstr "Splito can’t see your UPI app. Record the payment only once your app s
 msgid "Splito collects no analytics and shows no ads."
 msgstr "Splito collects no analytics and shows no ads."
 
-#: src/features/remind/RemindSheet.tsx:225
+#: src/features/remind/RemindSheet.tsx:226
 msgid "Splito hands this to the app you pick. It can’t see whether the message is sent."
 msgstr "Splito hands this to the app you pick. It can’t see whether the message is sent."
 
@@ -5096,15 +5097,15 @@ msgstr "Splito hands this to the app you pick. It can’t see whether the messag
 msgid "Splito is installed"
 msgstr "Splito is installed"
 
-#: src/features/remind/RemindMeSheet.tsx:134
-msgid "Splito needs your permission to show this reminder. It is only used for reminders you set, and nothing leaves this device."
-msgstr "Splito needs your permission to show this reminder. It is only used for reminders you set, and nothing leaves this device."
+#: src/features/remind/RemindMeSheet.tsx:136
+msgid "Splito needs your permission to show this reminder. It’s used only for reminders you set; the alert is scheduled on this device, not sent from a server."
+msgstr "Splito needs your permission to show this reminder. It’s used only for reminders you set; the alert is scheduled on this device, not sent from a server."
 
 #: src/screens/Settle/index.tsx:473
 msgid "Splito never moves money. Record each payment once it has happened – part payments are fine."
 msgstr "Splito never moves money. Record each payment once it has happened – part payments are fine."
 
-#: src/features/remind/useReminderEngine.ts:57
+#: src/features/remind/useReminderEngine.ts:60
 msgid "Splito reminder"
 msgstr "Splito reminder"
 
@@ -5255,7 +5256,7 @@ msgstr "Thanks!"
 msgid "That amount is too large"
 msgstr "That amount is too large"
 
-#: src/components/activity/ActivityItem.tsx:1130
+#: src/components/activity/ActivityItem.tsx:1129
 #: src/screens/People/components/RequestsSection.tsx:84
 msgid "That didn’t work. Please try again."
 msgstr "That didn’t work. Please try again."
@@ -5350,11 +5351,11 @@ msgstr "They join from now on. Expenses already in the group keep their splits."
 msgid "They only learn that you’re on Splito, never anything else."
 msgstr "They only learn that you’re on Splito, never anything else."
 
-#: src/features/remind/RemindMeSheet.tsx:72
+#: src/features/remind/RemindMeSheet.tsx:73
 msgid "this balance"
 msgstr "this balance"
 
-#: src/features/remind/RemindMeSheet.tsx:250
+#: src/features/remind/RemindMeSheet.tsx:258
 msgid "This browser can’t show notifications. You’ll see this reminder inside Splito when you open it."
 msgstr "This browser can’t show notifications. You’ll see this reminder inside Splito when you open it."
 
@@ -5419,22 +5420,26 @@ msgstr "This is your invite link"
 msgid "This plan goes outside your rules"
 msgstr "This plan goes outside your rules"
 
-#: src/screens/Settings/SettingsSection.tsx:219
+#: src/screens/Settings/SettingsSection.tsx:220
 msgid "This settings page doesn't exist"
 msgstr "This settings page doesn't exist"
 
-#: src/features/remind/RemindMeSheet.tsx:196
 #: src/features/remind/RemindMeSheet.tsx:198
+#: src/features/remind/RemindMeSheet.tsx:200
 msgid "Time"
 msgstr "Time"
 
-#: src/features/remind/useReminderEngine.ts:58
+#: src/features/remind/useReminderEngine.ts:61
 msgid "Time to settle up"
 msgstr "Time to settle up"
 
 #: src/components/split/AmountKeypad.tsx:69
 msgid "Times"
 msgstr "Times"
+
+#: src/features/remind/RemindMeSheet.tsx:226
+msgid "Times are in this device’s time zone ({deviceZone})."
+msgstr "Times are in this device’s time zone ({deviceZone})."
 
 #: src/components/settings/prefControls.tsx:503
 #: src/components/settings/prefControls.tsx:514
@@ -5485,7 +5490,7 @@ msgctxt "Activity section header"
 msgid "Today"
 msgstr "Today"
 
-#: src/features/remind/RemindMeSheet.tsx:165
+#: src/features/remind/RemindMeSheet.tsx:167
 #: src/locale/useDates.ts:85
 msgid "Tomorrow"
 msgstr "Tomorrow"
@@ -5709,7 +5714,7 @@ msgstr "Week"
 msgid "Week starts on"
 msgstr "Week starts on"
 
-#: src/features/remind/RemindMeSheet.tsx:211
+#: src/features/remind/RemindMeSheet.tsx:213
 msgid "Weekly"
 msgstr "Weekly"
 
@@ -5761,7 +5766,7 @@ msgstr "What you typed won’t be kept."
 msgid "Whatever doesn’t round is shown and added to one person’s share, so nothing is lost. You can change it on each expense."
 msgstr "Whatever doesn’t round is shown and added to one person’s share, so nothing is lost. You can change it on each expense."
 
-#: src/features/remind/RemindSheet.tsx:210
+#: src/features/remind/RemindSheet.tsx:211
 msgid "WhatsApp"
 msgstr "WhatsApp"
 
@@ -5803,7 +5808,7 @@ msgstr "Whether each charge on an itemised bill starts as an amount or a percent
 msgid "Which one should Splito use?"
 msgstr "Which one should Splito use?"
 
-#: src/features/remind/useReminderEngine.ts:101
+#: src/features/remind/useReminderEngine.ts:106
 msgid "While Splito was closed: {firstBody}"
 msgstr "While Splito was closed: {firstBody}"
 
@@ -5895,13 +5900,13 @@ msgctxt "Activity section header"
 msgid "Yesterday"
 msgstr "Yesterday"
 
-#: src/components/activity/ActivityItem.tsx:794
+#: src/components/activity/ActivityItem.tsx:793
 #: src/features/settlement/CallItEvenDialog.tsx:166
 #: src/features/settlement/CallItEvenDialog.tsx:169
 msgid "you"
 msgstr "you"
 
-#: src/components/activity/ActivityItem.tsx:476
+#: src/components/activity/ActivityItem.tsx:475
 #: src/components/groups/RulesEditor.tsx:219
 #: src/components/split/shared.tsx:22
 #: src/screens/Analytics/useReport.ts:310
@@ -5914,7 +5919,7 @@ msgstr "you"
 msgid "You"
 msgstr "You"
 
-#: src/components/activity/ActivityItem.tsx:626
+#: src/components/activity/ActivityItem.tsx:625
 msgid "You accepted {subject}’s friend request"
 msgstr "You accepted {subject}’s friend request"
 
@@ -5930,7 +5935,7 @@ msgstr "You and {0} are friends now"
 msgid "You and {0} let each other off"
 msgstr "You and {0} let each other off"
 
-#: src/components/activity/ActivityItem.tsx:1122
+#: src/components/activity/ActivityItem.tsx:1121
 msgid "You and {name} are friends now"
 msgstr "You and {name} are friends now"
 
@@ -5971,7 +5976,7 @@ msgstr "you borrowed {0}"
 msgid "You borrowed {0}"
 msgstr "You borrowed {0}"
 
-#: src/components/activity/ActivityItem.tsx:570
+#: src/components/activity/ActivityItem.tsx:569
 msgid "you borrowed {figure}"
 msgstr "you borrowed {figure}"
 
@@ -5980,7 +5985,7 @@ msgstr "you borrowed {figure}"
 msgid "You can now sign in with your new password."
 msgstr "You can now sign in with your new password."
 
-#: src/components/activity/ActivityItem.tsx:630
+#: src/components/activity/ActivityItem.tsx:629
 msgid "You can now split anything together"
 msgstr "You can now split anything together"
 
@@ -5992,7 +5997,7 @@ msgstr "You can type a sum, like 1200 + 300, or 2k or 1.5L"
 msgid "You can’t divide by zero"
 msgstr "You can’t divide by zero"
 
-#: src/components/activity/ActivityItem.tsx:602
+#: src/components/activity/ActivityItem.tsx:601
 msgid "You declined"
 msgstr "You declined"
 
@@ -6017,7 +6022,7 @@ msgstr "You have changes that are not saved yet. Reloading now discards them."
 msgid "You have entered an invalid code. It should be 6 digits."
 msgstr "You have entered an invalid code. It should be 6 digits."
 
-#: src/features/remind/RemindSheet.tsx:223
+#: src/features/remind/RemindSheet.tsx:224
 msgid "You last reminded {name} {lastAgo} ago."
 msgstr "You last reminded {name} {lastAgo} ago."
 
@@ -6035,7 +6040,7 @@ msgstr "you lent {0}"
 msgid "You lent {0}"
 msgstr "You lent {0}"
 
-#: src/components/activity/ActivityItem.tsx:568
+#: src/components/activity/ActivityItem.tsx:567
 msgid "you lent {figure}"
 msgstr "you lent {figure}"
 
@@ -6044,7 +6049,7 @@ msgstr "you lent {figure}"
 msgid "You let {0} off"
 msgstr "You let {0} off"
 
-#: src/components/activity/ActivityItem.tsx:836
+#: src/components/activity/ActivityItem.tsx:835
 msgid "You let {debtor} off"
 msgstr "You let {debtor} off"
 
@@ -6139,7 +6144,7 @@ msgstr "You’re all settled up."
 msgid "You’re already friends."
 msgstr "You’re already friends."
 
-#: src/components/activity/ActivityItem.tsx:600
+#: src/components/activity/ActivityItem.tsx:599
 msgid "You’re friends now"
 msgstr "You’re friends now"
 

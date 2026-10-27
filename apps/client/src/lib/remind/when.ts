@@ -1,7 +1,9 @@
 /*
  * The date and time of a reminder, as the sheet's fields hold them: local `YYYY-MM-DD` and `HH:MM`
- * (24-hour, the format of `<input type="date">` and `<input type="time">`). Reminders fire in the device's
- * own time zone, since the notification is the device's.
+ * (24-hour, the format of `<input type="date">` and `<input type="time">`). Reminders fire on the device's
+ * own clock and in its own time zone, since the notification is the device's: every place that shows or
+ * computes a reminder time (these helpers, the sheets, the Person list, the toasts, the OS triggers and the
+ * Activity row) uses the device zone and ignores the Timezone preference.
  */
 
 const DATE = /^(\d{4})-(\d{2})-(\d{2})$/

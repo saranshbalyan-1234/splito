@@ -143,7 +143,7 @@ export async function openIdbStore(name: string, factory: IDBFactory = indexedDB
           // v2 -> v3: two new stores and one new index; every older row is rewritten by the rebuild.
           createStores(raw, ['aggregates', 'search_terms'])
           req.transaction!.objectStore('people').createIndex('byActivity', [...STORES.people.indexes.byActivity.columns])
-          // The rebuild reads every entity store, so v4's exists first (empty).
+          // The rebuild reads every entity store, so v4's store is created in the same upgrade (ordered steps), empty, before it runs.
           createStores(raw, ['reminders'])
           await pipelined(t, cmp, rows => migrateV2ToV3(rows))
         }

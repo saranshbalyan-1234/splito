@@ -1,6 +1,6 @@
 import {expect, test} from 'bun:test'
 
-import {buildRemindMessage, type RemindWords, whatsappUrl} from './message'
+import {buildRemindMessage, type RemindWords, upiLinkWithoutPlaceholderName, whatsappUrl} from './message'
 
 const words: RemindWords = {
   greeting: name => `Hi ${name},`,
@@ -55,4 +55,12 @@ test('WhatsApp links keep the digits of any phone spelling and encode the text',
   expect(whatsappUrl('+91 98765-43210', 'Hi Riya,\nthanks & bye')).toBe('https://wa.me/919876543210?text=Hi%20Riya%2C%0Athanks%20%26%20bye')
   expect(whatsappUrl(null, 'x')).toBeNull()
   expect(whatsappUrl('abc', 'x')).toBeNull()
+})
+
+test('the UPI link drops the payee name while mine is the placeholder, and keeps a real one', () => {
+  const link = 'upi://pay?pa=me%40okaxis&pn=Me&am=450.00&cu=INR&tn=Splito'
+  expect(upiLinkWithoutPlaceholderName(link, 'Me')).toBe('upi://pay?pa=me%40okaxis&am=450.00&cu=INR&tn=Splito')
+  expect(upiLinkWithoutPlaceholderName(link, ' ')).toBe('upi://pay?pa=me%40okaxis&am=450.00&cu=INR&tn=Splito')
+  const named = 'upi://pay?pa=me%40okaxis&pn=Saransh&am=450.00&cu=INR&tn=Splito'
+  expect(upiLinkWithoutPlaceholderName(named, 'Saransh')).toBe(named)
 })

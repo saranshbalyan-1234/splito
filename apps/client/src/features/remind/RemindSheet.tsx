@@ -13,7 +13,7 @@ import {
 import {useHaptics} from '#/lib/haptics'
 import {useGetTimeAgo} from '#/lib/hooks/useTimeAgo'
 import {type RemindRequest} from '#/lib/remind/bus'
-import {buildRemindMessage, sortedAmounts, whatsappUrl} from '#/lib/remind/message'
+import {buildRemindMessage, sortedAmounts, upiLinkWithoutPlaceholderName, whatsappUrl} from '#/lib/remind/message'
 import {copyReminder, openWhatsapp, shareText} from '#/lib/remind/share'
 import {remindWords} from '#/lib/remind/words'
 import {logger} from '#/logger'
@@ -71,7 +71,7 @@ function Form({request}: {request: Remind}) {
   const owesRupees = request.owed.INR !== undefined
   const upi =
     owesRupees && me && UPI_RE.test(upiId.trim())
-      ? {id: upiId.trim(), link: upiPayUrl({upiId: upiId.trim(), name: me.data.name, amount: request.owed.INR!})}
+      ? {id: upiId.trim(), link: upiLinkWithoutPlaceholderName(upiPayUrl({upiId: upiId.trim(), name: me.data.name, amount: request.owed.INR!}), me.data.name)}
       : null
   const message = buildRemindMessage({
     name: name.split(/\s+/)[0] ?? name,
@@ -197,7 +197,8 @@ function Form({request}: {request: Remind}) {
               />
             </TextField.Root>
             <Text style={[a.pt_xs, a.text_sm, a.leading_snug, t.atoms.text_contrast_medium]}>
-              <Trans>Adds a link {name} can tap to pay you in a UPI app. Saved on this device.</Trans>
+              <Trans>Adds a link {name} can tap to pay you in a UPI app.</Trans>{' '}
+              <Trans>Saved on this device. It syncs to your other devices when you are online.</Trans>
             </Text>
           </View>
         )}
