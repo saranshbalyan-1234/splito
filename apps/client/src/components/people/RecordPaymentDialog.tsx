@@ -19,12 +19,14 @@ import {useNumberLocale} from '#/locale/numberLocale'
 import {useTimeZone} from '#/locale/useDates'
 import {UserAvatar} from '#/view/com/util/UserAvatar'
 import {atoms as a, useTheme} from '#/alf'
-import {Button, ButtonIcon} from '#/components/Button'
+import {Button, ButtonIcon, ButtonText} from '#/components/Button'
 import * as Dialog from '#/components/Dialog'
 import * as SegmentedControl from '#/components/forms/SegmentedControl'
 import * as TextField from '#/components/forms/TextField'
 import {ArrowRight_Stroke2_Corner0_Rounded as ArrowRightIcon} from '#/components/icons/Arrow'
 import {ArrowRightLeft_Stroke2_Corner0_Rounded as SwapIcon} from '#/components/icons/Route'
+import {CoinsIcon} from '#/components/split/icons'
+import {CurrencyDialog} from '#/components/split/pickers'
 import {
   currencyName,
   parseTypedAmount,
@@ -58,6 +60,7 @@ export function RecordPaymentDialog({
   control,
   draft,
   currencies,
+  canPickAnyCurrency = false,
   suggestions = {},
   me,
   names,
@@ -68,8 +71,10 @@ export function RecordPaymentDialog({
 }: {
   control: Dialog.DialogControlProps
   draft: PaymentDraft
-  /** Currencies the user may pick; the draft's currency is selected first. */
+  /** Currencies listed up front; the draft's currency is selected first. */
   currencies?: string[]
+  /** Adds an "Other" button that offers every currency (a friend's page, § 26.13). */
+  canPickAnyCurrency?: boolean
   /** Suggested amount per currency, for the currency switcher. */
   suggestions?: Record<string, bigint>
   me: string
@@ -85,6 +90,7 @@ export function RecordPaymentDialog({
       <Form
         draft={draft}
         currencies={currencies ?? [draft.currency]}
+        canPickAnyCurrency={canPickAnyCurrency}
         suggestions={suggestions}
         me={me}
         names={names}
@@ -100,6 +106,7 @@ export function RecordPaymentDialog({
 function Form({
   draft,
   currencies,
+  canPickAnyCurrency,
   suggestions,
   me,
   names,
@@ -110,6 +117,7 @@ function Form({
 }: {
   draft: PaymentDraft
   currencies: string[]
+  canPickAnyCurrency: boolean
   suggestions: Record<string, bigint>
   me: string
   names: Map<string, string>
@@ -130,10 +138,23 @@ function Form({
   const [from, setFrom] = useState(draft.from)
   const [to, setTo] = useState(draft.to)
   const [currency, setCurrency] = useState(draft.currency)
+  /* Currencies picked from "Other" join the quick options, so the choice stays visible. */
+  const [extra, setExtra] = useState<string[]>([])
+  const currencyControl = Dialog.useDialogControl()
+  const options = [
+    ...currencies,
+    ...[draft.currency, ...extra].filter(c => !currencies.includes(c)),
+  ].filter((c, i, all) => all.indexOf(c) === i)
   const suggestionFor = (c: string) =>
     c === draft.currency && draft.amount !== null
       ? draft.amount
       : suggestions[c]
+  const switchCurrency = (c: string) => {
+    if (c === currency) return
+    setCurrency(c)
+    setAmountText(prefill(c))
+    setError(null)
+  }
   const prefill = (c: string) => {
     const s = suggestionFor(c)
     // In the number format's own mark: parseTypedAmount reads it back exactly (F-111 C1).
@@ -319,25 +340,48 @@ function Form({
           )}
         </View>
 
-        {currencies.length > 1 && (
-          <SegmentedControl.Root
-            label={l`Currency`}
-            type="radio"
-            size="small"
+        {(options.length > 1 || canPickAnyCurrency) && (
+          <View style={[a.flex_row, a.align_center, a.gap_sm]}>
+            {options.length > 1 && (
+              <View style={[a.flex_1]}>
+                <SegmentedControl.Root
+                  label={l`Currency`}
+                  type="radio"
+                  size="small"
+                  value={currency}
+                  onChange={c => switchCurrency(c)}>
+                  {options.map(c => (
+                    <SegmentedControl.Item key={c} value={c} label={c}>
+                      <SegmentedControl.ItemText>{c}</SegmentedControl.ItemText>
+                    </SegmentedControl.Item>
+                  ))}
+                </SegmentedControl.Root>
+              </View>
+            )}
+            {canPickAnyCurrency && (
+              <Button
+                testID="payment-other-currency"
+                label={l`Other currency`}
+                size="small"
+                color="secondary"
+                onPress={() => currencyControl.open()}>
+                <ButtonIcon icon={CoinsIcon} />
+                <ButtonText>
+                  <Trans>Other</Trans>
+                </ButtonText>
+              </Button>
+            )}
+          </View>
+        )}
+        {canPickAnyCurrency && (
+          <CurrencyDialog
+            control={currencyControl}
             value={currency}
-            onChange={c => {
-              // The control reports its current value once on layout.
-              if (c === currency) return
-              setCurrency(c)
-              setAmountText(prefill(c))
-              setError(null)
-            }}>
-            {currencies.map(c => (
-              <SegmentedControl.Item key={c} value={c} label={c}>
-                <SegmentedControl.ItemText>{c}</SegmentedControl.ItemText>
-              </SegmentedControl.Item>
-            ))}
-          </SegmentedControl.Root>
+            onSelect={c => {
+              setExtra(x => (x.includes(c) ? x : [...x, c]))
+              switchCurrency(c)
+            }}
+          />
         )}
 
         <View>
