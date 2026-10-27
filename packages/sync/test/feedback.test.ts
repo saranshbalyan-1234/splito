@@ -4,6 +4,7 @@ import {DomainError} from '@splito/domain'
 import {
   deleteFeedback,
   type FeedbackInput,
+  FEEDBACK_MAIL_MESSAGE_MAX,
   feedbackMailto,
   isValidEmail,
   loadFeedback,
@@ -13,8 +14,8 @@ import {
 import {ensureMe} from '../src/mutations'
 import {getPref, PREFS} from '../src/preferences'
 import {openSqlStore} from '../src/sqlStore'
-import type {Store} from '../src/store'
-import type {MutationCtx} from '../src/types'
+import {type Store} from '../src/store'
+import {type MutationCtx} from '../src/types'
 import {bunExecutor} from './bunExecutor'
 
 let s: Store
@@ -114,4 +115,17 @@ test('isValidEmail', () => {
   expect(isValidEmail('a@b.co')).toBe(true)
   expect(isValidEmail('a@b')).toBe(false)
   expect(isValidEmail('a b@c.com')).toBe(false)
+})
+
+test('a very long message is shortened in the email draft only', async () => {
+  const fb = await saveFeedback(s, ctx, input({message: 'x'.repeat(FEEDBACK_MAIL_MESSAGE_MAX + 500)}))
+  const body = new URLSearchParams(feedbackMailto(fb.data, 'a@b.co').split('?')[1]).get('body')!
+  expect(body).toContain('shortened')
+  expect(body.length).toBeLessThan(FEEDBACK_MAIL_MESSAGE_MAX + 400)
+  expect(fb.data.message.length).toBe(FEEDBACK_MAIL_MESSAGE_MAX + 500)
+})
+
+test('"Include app info" starts on and stays on this device', async () => {
+  expect(await getPref(s, 'feedback.includeAppInfo')).toBe(true)
+  expect(PREFS['feedback.includeAppInfo'].scope).toBe('device')
 })

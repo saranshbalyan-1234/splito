@@ -12,6 +12,7 @@ import {isStateAtTabRoot} from '#/lib/routes/helpers'
 import {useDialogFullyExpandedCountContext} from '#/state/dialogs'
 import {useIsDrawerOpen, useSetDrawerOpen} from '#/state/shell'
 import {DrawerContent} from '#/navigation/Drawer'
+import {FeedbackProvider} from '#/features/feedback/FeedbackProvider'
 import {RoutesContainer, TabsNavigator} from '#/navigation/Navigation'
 import {atoms as a, select, useBreakpoints, useTheme} from '#/alf'
 import {Outlet as PortalOutlet} from '#/components/Portal'
@@ -32,13 +33,13 @@ function drawerLayout({children}: {children: React.ReactNode}) {
  */
 function ShellInner() {
   return (
-    <>
+    <FeedbackProvider>
       <View style={[a.h_full]}>
         <TabsNavigator layout={drawerLayout} />
       </View>
       <PortalOutlet />
       <BottomSheetOutlet />
-    </>
+    </FeedbackProvider>
   )
 }
 

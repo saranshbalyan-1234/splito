@@ -1,18 +1,22 @@
 // Adapted from bluesky-social/social-app@4e4ad9c (MIT) - src/screens/Settings/Settings.tsx
 import {View} from 'react-native'
-import {type PrefGroup, resetAllPrefs} from '@splito/sync'
+import {type Feedback, type PrefGroup, resetAllPrefs} from '@splito/sync'
 import {plural} from '@lingui/core/macro'
 import {Trans, useLingui} from '@lingui/react/macro'
 
 import {useHaptics} from '#/lib/haptics'
-import {useMe, usePref} from '#/data/hooks'
+import {useEntities, useMe, usePref} from '#/data/hooks'
+import {useOpenFeedback} from '#/features/feedback/FeedbackProvider'
 import {useData} from '#/data/StoreProvider'
 import {UserAvatar} from '#/view/com/util/UserAvatar'
 import * as SettingsList from '#/screens/Settings/components/SettingsList'
 import {atoms as a, useTheme} from '#/alf'
 import {ArrowRotateCounterClockwise_Stroke2_Corner0_Rounded as ResetIcon} from '#/components/icons/ArrowRotate'
 import {CircleInfo_Stroke2_Corner0_Rounded as InfoIcon} from '#/components/icons/CircleInfo'
+import {CircleQuestion_Stroke2_Corner2_Rounded as HelpIcon} from '#/components/icons/CircleQuestion'
 import {Cloud_Stroke2_Corner0_Rounded as CloudIcon} from '#/components/icons/Cloud'
+import {Inbox_Stroke2_Corner0_Rounded as InboxIcon} from '#/components/icons/Feedback'
+import {Message_Stroke2_Corner0_Rounded as MessageIcon} from '#/components/icons/Invite'
 import {Trash_Stroke2_Corner0_Rounded as TrashIcon} from '#/components/icons/Trash'
 import * as Layout from '#/components/Layout'
 import {useTabLabels} from '#/components/settings/TabsEditor'
@@ -39,6 +43,8 @@ export function SettingsScreen() {
   const me = useMe()
   const {hasSession} = useSession()
   const [binDays] = usePref('history.binDays')
+  const openFeedback = useOpenFeedback()
+  const feedbackCount = useEntities<Feedback>('feedback')?.length ?? 0
 
   return (
     <Layout.Screen testID="screen-settings">
@@ -136,7 +142,50 @@ export function SettingsScreen() {
           ))}
           <SettingsList.Divider />
           <SectionTitle>
-            <Trans>About and data</Trans>
+            <Trans>Support</Trans>
+          </SectionTitle>
+          <SettingsList.PressableItem
+            testID="settings-send-feedback"
+            label={l`Send feedback`}
+            onPress={openFeedback}>
+            <SettingsList.ItemIcon icon={MessageIcon} />
+            <SettingsList.ItemText>
+              <Trans>Send feedback</Trans>
+            </SettingsList.ItemText>
+          </SettingsList.PressableItem>
+          <SettingsList.LinkItem
+            testID="settings-your-feedback"
+            to="/settings/feedback"
+            label={l`Your feedback`}>
+            <SettingsList.ItemIcon icon={InboxIcon} />
+            <SettingsList.ItemText>
+              <Trans>Your feedback</Trans>
+            </SettingsList.ItemText>
+            {feedbackCount > 0 ? (
+              <SettingsList.BadgeText>{feedbackCount}</SettingsList.BadgeText>
+            ) : null}
+          </SettingsList.LinkItem>
+          <SettingsList.LinkItem
+            testID="settings-help"
+            to="/settings/help"
+            label={l`Help`}>
+            <SettingsList.ItemIcon icon={HelpIcon} />
+            <SettingsList.ItemText>
+              <Trans>Help</Trans>
+            </SettingsList.ItemText>
+          </SettingsList.LinkItem>
+          <SettingsList.LinkItem
+            testID="settings-about"
+            to="/settings/about"
+            label={l`About`}>
+            <SettingsList.ItemIcon icon={InfoIcon} />
+            <SettingsList.ItemText>
+              <Trans>About</Trans>
+            </SettingsList.ItemText>
+          </SettingsList.LinkItem>
+          <SettingsList.Divider />
+          <SectionTitle>
+            <Trans>Data</Trans>
           </SectionTitle>
           {/* Not a preference page: the bin itself, with its window setting on top. */}
           <SettingsList.LinkItem
@@ -155,15 +204,6 @@ export function SettingsScreen() {
                 {plural(binDays, {one: '# day', other: '# days'})}
               </Text>
             ) : null}
-          </SettingsList.LinkItem>
-          <SettingsList.LinkItem
-            testID="settings-about"
-            to="/settings/about"
-            label={l`About`}>
-            <SettingsList.ItemIcon icon={InfoIcon} />
-            <SettingsList.ItemText>
-              <Trans>About</Trans>
-            </SettingsList.ItemText>
           </SettingsList.LinkItem>
           <SettingsList.PressableItem
             testID="settings-reset-all"

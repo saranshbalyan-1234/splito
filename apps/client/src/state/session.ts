@@ -7,8 +7,9 @@
  */
 
 export type SessionState = {
-  hasSession: false
-  currentAccount: undefined
+  hasSession: boolean
+  /** Set once sign-in exists; feedback prefills the reply email from it. */
+  currentAccount: {email?: string} | undefined
 }
 
 const SIGNED_OUT: SessionState = {hasSession: false, currentAccount: undefined}

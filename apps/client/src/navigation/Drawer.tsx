@@ -15,6 +15,7 @@ import {type NavigationProp, type TabParams} from '#/lib/routes/types'
 import {useSession} from '#/state/session'
 import {useSetDrawerOpen} from '#/state/shell'
 import {useEntities, useMe, usePref} from '#/data/hooks'
+import {useOpenFeedback} from '#/features/feedback/FeedbackProvider'
 import {UserAvatar} from '#/view/com/util/UserAvatar'
 import {atoms as a, tokens, useTheme, web} from '#/alf'
 import {Button, ButtonIcon, ButtonText} from '#/components/Button'
@@ -31,6 +32,7 @@ import {
 import {CircleInfo_Stroke2_Corner0_Rounded as CircleInfoIcon} from '#/components/icons/CircleInfo'
 import {CircleQuestion_Stroke2_Corner2_Rounded as CircleQuestionIcon} from '#/components/icons/CircleQuestion'
 import {type Props as SVGIconProps} from '#/components/icons/common'
+import {Message_Stroke2_Corner0_Rounded as MessageIcon} from '#/components/icons/Invite'
 import {
   Group3_Filled_Corner0_Rounded as GroupFilledIcon,
   Group3_Stroke2_Corner0_Rounded as GroupIcon,
@@ -161,6 +163,12 @@ function DrawerContentInner(): React.ReactNode {
     navigation.navigate(screen)
   }
 
+  const openFeedback = useOpenFeedback()
+  const onPressFeedback = () => {
+    setDrawerOpen(false)
+    openFeedback()
+  }
+
   const onPressSection = (section: 'help' | 'about') => {
     setDrawerOpen(false)
     navigation.navigate('SettingsSection', {section})
@@ -289,6 +297,7 @@ function DrawerContentInner(): React.ReactNode {
 
       <DrawerFooter
         onPressSignIn={() => onPressScreen('SignIn')}
+        onPressFeedback={onPressFeedback}
         onPressHelp={() => onPressSection('help')}
         onPressAbout={() => onPressSection('about')}
       />
@@ -300,10 +309,12 @@ export {DrawerContent}
 
 let DrawerFooter = ({
   onPressSignIn,
+  onPressFeedback,
   onPressHelp,
   onPressAbout,
 }: {
   onPressSignIn: () => void
+  onPressFeedback: () => void
   onPressHelp: () => void
   onPressAbout: () => void
 }): React.ReactNode => {
@@ -342,6 +353,18 @@ let DrawerFooter = ({
           </ButtonText>
         </Button>
       )}
+      <Button
+        testID="drawer-feedback"
+        label={l`Send feedback`}
+        size="small"
+        variant="solid"
+        color="secondary"
+        onPress={onPressFeedback}>
+        <ButtonIcon icon={MessageIcon} position="left" />
+        <ButtonText>
+          <Trans>Feedback</Trans>
+        </ButtonText>
+      </Button>
       <Button
         testID="drawer-help"
         label={l`Get help`}

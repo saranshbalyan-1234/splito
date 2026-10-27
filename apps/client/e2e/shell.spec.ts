@@ -254,6 +254,7 @@ test.describe('drawer: Bluesky drawer from the header avatar', () => {
       'drawer-settings',
       'drawer-theme',
       'drawer-sign-in',
+      'drawer-feedback',
       'drawer-help',
       'drawer-about',
     ])

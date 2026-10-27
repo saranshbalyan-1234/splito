@@ -99,6 +99,8 @@ export const PREFS = {
   haptics: def('haptics', 'motion', 'device', 'Haptics', true, isBool),
   /** Phones only: shaking the phone opens Send feedback. */
   shakeToFeedback: def('shakeToFeedback', 'motion', 'device', 'Shake to send feedback', false, isBool),
+  /** The Send feedback sheet's "Include app info" switch remembers the last choice (spec default: on). */
+  'feedback.includeAppInfo': def('feedback.includeAppInfo', 'privacy', 'device', 'Include app info with feedback', true, isBool),
   tabs: def<TabId[]>(
     'tabs',
     'defaults',

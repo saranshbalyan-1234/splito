@@ -608,8 +608,8 @@ A year of realistic Splito use, generated deterministically, for the owner and f
 
 Bluesky's placement: a "Feedback" item in the drawer and the shared footer links, and a Settings "Support" section (Send feedback, Your feedback, Help, About). Feedback is kept on the device, with an email fallback, until the backend endpoint (F-2112).
 
-- **Effort** M · **Impact** 7 · **Backend** no · **Status** in progress (partially built on feat/feedback, unverified) · **Deps** F-201, F-205
-- **Prefs** `feedback.shake` (device)
+- **Effort** M · **Impact** 7 · **Backend** no · **Status** done (built and tested on feat/wA-34, unmerged; Feedback is in the drawer footer now, the shared footer links component arrives with the next step) · **Deps** F-201, F-205
+- **Prefs** `shakeToFeedback` (device, default off), `feedback.includeAppInfo` (device, default on; remembers the sheet's switch)
 - **Acceptance**
   1. "Feedback" opens from the drawer and from the footer links of the sidebar and drawer; Settings has a "Support" section with Send feedback, Your feedback, Help and About; under 1300 px desktop reaches them through the drawer and Settings.
   2. "Send feedback" opens a FormSheet (bottom drawer on phones, centred popup on desktop): type chips Bug / Idea / Question / Other, a required message, an optional screenshot or photo, an "Include app info" toggle (default on: version, platform, OS, language, current screen; never amounts, names, notes or receipts) with the sheet showing exactly what is attached, and an optional reply email (prefilled once signed in).

@@ -1,8 +1,8 @@
 import {DomainError} from '@splito/domain'
 
 import {requireLive, write} from './mutations'
-import type {Store} from './store'
-import type {Entity, MutationCtx} from './types'
+import {type Store} from './store'
+import {type Entity, type MutationCtx} from './types'
 
 export type FeedbackType = 'bug' | 'idea' | 'question' | 'other'
 export const FEEDBACK_TYPES: FeedbackType[] = ['bug', 'idea', 'question', 'other']
@@ -35,8 +35,8 @@ export interface FeedbackAppInfo {
 const APP_INFO_KEYS = ['version', 'platform', 'os', 'language', 'screen'] as const satisfies readonly (keyof FeedbackAppInfo)[]
 
 /**
- * A reference to the picked picture. Web stores a downscaled JPEG data URI
- * (blob URLs die with the tab); native keeps the picker's file URI.
+ * The picked picture, kept inside the record as a downscaled JPEG data URI on
+ * every platform (blob URLs die with the tab; picker cache files can be purged).
  */
 export interface FeedbackAttachment {
   uri: string
@@ -106,6 +106,9 @@ export async function loadFeedback(store: Store): Promise<Entity<Feedback>[]> {
   return sortFeedback(await store.getAll<Feedback>('feedback'))
 }
 
+/** Mail clients and `mailto:` handlers choke on very long links, so the draft carries the start of a long message. */
+export const FEEDBACK_MAIL_MESSAGE_MAX = 1500
+
 const TYPE_NAMES: Record<FeedbackType, string> = {bug: 'Bug', idea: 'Idea', question: 'Question', other: 'Other'}
 
 /**
@@ -114,7 +117,8 @@ const TYPE_NAMES: Record<FeedbackType, string> = {bug: 'Bug', idea: 'Idea', ques
  * Support reads English, so the draft is not translated.
  */
 export function feedbackMailto(f: Feedback, to: string): string {
-  const lines = [f.message, '', '---', `Type: ${TYPE_NAMES[f.type]}`]
+  const message = f.message.length > FEEDBACK_MAIL_MESSAGE_MAX ? `${f.message.slice(0, FEEDBACK_MAIL_MESSAGE_MAX)}... (shortened; the full text is saved in the app)` : f.message
+  const lines = [message, '', '---', `Type: ${TYPE_NAMES[f.type]}`]
   if (f.appInfo) {
     const i = f.appInfo
     lines.push(`Version: ${i.version}`, `Platform: ${i.platform}`, `OS: ${i.os}`, `Language: ${i.language}`, `Screen: ${i.screen}`)

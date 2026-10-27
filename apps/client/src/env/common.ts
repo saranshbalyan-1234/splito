@@ -64,3 +64,11 @@ export const LOG_LEVEL = (process.env.EXPO_PUBLIC_LOG_LEVEL || 'info') as
  * Enable debug logs for specific logger instances
  */
 export const LOG_DEBUG: string = process.env.EXPO_PUBLIC_LOG_DEBUG || ''
+
+/**
+ * Where "Send by email" feedback drafts go. Set `EXPO_PUBLIC_FEEDBACK_EMAIL`
+ * for a release; the default is the support address on Splito's domain
+ * (release checklist item).
+ */
+export const FEEDBACK_EMAIL: string =
+  process.env.EXPO_PUBLIC_FEEDBACK_EMAIL || 'feedback@splito.app'

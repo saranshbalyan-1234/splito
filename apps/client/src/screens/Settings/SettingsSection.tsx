@@ -9,6 +9,7 @@ import {type RouteProp, useNavigation, useRoute} from '@react-navigation/native'
 import {useHaptics} from '#/lib/haptics'
 import {type AllNavigatorParams, type NavigationProp} from '#/lib/routes/types'
 import {useData} from '#/data/StoreProvider'
+import {FeedbackList} from '#/features/feedback/FeedbackList'
 import * as SettingsList from '#/screens/Settings/components/SettingsList'
 import {atoms as a, useTheme} from '#/alf'
 import {Button, ButtonText} from '#/components/Button'
@@ -34,8 +35,8 @@ import {Text} from '#/components/Typography'
 /**
  * One Settings page. Pages are generated from the preferences registry: the
  * route's section is a registry group, and each preference in it renders its
- * control, in registry order. `/settings/about` and `/help` are the pages
- * that are not groups; Privacy is a group that also links invite links.
+ * control, in registry order. `/settings/about`, `/help` and `/feedback` are
+ * the pages that are not groups; Privacy is a group that also links invite links.
  */
 export function SettingsSectionScreen() {
   const {t: l} = useLingui()
@@ -47,6 +48,13 @@ export function SettingsSectionScreen() {
     return (
       <Frame title={l`About`}>
         <AboutSettings />
+      </Frame>
+    )
+  }
+  if (section === 'feedback') {
+    return (
+      <Frame title={l`Your feedback`}>
+        <FeedbackList />
       </Frame>
     )
   }
