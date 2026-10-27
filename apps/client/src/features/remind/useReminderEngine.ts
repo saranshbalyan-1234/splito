@@ -94,10 +94,12 @@ export function useReminderEngine() {
       const byId = new Map(liveRef.current.map(r => [r.id, r]))
       if (isCatchUp) {
         const first = byId.get(due[0]!.id)!
+        const firstBody = nameOf(first)
+        const count = due.length
         Toast.show(
-          due.length === 1
-            ? l`While Splito was closed: ${nameOf(first)}`
-            : l`${due.length} reminders came due while Splito was closed. First: ${nameOf(first)}`,
+          count === 1
+            ? l`While Splito was closed: ${firstBody}`
+            : l`${count} reminders came due while Splito was closed. First: ${firstBody}`,
           {type: 'info', duration: 15_000, onPress: () => openTarget({personId: first.personId, groupId: first.groupId})},
         )
         return

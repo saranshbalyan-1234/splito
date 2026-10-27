@@ -220,9 +220,8 @@ function Form({request}: {request: Remind}) {
         </View>
 
         <Text testID="remind-note" style={[a.text_sm, a.leading_snug, t.atoms.text_contrast_medium]}>
-          {lastAgo ? (
-            <Trans>You last reminded {name} {lastAgo} ago. </Trans>
-          ) : null}
+          {lastAgo ? <Trans>You last reminded {name} {lastAgo} ago.</Trans> : null}
+          {lastAgo ? ' ' : null}
           <Trans>Splito hands this to the app you pick. It can’t see whether the message is sent.</Trans>
         </Text>
       </View>

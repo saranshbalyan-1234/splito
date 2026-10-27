@@ -77,6 +77,7 @@ function Form({request}: {request: RemindMe}) {
   const picks = quickPicks(Date.now())
   const isDirty = date !== dateInput(initial) || time !== timeInput(initial) || repeat !== (existing?.data.repeat ?? 'none')
   const when = (ms: number) => i18n.date(new Date(ms), {dateStyle: 'full', timeStyle: 'short'})
+  const firesAt = next === null ? '' : when(next)
 
   const pick = (ms: number) => {
     setDate(dateInput(ms))
@@ -103,8 +104,8 @@ function Form({request}: {request: RemindMe}) {
           ? l`Reminder saved. Reminders are off in Settings, so it won’t alert you.`
           : state === 'granted'
             ? canFireWhenClosed
-              ? l`Reminder set for ${when(next)}`
-              : l`Reminder set for ${when(next)}. It alerts you while Splito is open.`
+              ? l`Reminder set for ${firesAt}`
+              : l`Reminder set for ${firesAt}. It alerts you while Splito is open.`
             : l`Reminder saved. Notifications are off, so it won’t alert you until you allow them.`,
         {type: state === 'granted' && isOn ? 'success' : 'warning'},
       ),
@@ -122,7 +123,7 @@ function Form({request}: {request: RemindMe}) {
       <FormSheet.Inner
         title={l`Allow notifications?`}
         footer={{
-          saveLabel: l`Allow notifications`,
+          saveLabel: l`Allow`,
           cancelLabel: l`Not now`,
           isSaving,
           onSave: () => void permission.ask().then(() => save()),
@@ -228,7 +229,7 @@ function Form({request}: {request: RemindMe}) {
           </Text>
         ) : next !== null ? (
           <Text testID="remind-next" style={[a.text_sm, a.font_semi_bold, t.atoms.text_contrast_medium]}>
-            <Trans>Reminds you {when(next)}</Trans>
+            <Trans>Reminds you {firesAt}</Trans>
           </Text>
         ) : null}
 
