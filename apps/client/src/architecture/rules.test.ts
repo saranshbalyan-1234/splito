@@ -1,7 +1,7 @@
 import {describe, expect, test} from 'bun:test'
 
 import {BASELINE} from './baseline'
-import {blank, CLIENT, importsOf, moneyOperators, reuseContext, type RuleContext, type RuleName, RULES} from './rules'
+import {blank, CLIENT, importsOf, moneyCursorLoops, moneyOperators, reuseContext, type RuleContext, type RuleName, RULES} from './rules'
 import {countAll} from './scan'
 
 /**
@@ -75,6 +75,32 @@ describe('counters', () => {
     expect(count('moneyFullRead', "useEntities<Person>('person'); store.page('expense', {index: 'byDate'})", screen)).toBe(0)
     expect(count('moneyFullRead', "// getAll('expense') is forbidden here", screen)).toBe(0)
     expect(count('moneyFullRead', 'export async function loadLedger(store) {}', 'packages/sync/src/selectors.ts')).toBe(0)
+  })
+
+  test('moneyFullRead: a cursor loop that runs to the end of a money store', () => {
+    const screen = `${CLIENT}screens/Analytics/useReport.ts`
+    // The in-memory mirror this rule exists to keep out: every page of every money store.
+    const mirror = `for (const kind of KINDS) {
+      let after: Key | null = null
+      do {
+        const page = await store.page(kind, {index: 'byUpdatedAt', after, limit: 500})
+        after = page.next
+      } while (after)
+    }`
+    expect(count('moneyFullRead', mirror, screen)).toBe(1)
+    expect(count('moneyFullRead', "while (!isDone) { const p = await store.page('expense', {after, limit: 50}); isDone = !p.next }", screen)).toBe(1)
+    expect(count('moneyFullRead', "for (;;) { const p = await store.parties({index: 'byPersonDate', after}); if (!p.next) break }", screen)).toBe(1)
+    expect(count('moneyFullRead', "do { const p = await store.page('writeoff', {after}); after = p.next } while (true)", 'packages/sync/src/x.ts')).toBe(1)
+    // A bounded read stops at `want`; a key range (eq, min, max) is not the whole store; small stores page freely.
+    expect(count('moneyFullRead', "while (rows.length < want && !isDone) { const p = await store.page('expense', {after, limit: 50}); isDone = !p.next }", screen)).toBe(0)
+    expect(count('moneyFullRead', "do { const p = await store.page(type, {index: 'byFrom', eq: [id], after, limit: 20}); after = p.next } while (after)", screen)).toBe(0)
+    expect(count('moneyFullRead', "do { const p = await store.page('expense', {index: 'byDate', min: a, max: b, after}); after = p.next } while (after)", screen)).toBe(0)
+    expect(count('moneyFullRead', "do { const p = await store.page('person', {after}); after = p.next } while (after)", screen)).toBe(0)
+    expect(count('moneyFullRead', 'do { await work() } while (after)', screen)).toBe(0)
+    // Maintenance, migration and the dev tools are the allowlist.
+    expect(count('moneyFullRead', mirror, `${CLIENT}data/demoLarge.ts`)).toBe(0)
+    expect(count('moneyFullRead', mirror, 'packages/sync/src/migrate.ts')).toBe(0)
+    expect(moneyCursorLoops("// while (after) { store.page('expense') }")).toBe(0)
   })
 
   test('rawColour', () => {
