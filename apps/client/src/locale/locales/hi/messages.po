@@ -4450,7 +4450,7 @@ msgstr "खाता चुनें"
 msgid "Select an app language"
 msgstr "ऐप की भाषा चुनें"
 
-#: src/components/Select/Sheet.tsx:216
+#: src/components/Select/Sheet.tsx:197
 msgid "Select an option"
 msgstr "एक विकल्प चुनें"
 

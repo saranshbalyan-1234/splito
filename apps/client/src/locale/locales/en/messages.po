@@ -4450,7 +4450,7 @@ msgstr "Select account"
 msgid "Select an app language"
 msgstr "Select an app language"
 
-#: src/components/Select/Sheet.tsx:216
+#: src/components/Select/Sheet.tsx:197
 msgid "Select an option"
 msgstr "Select an option"
 
