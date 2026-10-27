@@ -23,6 +23,7 @@ import {
   utcOffsetLabel,
 } from '#/locale/dates'
 import {resolveNumberLocale} from '#/locale/numberLocale'
+import {APP_LANGUAGES} from '#/locale/languages'
 import {useDateLocale, useToday} from '#/locale/useDates'
 import {atoms as a, native} from '#/alf'
 import {useDialogControl} from '#/components/Dialog'
@@ -526,10 +527,20 @@ function LanguagePref() {
       icon={LanguageIcon}
       title={l`Language`}
       description={l`Splito's language. Names, notes and amounts you enter stay as you typed them.`}
-      options={[
-        {value: 'en', label: 'English'},
-        {value: 'hi', label: 'हिन्दी', hint: 'Hindi'},
-      ]}
+      options={APP_LANGUAGES.map(x => ({value: x.code2, label: x.name}))}
+    />
+  )
+}
+
+function LanguageDropdownPref() {
+  const {t: l} = useLingui()
+  return (
+    <SwitchPref
+      pref={usePrefControl('rightColumn.languageDropdown')}
+      icon={LanguageIcon}
+      title={l`Language menu`}
+      label={l`Show the language menu on the sign-in screens and in the right column`}
+      description={l`The same choice as Language above, one tap away. Hiding it never changes your language.`}
     />
   )
 }
@@ -943,6 +954,7 @@ export const PREF_CONTROLS = {
   dateFormat: DateFormatPref,
   numberLocale: NumberFormatPref,
   'amount.shorthand': AmountShorthandPref,
+  'rightColumn.languageDropdown': LanguageDropdownPref,
   peopleSort: PeopleSortPref,
   includeGroupsDefault: IncludeGroupsPref,
   showSyncStatus: ShowSyncStatusPref,

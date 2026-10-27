@@ -22,6 +22,8 @@ export function activateLanguage(language: AppLanguage) {
   if (i18n.locale !== language) {
     i18n.activate(language)
   }
+  // Screen readers and the browser's translate prompt read it (Bluesky's i18n.web.ts does the same).
+  document.documentElement.lang = language
 }
 
 export {i18n}

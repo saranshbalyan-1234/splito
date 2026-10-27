@@ -3,6 +3,7 @@ import {View} from 'react-native'
 import {Trans, useLingui} from '@lingui/react/macro'
 
 import {atoms as a, useBreakpoints, useTheme} from '#/alf'
+import {AppLanguageDropdown} from '#/components/AppLanguageDropdown'
 import {LogoMark} from '#/components/brand/Logo'
 import {Button, ButtonText} from '#/components/Button'
 import * as Layout from '#/components/Layout'
@@ -101,6 +102,10 @@ function Footer() {
           Splito works without an account. Your data stays on this device.
         </Trans>
       </Text>
+
+      <View style={a.flex_1} />
+
+      <AppLanguageDropdown />
     </View>
   )
 }
