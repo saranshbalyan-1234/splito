@@ -97,6 +97,7 @@ export async function storedTerms(s: Store) {
  */
 export async function expectedActivity(s: Store) {
   const {entities, history} = await s.dump()
+  const meIds = new Set(entities.filter(e => e.type === 'person' && (e.data as {isMe?: boolean}).isMe).map(e => e.id))
   const groupAt = new Map<string, number>()
   const personAt = new Map<string, number>()
   const names = (type: string, d: Record<string, unknown>) =>
@@ -105,7 +106,9 @@ export async function expectedActivity(s: Store) {
     if (!d) return
     const g = d.groupId as string | null
     if (g) groupAt.set(g, Math.max(groupAt.get(g) ?? 0, at))
-    for (const p of names(type, d)) personAt.set(p, Math.max(personAt.get(p) ?? 0, at))
+    // Only a record I am on makes a friend active (audit m20).
+    const on = names(type, d)
+    if (on.some(p => meIds.has(p))) for (const p of on) personAt.set(p, Math.max(personAt.get(p) ?? 0, at))
   }
   const byEntity = new Map<string, typeof history>()
   for (const h of history) if (MONEY.includes(h.entityType)) byEntity.set(`${h.entityType}:${h.entityId}`, [...(byEntity.get(`${h.entityType}:${h.entityId}`) ?? []), h])

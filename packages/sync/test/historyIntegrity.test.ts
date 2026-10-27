@@ -204,3 +204,34 @@ test('restoring keeps working after the purge and restore helpers are used toget
   await purgeDeleted(s, ctx, 'expense', e.id)
   expect(await codeOf(restoreExpense(s, ctx, e.id))).toBe('NOT_FOUND')
 })
+
+/* ------------------- m19, m20: who and what was recently active ---------------- */
+
+test('m19: deleting an expense in a group moves the group up, and the people on it', async () => {
+  const bob = await createPerson(s, ctx, {name: 'Bob'})
+  const flat = await createGroup(s, ctx, {name: 'Flat', kind: 'home', currency: 'EUR', startDate: null, endDate: null, memberIds: [bob.id]})
+  const trip = await createGroup(s, ctx, {name: 'Trip', kind: 'trip', currency: 'EUR', startDate: null, endDate: null, memberIds: [bob.id]})
+  const e = await createExpense(s, ctx, expense({groupId: flat.id, split: {mode: 'equal', participants: ['me', bob.id]}}))
+  expect([...(await s.groupActivity()).keys()][0]).toBe(flat.id)
+  await createExpense(s, ctx, expense({groupId: trip.id, split: {mode: 'equal', participants: ['me', bob.id]}}))
+  expect([...(await s.groupActivity()).keys()][0]).toBe(trip.id)
+  await deleteExpense(s, ctx, e.id)
+  expect([...(await s.groupActivity()).keys()][0]).toBe(flat.id)
+  expect((await s.lastActivity()).get(bob.id)).toBe((await s.get('expense', e.id))!.updatedAt)
+})
+
+test('m20: a record I am not on does not make a friend recently active', async () => {
+  const bob = await createPerson(s, ctx, {name: 'Bob'})
+  const carol = await createPerson(s, ctx, {name: 'Carol'})
+  const g = await createGroup(s, ctx, {name: 'Pair', kind: 'other', currency: 'EUR', startDate: null, endDate: null, memberIds: [bob.id, carol.id]})
+  await createExpense(s, ctx, expense({groupId: g.id, payers: {[bob.id]: 3000n}, split: {mode: 'equal', participants: [bob.id, carol.id]}}))
+  expect((await s.lastActivity()).has(bob.id)).toBe(false)
+  expect((await s.lastActivity()).has(carol.id)).toBe(false)
+  const mine = await createExpense(s, ctx, expense({split: {mode: 'equal', participants: ['me', carol.id]}}))
+  const last = await s.lastActivity()
+  expect(last.get(carol.id)).toBe(mine.updatedAt)
+  expect(last.has(bob.id)).toBe(false)
+  // The rebuilt projection agrees.
+  await s.rebuildProjections()
+  expect(await s.lastActivity()).toEqual(last)
+})
