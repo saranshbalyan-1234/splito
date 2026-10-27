@@ -108,7 +108,14 @@ export function Reconciliation({
       {roundOff ? (
         <View style={[a.flex_row, a.align_center, a.gap_sm]}>
           <View style={[a.flex_1]}>
-            {row('round-off', l`Round-off`, fmt(roundOff.minor))}
+            {row(
+              'round-off',
+              /* "Round-off to the payer" with several payers has no one payer: say it is shared. */
+              form.roundOff === 'payer' && roundOff.to === undefined
+                ? l`Round-off · shared by everyone`
+                : l`Round-off`,
+              fmt(roundOff.minor),
+            )}
           </View>
           <Button
             testID="bill-round-off-remove"

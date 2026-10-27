@@ -2,6 +2,7 @@ import {View} from 'react-native'
 import {Trans, useLingui} from '@lingui/react/macro'
 import {
   billOf,
+  billShares,
   isInScope,
   magnitude,
   roundOffByPerson,
@@ -61,6 +62,11 @@ export function ChargedBreakdown({
   const lines = bill.lines.filter(x => x.amount !== ZERO)
   const covers = (c: (typeof bill.lines)[number]['charge']) =>
     split.items.filter(i => isInScope(c.appliesTo, i))
+  /* An unnamed item reads as its place on the bill, not its place among the ones a charge covers. */
+  const itemLabel = (id: string) => {
+    const index = split.items.findIndex(i => i.id === id)
+    return split.items[index]?.name || l`Item ${index + 1}`
+  }
   const scopeOf = (n: number) => {
     const { charge } = bill.lines[n]!
     const on =
@@ -69,7 +75,7 @@ export function ChargedBreakdown({
         : charge.appliesTo.type === 'classes'
           ? charge.appliesTo.classes.map(nameOf).join(' + ')
           : covers(charge)
-              .map((i, k) => i.name || l`Item ${k + 1}`)
+              .map(i => itemLabel(i.id))
               .join(' + ')
     // Stacking: the earlier charges that fall on the same items.
     const mine = new Set(covers(charge).map(i => i.id))
@@ -86,12 +92,8 @@ export function ChargedBreakdown({
     return v.mode === 'percent' ? `${pct.format(v.basisPoints / 100)}%` : ''
   }
 
-  const people = Object.keys(
-    split.items.reduce<Record<string, true>>((acc, i) => {
-      for (const id of Object.keys(parts[i.id]!)) acc[id] = true
-      return acc
-    }, {}),
-  )
+  /* Everyone who owes something: a payer with no items, only a round-off, still appears. */
+  const people = Object.keys(billShares(bill, roundOff))
 
   return (
     <View testID="expense-items">
