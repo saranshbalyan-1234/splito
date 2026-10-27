@@ -3,6 +3,7 @@ import {DomainError} from '@splito/domain'
 
 import {
   deleteFeedback,
+  type Feedback,
   type FeedbackInput,
   FEEDBACK_MAIL_MESSAGE_MAX,
   feedbackMailto,
@@ -80,6 +81,20 @@ test('Your feedback lists newest first and hides deleted', async () => {
   expect((await loadFeedback(s)).map(f => f.id)).toEqual([b.id])
   await fails(deleteFeedback(s, ctx, a.id), 'NOT_FOUND')
   expect(sortFeedback([])).toEqual([])
+})
+
+test('a deleted feedback tombstone keeps no message, picture, email or app info', async () => {
+  const fb = await saveFeedback(
+    s,
+    ctx,
+    input({attachment: {uri: 'data:image/jpeg;base64,AAAA', mime: 'image/jpeg', width: 10, height: 10}, replyEmail: 'me@example.com'}),
+  )
+  await deleteFeedback(s, ctx, fb.id)
+  const t = (await s.getAll<Feedback>('feedback')).find(f => f.id === fb.id)!
+  expect(t.deleted).toBe(true)
+  expect(t.data).toMatchObject({message: '', attachment: null, appInfo: null, replyEmail: null})
+  const latest = (await s.history('feedback', fb.id)).at(-1)!
+  expect(JSON.stringify(latest.data)).not.toContain('AAAA')
 })
 
 test('email draft carries the message and app info, notes the attachment, never embeds it', async () => {

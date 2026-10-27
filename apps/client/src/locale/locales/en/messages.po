@@ -2746,8 +2746,8 @@ msgid "It hasn't been sent anywhere yet. Send it by email now, or find it later 
 msgstr "It hasn't been sent anywhere yet. Send it by email now, or find it later in Your feedback."
 
 #: src/features/feedback/FeedbackList.tsx:88
-msgid "It is removed from this device. If you already emailed it, that email isn't affected."
-msgstr "It is removed from this device. If you already emailed it, that email isn't affected."
+msgid "It is removed from Your feedback. If you already emailed it, that email isn't affected."
+msgstr "It is removed from Your feedback. If you already emailed it, that email isn't affected."
 
 #: src/screens/RecentlyDeleted/index.tsx:278
 msgid "It leaves Recently deleted and can’t be restored. Its history stays in the record’s audit trail."

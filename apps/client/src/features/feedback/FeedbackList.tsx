@@ -85,7 +85,7 @@ export function FeedbackList() {
       <Prompt.Basic
         control={deletePrompt}
         title={l`Delete this feedback?`}
-        description={l`It is removed from this device. If you already emailed it, that email isn't affected.`}
+        description={l`It is removed from Your feedback. If you already emailed it, that email isn't affected.`}
         confirmButtonCta={l`Delete`}
         confirmButtonColor="negative"
         onConfirm={() => {

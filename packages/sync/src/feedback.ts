@@ -89,11 +89,11 @@ export async function saveFeedback(store: Store, ctx: MutationCtx, input: Feedba
   return store.transaction(tx => write(tx, ctx, 'feedback', ctx.newId(), data, false, null))
 }
 
-/** Tombstones a feedback record. Local only: the server never had it. */
+/** Tombstones a feedback record with its content stripped, so the message, email and picture are not kept in the tombstone. Local only: the server never had it. */
 export async function deleteFeedback(store: Store, ctx: MutationCtx, id: string): Promise<void> {
   await store.transaction(async tx => {
     const f = await requireLive<Feedback>(tx, 'feedback', id)
-    await write(tx, ctx, 'feedback', id, f.data, true, null)
+    await write(tx, ctx, 'feedback', id, {...f.data, message: '', attachment: null, appInfo: null, replyEmail: null}, true, null)
   })
 }
 

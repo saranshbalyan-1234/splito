@@ -2746,8 +2746,8 @@ msgid "It hasn't been sent anywhere yet. Send it by email now, or find it later 
 msgstr "इसे अभी कहीं भेजा नहीं गया है। इसे अभी ईमेल से भेजें, या बाद में आपका फ़ीडबैक में देखें।"
 
 #: src/features/feedback/FeedbackList.tsx:88
-msgid "It is removed from this device. If you already emailed it, that email isn't affected."
-msgstr "यह इस डिवाइस से हट जाएगा। अगर आप इसे पहले ही ईमेल कर चुके हैं, तो उस ईमेल पर कोई असर नहीं पड़ेगा।"
+msgid "It is removed from Your feedback. If you already emailed it, that email isn't affected."
+msgstr "यह आपके फ़ीडबैक से हट जाएगा। अगर आप इसे पहले ही ईमेल कर चुके हैं, तो उस ईमेल पर कोई असर नहीं पड़ेगा।"
 
 #: src/screens/RecentlyDeleted/index.tsx:278
 msgid "It leaves Recently deleted and can’t be restored. Its history stays in the record’s audit trail."
