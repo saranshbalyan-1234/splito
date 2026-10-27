@@ -1,6 +1,7 @@
 import {assertInRange, DomainError, getCurrency, parseLocalDate, validateExpense} from '@splito/domain'
 
 import {decode, encode} from './codec'
+import {inviteLinkState, type InviteLink} from './friends'
 import {write} from './mutations'
 import {PREFS, type PrefKey} from './preferences'
 import {ENTITY_TYPES, type Key, SCHEMA_VERSION} from './schema'
@@ -88,10 +89,24 @@ export async function createBackup(store: Store, ctx: MutationCtx): Promise<Back
   const d = await store.dump()
   const entities: BackupFile['entities'] = {}
   for (const type of ENTITY_TYPES) entities[type] = []
-  for (const e of d.entities)
+  const now = ctx.now()
+  for (const e of d.entities) {
+    if (!isExportable(e.type, e, now)) continue
     entities[e.type]!.push({id: e.id, data: e.data, version: e.version, deleted: e.deleted, createdAt: e.createdAt, updatedAt: e.updatedAt})
+  }
   for (const list of Object.values(entities)) list.sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0))
   return {format: BACKUP_FORMAT, version: BACKUP_VERSION, schemaVersion: SCHEMA_VERSION, exportedAt: ctx.now(), meId: ctx.actor, entities, history: d.history}
+}
+
+/**
+ * What never leaves in a file: preferences that belong to the device (and any
+ * this build does not define), and invite links that still work (a live link
+ * is a secret that grants access; a revoked or expired one is only history).
+ */
+function isExportable(type: EntityType, e: {id: string; data: unknown; deleted: boolean}, now: number): boolean {
+  if (type === 'preference') return PREFS[e.id as PrefKey]?.scope === 'account'
+  if (type === 'inviteLink') return e.deleted || inviteLinkState(e.data as InviteLink, now) !== 'active'
+  return true
 }
 
 /**
@@ -111,7 +126,9 @@ function checksum(s: string): string {
   return (4294967296 * (2097151 & h2) + (h1 >>> 0)).toString(16).padStart(14, '0')
 }
 
-const sumOf = (f: {entities: unknown; history: unknown}) => checksum(encode({entities: f.entities, history: f.history}))
+/** The checksum covers the header too, so a changed `meId`, version or date is caught. */
+const sumOf = (f: {format?: unknown; version?: unknown; schemaVersion?: unknown; exportedAt?: unknown; meId?: unknown; entities: unknown; history: unknown}) =>
+  checksum(encode({format: f.format, version: f.version, schemaVersion: f.schemaVersion, exportedAt: f.exportedAt, meId: f.meId, entities: f.entities, history: f.history}))
 
 /** The file's text: JSON with exact amounts and a checksum. */
 export function serializeBackup(file: BackupFile): string {
@@ -202,11 +219,14 @@ export function parseBackup(text: string): BackupFile {
     return fail('BACKUP_INVALID')
   }
   if (!isObj(raw) || raw.format !== BACKUP_FORMAT || !Number.isInteger(raw.version) || (raw.version as number) < 0) return fail('BACKUP_INVALID')
-  if ((raw.version as number) > BACKUP_VERSION || (isNum(raw.schemaVersion) && raw.schemaVersion > SCHEMA_VERSION)) return fail('BACKUP_TOO_NEW')
+  if (!Number.isInteger(raw.schemaVersion)) return fail('BACKUP_INVALID')
+  if ((raw.version as number) > BACKUP_VERSION || (raw.schemaVersion as number) > SCHEMA_VERSION) return fail('BACKUP_TOO_NEW')
+  // ponytail: no row migrations exist yet, so rows from an older schema are not guessed at; add them with the first schema step.
+  if ((raw.schemaVersion as number) < SCHEMA_VERSION) return fail('BACKUP_TOO_OLD')
   if (!isObj(raw.entities) || !Array.isArray(raw.history) || !isStr(raw.meId)) return fail('BACKUP_INVALID')
   // A type this build does not know would be dropped silently: refuse the file instead.
   if (Object.keys(raw.entities).some(t => !(ENTITY_TYPES as string[]).includes(t))) return fail('BACKUP_TOO_NEW')
-  if (raw.version === BACKUP_VERSION && raw.checksum !== sumOf(raw as {entities: unknown; history: unknown})) return fail('BACKUP_CORRUPT')
+  if (raw.version === BACKUP_VERSION && raw.checksum !== sumOf(raw as Parameters<typeof sumOf>[0])) return fail('BACKUP_CORRUPT')
   const file = upgradeBackup(raw) as unknown as BackupFile
   const ids = new Set<string>()
   for (const type of ENTITY_TYPES) {
@@ -231,7 +251,16 @@ export function parseBackup(text: string): BackupFile {
 function remapIdentity<T>(v: T, from: string, to: string): T {
   if (typeof v === 'string') return (v === from ? to : v) as T
   if (Array.isArray(v)) return v.map(x => remapIdentity(x, from, to)) as T
-  if (v && typeof v === 'object') return Object.fromEntries(Object.entries(v).map(([k, x]) => [k === from ? to : k, remapIdentity(x, from, to)])) as T
+  if (v && typeof v === 'object') {
+    const out: Record<string, unknown> = {}
+    for (const [k, x] of Object.entries(v)) {
+      const key = k === from ? to : k
+      // Two keys folding into one would drop an amount: refuse rather than save a broken expense.
+      if (key in out) fail('BACKUP_CORRUPT')
+      out[key] = remapIdentity(x, from, to)
+    }
+    return out as T
+  }
   return v
 }
 
@@ -250,10 +279,10 @@ function isQueued(type: EntityType, id: string): boolean {
 }
 
 /** A preference this build does not define, or whose value it would not accept, is left out (not corruption: a newer build may have added it). */
-function isApplicable(type: EntityType, e: BackupEntity): boolean {
+function isApplicable(type: EntityType, e: BackupEntity, now: number): boolean {
+  if (!isExportable(type, e, now)) return false
   if (type !== 'preference') return true
-  const def = PREFS[e.id as PrefKey]
-  return !!def && (e.deleted || def.validate((e.data as {value: unknown}).value))
+  return e.deleted || PREFS[e.id as PrefKey]!.validate((e.data as {value: unknown}).value)
 }
 
 async function* deviceRows(store: Store, type: EntityType) {
@@ -266,14 +295,23 @@ async function* deviceRows(store: Store, type: EntityType) {
   } while (after)
 }
 
-/** The file as this device would read it: "me" remapped, the foreign me person left out. */
+/**
+ * The file as this device would read it: "me" remapped, the foreign me person
+ * left out. A person row that carries this device's me id (or the file's me id
+ * without being that me) would overwrite or fold into me, so it is refused; the
+ * remapped rows are checked again, since remapping changes ids and map keys.
+ */
 function localFile(file: BackupFile, meId: string) {
   const foreign = file.meId !== meId
+  const isFileMe = (e: BackupEntity) => e.id === file.meId && !!(e.data as {isMe?: boolean}).isMe
+  for (const e of file.entities.person ?? [])
+    if ((e.id === meId && (foreign || !(e.data as {isMe?: boolean}).isMe)) || (e.id === file.meId && !isFileMe(e))) fail('BACKUP_CORRUPT')
   const entities: Record<string, BackupEntity[]> = {}
   for (const type of ENTITY_TYPES) {
     entities[type] = (file.entities[type] ?? [])
-      .filter(e => !(type === 'person' && (e.data as {isMe?: boolean}).isMe && e.id === file.meId))
+      .filter(e => !(type === 'person' && isFileMe(e)))
       .map(e => (foreign ? remapIdentity(e, file.meId, meId) : e))
+    if (foreign) for (const e of entities[type]!) checkEntity(type, e)
   }
   const history = foreign ? remapIdentity(file.history, file.meId, meId) : file.history
   return {entities, history, foreign}
@@ -284,7 +322,7 @@ async function plan(store: Store, ctx: MutationCtx, file: BackupFile, mode: Rest
   const counts = Object.fromEntries(ENTITY_TYPES.map(t => [t, emptyCounts()])) as Record<EntityType, TypeCounts>
   const actions: Action[] = []
   for (const type of ENTITY_TYPES) {
-    const list = local.entities[type]!.filter(e => isApplicable(type, e))
+    const list = local.entities[type]!.filter(e => isApplicable(type, e, ctx.now()))
     for (let i = 0; i < list.length; i += PAGE) {
       const chunk = list.slice(i, i + PAGE)
       const prevs = new Map((await store.getMany(type, chunk.map(e => e.id))).map(p => [p.id, p]))
@@ -316,30 +354,48 @@ async function plan(store: Store, ctx: MutationCtx, file: BackupFile, mode: Rest
   return {actions, counts, local}
 }
 
-/** Every person and group a restored row names must exist (in the file, or on this device when merging). */
+/** True for a group that takes no new expenses: inactive, or archived by an older build. */
+const isInactive = (d: Raw) => !!(d.inactive || d.archived)
+
+/**
+ * Every live person and group a restored live row names must exist and be live
+ * (in the file, or on this device when merging): a tombstone is not someone
+ * to attach money to. A restore also adds no expense to an inactive group
+ * (GROUP_INACTIVE); payments and write-offs may still land. A group that
+ * arrives in this same restore, with its own expenses, is the history being
+ * brought back, not a change to an inactive group.
+ */
 async function checkReferences(store: Store, entities: Record<string, BackupEntity[]>, actions: Action[], mode: RestoreMode, meId: string) {
-  const fileIds = (type: EntityType) => new Set(entities[type]!.map(e => e.id))
-  const have = {person: new Set([...fileIds('person'), meId]), group: fileIds('group')}
+  const live = (type: EntityType) => new Set(entities[type]!.filter(e => !e.deleted).map(e => e.id))
+  const have = {person: new Set([...live('person'), meId]), group: live('group')}
   const missing = {person: new Set<string>(), group: new Set<string>()}
   const need = (type: 'person' | 'group', id: string | null | undefined) => {
     if (id && !have[type].has(id)) missing[type].add(id)
   }
+  const added = new Set(actions.flatMap(a => (a.kind === 'add' && a.type === 'group' ? [a.entity.id] : [])))
+  const groupsToCheck = new Set<string>()
   for (const a of actions) {
-    if (a.kind === 'remove') continue
+    if (a.kind === 'remove' || a.entity.deleted) continue
     const d = a.entity.data as Raw
     if (a.type === 'expense') {
       for (const p of [...Object.keys(d.payers as object), ...Object.keys(d.shares as object)]) need('person', p)
       need('group', d.groupId as string | null)
+      if (d.groupId && !added.has(d.groupId as string)) groupsToCheck.add(d.groupId as string)
     } else if (a.type === 'repayment' || a.type === 'writeoff') {
       need('person', d.from as string)
       need('person', d.to as string)
       need('group', d.groupId as string | null)
     } else if (a.type === 'group') for (const m of d.members as Array<{personId: string}>) need('person', m.personId)
   }
-  for (const type of ['person', 'group'] as const) {
-    if (mode === 'merge' && missing[type].size) for (const e of await store.getMany(type, [...missing[type]])) missing[type].delete(e.id)
-    if (missing[type].size) fail('BACKUP_BROKEN_REFERENCE')
+  if (mode === 'merge') {
+    for (const type of ['person', 'group'] as const)
+      if (missing[type].size) for (const e of await store.getMany(type, [...missing[type]])) if (!e.deleted) missing[type].delete(e.id)
   }
+  if (missing.person.size || missing.group.size) fail('BACKUP_BROKEN_REFERENCE')
+  // The group as it will be once this restore is done: the file's row when it brings one, else this device's.
+  const arriving = new Map(actions.flatMap(a => (a.kind !== 'remove' && a.type === 'group' ? [[a.entity.id, a.entity.data as Raw] as const] : [])))
+  const here = new Map((await store.getMany<Raw>('group', [...groupsToCheck].filter(id => !arriving.has(id)))).map(g => [g.id, g.data]))
+  for (const id of groupsToCheck) if (isInactive(arriving.get(id) ?? here.get(id) ?? {})) fail('GROUP_INACTIVE')
 }
 
 /** What restoring `file` would change, without writing anything. */

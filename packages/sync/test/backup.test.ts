@@ -12,7 +12,7 @@ import {
   upgradeBackup,
 } from '../src/backup'
 import {encode} from '../src/codec'
-import {createInviteLink, sendFriendRequest} from '../src/friends'
+import {createInviteLink, revokeInviteLink, sendFriendRequest} from '../src/friends'
 import {saveFeedback} from '../src/feedback'
 import {createExpense, createGroup, type ExpenseDraft, createPerson, createRepayment, createWriteOffs, deleteExpense, ensureMe, updateExpense} from '../src/mutations'
 import {setPref} from '../src/preferences'
@@ -109,14 +109,15 @@ const WRITERS = {
     await sendFriendRequest(src, ctx, {contact: {kind: 'email', value: 'zed@example.com'}, name: 'Zed', reach: 'on-splito'})
   },
   inviteLink: async () => {
-    await createInviteLink(src, ctx, {kind: 'friend', groupId: null, maxUses: 5, expiresInMs: null, approveJoins: false})
+    // An active link is a secret that grants access and stays out of backups; a revoked one is history.
+    const link = await createInviteLink(src, ctx, {kind: 'friend', groupId: null, maxUses: 5, expiresInMs: null, approveJoins: false})
+    await revokeInviteLink(src, ctx, link.id)
   },
   feedback: async () => {
     await saveFeedback(src, ctx, {type: 'idea', message: 'Please add dark mode', attachment: null, appInfo: null, replyEmail: null})
   },
   preference: async () => {
     await setPref(src, ctx, 'defaultCurrency', 'AED')
-    await setPref(src, ctx, 'haptics', false)
   },
 } satisfies Record<EntityType, () => Promise<void>>
 
@@ -312,9 +313,8 @@ test('restoring queues the changes in the outbox, except device-only rows', asyn
   const ops = (await dst.outbox()).filter(o => o.opType.startsWith('backup.'))
   expect(ops.length).toBeGreaterThan(0)
   expect(ops.some(o => o.entityType === 'expense')).toBe(true)
-  // Feedback and device-scoped preferences never leave the device.
+  // Feedback never leaves the device.
   expect(ops.some(o => o.entityType === 'feedback')).toBe(false)
-  expect(ops.some(o => o.entityType === 'preference' && o.entityId === 'haptics')).toBe(false)
   expect(ops.some(o => o.entityType === 'preference' && o.entityId === 'defaultCurrency')).toBe(true)
   // Imported rows wait for the server, they are not "synced".
   const e = (await dst.getAll('expense'))[0]!
@@ -347,4 +347,127 @@ test('an expense that names a person nobody has is rejected before anything is w
   const before = await ledgerOf(dst)
   await expect(applyBackup(dst, ctx, noPeople, 'merge')).rejects.toThrow('BACKUP_BROKEN_REFERENCE')
   expect(await ledgerOf(dst)).toEqual(before)
+})
+
+/** A file edited by hand, with the checksum recomputed as a careful forger would. */
+const forged = async (edit: (f: BackupFile) => void) => {
+  const f = await createBackup(src, ctx)
+  edit(f)
+  return roundTrip(f)
+}
+const person = (id: string, name: string, over: Record<string, unknown> = {}) => ({id, data: {name, isMe: false}, version: 1, deleted: false, createdAt: 1, updatedAt: 1, ...over})
+const money = (id: string, data: Record<string, unknown>) => ({id, data: {title: 'x', groupId: null, currency: 'INR', date: '2026-10-20', tz: 'Asia/Kolkata', category: 'food', notes: '', split: {mode: 'equal', participants: []}, ...data}, version: 1, deleted: false, createdAt: 1, updatedAt: 1})
+
+test('a file person row with this device\'s me id is refused: it would overwrite me', async () => {
+  const bad = await forged(f => {
+    f.entities.person = f.entities.person!.map(p => (p.id === 'me' ? person('me', 'Impostor') : p))
+  })
+  await expect(applyBackup(dst, ctx, bad, 'merge')).rejects.toThrow('BACKUP_CORRUPT')
+  await expect(previewBackup(dst, ctx, bad, 'merge')).rejects.toThrow('BACKUP_CORRUPT')
+  expect((await dst.get<{name: string}>('person', 'me'))!.data.name).toBe('Me')
+  // From another identity too: a plain person row that carries this device's me id.
+  const other = await openSqlStore(bunExecutor(':memory:'))
+  const phone = mk('phone-me')
+  await ensureMe(other, phone, 'Phone')
+  const clash = await forged(f => {
+    f.entities.person!.push(person('phone-me', 'Clash'))
+  })
+  await expect(applyBackup(other, phone, clash, 'merge')).rejects.toThrow('BACKUP_CORRUPT')
+})
+
+test('remapping "me" can never fold two people into one: a collision is refused', async () => {
+  const other = await openSqlStore(bunExecutor(':memory:'))
+  const phone = mk('phone-me')
+  await ensureMe(other, phone, 'Phone')
+  const bad = await forged(f => {
+    f.meId = 'A'
+    f.entities.person = [person('A', 'Me', {data: {name: 'Me', isMe: true}})]
+    // "phone-me" is a dangling key in the file; A -> phone-me would merge the two shares.
+    f.entities.expense = [money('e1', {total: 1000n, payers: {A: 1000n}, shares: {A: 500n, 'phone-me': 500n}})]
+    f.history = []
+  })
+  await expect(applyBackup(other, phone, bad, 'merge')).rejects.toThrow('BACKUP_CORRUPT')
+  expect((await other.getAll('expense')).length).toBe(0)
+})
+
+test('a tombstoned person or group does not satisfy a reference', async () => {
+  const gone = await forged(f => {
+    f.entities.person!.push(person('p-dead', 'Dead', {deleted: true}))
+    f.entities.expense!.push(money('e-dead-ref', {total: 100n, payers: {me: 100n}, shares: {me: 50n, 'p-dead': 50n}}))
+  })
+  await expect(applyBackup(dst, ctx, gone, 'merge')).rejects.toThrow('BACKUP_BROKEN_REFERENCE')
+  // The device's own tombstone is no better.
+  await seed()
+  const ben = (await src.getAll('person')).find(p => (p.data as {name: string}).name === 'Ben')!
+  const file = await roundTrip(await createBackup(src, ctx))
+  await applyBackup(dst, ctx, file, 'merge')
+  await dst.transaction(async tx => {
+    const e = (await tx.get<Record<string, unknown>>('person', ben.id))!
+    await tx.put({type: 'person', id: ben.id, data: e.data, version: e.version + 1, deleted: true, updatedAt: clock++})
+  })
+  const ref = await forged(f => {
+    f.entities.person = f.entities.person!.filter(p => p.id !== ben.id)
+    f.entities.expense = [money('e-new', {total: 100n, payers: {me: 100n}, shares: {me: 50n, [ben.id]: 50n}})]
+    f.entities.group = []
+    f.entities.repayment = []
+    f.entities.writeoff = []
+    f.history = []
+  })
+  await expect(applyBackup(dst, ctx, ref, 'merge')).rejects.toThrow('BACKUP_BROKEN_REFERENCE')
+})
+
+test('a restore adds no expense to an inactive group, but a payment may still land', async () => {
+  await seed()
+  const file = await roundTrip(await createBackup(src, ctx))
+  await applyBackup(dst, ctx, file, 'merge')
+  const g = (await dst.getAll<Record<string, unknown>>('group'))[0]!
+  await dst.transaction(async tx => {
+    await tx.put({type: 'group', id: g.id, data: {...g.data, archived: true}, version: g.version + 1, deleted: false, updatedAt: clock++})
+  })
+  const asha = (await dst.getAll<{name: string}>('person')).find(p => p.data.name === 'Asha')!
+  const extra = await forged(f => {
+    f.entities.expense!.push(money('e-in-archived', {total: 100n, groupId: g.id, payers: {me: 100n}, shares: {me: 50n, [asha.id]: 50n}}))
+  })
+  await expect(applyBackup(dst, ctx, extra, 'merge')).rejects.toThrow('GROUP_INACTIVE')
+  await expect(previewBackup(dst, ctx, extra, 'merge')).rejects.toThrow('GROUP_INACTIVE')
+  const pay = await forged(f => {
+    f.entities.repayment!.push({id: 'r-in-archived', data: {groupId: g.id, currency: 'INR', from: asha.id, to: 'me', amount: 10n, date: '2026-10-25', tz: 'Asia/Kolkata', note: ''}, version: 1, deleted: false, createdAt: 1, updatedAt: 1})
+  })
+  const res = await applyBackup(dst, ctx, pay, 'merge')
+  expect(res.added).toBe(1)
+  // A group that arrives archived together with its own history is not "adding to an inactive group".
+  const fresh = await openSqlStore(bunExecutor(':memory:'))
+  await ensureMe(fresh, ctx, 'Me')
+  const archived = await forged(f => {
+    f.entities.group = f.entities.group!.map(x => ({...x, data: {...(x.data as object), archived: true}}))
+  })
+  await applyBackup(fresh, ctx, archived, 'merge')
+  expect((await fresh.getAll('expense')).length).toBe(3)
+})
+
+test('the file header is in the checksum, and a lower schema is refused until migrations exist', async () => {
+  await seed()
+  const file = await createBackup(src, ctx)
+  const text = serializeBackup(file)
+  const raw = JSON.parse(text)
+  expect(() => parseBackup(JSON.stringify({...raw, meId: 'someone-else'}))).toThrow('BACKUP_CORRUPT')
+  expect(() => parseBackup(JSON.stringify({...raw, exportedAt: raw.exportedAt + 1}))).toThrow('BACKUP_CORRUPT')
+  const { schemaVersion: _s, ...noSchema } = raw
+  expect(() => parseBackup(JSON.stringify(noSchema))).toThrow('BACKUP_INVALID')
+  expect(() => parseBackup(serializeBackup({...file, schemaVersion: file.schemaVersion - 1}))).toThrow('BACKUP_TOO_OLD')
+})
+
+test('device-scoped preferences and active invite links stay out of a backup', async () => {
+  await setPref(src, ctx, 'haptics', false)
+  await setPref(src, ctx, 'defaultCurrency', 'AED')
+  await createInviteLink(src, ctx, {kind: 'friend', groupId: null, maxUses: 5, expiresInMs: null, approveJoins: false})
+  const file = await createBackup(src, ctx)
+  expect(file.entities.preference!.map(p => p.id)).toEqual(['defaultCurrency'])
+  expect(file.entities.inviteLink).toEqual([])
+  // And a hand-made file that carries them is not applied.
+  const carried = await forged(f => {
+    f.entities.preference!.push({id: 'haptics', data: {value: false}, version: 1, deleted: false, createdAt: 1, updatedAt: 1})
+  })
+  await applyBackup(dst, ctx, carried, 'merge')
+  expect(await dst.get('preference', 'haptics')).toBeUndefined()
 })
