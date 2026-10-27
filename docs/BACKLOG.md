@@ -2727,6 +2727,19 @@ A "Recent transactions" section in the Home body (all expenses and repayments in
   4. Hidden by its preference; count and Home position respected; the right column is unchanged.
   5. e2e at phone and desktop widths with the demo set; Hindi 0 missing.
 
+### F-240 UX audit fixes (2026-10-28) `spec: docs/audit/UX-AUDIT-2026-10-28.md`
+
+Fix every finding of the 2026-10-28 UX audit marked "F-240" (1 critical, 6 major, 15 minor); findings 2, 3, 22 are in Wave B (B1, B6) and 9 waits for the owner's red-dot call. Queued for Wave C, first after F-228a.
+
+- **Effort** M · **Impact** 9 · **Backend** no · **Status** todo · **Deps** Wave B merged
+- **Prefs** -
+- **Acceptance**
+  1. Every F-240 row in the audit is fixed, each with a regression test (unit or e2e) that fails before the fix, and the audit table marks it fixed with the commit.
+  2. Critical #1: the FAB is mounted once in the shell from the header left-slot state; no screen mounts its own; e2e shows it on empty Home, Groups, Analytics and Activity at phone width and never on pushed pages.
+  3. Contrast (#7): every money and chart text token passes WCAG AA (4.5:1 body, 3:1 large) in light and Dim, checked by an automated contrast test over the theme tokens.
+  4. Web hit areas (#6): every icon button is at least 44 x 44 px on web (e2e geometry check at 390 px).
+  5. Full checks green; screenshots of every changed screen, phone and desktop, light and Dim.
+
 ### F-1501 Text summaries for WhatsApp `spec 4b v1`
 
 Whole-group or "only their part" summaries with WhatsApp markup, sent via wa.me in the recipient's language.
