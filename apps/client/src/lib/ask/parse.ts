@@ -17,41 +17,44 @@ import {fold, hasAny, hasPhrase, tokens, wholeNumber} from './text'
  * outside it is `unsupported`, never guessed at (ARCHITECTURE 26.19).
  */
 
-const WHO = ['who', 'whom', 'whos', 'kaun', 'kon', 'kisne', 'kisko', 'kise', 'kis', 'कौन', 'किसने', 'किसको', 'किसे', 'किस']
-const OWE = [
-  'owe', 'owes', 'owed', 'owing', 'due', 'dues', 'debt', 'debts', 'payback', 'pay back', 'get back', 'dena', 'dene', 'udhaar', 'udhar', 'baaki', 'baki', 'lena', 'lene',
-  'देना', 'देने', 'देगा', 'देगी', 'उधार', 'बकाया', 'बाकी', 'लेना', 'लेने', 'कर्ज',
-]
-const I_OWE = [
+/** Folded once, here: the words in a question are folded, so a keyword must be too (a Devanagari nukta has two spellings). */
+const F = (xs: readonly string[]) => xs.map(fold)
+
+const WHO = F(['who', 'whom', 'whos', 'kaun', 'kon', 'kisne', 'kisko', 'kise', 'kis', 'कौन', 'किसने', 'किसको', 'किसे', 'किस'])
+const OWE = F([
+  'owe', 'owes', 'owed', 'owing', 'due', 'dues', 'debt', 'debts', 'payback', 'pay back', 'get back', 'dena', 'dene', 'udhaar', 'udhar', 'baaki', 'baki', 'lena', 'lene', 'milna', 'milega', 'milenge', 'milegi',
+  'देना', 'देने', 'देगा', 'देगी', 'उधार', 'बकाया', 'बाकी', 'लेना', 'लेने', 'कर्ज', 'मिलना', 'मिलेगा', 'मिलेंगे',
+])
+const I_OWE = F([
   'i owe', 'do i owe', 'i have to pay', 'should i pay', 'i must pay', 'owe to', 'mujhe kisko', 'mujhe kise', 'mujhe kis ko', 'main kisko', 'main kise',
   'मुझे किसको', 'मुझे किसे', 'मैं किसे', 'मैं किसको', 'किसको देना',
-]
-const OWED_TO_ME = ['owes me', 'owe me', 'owed to me', 'am i owed', 'owing me', 'kisne mujhe', 'mujhe lena', 'mujhe milna', 'किसने मुझे', 'मुझे लेना', 'मुझे मिलना']
-const BOTH = ['owes whom', 'owe whom', 'whom owes', 'overall balance', 'net balance', 'all balances', 'my balance', 'my balances', 'balances', 'mera balance', 'मेरा बैलेंस', 'मेरा हिसाब']
-const BALANCE = ['balance', 'balances', 'settle', 'settled', 'settlement', 'net', 'baki', 'hisaab', 'hisab', 'बैलेंस', 'हिसाब', 'सेटल']
-const SPEND = [
+])
+const OWED_TO_ME = F(['owes me', 'owe me', 'owed to me', 'am i owed', 'owing me', 'kisne mujhe', 'mujhe lena', 'mujhe milna', 'milega', 'milenge', 'milegi', 'किसने मुझे', 'मुझे लेना', 'मुझे मिलना', 'मिलेगा', 'मिलेंगे'])
+const BOTH = F(['owes whom', 'owe whom', 'whom owes', 'overall balance', 'net balance', 'all balances', 'my balance', 'my balances', 'balances', 'mera balance', 'मेरा बैलेंस', 'मेरा हिसाब'])
+const BALANCE = F(['balance', 'balances', 'settle', 'settled', 'settlement', 'baki', 'hisaab', 'hisab', 'बैलेंस', 'हिसाब', 'सेटल'])
+const SPEND = F([
   'spend', 'spent', 'spending', 'expense', 'expenses', 'expenditure', 'cost', 'costs', 'costing', 'kharch', 'kharcha', 'kharche', 'kharchaa',
   'खर्च', 'खर्चा', 'खर्चे', 'लागत',
-]
-const TOTAL = ['total cost', 'altogether', 'in all', 'everyone', 'everybody', 'all together', 'combined', 'whole group', 'entire', 'cost', 'costs', 'costing', 'sabka', 'सबका', 'कुल लागत']
-const ME = ['my', 'me', 'i', 'mine', 'mera', 'meri', 'mere', 'mujhe', 'main', 'mai', 'मेरा', 'मेरी', 'मेरे', 'मुझे', 'मैं']
-const TREND = [
+])
+const TOTAL = F(['total cost', 'altogether', 'in all', 'everyone', 'everybody', 'all together', 'combined', 'whole group', 'entire', 'cost', 'costs', 'costing', 'sabka', 'सबका', 'कुल लागत'])
+const ME = F(['my', 'me', 'i', 'mine', 'mera', 'meri', 'mere', 'mujhe', 'main', 'mai', 'मेरा', 'मेरी', 'मेरे', 'मुझे', 'मैं'])
+const TREND = F([
   'trend', 'trends', 'over time', 'daily', 'weekly', 'monthly', 'by day', 'per day', 'each day', 'every day', 'day by day', 'day wise', 'daywise',
   'by week', 'per week', 'each week', 'week by week', 'by month', 'per month', 'each month', 'every month', 'month by month', 'month wise', 'monthwise',
   'har din', 'roz', 'rozana', 'din ke hisab se', 'mahine ke hisab se', 'हर दिन', 'रोज', 'रोज़ाना', 'दैनिक', 'मासिक', 'हर महीने', 'दिन के हिसाब से', 'महीने के हिसाब से',
-]
-const BY_DAY = ['by day', 'per day', 'each day', 'every day', 'day by day', 'day wise', 'daywise', 'daily', 'har din', 'roz', 'rozana', 'din ke hisab se', 'हर दिन', 'रोज', 'रोज़ाना', 'दैनिक', 'दिन के हिसाब से']
-const BY_WEEK = ['by week', 'per week', 'each week', 'week by week', 'weekly', 'week wise', 'हर हफ्ते', 'साप्ताहिक']
-const BY_MONTH = ['by month', 'per month', 'each month', 'every month', 'month by month', 'month wise', 'monthwise', 'monthly', 'mahine ke hisab se', 'har mahine', 'हर महीने', 'मासिक', 'महीने के हिसाब से']
-const BY_CATEGORY = ['by category', 'by categories', 'per category', 'category wise', 'categorywise', 'category', 'categories', 'breakdown', 'श्रेणी', 'कैटेगरी']
-const BY_PERSON = ['by person', 'per person', 'person wise', 'by friend', 'by people', 'by friends', 'har vyakti', 'हर व्यक्ति']
-const BY_GROUP = ['by group', 'per group', 'group wise', 'by groups', 'हर ग्रुप']
-const FIND = ['find', 'search', 'look for', 'looking for', 'dhundo', 'dhoondo', 'khojo', 'खोजो', 'ढूंढो', 'ढूँढो', 'खोज']
-const SHOW = ['show', 'list', 'display', 'dikhao', 'dikha', 'batao', 'bata', 'दिखाओ', 'दिखा', 'बताओ']
-const EXPENSE_NOUNS = ['expenses', 'expense', 'transactions', 'transaction', 'bills', 'bill', 'payments', 'purchases', 'kharche', 'खर्चे']
-const SPLIT = ['split', 'splits', 'splitting', 'divide', 'divided', 'bato', 'baato', 'baanto', 'banto', 'bant', 'बांटो', 'बाँटो', 'बांट', 'बाटो', 'बांटना']
-const HELP = ['help', 'what can you do', 'what can i ask', 'what do you know', 'how do you work', 'madad', 'kya kar sakte ho', 'kya puch sakta', 'मदद', 'आप क्या कर सकते हैं', 'क्या पूछ सकता']
-const GREET = ['hi', 'hello', 'hey', 'namaste', 'namaskar', 'नमस्ते', 'नमस्कार', 'हेलो']
+])
+const BY_DAY = F(['by day', 'per day', 'each day', 'every day', 'day by day', 'day wise', 'daywise', 'daily', 'har din', 'roz', 'rozana', 'din ke hisab se', 'हर दिन', 'रोज', 'रोज़ाना', 'दैनिक', 'दिन के हिसाब से'])
+const BY_WEEK = F(['by week', 'per week', 'each week', 'week by week', 'weekly', 'week wise', 'हर हफ्ते', 'साप्ताहिक'])
+const BY_MONTH = F(['by month', 'per month', 'each month', 'every month', 'month by month', 'month wise', 'monthwise', 'monthly', 'mahine ke hisab se', 'har mahine', 'हर महीने', 'मासिक', 'महीने के हिसाब से'])
+const BY_CATEGORY = F(['by category', 'by categories', 'per category', 'category wise', 'categorywise', 'category', 'categories', 'breakdown', 'श्रेणी', 'कैटेगरी'])
+const BY_PERSON = F(['by person', 'per person', 'person wise', 'by friend', 'by people', 'by friends', 'har vyakti', 'हर व्यक्ति'])
+const BY_GROUP = F(['by group', 'per group', 'group wise', 'by groups', 'हर ग्रुप'])
+const FIND = F(['find', 'search', 'look for', 'looking for', 'dhundo', 'dhoondo', 'khojo', 'खोजो', 'ढूंढो', 'ढूँढो', 'खोज'])
+const SHOW = F(['show', 'list', 'display', 'dikhao', 'dikha', 'batao', 'bata', 'दिखाओ', 'दिखा', 'बताओ'])
+const EXPENSE_NOUNS = F(['expenses', 'expense', 'transactions', 'transaction', 'bills', 'bill', 'payments', 'purchases', 'kharche', 'खर्चे'])
+const SPLIT = F(['split', 'splits', 'splitting', 'divide', 'divided', 'bato', 'baato', 'baanto', 'banto', 'bant', 'बांटो', 'बाँटो', 'बांट', 'बाटो', 'बांटना'])
+const HELP = F(['help', 'what can you do', 'what can i ask', 'what do you know', 'how do you work', 'madad', 'kya kar sakte ho', 'kya puch sakta', 'मदद', 'आप क्या कर सकते हैं', 'क्या पूछ सकता'])
+const GREET = F(['hi', 'hello', 'hey', 'namaste', 'namaskar', 'नमस्ते', 'नमस्कार', 'हेलो'])
 
 /* Words that carry no meaning of their own in a name, a title or a search. */
 const FILLER = new Set(
@@ -64,7 +67,7 @@ const FILLER = new Set(
 )
 const GENERIC_GROUP_WORDS = new Set(['trip', 'group', 'the', 'and', 'for', 'with', 'flat', 'home', 'house', 'family', 'friends', 'office', 'team', 'party', 'club'])
 
-const CATEGORY_SYNONYMS: Record<string, string[]> = {
+const CATEGORY_SYNONYMS: Record<string, string[]> = Object.fromEntries(Object.entries({
   food: ['food', 'dining', 'restaurant', 'restaurants', 'eating', 'meals', 'meal', 'lunch', 'dinner', 'breakfast', 'khana', 'खाना', 'खाने', 'भोजन'],
   transport: ['transport', 'travel', 'cab', 'cabs', 'taxi', 'uber', 'fuel', 'petrol', 'commute', 'transit', 'यात्रा', 'परिवहन'],
   stay: ['stay', 'hotel', 'hotels', 'accommodation', 'rent', 'lodging', 'airbnb', 'होटल'],
@@ -72,7 +75,7 @@ const CATEGORY_SYNONYMS: Record<string, string[]> = {
   entertainment: ['entertainment', 'movies', 'movie', 'fun', 'concert', 'concerts', 'games', 'मनोरंजन'],
   bills: ['bills', 'bill', 'utilities', 'electricity', 'wifi', 'internet', 'बिल'],
   groceries: ['groceries', 'grocery', 'kirana', 'किराना', 'राशन'],
-}
+}).map(([id, words]) => [id, F(words)]))
 
 const MONTHS = ['january', 'february', 'march', 'april', 'may', 'june', 'july', 'august', 'september', 'october', 'november', 'december']
 const monthOfWord = (w: string): number | undefined => {
@@ -135,27 +138,44 @@ function resolveRef(words: string[], used: boolean[], refs: Ref[], kind: 'person
 /* Periods                                                             */
 /* ------------------------------------------------------------------ */
 
+const P = {
+  all: F(['all time', 'alltime', 'ever', 'lifetime', 'so far', 'till now', 'until now', 'since the beginning', 'sabhi samay', 'अब तक', 'आज तक', 'कुल मिलाकर']),
+  lastMonth: F(['last month', 'previous month', 'past month', 'pichle mahine', 'pichhle mahine', 'पिछले महीने', 'पिछला महीना']),
+  thisMonth: F(['this month', 'current month', 'is mahine', 'इस महीने', 'इस माह']),
+  lastWeek: F(['last week', 'previous week', 'pichle hafte', 'pichhle hafte', 'पिछले हफ्ते', 'पिछले सप्ताह']),
+  thisWeek: F(['this week', 'current week', 'is hafte', 'is week', 'इस हफ्ते', 'इस सप्ताह']),
+  lastYear: F(['last year', 'previous year', 'pichle saal', 'pichhle saal', 'पिछले साल', 'पिछले वर्ष']),
+  thisYear: F(['this year', 'current year', 'is saal', 'इस साल', 'इस वर्ष']),
+  yesterday: F(['yesterday', 'kal', 'कल', 'बीते कल']),
+  today: F(['today', 'aaj', 'aj', 'आज']),
+  lead: F(['last', 'past', 'previous', 'pichle', 'pichhle', 'पिछले', 'बीते']),
+  days: F(['day', 'days', 'din', 'दिन']),
+  weeks: F(['week', 'weeks', 'hafte', 'हफ्ते', 'सप्ताह']),
+  months: F(['month', 'months', 'mahine', 'महीने']),
+  monthWord: F(['in', 'of', 'during']),
+}
+
 function parsePeriod(words: string[], used: boolean[]): PeriodSpec | undefined {
   const text = words.map((w, i) => (used[i] ? '' : w)).filter(Boolean)
-  const has = (...p: string[]) => hasAny(text, p)
-  if (has('all time', 'alltime', 'ever', 'lifetime', 'so far', 'till now', 'until now', 'since the beginning', 'sabhi samay', 'अब तक', 'आज तक', 'कुल मिलाकर')) return {kind: 'all'}
-  if (has('last month', 'previous month', 'past month', 'pichle mahine', 'pichhle mahine', 'पिछले महीने', 'पिछला महीना')) return {kind: 'month', offset: -1}
-  if (has('this month', 'current month', 'is mahine', 'इस महीने', 'इस माह')) return {kind: 'month', offset: 0}
-  if (has('last week', 'previous week', 'pichle hafte', 'pichhle hafte', 'पिछले हफ्ते', 'पिछले सप्ताह')) return {kind: 'week', offset: -1}
-  if (has('this week', 'current week', 'is hafte', 'is week', 'इस हफ्ते', 'इस सप्ताह')) return {kind: 'week', offset: 0}
-  if (has('last year', 'previous year', 'pichle saal', 'pichhle saal', 'पिछले साल', 'पिछले वर्ष')) return {kind: 'year', offset: -1}
-  if (has('this year', 'current year', 'is saal', 'इस साल', 'इस वर्ष')) return {kind: 'year', offset: 0}
-  if (has('yesterday', 'kal', 'कल', 'बीते कल')) return {kind: 'yesterday'}
-  if (has('today', 'aaj', 'aj', 'आज')) return {kind: 'today'}
+  const has = (p: string[]) => hasAny(text, p)
+  if (has(P.all)) return {kind: 'all'}
+  if (has(P.lastMonth)) return {kind: 'month', offset: -1}
+  if (has(P.thisMonth)) return {kind: 'month', offset: 0}
+  if (has(P.lastWeek)) return {kind: 'week', offset: -1}
+  if (has(P.thisWeek)) return {kind: 'week', offset: 0}
+  if (has(P.lastYear)) return {kind: 'year', offset: -1}
+  if (has(P.thisYear)) return {kind: 'year', offset: 0}
+  if (has(P.yesterday)) return {kind: 'yesterday'}
+  if (has(P.today)) return {kind: 'today'}
   // "last 7 days", "past 30 days", "pichle 10 din", "last 3 months"
   for (let i = 0; i + 2 < text.length; i++) {
-    if (!['last', 'past', 'previous', 'pichle', 'pichhle', 'पिछले', 'बीते'].includes(text[i]!)) continue
+    if (!P.lead.includes(text[i]!)) continue
     const n = wholeNumber(text[i + 1]!)
     if (n === undefined || n < 1) continue
     const unit = text[i + 2]!
-    if (['day', 'days', 'din', 'दिन'].includes(unit)) return {kind: 'days', n}
-    if (['week', 'weeks', 'hafte', 'हफ्ते', 'सप्ताह'].includes(unit)) return {kind: 'days', n: n * 7}
-    if (['month', 'months', 'mahine', 'महीने'].includes(unit)) return {kind: 'months', n}
+    if (P.days.includes(unit)) return {kind: 'days', n}
+    if (P.weeks.includes(unit)) return {kind: 'days', n: n * 7}
+    if (P.months.includes(unit)) return {kind: 'months', n}
   }
   for (let i = 0; i < text.length; i++) {
     const m = monthOfWord(text[i]!)
@@ -163,7 +183,7 @@ function parsePeriod(words: string[], used: boolean[]): PeriodSpec | undefined {
     if (m === undefined) continue
     const next = text[i + 1]
     const year = next && /^(19|20)\d\d$/.test(next) ? Number(next) : undefined
-    if (text[i] === 'may' && year === undefined && !['in', 'of', 'during'].includes(text[i - 1] ?? '')) continue
+    if (text[i] === 'may' && year === undefined && !P.monthWord.includes(text[i - 1] ?? '')) continue
     return {kind: 'monthOf', month: m, year}
   }
   const year = text.find(w => /^(19|20)\d\d$/.test(w))
@@ -175,52 +195,136 @@ function parsePeriod(words: string[], used: boolean[]): PeriodSpec | undefined {
 /* The parser                                                          */
 /* ------------------------------------------------------------------ */
 
+const PAID = F(['paid', 'bhara', 'chukaya', 'चुकाया', 'भरा'])
+const WHOM = F(['whom', 'kisko', 'kisne', 'kise', 'किसको', 'किसने', 'किसे'])
+const WHOM_ONLY = F(['whom', 'kisko', 'किसको'])
+const BREAKDOWN_WORDS = F(['by', 'per', 'wise', 'breakdown', 'श्रेणी'])
+const BREAKDOWN_CATEGORY = F(['by category', 'by categories', 'per category', 'category wise', 'categorywise', 'breakdown', 'श्रेणी'])
+const HOW_MUCH = F(['how much', 'kitna', 'kitne', 'कितना', 'कितने', 'कितनी'])
+const TREND_WORDS = F(['trend', 'trends'])
+const OWN_TOTAL = F(['cost', 'costs', 'everyone', 'altogether'])
+const WITH = F(['with', 'saath', 'sath', 'साथ'])
+
+/*
+ * Words the grammar reads. A spend question holding any other word is not
+ * answered as if it did not (ARCHITECTURE 26.19, no fake answers): it becomes
+ * a search for those words, or an honest "not yet".
+ */
+const HINDI_STOP = F(
+  (
+    'add up together hua hui hue kiya kiye kar karo ho hota hoti hote gaya gayi gaye raha rahi rahe tha thi the liya diya mera meri mere meine maine mujhse hamne ' +
+    'par pe se ko ka ki ke tak bhi sirf kuch koi sab sabhi money paisa paise rupaye rupees rupee rs inr usd eur gbp dollars dollar euros euro pounds pound ' +
+    'का की के को में से पर है हैं था थी थे हुआ हुई हुए किया किए करो कर रहा रही रहे मैंने मुझसे हमने भी सिर्फ कुछ कोई सब सभी पैसे रुपये रुपए'
+  ).split(' '),
+)
+const wordsIn = (...lists: Array<readonly string[]>) => lists.flatMap(l => l.flatMap(p => p.split(' ')))
+const KNOWN = new Set([
+  ...wordsIn(WHO, OWE, I_OWE, OWED_TO_ME, BOTH, BALANCE, SPEND, TOTAL, ME, TREND, BY_DAY, BY_WEEK, BY_MONTH, BY_CATEGORY, BY_PERSON, BY_GROUP, FIND, SHOW, EXPENSE_NOUNS, SPLIT, PAID, WITH, HOW_MUCH, HINDI_STOP),
+  ...wordsIn(...Object.values(P), ...Object.values(CATEGORY_SYNONYMS)),
+  ...FILLER,
+  ...GENERIC_GROUP_WORDS,
+])
+/** What a spend question can ask for that the engine cannot work out: a search for the word would be a fake answer. */
+const BEYOND = new Set(F(['average', 'avg', 'median', 'biggest', 'largest', 'highest', 'lowest', 'smallest', 'cheapest', 'costliest', 'compare', 'compared', 'versus', 'vs', 'budget', 'forecast', 'predict', 'afford', 'save', 'saving', 'savings', 'percent', 'percentage', 'why', 'when', 'where', 'which']))
+
+/** Words you can say first before a command ("can you please add ..."). */
+const POLITE = new Set(F(['can', 'could', 'would', 'will', 'you', 'please', 'pls', 'kindly', 'i', 'want', 'to', 'need', 'like', 'id', 'lets', 'let', 'us', 'just', 'now', 'also', 'and', 'then', 'hey', 'ok', 'okay']))
+/** Said anywhere in a question, these ask for a change, not an answer. */
+const COMMANDS = F(['delete', 'remove', 'edit', 'erase', 'rename', 'jodo', 'joro', 'daalo', 'dalo', 'hatao', 'hata do', 'mitao', 'mita do', 'badlo', 'badal do', 'जोड़ो', 'जोड़ें', 'डालो', 'हटाओ', 'हटाएं', 'मिटाओ', 'बदलो', 'बदलें'])
+/** Ask for a change only when they open the sentence ("add 500 ...", but "add up my food"). */
+const OPENING_COMMANDS = F(['add', 'create', 'insert', 'change'])
+const ADDS = F(['add', 'create', 'insert', 'jodo', 'joro', 'daalo', 'dalo', 'जोड़ो', 'जोड़ें', 'डालो'])
+
+/** 'any': a command anywhere; 'opening': one that opens the sentence; undefined: a question. */
+function commandOf(words: string[]): 'any' | 'opening' | undefined {
+  if (hasAny(words, COMMANDS)) return 'any'
+  const at = words.findIndex(w => !POLITE.has(w))
+  return at >= 0 && OPENING_COMMANDS.includes(words[at]!) && words[at + 1] !== 'up' && words[at + 1] !== 'together' ? 'opening' : undefined
+}
+
 function measureOf(words: string[], hasGroup: boolean): Measure {
-  if (hasAny(words, ['paid', 'bhara', 'chukaya', 'चुकाया', 'भरा']) && hasAny(words, ME)) return 'paid'
+  if (hasAny(words, PAID) && hasAny(words, ME)) return 'paid'
   if (hasPhrase(words, 'i paid') || hasPhrase(words, 'did i pay') || hasPhrase(words, 'have i paid')) return 'paid'
   const mine = hasAny(words, ME)
-  if (hasAny(words, TOTAL) && !(mine && hasGroup && !hasAny(words, ['cost', 'costs', 'everyone', 'altogether']))) return 'total'
+  if (hasAny(words, TOTAL) && !(mine && hasGroup && !hasAny(words, OWN_TOTAL))) return 'total'
   return 'share'
 }
 
 function categoryOf(words: string[], used: boolean[], categories: Vocab['categories']): string | undefined {
   const text = words.map((w, i) => (used[i] ? '' : w))
-  const own = categories.find(c => {
-    const name = tokens(c.name).join(' ')
-    return c.id !== 'other' && name !== '' && hasPhrase(text, name)
-  })
-  if (own) return own.id
+  const named = new Set(
+    categories.filter(c => {
+      const name = tokens(c.name).join(' ')
+      return c.id !== 'other' && name !== '' && hasPhrase(text, name)
+    }).map(c => c.id),
+  )
   const ids = new Set(categories.map(c => c.id))
-  for (const [id, synonyms] of Object.entries(CATEGORY_SYNONYMS)) {
-    if (ids.has(id) && hasAny(text, synonyms)) return id
-  }
-  return undefined
+  for (const [id, synonyms] of Object.entries(CATEGORY_SYNONYMS)) if (ids.has(id) && hasAny(text, synonyms)) named.add(id)
+  // Two categories named ("food and shopping") are two figures, not the first of them.
+  return named.size > 1 ? MANY : [...named][0]
 }
+const MANY = 'many'
 
 /** Strips what is not part of a search: verbs, fillers and period words. */
 function searchQueryOf(words: string[], used: boolean[], rawQuestion: string): string {
-  // "over 1000" / "under 500" become the search's own comparisons.
-  const compare = /\b(over|above|more than|greater than|at least|under|below|less than|at most|upar|neeche)\s+[₹$€£]?\s*(\d[\d,.]*\s?[klmc]?r?)/i.exec(fold(rawQuestion))
+  // "over 1000" / "under 500" / "over 1 lakh" become the search's own comparisons.
+  const compare = /\b(over|above|more than|greater than|at least|under|below|less than|at most|upar|neeche)\s+[₹$€£]?\s*(\d[\d,.]*)(?:\s?(lakhs?|lacs?|crores?|cr|mn|k|l|m)\b)?/i.exec(fold(rawQuestion))
   const parts: string[] = []
+  const skip = new Set([...FIND, ...SHOW, ...EXPENSE_NOUNS, 'over', 'above', 'more', 'than', 'greater', 'at', 'least', 'under', 'below', 'less', 'most', 'upar', 'neeche'].flatMap(w => w.split(' ')))
+  let numberInCompare = ''
+  let unitInCompare = ''
   if (compare) {
     const op = /over|above|more|greater|upar/.test(compare[1]!) ? '>' : /at least/.test(compare[1]!) ? '>=' : /at most/.test(compare[1]!) ? '<=' : '<'
-    parts.push(`${op}${compare[2]!.replace(/\s/g, '')}`)
+    const num = compare[2]!.replace(/[.,]+$/, '')
+    numberInCompare = num.replace(/,/g, '')
+    unitInCompare = compare[3]?.toLowerCase() ?? ''
+    parts.push(`${op}${num}${unitInCompare}`)
   }
-  const skip = new Set([...FIND, ...SHOW, ...EXPENSE_NOUNS, 'over', 'above', 'more', 'than', 'greater', 'at', 'least', 'under', 'below', 'less', 'most', 'upar', 'neeche'].flatMap(w => w.split(' ')))
-  const numberInCompare = compare ? compare[2]!.replace(/[\s,]/g, '') : ''
   for (const [i, w] of words.entries()) {
     if (used[i] || FILLER.has(w) || skip.has(w)) continue
-    if (compare && w.replace(/,/g, '') === numberInCompare) continue
+    if (numberInCompare && w.replace(/,/g, '') === numberInCompare) {
+      numberInCompare = ''
+      continue
+    }
+    if (unitInCompare && w === unitInCompare && !numberInCompare) {
+      unitInCompare = ''
+      continue
+    }
     parts.push(w)
   }
   return parts.join(' ').trim()
 }
 
 /** The "N ways" of a split question and the other number as the amount. */
-function parseSplit(words: string[], raw: string): {ways: number; amountText?: string; currency?: string; title?: string} | undefined {
-  const WAYS_AFTER = ['ways', 'way', 'people', 'persons', 'person', 'friends', 'friend', 'log', 'logon', 'लोग', 'लोगों', 'दोस्तों', 'दोस्त']
-  const WAYS_BEFORE = ['between', 'among', 'amongst', 'beech']
-  const WAYS_UNIT_AFTER = ['mein', 'me', 'में', 'ke', 'के']
+const UNITS: Record<string, string> = Object.fromEntries(
+  Object.entries({
+    k: 'k', thousand: 'k', hazaar: 'k', hazar: 'k', हज़ार: 'k', हजार: 'k',
+    l: 'l', lakh: 'lakh', lakhs: 'lakh', lac: 'lac', lacs: 'lac', लाख: 'lakh',
+    cr: 'cr', crore: 'cr', crores: 'cr', karod: 'cr', करोड़: 'cr', करोड: 'cr',
+    m: 'm', mn: 'm', million: 'm',
+  }).map(([w, u]) => [fold(w), u]),
+)
+
+/** "1 lakh" -> "1lakh", "५ हज़ार" -> "5k": a unit after a number is part of the amount, so the amount field reads it. */
+function joinUnits(words: string[]): string[] {
+  const out: string[] = []
+  for (let i = 0; i < words.length; i++) {
+    const unit = UNITS[words[i + 1] ?? '']
+    if (unit && /^\d[\d,.]*$/.test(words[i]!)) {
+      out.push(words[i] + unit)
+      i++
+    } else out.push(words[i]!)
+  }
+  return out
+}
+
+const WAYS_AFTER = F(['ways', 'way', 'people', 'persons', 'person', 'friends', 'friend', 'log', 'logon', 'लोग', 'लोगों', 'दोस्तों', 'दोस्त'])
+const WAYS_BEFORE = F(['between', 'among', 'amongst', 'beech'])
+const WAYS_UNIT_AFTER = F(['mein', 'me', 'में', 'ke', 'के'])
+const FRIENDS = F(['friends', 'friend', 'दोस्तों', 'दोस्त'])
+
+function parseSplit(spoken: string[], raw: string): {ways: number; amountText?: string; currency?: string; title?: string} | undefined {
+  const words = joinUnits(spoken)
   let ways: number | undefined
   let at = -1
   for (let i = 0; i < words.length; i++) {
@@ -233,13 +337,13 @@ function parseSplit(words: string[], raw: string): {ways: number; amountText?: s
       (before && WAYS_BEFORE.includes(before)) ||
       (after && WAYS_UNIT_AFTER.includes(after) && words.length > i + 2)
     if (isWays && n >= 2) {
-      ways = after === 'friends' || after === 'friend' || after === 'दोस्तों' || after === 'दोस्त' ? n + 1 : n
+      ways = after && FRIENDS.includes(after) ? n + 1 : n
       at = i
       break
     }
   }
   if (ways === undefined || ways > 50) return undefined
-  const isAmount = (w: string) => /^\d[\d,.]*(k|l|lakh|lac|cr|crore|m)?$/.test(w)
+  const isAmount = (w: string) => /^\d[\d,.]*(k|l|lakh|lac|cr|m)?$/.test(w)
   const amountIdx = words.findIndex((w, i) => i !== at && isAmount(w))
   const amountText = amountIdx >= 0 ? words[amountIdx] : undefined
   const currency = CURRENCY_MARKS.find(([re]) => re.test(raw))?.[1]
@@ -254,7 +358,7 @@ function suggest(words: string[], vocab: Vocab): Suggestion {
   const group = vocab.groups[0]
   const category = vocab.categories.find(c => c.id !== 'other')
   if (hasAny(words, SPLIT) || hasAny(words, ['bill', 'dinner', 'lunch'])) return {key: 'split'}
-  if (hasAny(words, ['whom', 'kisko', 'किसको']) && hasAny(words, OWE)) return {key: 'iOweMost'}
+  if (hasAny(words, WHOM_ONLY) && hasAny(words, OWE)) return {key: 'iOweMost'}
   if (hasAny(words, OWE) || hasAny(words, BALANCE) || hasAny(words, WHO)) {
     if (group && hasAny(words, ['group', 'trip', 'whom'])) return {key: 'groupOwes', name: group.name}
     if (person && hasAny(words, ['friend', 'friends', 'someone', 'anyone', 'person', 'dost'])) return {key: 'balanceWith', name: person.name}
@@ -271,16 +375,48 @@ export function closestSuggestion(question: string, vocab: Vocab): Suggestion {
   return suggest(tokens(question), vocab)
 }
 
+const unsupported = (suggestion: Suggestion): Intent => ({kind: 'unsupported', suggestion})
+
+/**
+ * A spend or trend question that holds words the grammar does not read. They
+ * are never dropped (that answers a broader question than the one asked): with
+ * nothing else narrowing it they become a search; otherwise, or when they ask
+ * for something the engine cannot work out, the answer is an honest "not yet".
+ */
+function withLeftovers(left: number[], words: string[], question: string, vocab: Vocab, isNarrowed: boolean, isTrend: boolean): Intent {
+  if (isTrend || isNarrowed || left.some(i => BEYOND.has(words[i]!))) return unsupported(suggest(words, vocab))
+  const query = searchQueryOf(words, words.map((_, i) => !left.includes(i)), question)
+  return query ? {kind: 'find', query} : unsupported(suggest(words, vocab))
+}
+
+/** The words of a question that nothing above read: not a keyword, a name, a filler, a period or a category. */
+function leftoverOf(words: string[], used: boolean[], vocab: Vocab): number[] {
+  const own = new Set(vocab.categories.flatMap(c => tokens(c.name)))
+  const isNumber = (w: string | undefined) => !!w && (/^\d[\d,.]*$/.test(w) || wholeNumber(w) !== undefined)
+  return words.flatMap((w, i) => {
+    if (used[i] || KNOWN.has(w) || own.has(w) || monthOfWord(w) !== undefined || /^(19|20)\d\d$/.test(w)) return []
+    // "last 30 days", "5 march": the number belongs to the period.
+    const prev = words[i - 1]
+    const next = words[i + 1]
+    if (isNumber(w) && ((prev && P.lead.includes(prev) && next && [...P.days, ...P.weeks, ...P.months].includes(next)) || (next && monthOfWord(next) !== undefined) || (prev && monthOfWord(prev) !== undefined))) return []
+    return [i]
+  })
+}
+
 /**
  * Reads one question. Returns `unsupported` (with the nearest supported
  * question) for anything outside the grammar; it never guesses.
  */
 export function parseQuestion(question: string, vocab: Vocab): Intent {
   const words = tokens(question)
-  if (words.length === 0) return {kind: 'unsupported', suggestion: {key: 'owedMost'}}
+  if (words.length === 0) return unsupported({key: 'owedMost'})
   const used = words.map(() => false)
 
   if ((words.length <= 6 && hasAny(words, GREET) && !hasAny(words, OWE)) || hasAny(words, HELP)) return {kind: 'help'}
+
+  // Asking to change the ledger is not a question: the chat reads, it never writes (an add belongs to the expense sheet).
+  const command = commandOf(words)
+  if (command === 'any' || (command === 'opening' && !hasAny(words, SPLIT))) return unsupported(hasAny(words, ADDS) || command === 'opening' ? {key: 'split'} : suggest(words, vocab))
 
   // Names first, so a group called "Food Court" is not read as the Food category.
   const g = resolveRef(words, used, vocab.groups, 'group')
@@ -289,12 +425,16 @@ export function parseQuestion(question: string, vocab: Vocab): Intent {
   if (p.tied) return {kind: 'clarify', term: p.term!, options: p.tied}
   const group = g.found
   const person = p.found
+  // A second friend: the question is about two people, not about me and one of them.
+  const p2 = person ? resolveRef(words, used, vocab.people.filter(x => x.id !== person.id), 'person') : {}
+  if (p2.tied) return {kind: 'clarify', term: p2.term!, options: p2.tied}
+  const other = p2.found
 
   // Split X N ways: an action, so it comes before any reading of the amount as a filter.
   if (hasAny(words, SPLIT)) {
     const s = parseSplit(words, question)
     if (s) return {kind: 'split', ways: s.ways, amountText: s.amountText, currency: s.currency, title: s.title}
-    return {kind: 'unsupported', suggestion: {key: 'split'}}
+    return unsupported({key: 'split'})
   }
 
   const isTrend = hasAny(words, TREND)
@@ -302,7 +442,7 @@ export function parseQuestion(question: string, vocab: Vocab): Intent {
   const hasOwe = hasAny(words, OWE)
   const hasWho = hasAny(words, WHO)
   const isBalanceWord = hasAny(words, BALANCE)
-  const wantsBreakdown = hasAny(words, ['by', 'per', 'wise', 'breakdown', 'श्रेणी'])
+  const wantsBreakdown = hasAny(words, BREAKDOWN_WORDS)
 
   // Find expenses: explicit verbs, or "show expenses ...", unless it is a chart or total in disguise.
   const isFindVerb = hasAny(words, FIND) || (hasAny(words, SHOW) && hasAny(words, EXPENSE_NOUNS))
@@ -312,17 +452,25 @@ export function parseQuestion(question: string, vocab: Vocab): Intent {
     if (query) return {kind: 'find', query}
   }
 
-  // Who owes me / whom do I owe / who owes whom
+  // Two friends named: a balance between them is not mine, and no figure here is theirs together.
+  if (person && other) return unsupported({key: 'balanceWith', name: person.name})
+
+  // Who owes me / whom do I owe / who owes whom: in the group named, if one is.
   if (hasOwe && hasWho && !person) {
-    if (group && (hasAny(words, ['whom', 'kisko', 'kisne', 'किसको', 'किसने', 'किसे']) || hasPhrase(words, 'owes whom'))) return {kind: 'groupBalance', group}
+    if (group) return {kind: 'groupBalance', group}
     if (hasAny(words, BOTH)) return {kind: 'ranking', direction: 'both'}
     if (hasAny(words, I_OWE) && !hasAny(words, OWED_TO_ME)) return {kind: 'ranking', direction: 'iOwe'}
     return {kind: 'ranking', direction: 'owedToMe'}
   }
 
-  // Balance with a person: a balance or owing word, or just the name.
-  const isNameOnly = words.length <= 3
-  if (person && !isSpend && !isTrend && (hasOwe || isBalanceWord || isNameOnly)) return {kind: 'balance', person}
+  // Balance with a person: only mine with them (a question about me, a balance word, or just the name).
+  const isNameOnly = words.length <= 3 && !hasOwe && !hasWho
+  if (person && !isSpend && !isTrend && (hasOwe || isBalanceWord || isNameOnly)) {
+    const isMine = hasAny(words, ME) || hasAny(words, I_OWE) || hasAny(words, OWED_TO_ME)
+    // A balance is by person, not by group, and "who owes Riya" is between her and someone else: neither is read as the whole.
+    if (group || !(isMine || isNameOnly || (isBalanceWord && !hasWho))) return unsupported({key: 'balanceWith', name: person.name})
+    return {kind: 'balance', person}
+  }
 
   // A group's balance and who owes whom in it
   if (group && (hasOwe || isBalanceWord || hasWho || isNameOnly) && !isSpend && !isTrend) return {kind: 'groupBalance', group}
@@ -335,27 +483,37 @@ export function parseQuestion(question: string, vocab: Vocab): Intent {
   }
 
   const category = categoryOf(words, used, vocab.categories)
+  if (category === MANY) return unsupported(suggest(words, vocab))
   const period = parsePeriod(words, used)
+  const left = leftoverOf(words, used, vocab)
+  const measure = measureOf(words, !!group)
+  // Their share is the only figure a person has here: whole-record totals and my own paid are not theirs.
+  const personMeasure: Measure | undefined = person ? (measure === 'paid' ? undefined : 'share') : measure
   const scope: Scope = {category, group, person}
 
-  if (isTrend && (isSpend || category || group || person || hasAny(words, ['trend', 'trends']) || hasAny(words, ME))) {
+  if (isTrend && (isSpend || category || group || person || hasAny(words, TREND_WORDS) || hasAny(words, ME))) {
+    if (left.length > 0 || !personMeasure) return withLeftovers(left, words, question, vocab, true, true)
     const by: Bucket | undefined = hasAny(words, BY_DAY) ? 'day' : hasAny(words, BY_WEEK) ? 'week' : hasAny(words, BY_MONTH) ? 'month' : undefined
-    return {kind: 'trend', measure: measureOf(words, !!group), by, period, ...scope}
+    return {kind: 'trend', measure: personMeasure, by, period, ...scope}
   }
 
-  const hasHowMuch = hasAny(words, ['how much', 'kitna', 'kitne', 'कितना', 'कितने', 'कितनी'])
+  const hasHowMuch = hasAny(words, HOW_MUCH)
   if (isSpend || category || (hasHowMuch && period) || (wantsBreakdown && period)) {
-    const breakdown: Breakdown | undefined = hasAny(words, BY_PERSON) ? 'person' : hasAny(words, BY_GROUP) ? 'group' : hasAny(words, ['by category', 'by categories', 'per category', 'category wise', 'categorywise', 'breakdown', 'श्रेणी']) || (hasAny(words, BY_CATEGORY) && wantsBreakdown) ? 'category' : undefined
-    return {kind: 'spend', measure: measureOf(words, !!group), period, breakdown, ...scope}
+    const breakdown: Breakdown | undefined = hasAny(words, BY_PERSON) ? 'person' : hasAny(words, BY_GROUP) ? 'group' : hasAny(words, BREAKDOWN_CATEGORY) || (hasAny(words, BY_CATEGORY) && wantsBreakdown) ? 'category' : undefined
+    const isNarrowed = !!(period || category || group || breakdown)
+    // "Spending with Riya" is every expense we are both in: a search, which says so, not her share.
+    if (person && hasAny(words, WITH)) return isNarrowed || left.length > 0 ? unsupported({key: 'balanceWith', name: person.name}) : {kind: 'find', query: person.name}
+    if (left.length > 0 || !personMeasure) return withLeftovers(left, words, question, vocab, isNarrowed || !!person, false)
+    return {kind: 'spend', measure: personMeasure, period, breakdown, ...scope}
   }
 
-  return {kind: 'unsupported', suggestion: suggest(words, vocab)}
+  return unsupported(suggest(words, vocab))
 }
 
 const QUESTION_STARTERS = new Set(
-  ('how what whats who whom whos which when where why can could should do does did is are will would show tell give split divide ' +
+  F(('how what whats who whom whos which when where why can could should do does did is are will would show tell give split divide ' +
     'kitna kitne kitni kaun kisne kisko kya mujhe mera meri mere batao ' +
-    'कितना कितने कितनी कौन किसने किसको क्या मुझे मेरा मेरी बताओ').split(' '),
+    'कितना कितने कितनी कौन किसने किसको क्या मुझे मेरा मेरी बताओ').split(' ')),
 )
 
 /**

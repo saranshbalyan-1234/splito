@@ -101,6 +101,56 @@ const TABLE: Array<[string, Pin]> = [
   ['split the taxi 1.5k with 2 friends', {kind: 'split', ways: 3, amountText: '1.5k', title: 'Taxi'}],
   ['1200 ko 4 mein baato', {kind: 'split', ways: 4, amountText: '1200'}],
   ['१२०० को 4 लोगों में बांटो', {kind: 'split', ways: 4, amountText: '1200'}],
+  // Split with Indian units: the unit joins its number and stays out of the title
+  ['Split 1 lakh 4 ways', {kind: 'split', ways: 4, amountText: '1lakh', title: undefined}],
+  ['split 2.5 lakh between 5', {kind: 'split', ways: 5, amountText: '2.5lakh', title: undefined}],
+  ['split the rent 1.2 cr 3 ways', {kind: 'split', ways: 3, amountText: '1.2cr', title: 'Rent'}],
+  ['split 50 k among 5 people', {kind: 'split', ways: 5, amountText: '50k'}],
+  ['5 हज़ार को 5 लोगों में बांटो', {kind: 'split', ways: 5, amountText: '5k'}],
+  ['2 लाख को 4 लोगों में बांटो', {kind: 'split', ways: 4, amountText: '2lakh'}],
+  // Words the grammar does not know are never dropped: a search, or an honest no
+  ['How much did I spend at Starbucks?', {kind: 'find', query: 'starbucks'}],
+  ['expenses over 1,00,000', {kind: 'find', query: '>1,00,000'}],
+  ['How much did I spend at Starbucks this month?', {kind: 'unsupported'}],
+  ['how much on food at Zomato', {kind: 'unsupported'}],
+  ['what is my average spending', {kind: 'unsupported'}],
+  ['weekly spending at Starbucks', {kind: 'unsupported'}],
+  ['Can you delete the dinner expense?', {kind: 'unsupported'}],
+  ['please edit my food expense', {kind: 'unsupported'}],
+  ['remove the taxi expense', {kind: 'unsupported'}],
+  ['add 500 for lunch with Riya', {kind: 'unsupported', suggestion: {key: 'split'}}],
+  ['change the amount of my last dinner', {kind: 'unsupported'}],
+  ['dinner ka kharcha delete karo', {kind: 'unsupported'}],
+  ['यह खर्चा हटाओ', {kind: 'unsupported'}],
+  ['Riya ka kharcha mitao', {kind: 'unsupported'}],
+  ['how much did I spend this month on entertainment and shopping', {kind: 'unsupported'}],
+  ['how much did I spend in the last two weeks', {kind: 'spend', period: {kind: 'days', n: 14}}],
+  ['add up my food spending this month', {kind: 'spend', category: 'food'}],
+  // A group named on an owe question scopes the answer to that group
+  ['Who owes me in Goa trip?', {kind: 'groupBalance', group: GOA}],
+  ['who do I owe in Flat 4B', {kind: 'groupBalance', group: FLAT}],
+  ['Goa trip mein kisne mujhe dena hai', {kind: 'groupBalance', group: GOA}],
+  ['what does Riya owe me in Goa trip', {kind: 'unsupported', suggestion: {key: 'balanceWith', name: 'Riya Sharma'}}],
+  // A balance between two other people is not my balance
+  ['Who owes Riya?', {kind: 'unsupported', suggestion: {key: 'balanceWith', name: 'Riya Sharma'}}],
+  ['does Riya owe Arjun', {kind: 'unsupported'}],
+  ['What does Riya owe Arjun?', {kind: 'unsupported'}],
+  ['how much does Arjun owe Riya', {kind: 'unsupported'}],
+  ['Riya ne Arjun ko kitna dena hai', {kind: 'unsupported'}],
+  ['Riya and Arjun balance', {kind: 'unsupported'}],
+  ['how much does Riya owe', {kind: 'unsupported', suggestion: {key: 'balanceWith', name: 'Riya Sharma'}}],
+  ['Riya', {kind: 'balance', person: RIYA}],
+  ['Riya Sharma', {kind: 'balance', person: RIYA}],
+  ['does Riya owe me anything', {kind: 'balance', person: RIYA}],
+  ['Riya balance', {kind: 'balance', person: RIYA}],
+  // A person in a spend question: their share, never whole-record totals or my paid
+  ['how much did I spend with Riya', {kind: 'find', query: 'Riya Sharma'}],
+  ['how much did Priya spend altogether this month', {kind: 'spend', measure: 'share', person: person('p-priya', 'Priya Nair')}],
+  ['how much did I pay Riya this month', {kind: 'unsupported'}],
+  ['how much did I pay for Riya', {kind: 'unsupported'}],
+  ['how much did I spend with Riya this month', {kind: 'unsupported'}],
+  ['daily spending of Priya', {kind: 'trend', measure: 'share', person: person('p-priya', 'Priya Nair')}],
+  ['how much did Riya and Arjun spend', {kind: 'unsupported'}],
   // Help and greetings
   ['help', {kind: 'help'}],
   ['what can you do?', {kind: 'help'}],
@@ -116,6 +166,13 @@ const TABLE: Array<[string, Pin]> = [
 test.each(TABLE)('%j reads as its intent', (question, pin) => {
   const intent = parseQuestion(question, vocab) as Record<string, unknown>
   for (const [key, want] of Object.entries(pin)) expect(intent[key], `${question} -> ${key}`).toEqual(want)
+})
+
+test('milna and milega are owing words; a bare "net" is not a balance word', () => {
+  expect(parseQuestion('mujhe kitna milega', vocab)).toMatchObject({kind: 'ranking', direction: 'owedToMe'})
+  expect(parseQuestion('kisne mujhe kitna milna hai', vocab)).toMatchObject({kind: 'ranking', direction: 'owedToMe'})
+  expect(parseQuestion('net worth of my plan', vocab).kind).toBe('unsupported')
+  expect(parseQuestion('my net balance', vocab)).toMatchObject({kind: 'ranking', direction: 'both'})
 })
 
 test('the table holds at least 40 questions across every intent', () => {
