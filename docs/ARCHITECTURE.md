@@ -580,6 +580,14 @@ with every hot screen reading by index, never by full scan (§ 17 budgets, F-109
   and a test asserts projection == recomputation after random operation sequences.
 - **Reads page by cursor** (`[date, id]` or `[updatedAt, id]`) for every list; selectors never `getAll` a money
   store on a hot path (only maintenance, export and tests may).
+  A loop that pages a money store from end to end is a full read and is banned the same way.
+- **Analytics and Search never load the ledger** (assistant's ruling, 2026-10-27, after the F-117 review).
+  Analytics reads the selected period by `byDate` / `byGroupDate` range and reads history-long charts from an
+  `aggregates` projection (`[currency, month, groupId|'', categoryId]` -> sum and count in minor units), kept in
+  the same transaction as `balances` and covered by `rebuildProjections()` and the property test. Search reads
+  a `search_terms` store (normalised prefix tokens of description, notes, merchant, person and group names,
+  plus an amount key per currency -> entity id), also maintained in the mutation transaction, and loads only
+  the matching rows. No in-memory ledger mirror.
 - **One transaction per mutation** spans the entity, its projections, history and outbox (atomic, § 9.3).
 - **Versioned migrations:** `meta.schemaVersion`; IndexedDB `onupgradeneeded` and SQLite `PRAGMA user_version`
   run ordered, idempotent steps; v1 -> v2 copies rows from `entities` into the per-type stores, builds
