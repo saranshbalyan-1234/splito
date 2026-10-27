@@ -16,8 +16,8 @@ that opens an external form (`src/view/shell/Drawer.tsx` `onPressFeedback`, `FEE
 | `src/features/feedback/pickAttachment.ts` | `src/lib/media/picker.shared.ts` (`openPicker`) | One image from the library; `base64: true` and `quality: 0.5` so the picture is stored inside the feedback record as a data URI (the picker's cache file can be purged); size cap and a typed result instead of Bluesky's `Toast` inside the picker |
 | `src/features/feedback/pickAttachment.web.ts` | `src/lib/media/picker.web.tsx` / `picker.shared.ts` | Bluesky's web picker is expo-image-picker's file input; this uses a plain file input, then scales to 1280 px and re-encodes to JPEG on a canvas (blob URLs die with the tab) |
 
-The drawer footer button (`navigation/Drawer.tsx`) follows Bluesky's `DrawerFooter` Feedback button (message icon,
-`secondary` solid small button); its action opens the in-app sheet instead of a URL.
+The Feedback link leads the shared footer links (`components/NavFooterLinks.tsx`, the sidebar and the phone drawer);
+like Bluesky's footer Feedback link its action opens the in-app sheet (`state/feedback.ts`) instead of a URL.
 
 ## Written for Splito (no Bluesky equivalent)
 

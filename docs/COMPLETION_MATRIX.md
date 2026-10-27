@@ -46,7 +46,7 @@ Status words are the same as `docs/BACKLOG.md`: **done** (built, tested and merg
 | Friends | Choose from contacts | F-602 | done (feat/4b-31-33; web verified, native picker not yet run on a device) |
 | Friends | Directory lookup and friend requests on the server | F-2111 | todo (needs backend) |
 | Friends | Invites and invite links on the server; link a private friend to a real account | F-2105, F-2106 | todo (needs backend) |
-| Support | Feedback: drawer + footer + Settings > Support, Send feedback sheet, Your feedback, saved on device + email draft | F-226 | done (built and tested on feat/wA-34, unmerged) |
+| Support | Feedback: drawer + footer + Settings > Support, Send feedback sheet, Your feedback, saved on device + email draft | F-226 | done (feat/wA-34; integrated on integrate/wA) |
 | Support | Feedback endpoint | F-2112 | todo (needs backend) |
 | Support | Help, About, licences, privacy | F-215 | todo |
 | Platform | PWA: production service worker, offline shell, update toast, manifest, Install app | F-1901 | done (feat/wA-38; verified in Chrome on a production build: registers, opens offline incl. deep routes, no API cached, update toast + Reload, install prompt and iPhone steps; Safari 7-day warning has no Export action until F-2001; native iOS/Android n/a) |

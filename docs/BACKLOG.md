@@ -546,7 +546,7 @@ Pin friends and groups to the top of their lists and of the right column's Recen
 
 One `navigationItems` array and one `NavFooterLinks` component feed the desktop/rail sidebar and the phone drawer, so both show Home, Groups, Analytics, Ask Splito, Activity, Settings, then Feedback · Help · Privacy · About. The home destination is "Home"; its header shows the logo on phones and the title "Home" on rail and desktop. The drawer header shows the avatar and the person's real name only.
 
-- **Effort** S · **Impact** 8 · **Backend** no · **Status** done (web checked in Chrome; Cmd/Ctrl+K on native hardware keyboards and the footer's Feedback link wait for a native key-command module and F-226; Ask Splito item and the drawer's Ask mode wait for F-2301) · **Deps** F-201, F-204
+- **Effort** S · **Impact** 8 · **Backend** no · **Status** done (web checked in Chrome; Cmd/Ctrl+K on native hardware keyboards and native hardware-keyboard shortcuts wait for a native key-command module; Ask Splito item and the drawer's Ask mode wait for F-2301) · **Deps** F-201, F-204
 - **Prefs** `tabs` (now takes every shared item, group Navigation)
 - **Acceptance**
   1. Sidebar and drawer show the same items in the same order with the same icons and labels, rendered from one `navigationItems` array and one `NavFooterLinks` component (a unit test asserts both lists are identical). The sidebar adds only the logo and the "Add expense" pill; the drawer adds only its profile header and Sign in / Log out (F-225).
@@ -619,7 +619,7 @@ Cmd/Ctrl+K toggles the Search & Ask drawer on iPad and Android with a hardware k
 
 Bluesky's placement: a "Feedback" item in the drawer and the shared footer links, and a Settings "Support" section (Send feedback, Your feedback, Help, About). Feedback is kept on the device, with an email fallback, until the backend endpoint (F-2112).
 
-- **Effort** M · **Impact** 7 · **Backend** no · **Status** done (built and tested on feat/wA-34, unmerged; Feedback is in the drawer footer now, the shared footer links component arrives with the next step) · **Deps** F-201, F-205
+- **Effort** M · **Impact** 7 · **Backend** no · **Status** done (feat/wA-34; Feedback leads the shared footer links on the sidebar and the drawer) · **Deps** F-201, F-205
 - **Prefs** `shakeToFeedback` (device, default off), `feedback.includeAppInfo` (device, default on; remembers the sheet's switch)
 - **Acceptance**
   1. "Feedback" opens from the drawer and from the footer links of the sidebar and drawer; Settings has a "Support" section with Send feedback, Your feedback, Help and About; under 1300 px desktop reaches them through the drawer and Settings.
