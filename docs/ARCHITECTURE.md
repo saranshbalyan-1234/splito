@@ -1458,7 +1458,7 @@ pages". § 17 holds the engineering rules that meet these budgets.
   feedback (`PressableScale`) on every tappable row, card and button; tab switches (§ 26.9); expanding search;
   filter dot; `AnimatedAmount` whenever a money total changes; skeleton shimmer while loading; success check +
   haptic on save and settle; drawer open/close with scrim.
-- **Animated icons and Expensify-style animation wherever it helps** (owner 96; F-1706, queued for Wave C).
+- **Animated icons and Expensify-style animation wherever it helps** (owner 96; F-1713, queued for Wave C).
   Icons animate on meaning, not decoration: tab and nav icons morph to their filled state on select (Bluesky
   tab icon pattern), Activity bell/pulse ticks when a new item lands, the check draws on Save/Settle/Accept, the
   trash lid lifts on Delete, the sync dot pulses while syncing, the FAB plus rotates to an X when its menu

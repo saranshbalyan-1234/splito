@@ -2948,7 +2948,7 @@ One table mapping intents to haptics, e.g. a rigid tick when remaining hits zero
   1. Every haptic call goes through useHaptics() by intent.
   2. Turning the haptics pref off silences every haptic.
 
-### F-1706 Animated icons and Expensify-style moments `spec: owner § 26.10 (decision 96)`
+### F-1713 Animated icons and Expensify-style moments `spec: owner § 26.10 (decision 96)`
 
 Animate icons where the motion carries meaning, and add Expensify-style success, empty-state and celebration animations, all on the UI thread with static fallbacks. Queued for Wave C.
 
