@@ -1679,7 +1679,7 @@ dishes etc and each item can be assigned to each in split"; "in itemize don't sh
   purged: no bin, no "days left", no `history.binDays` setting, no "Delete forever". Opening a deleted item shows
   it read-only with "Restore" (and its history); Restore keeps the same checks as before (a missing person or
   group, an inactive group). A list filter "Show deleted" (preference `lists.showDeleted`, account, default on)
-  can hide them. Only "Erase this device's data" (Settings > Data) removes data, and it says so. *Why:* "lets
+  can hide them; shown by default (owner 104). Only "Erase this device's data" (Settings > Data) removes data, and it says so. *Why:* "lets
   remove this deleted items and keep deleted items inside their actual place with a stroke, like a deleted
   expense and keep it forever, and same for groups".
 
@@ -1998,6 +1998,7 @@ Every owner decision, in the order it was made (all 2026-10-26). "Replaced" name
 | 101 | "even the drawer or sheet should have same rule" | The side drawer, the Search & Ask drawer and every bottom sheet, including pickers inside sheets, are URL-addressable too | § 26.3 | Rule 100 named pages, tabs, sheets and popups only |
 | 102 | "if i deleted an item and setting is for 90 days, and i change the setting to 7 days, the old item should still follow its own rule" | Each tombstone stores its own purgeAfter from the bin setting at delete time; changing the setting affects only later deletes | § 26.14 | Purge computed from the current setting |
 | 103 | "lets remove this deleted items and keep deleted items inside their actual place with a stroke, like a deleted expense and keep it forever, and same for groups" | No Recently deleted bin; deleted expenses, payments, write-offs, comments, groups and friends stay in their own lists, struck through, never purged, never counted; open read-only with Restore; "Show deleted" filter (default on) | § 26.14 | Recently deleted bin with timed purge (F-1203, decision 102) |
+| 104 | "by default show deleted as well" | Deleted items are shown by default; "Show deleted" filter defaults on | § 26.14 | (confirms 103's default) |
 
 New decisions follow § 0 rule 9: rewrite the rule in its topic so only the current truth remains, then add a
 row here.
