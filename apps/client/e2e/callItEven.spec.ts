@@ -117,7 +117,9 @@ test('Call it even clears the INR balance (direct and group), keeps EUR, shows i
   await expect(row).toHaveCount(2)
   await page.getByRole('button', {name: 'Undo'}).click()
   await expect(page.getByTestId('person-total-INR')).toHaveText('₹150.00')
-  await expect(row).toHaveCount(0)
+  // The undone write-offs stay in the history, struck through (they no longer count).
+  await expect(row).toHaveCount(2)
+  await expect(row.first().getByText('You forgave Kavya Rao')).toHaveCSS('text-decoration-line', 'line-through')
 })
 
 test('a part write-off leaves the rest open; more than the balance is refused', async ({

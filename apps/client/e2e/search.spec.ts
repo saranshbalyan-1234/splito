@@ -48,7 +48,8 @@ test('the header button opens the drawer; "dinner" finds titles and notes, with 
 
 test('amount and date queries', async ({page}) => {
   const screen = await openSearch(page)
-  const over1000 = DEMO_EXPENSES.filter(e => e.total > 100000n).length
+  // Two deleted demo expenses (Sunset cruise, Takeout pizza) are over 1000 too: listed, struck, never in the totals.
+  const over1000 = DEMO_EXPENSES.filter(e => e.total > 100000n).length + 2
   await page.getByTestId('search-input').fill('> 1000')
   await expect(screen.getByTestId('search-section-expenses')).toContainText(
     String(over1000),

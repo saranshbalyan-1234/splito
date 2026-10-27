@@ -258,8 +258,8 @@ describe.each(ENGINES)('paged search on a broad match (%s)', (_engine, open) => 
     const session = await openSearch(store, 'broad', opts)
     const summary = (await searchTotals(session, () => false))!
     const rows = (await store.getMany<Expense>('expense', want)).filter(e => !e.deleted)
-    // b0 is deleted: listed in `want`, never counted or added up.
-    expect(summary.count).toBe(want.length - 1)
+    // b0 is deleted: listed and counted as a row, never added up.
+    expect(summary.count).toBe(want.length)
     const sum = (c: string) => rows.filter(e => e.data.currency === c).reduce((a, e) => a + e.data.total, 0n)
     expect(summary.totals).toEqual({EUR: sum('EUR'), INR: sum('INR')})
     expect(summarizeSearch(session.found())).toEqual(summary)

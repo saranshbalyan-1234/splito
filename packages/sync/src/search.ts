@@ -450,9 +450,9 @@ export async function openSearch(store: Store, query: string, {today, mark = '.'
 
 /** Counts and adds up a session's matches. Only meaningful once `isDone()`. */
 export function summarizeSearch(found: ReadonlyArray<Entity<Expense>>): SearchSummary {
-  // A deleted match is listed, never counted or added up (decision 103).
+  // A deleted match is listed (and counted as a row), but never added up (decision 103).
   const live = found.filter(e => !e.deleted)
-  return {count: live.length, totals: sumByCurrency(live.map(e => ({currency: e.data.currency, amount: e.data.total})))}
+  return {count: found.length, totals: sumByCurrency(live.map(e => ({currency: e.data.currency, amount: e.data.total})))}
 }
 
 /**

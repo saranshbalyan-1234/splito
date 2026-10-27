@@ -100,7 +100,7 @@ test('paging live parties skips tombstones without short pages or lost rows', as
   expect(second.next).toBeNull()
 })
 
-test('search lists a deleted expense (narrow and broad) but its totals and count leave it out', async () => {
+test('search lists a deleted expense (narrow and broad) but its totals leave it out', async () => {
   const {gone} = await trip()
   const found = await searchStore(s, 'taxi', {today: '2026-10-27'})
   expect(found.expenses.map(e => [e.id, e.deleted])).toEqual([[gone.id, true]])
