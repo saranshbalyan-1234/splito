@@ -110,7 +110,7 @@ test('Settings can join the phone bar (5 at most), with arrows to reorder and Re
     .poll(async () => (await top('analytics')) < (await top('groups')))
     .toBe(true)
   // Home stays first: nothing moves above it.
-  await expect(page.getByTestId('tabs-up-groups')).toBeDisabled()
+  await expect(page.getByTestId('tabs-up-analytics')).toBeDisabled()
 
   await page.getByTestId('tabs-toggle-settings').click()
   await expect(page.getByTestId('tabs-limit-note')).toContainText('up to 5')

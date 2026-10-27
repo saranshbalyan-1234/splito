@@ -129,10 +129,9 @@ test('Ctrl+K toggles the drawer from anywhere and "/" opens it; the button toolt
 }) => {
   await page.goto('/groups?demo=1')
   await expect(page.getByTestId('group-Lisbon')).toBeVisible()
-  await expect(page.getByTestId('header-search-ask')).toBeVisible()
-  await expect(
-    page.getByTestId('header-search-ask').locator('..'),
-  ).toHaveAttribute('title', /Search or ask Splito \((⌘K|Ctrl K)\)/)
+  const button = page.getByTestId('screen-groups').getByTestId('header-search-ask')
+  await expect(button).toBeVisible()
+  await expect(button.locator('xpath=ancestor::*[@title][1]')).toHaveAttribute('title', /Search or ask Splito \((⌘K|Ctrl K)\)/)
   await page.keyboard.press('Control+k')
   await expect(page.getByTestId('search-ask')).toBeVisible()
   await expect(page.getByTestId('search-ask-shortcut')).toHaveText(/⌘K|Ctrl K/)

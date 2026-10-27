@@ -297,7 +297,7 @@ export function SearchAskBody({initialQuery}: {initialQuery: string}) {
         a.p_0,
         gtMobile
           ? {maxWidth: POPUP_WIDTH, height: 'min(640px, 80vh)'}
-          : web({height: '100dvh'}),
+          : web({height: '100dvh', maxHeight: '100dvh'}),
       ]}
       webInnerContentContainerStyle={[a.p_0]}
     />
