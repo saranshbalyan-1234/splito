@@ -461,3 +461,35 @@ test('a SQLite file already in v2 shape but with a lost user_version is stamped,
   expect(await second.dump()).toEqual(before)
   await second.close()
 })
+
+test('a v2-shaped SQLite file with a lost user_version is upgraded to v3, not stamped as it is', async () => {
+  const path = join(mkdtempSync(join(tmpdir(), 'splito-lost2-')), 'db.sqlite')
+  const first = await openSqlStore(bunExecutor(path))
+  const ctx = makeCtx()
+  await ensureMe(first, ctx, 'Me')
+  const a = await createPerson(first, ctx, {name: 'Asha'})
+  await createExpense(first, ctx, {
+    title: 'Dinner', groupId: null, currency: 'INR', total: 600n, payers: {me: 600n},
+    split: {mode: 'equal', participants: ['me', a.id]}, date: '2026-10-02', tz: 'UTC', category: 'food', notes: '',
+  })
+  const before = await first.dump()
+  await first.close()
+  downgradeSql(path)
+  const raw = new Database(path)
+  raw.run('PRAGMA user_version = 0')
+  raw.close()
+  const second = await openSqlStore(bunExecutor(path))
+  expect((await second.dump()).entities).toEqual(before.entities)
+  await expectDerivedTablesMatch(second)
+  // The write that used to fail with "table people has no column named lastActivityAt".
+  await createPerson(second, makeCtx(), {name: 'Bilal'})
+  await createExpense(second, {...makeCtx(), newId: () => 'later-1'}, {
+    title: 'Lunch', groupId: null, currency: 'INR', total: 300n, payers: {me: 300n},
+    split: {mode: 'equal', participants: ['me', a.id]}, date: '2026-10-03', tz: 'UTC', category: 'food', notes: '',
+  })
+  await expectDerivedTablesMatch(second)
+  await second.close()
+  const check = new Database(path)
+  expect((check.query('PRAGMA user_version').get() as {user_version: number}).user_version).toBe(SCHEMA_VERSION)
+  check.close()
+})

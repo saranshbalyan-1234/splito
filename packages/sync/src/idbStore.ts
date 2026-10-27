@@ -98,7 +98,12 @@ async function readV1(t: Tx): Promise<LegacyV1> {
 /** Runs a migration step with its writes issued without waiting for each (the upgrade transaction orders them). */
 async function pipelined(t: Tx, cmp: (a: unknown, b: unknown) => number, step: (rows: RowAccess) => Promise<void>) {
   const tx = transactionRows(idbRows(t, cmp), {isPipelined: true})
-  await step(tx.rows)
+  try {
+    await step(tx.rows)
+  } catch (e) {
+    // The first failed write is the root cause; what the step threw is usually the abort that followed it.
+    throw (await tx.failure())?.error ?? e
+  }
   await tx.flush()
 }
 
@@ -158,6 +163,10 @@ export async function openIdbStore(name: string, factory: IDBFactory = indexedDB
     throw upgradeError ?? e
   }
   await upgrade
+  if (upgradeError) {
+    db.close()
+    throw upgradeError
+  }
   // A newer build in another tab can upgrade later: let go so it is never blocked, and say this tab must reload.
   db.onversionchange = () => {
     db.close()

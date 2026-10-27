@@ -146,8 +146,16 @@ async function readV1(db: SqlExecutor): Promise<LegacyV1> {
  * crash leaves v1 untouched and a finished migration is never run again.
  */
 async function migrate(db: SqlExecutor) {
-  const [{user_version: version = 0} = {}] = await db.all<{user_version: number}>('PRAGMA user_version', [])
-  if (version >= SCHEMA_VERSION) return
+  const [{user_version: stored = 0} = {}] = await db.all<{user_version: number}>('PRAGMA user_version', [])
+  if (stored >= SCHEMA_VERSION) return
+  let version = stored
+  const [v1] = await db.all<{name: string}>("SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'entities'", [])
+  if (version === 0 && !v1) {
+    // A lost `user_version` (0) on a file that is already per-type: read the layout, not the number. A `people`
+    // table without the v3 column is v2, whatever it says; the fresh path would index the missing column as a literal.
+    const people = await db.all<{name: string}>('PRAGMA table_info(people)', [])
+    if (people.length > 0 && !people.some(c => c.name === 'lastActivityAt')) version = 2
+  }
   await db.withTransaction(async () => {
     // v2 -> v3: the older tables are kept (their indexes already exist); the new column is added before its index.
     if (version === 2) {
@@ -157,7 +165,6 @@ async function migrate(db: SqlExecutor) {
       await db.exec(`PRAGMA user_version = ${SCHEMA_VERSION}`)
       return
     }
-    const [v1] = await db.all<{name: string}>("SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'entities'", [])
     const legacy = v1 ? await readV1(db) : undefined
     if (v1) for (const old of ['entities', 'history', 'outbox']) await db.exec(`DROP TABLE IF EXISTS ${old}`)
     // v1 kept its version in a `meta` row of another name; the table is the same shape, so it stays.
