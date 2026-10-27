@@ -583,10 +583,10 @@ A fixed 320 px right column in Bluesky `RightNav` style at 1300 px and up, with 
 
 Settings starts with an "Account" section copied from Bluesky's Settings account section and Login/Signup screens; auth state comes from one `useSession()`. Honest until the auth backend exists.
 
-- **Effort** M · **Impact** 8 · **Backend** no · **Status** in progress · **Deps** F-1701, F-205
+- **Effort** M · **Impact** 8 · **Backend** no · **Status** done (feat/wA-30b; Log out and the signed-in row ship with F-2102) · **Deps** F-1701, F-205
 - **Prefs** -
 - **Acceptance**
-  1. Signed out: a "Sign in" row with the subtitle "Back up and share with friends" pushes the sign-in flow: choose a method (Continue with Apple, Continue with Google, Email, Phone) -> email or phone entry -> 6-digit code; every field is validated.
+  1. Signed out: a "Sign in" row with the subtitle "Back up and share with friends" opens Bluesky's logged-out flow full screen over the app (closable): splash with Create account / Sign in -> Login (email or phone, password, Forgot?) or Signup (name, email or phone, password); every field is validated (replaces the earlier method-picker design, decision 65).
   2. Until F-2102 exists, submit shows the Bluesky Admonition "Sign-in arrives with sync. Your data stays safe on this device."; no fake success and no fake account.
   3. Auth state comes from one `useSession()` (Bluesky `src/state/session` pattern), signed out until the backend lands; the drawer footer shows "Sign in" (and "Log out" once signed in).
   4. The signed-in account row and the "Log out?" prompt ship with F-2102 (criteria there).

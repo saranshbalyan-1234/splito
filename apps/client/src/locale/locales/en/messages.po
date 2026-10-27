@@ -643,10 +643,6 @@ msgstr "{who} edited this expense"
 msgid "{who} restored this expense"
 msgstr "{who} restored this expense"
 
-#: src/screens/SignIn.tsx:236
-msgid "+91 98765 43210"
-msgstr "+91 98765 43210"
-
 #: src/navigation/Drawer.tsx:110
 msgid "<0>{friendCount}</0> {friendCount, plural, one {friend} other {friends}}"
 msgstr "<0>{friendCount}</0> {friendCount, plural, one {friend} other {friends}}"
@@ -709,10 +705,9 @@ msgstr "100% assigned"
 msgid "30 days"
 msgstr "30 days"
 
-#: src/screens/SignIn.tsx:317
-#: src/screens/SignIn.tsx:318
-msgid "6-digit code"
-msgstr "6-digit code"
+#: src/screens/Login/SetNewPasswordForm.tsx:66
+msgid "6-digit reset code"
+msgstr "6-digit reset code"
 
 #: src/components/settings/prefControls.tsx:623
 #: src/components/settings/prefControls.tsx:804
@@ -1043,6 +1038,10 @@ msgstr "Allow access to contacts"
 msgid "Allowed"
 msgstr "Allowed"
 
+#: src/screens/Login/ForgotPasswordForm.tsx:142
+msgid "Already have a code?"
+msgstr "Already have a code?"
+
 #: src/components/settings/prefControls.tsx:577
 msgid "Also works for m (million) and inside sums, like 2k + 500."
 msgstr "Also works for m (million) and inside sums, like 2k + 500."
@@ -1190,8 +1189,15 @@ msgstr "Automatic"
 #: src/screens/AddFriend.tsx:273
 #: src/screens/AddFriend.tsx:735
 #: src/screens/AddFriend.tsx:742
-#: src/screens/SignIn.tsx:367
-#: src/screens/SignIn.tsx:372
+#: src/screens/Login/ChooseAccountForm.tsx:102
+#: src/screens/Login/ChooseAccountForm.tsx:106
+#: src/screens/Login/ForgotPasswordForm.tsx:101
+#: src/screens/Login/ForgotPasswordForm.tsx:106
+#: src/screens/Login/LoginForm.tsx:189
+#: src/screens/Login/LoginForm.tsx:194
+#: src/screens/Login/SetNewPasswordForm.tsx:113
+#: src/screens/Login/SetNewPasswordForm.tsx:119
+#: src/screens/Signup/BackNextButtons.tsx:29
 msgid "Back"
 msgstr "Back"
 
@@ -1206,10 +1212,6 @@ msgstr "Back to Groups"
 #: src/screens/Person/index.tsx:161
 msgid "Back to People"
 msgstr "Back to People"
-
-#: src/screens/SignIn.tsx:146
-msgid "Back up and share"
-msgstr "Back up and share"
 
 #: src/screens/Settings/index.tsx:79
 msgid "Back up and share with friends"
@@ -1383,6 +1385,11 @@ msgstr "Check the dates: the trip can’t end before it starts."
 msgid "Checking Splito…"
 msgstr "Checking Splito…"
 
+#: src/screens/Login/ForgotPasswordForm.tsx:115
+#: src/screens/Login/LoginForm.tsx:201
+msgid "Checks your details"
+msgstr "Checks your details"
+
 #: src/components/split/DateDialog.tsx:110
 msgid "Choose a year"
 msgstr "Choose a year"
@@ -1419,6 +1426,10 @@ msgstr "Choose who can pay whom when this group settles up. With no rules, anyon
 #: src/components/split/shared.tsx:183
 msgid "Choose who shares each item"
 msgstr "Choose who shares each item"
+
+#: src/screens/Signup/StepInfo/index.tsx:141
+msgid "Choose your password"
+msgstr "Choose your password"
 
 #: src/screens/Search/components/SearchHistory.tsx:173
 msgctxt "action"
@@ -1460,12 +1471,17 @@ msgstr "Clears: {clears}"
 
 #: src/components/Dialog/CloseButton.tsx:32
 #: src/components/FormSheet/shared.tsx:195
+#: src/screens/LoggedOut/index.tsx:48
 msgid "Close"
 msgstr "Close"
 
 #: src/components/Dialog/index.web.tsx:197
 msgid "Close active dialog"
 msgstr "Close active dialog"
+
+#: src/screens/Login/PasswordUpdatedForm.tsx:31
+msgid "Close alert"
+msgstr "Close alert"
 
 #: src/view/shell/index.tsx:103
 #: src/view/shell/index.web.tsx:81
@@ -1479,6 +1495,10 @@ msgstr "Close this dialog"
 #: src/components/split/ExpenseComposer.tsx:274
 msgid "Closes Add expense; your draft is kept"
 msgstr "Closes Add expense; your draft is kept"
+
+#: src/screens/Login/PasswordUpdatedForm.tsx:32
+msgid "Closes password update alert"
+msgstr "Closes password update alert"
 
 #: src/screens/AddFriend.tsx:366
 msgid "Closes without adding anyone"
@@ -1499,10 +1519,6 @@ msgstr "Closes without saving"
 #: src/components/split/ExpenseComposer.tsx:273
 msgid "Closes without saving your changes"
 msgstr "Closes without saving your changes"
-
-#: src/screens/SignIn.tsx:311
-msgid "Code"
-msgstr "Code"
 
 #: src/components/settings/CategoryDialog.tsx:126
 msgid "Color"
@@ -1545,23 +1561,9 @@ msgstr "Context menu backdrop, click to close the menu."
 msgid "Continue"
 msgstr "Continue"
 
-#: src/screens/SignIn.tsx:135
-msgid "Continue with Apple"
-msgstr "Continue with Apple"
-
-#: src/screens/SignIn.tsx:165
-#: src/screens/SignIn.tsx:171
-msgid "Continue with email"
-msgstr "Continue with email"
-
-#: src/screens/SignIn.tsx:140
-msgid "Continue with Google"
-msgstr "Continue with Google"
-
-#: src/screens/SignIn.tsx:176
-#: src/screens/SignIn.tsx:182
-msgid "Continue with phone"
-msgstr "Continue with phone"
+#: src/screens/Signup/BackNextButtons.tsx:34
+msgid "Continue to next step"
+msgstr "Continue to next step"
 
 #: src/lib/sharing.ts:34
 msgid "Copied to clipboard"
@@ -1702,6 +1704,14 @@ msgstr "Couple"
 msgid "Create a link"
 msgstr "Create a link"
 
+#: src/screens/LoggedOut/SplashScreen.tsx:68
+#: src/screens/LoggedOut/SplashScreen.web.tsx:59
+#: src/screens/Login/LoginForm.tsx:218
+#: src/screens/Login/LoginForm.tsx:224
+#: src/screens/Signup/index.tsx:35
+msgid "Create account"
+msgstr "Create account"
+
 #: src/screens/CreateGroup.tsx:137
 #: src/screens/Groups/index.tsx:138
 #: src/screens/Groups/index.tsx:254
@@ -1712,6 +1722,11 @@ msgstr "Create group"
 #: src/screens/Invites/CreateInvite.tsx:188
 msgid "Create link"
 msgstr "Create link"
+
+#: src/screens/LoggedOut/SplashScreen.tsx:63
+#: src/screens/LoggedOut/SplashScreen.web.tsx:53
+msgid "Create new account"
+msgstr "Create new account"
 
 #: src/components/groups/GroupFields.tsx:100
 #: src/components/people/RecordPaymentDialog.tsx:322
@@ -2036,18 +2051,21 @@ msgstr "Edit who you settle with"
 msgid "Edited the notes"
 msgstr "Edited the notes"
 
-#: src/screens/SignIn.tsx:228
-msgid "Email"
-msgstr "Email"
-
-#: src/screens/SignIn.tsx:234
-msgid "Email address"
-msgstr "Email address"
-
 #: src/screens/AddFriend.tsx:417
 #: src/screens/AddFriend.tsx:425
 msgid "Email or mobile number"
 msgstr "Email or mobile number"
+
+#: src/screens/Login/ForgotPasswordForm.tsx:55
+#: src/screens/Login/LoginForm.tsx:81
+#: src/screens/Signup/StepInfo/index.tsx:94
+msgid "Email or phone"
+msgstr "Email or phone"
+
+#: src/screens/Login/LoginForm.tsx:92
+#: src/screens/Signup/StepInfo/index.tsx:115
+msgid "Email or phone number"
+msgstr "Email or phone number"
 
 #: src/components/settings/AccentPicker.tsx:31
 msgid "Emerald"
@@ -2074,6 +2092,10 @@ msgstr "Enter a name or an email or number."
 msgid "Enter a name."
 msgstr "Enter a name."
 
+#: src/screens/Login/SetNewPasswordForm.tsx:87
+msgid "Enter a password"
+msgstr "Enter a password"
+
 #: src/components/people/EditFriendDialog.tsx:138
 #: src/components/people/UpiPayDialog.tsx:184
 msgid "Enter a UPI ID like name@bank."
@@ -2092,21 +2114,42 @@ msgstr "Enter an amount greater than zero."
 msgid "Enter an amount to see everyone’s share"
 msgstr "Enter an amount to see everyone’s share"
 
-#: src/screens/SignIn.tsx:263
-msgid "Enter an email like name@example.com."
-msgstr "Enter an email like name@example.com."
+#: src/screens/Login/LoginForm.tsx:64
+#: src/screens/Signup/StepInfo/index.tsx:33
+msgid "Enter an email like name@example.com, or a phone number with its country code like +91 98765 43210."
+msgstr "Enter an email like name@example.com, or a phone number with its country code like +91 98765 43210."
 
-#: src/screens/SignIn.tsx:297
-msgid "Enter the code"
-msgstr "Enter the code"
+#: src/screens/Login/ForgotPasswordForm.tsx:41
+msgid "Enter the email or phone number (with its country code) you signed up with."
+msgstr "Enter the email or phone number (with its country code) you signed up with."
 
-#: src/screens/SignIn.tsx:265
-msgid "Enter the number with its country code, like +91 98765 43210."
-msgstr "Enter the number with its country code, like +91 98765 43210."
+#: src/screens/Login/ForgotPasswordForm.tsx:84
+msgid "Enter the email or phone number you used to create your account. We'll send you a \"reset code\" so you can set a new password."
+msgstr "Enter the email or phone number you used to create your account. We'll send you a \"reset code\" so you can set a new password."
+
+#: src/screens/Login/LoginForm.tsx:111
+msgid "Enter the email or phone number you used when you created your account"
+msgstr "Enter the email or phone number you used when you created your account"
 
 #: src/components/split/PayersDialog.tsx:186
 msgid "Enter the total first, then what each person paid."
 msgstr "Enter the total first, then what each person paid."
+
+#: src/screens/Login/index.tsx:77
+msgid "Enter your email or phone and password"
+msgstr "Enter your email or phone and password"
+
+#: src/screens/Login/ForgotPasswordForm.tsx:65
+msgid "Enter your email or phone number"
+msgstr "Enter your email or phone number"
+
+#: src/screens/Signup/StepInfo/index.tsx:80
+msgid "Enter your name"
+msgstr "Enter your name"
+
+#: src/screens/Login/LoginForm.tsx:138
+msgid "Enter your password"
+msgstr "Enter your password"
 
 #: src/components/settings/CategoryIcon.tsx:129
 msgid "Entertainment"
@@ -2317,6 +2360,19 @@ msgstr "For money that changed hands outside Splito – cash, UPI or a bank tran
 msgid "For you"
 msgstr "For you"
 
+#: src/screens/Login/index.tsx:101
+#: src/screens/Login/index.tsx:112
+msgid "Forgot Password"
+msgstr "Forgot Password"
+
+#: src/screens/Login/LoginForm.tsx:159
+msgid "Forgot password?"
+msgstr "Forgot password?"
+
+#: src/screens/Login/LoginForm.tsx:166
+msgid "Forgot?"
+msgstr "Forgot?"
+
 #: src/screens/Person/index.tsx:151
 #: src/screens/Person/index.tsx:367
 #: src/screens/Search/components/ResultRows.tsx:295
@@ -2385,8 +2441,17 @@ msgid "Give each person a percentage."
 msgstr "Give each person a percentage."
 
 #: src/components/Layout/Header/index.tsx:154
+#: src/screens/Login/components/AuthLayout/Header/index.tsx:108
 msgid "Go back"
 msgstr "Go back"
+
+#: src/screens/Signup/BackNextButtons.tsx:23
+msgid "Go back to previous step"
+msgstr "Go back to previous step"
+
+#: src/screens/Login/ForgotPasswordForm.tsx:136
+msgid "Go to next"
+msgstr "Go to next"
 
 #: src/screens/Expense/index.tsx:107
 #: src/screens/Expense/index.tsx:108
@@ -2515,6 +2580,10 @@ msgstr "Hide from activity"
 msgid "Hide from Activity"
 msgstr "Hide from Activity"
 
+#: src/components/forms/PasswordField.tsx:77
+msgid "Hide password"
+msgstr "Hide password"
+
 #: src/screens/Expense/components/History.tsx:95
 #: src/screens/Person/index.tsx:332
 msgid "History"
@@ -2589,6 +2658,10 @@ msgstr "Indian Rupee"
 #: src/components/settings/AccentPicker.tsx:32
 msgid "Indigo"
 msgstr "Indigo"
+
+#: src/screens/Login/SetNewPasswordForm.tsx:98
+msgid "Input new password"
+msgstr "Input new password"
 
 #: src/components/settings/prefControls.tsx:561
 msgid "International"
@@ -2793,6 +2866,11 @@ msgstr "Let a debt go without any money changing hands. It shows in history and 
 msgid "Let people who know my email or number find me"
 msgstr "Let people who know my email or number find me"
 
+#: src/screens/Login/index.tsx:102
+#: src/screens/Login/index.tsx:113
+msgid "Let's get your password reset!"
+msgstr "Let's get your password reset!"
+
 #: src/components/settings/prefControls.tsx:84
 #: src/screens/Settings/index.tsx:233
 msgid "Light"
@@ -2979,6 +3057,7 @@ msgstr "Multiple payers"
 #: src/screens/AddFriend.tsx:467
 #: src/screens/Groups/components/GroupsFilterDialog.tsx:117
 #: src/screens/People/components/FriendsFilterDialog.tsx:125
+#: src/screens/Signup/StepInfo/index.tsx:69
 msgid "Name"
 msgstr "Name"
 
@@ -2989,6 +3068,10 @@ msgstr "Name (optional)"
 #: src/screens/AddFriend.tsx:432
 msgid "name@example.com or +91 98765 43210"
 msgstr "name@example.com or +91 98765 43210"
+
+#: src/screens/Login/ForgotPasswordForm.tsx:137
+msgid "Navigates to the next screen"
+msgstr "Navigates to the next screen"
 
 #: src/components/settings/prefControls.tsx:806
 #: src/screens/Invites/CreateInvite.tsx:242
@@ -3034,7 +3117,21 @@ msgstr "New invite link"
 msgid "New invite links expire after"
 msgstr "New invite links expire after"
 
-#: src/screens/SignIn.tsx:272
+#: src/screens/Login/SetNewPasswordForm.tsx:83
+msgid "New password"
+msgstr "New password"
+
+#: src/screens/Login/LoginForm.tsx:214
+msgid "New to Splito?"
+msgstr "New to Splito?"
+
+#: src/screens/Login/ForgotPasswordForm.tsx:114
+#: src/screens/Login/ForgotPasswordForm.tsx:120
+#: src/screens/Login/LoginForm.tsx:200
+#: src/screens/Login/LoginForm.tsx:206
+#: src/screens/Login/SetNewPasswordForm.tsx:127
+#: src/screens/Login/SetNewPasswordForm.tsx:132
+#: src/screens/Signup/BackNextButtons.tsx:40
 msgid "Next"
 msgstr "Next"
 
@@ -3269,6 +3366,10 @@ msgstr "of your share was paid by others"
 msgid "Off"
 msgstr "Off"
 
+#: src/screens/Login/PasswordUpdatedForm.tsx:36
+msgid "Okay"
+msgstr "Okay"
+
 #: src/screens/Settings/index.tsx:244
 msgid "On"
 msgstr "On"
@@ -3355,6 +3456,16 @@ msgstr "Open UPI app"
 msgid "Opening an invite needs a connection to Splito. Try again once you’re online."
 msgstr "Opening an invite needs a connection to Splito. Try again once you’re online."
 
+#: src/screens/LoggedOut/SplashScreen.tsx:64
+#: src/screens/LoggedOut/SplashScreen.web.tsx:54
+msgid "Opens flow to create a new Splito account"
+msgstr "Opens flow to create a new Splito account"
+
+#: src/screens/LoggedOut/SplashScreen.tsx:80
+#: src/screens/LoggedOut/SplashScreen.web.tsx:66
+msgid "Opens flow to sign in to your existing Splito account"
+msgstr "Opens flow to sign in to your existing Splito account"
+
 #: src/screens/RecentlyDeleted/index.tsx:318
 msgid "Opens it to restore or delete forever"
 msgstr "Opens it to restore or delete forever"
@@ -3381,6 +3492,11 @@ msgstr "Or keep them as a draft to finish later."
 #: src/screens/Groups/components/GroupsFilterDialog.tsx:73
 msgid "Other"
 msgstr "Other"
+
+#: src/screens/Login/ChooseAccountForm.tsx:87
+#: src/screens/Login/ChooseAccountForm.tsx:93
+msgid "Other account"
+msgstr "Other account"
 
 #: src/screens/Analytics/components/Summary.tsx:163
 msgid "Out of your pocket"
@@ -3443,6 +3559,20 @@ msgstr "Part of it: {0} stays open."
 #: src/components/people/RecordPaymentDialog.tsx:375
 msgid "Part payments are fine."
 msgstr "Part payments are fine."
+
+#: src/screens/Login/LoginForm.tsx:118
+#: src/screens/Login/LoginForm.tsx:124
+#: src/screens/Signup/StepInfo/index.tsx:130
+msgid "Password"
+msgstr "Password"
+
+#: src/screens/Login/index.tsx:123
+msgid "Password updated"
+msgstr "Password updated"
+
+#: src/screens/Login/PasswordUpdatedForm.tsx:23
+msgid "Password updated!"
+msgstr "Password updated!"
 
 #: src/components/people/UpiPayDialog.tsx:149
 #: src/screens/Person/index.tsx:311
@@ -3539,11 +3669,6 @@ msgstr "Period: {periodName}, {0}"
 msgid "Person"
 msgstr "Person"
 
-#: src/screens/SignIn.tsx:228
-#: src/screens/SignIn.tsx:234
-msgid "Phone number"
-msgstr "Phone number"
-
 #: src/components/split/shared.tsx:167
 msgid "Pick a date between 1900 and 2200"
 msgstr "Pick a date between 1900 and 2200"
@@ -3571,6 +3696,26 @@ msgstr "Pink"
 #: src/screens/Groups/index.tsx:247
 msgid "Planning a trip or sharing a flat? Keep its expenses in one place."
 msgstr "Planning a trip or sharing a flat? Keep its expenses in one place."
+
+#: src/screens/Signup/StepInfo/index.tsx:34
+msgid "Please choose your password."
+msgstr "Please choose your password."
+
+#: src/screens/Login/LoginForm.tsx:58
+msgid "Please enter your email or phone number"
+msgstr "Please enter your email or phone number"
+
+#: src/screens/Signup/StepInfo/index.tsx:32
+msgid "Please enter your email or phone number."
+msgstr "Please enter your email or phone number."
+
+#: src/screens/Signup/StepInfo/index.tsx:31
+msgid "Please enter your name."
+msgstr "Please enter your name."
+
+#: src/screens/Login/LoginForm.tsx:70
+msgid "Please enter your password"
+msgstr "Please enter your password"
 
 #: src/components/split/AmountKeypad.tsx:67
 msgid "Plus"
@@ -3771,6 +3916,14 @@ msgstr "Reset all settings"
 msgid "Reset all settings?"
 msgstr "Reset all settings?"
 
+#: src/screens/Login/SetNewPasswordForm.tsx:60
+msgid "Reset code"
+msgstr "Reset code"
+
+#: src/screens/Login/ForgotPasswordForm.tsx:52
+msgid "Reset password"
+msgstr "Reset password"
+
 #: src/components/groups/RulesEditor.tsx:234
 msgid "Reset rules"
 msgstr "Reset rules"
@@ -3782,6 +3935,10 @@ msgstr "Reset this page"
 #: src/components/groups/RulesEditor.tsx:240
 msgid "Reset to anyone pays anyone"
 msgstr "Reset to anyone pays anyone"
+
+#: src/screens/Login/LoginForm.tsx:160
+msgid "Reset your password by sending a code to your email or phone"
+msgstr "Reset your password by sending a code to your email or phone"
 
 #: src/screens/Expense/index.tsx:449
 #: src/screens/RecentlyDeleted/components/RestoreDialog.tsx:103
@@ -3808,6 +3965,10 @@ msgstr "Restoring puts it back in balances, history and Activity. It stays here 
 #: src/screens/RecentlyDeleted/components/RestoreDialog.tsx:175
 msgid "Restoring puts it back in balances, history and Activity. It stays here for 1 more day."
 msgstr "Restoring puts it back in balances, history and Activity. It stays here for 1 more day."
+
+#: src/components/forms/PasswordField.tsx:77
+msgid "Reveal password"
+msgstr "Reveal password"
 
 #: src/screens/Invites/InviteLinks.tsx:163
 msgid "Revoke"
@@ -3985,6 +4146,14 @@ msgstr "See all activity"
 msgid "See all groups"
 msgstr "See all groups"
 
+#: src/screens/Login/ChooseAccountForm.tsx:35
+msgid "Select account"
+msgstr "Select account"
+
+#: src/screens/Login/index.tsx:91
+msgid "Select from an existing account"
+msgstr "Select from an existing account"
+
 #. placeholder {0}: formatContact(to)
 #: src/components/invites/InviteShare.tsx:87
 msgid "Send by email to {0}"
@@ -4026,6 +4195,14 @@ msgstr "Service charge"
 #: src/components/groups/RulesEditor.tsx:296
 msgid "Set for this group"
 msgstr "Set for this group"
+
+#: src/screens/Login/SetNewPasswordForm.tsx:51
+msgid "Set new password"
+msgstr "Set new password"
+
+#: src/screens/Login/ForgotPasswordForm.tsx:79
+msgid "Sets the email or phone number for password reset"
+msgstr "Sets the email or phone number for password reset"
 
 #: src/navigation/Drawer.tsx:237
 #: src/navigation/Navigation.tsx:70
@@ -4166,24 +4343,30 @@ msgstr "Shows the write-off and lets you undo it"
 #: src/navigation/Drawer.tsx:335
 #: src/navigation/Drawer.tsx:341
 #: src/navigation/Navigation.tsx:72
+#: src/screens/LoggedOut/SplashScreen.tsx:78
+#: src/screens/LoggedOut/SplashScreen.tsx:85
+#: src/screens/LoggedOut/SplashScreen.web.tsx:65
+#: src/screens/LoggedOut/SplashScreen.web.tsx:71
+#: src/screens/Login/index.tsx:76
+#: src/screens/Login/index.tsx:90
+#: src/screens/Login/LoginForm.tsx:78
 #: src/screens/Settings/index.tsx:65
 #: src/screens/Settings/index.tsx:70
-#: src/screens/SignIn.tsx:48
-#: src/screens/SignIn.tsx:347
 msgid "Sign in"
 msgstr "Sign in"
 
-#: src/screens/SignIn.tsx:147
-msgid "Sign in to keep your expenses safe and share groups with friends."
-msgstr "Sign in to keep your expenses safe and share groups with friends."
+#. placeholder {0}: account.name
+#: src/screens/Login/ChooseAccountForm.tsx:54
+msgid "Sign in as {0}"
+msgstr "Sign in as {0}"
 
-#: src/screens/SignIn.tsx:100
+#: src/screens/Login/ChooseAccountForm.tsx:40
+msgid "Sign in as…"
+msgstr "Sign in as…"
+
+#: src/screens/Login/NotLiveYet.tsx:19
 msgid "Sign-in arrives with sync. Your data stays safe on this device."
 msgstr "Sign-in arrives with sync. Your data stays safe on this device."
-
-#: src/screens/SignIn.tsx:304
-msgid "Sign-in isn’t live yet, so no code has been sent. It arrives with sync."
-msgstr "Sign-in isn’t live yet, so no code has been sent. It arrives with sync."
 
 #: src/components/settings/prefControls.tsx:114
 msgid "Smaller"
@@ -4254,6 +4437,11 @@ msgstr "Split"
 msgid "Split between {0}"
 msgstr "Split between {0}"
 
+#: src/screens/LoggedOut/SplashScreen.tsx:43
+#: src/screens/LoggedOut/SplashScreen.web.tsx:43
+msgid "Split bills, stay friends."
+msgstr "Split bills, stay friends."
+
 #: src/screens/Expense/index.tsx:223
 msgid "Split by exact amounts"
 msgstr "Split by exact amounts"
@@ -4299,6 +4487,11 @@ msgstr "Split with"
 msgid "Split with friends"
 msgstr "Split with friends"
 
+#: src/screens/LoggedOut/SplashScreen.tsx:39
+#: src/screens/LoggedOut/SplashScreen.web.tsx:39
+msgid "Splito"
+msgstr "Splito"
+
 #: src/screens/People/index.tsx:145
 #: src/view/shell/desktop/LeftNav.tsx:157
 msgid "Splito - Home"
@@ -4319,6 +4512,11 @@ msgstr "Splito collects no analytics and shows no ads."
 #: src/screens/Settle/index.tsx:468
 msgid "Splito never moves money. Record each payment once it has happened – part payments are fine."
 msgstr "Splito never moves money. Record each payment once it has happened – part payments are fine."
+
+#: src/screens/LoggedOut/SplashScreen.tsx:95
+#: src/screens/LoggedOut/SplashScreen.web.tsx:100
+msgid "Splito works without an account. Your data stays on this device."
+msgstr "Splito works without an account. Your data stays on this device."
 
 #: src/components/settings/AboutSettings.tsx:54
 msgid "Splito's interface is built on Bluesky's social-app (MIT licence). Icons are Lucide (ISC licence). The Inter typeface is under the SIL Open Font License."
@@ -4348,6 +4546,12 @@ msgstr "Status"
 #: src/components/settings/CategoryIcon.tsx:127
 msgid "Stay"
 msgstr "Stay"
+
+#. placeholder {0}: state.activeStep + 1
+#. placeholder {1}: SIGNUP_STEPS.length
+#: src/screens/Signup/index.tsx:53
+msgid "Step {0} of {1}"
+msgstr "Step {0} of {1}"
 
 #: src/components/split/ExpenseComposer.tsx:467
 msgid "suggested"
@@ -4415,10 +4619,6 @@ msgstr "That isn’t a number. Use digits, one decimal point and + − × ÷"
 msgid "That’s more than the open balance of {0}."
 msgstr "That’s more than the open balance of {0}."
 
-#: src/screens/SignIn.tsx:298
-msgid "The 6-digit code for {contact}."
-msgstr "The 6-digit code for {contact}."
-
 #: src/components/split/shared.tsx:189
 msgid "The adjustments add up to more than the total"
 msgstr "The adjustments add up to more than the total"
@@ -4426,10 +4626,6 @@ msgstr "The adjustments add up to more than the total"
 #: src/components/split/shared.tsx:151
 msgid "The amount needs to be more than zero"
 msgstr "The amount needs to be more than zero"
-
-#: src/screens/SignIn.tsx:343
-msgid "The code is 6 digits."
-msgstr "The code is 6 digits."
 
 #: src/components/people/PaymentDetailsDialog.tsx:141
 msgid "The payment couldn’t be deleted. Please try again."
@@ -4782,17 +4978,13 @@ msgstr "We kept your unsaved expense."
 msgid "We’ll check when you’re online. Your request waits on this device until then."
 msgstr "We’ll check when you’re online. Your request waits on this device until then."
 
-#: src/screens/SignIn.tsx:219
-msgid "We’ll send a 6-digit code to this address."
-msgstr "We’ll send a 6-digit code to this address."
-
 #: src/screens/People/components/RequestsSection.tsx:159
 msgid "We’ll send it when you’re online"
 msgstr "We’ll send it when you’re online"
 
-#: src/screens/SignIn.tsx:221
-msgid "We’ll text a 6-digit code to this number. Include your country code."
-msgstr "We’ll text a 6-digit code to this number. Include your country code."
+#: src/screens/Signup/index.tsx:36
+msgid "We’re so excited to have you join us!"
+msgstr "We’re so excited to have you join us!"
 
 #: src/components/settings/prefControls.tsx:411
 #: src/screens/Analytics/components/Summary.tsx:192
@@ -5033,6 +5225,11 @@ msgstr "You borrowed {0}"
 msgid "you borrowed {figure}"
 msgstr "you borrowed {figure}"
 
+#: src/screens/Login/index.tsx:124
+#: src/screens/Login/PasswordUpdatedForm.tsx:26
+msgid "You can now sign in with your new password."
+msgstr "You can now sign in with your new password."
+
 #: src/components/activity/ActivityItem.tsx:573
 msgid "You can now split anything together"
 msgstr "You can now split anything together"
@@ -5061,6 +5258,10 @@ msgstr "You forgave {0}"
 #: src/view/shell/desktop/RecentTransactions.tsx:55
 msgid "You got paid"
 msgstr "You got paid"
+
+#: src/screens/Login/SetNewPasswordForm.tsx:38
+msgid "You have entered an invalid code. It should be 6 digits."
+msgstr "You have entered an invalid code. It should be 6 digits."
 
 #: src/components/people/HistoryRow.tsx:236
 msgid "you lent"
@@ -5160,6 +5361,10 @@ msgstr "You paid your own share"
 msgid "You pay {0}"
 msgstr "You pay {0}"
 
+#: src/screens/Login/SetNewPasswordForm.tsx:53
+msgid "You will receive a \"reset code\" by email or text. Enter that code here, then enter your new password."
+msgstr "You will receive a \"reset code\" by email or text. Enter that code here, then enter your new password."
+
 #: src/screens/Settle/index.tsx:554
 msgid "You’ll get"
 msgstr "You’ll get"
@@ -5200,9 +5405,9 @@ msgstr "You’ve already asked {value}. It’s under Invites sent on People, whe
 msgid "You've hidden everything here. New expenses, payments and group changes will show up as they happen."
 msgstr "You've hidden everything here. New expenses, payments and group changes will show up as they happen."
 
-#: src/screens/SignIn.tsx:236
-msgid "you@example.com"
-msgstr "you@example.com"
+#: src/screens/Signup/index.tsx:59
+msgid "Your account"
+msgstr "Your account"
 
 #: src/screens/AddFriend.tsx:685
 msgid "Your contact book is never uploaded."
@@ -5220,10 +5425,6 @@ msgstr "Your device asks for reduced motion, so Splito keeps movement to gentle 
 msgid "Your edits to this expense won’t be saved."
 msgstr "Your edits to this expense won’t be saved."
 
-#: src/screens/SignIn.tsx:217
-msgid "Your email"
-msgstr "Your email"
-
 #: src/screens/Analytics/components/Charts.tsx:98
 msgid "Your net balance at the end of each day, all friends together"
 msgstr "Your net balance at the end of each day, all friends together"
@@ -5239,6 +5440,11 @@ msgstr "Your net balance at the end of each week, all friends together"
 #: src/screens/Analytics/components/Charts.tsx:101
 msgid "Your net balance at the end of each year, all friends together"
 msgstr "Your net balance at the end of each year, all friends together"
+
+#: src/screens/Login/SetNewPasswordForm.tsx:42
+#: src/screens/Signup/StepInfo/index.tsx:35
+msgid "Your password must be at least 8 characters long."
+msgstr "Your password must be at least 8 characters long."
 
 #. placeholder {0}: nameList(item.stuck)
 #: src/screens/Settle/index.tsx:405
@@ -5258,10 +5464,6 @@ msgstr "Your payment rules leave no way to settle up, so this plan goes outside 
 #: src/screens/AddFriend.tsx:384
 msgid "Your personal invite is ready. When {0} joins with it, you’re friends straight away. It works once and is listed under Invites sent."
 msgstr "Your personal invite is ready. When {0} joins with it, you’re friends straight away. It works once and is listed under Invites sent."
-
-#: src/screens/SignIn.tsx:217
-msgid "Your phone number"
-msgstr "Your phone number"
 
 #: src/screens/AddFriend.tsx:676
 msgid "Your phone will ask to let Splito open your contacts. You pick one person; only the email or number you choose is used."
