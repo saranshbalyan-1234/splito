@@ -2,11 +2,11 @@ import {Database} from 'bun:sqlite'
 import {expect, test} from 'bun:test'
 import {
   balanceRows,
+  balanceSides,
   cellsByCategory,
   cellTotals,
   computeShares,
   type CurrencyCode,
-  magnitude,
   personSummary,
   ZERO,
 } from '@splito/domain'
@@ -142,8 +142,9 @@ test('"What does Riya owe me?" is the People balance, down to the group parts, f
     if (a.kind !== 'balance') continue
     expect(a.person.id).toBe(ids[key as DemoPersonKey])
     const want = truth.find(s => s.person === a.person.id)
-    const got = Object.fromEntries(a.lines.map(l => [l.currency, l.total]))
-    const expected = Object.fromEntries(Object.entries(want?.byCurrency ?? {}).filter(([, c]) => c.total !== ZERO).map(([cur, c]) => [cur, c.total]))
+    // The figures People shows: each way on its own, never netted across direct and groups.
+    const got = Object.fromEntries(a.lines.map(l => [l.currency, [l.owed, l.owe]]))
+    const expected = Object.fromEntries(Object.entries(want?.byCurrency ?? {}).map(([cur, c]) => [cur, balanceSides(c)]).filter(([, b]) => (b as {owed: bigint; owe: bigint}).owed !== ZERO || (b as {owed: bigint; owe: bigint}).owe !== ZERO).map(([cur, b]) => [cur, [(b as {owed: bigint}).owed, (b as {owe: bigint}).owe]]))
     expect(got, name).toEqual(expected)
     // One line per currency, never one summed figure.
     expect(new Set(a.lines.map(l => l.currency)).size).toBe(a.lines.length)
@@ -152,7 +153,7 @@ test('"What does Riya owe me?" is the People balance, down to the group parts, f
   expect(checked).toBe(6)
   // Riya really is in the books: owes or is owed in INR.
   const riya = await ask('What does Riya owe me?', env)
-  expect(riya.kind === 'balance' && riya.lines.some(l => l.currency === 'INR' && l.total !== ZERO)).toBe(true)
+  expect(riya.kind === 'balance' && riya.lines.some(l => l.currency === 'INR' && (l.owed !== ZERO || l.owe !== ZERO))).toBe(true)
 })
 
 test('who owes me the most and whom I owe the most match the balances, largest first, per currency', async () => {
@@ -164,8 +165,9 @@ test('who owes me the most and whom I owe the most match the balances, largest f
   const owe: Record<string, bigint> = {}
   for (const s of truth)
     for (const [cur, c] of Object.entries(s.byCurrency)) {
-      if (c.total > ZERO) owed[`${s.person}:${cur}`] = c.total
-      else if (c.total < ZERO) owe[`${s.person}:${cur}`] = magnitude(c.total)
+      const sides = balanceSides(c)
+      if (sides.owed > ZERO) owed[`${s.person}:${cur}`] = sides.owed
+      if (sides.owe > ZERO) owe[`${s.person}:${cur}`] = sides.owe
     }
   const a = await ask('Who owes me the most?', env)
   const b = await ask('Whom do I owe the most?', env)
@@ -279,8 +281,8 @@ test('on the large demo set: every friend\'s balance equals People\'s and a year
     const a = await ask(`What does ${p.name} owe me?`, env)
     if (a.kind === 'clarify') continue
     if (a.kind !== 'balance') throw new Error(`${p.name}: ${a.kind}`)
-    const want = Object.fromEntries(Object.entries(truth.find(s => s.person === a.person.id)?.byCurrency ?? {}).filter(([, c]) => c.total !== ZERO).map(([cur, c]) => [cur, c.total]))
-    expect(Object.fromEntries(a.lines.map(l => [l.currency, l.total])), p.name).toEqual(want)
+    const want = Object.fromEntries(Object.entries(truth.find(s => s.person === a.person.id)?.byCurrency ?? {}).map(([cur, c]) => [cur, balanceSides(c)]).filter(([, b]) => (b as {owed: bigint}).owed !== ZERO || (b as {owe: bigint}).owe !== ZERO).map(([cur, b]) => [cur, [(b as {owed: bigint}).owed, (b as {owe: bigint}).owe]]))
+    expect(Object.fromEntries(a.lines.map(l => [l.currency, [l.owed, l.owe]])), p.name).toEqual(want)
     checked++
   }
   expect(checked).toBeGreaterThan(5)

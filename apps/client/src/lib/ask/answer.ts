@@ -1,5 +1,6 @@
 import {
   type BalanceRow,
+  balanceSides,
   cellsByCategory,
   cellsByGroup,
   cellsByPerson,
@@ -94,10 +95,12 @@ async function summaries(env: AskEnv) {
 async function answerBalance(env: AskEnv, person: Ref): Promise<Answer> {
   const mine = (await summaries(env)).find(s => s.person === person.id)
   const lines = Object.entries(mine?.byCurrency ?? {})
-    .filter(([, c]) => c.total !== ZERO)
-    .map(([currency, c]) => ({
-      currency,
-      total: c.total,
+    .map(([currency, c]) => ({currency, ...balanceSides(c), direct: c.direct, groups: c.groups}))
+    .filter(c => c.owed !== ZERO || c.owe !== ZERO)
+    .map(c => ({
+      currency: c.currency,
+      owed: c.owed,
+      owe: c.owe,
       direct: c.direct,
       groups: Object.entries(c.groups)
         .filter(([, amount]) => amount !== ZERO)
@@ -113,8 +116,10 @@ async function answerRanking(env: AskEnv, direction: 'owedToMe' | 'iOwe' | 'both
   const iOwe: RankRow[] = []
   for (const s of await summaries(env)) {
     for (const [currency, c] of Object.entries(s.byCurrency)) {
-      if (c.total > ZERO) owedToMe.push({person: refOf(env, s.person), currency, amount: c.total})
-      else if (c.total < ZERO) iOwe.push({person: refOf(env, s.person), currency, amount: magnitude(c.total)})
+      // Each way on its own, as People shows it: owed in a group and owing directly are both listed.
+      const {owed, owe} = balanceSides(c)
+      if (owed > ZERO) owedToMe.push({person: refOf(env, s.person), currency, amount: owed})
+      if (owe > ZERO) iOwe.push({person: refOf(env, s.person), currency, amount: owe})
     }
   }
   // The currency with the most rows leads; within one currency, the largest amount.

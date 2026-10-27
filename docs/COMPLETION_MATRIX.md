@@ -61,7 +61,7 @@ Status words are the same as `docs/BACKLOG.md`: **done** (built, tested and merg
 | Data | JSON backup export + import / restore (Settings > Data) | F-2001 | todo (Batch 4b) |
 | Data | Export centre: CSV, PDF statement, filters; Group / Person / Analytics export entries | F-2007 | todo (Batch 4b) |
 | Data | Power exports (YNAB, Beancount, XLSX) | F-2004 | todo |
-| AI | Ask Splito: nav item, Analytics header, Search row; DM-style chat; on-device answers with rich cards | F-2301 | todo (Batch 4b) |
+| AI | Ask Splito: nav item, Sparkles Search & Ask button, Search row; DM-style chat; on-device answers (English and Hindi) with rich cards | F-2301 | done (web e2e; native pass pending) |
 | AI | Free-form answers via the backend model; AI opt-in and privacy | F-2302, F-2303 | todo (needs backend) |
 | Data | Free search across expenses | F-1401 | in progress (built and tested on feat/b-*, unmerged) |
 | Accessibility | Money direction never shown by colour alone | F-1801 | in progress (built and tested on feat/b-*, unmerged) |

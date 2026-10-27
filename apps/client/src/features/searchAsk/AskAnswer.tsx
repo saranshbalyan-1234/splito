@@ -116,30 +116,55 @@ export function AskAnswer({answer, me, question, onAsk, onSearch}: Props) {
       const sentence =
         answer.lines.length > 1
           ? l`Here is where you stand with ${who}, one line per currency.`
-          : first.total > ZERO
-            ? l`${who} owes you ${money(first.total, first.currency)}.`
-            : l`You owe ${who} ${money(magnitude(first.total), first.currency)}.`
+          : first.owed !== ZERO && first.owe !== ZERO
+            ? l`${who} owes you ${money(first.owed, first.currency)} and you owe ${who} ${money(first.owe, first.currency)}.`
+            : first.owed !== ZERO
+              ? l`${who} owes you ${money(first.owed, first.currency)}.`
+              : l`You owe ${who} ${money(first.owe, first.currency)}.`
+      const isOwed = answer.lines.some(line => line.owed !== ZERO)
       return (
         <View style={[a.gap_md]}>
           {lead(sentence)}
           <Card testID="ask-balance-card">
-            {answer.lines.map(line => (
-              <BalanceLine
-                key={line.currency}
-                amount={line.total}
-                currency={line.currency}
-                locale={locale}
-                caption={line.total > ZERO ? l`${who} owes you (${line.currency})` : l`You owe ${who} (${line.currency})`}
-                detail={[
-                  ...(line.direct !== ZERO ? [l`Direct ${money(line.direct, line.currency)}`] : []),
-                  ...line.groups.map(g => `${g.group.name || l`Group`} ${money(g.amount, line.currency)}`),
-                ]}
-              />
-            ))}
+            {answer.lines.flatMap(line => {
+              const detail = [
+                ...(line.direct !== ZERO ? [l`Direct ${line.direct > ZERO ? '+' : '−'}${money(magnitude(line.direct), line.currency)}`] : []),
+                ...line.groups.map(g => `${g.group.name || l`Group`} ${g.amount > ZERO ? '+' : '−'}${money(magnitude(g.amount), line.currency)}`),
+              ]
+              const isBoth = line.owed !== ZERO && line.owe !== ZERO
+              return [
+                ...(line.owed !== ZERO
+                  ? [
+                      <BalanceLine
+                        key={`${line.currency}-owed`}
+                        testID={isBoth ? `ask-balance-${line.currency}-owed` : `ask-balance-${line.currency}`}
+                        amount={line.owed}
+                        currency={line.currency}
+                        locale={locale}
+                        caption={l`${who} owes you (${line.currency})`}
+                        detail={detail}
+                      />,
+                    ]
+                  : []),
+                ...(line.owe !== ZERO
+                  ? [
+                      <BalanceLine
+                        key={`${line.currency}-owe`}
+                        testID={isBoth ? `ask-balance-${line.currency}-owe` : `ask-balance-${line.currency}`}
+                        amount={-line.owe}
+                        currency={line.currency}
+                        locale={locale}
+                        caption={l`You owe ${who} (${line.currency})`}
+                        detail={line.owed === ZERO ? detail : undefined}
+                      />,
+                    ]
+                  : []),
+              ]
+            })}
           </Card>
           <ActionCard
             testID="ask-action-person"
-            title={first.total > ZERO ? l`Remind ${who}` : l`Record a payment`}
+            title={isOwed ? l`Remind ${who}` : l`Record a payment`}
             subtitle={l`Opens ${who}'s page`}
             onPress={() => go(() => navigation.navigate('Person', {personId: answer.person.id}))}
           />

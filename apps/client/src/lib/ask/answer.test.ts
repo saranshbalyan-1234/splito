@@ -176,3 +176,16 @@ test('what the engine cannot answer comes back as it is, never as a figure', asy
   expect(a.kind).toBe('unsupported')
   expect(await ask('hi')).toEqual({kind: 'help'})
 })
+
+test('a balance shows each way on its own, never netted across direct and groups (as People does)', async () => {
+  const rows = [
+    {person: 'a', groupId: null, currency: 'INR', amount: -45000n},
+    {person: 'a', groupId: 'g1', currency: 'INR', amount: 602800n},
+  ]
+  const e = env({source: source({balanceRows: async () => rows})})
+  const a = await ask('What does Asha owe me?', e)
+  if (a.kind !== 'balance') throw new Error(a.kind)
+  expect(a.lines).toHaveLength(1)
+  expect(a.lines[0]).toMatchObject({currency: 'INR', owed: 602800n, owe: 45000n, direct: -45000n})
+  expect(a.lines[0]!.groups).toEqual([{group: {id: 'g1', name: 'Goa trip'}, amount: 602800n}])
+})

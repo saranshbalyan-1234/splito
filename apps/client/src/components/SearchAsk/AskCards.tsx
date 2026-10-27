@@ -60,7 +60,9 @@ export function BalanceLine({
   locale,
   caption,
   detail,
+  testID,
 }: {
+  testID: string
   amount: bigint
   currency: string
   locale: string
@@ -75,7 +77,7 @@ export function BalanceLine({
     <View style={[a.gap_2xs]}>
       <Text style={[a.text_xs, a.font_semi_bold, t.atoms.text_contrast_medium]}>{caption}</Text>
       <Text
-        testID={`ask-balance-${currency}`}
+        testID={testID}
         style={[a.text_3xl, a.font_bold, a.leading_tight, tabular, money.style(amount)]}>
         {`${moneyGlyph(amount)} ${formatAmount(magnitude(amount), currency, locale)}`}
       </Text>

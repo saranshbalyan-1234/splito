@@ -97,7 +97,7 @@ test('hiding Groups removes it from the phone bar only; the sidebar and drawer k
   await open(page, '/groups', 'screen-groups')
 })
 
-test('Settings can join the phone bar (5 at most), with arrows to reorder and Reset', async ({
+test('Settings can join the phone bar, with arrows to reorder and Reset', async ({
   page,
 }) => {
   await page.setViewportSize(LAPTOP)
@@ -113,7 +113,6 @@ test('Settings can join the phone bar (5 at most), with arrows to reorder and Re
   await expect(page.getByTestId('tabs-up-analytics')).toBeDisabled()
 
   await page.getByTestId('tabs-toggle-settings').click()
-  await expect(page.getByTestId('tabs-limit-note')).toContainText('up to 5')
   await page.setViewportSize(PHONE)
   // The bar re-renders for the phone width after the resize: poll, a read right after it can still see the old bar.
   await expect
@@ -142,26 +141,34 @@ test('Settings can join the phone bar (5 at most), with arrows to reorder and Re
     .toBe(true)
 })
 
-test('the bar keeps at least two tabs and Home cannot be hidden', async ({
+test('the bar takes any number of tabs, down to Home alone, and Home cannot be hidden', async ({
   page,
 }) => {
   await open(page, '/settings/navigation', 'screen-settings-section')
-  for (const tab of ['groups', 'analytics']) {
+  for (const tab of ['groups', 'analytics', 'activity']) {
     await page.getByTestId(`tabs-toggle-${tab}`).click()
     await expect(page.getByTestId(`tabs-toggle-${tab}`)).toHaveAttribute(
       'aria-checked',
       'false',
     )
   }
-  await expect(page.getByTestId('tabs-toggle-activity')).toHaveAttribute(
-    'aria-disabled',
-    'true',
-  )
+  // Nothing is locked but Home, even with Home alone left.
   await expect(page.getByTestId('tabs-toggle-people')).toHaveAttribute(
     'aria-disabled',
     'true',
   )
-  await expect(page.getByTestId('tabs-limit-note')).toContainText('at least 2')
+  await expect(page.getByTestId('tabs-toggle-activity')).not.toHaveAttribute(
+    'aria-disabled',
+    'true',
+  )
+  await expect(page.getByTestId('tabs-count-note')).toContainText('Only Home')
+  // Every item can go on, past five: six tabs.
+  for (const tab of ['groups', 'analytics', 'ask', 'activity', 'settings']) {
+    const toggle = page.getByTestId(`tabs-toggle-${tab}`)
+    if ((await toggle.getAttribute('aria-checked')) !== 'true') await toggle.click()
+    await expect(toggle).toHaveAttribute('aria-checked', 'true')
+  }
+  await expect(page.getByTestId('tabs-count-note')).toContainText('6 tabs')
 })
 
 test('choosing Hindi switches the whole UI live and persists', async ({

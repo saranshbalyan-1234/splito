@@ -99,8 +99,12 @@ export type Answer =
   | {
       kind: 'balance'
       person: Ref
-      /** One line per currency; `total` > 0 means they owe me. */
-      lines: Array<{currency: CurrencyCode; total: bigint; direct: bigint; groups: Array<{group: Ref; amount: bigint}>}>
+      /**
+       * One line per currency, each way on its own (never netted across direct and groups, as People
+       * shows it): `owed` is what they owe me, `owe` what I owe them, both >= 0. `direct` and the
+       * group parts are signed (> 0 they owe me).
+       */
+      lines: Array<{currency: CurrencyCode; owed: bigint; owe: bigint; direct: bigint; groups: Array<{group: Ref; amount: bigint}>}>
     }
   | {
       kind: 'ranking'

@@ -3,7 +3,7 @@ import {expect, test} from 'bun:test'
 import {DEFAULT_CATEGORIES} from '@splito/sync'
 
 import {parseQuestion} from '#/lib/ask/parse'
-import {type Vocab} from '#/lib/ask/types'
+import {type Intent, type Vocab} from '#/lib/ask/types'
 
 /*
  * Every question Ask Splito offers is sent back to the parser as typed, in
@@ -11,7 +11,7 @@ import {type Vocab} from '#/lib/ask/types'
  * and in the Hindi catalogue.
  */
 
-const OFFERED: Array<[msgid: string, intent: string]> = [
+const OFFERED: Array<[msgid: string, intent: Intent['kind']]> = [
   ['Who owes me the most?', 'ranking'],
   ['Whom do I owe the most?', 'ranking'],
   ['What does {name} owe me?', 'balance'],
