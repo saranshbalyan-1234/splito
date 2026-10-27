@@ -539,6 +539,57 @@ The spec's labels are `Saved on this device`, `Waiting for connection`, `Syncing
   and is never merged into a real account or used as a fallback. [Built] `?demo=1` seeds only in dev/e2e
   builds (`data/demo.ts`).
 
+### 9.8 Local database schema (binding; scalability first)
+
+*Why:* "manage the indexeddb properly, a lot of different data is clubbed into a single table"; "the db level
+architecture is very important for scalability". Replaces the v1 layout (one `entities` store holding every
+type keyed by `[type, id]`, read with full scans). Target: 10,000+ expenses, 500 people, 100 groups per device
+with every hot screen reading by index, never by full scan (§ 17 budgets, F-109).
+
+- **One store / table per entity type** (IndexedDB object stores and SQLite tables share names and columns):
+  `people`, `groups`, `group_members`, `expenses`, `expense_parties`, `repayments`, `writeoffs`, `comments`,
+  `friend_requests`, `invite_links`, `feedback`, `preferences`, plus infrastructure `history`, `outbox`,
+  `meta`. A new entity type gets its own store and a migration; nothing is "clubbed" into a shared store.
+- **Every row** carries `id` (UUID), `version`, `createdAt` / `updatedAt` (UTC ms), `deleted` (+ `deletedAt`,
+  `purgedAt`), and for money rows `currency` + amounts as bigint minor units encoded with the codec (§ 9.3);
+  an expense also keeps its `date` (LocalDate in the user's timezone).
+- **Every row carries its own sync status** `syncStatus`: `local` (on this device only: no account yet, never
+  queued), `pending` (queued in the outbox), `syncing` (sent, waiting for the server), `synced` (acknowledged;
+  `serverVersion` and `syncedAt` stored), `failed` (refused or conflicted; `syncError` holds the reason and it
+  surfaces as "Needs attention", § 9.5). The mutation that writes a row sets it in the same transaction as the
+  outbox op; the sync engine moves it forward only on real acknowledgements, never optimistically to `synced`.
+  Every store has a `bySyncStatus` index so counts ("3 changes waiting") are index reads. The UI can show it
+  per item (expense, repayment, comment, friend request: a small dot/label on detail pages and a subtle marker
+  on rows, same colours as the avatar dot of § 26.7, with text for accessibility), and the avatar dot is the
+  aggregate of all rows. Outbox ops keep their own status (`queued`, `sending`, `acked`, `failed`) linked to
+  the row by `entityType` + `entityId`. *Why:* "every value can have status, whether it's outbox, pending,
+  success, synced, whatever".
+- **Normalised relations, not arrays inside JSON:** group membership lives in `group_members`
+  (`[groupId, personId]`, `joinedAt`, `leftAt`, role); who paid / owes on an expense lives in
+  `expense_parties` (`[expenseId, personId]`, `paid`, `share`, `groupId`, `currency`, `date`). The expense row
+  keeps the split input for editing; `expense_parties` is its derived, indexed projection.
+- **Indexes for every query path** (name them `by<Field>`): people `byName`, `byUpdatedAt`; groups
+  `byUpdatedAt`, `byArchived`; group_members `byPerson`; expenses `byGroupDate` `[groupId, date]`, `byDate`,
+  `byUpdatedAt`, `byDeleted`; expense_parties `byPersonDate` `[personId, date]`, `byGroupPerson`; repayments and
+  writeoffs `byGroup`, `byFrom`, `byTo`, `byDate`; comments `byTarget` `[targetType, targetId]`; friend_requests
+  `byStatus`; history `byEntity` `[type, id]` and `byChangedAt`; outbox `opId` (unique), `byStatus`.
+- **Materialised balance projection** `balances` (`[personId, groupId|'', currency]` -> net minor units),
+  maintained in the SAME transaction as every money write (expense, repayment, write-off, delete, restore) by
+  the sync mutations, so Home, People, Groups and the right column read balances in O(rows shown) instead of
+  re-deriving from the whole ledger; a `rebuildProjections()` maintenance routine recomputes it from source rows
+  and a test asserts projection == recomputation after random operation sequences.
+- **Reads page by cursor** (`[date, id]` or `[updatedAt, id]`) for every list; selectors never `getAll` a money
+  store on a hot path (only maintenance, export and tests may).
+- **One transaction per mutation** spans the entity, its projections, history and outbox (atomic, § 9.3).
+- **Versioned migrations:** `meta.schemaVersion`; IndexedDB `onupgradeneeded` and SQLite `PRAGMA user_version`
+  run ordered, idempotent steps; v1 -> v2 copies rows from `entities` into the per-type stores, builds
+  `group_members`, `expense_parties` and `balances`, then drops `entities`. Each migration has a test that
+  loads a v1 fixture (incl. the large demo set) and checks every row and balance survives exactly.
+- **The Store interface stays the boundary** (§ 1): screens and hooks never touch IndexedDB/SQLite directly;
+  the per-type layout lives behind `packages/sync` (typed accessors per store + index queries).
+- **The server mirrors it:** the Postgres schema (backend batch) uses the same tables, keys and columns so sync is
+  row-to-row.
+
 ---
 
 ## 10. State and service boundaries
@@ -1123,6 +1174,12 @@ labelled sidebar); **wide** = web 1300 px and up (Bluesky `gtTablet`, right colu
   the list and finishes it (built, tested, merged, screenshots, status updated in BACKLOG and
   `COMPLETION_MATRIX.md`) before starting the next; parallel workers may split one feature, not run many
   features at once. *Why:* "add everything to feature list and pick one by one".
+- **Model split: Sonnet implements, Opus decides and reviews.** Every implementation agent (building,
+  fixing, migrating, merging) runs on Sonnet (latest); every decision (design, rulings, planning), review,
+  audit, judge and verification agent runs on Opus (latest). Each feature in the build chain is built by Sonnet,
+  then reviewed by Opus against § 26 and its BACKLOG criteria; a "fix-first" verdict sends it back to a Sonnet
+  fixer once before the next feature starts. *Why:* "use sonnet for all implementation and opus for decisions
+  and reviews".
 - **Large work fans out** into parallel throwaway worktrees (§ 20) with judges and review. *Why:* "Fanout".
 
 ### 26.2 Product scope, platforms and backend
@@ -1220,7 +1277,7 @@ show what: centre may be page name, right maybe some basic action, and left may 
   | Analytics | Search & Ask + overflow (Export CSV) |
   | Activity | Search & Ask + Mark all read |
   | Person | Settle up + overflow (Remind, Export statement, Edit, Delete) |
-  | Group | Settle up + overflow (Edit group, Members, Payment rules, Invite link, Export) |
+  | Group | Settle up + overflow (Edit group, Members, Payment rules, Export) |
   | Expense | Edit + overflow (Delete) |
   | Settings, Profile, Settle | none |
 
@@ -1571,10 +1628,22 @@ add anyway (only for you)"; "also i should be able to select from contacts". *Wh
     "Add anyway (only for you)" is still offered.
 - **Pending people are not selectable** in expenses or groups until they accept (they show greyed with
   "Waiting for <name> to accept"); a private "only for you" friend is selectable at once.
+- **Request and invite rows share one layout:** avatar, name, status line, and the actions on the right of the
+  row, all on ONE horizontal line (actions vertically centred with the name block, side by side, never wrapped
+  below the name; "basically in horizontal row"). Requests: Accept (check icon, primary) and Decline (X icon); Invites sent: Resend (send icon) and Cancel
+  (X icon). On phones the actions are icon-only round buttons (with accessibility labels and a long-press
+  tooltip); on rail/desktop each shows its icon and full text ("Accept", "Decline", "Resend", "Cancel"). *Why:*
+  "make accept decline like invites sent, on mobile only icon for both, for web complete text with icon" Activity's
+  friend-request rows use the same one-line layout: Accept / Decline on the right in place of the "..." menu,
+  whose items move to long-press / right-click on that row (assistant's call).
 - **Incoming requests** show in Activity (from others, unread badge) and at the top of People ("Requests":
   Accept / Decline). Declining is silent to the sender (stays "pending" until it expires after 30 days).
-- **Invite link and QR with limits.** People header and the Add friend sheet have "Invite link / QR"; groups
-  have the same for joining a group. Creating one sets: max uses (1, 5, 25, unlimited; default 1 for friends,
+- **Invite link and QR with limits, only inside "Invite people".** The Home header's person-plus button is
+  "Invite people" (it opens the Add friend sheet); the invite link / QR row lives only inside that sheet. On a
+  group, it lives only inside the group's "Add members / Invite people" sheet. No header overflow, menu or page
+  shows invite links outside these flows (the Home "..." overflow and the Group overflow entries are removed;
+  "Manage invite links" is reached from the invite-link sheet's "Manage links" button and from Settings >
+  Privacy). *Why:* "invite link and qr to show once i click on invite people, not outside". Creating one sets: max uses (1, 5, 25, unlimited; default 1 for friends,
   25 for groups), expiry (24 hours, 7 days, 30 days, never; default 7 days), and for groups "approve each join"
   (default off). The sheet shows the QR (scannable, accent-coloured logo in the centre), the link, Copy and
   Share. "Manage invite links" lists active links with uses left, expiry, and Revoke. Opening a link: if the
@@ -1732,6 +1801,11 @@ Every owner decision, in the order it was made (all 2026-10-26). "Replaced" name
 | 73 | "this search should open a drawer instead which would support ai as well" | Search icon (every top-level header) opens the Search & Ask drawer: search results + Ask Splito chat in one place; no Search or Ask pages; bottom bar back to Home, Groups, Analytics, Activity | §§ 26.3, 26.4, 26.19 | Expanding header search (72), Ask Splito centre tab and screen (71) |
 | 74 | "make it as a ai icon like flash or something ... basically we are combining ai and search" | The Search & Ask header button uses the Lucide Sparkles AI icon (not a magnifier) | § 26.3 | Magnifier icon |
 | 75 | "command + k opens this up" | Cmd/Ctrl+K opens and closes the Search & Ask drawer everywhere (web, hardware keyboards), hint shown on desktop | § 26.3 | "/" or Cmd/Ctrl+K on web only |
+| 76 | "make accept decline like invites sent, on mobile only icon for both, for web complete text with icon" | Requests and Invites sent rows: actions on the right; icon-only on phones, icon + text on desktop | § 26.18 | Accept/Decline text buttons under the name |
+| 77 | "invite link and qr to show once i click on invite people, not outside" | Invite link / QR only inside the Invite people (Add friend) sheet and the group Add members sheet; header overflow entries removed | § 26.18 | Invite link in Home "..." and Group overflow |
+| 78 | "manage the indexeddb properly, a lot of different data is clubbed into a single table"; "the db level architecture is very important for scalability" | Local DB v2: one store per entity type, normalised members/parties, indexes per query, balance projection in-transaction, cursor paging, versioned migrations, Postgres mirrors it | § 9.8 | Single `entities` store with full scans |
+| 79 | "every value can have status, whether its outbox, pending success, synced whatever" | Per-row `syncStatus` (local / pending / syncing / synced / failed) with index, shown per item, aggregated in the avatar dot | §§ 9.8, 26.7 | Only a global status label |
+| 80 | "use sonnet for all implementation and opus for decisions and reviews" | Sonnet builds and fixes; Opus decides, reviews, audits, judges; every feature gets an Opus review before the next | § 26.1 | One model for everything |
 
 New decisions follow § 0 rule 9: rewrite the rule in its topic so only the current truth remains, then add a
 row here.

@@ -1,7 +1,6 @@
 // Adapted from bluesky-social/social-app@4e4ad9c (MIT) - src/screens/Messages/JoinRequests.tsx (request rows: avatar, name, Accept / Reject buttons)
 import {useRef} from 'react'
 import {View} from 'react-native'
-import Animated from 'react-native-reanimated'
 import {plural, t} from '@lingui/core/macro'
 import {Trans, useLingui} from '@lingui/react/macro'
 import {useNavigation} from '@react-navigation/native'
@@ -20,15 +19,12 @@ import {type NavigationProp} from '#/lib/routes/types'
 import {logger} from '#/logger'
 import {directory} from '#/data/friends'
 import {useMutationCtx, usePendingRequests, useStore} from '#/data/hooks'
-import {UserAvatar} from '#/view/com/util/UserAvatar'
-import {atoms as a, useTheme} from '#/alf'
-import {Button, ButtonIcon, ButtonText} from '#/components/Button'
+import {Check_Stroke2_Corner0_Rounded as CheckIcon} from '#/components/icons/Check'
 import {PaperPlane_Stroke2_Corner0_Rounded as ResendIcon} from '#/components/icons/Invite'
 import {TimesLarge_Stroke2_Corner0_Rounded as XIcon} from '#/components/icons/Times'
 import * as Toast from '#/components/Toast'
-import {Text} from '#/components/Typography'
 import {useTickEveryMinute} from '#/state/shell/tick-every-minute'
-import {useListAnimations} from '#/motion/listAnimations'
+import {RequestAction, RequestRow} from '#/components/people/RequestRow'
 import {SectionHeader} from './SectionHeader'
 
 const DAY = 86_400_000
@@ -92,58 +88,6 @@ function useRowAction() {
   }
 }
 
-function Row({
-  testID,
-  name,
-  detail,
-  isCompact = false,
-  children,
-}: {
-  testID: string
-  name: string
-  detail: React.ReactNode
-  /** Invites sent: one line, muted avatar, the actions at the end. */
-  isCompact?: boolean
-  children: React.ReactNode
-}) {
-  const t = useTheme()
-  const listAnimations = useListAnimations()
-  return (
-    <Animated.View
-      {...listAnimations}
-      testID={testID}
-      style={[
-        a.flex_row,
-        isCompact ? a.align_center : a.align_start,
-        a.gap_md,
-        a.px_lg,
-        isCompact ? a.py_sm : a.py_md,
-      ]}>
-      <View style={[isCompact && {opacity: 0.55}]}>
-        <UserAvatar size={isCompact ? 36 : 42} name={name} type="user" />
-      </View>
-      <View style={[a.flex_1, a.gap_2xs, {minWidth: 0}]}>
-        <Text emoji numberOfLines={1} style={[a.text_md, a.font_semi_bold]}>
-          {name}
-        </Text>
-        <Text
-          numberOfLines={isCompact ? 1 : 2}
-          style={[a.text_sm, a.leading_snug, t.atoms.text_contrast_medium]}>
-          {detail}
-        </Text>
-        {isCompact ? null : (
-          <View style={[a.flex_row, a.align_center, a.gap_sm, a.mt_sm]}>
-            {children}
-          </View>
-        )}
-      </View>
-      {isCompact ? (
-        <View style={[a.flex_row, a.align_center, a.gap_xs]}>{children}</View>
-      ) : null}
-    </Animated.View>
-  )
-}
-
 function IncomingRow({request}: {request: Entity<FriendRequest>}) {
   const {t: l} = useLingui()
   const navigation = useNavigation<NavigationProp>()
@@ -155,16 +99,17 @@ function IncomingRow({request}: {request: Entity<FriendRequest>}) {
   const name = requestName(request.data)
 
   return (
-    <Row
+    <RequestRow
       testID={`request-${name}`}
       name={name}
       detail={
         <Trans>Wants to be friends · {ago(now - request.data.sentAt)}</Trans>
       }>
-      <Button
+      <RequestAction
         testID="request-accept"
         label={l`Accept ${name}’s friend request`}
-        size="small"
+        text={l({message: 'Accept', context: 'button'})}
+        icon={CheckIcon}
         color="primary"
         onPress={() =>
           void act('People.accept', async () => {
@@ -176,16 +121,13 @@ function IncomingRow({request}: {request: Entity<FriendRequest>}) {
             })
             navigation.navigate('Person', {personId: person.id})
           })
-        }>
-        <ButtonText>
-          <Trans context="button">Accept</Trans>
-        </ButtonText>
-      </Button>
-      <Button
+        }
+      />
+      <RequestAction
         testID="request-decline"
         label={l`Decline ${name}’s friend request`}
-        size="small"
-        color="secondary"
+        text={l({message: 'Decline', context: 'button'})}
+        icon={XIcon}
         onPress={() =>
           void act('People.decline', async () => {
             await declineFriendRequest(store, ctx, request.id)
@@ -193,12 +135,9 @@ function IncomingRow({request}: {request: Entity<FriendRequest>}) {
             // Silent to them (26.18): their side just waits until it expires.
             Toast.show(l`Request declined. ${name} isn’t told.`)
           })
-        }>
-        <ButtonText>
-          <Trans context="button">Decline</Trans>
-        </ButtonText>
-      </Button>
-    </Row>
+        }
+      />
+    </RequestRow>
   )
 }
 
@@ -223,13 +162,12 @@ function OutgoingRow({request}: {request: Entity<FriendRequest>}) {
     )
 
   return (
-    <Row testID={`invite-sent-${name}`} name={name} detail={detail} isCompact>
-      <Button
+    <RequestRow testID={`invite-sent-${name}`} name={name} detail={detail}>
+      <RequestAction
         testID="invite-sent-resend"
         label={l`Resend to ${name}`}
-        size="small"
-        color="secondary"
-        shape="round"
+        text={l({message: 'Resend', context: 'button'})}
+        icon={ResendIcon}
         onPress={() =>
           void act('People.resend', async () => {
             if (r.reach === 'invited' && r.inviteCode) {
@@ -246,26 +184,22 @@ function OutgoingRow({request}: {request: Entity<FriendRequest>}) {
                 : l`Saved. We’ll send it when you’re online.`,
             )
           })
-        }>
-        <ButtonIcon icon={ResendIcon} />
-      </Button>
-      <Button
+        }
+      />
+      <RequestAction
         testID="invite-sent-cancel"
         label={l`Cancel the request to ${name}`}
-        size="small"
-        color="secondary"
-        variant="ghost"
-        shape="round"
+        text={l({message: 'Cancel', context: 'button'})}
+        icon={XIcon}
         onPress={() =>
           void act('People.cancel', async () => {
             await cancelFriendRequest(store, ctx, request.id)
             haptics.confirm()
             Toast.show(l`Request to ${name} cancelled`)
           })
-        }>
-        <ButtonIcon icon={XIcon} />
-      </Button>
-    </Row>
+        }
+      />
+    </RequestRow>
   )
 }
 

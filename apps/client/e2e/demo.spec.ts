@@ -96,11 +96,12 @@ test('People shows each friend with real words and the right balance per currenc
   await expect(page.getByTestId('people-friends-title')).toHaveText(
     `Friends  ${Object.keys(DEMO_FRIENDS).length}`,
   )
-  // Add friend is the header's one action (an icon button), not repeated in the list.
+  // Invite people is the header's one action (an icon button), not repeated in the list; no overflow.
   await expect(page.getByTestId('people-add-friend')).toHaveAttribute(
     'aria-label',
-    'Add friend',
+    'Invite people',
   )
+  await expect(page.getByTestId('people-more')).toHaveCount(0)
   await expectNoMessageIds(page)
 })
 
@@ -157,7 +158,7 @@ test('Hindi renders translated words with Indian grouping, never message ids', a
   await expect(page.getByTestId('people-friends-title')).toHaveText(/^दोस्त/)
   await expect(page.getByTestId('people-add-friend')).toHaveAttribute(
     'aria-label',
-    'दोस्त जोड़ें',
+    'लोगों को आमंत्रित करें',
   )
   const arjun = byKey.get('arjun')!.byCurrency.INR!.total
   await expect(

@@ -217,6 +217,21 @@ BroadcastChannel change notices so every open tab refreshes its projections afte
   2. Exactly one tab holds the background-work lock; closing it hands the lock to another tab.
   3. Browsers without BroadcastChannel fall back to refresh on focus.
 
+### F-117 Local database schema v2 `spec: owner § 9.8`
+
+Per-type stores, normalised relations, indexes for every query path, in-transaction balance projection, cursor paging and versioned migrations, on IndexedDB and SQLite alike (ARCHITECTURE § 9.8).
+
+- **Effort** L · **Impact** 10 · **Backend** no · **Status** todo · **Deps** F-103, F-227
+- **Prefs** -
+- **Acceptance**
+  1. Stores/tables exactly as § 9.8 (names, keys, indexes) on both engines; the old `entities` store is gone after migration.
+  2. v1 -> v2 migration runs once, is idempotent, and is tested with a v1 fixture including the large demo set: every row, history entry, outbox op and balance identical before/after.
+  3. Every money mutation updates `expense_parties` and `balances` in the same transaction; a property test of random operation sequences (add/edit/delete/restore/write-off/repay, many currencies) shows projection == full recomputation.
+  4. Home, People, Person, Groups, Group, right column, Activity and Analytics read through indexes/projections with cursor paging; no `getAll` on a money store in hot paths (an architecture rule test enforces it).
+  5. With the large demo set (and a 10,000-expense fixture) cold open of Home < 150 ms and a write + UI update < 50 ms on web (F-109 budgets), measured and recorded.
+  6. The shared store contract test covers both engines.
+  7. Every row in every store has `syncStatus` (local / pending / syncing / synced / failed) set atomically with its outbox op, a `bySyncStatus` index, and a per-item status marker in the UI (expense/repayment/comment/request rows and detail pages) consistent with the avatar dot (§ 9.8, decision 79).
+
 ### F-111 Amount entry and parsing correctness `spec: audit docs/audit/AUDIT-2026-10-27.md`
 
 Fixes for logic-audit findings C1, C2, M1, M2, M3, M7, M14, m8, m9, m13 (see the report for scenario, evidence and fix per finding).
@@ -3638,6 +3653,7 @@ From the whole-app logic audit (`docs/audit/AUDIT-2026-10-27.md`: 50 confirmed f
 | 33c | F-111 | Amount entry and parsing correctness (both criticals) | domain currency/calc, composer, settle, search | L | 10 | row 30 |
 | 33d | F-113 | Balances and settle consistency | People/Home balances, Settle, write-offs | M | 9 | F-111 |
 | 35 | F-222 | One navigation list for sidebar and drawer, Home label and title | navigationItems + NavFooterLinks, drawer header | S | 8 | F-201, F-204 |
+| 35a | F-117 | Local database schema v2 (§ 9.8) | packages/sync stores, migrations, projections | L | 10 | F-227 |
 | 45 | F-2301 | Ask Splito: chat screen and on-device answers | screens/Ask, lib/ask | L | 8 | F-1301, F-222, F-1401 |
 | 33e | F-112 | Many-currency completeness | composer, Record payment, sidebar, rounding | M | 9 | F-111, F-227 |
 | 33f | F-114 | History, bin and sync integrity | sync mutations, bin, activity, search | M | 8 | F-113 |

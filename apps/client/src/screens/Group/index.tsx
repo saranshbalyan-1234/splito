@@ -20,6 +20,7 @@ import {List} from '#/view/com/util/List'
 import {UserAvatar} from '#/view/com/util/UserAvatar'
 import {GroupBalanceCards} from '#/screens/Group/components/GroupBalanceCards'
 import {SectionHeader} from '#/screens/People/components/SectionHeader'
+import * as SettingsList from '#/screens/Settings/components/SettingsList'
 import {atoms as a, useBreakpoints, useTheme, web} from '#/alf'
 import {Button, ButtonIcon, ButtonText} from '#/components/Button'
 import {useDialogControl} from '#/components/Dialog'
@@ -33,9 +34,9 @@ import {Pencil_Stroke2_Corner0_Rounded as PencilIcon} from '#/components/icons/P
 import {Group3_Stroke2_Corner0_Rounded as GroupIcon} from '#/components/icons/Group'
 import {Handshake_Stroke2_Corner0_Rounded as HandCoinsIcon} from '#/components/icons/Money'
 import {PersonPlus_Filled_Stroke2_Corner0_Rounded as PersonPlusIcon} from '#/components/icons/Person'
-import {QrCode_Stroke2_Corner0_Rounded as QrIcon} from '#/components/icons/Invite'
 import {PlusLarge_Stroke2_Corner0_Rounded as PlusIcon} from '#/components/icons/Plus'
 import * as Admonition from '#/components/Admonition'
+import {QrCode_Stroke2_Corner0_Rounded as QrIcon} from '#/components/icons/Invite'
 import * as Layout from '#/components/Layout'
 import * as Menu from '#/components/Menu'
 import {
@@ -561,17 +562,6 @@ export function GroupScreen() {
                 <Menu.ItemIcon icon={PersonPlusIcon} position="right" />
               </Menu.Item>
               <Menu.Item
-                testID="group-menu-invite-link"
-                label={l`Invite link or QR code`}
-                onPress={() =>
-                  navigation.navigate('CreateInvite', {kind: 'group', groupId})
-                }>
-                <Menu.ItemText>
-                  <Trans>Invite link or QR code</Trans>
-                </Menu.ItemText>
-                <Menu.ItemIcon icon={QrIcon} position="right" />
-              </Menu.Item>
-              <Menu.Item
                 testID="group-menu-rules"
                 label={l`Payment rules`}
                 onPress={() => rulesControl.open()}>
@@ -772,7 +762,34 @@ export function GroupScreen() {
           ListEmptyComponent={empty}
         />
       </LayoutAnimationConfig>
-      {group && <AddMembersDialog control={addMembersControl} group={group} />}
+      {group && (
+        <AddMembersDialog
+          control={addMembersControl}
+          group={group}
+          inviteRow={
+            <SettingsList.Container>
+              <SettingsList.PressableItem
+                testID="add-members-invite-link"
+                label={l`Invite with a link or QR code`}
+                contentContainerStyle={[a.px_0]}
+                onPress={() =>
+                  addMembersControl.close(() =>
+                    navigation.navigate('CreateInvite', {
+                      kind: 'group',
+                      groupId,
+                    }),
+                  )
+                }>
+                <SettingsList.ItemIcon icon={QrIcon} />
+                <SettingsList.ItemText>
+                  <Trans>Invite link or QR code</Trans>
+                </SettingsList.ItemText>
+                <SettingsList.Chevron />
+              </SettingsList.PressableItem>
+            </SettingsList.Container>
+          }
+        />
+      )}
       <CallItEvenDialog control={evenControl} draft={evenDraft} names={names} />
       {group && <EditGroupDialog control={editControl} group={group} />}
       {group && me && (

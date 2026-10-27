@@ -73,6 +73,59 @@ test('incoming requests: People > Requests and Activity, Accept makes a friend',
   await expect(page.getByTestId('person-name')).toHaveText('Ishaan Verma')
 })
 
+/*
+ * 26.18 decision 76: request and invite rows are one horizontal line, the
+ * actions side by side on the right, centred on the name block; icon-only
+ * round buttons on phones (tooltip on long-press / hover), icon + text from
+ * rail up. At 320 px the name truncates and the buttons never wrap.
+ */
+const ROWS: [string, string, [string, string][]][] = [
+  ['request-Ishaan Verma', 'Ishaan Verma', [['request-accept', 'Accept'], ['request-decline', 'Decline']]],
+  ['invite-sent-Kabir', 'Kabir', [['invite-sent-resend', 'Resend'], ['invite-sent-cancel', 'Cancel']]],
+]
+for (const viewport of [{width: 320, height: 800}, {width: 393, height: 852}, DESKTOP]) {
+  test(`request and invite rows are one horizontal line at ${viewport.width}px`, async ({page}) => {
+    await page.setViewportSize(viewport)
+    await page.goto('/?demo=1')
+    const isPhone = viewport.width < 800
+    for (const [rowID, name, actions] of ROWS) {
+      const row = page.getByTestId(rowID)
+      await row.scrollIntoViewIfNeeded()
+      const r = (await row.boundingBox())!
+      const n = (await row.getByText(name, {exact: true}).boundingBox())!
+      // One line: avatar plus a two-line name block, no wrapped button row.
+      expect(r.height).toBeLessThan(72)
+      expect(r.x + r.width).toBeLessThanOrEqual(viewport.width)
+      const boxes = []
+      for (const [id, text] of actions) {
+        const button = row.getByTestId(id)
+        const b = (await button.boundingBox())!
+        expect(b.y).toBeGreaterThanOrEqual(r.y)
+        expect(b.y + b.height).toBeLessThanOrEqual(r.y + r.height)
+        expect(b.x).toBeGreaterThanOrEqual(n.x + n.width)
+        if (isPhone) {
+          await expect(button).toHaveText('')
+          expect(Math.abs(b.width - b.height)).toBeLessThan(1) // round
+        } else {
+          await expect(button).toHaveText(text)
+        }
+        boxes.push(b)
+      }
+      // Side by side on one y, centred with the name block.
+      expect(Math.abs(boxes[0].y - boxes[1].y)).toBeLessThan(1)
+      expect(boxes[1].x).toBeGreaterThan(boxes[0].x + boxes[0].width)
+      expect(Math.abs(boxes[0].y + boxes[0].height / 2 - (r.y + r.height / 2))).toBeLessThan(2)
+    }
+    if (isPhone) {
+      // The icon-only button names itself on hover (and long-press on touch).
+      const accept = page.getByTestId('request-Ishaan Verma').getByTestId('request-accept')
+      await expect(accept).toHaveAttribute('aria-label', 'Accept Ishaan Verma’s friend request')
+      await accept.hover()
+      await expect(page.getByTestId('request-accept-tooltip')).toHaveText('Accept')
+    }
+  })
+}
+
 test('not on Splito: warning, then Add anyway (only for you) is selectable at once', async ({page}) => {
   await openDemo(page)
   await openAddFriend(page)
@@ -128,8 +181,10 @@ test('a bad value says what is wrong after leaving the field', async ({page}) =>
 
 test('invite link: limits, QR and link, then Manage invite links and Revoke', async ({page}) => {
   await openDemo(page)
-  await page.getByTestId('people-more').click()
-  await page.getByTestId('people-menu-invite-link').click()
+  // Only inside Invite people (26.18 decision 77): the Home header has no overflow.
+  await expect(page.getByTestId('people-more')).toHaveCount(0)
+  await openAddFriend(page)
+  await page.getByTestId('add-friend-invite-link').click()
   await expect(page.getByTestId('screen-create-invite')).toBeVisible()
   await page.getByTestId('invite-uses-5').click()
   await page.getByTestId('invite-expiry-24h').click()
@@ -156,12 +211,16 @@ test('invite link: limits, QR and link, then Manage invite links and Revoke', as
   await expect(page.getByTestId('invite-own')).toContainText('Revoked')
 })
 
-test('group invite: approve each join, from the group overflow', async ({page}) => {
+test('group invite: approve each join, from the Add members sheet only', async ({page}) => {
   await openDemo(page)
   await page.getByTestId('tab-groups').click()
   await page.getByTestId('screen-groups').getByTestId('group-Goa trip').click()
+  // Not in the group overflow (26.18 decision 77).
   await page.getByTestId('group-more').click()
-  await page.getByTestId('group-menu-invite-link').click()
+  await expect(page.getByTestId('group-menu-add-members')).toBeVisible()
+  await expect(page.getByTestId('group-menu-invite-link')).toHaveCount(0)
+  await page.getByTestId('group-menu-add-members').click()
+  await page.getByTestId('add-members-sheet').getByTestId('add-members-invite-link').click()
   await expect(page.getByText('Invite to Goa trip')).toBeVisible()
   await expect(page.getByTestId('invite-uses-25')).toHaveAttribute('aria-checked', 'true')
   await page.getByTestId('invite-approve-joins').click()
