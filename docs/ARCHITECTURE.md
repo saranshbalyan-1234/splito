@@ -1174,10 +1174,15 @@ labelled sidebar); **wide** = web 1300 px and up (Bluesky `gtTablet`, right colu
   repayments, write-offs, notes, categories, recurring rent and subscriptions, and deleted items for the bin.
   It is loaded with `?demo=large` (web) / `EXPO_PUBLIC_DEMO=large` (native) or from Settings > Data > "Add
   demo data" (shown only in dev/e2e builds), adds to whatever is already on the device, and has a matching
-  "Remove demo data". **Owner 94 supersedes the URL switches:** there is ONE demo dataset and ONE way in,
-  Settings > Data > "Add demo data" / "Remove demo data" (dev and e2e builds; production none); `?demo=1`,
-  `?demo=large` and `EXPO_PUBLIC_DEMO` are removed, the small set merges into the one dataset, and e2e seeds
-  through a test-only hook that runs the same Settings path (F-228a, queued right after the Wave B merge). *Why:* "add a lot of demo data to my
+  "Remove demo data". **Owner 94 + 95 supersede the URL switches and Add/Remove:** demo is a **mode switch**, Settings > Data >
+  "Demo mode" (on/off), backed by its **own separate local database** (its own IndexedDB database / SQLite file,
+  with its own preferences, history and outbox). Turning it on switches the app to the demo database, seeded
+  once with the one demo dataset; turning it off switches back to the real data, which demo mode never reads
+  or writes. Demo data never syncs and never merges into an account. While on, a persistent "Demo mode ·
+  Switch back" banner shows on every screen; "Reset demo" reseeds it. `?demo=1`, `?demo=large`,
+  `EXPO_PUBLIC_DEMO` and Add/Remove demo data are removed; e2e turns demo mode on through a test-only hook that
+  runs the same switch (F-228a, queued right after the Wave B merge). Dev and e2e builds only for now
+  (production ships none, F-227 c4). *Why:* "add a lot of demo data to my
   account".
 - **Don't ask; decide.** The owner has delegated every open choice: make the call, record it (spec decision
   table or here), deliver the final version, and do not interrupt with questions. *Why:* "don't ask me
@@ -1926,6 +1931,7 @@ Every owner decision, in the order it was made (all 2026-10-26). "Replaced" name
 | 92 | "in activity, add all, me and others" | Activity Pager tabs All / Me / Others (Me = actions I did, Others = actions by others) | § 26.14 | All / From others |
 | 93 | "remember we need to implement the backend as well, once we are done with all the features" | Backend is mandatory scope: after all front-end features, every backend item is built before the product is done | § 26.2 | - |
 | 94 | "now we have import and remove demo data, why do i have ?demo=1, only one demo mode from settings" | One demo dataset, added and removed only from Settings > Data; `?demo=1`, `?demo=large`, `EXPO_PUBLIC_DEMO` removed; e2e seeds via a test-only hook running the same path | § 26.1 | `?demo=1` small set + `?demo=large` + Settings |
+| 95 | "instead of add/remove demo data, make it a switch like switch to demo mode, so that it doesn't add data to current account, both accounts keep different" | Demo mode is an on/off switch over its own separate local database (own prefs, history, outbox); real data untouched; banner while on; Reset demo; never syncs | § 26.1 | Add/Remove demo data into the current account (row 94) |
 
 New decisions follow § 0 rule 9: rewrite the rule in its topic so only the current truth remains, then add a
 row here.

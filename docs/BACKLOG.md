@@ -622,17 +622,19 @@ A year of realistic Splito use, generated deterministically, for the owner and f
   3. Generation of the full set takes under 10 s on web and the app stays responsive (batched transactions); every screen stays within § 26.10 budgets with it loaded.
   4. Production builds contain no path to it.
 
-### F-228a One demo mode, from Settings only `spec: owner § 26.1 (decision 94)`
+### F-228a Demo mode switch with its own database `spec: owner § 26.1 (decisions 94, 95)`
 
-Remove the URL and env demo switches; the only way to add or remove demo data is Settings > Data. Queued first after the Wave B merge (every e2e spec uses `?demo=1` today, so it cannot change while Wave B builds).
+Demo is a Settings > Data switch, not data added to the current account: demo mode opens its own separate local database seeded with the one demo dataset, and switching back returns to the untouched real data. Queued first after the Wave B merge (every e2e spec uses `?demo=1` today).
 
-- **Effort** M · **Impact** 7 · **Backend** no · **Status** todo · **Deps** F-227, Wave B merged
-- **Prefs** -
+- **Effort** M · **Impact** 8 · **Backend** no · **Status** todo · **Deps** F-227, F-117, Wave B merged
+- **Prefs** `demo.mode` (device, default off; stored in the real database, the switch's only footprint there)
 - **Acceptance**
-  1. `?demo=1`, `?demo=large` and `EXPO_PUBLIC_DEMO` do nothing; the `demoPending` URL path and its storage flag are removed; production builds still ship no demo code (`demoStaticImport` rule stays green).
-  2. One dataset: the small set's people, groups and expenses that e2e relies on are folded into the large deterministic set (or the set is one generator with every case), multi-currency as § 26.13 requires; "Add demo data" is idempotent and "Remove demo data" removes exactly it.
-  3. e2e seeds through a test-only hook (e.g. `window.__splitoTest.addDemo()` in e2e builds) that calls the same code as the Settings button; every spec's `openDemo` uses it; the full suite stays green.
-  4. Settings > Data shows the progress toast and the counts line as today; docs and screenshot scripts stop using `?demo=1`.
+  1. Settings > Data > "Demo mode" switch; on: the store opens a separate database (IndexedDB name / SQLite file `splito-demo`), seeds the one demo dataset once, and every screen reads it; off: the real database comes back exactly as it was (test: real rows, prefs, history and outbox byte-identical before and after a demo session with edits).
+  2. Demo mode has its own preferences, history and outbox; nothing it does reaches the real database or any sync queue; it never syncs or merges.
+  3. While on, a persistent "Demo mode · Switch back" banner on every screen (Bluesky Admonition), and the avatar sync dot reads "Demo"; "Reset demo" reseeds; a reload keeps the mode.
+  4. `?demo=1`, `?demo=large`, `EXPO_PUBLIC_DEMO`, `demoPending` and Add/Remove demo data are removed; one dataset folds in every case the small set covered, multi-currency (§ 26.13).
+  5. e2e turns demo mode on through a test-only hook calling the same switch; every spec's `openDemo` uses it; full suite green; screenshot scripts updated.
+  6. Production builds ship no demo code or switch (`demoStaticImport` stays green).
 
 ### F-228 Native hardware-keyboard shortcuts (Cmd/Ctrl+K) `spec: owner § 26.3 decision 75`
 
