@@ -1,7 +1,7 @@
 // Adapted from bluesky-social/social-app@4e4ad9c (MIT) - src/components/Select/index.tsx (the native sheet; also the phone-width web select)
 import {
   createContext,
-  useCallback,
+  Fragment,
   useContext,
   useLayoutEffect,
   useMemo,
@@ -14,6 +14,7 @@ import {useLingui} from '@lingui/react'
 import {atoms as a, useTheme} from '#/alf'
 import {Button, ButtonIcon, ButtonText} from '#/components/Button'
 import * as Dialog from '#/components/Dialog'
+import * as FormSheet from '#/components/FormSheet'
 import {useInteractionState} from '#/components/hooks/useInteractionState'
 import {ChevronTopBottom_Stroke2_Corner0_Rounded as ChevronUpDownIcon} from '#/components/icons/Chevron'
 import {Text} from '#/components/Typography'
@@ -167,8 +168,9 @@ export function Content<T>({
     }
   }, [items, context.value, valueExtractor, setValue])
 
+  /* Splito: a picker is a FormSheet (§ 26.8: only the cross, a choice applies at once), not a bare Dialog with a FlatList. */
   return (
-    <Dialog.Outer control={control} nativeOptions={{fullHeight: true}}>
+    <FormSheet.Outer control={control} testID="select-sheet">
       <ContentInner
         control={control}
         items={items}
@@ -176,11 +178,12 @@ export function Content<T>({
         {...props}
         {...context}
       />
-    </Dialog.Outer>
+    </FormSheet.Outer>
   )
 }
 
 function ContentInner<T>({
+  control,
   label,
   items,
   renderItem,
@@ -188,41 +191,16 @@ function ContentInner<T>({
   ...context
 }: ContentProps<T> & ContextType) {
   const {_} = useLingui()
-  const [headerHeight, setHeaderHeight] = useState(61)
-
-  const render = useCallback(
-    ({item, index}: {item: T; index: number}) => {
-      return renderItem(item, index, context.value)
-    },
-    [renderItem, context.value],
-  )
 
   return (
-    <Context.Provider value={context}>
-      <Dialog.Header
-        onLayout={evt => setHeaderHeight(evt.nativeEvent.layout.height)}
-        style={[
-          a.absolute,
-          a.top_0,
-          a.left_0,
-          a.right_0,
-          a.z_10,
-          a.pt_3xl,
-          a.pb_sm,
-          a.border_b_0,
-        ]}>
-        <Dialog.HeaderText
-          style={[a.flex_1, a.px_xl, a.text_left, a.font_bold, a.text_2xl]}>
-          {label ?? _(msg`Select an option`)}
-        </Dialog.HeaderText>
-      </Dialog.Header>
-      <Dialog.Handle />
-      <Dialog.InnerFlatList
-        headerOffset={headerHeight}
-        data={items}
-        renderItem={render}
-        keyExtractor={valueExtractor}
-      />
+    <Context.Provider value={{control, ...context}}>
+      <FormSheet.Inner title={label ?? _(msg`Select an option`)}>
+        {items.map((item, index) => (
+          <Fragment key={valueExtractor!(item)}>
+            {renderItem(item, index, context.value)}
+          </Fragment>
+        ))}
+      </FormSheet.Inner>
     </Context.Provider>
   )
 }

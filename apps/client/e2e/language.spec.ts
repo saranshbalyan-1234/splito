@@ -64,7 +64,10 @@ test('web splash: the dropdown is keyboard operable', async ({page}) => {
   await page.getByTestId('app-language').focus()
   await page.keyboard.press('Enter')
   await expect(page.getByTestId('app-language-hi')).toBeVisible()
+  // Focus starts on the current option; arrows move it, Enter picks.
+  await expect(page.getByTestId('app-language-en')).toBeFocused()
   await page.keyboard.press('ArrowDown')
+  await expect(page.getByTestId('app-language-hi')).toBeFocused()
   await page.keyboard.press('Enter')
   await expect(page.locator('html')).toHaveAttribute('lang', 'hi')
 })
@@ -118,6 +121,8 @@ test('phone width: the same select opens as a bottom sheet with the current opti
   // Checked by a radio mark and by its state, not by colour alone.
   await expect(en).toHaveAttribute('aria-checked', 'true')
   await expect(hi).toHaveAttribute('aria-checked', 'false')
+  // The sheet slides up and its list settles; click once it has.
+  await page.waitForTimeout(800)
   await hi.click()
   await expect(page.locator('html')).toHaveAttribute('lang', 'hi')
 })

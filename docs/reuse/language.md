@@ -12,7 +12,7 @@ with a radio list, which Splito already has as Settings > Language; it has no fo
 |---|---|---|
 | `src/components/AppLanguageDropdown.tsx` | `src/components/AppLanguageDropdown.tsx` | Writes the `language` preference instead of Bluesky's language prefs; no feed reset; hidden by the device preference `rightColumn.languageDropdown`; testIDs |
 | `src/components/Select/index.tsx` | `src/components/Select/index.tsx` | Re-exports `Sheet.tsx`, so web can reuse Bluesky's sheet at phone width |
-| `src/components/Select/Sheet.tsx` | `src/components/Select/index.tsx` | Bluesky's native Select (a Dialog sheet) unchanged except `any` replaced by `SelectedItem` / `unknown` (lint) and an `ItemProps.testID`; items are `role="radio"` with `aria-checked` |
+| `src/components/Select/Sheet.tsx` | `src/components/Select/index.tsx` | Bluesky's native Select (a Dialog sheet) unchanged except `any` replaced by `SelectedItem` / `unknown` (lint) and an `ItemProps.testID`; items are `role="radio"` with `aria-checked`; the sheet is a `FormSheet` (picker: cross only, a choice applies at once, ARCHITECTURE 26.8) instead of a bare Dialog with a FlatList |
 | `src/components/Select/index.web.tsx` | `src/components/Select/index.web.tsx` | Picks Bluesky's Radix dropdown (`Radix.tsx`) on rail and desktop and the sheet under 800 px (ARCHITECTURE 26.8: every phone modal is a bottom sheet) |
 | `src/components/Select/Radix.tsx` | `src/components/Select/index.web.tsx` | Bluesky's Radix select unchanged except `any` replaced and an `ItemProps.testID` |
 | `src/components/Select/types.ts` | `src/components/Select/types.ts` | `SelectedItem` replaces `any`; `ItemProps.testID` |
