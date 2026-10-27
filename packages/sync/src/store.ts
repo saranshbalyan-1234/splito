@@ -227,3 +227,8 @@ export interface Store {
   subscribe(fn: (change: StoreChange) => void): () => void
   close(): Promise<void>
 }
+
+/** A store whose transactions run inside `tx`: the real mutations then batch into one commit. */
+export function insideTransaction(store: Store, tx: Tx): Store {
+  return {...store, transaction: fn => fn(tx)}
+}

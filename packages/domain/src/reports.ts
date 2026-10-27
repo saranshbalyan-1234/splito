@@ -261,7 +261,9 @@ export function balanceTrend(records: ReadonlyArray<ReportRecord>, me: string, f
  * - expense, a person: `paid`, `share`, `net` (paid - share) and `count` (1
  *   when their share is not zero, so slices count only who took part).
  * - transfer (payment or write-off), a person: `net` (+ they gave, - they
- *   received) and `count` (1); it moves balances but is never spending.
+ *   received) and `count` (1); `person` '' is the record itself (`count` 1,
+ *   so every record has one whole-record cell). It moves balances but is
+ *   never spending.
  */
 export interface SpendCell {
   /** The record's date; for a stored month, its first day. */
@@ -288,6 +290,7 @@ export function recordCells(r: ReportRecord): SpendCell[] {
   const base = {date: r.date, currency: r.currency, groupId: r.groupId ?? ''}
   if (r.kind !== 'expense')
     return [
+      {...base, category: '', person: '', kind: 'transfer', total: 0n, paid: 0n, share: 0n, net: 0n, count: 1},
       {...base, category: '', person: r.from, kind: 'transfer', total: 0n, paid: 0n, share: 0n, net: r.amount, count: 1},
       {...base, category: '', person: r.to, kind: 'transfer', total: 0n, paid: 0n, share: 0n, net: -r.amount, count: 1},
     ]

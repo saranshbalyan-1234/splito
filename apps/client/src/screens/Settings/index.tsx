@@ -1,4 +1,5 @@
 // Adapted from bluesky-social/social-app@4e4ad9c (MIT) - src/screens/Settings/Settings.tsx
+import {lazy, Suspense} from 'react'
 import {View} from 'react-native'
 import {type PrefGroup, resetAllPrefs} from '@splito/sync'
 import {plural} from '@lingui/core/macro'
@@ -7,8 +8,6 @@ import {Trans, useLingui} from '@lingui/react/macro'
 import {useHaptics} from '#/lib/haptics'
 import {useMe, usePref} from '#/data/hooks'
 import {useData} from '#/data/StoreProvider'
-import {IS_DEV, IS_E2E} from '#/env'
-import {DemoDataRows} from '#/screens/Settings/DemoData'
 import {UserAvatar} from '#/view/com/util/UserAvatar'
 import * as SettingsList from '#/screens/Settings/components/SettingsList'
 import {atoms as a, useTheme} from '#/alf'
@@ -24,6 +23,18 @@ import * as Toast from '#/components/Toast'
 import {SignIn_Stroke2_Corner0_Rounded as SignInIcon} from '#/components/icons/Auth'
 import {Text} from '#/components/Typography'
 import {useSession} from '#/state/session'
+
+/*
+ * Dev and e2e builds only (ARCHITECTURE 26.1): the demo rows and the generator
+ * behind them are loaded on demand under a condition Metro folds at build
+ * time (`__DEV__` and the inlined `EXPO_PUBLIC_ENV`; an imported constant
+ * would not fold), so a production bundle holds neither. `IS_DEV || IS_E2E`
+ * in `#/env` says the same at run time.
+ */
+const DemoDataRows =
+  __DEV__ || process.env.EXPO_PUBLIC_ENV === 'e2e'
+    ? lazy(() => import('#/screens/Settings/DemoData').then(m => ({default: m.DemoDataRows})))
+    : null
 
 /**
  * Bluesky's Settings list, one row per preferences-registry group, then
@@ -159,7 +170,11 @@ export function SettingsScreen() {
             ) : null}
           </SettingsList.LinkItem>
           {/* Dev and e2e builds only: the large demo set (ARCHITECTURE 26.1). */}
-          {(IS_DEV || IS_E2E) && <DemoDataRows />}
+          {DemoDataRows && (
+            <Suspense fallback={null}>
+              <DemoDataRows />
+            </Suspense>
+          )}
           <SettingsList.LinkItem
             testID="settings-about"
             to="/settings/about"

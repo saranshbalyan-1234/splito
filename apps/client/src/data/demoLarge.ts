@@ -4,21 +4,27 @@
  * mutations, many per store transaction, yielding to the UI between batches.
  * Every row it writes carries `DEMO_LARGE_PREFIX` in its id, which is how
  * "Remove demo data" finds exactly them.
+ *
+ * Dev and e2e builds only: this module and the generator behind it
+ * (`@splito/sync/demoLarge`, not the package index) are reached only through
+ * `import()` behind `IS_DEV || IS_E2E`, so a production bundle holds neither.
  */
 import {
-  applyDemoOp,
-  DEMO_LARGE_PREFIX,
-  type DemoCounts as PlanCounts,
   type Entity,
   type EntityType,
-  generateLargeDemo,
   insideTransaction,
   type Key,
-  localToday,
   type MutationCtx,
   type Page,
   type Store,
 } from '@splito/sync'
+import {
+  applyDemoOp,
+  DEMO_LARGE_PREFIX,
+  type DemoCounts as PlanCounts,
+  generateLargeDemo,
+  localToday,
+} from '@splito/sync/demoLarge'
 
 const BATCH = 150
 const DEMO_TYPES: EntityType[] = [

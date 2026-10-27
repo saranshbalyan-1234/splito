@@ -1,7 +1,8 @@
-import {useSyncExternalStore} from 'react'
+import {useEffect, useState, useSyncExternalStore} from 'react'
 import {type BalanceRow, pairBalance, ZERO} from '@splito/domain'
 import {
   acceptFriendRequest,
+  DEFAULT_CATEGORIES,
   declineFriendRequest,
   type Entity,
   type EntityType,
@@ -18,6 +19,8 @@ import {
   prefFrom,
   type PrefValue,
   type Repayment,
+  type SearchResults,
+  searchStore,
   setPref,
   type Store,
   toExpenseRecord,
@@ -25,7 +28,17 @@ import {
   type WriteOff,
 } from '@splito/sync'
 
-import {type DemoCounts, demoCounts} from '#/data/demoLarge'
+import {
+  boundsQuery,
+  type CellData,
+  cellsQuery,
+  type Overview,
+  overviewQuery,
+  rowsQuery,
+  type RowsPager,
+  type RowsSpec,
+} from '#/data/analyticsQueries'
+import {type DemoCounts} from '#/data/demoLarge'
 import {
   type GroupBalances,
   groupActivityQuery,
@@ -33,8 +46,6 @@ import {
   type HistoryPager,
   historyPagerQuery,
   indexStream,
-  type LedgerMirror,
-  ledgerMirrorQuery,
   lastActivityQuery,
   myGroupBalancesQuery,
   balanceRowsQuery,
@@ -136,7 +147,7 @@ export function useGroupActivity() {
   return useProjection(groupActivityQuery)
 }
 
-/** The latest shared date per person, read only while `enabled` (the "recent" friends sort). */
+/** When each person last saw activity (epoch ms), read only while `enabled` (the "recent" friends sort). */
 export function useLastActivity(enabled: boolean) {
   return useProjection(enabled ? lastActivityQuery : null)
 }
@@ -198,15 +209,66 @@ export function useRecentTransactions(size: number): HistoryPager | undefined {
   )
 }
 
-/** The whole ledger in memory, for Analytics and search only (read by index in pages, then kept current). */
-export function useLedgerMirror(): LedgerMirror | undefined {
-  return useProjection(ledgerMirrorQuery)
+/**
+ * Free-text search results for `query`: the store's search keys are read by
+ * range and only the matching rows load (ARCHITECTURE 9.8). The previous
+ * answer stays up while a new one loads, and a commit that touches expenses,
+ * people or groups runs the query again. Undefined until the first answer.
+ */
+export function useSearch(query: string, today: string, mark: '.' | ','): SearchResults | undefined {
+  const {store} = useData()
+  const [categories = DEFAULT_CATEGORIES] = usePref('categories')
+  const [results, setResults] = useState<SearchResults>()
+  const [commits, setCommits] = useState(0)
+  useEffect(
+    () =>
+      store.subscribe(change => {
+        if (touches(change, 'expense') || touches(change, 'person') || touches(change, 'group')) setCommits(n => n + 1)
+      }),
+    [store],
+  )
+  useEffect(() => {
+    let isCurrent = true
+    void searchStore(store, query, {today, mark, categories}).then(found => {
+      if (isCurrent) setResults(found)
+    })
+    return () => {
+      isCurrent = false
+    }
+  }, [store, query, today, mark, categories, commits])
+  return results
+}
+
+/* Analytics (ARCHITECTURE 9.8): stored month sums, date-index reads at the edges, a paged list. */
+
+/** Which currencies have expenses, most used first. */
+export function useAnalyticsOverview(): Overview | undefined {
+  return useProjection(overviewQuery)
+}
+
+/** First and last dated record in one currency and scope (null: none). `isIn` must follow `scopeKey`. */
+export function useAnalyticsBounds(
+  request: {currency: string; scopeKey: string; isIn: (groupId: string | null) => boolean} | null,
+) {
+  return useProjection(request ? boundsQuery(request.currency, request.scopeKey, request.isIn) : null)
+}
+
+/** The spending cells of a period (and every earlier cell, for the balance line). */
+export function useAnalyticsCells(request: {currency: string; from: string; to: string; exact: boolean} | null): CellData | undefined {
+  return useProjection(request ? cellsQuery(request.currency, {from: request.from, to: request.to}, request.exact) : null)
+}
+
+/** The expense list behind the charts, newest first, a page at a time. */
+export function useAnalyticsRows(spec: RowsSpec | null): RowsPager | undefined {
+  return useProjection(spec ? rowsQuery(spec) : null)
 }
 
 const demoCountsQuery: Query<DemoCounts> = {
   key: 'demoCounts',
   isTouchedBy: c => touches(c, 'person') || touches(c, 'group') || touches(c, 'expense'),
   loader: store => async (_c, prev) => {
+    /* Dev and e2e builds only (the rows that read this are): loaded on use, never in a production bundle. */
+    const {demoCounts} = await import('#/data/demoLarge')
     const next = await demoCounts(store)
     return prev && prev.friends === next.friends && prev.groups === next.groups && prev.expenses === next.expenses ? prev : next
   },

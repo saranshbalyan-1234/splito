@@ -16,7 +16,7 @@ import {tmpdir} from 'node:os'
 import {join} from 'node:path'
 
 import {encode} from '../src/codec'
-import {applyDemoOp, generateLargeDemo, insideTransaction} from '../src/demoLarge'
+import {applyDemoOp, generateLargeDemo} from '../src/demoLarge'
 import {openIdbStore} from '../src/idbStore'
 import {
   createExpense,
@@ -32,7 +32,7 @@ import {setPref} from '../src/preferences'
 import {createInviteLink, sendFriendRequest} from '../src/friends'
 import {SCHEMA_VERSION, STORES} from '../src/schema'
 import {openSqlStore, type SqlExecutor} from '../src/sqlStore'
-import {type Store, type StoreDump} from '../src/store'
+import {insideTransaction, type Store, type StoreDump} from '../src/store'
 import {bunExecutor} from './bunExecutor'
 import {expectDerivedTablesMatch, expectProjectionsMatchLedger, storedAggregates, storedTerms} from './projectionCheck'
 import {makeCtx} from './storeV2Contract'

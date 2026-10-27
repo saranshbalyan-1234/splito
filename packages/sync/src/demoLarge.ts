@@ -40,7 +40,7 @@ import {
   type RepaymentInput,
   updateExpense,
 } from './mutations'
-import {type Store, type Tx} from './store'
+import {type Store} from './store'
 import {type MutationCtx} from './types'
 
 export const DEMO_LARGE_PREFIX = 'demo-large-'
@@ -862,11 +862,6 @@ export function planRecords(plan: DemoPlan): ExpenseRecord[] {
   return [...live].map(([id, d]) => ({kind: 'expense', id, groupId: d.groupId, currency: d.currency, total: d.total, payers: d.payers, shares: computeShares(d.total, d.split), date: d.date, deleted: false}))
 }
 
-
-/** A store whose transactions run inside `tx`: the real mutations then batch into one commit. */
-export function insideTransaction(store: Store, tx: Tx): Store {
-  return {...store, transaction: fn => fn(tx)}
-}
 
 /**
  * Applies one write of the plan through the real mutations, as its actor at

@@ -149,7 +149,7 @@ test('cells give the record-based reports exactly, whole or folded into months',
   )
 })
 
-test('a deleted record has no cells; a transfer has net only; a payer outside the shares still shows', () => {
+test('a deleted record has no cells; a transfer has a whole-record cell and net per side; a payer outside the shares still shows', () => {
   const deleted: ReportExpense = {kind: 'expense', id: 'x', groupId: null, currency: 'INR', total: 100n, payers: {me: 100n}, shares: {me: 100n}, date: '2026-01-01', deleted: true}
   expect(recordCells(deleted)).toEqual([])
   const paid = recordCells({...deleted, deleted: false, payers: {a: 100n}, shares: {me: 100n}, category: 'food'})
@@ -157,5 +157,5 @@ test('a deleted record has no cells; a transfer has net only; a payer outside th
   expect(paid.find(c => c.person === 'me')).toMatchObject({paid: 0n, share: 100n, net: -100n, count: 1})
   expect(paid.find(c => c.person === '')).toMatchObject({total: 100n, count: 1, kind: 'expense', groupId: '', category: 'food'})
   const t = recordCells({kind: 'repayment', id: 't', groupId: 'g', currency: 'INR', from: 'a', to: 'b', amount: 50n, date: '2026-01-02', deleted: false})
-  expect(t.map(c => [c.person, c.net, c.kind, c.groupId])).toEqual([['a', 50n, 'transfer', 'g'], ['b', -50n, 'transfer', 'g']])
+  expect(t.map(c => [c.person, c.net, c.kind, c.groupId, c.count])).toEqual([['', 0n, 'transfer', 'g', 1], ['a', 50n, 'transfer', 'g', 1], ['b', -50n, 'transfer', 'g', 1]])
 })
