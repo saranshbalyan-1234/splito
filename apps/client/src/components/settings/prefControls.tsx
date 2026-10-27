@@ -62,6 +62,7 @@ import {
 } from '#/components/icons/Invite'
 import {MagnifyingGlass_Stroke2_Corner0_Rounded as SearchIcon} from '#/components/icons/MagnifyingGlass'
 import {OptionDialog} from '#/components/settings/OptionDialog'
+import {NotifyRemindersPref} from '#/components/settings/NotifyRemindersPref'
 import {PrefSection, usePrefControl} from '#/components/settings/PrefSection'
 import {
   NavigationEditor,
@@ -894,6 +895,10 @@ export const PREF_CONTROLS = {
   'notify.expense': NotifyExpensePref,
   'notify.payment': NotifyPaymentPref,
   'notify.invite': NotifyInvitePref,
+  'notify.reminders': NotifyRemindersPref,
+  // No rows until recurring expenses (F-306) and the digest exist: a switch that changes nothing would be a placeholder.
+  'notify.recurring': null,
+  'notify.digest': null,
   // No row until telemetry has a vendor (A-046): a switch that changes nothing would be a placeholder.
   sendDiagnostics: null,
   // Remembers the switch in the Send feedback sheet, where its effect shows.
