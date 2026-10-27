@@ -1,5 +1,16 @@
 import {CURRENCIES, DomainError} from '@splito/domain'
 
+import {
+  type ChargePreset,
+  DEFAULT_CHARGE_PRESETS,
+  DEFAULT_TAX_CLASSES,
+  isChargePresets,
+  isMerchantSetups,
+  isTaxClasses,
+  type MerchantSetup,
+  SERVICE_CHARGE_CHOICES,
+  type TaxClass,
+} from './bill'
 import type {Store, Tx} from './store'
 import type {Entity, MutationCtx} from './types'
 
@@ -176,6 +187,19 @@ export const PREFS = {
       new Set(v.map(c => c?.id)).size === v.length &&
       v.every(c => isString(c?.id) && isString(c?.name) && HEX.test(c?.color) && isString(c?.icon) && Number.isInteger(c?.order) && isBool(c?.hidden)),
   ),
+  /* Itemize bills (F-403): tax classes, charge setups and how a round-off is shared. */
+  'bill.taxClasses': def<TaxClass[]>('bill.taxClasses', 'defaults', 'account', 'Tax classes', DEFAULT_TAX_CLASSES, isTaxClasses),
+  'bill.chargePresets': def<ChargePreset[]>('bill.chargePresets', 'defaults', 'account', 'Charge presets', DEFAULT_CHARGE_PRESETS, isChargePresets),
+  /** The preset a new itemised bill starts from (an id of `bill.chargePresets`; Simple is the four plain rows). */
+  'bill.defaultPreset': def('bill.defaultPreset', 'defaults', 'account', 'New bills start with', 'simple', isString),
+  /** The service charge a new Simple bill starts with, in basis points (0: off). */
+  'bill.serviceChargeDefault': def<number>('bill.serviceChargeDefault', 'defaults', 'account', 'Service charge on new bills', 0, oneOf(...SERVICE_CHARGE_CHOICES)),
+  /** Who carries a bill's round-off: everyone, pro rata to their share, or the payer. */
+  'bill.roundOffSpread': def('bill.roundOffSpread', 'defaults', 'account', 'Round-off goes to', 'shares', oneOf('shares', 'payer')),
+  /** Remember a bill's charge setup per merchant and suggest it next time. */
+  'bill.rememberPerMerchant': def('bill.rememberPerMerchant', 'defaults', 'account', 'Remember charges per merchant', true, isBool),
+  /** The 200 most recent merchant setups; written by "Save as preset", cleared with Reset. */
+  'bill.merchantSetups': def<MerchantSetup[]>('bill.merchantSetups', 'defaults', 'account', 'Merchant setups', [], isMerchantSetups),
   // Registry order is the order Settings shows each group's items in.
   language: def('language', 'regional', 'account', 'Language', 'en', oneOf('en', 'hi')),
   timezone: def('timezone', 'regional', 'account', 'Timezone', 'device', isTimeZone),
