@@ -256,6 +256,20 @@ export function ActivityItem({
                 haptics.longPress()
                 menuControl.open()
               },
+              /* Keyboard: the Menu key or Shift+F10 on the row, or on its Accept / Decline, opens the same menu. */
+              onKeyDown: ((e: {
+                key: string
+                shiftKey: boolean
+                preventDefault(): void
+                currentTarget: Element
+              }) => {
+                if (e.key !== 'ContextMenu' && !(e.shiftKey && e.key === 'F10'))
+                  return
+                e.preventDefault()
+                const box = e.currentTarget.getBoundingClientRect()
+                setMenuAt({x: box.width / 2, y: box.height})
+                menuControl.open()
+              }) as never,
             }
           : {})}
         style={[

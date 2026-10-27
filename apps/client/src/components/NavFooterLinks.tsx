@@ -5,7 +5,7 @@ import {useLingui} from '@lingui/react/macro'
 import {useNavigation} from '@react-navigation/native'
 
 import {type NavigationProp} from '#/lib/routes/types'
-import {useOpenFeedback} from '#/features/feedback/FeedbackProvider'
+import {useOpenFeedback} from '#/state/feedback'
 import {atoms as a, useTheme, web, type ViewStyleProp} from '#/alf'
 import {Text} from '#/components/Typography'
 

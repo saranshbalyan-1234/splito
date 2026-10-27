@@ -53,6 +53,15 @@ for (const viewport of [{width: 320, height: 800}, {width: 390, height: 844}, DE
     await page.keyboard.press('Escape')
     await expect(page.getByTestId('activity-menu-markRead')).toHaveCount(0)
 
+    // And from the keyboard: the Menu key or Shift+F10 on the focused row.
+    for (const key of ['ContextMenu', 'Shift+F10']) {
+      await row.getByRole('link').focus()
+      await page.keyboard.press(key)
+      await expect(page.getByTestId('activity-menu-markRead')).toBeVisible()
+      await page.keyboard.press('Escape')
+      await expect(page.getByTestId('activity-menu-markRead')).toHaveCount(0)
+    }
+
     await accept.click()
     await expect(accept).toHaveCount(0)
   })

@@ -32,7 +32,7 @@ export function StepInfo({onPressBack}: {onPressBack: () => void}) {
     'identifier-missing': l`Please enter your email or phone number.`,
     'identifier-invalid': l`Enter an email like name@example.com, or a phone number with its country code like +91 98765 43210.`,
     'password-missing': l`Please choose your password.`,
-    'password-short': l`Your password must be at least 8 characters long.`,
+    'password-short': l`Your password must be at least ${MIN_PASSWORD_LENGTH} characters long.`,
   }
   const issueField = {
     'name-missing': 'name',
@@ -143,7 +143,7 @@ export function StepInfo({onPressBack}: {onPressBack: () => void}) {
             autoComplete="new-password"
             returnKeyType="done"
             onSubmitEditing={onNextPress}
-            passwordRules="minlength: 8;"
+            passwordRules={`minlength: ${MIN_PASSWORD_LENGTH};`}
           />
         </View>
         {state.isNotLive && <NotLiveYet />}

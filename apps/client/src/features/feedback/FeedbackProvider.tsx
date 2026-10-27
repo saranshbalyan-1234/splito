@@ -1,19 +1,14 @@
-import {createContext, useCallback, useContext, useState} from 'react'
+import {useCallback, useState} from 'react'
 
 import {navigationRef} from '#/navigation/DevTour'
+import {OpenFeedbackContext} from '#/state/feedback'
 import {usePref} from '#/data/hooks'
 import * as Dialog from '#/components/Dialog'
 import {IS_NATIVE} from '#/env'
 import {FeedbackSheet} from './FeedbackSheet'
 import {useShake} from './useShake'
 
-const OpenContext = createContext<() => void>(() => {})
-OpenContext.displayName = 'OpenFeedbackContext'
-
-/** Opens the Send feedback sheet from anywhere (drawer, Settings, footer links, shake). */
-export function useOpenFeedback() {
-  return useContext(OpenContext)
-}
+export {useOpenFeedback} from '#/state/feedback'
 
 /**
  * Holds the one Send feedback sheet for the whole app (Bluesky mounts its
@@ -35,9 +30,9 @@ export function FeedbackProvider({children}: {children: React.ReactNode}) {
   useShake(openFeedback, IS_NATIVE && shake)
 
   return (
-    <OpenContext.Provider value={openFeedback}>
+    <OpenFeedbackContext.Provider value={openFeedback}>
       {children}
       <FeedbackSheet control={control} screen={screen} />
-    </OpenContext.Provider>
+    </OpenFeedbackContext.Provider>
   )
 }

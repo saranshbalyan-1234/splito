@@ -39,7 +39,7 @@ export const SetNewPasswordForm = ({
       )
     }
     if (password.length < MIN_PASSWORD_LENGTH) {
-      return setError(l`Your password must be at least 8 characters long.`)
+      return setError(l`Your password must be at least ${MIN_PASSWORD_LENGTH} characters long.`)
     }
     setError('')
     setIsNotLive(true)
@@ -87,7 +87,7 @@ export const SetNewPasswordForm = ({
           label={l`Enter a password`}
           returnKeyType="done"
           autoComplete="new-password"
-          passwordRules="minlength: 8;"
+          passwordRules={`minlength: ${MIN_PASSWORD_LENGTH};`}
           clearButtonMode="while-editing"
           value={password}
           onChangeText={v => {
