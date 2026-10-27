@@ -81,7 +81,7 @@ msgstr "{0, plural, one {Expires in # hour} other {Expires in # hours}}"
 
 #. placeholder {0}: formatAmount(share, form.currency, locale)
 #. placeholder {1}: formatAmount(evaluation.cash.remainder, form.currency, locale)
-#: src/components/split/SplitEditor.tsx:256
+#: src/components/split/SplitEditor.tsx:257
 msgid "{0} · includes {1} left over"
 msgstr "{0} · includes {1} left over"
 
@@ -120,18 +120,18 @@ msgid "{0} and {1} let each other off"
 msgstr "{0} and {1} let each other off"
 
 #. placeholder {0}: x.label
-#: src/components/split/SplitEditor.tsx:830
+#: src/components/split/SplitEditor.tsx:831
 msgid "{0} as"
 msgstr "{0} as"
 
 #. placeholder {0}: x.label
-#: src/components/split/SplitEditor.tsx:852
+#: src/components/split/SplitEditor.tsx:853
 msgid "{0} as a percentage"
 msgstr "{0} as a percentage"
 
 #. placeholder {0}: x.label
 #. placeholder {1}: form.currency
-#: src/components/split/SplitEditor.tsx:844
+#: src/components/split/SplitEditor.tsx:845
 msgid "{0} as an amount in {1}"
 msgstr "{0} as an amount in {1}"
 
@@ -146,7 +146,7 @@ msgid "{0} by {deletedByName}"
 msgstr "{0} by {deletedByName}"
 
 #. placeholder {0}: c.scope.items.length
-#: src/components/split/charges/ChargesSection.tsx:252
+#: src/components/split/charges/ChargesSection.tsx:253
 msgid "{0} chosen items"
 msgstr "{0} chosen items"
 
@@ -159,14 +159,14 @@ msgstr "{0} created"
 #. placeholder {1}: unitText(roundTo)
 #. placeholder {2}: name(cash.remainderTo)
 #. placeholder {3}: fmt(evaluation.total!)
-#: src/components/split/SplitEditor.tsx:1075
+#: src/components/split/SplitEditor.tsx:1076
 msgid "{0} doesn’t round to {1}, so it goes on {2}’s share. Everything still adds up to {3}."
 msgstr "{0} doesn’t round to {1}, so it goes on {2}’s share. Everything still adds up to {3}."
 
 #. placeholder {0}: fmt(cash.remainder)
 #. placeholder {1}: unitText(roundTo)
 #. placeholder {2}: fmt(evaluation.total!)
-#: src/components/split/SplitEditor.tsx:1073
+#: src/components/split/SplitEditor.tsx:1074
 msgid "{0} doesn’t round to {1}, so it goes on your share. Everything still adds up to {2}."
 msgstr "{0} doesn’t round to {1}, so it goes on your share. Everything still adds up to {2}."
 
@@ -218,7 +218,7 @@ msgid "{0} is already your friend."
 msgstr "{0} is already your friend."
 
 #. placeholder {0}: name(id)
-#: src/components/split/SplitEditor.tsx:376
+#: src/components/split/SplitEditor.tsx:377
 msgid "{0} is splitting"
 msgstr "{0} is splitting"
 
@@ -359,7 +359,7 @@ msgid "{0}–{1} each · {2}"
 msgstr "{0}–{1} each · {2}"
 
 #. placeholder {0}: name(id)
-#: src/components/split/SplitEditor.tsx:664
+#: src/components/split/SplitEditor.tsx:665
 msgid "{0}, {portions} portions"
 msgstr "{0}, {portions} portions"
 
@@ -685,7 +685,7 @@ msgstr "{who} edited this expense"
 msgid "{who} restored this expense"
 msgstr "{who} restored this expense"
 
-#: src/components/split/charges/ChargesSection.tsx:329
+#: src/components/split/charges/ChargesSection.tsx:330
 msgid "+ earlier charges"
 msgstr "+ earlier charges"
 
@@ -941,8 +941,8 @@ msgstr "Add by email or number"
 msgid "Add category"
 msgstr "Add category"
 
-#: src/components/split/charges/ChargesSection.tsx:399
-#: src/components/split/charges/ChargesSection.tsx:406
+#: src/components/split/charges/ChargesSection.tsx:400
+#: src/components/split/charges/ChargesSection.tsx:407
 msgid "Add charge"
 msgstr "Add charge"
 
@@ -956,11 +956,11 @@ msgstr "Add demo data"
 msgid "Add demo data?"
 msgstr "Add demo data?"
 
-#: src/components/split/SplitEditor.tsx:116
+#: src/components/split/SplitEditor.tsx:117
 msgid "Add each item and who had it. Tap a name again for another portion; hold to take them off."
 msgstr "Add each item and who had it. Tap a name again for another portion; hold to take them off."
 
-#: src/components/split/SplitEditor.tsx:115
+#: src/components/split/SplitEditor.tsx:116
 msgid "Add each item and who had it. Tap a name again for another portion; right-click to take them off."
 msgstr "Add each item and who had it. Tap a name again for another portion; right-click to take them off."
 
@@ -999,8 +999,8 @@ msgstr "Add friend"
 msgid "Add friends, or type a new name to add someone without an account."
 msgstr "Add friends, or type a new name to add someone without an account."
 
-#: src/components/split/SplitEditor.tsx:740
-#: src/components/split/SplitEditor.tsx:764
+#: src/components/split/SplitEditor.tsx:741
+#: src/components/split/SplitEditor.tsx:765
 msgid "Add item"
 msgstr "Add item"
 
@@ -1021,8 +1021,8 @@ msgstr "Add member"
 msgid "Add members"
 msgstr "Add members"
 
-#: src/components/split/SplitEditor.tsx:203
-#: src/components/split/SplitEditor.tsx:210
+#: src/components/split/SplitEditor.tsx:204
+#: src/components/split/SplitEditor.tsx:211
 msgid "Add people"
 msgstr "Add people"
 
@@ -1037,8 +1037,8 @@ msgstr "Add someone new"
 msgid "Add Splito to your Home Screen"
 msgstr "Add Splito to your Home Screen"
 
-#: src/components/settings/TaxClassesEditor.tsx:117
-#: src/components/settings/TaxClassesEditor.tsx:123
+#: src/components/settings/TaxClassesEditor.tsx:116
+#: src/components/settings/TaxClassesEditor.tsx:122
 msgid "Add tax class"
 msgstr "Add tax class"
 
@@ -1072,7 +1072,7 @@ msgstr "Adding… {0}%"
 msgid "Adds about 30 friends, 12 groups and 1,500 expenses from the past year next to your own data. You can remove exactly this later."
 msgstr "Adds about 30 friends, 12 groups and 1,500 expenses from the past year next to your own data. You can remove exactly this later."
 
-#: src/components/split/SplitEditor.tsx:670
+#: src/components/split/SplitEditor.tsx:671
 msgid "Adds them to this item"
 msgstr "Adds them to this item"
 
@@ -1080,12 +1080,12 @@ msgstr "Adds them to this item"
 msgid "Adds up to the total"
 msgstr "Adds up to the total"
 
-#: src/components/split/SplitEditor.tsx:104
+#: src/components/split/SplitEditor.tsx:105
 msgid "Adjust"
 msgstr "Adjust"
 
 #. placeholder {0}: name(id)
-#: src/components/split/SplitEditor.tsx:363
+#: src/components/split/SplitEditor.tsx:364
 msgid "Adjustment for {0}, plus or minus"
 msgstr "Adjustment for {0}, plus or minus"
 
@@ -1121,8 +1121,8 @@ msgstr "All even"
 msgid "All groups"
 msgstr "All groups"
 
-#: src/components/split/charges/ChargesSection.tsx:249
-#: src/screens/Expense/components/ChargedBreakdown.tsx:65
+#: src/components/split/charges/ChargesSection.tsx:250
+#: src/screens/Expense/components/ChargedBreakdown.tsx:68
 msgid "all items"
 msgstr "all items"
 
@@ -1188,7 +1188,7 @@ msgid "Amount {0} paid"
 msgstr "Amount {0} paid"
 
 #. placeholder {0}: name(id)
-#: src/components/split/SplitEditor.tsx:331
+#: src/components/split/SplitEditor.tsx:332
 msgid "Amount for {0}"
 msgstr "Amount for {0}"
 
@@ -1528,8 +1528,8 @@ msgstr "Charge as"
 msgid "Charge setup"
 msgstr "Charge setup"
 
-#: src/components/split/SplitEditor.tsx:776
-#: src/screens/Expense/components/ChargedBreakdown.tsx:141
+#: src/components/split/SplitEditor.tsx:777
+#: src/screens/Expense/components/ChargedBreakdown.tsx:144
 msgid "Charges"
 msgstr "Charges"
 
@@ -2190,12 +2190,12 @@ msgstr "Discard changes?"
 
 #: src/components/settings/prefControls.tsx:316
 #: src/components/split/charges/hooks.ts:58
-#: src/components/split/SplitEditor.tsx:483
+#: src/components/split/SplitEditor.tsx:484
 #: src/screens/Expense/components/ItemsBreakdown.tsx:60
 msgid "Discount"
 msgstr "Discount"
 
-#: src/components/split/SplitEditor.tsx:789
+#: src/components/split/SplitEditor.tsx:790
 msgid "Discount comes off the items first; service, tax and tip are then worked out on what is left."
 msgstr "Discount comes off the items first; service, tax and tip are then worked out on what is left."
 
@@ -2233,11 +2233,11 @@ msgstr "e.g. Goa trip"
 msgid "e.g. Paid by UPI"
 msgstr "e.g. Paid by UPI"
 
-#: src/components/split/SplitEditor.tsx:781
+#: src/components/split/SplitEditor.tsx:782
 msgid "Each charge is shared only by the people who had the items it applies to. Drag to reorder: a charge can stack on the ones above it."
 msgstr "Each charge is shared only by the people who had the items it applies to. Drag to reorder: a charge can stack on the ones above it."
 
-#: src/components/split/SplitEditor.tsx:888
+#: src/components/split/SplitEditor.tsx:889
 msgid "Each person’s share"
 msgstr "Each person’s share"
 
@@ -2246,7 +2246,7 @@ msgid "Earlier years"
 msgstr "Earlier years"
 
 #. placeholder {0}: charge.name
-#: src/components/split/charges/ChargesSection.tsx:306
+#: src/components/split/charges/ChargesSection.tsx:307
 msgid "Edit {0}"
 msgstr "Edit {0}"
 
@@ -2417,7 +2417,7 @@ msgid "Entertainment"
 msgstr "Entertainment"
 
 #: src/components/settings/prefControls.tsx:374
-#: src/components/split/SplitEditor.tsx:100
+#: src/components/split/SplitEditor.tsx:101
 msgid "Equally"
 msgstr "Equally"
 
@@ -2431,7 +2431,7 @@ msgstr "Even overall, open both ways"
 
 #. placeholder {0}: unitText(roundTo)
 #. placeholder {1}: fmt(evaluation.total!)
-#: src/components/split/SplitEditor.tsx:1076
+#: src/components/split/SplitEditor.tsx:1077
 msgid "Every share is a whole multiple of {0} and they add up to {1}."
 msgstr "Every share is a whole multiple of {0} and they add up to {1}."
 
@@ -2440,7 +2440,7 @@ msgid "Every swipe action is also on the item's menu. Deleting only removes it f
 msgstr "Every swipe action is also on the item's menu. Deleting only removes it from your feed, never from the record."
 
 #: src/components/settings/prefControls.tsx:867
-#: src/components/split/SplitEditor.tsx:641
+#: src/components/split/SplitEditor.tsx:642
 #: src/screens/People/components/FriendsFilterDialog.tsx:112
 msgid "Everyone"
 msgstr "Everyone"
@@ -2454,7 +2454,7 @@ msgstr "Everyone is settled up."
 msgid "Everyone on a group expense needs to be in the group"
 msgstr "Everyone on a group expense needs to be in the group"
 
-#: src/components/split/SplitEditor.tsx:108
+#: src/components/split/SplitEditor.tsx:109
 msgid "Everyone ticked pays the same."
 msgstr "Everyone ticked pays the same."
 
@@ -2466,7 +2466,7 @@ msgstr "Everyone who owes pays the people who are owed, straight to them. Only p
 msgid "Everyone, by share"
 msgstr "Everyone, by share"
 
-#: src/components/split/SplitEditor.tsx:628
+#: src/components/split/SplitEditor.tsx:629
 msgid "Everyone, one portion each"
 msgstr "Everyone, one portion each"
 
@@ -2498,7 +2498,7 @@ msgstr "Everything you add stays on this device. Splito has no account or server
 msgid "Everything, including groups you add later"
 msgstr "Everything, including groups you add later"
 
-#: src/components/split/SplitEditor.tsx:101
+#: src/components/split/SplitEditor.tsx:102
 msgid "Exact"
 msgstr "Exact"
 
@@ -2577,7 +2577,7 @@ msgstr "Feedback"
 msgid "Feedback deleted"
 msgstr "Feedback deleted"
 
-#: src/components/split/SplitEditor.tsx:408
+#: src/components/split/SplitEditor.tsx:409
 msgid "Fewer shares"
 msgstr "Fewer shares"
 
@@ -2718,11 +2718,11 @@ msgstr "Future dates are fine – they show as upcoming until the day arrives."
 msgid "Gentle vibrations when you tap, toggle and save"
 msgstr "Gentle vibrations when you tap, toggle and save"
 
-#: src/components/settings/TaxClassesEditor.tsx:69
+#: src/components/settings/TaxClassesEditor.tsx:68
 msgid "Give each item on a bill a class, like Food or Alcohol, so a charge can apply to some items only."
 msgstr "Give each item on a bill a class, like Food or Alcohol, so a charge can apply to some items only."
 
-#: src/components/split/SplitEditor.tsx:110
+#: src/components/split/SplitEditor.tsx:111
 msgid "Give each person a percentage."
 msgstr "Give each person a percentage."
 
@@ -2849,7 +2849,7 @@ msgid "Hex color"
 msgstr "Hex color"
 
 #: src/components/settings/CategoriesEditor.tsx:197
-#: src/components/settings/TaxClassesEditor.tsx:189
+#: src/components/settings/TaxClassesEditor.tsx:188
 #: src/screens/Settings/index.tsx:317
 msgid "Hidden"
 msgstr "Hidden"
@@ -2863,7 +2863,7 @@ msgid "Hide {label}"
 msgstr "Hide {label}"
 
 #: src/components/settings/CategoriesEditor.tsx:227
-#: src/components/settings/TaxClassesEditor.tsx:219
+#: src/components/settings/TaxClassesEditor.tsx:218
 msgid "Hide {name}"
 msgstr "Hide {name}"
 
@@ -2919,7 +2919,7 @@ msgstr "How new expenses are divided until you change it."
 msgid "How this plan works"
 msgstr "How this plan works"
 
-#: src/components/split/SplitEditor.tsx:130
+#: src/components/split/SplitEditor.tsx:131
 msgid "How to split"
 msgstr "How to split"
 
@@ -2948,11 +2948,11 @@ msgstr "Include app info"
 msgid "Include groups"
 msgstr "Include groups"
 
-#: src/components/split/charges/ChargesSection.tsx:330
+#: src/components/split/charges/ChargesSection.tsx:331
 msgid "included"
 msgstr "included"
 
-#: src/screens/Expense/components/ChargedBreakdown.tsx:161
+#: src/screens/Expense/components/ChargedBreakdown.tsx:164
 msgid "included in the prices"
 msgstr "included in the prices"
 
@@ -3107,20 +3107,20 @@ msgstr "It was deleted, or the link is wrong."
 #. placeholder {0}: i + 1
 #. placeholder {0}: index + 1
 #. placeholder {0}: k + 1
-#: src/components/split/charges/ChargesSection.tsx:438
+#: src/components/split/charges/ChargesSection.tsx:439
 #: src/components/split/charges/Reconciliation.tsx:205
-#: src/components/split/SplitEditor.tsx:588
-#: src/components/split/SplitEditor.tsx:599
-#: src/screens/Expense/components/ChargedBreakdown.tsx:69
+#: src/components/split/SplitEditor.tsx:589
+#: src/components/split/SplitEditor.tsx:600
+#: src/screens/Expense/components/ChargedBreakdown.tsx:72
 #: src/screens/Expense/components/ItemRow.tsx:45
 msgid "Item {0}"
 msgstr "Item {0}"
 
-#: src/components/split/SplitEditor.tsx:598
+#: src/components/split/SplitEditor.tsx:599
 msgid "Item name"
 msgstr "Item name"
 
-#: src/components/split/SplitEditor.tsx:105
+#: src/components/split/SplitEditor.tsx:106
 msgid "Itemize"
 msgstr "Itemize"
 
@@ -3129,9 +3129,9 @@ msgid "Itemize charges"
 msgstr "Itemize charges"
 
 #: src/components/split/charges/Reconciliation.tsx:99
-#: src/screens/Expense/components/ChargedBreakdown.tsx:96
-#: src/screens/Expense/components/ChargedBreakdown.tsx:148
-#: src/screens/Expense/components/ChargedBreakdown.tsx:197
+#: src/screens/Expense/components/ChargedBreakdown.tsx:99
+#: src/screens/Expense/components/ChargedBreakdown.tsx:151
+#: src/screens/Expense/components/ChargedBreakdown.tsx:200
 #: src/screens/Expense/components/ItemsBreakdown.tsx:77
 msgid "Items"
 msgstr "Items"
@@ -3142,7 +3142,7 @@ msgid "Items {0}"
 msgstr "Items {0}"
 
 #. placeholder {0}: formatAmount(evaluation.itemsTotal, form.currency, locale)
-#: src/components/split/SplitEditor.tsx:936
+#: src/components/split/SplitEditor.tsx:937
 msgid "Items and charges come to {0}"
 msgstr "Items and charges come to {0}"
 
@@ -3352,7 +3352,7 @@ msgstr "More options"
 msgid "More options for {sentence}"
 msgstr "More options for {sentence}"
 
-#: src/components/split/SplitEditor.tsx:428
+#: src/components/split/SplitEditor.tsx:429
 msgid "More shares"
 msgstr "More shares"
 
@@ -3365,12 +3365,12 @@ msgid "Motion and haptics"
 msgstr "Motion and haptics"
 
 #. placeholder {0}: charge.name
-#: src/components/split/charges/ChargesSection.tsx:358
+#: src/components/split/charges/ChargesSection.tsx:359
 msgid "Move {0} down"
 msgstr "Move {0} down"
 
 #. placeholder {0}: charge.name
-#: src/components/split/charges/ChargesSection.tsx:348
+#: src/components/split/charges/ChargesSection.tsx:349
 msgid "Move {0} up"
 msgstr "Move {0} up"
 
@@ -3383,22 +3383,22 @@ msgid "Move {label} up"
 msgstr "Move {label} up"
 
 #: src/components/settings/CategoriesEditor.tsx:214
-#: src/components/settings/TaxClassesEditor.tsx:206
+#: src/components/settings/TaxClassesEditor.tsx:205
 msgid "Move {name} down"
 msgstr "Move {name} down"
 
 #: src/components/settings/CategoriesEditor.tsx:204
-#: src/components/settings/TaxClassesEditor.tsx:196
+#: src/components/settings/TaxClassesEditor.tsx:195
 msgid "Move {name} up"
 msgstr "Move {name} up"
 
 #. placeholder {0}: index + 1
-#: src/components/split/SplitEditor.tsx:544
+#: src/components/split/SplitEditor.tsx:545
 msgid "Move item {0} down"
 msgstr "Move item {0} down"
 
 #. placeholder {0}: index + 1
-#: src/components/split/SplitEditor.tsx:532
+#: src/components/split/SplitEditor.tsx:533
 msgid "Move item {0} up"
 msgstr "Move item {0} up"
 
@@ -3560,7 +3560,7 @@ msgstr "No balances yet. They appear once the group has an expense."
 msgid "No charges"
 msgstr "No charges"
 
-#: src/components/split/charges/ChargesSection.tsx:389
+#: src/components/split/charges/ChargesSection.tsx:390
 msgid "No charges yet. Add the service charge, taxes and anything else on the bill."
 msgstr "No charges yet. Add the service charge, taxes and anything else on the bill."
 
@@ -3688,8 +3688,8 @@ msgstr "not involved"
 msgid "Not now"
 msgstr "Not now"
 
-#: src/components/split/SplitEditor.tsx:253
-#: src/components/split/SplitEditor.tsx:259
+#: src/components/split/SplitEditor.tsx:254
+#: src/components/split/SplitEditor.tsx:260
 msgid "Not splitting"
 msgstr "Not splitting"
 
@@ -3795,11 +3795,11 @@ msgid "On"
 msgstr "On"
 
 #. placeholder {0}: scopeText(charge)
-#: src/components/split/charges/ChargesSection.tsx:328
+#: src/components/split/charges/ChargesSection.tsx:329
 msgid "on {0}"
 msgstr "on {0}"
 
-#: src/screens/Expense/components/ChargedBreakdown.tsx:79
+#: src/screens/Expense/components/ChargedBreakdown.tsx:82
 msgid "on {on}"
 msgstr "on {on}"
 
@@ -4009,7 +4009,7 @@ msgid "Paid by"
 msgstr "Paid by"
 
 #. placeholder {0}: name(roundOff.to)
-#: src/screens/Expense/components/ChargedBreakdown.tsx:177
+#: src/screens/Expense/components/ChargedBreakdown.tsx:180
 msgid "paid by {0}"
 msgstr "paid by {0}"
 
@@ -4107,12 +4107,12 @@ msgstr "People and Groups show who owes whom in each currency. Different currenc
 msgid "People who use the link wait until you let them in."
 msgstr "People who use the link wait until you let them in."
 
-#: src/components/split/SplitEditor.tsx:102
+#: src/components/split/SplitEditor.tsx:103
 msgid "Percent"
 msgstr "Percent"
 
 #. placeholder {0}: name(id)
-#: src/components/split/SplitEditor.tsx:342
+#: src/components/split/SplitEditor.tsx:343
 msgid "Percent for {0}"
 msgstr "Percent for {0}"
 
@@ -4226,7 +4226,7 @@ msgid "Previous period"
 msgstr "Previous period"
 
 #. placeholder {0}: index + 1
-#: src/components/split/SplitEditor.tsx:607
+#: src/components/split/SplitEditor.tsx:608
 msgid "Price of item {0}"
 msgstr "Price of item {0}"
 
@@ -4347,7 +4347,7 @@ msgid "Remove"
 msgstr "Remove"
 
 #. placeholder {0}: charge.name
-#: src/components/split/charges/ChargesSection.tsx:371
+#: src/components/split/charges/ChargesSection.tsx:372
 msgid "Remove {0}"
 msgstr "Remove {0}"
 
@@ -4375,7 +4375,7 @@ msgid "Remove friend"
 msgstr "Remove friend"
 
 #. placeholder {0}: index + 1
-#: src/components/split/SplitEditor.tsx:558
+#: src/components/split/SplitEditor.tsx:559
 msgid "Remove item {0}"
 msgstr "Remove item {0}"
 
@@ -4395,7 +4395,7 @@ msgstr "Removes the demo friends, groups, expenses and payments, with their hist
 msgid "Removing demo data…"
 msgstr "Removing demo data…"
 
-#: src/components/settings/TaxClassesEditor.tsx:229
+#: src/components/settings/TaxClassesEditor.tsx:228
 msgid "Rename {name}"
 msgstr "Rename {name}"
 
@@ -4552,24 +4552,24 @@ msgid "Revoked"
 msgstr "Revoked"
 
 #: src/components/settings/prefControls.tsx:392
-#: src/components/split/SplitEditor.tsx:1013
-#: src/components/split/SplitEditor.tsx:1029
+#: src/components/split/SplitEditor.tsx:1014
+#: src/components/split/SplitEditor.tsx:1030
 msgid "Round shares to cash"
 msgstr "Round shares to cash"
 
 #: src/components/settings/prefControls.tsx:407
-#: src/components/split/SplitEditor.tsx:1043
+#: src/components/split/SplitEditor.tsx:1044
 msgid "Round to"
 msgstr "Round to"
 
 #. placeholder {0}: unitText(unit)
-#: src/components/split/SplitEditor.tsx:1051
+#: src/components/split/SplitEditor.tsx:1052
 msgid "Round to {0}"
 msgstr "Round to {0}"
 
 #: src/components/split/charges/Reconciliation.tsx:111
-#: src/screens/Expense/components/ChargedBreakdown.tsx:173
-#: src/screens/Expense/components/ChargedBreakdown.tsx:201
+#: src/screens/Expense/components/ChargedBreakdown.tsx:176
+#: src/screens/Expense/components/ChargedBreakdown.tsx:204
 msgid "Round-off"
 msgstr "Round-off"
 
@@ -4627,8 +4627,8 @@ msgstr "Same as this device ({deviceZone})"
 msgid "Save"
 msgstr "Save"
 
-#: src/components/split/charges/ChargesSection.tsx:412
-#: src/components/split/charges/ChargesSection.tsx:419
+#: src/components/split/charges/ChargesSection.tsx:413
+#: src/components/split/charges/ChargesSection.tsx:420
 msgid "Save as preset for {title}"
 msgstr "Save as preset for {title}"
 
@@ -4665,7 +4665,7 @@ msgstr "Saved on this device. It syncs to your other devices when you are online
 msgid "Saved on this device. Sign in to sync it to your other devices."
 msgstr "Saved on this device. Sign in to sync it to your other devices."
 
-#: src/components/split/charges/ChargesSection.tsx:265
+#: src/components/split/charges/ChargesSection.tsx:266
 msgid "Saved the charges for {title}"
 msgstr "Saved the charges for {title}"
 
@@ -4828,7 +4828,7 @@ msgstr "Service"
 
 #: src/components/settings/prefControls.tsx:315
 #: src/components/split/charges/hooks.ts:74
-#: src/components/split/SplitEditor.tsx:482
+#: src/components/split/SplitEditor.tsx:483
 #: src/screens/Expense/components/ItemsBreakdown.tsx:66
 msgid "Service charge"
 msgstr "Service charge"
@@ -4919,17 +4919,17 @@ msgstr "Share"
 msgid "Share invite link"
 msgstr "Share invite link"
 
-#: src/screens/Expense/components/ChargedBreakdown.tsx:176
+#: src/screens/Expense/components/ChargedBreakdown.tsx:179
 msgid "shared by everyone’s share"
 msgstr "shared by everyone’s share"
 
 #: src/components/settings/prefControls.tsx:377
-#: src/components/split/SplitEditor.tsx:103
+#: src/components/split/SplitEditor.tsx:104
 msgid "Shares"
 msgstr "Shares"
 
 #. placeholder {0}: name(id)
-#: src/components/split/SplitEditor.tsx:352
+#: src/components/split/SplitEditor.tsx:353
 msgid "Shares for {0}"
 msgstr "Shares for {0}"
 
@@ -4947,7 +4947,7 @@ msgid "Show {label}"
 msgstr "Show {label}"
 
 #: src/components/settings/CategoriesEditor.tsx:227
-#: src/components/settings/TaxClassesEditor.tsx:219
+#: src/components/settings/TaxClassesEditor.tsx:218
 msgid "Show {name}"
 msgstr "Show {name}"
 
@@ -5147,7 +5147,7 @@ msgstr "Split by percentages"
 msgid "Split by shares"
 msgstr "Split by shares"
 
-#: src/components/split/SplitEditor.tsx:111
+#: src/components/split/SplitEditor.tsx:112
 msgid "Split by shares – say 2 for a couple, 1 for everyone else."
 msgstr "Split by shares – say 2 for a couple, 1 for everyone else."
 
@@ -5155,7 +5155,7 @@ msgstr "Split by shares – say 2 for a couple, 1 for everyone else."
 msgid "Split equally"
 msgstr "Split equally"
 
-#: src/components/split/SplitEditor.tsx:112
+#: src/components/split/SplitEditor.tsx:113
 msgid "Split equally, then add or take away an amount for someone."
 msgstr "Split equally, then add or take away an amount for someone."
 
@@ -5323,7 +5323,7 @@ msgstr "Table"
 msgid "Tap Add. Splito appears on your Home Screen."
 msgstr "Tap Add. Splito appears on your Home Screen."
 
-#: src/components/split/SplitEditor.tsx:669
+#: src/components/split/SplitEditor.tsx:670
 msgid "Tap for one more portion; hold to take them off"
 msgstr "Tap for one more portion; hold to take them off"
 
@@ -5337,7 +5337,7 @@ msgstr "Tap to change; hold to change several items"
 
 #: src/components/settings/prefControls.tsx:313
 #: src/components/split/charges/hooks.ts:54
-#: src/components/split/SplitEditor.tsx:480
+#: src/components/split/SplitEditor.tsx:481
 #: src/screens/Expense/components/ItemsBreakdown.tsx:70
 msgid "Tax"
 msgstr "Tax"
@@ -5351,7 +5351,7 @@ msgstr "Tax class"
 msgid "Tax class: {name}"
 msgstr "Tax class: {name}"
 
-#: src/components/settings/TaxClassesEditor.tsx:68
+#: src/components/settings/TaxClassesEditor.tsx:67
 #: src/components/split/charges/ChargeSheet.tsx:231
 msgid "Tax classes"
 msgstr "Tax classes"
@@ -5571,7 +5571,7 @@ msgstr "Tints buttons, links and highlights. Money keeps its green and red."
 
 #: src/components/settings/prefControls.tsx:314
 #: src/components/split/charges/hooks.ts:79
-#: src/components/split/SplitEditor.tsx:481
+#: src/components/split/SplitEditor.tsx:482
 #: src/screens/Expense/components/ItemsBreakdown.tsx:71
 msgid "Tip"
 msgstr "Tip"
@@ -5620,7 +5620,7 @@ msgstr "Too many digits after the decimal point for this currency"
 
 #: src/components/split/charges/Reconciliation.tsx:127
 #: src/screens/Analytics/index.tsx:219
-#: src/screens/Expense/components/ChargedBreakdown.tsx:184
+#: src/screens/Expense/components/ChargedBreakdown.tsx:187
 msgid "Total"
 msgstr "Total"
 
@@ -5675,7 +5675,7 @@ msgstr "Type"
 msgid "Type of feedback"
 msgstr "Type of feedback"
 
-#: src/components/split/SplitEditor.tsx:109
+#: src/components/split/SplitEditor.tsx:110
 msgid "Type what each person owes."
 msgstr "Type what each person owes."
 
@@ -5761,12 +5761,12 @@ msgid "Use Add expense in the sidebar, or the + button on phones. Choose who pai
 msgstr "Use Add expense in the sidebar, or the + button on phones. Choose who paid and how to split it."
 
 #: src/components/split/charges/Reconciliation.tsx:137
-#: src/components/split/SplitEditor.tsx:943
+#: src/components/split/SplitEditor.tsx:944
 msgid "Use as the total"
 msgstr "Use as the total"
 
 #: src/components/split/charges/Reconciliation.tsx:153
-#: src/components/split/SplitEditor.tsx:959
+#: src/components/split/SplitEditor.tsx:960
 msgid "Use as total"
 msgstr "Use as total"
 
@@ -5867,7 +5867,7 @@ msgstr "Week"
 msgid "Week starts on"
 msgstr "Week starts on"
 
-#: src/screens/Expense/components/ChargedBreakdown.tsx:191
+#: src/screens/Expense/components/ChargedBreakdown.tsx:194
 msgid "What each person pays"
 msgstr "What each person pays"
 
@@ -5978,7 +5978,7 @@ msgstr "Who paid?"
 msgid "Who you settle with"
 msgstr "Who you settle with"
 
-#: src/components/split/SplitEditor.tsx:1033
+#: src/components/split/SplitEditor.tsx:1034
 msgid "Whole amounts that are easy to hand over"
 msgstr "Whole amounts that are easy to hand over"
 
