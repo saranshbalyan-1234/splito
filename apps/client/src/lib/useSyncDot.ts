@@ -1,3 +1,4 @@
+import {useDemoMode} from '#/state/demo'
 import {useSession} from '#/state/session'
 import {type SyncDotState, syncDotState} from './syncState'
 
@@ -10,7 +11,9 @@ import {type SyncDotState, syncDotState} from './syncState'
  */
 export function useSyncDot(): SyncDotState {
   const {hasSession} = useSession()
+  const {demo} = useDemoMode()
   return syncDotState({
+    demo,
     hasSession,
     isOnline: true,
     pendingOps: hasSession ? 1 : 0,

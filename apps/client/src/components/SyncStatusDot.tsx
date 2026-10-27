@@ -19,6 +19,7 @@ export const SYNC_LABELS = {
   synced: msg`Synced`,
   syncing: msg`Syncing`,
   local: msg`On this device only`,
+  demo: msg`Demo`,
 } as const satisfies Record<SyncDotState, unknown>
 
 /** The state and its words, for the avatar's accessibility label and tooltip. */
@@ -56,7 +57,9 @@ export function SyncStatusDot({
       ? t.palette.positive_500
       : state === 'syncing'
         ? t.palette.yellow
-        : t.palette.negative_500
+        : state === 'demo'
+          ? t.palette.primary_500
+          : t.palette.negative_500
 
   /* The dot pops between states (instant under reduced motion). */
   const scale = useSharedValue(1)
