@@ -196,7 +196,6 @@ function parsePeriod(words: string[], used: boolean[]): PeriodSpec | undefined {
 /* ------------------------------------------------------------------ */
 
 const PAID = F(['paid', 'bhara', 'chukaya', 'चुकाया', 'भरा'])
-const WHOM = F(['whom', 'kisko', 'kisne', 'kise', 'किसको', 'किसने', 'किसे'])
 const WHOM_ONLY = F(['whom', 'kisko', 'किसको'])
 const BREAKDOWN_WORDS = F(['by', 'per', 'wise', 'breakdown', 'श्रेणी'])
 const BREAKDOWN_CATEGORY = F(['by category', 'by categories', 'per category', 'category wise', 'categorywise', 'breakdown', 'श्रेणी'])

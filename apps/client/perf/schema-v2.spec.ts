@@ -15,7 +15,10 @@ import {type CDPSession, expect, type Page, test} from '@playwright/test'
  * currency); "search keystroke" from setting the field's text to the first page
  * of results showing the query's matches, however many there are (budget 50 ms,
  * ARCHITECTURE 9.8, 17, 26.10); the per-currency totals of a broad match fill in
- * after that and are timed on their own (`totalsMs`, no budget). Each is
+ * after that and are timed on their own (`totalsMs`, no budget). "Ask" (owner
+ * decision 107): the Ask tab to the chat's composer on screen (`askOpenMs`, one
+ * frame) and Enter on "Who owes me the most?" to the answer on screen (`askAnswerMs`,
+ * budget 150 ms), with typed text arriving whole in the field. Each is
  * the median of five runs. Run:
  * `pnpm perf -- schema-v2` after `pnpm e2e:build`; PERF_CPU throttles the CPU
  * (4 is a mid-range phone). Prints `PERF {json}` lines.
@@ -178,6 +181,82 @@ function expectSearchBudget(r: {cpu: number; searchKeystrokeMs: Record<string, n
   for (const [q, ms] of Object.entries(r.searchKeystrokeMs)) expect(ms, `search "${q}"`).toBeLessThan(50)
 }
 
+/**
+ * Ask Splito on a large ledger: the sidebar's Ask tab to the composer on screen, then a question and Enter to
+ * the answer bubble on screen. Also types a long sentence into the field at full speed and checks no
+ * character is lost (decision 107: typing must never drop a character).
+ */
+async function askCase(page: Page) {
+  const question = 'Who owes me the most?'
+  const opens: number[] = []
+  const answers: number[] = []
+  for (let i = 0; i < RUNS; i++) {
+    opens.push(
+      await page.evaluate(
+        () =>
+          new Promise<number>((resolve, reject) => {
+            const t0 = performance.now()
+            document.querySelector<HTMLElement>('[data-testid="tab-ask"]')!.click()
+            const deadline = t0 + 30_000
+            const check = () => {
+              if (document.querySelector('[data-testid="ask-input"]')) resolve(performance.now() - t0)
+              else if (performance.now() > deadline) reject(new Error('the Ask composer never appeared'))
+              else requestAnimationFrame(check)
+            }
+            check()
+          }),
+      ),
+    )
+    const waiting = page.evaluate(
+      () =>
+        new Promise<number>((resolve, reject) => {
+          addEventListener(
+            'keydown',
+            e => {
+              if ((e as KeyboardEvent).key !== 'Enter') return
+              const t0 = performance.now()
+              const check = () => {
+                if (document.querySelector('[data-testid="ask-message-ask"]')) resolve(performance.now() - t0)
+                else if (performance.now() > t0 + 30_000) reject(new Error('no answer'))
+                else requestAnimationFrame(check)
+              }
+              check()
+            },
+            {capture: true, once: true},
+          )
+        }),
+    )
+    await page.getByTestId('ask-input').fill(question)
+    await page.getByTestId('ask-input').press('Enter')
+    answers.push(await waiting)
+    // The next run starts from an empty chat, so the list never grows under the measurement.
+    await page.getByTestId('ask-clear').click()
+    await page.getByRole('button', {name: 'Clear', exact: true}).click()
+    await page.keyboard.press('Escape')
+    await expect(page.getByTestId('ask-chat')).toHaveCount(0)
+  }
+  // Typing at full speed: every character arrives, in the chat and in Search.
+  const sentence = 'how much did I spend on food last month and who owes me the most 1,234.50'
+  await page.getByTestId('tab-ask').click()
+  await page.getByTestId('ask-input').pressSequentially(sentence, {delay: 0})
+  const typedInChat = await page.getByTestId('ask-input').inputValue()
+  await page.keyboard.press('Escape')
+  await page.getByTestId('header-search-ask').last().click()
+  await page.getByTestId('search-input').pressSequentially(sentence, {delay: 0})
+  const typedInSearch = await page.getByTestId('search-input').inputValue()
+  await page.keyboard.press('Escape')
+  const result = {
+    set: '10,000 expenses ask',
+    cpu: Number(process.env.PERF_CPU ?? 1),
+    askOpenMs: Math.round(median(opens)),
+    askAnswerMs: Math.round(median(answers)),
+    runs: {open: opens.map(Math.round), answer: answers.map(Math.round)},
+    typing: {chat: typedInChat === sentence, search: typedInSearch === sentence},
+  }
+  console.log(`PERF ${JSON.stringify(result)}`)
+  return {...result, typedInChat, typedInSearch, sentence}
+}
+
 let cdp: CDPSession
 async function throttle(page: Page) {
   const rate = Number(process.env.PERF_CPU ?? 1)
@@ -213,4 +292,10 @@ test('a 10,000-expense ledger: Home cold open and a write', async ({page}) => {
   ])
   expect(r.coldOpenHomeMs).toBeGreaterThan(0)
   expectSearchBudget(r)
+  // Ask Splito on the same ledger (decision 107): under 150 ms from Enter to the answer, and no character lost.
+  await page.keyboard.press('Escape')
+  const ask = await askCase(page)
+  expect(ask.typedInChat).toBe(ask.sentence)
+  expect(ask.typedInSearch).toBe(ask.sentence)
+  if (ask.cpu <= 1) expect(ask.askAnswerMs, 'Who owes me the most? to the answer').toBeLessThan(150)
 })

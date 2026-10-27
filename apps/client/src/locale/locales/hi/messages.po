@@ -162,7 +162,7 @@ msgstr "{0} {1} में पूरा नहीं बँटता, इसल�
 
 #. placeholder {0}: fmt(most)
 #. placeholder {1}: peopleCount(n)
-#: src/components/split/ExpenseComposer.tsx:683
+#: src/components/split/ExpenseComposer.tsx:684
 msgid "{0} each · {1}"
 msgstr "हर एक {0} · {1}"
 
@@ -213,7 +213,7 @@ msgid "{0} is splitting"
 msgstr "{0} बाँट रहे हैं"
 
 #. placeholder {0}: fmt(remaining.value)
-#: src/components/split/ExpenseComposer.tsx:665
+#: src/components/split/ExpenseComposer.tsx:666
 msgid "{0} left to assign"
 msgstr "{0} बाँटना बाकी है"
 
@@ -261,7 +261,7 @@ msgid "{0} of items"
 msgstr "चीज़ों के {0}"
 
 #. placeholder {0}: fmt(magnitude(remaining.value))
-#: src/components/split/ExpenseComposer.tsx:666
+#: src/components/split/ExpenseComposer.tsx:667
 msgid "{0} over the total"
 msgstr "कुल से {0} ज़्यादा"
 
@@ -272,7 +272,7 @@ msgstr "दोनों ओर {0} बकाया"
 
 #. placeholder {0}: name(topOwed.person)
 #. placeholder {1}: money(topOwed.amount, topOwed.currency)
-#: src/features/searchAsk/AskAnswer.tsx:194
+#: src/features/searchAsk/AskAnswer.tsx:195
 msgid "{0} owes you the most: {1}."
 msgstr "{0} को आपको सबसे ज़्यादा देना है: {1}।"
 
@@ -344,7 +344,7 @@ msgstr "{0} लोगों ने {total} चुकाए"
 
 #. placeholder {0}: money(amount.amount, amount.currency)
 #. placeholder {1}: money(each.high, amount.currency)
-#: src/features/searchAsk/AskAnswer.tsx:394
+#: src/features/searchAsk/AskAnswer.tsx:409
 msgid "{0} split {ways} ways is {1} each."
 msgstr "{0} को {ways} लोगों में बांटने पर हर किसी के {1} आते हैं।"
 
@@ -352,7 +352,7 @@ msgstr "{0} को {ways} लोगों में बांटने पर �
 #. placeholder {1}: each.highCount
 #. placeholder {2}: money(each.high, amount.currency)
 #. placeholder {3}: money(each.low, amount.currency)
-#: src/features/searchAsk/AskAnswer.tsx:395
+#: src/features/searchAsk/AskAnswer.tsx:410
 msgid "{0} split {ways} ways: {1, plural, one {# person pays} other {# people pay}} {2} and the rest pay {3}."
 msgstr "{0} को {ways} लोगों में बांटने पर {1, plural, one {# व्यक्ति} other {# लोग}} {2} देंगे और बाकी {3} देंगे।"
 
@@ -364,7 +364,7 @@ msgstr "{0} ज़्यादा"
 #. placeholder {0}: fmt(least)
 #. placeholder {1}: fmt(most)
 #. placeholder {2}: peopleCount(n)
-#: src/components/split/ExpenseComposer.tsx:684
+#: src/components/split/ExpenseComposer.tsx:685
 msgid "{0}–{1} each · {2}"
 msgstr "हर एक {0}–{1} · {2}"
 
@@ -407,17 +407,17 @@ msgid "{0}’s share <0>{1}</0>"
 msgstr "{0} का हिस्सा <0>{1}</0>"
 
 #. placeholder {0}: name(answer.person)
-#: src/features/searchAsk/AskAnswer.tsx:325
+#: src/features/searchAsk/AskAnswer.tsx:341
 msgid "{0}'s spending"
 msgstr "{0} का खर्च"
 
 #. placeholder {0}: pct(remaining.value)
-#: src/components/split/ExpenseComposer.tsx:657
+#: src/components/split/ExpenseComposer.tsx:658
 msgid "{0}% left to assign"
 msgstr "{0}% बाँटना बाकी है"
 
 #. placeholder {0}: pct(remaining.value)
-#: src/components/split/ExpenseComposer.tsx:658
+#: src/components/split/ExpenseComposer.tsx:659
 msgid "{0}% over 100%"
 msgstr "100% से {0}% ज़्यादा"
 
@@ -527,7 +527,7 @@ msgstr "{actor} ने एक माफ़ी वापस ली"
 msgid "{actor} updated the group {subject}"
 msgstr "{actor} ने समूह {subject} को अपडेट किया"
 
-#: src/features/searchAsk/AskAnswer.tsx:291
+#: src/features/searchAsk/AskAnswer.tsx:307
 msgid "{amount} was spent in total {scope} {period}."
 msgstr "{period} {scope} कुल {amount} खर्च हुए।"
 
@@ -559,7 +559,7 @@ msgstr "{creditor} ने {debtor} का कर्ज़ माफ़ किय
 msgid "{creditor} let you off"
 msgstr "{creditor} ने आपका कर्ज़ माफ़ किया"
 
-#: src/features/searchAsk/AskChat.tsx:278
+#: src/features/searchAsk/AskChat.tsx:299
 msgid "{day} at {time}"
 msgstr "{day}, {time}"
 
@@ -604,7 +604,7 @@ msgstr "{from} ने {to} को भुगतान किया"
 msgid "{from} paid you"
 msgstr "{from} ने आपको भुगतान किया"
 
-#: src/features/searchAsk/AskAnswer.tsx:236
+#: src/features/searchAsk/AskAnswer.tsx:241
 msgid "{g} is settled up."
 msgstr "{g} में सब हिसाब बराबर है।"
 
@@ -643,7 +643,7 @@ msgstr "{n, plural, one {# मित्र} other {# मित्र}}"
 msgid "{n, plural, one {# group} other {# groups}}"
 msgstr "{n, plural, one {# समूह} other {# समूह}}"
 
-#: src/components/split/ExpenseComposer.tsx:604
+#: src/components/split/ExpenseComposer.tsx:605
 msgid "{n, plural, one {# person} other {# people}}"
 msgstr "{n, plural, one {# व्यक्ति} other {# लोग}}"
 
@@ -688,7 +688,7 @@ msgstr "{visible} श्रेणियाँ"
 msgid "{visibleCount} tabs share the bar equally."
 msgstr "बार में {visibleCount} टैब बराबर जगह बांटते हैं।"
 
-#: src/features/searchAsk/AskAnswer.tsx:337
+#: src/features/searchAsk/AskAnswer.tsx:352
 msgid "{what} {bucketWord} {scope} {period}."
 msgstr "{what} {bucketWord} {scope} {period}।"
 
@@ -709,18 +709,18 @@ msgid "{who} edited this expense"
 msgstr "{who} ने यह खर्च बदला"
 
 #. placeholder {0}: line.currency
-#: src/features/searchAsk/AskAnswer.tsx:147
+#: src/features/searchAsk/AskAnswer.tsx:148
 msgid "{who} owes you ({0})"
 msgstr "{who} को आपको देना है ({0})"
 
 #. placeholder {0}: money(first.owed, first.currency)
 #. placeholder {1}: money(first.owe, first.currency)
-#: src/features/searchAsk/AskAnswer.tsx:123
+#: src/features/searchAsk/AskAnswer.tsx:124
 msgid "{who} owes you {0} and you owe {who} {1}."
 msgstr "{who} को आपको {0} देना है और आपको {who} को {1} देना है।"
 
 #. placeholder {0}: money(first.owed, first.currency)
-#: src/features/searchAsk/AskAnswer.tsx:125
+#: src/features/searchAsk/AskAnswer.tsx:126
 msgid "{who} owes you {0}."
 msgstr "{who} को आपको {0} देना है।"
 
@@ -728,11 +728,11 @@ msgstr "{who} को आपको {0} देना है।"
 msgid "{who} restored this expense"
 msgstr "{who} ने यह खर्च वापस लाया"
 
-#: src/features/searchAsk/AskAnswer.tsx:275
+#: src/features/searchAsk/AskAnswer.tsx:290
 msgid "{who}'s share"
 msgstr "{who} का हिस्सा"
 
-#: src/features/searchAsk/AskAnswer.tsx:287
+#: src/features/searchAsk/AskAnswer.tsx:303
 msgid "{who}'s share {scope} {period} was {amount}."
 msgstr "{period} {scope} {who} का हिस्सा {amount} था।"
 
@@ -780,7 +780,7 @@ msgstr "1 भुगतान से सबका हिसाब बराबर
 msgid "1 year"
 msgstr "1 साल"
 
-#: src/components/split/ExpenseComposer.tsx:655
+#: src/components/split/ExpenseComposer.tsx:656
 msgid "100% assigned"
 msgstr "100% बँट गया"
 
@@ -929,7 +929,7 @@ msgstr "दोस्त जोड़ें, फिर कोई भी बिल
 msgid "Add a name"
 msgstr "नाम लिखें"
 
-#: src/components/split/ExpenseComposer.tsx:549
+#: src/components/split/ExpenseComposer.tsx:550
 msgid "Add a note (optional)"
 msgstr "नोट जोड़ें (वैकल्पिक)"
 
@@ -1000,7 +1000,7 @@ msgstr "खर्च जोड़ें"
 
 #: src/components/AddExpenseFAB.tsx:33
 #: src/components/split/ExpenseComposer.tsx:266
-#: src/screens/AddExpense.tsx:53
+#: src/screens/AddExpense.tsx:54
 #: src/screens/Analytics/index.tsx:91
 #: src/screens/Analytics/index.tsx:92
 #: src/screens/Group/index.tsx:361
@@ -1020,7 +1020,7 @@ msgstr "खर्च जोड़ें"
 msgid "Add friend"
 msgstr "दोस्त जोड़ें"
 
-#: src/components/split/ExpenseComposer.tsx:362
+#: src/components/split/ExpenseComposer.tsx:363
 msgid "Add friends, or type a new name to add someone without an account."
 msgstr "दोस्त चुनें, या बिना खाते वाले किसी व्यक्ति को जोड़ने के लिए नया नाम लिखें।"
 
@@ -1058,7 +1058,7 @@ msgstr "किसी नए को जोड़ें"
 msgid "Add Splito to your Home Screen"
 msgstr "Splito को अपनी होम स्क्रीन पर जोड़ें"
 
-#: src/features/searchAsk/AskAnswer.tsx:404
+#: src/features/searchAsk/AskAnswer.tsx:419
 msgid "Add this expense"
 msgstr "यह खर्च जोड़ें"
 
@@ -1124,7 +1124,7 @@ msgid "All"
 msgstr "सभी"
 
 #. placeholder {0}: fmt(total!)
-#: src/components/split/ExpenseComposer.tsx:663
+#: src/components/split/ExpenseComposer.tsx:664
 msgid "All {0} assigned"
 msgstr "पूरे {0} बँट गए"
 
@@ -1259,11 +1259,11 @@ msgid "Answered on this device"
 msgstr "इसी डिवाइस पर जवाब दिया गया"
 
 #. placeholder {0}: i18n.date(new Date(message.at), {hour: 'numeric', minute: 'numeric'})
-#: src/features/searchAsk/AskChat.tsx:326
+#: src/features/searchAsk/AskChat.tsx:347
 msgid "Answered on this device · {0}"
 msgstr "इसी डिवाइस पर जवाब दिया गया · {0}"
 
-#: src/features/searchAsk/AskChat.tsx:165
+#: src/features/searchAsk/AskChat.tsx:186
 msgid "Answers from this device"
 msgstr "जवाब इसी डिवाइस से"
 
@@ -1319,14 +1319,14 @@ msgstr "संग्रहीत समूह"
 msgid "Ask about your balances and spending"
 msgstr "अपने बैलेंस और खर्च के बारे में पूछें"
 
-#: src/features/searchAsk/AskChat.tsx:246
+#: src/features/searchAsk/AskChat.tsx:267
 msgid "Ask about your money"
 msgstr "अपने पैसों के बारे में पूछें"
 
 #: src/components/SearchAsk/SearchHistory.tsx:116
 #: src/components/TabGlyph.tsx:41
-#: src/features/searchAsk/AskChat.tsx:162
-#: src/features/searchAsk/AskChat.tsx:187
+#: src/features/searchAsk/AskChat.tsx:183
+#: src/features/searchAsk/AskChat.tsx:208
 msgid "Ask Splito"
 msgstr "Splito से पूछें"
 
@@ -1370,7 +1370,7 @@ msgstr "समूहों पर वापस जाएं"
 msgid "Back to People"
 msgstr "लोग पर वापस जाएं"
 
-#: src/features/searchAsk/AskChat.tsx:153
+#: src/features/searchAsk/AskChat.tsx:174
 msgid "Back to search results"
 msgstr "खोज के नतीजों पर वापस"
 
@@ -1399,7 +1399,7 @@ msgstr "बैलेंस हमेशा तीर और “आपको द�
 msgid "Balances or rules changed since this plan was made."
 msgstr "यह योजना बनने के बाद बैलेंस या नियम बदल गए हैं।"
 
-#: src/features/searchAsk/AskChat.tsx:249
+#: src/features/searchAsk/AskChat.tsx:270
 msgid "Balances, who owes whom, and where the money went. Answered on this device, nothing is sent anywhere."
 msgstr "बैलेंस, किसे किसको देना है और पैसा कहाँ गया। जवाब इसी डिवाइस पर बनते हैं, कुछ भी कहीं भेजा नहीं जाता।"
 
@@ -1451,21 +1451,21 @@ msgstr "बग"
 msgid "By amount"
 msgstr "रकम के अनुसार"
 
-#: src/features/searchAsk/AskAnswer.tsx:295
+#: src/features/searchAsk/AskAnswer.tsx:311
 #: src/screens/Analytics/components/Charts.tsx:182
 msgid "By category"
 msgstr "श्रेणी के अनुसार"
 
-#: src/features/searchAsk/AskAnswer.tsx:324
+#: src/features/searchAsk/AskAnswer.tsx:340
 msgid "by day"
 msgstr "दिन के हिसाब से"
 
-#: src/features/searchAsk/AskAnswer.tsx:295
+#: src/features/searchAsk/AskAnswer.tsx:311
 #: src/screens/Analytics/components/Charts.tsx:319
 msgid "By group"
 msgstr "समूह के अनुसार"
 
-#: src/features/searchAsk/AskAnswer.tsx:324
+#: src/features/searchAsk/AskAnswer.tsx:340
 msgid "by month"
 msgstr "महीने के हिसाब से"
 
@@ -1473,12 +1473,12 @@ msgstr "महीने के हिसाब से"
 msgid "By name"
 msgstr "नाम के अनुसार"
 
-#: src/features/searchAsk/AskAnswer.tsx:295
+#: src/features/searchAsk/AskAnswer.tsx:311
 #: src/screens/Analytics/components/Charts.tsx:274
 msgid "By person"
 msgstr "व्यक्ति के अनुसार"
 
-#: src/features/searchAsk/AskAnswer.tsx:324
+#: src/features/searchAsk/AskAnswer.tsx:340
 msgid "by week"
 msgstr "हफ्ते के हिसाब से"
 
@@ -1514,7 +1514,7 @@ msgstr "यह आमंत्रण अभी नहीं खुल सकत�
 #: src/components/Prompt.tsx:153
 #: src/components/Prompt.tsx:155
 #: src/components/SearchAsk/SearchHistory.tsx:190
-#: src/features/searchAsk/AskChat.tsx:230
+#: src/features/searchAsk/AskChat.tsx:251
 #: src/features/searchAsk/SearchAskBody.tsx:333
 msgid "Cancel"
 msgstr "रद्द करें"
@@ -1546,7 +1546,7 @@ msgid "Category: {0} → {1}"
 msgstr "श्रेणी: {0} → {1}"
 
 #. placeholder {0}: category.name
-#: src/components/split/ExpenseComposer.tsx:425
+#: src/components/split/ExpenseComposer.tsx:426
 msgid "Category: {0}. Change"
 msgstr "श्रेणी: {0}। बदलें"
 
@@ -1562,7 +1562,7 @@ msgstr "बँटवारा बदला"
 msgid "Changed who paid"
 msgstr "भुगतान करने वाले बदले"
 
-#: src/components/split/ExpenseComposer.tsx:324
+#: src/components/split/ExpenseComposer.tsx:325
 msgid "Changes saved"
 msgstr "बदलाव सहेजे गए"
 
@@ -1630,7 +1630,7 @@ msgid "Choose your password"
 msgstr "अपना पासवर्ड चुनें"
 
 #: src/components/SearchAsk/SearchHistory.tsx:189
-#: src/features/searchAsk/AskChat.tsx:229
+#: src/features/searchAsk/AskChat.tsx:250
 msgctxt "action"
 msgid "Clear"
 msgstr "साफ़ करें"
@@ -1648,11 +1648,11 @@ msgstr "सभी हाल की खोजें साफ़ करें"
 msgid "Clear all recent searches?"
 msgstr "सभी हाल की खोजें साफ़ करें?"
 
-#: src/features/searchAsk/AskChat.tsx:170
+#: src/features/searchAsk/AskChat.tsx:191
 msgid "Clear chat"
 msgstr "चैट साफ़ करें"
 
-#: src/features/searchAsk/AskChat.tsx:223
+#: src/features/searchAsk/AskChat.tsx:244
 msgid "Clear chat?"
 msgstr "चैट साफ़ करें?"
 
@@ -1678,7 +1678,7 @@ msgstr "साफ़ होगा: {clears}"
 
 #: src/components/Dialog/CloseButton.tsx:32
 #: src/components/FormSheet/shared.tsx:197
-#: src/features/searchAsk/AskChat.tsx:175
+#: src/features/searchAsk/AskChat.tsx:196
 #: src/screens/LoggedOut/index.tsx:48
 msgid "Close"
 msgstr "बंद करें"
@@ -1858,7 +1858,7 @@ msgstr "यह माफ़ी वापस नहीं लाई जा सक
 msgid "Couldn't read that picture"
 msgstr "वह तस्वीर पढ़ी नहीं जा सकी"
 
-#: src/features/searchAsk/AskChat.tsx:101
+#: src/features/searchAsk/AskChat.tsx:109
 msgid "Couldn't read your data just now. Try asking again."
 msgstr "अभी आपका डेटा पढ़ नहीं सका। फिर से पूछकर देखें।"
 
@@ -2022,8 +2022,8 @@ msgid "Data"
 msgstr "डेटा"
 
 #: src/components/people/PaymentDetailsDialog.tsx:168
-#: src/components/split/ExpenseComposer.tsx:338
-#: src/components/split/ExpenseComposer.tsx:492
+#: src/components/split/ExpenseComposer.tsx:339
+#: src/components/split/ExpenseComposer.tsx:493
 #: src/screens/Analytics/index.tsx:214
 #: src/screens/RecentlyDeleted/components/RestoreDialog.tsx:157
 msgid "Date"
@@ -2188,7 +2188,7 @@ msgstr "सीधा {0}"
 
 #. placeholder {0}: line.direct > ZERO ? '+' : '−'
 #. placeholder {1}: money(magnitude(line.direct), line.currency)
-#: src/features/searchAsk/AskAnswer.tsx:134
+#: src/features/searchAsk/AskAnswer.tsx:135
 msgid "Direct {0}{1}"
 msgstr "सीधे {0}{1}"
 
@@ -2210,12 +2210,12 @@ msgid "Directly with friends, outside any group"
 msgstr "दोस्तों के साथ सीधे, किसी समूह के बाहर"
 
 #: src/components/FormSheet/shared.tsx:135
-#: src/components/split/ExpenseComposer.tsx:587
+#: src/components/split/ExpenseComposer.tsx:588
 msgid "Discard"
 msgstr "छोड़ दें"
 
 #: src/components/FormSheet/shared.tsx:133
-#: src/components/split/ExpenseComposer.tsx:578
+#: src/components/split/ExpenseComposer.tsx:579
 msgid "Discard changes?"
 msgstr "बदलाव छोड़ दें?"
 
@@ -2382,7 +2382,7 @@ msgstr "रकम लिखें"
 msgid "Enter an amount greater than zero."
 msgstr "शून्य से ज़्यादा राशि लिखें।"
 
-#: src/components/split/ExpenseComposer.tsx:668
+#: src/components/split/ExpenseComposer.tsx:669
 msgid "Enter an amount to see everyone’s share"
 msgstr "सबका हिस्सा देखने के लिए रकम लिखें"
 
@@ -2485,7 +2485,7 @@ msgstr "इन खर्चों में सबका हिस्सा"
 msgid "Everyone’s shares"
 msgstr "सबके हिस्से"
 
-#: src/features/searchAsk/AskAnswer.tsx:279
+#: src/features/searchAsk/AskAnswer.tsx:294
 msgid "Everyone's total"
 msgstr "सबका कुल"
 
@@ -2529,7 +2529,7 @@ msgid "Expense"
 msgstr "खर्च"
 
 #: src/components/split/ExpenseComposer.tsx:204
-#: src/components/split/ExpenseComposer.tsx:326
+#: src/components/split/ExpenseComposer.tsx:327
 msgid "Expense added"
 msgstr "खर्च जोड़ा गया"
 
@@ -2659,12 +2659,12 @@ msgstr "भूल गए?"
 
 #. placeholder {0}: answer.query
 #. placeholder {1}: answer.totals.map(m => money(m.amount, m.currency)).join(' · ')
-#: src/features/searchAsk/AskAnswer.tsx:373
+#: src/features/searchAsk/AskAnswer.tsx:388
 msgid "Found {n, plural, one {# expense} other {# expenses}} for “{0}”, {1} in all."
 msgstr "“{0}” के लिए {n, plural, one {# खर्च} other {# खर्चे}} मिले, कुल {1}।"
 
 #. placeholder {0}: answer.query
-#: src/features/searchAsk/AskAnswer.tsx:372
+#: src/features/searchAsk/AskAnswer.tsx:387
 msgid "Found at least {n, plural, one {# expense} other {# expenses}} for “{0}”."
 msgstr "“{0}” के लिए कम से कम {n, plural, one {# खर्च} other {# खर्चे}} मिले।"
 
@@ -2778,10 +2778,10 @@ msgstr "किराना"
 
 #: src/components/people/RecordPaymentDialog.tsx:174
 #: src/components/SearchAsk/ResultRows.tsx:344
-#: src/components/split/ExpenseComposer.tsx:500
+#: src/components/split/ExpenseComposer.tsx:501
 #: src/components/split/pickers.tsx:256
 #: src/components/split/pickers.tsx:260
-#: src/features/searchAsk/AskAnswer.tsx:135
+#: src/features/searchAsk/AskAnswer.tsx:136
 #: src/features/settlement/CallItEvenDialog.tsx:160
 #: src/navigation/Navigation.tsx:76
 #: src/screens/Analytics/components/Charts.tsx:325
@@ -2845,27 +2845,27 @@ msgstr "हैप्टिक्स"
 msgid "Help"
 msgstr "मदद"
 
-#: src/features/searchAsk/AskAnswer.tsx:293
+#: src/features/searchAsk/AskAnswer.tsx:309
 msgid "Here is what that comes to {scope} {period}, one line per currency."
 msgstr "{period} {scope} यह इतना बनता है, हर करेंसी की अलग पंक्ति में।"
 
-#: src/features/searchAsk/AskAnswer.tsx:121
+#: src/features/searchAsk/AskAnswer.tsx:122
 msgid "Here is where you stand with {who}, one line per currency."
 msgstr "{who} के साथ आपका हिसाब, हर करेंसी की अलग पंक्ति में।"
 
-#: src/features/searchAsk/AskAnswer.tsx:241
+#: src/features/searchAsk/AskAnswer.tsx:246
 msgid "Here is who owes whom in {g}."
 msgstr "{g} में किसे किसको कितना देना है।"
 
-#: src/features/searchAsk/AskAnswer.tsx:198
+#: src/features/searchAsk/AskAnswer.tsx:199
 msgid "Here is who owes you and whom you owe."
 msgstr "किसे आपको देना है और आपको किसे देना है।"
 
-#: src/features/searchAsk/AskAnswer.tsx:200
+#: src/features/searchAsk/AskAnswer.tsx:201
 msgid "Here is who owes you, one list per currency."
 msgstr "किसे आपको देना है, हर करेंसी की अलग सूची में।"
 
-#: src/features/searchAsk/AskAnswer.tsx:201
+#: src/features/searchAsk/AskAnswer.tsx:202
 msgid "Here is whom you owe, one list per currency."
 msgstr "आपको किसे देना है, हर करेंसी की अलग सूची में।"
 
@@ -2959,13 +2959,17 @@ msgstr "यह योजना कैसे बनती है"
 msgid "How to split"
 msgstr "कैसे बाँटें"
 
-#: src/features/searchAsk/AskAnswer.tsx:440
+#: src/features/searchAsk/AskAnswer.tsx:455
 msgid "I answer questions about your own balances and spending, on this device. Try one of these:"
 msgstr "मैं आपके अपने बैलेंस और खर्च के सवालों के जवाब इसी डिवाइस पर देता हूँ। इनमें से कोई आज़माएँ:"
 
-#: src/features/searchAsk/AskAnswer.tsx:458
+#: src/features/searchAsk/AskAnswer.tsx:473
 msgid "I can answer this once you sign in. For now I can answer questions about your balances and spending on this device, like:"
 msgstr "इसका जवाब मैं साइन इन करने के बाद दे सकूँगा। फ़िलहाल मैं इसी डिवाइस पर आपके बैलेंस और खर्च के सवालों का जवाब दे सकता हूँ, जैसे:"
+
+#: src/features/searchAsk/AskAnswer.tsx:239
+msgid "I could not work out who owes whom in {g}."
+msgstr "मैं {g} में किसे किसको देना है, यह तय नहीं कर पाया।"
 
 #: src/components/settings/CategoryDialog.tsx:169
 msgid "Icon"
@@ -2978,32 +2982,32 @@ msgstr "सुझाव"
 #. placeholder {0}: answer.group.name
 #. placeholder {0}: date(p.from, {month: 'long', year: 'numeric'})
 #. placeholder {0}: date(p.from, {year: 'numeric'})
-#: src/features/searchAsk/AskAnswer.tsx:78
-#: src/features/searchAsk/AskAnswer.tsx:80
-#: src/features/searchAsk/AskAnswer.tsx:82
-#: src/features/searchAsk/AskAnswer.tsx:84
-#: src/features/searchAsk/AskAnswer.tsx:270
-#: src/features/searchAsk/AskAnswer.tsx:322
+#: src/features/searchAsk/AskAnswer.tsx:79
+#: src/features/searchAsk/AskAnswer.tsx:81
+#: src/features/searchAsk/AskAnswer.tsx:83
+#: src/features/searchAsk/AskAnswer.tsx:85
+#: src/features/searchAsk/AskAnswer.tsx:285
+#: src/features/searchAsk/AskAnswer.tsx:338
 msgid "in {0}"
 msgstr "{0} में"
 
 #. placeholder {0}: money(only.amount, only.currency)
-#: src/features/searchAsk/AskAnswer.tsx:238
+#: src/features/searchAsk/AskAnswer.tsx:243
 msgid "In {g}, you are owed {0}."
 msgstr "{g} में आपको {0} मिलने हैं।"
 
 #. placeholder {0}: money(magnitude(only.amount), only.currency)
-#: src/features/searchAsk/AskAnswer.tsx:240
+#: src/features/searchAsk/AskAnswer.tsx:245
 msgid "In {g}, you owe {0}."
 msgstr "{g} में आपको {0} देने हैं।"
 
 #. placeholder {0}: p.n
-#: src/features/searchAsk/AskAnswer.tsx:86
+#: src/features/searchAsk/AskAnswer.tsx:87
 msgid "in the last {0} days"
 msgstr "पिछले {0} दिनों में"
 
 #. placeholder {0}: p.n
-#: src/features/searchAsk/AskAnswer.tsx:88
+#: src/features/searchAsk/AskAnswer.tsx:89
 msgid "in the last {0} months"
 msgstr "पिछले {0} महीनों में"
 
@@ -3229,7 +3233,7 @@ msgid "Keep deleted items for"
 msgstr "हटाए गए आइटम रखें"
 
 #: src/components/FormSheet/shared.tsx:137
-#: src/components/split/ExpenseComposer.tsx:597
+#: src/components/split/ExpenseComposer.tsx:598
 msgid "Keep editing"
 msgstr "बदलाव जारी रखें"
 
@@ -3250,15 +3254,15 @@ msgstr "बड़ा"
 msgid "Largest"
 msgstr "सबसे बड़ा"
 
-#: src/features/searchAsk/AskAnswer.tsx:78
+#: src/features/searchAsk/AskAnswer.tsx:79
 msgid "last month"
 msgstr "पिछले महीने"
 
-#: src/features/searchAsk/AskAnswer.tsx:76
+#: src/features/searchAsk/AskAnswer.tsx:77
 msgid "last week"
 msgstr "पिछले हफ्ते"
 
-#: src/features/searchAsk/AskAnswer.tsx:82
+#: src/features/searchAsk/AskAnswer.tsx:83
 msgid "last year"
 msgstr "पिछले साल"
 
@@ -3283,11 +3287,11 @@ msgstr "जो मेरा ईमेल या नंबर जानते ह
 msgid "Let's get your password reset!"
 msgstr "चलिए आपका पासवर्ड रीसेट करते हैं!"
 
-#: src/features/searchAsk/AskAnswer.tsx:397
+#: src/features/searchAsk/AskAnswer.tsx:412
 msgid "Let's split {title} {ways} ways. Add the amount and who is in on it."
 msgstr "{title} को {ways} लोगों में बांटते हैं। रकम और कौन-कौन शामिल है, जोड़ें।"
 
-#: src/features/searchAsk/AskAnswer.tsx:398
+#: src/features/searchAsk/AskAnswer.tsx:413
 msgid "Let's split it {ways} ways. Add the amount and who is in on it."
 msgstr "इसे {ways} लोगों में बांटते हैं। रकम और कौन-कौन शामिल है, जोड़ें।"
 
@@ -3372,7 +3376,7 @@ msgid "Members"
 msgstr "सदस्य"
 
 #. placeholder {0}: group.data.name
-#: src/components/split/ExpenseComposer.tsx:361
+#: src/components/split/ExpenseComposer.tsx:362
 msgid "Members of {0}"
 msgstr "{0} के सदस्य"
 
@@ -3632,7 +3636,7 @@ msgstr "अभी कोई फ़ीडबैक नहीं"
 msgid "No friends match these filters."
 msgstr "इन फ़िल्टर से कोई दोस्त मेल नहीं खाता।"
 
-#: src/components/split/ExpenseComposer.tsx:501
+#: src/components/split/ExpenseComposer.tsx:502
 #: src/components/split/pickers.tsx:247
 msgid "No group"
 msgstr "कोई समूह नहीं"
@@ -3687,7 +3691,7 @@ msgstr "इस डिवाइस पर कोई UPI ऐप यह भुग�
 msgid "Nobody matches “{query}”"
 msgstr "“{query}” से कोई नहीं मिला"
 
-#: src/features/searchAsk/AskAnswer.tsx:189
+#: src/features/searchAsk/AskAnswer.tsx:190
 msgid "Nobody owes you anything right now."
 msgstr "अभी किसी को आपको कुछ नहीं देना है।"
 
@@ -3695,7 +3699,7 @@ msgstr "अभी किसी को आपको कुछ नहीं दे
 msgid "Nobody yet"
 msgstr "अभी कोई नहीं"
 
-#: src/features/searchAsk/AskAnswer.tsx:313
+#: src/features/searchAsk/AskAnswer.tsx:329
 #: src/screens/Analytics/useReport.ts:312
 msgid "Non-group"
 msgstr "बिना समूह"
@@ -3747,8 +3751,8 @@ msgstr "नोट"
 msgid "Note (optional)"
 msgstr "नोट (वैकल्पिक)"
 
-#: src/components/split/ExpenseComposer.tsx:537
-#: src/components/split/ExpenseComposer.tsx:550
+#: src/components/split/ExpenseComposer.tsx:538
+#: src/components/split/ExpenseComposer.tsx:551
 #: src/screens/Expense/index.tsx:409
 msgid "Notes"
 msgstr "नोट"
@@ -3770,7 +3774,7 @@ msgid "Nothing here yet. Expenses, payments and group changes will show up here.
 msgstr "अभी यहां कुछ नहीं। खर्च, भुगतान और समूह के बदलाव यहां दिखेंगे।"
 
 #. placeholder {0}: answer.query
-#: src/features/searchAsk/AskAnswer.tsx:370
+#: src/features/searchAsk/AskAnswer.tsx:385
 msgid "Nothing matches “{0}”."
 msgstr "“{0}” से कुछ नहीं मिला।"
 
@@ -3834,8 +3838,8 @@ msgid "On"
 msgstr "चालू"
 
 #. placeholder {0}: answer.category.name || l`Other`
-#: src/features/searchAsk/AskAnswer.tsx:268
-#: src/features/searchAsk/AskAnswer.tsx:322
+#: src/features/searchAsk/AskAnswer.tsx:283
+#: src/features/searchAsk/AskAnswer.tsx:338
 msgid "on {0}"
 msgstr "{0} पर"
 
@@ -3950,7 +3954,7 @@ msgstr "आपका फ़ीडबैक खोलें"
 msgid "Opening an invite needs a connection to Splito. Try again once you’re online."
 msgstr "आमंत्रण खोलने के लिए Splito से कनेक्शन चाहिए। ऑनलाइन होने पर फिर कोशिश करें।"
 
-#: src/features/searchAsk/AskAnswer.tsx:171
+#: src/features/searchAsk/AskAnswer.tsx:172
 msgid "Opens {who}'s page"
 msgstr "{who} का पेज खुलता है"
 
@@ -3972,11 +3976,11 @@ msgstr "होम स्क्रीन से पूरी स्क्री�
 msgid "Opens it to restore or delete forever"
 msgstr "वापस लाने या हमेशा के लिए हटाने के लिए खोलता है"
 
-#: src/features/searchAsk/AskAnswer.tsx:405
+#: src/features/searchAsk/AskAnswer.tsx:420
 msgid "Opens the expense sheet. Nothing is saved until you do."
 msgstr "खर्च की शीट खुलती है। आपके पुष्टि करने तक कुछ सहेजा नहीं जाता।"
 
-#: src/features/searchAsk/AskAnswer.tsx:258
+#: src/features/searchAsk/AskAnswer.tsx:273
 msgid "Opens the settle-up plan for {g}"
 msgstr "{g} की सेटल-अप योजना खुलती है"
 
@@ -3992,16 +3996,16 @@ msgstr "आपकी प्रोफ़ाइल खोलता है"
 msgid "Opens your UPI app with {name} and the amount filled in. You confirm the payment there."
 msgstr "आपका UPI ऐप {name} और राशि भरकर खुलेगा। भुगतान की पुष्टि वहीं करें।"
 
-#: src/components/split/ExpenseComposer.tsx:581
+#: src/components/split/ExpenseComposer.tsx:582
 msgid "Or keep them as a draft to finish later."
 msgstr "या इन्हें ड्राफ़्ट में रखें और बाद में पूरा करें।"
 
 #: src/components/groups/GroupFields.tsx:46
 #: src/components/settings/CategoryIcon.tsx:132
 #: src/features/feedback/labels.ts:29
-#: src/features/searchAsk/AskAnswer.tsx:268
-#: src/features/searchAsk/AskAnswer.tsx:313
-#: src/features/searchAsk/AskAnswer.tsx:322
+#: src/features/searchAsk/AskAnswer.tsx:283
+#: src/features/searchAsk/AskAnswer.tsx:329
+#: src/features/searchAsk/AskAnswer.tsx:338
 #: src/screens/Analytics/useReport.ts:316
 #: src/screens/Groups/components/GroupsFilterDialog.tsx:73
 msgid "Other"
@@ -4016,7 +4020,7 @@ msgstr "दूसरा खाता"
 msgid "Out of your pocket"
 msgstr "आपकी जेब से"
 
-#: src/features/searchAsk/AskAnswer.tsx:70
+#: src/features/searchAsk/AskAnswer.tsx:71
 msgid "over all time"
 msgstr "अब तक"
 
@@ -4043,7 +4047,7 @@ msgstr "को देने हैं <0>{figure}</0>"
 msgid "owes you"
 msgstr "आपको देने हैं"
 
-#: src/features/searchAsk/AskAnswer.tsx:210
+#: src/features/searchAsk/AskAnswer.tsx:211
 #: src/screens/People/components/FriendsFilterDialog.tsx:113
 #: src/screens/Person/components/PersonBalances.tsx:129
 msgid "Owes you"
@@ -4053,11 +4057,11 @@ msgstr "आपको मिलेंगे"
 msgid "owes you <0>{figure}</0>"
 msgstr "आपको मिलेंगे <0>{figure}</0>"
 
-#: src/components/split/ExpenseComposer.tsx:367
+#: src/components/split/ExpenseComposer.tsx:368
 msgid "Paid · change who paid to remove"
 msgstr "भुगतान किया · हटाने के लिए भुगतानकर्ता बदलें"
 
-#: src/components/split/ExpenseComposer.tsx:514
+#: src/components/split/ExpenseComposer.tsx:515
 #: src/screens/Expense/index.tsx:363
 msgid "Paid by"
 msgstr "किसने दिया"
@@ -4335,7 +4339,7 @@ msgid "Record"
 msgstr "दर्ज करें"
 
 #: src/components/people/RecordPaymentDialog.tsx:217
-#: src/features/searchAsk/AskAnswer.tsx:170
+#: src/features/searchAsk/AskAnswer.tsx:171
 msgid "Record a payment"
 msgstr "भुगतान दर्ज करें"
 
@@ -4373,7 +4377,7 @@ msgstr "रीलोड करें और बदलाव खो दें?"
 msgid "Remember what you search for"
 msgstr "आपकी खोजें याद रखें"
 
-#: src/features/searchAsk/AskAnswer.tsx:170
+#: src/features/searchAsk/AskAnswer.tsx:171
 msgid "Remind {who}"
 msgstr "{who} को याद दिलाएँ"
 
@@ -4617,11 +4621,11 @@ msgstr "इस डिवाइस जैसा ({deviceZone})"
 msgid "Save"
 msgstr "सहेजें"
 
-#: src/components/split/ExpenseComposer.tsx:593
+#: src/components/split/ExpenseComposer.tsx:594
 msgid "Save draft"
 msgstr "ड्राफ़्ट सहेजें"
 
-#: src/components/split/ExpenseComposer.tsx:291
+#: src/components/split/ExpenseComposer.tsx:292
 msgid "Save expense"
 msgstr "खर्च सहेजें"
 
@@ -4730,7 +4734,7 @@ msgid "Search timezones"
 msgstr "समय क्षेत्र खोजें"
 
 #. placeholder {0}: answer.query
-#: src/features/searchAsk/AskAnswer.tsx:385
+#: src/features/searchAsk/AskAnswer.tsx:400
 msgid "Searches “{0}” with every match"
 msgstr "“{0}” की सभी खोजें खुलती हैं"
 
@@ -4849,7 +4853,7 @@ msgid "Settings reset"
 msgstr "सेटिंग्स रीसेट हो गईं"
 
 #: src/components/settings/AboutSettings.tsx:97
-#: src/features/searchAsk/AskAnswer.tsx:257
+#: src/features/searchAsk/AskAnswer.tsx:272
 #: src/navigation/Navigation.tsx:77
 #: src/screens/Group/index.tsx:523
 #: src/screens/Group/index.tsx:760
@@ -4928,7 +4932,7 @@ msgstr "{name} दिखाएँ"
 msgid "Show a small dot on each expense, payment and request"
 msgstr "हर खर्च, भुगतान और अनुरोध पर एक छोटा बिंदु दिखाएँ"
 
-#: src/features/searchAsk/AskAnswer.tsx:385
+#: src/features/searchAsk/AskAnswer.tsx:400
 msgid "Show all in Search"
 msgstr "खोज में सब दिखाएँ"
 
@@ -5049,7 +5053,7 @@ msgstr "कुछ"
 #: src/components/people/RecordPaymentDialog.tsx:148
 #: src/components/SearchAsk/ResultRows.tsx:221
 #: src/components/split/shared.tsx:22
-#: src/features/searchAsk/AskAnswer.tsx:59
+#: src/features/searchAsk/AskAnswer.tsx:60
 #: src/features/settlement/CallItEvenDialog.tsx:132
 #: src/screens/Analytics/useReport.ts:310
 #: src/screens/Group/index.tsx:621
@@ -5091,12 +5095,12 @@ msgstr "खाली जगह वाला"
 msgid "Spending over time"
 msgstr "समय के साथ खर्च"
 
-#: src/components/split/ExpenseComposer.tsx:522
+#: src/components/split/ExpenseComposer.tsx:523
 msgid "Split"
 msgstr "बँटवारा"
 
 #. placeholder {0}: peopleCount(n)
-#: src/components/split/ExpenseComposer.tsx:685
+#: src/components/split/ExpenseComposer.tsx:686
 msgid "Split between {0}"
 msgstr "{0} में बँटा"
 
@@ -5145,8 +5149,8 @@ msgstr "किसी के साथ भी खर्च बाँटें, �
 msgid "Split last night's dinner 3 ways"
 msgstr "कल रात का डिनर 3 लोगों में बांटो"
 
-#: src/components/split/ExpenseComposer.tsx:358
-#: src/components/split/ExpenseComposer.tsx:507
+#: src/components/split/ExpenseComposer.tsx:359
+#: src/components/split/ExpenseComposer.tsx:508
 msgid "Split with"
 msgstr "किसके साथ बाँटें"
 
@@ -5213,8 +5217,8 @@ msgstr "शुरू की तारीख"
 msgid "Start equal, shares and percent splits rounded to whole cash amounts"
 msgstr "बराबर, हिस्सों और प्रतिशत वाले बँटवारे पूरी नकद राशि में पूर्णांकित होकर शुरू हों"
 
-#: src/components/split/ExpenseComposer.tsx:405
-#: src/components/split/ExpenseComposer.tsx:415
+#: src/components/split/ExpenseComposer.tsx:406
+#: src/components/split/ExpenseComposer.tsx:416
 msgid "Start over"
 msgstr "फिर से शुरू करें"
 
@@ -5236,7 +5240,7 @@ msgstr "चरण {0} / {1}"
 msgid "Step {n}"
 msgstr "चरण {n}"
 
-#: src/components/split/ExpenseComposer.tsx:464
+#: src/components/split/ExpenseComposer.tsx:465
 msgid "suggested"
 msgstr "सुझाया गया"
 
@@ -5340,7 +5344,7 @@ msgstr "यह ईमेल पते जैसा नहीं लगता।"
 msgid "That isn’t a number. Use digits, one decimal point and + − × ÷"
 msgstr "यह संख्या नहीं है। अंक, एक दशमलव बिंदु और + − × ÷ इस्तेमाल करें"
 
-#: src/features/searchAsk/AskAnswer.tsx:340
+#: src/features/searchAsk/AskAnswer.tsx:355
 msgid "That many days would not fit a chart, so it is shown by month."
 msgstr "इतने दिन चार्ट में नहीं समाते, इसलिए इसे महीने के हिसाब से दिखाया गया है।"
 
@@ -5360,6 +5364,11 @@ msgstr "बदलाव मिलाकर कुल रकम से ज़्�
 #: src/components/split/shared.tsx:95
 msgid "The amount needs to be more than zero"
 msgstr "रकम शून्य से ज़्यादा होनी चाहिए"
+
+#. placeholder {0}: unplanned.join(', ')
+#: src/features/searchAsk/AskAnswer.tsx:257
+msgid "The balances in {0} do not add up, so there is no plan to show for them."
+msgstr "{0} के बैलेंस आपस में मेल नहीं खाते, इसलिए इनके लिए दिखाने को कोई योजना नहीं है।"
 
 #: src/components/people/PaymentDetailsDialog.tsx:143
 msgid "The payment couldn’t be deleted. Please try again."
@@ -5402,7 +5411,7 @@ msgstr "पूरा बैलेंस: {currency} में हिसाब �
 msgid "Theme, tabs, categories, language and every other setting go back to how Splito starts. Your people, groups and expenses stay as they are."
 msgstr "थीम, टैब, श्रेणियाँ, भाषा और बाकी हर सेटिंग Splito की शुरुआती सेटिंग पर लौट आएगी। आपके लोग, समूह और खर्च जैसे हैं वैसे ही रहेंगे।"
 
-#: src/features/searchAsk/AskAnswer.tsx:326
+#: src/features/searchAsk/AskAnswer.tsx:342
 msgid "There is no spending {scope} {period} to chart."
 msgstr "{period} {scope} चार्ट बनाने लायक कोई खर्च नहीं है।"
 
@@ -5475,7 +5484,7 @@ msgstr "यह जुड़ा है"
 msgid "This is your invite link"
 msgstr "यह आपका आमंत्रण लिंक है"
 
-#: src/features/searchAsk/AskAnswer.tsx:78
+#: src/features/searchAsk/AskAnswer.tsx:79
 msgid "this month"
 msgstr "इस महीने"
 
@@ -5483,7 +5492,7 @@ msgstr "इस महीने"
 msgid "This plan goes outside your rules"
 msgstr "यह योजना आपके नियमों से बाहर जाती है"
 
-#: src/features/searchAsk/AskChat.tsx:224
+#: src/features/searchAsk/AskChat.tsx:245
 msgid "This removes the conversation from this device. Your expenses and balances are not touched."
 msgstr "इससे यह बातचीत इस डिवाइस से हट जाएगी। आपके खर्च और बैलेंस पर कोई असर नहीं पड़ेगा।"
 
@@ -5491,11 +5500,11 @@ msgstr "इससे यह बातचीत इस डिवाइस से 
 msgid "This settings page doesn't exist"
 msgstr "यह सेटिंग्स पेज मौजूद नहीं है"
 
-#: src/features/searchAsk/AskAnswer.tsx:76
+#: src/features/searchAsk/AskAnswer.tsx:77
 msgid "this week"
 msgstr "इस हफ्ते"
 
-#: src/features/searchAsk/AskAnswer.tsx:82
+#: src/features/searchAsk/AskAnswer.tsx:83
 msgid "this year"
 msgstr "इस साल"
 
@@ -5518,7 +5527,7 @@ msgstr "बटन, लिंक और हाइलाइट इसी रंग
 msgid "Tip"
 msgstr "टिप"
 
-#: src/components/split/ExpenseComposer.tsx:448
+#: src/components/split/ExpenseComposer.tsx:449
 msgid "Title"
 msgstr "शीर्षक"
 
@@ -5537,14 +5546,14 @@ msgstr "{0} लोगों को"
 msgid "To 1 person"
 msgstr "1 व्यक्ति को"
 
-#: src/features/searchAsk/AskAnswer.tsx:72
+#: src/features/searchAsk/AskAnswer.tsx:73
 #: src/screens/People/components/RequestsSection.tsx:215
 msgid "today"
 msgstr "आज"
 
 #: src/components/split/DateDialog.tsx:245
 #: src/components/split/DateDialog.tsx:250
-#: src/features/searchAsk/AskChat.tsx:270
+#: src/features/searchAsk/AskChat.tsx:291
 #: src/locale/useDates.ts:83
 msgid "Today"
 msgstr "आज"
@@ -5570,7 +5579,7 @@ msgstr "कुल"
 msgid "Total {totalLine}"
 msgstr "कुल {totalLine}"
 
-#: src/features/searchAsk/AskAnswer.tsx:325
+#: src/features/searchAsk/AskAnswer.tsx:341
 msgid "Total spending"
 msgstr "कुल खर्च"
 
@@ -5650,7 +5659,7 @@ msgstr "असीमित इस्तेमाल"
 msgid "Unread"
 msgstr "अपठित"
 
-#: src/components/split/ExpenseComposer.tsx:620
+#: src/components/split/ExpenseComposer.tsx:621
 #: src/screens/Expense/index.tsx:306
 msgid "Upcoming"
 msgstr "आगामी"
@@ -5756,7 +5765,7 @@ msgstr "सिंक की प्रतीक्षा में"
 msgid "Wants to be friends · {0}"
 msgstr "दोस्त बनना चाहते हैं · {0}"
 
-#: src/components/split/ExpenseComposer.tsx:401
+#: src/components/split/ExpenseComposer.tsx:402
 msgid "We kept your unsaved expense."
 msgstr "आपका बिना सहेजा खर्च रखा गया है।"
 
@@ -5797,7 +5806,7 @@ msgstr "यह किस बारे में है?"
 msgid "What people paid needs to add up to the total"
 msgstr "लोगों ने जो दिया वह मिलाकर कुल रकम के बराबर होना चाहिए"
 
-#: src/components/split/ExpenseComposer.tsx:447
+#: src/components/split/ExpenseComposer.tsx:448
 msgid "What was it for?"
 msgstr "किस लिए था?"
 
@@ -5821,7 +5830,7 @@ msgstr "यहाँ किए गए बदलाव सहेजे नही�
 msgid "What you filled in won’t be kept. Anyone you added as a new friend stays in People."
 msgstr "आपने जो भरा वह नहीं रखा जाएगा। जिन्हें आपने नए दोस्त के रूप में जोड़ा, वे लोग में बने रहेंगे।"
 
-#: src/features/searchAsk/AskAnswer.tsx:325
+#: src/features/searchAsk/AskAnswer.tsx:341
 msgid "What you paid"
 msgstr "आपने जो चुकाया"
 
@@ -5868,7 +5877,7 @@ msgid "Whether each charge on an itemised bill starts as an amount or a percenta
 msgstr "आइटम वाले बिल में हर शुल्क राशि के रूप में शुरू हो या प्रतिशत के रूप में। बिल में आपका पिछला चुनाव याद रखा जाता है।"
 
 #. placeholder {0}: answer.term
-#: src/features/searchAsk/AskAnswer.tsx:423
+#: src/features/searchAsk/AskAnswer.tsx:438
 msgid "Which “{0}” do you mean?"
 msgstr "आपका मतलब कौन-सा “{0}” है?"
 
@@ -5888,7 +5897,7 @@ msgstr "मुझे दोस्ती के अनुरोध कौन भ�
 msgid "Who owes me the most?"
 msgstr "किसने मुझे सबसे ज्यादा देना है?"
 
-#: src/features/searchAsk/AskAnswer.tsx:246
+#: src/features/searchAsk/AskAnswer.tsx:261
 #: src/screens/Group/index.tsx:667
 msgid "Who owes whom"
 msgstr "किसे किसको देना है"
@@ -5966,13 +5975,13 @@ msgstr "पहले साल"
 msgid "Yes, record {0}"
 msgstr "हां, {0} दर्ज करें"
 
-#: src/features/searchAsk/AskAnswer.tsx:74
+#: src/features/searchAsk/AskAnswer.tsx:75
 msgid "yesterday"
 msgstr "कल"
 
 #: src/components/split/DateDialog.tsx:255
 #: src/components/split/DateDialog.tsx:260
-#: src/features/searchAsk/AskChat.tsx:272
+#: src/features/searchAsk/AskChat.tsx:293
 #: src/locale/useDates.ts:84
 msgid "Yesterday"
 msgstr "कल"
@@ -5991,7 +6000,7 @@ msgstr "आप"
 #: src/components/activity/ActivityItem.tsx:473
 #: src/components/groups/RulesEditor.tsx:219
 #: src/components/split/shared.tsx:22
-#: src/features/searchAsk/AskAnswer.tsx:59
+#: src/features/searchAsk/AskAnswer.tsx:60
 #: src/screens/Analytics/useReport.ts:310
 #: src/screens/CreateGroup.tsx:195
 #: src/screens/Group/index.tsx:187
@@ -6026,7 +6035,7 @@ msgstr "अब आप और {name} दोस्त हैं"
 msgid "You and {name} are settled up."
 msgstr "आपका और {name} का हिसाब बराबर है।"
 
-#: src/features/searchAsk/AskAnswer.tsx:117
+#: src/features/searchAsk/AskAnswer.tsx:118
 msgid "You and {who} are settled up."
 msgstr "आपका और {who} का हिसाब बराबर है।"
 
@@ -6088,7 +6097,7 @@ msgstr "शून्य से भाग नहीं दे सकते"
 msgid "You declined"
 msgstr "आपने अस्वीकार किया"
 
-#: src/features/searchAsk/AskAnswer.tsx:191
+#: src/features/searchAsk/AskAnswer.tsx:192
 msgid "You don't owe anyone anything right now."
 msgstr "अभी आपको किसी को कुछ नहीं देना है।"
 
@@ -6113,7 +6122,7 @@ msgstr "आपके कुछ बदलाव अभी सहेजे नह�
 msgid "You have entered an invalid code. It should be 6 digits."
 msgstr "आपने गलत कोड डाला है। यह 6 अंकों का होना चाहिए।"
 
-#: src/features/searchAsk/AskAnswer.tsx:282
+#: src/features/searchAsk/AskAnswer.tsx:298
 msgid "You have no expenses {scope} {period}."
 msgstr "{period} {scope} आपका कोई खर्च नहीं है।"
 
@@ -6148,7 +6157,7 @@ msgstr "आपने {debtor} का कर्ज़ माफ़ किया"
 msgid "you owe"
 msgstr "आपको देने हैं"
 
-#: src/features/searchAsk/AskAnswer.tsx:221
+#: src/features/searchAsk/AskAnswer.tsx:222
 #: src/screens/Group/components/GroupBalanceCards.tsx:73
 #: src/screens/Groups/components/GroupsFilterDialog.tsx:106
 #: src/screens/People/components/BalanceSummary.tsx:193
@@ -6164,7 +6173,7 @@ msgstr "आपको देने हैं {0}"
 
 #. placeholder {0}: name(topOwe.person)
 #. placeholder {1}: money(topOwe.amount, topOwe.currency)
-#: src/features/searchAsk/AskAnswer.tsx:196
+#: src/features/searchAsk/AskAnswer.tsx:197
 msgid "You owe {0} the most: {1}."
 msgstr "आपको सबसे ज़्यादा {0} को देना है: {1}।"
 
@@ -6173,12 +6182,12 @@ msgid "You owe {to}"
 msgstr "आपको {to} को देने हैं"
 
 #. placeholder {0}: line.currency
-#: src/features/searchAsk/AskAnswer.tsx:160
+#: src/features/searchAsk/AskAnswer.tsx:161
 msgid "You owe {who} ({0})"
 msgstr "आपको {who} को देना है ({0})"
 
 #. placeholder {0}: money(first.owe, first.currency)
-#: src/features/searchAsk/AskAnswer.tsx:126
+#: src/features/searchAsk/AskAnswer.tsx:127
 msgid "You owe {who} {0}."
 msgstr "आपको {who} को {0} देना है।"
 
@@ -6193,7 +6202,7 @@ msgid "you owe <0>{figure}</0>"
 msgstr "आपको देने हैं <0>{figure}</0>"
 
 #: src/components/SearchAsk/ResultRows.tsx:226
-#: src/features/searchAsk/AskAnswer.tsx:277
+#: src/features/searchAsk/AskAnswer.tsx:292
 #: src/screens/Analytics/components/Charts.tsx:148
 #: src/screens/Analytics/components/Charts.tsx:249
 #: src/screens/Analytics/components/Charts.tsx:259
@@ -6212,7 +6221,7 @@ msgstr "आपने चुकाया"
 msgid "You paid {0}"
 msgstr "आपने {0} को भुगतान किया"
 
-#: src/features/searchAsk/AskAnswer.tsx:289
+#: src/features/searchAsk/AskAnswer.tsx:305
 msgid "You paid {amount} {scope} {period}."
 msgstr "{period} {scope} आपने {amount} चुकाए।"
 
@@ -6237,7 +6246,7 @@ msgstr "आपने अपना हिस्सा खुद दिया"
 msgid "You pay {0}"
 msgstr "आप {0} को देंगे"
 
-#: src/features/searchAsk/AskAnswer.tsx:292
+#: src/features/searchAsk/AskAnswer.tsx:308
 msgid "You spent {amount} {scope} {period}."
 msgstr "{period} {scope} आपने {amount} खर्च किए।"
 
@@ -6277,7 +6286,7 @@ msgstr "आप इस खर्च में शामिल नहीं है
 msgid "You’re settled up in this group."
 msgstr "इस समूह में आपका हिसाब बराबर है।"
 
-#: src/features/searchAsk/AskAnswer.tsx:192
+#: src/features/searchAsk/AskAnswer.tsx:193
 msgid "You're settled up with everyone."
 msgstr "सबके साथ आपका हिसाब बराबर है।"
 
@@ -6351,6 +6360,8 @@ msgid "Your payment rules give no allowed pair to pay anyone who is owed: {0}. T
 msgstr "आपके भुगतान नियमों में इनके लिए किसी बकायेदार को चुकाने की कोई अनुमत जोड़ी नहीं है: {0}। ये भुगतान फिर भी सबका हिसाब बराबर करते हैं।"
 
 #. placeholder {0}: item.currencies.join(', ')
+#. placeholder {0}: outside.join(', ')
+#: src/features/searchAsk/AskAnswer.tsx:252
 #: src/screens/Group/index.tsx:721
 msgid "Your payment rules leave no way to settle up in {0}, so that plan goes outside them."
 msgstr "आपके भुगतान नियमों से {0} में हिसाब बराबर करने का कोई तरीका नहीं बचता, इसलिए वह योजना नियमों से बाहर जाती है।"
@@ -6372,7 +6383,7 @@ msgstr "आपका फ़ोन Splito को संपर्क खोलन�
 msgid "Your profile · saved on this device"
 msgstr "आपकी प्रोफ़ाइल · इस डिवाइस पर सहेजी गई"
 
-#: src/features/searchAsk/AskAnswer.tsx:280
+#: src/features/searchAsk/AskAnswer.tsx:295
 #: src/screens/Analytics/components/Charts.tsx:148
 #: src/screens/Analytics/components/Charts.tsx:188
 #: src/screens/Analytics/components/Charts.tsx:204
@@ -6417,7 +6428,7 @@ msgstr "हर श्रेणी में आपका हिस्सा"
 msgid "Your share of expenses"
 msgstr "खर्चों में आपका हिस्सा"
 
-#: src/features/searchAsk/AskAnswer.tsx:325
+#: src/features/searchAsk/AskAnswer.tsx:341
 msgid "Your spending"
 msgstr "आपका खर्च"
 
