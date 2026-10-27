@@ -378,8 +378,8 @@ export const RULES = {
   },
   moneyFullRead: {
     why: 'A whole money store read on a hot path: getAll / useEntities / useAllEntities / entitiesQuery of expense, repayment or writeoff, useLedger or loadLedger. Read through indexes, projections and cursors (ARCHITECTURE 9.8).',
-    // loadLedger (export, maintenance, tests) is defined in selectors.ts; nothing else may read a money store whole.
-    appliesTo: p => (isClient(p) || p.startsWith(SYNC)) && p !== `${SYNC}selectors.ts`,
+    // loadLedger (export, maintenance, tests) is defined in selectors.ts; the dev/e2e tools use it for the perf spec's baseline. Nothing else reads a money store whole.
+    appliesTo: p => (isClient(p) || p.startsWith(SYNC)) && p !== `${SYNC}selectors.ts` && p !== `${CLIENT}data/devTools.ts`,
     count: (_p, s) =>
       countMatches(noComments(s), /\b(?:getAll|useEntities|useAllEntities|entitiesQuery)\s*(?:<[^>()]*>)?\s*\(\s*['"`](?:expense|repayment|writeoff)['"`]/g) +
       countMatches(code(s), /\b(?:useLedger|loadLedger)\s*\(/g),

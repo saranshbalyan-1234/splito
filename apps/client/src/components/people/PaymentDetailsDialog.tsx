@@ -22,6 +22,7 @@ import * as FormSheet from '#/components/FormSheet'
 import {ArrowRotateCounterClockwise_Stroke2_Corner0_Rounded as UndoIcon} from '#/components/icons/ArrowRotate'
 import {Trash_Stroke2_Corner0_Rounded as TrashIcon} from '#/components/icons/Trash'
 import {utcDate} from '#/components/people/ledger'
+import {SyncStatusLine} from '#/components/SyncStatus'
 import * as Toast from '#/components/Toast'
 import {Text} from '#/components/Typography'
 
@@ -167,6 +168,7 @@ function Details({
         <DetailRow label={l`Where`} value={groupName ?? l`Direct, no group`} />
         {note ? <DetailRow label={l`Note`} value={note} /> : null}
       </View>
+      <SyncStatusLine row={repayment} testID="payment-sync-status" />
       <Text style={[a.text_sm, a.leading_snug, t.atoms.text_contrast_medium]}>
         {isWriteOff ? (
           <Trans>

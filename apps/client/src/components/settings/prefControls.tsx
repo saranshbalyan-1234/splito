@@ -21,6 +21,7 @@ import {atoms as a, native} from '#/alf'
 import {useDialogControl} from '#/components/Dialog'
 import * as SegmentedControl from '#/components/forms/SegmentedControl'
 import {ChartPie_Stroke2_Corner0_Rounded as ChartIcon} from '#/components/icons/ChartPie'
+import {Cloud_Stroke2_Corner0_Rounded as CloudIcon} from '#/components/icons/Cloud'
 import {HomeOpen_Stoke2_Corner0_Rounded as HomeIcon} from '#/components/icons/HomeOpen'
 import {Moon_Stroke2_Corner0_Rounded as MoonIcon} from '#/components/icons/Moon'
 import {AccentPicker} from '#/components/settings/AccentPicker'
@@ -610,6 +611,19 @@ function IncludeGroupsPref() {
   )
 }
 
+function ShowSyncStatusPref() {
+  const {t: l} = useLingui()
+  return (
+    <SwitchPref
+      pref={usePrefControl('showSyncStatus')}
+      icon={CloudIcon}
+      title={l`Sync status`}
+      label={l`Show a small dot on each expense, payment and request`}
+      description={l`Green when synced, yellow while it syncs, red when it is only on this device. Each item's page always says it in words.`}
+    />
+  )
+}
+
 /** Recently deleted's window; the row sits at the top of that screen. */
 function BinDaysPref() {
   const {t: l} = useLingui()
@@ -846,6 +860,7 @@ export const PREF_CONTROLS = {
   'amount.shorthand': AmountShorthandPref,
   peopleSort: PeopleSortPref,
   includeGroupsDefault: IncludeGroupsPref,
+  showSyncStatus: ShowSyncStatusPref,
   swipeLeft: SwipeLeftPref,
   swipeRight: SwipeRightPref,
   rememberSearches: RememberSearchesPref,

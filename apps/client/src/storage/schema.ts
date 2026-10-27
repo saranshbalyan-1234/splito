@@ -23,6 +23,8 @@ export type Device = {
   moneyPalette: 'default' | 'colorblind' | 'mono'
   homeTab: TabId
   hapticsEnabled: boolean
+  /** The sync dot on rows, mirrored so a list of rows costs no store reads. */
+  showSyncStatus: boolean
   /** Activity read/hidden marks: personal, so they stay on this device. */
   activityFeed: FeedState
   /** Search's recent queries, newest first (Bluesky's `searchTermHistory`). */

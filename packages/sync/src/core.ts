@@ -52,7 +52,14 @@ async function writeEntity(rows: RowAccess, next: Entity, prevRow?: Row) {
 }
 
 /** Changes only an entity's sync fields (its relation rows follow). */
-async function setSync(rows: RowAccess, e: Entity, sync: Partial<Pick<Entity, 'syncStatus' | 'syncError' | 'serverVersion' | 'syncedAt'>>) {
+async function setSync(
+  rows: RowAccess,
+  recorder: ReturnType<typeof changeRecorder>,
+  e: Entity,
+  sync: Partial<Pick<Entity, 'syncStatus' | 'syncError' | 'serverVersion' | 'syncedAt'>>,
+) {
+  // Readers of the row (and its lists) are told, as for any write to it.
+  recorder.record(e.type, e.id)
   const next: Entity = {...e, ...sync}
   await writeEntity(rows, next, await rows.get(ENTITY_STORE[e.type], [e.id]))
   await projectEntity(rows, e, next)
@@ -82,7 +89,7 @@ function makeTx(rows: RowAccess, recorder: ReturnType<typeof changeRecorder>): T
       await rows.add('outbox', outboxRow(op))
       // The row waits for the server from the moment its op is queued.
       const e = await loadEntity(rows, op.entityType, op.entityId)
-      if (e && e.syncStatus !== 'pending') await setSync(rows, e, {syncStatus: 'pending', syncError: null})
+      if (e && e.syncStatus !== 'pending') await setSync(rows, recorder, e, {syncStatus: 'pending', syncError: null})
     },
   }
 }
@@ -249,7 +256,7 @@ export function createStore(engine: Engine): Store {
       }),
 
     setOpStatus: (opId, status, info = {}) =>
-      write(async rows => {
+      write(async (rows, recorder) => {
         const [found] = await rows.range('outbox', {index: 'opId', eq: [opId]})
         if (!found) return
         const op = outboxOfRow(found)
@@ -257,14 +264,14 @@ export function createStore(engine: Engine): Store {
         await rows.put('outbox', outboxRow({...op, status, attempts, lastError: status === 'failed' ? (info.error ?? 'failed') : null}))
         const e = await loadEntity(rows, op.entityType, op.entityId)
         if (!e) return
-        if (status === 'sending') await setSync(rows, e, {syncStatus: 'syncing'})
-        else if (status === 'failed') await setSync(rows, e, {syncStatus: 'failed', syncError: info.error ?? 'failed'})
-        else if (status === 'queued') await setSync(rows, e, {syncStatus: 'pending', syncError: null})
+        if (status === 'sending') await setSync(rows, recorder, e, {syncStatus: 'syncing'})
+        else if (status === 'failed') await setSync(rows, recorder, e, {syncStatus: 'failed', syncError: info.error ?? 'failed'})
+        else if (status === 'queued') await setSync(rows, recorder, e, {syncStatus: 'pending', syncError: null})
         else if (status === 'acked') {
           // Later ops for the row are still waiting: it stays pending.
           const later = (await rows.range('outbox', {index: 'byEntity', eq: [op.entityType, op.entityId], min: op.seq! + 1})).some(r => r.status !== 'acked')
-          if (later) await setSync(rows, e, {syncStatus: 'pending'})
-          else await setSync(rows, e, {syncStatus: 'synced', syncError: null, serverVersion: info.serverVersion ?? e.version, syncedAt: info.at ?? e.updatedAt})
+          if (later) await setSync(rows, recorder, e, {syncStatus: 'pending'})
+          else await setSync(rows, recorder, e, {syncStatus: 'synced', syncError: null, serverVersion: info.serverVersion ?? e.version, syncedAt: info.at ?? e.updatedAt})
         }
       }),
 

@@ -1,4 +1,4 @@
-import {useState} from 'react'
+import {useEffect, useState} from 'react'
 import {useWindowDimensions} from 'react-native'
 import {LayoutAnimationConfig} from 'react-native-reanimated'
 import {plural} from '@lingui/core/macro'
@@ -8,6 +8,7 @@ import {balanceTotals, isSettledBalance, personSummary} from '@splito/domain'
 import {type Group, type Person} from '@splito/sync'
 
 import {type NavigationProp} from '#/lib/routes/types'
+import {perfMark} from '#/lib/perfMark'
 import {useNumberLocale} from '#/locale/numberLocale'
 import {
   useBalanceRows,
@@ -86,6 +87,10 @@ export function PeopleScreen() {
   const filterControl = useDialogControl()
 
   const isLoading = !me || !people || !groups || !balanceRows
+  /* The launch budget's end point: Home has its figures (perf spec reads the mark). */
+  useEffect(() => {
+    if (!isLoading) perfMark('splito:home-ready')
+  }, [isLoading])
   const summaries = balanceRows
     ? personSummary(balanceRows, {includeGroups})
     : []

@@ -102,6 +102,7 @@ function IncomingRow({request}: {request: Entity<FriendRequest>}) {
     <RequestRow
       testID={`request-${name}`}
       name={name}
+      sync={request}
       detail={
         <Trans>Wants to be friends · {ago(now - request.data.sentAt)}</Trans>
       }>
@@ -162,7 +163,11 @@ function OutgoingRow({request}: {request: Entity<FriendRequest>}) {
     )
 
   return (
-    <RequestRow testID={`invite-sent-${name}`} name={name} detail={detail}>
+    <RequestRow
+      testID={`invite-sent-${name}`}
+      name={name}
+      sync={request}
+      detail={detail}>
       <RequestAction
         testID="invite-sent-resend"
         label={l`Resend to ${name}`}

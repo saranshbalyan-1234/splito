@@ -14,7 +14,7 @@ import {
   updateExpense,
 } from '../src/mutations'
 import {type Key} from '../src/schema'
-import {type Store} from '../src/store'
+import {type Store, type StoreChange, touches} from '../src/store'
 import {type Entity, type MutationCtx} from '../src/types'
 import {expectProjectionsMatchLedger} from './projectionCheck'
 
@@ -185,7 +185,11 @@ export function runV2Contract(name: string, open: () => Promise<Store>) {
       const op1 = (await s.outbox()).find(o => o.entityId === e.id)!
       expect(op1.status).toBe('queued')
 
+      const seen: StoreChange[] = []
+      s.subscribe(c => seen.push(c))
       await s.setOpStatus(op1.opId, 'sending')
+      // Readers of the row hear about its new state like any other write to it.
+      expect(touches(seen.at(-1)!, 'expense', e.id)).toBe(true)
       expect((await s.get('expense', e.id))?.syncStatus).toBe('syncing')
       expect((await s.outbox()).find(o => o.opId === op1.opId)).toMatchObject({status: 'sending', attempts: 1})
 

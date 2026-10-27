@@ -3,6 +3,7 @@ import {AppState} from 'react-native'
 import {randomUUID} from 'expo-crypto'
 import {ensureMe, type MutationCtx, prefFrom, type Store} from '@splito/sync'
 
+import {perfMark} from '#/lib/perfMark'
 import {flush, logger, setDiagnosticsEnabled, setTelemetryIdentity} from '#/logger'
 import {device} from '#/storage'
 import {seedDemoIfRequested} from '#/data/demo'
@@ -58,6 +59,7 @@ export function StoreProvider({children, fallback = null}: {children: React.Reac
     let unwire: (() => void) | undefined
     let cancelled = false
     const ctx = getMutationCtx()
+    perfMark('splito:store-open')
     openStore()
       .then(async s => {
         /* Dev StrictMode mounts twice: a store opened for the discarded mount is closed, never used. */
@@ -70,6 +72,7 @@ export function StoreProvider({children, fallback = null}: {children: React.Reac
         installDevTools(s, ctx)
         unwire = wireTelemetry(s, ctx)
         await seedDemoIfRequested(s, ctx)
+        perfMark('splito:store-ready')
         setValue({store: s, ctx})
       })
       .catch(e => {

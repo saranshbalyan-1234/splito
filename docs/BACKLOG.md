@@ -221,8 +221,9 @@ BroadcastChannel change notices so every open tab refreshes its projections afte
 
 Per-type stores, normalised relations, indexes for every query path, in-transaction balance projection, cursor paging and versioned migrations, on IndexedDB and SQLite alike (ARCHITECTURE § 9.8).
 
-- **Effort** L · **Impact** 10 · **Backend** no · **Status** todo · **Deps** F-103, F-227
-- **Prefs** -
+- **Effort** L · **Impact** 10 · **Backend** no · **Status** done (feat/wA-35a, 2026-10-27; sync `storeV2Contract` on both engines, `ledgerProjection.property.test`, `migrate.test` with the large demo set, `queryPlan.test`; domain `recordEffects.test`; client `historyMerge.test`, `rowStatus.test`, architecture rule `moneyFullRead`; e2e `sync-status.spec`; perf `perf/schema-v2.spec`) · **Deps** F-103, F-227
+- **Prefs** `showSyncStatus` (device, default on): the sync dot on rows
+- **Measured** (web, Chrome, desktop 1440 px, median of 5; `pnpm perf schema-v2`): Home cold open (store open to Home holding its figures) 47 ms on the large demo set (1,566 expenses) and 57 ms on a 10,000-expense ledger; write plus the sidebar showing it 32 ms on both (commit itself 1 ms). At 4x CPU slowdown (a mid-range phone): cold open 163 / 202 ms, write + UI 30 / 60 ms. The path this replaced (read the whole ledger, work balances out of it) cost 17 ms / 81 ms of reading alone at 1x and 52 / 195 ms at 4x, before any render, and grows with the ledger; the new path is flat (47 -> 57 ms from 1.5k to 10k expenses). Migration of the large set (2,039 rows, 2,065 history rows, 2,065 ops): about 150 ms on IndexedDB (fake-indexeddb) and 100 ms on SQLite (bun) on an idle machine.
 - **Acceptance**
   1. Stores/tables exactly as § 9.8 (names, keys, indexes) on both engines; the old `entities` store is gone after migration.
   2. v1 -> v2 migration runs once, is idempotent, and is tested with a v1 fixture including the large demo set: every row, history entry, outbox op and balance identical before/after.

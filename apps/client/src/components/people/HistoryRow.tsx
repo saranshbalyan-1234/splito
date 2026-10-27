@@ -8,6 +8,7 @@ import {Link} from '#/view/com/util/Link'
 import {PressableWithHover} from '#/view/com/util/PressableWithHover'
 import {atoms as a, useTheme} from '#/alf'
 import {EntryIcon} from '#/components/people/EntryIcon'
+import {SyncDot} from '#/components/SyncStatus'
 import {type HistoryEntry, utcDate} from '#/components/people/ledger'
 import * as Skeleton from '#/components/Skeleton'
 import {Text} from '#/components/Typography'
@@ -152,12 +153,21 @@ export function HistoryRow({
           style={[a.text_md, a.font_semi_bold, a.leading_snug]}>
           {title}
         </Text>
-        <Text
-          emoji
-          numberOfLines={1}
-          style={[a.text_sm, a.leading_snug, t.atoms.text_contrast_medium]}>
-          {byline.join(' · ')}
-        </Text>
+        <View style={[a.flex_row, a.align_center, a.gap_sm]}>
+          <Text
+            emoji
+            numberOfLines={1}
+            style={[
+              a.flex_shrink,
+              a.text_sm,
+              a.leading_snug,
+              t.atoms.text_contrast_medium,
+              {minWidth: 0},
+            ]}>
+            {byline.join(' · ')}
+          </Text>
+          <SyncDot row={entry.entity} testID={`sync-${entry.entity.id}`} />
+        </View>
       </View>
       <View style={[a.align_end, a.flex_shrink_0, {maxWidth: '45%'}]}>
         {trailing}
