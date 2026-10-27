@@ -1276,7 +1276,10 @@ labelled sidebar); **wide** = web 1300 px and up (Bluesky `gtTablet`, right colu
   merge; Expensify's model, where every side panel and modal is a route). Every page, every in-page tab (Group
   Expenses / Balances / Members, Activity tabs, Analytics views), every sheet and popup (Add / Edit expense,
   Record payment, Settle up, Add friend / Invite people, Create / Edit group, Members, Payment rules, Filters,
-  Search & Ask with its query and Ask mode, Send feedback, Export / Import, every Settings section and editor)
+  Search & Ask with its query and Ask mode, Send feedback, Export / Import, every Settings section and editor),
+  **every drawer** (the side drawer / menu, e.g. `?drawer=menu`, and the Search & Ask drawer) **and every bottom
+  sheet including pickers opened inside a sheet** (currency, date, category, people: a sub-route of their sheet,
+  e.g. `/expense/new/currency`; owner 101)
   and the list state that matters (filters, sort, Show settled, scope, period, currency) is in the URL on web
   (path or query) and the same deep-link path on native. Opening one pushes its URL; closing goes back; browser
   Back closes the top sheet; pasting or refreshing the URL opens the parent page with that sheet or tab on top,
@@ -1979,6 +1982,7 @@ Every owner decision, in the order it was made (all 2026-10-26). "Replaced" name
 | 98 | "deleted item should show a stroke and clock symbol and time" | Deleted records show struck-through title and amount plus a Clock icon and "Deleted <time>" everywhere they appear | § 26.14 | Plain rows (strikethrough removed in B3 polish) |
 | 99 | "only when demo i said, with a switch with diff data"; "no small demo or anything, only one switch" | One demo dataset, one Settings switch over a separate database; no small set, no ?demo=1 or any URL alias; e2e uses a test-only hook | § 26.1 | Small ?demo=1 set kept as a test alias (row 95 plan) |
 | 100 | "for every tab, every popup it should be via url, so that even if i copy paste the url i land on same place" | Every page, tab, sheet/popup and meaningful list state has a URL (web) / deep link (native); open pushes, close goes back, paste/refresh restores; prompts and menus excluded; URLs never act | § 26.3 | Sheets and tabs held in screen state |
+| 101 | "even the drawer or sheet should have same rule" | The side drawer, the Search & Ask drawer and every bottom sheet, including pickers inside sheets, are URL-addressable too | § 26.3 | Rule 100 named pages, tabs, sheets and popups only |
 
 New decisions follow § 0 rule 9: rewrite the rule in its topic so only the current truth remains, then add a
 row here.

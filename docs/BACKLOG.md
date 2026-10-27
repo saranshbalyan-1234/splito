@@ -2748,7 +2748,7 @@ Copy any URL and land on the same screen: pages, in-page tabs, sheets and popups
 - **Effort** L · **Impact** 9 · **Backend** no · **Status** todo · **Deps** Wave B merged, F-228a
 - **Prefs** -
 - **Acceptance**
-  1. A route table in `routes.ts` covers every page, tab (e.g. `/groups/:id/balances`, `/activity/others`), sheet (e.g. `/expense/new?group=:id`, `/people/:id/record-payment`, `/groups/:id/settle`, `/settings/regional/timezone`, `/search?q=&mode=ask`) and list state as query params (filters, sort, showSettled, scope, period, currency); a test asserts every sheet and tab component has a route.
+  1. A route table in `routes.ts` covers every page, tab (e.g. `/groups/:id/balances`, `/activity/others`), sheet (e.g. `/expense/new?group=:id`, `/people/:id/record-payment`, `/groups/:id/settle`, `/settings/regional/timezone`, `/search?q=&mode=ask`), every drawer (side drawer `?drawer=menu`, Search & Ask), pickers inside sheets as sub-routes (e.g. `/expense/new/currency`; decision 101) and list state as query params (filters, sort, showSettled, scope, period, currency); a test asserts every sheet and tab component has a route.
   2. Opening a sheet or tab pushes its URL; closing pops it; browser Back closes the top sheet; Forward reopens it.
   3. Pasting or refreshing any of these URLs (web) or opening the deep link (native) shows the parent page with the sheet/tab on top and the draft restored; an entity missing on this device shows "Not on this device yet".
   4. Confirmation prompts and "..." menus are not addressable; no URL performs or arms an action (test: a sheet URL never writes).
