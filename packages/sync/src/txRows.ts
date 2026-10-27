@@ -64,6 +64,15 @@ export function transactionRows(rows: RowAccess, {isPipelined = false}: {isPipel
   }
   return {
     rows: access,
+    /**
+     * The first pipelined write that failed, if any. When the transaction body
+     * then throws something else (the abort surfacing under a later read), the
+     * kept failure is the root cause and the one to report.
+     */
+    async failure() {
+      await Promise.all(issued)
+      return failure
+    },
     /** Writes the held sums; call before the transaction ends. */
     async flush() {
       for (const {store, key, row} of held.values()) await write(row ? rows.put(store, row) : rows.delete(store, key))

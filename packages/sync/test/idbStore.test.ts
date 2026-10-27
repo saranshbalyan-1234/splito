@@ -5,7 +5,7 @@ import {expect, test} from 'bun:test'
 
 import {openIdbStore} from '../src/idbStore'
 import {changeFromJson, changeToJson, mergeChanges, type StoreChange, touches} from '../src/store'
-import {ent, runStoreContract} from './storeContract'
+import {ent, op, runStoreContract} from './storeContract'
 import {runV2Contract} from './storeV2Contract'
 
 let factory = new IDBFactory()
@@ -42,4 +42,29 @@ test('mergeChanges: the union of two notices; unknown wins', () => {
   expect(touches(m, 'group')).toBe(false)
   expect(mergeChanges('unknown', {})).toBe('unknown')
   expect(mergeChanges({}, 'unknown')).toBe('unknown')
+})
+
+test('a pipelined write that fails mid-transaction rolls everything back and surfaces its own error, not a later one', async () => {
+  const s = await openIdbStore('pipelined-failure', new IDBFactory())
+  await s.transaction(async tx => {
+    await tx.put(ent('person', 'p1'))
+    await tx.enqueue(op('dup'))
+  })
+  const error = await s
+    .transaction(async tx => {
+      await tx.put(ent('person', 'p2'))
+      // The duplicate op id fails asynchronously (the add is not awaited) ...
+      await tx.enqueue({...op('dup'), entityId: 'p2'})
+      // ... and the transaction aborts under the reads that follow.
+      await tx.get('person', 'p2')
+      await tx.get('person', 'p1')
+    })
+    .then(
+      () => undefined,
+      (e: unknown) => e,
+    )
+  expect((error as Error | undefined)?.name).toBe('ConstraintError')
+  expect((await s.getAll('person')).map(e => e.id)).toEqual(['p1'])
+  expect(await s.outbox()).toHaveLength(1)
+  await s.close()
 })

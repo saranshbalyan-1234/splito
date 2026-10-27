@@ -146,7 +146,13 @@ export function createStore(engine: Engine): Store {
     const recorder = changeRecorder()
     const result = await engine.run('rw', async raw => {
       const tx = transactionRows(raw, {isPipelined: engine.pipelined})
-      const done = await fn(tx.rows, recorder)
+      let done: T
+      try {
+        done = await fn(tx.rows, recorder)
+      } catch (e) {
+        // A pipelined write that already failed aborted the transaction under `fn`: report that cause.
+        throw (await tx.failure())?.error ?? e
+      }
       await tx.flush()
       return done
     })
