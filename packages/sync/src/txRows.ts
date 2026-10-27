@@ -16,8 +16,16 @@ const keyOf = (store: StoreName, row: Row): Key => STORES[store].key.map(c => ro
  * outbox) always see it. Atomicity is the engine's: `flush` runs inside the
  * same transaction.
  */
-export function transactionRows(rows: RowAccess) {
+export function transactionRows(rows: RowAccess, {isPipelined = false}: {isPipelined?: boolean} = {}) {
   const known = new Map<string, Row | undefined>()
+  /* Writes issued without waiting (IndexedDB runs them in order); the first failure is kept for `flush`. */
+  const issued: Promise<void>[] = []
+  let failure: { error: unknown } | undefined
+  const write = (request: Promise<void>): Promise<void> => {
+    if (!isPipelined) return request
+    issued.push(request.catch(error => void (failure ??= {error})))
+    return Promise.resolve()
+  }
   const held = new Map<string, {store: StoreName; key: Key; row?: Row}>()
   const access: RowAccess = {
     async get(store, key) {
@@ -32,10 +40,10 @@ export function transactionRows(rows: RowAccess) {
       const id = idOf(store, key)
       known.set(id, row)
       if (DEFERRED.has(store)) held.set(id, {store, key, row})
-      else await rows.put(store, row)
+      else await write(rows.put(store, row))
     },
     async add(store, row) {
-      await rows.add(store, row)
+      await write(rows.add(store, row))
       // The outbox numbers its own rows: only keyed stores are remembered.
       if (!(STORES[store] as {auto?: boolean}).auto) known.set(idOf(store, keyOf(store, row)), row)
     },
@@ -43,12 +51,12 @@ export function transactionRows(rows: RowAccess) {
       const id = idOf(store, key)
       known.set(id, undefined)
       if (DEFERRED.has(store)) held.set(id, {store, key})
-      else await rows.delete(store, key)
+      else await write(rows.delete(store, key))
     },
     async clear(store) {
       for (const id of [...known.keys()]) if (id.startsWith(store + '\u0000')) known.delete(id)
       for (const [id, h] of [...held]) if (h.store === store) held.delete(id)
-      await rows.clear(store)
+      await write(rows.clear(store))
     },
     // Reads of ranges never see held sums: nothing inside a transaction asks for them.
     range: (store, q) => rows.range(store, q),
@@ -58,11 +66,10 @@ export function transactionRows(rows: RowAccess) {
     rows: access,
     /** Writes the held sums; call before the transaction ends. */
     async flush() {
-      for (const {store, key, row} of held.values()) {
-        if (row) await rows.put(store, row)
-        else await rows.delete(store, key)
-      }
+      for (const {store, key, row} of held.values()) await write(row ? rows.put(store, row) : rows.delete(store, key))
       held.clear()
+      await Promise.all(issued)
+      if (failure) throw failure.error
     },
   }
 }

@@ -42,6 +42,12 @@ export interface Engine {
    */
   run<T>(mode: 'rw' | 'ro', fn: (rows: RowAccess) => Promise<T>): Promise<T>
   close(): Promise<void>
+  /**
+   * True when requests of one transaction run in the order they are issued
+   * (IndexedDB): the store may then issue writes without waiting for each one
+   * and wait for them all before the transaction ends.
+   */
+  pipelined?: boolean
   /** Notices to and from other tabs on the same database. */
   remote?: {post(change: StoreChange): void; listen(fn: (change: StoreChange) => void): void}
 }

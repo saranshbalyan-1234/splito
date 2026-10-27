@@ -11,6 +11,7 @@ import {
   deleteWriteOff,
   type ExpenseDraft,
   type Group,
+  insideTransaction,
   type MutationCtx,
   receiveFriendRequest,
   recordInviteUse,
@@ -87,9 +88,12 @@ export async function seedDemoIfRequested(store: Store, ctx: MutationCtx) {
     )
     return
   }
-  if (requested !== '1') return
+  // `?demo=1` marks the seed owed until it has finished, so a page left before then (a quick
+  // navigation, a reload) is finished by the next load rather than left half-seeded.
+  if (requested === '1') device.set(['demoPending'], true)
+  if (!device.get(['demoPending'])) return
   // One run per page load, even if the store opens twice (dev remounts).
-  seeding ??= seed(store, ctx)
+  seeding ??= seed(store, ctx).then(() => device.set(['demoPending'], false))
   return seeding
 }
 
@@ -106,8 +110,8 @@ const DAY = 24 * HOUR
  * whoever paid the most, as if synced in from their phone. The final data is
  * exactly the dataset, so every balance is unchanged.
  */
-async function seed(store: Store, ctx: MutationCtx) {
-  const groups = await store.getAll<Group>('group')
+async function seed(outer: Store, ctx: MutationCtx) {
+  const groups = await outer.getAll<Group>('group')
   if (groups.some(g => g.data.name === DEMO_GROUPS.goa.name)) return
 
   const now = Date.now()
@@ -118,15 +122,31 @@ async function seed(store: Store, ctx: MutationCtx) {
     return {...ctx, actor, now: () => clock}
   }
 
+  // The people, groups and ledger go in as one transaction: all of it or none, in a few milliseconds,
+  // so there is no half-seeded state to leave a page in. (The friend requests below read the store
+  // first, so they cannot run inside it.)
+  const groupIds = await outer.transaction(tx =>
+    seedLedger(insideTransaction(outer, tx), ctx, now, at, () => clock),
+  )
+  await seedFriendInvites(outer, ctx, groupIds.goa, at, now)
+}
+
+async function seedLedger(
+  store: Store,
+  ctx: MutationCtx,
+  now: number,
+  at: (time: number, actor?: string) => MutationCtx,
+  readClock: () => number,
+) {
   const ids = {me: ctx.actor} as Record<DemoPersonKey, string>
   for (const [key, name] of Object.entries(DEMO_FRIENDS)) {
-    const person = await createPerson(store, at(clock + 7 * MINUTE), {name})
+    const person = await createPerson(store, at(readClock() + 7 * MINUTE), {name})
     ids[key as DemoPersonKey] = person.id
   }
 
   const groupIds = {} as Record<DemoGroupKey, string>
   for (const [key, g] of Object.entries(DEMO_GROUPS)) {
-    const group = await createGroup(store, at(clock + 5 * HOUR), {
+    const group = await createGroup(store, at(readClock() + 5 * HOUR), {
       name: g.name,
       kind: g.kind,
       currency: g.currency,
@@ -258,7 +278,7 @@ async function seed(store: Store, ctx: MutationCtx) {
   ])
   await deleteWriteOff(store, at(now - 3 * DAY), forgiven!.id)
 
-  await seedFriendInvites(store, ctx, groupIds.goa, at, now)
+  return groupIds
 }
 
 /*

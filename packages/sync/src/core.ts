@@ -145,7 +145,7 @@ export function createStore(engine: Engine): Store {
   const write = async <T>(fn: (rows: RowAccess, recorder: ReturnType<typeof changeRecorder>) => Promise<T>) => {
     const recorder = changeRecorder()
     const result = await engine.run('rw', async raw => {
-      const tx = transactionRows(raw)
+      const tx = transactionRows(raw, {isPipelined: engine.pipelined})
       const done = await fn(tx.rows, recorder)
       await tx.flush()
       return done

@@ -136,6 +136,7 @@ export async function openIdbStore(name: string, factory: IDBFactory = indexedDB
   const channel = typeof BroadcastChannel === 'undefined' ? null : new BroadcastChannel(CHANNEL + ':' + name)
 
   const engine: Engine = {
+    pipelined: true,
     async run(mode, fn) {
       const t = db.transaction(STORE_NAMES, mode === 'rw' ? 'readwrite' : 'readonly') as unknown as Tx
       // Observe `done` now so an abort never surfaces as an unhandled rejection.
