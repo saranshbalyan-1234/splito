@@ -10,6 +10,7 @@ import {RemoveScrollBar} from 'react-remove-scroll-bar'
 import {useIsDrawerOpen, useSetDrawerOpen} from '#/state/shell'
 import {SearchAskProvider} from '#/features/searchAsk/SearchAskProvider'
 import {DrawerContent} from '#/navigation/Drawer'
+import {FeedbackProvider} from '#/features/feedback/FeedbackProvider'
 import {FlatNavigator, RoutesContainer} from '#/navigation/Navigation'
 import {atoms as a, flatten, select, useTheme} from '#/alf'
 import {Outlet as PortalOutlet} from '#/components/Portal'
@@ -33,10 +34,10 @@ function drawerLayout({children}: {children: React.ReactNode}) {
  */
 function ShellInner() {
   return (
-    <>
+    <FeedbackProvider>
       <FlatNavigator layout={drawerLayout} />
       <PortalOutlet />
-    </>
+    </FeedbackProvider>
   )
 }
 

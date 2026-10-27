@@ -15,8 +15,9 @@ export type SessionAccount = {
 }
 
 export type SessionState = {
-  hasSession: false
-  currentAccount: undefined
+  hasSession: boolean
+  /** Set once sign-in exists; feedback prefills the reply email from it. */
+  currentAccount: {email?: string} | undefined
   /** Accounts remembered on this device; always empty until the auth backend exists. */
   accounts: ReadonlyArray<SessionAccount>
 }

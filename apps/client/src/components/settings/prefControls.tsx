@@ -214,6 +214,23 @@ function HapticsPref() {
   )
 }
 
+function ShakeToFeedbackPref() {
+  const {t: l} = useLingui()
+  return (
+    <SwitchPref
+      pref={usePrefControl('shakeToFeedback')}
+      icon={VibrateIcon}
+      title={l`Shake to send feedback`}
+      label={l`Shaking your phone opens Send feedback`}
+      description={
+        IS_WEB
+          ? l`Browsers can't tell when you shake. This applies in the Splito app on your phone.`
+          : undefined
+      }
+    />
+  )
+}
+
 /* Navigation */
 
 function HomeTabPref() {
@@ -832,6 +849,7 @@ export const PREF_CONTROLS = {
   moneyPalette: MoneyPalettePref,
   motion: MotionPref,
   haptics: HapticsPref,
+  shakeToFeedback: ShakeToFeedbackPref,
   tabs: NavigationEditor,
   homeTab: HomeTabPref,
   defaultCurrency: CurrencyPref,
@@ -862,6 +880,8 @@ export const PREF_CONTROLS = {
   'notify.invite': NotifyInvitePref,
   // No row until telemetry has a vendor (A-046): a switch that changes nothing would be a placeholder.
   sendDiagnostics: null,
+  // Remembers the switch in the Send feedback sheet, where its effect shows.
+  'feedback.includeAppInfo': null,
   'history.binDays': BinDaysPref,
   'privacy.findByContact': FindablePref,
   'privacy.friendRequestsFrom': FriendRequestsFromPref,

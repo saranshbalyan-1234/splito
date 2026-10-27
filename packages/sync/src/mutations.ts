@@ -89,7 +89,8 @@ export type Purged = {purgedAt?: number}
 
 /**
  * Versioned write: entity, history row and outbox op, all inside the caller's
- * transaction. `remote` applies a change that came from someone else (a pull,
+ * transaction. `opType: null` keeps the write on this device (no outbox op), for records no
+ * server takes yet. `remote` applies a change that came from someone else (a pull,
  * or the demo directory): history, but no outbox op.
  * @internal shared by the mutation modules of this package.
  */
@@ -100,7 +101,7 @@ export async function write<T>(
   id: string,
   data: T,
   deleted: boolean,
-  opType: string,
+  opType: string | null,
   {remote = false}: {remote?: boolean} = {},
 ): Promise<Entity<T>> {
   const prev = await tx.get<T>(type, id)
@@ -108,7 +109,7 @@ export async function write<T>(
   const e: Entity<T> = {type, id, data, version: (prev?.version ?? 0) + 1, deleted, updatedAt: at}
   await tx.put(e)
   await tx.appendHistory({entityType: type, entityId: id, version: e.version, data, deleted, at, actor: ctx.actor})
-  if (remote) return e
+  if (remote || opType === null) return e
   await tx.enqueue({
     opId: ctx.newId(),
     deviceId: ctx.deviceId,

@@ -119,6 +119,10 @@ export const PREFS = {
   moneyPalette: def('moneyPalette', 'appearance', 'account', 'Money colours', 'default', oneOf('default', 'colorblind', 'mono')),
   motion: def('motion', 'motion', 'device', 'Animations', 'full', oneOf('full', 'reduced', 'off')),
   haptics: def('haptics', 'motion', 'device', 'Haptics', true, isBool),
+  /** Phones only: shaking the phone opens Send feedback. */
+  shakeToFeedback: def('shakeToFeedback', 'motion', 'device', 'Shake to send feedback', false, isBool),
+  /** The Send feedback sheet's "Include app info" switch remembers the last choice (spec default: on). */
+  'feedback.includeAppInfo': def('feedback.includeAppInfo', 'privacy', 'device', 'Include app info with feedback', true, isBool),
   /* The phone bottom bar: 2-5 items of the shared nav list, Home first and always on (26.3). */
   tabs: def<NavItemId[]>(
     'tabs',

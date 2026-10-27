@@ -385,6 +385,8 @@ const GROUPS = ['Flat 4B', 'Goa', 'Lisbon']
 test('scope: one chip names what is counted; the checklist applies only on Apply and is remembered', async ({
   page,
 }) => {
+  /* About 50 s of sheet animations in one test: the 30 s default is too tight when the suite runs in parallel. */
+  test.setTimeout(120_000)
   await seed(page, LEDGER, NOW, ['Lisbon', 'Flat 4B'])
   const chip = page.getByTestId('analytics-scope')
   await expect(chip).toHaveText('Everything')
