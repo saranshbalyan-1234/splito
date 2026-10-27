@@ -2056,6 +2056,7 @@ Every owner decision, in the order it was made (all 2026-10-26). "Replaced" name
 | 109 | "make sure to update the demo data again and again, with all the changes, add it in architecture" | Every feature adds realistic demo data in the same change; a demoCoverage test fails when a feature has no demo record; assemble re-seeds and re-screenshots | § 26.1 | Demo data updated ad hoc |
 | 110 | "the alerts i receive, move them to top right and add one close button as well" | Toasts at top right (rail/desktop), top full-width on phones, each with a close X, swipe to dismiss on phones | § 26.8 | Bottom-left web toasts without close |
 | 111 | "until the data is synced, keep that unsynced data a little light, so we know this is not synced" | Records not yet synced render in lighter (AA-safe) text, fading to full strength on server ack; failed keeps full strength + Needs attention; no per-row red dot | § 9.8 | Red per-row sync dot (decision 79 per-item marker) |
+| 112 | "dont show settled up friends by default" | Reaffirms decision 90: settled friends (and groups) hidden by default with a "Show settled" filter; this part is pulled forward into the Wave B assemble, the "every choice in the database" part of F-1413 stays queued | § 26.12 | (priority raised) |
 
 New decisions follow § 0 rule 9: rewrite the rule in its topic so only the current truth remains, then add a
 row here.
