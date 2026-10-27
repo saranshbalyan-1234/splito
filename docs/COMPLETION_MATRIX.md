@@ -47,7 +47,7 @@ Status words are the same as `docs/BACKLOG.md`: **done** (built, tested and merg
 | Support | Feedback: drawer + footer + Settings > Support, Send feedback sheet, Your feedback, saved on device + email draft | F-226 | in progress (partially built on feat/feedback, unverified) |
 | Support | Feedback endpoint | F-2112 | todo (needs backend) |
 | Support | Help, About, licences, privacy | F-215 | todo |
-| Platform | PWA: production service worker, offline shell, update toast, manifest, Install app | F-1901 | todo (Batch 4b) |
+| Platform | PWA: production service worker, offline shell, update toast, manifest, Install app | F-1901 | done (feat/wA-38; verified in Chrome on a production build: registers, opens offline incl. deep routes, no API cached, update toast + Reload, install prompt and iPhone steps; Safari 7-day warning has no Export action until F-2001; native iOS/Android n/a) |
 | Expenses+ | Comments on expenses and repayments (local + outbox) | F-1204 | todo (Batch 4b) |
 | Expenses+ | Disputes and flags | F-1210 | todo |
 | Expenses+ | Shared comments and disputes | F-2208 | todo (needs backend) |

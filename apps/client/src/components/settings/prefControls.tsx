@@ -837,6 +837,7 @@ export const PREF_CONTROLS = {
   analyticsView: AnalyticsViewPref,
   // Chosen on Analytics' own scope chip, where its effect shows; Reset all resets it.
   analyticsScope: null,
+  'pwa.installHintDismissed': null,
   categories: CategoriesEditor,
   language: LanguagePref,
   timezone: TimeZonePref,

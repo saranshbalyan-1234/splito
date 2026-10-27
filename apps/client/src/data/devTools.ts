@@ -20,6 +20,7 @@ import {
 } from '@splito/sync'
 
 import {IS_DEV, IS_E2E} from '#/env'
+import {setPwa} from '#/lib/pwa/state'
 
 const MONEY_KEYS = new Set(['total', 'amount', 'tax', 'tip', 'service', 'discount'])
 const MONEY_MAPS = new Set(['payers', 'amounts'])
@@ -50,6 +51,8 @@ export function installDevTools(store: Store, ctx: MutationCtx) {
     restoreExpense: (id: string) => restoreExpense(store, ctx, id),
     createRepayment: (input: unknown) => createRepayment(store, ctx, toBig(input) as RepaymentInput).then(e => e.id),
     updateGroupRules: (groupId: string, rules: SettlementRules) => updateGroupRules(store, ctx, groupId, rules).then(e => e.id),
+    /** Plays a PWA state change (e.g. `{updateReady: true}`) that a real worker would cause. */
+    setPwa,
     setPref: <K extends PrefKey>(key: K, value: PrefValue<K>) => setPref(store, ctx, key, value),
     /** The other side accepts your pending request to `contactValue` (stands in for the pull). */
     acceptOutgoing: async (contactValue: string, name = 'Friend') => {

@@ -502,7 +502,7 @@ msgstr "{actor} ने एक माफ़ी वापस ली"
 msgid "{actor} updated the group {subject}"
 msgstr "{actor} ने समूह {subject} को अपडेट किया"
 
-#: src/screens/Settings/index.tsx:155
+#: src/screens/Settings/index.tsx:156
 msgid "{binDays, plural, one {# day} other {# days}}"
 msgstr "{binDays, plural, one {# दिन} other {# दिन}}"
 
@@ -619,7 +619,7 @@ msgstr "{title} रीसेट हो गया"
 msgid "{title}, {byline}, {shareLabel} {shareText} of {totalText}"
 msgstr "{title}, {byline}, {totalText} में से {shareLabel} {shareText}"
 
-#: src/screens/Settings/index.tsx:237
+#: src/screens/Settings/index.tsx:239
 msgid "{visible} categories"
 msgstr "{visible} श्रेणियाँ"
 
@@ -668,7 +668,7 @@ msgstr "<0>{value}</0> अभी Splito पर नहीं हैं। आम�
 msgid "= Use result"
 msgstr "= नतीजा लें"
 
-#: src/screens/Settings/index.tsx:237
+#: src/screens/Settings/index.tsx:239
 msgid "1 category"
 msgstr "1 श्रेणी"
 
@@ -763,13 +763,13 @@ msgstr "कोई यात्रा, फ़्लैट या कुछ भी
 #: src/navigation/Drawer.tsx:366
 #: src/screens/Profile.tsx:73
 #: src/screens/Profile.tsx:76
-#: src/screens/Settings/index.tsx:162
-#: src/screens/Settings/index.tsx:165
+#: src/screens/Settings/index.tsx:163
+#: src/screens/Settings/index.tsx:166
 #: src/screens/Settings/SettingsSection.tsx:48
 msgid "About"
 msgstr "परिचय"
 
-#: src/screens/Settings/index.tsx:139
+#: src/screens/Settings/index.tsx:140
 msgid "About and data"
 msgstr "परिचय और डेटा"
 
@@ -818,7 +818,7 @@ msgstr "साथ में खर्च बाँटने के लिए स
 msgid "Accept to split expenses with {0}. You’ll both see what you share."
 msgstr "{0} के साथ खर्च बाँटने के लिए स्वीकार करें। जो साझा है, दोनों को दिखेगा।"
 
-#: src/screens/Settings/index.tsx:59
+#: src/screens/Settings/index.tsx:60
 msgid "Account"
 msgstr "खाता"
 
@@ -965,6 +965,10 @@ msgstr "लोग जोड़ें"
 #: src/screens/CreateGroup.tsx:245
 msgid "Add someone new"
 msgstr "किसी नए को जोड़ें"
+
+#: src/features/pwa/InstallHelpDialog.tsx:33
+msgid "Add Splito to your Home Screen"
+msgstr "Splito को अपनी होम स्क्रीन पर जोड़ें"
 
 #: src/components/groups/AddMembersDialog.tsx:113
 msgid "Add to group"
@@ -1211,7 +1215,7 @@ msgstr "लोग पर वापस जाएं"
 msgid "Back up and share"
 msgstr "बैकअप लें और साझा करें"
 
-#: src/screens/Settings/index.tsx:79
+#: src/screens/Settings/index.tsx:80
 msgid "Back up and share with friends"
 msgstr "बैकअप लें और मित्रों के साथ साझा करें"
 
@@ -1268,7 +1272,7 @@ msgstr "दोनों ओर: आप एक-दूसरे का कर्�
 msgid "Browsers can't vibrate. This applies in the Splito app on your phone."
 msgstr "ब्राउज़र वाइब्रेट नहीं कर सकते। यह आपके फ़ोन के Splito ऐप में लागू होता है।"
 
-#: src/screens/Settings/index.tsx:240
+#: src/screens/Settings/index.tsx:242
 msgid "By amount"
 msgstr "रकम के अनुसार"
 
@@ -1280,7 +1284,7 @@ msgstr "श्रेणी के अनुसार"
 msgid "By group"
 msgstr "समूह के अनुसार"
 
-#: src/screens/Settings/index.tsx:241
+#: src/screens/Settings/index.tsx:243
 msgid "By name"
 msgstr "नाम के अनुसार"
 
@@ -1310,8 +1314,8 @@ msgstr "हिसाब बराबर किया"
 msgid "Can’t open this invite yet"
 msgstr "यह आमंत्रण अभी नहीं खुल सकता"
 
-#: src/components/FormSheet/shared.tsx:286
-#: src/components/FormSheet/shared.tsx:292
+#: src/components/FormSheet/shared.tsx:288
+#: src/components/FormSheet/shared.tsx:294
 #: src/components/Menu/index.tsx:387
 #: src/components/Prompt.tsx:153
 #: src/components/Prompt.tsx:155
@@ -1459,7 +1463,7 @@ msgid "Clears: {clears}"
 msgstr "साफ़ होगा: {clears}"
 
 #: src/components/Dialog/CloseButton.tsx:32
-#: src/components/FormSheet/shared.tsx:195
+#: src/components/FormSheet/shared.tsx:197
 msgid "Close"
 msgstr "बंद करें"
 
@@ -1492,7 +1496,7 @@ msgstr "ग्रुप बनाए बिना बंद करता है"
 msgid "Closes without making a link"
 msgstr "लिंक बनाए बिना बंद करता है"
 
-#: src/components/FormSheet/shared.tsx:196
+#: src/components/FormSheet/shared.tsx:198
 msgid "Closes without saving"
 msgstr "सेव किए बिना बंद करता है"
 
@@ -1758,7 +1762,7 @@ msgid "Custom range…"
 msgstr "अपनी अवधि…"
 
 #: src/components/settings/prefControls.tsx:85
-#: src/screens/Settings/index.tsx:233
+#: src/screens/Settings/index.tsx:235
 msgid "Dark"
 msgstr "डार्क"
 
@@ -1928,12 +1932,12 @@ msgstr "सीधा, कोई समूह नहीं"
 msgid "Directly with friends, outside any group"
 msgstr "दोस्तों के साथ सीधे, किसी समूह के बाहर"
 
-#: src/components/FormSheet/shared.tsx:133
+#: src/components/FormSheet/shared.tsx:135
 #: src/components/split/ExpenseComposer.tsx:590
 msgid "Discard"
 msgstr "छोड़ दें"
 
-#: src/components/FormSheet/shared.tsx:131
+#: src/components/FormSheet/shared.tsx:133
 #: src/components/split/ExpenseComposer.tsx:581
 msgid "Discard changes?"
 msgstr "बदलाव छोड़ दें?"
@@ -2289,7 +2293,7 @@ msgstr "इस डिवाइस पर कोई भी खर्च, दो�
 msgid "Find me by email or phone"
 msgstr "ईमेल या फ़ोन से मुझे खोजा जा सके"
 
-#: src/screens/Settings/index.tsx:245
+#: src/screens/Settings/index.tsx:247
 msgid "Findable"
 msgstr "खोजे जा सकते हैं"
 
@@ -2364,7 +2368,7 @@ msgid "From others"
 msgstr "दूसरों से"
 
 #: src/components/settings/prefControls.tsx:190
-#: src/screens/Settings/index.tsx:234
+#: src/screens/Settings/index.tsx:236
 msgid "Full"
 msgstr "पूरा"
 
@@ -2491,7 +2495,7 @@ msgid "Hex color"
 msgstr "हेक्स रंग"
 
 #: src/components/settings/CategoriesEditor.tsx:197
-#: src/screens/Settings/index.tsx:245
+#: src/screens/Settings/index.tsx:247
 msgid "Hidden"
 msgstr "छिपी हुई"
 
@@ -2536,6 +2540,10 @@ msgstr "घर"
 #: src/components/settings/prefControls.tsx:225
 msgid "Home tab"
 msgstr "होम टैब"
+
+#: src/features/pwa/PwaHost.tsx:77
+msgid "How"
+msgstr "कैसे"
 
 #: src/components/settings/prefControls.tsx:557
 msgid "How amounts are grouped and punctuated."
@@ -2589,6 +2597,20 @@ msgstr "भारतीय रुपया"
 #: src/components/settings/AccentPicker.tsx:32
 msgid "Indigo"
 msgstr "नील"
+
+#: src/features/pwa/PwaHost.tsx:75
+#: src/features/pwa/PwaHost.tsx:77
+msgid "Install"
+msgstr "इंस्टॉल करें"
+
+#: src/screens/Settings/components/InstallAppItem.tsx:26
+#: src/screens/Settings/components/InstallAppItem.tsx:38
+msgid "Install app"
+msgstr "ऐप इंस्टॉल करें"
+
+#: src/features/pwa/PwaHost.tsx:70
+msgid "Install Splito for quick access, even offline."
+msgstr "तुरंत खोलने के लिए Splito इंस्टॉल करें, ऑफ़लाइन भी चलता है।"
 
 #: src/components/settings/prefControls.tsx:561
 msgid "International"
@@ -2756,7 +2778,7 @@ msgstr "सिर्फ़ आप और दोस्तों के बीच"
 msgid "Keep deleted items for"
 msgstr "हटाए गए आइटम रखें"
 
-#: src/components/FormSheet/shared.tsx:135
+#: src/components/FormSheet/shared.tsx:137
 #: src/components/split/ExpenseComposer.tsx:600
 msgid "Keep editing"
 msgstr "बदलाव जारी रखें"
@@ -2794,7 +2816,7 @@ msgid "Let people who know my email or number find me"
 msgstr "जो मेरा ईमेल या नंबर जानते हैं, वे मुझे खोज सकें"
 
 #: src/components/settings/prefControls.tsx:84
-#: src/screens/Settings/index.tsx:233
+#: src/screens/Settings/index.tsx:235
 msgid "Light"
 msgstr "लाइट"
 
@@ -2927,7 +2949,7 @@ msgstr "{sentence} के लिए और विकल्प"
 msgid "More shares"
 msgstr "ज़्यादा हिस्से"
 
-#: src/screens/Settings/index.tsx:242
+#: src/screens/Settings/index.tsx:244
 msgid "Most recent"
 msgstr "सबसे हाल का"
 
@@ -3033,6 +3055,10 @@ msgstr "नया आमंत्रण लिंक"
 #: src/components/settings/prefControls.tsx:801
 msgid "New invite links expire after"
 msgstr "नए आमंत्रण लिंक समाप्त होंगे"
+
+#: src/features/pwa/PwaHost.tsx:38
+msgid "New version available"
+msgstr "नया संस्करण उपलब्ध है"
 
 #: src/screens/SignIn.tsx:272
 msgid "Next"
@@ -3264,12 +3290,12 @@ msgid "of your share was paid by others"
 msgstr "आपके हिस्से में से दूसरों ने चुकाया"
 
 #: src/components/settings/prefControls.tsx:192
-#: src/screens/Settings/index.tsx:234
-#: src/screens/Settings/index.tsx:244
+#: src/screens/Settings/index.tsx:236
+#: src/screens/Settings/index.tsx:246
 msgid "Off"
 msgstr "बंद"
 
-#: src/screens/Settings/index.tsx:244
+#: src/screens/Settings/index.tsx:246
 msgid "On"
 msgstr "चालू"
 
@@ -3354,6 +3380,10 @@ msgstr "UPI ऐप खोलें"
 #: src/screens/Invites/Invite.tsx:316
 msgid "Opening an invite needs a connection to Splito. Try again once you’re online."
 msgstr "आमंत्रण खोलने के लिए Splito से कनेक्शन चाहिए। ऑनलाइन होने पर फिर कोशिश करें।"
+
+#: src/screens/Settings/components/InstallAppItem.tsx:43
+msgid "Opens full screen from your Home Screen and works offline."
+msgstr "होम स्क्रीन से पूरी स्क्रीन पर खुलता है और ऑफ़लाइन भी चलता है।"
 
 #: src/screens/RecentlyDeleted/index.tsx:318
 msgid "Opens it to restore or delete forever"
@@ -3576,7 +3606,7 @@ msgstr "ट्रिप की योजना या फ़्लैट सा�
 msgid "Plus"
 msgstr "जोड़"
 
-#: src/screens/Settings/index.tsx:110
+#: src/screens/Settings/index.tsx:111
 msgid "Preferences"
 msgstr "प्राथमिकताएँ"
 
@@ -3611,7 +3641,7 @@ msgstr "गोपनीयता"
 #: src/navigation/Drawer.tsx:230
 #: src/navigation/Navigation.tsx:69
 #: src/screens/Profile.tsx:40
-#: src/screens/Settings/index.tsx:87
+#: src/screens/Settings/index.tsx:88
 msgid "Profile"
 msgstr "प्रोफ़ाइल"
 
@@ -3652,8 +3682,8 @@ msgstr "हाल में सक्रिय ग्रुप"
 #: src/components/settings/sections.ts:53
 #: src/navigation/Navigation.tsx:73
 #: src/screens/RecentlyDeleted/index.tsx:198
-#: src/screens/Settings/index.tsx:145
-#: src/screens/Settings/index.tsx:148
+#: src/screens/Settings/index.tsx:146
+#: src/screens/Settings/index.tsx:149
 msgid "Recently deleted"
 msgstr "हाल ही में हटाए गए"
 
@@ -3675,13 +3705,23 @@ msgid "Record this payment"
 msgstr "यह भुगतान दर्ज करें"
 
 #: src/components/settings/prefControls.tsx:191
-#: src/screens/Settings/index.tsx:234
+#: src/screens/Settings/index.tsx:236
 msgid "Reduced"
 msgstr "कम"
 
 #: src/components/settings/prefControls.tsx:187
 msgid "Reduced swaps movement for gentle fades. Off shows every change instantly."
 msgstr "कम में हलचल की जगह हल्का फ़ेड होता है। बंद में हर बदलाव तुरंत दिखता है।"
+
+#: src/features/pwa/PwaHost.tsx:42
+#: src/features/pwa/PwaHost.tsx:49
+#: src/features/pwa/PwaHost.tsx:111
+msgid "Reload"
+msgstr "रीलोड करें"
+
+#: src/features/pwa/PwaHost.tsx:109
+msgid "Reload and lose your changes?"
+msgstr "रीलोड करें और बदलाव खो दें?"
 
 #: src/components/settings/prefControls.tsx:674
 msgid "Remember what you search for"
@@ -3758,16 +3798,16 @@ msgstr "{title} को डिफ़ॉल्ट पर रीसेट करे
 msgid "Reset {title}?"
 msgstr "{title} रीसेट करें?"
 
-#: src/screens/Settings/index.tsx:200
+#: src/screens/Settings/index.tsx:202
 msgid "Reset all"
 msgstr "सब रीसेट करें"
 
-#: src/screens/Settings/index.tsx:171
-#: src/screens/Settings/index.tsx:175
+#: src/screens/Settings/index.tsx:173
+#: src/screens/Settings/index.tsx:177
 msgid "Reset all settings"
 msgstr "सभी सेटिंग्स रीसेट करें"
 
-#: src/screens/Settings/index.tsx:198
+#: src/screens/Settings/index.tsx:200
 msgid "Reset all settings?"
 msgstr "सभी सेटिंग्स रीसेट करें?"
 
@@ -3861,6 +3901,10 @@ msgstr "नकद के लिए {unit} तक पूर्णांकित�
 msgid "Rule for this pair"
 msgstr "इस जोड़ी का नियम"
 
+#: src/features/pwa/PwaHost.tsx:65
+msgid "Safari can erase Splito’s saved data after 7 days away. Add it to your Home Screen to keep it."
+msgstr "7 दिन न खोलने पर Safari Splito का सहेजा हुआ डेटा मिटा सकता है। इसे बचाने के लिए Splito को होम स्क्रीन पर जोड़ें।"
+
 #: src/components/settings/prefControls.tsx:461
 msgid "Same as this device"
 msgstr "इस डिवाइस जैसा"
@@ -3908,6 +3952,10 @@ msgstr "सहेजा गया। ऑनलाइन होने पर ह�
 #: src/screens/People/components/RequestsSection.tsx:184
 msgid "Saved. We’ll send it when you’re online."
 msgstr "सहेजा गया। ऑनलाइन होने पर हम भेज देंगे।"
+
+#: src/features/pwa/InstallHelpDialog.tsx:45
+msgid "Scroll down and choose Add to Home Screen."
+msgstr "नीचे स्क्रॉल करें और होम स्क्रीन में जोड़ें चुनें।"
 
 #: src/components/forms/SearchInput.tsx:52
 #: src/components/forms/SearchInput.tsx:54
@@ -4032,17 +4080,17 @@ msgstr "इस समूह के लिए तय"
 #: src/navigation/Navigation.tsx:71
 #: src/screens/Profile.tsx:64
 #: src/screens/Profile.tsx:67
-#: src/screens/Settings/index.tsx:50
+#: src/screens/Settings/index.tsx:51
 #: src/screens/Settings/SettingsSection.tsx:62
 #: src/view/shell/desktop/LeftNav.tsx:758
 msgid "Settings"
 msgstr "सेटिंग्स"
 
-#: src/screens/Settings/index.tsx:187
+#: src/screens/Settings/index.tsx:189
 msgid "Settings are saved on this device. Once you sign in, they follow you to your other devices."
 msgstr "सेटिंग्स इसी डिवाइस पर सेव हैं। साइन इन करने के बाद ये आपके दूसरे डिवाइस पर भी मिलेंगी।"
 
-#: src/screens/Settings/index.tsx:205
+#: src/screens/Settings/index.tsx:207
 msgid "Settings reset"
 msgstr "सेटिंग्स रीसेट हो गईं"
 
@@ -4143,6 +4191,10 @@ msgstr "इनके खर्च दिखाएँ: {label}"
 msgid "Show hidden changes"
 msgstr "छिपे बदलाव दिखाएँ"
 
+#: src/features/pwa/PwaHost.tsx:75
+msgid "Show me how"
+msgstr "तरीका दिखाएँ"
+
 #: src/screens/Invites/InviteLinks.tsx:133
 msgid "Show QR code and share"
 msgstr "QR कोड दिखाएँ और शेयर करें"
@@ -4166,8 +4218,8 @@ msgstr "माफ़ी दिखाता है और उसे वापस 
 #: src/navigation/Drawer.tsx:335
 #: src/navigation/Drawer.tsx:341
 #: src/navigation/Navigation.tsx:72
-#: src/screens/Settings/index.tsx:65
-#: src/screens/Settings/index.tsx:70
+#: src/screens/Settings/index.tsx:66
+#: src/screens/Settings/index.tsx:71
 #: src/screens/SignIn.tsx:48
 #: src/screens/SignIn.tsx:347
 msgid "Sign in"
@@ -4193,7 +4245,7 @@ msgstr "छोटा"
 msgid "So friends know it’s you."
 msgstr "ताकि दोस्त जानें कि यह आप हैं।"
 
-#: src/screens/Settings/index.tsx:244
+#: src/screens/Settings/index.tsx:246
 msgid "Some"
 msgstr "कुछ"
 
@@ -4316,9 +4368,17 @@ msgstr "Splito आपका UPI ऐप नहीं देख सकता। �
 msgid "Splito collects no analytics and shows no ads."
 msgstr "Splito कोई एनालिटिक्स इकट्ठा नहीं करता और कोई विज्ञापन नहीं दिखाता।"
 
+#: src/screens/Settings/components/InstallAppItem.tsx:32
+msgid "Splito is installed"
+msgstr "Splito इंस्टॉल हो गया"
+
 #: src/screens/Settle/index.tsx:468
 msgid "Splito never moves money. Record each payment once it has happened – part payments are fine."
 msgstr "Splito कभी पैसे नहीं भेजता। हर भुगतान होने के बाद उसे दर्ज करें – आंशिक भुगतान भी ठीक है।"
+
+#: src/features/pwa/InstallHelpDialog.tsx:36
+msgid "Splito then opens full screen like any app, and keeps working without a connection."
+msgstr "इसके बाद Splito किसी भी ऐप की तरह पूरी स्क्रीन पर खुलता है और बिना इंटरनेट के भी चलता रहता है।"
 
 #: src/components/settings/AboutSettings.tsx:54
 msgid "Splito's interface is built on Bluesky's social-app (MIT licence). Icons are Lucide (ISC licence). The Inter typeface is under the SIL Open Font License."
@@ -4349,6 +4409,10 @@ msgstr "स्थिति"
 msgid "Stay"
 msgstr "ठहरना"
 
+#: src/features/pwa/InstallHelpDialog.tsx:80
+msgid "Step {n}"
+msgstr "चरण {n}"
+
 #: src/components/split/ExpenseComposer.tsx:467
 msgid "suggested"
 msgstr "सुझाया गया"
@@ -4366,7 +4430,7 @@ msgid "Swipe right on Activity"
 msgstr "गतिविधि पर दाएँ स्वाइप"
 
 #: src/components/settings/prefControls.tsx:83
-#: src/screens/Settings/index.tsx:233
+#: src/screens/Settings/index.tsx:235
 msgid "System"
 msgstr "सिस्टम"
 
@@ -4383,9 +4447,17 @@ msgstr "टैब"
 msgid "Tabs and defaults"
 msgstr "टैब और डिफ़ॉल्ट"
 
+#: src/features/pwa/InstallHelpDialog.tsx:48
+msgid "Tap Add. Splito appears on your Home Screen."
+msgstr "जोड़ें पर टैप करें। Splito आपकी होम स्क्रीन पर आ जाएगा।"
+
 #: src/components/split/SplitEditor.tsx:599
 msgid "Tap for one more portion; hold to take them off"
 msgstr "एक और हिस्से के लिए टैप करें; हटाने के लिए दबाकर रखें"
+
+#: src/features/pwa/InstallHelpDialog.tsx:42
+msgid "Tap the Share button in your browser’s toolbar."
+msgstr "अपने ब्राउज़र के टूलबार में शेयर बटन पर टैप करें।"
 
 #: src/components/settings/prefControls.tsx:285
 #: src/components/split/SplitEditor.tsx:446
@@ -4463,7 +4535,7 @@ msgstr "Splito खुलते समय यही टैब दिखेगा�
 msgid "The whole balance: you’ll be even in {currency}. Other currencies stay as they are."
 msgstr "पूरा बैलेंस: {currency} में हिसाब बराबर हो जाएगा। दूसरी मुद्राएँ जैसी हैं वैसी रहेंगी।"
 
-#: src/screens/Settings/index.tsx:199
+#: src/screens/Settings/index.tsx:201
 msgid "Theme, tabs, categories, language and every other setting go back to how Splito starts. Your people, groups and expenses stay as they are."
 msgstr "थीम, टैब, श्रेणियाँ, भाषा और बाकी हर सेटिंग Splito की शुरुआती सेटिंग पर लौट आएगी। आपके लोग, समूह और खर्च जैसे हैं वैसे ही रहेंगे।"
 
@@ -4815,7 +4887,7 @@ msgstr "किस लिए था?"
 msgid "What you call them, e.g. Riya"
 msgstr "आप उन्हें क्या कहते हैं, जैसे रिया"
 
-#: src/components/FormSheet/shared.tsx:132
+#: src/components/FormSheet/shared.tsx:134
 msgid "What you changed here won’t be saved."
 msgstr "यहाँ किए गए बदलाव सहेजे नहीं जाएँगे।"
 
@@ -5062,6 +5134,10 @@ msgstr "आपने {0} का कर्ज़ माफ़ किया"
 msgid "You got paid"
 msgstr "आपको भुगतान मिला"
 
+#: src/features/pwa/PwaHost.tsx:110
+msgid "You have changes that are not saved yet. Reloading now discards them."
+msgstr "आपके कुछ बदलाव अभी सहेजे नहीं गए हैं। अभी रीलोड करने पर वे हट जाएँगे।"
+
 #: src/components/people/HistoryRow.tsx:236
 msgid "you lent"
 msgstr "आपने उधार दिए"
@@ -5267,7 +5343,7 @@ msgstr "आपका फ़ोन नंबर"
 msgid "Your phone will ask to let Splito open your contacts. You pick one person; only the email or number you choose is used."
 msgstr "आपका फ़ोन Splito को संपर्क खोलने की अनुमति माँगेगा। आप एक व्यक्ति चुनें; सिर्फ़ आपका चुना ईमेल या नंबर इस्तेमाल होगा।"
 
-#: src/screens/Settings/index.tsx:104
+#: src/screens/Settings/index.tsx:105
 msgid "Your profile · saved on this device"
 msgstr "आपकी प्रोफ़ाइल · इस डिवाइस पर सहेजी गई"
 

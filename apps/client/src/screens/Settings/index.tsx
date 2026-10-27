@@ -8,6 +8,7 @@ import {useHaptics} from '#/lib/haptics'
 import {useMe, usePref} from '#/data/hooks'
 import {useData} from '#/data/StoreProvider'
 import {UserAvatar} from '#/view/com/util/UserAvatar'
+import {InstallAppItem} from '#/screens/Settings/components/InstallAppItem'
 import * as SettingsList from '#/screens/Settings/components/SettingsList'
 import {atoms as a, useTheme} from '#/alf'
 import {ArrowRotateCounterClockwise_Stroke2_Corner0_Rounded as ResetIcon} from '#/components/icons/ArrowRotate'
@@ -165,6 +166,7 @@ export function SettingsScreen() {
               <Trans>About</Trans>
             </SettingsList.ItemText>
           </SettingsList.LinkItem>
+          <InstallAppItem />
           <SettingsList.PressableItem
             testID="settings-reset-all"
             destructive

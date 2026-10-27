@@ -2853,7 +2853,7 @@ Native surfaces and the PWA.
 
 A production-only service worker with an offline app shell, a Bluesky-style update toast, a web manifest and install; plus manifest shortcuts, badge and a .splito file handler.
 
-- **Effort** M · **Impact** 8 · **Backend** no · **Status** todo · **Deps** F-201
+- **Effort** M · **Impact** 8 · **Backend** no · **Status** done (feat/wA-38; criterion 5's Export action waits for F-2001, the warning offers Add to Home Screen) · **Deps** F-201
 - **Prefs** `pwa.installHintDismissed` (device)
 - **Acceptance**
   1. The service worker registers only in production web builds (off in dev and e2e). It precaches the hashed app shell and assets, serves fonts and images stale-while-revalidate, and falls back to the cached shell for navigations, so the app opens offline (A16: refreshing a deep route offline works).

@@ -10,6 +10,7 @@ import {
 import {useSafeAreaInsets} from 'react-native-safe-area-context'
 import {Trans, useLingui} from '@lingui/react/macro'
 
+import {useWorkAtStake} from '#/lib/pwa/workAtStake'
 import {atoms as a, useBreakpoints, useTheme} from '#/alf'
 import {Button, ButtonIcon, ButtonText} from '#/components/Button'
 import * as Dialog from '#/components/Dialog'
@@ -79,6 +80,7 @@ export function Outer({
 }) {
   const discardControl = Prompt.usePromptControl()
   const [isDirty, setIsDirty] = useState(false)
+  useWorkAtStake(isDirty)
   const {gtMobile} = useBreakpoints()
   /* Bluesky's dialog padding: 24 on wide web, 20 elsewhere. */
   const inset = IS_WEB && gtMobile ? a.px_2xl : a.px_xl

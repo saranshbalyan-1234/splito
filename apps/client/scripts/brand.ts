@@ -24,6 +24,8 @@ const PUBLIC = join(ROOT, 'public')
 const BLUE = '#1185fe'
 const WHITE = '#FFFFFF'
 const BLACK = '#000000'
+/** ALF Dim's background, the default dark theme: the installed app's launch and title-bar colour (owner rule 26.21). */
+const DIM = '#151D28'
 
 const SOURCE = readFileSync(
   join(ROOT, '../../assets-owner/logo-owner-provided.svg'),
@@ -172,8 +174,8 @@ const MANIFEST = {
   start_url: '/',
   scope: '/',
   display: 'standalone',
-  background_color: WHITE,
-  theme_color: WHITE,
+  background_color: DIM,
+  theme_color: DIM,
   icons: [
     {
       src: '/icons/icon-192.png',
