@@ -1281,8 +1281,13 @@ show what: centre may be page name, right maybe some basic action, and left may 
   | Expense | Edit + overflow (Delete) |
   | Settings, Profile, Settle | none |
 
-- **Behaviour:** sticky, Bluesky bottom border; on phones it hides on scroll down and returns on scroll up
-  (Bluesky minimal shell). On rail and desktop it sits at the top of the main content, separate from the
+- **Behaviour (exactly Bluesky's minimal shell):** on phones (native and mobile web) the header scrolls away
+  with the content as you scroll down (the bottom bar and FAB slide away with it) and slides back in as soon
+  as you scroll up a little (Bluesky `useMinimalShellMode` / `useMinimalShellHeaderTransform` /
+  `useMinimalShellFooterTransform`, its thresholds and springs, driven on the UI thread from the list's scroll
+  handler); reaching the top always shows it; switching tabs or opening a sheet resets it to shown. On
+  rail/desktop the header stays sticky (as Bluesky). Bluesky bottom border. *Why:* "just like in bluesky, even
+  the header should scroll but once i scroll up a little it should appear". On rail and desktop it sits at the top of the main content, separate from the
   sidebar.
 - **Add expense and Edit expense are sheets (§ 26.8), so they have no header;** no header anywhere carries a
   "Cancel" text button or a "Save" pill.
@@ -1806,6 +1811,7 @@ Every owner decision, in the order it was made (all 2026-10-26). "Replaced" name
 | 78 | "manage the indexeddb properly, a lot of different data is clubbed into a single table"; "the db level architecture is very important for scalability" | Local DB v2: one store per entity type, normalised members/parties, indexes per query, balance projection in-transaction, cursor paging, versioned migrations, Postgres mirrors it | § 9.8 | Single `entities` store with full scans |
 | 79 | "every value can have status, whether its outbox, pending success, synced whatever" | Per-row `syncStatus` (local / pending / syncing / synced / failed) with index, shown per item, aggregated in the avatar dot | §§ 9.8, 26.7 | Only a global status label |
 | 80 | "use sonnet for all implementation and opus for decisions and reviews" | Sonnet builds and fixes; Opus decides, reviews, audits, judges; every feature gets an Opus review before the next | § 26.1 | One model for everything |
+| 81 | "just like in bluesky, even the header should scroll but once i scroll up a little it should appear" | Bluesky minimal shell on phones (header, bottom bar, FAB hide on scroll down, return on slight scroll up), sticky on desktop | § 26.4 | (rule existed but was not working) |
 
 New decisions follow § 0 rule 9: rewrite the rule in its topic so only the current truth remains, then add a
 row here.
