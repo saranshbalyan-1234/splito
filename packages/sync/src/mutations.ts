@@ -206,6 +206,7 @@ export async function createGroup(
   getCurrency(input.currency)
   if (input.startDate) parseLocalDate(input.startDate)
   if (input.endDate) parseLocalDate(input.endDate)
+  if (input.startDate && input.endDate && input.endDate < input.startDate) throw new DomainError('INVALID_DATE')
   const ids = [...new Set([ctx.actor, ...input.memberIds])]
   return store.transaction(async tx => {
     for (const pid of ids) await requireLive(tx, 'person', pid, 'UNKNOWN_PERSON')
