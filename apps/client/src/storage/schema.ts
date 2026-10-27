@@ -29,8 +29,4 @@ export type Device = {
   activityFeed: FeedState
   /** Search's recent queries, newest first (Bluesky's `searchTermHistory`). */
   searchHistory: string[]
-  /** Dev and e2e builds only: this install was opened with `?demo=1`, so the demo directory answers. */
-  demoMode: boolean
-  /** Dev and e2e builds only: the small demo set was asked for and has not finished going in. */
-  demoPending: boolean
 }

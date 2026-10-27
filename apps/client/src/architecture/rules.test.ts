@@ -112,7 +112,7 @@ describe('counters', () => {
     expect(count('moneyFullRead', "await rows.range('people', {})", 'packages/sync/src/x.ts')).toBe(0)
     expect(count('moneyFullRead', 'do { await work() } while (after)', screen)).toBe(0)
     // Migration and the dev tools are the file allowlist; anything else says so beside the call.
-    expect(count('moneyFullRead', mirror, `${CLIENT}data/demoLarge.ts`)).toBe(0)
+    expect(count('moneyFullRead', mirror, `${CLIENT}data/demoSeed.ts`)).toBe(0)
     expect(count('moneyFullRead', mirror, 'packages/sync/src/migrate.ts')).toBe(0)
     expect(count('moneyFullRead', mirror, 'packages/sync/src/selectors.ts')).toBe(1)
     expect(count('moneyFullRead', "// full-read-ok: export reads everything\nconst all = await store.page('expense', {limit: 500})", 'packages/sync/src/selectors.ts')).toBe(0)
@@ -123,14 +123,18 @@ describe('counters', () => {
   })
 
   test('demoStaticImport', () => {
-    expect(count('demoStaticImport', "import {runLargeDemo} from '#/screens/Settings/DemoData'")).toBe(1)
-    expect(count('demoStaticImport', "import {demoCounts} from '#/data/demoLarge'\nexport {x} from '@splito/sync/demoLarge'")).toBe(2)
-    expect(count('demoStaticImport', "const m = await import('#/screens/Settings/DemoData')")).toBe(0)
-    expect(count('demoStaticImport', "import {x} from '#/data/demoLarge'", `${CLIENT}screens/Settings/DemoData.tsx`)).toBe(0)
+    expect(count('demoStaticImport', "import {DemoModeRows} from '#/screens/Settings/DemoMode'")).toBe(1)
+    expect(count('demoStaticImport', "import {openDemo} from '#/data/demoMode'\nexport {x} from '@splito/sync/demoLarge'")).toBe(2)
+    expect(count('demoStaticImport', "import DemoBanner from '#/components/DemoBanner'")).toBe(1)
+    expect(count('demoStaticImport', "import {seedDemo} from '#/data/demoSeed'")).toBe(1)
+    expect(count('demoStaticImport', "import {seedDemo} from '#/data/demoSeed'", `${CLIENT}data/demoMode.ts`)).toBe(0)
+    expect(count('demoStaticImport', "const m = await import('#/screens/Settings/DemoMode')")).toBe(0)
+    expect(count('demoStaticImport', "const B = lazy(() => import('#/components/DemoBanner'))")).toBe(0)
+    expect(count('demoStaticImport', "import {x} from '#/data/demoMode'", `${CLIENT}screens/Settings/DemoMode.tsx`)).toBe(0)
     // Side-effect imports and require() bundle it too; a comment does not.
-    expect(count('demoStaticImport', "import '#/data/demoLarge'\nimport \"@splito/sync/demoLarge\"")).toBe(2)
-    expect(count('demoStaticImport', "const m = require('#/screens/Settings/DemoData')")).toBe(1)
-    expect(count('demoStaticImport', "// import '#/data/demoLarge'\nconst m = import('#/data/demoLarge')")).toBe(0)
+    expect(count('demoStaticImport', "import '#/data/demoMode'\nimport \"@splito/sync/demoLarge\"")).toBe(2)
+    expect(count('demoStaticImport', "const m = require('#/screens/Settings/DemoMode')")).toBe(1)
+    expect(count('demoStaticImport', "// import '#/data/demoMode'\nconst m = import('#/data/demoMode')")).toBe(0)
   })
 
   test('rawColour', () => {

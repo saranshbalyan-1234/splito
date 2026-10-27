@@ -14,7 +14,7 @@ type Schema = {
  * closing the composer, reloads and app restarts, and are cleared on save or
  * discard. (The old single `addExpense` slot is no longer read.)
  */
-const drafts = new Storage<[string], Schema>({id: 'splito_drafts'})
+const drafts = new Storage<[string], Schema>({id: 'splito_drafts', scoped: 'all'})
 
 export function readDraft(context: DraftContext): ExpenseForm | undefined {
   try {

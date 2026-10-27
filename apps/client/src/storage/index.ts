@@ -6,6 +6,20 @@ import {type Device} from '#/storage/schema'
 
 export * from '#/storage/schema'
 
+/*
+ * Dev and e2e demo mode keeps its own search history, read marks and drafts:
+ * while a prefix is set, the keys a storage lists as `scoped` live under it,
+ * so nothing typed in demo mode shows up in the real data (ARCHITECTURE 26.1).
+ * Production never sets one.
+ */
+let scope = ''
+const scopeListeners = new Set<() => void>()
+export function setStorageScope(prefix: string) {
+  if (prefix === scope) return
+  scope = prefix
+  scopeListeners.forEach(l => l())
+}
+
 /**
  * Generic storage class. DO NOT use this directly. Instead, use the exported
  * storage instances below.
@@ -13,9 +27,17 @@ export * from '#/storage/schema'
 export class Storage<Scopes extends unknown[], Schema> {
   protected sep = ':'
   protected store: MMKV
+  /** The keys (or all of them) that follow the demo-mode scope. */
+  protected scoped: 'all' | readonly string[]
 
-  constructor({id}: {id: string}) {
+  constructor({id, scoped = []}: {id: string; scoped?: 'all' | readonly string[]}) {
     this.store = new MMKV({id})
+    this.scoped = scoped
+  }
+
+  protected keyOf(scopes: unknown[]): string {
+    const key = scopes.join(this.sep)
+    return scope && (this.scoped === 'all' || this.scoped.includes(String(scopes.at(-1)))) ? scope + key : key
   }
 
   /**
@@ -29,7 +51,7 @@ export class Storage<Scopes extends unknown[], Schema> {
     data: Schema[Key],
   ): void {
     // stored as `{ data: <value> }` structure to ease stringification
-    this.store.set(scopes.join(this.sep), JSON.stringify({data}))
+    this.store.set(this.keyOf(scopes), JSON.stringify({data}))
   }
 
   /**
@@ -39,7 +61,7 @@ export class Storage<Scopes extends unknown[], Schema> {
   getRaw<Key extends keyof Schema>(
     scopes: [...Scopes, Key],
   ): string | undefined {
-    return this.store.getString(scopes.join(this.sep))
+    return this.store.getString(this.keyOf(scopes))
   }
 
   /**
@@ -64,7 +86,7 @@ export class Storage<Scopes extends unknown[], Schema> {
    *   `remove([scope, key])`
    */
   remove<Key extends keyof Schema>(scopes: [...Scopes, Key]) {
-    this.store.delete(scopes.join(this.sep))
+    this.store.delete(this.keyOf(scopes))
   }
 
   /**
@@ -94,7 +116,7 @@ export class Storage<Scopes extends unknown[], Schema> {
     callback: () => void,
   ) {
     return this.store.addOnValueChangedListener(key => {
-      if (key === scopes.join(this.sep)) {
+      if (key === this.keyOf(scopes)) {
         callback()
       }
     })
@@ -129,7 +151,13 @@ export function useStorage<
     const sub = storage.addOnValueChangedListener(scopes, () => {
       setValue(storage.get(scopes))
     })
-    return () => sub.remove()
+    // Demo mode moves the scoped keys to another prefix: read again.
+    const reread = () => setValue(storage.get(scopes))
+    scopeListeners.add(reread)
+    return () => {
+      sub.remove()
+      scopeListeners.delete(reread)
+    }
   }, [storage, scopes])
 
   const setter = useCallback(
@@ -148,7 +176,10 @@ export function useStorage<
  *
  *   `device.set([key], true)`
  */
-export const device = new Storage<[], Device>({id: 'splito_device'})
+export const device = new Storage<[], Device>({
+  id: 'splito_device',
+  scoped: ['searchHistory', 'activityFeed'],
+})
 
 /**
  * Account data that's specific to the account on this device

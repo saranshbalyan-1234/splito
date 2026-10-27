@@ -67,6 +67,8 @@ import {
   type Query,
 } from '#/data/projections'
 import {useData} from '#/data/StoreProvider'
+
+export {useDemoMode} from '#/data/StoreProvider'
 import {directory} from '#/data/friends'
 import {useTickEveryMinute} from '#/state/shell/tick-every-minute'
 
