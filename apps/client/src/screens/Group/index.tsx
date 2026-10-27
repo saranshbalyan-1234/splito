@@ -7,6 +7,7 @@ import {
   type Entity,
   type Group,
   groupAdmins,
+  isGroupInactive,
   type Person,
   type Repayment,
   type WriteOff,
@@ -364,17 +365,20 @@ export function GroupScreen() {
               size={gtMobile ? 64 : 56}
             />
             {/* Pushed pages have no FAB (owner rule); adding here pre-selects the group. */}
-            <Button
-              testID="group-add-expense"
-              label={l({message: 'Add expense', context: 'action'})}
-              size="small"
-              color="primary"
-              onPress={() => navigation.navigate('AddExpense', {groupId})}>
-              <ButtonIcon icon={PlusIcon} />
-              <ButtonText>
-                <Trans context="action">Add expense</Trans>
-              </ButtonText>
-            </Button>
+            {/* An inactive group takes no new expenses: its notice below says how to reopen it (decision 89). */}
+            {isGroupInactive(group.data) ? null : (
+              <Button
+                testID="group-add-expense"
+                label={l({message: 'Add expense', context: 'action'})}
+                size="small"
+                color="primary"
+                onPress={() => navigation.navigate('AddExpense', {groupId})}>
+                <ButtonIcon icon={PlusIcon} />
+                <ButtonText>
+                  <Trans context="action">Add expense</Trans>
+                </ButtonText>
+              </Button>
+            )}
           </View>
           <View style={[a.gap_xs]}>
             <View style={[a.flex_row, a.align_center, a.gap_sm]}>
@@ -489,7 +493,7 @@ export function GroupScreen() {
       illustration="empty-groups"
       message={l`No expenses in this group yet. Add the first one and everyone’s share is worked out for you.`}
       button={
-        gtMobile
+        gtMobile && !(group && isGroupInactive(group.data))
           ? {
               label: l`Add expense`,
               text: l`Add expense`,
@@ -590,7 +594,7 @@ export function GroupScreen() {
                 </Menu.ItemText>
                 <Menu.ItemIcon icon={RouteIcon} position="right" />
               </Menu.Item>
-              {me && <GroupLifecycleItems lifecycle={lifecycle} group={group} me={me.id} />}
+              {me && <GroupLifecycleItems lifecycle={lifecycle} group={group} me={me.id} nets={nets} />}
             </Menu.Outer>
           </Menu.Root>
         ) : (

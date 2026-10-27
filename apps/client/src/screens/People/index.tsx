@@ -9,6 +9,7 @@ import {type Group, type Person} from '@splito/sync'
 
 import {type NavigationProp} from '#/lib/routes/types'
 import {perfMark} from '#/lib/perfMark'
+import {useGroupChipNames} from '#/data/groupVisibility'
 import {useNumberLocale} from '#/locale/numberLocale'
 import {
   useBalanceRows,
@@ -95,7 +96,7 @@ export function PeopleScreen() {
     ? personSummary(balanceRows, {includeGroups})
     : []
   const byPerson = new Map(summaries.map(s => [s.person, s]))
-  const groupNames = new Map((groups ?? []).map(g => [g.id, g.data.name]))
+  const groupNames = useGroupChipNames(groups)
   const friends = (people ?? [])
     .filter(p => !p.data.isMe)
     .map(p => ({id: p.id, name: p.data.name, summary: byPerson.get(p.id)}))

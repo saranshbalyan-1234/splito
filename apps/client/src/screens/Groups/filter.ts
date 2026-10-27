@@ -6,7 +6,10 @@ export type GroupRowData = {
   id: string
   name: string
   kind: Group['kind']
-  archived: boolean
+  /** Inactive for every member (decision 89). */
+  inactive?: boolean
+  /** Hidden from my own lists (decision 89). */
+  hidden?: boolean
   balances: Record<string, bigint>
   /** Member names, so search finds a group by who is in it. */
   members: string[]
@@ -15,7 +18,9 @@ export type GroupRowData = {
 /** Everything the Groups filter sets; applied together with Apply. */
 export type GroupFilters = {
   type: Group['kind'] | 'all'
-  status: 'active' | 'archived'
+  status: 'active' | 'inactive' | 'all'
+  /** Shown or hidden groups (personal, decision 89). */
+  visibility: 'shown' | 'hidden' | 'all'
   currency: string | 'all'
   show: 'all' | 'owed' | 'owe' | 'settled'
   sort: 'recent' | 'name' | 'amount'
@@ -24,6 +29,7 @@ export type GroupFilters = {
 export const DEFAULT_GROUP_FILTERS: GroupFilters = {
   type: 'all',
   status: 'active',
+  visibility: 'shown',
   currency: 'all',
   show: 'all',
   sort: 'recent',
@@ -37,11 +43,12 @@ export const DEFAULT_GROUP_FILTERS: GroupFilters = {
  */
 export function filterGroups(
   rows: GroupRowData[],
-  {type, status, currency, show}: GroupFilters,
+  {type, status, visibility, currency, show}: GroupFilters,
 ): GroupRowData[] {
   return rows.flatMap(row => {
     if (type !== 'all' && row.kind !== type) return []
-    if (row.archived !== (status === 'archived')) return []
+    if (status !== 'all' && !!row.inactive !== (status === 'inactive')) return []
+    if (visibility !== 'all' && !!row.hidden !== (visibility === 'hidden')) return []
     let balances = row.balances
     if (currency !== 'all') {
       if (!(currency in balances)) return []

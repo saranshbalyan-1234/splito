@@ -19,7 +19,9 @@ import {
   magnitude,
   ZERO,
 } from '@splito/domain'
-import {type Group, type NavItemId} from '@splito/sync'
+import {type Group, isGroupInactive, type NavItemId} from '@splito/sync'
+
+import {useHiddenGroups} from '#/data/groupVisibility'
 import {Trans, useLingui} from '@lingui/react/macro'
 import {useLingui as useLinguiCore} from '@lingui/react'
 import {useNavigation, useNavigationState} from '@react-navigation/native'
@@ -424,6 +426,7 @@ export function RecentGroups() {
   const groups = useEntities<Group>('group')
   const myBalances = useMyGroupBalances()
   const groupActivity = useGroupActivity()
+  const hidden = useHiddenGroups()
   const [defaultCurrency = 'INR'] = usePref('defaultCurrency')
   const route = useNavigationState(state => getCurrentRoute(state))
   const openGroupId =
@@ -433,14 +436,13 @@ export function RecentGroups() {
 
   const recent = useMemo(() => {
     if (!me || !groups || !myBalances || !groupActivity) return []
-    const live = groups.filter(g => !g.data.archived)
+    const live = groups.filter(g => !isGroupInactive(g.data) && !hidden.has(g.id))
     const balances = myBalances
     return sortGroups(
       live.map(g => ({
         id: g.id,
         name: g.data.name,
         kind: g.data.kind,
-        archived: g.data.archived,
         balances: balances[g.id] ?? {},
         members: [],
       })),
@@ -450,7 +452,7 @@ export function RecentGroups() {
         activity: groupActivity,
       },
     ).slice(0, RECENT_GROUPS)
-  }, [me, groups, myBalances, groupActivity, defaultCurrency])
+  }, [me, groups, myBalances, groupActivity, defaultCurrency, hidden])
 
   if (recent.length === 0) return null
 

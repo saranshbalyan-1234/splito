@@ -48,3 +48,9 @@ test('rules the group set are kept when they allow a plan', () => {
   // bob may only pay cara, so the plan fails and falls back to the direct plan with no rules.
   expect(memberExitTransfers(g, 'bob', rules)).toEqual([{currency: 'EUR', from: 'bob', to: 'me', amount: 100n}])
 })
+
+test('open amounts per group currency: what is owed, settled currencies left out', async () => {
+  const {openAmounts} = await import('../src/memberExit')
+  expect(openAmounts(nets)).toEqual({EUR: 3000n, INR: 500n})
+  expect(openAmounts({JPY: nets.JPY})).toEqual({})
+})

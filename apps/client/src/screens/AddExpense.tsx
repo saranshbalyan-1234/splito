@@ -1,7 +1,7 @@
 import {useState} from 'react'
 import {useLingui} from '@lingui/react/macro'
 import {useNavigation, useRoute, type RouteProp} from '@react-navigation/native'
-import {type Entity, type Group, type Person} from '@splito/sync'
+import {type Entity, type Group, isGroupInactive, type Person} from '@splito/sync'
 
 import {type AllNavigatorParams, type NavigationProp} from '#/lib/routes/types'
 import {useEntities, useMe, usePref} from '#/data/hooks'
@@ -101,7 +101,8 @@ function AddExpenseForm({
 }) {
   const context = {personId, groupId}
   const [fresh] = useState(() => {
-    const group = groups.find(g => g.id === groupId)
+    /* An inactive group takes no new expenses (decision 89): a link or button naming one opens a plain expense. */
+    const group = groups.find(g => g.id === groupId && !isGroupInactive(g.data))
     if (group) {
       const members = group.data.members
         .filter(m => m.leftAt === null)
@@ -134,7 +135,7 @@ function AddExpenseForm({
     if (!d) return undefined
     // People removed since the draft was written drop out of every field of it.
     const alive = new Set(people.map(p => p.id))
-    const isGroupAlive = !d.groupId || groups.some(g => g.id === d.groupId)
+    const isGroupAlive = !d.groupId || groups.some(g => g.id === d.groupId && !isGroupInactive(g.data))
     return isGroupAlive ? pruneForm(d, alive) : undefined
   })
 

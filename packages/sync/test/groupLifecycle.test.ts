@@ -1,18 +1,19 @@
-/* F-604 archive, F-615 leave and delete a group, F-613 part 1 remove a member. */
+/* F-604 active / inactive and show / hide, F-615 leave and delete a group, F-613 part 1 remove a member. */
 import {beforeEach, expect, test} from 'bun:test'
 import {DomainError} from '@splito/domain'
 
 import {activityFromHistory, loadActivity} from '../src/activity'
 import {
-  archiveGroup,
+  makeGroupInactive,
   deleteGroup,
   groupContents,
   leaveGroup,
   previewMemberExit,
   purgeDeletedGroup,
   removeGroupMember,
+  setGroupHidden,
   restoreGroup,
-  unarchiveGroup,
+  makeGroupActive,
 } from '../src/groupLifecycle'
 import {
   addGroupMembers,
@@ -23,11 +24,15 @@ import {
   createWriteOffs,
   deleteExpense,
   deletePerson,
+  updateExpense,
   ensureMe,
   type ExpenseDraft,
   type Group,
   groupAdmins,
+  isGroupInactive,
+  restoreExpense,
 } from '../src/mutations'
+import {getPref} from '../src/preferences'
 import {loadBin} from '../src/selectors'
 import {openSqlStore} from '../src/sqlStore'
 import {type Store} from '../src/store'
@@ -80,31 +85,50 @@ async function flat() {
 const net = async (groupId: string, personId: string) => (await s.balances({groupId})).filter(b => b.personId === personId && b.amount !== 0n).map(b => [b.currency, b.amount])
 const exit = {date: '2026-10-27', tz: 'Asia/Kolkata'}
 
-/* ------------------------------- F-604 archive ------------------------------- */
+/* ------------------------------- F-604 active / inactive and show / hide ------------------------------- */
 
-test('archive hides a group by flag, keeps its balances, and unarchive brings it back', async () => {
-  const {g, bob} = await flat()
+test('inactive keeps a group\'s balances and records; active brings it back', async () => {
+  const {g} = await flat()
   const before = await s.balances({groupId: g.id})
-  const a = await archiveGroup(s, ctx, g.id)
-  expect(a.data.archived).toBe(true)
+  const a = await makeGroupInactive(s, ctx, g.id)
+  expect(a.data.inactive).toBe(true)
   expect(await s.balances({groupId: g.id})).toEqual(before)
-  expect((await s.get<Group>('group', g.id))!.data.archived).toBe(true)
-  // The Archived index finds it.
-  expect((await s.page('group', {index: 'byArchived', eq: [1]})).items.map(x => x.id)).toEqual([g.id])
-  // Expenses can still be added to an archived group.
-  await createExpense(s, ctx, {title: 'More', groupId: g.id, currency: 'EUR', total: 100n, payers: {me: 100n}, split: {mode: 'equal', participants: ['me', bob.id]}, date: '2026-10-27', tz: 'UTC', category: 'x', notes: ''})
-  const u = await unarchiveGroup(s, ctx, g.id)
-  expect(u.data.archived).toBe(false)
-  expect((await s.page('group', {index: 'byArchived', eq: [1]})).items).toEqual([])
+  expect(isGroupInactive(a.data)).toBe(true)
+  const u = await makeGroupActive(s, ctx, g.id)
+  expect(isGroupInactive(u.data)).toBe(false)
   const kinds = (await loadActivity(s)).filter(x => x.entityType === 'group').map(x => x.kind)
-  expect(kinds).toEqual(['group.unarchived', 'group.archived', 'group.created'])
+  expect(kinds).toEqual(['group.active', 'group.inactive', 'group.created'])
+  // One outbox op per change, in history.
+  expect((await s.outbox()).filter(o => o.entityId === g.id).map(o => o.opType)).toEqual(['group.create', 'group.inactive', 'group.active'])
 })
 
-test('archiving an archived group writes nothing', async () => {
+test('an inactive group rejects add, edit, move-into and restore-into with GROUP_INACTIVE, but settling still works', async () => {
+  const {g, bob, e, draft} = await flat()
+  const other = await createExpense(s, ctx, draft({groupId: null, split: {mode: 'equal', participants: ['me', bob.id]}}))
+  const inGroup = await createExpense(s, ctx, draft({title: 'Wi-Fi'}))
+  await deleteExpense(s, ctx, inGroup.id)
+  await makeGroupInactive(s, ctx, g.id)
+  expect(await codeOf(createExpense(s, ctx, draft()))).toBe('GROUP_INACTIVE')
+  expect(await codeOf(updateExpense(s, ctx, e.id, draft({title: 'Edited'})))).toBe('GROUP_INACTIVE')
+  expect(await codeOf(updateExpense(s, ctx, other.id, draft()))).toBe('GROUP_INACTIVE')
+  expect(await codeOf(restoreExpense(s, ctx, inGroup.id))).toBe('GROUP_INACTIVE')
+  expect((await s.get('expense', inGroup.id))!.deleted).toBe(true)
+  // Records outside the inactive group, and deleting inside it, are untouched.
+  await updateExpense(s, ctx, other.id, draft({groupId: null, title: 'Still fine', split: {mode: 'equal', participants: ['me', bob.id]}}))
+  await deleteExpense(s, ctx, e.id)
+  // Payments, write-offs and exits still close the money.
+  await createRepayment(s, ctx, {groupId: g.id, currency: 'EUR', from: bob.id, to: 'me', amount: 100n, date: '2026-10-28', tz: 'UTC', note: ''})
+  await createWriteOffs(s, ctx, [{groupId: g.id, currency: 'EUR', from: bob.id, to: 'me', amount: 50n, date: '2026-10-28', tz: 'UTC', note: ''}])
+  await makeGroupActive(s, ctx, g.id)
+  await restoreExpense(s, ctx, inGroup.id)
+  await createExpense(s, ctx, draft())
+})
+
+test('making an inactive group inactive again writes nothing', async () => {
   const {g} = await flat()
-  await archiveGroup(s, ctx, g.id)
+  await makeGroupInactive(s, ctx, g.id)
   const v = (await s.get('group', g.id))!.version
-  await archiveGroup(s, ctx, g.id)
+  await makeGroupInactive(s, ctx, g.id)
   expect((await s.get('group', g.id))!.version).toBe(v)
 })
 
@@ -322,4 +346,45 @@ test('a group that is not deleted cannot be restored, and a deleted one cannot b
   expect(await codeOf(restoreGroup(s, ctx, g.id))).toBe('NOT_FOUND')
   await deleteGroup(s, ctx, g.id)
   expect(await codeOf(deleteGroup(s, ctx, g.id))).toBe('NOT_FOUND')
+})
+
+test('the old archived flag reads as inactive: it blocks expenses, shows in Activity as inactive, and Make active clears it (adapter)', async () => {
+  const {g, bob, draft} = await flat()
+  await s.transaction(async tx => {
+    const row = (await tx.get<Group>('group', g.id))!
+    const data = {...row.data, archived: true}
+    await tx.put({...row, data, version: row.version + 1, updatedAt: ++clock})
+    await tx.appendHistory({entityType: 'group', entityId: g.id, version: row.version + 1, data, deleted: false, at: clock, actor: 'me'})
+  })
+  const legacy = (await s.get<Group>('group', g.id))!.data
+  expect(legacy.inactive).toBeUndefined()
+  expect(isGroupInactive(legacy)).toBe(true)
+  expect(await codeOf(createExpense(s, ctx, draft()))).toBe('GROUP_INACTIVE')
+  expect((await loadActivity(s)).find(x => x.entityType === 'group')!.kind).toBe('group.inactive')
+  // Settling still works.
+  await createRepayment(s, ctx, {groupId: g.id, currency: 'EUR', from: bob.id, to: 'me', amount: 100n, date: '2026-10-28', tz: 'UTC', note: ''})
+  const active = await makeGroupActive(s, ctx, g.id)
+  expect(active.data.archived).toBe(false)
+  expect(isGroupInactive(active.data)).toBe(false)
+  await createExpense(s, ctx, draft())
+})
+
+test('hide and show write only the account preference: the group, its history and its outbox are untouched', async () => {
+  const {g} = await flat()
+  const before = {row: await s.get('group', g.id), ops: (await s.outbox()).length}
+  await setGroupHidden(s, ctx, g.id, true)
+  expect(await getPref(s, 'groups.hidden')).toEqual([g.id])
+  expect(await s.get('group', g.id)).toEqual(before.row)
+  expect((await s.history('group', g.id)).length).toBe(before.row!.version)
+  const ops = (await s.outbox()).slice(before.ops)
+  expect(ops.map(o => [o.entityType, o.opType])).toEqual([['preference', 'preference.set']])
+  // Hiding twice, or showing what is not hidden, writes nothing.
+  await setGroupHidden(s, ctx, g.id, true)
+  expect((await s.outbox()).length).toBe(before.ops + 1)
+  await setGroupHidden(s, ctx, g.id, false)
+  expect(await getPref(s, 'groups.hidden')).toEqual([])
+  // A hidden group still takes expenses if it is active.
+  await setGroupHidden(s, ctx, g.id, true)
+  const { draft } = await (async () => ({draft: (over: Partial<ExpenseDraft>) => ({title: 'x', groupId: g.id, currency: 'EUR', total: 100n, payers: {me: 100n}, split: {mode: 'equal' as const, participants: ['me']}, date: '2026-10-28', tz: 'UTC', category: 'x', notes: '', ...over})}))()
+  await createExpense(s, ctx, draft({}))
 })

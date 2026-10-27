@@ -186,6 +186,10 @@ export const PREFS = {
   'amount.shorthand': def('amount.shorthand', 'regional', 'account', 'Amount shortcuts', true, isBool),
   peopleSort: def('peopleSort', 'lists', 'account', 'Sort people by', 'amount', oneOf('amount', 'name', 'recent')),
   includeGroupsDefault: def('includeGroupsDefault', 'lists', 'account', 'Include groups by default', true, isBool),
+  /** The "Inactive (N)" fold at the end of the Groups list (decision 89). */
+  'groups.showInactiveFold': def('groups.showInactiveFold', 'lists', 'account', 'Show inactive groups', true, isBool),
+  /** Groups I have hidden from my own lists (decision 89); set from a group's menu, personal to my account, no Settings row. */
+  'groups.hidden': def<string[]>('groups.hidden', 'lists', 'account', 'Hidden groups', [], (v): v is string[] => Array.isArray(v) && v.length <= 1000 && v.every(isString) && new Set(v).size === v.length),
   /** The small sync dot on expense, payment and request rows (ARCHITECTURE 9.8); detail pages always say it in words. */
   showSyncStatus: def('showSyncStatus', 'lists', 'device', 'Show sync status on rows', true, isBool),
   swipeLeft: def<SwipeAction>('swipeLeft', 'lists', 'account', 'Swipe left', 'delete', oneOf('markRead', 'hide', 'delete', 'none')),

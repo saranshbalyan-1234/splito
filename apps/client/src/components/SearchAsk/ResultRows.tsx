@@ -10,8 +10,11 @@ import {
   type Expense,
   type Group,
   highlightRanges,
+  isGroupInactive,
   type Person,
 } from '@splito/sync'
+
+import {useHiddenGroups} from '#/data/groupVisibility'
 
 import {PressableWithHover} from '#/view/com/util/PressableWithHover'
 import {UserAvatar} from '#/view/com/util/UserAvatar'
@@ -335,7 +338,8 @@ export function GroupResult({
 }) {
   const t = useTheme()
   const {t: l} = useLingui()
-  const {name, kind, members, archived} = group.data
+  const {name, kind, members} = group.data
+  const hidden = useHiddenGroups()
   const kindLabel = {
     trip: l`Trip`,
     home: l`Home`,
@@ -346,7 +350,8 @@ export function GroupResult({
   const byline = [
     kindLabel,
     memberCount === 1 ? l`1 member` : l`${memberCount} members`,
-    archived ? l`Archived` : undefined,
+    isGroupInactive(group.data) ? l`Inactive` : undefined,
+    hidden.has(group.id) ? l`Hidden` : undefined,
   ]
     .filter(Boolean)
     .join(' · ')

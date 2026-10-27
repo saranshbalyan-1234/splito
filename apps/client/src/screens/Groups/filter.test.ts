@@ -13,19 +13,22 @@ const row = (
   name: string,
   kind: GroupRowData['kind'],
   balances: Record<string, bigint>,
-  archived = false,
+  inactive = false,
   members: string[] = [],
-): GroupRowData => ({id, name, kind, archived, balances, members})
+  hidden = false,
+): GroupRowData => ({id, name, kind, inactive, hidden, balances, members})
 
 const rows: GroupRowData[] = [
   row('goa', 'Goa trip', 'trip', {INR: 5000n, EUR: -900n}, false, ['Arjun']),
   row('flat', 'Flat 4B', 'home', {INR: -12000n}, false, ['Kavya']),
   row('date', 'Date nights', 'couple', {INR: 0n}),
   row('old', 'Old trip', 'trip', {USD: 100n}, true),
+  row('secret', 'Surprise party', 'other', {INR: 300n}, false, [], true),
+  row('oldsecret', 'Old secret', 'other', {INR: 0n}, true, [], true),
 ]
 const ids = (r: GroupRowData[]) => r.map(g => g.id)
 
-test('defaults: active groups only, every kind and balance', () =>
+test('defaults: active, shown groups only, every kind and balance', () =>
   expect(ids(filterGroups(rows, DEFAULT_GROUP_FILTERS))).toEqual([
     'goa',
     'flat',
@@ -34,12 +37,21 @@ test('defaults: active groups only, every kind and balance', () =>
 
 test('status, type and show filter on their own fields', () => {
   const f = DEFAULT_GROUP_FILTERS
-  expect(ids(filterGroups(rows, {...f, status: 'archived'}))).toEqual(['old'])
+  expect(ids(filterGroups(rows, {...f, status: 'inactive'}))).toEqual(['old'])
+  expect(ids(filterGroups(rows, {...f, status: 'all'}))).toEqual(['goa', 'flat', 'date', 'old'])
   expect(ids(filterGroups(rows, {...f, type: 'trip'}))).toEqual(['goa'])
   expect(ids(filterGroups(rows, {...f, show: 'owed'}))).toEqual(['goa'])
   // Goa is owed in rupees but owes in euros: both directions keep it.
   expect(ids(filterGroups(rows, {...f, show: 'owe'}))).toEqual(['goa', 'flat'])
   expect(ids(filterGroups(rows, {...f, show: 'settled'}))).toEqual(['date'])
+})
+
+test('visibility is personal: hidden groups leave the default view and come back with Show = Hidden or All', () => {
+  const f = DEFAULT_GROUP_FILTERS
+  expect(ids(filterGroups(rows, {...f, visibility: 'hidden'}))).toEqual(['secret'])
+  expect(ids(filterGroups(rows, {...f, visibility: 'all'}))).toEqual(['goa', 'flat', 'date', 'secret'])
+  expect(ids(filterGroups(rows, {...f, status: 'all', visibility: 'all'}))).toHaveLength(6)
+  expect(ids(filterGroups(rows, {...f, status: 'inactive', visibility: 'hidden'}))).toEqual(['oldsecret'])
 })
 
 test('one currency keeps groups with a balance in it and trims the rest away', () => {

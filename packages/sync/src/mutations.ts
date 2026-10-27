@@ -57,11 +57,19 @@ export interface Group {
   members: GroupMemberEntry[]
   startDate: LocalDate | null
   endDate: LocalDate | null
+  /** Legacy flag from before Active / Inactive (decision 89): it reads as inactive (`isGroupInactive`) and is cleared by "Make active". */
   archived: boolean
+  /** Inactive (decision 89): takes no new expenses but can still settle. Absent: active. */
+  inactive?: boolean
   /** "Who you settle with" rules. Absent: every member pair is allowed. */
   rules?: SettlementRules
   /** Set on the tombstone by "Delete group"; cleared by restore. */
   removed?: GroupRemoval
+}
+
+/** Whether a group is inactive: the new flag, or the old `archived` one (read-time adapter, no schema change). */
+export function isGroupInactive(g: Pick<Group, 'archived' | 'inactive'>): boolean {
+  return g.inactive === true || g.archived === true
 }
 
 /**
@@ -348,6 +356,8 @@ async function buildExpense(tx: Tx, d: ExpenseDraft): Promise<Expense> {
   for (const pid of people) await requireLive(tx, 'person', pid, 'UNKNOWN_PERSON')
   if (d.groupId) {
     const g = await requireLive<Group>(tx, 'group', d.groupId)
+    // An inactive group takes no new, edited or moved-in expenses (decision 89); settling and payments are fine.
+    if (isGroupInactive(g.data)) throw new DomainError('GROUP_INACTIVE')
     const current = new Set(g.data.members.filter(m => m.leftAt === null).map(m => m.personId))
     if (people.some(p => !current.has(p))) throw new DomainError('NOT_A_MEMBER')
   }
@@ -398,6 +408,10 @@ async function restore(store: Store, ctx: MutationCtx, type: BinType, id: string
     const e = await tx.get<Purged>(type, id)
     if (!e?.deleted || e.data.purgedAt !== undefined) throw new DomainError('NOT_FOUND')
     await requireRestorable(tx, type, e.data)
+    // Restoring an expense into an inactive group is a new expense there (decision 89). Payments may come back.
+    const groupId = (e.data as {groupId?: string | null}).groupId
+    const into = type === 'expense' && groupId ? (await tx.get<Group>('group', groupId))?.data : undefined
+    if (into && isGroupInactive(into)) throw new DomainError('GROUP_INACTIVE')
     const {deletedWithGroup: _g, ...data} = e.data
     await write(tx, ctx, type, id, data, false, `${type}.restore`)
   })

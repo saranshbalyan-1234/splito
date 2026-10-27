@@ -1,14 +1,20 @@
 import {useState} from 'react'
-import {View} from 'react-native'
+import {Pressable, View} from 'react-native'
 import {LayoutAnimationConfig} from 'react-native-reanimated'
 import {plural} from '@lingui/core/macro'
 import {Trans, useLingui} from '@lingui/react/macro'
 import {useNavigation} from '@react-navigation/native'
 import {groupTotals, ZERO} from '@splito/domain'
-import {type Entity, type Group, type Person} from '@splito/sync'
+import {
+  type Entity,
+  type Group,
+  isGroupInactive,
+  type Person,
+} from '@splito/sync'
 
 import {type NavigationProp} from '#/lib/routes/types'
 import {useNumberLocale} from '#/locale/numberLocale'
+import {useHiddenGroups} from '#/data/groupVisibility'
 import {
   useEntities,
   useGroupActivity,
@@ -21,6 +27,7 @@ import {List} from '#/view/com/util/List'
 import {atoms as a, useTheme} from '#/alf'
 import {AddExpenseFAB, AddExpenseFABInset} from '#/components/AddExpenseFAB'
 import {Button, ButtonIcon, ButtonText} from '#/components/Button'
+import {ChevronBottom_Stroke2_Corner0_Rounded as ChevronDownIcon} from '#/components/icons/Chevron'
 import {useDialogControl} from '#/components/Dialog'
 import {SearchAskButton} from '#/components/SearchAsk/SearchAskButton'
 import {HeaderAvatar} from '#/components/HeaderAvatar'
@@ -65,6 +72,9 @@ export function GroupsScreen() {
   const myBalances = useMyGroupBalances()
   const groupActivity = useGroupActivity()
   const [defaultCurrency = 'INR'] = usePref('defaultCurrency')
+  const [showInactiveFold = true] = usePref('groups.showInactiveFold')
+  const hiddenIds = useHiddenGroups()
+  const [isFoldOpen, setIsFoldOpen] = useState(false)
   const [applied, setApplied] = useState<GroupFilters | null>(null)
   const filters = applied ?? DEFAULT_GROUP_FILTERS
   /* The filter dot counts what differs from the defaults. */
@@ -82,7 +92,8 @@ export function GroupsScreen() {
     id: g.id,
     name: g.data.name,
     kind: g.data.kind,
-    archived: g.data.archived,
+    inactive: isGroupInactive(g.data),
+    hidden: hiddenIds.has(g.id),
     balances: balances[g.id] ?? {},
     members: g.data.members
       .filter(m => m.leftAt === null)
@@ -91,15 +102,32 @@ export function GroupsScreen() {
   const currencies = [
     ...new Set(all.flatMap(g => Object.keys(g.balances))),
   ].sort()
-  const listed = sortGroups(filterGroups(all, filters), filters.sort, {
-    currency: filters.currency === 'all' ? defaultCurrency : filters.currency,
-    activity: filters.sort === 'recent' ? (groupActivity ?? new Map()) : new Map(),
-  })
-  /* Search narrows the list only; the Overview keeps showing what the filters chose. */
-  const shown = listed.filter(g => matchesGroupSearch(g, query))
+  const order = (rows: GroupRowData[]) =>
+    sortGroups(rows, filters.sort, {
+      currency: filters.currency === 'all' ? defaultCurrency : filters.currency,
+      activity: filters.sort === 'recent' ? (groupActivity ?? new Map()) : new Map(),
+    })
+  const listed = order(filterGroups(all, filters))
+  /* Search reaches inactive and hidden groups too (decision 89); it narrows the list only. */
+  const isSearching = query.trim() !== ''
+  const searched = isSearching
+    ? order(filterGroups(all, {...filters, status: 'all', visibility: 'all'}))
+    : listed
+  const shown = searched.filter(g => matchesGroupSearch(g, query))
+  /* The Inactive (N) fold at the end of the default view: inactive groups I have not hidden. */
+  const isDefaultView = filters.status === 'active' && filters.visibility === 'shown'
+  const folded =
+    showInactiveFold && isDefaultView && !isSearching
+      ? order(filterGroups(all, {...filters, status: 'inactive'}))
+      : []
   const createGroup = () => navigation.navigate('CreateGroup')
   /* Per currency, never across currencies; owed and owe summed apart (domain). */
-  const overall = groupTotals(listed.map(g => g.balances))
+  /* Money is never hidden: inactive and hidden groups count in the Overview whatever the status and visibility filters say. */
+  const overall = groupTotals(
+    filterGroups(all, {...filters, status: 'all', visibility: 'all'}).map(
+      g => g.balances,
+    ),
+  )
   const settledCount = listed.filter(g =>
     Object.values(g.balances).every(v => v === ZERO),
   ).length
@@ -153,6 +181,7 @@ export function GroupsScreen() {
               <GroupRow
                 group={byId.get(item.id) as Entity<Group>}
                 balances={item.balances}
+                isHidden={item.hidden}
                 locale={locale}
               />
             )}
@@ -221,6 +250,53 @@ export function GroupsScreen() {
             }
             ListFooterComponent={
               <>
+                {folded.length > 0 && (
+                  <View testID="groups-inactive-fold">
+                    <Pressable
+                      testID="groups-inactive-fold-toggle"
+                      accessibilityRole="button"
+                      accessibilityLabel={l`Inactive groups`}
+                      accessibilityState={{expanded: isFoldOpen}}
+                      onPress={() => setIsFoldOpen(o => !o)}
+                      style={[
+                        a.flex_row,
+                        a.align_center,
+                        a.gap_xs,
+                        a.px_lg,
+                        a.py_md,
+                        a.border_t,
+                        t.atoms.border_contrast_low,
+                      ]}>
+                      <Text
+                        style={[
+                          a.text_sm,
+                          a.font_semi_bold,
+                          t.atoms.text_contrast_medium,
+                        ]}>
+                        <Trans>Inactive ({folded.length})</Trans>
+                      </Text>
+                      <ChevronDownIcon
+                        size="sm"
+                        fill={t.atoms.text_contrast_medium.color}
+                        style={{
+                          transform: [
+                            {rotate: isFoldOpen ? '180deg' : '0deg'},
+                          ],
+                        }}
+                      />
+                    </Pressable>
+                    {isFoldOpen &&
+                      folded.map(item => (
+                        <GroupRow
+                          key={item.id}
+                          group={byId.get(item.id) as Entity<Group>}
+                          balances={item.balances}
+                          isHidden={item.hidden}
+                          locale={locale}
+                        />
+                      ))}
+                  </View>
+                )}
                 {shown.length > 0 && (
                   /* The list ends on a next step, not on blank space. */
                   <View

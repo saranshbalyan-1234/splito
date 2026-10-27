@@ -2,7 +2,9 @@ import {useState} from 'react'
 import {View} from 'react-native'
 import {Trans, useLingui} from '@lingui/react/macro'
 import {CURRENCIES, type CurrencyInfo} from '@splito/domain'
-import {type Category, type Entity, type Group} from '@splito/sync'
+import {type Category, type Entity, type Group, isGroupInactive} from '@splito/sync'
+
+import {useHiddenGroups} from '#/data/groupVisibility'
 
 import {UserAvatar} from '#/view/com/util/UserAvatar'
 import {atoms as a, useBreakpoints, useTheme} from '#/alf'
@@ -242,7 +244,9 @@ function GroupInner({
   const t = useTheme()
   const {t: l} = useLingui()
   const control = Dialog.useDialogContext()
-  const live = groups.filter(g => !g.data.archived)
+  const hidden = useHiddenGroups()
+  /* Inactive groups take no new expenses and hidden ones are out of my lists (decision 89). */
+  const live = groups.filter(g => !isGroupInactive(g.data) && !hidden.has(g.id))
   const rows = [
     {id: NO_GROUP, name: l`No group`, detail: l`Just between you and friends`},
     ...live.map(g => ({

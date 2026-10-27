@@ -1,5 +1,5 @@
 import {type FriendRequest} from './friends'
-import {type Expense, type Group, type Person, type Purged, type Repayment, type WriteOff} from './mutations'
+import {type Expense, type Group, isGroupInactive, type Person, type Purged, type Repayment, type WriteOff} from './mutations'
 import {type Key} from './schema'
 import {type Store, type StoreChange, touches} from './store'
 import {type Entity, type EntityType, type HistoryRow} from './types'
@@ -19,7 +19,7 @@ type Base = {
  * What happened to a group. `memberLeft`: a member left or was removed (the member whose `leftAt` is newly
  * set, who made the choice about their balance in `exit`; a new `role: 'admin'` is the hand-over).
  */
-export type GroupKind = 'group.created' | 'group.edited' | 'group.archived' | 'group.unarchived' | 'group.deleted' | 'group.restored' | 'group.memberLeft'
+export type GroupKind = 'group.created' | 'group.edited' | 'group.inactive' | 'group.active' | 'group.deleted' | 'group.restored' | 'group.memberLeft'
 
 /** One change from the audit history, as the Activity feed shows it. */
 export type ActivityEvent = Base &
@@ -63,7 +63,7 @@ function kindOf(row: HistoryRow, prev: HistoryRow | undefined): ActivityKind | u
       if (prev.deleted) return 'group.restored'
       const now = row.data as Group
       const before = prev.data as Group
-      if (now.archived !== before.archived) return now.archived ? 'group.archived' : 'group.unarchived'
+      if (isGroupInactive(now) !== isGroupInactive(before)) return isGroupInactive(now) ? 'group.inactive' : 'group.active'
       const hasLeft = (m: Group['members'][number]) => !!before.members?.some(b => b.personId === m.personId && b.leftAt === null) && m.leftAt !== null
       return now.members?.some(hasLeft) ? 'group.memberLeft' : 'group.edited'
     }

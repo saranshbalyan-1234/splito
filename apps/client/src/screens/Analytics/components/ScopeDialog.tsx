@@ -26,7 +26,7 @@ const TILE = 36
 
 /**
  * "Show expenses from": the one place Analytics' scope is chosen (26.16).
- * One checklist - All, Non-group expenses, then every group (archived ones
+ * One checklist - All, Non-group expenses, then every group (inactive ones
  * under a fold) - in Bluesky's checkbox rows; nothing changes until Apply,
  * which stays off while nothing is ticked.
  */
@@ -38,7 +38,7 @@ export function ScopeDialog({
 }: {
   control: Dialog.DialogControlProps
   scope: Scope
-  /** Active first, then archived: the sheet's order. */
+  /** Active first, then inactive: the sheet's order. */
   groups: GroupOption[]
   onScopeApplied: (scope: Scope) => void
 }) {
@@ -70,7 +70,7 @@ function Checklist({
   const [nonGroup, setNonGroup] = useState(initial.nonGroup)
   const [ticked, setTicked] = useState(initial.groups)
   const [query, setQuery] = useState('')
-  const archived = groups.filter(g => g.isArchived)
+  const archived = groups.filter(g => g.isInactive)
   const [isArchivedOpen, setIsArchivedOpen] = useState(
     () => scope.groups !== 'all' && archived.some(g => ticked.includes(g.id)),
   )
@@ -81,7 +81,7 @@ function Checklist({
   const isAll = tickCount === total
   const q = query.trim().toLowerCase()
   const matches = (g: GroupOption) => !q || g.name.toLowerCase().includes(q)
-  const active = groups.filter(g => !g.isArchived && matches(g))
+  const active = groups.filter(g => !g.isInactive && matches(g))
   const archivedShown = archived.filter(matches)
   /* A search looks inside the fold too. */
   const isArchivedVisible = isArchivedOpen || q.length > 0
@@ -177,7 +177,7 @@ function Checklist({
           <Pressable
             testID="analytics-scope-archived"
             accessibilityRole="button"
-            accessibilityLabel={l`Archived groups`}
+            accessibilityLabel={l`Inactive groups`}
             accessibilityState={{expanded: isArchivedVisible}}
             disabled={q.length > 0}
             onPress={() => setIsArchivedOpen(o => !o)}
@@ -188,7 +188,7 @@ function Checklist({
                 a.font_semi_bold,
                 t.atoms.text_contrast_medium,
               ]}>
-              <Trans>Archived · {archived.length}</Trans>
+              <Trans>Inactive · {archived.length}</Trans>
             </Text>
             <ChevronDownIcon
               size="sm"

@@ -42,7 +42,7 @@ import {
   updatePerson,
   deletePerson,
 } from '../src/mutations'
-import {archiveGroup, deleteGroup, purgeDeletedGroup, removeGroupMember, restoreGroup, unarchiveGroup} from '../src/groupLifecycle'
+import {deleteGroup, makeGroupActive, makeGroupInactive, purgeDeletedGroup, removeGroupMember, restoreGroup} from '../src/groupLifecycle'
 import {openSqlStore} from '../src/sqlStore'
 import {type Store} from '../src/store'
 import {bunExecutor} from './bunExecutor'
@@ -233,12 +233,12 @@ async function run(s: Store, seed: number, steps: number, {erases = true}: {eras
           break
         }
         case 23: {
-          // A group is archived, or deleted with its records and brought back (F-604, F-615).
+          // A group is made inactive or active, or deleted with its records and brought back (F-604, F-615).
           if (!groups.length) break
           const g = r.pick(groups)
           const roll = r.next()
-          if (roll < 0.3) await archiveGroup(s, ctx, g.id)
-          else if (roll < 0.5) await unarchiveGroup(s, ctx, g.id)
+          if (roll < 0.3) await makeGroupInactive(s, ctx, g.id)
+          else if (roll < 0.5) await makeGroupActive(s, ctx, g.id)
           else if (roll < 0.8) await deleteGroup(s, ctx, g.id)
           else await restoreGroup(s, ctx, g.id)
           break
@@ -341,8 +341,8 @@ describe('projection == recomputation over random operation sequences', () => {
     expect(total.demoRemoved).toBeGreaterThan(0)
   })
 
-  test('the generator reaches the group life cycle: a member left, a group went with its records, one was archived', async () => {
-    const seen = {left: false, archived: false, withGroup: false, restored: false}
+  test('the generator reaches the group life cycle: a member left, a group went with its records, one was made inactive', async () => {
+    const seen = {left: false, inactive: false, withGroup: false, restored: false}
     for (const seed of [11, 12, 13, 14, 15, 16, 17, 18]) {
       const s = await openSqlStore(bunExecutor(':memory:'))
       await run(s, seed, 200, {erases: false})
@@ -350,11 +350,11 @@ describe('projection == recomputation over random operation sequences', () => {
       const {entities, history} = await s.dump()
       const groupsNow = entities.filter(e => e.type === 'group').map(e => e.data as Group)
       seen.left ||= groupsNow.some(g => g.members.some(m => m.leftAt !== null))
-      seen.archived ||= groupsNow.some(g => g.archived)
+      seen.inactive ||= groupsNow.some(g => g.inactive === true)
       seen.withGroup ||= entities.some(e => (e.data as {deletedWithGroup?: string}).deletedWithGroup !== undefined)
       seen.restored ||= history.some(h => h.entityType === 'group' && !h.deleted && history.some(p => p.entityType === 'group' && p.entityId === h.entityId && p.deleted && p.version < h.version))
       await s.close()
     }
-    expect(seen).toEqual({left: true, archived: true, withGroup: true, restored: true})
+    expect(seen).toEqual({left: true, inactive: true, withGroup: true, restored: true})
   })
 })

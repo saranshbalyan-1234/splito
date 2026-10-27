@@ -10,7 +10,7 @@ import {type GroupFilters} from '../filter'
 
 /**
  * Groups' filters (owner: "overview in both friends and groups, with search
- * and filters as well"): type, active or archived, one currency or all,
+ * and filters as well"): type, active or inactive, shown or hidden, one currency or all,
  * which balances to show, and the order. Nothing changes until Apply, as
  * People's filters; they drive the Overview and the list alike.
  */
@@ -80,9 +80,21 @@ function Form({
           value={draft.status}
           options={[
             {value: 'active', label: l`Active`},
-            {value: 'archived', label: l`Archived`},
+            {value: 'inactive', label: l`Inactive`},
+            {value: 'all', label: l`All`},
           ]}
           onChange={status => set({status})}
+        />
+        <Choices
+          testID="filter-visibility"
+          title={l`Visibility`}
+          value={draft.visibility}
+          options={[
+            {value: 'shown', label: l`Shown`},
+            {value: 'hidden', label: l`Hidden`},
+            {value: 'all', label: l`All`},
+          ]}
+          onChange={visibility => set({visibility})}
         />
         {currencies.length > 1 && (
           <Choices

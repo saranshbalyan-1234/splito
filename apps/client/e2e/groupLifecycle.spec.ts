@@ -43,26 +43,92 @@ async function seed(page: Page) {
   })
 }
 
-test('archive hides the group from Active, keeps it under Archived, and unarchive brings it back', async ({page}) => {
-  await ready(page)
-  const {group} = await seed(page)
-  await page.goto(`/groups/${group}`)
-  await page.getByTestId('group-more').click()
-  await page.getByTestId('group-menu-archive').click()
-  await expect(page.getByTestId('group-archived-notice')).toBeVisible()
+const WIDTHS = [
+  {name: 'phone', width: 390, height: 844},
+  {name: 'desktop', width: 1440, height: 900},
+]
 
-  await page.goto('/groups')
-  const groups = page.getByTestId('screen-groups')
-  await expect(groups.getByTestId('group-Rishikesh')).toHaveCount(0)
-  await groups.getByTestId('list-filters').click()
-  await page.getByTestId('filter-status-archived').click()
-  await page.getByTestId('sheet-save').click()
-  await expect(groups.getByTestId('group-Rishikesh')).toBeVisible()
+for (const {name, width, height} of WIDTHS) {
+  test(`${name}: inactive takes no expenses but can settle, sits in the Inactive fold, and active brings it back`, async ({page}) => {
+    await page.setViewportSize({width, height})
+    await ready(page)
+    const {group} = await seed(page)
+    await page.goto(`/groups/${group}`)
+    await expect(page.getByTestId('group-add-expense')).toBeVisible()
+    await page.getByTestId('group-more').click()
+    await page.getByTestId('group-menu-inactive').click()
+    // Money is open, so it asks first, with the amount and Settle up first.
+    await expect(page.getByTestId('make-inactive-open')).toContainText('₹200.00')
+    await expect(page.getByTestId('make-inactive-settle')).toBeVisible()
+    await page.getByTestId('make-inactive-confirm').click()
+    await expect(page.getByTestId('group-inactive-notice')).toContainText('Inactive · Make active to add expenses')
+    await expect(page.getByTestId('group-add-expense')).toHaveCount(0)
 
-  await groups.getByTestId('group-Rishikesh').click()
-  await page.getByTestId('group-unarchive').click()
-  await expect(page.getByTestId('group-archived-notice')).toHaveCount(0)
-})
+    // The sync mutation refuses on its own, whatever the UI shows.
+    const refusal = await page.evaluate(async id => {
+      const s = (window as unknown as {splito: Splito}).splito
+      try {
+        await s.createExpense({title: 'Late', groupId: id, currency: 'INR', total: '100', payers: {[s.me]: '100'}, split: {mode: 'equal', participants: [s.me]}, date: '2026-09-06', tz: 'Asia/Kolkata', category: 'food', notes: ''})
+        return 'allowed'
+      } catch (e) {
+        return String((e as Error).message)
+      }
+    }, group)
+    expect(refusal).toContain('GROUP_INACTIVE')
+
+    // Settling still works in an inactive group.
+    await page.getByTestId('group-settle').click()
+    await expect(page.getByTestId('screen-settle')).toBeVisible()
+
+    // Out of the default list, in the Inactive (1) fold.
+    await page.goto('/groups')
+    const groups = page.getByTestId('screen-groups')
+    await expect(groups.getByTestId('groups-inactive-fold-toggle')).toContainText('Inactive (1)')
+    await expect(groups.getByTestId('group-Rishikesh')).toHaveCount(0)
+    await groups.getByTestId('groups-inactive-fold-toggle').click()
+    await expect(groups.getByTestId('group-Rishikesh')).toContainText('Inactive')
+    // The filter reaches it too, and so does search.
+    await groups.getByTestId('list-filters').click()
+    await page.getByTestId('filter-status-inactive').click()
+    await page.getByTestId('sheet-save').click()
+    await expect(groups.getByTestId('group-Rishikesh')).toBeVisible()
+
+    await groups.getByTestId('group-Rishikesh').click()
+    await page.getByTestId('group-make-active').click()
+    await expect(page.getByTestId('group-inactive-notice')).toHaveCount(0)
+    await expect(page.getByTestId('group-add-expense')).toBeVisible()
+  })
+
+  test(`${name}: hide is personal: out of my list, found by filter and search, still takes expenses, show brings it back`, async ({page}) => {
+    await page.setViewportSize({width, height})
+    await ready(page)
+    const {group} = await seed(page)
+    await page.goto(`/groups/${group}`)
+    await page.getByTestId('group-more').click()
+    await page.getByTestId('group-menu-hide').click()
+    await expect(page.getByTestId('group-hidden-notice')).toBeVisible()
+    // Still active, so adding from its own page works.
+    await expect(page.getByTestId('group-add-expense')).toBeVisible()
+
+    await page.goto('/groups')
+    const groups = page.getByTestId('screen-groups')
+    await expect(groups.getByTestId('group-Rishikesh')).toHaveCount(0)
+    await groups.getByTestId('list-search').click()
+    await groups.getByTestId('list-search-input').fill('rishi')
+    await expect(groups.getByTestId('group-Rishikesh')).toContainText('Hidden')
+    await groups.getByTestId('searchTextInputClearBtn').click()
+    await groups.getByTestId('list-filters').click()
+    await page.getByTestId('filter-visibility-hidden').click()
+    await page.getByTestId('sheet-save').click()
+    await expect(groups.getByTestId('group-Rishikesh')).toBeVisible()
+
+    await groups.getByTestId('group-Rishikesh').click()
+    await page.getByTestId('group-show').click()
+    await expect(page.getByTestId('group-hidden-notice')).toHaveCount(0)
+    await page.goto('/groups')
+    await expect(page.getByTestId('screen-groups').getByTestId('group-Rishikesh')).toBeVisible()
+  })
+}
 
 test('remove a member: settle previews every balance change, then the member is marked as left', async ({page}) => {
   await ready(page)

@@ -636,6 +636,19 @@ function IncludeGroupsPref() {
   )
 }
 
+function ShowInactiveFoldPref() {
+  const {t: l} = useLingui()
+  return (
+    <SwitchPref
+      pref={usePrefControl('groups.showInactiveFold')}
+      icon={GroupsIcon}
+      title={l`Inactive groups`}
+      label={l`Show an Inactive fold at the end of the Groups list`}
+      description={l`Inactive groups take no new expenses but can still be settled. Turn this off to reach them only through the Groups filter and search.`}
+    />
+  )
+}
+
 function ShowSyncStatusPref() {
   const {t: l} = useLingui()
   return (
@@ -887,6 +900,9 @@ export const PREF_CONTROLS = {
   'amount.shorthand': AmountShorthandPref,
   peopleSort: PeopleSortPref,
   includeGroupsDefault: IncludeGroupsPref,
+  'groups.showInactiveFold': ShowInactiveFoldPref,
+  // Set from a group's menu (Hide group / Show group), where its effect shows; Reset all resets it.
+  'groups.hidden': null,
   showSyncStatus: ShowSyncStatusPref,
   swipeLeft: SwipeLeftPref,
   swipeRight: SwipeRightPref,

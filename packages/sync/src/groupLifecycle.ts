@@ -25,6 +25,7 @@ import {
   type GroupMemberEntry,
   type GroupRemoval,
   groupAdmins,
+  isGroupInactive,
   type MemberExit,
   normalizeRoles,
   type Purged,
@@ -32,29 +33,41 @@ import {
   requireRestorable,
   write,
 } from './mutations'
+import {getPref, setPref} from './preferences'
 import {type Key} from './schema'
 import {insideTransaction, type Page, type Store} from './store'
 import {type Entity, type MutationCtx} from './types'
 
-/* ----------------------------- archive (F-604) ------------------------------ */
+/* ------------------- active / inactive and show / hide (F-604) ---------------- */
 
-async function setArchived(store: Store, ctx: MutationCtx, groupId: string, archived: boolean): Promise<Entity<Group>> {
+async function setInactive(store: Store, ctx: MutationCtx, groupId: string, inactive: boolean): Promise<Entity<Group>> {
   return store.transaction(async tx => {
     const g = await requireLive<Group>(tx, 'group', groupId)
     // Already there: nothing to write, nothing to sync.
-    if (g.data.archived === archived) return g
-    return write(tx, ctx, 'group', groupId, {...g.data, archived}, false, archived ? 'group.archive' : 'group.unarchive')
+    if (isGroupInactive(g.data) === inactive) return g
+    // Making active also clears the old `archived` flag, which read as inactive.
+    return write(tx, ctx, 'group', groupId, {...g.data, inactive, archived: inactive ? g.data.archived : false}, false, inactive ? 'group.inactive' : 'group.active')
   })
 }
 
 /**
- * Hides a group from the Groups list (Status "Active"). Its records stay: balances, search and Status "Archived"
- * still show it, and expenses can still be added.
+ * Makes a group inactive for every member: it takes no new, edited, moved-in or restored-in expenses
+ * (`GROUP_INACTIVE`), but balances, settling, payments, write-offs and search all stay (decision 89).
  */
-export const archiveGroup = (store: Store, ctx: MutationCtx, groupId: string) => setArchived(store, ctx, groupId, true)
+export const makeGroupInactive = (store: Store, ctx: MutationCtx, groupId: string) => setInactive(store, ctx, groupId, true)
 
-/** Brings an archived group back to the Active list. */
-export const unarchiveGroup = (store: Store, ctx: MutationCtx, groupId: string) => setArchived(store, ctx, groupId, false)
+/** Makes an inactive group active again. */
+export const makeGroupActive = (store: Store, ctx: MutationCtx, groupId: string) => setInactive(store, ctx, groupId, false)
+
+/**
+ * Hides a group from my own lists, or shows it again (decision 89). Personal: it writes only the account
+ * preference `groups.hidden`, never the group, so nobody else sees a change.
+ */
+export async function setGroupHidden(store: Store, ctx: MutationCtx, groupId: string, hidden: boolean): Promise<void> {
+  const ids = await getPref(store, 'groups.hidden')
+  if (ids.includes(groupId) === hidden) return
+  await setPref(store, ctx, 'groups.hidden', hidden ? [...ids, groupId] : ids.filter(id => id !== groupId))
+}
 
 /* -------------------------- reading a group's records ------------------------ */
 

@@ -15,7 +15,7 @@ import {
   type WeekStart,
   ZERO,
 } from '@splito/domain'
-import {DEFAULT_CATEGORIES, type Group, type Person} from '@splito/sync'
+import {DEFAULT_CATEGORIES, type Group, isGroupInactive, type Person} from '@splito/sync'
 
 import {useFormatDay, useToday} from '#/locale/useDates'
 import {readRows} from '#/data/analyticsQueries'
@@ -57,7 +57,7 @@ export type GroupOption = {
   id: string
   name: string
   kind: Group['kind']
-  isArchived: boolean
+  isInactive: boolean
 }
 
 /** `key` for the non-group slice in the by-group chart (group ids are never empty). */
@@ -105,17 +105,17 @@ export function useReport() {
 
   const weekStart = (weekStartPref ?? 1) as WeekStart
 
-  /* Active groups first, then archived; by name within each. Deleted groups are gone from both. */
+  /* Active groups first, then inactive; by name within each. Deleted groups are gone from both. */
   const groupOptions: GroupOption[] = (groups ?? [])
     .map(g => ({
       id: g.id,
       name: g.data.name,
       kind: g.data.kind,
-      isArchived: g.data.archived,
+      isInactive: isGroupInactive(g.data),
     }))
     .sort(
       (x, y) =>
-        Number(x.isArchived) - Number(y.isArchived) ||
+        Number(x.isInactive) - Number(y.isInactive) ||
         x.name.localeCompare(y.name),
     )
   const groupIds = groupOptions.map(g => g.id)

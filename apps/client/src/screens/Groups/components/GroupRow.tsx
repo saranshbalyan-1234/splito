@@ -1,15 +1,16 @@
 // Adapted from bluesky-social/social-app@4e4ad9c (MIT) - src/components/FeedCard.tsx (list card layout)
 import {View} from 'react-native'
 import Animated from 'react-native-reanimated'
-import {useLingui} from '@lingui/react/macro'
+import {Trans, useLingui} from '@lingui/react/macro'
 import {ZERO} from '@splito/domain'
-import {type Entity, type Group} from '@splito/sync'
+import {type Entity, type Group, isGroupInactive} from '@splito/sync'
 
 import {useRowPadding} from '#/state/preferences/density'
 import {Link} from '#/view/com/util/Link'
 import {atoms as a, useTheme} from '#/alf'
 import {BalanceBlock, SettledPill} from '#/components/BalanceText'
 import {GroupAvatar} from '#/components/groups/GroupAvatar'
+import * as Pills from '#/components/Pills'
 import * as Skeleton from '#/components/Skeleton'
 import {Text} from '#/components/Typography'
 import {useFormatDay} from '#/locale/useDates'
@@ -27,11 +28,14 @@ export function GroupRow({
   group,
   balances,
   locale,
+  isHidden = false,
   hideTopBorder = false,
 }: {
   group: Entity<Group>
   balances: Record<string, bigint>
   locale: string
+  /** I have hidden this group (decision 89); its chip says so. */
+  isHidden?: boolean
   hideTopBorder?: boolean
 }) {
   const t = useTheme()
@@ -101,12 +105,24 @@ export function GroupRow({
           style={[a.flex_row, a.align_center, a.gap_md, press.style]}>
           <GroupAvatar kind={kind} name={name} size={AVATAR_SIZE} />
           <View style={[a.flex_1, a.gap_2xs]}>
-            <Text
-              emoji
-              numberOfLines={1}
-              style={[a.text_md, a.font_semi_bold, a.leading_snug]}>
-              {name}
-            </Text>
+            <View style={[a.flex_row, a.align_center, a.gap_sm]}>
+              <Text
+                emoji
+                numberOfLines={1}
+                style={[a.flex_shrink, a.text_md, a.font_semi_bold, a.leading_snug]}>
+                {name}
+              </Text>
+              {isGroupInactive(group.data) && (
+                <Pills.Tag>
+                  <Trans>Inactive</Trans>
+                </Pills.Tag>
+              )}
+              {isHidden && (
+                <Pills.Tag>
+                  <Trans>Hidden</Trans>
+                </Pills.Tag>
+              )}
+            </View>
             {/* Two lines at most, so a trip's dates are never cut off by the balance beside them. */}
             <Text
               numberOfLines={2}

@@ -692,7 +692,7 @@ function useDescribe(
       return {
         avatarName: actorAvatar,
         icon:
-          event.kind === 'group.archived' || event.kind === 'group.unarchived'
+          event.kind === 'group.inactive' || event.kind === 'group.active'
             ? ArchivedBadge
             : event.kind === 'group.deleted'
               ? DeletedBadge
@@ -725,9 +725,9 @@ function useDescribe(
                 {actor} updated the group {subject}
               </Trans>
             ),
-            'group.archived': (
+            'group.inactive': (
               <Trans>
-                {actor} archived the group {subject}
+                {actor} made the group {subject} inactive
               </Trans>
             ),
             'group.deleted': (
@@ -740,9 +740,9 @@ function useDescribe(
                 {actor} restored the group {subject}
               </Trans>
             ),
-            'group.unarchived': (
+            'group.active': (
               <Trans>
-                {actor} unarchived the group {subject}
+                {actor} made the group {subject} active
               </Trans>
             ),
             'group.memberLeft': leaver ? (

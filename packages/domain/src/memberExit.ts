@@ -54,3 +54,17 @@ export function memberExitChanges(nets: Record<CurrencyCode, Record<string, bigi
     .filter(c => c.before !== c.after)
     .sort((x, y) => x.currency.localeCompare(y.currency) || x.personId.localeCompare(y.personId))
 }
+
+/**
+ * What is still open in a group, per currency: the sum of what its members are owed, which is also the sum of
+ * what they owe (nets add to zero). Currencies that are settled are left out; currencies are never added together.
+ */
+export function openAmounts(nets: Record<CurrencyCode, Record<string, bigint>>): Record<CurrencyCode, bigint> {
+  const out: Record<CurrencyCode, bigint> = {}
+  for (const [currency, net] of Object.entries(nets)) {
+    const owed = Object.values(net).filter(v => v > 0n)
+    if (owed.length === 0) continue
+    out[currency] = owed.reduce((sum, v) => sum + v, 0n)
+  }
+  return out
+}

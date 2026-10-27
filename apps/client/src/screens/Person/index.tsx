@@ -15,6 +15,7 @@ import {
   deletePerson,
   type Entity,
   type Group,
+  isGroupInactive,
   type Person,
   type Repayment,
   type WriteOff,
@@ -170,7 +171,7 @@ export function PersonScreen() {
   const items = withMonths(history)
   const sharedGroups = (groups ?? []).filter(
     g =>
-      !g.data.archived &&
+      !isGroupInactive(g.data) &&
       g.data.members.some(m => m.personId === personId && m.leftAt === null),
   )
 
