@@ -104,7 +104,7 @@ test.describe('header rule set', () => {
       // Owner rule 26.4: the avatar at the top left at every width; with the full sidebar it opens Profile.
       await expect(on(page, screen, 'header-avatar')).toHaveAttribute(
         'aria-label',
-        'Open profile',
+        /^Open profile\. /,
       )
       await expect(page.getByTestId('sidebar-profile')).toHaveCount(0)
       const act = await box(page, screen, action)
@@ -592,7 +592,7 @@ test.describe('desktop: Bluesky left sidebar and full-width content', () => {
     await expect(page.getByTestId('logo-wordmark')).toHaveCount(0)
     await expect(on(page, 'screen-people', 'header-avatar')).toHaveAttribute(
       'aria-label',
-      'Open menu',
+      /^Open menu\. /,
     )
     await expect(page.getByTestId('sidebar-recent-groups')).toHaveCount(0)
     await expect(page.getByTestId('sidebar-footer')).toHaveCount(0)
