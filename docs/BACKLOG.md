@@ -843,16 +843,22 @@ Round shares to 1 / 5 / 10 units per group or expense and transfers to 10 for ca
   2. Conservation holds: the remainder is shown, never lost.
   3. A friend marked "prefers cash" gets transfers rounded to 10.
 
-### F-403 GST-aware Indian bill lines `spec 4 (extended)`
+### F-403 Tax classes and scoped, stacked charges `spec: owner § 26.13 (decision 86)`
 
-CGST / SGST / IGST, optional service charge (CCPA hint), packing, round-off; GST only on taxable items; liquor tax follows liquor lines only.
+One bill, different taxes per item: items carry a tax class; charges (service, tax, packing, delivery, other, discount) form an ordered list, each % or fixed, applying to all items, chosen classes or chosen items, optionally stacking on earlier charges; each charge is spread only over the people who had its items; a round-off line and a reconciliation row tie the split to the printed total. Replaces the India-only "GST-aware bill lines" item (CGST/SGST/IGST, liquor VAT, packing and round-off are now presets of this). Neither Expensify (one tax rate per expense) nor Splitwise (one overall tax/tip) handles this, so the domain logic is Splito's own (§ 26.1 best of both: Expensify's tax-rate picker UI pattern, Bluesky components).
 
-- **Effort** M · **Impact** 8 · **Backend** no · **Status** todo · **Deps** F-401
-- **Prefs** `bill.serviceChargeDefault`
+- **Effort** L · **Impact** 9 · **Backend** no · **Status** todo · **Deps** F-401
+- **Prefs** `bill.taxClasses` (account; default Standard, Food, Soft drinks, Alcohol, Other; add, rename, reorder, hide), `bill.chargePresets` (account; default Simple, Restaurant India, Restaurant EU, US tip), `bill.defaultPreset` (account; default Simple), `bill.serviceChargeDefault` (account; default off), `bill.roundOffSpread` (account; default pro rata to every share, or to the payer), `bill.rememberPerMerchant` (account; default on)
 - **Acceptance**
-  1. People who had no liquor pay no tax on liquor items.
-  2. The round-off line is spread so the total equals the bill.
-  3. A reconciliation line shows items + taxes + service + round-off = total.
+  1. Domain (bun, bigint, both directions): the owner's sample bill (The Supper Factory, 02/06/2007; food 1,611.00 in 8 lines, alcohol 400.00 in 2 lines; Service 10% all items, stacks: no; VAT 12.5% on Food, stacks on service; VAT 20% on Alcohol, stacks on service) computes 201.10 / 221.51 / 88.00, total 2,521.61, round-off +0.39 to 2,522.00 exactly; conservation holds for every person; a person with only food pays 0 of the 88.00 and 0 of the 40.00 service on alcohol.
+  2. Property test over random bills (classes, scopes, stacking order, % and fixed charges, discounts, inclusive taxes, portions, JPY / INR / BHD scales): per-person shares sum exactly to the total; each charge lands only on people who had items in its scope; reordering non-stacking charges never changes the result.
+  3. Itemize editor: a class chip per item (long-press / right-click to change, multi-select to set many), a Charges section with drag-to-reorder rows, each opening a sheet (name, kind, % or amount, applies to: All / classes / items, stacks on earlier charges, prices include this tax); bottom drawer on phones, centred popup on desktop; Bluesky components only.
+  4. Reconciliation row "Items 2,011.00 + Service 201.10 + VAT 12.5% 221.51 + VAT 20% 88.00 + Round-off 0.39 = 2,522.00"; when an entered printed total disagrees, the gap is shown in red with "Add as round-off" (if within the currency's round-off limit) or "Check items"; Save explains, never hides, a gap.
+  5. Expense detail lists items grouped by class, each charge line with its scope ("on Alcohol + service"), and per person: items, each charge share, round-off, total; the same breakdown is in export and share text.
+  6. Presets apply in one tap; "Save as preset for The Supper Factory" stores the setup; next time that merchant is chosen the preset is pre-filled as a dashed suggestion (accept with one tap).
+  7. Existing expenses with one overall tax/tip/service/discount load unchanged (migration test): they become the Simple preset with every charge on all items.
+  8. Receipt scan (when F-scan lands) maps line markers (`*`, `#`, "A", "B") and tax lines ("VAT @12.50", "CGST 2.5%") to classes and charges for review.
+  9. Full checks green (typecheck, lint, arch rules, domain/sync/client tests, e2e with this exact bill on phone and desktop, Hindi 0 missing); screenshots of editor and detail in light and Dim.
 
 ### F-404 Item memory and shared-item defaults
 

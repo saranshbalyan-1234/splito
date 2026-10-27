@@ -1528,6 +1528,29 @@ dishes etc and each item can be assigned to each in split"; "in itemize don't sh
   text). Percent-to-money conversion happens only in `packages/domain` (bigint, round half away from zero to
   the currency's minor unit; tests include JPY scale 0, BHD scale 3, 18 % GST on INR, 12.5 % service, 15 %
   discount), then each adjustment is spread pro rata over each person's weighted item subtotal.
+- **Tax classes and scoped, stacked charges (one bill, different taxes per item).** A real bill taxes food
+  and alcohol differently and stacks tax on the service charge (owner's sample: The Supper Factory, New Delhi:
+  items 2,011.00 = food 1,611.00 + alcohol 400.00; Service charge 10% on all items = 201.10; VAT 12.5% on food
+  + its service = 221.51; VAT 20% on alcohol + its service = 88.00; total 2,521.61; Net to pay 2,522.00, so a
+  round-off of +0.39). So:
+  - **Every item has a tax class** chip (default "Standard"; user list in Settings, defaults Food, Soft
+    drinks, Alcohol, Other; receipt markers such as `*` and `#` map to classes).
+  - **Charges are an ordered list**, each with a name, kind (service, tax, packing, delivery, other, discount),
+    a % or fixed amount, **applies to** (all items, chosen classes, or chosen items) and **stacks on** (items
+    only, or items plus the earlier charges that fall on the same items). A "prices include this tax" switch
+    adds nothing and only shows the tax portion.
+  - **Each charge is spread over the people who had the items it applies to**, pro rata by their weighted
+    share of that charge's base (bigint, largest remainder, in `packages/domain`). Someone who had no alcohol
+    pays none of the alcohol VAT or of the service charge on alcohol.
+  - **Round-off and reconciliation:** a round-off line makes the computed total equal the printed total and is
+    spread over everyone's share; a reconciliation row shows items + each charge + round-off = total, and a
+    mismatch is highlighted, never silently absorbed.
+  - **Presets:** a simple single tax/tip/service/discount (the rules above) stays the default; "Restaurant,
+    India" and others ship as presets, and a bill's charge setup can be saved per merchant and reused.
+  - **Expense detail and each person's breakdown** show items, then each charge share per person.
+  *Why:* "See this bill, it has both alcohol and food and diff tax is applied on both. Consider this as well.
+  How to split such bill. Currently we don't support, as the taxation we added was overall on the bill".
+  *Where:* `packages/domain/src/adjustments.ts`, itemize editor, BACKLOG F-403.
 - **The "remaining to assign" readout and the total stay exact;** Save is disabled until everything is
   assigned.
 - **Expense detail lists every item with its people and portions, each person's resulting share, and
@@ -1850,6 +1873,7 @@ Every owner decision, in the order it was made (all 2026-10-26). "Replaced" name
 | 83 | "add invite management in settings as well"; "add one option in settings of friends, where you can add remove friends as well, and invite management as well" | Settings > Friends and invites: friends (add, remove with open-balance guard, undo), requests, invites sent, invite links, defaults | § 26.18 | Only "Manage invite links" under Privacy |
 | 84 | "in navigation any number of options can be there" | Bottom bar takes any number of tabs (Home alone up to all items); labels hide above 5 | § 26.3 | 2 to 5 tabs |
 | 85 | "make sure to pull features from Expensify and blusky whatever you think is better for user experience and features" | Per feature, take the better of Bluesky and Expensify (UX and features); Expensify leads money flows, Bluesky leads shell and client code; visual language stays Bluesky | § 26.1 | Bluesky first, Expensify for practice only |
+| 86 | "See this bill, it has both alcohol and food and diff tax is applied on both ... how to split such bill ... the taxation we added was overall on the bill" | Items carry tax classes; ordered charges each apply to all items, chosen classes or chosen items and can stack on earlier charges; each charge spread only over who had those items; round-off and reconciliation to the printed total; presets and per-merchant memory | § 26.13 | One overall tax on the whole bill |
 
 New decisions follow § 0 rule 9: rewrite the rule in its topic so only the current truth remains, then add a
 row here.
