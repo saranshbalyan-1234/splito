@@ -214,6 +214,69 @@ export function moneyOperators(code: string): number {
 }
 
 /* -------------------------------------------------------------------------- */
+/* Cursor loops over money stores                                             */
+/* -------------------------------------------------------------------------- */
+
+const MONEY_STORE_ARG = /^\s*(?:['"`](?:expense|repayment|writeoff)['"`]|[A-Za-z_$][\w$.]*)\s*[,)]/
+
+/** The index of the `}` that closes the `{` at `open`. */
+function closingBrace(code: string, open: number): number {
+  let depth = 0
+  for (let i = open; i < code.length; i++) {
+    if (code[i] === '{') depth++
+    else if (code[i] === '}' && --depth === 0) return i
+  }
+  return code.length
+}
+
+/**
+ * Loops that read a money store by cursor with nothing to stop them short of
+ * its end: `do { store.page(...) } while (after)`, `while (!isDone)`,
+ * `for (;;)`, `while (true)`. A loop condition that compares (`rows.length <
+ * want`) is a bounded read, and a page call with `eq:`, `min:` or `max:` is a
+ * range read, not the whole store. `.page(` takes the store from its first
+ * argument (a literal money type, or a variable, which may hold one);
+ * `.parties(` is always a money store. ponytail: textual; a cursor loop that
+ * hides behind a helper slips through, and the helper is what to read.
+ */
+export function moneyCursorLoops(source: string): number {
+  const structure = blank(source, {strings: false})
+  const text = blank(source, {strings: true})
+  let hits = 0
+  const header = /\bdo\s*\{|\bwhile\s*\(((?:[^()]|\([^()]*\))*)\)\s*\{|\bfor\s*\(\s*;\s*;\s*\)\s*\{/g
+  for (const m of structure.matchAll(header)) {
+    const open = m.index + m[0].length - 1
+    const close = closingBrace(structure, open)
+    let cond = m[1]
+    if (m[0].startsWith('do')) cond = /^\s*while\s*\(((?:[^()]|\([^()]*\))*)\)/.exec(structure.slice(close + 1))?.[1] ?? '<'
+    else if (m[0].startsWith('for')) cond = 'true'
+    if (/[<>]/.test(cond ?? '')) continue
+    const body = text.slice(open, close)
+    for (const call of body.matchAll(/\.(page|parties)\s*(?:<[^>()]*>)?\s*\(/g)) {
+      const from = call.index + call[0].length
+      let depth = 1
+      let end = from
+      for (; end < body.length && depth > 0; end++) depth += body[end] === '(' ? 1 : body[end] === ')' ? -1 : 0
+      const args = body.slice(from, end)
+      if (call[1] === 'page' && !MONEY_STORE_ARG.test(args)) continue
+      if (/\b(?:eq|min|max)\s*:/.test(args)) continue
+      hits++
+    }
+  }
+  return hits
+}
+
+/** Code that reads whole money stores by design: maintenance, migration, export and the dev/e2e seeding tools. */
+const FULL_READ_ALLOWED: ReadonlySet<string> = new Set([
+  `${SYNC}selectors.ts`,
+  `${SYNC}migrate.ts`,
+  `${SYNC}core.ts`,
+  `${SYNC}ledgerProjection.ts`,
+  `${CLIENT}data/devTools.ts`,
+  `${CLIENT}data/demoLarge.ts`,
+])
+
+/* -------------------------------------------------------------------------- */
 /* Rules                                                                      */
 /* -------------------------------------------------------------------------- */
 
@@ -367,11 +430,29 @@ export const RULES = {
       importsOf(s).filter(m => m === 'expo-sqlite' || m === 'idb').length + countMatches(code(s), /\bindexedDB\b/g),
   },
   storeAccess: {
-    why: 'Raw store access outside src/data/: store.getAll/transaction/history/outbox/subscribe, useData() or #/data/store (read through data/ hooks).',
+    why: 'Raw store access outside src/data/: store.getAll/get/page/parties/balances/transaction/history/outbox/subscribe/count..., useData() or #/data/store (read through data/ hooks).',
     appliesTo: p => isClient(p) && !under(p, 'data/'),
     count: (_p, s) =>
-      countMatches(code(s), /\bstore\.(?:getAll|transaction|history|outbox|subscribe)\s*\(|\buseData\s*\(/g) +
+      countMatches(
+        code(s),
+        /\bstore\.(?:getAll|get|getMany|page|parties|members|balances|pairBalances|lastActivity|historyPage|historyMany|count|groupActivity|syncCounts|setOpStatus|rebuildProjections|dump|erase|transaction|history|outbox|outboxByStatus|subscribe)\s*\(|\buseData\s*\(/g,
+      ) +
       importsOf(s).filter(m => m === '#/data/store' || m === '#/data/StoreProvider').length,
+  },
+  moneyFullRead: {
+    why: 'A whole money store read on a hot path: getAll / useEntities / useAllEntities / entitiesQuery of expense, repayment or writeoff, useLedger or loadLedger, or a store.page / store.parties cursor loop that runs to the end of a money store. Read through indexes, projections and cursors; a loop that pages a money store end to end is a full read (ARCHITECTURE 9.8). Maintenance, migration, export and the dev tools are allowlisted in FULL_READ_ALLOWED.',
+    // loadLedger (export, maintenance, tests) is defined in selectors.ts; the dev/e2e tools use it for the perf spec's baseline. Nothing else reads a money store whole.
+    appliesTo: p => (isClient(p) || p.startsWith(SYNC)) && !FULL_READ_ALLOWED.has(p),
+    count: (_p, s) =>
+      countMatches(noComments(s), /\b(?:getAll|useEntities|useAllEntities|entitiesQuery)\s*(?:<[^>()]*>)?\s*\(\s*['"`](?:expense|repayment|writeoff)['"`]/g) +
+      countMatches(code(s), /\b(?:useLedger|loadLedger)\s*\(/g) +
+      moneyCursorLoops(s),
+  },
+  demoStaticImport: {
+    why: 'A static import of the large demo set (#/data/demoLarge, #/screens/Settings/DemoData, @splito/sync/demoLarge) outside the demo files: it must load with import() under __DEV__ / EXPO_PUBLIC_ENV so production bundles hold none of it (ARCHITECTURE 26.1).',
+    appliesTo: p => isClient(p) && !/\/(?:data\/demoLarge|screens\/Settings\/DemoData)\.tsx?$/.test(p),
+    count: (_p, s) =>
+      countMatches(noComments(s), /(?:^|\n)\s*(?:import|export)\b[^'"`;]*?\bfrom\s*['"](?:#\/data\/demoLarge|#\/screens\/Settings\/DemoData|@splito\/sync\/demoLarge)['"]/g),
   },
   attribution: {
     why: 'Bluesky/Expensify code without the `// Adapted from <repo>@<sha> (MIT) - <path>` first line, or without a docs/reuse row.',

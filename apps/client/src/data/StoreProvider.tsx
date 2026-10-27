@@ -3,6 +3,8 @@ import {AppState} from 'react-native'
 import {randomUUID} from 'expo-crypto'
 import {ensureMe, type MutationCtx, prefFrom, type Store} from '@splito/sync'
 
+import {StorageNotice} from '#/components/StorageNotice'
+import {perfMark} from '#/lib/perfMark'
 import {flush, logger, setDiagnosticsEnabled, setTelemetryIdentity} from '#/logger'
 import {device} from '#/storage'
 import {seedDemoIfRequested} from '#/data/demo'
@@ -52,13 +54,19 @@ function wireTelemetry(store: Store, ctx: MutationCtx) {
 export function StoreProvider({children, fallback = null}: {children: React.ReactNode; fallback?: React.ReactNode}) {
   const [value, setValue] = useState<DataContext | null>(null)
   const [error, setError] = useState<unknown>(null)
+  /* Web only: another tab holds an older version open (`blocked`), or a newer build took the database over (`changed`). */
+  const [notice, setNotice] = useState<'blocked' | 'changed' | null>(null)
 
   useEffect(() => {
     let store: Store | undefined
     let unwire: (() => void) | undefined
     let cancelled = false
     const ctx = getMutationCtx()
-    openStore()
+    perfMark('splito:store-open')
+    openStore({
+      onBlocked: () => setNotice('blocked'),
+      onVersionChange: () => setNotice('changed'),
+    })
       .then(async s => {
         /* Dev StrictMode mounts twice: a store opened for the discarded mount is closed, never used. */
         if (cancelled) {
@@ -70,6 +78,8 @@ export function StoreProvider({children, fallback = null}: {children: React.Reac
         installDevTools(s, ctx)
         unwire = wireTelemetry(s, ctx)
         await seedDemoIfRequested(s, ctx)
+        perfMark('splito:store-ready')
+        setNotice(current => (current === 'blocked' ? null : current))
         setValue({store: s, ctx})
       })
       .catch(e => {
@@ -84,7 +94,9 @@ export function StoreProvider({children, fallback = null}: {children: React.Reac
   }, [])
 
   if (error) throw error
-  if (!value) return fallback
+  /* The connection of a replaced tab is closed: nothing can be read or saved until it reloads. */
+  if (notice === 'changed') return <StorageNotice kind="changed" onReload={() => globalThis.location?.reload()} />
+  if (!value) return notice === 'blocked' ? <StorageNotice kind="blocked" onReload={() => globalThis.location?.reload()} /> : fallback
   return <Context.Provider value={value}>{children}</Context.Provider>
 }
 

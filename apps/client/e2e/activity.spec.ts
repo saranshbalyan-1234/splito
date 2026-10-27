@@ -32,6 +32,15 @@ const screen = (page: Page) => page.getByTestId('screen-activity')
 const peopleBadge = (page: Page) => page.getByTestId('nav-badge-activity')
 const row = (page: Page, kind: string, text: string) =>
   screen(page).getByTestId(`activity-${kind}`).filter({hasText: text})
+/* Activity reads older history a page at a time (F-117): scroll to the end until the row has loaded. */
+async function loaded(page: Page, r: Locator) {
+  await page.mouse.move(700, 450)
+  for (let i = 0; i < 20 && (await r.count()) === 0; i++) {
+    await page.mouse.wheel(0, 5000)
+    await page.waitForTimeout(150)
+  }
+  return r
+}
 const unreadDot = (r: Locator) => r.getByTestId('activity-unread-dot')
 
 test('the demo history reads as a feed grouped by day, in real words', async ({
@@ -59,11 +68,10 @@ test('the demo history reads as a feed grouped by day, in real words', async ({
   await expect(row(page, 'group.created', 'Goa trip')).toContainText(
     'You created the group Goa trip',
   )
-  await expect(row(page, 'person.added', 'Riya Sharma')).toContainText(
-    'You added Riya Sharma as a friend',
-  )
+  const added = await loaded(page, row(page, 'person.added', 'Riya Sharma'))
+  await expect(added).toContainText('You added Riya Sharma as a friend')
   // Earlier days show the time of day, not "Nd ago", under their header.
-  await expect(row(page, 'person.added', 'Riya Sharma')).toContainText(
+  await expect(added).toContainText(
     /\d{1,2}:\d{2}\s?(AM|PM)/,
   )
 
@@ -120,8 +128,12 @@ test('every row pictures who made the change, never who it is about', async ({
   await openActivity(page)
   const avatar = (r: Locator) => r.getByTestId('userAvatarFallback').first()
   // You added Riya and created Goa trip: your avatar ("Me"), not hers or the group's.
-  await expect(avatar(row(page, 'person.added', 'Riya Sharma'))).toHaveText('M')
-  await expect(avatar(row(page, 'group.created', 'Goa trip'))).toHaveText('M')
+  await expect(
+    avatar(await loaded(page, row(page, 'person.added', 'Riya Sharma'))),
+  ).toHaveText('M')
+  await expect(
+    avatar(await loaded(page, row(page, 'group.created', 'Goa trip'))),
+  ).toHaveText('M')
   // Riya edited the dinner: hers.
   await expect(
     avatar(row(page, 'expense.edited', 'Dinner at Thalassa')),

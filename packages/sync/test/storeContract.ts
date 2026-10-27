@@ -1,9 +1,21 @@
 import {describe, expect, test} from 'bun:test'
 
 import {type Store, type StoreChange, touches} from '../src/store'
-import type {Entity, OutboxOp} from '../src/types'
+import {type Entity, type OutboxOp} from '../src/types'
 
-export const ent = (type: Entity['type'], id: string, data: unknown = {n: 1n}): Entity => ({type, id, data, version: 1, deleted: false, updatedAt: 1})
+export const ent = (type: Entity['type'], id: string, data: unknown = {n: 1n}): Entity => ({
+  type,
+  id,
+  data,
+  version: 1,
+  deleted: false,
+  createdAt: 1,
+  updatedAt: 1,
+  syncStatus: 'local',
+  serverVersion: null,
+  syncedAt: null,
+  syncError: null,
+})
 export const op = (opId: string): OutboxOp => ({
   opId,
   deviceId: 'd',
@@ -18,6 +30,7 @@ export const op = (opId: string): OutboxOp => ({
   attempts: 0,
   nextAttemptAt: null,
   lastError: null,
+  status: 'queued',
 })
 
 /** Behaviour every Store implementation must share. `open` gives a fresh empty store; `reopen` reopens the same one. */
@@ -141,6 +154,26 @@ export function runStoreContract(name: string, open: () => Promise<Store>, reope
           await tx.appendHistory({entityType: 'expense', entityId: 'e', version: v, data: {v}, deleted: false, at: v, actor: 'me'})
       })
       expect((await s.history('expense', 'e')).map(h => h.version)).toEqual([1, 2, 3])
+      await s.close()
+    })
+
+    test('erase removes exactly the named entities with their history and outbox ops', async () => {
+      const s = await open()
+      await s.transaction(async tx => {
+        for (const id of ['p1', 'p2']) {
+          await tx.put(ent('person', id))
+          await tx.appendHistory({entityType: 'person', entityId: id, version: 1, data: {}, deleted: false, at: 1, actor: 'me'})
+          await tx.enqueue({...op(`op-${id}`), entityId: id})
+        }
+      })
+      const seen: unknown[] = []
+      s.subscribe(c => seen.push(c))
+      await s.erase([{type: 'person', id: 'p1'}])
+      expect((await s.getAll('person')).map(e => e.id)).toEqual(['p2'])
+      expect(await s.history('person', 'p1')).toEqual([])
+      expect(await s.history('person', 'p2')).toHaveLength(1)
+      expect((await s.outbox()).map(o => o.opId)).toEqual(['op-p2'])
+      expect(touches(seen[0] as StoreChange, 'person', 'p1')).toBe(true)
       await s.close()
     })
   })

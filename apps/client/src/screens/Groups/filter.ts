@@ -1,5 +1,5 @@
 import {magnitude, ZERO} from '@splito/domain'
-import {type Entity, type Group} from '@splito/sync'
+import {type Group} from '@splito/sync'
 
 /** One group on the Groups list: my balance in it per currency, and who is in it (for search). */
 export type GroupRowData = {
@@ -58,7 +58,7 @@ export function filterGroups(
 }
 
 /**
- * `recent`: most recently active group first (see `groupLastActive`). `amount`: biggest balance in
+ * `recent`: most recently active group first (the store's `groupActivity`: the newest change to the group or to a record in it, the change time, not the expense date). `amount`: biggest balance in
  * `currency` first (other currencies can't be ranked against it, so those
  * groups follow, open before settled). Ties, and `name`, go by name.
  */
@@ -92,21 +92,4 @@ export function matchesGroupSearch(row: GroupRowData, query: string): boolean {
   return [row.name, ...row.members].some(name =>
     name.toLocaleLowerCase().includes(needle),
   )
-}
-
-/**
- * When each group last saw activity: the newest change (add, edit, delete) to
- * the group itself or to any expense or repayment in it. Uses the change time,
- * not the expense date, so a backdated expense added today still counts today.
- */
-export function groupLastActive(
-  groups: Entity<Group>[],
-  records: Entity<{groupId: string | null}>[],
-): Map<string, number> {
-  const latest = new Map(groups.map(g => [g.id, g.updatedAt]))
-  for (const r of records) {
-    const id = r.data.groupId
-    if (id && (latest.get(id) ?? 0) < r.updatedAt) latest.set(id, r.updatedAt)
-  }
-  return latest
 }

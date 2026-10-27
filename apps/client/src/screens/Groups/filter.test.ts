@@ -1,11 +1,9 @@
 import {expect, test} from 'bun:test'
-import {type Entity, type Group} from '@splito/sync'
 
 import {
   DEFAULT_GROUP_FILTERS,
   filterGroups,
   type GroupRowData,
-  groupLastActive,
   matchesGroupSearch,
   sortGroups,
 } from './filter'
@@ -77,34 +75,4 @@ test('search matches the group name or any member, ignoring case', () => {
   expect(matchesGroupSearch(rows[0]!, 'arj')).toBe(true)
   expect(matchesGroupSearch(rows[1]!, 'arj')).toBe(false)
   expect(matchesGroupSearch(rows[1]!, '')).toBe(true)
-})
-
-test('last active is the newest change to the group or anything in it', () => {
-  const ent = <T>(id: string, updatedAt: number, data: T) =>
-    ({
-      type: 'group',
-      id,
-      data,
-      version: 1,
-      deleted: false,
-      updatedAt,
-    }) as Entity<T>
-  const groups = [
-    ent('goa', 100, {} as Group),
-    ent('flat', 300, {} as Group),
-    ent('idle', 50, {} as Group),
-  ]
-  const latest = groupLastActive(groups, [
-    ent('e1', 200, {groupId: 'goa'}),
-    ent('e2', 900, {groupId: 'goa'}),
-    ent('r1', 400, {groupId: 'flat'}),
-    ent('e3', 999, {groupId: null}),
-  ])
-  expect(latest).toEqual(
-    new Map([
-      ['goa', 900],
-      ['flat', 400],
-      ['idle', 50],
-    ]),
-  )
 })

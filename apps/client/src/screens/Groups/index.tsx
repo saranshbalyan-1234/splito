@@ -4,25 +4,24 @@ import {LayoutAnimationConfig} from 'react-native-reanimated'
 import {plural} from '@lingui/core/macro'
 import {Trans, useLingui} from '@lingui/react/macro'
 import {useNavigation} from '@react-navigation/native'
-import {groupBalances, groupTotals, ZERO} from '@splito/domain'
-import {
-  type Entity,
-  type Expense,
-  type Group,
-  type Person,
-  type Repayment,
-} from '@splito/sync'
+import {groupTotals, ZERO} from '@splito/domain'
+import {type Entity, type Group, type Person} from '@splito/sync'
 
 import {type NavigationProp} from '#/lib/routes/types'
 import {useNumberLocale} from '#/locale/numberLocale'
-import {useEntities, useLedger, useMe, usePref} from '#/data/hooks'
+import {
+  useEntities,
+  useGroupActivity,
+  useMe,
+  useMyGroupBalances,
+  usePref,
+} from '#/data/hooks'
 import {EmptyState} from '#/view/com/util/EmptyState'
 import {List} from '#/view/com/util/List'
 import {atoms as a, useTheme} from '#/alf'
 import {AddExpenseFAB, AddExpenseFABInset} from '#/components/AddExpenseFAB'
 import {Button, ButtonIcon, ButtonText} from '#/components/Button'
 import {useDialogControl} from '#/components/Dialog'
-import {myBalances} from '#/components/groups/net'
 import {SearchAskButton} from '#/components/SearchAsk/SearchAskButton'
 import {HeaderAvatar} from '#/components/HeaderAvatar'
 import {MagnifyingGlass_Stroke2_Corner0_Rounded as SearchIcon} from '#/components/icons/MagnifyingGlass'
@@ -41,7 +40,6 @@ import {GroupsFilterDialog} from './components/GroupsFilterDialog'
 import {
   DEFAULT_GROUP_FILTERS,
   filterGroups,
-  groupLastActive,
   type GroupFilters,
   type GroupRowData,
   matchesGroupSearch,
@@ -64,9 +62,8 @@ export function GroupsScreen() {
   const me = useMe()
   const groups = useEntities<Group>('group')
   const people = useEntities<Person>('person')
-  const ledger = useLedger()
-  const expenses = useEntities<Expense>('expense')
-  const repayments = useEntities<Repayment>('repayment')
+  const myBalances = useMyGroupBalances()
+  const groupActivity = useGroupActivity()
   const [defaultCurrency = 'INR'] = usePref('defaultCurrency')
   const [applied, setApplied] = useState<GroupFilters | null>(null)
   const filters = applied ?? DEFAULT_GROUP_FILTERS
@@ -77,11 +74,8 @@ export function GroupsScreen() {
   const filterControl = useDialogControl()
   const [query, setQuery] = useState('')
 
-  const isLoading = !me || !groups || !ledger || !people
-  const balances =
-    me && ledger && groups
-      ? groupBalances(myBalances(ledger, me.id, groups))
-      : {}
+  const isLoading = !me || !groups || !myBalances || !people
+  const balances = myBalances ?? {}
   const names = new Map((people ?? []).map(p => [p.id, p.data.name]))
   const byId = new Map((groups ?? []).map(g => [g.id, g]))
   const all: GroupRowData[] = (groups ?? []).map(g => ({
@@ -99,10 +93,7 @@ export function GroupsScreen() {
   ].sort()
   const listed = sortGroups(filterGroups(all, filters), filters.sort, {
     currency: filters.currency === 'all' ? defaultCurrency : filters.currency,
-    activity:
-      filters.sort === 'recent' && groups
-        ? groupLastActive(groups, [...(expenses ?? []), ...(repayments ?? [])])
-        : new Map(),
+    activity: filters.sort === 'recent' ? (groupActivity ?? new Map()) : new Map(),
   })
   /* Search narrows the list only; the Overview keeps showing what the filters chose. */
   const shown = listed.filter(g => matchesGroupSearch(g, query))

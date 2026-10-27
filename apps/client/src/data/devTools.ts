@@ -1,4 +1,4 @@
-import {parseMinor, type SettlementRules} from '@splito/domain'
+import {balanceRows, parseMinor, type SettlementRules} from '@splito/domain'
 import {
   applyFriendRequestAccepted,
   type FriendRequest,
@@ -10,6 +10,8 @@ import {
   deleteExpense,
   type EntityType,
   type ExpenseDraft,
+  insideTransaction,
+  loadLedger,
   type MutationCtx,
   type PrefKey,
   type PrefValue,
@@ -56,7 +58,76 @@ export function installDevTools(store: Store, ctx: MutationCtx) {
     updateGroupRules: (groupId: string, rules: SettlementRules) => updateGroupRules(store, ctx, groupId, rules).then(e => e.id),
     /** Plays a PWA state change (e.g. `{updateReady: true}`) that a real worker would cause. */
     setPwa,
+    /** Moves an entity's queued op through the sync states, as the sync engine will (e2e of the row markers). */
+    setOpState: async (entityId: string, status: 'sending' | 'acked' | 'failed', error?: string) => {
+      const op = (await store.outbox()).filter(o => o.entityId === entityId).at(-1)
+      if (!op) throw new Error('no op for ' + entityId)
+      await store.setOpStatus(op.opId, status, {error})
+    },
     setPref: <K extends PrefKey>(key: K, value: PrefValue<K>) => setPref(store, ctx, key, value),
+    /** What Home did before schema v2, for the perf spec's baseline: read the whole ledger, then work every balance out of it. */
+    legacyHomeMs: async () => {
+      const t0 = performance.now()
+      const ledger = await loadLedger(store)
+      balanceRows(ledger, ctx.actor, {})
+      return performance.now() - t0
+    },
+    /** How many expenses (live and deleted) the store holds: an index count. */
+    countExpenses: () => store.count('expense'),
+    /**
+     * A big ledger for the perf spec (F-117): `friends` people, `groups` groups and
+     * `expenses` expenses in four currencies, written through the real mutations in
+     * batched transactions. Deterministic.
+     */
+    seedBulk: async ({friends, groups, expenses}: {friends: number; groups: number; expenses: number}) => {
+      const t0 = Date.now()
+      let n = 0
+      const at = (i: number): MutationCtx => ({...ctx, now: () => 1_760_000_000_000 + i * 60_000, newId: () => `bulk-${i}-${n++}`})
+      const people: string[] = []
+      for (let i = 0; i < friends; i++) people.push((await createPerson(store, at(i), {name: `Bulk Friend ${i}`})).id)
+      const groupIds: Array<{id: string; members: string[]}> = []
+      for (let g = 0; g < groups; g++) {
+        const members = people.filter((_, i) => i % groups === g || i % (groups + 3) === g)
+        const created = await createGroup(store, at(friends + g), {
+          name: `Bulk group ${g}`,
+          kind: 'trip',
+          currency: 'INR',
+          memberIds: members,
+          startDate: null,
+          endDate: null,
+        })
+        groupIds.push({id: created.id, members: [ctx.actor, ...members]})
+      }
+      const currencies = ['INR', 'EUR', 'USD', 'GBP']
+      for (let from = 0; from < expenses; from += 250) {
+        await store.transaction(async tx => {
+          const batched = insideTransaction(store, tx)
+          for (let i = from; i < Math.min(expenses, from + 250); i++) {
+            const group = i % 3 === 0 ? groupIds[i % groupIds.length] : undefined
+            const pool = group ? group.members : [ctx.actor, ...people.slice(0, 12)]
+            const others = [pool[1 + (i % (pool.length - 1))]!, pool[1 + ((i * 7) % (pool.length - 1))]!]
+            const parties = [...new Set([ctx.actor, ...others])]
+            const total = parseMinor(String(1000 + ((i * 37) % 9000)))
+            const payer = parties[i % parties.length]!
+            const day = (i % 28) + 1
+            const month = (i % 12) + 1
+            await createExpense(batched, at(friends + groups + i), {
+              title: `Bulk expense ${i}`,
+              groupId: group?.id ?? null,
+              currency: currencies[i % 4]!,
+              total,
+              payers: {[payer]: total},
+              split: {mode: 'equal', participants: parties},
+              date: `2026-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`,
+              tz: 'Asia/Kolkata',
+              category: 'food',
+              notes: '',
+            })
+          }
+        })
+      }
+      return Date.now() - t0
+    },
     /** The other side accepts your pending request to `contactValue` (stands in for the pull). */
     acceptOutgoing: async (contactValue: string, name = 'Friend') => {
       const requests = await store.getAll<FriendRequest>('friendRequest')

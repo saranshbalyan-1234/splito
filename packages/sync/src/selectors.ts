@@ -1,8 +1,9 @@
-import type {ExpenseRecord, LedgerRecord, RepaymentRecord, WriteOffRecord} from '@splito/domain'
+import {type ExpenseRecord, type LedgerRecord, type RepaymentRecord, type WriteOffRecord} from '@splito/domain'
 
-import type {BinType, Expense, Purged, Repayment, WriteOff} from './mutations'
-import type {Store} from './store'
-import type {Entity} from './types'
+import {type BinType, type Expense, type Purged, type Repayment, type WriteOff} from './mutations'
+import {type Key} from './schema'
+import {type Page, type Store} from './store'
+import {type Entity} from './types'
 
 export const toExpenseRecord = (e: Entity<Expense>): ExpenseRecord => ({
   kind: 'expense',
@@ -30,13 +31,23 @@ export const toRepaymentRecord = (e: Entity<Repayment>): RepaymentRecord => ({
 
 export const toWriteOffRecord = (e: Entity<WriteOff>): WriteOffRecord => ({...toRepaymentRecord(e), kind: 'writeoff'})
 
-/** Every expense, repayment and write-off, tombstones included (flagged `deleted`). */
+/**
+ * Every expense, repayment and write-off, tombstones included (flagged `deleted`).
+ * Reads the whole ledger: for export, maintenance and tests only, never a hot
+ * path (the architecture rule test keeps it out of screens and hooks).
+ */
 export async function loadLedger(store: Store): Promise<LedgerRecord[]> {
   const expenses = await store.getAll<Expense>('expense')
   const repayments = await store.getAll<Repayment>('repayment')
   const writeOffs = await store.getAll<WriteOff>('writeoff')
   return [...expenses.map(toExpenseRecord), ...repayments.map(toRepaymentRecord), ...writeOffs.map(toWriteOffRecord)]
 }
+
+/** One dated entry of a person's or a group's history: an expense, a payment or a write-off. */
+export type HistoryEntry =
+  | {kind: 'expense'; entity: Entity<Expense>}
+  | {kind: 'repayment'; entity: Entity<Repayment>}
+  | {kind: 'writeoff'; entity: Entity<WriteOff>}
 
 /** One item in Recently deleted. */
 export type BinItem = {deletedAt: number; deletedBy: string} & (
@@ -58,11 +69,17 @@ export async function loadBin(store: Store, now: number, days: number): Promise<
   const since = now - days * DAY_MS
   const items: BinItem[] = []
   for (const type of BIN_TYPES) {
-    for (const entity of await store.getAll<Purged>(type)) {
-      if (!entity.deleted || entity.data.purgedAt !== undefined || entity.updatedAt < since) continue
-      const last = (await store.history(type, entity.id)).at(-1)
-      items.push({type, entity, deletedAt: entity.updatedAt, deletedBy: last?.actor ?? ''} as BinItem)
-    }
+    // `byDeleted` is [deleted, updatedAt, id]: this reads only tombstones from inside the window.
+    let after: Key | null = null
+    do {
+      const page: Page<Entity<Purged>> = await store.page<Purged>(type, {index: 'byDeleted', eq: [1], min: since, after, limit: 100})
+      for (const entity of page.items) {
+        if (entity.data.purgedAt !== undefined) continue
+        const last = (await store.history(type, entity.id)).at(-1)
+        items.push({type, entity, deletedAt: entity.updatedAt, deletedBy: last?.actor ?? ''} as BinItem)
+      }
+      after = page.next
+    } while (after)
   }
   return items.sort((x, y) => y.deletedAt - x.deletedAt || (x.entity.id < y.entity.id ? -1 : 1))
 }

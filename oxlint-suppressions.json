@@ -112,47 +112,12 @@
       "count": 1
     }
   },
-  "packages/domain/src/ledger.ts": {
-    "import/consistent-type-specifier-style": {
-      "count": 2
-    }
-  },
   "packages/domain/src/reports.ts": {
     "import/consistent-type-specifier-style": {
       "count": 1
     }
   },
-  "packages/sync/src/idbStore.ts": {
-    "import/consistent-type-specifier-style": {
-      "count": 1
-    }
-  },
-  "packages/sync/src/mutations.ts": {
-    "import/consistent-type-specifier-style": {
-      "count": 2
-    }
-  },
   "packages/sync/src/preferences.ts": {
-    "import/consistent-type-specifier-style": {
-      "count": 2
-    }
-  },
-  "packages/sync/src/selectors.ts": {
-    "import/consistent-type-specifier-style": {
-      "count": 4
-    }
-  },
-  "packages/sync/src/sqlStore.ts": {
-    "import/consistent-type-specifier-style": {
-      "count": 1
-    }
-  },
-  "packages/sync/src/store.ts": {
-    "import/consistent-type-specifier-style": {
-      "count": 1
-    }
-  },
-  "packages/sync/test/activity.test.ts": {
     "import/consistent-type-specifier-style": {
       "count": 2
     }
@@ -175,11 +140,6 @@
   "packages/sync/test/repayments.test.ts": {
     "import/consistent-type-specifier-style": {
       "count": 2
-    }
-  },
-  "packages/sync/test/storeContract.ts": {
-    "import/consistent-type-specifier-style": {
-      "count": 1
     }
   }
 }

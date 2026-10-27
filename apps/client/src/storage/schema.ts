@@ -23,10 +23,14 @@ export type Device = {
   moneyPalette: 'default' | 'colorblind' | 'mono'
   homeTab: TabId
   hapticsEnabled: boolean
+  /** The sync dot on rows, mirrored so a list of rows costs no store reads. */
+  showSyncStatus: boolean
   /** Activity read/hidden marks: personal, so they stay on this device. */
   activityFeed: FeedState
   /** Search's recent queries, newest first (Bluesky's `searchTermHistory`). */
   searchHistory: string[]
   /** Dev and e2e builds only: this install was opened with `?demo=1`, so the demo directory answers. */
   demoMode: boolean
+  /** Dev and e2e builds only: the small demo set was asked for and has not finished going in. */
+  demoPending: boolean
 }

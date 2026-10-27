@@ -1,7 +1,7 @@
 import {expect, test} from 'bun:test'
-import {type LedgerRecord, type PersonSummary} from '@splito/domain'
+import {type PersonSummary} from '@splito/domain'
 
-import {filterFriends, type FriendRow, lastActivity, sortFriends} from './sort'
+import {filterFriends, type FriendRow, sortFriends} from './sort'
 
 const summary = (
   person: string,
@@ -29,49 +29,18 @@ test('amount: biggest default-currency balance first, owed or owing; other curre
     ),
   ).toEqual(['b', 'a', 'c', 'd']))
 
-test('recent: latest shared record first, never-active last by name', () => {
-  const records: LedgerRecord[] = [
-    {
-      kind: 'repayment',
-      id: 'r',
-      groupId: null,
-      currency: 'INR',
-      from: 'me',
-      to: 'd',
-      amount: 1n,
-      date: '2026-10-20',
-      deleted: false,
-    },
-    {
-      kind: 'expense',
-      id: 'e',
-      groupId: null,
-      currency: 'INR',
-      total: 2n,
-      payers: {a: 2n},
-      shares: {a: 1n, me: 1n},
-      date: '2026-09-01',
-      deleted: false,
-    },
-    {
-      kind: 'expense',
-      id: 'x',
-      groupId: null,
-      currency: 'INR',
-      total: 2n,
-      payers: {b: 2n},
-      shares: {b: 2n},
-      date: '2026-12-01',
-      deleted: true,
-    },
-  ]
+test('recent: latest change first, never-active last by name', () =>
+  // The newest change per person comes from the store (`lastActivity`, epoch ms): d has the latest, a next, b older; c has none.
   expect(
     sortFriends(rows, 'recent', {
       currency: 'INR',
-      activity: lastActivity(records),
+      activity: new Map([
+        ['d', 1_760_000_000_000],
+        ['a', 1_750_000_000_000],
+        ['b', 1_740_000_000_000],
+      ]),
     }).map(r => r.id),
-  ).toEqual(['d', 'a', 'b', 'c'])
-})
+  ).toEqual(['d', 'a', 'b', 'c']))
 
 test('name: alphabetical', () =>
   expect(

@@ -11,6 +11,7 @@ import {
   deleteWriteOff,
   type ExpenseDraft,
   type Group,
+  insideTransaction,
   type MutationCtx,
   receiveFriendRequest,
   recordInviteUse,
@@ -33,11 +34,16 @@ import {
 } from '#/data/demoData'
 import {IS_DEV, IS_E2E} from '#/env'
 
-/** True when this load asked for demo data: `?demo=1` on web, `EXPO_PUBLIC_DEMO=1` for native dev builds. */
-function isDemoRequested() {
-  if (process.env.EXPO_PUBLIC_DEMO === '1') return true
-  if (typeof window === 'undefined' || !window.location?.search) return false
-  return new URLSearchParams(window.location.search).get('demo') === '1'
+/**
+ * The demo set this load asked for: `?demo=1` / `?demo=large` on web,
+ * `EXPO_PUBLIC_DEMO=1` / `large` for native dev builds; null for none.
+ */
+function demoRequested(): '1' | 'large' | null {
+  const env = process.env.EXPO_PUBLIC_DEMO
+  if (env === '1' || env === 'large') return env
+  if (typeof window === 'undefined' || !window.location?.search) return null
+  const q = new URLSearchParams(window.location.search).get('demo')
+  return q === '1' || q === 'large' ? q : null
 }
 
 /**
@@ -46,18 +52,50 @@ function isDemoRequested() {
  * builds are never in demo mode (the env check is first).
  */
 export const IS_DEMO =
-  (IS_DEV || IS_E2E) && (isDemoRequested() || device.get(['demoMode']) === true)
+  (IS_DEV || IS_E2E) && (demoRequested() !== null || device.get(['demoMode']) === true)
 if (IS_DEMO) device.set(['demoMode'], true)
 
 /**
- * Dev and E2E builds only: with `?demo=1`, seeds the demo friends, groups and
+ * `EXPO_PUBLIC_DEMO_AUTO=large` (preview builds): load the large set when the
+ * device holds nothing but "me", so a fresh browser opens on populated screens.
+ */
+async function isAutoLarge(store: Store, ctx: MutationCtx) {
+  if (process.env.EXPO_PUBLIC_DEMO_AUTO !== 'large') return false
+  const [people, groups, expenses] = await Promise.all([
+    store.getAll('person'),
+    store.count('group'),
+    store.count('expense'),
+  ])
+  return people.every(p => p.id === ctx.actor) && groups === 0 && expenses === 0
+}
+
+/**
+ * Dev and E2E builds only: with `?demo=large` (or the preview auto flag),
+ * adds the large set (`demoLarge.ts`). With `?demo=1`, seeds the demo friends, groups and
  * expenses through the real mutations, once per local store. Production builds
  * never seed (the env check is first, so the URL is never read there).
  */
-export function seedDemoIfRequested(store: Store, ctx: MutationCtx) {
-  if (!(IS_DEV || IS_E2E) || !isDemoRequested()) return Promise.resolve()
+export async function seedDemoIfRequested(store: Store, ctx: MutationCtx) {
+  if (!(IS_DEV || IS_E2E)) return
+  const requested = demoRequested()
+  if (
+    requested === 'large' ||
+    (!requested && (await isAutoLarge(store, ctx)))
+  ) {
+    // A year of data: written in the background with a progress toast, so the app opens at once.
+    // The condition is spelled out so Metro folds it: a production bundle has no demo chunk.
+    if (__DEV__ || process.env.EXPO_PUBLIC_ENV === 'e2e')
+      void import('#/screens/Settings/DemoData').then(m =>
+        m.runLargeDemo(store, ctx, 'add'),
+      )
+    return
+  }
+  // `?demo=1` marks the seed owed until it has finished, so a page left before then (a quick
+  // navigation, a reload) is finished by the next load rather than left half-seeded.
+  if (requested === '1') device.set(['demoPending'], true)
+  if (!device.get(['demoPending'])) return
   // One run per page load, even if the store opens twice (dev remounts).
-  seeding ??= seed(store, ctx)
+  seeding ??= seed(store, ctx).then(() => device.set(['demoPending'], false))
   return seeding
 }
 
@@ -74,8 +112,8 @@ const DAY = 24 * HOUR
  * whoever paid the most, as if synced in from their phone. The final data is
  * exactly the dataset, so every balance is unchanged.
  */
-async function seed(store: Store, ctx: MutationCtx) {
-  const groups = await store.getAll<Group>('group')
+async function seed(outer: Store, ctx: MutationCtx) {
+  const groups = await outer.getAll<Group>('group')
   if (groups.some(g => g.data.name === DEMO_GROUPS.goa.name)) return
 
   const now = Date.now()
@@ -86,15 +124,31 @@ async function seed(store: Store, ctx: MutationCtx) {
     return {...ctx, actor, now: () => clock}
   }
 
+  // The people, groups and ledger go in as one transaction: all of it or none, in a few milliseconds,
+  // so there is no half-seeded state to leave a page in. (The friend requests below read the store
+  // first, so they cannot run inside it.)
+  const groupIds = await outer.transaction(tx =>
+    seedLedger(insideTransaction(outer, tx), ctx, now, at, () => clock),
+  )
+  await seedFriendInvites(outer, ctx, groupIds.goa, at, now)
+}
+
+async function seedLedger(
+  store: Store,
+  ctx: MutationCtx,
+  now: number,
+  at: (time: number, actor?: string) => MutationCtx,
+  readClock: () => number,
+) {
   const ids = {me: ctx.actor} as Record<DemoPersonKey, string>
   for (const [key, name] of Object.entries(DEMO_FRIENDS)) {
-    const person = await createPerson(store, at(clock + 7 * MINUTE), {name})
+    const person = await createPerson(store, at(readClock() + 7 * MINUTE), {name})
     ids[key as DemoPersonKey] = person.id
   }
 
   const groupIds = {} as Record<DemoGroupKey, string>
   for (const [key, g] of Object.entries(DEMO_GROUPS)) {
-    const group = await createGroup(store, at(clock + 5 * HOUR), {
+    const group = await createGroup(store, at(readClock() + 5 * HOUR), {
       name: g.name,
       kind: g.kind,
       currency: g.currency,
@@ -226,7 +280,7 @@ async function seed(store: Store, ctx: MutationCtx) {
   ])
   await deleteWriteOff(store, at(now - 3 * DAY), forgiven!.id)
 
-  await seedFriendInvites(store, ctx, groupIds.goa, at, now)
+  return groupIds
 }
 
 /*

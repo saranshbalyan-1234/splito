@@ -1,7 +1,13 @@
 import {View} from 'react-native'
 import {useLingui} from '@lingui/react/macro'
 import {formatAmount} from '@splito/domain'
-import {encode, type Expense, type HistoryRow, PREFS} from '@splito/sync'
+import {
+  encode,
+  type Expense,
+  type HistoryRow,
+  PREFS,
+  type RowSync,
+} from '@splito/sync'
 
 import {useNumberLocale} from '#/locale/numberLocale'
 import {useFormatDay, useTimeZone} from '#/locale/useDates'
@@ -14,6 +20,7 @@ import {type Props as SVGIconProps} from '#/components/icons/common'
 import {Pencil_Stroke2_Corner0_Rounded as PencilIcon} from '#/components/icons/Pencil'
 import {Trash_Stroke2_Corner0_Rounded as TrashIcon} from '#/components/icons/Trash'
 import {SectionLabel, useDisplayName} from '#/components/split/shared'
+import {useRowStatus} from '#/components/SyncStatus'
 import {Text} from '#/components/Typography'
 
 type Kind = 'created' | 'edited' | 'deleted' | 'restored'
@@ -23,7 +30,14 @@ type Kind = 'created' | 'edited' | 'deleted' | 'restored'
  * deleted or restored it, when, and what changed. Versions are local until
  * sync exists, which the footer says plainly.
  */
-export function History({history}: {history: HistoryRow[]}) {
+export function History({
+  history,
+  sync,
+}: {
+  history: HistoryRow[]
+  /** The expense's own sync state: the footer says what it means, in the same words as the marker. */
+  sync: Pick<RowSync, 'syncStatus'>
+}) {
   const t = useTheme()
   const {t: l, i18n} = useLingui()
   const locale = useNumberLocale()
@@ -75,6 +89,16 @@ export function History({history}: {history: HistoryRow[]}) {
     }
     return {row, kind, changes}
   })
+
+  const {kind: syncKind} = useRowStatus(sync)
+  const footer = {
+    local: l`Only on this device. Sign in to sync it to your other devices.`,
+    device: l`Saved on this device. Sign in to sync it to your other devices.`,
+    waiting: l`Saved on this device. It syncs to your other devices when you are online.`,
+    syncing: l`Syncing to your other devices.`,
+    synced: l`Synced to your other devices.`,
+    attention: l`This expense needs attention: it hasn’t synced.`,
+  }[syncKind]
 
   const titles: Record<Kind, (who: string) => string> = {
     created: who => l`${who} added this expense`,
@@ -169,7 +193,7 @@ export function History({history}: {history: HistoryRow[]}) {
             a.leading_snug,
             t.atoms.text_contrast_medium,
           ]}>
-          {l`Saved on this device. Sign in to sync it to your other devices.`}
+          {footer}
         </Text>
       </View>
     </View>

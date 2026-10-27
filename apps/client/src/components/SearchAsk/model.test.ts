@@ -36,6 +36,17 @@ test('people and groups come first, then expenses; every result is reachable by 
 
 test('no results, no rows', () => {
   expect(
-    searchRows({people: [], groups: [], expenses: [], totals: {}, terms: []}),
+    searchRows({people: [], groups: [], expenses: []}),
   ).toEqual([])
+})
+
+test('a partial expense count is flagged; a known one is not', () => {
+  const results = {people: [], groups: [], expenses: [e('expense', 'x1')]}
+  const header = (count?: {count: number; isPartial: boolean}) =>
+    searchRows(results, count)[0]
+  expect(header()).toMatchObject({count: 1, isPartial: false})
+  expect(header({count: 30, isPartial: true})).toMatchObject({
+    count: 30,
+    isPartial: true,
+  })
 })

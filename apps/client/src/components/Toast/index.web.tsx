@@ -78,4 +78,6 @@ export function show(
       `Toast can be a string or a React element, got ${typeof content}`,
     )
   }
+  // Splito: the id, so a long-running toast (a progress line) can be dismissed when its work ends.
+  return id
 }
