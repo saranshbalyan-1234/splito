@@ -136,6 +136,8 @@ test('phone: a menu opens as a drawer and its rows still act', async ({
 }) => {
   await page.setViewportSize(PHONE)
   await page.goto('/?demo=1')
+  /* The demo seed must have landed before navigating away, or /groups loads empty. */
+  await expect(page.getByTestId('person-Arjun Mehta')).toBeVisible()
   await page.goto('/groups')
   await page.getByTestId('group-Lisbon').click()
   await page.getByTestId('group-more').click()
