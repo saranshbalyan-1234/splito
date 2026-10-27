@@ -51,7 +51,7 @@ Status words are the same as `docs/BACKLOG.md`: **done** (built, tested and merg
 | Support | Help, About, licences, privacy | F-215 | todo |
 | Platform | PWA: production service worker, offline shell, update toast, manifest, Install app | F-1901 | done (feat/wA-38; verified in Chrome on a production build: registers, opens offline incl. deep routes, no API cached, update toast + Reload, install prompt and iPhone steps; Safari 7-day warning has no Export action until F-2001; native iOS/Android n/a) |
 | Expenses+ | Comments on expenses and repayments (local + outbox) | F-1204 | todo (Batch 4b) |
-| Expenses+ | Disputes and flags | F-1210 | todo |
+| Expenses+ | Disputes, flags and hold | F-1210 | todo |
 | Expenses+ | Shared comments and disputes | F-2208 | todo (needs backend) |
 | Reminders | Remind via share sheet (Person, group Balances, Settle plan), logged in Activity | F-1118 | todo (Batch 4b) |
 | Reminders | Remind me (local notification for yourself) | F-1119, F-1907 | todo (Batch 4b) |
@@ -94,3 +94,5 @@ Status words are the same as `docs/BACKLOG.md`: **done** (built, tested and merg
 | Account | Push notifications | F-2201 | todo (needs backend) |
 | Security | PIN lock, biometrics, encrypted storage | F-1601 | todo |
 | Languages | English and Hindi complete; more languages | F-1810, F-1811 | done for en/hi (F-1810); more languages todo (F-1811) |
+| Languages | Bluesky AppLanguageDropdown on the web sign-in splash, sign-up and desktop right column | F-1816 | todo (Batch 4d) |
+| Best of both | Bluesky and Expensify scouting additions (`docs/scouting/2026-10-27-bluesky-expensify.md`) | F-229..F-236, F-318..F-321, F-620, F-1211, F-1212, F-1412, F-1507 | todo (Batch 4d; F-1211 Batch 13, F-1412 Batch 21) |
