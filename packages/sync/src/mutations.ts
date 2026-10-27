@@ -14,7 +14,7 @@ import {
 } from '@splito/domain'
 
 import {formatContact, isContact} from './contact'
-import {getPref} from './preferences'
+import {getPref, setPref} from './preferences'
 import {type Key} from './schema'
 import {type Page, type Store, type Tx} from './store'
 import {type Entity, type EntityType, type MutationCtx} from './types'
@@ -129,20 +129,19 @@ export type WriteOff = Repayment
 /** `id` makes a retried save idempotent, as for payments. */
 export type WriteOffInput = WriteOff & {id?: string}
 
-/** Entity types the Recently deleted bin holds. */
-export type BinType = 'expense' | 'repayment' | 'writeoff'
+/** The money entity types: a deleted one stays in its list, struck through, forever (decision 103). */
+export type MoneyType = 'expense' | 'repayment' | 'writeoff'
 
 /**
- * Marks on a tombstone. `purgedAt`: set by "Delete forever", out of the bin and kept in the audit trail.
- * `deletedWithGroup`: the group whose deletion took this record with it, so restoring the group
- * brings back exactly these (F-615) and the bin shows the group as one entry.
+ * The mark on a tombstone. `deletedWithGroup`: the group whose deletion took this record with it, so restoring
+ * the group brings back exactly these (F-615). (Older builds also wrote `purgedAt`; it is ignored now.)
  */
-export type Purged = {purgedAt?: number; deletedWithGroup?: string}
+export type Tombstone = {deletedWithGroup?: string}
 
-/** What a tombstone sends to the server: the delete, and the marks that decide whether others may restore it. */
-function tombstonePayload(data: unknown): Purged & {deleted: true} {
-  const {purgedAt, deletedWithGroup} = (data ?? {}) as Purged
-  return {deleted: true, ...(purgedAt !== undefined && {purgedAt}), ...(deletedWithGroup !== undefined && {deletedWithGroup})}
+/** What a tombstone sends to the server: the delete, and the mark that decides whether others may restore it. */
+function tombstonePayload(data: unknown): Tombstone & {deleted: true} {
+  const {deletedWithGroup} = (data ?? {}) as Tombstone
+  return {deleted: true, ...(deletedWithGroup !== undefined && {deletedWithGroup})}
 }
 
 /**
@@ -250,12 +249,33 @@ export async function updatePerson(store: Store, ctx: MutationCtx, id: string, i
 export async function deletePerson(store: Store, ctx: MutationCtx, id: string): Promise<void> {
   // ponytail: reference check reads outside the write transaction (IndexedDB can't await other
   // reads mid-transaction). Fine for one local writer; the server re-checks once sync exists.
-  if ((await isPersonUsed(store, id)) || (await isPersonInBin(store, ctx.now(), id))) throw new DomainError('PERSON_IN_USE')
+  if (await isPersonUsed(store, id)) throw new DomainError('PERSON_IN_USE')
   await store.transaction(async tx => {
     const p = await requireLive<Person>(tx, 'person', id)
     if (p.data.isMe) throw new DomainError('PERSON_IN_USE')
     await write(tx, ctx, 'person', id, p.data, true, 'person.delete')
   })
+}
+
+/** Brings a deleted friend back (the person stays in People, struck, until then). */
+export async function restorePerson(store: Store, ctx: MutationCtx, id: string): Promise<void> {
+  await store.transaction(async tx => {
+    const p = await tx.get<Person>('person', id)
+    if (!p?.deleted) throw new DomainError('NOT_FOUND')
+    await write(tx, ctx, 'person', id, p.data, false, 'person.restore')
+  })
+}
+
+/**
+ * Hides one deleted item from my own lists, or shows it again (decisions 104 to 106). Personal: only the account
+ * preference `lists.hiddenItems` changes, never the item, so nobody else sees a thing. Only a deleted expense,
+ * payment, write-off or friend can be hidden (a live one has no "Hide"); a group hides through `setGroupHidden`.
+ */
+export async function setItemHidden(store: Store, ctx: MutationCtx, type: MoneyType | 'person', id: string, hidden: boolean): Promise<void> {
+  const ids = await getPref(store, 'lists.hiddenItems')
+  if (ids.includes(id) === hidden) return
+  if (hidden && !(await store.get(type, id))?.deleted) throw new DomainError('NOT_DELETED')
+  await setPref(store, ctx, 'lists.hiddenItems', hidden ? [...ids, id] : ids.filter(x => x !== id))
 }
 
 /** Whether any live expense, group or payment names the person: index reads, no scan. */
@@ -274,36 +294,12 @@ async function isPersonUsed(store: Store, id: string): Promise<boolean> {
   return false
 }
 
-const DAY_MS = 86_400_000
-/** @internal */
-export const BIN_TYPES: BinType[] = ['expense', 'repayment', 'writeoff']
-
 /** Who a money record or a group names, as stored. */
-function namedIn(type: BinType | 'group', data: unknown): string[] {
+function namedIn(type: MoneyType | 'group', data: unknown): string[] {
   const d = data as Partial<Expense & Repayment & Group> | null
   if (type === 'group') return (d?.members ?? []).map(m => m.personId)
   if (type === 'expense') return [...Object.keys(d?.payers ?? {}), ...Object.keys(d?.shares ?? {})]
   return [d?.from, d?.to].filter((p): p is string => typeof p === 'string')
-}
-
-/**
- * Whether Recently deleted still holds an expense, payment, write-off or group that names the person
- * (audit M4): restoring it would bring back a record that points at someone who is gone. Items older
- * than the bin window, and "Delete forever" ones, can no longer be restored and do not count. Reads
- * only tombstones (`byDeleted`), and the small groups store.
- */
-async function isPersonInBin(store: Store, now: number, id: string): Promise<boolean> {
-  const since = now - (await getPref(store, 'history.binDays')) * DAY_MS
-  for (const type of BIN_TYPES) {
-    let after: Key | null = null
-    do {
-      const page: Page<Entity<Purged>> = await store.page<Purged>(type, {index: 'byDeleted', eq: [1], min: since, after, limit: 100})
-      if (page.items.some(e => e.data.purgedAt === undefined && namedIn(type, e.data).includes(id))) return true
-      after = page.next
-    } while (after)
-  }
-  // ponytail: groups have no tombstone index; the store is small (about 100 rows), so one read.
-  return (await store.getAll<Group & Purged>('group')).some(g => g.deleted && g.updatedAt >= since && g.data.purgedAt === undefined && namedIn('group', g.data).includes(id))
 }
 
 export async function createGroup(
@@ -387,7 +383,7 @@ export async function restoreExpense(store: Store, ctx: MutationCtx, id: string)
 }
 
 /** Tombstones a live ledger entity: a new version, never a hard delete. */
-async function softDelete(store: Store, ctx: MutationCtx, type: BinType, id: string) {
+async function softDelete(store: Store, ctx: MutationCtx, type: MoneyType, id: string) {
   await store.transaction(async tx => {
     const e = await requireLive(tx, type, id)
     await write(tx, ctx, type, id, e.data, true, `${type}.delete`)
@@ -399,17 +395,17 @@ async function softDelete(store: Store, ctx: MutationCtx, type: BinType, id: str
  * UNKNOWN_PERSON for a person who is gone, GROUP_DELETED for a deleted group (restore the group first).
  */
 /** @internal shared with the group lifecycle. */
-export async function requireRestorable(tx: Tx, type: BinType | 'group', data: unknown) {
+export async function requireRestorable(tx: Tx, type: MoneyType | 'group', data: unknown) {
   for (const pid of new Set(namedIn(type, data))) await requireLive(tx, 'person', pid, 'UNKNOWN_PERSON')
   const groupId = (data as {groupId?: string | null}).groupId
   if (groupId) await requireLive(tx, 'group', groupId, 'GROUP_DELETED')
 }
 
-/** Brings a tombstone back as a new version. A purged one ("Delete forever") stays gone. */
-async function restore(store: Store, ctx: MutationCtx, type: BinType, id: string) {
+/** Brings a tombstone back as a new version. */
+async function restore(store: Store, ctx: MutationCtx, type: MoneyType, id: string) {
   await store.transaction(async tx => {
-    const e = await tx.get<Purged>(type, id)
-    if (!e?.deleted || e.data.purgedAt !== undefined) throw new DomainError('NOT_FOUND')
+    const e = await tx.get<Tombstone>(type, id)
+    if (!e?.deleted) throw new DomainError('NOT_FOUND')
     await requireRestorable(tx, type, e.data)
     // Restoring an expense into an inactive group is a new expense there (decision 89). Payments may come back.
     const groupId = (e.data as {groupId?: string | null}).groupId
@@ -417,19 +413,6 @@ async function restore(store: Store, ctx: MutationCtx, type: BinType, id: string
     if (into && isGroupInactive(into)) throw new DomainError('GROUP_INACTIVE')
     const {deletedWithGroup: _g, ...data} = e.data
     await write(tx, ctx, type, id, data, false, `${type}.restore`)
-  })
-}
-
-/**
- * "Delete forever" from Recently deleted: the tombstone gets `purgedAt`, so it
- * leaves the bin and can't be restored, while the entity and every history
- * version stay in the audit trail (deletes are never hard).
- */
-export async function purgeDeleted(store: Store, ctx: MutationCtx, type: BinType, id: string): Promise<void> {
-  await store.transaction(async tx => {
-    const e = await tx.get<Purged>(type, id)
-    if (!e?.deleted || e.data.purgedAt !== undefined) throw new DomainError('NOT_FOUND')
-    await write(tx, ctx, type, id, {...e.data, purgedAt: ctx.now()}, true, `${type}.purge`)
   })
 }
 

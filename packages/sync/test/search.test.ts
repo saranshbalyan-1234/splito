@@ -105,7 +105,7 @@ for (const [engine, open] of ENGINES) {
     })
 
     test('matches word prefixes, ignoring case and accents', async () => {
-      expect(await ids('din')).toEqual(['ramiro', 'dinner'])
+      expect(await ids('din')).toEqual(['ramiro', 'gone', 'dinner'])
       expect(await ids('PASTEIS bel')).toEqual(['pasteis'])
       expect(await ids('inner')).toEqual([])
     })
@@ -143,14 +143,14 @@ for (const [engine, open] of ENGINES) {
       expect(await ids('2025')).toEqual(['dinner'])
     })
 
-    test('people and groups match by name; deleted expenses never show', async () => {
+    test('people and groups match by name; a deleted expense is listed too (the app strikes it)', async () => {
       expect((await find('sa')).people.map(p => p.id)).toEqual(['sam'])
       expect((await find('goa')).groups.map(g => g.id)).toEqual(['goa'])
       expect((await find('> 10')).people).toEqual([])
-      expect(await ids('deleted')).toEqual([])
+      expect(await ids('deleted')).toEqual(['gone'])
       // "Me" is not a result of its own, but its expenses are found by the name.
       expect((await find('asha')).people).toEqual([])
-      expect((await ids('asha')).length).toBe(expenses.length - 1)
+      expect((await ids('asha')).length).toBe(expenses.length)
     })
 
     test('totals per currency, never mixed', async () => {
@@ -175,7 +175,9 @@ for (const [engine, open] of ENGINES) {
       expect((await f('7.77')).expenses).toEqual([])
       expect((await f('8.88')).expenses.map(e => e.id)).toEqual(['a'])
       await store.transaction(tx => tx.put({...a, version: 3, updatedAt: 100, deleted: true, data: {...a.data, title: 'Beta', total: 888n}}))
-      expect((await f('beta')).expenses).toEqual([])
+      // Deleted: still listed (struck by the app), found by its old words and amount, never in the totals.
+      expect((await f('beta')).expenses.map(e => [e.id, e.deleted])).toEqual([['a', true]])
+      expect((await f('beta')).totals).toEqual({})
       const gone = (await store.get<Expense>('expense', 'a'))!
       await store.transaction(tx => tx.put({...gone, version: 4, updatedAt: 101, deleted: false}))
       expect((await f('beta')).expenses.map(e => e.id)).toEqual(['a'])
@@ -217,7 +219,7 @@ describe.each(ENGINES)('paged search on a broad match (%s)', (_engine, open) => 
   async function expected(prefix: string) {
     const all = await store.page<Expense>('expense', {index: 'byDate', limit: 10_000})
     return all.items
-      .filter(e => !e.deleted && e.data.title.toLowerCase().startsWith(prefix))
+      .filter(e => e.data.title.toLowerCase().startsWith(prefix))
       .sort((x, y) => (x.data.date === y.data.date ? y.createdAt - x.createdAt || (x.id < y.id ? -1 : 1) : x.data.date < y.data.date ? 1 : -1))
       .map(e => e.id)
   }
@@ -255,8 +257,9 @@ describe.each(ENGINES)('paged search on a broad match (%s)', (_engine, open) => 
     const want = await expected('broad')
     const session = await openSearch(store, 'broad', opts)
     const summary = (await searchTotals(session, () => false))!
-    const rows = await store.getMany<Expense>('expense', want)
-    expect(summary.count).toBe(want.length)
+    const rows = (await store.getMany<Expense>('expense', want)).filter(e => !e.deleted)
+    // b0 is deleted: listed in `want`, never counted or added up.
+    expect(summary.count).toBe(want.length - 1)
     const sum = (c: string) => rows.filter(e => e.data.currency === c).reduce((a, e) => a + e.data.total, 0n)
     expect(summary.totals).toEqual({EUR: sum('EUR'), INR: sum('INR')})
     expect(summarizeSearch(session.found())).toEqual(summary)
@@ -280,10 +283,10 @@ describe.each(ENGINES)('paged search on a broad match (%s)', (_engine, open) => 
   })
 
   test('a broad amount comparison pages the same way', async () => {
-    // Totals are 10.00 + i cents (b0 is deleted): "> 12" is i > 200, "< 14" is i < 400.
+    // Totals are 10.00 + i cents (b0 is deleted, still listed): "> 12" is i > 200, "< 14" is i <= 400 with b0.
     for (const [q, count, ok] of [
       ['> 12', 499, (t: bigint) => t > 1200n],
-      ['< 14', 399, (t: bigint) => t < 1400n],
+      ['< 14', 400, (t: bigint) => t < 1400n],
     ] as const) {
       const session = await openSearch(store, q, opts)
       expect(session.isDone()).toBe(false)

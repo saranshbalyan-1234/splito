@@ -2,7 +2,7 @@ import {type IDBPDatabase, type IDBPTransaction, wrap} from 'idb'
 
 import {createStore} from './core'
 import {type Engine, type RangeQuery, type RowAccess} from './engine'
-import {type LegacyV1, migrateFromV1, migrateV2ToV3, stampSchemaVersion} from './migrate'
+import {type LegacyV1, migrateFromV1, migrateV2ToV3, migrateV3ToV4, stampSchemaVersion} from './migrate'
 import {indexColumns, type Key, type Row, SCHEMA_VERSION, STORES, type StoreName} from './schema'
 import {transactionRows} from './txRows'
 import {changeFromJson, changeToJson, type Store, type StoreChange} from './store'
@@ -142,6 +142,9 @@ export async function openIdbStore(name: string, factory: IDBFactory = indexedDB
         createStores(raw, ['aggregates', 'search_terms'])
         req.transaction!.objectStore('people').createIndex('byActivity', [...STORES.people.indexes.byActivity.columns])
         await pipelined(t, cmp, rows => migrateV2ToV3(rows))
+      } else if (e.oldVersion === 3) {
+        // v3 -> v4: same stores; the derived rows are rebuilt (deleted expenses keep parties and search terms).
+        await pipelined(t, cmp, rows => migrateV3ToV4(rows))
       }
     })().catch(error => {
       // Aborting the upgrade leaves the v1 database exactly as it was.

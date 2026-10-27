@@ -60,9 +60,9 @@ export interface SearchTerm {
 
 const row = (kind: TermKind, term: string, entityType: TermEntity, entityId: string): Row => ({kind, term, entityType, entityId})
 
-/** The term rows of a live expense, person or group; none for anything else, and none once deleted. */
+/** The term rows of an expense, person or group (a deleted one keeps them: search lists it, struck); none for anything else. */
 export function termRows(e: Entity | undefined): Row[] {
-  if (!e || e.deleted) return []
+  if (!e) return []
   const out = new Map<string, Row>()
   const add = (kind: TermKind, term: string) => {
     if (term) out.set(`${kind}\u0000${term}`, row(kind, term, e.type as TermEntity, e.id))

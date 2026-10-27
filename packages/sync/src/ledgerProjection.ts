@@ -51,9 +51,9 @@ const syncFields = (e: Entity) => ({
   syncError: e.syncError,
 })
 
-/** One row per person on a live expense. */
+/** One row per person on an expense; a deleted expense keeps its rows (`deleted` 1) so a person's history can list it in place. */
 export function partyRows(e: Entity<Expense> | undefined): Row[] {
-  if (!e || e.deleted || !e.data?.payers || !e.data.shares) return []
+  if (!e || !e.data?.payers || !e.data.shares) return []
   const d = e.data
   const people = [...new Set([...Object.keys(d.payers ?? {}), ...Object.keys(d.shares ?? {})])]
   return people.map(personId => ({
@@ -66,7 +66,7 @@ export function partyRows(e: Entity<Expense> | undefined): Row[] {
     currency: d.currency ?? '',
     date: d.date ?? '',
     createdAt: e.createdAt,
-    deleted: 0,
+    deleted: e.deleted ? 1 : 0,
     ...syncFields(e),
   }))
 }

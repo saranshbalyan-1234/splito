@@ -1,5 +1,5 @@
 import {type FriendRequest} from './friends'
-import {type Expense, type Group, isGroupInactive, type Person, type Purged, type Repayment, type WriteOff} from './mutations'
+import {type Expense, type Group, isGroupInactive, type Person, type Tombstone, type Repayment, type WriteOff} from './mutations'
 import {type Key} from './schema'
 import {type Store, type StoreChange, touches} from './store'
 import {type Entity, type EntityType, type HistoryRow} from './types'
@@ -44,10 +44,10 @@ const FEED_TYPES = ['person', 'group', 'expense', 'repayment', 'writeoff', 'frie
 /** What a history row means, given the version before it. Undefined rows stay out of the feed. */
 function kindOf(row: HistoryRow, prev: HistoryRow | undefined): ActivityKind | undefined {
   const isNew = !prev || prev.deleted
-  // "Delete forever" re-writes a tombstone to tidy the bin; the delete already showed.
+  // An old build's "Delete forever" re-wrote a tombstone; the delete already showed.
   if (row.deleted && prev?.deleted) return undefined
   // A record a group's deletion took with it (and its restore with the group) is the group's event, not its own (F-615).
-  if (row.deleted ? (row.data as Purged | null)?.deletedWithGroup : prev?.deleted && (prev.data as Purged | null)?.deletedWithGroup) return undefined
+  if (row.deleted ? (row.data as Tombstone | null)?.deletedWithGroup : prev?.deleted && (prev.data as Tombstone | null)?.deletedWithGroup) return undefined
   switch (row.entityType) {
     case 'expense':
       return !prev ? 'expense.created' : row.deleted ? 'expense.deleted' : prev.deleted ? 'expense.restored' : 'expense.edited'

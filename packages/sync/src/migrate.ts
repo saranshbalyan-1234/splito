@@ -6,7 +6,8 @@
  * shared; an engine only reads its own v1 layout into `LegacyV1` and hands
  * over a `RowAccess` on the new layout.
  *
- * Steps: v1 -> v2 (per-type stores, members, parties, balances) and
+ * Steps: v1 -> v2 (per-type stores, members, parties, balances),
+ * v3 -> v4 (a rebuild, see `migrateV3ToV4`) and
  * v2 -> v3 (the `aggregates` and `search_terms` projections and the people
  * activity column, all derived: rebuilt from the rows, so the step is
  * idempotent and loses nothing). A v1 database goes straight to the current
@@ -69,13 +70,19 @@ export async function migrateFromV1(legacy: LegacyV1, rows: RowAccess): Promise<
 }
 
 /**
- * v2 -> v3: the new stores and column exist (the engine made them, empty);
- * fills them, and recomputes the older projections with them, from the rows.
+ * v2 -> v3 -> v4: the stores and columns exist (the engine made them, empty); everything derived is rebuilt from the
+ * rows, so one step serves both and is idempotent. v4 also keeps a deleted expense's party rows and search terms
+ * (decision 103) and drops the stored `history.binDays` preference (the Recently deleted bin is gone). The
+ * preference's history and ops stay in the audit trail.
  */
 export async function migrateV2ToV3(rows: RowAccess): Promise<void> {
+  await rows.delete(ENTITY_STORE.preference, ['history.binDays'])
   await rebuildProjections(rows, async type => (await rows.range(ENTITY_STORE[type], {})).map(r => entityOfRow(type, r)))
   await rows.put('meta', {key: 'schemaVersion', value: String(SCHEMA_VERSION)})
 }
+
+/** v3 -> v4: the same rebuild; no store or column changes. */
+export const migrateV3ToV4 = migrateV2ToV3
 
 /** A freshly created database starts at the current version. */
 export const stampSchemaVersion = (rows: RowAccess) => rows.put('meta', {key: 'schemaVersion', value: String(SCHEMA_VERSION)})

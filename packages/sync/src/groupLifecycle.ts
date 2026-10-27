@@ -18,7 +18,7 @@ import {
 } from '@splito/domain'
 
 import {
-  type BinType,
+  type MoneyType,
   createRepayments,
   createWriteOffs,
   type Group,
@@ -28,7 +28,7 @@ import {
   isGroupInactive,
   type MemberExit,
   normalizeRoles,
-  type Purged,
+  type Tombstone,
   requireLive,
   requireRestorable,
   write,
@@ -78,12 +78,12 @@ const RECORD_INDEX = {expense: 'byGroupDate', repayment: 'byGroup', writeoff: 'b
  * ponytail: the read runs before the write transaction (the store has no range read inside one); one local writer
  * makes that safe, and the server re-checks once sync exists.
  */
-async function groupRecords(store: Store, groupId: string, keep: (e: Entity<Purged>) => boolean) {
-  const out = {expense: [] as Entity<Purged>[], repayment: [] as Entity<Purged>[], writeoff: [] as Entity<Purged>[]}
+async function groupRecords(store: Store, groupId: string, keep: (e: Entity<Tombstone>) => boolean) {
+  const out = {expense: [] as Entity<Tombstone>[], repayment: [] as Entity<Tombstone>[], writeoff: [] as Entity<Tombstone>[]}
   for (const type of ['expense', 'repayment', 'writeoff'] as const) {
     let after: Key | null = null
     do {
-      const page: Page<Entity<Purged>> = await store.page<Purged>(type, {index: RECORD_INDEX[type], eq: [groupId], after, limit: 200})
+      const page: Page<Entity<Tombstone>> = await store.page<Tombstone>(type, {index: RECORD_INDEX[type], eq: [groupId], after, limit: 200})
       out[type].push(...page.items.filter(keep))
       after = page.next
     } while (after)
@@ -184,12 +184,12 @@ export const leaveGroup = (store: Store, ctx: MutationCtx, input: Omit<MemberExi
 /* ------------------------------ delete group (F-615) ------------------------- */
 
 /** The records a group's deletion took, with the group's own mark; their type names the store. */
-const MONEY: BinType[] = ['expense', 'repayment', 'writeoff']
+const MONEY: MoneyType[] = ['expense', 'repayment', 'writeoff']
 
 /**
  * Deletes a group and every live expense, payment and write-off in it, in one transaction. Each record is
  * tombstoned with `deletedWithGroup`, so restoring the group brings back exactly those (records deleted earlier
- * stay in Recently deleted on their own), and the group's tombstone says how many went. Returns what went.
+ * stay deleted on their own), and the group's tombstone says how many went. Returns what went.
  */
 export async function deleteGroup(store: Store, ctx: MutationCtx, groupId: string): Promise<GroupRemoval> {
   const records = await groupRecords(store, groupId, e => !e.deleted)
@@ -200,7 +200,7 @@ export async function deleteGroup(store: Store, ctx: MutationCtx, groupId: strin
     const removed: GroupRemoval = {expenses: 0, repayments: 0, writeoffs: 0}
     for (const type of MONEY) {
       for (const { id } of records[type]) {
-        const e = await tx.get<Purged>(type, id)
+        const e = await tx.get<Tombstone>(type, id)
         if (!e || e.deleted) continue
         await write(tx, ctx, type, id, {...e.data, deletedWithGroup: groupId}, true, `${type}.delete`)
         removed[type === 'expense' ? 'expenses' : type === 'repayment' ? 'repayments' : 'writeoffs']++
@@ -211,10 +211,10 @@ export async function deleteGroup(store: Store, ctx: MutationCtx, groupId: strin
   })
 }
 
-/** A group's tombstone that can still be brought back or deleted forever (not purged). */
+/** A group's tombstone that can be brought back. */
 async function deletedGroup(store: Store, groupId: string) {
-  const g = await store.get<Group & Purged>('group', groupId)
-  if (!g?.deleted || g.data.purgedAt !== undefined) throw new DomainError('NOT_FOUND')
+  const g = await store.get<Group & Tombstone>('group', groupId)
+  if (!g?.deleted) throw new DomainError('NOT_FOUND')
   return g
 }
 
@@ -224,35 +224,20 @@ async function deletedGroup(store: Store, groupId: string) {
  */
 export async function restoreGroup(store: Store, ctx: MutationCtx, groupId: string): Promise<void> {
   const deleted = await deletedGroup(store, groupId)
-  const kids = await groupRecords(store, groupId, e => e.deleted && e.data.deletedWithGroup === groupId && e.data.purgedAt === undefined)
+  const kids = await groupRecords(store, groupId, e => e.deleted && e.data.deletedWithGroup === groupId)
   await store.transaction(async tx => {
-    const g = (await tx.get<Group & Purged>('group', groupId))!
+    const g = (await tx.get<Group & Tombstone>('group', groupId))!
     if (g.version !== deleted.version) throw new DomainError('NOT_FOUND')
     await requireRestorable(tx, 'group', g.data)
     const {removed: _removed, ...data} = g.data
     await write(tx, ctx, 'group', groupId, data, false, 'group.restore')
     for (const type of MONEY) {
       for (const { id } of kids[type]) {
-        const e = (await tx.get<Purged>(type, id))!
+        const e = (await tx.get<Tombstone>(type, id))!
         await requireRestorable(tx, type, e.data)
         const {deletedWithGroup: _g, ...rest} = e.data
         await write(tx, ctx, type, id, rest, false, `${type}.restore`)
       }
     }
-  })
-}
-
-/** "Delete forever" for a deleted group: it and its records leave Recently deleted for good; history stays. */
-export async function purgeDeletedGroup(store: Store, ctx: MutationCtx, groupId: string): Promise<void> {
-  await deletedGroup(store, groupId)
-  const kids = await groupRecords(store, groupId, e => e.deleted && e.data.deletedWithGroup === groupId && e.data.purgedAt === undefined)
-  await store.transaction(async tx => {
-    const at = ctx.now()
-    for (const type of MONEY) for (const { id } of kids[type]) {
-      const e = (await tx.get<Purged>(type, id))!
-      await write(tx, ctx, type, id, {...e.data, purgedAt: at}, true, `${type}.purge`)
-    }
-    const g = (await tx.get<Group & Purged>('group', groupId))!
-    await write(tx, ctx, 'group', groupId, {...g.data, purgedAt: at}, true, 'group.purge')
   })
 }

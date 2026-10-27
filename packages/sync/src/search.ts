@@ -229,7 +229,7 @@ export async function openSearch(store: Store, query: string, {today, mark = '.'
     const ids = (await wordHits('w', prefix)).map(h => h.entityId)
     for (const h of await wordHits('g', prefix))
       ids.push(...take((await store.page<Expense>('expense', {index: 'byGroupDate', eq: [h.entityId], limit: ALL})).items))
-    for (const h of await wordHits('p', prefix)) ids.push(...(await store.parties({index: 'byPersonDate', eq: [h.entityId], limit: ALL})).items.map(p => p.expenseId))
+    for (const h of await wordHits('p', prefix)) ids.push(...(await store.parties({index: 'byPersonDate', eq: [h.entityId], limit: ALL, includeDeleted: true})).items.map(p => p.expenseId))
     for (const c of categories)
       if (startsWith(wordsOf(c.name), prefix)) ids.push(...(await store.terms({kind: 'c', min: c.id, max: c.id})).map(t => t.entityId))
     await load(ids)
@@ -328,7 +328,7 @@ export async function openSearch(store: Store, query: string, {today, mark = '.'
       ids = ids ? new Set([...ids].filter(id => hit.has(id))) : hit
       if (ids.size === 0) return []
     }
-    return (await store.getMany<T>(type, [...ids!])).filter(e => !e.deleted && keep(e)).sort((x, y) => (nameOf(x) < nameOf(y) ? -1 : nameOf(x) > nameOf(y) ? 1 : x.id < y.id ? -1 : 1))
+    return (await store.getMany<T>(type, [...ids!])).filter(keep).sort((x, y) => (nameOf(x) < nameOf(y) ? -1 : nameOf(x) > nameOf(y) ? 1 : x.id < y.id ? -1 : 1))
   }
   const nameOf = (e: Entity<unknown>) => fold((e.data as {name: string}).name)
 
@@ -388,10 +388,9 @@ export async function openSearch(store: Store, query: string, {today, mark = '.'
     }
   }
 
-  /** The live rows that match every word (their names must be loaded). */
+  /** The rows that match every word, deleted ones included (their names must be loaded). */
   const check = (rows: Entity<Expense>[]) =>
     rows.filter(e => {
-      if (e.deleted) return false
       const words = wordsOfExpense(e)
       return tokens.every(t => matches(t, e, words))
     })
@@ -408,9 +407,9 @@ export async function openSearch(store: Store, query: string, {today, mark = '.'
   if (driver.estimate <= NARROW) {
     const candidateIds = [...new Set(await driver.candidates())]
     await load(candidateIds)
-    const live = candidateIds.map(id => expenses.get(id)).filter((e): e is Entity<Expense> => !!e && !e.deleted)
-    await loadNames(live)
-    const all = check(live).sort(newestFirst)
+    const rows = candidateIds.map(id => expenses.get(id)).filter((e): e is Entity<Expense> => !!e)
+    await loadNames(rows)
+    const all = check(rows).sort(newestFirst)
     return {...base, found: () => all, isDone: () => true, step: async () => undefined}
   }
 
@@ -451,7 +450,9 @@ export async function openSearch(store: Store, query: string, {today, mark = '.'
 
 /** Counts and adds up a session's matches. Only meaningful once `isDone()`. */
 export function summarizeSearch(found: ReadonlyArray<Entity<Expense>>): SearchSummary {
-  return {count: found.length, totals: sumByCurrency(found.map(e => ({currency: e.data.currency, amount: e.data.total})))}
+  // A deleted match is listed, never counted or added up (decision 103).
+  const live = found.filter(e => !e.deleted)
+  return {count: live.length, totals: sumByCurrency(live.map(e => ({currency: e.data.currency, amount: e.data.total})))}
 }
 
 /**

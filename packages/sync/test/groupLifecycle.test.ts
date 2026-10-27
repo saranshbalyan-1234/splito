@@ -9,7 +9,6 @@ import {
   groupContents,
   leaveGroup,
   previewMemberExit,
-  purgeDeletedGroup,
   removeGroupMember,
   setGroupHidden,
   restoreGroup,
@@ -24,6 +23,7 @@ import {
   createWriteOffs,
   deleteExpense,
   deletePerson,
+  restorePerson,
   updateExpense,
   ensureMe,
   type ExpenseDraft,
@@ -33,7 +33,6 @@ import {
   restoreExpense,
 } from '../src/mutations'
 import {getPref} from '../src/preferences'
-import {loadBin} from '../src/selectors'
 import {openSqlStore} from '../src/sqlStore'
 import {type Store} from '../src/store'
 import {type MutationCtx} from '../src/types'
@@ -264,7 +263,7 @@ test('delete lists what goes, tombstones everything in one transaction, and rest
   const second = await createExpense(s, ctx, draft({title: 'Wi-Fi', total: 600n, payers: {me: 600n}}))
   await createRepayment(s, ctx, {groupId: g.id, currency: 'EUR', from: bob.id, to: 'me', amount: 100n, date: '2026-10-27', tz: 'UTC', note: ''})
   await createWriteOffs(s, ctx, [{groupId: g.id, currency: 'EUR', from: bob.id, to: 'me', amount: 50n, date: '2026-10-27', tz: 'UTC', note: ''}])
-  // A record deleted earlier stays its own bin entry and is not brought back with the group.
+  // A record deleted earlier stays deleted on its own and is not brought back with the group.
   await deleteExpense(s, ctx, second.id)
   expect(await groupContents(s, g.id)).toEqual({expenses: 1, repayments: 1, writeoffs: 1})
 
@@ -276,10 +275,8 @@ test('delete lists what goes, tombstones everything in one transaction, and rest
   expect(await groupContents(s, g.id)).toEqual({expenses: 0, repayments: 0, writeoffs: 0})
   await expectProjectionsMatchLedger(s)
 
-  // Recently deleted: the group is one entry, with the earlier delete as its own; the records it took are not listed.
-  const bin = await loadBin(s, clock, 30)
-  expect(bin.map(b => `${b.type}:${b.entity.id}`).sort()).toEqual([`expense:${second.id}`, `group:${g.id}`].sort())
-  expect((bin.find(b => b.type === 'group')!.entity.data as Group).removed).toEqual({expenses: 1, repayments: 1, writeoffs: 1})
+  // The group's tombstone says what went with it.
+  expect((await s.get<Group>('group', g.id))!.data.removed).toEqual({expenses: 1, repayments: 1, writeoffs: 1})
 
   await restoreGroup(s, ctx, g.id)
   expect((await s.get('group', g.id))!.deleted).toBe(false)
@@ -311,22 +308,15 @@ test('deleted-with-group outbox ops carry the mark so another device restores th
   expect(op.payload).toEqual({deleted: true, deletedWithGroup: g.id})
 })
 
-test('a person in a deleted group cannot be deleted until the group is purged', async () => {
+test('a friend in a deleted group can be deleted; restoring the group then waits for the friend', async () => {
   const { g, bob } = await flat()
   await deleteGroup(s, ctx, g.id)
-  expect(await codeOf(deletePerson(s, ctx, bob.id))).toBe('PERSON_IN_USE')
-  await purgeDeletedGroup(s, ctx, g.id)
   await deletePerson(s, ctx, bob.id)
-})
-
-test('delete forever takes the group and its records out of the bin for good, history kept', async () => {
-  const { g, e } = await flat()
-  await deleteGroup(s, ctx, g.id)
-  await purgeDeletedGroup(s, ctx, g.id)
-  expect(await loadBin(s, clock, 30)).toEqual([])
-  expect(await codeOf(restoreGroup(s, ctx, g.id))).toBe('NOT_FOUND')
-  expect((await s.history('expense', e.id)).length).toBeGreaterThan(1)
-  expect(((await s.get('expense', e.id))!.data as {purgedAt?: number}).purgedAt).toBeGreaterThan(0)
+  expect((await s.get('person', bob.id))!.deleted).toBe(true)
+  expect(await codeOf(restoreGroup(s, ctx, g.id))).toBe('UNKNOWN_PERSON')
+  await restorePerson(s, ctx, bob.id)
+  await restoreGroup(s, ctx, g.id)
+  expect((await s.get('group', g.id))!.deleted).toBe(false)
 })
 
 test('restoring a group whose member has gone for good is refused whole', async () => {

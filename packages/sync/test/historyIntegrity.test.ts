@@ -10,17 +10,16 @@ import {
   createWriteOffs,
   deleteExpense,
   deletePerson,
+  restorePerson,
   deleteRepayment,
   deleteWriteOff,
   ensureMe,
   type ExpenseDraft,
-  purgeDeleted,
   type RepaymentInput,
   restoreExpense,
   restoreRepayment,
   restoreWriteOff,
 } from '../src/mutations'
-import {setPref} from '../src/preferences'
 import {searchStore} from '../src/search'
 import {openSqlStore} from '../src/sqlStore'
 import {type Store} from '../src/store'
@@ -76,27 +75,20 @@ const codeOf = async (p: Promise<unknown>) => {
 
 /* ------------------------------ M4: restore --------------------------------- */
 
-test('M4: a person named by a deleted expense or payment cannot be deleted', async () => {
+test('M4: a friend named only by deleted records can go; the friend stays as a tombstone, not removed from the records', async () => {
   const bob = await createPerson(s, ctx, {name: 'Bob'})
   const e = await createExpense(s, ctx, expense({split: {mode: 'equal', participants: ['me', bob.id]}}))
   const r = await createRepayment(s, ctx, pay({from: bob.id, to: 'me'}))
   await deleteExpense(s, ctx, e.id)
   await deleteRepayment(s, ctx, r.id)
-  expect(await codeOf(deletePerson(s, ctx, bob.id))).toBe('PERSON_IN_USE')
-  // Delete forever takes them out of the bin, so Bob is free to go.
-  await purgeDeleted(s, ctx, 'expense', e.id)
-  await purgeDeleted(s, ctx, 'repayment', r.id)
   await deletePerson(s, ctx, bob.id)
   expect((await s.get('person', bob.id))?.deleted).toBe(true)
-})
-
-test('M4: a deleted item older than the bin window no longer holds its person', async () => {
-  await setPref(s, ctx, 'history.binDays', 7)
-  const bob = await createPerson(s, ctx, {name: 'Bob'})
-  const e = await createExpense(s, ctx, expense({split: {mode: 'equal', participants: ['me', bob.id]}}))
-  await deleteExpense(s, ctx, e.id)
-  clock += 8 * 86_400_000
-  await deletePerson(s, ctx, bob.id)
+  expect((await s.get<{name: string}>('person', bob.id))?.data.name).toBe('Bob')
+  // The records still name him; restoring one needs him back first.
+  expect(await codeOf(restoreRepayment(s, ctx, r.id))).toBe('UNKNOWN_PERSON')
+  await restorePerson(s, ctx, bob.id)
+  await restoreRepayment(s, ctx, r.id)
+  expect((await s.get('repayment', r.id))?.deleted).toBe(false)
 })
 
 test('M4: restore refuses a record whose person is gone, with an explanation code', async () => {
@@ -107,8 +99,7 @@ test('M4: restore refuses a record whose person is gone, with an explanation cod
   await deleteExpense(s, ctx, e.id)
   await deleteRepayment(s, ctx, r.id)
   await deleteWriteOff(s, ctx, w.id)
-  // Out of the window the guard in deletePerson no longer holds Bob (legacy data or a purged window): the restore must.
-  await purgeDeleted(s, ctx, 'expense', e.id).catch(() => undefined)
+  // Bob goes by a path that skips deletePerson (legacy data): the restore must still refuse.
   await s.transaction(async tx => {
     const p = (await tx.get<{name: string; isMe: boolean}>('person', bob.id))!
     await tx.put({...p, data: p.data, deleted: true, version: p.version + 1, updatedAt: ++clock})
@@ -166,21 +157,6 @@ test('m11: the same holds for write-offs, and a conflicting batch writes nothing
   expect(await s.get('writeoff', 'w2')).toBeUndefined()
 })
 
-/* ---------------------------- m17: purge payload ----------------------------- */
-
-test('m17: the outbox op of a purge keeps purgedAt, so other devices cannot restore it', async () => {
-  const bob = await createPerson(s, ctx, {name: 'Bob'})
-  const e = await createExpense(s, ctx, expense({split: {mode: 'equal', participants: ['me', bob.id]}}))
-  await deleteExpense(s, ctx, e.id)
-  await purgeDeleted(s, ctx, 'expense', e.id)
-  const ops = (await s.outbox()).filter(o => o.entityId === e.id)
-  expect(ops.map(o => o.opType)).toEqual(['expense.create', 'expense.delete', 'expense.purge'])
-  expect(ops[1]!.payload).toEqual({deleted: true})
-  const purge = ops[2]!.payload as {deleted: boolean; purgedAt: number}
-  expect(purge.deleted).toBe(true)
-  expect(purge.purgedAt).toBe(((await s.get('expense', e.id))!.data as {purgedAt: number}).purgedAt)
-})
-
 /* ------------------------- m15: search tie-break ----------------------------- */
 
 test('m15: same-day search results list the later-created expense first, whatever the ids', async () => {
@@ -195,14 +171,6 @@ test('m15: same-day search results list the later-created expense first, whateve
   expect([first.id, second.id, third.id]).toEqual(['zzz', 'mmm', 'aaa'])
   const search = await searchStore(s, 'taxi', {today: '2026-10-27'})
   expect(search.expenses.map(e => e.id)).toEqual(['aaa', 'mmm', 'zzz'])
-})
-
-test('restoring keeps working after the purge and restore helpers are used together', async () => {
-  const bob = await createPerson(s, ctx, {name: 'Bob'})
-  const e = await createExpense(s, ctx, expense({split: {mode: 'equal', participants: ['me', bob.id]}}))
-  await deleteExpense(s, ctx, e.id)
-  await purgeDeleted(s, ctx, 'expense', e.id)
-  expect(await codeOf(restoreExpense(s, ctx, e.id))).toBe('NOT_FOUND')
 })
 
 /* ------------------- m19, m20: who and what was recently active ---------------- */

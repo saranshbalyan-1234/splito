@@ -3,7 +3,7 @@ import {CURRENCIES, DomainError} from '@splito/domain'
 import type {Store, Tx} from './store'
 import type {Entity, MutationCtx} from './types'
 
-export type PrefGroup = 'appearance' | 'motion' | 'navigation' | 'defaults' | 'categories' | 'regional' | 'lists' | 'notifications' | 'privacy' | 'history'
+export type PrefGroup = 'appearance' | 'motion' | 'navigation' | 'defaults' | 'categories' | 'regional' | 'lists' | 'notifications' | 'privacy'
 
 export interface PrefDef<T> {
   key: string
@@ -190,6 +190,12 @@ export const PREFS = {
   'groups.showInactiveFold': def('groups.showInactiveFold', 'lists', 'account', 'Show inactive groups', true, isBool),
   /** Groups I have hidden from my own lists (decision 89); set from a group's menu, personal to my account, no Settings row. */
   'groups.hidden': def<string[]>('groups.hidden', 'lists', 'account', 'Hidden groups', [], (v): v is string[] => Array.isArray(v) && v.length <= 1000 && v.every(isString) && new Set(v).size === v.length),
+  /**
+   * Deleted items I have hidden from my own lists (decisions 104, 105, 106): one id each, personal to my account, set
+   * from a deleted row's or page's "Hide"; "Show hidden" brings them back with "Unhide". Never changes anything for others.
+   */
+  // ponytail: id set in one pref, move to a personal table if it grows past a few thousand
+  'lists.hiddenItems': def<string[]>('lists.hiddenItems', 'lists', 'account', 'Hidden deleted items', [], (v): v is string[] => Array.isArray(v) && v.length <= 5000 && v.every(isString) && new Set(v).size === v.length),
   /** The small sync dot on expense, payment and request rows (ARCHITECTURE 9.8); detail pages always say it in words. */
   showSyncStatus: def('showSyncStatus', 'lists', 'device', 'Show sync status on rows', true, isBool),
   swipeLeft: def<SwipeAction>('swipeLeft', 'lists', 'account', 'Swipe left', 'delete', oneOf('markRead', 'hide', 'delete', 'none')),
@@ -201,8 +207,6 @@ export const PREFS = {
   'notify.invite': def('notify.invite', 'notifications', 'account', 'Invites', true, isBool),
   /** Telemetry (16.1): off, nothing is sent. No Settings row until a vendor exists (A-046); recording still honours it. */
   sendDiagnostics: def('sendDiagnostics', 'privacy', 'device', 'Send diagnostics', true, isBool),
-  /** How long Recently deleted lists a deleted expense, payment or write-off (F-1203). */
-  'history.binDays': def('history.binDays', 'history', 'account', 'Keep deleted items for', 30, oneOf(7, 30, 90, 365)),
   // Privacy: the directory server enforces these; saved now, applied once you sign in.
   'privacy.findByContact': def('privacy.findByContact', 'privacy', 'account', 'Let people find me by email or phone', true, isBool),
   'privacy.friendRequestsFrom': def('privacy.friendRequestsFrom', 'privacy', 'account', 'Who can send me friend requests', 'everyone', oneOf('everyone', 'link-only')),

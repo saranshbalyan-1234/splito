@@ -1,6 +1,6 @@
 import {createStore} from './core'
 import {type Engine, type RangeQuery, type RowAccess} from './engine'
-import {type LegacyV1, migrateFromV1, migrateV2ToV3, stampSchemaVersion} from './migrate'
+import {type LegacyV1, migrateFromV1, migrateV2ToV3, migrateV3ToV4, stampSchemaVersion} from './migrate'
 import {type ColumnType, indexColumns, type Row, SCHEMA_VERSION, STORES, type StoreName, type StoreSpec} from './schema'
 import {type Store} from './store'
 
@@ -162,6 +162,12 @@ async function migrate(db: SqlExecutor) {
       await db.exec('ALTER TABLE "people" ADD COLUMN "lastActivityAt" INTEGER NOT NULL DEFAULT 0')
       for (const sql of schemaSql()) await db.exec(sql)
       await migrateV2ToV3(sqlRows(db))
+      await db.exec(`PRAGMA user_version = ${SCHEMA_VERSION}`)
+      return
+    }
+    // v3 -> v4: no new tables; the derived rows are rebuilt (deleted expenses keep parties and search terms).
+    if (version === 3) {
+      await migrateV3ToV4(sqlRows(db))
       await db.exec(`PRAGMA user_version = ${SCHEMA_VERSION}`)
       return
     }

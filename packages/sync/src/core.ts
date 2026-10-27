@@ -107,6 +107,7 @@ const toParty = (r: Row): ExpenseParty => ({
   groupId: (r.groupId as string) || null,
   currency: r.currency as string,
   date: r.date as string,
+  deleted: r.deleted === 1,
   version: r.version as number,
   updatedAt: r.updatedAt as number,
   syncStatus: r.syncStatus as RowSyncStatus,
@@ -160,6 +161,27 @@ async function pageOf<T>(rows: RowAccess, store: StoreName, q: PageQuery, map: (
   return {items: slice.map(map), next: more ? indexKey(store, q.index, slice[slice.length - 1]!) : null}
 }
 
+/**
+ * A page of `store` rows that `keep` accepts: the index is read in chunks until `limit` rows are kept, so a page is
+ * full whatever is skipped, and the cursor is exact (it is `null` only when the index has no further kept row).
+ */
+async function keptPageOf<T>(rows: RowAccess, store: StoreName, q: PageQuery, map: (r: Row) => T, keep: (r: Row) => boolean): Promise<Page<T>> {
+  const limit = q.limit ?? DEFAULT_PAGE
+  const items: T[] = []
+  let after = q.after ?? null
+  for (;;) {
+    const found = await rows.range(store, {index: q.index, eq: q.eq, min: q.min, max: q.max, after, dir: q.dir, limit: limit + 1})
+    const more = found.length > limit
+    for (const r of more ? found.slice(0, limit) : found) {
+      // The cursor sits just before this row, so the next page starts with it.
+      if (keep(r) && items.length === limit) return {items, next: after}
+      if (keep(r)) items.push(map(r))
+      after = indexKey(store, q.index, r)
+    }
+    if (!more) return {items, next: null}
+  }
+}
+
 export function createStore(engine: Engine): Store {
   const listeners = new Set<(change: StoreChange) => void>()
   const notify = (change: StoreChange) => listeners.forEach(l => l(change))
@@ -205,7 +227,8 @@ export function createStore(engine: Engine): Store {
     page: <T>(type: EntityType, q: PageQuery) =>
       read(rows => pageOf(rows, ENTITY_STORE[type], q, r => entityOfRow(type, r))) as Promise<Page<Entity<T>>>,
 
-    parties: q => read(rows => pageOf(rows, 'expense_parties', q, toParty)),
+    parties: ({includeDeleted, ...q}) =>
+      read(rows => (includeDeleted ? pageOf(rows, 'expense_parties', q, toParty) : keptPageOf(rows, 'expense_parties', q, toParty, r => r.deleted === 0))),
 
     members: q =>
       read(async rows =>
