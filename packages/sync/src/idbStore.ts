@@ -102,9 +102,18 @@ async function pipelined(t: Tx, cmp: (a: unknown, b: unknown) => number, step: (
   await tx.flush()
 }
 
-export async function openIdbStore(name: string, factory: IDBFactory = indexedDB): Promise<Store> {
+/** What the browser tells about the database that the person may need to act on. */
+export interface StorageNotices {
+  /** Another tab still holds an older version open, so this tab's upgrade waits ("Close other Splito tabs"). The open goes on by itself once they close. */
+  onBlocked?: () => void
+  /** A newer build in another tab is upgrading the database: this tab's connection is closed and it must reload. */
+  onVersionChange?: () => void
+}
+
+export async function openIdbStore(name: string, factory: IDBFactory = indexedDB, notices: StorageNotices = {}): Promise<Store> {
   const cmp = (a: unknown, b: unknown) => factory.cmp(a, b)
   const req = factory.open(name, SCHEMA_VERSION)
+  req.onblocked = () => notices.onBlocked?.()
   let upgrade: Promise<void> | undefined
   /** Why the upgrade aborted: the open request itself only reports "aborted". */
   let upgradeError: unknown
@@ -149,8 +158,11 @@ export async function openIdbStore(name: string, factory: IDBFactory = indexedDB
     throw upgradeError ?? e
   }
   await upgrade
-  // A newer build in another tab can upgrade later: let go so it is never blocked.
-  db.onversionchange = () => db.close()
+  // A newer build in another tab can upgrade later: let go so it is never blocked, and say this tab must reload.
+  db.onversionchange = () => {
+    db.close()
+    notices.onVersionChange?.()
+  }
 
   const channel = typeof BroadcastChannel === 'undefined' ? null : new BroadcastChannel(CHANNEL + ':' + name)
 

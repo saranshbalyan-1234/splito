@@ -68,3 +68,40 @@ test('a pipelined write that fails mid-transaction rolls everything back and sur
   expect(await s.outbox()).toHaveLength(1)
   await s.close()
 })
+
+test('an upgrade held up by another tab says so, then finishes once that tab closes', async () => {
+  const f = new IDBFactory()
+  // An old tab: version 1 (empty) held open and, like a build that ignores the change, not letting go.
+  const old = await new Promise<IDBDatabase>((resolve, reject) => {
+    const req = f.open('blocked', 1)
+    req.onupgradeneeded = () => {
+      req.result.createObjectStore('entities', {keyPath: ['type', 'id']})
+      req.result.createObjectStore('history', {keyPath: ['entityType', 'entityId', 'version']})
+      req.result.createObjectStore('outbox', {keyPath: 'seq', autoIncrement: true}).createIndex('opId', 'opId', {unique: true})
+    }
+    req.onsuccess = () => resolve(req.result)
+    req.onerror = () => reject(req.error)
+  })
+  let blocked = 0
+  const opening = openIdbStore('blocked', f, {onBlocked: () => blocked++})
+  await new Promise(r => setTimeout(r, 30))
+  expect(blocked).toBeGreaterThan(0)
+  old.close()
+  const s = await opening
+  expect((await s.getAll('person')).length).toBe(0)
+  await s.close()
+})
+
+test('a newer build upgrading in another tab closes this tab’s connection and says to reload', async () => {
+  const f = new IDBFactory()
+  let changed = 0
+  const s = await openIdbStore('newer', f, {onVersionChange: () => changed++})
+  const next = await new Promise<IDBDatabase>((resolve, reject) => {
+    const req = f.open('newer', 99)
+    req.onsuccess = () => resolve(req.result)
+    req.onerror = () => reject(req.error)
+  })
+  expect(changed).toBe(1)
+  next.close()
+  await s.close()
+})
