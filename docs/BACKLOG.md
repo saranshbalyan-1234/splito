@@ -2397,7 +2397,7 @@ Both apps let a group talk (Expensify `src/pages/NewChatPage/`, rooms and trip r
 
 ### F-1212 Grouped Activity rows, filter pills, new-items pill and mute `spec: owner § 26.1 best of both (Bluesky notifications)`
 
-Bluesky's notifications screen (`src/screens/Notifications/components/NotificationItem/Item/`, `src/state/queries/notifications/grouped/`, `components/TabPills.tsx`, `components/RefreshPill.tsx`, `src/state/cache/thread-mutes.tsx`) on Splito's Activity. Consecutive items of the same kind in the same group within a window are grouped ("Riya and 2 others added 5 expenses in Goa trip · you borrowed ₹1,240 · €18") with an expandable avatar stack. Under § 26.14's All / From others tabs sit scrollable filter pills: Expenses, Payments, Comments, Requests (arrows on web). A session seen-snapshot keeps new items tinted for the visit they arrived in; items that arrive while scrolled show an "N new" pill instead of moving the list. The row menu gains "Mute <group or person> in Activity" with Undo and a Muted list in Settings.
+Bluesky's notifications screen (`src/screens/Notifications/components/NotificationItem/Item/`, `src/state/queries/notifications/grouped/`, `components/TabPills.tsx`, `components/RefreshPill.tsx`, `src/state/cache/thread-mutes.tsx`) on Splito's Activity. Consecutive items of the same kind in the same group within a window are grouped ("Riya and 2 others added 5 expenses in Goa trip · you borrowed ₹1,240 · €18") with an expandable avatar stack. Under § 26.14's All / Me / Others tabs sit scrollable filter pills: Expenses, Payments, Comments, Requests (arrows on web). A session seen-snapshot keeps new items tinted for the visit they arrived in; items that arrive while scrolled show an "N new" pill instead of moving the list. The row menu gains "Mute <group or person> in Activity" with Undo and a Muted list in Settings.
 
 - **Effort** M · **Impact** 6 · **Backend** no · **Status** todo · **Deps** F-1201
 - **Prefs** `activity.grouping` (on), `activity.groupWindowMinutes` (60), `activity.filters` (pills shown and their order), `activity.muted` (list)
@@ -2411,6 +2411,18 @@ Bluesky's notifications screen (`src/screens/Notifications/components/Notificati
 ## E13 Analytics, reports and budgets
 
 Exact numbers from the ledger, never illustrative.
+
+### F-1213 Activity tabs All / Me / Others `spec: owner § 26.14 (decision 92)`
+
+Replace Activity's "All" / "From others" tabs with "All" / "Me" / "Others". Queued by the owner; build only when the owner says so.
+
+- **Effort** S · **Impact** 6 · **Backend** no · **Status** todo · **Deps** F-1201
+- **Prefs** `activity.tab` (account, default All; remembered per decision 90), `activity.tabs` (which of the three show and their order)
+- **Acceptance**
+  1. Bluesky Pager tabs All / Me / Others on Activity; Me lists only items whose actor is me, Others only items by other people, All both; each paged by cursor (§ 9.8).
+  2. The unread badge and "Mark all read" count only Others (my own actions are never unread).
+  3. The chosen tab survives reload; F-1212's filter pills and grouping apply inside each tab.
+  4. e2e at phone and desktop widths with the demo set; Hindi 0 missing.
 
 ### F-1301 Basic analytics `spec v1, owner § 26.16`
 

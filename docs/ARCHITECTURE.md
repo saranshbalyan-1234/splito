@@ -1615,7 +1615,8 @@ dishes etc and each item can be assigned to each in split"; "in itemize don't sh
   Bluesky's unread badge on the nav item (bottom bar, sidebar), counting unread items from others. testIDs
   `tab-activity`, `screen-activity`.
 - **Header:** avatar | "Activity" | "Mark all read".
-- **Body keeps Bluesky's notification list:** Pager tabs "All" / "From others", day section headers (Today /
+- **Body keeps Bluesky's notification list:** Pager tabs "All" / "Me" / "Others" (owner 92: Me = what I did,
+  Others = what other people did; the tab choice is remembered per decision 90; F-1213, not built yet), day section headers (Today /
   Yesterday / weekday / date), read/unread tint, row menu (mark read, hide, delete expense), swipe actions,
   hide and undo.
 - **A row shows who did it and what it means for you:** the avatar is the ACTOR (who added, edited or
@@ -1919,6 +1920,7 @@ Every owner decision, in the order it was made (all 2026-10-26). "Replaced" name
 | 89 | "or make it as active inactive and hide show instead of archive" | Two controls: Active/Inactive (group-wide; inactive takes no new expenses, enforced in mutations; settle stays; Inactive fold) and Show/Hide (personal pref `groups.hidden`); balances never hidden; old `archived` reads as Inactive | § 26.12 | One "Archive" (row 88) |
 | 90 | "by default hide settled, in filters option for show settled, every setting that we choose to be stored in db" | Settled friends and groups hidden by default with a "Show settled" filter switch; every user choice (filters, sorts, scopes) persists as a database preference; device-scope prefs move from MMKV/localStorage into the DB | § 26.12 | Settled shown; filters in screen state; device prefs in MMKV |
 | 91 | "add search on friends as well" | Friends list keeps its own inline search (icon that expands, live filter by name) next to its filters, in addition to the Search & Ask drawer | § 26.12 | Search & Ask only (F-222 removed the Friends search icon) |
+| 92 | "in activity, add all, me and others" | Activity Pager tabs All / Me / Others (Me = actions I did, Others = actions by others) | § 26.14 | All / From others |
 
 New decisions follow § 0 rule 9: rewrite the rule in its topic so only the current truth remains, then add a
 row here.
