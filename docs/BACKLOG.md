@@ -2759,6 +2759,18 @@ Copy any URL and land on the same screen: pages, in-page tabs, sheets and popups
   5. List state in the URL and the database preferences (F-1413) agree: the URL wins when present, otherwise the saved preference.
   6. e2e: for every route in the table, load it cold at phone and desktop widths and assert the right screen, tab or sheet is open.
 
+### F-242 why-did-you-render and the wasted-render gate `spec: owner § 17, § 26.10 (decision 108)`
+
+Add `@welldone-software/why-did-you-render` to dev builds and a Playwright render scenario that fails on any avoidable re-render, then fix every report it finds. Runs first among the post-merge items so later work is held to it.
+
+- **Effort** M · **Impact** 9 · **Backend** no · **Status** todo · **Deps** Wave B merged
+- **Prefs** -
+- **Acceptance**
+  1. why-did-you-render is loaded only in dev builds (web and native) from the client entry, version verified against React 19.3 + React Compiler (or the documented fallback), tracking all components and hooks; production and e2e-timing bundles contain none of it (bundle check).
+  2. A dev-build Playwright scenario (launch -> Home, tab round, open/close Add expense, type 10 characters, scroll 1,000 rows, Search & Ask + one question) collects every report and per-component render counts; it fails on any report or a count above the recorded baseline; baseline stored in the repo.
+  3. Every report found on the merged Wave B app is fixed at the root (stable props, memoised rows, narrow selectors, stable context, equal snapshots kept), each with a before/after count in `docs/COMPLETION_MATRIX.md`.
+  4. The scenario is part of every merge's checks (decision 107).
+
 ### F-1501 Text summaries for WhatsApp `spec 4b v1`
 
 Whole-group or "only their part" summaries with WhatsApp markup, sent via wa.me in the recipient's language.

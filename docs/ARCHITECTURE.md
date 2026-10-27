@@ -916,6 +916,17 @@ are written; nothing records them automatically (A-037).
 - **Bundles:** keep Bluesky's lazy imports and inline requires; measure web first-load chunks before adding
   a lazy boundary (tap-opened dialogs first); warm tab modules on idle one per turn only if a first visit is
   measured slow; illustrations ship as WebP; unreferenced assets are deleted.
+- **No wasted renders** (owner 108). A component re-renders only when what it draws changed. Dev builds (web and
+  native, never production or e2e timing runs) load `@welldone-software/why-did-you-render` from the client entry,
+  tracking every component (`trackAllPureComponents` plus hooks), and log each avoidable re-render ("props/state
+  equal by value but not by reference", context churn); version pinned to one that supports React 19.3 and the
+  React Compiler, checked before adoption (fallback: React DevTools Profiler "why did this render" plus the render
+  counter below). A Playwright scenario runs the dev build through launch -> Home, a tab round, open/close Add
+  expense, type 10 characters, scroll 1,000 rows, open Search & Ask and ask one question, and fails on any
+  why-did-you-render report or a render count above the recorded baseline; every merge runs it (decision 107
+  gate). Typical causes it catches, fixed at the root: new objects/arrays/closures passed as props each render,
+  unstable context values, a store hook returning a new snapshot for an equal answer (§ 9.6), list rows not
+  memoised, selectors not narrow enough.
 - **Render gate:** a Playwright scenario counts renders (launch to People, tab round, add expense, search
   four characters) on main vs branch; numbers go in the PR.
 - **Dev-only tools never ship:** the release script refuses to build with any `EXPO_PUBLIC_` debug,
@@ -2016,6 +2027,7 @@ Every owner decision, in the order it was made (all 2026-10-26). "Replaced" name
 | 105 | "they need to manually hide, and then, show hidden to be used" | Deleted items always show; each can be hidden manually (personal, per item, Undo); one "Show hidden" filter (default off) reveals hidden items and hidden groups | § 26.14, § 26.12 | Global "Show deleted" filter (row 103) |
 | 106 | "an expense can be hidden if deleted, group can be hidden/show or made inactive active" | Hide is offered on expenses/payments/write-offs (and friends) only after deletion; groups can be hidden/shown any time and made inactive/active | § 26.14, § 26.12 | (clarifies 105) |
 | 107 | "keep performance in mind, it should be lightning fast no delays in rendering anywhere" | Performance budgets become a merge gate: first frame < 100 ms with real content or a skeleton, no blank/spinner, no dropped keystrokes; perf spec + render counts on 10k fixture at every merge, fail on budget miss or >10 % regression | § 26.10 | Budgets measured and recorded only |
+| 108 | "also check wasted renders or rerendering everytime, remember in architecture"; "why did you render" | why-did-you-render in dev builds tracks every avoidable re-render; a Playwright render scenario fails on any report or a count above baseline; part of the merge gate | § 17, § 26.10 | Render counts recorded, no wasted-render check |
 
 New decisions follow § 0 rule 9: rewrite the rule in its topic so only the current truth remains, then add a
 row here.
