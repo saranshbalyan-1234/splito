@@ -1670,13 +1670,18 @@ dishes etc and each item can be assigned to each in split"; "in itemize don't sh
   the screen reader says "Deleted, <time>"). Counts and helper lines ("8 records", "Gone in 28 days") are not
   struck. *Why:* "deleted item should show a stroke and clock symbol and time".
 
-- **Each deleted item keeps the bin period it was deleted under** (owner 102). Deleting stamps the tombstone
-  with its own `purgeAfter` (deletedAt + the `history.binDays` value at that moment); purging, the "N days left"
-  line, the bin window that keeps a person from being deleted, and restore all read the item's own `purgeAfter`.
-  Changing `history.binDays` (say 90 -> 7) applies only to items deleted afterwards; items already in Recently
-  deleted keep their date (Settings says so under the control). Rows deleted before this rule read their
-  `purgeAfter` as deletedAt + the setting at the time of upgrade, once. *Why:* "if i deleted an item and setting
-  is for 90 days, and i change the setting to 7 days, the old item should still follow its own rule".
+- **No Recently deleted bin: a deleted item stays where it was, struck through, forever** (owner 103, replaces
+  the bin and decision 102). Deleting an expense, payment, write-off or comment leaves it in its own list (the
+  group's Expenses tab, the person's history, Activity, search results) in its normal date position, drawn as
+  decision 98 says (title and amount struck, clock, "Deleted <time> · by <name>"); a deleted group stays in the
+  Groups list (and its page still opens, read-only, with its expenses struck); a deleted friend stays in People,
+  struck. Deleted items never count in any balance, total, chart, export total or settle plan. Nothing is ever
+  purged: no bin, no "days left", no `history.binDays` setting, no "Delete forever". Opening a deleted item shows
+  it read-only with "Restore" (and its history); Restore keeps the same checks as before (a missing person or
+  group, an inactive group). A list filter "Show deleted" (preference `lists.showDeleted`, account, default on)
+  can hide them. Only "Erase this device's data" (Settings > Data) removes data, and it says so. *Why:* "lets
+  remove this deleted items and keep deleted items inside their actual place with a stroke, like a deleted
+  expense and keep it forever, and same for groups".
 
 ### 26.15 Settings, sign in and log out
 
@@ -1992,6 +1997,7 @@ Every owner decision, in the order it was made (all 2026-10-26). "Replaced" name
 | 100 | "for every tab, every popup it should be via url, so that even if i copy paste the url i land on same place" | Every page, tab, sheet/popup and meaningful list state has a URL (web) / deep link (native); open pushes, close goes back, paste/refresh restores; prompts and menus excluded; URLs never act | § 26.3 | Sheets and tabs held in screen state |
 | 101 | "even the drawer or sheet should have same rule" | The side drawer, the Search & Ask drawer and every bottom sheet, including pickers inside sheets, are URL-addressable too | § 26.3 | Rule 100 named pages, tabs, sheets and popups only |
 | 102 | "if i deleted an item and setting is for 90 days, and i change the setting to 7 days, the old item should still follow its own rule" | Each tombstone stores its own purgeAfter from the bin setting at delete time; changing the setting affects only later deletes | § 26.14 | Purge computed from the current setting |
+| 103 | "lets remove this deleted items and keep deleted items inside their actual place with a stroke, like a deleted expense and keep it forever, and same for groups" | No Recently deleted bin; deleted expenses, payments, write-offs, comments, groups and friends stay in their own lists, struck through, never purged, never counted; open read-only with Restore; "Show deleted" filter (default on) | § 26.14 | Recently deleted bin with timed purge (F-1203, decision 102) |
 
 New decisions follow § 0 rule 9: rewrite the rule in its topic so only the current truth remains, then add a
 row here.

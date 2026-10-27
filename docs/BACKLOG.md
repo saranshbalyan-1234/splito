@@ -2305,17 +2305,20 @@ An expense History tab with plain diffs per version; an Activity row whenever an
   1. "Riya changed amount 1,200 -> 1,500 and removed Sam" shows with time.
   2. An edit that changes my share creates an Activity row with old and new share.
 
-### F-1203 Recently deleted bin `spec v1 (extended)`
+### F-1203 Deleted items stay in place, forever `spec: owner § 26.14 (decisions 98, 103)`
 
-Tombstoned expenses and payments listed for a configurable window with who, when and effect; one-tap restore.
+No Recently deleted bin. A deleted expense, payment, write-off, comment, group or friend stays in its own list, struck through with a clock and "Deleted <time>", never purged and never counted; it opens read-only with Restore. Replaces the bin (and decision 102's per-item purge).
 
-- **Effort** S · **Impact** 8 · **Backend** no · **Status** done (built and tested on a feat/b-* branch, unmerged) · **Deps** F-103
-- **Prefs** `history.binDays`
+- **Effort** M · **Impact** 8 · **Backend** no · **Status** todo (built on feat/wB-B3x) · **Deps** F-114, F-615
+- **Prefs** `lists.showDeleted` (account, default on); `history.binDays` removed (migration drops it)
 - **Acceptance**
-  1. Restore uses restoreExpense and is undoable.
-  2. After the window the tombstone stays in the audit trail.
-  4. Owner 98: every deleted record (bin, Activity deleted rows, deleted detail pages, deleted group entry) shows its title and amount struck through plus a Clock icon and "Deleted <relative time>" (exact time on hover / long-press, screen-reader text); counts and helper lines are not struck.
-  5. Owner 102: each tombstone stores `purgeAfter` = deletedAt + `history.binDays` at delete time; purge, "N days left", the deletePerson bin window and restore read it; changing the setting affects only later deletes (test: delete at 90, change to 7, item still has its 90-day date); legacy rows get purgeAfter once at upgrade.
+  1. The Recently deleted screen, route (`/settings/recently-deleted` redirects to Settings > Data with a short note), Settings row, purge code (`purgeDeleted`, auto-purge, "Delete forever", days-left lines) and `history.binDays` are removed; no code path hard-deletes a record (architecture rule test).
+  2. Deleted records render in place in the group Expenses tab, person history, Activity, search results, Groups list and People list, in date order, with decision 98's look; their amounts are excluded from every balance, total, chart, export total and settle plan (projection tests unchanged: tombstones already contribute nothing).
+  3. A deleted group stays in the Groups list (struck, chip "Deleted"), its page opens read-only with its records struck and a Restore action; restoring a group restores exactly the records deleted with it (existing deletedWithGroup logic).
+  4. A deleted expense/payment opens read-only with history and Restore (same guards: missing person or group, GROUP_INACTIVE); Undo toasts still work.
+  5. "Show deleted" filter on People, Groups, the Group Expenses tab and the Person history (default on, remembered per decision 90).
+  6. deletePerson no longer counts "bin items"; a person named on any record (deleted or not) is kept as a struck friend rather than removed from records.
+  7. e2e: delete an expense, it stays struck in the group list with clock and time and balances drop it; restore from its page; delete a group, it stays struck in Groups, opens read-only, restores; Show deleted off hides them. Phone and desktop.
 
 ### F-1204 Comments on expenses and repayments `spec v2, owner § 26.20`
 
