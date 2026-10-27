@@ -12,7 +12,7 @@ import {
 import {atoms as a, web} from '#/alf'
 import * as Composer from '#/components/Composer'
 import * as Prompt from '#/components/Prompt'
-import {IS_IOS, IS_IPAD, IS_LIQUID_GLASS, IS_NATIVE} from '#/env'
+import {IS_IOS, IS_IPAD, IS_LIQUID_GLASS} from '#/env'
 import {
   DiscardPrompt,
   Footer,
@@ -70,16 +70,14 @@ export function Screen({
   const pendingAction = useRef<NavigationAction | null>(null)
   const [isScrolled, onScroll] = useIsScrolled()
 
-  /* Native: a swipe down or Back is a route removal, so ask before it happens. */
-  usePreventRemove(IS_NATIVE && isDirty, ({data}) => {
+  /* A swipe down, Back or the browser's Back is a route removal, so ask before it happens (web too, audit m27). */
+  usePreventRemove(isDirty, ({data}) => {
     pendingAction.current = data.action
     discardControl.open()
   })
 
-  const requestClose = () => {
-    if (!isDirty || IS_NATIVE) onClose()
-    else discardControl.open()
-  }
+  // A dirty close is a route removal too: the prevent-remove prompt above asks.
+  const requestClose = onClose
   const leave = () => {
     const action = pendingAction.current
     pendingAction.current = null
