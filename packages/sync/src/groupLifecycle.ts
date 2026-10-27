@@ -228,6 +228,8 @@ export async function restoreGroup(store: Store, ctx: MutationCtx, groupId: stri
   await store.transaction(async tx => {
     const g = (await tx.get<Group & Tombstone>('group', groupId))!
     if (g.version !== deleted.version) throw new DomainError('NOT_FOUND')
+    // Only an admin brings a group back, as only an admin deleted it (26.12).
+    if (!groupAdmins(g.data).includes(ctx.actor)) throw new DomainError('NOT_ADMIN')
     await requireRestorable(tx, 'group', g.data)
     const {removed: _removed, ...data} = g.data
     await write(tx, ctx, 'group', groupId, data, false, 'group.restore')

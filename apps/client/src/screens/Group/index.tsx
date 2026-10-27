@@ -16,7 +16,7 @@ import {
 import {usePagedRows} from '#/lib/hooks/usePagedRows'
 import {type AllNavigatorParams, type NavigationProp} from '#/lib/routes/types'
 import {
-  useEntities,
+  useAllEntities,
   useGroupHistory,
   useGroupNets,
   useMe,
@@ -38,6 +38,9 @@ import {EditGroupDialog} from '#/components/groups/EditGroupDialog'
 import {NO_RULES, RulesDialog} from '#/components/groups/RulesEditor'
 import {DotGrid3x1_Stroke2_Corner0_Rounded as DotsIcon} from '#/components/icons/DotGrid'
 import {Pencil_Stroke2_Corner0_Rounded as PencilIcon} from '#/components/icons/Pencil'
+import {SettingsSliderVertical_Stroke2_Corner0_Rounded as FilterIcon} from '#/components/icons/SettingsSlider'
+import {historyRowMenu, ShowHiddenSheet, useVisibleEntries} from '#/features/hidden/ShowHidden'
+import {useHideItem} from '#/features/hidden/HideItem'
 import {Group3_Stroke2_Corner0_Rounded as GroupIcon} from '#/components/icons/Group'
 import {Handshake_Stroke2_Corner0_Rounded as HandCoinsIcon} from '#/components/icons/Money'
 import {PersonPlus_Filled_Stroke2_Corner0_Rounded as PersonPlusIcon} from '#/components/icons/Person'
@@ -67,6 +70,8 @@ import {TabBar} from '#/components/TabBar'
 import {Text} from '#/components/Typography'
 import {Shimmer} from '#/motion/Shimmer'
 import {
+  DeletedGroupItems,
+  GroupDeletedBanner,
   GroupLifecycleDialogs,
   GroupLifecycleItems,
   GroupNotices,
@@ -135,12 +140,15 @@ export function GroupScreen() {
       : (route.params.tab ?? 'expenses'),
   )
   const me = useMe()
-  const people = useEntities<Person>('person')
-  const groups = useEntities<Group>('group')
+  /* Removed friends too: the records still name them. */
+  const people = useAllEntities<Person>('person')
+  /* Tombstones too: a deleted group still opens, read-only (decision 103). */
+  const groups = useAllEntities<Group>('group')
   /* The group's net per currency and person (stored sums) and its expenses and payments, a page at a time (by index). */
   const storedNets = useGroupNets(groupId)
   const groupHistory = useGroupHistory(groupId)
   const detailsControl = useDialogControl()
+  const filterControl = useDialogControl()
   const addMembersControl = useDialogControl()
   const editControl = useDialogControl()
   const rulesControl = useDialogControl()
@@ -153,6 +161,7 @@ export function GroupScreen() {
   )
   const evenControl = useDialogControl()
   const [evenDraft, setEvenDraft] = useState<EvenDraft | null>(null)
+  const openHide = useHideItem({type: openKind, id: openRepayment?.id ?? ''})
 
   const isLoading =
     !me || !people || !groups || !storedNets || !groupHistory
@@ -163,7 +172,10 @@ export function GroupScreen() {
     navigation.setParams({tab: undefined})
   }, [wantsRules, isLoading, rulesControl, navigation])
   const group = groups?.find(g => g.id === groupId)
+  const isDeleted = !!group?.deleted
   const isMeAdmin = !!group && !!me && groupAdmins(group.data).includes(me.id)
+  /* Deleted records stay in their date place, struck; the ones I hid are out unless "Show hidden" is on. */
+  const {visible, hidden, showHidden} = useVisibleEntries(groupHistory?.entries ?? [])
 
   const pageOf = usePagedRows(tab)
   if (!isLoading && !group) {
@@ -196,7 +208,7 @@ export function GroupScreen() {
   const names = new Map(
     (people ?? []).map(p => [p.id, p.id === me?.id ? l`You` : p.data.name]),
   )
-  const history = groupHistory?.entries ?? []
+  const history = visible
   /* Every member listed, zero when they have no records yet, so a settlement plan can route through them. */
   const nets =
     group && storedNets
@@ -367,7 +379,7 @@ export function GroupScreen() {
             />
             {/* Pushed pages have no FAB (owner rule); adding here pre-selects the group. */}
             {/* An inactive group takes no new expenses: its notice below says how to reopen it (decision 89). */}
-            {isGroupInactive(group.data) ? null : (
+            {isGroupInactive(group.data) || isDeleted ? null : (
               <Button
                 testID="group-add-expense"
                 label={l({message: 'Add expense', context: 'action'})}
@@ -455,7 +467,7 @@ export function GroupScreen() {
               </Text>
             )}
           </View>
-          {me && <GroupNotices group={group} me={me.id} />}
+          {isDeleted ? <GroupDeletedBanner group={group} /> : me ? <GroupNotices group={group} me={me.id} /> : null}
           <GroupBalanceCards
             openCurrencies={openCurrencies}
             mine={mine}
@@ -473,6 +485,31 @@ export function GroupScreen() {
             onSelect={i => setTab(TABS[i]!)}
           />
         </View>
+        {tab === 'expenses' ? (
+          <SectionHeader
+            title={l`Expenses`}
+            testID="group-expenses-title"
+            action={
+              <Button
+                testID="group-filter"
+                label={l`Filter`}
+                size="small"
+                color="secondary"
+                onPress={() => filterControl.open()}>
+                <ButtonIcon icon={FilterIcon} />
+                <ButtonText>
+                  <Trans>Filter</Trans>
+                </ButtonText>
+                {showHidden ? (
+                  <Text testID="group-filter-active" style={[a.text_sm, a.font_semi_bold]}>
+                    {' · '}
+                    <Trans>Hidden shown</Trans>
+                  </Text>
+                ) : null}
+              </Button>
+            }
+          />
+        ) : null}
       </>
     )
 
@@ -536,7 +573,7 @@ export function GroupScreen() {
           testID="group-settle"
           label={l`Settle up`}
           icon={HandCoinsIcon}
-          disabled={!group || isSettled}
+          disabled={!group || isSettled || isDeleted}
           hint={isSettled ? l`Everyone is settled up.` : undefined}
           onPress={() => navigation.navigate('Settle', {groupId})}
         />
@@ -559,6 +596,10 @@ export function GroupScreen() {
               )}
             </Menu.Trigger>
             <Menu.Outer>
+              {isDeleted ? (
+                <DeletedGroupItems group={group} />
+              ) : (
+                <>
               <Menu.Item
                 testID="group-menu-edit"
                 label={l`Edit group`}
@@ -596,6 +637,8 @@ export function GroupScreen() {
                 <Menu.ItemIcon icon={RouteIcon} position="right" />
               </Menu.Item>
               {me && <GroupLifecycleItems lifecycle={lifecycle} group={group} me={me.id} nets={nets} />}
+                </>
+              )}
             </Menu.Outer>
           </Menu.Root>
         ) : (
@@ -621,6 +664,8 @@ export function GroupScreen() {
                     me={me!.id}
                     names={names}
                     locale={locale}
+                    menu={historyRowMenu(item.entry, hidden, l`this record`)}
+                    isHidden={hidden.has(item.entry.entity.id)}
                     onRepaymentPress={(r, kind) => {
                       setOpenRepayment(r)
                       setOpenKind(kind)
@@ -649,6 +694,7 @@ export function GroupScreen() {
                     title={l`Members`}
                     count={item.count}
                     action={
+                      isDeleted ? undefined : (
                       <Button
                         testID="group-add-members"
                         label={l`Add members`}
@@ -660,6 +706,7 @@ export function GroupScreen() {
                           <Trans>Add members</Trans>
                         </ButtonText>
                       </Button>
+                      )
                     }
                   />
                 )
@@ -676,7 +723,7 @@ export function GroupScreen() {
                     isAdmin={!!group && groupAdmins(group.data).includes(item.personId)}
                     /* Anyone may leave; only an admin removes somebody else. */
                     onExitPressed={
-                      item.personId === me?.id || isMeAdmin
+                      !isDeleted && (item.personId === me?.id || isMeAdmin)
                         ? () => lifecycle.openExit(item.personId)
                         : undefined
                     }
@@ -843,8 +890,14 @@ export function GroupScreen() {
           me={me.id}
           names={names}
           groupName={group?.data.name ?? null}
+          hide={
+            openRepayment?.deleted
+              ? {isHidden: hidden.has(openRepayment.id), onToggle: () => void openHide.toggle(!hidden.has(openRepayment.id))}
+              : undefined
+          }
         />
       )}
+      <ShowHiddenSheet control={filterControl} testID="group-filter-sheet" />
     </Layout.Screen>
   )
 }

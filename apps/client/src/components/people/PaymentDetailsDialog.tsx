@@ -17,10 +17,13 @@ import {useMutationCtx, useStore} from '#/data/hooks'
 import {useNumberLocale} from '#/locale/numberLocale'
 import {atoms as a, useTheme} from '#/alf'
 import {Button, ButtonIcon, ButtonText} from '#/components/Button'
+import {DeletedMeta, useStruck} from '#/components/DeletedMeta'
 import * as Dialog from '#/components/Dialog'
 import * as FormSheet from '#/components/FormSheet'
 import {ArrowRotateCounterClockwise_Stroke2_Corner0_Rounded as UndoIcon} from '#/components/icons/ArrowRotate'
 import {Trash_Stroke2_Corner0_Rounded as TrashIcon} from '#/components/icons/Trash'
+import {EyeIcon, EyeOffIcon} from '#/components/settings/icons'
+import {useErrorText} from '#/components/split/shared'
 import {SyncStatusLine} from '#/components/SyncStatus'
 import {useFormatDay} from '#/locale/useDates'
 import * as Toast from '#/components/Toast'
@@ -38,6 +41,7 @@ export function PaymentDetailsDialog({
   me,
   names,
   groupName,
+  hide,
 }: {
   control: Dialog.DialogControlProps
   repayment: Entity<Repayment | WriteOff> | null
@@ -45,6 +49,8 @@ export function PaymentDetailsDialog({
   me: string
   names: Map<string, string>
   groupName: string | null
+  /** A deleted record can be hidden from my lists (decisions 104 to 106); the caller owns the preference. */
+  hide?: {isHidden: boolean; onToggle: () => void}
 }) {
   const {t: l} = useLingui()
   return (
@@ -58,6 +64,7 @@ export function PaymentDetailsDialog({
             me={me}
             names={names}
             groupName={groupName}
+            hide={hide}
           />
         )}
       </FormSheet.Inner>
@@ -71,14 +78,18 @@ function Details({
   me,
   names,
   groupName,
+  hide,
 }: {
   repayment: Entity<Repayment | WriteOff>
   isWriteOff: boolean
   me: string
   names: Map<string, string>
   groupName: string | null
+  hide?: {isHidden: boolean; onToggle: () => void}
 }) {
   const t = useTheme()
+  const struck = useStruck()
+  const errorText = useErrorText()
   const {t: l} = useLingui()
   const formatDay = useFormatDay()
   const control = Dialog.useDialogContext()
@@ -146,10 +157,23 @@ function Details({
     }
   }
 
+  /* A deleted record opens read-only: struck, when it went, and Restore (same guards as the mutation's). */
+  const restore = async () => {
+    try {
+      await (isWriteOff ? restoreWriteOff : restoreRepayment)(store, ctx, repayment.id)
+      haptics.confirm()
+      control.close()
+    } catch (e) {
+      logger.error(e, {where: 'PaymentDetailsDialog.restore'})
+      Toast.show(errorText((e as {code?: string}).code ?? ''), {type: 'error'})
+    }
+  }
+  const isDeleted = repayment.deleted
+
   return (
     <View style={[a.gap_lg]}>
       <View style={[a.gap_xs]}>
-        <Text emoji style={[a.text_xl, a.font_semi_bold, a.leading_tight]}>
+        <Text emoji style={[a.text_xl, a.font_semi_bold, a.leading_tight, isDeleted && struck]}>
           {title}
         </Text>
         <Text
@@ -160,9 +184,11 @@ function Details({
             a.font_bold,
             a.leading_tight,
             {fontVariant: ['tabular-nums']},
+            isDeleted && struck,
           ]}>
           {formatAmount(amount, currency, locale)}
         </Text>
+        {isDeleted ? <DeletedMeta testID="payment-deleted-at" at={repayment.updatedAt} /> : null}
       </View>
       <View style={[a.rounded_md, a.border, t.atoms.border_contrast_low]}>
         <DetailRow label={l`Date`} value={when} />
@@ -171,7 +197,13 @@ function Details({
       </View>
       <SyncStatusLine row={repayment} testID="payment-sync-status" />
       <Text style={[a.text_sm, a.leading_snug, t.atoms.text_contrast_medium]}>
-        {isWriteOff ? (
+        {isDeleted ? (
+          isWriteOff ? (
+            <Trans>This write-off was undone. It no longer counts towards any balance.</Trans>
+          ) : (
+            <Trans>This payment was deleted. It no longer counts towards any balance.</Trans>
+          )
+        ) : isWriteOff ? (
           <Trans>
             A debt let go – no money changed hands, and it never counts as
             spending. Undoing it puts the balance back as it was.
@@ -183,7 +215,35 @@ function Details({
           </Trans>
         )}
       </Text>
-      {isWriteOff ? (
+      {isDeleted ? (
+        <View style={[a.gap_sm]}>
+          <Button
+            testID={isWriteOff ? 'writeoff-restore' : 'payment-restore'}
+            label={isWriteOff ? l`Restore write-off` : l`Restore payment`}
+            size="large"
+            color="primary"
+            onPress={() => void restore()}>
+            <ButtonIcon icon={UndoIcon} />
+            <ButtonText>
+              <Trans>Restore</Trans>
+            </ButtonText>
+          </Button>
+          {hide ? (
+            <Button
+              testID="payment-hide"
+              label={hide.isHidden ? l`Unhide` : l`Hide`}
+              size="large"
+              color="secondary"
+              onPress={() => {
+                hide.onToggle()
+                control.close()
+              }}>
+              <ButtonIcon icon={hide.isHidden ? EyeIcon : EyeOffIcon} />
+              <ButtonText>{hide.isHidden ? <Trans>Unhide</Trans> : <Trans>Hide</Trans>}</ButtonText>
+            </Button>
+          ) : null}
+        </View>
+      ) : isWriteOff ? (
         <Button
           testID="writeoff-undo"
           label={l`Undo write-off`}

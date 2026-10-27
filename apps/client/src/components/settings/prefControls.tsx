@@ -896,6 +896,8 @@ export const PREF_CONTROLS = {
   'feedback.includeAppInfo': null,
   // Set from a deleted item's "Hide" (and the lists' "Show hidden"), where its effect shows; Reset all clears it.
   'lists.hiddenItems': null,
+  // The "Show hidden" switch sits in each list's filters, where its effect shows.
+  'lists.showHidden': null,
   'privacy.findByContact': FindablePref,
   'privacy.friendRequestsFrom': FriendRequestsFromPref,
   'invites.defaultMaxUses.friend': FriendInviteUsesPref,

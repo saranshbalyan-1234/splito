@@ -399,6 +399,16 @@ test('adding a member to a group made before roles existed keeps the creator adm
 /** The same group seen by Bob, who is a member but not an admin. */
 const asBob = (bobId: string): MutationCtx => ({...ctx, actor: bobId})
 
+test('only an admin may restore a deleted group (NOT_ADMIN); a deleted group stays readable and its records stay deleted until then', async () => {
+  const {g, bob, e} = await flat()
+  await deleteGroup(s, ctx, g.id)
+  expect(await codeOf(restoreGroup(s, asBob(bob.id), g.id))).toBe('NOT_ADMIN')
+  expect((await s.get('group', g.id))!.deleted).toBe(true)
+  expect((await s.get('expense', e.id))!.deleted).toBe(true)
+  await restoreGroup(s, ctx, g.id)
+  expect((await s.get('group', g.id))!.deleted).toBe(false)
+})
+
 test('only an admin may remove another member or delete the group (NOT_ADMIN); any member may leave, hide and change the state', async () => {
   const {g, bob, cara} = await flat()
   const b = asBob(bob.id)

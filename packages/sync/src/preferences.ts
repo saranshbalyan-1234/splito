@@ -196,6 +196,8 @@ export const PREFS = {
    */
   // ponytail: id set in one pref, move to a personal table if it grows past a few thousand
   'lists.hiddenItems': def<string[]>('lists.hiddenItems', 'lists', 'account', 'Hidden deleted items', [], (v): v is string[] => Array.isArray(v) && v.length <= 5000 && v.every(isString) && new Set(v).size === v.length),
+  /** The one "Show hidden" filter of People, Groups, a group's Expenses and a person's history (decision 105): off, hidden deleted items and hidden groups stay out of the lists. */
+  'lists.showHidden': def('lists.showHidden', 'lists', 'account', 'Show hidden', false, isBool),
   /** The small sync dot on expense, payment and request rows (ARCHITECTURE 9.8); detail pages always say it in words. */
   showSyncStatus: def('showSyncStatus', 'lists', 'device', 'Show sync status on rows', true, isBool),
   swipeLeft: def<SwipeAction>('swipeLeft', 'lists', 'account', 'Swipe left', 'delete', oneOf('markRead', 'hide', 'delete', 'none')),

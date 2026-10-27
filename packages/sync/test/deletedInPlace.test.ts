@@ -20,7 +20,7 @@ import {
   setItemHidden,
 } from '../src/mutations'
 import {deleteGroup} from '../src/groupLifecycle'
-import {getPref, prefFrom} from '../src/preferences'
+import {getPref, prefFrom, PREFS} from '../src/preferences'
 import {searchStore} from '../src/search'
 import {openSqlStore} from '../src/sqlStore'
 import {type Store} from '../src/store'
@@ -153,4 +153,9 @@ test('Hide works on a deleted item only; Unhide undoes it; the id set is one pre
 test('the hidden set defaults to empty and ignores a bad stored value', () => {
   expect(prefFrom([], 'lists.hiddenItems')).toEqual([])
   expect(prefFrom([{id: 'lists.hiddenItems', data: {value: 'x'}, deleted: false}] as never, 'lists.hiddenItems')).toEqual([])
+})
+
+test('Show hidden is an account preference, off by default', async () => {
+  expect(await getPref(s, 'lists.showHidden')).toBe(false)
+  expect(PREFS['lists.showHidden'].scope).toBe('account')
 })

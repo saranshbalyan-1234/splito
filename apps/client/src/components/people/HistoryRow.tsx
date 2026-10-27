@@ -7,6 +7,7 @@ import {type Entity, type Repayment, type WriteOff} from '@splito/sync'
 import {Link} from '#/view/com/util/Link'
 import {PressableWithHover} from '#/view/com/util/PressableWithHover'
 import {atoms as a, useTheme} from '#/alf'
+import {DeletedMeta, useStruck} from '#/components/DeletedMeta'
 import {EntryIcon} from '#/components/people/EntryIcon'
 import {SyncDot} from '#/components/SyncStatus'
 import {type HistoryEntry, utcDate} from '#/components/people/ledger'
@@ -35,6 +36,8 @@ export function HistoryRow({
   locale,
   onRepaymentPress,
   hideTopBorder = false,
+  menu,
+  isHidden = false,
 }: {
   /** The first row under a month heading: the heading's rule already separates them. */
   hideTopBorder?: boolean
@@ -48,6 +51,10 @@ export function HistoryRow({
   /** The group's name, shown in a person's history. */
   groupName?: string | null
   locale: string
+  /** A deleted row's "..." menu (Hide / Unhide), drawn beside the row. Live rows have none. */
+  menu?: React.ReactNode
+  /** Hidden by me and brought back by "Show hidden": says so. */
+  isHidden?: boolean
   /** Opens a payment's or a write-off's details (`kind` says which). */
   onRepaymentPress: (
     repayment: Entity<Repayment | WriteOff>,
@@ -59,6 +66,9 @@ export function HistoryRow({
   const listAnimations = useListAnimations()
   const press = usePressScale()
   const data = entry.entity.data
+  /* A deleted record stays in its place, drawn struck (owner 98, 103); only live ones say what they did to a balance. */
+  const isDeleted = entry.entity.deleted
+  const struck = useStruck()
   const name = (id: string) => names.get(id) ?? l`Someone`
   /* Bylines are short enough for a phone: first names, and no date (the month heading has it). */
   const firstName = (id: string) => name(id).split(' ')[0]!
@@ -79,7 +89,9 @@ export function HistoryRow({
           ? l`You paid ${total}`
           : l`${firstName(payers[0]!)} paid ${total}`,
     ]
-    trailing = (
+    trailing = isDeleted ? (
+      <Text style={[a.text_md, a.font_semi_bold, a.leading_snug, tabular, struck]}>{total}</Text>
+    ) : (
       <EffectText
         effect={effect}
         context={context}
@@ -104,6 +116,7 @@ export function HistoryRow({
           a.leading_snug,
           t.atoms.text_contrast_medium,
           tabular,
+          isDeleted && struck,
         ]}>
         {amount(w.amount)}
       </Text>
@@ -126,6 +139,7 @@ export function HistoryRow({
           a.leading_snug,
           t.atoms.text,
           tabular,
+          isDeleted && struck,
         ]}>
         {amount(r.amount)}
       </Text>
@@ -150,7 +164,7 @@ export function HistoryRow({
         <Text
           emoji
           numberOfLines={1}
-          style={[a.text_md, a.font_semi_bold, a.leading_snug]}>
+          style={[a.text_md, a.font_semi_bold, a.leading_snug, isDeleted && struck]}>
           {title}
         </Text>
         <View style={[a.flex_row, a.align_center, a.gap_sm]}>
@@ -168,6 +182,17 @@ export function HistoryRow({
           </Text>
           <SyncDot row={entry.entity} testID={`sync-${entry.entity.id}`} />
         </View>
+        {isDeleted ? (
+          <View style={[a.flex_row, a.align_center, a.gap_sm]}>
+            <DeletedMeta testID={`history-${entry.entity.id}-deleted`} at={entry.entity.updatedAt} />
+            {isHidden ? (
+              <Text testID={`history-${entry.entity.id}-hidden`} style={[a.text_sm, a.leading_snug, t.atoms.text_contrast_medium]}>
+                {'· '}
+                <Trans>Hidden</Trans>
+              </Text>
+            ) : null}
+          </View>
+        ) : null}
       </View>
       <View style={[a.align_end, a.flex_shrink_0, {maxWidth: '45%'}]}>
         {trailing}
@@ -177,43 +202,60 @@ export function HistoryRow({
   const rowStyle = [
     a.px_lg,
     a.py_md,
-    !hideTopBorder && [a.border_t, t.atoms.border_contrast_low],
+    !hideTopBorder && !menu && [a.border_t, t.atoms.border_contrast_low],
     a.transition_color,
   ]
 
-  return (
-    <Animated.View {...listAnimations}>
-      {entry.kind === 'expense' ? (
-        <Link
-          testID={`history-${entry.entity.id}`}
-          onPressIn={press.onPressIn}
-          onPressOut={press.onPressOut}
-          href={`/expense/${entry.entity.id}`}
-          asAnchor
-          anchorNoUnderline
-          accessibilityLabel={title}
-          accessibilityHint=""
-          hoverStyle={t.atoms.bg_contrast_25}
-          style={rowStyle}>
-          {content}
-        </Link>
-      ) : (
-        <PressableWithHover
-          testID={`history-${entry.entity.id}`}
-          onPressIn={press.onPressIn}
-          onPressOut={press.onPressOut}
-          onPress={() => onRepaymentPress(entry.entity, entry.kind)}
-          accessibilityRole="button"
-          accessibilityLabel={title}
-          accessibilityHint={
-            entry.kind === 'writeoff'
+  const row =
+    entry.kind === 'expense' ? (
+      <Link
+        testID={`history-${entry.entity.id}`}
+        onPressIn={press.onPressIn}
+        onPressOut={press.onPressOut}
+        href={`/expense/${entry.entity.id}`}
+        asAnchor
+        anchorNoUnderline
+        accessibilityLabel={title}
+        accessibilityHint=""
+        hoverStyle={t.atoms.bg_contrast_25}
+        style={rowStyle}>
+        {content}
+      </Link>
+    ) : (
+      <PressableWithHover
+        testID={`history-${entry.entity.id}`}
+        onPressIn={press.onPressIn}
+        onPressOut={press.onPressOut}
+        onPress={() => onRepaymentPress(entry.entity, entry.kind)}
+        accessibilityRole="button"
+        accessibilityLabel={title}
+        accessibilityHint={
+          isDeleted
+            ? l`Shows the deleted record and lets you restore it`
+            : entry.kind === 'writeoff'
               ? l`Shows the write-off and lets you undo it`
               : l`Shows the payment and lets you delete it`
-          }
-          hoverStyle={t.atoms.bg_contrast_25}
-          style={rowStyle}>
-          {content}
-        </PressableWithHover>
+        }
+        hoverStyle={t.atoms.bg_contrast_25}
+        style={rowStyle}>
+        {content}
+      </PressableWithHover>
+    )
+
+  return (
+    <Animated.View {...listAnimations}>
+      {menu ? (
+        <View
+          style={[
+            a.flex_row,
+            a.align_center,
+            !hideTopBorder && [a.border_t, t.atoms.border_contrast_low],
+          ]}>
+          <View style={[a.flex_1]}>{row}</View>
+          {menu}
+        </View>
+      ) : (
+        row
       )}
     </Animated.View>
   )

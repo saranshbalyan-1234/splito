@@ -15,8 +15,9 @@ import {
 import {type NavigationProp} from '#/lib/routes/types'
 import {useNumberLocale} from '#/locale/numberLocale'
 import {useHiddenGroups} from '#/data/groupVisibility'
+import {useShowHidden} from '#/data/hiddenItems'
 import {
-  useEntities,
+  useAllEntities,
   useGroupActivity,
   useMe,
   useMyGroupBalances,
@@ -67,8 +68,9 @@ export function GroupsScreen() {
   const locale = useNumberLocale()
   const navigation = useNavigation<NavigationProp>()
   const me = useMe()
-  const groups = useEntities<Group>('group')
-  const people = useEntities<Person>('person')
+  /* Tombstones too: a deleted group stays in the list, struck through (decision 103). */
+  const groups = useAllEntities<Group>('group')
+  const people = useAllEntities<Person>('person')
   const myBalances = useMyGroupBalances()
   const groupActivity = useGroupActivity()
   const [defaultCurrency = 'INR'] = usePref('defaultCurrency')
@@ -76,7 +78,8 @@ export function GroupsScreen() {
   const hiddenIds = useHiddenGroups()
   const [isFoldOpen, setIsFoldOpen] = useState(false)
   const [applied, setApplied] = useState<GroupFilters | null>(null)
-  const filters = applied ?? DEFAULT_GROUP_FILTERS
+  const [showHidden, setShowHidden] = useShowHidden()
+  const filters: GroupFilters = {...(applied ?? DEFAULT_GROUP_FILTERS), showHidden}
   /* The filter dot counts what differs from the defaults. */
   const activeCount = (Object.keys(filters) as (keyof GroupFilters)[]).filter(
     k => filters[k] !== DEFAULT_GROUP_FILTERS[k],
@@ -94,6 +97,7 @@ export function GroupsScreen() {
     kind: g.data.kind,
     inactive: isGroupInactive(g.data),
     hidden: hiddenIds.has(g.id),
+    deleted: g.deleted,
     balances: balances[g.id] ?? {},
     members: g.data.members
       .filter(m => m.leftAt === null)
@@ -111,11 +115,11 @@ export function GroupsScreen() {
   /* Search reaches inactive and hidden groups too (decision 89); it narrows the list only. */
   const isSearching = query.trim() !== ''
   const searched = isSearching
-    ? order(filterGroups(all, {...filters, status: 'all', visibility: 'all'}))
+    ? order(filterGroups(all, {...filters, status: 'all', showHidden: true}))
     : listed
   const shown = searched.filter(g => matchesGroupSearch(g, query))
   /* The Inactive (N) fold at the end of the default view: inactive groups I have not hidden. */
-  const isDefaultView = filters.status === 'active' && filters.visibility === 'shown'
+  const isDefaultView = filters.status === 'active' && !filters.showHidden
   const folded =
     showInactiveFold && isDefaultView && !isSearching
       ? order(filterGroups(all, {...filters, status: 'inactive'}))
@@ -126,8 +130,8 @@ export function GroupsScreen() {
   const overviewRows = filterGroups(all, {
     ...filters,
     status: 'all',
-    visibility: 'all',
-  })
+    showHidden: true,
+  }).filter(g => !g.deleted)
   const overall = groupTotals(overviewRows.map(g => g.balances))
   /* The captions and the count line cover the same groups as the totals above them. */
   const settledCount = overviewRows.filter(g =>
@@ -202,8 +206,8 @@ export function GroupsScreen() {
                   <ListToolsHeader
                     title={l`Groups`}
                     titleTestID="groups-list-title"
-                    count={shown.length}
-                    total={listed.length}
+                    count={shown.filter(g => !g.deleted).length}
+                    total={listed.filter(g => !g.deleted).length}
                     query={query}
                     onQueryChange={setQuery}
                     searchLabel={l`Search groups or members`}
@@ -346,7 +350,10 @@ export function GroupsScreen() {
         control={filterControl}
         filters={filters}
         currencies={currencies}
-        onFiltersApplied={setApplied}
+        onFiltersApplied={f => {
+          setApplied(f)
+          if (f.showHidden !== showHidden) void setShowHidden(f.showHidden)
+        }}
       />
     </Layout.Screen>
   )

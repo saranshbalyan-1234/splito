@@ -24,7 +24,7 @@ import {
 import {type AllNavigatorParams, type NavigationProp} from '#/lib/routes/types'
 import {useNumberLocale} from '#/locale/numberLocale'
 import {useFormatDay, useToday} from '#/locale/useDates'
-import {useEntities, useMutationCtx, useStore} from '#/data/hooks'
+import {useAllEntities, useEntities, useMutationCtx, useStore} from '#/data/hooks'
 import {DeletedMeta, useStruck} from '#/components/DeletedMeta'
 import {Link} from '#/view/com/util/Link'
 import {EmptyState} from '#/view/com/util/EmptyState'
@@ -225,7 +225,7 @@ function Detail({
   const name = useDisplayName()
   const avatarName = useAvatarName()
   const errorText = useErrorText()
-  const groups = useEntities<Group>('group')
+  const groups = useAllEntities<Group>('group')
   const e = expense.data
   const category = useCategory(e.category)
   const group = e.groupId ? groups?.find(g => g.id === e.groupId) : undefined

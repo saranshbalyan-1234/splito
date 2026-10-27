@@ -5,12 +5,13 @@ import {useLingui} from '@lingui/react/macro'
 import {atoms as a} from '#/alf'
 import * as Dialog from '#/components/Dialog'
 import * as FormSheet from '#/components/FormSheet'
+import {ShowHiddenToggle} from '#/features/hidden/ShowHidden'
 import {Choices} from '#/screens/People/components/FriendsFilterDialog'
 import {type GroupFilters} from '../filter'
 
 /**
  * Groups' filters (owner: "overview in both friends and groups, with search
- * and filters as well"): type, active or inactive, shown or hidden, one currency or all,
+ * and filters as well"): type, active or inactive, one currency or all,
  * which balances to show, and the order. Nothing changes until Apply, as
  * People's filters; they drive the Overview and the list alike.
  */
@@ -61,6 +62,7 @@ function Form({
         onSave: () => control.close(() => onFiltersApplied(draft)),
       }}>
       <View style={[a.gap_lg]}>
+        <ShowHiddenToggle value={draft.showHidden} onChange={showHidden => set({showHidden})} />
         <Choices
           testID="filter-type"
           title={l`Type`}
@@ -84,17 +86,6 @@ function Form({
             {value: 'all', label: l`All`},
           ]}
           onChange={status => set({status})}
-        />
-        <Choices
-          testID="filter-visibility"
-          title={l`Visibility`}
-          value={draft.visibility}
-          options={[
-            {value: 'shown', label: l`Shown`},
-            {value: 'hidden', label: l`Hidden`},
-            {value: 'all', label: l`All`},
-          ]}
-          onChange={visibility => set({visibility})}
         />
         {currencies.length > 1 && (
           <Choices

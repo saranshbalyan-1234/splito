@@ -20,9 +20,13 @@ import {type NavigationProp} from '#/lib/routes/types'
 import {logger} from '#/logger'
 import {useHiddenGroups} from '#/data/groupVisibility'
 import {useMutationCtx, useStore} from '#/data/hooks'
-import {atoms as a} from '#/alf'
+import {atoms as a, useTheme} from '#/alf'
 import * as Admonition from '#/components/Admonition'
-import {ButtonText} from '#/components/Button'
+import {DeletedMeta} from '#/components/DeletedMeta'
+import {ArrowRotateCounterClockwise_Stroke2_Corner0_Rounded as UndoIcon} from '#/components/icons/ArrowRotate'
+import {useErrorText} from '#/components/split/shared'
+import {useHideItem} from '#/features/hidden/HideItem'
+import {Button, ButtonIcon, ButtonText} from '#/components/Button'
 import * as Dialog from '#/components/Dialog'
 import {Trash_Stroke2_Corner0_Rounded as TrashIcon} from '#/components/icons/Trash'
 import * as Menu from '#/components/Menu'
@@ -435,5 +439,78 @@ export function GroupNotices({
         </View>
       )}
     </View>
+  )
+}
+
+/**
+ * A deleted group (decision 103): it stays in Groups and opens read-only, its expenses and payments struck, with
+ * Restore (an admin's, `NOT_ADMIN` otherwise) and, as for any group, Hide / Show for me only.
+ */
+export function GroupDeletedBanner({group}: {group: Entity<Group>}) {
+  const t = useTheme()
+  const {t: l} = useLingui()
+  const store = useStore()
+  const ctx = useMutationCtx()
+  const haptics = useHaptics()
+  const errorText = useErrorText()
+  const restore = async () => {
+    try {
+      await restoreGroup(store, ctx, group.id)
+      haptics.confirm()
+    } catch (e) {
+      logger.error(e, {where: 'GroupDeletedBanner.restore'})
+      Toast.show(errorText((e as {code?: string}).code ?? ''), {type: 'error'})
+    }
+  }
+  return (
+    <View
+      testID="group-deleted"
+      style={[a.p_md, a.rounded_md, a.flex_row, a.align_center, a.gap_md, {backgroundColor: t.palette.negative_25}]}>
+      <TrashIcon size="md" fill={t.palette.negative_500} />
+      <View style={[a.flex_1, a.gap_2xs]}>
+        <Text style={[a.text_md, a.leading_snug]}>
+          <Trans>This group was deleted. Its expenses and payments are kept here, struck through, and no longer count.</Trans>
+        </Text>
+        <DeletedMeta testID="group-deleted-at" at={group.updatedAt} />
+      </View>
+      <Button testID="group-restore" label={l`Restore group`} size="small" color="secondary" onPress={() => void restore()}>
+        <ButtonIcon icon={UndoIcon} />
+        <ButtonText>
+          <Trans>Restore</Trans>
+        </ButtonText>
+      </Button>
+    </View>
+  )
+}
+
+/** The overflow of a deleted group: Restore, and Hide / Show for me only (the rest of the menu would change a deleted group). */
+export function DeletedGroupItems({group}: {group: Entity<Group>}) {
+  const {t: l} = useLingui()
+  const store = useStore()
+  const ctx = useMutationCtx()
+  const hiddenIds = useHiddenGroups()
+  const errorText = useErrorText()
+  const {toggle} = useHideItem({type: 'group', id: group.id})
+  const isHidden = hiddenIds.has(group.id)
+  return (
+    <>
+      <Menu.Item
+        testID="group-menu-restore"
+        label={l`Restore group`}
+        onPress={() =>
+          void restoreGroup(store, ctx, group.id).catch(e =>
+            Toast.show(errorText((e as {code?: string}).code ?? ''), {type: 'error'}),
+          )
+        }>
+        <Menu.ItemText>
+          <Trans>Restore group</Trans>
+        </Menu.ItemText>
+        <Menu.ItemIcon icon={UndoIcon} position="right" />
+      </Menu.Item>
+      <Menu.Item testID="group-menu-hide" label={isHidden ? l`Show group` : l`Hide group`} onPress={() => void toggle(!isHidden)}>
+        <Menu.ItemText>{isHidden ? <Trans>Show group</Trans> : <Trans>Hide group</Trans>}</Menu.ItemText>
+        <Menu.ItemIcon icon={isHidden ? EyeIcon : EyeOffIcon} position="right" />
+      </Menu.Item>
+    </>
   )
 }

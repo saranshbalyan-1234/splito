@@ -8,7 +8,7 @@ import {
   PREFS,
 } from '@splito/sync'
 
-import {useEntities, useMutationCtx, usePref} from '#/data/hooks'
+import {useAllEntities, useMutationCtx, usePref} from '#/data/hooks'
 import {atoms as a, useTheme} from '#/alf'
 import {Text} from '#/components/Typography'
 import {categoryIcon} from './icons'
@@ -17,14 +17,15 @@ import {categoryIcon} from './icons'
 export function useDisplayName() {
   const {t: l} = useLingui()
   const {actor} = useMutationCtx()
-  const people = useEntities<Person>('person')
+  // Removed friends too: the records still name them (decision 103).
+  const people = useAllEntities<Person>('person')
   const names = new Map((people ?? []).map(p => [p.id, p.data.name]))
   return (id: string) => (id === actor ? l`You` : (names.get(id) ?? l`Someone`))
 }
 
 /** The person's own name (yours too), for avatar initials. */
 export function useAvatarName() {
-  const people = useEntities<Person>('person')
+  const people = useAllEntities<Person>('person')
   const names = new Map((people ?? []).map(p => [p.id, p.data.name]))
   return (id: string) => names.get(id) ?? '?'
 }
@@ -134,7 +135,11 @@ export function useErrorText() {
       case 'NOT_A_MEMBER':
         return l`Everyone on a group expense needs to be in the group`
       case 'UNKNOWN_PERSON':
-        return l`Someone on this expense was removed`
+        return l`Someone on this was removed. Restore them first.`
+      case 'GROUP_DELETED':
+        return l`This is in a deleted group. Restore the group first.`
+      case 'NOT_DELETED':
+        return l`Only a deleted item can be hidden.`
       case 'GROUP_INACTIVE':
         return l`This group is inactive. Make it active first.`
       case 'NOT_ADMIN':

@@ -7,7 +7,9 @@ import {type Entity, type Group, isGroupInactive} from '@splito/sync'
 
 import {useRowPadding} from '#/state/preferences/density'
 import {Link} from '#/view/com/util/Link'
+import {HideMenu} from '#/features/hidden/HideItem'
 import {atoms as a, useTheme} from '#/alf'
+import {DeletedMeta, useStruck} from '#/components/DeletedMeta'
 import {BalanceBlock, SettledPill} from '#/components/BalanceText'
 import {GroupAvatar} from '#/components/groups/GroupAvatar'
 import * as Pills from '#/components/Pills'
@@ -45,6 +47,9 @@ export function GroupRow({
   const listAnimations = useListAnimations()
   const press = usePressScale()
   const {name, kind, startDate, endDate, members} = group.data
+  /* A deleted group stays in the list, struck through; it opens read-only (decision 103). */
+  const isDeleted = group.deleted
+  const struck = useStruck()
   const kindLabel = {
     trip: l`Trip`,
     home: l`Home`,
@@ -62,7 +67,7 @@ export function GroupRow({
     .filter(c => balances[c] !== ZERO)
     .sort()
 
-  const balanceView = (
+  const balanceView = isDeleted ? null : (
     <View style={[a.align_end, a.gap_xs, a.flex_shrink_0]}>
       {open.length === 0 ? (
         <SettledPill testID="group-settled" />
@@ -82,8 +87,7 @@ export function GroupRow({
   )
 
   /* The row content shrinks on press; the separator stays put. */
-  return (
-    <Animated.View {...listAnimations}>
+  const link = (
       <Link
         testID={`group-${name}`}
         onPressIn={press.onPressIn}
@@ -97,7 +101,7 @@ export function GroupRow({
         style={[
           a.px_lg,
           rowPadding,
-          !hideTopBorder && a.border_t,
+          !hideTopBorder && !isDeleted && a.border_t,
           t.atoms.border_contrast_low,
           a.transition_color,
         ]}>
@@ -109,9 +113,14 @@ export function GroupRow({
               <Text
                 emoji
                 numberOfLines={1}
-                style={[a.flex_shrink, a.text_md, a.font_semi_bold, a.leading_snug]}>
+                style={[a.flex_shrink, a.text_md, a.font_semi_bold, a.leading_snug, isDeleted && struck]}>
                 {name}
               </Text>
+              {isDeleted && (
+                <Pills.Tag>
+                  <Trans>Deleted</Trans>
+                </Pills.Tag>
+              )}
               {isGroupInactive(group.data) && (
                 <Pills.Tag>
                   <Trans>Inactive</Trans>
@@ -129,10 +138,24 @@ export function GroupRow({
               style={[a.text_sm, a.leading_snug, t.atoms.text_contrast_medium]}>
               {byline}
             </Text>
+            {isDeleted && <DeletedMeta testID={`group-${group.id}-deleted`} at={group.updatedAt} />}
           </View>
           {balanceView}
         </Animated.View>
       </Link>
+  )
+
+  return (
+    <Animated.View {...listAnimations}>
+      {isDeleted ? (
+        /* The menu is a sibling of the link, never nested in it. */
+        <View style={[a.flex_row, a.align_center, !hideTopBorder && [a.border_t, t.atoms.border_contrast_low]]}>
+          <View style={[a.flex_1]}>{link}</View>
+          <HideMenu testID={`group-${group.id}-more`} target={{type: 'group', id: group.id}} isHidden={isHidden} name={name} />
+        </View>
+      ) : (
+        link
+      )}
     </Animated.View>
   )
 }

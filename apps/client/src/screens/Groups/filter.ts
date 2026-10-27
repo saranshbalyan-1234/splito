@@ -10,6 +10,8 @@ export type GroupRowData = {
   inactive?: boolean
   /** Hidden from my own lists (decision 89). */
   hidden?: boolean
+  /** Deleted: it stays in the list, struck through, and opens read-only (decision 103). */
+  deleted?: boolean
   balances: Record<string, bigint>
   /** Member names, so search finds a group by who is in it. */
   members: string[]
@@ -19,8 +21,8 @@ export type GroupRowData = {
 export type GroupFilters = {
   type: Group['kind'] | 'all'
   status: 'active' | 'inactive' | 'all'
-  /** Shown or hidden groups (personal, decision 89). */
-  visibility: 'shown' | 'hidden' | 'all'
+  /** The one "Show hidden" switch (decision 105): the groups I hid come back. */
+  showHidden: boolean
   currency: string | 'all'
   show: 'all' | 'owed' | 'owe' | 'settled'
   sort: 'recent' | 'name' | 'amount'
@@ -29,7 +31,7 @@ export type GroupFilters = {
 export const DEFAULT_GROUP_FILTERS: GroupFilters = {
   type: 'all',
   status: 'active',
-  visibility: 'shown',
+  showHidden: false,
   currency: 'all',
   show: 'all',
   sort: 'recent',
@@ -43,12 +45,14 @@ export const DEFAULT_GROUP_FILTERS: GroupFilters = {
  */
 export function filterGroups(
   rows: GroupRowData[],
-  {type, status, visibility, currency, show}: GroupFilters,
+  {type, status, showHidden, currency, show}: GroupFilters,
 ): GroupRowData[] {
   return rows.flatMap(row => {
     if (type !== 'all' && row.kind !== type) return []
-    if (status !== 'all' && !!row.inactive !== (status === 'inactive')) return []
-    if (visibility !== 'all' && !!row.hidden !== (visibility === 'hidden')) return []
+    // A deleted group is neither active nor inactive any more: it stays in the list whatever the status, unless asked for inactive ones only.
+    if (status !== 'all' && !row.deleted && !!row.inactive !== (status === 'inactive')) return []
+    if (status === 'inactive' && row.deleted) return []
+    if (!showHidden && row.hidden) return []
     let balances = row.balances
     if (currency !== 'all') {
       if (!(currency in balances)) return []
