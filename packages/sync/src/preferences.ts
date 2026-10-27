@@ -97,6 +97,8 @@ export const PREFS = {
   moneyPalette: def('moneyPalette', 'appearance', 'account', 'Money colours', 'default', oneOf('default', 'colorblind', 'mono')),
   motion: def('motion', 'motion', 'device', 'Animations', 'full', oneOf('full', 'reduced', 'off')),
   haptics: def('haptics', 'motion', 'device', 'Haptics', true, isBool),
+  /** Phones only: shaking the phone opens Send feedback. */
+  shakeToFeedback: def('shakeToFeedback', 'motion', 'device', 'Shake to send feedback', false, isBool),
   tabs: def<TabId[]>(
     'tabs',
     'defaults',

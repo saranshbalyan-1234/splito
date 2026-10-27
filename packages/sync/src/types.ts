@@ -7,6 +7,7 @@ export type EntityType =
   | 'preference'
   | 'friendRequest'
   | 'inviteLink'
+  | 'feedback'
 
 export interface Entity<T = unknown> {
   type: EntityType
