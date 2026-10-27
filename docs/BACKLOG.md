@@ -2314,6 +2314,7 @@ Tombstoned expenses and payments listed for a configurable window with who, when
 - **Acceptance**
   1. Restore uses restoreExpense and is undoable.
   2. After the window the tombstone stays in the audit trail.
+  4. Owner 98: every deleted record (bin, Activity deleted rows, deleted detail pages, deleted group entry) shows its title and amount struck through plus a Clock icon and "Deleted <relative time>" (exact time on hover / long-press, screen-reader text); counts and helper lines are not struck.
 
 ### F-1204 Comments on expenses and repayments `spec v2, owner § 26.20`
 

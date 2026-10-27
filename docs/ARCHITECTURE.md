@@ -1646,6 +1646,13 @@ dishes etc and each item can be assigned to each in split"; "in itemize don't sh
   deleted), never the participants; the line carries the amount and your effect ("you lent EUR 9" in the
   positive colour, "you borrowed INR 450" in the negative colour) and the group name.
 
+- **A deleted item looks deleted** (owner 98): wherever a deleted record appears (Recently deleted, Activity's
+  "deleted" rows, the detail page of a deleted expense or payment, a deleted group's entry), its title and
+  amount are struck through (`textDecorationLine: 'line-through'`, contrast-medium colour) and a small Lucide
+  `Clock` icon with the deletion time follows ("Deleted 2 h ago"; the exact date and time on hover / long-press;
+  the screen reader says "Deleted, <time>"). Counts and helper lines ("8 records", "Gone in 28 days") are not
+  struck. *Why:* "deleted item should show a stroke and clock symbol and time".
+
 ### 26.15 Settings, sign in and log out
 
 *Why:* "add sign in option, and logout as well in settings". *Where:* `screens/Settings`; `useSession()` not
@@ -1955,6 +1962,7 @@ Every owner decision, in the order it was made (all 2026-10-26). "Replaced" name
 | 95 | "instead of add/remove demo data, make it a switch like switch to demo mode, so that it doesn't add data to current account, both accounts keep different" | Demo mode is an on/off switch over its own separate local database (own prefs, history, outbox); real data untouched; banner while on; Reset demo; never syncs | § 26.1 | Add/Remove demo data into the current account (row 94) |
 | 96 | "also add animations on svg icons or animations like Expensify wherever we can" | Meaningful animated SVG icons (tab fill morph, check draw, trash lid, sync pulse, FAB rotate, sparkles, chevrons) on the UI thread plus Expensify-style success/empty/celebration animations; reduced motion and `motion` pref respected | § 26.10 | Static icons; Lottie only for page illustrations |
 | 97 | "on the home page and group page add option for recent transactions as well; home shows all, group shows only group level recent txns" | "Recent transactions" section in the Home body (everything) and on each Group page (that group only), customizable | § 26.17 | Right column only (desktop 1300 px and up) |
+| 98 | "deleted item should show a stroke and clock symbol and time" | Deleted records show struck-through title and amount plus a Clock icon and "Deleted <time>" everywhere they appear | § 26.14 | Plain rows (strikethrough removed in B3 polish) |
 
 New decisions follow § 0 rule 9: rewrite the rule in its topic so only the current truth remains, then add a
 row here.
