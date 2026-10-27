@@ -101,9 +101,12 @@ export function isInScope(scope: ChargeScope, item: Pick<BillItem, 'id' | 'taxCl
  * Works out a bill's charges, in order. A percentage is taken of the base of
  * the items in scope (plus the earlier charges on those items when it
  * stacks), rounded once to the minor unit; that amount is then spread over
- * the people who had those items by their share of the base, item by item,
- * with `allocate` (largest remainder). So nobody pays a charge on items they
- * did not have, and every line sums exactly to its amount.
+ * the people who had those items by their share of the base, with `allocate`
+ * (largest remainder, ties by person id), so a person is never off exact pro
+ * rata by a unit per item and the same bill always splits the same way. Each
+ * person's part is then spread over their own items, only to feed a charge
+ * that stacks. Nobody pays a charge on items they did not have, and every
+ * line sums exactly to its amount.
  */
 export function billBreakdown(items: BillItem[], charges: Charge[]): BillBreakdown {
   const cells = new Map<string, Cell[]>()
@@ -136,14 +139,23 @@ export function billBreakdown(items: BillItem[], charges: Charge[]): BillBreakdo
     if (amount !== 0n && inScope.length === 0) throw new DomainError('CHARGE_NO_ITEMS')
     const byPerson: Record<string, bigint> = {}
     if (amount !== 0n) {
-      const weighted = inScope.map((c, n) => ({c, w: bases[n]!})).filter(x => x.w > 0n)
+      // Level 1: the amount over PEOPLE by what each has in scope (ties by person id, so a bill splits the same every time).
+      const personBase: Record<string, bigint> = {}
+      inScope.forEach((c, n) => {
+        personBase[c.person] = (personBase[c.person] ?? 0n) + bases[n]!
+      })
+      const people = Object.keys(personBase)
+      const weighted = people.filter(p => personBase[p] !== 0n).map(p => ({id: p, weight: abs(personBase[p]!)}))
       // A fixed charge on free items still has to land somewhere: equally.
-      const spread = weighted.length > 0 ? weighted : inScope.map(c => ({c, w: 1n}))
-      const parts = allocate(amount, spread.map(x => ({id: `${x.c.item}\u0000${x.c.person}`, weight: x.w})))
-      for (const {c} of spread) {
-        const part = parts[`${c.item}\u0000${c.person}`]!
-        byPerson[c.person] = (byPerson[c.person] ?? 0n) + part
-        if (!isInclusive) c.stack += part
+      const personParts = allocate(amount, weighted.length > 0 ? weighted : people.map(id => ({id, weight: 1n})))
+      // Level 2: each person's part over their own cells, only to feed what a later charge stacks on.
+      for (const [person, part] of Object.entries(personParts)) {
+        byPerson[person] = part
+        if (isInclusive) continue
+        const own = inScope.map((c, n) => ({c, w: abs(bases[n]!)})).filter(x => x.c.person === person)
+        const cellsOf = own.some(x => x.w > 0n) ? own.filter(x => x.w > 0n) : own.map(x => ({c: x.c, w: 1n}))
+        const parts = allocate(part, cellsOf.map(x => ({id: x.c.item, weight: x.w})))
+        for (const {c} of cellsOf) c.stack += parts[c.item]!
       }
     }
     if (!isInclusive) for (const [p, v] of Object.entries(byPerson)) extras[p] = (extras[p] ?? 0n) + v
@@ -166,8 +178,8 @@ export function roundOffByPerson(b: BillBreakdown, roundOff: RoundOff): Record<s
   if (roundOff.minor === 0n) return {}
   if (roundOff.to !== undefined) return {[roundOff.to]: roundOff.minor}
   const totals = Object.entries(personTotals(b))
-  const positive = totals.filter(([, v]) => v > 0n).map(([id, v]) => ({id, weight: v}))
-  return allocate(roundOff.minor, positive.length > 0 ? positive : totals.map(([id]) => ({id, weight: 1n})))
+  const weighted = totals.filter(([, v]) => v !== 0n).map(([id, v]) => ({id, weight: abs(v)}))
+  return allocate(roundOff.minor, weighted.length > 0 ? weighted : totals.map(([id]) => ({id, weight: 1n})))
 }
 
 /** Each person's share of the bill: items, charges and round-off; sums to computedTotal + round-off. */

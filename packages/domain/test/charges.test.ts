@@ -9,6 +9,7 @@ import {
   type Charge,
   type ChargeKind,
   chargesOf,
+  isInScope,
   roundOffByPerson,
   roundOffLimit,
 } from '../src/charges'
@@ -309,6 +310,56 @@ describe('property: random bills', () => {
         expect(b.computedTotal).toBe(a.computedTotal)
       }),
     ))
+
+  test('each person is within one minor unit of exact pro rata on every charge (no stacking)', () =>
+    fc.assert(
+      fc.property(arbBill(false), ({items, charges}) => {
+        const b = tryBill(items, charges)
+        if (!b) return
+        b.lines.forEach((line, n) => {
+          const c = charges[n]!
+          const base: Record<string, bigint> = {}
+          for (const i of items) if (isInScope(c.appliesTo, i)) for (const [p, v] of Object.entries(i.parts)) base[p] = (base[p] ?? 0n) + v
+          const total = sum(Object.values(base))
+          if (total === 0n || line.amount === 0n) return
+          for (const [p, pb] of Object.entries(base)) {
+            if (pb <= 0n) continue
+            // | byPerson - amount * personBase / base | < 1  <=>  | byPerson * base - amount * personBase | < base
+            const off = line.byPerson[p]! * total - line.amount * pb
+            expect((off < 0n ? -off : off) < total).toBe(true)
+          }
+        })
+      }),
+    ))
+
+  test('probe: 10 items of 10 units split 6/4, a 10-unit charge lands 6 and 4, not 10 and 0', () => {
+    const items: BillItem[] = Array.from({length: 10}, (_, n) => ({id: `x${n}`, parts: {a: 6n, b: 4n}}))
+    const b = billBreakdown(items, [charge({id: 'fee', value: fixed(10n)})])
+    expect(b.lines[0]!.byPerson).toEqual({a: 6n, b: 4n})
+  })
+
+  test('the same bill splits identically whatever the item ids are', () => {
+    const {items, charges} = supperFactory()
+    const base = billShares(billBreakdown(items, charges), {minor: 39n})
+    for (const seed of [1, 2, 3, 4, 5, 6, 7]) {
+      const ids = items.map((_, n) => `${((n + 1) * seed * 2654435761) % 4294967296}-${seed}`)
+      const renamed = items.map((i, n) => ({...i, id: ids[n]!}))
+      const rescoped = charges.map(c => c.appliesTo.type === 'items' ? c : c)
+      expect(billShares(billBreakdown(renamed.reverse(), rescoped), {minor: 39n})).toEqual(base)
+    }
+  })
+
+  test('a refund line (negative item) spreads a charge pro rata by absolute base instead of breaking', () => {
+    const items: BillItem[] = [
+      {id: 'a', parts: {x: 10000n}},
+      {id: 'b', parts: {y: -5000n}},
+    ]
+    const b = billBreakdown(items, [charge({id: 'fee', value: fixed(300n)})])
+    expect(sum(Object.values(b.lines[0]!.byPerson))).toBe(300n)
+    expect(b.lines[0]!.byPerson).toEqual({x: 200n, y: 100n})
+    const shares = billShares(b, {minor: 3n})
+    expect(sum(Object.values(shares))).toBe(b.computedTotal + 3n)
+  })
 
   test('JPY, INR and BHD: the same maths at scale 0, 2 and 3 (round-off limit follows the scale)', () => {
     for (const [code, scale] of [['JPY', 0], ['INR', 2], ['BHD', 3]] as const) {
