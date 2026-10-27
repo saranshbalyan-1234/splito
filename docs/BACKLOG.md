@@ -415,7 +415,7 @@ Pager tabs Expenses / Balances / Members (F-203). Balances shows each member's n
 
 Choose and order the phone bottom-bar destinations (Home, Groups, Analytics, Activity, Ask Splito) with a guaranteed recovery route to Settings.
 
-- **Effort** S · **Impact** 6 · **Backend** no · **Status** in progress (Settings) · **Deps** F-201
+- **Effort** S · **Impact** 6 · **Backend** no · **Status** done (Settings > Navigation takes any number of tabs, Ask Splito pinnable) · **Deps** F-201
 - **Prefs** `tabs`, `homeTab`
 - **Acceptance**
   1. Hiding every optional tab still leaves Settings reachable from the drawer.

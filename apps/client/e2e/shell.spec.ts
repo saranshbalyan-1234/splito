@@ -319,6 +319,7 @@ test.describe('drawer: Bluesky drawer from the header avatar', () => {
       'drawer-people',
       'drawer-groups',
       'drawer-analytics',
+      'drawer-ask',
       'drawer-activity',
       'drawer-settings',
       'drawer-sign-in',
@@ -443,6 +444,7 @@ test.describe('desktop: Bluesky left sidebar and full-width content', () => {
       'tab-people',
       'tab-groups',
       'tab-analytics',
+      'tab-ask',
       'tab-activity',
       'tab-settings',
     ])
