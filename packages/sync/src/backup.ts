@@ -340,11 +340,13 @@ async function plan(store: Store, ctx: MutationCtx, file: BackupFile, mode: Rest
     }
   }
   if (mode === 'replace') {
+    const now = ctx.now()
     for (const type of ENTITY_TYPES) {
       if (type === 'feedback') continue
       const inFile = new Set(local.entities[type]!.map(e => e.id))
       for await (const e of deviceRows(store, type)) {
-        if (e.deleted || inFile.has(e.id) || (type === 'person' && (e.data as {isMe?: boolean}).isMe)) continue
+        // Rows that never travel in a file (device-scoped preferences, live invite links) are not the file's to remove.
+        if (e.deleted || inFile.has(e.id) || !isExportable(type, e, now) || (type === 'person' && (e.data as {isMe?: boolean}).isMe)) continue
         counts[type].remove++
         actions.push({kind: 'remove', type, id: e.id})
       }

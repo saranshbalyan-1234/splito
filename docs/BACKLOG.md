@@ -1571,6 +1571,7 @@ One Settings page (`/settings/friends`) that manages friends and invites. Reques
   3. Removing keeps every past expense and payment, the name stays (marked "Removed" on the friend's page), the friend leaves pickers and lists, a toast offers Undo, and "Add back" restores them.
   4. The Person overflow "Remove friend" uses the same flow; Home's "Friends N" header has "Manage"; the invite sheet's "Manage links" opens the Invite links section.
   5. Removing someone from a shared group stays a group action (F-613).
+  6. A removed friend who still has an open balance (a shared group can give one) stays on Home marked "Removed" until it is settled; removed friends take no new expense (not offered as group-member candidates or preselected), and "Add friend" offers "Add back" for them.
 
 ## E7 Trips and travel
 
@@ -3300,6 +3301,9 @@ Full JSON backup from Settings > Data > Export and restore from Settings > Data 
   1. A12: round-trip preserves IDs, currencies and splits.
   2. A corrupt file is rejected atomically with nothing applied.
   3. Settings > Data has Export (full JSON backup) and Import; Import shows a preview of what will change and asks merge or replace before applying.
+  4. Safety rules (Opus review): a file person row with this device's me id, or a remap that would fold two people into one, is refused (BACKUP_CORRUPT); only live people and groups satisfy a reference; a restore adds no expense to an inactive group (GROUP_INACTIVE, decision 89) while payments may still land; device-scoped preferences and live invite links never travel in a file; a lower or missing schemaVersion is refused until row migrations exist.
+  5. Replace asks for a copy of this device first ("Save a copy of this device first", skippable only on a second confirm) and the restore toast offers Undo from an in-memory pre-restore backup for the session.
+- **Server note:** the `backup.import` and `backup.remove` outbox ops are new op types; review how the server applies them (idempotence, base versions, tombstones) when the backend arrives.
 
 ### F-2002 Encrypted and automatic backups
 
@@ -3357,7 +3361,7 @@ Space used by receipts, attachments and history per group; compress old images, 
 
 Settings > Data > Export (CSV, PDF statement, full JSON backup via F-2001) with filters, plus Group overflow "Export", Person overflow "Export statement" and Analytics overflow "Export CSV". Generated on the device.
 
-- **Effort** M · **Impact** 8 · **Backend** no · **Status** done (feat/wB-B6; tests: packages/domain/test/statement.test.ts, src/data/exportLedger.test.ts, src/lib/export/statementFormat.test.ts, e2e/export.spec.ts; native PDF/share not run on a device) · **Deps** F-1301, F-2001
+- **Effort** M · **Impact** 8 · **Backend** no · **Status** done (feat/wB-B6; tests: packages/domain/test/statement.test.ts, src/data/exportLedger.test.ts, src/lib/export/statementFormat.test.ts, e2e/backup.spec.ts; native PDF/share not run on a device) · **Deps** F-1301, F-2001
 - **Prefs** -
 - **Acceptance**
   1. Settings > Data > Export offers CSV, PDF statement and full JSON backup, with filters for date range, group, person and currency.

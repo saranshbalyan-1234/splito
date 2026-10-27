@@ -471,3 +471,22 @@ test('device-scoped preferences and active invite links stay out of a backup', a
   await applyBackup(dst, ctx, carried, 'merge')
   expect(await dst.get('preference', 'haptics')).toBeUndefined()
 })
+
+test('replace leaves rows that never travel in a file alone, and re-applying the pre-restore backup undoes it', async () => {
+  await seed()
+  const file = await roundTrip(await createBackup(src, ctx))
+  // The device has its own device-scoped preference and a live invite link: neither is in any file.
+  await setPref(dst, ctx, 'haptics', false)
+  const live = await createInviteLink(dst, ctx, {kind: 'friend', groupId: null, maxUses: 1, expiresInMs: null, approveJoins: false})
+  const mine = await createPerson(dst, ctx, {name: 'Only here'})
+  const before = await createBackup(dst, ctx)
+  const res = await applyBackup(dst, ctx, file, 'replace')
+  expect(res.removed).toBe(1) // only the person: not the pref, not the link
+  expect((await dst.get<{value: boolean}>('preference', 'haptics'))!.deleted).toBe(false)
+  expect((await dst.get('inviteLink', live.id))!.deleted).toBe(false)
+  expect((await dst.get('person', mine.id))!.deleted).toBe(true)
+  // Undo: the in-memory backup taken just before puts everything back.
+  await applyBackup(dst, ctx, before, 'replace')
+  expect((await dst.get('person', mine.id))!.deleted).toBe(false)
+  expect((await dst.getAll('expense')).filter(e => !e.deleted)).toEqual([])
+})

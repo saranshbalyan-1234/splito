@@ -57,7 +57,7 @@ export function useStatementText() {
     range: opts.from || opts.to ? l`${opts.from ? day(opts.from) : '…'} to ${opts.to ? day(opts.to) : '…'}` : l`All dates`,
     generated: l`Made on this device on ${i18n.date(new Date(), {dateStyle: 'medium'})}`,
     owner: opts.owner,
-    footnote: l`Positive means you are owed, negative means you owe. Every currency is its own balance; Splito never adds different currencies together. Splito records what you tell it; it does not move money.`,
+    footnote: l`Positive means you are owed, negative means you owe. Every currency is its own balance; Splito never adds different currencies together. Splito records what you tell it; it does not move money. A “Group settle-up routing” line means a group settles through someone else, so your balance with this friend is not the plain sum of the records above it.`,
     empty: l`Nothing recorded in this range.`,
     currencyHeading: code => code,
     direction: v => (v > ZERO ? l`You are owed` : v < ZERO ? l`You owe` : l`All settled`),

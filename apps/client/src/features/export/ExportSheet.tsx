@@ -28,6 +28,7 @@ import {OptionDialog} from '#/components/settings/OptionDialog'
 import {PickerTrigger} from '#/components/settings/controls'
 import * as Toast from '#/components/Toast'
 import {Text} from '#/components/Typography'
+import {IS_WEB} from '#/env'
 import {useStatementText} from './statementText'
 
 type Format = 'csv' | 'pdf' | 'backup'
@@ -112,6 +113,13 @@ function Form({preset}: {preset?: ExportPreset}) {
   const groupName = groups.find(g => g.id === groupId)?.data.name
   const personName = friends.find(p => p.id === personId)?.data.name
 
+  /* Sharing unavailable or the file could not be made: say so, change nothing, stay open. */
+  const fail = () => {
+    haptics.error()
+    setFailed(true)
+    setIsBusy(false)
+  }
+
   const run = async () => {
     setIsBusy(true)
     setFailed(false)
@@ -119,28 +127,35 @@ function Form({preset}: {preset?: ExportPreset}) {
       if (isBackup) {
         const file = await createBackup(store, ctx)
         const count = Object.values(file.entities).reduce((n, list) => n + list.length, 0)
-        await saveFile(`splito-backup-${today}.json`, 'application/json', serializeBackup(file))
+        const isShared = await saveFile(`splito-backup-${today}.json`, 'application/json', serializeBackup(file))
+        if (!isShared) return fail()
         haptics.success()
-        control.close(() => Toast.show(l`Backup saved (${count} records)`, {type: 'success'}))
+        control.close(() => Toast.show(IS_WEB ? l`Backup downloaded (${count} records)` : l`Backup ready to save (${count} records)`, {type: 'success'}))
         return
       }
       const r = range()
       const filter: StatementFilter = {from: r?.from, to: r?.to, groupId: groupId || null, personId: personId || null, currency: currency || null}
-      const statement = await loadStatement(store, ctx.actor, filter)
+      const statement = await loadStatement(store, ctx.actor, filter, today)
       const subject = personName ? l`With ${personName}` : (groupName ?? l`All activity`)
       const slug = (personName ?? groupName ?? 'all').toLowerCase().replace(/[^\p{L}\p{N}]+/gu, '-').replace(/^-|-$/g, '') || 'all'
       const name = `splito-statement-${slug}-${today}`
       const owner = words.people?.find(p => p.id === ctx.actor)?.data.name ?? ''
-      if (format === 'csv') await saveFile(`${name}.csv`, 'text/csv', statementCsv(statement, words.text))
-      else await printHtml(`${name}.pdf`, statementHtml(statement, words.text, words.page({subject, from: r?.from, to: r?.to, owner}), words.locale))
+      const isDone =
+        format === 'csv'
+          ? await saveFile(`${name}.csv`, 'text/csv', statementCsv(statement, words.text))
+          : await printHtml(`${name}.pdf`, statementHtml(statement, words.text, words.page({subject, from: r?.from, to: r?.to, owner}), words.locale))
+      if (!isDone) return fail()
       haptics.success()
       const n = statement.rows.length
-      control.close(() => Toast.show(n === 1 ? l`Exported 1 record` : l`Exported ${n} records`, {type: 'success'}))
+      control.close(() =>
+        Toast.show(
+          format === 'pdf' && IS_WEB ? l`Print dialog opened. Choose Save as PDF.` : n === 1 ? l`Exported 1 record` : l`Exported ${n} records`,
+          {type: 'success'},
+        ),
+      )
     } catch (e) {
       logger.error(e, {where: 'ExportSheet.run'})
-      haptics.error()
-      setFailed(true)
-      setIsBusy(false)
+      fail()
     }
   }
 

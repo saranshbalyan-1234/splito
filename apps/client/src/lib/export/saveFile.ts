@@ -9,8 +9,13 @@ import * as Sharing from 'expo-sharing'
 export async function saveFile(name: string, mime: string, text: string): Promise<boolean> {
   const file = new File(Paths.cache, name)
   file.create({overwrite: true})
-  file.write(text)
-  if (!(await Sharing.isAvailableAsync())) return false
-  await Sharing.shareAsync(file.uri, {mimeType: mime, dialogTitle: name})
-  return true
+  try {
+    file.write(text)
+    if (!(await Sharing.isAvailableAsync())) return false
+    await Sharing.shareAsync(file.uri, {mimeType: mime, dialogTitle: name})
+    return true
+  } finally {
+    // The share sheet has what it needs; do not leave a copy of someone's ledger in the cache.
+    if (file.exists) file.delete()
+  }
 }

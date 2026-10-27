@@ -57,6 +57,9 @@ test('a friend with an open balance cannot be removed: the amounts are listed, t
   // Settle up leads to the friend's page.
   await page.getByTestId('remove-friend-settle').click()
   await expect(page).toHaveURL(/\/people\//)
+  // ...and opens the settle-up flow there.
+  await expect(page.getByTestId('record-payment-sheet')).toBeVisible()
+  await page.getByTestId('sheet-cancel').click()
 
   // The friend's own overflow uses the same guarded flow.
   await page.getByTestId('person-more').click()
@@ -103,4 +106,33 @@ test('above ten friends the Friends section gets a search', async ({page}) => {
   await page.getByTestId('hub-friends-search').fill('friend 07')
   await expect(page.getByTestId('hub-friend-Friend 07')).toBeVisible()
   await expect(page.getByTestId('hub-friend-Friend 08')).toHaveCount(0)
+})
+
+test('a removed friend who gets a balance through a group stays on Home, marked Removed, with that balance', async ({page}) => {
+  await ready(page)
+  const ids = await page.evaluate(async () => {
+    const s = (window as unknown as {splito: Splito & {createGroup(i: unknown): Promise<string>}}).splito
+    const f = await s.createPerson('Tara Menon')
+    const g = await s.createGroup({name: 'Flat', kind: 'home', currency: 'INR', startDate: null, endDate: null, memberIds: [f]})
+    return {f, g}
+  })
+  await page.goto('/settings/friends')
+  await page.getByTestId('hub-friend-Tara Menon').getByTestId('hub-friend-remove').click()
+  await page.getByTestId('confirmBtn').click()
+  await expect(page.getByTestId('hub-removed-Tara Menon')).toBeVisible()
+  await page.goto('/')
+  await expect(page.getByTestId('person-Tara Menon')).toHaveCount(0)
+  // The group is still shared, and an expense in it gives them a balance.
+  await page.evaluate(async ({f, g}) => {
+    const s = (window as unknown as {splito: Splito}).splito
+    await s.createExpense({currency: 'INR', tz: 'Asia/Kolkata', category: 'food', notes: '', groupId: g, title: 'Rent', total: '60000', payers: {[s.me]: '60000'}, split: {mode: 'equal', participants: [s.me, f]}, date: '2026-10-22'})
+  }, ids)
+  await page.goto('/')
+  const row = page.getByTestId('person-Tara Menon')
+  await expect(row).toBeVisible()
+  await expect(row).toContainText('Removed')
+  await expect(row.getByTestId('balance-INR')).toContainText('300.00')
+  // And the add-expense flow does not preselect or offer them.
+  await page.goto(`/expense/new?groupId=${ids.g}`)
+  await expect(page.getByTestId('expense-people')).not.toContainText('Tara')
 })

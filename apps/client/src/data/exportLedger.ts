@@ -49,9 +49,9 @@ async function* ledgerRows<T>(
  * The statement behind an export: the records that match the filter, read by
  * index from the group (or all dates) up to the end date, then built by the
  * domain. A friend's statement is reconciled with the balance the app shows,
- * so its closing line is exactly that.
+ * so its closing line is exactly that. `today` is the person's own today.
  */
-export async function loadStatement(store: Store, me: string, filter: StatementFilter): Promise<Statement> {
+export async function loadStatement(store: Store, me: string, filter: StatementFilter, today: string): Promise<Statement> {
   const inputs: StatementInput[] = []
   const {groupId, to} = filter
   for await (const e of ledgerRows<Expense>(store, 'expense', groupId, to))
@@ -61,8 +61,8 @@ export async function loadStatement(store: Store, me: string, filter: StatementF
   for await (const e of ledgerRows<WriteOff>(store, 'writeoff', groupId, to))
     if (!e.deleted) inputs.push({record: toWriteOffRecord(e), title: '', note: e.data.note, createdAt: e.createdAt})
   const statement = buildStatement(inputs, me, filter)
-  // Only the whole history of a friend can be held to the figure on their page.
-  if (!filter.personId || filter.groupId || filter.from || filter.to) return statement
+  // A friend's statement that runs up to now closes on the figure their page shows (an earlier end date is that day's balance, not today's).
+  if (!filter.personId || filter.groupId || (filter.to && filter.to < today)) return statement
   const open = await friendOpenBalances(store, me, filter.personId)
   const onScreen: Record<CurrencyCode, bigint> = Object.fromEntries(Object.entries(open).map(([c, b]) => [c, b.total]))
   return reconcileStatement(statement, filter.currency ? pick(onScreen, filter.currency) : onScreen)
