@@ -134,6 +134,11 @@ export function activityTracker(store: Store): (change: StoreChange) => Promise<
       FEED_TYPES.map(type => (!entities[type] || touches(change, type) ? store.getAll(type) : Promise.resolve(entities[type]!))),
     )
     entities = Object.fromEntries(FEED_TYPES.map((type, i) => [type, fresh[i]!]))
+    // Rows erased outright (the demo set's "Remove") take their history with them.
+    if (change === 'unknown' || FEED_TYPES.some(type => touches(change, type))) {
+      const live = new Set(fresh.flat().map(e => `${e.type}:${e.id}`))
+      for (const key of histories.keys()) if (!live.has(key)) histories.delete(key)
+    }
     await Promise.all(
       fresh.flat().map(async e => {
         const key = `${e.type}:${e.id}`

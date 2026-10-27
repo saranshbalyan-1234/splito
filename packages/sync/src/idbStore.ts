@@ -75,6 +75,24 @@ export async function openIdbStore(name: string, factory: IDBFactory = indexedDB
       channel?.postMessage(changeToJson(change))
       return result
     },
+    async erase(refs) {
+      const t = db.transaction(STORES, 'readwrite')
+      const recorder = changeRecorder()
+      const keys = new Set(refs.map(r => `${r.type}:${r.id}`))
+      for (const {type, id} of refs) {
+        recorder.record(type, id)
+        void t.objectStore('entities').delete([type, id])
+        void t.objectStore('history').delete(IDBKeyRange.bound([type, id], [type, id, []]))
+      }
+      for (let c = await t.objectStore('outbox').openCursor(); c; c = await c.continue()) {
+        const o = c.value as OutboxRec
+        if (keys.has(`${o.entityType}:${o.entityId}`)) void c.delete()
+      }
+      await t.done
+      const change = recorder.change()
+      notify(change)
+      channel?.postMessage(changeToJson(change))
+    },
     async getAll<T>(type: EntityType) {
       const rows = (await db.getAll('entities', IDBKeyRange.bound([type], [type, []]))) as EntityRec[]
       return rows.map(toEntity) as Entity<T>[]

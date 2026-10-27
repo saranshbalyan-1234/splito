@@ -62,6 +62,12 @@ export interface Store {
   getAll<T>(type: EntityType): Promise<Entity<T>[]>
   history(type: EntityType, id: string): Promise<HistoryRow[]>
   outbox(): Promise<OutboxOp[]>
+  /**
+   * Erases entities outright, with their history and outbox ops, in one
+   * transaction. Only for data the app itself seeded (the dev/e2e demo set):
+   * user deletes are tombstones, never this.
+   */
+  erase(refs: ReadonlyArray<{type: EntityType; id: string}>): Promise<void>
   /** Fires after each committed transaction (and on changes from other tabs) with what it touched. */
   subscribe(fn: (change: StoreChange) => void): () => void
   close(): Promise<void>

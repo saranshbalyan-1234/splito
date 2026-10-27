@@ -72,7 +72,8 @@ export function MoneyArrow({
     <Icon
       size={size}
       fill={money.color(amount)}
-      style={style}
+      // The arrow never gives way to a long figure beside it (it shrank to a dot on phones).
+      style={[{flexShrink: 0}, style]}
       accessibilityElementsHidden
       importantForAccessibility="no"
     />

@@ -125,6 +125,21 @@ export async function openSqlStore(db: SqlExecutor): Promise<Store> {
       listeners.forEach(l => l(change))
       return result
     },
+    async erase(refs) {
+      const recorder = changeRecorder()
+      await serial(() =>
+        db.withTransaction(async () => {
+          for (const {type, id} of refs) {
+            recorder.record(type, id)
+            await db.run('DELETE FROM entities WHERE type = ? AND id = ?', [type, id])
+            await db.run('DELETE FROM history WHERE entity_type = ? AND entity_id = ?', [type, id])
+            await db.run('DELETE FROM outbox WHERE entity_type = ? AND entity_id = ?', [type, id])
+          }
+        }),
+      )
+      const change = recorder.change()
+      listeners.forEach(l => l(change))
+    },
     async getAll<T>(type: EntityType) {
       const rows = await serial(() => db.all<EntityRow>('SELECT * FROM entities WHERE type = ? ORDER BY id', [type]))
       return rows.map(toEntity) as Entity<T>[]
