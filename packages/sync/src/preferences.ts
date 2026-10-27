@@ -58,9 +58,9 @@ export const DEFAULT_CATEGORIES: Category[] = [
 const TAB_IDS: TabId[] = ['people', 'groups', 'analytics', 'activity']
 /** The shared list's order: Home, Groups, Analytics, Ask Splito, Activity, Settings. */
 export const NAV_ITEM_IDS: readonly NavItemId[] = ['people', 'groups', 'analytics', 'ask', 'activity', 'settings']
-/** The bottom bar holds 2 to 5 tabs, as Bluesky's. */
-export const MIN_TABS = 2
-export const MAX_TABS = 5
+/** The bottom bar holds any number of tabs, from Home alone to every item (decision 84). */
+export const MIN_TABS = 1
+export const MAX_TABS = NAV_ITEM_IDS.length
 const HEX = /^#[0-9a-f]{6}$/i
 
 const oneOf =
@@ -123,7 +123,7 @@ export const PREFS = {
   shakeToFeedback: def('shakeToFeedback', 'motion', 'device', 'Shake to send feedback', false, isBool),
   /** The Send feedback sheet's "Include app info" switch remembers the last choice (spec default: on). */
   'feedback.includeAppInfo': def('feedback.includeAppInfo', 'privacy', 'device', 'Include app info with feedback', true, isBool),
-  /* The phone bottom bar: 2-5 items of the shared nav list, Home first and always on (26.3). */
+  /* The phone bottom bar: any number of items of the shared nav list, Home first and always on (26.3, decision 84). */
   tabs: def<NavItemId[]>(
     'tabs',
     'navigation',

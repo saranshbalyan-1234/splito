@@ -40,14 +40,17 @@ test('account pref enqueues an outbox op, device pref does not', async () => {
   expect(await getPref(s, 'haptics')).toBe(false)
 })
 
-test('tabs: 2 to 5 items from the shared nav list, Home first, no duplicates (26.3)', async () => {
+test('tabs: any number from Home alone to every item of the shared nav list, Home first, no duplicates (26.3, decision 84)', async () => {
   await setPref(s, ctx, 'tabs', ['people', 'settings'])
   expect(await getPref(s, 'tabs')).toEqual(['people', 'settings'])
   await setPref(s, ctx, 'tabs', ['people', 'groups', 'analytics', 'ask', 'activity'])
   expect(await getPref(s, 'tabs')).toEqual(['people', 'groups', 'analytics', 'ask', 'activity'])
   await expect(setPref(s, ctx, 'tabs', [])).rejects.toThrow('INVALID_PREF')
-  await expect(setPref(s, ctx, 'tabs', ['people'])).rejects.toThrow('INVALID_PREF')
-  await expect(setPref(s, ctx, 'tabs', ['people', 'groups', 'analytics', 'ask', 'activity', 'settings'])).rejects.toThrow('INVALID_PREF')
+  await setPref(s, ctx, 'tabs', ['people'])
+  expect(await getPref(s, 'tabs')).toEqual(['people'])
+  await setPref(s, ctx, 'tabs', ['people', 'groups', 'analytics', 'ask', 'activity', 'settings'])
+  expect(await getPref(s, 'tabs')).toEqual(['people', 'groups', 'analytics', 'ask', 'activity', 'settings'])
+  await expect(setPref(s, ctx, 'tabs', ['people', 'groups', 'analytics', 'ask', 'activity', 'settings', 'settings'])).rejects.toThrow('INVALID_PREF')
   await expect(setPref(s, ctx, 'tabs', ['people', 'groups', 'groups'])).rejects.toThrow('INVALID_PREF')
   await expect(setPref(s, ctx, 'tabs', ['people', 'profile'] as never)).rejects.toThrow('INVALID_PREF')
   // Home is fixed: never off, always first.
@@ -66,9 +69,12 @@ test('an order stored before Home was fixed keeps its tabs, with Home moved firs
   // Without Home, Home joins at the front.
   await stored('tabs', ['activity', 'analytics'])
   expect(await getPref(s, 'tabs')).toEqual(['people', 'activity', 'analytics'])
-  // A single tab is below the 2-tab minimum once Home joins it alone: the default.
+  // Home alone is a valid bar now (decision 84).
   await stored('tabs', ['people'])
-  expect(await getPref(s, 'tabs')).toEqual(['people', 'groups', 'analytics', 'activity'])
+  expect(await getPref(s, 'tabs')).toEqual(['people'])
+  // An empty stored order gets Home, which is fixed.
+  await stored('tabs', [])
+  expect(await getPref(s, 'tabs')).toEqual(['people'])
 })
 
 test('home tab must be a visible destination', async () => {
