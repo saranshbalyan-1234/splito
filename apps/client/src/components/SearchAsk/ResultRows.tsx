@@ -14,8 +14,6 @@ import {
   type Person,
 } from '@splito/sync'
 
-import {useHiddenGroups} from '#/data/groupVisibility'
-
 import {PressableWithHover} from '#/view/com/util/PressableWithHover'
 import {UserAvatar} from '#/view/com/util/UserAvatar'
 import {atoms as a, type TextStyleProp, useTheme} from '#/alf'
@@ -326,12 +324,15 @@ export function PersonResult({
 export function GroupResult({
   nav,
   group,
+  isHidden = false,
   terms,
   isActive,
   onPress,
 }: {
   nav: number
   group: Entity<Group>
+  /** I have hidden this group (decision 89). */
+  isHidden?: boolean
   terms: string[]
   isActive: boolean
   onPress: () => void
@@ -339,7 +340,6 @@ export function GroupResult({
   const t = useTheme()
   const {t: l} = useLingui()
   const {name, kind, members} = group.data
-  const hidden = useHiddenGroups()
   const kindLabel = {
     trip: l`Trip`,
     home: l`Home`,
@@ -351,7 +351,7 @@ export function GroupResult({
     kindLabel,
     memberCount === 1 ? l`1 member` : l`${memberCount} members`,
     isGroupInactive(group.data) ? l`Inactive` : undefined,
-    hidden.has(group.id) ? l`Hidden` : undefined,
+    isHidden ? l`Hidden` : undefined,
   ]
     .filter(Boolean)
     .join(' · ')

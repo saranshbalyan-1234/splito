@@ -8,6 +8,7 @@ import {decimalMark} from '@splito/domain'
 import {type NavigationProp} from '#/lib/routes/types'
 import {useNumberLocale} from '#/locale/numberLocale'
 import {useFormatDay, useToday} from '#/locale/useDates'
+import {useHiddenGroups} from '#/data/groupVisibility'
 import {useMutationCtx, usePref, useSearch} from '#/data/hooks'
 import {device, useStorage} from '#/storage'
 import {atoms as a, useBreakpoints, useTheme, web} from '#/alf'
@@ -61,6 +62,7 @@ export function SearchAskBody({initialQuery}: {initialQuery: string}) {
 
   const {names, groupNames} = useSearchNames()
   const {actor: me} = useMutationCtx()
+  const hiddenGroups = useHiddenGroups()
   const locale = useNumberLocale()
   const formatDay = useFormatDay()
   const today = useToday()
@@ -171,6 +173,7 @@ export function SearchAskBody({initialQuery}: {initialQuery: string}) {
           <GroupResult
             nav={row.nav}
             group={row.group}
+            isHidden={hiddenGroups.has(row.group.id)}
             terms={results?.terms ?? []}
             isActive={row.nav === activeNav}
             onPress={() => open(row)}

@@ -4,8 +4,6 @@ import {Trans, useLingui} from '@lingui/react/macro'
 import {CURRENCIES, type CurrencyInfo} from '@splito/domain'
 import {type Category, type Entity, type Group, isGroupInactive} from '@splito/sync'
 
-import {useHiddenGroups} from '#/data/groupVisibility'
-
 import {UserAvatar} from '#/view/com/util/UserAvatar'
 import {atoms as a, useBreakpoints, useTheme} from '#/alf'
 import {Button} from '#/components/Button'
@@ -215,17 +213,25 @@ function CategoryInner({
 export function GroupDialog({
   control,
   groups,
+  hidden,
   value,
   onSelect,
 }: {
   control: Dialog.DialogControlProps
   groups: Entity<Group>[]
+  /** Groups I have hidden from my own lists (decision 89): not offered. */
+  hidden: ReadonlySet<string>
   value: string | null
   onSelect: (groupId: string | null) => void
 }) {
   return (
     <FormSheet.Outer control={control} testID="group-dialog">
-      <GroupInner groups={groups} value={value} onSelect={onSelect} />
+      <GroupInner
+        groups={groups}
+        hidden={hidden}
+        value={value}
+        onSelect={onSelect}
+      />
     </FormSheet.Outer>
   )
 }
@@ -234,17 +240,18 @@ const NO_GROUP = '__none__'
 
 function GroupInner({
   groups,
+  hidden,
   value,
   onSelect,
 }: {
   groups: Entity<Group>[]
+  hidden: ReadonlySet<string>
   value: string | null
   onSelect: (groupId: string | null) => void
 }) {
   const t = useTheme()
   const {t: l} = useLingui()
   const control = Dialog.useDialogContext()
-  const hidden = useHiddenGroups()
   /* Inactive groups take no new expenses and hidden ones are out of my lists (decision 89). */
   const live = groups.filter(g => !isGroupInactive(g.data) && !hidden.has(g.id))
   const rows = [
