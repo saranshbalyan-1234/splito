@@ -1,0 +1,195 @@
+{
+  "base": "32c5a3a",
+  "slots": [
+    {
+      "id": "B1",
+      "fNumbers": [
+        "F-2301",
+        "F-222 (acc 4, 9; decision 84)",
+        "F-209"
+      ],
+      "title": "Ask Splito on-device answers + bottom bar takes any number of tabs",
+      "branch": "feat/wB-B1",
+      "port": 8611,
+      "task": "Base 32c5a3a; branch feat/wB-B1; worktree in temp (never the main checkout); E2E_PORT=8611. Binding: docs/ARCHITECTURE.md §26, §9.8, your BACKLOG entries. Copy Bluesky first, then Expensify (upstream/App @44387bc7); reuse row in docs/reuse/. Lingui en+hi. Done = pnpm check + full e2e green, light/Dim phone/desktop screenshots, your own BACKLOG/matrix rows updated. Build Ask Splito per F-2301 and ARCHITECTURE §26.19/§26.3. The drawer's 'Ask Splito: <query>' row and Enter on a question turn the Search & Ask drawer into a chat with a back arrow to results. Add `mode?: 'search'|'ask'` to `open()` in components/SearchAsk/context.ts; change the four `TODO(F-2301)` calls (bottom-bar/BottomBar.tsx, BottomBarWeb.tsx, navigation/Drawer.tsx, and ONLY lines ~196-198 of desktop/LeftNav.tsx) to `open({mode:'ask'})`; set IS_ASK_SPLITO_AVAILABLE true. Chat copies Bluesky src/screens/Messages/components/MessagesList.tsx, MessageComposer.tsx, src/components/dms/MessageItem.tsx, DateDivider.tsx, with the four §26.19 suggestion chips. Engine in new apps/client/src/lib/ask/: deterministic parser (English + Hindi keywords) to intents: balance with a person, who owes me most / whom I owe most, group balance and who owes whom, spend by period/category/group/person (say which measure: my share or total), trend by month/day, find expenses (hand to existing search), 'split X N ways' (action card). Reads only balances, aggregates, search_terms and paged byDate/byGroupDate ranges through existing selectors (§9.8: never load the ledger); money via @splito/domain, one line per currency, never summed. Rich cards: chart (components/charts), table, balance card, action card opening the normal sheet pre-filled (no write without confirmation; 'Remind' card opens the Person page). Label 'Answered on this device'. Unsupported: 'I can answer this once you sign in' plus the closest supported suggestion; no fake answers, no `ai.enabled` toggle. History and draft persist in device storage (#/storage, cap 200 messages, 'Clear chat'), never the ledger DB or outbox. Fix F-2301 acc 1 text: no separate Analytics header button (the Sparkles header button covers it, §26.19). Decision 84: in packages/sync/src/preferences.ts change only MIN_TABS=1, MAX_TABS=NAV_ITEM_IDS.length, the tabs validator and its comment; NavigationEditor copy/limit; above 5 tabs labels hide, icons and badges keep Bluesky size; Home fixed, Reset. Tests: bun table of 40+ questions to intents; 'What does Riya owe me?' equals the People balance and category totals equal Analytics on the demo set; e2e: Sparkles, Enter, bar Ask item opens Ask mode, 6-tab bar. Owned: lib/ask/, features/searchAsk/, components/SearchAsk/, lib/routes/navigationItems.ts, view/shell/bottom-bar/*, navigation/Drawer.tsx, components/settings/NavigationEditor.tsx. Forbidden: packages/sync schema/mutations/activity, screens/Analytics, rest of LeftNav.tsx, RightNav.tsx. Schema: none. Refs also Expensify src/components/SidePanel/, src/pages/Search/SearchNLFilterPage.tsx."
+    },
+    {
+      "id": "B2",
+      "fNumbers": [
+        "F-112",
+        "F-227 (close-out, audit M13)",
+        "F-1816"
+      ],
+      "title": "Many-currency completeness + language dropdown",
+      "branch": "feat/wB-B2",
+      "port": 8621,
+      "task": "Base 32c5a3a; branch feat/wB-B2; worktree in temp (never the main checkout); E2E_PORT=8621. Binding: docs/ARCHITECTURE.md §26, §9.8, your BACKLOG entries. Copy Bluesky first, then Expensify (upstream/App @44387bc7); reuse row in docs/reuse/. Lingui en+hi. Done = pnpm check + full e2e green, light/Dim phone/desktop screenshots, your own BACKLOG/matrix rows updated. F-112: fix audit M5, M8, M12, M15, m2, m3, m21 (docs/audit/AUDIT-2026-10-27.md) with a regression test each that failed before; mark each fixed in the audit. M5: group picker never overwrites a picked or edited currency (ExpenseComposer.tsx group-picker block only). M8: Record payment offers every currency, falls back to `defaultCurrency` (screens/Person/index.tsx currency lines ~205-235 and the RecordPaymentDialog props ~505-517 only; RecordPaymentDialog.tsx). M12 + m2: one chip per open currency with exact formatAmount (LeftNav.tsx recently-active section, RecentTransactions.tsx). M15: rounding unit per currency (`split.roundTo` in preferences.ts, the cash-rounding call in components/split/form.ts, domain allocate.ts allocateCash skips when total/unit < participants). m3: settled currencies stay filterable (People/sort.ts currency filter, Groups/filter.ts currency line, domain helper). m21: Overview currency card opens /analytics?currency=X (BalanceSummary.tsx, Analytics/useReport.ts seed). F-227: verify acceptance 1-4 and audit M13 on both demo sets (multi-currency groups and friends, JPY plus BHD/KWD, idempotent add/remove, production holds none); fix gaps in data/demoData.ts, data/demoLarge.ts, packages/sync/src/demoLarge.ts; mark F-227 done. F-1816: copy Bluesky src/components/AppLanguageDropdown.tsx and src/components/Select/ (index.tsx, index.web.tsx, types.ts) into components/; render in screens/LoggedOut/SplashScreen.web.tsx footer (Bluesky src/view/com/auth/SplashScreen.web.tsx:186), screens/Signup/index.tsx footer (Bluesky src/screens/Signup/index.tsx:226), view/shell/desktop/RightNav.tsx footer (Bluesky src/view/shell/desktop/RightNav.tsx:152) behind device pref `rightColumn.languageDropdown` (insert after `amount.shorthand`). Writes `language`, activates the catalog without reload (Bluesky src/locale/i18n.web.ts dynamicActivate), sets html lang; acceptance 1-5 incl. iOS-simulator sign-up check. Owned: files above, components/Select, AppLanguageDropdown. Forbidden: LeftNav lines ~196-198 (B1), Person overflow menu (B5/B6), Groups/filter.ts status logic (B3), itemize/adjustment code in SplitEditor and form.ts (B7), data/demo.ts (B3), schema files. Schema: none. Refs also Expensify src/libs/CurrencyUtils.ts, src/components/CurrencySelectionList, src/pages/settings/Preferences/LanguagePage.tsx."
+    },
+    {
+      "id": "B3",
+      "fNumbers": [
+        "F-114",
+        "F-604",
+        "F-615",
+        "F-613 (part 1: safe member removal)"
+      ],
+      "title": "History, bin and sync integrity + archive, leave, delete group and member removal",
+      "branch": "feat/wB-B3",
+      "port": 8631,
+      "task": "Base 32c5a3a; branch feat/wB-B3; worktree in temp (never the main checkout); E2E_PORT=8631. Binding: docs/ARCHITECTURE.md §26, §9.8, your BACKLOG entries. Copy Bluesky first, then Expensify (upstream/App @44387bc7); reuse row in docs/reuse/. Lingui en+hi. Done = pnpm check + full e2e green, light/Dim phone/desktop screenshots, your own BACKLOG/matrix rows updated. Order: F-114 first, then F-604, F-615, F-613 part 1. F-114 (audit M4, m1, m11, m15, m17, m18, m19, m20), regression test each, marked fixed in the audit: restore runs create's liveness checks on payers, parties, from/to and group, or restores the person too with an explanation; deletePerson counts unpurged bin items (mutations.ts); `repayment.restored`/`writeoff.restored` kinds (activity.ts + components/activity); IDEMPOTENCY_CONFLICT when a retry hits a tombstone or different data; search ties broken by creation time (search.ts); purge outbox payload keeps purgedAt; demo seed uses todayIn(tz) and is idempotent (data/demo.ts); m19/m20: verify against F-117's groups.activityAt and people.lastActivityAt and fix in packages/sync projection code only (LeftNav.tsx and People/sort.ts are B2's). F-604: archive/unarchive in the group overflow; archived groups leave Groups 'Active' but stay in balances, search and Status=Archived. F-615: leave group (non-zero balance offers settle, Call it even via features/settlement/CallItEvenDialog, or stay inactive with group_members.leftAt; choice in history; last admin hands admin on via group_members.role). Delete group: lists what goes, tombstones the group and its expenses/repayments/write-offs in one transaction, each marked deleted-with-group so restore brings back exactly those; Recently deleted shows the group as one entry. F-613 part 1: remove member from the Members tab (MemberRow menu in screens/Group/components/GroupRows.tsx) with settle, forgive or keep inactive, each previewing every member's balance change (domain). The re-split wizard is Wave C. New mutations in new packages/sync/src/groupLifecycle.ts (one export line in index.ts). Deleted groups are read from the groups store (non-money, ~100 rows): no new index. Group overflow: one-line mount of your items right after 'Payment rules'. Refs: Bluesky src/screens/Messages/ConversationSettings/ (MembersAndRequests.tsx, MemberMenu.tsx, prompts.tsx), src/components/dms/LeaveConvoPrompt.tsx; Expensify src/pages/DynamicReportParticipantsPage.tsx, DynamicRoomMembersPage.tsx, src/components/ArchivedReportFooter.tsx, leaveGroupChat in src/libs/actions/Report/index.ts. Owned: mutations.ts, activity.ts (B5 also appends), search.ts, groupLifecycle.ts, data/demo.ts, screens/RecentlyDeleted, Members tab. Forbidden: schema.ts, migrate.ts, types.ts EntityType (B5), exported signatures of write/requireLive/MutationCtx, OweRow (B5), Person screen, LeftNav. Schema: none."
+    },
+    {
+      "id": "B4",
+      "fNumbers": [
+        "F-1204"
+      ],
+      "title": "Comments on expenses and repayments",
+      "branch": "feat/wB-B4",
+      "port": 8641,
+      "task": "Base 32c5a3a; branch feat/wB-B4; worktree in temp (never the main checkout); E2E_PORT=8641. Binding: docs/ARCHITECTURE.md §26, §9.8, your BACKLOG entries. Copy Bluesky first, then Expensify (upstream/App @44387bc7); reuse row in docs/reuse/. Lingui en+hi. Done = pnpm check + full e2e green, light/Dim phone/desktop screenshots, your own BACKLOG/matrix rows updated. Build F-1204 acceptance 1-3 and 5-7 (ARCHITECTURE §26.20; best of both: Expensify's one timeline, Bluesky's rows and composer). The v3 `comments` store with `byTarget` already exists: no schema change. New packages/sync/src/comments.ts: createComment, editComment, deleteComment (own comments only; tombstones keep history; one transaction with history and outbox; idempotent like other mutations), a byTarget cursor-paged thread read and an index count; one export line in index.ts. Expense detail (screens/Expense/index.tsx) ends with one timeline: comments merged in time order with the existing history lines (screens/Expense/components/History.tsx, history byEntity) under Bluesky DM date dividers; pref `comments.showHistory` (on; insert after `history.binDays` in preferences.ts) hides history lines. Repayments: if HistoryRow's onRepaymentPress opens no detail page, add route `Repayment: '/payment/:repaymentId'` (routes.ts after Expense, lib/routes/types.ts, navigation/Navigation.tsx) with a detail page and the same thread. Composer bar above the keyboard copies Bluesky src/screens/Messages/components/MessageComposer.tsx (+ vendor/KeyboardStickyView.tsx); emoji via Bluesky src/components/EmojiPicker on web and the OS keyboard on native; @mention of the expense's participants following src/view/com/composer/text-input/web/Autocomplete.tsx. Rows: src/components/dms/MessageItem.tsx, DateDivider.tsx. Long-press/right-click opens Bluesky src/components/ContextMenu/ with only allowed actions (Copy, Edit, Delete on own, Copy link), each also reachable by keyboard and screen reader; web Up arrow in the empty composer edits my last comment, Escape cancels (Expensify src/pages/inbox/report/ReportActionCompose/useLastEditableAction.ts, ReportActionItemMessageEdit.tsx). Comment count: a CommentCount component mounted with one line each in components/people/HistoryRow.tsx and screens/Analytics/components/ExpenseRow.tsx. Activity rows for others' comments arrive with F-2208: do not touch activity.ts. Tests: sync bun (own-only edit/delete, tombstone history, paging, count), merge-order unit test, e2e add/edit/delete/mention at phone and desktop widths. Owned: comments.ts, components/comments/, screens/Expense/index.tsx, screens/Repayment/. Forbidden: schema.ts, mutations.ts, activity.ts, ItemsBreakdown.tsx (B7), Person and Group screens, demo files. Refs also Expensify src/pages/inbox/report/ReportActionsList.tsx, src/libs/ModifiedExpenseMessage.ts."
+    },
+    {
+      "id": "B5",
+      "fNumbers": [
+        "F-1118",
+        "F-1907",
+        "F-1119"
+      ],
+      "title": "Remind, local notifications and Remind me (owns schema v4)",
+      "branch": "feat/wB-B5",
+      "port": 8651,
+      "task": "Base 32c5a3a; branch feat/wB-B5; worktree in temp (never the main checkout); E2E_PORT=8651. Binding: docs/ARCHITECTURE.md §26, §9.8, your BACKLOG entries. Copy Bluesky first, then Expensify (upstream/App @44387bc7); reuse row in docs/reuse/. Lingui en+hi. Done = pnpm check + full e2e green, light/Dim phone/desktop screenshots, your own BACKLOG/matrix rows updated. You are the only Wave B slot that changes the §9.8 schema. Add entity type `reminder` (types.ts EntityType, ENTITY_STORE) and store `reminders` in packages/sync/src/schema.ts: ENTITY_COLUMNS plus personId, groupId ('' for none), kind ('nudge'|'self'), dueAt int?, repeat text; indexes byPerson [personId, createdAt, id], byDue [kind, dueAt, id], bySyncStatus. SCHEMA_VERSION 4 with an ordered, idempotent v3 to v4 step on IndexedDB and SQLite (migrate.ts, idbStore.ts, sqlStore.ts) and a test that loads a v3 fixture including the large demo set and checks every row and balance survives; extend the store contract and query-plan tests. New packages/sync/src/reminders.ts mutations (record nudge, schedule, update, cancel). activity.ts: append reminder kinds ('You reminded Riya · INR 450', 'Reminder set') to the union, FEED_TYPES and switch in their own hunks (B3 also appends), plus the client activity row. F-1118: new lib/remind/ text builder (friendly, amount per currency never summed, UPI link from F-1103 or the friend's payment link; F-1501 will reuse it), share sheet via lib/sharing.ts, wa.me when the phone is known; never shown as sent; logged as a nudge row. Entry points: Person overflow (one-line mount of a RemindMenuItems component right after 'Call it even'), each debtor OweRow in screens/Group/components/GroupRows.tsx, Settle plan screens/Settle/components/TransferRow.tsx; hidden when nothing is owed. F-1907: lib/notifications/ on expo-notifications (add dependency + app.config plugin); prefs `notify.reminders`, `notify.recurring`, `notify.digest` inserted after `notify.invite`; fires in airplane mode on native; on web only while Splito is open, plus an in-app banner on next open, said plainly in the UI. F-1119: 'Remind me' sheet (date, time, repeat none/daily/weekly/monthly); permission primer only at that moment (Bluesky src/lib/hooks/usePermissions.ts pattern); the notification opens the person or group; reminders listed on the Person page (one-line mount under balances) with edit and cancel; OS notification ids kept in device storage, never synced. Refs: Bluesky src/lib/notifications/notifications.ts, src/screens/Settings/NotificationSettings/; Expensify src/libs/Notification/LocalNotification/. Tests: migration, mutations, text builder (multi-currency, JPY, BHD), e2e Remind from Person, Group Balances and Settle. Owned: schema.ts, migrate.ts, idbStore/sqlStore upgrade code, types.ts, reminders.ts, lib/remind/, lib/notifications/, OweRow, TransferRow. Forbidden: mutations.ts, Person screen beyond the two mounts, Group overflow, MemberRow (B3)."
+    },
+    {
+      "id": "B6",
+      "fNumbers": [
+        "F-2001",
+        "F-2007",
+        "F-621 (new: Settings > Friends and invites, decision 83)"
+      ],
+      "title": "Export, backup/restore and the Friends and invites hub",
+      "branch": "feat/wB-B6",
+      "port": 8661,
+      "task": "Base 32c5a3a; branch feat/wB-B6; worktree in temp (never the main checkout); E2E_PORT=8661. Binding: docs/ARCHITECTURE.md §26, §9.8, your BACKLOG entries. Copy Bluesky first, then Expensify (upstream/App @44387bc7); reuse row in docs/reuse/. Lingui en+hi. Done = pnpm check + full e2e green, light/Dim phone/desktop screenshots, your own BACKLOG/matrix rows updated. F-2001: new packages/sync/src/backup.ts: versioned JSON of every entity store, iterating ENTITY_TYPES (never a hard-coded list, so B5's reminders join on merge; a test asserts every type round-trips with IDs, currencies and splits, A12); schema validation, migration of older versions, preview (counts, conflicts), merge or replace applied in one transaction with history and outbox, then rebuildProjections; a corrupt file is rejected with nothing applied. Settings > Data gets Export and Import rows. F-2007: lib/export/ CSV (cells starting = + - @ escaped), PDF statement (every expense and repayment in range, running balance per currency equal to the on-screen balance; native expo-print printToFileAsync + share, web a print-ready page saved through the browser's Save as PDF), full JSON backup; filters date range, group, person, currency; never sums currencies; works offline. Entry points: Group overflow 'Export' (one-line mount right after 'Edit group'), Person overflow 'Export statement' (one-line mount right after 'Edit friend'), Analytics overflow 'Export CSV' pre-filtered (screens/Analytics/index.tsx overflow, exportCsv*.ts). Hub (ARCHITECTURE §26.18, decision 83): add BACKLOG entry F-621 with acceptance from §26.18; route `FriendsAndInvites: '/settings/friends'` before SettingsSection (routes.ts right after RecentlyDeleted, lib/routes/types.ts, Navigation.tsx); Settings row; sections Friends (search above 10, Add friend opens the Invite people sheet, Remove friend), Requests, Invites sent, Invite links (reuse RequestRow, PendingPeople, screens/Invites/InviteLinks.tsx) and defaults (existing invites.* and privacy.* prefs). Remove friend: soft `removedAt` in person data via new removeFriend/restoreFriend in friends.ts (not deletePerson); blocked while any currency is open, the prompt lists amounts per currency with Settle up and Call it even; keeps history, name marked 'Removed', out of pickers (selectablePeople) and lists, Undo toast, re-addable. The Person overflow 'Remove friend' uses this flow; People 'Friends N' header gets 'Manage' (People/components/SectionHeader.tsx); the invite sheet's 'Manage links' opens Invite links. Refs: Bluesky src/screens/Settings/components/ExportCarDialog.tsx, SettingsList.tsx, src/screens/Messages/components/IncomingRequestListItem.tsx; Expensify src/libs/ExportOnyxState/, src/libs/actions/ImportOnyxState.ts, src/components/ImportOnyxState/, src/components/ReportPDFDownloadModal.tsx, src/libs/fileDownload/. Forbidden: schema, mutations.ts, Person currency lines (B2), Group archive/members (B3). Schema: none."
+    },
+    {
+      "id": "B7",
+      "fNumbers": [
+        "F-403"
+      ],
+      "title": "Tax classes and scoped, stacked charges (owner's bill)",
+      "branch": "feat/wB-B7",
+      "port": 8671,
+      "task": "Base 32c5a3a; branch feat/wB-B7; worktree in temp (never the main checkout); E2E_PORT=8671. Binding: docs/ARCHITECTURE.md §26, §9.8, your BACKLOG entries. Copy Bluesky first, then Expensify (upstream/App @44387bc7); reuse row in docs/reuse/. Lingui en+hi. Done = pnpm check + full e2e green, light/Dim phone/desktop screenshots, your own BACKLOG/matrix rows updated. Build F-403 (ARCHITECTURE §26.13, decision 86). Acceptance 1 is the owner's real bill (The Supper Factory) and the e2e fixture. Domain first: new packages/domain/src/charges.ts: items carry `taxClass`; charges are an ordered list {name, kind service|tax|packing|delivery|other|discount, percent (basis points) or fixed minor units, appliesTo all|classes|items, stacksOn items or items plus earlier charges on the same items, inclusive (shows the tax portion only)}; each charge spread only over people who had in-scope items, pro rata by weighted share of its base, bigint largest remainder via allocate.ts (do not modify allocate.ts); round-off line to the printed total spread per `bill.roundOffSpread`; a reconciliation result. adjustments.ts's simple tax/tip/service/discount becomes the 'Simple' preset; a read-time adapter loads old expenses unchanged (acc 7 test). Tests: the bill exactly (201.10 / 221.51 / 88.00, total 2,521.61, round-off +0.39 to 2,522.00; a food-only person pays 0 of 88.00 and 0 of the 40.00 service on alcohol) and the acc 2 property test incl. JPY, INR, BHD. Data stays in the expense `data` JSON: no schema change. Editor (itemize parts of components/split/ and new components/split/charges/): class chip per item (long-press/right-click, multi-select), Charges section with drag reorder (components/DraggableList), charge sheet in FormSheet (phone drawer, desktop popup), reconciliation row with the gap in red and 'Add as round-off' / 'Check items'; Save explains a gap (acc 3-4). Detail: screens/Expense/components/ItemsBreakdown.tsx groups items by class, charge scopes ('on Alcohol + service') and per-person charge shares (acc 5; the export and share-text half is Wave C). Presets in one tap; 'Save as preset for <merchant>' and a dashed suggestion next time (acc 6); merchant = normalised expense title, stored in capped pref `bill.merchantSetups` (200 most recent). Prefs `bill.taxClasses`, `bill.chargePresets`, `bill.defaultPreset`, `bill.serviceChargeDefault`, `bill.roundOffSpread`, `bill.rememberPerMerchant`, `bill.merchantSetups` inserted right after `categories` in preferences.ts; tax-class editor in Settings > Defaults following components/settings/CategoriesEditor.tsx, registered in prefControls. Acc 8 (receipt markers) waits for F-501/F-502. Refs: Expensify src/components/TaxPicker.tsx, src/pages/iou/request/step/DynamicIOURequestStepTaxRatePage.tsx, src/pages/workspace/taxes/; UI from Bluesky components only. e2e enters the exact bill at phone and desktop widths; Hindi 0 missing. Owned: charges.ts, adjustments.ts, itemize/charges components, ItemsBreakdown.tsx, tax-class editor. Forbidden: ExpenseComposer group-picker block and form.ts cash rounding (B2), allocate.ts, screens/Expense/index.tsx (B4), schema."
+    }
+  ],
+  "waveC": [
+    {
+      "fNumbers": [
+        "F-613 (part 2)"
+      ],
+      "title": "Drop-out re-split wizard (still pays / refund / re-split, explicit revisions)",
+      "why": "Rewrites past expenses; needs B3's restore, idempotency and member-removal semantics merged first."
+    },
+    {
+      "fNumbers": [
+        "F-403 (acc 5 export/share half)",
+        "F-1501"
+      ],
+      "title": "Per-charge breakdown in export and share text",
+      "why": "Needs B6's export and B7's charges model both merged."
+    },
+    {
+      "fNumbers": [
+        "F-403 (acc 8)"
+      ],
+      "title": "Receipt line markers and tax lines map to classes and charges",
+      "why": "Needs the receipt scanner and OCR (F-501, F-502), not built."
+    },
+    {
+      "fNumbers": [
+        "F-228"
+      ],
+      "title": "Native hardware-keyboard Cmd/Ctrl+K",
+      "why": "Needs a native key-command module; build order puts it after F-2301 (B1)."
+    },
+    {
+      "fNumbers": [
+        "F-1111"
+      ],
+      "title": "Reminder policy, tone, language, snooze",
+      "why": "Builds on F-1118 (B5)."
+    },
+    {
+      "fNumbers": [
+        "F-1210"
+      ],
+      "title": "Disputes, flags and hold",
+      "why": "Builds on comments F-1204 (B4)."
+    },
+    {
+      "fNumbers": [
+        "F-2004"
+      ],
+      "title": "Power exports (YNAB, Beancount, XLSX)",
+      "why": "Builds on F-2007 (B6)."
+    },
+    {
+      "fNumbers": [
+        "F-235",
+        "F-318",
+        "F-320",
+        "F-231",
+        "F-321",
+        "F-1507",
+        "F-230",
+        "F-229",
+        "F-232",
+        "F-319",
+        "F-620",
+        "F-1212",
+        "F-233",
+        "F-234",
+        "F-236"
+      ],
+      "title": "Rest of Batch 4d (rows 44b-44p)",
+      "why": "Outside the approved Wave B scope; F-230 and F-232 also need F-1118 (B5), F-319 needs F-318."
+    },
+    {
+      "fNumbers": [
+        "-"
+      ],
+      "title": "Demo seeding of comments, reminders, archived and left groups; Ask's 'Remind' action card opening B5's Remind sheet directly",
+      "why": "Spans B1, B3, B4 and B5 files; do in the Wave B assemble if it is a few lines, otherwise first thing in Wave C."
+    },
+    {
+      "fNumbers": [
+        "F-2302",
+        "F-2303",
+        "F-2208",
+        "F-2210"
+      ],
+      "title": "Free-form AI, AI privacy, shared comments (others' comments in Activity), in-app reminders",
+      "why": "Need the backend (F-2101..F-2103); they go in the backend batches, not a client wave."
+    }
+  ],
+  "rulings": [
+    "Ask Splito (F-2301) offline-first approach: a deterministic on-device engine in apps/client/src/lib/ask. A keyword/grammar parser (English + Hindi) maps a question to a fixed intent set: balance with a person, who owes me most / whom I owe most, group balance and who owes whom, spend by period/category/group/person, trend by month/day, find expenses (hands to the existing search_terms search), and 'split X N ways' (action card). Answers read only the balances, aggregates and search_terms projections and paged byDate/byGroupDate ranges (§9.8), compute with @splito/domain, show one line per currency, and are labelled 'Answered on this device'. Anything outside the intents gets 'I can answer this once you sign in' plus the closest supported question. Nothing leaves the device. Free-form language needs the backend model (F-2302) and the privacy controls (F-2303); until then there is no AI toggle, no network call and no fake answer.",
+    "Ask chat history and draft are device-only (#/storage, capped at 200 messages, 'Clear chat'): not ledger data, never in the database, outbox or backup.",
+    "F-2301 acc 1's 'Analytics header right action' is superseded by §26.19 (§26 wins): the Sparkles Search & Ask button already sits in the Analytics header, so there is no second button. B1 corrects the BACKLOG text.",
+    "Schema v4 belongs to B5 alone: the `reminders` store plus entity type `reminder`. No other slot edits schema.ts STORES or SCHEMA_VERSION, migrate.ts, the idbStore/sqlStore upgrade code or types.ts EntityType. Comments use the existing v3 `comments` store (byTarget). F-403 tax classes and charges live in the expense `data` JSON, with a read-time adapter for old expenses. Per-merchant charge setups go in a capped account pref (`bill.merchantSetups`). Deleted groups in the bin are read from the small, non-money groups store with no new index. A removed friend is a soft `removedAt` in person data.",
+    "Hot shared files take one-line mounts; the logic lives in each slot's own files. Person overflow order: Call it even, [B5 Remind / Remind me], Edit friend, [B6 Export statement], Remove friend (B6 swaps in the guarded flow). Group overflow: Edit group, [B6 Export], Members, Add members, Payment rules, [B3 Archive / Leave / Delete]. Only B2 edits Person/index.tsx outside those mounts (the currency lines).",
+    "preferences.ts anchors, so the inserts do not collide: B1 changes MIN_TABS, MAX_TABS and the tabs validator; B2 changes `split.roundTo` and adds `rightColumn.languageDropdown` after `amount.shorthand`; B4 adds `comments.showHistory` after `history.binDays`; B5 adds `notify.*` after `notify.invite`; B7 adds `bill.*` after `categories`.",
+    "activity.ts is touched only by B3 (restored kinds, group membership kinds) and B5 (reminder kinds), each as separate union members and case blocks. B4 adds no Activity kind: others' comments arrive with F-2208. New sync mutations go in new modules (groupLifecycle.ts, comments.ts, reminders.ts, backup.ts); mutations.ts is B3's, and B3 keeps the exported signatures of write, requireLive and MutationCtx unchanged.",
+    "Routes: B6 adds FriendsAndInvites ('/settings/friends') right after RecentlyDeleted, before SettingsSection, because the first match wins. B4 adds Repayment ('/payment/:repaymentId') after Expense. Each also edits lib/routes/types.ts and navigation/Navigation.tsx at the same relative spot.",
+    "Generated and shared docs are fixed at assembly. Builders run lingui extract/compile and fill hi on their own branch. The assembler merges .po entries by msgid (keeping every hi translation), then re-extracts. A pnpm-lock.yaml conflict is resolved by re-running pnpm install after package.json merges (B5 adds expo-notifications; B6 may add expo-print, expo-sharing, expo-document-picker). The assembler alone recounts the BACKLOG status line and Epics table.",
+    "Assemble order (one Sonnet assemble, after an Opus review of each slot): B5 (schema v4), B3 (mutations/activity), B2, B7, B4, B6 (its backup round-trip test must then cover `reminder`), B1. Run pnpm check plus the full e2e after each merge.",
+    "PDF statement: native uses expo-print (printToFileAsync, then the share sheet); web opens a print-ready statement and the browser's Save as PDF. Nothing is generated on a server, and there is no PDF library.",
+    "F-1907 on the web: browsers cannot schedule notifications while the app is closed, so web reminders fire only while Splito is open, plus an in-app banner on next open. The UI says so. Native fires in airplane mode.",
+    "F-613 is split. Part 1 (safe member removal: settle / forgive / keep inactive, with a balance preview) is in B3. Part 2 (the drop-out re-split wizard) is in Wave C, because it rewrites past expenses on top of B3's restore semantics.",
+    "Decision 84: MIN_TABS = 1 (Home alone), MAX_TABS = every nav item (6). Above 5 tabs the labels hide and icons and badges stay at Bluesky size. Home cannot be turned off. Settings stays reachable from the drawer.",
+    "The Friends and invites hub (decision 83) had no F-number. It becomes F-621 in E6, and B6 writes the entry with acceptance taken from §26.18.",
+    "Blockers from earlier batches: F-1301, F-209, F-224, F-201..F-208, F-1203 and F-1113 still read 'in progress (unmerged)', but they were merged into m1-foundation with row 30 (d397576). They block nothing. The Wave B assembler verifies them on m1-foundation and corrects their statuses. F-227 (still 'in progress') and audit M13 are closed by B2, because F-112 depends on them. feat/4b-33e holds no F-112 work (it is only a merge commit), so F-112 starts fresh in B2.",
+    "Expensify references cite upstream/App at 44387bc7, which now exists. This replaces the scouting doc's note that it was missing."
+  ]
+}
