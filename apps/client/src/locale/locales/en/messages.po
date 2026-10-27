@@ -534,10 +534,6 @@ msgstr "{days, plural, one {Nothing deleted in the last day.} other {Nothing del
 msgid "{days, plural, one {yesterday} other {# days ago}}"
 msgstr "{days, plural, one {yesterday} other {# days ago}}"
 
-#: src/screens/Settings/DemoData.tsx:159
-msgid "{expenses, plural, one {# expense} other {# expenses}}"
-msgstr "{expenses, plural, one {# expense} other {# expenses}}"
-
 #: src/components/split/ExpenseComposer.tsx:241
 msgid "{first}, {second} +{rest}"
 msgstr "{first}, {second} +{rest}"
@@ -546,10 +542,6 @@ msgstr "{first}, {second} +{rest}"
 #: src/components/activity/ActivityItem.tsx:975
 msgid "{formatted} ago"
 msgstr "{formatted} ago"
-
-#: src/screens/Settings/DemoData.tsx:157
-msgid "{friends, plural, one {# friend} other {# friends}}"
-msgstr "{friends, plural, one {# friend} other {# friends}}"
 
 #: src/screens/Group/index.tsx:681
 msgid "{from} owes {to}"
@@ -566,10 +558,6 @@ msgstr "{from} paid {to}"
 #: src/components/activity/ActivityItem.tsx:776
 msgid "{from} paid you"
 msgstr "{from} paid you"
-
-#: src/screens/Settings/DemoData.tsx:158
-msgid "{groups, plural, one {# group} other {# groups}}"
-msgstr "{groups, plural, one {# group} other {# groups}}"
 
 #: src/screens/Activity.tsx:172
 msgid "{hiddenCount, plural, one {# change hidden from your activity} other {# changes hidden from your activity}}"
@@ -767,10 +755,6 @@ msgstr "A record of money that changed hands outside Splito. Deleting it puts th
 msgid "A trip, a flat or anything you split often."
 msgstr "A trip, a flat or anything you split often."
 
-#: src/screens/Settings/DemoData.tsx:162
-msgid "A year of friends, groups and expenses, for testing"
-msgstr "A year of friends, groups and expenses, for testing"
-
 #: src/components/NavFooterLinks.tsx:35
 #: src/screens/Profile.tsx:73
 #: src/screens/Profile.tsx:76
@@ -898,16 +882,6 @@ msgstr "Add by email or number"
 msgid "Add category"
 msgstr "Add category"
 
-#: src/screens/Settings/DemoData.tsx:137
-#: src/screens/Settings/DemoData.tsx:147
-#: src/screens/Settings/DemoData.tsx:185
-msgid "Add demo data"
-msgstr "Add demo data"
-
-#: src/screens/Settings/DemoData.tsx:183
-msgid "Add demo data?"
-msgstr "Add demo data?"
-
 #: src/components/split/SplitEditor.tsx:102
 msgid "Add each item and who had it. Tap a name again for another portion; hold to take them off."
 msgstr "Add each item and who had it. Tap a name again for another portion; hold to take them off."
@@ -994,26 +968,6 @@ msgstr "Add to group"
 #: src/screens/Profile.tsx:164
 msgid "Add your name"
 msgstr "Add your name"
-
-#. placeholder {0}: import {useSyncExternalStore} from 'react' import {View} from 'react-native' import {DatabaseZap} from 'lucide-react-native' import {type MutationCtx, type Store, touches} from '@splito/sync' import {plural, t} from '@lingui/core/macro' import {Trans, useLingui} from '@lingui/react/macro' import {useHaptics} from '#/lib/haptics' import {logger} from '#/logger' import {addLargeDemo, type DemoCounts, demoCounts, removeLargeDemo} from '#/data/demoLarge' import {useMutationCtx, useProjection, useStore} from '#/data/hooks' import {type Query} from '#/data/projections' import * as SettingsList from '#/screens/Settings/components/SettingsList' import {atoms as a, useTheme} from '#/alf' import {Trash_Stroke2_Corner0_Rounded as TrashIcon} from '#/components/icons/Trash' import {createIcon} from '#/components/icons/lucide' import * as Prompt from '#/components/Prompt' import * as Toast from '#/components/Toast' import {dismiss as dismissToast} from '#/components/Toast/sonner' import {Text} from '#/components/Typography' const DemoIcon = createIcon(DatabaseZap) const demoCountsQuery: Query<DemoCounts> = { key: 'demoCounts', isTouchedBy: c => touches(c, 'person') || touches(c, 'group') || touches(c, 'expense'), loader: store => async (_c, prev) => { const next = await demoCounts(store) return prev && prev.friends === next.friends && prev.groups === next.groups && prev.expenses === next.expenses ? prev : next }, } /* What is running and how far along: one tiny module store, read by the toast and the rows. */ let progress: {action: 'add' | 'remove'; done: number} | null = null const listeners = new Set<() => void>() function setProgress(next: typeof progress) { progress = next listeners.forEach(l => l()) } const subscribe = (l: () => void) => ( listeners.add(l), () => void listeners.delete(l) ) const getProgress = () => progress const useProgress = () => useSyncExternalStore(subscribe, getProgress) function ProgressText() { const p = useProgress() const percent = Math.round((p?.done ?? 1) * 100) return p?.action === 'remove' ? ( <Trans>Removing demo data…</Trans> ) : ( <Trans>Adding demo data… {percent}%</Trans> ) } /** * Adds or removes the large demo set with a live progress toast (dev and e2e * builds only; callers check). Used by Settings and by `?demo=large`. */ export async function runLargeDemo( store: Store, ctx: MutationCtx, action: 'add' | 'remove', ) { if (progress) return setProgress({action, done: 0}) const toast = Toast.show( <Toast.Outer> <Toast.Icon /> <Toast.Text> <ProgressText /> </Toast.Text> </Toast.Outer>, {duration: 120_000}, ) const started = performance.now() let done: {text: string; type: Toast.ToastType} try { if (action === 'add') { const counts = await addLargeDemo(store, ctx, part => setProgress({action, done: part}), ) if (counts) { // Kept in the log for the owner's timing checks (dev and e2e builds only). logger.info('demo.large.added', { ms: Math.round(performance.now() - started), ...counts, }) done = { text: t`Demo data added: ${plural(counts.expenses, {one: '# expense', other: '# expenses'})}`, type: 'success', } } else done = {text: t`Demo data is already added`, type: 'default'} } else { await removeLargeDemo(store) done = {text: t`Demo data removed`, type: 'success'} } } catch (e) { logger.error(e, {where: 'runLargeDemo'}) done = { text: t`Couldn't finish. Try Remove demo data, then add it again.`, type: 'error', } } setProgress(null) dismissToast(toast) // The progress toast leaves first, then the outcome takes its place. setTimeout(() => Toast.show(done.text, {type: done.type}), 400) } /** * Settings > About and data rows for the large demo set (ARCHITECTURE 26.1). * The caller renders them only in dev and e2e builds. */ export function DemoDataRows() { const {t: l} = useLingui() const t = useTheme() const store = useStore() const ctx = useMutationCtx() const haptics = useHaptics() const addPrompt = Prompt.usePromptControl() const removePrompt = Prompt.usePromptControl() const busy = useProgress() const {friends = 0, groups = 0, expenses = 0} = useProjection(demoCountsQuery) ?? {} const isLoaded = friends + groups > 0 const run = (action: 'add' | 'remove') => { haptics.confirm() void runLargeDemo(store, ctx, action).then(() => haptics.success()) } return ( <> <SettingsList.PressableItem testID="settings-demo-add" label={l`Add demo data`} disabled={!!busy} onPress={() => isLoaded ? Toast.show(l`Demo data is already added`) : addPrompt.open() }> <SettingsList.ItemIcon icon={DemoIcon} /> <View style={[a.flex_1, a.gap_2xs]}> <SettingsList.ItemText> <Trans>Add demo data</Trans> </SettingsList.ItemText> <Text testID="settings-demo-summary" numberOfLines={2} style={[a.text_sm, a.leading_snug, t.atoms.text_contrast_medium]}> {busy?.action === 'add' ? ( <Trans>Adding… {Math.round(busy.done * 100)}%</Trans> ) : isLoaded ? ( <Trans> Added: {plural(friends, {one: '# friend', other: '# friends'})},{' '} {plural(groups, {one: '# group', other: '# groups'})},{' '} {plural(expenses, {one: '# expense', other: '# expenses'})} </Trans> ) : ( <Trans>A year of friends, groups and expenses, for testing</Trans> )} </Text> </View> </SettingsList.PressableItem> {isLoaded && ( <SettingsList.PressableItem testID="settings-demo-remove" destructive label={l`Remove demo data`} disabled={!!busy} onPress={() => removePrompt.open()}> <SettingsList.ItemIcon icon={TrashIcon} /> <SettingsList.ItemText> <Trans>Remove demo data</Trans> </SettingsList.ItemText> </SettingsList.PressableItem> )} <Prompt.Basic control={addPrompt} title={l`Add demo data?`} description={l`Adds about 30 friends, 12 groups and 1,500 expenses from the past year next to your own data. You can remove exactly this later.`} confirmButtonCta={l`Add demo data`} onConfirm={() => run('add')} /> <Prompt.Basic control={removePrompt} title={l`Remove demo data?`} description={l`Removes the demo friends, groups, expenses and payments, with their history. Everything you added yourself stays.`} confirmButtonCta={l`Remove`} confirmButtonColor="negative" onConfirm={() => run('remove')} /> </> ) } 
-#. placeholder {1}: import {useSyncExternalStore} from 'react' import {View} from 'react-native' import {DatabaseZap} from 'lucide-react-native' import {type MutationCtx, type Store, touches} from '@splito/sync' import {plural, t} from '@lingui/core/macro' import {Trans, useLingui} from '@lingui/react/macro' import {useHaptics} from '#/lib/haptics' import {logger} from '#/logger' import {addLargeDemo, type DemoCounts, demoCounts, removeLargeDemo} from '#/data/demoLarge' import {useMutationCtx, useProjection, useStore} from '#/data/hooks' import {type Query} from '#/data/projections' import * as SettingsList from '#/screens/Settings/components/SettingsList' import {atoms as a, useTheme} from '#/alf' import {Trash_Stroke2_Corner0_Rounded as TrashIcon} from '#/components/icons/Trash' import {createIcon} from '#/components/icons/lucide' import * as Prompt from '#/components/Prompt' import * as Toast from '#/components/Toast' import {dismiss as dismissToast} from '#/components/Toast/sonner' import {Text} from '#/components/Typography' const DemoIcon = createIcon(DatabaseZap) const demoCountsQuery: Query<DemoCounts> = { key: 'demoCounts', isTouchedBy: c => touches(c, 'person') || touches(c, 'group') || touches(c, 'expense'), loader: store => async (_c, prev) => { const next = await demoCounts(store) return prev && prev.friends === next.friends && prev.groups === next.groups && prev.expenses === next.expenses ? prev : next }, } /* What is running and how far along: one tiny module store, read by the toast and the rows. */ let progress: {action: 'add' | 'remove'; done: number} | null = null const listeners = new Set<() => void>() function setProgress(next: typeof progress) { progress = next listeners.forEach(l => l()) } const subscribe = (l: () => void) => ( listeners.add(l), () => void listeners.delete(l) ) const getProgress = () => progress const useProgress = () => useSyncExternalStore(subscribe, getProgress) function ProgressText() { const p = useProgress() const percent = Math.round((p?.done ?? 1) * 100) return p?.action === 'remove' ? ( <Trans>Removing demo data…</Trans> ) : ( <Trans>Adding demo data… {percent}%</Trans> ) } /** * Adds or removes the large demo set with a live progress toast (dev and e2e * builds only; callers check). Used by Settings and by `?demo=large`. */ export async function runLargeDemo( store: Store, ctx: MutationCtx, action: 'add' | 'remove', ) { if (progress) return setProgress({action, done: 0}) const toast = Toast.show( <Toast.Outer> <Toast.Icon /> <Toast.Text> <ProgressText /> </Toast.Text> </Toast.Outer>, {duration: 120_000}, ) const started = performance.now() let done: {text: string; type: Toast.ToastType} try { if (action === 'add') { const counts = await addLargeDemo(store, ctx, part => setProgress({action, done: part}), ) if (counts) { // Kept in the log for the owner's timing checks (dev and e2e builds only). logger.info('demo.large.added', { ms: Math.round(performance.now() - started), ...counts, }) done = { text: t`Demo data added: ${plural(counts.expenses, {one: '# expense', other: '# expenses'})}`, type: 'success', } } else done = {text: t`Demo data is already added`, type: 'default'} } else { await removeLargeDemo(store) done = {text: t`Demo data removed`, type: 'success'} } } catch (e) { logger.error(e, {where: 'runLargeDemo'}) done = { text: t`Couldn't finish. Try Remove demo data, then add it again.`, type: 'error', } } setProgress(null) dismissToast(toast) // The progress toast leaves first, then the outcome takes its place. setTimeout(() => Toast.show(done.text, {type: done.type}), 400) } /** * Settings > About and data rows for the large demo set (ARCHITECTURE 26.1). * The caller renders them only in dev and e2e builds. */ export function DemoDataRows() { const {t: l} = useLingui() const t = useTheme() const store = useStore() const ctx = useMutationCtx() const haptics = useHaptics() const addPrompt = Prompt.usePromptControl() const removePrompt = Prompt.usePromptControl() const busy = useProgress() const {friends = 0, groups = 0, expenses = 0} = useProjection(demoCountsQuery) ?? {} const isLoaded = friends + groups > 0 const run = (action: 'add' | 'remove') => { haptics.confirm() void runLargeDemo(store, ctx, action).then(() => haptics.success()) } return ( <> <SettingsList.PressableItem testID="settings-demo-add" label={l`Add demo data`} disabled={!!busy} onPress={() => isLoaded ? Toast.show(l`Demo data is already added`) : addPrompt.open() }> <SettingsList.ItemIcon icon={DemoIcon} /> <View style={[a.flex_1, a.gap_2xs]}> <SettingsList.ItemText> <Trans>Add demo data</Trans> </SettingsList.ItemText> <Text testID="settings-demo-summary" numberOfLines={2} style={[a.text_sm, a.leading_snug, t.atoms.text_contrast_medium]}> {busy?.action === 'add' ? ( <Trans>Adding… {Math.round(busy.done * 100)}%</Trans> ) : isLoaded ? ( <Trans> Added: {plural(friends, {one: '# friend', other: '# friends'})},{' '} {plural(groups, {one: '# group', other: '# groups'})},{' '} {plural(expenses, {one: '# expense', other: '# expenses'})} </Trans> ) : ( <Trans>A year of friends, groups and expenses, for testing</Trans> )} </Text> </View> </SettingsList.PressableItem> {isLoaded && ( <SettingsList.PressableItem testID="settings-demo-remove" destructive label={l`Remove demo data`} disabled={!!busy} onPress={() => removePrompt.open()}> <SettingsList.ItemIcon icon={TrashIcon} /> <SettingsList.ItemText> <Trans>Remove demo data</Trans> </SettingsList.ItemText> </SettingsList.PressableItem> )} <Prompt.Basic control={addPrompt} title={l`Add demo data?`} description={l`Adds about 30 friends, 12 groups and 1,500 expenses from the past year next to your own data. You can remove exactly this later.`} confirmButtonCta={l`Add demo data`} onConfirm={() => run('add')} /> <Prompt.Basic control={removePrompt} title={l`Remove demo data?`} description={l`Removes the demo friends, groups, expenses and payments, with their history. Everything you added yourself stays.`} confirmButtonCta={l`Remove`} confirmButtonColor="negative" onConfirm={() => run('remove')} /> </> ) } 
-#. placeholder {2}: import {useSyncExternalStore} from 'react' import {View} from 'react-native' import {DatabaseZap} from 'lucide-react-native' import {type MutationCtx, type Store, touches} from '@splito/sync' import {plural, t} from '@lingui/core/macro' import {Trans, useLingui} from '@lingui/react/macro' import {useHaptics} from '#/lib/haptics' import {logger} from '#/logger' import {addLargeDemo, type DemoCounts, demoCounts, removeLargeDemo} from '#/data/demoLarge' import {useMutationCtx, useProjection, useStore} from '#/data/hooks' import {type Query} from '#/data/projections' import * as SettingsList from '#/screens/Settings/components/SettingsList' import {atoms as a, useTheme} from '#/alf' import {Trash_Stroke2_Corner0_Rounded as TrashIcon} from '#/components/icons/Trash' import {createIcon} from '#/components/icons/lucide' import * as Prompt from '#/components/Prompt' import * as Toast from '#/components/Toast' import {dismiss as dismissToast} from '#/components/Toast/sonner' import {Text} from '#/components/Typography' const DemoIcon = createIcon(DatabaseZap) const demoCountsQuery: Query<DemoCounts> = { key: 'demoCounts', isTouchedBy: c => touches(c, 'person') || touches(c, 'group') || touches(c, 'expense'), loader: store => async (_c, prev) => { const next = await demoCounts(store) return prev && prev.friends === next.friends && prev.groups === next.groups && prev.expenses === next.expenses ? prev : next }, } /* What is running and how far along: one tiny module store, read by the toast and the rows. */ let progress: {action: 'add' | 'remove'; done: number} | null = null const listeners = new Set<() => void>() function setProgress(next: typeof progress) { progress = next listeners.forEach(l => l()) } const subscribe = (l: () => void) => ( listeners.add(l), () => void listeners.delete(l) ) const getProgress = () => progress const useProgress = () => useSyncExternalStore(subscribe, getProgress) function ProgressText() { const p = useProgress() const percent = Math.round((p?.done ?? 1) * 100) return p?.action === 'remove' ? ( <Trans>Removing demo data…</Trans> ) : ( <Trans>Adding demo data… {percent}%</Trans> ) } /** * Adds or removes the large demo set with a live progress toast (dev and e2e * builds only; callers check). Used by Settings and by `?demo=large`. */ export async function runLargeDemo( store: Store, ctx: MutationCtx, action: 'add' | 'remove', ) { if (progress) return setProgress({action, done: 0}) const toast = Toast.show( <Toast.Outer> <Toast.Icon /> <Toast.Text> <ProgressText /> </Toast.Text> </Toast.Outer>, {duration: 120_000}, ) const started = performance.now() let done: {text: string; type: Toast.ToastType} try { if (action === 'add') { const counts = await addLargeDemo(store, ctx, part => setProgress({action, done: part}), ) if (counts) { // Kept in the log for the owner's timing checks (dev and e2e builds only). logger.info('demo.large.added', { ms: Math.round(performance.now() - started), ...counts, }) done = { text: t`Demo data added: ${plural(counts.expenses, {one: '# expense', other: '# expenses'})}`, type: 'success', } } else done = {text: t`Demo data is already added`, type: 'default'} } else { await removeLargeDemo(store) done = {text: t`Demo data removed`, type: 'success'} } } catch (e) { logger.error(e, {where: 'runLargeDemo'}) done = { text: t`Couldn't finish. Try Remove demo data, then add it again.`, type: 'error', } } setProgress(null) dismissToast(toast) // The progress toast leaves first, then the outcome takes its place. setTimeout(() => Toast.show(done.text, {type: done.type}), 400) } /** * Settings > About and data rows for the large demo set (ARCHITECTURE 26.1). * The caller renders them only in dev and e2e builds. */ export function DemoDataRows() { const {t: l} = useLingui() const t = useTheme() const store = useStore() const ctx = useMutationCtx() const haptics = useHaptics() const addPrompt = Prompt.usePromptControl() const removePrompt = Prompt.usePromptControl() const busy = useProgress() const {friends = 0, groups = 0, expenses = 0} = useProjection(demoCountsQuery) ?? {} const isLoaded = friends + groups > 0 const run = (action: 'add' | 'remove') => { haptics.confirm() void runLargeDemo(store, ctx, action).then(() => haptics.success()) } return ( <> <SettingsList.PressableItem testID="settings-demo-add" label={l`Add demo data`} disabled={!!busy} onPress={() => isLoaded ? Toast.show(l`Demo data is already added`) : addPrompt.open() }> <SettingsList.ItemIcon icon={DemoIcon} /> <View style={[a.flex_1, a.gap_2xs]}> <SettingsList.ItemText> <Trans>Add demo data</Trans> </SettingsList.ItemText> <Text testID="settings-demo-summary" numberOfLines={2} style={[a.text_sm, a.leading_snug, t.atoms.text_contrast_medium]}> {busy?.action === 'add' ? ( <Trans>Adding… {Math.round(busy.done * 100)}%</Trans> ) : isLoaded ? ( <Trans> Added: {plural(friends, {one: '# friend', other: '# friends'})},{' '} {plural(groups, {one: '# group', other: '# groups'})},{' '} {plural(expenses, {one: '# expense', other: '# expenses'})} </Trans> ) : ( <Trans>A year of friends, groups and expenses, for testing</Trans> )} </Text> </View> </SettingsList.PressableItem> {isLoaded && ( <SettingsList.PressableItem testID="settings-demo-remove" destructive label={l`Remove demo data`} disabled={!!busy} onPress={() => removePrompt.open()}> <SettingsList.ItemIcon icon={TrashIcon} /> <SettingsList.ItemText> <Trans>Remove demo data</Trans> </SettingsList.ItemText> </SettingsList.PressableItem> )} <Prompt.Basic control={addPrompt} title={l`Add demo data?`} description={l`Adds about 30 friends, 12 groups and 1,500 expenses from the past year next to your own data. You can remove exactly this later.`} confirmButtonCta={l`Add demo data`} onConfirm={() => run('add')} /> <Prompt.Basic control={removePrompt} title={l`Remove demo data?`} description={l`Removes the demo friends, groups, expenses and payments, with their history. Everything you added yourself stays.`} confirmButtonCta={l`Remove`} confirmButtonColor="negative" onConfirm={() => run('remove')} /> </> ) } 
-#: src/screens/Settings/DemoData.tsx:156
-msgid "Added: {0}, {1}, {2}"
-msgstr "Added: {0}, {1}, {2}"
-
-#: src/screens/Settings/DemoData.tsx:53
-msgid "Adding demo data… {percent}%"
-msgstr "Adding demo data… {percent}%"
-
-#. placeholder {0}: Math.round(busy.done * 100)
-#: src/screens/Settings/DemoData.tsx:154
-msgid "Adding… {0}%"
-msgstr "Adding… {0}%"
-
-#: src/screens/Settings/DemoData.tsx:184
-msgid "Adds about 30 friends, 12 groups and 1,500 expenses from the past year next to your own data. You can remove exactly this later."
-msgstr "Adds about 30 friends, 12 groups and 1,500 expenses from the past year next to your own data. You can remove exactly this later."
 
 #: src/components/split/SplitEditor.tsx:600
 msgid "Adds them to this item"
@@ -1697,10 +1651,6 @@ msgstr "Couldn’t delete this. Please try again."
 msgid "Couldn’t export. Try again."
 msgstr "Couldn’t export. Try again."
 
-#: src/screens/Settings/DemoData.tsx:102
-msgid "Couldn't finish. Try Remove demo data, then add it again."
-msgstr "Couldn't finish. Try Remove demo data, then add it again."
-
 #: src/lib/sharing.ts:62
 msgid "Couldn’t open an app for that. Copy the link instead."
 msgstr "Couldn’t open an app for that. Copy the link instead."
@@ -1720,6 +1670,10 @@ msgstr "Couldn’t remove this friend. Please try again."
 #: src/screens/Settings/index.tsx:270
 msgid "Couldn’t reset settings. Please try again."
 msgstr "Couldn’t reset settings. Please try again."
+
+#: src/screens/Settings/DemoMode.tsx:121
+msgid "Couldn’t reset the demo. Try again."
+msgstr "Couldn’t reset the demo. Try again."
 
 #: src/components/activity/useActivityActions.tsx:98
 msgid "Couldn't restore this expense"
@@ -1752,6 +1706,14 @@ msgstr "Couldn't save your feedback. Please try again."
 #: src/components/people/EditFriendDialog.tsx:60
 msgid "Couldn’t save. Please try again."
 msgstr "Couldn’t save. Please try again."
+
+#: src/components/DemoBanner.tsx:27
+msgid "Couldn’t switch back. Try again."
+msgstr "Couldn’t switch back. Try again."
+
+#: src/screens/Settings/DemoMode.tsx:78
+msgid "Couldn’t switch demo mode. Try again."
+msgstr "Couldn’t switch demo mode. Try again."
 
 #: src/features/settlement/CallItEvenDialog.tsx:218
 msgid "Couldn’t undo the write-off"
@@ -1996,19 +1958,18 @@ msgstr "Deleted expenses, payments and write-offs wait here before they leave fo
 msgid "Deleted forever"
 msgstr "Deleted forever"
 
-#. placeholder {0}: counts.expenses
-#: src/screens/Settings/DemoData.tsx:91
-msgid "Demo data added: {0, plural, one {# expense} other {# expenses}}"
-msgstr "Demo data added: {0, plural, one {# expense} other {# expenses}}"
+#: src/components/SyncStatusDot.tsx:22
+msgid "Demo"
+msgstr "Demo"
 
-#: src/screens/Settings/DemoData.tsx:94
-#: src/screens/Settings/DemoData.tsx:141
-msgid "Demo data is already added"
-msgstr "Demo data is already added"
+#: src/screens/Settings/DemoMode.tsx:90
+#: src/screens/Settings/DemoMode.tsx:97
+msgid "Demo mode"
+msgstr "Demo mode"
 
-#: src/screens/Settings/DemoData.tsx:97
-msgid "Demo data removed"
-msgstr "Demo data removed"
+#: src/components/DemoBanner.tsx:37
+msgid "Demo mode ·"
+msgstr "Demo mode ·"
 
 #: src/screens/Analytics/index.tsx:215
 msgid "Description"
@@ -2408,6 +2369,10 @@ msgstr "Expired"
 msgid "Expires within the hour"
 msgstr "Expires within the hour"
 
+#: src/screens/Settings/DemoMode.tsx:100
+msgid "Explore Splito with sample data. Your own data is kept separately and untouched."
+msgstr "Explore Splito with sample data. Your own data is kept separately and untouched."
+
 #: src/screens/Analytics/index.tsx:70
 msgid "Export CSV"
 msgstr "Export CSV"
@@ -2561,7 +2526,7 @@ msgstr "Gentle vibrations when you tap, toggle and save"
 msgid "Give each person a percentage."
 msgstr "Give each person a percentage."
 
-#: src/components/Layout/Header/index.tsx:154
+#: src/components/Layout/Header/index.tsx:187
 #: src/screens/Login/components/AuthLayout/Header/index.tsx:108
 msgid "Go back"
 msgstr "Go back"
@@ -3972,6 +3937,10 @@ msgstr "Privacy"
 msgid "Profile"
 msgstr "Profile"
 
+#: src/screens/Settings/DemoMode.tsx:118
+msgid "Puts the sample data back as it was and drops what you changed in demo mode. Your own data is not touched."
+msgstr "Puts the sample data back as it was and drops what you changed in demo mode. Your own data is not touched."
+
 #: src/screens/Invites/InviteLinks.tsx:139
 msgid "QR and share"
 msgstr "QR and share"
@@ -4062,7 +4031,6 @@ msgstr "Remember what you search for"
 
 #: src/features/feedback/FeedbackSheet.tsx:388
 #: src/screens/Person/index.tsx:560
-#: src/screens/Settings/DemoData.tsx:192
 msgid "Remove"
 msgstr "Remove"
 
@@ -4074,15 +4042,6 @@ msgstr "Remove {0}?"
 #: src/components/SearchAsk/SearchHistory.tsx:219
 msgid "Remove {q}"
 msgstr "Remove {q}"
-
-#: src/screens/Settings/DemoData.tsx:171
-#: src/screens/Settings/DemoData.tsx:176
-msgid "Remove demo data"
-msgstr "Remove demo data"
-
-#: src/screens/Settings/DemoData.tsx:190
-msgid "Remove demo data?"
-msgstr "Remove demo data?"
 
 #: src/screens/Person/index.tsx:409
 #: src/screens/Person/index.tsx:413
@@ -4097,14 +4056,6 @@ msgstr "Remove item {0}"
 #: src/features/feedback/FeedbackSheet.tsx:382
 msgid "Remove picture"
 msgstr "Remove picture"
-
-#: src/screens/Settings/DemoData.tsx:191
-msgid "Removes the demo friends, groups, expenses and payments, with their history. Everything you added yourself stays."
-msgstr "Removes the demo friends, groups, expenses and payments, with their history. Everything you added yourself stays."
-
-#: src/screens/Settings/DemoData.tsx:51
-msgid "Removing demo data…"
-msgstr "Removing demo data…"
 
 #: src/features/feedback/FeedbackSheet.tsx:287
 msgid "Reply email"
@@ -4146,6 +4097,7 @@ msgid "Resend to {name}"
 msgstr "Resend to {name}"
 
 #: src/components/settings/PrefSection.tsx:132
+#: src/screens/Settings/DemoMode.tsx:119
 #: src/screens/Settings/SettingsSection.tsx:168
 msgid "Reset"
 msgstr "Reset"
@@ -4178,6 +4130,15 @@ msgstr "Reset all settings?"
 #: src/screens/Login/SetNewPasswordForm.tsx:60
 msgid "Reset code"
 msgstr "Reset code"
+
+#: src/screens/Settings/DemoMode.tsx:107
+#: src/screens/Settings/DemoMode.tsx:110
+msgid "Reset demo"
+msgstr "Reset demo"
+
+#: src/screens/Settings/DemoMode.tsx:117
+msgid "Reset demo?"
+msgstr "Reset demo?"
 
 #: src/screens/Login/ForgotPasswordForm.tsx:52
 msgid "Reset password"
@@ -4503,6 +4464,11 @@ msgstr "Set new password"
 #: src/screens/Login/ForgotPasswordForm.tsx:79
 msgid "Sets the email or phone number for password reset"
 msgstr "Sets the email or phone number for password reset"
+
+#. placeholder {0}: Math.round((done ?? 0) * 100)
+#: src/screens/Settings/DemoMode.tsx:36
+msgid "Setting up the demo… {0}%"
+msgstr "Setting up the demo… {0}%"
 
 #: src/components/TabGlyph.tsx:43
 #: src/navigation/Navigation.tsx:70
@@ -4911,6 +4877,11 @@ msgstr "Swipe left on Activity"
 #: src/components/settings/prefControls.tsx:700
 msgid "Swipe right on Activity"
 msgstr "Swipe right on Activity"
+
+#: src/components/DemoBanner.tsx:39
+#: src/components/DemoBanner.tsx:41
+msgid "Switch back"
+msgstr "Switch back"
 
 #: src/components/settings/prefControls.tsx:645
 msgid "Sync status"
