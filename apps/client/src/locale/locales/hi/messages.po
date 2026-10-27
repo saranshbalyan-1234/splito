@@ -146,7 +146,7 @@ msgid "{0} by {deletedByName}"
 msgstr "{0}, {deletedByName} द्वारा"
 
 #. placeholder {0}: c.scope.items.length
-#: src/components/split/charges/ChargesSection.tsx:253
+#: src/components/split/charges/ChargesSection.tsx:271
 msgid "{0} chosen items"
 msgstr "{0} चुनी हुई चीज़ें"
 
@@ -632,7 +632,7 @@ msgstr "{name}, उनकी स्वीकृति का इंतज़ा�
 msgid "{name}. Tap to select"
 msgstr "{name}। चुनने के लिए टैप करें"
 
-#: src/components/people/UpiPayDialog.tsx:165
+#: src/components/people/UpiPayDialog.tsx:153
 msgid "{name}’s UPI ID"
 msgstr "{name} की UPI ID"
 
@@ -685,7 +685,7 @@ msgstr "{who} ने यह खर्च बदला"
 msgid "{who} restored this expense"
 msgstr "{who} ने यह खर्च वापस लाया"
 
-#: src/components/split/charges/ChargesSection.tsx:330
+#: src/components/split/charges/ChargesSection.tsx:355
 msgid "+ earlier charges"
 msgstr "+ पिछले चार्ज"
 
@@ -760,6 +760,10 @@ msgstr "7 दिन"
 #: src/components/settings/prefControls.tsx:666
 msgid "90 days"
 msgstr "90 दिन"
+
+#: src/components/split/shared.tsx:145
+msgid "A charge has a rate from 0 to 100% or an amount that isn’t below zero"
+msgstr "चार्ज की दर 0 से 100% के बीच हो या राशि शून्य से कम न हो"
 
 #: src/components/SearchAsk/SearchHistory.tsx:42
 msgid "A day: today or yesterday"
@@ -874,7 +878,7 @@ msgid "Add “{q}”"
 msgstr "“{q}” जोड़ें"
 
 #. placeholder {0}: fmt(gap!)
-#: src/components/split/charges/Reconciliation.tsx:170
+#: src/components/split/charges/Reconciliation.tsx:177
 msgid "Add {0} as round-off"
 msgstr "{0} को राउंड-ऑफ़ में जोड़ें"
 
@@ -891,7 +895,7 @@ msgstr "दोस्त जोड़ें"
 msgid "Add a friend, then split any bill with them. They don’t need the app."
 msgstr "दोस्त जोड़ें, फिर कोई भी बिल उनके साथ बाँटें। उन्हें ऐप की ज़रूरत नहीं।"
 
-#: src/components/split/shared.tsx:145
+#: src/components/split/shared.tsx:149
 msgid "Add a name"
 msgstr "नाम लिखें"
 
@@ -924,7 +928,7 @@ msgstr "फिर भी जोड़ें (सिर्फ़ आपके ल
 msgid "Add anyway, only for you"
 msgstr "फिर भी जोड़ें, सिर्फ़ आपके लिए"
 
-#: src/components/split/charges/Reconciliation.tsx:175
+#: src/components/split/charges/Reconciliation.tsx:182
 msgid "Add as round-off"
 msgstr "राउंड-ऑफ़ में जोड़ें"
 
@@ -941,8 +945,8 @@ msgstr "ईमेल या नंबर से जोड़ें"
 msgid "Add category"
 msgstr "श्रेणी जोड़ें"
 
-#: src/components/split/charges/ChargesSection.tsx:400
-#: src/components/split/charges/ChargesSection.tsx:407
+#: src/components/split/charges/ChargesSection.tsx:425
+#: src/components/split/charges/ChargesSection.tsx:432
 msgid "Add charge"
 msgstr "चार्ज जोड़ें"
 
@@ -1121,8 +1125,8 @@ msgstr "हिसाब बराबर"
 msgid "All groups"
 msgstr "सभी समूह"
 
-#: src/components/split/charges/ChargesSection.tsx:250
-#: src/screens/Expense/components/ChargedBreakdown.tsx:68
+#: src/components/split/charges/ChargesSection.tsx:268
+#: src/screens/Expense/components/ChargedBreakdown.tsx:74
 msgid "all items"
 msgstr "सभी चीज़ें"
 
@@ -1167,8 +1171,8 @@ msgstr "हमेशा समूह में"
 
 #: src/components/people/RecordPaymentDialog.tsx:345
 #: src/components/people/RecordPaymentDialog.tsx:350
-#: src/components/people/UpiPayDialog.tsx:191
-#: src/components/people/UpiPayDialog.tsx:196
+#: src/components/people/UpiPayDialog.tsx:179
+#: src/components/people/UpiPayDialog.tsx:184
 #: src/components/settings/prefControls.tsx:344
 #: src/components/settings/prefControls.tsx:347
 #: src/components/split/charges/ChargeSheet.tsx:171
@@ -1524,12 +1528,12 @@ msgstr "बदलाव सहेजे गए"
 msgid "Charge as"
 msgstr "चार्ज का रूप"
 
-#: src/components/split/charges/ChargesSection.tsx:128
+#: src/components/split/charges/ChargesSection.tsx:131
 msgid "Charge setup"
 msgstr "चार्ज सेटअप"
 
 #: src/components/split/SplitEditor.tsx:777
-#: src/screens/Expense/components/ChargedBreakdown.tsx:144
+#: src/screens/Expense/components/ChargedBreakdown.tsx:146
 msgid "Charges"
 msgstr "शुल्क"
 
@@ -1542,8 +1546,8 @@ msgstr "दुकान के हिसाब से चार्ज"
 msgid "Charts"
 msgstr "चार्ट"
 
-#: src/components/split/charges/Reconciliation.tsx:181
-#: src/components/split/charges/Reconciliation.tsx:186
+#: src/components/split/charges/Reconciliation.tsx:188
+#: src/components/split/charges/Reconciliation.tsx:193
 msgid "Check items"
 msgstr "चीज़ें जाँचें"
 
@@ -1730,7 +1734,7 @@ msgstr "सघन"
 msgid "Compact fits more people, groups and activity on screen."
 msgstr "सघन में स्क्रीन पर ज़्यादा लोग, समूह और गतिविधि दिखती है।"
 
-#: src/components/split/charges/Reconciliation.tsx:198
+#: src/components/split/charges/Reconciliation.tsx:205
 msgid "Compare each line with the bill:"
 msgstr "हर लाइन को बिल से मिलाएँ:"
 
@@ -1751,7 +1755,7 @@ msgstr "जारी रखें"
 msgid "Continue to next step"
 msgstr "अगले चरण पर जाएँ"
 
-#: src/lib/sharing.ts:34
+#: src/lib/sharing.ts:35
 msgid "Copied to clipboard"
 msgstr "क्लिपबोर्ड पर कॉपी हुआ"
 
@@ -1816,7 +1820,7 @@ msgstr "एक्सपोर्ट नहीं हो सका। फिर �
 msgid "Couldn't finish. Try Remove demo data, then add it again."
 msgstr "पूरा नहीं हो सका। डेमो डेटा हटाएँ, फिर दोबारा जोड़ें।"
 
-#: src/lib/sharing.ts:62
+#: src/lib/sharing.ts:63
 msgid "Couldn’t open an app for that. Copy the link instead."
 msgstr "इसके लिए कोई ऐप नहीं खुला। इसके बजाय लिंक कॉपी करें।"
 
@@ -1851,6 +1855,10 @@ msgstr "इसे वापस नहीं लाया जा सका। क
 #: src/screens/Invites/InviteLinks.tsx:79
 msgid "Couldn’t revoke the link. Please try again."
 msgstr "लिंक रद्द नहीं हो सका। कृपया फिर कोशिश करें।"
+
+#: src/components/split/charges/ChargesSection.tsx:285
+msgid "Couldn’t save the charges for {title}. Try again."
+msgstr "{title} के चार्ज सहेजे नहीं जा सके। फिर कोशिश करें।"
 
 #: src/components/groups/EditGroupDialog.tsx:79
 msgid "Couldn’t save the group. Please try again."
@@ -1952,8 +1960,8 @@ msgstr "मुद्रा: {0}"
 msgid "Currency: {currency}. Change"
 msgstr "मुद्रा: {currency}। बदलें"
 
-#: src/components/split/charges/ChargesSection.tsx:149
-#: src/components/split/charges/ChargesSection.tsx:160
+#: src/components/split/charges/ChargesSection.tsx:152
+#: src/components/split/charges/ChargesSection.tsx:178
 msgid "Custom"
 msgstr "अपना"
 
@@ -2138,7 +2146,7 @@ msgstr "डेमो डेटा हटा दिया गया"
 msgid "Description"
 msgstr "विवरण"
 
-#: src/components/people/UpiPayDialog.tsx:128
+#: src/components/people/UpiPayDialog.tsx:116
 msgid "Did the payment go through?"
 msgstr "क्या भुगतान हो गया?"
 
@@ -2189,6 +2197,7 @@ msgid "Discard changes?"
 msgstr "बदलाव छोड़ दें?"
 
 #: src/components/settings/prefControls.tsx:316
+#: src/components/split/charges/ChargesSection.tsx:171
 #: src/components/split/charges/hooks.ts:58
 #: src/components/split/SplitEditor.tsx:484
 #: src/screens/Expense/components/ItemsBreakdown.tsx:60
@@ -2246,7 +2255,7 @@ msgid "Earlier years"
 msgstr "पिछले साल"
 
 #. placeholder {0}: charge.name
-#: src/components/split/charges/ChargesSection.tsx:307
+#: src/components/split/charges/ChargesSection.tsx:332
 msgid "Edit {0}"
 msgstr "{0} बदलें"
 
@@ -2354,7 +2363,7 @@ msgid "Enter a password"
 msgstr "पासवर्ड डालें"
 
 #: src/components/people/EditFriendDialog.tsx:138
-#: src/components/people/UpiPayDialog.tsx:184
+#: src/components/people/UpiPayDialog.tsx:172
 msgid "Enter a UPI ID like name@bank."
 msgstr "name@bank जैसी UPI ID लिखें।"
 
@@ -2363,7 +2372,7 @@ msgid "Enter an amount"
 msgstr "रकम लिखें"
 
 #: src/components/people/RecordPaymentDialog.tsx:188
-#: src/components/people/UpiPayDialog.tsx:211
+#: src/components/people/UpiPayDialog.tsx:199
 msgid "Enter an amount greater than zero."
 msgstr "शून्य से ज़्यादा राशि लिखें।"
 
@@ -2388,7 +2397,7 @@ msgstr "खाता बनाते समय इस्तेमाल कि�
 msgid "Enter the email or phone number you used when you created your account"
 msgstr "खाता बनाते समय इस्तेमाल किया गया ईमेल या फ़ोन नंबर डालें"
 
-#: src/components/split/charges/Reconciliation.tsx:133
+#: src/components/split/charges/Reconciliation.tsx:140
 msgid "Enter the printed total to check it against this."
 msgstr "इससे मिलाने के लिए बिल पर छपा कुल लिखें।"
 
@@ -2948,11 +2957,11 @@ msgstr "ऐप की जानकारी शामिल करें"
 msgid "Include groups"
 msgstr "समूह शामिल करें"
 
-#: src/components/split/charges/ChargesSection.tsx:331
+#: src/components/split/charges/ChargesSection.tsx:356
 msgid "included"
 msgstr "शामिल"
 
-#: src/screens/Expense/components/ChargedBreakdown.tsx:164
+#: src/screens/Expense/components/ChargedBreakdown.tsx:166
 msgid "included in the prices"
 msgstr "कीमतों में शामिल"
 
@@ -2960,7 +2969,7 @@ msgstr "कीमतों में शामिल"
 msgid "Indian"
 msgstr "भारतीय"
 
-#: src/components/people/UpiPayDialog.tsx:205
+#: src/components/people/UpiPayDialog.tsx:193
 msgid "Indian Rupee"
 msgstr "भारतीय रुपया"
 
@@ -3106,12 +3115,12 @@ msgstr "यह हटा दिया गया है, या लिंक ग�
 
 #. placeholder {0}: i + 1
 #. placeholder {0}: index + 1
-#. placeholder {0}: k + 1
-#: src/components/split/charges/ChargesSection.tsx:439
-#: src/components/split/charges/Reconciliation.tsx:205
+#. placeholder {0}: n + 1
+#: src/components/split/charges/ChargesSection.tsx:464
+#: src/components/split/charges/Reconciliation.tsx:212
 #: src/components/split/SplitEditor.tsx:589
 #: src/components/split/SplitEditor.tsx:600
-#: src/screens/Expense/components/ChargedBreakdown.tsx:72
+#: src/screens/Expense/components/ChargedBreakdown.tsx:68
 #: src/screens/Expense/components/ItemRow.tsx:45
 msgid "Item {0}"
 msgstr "चीज़ {0}"
@@ -3129,9 +3138,9 @@ msgid "Itemize charges"
 msgstr "आइटम शुल्क"
 
 #: src/components/split/charges/Reconciliation.tsx:99
-#: src/screens/Expense/components/ChargedBreakdown.tsx:99
-#: src/screens/Expense/components/ChargedBreakdown.tsx:151
-#: src/screens/Expense/components/ChargedBreakdown.tsx:200
+#: src/screens/Expense/components/ChargedBreakdown.tsx:101
+#: src/screens/Expense/components/ChargedBreakdown.tsx:153
+#: src/screens/Expense/components/ChargedBreakdown.tsx:202
 #: src/screens/Expense/components/ItemsBreakdown.tsx:77
 msgid "Items"
 msgstr "चीज़ें"
@@ -3365,12 +3374,12 @@ msgid "Motion and haptics"
 msgstr "मोशन और हैप्टिक्स"
 
 #. placeholder {0}: charge.name
-#: src/components/split/charges/ChargesSection.tsx:359
+#: src/components/split/charges/ChargesSection.tsx:384
 msgid "Move {0} down"
 msgstr "{0} को नीचे ले जाएँ"
 
 #. placeholder {0}: charge.name
-#: src/components/split/charges/ChargesSection.tsx:349
+#: src/components/split/charges/ChargesSection.tsx:374
 msgid "Move {0} up"
 msgstr "{0} को ऊपर ले जाएँ"
 
@@ -3556,11 +3565,11 @@ msgstr "बैलेंस नहीं बदला"
 msgid "No balances yet. They appear once the group has an expense."
 msgstr "अभी कोई बैलेंस नहीं। समूह में खर्च जुड़ते ही दिखेंगे।"
 
-#: src/components/split/charges/ChargesSection.tsx:71
+#: src/components/split/charges/ChargesSection.tsx:73
 msgid "No charges"
 msgstr "कोई चार्ज नहीं"
 
-#: src/components/split/charges/ChargesSection.tsx:390
+#: src/components/split/charges/ChargesSection.tsx:415
 msgid "No charges yet. Add the service charge, taxes and anything else on the bill."
 msgstr "अभी कोई चार्ज नहीं। सर्विस चार्ज, टैक्स और बिल पर जो भी और हो, जोड़ें।"
 
@@ -3645,7 +3654,7 @@ msgstr "कोई साझा समूह नहीं"
 msgid "No tracking"
 msgstr "कोई ट्रैकिंग नहीं"
 
-#: src/components/people/UpiPayDialog.tsx:119
+#: src/components/people/UpiPayDialog.tsx:107
 msgid "No UPI app on this device can open the payment."
 msgstr "इस डिवाइस पर कोई UPI ऐप यह भुगतान नहीं खोल सकता।"
 
@@ -3693,7 +3702,7 @@ msgstr "अभी नहीं"
 msgid "Not splitting"
 msgstr "बाँट नहीं रहे"
 
-#: src/components/people/UpiPayDialog.tsx:132
+#: src/components/people/UpiPayDialog.tsx:120
 msgid "Not yet"
 msgstr "अभी नहीं"
 
@@ -3795,11 +3804,11 @@ msgid "On"
 msgstr "चालू"
 
 #. placeholder {0}: scopeText(charge)
-#: src/components/split/charges/ChargesSection.tsx:329
+#: src/components/split/charges/ChargesSection.tsx:354
 msgid "on {0}"
 msgstr "{0} पर"
 
-#: src/screens/Expense/components/ChargedBreakdown.tsx:82
+#: src/screens/Expense/components/ChargedBreakdown.tsx:88
 msgid "on {on}"
 msgstr "{on} पर"
 
@@ -3897,7 +3906,7 @@ msgstr "सेटिंग्स खोलें"
 msgid "Open source"
 msgstr "ओपन सोर्स"
 
-#: src/components/people/UpiPayDialog.tsx:152
+#: src/components/people/UpiPayDialog.tsx:140
 msgid "Open UPI app"
 msgstr "UPI ऐप खोलें"
 
@@ -3936,7 +3945,7 @@ msgstr "जो बदला, उसे खोलता है"
 msgid "Opens your profile"
 msgstr "आपकी प्रोफ़ाइल खोलता है"
 
-#: src/components/people/UpiPayDialog.tsx:157
+#: src/components/people/UpiPayDialog.tsx:145
 msgid "Opens your UPI app with {name} and the amount filled in. You confirm the payment there."
 msgstr "आपका UPI ऐप {name} और राशि भरकर खुलेगा। भुगतान की पुष्टि वहीं करें।"
 
@@ -4009,7 +4018,7 @@ msgid "Paid by"
 msgstr "किसने दिया"
 
 #. placeholder {0}: name(roundOff.to)
-#: src/screens/Expense/components/ChargedBreakdown.tsx:180
+#: src/screens/Expense/components/ChargedBreakdown.tsx:182
 msgid "paid by {0}"
 msgstr "{0} ने चुकाया"
 
@@ -4044,7 +4053,7 @@ msgstr "पासवर्ड अपडेट हो गया"
 msgid "Password updated!"
 msgstr "पासवर्ड अपडेट हो गया!"
 
-#: src/components/people/UpiPayDialog.tsx:149
+#: src/components/people/UpiPayDialog.tsx:137
 #: src/screens/Person/index.tsx:291
 #: src/screens/Person/index.tsx:297
 msgid "Pay with UPI"
@@ -4339,7 +4348,7 @@ msgstr "आपकी खोजें याद रखें"
 msgid "Remembered merchants"
 msgstr "याद रखी गई दुकानें"
 
-#: src/components/split/charges/Reconciliation.tsx:121
+#: src/components/split/charges/Reconciliation.tsx:128
 #: src/features/feedback/FeedbackSheet.tsx:388
 #: src/screens/Person/index.tsx:560
 #: src/screens/Settings/DemoData.tsx:192
@@ -4347,7 +4356,7 @@ msgid "Remove"
 msgstr "हटाएं"
 
 #. placeholder {0}: charge.name
-#: src/components/split/charges/ChargesSection.tsx:372
+#: src/components/split/charges/ChargesSection.tsx:397
 msgid "Remove {0}"
 msgstr "{0} हटाएँ"
 
@@ -4383,7 +4392,7 @@ msgstr "चीज़ {0} हटाएँ"
 msgid "Remove picture"
 msgstr "तस्वीर हटाएँ"
 
-#: src/components/split/charges/Reconciliation.tsx:115
+#: src/components/split/charges/Reconciliation.tsx:122
 msgid "Remove round-off"
 msgstr "राउंड-ऑफ़ हटाएँ"
 
@@ -4567,16 +4576,24 @@ msgstr "इतने तक पूर्णांकित करें"
 msgid "Round to {0}"
 msgstr "{0} तक पूर्णांकित करें"
 
-#: src/components/split/charges/Reconciliation.tsx:111
-#: src/screens/Expense/components/ChargedBreakdown.tsx:176
-#: src/screens/Expense/components/ChargedBreakdown.tsx:204
+#: src/components/split/charges/Reconciliation.tsx:116
+#: src/screens/Expense/components/ChargedBreakdown.tsx:178
+#: src/screens/Expense/components/ChargedBreakdown.tsx:206
 msgid "Round-off"
 msgstr "राउंड-ऑफ़"
+
+#: src/components/split/charges/Reconciliation.tsx:115
+msgid "Round-off · shared by everyone"
+msgstr "राउंड-ऑफ · सबमें बँटा"
 
 #. placeholder {0}: fmt(roundOff.minor)
 #: src/components/split/charges/Reconciliation.tsx:57
 msgid "Round-off {0}"
 msgstr "राउंड-ऑफ़ {0}"
+
+#: src/components/split/shared.tsx:147
+msgid "Round-off can’t be more than one whole unit"
+msgstr "राउंड-ऑफ एक पूरी इकाई से ज़्यादा नहीं हो सकता"
 
 #: src/screens/Expense/index.tsx:646
 msgid "Rounded to {unit} for cash."
@@ -4606,7 +4623,7 @@ msgid "Sales tax"
 msgstr "सेल्स टैक्स"
 
 #. placeholder {0}: setup.name
-#: src/components/split/charges/ChargesSection.tsx:182
+#: src/components/split/charges/ChargesSection.tsx:200
 msgid "Same as last time at {0}?"
 msgstr "{0} पर पिछली बार जैसा ही?"
 
@@ -4627,8 +4644,8 @@ msgstr "इस डिवाइस जैसा ({deviceZone})"
 msgid "Save"
 msgstr "सहेजें"
 
-#: src/components/split/charges/ChargesSection.tsx:413
-#: src/components/split/charges/ChargesSection.tsx:420
+#: src/components/split/charges/ChargesSection.tsx:438
+#: src/components/split/charges/ChargesSection.tsx:445
 msgid "Save as preset for {title}"
 msgstr "{title} के लिए प्रीसेट सेव करें"
 
@@ -4665,7 +4682,7 @@ msgstr "इस डिवाइस पर सहेजा गया। ऑनल�
 msgid "Saved on this device. Sign in to sync it to your other devices."
 msgstr "इस डिवाइस पर सहेजा गया। अपने दूसरे डिवाइसों पर सिंक करने के लिए साइन इन करें।"
 
-#: src/components/split/charges/ChargesSection.tsx:266
+#: src/components/split/charges/ChargesSection.tsx:291
 msgid "Saved the charges for {title}"
 msgstr "{title} के चार्ज सेव हो गए"
 
@@ -4827,6 +4844,7 @@ msgid "Service"
 msgstr "सर्विस"
 
 #: src/components/settings/prefControls.tsx:315
+#: src/components/split/charges/ChargesSection.tsx:170
 #: src/components/split/charges/hooks.ts:74
 #: src/components/split/SplitEditor.tsx:483
 #: src/screens/Expense/components/ItemsBreakdown.tsx:66
@@ -4919,7 +4937,7 @@ msgstr "हिस्सा"
 msgid "Share invite link"
 msgstr "आमंत्रण लिंक शेयर करें"
 
-#: src/screens/Expense/components/ChargedBreakdown.tsx:179
+#: src/screens/Expense/components/ChargedBreakdown.tsx:181
 msgid "shared by everyone’s share"
 msgstr "सबके हिस्से में बँटा"
 
@@ -5092,7 +5110,7 @@ msgstr "कोई"
 msgid "Someone on this expense was removed"
 msgstr "इस खर्च से जुड़ा कोई व्यक्ति हटा दिया गया है"
 
-#: src/components/split/shared.tsx:147
+#: src/components/split/shared.tsx:151
 msgid "Something isn’t right. Check the highlighted fields."
 msgstr "कुछ ठीक नहीं है। चिह्नित जगहें जाँचें।"
 
@@ -5190,7 +5208,7 @@ msgstr "Splito - घर"
 msgid "Splito can’t open your contacts. Turn on Contacts for Splito in Settings, then come back."
 msgstr "Splito आपके संपर्क नहीं खोल सकता। सेटिंग्स में Splito के लिए Contacts चालू करें, फिर वापस आएँ।"
 
-#: src/components/people/UpiPayDialog.tsx:137
+#: src/components/people/UpiPayDialog.tsx:125
 msgid "Splito can’t see your UPI app. Record the payment only once your app shows it as successful."
 msgstr "Splito आपका UPI ऐप नहीं देख सकता। भुगतान तभी दर्ज करें जब ऐप उसे सफल दिखाए।"
 
@@ -5336,6 +5354,7 @@ msgid "Tap to change; hold to change several items"
 msgstr "बदलने के लिए टैप करें; कई चीज़ें बदलने के लिए दबाए रखें"
 
 #: src/components/settings/prefControls.tsx:313
+#: src/components/split/charges/ChargesSection.tsx:168
 #: src/components/split/charges/hooks.ts:54
 #: src/components/split/SplitEditor.tsx:481
 #: src/screens/Expense/components/ItemsBreakdown.tsx:70
@@ -5437,13 +5456,13 @@ msgstr "आपकी जोड़ी हुई तस्वीर"
 
 #. placeholder {0}: fmt(total!)
 #. placeholder {1}: fmt(magnitude(gap!))
-#: src/components/split/charges/Reconciliation.tsx:164
+#: src/components/split/charges/Reconciliation.tsx:171
 msgid "The printed total {0} is {1} less than the items and charges."
 msgstr "छपा हुआ कुल {0}, चीज़ों और चार्ज से {1} कम है।"
 
 #. placeholder {0}: fmt(total!)
 #. placeholder {1}: fmt(gap!)
-#: src/components/split/charges/Reconciliation.tsx:163
+#: src/components/split/charges/Reconciliation.tsx:170
 msgid "The printed total {0} is {1} more than the items and charges."
 msgstr "छपा हुआ कुल {0}, चीज़ों और चार्ज से {1} ज़्यादा है।"
 
@@ -5570,6 +5589,7 @@ msgid "Tints buttons, links and highlights. Money keeps its green and red."
 msgstr "बटन, लिंक और हाइलाइट इसी रंग में दिखते हैं। पैसों के लिए हरा और लाल ही रहता है।"
 
 #: src/components/settings/prefControls.tsx:314
+#: src/components/split/charges/ChargesSection.tsx:169
 #: src/components/split/charges/hooks.ts:79
 #: src/components/split/SplitEditor.tsx:482
 #: src/screens/Expense/components/ItemsBreakdown.tsx:71
@@ -5618,9 +5638,9 @@ msgstr "आने वाला कल"
 msgid "Too many digits after the decimal point for this currency"
 msgstr "इस मुद्रा के लिए दशमलव के बाद बहुत ज़्यादा अंक हैं"
 
-#: src/components/split/charges/Reconciliation.tsx:127
+#: src/components/split/charges/Reconciliation.tsx:134
 #: src/screens/Analytics/index.tsx:219
-#: src/screens/Expense/components/ChargedBreakdown.tsx:187
+#: src/screens/Expense/components/ChargedBreakdown.tsx:189
 msgid "Total"
 msgstr "कुल"
 
@@ -5725,7 +5745,7 @@ msgid "UPI {0}"
 msgstr "UPI {0}"
 
 #: src/components/people/EditFriendDialog.tsx:116
-#: src/components/people/UpiPayDialog.tsx:170
+#: src/components/people/UpiPayDialog.tsx:158
 msgid "UPI ID"
 msgstr "UPI ID"
 
@@ -5733,7 +5753,7 @@ msgstr "UPI ID"
 msgid "UPI ID (optional)"
 msgstr "UPI ID (वैकल्पिक)"
 
-#: src/components/people/UpiPayDialog.tsx:218
+#: src/components/people/UpiPayDialog.tsx:206
 msgid "UPI links open on a phone with a UPI app. On a computer, nothing may happen."
 msgstr "UPI लिंक UPI ऐप वाले फ़ोन पर खुलते हैं। कंप्यूटर पर शायद कुछ न हो।"
 
@@ -5741,7 +5761,7 @@ msgstr "UPI लिंक UPI ऐप वाले फ़ोन पर खुल�
 msgid "US tip"
 msgstr "अमेरिका टिप"
 
-#: src/components/split/charges/ChargesSection.tsx:191
+#: src/components/split/charges/ChargesSection.tsx:209
 msgid "Use"
 msgstr "लगाएँ"
 
@@ -5760,12 +5780,12 @@ msgstr "0 से 100 तक का प्रतिशत लिखें, अध
 msgid "Use Add expense in the sidebar, or the + button on phones. Choose who paid and how to split it."
 msgstr "साइडबार में खर्च जोड़ें या फ़ोन पर + बटन इस्तेमाल करें। चुनें कि किसने भुगतान किया और कैसे बाँटना है।"
 
-#: src/components/split/charges/Reconciliation.tsx:137
+#: src/components/split/charges/Reconciliation.tsx:144
 #: src/components/split/SplitEditor.tsx:944
 msgid "Use as the total"
 msgstr "कुल रकम के रूप में इस्तेमाल करें"
 
-#: src/components/split/charges/Reconciliation.tsx:153
+#: src/components/split/charges/Reconciliation.tsx:160
 #: src/components/split/SplitEditor.tsx:960
 msgid "Use as total"
 msgstr "कुल रकम बनाएँ"
@@ -5779,7 +5799,7 @@ msgid "Use Splito’s calculator keypad for amounts on phones"
 msgstr "फ़ोन पर राशि के लिए Splito का कैलकुलेटर कीपैड इस्तेमाल करें"
 
 #. placeholder {0}: setup.name
-#: src/components/split/charges/ChargesSection.tsx:168
+#: src/components/split/charges/ChargesSection.tsx:186
 msgid "Use the charges from your last bill at {0}"
 msgstr "{0} पर पिछले बिल के चार्ज लगाएँ"
 
@@ -5867,7 +5887,7 @@ msgstr "सप्ताह"
 msgid "Week starts on"
 msgstr "हफ़्ता शुरू होता है"
 
-#: src/screens/Expense/components/ChargedBreakdown.tsx:194
+#: src/screens/Expense/components/ChargedBreakdown.tsx:196
 msgid "What each person pays"
 msgstr "हर व्यक्ति कितना देता है"
 
@@ -6034,7 +6054,7 @@ msgid "Year first"
 msgstr "पहले साल"
 
 #. placeholder {0}: formatAmount(opened, 'INR', locale)
-#: src/components/people/UpiPayDialog.tsx:130
+#: src/components/people/UpiPayDialog.tsx:118
 msgid "Yes, record {0}"
 msgstr "हां, {0} दर्ज करें"
 

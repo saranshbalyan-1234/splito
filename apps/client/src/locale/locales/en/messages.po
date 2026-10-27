@@ -146,7 +146,7 @@ msgid "{0} by {deletedByName}"
 msgstr "{0} by {deletedByName}"
 
 #. placeholder {0}: c.scope.items.length
-#: src/components/split/charges/ChargesSection.tsx:253
+#: src/components/split/charges/ChargesSection.tsx:271
 msgid "{0} chosen items"
 msgstr "{0} chosen items"
 
@@ -632,7 +632,7 @@ msgstr "{name}, waiting for them to accept. Not selectable yet."
 msgid "{name}. Tap to select"
 msgstr "{name}. Tap to select"
 
-#: src/components/people/UpiPayDialog.tsx:165
+#: src/components/people/UpiPayDialog.tsx:153
 msgid "{name}’s UPI ID"
 msgstr "{name}’s UPI ID"
 
@@ -685,7 +685,7 @@ msgstr "{who} edited this expense"
 msgid "{who} restored this expense"
 msgstr "{who} restored this expense"
 
-#: src/components/split/charges/ChargesSection.tsx:330
+#: src/components/split/charges/ChargesSection.tsx:355
 msgid "+ earlier charges"
 msgstr "+ earlier charges"
 
@@ -760,6 +760,10 @@ msgstr "7 days"
 #: src/components/settings/prefControls.tsx:666
 msgid "90 days"
 msgstr "90 days"
+
+#: src/components/split/shared.tsx:145
+msgid "A charge has a rate from 0 to 100% or an amount that isn’t below zero"
+msgstr "A charge has a rate from 0 to 100% or an amount that isn’t below zero"
 
 #: src/components/SearchAsk/SearchHistory.tsx:42
 msgid "A day: today or yesterday"
@@ -874,7 +878,7 @@ msgid "Add “{q}”"
 msgstr "Add “{q}”"
 
 #. placeholder {0}: fmt(gap!)
-#: src/components/split/charges/Reconciliation.tsx:170
+#: src/components/split/charges/Reconciliation.tsx:177
 msgid "Add {0} as round-off"
 msgstr "Add {0} as round-off"
 
@@ -891,7 +895,7 @@ msgstr "Add a friend"
 msgid "Add a friend, then split any bill with them. They don’t need the app."
 msgstr "Add a friend, then split any bill with them. They don’t need the app."
 
-#: src/components/split/shared.tsx:145
+#: src/components/split/shared.tsx:149
 msgid "Add a name"
 msgstr "Add a name"
 
@@ -924,7 +928,7 @@ msgstr "Add anyway (only for you)"
 msgid "Add anyway, only for you"
 msgstr "Add anyway, only for you"
 
-#: src/components/split/charges/Reconciliation.tsx:175
+#: src/components/split/charges/Reconciliation.tsx:182
 msgid "Add as round-off"
 msgstr "Add as round-off"
 
@@ -941,8 +945,8 @@ msgstr "Add by email or number"
 msgid "Add category"
 msgstr "Add category"
 
-#: src/components/split/charges/ChargesSection.tsx:400
-#: src/components/split/charges/ChargesSection.tsx:407
+#: src/components/split/charges/ChargesSection.tsx:425
+#: src/components/split/charges/ChargesSection.tsx:432
 msgid "Add charge"
 msgstr "Add charge"
 
@@ -1121,8 +1125,8 @@ msgstr "All even"
 msgid "All groups"
 msgstr "All groups"
 
-#: src/components/split/charges/ChargesSection.tsx:250
-#: src/screens/Expense/components/ChargedBreakdown.tsx:68
+#: src/components/split/charges/ChargesSection.tsx:268
+#: src/screens/Expense/components/ChargedBreakdown.tsx:74
 msgid "all items"
 msgstr "all items"
 
@@ -1167,8 +1171,8 @@ msgstr "Always in the group"
 
 #: src/components/people/RecordPaymentDialog.tsx:345
 #: src/components/people/RecordPaymentDialog.tsx:350
-#: src/components/people/UpiPayDialog.tsx:191
-#: src/components/people/UpiPayDialog.tsx:196
+#: src/components/people/UpiPayDialog.tsx:179
+#: src/components/people/UpiPayDialog.tsx:184
 #: src/components/settings/prefControls.tsx:344
 #: src/components/settings/prefControls.tsx:347
 #: src/components/split/charges/ChargeSheet.tsx:171
@@ -1524,12 +1528,12 @@ msgstr "Changes saved"
 msgid "Charge as"
 msgstr "Charge as"
 
-#: src/components/split/charges/ChargesSection.tsx:128
+#: src/components/split/charges/ChargesSection.tsx:131
 msgid "Charge setup"
 msgstr "Charge setup"
 
 #: src/components/split/SplitEditor.tsx:777
-#: src/screens/Expense/components/ChargedBreakdown.tsx:144
+#: src/screens/Expense/components/ChargedBreakdown.tsx:146
 msgid "Charges"
 msgstr "Charges"
 
@@ -1542,8 +1546,8 @@ msgstr "Charges per merchant"
 msgid "Charts"
 msgstr "Charts"
 
-#: src/components/split/charges/Reconciliation.tsx:181
-#: src/components/split/charges/Reconciliation.tsx:186
+#: src/components/split/charges/Reconciliation.tsx:188
+#: src/components/split/charges/Reconciliation.tsx:193
 msgid "Check items"
 msgstr "Check items"
 
@@ -1730,7 +1734,7 @@ msgstr "Compact"
 msgid "Compact fits more people, groups and activity on screen."
 msgstr "Compact fits more people, groups and activity on screen."
 
-#: src/components/split/charges/Reconciliation.tsx:198
+#: src/components/split/charges/Reconciliation.tsx:205
 msgid "Compare each line with the bill:"
 msgstr "Compare each line with the bill:"
 
@@ -1751,7 +1755,7 @@ msgstr "Continue"
 msgid "Continue to next step"
 msgstr "Continue to next step"
 
-#: src/lib/sharing.ts:34
+#: src/lib/sharing.ts:35
 msgid "Copied to clipboard"
 msgstr "Copied to clipboard"
 
@@ -1816,7 +1820,7 @@ msgstr "Couldn’t export. Try again."
 msgid "Couldn't finish. Try Remove demo data, then add it again."
 msgstr "Couldn't finish. Try Remove demo data, then add it again."
 
-#: src/lib/sharing.ts:62
+#: src/lib/sharing.ts:63
 msgid "Couldn’t open an app for that. Copy the link instead."
 msgstr "Couldn’t open an app for that. Copy the link instead."
 
@@ -1851,6 +1855,10 @@ msgstr "Couldn’t restore this. Please try again."
 #: src/screens/Invites/InviteLinks.tsx:79
 msgid "Couldn’t revoke the link. Please try again."
 msgstr "Couldn’t revoke the link. Please try again."
+
+#: src/components/split/charges/ChargesSection.tsx:285
+msgid "Couldn’t save the charges for {title}. Try again."
+msgstr "Couldn’t save the charges for {title}. Try again."
 
 #: src/components/groups/EditGroupDialog.tsx:79
 msgid "Couldn’t save the group. Please try again."
@@ -1952,8 +1960,8 @@ msgstr "Currency: {0}"
 msgid "Currency: {currency}. Change"
 msgstr "Currency: {currency}. Change"
 
-#: src/components/split/charges/ChargesSection.tsx:149
-#: src/components/split/charges/ChargesSection.tsx:160
+#: src/components/split/charges/ChargesSection.tsx:152
+#: src/components/split/charges/ChargesSection.tsx:178
 msgid "Custom"
 msgstr "Custom"
 
@@ -2138,7 +2146,7 @@ msgstr "Demo data removed"
 msgid "Description"
 msgstr "Description"
 
-#: src/components/people/UpiPayDialog.tsx:128
+#: src/components/people/UpiPayDialog.tsx:116
 msgid "Did the payment go through?"
 msgstr "Did the payment go through?"
 
@@ -2189,6 +2197,7 @@ msgid "Discard changes?"
 msgstr "Discard changes?"
 
 #: src/components/settings/prefControls.tsx:316
+#: src/components/split/charges/ChargesSection.tsx:171
 #: src/components/split/charges/hooks.ts:58
 #: src/components/split/SplitEditor.tsx:484
 #: src/screens/Expense/components/ItemsBreakdown.tsx:60
@@ -2246,7 +2255,7 @@ msgid "Earlier years"
 msgstr "Earlier years"
 
 #. placeholder {0}: charge.name
-#: src/components/split/charges/ChargesSection.tsx:307
+#: src/components/split/charges/ChargesSection.tsx:332
 msgid "Edit {0}"
 msgstr "Edit {0}"
 
@@ -2354,7 +2363,7 @@ msgid "Enter a password"
 msgstr "Enter a password"
 
 #: src/components/people/EditFriendDialog.tsx:138
-#: src/components/people/UpiPayDialog.tsx:184
+#: src/components/people/UpiPayDialog.tsx:172
 msgid "Enter a UPI ID like name@bank."
 msgstr "Enter a UPI ID like name@bank."
 
@@ -2363,7 +2372,7 @@ msgid "Enter an amount"
 msgstr "Enter an amount"
 
 #: src/components/people/RecordPaymentDialog.tsx:188
-#: src/components/people/UpiPayDialog.tsx:211
+#: src/components/people/UpiPayDialog.tsx:199
 msgid "Enter an amount greater than zero."
 msgstr "Enter an amount greater than zero."
 
@@ -2388,7 +2397,7 @@ msgstr "Enter the email or phone number you used to create your account. We'll s
 msgid "Enter the email or phone number you used when you created your account"
 msgstr "Enter the email or phone number you used when you created your account"
 
-#: src/components/split/charges/Reconciliation.tsx:133
+#: src/components/split/charges/Reconciliation.tsx:140
 msgid "Enter the printed total to check it against this."
 msgstr "Enter the printed total to check it against this."
 
@@ -2948,11 +2957,11 @@ msgstr "Include app info"
 msgid "Include groups"
 msgstr "Include groups"
 
-#: src/components/split/charges/ChargesSection.tsx:331
+#: src/components/split/charges/ChargesSection.tsx:356
 msgid "included"
 msgstr "included"
 
-#: src/screens/Expense/components/ChargedBreakdown.tsx:164
+#: src/screens/Expense/components/ChargedBreakdown.tsx:166
 msgid "included in the prices"
 msgstr "included in the prices"
 
@@ -2960,7 +2969,7 @@ msgstr "included in the prices"
 msgid "Indian"
 msgstr "Indian"
 
-#: src/components/people/UpiPayDialog.tsx:205
+#: src/components/people/UpiPayDialog.tsx:193
 msgid "Indian Rupee"
 msgstr "Indian Rupee"
 
@@ -3106,12 +3115,12 @@ msgstr "It was deleted, or the link is wrong."
 
 #. placeholder {0}: i + 1
 #. placeholder {0}: index + 1
-#. placeholder {0}: k + 1
-#: src/components/split/charges/ChargesSection.tsx:439
-#: src/components/split/charges/Reconciliation.tsx:205
+#. placeholder {0}: n + 1
+#: src/components/split/charges/ChargesSection.tsx:464
+#: src/components/split/charges/Reconciliation.tsx:212
 #: src/components/split/SplitEditor.tsx:589
 #: src/components/split/SplitEditor.tsx:600
-#: src/screens/Expense/components/ChargedBreakdown.tsx:72
+#: src/screens/Expense/components/ChargedBreakdown.tsx:68
 #: src/screens/Expense/components/ItemRow.tsx:45
 msgid "Item {0}"
 msgstr "Item {0}"
@@ -3129,9 +3138,9 @@ msgid "Itemize charges"
 msgstr "Itemize charges"
 
 #: src/components/split/charges/Reconciliation.tsx:99
-#: src/screens/Expense/components/ChargedBreakdown.tsx:99
-#: src/screens/Expense/components/ChargedBreakdown.tsx:151
-#: src/screens/Expense/components/ChargedBreakdown.tsx:200
+#: src/screens/Expense/components/ChargedBreakdown.tsx:101
+#: src/screens/Expense/components/ChargedBreakdown.tsx:153
+#: src/screens/Expense/components/ChargedBreakdown.tsx:202
 #: src/screens/Expense/components/ItemsBreakdown.tsx:77
 msgid "Items"
 msgstr "Items"
@@ -3365,12 +3374,12 @@ msgid "Motion and haptics"
 msgstr "Motion and haptics"
 
 #. placeholder {0}: charge.name
-#: src/components/split/charges/ChargesSection.tsx:359
+#: src/components/split/charges/ChargesSection.tsx:384
 msgid "Move {0} down"
 msgstr "Move {0} down"
 
 #. placeholder {0}: charge.name
-#: src/components/split/charges/ChargesSection.tsx:349
+#: src/components/split/charges/ChargesSection.tsx:374
 msgid "Move {0} up"
 msgstr "Move {0} up"
 
@@ -3556,11 +3565,11 @@ msgstr "no balance change"
 msgid "No balances yet. They appear once the group has an expense."
 msgstr "No balances yet. They appear once the group has an expense."
 
-#: src/components/split/charges/ChargesSection.tsx:71
+#: src/components/split/charges/ChargesSection.tsx:73
 msgid "No charges"
 msgstr "No charges"
 
-#: src/components/split/charges/ChargesSection.tsx:390
+#: src/components/split/charges/ChargesSection.tsx:415
 msgid "No charges yet. Add the service charge, taxes and anything else on the bill."
 msgstr "No charges yet. Add the service charge, taxes and anything else on the bill."
 
@@ -3645,7 +3654,7 @@ msgstr "No shared groups"
 msgid "No tracking"
 msgstr "No tracking"
 
-#: src/components/people/UpiPayDialog.tsx:119
+#: src/components/people/UpiPayDialog.tsx:107
 msgid "No UPI app on this device can open the payment."
 msgstr "No UPI app on this device can open the payment."
 
@@ -3693,7 +3702,7 @@ msgstr "Not now"
 msgid "Not splitting"
 msgstr "Not splitting"
 
-#: src/components/people/UpiPayDialog.tsx:132
+#: src/components/people/UpiPayDialog.tsx:120
 msgid "Not yet"
 msgstr "Not yet"
 
@@ -3795,11 +3804,11 @@ msgid "On"
 msgstr "On"
 
 #. placeholder {0}: scopeText(charge)
-#: src/components/split/charges/ChargesSection.tsx:329
+#: src/components/split/charges/ChargesSection.tsx:354
 msgid "on {0}"
 msgstr "on {0}"
 
-#: src/screens/Expense/components/ChargedBreakdown.tsx:82
+#: src/screens/Expense/components/ChargedBreakdown.tsx:88
 msgid "on {on}"
 msgstr "on {on}"
 
@@ -3897,7 +3906,7 @@ msgstr "Open Settings"
 msgid "Open source"
 msgstr "Open source"
 
-#: src/components/people/UpiPayDialog.tsx:152
+#: src/components/people/UpiPayDialog.tsx:140
 msgid "Open UPI app"
 msgstr "Open UPI app"
 
@@ -3936,7 +3945,7 @@ msgstr "Opens what changed"
 msgid "Opens your profile"
 msgstr "Opens your profile"
 
-#: src/components/people/UpiPayDialog.tsx:157
+#: src/components/people/UpiPayDialog.tsx:145
 msgid "Opens your UPI app with {name} and the amount filled in. You confirm the payment there."
 msgstr "Opens your UPI app with {name} and the amount filled in. You confirm the payment there."
 
@@ -4009,7 +4018,7 @@ msgid "Paid by"
 msgstr "Paid by"
 
 #. placeholder {0}: name(roundOff.to)
-#: src/screens/Expense/components/ChargedBreakdown.tsx:180
+#: src/screens/Expense/components/ChargedBreakdown.tsx:182
 msgid "paid by {0}"
 msgstr "paid by {0}"
 
@@ -4044,7 +4053,7 @@ msgstr "Password updated"
 msgid "Password updated!"
 msgstr "Password updated!"
 
-#: src/components/people/UpiPayDialog.tsx:149
+#: src/components/people/UpiPayDialog.tsx:137
 #: src/screens/Person/index.tsx:291
 #: src/screens/Person/index.tsx:297
 msgid "Pay with UPI"
@@ -4339,7 +4348,7 @@ msgstr "Remember what you search for"
 msgid "Remembered merchants"
 msgstr "Remembered merchants"
 
-#: src/components/split/charges/Reconciliation.tsx:121
+#: src/components/split/charges/Reconciliation.tsx:128
 #: src/features/feedback/FeedbackSheet.tsx:388
 #: src/screens/Person/index.tsx:560
 #: src/screens/Settings/DemoData.tsx:192
@@ -4347,7 +4356,7 @@ msgid "Remove"
 msgstr "Remove"
 
 #. placeholder {0}: charge.name
-#: src/components/split/charges/ChargesSection.tsx:372
+#: src/components/split/charges/ChargesSection.tsx:397
 msgid "Remove {0}"
 msgstr "Remove {0}"
 
@@ -4383,7 +4392,7 @@ msgstr "Remove item {0}"
 msgid "Remove picture"
 msgstr "Remove picture"
 
-#: src/components/split/charges/Reconciliation.tsx:115
+#: src/components/split/charges/Reconciliation.tsx:122
 msgid "Remove round-off"
 msgstr "Remove round-off"
 
@@ -4567,16 +4576,24 @@ msgstr "Round to"
 msgid "Round to {0}"
 msgstr "Round to {0}"
 
-#: src/components/split/charges/Reconciliation.tsx:111
-#: src/screens/Expense/components/ChargedBreakdown.tsx:176
-#: src/screens/Expense/components/ChargedBreakdown.tsx:204
+#: src/components/split/charges/Reconciliation.tsx:116
+#: src/screens/Expense/components/ChargedBreakdown.tsx:178
+#: src/screens/Expense/components/ChargedBreakdown.tsx:206
 msgid "Round-off"
 msgstr "Round-off"
+
+#: src/components/split/charges/Reconciliation.tsx:115
+msgid "Round-off · shared by everyone"
+msgstr "Round-off · shared by everyone"
 
 #. placeholder {0}: fmt(roundOff.minor)
 #: src/components/split/charges/Reconciliation.tsx:57
 msgid "Round-off {0}"
 msgstr "Round-off {0}"
+
+#: src/components/split/shared.tsx:147
+msgid "Round-off can’t be more than one whole unit"
+msgstr "Round-off can’t be more than one whole unit"
 
 #: src/screens/Expense/index.tsx:646
 msgid "Rounded to {unit} for cash."
@@ -4606,7 +4623,7 @@ msgid "Sales tax"
 msgstr "Sales tax"
 
 #. placeholder {0}: setup.name
-#: src/components/split/charges/ChargesSection.tsx:182
+#: src/components/split/charges/ChargesSection.tsx:200
 msgid "Same as last time at {0}?"
 msgstr "Same as last time at {0}?"
 
@@ -4627,8 +4644,8 @@ msgstr "Same as this device ({deviceZone})"
 msgid "Save"
 msgstr "Save"
 
-#: src/components/split/charges/ChargesSection.tsx:413
-#: src/components/split/charges/ChargesSection.tsx:420
+#: src/components/split/charges/ChargesSection.tsx:438
+#: src/components/split/charges/ChargesSection.tsx:445
 msgid "Save as preset for {title}"
 msgstr "Save as preset for {title}"
 
@@ -4665,7 +4682,7 @@ msgstr "Saved on this device. It syncs to your other devices when you are online
 msgid "Saved on this device. Sign in to sync it to your other devices."
 msgstr "Saved on this device. Sign in to sync it to your other devices."
 
-#: src/components/split/charges/ChargesSection.tsx:266
+#: src/components/split/charges/ChargesSection.tsx:291
 msgid "Saved the charges for {title}"
 msgstr "Saved the charges for {title}"
 
@@ -4827,6 +4844,7 @@ msgid "Service"
 msgstr "Service"
 
 #: src/components/settings/prefControls.tsx:315
+#: src/components/split/charges/ChargesSection.tsx:170
 #: src/components/split/charges/hooks.ts:74
 #: src/components/split/SplitEditor.tsx:483
 #: src/screens/Expense/components/ItemsBreakdown.tsx:66
@@ -4919,7 +4937,7 @@ msgstr "Share"
 msgid "Share invite link"
 msgstr "Share invite link"
 
-#: src/screens/Expense/components/ChargedBreakdown.tsx:179
+#: src/screens/Expense/components/ChargedBreakdown.tsx:181
 msgid "shared by everyone’s share"
 msgstr "shared by everyone’s share"
 
@@ -5092,7 +5110,7 @@ msgstr "Someone"
 msgid "Someone on this expense was removed"
 msgstr "Someone on this expense was removed"
 
-#: src/components/split/shared.tsx:147
+#: src/components/split/shared.tsx:151
 msgid "Something isn’t right. Check the highlighted fields."
 msgstr "Something isn’t right. Check the highlighted fields."
 
@@ -5190,7 +5208,7 @@ msgstr "Splito - Home"
 msgid "Splito can’t open your contacts. Turn on Contacts for Splito in Settings, then come back."
 msgstr "Splito can’t open your contacts. Turn on Contacts for Splito in Settings, then come back."
 
-#: src/components/people/UpiPayDialog.tsx:137
+#: src/components/people/UpiPayDialog.tsx:125
 msgid "Splito can’t see your UPI app. Record the payment only once your app shows it as successful."
 msgstr "Splito can’t see your UPI app. Record the payment only once your app shows it as successful."
 
@@ -5336,6 +5354,7 @@ msgid "Tap to change; hold to change several items"
 msgstr "Tap to change; hold to change several items"
 
 #: src/components/settings/prefControls.tsx:313
+#: src/components/split/charges/ChargesSection.tsx:168
 #: src/components/split/charges/hooks.ts:54
 #: src/components/split/SplitEditor.tsx:481
 #: src/screens/Expense/components/ItemsBreakdown.tsx:70
@@ -5437,13 +5456,13 @@ msgstr "The picture you attached"
 
 #. placeholder {0}: fmt(total!)
 #. placeholder {1}: fmt(magnitude(gap!))
-#: src/components/split/charges/Reconciliation.tsx:164
+#: src/components/split/charges/Reconciliation.tsx:171
 msgid "The printed total {0} is {1} less than the items and charges."
 msgstr "The printed total {0} is {1} less than the items and charges."
 
 #. placeholder {0}: fmt(total!)
 #. placeholder {1}: fmt(gap!)
-#: src/components/split/charges/Reconciliation.tsx:163
+#: src/components/split/charges/Reconciliation.tsx:170
 msgid "The printed total {0} is {1} more than the items and charges."
 msgstr "The printed total {0} is {1} more than the items and charges."
 
@@ -5570,6 +5589,7 @@ msgid "Tints buttons, links and highlights. Money keeps its green and red."
 msgstr "Tints buttons, links and highlights. Money keeps its green and red."
 
 #: src/components/settings/prefControls.tsx:314
+#: src/components/split/charges/ChargesSection.tsx:169
 #: src/components/split/charges/hooks.ts:79
 #: src/components/split/SplitEditor.tsx:482
 #: src/screens/Expense/components/ItemsBreakdown.tsx:71
@@ -5618,9 +5638,9 @@ msgstr "Tomorrow"
 msgid "Too many digits after the decimal point for this currency"
 msgstr "Too many digits after the decimal point for this currency"
 
-#: src/components/split/charges/Reconciliation.tsx:127
+#: src/components/split/charges/Reconciliation.tsx:134
 #: src/screens/Analytics/index.tsx:219
-#: src/screens/Expense/components/ChargedBreakdown.tsx:187
+#: src/screens/Expense/components/ChargedBreakdown.tsx:189
 msgid "Total"
 msgstr "Total"
 
@@ -5725,7 +5745,7 @@ msgid "UPI {0}"
 msgstr "UPI {0}"
 
 #: src/components/people/EditFriendDialog.tsx:116
-#: src/components/people/UpiPayDialog.tsx:170
+#: src/components/people/UpiPayDialog.tsx:158
 msgid "UPI ID"
 msgstr "UPI ID"
 
@@ -5733,7 +5753,7 @@ msgstr "UPI ID"
 msgid "UPI ID (optional)"
 msgstr "UPI ID (optional)"
 
-#: src/components/people/UpiPayDialog.tsx:218
+#: src/components/people/UpiPayDialog.tsx:206
 msgid "UPI links open on a phone with a UPI app. On a computer, nothing may happen."
 msgstr "UPI links open on a phone with a UPI app. On a computer, nothing may happen."
 
@@ -5741,7 +5761,7 @@ msgstr "UPI links open on a phone with a UPI app. On a computer, nothing may hap
 msgid "US tip"
 msgstr "US tip"
 
-#: src/components/split/charges/ChargesSection.tsx:191
+#: src/components/split/charges/ChargesSection.tsx:209
 msgid "Use"
 msgstr "Use"
 
@@ -5760,12 +5780,12 @@ msgstr "Use a percentage from 0 to 100, with up to two decimals"
 msgid "Use Add expense in the sidebar, or the + button on phones. Choose who paid and how to split it."
 msgstr "Use Add expense in the sidebar, or the + button on phones. Choose who paid and how to split it."
 
-#: src/components/split/charges/Reconciliation.tsx:137
+#: src/components/split/charges/Reconciliation.tsx:144
 #: src/components/split/SplitEditor.tsx:944
 msgid "Use as the total"
 msgstr "Use as the total"
 
-#: src/components/split/charges/Reconciliation.tsx:153
+#: src/components/split/charges/Reconciliation.tsx:160
 #: src/components/split/SplitEditor.tsx:960
 msgid "Use as total"
 msgstr "Use as total"
@@ -5779,7 +5799,7 @@ msgid "Use Splito’s calculator keypad for amounts on phones"
 msgstr "Use Splito’s calculator keypad for amounts on phones"
 
 #. placeholder {0}: setup.name
-#: src/components/split/charges/ChargesSection.tsx:168
+#: src/components/split/charges/ChargesSection.tsx:186
 msgid "Use the charges from your last bill at {0}"
 msgstr "Use the charges from your last bill at {0}"
 
@@ -5867,7 +5887,7 @@ msgstr "Week"
 msgid "Week starts on"
 msgstr "Week starts on"
 
-#: src/screens/Expense/components/ChargedBreakdown.tsx:194
+#: src/screens/Expense/components/ChargedBreakdown.tsx:196
 msgid "What each person pays"
 msgstr "What each person pays"
 
@@ -6034,7 +6054,7 @@ msgid "Year first"
 msgstr "Year first"
 
 #. placeholder {0}: formatAmount(opened, 'INR', locale)
-#: src/components/people/UpiPayDialog.tsx:130
+#: src/components/people/UpiPayDialog.tsx:118
 msgid "Yes, record {0}"
 msgstr "Yes, record {0}"
 

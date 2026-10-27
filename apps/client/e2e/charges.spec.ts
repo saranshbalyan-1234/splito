@@ -199,3 +199,77 @@ test('Settings: tax classes can be added, renamed, hidden and used', async ({pag
   await expect(page.getByTestId('class-option-soft')).toHaveCount(0)
   await expect(page.getByTestId('class-picker')).toContainText('Desserts')
 })
+
+test('Simple to Custom keeps the tax and tip typed in the Simple rows', async ({page}) => {
+  await openAddExpense(page, DESKTOP)
+  await page.getByTestId('split-mode-items').click()
+  await page.getByTestId('item-add').click()
+  await page.getByTestId('item-0-amount').fill('1000')
+  await page.getByTestId('item-tax-mode-percent').click()
+  await page.getByTestId('item-tax').fill('18')
+  await page.getByTestId('item-tip-mode-amount').click()
+  await page.getByTestId('item-tip').fill('50')
+  await page.getByTestId('charge-preset-custom').click()
+  await expect(page.getByTestId('charge-0-amount')).toHaveText('₹180.00')
+  await expect(page.getByTestId('charge-1-amount')).toHaveText('₹50.00')
+  await expect(page.getByTestId('charge-0-edit')).toContainText('18%')
+})
+
+/** Two unnamed items (600 and 400) that only You had; Riya is on the bill but has no item. 10% packing on item 2 only, printed total 1,041.00 (a 1.00 gap). */
+async function unnamedItemsBill(page: Page) {
+  await openAddExpense(page, DESKTOP)
+  await page.evaluate(() =>
+    (window as unknown as {splito: {setPref: (k: string, v: string) => Promise<unknown>}}).splito.setPref('bill.roundOffSpread', 'payer'),
+  )
+  await page.getByTestId('expense-title').fill('Mixed bill')
+  await page.getByTestId('amount-input').fill('1041')
+  await page.getByTestId('expense-people').click()
+  await page.getByTestId('person-option-Riya Sharma').click()
+  await page.getByTestId('people-dialog').getByTestId('sheet-close').click()
+  await expect(page.getByTestId('people-dialog')).toHaveCount(0)
+  await page.getByTestId('split-mode-items').click()
+  for (const [n, amount] of [['0', '600'], ['1', '400']] as const) {
+    await page.getByTestId('item-add').click()
+    await page.getByTestId(`item-${n}-amount`).fill(amount)
+    await page.getByTestId(`item-${n}-person-Riya Sharma`).click({button: 'right'})
+  }
+  await page.getByTestId('charge-preset-custom').click()
+  await page.getByTestId('charge-add').click()
+  const sheet = page.getByTestId('charge-sheet')
+  await sheet.getByTestId('charge-name').fill('Packing')
+  await sheet.getByTestId('charge-kind-packing').click()
+  await sheet.getByTestId('charge-value').fill('10')
+  await sheet.getByTestId('charge-scope-items').click()
+  await sheet.locator('[data-testid^="charge-item-"]').nth(1).click()
+  await sheet.getByTestId('sheet-save').click()
+  await expect(page.getByTestId('charge-sheet')).toHaveCount(0)
+  await expect(page.getByTestId('charge-0-amount')).toHaveText('₹40.00')
+  await page.getByTestId('bill-round-off-add').click()
+}
+
+test('round-off to the payer: a payer with no items appears in the breakdown, and an unnamed item is numbered by the bill', async ({page}) => {
+  await unnamedItemsBill(page)
+  await page.getByTestId('expense-payers').click()
+  await page.getByTestId('payers-single').click()
+  await page.getByTestId('payer-Riya Sharma').click()
+  await expect(page.getByTestId('bill-line-round-off')).toContainText('₹1.00')
+  await page.getByTestId('sheet-save').click()
+  await expect(page.getByTestId('expense-saved')).toBeVisible()
+  await page.getByRole('button', {name: 'View expense'}).click()
+  const detail = page.getByTestId('expense-items')
+  await expect(detail.getByTestId('expense-charge-0')).toContainText('on Item 2')
+  await expect(detail.getByTestId('expense-charge-round-off')).toContainText('paid by Riya Sharma')
+  const riya = detail.getByTestId('expense-person-Riya Sharma')
+  await expect(riya).toContainText('Round-off')
+  await expect(riya).toContainText('₹1.00')
+})
+
+test('with several payers a round-off "to the payer" says it is shared by everyone', async ({page}) => {
+  await unnamedItemsBill(page)
+  await page.getByTestId('expense-payers').click()
+  await page.getByTestId('payers-multiple').click()
+  await page.getByTestId('paid-You').fill('520.50')
+  await page.getByTestId('paid-Riya Sharma').fill('520.50')
+  await page.getByTestId('payers-dialog').getByTestId('sheet-close').click()
+  await expect(page.getByTestId('bill-line-round-off')).toContainText('shared by everyone')
+})
