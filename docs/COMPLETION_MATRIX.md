@@ -9,7 +9,7 @@ Status words are the same as `docs/BACKLOG.md`: **done** (built, tested and merg
 | Core rules | Exact money (bigint), all split modes, rounding, multi-currency maths | F-101 | done (domain, 68 tests) |
 | Core rules | Settlement planner with allowed / preferred / excluded routes | F-102 | done (domain) |
 | Storage | Offline local store (SQLite / IndexedDB), history, outbox, preferences registry | F-103, F-104 | done (sync, 40 tests) |
-| Storage | Local database schema v2: a store per entity type on IndexedDB and SQLite, normalised members and parties, in-transaction balance sums, per-row sync status, v1 migration, cursor-paged hot reads | F-117 | done (feat/wA-35a: Home cold open 47 ms on 1.5k expenses, 57 ms on 10k; write + UI 32 ms; see BACKLOG F-117) |
+| Storage | Local database schema v3: a store per entity type on IndexedDB and SQLite, normalised members and parties, in-transaction balance sums, monthly aggregates and search terms (Analytics and Search never load the ledger), per-row sync status, v1 and v2 migrations, cursor-paged hot reads | F-117 | done (feat/wA-35a: Home cold open 46 ms on 1.5k expenses, 46 ms on 10k; write + UI 16 ms; Analytics open 35 / 21 ms; narrow search 16-43 ms; see BACKLOG F-117) |
 | Engineering | Guardrails: CI architecture test | F-108 | in progress (built and tested on feat/b-*, unmerged) |
 | Integration | Merge the UI line + Batch 4 streams + phone bottom drawers into m1-foundation | Batch 4b row 30 | todo (first item of Batch 4b) |
 | Shell | Bluesky sidebar / bottom bar / FAB (phones only, no-Back screens) / drawer / header rules / owner logo in the accent colour | F-201 | in progress (built and tested on the unmerged UI line) |
