@@ -3,7 +3,7 @@
  * any sequence of money writes. Random operation sequences (add, edit,
  * delete, restore for expenses; add, delete, restore for payments and
  * write-offs; members and groups; moving an expense between groups and
- * between a group and direct; "delete forever"; erasing rows outright, the
+ * between a group and direct; erasing rows outright, the
  * demo set's removal among them; many currencies, three of them with
  * non-two-decimal scales) run through the real mutations on both engines;
  * after each sequence the stored sums, the monthly aggregates, the search

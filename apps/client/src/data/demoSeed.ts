@@ -168,8 +168,8 @@ async function seedLedger(
   await restoreExpense(store, at(now - 38 * MINUTE), expenseIds.Groceries!)
 
   /*
-   * Recently deleted: records added and then deleted, so balances are
-   * unchanged and the bin has one of each kind to show.
+   * Deleted items: records added and then deleted, so they show struck in their lists while balances are
+   * unchanged and there is one of each kind to show.
    */
   const binned = async (
     title: string,

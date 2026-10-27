@@ -37,7 +37,7 @@ Status words are the same as `docs/BACKLOG.md`: **done** (built, tested and merg
 | Settle up | Plan per group, payment rules, record repayment, UPI link and "Mark as paid?" | F-1101, F-1103 | in progress (built and tested on the unmerged UI line) |
 | Settle up | Call it even: forgive or write off | F-1113 | in progress (built and tested on feat/b-*, unmerged) |
 | Activity | Feed, read/unread, All / From others, actor avatar, day headers, lent/borrowed rows, swipe, hide, undo | F-1201 | in progress (built and tested on the unmerged UI line) |
-| Activity | Recently deleted bin | F-1203 | in progress (built and tested on feat/b-*, unmerged) |
+| Activity | Deleted items stay in their lists, struck through, forever; Restore; Hide and Show hidden (no Recently deleted bin) | F-1203 | in progress (built and tested on feat/wB-B3x, unmerged; web verified, native not yet run) |
 | Analytics | Charts + table, period / currency / group filters, Export CSV in the header overflow | F-1301 | in progress (built and tested on the unmerged UI line) |
 | Settings | Every preference incl. Dim / Black dark style, accent, timezone | F-1701 | in progress (built and tested on the unmerged UI line) |
 | Settings | Account section: Sign in / Create account (Bluesky LoggedOut, Login, Signup copied; honest until sync; Log out ships with F-2102) | F-225 | done (feat/wA-30b; backend submit answers "arrives with sync" until F-2102) |

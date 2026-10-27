@@ -43,7 +43,7 @@ export interface GroupMemberEntry {
   exit?: MemberExit
 }
 
-/** What a group's deletion took with it, kept on its tombstone so Recently deleted can say what comes back. */
+/** What a group's deletion took with it, kept on its tombstone so the deleted group can say what comes back. */
 export interface GroupRemoval {
   expenses: number
   repayments: number
