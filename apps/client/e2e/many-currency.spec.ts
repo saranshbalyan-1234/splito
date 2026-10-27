@@ -190,14 +190,20 @@ test('M12, m2: Recently active groups shows a chip per open currency, with exact
   )
 })
 
-test('m21: an Overview currency card opens Analytics in that currency', async ({
+test('m21: an Overview currency card opens Analytics in that currency, every time', async ({
   page,
 }) => {
   await page.setViewportSize(DESKTOP)
   await page.goto('/?demo=1')
   await expect(page.getByTestId('person-Riya Sharma')).toBeVisible()
   await page.getByTestId('summary-EUR').click()
-  await expect(page).toHaveURL(/\/analytics\?currency=EUR/)
+  await expect(page.getByTestId('analytics-currency')).toContainText('EUR')
+  // Pick another currency there, go home and tap the same card again: it must seed again.
+  await page.getByTestId('analytics-currency').click()
+  await page.getByTestId('analytics-currency-INR').click()
+  await expect(page.getByTestId('analytics-currency')).toContainText('INR')
+  await page.getByTestId('tab-people').click()
+  await page.getByTestId('summary-EUR').click()
   await expect(page.getByTestId('analytics-currency')).toContainText('EUR')
 })
 

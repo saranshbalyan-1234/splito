@@ -1,6 +1,6 @@
 import {useEffect, useState} from 'react'
 import {useLingui} from '@lingui/react/macro'
-import {useRoute} from '@react-navigation/native'
+import {useNavigation, useRoute} from '@react-navigation/native'
 import {
   cellBalanceTrend,
   cellsByCategory,
@@ -105,9 +105,13 @@ export function useReport() {
     offset: 0,
     currency: routeCurrency,
   })
+  const navigation = useNavigation()
+  /* Seed once, then clear the param, so tapping the same card again seeds again. */
   useEffect(() => {
-    if (routeCurrency) setState(s => ({...s, currency: routeCurrency}))
-  }, [routeCurrency])
+    if (!routeCurrency) return
+    setState(s => ({...s, currency: routeCurrency}))
+    navigation.setParams({currency: undefined} as never)
+  }, [routeCurrency, navigation])
   const [picked, setPicked] = useState<{
     filterKey: string
     selection: Selection
