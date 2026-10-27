@@ -1272,6 +1272,19 @@ labelled sidebar); **wide** = web 1300 px and up (Bluesky `gtTablet`, right colu
   drawer. Default bar: Home, Groups, Analytics, Activity. "Ask Splito" placed in the bar opens the Search & Ask drawer in Ask mode instead of switching tab. Desktop and rail always show the full list.
   "Reset" restores the default. Stored in the existing `tabs` preference. *Why:* "all of the sidebar options to
   be available in settings to be added in navigation bar".
+- **Every place has a URL, so a copied link lands on the same screen** (owner 100; F-241, queued after the Wave B
+  merge; Expensify's model, where every side panel and modal is a route). Every page, every in-page tab (Group
+  Expenses / Balances / Members, Activity tabs, Analytics views), every sheet and popup (Add / Edit expense,
+  Record payment, Settle up, Add friend / Invite people, Create / Edit group, Members, Payment rules, Filters,
+  Search & Ask with its query and Ask mode, Send feedback, Export / Import, every Settings section and editor)
+  and the list state that matters (filters, sort, Show settled, scope, period, currency) is in the URL on web
+  (path or query) and the same deep-link path on native. Opening one pushes its URL; closing goes back; browser
+  Back closes the top sheet; pasting or refreshing the URL opens the parent page with that sheet or tab on top,
+  with the draft restored (§ 5). An entity that is not on this device shows "Not on this device yet" (§ 14).
+  Exceptions, for safety: confirmation prompts (Delete?, Log out?, Discard changes?) and "..." menus are not
+  addressable, and no URL ever performs or arms an action (§ 14 "links carry no command"); a sheet URL only
+  opens the sheet. *Why:* "for every tab, every popup it should be via url, so that even if i copy paste the
+  url i land on same place".
 - **Activity's route is `/activity`; `/notifications` redirects to it.**
 - **Pushed pages** (Person, Group, Settle, Expense, Profile, Settings and its sections, Add friend, Create
   group) show Back in the header; top-level pages (People, Groups, Analytics, Activity) show the avatar. This
@@ -1965,6 +1978,7 @@ Every owner decision, in the order it was made (all 2026-10-26). "Replaced" name
 | 97 | "on the home page and group page add option for recent transactions as well; home shows all, group shows only group level recent txns" | "Recent transactions" section in the Home body (everything) and on each Group page (that group only), customizable | § 26.17 | Right column only (desktop 1300 px and up) |
 | 98 | "deleted item should show a stroke and clock symbol and time" | Deleted records show struck-through title and amount plus a Clock icon and "Deleted <time>" everywhere they appear | § 26.14 | Plain rows (strikethrough removed in B3 polish) |
 | 99 | "only when demo i said, with a switch with diff data"; "no small demo or anything, only one switch" | One demo dataset, one Settings switch over a separate database; no small set, no ?demo=1 or any URL alias; e2e uses a test-only hook | § 26.1 | Small ?demo=1 set kept as a test alias (row 95 plan) |
+| 100 | "for every tab, every popup it should be via url, so that even if i copy paste the url i land on same place" | Every page, tab, sheet/popup and meaningful list state has a URL (web) / deep link (native); open pushes, close goes back, paste/refresh restores; prompts and menus excluded; URLs never act | § 26.3 | Sheets and tabs held in screen state |
 
 New decisions follow § 0 rule 9: rewrite the rule in its topic so only the current truth remains, then add a
 row here.

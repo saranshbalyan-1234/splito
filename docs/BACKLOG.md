@@ -2741,6 +2741,20 @@ Fix every finding of the 2026-10-28 UX audit marked "F-240" (1 critical, 6 major
   4. Web hit areas (#6): every icon button is at least 44 x 44 px on web (e2e geometry check at 390 px).
   5. Full checks green; screenshots of every changed screen, phone and desktop, light and Dim.
 
+### F-241 Every tab, sheet and popup addressable by URL `spec: owner § 26.3 (decision 100)`
+
+Copy any URL and land on the same screen: pages, in-page tabs, sheets and popups, and the list state that matters are all routes (web path/query, native deep link), following Expensify's route-per-modal model on Bluesky's navigator. Queued right after the Wave B merge and F-228a.
+
+- **Effort** L · **Impact** 9 · **Backend** no · **Status** todo · **Deps** Wave B merged, F-228a
+- **Prefs** -
+- **Acceptance**
+  1. A route table in `routes.ts` covers every page, tab (e.g. `/groups/:id/balances`, `/activity/others`), sheet (e.g. `/expense/new?group=:id`, `/people/:id/record-payment`, `/groups/:id/settle`, `/settings/regional/timezone`, `/search?q=&mode=ask`) and list state as query params (filters, sort, showSettled, scope, period, currency); a test asserts every sheet and tab component has a route.
+  2. Opening a sheet or tab pushes its URL; closing pops it; browser Back closes the top sheet; Forward reopens it.
+  3. Pasting or refreshing any of these URLs (web) or opening the deep link (native) shows the parent page with the sheet/tab on top and the draft restored; an entity missing on this device shows "Not on this device yet".
+  4. Confirmation prompts and "..." menus are not addressable; no URL performs or arms an action (test: a sheet URL never writes).
+  5. List state in the URL and the database preferences (F-1413) agree: the URL wins when present, otherwise the saved preference.
+  6. e2e: for every route in the table, load it cold at phone and desktop widths and assert the right screen, tab or sheet is open.
+
 ### F-1501 Text summaries for WhatsApp `spec 4b v1`
 
 Whole-group or "only their part" summaries with WhatsApp markup, sent via wa.me in the recipient's language.
