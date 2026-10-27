@@ -1,5 +1,6 @@
-import {type DateRange, type ReportExpense, recordCells, type SpendCell, ZERO} from '@splito/domain'
+import {type DateRange, type ReportExpense, type SpendCell, ZERO} from '@splito/domain'
 import {
+  cellsOfEntity,
   type Entity,
   type Expense,
   type Key,
@@ -7,8 +8,6 @@ import {
   type Repayment,
   type Store,
   toExpenseRecord,
-  toRepaymentRecord,
-  toWriteOffRecord,
   touches,
   type WriteOff,
 } from '@splito/sync'
@@ -71,17 +70,10 @@ export const overviewQuery: Query<Overview> = {
 /** The cells of the live records dated `from` to `to` (inclusive) in one currency, read by the date indexes. */
 async function cellsBetween(store: Store, from: string, to: string, currency: string): Promise<SpendCell[]> {
   if (from > to) return []
-  const q = {index: 'byDate', min: from, max: to, limit: ALL}
-  const [expenses, repayments, writeOffs] = await Promise.all([
-    store.page<Expense>('expense', q),
-    store.page<Repayment>('repayment', q),
-    store.page<WriteOff>('writeoff', q),
-  ])
-  return [
-    ...expenses.items.flatMap(e => recordCells({...toExpenseRecord(e), category: e.data.category})),
-    ...repayments.items.flatMap(e => recordCells(toRepaymentRecord(e))),
-    ...writeOffs.items.flatMap(e => recordCells(toWriteOffRecord(e))),
-  ].filter(c => c.currency === currency)
+  const dated = <T>(type: 'expense' | 'repayment' | 'writeoff') => store.page<T>(type, {index: 'byDate', min: from, max: to, limit: ALL})
+  const [expenses, repayments, writeOffs] = await Promise.all([dated<Expense>('expense'), dated<Repayment>('repayment'), dated<WriteOff>('writeoff')])
+  // The same guard as the stored sums use (deleted rows, rows of a shape this build does not know), so the two agree.
+  return [...expenses.items, ...repayments.items, ...writeOffs.items].flatMap(e => cellsOfEntity(e)).filter(c => c.currency === currency)
 }
 
 /** What a period's report is made of: the cells inside it, and every earlier cell for the balance line. */

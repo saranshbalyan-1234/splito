@@ -107,8 +107,11 @@ function addEffects(r: LedgerRecord | undefined, sign: 1 | -1, nets: Sums, pairs
   }
 }
 
-/** The cells of a live money entity (`recordCells` of its record). */
-function cellsOf(e: Entity | undefined): SpendCell[] {
+/**
+ * The cells of a live money entity (`recordCells` of its record); none for a deleted row or one whose data is not
+ * the shape this build knows. Readers of the date indexes use it so they agree with the stored `aggregates`.
+ */
+export function cellsOfEntity(e: Entity | undefined): SpendCell[] {
   const r = recordOf(e)
   return r ? recordCells(r.kind === 'expense' ? {...r, category: (e!.data as Expense).category} : r) : []
 }
@@ -194,8 +197,8 @@ export async function projectEntity(rows: RowAccess, prev: Entity | undefined, n
     addEffects(recordOf(next), 1, nets, pairs)
     await writeSums(rows, nets, pairs, (next ?? prev)!.updatedAt)
     const aggs: Aggregates = new Map()
-    addAggregates(aggs, cellsOf(prev), -1)
-    addAggregates(aggs, cellsOf(next), 1)
+    addAggregates(aggs, cellsOfEntity(prev), -1)
+    addAggregates(aggs, cellsOfEntity(next), 1)
     await writeAggregates(rows, aggs, (next ?? prev)!.updatedAt)
     // Any change to a record in a group or on a person, a delete included, is their latest activity (26.17).
     if (next) {
@@ -247,7 +250,7 @@ export async function rebuildProjections(rows: RowAccess, entities: (type: Entit
     for (const e of await entities(type)) {
       if (type === 'expense') for (const r of partyRows(e as Entity<Expense>)) await rows.put('expense_parties', r)
       addEffects(recordOf(e), 1, nets, pairs)
-      addAggregates(aggs, cellsOf(e), 1)
+      addAggregates(aggs, cellsOfEntity(e), 1)
       latest = Math.max(latest, e.updatedAt)
       money.push(e)
     }
