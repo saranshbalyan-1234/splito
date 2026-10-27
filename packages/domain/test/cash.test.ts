@@ -74,10 +74,8 @@ describe('F-402 cash rounding', () => {
           const weights = ws.map((w, i) => ({id: `p${i}`, weight: BigInt(w)}))
           const r = allocateCash(total, weights, unit)
           expect(sum(r.shares)).toBe(total)
-          // Fewer whole units than people: rounding is skipped (audit M15).
-          const abs = total < 0n ? -total : total
-          if (abs / unit < BigInt(weights.length))
-            return expect(r.remainder).toBe(0n)
+          // Too few whole units for everyone to get one: rounding is skipped (audit M15).
+          if (r.isExact) return expect(r.remainder).toBe(0n)
           for (const [id, v] of Object.entries(r.shares)) {
             const base = id === r.remainderTo ? v - r.remainder : v
             expect(base % unit).toBe(0n)
@@ -144,4 +142,23 @@ describe('F-112 cash unit larger than the bill (audit M15)', () => {
     expect(r.shares).toEqual({a: 1000n, b: 1000n, c: 1000n})
     expect(r.isExact).toBeUndefined()
   })
+  test('a weighted split that would round someone to nothing is exact (1:1:4 of EUR 300, unit 100)', () => {
+    const r = allocateCash(
+      30000n,
+      [
+        {id: 'a', weight: 1n},
+        {id: 'b', weight: 1n},
+        {id: 'c', weight: 4n},
+      ],
+      cashUnit('EUR', 100),
+    )
+    expect(r.shares).toEqual({a: 5000n, b: 5000n, c: 20000n})
+    expect(r.remainder).toBe(0n)
+    expect(r.isExact).toBe(true)
+  })
+  test('percent 1 / 99 of INR 100 at a unit of 10 gives the 1% share its paise, not 0', () => {
+    const shares = computeShares(10000n, {mode: 'percent', basisPoints: {a: 100, b: 9900}, roundTo: cashUnit('INR', 10)})
+    expect(shares).toEqual({a: 100n, b: 9900n})
+  })
 })
+
