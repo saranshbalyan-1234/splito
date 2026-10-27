@@ -107,10 +107,12 @@ export async function write<T>(
   const prev = await tx.get<T>(type, id)
   const at = ctx.now()
   const version = (prev?.version ?? 0) + 1
-  // A local change waits for the server (`pending`, then `tx.enqueue` below); a change that came from the
-  // server is `synced`. Only a real acknowledgement ever moves a row to `synced` (ARCHITECTURE 9.8).
+  // A local change waits for the server (`pending`, then `tx.enqueue` below). Only a real server
+  // acknowledgement ever moves a row to `synced` (ARCHITECTURE 9.8): a change applied from someone else's
+  // side (`remote`) has none yet, so it keeps the row's state (`local` for a new row, `pending` if its own
+  // op is still queued).
   const sync = remote
-    ? ({syncStatus: 'synced', serverVersion: version, syncedAt: at, syncError: null} as const)
+    ? ({syncStatus: prev?.syncStatus ?? 'local', serverVersion: prev?.serverVersion ?? null, syncedAt: prev?.syncedAt ?? null, syncError: prev?.syncError ?? null} as const)
     : ({syncStatus: 'pending', serverVersion: prev?.serverVersion ?? null, syncedAt: prev?.syncedAt ?? null, syncError: null} as const)
   const e: Entity<T> = {type, id, data, version, deleted, createdAt: prev?.createdAt ?? at, updatedAt: at, ...sync}
   await tx.put(e)
