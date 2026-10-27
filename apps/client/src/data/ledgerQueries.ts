@@ -2,7 +2,6 @@ import {
   type BalanceRow,
   balanceRowsFromNets,
   type CurrencyCode,
-  type LedgerRecord,
   ZERO,
 } from '@splito/domain'
 import {
@@ -15,9 +14,6 @@ import {
   type Page,
   type Repayment,
   type Store,
-  toExpenseRecord,
-  toRepaymentRecord,
-  toWriteOffRecord,
   touches,
   type WriteOff,
 } from '@splito/sync'
@@ -206,13 +202,12 @@ export const groupActivityQuery: Query<Map<string, number>> = {
   },
 }
 
-/** The latest date (`YYYY-MM-DD`) of a live record each person is on: for the "recent" friends sort only. */
-export const lastActivityQuery: Query<Map<string, string>> = {
+/** When each person last saw activity (epoch ms), for the "recent" friends sort only: an index read of `people.lastActivityAt`. */
+export const lastActivityQuery: Query<Map<string, number>> = {
   key: 'lastActivity',
-  isTouchedBy: c => isMoney(c) || touches(c, 'person'),
+  isTouchedBy: isMoney,
   loader: store => async (_c, prev) => {
-    const ids = (await store.getAll('person')).map(p => p.id)
-    const next = await store.lastActivity(ids)
+    const next = await store.lastActivity()
     return prev && sameMap(prev, next) ? prev : next
   },
 }
@@ -341,103 +336,4 @@ export function partyStream(
       }
     },
   }
-}
-
-/* -------------------------------------------------------------------------- */
-/* The ledger in memory (Analytics and search)                                */
-/* -------------------------------------------------------------------------- */
-
-/** Every record of the ledger as screens that look at all of it need it: Analytics and search. */
-export type LedgerMirror = {
-  /** Live expenses, repayments and write-offs, ordered by id. */
-  expenses: Entity<Expense>[]
-  repayments: Entity<Repayment>[]
-  writeOffs: Entity<WriteOff>[]
-  /** Every record, tombstones flagged `deleted`, as the domain's reports read them. */
-  ledger: LedgerRecord[]
-}
-
-const MIRROR_PAGE = 500
-type MoneyKind = 'expense' | 'repayment' | 'writeoff'
-const KINDS: MoneyKind[] = ['expense', 'repayment', 'writeoff']
-
-const recordCache = new WeakMap<Entity, LedgerRecord>()
-function recordOf(e: Entity, kind: MoneyKind): LedgerRecord {
-  let r = recordCache.get(e)
-  if (!r) {
-    r =
-      kind === 'expense'
-        ? toExpenseRecord(e as Entity<Expense>)
-        : kind === 'repayment'
-          ? toRepaymentRecord(e as Entity<Repayment>)
-          : toWriteOffRecord(e as Entity<WriteOff>)
-    recordCache.set(e, r)
-  }
-  return r
-}
-
-const sameEntity = (a: Entity, b: Entity) =>
-  a.version === b.version && a.deleted === b.deleted && a.updatedAt === b.updatedAt
-
-/**
- * The whole ledger held in memory, for the two screens that need all of it
- * (Analytics' history-long charts, and free-text search). Read once by index
- * in pages of 500, then kept current from change notices by reading only the
- * rows a commit names. It exists only while one of those screens is open.
- */
-export const ledgerMirrorQuery: Query<LedgerMirror> = {
-  key: 'ledgerMirror',
-  isTouchedBy: isMoney,
-  loader: store => {
-    const rows: Record<MoneyKind, Map<string, Entity>> = {expense: new Map(), repayment: new Map(), writeoff: new Map()}
-    let isLoaded = false
-    const arrays: Partial<Record<MoneyKind, Entity[]>> = {}
-
-    const loadAll = async () => {
-      for (const kind of KINDS) {
-        rows[kind].clear()
-        delete arrays[kind]
-        let after: Key | null = null
-        do {
-          const page: Page<Entity> = await store.page(kind, {index: 'byUpdatedAt', after, limit: MIRROR_PAGE})
-          for (const e of page.items) rows[kind].set(e.id, e)
-          after = page.next
-        } while (after)
-      }
-      isLoaded = true
-    }
-    const patch = async (kind: MoneyKind, ids: ReadonlySet<string>) => {
-      const found = new Map((await store.getMany(kind, [...ids])).map(e => [e.id, e]))
-      for (const id of ids) {
-        const e = found.get(id)
-        const old = rows[kind].get(id)
-        if (!e) rows[kind].delete(id)
-        else if (!old || !sameEntity(old, e)) rows[kind].set(id, e)
-        else continue
-        delete arrays[kind]
-      }
-    }
-    const list = (kind: MoneyKind) =>
-      (arrays[kind] ??= [...rows[kind].values()].sort((x, y) => (x.id < y.id ? -1 : 1)))
-
-    return async (change, prev) => {
-      if (!isLoaded || change === 'unknown') await loadAll()
-      else await Promise.all(KINDS.map(kind => (change[kind] ? patch(kind, change[kind]) : undefined)))
-      const all = KINDS.map(kind => list(kind))
-      const live = all.map(a => a.filter(e => !e.deleted))
-      const next: LedgerMirror = {
-        expenses: live[0] as Entity<Expense>[],
-        repayments: live[1] as Entity<Repayment>[],
-        writeOffs: live[2] as Entity<WriteOff>[],
-        ledger: KINDS.flatMap((kind, i) => all[i]!.map(e => recordOf(e, kind))),
-      }
-      if (
-        prev &&
-        prev.ledger.length === next.ledger.length &&
-        prev.ledger.every((r, i) => r === next.ledger[i])
-      )
-        return prev
-      return next
-    }
-  },
 }

@@ -13,12 +13,12 @@ export type FriendRow = {id: string; name: string; summary?: PersonSummary}
  * The `peopleSort` preference applied. `amount`: biggest balance in the
  * default currency first (balances in other currencies can't be ranked
  * against it, so those friends follow, open balances before settled ones).
- * `recent`: latest shared record first. Ties, and `name`, go by name.
+ * `recent`: the friend with the newest change to a record they are on first (`people.lastActivityAt`). Ties, and `name`, go by name.
  */
 export function sortFriends<T extends FriendRow>(
   rows: T[],
   sort: 'amount' | 'name' | 'recent',
-  {currency, activity}: {currency: string; activity: Map<string, string>},
+  {currency, activity}: {currency: string; activity: Map<string, number>},
 ): T[] {
   const size = (row: FriendRow) =>
     magnitude(row.summary?.byCurrency[currency]?.total ?? ZERO)
@@ -32,8 +32,8 @@ export function sortFriends<T extends FriendRow>(
       if (dx !== dy) return dx > dy ? -1 : 1
       if (isOpen(x) !== isOpen(y)) return isOpen(x) ? -1 : 1
     } else if (sort === 'recent') {
-      const ax = activity.get(x.id) ?? ''
-      const ay = activity.get(y.id) ?? ''
+      const ax = activity.get(x.id) ?? 0
+      const ay = activity.get(y.id) ?? 0
       if (ax !== ay) return ax > ay ? -1 : 1
     }
     return byName(x, y)

@@ -29,15 +29,15 @@ test('amount: biggest default-currency balance first, owed or owing; other curre
     ),
   ).toEqual(['b', 'a', 'c', 'd']))
 
-test('recent: latest shared record first, never-active last by name', () =>
-  // The newest shared date per person comes from the store (`lastActivity`): d has the latest, a next, b older; c has none.
+test('recent: latest change first, never-active last by name', () =>
+  // The newest change per person comes from the store (`lastActivity`, epoch ms): d has the latest, a next, b older; c has none.
   expect(
     sortFriends(rows, 'recent', {
       currency: 'INR',
       activity: new Map([
-        ['d', '2026-10-20'],
-        ['a', '2026-09-01'],
-        ['b', '2026-08-15'],
+        ['d', 1_760_000_000_000],
+        ['a', 1_750_000_000_000],
+        ['b', 1_740_000_000_000],
       ]),
     }).map(r => r.id),
   ).toEqual(['d', 'a', 'b', 'c']))

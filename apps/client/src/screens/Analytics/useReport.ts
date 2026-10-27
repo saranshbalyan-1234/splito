@@ -1,32 +1,33 @@
 import {useState} from 'react'
 import {useLingui} from '@lingui/react/macro'
 import {
-  balanceTrend,
+  cellBalanceTrend,
+  cellsByCategory,
+  cellsByGroup,
+  cellsByPerson,
+  cellsOverTime,
+  cellTotals,
   type DateRange,
-  dataRange,
   type Granularity,
   granularityFor,
   periodRange,
   type ReportExpense,
-  type ReportFilter,
-  type ReportRecord,
-  selectExpenses,
-  spendingByCategory,
-  spendingByGroup,
-  spendingByPerson,
-  spendingOverTime,
-  spendingTotals,
   todayIn,
   type WeekStart,
   ZERO,
 } from '@splito/domain'
 import {DEFAULT_CATEGORIES, type Group, type Person} from '@splito/sync'
 
+import {readRows} from '#/data/analyticsQueries'
 import {
+  useAnalyticsBounds,
+  useAnalyticsCells,
+  useAnalyticsOverview,
+  useAnalyticsRows,
   useEntities,
-  useLedgerMirror,
   useMutationCtx,
   usePref,
+  useStore,
 } from '#/data/hooks'
 import {
   inScope,
@@ -71,16 +72,25 @@ function deviceTimezone() {
   return Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC'
 }
 
+/** What the screen last had an answer for: the report keeps showing it while the next period loads. */
+type View = {
+  data: NonNullable<ReturnType<typeof useAnalyticsCells>>
+  period: PeriodChoice
+  granularity: Granularity
+  offset: number
+}
+
 /**
- * Everything Analytics shows, derived from the ledger and one filter state:
- * charts, totals, the expense list and the CSV all read from here, so the
- * numbers agree everywhere. Undefined while the local store loads.
+ * Everything Analytics shows, derived from the stored month sums, the date
+ * indexes and one filter state (ARCHITECTURE 9.8: the ledger is never
+ * loaded): charts, totals, the expense list and the CSV all read from here,
+ * so the numbers agree everywhere. Undefined while the local store loads.
  */
 export function useReport() {
   const {t: l, i18n} = useLingui()
   const {actor: me} = useMutationCtx()
-  /* Analytics looks at the whole ledger: read by index in pages once, then kept current (data/ledgerQueries). */
-  const mirror = useLedgerMirror()
+  const store = useStore()
+  const overview = useAnalyticsOverview()
   const groups = useEntities<Group>('group')
   const people = useEntities<Person>('person')
   const [categories = DEFAULT_CATEGORIES] = usePref('categories')
@@ -94,32 +104,15 @@ export function useReport() {
     filterKey: string
     selection: Selection
   }>()
-
-  if (!mirror || !groups || !people) return undefined
-  const {ledger, expenses} = mirror
+  const [held, setHeld] = useState<View>()
 
   const weekStart = (weekStartPref ?? 1) as WeekStart
   const tz =
     !timezonePref || timezonePref === 'device' ? deviceTimezone() : timezonePref
   const today = todayIn(tz, Date.now())
 
-  /* Labels ride along on each expense record; repayments (when they exist) pass through. */
-  const labels = new Map(expenses.map(e => [e.id, e.data]))
-  const records: ReportRecord[] = ledger.map(r =>
-    r.kind === 'expense'
-      ? {
-          ...r,
-          category: labels.get(r.id)?.category,
-          title: labels.get(r.id)?.title,
-        }
-      : r,
-  )
-  const live = records.filter(
-    (r): r is ReportExpense => r.kind === 'expense' && !r.deleted,
-  )
-
   /* Active groups first, then archived; by name within each. Deleted groups are gone from both. */
-  const groupOptions: GroupOption[] = groups
+  const groupOptions: GroupOption[] = (groups ?? [])
     .map(g => ({
       id: g.id,
       name: g.data.name,
@@ -133,27 +126,29 @@ export function useReport() {
     )
   const groupIds = groupOptions.map(g => g.id)
   const scope = scopeFromPref(scopePref, groupIds)
-  const scoped = records.filter(r => inScope(r.groupId, scope))
+  const scopeKey = JSON.stringify(scope)
+  const isIn = (groupId: string | null) => inScope(groupId, scope)
 
   /* Currencies with expenses, most used first; never mixed. */
-  const counts = new Map<string, number>()
-  for (const r of live)
-    counts.set(r.currency, (counts.get(r.currency) ?? 0) + 1)
-  const currencies = [...counts.keys()].sort(
-    (x, y) => counts.get(y)! - counts.get(x)! || x.localeCompare(y),
-  )
+  const currencies = overview?.currencies ?? []
   const currency =
-    state.currency && counts.has(state.currency)
+    state.currency && currencies.includes(state.currency)
       ? state.currency
-      : defaultCurrency && counts.has(defaultCurrency)
+      : defaultCurrency && currencies.includes(defaultCurrency)
         ? defaultCurrency
         : currencies[0]
 
-  const groupName = new Map(groups.map(g => [g.id, g.data.name]))
   /* "All time" spans what the scope holds, so one group's trip is its own dates. */
-  const inCurrency = scoped.filter(r => r.currency === currency)
+  const stored = useAnalyticsBounds(
+    currency && groups ? {currency, scopeKey, isIn} : null,
+  )
+  const bounds: DateRange = stored
+    ? {
+        from: stored.from < today ? stored.from : today,
+        to: stored.to > today ? stored.to : today,
+      }
+    : {from: today, to: today}
 
-  const bounds = dataRange(inCurrency, today) ?? {from: today, to: today}
   const period: PeriodChoice =
     state.period === 'custom' && !state.custom
       ? 'year'
@@ -170,58 +165,110 @@ export function useReport() {
       : period === 'year'
         ? 'month'
         : granularityFor(range)
+  /* Whole months are stored; bars of days or weeks need the days themselves. */
+  const isExact = granularity === 'day' || granularity === 'week'
 
-  /* The scope is applied to the records first, so the domain filter only picks currency and dates. */
-  const filter: ReportFilter = {
-    currency: currency ?? '',
-    range,
-    includeGroups: true,
-  }
-  const selected = currency ? selectExpenses(scoped, filter) : []
-  const totals = spendingTotals(selected, me)
-  const overTime = spendingOverTime(selected, me, range, granularity, weekStart)
-  const byCategory = spendingByCategory(selected, me)
-  const byPerson = spendingByPerson(selected)
-  const byGroup = spendingByGroup(selected, me)
-  const trend = currency
-    ? balanceTrend(scoped, me, filter, granularity, weekStart)
-    : []
+  /* With no expense at all there is nothing to read: an empty period. */
+  const isEmpty = overview ? !overview.hasExpenses : false
+  const read = useAnalyticsCells(
+    currency && groups && !(period === 'all' && stored === undefined)
+      ? {currency, from: range.from, to: range.to, exact: isExact}
+      : null,
+  )
+  if (read && read !== held?.data)
+    setHeld({data: read, period, granularity, offset: state.offset})
+  const view: View | undefined = read
+    ? {data: read, period, granularity, offset: state.offset}
+    : isEmpty
+      ? {
+          data: {currency: '', range, period: [], before: []},
+          period,
+          granularity,
+          offset: state.offset,
+        }
+      : held
 
   /* A selection belongs to the filter it was made under; any filter change clears it. */
-  const filterKey = JSON.stringify([currency, range, scope])
+  const shownRange = view?.data.range
+  const shownCurrency = view?.data.currency
+  const filterKey = JSON.stringify([shownCurrency, shownRange, scope])
   const selection = picked?.filterKey === filterKey ? picked.selection : null
+  const shareOf = selection?.kind === 'person' ? selection.key : me
+
+  /* The list behind the current selection: a bar narrows the dates, a slice or row the expenses. */
+  const listed = useAnalyticsRows(
+    view && shownCurrency
+      ? {
+          currency: shownCurrency,
+          from: selection?.kind === 'time' ? selection.from : view.data.range.from,
+          to: selection?.kind === 'time' ? selection.to : view.data.range.to,
+          scopeKey,
+          isIn,
+          selection:
+            selection?.kind === 'category' || selection?.kind === 'person'
+              ? {kind: selection.kind, key: selection.key}
+              : undefined,
+          me,
+        }
+      : null,
+  )
+
+  if (!view || !groups || !people || !overview) return undefined
+  const {data} = view
+  const shownGranularity = view.granularity
+  const shownPeriod = view.period
+  const shownRangeNow = data.range
+  const shownBounds = bounds
+
+  /* The scope applies to the cells; the domain functions pick the currency's dates and kinds. */
+  const cells = data.period.filter(c => isIn(c.groupId || null))
+  const earlier = data.before.filter(c => isIn(c.groupId || null))
+  const totals = cellTotals(cells, me)
+  const overTime = cellsOverTime(cells, me, shownRangeNow, shownGranularity, weekStart)
+  const byCategory = cellsByCategory(cells, me)
+  const byPerson = cellsByPerson(cells)
+  const byGroup = cellsByGroup(cells, me)
+  const trend = data.currency
+    ? cellBalanceTrend([...earlier, ...cells], me, shownRangeNow, shownGranularity, weekStart)
+    : []
+
   const select = (s: Selection | null) =>
     setPicked(s ? {filterKey, selection: s} : undefined)
 
-  /* The list behind the current selection, and whose share each row shows. */
-  const shareOf = selection?.kind === 'person' ? selection.key : me
-  const rows = selected.filter(e => {
-    if (!selection) return true
-    const myShare = e.shares[me] ?? ZERO
-    switch (selection.kind) {
-      case 'time':
-        return e.date >= selection.from && e.date <= selection.to
-      case 'category':
-        return myShare !== ZERO && (e.category ?? 'other') === selection.key
-      case 'person':
-        return (e.shares[selection.key] ?? ZERO) !== ZERO
-    }
-  })
-  const rowsTotal = spendingTotals(rows, shareOf).share
+  /* How many rows the selection holds and whose share they add up to: the cells already say. */
+  const sliceOf = (slices: Array<{key: string | null; share: bigint; count: number}>, key: string) =>
+    slices.find(x => x.key === key)
+  const inBar =
+    selection?.kind === 'time'
+      ? cellTotals(
+          cells.filter(c => c.date >= selection.from && c.date <= selection.to),
+          me,
+        )
+      : undefined
+  const slice =
+    selection?.kind === 'category'
+      ? sliceOf(byCategory, selection.key)
+      : selection?.kind === 'person'
+        ? sliceOf(byPerson, selection.key)
+        : undefined
+  const rowCount = !selection ? totals.count : (inBar?.count ?? slice?.count ?? 0)
+  const rowsTotal = !selection ? totals.share : (inBar?.share ?? slice?.share ?? ZERO)
+  const rows: ReportExpense[] = listed?.rows ?? []
 
   const date = (d: string, o: Intl.DateTimeFormatOptions) =>
     i18n.date(utcDate(d), {...o, timeZone: 'UTC'})
-  const isMultiYear = range.from.slice(0, 4) !== range.to.slice(0, 4)
+  const groupName = new Map(groups.map(g => [g.id, g.data.name]))
+  const isMultiYear = shownRangeNow.from.slice(0, 4) !== shownRangeNow.to.slice(0, 4)
   const spanLabel = (r: DateRange) =>
     r.from === r.to
       ? date(r.from, {day: 'numeric', month: 'short', year: 'numeric'})
       : `${date(r.from, {day: 'numeric', month: 'short', ...(isMultiYear || r.from.slice(0, 4) !== r.to.slice(0, 4) ? {year: 'numeric'} : {})})} – ${date(r.to, {day: 'numeric', month: 'short', year: 'numeric'})}`
   const bucketLabels = (b: {key: string; from: string; to: string}) => {
-    switch (granularity) {
+    switch (shownGranularity) {
       case 'day':
         return {
           axisLabel:
-            period === 'week'
+            shownPeriod === 'week'
               ? date(b.key, {weekday: 'short'})
               : date(b.key, {day: 'numeric'}),
           label: date(b.key, {
@@ -255,13 +302,13 @@ export function useReport() {
     }
   }
   const periodLabel =
-    period === 'all'
+    shownPeriod === 'all'
       ? l`All time`
-      : period === 'month'
-        ? date(range.from, {month: 'long', year: 'numeric'})
-        : period === 'year'
-          ? date(range.from, {year: 'numeric'})
-          : spanLabel(range)
+      : shownPeriod === 'month'
+        ? date(shownRangeNow.from, {month: 'long', year: 'numeric'})
+        : shownPeriod === 'year'
+          ? date(shownRangeNow.from, {year: 'numeric'})
+          : spanLabel(shownRangeNow)
 
   const personName = new Map(people.map(p => [p.id, p.data.name]))
   const categoryById = new Map(categories.map(c => [c.id, c]))
@@ -277,7 +324,7 @@ export function useReport() {
   return {
     me,
     today,
-    hasExpenses: live.length > 0,
+    hasExpenses: overview.hasExpenses,
     currencies,
     currency: currency ?? '',
     groupOptions,
@@ -285,14 +332,13 @@ export function useReport() {
     scope,
     period,
     offset: state.offset,
-    range,
+    range: shownRangeNow,
     customRange: state.custom,
     weekStart,
-    granularity,
+    granularity: shownGranularity,
     periodLabel,
-    canGoBack: range.from > bounds.from,
-    canGoForward: range.to < bounds.to,
-    selected,
+    canGoBack: shownRangeNow.from > shownBounds.from,
+    canGoForward: shownRangeNow.to < shownBounds.to,
     totals,
     overTime: overTime.map(b => ({...b, ...bucketLabels(b)})),
     byCategory,
@@ -300,11 +346,35 @@ export function useReport() {
     byGroup,
     /* The line stops at the last day anything is recorded for (today, or a later-dated expense). */
     trend: trend
-      .filter(b => b.from <= bounds.to)
+      .filter(b => b.from <= shownBounds.to)
       .map(b => ({...b, ...bucketLabels(b)})),
     selection,
     select,
+    /** The rows loaded so far, newest first; `rowCount` is how many there are in all. */
     rows,
+    rowCount,
+    isRowsDone: listed?.isDone ?? true,
+    loadMoreRows: listed?.loadMore ?? (() => {}),
+    /** Every row of the list, for the CSV export (a full read of the period by cursor, on request). */
+    exportRows: async () =>
+      (
+        await readRows(
+          store,
+          {
+            currency: data.currency,
+            from: selection?.kind === 'time' ? selection.from : data.range.from,
+            to: selection?.kind === 'time' ? selection.to : data.range.to,
+            scopeKey,
+            isIn,
+            selection:
+              selection?.kind === 'category' || selection?.kind === 'person'
+                ? {kind: selection.kind, key: selection.key}
+                : undefined,
+            me,
+          },
+          Infinity,
+        )
+      ).rows,
     rowsTotal,
     shareOf,
     nameOfPerson,

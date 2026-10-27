@@ -4,14 +4,13 @@ import {type TextInput, type TextInputKeyPressEvent, View} from 'react-native'
 import {Trans, useLingui} from '@lingui/react/macro'
 import {useNavigation, useRoute} from '@react-navigation/native'
 import {decimalMark} from '@splito/domain'
-import {search} from '@splito/sync'
 
 import {usePagedRows} from '#/lib/hooks/usePagedRows'
 import {type NavigationProp} from '#/lib/routes/types'
 import {todayIn} from '#/locale/dates'
 import {useNumberLocale} from '#/locale/numberLocale'
 import {useFormatLocalDate, useTimeZone} from '#/locale/useDates'
-import {useMutationCtx, usePref} from '#/data/hooks'
+import {useMutationCtx, usePref, useSearch} from '#/data/hooks'
 import {device, useStorage} from '#/storage'
 import {List} from '#/view/com/util/List'
 import {atoms as a} from '#/alf'
@@ -28,7 +27,7 @@ import {
 import {SearchHistory} from './components/SearchHistory'
 import {type SearchResultRow, type SearchRow, searchRows} from './model'
 import {scrollRowIntoView} from './scrollRowIntoView'
-import {useSearchIndex} from './useSearchIndex'
+import {useSearchNames} from './useSearchNames'
 
 const HISTORY_KEY: ['searchHistory'] = ['searchHistory']
 /* Bluesky keeps six and shows five. */
@@ -37,7 +36,7 @@ const HISTORY_LIMIT = 6
 /**
  * Search everything on this device (BACKLOG F-1401), in Bluesky's search
  * shell: the header, then the search box; recent searches while it is
- * empty; results update on every keystroke from a prebuilt local index,
+ * empty; results update on every keystroke from the local search keys (only the matching rows load),
  * grouped into People, Groups and Expenses with the matches highlighted.
  * Web: arrow keys move through the results, Enter opens one, Escape clears.
  */
@@ -50,7 +49,7 @@ export function SearchScreen() {
   const [query, setQuery] = useState(initialQuery)
   const [activeNav, setActiveNav] = useState(-1)
 
-  const {index, names, groupNames} = useSearchIndex()
+  const {names, groupNames} = useSearchNames()
   const {actor: me} = useMutationCtx()
   const locale = useNumberLocale()
   const formatDate = useFormatLocalDate()
@@ -65,9 +64,7 @@ export function SearchScreen() {
     if (rememberSearches === false && history.length > 0) setHistory([])
   }, [rememberSearches, history, setHistory])
 
-  const results = index
-    ? search(index, query, {today, mark: decimalMark(locale)})
-    : undefined
+  const results = useSearch(query, today, decimalMark(locale))
   const rows = results ? searchRows(results) : []
   const navRows = rows.filter((r): r is SearchResultRow => r.type !== 'header')
   const {shown, onEndReached} = usePagedRows(query)(rows)

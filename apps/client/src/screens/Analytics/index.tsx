@@ -4,7 +4,6 @@ import {Trans, useLingui} from '@lingui/react/macro'
 import {useNavigation} from '@react-navigation/native'
 import {formatAmount, type ReportExpense, reportCsv} from '@splito/domain'
 
-import {usePagedRows} from '#/lib/hooks/usePagedRows'
 import {type NavigationProp} from '#/lib/routes/types'
 import {useNumberLocale} from '#/locale/numberLocale'
 import {usePref} from '#/data/hooks'
@@ -51,7 +50,7 @@ export function AnalyticsScreen() {
   const [view = 'charts', setView] = usePref('analyticsView')
   const isTable = view === 'table'
   const exportRows = useExportRows()
-  const {shown, onEndReached} = usePagedRows()(report?.rows ?? [])
+  
 
   return (
     <Layout.Screen testID="screen-analytics">
@@ -67,7 +66,7 @@ export function AnalyticsScreen() {
           label={l`Export CSV`}
           icon={DownloadIcon}
           edge
-          disabled={!report || report.rows.length === 0}
+          disabled={!report || report.rowCount === 0}
           onPress={() => report && void exportRows(report)}
         />
       </Layout.Header.Outer>
@@ -96,8 +95,10 @@ export function AnalyticsScreen() {
       ) : (
         <LayoutAnimationConfig skipEntering skipExiting>
           <List
-            data={shown}
-            onEndReached={onEndReached}
+            data={report.rows}
+            onEndReached={() => {
+              if (!report.isRowsDone) report.loadMoreRows()
+            }}
             keyExtractor={(e: ReportExpense) => e.id}
             renderItem={({item}: {item: ReportExpense}) => (
               <ExpenseRow
@@ -144,13 +145,13 @@ export function AnalyticsScreen() {
 function ExpensesHeader({report, locale}: {report: Report; locale: string}) {
   const t = useTheme()
   const {t: l} = useLingui()
-  const {selection, rows, currency} = report
+  const {selection, rowCount, currency} = report
 
   return (
     <View>
       <SectionHeader
         title={l`Expenses`}
-        count={rows.length}
+        count={rowCount}
         testID="analytics-expenses-title"
       />
       {selection && (
@@ -201,23 +202,24 @@ function ExpensesHeader({report, locale}: {report: Report; locale: string}) {
 function useExportRows() {
   const {t: l} = useLingui()
   return async (report: Report) => {
-    const {rows, currency} = report
-    const csv = reportCsv(rows, report.me, {
-      header: [
-        l`Date`,
-        l`Description`,
-        l`Category`,
-        l`Group`,
-        l`Currency`,
-        l`Total`,
-        l`You paid`,
-        l`Your share`,
-      ],
-      categoryName: id => report.category(id).name,
-      groupName: id => (id === null ? '' : report.nameOfGroup(id)),
-    })
-    const name = `splito-${currency}-${report.range.from}-to-${report.range.to}.csv`
+    const {currency} = report
     try {
+      const rows = await report.exportRows()
+      const csv = reportCsv(rows, report.me, {
+        header: [
+          l`Date`,
+          l`Description`,
+          l`Category`,
+          l`Group`,
+          l`Currency`,
+          l`Total`,
+          l`You paid`,
+          l`Your share`,
+        ],
+        categoryName: id => report.category(id).name,
+        groupName: id => (id === null ? '' : report.nameOfGroup(id)),
+      })
+      const name = `splito-${currency}-${report.range.from}-to-${report.range.to}.csv`
       if (await exportCsv(name, csv)) {
         Toast.show(
           rows.length === 1
