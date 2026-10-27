@@ -10,6 +10,7 @@ import {
 } from '@splito/domain'
 
 import {UserAvatar} from '#/view/com/util/UserAvatar'
+import {useNumberLocale} from '#/locale/numberLocale'
 import {atoms as a, useTheme} from '#/alf'
 import {PortionBadge} from '#/components/split/PortionBadge'
 import {SectionLabel} from '#/components/split/shared'
@@ -35,14 +36,15 @@ export function ItemsBreakdown({
   avatarName: (id: string) => string
 }) {
   const t = useTheme()
-  const {t: l, i18n} = useLingui()
+  const {t: l} = useLingui()
+  const locale = useNumberLocale()
   const {items, subtotals} = itemBreakdown(split)
   /* "Tax 18%": the rate a charge was entered as, when it was a percentage. */
   const rate = (key: keyof NonNullable<typeof split.rates>) => {
     const bp = split.rates?.[key]
     return bp === undefined
       ? ''
-      : ` ${i18n.number(bp / 10000, {style: 'percent', maximumFractionDigits: 2})}`
+      : ` ${new Intl.NumberFormat(locale, {style: 'percent', maximumFractionDigits: 2}).format(bp / 10000)}`
   }
   const extras = [
     {

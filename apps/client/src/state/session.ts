@@ -6,12 +6,28 @@
  * session. When auth lands, a provider replaces this module.
  */
 
-export type SessionState = {
-  hasSession: false
-  currentAccount: undefined
+/** An account this device has signed in to before (Bluesky's `SessionAccount`, trimmed). */
+export type SessionAccount = {
+  id: string
+  name: string
+  /** The email or phone number the account signs in with. */
+  contact: string
 }
 
-const SIGNED_OUT: SessionState = {hasSession: false, currentAccount: undefined}
+export type SessionState = {
+  hasSession: boolean
+  /** Set once sign-in exists; feedback prefills the reply email from it. */
+  currentAccount: {email?: string} | undefined
+  /** Accounts remembered on this device; always empty until the auth backend exists. */
+  accounts: ReadonlyArray<SessionAccount>
+}
+
+const NO_ACCOUNTS: ReadonlyArray<SessionAccount> = []
+const SIGNED_OUT: SessionState = {
+  hasSession: false,
+  currentAccount: undefined,
+  accounts: NO_ACCOUNTS,
+}
 
 /** Signed out until the auth backend exists. */
 export function useSession(): SessionState {

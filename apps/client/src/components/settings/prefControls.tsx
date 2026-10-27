@@ -12,11 +12,10 @@ import {
   allTimeZones,
   deviceTimeZone,
   formatLocalDate,
-  todayIn,
   utcOffsetLabel,
 } from '#/locale/dates'
 import {resolveNumberLocale} from '#/locale/numberLocale'
-import {useDateLocale, useTimeZone} from '#/locale/useDates'
+import {useDateLocale, useToday} from '#/locale/useDates'
 import {atoms as a, native} from '#/alf'
 import {useDialogControl} from '#/components/Dialog'
 import * as SegmentedControl from '#/components/forms/SegmentedControl'
@@ -209,6 +208,23 @@ function HapticsPref() {
       description={
         IS_WEB
           ? l`Browsers can't vibrate. This applies in the Splito app on your phone.`
+          : undefined
+      }
+    />
+  )
+}
+
+function ShakeToFeedbackPref() {
+  const {t: l} = useLingui()
+  return (
+    <SwitchPref
+      pref={usePrefControl('shakeToFeedback')}
+      icon={VibrateIcon}
+      title={l`Shake to send feedback`}
+      label={l`Shaking your phone opens Send feedback`}
+      description={
+        IS_WEB
+          ? l`Browsers can't tell when you shake. This applies in the Splito app on your phone.`
           : undefined
       }
     />
@@ -532,7 +548,7 @@ function WeekStartPref() {
 function DateFormatPref() {
   const {t: l} = useLingui()
   const locale = useDateLocale()
-  const today = todayIn(useTimeZone())
+  const today = useToday()
   const example = (format: 'auto' | 'dmy' | 'mdy' | 'ymd') =>
     formatLocalDate(today, format, locale)
   return (
@@ -833,6 +849,7 @@ export const PREF_CONTROLS = {
   moneyPalette: MoneyPalettePref,
   motion: MotionPref,
   haptics: HapticsPref,
+  shakeToFeedback: ShakeToFeedbackPref,
   tabs: NavigationEditor,
   homeTab: HomeTabPref,
   defaultCurrency: CurrencyPref,
@@ -846,6 +863,7 @@ export const PREF_CONTROLS = {
   analyticsView: AnalyticsViewPref,
   // Chosen on Analytics' own scope chip, where its effect shows; Reset all resets it.
   analyticsScope: null,
+  'pwa.installHintDismissed': null,
   categories: CategoriesEditor,
   language: LanguagePref,
   timezone: TimeZonePref,
@@ -863,6 +881,8 @@ export const PREF_CONTROLS = {
   'notify.invite': NotifyInvitePref,
   // No row until telemetry has a vendor (A-046): a switch that changes nothing would be a placeholder.
   sendDiagnostics: null,
+  // Remembers the switch in the Send feedback sheet, where its effect shows.
+  'feedback.includeAppInfo': null,
   'history.binDays': BinDaysPref,
   'privacy.findByContact': FindablePref,
   'privacy.friendRequestsFrom': FriendRequestsFromPref,

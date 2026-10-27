@@ -4,6 +4,7 @@ import {formatAmount} from '@splito/domain'
 import {encode, type Expense, type HistoryRow, PREFS} from '@splito/sync'
 
 import {useNumberLocale} from '#/locale/numberLocale'
+import {useFormatDay, useTimeZone} from '#/locale/useDates'
 import {usePref} from '#/data/hooks'
 import {atoms as a, useTheme} from '#/alf'
 import {ArrowRotateCounterClockwise_Stroke2_Corner0_Rounded as UndoIcon} from '#/components/icons/ArrowRotate'
@@ -12,11 +13,7 @@ import {Cloud_Stroke2_Corner0_Rounded as CloudIcon} from '#/components/icons/Clo
 import {type Props as SVGIconProps} from '#/components/icons/common'
 import {Pencil_Stroke2_Corner0_Rounded as PencilIcon} from '#/components/icons/Pencil'
 import {Trash_Stroke2_Corner0_Rounded as TrashIcon} from '#/components/icons/Trash'
-import {
-  formatDay,
-  SectionLabel,
-  useDisplayName,
-} from '#/components/split/shared'
+import {SectionLabel, useDisplayName} from '#/components/split/shared'
 import {Text} from '#/components/Typography'
 
 type Kind = 'created' | 'edited' | 'deleted' | 'restored'
@@ -30,6 +27,8 @@ export function History({history}: {history: HistoryRow[]}) {
   const t = useTheme()
   const {t: l, i18n} = useLingui()
   const locale = useNumberLocale()
+  const formatDay = useFormatDay()
+  const tz = useTimeZone()
   const name = useDisplayName()
   const [categories = PREFS.categories.default] = usePref('categories')
   const categoryName = (id: string) =>
@@ -56,7 +55,7 @@ export function History({history}: {history: HistoryRow[]}) {
         )
       if (was.date !== now.date)
         changes.push(
-          l`Date: ${formatDay(i18n, was.date)} → ${formatDay(i18n, now.date)}`,
+          l`Date: ${formatDay(was.date)} → ${formatDay(now.date)}`,
         )
       if (was.category !== now.category)
         changes.push(
@@ -147,6 +146,7 @@ export function History({history}: {history: HistoryRow[]}) {
                 {i18n.date(new Date(row.at), {
                   dateStyle: 'medium',
                   timeStyle: 'short',
+                  timeZone: tz,
                 })}
               </Text>
             </View>

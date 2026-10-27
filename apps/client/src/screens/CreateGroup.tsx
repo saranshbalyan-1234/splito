@@ -6,6 +6,7 @@ import {DomainError, parseLocalDate} from '@splito/domain'
 import {createGroup, createPerson, type Group, type Person} from '@splito/sync'
 
 import {useHaptics} from '#/lib/haptics'
+import {useSingleFlight} from '#/lib/hooks/useSingleFlight'
 import {type NavigationProp} from '#/lib/routes/types'
 import {logger} from '#/logger'
 import {
@@ -56,6 +57,7 @@ export function CreateGroupScreen() {
   const [endDate, setEndDate] = useState('')
   const [memberIds, setMemberIds] = useState<string[]>([])
   const [newName, setNewName] = useState('')
+  const runOnce = useSingleFlight()
   const [error, setError] = useState<'name' | 'dates' | null>(null)
   const [isSaving, setIsSaving] = useState(false)
   const currencyControl = Dialog.useDialogControl()
@@ -70,20 +72,21 @@ export function CreateGroupScreen() {
     .filter(p => !p.data.isMe)
     .sort((x, y) => x.data.name.localeCompare(y.data.name))
 
-  const addNewFriend = async () => {
-    if (!newName.trim()) return
-    try {
-      const p = await createPerson(store, ctx, {name: newName})
-      setMemberIds(ids => [...ids, p.id])
-      setNewName('')
-      haptics.confirm()
-    } catch (e) {
-      logger.error(e, {where: 'CreateGroup.addNewFriend'})
-      Toast.show(l`Couldn’t add that person. Please try again.`, {
-        type: 'error',
-      })
-    }
-  }
+  const addNewFriend = () =>
+    runOnce(async () => {
+      if (!newName.trim()) return
+      try {
+        const p = await createPerson(store, ctx, {name: newName})
+        setMemberIds(ids => [...ids, p.id])
+        setNewName('')
+        haptics.confirm()
+      } catch (e) {
+        logger.error(e, {where: 'CreateGroup.addNewFriend'})
+        Toast.show(l`Couldn’t add that person. Please try again.`, {
+          type: 'error',
+        })
+      }
+    })
 
   const save = async () => {
     const isTrip = kind === 'trip'

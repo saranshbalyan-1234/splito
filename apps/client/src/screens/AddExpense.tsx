@@ -8,8 +8,9 @@ import {useEntities, useMe, usePref} from '#/data/hooks'
 import {ComposerSkeleton} from '#/components/split/ComposerSkeleton'
 import {readDraft} from '#/components/split/drafts'
 import {ExpenseComposer} from '#/components/split/ExpenseComposer'
-import {emptyForm, type ExpenseForm} from '#/components/split/form'
-import {localToday, useExpenseTz} from '#/components/split/shared'
+import {emptyForm, type ExpenseForm, pruneForm} from '#/components/split/form'
+import {todayIn} from '#/locale/dates'
+import {useTimeZone} from '#/locale/useDates'
 
 /**
  * Add expense, opened from the sidebar pill or the FAB exactly the way
@@ -29,7 +30,7 @@ export function AddExpenseScreen() {
   const [adjustModes] = usePref('itemizeAdjustmentModes')
   const [isRoundingCash] = usePref('split.roundCash')
   const [roundTo] = usePref('split.roundTo')
-  const tz = useExpenseTz()
+  const tz = useTimeZone()
 
   const close = () => {
     if (navigation.canGoBack()) navigation.goBack()
@@ -108,7 +109,7 @@ function AddExpenseForm({
       return emptyForm({
         me,
         currency: group.data.currency,
-        date: localToday(tz),
+        date: todayIn(tz),
         people: members,
         groupId: group.id,
         mode,
@@ -120,7 +121,7 @@ function AddExpenseForm({
     return emptyForm({
       me,
       currency,
-      date: localToday(tz),
+      date: todayIn(tz),
       people: person ? [person.id] : [],
       groupId: null,
       mode,
@@ -131,12 +132,10 @@ function AddExpenseForm({
   const [draft] = useState(() => {
     const d = readDraft(context)
     if (!d) return undefined
-    // People removed since the draft was written drop out of it.
+    // People removed since the draft was written drop out of every field of it.
     const alive = new Set(people.map(p => p.id))
     const isGroupAlive = !d.groupId || groups.some(g => g.id === d.groupId)
-    return isGroupAlive
-      ? {...d, people: d.people.filter(p => alive.has(p))}
-      : undefined
+    return isGroupAlive ? pruneForm(d, alive) : undefined
   })
 
   return (

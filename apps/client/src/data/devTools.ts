@@ -8,6 +8,7 @@ import {
   createPerson,
   createRepayment,
   deleteExpense,
+  type EntityType,
   type ExpenseDraft,
   type MutationCtx,
   type PrefKey,
@@ -20,6 +21,7 @@ import {
 } from '@splito/sync'
 
 import {IS_DEV, IS_E2E} from '#/env'
+import {setPwa} from '#/lib/pwa/state'
 
 const MONEY_KEYS = new Set(['total', 'amount', 'tax', 'tip', 'service', 'discount'])
 const MONEY_MAPS = new Set(['payers', 'amounts'])
@@ -46,10 +48,14 @@ export function installDevTools(store: Store, ctx: MutationCtx) {
     createPerson: (name: string) => createPerson(store, ctx, {name}).then(e => e.id),
     createGroup: (input: Parameters<typeof createGroup>[2]) => createGroup(store, ctx, input).then(e => e.id),
     createExpense: (draft: unknown) => createExpense(store, ctx, toBig(draft) as ExpenseDraft).then(e => e.id),
+    /** Every row of one entity type, bigint as decimal strings (read-only, for assertions). */
+    list: async (type: EntityType) => JSON.parse(JSON.stringify(await store.getAll(type), (_k, v) => (typeof v === 'bigint' ? v.toString() : v))),
     deleteExpense: (id: string) => deleteExpense(store, ctx, id),
     restoreExpense: (id: string) => restoreExpense(store, ctx, id),
     createRepayment: (input: unknown) => createRepayment(store, ctx, toBig(input) as RepaymentInput).then(e => e.id),
     updateGroupRules: (groupId: string, rules: SettlementRules) => updateGroupRules(store, ctx, groupId, rules).then(e => e.id),
+    /** Plays a PWA state change (e.g. `{updateReady: true}`) that a real worker would cause. */
+    setPwa,
     setPref: <K extends PrefKey>(key: K, value: PrefValue<K>) => setPref(store, ctx, key, value),
     /** The other side accepts your pending request to `contactValue` (stands in for the pull). */
     acceptOutgoing: async (contactValue: string, name = 'Friend') => {

@@ -335,7 +335,7 @@ test.describe('drawer: Bluesky drawer from the header avatar', () => {
     ])
     // The footer links are the sidebar's component (26.3).
     await expect(drawer.getByTestId('nav-footer-links')).toContainText(
-      'Help ∙ Privacy ∙ About',
+      'Feedback ∙ Help ∙ Privacy ∙ About',
     )
     // Escape closes it (focus is trapped inside while it's open).
     await page.keyboard.press('Escape')
@@ -502,7 +502,7 @@ test.describe('desktop: Bluesky left sidebar and full-width content', () => {
     expect([...ys].sort((x, y) => x - y)).toEqual(ys)
     await expect(page.getByTestId('logo-wordmark')).toHaveCount(0)
     await expect(nav.getByTestId('nav-footer-links')).toContainText(
-      'Help ∙ Privacy ∙ About',
+      'Feedback ∙ Help ∙ Privacy ∙ About',
     )
     for (const gone of ['sidebar-profile'])
       await expect(nav.getByTestId(gone)).toHaveCount(0)

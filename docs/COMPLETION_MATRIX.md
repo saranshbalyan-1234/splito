@@ -29,7 +29,9 @@ Status words are the same as `docs/BACKLOG.md`: **done** (built, tested and merg
 | Expenses | Itemize: portions, Everyone, tax / tip / service / discount visible with amount / % toggle | F-401 | in progress (built and tested on the unmerged UI line) |
 | Expenses | Smart amount input | F-310 | in progress (built and tested on feat/b-*, unmerged) |
 | Expenses | Amount entry and parsing correctness (audit C1, C2, M1, M2, M3, M7, M14, m8, m9, m13) | F-111 | done (feat/4b-33c; domain/sync/client bun tests + e2e `amountLocale.spec.ts` in de-DE and en-US with BHD; web verified, native not yet run) |
+| Navigation | Web navigation and sheet robustness (audit M16, m6, m12, m26, m27, m30) and one-line Activity request rows | F-116 | done (feat/wA-33h; sync `mutations.test.ts` / `preferences.test.ts`, client `goBack.test.ts` / `form.test.ts` / `draftKey.test.ts`, e2e `webNav.spec.ts` + `links.spec.ts` + `activityRequests.spec.ts`; web verified, native not yet run) |
 | Settle up | Balances and settle consistency (audit M6, M10, M11, m5, m7, m10, m16) | F-113 | done (feat/4b-33d; domain `balanceAudit.test.ts`, sync `writeoffs.test.ts`, client `form.test.ts` / `sort.test.ts` / `feed.test.ts`, e2e `balances.spec.ts` + `group.spec.ts` A07 + `demo.spec.ts`; web verified, native not yet run) |
+| Settings | Timezone, date and number formats everywhere (audit M9, M17, M18, m14, m23, m24, m25, m28, m29) | F-115 | done (feat/wA-33g; client `dates.test.ts` / `feed.test.ts` / `numberFormatNative.test.ts`, sync `preferences.test.ts`, e2e `dates.spec.ts`; web verified, native only checked under Bun's polyfill run, not yet on a device); Activity row-build profile, 1,000 events, `feed.bench.test.ts`, Bun on a machine at load average ~250: before 3.4-3.7 s (domain `todayIn` built an `Intl.DateTimeFormat` per call), after 3-11 ms (one cached formatter per timezone, `buildRows` memoised in `useActivityFeed`); not profiled on Hermes) |
 | Expenses | Cash rounding with visible remainder | F-402 | in progress (built and tested on feat/b-*, unmerged) |
 | Settle up | Plan per group, payment rules, record repayment, UPI link and "Mark as paid?" | F-1101, F-1103 | in progress (built and tested on the unmerged UI line) |
 | Settle up | Call it even: forgive or write off | F-1113 | in progress (built and tested on feat/b-*, unmerged) |
@@ -37,17 +39,17 @@ Status words are the same as `docs/BACKLOG.md`: **done** (built, tested and merg
 | Activity | Recently deleted bin | F-1203 | in progress (built and tested on feat/b-*, unmerged) |
 | Analytics | Charts + table, period / currency / group filters, Export CSV in the header overflow | F-1301 | in progress (built and tested on the unmerged UI line) |
 | Settings | Every preference incl. Dim / Black dark style, accent, timezone | F-1701 | in progress (built and tested on the unmerged UI line) |
-| Settings | Account section: Sign in (honest until sync) / Log out | F-225 | todo |
+| Settings | Account section: Sign in / Create account (Bluesky LoggedOut, Login, Signup copied; honest until sync; Log out ships with F-2102) | F-225 | done (feat/wA-30b; backend submit answers "arrives with sync" until F-2102) |
 | Friends | Private friends ("Add anyway (only for you)") | F-601 | in progress (built on the unmerged UI line) |
 | Friends | Add friend by email or mobile, Splito directory check, consent, Requests and Invites sent | F-618 | done (feat/4b-31-33; directory answers in demo only, production says "We'll check when you're online" until F-2111) |
 | Friends | Invite link and QR with use / expiry limits, manage and revoke | F-619 | done (feat/4b-31-33; links fail closed outside demo until F-2105) |
 | Friends | Choose from contacts | F-602 | done (feat/4b-31-33; web verified, native picker not yet run on a device) |
 | Friends | Directory lookup and friend requests on the server | F-2111 | todo (needs backend) |
 | Friends | Invites and invite links on the server; link a private friend to a real account | F-2105, F-2106 | todo (needs backend) |
-| Support | Feedback: drawer + footer + Settings > Support, Send feedback sheet, Your feedback, saved on device + email draft | F-226 | in progress (partially built on feat/feedback, unverified) |
+| Support | Feedback: drawer + footer + Settings > Support, Send feedback sheet, Your feedback, saved on device + email draft | F-226 | done (feat/wA-34; integrated on integrate/wA) |
 | Support | Feedback endpoint | F-2112 | todo (needs backend) |
 | Support | Help, About, licences, privacy | F-215 | todo |
-| Platform | PWA: production service worker, offline shell, update toast, manifest, Install app | F-1901 | todo (Batch 4b) |
+| Platform | PWA: production service worker, offline shell, update toast, manifest, Install app | F-1901 | done (feat/wA-38; verified in Chrome on a production build: registers, opens offline incl. deep routes, no API cached, update toast + Reload, install prompt and iPhone steps; Safari 7-day warning has no Export action until F-2001; native iOS/Android n/a) |
 | Expenses+ | Comments on expenses and repayments (local + outbox) | F-1204 | todo (Batch 4b) |
 | Expenses+ | Disputes and flags | F-1210 | todo |
 | Expenses+ | Shared comments and disputes | F-2208 | todo (needs backend) |

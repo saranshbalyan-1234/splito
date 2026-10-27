@@ -13,6 +13,7 @@ import {ThemeProvider as Alf} from '#/alf'
 import {useColorModeTheme} from '#/alf/util/useColorModeTheme'
 import {GestureRoot} from '#/components/GestureRoot'
 import {Provider as PortalProvider} from '#/components/Portal'
+import {PwaHost} from '#/features/pwa/PwaHost'
 import {ToastOutlet} from '#/components/Toast'
 import {StoreProvider} from '#/data/StoreProvider'
 import {Shell} from '#/view/shell'
@@ -33,6 +34,7 @@ function Themed() {
             <StoreProvider>
               <LocaleFromPrefs />
               <PrefsMirror />
+              <PwaHost />
               <Shell />
             </StoreProvider>
             <ToastOutlet />

@@ -182,10 +182,48 @@ export function withPeople(
     ...f,
     people,
     excluded: f.excluded.filter(p => keep.has(p)),
-    items: f.items.map(i => ({
-      ...i,
-      people: i.people.filter(p => keep.has(p)),
-    })),
+    items: keepItemPeople(f.items, keep),
+  }
+}
+
+/** Items with only `keep`'s people and their portions: portions of someone removed must not return when they are re-added (audit m30c). */
+export function keepItemPeople(
+  items: ItemForm[],
+  keep: ReadonlySet<string>,
+): ItemForm[] {
+  return items.map(i => ({
+    ...i,
+    people: i.people.filter(p => keep.has(p)),
+    ...(i.portions
+      ? {
+          portions: Object.fromEntries(
+            Object.entries(i.portions).filter(([p]) => keep.has(p)),
+          ),
+        }
+      : {}),
+  }))
+}
+
+/**
+ * A restored draft with every reference to a person outside `alive` removed
+ * (payer, paid, per-person amounts, exclusions, item picks), so Save cannot
+ * fail with UNKNOWN_PERSON (audit m30b). The payer falls to the first person left.
+ */
+export function pruneForm(f: ExpenseForm, alive: ReadonlySet<string>): ExpenseForm {
+  const people = f.people.filter(p => alive.has(p))
+  const only = <V>(m: Record<string, V>) =>
+    Object.fromEntries(Object.entries(m).filter(([p]) => alive.has(p))) as Record<string, V>
+  return {
+    ...f,
+    people,
+    payer: alive.has(f.payer) ? f.payer : (people[0] ?? f.payer),
+    paid: only(f.paid),
+    exact: only(f.exact),
+    percent: only(f.percent),
+    shares: only(f.shares),
+    adjust: only(f.adjust),
+    excluded: f.excluded.filter(p => alive.has(p)),
+    items: keepItemPeople(f.items, alive),
   }
 }
 

@@ -1,5 +1,4 @@
 import {View} from 'react-native'
-import {type I18n} from '@lingui/core'
 import {useLingui} from '@lingui/react/macro'
 import {getCurrency} from '@splito/domain'
 import {
@@ -13,61 +12,6 @@ import {useEntities, useMutationCtx, usePref} from '#/data/hooks'
 import {atoms as a, useTheme} from '#/alf'
 import {Text} from '#/components/Typography'
 import {categoryIcon} from './icons'
-
-/** The device's IANA timezone. */
-export function deviceTz() {
-  return Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC'
-}
-
-/** The timezone new expenses are stamped with: the Timezone preference, else the device's. */
-export function useExpenseTz() {
-  const [pref = 'device'] = usePref('timezone')
-  return pref === 'device' ? deviceTz() : pref
-}
-
-/** Today's `YYYY-MM-DD` in `tz` (en-CA formats dates as ISO). */
-export function localToday(tz: string, offsetDays = 0) {
-  const d = new Date(Date.now() + offsetDays * 86_400_000)
-  return new Intl.DateTimeFormat('en-CA', {
-    timeZone: tz,
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-  }).format(d)
-}
-
-/** A local `YYYY-MM-DD` as a Date at UTC midnight, so formatting never shifts the day. */
-export function utcDate(d: string) {
-  return new Date(`${d}T00:00:00Z`)
-}
-
-/** "Today", "Yesterday", "Tomorrow", else "26 Oct 2026" in the UI language. */
-export function useFormatDay() {
-  const {t: l, i18n} = useLingui()
-  const tz = useExpenseTz()
-  return (date: string, {relative = true}: {relative?: boolean} = {}) => {
-    if (relative) {
-      if (date === localToday(tz)) return l`Today`
-      if (date === localToday(tz, -1)) return l`Yesterday`
-      if (date === localToday(tz, 1)) return l`Tomorrow`
-    }
-    return formatDay(i18n, date)
-  }
-}
-
-export function formatDay(
-  i18n: I18n,
-  date: string,
-  opts: Intl.DateTimeFormatOptions = {},
-) {
-  return i18n.date(utcDate(date), {
-    day: 'numeric',
-    month: 'short',
-    year: 'numeric',
-    timeZone: 'UTC',
-    ...opts,
-  })
-}
 
 /** Display names by person id; the local user is "You". */
 export function useDisplayName() {

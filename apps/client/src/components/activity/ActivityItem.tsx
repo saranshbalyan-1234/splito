@@ -51,7 +51,8 @@ import {
   RestoredBadge,
   WriteOffBadge,
 } from './icons'
-import {daysAgo, writeOffParties} from './feed'
+import {useTimeZone, useToday} from '#/locale/useDates'
+import {dayOf, daysAgo, writeOffParties} from './feed'
 import {type ActivityActions, type RowAction} from './useActivityActions'
 import {type ActivitySnapshot} from './useActivityFeed'
 
@@ -146,9 +147,12 @@ export function ActivityItem({
   const rowPadding = useRowPadding()
   const rowPaddingTop = (rowPadding as {paddingTop?: number}).paddingTop ?? 12
   const menuControl = Menu.useMenuControl()
+  const [menuAt, setMenuAt] = useState({x: 0, y: 0})
   const [isHovered, setIsHovered] = useState(false)
   const [isFocusWithin, setIsFocusWithin] = useState(false)
   const content = useDescribe(event, snapshot, me, locale, navigation, actions)
+  /* A request awaiting an answer is one line: the answers on the right in place of "...", whose items are long-press / right-click (ARCHITECTURE 26.18). */
+  const isRequestRow = !!content.actions
 
   const menuActions = (['markRead', 'hide', 'delete'] as const).filter(x =>
     actions.isAvailable(x, event),
@@ -238,7 +242,42 @@ export function ActivityItem({
               onBlur: () => setIsFocusWithin(false),
             }
           : {})}
-        style={[a.relative, {backgroundColor}, style]}>
+        {...(IS_WEB && isRequestRow
+          ? {
+              onContextMenu: (e: {
+                preventDefault(): void
+                clientX: number
+                clientY: number
+                currentTarget: Element
+              }) => {
+                e.preventDefault()
+                const box = e.currentTarget.getBoundingClientRect()
+                setMenuAt({x: e.clientX - box.left, y: e.clientY - box.top})
+                haptics.longPress()
+                menuControl.open()
+              },
+              /* Keyboard: the Menu key or Shift+F10 on the row, or on its Accept / Decline, opens the same menu. */
+              onKeyDown: ((e: {
+                key: string
+                shiftKey: boolean
+                preventDefault(): void
+                currentTarget: Element
+              }) => {
+                if (e.key !== 'ContextMenu' && !(e.shiftKey && e.key === 'F10'))
+                  return
+                e.preventDefault()
+                const box = e.currentTarget.getBoundingClientRect()
+                setMenuAt({x: box.width / 2, y: box.height})
+                menuControl.open()
+              }) as never,
+            }
+          : {})}
+        style={[
+          a.relative,
+          isRequestRow ? [a.flex_row, a.align_center] : undefined,
+          {backgroundColor},
+          style,
+        ]}>
         <Pressable
           accessibilityRole={content.open ? 'link' : 'button'}
           accessibilityHint={
@@ -262,14 +301,16 @@ export function ActivityItem({
             a.flex_row,
             a.align_start,
             a.gap_lg,
-            a.w_full,
+            isRequestRow ? [a.flex_1, {minWidth: 0}] : a.w_full,
             a.px_lg,
             rowPadding,
             {backgroundColor},
             {
-              paddingRight: IS_WEB
-                ? actionsInset
-                : ACTIONS_RIGHT + ACTION_BUTTON_SIZE + 4,
+              paddingRight: isRequestRow
+                ? a.gap_md.gap
+                : IS_WEB
+                  ? actionsInset
+                  : ACTIONS_RIGHT + ACTION_BUTTON_SIZE + 4,
             },
           ]}>
           <SubtleHover hover={isHovered} />
@@ -309,26 +350,38 @@ export function ActivityItem({
         </Pressable>
         {content.actions ? (
           <View
-            style={[
-              a.flex_row,
-              a.gap_sm,
-              a.pb_md,
-              a.pr_lg,
-              {
-                backgroundColor,
-                paddingLeft:
-                  a.px_lg.paddingLeft + SLOT_SIZE.width + a.gap_lg.gap,
-                marginTop: -4,
-              },
-            ]}>
+            testID="activity-request-actions"
+            style={[a.flex_row, a.align_center, a.gap_xs, a.flex_shrink_0, a.pr_lg]}>
             {content.actions}
           </View>
         ) : null}
         {/*
-         * The "..." is always there, on every platform, so the row's actions
-         * are discoverable; on web with a mouse the quick actions join it on
-         * hover or focus.
+         * The "..." is on every row, so its actions are discoverable; on web
+         * with a mouse the quick actions join it on hover or focus. A request
+         * row has no "...": Accept / Decline take its place and the menu opens
+         * on long-press or right-click.
          */}
+        {isRequestRow ? (
+          <Menu.Root control={menuControl}>
+            {IS_WEB ? (
+              /* An invisible anchor where the right-click landed. */
+              <Menu.Trigger label={l`More actions`}>
+                {({props}) => (
+                  <Pressable
+                    {...props}
+                    accessible={false}
+                    pointerEvents="none"
+                    style={[
+                      a.absolute,
+                      {left: menuAt.x, top: menuAt.y, width: 1, height: 1, opacity: 0},
+                    ]}
+                  />
+                )}
+              </Menu.Trigger>
+            ) : null}
+            {menu}
+          </Menu.Root>
+        ) : (
         <View
           testID="activity-actions"
           style={[
@@ -388,6 +441,7 @@ export function ActivityItem({
             {menu}
           </Menu.Root>
         </View>
+        )}
       </View>
     </GestureActionView>
   )
@@ -872,17 +926,27 @@ function Dot() {
 function Timestamp({at}: {at: number}) {
   const t = useTheme()
   const {i18n} = useLingui()
+  const tz = useTimeZone()
+  const today = useToday()
   const date = new Date(at)
-  const isToday = daysAgo(at, Date.now()) === 0
+  const isToday = daysAgo(dayOf(at, tz), today) === 0
   return (
     <TimeElapsed
       // TimeElapsed only re-formats on its minute tick; a language switch remounts it.
       key={i18n.locale}
       timestamp={date.toISOString()}
-      timeToString={isToday ? formatTimeAgo : formatTimeOfDay}>
+      timeToString={
+        isToday
+          ? formatTimeAgo
+          : (i18n, timestamp) => formatTimeOfDay(i18n, timestamp, tz)
+      }>
       {({timeElapsed}) => (
         <Text
-          title={i18n.date(date, {dateStyle: 'medium', timeStyle: 'short'})}
+          title={i18n.date(date, {
+            dateStyle: 'medium',
+            timeStyle: 'short',
+            timeZone: tz,
+          })}
           style={[
             a.self_start,
             a.text_sm,
@@ -896,8 +960,8 @@ function Timestamp({at}: {at: number}) {
   )
 }
 
-function formatTimeOfDay(i18n: I18n, timestamp: string) {
-  return i18n.date(new Date(timestamp), {timeStyle: 'short'})
+function formatTimeOfDay(i18n: I18n, timestamp: string, timeZone: string) {
+  return i18n.date(new Date(timestamp), {timeStyle: 'short', timeZone})
 }
 
 function formatTimeAgo(i18n: I18n, timestamp: string) {

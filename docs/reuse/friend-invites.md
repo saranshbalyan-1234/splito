@@ -31,7 +31,7 @@ Dependencies taken from Bluesky's `package.json` at the same versions: `expo-con
 
 | Splito file | Bluesky source of the layout |
 |---|---|
-| `src/components/activity/ActivityItem.tsx` friend-request rows | `src/view/com/notifications/NotificationFeedItem.tsx` (`FollowBackButton` under a follow notification); Splito renders the buttons (shared `RequestAction`) as a sibling of the row's pressable (ARCHITECTURE 2) |
+| `src/components/activity/ActivityItem.tsx` friend-request rows | `src/view/com/notifications/NotificationFeedItem.tsx` (`FollowBackButton` under a follow notification); Splito renders the buttons (shared `RequestAction`) as a sibling of the row's pressable (ARCHITECTURE 2). F-116: a pending request is the one-line `RequestRow` layout (actions on the right, vertically centred, no "..."); its menu opens on long-press (native) and right-click (web, anchored where the click landed) |
 | `src/components/people/PendingPeople.tsx` | `src/components/ProfileCard.tsx` row, disabled and muted |
 | Group Add members sheet "Invite link or QR code" row (drawn in `src/screens/Group/index.tsx`, passed to `AddMembersDialog`) | `src/screens/Settings/components/SettingsList.tsx` pressable row, as in the Add friend sheet (26.18 decision 77; the People and Group overflow entries were removed) |
 

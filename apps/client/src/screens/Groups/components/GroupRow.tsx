@@ -12,15 +12,11 @@ import {BalanceBlock, SettledPill} from '#/components/BalanceText'
 import {GroupAvatar} from '#/components/groups/GroupAvatar'
 import * as Skeleton from '#/components/Skeleton'
 import {Text} from '#/components/Typography'
+import {useFormatDay} from '#/locale/useDates'
 import {useListAnimations} from '#/motion/listAnimations'
 import {usePressScale} from '#/motion/PressableScale'
 
 const AVATAR_SIZE = 42
-
-/** A local `YYYY-MM-DD` as a Date at UTC midnight, so formatting never shifts the day. */
-function utcDate(d: string) {
-  return new Date(`${d}T00:00:00Z`)
-}
 
 /**
  * Bluesky's list card as a row: the group's tile, title, byline (kind,
@@ -40,7 +36,8 @@ export function GroupRow({
 }) {
   const t = useTheme()
   const rowPadding = useRowPadding()
-  const {t: l, i18n} = useLingui()
+  const {t: l} = useLingui()
+  const formatDay = useFormatDay()
   const listAnimations = useListAnimations()
   const press = usePressScale()
   const {name, kind, startDate, endDate, members} = group.data
@@ -53,7 +50,7 @@ export function GroupRow({
   const memberCount = members.filter(m => m.leftAt === null).length
   const dates =
     startDate && endDate
-      ? `${i18n.date(utcDate(startDate), {day: 'numeric', month: 'short', timeZone: 'UTC'})} – ${i18n.date(utcDate(endDate), {day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC'})}`
+      ? `${formatDay(startDate, {intl: {day: 'numeric', month: 'short'}})} – ${formatDay(endDate, {intl: {day: 'numeric', month: 'short', year: 'numeric'}})}`
       : null
   const memberText = memberCount === 1 ? l`1 member` : l`${memberCount} members`
   const byline = [kindLabel, dates, memberText].filter(Boolean).join(' · ')

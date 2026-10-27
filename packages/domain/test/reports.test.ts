@@ -58,6 +58,22 @@ const LEDGER = [lunch, cab, rent, euro, gone, payback]
 const ALL_INR: ReportFilter = {currency: 'INR', range: {from: '2026-01-01', to: '2026-12-31'}, includeGroups: true}
 
 describe('dates and periods', () => {
+  test('todayIn builds one formatter per timezone, not one per call', () => {
+    const Real = Intl.DateTimeFormat
+    let built = 0
+    const Spy = function (this: unknown, ...a: ConstructorParameters<typeof Real>) {
+      built++
+      return new Real(...a)
+    } as unknown as typeof Real
+    Intl.DateTimeFormat = Spy
+    try {
+      for (let i = 0; i < 50; i++) todayIn('Pacific/Auckland', 1_800_000_000_000 + i)
+      expect(built).toBeLessThanOrEqual(1)
+    } finally {
+      Intl.DateTimeFormat = Real
+    }
+  })
+
   test('todayIn uses the chosen timezone, not UTC', () => {
     const now = Date.UTC(2026, 9, 25, 20, 0) // 2026-10-25 20:00Z
     expect(todayIn('Asia/Kolkata', now)).toBe('2026-10-26')

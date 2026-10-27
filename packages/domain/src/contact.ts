@@ -22,6 +22,9 @@ export function normalizePhone(input: string): string | null {
   return digits.length >= 8 && digits.length <= 15 ? `+${digits}` : null
 }
 
+/** The shortest password sign-up and password reset accept (Bluesky's rule). */
+export const MIN_PASSWORD_LENGTH = 8
+
 /** A one-time sign-in code: exactly six digits. */
 export function isSignInCode(input: string): boolean {
   return /^\d{6}$/.test(input.trim())

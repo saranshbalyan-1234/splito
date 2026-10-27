@@ -5,15 +5,17 @@ import {useLingui} from '@lingui/react/macro'
 import {useNavigation} from '@react-navigation/native'
 
 import {type NavigationProp} from '#/lib/routes/types'
+import {useOpenFeedback} from '#/state/feedback'
 import {atoms as a, useTheme, web, type ViewStyleProp} from '#/alf'
 import {Text} from '#/components/Typography'
 
-type Section = 'help' | 'privacy' | 'about'
+type Section = 'feedback' | 'help' | 'privacy' | 'about'
 
 /**
  * Bluesky's footer links ("Feedback · Privacy · Terms · Help"), shared by the
  * desktop sidebar and the phone drawer (ARCHITECTURE 26.3, 26.5, 26.7):
- * Help · Privacy · About, each opening its Settings page.
+ * Feedback · Help · Privacy · About: Feedback opens the Send feedback sheet,
+ * the rest open their Settings page.
  */
 export function NavFooterLinks({
   onBeforeNavigate,
@@ -25,11 +27,9 @@ export function NavFooterLinks({
   const t = useTheme()
   const {t: l} = useLingui()
   const navigation = useNavigation<NavigationProp>()
-  /*
-   * TODO(F-226): Feedback leads the row once its sheet ships; until then it
-   * is left out rather than opening nothing.
-   */
+  const openFeedback = useOpenFeedback()
   const links: {section: Section; label: string}[] = [
+    {section: 'feedback', label: l`Feedback`},
     {section: 'help', label: l`Help`},
     {section: 'privacy', label: l`Privacy`},
     {section: 'about', label: l`About`},
@@ -48,10 +48,13 @@ export function NavFooterLinks({
             <FooterLink
               testID={`nav-footer-${section}`}
               label={label}
-              href={`/settings/${section}`}
+              href={
+                section === 'feedback' ? undefined : `/settings/${section}`
+              }
               onPress={() => {
                 onBeforeNavigate?.()
-                navigation.navigate('SettingsSection', {section})
+                if (section === 'feedback') openFeedback()
+                else navigation.navigate('SettingsSection', {section})
               }}
             />
           </Fragment>
@@ -70,7 +73,7 @@ function FooterLink({
 }: {
   testID: string
   label: string
-  href: string
+  href?: string
   onPress: () => void
 }) {
   const t = useTheme()

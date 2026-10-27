@@ -10,6 +10,7 @@ import {
 } from '@splito/sync'
 
 import {useHaptics} from '#/lib/haptics'
+import {useSingleFlight} from '#/lib/hooks/useSingleFlight'
 import {logger} from '#/logger'
 import {useEntities, useMutationCtx, usePendingRequests, useStore} from '#/data/hooks'
 import {UserAvatar} from '#/view/com/util/UserAvatar'
@@ -62,6 +63,7 @@ function Form({
   const people = useEntities<Person>('person')
   const [selected, setSelected] = useState<string[]>([])
   const [newName, setNewName] = useState('')
+  const runOnce = useSingleFlight()
   const [isSaving, setIsSaving] = useState(false)
   const current = new Set(
     group.data.members.filter(m => m.leftAt === null).map(m => m.personId),
@@ -70,20 +72,21 @@ function Form({
     .filter(p => !p.data.isMe && !current.has(p.id))
     .sort((x, y) => x.data.name.localeCompare(y.data.name))
 
-  const addNew = async () => {
-    if (!newName.trim()) return
-    try {
-      const p = await createPerson(store, ctx, {name: newName})
-      setSelected(ids => [...ids, p.id])
-      setNewName('')
-      haptics.confirm()
-    } catch (e) {
-      logger.error(e, {where: 'AddMembersDialog.addNew'})
-      Toast.show(l`Couldn’t add that person. Please try again.`, {
-        type: 'error',
-      })
-    }
-  }
+  const addNew = () =>
+    runOnce(async () => {
+      if (!newName.trim()) return
+      try {
+        const p = await createPerson(store, ctx, {name: newName})
+        setSelected(ids => [...ids, p.id])
+        setNewName('')
+        haptics.confirm()
+      } catch (e) {
+        logger.error(e, {where: 'AddMembersDialog.addNew'})
+        Toast.show(l`Couldn’t add that person. Please try again.`, {
+          type: 'error',
+        })
+      }
+    })
 
   const save = async () => {
     setIsSaving(true)

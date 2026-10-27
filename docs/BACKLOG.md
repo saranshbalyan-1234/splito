@@ -280,7 +280,7 @@ Fixes for logic-audit findings M4, m1, m11, m15, m17, m18, m19, m20 (see the rep
 
 Fixes for logic-audit findings M9, M17, M18, m14, m23, m24, m25, m28, m29 (see the report for scenario, evidence and fix per finding).
 
-- **Effort** M · **Impact** 8 · **Backend** no · **Status** todo · **Deps** merge row 30
+- **Effort** M · **Impact** 8 · **Backend** no · **Status** done (feat/wA-33g, 2026-10-27; client `dates.test.ts`, `feed.test.ts`, `numberFormatNative.test.ts`, sync `preferences.test.ts`, e2e `dates.spec.ts` with a Los Angeles device and a Kolkata preference; web verified, native polyfill checked under Bun only, not yet on a device) · **Deps** merge row 30
 - **Prefs** -
 - **Acceptance**
   1. Payments, write-offs and Activity use the Timezone preference; native honours the Number format preference and en-IN grouping; the Date format preference applies on every screen; invalid zones are rejected; day arithmetic is DST-safe; percents and counts use Number format; the native zone picker lists all zones; "today" refreshes across midnight and on app resume.
@@ -291,7 +291,7 @@ Fixes for logic-audit findings M9, M17, M18, m14, m23, m24, m25, m28, m29 (see t
 
 Fixes for logic-audit findings M16, m6, m12, m26, m27, m30 (see the report for scenario, evidence and fix per finding).
 
-- **Effort** M · **Impact** 8 · **Backend** no · **Status** todo · **Deps** merge row 30
+- **Effort** M · **Impact** 8 · **Backend** no · **Status** done (feat/wA-33h; sync `mutations.test.ts` / `preferences.test.ts`, client `goBack.test.ts` / `form.test.ts` / `draftKey.test.ts`, e2e `webNav.spec.ts` + `links.spec.ts` + `activityRequests.spec.ts`; web verified, native not yet run) · **Deps** merge row 30
 - **Prefs** -
 - **Acceptance**
   1. Back fallbacks work after a deep link or refresh on web; reset-all survives removed preferences; groups reject end before start; a drawer reopened during its exit animation shows; browser Back on a dirty sheet asks "Discard changes?"; composer drafts are per-entry and prune every removed reference.
@@ -546,7 +546,7 @@ Pin friends and groups to the top of their lists and of the right column's Recen
 
 One `navigationItems` array and one `NavFooterLinks` component feed the desktop/rail sidebar and the phone drawer, so both show Home, Groups, Analytics, Ask Splito, Activity, Settings, then Feedback · Help · Privacy · About. The home destination is "Home"; its header shows the logo on phones and the title "Home" on rail and desktop. The drawer header shows the avatar and the person's real name only.
 
-- **Effort** S · **Impact** 8 · **Backend** no · **Status** done (web checked in Chrome; Cmd/Ctrl+K on native hardware keyboards and the footer's Feedback link wait for a native key-command module and F-226; Ask Splito item and the drawer's Ask mode wait for F-2301) · **Deps** F-201, F-204
+- **Effort** S · **Impact** 8 · **Backend** no · **Status** done (web checked in Chrome; Cmd/Ctrl+K on native hardware keyboards and native hardware-keyboard shortcuts wait for a native key-command module; Ask Splito item and the drawer's Ask mode wait for F-2301) · **Deps** F-201, F-204
 - **Prefs** `tabs` (now takes every shared item, group Navigation)
 - **Acceptance**
   1. Sidebar and drawer show the same items in the same order with the same icons and labels, rendered from one `navigationItems` array and one `NavFooterLinks` component (a unit test asserts both lists are identical). The sidebar adds only the logo and the "Add expense" pill; the drawer adds only its profile header and Sign in / Log out (F-225).
@@ -584,10 +584,10 @@ A fixed 320 px right column in Bluesky `RightNav` style at 1300 px and up, with 
 
 Settings starts with an "Account" section copied from Bluesky's Settings account section and Login/Signup screens; auth state comes from one `useSession()`. Honest until the auth backend exists.
 
-- **Effort** M · **Impact** 8 · **Backend** no · **Status** in progress · **Deps** F-1701, F-205
+- **Effort** M · **Impact** 8 · **Backend** no · **Status** done (feat/wA-30b; Log out and the signed-in row ship with F-2102) · **Deps** F-1701, F-205
 - **Prefs** -
 - **Acceptance**
-  1. Signed out: a "Sign in" row with the subtitle "Back up and share with friends" pushes the sign-in flow: choose a method (Continue with Apple, Continue with Google, Email, Phone) -> email or phone entry -> 6-digit code; every field is validated.
+  1. Signed out: a "Sign in" row with the subtitle "Back up and share with friends" opens Bluesky's logged-out flow full screen over the app (closable): splash with Create account / Sign in -> Login (email or phone, password, Forgot?) or Signup (name, email or phone, password); every field is validated (replaces the earlier method-picker design, decision 65).
   2. Until F-2102 exists, submit shows the Bluesky Admonition "Sign-in arrives with sync. Your data stays safe on this device."; no fake success and no fake account.
   3. Auth state comes from one `useSession()` (Bluesky `src/state/session` pattern), signed out until the backend lands; the drawer footer shows "Sign in" (and "Log out" once signed in).
   4. The signed-in account row and the "Log out?" prompt ship with F-2102 (criteria there).
@@ -619,8 +619,8 @@ Cmd/Ctrl+K toggles the Search & Ask drawer on iPad and Android with a hardware k
 
 Bluesky's placement: a "Feedback" item in the drawer and the shared footer links, and a Settings "Support" section (Send feedback, Your feedback, Help, About). Feedback is kept on the device, with an email fallback, until the backend endpoint (F-2112).
 
-- **Effort** M · **Impact** 7 · **Backend** no · **Status** in progress (partially built on feat/feedback, unverified) · **Deps** F-201, F-205
-- **Prefs** `feedback.shake` (device)
+- **Effort** M · **Impact** 7 · **Backend** no · **Status** done (feat/wA-34; Feedback leads the shared footer links on the sidebar and the drawer) · **Deps** F-201, F-205
+- **Prefs** `shakeToFeedback` (device, default off), `feedback.includeAppInfo` (device, default on; remembers the sheet's switch)
 - **Acceptance**
   1. "Feedback" opens from the drawer and from the footer links of the sidebar and drawer; Settings has a "Support" section with Send feedback, Your feedback, Help and About; under 1300 px desktop reaches them through the drawer and Settings.
   2. "Send feedback" opens a FormSheet (bottom drawer on phones, centred popup on desktop): type chips Bug / Idea / Question / Other, a required message, an optional screenshot or photo, an "Include app info" toggle (default on: version, platform, OS, language, current screen; never amounts, names, notes or receipts) with the sheet showing exactly what is attached, and an optional reply email (prefilled once signed in).
@@ -2864,7 +2864,7 @@ Native surfaces and the PWA.
 
 A production-only service worker with an offline app shell, a Bluesky-style update toast, a web manifest and install; plus manifest shortcuts, badge and a .splito file handler.
 
-- **Effort** M · **Impact** 8 · **Backend** no · **Status** todo · **Deps** F-201
+- **Effort** M · **Impact** 8 · **Backend** no · **Status** done (feat/wA-38; criterion 5's Export action waits for F-2001, the warning offers Add to Home Screen) · **Deps** F-201
 - **Prefs** `pwa.installHintDismissed` (device)
 - **Acceptance**
   1. The service worker registers only in production web builds (off in dev and e2e). It precaches the hashed app shell and assets, serves fonts and images stale-while-revalidate, and falls back to the cached shell for navigations, so the app opens offline (A16: refreshing a deep route offline works).

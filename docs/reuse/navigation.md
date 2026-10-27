@@ -7,7 +7,7 @@ glyphs, illustrations, logos or `assets/images` are copied.
 
 | Splito file | Upstream file | Splito changes |
 |---|---|---|
-| `src/components/NavFooterLinks.tsx` | `src/view/shell/desktop/RightNav.tsx` (footer links), `src/components/Link.tsx` (`InlineLinkText` hover/focus underline) | One component shared by the desktop/rail sidebar and the phone drawer: Help, Privacy, About open their Settings pages. Feedback joins when its sheet ships (F-226) |
+| `src/components/NavFooterLinks.tsx` | `src/view/shell/desktop/RightNav.tsx` (footer links), `src/components/Link.tsx` (`InlineLinkText` hover/focus underline) | One component shared by the desktop/rail sidebar and the phone drawer: Feedback opens the Send feedback sheet (F-226); Help, Privacy, About open their Settings pages |
 | `src/features/searchAsk/SearchAskBody.tsx` | `src/screens/Search/Shell.tsx` | The search shell moved from a page into a Dialog body (`Dialog.InnerFlatList`): one autofocused `SearchInput`, Cancel beside it on phones, recent searches while empty, grouped live results from the local index, arrow keys and Enter on web, a "Cmd K" hint on desktop. No autocomplete dropdown, advanced search, language admonition |
 | `src/components/SearchAsk/SearchHistory.tsx` | `src/screens/Search/components/SearchHistory.tsx` | As in the former Search page row (docs/reuse/search.md); moved with the drawer |
 | `src/components/SearchAsk/ResultRows.tsx` | `src/screens/Search/components/ModuleHeader.tsx`, `SearchProfileCard.tsx`, `SearchResults.tsx` | As in docs/reuse/search.md; moved with the drawer |

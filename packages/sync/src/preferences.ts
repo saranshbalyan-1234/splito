@@ -1,6 +1,6 @@
 import {CURRENCIES, DomainError} from '@splito/domain'
 
-import type {Store} from './store'
+import type {Store, Tx} from './store'
 import type {Entity, MutationCtx} from './types'
 
 export type PrefGroup = 'appearance' | 'motion' | 'navigation' | 'defaults' | 'categories' | 'regional' | 'lists' | 'notifications' | 'privacy' | 'history'
@@ -70,6 +70,18 @@ const oneOf =
 const isBool = (v: unknown): v is boolean => typeof v === 'boolean'
 const isString = (v: unknown): v is string => typeof v === 'string' && v.length > 0 && v.length <= 64
 
+/** `device`, or an IANA zone this runtime knows (F-115 m14: an unknown one would throw while rendering dates). */
+const isTimeZone = (v: unknown): v is string => {
+  if (v === 'device') return true
+  if (!isString(v)) return false
+  try {
+    new Intl.DateTimeFormat('en', {timeZone: v})
+    return true
+  } catch {
+    return false
+  }
+}
+
 const isAnalyticsScope = (v: unknown): v is AnalyticsScope => {
   if (v === 'everything') return true
   if (typeof v !== 'object' || v === null) return false
@@ -107,6 +119,10 @@ export const PREFS = {
   moneyPalette: def('moneyPalette', 'appearance', 'account', 'Money colours', 'default', oneOf('default', 'colorblind', 'mono')),
   motion: def('motion', 'motion', 'device', 'Animations', 'full', oneOf('full', 'reduced', 'off')),
   haptics: def('haptics', 'motion', 'device', 'Haptics', true, isBool),
+  /** Phones only: shaking the phone opens Send feedback. */
+  shakeToFeedback: def('shakeToFeedback', 'motion', 'device', 'Shake to send feedback', false, isBool),
+  /** The Send feedback sheet's "Include app info" switch remembers the last choice (spec default: on). */
+  'feedback.includeAppInfo': def('feedback.includeAppInfo', 'privacy', 'device', 'Include app info with feedback', true, isBool),
   /* The phone bottom bar: 2-5 items of the shared nav list, Home first and always on (26.3). */
   tabs: def<NavItemId[]>(
     'tabs',
@@ -144,6 +160,8 @@ export const PREFS = {
   'amount.keypad': def('amount.keypad', 'defaults', 'device', 'Amount keypad', true, isBool),
   analyticsPeriod: def('analyticsPeriod', 'defaults', 'account', 'Analytics period', 'year', oneOf('week', 'month', 'year', 'all')),
   analyticsView: def('analyticsView', 'defaults', 'device', 'Analytics view', 'charts', oneOf('charts', 'table')),
+  /** F-1901: the one-time "install Splito" hint on the web has been shown; set by the app, no Settings row. */
+  'pwa.installHintDismissed': def('pwa.installHintDismissed', 'defaults', 'device', 'Install hint shown', false, isBool),
   /** The last scope chosen on Analytics' scope chip; set there, not in Settings. */
   analyticsScope: def<AnalyticsScope>('analyticsScope', 'defaults', 'device', 'Analytics scope', 'everything', isAnalyticsScope),
   categories: def<Category[]>(
@@ -160,7 +178,7 @@ export const PREFS = {
   ),
   // Registry order is the order Settings shows each group's items in.
   language: def('language', 'regional', 'account', 'Language', 'en', oneOf('en', 'hi')),
-  timezone: def('timezone', 'regional', 'account', 'Timezone', 'device', isString),
+  timezone: def('timezone', 'regional', 'account', 'Timezone', 'device', isTimeZone),
   weekStart: def('weekStart', 'regional', 'account', 'Week starts on', 1, oneOf(0, 1, 6)),
   dateFormat: def('dateFormat', 'regional', 'account', 'Date format', 'auto', oneOf('auto', 'dmy', 'mdy', 'ymd')),
   numberLocale: def('numberLocale', 'regional', 'account', 'Number format', 'auto', oneOf('auto', 'en-IN', 'en-US', 'de-DE', 'fr-FR')),
@@ -228,30 +246,31 @@ export async function getPref<K extends PrefKey>(store: Store, key: K): Promise<
   return prefFrom(await store.getAll<{value: unknown}>('preference'), key)
 }
 
-async function writePref(store: Store, ctx: MutationCtx, key: PrefKey, value: unknown, deleted: boolean) {
+async function putPref(tx: Tx, ctx: MutationCtx, key: PrefKey, value: unknown, deleted: boolean) {
   const def = PREFS[key] as PrefDef<unknown>
-  await store.transaction(async tx => {
-    const prev = await tx.get('preference', key)
-    const version = (prev?.version ?? 0) + 1
-    await tx.put({type: 'preference', id: key, data: {value}, version, deleted, updatedAt: ctx.now()})
-    if (def.scope === 'account')
-      await tx.enqueue({
-        opId: ctx.newId(),
-        deviceId: ctx.deviceId,
-        actor: ctx.actor,
-        entityType: 'preference',
-        entityId: key,
-        opType: deleted ? 'preference.reset' : 'preference.set',
-        baseVersion: prev?.version ?? 0,
-        payload: {value},
-        schemaVersion: 1,
-        deps: [],
-        attempts: 0,
-        nextAttemptAt: null,
-        lastError: null,
-      })
-  })
+  const prev = await tx.get('preference', key)
+  const version = (prev?.version ?? 0) + 1
+  await tx.put({type: 'preference', id: key, data: {value}, version, deleted, updatedAt: ctx.now()})
+  if (def.scope === 'account')
+    await tx.enqueue({
+      opId: ctx.newId(),
+      deviceId: ctx.deviceId,
+      actor: ctx.actor,
+      entityType: 'preference',
+      entityId: key,
+      opType: deleted ? 'preference.reset' : 'preference.set',
+      baseVersion: prev?.version ?? 0,
+      payload: {value},
+      schemaVersion: 1,
+      deps: [],
+      attempts: 0,
+      nextAttemptAt: null,
+      lastError: null,
+    })
 }
+
+const writePref = (store: Store, ctx: MutationCtx, key: PrefKey, value: unknown, deleted: boolean) =>
+  store.transaction(tx => putPref(tx, ctx, key, value, deleted))
 
 export async function setPref<K extends PrefKey>(store: Store, ctx: MutationCtx, key: K, value: PrefValue<K>): Promise<void> {
   if (!PREFS[key].validate(value)) throw new DomainError('INVALID_PREF')
@@ -263,6 +282,9 @@ export async function resetPref(store: Store, ctx: MutationCtx, key: PrefKey): P
 }
 
 export async function resetAllPrefs(store: Store, ctx: MutationCtx): Promise<void> {
-  const set = (await store.getAll('preference')).filter(p => !p.deleted)
-  for (const p of set) await resetPref(store, ctx, p.id as PrefKey)
+  // A stored row for a removed preference (old build) has no definition: skip it. One transaction: all or none.
+  const set = (await store.getAll('preference')).filter(p => !p.deleted && Object.hasOwn(PREFS, p.id))
+  await store.transaction(async tx => {
+    for (const p of set) await putPref(tx, ctx, p.id as PrefKey, PREFS[p.id as PrefKey].default, true)
+  })
 }

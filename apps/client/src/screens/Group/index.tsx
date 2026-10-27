@@ -15,6 +15,7 @@ import {
 import {type AllNavigatorParams, type NavigationProp} from '#/lib/routes/types'
 import {useEntities, useLedger, useMe} from '#/data/hooks'
 import {useNumberLocale} from '#/locale/numberLocale'
+import {useFormatDay} from '#/locale/useDates'
 import {EmptyState} from '#/view/com/util/EmptyState'
 import {List} from '#/view/com/util/List'
 import {UserAvatar} from '#/view/com/util/UserAvatar'
@@ -48,7 +49,6 @@ import {
   effectInGroup,
   type HistoryEntry,
   toHistory,
-  utcDate,
   withMonths,
 } from '#/components/people/ledger'
 import {
@@ -104,7 +104,8 @@ const STICKY_TOP = 52
  */
 export function GroupScreen() {
   const t = useTheme()
-  const {t: l, i18n} = useLingui()
+  const {t: l} = useLingui()
+  const formatDay = useFormatDay()
   const {gtMobile} = useBreakpoints()
   const locale = useNumberLocale()
   const navigation = useNavigation<NavigationProp>()
@@ -313,7 +314,7 @@ export function GroupScreen() {
   const {startDate, endDate} = group?.data ?? {}
   const dates =
     startDate && endDate
-      ? `${i18n.date(utcDate(startDate), {day: 'numeric', month: 'short', timeZone: 'UTC'})} – ${i18n.date(utcDate(endDate), {day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC'})}`
+      ? `${formatDay(startDate, {intl: {day: 'numeric', month: 'short'}})} – ${formatDay(endDate, {intl: {day: 'numeric', month: 'short', year: 'numeric'}})}`
       : null
   const memberCount = members.filter(m => m.leftAt === null).length
   const memberText = memberCount === 1 ? l`1 member` : l`${memberCount} members`
