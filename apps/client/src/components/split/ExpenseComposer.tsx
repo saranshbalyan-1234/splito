@@ -45,9 +45,9 @@ import {
   formPayers,
   type FormEvaluation,
   hasContent,
-  keepItemPeople,
   withPeople,
 } from './form'
+import {formWithGroup} from './groupPick'
 import {CircleCheck_Stroke2_Corner0_Rounded as CheckIcon} from '#/components/icons/CircleCheck'
 import {Warning_Stroke2_Corner0_Rounded as WarningIcon} from '#/components/icons/Warning'
 import {
@@ -120,6 +120,8 @@ export function ExpenseComposer({
   const [form, setForm] = useState(initialForm)
   const [showRestored, setShowRestored] = useState(isDraftRestored)
   const [isSaving, setIsSaving] = useState(false)
+  /* Once the currency was chosen (or restored from a draft) a group never overwrites it (audit M5). */
+  const [isCurrencyPicked, setIsCurrencyPicked] = useState(isDraftRestored)
   const [savedId, setSavedId] = useState<string>()
   const [isTitleFocused, setIsTitleFocused] = useState(false)
   const [isShorthandOn = true] = usePref('amount.shorthand')
@@ -167,22 +169,12 @@ export function ExpenseComposer({
       if (!groupId) return {...f, groupId: null}
       const g = groups?.find(x => x.id === groupId)
       if (!g) return f
-      const ids = g.data.members
-        .filter(m => m.leftAt === null)
-        .map(m => m.personId)
-      const next = [
-        ...ids.filter(id => id === ctx.actor),
-        ...ids.filter(id => id !== ctx.actor),
-      ]
-      return {
-        ...f,
-        groupId,
-        currency: g.data.currency,
-        people: next,
-        payer: next.includes(f.payer) ? f.payer : (next[0] ?? ctx.actor),
-        excluded: [],
-        items: keepItemPeople(f.items, new Set(next)),
-      }
+      return formWithGroup(
+        f,
+        {id: g.id, currency: g.data.currency, members: g.data.members},
+        ctx.actor,
+        {isEdit, isCurrencyPicked},
+      )
     })
 
   const setTitle = (title: string) =>
@@ -331,7 +323,10 @@ export function ExpenseComposer({
           <CurrencyDialog
             control={currencyControl}
             value={form.currency}
-            onSelect={currency => update(f => ({...f, currency}))}
+            onSelect={currency => {
+              setIsCurrencyPicked(true)
+              update(f => ({...f, currency}))
+            }}
           />
           <DateDialog
             control={dateControl}
