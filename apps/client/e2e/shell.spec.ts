@@ -243,44 +243,39 @@ test.describe('header rule set', () => {
   })
 
 
-  test('owner 81: a sheet opening or a tab switch brings the shell back', async ({
+  test('owner 81 + 87: a sheet opening or a tab switch brings the header back', async ({
     page,
   }) => {
     await page.setViewportSize(PHONE)
     await openDemo(page)
+    const header = on(page, 'screen-people', 'header-avatar')
     const bar = page.getByTestId('tab-groups')
-    const barY = (await bar.boundingBox())!.y
     const hide = async () => {
       await page.mouse.move(200, 400)
       await page.mouse.wheel(0, 300)
       await expect
-        .poll(async () => (await bar.boundingBox())!.y)
-        .toBeGreaterThan(barY + 20)
+        .poll(async () => (await header.boundingBox())!.y)
+        .toBeLessThan(0)
     }
     await page.waitForTimeout(400)
     await hide()
     // Cmd/Ctrl+K opens the Search & Ask sheet.
     await page.keyboard.press('Control+k')
     await expect(page.getByTestId('search-input')).toBeVisible()
-    await expect
-      .poll(async () => Math.abs((await bar.boundingBox())!.y - barY))
-      .toBeLessThan(2)
     await page.keyboard.press('Escape')
     await expect(page.getByTestId('search-input')).toHaveCount(0)
+    await expect
+      .poll(async () => (await header.boundingBox())!.y)
+      .toBeGreaterThanOrEqual(0)
 
-    // A tab switch: the hidden bar's Groups tab is activated directly.
+    // A tab switch: the bar never left (owner 87), and the new screen's header shows.
     await page.mouse.move(200, 400)
     await page.mouse.wheel(0, 100)
     await page.mouse.wheel(0, -30)
-    await page.mouse.wheel(0, 300)
-    await expect
-      .poll(async () => (await bar.boundingBox())!.y)
-      .toBeGreaterThan(barY + 20)
-    await bar.dispatchEvent('click')
+    await hide()
+    await expect(bar).toBeVisible()
+    await bar.click()
     await expect(on(page, 'screen-groups', 'header-avatar')).toBeVisible()
-    await expect
-      .poll(async () => Math.abs((await bar.boundingBox())!.y - barY))
-      .toBeLessThan(2)
     await expect
       .poll(async () => (await on(page, 'screen-groups', 'header-avatar').boundingBox())!.y)
       .toBeGreaterThanOrEqual(0)
