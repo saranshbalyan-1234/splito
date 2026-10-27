@@ -15,7 +15,7 @@ import {type LedgerRecord, recordCells, recordEffects, type SpendCell} from '@sp
 
 import {decode} from './codec'
 import {type RowAccess} from './engine'
-import {type Expense, type Group, type Repayment} from './mutations'
+import {type Expense, type Group, normalizeRoles, type Repayment} from './mutations'
 import {type Key, type Row} from './schema'
 import {termKey, termRows} from './searchTerms'
 import {toExpenseRecord, toRepaymentRecord, toWriteOffRecord} from './selectors'
@@ -74,13 +74,13 @@ export function partyRows(e: Entity<Expense> | undefined): Row[] {
 /** One row per member of a live group. */
 export function memberRows(e: Entity<Group> | undefined): Row[] {
   if (!e || e.deleted || !Array.isArray(e.data?.members)) return []
-  return e.data.members.map(m => ({
+  return normalizeRoles(e.data.members).map(m => ({
     id: `${e.id}:${m.personId}`,
     groupId: e.id,
     personId: m.personId,
     joinedAt: m.joinedAt,
     leftAt: m.leftAt ?? null,
-    role: 'member',
+    role: m.role ?? 'member',
     createdAt: m.joinedAt,
     deleted: 0,
     ...syncFields(e),

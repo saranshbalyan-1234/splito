@@ -43,6 +43,13 @@ export interface GroupMemberEntry {
   exit?: MemberExit
 }
 
+/** What a group's deletion took with it, kept on its tombstone so Recently deleted can say what comes back. */
+export interface GroupRemoval {
+  expenses: number
+  repayments: number
+  writeoffs: number
+}
+
 export interface Group {
   name: string
   kind: 'trip' | 'home' | 'couple' | 'other'
@@ -53,6 +60,24 @@ export interface Group {
   archived: boolean
   /** "Who you settle with" rules. Absent: every member pair is allowed. */
   rules?: SettlementRules
+  /** Set on the tombstone by "Delete group"; cleared by restore. */
+  removed?: GroupRemoval
+}
+
+/**
+ * The members with every role filled in. Groups made before roles existed have none: their first member,
+ * the creator, is the admin and the rest are members.
+ */
+export function normalizeRoles(members: Group['members']): Group['members'] {
+  const hasRoles = members.some(m => m.role !== undefined)
+  return members.map((m, i) => ({...m, role: m.role ?? (!hasRoles && i === 0 ? 'admin' : 'member')}))
+}
+
+/** The people who run a group right now: admins who have not left. */
+export function groupAdmins(g: Pick<Group, 'members'>): string[] {
+  return normalizeRoles(g.members)
+    .filter(m => m.role === 'admin' && m.leftAt === null)
+    .map(m => m.personId)
 }
 
 export interface Expense {
@@ -242,7 +267,8 @@ async function isPersonUsed(store: Store, id: string): Promise<boolean> {
 }
 
 const DAY_MS = 86_400_000
-const BIN_TYPES: BinType[] = ['expense', 'repayment', 'writeoff']
+/** @internal */
+export const BIN_TYPES: BinType[] = ['expense', 'repayment', 'writeoff']
 
 /** Who a money record or a group names, as stored. */
 function namedIn(type: BinType | 'group', data: unknown): string[] {
@@ -286,7 +312,8 @@ export async function createGroup(
     for (const pid of ids) await requireLive(tx, 'person', pid, 'UNKNOWN_PERSON')
     const joinedAt = ctx.now()
     const {memberIds: _m, ...rest} = input
-    const data: Group = {...rest, name: cleanName(input.name), members: ids.map(personId => ({personId, joinedAt, leftAt: null})), archived: false}
+    const members = ids.map(personId => ({personId, joinedAt, leftAt: null, role: personId === ctx.actor ? ('admin' as const) : ('member' as const)}))
+    const data: Group = {...rest, name: cleanName(input.name), members, archived: false}
     return write(tx, ctx, 'group', ctx.newId(), data, false, 'group.create')
   })
 }
@@ -358,7 +385,8 @@ async function softDelete(store: Store, ctx: MutationCtx, type: BinType, id: str
  * A tombstone comes back only if everything it names is live, as when it was created (audit M4):
  * UNKNOWN_PERSON for a person who is gone, GROUP_DELETED for a deleted group (restore the group first).
  */
-async function requireRestorable(tx: Tx, type: BinType, data: unknown) {
+/** @internal shared with the group lifecycle. */
+export async function requireRestorable(tx: Tx, type: BinType | 'group', data: unknown) {
   for (const pid of new Set(namedIn(type, data))) await requireLive(tx, 'person', pid, 'UNKNOWN_PERSON')
   const groupId = (data as {groupId?: string | null}).groupId
   if (groupId) await requireLive(tx, 'group', groupId, 'GROUP_DELETED')
@@ -504,8 +532,12 @@ export async function addGroupMembers(store: Store, ctx: MutationCtx, groupId: s
     for (const personId of new Set(personIds)) {
       await requireLive(tx, 'person', personId, 'UNKNOWN_PERSON')
       const i = members.findIndex(m => m.personId === personId)
-      if (i === -1) members.push({personId, joinedAt, leftAt: null})
-      else if (members[i]!.leftAt !== null) members[i] = {...members[i]!, leftAt: null}
+      if (i === -1) members.push({personId, joinedAt, leftAt: null, role: 'member'})
+      else if (members[i]!.leftAt !== null) {
+        // Back in: the old exit choice is history now, and a returning admin comes back as a member.
+        const {exit: _exit, ...rest} = members[i]!
+        members[i] = {...rest, leftAt: null, role: 'member'}
+      }
     }
     return write(tx, ctx, 'group', groupId, {...g.data, members}, false, 'group.members')
   })
