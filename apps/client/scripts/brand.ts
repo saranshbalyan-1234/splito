@@ -24,6 +24,8 @@ const PUBLIC = join(ROOT, 'public')
 const BLUE = '#1185fe'
 const WHITE = '#FFFFFF'
 const BLACK = '#000000'
+/* ALF Dim's background: the dark splash colour (app.config.ts, public/index.html). */
+const DIM = '#151D28'
 
 const SOURCE = readFileSync(
   join(ROOT, '../../assets-owner/logo-owner-provided.svg'),
@@ -312,7 +314,7 @@ ${cell('Home screen, light / dark wallpaper', home('linear-gradient(135deg,#f7d9
 ${cell('Android adaptive: circle / squircle', adaptive('50%') + adaptive('32%'), '#e8eaed')}
 ${cell('Android 13 themed (monochrome)', `<div style="width:96px;height:96px;border-radius:50%;background:#d3e3fd;display:flex;align-items:center;justify-content:center;overflow:hidden">${mask('assets/brand/adaptive-monochrome.png', 144, '#0b57d0', 'flex:none')}</div>`, '#e8eaed')}
 ${cell('Notification icon 24 / 48 dp', mask('assets/brand/notification-icon.png', 24, '#fff') + mask('assets/brand/notification-icon.png', 48, '#fff'), '#202124', '#ddd')}
-${cell('Splash light / dark', phone(WHITE, 'assets/brand/splash-mark.png') + phone(BLACK, 'assets/brand/splash-mark-dark.png'), '#d0d4da')}
+${cell('Splash light / dark', phone(WHITE, 'assets/brand/splash-mark.png') + phone(DIM, 'assets/brand/splash-mark-dark.png'), '#d0d4da')}
 ${cell('Favicon tab light / dark', `<div style="display:flex;flex-direction:column;gap:8px">${tab('#fff', '#222')}${tab('#35363a', '#eee')}</div>`, '#dee1e6')}
 ${cell('Favicons 16 / 32 / 48 (1x)', img('public/favicon-16.png') + img('public/favicon-32.png') + img('public/favicon-48.png'))}
 ${cell('Apple touch 180', img('public/apple-touch-icon.png', 'width:90px;border-radius:20px'), 'linear-gradient(#c9d6ff,#e2e2e2)')}

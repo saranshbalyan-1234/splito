@@ -4,11 +4,13 @@ import {type ExpoConfig} from 'expo/config'
  * Brand assets are generated from assets-owner/logo-owner-provided.svg by
  * `pnpm brand` (scripts/brand.ts) - edit the script, not the PNGs.
  */
+/* ALF Dim's `atoms.bg` (src/alf/splash.test.ts keeps this and public/index.html in step). */
+const DIM_BACKGROUND = '#151D28'
 const SPLASH = {
   light: {image: './assets/brand/splash-mark.png', backgroundColor: '#FFFFFF'},
   dark: {
     image: './assets/brand/splash-mark-dark.png',
-    backgroundColor: '#000000',
+    backgroundColor: DIM_BACKGROUND,
   },
 }
 
