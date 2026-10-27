@@ -122,11 +122,10 @@ export function useDrawer({
     v: number
   } | null>(null)
 
+  /* The rise on mount, and back up when a close is undone by reopening during the exit (audit m26). */
   useEffect(() => {
-    if (animate) y.set(withSpring(0, SHEET_SPRING))
-    // Mount only: the rise.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+    if (animate && !isClosing) y.set(withSpring(0, SHEET_SPRING))
+  }, [animate, isClosing, y])
 
   useEffect(() => {
     if (!isClosing || !onExited) return
