@@ -163,7 +163,9 @@ async function searchFor(page: Page, query: string, shows: string) {
         let first: number | undefined
         const check = () => {
           const now = performance.now()
-          if (first === undefined && document.querySelector('[data-testid="search-row-0"]')?.textContent?.includes(shows)) first = now - t0
+          // The "Ask Splito" row heads the results and repeats the query, so it is not a match.
+          const rows = [...document.querySelectorAll('[data-testid^="search-row-"]')].filter(r => !r.textContent?.includes('Ask Splito'))
+          if (first === undefined && rows.some(r => r.textContent?.includes(shows))) first = now - t0
           if (first !== undefined && document.querySelector('[data-testid="search-section-expenses"]') && !document.querySelector('[data-testid="search-totals-pending"]'))
             resolve({first, totals: now - t0})
           else if (now > deadline) reject(new Error(`timed out searching "${query}" for "${shows}"`))
@@ -232,6 +234,7 @@ async function askCase(page: Page) {
     // The next run starts from an empty chat, so the list never grows under the measurement.
     await page.getByTestId('ask-clear').click()
     await page.getByRole('button', {name: 'Clear', exact: true}).click()
+    await expect(page.getByTestId('ask-empty')).toBeVisible()
     await page.keyboard.press('Escape')
     await expect(page.getByTestId('ask-chat')).toHaveCount(0)
   }
