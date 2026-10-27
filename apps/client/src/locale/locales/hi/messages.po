@@ -24,12 +24,12 @@ msgid "{0, plural, one {# expired, used or revoked link isn’t shown.} other {#
 msgstr "{0, plural, one {# समाप्त, इस्तेमाल हो चुका या रद्द लिंक नहीं दिखाया गया।} other {# समाप्त, इस्तेमाल हो चुके या रद्द लिंक नहीं दिखाए गए।}}"
 
 #. placeholder {0}: rows.length
-#: src/screens/People/index.tsx:128
+#: src/screens/People/index.tsx:133
 msgid "{0, plural, one {# friend} other {# friends}}"
 msgstr "{0, plural, one {# दोस्त} other {# दोस्त}}"
 
 #. placeholder {0}: listed.length
-#: src/screens/Groups/index.tsx:123
+#: src/screens/Groups/index.tsx:114
 msgid "{0, plural, one {# group} other {# groups}}"
 msgstr "{0, plural, one {# समूह} other {# समूह}}"
 
@@ -59,7 +59,7 @@ msgid "{0, plural, one {# share} other {# shares}}"
 msgstr "{0, plural, one {# हिस्सा} other {# हिस्से}}"
 
 #. placeholder {0}: sharedGroups.length
-#: src/screens/Person/index.tsx:208
+#: src/screens/Person/index.tsx:188
 msgid "{0, plural, one {# shared group} other {# shared groups}}"
 msgstr "{0, plural, one {# साझा समूह} other {# साझा समूह}}"
 
@@ -193,7 +193,7 @@ msgid "{0} groups"
 msgstr "{0} समूह"
 
 #. placeholder {0}: person?.data.name ?? ''
-#: src/screens/Person/index.tsx:267
+#: src/screens/Person/index.tsx:247
 msgid "{0} has expenses, payments or groups, so they can’t be removed."
 msgstr "{0} के खर्च, भुगतान या समूह हैं, इसलिए उन्हें हटाया नहीं जा सकता।"
 
@@ -301,12 +301,12 @@ msgid "{0} paid you"
 msgstr "{0} ने आपको भुगतान किया"
 
 #. placeholder {0}: item.count
-#: src/screens/Settle/index.tsx:320
+#: src/screens/Settle/index.tsx:325
 msgid "{0} payments"
 msgstr "{0} भुगतान"
 
 #. placeholder {0}: item.payments
-#: src/screens/Group/index.tsx:746
+#: src/screens/Group/index.tsx:757
 msgid "{0} payments settle everyone up."
 msgstr "{0} भुगतानों से सबका हिसाब बराबर हो जाता है।"
 
@@ -359,30 +359,30 @@ msgid "{0}, {total}, {date}"
 msgstr "{0}, {total}, {date}"
 
 #. placeholder {0}: group.name
-#: src/view/shell/desktop/LeftNav.tsx:578
+#: src/view/shell/desktop/LeftNav.tsx:576
 msgid "{0}, settled up"
 msgstr "{0}, हिसाब बराबर"
 
 #. placeholder {0}: group.name
 #. placeholder {1}: formatAmount(amount, currency, locale)
-#: src/view/shell/desktop/LeftNav.tsx:576
+#: src/view/shell/desktop/LeftNav.tsx:574
 msgid "{0}, you are owed {1}"
 msgstr "{0}, आपको {1} मिलने हैं"
 
 #. placeholder {0}: group.name
 #. placeholder {1}: formatAmount(magnitude(amount), currency, locale)
-#: src/view/shell/desktop/LeftNav.tsx:577
+#: src/view/shell/desktop/LeftNav.tsx:575
 msgid "{0}, you owe {1}"
 msgstr "{0}, आपको {1} देने हैं"
 
 #. placeholder {0}: report.nameOfPerson(report.shareOf)
-#: src/screens/Analytics/index.tsx:106
+#: src/screens/Analytics/index.tsx:109
 msgid "{0}’s share"
 msgstr "{0} का हिस्सा"
 
 #. placeholder {0}: report.nameOfPerson(report.shareOf)
 #. placeholder {1}: formatAmount(report.rowsTotal, currency, locale)
-#: src/screens/Analytics/index.tsx:183
+#: src/screens/Analytics/index.tsx:186
 msgid "{0}’s share <0>{1}</0>"
 msgstr "{0} का हिस्सा <0>{1}</0>"
 
@@ -502,7 +502,7 @@ msgstr "{actor} ने एक माफ़ी वापस ली"
 msgid "{actor} updated the group {subject}"
 msgstr "{actor} ने समूह {subject} को अपडेट किया"
 
-#: src/screens/Settings/index.tsx:155
+#: src/screens/Settings/index.tsx:157
 msgid "{binDays, plural, one {# day} other {# days}}"
 msgstr "{binDays, plural, one {# दिन} other {# दिन}}"
 
@@ -510,11 +510,11 @@ msgstr "{binDays, plural, one {# दिन} other {# दिन}}"
 msgid "{count, plural, one {# item} other {# items}}"
 msgstr "{count, plural, one {# आइटम} other {# आइटम}}"
 
-#: src/components/activity/useActivityFeed.ts:94
+#: src/components/activity/useActivityFeed.ts:103
 msgid "{count, plural, one {# or more unread items} other {# or more unread items}}"
 msgstr "{count, plural, one {# या अधिक अपठित} other {# या अधिक अपठित}}"
 
-#: src/components/activity/useActivityFeed.ts:98
+#: src/components/activity/useActivityFeed.ts:107
 msgid "{count, plural, one {# unread item} other {# unread items}}"
 msgstr "{count, plural, one {# अपठित} other {# अपठित}}"
 
@@ -534,6 +534,10 @@ msgstr "{days, plural, one {पिछले एक दिन में कुछ
 msgid "{days, plural, one {yesterday} other {# days ago}}"
 msgstr "{days, plural, one {कल} other {# दिन पहले}}"
 
+#: src/screens/Settings/DemoData.tsx:149
+msgid "{expenses, plural, one {# expense} other {# expenses}}"
+msgstr "{expenses, plural, one {# खर्च} other {# खर्च}}"
+
 #: src/components/split/ExpenseComposer.tsx:244
 msgid "{first}, {second} +{rest}"
 msgstr "{first}, {second} +{rest}"
@@ -543,11 +547,15 @@ msgstr "{first}, {second} +{rest}"
 msgid "{formatted} ago"
 msgstr "{formatted} पहले"
 
-#: src/screens/Group/index.tsx:669
+#: src/screens/Settings/DemoData.tsx:147
+msgid "{friends, plural, one {# friend} other {# friends}}"
+msgstr "{friends, plural, one {# दोस्त} other {# दोस्त}}"
+
+#: src/screens/Group/index.tsx:680
 msgid "{from} owes {to}"
 msgstr "{from} को {to} को देने हैं"
 
-#: src/screens/Group/index.tsx:668
+#: src/screens/Group/index.tsx:679
 msgid "{from} owes you"
 msgstr "{from} से आपको मिलने हैं"
 
@@ -559,7 +567,11 @@ msgstr "{from} ने {to} को भुगतान किया"
 msgid "{from} paid you"
 msgstr "{from} ने आपको भुगतान किया"
 
-#: src/screens/Activity.tsx:160
+#: src/screens/Settings/DemoData.tsx:148
+msgid "{groups, plural, one {# group} other {# groups}}"
+msgstr "{groups, plural, one {# ग्रुप} other {# ग्रुप}}"
+
+#: src/screens/Activity.tsx:168
 msgid "{hiddenCount, plural, one {# change hidden from your activity} other {# changes hidden from your activity}}"
 msgstr "{hiddenCount, plural, one {# बदलाव आपकी गतिविधि से छिपा है} other {# बदलाव आपकी गतिविधि से छिपे हैं}}"
 
@@ -572,17 +584,17 @@ msgstr "{left, plural, one {# दिन बाकी} other {# दिन बा�
 msgid "{left} of {0} uses left"
 msgstr "{0} में से {left} बार बाकी"
 
-#: src/screens/Group/index.tsx:319
+#: src/screens/Group/index.tsx:322
 #: src/screens/Groups/components/GroupRow.tsx:58
 #: src/screens/Search/components/ResultRows.tsx:328
 msgid "{memberCount} members"
 msgstr "{memberCount} सदस्य"
 
-#: src/screens/People/index.tsx:124
+#: src/screens/People/index.tsx:129
 msgid "{n, plural, one {# friend} other {# friends}}"
 msgstr "{n, plural, one {# मित्र} other {# मित्र}}"
 
-#: src/screens/Groups/index.tsx:119
+#: src/screens/Groups/index.tsx:110
 msgid "{n, plural, one {# group} other {# groups}}"
 msgstr "{n, plural, one {# समूह} other {# समूह}}"
 
@@ -598,8 +610,8 @@ msgstr "{name}, उनकी स्वीकृति का इंतज़ा�
 msgid "{name}’s UPI ID"
 msgstr "{name} की UPI ID"
 
-#: src/screens/Groups/index.tsx:124
-#: src/screens/People/index.tsx:129
+#: src/screens/Groups/index.tsx:115
+#: src/screens/People/index.tsx:134
 msgid "{settledCount} settled"
 msgstr "{settledCount} हिसाब बराबर"
 
@@ -619,7 +631,7 @@ msgstr "{title} रीसेट हो गया"
 msgid "{title}, {byline}, {shareLabel} {shareText} of {totalText}"
 msgstr "{title}, {byline}, {totalText} में से {shareLabel} {shareText}"
 
-#: src/screens/Settings/index.tsx:237
+#: src/screens/Settings/index.tsx:241
 msgid "{visible} categories"
 msgstr "{visible} श्रेणियाँ"
 
@@ -668,7 +680,7 @@ msgstr "<0>{value}</0> अभी Splito पर नहीं हैं। आम�
 msgid "= Use result"
 msgstr "= नतीजा लें"
 
-#: src/screens/Settings/index.tsx:237
+#: src/screens/Settings/index.tsx:241
 msgid "1 category"
 msgstr "1 श्रेणी"
 
@@ -677,7 +689,7 @@ msgstr "1 श्रेणी"
 msgid "1 day"
 msgstr "1 दिन"
 
-#: src/screens/Group/index.tsx:319
+#: src/screens/Group/index.tsx:322
 #: src/screens/Groups/components/GroupRow.tsx:58
 #: src/screens/Search/components/ResultRows.tsx:328
 msgid "1 member"
@@ -687,11 +699,11 @@ msgstr "1 सदस्य"
 msgid "1 member added"
 msgstr "1 सदस्य जोड़ा गया"
 
-#: src/screens/Settle/index.tsx:318
+#: src/screens/Settle/index.tsx:323
 msgid "1 payment"
 msgstr "1 भुगतान"
 
-#: src/screens/Group/index.tsx:745
+#: src/screens/Group/index.tsx:756
 msgid "1 payment settles everyone up."
 msgstr "1 भुगतान से सबका हिसाब बराबर हो जाता है।"
 
@@ -760,16 +772,20 @@ msgstr "Splito के बाहर हुए लेन-देन का रि�
 msgid "A trip, a flat or anything you split often."
 msgstr "कोई यात्रा, फ़्लैट या कुछ भी जिसे आप अक्सर बांटते हैं।"
 
+#: src/screens/Settings/DemoData.tsx:152
+msgid "A year of friends, groups and expenses, for testing"
+msgstr "टेस्टिंग के लिए एक साल के दोस्त, ग्रुप और खर्च"
+
 #: src/navigation/Drawer.tsx:366
 #: src/screens/Profile.tsx:73
 #: src/screens/Profile.tsx:76
-#: src/screens/Settings/index.tsx:162
-#: src/screens/Settings/index.tsx:165
+#: src/screens/Settings/index.tsx:166
+#: src/screens/Settings/index.tsx:169
 #: src/screens/Settings/SettingsSection.tsx:48
 msgid "About"
 msgstr "परिचय"
 
-#: src/screens/Settings/index.tsx:139
+#: src/screens/Settings/index.tsx:141
 msgid "About and data"
 msgstr "परिचय और डेटा"
 
@@ -818,7 +834,7 @@ msgstr "साथ में खर्च बाँटने के लिए स
 msgid "Accept to split expenses with {0}. You’ll both see what you share."
 msgstr "{0} के साथ खर्च बाँटने के लिए स्वीकार करें। जो साझा है, दोनों को दिखेगा।"
 
-#: src/screens/Settings/index.tsx:59
+#: src/screens/Settings/index.tsx:61
 msgid "Account"
 msgstr "खाता"
 
@@ -830,8 +846,8 @@ msgstr "सक्रिय"
 #: src/components/TabGlyph.tsx:30
 #: src/navigation/Drawer.tsx:214
 #: src/navigation/Navigation.tsx:68
-#: src/screens/Activity.tsx:98
-#: src/view/shell/desktop/LeftNav.tsx:737
+#: src/screens/Activity.tsx:105
+#: src/view/shell/desktop/LeftNav.tsx:735
 msgid "Activity"
 msgstr "गतिविधि"
 
@@ -843,12 +859,12 @@ msgstr "“{q}” जोड़ें"
 msgid "Add {q}"
 msgstr "{q} जोड़ें"
 
-#: src/screens/People/index.tsx:234
-#: src/screens/People/index.tsx:235
+#: src/screens/People/index.tsx:239
+#: src/screens/People/index.tsx:240
 msgid "Add a friend"
 msgstr "दोस्त जोड़ें"
 
-#: src/screens/People/index.tsx:231
+#: src/screens/People/index.tsx:236
 msgid "Add a friend, then split any bill with them. They don’t need the app."
 msgstr "दोस्त जोड़ें, फिर कोई भी बिल उनके साथ बाँटें। उन्हें ऐप की ज़रूरत नहीं।"
 
@@ -893,6 +909,16 @@ msgstr "ईमेल या नंबर से जोड़ें"
 msgid "Add category"
 msgstr "श्रेणी जोड़ें"
 
+#: src/screens/Settings/DemoData.tsx:127
+#: src/screens/Settings/DemoData.tsx:137
+#: src/screens/Settings/DemoData.tsx:175
+msgid "Add demo data"
+msgstr "डेमो डेटा जोड़ें"
+
+#: src/screens/Settings/DemoData.tsx:173
+msgid "Add demo data?"
+msgstr "डेमो डेटा जोड़ें?"
+
 #: src/components/split/SplitEditor.tsx:102
 msgid "Add each item and who had it. Tap a name again for another portion; hold to take them off."
 msgstr "हर आइटम और किसने लिया, जोड़ें। एक और हिस्से के लिए नाम दोबारा टैप करें; हटाने के लिए दबाकर रखें।"
@@ -902,26 +928,26 @@ msgid "Add each item and who had it. Tap a name again for another portion; right
 msgstr "हर आइटम और किसने लिया, जोड़ें। एक और हिस्से के लिए नाम दोबारा टैप करें; हटाने के लिए राइट-क्लिक करें।"
 
 #: src/navigation/Navigation.tsx:78
-#: src/screens/Group/index.tsx:481
-#: src/screens/Group/index.tsx:482
-#: src/screens/Person/index.tsx:487
-#: src/screens/Person/index.tsx:488
-#: src/view/shell/desktop/LeftNav.tsx:485
+#: src/screens/Group/index.tsx:484
+#: src/screens/Group/index.tsx:485
+#: src/screens/Person/index.tsx:473
+#: src/screens/Person/index.tsx:474
+#: src/view/shell/desktop/LeftNav.tsx:484
 msgid "Add expense"
 msgstr "खर्च जोड़ें"
 
 #: src/components/AddExpenseFAB.tsx:33
 #: src/components/split/ExpenseComposer.tsx:269
 #: src/screens/AddExpense.tsx:52
-#: src/screens/Analytics/index.tsx:86
-#: src/screens/Analytics/index.tsx:87
-#: src/screens/Group/index.tsx:357
-#: src/screens/Group/index.tsx:363
-#: src/screens/People/index.tsx:243
-#: src/screens/People/index.tsx:244
-#: src/screens/Person/index.tsx:299
-#: src/screens/Person/index.tsx:305
-#: src/view/shell/desktop/LeftNav.tsx:493
+#: src/screens/Analytics/index.tsx:88
+#: src/screens/Analytics/index.tsx:89
+#: src/screens/Group/index.tsx:360
+#: src/screens/Group/index.tsx:366
+#: src/screens/People/index.tsx:248
+#: src/screens/People/index.tsx:249
+#: src/screens/Person/index.tsx:279
+#: src/screens/Person/index.tsx:285
+#: src/view/shell/desktop/LeftNav.tsx:492
 msgctxt "action"
 msgid "Add expense"
 msgstr "खर्च जोड़ें"
@@ -947,10 +973,10 @@ msgid "Add member"
 msgstr "सदस्य जोड़ें"
 
 #: src/components/groups/AddMembersDialog.tsx:110
-#: src/screens/Group/index.tsx:557
-#: src/screens/Group/index.tsx:560
-#: src/screens/Group/index.tsx:627
-#: src/screens/Group/index.tsx:633
+#: src/screens/Group/index.tsx:567
+#: src/screens/Group/index.tsx:570
+#: src/screens/Group/index.tsx:638
+#: src/screens/Group/index.tsx:644
 msgid "Add members"
 msgstr "सदस्य जोड़ें"
 
@@ -975,6 +1001,26 @@ msgstr "समूह में जोड़ें"
 msgid "Add your name"
 msgstr "अपना नाम जोड़ें"
 
+#. placeholder {0}: import {useSyncExternalStore} from 'react' import {View} from 'react-native' import {DatabaseZap} from 'lucide-react-native' import {type MutationCtx, type Store} from '@splito/sync' import {plural, t} from '@lingui/core/macro' import {Trans, useLingui} from '@lingui/react/macro' import {useHaptics} from '#/lib/haptics' import {logger} from '#/logger' import {addLargeDemo, removeLargeDemo} from '#/data/demoLarge' import {useDemoCounts, useMutationCtx, useStore} from '#/data/hooks' import * as SettingsList from '#/screens/Settings/components/SettingsList' import {atoms as a, useTheme} from '#/alf' import {Trash_Stroke2_Corner0_Rounded as TrashIcon} from '#/components/icons/Trash' import {createIcon} from '#/components/icons/lucide' import * as Prompt from '#/components/Prompt' import * as Toast from '#/components/Toast' import {dismiss as dismissToast} from '#/components/Toast/sonner' import {Text} from '#/components/Typography' const DemoIcon = createIcon(DatabaseZap) /* What is running and how far along: one tiny module store, read by the toast and the rows. */ let progress: {action: 'add' | 'remove'; done: number} | null = null const listeners = new Set<() => void>() function setProgress(next: typeof progress) { progress = next listeners.forEach(l => l()) } const subscribe = (l: () => void) => ( listeners.add(l), () => void listeners.delete(l) ) const getProgress = () => progress const useProgress = () => useSyncExternalStore(subscribe, getProgress) function ProgressText() { const p = useProgress() const percent = Math.round((p?.done ?? 1) * 100) return p?.action === 'remove' ? ( <Trans>Removing demo data…</Trans> ) : ( <Trans>Adding demo data… {percent}%</Trans> ) } /** * Adds or removes the large demo set with a live progress toast (dev and e2e * builds only; callers check). Used by Settings and by `?demo=large`. */ export async function runLargeDemo( store: Store, ctx: MutationCtx, action: 'add' | 'remove', ) { if (progress) return setProgress({action, done: 0}) const toast = Toast.show( <Toast.Outer> <Toast.Icon /> <Toast.Text> <ProgressText /> </Toast.Text> </Toast.Outer>, {duration: 120_000}, ) const started = performance.now() let done: {text: string; type: Toast.ToastType} try { if (action === 'add') { const counts = await addLargeDemo(store, ctx, part => setProgress({action, done: part}), ) if (counts) { // Kept in the log for the owner's timing checks (dev and e2e builds only). logger.info('demo.large.added', { ms: Math.round(performance.now() - started), ...counts, }) done = { text: t`Demo data added: ${plural(counts.expenses, {one: '# expense', other: '# expenses'})}`, type: 'success', } } else done = {text: t`Demo data is already added`, type: 'default'} } else { await removeLargeDemo(store) done = {text: t`Demo data removed`, type: 'success'} } } catch (e) { logger.error(e, {where: 'runLargeDemo'}) done = { text: t`Couldn't finish. Try Remove demo data, then add it again.`, type: 'error', } } setProgress(null) dismissToast(toast) // The progress toast leaves first, then the outcome takes its place. setTimeout(() => Toast.show(done.text, {type: done.type}), 400) } /** * Settings > About and data rows for the large demo set (ARCHITECTURE 26.1). * The caller renders them only in dev and e2e builds. */ export function DemoDataRows() { const {t: l} = useLingui() const t = useTheme() const store = useStore() const ctx = useMutationCtx() const haptics = useHaptics() const addPrompt = Prompt.usePromptControl() const removePrompt = Prompt.usePromptControl() const busy = useProgress() const {friends = 0, groups = 0, expenses = 0} = useDemoCounts() ?? {} const isLoaded = friends + groups > 0 const run = (action: 'add' | 'remove') => { haptics.confirm() void runLargeDemo(store, ctx, action).then(() => haptics.success()) } return ( <> <SettingsList.PressableItem testID="settings-demo-add" label={l`Add demo data`} disabled={!!busy} onPress={() => isLoaded ? Toast.show(l`Demo data is already added`) : addPrompt.open() }> <SettingsList.ItemIcon icon={DemoIcon} /> <View style={[a.flex_1, a.gap_2xs]}> <SettingsList.ItemText> <Trans>Add demo data</Trans> </SettingsList.ItemText> <Text testID="settings-demo-summary" numberOfLines={2} style={[a.text_sm, a.leading_snug, t.atoms.text_contrast_medium]}> {busy?.action === 'add' ? ( <Trans>Adding… {Math.round(busy.done * 100)}%</Trans> ) : isLoaded ? ( <Trans> Added: {plural(friends, {one: '# friend', other: '# friends'})},{' '} {plural(groups, {one: '# group', other: '# groups'})},{' '} {plural(expenses, {one: '# expense', other: '# expenses'})} </Trans> ) : ( <Trans>A year of friends, groups and expenses, for testing</Trans> )} </Text> </View> </SettingsList.PressableItem> {isLoaded && ( <SettingsList.PressableItem testID="settings-demo-remove" destructive label={l`Remove demo data`} disabled={!!busy} onPress={() => removePrompt.open()}> <SettingsList.ItemIcon icon={TrashIcon} /> <SettingsList.ItemText> <Trans>Remove demo data</Trans> </SettingsList.ItemText> </SettingsList.PressableItem> )} <Prompt.Basic control={addPrompt} title={l`Add demo data?`} description={l`Adds about 30 friends, 12 groups and 1,500 expenses from the past year next to your own data. You can remove exactly this later.`} confirmButtonCta={l`Add demo data`} onConfirm={() => run('add')} /> <Prompt.Basic control={removePrompt} title={l`Remove demo data?`} description={l`Removes the demo friends, groups, expenses and payments, with their history. Everything you added yourself stays.`} confirmButtonCta={l`Remove`} confirmButtonColor="negative" onConfirm={() => run('remove')} /> </> ) } 
+#. placeholder {1}: import {useSyncExternalStore} from 'react' import {View} from 'react-native' import {DatabaseZap} from 'lucide-react-native' import {type MutationCtx, type Store} from '@splito/sync' import {plural, t} from '@lingui/core/macro' import {Trans, useLingui} from '@lingui/react/macro' import {useHaptics} from '#/lib/haptics' import {logger} from '#/logger' import {addLargeDemo, removeLargeDemo} from '#/data/demoLarge' import {useDemoCounts, useMutationCtx, useStore} from '#/data/hooks' import * as SettingsList from '#/screens/Settings/components/SettingsList' import {atoms as a, useTheme} from '#/alf' import {Trash_Stroke2_Corner0_Rounded as TrashIcon} from '#/components/icons/Trash' import {createIcon} from '#/components/icons/lucide' import * as Prompt from '#/components/Prompt' import * as Toast from '#/components/Toast' import {dismiss as dismissToast} from '#/components/Toast/sonner' import {Text} from '#/components/Typography' const DemoIcon = createIcon(DatabaseZap) /* What is running and how far along: one tiny module store, read by the toast and the rows. */ let progress: {action: 'add' | 'remove'; done: number} | null = null const listeners = new Set<() => void>() function setProgress(next: typeof progress) { progress = next listeners.forEach(l => l()) } const subscribe = (l: () => void) => ( listeners.add(l), () => void listeners.delete(l) ) const getProgress = () => progress const useProgress = () => useSyncExternalStore(subscribe, getProgress) function ProgressText() { const p = useProgress() const percent = Math.round((p?.done ?? 1) * 100) return p?.action === 'remove' ? ( <Trans>Removing demo data…</Trans> ) : ( <Trans>Adding demo data… {percent}%</Trans> ) } /** * Adds or removes the large demo set with a live progress toast (dev and e2e * builds only; callers check). Used by Settings and by `?demo=large`. */ export async function runLargeDemo( store: Store, ctx: MutationCtx, action: 'add' | 'remove', ) { if (progress) return setProgress({action, done: 0}) const toast = Toast.show( <Toast.Outer> <Toast.Icon /> <Toast.Text> <ProgressText /> </Toast.Text> </Toast.Outer>, {duration: 120_000}, ) const started = performance.now() let done: {text: string; type: Toast.ToastType} try { if (action === 'add') { const counts = await addLargeDemo(store, ctx, part => setProgress({action, done: part}), ) if (counts) { // Kept in the log for the owner's timing checks (dev and e2e builds only). logger.info('demo.large.added', { ms: Math.round(performance.now() - started), ...counts, }) done = { text: t`Demo data added: ${plural(counts.expenses, {one: '# expense', other: '# expenses'})}`, type: 'success', } } else done = {text: t`Demo data is already added`, type: 'default'} } else { await removeLargeDemo(store) done = {text: t`Demo data removed`, type: 'success'} } } catch (e) { logger.error(e, {where: 'runLargeDemo'}) done = { text: t`Couldn't finish. Try Remove demo data, then add it again.`, type: 'error', } } setProgress(null) dismissToast(toast) // The progress toast leaves first, then the outcome takes its place. setTimeout(() => Toast.show(done.text, {type: done.type}), 400) } /** * Settings > About and data rows for the large demo set (ARCHITECTURE 26.1). * The caller renders them only in dev and e2e builds. */ export function DemoDataRows() { const {t: l} = useLingui() const t = useTheme() const store = useStore() const ctx = useMutationCtx() const haptics = useHaptics() const addPrompt = Prompt.usePromptControl() const removePrompt = Prompt.usePromptControl() const busy = useProgress() const {friends = 0, groups = 0, expenses = 0} = useDemoCounts() ?? {} const isLoaded = friends + groups > 0 const run = (action: 'add' | 'remove') => { haptics.confirm() void runLargeDemo(store, ctx, action).then(() => haptics.success()) } return ( <> <SettingsList.PressableItem testID="settings-demo-add" label={l`Add demo data`} disabled={!!busy} onPress={() => isLoaded ? Toast.show(l`Demo data is already added`) : addPrompt.open() }> <SettingsList.ItemIcon icon={DemoIcon} /> <View style={[a.flex_1, a.gap_2xs]}> <SettingsList.ItemText> <Trans>Add demo data</Trans> </SettingsList.ItemText> <Text testID="settings-demo-summary" numberOfLines={2} style={[a.text_sm, a.leading_snug, t.atoms.text_contrast_medium]}> {busy?.action === 'add' ? ( <Trans>Adding… {Math.round(busy.done * 100)}%</Trans> ) : isLoaded ? ( <Trans> Added: {plural(friends, {one: '# friend', other: '# friends'})},{' '} {plural(groups, {one: '# group', other: '# groups'})},{' '} {plural(expenses, {one: '# expense', other: '# expenses'})} </Trans> ) : ( <Trans>A year of friends, groups and expenses, for testing</Trans> )} </Text> </View> </SettingsList.PressableItem> {isLoaded && ( <SettingsList.PressableItem testID="settings-demo-remove" destructive label={l`Remove demo data`} disabled={!!busy} onPress={() => removePrompt.open()}> <SettingsList.ItemIcon icon={TrashIcon} /> <SettingsList.ItemText> <Trans>Remove demo data</Trans> </SettingsList.ItemText> </SettingsList.PressableItem> )} <Prompt.Basic control={addPrompt} title={l`Add demo data?`} description={l`Adds about 30 friends, 12 groups and 1,500 expenses from the past year next to your own data. You can remove exactly this later.`} confirmButtonCta={l`Add demo data`} onConfirm={() => run('add')} /> <Prompt.Basic control={removePrompt} title={l`Remove demo data?`} description={l`Removes the demo friends, groups, expenses and payments, with their history. Everything you added yourself stays.`} confirmButtonCta={l`Remove`} confirmButtonColor="negative" onConfirm={() => run('remove')} /> </> ) } 
+#. placeholder {2}: import {useSyncExternalStore} from 'react' import {View} from 'react-native' import {DatabaseZap} from 'lucide-react-native' import {type MutationCtx, type Store} from '@splito/sync' import {plural, t} from '@lingui/core/macro' import {Trans, useLingui} from '@lingui/react/macro' import {useHaptics} from '#/lib/haptics' import {logger} from '#/logger' import {addLargeDemo, removeLargeDemo} from '#/data/demoLarge' import {useDemoCounts, useMutationCtx, useStore} from '#/data/hooks' import * as SettingsList from '#/screens/Settings/components/SettingsList' import {atoms as a, useTheme} from '#/alf' import {Trash_Stroke2_Corner0_Rounded as TrashIcon} from '#/components/icons/Trash' import {createIcon} from '#/components/icons/lucide' import * as Prompt from '#/components/Prompt' import * as Toast from '#/components/Toast' import {dismiss as dismissToast} from '#/components/Toast/sonner' import {Text} from '#/components/Typography' const DemoIcon = createIcon(DatabaseZap) /* What is running and how far along: one tiny module store, read by the toast and the rows. */ let progress: {action: 'add' | 'remove'; done: number} | null = null const listeners = new Set<() => void>() function setProgress(next: typeof progress) { progress = next listeners.forEach(l => l()) } const subscribe = (l: () => void) => ( listeners.add(l), () => void listeners.delete(l) ) const getProgress = () => progress const useProgress = () => useSyncExternalStore(subscribe, getProgress) function ProgressText() { const p = useProgress() const percent = Math.round((p?.done ?? 1) * 100) return p?.action === 'remove' ? ( <Trans>Removing demo data…</Trans> ) : ( <Trans>Adding demo data… {percent}%</Trans> ) } /** * Adds or removes the large demo set with a live progress toast (dev and e2e * builds only; callers check). Used by Settings and by `?demo=large`. */ export async function runLargeDemo( store: Store, ctx: MutationCtx, action: 'add' | 'remove', ) { if (progress) return setProgress({action, done: 0}) const toast = Toast.show( <Toast.Outer> <Toast.Icon /> <Toast.Text> <ProgressText /> </Toast.Text> </Toast.Outer>, {duration: 120_000}, ) const started = performance.now() let done: {text: string; type: Toast.ToastType} try { if (action === 'add') { const counts = await addLargeDemo(store, ctx, part => setProgress({action, done: part}), ) if (counts) { // Kept in the log for the owner's timing checks (dev and e2e builds only). logger.info('demo.large.added', { ms: Math.round(performance.now() - started), ...counts, }) done = { text: t`Demo data added: ${plural(counts.expenses, {one: '# expense', other: '# expenses'})}`, type: 'success', } } else done = {text: t`Demo data is already added`, type: 'default'} } else { await removeLargeDemo(store) done = {text: t`Demo data removed`, type: 'success'} } } catch (e) { logger.error(e, {where: 'runLargeDemo'}) done = { text: t`Couldn't finish. Try Remove demo data, then add it again.`, type: 'error', } } setProgress(null) dismissToast(toast) // The progress toast leaves first, then the outcome takes its place. setTimeout(() => Toast.show(done.text, {type: done.type}), 400) } /** * Settings > About and data rows for the large demo set (ARCHITECTURE 26.1). * The caller renders them only in dev and e2e builds. */ export function DemoDataRows() { const {t: l} = useLingui() const t = useTheme() const store = useStore() const ctx = useMutationCtx() const haptics = useHaptics() const addPrompt = Prompt.usePromptControl() const removePrompt = Prompt.usePromptControl() const busy = useProgress() const {friends = 0, groups = 0, expenses = 0} = useDemoCounts() ?? {} const isLoaded = friends + groups > 0 const run = (action: 'add' | 'remove') => { haptics.confirm() void runLargeDemo(store, ctx, action).then(() => haptics.success()) } return ( <> <SettingsList.PressableItem testID="settings-demo-add" label={l`Add demo data`} disabled={!!busy} onPress={() => isLoaded ? Toast.show(l`Demo data is already added`) : addPrompt.open() }> <SettingsList.ItemIcon icon={DemoIcon} /> <View style={[a.flex_1, a.gap_2xs]}> <SettingsList.ItemText> <Trans>Add demo data</Trans> </SettingsList.ItemText> <Text testID="settings-demo-summary" numberOfLines={2} style={[a.text_sm, a.leading_snug, t.atoms.text_contrast_medium]}> {busy?.action === 'add' ? ( <Trans>Adding… {Math.round(busy.done * 100)}%</Trans> ) : isLoaded ? ( <Trans> Added: {plural(friends, {one: '# friend', other: '# friends'})},{' '} {plural(groups, {one: '# group', other: '# groups'})},{' '} {plural(expenses, {one: '# expense', other: '# expenses'})} </Trans> ) : ( <Trans>A year of friends, groups and expenses, for testing</Trans> )} </Text> </View> </SettingsList.PressableItem> {isLoaded && ( <SettingsList.PressableItem testID="settings-demo-remove" destructive label={l`Remove demo data`} disabled={!!busy} onPress={() => removePrompt.open()}> <SettingsList.ItemIcon icon={TrashIcon} /> <SettingsList.ItemText> <Trans>Remove demo data</Trans> </SettingsList.ItemText> </SettingsList.PressableItem> )} <Prompt.Basic control={addPrompt} title={l`Add demo data?`} description={l`Adds about 30 friends, 12 groups and 1,500 expenses from the past year next to your own data. You can remove exactly this later.`} confirmButtonCta={l`Add demo data`} onConfirm={() => run('add')} /> <Prompt.Basic control={removePrompt} title={l`Remove demo data?`} description={l`Removes the demo friends, groups, expenses and payments, with their history. Everything you added yourself stays.`} confirmButtonCta={l`Remove`} confirmButtonColor="negative" onConfirm={() => run('remove')} /> </> ) } 
+#: src/screens/Settings/DemoData.tsx:146
+msgid "Added: {0}, {1}, {2}"
+msgstr "जोड़ा गया: {0}, {1}, {2}"
+
+#: src/screens/Settings/DemoData.tsx:43
+msgid "Adding demo data… {percent}%"
+msgstr "डेमो डेटा जोड़ा जा रहा है… {percent}%"
+
+#. placeholder {0}: Math.round(busy.done * 100)
+#: src/screens/Settings/DemoData.tsx:144
+msgid "Adding… {0}%"
+msgstr "जोड़ा जा रहा है… {0}%"
+
+#: src/screens/Settings/DemoData.tsx:174
+msgid "Adds about 30 friends, 12 groups and 1,500 expenses from the past year next to your own data. You can remove exactly this later."
+msgstr "आपके अपने डेटा के साथ पिछले साल के लगभग 30 दोस्त, 12 ग्रुप और 1,500 खर्च जोड़ता है। बाद में आप ठीक यही हटा सकते हैं।"
+
 #: src/components/split/SplitEditor.tsx:600
 msgid "Adds them to this item"
 msgstr "उन्हें इस आइटम में जोड़ता है"
@@ -996,7 +1042,7 @@ msgstr "{0} के लिए घटाना या बढ़ाना"
 msgid "After that they leave this list. Their history stays in each record’s audit trail."
 msgstr "उसके बाद वे इस सूची से हट जाते हैं। उनका इतिहास हर रिकॉर्ड के ऑडिट ट्रेल में बना रहता है।"
 
-#: src/screens/Activity.tsx:113
+#: src/screens/Activity.tsx:120
 #: src/screens/Analytics/components/ScopeDialog.tsx:134
 #: src/screens/Analytics/components/ScopeDialog.tsx:145
 #: src/screens/Groups/components/GroupsFilterDialog.tsx:69
@@ -1021,13 +1067,13 @@ msgid "All groups"
 msgstr "सभी समूह"
 
 #: src/screens/People/components/BalanceSummary.tsx:195
-#: src/screens/Settle/index.tsx:379
+#: src/screens/Settle/index.tsx:384
 msgid "All settled up"
 msgstr "सब हिसाब बराबर"
 
 #: src/components/settings/prefControls.tsx:414
 #: src/screens/Analytics/components/Summary.tsx:195
-#: src/screens/Analytics/useReport.ts:258
+#: src/screens/Analytics/useReport.ts:259
 msgid "All time"
 msgstr "अब तक"
 
@@ -1116,9 +1162,9 @@ msgstr "किसी भी मुद्रा में ठीक यही र
 #: src/components/TabGlyph.tsx:29
 #: src/navigation/Drawer.tsx:207
 #: src/navigation/Navigation.tsx:67
-#: src/screens/Analytics/index.tsx:60
+#: src/screens/Analytics/index.tsx:62
 #: src/screens/People/components/BalanceSummary.tsx:138
-#: src/view/shell/desktop/LeftNav.tsx:733
+#: src/view/shell/desktop/LeftNav.tsx:731
 msgid "Analytics"
 msgstr "विश्लेषण"
 
@@ -1195,15 +1241,15 @@ msgstr "अपने आप"
 msgid "Back"
 msgstr "वापस"
 
-#: src/screens/Group/index.tsx:171
-#: src/screens/Group/index.tsx:172
-#: src/screens/Settle/index.tsx:140
-#: src/screens/Settle/index.tsx:141
+#: src/screens/Group/index.tsx:174
+#: src/screens/Group/index.tsx:175
+#: src/screens/Settle/index.tsx:145
+#: src/screens/Settle/index.tsx:146
 msgid "Back to Groups"
 msgstr "समूहों पर वापस जाएं"
 
-#: src/screens/Person/index.tsx:160
-#: src/screens/Person/index.tsx:161
+#: src/screens/Person/index.tsx:149
+#: src/screens/Person/index.tsx:150
 msgid "Back to People"
 msgstr "लोग पर वापस जाएं"
 
@@ -1211,7 +1257,7 @@ msgstr "लोग पर वापस जाएं"
 msgid "Back up and share"
 msgstr "बैकअप लें और साझा करें"
 
-#: src/screens/Settings/index.tsx:79
+#: src/screens/Settings/index.tsx:81
 msgid "Back up and share with friends"
 msgstr "बैकअप लें और मित्रों के साथ साझा करें"
 
@@ -1224,7 +1270,7 @@ msgid "Balance over time"
 msgstr "समय के साथ बैलेंस"
 
 #: src/components/settings/AboutSettings.tsx:102
-#: src/screens/Group/index.tsx:453
+#: src/screens/Group/index.tsx:456
 msgid "Balances"
 msgstr "बैलेंस"
 
@@ -1232,7 +1278,7 @@ msgstr "बैलेंस"
 msgid "Balances always show an arrow and words like “owes you”, so they read without colour too."
 msgstr "बैलेंस हमेशा तीर और “आपको देना है” जैसे शब्दों के साथ दिखते हैं, इसलिए रंग के बिना भी समझ आते हैं।"
 
-#: src/screens/Settle/index.tsx:250
+#: src/screens/Settle/index.tsx:255
 msgid "Balances or rules changed since this plan was made."
 msgstr "यह योजना बनने के बाद बैलेंस या नियम बदल गए हैं।"
 
@@ -1268,7 +1314,7 @@ msgstr "दोनों ओर: आप एक-दूसरे का कर्�
 msgid "Browsers can't vibrate. This applies in the Splito app on your phone."
 msgstr "ब्राउज़र वाइब्रेट नहीं कर सकते। यह आपके फ़ोन के Splito ऐप में लागू होता है।"
 
-#: src/screens/Settings/index.tsx:240
+#: src/screens/Settings/index.tsx:244
 msgid "By amount"
 msgstr "रकम के अनुसार"
 
@@ -1280,7 +1326,7 @@ msgstr "श्रेणी के अनुसार"
 msgid "By group"
 msgstr "समूह के अनुसार"
 
-#: src/screens/Settings/index.tsx:241
+#: src/screens/Settings/index.tsx:245
 msgid "By name"
 msgstr "नाम के अनुसार"
 
@@ -1296,8 +1342,8 @@ msgstr "कैलकुलेटर"
 #: src/features/settlement/CallItEvenDialog.tsx:279
 #: src/screens/Group/components/GroupRows.tsx:209
 #: src/screens/Group/components/GroupRows.tsx:212
-#: src/screens/Person/index.tsx:405
-#: src/screens/Person/index.tsx:408
+#: src/screens/Person/index.tsx:390
+#: src/screens/Person/index.tsx:393
 msgid "Call it even"
 msgstr "हिसाब बराबर करें"
 
@@ -1335,7 +1381,7 @@ msgstr "श्रेणियाँ"
 
 #: src/components/split/pickers.tsx:168
 #: src/screens/Analytics/components/Charts.tsx:188
-#: src/screens/Analytics/index.tsx:206
+#: src/screens/Analytics/index.tsx:209
 msgid "Category"
 msgstr "श्रेणी"
 
@@ -1439,14 +1485,14 @@ msgid "Clear all recent searches?"
 msgstr "सभी हाल की खोजें साफ़ करें?"
 
 #. placeholder {0}: selection.label
-#: src/screens/Analytics/index.tsx:165
+#: src/screens/Analytics/index.tsx:168
 msgid "Clear filter: {0}"
 msgstr "फ़िल्टर हटाएँ: {0}"
 
-#: src/screens/Groups/index.tsx:204
-#: src/screens/Groups/index.tsx:205
-#: src/screens/People/index.tsx:217
-#: src/screens/People/index.tsx:218
+#: src/screens/Groups/index.tsx:195
+#: src/screens/Groups/index.tsx:196
+#: src/screens/People/index.tsx:222
+#: src/screens/People/index.tsx:223
 msgid "Clear filters"
 msgstr "फ़िल्टर हटाएँ"
 
@@ -1620,9 +1666,13 @@ msgstr "यह खर्च हटाया नहीं जा सका"
 msgid "Couldn’t delete this. Please try again."
 msgstr "इसे हटाया नहीं जा सका। कृपया फिर से कोशिश करें।"
 
-#: src/screens/Analytics/index.tsx:227
+#: src/screens/Analytics/index.tsx:230
 msgid "Couldn’t export. Try again."
 msgstr "एक्सपोर्ट नहीं हो सका। फिर से कोशिश करें।"
+
+#: src/screens/Settings/DemoData.tsx:92
+msgid "Couldn't finish. Try Remove demo data, then add it again."
+msgstr "पूरा नहीं हो सका। डेमो डेटा हटाएँ, फिर दोबारा जोड़ें।"
 
 #: src/lib/sharing.ts:62
 msgid "Couldn’t open an app for that. Copy the link instead."
@@ -1632,7 +1682,7 @@ msgstr "इसके लिए कोई ऐप नहीं खुला। इ
 msgid "Couldn’t put this write-off back"
 msgstr "यह माफ़ी वापस नहीं लाई जा सकी"
 
-#: src/screens/Person/index.tsx:268
+#: src/screens/Person/index.tsx:248
 msgid "Couldn’t remove this friend. Please try again."
 msgstr "इस दोस्त को नहीं हटा सके। कृपया फिर कोशिश करें।"
 
@@ -1690,7 +1740,7 @@ msgid "Counts towards: {settles}"
 msgstr "इसमें गिना जाएगा: {settles}"
 
 #: src/components/groups/GroupFields.tsx:45
-#: src/screens/Group/index.tsx:309
+#: src/screens/Group/index.tsx:312
 #: src/screens/Groups/components/GroupRow.tsx:50
 #: src/screens/Groups/components/GroupsFilterDialog.tsx:72
 #: src/screens/Search/components/ResultRows.tsx:322
@@ -1703,9 +1753,9 @@ msgid "Create a link"
 msgstr "लिंक बनाएँ"
 
 #: src/screens/CreateGroup.tsx:137
-#: src/screens/Groups/index.tsx:138
-#: src/screens/Groups/index.tsx:254
-#: src/screens/Groups/index.tsx:260
+#: src/screens/Groups/index.tsx:129
+#: src/screens/Groups/index.tsx:245
+#: src/screens/Groups/index.tsx:251
 msgid "Create group"
 msgstr "समूह बनाएँ"
 
@@ -1718,7 +1768,7 @@ msgstr "लिंक बनाएँ"
 #: src/components/split/pickers.tsx:69
 #: src/components/split/pickers.tsx:80
 #: src/features/settlement/CallItEvenDialog.tsx:326
-#: src/screens/Analytics/index.tsx:208
+#: src/screens/Analytics/index.tsx:211
 #: src/screens/Groups/components/GroupsFilterDialog.tsx:90
 #: src/screens/People/components/FriendsFilterDialog.tsx:98
 msgid "Currency"
@@ -1758,7 +1808,7 @@ msgid "Custom range…"
 msgstr "अपनी अवधि…"
 
 #: src/components/settings/prefControls.tsx:85
-#: src/screens/Settings/index.tsx:233
+#: src/screens/Settings/index.tsx:237
 msgid "Dark"
 msgstr "डार्क"
 
@@ -1774,7 +1824,7 @@ msgstr "डार्क थीम"
 #: src/components/people/PaymentDetailsDialog.tsx:166
 #: src/components/split/ExpenseComposer.tsx:341
 #: src/components/split/ExpenseComposer.tsx:495
-#: src/screens/Analytics/index.tsx:204
+#: src/screens/Analytics/index.tsx:207
 #: src/screens/RecentlyDeleted/components/RestoreDialog.tsx:155
 msgid "Date"
 msgstr "तारीख"
@@ -1884,7 +1934,21 @@ msgstr "हटाए गए ख़र्च, भुगतान और माफ
 msgid "Deleted forever"
 msgstr "हमेशा के लिए हटा दिया गया"
 
-#: src/screens/Analytics/index.tsx:205
+#. placeholder {0}: counts.expenses
+#: src/screens/Settings/DemoData.tsx:81
+msgid "Demo data added: {0, plural, one {# expense} other {# expenses}}"
+msgstr "डेमो डेटा जोड़ा गया: {0, plural, one {# खर्च} other {# खर्च}}"
+
+#: src/screens/Settings/DemoData.tsx:84
+#: src/screens/Settings/DemoData.tsx:131
+msgid "Demo data is already added"
+msgstr "डेमो डेटा पहले से जोड़ा हुआ है"
+
+#: src/screens/Settings/DemoData.tsx:87
+msgid "Demo data removed"
+msgstr "डेमो डेटा हटा दिया गया"
+
+#: src/screens/Analytics/index.tsx:208
 msgid "Description"
 msgstr "विवरण"
 
@@ -1915,7 +1979,7 @@ msgstr "सीधा {0}"
 msgid "Direct expenses"
 msgstr "सीधे खर्च"
 
-#: src/screens/Person/index.tsx:339
+#: src/screens/Person/index.tsx:319
 msgid "Direct only"
 msgstr "सिर्फ़ सीधे"
 
@@ -2004,14 +2068,14 @@ msgid "Edit expense"
 msgstr "खर्च बदलें"
 
 #: src/components/people/EditFriendDialog.tsx:67
-#: src/screens/Person/index.tsx:415
-#: src/screens/Person/index.tsx:418
+#: src/screens/Person/index.tsx:400
+#: src/screens/Person/index.tsx:403
 msgid "Edit friend"
 msgstr "दोस्त बदलें"
 
 #: src/components/groups/EditGroupDialog.tsx:89
-#: src/screens/Group/index.tsx:539
-#: src/screens/Group/index.tsx:542
+#: src/screens/Group/index.tsx:549
+#: src/screens/Group/index.tsx:552
 msgid "Edit group"
 msgstr "ग्रुप बदलें"
 
@@ -2022,13 +2086,13 @@ msgstr "ग्रुप बदलें"
 msgid "Edit profile"
 msgstr "प्रोफ़ाइल बदलें"
 
-#: src/screens/Group/index.tsx:720
-#: src/screens/Settle/index.tsx:431
+#: src/screens/Group/index.tsx:731
+#: src/screens/Settle/index.tsx:436
 msgid "Edit rules"
 msgstr "नियम बदलें"
 
-#: src/screens/Group/index.tsx:716
-#: src/screens/Settle/index.tsx:422
+#: src/screens/Group/index.tsx:727
+#: src/screens/Settle/index.tsx:427
 msgid "Edit who you settle with"
 msgstr "किसके साथ हिसाब चुकाएं, बदलें"
 
@@ -2141,8 +2205,8 @@ msgstr "हर स्वाइप वाला काम आइटम के म
 msgid "Everyone"
 msgstr "सभी"
 
-#: src/screens/Group/index.tsx:515
-#: src/screens/Settle/index.tsx:387
+#: src/screens/Group/index.tsx:525
+#: src/screens/Settle/index.tsx:392
 msgid "Everyone is settled up."
 msgstr "सबका हिसाब बराबर है।"
 
@@ -2154,7 +2218,7 @@ msgstr "समूह के खर्च में सभी लोग समू
 msgid "Everyone ticked pays the same."
 msgstr "चुने गए सभी लोग बराबर देते हैं।"
 
-#: src/screens/Settle/index.tsx:237
+#: src/screens/Settle/index.tsx:242
 msgid "Everyone who owes pays the people who are owed, straight to them. Only pairs allowed in Who you settle with are used, preferred pairs first, so the plan isn’t always the fewest payments."
 msgstr "जिन्हें पैसे देने हैं, वे सीधे उन्हें देते हैं जिन्हें पैसे मिलने हैं। सिर्फ़ “किसके साथ हिसाब चुकाएं” में अनुमति वाली जोड़ियाँ इस्तेमाल होती हैं, पसंदीदा पहले, इसलिए योजना में हमेशा सबसे कम भुगतान नहीं होते।"
 
@@ -2233,8 +2297,8 @@ msgstr "ख़र्च वापस लाया गया"
 #: src/screens/Analytics/components/Charts.tsx:280
 #: src/screens/Analytics/components/Charts.tsx:325
 #: src/screens/Analytics/components/Summary.tsx:174
-#: src/screens/Analytics/index.tsx:149
-#: src/screens/Group/index.tsx:453
+#: src/screens/Analytics/index.tsx:152
+#: src/screens/Group/index.tsx:456
 #: src/screens/Profile.tsx:249
 #: src/screens/Search/components/ResultRows.tsx:77
 msgid "Expenses"
@@ -2248,16 +2312,16 @@ msgstr "समाप्त"
 msgid "Expires within the hour"
 msgstr "एक घंटे के अंदर समाप्त"
 
-#: src/screens/Analytics/index.tsx:65
+#: src/screens/Analytics/index.tsx:67
 msgid "Export CSV"
 msgstr "CSV एक्सपोर्ट करें"
 
 #. placeholder {0}: rows.length
-#: src/screens/Analytics/index.tsx:222
+#: src/screens/Analytics/index.tsx:225
 msgid "Exported {0} expenses"
 msgstr "{0} खर्च एक्सपोर्ट किए गए"
 
-#: src/screens/Analytics/index.tsx:221
+#: src/screens/Analytics/index.tsx:224
 msgid "Exported 1 expense"
 msgstr "1 खर्च एक्सपोर्ट किया गया"
 
@@ -2266,8 +2330,8 @@ msgid "Fewer shares"
 msgstr "कम हिस्से"
 
 #: src/screens/Person/components/HistoryFilterDialog.tsx:55
-#: src/screens/Person/index.tsx:344
-#: src/screens/Person/index.tsx:350
+#: src/screens/Person/index.tsx:324
+#: src/screens/Person/index.tsx:330
 msgid "Filter"
 msgstr "फ़िल्टर"
 
@@ -2289,7 +2353,7 @@ msgstr "इस डिवाइस पर कोई भी खर्च, दो�
 msgid "Find me by email or phone"
 msgstr "ईमेल या फ़ोन से मुझे खोजा जा सके"
 
-#: src/screens/Settings/index.tsx:245
+#: src/screens/Settings/index.tsx:249
 msgid "Findable"
 msgstr "खोजे जा सकते हैं"
 
@@ -2317,8 +2381,8 @@ msgstr "Splito के बाहर हुए लेन-देन के लि�
 msgid "For you"
 msgstr "आपके लिए"
 
-#: src/screens/Person/index.tsx:151
-#: src/screens/Person/index.tsx:367
+#: src/screens/Person/index.tsx:140
+#: src/screens/Person/index.tsx:352
 #: src/screens/Search/components/ResultRows.tsx:295
 msgid "Friend"
 msgstr "दोस्त"
@@ -2335,7 +2399,7 @@ msgstr "दोस्ती का आमंत्रण"
 msgid "Friend invite links work for"
 msgstr "दोस्ती के आमंत्रण लिंक कितनों के लिए"
 
-#: src/screens/Person/index.tsx:263
+#: src/screens/Person/index.tsx:243
 msgid "Friend removed"
 msgstr "दोस्त हटाया गया"
 
@@ -2344,27 +2408,27 @@ msgid "Friend request sent to {shownName}"
 msgstr "{shownName} को दोस्ती का अनुरोध भेजा गया"
 
 #: src/components/groups/AddMembersDialog.tsx:134
-#: src/screens/People/index.tsx:188
-#: src/screens/People/index.tsx:273
+#: src/screens/People/index.tsx:193
+#: src/screens/People/index.tsx:278
 #: src/screens/Profile.tsx:237
 msgid "Friends"
 msgstr "दोस्त"
 
 #. placeholder {0}: line.people
-#: src/screens/Settle/index.tsx:578
+#: src/screens/Settle/index.tsx:583
 msgid "From {0} people"
 msgstr "{0} लोगों से"
 
-#: src/screens/Settle/index.tsx:576
+#: src/screens/Settle/index.tsx:581
 msgid "From 1 person"
 msgstr "1 व्यक्ति से"
 
-#: src/screens/Activity.tsx:113
+#: src/screens/Activity.tsx:120
 msgid "From others"
 msgstr "दूसरों से"
 
 #: src/components/settings/prefControls.tsx:190
-#: src/screens/Settings/index.tsx:234
+#: src/screens/Settings/index.tsx:238
 msgid "Full"
 msgstr "पूरा"
 
@@ -2423,11 +2487,11 @@ msgstr "किराना"
 #: src/features/settlement/CallItEvenDialog.tsx:158
 #: src/navigation/Navigation.tsx:76
 #: src/screens/Analytics/components/Charts.tsx:325
-#: src/screens/Analytics/index.tsx:207
-#: src/screens/Analytics/useReport.ts:270
-#: src/screens/Group/index.tsx:162
-#: src/screens/Group/index.tsx:309
-#: src/screens/Group/index.tsx:501
+#: src/screens/Analytics/index.tsx:210
+#: src/screens/Analytics/useReport.ts:271
+#: src/screens/Group/index.tsx:165
+#: src/screens/Group/index.tsx:312
+#: src/screens/Group/index.tsx:511
 #: src/screens/Groups/components/GroupRow.tsx:51
 #: src/screens/People/components/PersonRow.tsx:79
 #: src/screens/Person/components/PersonBalances.tsx:98
@@ -2467,12 +2531,12 @@ msgstr "ग्रुप अपडेट हुआ"
 #: src/components/TabGlyph.tsx:28
 #: src/navigation/Drawer.tsx:200
 #: src/navigation/Navigation.tsx:66
-#: src/screens/Groups/index.tsx:133
-#: src/screens/Groups/index.tsx:147
-#: src/screens/Groups/index.tsx:177
+#: src/screens/Groups/index.tsx:124
+#: src/screens/Groups/index.tsx:138
+#: src/screens/Groups/index.tsx:168
 #: src/screens/Profile.tsx:243
 #: src/screens/Search/components/ResultRows.tsx:77
-#: src/view/shell/desktop/LeftNav.tsx:729
+#: src/view/shell/desktop/LeftNav.tsx:727
 msgid "Groups"
 msgstr "समूह"
 
@@ -2491,7 +2555,7 @@ msgid "Hex color"
 msgstr "हेक्स रंग"
 
 #: src/components/settings/CategoriesEditor.tsx:197
-#: src/screens/Settings/index.tsx:245
+#: src/screens/Settings/index.tsx:249
 msgid "Hidden"
 msgstr "छिपी हुई"
 
@@ -2516,7 +2580,7 @@ msgid "Hide from Activity"
 msgstr "गतिविधि से छिपाएँ"
 
 #: src/screens/Expense/components/History.tsx:95
-#: src/screens/Person/index.tsx:332
+#: src/screens/Person/index.tsx:312
 msgid "History"
 msgstr "इतिहास"
 
@@ -2524,12 +2588,12 @@ msgstr "इतिहास"
 #: src/components/settings/TabsEditor.tsx:32
 #: src/components/TabGlyph.tsx:27
 #: src/navigation/Drawer.tsx:193
-#: src/screens/Group/index.tsx:309
+#: src/screens/Group/index.tsx:312
 #: src/screens/Groups/components/GroupRow.tsx:49
 #: src/screens/Groups/components/GroupsFilterDialog.tsx:71
-#: src/screens/People/index.tsx:139
+#: src/screens/People/index.tsx:144
 #: src/screens/Search/components/ResultRows.tsx:321
-#: src/view/shell/desktop/LeftNav.tsx:725
+#: src/view/shell/desktop/LeftNav.tsx:723
 msgid "Home"
 msgstr "घर"
 
@@ -2553,8 +2617,8 @@ msgstr "कितने लोग इस्तेमाल कर सकते �
 msgid "How new expenses are divided until you change it."
 msgstr "जब तक आप न बदलें, नए खर्च ऐसे बँटेंगे।"
 
-#: src/screens/Settle/index.tsx:216
-#: src/screens/Settle/index.tsx:224
+#: src/screens/Settle/index.tsx:221
+#: src/screens/Settle/index.tsx:229
 msgid "How this plan works"
 msgstr "यह योजना कैसे बनती है"
 
@@ -2620,7 +2684,7 @@ msgid "Invite link"
 msgstr "आमंत्रण लिंक"
 
 #: src/screens/AddFriend.tsx:498
-#: src/screens/Group/index.tsx:787
+#: src/screens/Group/index.tsx:798
 msgid "Invite link or QR code"
 msgstr "आमंत्रण लिंक या QR कोड"
 
@@ -2637,7 +2701,7 @@ msgstr "आमंत्रण लिंक के लिए Splito के सर
 msgid "Invite links need a connection. Try again when you’re online."
 msgstr "आमंत्रण लिंक के लिए कनेक्शन चाहिए। ऑनलाइन होने पर फिर कोशिश करें।"
 
-#: src/screens/People/index.tsx:154
+#: src/screens/People/index.tsx:159
 msgid "Invite people"
 msgstr "लोगों को आमंत्रित करें"
 
@@ -2647,7 +2711,7 @@ msgid "Invite to {0}"
 msgstr "{0} में आमंत्रित करें"
 
 #: src/screens/AddFriend.tsx:493
-#: src/screens/Group/index.tsx:775
+#: src/screens/Group/index.tsx:786
 msgid "Invite with a link or QR code"
 msgstr "लिंक या QR कोड से आमंत्रित करें"
 
@@ -2794,7 +2858,7 @@ msgid "Let people who know my email or number find me"
 msgstr "जो मेरा ईमेल या नंबर जानते हैं, वे मुझे खोज सकें"
 
 #: src/components/settings/prefControls.tsx:84
-#: src/screens/Settings/index.tsx:233
+#: src/screens/Settings/index.tsx:237
 msgid "Light"
 msgstr "लाइट"
 
@@ -2839,7 +2903,7 @@ msgstr "आमंत्रण लिंक प्रबंधित करें
 msgid "Manage links"
 msgstr "लिंक प्रबंधित करें"
 
-#: src/screens/Activity.tsx:103
+#: src/screens/Activity.tsx:110
 msgid "Mark all read"
 msgstr "सभी को पढ़ा हुआ मार्क करें"
 
@@ -2870,10 +2934,10 @@ msgstr "माप"
 
 #: src/screens/CreateGroup.tsx:179
 #: src/screens/CreateGroup.tsx:199
-#: src/screens/Group/index.tsx:453
-#: src/screens/Group/index.tsx:548
-#: src/screens/Group/index.tsx:551
-#: src/screens/Group/index.tsx:622
+#: src/screens/Group/index.tsx:456
+#: src/screens/Group/index.tsx:558
+#: src/screens/Group/index.tsx:561
+#: src/screens/Group/index.tsx:633
 msgid "Members"
 msgstr "सदस्य"
 
@@ -2914,8 +2978,8 @@ msgstr "पहले महीना"
 msgid "More actions"
 msgstr "और विकल्प"
 
-#: src/screens/Group/index.tsx:520
-#: src/screens/Person/index.tsx:385
+#: src/screens/Group/index.tsx:530
+#: src/screens/Person/index.tsx:370
 msgid "More options"
 msgstr "और विकल्प"
 
@@ -2927,7 +2991,7 @@ msgstr "{sentence} के लिए और विकल्प"
 msgid "More shares"
 msgstr "ज़्यादा हिस्से"
 
-#: src/screens/Settings/index.tsx:242
+#: src/screens/Settings/index.tsx:246
 msgid "Most recent"
 msgstr "सबसे हाल का"
 
@@ -3017,8 +3081,8 @@ msgstr "नया दोस्त – खाते की ज़रूरत न
 
 #: src/navigation/Navigation.tsx:86
 #: src/screens/CreateGroup.tsx:131
-#: src/screens/Groups/index.tsx:217
-#: src/screens/Groups/index.tsx:218
+#: src/screens/Groups/index.tsx:208
+#: src/screens/Groups/index.tsx:209
 msgid "New group"
 msgstr "नया समूह"
 
@@ -3060,7 +3124,7 @@ msgstr "कोई सक्रिय आमंत्रण लिंक नह�
 msgid "no balance change"
 msgstr "बैलेंस नहीं बदला"
 
-#: src/screens/Group/index.tsx:471
+#: src/screens/Group/index.tsx:474
 msgid "No balances yet. They appear once the group has an expense."
 msgstr "अभी कोई बैलेंस नहीं। समूह में खर्च जुड़ते ही दिखेंगे।"
 
@@ -3073,7 +3137,7 @@ msgid "No currency matches “{query}”"
 msgstr "“{query}” से कोई मुद्रा नहीं मिली"
 
 #. placeholder {0}: person!.data.name
-#: src/screens/Person/index.tsx:482
+#: src/screens/Person/index.tsx:468
 msgid "No direct expenses with {0}. Group expenses are hidden by the filter."
 msgstr "{0} के साथ कोई सीधा खर्च नहीं। समूह के खर्च फ़िल्टर से छिपे हैं।"
 
@@ -3081,11 +3145,11 @@ msgstr "{0} के साथ कोई सीधा खर्च नहीं।
 msgid "No email or number? Add just a name and they’re only for you."
 msgstr "ईमेल या नंबर नहीं है? सिर्फ़ नाम जोड़ें, वे सिर्फ़ आपके लिए रहेंगे।"
 
-#: src/screens/Group/index.tsx:477
+#: src/screens/Group/index.tsx:480
 msgid "No expenses in this group yet. Add the first one and everyone’s share is worked out for you."
 msgstr "इस समूह में अभी कोई खर्च नहीं। पहला जोड़ें, सबका हिस्सा अपने आप निकल आएगा।"
 
-#: src/screens/People/index.tsx:214
+#: src/screens/People/index.tsx:219
 msgid "No friends match these filters."
 msgstr "इन फ़िल्टर से कोई दोस्त मेल नहीं खाता।"
 
@@ -3098,11 +3162,11 @@ msgstr "कोई समूह नहीं"
 msgid "No groups match “{query}”"
 msgstr "“{query}” से कोई समूह मेल नहीं खाता"
 
-#: src/screens/Groups/index.tsx:201
+#: src/screens/Groups/index.tsx:192
 msgid "No groups match these filters."
 msgstr "इन फ़िल्टर से कोई समूह मेल नहीं खाता।"
 
-#: src/screens/Groups/index.tsx:215
+#: src/screens/Groups/index.tsx:206
 msgid "No groups yet. A group keeps a trip’s or a flat’s expenses and balances in one place."
 msgstr "अभी कोई समूह नहीं। समूह किसी यात्रा या फ़्लैट के खर्च और बैलेंस एक जगह रखता है।"
 
@@ -3112,8 +3176,8 @@ msgid "No limit"
 msgstr "कोई सीमा नहीं"
 
 #. placeholder {0}: query.trim()
-#: src/screens/Groups/index.tsx:195
-#: src/screens/People/index.tsx:208
+#: src/screens/Groups/index.tsx:186
+#: src/screens/People/index.tsx:213
 msgid "No matches for “{0}”"
 msgstr "“{0}” के लिए कोई नतीजा नहीं"
 
@@ -3129,7 +3193,7 @@ msgstr "कोई बकाया नहीं"
 msgid "No results found for “<0>{query}</0>”."
 msgstr "“<0>{query}</0>” के लिए कोई नतीजा नहीं मिला।"
 
-#: src/screens/Person/index.tsx:207
+#: src/screens/Person/index.tsx:187
 msgid "No shared groups"
 msgstr "कोई साझा समूह नहीं"
 
@@ -3149,7 +3213,7 @@ msgstr "“{query}” से कोई नहीं मिला"
 msgid "Nobody yet"
 msgstr "अभी कोई नहीं"
 
-#: src/screens/Analytics/useReport.ts:270
+#: src/screens/Analytics/useReport.ts:271
 msgid "Non-group"
 msgstr "बिना समूह"
 
@@ -3210,11 +3274,11 @@ msgstr "नोट"
 msgid "Nothing"
 msgstr "कुछ नहीं"
 
-#: src/screens/Activity.tsx:137
+#: src/screens/Activity.tsx:145
 msgid "Nothing from other people yet. When someone else adds or changes something you share, it shows up here."
 msgstr "अभी दूसरों की ओर से कुछ नहीं। जब कोई और आपके साझा खर्च में कुछ जोड़ता या बदलता है, तो वह यहाँ दिखेगा।"
 
-#: src/screens/Activity.tsx:138
+#: src/screens/Activity.tsx:146
 msgid "Nothing here yet. Expenses, payments and group changes will show up here."
 msgstr "अभी यहां कुछ नहीं। खर्च, भुगतान और समूह के बदलाव यहां दिखेंगे।"
 
@@ -3222,12 +3286,12 @@ msgstr "अभी यहां कुछ नहीं। खर्च, भुग
 msgid "Nothing matches “{search}”"
 msgstr "“{search}” से कुछ नहीं मिला"
 
-#: src/screens/Settle/index.tsx:446
+#: src/screens/Settle/index.tsx:451
 msgid "Nothing to settle. This group has no expenses yet."
 msgstr "चुकाने को कुछ नहीं। इस समूह में अभी कोई खर्च नहीं।"
 
 #. placeholder {0}: person!.data.name
-#: src/screens/Person/index.tsx:481
+#: src/screens/Person/index.tsx:467
 msgid "Nothing with {0} yet. Add an expense you shared and it shows up here."
 msgstr "{0} के साथ अभी कुछ नहीं। साझा खर्च जोड़ें, वह यहां दिखेगा।"
 
@@ -3264,12 +3328,12 @@ msgid "of your share was paid by others"
 msgstr "आपके हिस्से में से दूसरों ने चुकाया"
 
 #: src/components/settings/prefControls.tsx:192
-#: src/screens/Settings/index.tsx:234
-#: src/screens/Settings/index.tsx:244
+#: src/screens/Settings/index.tsx:238
+#: src/screens/Settings/index.tsx:248
 msgid "Off"
 msgstr "बंद"
 
-#: src/screens/Settings/index.tsx:244
+#: src/screens/Settings/index.tsx:248
 msgid "On"
 msgstr "चालू"
 
@@ -3291,7 +3355,7 @@ msgstr "साझा खर्च के लिए एक जगह"
 msgid "Only allowed pairs"
 msgstr "सिर्फ़ अनुमति वाली जोड़ियाँ"
 
-#: src/screens/Person/index.tsx:573
+#: src/screens/Person/index.tsx:559
 msgid "Only friends with no expenses, payments or groups can be removed."
 msgstr "सिर्फ़ वे दोस्त हटाए जा सकते हैं जिनका कोई खर्च, भुगतान या समूह नहीं है।"
 
@@ -3331,7 +3395,7 @@ msgid "Open balance {0}. Part payments are fine."
 msgstr "बकाया {0}। आंशिक भुगतान भी ठीक है।"
 
 #: src/components/HeaderAvatar.tsx:47
-#: src/view/shell/desktop/LeftNav.tsx:190
+#: src/view/shell/desktop/LeftNav.tsx:189
 msgid "Open menu"
 msgstr "मेन्यू खोलें"
 
@@ -3377,7 +3441,7 @@ msgstr "या इन्हें ड्राफ़्ट में रखे�
 
 #: src/components/groups/GroupFields.tsx:46
 #: src/components/settings/CategoryIcon.tsx:132
-#: src/screens/Analytics/useReport.ts:274
+#: src/screens/Analytics/useReport.ts:275
 #: src/screens/Groups/components/GroupsFilterDialog.tsx:73
 msgid "Other"
 msgstr "अन्य"
@@ -3445,8 +3509,8 @@ msgid "Part payments are fine."
 msgstr "आंशिक भुगतान भी ठीक है।"
 
 #: src/components/people/UpiPayDialog.tsx:149
-#: src/screens/Person/index.tsx:311
-#: src/screens/Person/index.tsx:317
+#: src/screens/Person/index.tsx:291
+#: src/screens/Person/index.tsx:297
 msgid "Pay with UPI"
 msgstr "UPI से भुगतान करें"
 
@@ -3474,8 +3538,8 @@ msgid "Payment restored"
 msgstr "भुगतान वापस लाया गया"
 
 #: src/components/groups/RulesEditor.tsx:97
-#: src/screens/Group/index.tsx:566
-#: src/screens/Group/index.tsx:569
+#: src/screens/Group/index.tsx:576
+#: src/screens/Group/index.tsx:579
 msgid "Payment rules"
 msgstr "भुगतान के नियम"
 
@@ -3568,7 +3632,7 @@ msgstr "पहला दिन चुनें"
 msgid "Pink"
 msgstr "गुलाबी"
 
-#: src/screens/Groups/index.tsx:247
+#: src/screens/Groups/index.tsx:238
 msgid "Planning a trip or sharing a flat? Keep its expenses in one place."
 msgstr "ट्रिप की योजना या फ़्लैट साझा कर रहे हैं? उसके खर्च एक जगह रखें।"
 
@@ -3576,7 +3640,7 @@ msgstr "ट्रिप की योजना या फ़्लैट सा�
 msgid "Plus"
 msgstr "जोड़"
 
-#: src/screens/Settings/index.tsx:110
+#: src/screens/Settings/index.tsx:112
 msgid "Preferences"
 msgstr "प्राथमिकताएँ"
 
@@ -3611,7 +3675,7 @@ msgstr "गोपनीयता"
 #: src/navigation/Drawer.tsx:230
 #: src/navigation/Navigation.tsx:69
 #: src/screens/Profile.tsx:40
-#: src/screens/Settings/index.tsx:87
+#: src/screens/Settings/index.tsx:89
 msgid "Profile"
 msgstr "प्रोफ़ाइल"
 
@@ -3641,19 +3705,19 @@ msgstr "हाल की गतिविधि"
 msgid "Recent searches"
 msgstr "हाल की खोजें"
 
-#: src/view/shell/desktop/RecentTransactions.tsx:67
+#: src/view/shell/desktop/RecentTransactions.tsx:62
 msgid "Recent transactions"
 msgstr "हाल के लेन-देन"
 
-#: src/view/shell/desktop/LeftNav.tsx:556
+#: src/view/shell/desktop/LeftNav.tsx:554
 msgid "Recently active groups"
 msgstr "हाल में सक्रिय ग्रुप"
 
 #: src/components/settings/sections.ts:53
 #: src/navigation/Navigation.tsx:73
 #: src/screens/RecentlyDeleted/index.tsx:198
-#: src/screens/Settings/index.tsx:145
-#: src/screens/Settings/index.tsx:148
+#: src/screens/Settings/index.tsx:147
+#: src/screens/Settings/index.tsx:150
 msgid "Recently deleted"
 msgstr "हाल ही में हटाए गए"
 
@@ -3666,7 +3730,7 @@ msgid "Record a payment"
 msgstr "भुगतान दर्ज करें"
 
 #: src/components/people/RecordPaymentDialog.tsx:267
-#: src/screens/Person/index.tsx:378
+#: src/screens/Person/index.tsx:363
 msgid "Record payment"
 msgstr "भुगतान दर्ज करें"
 
@@ -3675,7 +3739,7 @@ msgid "Record this payment"
 msgstr "यह भुगतान दर्ज करें"
 
 #: src/components/settings/prefControls.tsx:191
-#: src/screens/Settings/index.tsx:234
+#: src/screens/Settings/index.tsx:238
 msgid "Reduced"
 msgstr "कम"
 
@@ -3687,12 +3751,13 @@ msgstr "कम में हलचल की जगह हल्का फ़े
 msgid "Remember what you search for"
 msgstr "आपकी खोजें याद रखें"
 
-#: src/screens/Person/index.tsx:574
+#: src/screens/Person/index.tsx:560
+#: src/screens/Settings/DemoData.tsx:182
 msgid "Remove"
 msgstr "हटाएं"
 
 #. placeholder {0}: person.data.name
-#: src/screens/Person/index.tsx:572
+#: src/screens/Person/index.tsx:558
 msgid "Remove {0}?"
 msgstr "{0} को हटाएं?"
 
@@ -3700,8 +3765,17 @@ msgstr "{0} को हटाएं?"
 msgid "Remove {q}"
 msgstr "{q} हटाएँ"
 
-#: src/screens/Person/index.tsx:424
-#: src/screens/Person/index.tsx:428
+#: src/screens/Settings/DemoData.tsx:161
+#: src/screens/Settings/DemoData.tsx:166
+msgid "Remove demo data"
+msgstr "डेमो डेटा हटाएँ"
+
+#: src/screens/Settings/DemoData.tsx:180
+msgid "Remove demo data?"
+msgstr "डेमो डेटा हटाएँ?"
+
+#: src/screens/Person/index.tsx:409
+#: src/screens/Person/index.tsx:413
 msgid "Remove friend"
 msgstr "दोस्त हटाएं"
 
@@ -3709,6 +3783,14 @@ msgstr "दोस्त हटाएं"
 #: src/components/split/SplitEditor.tsx:488
 msgid "Remove item {0}"
 msgstr "चीज़ {0} हटाएँ"
+
+#: src/screens/Settings/DemoData.tsx:181
+msgid "Removes the demo friends, groups, expenses and payments, with their history. Everything you added yourself stays."
+msgstr "डेमो के दोस्त, ग्रुप, खर्च और भुगतान उनके इतिहास के साथ हटाता है। आपका अपना जोड़ा हुआ सब कुछ बना रहता है।"
+
+#: src/screens/Settings/DemoData.tsx:41
+msgid "Removing demo data…"
+msgstr "डेमो डेटा हटाया जा रहा है…"
 
 #: src/components/activity/ActivityItem.tsx:993
 #: src/screens/People/components/RequestsSection.tsx:136
@@ -3758,16 +3840,16 @@ msgstr "{title} को डिफ़ॉल्ट पर रीसेट करे
 msgid "Reset {title}?"
 msgstr "{title} रीसेट करें?"
 
-#: src/screens/Settings/index.tsx:200
+#: src/screens/Settings/index.tsx:204
 msgid "Reset all"
 msgstr "सब रीसेट करें"
 
-#: src/screens/Settings/index.tsx:171
 #: src/screens/Settings/index.tsx:175
+#: src/screens/Settings/index.tsx:179
 msgid "Reset all settings"
 msgstr "सभी सेटिंग्स रीसेट करें"
 
-#: src/screens/Settings/index.tsx:198
+#: src/screens/Settings/index.tsx:202
 msgid "Reset all settings?"
 msgstr "सभी सेटिंग्स रीसेट करें?"
 
@@ -3892,7 +3974,7 @@ msgstr "सहेजा गया"
 #: src/components/settings/AboutSettings.tsx:116
 #: src/navigation/Drawer.tsx:106
 #: src/screens/Profile.tsx:192
-#: src/view/shell/desktop/LeftNav.tsx:227
+#: src/view/shell/desktop/LeftNav.tsx:226
 msgid "Saved on this device"
 msgstr "इस डिवाइस पर सहेजा गया"
 
@@ -3913,8 +3995,8 @@ msgstr "सहेजा गया। ऑनलाइन होने पर ह�
 #: src/components/forms/SearchInput.tsx:54
 #: src/navigation/Drawer.tsx:223
 #: src/navigation/Navigation.tsx:74
-#: src/screens/Search/index.tsx:188
-#: src/view/shell/desktop/LeftNav.tsx:752
+#: src/screens/Search/index.tsx:190
+#: src/view/shell/desktop/LeftNav.tsx:750
 msgid "Search"
 msgstr "खोजें"
 
@@ -3924,11 +4006,11 @@ msgstr "खोजें"
 msgid "Search currencies"
 msgstr "मुद्राएँ खोजें"
 
-#: src/screens/Search/index.tsx:205
+#: src/screens/Search/index.tsx:207
 msgid "Search expenses, people and groups"
 msgstr "खर्च, लोग और ग्रुप खोजें"
 
-#: src/screens/Search/index.tsx:206
+#: src/screens/Search/index.tsx:208
 msgid "Search expenses, people, groups"
 msgstr "खर्च, लोग, ग्रुप खोजें"
 
@@ -3941,7 +4023,7 @@ msgstr "{0} खोजें"
 msgid "Search for {q}"
 msgstr "{q} खोजें"
 
-#: src/screens/People/index.tsx:194
+#: src/screens/People/index.tsx:199
 msgid "Search friends"
 msgstr "दोस्त खोजें"
 
@@ -3950,7 +4032,7 @@ msgstr "दोस्त खोजें"
 msgid "Search groups"
 msgstr "समूह खोजें"
 
-#: src/screens/Groups/index.tsx:183
+#: src/screens/Groups/index.tsx:174
 msgid "Search groups or members"
 msgstr "समूह या सदस्य खोजें"
 
@@ -3972,16 +4054,16 @@ msgstr "खोज आपकी पिछली कुछ खोजें दि�
 msgid "Search timezones"
 msgstr "समय क्षेत्र खोजें"
 
-#: src/view/shell/desktop/LeftNav.tsx:670
-#: src/view/shell/desktop/RecentTransactions.tsx:119
+#: src/view/shell/desktop/LeftNav.tsx:668
+#: src/view/shell/desktop/RecentTransactions.tsx:114
 msgid "See all"
 msgstr "सभी देखें"
 
-#: src/view/shell/desktop/RecentTransactions.tsx:111
+#: src/view/shell/desktop/RecentTransactions.tsx:106
 msgid "See all activity"
 msgstr "सारी गतिविधि देखें"
 
-#: src/view/shell/desktop/LeftNav.tsx:643
+#: src/view/shell/desktop/LeftNav.tsx:641
 msgid "See all groups"
 msgstr "सभी समूह देखें"
 
@@ -4032,32 +4114,32 @@ msgstr "इस समूह के लिए तय"
 #: src/navigation/Navigation.tsx:71
 #: src/screens/Profile.tsx:64
 #: src/screens/Profile.tsx:67
-#: src/screens/Settings/index.tsx:50
+#: src/screens/Settings/index.tsx:52
 #: src/screens/Settings/SettingsSection.tsx:62
-#: src/view/shell/desktop/LeftNav.tsx:758
+#: src/view/shell/desktop/LeftNav.tsx:756
 msgid "Settings"
 msgstr "सेटिंग्स"
 
-#: src/screens/Settings/index.tsx:187
+#: src/screens/Settings/index.tsx:191
 msgid "Settings are saved on this device. Once you sign in, they follow you to your other devices."
 msgstr "सेटिंग्स इसी डिवाइस पर सेव हैं। साइन इन करने के बाद ये आपके दूसरे डिवाइस पर भी मिलेंगी।"
 
-#: src/screens/Settings/index.tsx:205
+#: src/screens/Settings/index.tsx:209
 msgid "Settings reset"
 msgstr "सेटिंग्स रीसेट हो गईं"
 
 #: src/components/settings/AboutSettings.tsx:97
 #: src/navigation/Navigation.tsx:77
-#: src/screens/Group/index.tsx:512
-#: src/screens/Group/index.tsx:750
-#: src/screens/Group/index.tsx:756
-#: src/screens/Person/index.tsx:378
-#: src/screens/Settle/index.tsx:131
-#: src/screens/Settle/index.tsx:277
+#: src/screens/Group/index.tsx:522
+#: src/screens/Group/index.tsx:761
+#: src/screens/Group/index.tsx:767
+#: src/screens/Person/index.tsx:363
+#: src/screens/Settle/index.tsx:136
+#: src/screens/Settle/index.tsx:282
 msgid "Settle up"
 msgstr "हिसाब चुकाएं"
 
-#: src/view/shell/desktop/LeftNav.tsx:633
+#: src/view/shell/desktop/LeftNav.tsx:631
 msgid "settled"
 msgstr "बराबर"
 
@@ -4139,7 +4221,7 @@ msgstr "इनके खर्च दिखाएँ"
 msgid "Show expenses from: {label}"
 msgstr "इनके खर्च दिखाएँ: {label}"
 
-#: src/screens/Activity.tsx:168
+#: src/screens/Activity.tsx:176
 msgid "Show hidden changes"
 msgstr "छिपे बदलाव दिखाएँ"
 
@@ -4147,7 +4229,7 @@ msgstr "छिपे बदलाव दिखाएँ"
 msgid "Show QR code and share"
 msgstr "QR कोड दिखाएँ और शेयर करें"
 
-#: src/screens/Activity.tsx:174
+#: src/screens/Activity.tsx:182
 msgid "Show them"
 msgstr "दिखाएँ"
 
@@ -4166,8 +4248,8 @@ msgstr "माफ़ी दिखाता है और उसे वापस 
 #: src/navigation/Drawer.tsx:335
 #: src/navigation/Drawer.tsx:341
 #: src/navigation/Navigation.tsx:72
-#: src/screens/Settings/index.tsx:65
-#: src/screens/Settings/index.tsx:70
+#: src/screens/Settings/index.tsx:67
+#: src/screens/Settings/index.tsx:72
 #: src/screens/SignIn.tsx:48
 #: src/screens/SignIn.tsx:347
 msgid "Sign in"
@@ -4193,7 +4275,7 @@ msgstr "छोटा"
 msgid "So friends know it’s you."
 msgstr "ताकि दोस्त जानें कि यह आप हैं।"
 
-#: src/screens/Settings/index.tsx:244
+#: src/screens/Settings/index.tsx:248
 msgid "Some"
 msgstr "कुछ"
 
@@ -4204,11 +4286,11 @@ msgstr "कुछ"
 #: src/components/people/RecordPaymentDialog.tsx:146
 #: src/components/split/shared.tsx:78
 #: src/features/settlement/CallItEvenDialog.tsx:130
-#: src/screens/Analytics/useReport.ts:268
-#: src/screens/Group/index.tsx:609
-#: src/screens/Group/index.tsx:643
-#: src/screens/Group/index.tsx:659
-#: src/screens/Group/index.tsx:660
+#: src/screens/Analytics/useReport.ts:269
+#: src/screens/Group/index.tsx:620
+#: src/screens/Group/index.tsx:654
+#: src/screens/Group/index.tsx:670
+#: src/screens/Group/index.tsx:671
 #: src/screens/RecentlyDeleted/describe.ts:26
 #: src/screens/RecentlyDeleted/index.tsx:99
 #: src/screens/Search/components/ResultRows.tsx:200
@@ -4295,12 +4377,12 @@ msgstr "किसी के साथ भी खर्च बाँटें, �
 msgid "Split with"
 msgstr "किसके साथ बाँटें"
 
-#: src/screens/People/index.tsx:230
+#: src/screens/People/index.tsx:235
 msgid "Split with friends"
 msgstr "दोस्तों के साथ बाँटें"
 
-#: src/screens/People/index.tsx:145
-#: src/view/shell/desktop/LeftNav.tsx:157
+#: src/screens/People/index.tsx:150
+#: src/view/shell/desktop/LeftNav.tsx:156
 msgid "Splito - Home"
 msgstr "Splito - घर"
 
@@ -4316,7 +4398,7 @@ msgstr "Splito आपका UPI ऐप नहीं देख सकता। �
 msgid "Splito collects no analytics and shows no ads."
 msgstr "Splito कोई एनालिटिक्स इकट्ठा नहीं करता और कोई विज्ञापन नहीं दिखाता।"
 
-#: src/screens/Settle/index.tsx:468
+#: src/screens/Settle/index.tsx:473
 msgid "Splito never moves money. Record each payment once it has happened – part payments are fine."
 msgstr "Splito कभी पैसे नहीं भेजता। हर भुगतान होने के बाद उसे दर्ज करें – आंशिक भुगतान भी ठीक है।"
 
@@ -4366,7 +4448,7 @@ msgid "Swipe right on Activity"
 msgstr "गतिविधि पर दाएँ स्वाइप"
 
 #: src/components/settings/prefControls.tsx:83
-#: src/screens/Settings/index.tsx:233
+#: src/screens/Settings/index.tsx:237
 msgid "System"
 msgstr "सिस्टम"
 
@@ -4463,7 +4545,7 @@ msgstr "Splito खुलते समय यही टैब दिखेगा�
 msgid "The whole balance: you’ll be even in {currency}. Other currencies stay as they are."
 msgstr "पूरा बैलेंस: {currency} में हिसाब बराबर हो जाएगा। दूसरी मुद्राएँ जैसी हैं वैसी रहेंगी।"
 
-#: src/screens/Settings/index.tsx:199
+#: src/screens/Settings/index.tsx:203
 msgid "Theme, tabs, categories, language and every other setting go back to how Splito starts. Your people, groups and expenses stay as they are."
 msgstr "थीम, टैब, श्रेणियाँ, भाषा और बाकी हर सेटिंग Splito की शुरुआती सेटिंग पर लौट आएगी। आपके लोग, समूह और खर्च जैसे हैं वैसे ही रहेंगे।"
 
@@ -4507,12 +4589,12 @@ msgstr "यह खर्च अब मौजूद नहीं है"
 msgid "This expense was deleted. It no longer counts towards any balance."
 msgstr "यह खर्च हटा दिया गया है। अब यह किसी हिसाब में नहीं गिना जाता।"
 
-#: src/screens/Person/index.tsx:158
+#: src/screens/Person/index.tsx:147
 msgid "This friend isn’t on this device. They may have been removed."
 msgstr "यह दोस्त इस डिवाइस पर नहीं है। शायद हटा दिया गया है।"
 
-#: src/screens/Group/index.tsx:169
-#: src/screens/Settle/index.tsx:138
+#: src/screens/Group/index.tsx:172
+#: src/screens/Settle/index.tsx:143
 msgid "This group isn’t on this device. It may have been removed."
 msgstr "यह समूह इस डिवाइस पर नहीं है। शायद हटा दिया गया है।"
 
@@ -4528,7 +4610,7 @@ msgstr "यह आमंत्रण लिंक अब काम नहीं 
 msgid "This is your invite link"
 msgstr "यह आपका आमंत्रण लिंक है"
 
-#: src/screens/Settle/index.tsx:400
+#: src/screens/Settle/index.tsx:405
 msgid "This plan goes outside your rules"
 msgstr "यह योजना आपके नियमों से बाहर जाती है"
 
@@ -4566,11 +4648,11 @@ msgid "Title: {0} → {1}"
 msgstr "शीर्षक: {0} → {1}"
 
 #. placeholder {0}: line.people
-#: src/screens/Settle/index.tsx:583
+#: src/screens/Settle/index.tsx:588
 msgid "To {0} people"
 msgstr "{0} लोगों को"
 
-#: src/screens/Settle/index.tsx:581
+#: src/screens/Settle/index.tsx:586
 msgid "To 1 person"
 msgstr "1 व्यक्ति को"
 
@@ -4597,7 +4679,7 @@ msgstr "आने वाला कल"
 msgid "Too many digits after the decimal point for this currency"
 msgstr "इस मुद्रा के लिए दशमलव के बाद बहुत ज़्यादा अंक हैं"
 
-#: src/screens/Analytics/index.tsx:209
+#: src/screens/Analytics/index.tsx:212
 msgid "Total"
 msgstr "कुल"
 
@@ -4614,7 +4696,7 @@ msgid "Transport"
 msgstr "आना-जाना"
 
 #: src/components/groups/GroupFields.tsx:43
-#: src/screens/Group/index.tsx:309
+#: src/screens/Group/index.tsx:312
 #: src/screens/Groups/components/GroupRow.tsx:48
 #: src/screens/Groups/components/GroupsFilterDialog.tsx:70
 #: src/screens/Search/components/ResultRows.tsx:320
@@ -4682,13 +4764,13 @@ msgstr "अपठित"
 msgid "Upcoming"
 msgstr "आगामी"
 
-#: src/screens/Settle/index.tsx:257
 #: src/screens/Settle/index.tsx:262
+#: src/screens/Settle/index.tsx:267
 msgid "Update plan"
 msgstr "योजना अपडेट करें"
 
 #. placeholder {0}: person.data.upiId
-#: src/screens/Person/index.tsx:205
+#: src/screens/Person/index.tsx:185
 msgid "UPI {0}"
 msgstr "UPI {0}"
 
@@ -4877,7 +4959,7 @@ msgstr "इस रंग पर सफ़ेद टेक्स्ट पढ़�
 msgid "Who can send me friend requests"
 msgstr "मुझे दोस्ती के अनुरोध कौन भेज सकता है"
 
-#: src/screens/Group/index.tsx:655
+#: src/screens/Group/index.tsx:666
 msgid "Who owes whom"
 msgstr "किसे किसको देना है"
 
@@ -4962,10 +5044,10 @@ msgstr "आप"
 #: src/components/activity/ActivityItem.tsx:419
 #: src/components/groups/RulesEditor.tsx:219
 #: src/components/split/shared.tsx:78
-#: src/screens/Analytics/useReport.ts:268
+#: src/screens/Analytics/useReport.ts:269
 #: src/screens/CreateGroup.tsx:192
-#: src/screens/Group/index.tsx:183
-#: src/screens/Person/index.tsx:172
+#: src/screens/Group/index.tsx:186
+#: src/screens/Person/index.tsx:161
 #: src/screens/RecentlyDeleted/describe.ts:26
 #: src/screens/RecentlyDeleted/index.tsx:99
 #: src/screens/Settle/index.tsx:89
@@ -5058,7 +5140,7 @@ msgstr "आपने अस्वीकार किया"
 msgid "You forgave {0}"
 msgstr "आपने {0} का कर्ज़ माफ़ किया"
 
-#: src/view/shell/desktop/RecentTransactions.tsx:55
+#: src/view/shell/desktop/RecentTransactions.tsx:51
 msgid "You got paid"
 msgstr "आपको भुगतान मिला"
 
@@ -5106,7 +5188,7 @@ msgstr "आपको देने हैं"
 msgid "You owe {0}"
 msgstr "आपको देने हैं {0}"
 
-#: src/screens/Group/index.tsx:666
+#: src/screens/Group/index.tsx:677
 msgid "You owe {to}"
 msgstr "आपको {to} को देने हैं"
 
@@ -5124,9 +5206,9 @@ msgstr "आपको देने हैं <0>{figure}</0>"
 #: src/screens/Analytics/components/Charts.tsx:249
 #: src/screens/Analytics/components/Charts.tsx:259
 #: src/screens/Analytics/components/Summary.tsx:161
-#: src/screens/Analytics/index.tsx:210
+#: src/screens/Analytics/index.tsx:213
 #: src/screens/Search/components/ResultRows.tsx:205
-#: src/view/shell/desktop/RecentTransactions.tsx:55
+#: src/view/shell/desktop/RecentTransactions.tsx:51
 msgid "You paid"
 msgstr "आपने चुकाया"
 
@@ -5160,11 +5242,11 @@ msgstr "आपने अपना हिस्सा खुद दिया"
 msgid "You pay {0}"
 msgstr "आप {0} को देंगे"
 
-#: src/screens/Settle/index.tsx:554
+#: src/screens/Settle/index.tsx:559
 msgid "You’ll get"
 msgstr "आपको मिलेंगे"
 
-#: src/screens/Settle/index.tsx:556
+#: src/screens/Settle/index.tsx:561
 msgid "You’ll pay"
 msgstr "आप देंगे"
 
@@ -5180,7 +5262,7 @@ msgstr "आप पहले से दोस्त हैं।"
 msgid "You’re friends now"
 msgstr "अब आप दोस्त हैं"
 
-#: src/screens/Settle/index.tsx:544
+#: src/screens/Settle/index.tsx:549
 msgid "You’re not part of any of these payments."
 msgstr "इनमें से किसी भुगतान में आप शामिल नहीं हैं।"
 
@@ -5196,7 +5278,7 @@ msgstr "इस समूह में आपका हिसाब बराब�
 msgid "You’ve already asked {value}. It’s under Invites sent on People, where you can resend it."
 msgstr "आप {value} को पहले ही अनुरोध भेज चुके हैं। यह People में 'भेजे गए आमंत्रण' में है, जहाँ से फिर भेज सकते हैं।"
 
-#: src/screens/Activity.tsx:135
+#: src/screens/Activity.tsx:143
 msgid "You've hidden everything here. New expenses, payments and group changes will show up as they happen."
 msgstr "आपने यहाँ सब कुछ छिपा दिया है। नए खर्च, भुगतान और समूह के बदलाव होते ही यहाँ दिखेंगे।"
 
@@ -5241,16 +5323,16 @@ msgid "Your net balance at the end of each year, all friends together"
 msgstr "हर साल के अंत में आपका कुल बैलेंस, सभी दोस्तों के साथ"
 
 #. placeholder {0}: nameList(item.stuck)
-#: src/screens/Settle/index.tsx:405
+#: src/screens/Settle/index.tsx:410
 msgid "Your payment rules give no allowed pair to pay anyone who is owed: {0}. These payments still settle everyone up."
 msgstr "आपके भुगतान नियमों में इनके लिए किसी बकायेदार को चुकाने की कोई अनुमत जोड़ी नहीं है: {0}। ये भुगतान फिर भी सबका हिसाब बराबर करते हैं।"
 
 #. placeholder {0}: item.currencies.join(', ')
-#: src/screens/Group/index.tsx:711
+#: src/screens/Group/index.tsx:722
 msgid "Your payment rules leave no way to settle up in {0}, so that plan goes outside them."
 msgstr "आपके भुगतान नियमों से {0} में हिसाब बराबर करने का कोई तरीका नहीं बचता, इसलिए वह योजना नियमों से बाहर जाती है।"
 
-#: src/screens/Group/index.tsx:710
+#: src/screens/Group/index.tsx:721
 msgid "Your payment rules leave no way to settle up, so this plan goes outside them."
 msgstr "आपके भुगतान नियमों से हिसाब बराबर करने का कोई तरीका नहीं बचता, इसलिए यह योजना नियमों से बाहर जाती है।"
 
@@ -5267,7 +5349,7 @@ msgstr "आपका फ़ोन नंबर"
 msgid "Your phone will ask to let Splito open your contacts. You pick one person; only the email or number you choose is used."
 msgstr "आपका फ़ोन Splito को संपर्क खोलने की अनुमति माँगेगा। आप एक व्यक्ति चुनें; सिर्फ़ आपका चुना ईमेल या नंबर इस्तेमाल होगा।"
 
-#: src/screens/Settings/index.tsx:104
+#: src/screens/Settings/index.tsx:106
 msgid "Your profile · saved on this device"
 msgstr "आपकी प्रोफ़ाइल · इस डिवाइस पर सहेजी गई"
 
@@ -5277,13 +5359,13 @@ msgstr "आपकी प्रोफ़ाइल · इस डिवाइस �
 #: src/screens/Analytics/components/Charts.tsx:250
 #: src/screens/Analytics/components/Charts.tsx:263
 #: src/screens/Analytics/components/Charts.tsx:325
-#: src/screens/Analytics/index.tsx:105
-#: src/screens/Analytics/index.tsx:211
+#: src/screens/Analytics/index.tsx:108
+#: src/screens/Analytics/index.tsx:214
 msgid "Your share"
 msgstr "आपका हिस्सा"
 
 #. placeholder {0}: formatAmount(report.rowsTotal, currency, locale)
-#: src/screens/Analytics/index.tsx:176
+#: src/screens/Analytics/index.tsx:179
 msgid "Your share <0>{0}</0>"
 msgstr "आपका हिस्सा <0>{0}</0>"
 
@@ -5315,6 +5397,6 @@ msgstr "हर श्रेणी में आपका हिस्सा"
 msgid "Your share of expenses"
 msgstr "खर्चों में आपका हिस्सा"
 
-#: src/screens/Analytics/index.tsx:84
+#: src/screens/Analytics/index.tsx:86
 msgid "Your spending shows up here – by month, category, person and group – once you add an expense."
 msgstr "खर्च जोड़ते ही आपका खर्च यहाँ दिखेगा – महीने, श्रेणी, व्यक्ति और समूह के अनुसार।"

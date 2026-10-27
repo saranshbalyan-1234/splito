@@ -23,16 +23,25 @@ import {
   type StoreName,
   STORES,
 } from './schema'
+import {transactionRows} from './txRows'
 import {changeRecorder, DEFAULT_PAGE, type ExpenseParty, type GroupMember, type NetBalance, type Page, type PageQuery, type PairBalance, type Store, type StoreChange, type Tx} from './store'
 import {type Entity, type EntityType, type HistoryRow, type RowSyncStatus} from './types'
 import {ROW_SYNC_STATUSES} from './types'
 
 const SYNC_STORES = (Object.keys(STORES) as StoreName[]).filter(s => 'bySyncStatus' in STORES[s].indexes)
 
+/* A row is decoded once however often a transaction reads it (rows are never changed in place). */
+const decoded = new WeakMap<Row, Entity>()
+function decode(type: EntityType, row: Row): Entity {
+  let e = decoded.get(row)
+  if (!e) decoded.set(row, (e = entityOfRow(type, row)))
+  return e
+}
+
 /** Reads an entity row. */
 async function loadEntity(rows: RowAccess, type: EntityType, id: string): Promise<Entity | undefined> {
   const r = await rows.get(ENTITY_STORE[type], [id])
-  return r ? entityOfRow(type, r) : undefined
+  return r ? decode(type, r) : undefined
 }
 
 /** Writes an entity row; a group keeps the activity time its records have raised. */
@@ -59,7 +68,7 @@ function makeTx(rows: RowAccess, recorder: ReturnType<typeof changeRecorder>): T
     },
     async put(input) {
       const prevRow = await rows.get(ENTITY_STORE[input.type], [input.id])
-      const prev = prevRow ? entityOfRow(input.type, prevRow) : undefined
+      const prev = prevRow ? decode(input.type, prevRow) : undefined
       const next = completeEntity(input, prev)
       recorder.record(next.type, next.id)
       await writeEntity(rows, next, prevRow)
@@ -128,7 +137,12 @@ export function createStore(engine: Engine): Store {
   const read = <T>(fn: (rows: RowAccess) => Promise<T>) => engine.run('ro', fn)
   const write = async <T>(fn: (rows: RowAccess, recorder: ReturnType<typeof changeRecorder>) => Promise<T>) => {
     const recorder = changeRecorder()
-    const result = await engine.run('rw', rows => fn(rows, recorder))
+    const result = await engine.run('rw', async raw => {
+      const tx = transactionRows(raw)
+      const done = await fn(tx.rows, recorder)
+      await tx.flush()
+      return done
+    })
     const change = recorder.change()
     notify(change)
     engine.remote?.post(change)

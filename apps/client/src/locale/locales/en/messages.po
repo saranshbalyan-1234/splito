@@ -24,12 +24,12 @@ msgid "{0, plural, one {# expired, used or revoked link isn’t shown.} other {#
 msgstr "{0, plural, one {# expired, used or revoked link isn’t shown.} other {# expired, used or revoked links aren’t shown.}}"
 
 #. placeholder {0}: rows.length
-#: src/screens/People/index.tsx:128
+#: src/screens/People/index.tsx:133
 msgid "{0, plural, one {# friend} other {# friends}}"
 msgstr "{0, plural, one {# friend} other {# friends}}"
 
 #. placeholder {0}: listed.length
-#: src/screens/Groups/index.tsx:123
+#: src/screens/Groups/index.tsx:114
 msgid "{0, plural, one {# group} other {# groups}}"
 msgstr "{0, plural, one {# group} other {# groups}}"
 
@@ -59,7 +59,7 @@ msgid "{0, plural, one {# share} other {# shares}}"
 msgstr "{0, plural, one {# share} other {# shares}}"
 
 #. placeholder {0}: sharedGroups.length
-#: src/screens/Person/index.tsx:208
+#: src/screens/Person/index.tsx:188
 msgid "{0, plural, one {# shared group} other {# shared groups}}"
 msgstr "{0, plural, one {# shared group} other {# shared groups}}"
 
@@ -193,7 +193,7 @@ msgid "{0} groups"
 msgstr "{0} groups"
 
 #. placeholder {0}: person?.data.name ?? ''
-#: src/screens/Person/index.tsx:267
+#: src/screens/Person/index.tsx:247
 msgid "{0} has expenses, payments or groups, so they can’t be removed."
 msgstr "{0} has expenses, payments or groups, so they can’t be removed."
 
@@ -301,12 +301,12 @@ msgid "{0} paid you"
 msgstr "{0} paid you"
 
 #. placeholder {0}: item.count
-#: src/screens/Settle/index.tsx:320
+#: src/screens/Settle/index.tsx:325
 msgid "{0} payments"
 msgstr "{0} payments"
 
 #. placeholder {0}: item.payments
-#: src/screens/Group/index.tsx:746
+#: src/screens/Group/index.tsx:757
 msgid "{0} payments settle everyone up."
 msgstr "{0} payments settle everyone up."
 
@@ -359,30 +359,30 @@ msgid "{0}, {total}, {date}"
 msgstr "{0}, {total}, {date}"
 
 #. placeholder {0}: group.name
-#: src/view/shell/desktop/LeftNav.tsx:578
+#: src/view/shell/desktop/LeftNav.tsx:576
 msgid "{0}, settled up"
 msgstr "{0}, settled up"
 
 #. placeholder {0}: group.name
 #. placeholder {1}: formatAmount(amount, currency, locale)
-#: src/view/shell/desktop/LeftNav.tsx:576
+#: src/view/shell/desktop/LeftNav.tsx:574
 msgid "{0}, you are owed {1}"
 msgstr "{0}, you are owed {1}"
 
 #. placeholder {0}: group.name
 #. placeholder {1}: formatAmount(magnitude(amount), currency, locale)
-#: src/view/shell/desktop/LeftNav.tsx:577
+#: src/view/shell/desktop/LeftNav.tsx:575
 msgid "{0}, you owe {1}"
 msgstr "{0}, you owe {1}"
 
 #. placeholder {0}: report.nameOfPerson(report.shareOf)
-#: src/screens/Analytics/index.tsx:106
+#: src/screens/Analytics/index.tsx:109
 msgid "{0}’s share"
 msgstr "{0}’s share"
 
 #. placeholder {0}: report.nameOfPerson(report.shareOf)
 #. placeholder {1}: formatAmount(report.rowsTotal, currency, locale)
-#: src/screens/Analytics/index.tsx:183
+#: src/screens/Analytics/index.tsx:186
 msgid "{0}’s share <0>{1}</0>"
 msgstr "{0}’s share <0>{1}</0>"
 
@@ -502,7 +502,7 @@ msgstr "{actor} undid a write-off"
 msgid "{actor} updated the group {subject}"
 msgstr "{actor} updated the group {subject}"
 
-#: src/screens/Settings/index.tsx:155
+#: src/screens/Settings/index.tsx:157
 msgid "{binDays, plural, one {# day} other {# days}}"
 msgstr "{binDays, plural, one {# day} other {# days}}"
 
@@ -510,11 +510,11 @@ msgstr "{binDays, plural, one {# day} other {# days}}"
 msgid "{count, plural, one {# item} other {# items}}"
 msgstr "{count, plural, one {# item} other {# items}}"
 
-#: src/components/activity/useActivityFeed.ts:94
+#: src/components/activity/useActivityFeed.ts:103
 msgid "{count, plural, one {# or more unread items} other {# or more unread items}}"
 msgstr "{count, plural, one {# or more unread items} other {# or more unread items}}"
 
-#: src/components/activity/useActivityFeed.ts:98
+#: src/components/activity/useActivityFeed.ts:107
 msgid "{count, plural, one {# unread item} other {# unread items}}"
 msgstr "{count, plural, one {# unread item} other {# unread items}}"
 
@@ -534,6 +534,10 @@ msgstr "{days, plural, one {Nothing deleted in the last day.} other {Nothing del
 msgid "{days, plural, one {yesterday} other {# days ago}}"
 msgstr "{days, plural, one {yesterday} other {# days ago}}"
 
+#: src/screens/Settings/DemoData.tsx:149
+msgid "{expenses, plural, one {# expense} other {# expenses}}"
+msgstr "{expenses, plural, one {# expense} other {# expenses}}"
+
 #: src/components/split/ExpenseComposer.tsx:244
 msgid "{first}, {second} +{rest}"
 msgstr "{first}, {second} +{rest}"
@@ -543,11 +547,15 @@ msgstr "{first}, {second} +{rest}"
 msgid "{formatted} ago"
 msgstr "{formatted} ago"
 
-#: src/screens/Group/index.tsx:669
+#: src/screens/Settings/DemoData.tsx:147
+msgid "{friends, plural, one {# friend} other {# friends}}"
+msgstr "{friends, plural, one {# friend} other {# friends}}"
+
+#: src/screens/Group/index.tsx:680
 msgid "{from} owes {to}"
 msgstr "{from} owes {to}"
 
-#: src/screens/Group/index.tsx:668
+#: src/screens/Group/index.tsx:679
 msgid "{from} owes you"
 msgstr "{from} owes you"
 
@@ -559,7 +567,11 @@ msgstr "{from} paid {to}"
 msgid "{from} paid you"
 msgstr "{from} paid you"
 
-#: src/screens/Activity.tsx:160
+#: src/screens/Settings/DemoData.tsx:148
+msgid "{groups, plural, one {# group} other {# groups}}"
+msgstr "{groups, plural, one {# group} other {# groups}}"
+
+#: src/screens/Activity.tsx:168
 msgid "{hiddenCount, plural, one {# change hidden from your activity} other {# changes hidden from your activity}}"
 msgstr "{hiddenCount, plural, one {# change hidden from your activity} other {# changes hidden from your activity}}"
 
@@ -572,17 +584,17 @@ msgstr "{left, plural, one {# day left} other {# days left}}"
 msgid "{left} of {0} uses left"
 msgstr "{left} of {0} uses left"
 
-#: src/screens/Group/index.tsx:319
+#: src/screens/Group/index.tsx:322
 #: src/screens/Groups/components/GroupRow.tsx:58
 #: src/screens/Search/components/ResultRows.tsx:328
 msgid "{memberCount} members"
 msgstr "{memberCount} members"
 
-#: src/screens/People/index.tsx:124
+#: src/screens/People/index.tsx:129
 msgid "{n, plural, one {# friend} other {# friends}}"
 msgstr "{n, plural, one {# friend} other {# friends}}"
 
-#: src/screens/Groups/index.tsx:119
+#: src/screens/Groups/index.tsx:110
 msgid "{n, plural, one {# group} other {# groups}}"
 msgstr "{n, plural, one {# group} other {# groups}}"
 
@@ -598,8 +610,8 @@ msgstr "{name}, waiting for them to accept. Not selectable yet."
 msgid "{name}’s UPI ID"
 msgstr "{name}’s UPI ID"
 
-#: src/screens/Groups/index.tsx:124
-#: src/screens/People/index.tsx:129
+#: src/screens/Groups/index.tsx:115
+#: src/screens/People/index.tsx:134
 msgid "{settledCount} settled"
 msgstr "{settledCount} settled"
 
@@ -619,7 +631,7 @@ msgstr "{title} reset"
 msgid "{title}, {byline}, {shareLabel} {shareText} of {totalText}"
 msgstr "{title}, {byline}, {shareLabel} {shareText} of {totalText}"
 
-#: src/screens/Settings/index.tsx:237
+#: src/screens/Settings/index.tsx:241
 msgid "{visible} categories"
 msgstr "{visible} categories"
 
@@ -668,7 +680,7 @@ msgstr "<0>{value}</0> isn’t on Splito yet. Send an invite, or add them just f
 msgid "= Use result"
 msgstr "= Use result"
 
-#: src/screens/Settings/index.tsx:237
+#: src/screens/Settings/index.tsx:241
 msgid "1 category"
 msgstr "1 category"
 
@@ -677,7 +689,7 @@ msgstr "1 category"
 msgid "1 day"
 msgstr "1 day"
 
-#: src/screens/Group/index.tsx:319
+#: src/screens/Group/index.tsx:322
 #: src/screens/Groups/components/GroupRow.tsx:58
 #: src/screens/Search/components/ResultRows.tsx:328
 msgid "1 member"
@@ -687,11 +699,11 @@ msgstr "1 member"
 msgid "1 member added"
 msgstr "1 member added"
 
-#: src/screens/Settle/index.tsx:318
+#: src/screens/Settle/index.tsx:323
 msgid "1 payment"
 msgstr "1 payment"
 
-#: src/screens/Group/index.tsx:745
+#: src/screens/Group/index.tsx:756
 msgid "1 payment settles everyone up."
 msgstr "1 payment settles everyone up."
 
@@ -760,16 +772,20 @@ msgstr "A record of money that changed hands outside Splito. Deleting it puts th
 msgid "A trip, a flat or anything you split often."
 msgstr "A trip, a flat or anything you split often."
 
+#: src/screens/Settings/DemoData.tsx:152
+msgid "A year of friends, groups and expenses, for testing"
+msgstr "A year of friends, groups and expenses, for testing"
+
 #: src/navigation/Drawer.tsx:366
 #: src/screens/Profile.tsx:73
 #: src/screens/Profile.tsx:76
-#: src/screens/Settings/index.tsx:162
-#: src/screens/Settings/index.tsx:165
+#: src/screens/Settings/index.tsx:166
+#: src/screens/Settings/index.tsx:169
 #: src/screens/Settings/SettingsSection.tsx:48
 msgid "About"
 msgstr "About"
 
-#: src/screens/Settings/index.tsx:139
+#: src/screens/Settings/index.tsx:141
 msgid "About and data"
 msgstr "About and data"
 
@@ -818,7 +834,7 @@ msgstr "Accept to split expenses together"
 msgid "Accept to split expenses with {0}. You’ll both see what you share."
 msgstr "Accept to split expenses with {0}. You’ll both see what you share."
 
-#: src/screens/Settings/index.tsx:59
+#: src/screens/Settings/index.tsx:61
 msgid "Account"
 msgstr "Account"
 
@@ -830,8 +846,8 @@ msgstr "Active"
 #: src/components/TabGlyph.tsx:30
 #: src/navigation/Drawer.tsx:214
 #: src/navigation/Navigation.tsx:68
-#: src/screens/Activity.tsx:98
-#: src/view/shell/desktop/LeftNav.tsx:737
+#: src/screens/Activity.tsx:105
+#: src/view/shell/desktop/LeftNav.tsx:735
 msgid "Activity"
 msgstr "Activity"
 
@@ -843,12 +859,12 @@ msgstr "Add “{q}”"
 msgid "Add {q}"
 msgstr "Add {q}"
 
-#: src/screens/People/index.tsx:234
-#: src/screens/People/index.tsx:235
+#: src/screens/People/index.tsx:239
+#: src/screens/People/index.tsx:240
 msgid "Add a friend"
 msgstr "Add a friend"
 
-#: src/screens/People/index.tsx:231
+#: src/screens/People/index.tsx:236
 msgid "Add a friend, then split any bill with them. They don’t need the app."
 msgstr "Add a friend, then split any bill with them. They don’t need the app."
 
@@ -893,6 +909,16 @@ msgstr "Add by email or number"
 msgid "Add category"
 msgstr "Add category"
 
+#: src/screens/Settings/DemoData.tsx:127
+#: src/screens/Settings/DemoData.tsx:137
+#: src/screens/Settings/DemoData.tsx:175
+msgid "Add demo data"
+msgstr "Add demo data"
+
+#: src/screens/Settings/DemoData.tsx:173
+msgid "Add demo data?"
+msgstr "Add demo data?"
+
 #: src/components/split/SplitEditor.tsx:102
 msgid "Add each item and who had it. Tap a name again for another portion; hold to take them off."
 msgstr "Add each item and who had it. Tap a name again for another portion; hold to take them off."
@@ -902,26 +928,26 @@ msgid "Add each item and who had it. Tap a name again for another portion; right
 msgstr "Add each item and who had it. Tap a name again for another portion; right-click to take them off."
 
 #: src/navigation/Navigation.tsx:78
-#: src/screens/Group/index.tsx:481
-#: src/screens/Group/index.tsx:482
-#: src/screens/Person/index.tsx:487
-#: src/screens/Person/index.tsx:488
-#: src/view/shell/desktop/LeftNav.tsx:485
+#: src/screens/Group/index.tsx:484
+#: src/screens/Group/index.tsx:485
+#: src/screens/Person/index.tsx:473
+#: src/screens/Person/index.tsx:474
+#: src/view/shell/desktop/LeftNav.tsx:484
 msgid "Add expense"
 msgstr "Add expense"
 
 #: src/components/AddExpenseFAB.tsx:33
 #: src/components/split/ExpenseComposer.tsx:269
 #: src/screens/AddExpense.tsx:52
-#: src/screens/Analytics/index.tsx:86
-#: src/screens/Analytics/index.tsx:87
-#: src/screens/Group/index.tsx:357
-#: src/screens/Group/index.tsx:363
-#: src/screens/People/index.tsx:243
-#: src/screens/People/index.tsx:244
-#: src/screens/Person/index.tsx:299
-#: src/screens/Person/index.tsx:305
-#: src/view/shell/desktop/LeftNav.tsx:493
+#: src/screens/Analytics/index.tsx:88
+#: src/screens/Analytics/index.tsx:89
+#: src/screens/Group/index.tsx:360
+#: src/screens/Group/index.tsx:366
+#: src/screens/People/index.tsx:248
+#: src/screens/People/index.tsx:249
+#: src/screens/Person/index.tsx:279
+#: src/screens/Person/index.tsx:285
+#: src/view/shell/desktop/LeftNav.tsx:492
 msgctxt "action"
 msgid "Add expense"
 msgstr "Add expense"
@@ -947,10 +973,10 @@ msgid "Add member"
 msgstr "Add member"
 
 #: src/components/groups/AddMembersDialog.tsx:110
-#: src/screens/Group/index.tsx:557
-#: src/screens/Group/index.tsx:560
-#: src/screens/Group/index.tsx:627
-#: src/screens/Group/index.tsx:633
+#: src/screens/Group/index.tsx:567
+#: src/screens/Group/index.tsx:570
+#: src/screens/Group/index.tsx:638
+#: src/screens/Group/index.tsx:644
 msgid "Add members"
 msgstr "Add members"
 
@@ -975,6 +1001,26 @@ msgstr "Add to group"
 msgid "Add your name"
 msgstr "Add your name"
 
+#. placeholder {0}: import {useSyncExternalStore} from 'react' import {View} from 'react-native' import {DatabaseZap} from 'lucide-react-native' import {type MutationCtx, type Store} from '@splito/sync' import {plural, t} from '@lingui/core/macro' import {Trans, useLingui} from '@lingui/react/macro' import {useHaptics} from '#/lib/haptics' import {logger} from '#/logger' import {addLargeDemo, removeLargeDemo} from '#/data/demoLarge' import {useDemoCounts, useMutationCtx, useStore} from '#/data/hooks' import * as SettingsList from '#/screens/Settings/components/SettingsList' import {atoms as a, useTheme} from '#/alf' import {Trash_Stroke2_Corner0_Rounded as TrashIcon} from '#/components/icons/Trash' import {createIcon} from '#/components/icons/lucide' import * as Prompt from '#/components/Prompt' import * as Toast from '#/components/Toast' import {dismiss as dismissToast} from '#/components/Toast/sonner' import {Text} from '#/components/Typography' const DemoIcon = createIcon(DatabaseZap) /* What is running and how far along: one tiny module store, read by the toast and the rows. */ let progress: {action: 'add' | 'remove'; done: number} | null = null const listeners = new Set<() => void>() function setProgress(next: typeof progress) { progress = next listeners.forEach(l => l()) } const subscribe = (l: () => void) => ( listeners.add(l), () => void listeners.delete(l) ) const getProgress = () => progress const useProgress = () => useSyncExternalStore(subscribe, getProgress) function ProgressText() { const p = useProgress() const percent = Math.round((p?.done ?? 1) * 100) return p?.action === 'remove' ? ( <Trans>Removing demo data…</Trans> ) : ( <Trans>Adding demo data… {percent}%</Trans> ) } /** * Adds or removes the large demo set with a live progress toast (dev and e2e * builds only; callers check). Used by Settings and by `?demo=large`. */ export async function runLargeDemo( store: Store, ctx: MutationCtx, action: 'add' | 'remove', ) { if (progress) return setProgress({action, done: 0}) const toast = Toast.show( <Toast.Outer> <Toast.Icon /> <Toast.Text> <ProgressText /> </Toast.Text> </Toast.Outer>, {duration: 120_000}, ) const started = performance.now() let done: {text: string; type: Toast.ToastType} try { if (action === 'add') { const counts = await addLargeDemo(store, ctx, part => setProgress({action, done: part}), ) if (counts) { // Kept in the log for the owner's timing checks (dev and e2e builds only). logger.info('demo.large.added', { ms: Math.round(performance.now() - started), ...counts, }) done = { text: t`Demo data added: ${plural(counts.expenses, {one: '# expense', other: '# expenses'})}`, type: 'success', } } else done = {text: t`Demo data is already added`, type: 'default'} } else { await removeLargeDemo(store) done = {text: t`Demo data removed`, type: 'success'} } } catch (e) { logger.error(e, {where: 'runLargeDemo'}) done = { text: t`Couldn't finish. Try Remove demo data, then add it again.`, type: 'error', } } setProgress(null) dismissToast(toast) // The progress toast leaves first, then the outcome takes its place. setTimeout(() => Toast.show(done.text, {type: done.type}), 400) } /** * Settings > About and data rows for the large demo set (ARCHITECTURE 26.1). * The caller renders them only in dev and e2e builds. */ export function DemoDataRows() { const {t: l} = useLingui() const t = useTheme() const store = useStore() const ctx = useMutationCtx() const haptics = useHaptics() const addPrompt = Prompt.usePromptControl() const removePrompt = Prompt.usePromptControl() const busy = useProgress() const {friends = 0, groups = 0, expenses = 0} = useDemoCounts() ?? {} const isLoaded = friends + groups > 0 const run = (action: 'add' | 'remove') => { haptics.confirm() void runLargeDemo(store, ctx, action).then(() => haptics.success()) } return ( <> <SettingsList.PressableItem testID="settings-demo-add" label={l`Add demo data`} disabled={!!busy} onPress={() => isLoaded ? Toast.show(l`Demo data is already added`) : addPrompt.open() }> <SettingsList.ItemIcon icon={DemoIcon} /> <View style={[a.flex_1, a.gap_2xs]}> <SettingsList.ItemText> <Trans>Add demo data</Trans> </SettingsList.ItemText> <Text testID="settings-demo-summary" numberOfLines={2} style={[a.text_sm, a.leading_snug, t.atoms.text_contrast_medium]}> {busy?.action === 'add' ? ( <Trans>Adding… {Math.round(busy.done * 100)}%</Trans> ) : isLoaded ? ( <Trans> Added: {plural(friends, {one: '# friend', other: '# friends'})},{' '} {plural(groups, {one: '# group', other: '# groups'})},{' '} {plural(expenses, {one: '# expense', other: '# expenses'})} </Trans> ) : ( <Trans>A year of friends, groups and expenses, for testing</Trans> )} </Text> </View> </SettingsList.PressableItem> {isLoaded && ( <SettingsList.PressableItem testID="settings-demo-remove" destructive label={l`Remove demo data`} disabled={!!busy} onPress={() => removePrompt.open()}> <SettingsList.ItemIcon icon={TrashIcon} /> <SettingsList.ItemText> <Trans>Remove demo data</Trans> </SettingsList.ItemText> </SettingsList.PressableItem> )} <Prompt.Basic control={addPrompt} title={l`Add demo data?`} description={l`Adds about 30 friends, 12 groups and 1,500 expenses from the past year next to your own data. You can remove exactly this later.`} confirmButtonCta={l`Add demo data`} onConfirm={() => run('add')} /> <Prompt.Basic control={removePrompt} title={l`Remove demo data?`} description={l`Removes the demo friends, groups, expenses and payments, with their history. Everything you added yourself stays.`} confirmButtonCta={l`Remove`} confirmButtonColor="negative" onConfirm={() => run('remove')} /> </> ) } 
+#. placeholder {1}: import {useSyncExternalStore} from 'react' import {View} from 'react-native' import {DatabaseZap} from 'lucide-react-native' import {type MutationCtx, type Store} from '@splito/sync' import {plural, t} from '@lingui/core/macro' import {Trans, useLingui} from '@lingui/react/macro' import {useHaptics} from '#/lib/haptics' import {logger} from '#/logger' import {addLargeDemo, removeLargeDemo} from '#/data/demoLarge' import {useDemoCounts, useMutationCtx, useStore} from '#/data/hooks' import * as SettingsList from '#/screens/Settings/components/SettingsList' import {atoms as a, useTheme} from '#/alf' import {Trash_Stroke2_Corner0_Rounded as TrashIcon} from '#/components/icons/Trash' import {createIcon} from '#/components/icons/lucide' import * as Prompt from '#/components/Prompt' import * as Toast from '#/components/Toast' import {dismiss as dismissToast} from '#/components/Toast/sonner' import {Text} from '#/components/Typography' const DemoIcon = createIcon(DatabaseZap) /* What is running and how far along: one tiny module store, read by the toast and the rows. */ let progress: {action: 'add' | 'remove'; done: number} | null = null const listeners = new Set<() => void>() function setProgress(next: typeof progress) { progress = next listeners.forEach(l => l()) } const subscribe = (l: () => void) => ( listeners.add(l), () => void listeners.delete(l) ) const getProgress = () => progress const useProgress = () => useSyncExternalStore(subscribe, getProgress) function ProgressText() { const p = useProgress() const percent = Math.round((p?.done ?? 1) * 100) return p?.action === 'remove' ? ( <Trans>Removing demo data…</Trans> ) : ( <Trans>Adding demo data… {percent}%</Trans> ) } /** * Adds or removes the large demo set with a live progress toast (dev and e2e * builds only; callers check). Used by Settings and by `?demo=large`. */ export async function runLargeDemo( store: Store, ctx: MutationCtx, action: 'add' | 'remove', ) { if (progress) return setProgress({action, done: 0}) const toast = Toast.show( <Toast.Outer> <Toast.Icon /> <Toast.Text> <ProgressText /> </Toast.Text> </Toast.Outer>, {duration: 120_000}, ) const started = performance.now() let done: {text: string; type: Toast.ToastType} try { if (action === 'add') { const counts = await addLargeDemo(store, ctx, part => setProgress({action, done: part}), ) if (counts) { // Kept in the log for the owner's timing checks (dev and e2e builds only). logger.info('demo.large.added', { ms: Math.round(performance.now() - started), ...counts, }) done = { text: t`Demo data added: ${plural(counts.expenses, {one: '# expense', other: '# expenses'})}`, type: 'success', } } else done = {text: t`Demo data is already added`, type: 'default'} } else { await removeLargeDemo(store) done = {text: t`Demo data removed`, type: 'success'} } } catch (e) { logger.error(e, {where: 'runLargeDemo'}) done = { text: t`Couldn't finish. Try Remove demo data, then add it again.`, type: 'error', } } setProgress(null) dismissToast(toast) // The progress toast leaves first, then the outcome takes its place. setTimeout(() => Toast.show(done.text, {type: done.type}), 400) } /** * Settings > About and data rows for the large demo set (ARCHITECTURE 26.1). * The caller renders them only in dev and e2e builds. */ export function DemoDataRows() { const {t: l} = useLingui() const t = useTheme() const store = useStore() const ctx = useMutationCtx() const haptics = useHaptics() const addPrompt = Prompt.usePromptControl() const removePrompt = Prompt.usePromptControl() const busy = useProgress() const {friends = 0, groups = 0, expenses = 0} = useDemoCounts() ?? {} const isLoaded = friends + groups > 0 const run = (action: 'add' | 'remove') => { haptics.confirm() void runLargeDemo(store, ctx, action).then(() => haptics.success()) } return ( <> <SettingsList.PressableItem testID="settings-demo-add" label={l`Add demo data`} disabled={!!busy} onPress={() => isLoaded ? Toast.show(l`Demo data is already added`) : addPrompt.open() }> <SettingsList.ItemIcon icon={DemoIcon} /> <View style={[a.flex_1, a.gap_2xs]}> <SettingsList.ItemText> <Trans>Add demo data</Trans> </SettingsList.ItemText> <Text testID="settings-demo-summary" numberOfLines={2} style={[a.text_sm, a.leading_snug, t.atoms.text_contrast_medium]}> {busy?.action === 'add' ? ( <Trans>Adding… {Math.round(busy.done * 100)}%</Trans> ) : isLoaded ? ( <Trans> Added: {plural(friends, {one: '# friend', other: '# friends'})},{' '} {plural(groups, {one: '# group', other: '# groups'})},{' '} {plural(expenses, {one: '# expense', other: '# expenses'})} </Trans> ) : ( <Trans>A year of friends, groups and expenses, for testing</Trans> )} </Text> </View> </SettingsList.PressableItem> {isLoaded && ( <SettingsList.PressableItem testID="settings-demo-remove" destructive label={l`Remove demo data`} disabled={!!busy} onPress={() => removePrompt.open()}> <SettingsList.ItemIcon icon={TrashIcon} /> <SettingsList.ItemText> <Trans>Remove demo data</Trans> </SettingsList.ItemText> </SettingsList.PressableItem> )} <Prompt.Basic control={addPrompt} title={l`Add demo data?`} description={l`Adds about 30 friends, 12 groups and 1,500 expenses from the past year next to your own data. You can remove exactly this later.`} confirmButtonCta={l`Add demo data`} onConfirm={() => run('add')} /> <Prompt.Basic control={removePrompt} title={l`Remove demo data?`} description={l`Removes the demo friends, groups, expenses and payments, with their history. Everything you added yourself stays.`} confirmButtonCta={l`Remove`} confirmButtonColor="negative" onConfirm={() => run('remove')} /> </> ) } 
+#. placeholder {2}: import {useSyncExternalStore} from 'react' import {View} from 'react-native' import {DatabaseZap} from 'lucide-react-native' import {type MutationCtx, type Store} from '@splito/sync' import {plural, t} from '@lingui/core/macro' import {Trans, useLingui} from '@lingui/react/macro' import {useHaptics} from '#/lib/haptics' import {logger} from '#/logger' import {addLargeDemo, removeLargeDemo} from '#/data/demoLarge' import {useDemoCounts, useMutationCtx, useStore} from '#/data/hooks' import * as SettingsList from '#/screens/Settings/components/SettingsList' import {atoms as a, useTheme} from '#/alf' import {Trash_Stroke2_Corner0_Rounded as TrashIcon} from '#/components/icons/Trash' import {createIcon} from '#/components/icons/lucide' import * as Prompt from '#/components/Prompt' import * as Toast from '#/components/Toast' import {dismiss as dismissToast} from '#/components/Toast/sonner' import {Text} from '#/components/Typography' const DemoIcon = createIcon(DatabaseZap) /* What is running and how far along: one tiny module store, read by the toast and the rows. */ let progress: {action: 'add' | 'remove'; done: number} | null = null const listeners = new Set<() => void>() function setProgress(next: typeof progress) { progress = next listeners.forEach(l => l()) } const subscribe = (l: () => void) => ( listeners.add(l), () => void listeners.delete(l) ) const getProgress = () => progress const useProgress = () => useSyncExternalStore(subscribe, getProgress) function ProgressText() { const p = useProgress() const percent = Math.round((p?.done ?? 1) * 100) return p?.action === 'remove' ? ( <Trans>Removing demo data…</Trans> ) : ( <Trans>Adding demo data… {percent}%</Trans> ) } /** * Adds or removes the large demo set with a live progress toast (dev and e2e * builds only; callers check). Used by Settings and by `?demo=large`. */ export async function runLargeDemo( store: Store, ctx: MutationCtx, action: 'add' | 'remove', ) { if (progress) return setProgress({action, done: 0}) const toast = Toast.show( <Toast.Outer> <Toast.Icon /> <Toast.Text> <ProgressText /> </Toast.Text> </Toast.Outer>, {duration: 120_000}, ) const started = performance.now() let done: {text: string; type: Toast.ToastType} try { if (action === 'add') { const counts = await addLargeDemo(store, ctx, part => setProgress({action, done: part}), ) if (counts) { // Kept in the log for the owner's timing checks (dev and e2e builds only). logger.info('demo.large.added', { ms: Math.round(performance.now() - started), ...counts, }) done = { text: t`Demo data added: ${plural(counts.expenses, {one: '# expense', other: '# expenses'})}`, type: 'success', } } else done = {text: t`Demo data is already added`, type: 'default'} } else { await removeLargeDemo(store) done = {text: t`Demo data removed`, type: 'success'} } } catch (e) { logger.error(e, {where: 'runLargeDemo'}) done = { text: t`Couldn't finish. Try Remove demo data, then add it again.`, type: 'error', } } setProgress(null) dismissToast(toast) // The progress toast leaves first, then the outcome takes its place. setTimeout(() => Toast.show(done.text, {type: done.type}), 400) } /** * Settings > About and data rows for the large demo set (ARCHITECTURE 26.1). * The caller renders them only in dev and e2e builds. */ export function DemoDataRows() { const {t: l} = useLingui() const t = useTheme() const store = useStore() const ctx = useMutationCtx() const haptics = useHaptics() const addPrompt = Prompt.usePromptControl() const removePrompt = Prompt.usePromptControl() const busy = useProgress() const {friends = 0, groups = 0, expenses = 0} = useDemoCounts() ?? {} const isLoaded = friends + groups > 0 const run = (action: 'add' | 'remove') => { haptics.confirm() void runLargeDemo(store, ctx, action).then(() => haptics.success()) } return ( <> <SettingsList.PressableItem testID="settings-demo-add" label={l`Add demo data`} disabled={!!busy} onPress={() => isLoaded ? Toast.show(l`Demo data is already added`) : addPrompt.open() }> <SettingsList.ItemIcon icon={DemoIcon} /> <View style={[a.flex_1, a.gap_2xs]}> <SettingsList.ItemText> <Trans>Add demo data</Trans> </SettingsList.ItemText> <Text testID="settings-demo-summary" numberOfLines={2} style={[a.text_sm, a.leading_snug, t.atoms.text_contrast_medium]}> {busy?.action === 'add' ? ( <Trans>Adding… {Math.round(busy.done * 100)}%</Trans> ) : isLoaded ? ( <Trans> Added: {plural(friends, {one: '# friend', other: '# friends'})},{' '} {plural(groups, {one: '# group', other: '# groups'})},{' '} {plural(expenses, {one: '# expense', other: '# expenses'})} </Trans> ) : ( <Trans>A year of friends, groups and expenses, for testing</Trans> )} </Text> </View> </SettingsList.PressableItem> {isLoaded && ( <SettingsList.PressableItem testID="settings-demo-remove" destructive label={l`Remove demo data`} disabled={!!busy} onPress={() => removePrompt.open()}> <SettingsList.ItemIcon icon={TrashIcon} /> <SettingsList.ItemText> <Trans>Remove demo data</Trans> </SettingsList.ItemText> </SettingsList.PressableItem> )} <Prompt.Basic control={addPrompt} title={l`Add demo data?`} description={l`Adds about 30 friends, 12 groups and 1,500 expenses from the past year next to your own data. You can remove exactly this later.`} confirmButtonCta={l`Add demo data`} onConfirm={() => run('add')} /> <Prompt.Basic control={removePrompt} title={l`Remove demo data?`} description={l`Removes the demo friends, groups, expenses and payments, with their history. Everything you added yourself stays.`} confirmButtonCta={l`Remove`} confirmButtonColor="negative" onConfirm={() => run('remove')} /> </> ) } 
+#: src/screens/Settings/DemoData.tsx:146
+msgid "Added: {0}, {1}, {2}"
+msgstr "Added: {0}, {1}, {2}"
+
+#: src/screens/Settings/DemoData.tsx:43
+msgid "Adding demo data… {percent}%"
+msgstr "Adding demo data… {percent}%"
+
+#. placeholder {0}: Math.round(busy.done * 100)
+#: src/screens/Settings/DemoData.tsx:144
+msgid "Adding… {0}%"
+msgstr "Adding… {0}%"
+
+#: src/screens/Settings/DemoData.tsx:174
+msgid "Adds about 30 friends, 12 groups and 1,500 expenses from the past year next to your own data. You can remove exactly this later."
+msgstr "Adds about 30 friends, 12 groups and 1,500 expenses from the past year next to your own data. You can remove exactly this later."
+
 #: src/components/split/SplitEditor.tsx:600
 msgid "Adds them to this item"
 msgstr "Adds them to this item"
@@ -996,7 +1042,7 @@ msgstr "Adjustment for {0}, plus or minus"
 msgid "After that they leave this list. Their history stays in each record’s audit trail."
 msgstr "After that they leave this list. Their history stays in each record’s audit trail."
 
-#: src/screens/Activity.tsx:113
+#: src/screens/Activity.tsx:120
 #: src/screens/Analytics/components/ScopeDialog.tsx:134
 #: src/screens/Analytics/components/ScopeDialog.tsx:145
 #: src/screens/Groups/components/GroupsFilterDialog.tsx:69
@@ -1021,13 +1067,13 @@ msgid "All groups"
 msgstr "All groups"
 
 #: src/screens/People/components/BalanceSummary.tsx:195
-#: src/screens/Settle/index.tsx:379
+#: src/screens/Settle/index.tsx:384
 msgid "All settled up"
 msgstr "All settled up"
 
 #: src/components/settings/prefControls.tsx:414
 #: src/screens/Analytics/components/Summary.tsx:195
-#: src/screens/Analytics/useReport.ts:258
+#: src/screens/Analytics/useReport.ts:259
 msgid "All time"
 msgstr "All time"
 
@@ -1116,9 +1162,9 @@ msgstr "An exact amount, in any currency"
 #: src/components/TabGlyph.tsx:29
 #: src/navigation/Drawer.tsx:207
 #: src/navigation/Navigation.tsx:67
-#: src/screens/Analytics/index.tsx:60
+#: src/screens/Analytics/index.tsx:62
 #: src/screens/People/components/BalanceSummary.tsx:138
-#: src/view/shell/desktop/LeftNav.tsx:733
+#: src/view/shell/desktop/LeftNav.tsx:731
 msgid "Analytics"
 msgstr "Analytics"
 
@@ -1195,15 +1241,15 @@ msgstr "Automatic"
 msgid "Back"
 msgstr "Back"
 
-#: src/screens/Group/index.tsx:171
-#: src/screens/Group/index.tsx:172
-#: src/screens/Settle/index.tsx:140
-#: src/screens/Settle/index.tsx:141
+#: src/screens/Group/index.tsx:174
+#: src/screens/Group/index.tsx:175
+#: src/screens/Settle/index.tsx:145
+#: src/screens/Settle/index.tsx:146
 msgid "Back to Groups"
 msgstr "Back to Groups"
 
-#: src/screens/Person/index.tsx:160
-#: src/screens/Person/index.tsx:161
+#: src/screens/Person/index.tsx:149
+#: src/screens/Person/index.tsx:150
 msgid "Back to People"
 msgstr "Back to People"
 
@@ -1211,7 +1257,7 @@ msgstr "Back to People"
 msgid "Back up and share"
 msgstr "Back up and share"
 
-#: src/screens/Settings/index.tsx:79
+#: src/screens/Settings/index.tsx:81
 msgid "Back up and share with friends"
 msgstr "Back up and share with friends"
 
@@ -1224,7 +1270,7 @@ msgid "Balance over time"
 msgstr "Balance over time"
 
 #: src/components/settings/AboutSettings.tsx:102
-#: src/screens/Group/index.tsx:453
+#: src/screens/Group/index.tsx:456
 msgid "Balances"
 msgstr "Balances"
 
@@ -1232,7 +1278,7 @@ msgstr "Balances"
 msgid "Balances always show an arrow and words like “owes you”, so they read without colour too."
 msgstr "Balances always show an arrow and words like “owes you”, so they read without colour too."
 
-#: src/screens/Settle/index.tsx:250
+#: src/screens/Settle/index.tsx:255
 msgid "Balances or rules changed since this plan was made."
 msgstr "Balances or rules changed since this plan was made."
 
@@ -1268,7 +1314,7 @@ msgstr "Both ways: each of you lets the other off, and you’ll be even in {curr
 msgid "Browsers can't vibrate. This applies in the Splito app on your phone."
 msgstr "Browsers can't vibrate. This applies in the Splito app on your phone."
 
-#: src/screens/Settings/index.tsx:240
+#: src/screens/Settings/index.tsx:244
 msgid "By amount"
 msgstr "By amount"
 
@@ -1280,7 +1326,7 @@ msgstr "By category"
 msgid "By group"
 msgstr "By group"
 
-#: src/screens/Settings/index.tsx:241
+#: src/screens/Settings/index.tsx:245
 msgid "By name"
 msgstr "By name"
 
@@ -1296,8 +1342,8 @@ msgstr "Calculator"
 #: src/features/settlement/CallItEvenDialog.tsx:279
 #: src/screens/Group/components/GroupRows.tsx:209
 #: src/screens/Group/components/GroupRows.tsx:212
-#: src/screens/Person/index.tsx:405
-#: src/screens/Person/index.tsx:408
+#: src/screens/Person/index.tsx:390
+#: src/screens/Person/index.tsx:393
 msgid "Call it even"
 msgstr "Call it even"
 
@@ -1335,7 +1381,7 @@ msgstr "Categories"
 
 #: src/components/split/pickers.tsx:168
 #: src/screens/Analytics/components/Charts.tsx:188
-#: src/screens/Analytics/index.tsx:206
+#: src/screens/Analytics/index.tsx:209
 msgid "Category"
 msgstr "Category"
 
@@ -1439,14 +1485,14 @@ msgid "Clear all recent searches?"
 msgstr "Clear all recent searches?"
 
 #. placeholder {0}: selection.label
-#: src/screens/Analytics/index.tsx:165
+#: src/screens/Analytics/index.tsx:168
 msgid "Clear filter: {0}"
 msgstr "Clear filter: {0}"
 
-#: src/screens/Groups/index.tsx:204
-#: src/screens/Groups/index.tsx:205
-#: src/screens/People/index.tsx:217
-#: src/screens/People/index.tsx:218
+#: src/screens/Groups/index.tsx:195
+#: src/screens/Groups/index.tsx:196
+#: src/screens/People/index.tsx:222
+#: src/screens/People/index.tsx:223
 msgid "Clear filters"
 msgstr "Clear filters"
 
@@ -1620,9 +1666,13 @@ msgstr "Couldn't delete this expense"
 msgid "Couldn’t delete this. Please try again."
 msgstr "Couldn’t delete this. Please try again."
 
-#: src/screens/Analytics/index.tsx:227
+#: src/screens/Analytics/index.tsx:230
 msgid "Couldn’t export. Try again."
 msgstr "Couldn’t export. Try again."
+
+#: src/screens/Settings/DemoData.tsx:92
+msgid "Couldn't finish. Try Remove demo data, then add it again."
+msgstr "Couldn't finish. Try Remove demo data, then add it again."
 
 #: src/lib/sharing.ts:62
 msgid "Couldn’t open an app for that. Copy the link instead."
@@ -1632,7 +1682,7 @@ msgstr "Couldn’t open an app for that. Copy the link instead."
 msgid "Couldn’t put this write-off back"
 msgstr "Couldn’t put this write-off back"
 
-#: src/screens/Person/index.tsx:268
+#: src/screens/Person/index.tsx:248
 msgid "Couldn’t remove this friend. Please try again."
 msgstr "Couldn’t remove this friend. Please try again."
 
@@ -1690,7 +1740,7 @@ msgid "Counts towards: {settles}"
 msgstr "Counts towards: {settles}"
 
 #: src/components/groups/GroupFields.tsx:45
-#: src/screens/Group/index.tsx:309
+#: src/screens/Group/index.tsx:312
 #: src/screens/Groups/components/GroupRow.tsx:50
 #: src/screens/Groups/components/GroupsFilterDialog.tsx:72
 #: src/screens/Search/components/ResultRows.tsx:322
@@ -1703,9 +1753,9 @@ msgid "Create a link"
 msgstr "Create a link"
 
 #: src/screens/CreateGroup.tsx:137
-#: src/screens/Groups/index.tsx:138
-#: src/screens/Groups/index.tsx:254
-#: src/screens/Groups/index.tsx:260
+#: src/screens/Groups/index.tsx:129
+#: src/screens/Groups/index.tsx:245
+#: src/screens/Groups/index.tsx:251
 msgid "Create group"
 msgstr "Create group"
 
@@ -1718,7 +1768,7 @@ msgstr "Create link"
 #: src/components/split/pickers.tsx:69
 #: src/components/split/pickers.tsx:80
 #: src/features/settlement/CallItEvenDialog.tsx:326
-#: src/screens/Analytics/index.tsx:208
+#: src/screens/Analytics/index.tsx:211
 #: src/screens/Groups/components/GroupsFilterDialog.tsx:90
 #: src/screens/People/components/FriendsFilterDialog.tsx:98
 msgid "Currency"
@@ -1758,7 +1808,7 @@ msgid "Custom range…"
 msgstr "Custom range…"
 
 #: src/components/settings/prefControls.tsx:85
-#: src/screens/Settings/index.tsx:233
+#: src/screens/Settings/index.tsx:237
 msgid "Dark"
 msgstr "Dark"
 
@@ -1774,7 +1824,7 @@ msgstr "Dark theme"
 #: src/components/people/PaymentDetailsDialog.tsx:166
 #: src/components/split/ExpenseComposer.tsx:341
 #: src/components/split/ExpenseComposer.tsx:495
-#: src/screens/Analytics/index.tsx:204
+#: src/screens/Analytics/index.tsx:207
 #: src/screens/RecentlyDeleted/components/RestoreDialog.tsx:155
 msgid "Date"
 msgstr "Date"
@@ -1884,7 +1934,21 @@ msgstr "Deleted expenses, payments and write-offs wait here before they leave fo
 msgid "Deleted forever"
 msgstr "Deleted forever"
 
-#: src/screens/Analytics/index.tsx:205
+#. placeholder {0}: counts.expenses
+#: src/screens/Settings/DemoData.tsx:81
+msgid "Demo data added: {0, plural, one {# expense} other {# expenses}}"
+msgstr "Demo data added: {0, plural, one {# expense} other {# expenses}}"
+
+#: src/screens/Settings/DemoData.tsx:84
+#: src/screens/Settings/DemoData.tsx:131
+msgid "Demo data is already added"
+msgstr "Demo data is already added"
+
+#: src/screens/Settings/DemoData.tsx:87
+msgid "Demo data removed"
+msgstr "Demo data removed"
+
+#: src/screens/Analytics/index.tsx:208
 msgid "Description"
 msgstr "Description"
 
@@ -1915,7 +1979,7 @@ msgstr "Direct {0}"
 msgid "Direct expenses"
 msgstr "Direct expenses"
 
-#: src/screens/Person/index.tsx:339
+#: src/screens/Person/index.tsx:319
 msgid "Direct only"
 msgstr "Direct only"
 
@@ -2004,14 +2068,14 @@ msgid "Edit expense"
 msgstr "Edit expense"
 
 #: src/components/people/EditFriendDialog.tsx:67
-#: src/screens/Person/index.tsx:415
-#: src/screens/Person/index.tsx:418
+#: src/screens/Person/index.tsx:400
+#: src/screens/Person/index.tsx:403
 msgid "Edit friend"
 msgstr "Edit friend"
 
 #: src/components/groups/EditGroupDialog.tsx:89
-#: src/screens/Group/index.tsx:539
-#: src/screens/Group/index.tsx:542
+#: src/screens/Group/index.tsx:549
+#: src/screens/Group/index.tsx:552
 msgid "Edit group"
 msgstr "Edit group"
 
@@ -2022,13 +2086,13 @@ msgstr "Edit group"
 msgid "Edit profile"
 msgstr "Edit profile"
 
-#: src/screens/Group/index.tsx:720
-#: src/screens/Settle/index.tsx:431
+#: src/screens/Group/index.tsx:731
+#: src/screens/Settle/index.tsx:436
 msgid "Edit rules"
 msgstr "Edit rules"
 
-#: src/screens/Group/index.tsx:716
-#: src/screens/Settle/index.tsx:422
+#: src/screens/Group/index.tsx:727
+#: src/screens/Settle/index.tsx:427
 msgid "Edit who you settle with"
 msgstr "Edit who you settle with"
 
@@ -2141,8 +2205,8 @@ msgstr "Every swipe action is also on the item's menu. Deleting only removes it 
 msgid "Everyone"
 msgstr "Everyone"
 
-#: src/screens/Group/index.tsx:515
-#: src/screens/Settle/index.tsx:387
+#: src/screens/Group/index.tsx:525
+#: src/screens/Settle/index.tsx:392
 msgid "Everyone is settled up."
 msgstr "Everyone is settled up."
 
@@ -2154,7 +2218,7 @@ msgstr "Everyone on a group expense needs to be in the group"
 msgid "Everyone ticked pays the same."
 msgstr "Everyone ticked pays the same."
 
-#: src/screens/Settle/index.tsx:237
+#: src/screens/Settle/index.tsx:242
 msgid "Everyone who owes pays the people who are owed, straight to them. Only pairs allowed in Who you settle with are used, preferred pairs first, so the plan isn’t always the fewest payments."
 msgstr "Everyone who owes pays the people who are owed, straight to them. Only pairs allowed in Who you settle with are used, preferred pairs first, so the plan isn’t always the fewest payments."
 
@@ -2233,8 +2297,8 @@ msgstr "Expense restored"
 #: src/screens/Analytics/components/Charts.tsx:280
 #: src/screens/Analytics/components/Charts.tsx:325
 #: src/screens/Analytics/components/Summary.tsx:174
-#: src/screens/Analytics/index.tsx:149
-#: src/screens/Group/index.tsx:453
+#: src/screens/Analytics/index.tsx:152
+#: src/screens/Group/index.tsx:456
 #: src/screens/Profile.tsx:249
 #: src/screens/Search/components/ResultRows.tsx:77
 msgid "Expenses"
@@ -2248,16 +2312,16 @@ msgstr "Expired"
 msgid "Expires within the hour"
 msgstr "Expires within the hour"
 
-#: src/screens/Analytics/index.tsx:65
+#: src/screens/Analytics/index.tsx:67
 msgid "Export CSV"
 msgstr "Export CSV"
 
 #. placeholder {0}: rows.length
-#: src/screens/Analytics/index.tsx:222
+#: src/screens/Analytics/index.tsx:225
 msgid "Exported {0} expenses"
 msgstr "Exported {0} expenses"
 
-#: src/screens/Analytics/index.tsx:221
+#: src/screens/Analytics/index.tsx:224
 msgid "Exported 1 expense"
 msgstr "Exported 1 expense"
 
@@ -2266,8 +2330,8 @@ msgid "Fewer shares"
 msgstr "Fewer shares"
 
 #: src/screens/Person/components/HistoryFilterDialog.tsx:55
-#: src/screens/Person/index.tsx:344
-#: src/screens/Person/index.tsx:350
+#: src/screens/Person/index.tsx:324
+#: src/screens/Person/index.tsx:330
 msgid "Filter"
 msgstr "Filter"
 
@@ -2289,7 +2353,7 @@ msgstr "Find any expense, friend or group on this device"
 msgid "Find me by email or phone"
 msgstr "Find me by email or phone"
 
-#: src/screens/Settings/index.tsx:245
+#: src/screens/Settings/index.tsx:249
 msgid "Findable"
 msgstr "Findable"
 
@@ -2317,8 +2381,8 @@ msgstr "For money that changed hands outside Splito – cash, UPI or a bank tran
 msgid "For you"
 msgstr "For you"
 
-#: src/screens/Person/index.tsx:151
-#: src/screens/Person/index.tsx:367
+#: src/screens/Person/index.tsx:140
+#: src/screens/Person/index.tsx:352
 #: src/screens/Search/components/ResultRows.tsx:295
 msgid "Friend"
 msgstr "Friend"
@@ -2335,7 +2399,7 @@ msgstr "FRIEND INVITE"
 msgid "Friend invite links work for"
 msgstr "Friend invite links work for"
 
-#: src/screens/Person/index.tsx:263
+#: src/screens/Person/index.tsx:243
 msgid "Friend removed"
 msgstr "Friend removed"
 
@@ -2344,27 +2408,27 @@ msgid "Friend request sent to {shownName}"
 msgstr "Friend request sent to {shownName}"
 
 #: src/components/groups/AddMembersDialog.tsx:134
-#: src/screens/People/index.tsx:188
-#: src/screens/People/index.tsx:273
+#: src/screens/People/index.tsx:193
+#: src/screens/People/index.tsx:278
 #: src/screens/Profile.tsx:237
 msgid "Friends"
 msgstr "Friends"
 
 #. placeholder {0}: line.people
-#: src/screens/Settle/index.tsx:578
+#: src/screens/Settle/index.tsx:583
 msgid "From {0} people"
 msgstr "From {0} people"
 
-#: src/screens/Settle/index.tsx:576
+#: src/screens/Settle/index.tsx:581
 msgid "From 1 person"
 msgstr "From 1 person"
 
-#: src/screens/Activity.tsx:113
+#: src/screens/Activity.tsx:120
 msgid "From others"
 msgstr "From others"
 
 #: src/components/settings/prefControls.tsx:190
-#: src/screens/Settings/index.tsx:234
+#: src/screens/Settings/index.tsx:238
 msgid "Full"
 msgstr "Full"
 
@@ -2423,11 +2487,11 @@ msgstr "Groceries"
 #: src/features/settlement/CallItEvenDialog.tsx:158
 #: src/navigation/Navigation.tsx:76
 #: src/screens/Analytics/components/Charts.tsx:325
-#: src/screens/Analytics/index.tsx:207
-#: src/screens/Analytics/useReport.ts:270
-#: src/screens/Group/index.tsx:162
-#: src/screens/Group/index.tsx:309
-#: src/screens/Group/index.tsx:501
+#: src/screens/Analytics/index.tsx:210
+#: src/screens/Analytics/useReport.ts:271
+#: src/screens/Group/index.tsx:165
+#: src/screens/Group/index.tsx:312
+#: src/screens/Group/index.tsx:511
 #: src/screens/Groups/components/GroupRow.tsx:51
 #: src/screens/People/components/PersonRow.tsx:79
 #: src/screens/Person/components/PersonBalances.tsx:98
@@ -2467,12 +2531,12 @@ msgstr "Group updated"
 #: src/components/TabGlyph.tsx:28
 #: src/navigation/Drawer.tsx:200
 #: src/navigation/Navigation.tsx:66
-#: src/screens/Groups/index.tsx:133
-#: src/screens/Groups/index.tsx:147
-#: src/screens/Groups/index.tsx:177
+#: src/screens/Groups/index.tsx:124
+#: src/screens/Groups/index.tsx:138
+#: src/screens/Groups/index.tsx:168
 #: src/screens/Profile.tsx:243
 #: src/screens/Search/components/ResultRows.tsx:77
-#: src/view/shell/desktop/LeftNav.tsx:729
+#: src/view/shell/desktop/LeftNav.tsx:727
 msgid "Groups"
 msgstr "Groups"
 
@@ -2491,7 +2555,7 @@ msgid "Hex color"
 msgstr "Hex color"
 
 #: src/components/settings/CategoriesEditor.tsx:197
-#: src/screens/Settings/index.tsx:245
+#: src/screens/Settings/index.tsx:249
 msgid "Hidden"
 msgstr "Hidden"
 
@@ -2516,7 +2580,7 @@ msgid "Hide from Activity"
 msgstr "Hide from Activity"
 
 #: src/screens/Expense/components/History.tsx:95
-#: src/screens/Person/index.tsx:332
+#: src/screens/Person/index.tsx:312
 msgid "History"
 msgstr "History"
 
@@ -2524,12 +2588,12 @@ msgstr "History"
 #: src/components/settings/TabsEditor.tsx:32
 #: src/components/TabGlyph.tsx:27
 #: src/navigation/Drawer.tsx:193
-#: src/screens/Group/index.tsx:309
+#: src/screens/Group/index.tsx:312
 #: src/screens/Groups/components/GroupRow.tsx:49
 #: src/screens/Groups/components/GroupsFilterDialog.tsx:71
-#: src/screens/People/index.tsx:139
+#: src/screens/People/index.tsx:144
 #: src/screens/Search/components/ResultRows.tsx:321
-#: src/view/shell/desktop/LeftNav.tsx:725
+#: src/view/shell/desktop/LeftNav.tsx:723
 msgid "Home"
 msgstr "Home"
 
@@ -2553,8 +2617,8 @@ msgstr "How many people can use it"
 msgid "How new expenses are divided until you change it."
 msgstr "How new expenses are divided until you change it."
 
-#: src/screens/Settle/index.tsx:216
-#: src/screens/Settle/index.tsx:224
+#: src/screens/Settle/index.tsx:221
+#: src/screens/Settle/index.tsx:229
 msgid "How this plan works"
 msgstr "How this plan works"
 
@@ -2620,7 +2684,7 @@ msgid "Invite link"
 msgstr "Invite link"
 
 #: src/screens/AddFriend.tsx:498
-#: src/screens/Group/index.tsx:787
+#: src/screens/Group/index.tsx:798
 msgid "Invite link or QR code"
 msgstr "Invite link or QR code"
 
@@ -2637,7 +2701,7 @@ msgstr "Invite links need a connection to Splito’s servers, which arrive with 
 msgid "Invite links need a connection. Try again when you’re online."
 msgstr "Invite links need a connection. Try again when you’re online."
 
-#: src/screens/People/index.tsx:154
+#: src/screens/People/index.tsx:159
 msgid "Invite people"
 msgstr "Invite people"
 
@@ -2647,7 +2711,7 @@ msgid "Invite to {0}"
 msgstr "Invite to {0}"
 
 #: src/screens/AddFriend.tsx:493
-#: src/screens/Group/index.tsx:775
+#: src/screens/Group/index.tsx:786
 msgid "Invite with a link or QR code"
 msgstr "Invite with a link or QR code"
 
@@ -2794,7 +2858,7 @@ msgid "Let people who know my email or number find me"
 msgstr "Let people who know my email or number find me"
 
 #: src/components/settings/prefControls.tsx:84
-#: src/screens/Settings/index.tsx:233
+#: src/screens/Settings/index.tsx:237
 msgid "Light"
 msgstr "Light"
 
@@ -2839,7 +2903,7 @@ msgstr "Manage invite links"
 msgid "Manage links"
 msgstr "Manage links"
 
-#: src/screens/Activity.tsx:103
+#: src/screens/Activity.tsx:110
 msgid "Mark all read"
 msgstr "Mark all read"
 
@@ -2870,10 +2934,10 @@ msgstr "Measure"
 
 #: src/screens/CreateGroup.tsx:179
 #: src/screens/CreateGroup.tsx:199
-#: src/screens/Group/index.tsx:453
-#: src/screens/Group/index.tsx:548
-#: src/screens/Group/index.tsx:551
-#: src/screens/Group/index.tsx:622
+#: src/screens/Group/index.tsx:456
+#: src/screens/Group/index.tsx:558
+#: src/screens/Group/index.tsx:561
+#: src/screens/Group/index.tsx:633
 msgid "Members"
 msgstr "Members"
 
@@ -2914,8 +2978,8 @@ msgstr "Month first"
 msgid "More actions"
 msgstr "More actions"
 
-#: src/screens/Group/index.tsx:520
-#: src/screens/Person/index.tsx:385
+#: src/screens/Group/index.tsx:530
+#: src/screens/Person/index.tsx:370
 msgid "More options"
 msgstr "More options"
 
@@ -2927,7 +2991,7 @@ msgstr "More options for {sentence}"
 msgid "More shares"
 msgstr "More shares"
 
-#: src/screens/Settings/index.tsx:242
+#: src/screens/Settings/index.tsx:246
 msgid "Most recent"
 msgstr "Most recent"
 
@@ -3017,8 +3081,8 @@ msgstr "New friend – no account needed"
 
 #: src/navigation/Navigation.tsx:86
 #: src/screens/CreateGroup.tsx:131
-#: src/screens/Groups/index.tsx:217
-#: src/screens/Groups/index.tsx:218
+#: src/screens/Groups/index.tsx:208
+#: src/screens/Groups/index.tsx:209
 msgid "New group"
 msgstr "New group"
 
@@ -3060,7 +3124,7 @@ msgstr "No active invite links"
 msgid "no balance change"
 msgstr "no balance change"
 
-#: src/screens/Group/index.tsx:471
+#: src/screens/Group/index.tsx:474
 msgid "No balances yet. They appear once the group has an expense."
 msgstr "No balances yet. They appear once the group has an expense."
 
@@ -3073,7 +3137,7 @@ msgid "No currency matches “{query}”"
 msgstr "No currency matches “{query}”"
 
 #. placeholder {0}: person!.data.name
-#: src/screens/Person/index.tsx:482
+#: src/screens/Person/index.tsx:468
 msgid "No direct expenses with {0}. Group expenses are hidden by the filter."
 msgstr "No direct expenses with {0}. Group expenses are hidden by the filter."
 
@@ -3081,11 +3145,11 @@ msgstr "No direct expenses with {0}. Group expenses are hidden by the filter."
 msgid "No email or number? Add just a name and they’re only for you."
 msgstr "No email or number? Add just a name and they’re only for you."
 
-#: src/screens/Group/index.tsx:477
+#: src/screens/Group/index.tsx:480
 msgid "No expenses in this group yet. Add the first one and everyone’s share is worked out for you."
 msgstr "No expenses in this group yet. Add the first one and everyone’s share is worked out for you."
 
-#: src/screens/People/index.tsx:214
+#: src/screens/People/index.tsx:219
 msgid "No friends match these filters."
 msgstr "No friends match these filters."
 
@@ -3098,11 +3162,11 @@ msgstr "No group"
 msgid "No groups match “{query}”"
 msgstr "No groups match “{query}”"
 
-#: src/screens/Groups/index.tsx:201
+#: src/screens/Groups/index.tsx:192
 msgid "No groups match these filters."
 msgstr "No groups match these filters."
 
-#: src/screens/Groups/index.tsx:215
+#: src/screens/Groups/index.tsx:206
 msgid "No groups yet. A group keeps a trip’s or a flat’s expenses and balances in one place."
 msgstr "No groups yet. A group keeps a trip’s or a flat’s expenses and balances in one place."
 
@@ -3112,8 +3176,8 @@ msgid "No limit"
 msgstr "No limit"
 
 #. placeholder {0}: query.trim()
-#: src/screens/Groups/index.tsx:195
-#: src/screens/People/index.tsx:208
+#: src/screens/Groups/index.tsx:186
+#: src/screens/People/index.tsx:213
 msgid "No matches for “{0}”"
 msgstr "No matches for “{0}”"
 
@@ -3129,7 +3193,7 @@ msgstr "No open balances"
 msgid "No results found for “<0>{query}</0>”."
 msgstr "No results found for “<0>{query}</0>”."
 
-#: src/screens/Person/index.tsx:207
+#: src/screens/Person/index.tsx:187
 msgid "No shared groups"
 msgstr "No shared groups"
 
@@ -3149,7 +3213,7 @@ msgstr "Nobody matches “{query}”"
 msgid "Nobody yet"
 msgstr "Nobody yet"
 
-#: src/screens/Analytics/useReport.ts:270
+#: src/screens/Analytics/useReport.ts:271
 msgid "Non-group"
 msgstr "Non-group"
 
@@ -3210,11 +3274,11 @@ msgstr "Notes"
 msgid "Nothing"
 msgstr "Nothing"
 
-#: src/screens/Activity.tsx:137
+#: src/screens/Activity.tsx:145
 msgid "Nothing from other people yet. When someone else adds or changes something you share, it shows up here."
 msgstr "Nothing from other people yet. When someone else adds or changes something you share, it shows up here."
 
-#: src/screens/Activity.tsx:138
+#: src/screens/Activity.tsx:146
 msgid "Nothing here yet. Expenses, payments and group changes will show up here."
 msgstr "Nothing here yet. Expenses, payments and group changes will show up here."
 
@@ -3222,12 +3286,12 @@ msgstr "Nothing here yet. Expenses, payments and group changes will show up here
 msgid "Nothing matches “{search}”"
 msgstr "Nothing matches “{search}”"
 
-#: src/screens/Settle/index.tsx:446
+#: src/screens/Settle/index.tsx:451
 msgid "Nothing to settle. This group has no expenses yet."
 msgstr "Nothing to settle. This group has no expenses yet."
 
 #. placeholder {0}: person!.data.name
-#: src/screens/Person/index.tsx:481
+#: src/screens/Person/index.tsx:467
 msgid "Nothing with {0} yet. Add an expense you shared and it shows up here."
 msgstr "Nothing with {0} yet. Add an expense you shared and it shows up here."
 
@@ -3264,12 +3328,12 @@ msgid "of your share was paid by others"
 msgstr "of your share was paid by others"
 
 #: src/components/settings/prefControls.tsx:192
-#: src/screens/Settings/index.tsx:234
-#: src/screens/Settings/index.tsx:244
+#: src/screens/Settings/index.tsx:238
+#: src/screens/Settings/index.tsx:248
 msgid "Off"
 msgstr "Off"
 
-#: src/screens/Settings/index.tsx:244
+#: src/screens/Settings/index.tsx:248
 msgid "On"
 msgstr "On"
 
@@ -3291,7 +3355,7 @@ msgstr "One place for shared costs"
 msgid "Only allowed pairs"
 msgstr "Only allowed pairs"
 
-#: src/screens/Person/index.tsx:573
+#: src/screens/Person/index.tsx:559
 msgid "Only friends with no expenses, payments or groups can be removed."
 msgstr "Only friends with no expenses, payments or groups can be removed."
 
@@ -3331,7 +3395,7 @@ msgid "Open balance {0}. Part payments are fine."
 msgstr "Open balance {0}. Part payments are fine."
 
 #: src/components/HeaderAvatar.tsx:47
-#: src/view/shell/desktop/LeftNav.tsx:190
+#: src/view/shell/desktop/LeftNav.tsx:189
 msgid "Open menu"
 msgstr "Open menu"
 
@@ -3377,7 +3441,7 @@ msgstr "Or keep them as a draft to finish later."
 
 #: src/components/groups/GroupFields.tsx:46
 #: src/components/settings/CategoryIcon.tsx:132
-#: src/screens/Analytics/useReport.ts:274
+#: src/screens/Analytics/useReport.ts:275
 #: src/screens/Groups/components/GroupsFilterDialog.tsx:73
 msgid "Other"
 msgstr "Other"
@@ -3445,8 +3509,8 @@ msgid "Part payments are fine."
 msgstr "Part payments are fine."
 
 #: src/components/people/UpiPayDialog.tsx:149
-#: src/screens/Person/index.tsx:311
-#: src/screens/Person/index.tsx:317
+#: src/screens/Person/index.tsx:291
+#: src/screens/Person/index.tsx:297
 msgid "Pay with UPI"
 msgstr "Pay with UPI"
 
@@ -3474,8 +3538,8 @@ msgid "Payment restored"
 msgstr "Payment restored"
 
 #: src/components/groups/RulesEditor.tsx:97
-#: src/screens/Group/index.tsx:566
-#: src/screens/Group/index.tsx:569
+#: src/screens/Group/index.tsx:576
+#: src/screens/Group/index.tsx:579
 msgid "Payment rules"
 msgstr "Payment rules"
 
@@ -3568,7 +3632,7 @@ msgstr "Pick the first day"
 msgid "Pink"
 msgstr "Pink"
 
-#: src/screens/Groups/index.tsx:247
+#: src/screens/Groups/index.tsx:238
 msgid "Planning a trip or sharing a flat? Keep its expenses in one place."
 msgstr "Planning a trip or sharing a flat? Keep its expenses in one place."
 
@@ -3576,7 +3640,7 @@ msgstr "Planning a trip or sharing a flat? Keep its expenses in one place."
 msgid "Plus"
 msgstr "Plus"
 
-#: src/screens/Settings/index.tsx:110
+#: src/screens/Settings/index.tsx:112
 msgid "Preferences"
 msgstr "Preferences"
 
@@ -3611,7 +3675,7 @@ msgstr "Privacy"
 #: src/navigation/Drawer.tsx:230
 #: src/navigation/Navigation.tsx:69
 #: src/screens/Profile.tsx:40
-#: src/screens/Settings/index.tsx:87
+#: src/screens/Settings/index.tsx:89
 msgid "Profile"
 msgstr "Profile"
 
@@ -3641,19 +3705,19 @@ msgstr "Recent activity"
 msgid "Recent searches"
 msgstr "Recent searches"
 
-#: src/view/shell/desktop/RecentTransactions.tsx:67
+#: src/view/shell/desktop/RecentTransactions.tsx:62
 msgid "Recent transactions"
 msgstr "Recent transactions"
 
-#: src/view/shell/desktop/LeftNav.tsx:556
+#: src/view/shell/desktop/LeftNav.tsx:554
 msgid "Recently active groups"
 msgstr "Recently active groups"
 
 #: src/components/settings/sections.ts:53
 #: src/navigation/Navigation.tsx:73
 #: src/screens/RecentlyDeleted/index.tsx:198
-#: src/screens/Settings/index.tsx:145
-#: src/screens/Settings/index.tsx:148
+#: src/screens/Settings/index.tsx:147
+#: src/screens/Settings/index.tsx:150
 msgid "Recently deleted"
 msgstr "Recently deleted"
 
@@ -3666,7 +3730,7 @@ msgid "Record a payment"
 msgstr "Record a payment"
 
 #: src/components/people/RecordPaymentDialog.tsx:267
-#: src/screens/Person/index.tsx:378
+#: src/screens/Person/index.tsx:363
 msgid "Record payment"
 msgstr "Record payment"
 
@@ -3675,7 +3739,7 @@ msgid "Record this payment"
 msgstr "Record this payment"
 
 #: src/components/settings/prefControls.tsx:191
-#: src/screens/Settings/index.tsx:234
+#: src/screens/Settings/index.tsx:238
 msgid "Reduced"
 msgstr "Reduced"
 
@@ -3687,12 +3751,13 @@ msgstr "Reduced swaps movement for gentle fades. Off shows every change instantl
 msgid "Remember what you search for"
 msgstr "Remember what you search for"
 
-#: src/screens/Person/index.tsx:574
+#: src/screens/Person/index.tsx:560
+#: src/screens/Settings/DemoData.tsx:182
 msgid "Remove"
 msgstr "Remove"
 
 #. placeholder {0}: person.data.name
-#: src/screens/Person/index.tsx:572
+#: src/screens/Person/index.tsx:558
 msgid "Remove {0}?"
 msgstr "Remove {0}?"
 
@@ -3700,8 +3765,17 @@ msgstr "Remove {0}?"
 msgid "Remove {q}"
 msgstr "Remove {q}"
 
-#: src/screens/Person/index.tsx:424
-#: src/screens/Person/index.tsx:428
+#: src/screens/Settings/DemoData.tsx:161
+#: src/screens/Settings/DemoData.tsx:166
+msgid "Remove demo data"
+msgstr "Remove demo data"
+
+#: src/screens/Settings/DemoData.tsx:180
+msgid "Remove demo data?"
+msgstr "Remove demo data?"
+
+#: src/screens/Person/index.tsx:409
+#: src/screens/Person/index.tsx:413
 msgid "Remove friend"
 msgstr "Remove friend"
 
@@ -3709,6 +3783,14 @@ msgstr "Remove friend"
 #: src/components/split/SplitEditor.tsx:488
 msgid "Remove item {0}"
 msgstr "Remove item {0}"
+
+#: src/screens/Settings/DemoData.tsx:181
+msgid "Removes the demo friends, groups, expenses and payments, with their history. Everything you added yourself stays."
+msgstr "Removes the demo friends, groups, expenses and payments, with their history. Everything you added yourself stays."
+
+#: src/screens/Settings/DemoData.tsx:41
+msgid "Removing demo data…"
+msgstr "Removing demo data…"
 
 #: src/components/activity/ActivityItem.tsx:993
 #: src/screens/People/components/RequestsSection.tsx:136
@@ -3758,16 +3840,16 @@ msgstr "Reset {title} to default"
 msgid "Reset {title}?"
 msgstr "Reset {title}?"
 
-#: src/screens/Settings/index.tsx:200
+#: src/screens/Settings/index.tsx:204
 msgid "Reset all"
 msgstr "Reset all"
 
-#: src/screens/Settings/index.tsx:171
 #: src/screens/Settings/index.tsx:175
+#: src/screens/Settings/index.tsx:179
 msgid "Reset all settings"
 msgstr "Reset all settings"
 
-#: src/screens/Settings/index.tsx:198
+#: src/screens/Settings/index.tsx:202
 msgid "Reset all settings?"
 msgstr "Reset all settings?"
 
@@ -3892,7 +3974,7 @@ msgstr "Saved"
 #: src/components/settings/AboutSettings.tsx:116
 #: src/navigation/Drawer.tsx:106
 #: src/screens/Profile.tsx:192
-#: src/view/shell/desktop/LeftNav.tsx:227
+#: src/view/shell/desktop/LeftNav.tsx:226
 msgid "Saved on this device"
 msgstr "Saved on this device"
 
@@ -3913,8 +3995,8 @@ msgstr "Saved. We’ll send it when you’re online."
 #: src/components/forms/SearchInput.tsx:54
 #: src/navigation/Drawer.tsx:223
 #: src/navigation/Navigation.tsx:74
-#: src/screens/Search/index.tsx:188
-#: src/view/shell/desktop/LeftNav.tsx:752
+#: src/screens/Search/index.tsx:190
+#: src/view/shell/desktop/LeftNav.tsx:750
 msgid "Search"
 msgstr "Search"
 
@@ -3924,11 +4006,11 @@ msgstr "Search"
 msgid "Search currencies"
 msgstr "Search currencies"
 
-#: src/screens/Search/index.tsx:205
+#: src/screens/Search/index.tsx:207
 msgid "Search expenses, people and groups"
 msgstr "Search expenses, people and groups"
 
-#: src/screens/Search/index.tsx:206
+#: src/screens/Search/index.tsx:208
 msgid "Search expenses, people, groups"
 msgstr "Search expenses, people, groups"
 
@@ -3941,7 +4023,7 @@ msgstr "Search for {0}"
 msgid "Search for {q}"
 msgstr "Search for {q}"
 
-#: src/screens/People/index.tsx:194
+#: src/screens/People/index.tsx:199
 msgid "Search friends"
 msgstr "Search friends"
 
@@ -3950,7 +4032,7 @@ msgstr "Search friends"
 msgid "Search groups"
 msgstr "Search groups"
 
-#: src/screens/Groups/index.tsx:183
+#: src/screens/Groups/index.tsx:174
 msgid "Search groups or members"
 msgstr "Search groups or members"
 
@@ -3972,16 +4054,16 @@ msgstr "Search shows your last few searches, kept on this device only."
 msgid "Search timezones"
 msgstr "Search timezones"
 
-#: src/view/shell/desktop/LeftNav.tsx:670
-#: src/view/shell/desktop/RecentTransactions.tsx:119
+#: src/view/shell/desktop/LeftNav.tsx:668
+#: src/view/shell/desktop/RecentTransactions.tsx:114
 msgid "See all"
 msgstr "See all"
 
-#: src/view/shell/desktop/RecentTransactions.tsx:111
+#: src/view/shell/desktop/RecentTransactions.tsx:106
 msgid "See all activity"
 msgstr "See all activity"
 
-#: src/view/shell/desktop/LeftNav.tsx:643
+#: src/view/shell/desktop/LeftNav.tsx:641
 msgid "See all groups"
 msgstr "See all groups"
 
@@ -4032,32 +4114,32 @@ msgstr "Set for this group"
 #: src/navigation/Navigation.tsx:71
 #: src/screens/Profile.tsx:64
 #: src/screens/Profile.tsx:67
-#: src/screens/Settings/index.tsx:50
+#: src/screens/Settings/index.tsx:52
 #: src/screens/Settings/SettingsSection.tsx:62
-#: src/view/shell/desktop/LeftNav.tsx:758
+#: src/view/shell/desktop/LeftNav.tsx:756
 msgid "Settings"
 msgstr "Settings"
 
-#: src/screens/Settings/index.tsx:187
+#: src/screens/Settings/index.tsx:191
 msgid "Settings are saved on this device. Once you sign in, they follow you to your other devices."
 msgstr "Settings are saved on this device. Once you sign in, they follow you to your other devices."
 
-#: src/screens/Settings/index.tsx:205
+#: src/screens/Settings/index.tsx:209
 msgid "Settings reset"
 msgstr "Settings reset"
 
 #: src/components/settings/AboutSettings.tsx:97
 #: src/navigation/Navigation.tsx:77
-#: src/screens/Group/index.tsx:512
-#: src/screens/Group/index.tsx:750
-#: src/screens/Group/index.tsx:756
-#: src/screens/Person/index.tsx:378
-#: src/screens/Settle/index.tsx:131
-#: src/screens/Settle/index.tsx:277
+#: src/screens/Group/index.tsx:522
+#: src/screens/Group/index.tsx:761
+#: src/screens/Group/index.tsx:767
+#: src/screens/Person/index.tsx:363
+#: src/screens/Settle/index.tsx:136
+#: src/screens/Settle/index.tsx:282
 msgid "Settle up"
 msgstr "Settle up"
 
-#: src/view/shell/desktop/LeftNav.tsx:633
+#: src/view/shell/desktop/LeftNav.tsx:631
 msgid "settled"
 msgstr "settled"
 
@@ -4139,7 +4221,7 @@ msgstr "Show expenses from"
 msgid "Show expenses from: {label}"
 msgstr "Show expenses from: {label}"
 
-#: src/screens/Activity.tsx:168
+#: src/screens/Activity.tsx:176
 msgid "Show hidden changes"
 msgstr "Show hidden changes"
 
@@ -4147,7 +4229,7 @@ msgstr "Show hidden changes"
 msgid "Show QR code and share"
 msgstr "Show QR code and share"
 
-#: src/screens/Activity.tsx:174
+#: src/screens/Activity.tsx:182
 msgid "Show them"
 msgstr "Show them"
 
@@ -4166,8 +4248,8 @@ msgstr "Shows the write-off and lets you undo it"
 #: src/navigation/Drawer.tsx:335
 #: src/navigation/Drawer.tsx:341
 #: src/navigation/Navigation.tsx:72
-#: src/screens/Settings/index.tsx:65
-#: src/screens/Settings/index.tsx:70
+#: src/screens/Settings/index.tsx:67
+#: src/screens/Settings/index.tsx:72
 #: src/screens/SignIn.tsx:48
 #: src/screens/SignIn.tsx:347
 msgid "Sign in"
@@ -4193,7 +4275,7 @@ msgstr "Smaller"
 msgid "So friends know it’s you."
 msgstr "So friends know it’s you."
 
-#: src/screens/Settings/index.tsx:244
+#: src/screens/Settings/index.tsx:248
 msgid "Some"
 msgstr "Some"
 
@@ -4204,11 +4286,11 @@ msgstr "Some"
 #: src/components/people/RecordPaymentDialog.tsx:146
 #: src/components/split/shared.tsx:78
 #: src/features/settlement/CallItEvenDialog.tsx:130
-#: src/screens/Analytics/useReport.ts:268
-#: src/screens/Group/index.tsx:609
-#: src/screens/Group/index.tsx:643
-#: src/screens/Group/index.tsx:659
-#: src/screens/Group/index.tsx:660
+#: src/screens/Analytics/useReport.ts:269
+#: src/screens/Group/index.tsx:620
+#: src/screens/Group/index.tsx:654
+#: src/screens/Group/index.tsx:670
+#: src/screens/Group/index.tsx:671
 #: src/screens/RecentlyDeleted/describe.ts:26
 #: src/screens/RecentlyDeleted/index.tsx:99
 #: src/screens/Search/components/ResultRows.tsx:200
@@ -4295,12 +4377,12 @@ msgstr "Split expenses with anyone, even offline."
 msgid "Split with"
 msgstr "Split with"
 
-#: src/screens/People/index.tsx:230
+#: src/screens/People/index.tsx:235
 msgid "Split with friends"
 msgstr "Split with friends"
 
-#: src/screens/People/index.tsx:145
-#: src/view/shell/desktop/LeftNav.tsx:157
+#: src/screens/People/index.tsx:150
+#: src/view/shell/desktop/LeftNav.tsx:156
 msgid "Splito - Home"
 msgstr "Splito - Home"
 
@@ -4316,7 +4398,7 @@ msgstr "Splito can’t see your UPI app. Record the payment only once your app s
 msgid "Splito collects no analytics and shows no ads."
 msgstr "Splito collects no analytics and shows no ads."
 
-#: src/screens/Settle/index.tsx:468
+#: src/screens/Settle/index.tsx:473
 msgid "Splito never moves money. Record each payment once it has happened – part payments are fine."
 msgstr "Splito never moves money. Record each payment once it has happened – part payments are fine."
 
@@ -4366,7 +4448,7 @@ msgid "Swipe right on Activity"
 msgstr "Swipe right on Activity"
 
 #: src/components/settings/prefControls.tsx:83
-#: src/screens/Settings/index.tsx:233
+#: src/screens/Settings/index.tsx:237
 msgid "System"
 msgstr "System"
 
@@ -4463,7 +4545,7 @@ msgstr "The tab Splito opens on."
 msgid "The whole balance: you’ll be even in {currency}. Other currencies stay as they are."
 msgstr "The whole balance: you’ll be even in {currency}. Other currencies stay as they are."
 
-#: src/screens/Settings/index.tsx:199
+#: src/screens/Settings/index.tsx:203
 msgid "Theme, tabs, categories, language and every other setting go back to how Splito starts. Your people, groups and expenses stay as they are."
 msgstr "Theme, tabs, categories, language and every other setting go back to how Splito starts. Your people, groups and expenses stay as they are."
 
@@ -4507,12 +4589,12 @@ msgstr "This expense no longer exists"
 msgid "This expense was deleted. It no longer counts towards any balance."
 msgstr "This expense was deleted. It no longer counts towards any balance."
 
-#: src/screens/Person/index.tsx:158
+#: src/screens/Person/index.tsx:147
 msgid "This friend isn’t on this device. They may have been removed."
 msgstr "This friend isn’t on this device. They may have been removed."
 
-#: src/screens/Group/index.tsx:169
-#: src/screens/Settle/index.tsx:138
+#: src/screens/Group/index.tsx:172
+#: src/screens/Settle/index.tsx:143
 msgid "This group isn’t on this device. It may have been removed."
 msgstr "This group isn’t on this device. It may have been removed."
 
@@ -4528,7 +4610,7 @@ msgstr "This invite link no longer works"
 msgid "This is your invite link"
 msgstr "This is your invite link"
 
-#: src/screens/Settle/index.tsx:400
+#: src/screens/Settle/index.tsx:405
 msgid "This plan goes outside your rules"
 msgstr "This plan goes outside your rules"
 
@@ -4566,11 +4648,11 @@ msgid "Title: {0} → {1}"
 msgstr "Title: {0} → {1}"
 
 #. placeholder {0}: line.people
-#: src/screens/Settle/index.tsx:583
+#: src/screens/Settle/index.tsx:588
 msgid "To {0} people"
 msgstr "To {0} people"
 
-#: src/screens/Settle/index.tsx:581
+#: src/screens/Settle/index.tsx:586
 msgid "To 1 person"
 msgstr "To 1 person"
 
@@ -4597,7 +4679,7 @@ msgstr "Tomorrow"
 msgid "Too many digits after the decimal point for this currency"
 msgstr "Too many digits after the decimal point for this currency"
 
-#: src/screens/Analytics/index.tsx:209
+#: src/screens/Analytics/index.tsx:212
 msgid "Total"
 msgstr "Total"
 
@@ -4614,7 +4696,7 @@ msgid "Transport"
 msgstr "Transport"
 
 #: src/components/groups/GroupFields.tsx:43
-#: src/screens/Group/index.tsx:309
+#: src/screens/Group/index.tsx:312
 #: src/screens/Groups/components/GroupRow.tsx:48
 #: src/screens/Groups/components/GroupsFilterDialog.tsx:70
 #: src/screens/Search/components/ResultRows.tsx:320
@@ -4682,13 +4764,13 @@ msgstr "Unread"
 msgid "Upcoming"
 msgstr "Upcoming"
 
-#: src/screens/Settle/index.tsx:257
 #: src/screens/Settle/index.tsx:262
+#: src/screens/Settle/index.tsx:267
 msgid "Update plan"
 msgstr "Update plan"
 
 #. placeholder {0}: person.data.upiId
-#: src/screens/Person/index.tsx:205
+#: src/screens/Person/index.tsx:185
 msgid "UPI {0}"
 msgstr "UPI {0}"
 
@@ -4877,7 +4959,7 @@ msgstr "White text is hard to read on this color. A darker shade works better."
 msgid "Who can send me friend requests"
 msgstr "Who can send me friend requests"
 
-#: src/screens/Group/index.tsx:655
+#: src/screens/Group/index.tsx:666
 msgid "Who owes whom"
 msgstr "Who owes whom"
 
@@ -4962,10 +5044,10 @@ msgstr "you"
 #: src/components/activity/ActivityItem.tsx:419
 #: src/components/groups/RulesEditor.tsx:219
 #: src/components/split/shared.tsx:78
-#: src/screens/Analytics/useReport.ts:268
+#: src/screens/Analytics/useReport.ts:269
 #: src/screens/CreateGroup.tsx:192
-#: src/screens/Group/index.tsx:183
-#: src/screens/Person/index.tsx:172
+#: src/screens/Group/index.tsx:186
+#: src/screens/Person/index.tsx:161
 #: src/screens/RecentlyDeleted/describe.ts:26
 #: src/screens/RecentlyDeleted/index.tsx:99
 #: src/screens/Settle/index.tsx:89
@@ -5058,7 +5140,7 @@ msgstr "You declined"
 msgid "You forgave {0}"
 msgstr "You forgave {0}"
 
-#: src/view/shell/desktop/RecentTransactions.tsx:55
+#: src/view/shell/desktop/RecentTransactions.tsx:51
 msgid "You got paid"
 msgstr "You got paid"
 
@@ -5106,7 +5188,7 @@ msgstr "You owe"
 msgid "You owe {0}"
 msgstr "You owe {0}"
 
-#: src/screens/Group/index.tsx:666
+#: src/screens/Group/index.tsx:677
 msgid "You owe {to}"
 msgstr "You owe {to}"
 
@@ -5124,9 +5206,9 @@ msgstr "you owe <0>{figure}</0>"
 #: src/screens/Analytics/components/Charts.tsx:249
 #: src/screens/Analytics/components/Charts.tsx:259
 #: src/screens/Analytics/components/Summary.tsx:161
-#: src/screens/Analytics/index.tsx:210
+#: src/screens/Analytics/index.tsx:213
 #: src/screens/Search/components/ResultRows.tsx:205
-#: src/view/shell/desktop/RecentTransactions.tsx:55
+#: src/view/shell/desktop/RecentTransactions.tsx:51
 msgid "You paid"
 msgstr "You paid"
 
@@ -5160,11 +5242,11 @@ msgstr "You paid your own share"
 msgid "You pay {0}"
 msgstr "You pay {0}"
 
-#: src/screens/Settle/index.tsx:554
+#: src/screens/Settle/index.tsx:559
 msgid "You’ll get"
 msgstr "You’ll get"
 
-#: src/screens/Settle/index.tsx:556
+#: src/screens/Settle/index.tsx:561
 msgid "You’ll pay"
 msgstr "You’ll pay"
 
@@ -5180,7 +5262,7 @@ msgstr "You’re already friends."
 msgid "You’re friends now"
 msgstr "You’re friends now"
 
-#: src/screens/Settle/index.tsx:544
+#: src/screens/Settle/index.tsx:549
 msgid "You’re not part of any of these payments."
 msgstr "You’re not part of any of these payments."
 
@@ -5196,7 +5278,7 @@ msgstr "You’re settled up in this group."
 msgid "You’ve already asked {value}. It’s under Invites sent on People, where you can resend it."
 msgstr "You’ve already asked {value}. It’s under Invites sent on People, where you can resend it."
 
-#: src/screens/Activity.tsx:135
+#: src/screens/Activity.tsx:143
 msgid "You've hidden everything here. New expenses, payments and group changes will show up as they happen."
 msgstr "You've hidden everything here. New expenses, payments and group changes will show up as they happen."
 
@@ -5241,16 +5323,16 @@ msgid "Your net balance at the end of each year, all friends together"
 msgstr "Your net balance at the end of each year, all friends together"
 
 #. placeholder {0}: nameList(item.stuck)
-#: src/screens/Settle/index.tsx:405
+#: src/screens/Settle/index.tsx:410
 msgid "Your payment rules give no allowed pair to pay anyone who is owed: {0}. These payments still settle everyone up."
 msgstr "Your payment rules give no allowed pair to pay anyone who is owed: {0}. These payments still settle everyone up."
 
 #. placeholder {0}: item.currencies.join(', ')
-#: src/screens/Group/index.tsx:711
+#: src/screens/Group/index.tsx:722
 msgid "Your payment rules leave no way to settle up in {0}, so that plan goes outside them."
 msgstr "Your payment rules leave no way to settle up in {0}, so that plan goes outside them."
 
-#: src/screens/Group/index.tsx:710
+#: src/screens/Group/index.tsx:721
 msgid "Your payment rules leave no way to settle up, so this plan goes outside them."
 msgstr "Your payment rules leave no way to settle up, so this plan goes outside them."
 
@@ -5267,7 +5349,7 @@ msgstr "Your phone number"
 msgid "Your phone will ask to let Splito open your contacts. You pick one person; only the email or number you choose is used."
 msgstr "Your phone will ask to let Splito open your contacts. You pick one person; only the email or number you choose is used."
 
-#: src/screens/Settings/index.tsx:104
+#: src/screens/Settings/index.tsx:106
 msgid "Your profile · saved on this device"
 msgstr "Your profile · saved on this device"
 
@@ -5277,13 +5359,13 @@ msgstr "Your profile · saved on this device"
 #: src/screens/Analytics/components/Charts.tsx:250
 #: src/screens/Analytics/components/Charts.tsx:263
 #: src/screens/Analytics/components/Charts.tsx:325
-#: src/screens/Analytics/index.tsx:105
-#: src/screens/Analytics/index.tsx:211
+#: src/screens/Analytics/index.tsx:108
+#: src/screens/Analytics/index.tsx:214
 msgid "Your share"
 msgstr "Your share"
 
 #. placeholder {0}: formatAmount(report.rowsTotal, currency, locale)
-#: src/screens/Analytics/index.tsx:176
+#: src/screens/Analytics/index.tsx:179
 msgid "Your share <0>{0}</0>"
 msgstr "Your share <0>{0}</0>"
 
@@ -5315,6 +5397,6 @@ msgstr "Your share of each category"
 msgid "Your share of expenses"
 msgstr "Your share of expenses"
 
-#: src/screens/Analytics/index.tsx:84
+#: src/screens/Analytics/index.tsx:86
 msgid "Your spending shows up here – by month, category, person and group – once you add an expense."
 msgstr "Your spending shows up here – by month, category, person and group – once you add an expense."
