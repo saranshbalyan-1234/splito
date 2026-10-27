@@ -1470,6 +1470,14 @@ pages". § 17 holds the engineering rules that meet these budgets.
   lists virtualised with Bluesky `List`; images and Lottie lazy-loaded; bundle growth justified. Any change
   touching lists, navigation or totals is profiled (Chrome Performance on web; React Native DevTools / Hermes
   profiler on a simulator) with a baseline and an after, numbers in `docs/COMPLETION_MATRIX.md`.
+- **Lightning fast is a merge gate, not a goal** (owner 107). No screen, tab, sheet or list ever shows a delay
+  the user can see: the first frame of any navigation shows real content or a same-size skeleton within 100 ms
+  (never a blank area or a spinner), sheets start moving within one frame of the tap, and typing never drops a
+  character. Every merge (each slot and every wave assemble) runs the perf spec (`playwright.perf.config.ts`)
+  and the render-count scenario (§ 17) on the 10,000-expense fixture and fails on any budget miss or a
+  regression over 10 % against the main line; Opus reviews check new code for extra store reads, re-renders,
+  unbounded lists and JS-thread animation. Numbers go in `docs/COMPLETION_MATRIX.md`. *Why:* "keep performance in
+  mind, it should be lightning fast, no delays in rendering anywhere".
 - **Animation on every surface, UI thread only** (Reanimated worklets, no JS loops): native stack push/pop and
   swipe-back; sheets and popups; list rows enter/exit/reorder (`LinearTransition` / `FadeInDown`); press
   feedback (`PressableScale`) on every tappable row, card and button; tab switches (§ 26.9); expanding search;
@@ -2007,6 +2015,7 @@ Every owner decision, in the order it was made (all 2026-10-26). "Replaced" name
 | 104 | "by default show deleted as well" | Deleted items are shown by default; "Show deleted" filter defaults on | § 26.14 | (confirms 103's default) |
 | 105 | "they need to manually hide, and then, show hidden to be used" | Deleted items always show; each can be hidden manually (personal, per item, Undo); one "Show hidden" filter (default off) reveals hidden items and hidden groups | § 26.14, § 26.12 | Global "Show deleted" filter (row 103) |
 | 106 | "an expense can be hidden if deleted, group can be hidden/show or made inactive active" | Hide is offered on expenses/payments/write-offs (and friends) only after deletion; groups can be hidden/shown any time and made inactive/active | § 26.14, § 26.12 | (clarifies 105) |
+| 107 | "keep performance in mind, it should be lightning fast no delays in rendering anywhere" | Performance budgets become a merge gate: first frame < 100 ms with real content or a skeleton, no blank/spinner, no dropped keystrokes; perf spec + render counts on 10k fixture at every merge, fail on budget miss or >10 % regression | § 26.10 | Budgets measured and recorded only |
 
 New decisions follow § 0 rule 9: rewrite the rule in its topic so only the current truth remains, then add a
 row here.
