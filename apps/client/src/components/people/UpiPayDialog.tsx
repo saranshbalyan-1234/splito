@@ -1,5 +1,5 @@
 import {useState} from 'react'
-import {Linking, View} from 'react-native'
+import {View} from 'react-native'
 import {Trans, useLingui} from '@lingui/react/macro'
 import {
   amountInputText,
@@ -23,6 +23,7 @@ import {parseTypedAmount, upiPayUrl} from '#/components/people/ledger'
 import * as Toast from '#/components/Toast'
 import {Text} from '#/components/Typography'
 import {IS_WEB} from '#/env'
+import {openExternalUrl} from '#/lib/externalUrl'
 
 /**
  * Pay a friend what you owe in rupees from your UPI app. Splito only opens
@@ -98,20 +99,8 @@ function Form({
     }
     const url = upiPayUrl({upiId: upiId.trim(), name, amount: minor})
     try {
-      if (IS_WEB) {
-        /*
-         * An anchor click is how mobile browsers hand a custom scheme to the
-         * installed app; the page stays where it is.
-         */
-        const link = document.createElement('a')
-        link.href = url
-        link.rel = 'noopener'
-        document.body.appendChild(link)
-        link.click()
-        link.remove()
-      } else {
-        await Linking.openURL(url)
-      }
+      /* On the web an anchor click hands the scheme to the installed app; the page stays. */
+      await openExternalUrl(url)
       haptics.tap()
       setOpened(minor)
     } catch (e) {

@@ -1,10 +1,11 @@
 // Adapted from bluesky-social/social-app@4e4ad9c (MIT) - src/lib/sharing.ts
-import {Linking, Share} from 'react-native'
+import {Share} from 'react-native'
 import {setStringAsync} from 'expo-clipboard'
 import {t} from '@lingui/core/macro'
 
 import * as Toast from '#/components/Toast'
 import {IS_ANDROID, IS_IOS, IS_NATIVE} from '#/env'
+import {openExternalUrl} from '#/lib/externalUrl'
 
 /**
  * Shares a link with a line of text: the native share sheet on iOS and
@@ -57,7 +58,7 @@ export async function openComposeLink({
         `sms:${to}?&body=${encodeURIComponent(body)}`
       : `mailto:${to}?subject=${encodeURIComponent(subject ?? '')}&body=${encodeURIComponent(body)}`
   try {
-    await Linking.openURL(url)
+    await openExternalUrl(url)
   } catch {
     Toast.show(t`Couldn’t open an app for that. Copy the link instead.`, {
       type: 'error',

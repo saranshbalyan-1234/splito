@@ -2,7 +2,6 @@
 import {memo, useCallback} from 'react'
 import {
   type GestureResponderEvent,
-  Linking,
   Platform,
   Pressable,
   type StyleProp,
@@ -12,6 +11,7 @@ import {
 } from 'react-native'
 import {StackActions} from '@react-navigation/native'
 
+import {openExternalUrl} from '#/lib/externalUrl'
 import {
   type DebouncedNavigationProp,
   useNavigationDeduped,
@@ -186,7 +186,7 @@ function onPressInner(
       href.startsWith('mailto') ||
       EXEMPT_PATHS.some(path => href.startsWith(path))
     ) {
-      void Linking.openURL(href)
+      void openExternalUrl(href)
     } else {
       const [routeName, params] = router.matchPath(href)
       if (navigationAction === 'push') {
