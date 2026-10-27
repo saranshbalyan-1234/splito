@@ -67,7 +67,11 @@ test('amount and date queries', async ({page}) => {
   await expect(screen.getByTestId('search-row-1')).toHaveCount(0)
 
   await page.getByTestId('search-input').fill('march')
+  // Newest first: the March 20 ramen, then the March 8 concert.
   await expect(screen.getByTestId('search-row-0')).toContainText(
+    'Ramen in Shibuya',
+  )
+  await expect(screen.getByTestId('search-row-1')).toContainText(
     'Concert tickets',
   )
 
