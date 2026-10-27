@@ -42,6 +42,8 @@ for (const {name, width, height} of [
     await page.getByTestId('group-more').click()
     await page.getByTestId('group-menu-delete').click()
     await page.getByTestId('delete-group-confirm').click()
+    // The delete runs after the prompt closes: wait for it to land before leaving the page.
+    await expect(page).toHaveURL(/\/groups$/)
     await page.goto('/settings/recently-deleted')
 
     const title = page.getByTestId(`bin-title-${pizza}`)
@@ -52,7 +54,7 @@ for (const {name, width, height} of [
     await expect(meta).toContainText(/^Deleted (just now|\d+ (minute|hour|day)s? ago)$/)
     await expect(page.getByTestId(`bin-deleted-${pizza}-clock`).locator('svg')).toBeVisible()
     // The exact date and time is the tooltip, and the label for assistive tech.
-    await expect(meta.getByText(/^Deleted/)).toHaveAttribute('title', /\d{4}|\d{1,2}:\d{2}/)
+    await expect(meta.getByText(/^Deleted/)).toHaveAttribute('data-tooltip', /\d{4}|\d{1,2}:\d{2}/)
     await expect(meta).toHaveAttribute('aria-label', /^Deleted, /)
 
     // The deleted group's entry: title struck, its record count and "days left" are not.
