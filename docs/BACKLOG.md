@@ -622,6 +622,18 @@ A year of realistic Splito use, generated deterministically, for the owner and f
   3. Generation of the full set takes under 10 s on web and the app stays responsive (batched transactions); every screen stays within § 26.10 budgets with it loaded.
   4. Production builds contain no path to it.
 
+### F-228a One demo mode, from Settings only `spec: owner § 26.1 (decision 94)`
+
+Remove the URL and env demo switches; the only way to add or remove demo data is Settings > Data. Queued first after the Wave B merge (every e2e spec uses `?demo=1` today, so it cannot change while Wave B builds).
+
+- **Effort** M · **Impact** 7 · **Backend** no · **Status** todo · **Deps** F-227, Wave B merged
+- **Prefs** -
+- **Acceptance**
+  1. `?demo=1`, `?demo=large` and `EXPO_PUBLIC_DEMO` do nothing; the `demoPending` URL path and its storage flag are removed; production builds still ship no demo code (`demoStaticImport` rule stays green).
+  2. One dataset: the small set's people, groups and expenses that e2e relies on are folded into the large deterministic set (or the set is one generator with every case), multi-currency as § 26.13 requires; "Add demo data" is idempotent and "Remove demo data" removes exactly it.
+  3. e2e seeds through a test-only hook (e.g. `window.__splitoTest.addDemo()` in e2e builds) that calls the same code as the Settings button; every spec's `openDemo` uses it; the full suite stays green.
+  4. Settings > Data shows the progress toast and the counts line as today; docs and screenshot scripts stop using `?demo=1`.
+
 ### F-228 Native hardware-keyboard shortcuts (Cmd/Ctrl+K) `spec: owner § 26.3 decision 75`
 
 Cmd/Ctrl+K toggles the Search & Ask drawer on iPad and Android with a hardware keyboard (web already done in F-222).
