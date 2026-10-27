@@ -564,6 +564,15 @@ with every hot screen reading by index, never by full scan (§ 17 budgets, F-109
   aggregate of all rows. Outbox ops keep their own status (`queued`, `sending`, `acked`, `failed`) linked to
   the row by `entityType` + `entityId`. *Why:* "every value can have status, whether it's outbox, pending,
   success, synced, whatever".
+- **Unsynced data is drawn lighter** (owner 111; replaces the red per-row dot, answers UX audit #9; F-244). Any
+  row, card, chip or detail page whose record is not yet `synced` (`local`, `pending`, `syncing`) renders its
+  title, amount and meta in the lighter `text_contrast_medium` tokens (never below WCAG AA: 4.5:1 body, 3:1
+  large), so synced data reads full strength and unsynced data visibly lighter; the change animates (fade to full
+  strength) when the server acknowledges. `failed` keeps full strength plus the "Needs attention" marker (§ 9.5).
+  No per-row coloured dot; the avatar dot (§ 26.7) stays the aggregate. Accessibility label adds "Not synced yet".
+  Until the backend exists every record is `local`, so the whole app reads in the lighter style, which is the
+  honest state. *Why:* "until the data is synced, keep that unsynced data a little light, so we know this is not
+  synced".
 - **Normalised relations, not arrays inside JSON:** group membership lives in `group_members`
   (`[groupId, personId]`, `joinedAt`, `leftAt`, role); who paid / owes on an expense lives in
   `expense_parties` (`[expenseId, personId]`, `paid`, `share`, `groupId`, `currency`, `date`). The expense row
@@ -2046,6 +2055,7 @@ Every owner decision, in the order it was made (all 2026-10-26). "Replaced" name
 | 108 | "also check wasted renders or rerendering everytime, remember in architecture"; "why did you render" | why-did-you-render in dev builds tracks every avoidable re-render; a Playwright render scenario fails on any report or a count above baseline; part of the merge gate | § 17, § 26.10 | Render counts recorded, no wasted-render check |
 | 109 | "make sure to update the demo data again and again, with all the changes, add it in architecture" | Every feature adds realistic demo data in the same change; a demoCoverage test fails when a feature has no demo record; assemble re-seeds and re-screenshots | § 26.1 | Demo data updated ad hoc |
 | 110 | "the alerts i receive, move them to top right and add one close button as well" | Toasts at top right (rail/desktop), top full-width on phones, each with a close X, swipe to dismiss on phones | § 26.8 | Bottom-left web toasts without close |
+| 111 | "until the data is synced, keep that unsynced data a little light, so we know this is not synced" | Records not yet synced render in lighter (AA-safe) text, fading to full strength on server ack; failed keeps full strength + Needs attention; no per-row red dot | § 9.8 | Red per-row sync dot (decision 79 per-item marker) |
 
 New decisions follow § 0 rule 9: rewrite the rule in its topic so only the current truth remains, then add a
 row here.

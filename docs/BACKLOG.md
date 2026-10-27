@@ -2784,6 +2784,19 @@ Move every toast to the top right (rail/desktop; top full-width on phones) and g
   3. Auto-hide unchanged except toasts that must be acted on (update toast) stay until dismissed.
   4. Toasts never cover the header's actions or the FAB; reduced motion respected; e2e at 390 and 1440 px checks position and the X.
 
+### F-244 Unsynced data drawn lighter `spec: owner § 9.8 (decision 111)`
+
+Replace the per-row red sync dot with a lighter, AA-safe text style for every record not yet synced; full strength once the server acknowledges.
+
+- **Effort** S · **Impact** 7 · **Backend** no · **Status** todo · **Deps** F-117
+- **Prefs** -
+- **Acceptance**
+  1. One `useSyncTone(row)` (or row prop) maps syncStatus local/pending/syncing to the `text_contrast_medium` tone for titles, amounts, chips and meta on every list row, card, chip and detail page; synced = full strength; failed = full strength + "Needs attention".
+  2. Contrast test: the lighter tone passes WCAG AA in light and Dim for body and large text.
+  3. The per-row red dot and duplicate "Saved on this device" text are removed (UX audit #9); the avatar aggregate dot stays.
+  4. The tone fades to full strength on acknowledgement (Reanimated, reduced-motion aware); accessibility label adds "Not synced yet".
+  5. e2e: a local row has the lighter colour; a row flipped to synced via the e2e test hook shows full strength.
+
 ### F-1501 Text summaries for WhatsApp `spec 4b v1`
 
 Whole-group or "only their part" summaries with WhatsApp markup, sent via wa.me in the recipient's language.
