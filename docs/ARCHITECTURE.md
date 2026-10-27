@@ -1196,6 +1196,15 @@ labelled sidebar); **wide** = web 1300 px and up (Bluesky `gtTablet`, right colu
   switch (F-228a, being built on feat/demo-mode). Dev and e2e builds only for now
   (production ships none, F-227 c4). *Why:* "add a lot of demo data to my
   account".
+- **The demo dataset grows with every feature, in the same change** (owner 109). A feature is not done until the
+  one demo dataset (§ 26.1 demo mode) shows it with realistic, multi-currency examples: e.g. the Supper Factory
+  bill with tax classes and stacked charges (F-403), comment threads (F-1204), reminders (F-1118/F-1119), inactive
+  and hidden groups (F-604), deleted expenses, payments and a deleted group shown in place and one hidden
+  (decision 103/105), left members and a handed-over admin (F-615), Ask-ready balances, exports, feedback rows.
+  A `demoCoverage` test lists every user-facing feature and asserts the seeded demo database contains at least
+  one record exercising it; adding a feature adds its line, and the test fails if the demo lacks it. Reviews
+  check it; the wave assemble step re-seeds and re-screenshots. *Why:* "make sure to update the demo data again
+  and again, with all the changes".
 - **Don't ask; decide.** The owner has delegated every open choice: make the call, record it (spec decision
   table or here), deliver the final version, and do not interrupt with questions. *Why:* "don't ask me
   anything, take your own decisions, give final version"; "do what you want to do, take own decisions, don't
@@ -2028,6 +2037,7 @@ Every owner decision, in the order it was made (all 2026-10-26). "Replaced" name
 | 106 | "an expense can be hidden if deleted, group can be hidden/show or made inactive active" | Hide is offered on expenses/payments/write-offs (and friends) only after deletion; groups can be hidden/shown any time and made inactive/active | § 26.14, § 26.12 | (clarifies 105) |
 | 107 | "keep performance in mind, it should be lightning fast no delays in rendering anywhere" | Performance budgets become a merge gate: first frame < 100 ms with real content or a skeleton, no blank/spinner, no dropped keystrokes; perf spec + render counts on 10k fixture at every merge, fail on budget miss or >10 % regression | § 26.10 | Budgets measured and recorded only |
 | 108 | "also check wasted renders or rerendering everytime, remember in architecture"; "why did you render" | why-did-you-render in dev builds tracks every avoidable re-render; a Playwright render scenario fails on any report or a count above baseline; part of the merge gate | § 17, § 26.10 | Render counts recorded, no wasted-render check |
+| 109 | "make sure to update the demo data again and again, with all the changes, add it in architecture" | Every feature adds realistic demo data in the same change; a demoCoverage test fails when a feature has no demo record; assemble re-seeds and re-screenshots | § 26.1 | Demo data updated ad hoc |
 
 New decisions follow § 0 rule 9: rewrite the rule in its topic so only the current truth remains, then add a
 row here.

@@ -635,6 +635,7 @@ Demo is a Settings > Data switch, not data added to the current account: demo mo
   4. `?demo=1`, `?demo=large`, `EXPO_PUBLIC_DEMO`, `demoPending` and Add/Remove demo data are removed; one dataset folds in every case the small set covered, multi-currency (§ 26.13).
   5. e2e turns demo mode on through a test-only hook calling the same switch; every spec's `openDemo` uses it; full suite green; screenshot scripts updated.
   6. Production builds ship no demo code or switch (`demoStaticImport` stays green).
+  8. Owner 109: a `demoCoverage` test lists every user-facing feature and asserts the seeded demo database has a record exercising it; after the Wave B merge the dataset gains the Supper Factory bill (F-403), comment threads, reminders, inactive and hidden groups, deleted items in place (one hidden), left members and an admin handover, so every Wave B feature is visible in demo mode.
 
 ### F-228 Native hardware-keyboard shortcuts (Cmd/Ctrl+K) `spec: owner § 26.3 decision 75`
 
