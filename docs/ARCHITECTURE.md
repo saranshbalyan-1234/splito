@@ -1547,8 +1547,12 @@ expands once I click". *Where:* `screens/People`, `screens/Groups`, `screens/Gro
     Show = Hidden, search and links from history, and I can still add expenses from its page if it is active.
   - **Money is never hidden:** balances of inactive and hidden groups keep counting on Home, People and the
     overview, with the group's chip marked "Inactive" or "Hidden".
-  - **Groups filter:** Status (Active / Inactive / All, default Active) and Show (Shown / Hidden / All, default
-    Shown). The old `archived` flag reads as Inactive (read-time adapter, no schema change).
+  - **Groups filter:** Status (Active / Inactive / All, default Active) and Visibility (Shown / Hidden / All,
+    default Shown; labelled "Visibility" because "Show" is already the balance filter).
+  - **Who may do what (assistant's call, 2026-10-27, after the B3 review):** any member may add expenses (when
+    active), make the group inactive/active, hide it for themselves and leave; only an admin may remove another
+    member, change roles or delete the group (`NOT_ADMIN`); the last admin hands admin on before leaving.
+    Groups made before roles existed treat their creator as admin. Server enforcement follows with F-2108. The old `archived` flag reads as Inactive (read-time adapter, no schema change).
   *Why:* "add archive group option as well, when archived it stops showing in main view and no expense can be
   added", then "or make it as active inactive and hide show instead of archive".
 - **Settled is hidden by default; every choice is remembered in the database** (owner 90; not built yet,
