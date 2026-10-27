@@ -1238,8 +1238,9 @@ labelled sidebar); **wide** = web 1300 px and up (Bluesky `gtTablet`, right colu
   would support ai as well".
 - **Settings > Navigation lets the user choose the phone bottom bar from every sidebar item.** All items of the
   shared list (Home, Groups, Analytics, Ask Splito, Activity, Settings) are offered, each with a toggle
-  and a drag handle (Bluesky's reorderable list): what is on and its order is the bottom bar (2 to 5 tabs, as in
-  Bluesky; Home cannot be turned off; a sixth is refused with a short note). Items not in the bar stay in the
+  and a drag handle (Bluesky's reorderable list): what is on and its order is the bottom bar, with **any number of
+  tabs** (from Home alone up to every item; Home cannot be turned off). Tabs share the bar width equally; with
+  more than 5 the labels hide and icons stay at Bluesky size with their badges. Items not in the bar stay in the
   drawer. Default bar: Home, Groups, Analytics, Activity. "Ask Splito" placed in the bar opens the Search & Ask drawer in Ask mode instead of switching tab. Desktop and rail always show the full list.
   "Reset" restores the default. Stored in the existing `tabs` preference. *Why:* "all of the sidebar options to
   be available in settings to be added in navigation bar".
@@ -1830,6 +1831,7 @@ Every owner decision, in the order it was made (all 2026-10-26). "Replaced" name
 | 81 | "just like in bluesky, even the header should scroll but once i scroll up a little it should appear" | Bluesky minimal shell on phones (header, bottom bar, FAB hide on scroll down, return on slight scroll up), sticky on desktop | § 26.4 | (rule existed but was not working) |
 | 82 | "fanout with sonnet and get done" | Independent features build in parallel Sonnet worktrees in dependency waves, Opus review per feature, one assemble per wave | § 26.1 | Strictly one feature at a time (row 63) |
 | 83 | "add invite management in settings as well"; "add one option in settings of friends, where you can add remove friends as well, and invite management as well" | Settings > Friends and invites: friends (add, remove with open-balance guard, undo), requests, invites sent, invite links, defaults | § 26.18 | Only "Manage invite links" under Privacy |
+| 84 | "in navigation any number of options can be there" | Bottom bar takes any number of tabs (Home alone up to all items); labels hide above 5 | § 26.3 | 2 to 5 tabs |
 
 New decisions follow § 0 rule 9: rewrite the rule in its topic so only the current truth remains, then add a
 row here.
