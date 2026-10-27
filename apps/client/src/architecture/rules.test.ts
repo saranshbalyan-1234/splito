@@ -103,6 +103,13 @@ describe('counters', () => {
     expect(moneyCursorLoops("// while (after) { store.page('expense') }")).toBe(0)
   })
 
+  test('demoStaticImport', () => {
+    expect(count('demoStaticImport', "import {runLargeDemo} from '#/screens/Settings/DemoData'")).toBe(1)
+    expect(count('demoStaticImport', "import {demoCounts} from '#/data/demoLarge'\nexport {x} from '@splito/sync/demoLarge'")).toBe(2)
+    expect(count('demoStaticImport', "const m = await import('#/screens/Settings/DemoData')")).toBe(0)
+    expect(count('demoStaticImport', "import {x} from '#/data/demoLarge'", `${CLIENT}screens/Settings/DemoData.tsx`)).toBe(0)
+  })
+
   test('rawColour', () => {
     expect(count('rawColour', "const c = '#1185fe'; const d = 'rgba(0,0,0,0.5)'")).toBe(2)
     expect(count('rawColour', "// '#fff'\nconst c = t.palette.primary_500")).toBe(0)

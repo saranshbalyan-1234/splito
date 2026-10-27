@@ -38,7 +38,6 @@ import {
   type RowsPager,
   type RowsSpec,
 } from '#/data/analyticsQueries'
-import {type DemoCounts} from '#/data/demoLarge'
 import {
   type GroupBalances,
   groupActivityQuery,
@@ -77,7 +76,7 @@ export function useMutationCtx(): MutationCtx {
 const IDLE: Projection<never> = {subscribe: () => () => {}, get: () => undefined}
 
 /** A shared projection's current value; undefined until its first load (or always, for a null query: nothing is read). */
-function useProjection<T>(query: Query<T> | null): T | undefined {
+export function useProjection<T>(query: Query<T> | null): T | undefined {
   const store = useStore()
   const projection = query ? projectionFor(store, query) : IDLE
   return useSyncExternalStore(projection.subscribe, projection.get)
@@ -261,22 +260,6 @@ export function useAnalyticsCells(request: {currency: string; from: string; to: 
 /** The expense list behind the charts, newest first, a page at a time. */
 export function useAnalyticsRows(spec: RowsSpec | null): RowsPager | undefined {
   return useProjection(spec ? rowsQuery(spec) : null)
-}
-
-const demoCountsQuery: Query<DemoCounts> = {
-  key: 'demoCounts',
-  isTouchedBy: c => touches(c, 'person') || touches(c, 'group') || touches(c, 'expense'),
-  loader: store => async (_c, prev) => {
-    /* Dev and e2e builds only (the rows that read this are): loaded on use, never in a production bundle. */
-    const {demoCounts} = await import('#/data/demoLarge')
-    const next = await demoCounts(store)
-    return prev && prev.friends === next.friends && prev.groups === next.groups && prev.expenses === next.expenses ? prev : next
-  },
-}
-
-/** What the large demo set holds right now (Settings > Data; dev and e2e builds only). */
-export function useDemoCounts(): DemoCounts | undefined {
-  return useProjection(demoCountsQuery)
 }
 
 /** How many rows an index range holds (`count`), live. */

@@ -1,14 +1,15 @@
 import {useSyncExternalStore} from 'react'
 import {View} from 'react-native'
 import {DatabaseZap} from 'lucide-react-native'
-import {type MutationCtx, type Store} from '@splito/sync'
+import {type MutationCtx, type Store, touches} from '@splito/sync'
 import {plural, t} from '@lingui/core/macro'
 import {Trans, useLingui} from '@lingui/react/macro'
 
 import {useHaptics} from '#/lib/haptics'
 import {logger} from '#/logger'
-import {addLargeDemo, removeLargeDemo} from '#/data/demoLarge'
-import {useDemoCounts, useMutationCtx, useStore} from '#/data/hooks'
+import {addLargeDemo, type DemoCounts, demoCounts, removeLargeDemo} from '#/data/demoLarge'
+import {useMutationCtx, useProjection, useStore} from '#/data/hooks'
+import {type Query} from '#/data/projections'
 import * as SettingsList from '#/screens/Settings/components/SettingsList'
 import {atoms as a, useTheme} from '#/alf'
 import {Trash_Stroke2_Corner0_Rounded as TrashIcon} from '#/components/icons/Trash'
@@ -19,6 +20,15 @@ import {dismiss as dismissToast} from '#/components/Toast/sonner'
 import {Text} from '#/components/Typography'
 
 const DemoIcon = createIcon(DatabaseZap)
+
+const demoCountsQuery: Query<DemoCounts> = {
+  key: 'demoCounts',
+  isTouchedBy: c => touches(c, 'person') || touches(c, 'group') || touches(c, 'expense'),
+  loader: store => async (_c, prev) => {
+    const next = await demoCounts(store)
+    return prev && prev.friends === next.friends && prev.groups === next.groups && prev.expenses === next.expenses ? prev : next
+  },
+}
 
 /* What is running and how far along: one tiny module store, read by the toast and the rows. */
 let progress: {action: 'add' | 'remove'; done: number} | null = null
@@ -112,7 +122,7 @@ export function DemoDataRows() {
   const addPrompt = Prompt.usePromptControl()
   const removePrompt = Prompt.usePromptControl()
   const busy = useProgress()
-  const {friends = 0, groups = 0, expenses = 0} = useDemoCounts() ?? {}
+  const {friends = 0, groups = 0, expenses = 0} = useProjection(demoCountsQuery) ?? {}
   const isLoaded = friends + groups > 0
 
   const run = (action: 'add' | 'remove') => {

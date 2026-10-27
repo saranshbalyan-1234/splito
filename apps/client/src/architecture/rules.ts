@@ -448,6 +448,12 @@ export const RULES = {
       countMatches(code(s), /\b(?:useLedger|loadLedger)\s*\(/g) +
       moneyCursorLoops(s),
   },
+  demoStaticImport: {
+    why: 'A static import of the large demo set (#/data/demoLarge, #/screens/Settings/DemoData, @splito/sync/demoLarge) outside the demo files: it must load with import() under __DEV__ / EXPO_PUBLIC_ENV so production bundles hold none of it (ARCHITECTURE 26.1).',
+    appliesTo: p => isClient(p) && !/\/(?:data\/demoLarge|screens\/Settings\/DemoData)\.tsx?$/.test(p),
+    count: (_p, s) =>
+      countMatches(noComments(s), /(?:^|\n)\s*(?:import|export)\b[^'"`;]*?\bfrom\s*['"](?:#\/data\/demoLarge|#\/screens\/Settings\/DemoData|@splito\/sync\/demoLarge)['"]/g),
+  },
   attribution: {
     why: 'Bluesky/Expensify code without the `// Adapted from <repo>@<sha> (MIT) - <path>` first line, or without a docs/reuse row.',
     appliesTo: isClient,

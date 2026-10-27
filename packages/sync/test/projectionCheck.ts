@@ -86,7 +86,7 @@ export async function storedAggregates(s: Store) {
 /** Every stored search term, as keys. */
 export async function storedTerms(s: Store) {
   const out: string[] = []
-  for (const kind of ['w', 'a', 'm', 'c'] as const) for (const t of await s.terms({kind})) out.push(JSON.stringify([t.kind, t.term, t.entityType, t.entityId]))
+  for (const kind of ['w', 'p', 'g', 'a', 'm', 'c'] as const) for (const t of await s.terms({kind})) out.push(JSON.stringify([t.kind, t.term, t.entityType, t.entityId]))
   return out.sort()
 }
 

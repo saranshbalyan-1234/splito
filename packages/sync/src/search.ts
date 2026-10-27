@@ -154,9 +154,9 @@ export async function searchStore(store: Store, query: string, {today, mark = '.
   const tokens = parseSearchQuery(query, mark)
   if (tokens.length === 0) return EMPTY
 
-  const prefixTerms = (prefix: string) => ({kind: 'w' as const, min: prefix, max: prefix + '￿'})
-  const wordHits = (prefix: string): Promise<SearchTerm[]> => store.terms(prefixTerms(prefix))
-  const wordCount = (prefix: string) => store.termCount(prefixTerms(prefix))
+  const prefixTerms = (kind: 'w' | 'p' | 'g', prefix: string) => ({kind, min: prefix, max: prefix + '\uffff'})
+  const wordHits = (kind: 'w' | 'p' | 'g', prefix: string): Promise<SearchTerm[]> => store.terms(prefixTerms(kind, prefix))
+  const wordCount = (prefix: string) => store.termCount(prefixTerms('w', prefix))
   /** The currencies that have an expense: a skip scan of the amount keys, one read each. */
   const currencies = async () => {
     const out: CurrencyCode[] = []
@@ -188,11 +188,10 @@ export async function searchStore(store: Store, query: string, {today, mark = '.
 
   /** Expenses whose own words, group, people or category start with `prefix`. */
   async function textCandidates(prefix: string): Promise<string[]> {
-    const hits = await wordHits(prefix)
-    const ids = hits.filter(h => h.entityType === 'expense').map(h => h.entityId)
-    for (const h of hits.filter(h => h.entityType === 'group'))
+    const ids = (await wordHits('w', prefix)).map(h => h.entityId)
+    for (const h of await wordHits('g', prefix))
       ids.push(...take((await store.page<Expense>('expense', {index: 'byGroupDate', eq: [h.entityId], limit: ALL})).items))
-    for (const h of hits.filter(h => h.entityType === 'person')) ids.push(...(await store.parties({index: 'byPersonDate', eq: [h.entityId], limit: ALL})).items.map(p => p.expenseId))
+    for (const h of await wordHits('p', prefix)) ids.push(...(await store.parties({index: 'byPersonDate', eq: [h.entityId], limit: ALL})).items.map(p => p.expenseId))
     for (const c of categories)
       if (startsWith(wordsOf(c.name), prefix)) ids.push(...(await store.terms({kind: 'c', min: c.id, max: c.id})).map(t => t.entityId))
     await load(ids)
@@ -272,7 +271,7 @@ export async function searchStore(store: Store, query: string, {today, mark = '.
     if (!tokens.every(t => 'text' in t)) return []
     let ids: Set<string> | undefined
     for (const t of tokens) {
-      const hit = new Set((await wordHits((t as {text: string}).text)).filter(h => h.entityType === type).map(h => h.entityId))
+      const hit = new Set((await wordHits(type === 'person' ? 'p' : 'g', (t as {text: string}).text)).map(h => h.entityId))
       ids = ids ? new Set([...ids].filter(id => hit.has(id))) : hit
       if (ids.size === 0) return []
     }

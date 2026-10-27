@@ -83,9 +83,11 @@ export async function seedDemoIfRequested(store: Store, ctx: MutationCtx) {
     (!requested && (await isAutoLarge(store, ctx)))
   ) {
     // A year of data: written in the background with a progress toast, so the app opens at once.
-    void import('#/screens/Settings/DemoData').then(m =>
-      m.runLargeDemo(store, ctx, 'add'),
-    )
+    // The condition is spelled out so Metro folds it: a production bundle has no demo chunk.
+    if (__DEV__ || process.env.EXPO_PUBLIC_ENV === 'e2e')
+      void import('#/screens/Settings/DemoData').then(m =>
+        m.runLargeDemo(store, ctx, 'add'),
+      )
     return
   }
   // `?demo=1` marks the seed owed until it has finished, so a page left before then (a quick
