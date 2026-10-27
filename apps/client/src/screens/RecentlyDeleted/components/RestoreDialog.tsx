@@ -8,6 +8,7 @@ import {Button, ButtonIcon, ButtonText} from '#/components/Button'
 import * as Dialog from '#/components/Dialog'
 import * as FormSheet from '#/components/FormSheet'
 import {Trash_Stroke2_Corner0_Rounded as TrashIcon} from '#/components/icons/Trash'
+import {DeletedMeta, useStruck} from '#/components/DeletedMeta'
 import {GroupAvatar} from '#/components/groups/GroupAvatar'
 import {EntryIcon} from '#/components/people/EntryIcon'
 import {useFormatDay, useTimeZone} from '#/locale/useDates'
@@ -80,6 +81,7 @@ function Body({
   onDeleteForeverPressed: (item: BinItem) => void
 }) {
   const t = useTheme()
+  const struck = useStruck()
   const {t: l, i18n} = useLingui()
   const formatDay = useFormatDay()
   const tz = useTimeZone()
@@ -133,12 +135,13 @@ function Body({
               testID="restore-title"
               emoji
               numberOfLines={2}
-              style={[a.text_xl, a.font_semi_bold, a.leading_tight]}>
+              style={[a.text_xl, a.font_semi_bold, a.leading_tight, struck]}>
               {model.title}
             </Text>
             <Text style={[a.text_sm, t.atoms.text_contrast_medium]}>
               {kindLabel}
             </Text>
+            <DeletedMeta testID="restore-deleted" at={item.deletedAt} />
           </View>
         </View>
         {item.type === 'group' ? null : (
@@ -148,6 +151,7 @@ function Body({
               a.text_4xl,
               a.font_bold,
               a.leading_tight,
+              struck,
               {fontVariant: ['tabular-nums']},
             ]}>
             {model.amount}

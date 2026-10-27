@@ -26,6 +26,7 @@ import {UserAvatar} from '#/view/com/util/UserAvatar'
 import {atoms as a, useBreakpoints, useTheme} from '#/alf'
 import {hexToRgb, rgbToHex} from '#/alf/util/colorGeneration'
 import {Button, ButtonIcon} from '#/components/Button'
+import {DeletedMeta, useStruck} from '#/components/DeletedMeta'
 import {Check_Stroke2_Corner0_Rounded as CheckIcon} from '#/components/icons/Check'
 import {TimesLarge_Stroke2_Corner0_Rounded as XIcon} from '#/components/icons/Times'
 import {DotGrid3x1_Stroke2_Corner0_Rounded as DotsIcon} from '#/components/icons/DotGrid'
@@ -151,6 +152,7 @@ export function ActivityItem({
   const [isHovered, setIsHovered] = useState(false)
   const [isFocusWithin, setIsFocusWithin] = useState(false)
   const content = useDescribe(event, snapshot, me, locale, navigation, actions)
+  const isDeletedEvent = DELETED_KINDS.has(event.kind)
   /* A request awaiting an answer is one line: the answers on the right in place of "...", whose items are long-press / right-click (ARCHITECTURE 26.18). */
   const isRequestRow = !!content.actions
 
@@ -327,7 +329,16 @@ export function ActivityItem({
               {content.headline}
             </Text>
             {content.detail}
-            <Timestamp at={event.at} />
+            {isDeletedEvent ? (
+              /* The deletion's own time, with its clock: replaces the plain timestamp (owner 98). */
+              <DeletedMeta
+                testID="activity-deleted"
+                at={event.at}
+                onPress={content.open}
+              />
+            ) : (
+              <Timestamp at={event.at} />
+            )}
           </View>
           {!isRead && (
             <View
@@ -447,6 +458,15 @@ export function ActivityItem({
   )
 }
 
+/** Changes that put a record in Recently deleted: shown struck through with when it was deleted. */
+const DELETED_KINDS = new Set<ActivityEvent['kind']>([
+  'expense.deleted',
+  'repayment.removed',
+  'writeoff.removed',
+  'group.deleted',
+  'person.removed',
+])
+
 /** Everything that differs by kind: the badge, the sentence, the money line, where it goes. */
 function useDescribe(
   event: ActivityEvent,
@@ -483,7 +503,9 @@ function useDescribe(
   switch (event.entityType) {
     case 'expense': {
       const e = event.data
-      const subject = <Strong>{e.title}</Strong>
+      const subject = (
+        <Strong isDeleted={event.kind === 'expense.deleted'}>{e.title}</Strong>
+      )
       const net = expenseNet(e, me)
       const total =
         event.kind === 'expense.edited' &&
@@ -648,7 +670,11 @@ function useDescribe(
       }
     }
     case 'person': {
-      const subject = <Strong>{event.data.name}</Strong>
+      const subject = (
+        <Strong isDeleted={event.kind === 'person.removed'}>
+          {event.data.name}
+        </Strong>
+      )
       const isAdded = event.kind === 'person.added'
       return {
         avatarName: actorAvatar,
@@ -671,7 +697,9 @@ function useDescribe(
     }
     case 'group': {
       const g = event.data
-      const subject = <Strong>{g.name}</Strong>
+      const subject = (
+        <Strong isDeleted={event.kind === 'group.deleted'}>{g.name}</Strong>
+      )
       const oldName = <Strong>{event.prev?.name}</Strong>
       const isRenamed =
         event.kind === 'group.edited' &&
@@ -957,9 +985,18 @@ function useDescribe(
 }
 
 /** A name or title, emphasised inside the headline. */
-function Strong({children}: {children: React.ReactNode}) {
+function Strong({
+  children,
+  isDeleted = false,
+}: {
+  children: React.ReactNode
+  /** A deleted record's title is struck through in muted text (owner 98). */
+  isDeleted?: boolean
+}) {
+  const struck = useStruck()
   return (
-    <Text style={[a.text_md, a.leading_snug, a.font_semi_bold]}>
+    <Text
+      style={[a.text_md, a.leading_snug, a.font_semi_bold, isDeleted && struck]}>
       {children}
     </Text>
   )

@@ -25,6 +25,7 @@ import {type AllNavigatorParams, type NavigationProp} from '#/lib/routes/types'
 import {useNumberLocale} from '#/locale/numberLocale'
 import {useFormatDay, useToday} from '#/locale/useDates'
 import {useEntities, useMutationCtx, useStore} from '#/data/hooks'
+import {DeletedMeta, useStruck} from '#/components/DeletedMeta'
 import {Link} from '#/view/com/util/Link'
 import {EmptyState} from '#/view/com/util/EmptyState'
 import {UserAvatar} from '#/view/com/util/UserAvatar'
@@ -66,6 +67,7 @@ export function ExpenseScreen() {
   const {params} = useRoute<RouteProp<AllNavigatorParams, 'Expense'>>()
   const navigation = useNavigation<NavigationProp>()
   const {expense, history} = useExpense(params.expenseId)
+  const struck = useStruck()
   const groups = useEntities<Group>('group')
   /* An expense in an inactive group cannot be edited: that would change the group's balances (decision 89). */
   const isInInactiveGroup =
@@ -81,7 +83,9 @@ export function ExpenseScreen() {
         {/* Balances Edit and the overflow on the right, so the title stays centred. */}
         <Layout.Header.Slot />
         <Layout.Header.Content>
-          <Layout.Header.TitleText testID="expense-detail-title">
+          <Layout.Header.TitleText
+            testID="expense-detail-title"
+            style={expense?.deleted ? struck : undefined}>
             {expense?.data.title ?? <Trans>Expense</Trans>}
           </Layout.Header.TitleText>
         </Layout.Header.Content>
@@ -210,6 +214,7 @@ function Detail({
   history: Parameters<typeof History>[0]['history']
 }) {
   const t = useTheme()
+  const struck = useStruck()
   const {t: l, i18n} = useLingui()
   const {gtTablet} = useBreakpoints()
   const store = useStore()
@@ -282,10 +287,15 @@ function Detail({
             a.text_5xl,
             a.font_bold,
             a.leading_tight,
+            expense.deleted && struck,
             {fontVariant: ['tabular-nums']},
           ]}>
           {fmt(e.total)}
         </Text>
+        {/* A deleted expense says when, right under its struck amount (owner 98). */}
+        {expense.deleted ? (
+          <DeletedMeta testID="expense-deleted-at" at={expense.updatedAt} />
+        ) : null}
         <View style={[a.flex_row, a.align_center, a.gap_sm, a.flex_wrap]}>
           <Text
             testID="expense-detail-date"

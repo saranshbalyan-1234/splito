@@ -24,7 +24,6 @@ import {
 } from '@splito/sync'
 
 import {useHaptics} from '#/lib/haptics'
-import {dateDiff, formatDateDiff} from '#/lib/hooks/useTimeAgo'
 import {logger} from '#/logger'
 import {useEntities, useMe, useMutationCtx, useStore} from '#/data/hooks'
 import {useNumberLocale} from '#/locale/numberLocale'
@@ -33,6 +32,7 @@ import {List} from '#/view/com/util/List'
 import {PressableWithHover} from '#/view/com/util/PressableWithHover'
 import {atoms as a, useTheme} from '#/alf'
 import {Admonition} from '#/components/Admonition'
+import {DeletedMeta, useStruck} from '#/components/DeletedMeta'
 import {useDialogControl} from '#/components/Dialog'
 import {Trash_Stroke2_Corner0_Rounded as TrashIcon} from '#/components/icons/Trash'
 import * as Layout from '#/components/Layout'
@@ -83,7 +83,7 @@ const DELETE: Record<
  * history stay in the audit trail.
  */
 export function RecentlyDeletedScreen() {
-  const {t: l, i18n} = useLingui()
+  const {t: l} = useLingui()
   const t = useTheme()
   const store = useStore()
   const ctx = useMutationCtx()
@@ -229,10 +229,6 @@ export function RecentlyDeletedScreen() {
           keyExtractor={(item: BinItem) => `${item.type}-${item.entity.id}`}
           renderItem={({item, index}: {item: BinItem; index: number}) => {
             const model = describe(item, meId, names, locale)
-            const ago = formatDateDiff({
-              diff: dateDiff(item.deletedAt, readAt),
-              i18n,
-            })
             const groupName = model.groupId
               ? groupNames.get(model.groupId)
               : null
@@ -241,10 +237,7 @@ export function RecentlyDeletedScreen() {
                 item={item}
                 model={model}
                 isFirst={index === 0}
-                byline={[
-                  l`Deleted by ${deletedBy(item.deletedBy)} · ${ago}`,
-                  groupName,
-                ]
+                byline={[l`by ${deletedBy(item.deletedBy)}`, groupName]
                   .filter(Boolean)
                   .join(' · ')}
                 left={daysLeft(item.deletedAt, days, readAt)}
@@ -320,6 +313,7 @@ function BinRow({
 }: {
   item: BinItem
   model: BinRowModel
+  /** Who deleted it, and where: the line after "Deleted 2 hours ago". */
   byline: string
   left: number
   isFirst: boolean
@@ -327,6 +321,7 @@ function BinRow({
 }) {
   const t = useTheme()
   const {t: l} = useLingui()
+  const struck = useStruck()
   const listAnimations = useListAnimations()
   const press = usePressScale()
   return (
@@ -369,20 +364,34 @@ function BinRow({
           </View>
           <View style={[a.flex_1, a.gap_2xs]}>
             <Text
+              testID={`bin-title-${item.entity.id}`}
               emoji
               numberOfLines={1}
-              style={[a.text_md, a.font_semi_bold, a.leading_snug]}>
+              style={[a.text_md, a.font_semi_bold, a.leading_snug, struck]}>
               {model.title}
             </Text>
-            <Text
-              emoji
-              numberOfLines={1}
-              style={[a.text_sm, a.leading_snug, t.atoms.text_contrast_medium]}>
-              {byline}
-            </Text>
+            <View style={[a.flex_row, a.align_center, a.gap_xs]}>
+              <DeletedMeta
+                testID={`bin-deleted-${item.entity.id}`}
+                at={item.deletedAt}
+                onPress={onPress}
+              />
+              <Text
+                emoji
+                numberOfLines={1}
+                style={[
+                  a.flex_1,
+                  a.text_sm,
+                  a.leading_snug,
+                  t.atoms.text_contrast_medium,
+                ]}>
+                {`· ${byline}`}
+              </Text>
+            </View>
           </View>
           <View style={[a.align_end, a.flex_shrink_0, a.gap_2xs]}>
             <Text
+              testID={`bin-amount-${item.entity.id}`}
               style={[
                 a.text_md,
                 a.font_semi_bold,

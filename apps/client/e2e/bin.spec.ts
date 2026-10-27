@@ -183,7 +183,8 @@ test('Recently deleted: reachable from Settings, restore re-enters balances with
   await expect(page.getByTestId('screen-recently-deleted')).toBeVisible()
   await expect(page.getByTestId('bin-count')).toHaveText('1 item')
   const pizza = page.locator('[data-testid^="bin-row-"]', {hasText: 'Pizza'})
-  await expect(pizza).toContainText('Deleted by You')
+  await expect(pizza).toContainText('by You')
+  await expect(pizza).toContainText('Deleted')
   await expect(pizza).toContainText('30 days left')
 
   await pizza.click()
