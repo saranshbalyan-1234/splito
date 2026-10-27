@@ -1137,6 +1137,15 @@ labelled sidebar); **wide** = web 1300 px and up (Bluesky `gtTablet`, right colu
   speed come from Bluesky and Expensify App (both MIT); Bluesky wins for client code. Their licensed artwork,
   icons and logos are never copied. *Why:* "And Expensify as well", "make sure to copy not just the design but
   the code practice", "speed and all", "the structure", "coding standards". *Where:* `AGENTS.md`.
+- **Best of both, per feature:** for every feature, compare how Bluesky and Expensify App do it and take
+  whichever gives the better user experience and the richer feature set, including features one app has and
+  Splito lacks. Expensify is the default reference for money and expense flows (split, itemize, receipts,
+  scan, reports, settle up, categories, tags, reminders, export, approvals), Bluesky for shell, navigation,
+  social, lists, motion and client code. Features and flows can come from either; the visual language stays
+  Bluesky's (an Expensify flow is rebuilt with Bluesky components), and licensed artwork, icons and logos are
+  never copied. Each feature's reuse row names both apps' equivalents and why one won. *Why:* "make sure to
+  pull features from Expensify and Bluesky whatever you think is better for user experience and features".
+  *Where:* `docs/reuse/<feature>.md`; scouting list in `docs/BACKLOG.md`.
 - **Everything customizable.** Every user-facing choice the app makes has a setting with a sensible default,
   and every surface that shows a collection (cards, tabs, lists, charts) can be shown, hidden, reordered and
   restyled; dialog and form internals stay fixed. A new choice costs one preferences-registry entry plus its
@@ -1832,6 +1841,7 @@ Every owner decision, in the order it was made (all 2026-10-26). "Replaced" name
 | 82 | "fanout with sonnet and get done" | Independent features build in parallel Sonnet worktrees in dependency waves, Opus review per feature, one assemble per wave | § 26.1 | Strictly one feature at a time (row 63) |
 | 83 | "add invite management in settings as well"; "add one option in settings of friends, where you can add remove friends as well, and invite management as well" | Settings > Friends and invites: friends (add, remove with open-balance guard, undo), requests, invites sent, invite links, defaults | § 26.18 | Only "Manage invite links" under Privacy |
 | 84 | "in navigation any number of options can be there" | Bottom bar takes any number of tabs (Home alone up to all items); labels hide above 5 | § 26.3 | 2 to 5 tabs |
+| 85 | "make sure to pull features from Expensify and blusky whatever you think is better for user experience and features" | Per feature, take the better of Bluesky and Expensify (UX and features); Expensify leads money flows, Bluesky leads shell and client code; visual language stays Bluesky | § 26.1 | Bluesky first, Expensify for practice only |
 
 New decisions follow § 0 rule 9: rewrite the rule in its topic so only the current truth remains, then add a
 row here.
