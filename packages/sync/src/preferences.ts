@@ -238,6 +238,11 @@ function readRaw<K extends PrefKey>(rows: ReadonlyArray<PrefRow>, key: K): PrefV
     // Home became fixed (26.3): orders saved before then keep their tabs, with Home first.
     value = ['people', ...(value as NavItemId[]).filter(t => t !== 'people')]
   }
+  // The account-wide unit saved before units were per currency (F-112) belongs to the default currency, where it was meant.
+  if (key === 'split.roundTo' && typeof value === 'number' && (ROUND_TO_UNITS as readonly number[]).includes(value)) {
+    const currency = readRaw(rows, 'defaultCurrency')
+    value = value === 1 ? {} : {[currency]: value}
+  }
   return value !== undefined && def.validate(value) ? (value as PrefValue<K>) : def.default
 }
 

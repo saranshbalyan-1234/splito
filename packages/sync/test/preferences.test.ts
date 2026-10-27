@@ -180,8 +180,13 @@ test('money input, cash rounding and money colours (F-310, F-402, F-1801)', asyn
   expect(roundToFor(unit, 'EUR')).toBe(1)
   for (const bad of [10, {INR: 3}, {NOPE: 5}, {toString: 5}, null, []])
     await expect(setPref(s, ctx, 'split.roundTo', bad as never)).rejects.toThrow('INVALID_PREF')
-  // A number stored by the old, account-wide pref reads back as the default.
-  await s.transaction(tx => tx.put({type: 'preference', id: 'split.roundTo', data: {value: 100}, version: 9, deleted: false, updatedAt: 1}))
+  // A number stored by the old, account-wide pref reads as that unit for the default currency (INR unless set); a number that was never offered is the default.
+  const legacy = (value: unknown) => s.transaction(tx => tx.put({type: 'preference', id: 'split.roundTo', data: {value}, version: 9, deleted: false, updatedAt: 1}))
+  await legacy(100)
+  expect(await getPref(s, 'split.roundTo')).toEqual({INR: 100})
+  await setPref(s, ctx, 'defaultCurrency', 'EUR')
+  expect(await getPref(s, 'split.roundTo')).toEqual({EUR: 100})
+  await legacy(3)
   expect(await getPref(s, 'split.roundTo')).toEqual({})
   await expect(setPref(s, ctx, 'moneyPalette', 'red' as never)).rejects.toThrow('INVALID_PREF')
   expect(PREFS['amount.keypad'].scope).toBe('device')
