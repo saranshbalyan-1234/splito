@@ -1279,7 +1279,7 @@ show what: centre may be page name, right maybe some basic action, and left may 
   | Groups | Search & Ask + Create group |
   | Analytics | Search & Ask + overflow (Export CSV) |
   | Activity | Search & Ask + Mark all read |
-  | Person | Settle up + overflow (Remind, Export statement, Edit, Delete) |
+  | Person | Settle up + overflow (Remind, Export statement, Edit, Remove friend) |
   | Group | Settle up + overflow (Edit group, Members, Payment rules, Export) |
   | Expense | Edit + overflow (Delete) |
   | Settings, Profile, Settle | none |
@@ -1663,6 +1663,10 @@ add anyway (only for you)"; "also i should be able to select from contacts". *Wh
   - **Invites and requests:** Requests received (Accept / Decline), Invites sent (Resend / Cancel), Invite
     links (every friend and group link with uses left, expiry, Revoke, "Create invite link"), and the defaults
     (max uses for friend and group links, expiry, approve each join, who can send me friend requests).
+  **Placement (assistant's call, owner asked for the best spot):** the hub lives in Settings, but each action
+  also sits where the user already is, as in Bluesky (block/mute live on the profile's "..." menu): "Remove
+  friend" is in the Person page overflow (same guarded flow), Home's "Friends N" section header gets a
+  "Manage" link to this page, and the invite sheet's "Manage links" opens its Invite links section.
   Same row components as Home and the invite sheet; Settings > Privacy keeps "Let people find me by email /
   phone" and links here. *Why:* "add invite management in settings as well"; "add one option in settings of
   friends, where you can add remove friends as well, and invite management as well".
