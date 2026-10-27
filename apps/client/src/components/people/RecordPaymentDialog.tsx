@@ -14,7 +14,9 @@ import {createRepayments} from '@splito/sync'
 import {useHaptics} from '#/lib/haptics'
 import {logger} from '#/logger'
 import {useMe, useMutationCtx, useStore} from '#/data/hooks'
+import {todayIn} from '#/locale/dates'
 import {useNumberLocale} from '#/locale/numberLocale'
+import {useTimeZone} from '#/locale/useDates'
 import {UserAvatar} from '#/view/com/util/UserAvatar'
 import {atoms as a, useTheme} from '#/alf'
 import {Button, ButtonIcon} from '#/components/Button'
@@ -27,7 +29,6 @@ import {
   currencyName,
   parseTypedAmount,
   partsOwedBy,
-  todayLocal,
 } from '#/components/people/ledger'
 import * as Toast from '#/components/Toast'
 import {Text} from '#/components/Typography'
@@ -121,6 +122,7 @@ function Form({
   const {t: l, i18n} = useLingui()
   const control = Dialog.useDialogContext()
   const store = useStore()
+  const tz = useTimeZone()
   const ctx = useMutationCtx()
   const haptics = useHaptics()
   const locale = useNumberLocale()
@@ -188,7 +190,7 @@ function Form({
     }
     setIsSaving(true)
     try {
-      const {date, tz} = todayLocal()
+      const date = todayIn(tz)
       await createRepayments(
         store,
         ctx,

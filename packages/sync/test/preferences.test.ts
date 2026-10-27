@@ -193,3 +193,14 @@ test('privacy and invite-link defaults (26.18)', async () => {
   expect(PREFS['privacy.findByContact'].group).toBe('privacy')
   expect(INVITE_EXPIRY_MS['7d']).toBe(7 * 86_400_000)
 })
+
+/* F-115 m14: the timezone preference accepts only zones the runtime knows. */
+test('timezone: device or a real IANA zone', async () => {
+  expect(PREFS.timezone.validate('device')).toBe(true)
+  expect(PREFS.timezone.validate('Asia/Kolkata')).toBe(true)
+  expect(PREFS.timezone.validate('UTC')).toBe(true)
+  expect(PREFS.timezone.validate('Not/AZone')).toBe(false)
+  expect(PREFS.timezone.validate('')).toBe(false)
+  expect(PREFS.timezone.validate(5)).toBe(false)
+  await expect(setPref(s, ctx, 'timezone', 'Not/AZone')).rejects.toThrow('INVALID_PREF')
+})

@@ -280,7 +280,7 @@ Fixes for logic-audit findings M4, m1, m11, m15, m17, m18, m19, m20 (see the rep
 
 Fixes for logic-audit findings M9, M17, M18, m14, m23, m24, m25, m28, m29 (see the report for scenario, evidence and fix per finding).
 
-- **Effort** M · **Impact** 8 · **Backend** no · **Status** todo · **Deps** merge row 30
+- **Effort** M · **Impact** 8 · **Backend** no · **Status** done (feat/wA-33g, 2026-10-27; client `dates.test.ts`, `feed.test.ts`, `numberFormatNative.test.ts`, sync `preferences.test.ts`, e2e `dates.spec.ts` with a Los Angeles device and a Kolkata preference; web verified, native polyfill checked under Bun only, not yet on a device) · **Deps** merge row 30
 - **Prefs** -
 - **Acceptance**
   1. Payments, write-offs and Activity use the Timezone preference; native honours the Number format preference and en-IN grouping; the Date format preference applies on every screen; invalid zones are rejected; day arithmetic is DST-safe; percents and counts use Number format; the native zone picker lists all zones; "today" refreshes across midnight and on app resume.

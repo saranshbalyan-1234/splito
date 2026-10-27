@@ -12,11 +12,10 @@ import {
   allTimeZones,
   deviceTimeZone,
   formatLocalDate,
-  todayIn,
   utcOffsetLabel,
 } from '#/locale/dates'
 import {resolveNumberLocale} from '#/locale/numberLocale'
-import {useDateLocale, useTimeZone} from '#/locale/useDates'
+import {useDateLocale, useToday} from '#/locale/useDates'
 import {atoms as a, native} from '#/alf'
 import {useDialogControl} from '#/components/Dialog'
 import * as SegmentedControl from '#/components/forms/SegmentedControl'
@@ -532,7 +531,7 @@ function WeekStartPref() {
 function DateFormatPref() {
   const {t: l} = useLingui()
   const locale = useDateLocale()
-  const today = todayIn(useTimeZone())
+  const today = useToday()
   const example = (format: 'auto' | 'dmy' | 'mdy' | 'ymd') =>
     formatLocalDate(today, format, locale)
   return (

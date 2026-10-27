@@ -24,6 +24,7 @@ import {
 
 import {type NavigationProp} from '#/lib/routes/types'
 import {useNumberLocale} from '#/locale/numberLocale'
+import {useFormatDay, useToday} from '#/locale/useDates'
 import {useEntities, useMutationCtx, usePref, useStore} from '#/data/hooks'
 import {atoms as a, useBreakpoints, useTheme} from '#/alf'
 import {Button, ButtonText} from '#/components/Button'
@@ -60,13 +61,11 @@ import {PeopleDialog} from './PeopleDialog'
 import {CategoryDialog, CurrencyDialog, GroupDialog} from './pickers'
 import {
   CategoryTile,
-  localToday,
   SectionLabel,
   useCategories,
   useCategory,
   useDisplayName,
   useErrorText,
-  useFormatDay,
 } from './shared'
 import {SplitEditor} from './SplitEditor'
 import {suggestCategory} from './suggestCategory'
@@ -243,7 +242,7 @@ export function ExpenseComposer({
         ? form.people.map(name).join(', ')
         : l`${first}, ${second} +${rest}`
 
-  const today = localToday(tz)
+  const today = useToday()
   const isUpcoming = form.date > today
   const payersValue =
     form.payerMode === 'single'
@@ -493,7 +492,7 @@ export function ExpenseComposer({
         testID="expense-date"
         icon={CalendarIcon}
         label={l`Date`}
-        value={formatDay(form.date)}
+        value={formatDay(form.date, {relative: true})}
         onPress={() => dateControl.open()}
         accessory={isUpcoming ? <UpcomingTag /> : null}
       />
@@ -639,12 +638,14 @@ function Readout({
   isDirty: boolean
 }) {
   const t = useTheme()
-  const {t: l, i18n} = useLingui()
+  const {t: l} = useLingui()
   const errorText = useErrorText()
   const {total, remaining, shares} = evaluation
   const fmt = (v: bigint) => formatAmount(v, form.currency, locale)
   const pct = (bp: number) =>
-    i18n.number(Math.abs(bp) / 100, {maximumFractionDigits: 2})
+    new Intl.NumberFormat(locale, {maximumFractionDigits: 2}).format(
+      Math.abs(bp) / 100,
+    )
 
   let text: string | null = null
   let tone: 'ok' | 'off' | 'muted' = 'muted'

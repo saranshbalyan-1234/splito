@@ -4,7 +4,6 @@ import {
   evaluateAmount,
   getCurrency,
   groupMemberNet,
-  type LocalDate,
   pairBalance,
   toDecimalString,
 } from '@splito/domain'
@@ -112,19 +111,6 @@ export {balanceParts, partsOwedBy} from '@splito/domain'
 /** A local `YYYY-MM-DD` (or `YYYY-MM`) at UTC midnight, so formatting never shifts the day. */
 export function utcDate(d: string) {
   return new Date(`${d.length === 7 ? `${d}-01` : d}T00:00:00Z`)
-}
-
-/** Today's calendar date where the user is, plus that IANA zone. */
-export function todayLocal(): {date: LocalDate; tz: string} {
-  const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC'
-  // en-CA formats as YYYY-MM-DD.
-  const date = new Intl.DateTimeFormat('en-CA', {
-    timeZone: tz,
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-  }).format(new Date())
-  return {date, tz}
 }
 
 /**

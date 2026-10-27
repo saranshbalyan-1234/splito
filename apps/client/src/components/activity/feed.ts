@@ -1,4 +1,7 @@
+import {type LocalDate} from '@splito/domain'
 import {type ActivityEvent} from '@splito/sync'
+
+import {daysBetween, todayIn} from '#/locale/dates'
 
 /**
  * Your personal view of the feed, kept on this device: what you've read and
@@ -71,20 +74,18 @@ export function writeOffParties(
   return {kind: 'third'}
 }
 
-/** Local midnight of the day `at` falls on. */
-export function startOfDay(at: number) {
-  const d = new Date(at)
-  return new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime()
+/** The calendar day `at` falls on in `tz` (the Timezone preference, not the device's). */
+export function dayOf(at: number, tz: string): LocalDate {
+  return todayIn(tz, new Date(at))
 }
 
-/** Calendar days between the day of `at` and the day of `now` (0 = today). */
-export function daysAgo(at: number, now: number) {
-  // Rounded, as a day across a daylight-saving change is 23 or 25 hours.
-  return Math.round((startOfDay(now) - startOfDay(at)) / 86_400_000)
+/** Calendar days from `day` to `today` (0 = today). */
+export function daysAgo(day: LocalDate, today: LocalDate) {
+  return daysBetween(day, today)
 }
 
 export type FeedRow =
-  | {type: 'section'; key: string; /** Local midnight. */ day: number}
+  | {type: 'section'; key: string; /** The calendar day, in the Timezone preference. */ day: LocalDate}
   | {
       type: 'event'
       key: string
@@ -107,20 +108,21 @@ export function buildRows(
   s: FeedState,
   me: string,
   filter: FeedFilter = 'all',
+  tz: string,
 ) {
   const hidden = new Set(s.hidden)
   const rows: FeedRow[] = []
   let hiddenCount = 0
   let unreadCount = 0
   let unreadFromOthers = 0
-  let day: number | undefined
+  let day: LocalDate | undefined
   for (const event of events) {
     if (filter === 'others' && event.actor === me) continue
     if (hidden.has(event.id)) {
       hiddenCount++
       continue
     }
-    const eventDay = startOfDay(event.at)
+    const eventDay = dayOf(event.at, tz)
     if (eventDay !== day) {
       day = eventDay
       rows.push({type: 'section', key: `day-${day}`, day})

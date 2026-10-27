@@ -70,6 +70,18 @@ const oneOf =
 const isBool = (v: unknown): v is boolean => typeof v === 'boolean'
 const isString = (v: unknown): v is string => typeof v === 'string' && v.length > 0 && v.length <= 64
 
+/** `device`, or an IANA zone this runtime knows (F-115 m14: an unknown one would throw while rendering dates). */
+const isTimeZone = (v: unknown): v is string => {
+  if (v === 'device') return true
+  if (!isString(v)) return false
+  try {
+    new Intl.DateTimeFormat('en', {timeZone: v})
+    return true
+  } catch {
+    return false
+  }
+}
+
 const isAnalyticsScope = (v: unknown): v is AnalyticsScope => {
   if (v === 'everything') return true
   if (typeof v !== 'object' || v === null) return false
@@ -160,7 +172,7 @@ export const PREFS = {
   ),
   // Registry order is the order Settings shows each group's items in.
   language: def('language', 'regional', 'account', 'Language', 'en', oneOf('en', 'hi')),
-  timezone: def('timezone', 'regional', 'account', 'Timezone', 'device', isString),
+  timezone: def('timezone', 'regional', 'account', 'Timezone', 'device', isTimeZone),
   weekStart: def('weekStart', 'regional', 'account', 'Week starts on', 1, oneOf(0, 1, 6)),
   dateFormat: def('dateFormat', 'regional', 'account', 'Date format', 'auto', oneOf('auto', 'dmy', 'mdy', 'ymd')),
   numberLocale: def('numberLocale', 'regional', 'account', 'Number format', 'auto', oneOf('auto', 'en-IN', 'en-US', 'de-DE', 'fr-FR')),

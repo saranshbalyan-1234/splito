@@ -1,7 +1,9 @@
 import {useState} from 'react'
 import {View} from 'react-native'
 import {Trans, useLingui} from '@lingui/react/macro'
+import {addDays} from '@splito/domain'
 
+import {useToday} from '#/locale/useDates'
 import {usePref} from '#/data/hooks'
 import {atoms as a, useTheme} from '#/alf'
 import {Button, ButtonIcon, ButtonText} from '#/components/Button'
@@ -10,7 +12,7 @@ import * as FormSheet from '#/components/FormSheet'
 import {ChevronRight_Stroke2_Corner0_Rounded as ChevronRightIcon} from '#/components/icons/Chevron'
 import {Text} from '#/components/Typography'
 import {ChevronDownIcon, ChevronLeftIcon} from './icons'
-import {localToday, useExpenseTz} from './shared'
+
 
 const MIN_YEAR = 1900
 const MAX_YEAR = 2200
@@ -55,9 +57,8 @@ function Calendar({
   const t = useTheme()
   const {t: l, i18n} = useLingui()
   const control = Dialog.useDialogContext()
-  const tz = useExpenseTz()
   const [weekStart = 1] = usePref('weekStart')
-  const today = localToday(tz)
+  const today = useToday()
   const start = /^\d{4}-\d{2}-\d{2}$/.test(value) ? value : today
   const [vy, vm] = start.split('-').map(Number) as [number, number]
   const [view, setView] = useState({y: vy, m: vm - 1})
@@ -254,7 +255,7 @@ function Calendar({
           label={l`Yesterday`}
           size="small"
           color="secondary"
-          onPress={() => pick(localToday(tz, -1))}>
+          onPress={() => pick(addDays(today, -1))}>
           <ButtonText>
             <Trans>Yesterday</Trans>
           </ButtonText>

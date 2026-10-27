@@ -8,6 +8,7 @@ import {
   createPerson,
   createRepayment,
   deleteExpense,
+  type EntityType,
   type ExpenseDraft,
   type MutationCtx,
   type PrefKey,
@@ -46,6 +47,8 @@ export function installDevTools(store: Store, ctx: MutationCtx) {
     createPerson: (name: string) => createPerson(store, ctx, {name}).then(e => e.id),
     createGroup: (input: Parameters<typeof createGroup>[2]) => createGroup(store, ctx, input).then(e => e.id),
     createExpense: (draft: unknown) => createExpense(store, ctx, toBig(draft) as ExpenseDraft).then(e => e.id),
+    /** Every row of one entity type, bigint as decimal strings (read-only, for assertions). */
+    list: async (type: EntityType) => JSON.parse(JSON.stringify(await store.getAll(type), (_k, v) => (typeof v === 'bigint' ? v.toString() : v))),
     deleteExpense: (id: string) => deleteExpense(store, ctx, id),
     restoreExpense: (id: string) => restoreExpense(store, ctx, id),
     createRepayment: (input: unknown) => createRepayment(store, ctx, toBig(input) as RepaymentInput).then(e => e.id),

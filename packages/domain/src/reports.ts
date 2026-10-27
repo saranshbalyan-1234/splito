@@ -43,9 +43,18 @@ const toUtc = (d: LocalDate) => Date.UTC(Number(d.slice(0, 4)), Number(d.slice(5
 const fromUtc = (ms: number): LocalDate => new Date(ms).toISOString().slice(0, 10)
 const ymd = (y: number, m: number, d: number) => fromUtc(Date.UTC(y, m, d))
 
+// One formatter per timezone: constructing Intl.DateTimeFormat is ~200x dearer than format().
+// Lazy, never at module scope (Hermes rule).
+const dayFormats = new Map<string, Intl.DateTimeFormat>()
+
 /** Today's date in an IANA timezone at instant `now` (ms). */
 export function todayIn(tz: string, now: number): LocalDate {
-  const parts = new Intl.DateTimeFormat('en-US', {timeZone: tz, year: 'numeric', month: '2-digit', day: '2-digit'}).formatToParts(now)
+  let fmt = dayFormats.get(tz)
+  if (!fmt) {
+    fmt = new Intl.DateTimeFormat('en-US', {timeZone: tz, year: 'numeric', month: '2-digit', day: '2-digit'})
+    dayFormats.set(tz, fmt)
+  }
+  const parts = fmt.formatToParts(now)
   const get = (type: string) => parts.find(p => p.type === type)!.value
   return `${get('year')}-${get('month')}-${get('day')}`
 }

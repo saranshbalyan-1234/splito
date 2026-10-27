@@ -51,7 +51,8 @@ import {
   RestoredBadge,
   WriteOffBadge,
 } from './icons'
-import {daysAgo, writeOffParties} from './feed'
+import {useTimeZone, useToday} from '#/locale/useDates'
+import {dayOf, daysAgo, writeOffParties} from './feed'
 import {type ActivityActions, type RowAction} from './useActivityActions'
 import {type ActivitySnapshot} from './useActivityFeed'
 
@@ -872,17 +873,27 @@ function Dot() {
 function Timestamp({at}: {at: number}) {
   const t = useTheme()
   const {i18n} = useLingui()
+  const tz = useTimeZone()
+  const today = useToday()
   const date = new Date(at)
-  const isToday = daysAgo(at, Date.now()) === 0
+  const isToday = daysAgo(dayOf(at, tz), today) === 0
   return (
     <TimeElapsed
       // TimeElapsed only re-formats on its minute tick; a language switch remounts it.
       key={i18n.locale}
       timestamp={date.toISOString()}
-      timeToString={isToday ? formatTimeAgo : formatTimeOfDay}>
+      timeToString={
+        isToday
+          ? formatTimeAgo
+          : (i18n, timestamp) => formatTimeOfDay(i18n, timestamp, tz)
+      }>
       {({timeElapsed}) => (
         <Text
-          title={i18n.date(date, {dateStyle: 'medium', timeStyle: 'short'})}
+          title={i18n.date(date, {
+            dateStyle: 'medium',
+            timeStyle: 'short',
+            timeZone: tz,
+          })}
           style={[
             a.self_start,
             a.text_sm,
@@ -896,8 +907,8 @@ function Timestamp({at}: {at: number}) {
   )
 }
 
-function formatTimeOfDay(i18n: I18n, timestamp: string) {
-  return i18n.date(new Date(timestamp), {timeStyle: 'short'})
+function formatTimeOfDay(i18n: I18n, timestamp: string, timeZone: string) {
+  return i18n.date(new Date(timestamp), {timeStyle: 'short', timeZone})
 }
 
 function formatTimeAgo(i18n: I18n, timestamp: string) {

@@ -21,7 +21,7 @@ import * as Dialog from '#/components/Dialog'
 import * as FormSheet from '#/components/FormSheet'
 import {ArrowRotateCounterClockwise_Stroke2_Corner0_Rounded as UndoIcon} from '#/components/icons/ArrowRotate'
 import {Trash_Stroke2_Corner0_Rounded as TrashIcon} from '#/components/icons/Trash'
-import {utcDate} from '#/components/people/ledger'
+import {useFormatDay} from '#/locale/useDates'
 import * as Toast from '#/components/Toast'
 import {Text} from '#/components/Typography'
 
@@ -78,7 +78,8 @@ function Details({
   groupName: string | null
 }) {
   const t = useTheme()
-  const {t: l, i18n} = useLingui()
+  const {t: l} = useLingui()
+  const formatDay = useFormatDay()
   const control = Dialog.useDialogContext()
   const store = useStore()
   const ctx = useMutationCtx()
@@ -97,7 +98,7 @@ function Details({
       : to === me
         ? l`${name(from)} paid you`
         : l`${name(from)} paid ${name(to)}`
-  const when = i18n.date(utcDate(date), {dateStyle: 'long', timeZone: 'UTC'})
+  const when = formatDay(date, {intl: {dateStyle: 'long'}})
 
   const remove = async () => {
     try {

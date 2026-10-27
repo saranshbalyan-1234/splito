@@ -10,7 +10,7 @@ import {Text} from '#/components/Typography'
 import {useListAnimations} from '#/motion/listAnimations'
 import {usePressScale} from '#/motion/PressableScale'
 import {CategoryIcon} from '#/screens/Analytics/components/CategoryIcon'
-import {utcDate} from '#/screens/Analytics/useReport'
+import {useFormatDay} from '#/locale/useDates'
 
 const tabular = {fontVariant: ['tabular-nums' as const]}
 
@@ -35,16 +35,14 @@ export function ExpenseRow({
   locale: string
 }) {
   const t = useTheme()
-  const {t: l, i18n} = useLingui()
+  const {t: l} = useLingui()
+  const formatDay = useFormatDay()
   const listAnimations = useListAnimations()
   const press = usePressScale()
   const share = expense.shares[shareOf] ?? ZERO
   const title = expense.title || l`Expense`
-  const date = i18n.date(utcDate(expense.date), {
-    day: 'numeric',
-    month: 'short',
-    year: 'numeric',
-    timeZone: 'UTC',
+  const date = formatDay(expense.date, {
+    intl: {day: 'numeric', month: 'short', year: 'numeric'},
   })
   const byline = [date, groupName, category.name].filter(Boolean).join(' · ')
   const shareText = formatAmount(share, expense.currency, locale)

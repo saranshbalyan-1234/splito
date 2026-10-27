@@ -16,7 +16,6 @@ import {
   spendingByPerson,
   spendingOverTime,
   spendingTotals,
-  todayIn,
   type WeekStart,
   ZERO,
 } from '@splito/domain'
@@ -27,6 +26,7 @@ import {
   type Person,
 } from '@splito/sync'
 
+import {useFormatDay, useToday} from '#/locale/useDates'
 import {useEntities, useLedger, useMutationCtx, usePref} from '#/data/hooks'
 import {
   inScope,
@@ -67,10 +67,6 @@ export function utcDate(d: string) {
   return new Date(Date.UTC(+d.slice(0, 4), +d.slice(5, 7) - 1, +d.slice(8, 10)))
 }
 
-function deviceTimezone() {
-  return Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC'
-}
-
 /**
  * Everything Analytics shows, derived from the ledger and one filter state:
  * charts, totals, the expense list and the CSV all read from here, so the
@@ -88,7 +84,8 @@ export function useReport() {
   const [scopePref, setScopePref] = usePref('analyticsScope')
   const [defaultCurrency] = usePref('defaultCurrency')
   const [weekStartPref] = usePref('weekStart')
-  const [timezonePref] = usePref('timezone')
+  const today = useToday()
+  const formatDay = useFormatDay()
   const [state, setState] = useState<FilterState>({offset: 0})
   const [picked, setPicked] = useState<{
     filterKey: string
@@ -98,9 +95,6 @@ export function useReport() {
   if (!ledger || !expenses || !groups || !people) return undefined
 
   const weekStart = (weekStartPref ?? 1) as WeekStart
-  const tz =
-    !timezonePref || timezonePref === 'device' ? deviceTimezone() : timezonePref
-  const today = todayIn(tz, Date.now())
 
   /* Labels ride along on each expense record; repayments (when they exist) pass through. */
   const labels = new Map(expenses.map(e => [e.id, e.data]))
@@ -213,8 +207,8 @@ export function useReport() {
   const isMultiYear = range.from.slice(0, 4) !== range.to.slice(0, 4)
   const spanLabel = (r: DateRange) =>
     r.from === r.to
-      ? date(r.from, {day: 'numeric', month: 'short', year: 'numeric'})
-      : `${date(r.from, {day: 'numeric', month: 'short', ...(isMultiYear || r.from.slice(0, 4) !== r.to.slice(0, 4) ? {year: 'numeric'} : {})})} – ${date(r.to, {day: 'numeric', month: 'short', year: 'numeric'})}`
+      ? formatDay(r.from, {intl: {day: 'numeric', month: 'short', year: 'numeric'}})
+      : `${formatDay(r.from, {intl: {day: 'numeric', month: 'short', ...(isMultiYear || r.from.slice(0, 4) !== r.to.slice(0, 4) ? {year: 'numeric'} : {})}})} – ${formatDay(r.to, {intl: {day: 'numeric', month: 'short', year: 'numeric'}})}`
   const bucketLabels = (b: {key: string; from: string; to: string}) => {
     switch (granularity) {
       case 'day':
