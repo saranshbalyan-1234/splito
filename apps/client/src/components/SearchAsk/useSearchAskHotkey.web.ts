@@ -11,8 +11,9 @@ export const SHORTCUT_HINT: string | undefined =
 
 /**
  * Cmd/Ctrl+K toggles the Search & Ask drawer from anywhere and "/" opens it
- * (decision 75). Listens on the window, as Bluesky's lightbox does, so it
- * works whatever has focus, the drawer's own input included.
+ * (decision 75). Listens on the window, as Bluesky's lightbox does (in the
+ * capture phase), so it works whatever has focus, the drawer's own input
+ * included.
  */
 export function useSearchAskHotkey({
   onToggle,
@@ -45,7 +46,8 @@ export function useSearchAskHotkey({
       if (action === 'toggle') onToggle()
       else onOpen()
     }
-    window.addEventListener('keydown', onKeyDown)
-    return () => window.removeEventListener('keydown', onKeyDown)
+    // Capture phase: the open dialog's own key handlers stop the event before it bubbles.
+    window.addEventListener('keydown', onKeyDown, true)
+    return () => window.removeEventListener('keydown', onKeyDown, true)
   }, [onToggle, onOpen, isOpen])
 }

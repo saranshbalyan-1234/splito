@@ -189,7 +189,7 @@ export function NavigationEditor() {
 
 /* Home has no handle; the gap keeps its glyph in line with the rows below. */
 function HandleSpacer() {
-  return <View style={{width: 44}} />
+  return <View style={{width: 39}} />
 }
 
 function TabRow({
