@@ -12,8 +12,10 @@ import {type CDPSession, expect, type Page, test} from '@playwright/test'
  * (desktop width, so the right column and the Activity badge are mounted, the
  * worst case for re-reads). "Analytics open" runs from the tap on the Analytics
  * tab to the summary and charts showing figures (default year period, one
- * currency); "search keystroke" from setting the field's text to the result
- * list showing the query's matches (budget 50 ms, ARCHITECTURE 17). Each is
+ * currency); "search keystroke" from setting the field's text to the first page
+ * of results showing the query's matches, however many there are (budget 50 ms,
+ * ARCHITECTURE 9.8, 17, 26.10); the per-currency totals of a broad match fill in
+ * after that and are timed on their own (`totalsMs`, no budget). Each is
  * the median of five runs. Run:
  * `pnpm perf -- schema-v2` after `pnpm e2e:build`; PERF_CPU throttles the CPU
  * (4 is a mid-range phone). Prints `PERF {json}` lines.
@@ -87,17 +89,19 @@ async function measure(page: Page, label: string, extra: Record<string, unknown>
     await expect(page.getByTestId('sidebar-recent-transactions')).toBeVisible()
     analytics.push(await openTab(page, 'tab-analytics', 'analytics-expenses-title'))
   }
-  // Search: one keystroke-sized change to results, for a narrow query and a person's name.
-  await page.getByTestId('tab-search').click()
+  // Search: one keystroke-sized change to the first page of results, for narrow and broad queries (the Search & Ask drawer).
+  await page.getByTestId('header-search-ask').last().click()
   await expect(page.getByTestId('search-input')).toBeVisible()
   const searches: Record<string, number> = {}
+  const searchTotals: Record<string, number> = {}
   for (const {q, shows} of queries) {
-    const runs: number[] = []
+    const runs: Awaited<ReturnType<typeof searchFor>>[] = []
     for (let i = 0; i < RUNS; i++) {
       await page.getByTestId('search-input').fill('')
       runs.push(await searchFor(page, q, shows))
     }
-    searches[q] = Math.round(median(runs))
+    searches[q] = Math.round(median(runs.map(r => r.first)))
+    searchTotals[q] = Math.round(median(runs.map(r => r.totals)))
   }
   const result = {
     set: label,
@@ -112,6 +116,8 @@ async function measure(page: Page, label: string, extra: Record<string, unknown>
     writeAndUiMs: Math.round(median(writes.map(w => w.ui))),
     analyticsOpenMs: Math.round(median(analytics)),
     searchKeystrokeMs: searches,
+    /** Of a broad match, the count and totals filling in after that first page (no budget; cancelled by the next keystroke). */
+    searchTotalsMs: searchTotals,
     runs: {coldOpen: opens.map(o => Math.round(o.home)), writeAndUi: writes.map(w => Math.round(w.ui))},
   }
   console.log(`PERF ${JSON.stringify(result)}`)
@@ -137,26 +143,39 @@ async function openTab(page: Page, tab: string, ready: string) {
   )
 }
 
-/** Types a query into the search field and waits for the first result row to hold `shows` (the query's own match). */
+/**
+ * Types a query into the search field. `first`: until the first result row holds `shows` (the query's own match).
+ * `totals`: until the expenses heading has its count and totals (no "Calculating totals…" left).
+ */
 async function searchFor(page: Page, query: string, shows: string) {
   return page.evaluate(
     ({query, shows}) =>
-      new Promise<number>((resolve, reject) => {
+      new Promise<{first: number; totals: number}>((resolve, reject) => {
         const input = document.querySelector<HTMLInputElement>('[data-testid="search-input"]')!
         const set = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value')!.set!
         const t0 = performance.now()
         set.call(input, query)
         input.dispatchEvent(new Event('input', {bubbles: true}))
-        const deadline = t0 + 30_000
+        const deadline = t0 + 60_000
+        let first: number | undefined
         const check = () => {
-          if (document.querySelector('[data-testid="search-row-0"]')?.textContent?.includes(shows)) resolve(performance.now() - t0)
-          else if (performance.now() > deadline) reject(new Error(`timed out searching "${query}" for "${shows}"`))
+          const now = performance.now()
+          if (first === undefined && document.querySelector('[data-testid="search-row-0"]')?.textContent?.includes(shows)) first = now - t0
+          if (first !== undefined && document.querySelector('[data-testid="search-section-expenses"]') && !document.querySelector('[data-testid="search-totals-pending"]'))
+            resolve({first, totals: now - t0})
+          else if (now > deadline) reject(new Error(`timed out searching "${query}" for "${shows}"`))
           else requestAnimationFrame(check)
         }
         check()
       }),
     {query, shows},
   )
+}
+
+/** Keystroke to first page of results: under 50 ms for every query, broad ones included (the budget is for an unthrottled CPU). */
+function expectSearchBudget(r: {cpu: number; searchKeystrokeMs: Record<string, number>}) {
+  if (r.cpu > 1) return
+  for (const [q, ms] of Object.entries(r.searchKeystrokeMs)) expect(ms, `search "${q}"`).toBeLessThan(50)
 }
 
 let cdp: CDPSession
@@ -177,6 +196,7 @@ test('the large demo set: Home cold open and a write', async ({page}) => {
     {q: 'goa', shows: 'Goa'},
   ])
   expect(r.coldOpenHomeMs).toBeGreaterThan(0)
+  expectSearchBudget(r)
 })
 
 test('a 10,000-expense ledger: Home cold open and a write', async ({page}) => {
@@ -192,4 +212,5 @@ test('a 10,000-expense ledger: Home cold open and a write', async ({page}) => {
     {q: '> 90', shows: 'Bulk'},
   ])
   expect(r.coldOpenHomeMs).toBeGreaterThan(0)
+  expectSearchBudget(r)
 })
