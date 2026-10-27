@@ -9,6 +9,7 @@ export type EntityType =
   | 'inviteLink'
   | 'comment'
   | 'feedback'
+  | 'reminder'
 
 /**
  * Where a row stands with the server (ARCHITECTURE 9.8). `local`: on this

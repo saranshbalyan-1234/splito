@@ -58,7 +58,7 @@ export function runV2Contract(name: string, open: () => Promise<Store>) {
       const counts = await s.syncCounts()
       for (const store of [
         'people', 'groups', 'group_members', 'expenses', 'expense_parties', 'repayments', 'writeoffs',
-        'comments', 'friend_requests', 'invite_links', 'feedback', 'preferences',
+        'comments', 'friend_requests', 'invite_links', 'feedback', 'preferences', 'reminders',
       ] as const)
         expect(counts[store]).toEqual({local: 0, pending: 0, syncing: 0, synced: 0, failed: 0})
       await s.close()

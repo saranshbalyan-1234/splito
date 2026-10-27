@@ -1,5 +1,5 @@
 /**
- * The local database schema, version 3 (ARCHITECTURE 9.8). One definition
+ * The local database schema, version 4 (ARCHITECTURE 9.8). One definition
  * drives both engines: IndexedDB object stores and SQLite tables share names,
  * columns, keys and indexes, and the Postgres mirror (backend batch) is cut
  * from the same list.
@@ -25,8 +25,9 @@ import {type Entity, type EntityInput, type EntityType, type HistoryRow, type Ou
  * 1: one `entities` store. 2: a store per entity type, relations and balance
  * projections. 3: the `aggregates` and `search_terms` projections and
  * `people.lastActivityAt` (so Analytics and Search never load the ledger).
+ * 4: the `reminders` store (Remind nudges and Remind me, F-1118 / F-1119).
  */
-export const SCHEMA_VERSION = 3
+export const SCHEMA_VERSION = 4
 
 export type Scalar = string | number
 export type Key = Scalar[]
@@ -170,6 +171,20 @@ export const STORES = {
       bySyncStatus: ix('syncStatus', 'id'),
     },
   },
+  /*
+   * Remind (F-1118) and Remind me (F-1119). `kind` 'nudge': a friendly reminder I shared with someone
+   * (a log row, `dueAt` null). 'self': a notification I scheduled for myself (`dueAt` is the first or next
+   * due time, `repeat` none|daily|weekly|monthly). `groupId` '' for none.
+   */
+  reminders: {
+    key: ['id'],
+    columns: {...ENTITY_COLUMNS, personId: 'text', groupId: 'text', kind: 'text', dueAt: 'int?', repeat: 'text'},
+    indexes: {
+      byPerson: ix('personId', 'createdAt', 'id'),
+      byDue: ix('kind', 'dueAt', 'id'),
+      bySyncStatus: ix('syncStatus', 'id'),
+    },
+  },
   friend_requests: {
     key: ['id'],
     columns: {...ENTITY_COLUMNS, status: 'text', direction: 'text'},
@@ -306,6 +321,7 @@ export const ENTITY_STORE = {
   inviteLink: 'invite_links',
   feedback: 'feedback',
   preference: 'preferences',
+  reminder: 'reminders',
 } as const satisfies Record<EntityType, StoreName>
 
 /** The index names of one entity type's store. */
@@ -379,6 +395,10 @@ const EXTRA: Record<EntityType, (data: unknown) => Row> = {
   },
   feedback: () => ({}),
   preference: () => ({}),
+  reminder: data => {
+    const d = data as {kind?: string; personId?: string; groupId?: string | null; dueAt?: number | null; repeat?: string} | null
+    return {personId: d?.personId ?? '', groupId: d?.groupId ?? '', kind: d?.kind ?? '', dueAt: typeof d?.dueAt === 'number' ? d.dueAt : null, repeat: d?.repeat ?? 'none'}
+  },
 }
 
 function moneyTransfer(d: Partial<Repayment> | null | undefined): Row {

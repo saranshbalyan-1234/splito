@@ -1,5 +1,6 @@
 import {type FriendRequest} from './friends'
 import {type Expense, type Group, type Person, type Repayment, type WriteOff} from './mutations'
+import {type Reminder} from './reminders'
 import {type Key} from './schema'
 import {type Store, type StoreChange, touches} from './store'
 import {type Entity, type EntityType, type HistoryRow} from './types'
@@ -29,11 +30,12 @@ export type ActivityEvent = Base &
         data: FriendRequest
         prev?: FriendRequest
       }
+    | {entityType: 'reminder'; kind: 'reminder.nudged' | 'reminder.set'; data: Reminder; prev?: Reminder}
   )
 
 export type ActivityKind = ActivityEvent['kind']
 
-const FEED_TYPES = ['person', 'group', 'expense', 'repayment', 'writeoff', 'friendRequest'] as const satisfies EntityType[]
+const FEED_TYPES = ['person', 'group', 'expense', 'repayment', 'writeoff', 'friendRequest', 'reminder'] as const satisfies EntityType[]
 
 /** What a history row means, given the version before it. Undefined rows stay out of the feed. */
 function kindOf(row: HistoryRow, prev: HistoryRow | undefined): ActivityKind | undefined {
@@ -63,6 +65,9 @@ function kindOf(row: HistoryRow, prev: HistoryRow | undefined): ActivityKind | u
       // Resends, cancels and declines are housekeeping; only the moment you become friends is news.
       return r.status === 'accepted' && (prev.data as FriendRequest).status !== 'accepted' ? 'friendRequest.accepted' : undefined
     }
+    case 'reminder':
+      // A reminder shows once, when it is shared or set; moving or cancelling it is housekeeping.
+      return !prev ? ((row.data as Reminder).kind === 'nudge' ? 'reminder.nudged' : 'reminder.set') : undefined
     default:
       // Preferences are settings, not activity.
       return undefined
@@ -219,6 +224,7 @@ export function activityTracker(store: Store, want: () => number = () => ACTIVIT
       repayment: [],
       writeoff: [],
       friendRequest: named('friendRequest'),
+      reminder: [],
     } satisfies Record<FeedType, Entity[]>
     return {events: list, entities, isDone: isDone && !hasMore}
   }
