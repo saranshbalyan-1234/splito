@@ -1218,7 +1218,7 @@ labelled sidebar); **wide** = web 1300 px and up (Bluesky `gtTablet`, right colu
   *Why:* "set your timezone". *Where:* spec § 5, preferences registry.
 - **All platforms (iOS, Android, web/PWA) get the full polish: splash, branding, icons.** *Why:* "for all
   platforms: splash, branding etc". *Where:* § 8, `apps/client/scripts/brand.ts`.
-- **Backend comes after the UI.** Front-end batches first; the server is Fastify on Bun with **Postgres**.
+- **Backend comes after the UI, and it is mandatory, not optional** (owner 93: "we need to implement the backend as well, once we are done with all the features"): when the front-end batches are done, every BACKLOG backend item (E21, E22, the server halves of E23 and of any item marked Backend yes) is built before the product is called done. **Backend comes after the UI.** Front-end batches first; the server is Fastify on Bun with **Postgres**.
   *Why:* "let's build backend later once we are done with UI"; "use Postgres". *Where:* `docs/RESUME.md`, § 9.4.
 - **GameRun's Expo architecture is adopted where it fits** (§§ 21-22 record the calls). *Why:* "can you also
   look into architecture md file from GameRun expo".
@@ -1921,6 +1921,7 @@ Every owner decision, in the order it was made (all 2026-10-26). "Replaced" name
 | 90 | "by default hide settled, in filters option for show settled, every setting that we choose to be stored in db" | Settled friends and groups hidden by default with a "Show settled" filter switch; every user choice (filters, sorts, scopes) persists as a database preference; device-scope prefs move from MMKV/localStorage into the DB | § 26.12 | Settled shown; filters in screen state; device prefs in MMKV |
 | 91 | "add search on friends as well" | Friends list keeps its own inline search (icon that expands, live filter by name) next to its filters, in addition to the Search & Ask drawer | § 26.12 | Search & Ask only (F-222 removed the Friends search icon) |
 | 92 | "in activity, add all, me and others" | Activity Pager tabs All / Me / Others (Me = actions I did, Others = actions by others) | § 26.14 | All / From others |
+| 93 | "remember we need to implement the backend as well, once we are done with all the features" | Backend is mandatory scope: after all front-end features, every backend item is built before the product is done | § 26.2 | - |
 
 New decisions follow § 0 rule 9: rewrite the rule in its topic so only the current truth remains, then add a
 row here.
