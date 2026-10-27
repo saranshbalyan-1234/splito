@@ -2797,6 +2797,19 @@ Replace the per-row red sync dot with a lighter, AA-safe text style for every re
   4. The tone fades to full strength on acknowledgement (Reanimated, reduced-motion aware); accessibility label adds "Not synced yet".
   5. e2e: a local row has the lighter colour; a row flipped to synced via the e2e test hook shows full strength.
 
+### F-245 Overview currency cards as separate, balanced boxes `spec: owner § 26.12 (decision 113)`
+
+On Home/People and Groups, each currency card is its own box of equal size in a grid whose columns keep rows even for any number of currencies. Queued by the owner ("don't fix, just remember to fix").
+
+- **Effort** S · **Impact** 7 · **Backend** no · **Status** todo · **Deps** -
+- **Prefs** -
+- **Acceptance**
+  1. Each currency card has its own border, radius and padding with a gap between cards; no shared outer box with dividers.
+  2. Column rule: phone 1 (2 when the card fits); rail/desktop max 3: 1 -> 1, 2 -> 2, 3 -> 3, 4 -> 2x2, 5 -> 3+2, 6 -> 3x2, 7+ -> 3 per row; a short last row keeps the card width, left-aligned, never stretched.
+  3. Cards in a row share the tallest height, content top-aligned; amounts never wrap mid-number.
+  4. The counts line sits below the grid as plain text.
+  5. e2e geometry at 390, 860 and 1440 px with 1 to 6 currencies (equal widths, no stretched card); light and Dim screenshots.
+
 ### F-1501 Text summaries for WhatsApp `spec 4b v1`
 
 Whole-group or "only their part" summaries with WhatsApp markup, sent via wa.me in the recipient's language.
