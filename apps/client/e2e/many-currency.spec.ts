@@ -161,6 +161,9 @@ test('M8: Record payment on a settled friend offers every currency, starting on 
   await expect(page.getByTestId('record-payment-sheet')).toContainText('EUR')
   await page.getByTestId('payment-other-currency').click()
   await page.getByTestId('currency-JPY').click()
+  // The picker closes back into the payment sheet before the amount is typed.
+  await expect(page.getByTestId('currency-dialog')).toHaveCount(0)
+  await expect(page.getByTestId('record-payment-sheet')).toContainText('JPY')
   await page.getByTestId('payment-amount').fill('500')
   await page.getByTestId('sheet-save').click()
   await expect(page.getByTestId('payment-recorded')).toBeVisible()
