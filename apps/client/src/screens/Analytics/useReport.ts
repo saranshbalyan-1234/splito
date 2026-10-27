@@ -1,5 +1,6 @@
-import {useState} from 'react'
+import {useEffect, useState} from 'react'
 import {useLingui} from '@lingui/react/macro'
+import {useRoute} from '@react-navigation/native'
 import {
   cellBalanceTrend,
   cellsByCategory,
@@ -96,7 +97,17 @@ export function useReport() {
   const [weekStartPref] = usePref('weekStart')
   const today = useToday()
   const formatDay = useFormatDay()
-  const [state, setState] = useState<FilterState>({offset: 0})
+  /* An Overview card opens Analytics in its currency (`?currency=EUR`, audit m21). */
+  const route = useRoute()
+  const routeCurrency = (route.params as {currency?: string} | undefined)
+    ?.currency
+  const [state, setState] = useState<FilterState>({
+    offset: 0,
+    currency: routeCurrency,
+  })
+  useEffect(() => {
+    if (routeCurrency) setState(s => ({...s, currency: routeCurrency}))
+  }, [routeCurrency])
   const [picked, setPicked] = useState<{
     filterKey: string
     selection: Selection

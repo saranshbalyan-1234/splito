@@ -171,7 +171,7 @@ function SummaryCell({
         testID={`summary-${currency}`}
         onPressIn={press.onPressIn}
         onPressOut={press.onPressOut}
-        href="/analytics"
+        href={`/analytics?currency=${currency}`}
         asAnchor
         anchorNoUnderline
         accessibilityLabel={l`${getCurrency(currency).name} balance - open analytics`}
