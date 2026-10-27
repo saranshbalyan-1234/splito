@@ -670,7 +670,7 @@ function BinDaysPref() {
       pref={usePrefControl('history.binDays')}
       icon={BinIcon}
       title={l`Keep deleted items for`}
-      description={`${l`After that they leave this list. Their history stays in each record’s audit trail.`} ${l`Applies to items you delete from now on. Items already in Recently deleted keep their date.`}`}
+      description={l`After that they leave this list. Their history stays in each record’s audit trail.`}
       options={[
         {value: 7, label: l`7 days`},
         {value: 30, label: l`30 days`},

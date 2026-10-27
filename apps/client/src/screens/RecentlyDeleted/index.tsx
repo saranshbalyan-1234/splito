@@ -240,7 +240,7 @@ export function RecentlyDeletedScreen() {
                 byline={[l`by ${deletedBy(item.deletedBy)}`, groupName]
                   .filter(Boolean)
                   .join(' · ')}
-                left={daysLeft(item.purgeAfter, readAt)}
+                left={daysLeft(item.deletedAt, days, readAt)}
                 onPress={() => {
                   setOpen(item)
                   restoreControl.open()
@@ -280,6 +280,7 @@ export function RecentlyDeletedScreen() {
             ? (groupNames.get(openModel.groupId) ?? null)
             : null
         }
+        days={days}
         readAt={readAt}
         onRestorePressed={restore}
         onDeleteForeverPressed={item => {

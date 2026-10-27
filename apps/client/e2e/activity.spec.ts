@@ -47,10 +47,6 @@ test('the demo history reads as a feed grouped by day, in real words', async ({
   page,
 }) => {
   await page.setViewportSize(DESKTOP)
-  // The demo seeds minutes and hours before "now"; at 00:30 those fall on yesterday. Noon keeps the same day.
-  const noon = new Date()
-  noon.setHours(12, 0, 0, 0)
-  await page.clock.setFixedTime(noon)
   await openActivity(page)
   const headers = screen(page).getByRole('heading')
   await expect(headers.first()).toHaveText('Today')

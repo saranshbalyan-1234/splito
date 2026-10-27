@@ -181,7 +181,7 @@ msgid "{0} balance - open analytics"
 msgstr "{0} बैलेंस - एनालिटिक्स खोलें"
 
 #. placeholder {0}: i18n.date(new Date(item.deletedAt), { dateStyle: 'medium', timeStyle: 'short', timeZone: tz, })
-#: src/screens/RecentlyDeleted/components/RestoreDialog.tsx:203
+#: src/screens/RecentlyDeleted/components/RestoreDialog.tsx:208
 msgid "{0} by {deletedByName}"
 msgstr "{0}, {deletedByName} द्वारा"
 
@@ -672,7 +672,7 @@ msgstr "{groups, plural, one {# ग्रुप} other {# ग्रुप}}"
 msgid "{hiddenCount, plural, one {# change hidden from your activity} other {# changes hidden from your activity}}"
 msgstr "{hiddenCount, plural, one {# बदलाव आपकी गतिविधि से छिपा है} other {# बदलाव आपकी गतिविधि से छिपे हैं}}"
 
-#: src/screens/RecentlyDeleted/index.tsx:416
+#: src/screens/RecentlyDeleted/index.tsx:417
 msgid "{left, plural, one {# day left} other {# days left}}"
 msgstr "{left, plural, one {# दिन बाकी} other {# दिन बाकी}}"
 
@@ -1317,10 +1317,6 @@ msgstr "इस लिंक या QR कोड वाला कोई भी Sp
 #: src/components/settings/sections.ts:49
 msgid "Appearance"
 msgstr "रूप-रंग"
-
-#: src/components/settings/prefControls.tsx:673
-msgid "Applies to items you delete from now on. Items already in Recently deleted keep their date."
-msgstr "यह उन चीज़ों पर लागू होता है जिन्हें आप अब से हटाएँगे। हाल में हटाए गए में पहले से मौजूद चीज़ें अपनी तारीख़ पर ही रहती हैं।"
 
 #: src/components/settings/AccentPicker.tsx:125
 #: src/screens/Analytics/components/RangeDialog.tsx:112
@@ -2038,7 +2034,7 @@ msgstr "डेटा"
 #: src/components/split/ExpenseComposer.tsx:339
 #: src/components/split/ExpenseComposer.tsx:494
 #: src/screens/Analytics/index.tsx:214
-#: src/screens/RecentlyDeleted/components/RestoreDialog.tsx:192
+#: src/screens/RecentlyDeleted/components/RestoreDialog.tsx:197
 msgid "Date"
 msgstr "तारीख"
 
@@ -2123,13 +2119,13 @@ msgstr "{0} हटाएँ?"
 msgid "Delete expense"
 msgstr "खर्च हटाएँ"
 
-#: src/screens/RecentlyDeleted/components/RestoreDialog.tsx:230
-#: src/screens/RecentlyDeleted/components/RestoreDialog.tsx:236
-#: src/screens/RecentlyDeleted/index.tsx:294
+#: src/screens/RecentlyDeleted/components/RestoreDialog.tsx:235
+#: src/screens/RecentlyDeleted/components/RestoreDialog.tsx:241
+#: src/screens/RecentlyDeleted/index.tsx:295
 msgid "Delete forever"
 msgstr "हमेशा के लिए हटाएँ"
 
-#: src/screens/RecentlyDeleted/index.tsx:292
+#: src/screens/RecentlyDeleted/index.tsx:293
 msgid "Delete forever?"
 msgstr "हमेशा के लिए हटाएँ?"
 
@@ -2152,7 +2148,7 @@ msgstr "भुगतान हटाएं"
 msgid "Delete this feedback?"
 msgstr "यह फ़ीडबैक हटाएँ?"
 
-#: src/screens/RecentlyDeleted/components/RestoreDialog.tsx:202
+#: src/screens/RecentlyDeleted/components/RestoreDialog.tsx:207
 msgid "Deleted"
 msgstr "हटाया गया"
 
@@ -2227,7 +2223,7 @@ msgid "Direct only"
 msgstr "सिर्फ़ सीधे"
 
 #: src/components/people/PaymentDetailsDialog.tsx:169
-#: src/screens/RecentlyDeleted/components/RestoreDialog.tsx:197
+#: src/screens/RecentlyDeleted/components/RestoreDialog.tsx:202
 msgid "Direct, no group"
 msgstr "सीधा, कोई समूह नहीं"
 
@@ -2546,7 +2542,7 @@ msgstr "बाहर"
 #: src/navigation/Navigation.tsx:79
 #: src/screens/Analytics/components/ExpenseRow.tsx:43
 #: src/screens/Expense/index.tsx:89
-#: src/screens/RecentlyDeleted/components/RestoreDialog.tsx:93
+#: src/screens/RecentlyDeleted/components/RestoreDialog.tsx:98
 msgid "Expense"
 msgstr "खर्च"
 
@@ -2578,7 +2574,7 @@ msgstr "ख़र्च वापस लाया गया"
 #: src/screens/Analytics/index.tsx:157
 #: src/screens/Group/index.tsx:471
 #: src/screens/Profile.tsx:249
-#: src/screens/RecentlyDeleted/components/RestoreDialog.tsx:170
+#: src/screens/RecentlyDeleted/components/RestoreDialog.tsx:175
 msgid "Expenses"
 msgstr "खर्च"
 
@@ -2663,7 +2659,7 @@ msgstr "जैसे, किराया"
 msgid "For money that changed hands outside Splito – cash, UPI or a bank transfer. Splito keeps the record; it never moves money."
 msgstr "Splito के बाहर हुए लेन-देन के लिए – नकद, UPI या बैंक ट्रांसफ़र। Splito सिर्फ़ रिकॉर्ड रखता है; वह कभी पैसे नहीं भेजता।"
 
-#: src/screens/RecentlyDeleted/components/RestoreDialog.tsx:158
+#: src/screens/RecentlyDeleted/components/RestoreDialog.tsx:163
 msgid "For you"
 msgstr "आपके लिए"
 
@@ -2804,7 +2800,7 @@ msgstr "किराना"
 #: src/screens/Groups/components/GroupRow.tsx:52
 #: src/screens/People/components/PersonRow.tsx:79
 #: src/screens/Person/components/PersonBalances.tsx:98
-#: src/screens/RecentlyDeleted/components/RestoreDialog.tsx:96
+#: src/screens/RecentlyDeleted/components/RestoreDialog.tsx:101
 msgid "Group"
 msgstr "समूह"
 
@@ -3151,7 +3147,7 @@ msgstr "इसे अभी कहीं भेजा नहीं गया ह
 msgid "It is removed from Your feedback. If you already emailed it, that email isn't affected."
 msgstr "यह आपके फ़ीडबैक से हट जाएगा। अगर आप इसे पहले ही ईमेल कर चुके हैं, तो उस ईमेल पर कोई असर नहीं पड़ेगा।"
 
-#: src/screens/RecentlyDeleted/index.tsx:293
+#: src/screens/RecentlyDeleted/index.tsx:294
 msgid "It leaves Recently deleted and can’t be restored. Its history stays in the record’s audit trail."
 msgstr "यह हाल ही में हटाए गए से निकल जाएगा और वापस नहीं लाया जा सकेगा। इसका इतिहास रिकॉर्ड के ऑडिट ट्रेल में बना रहेगा।"
 
@@ -3384,7 +3380,7 @@ msgstr "माप"
 #: src/screens/Group/index.tsx:573
 #: src/screens/Group/index.tsx:576
 #: src/screens/Group/index.tsx:649
-#: src/screens/RecentlyDeleted/components/RestoreDialog.tsx:182
+#: src/screens/RecentlyDeleted/components/RestoreDialog.tsx:187
 msgid "Members"
 msgstr "सदस्य"
 
@@ -3983,7 +3979,7 @@ msgstr "आपके मौजूदा Splito खाते में साइ�
 msgid "Opens full screen from your Home Screen and works offline."
 msgstr "होम स्क्रीन से पूरी स्क्रीन पर खुलता है और ऑफ़लाइन भी चलता है।"
 
-#: src/screens/RecentlyDeleted/index.tsx:335
+#: src/screens/RecentlyDeleted/index.tsx:336
 msgid "Opens it to restore or delete forever"
 msgstr "वापस लाने या हमेशा के लिए हटाने के लिए खोलता है"
 
@@ -4104,7 +4100,7 @@ msgid "Pay with UPI"
 msgstr "UPI से भुगतान करें"
 
 #: src/components/people/HistoryRow.tsx:119
-#: src/screens/RecentlyDeleted/components/RestoreDialog.tsx:94
+#: src/screens/RecentlyDeleted/components/RestoreDialog.tsx:99
 msgid "Payment"
 msgstr "भुगतान"
 
@@ -4137,7 +4133,7 @@ msgid "Payment rules saved"
 msgstr "भुगतान के नियम सहेजे गए"
 
 #: src/components/settings/prefControls.tsx:752
-#: src/screens/RecentlyDeleted/components/RestoreDialog.tsx:174
+#: src/screens/RecentlyDeleted/components/RestoreDialog.tsx:179
 msgid "Payments"
 msgstr "भुगतान"
 
@@ -4537,36 +4533,36 @@ msgid "Reset your password by sending a code to your email or phone"
 msgstr "अपने ईमेल या फ़ोन पर कोड भेजकर पासवर्ड रीसेट करें"
 
 #: src/screens/Expense/index.tsx:476
-#: src/screens/RecentlyDeleted/components/RestoreDialog.tsx:104
+#: src/screens/RecentlyDeleted/components/RestoreDialog.tsx:109
 msgid "Restore"
 msgstr "वापस लाएँ"
 
 #: src/screens/Expense/index.tsx:464
-#: src/screens/RecentlyDeleted/components/RestoreDialog.tsx:87
+#: src/screens/RecentlyDeleted/components/RestoreDialog.tsx:92
 msgid "Restore expense"
 msgstr "खर्च वापस लाएँ"
 
-#: src/screens/RecentlyDeleted/components/RestoreDialog.tsx:90
+#: src/screens/RecentlyDeleted/components/RestoreDialog.tsx:95
 msgid "Restore group"
 msgstr "ग्रुप बहाल करें"
 
-#: src/screens/RecentlyDeleted/components/RestoreDialog.tsx:88
+#: src/screens/RecentlyDeleted/components/RestoreDialog.tsx:93
 msgid "Restore payment"
 msgstr "भुगतान वापस लाएँ"
 
-#: src/screens/RecentlyDeleted/components/RestoreDialog.tsx:89
+#: src/screens/RecentlyDeleted/components/RestoreDialog.tsx:94
 msgid "Restore write-off"
 msgstr "माफ़ी वापस लाएँ"
 
-#: src/screens/RecentlyDeleted/components/RestoreDialog.tsx:212
+#: src/screens/RecentlyDeleted/components/RestoreDialog.tsx:217
 msgid "Restoring brings the group back with every expense, payment and write-off that went with it."
 msgstr "बहाल करने पर ग्रुप अपने साथ हटे हर खर्च, भुगतान और माफ़ी के साथ लौट आता है।"
 
-#: src/screens/RecentlyDeleted/components/RestoreDialog.tsx:222
+#: src/screens/RecentlyDeleted/components/RestoreDialog.tsx:227
 msgid "Restoring puts it back in balances, history and Activity. It stays here for {left} more days."
 msgstr "वापस लाने पर यह बैलेंस, इतिहास और गतिविधि में लौट आता है। यह यहाँ {left} दिन और रहेगा।"
 
-#: src/screens/RecentlyDeleted/components/RestoreDialog.tsx:217
+#: src/screens/RecentlyDeleted/components/RestoreDialog.tsx:222
 msgid "Restoring puts it back in balances, history and Activity. It stays here for 1 more day."
 msgstr "वापस लाने पर यह बैलेंस, इतिहास और गतिविधि में लौट आता है। यह यहाँ 1 दिन और रहेगा।"
 
@@ -5906,7 +5902,7 @@ msgid "When you pay"
 msgstr "जब आप देते हैं"
 
 #: src/components/people/PaymentDetailsDialog.tsx:169
-#: src/screens/RecentlyDeleted/components/RestoreDialog.tsx:196
+#: src/screens/RecentlyDeleted/components/RestoreDialog.tsx:201
 msgid "Where"
 msgstr "कहां"
 
@@ -5967,7 +5963,7 @@ msgstr "कम से कम {FEEDBACK_MIN_LENGTH} अक्षर लिखे�
 msgid "Write off"
 msgstr "माफ़ करें"
 
-#: src/screens/RecentlyDeleted/components/RestoreDialog.tsx:95
+#: src/screens/RecentlyDeleted/components/RestoreDialog.tsx:100
 msgid "Write-off"
 msgstr "माफ़ी"
 
@@ -5980,7 +5976,7 @@ msgstr "माफ़ी वापस लाई गई"
 msgid "Write-off undone"
 msgstr "माफ़ी वापस ली गई"
 
-#: src/screens/RecentlyDeleted/components/RestoreDialog.tsx:178
+#: src/screens/RecentlyDeleted/components/RestoreDialog.tsx:183
 msgid "Write-offs"
 msgstr "माफ़ियाँ"
 
