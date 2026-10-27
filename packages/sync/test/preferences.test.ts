@@ -192,3 +192,10 @@ test('privacy and invite-link defaults (26.18)', async () => {
   expect(PREFS['privacy.findByContact'].group).toBe('privacy')
   expect(INVITE_EXPIRY_MS['7d']).toBe(7 * 86_400_000)
 })
+
+test('reset all skips a stored row for a removed preference (audit m6)', async () => {
+  await setPref(s, ctx, 'theme', 'dark')
+  await s.transaction(tx => tx.put({type: 'preference', id: 'settleMode', data: {value: 'x'}, version: 1, deleted: false, updatedAt: 1}))
+  await resetAllPrefs(s, ctx)
+  expect(await getPref(s, 'theme')).toBe('system')
+})

@@ -200,10 +200,13 @@ export function SettingsScreen() {
         confirmButtonCta={l`Reset all`}
         confirmButtonColor="negative"
         onConfirm={() => {
-          void resetAllPrefs(store, ctx).then(() => {
-            haptics.success()
-            Toast.show(l`Settings reset`)
-          })
+          resetAllPrefs(store, ctx).then(
+            () => {
+              haptics.success()
+              Toast.show(l`Settings reset`)
+            },
+            () => Toast.show(l`Couldn’t reset settings. Please try again.`, {type: 'error'}),
+          )
         }}
       />
     </Layout.Screen>

@@ -1,6 +1,6 @@
 import {CURRENCIES, DomainError} from '@splito/domain'
 
-import type {Store} from './store'
+import type {Store, Tx} from './store'
 import type {Entity, MutationCtx} from './types'
 
 export type PrefGroup = 'appearance' | 'motion' | 'defaults' | 'categories' | 'regional' | 'lists' | 'notifications' | 'privacy' | 'history'
@@ -210,30 +210,31 @@ export async function getPref<K extends PrefKey>(store: Store, key: K): Promise<
   return prefFrom(await store.getAll<{value: unknown}>('preference'), key)
 }
 
-async function writePref(store: Store, ctx: MutationCtx, key: PrefKey, value: unknown, deleted: boolean) {
+async function putPref(tx: Tx, ctx: MutationCtx, key: PrefKey, value: unknown, deleted: boolean) {
   const def = PREFS[key] as PrefDef<unknown>
-  await store.transaction(async tx => {
-    const prev = await tx.get('preference', key)
-    const version = (prev?.version ?? 0) + 1
-    await tx.put({type: 'preference', id: key, data: {value}, version, deleted, updatedAt: ctx.now()})
-    if (def.scope === 'account')
-      await tx.enqueue({
-        opId: ctx.newId(),
-        deviceId: ctx.deviceId,
-        actor: ctx.actor,
-        entityType: 'preference',
-        entityId: key,
-        opType: deleted ? 'preference.reset' : 'preference.set',
-        baseVersion: prev?.version ?? 0,
-        payload: {value},
-        schemaVersion: 1,
-        deps: [],
-        attempts: 0,
-        nextAttemptAt: null,
-        lastError: null,
-      })
-  })
+  const prev = await tx.get('preference', key)
+  const version = (prev?.version ?? 0) + 1
+  await tx.put({type: 'preference', id: key, data: {value}, version, deleted, updatedAt: ctx.now()})
+  if (def.scope === 'account')
+    await tx.enqueue({
+      opId: ctx.newId(),
+      deviceId: ctx.deviceId,
+      actor: ctx.actor,
+      entityType: 'preference',
+      entityId: key,
+      opType: deleted ? 'preference.reset' : 'preference.set',
+      baseVersion: prev?.version ?? 0,
+      payload: {value},
+      schemaVersion: 1,
+      deps: [],
+      attempts: 0,
+      nextAttemptAt: null,
+      lastError: null,
+    })
 }
+
+const writePref = (store: Store, ctx: MutationCtx, key: PrefKey, value: unknown, deleted: boolean) =>
+  store.transaction(tx => putPref(tx, ctx, key, value, deleted))
 
 export async function setPref<K extends PrefKey>(store: Store, ctx: MutationCtx, key: K, value: PrefValue<K>): Promise<void> {
   if (!PREFS[key].validate(value)) throw new DomainError('INVALID_PREF')
@@ -245,6 +246,9 @@ export async function resetPref(store: Store, ctx: MutationCtx, key: PrefKey): P
 }
 
 export async function resetAllPrefs(store: Store, ctx: MutationCtx): Promise<void> {
-  const set = (await store.getAll('preference')).filter(p => !p.deleted)
-  for (const p of set) await resetPref(store, ctx, p.id as PrefKey)
+  // A stored row for a removed preference (old build) has no definition: skip it. One transaction: all or none.
+  const set = (await store.getAll('preference')).filter(p => !p.deleted && Object.hasOwn(PREFS, p.id))
+  await store.transaction(async tx => {
+    for (const p of set) await putPref(tx, ctx, p.id as PrefKey, PREFS[p.id as PrefKey].default, true)
+  })
 }
