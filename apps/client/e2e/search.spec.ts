@@ -205,8 +205,8 @@ test.describe('a broad query pages: the first page at once, the totals after, mo
     // The first page: 30 expenses (and the people and groups), however many match.
     await expect(screen.getByTestId('search-row-0')).toBeVisible()
     const rows = screen.locator('[data-testid^="search-row-"]')
-    const people = await screen.locator('[data-testid^="search-row-"]').count()
-    expect(people).toBeLessThan(80)
+    const shown = await screen.locator('[data-testid^="search-row-"]').count()
+    expect(shown).toBeLessThan(80)
     await expect(screen.getByTestId('search-show-more')).toBeVisible()
     // Totals fill in after it: the heading's count becomes the real one, with one total per currency.
     await expect(screen.getByTestId('search-totals')).toBeVisible({timeout: 30_000})

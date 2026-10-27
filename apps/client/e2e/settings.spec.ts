@@ -115,17 +115,21 @@ test('Settings can join the phone bar (5 at most), with arrows to reorder and Re
   await page.getByTestId('tabs-toggle-settings').click()
   await expect(page.getByTestId('tabs-limit-note')).toContainText('up to 5')
   await page.setViewportSize(PHONE)
-  const order = await page
-    .getByRole('navigation')
-    .locator('[data-testid^="tab-"]')
-    .evaluateAll(els => els.map(e => e.getAttribute('data-testid')))
-  expect(order).toEqual([
-    'tab-people',
-    'tab-analytics',
-    'tab-groups',
-    'tab-activity',
-    'tab-settings',
-  ])
+  // The bar re-renders for the phone width after the resize: poll, a read right after it can still see the old bar.
+  await expect
+    .poll(() =>
+      page
+        .getByRole('navigation')
+        .locator('[data-testid^="tab-"]')
+        .evaluateAll(els => els.map(e => e.getAttribute('data-testid'))),
+    )
+    .toEqual([
+      'tab-people',
+      'tab-analytics',
+      'tab-groups',
+      'tab-activity',
+      'tab-settings',
+    ])
 
   await page.setViewportSize(LAPTOP)
   await page.getByTestId('reset-tabs').click()

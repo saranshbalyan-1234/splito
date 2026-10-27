@@ -78,6 +78,8 @@ test('with unsaved input in a sheet, Reload asks first and Cancel keeps the offe
   await page.getByRole('button', {name: 'Cancel'}).last().click()
   await expect(page.getByText('Reload and lose your changes?')).toHaveCount(0)
   await expect(page.getByTestId('expense-title')).toHaveValue('Dinner at Thalassa')
+  // The tapped toast leaves with its exit animation while the brought-back one arrives: wait for the one.
+  await expect(page.getByTestId('update-reload')).toHaveCount(1)
   await expect(page.getByTestId('update-reload')).toBeVisible()
 })
 
