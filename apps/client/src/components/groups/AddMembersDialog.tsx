@@ -6,6 +6,7 @@ import {
   createPerson,
   type Entity,
   type Group,
+  isRemovedFriend,
   type Person,
 } from '@splito/sync'
 
@@ -69,7 +70,7 @@ function Form({
     group.data.members.filter(m => m.leftAt === null).map(m => m.personId),
   )
   const candidates = (people ?? [])
-    .filter(p => !p.data.isMe && !current.has(p.id))
+    .filter(p => !p.data.isMe && !isRemovedFriend(p.data) && !current.has(p.id))
     .sort((x, y) => x.data.name.localeCompare(y.data.name))
 
   const addNew = () =>

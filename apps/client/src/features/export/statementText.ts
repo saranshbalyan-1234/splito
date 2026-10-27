@@ -45,8 +45,8 @@ export function useStatementText() {
       effect: l`Effect on your balance`,
       balance: l`Balance`,
     },
-    opening: l`Balance before`,
-    closing: l`Balance`,
+    opening: l`Opening balance`,
+    closing: l`Closing balance`,
     adjustment: l`Group settle-up routing`,
   }
 

@@ -37,11 +37,12 @@ import {Text} from '#/components/Typography'
 import {useListAnimations} from '#/motion/listAnimations'
 
 /**
- * Manage invite links (26.18): every link that still works, with uses left
- * and expiry, Copy, the QR sheet and Revoke (a prompt, so a bottom sheet on
- * phones). Links that stopped working are only counted.
+ * The invite-link rows and their Revoke prompt, shared by this screen and the
+ * Friends and invites hub (Settings, F-621): `renderLink` draws one link
+ * (uses left, expiry, QR and share, Copy, Revoke) and `prompt` is the
+ * confirmation to render once beside the list.
  */
-export function InviteLinksScreen() {
+export function useInviteLinkRows(now: number) {
   const {t: l} = useLingui()
   const t = useTheme()
   const navigation = useNavigation<NavigationProp>()
@@ -50,7 +51,6 @@ export function InviteLinksScreen() {
   const haptics = useHaptics()
   const describe = useDescribeLink()
   const listAnimations = useListAnimations()
-  const {isLoading, active, inactive, now} = useSortedInviteLinks()
   const groups = useEntities<Group>('group')
   const groupName = new Map((groups ?? []).map(g => [g.id, g.data.name]))
   /* A personal link sent with an invite is named after who it is for. */
@@ -80,7 +80,7 @@ export function InviteLinksScreen() {
     }
   }
 
-  const renderItem = ({item: link}: {item: Entity<InviteLink>}) => {
+  const renderLink = (link: Entity<InviteLink>) => {
     const name =
       link.data.kind === 'group'
         ? (groupName.get(link.data.groupId ?? '') ?? l`Group invite`)
@@ -90,6 +90,7 @@ export function InviteLinksScreen() {
     return (
       <Animated.View
         {...listAnimations}
+        key={link.id}
         testID={`invite-link-${link.id}`}
         style={[
           a.flex_row,
@@ -169,6 +170,33 @@ export function InviteLinksScreen() {
     )
   }
 
+  const prompt = (
+    <Prompt.Basic
+      control={revokePrompt}
+      title={l`Revoke this invite link?`}
+      description={l`Anyone who has it can no longer use it. You can always make a new one.`}
+      confirmButtonCta={l`Revoke link`}
+      confirmButtonColor="negative"
+      onConfirm={() => {
+        if (revoking) void revoke(revoking)
+      }}
+    />
+  )
+  return {renderLink, prompt}
+}
+
+/**
+ * Manage invite links (26.18): every link that still works, with uses left
+ * and expiry, Copy, the QR sheet and Revoke (a prompt, so a bottom sheet on
+ * phones). Links that stopped working are only counted.
+ */
+export function InviteLinksScreen() {
+  const {t: l} = useLingui()
+  const t = useTheme()
+  const navigation = useNavigation<NavigationProp>()
+  const {isLoading, active, inactive, now} = useSortedInviteLinks()
+  const {renderLink, prompt} = useInviteLinkRows(now)
+
   return (
     <Layout.Screen testID="screen-invite-links">
       <Layout.Header.Outer>
@@ -191,7 +219,7 @@ export function InviteLinksScreen() {
           <List
             data={active}
             keyExtractor={(link: Entity<InviteLink>) => link.id}
-            renderItem={renderItem}
+            renderItem={({item}: {item: Entity<InviteLink>}) => renderLink(item)}
             ListHeaderComponent={
               active.length > 0 ? (
                 <Text
@@ -242,16 +270,7 @@ export function InviteLinksScreen() {
           />
         </LayoutAnimationConfig>
       )}
-      <Prompt.Basic
-        control={revokePrompt}
-        title={l`Revoke this invite link?`}
-        description={l`Anyone who has it can no longer use it. You can always make a new one.`}
-        confirmButtonCta={l`Revoke link`}
-        confirmButtonColor="negative"
-        onConfirm={() => {
-          if (revoking) void revoke(revoking)
-        }}
-      />
+      {prompt}
     </Layout.Screen>
   )
 }

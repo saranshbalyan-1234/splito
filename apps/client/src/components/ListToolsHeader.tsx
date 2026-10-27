@@ -43,6 +43,7 @@ export function ListToolsHeader({
   searchLabel,
   activeFilterCount,
   onFiltersPress,
+  action,
 }: {
   title: string
   count: number | undefined
@@ -59,6 +60,8 @@ export function ListToolsHeader({
   searchLabel?: string
   activeFilterCount: number
   onFiltersPress: () => void
+  /** A small link beside the title (Home's friends: "Manage"). */
+  action?: React.ReactNode
 }) {
   const t = useTheme()
   const {t: l} = useLingui()
@@ -118,6 +121,7 @@ export function ListToolsHeader({
               </Text>
             )}
           </Text>
+          {action}
           {onQueryChange && searchLabel && (
             <Button
               testID="list-search"

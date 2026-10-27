@@ -52,6 +52,7 @@ import {PersonScreen} from '#/screens/Person'
 import {ProfileScreen} from '#/screens/Profile'
 import {SettingsScreen} from '#/screens/Settings'
 import {RecentlyDeletedScreen} from '#/screens/RecentlyDeleted'
+import {FriendsAndInvitesScreen} from '#/screens/FriendsAndInvites'
 import {SettingsSectionScreen} from '#/screens/Settings/SettingsSection'
 import {SignInScreen} from '#/screens/SignIn'
 import {SearchScreen} from '#/screens/Search'
@@ -71,6 +72,7 @@ const TITLES: Partial<Record<keyof FlatNavigatorParams, MessageDescriptor>> = {
   SettingsSection: msg`Settings`,
   SignIn: msg`Sign in`,
   RecentlyDeleted: msg`Recently deleted`,
+  FriendsAndInvites: msg`Friends and invites`,
   Search: msg`Search`,
   Person: msg`Person`,
   Group: msg`Group`,
@@ -201,6 +203,7 @@ export function TabsNavigator({
       <Stack.Screen name="SettingsSection" component={SettingsSectionScreen} />
       <Stack.Screen name="SignIn" component={SignInScreen} />
       <Stack.Screen name="RecentlyDeleted" component={RecentlyDeletedScreen} />
+      <Stack.Screen name="FriendsAndInvites" component={FriendsAndInvitesScreen} />
       <Stack.Screen name="Person" component={PersonScreen} />
       <Stack.Screen name="Group" component={GroupScreen} />
       <Stack.Screen name="Settle" component={SettleScreen} />
@@ -298,6 +301,11 @@ export function FlatNavigator({
         name="RecentlyDeleted"
         component={RecentlyDeletedScreen}
         options={{title: title('RecentlyDeleted')}}
+      />
+      <Flat.Screen
+        name="FriendsAndInvites"
+        component={FriendsAndInvitesScreen}
+        options={{title: title('FriendsAndInvites')}}
       />
       <Flat.Screen
         name="Person"

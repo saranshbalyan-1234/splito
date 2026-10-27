@@ -131,7 +131,7 @@ export function CreateInviteScreen() {
             ? {
                 saveLabel: l`Done`,
                 cancelLabel: l`Manage links`,
-                onCancel: () => navigation.replace('InviteLinks'),
+                onCancel: () => navigation.replace('FriendsAndInvites', {section: 'links'}),
                 onSave: close,
               }
             : undefined

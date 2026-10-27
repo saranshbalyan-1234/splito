@@ -1,7 +1,15 @@
-import {type Contact, contactKey, DomainError} from '@splito/domain'
+import {
+  balanceRowsFromNets,
+  type Contact,
+  contactKey,
+  type CurrencyBalance,
+  DomainError,
+  isSettledBalance,
+  personSummary,
+} from '@splito/domain'
 
 import {formatContact, isContact} from './contact'
-import {cleanName, type Person, requireLive, write} from './mutations'
+import {cleanName, type Group, type Person, requireLive, write} from './mutations'
 import {type Store, type Tx} from './store'
 import {type Entity, type MutationCtx} from './types'
 
@@ -12,6 +20,14 @@ import {type Entity, type MutationCtx} from './types'
  * through an invite link) links or creates a Person with their account id.
  * Private "only for you" friends (F-601) are ordinary Persons without one.
  */
+
+/** The soft-removal mark a friend carries (F-621): when you removed them, absent or null while they are a friend. */
+export interface FriendRemoval {
+  removedAt?: number | null
+}
+
+/** True for a friend you removed: still stored, with their history, but out of pickers and lists. */
+export const isRemovedFriend = (p: Person): boolean => !!(p as Person & FriendRemoval).removedAt
 
 /** Unanswered requests lapse after 30 days; declining is silent, so the sender sees this too. */
 export const REQUEST_LIFETIME_MS = 30 * 86_400_000
@@ -64,7 +80,7 @@ export const incomingRequests = pendingIn('incoming')
  */
 export function selectablePeople(people: Entity<Person>[], requests: Entity<FriendRequest>[], now: number) {
   return {
-    selectable: people.filter(p => !p.deleted && !p.data.isMe),
+    selectable: people.filter(p => !p.deleted && !p.data.isMe && !isRemovedFriend(p.data)),
     pending: outgoingRequests(requests, now),
   }
 }
@@ -94,7 +110,7 @@ export async function sendFriendRequest(
   const key = contactKey(contact)
   // ponytail: duplicate checks read outside the transaction (IndexedDB can't await other reads mid-transaction); the server re-checks.
   const people = await store.getAll<Person>('person')
-  if (people.some(p => !p.deleted && p.data.accountId && p.data.contact && contactKey(p.data.contact) === key)) throw new DomainError('ALREADY_FRIENDS')
+  if (people.some(p => !p.deleted && !isRemovedFriend(p.data) && p.data.accountId && p.data.contact && contactKey(p.data.contact) === key)) throw new DomainError('ALREADY_FRIENDS')
   const requests = await store.getAll<FriendRequest>('friendRequest')
   if (outgoingRequests(requests, ctx.now()).some(r => r.data.contact && contactKey(r.data.contact) === key)) throw new DomainError('ALREADY_REQUESTED')
   const data: FriendRequest = {
@@ -159,7 +175,8 @@ type Account = {accountId: string; name: string; contact: Contact | null}
 async function linkPerson(tx: Tx, ctx: MutationCtx, people: Entity<Person>[], account: Account, remote: boolean): Promise<Entity<Person>> {
   const live = people.filter(p => !p.deleted && !p.data.isMe)
   const linked = live.find(p => p.data.accountId === account.accountId)
-  if (linked) return linked
+  // Someone you removed and who is accepted again is back, not a second row.
+  if (linked) return isRemovedFriend(linked.data) ? restoreFriendIn(tx, ctx, linked.id, remote) : linked
   const key = account.contact ? contactKey(account.contact) : null
   const priv = key ? live.find(p => !p.data.accountId && p.data.contact && contactKey(p.data.contact) === key) : undefined
   if (priv) {
@@ -328,4 +345,64 @@ export async function recordInviteUse(store: Store, ctx: MutationCtx, code: stri
     if (inviteLinkState(l.data, ctx.now()) === 'used-up') throw new DomainError('INVITE_USED_UP')
     return write(tx, ctx, 'inviteLink', code, {...l.data, uses: l.data.uses + 1}, false, 'inviteLink.used', {remote: true})
   })
+}
+
+/* Removing a friend (ARCHITECTURE 26.18, F-621) */
+
+/**
+ * What is still open between me and one person, per currency: outside groups
+ * from the pair sums, inside each group from its stored net under the group's
+ * rules (the same read the People list makes). Currencies with every part at
+ * zero are left out; parts are never netted across groups (audit M10).
+ */
+export async function friendOpenBalances(store: Store, me: string, personId: string): Promise<Record<string, CurrencyBalance>> {
+  const [pairs, mine] = await Promise.all([store.pairBalances(me), store.balances({personId: me})])
+  const groupIds = [...new Set(mine.flatMap(b => (b.groupId && b.amount !== 0n ? [b.groupId] : [])))]
+  const [nets, groups] = await Promise.all([Promise.all(groupIds.map(id => store.balances({groupId: id}))), store.getMany<Group>('group', groupIds)])
+  const rows = balanceRowsFromNets(
+    me,
+    pairs.map(p => ({person: p.otherId, groupId: null, currency: p.currency, amount: p.amount})),
+    Object.fromEntries(
+      groupIds.map((id, i) => {
+        const net: Record<string, Record<string, bigint>> = {}
+        for (const r of nets[i]!) (net[r.currency] ??= {})[r.personId] = r.amount
+        return [id, net]
+      }),
+    ),
+    Object.fromEntries(groups.map(g => [g.id, g.data.rules])),
+  )
+  const summary = personSummary(rows, {includeGroups: true}).find(x => x.person === personId)
+  return Object.fromEntries(Object.entries(summary?.byCurrency ?? {}).filter(([, b]) => !isSettledBalance(b)))
+}
+
+/**
+ * Takes a friend out of pickers and lists without touching a single record:
+ * `removedAt` is set on their person row, so every past expense and payment
+ * keeps their name. Refused with BALANCE_OPEN while any currency is open
+ * (settle up or call it even first). Not a delete and not a group action:
+ * their place in shared groups is F-613.
+ */
+export async function removeFriend(store: Store, ctx: MutationCtx, id: string): Promise<Entity<Person>> {
+  // ponytail: the balance read is outside the write transaction (IndexedDB can't await other reads mid-transaction); one local writer, the server re-checks.
+  const current = await store.get<Person>('person', id)
+  if (current && !current.deleted && current.data.isMe) throw new DomainError('PERSON_IN_USE')
+  if (current && !current.deleted && !isRemovedFriend(current.data) && Object.keys(await friendOpenBalances(store, ctx.actor, id)).length > 0)
+    throw new DomainError('BALANCE_OPEN')
+  return store.transaction(async tx => {
+    const p = await requireLive<Person>(tx, 'person', id)
+    if (p.data.isMe) throw new DomainError('PERSON_IN_USE')
+    if (isRemovedFriend(p.data)) throw new DomainError('ALREADY_REMOVED')
+    return write(tx, ctx, 'person', id, {...p.data, removedAt: ctx.now()}, false, 'person.remove')
+  })
+}
+
+async function restoreFriendIn(tx: Tx, ctx: MutationCtx, id: string, remote: boolean): Promise<Entity<Person>> {
+  const p = await requireLive<Person>(tx, 'person', id)
+  if (!isRemovedFriend(p.data)) throw new DomainError('NOT_REMOVED')
+  return write(tx, ctx, 'person', id, {...p.data, removedAt: null}, false, 'person.restore', {remote})
+}
+
+/** Undo for `removeFriend`, and "Add back": the same row, history intact. */
+export async function restoreFriend(store: Store, ctx: MutationCtx, id: string): Promise<Entity<Person>> {
+  return store.transaction(tx => restoreFriendIn(tx, ctx, id, false))
 }

@@ -27,6 +27,8 @@ export type RootStackParams = {
   SignIn: undefined
   /** Settings > Recently deleted (also in the drawer). */
   RecentlyDeleted: undefined
+  /** Settings > Friends and invites; `section: 'links'` scrolls to the invite links. */
+  FriendsAndInvites: {section?: 'links'} | undefined
   Person: {personId: string}
   /** `tab` opens a section directly (`/groups/:groupId?tab=rules`). */
   Group: {groupId: string; tab?: 'expenses' | 'balances' | 'members' | 'rules'}

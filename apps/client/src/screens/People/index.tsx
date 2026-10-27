@@ -2,10 +2,10 @@ import {useEffect, useState} from 'react'
 import {useWindowDimensions} from 'react-native'
 import {LayoutAnimationConfig} from 'react-native-reanimated'
 import {plural} from '@lingui/core/macro'
-import {useLingui} from '@lingui/react/macro'
+import {Trans, useLingui} from '@lingui/react/macro'
 import {useNavigation} from '@react-navigation/native'
 import {balanceTotals, isSettledBalance, personSummary} from '@splito/domain'
-import {type Group, type Person} from '@splito/sync'
+import {type Group, isRemovedFriend, type Person} from '@splito/sync'
 
 import {type NavigationProp} from '#/lib/routes/types'
 import {perfMark} from '#/lib/perfMark'
@@ -23,6 +23,7 @@ import {atoms as a, useBreakpoints} from '#/alf'
 import {AddExpenseFAB, AddExpenseFABInset} from '#/components/AddExpenseFAB'
 import {LogoMark} from '#/components/brand/Logo'
 import {useDialogControl} from '#/components/Dialog'
+import {Button, ButtonText} from '#/components/Button'
 import {SearchAskButton} from '#/components/SearchAsk/SearchAskButton'
 import {HeaderAvatar} from '#/components/HeaderAvatar'
 import {PersonPlus_Filled_Stroke2_Corner0_Rounded as PersonPlusIcon} from '#/components/icons/Person'
@@ -97,7 +98,7 @@ export function PeopleScreen() {
   const byPerson = new Map(summaries.map(s => [s.person, s]))
   const groupNames = new Map((groups ?? []).map(g => [g.id, g.data.name]))
   const friends = (people ?? [])
-    .filter(p => !p.data.isMe)
+    .filter(p => !p.data.isMe && !isRemovedFriend(p.data))
     .map(p => ({id: p.id, name: p.data.name, summary: byPerson.get(p.id)}))
   const currencies = [
     ...new Set(summaries.flatMap(s => Object.keys(s.byCurrency))),
@@ -197,6 +198,19 @@ export function PeopleScreen() {
                     count={rows.length}
                     activeFilterCount={activeCount}
                     onFiltersPress={() => filterControl.open()}
+                    action={
+                      <Button
+                        testID="people-manage-friends"
+                        label={l`Manage friends and invites`}
+                        size="small"
+                        variant="ghost"
+                        color="secondary"
+                        onPress={() => navigation.navigate('FriendsAndInvites')}>
+                        <ButtonText>
+                          <Trans>Manage</Trans>
+                        </ButtonText>
+                      </Button>
+                    }
                   />
                 </>
               ) : (

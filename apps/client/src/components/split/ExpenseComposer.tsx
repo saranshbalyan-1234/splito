@@ -18,6 +18,7 @@ import {
 import {
   createExpense,
   type Group,
+  isRemovedFriend,
   type Person,
   updateExpense,
 } from '@splito/sync'
@@ -154,7 +155,7 @@ export function ExpenseComposer({
     .filter(m => m.leftAt === null)
     .map(m => m.personId)
   const friends = (people ?? [])
-    .filter(p => !p.data.isMe)
+    .filter(p => !p.data.isMe && !isRemovedFriend(p.data))
     .sort((x, y) => x.data.name.localeCompare(y.data.name))
     .map(p => p.id)
   const candidates = members ?? [ctx.actor, ...friends]

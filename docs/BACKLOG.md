@@ -1559,6 +1559,19 @@ Bluesky's invite dialog (`src/features/inviteFriends/InviteFriendsDialogInner.ts
   3. The saved image holds the QR and the name only, never an amount unless the user chose a Pay-me QR with one.
   4. iOS simulator and Android emulator runs recorded; web saves as a download and hides Scan without a camera.
 
+### F-621 Settings > Friends and invites hub, with safe Remove friend `spec: owner § 26.18, decision 83`
+
+One Settings page (`/settings/friends`) that manages friends and invites. Requests received (Accept / Decline) and Invites sent (Resend / Cancel) show first while any wait; Friends lists every friend (search above 10) with "Add friend" (opens the Invite people sheet) and Remove friend per row (a row menu on phones, a button on desktop); Invite links lists every active link with uses left, expiry, Revoke and "Create invite link"; below are the defaults for new links and requests. Remove friend is a soft `removedAt` on the person, never a delete.
+
+- **Effort** M · **Impact** 7 · **Backend** no · **Status** done (feat/wB-B6; tests: packages/sync/test/removeFriend.test.ts, e2e/friendsHub.spec.ts) · **Deps** F-618, F-619
+- **Prefs** existing `privacy.*` and `invites.*`
+- **Acceptance**
+  1. Settings has a "Friends and invites" row and page with the sections above, using the same row components as Home and the invite sheet (`RequestRow`, `InviteLinkRow`).
+  2. A friend with an open balance in any currency cannot be removed: the prompt lists the open amounts per currency and offers "Settle up" and "Call it even". Otherwise a confirmation (bottom drawer on phones) removes them.
+  3. Removing keeps every past expense and payment, the name stays (marked "Removed" on the friend's page), the friend leaves pickers and lists, a toast offers Undo, and "Add back" restores them.
+  4. The Person overflow "Remove friend" uses the same flow; Home's "Friends N" header has "Manage"; the invite sheet's "Manage links" opens the Invite links section.
+  5. Removing someone from a shared group stays a group action (F-613).
+
 ## E7 Trips and travel
 
 Everything a group trip needs, from first booking to closing the books.
@@ -3281,7 +3294,7 @@ Your data in and out, safely.
 
 Full JSON backup from Settings > Data > Export and restore from Settings > Data > Import: versioned JSON with schema validation, migration, dedupe, preview, merge/replace and rollback on failure; generated on the device.
 
-- **Effort** M · **Impact** 8 · **Backend** no · **Status** todo · **Deps** F-103, F-1701
+- **Effort** M · **Impact** 8 · **Backend** no · **Status** done (feat/wB-B6; tests: packages/sync/test/backup.test.ts) · **Deps** F-103, F-1701
 - **Prefs** -
 - **Acceptance**
   1. A12: round-trip preserves IDs, currencies and splits.
@@ -3344,7 +3357,7 @@ Space used by receipts, attachments and history per group; compress old images, 
 
 Settings > Data > Export (CSV, PDF statement, full JSON backup via F-2001) with filters, plus Group overflow "Export", Person overflow "Export statement" and Analytics overflow "Export CSV". Generated on the device.
 
-- **Effort** M · **Impact** 8 · **Backend** no · **Status** todo · **Deps** F-1301, F-2001
+- **Effort** M · **Impact** 8 · **Backend** no · **Status** done (feat/wB-B6; tests: packages/domain/test/statement.test.ts, src/data/exportLedger.test.ts, src/lib/export/statementFormat.test.ts, e2e/export.spec.ts; native PDF/share not run on a device) · **Deps** F-1301, F-2001
 - **Prefs** -
 - **Acceptance**
   1. Settings > Data > Export offers CSV, PDF statement and full JSON backup, with filters for date range, group, person and currency.

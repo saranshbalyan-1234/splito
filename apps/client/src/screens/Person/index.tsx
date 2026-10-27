@@ -5,18 +5,18 @@ import {plural} from '@lingui/core/macro'
 import {Trans, useLingui} from '@lingui/react/macro'
 import {type RouteProp, useNavigation, useRoute} from '@react-navigation/native'
 import {
-  DomainError,
   isSettledBalance,
   personSummary,
   sumMinor,
   ZERO,
 } from '@splito/domain'
 import {
-  deletePerson,
   type Entity,
   type Group,
+  isRemovedFriend,
   type Person,
   type Repayment,
+  restoreFriend,
   type WriteOff,
 } from '@splito/sync'
 
@@ -54,6 +54,8 @@ import {
   CallItEvenDialog,
   type EvenDraft,
 } from '#/features/settlement/CallItEvenDialog'
+import {ExportMenuItem, useExportSheet} from '#/features/export/ExportSheet'
+import {RemoveFriendDialog} from '#/features/friends/RemoveFriendDialog'
 import {EditFriendDialog} from '#/components/people/EditFriendDialog'
 import {
   HistoryRow,
@@ -74,7 +76,6 @@ import {
 } from '#/components/people/RecordPaymentDialog'
 import {UpiPayDialog} from '#/components/people/UpiPayDialog'
 import * as Pills from '#/components/Pills'
-import * as Prompt from '#/components/Prompt'
 import * as Skeleton from '#/components/Skeleton'
 import * as Toast from '#/components/Toast'
 import {Text} from '#/components/Typography'
@@ -116,7 +117,8 @@ export function PersonScreen() {
   const upiControl = useDialogControl()
   const detailsControl = useDialogControl()
   const editControl = useDialogControl()
-  const deleteControl = Prompt.usePromptControl()
+  const exportSheet = useExportSheet({personId})
+  const removeControl = useDialogControl()
   const evenControl = useDialogControl()
   const [evenDraft, setEvenDraft] = useState<EvenDraft | null>(null)
   const [paymentDraft, setPaymentDraft] = useState<PaymentDraft | null>(null)
@@ -182,6 +184,7 @@ export function PersonScreen() {
   const hasOpenBalance = openCurrencies.length > 0
   /* What the hero can say that the balance card does not: shared groups and a UPI id. */
   const byline = [
+    person && isRemovedFriend(person.data) ? l`Removed` : null,
     person?.data.upiId ? l`UPI ${person.data.upiId}` : null,
     sharedGroups.length === 0
       ? l`No shared groups`
@@ -236,20 +239,11 @@ export function PersonScreen() {
     evenControl.open()
   }
 
-  const removeFriend = async () => {
-    try {
-      await deletePerson(store, ctx, personId)
-      goBack(navigation, {name: 'People'})
-      Toast.show(l`Friend removed`)
-    } catch (e) {
-      Toast.show(
-        e instanceof DomainError && e.code === 'PERSON_IN_USE'
-          ? l`${person?.data.name ?? ''} has expenses, payments or groups, so they can’t be removed.`
-          : l`Couldn’t remove this friend. Please try again.`,
-        {type: 'error'},
-      )
-    }
-  }
+  const addBack = () =>
+    void restoreFriend(store, ctx, personId).then(
+      () => Toast.show(l`${person?.data.name ?? ''} is back in your friends`),
+      () => Toast.show(l`Couldn’t add them back. Please try again.`, {type: 'error'}),
+    )
 
   const header = isLoading ? (
     <Shimmer testID="person-loading">
@@ -404,15 +398,16 @@ export function PersonScreen() {
                 </Menu.ItemText>
                 <Menu.ItemIcon icon={PencilIcon} position="right" />
               </Menu.Item>
+              <ExportMenuItem testID="person-export" label={l`Export statement`} onPress={exportSheet.open} />
               <Menu.Item
                 testID="person-delete"
-                label={l`Remove friend`}
-                destructive
-                onPress={() => deleteControl.open()}>
+                label={isRemovedFriend(person.data) ? l`Add friend back` : l`Remove friend`}
+                destructive={!isRemovedFriend(person.data)}
+                onPress={() => (isRemovedFriend(person.data) ? addBack() : removeControl.open())}>
                 <Menu.ItemText>
-                  <Trans>Remove friend</Trans>
+                  {isRemovedFriend(person.data) ? <Trans>Add friend back</Trans> : <Trans>Remove friend</Trans>}
                 </Menu.ItemText>
-                <Menu.ItemIcon icon={TrashIcon} position="right" />
+                <Menu.ItemIcon icon={isRemovedFriend(person.data) ? PlusIcon : TrashIcon} position="right" />
               </Menu.Item>
             </Menu.Outer>
           </Menu.Root>
@@ -546,6 +541,7 @@ export function PersonScreen() {
                 : null
             }
           />
+          {exportSheet.element}
           <EditFriendDialog control={editControl} person={person} />
           <CallItEvenDialog
             control={evenControl}
@@ -553,13 +549,12 @@ export function PersonScreen() {
             names={names}
             groupNames={groupNames}
           />
-          <Prompt.Basic
-            control={deleteControl}
-            title={l`Remove ${person.data.name}?`}
-            description={l`Only friends with no expenses, payments or groups can be removed.`}
-            confirmButtonCta={l`Remove`}
-            confirmButtonColor="negative"
-            onConfirm={() => void removeFriend()}
+          <RemoveFriendDialog
+            control={removeControl}
+            person={person}
+            onSettleUp={() => recordPayment()}
+            onCallItEven={callItEven}
+            onRemoved={() => goBack(navigation, {name: 'People'})}
           />
         </>
       )}
