@@ -26,6 +26,9 @@ import {useNumberLocale} from '#/locale/numberLocale'
 import {useFormatDay, useToday} from '#/locale/useDates'
 import {useAllEntities, useEntities, useMutationCtx, useStore} from '#/data/hooks'
 import {DeletedMeta, useStruck} from '#/components/DeletedMeta'
+import {EyeIcon, EyeOffIcon} from '#/components/settings/icons'
+import {useHiddenItems} from '#/data/hiddenItems'
+import {useHideItem} from '#/features/hidden/HideItem'
 import {Link} from '#/view/com/util/Link'
 import {EmptyState} from '#/view/com/util/EmptyState'
 import {UserAvatar} from '#/view/com/util/UserAvatar'
@@ -440,6 +443,8 @@ function Detail({
     </View>
   )
 
+  const hide = useHideItem({type: 'expense', id: expense.id})
+  const isHidden = useHiddenItems().has(expense.id)
   const deletedBanner = expense.deleted ? (
     <View
       testID="expense-deleted"
@@ -459,6 +464,7 @@ function Detail({
           This expense was deleted. It no longer counts towards any balance.
         </Trans>
       </Text>
+      <View style={[a.gap_xs]}>
       <Button
         testID="expense-restore"
         label={l`Restore expense`}
@@ -476,6 +482,16 @@ function Detail({
           <Trans>Restore</Trans>
         </ButtonText>
       </Button>
+      <Button
+        testID="expense-hide"
+        label={isHidden ? l`Unhide` : l`Hide`}
+        size="small"
+        color="secondary"
+        onPress={() => void hide.toggle(!isHidden)}>
+        <ButtonIcon icon={isHidden ? EyeIcon : EyeOffIcon} />
+        <ButtonText>{isHidden ? <Trans>Unhide</Trans> : <Trans>Hide</Trans>}</ButtonText>
+      </Button>
+      </View>
     </View>
   ) : null
 

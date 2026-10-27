@@ -120,7 +120,7 @@ for (const {name, width, height} of WIDTHS) {
     await expect(groups.getByTestId('group-Rishikesh')).toContainText('Hidden')
     await groups.getByTestId('searchTextInputClearBtn').click()
     await groups.getByTestId('list-filters').click()
-    await page.getByTestId('filter-visibility-hidden').click()
+    await page.getByTestId('filter-show-hidden').click()
     await page.getByTestId('sheet-save').click()
     await expect(groups.getByTestId('group-Rishikesh')).toBeVisible()
 
@@ -191,7 +191,7 @@ test('leaving as the last admin asks who takes over; then I am out and told so',
   await expect(page.getByTestId('group-menu-delete')).toHaveCount(0)
 })
 
-test('delete group lists what goes, shows as one Recently deleted entry, and restores everything', async ({page}) => {
+test('delete group lists what goes, keeps the group struck in Groups, and restores everything', async ({page}) => {
   await ready(page)
   const {group} = await seed(page)
   await page.goto(`/groups/${group}`)
@@ -200,17 +200,13 @@ test('delete group lists what goes, shows as one Recently deleted entry, and res
   await expect(page.getByTestId('delete-group-contents')).toContainText('1 expense')
   await page.getByTestId('delete-group-confirm').click()
   await expect(page).toHaveURL(/\/groups$/)
-  await expect(page.getByTestId('group-Rishikesh')).toHaveCount(0)
+  // It stays in the list, struck, with its chip.
+  await expect(page.getByTestId('group-Rishikesh')).toContainText('Deleted')
 
-  await page.goto('/settings/recently-deleted')
-  await expect(page.getByTestId('bin-count')).toHaveText('1 item')
-  const row = page.locator('[data-testid^="bin-row-"]', {hasText: 'Rishikesh'})
-  await expect(row).toContainText('1 record')
-  await row.click()
-  await expect(page.getByTestId('restore-sheet')).toContainText('Expenses')
-  await page.getByTestId('sheet-save').click()
-  await expect(page.getByText('Group restored')).toBeVisible()
   await page.goto(`/groups/${group}`)
+  await expect(page.getByTestId('group-deleted')).toBeVisible()
+  await page.getByTestId('group-restore').click()
+  await expect(page.getByTestId('group-deleted')).toHaveCount(0)
   await expect(page.getByTestId('group-name')).toHaveText('Rishikesh')
   await page.getByTestId('group-tab-balances').click()
   await expect(page.getByTestId('group-net-INR-Chirag Shah-text')).toContainText('is owed')

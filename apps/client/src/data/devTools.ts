@@ -8,6 +8,7 @@ import {
   createPerson,
   createRepayment,
   deleteExpense,
+  deletePerson,
   type EntityType,
   type ExpenseDraft,
   insideTransaction,
@@ -53,6 +54,7 @@ export function installDevTools(store: Store, ctx: MutationCtx) {
     /** Every row of one entity type, bigint as decimal strings (read-only, for assertions). */
     list: async (type: EntityType) => JSON.parse(JSON.stringify(await store.getAll(type), (_k, v) => (typeof v === 'bigint' ? v.toString() : v))),
     deleteExpense: (id: string) => deleteExpense(store, ctx, id),
+    deletePerson: (id: string) => deletePerson(store, ctx, id),
     restoreExpense: (id: string) => restoreExpense(store, ctx, id),
     createRepayment: (input: unknown) => createRepayment(store, ctx, toBig(input) as RepaymentInput).then(e => e.id),
     updateGroupRules: (groupId: string, rules: SettlementRules) => updateGroupRules(store, ctx, groupId, rules).then(e => e.id),

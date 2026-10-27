@@ -1,6 +1,6 @@
 import {expect, type Page, test} from '@playwright/test'
 
-/* F-1113 Call it even and F-1203 Recently deleted, seeded through the app's own mutations (window.splito). */
+/* F-1113 Call it even, seeded through the app's own mutations (window.splito). */
 type Splito = {
   me: string
   createPerson(name: string): Promise<string>
@@ -168,63 +168,4 @@ test('group balances: Call it even on a "who owes whom" row clears that pair in 
   await expect(
     page.getByText('You called it even with Kavya Rao'),
   ).toBeVisible()
-})
-
-test('Recently deleted: reachable from Settings, restore re-enters balances with Undo, delete forever confirms', async ({
-  page,
-}) => {
-  await ready(page)
-  const {kavya, pizza: pizzaId} = await seed(page)
-  await page.goto('/settings')
-  await expect(page.getByTestId('settings-recently-deleted-value')).toHaveText(
-    '30 days',
-  )
-  await page.getByTestId('settings-recently-deleted').click()
-  await expect(page.getByTestId('screen-recently-deleted')).toBeVisible()
-  await expect(page.getByTestId('bin-count')).toHaveText('1 item')
-  const pizza = page.locator('[data-testid^="bin-row-"]', {hasText: 'Pizza'})
-  await expect(pizza).toContainText('by You')
-  await expect(pizza).toContainText('Deleted')
-  await expect(pizza).toContainText('30 days left')
-
-  await pizza.click()
-  await expect(page.getByTestId('restore-sheet')).toBeVisible()
-  await expect(page.getByTestId('restore-amount')).toHaveText('₹600.00')
-  await page.getByTestId('sheet-save').click()
-  await expect(page.getByText('Expense restored')).toBeVisible()
-  await expect(page.getByTestId('bin-empty')).toBeVisible()
-
-  // Restored: Kavya now owes 150 + 300.
-  await page.goto(`/people/${kavya}`)
-  await expect(page.getByTestId('person-total-INR')).toHaveText('₹450.00')
-
-  // Delete it again, then delete forever: it leaves the bin for good, after a confirmation.
-  await page.evaluate(async id => {
-    await (window as unknown as {splito: Splito}).splito.deleteExpense(id)
-  }, pizzaId)
-  await page.goto('/settings/recently-deleted')
-  await page.locator('[data-testid^="bin-row-"]', {hasText: 'Pizza'}).click()
-  await page.getByTestId('restore-delete-forever').click()
-  await expect(page.getByText('Delete forever?')).toBeVisible()
-  await page.getByTestId('confirmBtn').click()
-  await expect(page.getByText('Deleted forever')).toBeVisible()
-  await expect(page.getByTestId('bin-empty')).toBeVisible()
-  await expect(page.getByTestId('person-total-INR')).toHaveCount(0)
-})
-
-test('the bin window comes from history.binDays and Settings reaches the bin on phones', async ({
-  page,
-}) => {
-  await page.setViewportSize({width: 390, height: 844})
-  await ready(page)
-  await seed(page)
-  // The drawer lists only the shared nav (ARCHITECTURE 26.3); the bin lives in Settings.
-  await page.getByTestId('header-avatar').click()
-  await page.getByTestId('drawer-settings').click()
-  await page.getByTestId('settings-recently-deleted').click()
-  await expect(page.getByTestId('screen-recently-deleted')).toBeVisible()
-  await page.getByTestId('history.binDays-7').click()
-  await expect(
-    page.locator('[data-testid^="bin-row-"]', {hasText: 'Pizza'}),
-  ).toContainText('7 days left')
 })
