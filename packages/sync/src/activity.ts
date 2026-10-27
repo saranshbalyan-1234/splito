@@ -1,5 +1,5 @@
 import {type FriendRequest} from './friends'
-import {type Expense, type Group, type Person, type Repayment, type WriteOff} from './mutations'
+import {type Expense, type Group, type Person, type Purged, type Repayment, type WriteOff} from './mutations'
 import {type Key} from './schema'
 import {type Store, type StoreChange, touches} from './store'
 import {type Entity, type EntityType, type HistoryRow} from './types'
@@ -15,14 +15,20 @@ type Base = {
   actor: string
 }
 
+/**
+ * What happened to a group. `memberLeft`: a member left or was removed (the member whose `leftAt` is newly
+ * set, who made the choice about their balance in `exit`; a new `role: 'admin'` is the hand-over).
+ */
+export type GroupKind = 'group.created' | 'group.edited' | 'group.archived' | 'group.unarchived' | 'group.deleted' | 'group.restored' | 'group.memberLeft'
+
 /** One change from the audit history, as the Activity feed shows it. */
 export type ActivityEvent = Base &
   (
     | {entityType: 'expense'; kind: 'expense.created' | 'expense.edited' | 'expense.deleted' | 'expense.restored'; data: Expense; prev?: Expense}
     | {entityType: 'person'; kind: 'person.added' | 'person.removed'; data: Person; prev?: Person}
-    | {entityType: 'group'; kind: 'group.created' | 'group.edited' | 'group.archived' | 'group.deleted'; data: Group; prev?: Group}
-    | {entityType: 'repayment'; kind: 'repayment.recorded' | 'repayment.edited' | 'repayment.removed'; data: Repayment; prev?: Repayment}
-    | {entityType: 'writeoff'; kind: 'writeoff.recorded' | 'writeoff.removed'; data: WriteOff; prev?: WriteOff}
+    | {entityType: 'group'; kind: GroupKind; data: Group; prev?: Group}
+    | {entityType: 'repayment'; kind: 'repayment.recorded' | 'repayment.edited' | 'repayment.removed' | 'repayment.restored'; data: Repayment; prev?: Repayment}
+    | {entityType: 'writeoff'; kind: 'writeoff.recorded' | 'writeoff.removed' | 'writeoff.restored'; data: WriteOff; prev?: WriteOff}
     | {
         entityType: 'friendRequest'
         kind: 'friendRequest.sent' | 'friendRequest.received' | 'friendRequest.accepted'
@@ -40,6 +46,8 @@ function kindOf(row: HistoryRow, prev: HistoryRow | undefined): ActivityKind | u
   const isNew = !prev || prev.deleted
   // "Delete forever" re-writes a tombstone to tidy the bin; the delete already showed.
   if (row.deleted && prev?.deleted) return undefined
+  // A record a group's deletion took with it (and its restore with the group) is the group's event, not its own (F-615).
+  if (row.deleted ? (row.data as Purged | null)?.deletedWithGroup : prev?.deleted && (prev.data as Purged | null)?.deletedWithGroup) return undefined
   switch (row.entityType) {
     case 'expense':
       return !prev ? 'expense.created' : row.deleted ? 'expense.deleted' : prev.deleted ? 'expense.restored' : 'expense.edited'
@@ -49,14 +57,21 @@ function kindOf(row: HistoryRow, prev: HistoryRow | undefined): ActivityKind | u
       // A friend who arrives by accepting is the request's "accepted" row, not a second one.
       if (!prev && (row.data as Person).accountId) return undefined
       return row.deleted ? 'person.removed' : isNew ? 'person.added' : undefined
-    case 'group':
+    case 'group': {
       if (row.deleted) return 'group.deleted'
-      if (isNew) return 'group.created'
-      return (row.data as Group).archived && !(prev.data as Group).archived ? 'group.archived' : 'group.edited'
+      if (!prev) return 'group.created'
+      if (prev.deleted) return 'group.restored'
+      const now = row.data as Group
+      const before = prev.data as Group
+      if (now.archived !== before.archived) return now.archived ? 'group.archived' : 'group.unarchived'
+      const hasLeft = (m: Group['members'][number]) => !!before.members?.some(b => b.personId === m.personId && b.leftAt === null) && m.leftAt !== null
+      return now.members?.some(hasLeft) ? 'group.memberLeft' : 'group.edited'
+    }
     case 'repayment':
-      return row.deleted ? 'repayment.removed' : isNew ? 'repayment.recorded' : 'repayment.edited'
+      // A restored payment is its own event: "recorded" twice would read as two payments (audit m1).
+      return row.deleted ? 'repayment.removed' : !prev ? 'repayment.recorded' : prev.deleted ? 'repayment.restored' : 'repayment.edited'
     case 'writeoff':
-      return row.deleted ? 'writeoff.removed' : 'writeoff.recorded'
+      return row.deleted ? 'writeoff.removed' : prev?.deleted ? 'writeoff.restored' : 'writeoff.recorded'
     case 'friendRequest': {
       const r = row.data as FriendRequest
       if (!prev) return r.direction === 'incoming' ? 'friendRequest.received' : 'friendRequest.sent'

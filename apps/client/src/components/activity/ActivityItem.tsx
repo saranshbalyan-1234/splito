@@ -678,18 +678,33 @@ function useDescribe(
         event.prev &&
         event.prev.name !== g.name
       const members = g.members.filter(m => m.leftAt === null)
+      /* A member who left in this change, and whoever was handed admin (F-615). */
+      const leaver = g.members.find(
+        m =>
+          m.leftAt !== null &&
+          event.prev?.members?.some(p => p.personId === m.personId && p.leftAt === null),
+      )
+      const newAdmin = g.members.find(
+        m =>
+          m.role === 'admin' &&
+          event.prev?.members?.some(p => p.personId === m.personId && p.role !== 'admin'),
+      )
       return {
         avatarName: actorAvatar,
         icon:
-          event.kind === 'group.archived'
+          event.kind === 'group.archived' || event.kind === 'group.unarchived'
             ? ArchivedBadge
             : event.kind === 'group.deleted'
               ? DeletedBadge
-              : event.kind === 'group.edited'
-                ? EditedBadge
-                : GroupBadge,
+              : event.kind === 'group.restored'
+                ? RestoredBadge
+                : event.kind === 'group.edited'
+                  ? EditedBadge
+                  : event.kind === 'group.memberLeft'
+                    ? FriendRemovedBadge
+                    : GroupBadge,
         tone:
-          event.kind === 'group.created'
+          event.kind === 'group.created' || event.kind === 'group.restored'
             ? 'primary'
             : event.kind === 'group.deleted'
               ? 'negative'
@@ -720,10 +735,48 @@ function useDescribe(
                 {actor} deleted the group {subject}
               </Trans>
             ),
+            'group.restored': (
+              <Trans>
+                {actor} restored the group {subject}
+              </Trans>
+            ),
+            'group.unarchived': (
+              <Trans>
+                {actor} unarchived the group {subject}
+              </Trans>
+            ),
+            'group.memberLeft': leaver ? (
+              leaver.personId === event.actor ? (
+                <Trans>
+                  {actor} left {subject}
+                </Trans>
+              ) : (
+                <Trans>
+                  {actor} removed <Strong>{nameOf(leaver.personId)}</Strong> from{' '}
+                  {subject}
+                </Trans>
+              )
+            ) : (
+              <Trans>
+                {actor} updated the group {subject}
+              </Trans>
+            ),
           }[event.kind]
         ),
         detail:
-          event.kind === 'group.created' ? (
+          event.kind === 'group.memberLeft' && leaver ? (
+            <Detail>
+              {leaver.exit === 'settled'
+                ? l`Settled up first`
+                : leaver.exit === 'forgiven'
+                  ? l`Balance written off`
+                  : leaver.exit === 'kept'
+                    ? l`Left with a balance still open`
+                    : l`Nothing owed`}
+              {newAdmin ? <Dot /> : null}
+              {newAdmin ? l`${nameOf(newAdmin.personId)} is now admin` : null}
+            </Detail>
+          ) : event.kind === 'group.created' ? (
             <View style={[a.flex_row, a.align_center, a.gap_sm, a.pt_2xs]}>
               {members.slice(0, MAX_PREVIEW_AVATARS).map(m => (
                 <UserAvatar
@@ -761,9 +814,11 @@ function useDescribe(
         icon:
           event.kind === 'repayment.removed'
             ? DeletedBadge
-            : event.kind === 'repayment.edited'
-              ? EditedBadge
-              : PaymentBadge,
+            : event.kind === 'repayment.restored'
+              ? RestoredBadge
+              : event.kind === 'repayment.edited'
+                ? EditedBadge
+                : PaymentBadge,
         tone:
           event.kind === 'repayment.recorded'
             ? 'primary'
@@ -781,6 +836,8 @@ function useDescribe(
             )
           ) : event.kind === 'repayment.edited' ? (
             <Trans>{actor} edited a payment</Trans>
+          ) : event.kind === 'repayment.restored' ? (
+            <Trans>{actor} restored a payment</Trans>
           ) : (
             <Trans>{actor} removed a payment</Trans>
           ),
@@ -840,10 +897,16 @@ function useDescribe(
         )
       return {
         avatarName: actorAvatar,
-        icon: isRemoved ? DeletedBadge : WriteOffBadge,
+        icon: isRemoved
+          ? DeletedBadge
+          : event.kind === 'writeoff.restored'
+            ? RestoredBadge
+            : WriteOffBadge,
         tone: isRemoved ? 'negative' : 'primary',
         headline: isRemoved ? (
           <Trans>{actor} undid a write-off</Trans>
+        ) : event.kind === 'writeoff.restored' ? (
+          <Trans>{actor} restored a write-off</Trans>
         ) : parties.kind === 'third' ? (
           <Trans>
             {actor} called it even between {debtor} and {creditor}

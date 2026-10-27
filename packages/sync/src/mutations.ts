@@ -30,11 +30,24 @@ export interface Person {
   accountId?: string | null
 }
 
+/** How a member's balance stood when they left (F-613, F-615): nothing owed, settled, forgiven, or left open. */
+export type MemberExit = 'none' | 'settled' | 'forgiven' | 'kept'
+
+/** One place in a group. `role` absent on older groups: see `groupAdmins`. */
+export interface GroupMemberEntry {
+  personId: string
+  joinedAt: number
+  leftAt: number | null
+  role?: 'admin' | 'member'
+  /** Set when `leftAt` is: the choice made about the balance, kept in history. */
+  exit?: MemberExit
+}
+
 export interface Group {
   name: string
   kind: 'trip' | 'home' | 'couple' | 'other'
   currency: CurrencyCode
-  members: Array<{personId: string; joinedAt: number; leftAt: number | null}>
+  members: GroupMemberEntry[]
   startDate: LocalDate | null
   endDate: LocalDate | null
   archived: boolean
