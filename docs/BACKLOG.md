@@ -291,7 +291,7 @@ Fixes for logic-audit findings M9, M17, M18, m14, m23, m24, m25, m28, m29 (see t
 
 Fixes for logic-audit findings M16, m6, m12, m26, m27, m30 (see the report for scenario, evidence and fix per finding).
 
-- **Effort** M · **Impact** 8 · **Backend** no · **Status** todo · **Deps** merge row 30
+- **Effort** M · **Impact** 8 · **Backend** no · **Status** done (feat/wA-33h; sync `mutations.test.ts` / `preferences.test.ts`, client `goBack.test.ts` / `form.test.ts` / `draftKey.test.ts`, e2e `webNav.spec.ts` + `links.spec.ts` + `activityRequests.spec.ts`; web verified, native not yet run) · **Deps** merge row 30
 - **Prefs** -
 - **Acceptance**
   1. Back fallbacks work after a deep link or refresh on web; reset-all survives removed preferences; groups reject end before start; a drawer reopened during its exit animation shows; browser Back on a dirty sheet asks "Discard changes?"; composer drafts are per-entry and prune every removed reference.

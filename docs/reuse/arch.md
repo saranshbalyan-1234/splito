@@ -29,3 +29,7 @@ repo root. Expensify App was not available in the upstream folder, so nothing ca
   data comes from TanStack Query over the network), privacy scrubbers (`logger/scrub.ts`), `navigation/goBack.ts`
   (Bluesky's `BackButton` falls back to Home inline; Splito keeps that and adds per-route parents) and the perf
   scenario (`apps/client/perf/`).
+
+## F-116 Web navigation and sheet robustness
+
+Bluesky search: `src/lib/hooks/useDedupe.ts` (time-based, not async-aware) was the nearest to a single-flight guard, so `lib/hooks/useSingleFlight.ts` is written from scratch (ARCHITECTURE section 10, a ref closed synchronously); Bluesky has no `getStateFromPath` parent chain (its web routes always sit under the tabs), so `backChain` in `navigation/goBack.ts` is Splito's own; the drawer fix and the web discard prompt adapt files already in `components/Dialog/drawer.web.tsx` and `components/FormSheet/Screen.tsx` (React Navigation `usePreventRemove`, as Bluesky's Composer uses `beforeRemove`).
