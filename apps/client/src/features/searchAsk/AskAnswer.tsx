@@ -8,7 +8,7 @@ import {type Answer, type PeriodInfo, type Ref, type Suggestion} from '#/lib/ask
 import {type NavigationProp} from '#/lib/routes/types'
 import {useNumberLocale} from '#/locale/numberLocale'
 import {useFormatDay} from '#/locale/useDates'
-import {usePref} from '#/data/hooks'
+import {useMe, usePref} from '#/data/hooks'
 import {atoms as a, useTheme} from '#/alf'
 import * as Dialog from '#/components/Dialog'
 import {
@@ -57,6 +57,9 @@ export function AskAnswer({answer, me, question, onAsk, onSearch}: Props) {
   const isTable = view === 'table'
 
   const name = (r: Ref) => (r.id === me ? l`You` : r.name || l`Someone`)
+  /* My own avatar shows my name's initials, as it does everywhere else. */
+  const myName = useMe()?.data.name
+  const avatarName = (r: Ref) => (r.id === me ? myName : undefined)
   const money = (amount: bigint, currency: string) => formatAmount(amount, currency, locale)
   const date = (d: string, o: Intl.DateTimeFormatOptions) => i18n.date(utc(d), {...o, timeZone: 'UTC'})
   const go = (to: () => void) => close(to)
@@ -244,7 +247,7 @@ export function AskAnswer({answer, me, question, onAsk, onSearch}: Props) {
               <PlanRows
                 testID="ask-plan"
                 locale={locale}
-                rows={answer.owes.map(o => ({key: `${o.currency}-${o.from.id}-${o.to.id}`, from: name(o.from), to: name(o.to), currency: o.currency, amount: o.amount}))}
+                rows={answer.owes.map(o => ({key: `${o.currency}-${o.from.id}-${o.to.id}`, from: name(o.from), to: name(o.to), fromAvatar: avatarName(o.from), toAvatar: avatarName(o.to), currency: o.currency, amount: o.amount}))}
               />
             </Card>
           )}

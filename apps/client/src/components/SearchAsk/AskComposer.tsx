@@ -14,6 +14,10 @@ type InputRef = React.ComponentRef<typeof RNTextInput>
 
 const MIN_HEIGHT = 40
 const MAX_HEIGHT = 120
+const LINE_HEIGHT = 22
+
+/* ponytail: the web field grows by the lines typed (Shift+Enter), not by soft wraps; a measured height if long questions ever need it. */
+const webHeight = (text: string) => Math.min(MAX_HEIGHT, MIN_HEIGHT + LINE_HEIGHT * (text.split('\n').length - 1))
 
 /**
  * Bluesky's message composer: a rounded field that grows with its text, and a
@@ -72,8 +76,8 @@ export function AskComposer({
           value={draft}
           onChangeText={onDraftChange}
           onKeyPress={onKeyPress}
-          onContentSizeChange={h => setHeight(Math.min(Math.max(h, MIN_HEIGHT), MAX_HEIGHT))}
-          height={height}
+          onContentSizeChange={h => !IS_WEB && setHeight(Math.min(Math.max(h, MIN_HEIGHT), MAX_HEIGHT))}
+          height={IS_WEB ? webHeight(draft) : height}
           placeholder={l`Ask about your balances and spending`}
           label={l`Message input field`}
           onSubmit={platform({web: undefined, default: send})}

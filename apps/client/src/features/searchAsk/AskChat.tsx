@@ -121,7 +121,14 @@ export function AskChat({
     items.push({type: 'message', key: m.id, message: m, question: lastUser?.role === 'user' ? lastUser.text : undefined})
   })
 
-  const scrollToEnd = () => list.current?.scrollToEnd({animated: true})
+  const scrollToEnd = () => list.current?.scrollToEnd({animated: false})
+  // The composer's height settles after its first layout: keep the newest message clear of it.
+  useEffect(() => {
+    scrollToEnd()
+    // A card or chart sizes itself a moment after it mounts, so the end moves: follow it.
+    const timers = [120, 400, 900].map(ms => setTimeout(scrollToEnd, ms))
+    return () => timers.forEach(clearTimeout)
+  }, [footerHeight, messages.length])
 
   const chips = [
     questions.spendFood(),
@@ -199,7 +206,7 @@ export function AskChat({
         keyboardDismissMode="on-drag"
         onContentSizeChange={scrollToEnd}
         style={[a.px_0]}
-        contentContainerStyle={[{paddingBottom: footerHeight + 8}]}
+        contentContainerStyle={[{paddingBottom: footerHeight + 24}]}
         webInnerStyle={[
           a.p_0,
           gtMobile ? {maxWidth: POPUP_WIDTH, height: 'min(640px, 80vh)'} : web({height: '100dvh', maxHeight: '100dvh'}),

@@ -127,7 +127,7 @@ export function PlanRows({
   locale,
   testID,
 }: {
-  rows: Array<{key: string; from: string; to: string; currency: string; amount: bigint}>
+  rows: Array<{key: string; from: string; to: string; fromAvatar?: string; toAvatar?: string; currency: string; amount: bigint}>
   locale: string
   testID: string
 }) {
@@ -136,12 +136,12 @@ export function PlanRows({
     <View testID={testID} style={[a.gap_sm]}>
       {rows.map(r => (
         <View key={r.key} style={[a.flex_row, a.align_center, a.gap_sm]}>
-          <UserAvatar size={28} name={r.from} type="user" />
+          <UserAvatar size={28} name={r.fromAvatar ?? r.from} type="user" />
           <Text numberOfLines={1} style={[a.flex_shrink, a.text_sm, a.font_semi_bold]}>
             {r.from}
           </Text>
           <ArrowRightIcon size="sm" style={t.atoms.text_contrast_medium} />
-          <UserAvatar size={28} name={r.to} type="user" />
+          <UserAvatar size={28} name={r.toAvatar ?? r.to} type="user" />
           <Text numberOfLines={1} style={[a.flex_1, a.text_sm, a.font_semi_bold]}>
             {r.to}
           </Text>

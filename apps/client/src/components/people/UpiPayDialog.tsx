@@ -1,5 +1,5 @@
 import {useState} from 'react'
-import {Linking, View} from 'react-native'
+import {View} from 'react-native'
 import {Trans, useLingui} from '@lingui/react/macro'
 import {
   amountInputText,
@@ -11,6 +11,7 @@ import {
 import {type Entity, type Person, updatePerson} from '@splito/sync'
 
 import {useHaptics} from '#/lib/haptics'
+import {openExternal} from '#/lib/openExternal'
 import {logger} from '#/logger'
 import {useMutationCtx, useStore} from '#/data/hooks'
 import {useNumberLocale} from '#/locale/numberLocale'
@@ -98,20 +99,7 @@ function Form({
     }
     const url = upiPayUrl({upiId: upiId.trim(), name, amount: minor})
     try {
-      if (IS_WEB) {
-        /*
-         * An anchor click is how mobile browsers hand a custom scheme to the
-         * installed app; the page stays where it is.
-         */
-        const link = document.createElement('a')
-        link.href = url
-        link.rel = 'noopener'
-        document.body.appendChild(link)
-        link.click()
-        link.remove()
-      } else {
-        await Linking.openURL(url)
-      }
+      await openExternal(url)
       haptics.tap()
       setOpened(minor)
     } catch (e) {

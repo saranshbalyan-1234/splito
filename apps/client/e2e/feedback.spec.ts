@@ -117,6 +117,10 @@ test('Send by email opens a draft, and the feedback is still only saved on the d
   await send(page, 'Please add a dark map view', 'idea')
   await page.getByTestId('sheet-save').click()
   await expect(page.getByText('Email draft opened')).toBeVisible()
+  // The e2e build records the mailto link instead of handing it to the Mail app.
+  expect(
+    await page.evaluate(() => (window as unknown as {__splitoTest?: {externalUrls: string[]}}).__splitoTest?.externalUrls ?? []),
+  ).toEqual([expect.stringMatching(/^mailto:/)])
   /* Opening a draft is not sending. */
   await page.getByTestId('sheet-cancel').click()
   await page.goto('/settings/feedback')
