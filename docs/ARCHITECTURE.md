@@ -1172,8 +1172,11 @@ labelled sidebar); **wide** = web 1300 px and up (Bluesky `gtTablet`, right colu
   (new feature or change) becomes or updates an entry in `docs/BACKLOG.md` (ID, acceptance criteria, status)
   and gets a slot in the build order, in the same turn as its § 26 rule. Work then takes the next feature from
   the list and finishes it (built, tested, merged, screenshots, status updated in BACKLOG and
-  `COMPLETION_MATRIX.md`) before starting the next; parallel workers may split one feature, not run many
-  features at once. *Why:* "add everything to feature list and pick one by one".
+  `COMPLETION_MATRIX.md`). **Building fans out:** features that touch different areas are built in parallel
+  by Sonnet workers in separate worktrees (waves ordered by dependency: a feature waits only for what it
+  depends on), each reviewed by Opus and fixed once, then one assemble step merges the wave, runs every check
+  and deploys the preview. *Why:* "add everything to feature list and pick one by one"; then "fanout with
+  sonnet and get done" (replaces strictly one feature at a time).
 - **Model split: Sonnet implements, Opus decides and reviews.** Every implementation agent (building,
   fixing, migrating, merging) runs on Sonnet (latest); every decision (design, rulings, planning), review,
   audit, judge and verification agent runs on Opus (latest). Each feature in the build chain is built by Sonnet,
@@ -1812,6 +1815,7 @@ Every owner decision, in the order it was made (all 2026-10-26). "Replaced" name
 | 79 | "every value can have status, whether its outbox, pending success, synced whatever" | Per-row `syncStatus` (local / pending / syncing / synced / failed) with index, shown per item, aggregated in the avatar dot | §§ 9.8, 26.7 | Only a global status label |
 | 80 | "use sonnet for all implementation and opus for decisions and reviews" | Sonnet builds and fixes; Opus decides, reviews, audits, judges; every feature gets an Opus review before the next | § 26.1 | One model for everything |
 | 81 | "just like in bluesky, even the header should scroll but once i scroll up a little it should appear" | Bluesky minimal shell on phones (header, bottom bar, FAB hide on scroll down, return on slight scroll up), sticky on desktop | § 26.4 | (rule existed but was not working) |
+| 82 | "fanout with sonnet and get done" | Independent features build in parallel Sonnet worktrees in dependency waves, Opus review per feature, one assemble per wave | § 26.1 | Strictly one feature at a time (row 63) |
 
 New decisions follow § 0 rule 9: rewrite the rule in its topic so only the current truth remains, then add a
 row here.
