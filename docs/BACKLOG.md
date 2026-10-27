@@ -259,8 +259,8 @@ Fixes for logic-audit findings C1, C2, M1, M2, M3, M7, M14, m8, m9, m13 (see the
 
 Fixes for logic-audit findings M5, M8, M12, M15, m2, m3, m21 (M13 is fixed by F-227) (see the report for scenario, evidence and fix per finding).
 
-- **Effort** M · **Impact** 9 · **Backend** no · **Status** todo · **Deps** merge row 30
-- **Prefs** -
+- **Effort** M · **Impact** 9 · **Backend** no · **Status** done (feat/wB-B2; M5 759532d, M8 4285917, M12 + m2 97e80d9, M15 cfd9d69, m3 8f8cd8a, m21 afe75f1; regression tests in `e2e/many-currency.spec.ts`, `formPick.test`, `ledger.test`, `cash.test`, `preferences.test`, `People/sort.test`, `Groups/filter.test`; cash unit is now the `split.roundTo` per-currency map) · **Deps** merge row 30
+- **Prefs** `split.roundTo` (now a per-currency map, default none = 1)
 - **Acceptance**
   1. Picking a group never silently changes an entered amount's currency (ask, or keep the currency); Record payment offers every currency and pre-selects the open ones; sidebar and right column show every open currency of a group; the cash-rounding unit is set per currency; compact chips never round small amounts to zero; a settled currency stays filterable; Overview currency cards open Analytics in that currency (§ 26.13).
   2. Every listed finding has a regression test that failed before the fix and passes after; the audit report marks it fixed with the commit.
@@ -614,7 +614,7 @@ Settings starts with an "Account" section copied from Bluesky's Settings account
 
 A year of realistic Splito use, generated deterministically, for the owner and for performance checks. Dev and e2e builds only.
 
-- **Effort** S · **Impact** 7 · **Backend** no · **Status** in progress · **Deps** F-103, F-1203, F-1113
+- **Effort** S · **Impact** 7 · **Backend** no · **Status** done (verified on feat/wB-B2: large set 1,550 expenses, 30 friends, 12 groups, 7 currencies incl. JPY scale 0 and BHD scale 3, 9 groups and 15 payers in more than one currency, every split mode, 92 multi-payer, 133 itemised with portions, 253 notes, 365 payments, 65 write-offs, bin items; `demoLarge.test`, `e2e/demo-large.spec.ts`, rules `demoStaticImport`; the small `?demo=1` set now holds two currencies in Goa and Lisbon, USD, JPY, BHD and KWD, b46024d) · **Deps** F-103, F-1203, F-1113
 - **Prefs** -
 - **Acceptance**
   1. `?demo=large` (web) / `EXPO_PUBLIC_DEMO=large` (native) and Settings > Data > "Add demo data" (visible only in dev/e2e builds) write ~30 friends, 12 groups, ~1,500 expenses in 6 currencies over 12 months (all split modes incl. itemised with portions and multiple payers), repayments, write-offs, notes, recurring rent/subscriptions and some deleted items, through the real mutations.
@@ -3127,7 +3127,7 @@ Bluesky's `src/components/AppLanguageDropdown.tsx` (no props): a ghost button wi
 
 Bluesky's fourth placement, the logged-out `NavSignupCard` in the LeftNav and drawer, is not copied: Splito's sidebar and drawer already carry Sign in (§ 26.3). Choosing a language writes the existing `language` preference (the same value as Settings > Language and onboarding, F-1810, F-211), activates its Lingui catalog without a reload (Bluesky `dynamicActivate`) and sets `document.documentElement.lang` on web. Options come from the one supported-language list, each labelled in its own script plus English ("हिन्दी – Hindi"), so languages added by F-1811 appear automatically.
 
-- **Effort** S · **Impact** 7 · **Backend** no · **Status** todo · **Deps** F-1810, F-225, F-224
+- **Effort** S · **Impact** 7 · **Backend** no · **Status** done (feat/wB-B2; `components/AppLanguageDropdown`, `components/Select`, `locale/languages.ts`, mounts in the web splash, Signup and RightNav; `e2e/language.spec.ts`; adds `@radix-ui/react-select` 2.2.6) · **Deps** F-1810, F-225, F-224
 - **Prefs** `language` (existing, no new value); `rightColumn.languageDropdown` (device, on)
 - **Acceptance**
   1. Copied from Bluesky with the attribution header; the reuse row names Bluesky's version (won) and Expensify's (a Preferences page only, `src/pages/settings/Preferences/`).
