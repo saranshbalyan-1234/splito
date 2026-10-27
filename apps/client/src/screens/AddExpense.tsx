@@ -68,6 +68,7 @@ export function AddExpenseScreen() {
       tz={tz}
       personId={params?.personId}
       groupId={params?.groupId}
+      prefill={{title: params?.title, amount: params?.amount, currency: params?.currency}}
       onClose={close}
     />
   )
@@ -84,6 +85,7 @@ function AddExpenseForm({
   tz,
   personId,
   groupId,
+  prefill,
   onClose,
 }: {
   me: string
@@ -97,10 +99,19 @@ function AddExpenseForm({
   tz: string
   personId?: string
   groupId?: string
+  /** An Ask Splito action card starts the form with these; the saved draft then waits (ARCHITECTURE 26.19). */
+  prefill?: {title?: string; amount?: string; currency?: string}
   onClose: () => void
 }) {
   const context = {personId, groupId}
+  const isPrefilled = !!(prefill?.title || prefill?.amount)
   const [fresh] = useState(() => {
+    const form = freshFormFor()
+    return isPrefilled
+      ? {...form, title: prefill?.title ?? form.title, amount: prefill?.amount ?? form.amount, currency: prefill?.currency ?? form.currency}
+      : form
+  })
+  function freshFormFor() {
     const group = groups.find(g => g.id === groupId)
     if (group) {
       const members = group.data.members
@@ -128,8 +139,9 @@ function AddExpenseForm({
       adjustModes,
       roundTo,
     })
-  })
+  }
   const [draft] = useState(() => {
+    if (isPrefilled) return undefined
     const d = readDraft(context)
     if (!d) return undefined
     // People removed since the draft was written drop out of every field of it.

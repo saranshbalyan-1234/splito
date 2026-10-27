@@ -20,24 +20,12 @@ test('one list, in the order of ARCHITECTURE 26.3', () => {
   ])
 })
 
-test('Ask Splito is hidden, not a dead link, until F-2301 ships', () => {
-  expect(IS_ASK_SPLITO_AVAILABLE).toBe(false)
-  expect(navigationItems()).toEqual([
-    'people',
-    'groups',
-    'analytics',
-    'activity',
-    'settings',
-  ])
-  expect(bottomBarItems(['people', 'ask', 'groups'])).toEqual([
-    'people',
-    'groups',
-  ])
-  expect(bottomBarItems(['people', 'ask', 'groups'], true)).toEqual([
-    'people',
-    'ask',
-    'groups',
-  ])
+test('Ask Splito is in the list now that F-2301 ships; it can still be switched off', () => {
+  expect(IS_ASK_SPLITO_AVAILABLE).toBe(true)
+  expect(navigationItems()).toEqual(['people', 'groups', 'analytics', 'ask', 'activity', 'settings'])
+  expect(navigationItems(false)).toEqual(['people', 'groups', 'analytics', 'activity', 'settings'])
+  expect(bottomBarItems(['people', 'ask', 'groups'])).toEqual(['people', 'ask', 'groups'])
+  expect(bottomBarItems(['people', 'ask', 'groups'], false)).toEqual(['people', 'groups'])
 })
 
 test('the default bottom bar is Home, Groups, Analytics, Activity', () => {

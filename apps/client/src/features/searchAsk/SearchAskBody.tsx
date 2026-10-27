@@ -20,6 +20,7 @@ import {
   searchRows,
 } from '#/components/SearchAsk/model'
 import {
+  AskResult,
   ExpenseResult,
   GroupResult,
   NoResults,
@@ -31,6 +32,11 @@ import {SearchHistory} from '#/components/SearchAsk/SearchHistory'
 import {SHORTCUT_HINT} from '#/components/SearchAsk/useSearchAskHotkey'
 import {Text} from '#/components/Typography'
 import {IS_WEB} from '#/env'
+import {isQuestion} from '#/lib/ask/parse'
+import {type SearchAskMode} from '#/components/SearchAsk/context'
+import {AskChat} from './AskChat'
+import {useAskQuestions} from './askQuestions'
+import {useAskEngine} from './useAskEngine'
 import {useSearchNames} from './useSearchNames'
 
 const HISTORY_KEY: ['searchHistory'] = ['searchHistory']
@@ -46,20 +52,67 @@ const POPUP_WIDTH = 720
  * People, Groups and Expenses with the matches highlighted. A result opens
  * its page and closes the drawer. Web: arrow keys move through the results,
  * Enter opens one; Escape closes the drawer.
- * TODO(F-2301): the "Ask Splito: '<query>'" row heads the results and the
- * suggested questions join the empty state once the chat ships.
+ * The "Ask Splito: '<query>'" row heads the results and Enter on a question
+ * opens the chat (F-2301); suggested questions join the empty state.
  */
-export function SearchAskBody({initialQuery}: {initialQuery: string}) {
+export function SearchAskBody({
+  initialQuery,
+  initialMode = 'search',
+}: {
+  initialQuery: string
+  initialMode?: SearchAskMode
+}) {
+  /* The drawer is one place with two views: the search and the Ask Splito chat, a back arrow between. */
+  const [mode, setMode] = useState<SearchAskMode>(initialMode)
+  const [query, setQuery] = useState(initialQuery)
+  const [question, setQuestion] = useState<string>()
+  if (mode === 'ask')
+    return (
+      <AskChat
+        initialQuestion={question}
+        onBack={() => {
+          setQuestion(undefined)
+          setMode('search')
+        }}
+        onSearch={q => {
+          setQuery(q)
+          setQuestion(undefined)
+          setMode('search')
+        }}
+      />
+    )
+  return (
+    <SearchPanel
+      query={query}
+      setQuery={setQuery}
+      onAsk={q => {
+        setQuestion(q)
+        setMode('ask')
+      }}
+    />
+  )
+}
+
+function SearchPanel({
+  query,
+  setQuery,
+  onAsk,
+}: {
+  query: string
+  setQuery: (q: string) => void
+  onAsk: (question: string) => void
+}) {
   const t = useTheme()
   const {t: l} = useLingui()
   const {gtMobile} = useBreakpoints()
   const navigation = useNavigation<NavigationProp>()
   const {close} = Dialog.useDialogContext()
   const textInput = useRef<React.ComponentRef<typeof TextInput>>(null)
-  const [query, setQuery] = useState(initialQuery)
   const [activeNav, setActiveNav] = useState(-1)
 
   const {names, groupNames} = useSearchNames()
+  const {vocab} = useAskEngine()
+  const askQuestions = useAskQuestions()
   const {actor: me} = useMutationCtx()
   const locale = useNumberLocale()
   const formatDay = useFormatDay()
@@ -81,6 +134,7 @@ export function SearchAskBody({initialQuery}: {initialQuery: string}) {
         results.summary
           ? {count: results.summary.count, isPartial: false}
           : {count: results.expenses.length, isPartial: true},
+        query.trim() || undefined,
       )
     : []
   const navRows = rows.filter((r): r is SearchResultRow => r.type !== 'header')
@@ -100,6 +154,10 @@ export function SearchAskBody({initialQuery}: {initialQuery: string}) {
   }
 
   const open = (row: SearchResultRow) => {
+    if (row.type === 'ask') {
+      onAsk(row.query)
+      return
+    }
     rememberQuery(query)
     close(() => {
       if (row.type === 'person')
@@ -114,6 +172,10 @@ export function SearchAskBody({initialQuery}: {initialQuery: string}) {
     const active = navRows[activeNav]
     if (active) {
       open(active)
+      return
+    }
+    if (isQuestion(query, vocab)) {
+      onAsk(query.trim())
       return
     }
     rememberQuery(query)
@@ -156,6 +218,8 @@ export function SearchAskBody({initialQuery}: {initialQuery: string}) {
             locale={locale}
           />
         )
+      case 'ask':
+        return <AskResult nav={row.nav} query={row.query} isActive={row.nav === activeNav} onPress={() => open(row)} />
       case 'person':
         return (
           <PersonResult
@@ -292,6 +356,8 @@ export function SearchAskBody({initialQuery}: {initialQuery: string}) {
               setHistory(history.filter(h => h !== item))
             }
             onClearAll={() => setHistory([])}
+            questions={[askQuestions.spendFood(), askQuestions.owedMost(), askQuestions.split()]}
+            onAsk={onAsk}
           />
         ) : results?.isDone ? (
           <NoResults query={query.trim()} />
@@ -300,7 +366,10 @@ export function SearchAskBody({initialQuery}: {initialQuery: string}) {
       onEndReached={results?.hasMore ? results.loadMore : undefined}
       onEndReachedThreshold={2}
       ListFooterComponent={
-        results?.hasMore && rows.length > 0 ? (
+        /* Only the Ask row and nothing found: say so under it. */
+        rows.length === 1 && results?.isDone ? (
+          <NoResults query={query.trim()} />
+        ) : results?.hasMore && rows.length > 0 ? (
           <View style={[a.align_center, a.pt_md, a.pb_sm]}>
             <Button
               testID="search-show-more"

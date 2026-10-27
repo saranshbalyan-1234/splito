@@ -162,7 +162,11 @@ test('who owes me the most and whom I owe the most match the balances, largest f
   const truth = personSummary(balanceRows((await records(store)).all, ctx.actor, Object.fromEntries(groups.map(g => [g.id, g.data.rules]))), {includeGroups: true})
   const owed: Record<string, bigint> = {}
   const owe: Record<string, bigint> = {}
-  for (const s of truth) for (const [cur, c] of Object.entries(s.byCurrency)) (c.total > ZERO ? (owed[`${s.person}:${cur}`] = c.total) : c.total < ZERO ? (owe[`${s.person}:${cur}`] = magnitude(c.total)) : 0)
+  for (const s of truth)
+    for (const [cur, c] of Object.entries(s.byCurrency)) {
+      if (c.total > ZERO) owed[`${s.person}:${cur}`] = c.total
+      else if (c.total < ZERO) owe[`${s.person}:${cur}`] = magnitude(c.total)
+    }
   const a = await ask('Who owes me the most?', env)
   const b = await ask('Whom do I owe the most?', env)
   if (a.kind !== 'ranking' || b.kind !== 'ranking') throw new Error('not a ranking')
@@ -296,6 +300,6 @@ test('on the large demo set: every friend\'s balance equals People\'s and a year
     }
     // The answer shows at most 8 slices; the headline is the whole.
     expect(c.share, c.currency).toBe([...mine.values()].reduce((x, y) => x + y, ZERO))
-    for (const s of c.slices) expect(s.value, `${c.currency} ${s.key}`).toBe(mine.get(s.key))
+    for (const s of c.slices) expect(s.value, `${c.currency} ${s.key}`).toBe(mine.get(s.key)!)
   }
 }, 120_000)

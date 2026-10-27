@@ -1,12 +1,10 @@
 import {NAV_ITEM_IDS, type NavItemId} from '@splito/sync'
 
 /**
- * Ask Splito's chat ships with F-2301. Until then the item stays out of the
- * sidebar, the drawer, the bottom bar and Settings > Navigation, rather than
- * being a dead link (ARCHITECTURE 26.3, 26.19).
- * TODO(F-2301): turn on with the chat.
+ * Ask Splito's chat is built (F-2301), so its item shows in the sidebar, the
+ * drawer, the bottom bar and Settings > Navigation (ARCHITECTURE 26.3, 26.19).
  */
-export const IS_ASK_SPLITO_AVAILABLE = false
+export const IS_ASK_SPLITO_AVAILABLE = true
 
 /** The route each item opens; Ask Splito opens the Search & Ask drawer instead. */
 export const NAV_ITEM_ROUTE = {

@@ -13,7 +13,7 @@ glyphs, illustrations, logos or `assets/images` are copied.
 | `src/components/SearchAsk/ResultRows.tsx` | `src/screens/Search/components/ModuleHeader.tsx`, `SearchProfileCard.tsx`, `SearchResults.tsx` | As in docs/reuse/search.md; moved with the drawer |
 | `src/components/SearchAsk/useSearchAskHotkey.web.ts` | `src/components/Lightbox/Lightbox.web.tsx` | Window `keydown` listener: Cmd/Ctrl+K toggles the drawer, "/" opens it outside text fields |
 | `src/components/SyncStatusDot.tsx` | `src/view/com/util/UserAvatar.tsx` (the alert badge pinned bottom-right on an avatar) | The sync-status dot (F-223): Bluesky's bottom-right badge geometry, scaled to the avatar, with a ring in the background colour; green / yellow / red from `lib/syncState.ts`, a pop between states (instant under reduced motion), the state as the avatar's accessibility label and a web hover tooltip |
-| `src/components/settings/NavigationEditor.tsx` | `src/screens/SavedFeeds.tsx` (`PinnedFeedItem`, move up/down) | Bluesky's pinned list for the phone bottom bar: every shared nav item with a toggle and a drag handle, 2 to 5 tabs, Home fixed, arrows on wide web / screen readers |
+| `src/components/settings/NavigationEditor.tsx` | `src/screens/SavedFeeds.tsx` (`PinnedFeedItem`, move up/down) | Bluesky's pinned list for the phone bottom bar: every shared nav item with a toggle and a drag handle, any number of tabs (decision 84), Home fixed, arrows on wide web / screen readers |
 
 Written for Splito (no Bluesky equivalent): `src/lib/routes/navigationItems.ts` (the one nav list), `src/lib/syncState.ts` and `useSyncDot.ts` (the dot's rule),
 `src/components/SearchAsk/context.ts`, `hotkeyAction.ts`, `useSearchAskHotkey.ts`, `SearchAskButton.tsx`,

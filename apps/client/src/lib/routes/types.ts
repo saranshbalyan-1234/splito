@@ -31,7 +31,8 @@ export type RootStackParams = {
   /** `tab` opens a section directly (`/groups/:groupId?tab=rules`). */
   Group: {groupId: string; tab?: 'expenses' | 'balances' | 'members' | 'rules'}
   Settle: {groupId: string}
-  AddExpense: {personId?: string; groupId?: string}
+  /** `title`, `amount` (a decimal like "1200.00") and `currency` start the form pre-filled (an Ask Splito action card). */
+  AddExpense: {personId?: string; groupId?: string; title?: string; amount?: string; currency?: string}
   Expense: {expenseId: string}
   EditExpense: {expenseId: string}
   AddFriend: undefined

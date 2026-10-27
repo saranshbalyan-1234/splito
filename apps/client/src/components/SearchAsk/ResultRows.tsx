@@ -18,6 +18,7 @@ import {UserAvatar} from '#/view/com/util/UserAvatar'
 import {atoms as a, type TextStyleProp, useTheme} from '#/alf'
 import {GroupAvatar} from '#/components/groups/GroupAvatar'
 import {ChevronRight_Stroke2_Corner0_Rounded as ChevronIcon} from '#/components/icons/Chevron'
+import {Sparkles_Stroke2_Corner0_Rounded as SparklesIcon} from '#/components/icons/Sparkles'
 import {EntryIcon} from '#/components/people/EntryIcon'
 import {Text} from '#/components/Typography'
 import {useListAnimations} from '#/motion/listAnimations'
@@ -390,5 +391,43 @@ export function NoResults({query}: {query: string}) {
         </Text>
       </View>
     </View>
+  )
+}
+
+/** The "Ask Splito: '<query>'" row that heads the results: Enter on a question or a tap opens the chat. */
+export function AskResult({
+  nav,
+  query,
+  isActive,
+  onPress,
+}: {
+  nav: number
+  query: string
+  isActive: boolean
+  onPress: () => void
+}) {
+  const t = useTheme()
+  const {t: l} = useLingui()
+  return (
+    <ResultRow nav={nav} label={l`Ask Splito: ${query}`} isActive={isActive} onPress={onPress}>
+      <View
+        style={[
+          a.rounded_full,
+          a.align_center,
+          a.justify_center,
+          {width: 40, height: 40, backgroundColor: t.palette.primary_100},
+        ]}>
+        <SparklesIcon size="md" fill={t.palette.primary_600} />
+      </View>
+      <View style={[a.flex_1, a.gap_2xs]}>
+        <Text numberOfLines={1} style={[a.text_md, a.font_semi_bold, a.leading_snug]}>
+          <Trans>Ask Splito: “{query}”</Trans>
+        </Text>
+        <Text style={[a.text_sm, a.leading_snug, t.atoms.text_contrast_medium]} numberOfLines={1}>
+          <Trans>Answered on this device</Trans>
+        </Text>
+      </View>
+      <ChevronIcon size="sm" style={t.atoms.text_contrast_low} />
+    </ResultRow>
   )
 }

@@ -29,6 +29,10 @@ export type Device = {
   activityFeed: FeedState
   /** Search's recent queries, newest first (Bluesky's `searchTermHistory`). */
   searchHistory: string[]
+  /** Ask Splito's conversation (`lib/ask/history`: JSON, newest 200 messages). Device-only: never ledger data, the outbox or a backup. */
+  askChat: string
+  /** The question being typed in Ask Splito, kept when the drawer closes. */
+  askDraft: string
   /** Dev and e2e builds only: this install was opened with `?demo=1`, so the demo directory answers. */
   demoMode: boolean
   /** Dev and e2e builds only: the small demo set was asked for and has not finished going in. */

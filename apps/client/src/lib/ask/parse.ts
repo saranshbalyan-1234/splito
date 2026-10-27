@@ -33,7 +33,6 @@ const SPEND = [
   'spend', 'spent', 'spending', 'expense', 'expenses', 'expenditure', 'cost', 'costs', 'costing', 'kharch', 'kharcha', 'kharche', 'kharchaa',
   'खर्च', 'खर्चा', 'खर्चे', 'लागत',
 ]
-const PAID = ['paid', 'pay', 'bhara', 'diya', 'chukaya', 'दिया', 'भरा', 'चुकाया']
 const TOTAL = ['total cost', 'altogether', 'in all', 'everyone', 'everybody', 'all together', 'combined', 'whole group', 'entire', 'cost', 'costs', 'costing', 'sabka', 'सबका', 'कुल लागत']
 const ME = ['my', 'me', 'i', 'mine', 'mera', 'meri', 'mere', 'mujhe', 'main', 'mai', 'मेरा', 'मेरी', 'मेरे', 'मुझे', 'मैं']
 const TREND = [
@@ -351,4 +350,25 @@ export function parseQuestion(question: string, vocab: Vocab): Intent {
   }
 
   return {kind: 'unsupported', suggestion: suggest(words, vocab)}
+}
+
+const QUESTION_STARTERS = new Set(
+  ('how what whats who whom whos which when where why can could should do does did is are will would show tell give split divide ' +
+    'kitna kitne kitni kaun kisne kisko kya mujhe mera meri mere batao ' +
+    'कितना कितने कितनी कौन किसने किसको क्या मुझे मेरा मेरी बताओ').split(' '),
+)
+
+/**
+ * Whether Enter on this text in Search should start a conversation instead:
+ * it ends in "?", opens with a question word, or the engine reads three or
+ * more words as one of its question kinds. A bare name or a plain search
+ * ("dinner", "> 1000") stays a search.
+ */
+export function isQuestion(text: string, vocab: Vocab): boolean {
+  const words = tokens(text)
+  if (words.length === 0) return false
+  if (/[?？]\s*$/.test(text.trim())) return true
+  if (words.length >= 2 && QUESTION_STARTERS.has(words[0]!)) return true
+  const kind = parseQuestion(text, vocab).kind
+  return words.length >= 3 && kind !== 'find' && kind !== 'unsupported' && kind !== 'help'
 }

@@ -194,8 +194,7 @@ function NavItem({
       }
       e.preventDefault?.()
       if (navItem === 'ask') {
-        // TODO(F-2301): open straight in Ask mode.
-        searchAsk.open()
+        searchAsk.open({mode: 'ask'})
         return
       }
       if (tab && onNavigateTab) {

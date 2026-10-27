@@ -50,3 +50,13 @@ test('a partial expense count is flagged; a known one is not', () => {
     isPartial: true,
   })
 })
+
+test('the "Ask Splito" row heads the list and is the first stop of the keyboard, results follow', () => {
+  const results = {people: [e('person', 'sam')], groups: [], expenses: [e('expense', 'x1')]}
+  const rows = searchRows(results, undefined, 'who owes me?')
+  expect(rows.map(r => (r.type === 'header' ? r.section : `${r.key}#${r.nav}`))).toEqual(['ask#0', 'people', 'person-sam#1', 'expenses', 'expense-x1#2'])
+  expect(rows[0]).toMatchObject({type: 'ask', query: 'who owes me?'})
+  // Nothing found still offers the question: it is answered from the books, not the search.
+  expect(searchRows({people: [], groups: [], expenses: []}, undefined, 'who owes me?')).toHaveLength(1)
+  expect(searchRows({people: [], groups: [], expenses: []})).toEqual([])
+})

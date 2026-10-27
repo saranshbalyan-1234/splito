@@ -121,8 +121,7 @@ export function BottomBar({navigation}: BottomTabBarProps) {
                 ax.metric('nav:click', {item: tab, surface: 'bottomBar'})
                 dedupe(() => navigation.navigate('Settings'))
               } else if (tab === 'ask') {
-                // TODO(F-2301): open straight in Ask mode.
-                searchAsk.open()
+                searchAsk.open({mode: 'ask'})
               } else onPressTab(TAB_ROUTE[tab])
             }}
             /* Bluesky's unread badge, on the tab its Notifications became. */

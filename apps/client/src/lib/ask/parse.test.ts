@@ -1,7 +1,7 @@
 import {expect, test} from 'bun:test'
 import {DEFAULT_CATEGORIES} from '@splito/sync'
 
-import {closestSuggestion, parseQuestion} from './parse'
+import {closestSuggestion, isQuestion, parseQuestion} from './parse'
 import {type Intent, type Vocab} from './types'
 
 const person = (id: string, name: string) => ({id, name})
@@ -157,22 +157,9 @@ test('the nearest supported question follows the topic of the unsupported one', 
   expect(closestSuggestion('compare my trip day to day', vocab)).toEqual({key: 'groupByDay', name: 'Goa trip'})
 })
 
-test('every suggestion Splito offers is a question it can answer', async () => {
-  const {suggestionText} = await import('./suggestions')
-  for (const s of [
-    {key: 'owedMost'},
-    {key: 'iOweMost'},
-    {key: 'balanceWith', name: 'Riya Sharma'},
-    {key: 'spendMonth'},
-    {key: 'spendCategory', name: 'Food'},
-    {key: 'groupByDay', name: 'Goa trip'},
-    {key: 'groupOwes', name: 'Goa trip'},
-    {key: 'byCategory'},
-    {key: 'split'},
-  ] as const) {
-    for (const lang of ['en', 'hi'] as const) {
-      const q = suggestionText(s, lang)
-      expect(parseQuestion(q, vocab).kind, q).not.toBe('unsupported')
-    }
-  }
+test('Enter in Search starts a chat only for questions, never for a name or a plain search', () => {
+  for (const q of ['What does Riya owe me?', 'who owes me', 'how much did I spend on food', 'Show my Goa trip spending by day', 'Split 1200 4 ways', 'kitna kharch hua is mahine', 'mera kharcha is mahine'])
+    expect(isQuestion(q, vocab), q).toBe(true)
+  for (const q of ['dinner', 'Riya', 'Goa trip', '> 1000', 'march 2026', 'pizza dhundo', 'airbnb', 'show'])
+    expect(isQuestion(q, vocab), q).toBe(false)
 })

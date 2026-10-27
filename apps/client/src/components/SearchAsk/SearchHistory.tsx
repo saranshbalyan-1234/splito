@@ -7,6 +7,7 @@ import {Button, ButtonIcon, ButtonText} from '#/components/Button'
 import {MagnifyingGlass_Stroke2_Corner0_Rounded as SearchIcon} from '#/components/icons/MagnifyingGlass'
 import {TimesLarge_Stroke2_Corner0_Rounded as XIcon} from '#/components/icons/Times'
 import * as Prompt from '#/components/Prompt'
+import {QuestionChip} from '#/components/SearchAsk/AskCards'
 import {Text} from '#/components/Typography'
 
 /*
@@ -21,7 +22,12 @@ export function SearchHistory({
   onItemClick,
   onRemoveItemClick,
   onClearAll,
+  questions = [],
+  onAsk,
 }: {
+  /** Suggested questions for Ask Splito, shown above the search tips. */
+  questions?: string[]
+  onAsk?: (question: string) => void
   searchHistory: string[]
   onItemClick: (item: string) => void
   onRemoveItemClick: (item: string) => void
@@ -101,6 +107,19 @@ export function SearchHistory({
               style={[a.text_md, a.text_center, t.atoms.text_contrast_medium]}>
               <Trans>Find any expense, friend or group on this device</Trans>
             </Text>
+          </View>
+        )}
+
+        {questions.length > 0 && onAsk && (
+          <View testID="search-questions">
+            <Text style={[a.px_lg, a.pt_sm, a.pb_xs, a.text_md, a.font_semi_bold]}>
+              <Trans>Ask Splito</Trans>
+            </Text>
+            <View style={[a.flex_row, a.flex_wrap, a.gap_sm, a.px_lg, a.pt_xs]}>
+              {questions.map(q => (
+                <QuestionChip key={q} testID="search-question" text={q} onPress={() => onAsk(q)} />
+              ))}
+            </View>
           </View>
         )}
 
