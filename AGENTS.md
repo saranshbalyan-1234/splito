@@ -45,6 +45,8 @@ pnpm --filter @splito/client ios   # dev client build (needs Xcode)
 EXPO_PUBLIC_DEMO=1 CI=1 npx expo run:android --port 8226 --device emulator-5584   # build, install, run
 ANDROID_SERIAL=emulator-5584 METRO_PORT=8226 pnpm android:smoke <outDir>        # add expense + settle up
 pnpm --filter @splito/client e2e   # Playwright against the web build
+pnpm --filter @splito/client e2e:pwa   # production build + service worker (offline, update); ~2 min build
+pnpm --filter @splito/client build-web # production web build with sw.js (e2e:build has none)
 ```
 
 ## Project Structure

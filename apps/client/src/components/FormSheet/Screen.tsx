@@ -9,6 +9,7 @@ import {
   usePreventRemove,
 } from '@react-navigation/native'
 
+import {useWorkAtStake} from '#/lib/pwa/workAtStake'
 import {atoms as a, web} from '#/alf'
 import * as Composer from '#/components/Composer'
 import * as Prompt from '#/components/Prompt'
@@ -69,6 +70,7 @@ export function Screen({
   const keyboardVerticalOffset = useKeyboardVerticalOffset()
   const pendingAction = useRef<NavigationAction | null>(null)
   const [isScrolled, onScroll] = useIsScrolled()
+  useWorkAtStake(isDirty)
 
   /* A swipe down, Back or the browser's Back is a route removal, so ask before it happens (web too, audit m27). */
   usePreventRemove(isDirty, ({data}) => {

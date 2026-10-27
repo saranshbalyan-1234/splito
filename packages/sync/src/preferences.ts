@@ -160,6 +160,8 @@ export const PREFS = {
   'amount.keypad': def('amount.keypad', 'defaults', 'device', 'Amount keypad', true, isBool),
   analyticsPeriod: def('analyticsPeriod', 'defaults', 'account', 'Analytics period', 'year', oneOf('week', 'month', 'year', 'all')),
   analyticsView: def('analyticsView', 'defaults', 'device', 'Analytics view', 'charts', oneOf('charts', 'table')),
+  /** F-1901: the one-time "install Splito" hint on the web has been shown; set by the app, no Settings row. */
+  'pwa.installHintDismissed': def('pwa.installHintDismissed', 'defaults', 'device', 'Install hint shown', false, isBool),
   /** The last scope chosen on Analytics' scope chip; set there, not in Settings. */
   analyticsScope: def<AnalyticsScope>('analyticsScope', 'defaults', 'device', 'Analytics scope', 'everything', isAnalyticsScope),
   categories: def<Category[]>(

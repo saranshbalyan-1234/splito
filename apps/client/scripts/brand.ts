@@ -174,8 +174,8 @@ const MANIFEST = {
   start_url: '/',
   scope: '/',
   display: 'standalone',
-  background_color: WHITE,
-  theme_color: WHITE,
+  background_color: DIM,
+  theme_color: DIM,
   icons: [
     {
       src: '/icons/icon-192.png',

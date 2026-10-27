@@ -10,6 +10,7 @@ import {useEntities, useMe, usePref} from '#/data/hooks'
 import {useOpenFeedback} from '#/features/feedback/FeedbackProvider'
 import {useData} from '#/data/StoreProvider'
 import {UserAvatar} from '#/view/com/util/UserAvatar'
+import {InstallAppItem} from '#/screens/Settings/components/InstallAppItem'
 import * as SettingsList from '#/screens/Settings/components/SettingsList'
 import {atoms as a, useTheme} from '#/alf'
 import {ArrowRotateCounterClockwise_Stroke2_Corner0_Rounded as ResetIcon} from '#/components/icons/ArrowRotate'
@@ -206,6 +207,7 @@ export function SettingsScreen() {
               </Text>
             ) : null}
           </SettingsList.LinkItem>
+          <InstallAppItem />
           <SettingsList.PressableItem
             testID="settings-reset-all"
             destructive
