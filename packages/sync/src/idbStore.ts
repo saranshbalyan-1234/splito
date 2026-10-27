@@ -89,17 +89,17 @@ function idbRows(t: Tx, cmp: (a: unknown, b: unknown) => number): RowAccess {
 
 /** Reads v1's three object stores. */
 async function readV1(t: Tx): Promise<LegacyV1> {
-  return {
-    entities: (await t.objectStore('entities').getAll()) as LegacyV1['entities'],
-    history: (await t.objectStore('history').getAll()) as LegacyV1['history'],
-    outbox: (await t.objectStore('outbox').getAll()) as LegacyV1['outbox'],
-  }
+  // Issued together: a transaction with no request pending when a read returns may already be finished.
+  const [entities, history, outbox] = await Promise.all(['entities', 'history', 'outbox'].map(name => t.objectStore(name).getAll()))
+  return {entities, history, outbox} as LegacyV1
 }
 
 export async function openIdbStore(name: string, factory: IDBFactory = indexedDB): Promise<Store> {
   const cmp = (a: unknown, b: unknown) => factory.cmp(a, b)
   const req = factory.open(name, SCHEMA_VERSION)
   let upgrade: Promise<void> | undefined
+  /** Why the upgrade aborted: the open request itself only reports "aborted". */
+  let upgradeError: unknown
   req.onupgradeneeded = e => {
     const raw = req.result
     const t = wrap(req.transaction!) as unknown as Tx
@@ -118,6 +118,7 @@ export async function openIdbStore(name: string, factory: IDBFactory = indexedDB
       }
     })().catch(error => {
       // Aborting the upgrade leaves the v1 database exactly as it was.
+      upgradeError = error
       try {
         req.transaction!.abort()
       } catch {
@@ -128,7 +129,12 @@ export async function openIdbStore(name: string, factory: IDBFactory = indexedDB
     // A failure surfaces through the aborted open request below.
     upgrade.catch(() => undefined)
   }
-  const db = (await wrap(req)) as IDBPDatabase
+  let db: IDBPDatabase
+  try {
+    db = (await wrap(req)) as IDBPDatabase
+  } catch (e) {
+    throw upgradeError ?? e
+  }
   await upgrade
   // A newer build in another tab can upgrade later: let go so it is never blocked.
   db.onversionchange = () => db.close()

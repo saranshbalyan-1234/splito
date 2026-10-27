@@ -35,7 +35,8 @@ export async function migrateV1ToV2(legacy: LegacyV1, rows: RowAccess): Promise<
   }
   const byType = new Map<EntityType, Entity[]>()
   for (const l of legacy.entities) {
-    if (!(l.type in ENTITY_STORE)) continue
+    // Dropping `entities` afterwards would lose the row for good: abort and leave v1 intact.
+    if (!(l.type in ENTITY_STORE)) throw new Error(`cannot migrate: unknown entity type "${l.type}" (${l.id})`)
     const key = `${l.type}:${l.id}`
     const entity = completeEntity(
       {

@@ -71,6 +71,9 @@ async function smallSet(): Promise<StoreDump> {
 }
 
 let large: StoreDump
+/** The balance sums the mutations kept while the large set was written: what a migration must rebuild exactly. */
+let largeBalances: Awaited<ReturnType<Store['balances']>>
+const sorted = (rows: Awaited<ReturnType<Store['balances']>>) => [...rows].sort((x, y) => (encode(x) < encode(y) ? -1 : 1))
 beforeAll(async () => {
   const s = await openSqlStore(bunExecutor(':memory:'))
   const base = makeCtx()
@@ -84,6 +87,7 @@ beforeAll(async () => {
       for (const op of ops.slice(i, i + 150)) await applyDemoOp(batched, ctx, op)
     })
   large = await s.dump()
+  largeBalances = await s.balances()
   await s.close()
 }, 120_000)
 
@@ -222,8 +226,7 @@ describe.each(Object.keys(open))('%s v1 -> v2', engine => {
     console.log(`${engine} v1 -> v2 migration of ${large.entities.length} rows, ${large.history.length} history rows, ${large.outbox.length} ops: ${ms.toFixed(0)} ms`)
     await expectSameAsV1(store, large)
     // The sums the migration built equal the ones the mutations kept while the source set was written.
-    const source = await openSqlStore(bunExecutor(':memory:'))
-    await source.close()
+    expect(sorted(await store.balances())).toEqual(sorted(largeBalances))
     const people = large.entities.filter(e => e.type === 'person' && !e.deleted).map(e => e.id)
     expect((await store.balances()).length).toBeGreaterThan(100)
     expect(people.length).toBeGreaterThan(20)
@@ -268,7 +271,7 @@ describe('a migration that fails leaves v1 exactly as it was', () => {
     const person = bad.entities.find(e => e.type === 'person')!
     await raw.put('entities', {...v1Entity(person), data: '{not json'})
     raw.close()
-    await expect(openIdbStore('bad', factory)).rejects.toThrow()
+    await expect(openIdbStore('bad', factory)).rejects.toThrow(/JSON|Expected|parse/i)
     const again = (await wrap(factory.open('bad', 1))) as IDBPDatabase
     expect(again.version).toBe(1)
     expect(await again.count('entities')).toBe(dump.entities.length)
@@ -289,6 +292,35 @@ describe('a migration that fails leaves v1 exactly as it was', () => {
     expect((check.query('PRAGMA user_version').get() as {user_version: number}).user_version).toBe(0)
     expect((check.query('SELECT COUNT(*) AS n FROM entities').get() as {n: number}).n).toBe(dump.entities.length)
     expect((check.query('SELECT COUNT(*) AS n FROM outbox').get() as {n: number}).n).toBe(dump.outbox.length)
+    check.close()
+  })
+})
+
+describe('a v1 row of a type this build does not know aborts the upgrade (fail closed, like a corrupt row)', () => {
+  const alien = {type: 'receipt', id: 'r1', data: {}, version: 1, deleted: false, createdAt: 1, updatedAt: 1, syncStatus: 'local', serverVersion: null, syncedAt: null, syncError: null} as unknown as StoreDump['entities'][number]
+
+  test('IndexedDB', async () => {
+    const dump = await smallSet()
+    const factory = new IDBFactory()
+    await writeV1Idb(factory, 'alien', {...dump, entities: [...dump.entities, alien]})
+    await expect(openIdbStore('alien', factory)).rejects.toThrow(/receipt/)
+    const again = (await wrap(factory.open('alien', 1))) as IDBPDatabase
+    expect(again.version).toBe(1)
+    expect(await again.count('entities')).toBe(dump.entities.length + 1)
+    again.close()
+  })
+
+  test('SQLite', async () => {
+    const dump = await smallSet()
+    const path = join(mkdtempSync(join(tmpdir(), 'splito-alien-')), 'db.sqlite')
+    writeV1Sql(path, dump)
+    const raw = new Database(path)
+    raw.query('INSERT INTO entities VALUES (?, ?, ?, ?, ?, ?)').run('receipt', 'r1', '{}', 1, 0, 1)
+    raw.close()
+    await expect(openSqlStore(bunExecutor(path))).rejects.toThrow(/receipt/)
+    const check = new Database(path)
+    expect((check.query('PRAGMA user_version').get() as {user_version: number}).user_version).toBe(0)
+    expect((check.query('SELECT COUNT(*) AS n FROM entities').get() as {n: number}).n).toBe(dump.entities.length + 1)
     check.close()
   })
 })
