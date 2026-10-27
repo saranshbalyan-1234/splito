@@ -6,7 +6,7 @@
  * units. Every split divides exactly, so balances don't depend on the
  * id-ordered tie-break that real (random) ids would get for remainders.
  */
-import {type ItemParticipant, parseMinor as minor, type SplitInput} from '@splito/domain'
+import {type CurrencyCode, type ItemParticipant, parseMinor as minor, type SplitInput} from '@splito/domain'
 import {type demoDirectory} from '@splito/sync'
 
 /** An itemised bill: who had each item, with portions as `[person, n]`. */
@@ -21,7 +21,8 @@ export type DemoBill = {
 export type DemoExpense = {
   title: string
   group: DemoGroupKey | null
-  currency: 'INR' | 'EUR'
+  /** Any currency (§ 26.13): groups hold several, and a JPY or BHD amount is scale 0 or 3. */
+  currency: CurrencyCode
   total: bigint
   payers: Partial<Record<DemoPersonKey, bigint>>
   participants: DemoPersonKey[]
@@ -131,6 +132,8 @@ export const DEMO_EXPENSES: DemoExpense[] = [
     category: 'food',
   },
   {title: 'Beach shack lunch', group: 'goa', currency: 'INR', total: minor('450000'), payers: {priya: minor('450000')}, participants: GOA, date: '2025-12-24', category: 'food'},
+  // Priced in another currency than the group's own (§ 26.13): Sam bought gear abroad.
+  {title: 'Snorkel gear', group: 'goa', currency: 'USD', total: minor('10000'), payers: {sam: minor('10000')}, participants: GOA, date: '2025-12-22', category: 'shopping'},
   {title: 'Cab to airport', group: 'goa', currency: 'INR', total: minor('240000'), payers: {me: minor('120000'), arjun: minor('120000')}, participants: ['me', 'riya', 'arjun', 'priya'], date: '2025-12-27', category: 'transport'},
   // Flat 4B (INR)
   {title: 'Rent, January', group: 'flat', currency: 'INR', total: minor('6000000'), payers: {me: minor('6000000')}, participants: FLAT, date: '2026-01-01', category: 'stay'},
@@ -145,9 +148,18 @@ export const DEMO_EXPENSES: DemoExpense[] = [
   {title: 'Tram 28 tickets', group: 'lisbon', currency: 'EUR', total: minor('1200'), payers: {diego: minor('1200')}, participants: LISBON, date: '2026-04-11', category: 'transport'},
   {title: 'Fado night', group: 'lisbon', currency: 'EUR', total: minor('16000'), payers: {sam: minor('10000'), me: minor('6000')}, participants: LISBON, date: '2026-04-12', category: 'entertainment', notes: 'Dinner and a show in Alfama'},
   {title: 'Seafood at Ramiro', group: 'lisbon', currency: 'EUR', total: minor('18400'), payers: {me: minor('18400')}, participants: LISBON, date: '2026-04-13', category: 'food', notes: 'Farewell dinner, Sam picked the wine'},
+  // A flight booked from India: Lisbon holds rupees and euros side by side.
+  {title: 'Flights from Delhi', group: 'lisbon', currency: 'INR', total: minor('8400000'), payers: {me: minor('8400000')}, participants: LISBON, date: '2026-04-02', category: 'transport'},
   // Direct (no group)
   {title: 'Concert tickets', group: null, currency: 'INR', total: minor('500000'), payers: {me: minor('500000')}, participants: ['me', 'priya'], date: '2026-03-08', category: 'entertainment'},
   {title: 'Coffee beans', group: null, currency: 'EUR', total: minor('1800'), payers: {sam: minor('1800')}, participants: ['me', 'sam'], date: '2026-05-02', category: 'groceries'},
+  // One friend, a second currency each: Riya in euros, Priya in dollars.
+  {title: 'Duty-free chocolate', group: null, currency: 'EUR', total: minor('4000'), payers: {riya: minor('4000')}, participants: ['me', 'riya'], date: '2026-04-16', category: 'shopping'},
+  {title: 'Online course', group: null, currency: 'USD', total: minor('3000'), payers: {priya: minor('3000')}, participants: ['me', 'priya'], date: '2026-05-20', category: 'other'},
+  // Zero- and three-decimal currencies: yen has no minor unit, dinar has three.
+  {title: 'Ramen in Shibuya', group: null, currency: 'JPY', total: minor('4200'), payers: {me: minor('4200')}, participants: ['me', 'arjun'], date: '2026-03-20', category: 'food'},
+  {title: 'Layover duty-free', group: null, currency: 'BHD', total: minor('12500'), payers: {diego: minor('12500')}, participants: ['me', 'diego'], date: '2026-04-09', category: 'shopping'},
+  {title: 'Taxi in Kuwait City', group: null, currency: 'KWD', total: minor('4800'), payers: {me: minor('4800')}, participants: ['me', 'lena'], date: '2026-04-09', category: 'transport'},
   {title: 'Movie night', group: null, currency: 'INR', total: minor('90000'), payers: {riya: minor('90000')}, participants: ['me', 'riya'], date: '2026-06-14', category: 'entertainment', notes: 'Pizza dinner at Riya’s before the film'},
 ]
 
