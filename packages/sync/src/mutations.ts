@@ -370,7 +370,10 @@ export async function createExpense(store: Store, ctx: MutationCtx, d: ExpenseDr
 
 export async function updateExpense(store: Store, ctx: MutationCtx, id: string, d: ExpenseDraft): Promise<Entity<Expense>> {
   return store.transaction(async tx => {
-    await requireLive(tx, 'expense', id)
+    const stored = await requireLive<Expense>(tx, 'expense', id)
+    // An expense in an inactive group cannot be edited or moved out: that changes the group's balances (decision 89).
+    const from = stored.data.groupId ? (await tx.get<Group>('group', stored.data.groupId))?.data : undefined
+    if (from && isGroupInactive(from)) throw new DomainError('GROUP_INACTIVE')
     return write(tx, ctx, 'expense', id, await buildExpense(tx, d), false, 'expense.update')
   })
 }
@@ -542,7 +545,8 @@ export async function addGroupMembers(store: Store, ctx: MutationCtx, groupId: s
   return store.transaction(async tx => {
     const g = await requireLive<Group>(tx, 'group', groupId)
     const joinedAt = ctx.now()
-    const members = [...g.data.members]
+    // Roles filled in first, so a group made before roles keeps its creator as admin (not demoted by the new member's 'member').
+    const members = [...normalizeRoles(g.data.members)]
     for (const personId of new Set(personIds)) {
       await requireLive(tx, 'person', personId, 'UNKNOWN_PERSON')
       const i = members.findIndex(m => m.personId === personId)

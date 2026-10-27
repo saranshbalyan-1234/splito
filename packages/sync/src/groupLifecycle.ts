@@ -45,8 +45,8 @@ async function setInactive(store: Store, ctx: MutationCtx, groupId: string, inac
     const g = await requireLive<Group>(tx, 'group', groupId)
     // Already there: nothing to write, nothing to sync.
     if (isGroupInactive(g.data) === inactive) return g
-    // Making active also clears the old `archived` flag, which read as inactive.
-    return write(tx, ctx, 'group', groupId, {...g.data, inactive, archived: inactive ? g.data.archived : false}, false, inactive ? 'group.inactive' : 'group.active')
+    // `archived` follows `inactive`, so the byArchived index keeps meaning inactive and an old flag is cleared by Make active.
+    return write(tx, ctx, 'group', groupId, {...g.data, inactive, archived: inactive}, false, inactive ? 'group.inactive' : 'group.active')
   })
 }
 
@@ -155,6 +155,8 @@ export async function removeGroupMember(store: Store, ctx: MutationCtx, input: M
   const hasBalance = Object.keys(preview.owed).length > 0
   return store.transaction(async tx => {
     const g = await requireLive<Group>(tx, 'group', groupId)
+    // Anyone may leave; only an admin may remove somebody else (decision 90 / 26.12).
+    if (personId !== ctx.actor && !groupAdmins(g.data).includes(ctx.actor)) throw new DomainError('NOT_ADMIN')
     const members = normalizeRoles(g.data.members)
     const leaver = members.find(m => m.personId === personId)
     if (!leaver || leaver.leftAt !== null) throw new DomainError('NOT_A_MEMBER')
@@ -193,6 +195,8 @@ export async function deleteGroup(store: Store, ctx: MutationCtx, groupId: strin
   const records = await groupRecords(store, groupId, e => !e.deleted)
   return store.transaction(async tx => {
     const g = await requireLive<Group>(tx, 'group', groupId)
+    // Only an admin deletes the group; any member may leave, hide it or make it inactive.
+    if (!groupAdmins(g.data).includes(ctx.actor)) throw new DomainError('NOT_ADMIN')
     const removed: GroupRemoval = {expenses: 0, repayments: 0, writeoffs: 0}
     for (const type of MONEY) {
       for (const { id } of records[type]) {

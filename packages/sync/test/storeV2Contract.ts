@@ -316,7 +316,11 @@ export function runV2Contract(name: string, open: () => Promise<Store>) {
       expect(await code(restoreExpense(s, ctx, gone.id))).toBe('GROUP_INACTIVE')
       const paid = await code(createRepayment(s, ctx, {groupId: g.id, currency: 'INR', from: a.id, to: 'me', amount: 10n, date: '2026-10-08', tz: 'Asia/Kolkata', note: ''}))
       expect(paid).toBe('ok')
+      // An expense that sits in the inactive group cannot be moved out of it either: that would change its balances.
+      expect(await code(updateExpense(s, ctx, inGroup.id, draft({with: [a.id], groupId: null})))).toBe('GROUP_INACTIVE')
+      expect((await s.get<ExpenseDraft>('expense', inGroup.id))!.data.groupId).toBe(g.id)
       await makeGroupActive(s, ctx, g.id)
+      expect(await code(updateExpense(s, ctx, inGroup.id, draft({with: [a.id], groupId: null})))).toBe('ok')
       expect(await code(createExpense(s, ctx, draft({with: [a.id], groupId: g.id})))).toBe('ok')
       await s.close()
     })

@@ -388,3 +388,54 @@ test('hide and show write only the account preference: the group, its history an
   const { draft } = await (async () => ({draft: (over: Partial<ExpenseDraft>) => ({title: 'x', groupId: g.id, currency: 'EUR', total: 100n, payers: {me: 100n}, split: {mode: 'equal' as const, participants: ['me']}, date: '2026-10-28', tz: 'UTC', category: 'x', notes: '', ...over})}))()
   await createExpense(s, ctx, draft({}))
 })
+
+/* ------------------- review fixes: roles, admin-only actions, move-out ------------------- */
+
+test('adding a member to a group made before roles existed keeps the creator admin, and leaving still needs a handover', async () => {
+  const {g, bob} = await flat()
+  await s.transaction(async tx => {
+    const row = (await tx.get<Group>('group', g.id))!
+    const members = row.data.members.map(({role: _r, ...m}) => m)
+    await tx.put({...row, data: {...row.data, members}, version: row.version + 1, updatedAt: ++clock})
+  })
+  const dan = await createPerson(s, ctx, {name: 'Dan'})
+  const added = await addGroupMembers(s, ctx, g.id, [dan.id])
+  expect(groupAdmins(added.data)).toEqual(['me'])
+  expect(added.data.members.find(m => m.personId === dan.id)!.role).toBe('member')
+  expect(await codeOf(leaveGroup(s, ctx, {groupId: g.id, choice: 'keep', ...exit}))).toBe('LAST_ADMIN')
+  await leaveGroup(s, ctx, {groupId: g.id, choice: 'keep', handAdminTo: bob.id, ...exit})
+})
+
+/** The same group seen by Bob, who is a member but not an admin. */
+const asBob = (bobId: string): MutationCtx => ({...ctx, actor: bobId})
+
+test('only an admin may remove another member or delete the group (NOT_ADMIN); any member may leave, hide and change the state', async () => {
+  const {g, bob, cara} = await flat()
+  const b = asBob(bob.id)
+  expect(await codeOf(removeGroupMember(s, b, {groupId: g.id, personId: cara.id, choice: 'keep', ...exit}))).toBe('NOT_ADMIN')
+  expect(await codeOf(deleteGroup(s, b, g.id))).toBe('NOT_ADMIN')
+  expect((await s.get('group', g.id))!.deleted).toBe(false)
+  expect((await s.get<Group>('group', g.id))!.data.members.find(m => m.personId === cara.id)!.leftAt).toBeNull()
+  // Any member may make it inactive and active, and may leave.
+  await makeGroupInactive(s, b, g.id)
+  await makeGroupActive(s, b, g.id)
+  await leaveGroup(s, b, {groupId: g.id, choice: 'keep', ...exit})
+  // The admin may do both.
+  await removeGroupMember(s, ctx, {groupId: g.id, personId: cara.id, choice: 'keep', ...exit})
+  await deleteGroup(s, ctx, g.id)
+})
+
+test('a member who has left is no admin: they cannot remove anyone either', async () => {
+  const {g, bob, cara} = await flat()
+  await leaveGroup(s, ctx, {groupId: g.id, choice: 'keep', handAdminTo: bob.id, ...exit})
+  expect(await codeOf(removeGroupMember(s, ctx, {groupId: g.id, personId: cara.id, choice: 'keep', ...exit}))).toBe('NOT_ADMIN')
+  expect(await codeOf(deleteGroup(s, ctx, g.id))).toBe('NOT_ADMIN')
+})
+
+test('Make inactive writes the legacy archived flag too, so the byArchived index means inactive', async () => {
+  const {g} = await flat()
+  await makeGroupInactive(s, ctx, g.id)
+  expect((await s.page('group', {index: 'byArchived', eq: [1]})).items.map(x => x.id)).toEqual([g.id])
+  await makeGroupActive(s, ctx, g.id)
+  expect((await s.page('group', {index: 'byArchived', eq: [1]})).items).toEqual([])
+})
