@@ -1458,6 +1458,17 @@ pages". § 17 holds the engineering rules that meet these budgets.
   feedback (`PressableScale`) on every tappable row, card and button; tab switches (§ 26.9); expanding search;
   filter dot; `AnimatedAmount` whenever a money total changes; skeleton shimmer while loading; success check +
   haptic on save and settle; drawer open/close with scrim.
+- **Animated icons and Expensify-style animation wherever it helps** (owner 96; F-1706, queued for Wave C).
+  Icons animate on meaning, not decoration: tab and nav icons morph to their filled state on select (Bluesky
+  tab icon pattern), Activity bell/pulse ticks when a new item lands, the check draws on Save/Settle/Accept, the
+  trash lid lifts on Delete, the sync dot pulses while syncing, the FAB plus rotates to an X when its menu
+  opens, Search & Ask sparkles twinkle on open, chevrons rotate on expand. Built as animated SVG paths with
+  Reanimated on the UI thread (react-native-svg animated props; no per-icon Lottie), from Lucide geometry
+  only. Expensify-style moments in addition to the page illustrations below: a success animation when a
+  balance reaches zero ("All settled"), a confetti-free celebratory Lottie on first expense and on settling a
+  trip, animated empty states, and spring page/sheet transitions. Every animation honours reduced motion and
+  the `motion` preference (static fallback), stays inside § 26.10 budgets (profiled), and never blocks input.
+  *Why:* "also add animations on svg icons or animations like Expensify wherever we can".
 - **Expensify-style page illustrations in v1:** each main page (People empty state, Groups, Activity,
   Profile/Settings sections, Analytics) has an animated Lottie header or empty-state illustration, original
   to Splito; Lottie never drives navigation. *Where:* spec § 4 "Motion & feel", `apps/client/scripts/lottie.ts`.
@@ -1932,6 +1943,7 @@ Every owner decision, in the order it was made (all 2026-10-26). "Replaced" name
 | 93 | "remember we need to implement the backend as well, once we are done with all the features" | Backend is mandatory scope: after all front-end features, every backend item is built before the product is done | § 26.2 | - |
 | 94 | "now we have import and remove demo data, why do i have ?demo=1, only one demo mode from settings" | One demo dataset, added and removed only from Settings > Data; `?demo=1`, `?demo=large`, `EXPO_PUBLIC_DEMO` removed; e2e seeds via a test-only hook running the same path | § 26.1 | `?demo=1` small set + `?demo=large` + Settings |
 | 95 | "instead of add/remove demo data, make it a switch like switch to demo mode, so that it doesn't add data to current account, both accounts keep different" | Demo mode is an on/off switch over its own separate local database (own prefs, history, outbox); real data untouched; banner while on; Reset demo; never syncs | § 26.1 | Add/Remove demo data into the current account (row 94) |
+| 96 | "also add animations on svg icons or animations like Expensify wherever we can" | Meaningful animated SVG icons (tab fill morph, check draw, trash lid, sync pulse, FAB rotate, sparkles, chevrons) on the UI thread plus Expensify-style success/empty/celebration animations; reduced motion and `motion` pref respected | § 26.10 | Static icons; Lottie only for page illustrations |
 
 New decisions follow § 0 rule 9: rewrite the rule in its topic so only the current truth remains, then add a
 row here.

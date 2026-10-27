@@ -2948,6 +2948,19 @@ One table mapping intents to haptics, e.g. a rigid tick when remaining hits zero
   1. Every haptic call goes through useHaptics() by intent.
   2. Turning the haptics pref off silences every haptic.
 
+### F-1706 Animated icons and Expensify-style moments `spec: owner § 26.10 (decision 96)`
+
+Animate icons where the motion carries meaning, and add Expensify-style success, empty-state and celebration animations, all on the UI thread with static fallbacks. Queued for Wave C.
+
+- **Effort** L · **Impact** 7 · **Backend** no · **Status** todo · **Deps** F-1704
+- **Prefs** `motion` (existing: full / reduced / off), `motion.iconAnimations` (account, default on), `motion.celebrations` (account, default on)
+- **Acceptance**
+  1. An `AnimatedIcon` primitive (react-native-svg animated props + Reanimated, Lucide geometry only) with variants: fill morph (bottom bar, sidebar, drawer selected state), draw (check on Save / Settle / Accept), lid (trash on Delete), pulse (sync dot while syncing), rotate (FAB plus to X, chevrons on expand), twinkle (Search & Ask sparkles on open), tick (Activity icon when a new item arrives).
+  2. Expensify-style moments: "All settled" success animation when a balance or group reaches zero, a celebratory animation on the first expense and on settling a whole trip, animated empty states on every list (static fallback), spring page and sheet transitions matching Bluesky.
+  3. Reduced motion or `motion` = off shows the final static frame; `motion.iconAnimations` / `motion.celebrations` off disable each family.
+  4. Profiled: no dropped frames on a 1,000-row list scroll with animated icons visible; each animation under 400 ms and never blocks input; bundle growth recorded.
+  5. Animations inventory in docs/reuse/motion.md naming the Bluesky or Expensify source pattern for each; e2e checks the static fallback under reduced motion.
+
 ### F-1706 Living cat mascot for sync states
 
 The header cat blinks on refresh, perks on sync ack, sleeps offline, raises a paw on conflict.
