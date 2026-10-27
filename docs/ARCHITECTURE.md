@@ -1576,7 +1576,11 @@ expands once I click". *Where:* `screens/People`, `screens/Groups`, `screens/Gro
   cards in a row have the same width and height (the row takes the tallest card's height, content top-aligned).
   Columns are chosen so rows stay even: phone 1 column (2 when the card fits); rail/desktop at most 3, with 1 -> 1,
   2 -> 2, 3 -> 3, 4 -> 2 x 2, 5 -> 3 + 2, 6 -> 3 x 2 (a short last row keeps the same card width, left-aligned,
-  never stretched across the row). The counts line ("15 groups · 6 settled") sits below the grid as plain text,
+  never stretched across the row). **It adapts to every screen size** (owner 114): the column count comes from
+  the measured width of the content area (`onLayout`), not from fixed breakpoints: fit = floor(width / 240 px
+  min card width), capped at 3, then the balanced rule above picks the columns from min(fit, count); it re-lays
+  out live on resize, rotation, split view, the sidebar collapsing to the rail and the right column appearing at
+  1300 px, from 320 px phones to ultra-wide screens (where the 3-column cap keeps cards readable). The counts line ("15 groups · 6 settled") sits below the grid as plain text,
   not as a strip inside a box. *Why:* "the view is not good in the overview if I don't have either 3 or 6, it should
   be properly boxed each one" (screenshot: 4 currencies, the 4th card stretched across a shared box).
 - **People (Friends) and Groups both start with an "Overview" section:** one card per currency, "You are owed"
@@ -2066,6 +2070,7 @@ Every owner decision, in the order it was made (all 2026-10-26). "Replaced" name
 | 111 | "until the data is synced, keep that unsynced data a little light, so we know this is not synced" | Records not yet synced render in lighter (AA-safe) text, fading to full strength on server ack; failed keeps full strength + Needs attention; no per-row red dot | § 9.8 | Red per-row sync dot (decision 79 per-item marker) |
 | 112 | "dont show settled up friends by default" | Reaffirms decision 90: settled friends (and groups) hidden by default with a "Show settled" filter; this part is pulled forward into the Wave B assemble, the "every choice in the database" part of F-1413 stays queued | § 26.12 | (priority raised) |
 | 113 | "the view is not good in the overview if i dont have either 3 or 6, it should be properly boxed each one" | Each Overview currency card is its own equal-size box; balanced columns (4 -> 2x2, 5 -> 3+2 left-aligned); counts line below the grid | § 26.12 | Cards as cells of one shared box, last card stretched |
+| 114 | "and it should adapt to all screen sizes" | Overview grid columns come from the measured content width (min card 240 px, max 3) with the balanced rule, re-laid out live on any resize, 320 px to ultra-wide | § 26.12 | Fixed phone/desktop column counts |
 
 New decisions follow § 0 rule 9: rewrite the rule in its topic so only the current truth remains, then add a
 row here.

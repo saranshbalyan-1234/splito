@@ -2808,7 +2808,8 @@ On Home/People and Groups, each currency card is its own box of equal size in a 
   2. Column rule: phone 1 (2 when the card fits); rail/desktop max 3: 1 -> 1, 2 -> 2, 3 -> 3, 4 -> 2x2, 5 -> 3+2, 6 -> 3x2, 7+ -> 3 per row; a short last row keeps the card width, left-aligned, never stretched.
   3. Cards in a row share the tallest height, content top-aligned; amounts never wrap mid-number.
   4. The counts line sits below the grid as plain text.
-  5. e2e geometry at 390, 860 and 1440 px with 1 to 6 currencies (equal widths, no stretched card); light and Dim screenshots.
+  5. Adapts to every screen size (decision 114): columns from the measured content width (min 240 px card, max 3) then the balanced rule; re-lays out live on resize, rotation, rail/sidebar and right-column changes.
+  6. e2e geometry at 320, 390, 600, 860, 1100, 1440 and 2560 px with 1 to 6 currencies, plus a live resize (equal widths, no stretched card, no overflow); light and Dim screenshots.
 
 ### F-1501 Text summaries for WhatsApp `spec 4b v1`
 
