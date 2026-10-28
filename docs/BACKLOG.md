@@ -2831,7 +2831,7 @@ Use Claude to turn free-form questions into structured queries the on-device eng
 - **Effort** M · **Impact** 8 · **Backend** no (backend proxy later) · **Status** todo · **Deps** F-246, F-2301
 - **Prefs** `ai.enabled` (account, default off until a key or sign-in exists), `ai.model` (device; default the latest fast Claude model for query understanding)
 - **Acceptance**
-  1. Settings > Ask Splito > "Claude API key" (dev and owner builds): stored in the OS secure store (web: encrypted local entry), never in the bundle, repo, logs, telemetry, backups or sync; "Remove key"; a test scans the built bundle and backups for the key pattern.
+  1. The key is read from the git-ignored `.env.local` (`ANTHROPIC_API_KEY`, decision 117) only by a dev-only local AI proxy (`scripts/ai-proxy`, started with the dev/preview server, bound to localhost, origin-checked); the app calls the proxy, never Anthropic directly; never an `EXPO_PUBLIC_*` variable; a test scans the built web bundle, backups and logs for `sk-ant-` and fails if found.
   2. A question goes to Claude with a tool schema (intent, people, groups, categories, types, amount ranges per currency, periods, text terms) plus only the names needed to resolve it; the response is validated and run by the on-device engine; Claude never returns or computes amounts shown to the user.
   3. First use shows exactly what is sent; offline, no key or an API error falls back to the on-device parser with no fake answer.
   4. Latency: answer within 1.5 s p50 on a normal connection with a streaming "Thinking…" state; cancel on new keystroke; cost guard (max tokens, one call per question).

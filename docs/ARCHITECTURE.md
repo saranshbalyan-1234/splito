@@ -1911,10 +1911,11 @@ add anyway (only for you)"; "also i should be able to select from contacts". *Wh
   categories, types, amount ranges per currency, dates/periods, text terms) that the on-device engine runs
   against the local store; Claude never computes money (amounts always come from `@splito/domain` on the device)
   and its output is validated before use. **The key is never in the bundle, the repo, logs, backups or sync:**
-  until the backend exists it is entered in Settings > Ask Splito > "Claude API key" (dev and owner builds), kept
-  in the OS secure store (web: an encrypted local entry, cleared on sign-out) and used for direct calls
-  (`anthropic-dangerous-direct-browser-access` on web); once the backend exists, calls go through the backend
-  proxy (§ 26.19) and the per-device key path is removed. What is sent: the question plus the names of my
+  until the backend exists the key lives in the git-ignored `.env.local` at the repo root (`ANTHROPIC_API_KEY`,
+  owner 117; `.env.example` documents it) and is read only by a small dev-only local AI proxy
+  (`scripts/ai-proxy`, started with the dev/preview server) that the app calls; it is never an `EXPO_PUBLIC_*`
+  variable (those are copied into the JS bundle) and never reaches the client. Once the backend exists, the
+  backend proxy (§ 26.19) replaces the local one with the same contract. What is sent: the question plus the names of my
   people, groups and categories needed to resolve it, never amounts, notes or other records; shown once on first
   use. Offline or with no key, the on-device parser answers as today. *Why:* "I have Claude keys, you should
   enable that as well in search".
@@ -2096,6 +2097,7 @@ Every owner decision, in the order it was made (all 2026-10-26). "Replaced" name
 | 114 | "and it should adapt to all screen sizes" | Overview grid columns come from the measured content width (min card 240 px, max 3) with the balanced rule, re-laid out live on any resize, 320 px to ultra-wide | § 26.12 | Fixed phone/desktop column counts |
 | 115 | "i have claude keys, you should enable that as well in search" | Claude (latest models) turns questions into structured queries run on device; never computes money; key in OS secure store via Settings until the backend proxy exists; never bundled, committed, logged, backed up or synced | § 26.19 | On-device parser only until the backend AI endpoint |
 | 116 | "make sure the search works logically with most of the things like name, place, amount, category, type, group etc etc" | Search covers people, places, amounts, category, type, group, dates, currency, payer, status; AND across facets, OR within; facet chips; per-currency totals; paged | § 26.19 | Words, names and simple amount filters |
+| 117 | "create one env file and ask for token there, i would paste" | Claude key in git-ignored `.env.local` (ANTHROPIC_API_KEY), read only by a dev-only local AI proxy; never EXPO_PUBLIC_*, never in the bundle | § 26.19 | Key entered in Settings, stored in OS secure store (row 115) |
 
 New decisions follow § 0 rule 9: rewrite the rule in its topic so only the current truth remains, then add a
 row here.
