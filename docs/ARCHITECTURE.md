@@ -1905,6 +1905,29 @@ add anyway (only for you)"; "also i should be able to select from contacts". *Wh
   `@splito/domain` (exact money, never summing currencies). Free-form language goes to an AI model through the
   backend (Claude, latest model) once it exists; until then unsupported questions get "I can answer this once
   you sign in" with the closest supported suggestion. No fake answers.
+- **Claude powers search and Ask with the owner's Claude API key** (owner 115; F-247). Search & Ask sends the
+  question to Claude (latest model; a fast tier such as Haiku for query understanding, Sonnet/Opus only for
+  free-form answers) which returns a structured query (tool use with a JSON schema: intent, people, groups,
+  categories, types, amount ranges per currency, dates/periods, text terms) that the on-device engine runs
+  against the local store; Claude never computes money (amounts always come from `@splito/domain` on the device)
+  and its output is validated before use. **The key is never in the bundle, the repo, logs, backups or sync:**
+  until the backend exists it is entered in Settings > Ask Splito > "Claude API key" (dev and owner builds), kept
+  in the OS secure store (web: an encrypted local entry, cleared on sign-out) and used for direct calls
+  (`anthropic-dangerous-direct-browser-access` on web); once the backend exists, calls go through the backend
+  proxy (§ 26.19) and the per-device key path is removed. What is sent: the question plus the names of my
+  people, groups and categories needed to resolve it, never amounts, notes or other records; shown once on first
+  use. Offline or with no key, the on-device parser answers as today. *Why:* "I have Claude keys, you should
+  enable that as well in search".
+- **Search understands every field and combines them logically** (owner 116; F-246): people (name, nickname,
+  "with Riya", "paid by Riya"), places (expense title, notes, item names, group name, trip location), amount
+  ("500", "> 1000", "between 200 and 800", "around 1k", "1 lakh", with or without a currency, in the user's
+  number format), category, type (expense, payment, write-off, comment, group, friend, invite), group, date
+  and period ("yesterday", "last month", "March", "in Goa trip"), currency, payer, status (settled, owed, deleted,
+  hidden, inactive). Facets combine with AND across facets and OR within one ("food or travel in Goa over 500");
+  each recognised facet shows as a removable chip in the search box; free text matches the remaining words;
+  results stay grouped (People, Groups, Expenses...) with totals per currency and paged (§ 9.8 `search_terms`,
+  extended with tokens for every field above). *Why:* "make sure the search works logically with most of the
+  things like name, place, amount, category, type, group etc".
 - **Privacy:** AI is opt-in (preference "Ask Splito uses AI", default off until signed in); the first use
   shows exactly what data is sent; nothing is sent for on-device answers.
 
@@ -2071,6 +2094,8 @@ Every owner decision, in the order it was made (all 2026-10-26). "Replaced" name
 | 112 | "dont show settled up friends by default" | Reaffirms decision 90: settled friends (and groups) hidden by default with a "Show settled" filter; this part is pulled forward into the Wave B assemble, the "every choice in the database" part of F-1413 stays queued | § 26.12 | (priority raised) |
 | 113 | "the view is not good in the overview if i dont have either 3 or 6, it should be properly boxed each one" | Each Overview currency card is its own equal-size box; balanced columns (4 -> 2x2, 5 -> 3+2 left-aligned); counts line below the grid | § 26.12 | Cards as cells of one shared box, last card stretched |
 | 114 | "and it should adapt to all screen sizes" | Overview grid columns come from the measured content width (min card 240 px, max 3) with the balanced rule, re-laid out live on any resize, 320 px to ultra-wide | § 26.12 | Fixed phone/desktop column counts |
+| 115 | "i have claude keys, you should enable that as well in search" | Claude (latest models) turns questions into structured queries run on device; never computes money; key in OS secure store via Settings until the backend proxy exists; never bundled, committed, logged, backed up or synced | § 26.19 | On-device parser only until the backend AI endpoint |
+| 116 | "make sure the search works logically with most of the things like name, place, amount, category, type, group etc etc" | Search covers people, places, amounts, category, type, group, dates, currency, payer, status; AND across facets, OR within; facet chips; per-currency totals; paged | § 26.19 | Words, names and simple amount filters |
 
 New decisions follow § 0 rule 9: rewrite the rule in its topic so only the current truth remains, then add a
 row here.

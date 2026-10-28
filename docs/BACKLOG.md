@@ -2811,6 +2811,33 @@ On Home/People and Groups, each currency card is its own box of equal size in a 
   5. Adapts to every screen size (decision 114): columns from the measured content width (min 240 px card, max 3) then the balanced rule; re-lays out live on resize, rotation, rail/sidebar and right-column changes.
   6. e2e geometry at 320, 390, 600, 860, 1100, 1440 and 2560 px with 1 to 6 currencies, plus a live resize (equal widths, no stretched card, no overflow); light and Dim screenshots.
 
+### F-246 Search that understands every field `spec: owner § 26.19 (decision 116)`
+
+Search & Ask understands people, places, amounts, category, type, group, dates, currency, payer and status, and combines them logically, with removable facet chips.
+
+- **Effort** M · **Impact** 9 · **Backend** no · **Status** todo · **Deps** F-117, F-222
+- **Prefs** -
+- **Acceptance**
+  1. `search_terms` indexes every field: title, notes, item names, group name and trip location, people (paid by / with), category, type (expense, payment, write-off, comment, group, friend, invite), currency, date (day, month, year), status (settled, owed, deleted, hidden, inactive), amount keys per currency.
+  2. A query parser recognises facets (names with fuzzy matching, "paid by", "with", amount comparisons and ranges incl. "1 lakh", "1k", "around", periods incl. month names and "last month", categories, types, groups, currencies, statuses) in English and Hindi; AND across facets, OR within one; the rest is free text.
+  3. Each recognised facet shows as a removable chip in the search box; removing one re-runs the search; results grouped with per-currency totals, paged within § 26.10 budgets on the 10k fixture.
+  4. A table test of 60+ queries (e.g. "food or travel in Goa over 500", "paid by Riya last month", "deleted payments", "EUR between 10 and 50", "Netflix") with expected facets and results.
+  5. e2e at phone and desktop widths; Hindi 0 missing.
+
+### F-247 Claude-powered search and Ask with the owner's key `spec: owner § 26.19 (decision 115)`
+
+Use Claude to turn free-form questions into structured queries the on-device engine runs; money is always computed on the device. The key lives in the OS secure store via Settings until the backend proxy exists.
+
+- **Effort** M · **Impact** 8 · **Backend** no (backend proxy later) · **Status** todo · **Deps** F-246, F-2301
+- **Prefs** `ai.enabled` (account, default off until a key or sign-in exists), `ai.model` (device; default the latest fast Claude model for query understanding)
+- **Acceptance**
+  1. Settings > Ask Splito > "Claude API key" (dev and owner builds): stored in the OS secure store (web: encrypted local entry), never in the bundle, repo, logs, telemetry, backups or sync; "Remove key"; a test scans the built bundle and backups for the key pattern.
+  2. A question goes to Claude with a tool schema (intent, people, groups, categories, types, amount ranges per currency, periods, text terms) plus only the names needed to resolve it; the response is validated and run by the on-device engine; Claude never returns or computes amounts shown to the user.
+  3. First use shows exactly what is sent; offline, no key or an API error falls back to the on-device parser with no fake answer.
+  4. Latency: answer within 1.5 s p50 on a normal connection with a streaming "Thinking…" state; cancel on new keystroke; cost guard (max tokens, one call per question).
+  5. When the backend exists, calls switch to the backend proxy and the per-device key path is removed (tracked in the backend batch).
+  6. Model ids and API usage follow the current Claude API docs (latest models) at build time.
+
 ### F-1501 Text summaries for WhatsApp `spec 4b v1`
 
 Whole-group or "only their part" summaries with WhatsApp markup, sent via wa.me in the recipient's language.
