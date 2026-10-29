@@ -1868,6 +1868,16 @@ built yet.
   support address, `FEEDBACK_EMAIL`, a release-checklist item); once the backend exists it goes through the
   outbox. No shake-to-send preference (removed by F-251, owner 128).
 
+- **Sign in with Google and Apple** (owner 138; UI with F-250 in Wave C, real with F-2102). The splash, Sign
+  in and Create account screens offer "Continue with Apple" and "Continue with Google" above the email or phone
+  option, on every platform (Apple first on iOS, Google first on Android and web; the platforms' own button
+  styles: Apple's black/white button, Google's branded button). Native: `expo-apple-authentication` and Google
+  Sign-In; web: Sign in with Apple JS and Google Identity Services. The server verifies the ID token, creates or
+  finds the account and links by verified email (never merges silently on an unverified one; asks); Apple's
+  "Hide my email" relay works. A new account from Google/Apple still goes through setup (F-211). Until the auth
+  API exists, the buttons are shown in dev/e2e builds but say "Sign-in with Google and Apple arrives with
+  sync" (no fake success); the dev account stays the only working path there. *Why:* "on login, sign in with
+  google and apple as well".
 - **Sign-in is required: without an account nothing of the app is visible** (owner 125; replaces "signing in
   is optional" and F-211's zero-signup start; F-250, Wave C, right after the welcome tour). Signed out, the app
   shows only: the welcome tour (owner 123), Bluesky's logged-out flow (splash, Sign in, Create account, Forgot
@@ -2303,6 +2313,7 @@ Every owner decision, in the order it was made (all 2026-10-26). "Replaced" name
 | 135 | "remember when backend is build, you need to download the demo data from backend not store in frontend" | With the backend, Demo mode downloads the demo dataset from the server into the demo DB; no demo seed in the client bundle | § 26.1 | Demo dataset generated in the app (dev/e2e) |
 | 136 | "and remove when demo mode is switched off" | Switching demo off erases the demo database and demo-scoped keys; on again starts fresh; no Reset demo | § 26.1 | Demo DB kept between sessions; Reset demo |
 | 137 | "we need to add push notifications as well" | Real push on iOS (APNs), Android (FCM) and web (Web Push in the PWA), following the Notifications switches; privacy-aware text; opens the exact screen; permission only from a tap; first backend batch | § 26.20 | Push planned without platform detail (F-2201) |
+| 138 | "on login, signin with google and apple as well" | "Continue with Apple" and "Continue with Google" on splash, Sign in and Create account, every platform; server verifies tokens, links by verified email | § 26.15 | Email/phone only on the sign-in screens |
 
 New decisions follow § 0 rule 9: rewrite the rule in its topic so only the current truth remains, then add a
 row here.
