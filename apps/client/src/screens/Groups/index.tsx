@@ -36,7 +36,6 @@ import {ChevronBottom_Stroke2_Corner0_Rounded as ChevronDownIcon} from '#/compon
 import {useDialogControl} from '#/components/Dialog'
 import {SearchAskButton} from '#/components/SearchAsk/SearchAskButton'
 import {HeaderAvatar} from '#/components/HeaderAvatar'
-import {MagnifyingGlass_Stroke2_Corner0_Rounded as SearchIcon} from '#/components/icons/MagnifyingGlass'
 import {PlusLarge_Stroke2_Corner0_Rounded as PlusIcon} from '#/components/icons/Plus'
 import * as Layout from '#/components/Layout'
 import {ListToolsHeader} from '#/components/ListToolsHeader'
@@ -245,7 +244,7 @@ export function GroupsScreen() {
               all.length > 0 && query.trim() ? (
                 <EmptyState
                   testID="groups-search-empty"
-                  icon={SearchIcon}
+                  illustration="empty-groups"
                   message={l`No matches for “${query.trim()}”`}
                 />
               ) : all.length > 0 ? (
@@ -253,7 +252,7 @@ export function GroupsScreen() {
                   /* Everything that matches is settled up: one button brings it back (it sets the preference). */
                   <EmptyState
                     testID="groups-all-settled"
-                    icon={null}
+                    illustration="empty-groups"
                     message={l`All settled up`}
                     button={{
                       testID: 'groups-show-settled',
@@ -267,7 +266,7 @@ export function GroupsScreen() {
                 ) : (
                 <EmptyState
                   testID="groups-filtered-empty"
-                  icon={null}
+                  illustration="empty-groups"
                   message={l`No groups match these filters.`}
                   button={{
                     testID: 'groups-clear-filters',
