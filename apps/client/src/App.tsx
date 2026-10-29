@@ -14,6 +14,7 @@ import {ThemeProvider as Alf} from '#/alf'
 import {useColorModeTheme} from '#/alf/util/useColorModeTheme'
 import {GestureRoot} from '#/components/GestureRoot'
 import {Provider as PortalProvider} from '#/components/Portal'
+import {LinkHost} from '#/features/links/LinkHost'
 import {PwaHost} from '#/features/pwa/PwaHost'
 import {RemindHost} from '#/features/remind/RemindHost'
 import {ToastOutlet} from '#/components/Toast'
@@ -37,9 +38,10 @@ function Themed() {
               <LocaleFromPrefs />
               <PrefsMirror />
               <PwaHost />
-              {/* RemindHost sits above the Shell, outside its BottomSheetProvider: its sheets need a portal of their own on native. */}
+              {/* RemindHost and LinkHost sit above the Shell, outside its BottomSheetProvider: their sheets need a portal of their own on native. */}
               <BottomSheetProvider>
                 <RemindHost />
+                <LinkHost />
                 <BottomSheetOutlet />
               </BottomSheetProvider>
               <Shell />

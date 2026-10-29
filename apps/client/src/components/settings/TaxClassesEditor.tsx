@@ -40,7 +40,7 @@ export function TaxClassesEditor() {
   const {screenReaderEnabled} = useA11y()
   const {gtMobile} = useBreakpoints()
   const pref = usePrefControl('bill.taxClasses')
-  const dialog = useDialogControl()
+  const dialog = useDialogControl({url: 'tax-class'})
   const [editing, setEditing] = useState<TaxClass | undefined>()
   if (!pref.value) return null
   const classes = [...pref.value].sort((x, y) => x.order - y.order)

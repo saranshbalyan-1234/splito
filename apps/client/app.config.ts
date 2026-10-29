@@ -1,5 +1,10 @@
 import {type ExpoConfig} from 'expo/config'
 
+import linkHosts from './link-hosts.json'
+import {tierFrom} from './link-tier'
+
+type Tier = keyof typeof linkHosts.tiers
+
 /*
  * The version comes from package.json here and reaches the app as an inlined env value, so no bundle
  * carries the whole package.json (its dependency list included).
@@ -22,10 +27,35 @@ const SPLASH = {
   },
 }
 
+/**
+ * Universal Links and App Links (F-254, ARCHITECTURE 14): a build claims only its own tier's host, so a dev build
+ * never opens prod links. Hosts and the claimed paths come from `link-hosts.json`, the one file the resolver
+ * (`src/lib/links`) reads too; `src/lib/links/appConfig.test.ts` checks every tier claims exactly its host.
+ */
+export function linkClaims(tier: Tier) {
+  const host = linkHosts.tiers[tier]
+  return {
+    ios: {associatedDomains: [`applinks:${host}`]},
+    android: {
+      intentFilters: [
+        {
+          action: 'VIEW',
+          autoVerify: true,
+          /* "/" is the Home page alone (a prefix of it would claim every path, downloads and callbacks included). */
+          data: linkHosts.appPaths.map(p => (p === '/' ? {scheme: 'https', host, path: '/'} : {scheme: 'https', host, pathPrefix: p})),
+          category: ['BROWSABLE', 'DEFAULT'],
+        },
+      ],
+    },
+  }
+}
+
+const TIER = tierFrom(process.env.EXPO_PUBLIC_TIER)
+
 const config: ExpoConfig = {
   name: 'Splito',
   slug: 'splito',
-  scheme: 'splito',
+  scheme: linkHosts.scheme,
   version,
   orientation: 'default',
   userInterfaceStyle: 'automatic',
@@ -33,6 +63,7 @@ const config: ExpoConfig = {
   ios: {
     bundleIdentifier: 'app.splito',
     supportsTablet: true,
+    ...linkClaims(TIER).ios,
     icon: {
       light: './assets/brand/icon.png',
       dark: './assets/brand/icon-dark.png',
@@ -41,6 +72,7 @@ const config: ExpoConfig = {
   },
   android: {
     package: 'app.splito',
+    ...linkClaims(TIER).android,
     adaptiveIcon: {
       foregroundImage: './assets/brand/adaptive-foreground.png',
       backgroundImage: './assets/brand/adaptive-background.png',

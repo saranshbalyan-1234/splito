@@ -39,7 +39,7 @@ export function CategoriesEditor() {
   const {screenReaderEnabled} = useA11y()
   const {gtMobile} = useBreakpoints()
   const pref = usePrefControl('categories')
-  const dialog = useDialogControl()
+  const dialog = useDialogControl({url: 'category'})
   const [editing, setEditing] = useState<Category | undefined>()
 
   if (!pref.value) return null

@@ -501,7 +501,7 @@ After the first sign-in and setup, a short coach-mark walkthrough over the real 
 
 Every F-241 URL opens the right screen from anywhere: iOS Universal Links, Android App Links, `splito://`, web fallback; one resolver for push, invites, QR, reminders, shares; signed-out resume, demo handling, deferred link after install.
 
-- **Effort** M · **Impact** 9 · **Backend** partly (hosted AASA and assetlinks, deferred-link handoff) · **Status** todo, with F-241 right after Wave B · **Deps** F-241, F-619, F-2201 (push taps), F-250
+- **Effort** M · **Impact** 9 · **Backend** partly (hosted AASA and assetlinks, deferred-link handoff) · **Status** client part built on feat/wC-F241-254 (unmerged, review round done 2026-10-30): resolver + route table test, tier claims in `app.config.ts`, demo gate, signed-out intent store (stub until F-250), deferred link stub, simulator commands in RELEASE_CHECKLIST (native not run); hosted files and the deferred hand-over wait for the backend · **Deps** F-241, F-619, F-2201 (push taps), F-250
 - **Prefs** -
 - **Acceptance**
   1. A route table test parses every route from `https://splito.app/...` and `splito://...` to the same screen and params; unknown paths go Home.
@@ -535,7 +535,19 @@ Home shows the Overview and Recent transactions (F-1415); a new People tab holds
   3. `/groups` has no Overview; everything else unchanged.
   4. Nav list order Home, People, Groups, Analytics, Ask Splito, Activity, Settings; the rail and desktop sidebar always show every item in the chosen order with no More (owner 155), the phone bar shows the on items; default bar of 5 with labels; Settings > Navigation includes People; saved tabs migrate by inserting People after Home.
   5. The right column (1300 px and up) is not shown on Home, since the page holds its content; other pages keep it.
+  7. Overview cards (owners 156-161): line 1 label + chip left, net large green/red right-aligned; when both directions are open, "Owed to you ₹X" and "You owe ₹Y" small on the left in normal text colours; count line left; the net is the only coloured, right-side amount; about 64-72 px tall at 390 px; 6 currencies fit in one phone screen with the header; e2e checks height and that the amount's right edge aligns with the card's.
   6. Shell-first rendering (owner 152), e2e at 390/1440, demo data covers recent transactions, Lingui en + hi, perf and renders gate.
+
+### F-257 Main-tab slide, indicator, icon pop and re-tap scroll-to-top (§ 26.9 gap) `spec: owner § 26.9`
+
+Found 2026-10-30 by the tap-speed work: § 26.9's direction-aware slide between main tabs (native sceneStyleInterpolator ~220 ms, web ~200 ms), the springing bottom-bar indicator, the icon pop with haptic, the badge spring and re-tap-scrolls-to-top are not built (web switches instantly; "no soft reset yet"). Build them interruptible from the start (owner 150: a new tap redirects the running slide from its current value), reduced-motion aware.
+
+- **Effort** M · **Impact** 7 · **Backend** no · **Status** todo, after F-256 · **Deps** F-255
+- **Prefs** -
+- **Acceptance**
+  1. Slide direction follows tab order; a tap mid-slide redirects from the current position; the landing tab is the last tapped (tabTaps.spec stays green).
+  2. Indicator springs; icon pops; haptic tap on native; badge springs on count change; re-tap of the active tab scrolls its list to top.
+  3. Reduced motion / motion off: instant switch; renders gate and tap-latency spec do not regress.
 
 ### F-250 Sign-in required (auth gate) `spec: owner § 26.15 (decision 125)`
 
@@ -2907,7 +2919,7 @@ Fix every finding of the 2026-10-28 UX audit marked "F-240" (1 critical, 6 major
 
 Copy any URL and land on the same screen: pages, in-page tabs, sheets and popups, and the list state that matters are all routes (web path/query, native deep link), following Expensify's route-per-modal model on Bluesky's navigator. Queued right after the Wave B merge and F-228a.
 
-- **Effort** L · **Impact** 9 · **Backend** no · **Status** todo · **Deps** Wave B merged, F-228a
+- **Effort** L · **Impact** 9 · **Backend** no · **Status** built on feat/wC-F241-254 (unmerged), web verified (e2e `deeplinks.spec.ts` at 390 and 1440); native opens the page then the sheet through a queue, not run · **Deps** Wave B merged, F-228a
 - **Prefs** -
 - **Acceptance**
   1. A route table in `routes.ts` covers every page, tab (e.g. `/groups/:id/balances`, `/activity/others`), sheet (e.g. `/expense/new?group=:id`, `/people/:id/record-payment`, `/groups/:id/settle`, `/settings/regional/timezone`, `/search?q=&mode=ask`), every drawer (side drawer `?drawer=menu`, Search & Ask), pickers inside sheets as sub-routes (e.g. `/expense/new/currency`; decision 101) and list state as query params (filters, sort, showSettled, scope, period, currency); a test asserts every sheet and tab component has a route.
@@ -2916,6 +2928,10 @@ Copy any URL and land on the same screen: pages, in-page tabs, sheets and popups
   4. Confirmation prompts and "..." menus are not addressable; no URL performs or arms an action (test: a sheet URL never writes).
   5. List state in the URL and the database preferences (F-1413) agree: the URL wins when present, otherwise the saved preference.
   6. e2e: for every route in the table, load it cold at phone and desktop widths and assert the right screen, tab or sheet is open.
+
+- **Assistant rulings, 2026-10-29** (made while reviewing the build; the owner has not seen them, change on request): (1) **Tab switches replace the history entry** (`/groups/:id/balances`, `/activity/others`): Back never steps through tab taps, and the heavy page is not mounted twice. This is the reading of acceptance 2 for tabs; sheets and pickers do push. (2) **A pasted sheet-plus-picker URL is one history entry**: the browser's Back leaves to the previous site, while the in-app X steps back one level (picker to sheet to page).
+- **Deferred:** "Not on this device yet" for an entity a link names but the device has not pulled (acceptance 3, § 14) waits for sync (F-2103). Until then a sheet whose target is missing is dropped and the page shows its own not-found state; a page's own "isn't on this device" empty state is unchanged.
+- **Native, until the in-sheet picker hand-over lands (fix/ios-wB):** a link to a picker opens its parent sheet only, and nothing opens over a composer (Add / Edit expense, New group); a phone keeps sheets as dialog state, with the link's sheet held for its page.
 
 ### F-242 why-did-you-render and the wasted-render gate `spec: owner § 17, § 26.10 (decision 108)`
 

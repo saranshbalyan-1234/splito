@@ -2,10 +2,11 @@ import {useEffect, useState} from 'react'
 import {LayoutAnimationConfig} from 'react-native-reanimated'
 import {plural} from '@lingui/core/macro'
 import {Trans, useLingui} from '@lingui/react/macro'
-import {useNavigation} from '@react-navigation/native'
+import {useNavigation, useRoute} from '@react-navigation/native'
 import {balanceTotals, isSettledBalance, personSummary} from '@splito/domain'
 import {type Group, type Person} from '@splito/sync'
 
+import {type Params} from '#/lib/links/listState'
 import {type NavigationProp} from '#/lib/routes/types'
 import {perfMark} from '#/lib/perfMark'
 import {useGroupChipNames} from '#/data/groupVisibility'
@@ -52,6 +53,7 @@ import {
 } from './components/FriendsFilterDialog'
 import {RequestsSection} from './components/RequestsSection'
 import {SectionHeader} from './components/SectionHeader'
+import {peopleParams, readPeopleParams} from './urlState'
 import {filterFriends, listedFriends, searchFriends, seenByPerson, sortFriends} from './sort'
 
 const PLACEHOLDER_ROWS = 6
@@ -94,17 +96,23 @@ export function PeopleScreen() {
     showHidden: false,
     showSettled: false,
   }
-  const [applied, setApplied] = useState<PeopleFilters | null>(null)
   /* The list's own search (26.12): by name, combined with the filters; not kept after leaving. */
   const [query, setQuery] = useState('')
-  const filters: PeopleFilters = {...(applied ?? defaults), showHidden, showSettled}
+  const route = useRoute()
+  /* The filters are the address (`/?sort=name&show=owesYou`, F-241): a param that is present wins over the saved preference. */
+  const filters: PeopleFilters = {
+    ...defaults,
+    showHidden,
+    showSettled,
+    ...readPeopleParams(route.params as Params),
+  }
   const {includeGroups, sort} = filters
   const lastActivity = useLastActivity(sort === 'recent')
   /* The filter button counts what differs from the defaults (Settings › Sorting and filters). */
   const activeCount = (
     ['includeGroups', 'currency', 'show', 'sort', 'showHidden', 'showSettled'] as const
   ).filter(k => filters[k] !== STOCK[k]).length
-  const filterControl = useDialogControl()
+  const filterControl = useDialogControl({url: 'filters'})
 
   const isLoading = !me || !people || !groups || !balanceRows
   /* The launch budget's end point: Home has its figures (perf spec reads the mark). */
@@ -290,7 +298,7 @@ export function PeopleScreen() {
                     label: l`Clear filters`,
                     text: l`Clear filters`,
                     onPress: () => {
-                      setApplied(null)
+                      navigation.setParams(peopleParams(STOCK as PeopleFilters, STOCK as PeopleFilters) as never)
                       void setSortDefault('amount')
                       void setIncludeDefault(true)
                       void setShowSettled(false)
@@ -330,7 +338,7 @@ export function PeopleScreen() {
         filters={filters}
         currencies={currencies}
         onFiltersApplied={f => {
-          setApplied(f)
+          navigation.setParams(peopleParams(f, STOCK as PeopleFilters, {sort: sortDefault, includeGroups: includeDefault ?? true, showSettled, showHidden}) as never)
           if (f.showHidden !== showHidden) void setShowHidden(f.showHidden)
           if (f.showSettled !== showSettled) void setShowSettled(f.showSettled)
           /* Sort and Include groups are saved too (owner 128): the choice is the new default and survives a reload. */

@@ -1,4 +1,4 @@
-import {useEffect, useState} from 'react'
+import {useState} from 'react'
 import {useLingui} from '@lingui/react/macro'
 import {useNavigation, useRoute} from '@react-navigation/native'
 import {
@@ -35,6 +35,7 @@ import {
   scopeFromPref,
   scopeToPref,
 } from '#/screens/Analytics/scope'
+import {MAX_OFFSET, readAnalyticsParams, scopeToParam} from '#/screens/Analytics/urlState'
 
 export type PeriodChoice = 'week' | 'month' | 'year' | 'all' | 'custom'
 
@@ -62,6 +63,17 @@ export type GroupOption = {
 
 /** `key` for the non-group slice in the by-group chart (group ids are never empty). */
 export const DIRECT_KEY = ''
+
+/** `periodRange`, never throwing and never leaving real calendars: an address can carry any offset. */
+function safePeriodRange(period: Exclude<PeriodChoice, 'all' | 'custom'>, today: string, weekStart: WeekStart, offset: number): DateRange {
+  try {
+    const range = periodRange(period, today, weekStart, offset)
+    if (/^\d{4}-\d{2}-\d{2}$/.test(range.from) && /^\d{4}-\d{2}-\d{2}$/.test(range.to)) return range
+  } catch {
+    // fall through to the current period
+  }
+  return periodRange(period, today, weekStart, 0)
+}
 
 /** `YYYY-MM-DD` as a Date at UTC midnight; always format it with `timeZone: 'UTC'`. */
 export function utcDate(d: string) {
@@ -96,21 +108,16 @@ export function useReport() {
   const [weekStartPref] = usePref('weekStart')
   const today = useToday()
   const formatDay = useFormatDay()
-  /* An Overview card opens Analytics in its currency (`?currency=EUR`, audit m21). */
+  /*
+   * The filter bar's choices live in the address (F-241): `?currency=EUR` (an Overview card opens it so, audit
+   * m21), `period`, `offset`, `from`/`to`, `scope`. A param that is present wins over the saved preference.
+   * They are written on a tap, never on mount.
+   */
   const route = useRoute()
-  const routeCurrency = (route.params as {currency?: string} | undefined)
-    ?.currency
-  const [state, setState] = useState<FilterState>({
-    offset: 0,
-    currency: routeCurrency,
-  })
   const navigation = useNavigation()
-  /* Seed once, then clear the param, so tapping the same card again seeds again. */
-  useEffect(() => {
-    if (!routeCurrency) return
-    setState(s => ({...s, currency: routeCurrency}))
-    navigation.setParams({currency: undefined} as never)
-  }, [routeCurrency, navigation])
+  const urlState = readAnalyticsParams(route.params as Record<string, string | undefined> | undefined)
+  const state: FilterState = urlState
+  const setParams = (patch: Record<string, string | undefined>) => navigation.setParams(patch as never)
   const [picked, setPicked] = useState<{
     filterKey: string
     selection: Selection
@@ -133,7 +140,7 @@ export function useReport() {
         x.name.localeCompare(y.name),
     )
   const groupIds = groupOptions.map(g => g.id)
-  const scope = scopeFromPref(scopePref, groupIds)
+  const scope = urlState.scope ? scopeFromPref(urlState.scope, groupIds) : scopeFromPref(scopePref, groupIds)
   const scopeKey = JSON.stringify(scope)
   const isIn = (groupId: string | null) => inScope(groupId, scope)
 
@@ -166,7 +173,7 @@ export function useReport() {
       ? bounds
       : period === 'custom'
         ? state.custom!
-        : periodRange(period, today, weekStart, state.offset)
+        : safePeriodRange(period, today, weekStart, state.offset)
   const granularity: Granularity =
     period === 'week' || period === 'month'
       ? 'day'
@@ -391,15 +398,20 @@ export function useReport() {
     spanLabel,
     /** Remembered as the period Analytics opens with (`analyticsPeriod`, decision 90); a custom range is not. */
     setPeriod: (period: Exclude<PeriodChoice, 'custom'>) => {
-      setState(s => ({...s, period, offset: 0}))
+      setParams({period, offset: undefined, from: undefined, to: undefined})
       void saveDefaultPeriod(period)
     },
-    setCustom: (custom: DateRange) =>
-      setState(s => ({...s, period: 'custom', custom, offset: 0})),
-    step: (by: number) => setState(s => ({...s, offset: s.offset + by})),
-    setCurrency: (currency: string) => setState(s => ({...s, currency})),
-    /** Remembered on this device (`analyticsScope`). */
-    setScope: (next: Scope) => void setScopePref(scopeToPref(next)),
+    setCustom: (custom: DateRange) => setParams({period: 'custom', from: custom.from, to: custom.to, offset: undefined}),
+    step: (by: number) => {
+      const next = Math.max(-MAX_OFFSET, Math.min(MAX_OFFSET, state.offset + by))
+      setParams({offset: next === 0 ? undefined : String(next)})
+    },
+    setCurrency: (currency: string) => setParams({currency}),
+    /** In the address and remembered on this device (`analyticsScope`). */
+    setScope: (next: Scope) => {
+      setParams({scope: scopeToParam(next)})
+      void setScopePref(scopeToPref(next))
+    },
   }
 }
 

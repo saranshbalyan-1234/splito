@@ -76,6 +76,9 @@ export function AddExpenseScreen() {
       personId={params?.personId}
       groupId={params?.groupId}
       prefill={{title: params?.title, amount: params?.amount, currency: params?.currency}}
+      onPrefillEdited={() => {
+        if (params?.title || params?.amount || params?.currency) navigation.setParams({title: undefined, amount: undefined, currency: undefined})
+      }}
       onClose={close}
     />
   )
@@ -92,6 +95,7 @@ function AddExpenseForm({
   personId,
   groupId,
   prefill,
+  onPrefillEdited,
   onClose,
 }: {
   me: string
@@ -106,11 +110,13 @@ function AddExpenseForm({
   groupId?: string
   /** An Ask Splito action card starts the form with these; the saved draft then waits, untouched (ARCHITECTURE 26.19). */
   prefill?: {title?: string; amount?: string; currency?: string}
+  onPrefillEdited?: () => void
   onClose: () => void
 }) {
   const {t: l} = useLingui()
   const context = {personId, groupId}
-  const isPrefilled = !!(prefill?.title || prefill?.amount)
+  /* Fixed at the first render: the prefill leaves the address on the first edit, the form stays a prefilled one (no draft slot, ARCHITECTURE 26.19). */
+  const [isPrefilled] = useState(() => !!(prefill?.title || prefill?.amount))
   function freshFormFor() {
     /* An inactive group takes no new expenses (decision 89): a link or button naming one opens a plain expense. */
     const group = groups.find(g => g.id === groupId && !isGroupInactive(g.data))
@@ -171,6 +177,8 @@ function AddExpenseForm({
       /* A prefilled form owns no draft slot: it never writes over, or clears, the draft the user saved. */
       draftContext={draftContextFor(context, isPrefilled)}
       isDraftRestored={!!draft}
+      /* Once the person edits, the one-shot prefill leaves the address: a refresh opens the plain composer with the draft the user saved, not the prefill again (F-241). */
+      onFirstEdit={isPrefilled ? onPrefillEdited : undefined}
       onClose={onClose}
     />
   )

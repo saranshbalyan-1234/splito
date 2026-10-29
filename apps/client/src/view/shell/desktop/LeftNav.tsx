@@ -731,8 +731,8 @@ export function RecentGroups() {
 function selectedItem(
   state: State | undefined,
   items: {navItem: NavClickItem; href: string}[],
+  section = currentSection(state),
 ) {
-  const section = currentSection(state)
   return items.find(({navItem, href}) => {
     const tab = NAV_ITEM_TO_TAB[navItem]
     return IS_NATIVE && tab
@@ -759,7 +759,12 @@ export function DesktopLeftNav({
   const {leftNavMinimal} = useLayoutBreakpoints()
   const insets = useSafeAreaInsets()
   const activityBadge = useActivityBadge()
-  const navigationState = useNavigationState(state => state)
+  /*
+   * Web lights an item from the section alone (a string), so a `Sheet` marker pushed or popped over the page does not
+   * re-render the sidebar; native keeps the whole state for the tab check.
+   */
+  const navigationState = useNavigationState(state => (IS_NATIVE ? state : undefined))
+  const section = useNavigationState(state => currentSection(state))
   const tabs = useTabs()
   const [layouts, setLayouts] = useState<
     Partial<Record<NavClickItem | 'more', {y: number; height: number}>>
@@ -780,7 +785,7 @@ export function DesktopLeftNav({
   })
   const items = on.map(toItem)
   const moreItems = off.map(toItem)
-  const lit = selectedItem(navigationState, [...items, ...moreItems])
+  const lit = selectedItem(navigationState, [...items, ...moreItems], section)
   const selected = lit && off.includes(lit) ? undefined : lit
   const selectedMore = lit && off.includes(lit) ? lit : undefined
   const onItemLayout = (navItem: NavClickItem | 'more') => (e: LayoutChangeEvent) => {

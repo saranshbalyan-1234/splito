@@ -128,7 +128,7 @@ export function FilterBar({
  */
 function ScopeChip({report}: {report: Report}) {
   const {t: l} = useLingui()
-  const control = Dialog.useDialogControl()
+  const control = Dialog.useDialogControl({url: 'scope'})
   const {scope, groupOptions, groupIds} = report
   const summary = scopeSummary(scope, groupIds)
   const name = (id: string) => report.nameOfGroup(id)
