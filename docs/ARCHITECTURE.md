@@ -1241,6 +1241,12 @@ labelled sidebar); **wide** = web 1300 px and up (Bluesky `gtTablet`, right colu
   fixer once before the next feature starts. *Why:* "use sonnet for all implementation and opus for decisions
   and reviews".
 - **Large work fans out** into parallel throwaway worktrees (§ 20) with judges and review. *Why:* "Fanout".
+- **No e2e test ever opens another app on the machine** (owner 118). Playwright runs in a real Chrome on the
+  owner's Mac, which hands `mailto:`, `sms:`, `tel:`, `upi:`, WhatsApp links and the Web Share sheet to macOS apps.
+  So there is no e2e test of "Send by email" (removed on every branch, 2026-10-29), and no spec clicks a share,
+  invite-share, Remind send, SMS, WhatsApp or UPI pay control unless the app routes it through `lib/openExternal.ts`,
+  which under `IS_E2E` only records the URL on `window.__splitoTest.externalUrls`. Builder and reviewer briefs say so.
+  *Why:* "remove email test, the emails are being triggered and app is opened".
 
 ### 26.2 Product scope, platforms and backend
 
@@ -2098,6 +2104,7 @@ Every owner decision, in the order it was made (all 2026-10-26). "Replaced" name
 | 115 | "i have claude keys, you should enable that as well in search" | Claude (latest models) turns questions into structured queries run on device; never computes money; key in OS secure store via Settings until the backend proxy exists; never bundled, committed, logged, backed up or synced | § 26.19 | On-device parser only until the backend AI endpoint |
 | 116 | "make sure the search works logically with most of the things like name, place, amount, category, type, group etc etc" | Search covers people, places, amounts, category, type, group, dates, currency, payer, status; AND across facets, OR within; facet chips; per-currency totals; paged | § 26.19 | Words, names and simple amount filters |
 | 117 | "create one env file and ask for token there, i would paste" | Claude key in git-ignored `.env.local` (ANTHROPIC_API_KEY), read only by a dev-only local AI proxy; never EXPO_PUBLIC_*, never in the bundle | § 26.19 | Key entered in Settings, stored in OS secure store (row 115) |
+| 118 | "remove email test, the emails are being triggered and app is opened" | The "Send by email" e2e test is removed on every branch; no e2e spec clicks a control that hands a link to another app unless it goes through `openExternal` (records only) | § 26.1 | e2e asserted the mailto hand-off (feedback.spec) |
 
 New decisions follow § 0 rule 9: rewrite the rule in its topic so only the current truth remains, then add a
 row here.
