@@ -1,4 +1,4 @@
-import {useEffect, useRef, useState} from 'react'
+import {useEffect, useState} from 'react'
 import {View} from 'react-native'
 import Animated, {
   useAnimatedStyle,
@@ -162,13 +162,10 @@ export function ExpenseComposer({
   const isEdit = !!expenseId
   const isDirty = form !== initialForm
 
-  const didEdit = useRef(false)
+  /* `onFirstEdit` is idempotent (the caller checks), so no ref is read here: a ref in this function would stop React Compiler from compiling the whole composer. */
   const update = (fn: (f: ExpenseForm) => ExpenseForm) => {
     setForm(fn)
-    if (!didEdit.current) {
-      didEdit.current = true
-      onFirstEdit?.()
-    }
+    onFirstEdit?.()
   }
 
   const currencyControl = Dialog.useDialogControl({url: 'currency'})

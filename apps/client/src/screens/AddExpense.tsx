@@ -76,7 +76,9 @@ export function AddExpenseScreen() {
       personId={params?.personId}
       groupId={params?.groupId}
       prefill={{title: params?.title, amount: params?.amount, currency: params?.currency}}
-      onPrefillEdited={() => navigation.setParams({title: undefined, amount: undefined, currency: undefined})}
+      onPrefillEdited={() => {
+        if (params?.title || params?.amount || params?.currency) navigation.setParams({title: undefined, amount: undefined, currency: undefined})
+      }}
       onClose={close}
     />
   )
