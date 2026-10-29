@@ -1,5 +1,5 @@
 // Adapted from bluesky-social/social-app@4e4ad9c (MIT) — src/components/Layout/Header/index.tsx
-import {createContext, lazy, Suspense, useCallback, useContext} from 'react'
+import {createContext, useCallback, useContext} from 'react'
 import {type GestureResponderEvent, View} from 'react-native'
 import Animated from 'react-native-reanimated'
 import {msg} from '@lingui/core/macro'
@@ -9,7 +9,6 @@ import {useNavigation} from '@react-navigation/native'
 import {type NavigationProp} from '#/lib/routes/types'
 import {backFallback, goBack} from '#/navigation/goBack'
 import {useShellHeaderLayout} from '#/state/shell/shell-layout'
-import {useDemoMode} from '#/state/demo'
 import {useIsWithinSplitView} from '#/lib/splitView'
 import {
   atoms as a,
@@ -32,27 +31,6 @@ import {useHeaderHideTransform} from '#/components/Layout/MainScrollProvider'
 import {Text} from '#/components/Typography'
 
 const HEADER_BUTTON_HITSLOP = {top: 30, bottom: 10, left: 30, right: 30}
-
-/*
- * Dev and e2e builds only (ARCHITECTURE 26.1): the "Demo mode · Switch back"
- * banner is loaded on demand under a condition Metro folds at build time, so a
- * production bundle holds no part of it. It sits above the header row, inside
- * the sticky wrapper, so it never covers a header and travels with it.
- */
-const DemoBanner =
-  __DEV__ || process.env.EXPO_PUBLIC_ENV === 'e2e'
-    ? lazy(() => import('#/components/DemoBanner'))
-    : null
-
-function DemoBannerSlot() {
-  const {demo} = useDemoMode()
-  if (!DemoBanner || !demo) return null
-  return (
-    <Suspense fallback={null}>
-      <DemoBanner />
-    </Suspense>
-  )
-}
 
 /**
  * Pins a header (and anything that travels with it, such as a tab bar) to
@@ -122,18 +100,7 @@ export function Outer({
     </View>
   )
 
-  const banner = <DemoBannerSlot />
-  return sticky ? (
-    <Sticky>
-      {banner}
-      {row}
-    </Sticky>
-  ) : (
-    <>
-      {banner}
-      {row}
-    </>
-  )
+  return sticky ? <Sticky>{row}</Sticky> : row
 }
 
 const AlignmentContext = createContext<'center' | 'left'>('center')

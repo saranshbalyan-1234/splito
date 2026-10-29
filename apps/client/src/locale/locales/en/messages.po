@@ -814,7 +814,7 @@ msgid "Active"
 msgstr "Active"
 
 #: src/components/TabGlyph.tsx:42
-#: src/navigation/Navigation.tsx:68
+#: src/navigation/Navigation.tsx:69
 #: src/screens/Activity.tsx:108
 msgid "Activity"
 msgstr "Activity"
@@ -890,7 +890,7 @@ msgstr "Add each item and who had it. Tap a name again for another portion; hold
 msgid "Add each item and who had it. Tap a name again for another portion; right-click to take them off."
 msgstr "Add each item and who had it. Tap a name again for another portion; right-click to take them off."
 
-#: src/navigation/Navigation.tsx:78
+#: src/navigation/Navigation.tsx:79
 #: src/screens/Group/index.tsx:485
 #: src/screens/Group/index.tsx:486
 #: src/screens/Person/index.tsx:473
@@ -915,7 +915,7 @@ msgctxt "action"
 msgid "Add expense"
 msgstr "Add expense"
 
-#: src/navigation/Navigation.tsx:81
+#: src/navigation/Navigation.tsx:82
 #: src/screens/AddFriend.tsx:326
 #: src/screens/AddFriend.tsx:388
 msgid "Add friend"
@@ -1111,7 +1111,7 @@ msgid "An exact amount, in any currency"
 msgstr "An exact amount, in any currency"
 
 #: src/components/TabGlyph.tsx:40
-#: src/navigation/Navigation.tsx:67
+#: src/navigation/Navigation.tsx:68
 #: src/screens/Analytics/index.tsx:64
 #: src/screens/People/components/BalanceSummary.tsx:138
 msgid "Analytics"
@@ -1500,8 +1500,8 @@ msgstr "Close active dialog"
 msgid "Close alert"
 msgstr "Close alert"
 
-#: src/view/shell/index.tsx:110
-#: src/view/shell/index.web.tsx:88
+#: src/view/shell/index.tsx:114
+#: src/view/shell/index.web.tsx:92
 msgid "Close drawer menu"
 msgstr "Close drawer menu"
 
@@ -1590,7 +1590,7 @@ msgstr "Continue"
 msgid "Continue to next step"
 msgstr "Continue to next step"
 
-#: src/lib/sharing.ts:35
+#: src/lib/sharing.ts:38
 msgid "Copied to clipboard"
 msgstr "Copied to clipboard"
 
@@ -1651,9 +1651,13 @@ msgstr "Couldn’t delete this. Please try again."
 msgid "Couldn’t export. Try again."
 msgstr "Couldn’t export. Try again."
 
-#: src/lib/sharing.ts:63
+#: src/lib/sharing.ts:66
 msgid "Couldn’t open an app for that. Copy the link instead."
 msgstr "Couldn’t open an app for that. Copy the link instead."
+
+#: src/data/StoreProvider.tsx:167
+msgid "Couldn’t open the demo. Showing your own data."
+msgstr "Couldn’t open the demo. Showing your own data."
 
 #: src/components/people/PaymentDetailsDialog.tsx:130
 msgid "Couldn’t put this write-off back"
@@ -1671,7 +1675,7 @@ msgstr "Couldn’t remove this friend. Please try again."
 msgid "Couldn’t reset settings. Please try again."
 msgstr "Couldn’t reset settings. Please try again."
 
-#: src/screens/Settings/DemoMode.tsx:121
+#: src/screens/Settings/DemoMode.tsx:87
 msgid "Couldn’t reset the demo. Try again."
 msgstr "Couldn’t reset the demo. Try again."
 
@@ -1707,11 +1711,11 @@ msgstr "Couldn't save your feedback. Please try again."
 msgid "Couldn’t save. Please try again."
 msgstr "Couldn’t save. Please try again."
 
-#: src/components/DemoBanner.tsx:27
+#: src/components/DemoBanner.tsx:25
 msgid "Couldn’t switch back. Try again."
 msgstr "Couldn’t switch back. Try again."
 
-#: src/screens/Settings/DemoMode.tsx:78
+#: src/screens/Settings/DemoMode.tsx:40
 msgid "Couldn’t switch demo mode. Try again."
 msgstr "Couldn’t switch demo mode. Try again."
 
@@ -1962,12 +1966,12 @@ msgstr "Deleted forever"
 msgid "Demo"
 msgstr "Demo"
 
-#: src/screens/Settings/DemoMode.tsx:90
-#: src/screens/Settings/DemoMode.tsx:97
+#: src/screens/Settings/DemoMode.tsx:56
+#: src/screens/Settings/DemoMode.tsx:63
 msgid "Demo mode"
 msgstr "Demo mode"
 
-#: src/components/DemoBanner.tsx:37
+#: src/components/DemoBanner.tsx:35
 msgid "Demo mode ·"
 msgstr "Demo mode ·"
 
@@ -2084,7 +2088,7 @@ msgid "Edit category"
 msgstr "Edit category"
 
 #: src/components/split/ExpenseComposer.tsx:265
-#: src/navigation/Navigation.tsx:80
+#: src/navigation/Navigation.tsx:81
 #: src/screens/EditExpense.tsx:35
 #: src/screens/EditExpense.tsx:74
 #: src/screens/Expense/index.tsx:85
@@ -2323,7 +2327,7 @@ msgstr "Exact amounts"
 msgid "Excluded"
 msgstr "Excluded"
 
-#: src/navigation/Navigation.tsx:79
+#: src/navigation/Navigation.tsx:80
 #: src/screens/Analytics/components/ExpenseRow.tsx:43
 #: src/screens/Expense/index.tsx:77
 #: src/screens/RecentlyDeleted/components/RestoreDialog.tsx:96
@@ -2369,7 +2373,7 @@ msgstr "Expired"
 msgid "Expires within the hour"
 msgstr "Expires within the hour"
 
-#: src/screens/Settings/DemoMode.tsx:100
+#: src/screens/Settings/DemoMode.tsx:66
 msgid "Explore Splito with sample data. Your own data is kept separately and untouched."
 msgstr "Explore Splito with sample data. Your own data is kept separately and untouched."
 
@@ -2526,7 +2530,7 @@ msgstr "Gentle vibrations when you tap, toggle and save"
 msgid "Give each person a percentage."
 msgstr "Give each person a percentage."
 
-#: src/components/Layout/Header/index.tsx:187
+#: src/components/Layout/Header/index.tsx:154
 #: src/screens/Login/components/AuthLayout/Header/index.tsx:108
 msgid "Go back"
 msgstr "Go back"
@@ -2577,7 +2581,7 @@ msgstr "Groceries"
 #: src/components/split/pickers.tsx:256
 #: src/components/split/pickers.tsx:260
 #: src/features/settlement/CallItEvenDialog.tsx:160
-#: src/navigation/Navigation.tsx:76
+#: src/navigation/Navigation.tsx:77
 #: src/screens/Analytics/components/Charts.tsx:325
 #: src/screens/Analytics/index.tsx:217
 #: src/screens/Analytics/useReport.ts:312
@@ -2620,7 +2624,7 @@ msgstr "Group updated"
 
 #: src/components/SearchAsk/ResultRows.tsx:83
 #: src/components/TabGlyph.tsx:39
-#: src/navigation/Navigation.tsx:66
+#: src/navigation/Navigation.tsx:67
 #: src/screens/Groups/index.tsx:127
 #: src/screens/Groups/index.tsx:142
 #: src/screens/Groups/index.tsx:172
@@ -2776,7 +2780,7 @@ msgstr "Install Splito for quick access, even offline."
 msgid "International"
 msgstr "International"
 
-#: src/navigation/Navigation.tsx:85
+#: src/navigation/Navigation.tsx:86
 #: src/screens/Invites/Invite.tsx:68
 msgid "Invite"
 msgstr "Invite"
@@ -2795,8 +2799,8 @@ msgstr "Invite declined"
 msgid "Invite for {0}"
 msgstr "Invite for {0}"
 
-#: src/navigation/Navigation.tsx:83
 #: src/navigation/Navigation.tsx:84
+#: src/navigation/Navigation.tsx:85
 #: src/screens/Invites/CreateInvite.tsx:119
 msgid "Invite link"
 msgstr "Invite link"
@@ -2806,7 +2810,7 @@ msgstr "Invite link"
 msgid "Invite link or QR code"
 msgstr "Invite link or QR code"
 
-#: src/navigation/Navigation.tsx:82
+#: src/navigation/Navigation.tsx:83
 #: src/screens/Invites/InviteLinks.tsx:178
 msgid "Invite links"
 msgstr "Invite links"
@@ -3076,7 +3080,7 @@ msgstr "Members of {0}"
 
 #: src/components/Menu/index.tsx:133
 #: src/components/Menu/index.web.tsx:240
-#: src/view/shell/index.web.tsx:134
+#: src/view/shell/index.web.tsx:138
 msgid "Menu"
 msgstr "Menu"
 
@@ -3225,7 +3229,7 @@ msgstr "New expenses start in this currency. You can change it on any expense."
 msgid "New friend – no account needed"
 msgstr "New friend – no account needed"
 
-#: src/navigation/Navigation.tsx:86
+#: src/navigation/Navigation.tsx:87
 #: src/screens/CreateGroup.tsx:134
 #: src/screens/Groups/index.tsx:212
 #: src/screens/Groups/index.tsx:213
@@ -3837,7 +3841,7 @@ msgstr "Period"
 msgid "Period: {periodName}, {0}"
 msgstr "Period: {periodName}, {0}"
 
-#: src/navigation/Navigation.tsx:75
+#: src/navigation/Navigation.tsx:76
 #: src/screens/Analytics/components/Charts.tsx:280
 msgid "Person"
 msgstr "Person"
@@ -3931,13 +3935,13 @@ msgid "Privacy"
 msgstr "Privacy"
 
 #: src/navigation/Drawer.tsx:61
-#: src/navigation/Navigation.tsx:69
+#: src/navigation/Navigation.tsx:70
 #: src/screens/Profile.tsx:40
 #: src/screens/Settings/index.tsx:108
 msgid "Profile"
 msgstr "Profile"
 
-#: src/screens/Settings/DemoMode.tsx:118
+#: src/screens/Settings/DemoMode.tsx:84
 msgid "Puts the sample data back as it was and drops what you changed in demo mode. Your own data is not touched."
 msgstr "Puts the sample data back as it was and drops what you changed in demo mode. Your own data is not touched."
 
@@ -3980,7 +3984,7 @@ msgid "Recently active groups"
 msgstr "Recently active groups"
 
 #: src/components/settings/sections.ts:61
-#: src/navigation/Navigation.tsx:73
+#: src/navigation/Navigation.tsx:74
 #: src/screens/RecentlyDeleted/index.tsx:198
 #: src/screens/Settings/index.tsx:209
 #: src/screens/Settings/index.tsx:212
@@ -4097,7 +4101,7 @@ msgid "Resend to {name}"
 msgstr "Resend to {name}"
 
 #: src/components/settings/PrefSection.tsx:132
-#: src/screens/Settings/DemoMode.tsx:119
+#: src/screens/Settings/DemoMode.tsx:85
 #: src/screens/Settings/SettingsSection.tsx:168
 msgid "Reset"
 msgstr "Reset"
@@ -4131,12 +4135,12 @@ msgstr "Reset all settings?"
 msgid "Reset code"
 msgstr "Reset code"
 
-#: src/screens/Settings/DemoMode.tsx:107
-#: src/screens/Settings/DemoMode.tsx:110
+#: src/screens/Settings/DemoMode.tsx:73
+#: src/screens/Settings/DemoMode.tsx:76
 msgid "Reset demo"
 msgstr "Reset demo"
 
-#: src/screens/Settings/DemoMode.tsx:117
+#: src/screens/Settings/DemoMode.tsx:83
 msgid "Reset demo?"
 msgstr "Reset demo?"
 
@@ -4317,7 +4321,7 @@ msgstr "Scroll down and choose Add to Home Screen."
 
 #: src/components/forms/SearchInput.tsx:52
 #: src/components/forms/SearchInput.tsx:54
-#: src/navigation/Navigation.tsx:74
+#: src/navigation/Navigation.tsx:75
 msgid "Search"
 msgstr "Search"
 
@@ -4465,14 +4469,14 @@ msgstr "Set new password"
 msgid "Sets the email or phone number for password reset"
 msgstr "Sets the email or phone number for password reset"
 
-#. placeholder {0}: Math.round((done ?? 0) * 100)
-#: src/screens/Settings/DemoMode.tsx:36
+#. placeholder {0}: Math.round(done * 100)
+#: src/components/DemoBanner.tsx:66
 msgid "Setting up the demo… {0}%"
 msgstr "Setting up the demo… {0}%"
 
 #: src/components/TabGlyph.tsx:43
-#: src/navigation/Navigation.tsx:70
 #: src/navigation/Navigation.tsx:71
+#: src/navigation/Navigation.tsx:72
 #: src/screens/Profile.tsx:64
 #: src/screens/Profile.tsx:67
 #: src/screens/Settings/index.tsx:71
@@ -4489,7 +4493,7 @@ msgid "Settings reset"
 msgstr "Settings reset"
 
 #: src/components/settings/AboutSettings.tsx:97
-#: src/navigation/Navigation.tsx:77
+#: src/navigation/Navigation.tsx:78
 #: src/screens/Group/index.tsx:523
 #: src/screens/Group/index.tsx:760
 #: src/screens/Group/index.tsx:766
@@ -4631,7 +4635,7 @@ msgstr "Shows the write-off and lets you undo it"
 
 #: src/navigation/Drawer.tsx:225
 #: src/navigation/Drawer.tsx:232
-#: src/navigation/Navigation.tsx:72
+#: src/navigation/Navigation.tsx:73
 #: src/screens/LoggedOut/SplashScreen.tsx:78
 #: src/screens/LoggedOut/SplashScreen.tsx:85
 #: src/screens/LoggedOut/SplashScreen.web.tsx:65
@@ -4878,10 +4882,14 @@ msgstr "Swipe left on Activity"
 msgid "Swipe right on Activity"
 msgstr "Swipe right on Activity"
 
+#: src/components/DemoBanner.tsx:37
 #: src/components/DemoBanner.tsx:39
-#: src/components/DemoBanner.tsx:41
 msgid "Switch back"
 msgstr "Switch back"
+
+#: src/components/DemoBanner.tsx:66
+msgid "Switching…"
+msgstr "Switching…"
 
 #: src/components/settings/prefControls.tsx:645
 msgid "Sync status"

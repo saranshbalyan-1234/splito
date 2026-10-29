@@ -13,14 +13,13 @@ no mode banner. What it does have, and what is reused unchanged in role:
 
 | Splito file | Upstream file | Splito changes |
 |---|---|---|
-| `src/components/DemoBanner.tsx` | `src/components/Admonition.tsx` (`Outer`, `Row`, `Icon`, `Content`, `Text`, `Button`) | The banner is an Admonition of type `tip`: icon, "Demo mode ·" text and a small secondary "Switch back" button. Bluesky uses Admonition for in-page notices (language, labels); here it is the one persistent banner |
+| `src/components/DemoBanner.tsx`, `DemoFrame.tsx` | `src/components/Admonition.tsx` (`Outer`, `Row`, `Icon`, `Content`, `Text`, `Button`) | The banner is an Admonition of type `tip`: icon, "Demo mode ·" text and a small secondary "Switch back" button. Bluesky uses Admonition for in-page notices (language, labels); here it is the one persistent banner, drawn once by the shell (`DemoFrame`) above every screen, with a blocking cover while a switch runs |
 | `src/screens/Settings/DemoMode.tsx` | `src/screens/Settings/components/SettingsList.tsx` (`Item`, `PressableItem`, `ItemIcon`, `ItemText`), `src/components/forms/Toggle.tsx` | A Settings > Data row with a switch (Bluesky's settings checkbox row) and, while on, a "Reset demo" pressable row with a `Prompt.Basic` confirm |
-| `src/components/Layout/Header/index.tsx` (edited) | `src/components/Layout/Header/index.tsx` | The banner sits inside `Header.Sticky`, above the header row, so it never covers a header and slides away with it on phones, as Bluesky's minimal-shell header does |
 | `src/storage/index.ts` (edited) | `src/storage/index.ts` | `Storage` gains an optional key scope prefix (`setStorageScope`), so demo mode keeps its own search history, read marks and drafts; the MMKV classes are otherwise unchanged |
 
 Written for Splito (no Bluesky equivalent): `src/data/demoMode.ts` (opens the demo database, e2e hook),
 `src/data/demoSeed.ts` (the `demo.mode` row in the real database, seeding in one transaction, wipe),
-`src/data/StoreProvider.tsx` (the store swap without a remount), `src/state/demo.ts`,
+`src/data/StoreProvider.tsx` (the store swap without a remount), `src/state/demo.ts` (the context and progress), `src/navigation/ref.ts` (back to the first tab on a swap), `src/components/DemoFrame.tsx`,
 `src/data/friends.ts` (the directory that answers follows the mode), `e2e/openDemo.ts`,
 `packages/sync/src/demoLarge.ts` (the curated story folded into the generator).
 

@@ -14,9 +14,22 @@ export * from '#/storage/schema'
  */
 let scope = ''
 const scopeListeners = new Set<() => void>()
+/** Every storage instance, so a scope's keys can be cleared from all of them (a reset of demo mode). */
+const instances = new Set<MMKV>()
 export function setStorageScope(prefix: string) {
   if (prefix === scope) return
   scope = prefix
+  scopeListeners.forEach(l => l())
+}
+
+/** True while keys are scoped (demo mode): the first-frame copies of preferences must not be written outside the scope. */
+export function isStorageScoped() {
+  return scope !== ''
+}
+
+/** Deletes every key under `prefix` from every storage instance (MMKV natively, localStorage on web), then readers look again. */
+export function clearStorageScope(prefix: string) {
+  for (const store of instances) for (const key of store.getAllKeys()) if (key.startsWith(prefix)) store.delete(key)
   scopeListeners.forEach(l => l())
 }
 
@@ -33,6 +46,7 @@ export class Storage<Scopes extends unknown[], Schema> {
   constructor({id, scoped = []}: {id: string; scoped?: 'all' | readonly string[]}) {
     this.store = new MMKV({id})
     this.scoped = scoped
+    instances.add(this.store)
   }
 
   protected keyOf(scopes: unknown[]): string {
@@ -178,7 +192,8 @@ export function useStorage<
  */
 export const device = new Storage<[], Device>({
   id: 'splito_device',
-  scoped: ['searchHistory', 'activityFeed'],
+  // Search history and read marks, and the first-frame copies of preferences (the mirror): demo mode has its own of each.
+  scoped: ['searchHistory', 'activityFeed', 'fontScale', 'colorMode', 'darkTheme', 'accent', 'hapticsEnabled', 'density', 'moneyPalette', 'showSyncStatus', 'homeTab'],
 })
 
 /**

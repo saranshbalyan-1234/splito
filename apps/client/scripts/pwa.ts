@@ -5,7 +5,7 @@
  *   node scripts/pwa.ts [dist]      (default: dist)
  *
  * Every exported file is precached except the worker itself and files the app
- * never loads. Hashed names (Metro's 32-hex content hash) carry their own
+ * never loads. Fails when the export holds any demo mode code. Hashed names (Metro's 32-hex content hash) carry their own
  * version; the rest are versioned by a content hash. `pnpm e2e:build` and dev
  * never run this, so they never get a service worker.
  */
@@ -30,6 +30,17 @@ export function buildPrecache(files: Array<{url: string; bytes: Uint8Array}>): P
   return {name, urls}
 }
 
+/*
+ * Demo mode is dev and e2e only (ARCHITECTURE 26.1): a production export must hold none of it. These
+ * strings are in the demo database's name, its seed and its legacy cleanup and nowhere else.
+ */
+const DEMO_MARKERS = ['splito-demo', 'demo-large-', 'demo.mode']
+
+/** Exported files whose bytes mention demo mode: empty in a production build. */
+export function demoLeaks(files: Array<{url: string; bytes: Uint8Array}>): string[] {
+  return files.filter(f => DEMO_MARKERS.some(m => Buffer.from(f.bytes).includes(m))).map(f => f.url)
+}
+
 function sha(bytes: Uint8Array) {
   return createHash('sha1').update(bytes).digest('hex').slice(0, 12)
 }
@@ -42,6 +53,8 @@ if (import.meta.main) {
   const dist = join(ROOT, process.argv[2] ?? 'dist')
   const files = walk(dist).map(p => ({url: '/' + relative(dist, p).split('\\').join('/'), bytes: readFileSync(p)}))
   if (!files.some(f => f.url === '/index.html')) throw new Error(`${dist} has no index.html: run expo export first`)
+  const leaks = demoLeaks(files)
+  if (leaks.length) throw new Error(`demo mode code is in the production export: ${leaks.join(', ')}`)
   const precache = buildPrecache(files)
   writeFileSync(join(dist, 'sw.js'), `self.__PRECACHE = ${JSON.stringify(precache)};\n${readFileSync(join(ROOT, 'web/sw.js'), 'utf8')}`)
   console.log(`sw.js: ${precache.urls.length} files precached (${precache.name})`)

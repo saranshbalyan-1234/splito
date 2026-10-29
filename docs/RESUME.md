@@ -11,6 +11,9 @@ Next, in order:
 4. Wave 2 features (COMPLETION_MATRIX), then backend (fix fan2/api findings, auth, sync client).
 iOS sim: worktree .claude/worktrees/wf_5ebea8ed-d38-3, `EXPO_PUBLIC_TOUR=1 npx expo start --dev-client --clear` then open exp+splito://?__expo_url=http%3A%2F%2Flocalhost%3A8081 ; restart Metro after edits (watcher misses worktree changes).
 
+## Old demo rows in a real database (F-228a)
+Dev and e2e builds erase, once per device, the `demo-large-` rows that `?demo=large` and "Add demo data" wrote into the real database. The old small `?demo=1` set used random ids and cannot be told apart: a device that loaded it uses Settings > Data > Erase this device's data.
+
 ## Build order after splito-resume-1 (decided 2026-10-26)
 1. Architecture batch first (docs/ARCHITECTURE-BACKLOG.md A-001..A-010): rule tests with ratcheting baseline, oxlint, move client money arithmetic into packages/domain (51 sites in 8 files), never-throw decoders, golden money tests, outbox lifecycle, delete-after-undo-window, single sync-status component, id validation. Also fix data/hooks.ts re-running every store read after every save (speed rule 10).
 2. Then docs/BACKLOG.md feature batches in order (front-end first), each batch: Bluesky-first copy (rule 11), speed + animation (rule 10), judges >= 8.5, web + iOS screenshots.

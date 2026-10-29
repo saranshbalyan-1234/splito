@@ -7,16 +7,18 @@ import {
   createGroup,
   createPerson,
   ensureMe,
+  isNeverSync,
   type MutationCtx,
   openIdbStore,
   openSqlStore,
+  sendableOps,
   setPref,
   type Store,
 } from '@splito/sync'
 import {IDBFactory} from 'fake-indexeddb'
 import {parseMinor} from '@splito/domain'
 
-import {DEMO_ME, readDemoMode, seedDemo, wipeDemo, writeDemoMode} from '#/data/demoSeed'
+import {DEMO_ME, purgeLegacyDemo, readDemoMode, resumeDemo, seedDemo, wipeDemo, writeDemoMode} from '#/data/demoSeed'
 
 /*
  * Demo mode's data side (ARCHITECTURE 26.1, F-228a) on both store engines:
@@ -192,7 +194,78 @@ for (const engine of [sqlite, indexedDb]) {
         // The friend requests and invite links of the 26.18 flow are there too.
         expect((await demo.getAll('friendRequest')).length).toBe(9)
         expect((await demo.getAll('inviteLink')).length).toBe(9)
+
+        // Never-sync (M9): the demo store holds over a thousand queued ops and the sync client is offered none.
+        expect(isNeverSync(demo)).toBe(true)
+        expect((await demo.outboxByStatus('queued')).length).toBeGreaterThan(1000)
+        expect(await sendableOps(demo)).toEqual([])
+
+        // A cut-off block is finished by the next open (M2): the marker is written last, so with it gone (and part of the
+        // block missing) the block is erased and written again, never doubled.
+        const requests = await demo.getAll('friendRequest')
+        await demo.erase([...requests.slice(0, 4).map(r => ({type: 'friendRequest' as const, id: r.id})), {type: 'preference', id: 'demo.seed.invites'}])
+        await demo.erase([{type: 'preference', id: 'demo.seed.feedback'}])
+        expect((await demo.getAll('friendRequest')).length).toBe(5)
+        expect(await seedDemo(demo, demoCtx)).toBe(true)
+        expect((await demo.getAll('friendRequest')).length).toBe(9)
+        expect((await demo.getAll('inviteLink')).length).toBe(9)
+        expect((await demo.getAll('feedback')).length).toBe(3)
+        expect((await demo.getAll<{name: string}>('person')).filter(p => p.data.name === 'Tanvi Rao').length).toBe(1)
+        expect(await seedDemo(demo, demoCtx)).toBe(false)
         await demo.close()
+      },
+      300_000,
+    )
+
+    onSqlite(
+      'a demo database that will not open at boot does not lock the app: the mode is turned off in the real database',
+      async () => {
+        const real = await engine().open('real')
+        await ensureMe(real, realCtx, 'Me')
+        await writeDemoMode(real, realCtx, true)
+        const failures: unknown[] = []
+        const opened = await resumeDemo(
+          {store: real, ctx: realCtx},
+          async () => {
+            throw new Error('IndexedDB blocked')
+          },
+          e => failures.push(e),
+        )
+        expect(opened).toBeNull()
+        expect(failures).toHaveLength(1)
+        expect(await readDemoMode(real)).toBe(false)
+        // When it does open, nothing changes.
+        await writeDemoMode(real, realCtx, true)
+        expect(await resumeDemo({store: real, ctx: realCtx}, async () => 'store')).toBe('store')
+        expect(await readDemoMode(real)).toBe(true)
+        await real.close()
+      },
+      60_000,
+    )
+
+    onSqlite(
+      'demo rows older builds wrote into the real database are erased once, and nothing else is',
+      async () => {
+        const real = await engine().open('real')
+        await realData(real)
+        // What `?demo=large` left behind: the whole dataset, in the real database next to real data.
+        await seedDemo(real, {...realCtx, now: () => Date.now()})
+        expect((await real.dump()).entities.some(x => x.id.startsWith('demo-large-'))).toBe(true)
+        let done = false
+        const flag = {isDone: () => done, markDone: () => void (done = true)}
+        expect(await purgeLegacyDemo(real, flag)).toBeGreaterThan(1000)
+        const dump = await real.dump()
+        expect(dump.entities.some(x => x.id.startsWith('demo-large-'))).toBe(false)
+        expect(dump.history.some(h => h.entityId.startsWith('demo-large-'))).toBe(false)
+        expect(dump.outbox.some(o => o.entityId.startsWith('demo-large-'))).toBe(false)
+        const names = (await real.getAll<{name: string}>('person')).map(p => p.data.name)
+        expect(names).toContain('Asha Real')
+        expect((await real.getAll<{name: string}>('group')).map(g => g.data.name)).toEqual(['Real flat'])
+        expect(await real.count('expense')).toBe(1)
+        expect(done).toBe(true)
+        // Once: the flag stops a second pass.
+        expect(await purgeLegacyDemo(real, flag)).toBe(0)
+        await real.close()
       },
       300_000,
     )

@@ -1,6 +1,6 @@
 import {useCallback, useState} from 'react'
 
-import {navigationRef} from '#/navigation/DevTour'
+import {navigationRef} from '#/navigation/ref'
 import {OpenFeedbackContext} from '#/state/feedback'
 import {usePref} from '#/data/hooks'
 import * as Dialog from '#/components/Dialog'

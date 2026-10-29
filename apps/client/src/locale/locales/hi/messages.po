@@ -814,7 +814,7 @@ msgid "Active"
 msgstr "सक्रिय"
 
 #: src/components/TabGlyph.tsx:42
-#: src/navigation/Navigation.tsx:68
+#: src/navigation/Navigation.tsx:69
 #: src/screens/Activity.tsx:108
 msgid "Activity"
 msgstr "गतिविधि"
@@ -890,7 +890,7 @@ msgstr "हर आइटम और किसने लिया, जोड़े
 msgid "Add each item and who had it. Tap a name again for another portion; right-click to take them off."
 msgstr "हर आइटम और किसने लिया, जोड़ें। एक और हिस्से के लिए नाम दोबारा टैप करें; हटाने के लिए राइट-क्लिक करें।"
 
-#: src/navigation/Navigation.tsx:78
+#: src/navigation/Navigation.tsx:79
 #: src/screens/Group/index.tsx:485
 #: src/screens/Group/index.tsx:486
 #: src/screens/Person/index.tsx:473
@@ -915,7 +915,7 @@ msgctxt "action"
 msgid "Add expense"
 msgstr "खर्च जोड़ें"
 
-#: src/navigation/Navigation.tsx:81
+#: src/navigation/Navigation.tsx:82
 #: src/screens/AddFriend.tsx:326
 #: src/screens/AddFriend.tsx:388
 msgid "Add friend"
@@ -1111,7 +1111,7 @@ msgid "An exact amount, in any currency"
 msgstr "किसी भी मुद्रा में ठीक यही रकम"
 
 #: src/components/TabGlyph.tsx:40
-#: src/navigation/Navigation.tsx:67
+#: src/navigation/Navigation.tsx:68
 #: src/screens/Analytics/index.tsx:64
 #: src/screens/People/components/BalanceSummary.tsx:138
 msgid "Analytics"
@@ -1500,8 +1500,8 @@ msgstr "खुला डायलॉग बंद करें"
 msgid "Close alert"
 msgstr "सूचना बंद करें"
 
-#: src/view/shell/index.tsx:110
-#: src/view/shell/index.web.tsx:88
+#: src/view/shell/index.tsx:114
+#: src/view/shell/index.web.tsx:92
 msgid "Close drawer menu"
 msgstr "मेन्यू बंद करें"
 
@@ -1590,7 +1590,7 @@ msgstr "जारी रखें"
 msgid "Continue to next step"
 msgstr "अगले चरण पर जाएँ"
 
-#: src/lib/sharing.ts:35
+#: src/lib/sharing.ts:38
 msgid "Copied to clipboard"
 msgstr "क्लिपबोर्ड पर कॉपी हुआ"
 
@@ -1651,9 +1651,13 @@ msgstr "इसे हटाया नहीं जा सका। कृपय�
 msgid "Couldn’t export. Try again."
 msgstr "एक्सपोर्ट नहीं हो सका। फिर से कोशिश करें।"
 
-#: src/lib/sharing.ts:63
+#: src/lib/sharing.ts:66
 msgid "Couldn’t open an app for that. Copy the link instead."
 msgstr "इसके लिए कोई ऐप नहीं खुला। इसके बजाय लिंक कॉपी करें।"
+
+#: src/data/StoreProvider.tsx:167
+msgid "Couldn’t open the demo. Showing your own data."
+msgstr "डेमो नहीं खुल पाया। आपका अपना डेटा दिखाया जा रहा है।"
 
 #: src/components/people/PaymentDetailsDialog.tsx:130
 msgid "Couldn’t put this write-off back"
@@ -1671,7 +1675,7 @@ msgstr "इस दोस्त को नहीं हटा सके। कृ
 msgid "Couldn’t reset settings. Please try again."
 msgstr "सेटिंग्स रीसेट नहीं हो सकीं। कृपया फिर से कोशिश करें।"
 
-#: src/screens/Settings/DemoMode.tsx:121
+#: src/screens/Settings/DemoMode.tsx:87
 msgid "Couldn’t reset the demo. Try again."
 msgstr "डेमो रीसेट नहीं हो सका। फिर कोशिश करें।"
 
@@ -1707,11 +1711,11 @@ msgstr "आपका फ़ीडबैक सहेजा नहीं जा �
 msgid "Couldn’t save. Please try again."
 msgstr "सहेजा नहीं जा सका। कृपया फिर कोशिश करें।"
 
-#: src/components/DemoBanner.tsx:27
+#: src/components/DemoBanner.tsx:25
 msgid "Couldn’t switch back. Try again."
 msgstr "वापस नहीं जा सका। फिर कोशिश करें।"
 
-#: src/screens/Settings/DemoMode.tsx:78
+#: src/screens/Settings/DemoMode.tsx:40
 msgid "Couldn’t switch demo mode. Try again."
 msgstr "डेमो मोड बदला नहीं जा सका। फिर कोशिश करें।"
 
@@ -1962,12 +1966,12 @@ msgstr "हमेशा के लिए हटा दिया गया"
 msgid "Demo"
 msgstr "डेमो"
 
-#: src/screens/Settings/DemoMode.tsx:90
-#: src/screens/Settings/DemoMode.tsx:97
+#: src/screens/Settings/DemoMode.tsx:56
+#: src/screens/Settings/DemoMode.tsx:63
 msgid "Demo mode"
 msgstr "डेमो मोड"
 
-#: src/components/DemoBanner.tsx:37
+#: src/components/DemoBanner.tsx:35
 msgid "Demo mode ·"
 msgstr "डेमो मोड ·"
 
@@ -2084,7 +2088,7 @@ msgid "Edit category"
 msgstr "श्रेणी बदलें"
 
 #: src/components/split/ExpenseComposer.tsx:265
-#: src/navigation/Navigation.tsx:80
+#: src/navigation/Navigation.tsx:81
 #: src/screens/EditExpense.tsx:35
 #: src/screens/EditExpense.tsx:74
 #: src/screens/Expense/index.tsx:85
@@ -2323,7 +2327,7 @@ msgstr "सटीक रकम"
 msgid "Excluded"
 msgstr "बाहर"
 
-#: src/navigation/Navigation.tsx:79
+#: src/navigation/Navigation.tsx:80
 #: src/screens/Analytics/components/ExpenseRow.tsx:43
 #: src/screens/Expense/index.tsx:77
 #: src/screens/RecentlyDeleted/components/RestoreDialog.tsx:96
@@ -2369,7 +2373,7 @@ msgstr "समाप्त"
 msgid "Expires within the hour"
 msgstr "एक घंटे के अंदर समाप्त"
 
-#: src/screens/Settings/DemoMode.tsx:100
+#: src/screens/Settings/DemoMode.tsx:66
 msgid "Explore Splito with sample data. Your own data is kept separately and untouched."
 msgstr "नमूना डेटा के साथ Splito को आज़माएँ। आपका अपना डेटा अलग रखा जाता है और अछूता रहता है।"
 
@@ -2526,7 +2530,7 @@ msgstr "टैप, टॉगल और सेव करने पर हल्�
 msgid "Give each person a percentage."
 msgstr "हर व्यक्ति को प्रतिशत दें।"
 
-#: src/components/Layout/Header/index.tsx:187
+#: src/components/Layout/Header/index.tsx:154
 #: src/screens/Login/components/AuthLayout/Header/index.tsx:108
 msgid "Go back"
 msgstr "वापस जाएं"
@@ -2577,7 +2581,7 @@ msgstr "किराना"
 #: src/components/split/pickers.tsx:256
 #: src/components/split/pickers.tsx:260
 #: src/features/settlement/CallItEvenDialog.tsx:160
-#: src/navigation/Navigation.tsx:76
+#: src/navigation/Navigation.tsx:77
 #: src/screens/Analytics/components/Charts.tsx:325
 #: src/screens/Analytics/index.tsx:217
 #: src/screens/Analytics/useReport.ts:312
@@ -2620,7 +2624,7 @@ msgstr "ग्रुप अपडेट हुआ"
 
 #: src/components/SearchAsk/ResultRows.tsx:83
 #: src/components/TabGlyph.tsx:39
-#: src/navigation/Navigation.tsx:66
+#: src/navigation/Navigation.tsx:67
 #: src/screens/Groups/index.tsx:127
 #: src/screens/Groups/index.tsx:142
 #: src/screens/Groups/index.tsx:172
@@ -2776,7 +2780,7 @@ msgstr "तुरंत खोलने के लिए Splito इंस्ट�
 msgid "International"
 msgstr "अंतरराष्ट्रीय"
 
-#: src/navigation/Navigation.tsx:85
+#: src/navigation/Navigation.tsx:86
 #: src/screens/Invites/Invite.tsx:68
 msgid "Invite"
 msgstr "आमंत्रण"
@@ -2795,8 +2799,8 @@ msgstr "आमंत्रण अस्वीकार किया"
 msgid "Invite for {0}"
 msgstr "{0} के लिए आमंत्रण"
 
-#: src/navigation/Navigation.tsx:83
 #: src/navigation/Navigation.tsx:84
+#: src/navigation/Navigation.tsx:85
 #: src/screens/Invites/CreateInvite.tsx:119
 msgid "Invite link"
 msgstr "आमंत्रण लिंक"
@@ -2806,7 +2810,7 @@ msgstr "आमंत्रण लिंक"
 msgid "Invite link or QR code"
 msgstr "आमंत्रण लिंक या QR कोड"
 
-#: src/navigation/Navigation.tsx:82
+#: src/navigation/Navigation.tsx:83
 #: src/screens/Invites/InviteLinks.tsx:178
 msgid "Invite links"
 msgstr "आमंत्रण लिंक"
@@ -3076,7 +3080,7 @@ msgstr "{0} के सदस्य"
 
 #: src/components/Menu/index.tsx:133
 #: src/components/Menu/index.web.tsx:240
-#: src/view/shell/index.web.tsx:134
+#: src/view/shell/index.web.tsx:138
 msgid "Menu"
 msgstr "मेन्यू"
 
@@ -3225,7 +3229,7 @@ msgstr "नए खर्च इसी मुद्रा में शुरू 
 msgid "New friend – no account needed"
 msgstr "नया दोस्त – खाते की ज़रूरत नहीं"
 
-#: src/navigation/Navigation.tsx:86
+#: src/navigation/Navigation.tsx:87
 #: src/screens/CreateGroup.tsx:134
 #: src/screens/Groups/index.tsx:212
 #: src/screens/Groups/index.tsx:213
@@ -3837,7 +3841,7 @@ msgstr "अवधि"
 msgid "Period: {periodName}, {0}"
 msgstr "अवधि: {periodName}, {0}"
 
-#: src/navigation/Navigation.tsx:75
+#: src/navigation/Navigation.tsx:76
 #: src/screens/Analytics/components/Charts.tsx:280
 msgid "Person"
 msgstr "व्यक्ति"
@@ -3931,13 +3935,13 @@ msgid "Privacy"
 msgstr "गोपनीयता"
 
 #: src/navigation/Drawer.tsx:61
-#: src/navigation/Navigation.tsx:69
+#: src/navigation/Navigation.tsx:70
 #: src/screens/Profile.tsx:40
 #: src/screens/Settings/index.tsx:108
 msgid "Profile"
 msgstr "प्रोफ़ाइल"
 
-#: src/screens/Settings/DemoMode.tsx:118
+#: src/screens/Settings/DemoMode.tsx:84
 msgid "Puts the sample data back as it was and drops what you changed in demo mode. Your own data is not touched."
 msgstr "नमूना डेटा को पहले जैसा कर देता है और डेमो मोड में किए आपके बदलाव हटा देता है। आपके अपने डेटा को कुछ नहीं होता।"
 
@@ -3980,7 +3984,7 @@ msgid "Recently active groups"
 msgstr "हाल में सक्रिय ग्रुप"
 
 #: src/components/settings/sections.ts:61
-#: src/navigation/Navigation.tsx:73
+#: src/navigation/Navigation.tsx:74
 #: src/screens/RecentlyDeleted/index.tsx:198
 #: src/screens/Settings/index.tsx:209
 #: src/screens/Settings/index.tsx:212
@@ -4097,7 +4101,7 @@ msgid "Resend to {name}"
 msgstr "{name} को फिर भेजें"
 
 #: src/components/settings/PrefSection.tsx:132
-#: src/screens/Settings/DemoMode.tsx:119
+#: src/screens/Settings/DemoMode.tsx:85
 #: src/screens/Settings/SettingsSection.tsx:168
 msgid "Reset"
 msgstr "रीसेट"
@@ -4131,12 +4135,12 @@ msgstr "सभी सेटिंग्स रीसेट करें?"
 msgid "Reset code"
 msgstr "रीसेट कोड"
 
-#: src/screens/Settings/DemoMode.tsx:107
-#: src/screens/Settings/DemoMode.tsx:110
+#: src/screens/Settings/DemoMode.tsx:73
+#: src/screens/Settings/DemoMode.tsx:76
 msgid "Reset demo"
 msgstr "डेमो रीसेट करें"
 
-#: src/screens/Settings/DemoMode.tsx:117
+#: src/screens/Settings/DemoMode.tsx:83
 msgid "Reset demo?"
 msgstr "डेमो रीसेट करें?"
 
@@ -4317,7 +4321,7 @@ msgstr "नीचे स्क्रॉल करें और होम स्�
 
 #: src/components/forms/SearchInput.tsx:52
 #: src/components/forms/SearchInput.tsx:54
-#: src/navigation/Navigation.tsx:74
+#: src/navigation/Navigation.tsx:75
 msgid "Search"
 msgstr "खोजें"
 
@@ -4465,14 +4469,14 @@ msgstr "नया पासवर्ड सेट करें"
 msgid "Sets the email or phone number for password reset"
 msgstr "पासवर्ड रीसेट के लिए ईमेल या फ़ोन नंबर तय करता है"
 
-#. placeholder {0}: Math.round((done ?? 0) * 100)
-#: src/screens/Settings/DemoMode.tsx:36
+#. placeholder {0}: Math.round(done * 100)
+#: src/components/DemoBanner.tsx:66
 msgid "Setting up the demo… {0}%"
 msgstr "डेमो तैयार हो रहा है… {0}%"
 
 #: src/components/TabGlyph.tsx:43
-#: src/navigation/Navigation.tsx:70
 #: src/navigation/Navigation.tsx:71
+#: src/navigation/Navigation.tsx:72
 #: src/screens/Profile.tsx:64
 #: src/screens/Profile.tsx:67
 #: src/screens/Settings/index.tsx:71
@@ -4489,7 +4493,7 @@ msgid "Settings reset"
 msgstr "सेटिंग्स रीसेट हो गईं"
 
 #: src/components/settings/AboutSettings.tsx:97
-#: src/navigation/Navigation.tsx:77
+#: src/navigation/Navigation.tsx:78
 #: src/screens/Group/index.tsx:523
 #: src/screens/Group/index.tsx:760
 #: src/screens/Group/index.tsx:766
@@ -4631,7 +4635,7 @@ msgstr "माफ़ी दिखाता है और उसे वापस 
 
 #: src/navigation/Drawer.tsx:225
 #: src/navigation/Drawer.tsx:232
-#: src/navigation/Navigation.tsx:72
+#: src/navigation/Navigation.tsx:73
 #: src/screens/LoggedOut/SplashScreen.tsx:78
 #: src/screens/LoggedOut/SplashScreen.tsx:85
 #: src/screens/LoggedOut/SplashScreen.web.tsx:65
@@ -4878,10 +4882,14 @@ msgstr "गतिविधि पर बाएँ स्वाइप"
 msgid "Swipe right on Activity"
 msgstr "गतिविधि पर दाएँ स्वाइप"
 
+#: src/components/DemoBanner.tsx:37
 #: src/components/DemoBanner.tsx:39
-#: src/components/DemoBanner.tsx:41
 msgid "Switch back"
 msgstr "वापस जाएँ"
+
+#: src/components/DemoBanner.tsx:66
+msgid "Switching…"
+msgstr "बदला जा रहा है…"
 
 #: src/components/settings/prefControls.tsx:645
 msgid "Sync status"

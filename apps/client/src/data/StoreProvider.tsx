@@ -1,10 +1,15 @@
 import {createContext, useCallback, useContext, useEffect, useMemo, useRef, useState} from 'react'
 import {AppState} from 'react-native'
 import {randomUUID} from 'expo-crypto'
-import {ensureMe, type MutationCtx, prefFrom, type Store} from '@splito/sync'
+import {t} from '@lingui/core/macro'
+import {type DirectoryClient, ensureMe, type MutationCtx, prefFrom, type Store} from '@splito/sync'
 
 import {StorageNotice} from '#/components/StorageNotice'
+import * as Toast from '#/components/Toast'
 import {perfMark} from '#/lib/perfMark'
+import {resetToRoot} from '#/navigation/ref'
+import {DEMO_OFF, DemoContext, type DemoModeValue, setDemoProgress} from '#/state/demo'
+import {useDialogStateControlContext} from '#/state/dialogs'
 import {flush, logger, setDiagnosticsEnabled, setTelemetryIdentity} from '#/logger'
 import {device, setStorageScope} from '#/storage'
 import {installDevTools} from '#/data/devTools'
@@ -13,6 +18,8 @@ import {entitiesQuery, projectionFor} from '#/data/projections'
 import {openStore} from '#/data/store'
 
 type DataContext = {store: Store; ctx: MutationCtx}
+/** A store ready to be shown: the demo one brings its directory (who is on Splito there). */
+type Next = DataContext & {demo: boolean; directory?: DirectoryClient}
 
 const Context = createContext<DataContext | null>(null)
 Context.displayName = 'SplitoDataContext'
@@ -61,22 +68,6 @@ const loadDemo =
     ? () => import('#/data/demoMode')
     : null
 
-/** What the switch exposes. Production: always off, nothing to switch. */
-export type DemoModeValue = {
-  /** The app is on the separate demo database. */
-  demo: boolean
-  /** A switch or a reset is running. */
-  busy: boolean
-  /** Turns demo mode on (seeding it the first time) or off; resolves when the other store is showing. */
-  setDemo: (on: boolean, onProgress?: (done: number) => void) => Promise<void>
-  /** Wipes the demo database and seeds it again. */
-  resetDemo: (onProgress?: (done: number) => void) => Promise<void>
-}
-
-const OFF: DemoModeValue = {demo: false, busy: false, setDemo: async () => {}, resetDemo: async () => {}}
-const DemoContext = createContext<DemoModeValue>(OFF)
-DemoContext.displayName = 'SplitoDemoModeContext'
-
 /** A store that is open and showing, with what to undo when it goes. */
 type Live = DataContext & {demo: boolean; unwire: () => void}
 
@@ -98,20 +89,43 @@ export function StoreProvider({children, fallback = null}: {children: React.Reac
   const booted = useRef<Promise<void>>(Promise.resolve())
   const notices = useRef({onBlocked: () => setNotice('blocked'), onVersionChange: () => setNotice('changed')})
 
-  /** Makes `next` the store everything reads, then closes the one it replaces (after in-flight reads have landed). */
-  const adopt = useCallback((next: DataContext & {demo: boolean}) => {
-    const prev = live.current
-    prev?.unwire()
-    // Telemetry follows the real store; demo mode records nothing (and `Send diagnostics` is the real one's setting).
-    const unwire = next.demo ? (setDiagnosticsEnabled(false), () => {}) : wireTelemetry(next.store, next.ctx)
-    live.current = {...next, unwire}
-    installDevTools(next.store, next.ctx)
-    perfMark('splito:store-adopt')
-    setValue({store: next.store, ctx: next.ctx})
-    setDemoFlag(next.demo)
-    setNotice(current => (current === 'blocked' ? null : current))
-    if (prev) setTimeout(() => void prev.store.close(), 300)
+  /*
+   * Everything that belongs to a store changes in this one place, when the store is adopted and
+   * never before (a switch that fails leaves the old store with its own directory and key scope):
+   * telemetry, the directory that answers, the device-key scope, and, when a store is being
+   * replaced, the UI that was built on the old one (open sheets and dialogs, pushed pages).
+   */
+  const closeAllDialogs = useDialogStateControlContext().closeAllDialogs
+  const closeDialogs = useRef(closeAllDialogs)
+  closeDialogs.current = closeAllDialogs
+
+  /** What a person had open belongs to the store that is going away: shut it, back to the first tab. */
+  const dropOpenUi = useCallback(() => {
+    closeDialogs.current()
+    resetToRoot()
   }, [])
+
+  /** Makes `next` the store everything reads, then closes the one it replaces (after in-flight reads have landed). */
+  const adopt = useCallback(
+    (next: Next) => {
+      const prev = live.current
+      prev?.unwire()
+      // Telemetry follows the real store; demo mode records nothing (and `Send diagnostics` is the real one's setting).
+      const unwire = next.demo ? (setDiagnosticsEnabled(false), () => {}) : wireTelemetry(next.store, next.ctx)
+      live.current = {...next, unwire}
+      setDirectory(next.demo ? (next.directory ?? null) : null)
+      // Search history, read marks, drafts and the first-frame copies of preferences typed in demo mode stay in demo mode.
+      setStorageScope(next.demo ? 'demo:' : '')
+      installDevTools(next.store, next.ctx)
+      perfMark('splito:store-adopt')
+      if (prev) dropOpenUi()
+      setValue({store: next.store, ctx: next.ctx})
+      setDemoFlag(next.demo)
+      setNotice(current => (current === 'blocked' ? null : current))
+      if (prev) setTimeout(() => void prev.store.close(), 300)
+    },
+    [dropOpenUi],
+  )
 
   /** The real store. `ensure: false` skips the "me" write for a start that is about to open the demo database instead. */
   const openReal = useCallback(async (ensure = true) => {
@@ -140,18 +154,19 @@ export function StoreProvider({children, fallback = null}: {children: React.Reac
       const demoOn =
         (__DEV__ || process.env.EXPO_PUBLIC_ENV === 'e2e') &&
         (await real.store.get<{value: unknown}>('preference', 'demo.mode'))?.data.value === true
-      if (demoOn && loadDemo) {
+      const resumed = demoOn && loadDemo ? await (await loadDemo()).resumeDemo(real, notices.current) : null
+      if (resumed) {
         // A reload keeps the mode: the real database said so; the demo one opens, the real one closes.
-        const m = await loadDemo()
-        const opened = await m.openDemo(real.ctx, notices.current)
-        if (cancelled) return void Promise.all([opened.store.close(), real.store.close()])
-        adopt({...opened, demo: true})
+        if (cancelled) return void Promise.all([resumed.store.close(), real.store.close()])
+        adopt({...resumed, demo: true})
         setTimeout(() => void real.store.close(), 300)
       } else {
         if (loadDemo) await ensureMe(real.store, real.ctx, 'Me')
         adopt({...real, demo: false})
-        // Fetch the demo chunk in the background so the first switch does not wait for it.
-        void loadDemo?.()
+        // The demo database would not open and the mode is now off: say so.
+        if (demoOn) Toast.show(t`Couldn’t open the demo. Showing your own data.`, {type: 'error'})
+        // Fetch the demo chunk in the background so the first switch does not wait for it, and tidy the real database of old demo rows once.
+        if (loadDemo && !demoOn) void loadDemo().then(m => setTimeout(() => void m.purgeLegacy(real.store), 2000))
       }
       perfMark('splito:store-ready')
     })().catch(e => {
@@ -183,56 +198,69 @@ export function StoreProvider({children, fallback = null}: {children: React.Reac
     })
   }, [])
 
+  /** The progress of a seeding reaches the blocking dialog (and the caller's own callback, if any). */
+  const withProgress = useCallback(<T,>(onProgress: ((done: number) => void) | undefined, run: (report: (done: number) => void) => Promise<T>) => {
+    setDemoProgress(0)
+    return run(done => {
+      setDemoProgress(done)
+      onProgress?.(done)
+    }).finally(() => setDemoProgress(null))
+  }, [])
+
   const setDemo = useCallback(
     (on: boolean, onProgress?: (done: number) => void) =>
-      serial(async () => {
-        await booted.current
-        const cur = live.current
-        if (!loadDemo || !cur || cur.demo === on) return
-        const m = await loadDemo()
-        if (on) {
-          // Seeded and ready before anything changes; the real database learns of the mode last, so a failure leaves it untouched.
-          const opened = await m.openDemo(cur.ctx, notices.current, onProgress)
-          try {
-            await m.writeDemoMode(cur.store, cur.ctx, true)
-          } catch (e) {
-            await opened.store.close()
-            throw e
+      serial(() =>
+        withProgress(onProgress, async report => {
+          await booted.current
+          const cur = live.current
+          if (!loadDemo || !cur || cur.demo === on) return
+          const m = await loadDemo()
+          if (on) {
+            // Seeded and ready before anything changes; the real database learns of the mode last, so a failure leaves it untouched.
+            const opened = await m.openDemo(cur.ctx, notices.current, report)
+            try {
+              await m.writeDemoMode(cur.store, cur.ctx, true)
+            } catch (e) {
+              await opened.store.close()
+              throw e
+            }
+            adopt({...opened, demo: true})
+          } else {
+            const real = await openReal()
+            try {
+              await m.writeDemoMode(real.store, real.ctx, false)
+            } catch (e) {
+              await real.store.close()
+              throw e
+            }
+            adopt({...real, demo: false})
           }
-          adopt({...opened, demo: true})
-        } else {
-          const real = await openReal()
-          try {
-            await m.writeDemoMode(real.store, real.ctx, false)
-          } catch (e) {
-            await real.store.close()
-            throw e
-          }
-          setDirectory(null)
-          setStorageScope('')
-          adopt({...real, demo: false})
-        }
-      }),
-    [adopt, openReal, serial],
+        }),
+      ),
+    [adopt, openReal, serial, withProgress],
   )
 
   const resetDemo = useCallback(
     (onProgress?: (done: number) => void) =>
-      serial(async () => {
-        await booted.current
-        const cur = live.current
-        if (!loadDemo || !cur?.demo) return
-        const m = await loadDemo()
-        await m.openDemo(cur.ctx, notices.current, onProgress, cur.store, true)
-      }),
-    [serial],
+      serial(() =>
+        withProgress(onProgress, async report => {
+          await booted.current
+          const cur = live.current
+          if (!loadDemo || !cur?.demo) return
+          const m = await loadDemo()
+          await m.openDemo(cur.ctx, notices.current, report, cur.store, true)
+          // The same store, reseeded: what was open was built on rows that are gone.
+          dropOpenUi()
+        }),
+      ),
+    [dropOpenUi, serial, withProgress],
   )
 
   useEffect(() => {
     if (loadDemo) void loadDemo().then(m => m.installTestHook(setDemo))
   }, [setDemo])
 
-  const demoValue = useMemo<DemoModeValue>(() => (loadDemo ? {demo, busy, setDemo, resetDemo} : OFF), [demo, busy, setDemo, resetDemo])
+  const demoValue = useMemo<DemoModeValue>(() => (loadDemo ? {demo, busy, setDemo, resetDemo} : DEMO_OFF), [demo, busy, setDemo, resetDemo])
 
   if (error) throw error
   /* The connection of a replaced tab is closed: nothing can be read or saved until it reloads. */
@@ -243,11 +271,6 @@ export function StoreProvider({children, fallback = null}: {children: React.Reac
       <DemoContext.Provider value={demoValue}>{children}</DemoContext.Provider>
     </Context.Provider>
   )
-}
-
-/** Whether demo mode is showing, and the switch (always off and inert in production builds). */
-export function useDemoMode(): DemoModeValue {
-  return useContext(DemoContext)
 }
 
 export function useData(): DataContext {

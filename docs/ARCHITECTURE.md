@@ -1969,7 +1969,6 @@ Every owner decision, in the order it was made (all 2026-10-26). "Replaced" name
 | 96 | "also add animations on svg icons or animations like Expensify wherever we can" | Meaningful animated SVG icons (tab fill morph, check draw, trash lid, sync pulse, FAB rotate, sparkles, chevrons) on the UI thread plus Expensify-style success/empty/celebration animations; reduced motion and `motion` pref respected | § 26.10 | Static icons; Lottie only for page illustrations |
 | 97 | "on the home page and group page add option for recent transactions as well; home shows all, group shows only group level recent txns" | "Recent transactions" section in the Home body (everything) and on each Group page (that group only), customizable | § 26.17 | Right column only (desktop 1300 px and up) |
 | 98 | "deleted item should show a stroke and clock symbol and time" | Deleted records show struck-through title and amount plus a Clock icon and "Deleted <time>" everywhere they appear | § 26.14 | Plain rows (strikethrough removed in B3 polish) |
-| 110 | "I don't see invites related data in demo" | The one demo dataset carries every invites state (requests in and out, Sent / Opened / Joined / Expired / Cancelled, private friends, links of both kinds in every state, group join requests, Activity rows), pinned by `demoCoverage` | § 26.1 | Demo with only a few requests and links |
 
 New decisions follow § 0 rule 9: rewrite the rule in its topic so only the current truth remains, then add a
 row here.

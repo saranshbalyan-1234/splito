@@ -1,6 +1,6 @@
 import {describe, expect, test} from 'bun:test'
 
-import {buildPrecache} from '../../../scripts/pwa'
+import {buildPrecache, demoLeaks} from '../../../scripts/pwa'
 import {classify} from '../../../web/sw.js'
 import {isIosDevice} from './state'
 import {hasWorkAtStake, markWorkAtStake} from './workAtStake'
@@ -84,5 +84,13 @@ describe('install and update helpers', () => {
     expect(hasWorkAtStake()).toBe(true)
     markWorkAtStake('sheet', false)
     expect(hasWorkAtStake()).toBe(false)
+  })
+})
+
+describe('a production export holds no demo mode', () => {
+  const file = (url: string, text: string) => ({url, bytes: new TextEncoder().encode(text)})
+  test('a chunk naming the demo database or its seed is reported', () => {
+    expect(demoLeaks([file('/a.js', 'openStore(n,"splito-demo")'), file('/b.js', 'id:"demo-large-p-riya"'), file('/c.js', 'plain')])).toEqual(['/a.js', '/b.js'])
+    expect(demoLeaks([file('/index.html', '<html></html>'), file('/c.js', 'plain')])).toEqual([])
   })
 })

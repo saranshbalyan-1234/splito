@@ -1,11 +1,10 @@
-import {useSyncExternalStore} from 'react'
 import {View} from 'react-native'
 import {DatabaseZap} from 'lucide-react-native'
 import {Trans, useLingui} from '@lingui/react/macro'
 
 import {useHaptics} from '#/lib/haptics'
 import {logger} from '#/logger'
-import {useDemoMode} from '#/data/hooks'
+import {useDemoMode} from '#/state/demo'
 import * as SettingsList from '#/screens/Settings/components/SettingsList'
 import {atoms as a, useTheme} from '#/alf'
 import * as Toggle from '#/components/forms/Toggle'
@@ -13,50 +12,14 @@ import {ArrowRotateCounterClockwise_Stroke2_Corner0_Rounded as ResetIcon} from '
 import {createIcon} from '#/components/icons/lucide'
 import * as Prompt from '#/components/Prompt'
 import * as Toast from '#/components/Toast'
-import {dismiss as dismissToast} from '#/components/Toast/sonner'
 import {Text} from '#/components/Typography'
 
 const DemoIcon = createIcon(DatabaseZap)
 
-/* How far the first-time setup (or a reset) has got: one tiny module store, read by the toast. */
-let progress: number | null = null
-const listeners = new Set<() => void>()
-function setProgress(next: number | null) {
-  progress = next
-  listeners.forEach(l => l())
-}
-const subscribe = (l: () => void) => (
-  listeners.add(l),
-  () => void listeners.delete(l)
-)
-const useProgress = () => useSyncExternalStore(subscribe, () => progress)
-
-function ProgressText() {
-  const done = useProgress()
-  return <Trans>Setting up the demo… {Math.round((done ?? 0) * 100)}%</Trans>
-}
-
-/** Runs a switch or reset with a live progress toast; the outcome is the banner itself, only a failure is told. */
-async function withProgress(run: (onProgress: (done: number) => void) => Promise<void>, failed: string) {
-  setProgress(0)
-  const toast = Toast.show(
-    <Toast.Outer>
-      <Toast.Icon />
-      <Toast.Text>
-        <ProgressText />
-      </Toast.Text>
-    </Toast.Outer>,
-    {duration: 120_000},
-  )
-  try {
-    await run(setProgress)
-  } catch (e) {
-    logger.error(e, {where: 'DemoMode'})
-    setTimeout(() => Toast.show(failed, {type: 'error'}), 400)
-  } finally {
-    setProgress(null)
-    dismissToast(toast)
-  }
+/** The blocking dialog and the banner are the outcome of a switch or reset; only a failure is told. */
+function failure(e: unknown, message: string) {
+  logger.error(e, {where: 'DemoMode'})
+  Toast.show(message, {type: 'error'})
 }
 
 /**
@@ -74,9 +37,12 @@ export function DemoModeRows() {
 
   const toggle = (on: boolean) => {
     haptics.confirm()
-    // Turning it off is quick; turning it on the first time seeds a year of data, which shows its progress.
     const failed = l`Couldn’t switch demo mode. Try again.`
-    void (on ? withProgress(p => setDemo(true, p), failed) : setDemo(false).catch(() => Toast.show(failed, {type: 'error'}))).then(() => haptics.success())
+    // The first switch on seeds a year of data; the provider shows its progress in a blocking dialog.
+    setDemo(on).then(
+      () => haptics.success(),
+      e => failure(e, failed),
+    )
   }
 
   return (
@@ -118,7 +84,7 @@ export function DemoModeRows() {
         description={l`Puts the sample data back as it was and drops what you changed in demo mode. Your own data is not touched.`}
         confirmButtonCta={l`Reset`}
         confirmButtonColor="negative"
-        onConfirm={() => void withProgress(p => resetDemo(p), l`Couldn’t reset the demo. Try again.`)}
+        onConfirm={() => resetDemo().then(undefined, e => failure(e, l`Couldn’t reset the demo. Try again.`))}
       />
     </>
   )

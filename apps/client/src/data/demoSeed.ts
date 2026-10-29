@@ -16,6 +16,7 @@ import {
   type Entity,
   type EntityType,
   insideTransaction,
+  markNeverSync,
   type Key,
   type MutationCtx,
   type Page,
@@ -77,6 +78,16 @@ export const DEMO_DIRECTORY: Parameters<typeof demoDirectory>[0] = {
 /** Someone not on Splito, already invited in the demo. */
 const INVITED = {name: 'Neha Joshi', contact: {kind: 'phone', value: '+919988776655'}} as const
 
+/** The private friends of the invites block have fixed ids (a partial block is erased by them and redone). */
+const PRIVATE_PREFIX = `${DEMO_LARGE_PREFIX}p-inv-`
+const PRIVATE_IDS = ['pooja', 'rohan', 'tanvi'].map(k => PRIVATE_PREFIX + k)
+
+/** The same context, whose first new id is `id` (a mutation mints the entity id first). */
+function withFirstId(ctx: MutationCtx, id: string): MutationCtx {
+  let used = false
+  return {...ctx, newId: () => (used ? ctx.newId() : ((used = true), id))}
+}
+
 const email = (value: string) => ({kind: 'email', value}) as const
 
 /*
@@ -92,7 +103,7 @@ const email = (value: string) => ({kind: 'email', value}) as const
 async function seedFriendInvites(store: Store, ctx: MutationCtx, goaId: string, lisbonId: string, now: number) {
   const at = (time: number, actor = ctx.actor): MutationCtx => ({...ctx, actor, now: () => time})
   const account = (id: string) => DEMO_DIRECTORY.accounts.find(a => a.accountId === id)!
-  const personalLink = (time: number, maxUses: number, expiresInMs: number) =>
+  const personalLink = (time: number, maxUses: number, expiresInMs = 60 * DAY) =>
     createInviteLink(store, at(time), {kind: 'friend', groupId: null, maxUses, expiresInMs, approveJoins: false})
 
   // Requests for me: two waiting, one I declined.
@@ -106,30 +117,32 @@ async function seedFriendInvites(store: Store, ctx: MutationCtx, goaId: string, 
     if (id === 'demo-leo') await declineFriendRequest(store, at(now - 8 * DAY), r.id)
   }
 
-  // Private "only for you" friends: a name only, a contact, and one who will join below.
-  await createPerson(store, at(now - 60 * DAY), {name: 'Pooja (flatmate)'})
-  await createPerson(store, at(now - 45 * DAY), {name: 'Rohan Das', contact: email('rohan@example.com')})
+  // Private "only for you" friends: a name only, a contact, and one who will join below. Fixed ids, so a partial block can be erased and redone.
   const tanvi = account('demo-tanvi')
-  await createPerson(store, at(now - 30 * DAY), {name: tanvi.name, contact: tanvi.contact})
+  const priv = (key: string, input: Parameters<typeof createPerson>[2], time: number) => createPerson(store, withFirstId(at(time), PRIVATE_PREFIX + key), input)
+  await priv('pooja', {name: 'Pooja (flatmate)'}, now - 60 * DAY)
+  await priv('rohan', {name: 'Rohan Das', contact: email('rohan@example.com')}, now - 45 * DAY)
+  await priv('tanvi', {name: tanvi.name, contact: tanvi.contact}, now - 30 * DAY)
 
   // Sent: on Splito, waiting; and by SMS, the personal link not opened yet.
   await sendFriendRequest(store, at(now - 2 * DAY), {contact: account('demo-kabir').contact!, name: 'Kabir', reach: 'on-splito'})
-  const sent = await personalLink(now - 5 * DAY, 1, 7 * DAY)
+  const sent = await personalLink(now - 5 * DAY, 1)
   await sendFriendRequest(store, at(now - 5 * DAY), {contact: INVITED.contact, name: INVITED.name, reach: 'invited', inviteCode: sent.id})
 
   // Opened: the person opened the link (a use) but has not answered.
-  const opened = await personalLink(now - 3 * DAY, 1, 7 * DAY)
+  // Three uses, so a link that was opened does not read "Used up" (the stand-in for Opened until F-2105).
+  const opened = await personalLink(now - 3 * DAY, 3)
   await sendFriendRequest(store, at(now - 3 * DAY), {contact: email('aarav@example.com'), name: 'Aarav Mehta', reach: 'invited', inviteCode: opened.id})
   await recordInviteUse(store, at(now - 2 * DAY), opened.id)
 
   // Joined: opened the link and accepted; the private "Tanvi Rao" above is now linked to the account.
-  const joined = await personalLink(now - 4 * DAY, 1, 7 * DAY)
+  const joined = await personalLink(now - 4 * DAY, 1)
   const joinedReq = await sendFriendRequest(store, at(now - 4 * DAY), {contact: tanvi.contact!, name: tanvi.name, reach: 'invited', inviteCode: joined.id})
   await recordInviteUse(store, at(now - 2 * HOUR), joined.id)
   await applyFriendRequestAccepted(store, at(now - 90 * MINUTE, tanvi.accountId), joinedReq.id, {accountId: tanvi.accountId, name: tanvi.name})
 
   // Expired: sent 40 days ago, never answered, and its link has lapsed too.
-  const lapsed = await personalLink(now - 40 * DAY, 1, 7 * DAY)
+  const lapsed = await personalLink(now - 40 * DAY, 1, 7 * DAY) // lapsed on purpose
   await sendFriendRequest(store, at(now - 40 * DAY), {contact: email('meera@example.com'), name: 'Meera Nair', reach: 'invited', inviteCode: lapsed.id})
 
   // Cancelled: sent, then withdrawn.
@@ -143,7 +156,7 @@ async function seedFriendInvites(store: Store, ctx: MutationCtx, goaId: string, 
   await revokeInviteLink(store, at(now - 14 * DAY), old.id)
   const goa = await createInviteLink(store, at(now - 4 * DAY), {kind: 'group', groupId: goaId, maxUses: 25, expiresInMs: 30 * DAY, approveJoins: true})
   for (const id of ['demo-maya', 'demo-ananya', 'demo-sara']) await recordInviteUse(store, at(now - 3 * DAY, id), goa.id)
-  const lisbon = await createInviteLink(store, at(now - 2 * DAY), {kind: 'group', groupId: lisbonId, maxUses: null, expiresInMs: 14 * DAY, approveJoins: true})
+  const lisbon = await createInviteLink(store, at(now - 2 * DAY), {kind: 'group', groupId: lisbonId, maxUses: null, expiresInMs: 30 * DAY, approveJoins: true})
   await recordInviteUse(store, at(now - 1 * DAY, 'demo-kabir'), lisbon.id)
 }
 
@@ -166,16 +179,62 @@ const STORY_GOA = `${DEMO_LARGE_PREFIX}g-story-goa`
 const STORY_LISBON = `${DEMO_LARGE_PREFIX}g-story-lisbon`
 
 /**
+ * Completion markers of the two blocks that read the store first (so they cannot join the ledger's one
+ * transaction). A device-only preference row in the demo database, written LAST with the seeding time: no
+ * marker means the block never finished, and it is erased and written again.
+ */
+const MARK_INVITES = 'demo.seed.invites'
+const MARK_FEEDBACK = 'demo.seed.feedback'
+
+/**
+ * The invites block holds states that age (a request lapses after 30 days, a link expires): when its marker is
+ * older than this it is redone, so "Sent", "Opened" and the links never go stale. Well inside the 30 days.
+ */
+export const INVITES_MAX_AGE_MS = 14 * DAY
+
+async function readMark(store: Store, id: string): Promise<number | null> {
+  const row = await store.get<{value: unknown}>('preference', id)
+  return row && !row.deleted && typeof row.data.value === 'number' ? row.data.value : null
+}
+
+async function writeMark(store: Store, id: string, at: number) {
+  await store.transaction(async tx => {
+    const prev = await tx.get('preference', id)
+    await tx.put({type: 'preference', id, data: {value: at}, version: (prev?.version ?? 0) + 1, deleted: false, updatedAt: at})
+  })
+}
+
+/** Erases every row of these types (a page at a time) plus the given people. */
+async function eraseBlock(store: Store, types: EntityType[], personIds: string[] = []) {
+  for (const type of types) {
+    let after: Key | null = null
+    do {
+      // full-read-ok: a block of the disposable demo database, erased a page at a time.
+      const page: Page<Entity> = await store.page(type, {after, limit: 500})
+      if (page.items.length) await store.erase(page.items.map(e => ({type: e.type, id: e.id})))
+      after = page.next
+    } while (after)
+  }
+  const people = await store.getMany('person', personIds)
+  if (people.length) {
+    await store.erase(people.map(e => ({type: 'person' as const, id: e.id})))
+    await store.rebuildProjections()
+  }
+}
+
+/**
  * Writes the one demo dataset into an empty demo store through the real
  * mutations. The people, groups and ledger go in as ONE transaction (all of
- * it or none, so a page left half-way leaves nothing half-seeded), then the
- * friend requests and invite links, each only when still missing, so a
- * seeding that was cut off is finished by the next open. Returns false when
- * everything was already there.
+ * it or none, so a page left half-way leaves nothing half-seeded). The invites
+ * and feedback blocks then go in one after the other, each ending with its
+ * marker: a block with no marker (cut off) is erased and written again, and the
+ * invites block is also redone once it is old (`INVITES_MAX_AGE_MS`). Marks the
+ * store as never-syncing. Returns false when everything was already there.
  */
 export async function seedDemo(store: Store, ctx: MutationCtx, onProgress?: (done: number) => void): Promise<boolean> {
+  markNeverSync(store)
   let wrote = false
-  const now = Date.now()
+  const now = ctx.now()
   if (!(await store.get('person', SEEDED_MARK))) {
     wrote = true
     const {ops} = generateLargeDemo({me: ctx.actor, today: localToday(now), now})
@@ -187,13 +246,18 @@ export async function seedDemo(store: Store, ctx: MutationCtx, onProgress?: (don
       }
     })
   }
-  if ((await store.count('friendRequest')) === 0) {
+  const invitesAt = await readMark(store, MARK_INVITES)
+  if (invitesAt === null || now - invitesAt > INVITES_MAX_AGE_MS || now < invitesAt) {
     wrote = true
+    await eraseBlock(store, ['friendRequest', 'inviteLink'], PRIVATE_IDS)
     await seedFriendInvites(store, ctx, STORY_GOA, STORY_LISBON, now)
+    await writeMark(store, MARK_INVITES, now)
   }
-  if ((await store.count('feedback')) === 0) {
+  if ((await readMark(store, MARK_FEEDBACK)) === null) {
     wrote = true
+    await eraseBlock(store, ['feedback'])
     await seedFeedback(store, ctx, now)
+    await writeMark(store, MARK_FEEDBACK, now)
   }
   onProgress?.(1)
   return wrote
@@ -215,3 +279,43 @@ export async function wipeDemo(store: Store): Promise<void> {
   await store.rebuildProjections()
 }
 
+
+/**
+ * A start with `demo.mode` on: opens the demo database through `open`. When that
+ * fails the app must not be locked in a mode it cannot open: the failure is passed
+ * to `onFail` (logged by the caller), the REAL database is told the mode is off,
+ * and null comes back (the caller shows the real store and a notice).
+ */
+export async function resumeDemo<T>(real: {store: Store; ctx: MutationCtx}, open: () => Promise<T>, onFail?: (e: unknown) => void): Promise<T | null> {
+  try {
+    return await open()
+  } catch (e) {
+    onFail?.(e)
+    await writeDemoMode(real.store, real.ctx, false)
+    return null
+  }
+}
+
+/**
+ * Demo rows that older builds (`?demo=large`, "Add demo data") wrote into the REAL
+ * database can no longer be removed from the app. Once per device (`flag`), erases
+ * every row in the old `demo-large-` id range, with its history and outbox ops.
+ * The old small set used random ids and cannot be told apart: those devices use
+ * Settings > Data > Erase this device's data (RESUME.md). Returns how many rows went.
+ */
+export async function purgeLegacyDemo(real: Store, flag: {isDone(): boolean; markDone(): void}): Promise<number> {
+  if (flag.isDone()) return 0
+  let erased = 0
+  for (const type of ALL_TYPES) {
+    for (;;) {
+      // full-read-ok: a one-time range read of the old demo ids, erased a page at a time.
+      const page: Page<Entity> = await real.page(type, {min: DEMO_LARGE_PREFIX, max: `${DEMO_LARGE_PREFIX}\uffff`, limit: 500})
+      if (page.items.length === 0) break
+      await real.erase(page.items.map(e => ({type: e.type, id: e.id})))
+      erased += page.items.length
+    }
+  }
+  if (erased > 0) await real.rebuildProjections()
+  flag.markDone()
+  return erased
+}

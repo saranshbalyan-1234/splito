@@ -97,7 +97,7 @@ const FEATURES: Array<[feature: string, found: (d: Demo) => boolean]> = [
   ['a deleted write-off', d => d.writeOffs.some(w => w.deleted)],
   ['payments in several currencies', d => new Set(d.repayments.map(r => r.data.currency)).size >= 4],
   // People
-  ['friends (private, no account)', d => d.people.filter(p => !p.data.isMe).length >= 30],
+  ['friends (private, no account)', d => d.people.filter(p => !p.data.isMe && !p.data.accountId).length >= 30],
   ['a friend with a UPI id', d => d.people.some(p => p.data.upiId)],
   // Friends and invites (26.18)
   ['a private "only for you" friend (no account) with a contact', d => d.people.some(p => !p.data.accountId && p.data.contact)],
@@ -133,6 +133,32 @@ const FEATURES: Array<[feature: string, found: (d: Demo) => boolean]> = [
 
 let demo: Demo
 let store: Store
+let ids = 0
+const ctxAt = (now: () => number) => ({deviceId: 'd', actor: DEMO_ME, now, newId: () => `op-${++ids}`})
+
+/** The whole database read once, its states judged at `now`. */
+async function readDemo(now: number): Promise<Demo> {
+  const dump = await store.dump()
+  const of = <T>(type: string) => dump.entities.filter(e => e.type === type) as Entity<T>[]
+  const expenses = of<Expense>('expense')
+  return {
+    dump,
+    expenses,
+    live: expenses.filter(e => !e.deleted),
+    groups: of<Group>('group').filter(g => !g.deleted),
+    people: of<Person>('person').filter(p => !p.deleted),
+    repayments: of<Repayment>('repayment'),
+    writeOffs: of<WriteOff>('writeoff'),
+    requests: of<FriendRequest>('friendRequest'),
+    links: of<InviteLink>('inviteLink'),
+    feedback: of('feedback'),
+    activity: activityFromHistory(dump.history),
+    now,
+  }
+}
+
+const T0 = Date.now()
+let clock = T0
 
 beforeAll(async () => {
   const db = new Database(':memory:')
@@ -153,33 +179,31 @@ beforeAll(async () => {
     },
     close: async () => db.close(),
   })
-  let n = 0
-  const ctx = {deviceId: 'd', actor: DEMO_ME, now: () => Date.now(), newId: () => `op-${++n}`}
+  const ctx = ctxAt(() => clock)
   await ensureMe(store, ctx, 'Me')
   await seedDemo(store, ctx)
-  const dump = await store.dump()
-  const of = <T>(type: string) => dump.entities.filter(e => e.type === type) as Entity<T>[]
-  const expenses = of<Expense>('expense')
-  demo = {
-    dump,
-    expenses,
-    live: expenses.filter(e => !e.deleted),
-    groups: of<Group>('group').filter(g => !g.deleted),
-    people: of<Person>('person').filter(p => !p.deleted),
-    repayments: of<Repayment>('repayment'),
-    writeOffs: of<WriteOff>('writeoff'),
-    requests: of<FriendRequest>('friendRequest'),
-    links: of<InviteLink>('inviteLink'),
-    feedback: of('feedback'),
-    activity: activityFromHistory(dump.history),
-    now: Date.now(),
-  }
+  demo = await readDemo(clock)
 }, 120_000)
 
 describe('the demo dataset covers every feature the app has', () => {
   test('every feature below finds at least one record in the seeded demo database', () => {
     const missing = FEATURES.filter(([, found]) => !found(demo)).map(([feature]) => feature)
     expect(missing).toEqual([])
+  })
+
+  test('the time-sensitive states hold 30 days later: the next open redoes what aged (M3)', async () => {
+    // The ledger stays; requests lapse after 30 days and links expire, so the invites block is redone once it is old.
+    clock = T0 + 30 * 86_400_000
+    await seedDemo(store, ctxAt(() => clock))
+    const later = await readDemo(clock)
+    const missing = FEATURES.filter(([, found]) => !found(later)).map(([feature]) => feature)
+    expect(missing).toEqual([])
+    expect(later.requests.length).toBe(9)
+    expect(later.links.length).toBe(9)
+    // The 'Sent' and 'Opened' invites are still waiting, not lapsed.
+    const waiting = later.requests.filter(r => r.data.direction === 'outgoing' && requestState(r.data, later.now) === 'pending')
+    expect(waiting.length).toBe(3)
+    clock = T0
   })
 
   test('the list names each feature once', () => {

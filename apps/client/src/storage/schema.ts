@@ -29,4 +29,6 @@ export type Device = {
   activityFeed: FeedState
   /** Search's recent queries, newest first (Bluesky's `searchTermHistory`). */
   searchHistory: string[]
+  /** Dev and e2e: the old `demo-large-` rows were purged from the real database (one time). */
+  demoLegacyPurged: boolean
 }

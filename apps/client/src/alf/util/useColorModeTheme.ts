@@ -4,6 +4,7 @@ import {type ColorSchemeName, useColorScheme} from 'react-native'
 import {type ThemeName} from '@bsky.app/alf'
 
 import {useThemePrefs} from '#/state/shell'
+import {isStorageScoped} from '#/storage'
 import {dark, dim, light} from '#/alf/themes'
 import {IS_WEB} from '#/env'
 
@@ -52,7 +53,8 @@ function updateDocument(theme: ThemeName) {
     /* The page behind scrolling content must match the theme (Dim/Black/Light), not the HTML default. */
     html.style.backgroundColor = getBackgroundColor(theme)
     window.document.body.style.backgroundColor = getBackgroundColor(theme)
-    window.localStorage.setItem('ALF_THEME', theme)
+    // Demo mode's theme is its own: the first-paint copy stays the real one's.
+    if (!isStorageScoped()) window.localStorage.setItem('ALF_THEME', theme)
   }
 }
 

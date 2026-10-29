@@ -33,26 +33,44 @@ test('turning it on seeds the demo database in under 10 s, shows the banner and 
   const ms = Date.now() - started
   console.log(`demo mode on in ${ms} ms`)
   expect(ms).toBeLessThan(10_000)
-  await expect(page.getByTestId('settings-demo-reset')).toBeVisible()
+  // The switch takes the app to the first tab: what was open belonged to the other database.
+  await expect(page.getByTestId('screen-people')).toBeVisible()
   await expect(page.getByTestId('header-avatar').last()).toHaveAttribute('aria-label', /Demo$/)
   await expect(page.getByTestId('header-avatar').last().getByTestId('sync-dot-demo')).toBeAttached()
+  await page.goto('/settings')
+  await expect(page.getByTestId('settings-demo-reset')).toBeVisible()
 
-  // On every screen with a header, and above it: never covering one.
+  // The banner is the shell's, drawn once above EVERY screen: pages, Search, composers, invites and sign-in.
   for (const [path, screen] of [
     ['/', 'screen-people'],
     ['/groups', 'screen-groups'],
     ['/activity', 'screen-activity'],
     ['/analytics', 'screen-analytics'],
     ['/settings', 'screen-settings'],
+    ['/search', 'screen-search-redirect'],
+    ['/expense/new', 'screen-add-expense'],
+    ['/friends/new', 'screen-add-friend'],
+    ['/groups/new', 'screen-create-group'],
+    ['/invites', 'screen-invite-links'],
+    ['/signin', 'screen-sign-in'],
   ] as const) {
     await page.goto(path)
-    const s = page.getByTestId(screen)
-    await expect(s.getByTestId('demo-banner')).toBeVisible({timeout: 30_000})
-    const banner = (await s.getByTestId('demo-banner').boundingBox())!
-    // The header's own first control (the avatar, or Back) is below the banner, never under it.
-    const control = (await s.getByTestId('header-avatar').or(s.getByRole('button', {name: 'Go back'})).first().boundingBox())!
-    expect(control.y).toBeGreaterThanOrEqual(banner.y + banner.height - 1)
+    const banner = page.getByTestId('demo-banner')
+    await expect(banner, `${path}: one banner`).toHaveCount(1, {timeout: 30_000})
+    await expect(banner).toBeVisible()
+    const box = (await banner.boundingBox())!
+    const found = page.getByTestId(screen).first()
+    const screenBox = (await found.count()) ? await found.boundingBox() : null
+    // Above the screen, never covering it.
+    if (screenBox) expect(screenBox.y, `${path}: screen starts below the banner`).toBeGreaterThanOrEqual(box.y + box.height - 1)
   }
+
+  // The Search & Ask drawer opens over a screen: the banner stays.
+  await page.goto('/')
+  await page.getByTestId('header-search-ask').click()
+  await expect(page.getByTestId('search-ask')).toBeVisible()
+  await expect(page.getByTestId('demo-banner')).toBeVisible()
+  await page.keyboard.press('Escape')
 
   // A year of activity: a page at a time, the next on scroll.
   await page.goto('/groups')
@@ -90,7 +108,7 @@ test('the real data is untouched by a demo session; Switch back returns Home wit
 
   // Switch back from the banner: Home, with the real data and none of the demo.
   await page.goto('/groups')
-  await page.getByTestId('demo-banner-switch-back').last().click()
+  await page.getByTestId('demo-banner-switch-back').click()
   await expect(page.getByTestId('demo-banner')).toHaveCount(0)
   await expect(page).toHaveURL(/\/$/)
   await expect(page.getByTestId('person-Real Asha').last()).toBeVisible()
@@ -114,4 +132,33 @@ test('the real data is untouched by a demo session; Switch back returns Home wit
   await expect.poll(async () => { const n = await names(page, 'person'); return n.includes('Riya Sharma') && !n.includes('Typed in demo') }, {timeout: 60_000}).toBe(true)
   await closeDemo(page)
   expect(await names(page, 'person')).toContain('Real Asha')
+})
+
+test('the store swapping under an open Add friend sheet drops the sheet and writes nothing to either database', async ({page}) => {
+  await page.goto('/')
+  await page.waitForFunction(() => 'splito' in window)
+  await page.getByTestId('people-add-friend').click()
+  await expect(page.getByTestId('screen-add-friend')).toBeVisible()
+  await page.getByTestId('add-friend-contact').fill('zed.mid.swap@example.com')
+
+  // On: the first seeding covers the app with a blocking dialog, then the sheet is gone and People is showing.
+  const on = page.evaluate(() => (window as unknown as {__splitoTest: {demoMode(on: boolean): Promise<void>}}).__splitoTest.demoMode(true))
+  await expect(page.getByTestId('demo-busy')).toBeVisible()
+  await on
+  await expect(page.getByTestId('demo-busy')).toHaveCount(0)
+  await expect(page.getByTestId('screen-add-friend')).toHaveCount(0)
+  await expect(page.getByTestId('screen-people')).toBeVisible()
+  await expect(page.getByTestId('demo-banner')).toBeVisible()
+  const inDemo = await page.evaluate(async () => JSON.stringify(await (window as unknown as {splito: {list(t: string): Promise<unknown[]>}}).splito.list('friendRequest')))
+  expect(inDemo).not.toContain('zed.mid.swap')
+
+  // Off again, with another sheet open on the demo side: the same, the other way round.
+  await page.getByTestId('people-add-friend').click()
+  await page.getByTestId('add-friend-contact').fill('zed.back@example.com')
+  await closeDemo(page)
+  await expect(page.getByTestId('screen-add-friend')).toHaveCount(0)
+  await expect(page.getByTestId('demo-banner')).toHaveCount(0)
+  await page.waitForFunction(() => 'splito' in window)
+  const real = await page.evaluate(async () => JSON.stringify(await (window as unknown as {splito: {list(t: string): Promise<unknown[]>}}).splito.list('friendRequest')))
+  expect(real).not.toContain('zed')
 })
