@@ -14,3 +14,5 @@ apps/client/dist/
 *.tmp.mjs
 .claude/worktrees/
 apps/client/dist-*/
+# Local QA screenshots (re-shot per review)
+apps/client/qa/
