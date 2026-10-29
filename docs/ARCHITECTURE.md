@@ -1176,6 +1176,15 @@ labelled sidebar); **wide** = web 1300 px and up (Bluesky `gtTablet`, right colu
   never copied. Each feature's reuse row names both apps' equivalents and why one won. *Why:* "make sure to
   pull features from Expensify and Bluesky whatever you think is better for user experience and features".
   *Where:* `docs/reuse/<feature>.md`; scouting list in `docs/BACKLOG.md`.
+- **Simple, with every feature and the customization that matters** (owner 129). Splito keeps every
+  feature and the settings people genuinely need (decision 128), but it must feel simple: each screen shows
+  only what that moment needs (one primary action, the essentials first, power features one tap deeper in a
+  menu, sheet, "More" or detail page, never removed); defaults do the right thing so nobody has to configure
+  anything to start; no screen is a wall of chips, badges, counts or toggles; copy is short (one line per
+  card, one sentence of help at most); a new feature is placed where it is used, not added as a new section
+  or setting by default. Every Opus review checks a change for clutter as well as correctness, and the UX
+  audit (F-240) and Settings prune (F-251) apply this rule. *Why:* "we need to make this app simple with all
+  the features and customization".
 - **Customizable where it helps, never forced** (owner 128, replaces "everything customizable"). A setting
   exists only when people genuinely want different answers and the default cannot serve them all (language,
   theme, default currency, timezone, home tab, bottom bar, list filters and sorts, motion, reminders, privacy).
@@ -2235,6 +2244,7 @@ Every owner decision, in the order it was made (all 2026-10-26). "Replaced" name
 | 126 | "add a little padding from top, on sidebar on logo" | Sidebar logo sits 12 px lower than the header centre line | § 26.5 | Logo on the header row centre line |
 | 127 | "navigation changes reflect on mobile only, it should be same on desktop as well" | Settings > Navigation drives the bottom bar, the rail and the desktop sidebar alike (same items, same order); items turned off go under "More" at the end of the sidebar/rail; the drawer follows the same order | § 26.3 | Desktop and rail always showed the full list |
 | 128 | "remove this, its not needed" (Language menu switch); "customization are needed, but not forcefully, only whats needed" | Settings only where people genuinely differ; no switches for small UI details or duplicates; Language menu switch removed (dropdown always shown); F-251 prunes the rest | § 26.1 | Everything customizable |
+| 129 | "remember, we need to make this app simple with all the features and customization" | Simple first: every feature kept, each screen shows only what the moment needs, power features one tap deeper, good defaults, short copy, no clutter; reviews check for clutter | § 26.1 | - (complements 128) |
 
 New decisions follow § 0 rule 9: rewrite the rule in its topic so only the current truth remains, then add a
 row here.
