@@ -3,7 +3,7 @@ import {useLingui} from '@lingui/react/macro'
 
 import {IS_E2E, IS_WEB} from '#/env'
 import {useStore} from '#/data/hooks'
-import {isInStore} from '#/lib/links/inStore'
+import {isInStore} from '#/data/linkTargets'
 import {type LinkTarget} from '#/lib/links/resolve'
 import {device} from '#/storage'
 import {readDeferredLink} from '#/lib/links/deferred'

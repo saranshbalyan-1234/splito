@@ -5,7 +5,7 @@ import {amountInputText, decimalMark, formatAmount, magnitude, ZERO} from '@spli
 
 import {type Answer, type PeriodInfo, type Ref, type Suggestion} from '#/lib/ask/types'
 import {pathTo} from '#/lib/links/make'
-import {useOpenLink} from '#/lib/links/useOpenLink'
+import {useOpenLink} from '#/data/useOpenLink'
 import {useNumberLocale} from '#/locale/numberLocale'
 import {useFormatDay, useToday} from '#/locale/useDates'
 import {useMe, usePref} from '#/data/hooks'

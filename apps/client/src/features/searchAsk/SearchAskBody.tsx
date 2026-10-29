@@ -6,7 +6,7 @@ import {decimalMark} from '@splito/domain'
 
 import {pathTo} from '#/lib/links/make'
 import {setSheetQuery} from '#/navigation/sheets'
-import {useOpenLink} from '#/lib/links/useOpenLink'
+import {useOpenLink} from '#/data/useOpenLink'
 import {useNumberLocale} from '#/locale/numberLocale'
 import {useFormatDay, useToday} from '#/locale/useDates'
 import {useHiddenGroups} from '#/data/groupVisibility'

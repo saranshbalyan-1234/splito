@@ -1,7 +1,7 @@
 import {type EntityType} from '@splito/sync'
 
-import {type LinkTarget} from './resolve'
-import {pathParamNames} from './table'
+import {type LinkTarget} from '#/lib/links/resolve'
+import {pathParamNames} from '#/lib/links/table'
 
 /** Which store a link's id param names. A payment id may be a payment or a write-off. */
 const TYPES: Record<string, EntityType[]> = {

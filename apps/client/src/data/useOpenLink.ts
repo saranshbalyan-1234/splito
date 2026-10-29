@@ -1,8 +1,8 @@
 import {useStore} from '#/data/hooks'
 import {useDemoMode} from '#/state/demo'
-import {isInStore} from './inStore'
-import {openLink, openLinkWhenReady} from './open'
-import {type LinkTarget} from './resolve'
+import {isInStore} from '#/data/linkTargets'
+import {openLink, openLinkWhenReady} from '#/lib/links/open'
+import {type LinkTarget} from '#/lib/links/resolve'
 
 /**
  * `openLink` that knows whether demo mode is on. `open` is for a link that came from outside (a push, a QR code, an

@@ -145,3 +145,9 @@ test('real-data links: ids ask in demo mode, generic pages do not', () => {
   expect(touchesRealData(resolveLink(`/invite/k3j9x2m4q8w1z5v7`).target)).toBe(false)
   expect(touchesRealData(resolveLink(`/invites/k3j9x2m4q8w1z5v7/share`).target)).toBe(true)
 })
+
+test('/people itself stays free for a People list page (decisions 153-155); person pages are /people/:id', () => {
+  expect(resolveLink('/people').isKnown).toBe(false)
+  expect(resolveLink('/people/').isKnown).toBe(false)
+  expect(resolveLink(`/people/${ID}`).target.name).toBe('Person')
+})

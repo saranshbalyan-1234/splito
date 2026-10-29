@@ -1,7 +1,7 @@
 import {expect, test} from 'bun:test'
 
-import {isInStore} from './inStore'
-import {resolveLink} from './resolve'
+import {isInStore} from './linkTargets'
+import {resolveLink} from '#/lib/links/resolve'
 
 const ID = '3f2b8c1e-7d4a-4e9b-9a61-0c5d2e8f1a77'
 const OTHER = '9a1b2c3d-4e5f-4a6b-8c7d-0e1f2a3b4c5d'

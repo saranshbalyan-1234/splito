@@ -1,6 +1,6 @@
 // Adapted from bluesky-social/social-app@4e4ad9c (MIT) - src/screens/Settings/Settings.tsx (settings page frame and rows)
 import {pathTo} from '#/lib/links/make'
-import {useOpenLink} from '#/lib/links/useOpenLink'
+import {useOpenLink} from '#/data/useOpenLink'
 import {useEffect, useRef, useState} from 'react'
 import {View} from 'react-native'
 import {LayoutAnimationConfig} from 'react-native-reanimated'
