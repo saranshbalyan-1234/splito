@@ -81,6 +81,7 @@ Every row of the ARCHITECTURE § 26.23 decision log (rows 1-63) and the feature(
 | 135 demo data downloaded from the backend, not bundled | § 26.1 | F-252 (backend) |
 | 128 customization only where needed; Language menu switch removed | § 26.1 | F-251 |
 | 153 Home = Overview + Recent transactions; People tab; Overview only on Home | § 26.3 | F-256 |
+| 167 pull to refresh, header stays | § 26.9 | F-258 (Wave C) |
 | 145 deep links end to end | § 26.3 | F-254 (with F-241) |
 | 125 sign-in required, nothing visible signed out | § 26.15 | F-250 (Wave C), F-2101/F-2102 moved up after Wave C |
 | 124 footer links on one line | § 26.5 | fixed on integrate/wB |
@@ -548,6 +549,62 @@ Found 2026-10-30 by the tap-speed work: § 26.9's direction-aware slide between 
   1. Slide direction follows tab order; a tap mid-slide redirects from the current position; the landing tab is the last tapped (tabTaps.spec stays green).
   2. Indicator springs; icon pops; haptic tap on native; badge springs on count change; re-tap of the active tab scrolls its list to top.
   3. Reduced motion / motion off: instant switch; renders gate and tap-latency spec do not regress.
+
+### F-258 Pull to refresh, header stays `spec: owner § 26.9 (decision 167)`
+
+Pull down at the top of Home, People, Groups, Activity, Analytics, Person and Group to refresh; the header stays fixed and visible throughout; native RefreshControl, phone-web pull handler.
+
+- **Effort** M · **Impact** 8 · **Backend** no (syncNow() hook ready for F-2103) · **Status** todo, Wave C (next free slot) · **Deps** F-255, F-256
+- **Prefs** -
+- **Acceptance**
+  1. Every full screen refreshes on pull at the top, header or not (owners 169, 170), built once in the shared scaffold with a test over every route; sheets and popups keep drag-to-close (§ 26.8); the spinner sits under the header; the header never moves or hides during the pull (e2e checks its top stays at 0 while pulling at 390).
+  2. Native: List RefreshControl on iOS and Android (simulator checked); phone web: a pull handler on the window scroll in iOS Safari (simulator) and Android Chrome, no fight with browser overscroll, scrolling unaffected (scrollWeb.spec green).
+  3. Until sync: re-reads local data and ends in under 1 s with honest status; offline ends at once, no error toast; with the backend it calls syncNow().
+  4. Nothing redraws unless data changed (owner 166); renders gate and tap-latency spec do not regress.
+
+### F-259 Activity type filter; See all transactions lands there `spec: owner § 26.14 (decision 173)`
+
+Activity Filters gain the type (Expenses, Payments, Comments, Groups, Friends and invites, Reminders, Disputes), remembered and in the URL; every Recent transactions "See all" opens Activity with type=transactions (group-scoped from a Group page).
+
+- **Effort** S · **Impact** 8 · **Backend** no · **Status** todo, Wave C (with F-1213 All/Me/Others) · **Deps** F-1213, F-256
+- **Prefs** `activity.type` (account)
+- **Acceptance**
+  1. Filters sheet on Activity has Type (multi-select) besides All/Me/Others; badge and empty state follow it; remembered after reload; `/activity?type=transactions` deep-links it.
+  2. Home, right column and Group "See all" of Recent transactions land on Activity filtered to transactions (and to that group from a Group page), opened as a pushed page with Back to where they came from (owner 179); tapping the Activity tab still gives the plain tab.
+  3. e2e at 390/1440; demo data has every type.
+
+### F-260 Screen-specific empty-state illustrations `spec: owner § 7 (decisions 146, 172)`
+
+Original animated illustrations (light and dark) for every empty state: search no match, filtered no match, all settled, no history, no balances, nothing to settle, no feedback, no invite links, not found, Ask empty, besides the existing people, groups, activity and analytics.
+
+- **Effort** M · **Impact** 7 · **Backend** no · **Status** in progress (every empty state animated with the 4 existing pieces; screen-specific art next) · **Deps** -
+- **Prefs** -
+- **Acceptance**
+  1. Each empty state uses art about its own screen, original (scripts/lottie.ts style), light and dark, lazy-loaded, plays once then rests, static under reduced motion.
+  2. A test fails on any `EmptyState` without an `illustration`.
+  3. Same size, spacing and structure everywhere; screenshots of each.
+
+### F-261 Avatar or name opens the person, everywhere `spec: owner § 26.3 (decision 178)`
+
+One shared PersonLink (avatar + name) used on every screen; tapping either opens /people/:id (Me -> Profile).
+
+- **Effort** M · **Impact** 8 · **Backend** no · **Status** todo, Wave C (next free slot, with F-1213 / F-259) · **Deps** F-256
+- **Prefs** -
+- **Acceptance**
+  1. Every avatar or name of a person (expense/payment detail, items, Activity actor, comments, Members, Balances, Settle plan, search/Ask results, recent people, requests/invites, right column) opens that person; Me opens Profile; removed/unknown open the read-only page or "Not on this device yet".
+  2. Built as one `PersonLink` (architecture test: no screen renders `UserAvatar` with a person id outside it); nested targets inside rows that open something else; 44 px targets; hover underline on web; keyboard focusable.
+  3. e2e samples each surface at 390 and 1440; no redraw regressions (renders gate).
+
+### F-262 Person names capitalised word by word `spec: owner § 26.3 (decision 181)`
+
+Every word of a person's full name starts with a capital, on save and on display.
+
+- **Effort** S · **Impact** 6 · **Backend** no (the API applies the same function in M2) · **Status** in progress, Wave C · **Deps** -
+- **Prefs** -
+- **Acceptance**
+  1. `capitalizeName` in `packages/domain` (unit-tested: spaces, hyphens, apostrophes, "McDonald" kept, Devanagari unchanged, trims and collapses spaces).
+  2. Every save path for a person's name uses it; every display of a person's name uses it (old lower-case data reads right).
+  3. Group names, expense titles, emails untouched; e2e adds "saransh balyan" and sees "Saransh Balyan".
 
 ### F-250 Sign-in required (auth gate) `spec: owner § 26.15 (decision 125)`
 
@@ -2988,7 +3045,7 @@ On Home/People and Groups, each currency card is its own box of equal size in a 
 
 Search & Ask understands people, places, amounts, category, type, group, dates, currency, payer and status, and combines them logically, with removable facet chips.
 
-- **Effort** M · **Impact** 9 · **Backend** no · **Status** todo · **Deps** F-117, F-222
+- **Effort** M · **Impact** 9 · **Backend** no · **Status** todo, Wave C (after the first slot merges; search across every field, front end) · **Deps** F-117, F-222
 - **Prefs** -
 - **Acceptance**
   1. `search_terms` indexes every field: title, notes, item names, group name and trip location, people (paid by / with), category, type (expense, payment, write-off, comment, group, friend, invite), currency, date (day, month, year), status (settled, owed, deleted, hidden, inactive), amount keys per currency.
@@ -3001,7 +3058,7 @@ Search & Ask understands people, places, amounts, category, type, group, dates, 
 
 Use Claude to turn free-form questions into structured queries the on-device engine runs; money is always computed on the device. The key lives in the OS secure store via Settings until the backend proxy exists.
 
-- **Effort** M · **Impact** 8 · **Backend** no (backend proxy later) · **Status** todo · **Deps** F-246, F-2301
+- **Effort** M · **Impact** 8 · **Backend** no (backend proxy later) · **Status** todo, backend batch 1 (Claude key server-side via the API proxy, not in the app) · **Deps** F-246, F-2301
 - **Prefs** `ai.enabled` (account, default off until a key or sign-in exists), `ai.model` (device; default the latest fast Claude model for query understanding)
 - **Acceptance**
   1. The key is read from the git-ignored `.env.local` (`ANTHROPIC_API_KEY`, decision 117) only by a dev-only local AI proxy (`scripts/ai-proxy`, started with the dev/preview server, bound to localhost, origin-checked); the app calls the proxy, never Anthropic directly; never an `EXPO_PUBLIC_*` variable; a test scans the built web bundle, backups and logs for `sk-ant-` and fails if found.

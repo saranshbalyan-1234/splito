@@ -349,11 +349,23 @@ All user-facing strings go through Lingui; English default, Hindi second, Englis
 - **Honesty:** "Synced" appears only in the sync-status component's messages. FX-, OCR- and AI-derived
   values carry "Estimated rate" / "From receipt" until confirmed; converted totals carry "≈" and "rate from
   DATE"; a receipt field that was not read stays empty. A bun test scans the source catalog (A-013).
-- **Every empty state looks the same** (owner 146): one `EmptyState` layout on every screen (Home, Groups,
-  Analytics, Activity, Group): the same illustration size and motion, the same top spacing, one short message and
-  at most one small secondary button; no per-screen titles, large buttons, second buttons or custom centring.
-  *Why:* "make the home empty screen animation like other screens, there is slight diff in button and top
-  paddings".
+- **Every empty state looks the same and is animated with art about that screen** (owners 146, 172): one
+  `EmptyState` layout on every screen and state (first-use empty, search with no match, filters with no match,
+  all settled, no history, no balances, nothing to settle, no feedback, no invite links, not found, Ask with nothing
+  yet): the same structure (animated illustration, one short message, at most one small secondary button), the same
+  illustration size, motion and top spacing; never a bare icon or text only. Each illustration is original and
+  about its own screen (people, groups, activity, analytics, search, settled, history, balances, settle up,
+  feedback, invites, not found), light and dark variants, played once and resting (§ 17), static under reduced
+  motion. A test fails on any `EmptyState` without an illustration. *Why:* "make the home empty screen animation
+  like other screens"; "why there is no animation here"; "empty screen animations should be there always, and
+  related to those screens only, and design/structure should be same".
+- **Every list has a type filter where items have types; Activity filters by type** (owner 173; F-259, Wave C):
+  Activity's Filters offer the type (Expenses, Payments, Comments, Groups, Friends and invites, Reminders, Disputes)
+  besides All / Me / Others (owner 92), remembered (decision 90) and in the URL (`/activity?type=transactions`).
+  Every "See all" of Recent transactions (Home, right column, Group) lands on Activity with the transactions type
+  already applied (`/activity?type=transactions`, scoped to the group from a Group page). *Why:* "in activity add
+  the filter option to choose the type, like transaction etc; when I click on see all transactions it should land
+  here".
 - **No "coming soon"** and no placeholder UI. A section with no data returns `null`; list screens use
   Bluesky's empty state. Empty states always use the empty-state component with a glyph, never bare text.
 - **Never invent data:** no name splitting, no currency or category inferred for a record; show `-`. A figure
@@ -1178,6 +1190,18 @@ Splito lessons (add newest last, dated, with PR):
   provider" check first ran for every Dialog, including closed ones, and took the app down on iOS. Checks that
   depend on context a closed dialog doesn't need run when the sheet opens, never at mount (§ 4: a closed dialog
   renders and reads nothing).
+- 2026-10-30, Render: **production builds failed for hours unnoticed.** The demo-leak check in `scripts/pwa.ts`
+  matched the text `demo-large-` in the start-up bundle, which the F-241 link resolver's id check contains on
+  purpose; every Render build after that merge failed, and the live site silently stayed on the older build. Two
+  rules: a build guard matches strings that only the guarded thing contains (a test pins the near-miss), and every
+  merge to `main` is followed by checking that the Render deploy succeeded (`render deploys list`), not only the
+  GitHub workflow, before saying it is live.
+- 2026-10-30, owner on iPhone Safari: **the tap-speed fix passed in Chrome and still felt broken on the phone.**
+  Chrome (desktop and touch emulation) measured every tab at 4-15 ms, but Home re-rendered synchronously on switch
+  (about 50 ms on the Mac, several times that on a phone) and the page had no `touch-action: manipulation`, so iOS
+  Safari's double-tap detection could hold or swallow quick taps. Rule: tap, scroll and gesture work is verified in
+  real Mobile Safari (iOS simulator) and with Chrome CPU throttling at 6x before it is called done, every tab
+  (Home included) is measured, and no fix is reported as working on phones from desktop numbers alone.
 
 - 2026-10-30, F-256 (feat/wC-F256-home): **the id `people` used to mean Home**, so adding a People tab was a rename:
   tab ids are `home | people | ...`, route `Home` at `/`, `People` at `/people`. Stored data is migrated on read, never by
@@ -1431,8 +1455,14 @@ labelled sidebar); **wide** = web 1300 px and up (Bluesky `gtTablet`, right colu
   § 7, `locale/`.
 - **The user sets their own timezone** (Settings > Regional); each expense keeps its local date and IANA tz.
   *Why:* "set your timezone". *Where:* spec § 5, preferences registry.
-- **All platforms (iOS, Android, web/PWA) get the full polish: splash, branding, icons.** *Why:* "for all
+- **All platforms (iOS, Android, web/PWA) get the full polish: splash, branding, icons, and every wave is checked on each** (an iOS simulator pass and an Android emulator pass after each wave; Android not yet run for Wave B, scheduled after Wave C, 2026-10-30). *Why:* "for all
   platforms: splash, branding etc". *Where:* § 8, `apps/client/scripts/brand.ts`.
+- **Front end first, then the backend** (owner 164, 2026-10-30, reaffirms 93 and replaces the plan to start the
+  auth/sync backend right after Wave C or in parallel with it): every front-end batch in BACKLOG is finished
+  (Wave C, then the remaining front-end batches) AND the owner says they are okay with all the front-end changes
+  (an explicit sign-off) before any backend work starts; until then sign-in runs on the
+  labelled dev account (owner 125) and everything stays local. *Why:* "finish the frontend first, and then start
+  backend"; "once I say I am okay with all frontend changes".
 - **Backend comes after the UI, and it is mandatory, not optional** (owner 93: "we need to implement the backend as well, once we are done with all the features"): when the front-end batches are done, every BACKLOG backend item (E21, E22, the server halves of E23 and of any item marked Backend yes) is built before the product is called done. **Backend comes after the UI.** Front-end batches first; the server is Fastify on Bun with **Postgres**.
   *Why:* "let's build backend later once we are done with UI"; "use Postgres". *Where:* `docs/RESUME.md`, § 9.4.
 - **GameRun's Expo architecture is adopted where it fits** (§§ 21-22 record the calls). *Why:* "can you also
@@ -1474,20 +1504,21 @@ labelled sidebar); **wide** = web 1300 px and up (Bluesky `gtTablet`, right colu
 - **Home, People and Groups are three tabs; the Overview lives only on Home** [Built, F-256, web; native not yet checked on a simulator] (owner 153; replaces the
   Home-holds-the-friends-list layout of 120 and the Overview on Groups):
   - **Home** (`/`), top to bottom (owners 153, 154): the **Overview** (per-currency cards, owners 113/114/120,
-    "Analytics ›"); **Requests** (below the Overview, never above it: incoming friend requests with Accept / Decline, then
-    "Invites sent" rows, each with the avatar, name, status line and Resend + Cancel on the right in one line, the
-    `RequestRow` components, no red dots; 5 rows at most in all, requests first, "See all ›" to Friends and invites
-    when there are more; the section hides when nothing is pending; owners 153, 175); **Recent transactions** (F-1415: the newest expenses and payments
+    "Analytics ›"; a scope choice in its header, **All** (default) / **Groups** / **Direct** (non-group), changes
+    only the cards and their counts, remembered and in the URL `/?overview=groups|direct`, and "Analytics ›" carries
+    it over; owner 176); **Requests** (shown only when something is pending, below the Overview: incoming friend requests
+    with Accept / Decline, then **Invites sent** as real rows like before, each with avatar, name, status line and
+    Resend + Cancel on one horizontal line, at most 5 rows then "See all ›" to Friends and invites; owner 175,
+    replaces the compact "N invites waiting ›" row of 120/153); **Recent transactions** (F-1415: the newest expenses and payments
     across everything, "See all" -> Activity); **Recently active people** (the 5 friends with the newest change,
     by change time, with their per-currency net, "See all" -> People); **Recently active groups** (the 5 groups
     with the newest change, balance chips, "See all" -> Groups, same rule as § 26.17). Each section is short (5
     rows at most) and hides when empty. Header: avatar | logo (phone) / "Home" | Search & Ask (no Add friend
     here). On wide screens the right column is not shown on Home (its content is on the page), so nothing repeats.
   - **Ids and routes:** the tab ids are `home | people | groups | analytics | activity` (plus `ask`, `settings` in the shared list) and the routes `Home` (`/`) and `People` (`/people`); the old route and id `people` meant Home. The Groups tab glyph is Lucide `Group` now, since `Users` is People's.
-  - **People** (`/people`, new tab, Lucide `Users`): the same Requests and Invites sent rows Home shows (owner 175),
-    then the Friends list with its search, Filters and, last, a gear icon "Manage friends and invites" that opens
-    Friends and invites (owner 177: no "Manage" text button; Friends header icons, left to right: search, Filters,
-    gear; owners 91, 120, 130); no Overview. Header:
+  - **People** (`/people`, new tab, Lucide `Users`): incoming friend requests (Accept / Decline, the same ones
+    Home shows), the "N invites waiting ›" row, then the Friends list with its search and Filters (owners 91, 120, 130) and a settings (gear) icon on the right of the
+    Friends header (search, Filters, gear; it opens Friends and invites; no "Manage" text button, owner 177); no Overview. Header:
     avatar | "People" | Search & Ask + Add friend. A friend still opens `/people/:id`.
   - **Groups** (`/groups`): the groups list with search and Filters; no Overview. Header unchanged.
   - **Navigation:** the shared list becomes Home, People, Groups, Analytics, Ask Splito, Activity, Settings; the
@@ -1495,15 +1526,6 @@ labelled sidebar); **wide** = web 1300 px and up (Bluesky `gtTablet`, right colu
     Navigation still lets the user change it (owners 84, 127). Every tab keeps the FAB rule (§ 26.6).
   *Why:* "on home show overview and recent transactions, then create a people tab as well, the group tab is
   already there, the overview is needed only in home".
-- **A main screen opened from a link is a pushed page** (owner 179): when Home, People, Groups, Analytics or
-  Activity is reached by a link (Home's "See all" links, an Overview card's or the heading's "Analytics ›", the
-  recent people and groups "See all") rather than by its own tab, rail or sidebar item, it opens as a stack copy of
-  the screen carrying its params, with Back in the header (returning to where the link was) and no FAB (§ 26.6);
-  the tab itself still gives the plain tab screen with the avatar. One place does it: `tabLink()` in
-  `lib/routes/helpers.ts` (used by `Link` for the default `push` action; nav items use `navigationAction="navigate"`
-  and never push), `HeaderAvatar` renders Back and `AddExpenseFAB` nothing when `useIsPushedTab()`. Web pushes the tab
-  route with a `pushed` param kept out of the address (`buildPath` skips it); native pushes `Pushed<Tab>` twins
-  registered in the root stack. A pasted or refreshed address is the plain tab. e2e `homeTabs.spec.ts`.
 - **Bluesky's shell on every width.** Web fills the whole screen: left sidebar plus main content (plus the
   right column when wide, § 26.17). *Why:* "on web it should occupy complete screen", "the navigation should
   be like Bluesky", "for web, keep my left sidebar and main content".
@@ -1577,7 +1599,36 @@ labelled sidebar); **wide** = web 1300 px and up (Bluesky `gtTablet`, right colu
   of every route parsed from both `https` and `splito://`, e2e opening links cold and warm on web, and
   iOS/Android simulator checks with `xcrun simctl openurl` / `adb shell am start -d`. *Why:* "integrate deep
   links properly as well".
+- **A person's avatar or name opens that person, everywhere** (owner 178; F-261, Wave C): on every screen and
+  width, tapping or clicking a person's avatar or name opens their page (`/people/:id`): expense and payment detail
+  (paid by, split rows, items), Activity rows (the actor), comments (the author), group Members and Balances, the
+  Settle plan, search and Ask results, recent people, requests and invites, the right column. Me opens Profile; a
+  removed or unknown person opens their read-only page or "Not on this device yet", never nothing. One shared
+  `PersonLink` (Bluesky's profile-link pattern: `UserAvatar` + name as a link with hover underline on web, 44 px
+  target) does it, so no screen wires its own; where the whole row already opens something else (an expense row),
+  the avatar and name are their own nested targets that open the person. Shell first (owner 152), no redraw (166).
+  *Why:* "clicking on avatar or name anywhere on the website should open that friend's details".
+- **Person names are capitalised word by word** (owner 181): every word of a person's full name starts with a
+  capital letter ("saransh balyan" -> "Saransh Balyan"); the rest of each word stays as typed, so "McDonald" and
+  "D'Souza" survive. Saved that way on every path (add friend, own profile name, contacts, invites, join, demo
+  seed, sign-up) through one `capitalizeName` in `packages/domain`, and shown that way through the same function,
+  so names already saved lower-case read right too. Scripts without letter case (Devanagari) are unchanged.
+  Group names, expense titles and emails are not names and stay as typed.
+  *Why:* "name should be capitalized first letter in complete name".
 - **Activity's route is `/activity`; `/notifications` redirects to it.**
+- **A main screen reached from a link shows Back** (owner 179): when Home, People, Groups, Analytics or Activity
+  is opened from something other than its own tab or sidebar item (a "See all", an Overview card, a search or Ask
+  result, a notification, a deep link), it opens as a pushed page with Back in the header that returns to where the
+  person came from (filters from the link applied, e.g. Activity with type=transactions); tapping the tab itself
+  always gives the plain tab screen with the avatar. The FAB follows the header (§ 26.6: Back, so no FAB). One
+  helper decides (the link resolver / `tabLink()`), not each screen. *Why:* "even if you go to a main screen from
+  some links, it should show a back button, in case you don't go directly from tabs". *Where:* `tabLink()` in
+  `lib/routes/helpers.ts` (the `Link` default `push` action, `navigateToTarget` in `lib/links/open.ts` for links the
+  running app opens; nav items use `navigationAction="navigate"` and never push), `HeaderAvatar` (Back instead of
+  the avatar) and `AddExpenseFAB` (none) read `PushedTabContext`, which the tab screen sets. Web pushes the tab route with a
+  `pushed` param kept out of the address (`buildPath` skips it); native pushes `Pushed<Tab>` twins registered in the
+  root stack. A pushed copy is never the current tab: pressing its own tab replaces it with the plain tab. A cold
+  page load of an address is the plain tab. e2e `homeTabs.spec.ts`.
 - **Pushed pages** (Person, Group, Settle, Expense, Profile, Settings and its sections, Add friend, Create
   group) show Back in the header; top-level pages (People, Groups, Analytics, Activity) show the avatar. This
   one distinction also decides the FAB (§ 26.6).
@@ -1763,6 +1814,38 @@ good"; "the left sidebar looks bad on desktop". *Where:* `view/shell/desktop/Lef
   Analytics, Activity, Person, Group) and the in-page tabs (`useDeferredValue(tab)`: the bar follows the tap, the
   list re-renders as a transition); check `perf/tapLatency.spec.ts` (`E2E_PORT=8231 pnpm perf -- tapLatency`, CPU x1
   and x4, plus taps 50 ms after a screen-changing tap).
+- **Pull to refresh on every screen, with the header staying put** (owners 167, 169, 170; F-258, Wave C): every
+  full screen of the app refreshes by pulling down at the top, whether or not it has a header (Home, People,
+  Groups, Activity, Analytics, Person, Group, Expense, Payment, Settle up, Profile, Settings and its sections, Friends
+  and invites, Search & Ask results, and the signed-out screens, where it simply reloads them). Built once in the
+  shared screen/list scaffold, so a new screen gets it for free (a test lists every route and asserts it).
+  The one exception is sheets and popups on phones: there a pull down at the top closes the sheet (owner rule
+  § 26.8, "should be closable if I drag it down"), so the two gestures never fight. The header stays
+  fixed and visible while pulling and refreshing (the minimal-shell hide never runs during a pull; the spinner
+  sits under the header, never over or above it); the list content moves, the header does not. Native uses the
+  List's `RefreshControl` (Bluesky's `List` already supports it; iOS bounce, Android material spinner); phone web
+  (iOS Safari, Android Chrome) gets the same gesture from a small shared pull handler on the window scroll that
+  works with the safe-area patch (§ 23) and never fights browser overscroll (`overscroll-behavior-y: contain` on the
+  scroller while pulling). What it does: until sync exists it re-reads the local data (projections and the current
+  page) and ends in well under a second, honestly ("Saved on this device", no "Synced"); once the backend exists it
+  calls one `syncNow()` (drain, then pull, § 9.3); offline it ends at once with the status, never an error toast.
+  Shell first (owner 152): the spinner appears in the same frame as the pull threshold; nothing else redraws unless
+  data changed (owner 166). *Why:* "also add pull to refresh, header should stay while pulling down to refresh".
+- **Open first, render after, even the first time** (owner 168, sharpens 151/152): a tab switch, a drawer and a
+  popup or sheet first OPEN (the tab highlights and its shell shows, the drawer slides in, the sheet slides up or
+  the popup scales in) with only light content (header, title, X, footer, a same-size skeleton), and the heavy
+  content mounts after the opening has finished (transition end / the sheet's or drawer's opened event, not a
+  fixed two frames), so rendering never competes with the opening, on the first visit as much as on later ones.
+  Later visits show the frozen content at once (owner 166). One shared helper (`useAfterTransition` /
+  `<Deferred>` / `deferBody`) waits for the real "opened" signal of tabs, drawers and sheets. *Why:* "even for the
+  first time, the rendering should happen once the tab is open, or drawer is open or popup is open".
+- **Switching tabs never redraws** (owner 166): a tab already visited stays mounted and is frozen while hidden
+  (react-native-screens `freezeOnBlur` / react-freeze, as Bluesky; the web twin too), so switching back shows it
+  instantly, exactly as it was left (scroll position included), with zero re-render of its content unless its data
+  actually changed while away. Focus is never a reason to re-render (no work in focus effects that rebuilds the
+  body, no store hook returning a new snapshot for an equal answer, no re-keying). Deferral (owners 151/152) applies
+  only to a tab's first visit or to data that really changed. The renders gate's tab round enforces it. *Why:* "it
+  should not redraw".
 - **Tab taps always win, however fast** (owner 150): every tap on a bottom-bar, sidebar, rail or in-page tab
   switches at once, even when taps come milliseconds apart or during a running switch animation: the newest tap
   cancels or redirects the animation, nothing is debounced, locked or swallowed (the first tap after a screen
@@ -1772,7 +1855,9 @@ good"; "the left sidebar looks bad on desktop". *Where:* `view/shell/desktop/Lef
   within ms and it still switches". *Where:* no `useDedupe` on a tab press (it dropped every tap within 250 ms of
   another, app-wide on native and per tab on web; `useNavigationDeduped().navigate` no longer dedupes, it is
   idempotent); e2e `tabTaps.spec.ts`.
-- **Main bottom-bar / sidebar switches are animated** (owner override of Bluesky's instant switch): a
+- **Main bottom-bar / sidebar switches are animated** (owner override of Bluesky's instant switch; reaffirmed by
+  owner 174 on 2026-10-30, "in tab switch, it should switch with sliding animation": F-257, next in Wave C, not built
+  yet; it must stay interruptible per owner 150 and must not redraw per owner 166): a
   direction-aware horizontal slide (from the right when moving to a tab on the right, else from the left;
   native ~220 ms via a bottom-tabs `sceneStyleInterpolator` + `transitionSpec`, web ~200 ms transform of the
   content area). A small indicator under the active bottom-bar icon / beside the active sidebar item springs
@@ -2092,6 +2177,12 @@ built yet.
 
 - **Settings starts with an "Account" section** (copied from Bluesky's Settings account section and its
   Login/Signup screens' layout, `src/screens/Login`, `src/screens/Settings`).
+- **The review site is a "preview" build** (assistant's ruling 2026-10-30, after the F-250 review; the owner
+  reviews the front end on https://splito-web.onrender.com before any backend, owners 164/165): Render builds with
+  `EXPO_PUBLIC_ENV=preview`, which allows the labelled dev account ("Preview build: local dev account, data stays in
+  this browser, don't use a real password", `noindex`), never on a stage or prod tier; a real production build is
+  refused until the auth HTTP client exists. The intro slides keep their animated (Lottie) art (owners 123, 172); the
+  Pager is replaced by Bluesky's `ScreenTransition` plus a swipe, because `react-native-pager-view` is not shipped.
 - **Signed out, the app is the logged-out flow** (owners 125, 138-140): Bluesky's logged-out look, copied screen
   for screen where it still applies (`view/com/auth/LoggedOut.tsx`, `SplashScreen(.web).tsx` with the logo mark and
   tagline, `screens/Login/FormContainer` and `LoginForm` layout, Bluesky's step indicator and `BackNextButtons`),
@@ -2174,10 +2265,10 @@ built yet.
     or erase this device's data, unsynced warning) still applies.
   - **Data already on a device from before this rule** is offered once after the first sign-in: "Move this
     device's data into your account" (F-2104), never merged silently.
-  - **Until the auth API exists** (F-2101/F-2102, moved up to start right after Wave C): dev and e2e builds offer
+  - **Until the auth API exists** (F-2101/F-2102, built after the whole front end, owner 164): dev and e2e builds offer
     "Continue with a dev account" on the sign-in screen (a local, clearly labelled account, never in production;
     e2e signs in through `window.__splitoTest`); production builds refuse to ship without the real auth API
-    (release blocker § 26.22).
+    (release blocker § 26.22). The auth API itself comes with the backend, after the whole front end (owner 164).
   *Why:* "also without login, nothing should be visible, auth is required".
 
 - **On/off settings are switches, on every platform** (owner 132): every boolean setting (Demo mode, each
@@ -2197,6 +2288,9 @@ built yet.
   group; the chart/table toggle sits in that filter row, never in the header; the header's one action is
   Export CSV. One chart per currency, or converted with the rate labelled. *Why:* "analytics also needed, with
   graphs and all". *Where:* `screens/Analytics`, § 25 "Analytics and export", spec § 4.
+- **All Analytics filters sit on one line** (owner 171): currency, scope, period (‹ 2026 ›) and the Charts/Table
+  switch in one row that scrolls sideways on narrow screens rather than wrapping. *Why:* "all filters to be in one
+  line".
 - **One scope control, not a dropdown plus a toggle.** The filter row has a single "scope" chip whose label
   says what is counted: "Everything" (default), "Non-group only", "Goa trip", "Goa trip + 2" (up to 3 groups named), "4 groups" (a count from 4),
   "Non-group + 2 groups". Tapping it opens one sheet (bottom drawer on phones, popup on desktop) titled "Show
@@ -2618,10 +2712,24 @@ Every owner decision, in the order it was made (all 2026-10-26). "Replaced" name
 | 161 | mock-up: net large green on the right of line 1; "Owed to you ₹49,243.00" and "You owe ₹450.00" small, white/grey, on the left; "4 friends" | Only the net is coloured and right-aligned; breakdown lines stay left in normal colours | § 26.12 | Breakdown amounts coloured on the right (160) |
 | 162 | "add all these to architecture" (the iOS, tap-speed and links review findings) | Lessons recorded in § 23 (sheet presenting, sheet host provider, tab links on native, SQLite sync batching, no dedupe on idempotent nav, deferred-render contract, sideways overflow, renders baseline upkeep) | § 23 | - |
 | 163 | "make sure you do it yourself always, whenever you think this should be in app" | Claude records lessons and rules (§ 23 or the section) on its own in the same turn, plus BACKLOG work, commit and push, without being asked | § 0 rule 10 | Recording lessons only when asked |
-| 175 | coordinator, from the owner: show the invites "the way they used to look" on Home | Home's Requests section shows incoming requests then "Invites sent" rows (Resend + Cancel on one line), 5 rows at most, "See all ›" to Friends and invites, hidden when none; People shows the same; replaces the compact "N invites waiting" row | § 26.3 | Home had only the "N invites waiting ›" row (owner 120) |
-| 176 | coordinator, from the owner: an Overview scope of All, Groups or Direct | Overview chips All (default) / Groups / Direct beside "Analytics ›"; only the cards and their counts; remembered (`home.overviewScope`) and in the address; Analytics gets the same scope | § 26.12 | The Overview always counted everything (and followed the friends' Include groups filter) |
-| 177 | coordinator, from the owner: remove "Manage" from the Friends header, gear on the right | Friends section header icons: search, Filters, gear ("Manage friends and invites" -> Friends and invites); no text button | § 26.3 | A "Manage" text button between the title and the icons |
-| 179 | coordinator, from the owner: a main screen opened from a link needs Back to Home | A main screen opened from a link (not its own tab) is a pushed copy with Back and no FAB; the tab still has the avatar; implemented once in `tabLink()` | § 26.3 | Links to a tab switched to the plain tab, so the header showed the avatar and no way back |
+| 164 | "finish the frontend first, and then start backend" | All front-end batches finish before any backend work; dev account and local data until then | § 26.2 | Backend batch 1 to start after Wave C / in parallel (125 plan) |
+| 165 | "once i say i am okay with all forntend changes" | Backend starts only after the owner explicitly signs off on all front-end changes | § 26.2 | Backend after front-end batches finish (164) |
+| 166 | "it should not redraw" (on switching back to Home / any tab) | Visited tabs stay mounted and frozen while hidden; switching back shows them as left with zero re-render unless data changed; deferral only on first visit | § 26.9 | Home re-rendered on every switch |
+| 167 | "also add pull to refresh, header should stay while pulling down to refresh" | Pull to refresh on every list (native RefreshControl, phone-web pull handler); header fixed and visible during the pull; local re-read now, syncNow() with the backend | § 26.9 | No pull to refresh |
+| 168 | "even for the first time, the rendering should happen once the tab is open, or drawer is open or popup is open" | Tabs, drawers and sheets open first with light content; heavy content mounts after the opening finishes (real opened/transition-end signal), first visit included | § 26.9 | Deferral of two frames only (151/152) |
+| 169 | "pull to refresh should work, wherever header is shown" | Pull to refresh on every page with a header (lists and detail pages, Settings included), built once in the shared scaffold; not in sheets, popups or the drawer | § 26.9 | List screens only (167) |
+| 170 | "not even with header, pull to refresh should work everywhere on all screens" | Pull to refresh on every full screen, header or not, via the shared scaffold with a test over all routes; sheets keep drag-to-close (§ 26.8) | § 26.9 | Screens with a header only (169) |
+| 171 | "all filters to be in one line" (Analytics screenshot) | Analytics currency, scope, period and the table switch share one filter line | § 26.16 | Period stepper on its own line |
+| 172 | "why there is no animation here"; "empty screen animations should be there always, and related to those screens only, and design/structure should be same" | Every empty state animated, same structure, with original art about its own screen; test fails on an EmptyState without illustration | § 7 | Some empty states icon-only or text-only |
+| 173 | "in activity add the filter option to choose the type, like transaction etc, when I click on see all transaction it should land here" | Activity type filter (in URL, remembered); every Recent transactions "See all" opens Activity filtered to transactions | § 7 / § 26.14 | See all opened unfiltered Activity |
+| 174 | "and in tab switch, it should switch with sliding animation" | Main tab switches slide (F-257) next in Wave C, interruptible, no redraw | § 26.9 | Slide specified but not built |
+| 175 | "on the home, invite should be shown like previously" (screenshot of the compact "2 invites waiting" row) | Home Requests section shows Invites sent as full rows (Resend / Cancel) again, below the Overview, max 5 then See all | § 26.3 | Compact "N invites waiting ›" row (120, 153) |
+| 176 | "in overview by default it should select all, but options for group and direct" | Overview scope All (default) / Groups / Direct, remembered, in URL, carried into Analytics | § 26.3 | Overview always counted everything |
+| 177 | "instead of manage button in middle, make it as a settings icon on right in friends in home" | Friends header: gear icon on the right (after search and Filters) opens Friends and invites; no Manage text button | § 26.3 | "Manage" text button in the middle of the header |
+| 178 | "clicking on avatar or name anywhere on the website, should open that friend details" | One shared PersonLink: any avatar or name opens /people/:id (Me -> Profile), on every screen | § 26.3 | Only friend rows opened a person |
+| 179 | "even if you go to main screen from some links, it should show back button, in case you dont go directly from tabs" | A main screen opened from a link (See all, cards, results, notifications, deep links) is a pushed page with Back to the origin; the tab itself gives the plain tab screen | § 26.3 | Links switched tabs with no way back |
+| 180 | Assistant ruling after the F-250 review (owner asleep, "take your own decisions"; owners 164/165 review the front end on Render first) | Render builds a "preview" tier: labelled local dev account allowed, `noindex`, never on stage/prod tiers; real production refused until the auth HTTP client exists; intro keeps animated Lottie art | § 26.15 | Render built `production`, which refused the dev account and broke the deploy |
+| 181 | "name should be capitalized first letter in complete name" | Every word of a person's name starts with a capital, saved and shown through one `capitalizeName`; rest of each word as typed; groups, titles, emails unchanged | § 26.3 | Names shown exactly as typed |
 
 New decisions follow § 0 rule 9: rewrite the rule in its topic so only the current truth remains, then add a
 row here.
