@@ -13,6 +13,8 @@ import {
   incomingRequests,
   type InviteLink,
   inviteLinkState,
+  type Key,
+  listOpenDisputes,
   type MutationCtx,
   outgoingRequests,
   type Person,
@@ -259,14 +261,44 @@ export interface SearchView {
  * expenses, people or groups runs the query again. Undefined until the first
  * answer.
  */
-export function useSearch(query: string, today: string, mark: '.' | ','): SearchView | undefined {
+/** `status: disputed` in a query keeps only the expenses with an open dispute or hold (F-1210); the rest of the query is the usual search. */
+const DISPUTED_FILTER = /(^|\s)status:\s*disputed(?=\s|$)/i
+
+export function useSearch(rawQuery: string, today: string, mark: '.' | ','): SearchView | undefined {
   const {store} = useData()
+  const isDisputed = DISPUTED_FILTER.test(rawQuery)
+  const query = isDisputed ? rawQuery.replace(DISPUTED_FILTER, ' ').trim() : rawQuery
+  /* The expenses with an open dispute or hold, kept current while the filter is in the query. */
+  const [disputedExpenses, setDisputedExpenses] = useState<Entity<Expense>[]>()
+  useEffect(() => {
+    if (!isDisputed) return
+    let isCurrent = true
+    const load = async () => {
+      const ids = new Set<string>()
+      let after: Key | null = null
+      do {
+        const page: Awaited<ReturnType<typeof listOpenDisputes>> = await listOpenDisputes(store, {after})
+        for (const d of page.items) if (d.data.targetType === 'expense') ids.add(d.data.targetId)
+        after = page.next
+      } while (after)
+      const rows = await store.getMany<Expense>('expense', [...ids])
+      if (isCurrent) setDisputedExpenses(rows.filter(e => !e.deleted).sort((x, y) => (x.data.date < y.data.date ? 1 : x.data.date > y.data.date ? -1 : 0)))
+    }
+    void load()
+    const off = store.subscribe(change => {
+      if (touches(change, 'dispute') || touches(change, 'expense')) void load()
+    })
+    return () => {
+      isCurrent = false
+      off()
+    }
+  }, [store, isDisputed])
   const [categories = DEFAULT_CATEGORIES] = usePref('categories')
   const [commits, setCommits] = useState(0)
   const [session, setSession] = useState<SearchSession>()
   const [paging, setPaging] = useState({key: query, pages: 1})
   const [view, setView] = useState<Omit<SearchView, 'loadMore'>>()
-  const pages = paging.key === query ? paging.pages : 1
+  const pages = paging.key === rawQuery ? paging.pages : 1
   const wanted = pages * SEARCH_PAGE
   useEffect(
     () =>
@@ -288,8 +320,10 @@ export function useSearch(query: string, today: string, mark: '.' | ','): Search
     if (!session) return
     let isCurrent = true
     const show = (summary?: SearchSummary) => {
-      const found = session.found()
-      const isDone = session.isDone()
+      /* With the disputed filter: the disputed expenses alone, or (with words) the search's matches that are among them. */
+      const disputedIds = new Set((disputedExpenses ?? []).map(e => e.id))
+      const found = isDisputed ? (query.trim() === '' ? (disputedExpenses ?? []) : session.found().filter(e => disputedIds.has(e.id))) : session.found()
+      const isDone = session.isDone() && (!isDisputed || disputedExpenses !== undefined)
       setView({
         people: session.people,
         groups: session.groups,
@@ -316,8 +350,8 @@ export function useSearch(query: string, today: string, mark: '.' | ','): Search
     return () => {
       isCurrent = false
     }
-  }, [session, wanted])
-  return view && {...view, loadMore: () => setPaging({key: query, pages: pages + 1})}
+  }, [session, wanted, isDisputed, disputedExpenses, query])
+  return view && {...view, loadMore: () => setPaging({key: rawQuery, pages: pages + 1})}
 }
 
 /* Analytics (ARCHITECTURE 9.8): stored month sums, date-index reads at the edges, a paged list. */

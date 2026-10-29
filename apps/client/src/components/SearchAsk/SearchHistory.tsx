@@ -47,6 +47,7 @@ export function SearchHistory({
     {q: '> 1000', hint: l`Amounts over 1,000 (or under, with <)`},
     {q: 'yesterday', hint: l`A day: today or yesterday`},
     {q: 'march', hint: l`A month, with a year if you like: march 2026`},
+    {q: 'status: disputed', hint: l`Expenses with an open dispute or on hold`},
   ]
 
   return (

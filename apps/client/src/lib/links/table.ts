@@ -9,7 +9,7 @@ import {ROUTE_PATHS, type RouteName} from '#/routes'
 /** In-page tabs: the path segment after the page (`/groups/:id/balances`); the first is the default and prints no segment. */
 export const PAGE_TABS = {
   Group: ['expenses', 'balances', 'members'],
-  Activity: ['all', 'others'],
+  Activity: ['all', 'others', 'disputed'],
 } as const satisfies Partial<Record<RouteName, readonly string[]>>
 
 export type TabbedPage = keyof typeof PAGE_TABS

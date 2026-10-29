@@ -379,3 +379,24 @@ export function disputeEvents(history: readonly HistoryRow[]): DisputeEvent[] {
   }
   return out.sort((x, y) => x.at - y.at || (x.key < y.key ? -1 : 1))
 }
+
+/**
+ * Every dispute event of one record's disputes, oldest first: the system lines of its thread. Reads the record's
+ * disputes by `byTarget` and their histories (a handful of rows).
+ */
+export async function loadDisputeEvents(store: Store, targetType: DisputeTarget, targetId: string): Promise<DisputeEvent[]> {
+  const rows: Entity<Dispute>[] = []
+  let after: Key | null = null
+  do {
+    const page: Page<Entity<Dispute>> = await listDisputes(store, targetType, targetId, {after})
+    rows.push(...page.items)
+    after = page.next
+  } while (after)
+  return disputeEvents(await store.historyMany(rows.map(r => ({type: 'dispute' as const, id: r.id}))))
+}
+
+/** The disputed or held part of the net balances (same selection as `store.balances`): the "of which disputed" figures. */
+export const listDisputedBalances = (store: Store, q: {personId?: string; groupId?: string | null} = {}) => store.disputedBalances(q)
+
+/** The disputed or held part of what others owe `personId` (or `otherId` owes them). */
+export const listDisputedPairs = (store: Store, personId: string, otherId?: string) => store.disputedPairs(personId, otherId)

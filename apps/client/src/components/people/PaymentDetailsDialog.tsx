@@ -27,6 +27,11 @@ import {ArrowRotateCounterClockwise_Stroke2_Corner0_Rounded as UndoIcon} from '#
 import {Bubble_Stroke2_Corner2_Rounded as BubbleIcon} from '#/components/icons/Message'
 import {Trash_Stroke2_Corner0_Rounded as TrashIcon} from '#/components/icons/Trash'
 import {EyeIcon, EyeOffIcon} from '#/components/settings/icons'
+import {DisputeBadge} from '#/components/disputes/DisputeBadge'
+import {DisputePanel} from '#/components/disputes/DisputePanel'
+import {HoldIcon, RaiseIcon} from '#/components/disputes/icons'
+import {requestDispute} from '#/lib/disputes/bus'
+import {markOf, useOpenDisputes} from '#/state/disputes'
 import {useErrorText} from '#/components/split/shared'
 import {SyncStatusLine} from '#/components/SyncStatus'
 import {SyncToned} from '#/components/SyncTone'
@@ -175,6 +180,8 @@ function Details({
     }
   }
   const isDeleted = repayment.deleted
+  const targetType = isWriteOff ? 'writeoff' : 'repayment'
+  const mark = markOf(useOpenDisputes(), targetType, repayment.id)
 
   return (
     <View style={[a.gap_lg]}>
@@ -196,7 +203,9 @@ function Details({
           {formatAmount(amount, currency, locale)}
         </Text>
         {isDeleted ? <DeletedMeta testID="payment-deleted-at" at={repayment.updatedAt} /> : null}
+        {mark && !isDeleted ? <DisputeBadge kind={mark === 'hold' ? 'hold' : 'dispute'} testID="payment-disputed" /> : null}
       </View>
+      <DisputePanel targetType={targetType} targetId={repayment.id} currency={currency} inset={false} />
       <View style={[a.rounded_md, a.border, t.atoms.border_contrast_low]}>
         <DetailRow label={l`Date`} value={when} />
         <DetailRow label={l`Where`} value={groupName ?? l`Direct, no group`} />
@@ -240,6 +249,32 @@ function Details({
           </ButtonText>
           <CommentCount targetType="repayment" targetId={repayment.id} />
         </Button>
+      )}
+      {isDeleted ? null : (
+        <View style={[a.flex_row, a.gap_sm]}>
+          <Button
+            testID="payment-dispute"
+            label={isWriteOff ? l`Dispute this write-off` : l`Dispute this payment`}
+            size="small"
+            color="secondary"
+            onPress={() => control.close(() => requestDispute({kind: 'raise', targetType, targetId: repayment.id}))}>
+            <ButtonIcon icon={RaiseIcon} />
+            <ButtonText>
+              <Trans>Dispute</Trans>
+            </ButtonText>
+          </Button>
+          <Button
+            testID="payment-hold"
+            label={l`Put on hold`}
+            size="small"
+            color="secondary"
+            onPress={() => control.close(() => requestDispute({kind: 'hold', targetType, targetId: repayment.id}))}>
+            <ButtonIcon icon={HoldIcon} />
+            <ButtonText>
+              <Trans>Put on hold</Trans>
+            </ButtonText>
+          </Button>
+        </View>
       )}
       {isDeleted ? (
         <View style={[a.gap_sm]}>

@@ -25,6 +25,7 @@ import {
   roundToFor,
   type Store,
   updateExpense,
+  updateExpenseResolving,
 } from '@splito/sync'
 
 import {type NavigationProp} from '#/lib/routes/types'
@@ -32,6 +33,7 @@ import {useNumberLocale} from '#/locale/numberLocale'
 import {useFormatDay, useToday} from '#/locale/useDates'
 import {useA11y} from '#/state/a11y'
 import {useEntities, useMutationCtx, usePref, useStore} from '#/data/hooks'
+import {useResolvableDisputes} from '#/state/disputes'
 import {atoms as a, useBreakpoints, useTheme} from '#/alf'
 import {Button, ButtonText} from '#/components/Button'
 import * as FormSheet from '#/components/FormSheet'
@@ -82,8 +84,9 @@ import {suggestCategory} from './suggestCategory'
  * The write, with its failure returned: a try/catch around a conditional inside the component makes the React
  * Compiler skip the whole form, so every keystroke re-rendered every row, button and dialog (owner 108).
  */
-async function persistExpense(store: Store, ctx: MutationCtx, expenseId: string | undefined, draft: ExpenseDraft) {
+async function persistExpense(store: Store, ctx: MutationCtx, expenseId: string | undefined, draft: ExpenseDraft, resolveIds: readonly string[] = []) {
   try {
+    if (expenseId && resolveIds.length) return {saved: await updateExpenseResolving(store, ctx, expenseId, draft, resolveIds)}
     return {saved: expenseId ? await updateExpense(store, ctx, expenseId, draft) : await createExpense(store, ctx, draft)}
   } catch (error) {
     return {error}
@@ -169,6 +172,8 @@ export function ExpenseComposer({
     onFirstEdit?.()
   }
 
+  const resolvable = useResolvableDisputes(expenseId)
+  const resolveControl = Prompt.usePromptControl()
   const currencyControl = Dialog.useDialogControl({url: 'currency'})
   const dateControl = Dialog.useDialogControl({url: 'date'})
   const categoryControl = Dialog.useDialogControl({url: 'category'})
@@ -248,11 +253,11 @@ export function ExpenseComposer({
     }
   }
 
-  const save = async () => {
+  const save = async (resolveIds: readonly string[] = []) => {
     const draft = evaluation.draft
     if (!draft || isSaving || savedId) return
     setIsSaving(true)
-    const result = await persistExpense(store, ctx, expenseId, draft)
+    const result = await persistExpense(store, ctx, expenseId, draft, resolveIds)
     if ('error' in result) {
       setIsSaving(false)
       Toast.show(errorText((result.error as {code?: string}).code ?? ''), {type: 'error'})
@@ -323,7 +328,8 @@ export function ExpenseComposer({
       }
       footer={{
         saveLabel: l`Save expense`,
-        onSave: () => void save(),
+        /* Editing an expense someone disputed asks whether the edit resolves it (F-1210). */
+        onSave: () => (resolvable.length > 0 ? resolveControl.open() : void save()),
         canSave: !!evaluation.draft && !savedId,
         isSaving,
       }}
@@ -592,6 +598,12 @@ export function ExpenseComposer({
           style={[a.flex_1, {lineHeight: 20, minHeight: 44, paddingTop: 0}]}
         />
       </View>
+      <ResolvePrompt
+        control={resolveControl}
+        names={resolvable.map(d => name(d.data.raisedBy))}
+        onResolved={() => void save(resolvable.map(d => d.id))}
+        onKeptOpen={() => void save()}
+      />
     </FormSheet.Screen>
   )
 }
@@ -633,6 +645,39 @@ function DraftPrompt({
           color="secondary"
           onPress={onDraftKept}
         />
+        <Prompt.Cancel cta={l`Keep editing`} />
+      </Prompt.Actions>
+    </Prompt.Outer>
+  )
+}
+
+/** "Does this resolve Bob's dispute?" (F-1210): saving an edit to a disputed expense asks, so the answer is on record. */
+function ResolvePrompt({
+  control,
+  names,
+  onResolved,
+  onKeptOpen,
+}: {
+  control: Prompt.PromptControlProps
+  names: string[]
+  onResolved: () => void
+  onKeptOpen: () => void
+}) {
+  const {t: l} = useLingui()
+  const who = names.length === 1 ? names[0]! : names.slice(0, -1).join(', ') + ' & ' + names.at(-1)!
+  return (
+    <Prompt.Outer control={control} testID="expense-resolve-prompt">
+      <Prompt.Content>
+        <Prompt.TitleText>
+          {names.length === 1 ? <Trans>Does this resolve {who}’s dispute?</Trans> : <Trans>Does this resolve the disputes from {who}?</Trans>}
+        </Prompt.TitleText>
+        <Prompt.DescriptionText>
+          <Trans>Saving applies your edit either way. Yes marks it accepted; No leaves it open for them to answer.</Trans>
+        </Prompt.DescriptionText>
+      </Prompt.Content>
+      <Prompt.Actions>
+        <Prompt.Action testID="resolve-yes" cta={l`Yes, it resolves it`} color="primary" onPress={onResolved} />
+        <Prompt.Action testID="resolve-no" cta={l`No, keep it open`} color="secondary" onPress={onKeptOpen} />
         <Prompt.Cancel cta={l`Keep editing`} />
       </Prompt.Actions>
     </Prompt.Outer>

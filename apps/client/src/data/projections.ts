@@ -223,7 +223,8 @@ export const activityQuery: Query<ActivityFeed> = {
     touches(change, 'person') || touches(change, 'group') || touches(change, 'expense') ||
     touches(change, 'repayment') ||
     touches(change, 'writeoff') ||
-    touches(change, 'friendRequest'),
+    touches(change, 'friendRequest') ||
+    touches(change, 'dispute'),
   loader: (store, controls) => {
     let want = ACTIVITY_PAGE
     const track = activityTracker(store, () => want)

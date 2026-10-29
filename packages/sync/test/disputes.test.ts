@@ -321,6 +321,6 @@ describe.each(engines)('disputes on %s', (_name, open) => {
     await deleteExpense(s, me, ids.direct)
     expect((await s.get<Dispute>('dispute', w.id))!.data.status).toBe('gone')
     const kinds = (await loadActivity(s)).filter(e => e.entityType === 'dispute').map(e => e.kind)
-    expect(kinds.sort()).toEqual(['dispute.held', 'dispute.raised', 'dispute.raised', 'dispute.rejected', 'dispute.released', 'dispute.reopened', 'dispute.withdrawn'].sort())
+    expect([...kinds].sort()).toEqual(['dispute.held', 'dispute.raised', 'dispute.raised', 'dispute.rejected', 'dispute.released', 'dispute.reopened', 'dispute.withdrawn'])
   })
 })

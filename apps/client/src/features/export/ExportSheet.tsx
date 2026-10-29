@@ -9,7 +9,7 @@ import {printHtml} from '#/lib/export/printHtml'
 import {statementCsv, statementHtml} from '#/lib/export/statementFormat'
 import {useHaptics} from '#/lib/haptics'
 import {logger} from '#/logger'
-import {loadStatement} from '#/data/exportLedger'
+import {loadDisputeMarks, loadStatement} from '#/data/exportLedger'
 import {useMutationCtx, usePref, useStore} from '#/data/hooks'
 import {useToday} from '#/locale/useDates'
 import {RangeDialog} from '#/screens/Analytics/components/RangeDialog'
@@ -120,6 +120,9 @@ function Form({preset}: {preset?: ExportPreset}) {
     setIsBusy(false)
   }
 
+  /* The dispute column (F-1210): a record with an open dispute says Disputed, one on hold On hold. */
+  const dispute = (marks: Map<string, 'dispute' | 'hold'>) => (row: {id: string}) => (marks.get(row.id) === 'dispute' ? l`Disputed` : marks.get(row.id) === 'hold' ? l`On hold` : '')
+
   const run = async () => {
     setIsBusy(true)
     setFailed(false)
@@ -142,7 +145,7 @@ function Form({preset}: {preset?: ExportPreset}) {
       const owner = words.people?.find(p => p.id === ctx.actor)?.data.name ?? ''
       const isDone =
         format === 'csv'
-          ? await saveFile(`${name}.csv`, 'text/csv', statementCsv(statement, words.text))
+          ? await saveFile(`${name}.csv`, 'text/csv', statementCsv(statement, {...words.text, dispute: dispute(await loadDisputeMarks(store))}))
           : await printHtml(`${name}.pdf`, statementHtml(statement, words.text, words.page({subject, from: r?.from, to: r?.to, owner}), words.locale))
       if (!isDone) return fail()
       haptics.success()

@@ -8,6 +8,7 @@ import * as Dialog from '#/components/Dialog'
 import * as Toggle from '#/components/forms/Toggle'
 import * as FormSheet from '#/components/FormSheet'
 import {HideRow} from '#/features/hidden/HideItem'
+import {DisputedOnlyToggle} from '#/components/disputes/DisputedOnlyToggle'
 import {type HistoryEntry} from '#/components/people/ledger'
 import {Text} from '#/components/Typography'
 
@@ -34,25 +35,34 @@ export function ShowHiddenToggle({value, onChange}: {value: boolean; onChange: (
 }
 
 /** A list's own filter sheet with only this switch (a group's Expenses tab). Applies and remembers on Apply. */
-export function ShowHiddenSheet({control, testID}: {control: Dialog.DialogControlProps; testID: string}) {
+export function ShowHiddenSheet({control, testID, disputed}: {control: Dialog.DialogControlProps; testID: string; /** The list's "Disputed only" choice (F-1210), applied with the rest. */ disputed?: {value: boolean; onApply: (v: boolean) => void}}) {
   return (
     <FormSheet.Outer control={control} testID={testID}>
-      <Form />
+      <Form disputed={disputed} />
     </FormSheet.Outer>
   )
 }
 
-function Form() {
+function Form({disputed}: {disputed?: {value: boolean; onApply: (v: boolean) => void}}) {
   const {t: l} = useLingui()
   const control = Dialog.useDialogContext()
   const [current, set] = useShowHidden()
   const [draft, setDraft] = useState(current)
+  const [draftDisputed, setDraftDisputed] = useState(disputed?.value ?? false)
   return (
     <FormSheet.Inner
       title={l`Filter`}
-      isDirty={draft !== current}
-      footer={{saveLabel: l`Apply`, onSave: () => control.close(() => void set(draft))}}>
+      isDirty={draft !== current || draftDisputed !== (disputed?.value ?? false)}
+      footer={{
+        saveLabel: l`Apply`,
+        onSave: () =>
+          control.close(() => {
+            if (draft !== current) void set(draft)
+            disputed?.onApply(draftDisputed)
+          }),
+      }}>
       <View style={[a.gap_lg]}>
+        {disputed ? <DisputedOnlyToggle value={draftDisputed} onChange={setDraftDisputed} /> : null}
         <ShowHiddenToggle value={draft} onChange={setDraft} />
       </View>
     </FormSheet.Inner>

@@ -44,6 +44,7 @@ export function useStatementText() {
       yourShare: l`Your share`,
       effect: l`Effect on your balance`,
       balance: l`Balance`,
+      dispute: l`Dispute`,
     },
     opening: l`Opening balance`,
     closing: l`Closing balance`,

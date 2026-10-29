@@ -214,6 +214,11 @@ export const PREFS = {
    */
   // ponytail: id set in one pref, move to a personal table if it grows past a few thousand
   'lists.hiddenItems': def<string[]>('lists.hiddenItems', 'lists', 'account', 'Hidden deleted items', [], (v): v is string[] => Array.isArray(v) && v.length <= 5000 && v.every(isString) && new Set(v).size === v.length),
+  /**
+   * Settle up leaves disputed and held amounts out of a group's plan by default (F-1210, owner 119); the groups listed
+   * here put them back ("Include disputed"). One id each, remembered per group, set on the Settle screen, no Settings row.
+   */
+  'group:settleIncludeDisputed': def<string[]>('group:settleIncludeDisputed', 'lists', 'account', 'Groups whose Settle up includes disputed amounts', [], (v): v is string[] => Array.isArray(v) && v.length <= 1000 && v.every(isString) && new Set(v).size === v.length),
   /** The one "Show hidden" filter of People, Groups, a group's Expenses and a person's history (decision 105): off, hidden deleted items and hidden groups stay out of the lists. */
   'lists.showHidden': def('lists.showHidden', 'lists', 'account', 'Show hidden', false, isBool),
   /** F-1413 (owner 90, 112): fully settled friends / groups are hidden from Home and Groups unless this is on. Set from each filter sheet's "Show settled". */
@@ -324,7 +329,7 @@ const enqueuePref = (tx: Tx, ctx: MutationCtx, id: string, baseVersion: number, 
  * Edits a list-of-ids preference inside the caller's transaction (read and write together, so two changes never
  * lose one another). Writes only when `edit` changes the list.
  */
-export async function editIdsPref(tx: Tx, ctx: MutationCtx, key: 'lists.hiddenItems' | 'groups.hidden', edit: (ids: string[]) => string[]) {
+export async function editIdsPref(tx: Tx, ctx: MutationCtx, key: 'lists.hiddenItems' | 'groups.hidden' | 'group:settleIncludeDisputed', edit: (ids: string[]) => string[]) {
   const row = await tx.get<{value: unknown}>('preference', key)
   const ids = prefFrom(row ? [row] : [], key)
   const next = edit(ids)
@@ -355,4 +360,11 @@ export async function resetAllPrefs(store: Store, ctx: MutationCtx): Promise<voi
   await store.transaction(async tx => {
     for (const p of set) await putPref(tx, ctx, p.id as PrefKey, PREFS[p.id as PrefKey].default, true)
   })
+}
+
+/** Remembers, for one group, whether Settle up includes disputed and held amounts (default: left out). */
+export async function setSettleIncludeDisputed(store: Store, ctx: MutationCtx, groupId: string, include: boolean): Promise<void> {
+  await store.transaction(tx =>
+    editIdsPref(tx, ctx, 'group:settleIncludeDisputed', ids => (ids.includes(groupId) === include ? ids : include ? [...ids, groupId] : ids.filter(id => id !== groupId))),
+  )
 }

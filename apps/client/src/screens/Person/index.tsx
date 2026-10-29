@@ -10,6 +10,7 @@ import {
   personSummary,
   sumMinor,
   ZERO,
+  disputedWith,
 } from '@splito/domain'
 import {
   type Entity,
@@ -94,6 +95,8 @@ import {Shimmer} from '#/motion/Shimmer'
 import {PersonReminders} from '#/features/remind/PersonReminders'
 import {RemindMenuItems} from '#/features/remind/RemindMenuItems'
 import {HistoryFilterDialog} from './components/HistoryFilterDialog'
+import {historyRowMenu} from '#/features/disputes/RowMenu'
+import {markOf, useDisputedPairs, useOpenDisputes} from '#/state/disputes'
 import {
   PersonBalances,
   PersonBalancesPlaceholder,
@@ -128,6 +131,10 @@ export function PersonScreen() {
   const pairHistory = usePairHistory(personId, includeGroups)
 
   const filterControl = useDialogControl({url: 'filters'})
+  /* "Disputed only" (F-1210): this page's own choice, not remembered. ponytail: not in the address yet. */
+  const [onlyDisputed, setOnlyDisputed] = useState(false)
+  const openDisputes = useOpenDisputes()
+  const disputedPairs = useDisputedPairs(me?.id ?? '', personId)
   const paymentControl = useDialogControl({
     url: 'record-payment',
     /* A pasted address: wait for the balances, then open as the Settle up button does. */
@@ -206,7 +213,7 @@ export function PersonScreen() {
         s => s.person === personId,
       )
     : undefined
-  const history = visible
+  const history = onlyDisputed ? visible.filter(e => markOf(openDisputes, e.kind, e.entity.id) !== undefined) : visible
   const items = withMonths(history)
   const sharedGroups = (groups ?? []).filter(
     g =>
@@ -381,6 +388,7 @@ export function PersonScreen() {
             summary={summary}
             groupNames={groupNames}
             locale={locale}
+            disputed={disputedWith(disputedPairs, Object.fromEntries(Object.entries(summary?.byCurrency ?? {}).map(([c, b]) => [c, b.total])), includeGroups)}
           />
           <PersonReminders personId={personId} />
         </View>
@@ -399,6 +407,11 @@ export function PersonScreen() {
             {showHidden && (
               <Pills.Tag>
                 <Trans>Hidden shown</Trans>
+              </Pills.Tag>
+            )}
+            {onlyDisputed && (
+              <Pills.Tag>
+                <Trans>Disputed only</Trans>
               </Pills.Tag>
             )}
             <Button
@@ -527,6 +540,8 @@ export function PersonScreen() {
                 }
                 locale={locale}
                 hide={historyRowHide(item.entry, hidden, l`this record`)}
+                rowMenu={historyRowMenu(item.entry, l`this record`)}
+                mark={markOf(openDisputes, item.entry.kind, item.entry.entity.id)}
                 onRepaymentPress={(r, kind) => {
                   setOpenRepayment(r)
                   setOpenKind(kind)
@@ -578,6 +593,7 @@ export function PersonScreen() {
             name={person.data.name}
             includeGroups={includeGroups}
             onFilterApplied={v => navigation.setParams({groups: flagParam(v, true, includeDefault ?? true)})}
+            disputed={{value: onlyDisputed, onApply: setOnlyDisputed}}
           />
           {
             <RecordPaymentDialog
