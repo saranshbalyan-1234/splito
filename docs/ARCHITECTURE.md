@@ -1602,6 +1602,15 @@ good"; "the left sidebar looks bad on desktop". *Where:* `view/shell/desktop/Lef
   uses Bluesky's web pager. Group: Expenses / Balances / Members; Activity: All / From others; Analytics,
   Person and Settings if tabbed. *Why:* "there is no animation when switching tabs, but it's there in Bluesky,
   why it's not there". *Where:* `components/TabBar.tsx` (Pager not copied yet, § 1 table).
+- **Every tap reflects immediately; heavy rendering is deferred** (owner 151, extends 150 to the whole app):
+  any tap (rows, buttons, chips, switches, filters, sheets, tabs, menus, the FAB) changes what the user sees in
+  the same frame or the next: the pressed state, the selected chip, the switch thumb, the opening sheet's motion,
+  the new screen's header and a same-size skeleton. Anything slow (long lists, charts, breakdowns, the next tab's
+  body, search results) renders after that first frame, via React transitions (`startTransition` /
+  `useDeferredValue`), mounting the body after the transition (§ 3) or on idle; a busy body never delays the
+  tap's own feedback, and later taps are never queued behind it. Measured: an e2e/perf check of tap-to-first-
+  visual-change under 100 ms (§ 26.10) for the main tappables at 390 px, and none of them waits on a JS long
+  task. *Why:* "all the taps everywhere should reflect immediately, maybe defer some rendering".
 - **Tab taps always win, however fast** (owner 150): every tap on a bottom-bar, sidebar, rail or in-page tab
   switches at once, even when taps come milliseconds apart or during a running switch animation: the newest tap
   cancels or redirects the animation, nothing is debounced, locked or swallowed (the first tap after a screen
@@ -2419,6 +2428,7 @@ Every owner decision, in the order it was made (all 2026-10-26). "Replaced" name
 | 148 | "i dont see demo mode in deployed app" (https://splito-web.onrender.com, auto deploy on main) | Demo mode ships in every build, production included, as lazy chunks; start-up bundle stays demo-free | § 26.1 | Demo mode dev/e2e only (F-227 c4) |
 | 149 | "now keep on pushing to github as well"; "use saranshbalyan-1234 account to push" | Push main to origin after every merge as saranshbalyan-1234 (repo-local credential helper); Render auto-deploys main | § 26.1 | No remote; never push |
 | 150 | "when i click on tabs immediately it doesnt work, in other apps i keep clicking on tabs within ms it still switches" | Every tab tap switches at once, even milliseconds apart or mid-animation; newest tap wins; nothing debounced or swallowed, every platform | § 26.9 | Taps during a switch could be ignored |
+| 151 | "all the taps everywhere should reflect immediately, maybe deffer some renderring" | Every tap shows its result in the same or next frame; slow bodies render after via transitions/deferred mount; tap-to-first-change < 100 ms measured | § 26.9, § 26.10 | Only tap feedback within 100 ms (body could block) |
 
 New decisions follow § 0 rule 9: rewrite the rule in its topic so only the current truth remains, then add a
 row here.
