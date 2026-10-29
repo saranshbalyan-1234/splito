@@ -29,8 +29,9 @@ export function useNavigationDeduped() {
       push: (...args: Parameters<typeof navigation.push>) => {
         dedupe(() => navigation.push(...args))
       },
+      /* Never deduped (owner 150): `navigate` (with `pop`) is idempotent, and it is what tab taps use, so two taps ms apart must both act. */
       navigate: (...args: Parameters<typeof navigation.navigate>) => {
-        dedupe(() => navigation.navigate(...args))
+        navigation.navigate(...args)
       },
       replace: (...args: Parameters<typeof navigation.replace>) => {
         dedupe(() => navigation.replace(...args))

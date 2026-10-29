@@ -60,6 +60,7 @@ export function BottomBar({navigation}: BottomTabBarProps) {
         item: tab.toLowerCase(),
         surface: 'bottomBar',
       })
+      /* Never debounced (owner 150): tab taps ms apart must each act, and the newest wins. */
       const state = navigation.getState()
       const tabState = getTabState(state, tab)
       if (tabState === TabState.InsideAtRoot) {
@@ -68,26 +69,18 @@ export function BottomBar({navigation}: BottomTabBarProps) {
         // find the correct navigator in which to pop-to-top
         const target = state.routes.find(route => route.name === tab)?.state
           ?.key
-        dedupe(() => {
-          if (target) {
-            // if we found it, trigger pop-to-top
-            navigation.dispatch({
-              ...StackActions.popToTop(),
-              target,
-            })
-          } else {
-            // fallback: reset navigation
-            navigation.reset({
-              index: 0,
-              routes: [{name: tab}],
-            })
-          }
-        })
+        if (target) {
+          // if we found it, trigger pop-to-top
+          navigation.dispatch({...StackActions.popToTop(), target})
+        } else {
+          // fallback: reset navigation
+          navigation.reset({index: 0, routes: [{name: tab}]})
+        }
       } else {
-        dedupe(() => navigation.navigate(tab))
+        navigation.navigate(tab)
       }
     },
-    [navigation, dedupe, ax],
+    [navigation, ax],
   )
 
   return (
