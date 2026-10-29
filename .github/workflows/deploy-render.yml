@@ -1,11 +1,11 @@
-# Checks every push to m1-foundation, then deploys the web app and the API to Render (render.yaml).
+# Checks every push to main, then deploys the web app and the API to Render (render.yaml).
 # Needs two repository secrets, each a service's deploy hook URL from Render > Settings > Deploy Hook:
 #   RENDER_DEPLOY_HOOK_WEB (splito-web) and RENDER_DEPLOY_HOOK_API (splito-api).
 name: Deploy to Render
 
 on:
   push:
-    branches: [m1-foundation]
+    branches: [main]
   workflow_dispatch:
 
 concurrency:

@@ -36,7 +36,7 @@ Sources: `../Splito-Claude-Prompt.txt`, `docs/superpowers/specs/2026-10-26-split
 3. Fast and animated (ARCHITECTURE § 26.10): speed budgets measured and recorded; reduced-motion and `motion` pref honoured.
 4. Every user-facing choice has a registry entry; every string goes through Lingui with en and hi.
 5. Acceptance criteria below pass with recorded evidence (command, platform, result). Untested is not done.
-6. Merged into m1-foundation, with populated screenshots (light and Dim, phone and desktop) for any UI change (ARCHITECTURE § 26.1). Where an ARCHITECTURE § 26 rule and a criterion here disagree, § 26 wins and this file is corrected.
+6. Merged into main, with populated screenshots (light and Dim, phone and desktop) for any UI change (ARCHITECTURE § 26.1). Where an ARCHITECTURE § 26 rule and a criterion here disagree, § 26 wins and this file is corrected.
 
 ## Owner decisions to features
 
