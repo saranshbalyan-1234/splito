@@ -530,11 +530,11 @@ Home shows the Overview and Recent transactions (F-1415); a new People tab holds
 - **Effort** M · **Impact** 9 · **Backend** no · **Status** todo, next after the tap fix (F-255) merges; F-241's WIP rebases onto it · **Deps** F-1415, F-255, F-241
 - **Prefs** `tabs` default changes to Home, People, Groups, Analytics, Activity (existing users keep their own order; People is added after Home if absent)
 - **Acceptance**
-  1. `/` shows Overview then Recent transactions (newest expenses and payments across everything, "See all" -> Activity), no friends list, no requests; phone header has Search & Ask only.
+  1. `/` shows, in order: Overview; Requests with the invites row (only when pending); Recent transactions (See all -> Activity); Recently active people (5, by change time, net per currency, See all -> People); Recently active groups (5, balance chips, See all -> Groups); each hides when empty; no full friends list; phone header has Search & Ask only (owners 153, 154).
   2. `/people` shows requests, "N invites waiting ›", Friends (count, search, Filters, Show settled), no Overview; header Search & Ask + Add friend; `/people/:id` unchanged.
   3. `/groups` has no Overview; everything else unchanged.
   4. Nav list order Home, People, Groups, Analytics, Ask Splito, Activity, Settings in bottom bar, sidebar, rail, drawer; default bar of 5 with labels; Settings > Navigation includes People; saved tabs migrate by inserting People after Home.
-  5. Right column at 1300 px hides its Recent transactions while Home is shown.
+  5. The right column (1300 px and up) is not shown on Home, since the page holds its content; other pages keep it.
   6. Shell-first rendering (owner 152), e2e at 390/1440, demo data covers recent transactions, Lingui en + hi, perf and renders gate.
 
 ### F-250 Sign-in required (auth gate) `spec: owner § 26.15 (decision 125)`

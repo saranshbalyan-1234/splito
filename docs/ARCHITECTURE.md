@@ -1369,12 +1369,16 @@ labelled sidebar); **wide** = web 1300 px and up (Bluesky `gtTablet`, right colu
 
 - **Home, People and Groups are three tabs; the Overview lives only on Home** (owner 153; F-256; replaces the
   Home-holds-the-friends-list layout of 120 and the Overview on Groups):
-  - **Home** (`/`): the Overview (per-currency cards, owners 113/114/120, with "Analytics ›") and then **Recent
-    transactions** (F-1415: the newest expenses and payments across everything, "See all" -> Activity). Header:
-    avatar | logo (phone) / "Home" | Search & Ask (no Add friend here). On wide screens the right column drops its
-    own "Recent transactions" while Home is showing (no duplicate) and keeps "Recently active groups".
-  - **People** (`/people`, new tab, Lucide `Users`): incoming friend requests (Accept / Decline), the "N invites
-    waiting ›" row, then the Friends list with its search and Filters (owners 91, 120, 130); no Overview. Header:
+  - **Home** (`/`), top to bottom (owners 153, 154): the **Overview** (per-currency cards, owners 113/114/120,
+    "Analytics ›"); **Requests** (incoming friend requests with Accept / Decline and the "N invites waiting ›"
+    row, shown only when something is pending); **Recent transactions** (F-1415: the newest expenses and payments
+    across everything, "See all" -> Activity); **Recently active people** (the 5 friends with the newest change,
+    by change time, with their per-currency net, "See all" -> People); **Recently active groups** (the 5 groups
+    with the newest change, balance chips, "See all" -> Groups, same rule as § 26.17). Each section is short (5
+    rows at most) and hides when empty. Header: avatar | logo (phone) / "Home" | Search & Ask (no Add friend
+    here). On wide screens the right column is not shown on Home (its content is on the page), so nothing repeats.
+  - **People** (`/people`, new tab, Lucide `Users`): incoming friend requests (Accept / Decline, the same ones
+    Home shows), the "N invites waiting ›" row, then the Friends list with its search and Filters (owners 91, 120, 130); no Overview. Header:
     avatar | "People" | Search & Ask + Add friend. A friend still opens `/people/:id`.
   - **Groups** (`/groups`): the groups list with search and Filters; no Overview. Header unchanged.
   - **Navigation:** the shared list becomes Home, People, Groups, Analytics, Ask Splito, Activity, Settings; the
@@ -2450,6 +2454,7 @@ Every owner decision, in the order it was made (all 2026-10-26). "Replaced" name
 | 151 | "all the taps everywhere should reflect immediately, maybe deffer some renderring" | Every tap shows its result in the same or next frame; slow bodies render after via transitions/deferred mount; tap-to-first-change < 100 ms measured | § 26.9, § 26.10 | Only tap feedback within 100 ms (body could block) |
 | 152 | "for example switch tabs first, and render content later, same for popups or diff screen that happen"; "make sure such things are stored in architecture, and it should be self updating whenever we make such decisions" | Shell first, content later for tabs, sheets and screens via one shared helper; every such decision recorded in § 26 + log + BACKLOG in the same turn (§ 0 rule 9, prompt hook) | § 26.9, § 0 | - (spells out 151) |
 | 153 | "on home show overview and recent transactions, then create a people tab as well, the group tab is already there, the overview is needed only in home" | Home = Overview + Recent transactions; new People tab (requests, invites row, friends list with search/filters); Groups list without Overview; nav Home, People, Groups, Analytics, Ask, Activity, Settings; default bar Home, People, Groups, Analytics, Activity | § 26.3 | Home held the Overview and friends list; Groups had its own Overview; bar Home, Groups, Analytics, Activity |
+| 154 | "also on home show recent active people, and recent active group"; "also request and all" | Home adds Requests (when pending), Recently active people and Recently active groups (5 each, See all); right column not shown on Home at wide | § 26.3 | Home = Overview + Recent transactions only (row 153) |
 
 New decisions follow § 0 rule 9: rewrite the rule in its topic so only the current truth remains, then add a
 row here.
