@@ -20,7 +20,12 @@ test('a fresh install opens the intro at /welcome/1, with the app nowhere in sig
   await page.goto('/')
   await slide(page, 1)
   await expect(page).toHaveURL(/\/welcome\/1$/)
+  // "Step 1 of 5" is for screen readers: in the page, but not drawn.
   await expect(page.getByTestId('welcome-step')).toHaveText('Step 1 of 5')
+  const step = (await page.getByTestId('welcome-step').boundingBox())!
+  expect(step.width).toBeLessThanOrEqual(1)
+  // The art is an animation, not a still.
+  await expect(page.getByTestId('welcome-art')).toHaveAttribute('data-static', 'false')
   await expect(page.getByTestId('welcome-next')).toHaveText('Next')
   // No ledger, no tab bar, no database.
   await expect(page.getByTestId('screen-people')).toHaveCount(0)
@@ -98,6 +103,35 @@ test('a swipe moves a slide in either direction', async ({page}) => {
   await slide(page, 2)
 })
 
+test('a vertical or diagonal drag is not a swipe; a horizontal one is followed by the slide', async ({page}) => {
+  await page.setViewportSize(PHONE)
+  await page.goto('/')
+  const touch = (type: 'touchstart' | 'touchmove' | 'touchend', x: number, y: number) =>
+    page.evaluate(
+      ([type, x, y]) => {
+        const el = document.querySelector('[data-testid="welcome"]')!
+        const t = new Touch({identifier: 1, target: el, pageX: x as number, pageY: y as number, clientX: x as number, clientY: y as number})
+        el.dispatchEvent(new TouchEvent(type as string, {bubbles: true, touches: type === 'touchend' ? [] : [t], changedTouches: [t]}))
+      },
+      [type, x, y],
+    )
+  // Mostly downward: a scroll, not a page turn.
+  await touch('touchstart', 200, 200)
+  await touch('touchend', 120, 420)
+  await slide(page, 1)
+  // Diagonal (about 45 degrees): still not.
+  await touch('touchstart', 300, 300)
+  await touch('touchend', 200, 400)
+  await slide(page, 1)
+  // Horizontal: the slide follows the finger while it is down.
+  await touch('touchstart', 300, 300)
+  await touch('touchmove', 230, 304)
+  const moved = await page.getByTestId('welcome-slide').evaluate(el => new DOMMatrix(getComputedStyle(el).transform).m41)
+  expect(moved).toBeLessThan(-40)
+  await touch('touchend', 150, 306)
+  await slide(page, 2)
+})
+
 test('the language chip is on the first slide only and switches the intro live', async ({page}) => {
   await page.setViewportSize(PHONE)
   await page.goto('/')
@@ -111,6 +145,26 @@ test('the language chip is on the first slide only and switches the intro live',
   // The choice survives a reload (the device's, while signed out).
   await page.reload()
   await expect(page.getByTestId('welcome-title')).not.toHaveText(TITLES[1]!)
+})
+
+test('Escape closes the open language list first, and only then skips the intro', async ({page}) => {
+  await page.setViewportSize(DESKTOP)
+  await page.goto('/')
+  await slide(page, 1)
+  await page.getByTestId('app-language').click()
+  await expect(page.getByTestId('app-language-hi')).toBeVisible()
+  await page.keyboard.press('Escape')
+  await expect(page.getByTestId('app-language-hi')).toHaveCount(0)
+  await slide(page, 1)
+  await page.keyboard.press('Escape')
+  await expect(page.getByTestId('continue-form')).toBeVisible()
+})
+
+test('reduced motion shows a still frame of the art', async ({page}) => {
+  await page.emulateMedia({reducedMotion: 'reduce'})
+  await page.setViewportSize(PHONE)
+  await page.goto('/')
+  await expect(page.getByTestId('welcome-art')).toHaveAttribute('data-static', 'true')
 })
 
 test('Escape skips the intro', async ({page}) => {

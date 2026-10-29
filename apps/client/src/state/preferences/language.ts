@@ -17,6 +17,7 @@ export function useAppLanguage() {
 /** Signed out there is no database to hold a preference: the choice is the device's, and the account takes it at sign-in (`LocaleFromPrefs`). */
 export function setDeviceLanguage(language: AppLanguage) {
   device.set(['language'], language)
+  device.set(['deviceLanguage'], language)
   activateLanguage(language)
 }
 

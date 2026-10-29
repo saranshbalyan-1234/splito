@@ -93,8 +93,8 @@ export function ProfileScreen() {
                 t.atoms.text_contrast_medium,
               ]}>
               <Trans>
-                Everything is saved on this device. Sign-in, and sync across
-                your devices, are on the way.
+                Everything is saved on this device. It will sync across your
+                devices once sync arrives.
               </Trans>
             </Text>
           </View>

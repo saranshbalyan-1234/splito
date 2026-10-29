@@ -4,14 +4,20 @@ import {join} from 'node:path'
 import {expect, type Page, test} from '@playwright/test'
 
 /*
- * The production build: the only one that registers the service worker. Production has no dev sign-in (F-250), so
- * these specs run on the signed-out app: a fresh install shows the intro at every address, offline included.
+ * The PREVIEW build (`EXPO_PUBLIC_ENV=preview`, what Render serves for the owner's review; a production build is refused
+ * until the auth HTTP client exists): like production it registers the service worker, and it offers the labelled dev account,
+ * which is how these specs get in. A fresh install starts at the intro, then Continue.
  */
 const SW_FILE = join(__dirname, '../dist-pwa/sw.js')
 
+/** Signs in through the real Continue screen (the preview build has no test hooks), then opens Settings. */
 async function controlled(page: Page) {
+  await page.goto('/')
+  await page.getByTestId('welcome-skip').click()
+  await page.getByTestId('continue-dev-account').click()
+  await expect(page.getByTestId('screen-people')).toBeVisible({timeout: 20_000})
   await page.goto('/settings')
-  await expect(page.getByTestId('welcome')).toBeVisible()
+  await expect(page.getByTestId('screen-settings')).toBeVisible()
   // The worker installs, activates and claims this page.
   await page.waitForFunction(() => !!navigator.serviceWorker.controller)
 }
@@ -34,13 +40,11 @@ test('opens offline, refreshing a deep route included', async ({page, context}) 
   await controlled(page)
   await context.setOffline(true)
   await page.reload()
-  await expect(page.getByTestId('welcome')).toBeVisible()
+  await expect(page.getByTestId('screen-settings')).toBeVisible()
   await page.goto('/settings/about')
-  await expect(page.getByTestId('welcome')).toBeVisible()
-  await page.getByTestId('welcome-skip').click()
-  await expect(page.getByTestId('continue-form')).toBeVisible()
+  await expect(page.getByTestId('screen-settings-section')).toBeVisible()
   await page.goto('/')
-  await expect(page.getByTestId('continue-form')).toBeVisible()
+  await expect(page.getByTestId('screen-people')).toBeVisible()
   await context.setOffline(false)
 })
 
@@ -60,8 +64,7 @@ test('API routes never reach a cache', async ({page}) => {
   expect(outcome).toBe('failed')
 })
 
-/* The update toast is `PwaHost`'s, which lives in the signed-in app (it reads the install-hint preference). A production build has no dev sign-in, so this runs by hand once the auth API exists (docs/RELEASE_CHECKLIST.md). */
-test.skip('a new version shows the toast and Reload switches to it', async ({page}) => {
+test('a new version shows the toast and Reload switches to it', async ({page}) => {
   await controlled(page)
   const original = readFileSync(SW_FILE, 'utf8')
   try {
@@ -93,15 +96,13 @@ test('the manifest is standalone with the Dim background and brand icons', async
   expect(manifest.icons.length).toBeGreaterThanOrEqual(3)
 })
 
-test('production has no dev sign-in: no dev account, and Continue says sign-in arrives with sync', async ({page}) => {
+test('the preview build says so on Continue, is not indexed, and has the labelled dev account', async ({page}) => {
   await page.goto('/')
   await page.getByTestId('welcome-skip').click()
-  await expect(page.getByTestId('continue-form')).toBeVisible()
-  await expect(page.getByTestId('continue-dev-account')).toHaveCount(0)
-  await expect(page.getByTestId('dev-banner')).toHaveCount(0)
-  await page.getByTestId('continue-input').fill('dev@splito.test')
-  await page.getByTestId('continue-next').click()
-  await expect(page.getByTestId('continue-error')).toContainText('arrives with sync')
-  expect(await page.evaluate(() => (window as unknown as {__splitoTest?: unknown}).__splitoTest)).toBeUndefined()
+  await expect(page.getByTestId('preview-note')).toContainText("Preview build: local dev account, data stays in this browser, don't use a real password")
+  await expect(page.getByTestId('continue-dev-account')).toContainText('Continue with a dev account')
+  await expect(page.locator('meta[name="robots"]')).toHaveAttribute('content', 'noindex')
+  // No test hooks, and no database before sign-in.
+  expect(await page.evaluate(() => Object.keys((window as unknown as {__splitoTest?: object}).__splitoTest ?? {}).filter(k => ['signIn', 'signOut', 'seedAccount', 'seedLegacy', 'demoMode', 'openLink'].includes(k)))).toEqual([])
   expect(await page.evaluate(async () => (await indexedDB.databases()).length)).toBe(0)
 })

@@ -32,9 +32,38 @@ test.describe('signed out, nothing of the app exists', () => {
     expect(await databases(page)).toEqual([])
   })
 
-  test('/join/<token> and other unknown addresses also stop at Continue', async ({page}) => {
-    await toContinue(page, '/join/abc123def456')
+  test('/join/<token> stays public and leads to sign-in; a near-miss does not', async ({page}) => {
+    await page.goto('/join/abc123def456')
+    await expect(page.getByTestId('public-join')).toBeVisible()
+    await expect(page).toHaveURL(/\/join\/abc123def456$/)
     expect(await databases(page)).toEqual([])
+    await expect(page.getByTestId('screen-people')).toHaveCount(0)
+    await page.getByTestId('public-continue').click()
+    await expect(page.getByTestId('continue-form')).toBeVisible()
+    await page.goto('/join/abc')
+    await expect(page.getByTestId('public-join')).toHaveCount(0)
+    await expect(page.getByTestId('welcome').or(page.getByTestId('continue-form'))).toBeVisible()
+  })
+
+  test('the help and legal pages are reachable signed out, from Continue and by address, and open no database', async ({page}) => {
+    await toContinue(page)
+    for (const page_ of ['help', 'privacy', 'about'] as const) {
+      await page.getByTestId(`public-link-${page_}`).click()
+      await expect(page.getByTestId(`public-${page_}`)).toBeVisible()
+      await expect(page).toHaveURL(new RegExp(`/settings/${page_}$`))
+      // The signed-in extras are not here: no intro link (there is no navigator to open it in).
+      await expect(page.getByTestId('help-see-intro')).toHaveCount(0)
+      await page.getByTestId('public-back').click()
+      await expect(page.getByTestId('continue-form')).toBeVisible()
+    }
+    await page.goto('/settings/privacy')
+    await expect(page.getByTestId('public-privacy')).toBeVisible()
+    await expect(page.getByTestId('screen-settings-section')).toHaveCount(0)
+    expect(await databases(page)).toEqual([])
+    // Nothing is held for later: signing in lands on Home, not on Privacy.
+    await page.getByTestId('public-back').click()
+    await page.getByTestId('continue-dev-account').click()
+    await signedInShown(page)
   })
 })
 
@@ -309,7 +338,8 @@ test.describe('log out and one database per account', () => {
     await page.goto('/settings')
     await page.getByTestId('settings-log-out').click()
     await expect(page.getByRole('dialog').filter({hasText: 'Log out?'})).toContainText('Log out?')
-    await expect(page.getByRole('dialog').filter({hasText: 'Log out?'})).toContainText('changes haven’t synced yet')
+    await expect(page.getByRole('dialog').filter({hasText: 'Log out?'})).toContainText('haven’t synced yet')
+    await expect(page.getByTestId('logout-erase')).toBeEnabled()
     await page.getByTestId('logout-keep').click()
     await expect(page.getByTestId('continue-form')).toBeVisible()
     await expect(page.getByTestId('screen-settings')).toHaveCount(0)
@@ -351,11 +381,14 @@ test.describe('log out and one database per account', () => {
     await page.waitForFunction(() => 'splito' in window)
     await page.evaluate(() => (window as unknown as {splito: {createPerson(n: string): Promise<string>}}).splito.createPerson('Only Dev'))
     await expect(page.getByText('Only Dev')).toBeVisible()
+    const devMe = await page.evaluate(() => (window as unknown as {splito: {me: string}}).splito.me)
     await logOutFromSettings(page, 'keep')
 
     await createAccount(page, NEW)
     await signedInShown(page)
     await page.waitForFunction(() => 'splito' in window)
+    // Each account is its own "me".
+    expect(await page.evaluate(() => (window as unknown as {splito: {me: string}}).splito.me)).not.toBe(devMe)
     await expect(page.getByText('Only Dev')).toHaveCount(0)
     await page.evaluate(() => (window as unknown as {splito: {createPerson(n: string): Promise<string>}}).splito.createPerson('Only Riya'))
     await expect(page.getByText('Only Riya')).toBeVisible()
@@ -388,19 +421,34 @@ test.describe('data from before accounts', () => {
     await expect(page.getByRole('dialog').filter({hasText: 'Move this device’s data into your account?'})).toHaveCount(0)
   })
 
-  test('"Not now" leaves the old database alone and the offer is not made again', async ({page}) => {
+  test('an offer left open is made again at the next launch; Not now settles it, and Settings keeps a row while the old data exists', async ({page}) => {
+    const offer = page.getByRole('dialog').filter({hasText: 'Move this device’s data into your account?'})
     await toContinue(page)
     await page.waitForFunction(() => !!(window as unknown as {__splitoTest?: {seedLegacy?: unknown}}).__splitoTest?.seedLegacy)
     await page.evaluate(() => (window as unknown as {__splitoTest: {seedLegacy(n: string[]): Promise<void>}}).__splitoTest.seedLegacy(['Old Friend']))
     await page.getByTestId('continue-dev-account').click()
     await signedInShown(page)
-    await expect(page.getByRole('dialog').filter({hasText: 'Move this device’s data into your account?'})).toBeVisible()
-    await page.getByRole('button', {name: 'Not now'}).click()
-    await expect(page.getByText('Old Friend')).toHaveCount(0)
+    await expect(offer).toBeVisible()
+    // Not answered (the page went away with it open): asked again.
     await page.reload()
     await signedInShown(page)
-    await expect(page.getByRole('dialog').filter({hasText: 'Move this device’s data into your account?'})).toHaveCount(0)
+    await expect(offer).toBeVisible()
+    await page.getByRole('button', {name: 'Not now'}).click()
+    await expect(page.getByText('Old Friend')).toHaveCount(0)
+    // Answered: not offered by itself any more, and the old database is untouched.
+    await page.reload()
+    await signedInShown(page)
+    await expect(offer).toHaveCount(0)
     expect(await databases(page)).toContain('splito')
+    // Settings > Data still offers it while the old database exists, and Move then removes the row.
+    await page.goto('/settings')
+    await page.getByTestId('settings-move-legacy').click()
+    await expect(offer).toBeVisible()
+    await page.getByTestId('legacy-move').click()
+    await expect.poll(() => databases(page)).not.toContain('splito')
+    await expect(page.getByTestId('settings-move-legacy')).toHaveCount(0)
+    await page.goto('/')
+    await expect(page.getByText('Old Friend')).toBeVisible({timeout: 15_000})
   })
 
   test('no offer when the device has no old data', async ({page}) => {
@@ -408,5 +456,55 @@ test.describe('data from before accounts', () => {
     await page.getByTestId('continue-dev-account').click()
     await signedInShown(page)
     await expect(page.getByRole('dialog').filter({hasText: 'Move this device’s data into your account?'})).toHaveCount(0)
+  })
+})
+
+test.describe('tabs, languages and codes', () => {
+  test('another tab signing out signs this one out too (the session key is watched)', async ({page, context}) => {
+    await toContinue(page)
+    await page.getByTestId('continue-dev-account').click()
+    await signedInShown(page)
+    const other = await context.newPage()
+    await other.goto('/')
+    await expect(other.getByTestId('screen-people')).toBeVisible({timeout: 20_000})
+    await other.evaluate(() => (window as unknown as {__splitoTest: {signOut(): void}}).__splitoTest.signOut())
+    await expect(page.getByTestId('continue-form')).toBeVisible({timeout: 10_000})
+    await expect(page.getByTestId('screen-people')).toHaveCount(0)
+  })
+
+  test('the language in use stays after log out, and on the next cold start', async ({page}) => {
+    await toContinue(page)
+    await page.getByTestId('continue-dev-account').click()
+    await signedInShown(page)
+    await page.waitForFunction(() => 'splito' in window)
+    await page.evaluate(() => (window as unknown as {splito: {setPref(k: string, v: unknown): Promise<void>}}).splito.setPref('language', 'hi'))
+    await expect(page.locator('html')).toHaveAttribute('lang', 'hi')
+    await logOutFromSettings(page, 'keep')
+    await expect(page.locator('html')).toHaveAttribute('lang', 'hi')
+    await page.reload()
+    await expect(page.locator('html')).toHaveAttribute('lang', 'hi')
+    await expect(page.getByTestId('continue-form')).toBeVisible()
+  })
+
+  test('a pasted code keeps only its digits', async ({page}) => {
+    await toContinue(page)
+    await continueWith(page, 'paste@example.com')
+    await expect(page.getByTestId('code-form')).toBeVisible()
+    const code = await devCode(page)
+    await page.getByTestId('code-input').fill(`Your code: ${code.slice(0, 3)} ${code.slice(3)}!`)
+    await expect(page.getByTestId('code-input')).toHaveValue(code)
+    await page.getByTestId('code-next').click()
+    await expect(page.getByTestId('name-form')).toBeVisible()
+  })
+
+  test('a code of an older request is refused once a new one is sent', async ({page}) => {
+    await toContinue(page)
+    await continueWith(page, 'again@example.com')
+    const first = await devCode(page)
+    await page.getByTestId('code-resend').click()
+    await expect.poll(async () => (await page.getByTestId('dev-code').textContent()) !== first, {timeout: 5000}).toBe(true)
+    await page.getByTestId('code-input').fill(first)
+    await page.getByTestId('code-next').click()
+    await expect(page.getByTestId('code-error')).toBeVisible()
   })
 })

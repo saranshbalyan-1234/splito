@@ -11,6 +11,7 @@ import {Button, ButtonText} from '#/components/Button'
 import * as TextField from '#/components/forms/TextField'
 import {Key_Stroke2_Corner0_Rounded as KeyIcon} from '#/components/icons/Auth'
 import {Text} from '#/components/Typography'
+import {onlyDigits} from './digits'
 import {FormActions} from './FormActions'
 import {FormContainer} from './FormContainer'
 import {useAuthErrorText} from './messages'
@@ -32,7 +33,8 @@ export function CodeForm({
   purpose: CodePurpose
   title: React.ReactNode
   hint?: React.ReactNode
-  onVerified: (code: string) => void | Promise<void>
+  /** The short-lived token proving the code (`AuthClient.verifyCode`); the account call takes it. */
+  onVerified: (token: string) => void | Promise<void>
   onBack?: () => void
 }) {
   const t = useTheme()
@@ -69,8 +71,8 @@ export function CodeForm({
     if (!isSignInCode(code)) return setError(l`Enter the 6-digit code.`)
     setBusy(true)
     try {
-      await (await getAuthClient()).verifyCode(contact, code, purpose)
-      await onVerified(code.trim())
+      const {token} = await (await getAuthClient()).verifyCode(contact, code, purpose)
+      await onVerified(token)
     } catch (e) {
       fail(e)
     } finally {
@@ -98,10 +100,9 @@ export function CodeForm({
             textContentType="oneTimeCode"
             inputMode="numeric"
             keyboardType="number-pad"
-            maxLength={6}
             value={code}
             onChangeText={v => {
-              setCode(v)
+              setCode(onlyDigits(v))
               if (error) setError('')
             }}
             onSubmitEditing={submit}

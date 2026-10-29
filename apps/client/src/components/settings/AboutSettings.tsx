@@ -85,18 +85,22 @@ function Topic({
 }
 
 /** The sidebar footer's and drawer's Help page. */
-export function HelpSettings() {
+export function HelpSettings({isIntroLinked = true}: {isIntroLinked?: boolean}) {
   const {t: l} = useLingui()
   return (
     <>
-      {/* The intro slides again (F-249); the address is /welcome/1. */}
-      <SettingsList.LinkItem testID="help-see-intro" to="/welcome/1" label={l`See the intro`}>
-        <SettingsList.ItemIcon icon={InfoIcon} />
-        <SettingsList.ItemText>
-          <Trans>See the intro</Trans>
-        </SettingsList.ItemText>
-      </SettingsList.LinkItem>
-      <SettingsList.Divider />
+      {/* The intro slides again (F-249); the address is /welcome/1. Signed out there is no navigator to link inside, and the intro is already the way in. */}
+      {isIntroLinked && (
+        <>
+          <SettingsList.LinkItem testID="help-see-intro" to="/welcome/1" label={l`See the intro`}>
+            <SettingsList.ItemIcon icon={InfoIcon} />
+            <SettingsList.ItemText>
+              <Trans>See the intro</Trans>
+            </SettingsList.ItemText>
+          </SettingsList.LinkItem>
+          <SettingsList.Divider />
+        </>
+      )}
       <Topic icon={CirclePlusIcon} title={<Trans>Add an expense</Trans>}>
         <Trans>
           Use Add expense in the sidebar, or the + button on phones. Choose who

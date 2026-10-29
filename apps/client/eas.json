@@ -1,7 +1,7 @@
 {
   "cli": {"appVersionSource": "remote"},
   "build": {
-    "dev": {"distribution": "internal", "developmentClient": true, "env": {"EXPO_PUBLIC_TIER": "dev"}},
+    "dev": {"distribution": "internal", "developmentClient": true, "env": {"EXPO_PUBLIC_TIER": "dev", "EXPO_PUBLIC_ENV": "development"}},
     "stage": {"distribution": "internal", "env": {"EXPO_PUBLIC_TIER": "stage"}},
     "prod": {"autoIncrement": true, "env": {"EXPO_PUBLIC_TIER": "prod"}}
   }

@@ -4,16 +4,20 @@ import {useSafeAreaInsets} from 'react-native-safe-area-context'
 import {BottomSheetOutlet, BottomSheetProvider} from '@bsky.app/bottom-sheet'
 
 import {activateLanguage} from '#/locale/i18n'
+import {takeInitialUrlOnce} from '#/lib/links/incoming'
 import {holdSignedOutLink} from '#/lib/links/intent'
+import {type PublicPage as Page, publicPageFor, publicPath} from '#/lib/links/public'
 import {device} from '#/storage'
 import {Outlet as PortalOutlet} from '#/components/Portal'
+import {ToastOutlet} from '#/components/Toast'
 import {Login} from '#/screens/Login'
 import {SLIDE_COUNT, slideFrom, Welcome} from '#/screens/Welcome'
 import {atoms as a, useBreakpoints, useTheme} from '#/alf'
 import {IS_WEB} from '#/env'
+import {PublicPage} from './PublicPage'
 
 /* A lazy chunk behind the folded dev check: a production bundle holds none of the dev banner. */
-const DevBanner = __DEV__ || process.env.EXPO_PUBLIC_ENV === 'e2e' ? lazy(() => import('./DevBanner').then(m => ({default: m.DevBanner}))) : null
+const DevBanner = __DEV__ || process.env.EXPO_PUBLIC_ENV === 'e2e' || process.env.EXPO_PUBLIC_ENV === 'preview' ? lazy(() => import('./DevBanner').then(m => ({default: m.DevBanner}))) : null
 
 /**
  * What a signed-out device (or one blocked on a missing contact) shows instead of the app (ARCHITECTURE 26.15): the same
@@ -34,11 +38,12 @@ export function LoggedOutShell({children}: {children: React.ReactNode}) {
       </View>
       <BottomSheetOutlet />
       <PortalOutlet />
+      <ToastOutlet />
     </BottomSheetProvider>
   )
 }
 
-type Screen = {kind: 'welcome'; slide: number; previous: number} | {kind: 'continue'}
+type Screen = {kind: 'welcome'; slide: number; previous: number} | {kind: 'page'; page: Page} | {kind: 'continue'}
 
 /** Web: `/welcome/3` names a slide. */
 function welcomeSlideFromAddress() {
@@ -46,16 +51,21 @@ function welcomeSlideFromAddress() {
   return m ? slideFrom(m[1]) : null
 }
 
+/** Web: the public page the address names (`/settings/help`, `/join/<token>`), if any. */
+const publicPageFromAddress = () => (IS_WEB ? publicPageFor(window.location.pathname) : null)
+
 function initialView(): Screen {
   const fromUrl = welcomeSlideFromAddress()
   if (fromUrl !== null) return {kind: 'welcome', slide: fromUrl, previous: fromUrl}
+  const page = publicPageFromAddress()
+  if (page) return {kind: 'page', page}
   return device.get(['tourSeen']) ? {kind: 'continue'} : {kind: 'welcome', slide: 0, previous: 0}
 }
 
 /**
- * Signed out: the intro slides the first time (and at `/welcome/N`), then the Continue screen, for every address. A
- * link to something inside the app is held here (`holdSignedOutLink`) and opened after sign-in; the address bar shows
- * the slide on web.
+ * Signed out: the intro slides the first time (and at `/welcome/N`), then the Continue screen, for every address except
+ * the public ones (Help, Privacy, About, `/join/<token>`). A link to something inside the app is held here
+ * (`holdSignedOutLink`) and opened after sign-in; the address bar shows the slide or page on web.
  */
 export function LoggedOutApp() {
   const [view, setView] = useState<Screen>(initialView)
@@ -63,7 +73,7 @@ export function LoggedOutApp() {
   const t = useTheme()
 
   useLayoutEffect(() => {
-    const chosen = device.get(['language'])
+    const chosen = device.get(['deviceLanguage'])
     if (chosen) activateLanguage(chosen)
   }, [])
 
@@ -73,9 +83,14 @@ export function LoggedOutApp() {
       if (welcomeSlideFromAddress() === null) holdSignedOutLink(window.location.pathname + window.location.search)
       return
     }
-    void Linking.getInitialURL().then(url => url && holdSignedOutLink(url))
+    /* The launch URL is read once per process, and only `url` events after it: a log out and in never replays a handled link. */
+    let isCurrent = true
+    void takeInitialUrlOnce().then(url => isCurrent && url && holdSignedOutLink(url))
     const sub = Linking.addEventListener('url', ({url}) => holdSignedOutLink(url))
-    return () => sub.remove()
+    return () => {
+      isCurrent = false
+      sub.remove()
+    }
   }, [])
 
   /* The first visit to any other address shows slide 1 at its own: /welcome/1 (the link itself was held above). */
@@ -84,12 +99,13 @@ export function LoggedOutApp() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  /* Web: the address follows the slide, and Back/Forward move between slides. */
+  /* Web: the address follows the slide or page, and Back/Forward move between them. */
   useEffect(() => {
     if (!IS_WEB) return
     const onPop = () => {
       const slide = welcomeSlideFromAddress()
-      setView(v => (slide === null ? {kind: 'continue'} : {kind: 'welcome', slide, previous: v.kind === 'welcome' ? v.slide : slide}))
+      const page = publicPageFromAddress()
+      setView(v => (slide !== null ? {kind: 'welcome', slide, previous: v.kind === 'welcome' ? v.slide : slide} : page ? {kind: 'page', page} : {kind: 'continue'}))
     }
     window.addEventListener('popstate', onPop)
     return () => window.removeEventListener('popstate', onPop)
@@ -100,10 +116,19 @@ export function LoggedOutApp() {
     setView(v => ({kind: 'welcome', slide, previous: v.kind === 'welcome' ? v.slide : slide}))
   }
 
-  const finishIntro = () => {
-    device.set(['tourSeen'], true)
+  const showContinue = () => {
     if (IS_WEB) window.history.replaceState({}, '', '/')
     setView({kind: 'continue'})
+  }
+
+  const finishIntro = () => {
+    device.set(['tourSeen'], true)
+    showContinue()
+  }
+
+  const showPage = (page: Exclude<Page, 'join'>) => {
+    if (IS_WEB) window.history.pushState({}, '', publicPath(page))
+    setView({kind: 'page', page})
   }
 
   return (
@@ -112,8 +137,10 @@ export function LoggedOutApp() {
         <View testID="welcome-ground" style={[a.flex_1, gtMobile && {backgroundColor: t.palette.contrast_100}]}>
           <Welcome slide={Math.min(view.slide, SLIDE_COUNT - 1)} previous={view.previous} onSlide={showSlide} onDone={finishIntro} isLanguageFromDevice />
         </View>
+      ) : view.kind === 'page' ? (
+        <PublicPage page={view.page} onBack={showContinue} onContinue={showContinue} />
       ) : (
-        <Login />
+        <Login onPublicPage={showPage} />
       )}
     </LoggedOutShell>
   )

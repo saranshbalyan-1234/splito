@@ -8,6 +8,7 @@ export type AuthErrorCode =
   | 'offline' // sign-in needs a connection
   | 'bad-password'
   | 'bad-code'
+  | 'bad-token' // a verification token is unknown, used or expired
   | 'no-account'
   | 'taken' // the contact belongs to another account
 
@@ -24,7 +25,11 @@ export type Lookup = {exists: boolean; hasPassword: boolean}
 /** Why a code is asked for. The server words its message and rate-limits per purpose. */
 export type CodePurpose = 'signin' | 'signup' | 'reset' | 'add-contact'
 
-export type NewAccount = {name: string; email: string; phone: string; password: string}
+/** A short-lived proof that someone entered the right code for a contact (`verifyCode`); the account calls take it, never the code again. */
+export type VerifiedContact = {token: string}
+
+/** Both contacts arrive with the token `verifyCode` gave for each (owner 139): the server checks the tokens, never trusts the client's word. */
+export type NewAccount = {name: string; password: string; email: string; emailToken: string; phone: string; phoneToken: string}
 
 /**
  * Everything the Continue flow needs from an auth backend (owners 125, 138-144). The real HTTP client arrives with
@@ -34,13 +39,13 @@ export type NewAccount = {name: string; email: string; phone: string; password: 
 export interface AuthClient {
   lookup(contact: Contact): Promise<Lookup>
   sendCode(contact: Contact, purpose: CodePurpose): Promise<void>
-  /** Checks a code without using it up (the new-account steps verify before the account exists). */
-  verifyCode(contact: Contact, code: string, purpose: CodePurpose): Promise<void>
+  /** Checks a code and answers a short-lived token for the contact (the new-account and add-contact steps verify before the account call). */
+  verifyCode(contact: Contact, code: string, purpose: CodePurpose): Promise<VerifiedContact>
   signInWithPassword(contact: Contact, password: string): Promise<SessionAccount>
   signInWithCode(contact: Contact, code: string): Promise<SessionAccount>
-  /** Both contacts were verified with `verifyCode` first. */
+  /** Both contacts were verified with `verifyCode` first; their tokens come with the call. */
   createAccount(account: NewAccount): Promise<SessionAccount>
   resetPassword(contact: Contact, code: string, password: string): Promise<void>
-  /** Adds the missing email or phone to the signed-in account once its code is right. */
-  addContact(account: SessionAccount, contact: Contact, code: string): Promise<SessionAccount>
+  /** Adds the missing email or phone to the signed-in account, with the token `verifyCode` gave for it. */
+  addContact(account: SessionAccount, contact: Contact, token: string): Promise<SessionAccount>
 }

@@ -1,4 +1,4 @@
-# Render Blueprint: the web app, the API and its Postgres. Deploys come from .github/workflows/deploy-render.yml
+# Render Blueprint: the web app (a PREVIEW build for the owner's review: the labelled dev account, noindex; a production build is refused until the auth HTTP client exists, apps/client/auth-config.js), the API and its Postgres. Deploys come from .github/workflows/deploy-render.yml
 # (deploy hooks, after the checks pass), so Render's own auto-deploy is off.
 services:
   - type: web
@@ -8,7 +8,7 @@ services:
     buildCommand: >-
       npm install -g pnpm@11.28.5 &&
       pnpm install --frozen-lockfile &&
-      EXPO_PUBLIC_ENV=production pnpm --filter @splito/client build-web
+      EXPO_PUBLIC_ENV=preview pnpm --filter @splito/client build-web
     staticPublishPath: ./apps/client/dist
     routes:
       - type: rewrite

@@ -17,7 +17,9 @@ export const databases = (page: Page) => page.evaluate(async () => (await indexe
 /** Signed-out specs: past the intro, on the Continue screen (the intro has its own spec). */
 export async function toContinue(page: Page, path = '/') {
   await page.goto(path)
-  if (await page.getByTestId('welcome-skip').isVisible({timeout: 3000}).catch(() => false)) await page.getByTestId('welcome-skip').click()
+  /* Either the intro (a fresh install) or the Continue screen: wait for whichever comes, then get past the intro. */
+  await expect(page.getByTestId('welcome-skip').or(page.getByTestId('continue-form'))).toBeVisible()
+  if (await page.getByTestId('welcome-skip').isVisible()) await page.getByTestId('welcome-skip').click()
   await expect(page.getByTestId('continue-form')).toBeVisible()
 }
 

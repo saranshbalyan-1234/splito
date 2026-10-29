@@ -27,10 +27,13 @@ export function ContinueForm({
   initialValue,
   onContinue,
   onDevAccount,
+  onPublicPage,
 }: {
   initialValue: string
   onContinue: (contact: Contact, lookup: Lookup) => void
   onDevAccount: () => void
+  /** The pages a signed-out device may open (Help, Privacy, About). */
+  onPublicPage: (page: 'help' | 'privacy' | 'about') => void
 }) {
   const t = useTheme()
   const {t: l} = useLingui()
@@ -87,8 +90,16 @@ export function ContinueForm({
       )}
       <FormActions testID="continue" isBusy={isBusy} onNext={submit} />
 
+      {process.env.EXPO_PUBLIC_ENV === 'preview' && (
+        <View testID="preview-note" role="note">
+          <Admonition type="warning">
+            <Trans>Preview build: local dev account, data stays in this browser, don't use a real password.</Trans>
+          </Admonition>
+        </View>
+      )}
+
       {/* Inline so a production bundle folds it away (a const from another module would not fold). */}
-      {(__DEV__ || process.env.EXPO_PUBLIC_ENV === 'e2e') && (
+      {(__DEV__ || process.env.EXPO_PUBLIC_ENV === 'e2e' || process.env.EXPO_PUBLIC_ENV === 'preview') && (
         <View style={[a.gap_xs, a.pt_md, a.align_center]}>
           <Button testID="continue-dev-account" label={l`Continue with a dev account`} size="small" variant="outline" color="secondary" onPress={onDevAccount}>
             <ButtonText>
@@ -100,6 +111,13 @@ export function ContinueForm({
           </Text>
         </View>
       )}
+      <View style={[a.flex_row, a.justify_center, a.flex_wrap, a.gap_xs, a.pt_sm]}>
+        {(['help', 'privacy', 'about'] as const).map(page => (
+          <Button key={page} testID={`public-link-${page}`} label={{help: l`Help`, privacy: l`Privacy`, about: l`About`}[page]} size="small" variant="ghost" color="secondary" onPress={() => onPublicPage(page)}>
+            <ButtonText style={[t.atoms.text_contrast_medium]}>{{help: <Trans>Help</Trans>, privacy: <Trans>Privacy</Trans>, about: <Trans>About</Trans>}[page]}</ButtonText>
+          </Button>
+        ))}
+      </View>
     </View>
   )
 }

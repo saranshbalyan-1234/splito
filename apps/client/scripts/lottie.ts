@@ -1025,6 +1025,189 @@ function emptyAnalytics(c: Palette) {
   ])
 }
 
+/* Shapes inside one layer draw first-on-top: a background (paper, bubble, body) is listed last. */
+/* ---------- the intro slides (F-249): one loop each, 3 s, state at the last frame equals the first ---------- */
+
+const LOOP = 180
+/** Scale key list: absent until `t`, a pop in, held, then back out before the loop ends. */
+const popKeys = (t: number): Key[] => [
+  [0, [0, 0]],
+  [t, [0, 0], EASE.back],
+  [t + 16, [100, 100]],
+  [LOOP - 26, [100, 100], EASE.in],
+  [LOOP - 8, [0, 0]],
+  [LOOP, [0, 0]],
+]
+/** Scale x from the left edge (the rect's anchor), the same shape. */
+const drawKeys = (t: number, to = 100): Key[] => [
+  [0, [0, 100]],
+  [t, [0, 100], EASE.out],
+  [t + 24, [to, 100]],
+  [LOOP - 26, [to, 100], EASE.in],
+  [LOOP - 8, [0, 100]],
+  [LOOP, [0, 100]],
+]
+/** Scale y from the bottom edge. */
+const growKeys = (t: number): Key[] => [
+  [0, [100, 0]],
+  [t, [100, 0], EASE.out],
+  [t + 26, [100, 100]],
+  [LOOP - 26, [100, 100], EASE.in],
+  [LOOP - 8, [100, 0]],
+  [LOOP, [100, 0]],
+]
+
+/** Three friends and one bill: a coin drops, the bar splits into three shares, each friend nods in turn. */
+function welcomeSplit(c: Palette) {
+  const xs = [C - 62, C, C + 62]
+  const cols = [c.ink, c.t(0.54), c.t(0.34)]
+  const BAR_Y = C + 54
+  const nod = (t: number): Key[] => [
+    [0, [100, 100]],
+    [t, [100, 100], EASE.out],
+    [t + 8, [104, 94], EASE.out],
+    [t + 24, [100, 100]],
+    [LOOP, [100, 100]],
+  ]
+  return animation('welcome-split', LOOP, [
+    backdrop(c),
+    ...xs.map((x, i) => ({
+      nm: `friend-${i}`,
+      shapes: [group('person', person(cols[i]!, 0.8), {p: st([x, C + 14]), a: st([0, 32]), s: kf(nod(40 + i * 22))})],
+      p: st([0, 0, 0]),
+    })),
+    {
+      nm: 'shares',
+      shapes: xs.map((x, i) => group('share', [rect(52, 12, 6), fill(cols[i]!)], {p: st([x, BAR_Y]), a: st([0, 6]), s: kf(popKeys(52 + i * 12))})),
+      p: st([0, 0, 0]),
+    },
+    {
+      nm: 'coin',
+      shapes: [group('coin', [ellipse(22), fill(c.t(0.34)), stroke(c.ink, 3)], {p: kf([[0, [C, C - 92]], [28, [C, C - 92], EASE.in], [52, [C, BAR_Y - 14]], [LOOP, [C, BAR_Y - 14]]])})],
+      p: st([0, 0, 0]),
+      o: kf([[0, 100], [50, 100], [54, 0], [LOOP, 0]], false),
+    },
+  ])
+}
+
+/** A receipt: line items write themselves in, each gets its tax chip, then the total. */
+function welcomeBills(c: Palette) {
+  const widths = [46, 58, 38]
+  return animation('welcome-bills', LOOP, [
+    backdrop(c),
+    {
+      nm: 'receipt',
+      shapes: [
+        ...widths.map((w, i) => group('line', [rect(w, 7, 3.5), fill(c.t(0.34))], {p: st([C - 40, C - 34 + i * 24]), a: st([-w / 2, 0]), s: kf(drawKeys(14 + i * 14))})),
+        ...widths.map((_, i) => group('chip', [rect(26, 12, 6), fill(i === 1 ? c.ink : c.t(0.54))], {p: st([C + 30, C - 34 + i * 24]), s: kf(popKeys(34 + i * 14))})),
+        group('rule', [rect(84, 2.5, 1.25), fill(c.t(0.34))], {p: st([C - 42, C + 32]), a: st([-42, 0]), s: kf(drawKeys(70))}),
+        group('total', [rect(74, 13, 6.5), fill(c.ink)], {p: st([C - 37, C + 48]), a: st([-37, 0]), s: kf(drawKeys(84))}),
+        group('paper', [rect(108, 136, 12), fill(c.paper), stroke(c.ink, 4)], {p: st([C, C])}),
+      ],
+      p: st([0, 0, 0]),
+    },
+  ])
+}
+
+/** Settling up in fewest payments: one arrow draws from one friend to another, the third is settled with a check. */
+function welcomeSettle(c: Palette) {
+  const A = [C - 58, C - 30]
+  const B = [C + 58, C - 30]
+  const K = [C, C + 54]
+  const dashed = (p: number[][]) => group('old', [pathShape(polyline(p)), stroke(c.ink, 3, st(30), [2, 8])])
+  return animation('welcome-settle', LOOP, [
+    backdrop(c),
+    {
+      nm: 'tangle',
+      shapes: [dashed([[A[0]! + 10, A[1]! + 14], [K[0]! - 12, K[1]! - 12]]), dashed([[B[0]! - 10, B[1]! + 14], [K[0]! + 12, K[1]! - 12]])],
+      p: st([0, 0, 0]),
+      o: kf([[0, 100], [60, 100], [90, 0], [LOOP - 26, 0], [LOOP - 8, 100], [LOOP, 100]], false),
+    },
+    {
+      nm: 'people',
+      shapes: [
+        group('a', [ellipse(38), fill(c.t(0.54))], {p: st(A)}),
+        group('b', [ellipse(38), fill(c.t(0.34))], {p: st(B)}),
+        group('k', [ellipse(38), fill(c.ink)], {p: st(K)}),
+      ],
+      p: st([0, 0, 0]),
+    },
+    {
+      nm: 'payment',
+      shapes: [
+        group('line', [pathShape(polyline([[A[0]! + 24, A[1]!], [B[0]! - 26, B[1]!]])), stroke(c.ink, 5), trim(kf([[0, 0], [40, 0, EASE.out], [78, 100], [LOOP - 26, 100, EASE.in], [LOOP - 8, 0], [LOOP, 0]]))]),
+        group('head', [pathShape(polyline([[B[0]! - 38, B[1]! - 10], [B[0]! - 26, B[1]!], [B[0]! - 38, B[1]! + 10]])), stroke(c.ink, 5)]),
+      ],
+      p: st([0, 0, 0]),
+      o: kf([[0, 0], [70, 0], [78, 100], [LOOP - 26, 100], [LOOP - 8, 0], [LOOP, 0]], false),
+    },
+    {
+      nm: 'done',
+      shapes: [group('check', [pathShape(polyline([[-9, 1], [-2, 8], [10, -8]])), stroke(c.paper, 5)], {p: st(K), s: kf(popKeys(84))})],
+      p: st([0, 0, 0]),
+    },
+  ])
+}
+
+/** Search and ask: a question types itself into the bar, the answer's chart grows. */
+function welcomeAsk(c: Palette) {
+  const heights = [28, 46, 64]
+  return animation('welcome-ask', LOOP, [
+    backdrop(c),
+    {
+      nm: 'bar',
+      shapes: [
+        group('lens', [ellipse(13), stroke(c.ink, 3)], {p: st([C - 62, C - 63])}),
+        group('handle', [pathShape(polyline([[C - 55, C - 56], [C - 50, C - 51]])), stroke(c.ink, 3)]),
+        group('typing', [rect(76, 6, 3), fill(c.t(0.34))], {p: st([C - 40, C - 62]), a: st([-38, 0]), s: kf(drawKeys(8))}),
+        group('field', [rect(164, 34, 17), fill(c.paper), stroke(c.t(0.34), 3)], {p: st([C, C - 62])}),
+      ],
+      p: st([0, 0, 0]),
+    },
+    {
+      nm: 'answer',
+      shapes: [
+        ...heights.map((h, i) => group('column', [rect(18, h, 4), fill(i === 2 ? c.ink : i === 1 ? c.t(0.54) : c.t(0.34))], {p: st([C - 28 + i * 28, C + 62]), a: st([0, h / 2]), s: kf(growKeys(60 + i * 14))})),
+        group('bubble', [rect(164, 92, 14), fill(c.paper), stroke(c.t(0.34), 3)], {p: st([C, C + 30]), s: kf(popKeys(34))}),
+      ],
+      p: st([0, 0, 0]),
+    },
+  ])
+}
+
+/** Yours, offline: a phone that holds it all; the connection is struck out. */
+function welcomeOffline(c: Palette) {
+  const WX = C + 50
+  const WY = C - 38
+  /* A quarter of a circle round the dot, turned to point up: the circle's own centre is the anchor. */
+  const arc = (r: number, t: number) =>
+    group('arc', [pathShape(circlePath(r)), stroke(c.t(0.54), 4, kf([[0, 25], [t, 25], [t + 12, 100], [t + 40, 25], [LOOP, 25]], false)), trim(st(25))], {p: st([WX, WY + 10]), a: st([C, C]), r: st(-45)})
+  return animation('welcome-offline', LOOP, [
+    backdrop(c),
+    {
+      nm: 'wifi',
+      shapes: [arc(12, 8), arc(24, 18), arc(36, 28), group('dot', [ellipse(7), fill(c.t(0.54))], {p: st([WX, WY + 10])})],
+      p: st([0, 0, 0]),
+    },
+    {
+      nm: 'strike',
+      shapes: [group('slash', [pathShape(polyline([[WX - 26, WY - 20], [WX + 26, WY + 32]])), stroke(c.ink, 5), trim(kf([[0, 0], [64, 0, EASE.out], [84, 100], [LOOP - 26, 100, EASE.in], [LOOP - 8, 0], [LOOP, 0]]))])],
+      p: st([0, 0, 0]),
+    },
+    {
+      nm: 'phone',
+      shapes: [
+        group('notch', [rect(20, 4, 2), fill(c.t(0.34))], {p: st([C - 24, C - 46])}),
+        group('tick', [pathShape(polyline([[-9, 0], [-2, 7], [10, -8]])), stroke(c.paper, 5)], {p: st([C - 24, C + 4]), s: kf(popKeys(26))}),
+        group('badge', [ellipse(40), fill(c.ink)], {p: st([C - 24, C + 4]), s: kf(popKeys(18))}),
+        group('bars', [rect(40, 6, 3), fill(c.t(0.34))], {p: st([C - 24, C + 44]), s: kf(drawKeys(36))}),
+        group('body', [rect(72, 118, 14), fill(c.paper), stroke(c.ink, 4)], {p: st([C - 24, C + 6])}),
+      ],
+      p: st([0, 0, 0]),
+    },
+  ])
+}
+
 const BUILDERS = {
   loading,
   success,
@@ -1032,6 +1215,11 @@ const BUILDERS = {
   'empty-groups': emptyGroups,
   'empty-activity': emptyActivity,
   'empty-analytics': emptyAnalytics,
+  'welcome-split': welcomeSplit,
+  'welcome-bills': welcomeBills,
+  'welcome-settle': welcomeSettle,
+  'welcome-ask': welcomeAsk,
+  'welcome-offline': welcomeOffline,
 }
 /** name -> {light, dark} Lottie JSON */
 const ANIMATIONS = Object.fromEntries(

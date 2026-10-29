@@ -29,6 +29,36 @@ export const ILLUSTRATIONS = {
     staticFrame: 100,
     isLoop: true,
   },
+  'welcome-split': {
+    source: require('../../assets/lottie/welcome-split.json'),
+    sourceDark: require('../../assets/lottie/welcome-split-dark.json'),
+    staticFrame: 120,
+    isLoop: true,
+  },
+  'welcome-bills': {
+    source: require('../../assets/lottie/welcome-bills.json'),
+    sourceDark: require('../../assets/lottie/welcome-bills-dark.json'),
+    staticFrame: 130,
+    isLoop: true,
+  },
+  'welcome-settle': {
+    source: require('../../assets/lottie/welcome-settle.json'),
+    sourceDark: require('../../assets/lottie/welcome-settle-dark.json'),
+    staticFrame: 120,
+    isLoop: true,
+  },
+  'welcome-ask': {
+    source: require('../../assets/lottie/welcome-ask.json'),
+    sourceDark: require('../../assets/lottie/welcome-ask-dark.json'),
+    staticFrame: 120,
+    isLoop: true,
+  },
+  'welcome-offline': {
+    source: require('../../assets/lottie/welcome-offline.json'),
+    sourceDark: require('../../assets/lottie/welcome-offline-dark.json'),
+    staticFrame: 120,
+    isLoop: true,
+  },
   loading: {
     source: require('../../assets/lottie/loading.json'),
     sourceDark: require('../../assets/lottie/loading-dark.json'),

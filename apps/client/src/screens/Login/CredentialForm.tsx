@@ -18,6 +18,7 @@ import * as TextField from '#/components/forms/TextField'
 import {Key_Stroke2_Corner0_Rounded as KeyIcon} from '#/components/icons/Auth'
 import {Text} from '#/components/Typography'
 import {IS_IOS} from '#/env'
+import {onlyDigits} from './digits'
 import {FormActions} from './FormActions'
 import {FormContainer} from './FormContainer'
 import {useAuthErrorText} from './messages'
@@ -171,10 +172,9 @@ export function CredentialForm({
               textContentType="oneTimeCode"
               inputMode="numeric"
               keyboardType="number-pad"
-              maxLength={6}
               value={code}
               onChangeText={v => {
-                setCode(v)
+                setCode(onlyDigits(v))
                 if (error) setError('')
               }}
               onSubmitEditing={submit}

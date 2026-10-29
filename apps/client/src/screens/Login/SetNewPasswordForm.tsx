@@ -5,12 +5,14 @@ import {Trans, useLingui} from '@lingui/react/macro'
 import {isSignInCode, MIN_PASSWORD_LENGTH} from '@splito/domain'
 
 import {AuthError} from '#/lib/auth'
+import {isPasswordLongEnough} from '#/lib/auth/password'
 import {atoms as a} from '#/alf'
 import {Admonition} from '#/components/Admonition'
 import {PasswordField} from '#/components/forms/PasswordField'
 import * as TextField from '#/components/forms/TextField'
 import {Key_Stroke2_Corner0_Rounded as KeyIcon} from '#/components/icons/Auth'
 import {Text} from '#/components/Typography'
+import {onlyDigits} from './digits'
 import {FormActions} from './FormActions'
 import {FormContainer} from './FormContainer'
 import {useAuthErrorText} from './messages'
@@ -47,7 +49,7 @@ export const SetNewPasswordForm = ({
 
   const submit = async () => {
     if (needsCode && !isSignInCode(resetCode)) return setError(l`You have entered an invalid code. It should be 6 digits.`)
-    if (password.length < MIN_PASSWORD_LENGTH) return setError(l`Your password must be at least ${MIN_PASSWORD_LENGTH} characters long.`)
+    if (!isPasswordLongEnough(password)) return setError(l`Your password must be at least ${MIN_PASSWORD_LENGTH} characters long.`)
     setError('')
     setBusy(true)
     try {
@@ -77,10 +79,9 @@ export const SetNewPasswordForm = ({
               textContentType="oneTimeCode"
               inputMode="numeric"
               keyboardType="number-pad"
-              maxLength={6}
               value={resetCode}
               onChangeText={v => {
-                setResetCode(v)
+                setResetCode(onlyDigits(v))
                 if (error) setError('')
               }}
             />

@@ -1,11 +1,13 @@
 /*
- * Production web post-step (ARCHITECTURE 26.21, F-1901): after `expo export -p web`,
+ * Web release post-step (ARCHITECTURE 26.21, F-1901): after `expo export -p web`,
  * writes <dist>/sw.js = the precache manifest + web/sw.js.
  *
  *   node scripts/pwa.ts [dist]      (default: dist)
  *
  * Every exported file is precached except the worker itself and files the app
- * never loads. Fails when the export holds any demo mode code. Hashed names (Metro's 32-hex content hash) carry their own
+ * never loads. Fails when a start-up script holds demo data (demo mode itself is a lazy chunk in every
+ * build). A preview build (`EXPO_PUBLIC_ENV=preview`, the review site) also gets `<meta name="robots" content="noindex">`
+ * in index.html before anything is hashed. Hashed names (Metro's 32-hex content hash) carry their own
  * version; the rest are versioned by a content hash. `pnpm e2e:build` and dev
  * never run this, so they never get a service worker.
  */
@@ -46,6 +48,11 @@ export function demoLeaks(files: Array<{url: string; bytes: Uint8Array}>): strin
     .map(f => f.url)
 }
 
+/** index.html with `noindex` in its head, once: the review site is for the owner, not for search engines. */
+export function withNoindex(html: string): string {
+  return /name=["']robots["']/.test(html) ? html : html.replace('<head>', '<head><meta name="robots" content="noindex">')
+}
+
 function sha(bytes: Uint8Array) {
   return createHash('sha1').update(bytes).digest('hex').slice(0, 12)
 }
@@ -56,6 +63,10 @@ function walk(dir: string): string[] {
 
 if (import.meta.main) {
   const dist = join(ROOT, process.argv[2] ?? 'dist')
+  if (process.env.EXPO_PUBLIC_ENV === 'preview') {
+    const index = join(dist, 'index.html')
+    writeFileSync(index, withNoindex(readFileSync(index, 'utf8')))
+  }
   const files = walk(dist).map(p => ({url: '/' + relative(dist, p).split('\\').join('/'), bytes: readFileSync(p)}))
   if (!files.some(f => f.url === '/index.html')) throw new Error(`${dist} has no index.html: run expo export first`)
   const leaks = demoLeaks(files)

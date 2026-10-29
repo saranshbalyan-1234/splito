@@ -31,9 +31,9 @@ import {SetNewPasswordForm} from './SetNewPasswordForm'
 type Step = 'contact' | 'credential' | 'forgot' | 'reset' | 'updated' | 'verify' | 'name' | 'other' | 'otherVerify' | 'password'
 const ORDER: Step[] = ['contact', 'credential', 'forgot', 'reset', 'updated', 'verify', 'name', 'other', 'otherVerify', 'password']
 
-type Draft = {contact?: Contact; lookup?: Lookup; name: string; other?: Contact}
+type Draft = {contact?: Contact; contactToken?: string; lookup?: Lookup; name: string; other?: Contact; otherToken?: string}
 
-export function Login() {
+export function Login({onPublicPage}: {onPublicPage: (page: 'help' | 'privacy' | 'about') => void}) {
   const {t: l} = useLingui()
   const [step, setStep] = useState<Step>('contact')
   const [direction, setDirection] = useState<'Forward' | 'Backward'>('Forward')
@@ -50,7 +50,8 @@ export function Login() {
 
   const createAccount = async (password: string) => {
     const [email, phone] = contact.kind === 'email' ? [contact, draft.other!] : [draft.other!, contact]
-    sessionApi.signIn(await (await getAuthClient()).createAccount({name: draft.name, email: email.value, phone: phone.value, password}))
+    const [emailToken, phoneToken] = contact.kind === 'email' ? [draft.contactToken!, draft.otherToken!] : [draft.otherToken!, draft.contactToken!]
+    sessionApi.signIn(await (await getAuthClient()).createAccount({name: draft.name, password, email: email.value, emailToken, phone: phone.value, phoneToken}))
   }
 
   let content: React.ReactNode = null
@@ -64,6 +65,7 @@ export function Login() {
         <ContinueForm
           initialValue={contact?.value ?? ''}
           onDevAccount={devAccount}
+          onPublicPage={onPublicPage}
           onContinue={(c, lookup) => {
             setDraft(d => ({...d, contact: c, lookup}))
             go(lookup.exists ? 'credential' : 'verify')
@@ -115,7 +117,7 @@ export function Login() {
       break
     case 'verify':
       title = l`Create your account`
-      description = l`We’ll create your account`
+      description = l`Just a few details`
       goBack = () => go('contact')
       content = (
         <CodeForm
@@ -123,14 +125,17 @@ export function Login() {
           purpose="signup"
           title={l`We’ll create your account`}
           hint={l`Enter it to continue.`}
-          onVerified={() => go('name')}
+          onVerified={token => {
+            setDraft(d => ({...d, contactToken: token}))
+            go('name')
+          }}
           onBack={goBack}
         />
       )
       break
     case 'name':
       title = l`Create your account`
-      description = l`We’ll create your account`
+      description = l`Just a few details`
       goBack = () => go('verify')
       content = (
         <NameForm
@@ -145,7 +150,7 @@ export function Login() {
       break
     case 'other':
       title = l`Create your account`
-      description = l`We’ll create your account`
+      description = l`Just a few details`
       goBack = () => go('name')
       content = (
         <OtherContactForm
@@ -162,13 +167,16 @@ export function Login() {
       break
     case 'otherVerify':
       title = l`Create your account`
-      description = l`We’ll create your account`
+      description = l`Just a few details`
       goBack = () => go('other')
-      content = <CodeForm contact={draft.other!} purpose="signup" title={otherKind === 'phone' ? l`Confirm your phone number` : l`Confirm your email`} onVerified={() => go('password')} onBack={goBack} />
+      content = <CodeForm contact={draft.other!} purpose="signup" title={otherKind === 'phone' ? l`Confirm your phone number` : l`Confirm your email`} onVerified={token => {
+          setDraft(d => ({...d, otherToken: token}))
+          go('password')
+        }} onBack={goBack} />
       break
     case 'password':
       title = l`Create your account`
-      description = l`We’ll create your account`
+      description = l`Just a few details`
       goBack = () => go('otherVerify')
       content = (
         <SetNewPasswordForm

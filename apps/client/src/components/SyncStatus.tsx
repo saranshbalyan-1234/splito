@@ -11,8 +11,8 @@ type Status = Pick<RowSync, 'syncStatus'>
 /** The state's words, from the one place that decides them (so pages and the avatar never disagree). */
 export function useRowStatus(row: Status) {
   const {t: l} = useLingui()
-  const {canSync: hasSession} = useSession()
-  const kind = rowStatusKind(row.syncStatus, hasSession)
+  const {canSync} = useSession()
+  const kind = rowStatusKind(row.syncStatus, canSync)
   const labels: Record<RowStatusKind, string> = {
     local: l`On this device only`,
     device: l`Saved on this device`,

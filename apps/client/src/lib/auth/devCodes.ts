@@ -19,3 +19,6 @@ export const useDevCode = () =>
     l => (listeners.add(l), () => void listeners.delete(l)),
     () => last,
   )
+
+/** The last code outside React (the unit test of the dev client reads it). */
+export const currentDevCode = () => last

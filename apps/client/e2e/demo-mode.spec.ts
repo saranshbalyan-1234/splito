@@ -110,10 +110,10 @@ const databases = (page: Page) => page.evaluate(async () => (await indexedDB.dat
 test('turning demo mode off erases the demo database and every key it kept; turning it on again seeds afresh (owner 136)', async ({page}) => {
   await page.goto('/')
   await page.waitForFunction(() => 'splito' in window)
-  expect(await databases(page)).not.toContain('splito-demo')
+  expect(await databases(page)).not.toContain('splito-demo-dev')
 
   await openDemo(page)
-  expect(await databases(page)).toContain('splito-demo')
+  expect(await databases(page)).toContain('splito-demo-dev')
   await page.evaluate(() => (window as unknown as {splito: Splito}).splito.createPerson('Gone after off'))
   // A device key demo mode kept: a recent search lives under the demo scope.
   await page.getByTestId('header-search-ask').click()
@@ -124,12 +124,12 @@ test('turning demo mode off erases the demo database and every key it kept; turn
   await page.keyboard.press('Escape')
 
   await closeDemo(page)
-  await expect.poll(() => databases(page)).not.toContain('splito-demo')
+  await expect.poll(() => databases(page)).not.toContain('splito-demo-dev')
   // The real database is still there.
   expect(await databases(page)).toContain('splito-acct-dev')
 
   await openDemo(page)
-  expect(await databases(page)).toContain('splito-demo')
+  expect(await databases(page)).toContain('splito-demo-dev')
   const again = await names(page, 'person')
   expect(again).toContain('Riya Sharma')
   expect(again).not.toContain('Gone after off')

@@ -599,7 +599,7 @@ One shared PersonLink (avatar + name) used on every screen; tapping either opens
 
 Nothing of the app is visible signed out: only the welcome tour, the logged-out flow, language and legal pages. The local database opens per account only with a session; offline after sign-in; deep links resume after sign-in.
 
-- **Effort** M · **Impact** 10 · **Backend** front end now (dev account), real with F-2102 · **Status** built on feat/wC-F249-F250-auth (unmerged, 2026-10-30): front end against the dev AuthClient; criteria 1-4, 6-10 met on web (e2e `auth.spec.ts`, `authConfig.spec.ts`), 5 (offline) partly (the sign-in screens say they need a connection; the app opens offline from the device copy of the session); native not run; Google/Apple are buttons only; real auth waits for F-2101/F-2102 · **Deps** F-225, F-249, F-2102 (production)
+- **Effort** M · **Impact** 10 · **Backend** front end now (dev account), real with F-2102 · **Status** built on feat/wC-F249-F250-auth (unmerged, fix round 2026-10-30): front end against the dev AuthClient, web only (native not run); criteria 1, 3, 4, 6-10 met in e2e (`auth.spec.ts`, `authConfig.spec.ts`, preview checks in `e2e-pwa`); 2 only as far as intro then Continue (setup F-211 is not built, so Continue goes to Home); 5 partly (sign-in says it needs a connection; the app opens offline from the device copy of the session); Google/Apple are buttons only ("arrives with sync"); the review site is a preview build, production is refused until the auth HTTP client (F-2101/F-2102) exists · **Deps** F-225, F-249, F-2102 (production)
 - **Prefs** -
 - **Acceptance**
   1. Signed out, every route (including deep links and `?drawer=` URLs) shows the logged-out flow; no store is opened and no ledger data is in the DOM (e2e asserts zero store reads before sign-in).
@@ -617,7 +617,7 @@ Nothing of the app is visible signed out: only the welcome tour, the logged-out 
 
 First-launch tour of up to 5 slides (what Splito is and how to use it) with Skip / Next / Get started, then setup (F-211); first-use tips after it. Bluesky Pager and ProgressGuide, Expensify FeatureTraining (`src/components/FeatureTrainingModal.tsx`) and onboarding header (`src/components/OnboardingHeader.tsx`); illustrations original (never Expensify's or Bluesky's artwork).
 
-- **Effort** M · **Impact** 8 · **Backend** no · **Status** built on feat/wC-F249-F250-auth (unmerged, 2026-10-30): static SVG art and `ScreenTransition` + touch swipe in place of Lottie and the native Pager; `onboarding.tourSeen` is a device-storage key (the database is closed while signed out); criteria 1-4 met on web (e2e `welcome.spec.ts`, `introReplay.spec.ts`), 5 (tips) is F-253's, 6 measured · **Deps** F-1712 (Lottie), F-203 (Pager)
+- **Effort** M · **Impact** 8 · **Backend** no · **Status** built on feat/wC-F249-F250-auth (unmerged, fix round 2026-10-30): animated Lottie art (`pnpm lottie`), `ScreenTransition` + a touch swipe in place of the native Pager (pager-view is not shipped); `onboarding.tourSeen` is a device-storage key (the database is closed while signed out); criteria 1-4 met on web (e2e `welcome.spec.ts`, `introReplay.spec.ts`), with Skip/Get started going to Continue (setup F-211 is not built); 5 (tips) is F-253's; 6 measured (COMPLETION_MATRIX) · **Deps** F-1712 (Lottie), F-203 (Pager)
 - **Prefs** `onboarding.tourSeen` (device, in the database), `tips.enabled` (on), `tips.seen` (device)
 - **Acceptance**
   1. A fresh install opens the tour; slides as § 26.2 with titles and one sentence each, en and hi, no claim of sync or features not built.
@@ -3056,6 +3056,17 @@ Use Claude to turn free-form questions into structured queries the on-device eng
   4. Latency: answer within 1.5 s p50 on a normal connection with a streaming "Thinking…" state; cancel on new keystroke; cost guard (max tokens, one call per question).
   5. When the backend exists, calls switch to the backend proxy and the per-device key path is removed (tracked in the backend batch).
   6. Model ids and API usage follow the current Claude API docs (latest models) at build time.
+
+### F-262 Fix the `tab, 50 ms, tab` tap-latency red `spec: owner § 26.9 (decisions 150-152), found in the F-250 perf run`
+
+`perf/tapLatency.spec.ts` "tab, 50 ms, tab" at CPU x1 fails the 100 ms budget (188 to 244 ms, one long task of 134 to 143 ms; once "result never showed" on `/activity`): a tap on Analytics, then a tap on Activity 50 ms later. It is not from F-250: pristine `bf82d1d` (the base of that branch), built and run in a clean worktree on the same machine, fails identically (189 ms, long task 143 ms). Likely the first Analytics mount (a long task) landing between the two taps.
+
+- **Effort** S · **Impact** 6 · **Backend** no · **Status** todo, found 2026-10-30 · **Deps** F-255
+- **Prefs** -
+- **Acceptance**
+  1. Find the long task (Chrome trace at CPU x1) and split or defer it so the second tap is shown within 100 ms and no JS task over 50 ms runs between the taps.
+  2. `pnpm perf` is green at CPU x1 and x4, three runs in a row, on a machine under load 10.
+  3. The result is recorded in `docs/COMPLETION_MATRIX.md` with the trace's main cause.
 
 ### F-1501 Text summaries for WhatsApp `spec 4b v1`
 

@@ -25,7 +25,7 @@ export function NameForm({initial, onName, onBack}: {initial: string; onName: (n
   return (
     <FormContainer testID="name-form" titleText={<Trans>What’s your name?</Trans>}>
       <Text style={[a.leading_snug, t.atoms.text_contrast_high]}>
-        <Trans>We’ll create your account. Friends see this name.</Trans>
+        <Trans>Friends see this name.</Trans>
       </Text>
       <View>
         <TextField.LabelText>

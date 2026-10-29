@@ -1204,6 +1204,14 @@ Splito lessons (add newest last, dated, with PR):
 - 2026-10-30, F-250: a prompt opened from inside the web drawer is drawn under the drawer's scrim (clicks hit the scrim),
   and closing the drawer unmounts the prompt with it: dialogs that several places open (Log out?) are mounted once in the
   app (`LogOutHost`, `requestLogOut()`).
+- 2026-10-30, F-250 review: **an erase that races the close can silently fail.** Deleting an IndexedDB database while a
+  connection is still open blocks forever (and a native file delete throws); a log out that deletes right after unmounting
+  the provider depended on timing. The close now announces itself (`expectStoreClosed`), the delete retries and a failure is
+  shown. Likewise `Linking.getInitialURL()` answers the launch URL every time, so a log out and in replayed it: read it once.
+- 2026-10-30, F-250 review: **a build guard keyed on one env var has holes.** `EXPO_PUBLIC_ENV` unset, a tier without it, an
+  e2e build on a prod tier: each skipped the first guard. Builds now have explicit kinds, every kind but production is refused on
+  a stage/prod tier, and an unset kind means production in an export. A preview build is a real, separate kind with its own
+  checks (dev sign-in present, e2e hooks absent), not production with a switch.
 - 2026-10-30, F-250: **the e2e sign-in is browser state, not per-spec code.** `e2e/globalSignIn.ts` signs the dev account
   in once per config and saves `storageState`, which every context starts from; a signed-out spec opts out with
   `test.use(signedOut)`. Playwright's `FullConfig.rootDir` is the test dir, not the config dir: resolve paths from
@@ -1469,10 +1477,8 @@ labelled sidebar); **wide** = web 1300 px and up (Bluesky `gtTablet`, right colu
 
 - **Welcome tour on first launch** (owner 123; F-249, Wave C). A fresh install opens short swipeable intro
   slides that say what Splito is and what you can do, before sign-in, then hands over to the Continue screen:
-  - **5 slides max** [Built, F-249], each an original illustration (static SVG art in the theme's colours today,
-    `screens/Welcome/art.tsx`; Lottie is the upgrade), a title and one sentence, with tappable dot indicators and
-    Bluesky's direction-aware slide (`ScreenTransition`) plus a touch swipe. Bluesky's `Pager` is not used: it is
-    the `react-native-pager-view` native module, which this app does not ship (a native rebuild for five slides):
+  - **5 slides max**, each an original animated illustration (Lottie, static under reduced motion), a title and
+    one sentence, built on Bluesky's Pager with dot indicators (tappable) and its direction-aware slide:
     1. Split anything with anyone: friends, groups, trips, any currency, never mixed.
     2. Bills done right: items, portions, different taxes per item, service and round-off.
     3. Settle up in fewest payments, record cash or UPI, remind gently.
@@ -1482,13 +1488,10 @@ labelled sidebar); **wide** = web 1300 px and up (Bluesky `gtTablet`, right colu
     primary, the last slide's primary is "Get started"; swipe and the dots move both ways; a language chip top
     left on the first slide (English / हिन्दी), because the tour is the first thing read. Phone: full screen;
     rail and desktop: a centred card (~560 px) over a dimmed app, Escape = Skip.
-  - **Once, then on demand:** shown once per install (`onboarding.tourSeen`, kept in device storage, `device`
-    key `tourSeen`: the database is per account and stays closed while signed out, so the flag cannot live in it;
-    it survives log out); Settings > Help "See the intro" replays it at `/welcome/1` (the `Welcome` route); never shown
-    in demo mode or to e2e runs (the sign-in hook marks it seen; `welcome.spec.ts` covers the intro, from a fresh
-    install). Every slide has a URL (`/welcome/1` .. `/5`, owner 100); signed out the address bar follows the
-    slide and Back/Forward move between slides. The language chip writes the device's language while signed out
-    (`device` key `language`), which the account takes at its first sign-in (`LocaleFromPrefs`).
+  - **Once, then on demand:** shown once per install (`onboarding.tourSeen`, device preference kept in the
+    database, decision 90); Settings > Help "See the intro" replays it; never shown in demo mode or to e2e runs
+    (the test hook marks it seen; one spec covers the tour itself). Every slide has a URL (`/welcome/1` .. `/5`,
+    owner 100).
   - **Two different things** (owner 142): these swipeable **intro slides come BEFORE sign-in** (what Splito is,
     like many apps' first-open screens; "Get started" leads to the Continue screen, owner 140), and the **tour
     comes AFTER the first sign-in and setup**: a guided walkthrough over the real app (F-253), a few coach marks
@@ -2173,9 +2176,27 @@ dishes etc and each item can be assigned to each in split"; "in itemize don't sh
   "Move this device's data into your account"): Move copies it through the backup path (`createBackup` ->
   `applyBackup`, merge) and deletes it; "Not now" leaves it on disk and the offer is not repeated (a Settings > Data row
   to ask again is the upgrade).
+- **Verification tokens (the F-2101 contract):** `verifyCode` answers a short-lived, one-use token for the contact; `createAccount`
+  takes both tokens (email and phone) and `addContact` the one, never the code again (`lib/auth/types.ts`, tested against the dev
+  client in `dev.test.ts`).
+- **Each account is its own "me" and its own demo:** the "me" person id is minted per account (`meIds` device key; the old
+  device `meId` is the pre-account database's, which Move re-points), and the demo database and its device keys are named by
+  account id (`splito-demo-<id>`, `demo:<id>:`). A session id that could not be a database name is no session. Another tab's
+  sign-in or sign-out is followed through the `storage` event on the session key.
+- **Log out waits for the close:** `expectStoreClosed(accountId)` is armed before the session ends and settles when
+  `StoreProvider`'s cleanup has closed every connection of that account (a store still opening, a swap's old store); only then
+  does Erase delete the database, retrying and reporting a failure. The prompt counts unsynced changes with `syncCounts()` (an index
+  read) and keeps Erase off until the count is known.
+- **The legacy offer is answered by Move, Not now or no old database;** an open or closed-by-reload offer comes again, and
+  Settings > Data keeps "Move this device's older data" while the old database exists.
+- **Signed-out pages:** the intro, Continue, Help, Privacy, About (`/settings/help|privacy|about`) and `/join/<token>` (a stub page
+  that leads to sign-in until the invite flow exists) are the only things a signed-out device shows (`lib/links/public.ts`).
+  Native: the launch URL is read once per process (`takeInitialUrlOnce`) and, signed out, only `url` events are held after it.
+- **The intro's art is Lottie** (original, `pnpm lottie`: `welcome-split|bills|settle|ask|offline`, light and dark, a still frame
+  under reduced motion); the Pager is replaced by `ScreenTransition` plus a swipe that follows the finger and ignores vertical and
+  diagonal drags; "Step N of 5" is for screen readers only.
 - **Not in this task:** setup after sign-in (F-211) and the guided tour (F-253); Google and Apple (buttons only, a
-  tap says "arrives with sync"); the real HTTP client (F-2101/F-2102); the signed-out update toast (`PwaHost` lives in the
-  signed-in app).
+  tap says "arrives with sync"); the real HTTP client (F-2101/F-2102).
 
 - **Settings starts with an "Account" section** (copied from Bluesky's Settings account section and its
   Login/Signup screens' layout, `src/screens/Login`, `src/screens/Settings`).
@@ -2541,10 +2562,12 @@ add anyway (only for you)"; "also i should be able to select from contacts". *Wh
   look-alike apps. The item in `docs/RELEASE_CHECKLIST.md` stays open until an original mark replaces the one
   logo source file and the brand kit is regenerated. *Why:* the owner chose it for development after being
   told.
-- **A release build needs the real auth API URL** (F-250): without `EXPO_PUBLIC_AUTH_API_URL` (https) a production,
-  stage or prod-tier build refuses to build (`auth-config.js`, `authConfig.spec.ts`), because production has no dev
-  sign-in. `render.yaml`'s web build runs `EXPO_PUBLIC_ENV=production`, so the Render deploy fails until the variable is set
-  there (and the auth API exists behind it).
+- **A production build is refused until the auth HTTP client exists** (F-250): `auth-config.js` (read by `app.config.ts`)
+  sorts every build into a kind from `EXPO_PUBLIC_ENV` (development, e2e, preview, production; no value means production in
+  an export and development in `expo start`), refuses production outright until `AUTH_HTTP_CLIENT_READY` flips (then it needs an
+  https `EXPO_PUBLIC_AUTH_API_URL`), and refuses any kind on a stage or prod tier. The review site is the **preview** kind
+  (`render.yaml` builds `EXPO_PUBLIC_ENV=preview`): the labelled dev account, a fixed note on Continue, `noindex`, no e2e hooks
+  (`authConfig.spec.ts`, `e2e-pwa/bundle.spec.ts`, `e2e-pwa/pwa.spec.ts`).
 - The other release blockers (dev-only switches inert, real auth and sync live) are listed in
   `docs/RELEASE_CHECKLIST.md`.
 

@@ -33,8 +33,8 @@ export function AddMissingContact({account, kind}: {account: SessionAccount; kin
             purpose="add-contact"
             title={kind === 'phone' ? l`Confirm your phone number` : l`Confirm your email`}
             onBack={() => setContact(undefined)}
-            onVerified={async code => {
-              sessionApi.signIn(await (await getAuthClient()).addContact(account, contact, code))
+            onVerified={async token => {
+              sessionApi.signIn(await (await getAuthClient()).addContact(account, contact, token))
             }}
           />
         ) : (

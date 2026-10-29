@@ -1,5 +1,6 @@
 import {useSyncExternalStore} from 'react'
 
+import {isAccountId} from '#/data/storeNames'
 import {accountScope, device, setStorageScope} from '#/storage'
 
 /*
@@ -31,7 +32,8 @@ export type SessionState = {
 
 function readAccount(): SessionAccount | undefined {
   const s = device.get(['session'])
-  return s && typeof s.id === 'string' && typeof s.name === 'string' ? s : undefined
+  /* An id that could not be a database name is no session (the account id becomes part of one). */
+  return s && isAccountId(s.id) && typeof s.name === 'string' ? s : undefined
 }
 
 function stateFor(account: SessionAccount | undefined): SessionState {
@@ -48,16 +50,37 @@ let state = stateFor(readAccount())
 if (state.currentAccount) setStorageScope(accountScope(state.currentAccount.id))
 const listeners = new Set<() => void>()
 
-function set(account: SessionAccount | undefined) {
-  if (account) device.set(['session'], account)
-  else device.remove(['session'])
+function adopt(account: SessionAccount | undefined) {
   state = stateFor(account)
   setStorageScope(account ? accountScope(account.id) : '')
   listeners.forEach(l => l())
 }
 
+function set(account: SessionAccount | undefined) {
+  if (account) device.set(['session'], account)
+  else device.remove(['session'])
+  adopt(account)
+}
+
+/*
+ * Another tab signed in, out or in as someone else: this tab follows (web; a `storage` event never fires in the tab that
+ * wrote). Signing out there closes this tab's database here too, through the same gate, and a tab never keeps showing
+ * an account the device no longer holds.
+ */
+if (typeof window !== 'undefined' && typeof window.addEventListener === 'function') {
+  window.addEventListener('storage', e => {
+    if (e.key !== null && !e.key.endsWith('\\session')) return
+    const next = readAccount()
+    const was = state.currentAccount
+    if (next?.id === was?.id && next?.email === was?.email && next?.phone === was?.phone) return
+    adopt(next)
+  })
+}
+
 /** Signs in (or updates the signed-in account's details, as the Add-missing step does). */
 function signIn(account: SessionAccount) {
+  /* Web: a sign-in from the intro's address (`/welcome/2`, the e2e hook) must not land the app on the intro's replay route. */
+  if (typeof window !== 'undefined' && /^\/welcome(\/|$)/.test(window.location.pathname)) window.history.replaceState(window.history.state, '', '/')
   set(account)
 }
 
@@ -84,6 +107,6 @@ export const isSignedIn = () => state.hasSession
 
 /* E2E builds only: `window.__splitoTest.signIn()` and friends (the dev AuthClient's chunk is reached nowhere else). */
 if (process.env.EXPO_PUBLIC_ENV === 'e2e') {
-  void import('#/lib/auth/dev').then(m => m.installAuthTestHook(sessionApi))
+  void import('#/lib/auth/testHook').then(m => m.installAuthTestHook(sessionApi))
   void import('#/data/legacyTestHook').then(m => m.installLegacyTestHook())
 }
