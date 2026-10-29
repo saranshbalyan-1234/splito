@@ -14,7 +14,7 @@ export function ShowSettledToggle({value, onChange}: {value: boolean; onChange: 
   const t = useTheme()
   const {t: l} = useLingui()
   return (
-    <Toggle.Item testID="filter-settled-toggle" name="showSettled" label={l`Show settled`} value={value} onChange={onChange} style={[a.w_full]}>
+    <Toggle.Item type="switch" testID="filter-settled-toggle" name="showSettled" label={l`Show settled`} value={value} onChange={onChange} style={[a.w_full]}>
       <View style={[a.flex_1, a.gap_2xs, a.pr_md]}>
         <Toggle.LabelText style={[a.text_md, a.font_semi_bold]}>
           <Trans>Show settled</Trans>

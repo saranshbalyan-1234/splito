@@ -33,20 +33,19 @@ function put<K extends keyof Device>(key: K, value: Device[K]) {
 
 /**
  * Applies app-wide preferences. Copies the ones that shape the first frame
- * (theme, accent, text size, density, money colours, home tab, haptics, the sync dot) from the registry into
+ * (theme, accent, text size, money colours, home tab, haptics) from the registry into
  * synchronous device storage whenever one changes. The registry stays
  * the source of truth; the copy only exists so the next launch paints right
  * before the local store opens.
  */
 export function PrefsMirror() {
   const {setFontScale} = useAlf().fonts
-  // One shared read of the preference rows serves all eight (data/projections).
+  // One shared read of the preference rows serves all seven (data/projections).
   const [theme] = usePref('theme')
   const [darkTheme] = usePref('darkTheme')
   const [accent] = usePref('accent')
   const [textScale] = usePref('textScale')
   const [haptics] = usePref('haptics')
-  const [density] = usePref('density')
   const [homeTab] = usePref('homeTab')
   const [moneyPalette] = usePref('moneyPalette')
 
@@ -58,7 +57,6 @@ export function PrefsMirror() {
       accent === undefined ||
       textScale === undefined ||
       haptics === undefined ||
-      density === undefined ||
       homeTab === undefined ||
       moneyPalette === undefined
     )
@@ -67,12 +65,11 @@ export function PrefsMirror() {
     put('darkTheme', darkTheme)
     put('accent', accent)
     put('hapticsEnabled', haptics)
-    put('density', density)
     put('moneyPalette', moneyPalette)
     put('homeTab', homeTab)
     const scale = fontScaleFor(textScale)
     if (scale !== getFontScale()) setFontScale(scale)
-  }, [theme, darkTheme, accent, textScale, haptics, density, homeTab, moneyPalette, setFontScale])
+  }, [theme, darkTheme, accent, textScale, haptics, homeTab, moneyPalette, setFontScale])
 
   /*
    * The Animations preference (or the OS setting) also reaches every

@@ -21,7 +21,6 @@ import {
   useEntity,
   useHistory,
   useMutationCtx,
-  usePref,
   useStore,
 } from '#/data/hooks'
 import {EmptyState} from '#/view/com/util/EmptyState'
@@ -111,7 +110,6 @@ function Detail({
   const avatarName = useAvatarName()
   const errorText = useErrorText()
   const groups = useEntities<Group>('group')
-  const [showHistory = true] = usePref('comments.showHistory')
   const panel = useRef<React.ComponentRef<typeof ScrollView>>(null)
   const page = useAnimatedRef<Animated.ScrollView>()
   const {from, to, amount, currency, date, note, groupId} = payment.data
@@ -237,7 +235,6 @@ function Detail({
       </SectionLabel>
       <DiscussionTimeline
         lines={lines}
-        showHistory={showHistory}
         renderLine={line => (
           <View
             testID={`history-${line.kind}`}

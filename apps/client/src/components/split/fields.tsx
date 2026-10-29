@@ -103,8 +103,8 @@ const PLAIN_NUMBER = /^\d+([.,]\d*)?$/
  * underneath; "=" replaces the sum with its result. It reads shorthand
  * ("1.5L"), other digit scripts and pasted amounts ("₹1,20,000.50": the
  * currency marks are dropped as they arrive), and asks "Did you mean ...?"
- * for an ambiguous "1,234" (F-310). With `hasKeypad` (phones, the
- * `amount.keypad` preference) Splito's keypad replaces the system keyboard,
+ * for an ambiguous "1,234" (F-310). With `hasKeypad` (phones; the
+ * system keyboard stays for screen readers) Splito's keypad replaces the system keyboard,
  * as Expensify's amount page does. Parse errors read in plain words.
  */
 export function AmountField({

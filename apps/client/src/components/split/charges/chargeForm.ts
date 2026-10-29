@@ -181,19 +181,17 @@ export function formsFromCharges(
 
 /**
  * A new itemised bill starts from the person's defaults (F-403): their default
- * preset when it is not Simple, else Simple with the default service charge.
+ * preset when it is not Simple, else Simple.
  * A bill that already has items or a charge list is left alone.
  */
 export function startItemize(
   f: ExpenseForm,
   {
     preset,
-    serviceBasisPoints,
     newKey,
     mark,
   }: {
     preset: ChargePreset | undefined
-    serviceBasisPoints: number
     newKey: () => string
     mark: '.' | ','
   },
@@ -201,12 +199,6 @@ export function startItemize(
   if (f.items.length > 0 || f.charges !== undefined) return f
   if (preset && preset.id !== 'simple')
     return {...f, charges: chargesFromTemplates(preset.charges, newKey, mark)}
-  if (serviceBasisPoints > 0 && !f.service.trim())
-    return {
-      ...f,
-      service: bpText(serviceBasisPoints, mark),
-      adjustModes: {...f.adjustModes, service: 'percent'},
-    }
   return f
 }
 

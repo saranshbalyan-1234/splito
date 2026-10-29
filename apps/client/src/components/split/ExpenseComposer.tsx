@@ -27,6 +27,7 @@ import {
 import {type NavigationProp} from '#/lib/routes/types'
 import {useNumberLocale} from '#/locale/numberLocale'
 import {useFormatDay, useToday} from '#/locale/useDates'
+import {useA11y} from '#/state/a11y'
 import {useEntities, useMutationCtx, usePref, useStore} from '#/data/hooks'
 import {atoms as a, useBreakpoints, useTheme} from '#/alf'
 import {Button, ButtonText} from '#/components/Button'
@@ -114,8 +115,17 @@ export function ExpenseComposer({
   const groups = useEntities<Group>('group')
   const [hiddenGroupIds = []] = usePref('groups.hidden')
   const [adjustModes, saveAdjustModes] = usePref('itemizeAdjustmentModes')
-  const [roundToUnits = {}] = usePref('split.roundTo')
+  const [roundToUnits = {}, saveRoundToUnits] = usePref('split.roundTo')
+  const [, saveRoundCash] = usePref('split.roundCash')
+  const {screenReaderEnabled} = useA11y()
   const unitOf = (currency: string) => roundToFor(roundToUnits, currency)
+  /* The round control remembers its choice for the next expense (decision 90): on or off, and the unit per currency. */
+  const rememberRounding = (unit: number) => {
+    void saveRoundCash(unit > 0)
+    if (unit === 0) return
+    const {[form.currency]: _, ...rest} = roundToUnits
+    void saveRoundToUnits(unit === 1 ? rest : {...rest, [form.currency]: unit})
+  }
   const people = useEntities<Person>('person')
   const name = useDisplayName()
   const errorText = useErrorText()
@@ -128,11 +138,7 @@ export function ExpenseComposer({
   const [isCurrencyPicked, setIsCurrencyPicked] = useState(isDraftRestored)
   const [savedId, setSavedId] = useState<string>()
   const [isTitleFocused, setIsTitleFocused] = useState(false)
-  const [isShorthandOn = true] = usePref('amount.shorthand')
-  const [isKeypadOn = true] = usePref('amount.keypad')
-  const evaluation = evaluateForm(form, tz, decimalMark(locale), {
-    shorthand: isShorthandOn,
-  })
+  const evaluation = evaluateForm(form, tz, decimalMark(locale))
   const category = useCategory(form.category)
   const isEdit = !!expenseId
   const isDirty = form !== initialForm
@@ -490,7 +496,7 @@ export function ExpenseComposer({
         readings={evaluation.amountReadings}
         reading={form.amountReading}
         onReadingPicked={amountReading => update(f => ({...f, amountReading}))}
-        hasKeypad={isKeypadOn && !gtMobile}
+        hasKeypad={!gtMobile && !screenReaderEnabled}
         onPressCurrency={() => currencyControl.open()}
       />
 
@@ -539,6 +545,7 @@ export function ExpenseComposer({
         adjustModes={adjustModes}
         onAdjustModesChanged={saveAdjustModes}
         defaultRoundTo={unitOf(form.currency)}
+        onRoundingChanged={rememberRounding}
         me={ctx.actor}
       />
 

@@ -28,7 +28,7 @@ import {
 import {type AllNavigatorParams, type NavigationProp} from '#/lib/routes/types'
 import {useNumberLocale} from '#/locale/numberLocale'
 import {useFormatDay, useToday} from '#/locale/useDates'
-import {useAllEntities, useEntities, useMutationCtx, usePref, useStore} from '#/data/hooks'
+import {useAllEntities, useEntities, useMutationCtx, useStore} from '#/data/hooks'
 import {DeletedMeta, useStruck} from '#/components/DeletedMeta'
 import {EyeIcon, EyeOffIcon} from '#/components/settings/icons'
 import {useHiddenItems} from '#/data/hiddenItems'
@@ -244,7 +244,6 @@ function Detail({
   const errorText = useErrorText()
   const groups = useAllEntities<Group>('group')
   const lines = useHistoryLines(history)
-  const [showHistory = true] = usePref('comments.showHistory')
   const scroll = useAnimatedRef<Animated.ScrollView>()
   const panel = useRef<React.ComponentRef<typeof ScrollView>>(null)
   const e = expense.data
@@ -536,7 +535,6 @@ function Detail({
       </SectionLabel>
       <DiscussionTimeline
         lines={lines}
-        showHistory={showHistory}
         renderLine={(line: HistoryLineData) => <HistoryLine line={line} />}
       />
       <SyncFooter sync={expense} />

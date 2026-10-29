@@ -5,7 +5,6 @@ import {Trans, useLingui} from '@lingui/react/macro'
 import {ZERO} from '@splito/domain'
 import {type Entity, type Group, isGroupInactive} from '@splito/sync'
 
-import {useRowPadding} from '#/state/preferences/density'
 import {Link} from '#/view/com/util/Link'
 import {HideRow} from '#/features/hidden/HideItem'
 import {atoms as a, useTheme} from '#/alf'
@@ -43,7 +42,6 @@ export function GroupRow({
   hideTopBorder?: boolean
 }) {
   const t = useTheme()
-  const rowPadding = useRowPadding()
   const {t: l} = useLingui()
   const formatDay = useFormatDay()
   const listAnimations = useListAnimations()
@@ -104,7 +102,7 @@ export function GroupRow({
         hoverStyle={t.atoms.bg_contrast_25}
         style={[
           a.px_lg,
-          rowPadding,
+          a.py_md,
           !hideTopBorder && !isDeleted && a.border_t,
           t.atoms.border_contrast_low,
           a.transition_color,

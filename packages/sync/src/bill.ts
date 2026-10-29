@@ -151,5 +151,3 @@ export function merchantSetupOf(title: string, charges: ChargeTemplate[]): Merch
   }
 }
 
-/** The service charge new Simple bills start with, in basis points: 0 is off. */
-export const SERVICE_CHARGE_CHOICES = [0, 500, 1000, 1250, 1500] as const

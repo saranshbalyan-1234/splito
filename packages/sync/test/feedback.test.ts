@@ -127,11 +127,6 @@ test('email draft carries the message and app info, notes the attachment, never 
   expect(url).not.toContain('+')
 })
 
-test('"Shake to send feedback" is off by default and stays on this device', async () => {
-  expect(await getPref(s, 'shakeToFeedback')).toBe(false)
-  expect(PREFS.shakeToFeedback.scope).toBe('device')
-})
-
 test('isValidEmail', () => {
   expect(isValidEmail('a@b.co')).toBe(true)
   expect(isValidEmail('a@b')).toBe(false)

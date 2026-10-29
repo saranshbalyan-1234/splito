@@ -1,5 +1,5 @@
 // Adapted from bluesky-social/social-app@4e4ad9c (MIT) - src/screens/Search/Shell.tsx
-import {useEffect, useRef, useState} from 'react'
+import {useRef, useState} from 'react'
 import {type TextInput, type TextInputKeyPressEvent, View} from 'react-native'
 import {Trans, useLingui} from '@lingui/react/macro'
 import {useNavigation} from '@react-navigation/native'
@@ -9,7 +9,7 @@ import {type NavigationProp} from '#/lib/routes/types'
 import {useNumberLocale} from '#/locale/numberLocale'
 import {useFormatDay, useToday} from '#/locale/useDates'
 import {useHiddenGroups} from '#/data/groupVisibility'
-import {useMutationCtx, usePref, useSearch} from '#/data/hooks'
+import {useMutationCtx, useSearch} from '#/data/hooks'
 import {device, useStorage} from '#/storage'
 import {atoms as a, useBreakpoints, useTheme, web} from '#/alf'
 import {Button, ButtonText} from '#/components/Button'
@@ -121,13 +121,6 @@ function SearchPanel({
   const today = useToday()
 
   const [history = [], setHistory] = useStorage(device, HISTORY_KEY)
-  const [rememberSearches] = usePref('rememberSearches')
-  const shownHistory = rememberSearches === false ? [] : history
-
-  // Turning the preference off forgets what was kept.
-  useEffect(() => {
-    if (rememberSearches === false && history.length > 0) setHistory([])
-  }, [rememberSearches, history, setHistory])
 
   const results = useSearch(query, today, decimalMark(locale))
   const rows = results
@@ -144,7 +137,7 @@ function SearchPanel({
 
   const rememberQuery = (q: string) => {
     const item = q.trim()
-    if (!item || rememberSearches === false) return
+    if (!item) return
     setHistory(
       [item, ...history.filter(h => h !== item)].slice(0, HISTORY_LIMIT),
     )
@@ -353,7 +346,7 @@ function SearchPanel({
       ListEmptyComponent={
         isEmptyQuery ? (
           <SearchHistory
-            searchHistory={shownHistory}
+            searchHistory={history}
             onItemClick={pickHistory}
             onRemoveItemClick={item =>
               setHistory(history.filter(h => h !== item))

@@ -29,7 +29,7 @@ export function NotifyRemindersPref() {
         description={
           canFireWhenClosed
             ? l`These are scheduled on this device and arrive even offline.`
-            : l`On the web these alert you only while Splito is open; if it’s closed you’ll see them the next time you open it.`
+            : l`On the web, only while Splito is open.`
         }
       />
       {permission.state === 'denied' && IS_NATIVE ? (

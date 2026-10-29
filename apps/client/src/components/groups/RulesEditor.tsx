@@ -173,7 +173,7 @@ function RulesEditor({
           a.border,
           t.atoms.border_contrast_low,
         ]}>
-        <Toggle.Item
+        <Toggle.Item type="switch"
           testID="rules-allow-list"
           name="allowListOnly"
           label={l`Only allowed pairs`}
@@ -192,7 +192,7 @@ function RulesEditor({
               </Trans>
             </Text>
           </View>
-          <Toggle.Platform />
+          <Toggle.Switch />
         </Toggle.Item>
       </View>
 

@@ -91,9 +91,9 @@ test('an order saved while Profile was a tab predates the Analytics tab, so Anal
 })
 
 test('reset restores default', async () => {
-  await setPref(s, ctx, 'density', 'compact')
-  await resetPref(s, ctx, 'density')
-  expect(await getPref(s, 'density')).toBe('comfortable')
+  await setPref(s, ctx, 'moneyPalette', 'mono')
+  await resetPref(s, ctx, 'moneyPalette')
+  expect(await getPref(s, 'moneyPalette')).toBe('default')
   await setPref(s, ctx, 'theme', 'dark')
   await setPref(s, ctx, 'weekStart', 0)
   await resetAllPrefs(s, ctx)
@@ -173,8 +173,6 @@ test('prefFrom reads a value from loaded preference rows exactly as getPref read
 })
 
 test('money input, cash rounding and money colours (F-310, F-402, F-1801)', async () => {
-  expect(await getPref(s, 'amount.shorthand')).toBe(true)
-  expect(await getPref(s, 'amount.keypad')).toBe(true)
   expect(await getPref(s, 'split.roundCash')).toBe(false)
   // The cash unit is kept per currency (F-112, audit M15): a ₹100 unit is not a €100 one.
   expect(await getPref(s, 'split.roundTo')).toEqual({})
@@ -195,7 +193,6 @@ test('money input, cash rounding and money colours (F-310, F-402, F-1801)', asyn
   await legacy(3)
   expect(await getPref(s, 'split.roundTo')).toEqual({})
   await expect(setPref(s, ctx, 'moneyPalette', 'red' as never)).rejects.toThrow('INVALID_PREF')
-  expect(PREFS['amount.keypad'].scope).toBe('device')
 })
 
 test('privacy and invite-link defaults (26.18)', async () => {
@@ -229,4 +226,32 @@ test('reset all skips a stored row for a removed preference (audit m6)', async (
   await s.transaction(tx => tx.put({type: 'preference', id: 'settleMode', data: {value: 'x'}, version: 1, deleted: false, updatedAt: 1}))
   await resetAllPrefs(s, ctx)
   expect(await getPref(s, 'theme')).toBe('system')
+})
+
+test('values stored for keys retired in F-251 are harmless: ignored on read, skipped by Reset all', async () => {
+  const old = ['density', 'shakeToFeedback', 'defaultSplitMode', 'amount.keypad', 'bill.serviceChargeDefault', 'bill.roundOffSpread', 'bill.rememberPerMerchant', 'amount.shorthand', 'groups.showInactiveFold', 'showSyncStatus', 'swipeLeft', 'swipeRight', 'rememberSearches', 'notify.recurring', 'notify.digest', 'comments.showHistory']
+  for (const id of old) {
+    expect(Object.hasOwn(PREFS, id)).toBe(false)
+    await s.transaction(tx => tx.put({type: 'preference', id, data: {value: 'whatever'}, version: 3, deleted: false, updatedAt: 1}))
+  }
+  await setPref(s, ctx, 'theme', 'dark')
+  const rows = await s.getAll<{value: unknown}>('preference')
+  for (const k of Object.keys(PREFS) as PrefKey[]) expect(prefFrom(rows, k)).toEqual(await getPref(s, k))
+  await resetAllPrefs(s, ctx)
+  expect(await getPref(s, 'theme')).toBe('system')
+})
+
+test('Payments folds in New expenses: an old stored off on either key reads as off (owner 131)', async () => {
+  const put = (id: string, value: unknown) => s.transaction(tx => tx.put({type: 'preference', id, data: {value}, version: 2, deleted: false, updatedAt: 1}))
+  expect(await getPref(s, 'notify.payment')).toBe(true)
+  await put('notify.expense', false)
+  expect(await getPref(s, 'notify.payment')).toBe(false)
+  // Switching Payments on is the user's latest word: the old off must not keep it off.
+  await put('notify.expense', false)
+  await setPref(s, ctx, 'notify.payment', true)
+  expect(await getPref(s, 'notify.payment')).toBe(true)
+  await put('notify.payment', false)
+  expect(await getPref(s, 'notify.payment')).toBe(false)
+  expect(await getPref(s, 'notify.comments')).toBe(true)
+  expect(PREFS['notify.comments'].group).toBe('notifications')
 })

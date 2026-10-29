@@ -114,7 +114,7 @@ export function RadioPref<K extends PrefKey>({
   )
 }
 
-/** An on/off preference: Bluesky's settings checkbox row (a switch on native). */
+/** An on/off preference: a switch on every platform (owner 132). */
 export function SwitchPref<K extends PrefKey>({
   pref,
   icon,
@@ -138,7 +138,7 @@ export function SwitchPref<K extends PrefKey>({
       title={title}
       description={description}>
       <Toggle.Item
-        type="checkbox"
+        type="switch"
         testID={`${pref.key}-switch`}
         name={pref.key}
         label={label}
@@ -147,7 +147,7 @@ export function SwitchPref<K extends PrefKey>({
         onChange={value => void pref.set(value as PrefValue<K>)}
         style={[a.w_full, a.gap_md]}>
         <Toggle.LabelText style={[a.flex_1]}>{label}</Toggle.LabelText>
-        <Toggle.Platform />
+        <Toggle.Switch />
       </Toggle.Item>
     </PrefSection>
   )

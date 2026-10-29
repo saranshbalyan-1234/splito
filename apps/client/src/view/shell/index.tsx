@@ -16,7 +16,7 @@ import {DrawerContent} from '#/navigation/Drawer'
 import {FeedbackProvider} from '#/features/feedback/FeedbackProvider'
 import {RoutesContainer, TabsNavigator} from '#/navigation/Navigation'
 import {atoms as a, select, useBreakpoints, useTheme} from '#/alf'
-import {DemoBusy, DemoFrame} from '#/components/DemoFrame'
+import {DemoBusy} from '#/components/DemoBusy'
 import {Outlet as PortalOutlet} from '#/components/Portal'
 import {IS_ANDROID, IS_IOS, IS_LIQUID_GLASS} from '#/env'
 
@@ -41,11 +41,9 @@ function drawerLayout({children}: {children: React.ReactNode}) {
 function ShellInner() {
   return (
     <FeedbackProvider>
-      <DemoFrame>
-        <View style={[a.h_full]}>
-          <TabsNavigator layout={drawerLayout} />
-        </View>
-      </DemoFrame>
+      <View style={[a.h_full]}>
+        <TabsNavigator layout={drawerLayout} />
+      </View>
       <PortalOutlet />
       <BottomSheetOutlet />
       <DemoBusy />

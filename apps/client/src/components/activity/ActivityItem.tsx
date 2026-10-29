@@ -12,7 +12,7 @@ import {defineMessage} from '@lingui/core/macro'
 import {Trans, useLingui} from '@lingui/react/macro'
 import {useNavigation} from '@react-navigation/native'
 import {expenseNet, formatAmount, magnitude, ZERO} from '@splito/domain'
-import {type ActivityEvent, requestName, type SwipeAction} from '@splito/sync'
+import {type ActivityEvent, requestName} from '@splito/sync'
 
 import {useHaptics} from '#/lib/haptics'
 import {GestureActionView} from '#/lib/custom-animations/GestureActionView'
@@ -20,7 +20,6 @@ import {type GestureActions} from '#/lib/custom-animations/GestureActionView.sha
 import {dateDiff, formatDateDiff} from '#/lib/hooks/useTimeAgo'
 import {type NavigationProp} from '#/lib/routes/types'
 import {logger} from '#/logger'
-import {useRowPadding} from '#/state/preferences/density'
 import {TimeElapsed} from '#/view/com/util/TimeElapsed'
 import {UserAvatar} from '#/view/com/util/UserAvatar'
 import {atoms as a, useBreakpoints, useTheme} from '#/alf'
@@ -112,11 +111,14 @@ export function useRowBackgroundColor(isRead: boolean) {
   return rgbToHex(mix(bg.r, tint.r), mix(bg.g, tint.g), mix(bg.b, tint.b))
 }
 
+const SWIPE_LEFT: RowAction = 'delete'
+const SWIPE_RIGHT: RowAction = 'markRead'
+
 /**
  * One change in the Activity feed, laid out as Bluesky's notification rows:
  * a badged avatar, the headline, a money line and the time. Pressing it opens
- * what it's about and marks it read. Its actions come from the `swipeLeft` /
- * `swipeRight` preferences: swipes on native, buttons on hover or focus on
+ * what it's about and marks it read. Swipe left deletes it from
+ * the feed and swipe right marks it read (a fixed choice, F-251): swipes on native, buttons on hover or focus on
  * web, and every action in the row menu (long press on native) and as
  * screen-reader actions.
  */
@@ -126,8 +128,6 @@ export function ActivityItem({
   snapshot,
   me,
   locale,
-  swipeLeft,
-  swipeRight,
   actions,
   style,
 }: {
@@ -136,8 +136,6 @@ export function ActivityItem({
   snapshot: ActivitySnapshot
   me: string
   locale: string
-  swipeLeft: SwipeAction
-  swipeRight: SwipeAction
   actions: ActivityActions
   style?: StyleProp<ViewStyle>
 }) {
@@ -147,8 +145,7 @@ export function ActivityItem({
   const haptics = useHaptics()
   const {gtMobile} = useBreakpoints()
   const backgroundColor = useRowBackgroundColor(isRead)
-  const rowPadding = useRowPadding()
-  const rowPaddingTop = (rowPadding as {paddingTop?: number}).paddingTop ?? 12
+  const rowPaddingTop = 12
   const menuControl = Menu.useMenuControl()
   const [menuAt, setMenuAt] = useState({x: 0, y: 0})
   const [isHovered, setIsHovered] = useState(false)
@@ -163,18 +160,18 @@ export function ActivityItem({
   )
   // The swipe actions as buttons, in the menu's order (destructive last).
   const quickActions = menuActions.filter(
-    x => x === swipeLeft || x === swipeRight,
+    x => x === SWIPE_LEFT || x === SWIPE_RIGHT,
   )
   const run = (action: RowAction) => void actions.perform(action, event, isRead)
 
-  const gestureAction = (action: SwipeAction) => {
-    if (action === 'none' || !actions.isAvailable(action, event)) return
+  const gestureAction = (action: RowAction) => {
+    if (!actions.isAvailable(action, event)) return
     const {color, icon} = actions.info(action, isRead)
     return {color, icon, threshold: SWIPE_THRESHOLD, action: () => run(action)}
   }
   const gestureActions: GestureActions = {
-    leftFirst: gestureAction(swipeLeft),
-    rightFirst: gestureAction(swipeRight),
+    leftFirst: gestureAction(SWIPE_LEFT),
+    rightFirst: gestureAction(SWIPE_RIGHT),
   }
 
   const open = () => {
@@ -307,7 +304,7 @@ export function ActivityItem({
             a.gap_lg,
             isRequestRow ? [a.flex_1, {minWidth: 0}] : a.w_full,
             a.px_lg,
-            rowPadding,
+            a.py_md,
             {backgroundColor},
             {
               paddingRight: isRequestRow

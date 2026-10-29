@@ -35,8 +35,9 @@ test('Settings has a Friends and invites page; Home links to it and the sections
   await page.goto('/settings')
   await page.getByTestId('settings-friends').click()
   await expect(page).toHaveURL(/\/settings\/friends$/)
-  // Defaults live here too.
-  await expect(page.getByTestId('pref-privacy.findByContact')).toBeVisible()
+  // The friend-request and invite-link defaults live here; Privacy keeps "find me" (F-251).
+  await expect(page.getByTestId('pref-privacy.friendRequestsFrom')).toBeVisible()
+  await expect(page.getByTestId('pref-privacy.findByContact')).toHaveCount(0)
 })
 
 test('Add friend opens the Invite people sheet', async ({page}) => {

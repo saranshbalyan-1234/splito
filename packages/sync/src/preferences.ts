@@ -8,13 +8,14 @@ import {
   isMerchantSetups,
   isTaxClasses,
   type MerchantSetup,
-  SERVICE_CHARGE_CHOICES,
   type TaxClass,
 } from './bill'
 import type {Store, Tx} from './store'
 import type {Entity, MutationCtx} from './types'
 
-export type PrefGroup = 'appearance' | 'motion' | 'navigation' | 'defaults' | 'categories' | 'regional' | 'lists' | 'notifications' | 'privacy'
+export type PrefGroup = 'appearance' | 'navigation' | 'defaults' | 'categories' | 'regional' | 'notifications' | 'privacy'
+  /* Groups with no Settings page (F-251): remembered state set where it acts, and the invite defaults on Friends and invites. */
+  | 'lists' | 'invites' | 'app'
 
 export interface PrefDef<T> {
   key: string
@@ -39,7 +40,6 @@ export type TabId = 'people' | 'groups' | 'analytics' | 'activity'
 export type NavItemId = TabId | 'ask' | 'settings'
 /** How each itemised-bill charge is typed: money, or a percentage of the items. */
 export type AdjustmentModes = Record<'tax' | 'tip' | 'service' | 'discount', 'amount' | 'percent'>
-export type SwipeAction = 'markRead' | 'hide' | 'delete' | 'none'
 /**
  * Which expenses Analytics counts (ARCHITECTURE 26.16): 'everything', or
  * non-group expenses on or off plus every group or a chosen list. Never empty.
@@ -134,15 +134,12 @@ export const PREFS = {
   darkTheme: def('darkTheme', 'appearance', 'account', 'Dark theme', 'dim', oneOf('dim', 'dark')),
   accent: def('accent', 'appearance', 'account', 'Accent colour', '#006AFF', (v): v is string => typeof v === 'string' && HEX.test(v)),
   textScale: def('textScale', 'appearance', 'device', 'Text size', 1, (v): v is number => typeof v === 'number' && v >= 0.85 && v <= 1.3),
-  density: def('density', 'appearance', 'account', 'List density', 'comfortable', oneOf('comfortable', 'compact')),
   /** How money direction is coloured (F-1801); every palette also shows it by sign, arrow and words. */
   moneyPalette: def('moneyPalette', 'appearance', 'account', 'Money colours', 'default', oneOf('default', 'colorblind', 'mono')),
-  motion: def('motion', 'motion', 'device', 'Animations', 'full', oneOf('full', 'reduced', 'off')),
-  haptics: def('haptics', 'motion', 'device', 'Haptics', true, isBool),
-  /** Phones only: shaking the phone opens Send feedback. */
-  shakeToFeedback: def('shakeToFeedback', 'motion', 'device', 'Shake to send feedback', false, isBool),
+  motion: def('motion', 'appearance', 'device', 'Animations', 'full', oneOf('full', 'reduced', 'off')),
+  haptics: def('haptics', 'appearance', 'device', 'Haptics', true, isBool),
   /** The Send feedback sheet's "Include app info" switch remembers the last choice (spec default: on). */
-  'feedback.includeAppInfo': def('feedback.includeAppInfo', 'privacy', 'device', 'Include app info with feedback', true, isBool),
+  'feedback.includeAppInfo': def('feedback.includeAppInfo', 'app', 'device', 'Include app info with feedback', true, isBool),
   /* The phone bottom bar: any number of items of the shared nav list, Home first and always on (26.3, decision 84). */
   tabs: def<NavItemId[]>(
     'tabs',
@@ -171,17 +168,14 @@ export const PREFS = {
       v !== null &&
       (['tax', 'tip', 'service', 'discount'] as const).every(k => ['amount', 'percent'].includes((v as Record<string, unknown>)[k] as string)),
   ),
-  defaultSplitMode: def('defaultSplitMode', 'defaults', 'account', 'Default split', 'equal', oneOf('equal', 'exact', 'percent', 'shares')),
   /** F-402: new equal, shares and percent splits start rounded to whole cash units. */
   'split.roundCash': def('split.roundCash', 'defaults', 'account', 'Round shares to cash', false, isBool),
   /** The cash unit those splits round to, per currency, in whole units (INR 10 is ₹10, JPY 100 is ¥100); a currency not listed rounds to 1 (F-112, audit M15). */
   'split.roundTo': def<RoundToByCurrency>('split.roundTo', 'defaults', 'account', 'Round to', {}, isRoundToByCurrency),
-  /** F-310: the calculator keypad replaces the system keyboard for amounts on phones (Expensify's number pad). */
-  'amount.keypad': def('amount.keypad', 'defaults', 'device', 'Amount keypad', true, isBool),
   analyticsPeriod: def('analyticsPeriod', 'defaults', 'account', 'Analytics period', 'year', oneOf('week', 'month', 'year', 'all')),
   analyticsView: def('analyticsView', 'defaults', 'device', 'Analytics view', 'charts', oneOf('charts', 'table')),
   /** F-1901: the one-time "install Splito" hint on the web has been shown; set by the app, no Settings row. */
-  'pwa.installHintDismissed': def('pwa.installHintDismissed', 'defaults', 'device', 'Install hint shown', false, isBool),
+  'pwa.installHintDismissed': def('pwa.installHintDismissed', 'app', 'device', 'Install hint shown', false, isBool),
   /** The last scope chosen on Analytics' scope chip; set there, not in Settings. */
   analyticsScope: def<AnalyticsScope>('analyticsScope', 'defaults', 'device', 'Analytics scope', 'everything', isAnalyticsScope),
   categories: def<Category[]>(
@@ -201,12 +195,6 @@ export const PREFS = {
   'bill.chargePresets': def<ChargePreset[]>('bill.chargePresets', 'defaults', 'account', 'Charge presets', DEFAULT_CHARGE_PRESETS, isChargePresets),
   /** The preset a new itemised bill starts from (an id of `bill.chargePresets`; Simple is the four plain rows). */
   'bill.defaultPreset': def('bill.defaultPreset', 'defaults', 'account', 'New bills start with', 'simple', isString),
-  /** The service charge a new Simple bill starts with, in basis points (0: off). */
-  'bill.serviceChargeDefault': def<number>('bill.serviceChargeDefault', 'defaults', 'account', 'Service charge on new bills', 0, oneOf(...SERVICE_CHARGE_CHOICES)),
-  /** Who carries a bill's round-off: everyone, pro rata to their share, or the payer. */
-  'bill.roundOffSpread': def('bill.roundOffSpread', 'defaults', 'account', 'Round-off goes to', 'shares', oneOf('shares', 'payer')),
-  /** Remember a bill's charge setup per merchant and suggest it next time. */
-  'bill.rememberPerMerchant': def('bill.rememberPerMerchant', 'defaults', 'account', 'Remember charges per merchant', true, isBool),
   /** The 200 most recent merchant setups; written by "Save as preset", cleared with Reset. */
   'bill.merchantSetups': def<MerchantSetup[]>('bill.merchantSetups', 'defaults', 'account', 'Merchant setups', [], isMerchantSetups),
   // Registry order is the order Settings shows each group's items in.
@@ -215,13 +203,9 @@ export const PREFS = {
   weekStart: def('weekStart', 'regional', 'account', 'Week starts on', 1, oneOf(0, 1, 6)),
   dateFormat: def('dateFormat', 'regional', 'account', 'Date format', 'auto', oneOf('auto', 'dmy', 'mdy', 'ymd')),
   numberLocale: def('numberLocale', 'regional', 'account', 'Number format', 'auto', oneOf('auto', 'en-IN', 'en-US', 'de-DE', 'fr-FR')),
-  /** F-310: amounts read 2k, 1.5L, 1cr and 2m. */
-  'amount.shorthand': def('amount.shorthand', 'regional', 'account', 'Amount shortcuts', true, isBool),
   /** F-1816: Bluesky's language dropdown on the web splash, sign-up and the desktop right column. */
   peopleSort: def('peopleSort', 'lists', 'account', 'Sort people by', 'amount', oneOf('amount', 'name', 'recent')),
   includeGroupsDefault: def('includeGroupsDefault', 'lists', 'account', 'Include groups by default', true, isBool),
-  /** The "Inactive (N)" fold at the end of the Groups list (decision 89). */
-  'groups.showInactiveFold': def('groups.showInactiveFold', 'lists', 'account', 'Show inactive groups', true, isBool),
   /** Groups I have hidden from my own lists (decision 89); set from a group's menu, personal to my account, no Settings row. */
   'groups.hidden': def<string[]>('groups.hidden', 'lists', 'account', 'Hidden groups', [], (v): v is string[] => Array.isArray(v) && v.length <= 1000 && v.every(isString) && new Set(v).size === v.length),
   /**
@@ -237,33 +221,24 @@ export const PREFS = {
   /** The Groups filter's sort, saved on Apply so it survives a reload (owner 128, decision 90). */
   'groups.sort': def('groups.sort', 'lists', 'account', 'Sort groups by', 'recent', oneOf('recent', 'name', 'amount')),
   'groups.showSettled': def('groups.showSettled', 'lists', 'account', 'Show settled groups', false, isBool),
-  swipeLeft: def<SwipeAction>('swipeLeft', 'lists', 'account', 'Swipe left', 'delete', oneOf('markRead', 'hide', 'delete', 'none')),
-  swipeRight: def<SwipeAction>('swipeRight', 'lists', 'account', 'Swipe right', 'markRead', oneOf('markRead', 'hide', 'delete', 'none')),
-  /** Search keeps your last searches on this device only, like Bluesky's history. */
-  rememberSearches: def('rememberSearches', 'lists', 'device', 'Remember recent searches', true, isBool),
-  'notify.expense': def('notify.expense', 'notifications', 'account', 'New expenses', true, isBool),
+  /** One switch for "someone adds an expense with you or records a payment to or from you"; an old `notify.expense` of off still reads as off. */
   'notify.payment': def('notify.payment', 'notifications', 'account', 'Payments', true, isBool),
+  'notify.comments': def('notify.comments', 'notifications', 'account', 'Comments and mentions', true, isBool),
   'notify.invite': def('notify.invite', 'notifications', 'account', 'Invites', true, isBool),
   /*
-   * Local notifications (F-1907): they live on this device, so the switches do too. Each kind has its own:
-   * reminders you set (Remind me, F-1119), recurring expenses coming due and a periodic digest (their
-   * features arrive later; the switches exist so the notification module honours them from the start).
+   * Local notifications (F-1907): they live on this device, so the switch does too: reminders you set (Remind me, F-1119).
    */
   'notify.reminders': def('notify.reminders', 'notifications', 'device', 'Reminders I set', true, isBool),
-  'notify.recurring': def('notify.recurring', 'notifications', 'device', 'Recurring expenses due', true, isBool),
-  'notify.digest': def('notify.digest', 'notifications', 'device', 'Digest', false, isBool),
   /** Telemetry (16.1): off, nothing is sent. No Settings row until a vendor exists (A-046); recording still honours it. */
   sendDiagnostics: def('sendDiagnostics', 'privacy', 'device', 'Send diagnostics', true, isBool),
-  /** F-1204: an expense's page lists its edit history between the comments; off, only the comments show. */
-  'comments.showHistory': def('comments.showHistory', 'lists', 'account', 'Show edit history in the discussion', true, isBool),
   // Privacy: the directory server enforces these; saved now, applied once you sign in.
   'privacy.findByContact': def('privacy.findByContact', 'privacy', 'account', 'Let people find me by email or phone', true, isBool),
-  'privacy.friendRequestsFrom': def('privacy.friendRequestsFrom', 'privacy', 'account', 'Who can send me friend requests', 'everyone', oneOf('everyone', 'link-only')),
-  'invites.defaultMaxUses.friend': def<InviteMaxUses>('invites.defaultMaxUses.friend', 'privacy', 'account', 'Friend invite link uses', 1, oneOf(...MAX_USES)),
-  'invites.defaultMaxUses.group': def<InviteMaxUses>('invites.defaultMaxUses.group', 'privacy', 'account', 'Group invite link uses', 25, oneOf(...MAX_USES)),
+  'privacy.friendRequestsFrom': def('privacy.friendRequestsFrom', 'invites', 'account', 'Who can send me friend requests', 'everyone', oneOf('everyone', 'link-only')),
+  'invites.defaultMaxUses.friend': def<InviteMaxUses>('invites.defaultMaxUses.friend', 'invites', 'account', 'Friend invite link uses', 1, oneOf(...MAX_USES)),
+  'invites.defaultMaxUses.group': def<InviteMaxUses>('invites.defaultMaxUses.group', 'invites', 'account', 'Group invite link uses', 25, oneOf(...MAX_USES)),
   /** Groups: new invite links make each join wait for an admin (26.18, default off). */
-  'invites.approveJoins': def('invites.approveJoins', 'privacy', 'account', 'Approve each group join', false, isBool),
-  'invites.defaultExpiry': def<InviteExpiry>('invites.defaultExpiry', 'privacy', 'account', 'Invite links expire after', '7d', oneOf('24h', '7d', '30d', 'never')),
+  'invites.approveJoins': def('invites.approveJoins', 'invites', 'account', 'Approve each group join', false, isBool),
+  'invites.defaultExpiry': def<InviteExpiry>('invites.defaultExpiry', 'invites', 'account', 'Invite links expire after', '7d', oneOf('24h', '7d', '30d', 'never')),
 } as const
 
 export type PrefKey = keyof typeof PREFS
@@ -284,6 +259,8 @@ function readRaw<K extends PrefKey>(rows: ReadonlyArray<PrefRow>, key: K): PrefV
     // Home became fixed (26.3): orders saved before then keep their tabs, with Home first.
     value = ['people', ...(value as NavItemId[]).filter(t => t !== 'people')]
   }
+  // The "New expenses" switch folded into "Payments" (owner 131): an old stored off on either reads as off.
+  if (key === 'notify.payment' && value !== false && rows.some(p => p.id === 'notify.expense' && !p.deleted && p.data.value === false)) value = false
   // The account-wide unit saved before units were per currency (F-112) belongs to the default currency, where it was meant.
   if (key === 'split.roundTo' && typeof value === 'number' && (ROUND_TO_UNITS as readonly number[]).includes(value)) {
     const currency = readRaw(rows, 'defaultCurrency')
@@ -315,6 +292,11 @@ async function putPref(tx: Tx, ctx: MutationCtx, key: PrefKey, value: unknown, d
   const prev = await tx.get('preference', key)
   const version = (prev?.version ?? 0) + 1
   await tx.put({type: 'preference', id: key, data: {value}, version, deleted, updatedAt: ctx.now()})
+  // The folded-in "New expenses" row would keep reading as off after Payments is changed here: this write is the latest word.
+  if (key === 'notify.payment') {
+    const old = await tx.get('preference', 'notify.expense')
+    if (old && !old.deleted) await tx.put({...old, version: old.version + 1, deleted: true, updatedAt: ctx.now()})
+  }
   if (def.scope === 'account')
     await tx.enqueue({
       opId: ctx.newId(),

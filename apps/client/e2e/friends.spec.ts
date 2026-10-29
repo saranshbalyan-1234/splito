@@ -327,15 +327,18 @@ test('phone: Add friend is a bottom sheet, full width from the bottom edge', asy
   expect(primary.y + primary.height).toBeGreaterThan(PHONE.height - 80)
 })
 
-test('Settings > Privacy has the directory and invite-link choices', async ({page}) => {
+test('Settings > Privacy has the directory choice and links to Friends and invites, which owns the rest', async ({page}) => {
   await page.setViewportSize(DESKTOP)
   await page.goto('/settings')
   await expect(page.getByTestId('settings-privacy-value')).toHaveText('Findable')
   await page.getByTestId('settings-privacy').click()
   await expect(page.getByTestId('pref-privacy.findByContact')).toBeVisible()
+  await expect(page.getByTestId('pref-privacy.friendRequestsFrom')).toHaveCount(0)
+  await expect(page.getByTestId('pref-invites.defaultExpiry')).toHaveCount(0)
+  await page.getByTestId('settings-privacy-friends').click()
   await expect(page.getByTestId('pref-privacy.friendRequestsFrom')).toBeVisible()
+  await expect(page.getByTestId('pref-privacy.findByContact')).toHaveCount(0)
   await page.getByTestId('invites.defaultMaxUses.friend-5').click()
   await expect(page.getByTestId('invites.defaultMaxUses.friend-5')).toHaveAttribute('aria-checked', 'true')
   await expect(page.getByTestId('pref-invites.defaultExpiry')).toBeVisible()
-  await expect(page.getByTestId('settings-invite-links')).toBeVisible()
 })

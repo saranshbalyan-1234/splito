@@ -260,7 +260,7 @@ function Inner({screen}: {screen: string}) {
         </View>
 
         <View style={[a.gap_sm]}>
-          <Toggle.Item
+          <Toggle.Item type="switch"
             testID="feedback-include-info"
             name="includeAppInfo"
             label={l`Include app info`}

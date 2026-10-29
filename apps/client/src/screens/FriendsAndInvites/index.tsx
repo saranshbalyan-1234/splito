@@ -37,9 +37,8 @@ import {Text} from '#/components/Typography'
 /** Above this many friends the section gets a search field. */
 const SEARCH_ABOVE = 10
 
-/** The defaults this page owns: the existing privacy and invite-link preferences. */
+/** The defaults this page owns: friend requests and the invite-link choices (Privacy keeps "find me"). */
 const DEFAULT_PREFS = [
-  'privacy.findByContact',
   'privacy.friendRequestsFrom',
   'invites.defaultMaxUses.friend',
   'invites.defaultMaxUses.group',

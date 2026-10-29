@@ -8,6 +8,7 @@ import {useNavigation} from '@react-navigation/native'
 
 import {type NavigationProp} from '#/lib/routes/types'
 import {backFallback, goBack} from '#/navigation/goBack'
+import {useDemoMode} from '#/state/demo'
 import {useShellHeaderLayout} from '#/state/shell/shell-layout'
 import {useIsWithinSplitView} from '#/lib/splitView'
 import {
@@ -228,6 +229,9 @@ export function TitleText({
   const {gtMobile} = useBreakpoints()
   const {isWithinLeftPanel} = useIsWithinSplitView()
   const align = useContext(AlignmentContext)
+  const {_} = useLingui()
+  /* Demo mode shows in every header title (owner 134), once, here. */
+  const {demo} = useDemoMode()
   return (
     <Text
       testID={testID}
@@ -244,6 +248,7 @@ export function TitleText({
       emoji
       maxFontSizeMultiplier={2}>
       {children}
+      {demo ? ` - ${_(msg`Demo`)}` : null}
     </Text>
   )
 }

@@ -16,9 +16,6 @@ export async function openDemo(page: Page, path = '/') {
   if (path !== '/' || page.url() !== new URL('/', page.url()).href) await page.goto(path)
   // The app's seeding tools are bound to the new store once it is showing.
   await page.waitForFunction(() => 'splito' in window, undefined, {timeout: 30_000})
-  // The banner is loaded on demand and pushes the page down when it lands; measure only after that.
-  // Screens without a header never show it, so a miss is fine.
-  await page.getByTestId('demo-banner').first().waitFor({timeout: 5_000}).catch(() => {})
 }
 
 /** Turns demo mode off again through the same hook (back on the real, untouched data). */

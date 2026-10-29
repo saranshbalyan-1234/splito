@@ -1,7 +1,7 @@
 // Adapted from bluesky-social/social-app@4e4ad9c (MIT) - src/screens/Settings/Settings.tsx
 import {lazy, Suspense} from 'react'
 import {View} from 'react-native'
-import {type Feedback, type PrefGroup, resetAllPrefs} from '@splito/sync'
+import {type Feedback, resetAllPrefs} from '@splito/sync'
 import {plural} from '@lingui/core/macro'
 import {Trans, useLingui} from '@lingui/react/macro'
 import {useRoute} from '@react-navigation/native'
@@ -27,7 +27,7 @@ import {Message_Stroke2_Corner0_Rounded as MessageIcon, PeopleGroup_Stroke2_Corn
 import * as Layout from '#/components/Layout'
 import {useTabLabels} from '#/components/settings/NavigationEditor'
 import * as Prompt from '#/components/Prompt'
-import {SETTINGS_SECTIONS, useSectionInfo} from '#/components/settings/sections'
+import {SETTINGS_SECTIONS, type SettingsSectionId, useSectionInfo} from '#/components/settings/sections'
 import * as Toast from '#/components/Toast'
 import {SignIn_Stroke2_Corner0_Rounded as SignInIcon} from '#/components/icons/Auth'
 import {Text} from '#/components/Typography'
@@ -270,8 +270,8 @@ export function SettingsScreen() {
                 t.atoms.text_contrast_medium,
               ]}>
               <Trans>
-                Settings are saved on this device. Once you sign in, they follow
-                you to your other devices.
+                Settings are saved on this device and follow you to your other
+                devices once sync is on.
               </Trans>
             </Text>
           </View>
@@ -301,10 +301,9 @@ export function SettingsScreen() {
 }
 
 /** Each page's current state at a glance, shown at the end of its row (as Bluesky's settings rows do). */
-function useSectionSummary(): Partial<Record<PrefGroup, string>> {
+function useSectionSummary(): Partial<Record<SettingsSectionId, string>> {
   const {t: l} = useLingui()
   const [theme = 'system'] = usePref('theme')
-  const [motion = 'full'] = usePref('motion')
   const [currency = 'INR'] = usePref('defaultCurrency')
   const [homeTab = 'people'] = usePref('homeTab')
   const [tabs] = usePref('tabs')
@@ -312,18 +311,16 @@ function useSectionSummary(): Partial<Record<PrefGroup, string>> {
   const tabLabels = useTabLabels()
   const [categories] = usePref('categories')
   const [language = 'en'] = usePref('language')
-  const [sort = 'amount'] = usePref('peopleSort')
-  const [notifyExpense = true] = usePref('notify.expense')
+  const [notifyComments = true] = usePref('notify.comments')
   const [notifyPayment = true] = usePref('notify.payment')
   const [notifyInvite = true] = usePref('notify.invite')
   const [findable = true] = usePref('privacy.findByContact')
   const visible = (categories ?? []).filter(c => !c.hidden).length
-  const notifyOn = [notifyExpense, notifyPayment, notifyInvite].filter(
+  const notifyOn = [notifyPayment, notifyComments, notifyInvite].filter(
     Boolean,
   ).length
   return {
     appearance: {system: l`System`, light: l`Light`, dark: l`Dark`}[theme],
-    motion: {full: l`Full`, reduced: l`Reduced`, off: l`Off`}[motion],
     /* How many tabs the bottom bar holds, and where the app opens. */
     navigation:
       tabCount === undefined
@@ -333,11 +330,6 @@ function useSectionSummary(): Partial<Record<PrefGroup, string>> {
     defaults: currency,
     categories: visible === 1 ? l`1 category` : l`${visible} categories`,
     regional: {en: 'English', hi: 'हिन्दी'}[language],
-    lists: {
-      amount: l`By amount`,
-      name: l`By name`,
-      recent: l`Most recent`,
-    }[sort],
     notifications: notifyOn === 3 ? l`On` : notifyOn === 0 ? l`Off` : l`Some`,
     privacy: findable ? l`Findable` : l`Hidden`,
   }

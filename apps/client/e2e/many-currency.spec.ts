@@ -208,30 +208,32 @@ test('m21: an Overview currency card opens Analytics in that currency, every tim
   await expect(page.getByTestId('analytics-currency')).toContainText('EUR')
 })
 
-test('M15: the cash unit is chosen per currency in Settings and a unit too big for the bill splits it exactly', async ({
+test('M15: the expense\'s round control remembers the switch and the unit per currency (F-251)', async ({
   page,
 }) => {
+  await page.setViewportSize(DESKTOP)
   await ready(page)
-  await page.goto('/settings/defaults')
-  await page.getByTestId('split.roundCash-switch').click()
-  await expect(page.getByTestId('round-to-currency')).toContainText('INR')
-  // Showing the control writes nothing: the segmented control reports its value on layout.
-  await page.waitForTimeout(500)
-  const rowsAtLayout = await page.evaluate(async () =>
-    (
-      await (window as unknown as {splito: Splito}).splito.list('preference')
-    ).map(r => r.id),
-  )
-  expect(rowsAtLayout).not.toContain('split.roundTo')
-  await page.getByTestId('round-to-10').click()
-  await page.getByTestId('round-to-currency').click()
-  await page.getByTestId('round-to-currency-dialog-JPY').click()
-  await page.getByTestId('round-to-100').click()
-  const unit = await page.evaluate(async () => {
-    const rows = await (window as unknown as {splito: Splito}).splito.list(
-      'preference',
+  await page.evaluate(() => (window as unknown as {splito: Splito}).splito.createPerson('Riya Sharma'))
+  const prefs = () =>
+    page.evaluate(async () =>
+      Object.fromEntries(
+        (await (window as unknown as {splito: Splito}).splito.list('preference')).map(r => [r.id, r.data.value]),
+      ),
     )
-    return rows.find(r => r.id === 'split.roundTo')?.data.value
-  })
-  expect(unit).toEqual({INR: 10, JPY: 100})
+  await page.getByTestId('sidebar-add').click()
+  await page.getByTestId('amount-input').fill('1000.50')
+  await page.getByTestId('expense-people').click()
+  await page.getByTestId('person-option-Riya Sharma').click()
+  await page.getByTestId('people-dialog').getByTestId('sheet-close').click()
+  await expect(page.getByTestId('cash-rounding')).toBeVisible()
+  // Showing the control writes nothing.
+  await page.waitForTimeout(500)
+  expect(Object.keys(await prefs())).not.toContain('split.roundTo')
+  await page.getByTestId('cash-rounding-switch').click()
+  await page.getByTestId('cash-unit-10').click()
+  await expect.poll(async () => (await prefs())['split.roundTo']).toEqual({INR: 10})
+  expect((await prefs())['split.roundCash']).toBe(true)
+  // Switching it off is remembered too.
+  await page.getByTestId('cash-rounding-switch').click()
+  await expect.poll(async () => (await prefs())['split.roundCash']).toBe(false)
 })

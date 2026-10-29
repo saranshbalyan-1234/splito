@@ -206,10 +206,14 @@ test('a reminder that comes due while Splito is open shows itself, and one misse
   await expect(page.getByText(/^While Splito was closed: Settle up with Bob Mehta/)).toBeVisible()
 })
 
-test('Settings: one switch for reminders, none yet for features that do not exist', async ({page}) => {
+test('Settings: Payments, Comments, Invites and Reminders; none for features that do not exist', async ({page}) => {
   await ready(page)
   await page.goto('/settings/notifications')
-  await expect(page.getByText('Reminders you set with Remind me work now, on this device.')).toBeVisible()
+  await expect(page.getByText('Reminders work now.')).toBeVisible()
+  await expect(page.getByTestId('pref-notify.payment')).toContainText('adds an expense with you or records a payment to or from you')
+  await expect(page.getByTestId('pref-notify.comments')).toContainText('@mentions you')
+  await expect(page.getByTestId('pref-notify.expense')).toHaveCount(0)
+  await expect(page.getByTestId('pref-notify.invite')).toBeVisible()
   await expect(page.getByTestId('pref-notify.reminders')).toBeVisible()
   await expect(page.getByTestId('pref-notify.recurring')).toHaveCount(0)
   await expect(page.getByTestId('pref-notify.digest')).toHaveCount(0)

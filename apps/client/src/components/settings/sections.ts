@@ -2,32 +2,29 @@ import {PREFS, type PrefGroup, type PrefKey} from '@splito/sync'
 import {useLingui} from '@lingui/react/macro'
 
 import {Bell_Stroke2_Corner0_Rounded as BellIcon} from '#/components/icons/Bell'
-import {BulletList_Stroke2_Corner0_Rounded as ListIcon} from '#/components/icons/BulletList'
 import {type Props as SVGIconProps} from '#/components/icons/common'
 import {Earth_Stroke2_Corner2_Rounded as EarthIcon} from '#/components/icons/Globe'
 import {PaintRoller_Stroke2_Corner2_Rounded as PaintRollerIcon} from '#/components/icons/PaintRoller'
 import {Shapes_Stroke2_Corner0_Rounded as ShapesIcon} from '#/components/icons/Shapes'
 import {Shield_Stroke2_Corner0_Rounded as ShieldIcon} from '#/components/icons/Invite'
-import {
-  DefaultsIcon,
-  SparklesIcon,
-  TabsIcon,
-} from '#/components/settings/icons'
+import {DefaultsIcon, TabsIcon} from '#/components/settings/icons'
 
-/** Settings pages, one per preferences-registry group, in the order the Settings list shows them. */
+/**
+ * Settings pages, one per preferences-registry group that has a page, in the order the Settings list shows
+ * them (F-251: seven). The `motion` and `lists` pages are gone; their old links redirect (SettingsSection).
+ */
 export const SETTINGS_SECTIONS = [
   'appearance',
-  'motion',
   'navigation',
   'defaults',
   'categories',
   'regional',
-  'lists',
   'notifications',
   'privacy',
 ] as const satisfies readonly PrefGroup[]
+export type SettingsSectionId = (typeof SETTINGS_SECTIONS)[number]
 
-export function isSettingsSection(id: string): id is PrefGroup {
+export function isSettingsSection(id: string): id is SettingsSectionId {
   return (SETTINGS_SECTIONS as readonly string[]).includes(id)
 }
 
@@ -40,20 +37,17 @@ export function prefsIn(group: PrefGroup): PrefKey[] {
 
 /** Title and icon of each Settings page. */
 export function useSectionInfo(): Record<
-  PrefGroup,
+  SettingsSectionId,
   {title: string; icon: React.ComponentType<SVGIconProps>}
 > {
   const {t: l} = useLingui()
   return {
     appearance: {title: l`Appearance`, icon: PaintRollerIcon},
-    motion: {title: l`Motion and haptics`, icon: SparklesIcon},
     /* The phone bottom bar and where Splito opens (26.3). */
     navigation: {title: l`Navigation`, icon: TabsIcon},
     defaults: {title: l`Defaults`, icon: DefaultsIcon},
     categories: {title: l`Categories`, icon: ShapesIcon},
     regional: {title: l`Language and region`, icon: EarthIcon},
-    /* What the People list shows and in what order; "Lists" alone said nothing. */
-    lists: {title: l`Sorting and filters`, icon: ListIcon},
     notifications: {title: l`Notifications`, icon: BellIcon},
     privacy: {title: l`Privacy`, icon: ShieldIcon},
   }

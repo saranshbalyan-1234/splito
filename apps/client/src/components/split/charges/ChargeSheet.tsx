@@ -348,7 +348,7 @@ function SwitchRow({
   const t = useTheme()
   return (
     <Toggle.Item
-      type="checkbox"
+      type="switch"
       testID={testID}
       name={testID}
       label={label}
@@ -361,7 +361,7 @@ function SwitchRow({
           {hint}
         </Text>
       </View>
-      <Toggle.Platform />
+      <Toggle.Switch />
     </Toggle.Item>
   )
 }

@@ -58,6 +58,7 @@ import {SettingsSectionScreen} from '#/screens/Settings/SettingsSection'
 import {SignInScreen} from '#/screens/SignIn'
 import {SearchScreen} from '#/screens/Search'
 import {SettleScreen} from '#/screens/Settle'
+import {useDemoMode} from '#/state/demo'
 
 const Stack = createNativeStackNavigator<RootStackParams>()
 const Tab = createBottomTabNavigator<TabParams>()
@@ -242,10 +243,14 @@ export function FlatNavigator({
   const t = useTheme()
   const {_} = useLingui()
   const screenListeners = useWebScrollRestoration()
+  const {demo} = useDemoMode()
 
   const title = (name: keyof FlatNavigatorParams) => {
     const page = TITLES[name]
-    return page ? `${_(page)} - Splito` : 'Splito'
+    /* Demo mode follows the page name in the window title too (owner 134). */
+    const demoTag = demo ? ` - ${_(msg`Demo`)}` : ''
+    if (!page) return demo ? `${_(msg`Home`)}${demoTag} - Splito` : 'Splito'
+    return `${_(page)}${demoTag} - Splito`
   }
 
   return (

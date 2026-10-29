@@ -23,7 +23,9 @@ import {
 } from '#/data/hooks'
 import {EmptyState} from '#/view/com/util/EmptyState'
 import {List} from '#/view/com/util/List'
-import {atoms as a, useBreakpoints} from '#/alf'
+import {useDemoMode} from '#/state/demo'
+import {atoms as a, useBreakpoints, useTheme} from '#/alf'
+import {Text} from '#/components/Typography'
 import {AddExpenseFAB, AddExpenseFABInset} from '#/components/AddExpenseFAB'
 import {LogoMark} from '#/components/brand/Logo'
 import {useDialogControl} from '#/components/Dialog'
@@ -69,6 +71,8 @@ const STOCK = {includeGroups: true, currency: 'all', show: 'all', sort: 'amount'
 export function PeopleScreen() {
   const {t: l} = useLingui()
   const {gtMobile} = useBreakpoints()
+  const t = useTheme()
+  const {demo} = useDemoMode()
   const locale = useNumberLocale()
   const navigation = useNavigation<NavigationProp>()
   const {height} = useWindowDimensions()
@@ -181,8 +185,14 @@ export function PeopleScreen() {
               accessibilityRole="link"
               accessibilityLabel={l`Splito - Home`}
               aria-disabled={true}
+              style={[a.flex_row, a.align_center, a.gap_xs]}
               disabled={true}>
               <LogoMark size={30} />
+              {demo ? (
+                <Text testID="header-demo-label" style={[a.text_xs, a.font_semi_bold, t.atoms.text_contrast_medium]}>
+                  <Trans>Demo</Trans>
+                </Text>
+              ) : null}
             </PressableScale>
           )}
         </Layout.Header.Content>

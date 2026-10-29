@@ -23,17 +23,18 @@ test('the Settings list has a page for every preference group, plus About', asyn
   await open(page, '/settings', 'screen-settings')
   for (const id of [
     'appearance',
-    'motion',
     'navigation',
     'defaults',
     'categories',
     'regional',
-    'lists',
     'notifications',
+    'privacy',
     'about',
   ]) {
     await expect(page.getByTestId(`settings-${id}`)).toBeVisible()
   }
+  // Motion and haptics, and Sorting and filters, are gone (F-251): seven preference pages.
+  for (const id of ['motion', 'lists']) await expect(page.getByTestId(`settings-${id}`)).toHaveCount(0)
   await page.getByTestId('settings-regional').click()
   await expect(page).toHaveURL(/\/settings\/regional$/)
   await expect(page.getByTestId('pref-language')).toBeVisible()
@@ -251,18 +252,18 @@ test('Reset restores one default, and Reset all restores every default', async (
   page,
 }) => {
   await open(page, '/settings/appearance', 'screen-settings-section')
-  await expect(page.getByTestId('reset-density')).toHaveCount(0)
-  await page.getByTestId('density-compact').click()
-  await expect(page.getByTestId('density-compact')).toHaveAttribute(
+  await expect(page.getByTestId('reset-moneyPalette')).toHaveCount(0)
+  await page.getByTestId('moneyPalette-mono').click()
+  await expect(page.getByTestId('moneyPalette-mono')).toHaveAttribute(
     'aria-checked',
     'true',
   )
-  await page.getByTestId('reset-density').click()
-  await expect(page.getByTestId('density-comfortable')).toHaveAttribute(
+  await page.getByTestId('reset-moneyPalette').click()
+  await expect(page.getByTestId('moneyPalette-default')).toHaveAttribute(
     'aria-checked',
     'true',
   )
-  await expect(page.getByTestId('reset-density')).toHaveCount(0)
+  await expect(page.getByTestId('reset-moneyPalette')).toHaveCount(0)
 
   await page.getByTestId('theme-dark').click()
   await expect(page.locator('html')).toHaveClass(/theme--dim/)

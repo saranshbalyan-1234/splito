@@ -246,7 +246,7 @@ export function CreateInviteScreen() {
 
         {kind === 'group' ? (
           <Toggle.Item
-            type="checkbox"
+            type="switch"
             testID="invite-approve-joins"
             name="approveJoins"
             label={l`Approve each join`}
@@ -261,7 +261,7 @@ export function CreateInviteScreen() {
                 <Trans>People who use the link wait until you let them in.</Trans>
               </Text>
             </View>
-            <Toggle.Platform />
+            <Toggle.Switch />
           </Toggle.Item>
         ) : null}
 

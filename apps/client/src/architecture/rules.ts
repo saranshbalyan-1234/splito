@@ -502,11 +502,11 @@ export const RULES = {
     count: (_p, s) => externalHandOffs(s),
   },
   demoStaticImport: {
-    why: 'A static import of demo mode (#/data/demoMode, #/data/demoSeed, #/screens/Settings/DemoMode, #/components/DemoBanner, @splito/sync/demoLarge) outside the demo files: `import x from`, `export ... from`, a side-effect `import \'...\'` and `require()` all bundle it. It must load with import() under __DEV__ / EXPO_PUBLIC_ENV so production bundles hold none of it (ARCHITECTURE 26.1).',
-    appliesTo: p => isClient(p) && !/\/(?:data\/demo(?:Mode|Seed)|screens\/Settings\/DemoMode|components\/DemoBanner)\.tsx?$/.test(p),
+    why: 'A static import of demo mode (#/data/demoMode, #/data/demoSeed, #/screens/Settings/DemoMode, #/components/DemoBusyCover, @splito/sync/demoLarge) outside the demo files: `import x from`, `export ... from`, a side-effect `import \'...\'` and `require()` all bundle it. It must load with import() under __DEV__ / EXPO_PUBLIC_ENV so production bundles hold none of it (ARCHITECTURE 26.1).',
+    appliesTo: p => isClient(p) && !/\/(?:data\/demo(?:Mode|Seed)|screens\/Settings\/DemoMode|components\/DemoBusyCover)\.tsx?$/.test(p),
     count: (_p, s) => {
       const c = noComments(s)
-      const DEMO = `['"](?:#\\/data\\/demoMode|#\\/data\\/demoSeed|#\\/screens\\/Settings\\/DemoMode|#\\/components\\/DemoBanner|@splito\\/sync\\/demoLarge)['"]`
+      const DEMO = `['"](?:#\\/data\\/demoMode|#\\/data\\/demoSeed|#\\/screens\\/Settings\\/DemoMode|#\\/components\\/DemoBusyCover|@splito\\/sync\\/demoLarge)['"]`
       return (
         countMatches(c, new RegExp(`(?:^|\\n)\\s*(?:import|export)\\b[^'"\`;]*?\\bfrom\\s*${DEMO}`, 'g')) +
         countMatches(c, new RegExp(`(?:^|\\n)\\s*import\\s*${DEMO}`, 'g')) +

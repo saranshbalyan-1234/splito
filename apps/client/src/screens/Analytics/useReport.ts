@@ -91,7 +91,7 @@ export function useReport() {
   const groups = useEntities<Group>('group')
   const people = useEntities<Person>('person')
   const [categories = DEFAULT_CATEGORIES] = usePref('categories')
-  const [defaultPeriod] = usePref('analyticsPeriod')
+  const [defaultPeriod, saveDefaultPeriod] = usePref('analyticsPeriod')
   const [scopePref, setScopePref] = usePref('analyticsScope')
   const [defaultCurrency] = usePref('defaultCurrency')
   const [weekStartPref] = usePref('weekStart')
@@ -390,8 +390,11 @@ export function useReport() {
     nameOfGroup,
     category,
     spanLabel,
-    setPeriod: (period: Exclude<PeriodChoice, 'custom'>) =>
-      setState(s => ({...s, period, offset: 0})),
+    /** Remembered as the period Analytics opens with (`analyticsPeriod`, decision 90); a custom range is not. */
+    setPeriod: (period: Exclude<PeriodChoice, 'custom'>) => {
+      setState(s => ({...s, period, offset: 0}))
+      void saveDefaultPeriod(period)
+    },
     setCustom: (custom: DateRange) =>
       setState(s => ({...s, period: 'custom', custom, offset: 0})),
     step: (by: number) => setState(s => ({...s, offset: s.offset + by})),

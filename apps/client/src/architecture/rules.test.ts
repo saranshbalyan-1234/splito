@@ -151,11 +151,11 @@ describe('counters', () => {
   test('demoStaticImport', () => {
     expect(count('demoStaticImport', "import {DemoModeRows} from '#/screens/Settings/DemoMode'")).toBe(1)
     expect(count('demoStaticImport', "import {openDemo} from '#/data/demoMode'\nexport {x} from '@splito/sync/demoLarge'")).toBe(2)
-    expect(count('demoStaticImport', "import DemoBanner from '#/components/DemoBanner'")).toBe(1)
+    expect(count('demoStaticImport', "import DemoBusyCover from '#/components/DemoBusyCover'")).toBe(1)
     expect(count('demoStaticImport', "import {seedDemo} from '#/data/demoSeed'")).toBe(1)
     expect(count('demoStaticImport', "import {seedDemo} from '#/data/demoSeed'", `${CLIENT}data/demoMode.ts`)).toBe(0)
     expect(count('demoStaticImport', "const m = await import('#/screens/Settings/DemoMode')")).toBe(0)
-    expect(count('demoStaticImport', "const B = lazy(() => import('#/components/DemoBanner'))")).toBe(0)
+    expect(count('demoStaticImport', "const B = lazy(() => import('#/components/DemoBusyCover'))")).toBe(0)
     expect(count('demoStaticImport', "import {x} from '#/data/demoMode'", `${CLIENT}screens/Settings/DemoMode.tsx`)).toBe(0)
     // Side-effect imports and require() bundle it too; a comment does not.
     expect(count('demoStaticImport', "import '#/data/demoMode'\nimport \"@splito/sync/demoLarge\"")).toBe(2)

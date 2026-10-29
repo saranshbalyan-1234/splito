@@ -73,6 +73,7 @@ export function SplitEditor({
   adjustModes,
   onAdjustModesChanged,
   defaultRoundTo,
+  onRoundingChanged,
   me,
 }: {
   form: ExpenseForm
@@ -85,6 +86,8 @@ export function SplitEditor({
   onAdjustModesChanged: (modes: AdjustmentModes) => void
   /** The cash unit rounding starts with (the `split.roundTo` preference). */
   defaultRoundTo: number
+  /** The user toggled or picked the cash unit (0: off): remembered for the next expense. */
+  onRoundingChanged: (unit: number) => void
   /** My person id: the readout says when the remainder lands on me. */
   me: string
 }) {
@@ -94,8 +97,6 @@ export function SplitEditor({
   const isPointer = IS_WEB && gtMobile
   const presets = useChargePresets()
   const defaultPresetId = usePrefControl('bill.defaultPreset').value ?? 'simple'
-  const serviceBasisPoints =
-    usePrefControl('bill.serviceChargeDefault').value ?? 0
 
   const labels: Record<SplitMode, string> = {
     equal: l`Equally`,
@@ -153,7 +154,6 @@ export function SplitEditor({
                                 preset: presets.find(
                                   p => p.id === defaultPresetId,
                                 ),
-                                serviceBasisPoints,
                                 newKey: () => nanoid(8),
                                 mark: decimalMark(locale),
                               },
@@ -219,6 +219,7 @@ export function SplitEditor({
               evaluation={evaluation}
               locale={locale}
               defaultUnit={defaultRoundTo}
+              onChanged={onRoundingChanged}
               actor={me}
             />
           ) : null}
@@ -987,6 +988,7 @@ function CashRounding({
   evaluation,
   locale,
   defaultUnit,
+  onChanged,
   actor,
 }: {
   form: ExpenseForm
@@ -994,6 +996,7 @@ function CashRounding({
   evaluation: FormEvaluation
   locale: string
   defaultUnit: number
+  onChanged: (unit: number) => void
   actor: string
 }) {
   const t = useTheme()
@@ -1008,12 +1011,15 @@ function CashRounding({
   return (
     <View testID="cash-rounding" style={[a.px_lg, a.pt_lg, a.gap_sm]}>
       <Toggle.Item
-        type="checkbox"
+        type="switch"
         testID="cash-rounding-switch"
         name="cash-rounding"
         label={l`Round shares to cash`}
         value={isOn}
-        onChange={on => update(f => ({...f, roundTo: on ? defaultUnit : 0}))}
+        onChange={on => {
+          update(f => ({...f, roundTo: on ? defaultUnit : 0}))
+          onChanged(on ? defaultUnit : 0)
+        }}
         style={[a.w_full, a.gap_md]}>
         <View
           style={[
@@ -1034,7 +1040,7 @@ function CashRounding({
             <Trans>Whole amounts that are easy to hand over</Trans>
           </Text>
         </View>
-        <Toggle.Platform />
+        <Toggle.Switch />
       </Toggle.Item>
 
       {isOn ? (
@@ -1055,7 +1061,10 @@ function CashRounding({
                   accessibilityState={{checked: isPicked}}
                   size="small"
                   color={isPicked ? 'primary' : 'secondary'}
-                  onPress={() => update(f => ({...f, roundTo: unit}))}>
+                  onPress={() => {
+                    update(f => ({...f, roundTo: unit}))
+                    onChanged(unit)
+                  }}>
                   <ButtonText>{unitText(unit)}</ButtonText>
                 </Button>
               )

@@ -36,7 +36,6 @@ export function AddExpenseScreen() {
   const people = useEntities<Person>('person')
   const groups = useEntities<Group>('group')
   const [currency] = usePref('defaultCurrency')
-  const [mode] = usePref('defaultSplitMode')
   const [adjustModes] = usePref('itemizeAdjustmentModes')
   const [isRoundingCash] = usePref('split.roundCash')
   const [roundTo] = usePref('split.roundTo')
@@ -52,7 +51,6 @@ export function AddExpenseScreen() {
     !people ||
     !groups ||
     !currency ||
-    !mode ||
     !adjustModes ||
     isRoundingCash === undefined ||
     roundTo === undefined
@@ -72,7 +70,6 @@ export function AddExpenseScreen() {
       people={people}
       groups={groups}
       currency={currency}
-      mode={mode}
       adjustModes={adjustModes}
       roundTo={isRoundingCash ? roundTo : null}
       tz={tz}
@@ -89,7 +86,6 @@ function AddExpenseForm({
   people,
   groups,
   currency,
-  mode,
   adjustModes,
   roundTo,
   tz,
@@ -102,7 +98,6 @@ function AddExpenseForm({
   people: Entity<Person>[]
   groups: Entity<Group>[]
   currency: string
-  mode: ExpenseForm['mode']
   adjustModes: ExpenseForm['adjustModes']
   /** Cash units per currency new splits start rounded to (`split.roundTo`); null when `split.roundCash` is off. */
   roundTo: RoundToByCurrency | null
@@ -136,7 +131,7 @@ function AddExpenseForm({
         date: todayIn(tz),
         people: members,
         groupId: group.id,
-        mode,
+        mode: 'equal',
         adjustModes,
         roundTo: roundTo ? roundToFor(roundTo, group.data.currency) : 0,
       })
@@ -148,7 +143,7 @@ function AddExpenseForm({
       date: todayIn(tz),
       people: person ? [person.id] : [],
       groupId: null,
-      mode,
+      mode: 'equal',
       adjustModes,
       roundTo: roundTo ? roundToFor(roundTo, currency) : 0,
     })

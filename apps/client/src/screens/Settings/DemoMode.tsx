@@ -50,7 +50,7 @@ export function DemoModeRows() {
       <SettingsList.Item>
         <SettingsList.ItemIcon icon={DemoIcon} />
         <Toggle.Item
-          type="checkbox"
+          type="switch"
           testID="settings-demo-mode"
           name="demo-mode"
           label={l`Demo mode`}
@@ -66,7 +66,7 @@ export function DemoModeRows() {
               <Trans>Explore Splito with sample data. Your own data is kept separately and untouched.</Trans>
             </Text>
           </View>
-          <Toggle.Platform />
+          <Toggle.Switch />
         </Toggle.Item>
       </SettingsList.Item>
       {demo && (

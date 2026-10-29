@@ -76,7 +76,6 @@ export function GroupsScreen() {
   const seen = useSeenCurrencies()
   const groupActivity = useGroupActivity()
   const [defaultCurrency = 'INR'] = usePref('defaultCurrency')
-  const [showInactiveFold = true] = usePref('groups.showInactiveFold')
   const hiddenIds = useHiddenGroups()
   const [isFoldOpen, setIsFoldOpen] = useState(false)
   const [applied, setApplied] = useState<GroupFilters | null>(null)
@@ -129,7 +128,7 @@ export function GroupsScreen() {
   /* The Inactive (N) fold at the end of the default view: inactive groups I have not hidden. */
   const isDefaultView = filters.status === 'active' && !filters.showHidden
   const folded =
-    showInactiveFold && isDefaultView && !isSearching
+    isDefaultView && !isSearching
       ? order(filterGroups(all, {...filters, status: 'inactive'}))
       : []
   const createGroup = () => navigation.navigate('CreateGroup')

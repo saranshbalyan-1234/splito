@@ -1,8 +1,8 @@
 // Adapted from bluesky-social/social-app@4e4ad9c (MIT) - src/screens/Settings/AppearanceSettings.tsx (screen frame)
-import {Fragment} from 'react'
+import {Fragment, useEffect} from 'react'
 import {View} from 'react-native'
 import {LayoutAnimationConfig} from 'react-native-reanimated'
-import {type PrefGroup, resetPref} from '@splito/sync'
+import {resetPref} from '@splito/sync'
 import {Trans, useLingui} from '@lingui/react/macro'
 import {type RouteProp, useNavigation, useRoute} from '@react-navigation/native'
 
@@ -15,7 +15,7 @@ import {atoms as a, useTheme} from '#/alf'
 import {Button, ButtonText} from '#/components/Button'
 import {ArrowRotateCounterClockwise_Stroke2_Corner0_Rounded as ResetIcon} from '#/components/icons/ArrowRotate'
 import {CircleInfo_Stroke2_Corner0_Rounded as InfoIcon} from '#/components/icons/CircleInfo'
-import {ChainLink_Stroke2_Corner0_Rounded as LinkIcon} from '#/components/icons/Invite'
+import {PeopleGroup_Stroke2_Corner0_Rounded as FriendsIcon} from '#/components/icons/Invite'
 import * as Layout from '#/components/Layout'
 import * as Prompt from '#/components/Prompt'
 import {
@@ -27,6 +27,7 @@ import {PREF_CONTROLS} from '#/components/settings/prefControls'
 import {
   isSettingsSection,
   prefsIn,
+  type SettingsSectionId,
   useSectionInfo,
 } from '#/components/settings/sections'
 import * as Toast from '#/components/Toast'
@@ -36,7 +37,8 @@ import {Text} from '#/components/Typography'
  * One Settings page. Pages are generated from the preferences registry: the
  * route's section is a registry group, and each preference in it renders its
  * control, in registry order. `/settings/about`, `/help` and `/feedback` are
- * the pages that are not groups; Privacy is a group that also links invite links.
+ * the pages that are not groups; Privacy is a group that also links Friends and
+ * invites. `/settings/motion` and `/settings/lists` (gone in F-251) redirect.
  */
 export function SettingsSectionScreen() {
   const {t: l} = useLingui()
@@ -65,6 +67,9 @@ export function SettingsSectionScreen() {
       </Frame>
     )
   }
+  if (section === 'motion' || section === 'lists') {
+    return <MovedPage to={section === 'motion' ? 'appearance' : undefined} />
+  }
   if (!isSettingsSection(section)) {
     return (
       <Frame title={l`Settings`}>
@@ -77,6 +82,16 @@ export function SettingsSectionScreen() {
       <Section group={section} title={sections[section].title} />
     </Frame>
   )
+}
+
+/** A page that was merged away (owner 100): the old link lands on its new home instead of an error. */
+function MovedPage({to}: {to?: SettingsSectionId}) {
+  const navigation = useNavigation<NavigationProp>()
+  useEffect(() => {
+    if (to) navigation.replace('SettingsSection', {section: to})
+    else navigation.replace('Settings')
+  }, [navigation, to])
+  return null
 }
 
 function Frame({title, children}: {title: string; children: React.ReactNode}) {
@@ -98,7 +113,7 @@ function Frame({title, children}: {title: string; children: React.ReactNode}) {
   )
 }
 
-function Section({group, title}: {group: PrefGroup; title: string}) {
+function Section({group, title}: {group: SettingsSectionId; title: string}) {
   const {t: l} = useLingui()
   const {store, ctx} = useData()
   const haptics = useHaptics()
@@ -114,18 +129,14 @@ function Section({group, title}: {group: PrefGroup; title: string}) {
       {group === 'notifications' && (
         <Notice>
           <Trans>
-            Reminders you set with Remind me work now, on this device. New
-            expense, payment and invite notifications start once you sign in
-            and turn on sync; those choices are saved now and apply from then.
+            New expense, payment, comment and invite alerts start once sync is
+            on. Reminders work now.
           </Trans>
         </Notice>
       )}
       {group === 'privacy' && (
         <Notice>
-          <Trans>
-            Finding and friend requests use Splito’s directory, which arrives
-            with sign-in. Your choices are saved now and apply from then.
-          </Trans>
+          <Trans>Saved now; applies once the directory is live.</Trans>
         </Notice>
       )}
       {controls.map(({key, Control}, i) => (
@@ -138,12 +149,12 @@ function Section({group, title}: {group: PrefGroup; title: string}) {
         <>
           <SettingsList.Divider />
           <SettingsList.LinkItem
-            testID="settings-invite-links"
-            to="/invites"
-            label={l`Manage invite links`}>
-            <SettingsList.ItemIcon icon={LinkIcon} />
+            testID="settings-privacy-friends"
+            to="/settings/friends"
+            label={l`Friends and invites`}>
+            <SettingsList.ItemIcon icon={FriendsIcon} />
             <SettingsList.ItemText>
-              <Trans>Manage invite links</Trans>
+              <Trans>Friends and invites</Trans>
             </SettingsList.ItemText>
           </SettingsList.LinkItem>
           <SettingsList.Divider />

@@ -12,7 +12,6 @@ import {
   mentionRanges,
 } from '../src/comments'
 import {createExpense, createPerson, deleteExpense, ensureMe, type ExpenseDraft} from '../src/mutations'
-import {getPref, PREFS} from '../src/preferences'
 import {openSqlStore} from '../src/sqlStore'
 import {type Store} from '../src/store'
 import {type MutationCtx} from '../src/types'
@@ -157,11 +156,6 @@ test('mentions: stored as person ids, found in the text by name', async () => {
   ])
   // a mention the author never kept is plain text
   expect(mentionRanges('hi @Riya', people, [])).toEqual([])
-})
-
-test('comments.showHistory defaults on and is a registered preference', async () => {
-  expect(PREFS['comments.showHistory'].default).toBe(true)
-  expect(await getPref(s, 'comments.showHistory')).toBe(true)
 })
 
 test('a person created later can be mentioned', async () => {

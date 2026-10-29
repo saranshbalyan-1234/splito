@@ -165,15 +165,13 @@ export function DiscussionProvider({
 /**
  * The expense page's one timeline (Expensify's single stream, Bluesky's rows):
  * comments merged in time order with the page's history lines, under date dividers.
- * `renderLine` draws a history line; `showHistory` is the `comments.showHistory` pref.
+ * `renderLine` draws a history line; the history always shows (F-251).
  */
 export function DiscussionTimeline<H extends TimelineLine>({
   lines,
-  showHistory,
   renderLine,
 }: {
   lines: readonly H[]
-  showHistory: boolean
   renderLine(line: H): React.ReactNode
 }) {
   const t = useTheme()
@@ -195,7 +193,7 @@ export function DiscussionTimeline<H extends TimelineLine>({
 
   const items = withDividers(
     mergeTimeline(thread?.comments ?? [], lines, {
-      showHistory,
+      showHistory: true,
       hasEarlier: thread?.hasEarlier ?? false,
     }),
     timeZone,

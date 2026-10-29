@@ -76,7 +76,7 @@ function Form({
         onSave: () => control.close(() => onFiltersApplied(draft)),
       }}>
       <View style={[a.gap_lg]}>
-        <Toggle.Item
+        <Toggle.Item type="switch"
           testID="filter-include-groups"
           name="includeGroups"
           label={l`Include groups`}

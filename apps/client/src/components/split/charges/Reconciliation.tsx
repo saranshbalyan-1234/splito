@@ -11,7 +11,6 @@ import {
 
 import {atoms as a, useTheme} from '#/alf'
 import {Button, ButtonText} from '#/components/Button'
-import {usePrefControl} from '#/components/settings/PrefSection'
 import {Text} from '#/components/Typography'
 import {FieldError} from '../fields'
 import {type ExpenseForm, type FormEvaluation} from '../form'
@@ -38,7 +37,6 @@ export function Reconciliation({
 }) {
   const t = useTheme()
   const {t: l} = useLingui()
-  const spread = usePrefControl('bill.roundOffSpread').value ?? 'shares'
   const [isChecking, setIsChecking] = useState(false)
   const {bill, gap, total, roundOff} = evaluation
   if (!bill) return null
@@ -177,7 +175,7 @@ export function Reconciliation({
                 label={l`Add ${fmt(gap!)} as round-off`}
                 size="small"
                 color="primary"
-                onPress={() => update(f => ({...f, roundOff: spread}))}>
+                onPress={() => update(f => ({...f, roundOff: 'shares'}))}>
                 <ButtonText>
                   <Trans>Add as round-off</Trans>
                 </ButtonText>

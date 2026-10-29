@@ -73,7 +73,8 @@ export type GroupProps = React.PropsWithChildren<{
 }>
 
 export type ItemProps = ViewStyleProp & {
-  type?: 'radio' | 'checkbox'
+  /** `switch`: an on/off choice drawn as a switch on every platform (owner 132); the others are list choices. */
+  type?: 'radio' | 'checkbox' | 'switch'
   name: string
   label: string
   value?: boolean
@@ -238,6 +239,7 @@ export function Item({
         accessibilityState={{
           disabled: disabled ?? false,
           selected: selected,
+          checked: selected,
         }}
         accessibilityLabel={label}
         onPress={onPress}

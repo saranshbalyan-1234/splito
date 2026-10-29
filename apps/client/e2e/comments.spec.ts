@@ -185,7 +185,7 @@ test('@ lists the expense participants; choosing one tags them in the sent comme
   await expect(page.getByTestId('comment-mention')).toHaveText('@Kavya Rao')
 })
 
-test('the edit-history preference hides history lines, comments stay', async ({
+test('the edit history always shows between the comments (F-251: no switch)', async ({
   page,
 }) => {
   await page.setViewportSize(DESKTOP)
@@ -193,13 +193,6 @@ test('the edit-history preference hides history lines, comments stay', async ({
   await page.goto(`/expense/${expense}`)
   await send(page, 'A note')
   await expect(page.getByTestId('history-created')).toBeVisible()
-  await page.evaluate(() =>
-    (window as unknown as {splito: Splito}).splito.setPref(
-      'comments.showHistory',
-      false,
-    ),
-  )
-  await expect(page.getByTestId('history-created')).toHaveCount(0)
   await expect(
     page.getByTestId('comment-bubble').filter({hasText: 'A note'}),
   ).toBeVisible()

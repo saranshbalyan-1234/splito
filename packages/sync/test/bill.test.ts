@@ -9,16 +9,13 @@ describe('bill preferences (F-403)', () => {
     expect(isChargePresets(DEFAULT_CHARGE_PRESETS)).toBe(true)
     expect(DEFAULT_TAX_CLASSES.map(c => c.name)).toEqual(['Standard', 'Food', 'Soft drinks', 'Alcohol', 'Other'])
     expect(DEFAULT_CHARGE_PRESETS.map(p => p.name)).toEqual(['Simple', 'Restaurant India', 'Restaurant EU', 'US tip'])
-    for (const k of ['taxClasses', 'chargePresets', 'defaultPreset', 'serviceChargeDefault', 'roundOffSpread', 'rememberPerMerchant', 'merchantSetups'] as const) {
+    for (const k of ['taxClasses', 'chargePresets', 'defaultPreset', 'merchantSetups'] as const) {
       const def = PREFS[`bill.${k}`]
       expect(def.group).toBe('defaults')
       expect(def.scope).toBe('account')
       expect(def.validate(def.default)).toBe(true)
     }
     expect(PREFS['bill.defaultPreset'].default).toBe('simple')
-    expect(PREFS['bill.serviceChargeDefault'].default).toBe(0)
-    expect(PREFS['bill.roundOffSpread'].default).toBe('shares')
-    expect(PREFS['bill.rememberPerMerchant'].default).toBe(true)
   })
 
   test('tax classes need unique ids and Standard', () => {

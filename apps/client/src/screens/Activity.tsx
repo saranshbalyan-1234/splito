@@ -3,11 +3,9 @@ import {useState} from 'react'
 import {View} from 'react-native'
 import Animated, {LayoutAnimationConfig} from 'react-native-reanimated'
 import {Plural, Trans, useLingui} from '@lingui/react/macro'
-import {PREFS} from '@splito/sync'
 
 import {useNumberLocale} from '#/locale/numberLocale'
 import {usePagedRows} from '#/lib/hooks/usePagedRows'
-import {usePref} from '#/data/hooks'
 import {EmptyState} from '#/view/com/util/EmptyState'
 import {List} from '#/view/com/util/List'
 import {atoms as a, useTheme} from '#/alf'
@@ -50,8 +48,6 @@ export function ActivityScreen() {
   const [tab, setTab] = useState(0)
   const feed = useActivityFeed(tab === 0 ? 'all' : 'others')
   const actions = useActivityActions(feed)
-  const [swipeLeft = PREFS.swipeLeft.default] = usePref('swipeLeft')
-  const [swipeRight = PREFS.swipeRight.default] = usePref('swipeRight')
   const {snapshot, rows, hiddenCount, unreadCount, me} = feed
   const {shown, onEndReached: showMore} = usePagedRows(tab)(rows)
   /* Rows already loaded appear a page at a time; past the last one, older history is read by cursor. */
@@ -87,8 +83,6 @@ export function ActivityScreen() {
           snapshot={snapshot}
           me={me}
           locale={locale}
-          swipeLeft={swipeLeft}
-          swipeRight={swipeRight}
           actions={actions}
         />
       </Animated.View>

@@ -140,7 +140,9 @@ test('a picture can be attached and removed', async ({page}) => {
   await expect(page.getByTestId('feedback-attach')).toBeVisible()
 })
 
-test('Shake to send feedback is a switch, off by default', async ({page}) => {
+test('Appearance has no shake switch, and the old Motion link lands on Appearance (F-251)', async ({page}) => {
   await page.goto('/settings/motion')
-  await expect(page.getByTestId('pref-shakeToFeedback')).toBeVisible()
+  await expect(page).toHaveURL(/\/settings\/appearance$/)
+  await expect(page.getByTestId('pref-haptics')).toBeVisible()
+  await expect(page.getByTestId('pref-shakeToFeedback')).toHaveCount(0)
 })

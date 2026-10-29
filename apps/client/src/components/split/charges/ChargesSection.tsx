@@ -93,19 +93,15 @@ export function ChargePresets({
   const haptics = useHaptics()
   const presets = useChargePresets()
   const summary = useSetupSummary()
-  const isRemembering = usePrefControl('bill.rememberPerMerchant').value ?? true
   const setups = usePrefControl('bill.merchantSetups').value ?? []
   const mark = decimalMark(locale)
-  const isShorthandOn = usePrefControl('amount.shorthand').value ?? true
 
   const current = form.charges ? templatesFromCharges(form.charges) : undefined
   const activeId = current
     ? (presets.find(p => p.id !== 'simple' && isSameSetup(p.charges, current))
         ?.id ?? 'custom')
     : 'simple'
-  const setup = isRemembering
-    ? setups.find(s => s.key === merchantKey(form.title))
-    : undefined
+  const setup = setups.find(s => s.key === merchantKey(form.title))
   /* Offered while nothing is set up yet; accepting it fills the list. */
   const isSuggesting =
     !!setup && setup.charges.length > 0 && (form.charges?.length ?? 0) === 0
@@ -163,7 +159,7 @@ export function ChargePresets({
                 ...f,
                 charges: chargesFromSimple(f, {
                   mark,
-                  shorthand: isShorthandOn,
+                  shorthand: true,
                   names: {
                     tax: l`Tax`,
                     tip: l`Tip`,
@@ -239,7 +235,6 @@ export function ChargeList({
   const {nameOf} = useTaxClasses()
   const dialog = useDialogControl()
   const [editing, setEditing] = useState<ChargeForm>(() => emptyCharge('new'))
-  const isRemembering = usePrefControl('bill.rememberPerMerchant').value ?? true
   const merchants = usePrefControl('bill.merchantSetups')
   const setups = merchants.value ?? PREFS['bill.merchantSetups'].default
   const saveSetups = merchants.set
@@ -432,7 +427,7 @@ export function ChargeList({
             <Trans>Add charge</Trans>
           </ButtonText>
         </Button>
-        {isRemembering && title && charges.some(c => c.scope.type !== 'items') ? (
+        {title && charges.some(c => c.scope.type !== 'items') ? (
           <Button
             testID="charge-save-setup"
             label={l`Save as preset for ${title}`}
