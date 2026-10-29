@@ -1636,7 +1636,8 @@ expands once I click". *Where:* `screens/People`, `screens/Groups`, `screens/Gro
     sub-lines because both directions exist, the others reserve that space), so no card is taller or emptier.
   - **No red per-row dots** on friend, request or invite rows (owner 111: unsynced rows are drawn lighter).
   - **Friend rows stay on two lines at phone width:** name plus at most two group chips and "+N" (the rest in
-    the row's detail), and on the right one net line per currency (max 3, then "+N"); chips never wrap to a
+    the row's detail), and on the right one net line per currency (max 3, then "+N"; a currency open both ways that nets to zero keeps its
+    two lines, owed and owe, so it never reads settled); chips never wrap to a
     second chip line, and the per-currency nets are not repeated inside the chips. The list's last row clears
     the FAB (§ 26.6 bottom padding).
   - **Friends header** gets its list search back (owner 91, F-1414) beside Filters.

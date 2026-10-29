@@ -136,10 +136,10 @@ for (const viewport of [{width: 320, height: 800}, {width: 393, height: 852}, DE
     if (isPhone) {
       // The icon-only button names itself on hover (and long-press on touch); the request is on Home.
       await page.goBack()
-      const accept = page.getByTestId('request-Ishaan Verma').getByTestId('request-accept')
+      const accept = page.getByTestId('screen-people').getByTestId('request-Ishaan Verma').getByTestId('request-accept')
       await expect(accept).toHaveAttribute('aria-label', 'Accept Ishaan Verma’s friend request')
       await accept.hover()
-      await expect(page.getByTestId('request-accept-tooltip')).toHaveText('Accept')
+      await expect(page.getByTestId('screen-people').getByTestId('request-accept-tooltip')).toHaveText('Accept')
     }
   })
 }
