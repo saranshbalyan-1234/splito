@@ -1736,15 +1736,16 @@ pages". § 17 holds the engineering rules that meet these budgets.
 group there"; "add overview in both friends and groups, with search and filters as well, search icon only,
 expands once I click". *Where:* `screens/People`, `screens/Groups`, `screens/Group`, `components/ListToolsHeader.tsx`.
 
-- **Overview cards are compact, amount on the right, no breakdown line** (owners 156, 157; with F-256): each
-  currency card is one short row: on the LEFT the label ("You owe" / "You are owed") with the currency chip, and
-  under it one small line, the count only ("4 friends" / "2 groups"); on the RIGHT the net amount, large, in the
-  red/green money colour with its arrow, right-aligned and vertically centred (owner 130). The gross split ("owed
-  to you X · you owe Y") is not on the card: tapping the card opens Analytics in that currency, which shows it.
-  About 64 px tall on phones; the same internal layout in the desktop grid (owners 113/114 still decide columns
-  and equal heights). Amounts never truncate (owner 120: shrink to fit). *Why:* "the overview looks bad in mobile,
-  move the red and green to right or think of something else"; then "Owed to you ₹49,243 · You owe ₹450 ... this
-  looks bad".
+- **Overview cards: details on the left, the green and red amounts on the right** (owners 156-158; with F-256):
+  each currency card is one short row styled like a friend row (owner 130). RIGHT: the money lines in the same
+  style as friend rows, right-aligned and vertically centred, "owed to you ↙ ₹49,243.00" in green and "you owe
+  ↗ ₹450.00" in red, one line per direction that is open (one line when only one is). LEFT: the details: the
+  currency chip with the net as the headline ("₹48,793.00 net", coloured by its sign, or "Settled" at zero) and a
+  small count line ("4 friends"). No long breakdown sentence anywhere. About 64-72 px tall on phones; the same
+  layout in the desktop grid (owners 113/114 still decide columns and equal heights). Amounts never truncate
+  (owner 120). Tapping a card opens Analytics in that currency. *Why:* "move the red and green to right or think of
+  something else"; "Owed to you ₹49,243 · You owe ₹450 ... this looks bad"; "right side we can have green/red with
+  same styles and left we can have other details".
 - **Overview currency cards are separate, equal boxes in a balanced grid** (owner 113; F-245, queued): each
   currency is its own card (own border, radius, padding, gap between cards), never cells of one shared box; all
   cards in a row have the same width and height (the row takes the tallest card's height, content top-aligned).
@@ -2474,6 +2475,7 @@ Every owner decision, in the order it was made (all 2026-10-26). "Replaced" name
 | 155 | "also on desktop show all the tabs" | Rail and desktop sidebar always list every item in the chosen order, no More; on/off shapes only the phone bar | § 26.3 | Desktop followed the on/off choice with off items under More (127) |
 | 156 | "the overview, this looks bad in mobile, in the overview move the red and green to right or think of something else" | Compact overview cards: label and small lines left, large red/green net amount right and vertically centred; ~64-72 px on phones; same layout in the desktop grid | § 26.12 | Tall boxes with the amount under the label |
 | 157 | "Owed to you ₹49,243 · You owe ₹450 ↙ ₹48,793.00 ... this looks bad" | Overview card drops the owed/owe breakdown line; left: label + chip + count only; right: big net; breakdown lives in Analytics (card tap) | § 26.12 | Breakdown line on the card (row 156 draft) |
+| 158 | "right side we can have green/red with same styles, and left we can have other details" | Overview card: right = green "owed to you" and red "you owe" lines in friend-row style, vertically centred; left = currency chip, net headline, count line | § 26.12 | Net-only right side (157) |
 
 New decisions follow § 0 rule 9: rewrite the rule in its topic so only the current truth remains, then add a
 row here.
