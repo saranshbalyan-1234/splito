@@ -189,6 +189,11 @@ function expectSearchBudget(r: {cpu: number; searchKeystrokeMs: Record<string, n
  * character is lost (decision 107: typing must never drop a character).
  */
 async function askCase(page: Page) {
+  // Ask Splito is off the default bar, so put it on the sidebar (26.3) to measure its tab.
+  await page.evaluate(() =>
+    (window as any).splito.setPref('tabs', ['people', 'groups', 'analytics', 'ask', 'activity']),
+  )
+  await page.getByTestId('tab-ask').waitFor()
   const question = 'Who owes me the most?'
   const opens: number[] = []
   const answers: number[] = []
