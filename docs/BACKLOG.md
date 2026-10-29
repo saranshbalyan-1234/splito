@@ -538,6 +538,17 @@ Home shows the Overview and Recent transactions (F-1415); a new People tab holds
   7. Overview cards are compact rows (owners 156-158): left = currency chip, net headline coloured by sign ("₹48,793.00 net" / "Settled") and a count line; right = the green "owed to you" and red "you owe" lines in the friend-row style, right-aligned and vertically centred (one line when only one direction is open); about 64-72 px tall at 390 px; 6 currencies fit in one phone screen with the header; e2e checks height and that the amount's right edge aligns with the card's.
   6. Shell-first rendering (owner 152), e2e at 390/1440, demo data covers recent transactions, Lingui en + hi, perf and renders gate.
 
+### F-257 Main-tab slide, indicator, icon pop and re-tap scroll-to-top (§ 26.9 gap) `spec: owner § 26.9`
+
+Found 2026-10-30 by the tap-speed work: § 26.9's direction-aware slide between main tabs (native sceneStyleInterpolator ~220 ms, web ~200 ms), the springing bottom-bar indicator, the icon pop with haptic, the badge spring and re-tap-scrolls-to-top are not built (web switches instantly; "no soft reset yet"). Build them interruptible from the start (owner 150: a new tap redirects the running slide from its current value), reduced-motion aware.
+
+- **Effort** M · **Impact** 7 · **Backend** no · **Status** todo, after F-256 · **Deps** F-255
+- **Prefs** -
+- **Acceptance**
+  1. Slide direction follows tab order; a tap mid-slide redirects from the current position; the landing tab is the last tapped (tabTaps.spec stays green).
+  2. Indicator springs; icon pops; haptic tap on native; badge springs on count change; re-tap of the active tab scrolls its list to top.
+  3. Reduced motion / motion off: instant switch; renders gate and tap-latency spec do not regress.
+
 ### F-250 Sign-in required (auth gate) `spec: owner § 26.15 (decision 125)`
 
 Nothing of the app is visible signed out: only the welcome tour, the logged-out flow, language and legal pages. The local database opens per account only with a session; offline after sign-in; deep links resume after sign-in.
