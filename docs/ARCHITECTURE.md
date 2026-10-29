@@ -1497,7 +1497,8 @@ labelled sidebar); **wide** = web 1300 px and up (Bluesky `gtTablet`, right colu
     rows at most) and hides when empty. Header: avatar | logo (phone) / "Home" | Search & Ask (no Add friend
     here). On wide screens the right column is not shown on Home (its content is on the page), so nothing repeats.
   - **People** (`/people`, new tab, Lucide `Users`): incoming friend requests (Accept / Decline, the same ones
-    Home shows), the "N invites waiting ›" row, then the Friends list with its search and Filters (owners 91, 120, 130); no Overview. Header:
+    Home shows), the "N invites waiting ›" row, then the Friends list with its search and Filters (owners 91, 120, 130) and a settings (gear) icon on the right of the
+    Friends header (search, Filters, gear; it opens Friends and invites; no "Manage" text button, owner 177); no Overview. Header:
     avatar | "People" | Search & Ask + Add friend. A friend still opens `/people/:id`.
   - **Groups** (`/groups`): the groups list with search and Filters; no Overview. Header unchanged.
   - **Navigation:** the shared list becomes Home, People, Groups, Analytics, Ask Splito, Activity, Settings; the
@@ -2658,6 +2659,7 @@ Every owner decision, in the order it was made (all 2026-10-26). "Replaced" name
 | 174 | "and in tab switch, it should switch with sliding animation" | Main tab switches slide (F-257) next in Wave C, interruptible, no redraw | § 26.9 | Slide specified but not built |
 | 175 | "on the home, invite should be shown like previously" (screenshot of the compact "2 invites waiting" row) | Home Requests section shows Invites sent as full rows (Resend / Cancel) again, below the Overview, max 5 then See all | § 26.3 | Compact "N invites waiting ›" row (120, 153) |
 | 176 | "in overview by default it should select all, but options for group and direct" | Overview scope All (default) / Groups / Direct, remembered, in URL, carried into Analytics | § 26.3 | Overview always counted everything |
+| 177 | "instead of manage button in middle, make it as a settings icon on right in friends in home" | Friends header: gear icon on the right (after search and Filters) opens Friends and invites; no Manage text button | § 26.3 | "Manage" text button in the middle of the header |
 
 New decisions follow § 0 rule 9: rewrite the rule in its topic so only the current truth remains, then add a
 row here.
