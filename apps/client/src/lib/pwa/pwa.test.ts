@@ -94,6 +94,9 @@ describe('demo mode ships only as lazy chunks (owner 148)', () => {
     expect(demoLeaks([html, file('/a.js', 'openStore(n,"splito-demo")'), file('/c.js', 'plain')])).toEqual(['/a.js'])
   })
   test('a lazy chunk holding the demo is fine', () => {
-    expect(demoLeaks([html, file('/a.js', 'plain'), file('/c.js', 'plain'), file('/lazy.js', 'id:"demo-large-p-riya"')])).toEqual([])
+    expect(demoLeaks([html, file('/a.js', 'plain'), file('/c.js', 'plain'), file('/lazy.js', 'title:"The Supper Factory"')])).toEqual([])
+  })
+  test('the demo id shape in a start-up script is not a leak (the link resolver checks it, F-254)', () => {
+    expect(demoLeaks([html, file('/a.js', '/^(demo-large-[a-z0-9-]{1,48})$/i'), file('/c.js', 'plain')])).toEqual([])
   })
 })
