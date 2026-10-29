@@ -142,9 +142,10 @@ export function PeopleScreen() {
    * and a search still finds them.
    */
   const q = query.trim().toLocaleLowerCase()
+  const unsearched = hideSettled(filtered, filters, seenCurrencies)
   const listed = q
     ? filtered.filter(row => row.name.toLocaleLowerCase().includes(q))
-    : hideSettled(filtered, filters, seenCurrencies)
+    : unsearched
   /* The summary follows the filters too, so its figures always match the list. */
   const totals = balanceTotals(
     rows.flatMap(row => (row.summary ? [row.summary] : [])),
@@ -236,7 +237,8 @@ export function PeopleScreen() {
                     title={l`Friends`}
                     titleTestID="people-friends-title"
                     count={listed.filter(row => row.deletedAt === undefined).length}
-                    total={rows.length}
+                    /* "N of M": M is the list as it stands without the search, so it matches the title's count (settled friends stay out unless Show settled is on). */
+                    total={unsearched.filter(row => row.deletedAt === undefined).length}
                     query={query}
                     onQueryChange={setQuery}
                     searchLabel={l`Search friends`}
