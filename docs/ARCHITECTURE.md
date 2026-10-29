@@ -1235,8 +1235,8 @@ labelled sidebar); **wide** = web 1300 px and up (Bluesky `gtTablet`, right colu
   or writes. Demo data never syncs and never merges into an account. While on, no banner shows (owner 133); the Settings switch and the avatar's "Demo" state say so; "Reset demo" reseeds it. There is ONE demo dataset and ONE
   switch: no small set, no URL (`?demo=1`, `?demo=large` gone), no `EXPO_PUBLIC_DEMO`, no Add/Remove demo
   data; e2e turns demo mode on only through a test-only hook (`window.__splitoTest.demoMode`) that runs the same
-  switch (F-228a, being built on feat/demo-mode). Dev and e2e builds only for now
-  (production ships none, F-227 c4). *Why:* "add a lot of demo data to my
+  switch (F-228a, being built on feat/demo-mode). Available in every build, production included (owner 148), as lazy chunks the start-up bundle never
+  loads; the legacy cleanup and the e2e hook stay dev/e2e only. *Why:* "add a lot of demo data to my
   account".
 - **Once the backend exists, the demo data comes from the backend, not the app** (owner 135; F-252, backend
   batch). The demo dataset and its generator move to the server: turning Demo mode on downloads the one demo
@@ -2396,6 +2396,7 @@ Every owner decision, in the order it was made (all 2026-10-26). "Replaced" name
 | 145 | "integrate deep links properly as well" | Every URL is a deep link: Universal Links, App Links, splito:// scheme, web fallback; one resolver for push, invites, QR, reminders, shares; signed-out and demo handling; deferred link after install; simulator tests | § 26.3 | Deep links partly wired (§ 14), no universal/app links |
 | 146 | "make the home empty screen animation like other screens, there is slight diff in button and top paddings" | One empty-state layout everywhere: same illustration, motion, top spacing, one small secondary button | § 7 | Home had a title, large primary + secondary buttons and its own centring |
 | 147 | "change the main branch to main" | Main line renamed from m1-foundation to main (old name kept as an alias) | § 26.1 | m1-foundation as the main line |
+| 148 | "i dont see demo mode in deployed app" (https://splito-web.onrender.com, auto deploy on main) | Demo mode ships in every build, production included, as lazy chunks; start-up bundle stays demo-free | § 26.1 | Demo mode dev/e2e only (F-227 c4) |
 
 New decisions follow § 0 rule 9: rewrite the rule in its topic so only the current truth remains, then add a
 row here.
