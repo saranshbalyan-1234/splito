@@ -1173,8 +1173,11 @@ labelled sidebar); **wide** = web 1300 px and up (Bluesky `gtTablet`, right colu
   through the real mutations: about 30 friends plus a hand-checked story, 12+ groups (trips abroad, flat, office
   lunch, family, wedding, sports), ~1,500 expenses in 6 currencies with every split mode (equal, exact, percent,
   shares, itemised with portions, multiple payers), repayments, write-offs, notes, categories, recurring rent and
-  subscriptions and deleted items, plus the friend requests, invites sent, invite links and the fake account
-  directory of § 26.18, and some saved feedback. Demo is a **mode switch**, Settings > Data > "Demo mode" (on/off),
+  subscriptions and deleted items, plus the whole invites flow of § 26.18 (requests waiting for me and one declined;
+  invites sent in every state: Sent, Opened, Joined, Expired, Cancelled; private "only for you" friends, one of
+  them linked when it joined; friend and group invite links active, limited, unlimited, used up, expired and
+  revoked; group links that need my approval and have been opened by people; matching Activity rows) with the
+  fake account directory, and some saved feedback. Demo is a **mode switch**, Settings > Data > "Demo mode" (on/off),
   backed by its **own separate local database** (its own IndexedDB database / SQLite file, with its own
   preferences, history and outbox). Turning it on switches the app to the demo database, seeded once; turning it
   off switches back to the real data, which demo mode never reads or writes (the real database keeps one device
@@ -1966,6 +1969,7 @@ Every owner decision, in the order it was made (all 2026-10-26). "Replaced" name
 | 96 | "also add animations on svg icons or animations like Expensify wherever we can" | Meaningful animated SVG icons (tab fill morph, check draw, trash lid, sync pulse, FAB rotate, sparkles, chevrons) on the UI thread plus Expensify-style success/empty/celebration animations; reduced motion and `motion` pref respected | § 26.10 | Static icons; Lottie only for page illustrations |
 | 97 | "on the home page and group page add option for recent transactions as well; home shows all, group shows only group level recent txns" | "Recent transactions" section in the Home body (everything) and on each Group page (that group only), customizable | § 26.17 | Right column only (desktop 1300 px and up) |
 | 98 | "deleted item should show a stroke and clock symbol and time" | Deleted records show struck-through title and amount plus a Clock icon and "Deleted <time>" everywhere they appear | § 26.14 | Plain rows (strikethrough removed in B3 polish) |
+| 110 | "I don't see invites related data in demo" | The one demo dataset carries every invites state (requests in and out, Sent / Opened / Joined / Expired / Cancelled, private friends, links of both kinds in every state, group join requests, Activity rows), pinned by `demoCoverage` | § 26.1 | Demo with only a few requests and links |
 
 New decisions follow § 0 rule 9: rewrite the rule in its topic so only the current truth remains, then add a
 row here.

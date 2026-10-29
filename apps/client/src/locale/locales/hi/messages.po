@@ -598,7 +598,7 @@ msgstr "{n, plural, one {# व्यक्ति} other {# लोग}}"
 msgid "{name}, waiting for them to accept. Not selectable yet."
 msgstr "{name}, उनकी स्वीकृति का इंतज़ार। अभी चुने नहीं जा सकते।"
 
-#: src/components/people/UpiPayDialog.tsx:165
+#: src/components/people/UpiPayDialog.tsx:153
 msgid "{name}’s UPI ID"
 msgstr "{name} की UPI ID"
 
@@ -669,7 +669,7 @@ msgid "1 category"
 msgstr "1 श्रेणी"
 
 #: src/components/settings/prefControls.tsx:842
-#: src/screens/Invites/CreateInvite.tsx:239
+#: src/screens/Invites/CreateInvite.tsx:238
 msgid "1 day"
 msgstr "1 दिन"
 
@@ -701,7 +701,7 @@ msgstr "100% बँट गया"
 
 #: src/components/settings/prefControls.tsx:663
 #: src/components/settings/prefControls.tsx:844
-#: src/screens/Invites/CreateInvite.tsx:241
+#: src/screens/Invites/CreateInvite.tsx:240
 msgid "30 days"
 msgstr "30 दिन"
 
@@ -711,7 +711,7 @@ msgstr "6 अंकों का रीसेट कोड"
 
 #: src/components/settings/prefControls.tsx:662
 #: src/components/settings/prefControls.tsx:843
-#: src/screens/Invites/CreateInvite.tsx:240
+#: src/screens/Invites/CreateInvite.tsx:239
 msgid "7 days"
 msgstr "7 दिन"
 
@@ -735,11 +735,11 @@ msgstr "समूह का खर्च समूह के सदस्यो�
 msgid "A link"
 msgstr "एक लिंक"
 
-#: src/screens/Invites/CreateInvite.tsx:206
+#: src/screens/Invites/CreateInvite.tsx:205
 msgid "A link and QR code people can use to join this group. You set how many people and for how long."
 msgstr "एक लिंक और QR कोड, जिससे लोग इस ग्रुप में जुड़ सकें। कितने लोग और कितने समय तक, यह आप तय करें।"
 
-#: src/screens/Invites/CreateInvite.tsx:211
+#: src/screens/Invites/CreateInvite.tsx:210
 msgid "A link and QR code that makes people your friends when they use it. You set how many people and for how long."
 msgstr "एक लिंक और QR कोड, जिसे इस्तेमाल करते ही लोग आपके दोस्त बन जाते हैं। कितने लोग और कितने समय तक, यह आप तय करें।"
 
@@ -1051,8 +1051,8 @@ msgstr "हमेशा समूह में"
 
 #: src/components/people/RecordPaymentDialog.tsx:345
 #: src/components/people/RecordPaymentDialog.tsx:350
-#: src/components/people/UpiPayDialog.tsx:191
-#: src/components/people/UpiPayDialog.tsx:196
+#: src/components/people/UpiPayDialog.tsx:179
+#: src/components/people/UpiPayDialog.tsx:184
 #: src/components/settings/prefControls.tsx:342
 #: src/components/settings/prefControls.tsx:345
 #: src/components/split/fields.tsx:155
@@ -1133,11 +1133,11 @@ msgstr "एनिमेशन"
 msgid "Anyone who has it can no longer use it. You can always make a new one."
 msgstr "जिसके पास यह है, वह अब इसे इस्तेमाल नहीं कर पाएगा। आप कभी भी नया बना सकते हैं।"
 
-#: src/screens/Invites/CreateInvite.tsx:146
+#: src/screens/Invites/CreateInvite.tsx:145
 msgid "Anyone with this link or QR code can ask to join. Using it counts as accepting your invite."
 msgstr "इस लिंक या QR कोड वाला कोई भी जुड़ने का अनुरोध कर सकता है। इसका इस्तेमाल आपका आमंत्रण स्वीकार करना माना जाता है।"
 
-#: src/screens/Invites/CreateInvite.tsx:151
+#: src/screens/Invites/CreateInvite.tsx:150
 msgid "Anyone with this link or QR code can become your friend on Splito. Using it counts as accepting."
 msgstr "इस लिंक या QR कोड वाला कोई भी Splito पर आपका दोस्त बन सकता है। इसका इस्तेमाल स्वीकार करना माना जाता है।"
 
@@ -1154,8 +1154,8 @@ msgstr "रूप-रंग"
 msgid "Apply"
 msgstr "लागू करें"
 
-#: src/screens/Invites/CreateInvite.tsx:253
-#: src/screens/Invites/CreateInvite.tsx:259
+#: src/screens/Invites/CreateInvite.tsx:252
+#: src/screens/Invites/CreateInvite.tsx:258
 msgid "Approve each join"
 msgstr "हर जुड़ने को मंज़ूरी दें"
 
@@ -1533,7 +1533,7 @@ msgstr "किसी को जोड़े बिना बंद करता 
 msgid "Closes without creating the group"
 msgstr "ग्रुप बनाए बिना बंद करता है"
 
-#: src/screens/Invites/CreateInvite.tsx:184
+#: src/screens/Invites/CreateInvite.tsx:183
 msgid "Closes without making a link"
 msgstr "लिंक बनाए बिना बंद करता है"
 
@@ -1590,7 +1590,7 @@ msgstr "जारी रखें"
 msgid "Continue to next step"
 msgstr "अगले चरण पर जाएँ"
 
-#: src/lib/sharing.ts:34
+#: src/lib/sharing.ts:35
 msgid "Copied to clipboard"
 msgstr "क्लिपबोर्ड पर कॉपी हुआ"
 
@@ -1635,7 +1635,7 @@ msgstr "हिसाब बराबर नहीं हो सका। कृ�
 msgid "Couldn’t create the group. Please try again."
 msgstr "समूह नहीं बना सके। कृपया फिर कोशिश करें।"
 
-#: src/screens/Invites/CreateInvite.tsx:110
+#: src/screens/Invites/CreateInvite.tsx:109
 msgid "Couldn’t create the link. Please try again."
 msgstr "लिंक नहीं बन सका। कृपया फिर कोशिश करें।"
 
@@ -1651,7 +1651,7 @@ msgstr "इसे हटाया नहीं जा सका। कृपय�
 msgid "Couldn’t export. Try again."
 msgstr "एक्सपोर्ट नहीं हो सका। फिर से कोशिश करें।"
 
-#: src/lib/sharing.ts:62
+#: src/lib/sharing.ts:63
 msgid "Couldn’t open an app for that. Copy the link instead."
 msgstr "इसके लिए कोई ऐप नहीं खुला। इसके बजाय लिंक कॉपी करें।"
 
@@ -1768,7 +1768,7 @@ msgstr "खाता बनाएँ"
 msgid "Create group"
 msgstr "समूह बनाएँ"
 
-#: src/screens/Invites/CreateInvite.tsx:188
+#: src/screens/Invites/CreateInvite.tsx:187
 msgid "Create link"
 msgstr "लिंक बनाएँ"
 
@@ -1975,7 +1975,7 @@ msgstr "डेमो मोड ·"
 msgid "Description"
 msgstr "विवरण"
 
-#: src/components/people/UpiPayDialog.tsx:128
+#: src/components/people/UpiPayDialog.tsx:116
 msgid "Did the payment go through?"
 msgstr "क्या भुगतान हो गया?"
 
@@ -2047,7 +2047,7 @@ msgstr "भाग"
 #: src/components/split/AmountKeypad.tsx:174
 #: src/features/feedback/FeedbackSheet.tsx:139
 #: src/screens/AddFriend.tsx:313
-#: src/screens/Invites/CreateInvite.tsx:132
+#: src/screens/Invites/CreateInvite.tsx:131
 msgid "Done"
 msgstr "हो गया"
 
@@ -2175,7 +2175,7 @@ msgid "Enter a password"
 msgstr "पासवर्ड डालें"
 
 #: src/components/people/EditFriendDialog.tsx:138
-#: src/components/people/UpiPayDialog.tsx:184
+#: src/components/people/UpiPayDialog.tsx:172
 msgid "Enter a UPI ID like name@bank."
 msgstr "name@bank जैसी UPI ID लिखें।"
 
@@ -2184,7 +2184,7 @@ msgid "Enter an amount"
 msgstr "रकम लिखें"
 
 #: src/components/people/RecordPaymentDialog.tsx:188
-#: src/components/people/UpiPayDialog.tsx:211
+#: src/components/people/UpiPayDialog.tsx:199
 msgid "Enter an amount greater than zero."
 msgstr "शून्य से ज़्यादा राशि लिखें।"
 
@@ -2700,7 +2700,7 @@ msgstr "रकम के अंकों को कैसे समूह और
 msgid "How many people can use a new friend link. You can change it on each link."
 msgstr "नए दोस्ती लिंक को कितने लोग इस्तेमाल कर सकते हैं। हर लिंक पर इसे बदल सकते हैं।"
 
-#: src/screens/Invites/CreateInvite.tsx:220
+#: src/screens/Invites/CreateInvite.tsx:219
 msgid "How many people can use it"
 msgstr "कितने लोग इस्तेमाल कर सकते हैं"
 
@@ -2746,7 +2746,7 @@ msgstr "समूह शामिल करें"
 msgid "Indian"
 msgstr "भारतीय"
 
-#: src/components/people/UpiPayDialog.tsx:205
+#: src/components/people/UpiPayDialog.tsx:193
 msgid "Indian Rupee"
 msgstr "भारतीय रुपया"
 
@@ -2797,7 +2797,7 @@ msgstr "{0} के लिए आमंत्रण"
 
 #: src/navigation/Navigation.tsx:83
 #: src/navigation/Navigation.tsx:84
-#: src/screens/Invites/CreateInvite.tsx:120
+#: src/screens/Invites/CreateInvite.tsx:119
 msgid "Invite link"
 msgstr "आमंत्रण लिंक"
 
@@ -2811,11 +2811,11 @@ msgstr "आमंत्रण लिंक या QR कोड"
 msgid "Invite links"
 msgstr "आमंत्रण लिंक"
 
-#: src/screens/Invites/CreateInvite.tsx:271
+#: src/screens/Invites/CreateInvite.tsx:270
 msgid "Invite links need a connection to Splito’s servers, which arrive with sign-in and sync. Until then, add friends by email or number, or just by name."
 msgstr "आमंत्रण लिंक के लिए Splito के सर्वर से जुड़ाव चाहिए, जो साइन-इन और सिंक के साथ आएगा। तब तक दोस्तों को ईमेल, नंबर या सिर्फ़ नाम से जोड़ें।"
 
-#: src/screens/Invites/CreateInvite.tsx:102
+#: src/screens/Invites/CreateInvite.tsx:101
 msgid "Invite links need a connection. Try again when you’re online."
 msgstr "आमंत्रण लिंक के लिए कनेक्शन चाहिए। ऑनलाइन होने पर फिर कोशिश करें।"
 
@@ -2824,7 +2824,7 @@ msgid "Invite people"
 msgstr "लोगों को आमंत्रित करें"
 
 #. placeholder {0}: group.data.name
-#: src/screens/Invites/CreateInvite.tsx:119
+#: src/screens/Invites/CreateInvite.tsx:118
 msgid "Invite to {0}"
 msgstr "{0} में आमंत्रित करें"
 
@@ -2924,17 +2924,17 @@ msgid "Items subtotal"
 msgstr "आइटमों का उप-योग"
 
 #. placeholder {0}: group.data.name
-#: src/screens/Invites/CreateInvite.tsx:162
+#: src/screens/Invites/CreateInvite.tsx:161
 msgid "Join {0} on Splito:"
 msgstr "Splito पर {0} से जुड़ें:"
 
 #: src/screens/AddFriend.tsx:417
-#: src/screens/Invites/CreateInvite.tsx:159
+#: src/screens/Invites/CreateInvite.tsx:158
 msgid "Join me on Splito"
 msgstr "Splito पर मुझसे जुड़ें"
 
 #: src/screens/AddFriend.tsx:418
-#: src/screens/Invites/CreateInvite.tsx:163
+#: src/screens/Invites/CreateInvite.tsx:162
 msgid "Join me on Splito so we can split expenses:"
 msgstr "Splito पर मुझसे जुड़ें, ताकि हम खर्च बाँट सकें:"
 
@@ -2994,7 +2994,7 @@ msgstr "चलिए आपका पासवर्ड रीसेट कर�
 msgid "Light"
 msgstr "लाइट"
 
-#: src/screens/Invites/CreateInvite.tsx:233
+#: src/screens/Invites/CreateInvite.tsx:232
 msgid "Link expires after"
 msgstr "लिंक कितने समय बाद समाप्त हो"
 
@@ -3022,8 +3022,8 @@ msgstr "लोड हो रहा है…"
 msgid "Make a link or QR code to add friends or fill a group without typing anyone’s number."
 msgstr "किसी का नंबर लिखे बिना दोस्त जोड़ने या ग्रुप भरने के लिए लिंक या QR कोड बनाएँ।"
 
-#: src/screens/Invites/CreateInvite.tsx:282
-#: src/screens/Invites/CreateInvite.tsx:287
+#: src/screens/Invites/CreateInvite.tsx:281
+#: src/screens/Invites/CreateInvite.tsx:286
 #: src/screens/Invites/Invite.tsx:267
 #: src/screens/Invites/Invite.tsx:273
 #: src/screens/Settings/SettingsSection.tsx:142
@@ -3031,7 +3031,7 @@ msgstr "किसी का नंबर लिखे बिना दोस्�
 msgid "Manage invite links"
 msgstr "आमंत्रण लिंक प्रबंधित करें"
 
-#: src/screens/Invites/CreateInvite.tsx:133
+#: src/screens/Invites/CreateInvite.tsx:132
 msgid "Manage links"
 msgstr "लिंक प्रबंधित करें"
 
@@ -3197,7 +3197,7 @@ msgid "Needs attention"
 msgstr "ध्यान देने की ज़रूरत"
 
 #: src/components/settings/prefControls.tsx:845
-#: src/screens/Invites/CreateInvite.tsx:242
+#: src/screens/Invites/CreateInvite.tsx:241
 msgid "Never"
 msgstr "कभी नहीं"
 
@@ -3344,7 +3344,7 @@ msgid "No groups yet. A group keeps a trip’s or a flat’s expenses and balanc
 msgstr "अभी कोई समूह नहीं। समूह किसी यात्रा या फ़्लैट के खर्च और बैलेंस एक जगह रखता है।"
 
 #: src/components/settings/prefControls.tsx:793
-#: src/screens/Invites/CreateInvite.tsx:225
+#: src/screens/Invites/CreateInvite.tsx:224
 msgid "No limit"
 msgstr "कोई सीमा नहीं"
 
@@ -3373,7 +3373,7 @@ msgstr "कोई साझा समूह नहीं"
 msgid "No tracking"
 msgstr "कोई ट्रैकिंग नहीं"
 
-#: src/components/people/UpiPayDialog.tsx:119
+#: src/components/people/UpiPayDialog.tsx:107
 msgid "No UPI app on this device can open the payment."
 msgstr "इस डिवाइस पर कोई UPI ऐप यह भुगतान नहीं खोल सकता।"
 
@@ -3421,7 +3421,7 @@ msgstr "अभी नहीं"
 msgid "Not splitting"
 msgstr "बाँट नहीं रहे"
 
-#: src/components/people/UpiPayDialog.tsx:132
+#: src/components/people/UpiPayDialog.tsx:120
 msgid "Not yet"
 msgstr "अभी नहीं"
 
@@ -3611,7 +3611,7 @@ msgstr "सेटिंग्स खोलें"
 msgid "Open source"
 msgstr "ओपन सोर्स"
 
-#: src/components/people/UpiPayDialog.tsx:152
+#: src/components/people/UpiPayDialog.tsx:140
 msgid "Open UPI app"
 msgstr "UPI ऐप खोलें"
 
@@ -3650,7 +3650,7 @@ msgstr "जो बदला, उसे खोलता है"
 msgid "Opens your profile"
 msgstr "आपकी प्रोफ़ाइल खोलता है"
 
-#: src/components/people/UpiPayDialog.tsx:157
+#: src/components/people/UpiPayDialog.tsx:145
 msgid "Opens your UPI app with {name} and the amount filled in. You confirm the payment there."
 msgstr "आपका UPI ऐप {name} और राशि भरकर खुलेगा। भुगतान की पुष्टि वहीं करें।"
 
@@ -3747,7 +3747,7 @@ msgstr "पासवर्ड अपडेट हो गया"
 msgid "Password updated!"
 msgstr "पासवर्ड अपडेट हो गया!"
 
-#: src/components/people/UpiPayDialog.tsx:149
+#: src/components/people/UpiPayDialog.tsx:137
 #: src/screens/Person/index.tsx:291
 #: src/screens/Person/index.tsx:297
 msgid "Pay with UPI"
@@ -3806,7 +3806,7 @@ msgstr "लोग"
 msgid "People and Groups show who owes whom in each currency. Different currencies are never added together."
 msgstr "लोग और समूह हर मुद्रा में दिखाते हैं कि किसे किसको कितना देना है। अलग-अलग मुद्राएँ कभी जोड़ी नहीं जातीं।"
 
-#: src/screens/Invites/CreateInvite.tsx:262
+#: src/screens/Invites/CreateInvite.tsx:261
 msgid "People who use the link wait until you let them in."
 msgstr "लिंक इस्तेमाल करने वाले तब तक इंतज़ार करेंगे जब तक आप उन्हें जोड़ न लें।"
 
@@ -4790,7 +4790,7 @@ msgstr "Splito - घर"
 msgid "Splito can’t open your contacts. Turn on Contacts for Splito in Settings, then come back."
 msgstr "Splito आपके संपर्क नहीं खोल सकता। सेटिंग्स में Splito के लिए Contacts चालू करें, फिर वापस आएँ।"
 
-#: src/components/people/UpiPayDialog.tsx:137
+#: src/components/people/UpiPayDialog.tsx:125
 msgid "Splito can’t see your UPI app. Record the payment only once your app shows it as successful."
 msgstr "Splito आपका UPI ऐप नहीं देख सकता। भुगतान तभी दर्ज करें जब ऐप उसे सफल दिखाए।"
 
@@ -5086,7 +5086,7 @@ msgstr "यह दोस्त इस डिवाइस पर नहीं ह
 msgid "This group isn’t on this device. It may have been removed."
 msgstr "यह समूह इस डिवाइस पर नहीं है। शायद हटा दिया गया है।"
 
-#: src/screens/Invites/CreateInvite.tsx:172
+#: src/screens/Invites/CreateInvite.tsx:171
 msgid "This invite link isn’t on this device."
 msgstr "यह आमंत्रण लिंक इस डिवाइस पर नहीं है।"
 
@@ -5271,7 +5271,7 @@ msgid "UPI {0}"
 msgstr "UPI {0}"
 
 #: src/components/people/EditFriendDialog.tsx:116
-#: src/components/people/UpiPayDialog.tsx:170
+#: src/components/people/UpiPayDialog.tsx:158
 msgid "UPI ID"
 msgstr "UPI ID"
 
@@ -5279,7 +5279,7 @@ msgstr "UPI ID"
 msgid "UPI ID (optional)"
 msgstr "UPI ID (वैकल्पिक)"
 
-#: src/components/people/UpiPayDialog.tsx:218
+#: src/components/people/UpiPayDialog.tsx:206
 msgid "UPI links open on a phone with a UPI app. On a computer, nothing may happen."
 msgstr "UPI लिंक UPI ऐप वाले फ़ोन पर खुलते हैं। कंप्यूटर पर शायद कुछ न हो।"
 
@@ -5541,7 +5541,7 @@ msgid "Year first"
 msgstr "पहले साल"
 
 #. placeholder {0}: formatAmount(opened, 'INR', locale)
-#: src/components/people/UpiPayDialog.tsx:130
+#: src/components/people/UpiPayDialog.tsx:118
 msgid "Yes, record {0}"
 msgstr "हां, {0} दर्ज करें"
 

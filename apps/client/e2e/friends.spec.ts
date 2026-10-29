@@ -75,6 +75,27 @@ test('incoming requests: People > Requests and Activity, Accept makes a friend',
   await expect(page.getByTestId('person-name')).toHaveText('Ishaan Verma')
 })
 
+test('the demo set carries the invites flow: requests, invites sent, a joined friend, links and Activity rows', async ({page}) => {
+  await openDemo(page)
+  // Requests: two waiting (the one I declined is gone); invites sent: only the ones still waiting.
+  await expect(page.getByTestId('people-requests-title')).toHaveText('Requests  2')
+  await expect(page.getByTestId('people-invites-title')).toHaveText('Invites sent  3')
+  for (const name of ['Kabir', 'Neha Joshi', 'Aarav Mehta']) await expect(page.getByTestId(`invite-sent-${name}`)).toBeVisible()
+  for (const gone of ['Meera Nair', 'Zoya Khan']) await expect(page.getByTestId(`invite-sent-${gone}`)).toHaveCount(0)
+  // Joined: the private "Tanvi Rao" was linked to the account when they accepted.
+  await expect(page.getByTestId('person-Tanvi Rao')).toBeVisible()
+  // Links: the active ones are listed, the rest counted.
+  await page.goto('/invites')
+  await expect(page.getByTestId('screen-invite-links')).toBeVisible()
+  await expect(page.getByText('22 of 25 uses left · Expires in 26 days · You approve each join')).toBeVisible()
+  await expect(page.getByTestId('invite-links-inactive')).toContainText('n’t shown')
+  // Activity: received, sent and the accepted invite.
+  await page.goto('/activity')
+  await expect(page.getByTestId('activity-friendRequest.received').filter({hasText: 'Ishaan Verma'})).toBeVisible()
+  await expect(page.getByTestId('activity-friendRequest.sent').filter({hasText: 'Aarav Mehta'})).toBeVisible()
+  await expect(page.getByTestId('activity-friendRequest.accepted').filter({hasText: 'Tanvi Rao'})).toBeVisible()
+})
+
 /*
  * 26.18 decision 76: request and invite rows are one horizontal line, the
  * actions side by side on the right, centred on the name block; icon-only
@@ -206,7 +227,7 @@ test('invite link: limits, QR and link, then Manage invite links and Revoke', as
   await expect(page.getByText('Revoke this invite link?')).toBeVisible()
   await page.getByTestId('confirmBtn').click()
   await expect(row).toHaveCount(0)
-  await expect(page.getByTestId('invite-links-inactive')).toContainText('isn’t shown')
+  await expect(page.getByTestId('invite-links-inactive')).toContainText('n’t shown')
 
   // Opening your own revoked link says it no longer works.
   await page.goto(`/invite/${code}`)

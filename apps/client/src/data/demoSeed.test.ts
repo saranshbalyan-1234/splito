@@ -155,7 +155,7 @@ for (const engine of [sqlite, indexedDb]) {
         expect(dump.entities.some(x => x.id.startsWith('demo-large-'))).toBe(false)
         expect(dump.outbox.some(o => o.entityId.startsWith('demo-large-'))).toBe(false)
       },
-      300_000,
+      600_000,
     )
 
     // Seeding on the pure-JS IndexedDB of the test runner takes half a minute a time; the engine-independent checks run on SQLite.
@@ -190,8 +190,8 @@ for (const engine of [sqlite, indexedDb]) {
         expect(dump.outbox.length).toBeGreaterThan(1000)
         expect(dump.history.length).toBeGreaterThan(1000)
         // The friend requests and invite links of the 26.18 flow are there too.
-        expect((await demo.getAll('friendRequest')).length).toBe(4)
-        expect((await demo.getAll('inviteLink')).length).toBe(3)
+        expect((await demo.getAll('friendRequest')).length).toBe(9)
+        expect((await demo.getAll('inviteLink')).length).toBe(9)
         await demo.close()
       },
       300_000,

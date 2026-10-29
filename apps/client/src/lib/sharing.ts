@@ -5,7 +5,7 @@ import {t} from '@lingui/core/macro'
 
 import {openExternal} from '#/lib/openExternal'
 import * as Toast from '#/components/Toast'
-import {IS_ANDROID, IS_IOS, IS_NATIVE} from '#/env'
+import {IS_ANDROID, IS_E2E, IS_IOS, IS_NATIVE} from '#/env'
 
 /**
  * Shares a link with a line of text: the native share sheet on iOS and
@@ -14,7 +14,10 @@ import {IS_ANDROID, IS_IOS, IS_NATIVE} from '#/env'
  * a missing capability is a planned fallback).
  */
 export async function shareUrl(url: string, message?: string) {
-  if (IS_IOS) {
+  if (IS_E2E) {
+    // Chrome's share sheet can open the owner's Mail app: e2e builds only record the link.
+    await openExternal(url)
+  } else if (IS_IOS) {
     await Share.share({url, message})
   } else if (IS_ANDROID) {
     await Share.share({message: message ? `${message} ${url}` : url})

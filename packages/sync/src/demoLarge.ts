@@ -371,7 +371,7 @@ const NOTES: Record<string, string[]> = {
 
 /**
  * Three small groups and six friends with fixed, hand-checked numbers (ARCHITECTURE 26.1: the one demo set
- * folds in what the old `?demo=1` set held). They stand beside the year of generated use, share none of its
+ * folds in what the old small set held). They stand beside the year of generated use, share none of its
  * groups or people (so each friend's balance is exactly what is written here), and are never settled up.
  * Their dates are fixed (the e2e specs search and read them), so over time they age like any old trip.
  */

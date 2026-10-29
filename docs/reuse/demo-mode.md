@@ -31,12 +31,12 @@ external links instead of handing them to the operating system).
 
 ## Removed
 
-`?demo=1`, `?demo=large`, `EXPO_PUBLIC_DEMO`, `EXPO_PUBLIC_DEMO_AUTO`, `demoPending`, "Add demo data" and "Remove
+The URL switches, the `EXPO_PUBLIC_` demo variables, `demoPending`, "Add demo data" and "Remove
 demo data", `data/demo.ts`, `data/demoData.ts`, `data/demoLarge.ts`.
 
 ## For the other branches (e2e)
 
-Every spec that opened `/?demo=1` now calls `openDemo(page, path?)` from `e2e/openDemo.ts`, which waits for
+Every spec that used the URL switch now calls `openDemo(page, path?)` from `e2e/openDemo.ts`, which waits for
 `window.__splitoTest.demoMode`, runs `demoMode(true)` and then loads `path`. Specs must not rely on the six
 curated friends (Riya, Arjun, Priya, Sam, Lena, Diego) being on screen without scrolling: the dataset has 36
 friends and 15 groups and lists are virtualised.
