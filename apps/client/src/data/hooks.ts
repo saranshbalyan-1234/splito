@@ -317,13 +317,14 @@ export function useSearch(rawQuery: string, today: string, mark: '.' | ','): Sea
     }
   }, [store, query, today, mark, categories, commits])
   useEffect(() => {
-    if (!session) return
+    // The disputed filter waits for its expenses (the read below would spin on a session that has nothing more to give).
+    if (!session || (isDisputed && disputedExpenses === undefined)) return
     let isCurrent = true
     const show = (summary?: SearchSummary) => {
       /* With the disputed filter: the disputed expenses alone, or (with words) the search's matches that are among them. */
       const disputedIds = new Set((disputedExpenses ?? []).map(e => e.id))
       const found = isDisputed ? (query.trim() === '' ? (disputedExpenses ?? []) : session.found().filter(e => disputedIds.has(e.id))) : session.found()
-      const isDone = session.isDone() && (!isDisputed || disputedExpenses !== undefined)
+      const isDone = session.isDone()
       setView({
         people: session.people,
         groups: session.groups,

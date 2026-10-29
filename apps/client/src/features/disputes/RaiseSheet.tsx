@@ -39,9 +39,9 @@ const HOLD_SUGGESTIONS = ['Waiting for the refund', 'Need the receipt', 'Checkin
  * chip, an optional note (required for Other and for a hold), a proposed fix for amount, share, payer and
  * duplicate so the answer can be one tap, and (before the backend) who it is raised as. The record keeps counting.
  */
-export function RaiseSheet({control, request}: {control: Dialog.DialogControlProps; request: Raise}) {
+export function RaiseSheet({control, request, onClosed}: {control: Dialog.DialogControlProps; request: Raise; /** After it has closed (the host lets it go). */ onClosed?: () => void}) {
   return (
-    <FormSheet.Outer control={control} testID="dispute-sheet">
+    <FormSheet.Outer control={control} testID="dispute-sheet" onClose={onClosed}>
       <Form request={request} />
     </FormSheet.Outer>
   )

@@ -20,9 +20,9 @@ import {Text} from '#/components/Typography'
  * The note that goes with a rejection (the reason is required) or a reopening (a new note, once; then an admin may)
  * (F-1210, 26.20). Shows what the dispute said, so the answer is written with it in view.
  */
-export function AnswerSheet({control, request}: {control: Dialog.DialogControlProps; request: {kind: 'reject' | 'reopen'; disputeId: string}}) {
+export function AnswerSheet({control, request, onClosed}: {control: Dialog.DialogControlProps; request: {kind: 'reject' | 'reopen'; disputeId: string}; /** After it has closed (the host lets it go). */ onClosed?: () => void}) {
   return (
-    <FormSheet.Outer control={control} testID="dispute-answer-sheet">
+    <FormSheet.Outer control={control} testID="dispute-answer-sheet" onClose={onClosed}>
       <Form request={request} />
     </FormSheet.Outer>
   )
