@@ -93,7 +93,8 @@ export const Link = memo(function Link({
       props.onPressIn?.(e)
       if (activateOnPressIn && IS_WEB) {
         pressedIn.current = true
-        onPress(e)
+        /* A frame later: the press-in's own feedback (the bar's highlight) paints first, then the page switches. */
+        requestAnimationFrame(() => onPress(e))
       }
     },
     [activateOnPressIn, onPress, props.onPressIn],
