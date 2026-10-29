@@ -80,6 +80,7 @@ Every row of the ARCHITECTURE § 26.23 decision log (rows 1-63) and the feature(
 | 137 push notifications on iOS, Android and web | § 26.20 | F-2201 (first backend batch) |
 | 135 demo data downloaded from the backend, not bundled | § 26.1 | F-252 (backend) |
 | 128 customization only where needed; Language menu switch removed | § 26.1 | F-251 |
+| 145 deep links end to end | § 26.3 | F-254 (with F-241) |
 | 125 sign-in required, nothing visible signed out | § 26.15 | F-250 (Wave C), F-2101/F-2102 moved up after Wave C |
 | 124 footer links on one line | § 26.5 | fixed on integrate/wB |
 | 123, 142 intro slides before sign-in; guided tour after first sign-in | § 26.2 | F-249, F-253 (Wave C) |
@@ -492,6 +493,20 @@ After the first sign-in and setup, a short coach-mark walkthrough over the real 
   3. Steps that need data use empty-state wording when there is none; the tour never creates records.
   4. Never in demo mode or e2e unless its spec asks; reduced motion respected; no overlap with toasts or sheets.
   5. e2e at 390 and 1440 plus screenshots.
+
+### F-254 Deep links end to end `spec: owner § 26.3 (decision 145)`
+
+Every F-241 URL opens the right screen from anywhere: iOS Universal Links, Android App Links, `splito://`, web fallback; one resolver for push, invites, QR, reminders, shares; signed-out resume, demo handling, deferred link after install.
+
+- **Effort** M · **Impact** 9 · **Backend** partly (hosted AASA and assetlinks, deferred-link handoff) · **Status** todo, with F-241 right after Wave B · **Deps** F-241, F-619, F-2201 (push taps), F-250
+- **Prefs** -
+- **Acceptance**
+  1. A route table test parses every route from `https://splito.app/...` and `splito://...` to the same screen and params; unknown paths go Home.
+  2. iOS associated domains + `apple-app-site-association` and Android verified `assetlinks.json` (per tier host, § 14); simulator checks with `xcrun simctl openurl` and `adb shell am start -d` open the exact screen cold and warm.
+  3. Web: pasting any URL opens that screen with its sheet/tab/picker (F-241); browser Back behaves.
+  4. Signed out: intro/Continue, then resume at the target; demo mode: asks to switch back before opening real data; entity not on device: "Not on this device yet".
+  5. Push, invite, QR, reminder and share links all go through the one resolver; links never perform an action.
+  6. Deferred link: install from a link, first open lands on its target, no third-party SDK.
 
 ### F-250 Sign-in required (auth gate) `spec: owner § 26.15 (decision 125)`
 

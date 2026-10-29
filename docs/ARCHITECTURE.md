@@ -1386,6 +1386,21 @@ labelled sidebar); **wide** = web 1300 px and up (Bluesky `gtTablet`, right colu
   addressable, and no URL ever performs or arms an action (§ 14 "links carry no command"); a sheet URL only
   opens the sheet. *Why:* "for every tab, every popup it should be via url, so that even if i copy paste the
   url i land on same place".
+- **Deep links work end to end, everywhere** (owner 145; F-254, built with F-241 right after Wave B; the
+  hosted files ship with the backend/domain). Every URL of F-241 (pages, tabs, sheets, drawers, pickers, list
+  state) is also a deep link: `https://splito.app/<path>` opens the installed app at that exact screen through
+  iOS Universal Links (associated domains + `apple-app-site-association`) and Android App Links (verified
+  `assetlinks.json`), falls back to the web app when the app is not installed, and `splito://<path>` works as
+  the custom scheme; the same resolver (§ 14) handles links from push notifications (F-2201), invite links and
+  QR codes (F-619), email/SMS reminders, the share sheet, Ask answers and Search results. Opening a link:
+  signed out -> intro/Continue, then resumes at the target (owner 125); in demo mode -> asks to switch back
+  first when the target is real data; not on this device yet -> "Not on this device yet" until the pull
+  (§ 14); unknown path -> Home. Links only navigate, never act (§ 14). After an install from a link, the first
+  open goes to that link's target (deferred link, store-safe: the link is kept on the web page and handed over
+  by the app's first open, no third-party SDK). Each build claims only its tier's host (§ 14). Tests: a table
+  of every route parsed from both `https` and `splito://`, e2e opening links cold and warm on web, and
+  iOS/Android simulator checks with `xcrun simctl openurl` / `adb shell am start -d`. *Why:* "integrate deep
+  links properly as well".
 - **Activity's route is `/activity`; `/notifications` redirects to it.**
 - **Pushed pages** (Person, Group, Settle, Expense, Profile, Settings and its sections, Add friend, Create
   group) show Back in the header; top-level pages (People, Groups, Analytics, Activity) show the avatar. This
@@ -2356,6 +2371,7 @@ Every owner decision, in the order it was made (all 2026-10-26). "Replaced" name
 | 142 | "tour is when i have logged in, and want the swipable screen before login like some app does" | Swipeable intro slides before sign-in (F-249); a separate guided coach-mark tour over the real app after first sign-in and setup (F-253) | § 26.2 | One welcome tour before setup (row 123) |
 | 143 | "tour focuses on the feature and blur other places" | Each tour step keeps the focused control sharp and blurs (plus slight dim) the rest of the screen | § 26.2 | Dimmed backdrop only |
 | 144 | "either signin with password otp, users choice" | Existing accounts choose Password or Code as equal options (segmented), last choice remembered per device | § 26.15 | Password first with "Use a one-time code instead" |
+| 145 | "integrate deep links properly as well" | Every URL is a deep link: Universal Links, App Links, splito:// scheme, web fallback; one resolver for push, invites, QR, reminders, shares; signed-out and demo handling; deferred link after install; simulator tests | § 26.3 | Deep links partly wired (§ 14), no universal/app links |
 
 New decisions follow § 0 rule 9: rewrite the rule in its topic so only the current truth remains, then add a
 row here.
