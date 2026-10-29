@@ -1196,6 +1196,11 @@ Splito lessons (add newest last, dated, with PR):
   rules: a build guard matches strings that only the guarded thing contains (a test pins the near-miss), and every
   merge to `main` is followed by checking that the Render deploy succeeded (`render deploys list`), not only the
   GitHub workflow, before saying it is live.
+- 2026-10-30, Render: **auto-deploy was switched off by our own Blueprint.** `render.yaml` said
+  `autoDeployTrigger: 'off'` (deploys were meant to come from deploy hooks, whose secrets were never set), and a
+  Blueprint sync applied it to `splito-web`, so ten pushes after 5b60890 never deployed and nothing failed. Rule: the
+  Blueprint is the source of truth for service settings, so a setting the owner relies on (auto-deploy of `main`)
+  is written there; "no new deploy in `render deploys list` after a push" counts as a failed deploy.
 - 2026-10-30, owner on iPhone Safari: **the tap-speed fix passed in Chrome and still felt broken on the phone.**
   Chrome (desktop and touch emulation) measured every tab at 4-15 ms, but Home re-rendered synchronously on switch
   (about 50 ms on the Mac, several times that on a phone) and the page had no `touch-action: manipulation`, so iOS
