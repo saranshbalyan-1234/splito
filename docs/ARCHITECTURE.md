@@ -1272,6 +1272,31 @@ labelled sidebar); **wide** = web 1300 px and up (Bluesky `gtTablet`, right colu
 - **GameRun's Expo architecture is adopted where it fits** (§§ 21-22 record the calls). *Why:* "can you also
   look into architecture md file from GameRun expo".
 
+- **Welcome tour on first launch** (owner 123; F-249, Wave C, before F-211's setup steps). A fresh install
+  opens a short swipeable tour that says what Splito is and how to use it, then hands over to setup (F-211):
+  - **5 slides max**, each an original animated illustration (Lottie, static under reduced motion), a title and
+    one sentence, built on Bluesky's Pager with dot indicators (tappable) and its direction-aware slide:
+    1. Split anything with anyone: friends, groups, trips, any currency, never mixed.
+    2. Bills done right: items, portions, different taxes per item, service and round-off.
+    3. Settle up in fewest payments, record cash or UPI, remind gently.
+    4. Search or ask anything: "how much did I spend on food in Goa?".
+    5. Yours, offline: everything is saved on this device first (copy says sync only once it exists, § 0 rule 6).
+  - **Controls:** "Skip" top right on every slide (goes straight to setup, never past it), "Next" as the bottom
+    primary, the last slide's primary is "Get started"; swipe and the dots move both ways; a language chip top
+    left on the first slide (English / हिन्दी), because the tour is the first thing read. Phone: full screen;
+    rail and desktop: a centred card (~560 px) over a dimmed app, Escape = Skip.
+  - **Once, then on demand:** shown once per install (`onboarding.tourSeen`, device preference kept in the
+    database, decision 90); Settings > Help "Take the tour" replays it; never shown in demo mode or to e2e runs
+    (the test hook marks it seen; one spec covers the tour itself). Every slide has a URL (`/welcome/1` .. `/5`,
+    owner 100).
+  - **After the tour, first-use tips** (Expensify FeatureTraining / Bluesky ProgressGuide style): one small
+    dismissible tip the first time a screen is opened (FAB "Add your first expense", Groups "+", Analytics
+    scope chip, Search & Ask icon, row swipe/long-press), at most one tip on screen, each shown once, all
+    switchable off (`tips.enabled`), "Reset tips" in Settings > Help.
+  - Screen readers hear "Step 2 of 5" and each title as a heading; tap targets 44 px; works at 320 px in Hindi.
+  *Why:* "like what you get when you install one app and you get one overview, where you have to click next or
+  skip which explains you what this app is and how to use".
+
 ### 26.3 Shell and navigation
 
 - **Bluesky's shell on every width.** Web fills the whole screen: left sidebar plus main content (plus the
@@ -1392,8 +1417,8 @@ good"; "the left sidebar looks bad on desktop". *Where:* `view/shell/desktop/Lef
   links pinned at the bottom (Feedback · Help · Privacy · About; same component as the drawer). No avatar or
   `ProfileCard`, no "Splito" wordmark, no recent groups or transactions (those live in the right column,
   § 26.17). *Why:* "remove the avatar from sidebar"; "remove label from logo".
-- **Logo:** the mark only (§ 26.11), 40 px, horizontally centred in the sidebar column, vertically aligned with
-  the content header row (same top padding and height as `Layout.Header`). *Why:* "make the branding in
+- **Logo:** the mark only (§ 26.11), 40 px, horizontally centred in the sidebar column, 12 px (space.md) below the
+  content header row's centre line, for a little air on top (owner 126; was aligned with the header row). *Why:* "make the branding in
   centre".
 - **Nav items:** Bluesky `NavItem` exactly (24 px icon, `text_xl`, active = bold + filled icon,
   `rounded_full` hover background, Bluesky badge/dot): the shared list of § 26.3. The
@@ -1787,8 +1812,7 @@ built yet.
   `ChooseAccountForm` for several accounts; `ForgotPasswordForm` -> `SetNewPasswordForm` (emailed/texted
   code + new password) -> `PasswordUpdatedForm`), and `screens/Signup/` (`StepInfo`: name, email or phone,
   password; Bluesky's step indicator and `BackNextButtons`; the handle and captcha steps are dropped).
-  Only the replacements required for Splito change (copy text, field types, logo, routes). Presented as a full
-  screen over the app (Splito is offline-first, so signing in is optional and can be closed). Every field is
+  Only the replacements required for Splito change (copy text, field types, logo, routes). Presented as the whole app while signed out (owner 125: sign-in is required; it cannot be closed). Every field is
   validated. Until the auth backend exists (BACKLOG F-2101..F-2105), Next shows Bluesky's Admonition
   "Sign-in arrives with sync. Your data stays safe on this device." No fake success, no fake account. *Why:*
   "there is signin page already there in bluesky, use that".
@@ -1811,6 +1835,29 @@ built yet.
   on the device (status "Saved on this device") and offers "Send by email" (a prefilled email draft to the
   support address, `FEEDBACK_EMAIL`, a release-checklist item); once the backend exists it goes through the
   outbox. Preference "Shake to send feedback" (phones, default off).
+
+- **Sign-in is required: without an account nothing of the app is visible** (owner 125; replaces "signing in
+  is optional" and F-211's zero-signup start; F-250, Wave C, right after the welcome tour). Signed out, the app
+  shows only: the welcome tour (owner 123), Bluesky's logged-out flow (splash, Sign in, Create account, Forgot
+  password; copied as above), language choice and the legal/help pages. No ledger, list, Settings page,
+  search, demo switch or deep-linked record renders, and the local database is not opened, until a session
+  exists. A deep link opened signed out (expense, group, invite) is kept and resumed after sign-in (§ 14
+  "sign-in preserves intent"); public invite pages (`/join/:token`) stay public and lead to sign-in.
+  - **Order on a fresh install:** welcome tour -> Create account or Sign in -> setup (F-211: name, purpose,
+    currency) -> Home.
+  - **Offline-first still holds after sign-in:** the session is kept on the device (credential store, § 11), the
+    app opens and works offline with the account's local database (one database per account, so two accounts on
+    one device never mix), and only an API 401 ends the session (§ 11). Sign-in itself needs a connection, and
+    says so offline.
+  - **Log out** returns to the logged-out flow and closes that account's database; the prompt of § 26.15 (keep
+    or erase this device's data, unsynced warning) still applies.
+  - **Data already on a device from before this rule** is offered once after the first sign-in: "Move this
+    device's data into your account" (F-2104), never merged silently.
+  - **Until the auth API exists** (F-2101/F-2102, moved up to start right after Wave C): dev and e2e builds offer
+    "Continue with a dev account" on the sign-in screen (a local, clearly labelled account, never in production;
+    e2e signs in through `window.__splitoTest`); production builds refuse to ship without the real auth API
+    (release blocker § 26.22).
+  *Why:* "also without login, nothing should be visible, auth is required".
 
 ### 26.16 Analytics
 
@@ -2176,6 +2223,10 @@ Every owner decision, in the order it was made (all 2026-10-26). "Replaced" name
 | 120 | "ui issues" (Home screenshot, 2026-10-29) | Home order Overview, requests, recent, Friends; Invites sent move to the Friends and invites page; overview labels and amounts never truncated and cards even; no red per-row dots; friend rows two lines (2 chips + N, one net per currency); Friends search back | § 26.12 | Invites sent above the Overview; truncating cards; chips wrapping |
 | 121 | "I don't see invites related data in demo" | The one demo dataset carries the invites flow in every state: incoming requests (waiting, declined), invites sent (Sent, Opened, Joined, Expired, Cancelled), private "only for you" friends incl. one linked on joining, friend and group invite links in every state, a group join request, and their Activity rows; "Opened" and "join request" are stand-ins until F-2105 | § 26.1 | Demo had no invites data |
 | 122 | "keep rebuilding app after changes, i see very old always" | localhost:8090 is rebuilt automatically after every commit to the integration branch or main line | § 26.1 | Preview rebuilt only at the end of a wave |
+| 123 | "add another feature, like what you get when you install one app ... click next or skip which explains you what this app is and how to use" | Welcome tour on first launch: up to 5 slides (Pager, dots, Skip / Next / Get started, language chip), then setup (F-211); once per install, replay from Settings > Help; first-use tips after it, one at a time, each once | § 26.2 | F-211 began at the language/name step with one FAB coach mark |
+| 124 | "Feedback ∙ Help ∙ Privacy ∙ About should be in one line" | The footer links are one line in the sidebar and the drawer (nowrap row, text_xs), English and Hindi | § 26.5 | Inline text that wrapped in the 240 px sidebar |
+| 125 | "also without login, nothing should be visible, auth is required" | Sign-in required: signed out shows only the tour, the logged-out flow, language and legal pages; DB opens only with a session; offline after sign-in; one DB per account; dev/e2e dev account until the auth API; auth backend moved up after Wave C | § 26.15 | Sign-in optional, zero-signup onboarding (F-211), closable sign-in screen |
+| 126 | "add a little padding from top, on sidebar on logo" | Sidebar logo sits 12 px lower than the header centre line | § 26.5 | Logo on the header row centre line |
 
 New decisions follow § 0 rule 9: rewrite the rule in its topic so only the current truth remains, then add a
 row here.
