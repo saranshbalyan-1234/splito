@@ -69,26 +69,49 @@ for (const width of WIDTHS) {
 
     // Overview, then requests, then the invites row, then the recent lists; no Friends list on Home.
     const y = async (id: string) => (await page.getByTestId(id).boundingBox())!.y
-    const order = ['home-overview-title', 'people-requests-title', 'people-invites-waiting', 'home-recent-transactions-title', 'home-recent-people-title', 'home-recent-groups-title']
+    const order = ['home-overview-title', 'people-requests-title', 'people-invites-title', 'home-recent-transactions-title', 'home-recent-people-title', 'home-recent-groups-title']
     const ys: number[] = []
     for (const id of order) ys.push(await y(id))
     expect([...ys].sort((p, q) => p - q)).toEqual(ys)
     await expect(page.getByTestId('people-friends-title')).toHaveCount(0)
-    // Sent invites are not on Home, and no row carries a coloured sync dot.
-    await expect(page.getByTestId('invite-sent-Kabir')).toHaveCount(0)
-    await expect(page.getByTestId('people-invites-title')).toHaveCount(0)
+    // The invites sent are rows on Home (owner 175), and no row carries a coloured sync dot.
+    await expect(page.getByTestId('invite-sent-Kabir')).toBeVisible()
+    await expect(page.getByTestId('invite-sent-Kabir').locator('[data-testid$="-sync"]')).toHaveCount(0)
     await expect(page.getByTestId('request-Ishaan Verma').locator('[data-testid$="-sync"]')).toHaveCount(0)
   })
 }
 
-test('the invites row opens Friends and invites, where Invites sent live', async ({page}) => {
+test('Home shows requests then Invites sent as rows, at most 5 in all, and the full list is on Friends and invites', async ({page}) => {
   await openHome(page, 390)
-  await expect(page.getByTestId('people-invites-waiting')).toContainText(/\d+ invites? waiting/)
-  await page.getByTestId('people-invites-waiting').click()
+  const home = page.getByTestId('screen-home')
+  await expect(home.getByTestId('people-invites-title')).toContainText('Invites sent')
+  const rows = home
+    .getByTestId('people-requests')
+    .locator('[data-testid^="request-"], [data-testid^="invite-sent-"]')
+  const named = await rows.evaluateAll(els =>
+    els.map(e => e.getAttribute('data-testid')!).filter(id => !/accept|decline|resend|cancel|-sync|tooltip|title/.test(id)),
+  )
+  const unique = new Set(named)
+  expect(unique.size).toBeGreaterThan(2)
+  expect(unique.size, [...unique].join(', ')).toBeLessThanOrEqual(5)
+  const kabir = home.getByTestId('invite-sent-Kabir')
+  await expect(kabir).toContainText(/Invited, not on Splito yet|Waiting to accept/)
+  // Resend and Cancel sit on the right in one horizontal line.
+  const row = (await kabir.boundingBox())!
+  const resend = (await kabir.getByTestId('invite-sent-resend').boundingBox())!
+  const cancel = (await kabir.getByTestId('invite-sent-cancel').boundingBox())!
+  expect(Math.abs(resend.y - cancel.y)).toBeLessThan(1)
+  expect(cancel.x).toBeGreaterThan(resend.x + resend.width)
+  expect(resend.x).toBeGreaterThan(row.x + row.width / 2)
+  expect(row.height).toBeLessThan(72)
+  // The rows come after the Overview.
+  expect(await y(page, 'home-overview-title')).toBeLessThan(await y(page, 'people-requests-title'))
+  await page.goto('/settings/friends')
   await expect(page.getByTestId('screen-friends-invites')).toBeVisible()
   await expect(page.getByTestId('invite-sent-Kabir')).toBeVisible()
-  await expect(page.getByTestId('invite-sent-Kabir').locator('[data-testid$="-sync"]')).toHaveCount(0)
 })
+
+const y = async (page: Page, id: string) => (await page.getByTestId(id).boundingBox())!.y
 
 test('with nothing waiting there is no invites row', async ({page}) => {
   await page.goto('/')
@@ -98,7 +121,8 @@ test('with nothing waiting there is no invites row', async ({page}) => {
   })
   await page.goto('/people')
   await expect(page.getByTestId('person-Kavya Rao')).toBeVisible()
-  await expect(page.getByTestId('people-invites-waiting')).toHaveCount(0)
+  await expect(page.getByTestId('people-invites-title')).toHaveCount(0)
+  await expect(page.getByTestId('people-requests-title')).toHaveCount(0)
 })
 
 test('a friend row is at most two lines at 390px, amounts vertically centred, chips do not wrap, the last row clears the FAB', async ({page}) => {

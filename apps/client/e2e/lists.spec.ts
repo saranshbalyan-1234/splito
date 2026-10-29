@@ -60,7 +60,7 @@ async function seedA04(page: Page) {
   })
 }
 
-test('A04: Include groups reads 150 with groups and 100 without on People, and Home follows the saved choice', async ({
+test('A04: Include groups reads 150 with groups and 100 without on People; the Overview on Home counts everything (scope All)', async ({
   page,
 }) => {
   await seedA04(page)
@@ -79,8 +79,10 @@ test('A04: Include groups reads 150 with groups and 100 without on People, and H
     people.getByTestId('person-Kavya Rao').getByTestId('balance-INR'),
   ).toHaveText('owes you ↙ ₹100.00')
   await expect(people.getByTestId('list-filters-dot')).toBeVisible()
-  // The choice is saved (owner 128), so the Overview on Home reads the same way.
+  // The Overview has its own scope (owner 176): the friends filter never changes it.
   await page.getByTestId('tab-home').click()
+  await expect(page.getByTestId('screen-home').getByTestId('summary-INR-net')).toHaveText('₹150.00')
+  await page.getByTestId('screen-home').getByTestId('overview-scope-direct').click()
   await expect(page.getByTestId('screen-home').getByTestId('summary-INR-net')).toHaveText('₹100.00')
 
   // Back on: the defaults again, so the dot goes.
@@ -89,8 +91,6 @@ test('A04: Include groups reads 150 with groups and 100 without on People, and H
   await page.getByTestId('filter-include-groups').click()
   await page.getByTestId('sheet-save').click()
   await expect(people.getByTestId('list-filters-dot')).toHaveCount(0)
-  await page.getByTestId('tab-home').click()
-  await expect(page.getByTestId('screen-home').getByTestId('summary-INR-net')).toHaveText('₹150.00')
 })
 
 test('search grows from the icon to the row width, Escape folds it, and it combines with filters', async ({

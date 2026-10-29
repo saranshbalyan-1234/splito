@@ -8,7 +8,7 @@ const PHONE = {width: 390, height: 844}
 async function openAddExpense(page: Page) {
   await page.setViewportSize(DESKTOP)
   await openDemo(page, '/people')
-  await expect(page.getByTestId('screen-home')).toBeVisible()
+  await expect(page.getByTestId('screen-people')).toBeVisible()
   await expect(page.getByTestId('person-Riya Sharma')).toBeVisible()
   await page.getByTestId('sidebar-add').click()
   await expect(page.getByTestId('screen-add-expense')).toBeVisible()

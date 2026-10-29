@@ -582,6 +582,7 @@ export const PREF_CONTROLS = {
   // Set from a group's menu (Hide group / Show group), where its effect shows; Reset all resets it.
   'groups.hidden': null,
   // Chosen in each list's filter sheet (Show settled), next to the other filters; Reset all resets them.
+  'home.overviewScope': null,
   'people.showSettled': null,
   'groups.showSettled': null,
   'groups.sort': null,

@@ -104,6 +104,7 @@ export type PageName = Exclude<RouteName, 'Search'>
  * by the resolver, so a link can carry nothing a page does not look at.
  */
 export const QUERY_KEYS: Partial<Record<PageName, readonly string[]>> = {
+  Home: ['overview'],
   People: ['show', 'sort', 'currency', 'groups', 'settled', 'hidden'],
   Groups: ['type', 'status', 'show', 'currency', 'sort', 'settled', 'hidden'],
   Person: ['groups'],

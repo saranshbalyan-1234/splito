@@ -27,7 +27,7 @@ test('Home at 390: the sections in order, each at most 5 rows, no friends list, 
   await openDemo(page)
   const home = page.getByTestId('screen-home')
   await expect(home.getByTestId('home-overview')).toBeVisible()
-  const order = ['home-overview-title', 'people-requests-title', 'people-invites-waiting', 'home-recent-transactions-title', 'home-recent-people-title', 'home-recent-groups-title']
+  const order = ['home-overview-title', 'people-requests-title', 'people-invites-title', 'home-recent-transactions-title', 'home-recent-people-title', 'home-recent-groups-title']
   const ys: number[] = []
   for (const id of order) ys.push(await y(page, id))
   expect([...ys].sort((p, q) => p - q)).toEqual(ys)
@@ -120,14 +120,26 @@ test('People tab: requests, invites row, Friends with search, Filters and Show s
   await openDemo(page, '/people')
   const people = page.getByTestId('screen-people')
   await expect(people.getByTestId('people-requests-title')).toBeVisible()
-  await expect(people.getByTestId('people-invites-waiting')).toBeVisible()
+  await expect(people.getByTestId('people-invites-title')).toBeVisible()
+  await expect(people.getByTestId('invite-sent-Kabir')).toBeVisible()
   await expect(people.getByTestId('people-friends-title')).toBeVisible()
   await expect(people.getByTestId('list-search')).toBeVisible()
   await expect(people.getByTestId('list-filters')).toBeVisible()
+  // Friends header, right to left: search, Filters, then the Manage gear (owner 177); no "Manage" text.
+  const [search, filters, gear] = await Promise.all(['list-search', 'list-filters', 'people-manage-friends'].map(id => people.getByTestId(id).boundingBox()))
+  expect(search!.x).toBeLessThan(filters!.x)
+  expect(filters!.x).toBeLessThan(gear!.x)
+  expect(Math.abs(search!.y - gear!.y)).toBeLessThan(2)
+  expect(Math.abs(search!.width - gear!.width)).toBeLessThan(2)
+  await expect(people.getByTestId('people-manage-friends')).toHaveAttribute('aria-label', 'Manage friends and invites')
+  await expect(people.getByTestId('people-manage-friends')).toHaveText('')
   await expect(people.getByTestId('home-overview')).toHaveCount(0)
   await expect(people.getByTestId('people-add-friend')).toBeVisible()
   await expect(people.getByTestId('header-search-ask')).toBeVisible()
   await expect(people.getByTestId('fab-add')).toBeVisible()
+  await people.getByTestId('people-manage-friends').click()
+  await expect(page).toHaveURL(/\/settings\/friends$/)
+  await page.goBack()
   await people.getByTestId('list-filters').click()
   await expect(page.getByTestId('filter-settled-toggle')).toBeVisible()
   await page.getByTestId('sheet-close').click()
@@ -231,4 +243,82 @@ test('no horizontal overflow on Home, People and Groups at 320 and 390', async (
       expect(over, `${path} @${width}`).toBeLessThanOrEqual(0)
     }
   }
+})
+
+/** The signed net of each Overview card, by currency: "You owe" is negative. */
+async function rawNets(page: Page) {
+  const cards = page.getByTestId('home-overview').locator('[data-testid$="-card"]')
+  return cards.evaluateAll(els =>
+    Object.fromEntries(
+      els.map(card => {
+        const code = card.getAttribute('data-testid')!.split('-')[1]!
+        const label = card.querySelector(`[data-testid="summary-${code}-label"]`)!.textContent!
+        const figure = card.querySelector(`[data-testid="summary-${code}-net"]`)!.textContent!
+        const n = Number(figure.replace(/[^0-9.]/g, ''))
+        return [code, /owe\b/.test(label) ? -n : label.includes('settled') ? 0 : n]
+      }),
+    ) as Record<string, number>,
+  )
+}
+
+/** The nets once the amounts have stopped counting to their new values. */
+async function overviewNets(page: Page) {
+  let last = JSON.stringify(await rawNets(page))
+  for (let i = 0; i < 20; i++) {
+    await page.waitForTimeout(250)
+    const now = JSON.stringify(await rawNets(page))
+    if (now === last) break
+    last = now
+  }
+  return JSON.parse(last) as Record<string, number>
+}
+
+test('Overview scope: All, Groups and Direct change only the cards; it is in the address and remembered; Analytics carries it (owner 176)', async ({page}) => {
+  await page.setViewportSize(PHONE)
+  await openDemo(page)
+  const home = page.getByTestId('screen-home')
+  await expect(home.getByTestId('overview-scope-all')).toHaveAttribute('aria-checked', 'true')
+  const all = await overviewNets(page)
+  const peopleBefore = await home.getByTestId('home-recent-people').locator('a[data-testid^="person-"]').count()
+  expect(Object.keys(all).length).toBeGreaterThanOrEqual(3)
+
+  await home.getByTestId('overview-scope-groups').click()
+  await expect(page).toHaveURL(/\?overview=groups$/)
+  await expect(home.getByTestId('overview-scope-groups')).toHaveAttribute('aria-checked', 'true')
+  const groups = await overviewNets(page)
+  await home.getByTestId('overview-scope-direct').click()
+  await expect(page).toHaveURL(/\?overview=direct$/)
+  await expect(home.getByTestId('overview-scope-direct')).toHaveAttribute('aria-checked', 'true')
+  const direct = await overviewNets(page)
+
+  // Both views have balances in two or more currencies, and they differ from All.
+  expect(Object.keys(groups).length).toBeGreaterThanOrEqual(2)
+  expect(Object.keys(direct).length).toBeGreaterThanOrEqual(2)
+  expect(groups).not.toEqual(all)
+  expect(direct).not.toEqual(all)
+  // Per currency, never summed across currencies: all = groups + direct.
+  for (const code of Object.keys(all)) expect(all[code]!, code).toBeCloseTo((groups[code] ?? 0) + (direct[code] ?? 0), 2)
+  // The sections below are the same whatever the scope.
+  expect(await home.getByTestId('home-recent-people').locator('a[data-testid^="person-"]').count()).toBe(peopleBefore)
+
+  // Analytics carries the scope: Everything, all groups, non-group only.
+  await expect(home.getByTestId('overview-analytics')).toHaveAttribute('href', /scope=1(:|%3A)$/)
+  await home.getByTestId('overview-analytics').click()
+  await expect(page).toHaveURL(/\/analytics\?scope=1(:|%3A)$/)
+  await expect(page.getByTestId('screen-analytics')).toBeVisible()
+
+  // Remembered (a preference), so the bare address reads the same; All, from a saved Groups, is written out.
+  await page.goto('/')
+  await expect(page.getByTestId('screen-home').getByTestId('overview-scope-direct')).toHaveAttribute('aria-checked', 'true')
+  expect(await overviewNets(page)).toEqual(direct)
+  await page.goto('/?overview=groups')
+  await expect(page.getByTestId('screen-home').getByTestId('overview-scope-groups')).toHaveAttribute('aria-checked', 'true')
+  expect(await overviewNets(page)).toEqual(groups)
+  await page.getByTestId('screen-home').getByTestId('overview-analytics').click()
+  await expect(page).toHaveURL(/\/analytics\?scope=0(:|%3A)all$/)
+  await page.goto('/')
+  await page.getByTestId('screen-home').getByTestId('overview-scope-all').click()
+  await expect(page).toHaveURL(/\?overview=all$/)
+  expect(await overviewNets(page)).toEqual(all)
+  await expect(page.getByTestId('screen-home').getByTestId('overview-analytics')).toHaveAttribute('href', '/analytics')
 })

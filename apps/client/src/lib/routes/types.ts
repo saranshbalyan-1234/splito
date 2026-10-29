@@ -10,8 +10,8 @@ export type ListParams = {[key: string]: string | undefined}
 
 /** The bottom bar / sidebar destinations, in display order. */
 export type TabParams = {
-  /** The Overview and the short recent lists; no list state of its own. */
-  Home: undefined
+  /** The Overview and the short recent lists. `overview=all|groups|direct` is the Overview's scope (owner 176). */
+  Home: {overview?: string} | undefined
   /** The Friends list (F-256). List state in the address (F-241): `sort`, `show`, `currency`, `groups=0` (no group shares), `settled=1`, `hidden=1`. */
   People: ListParams | undefined
   /** `type`, `status`, `show`, `currency`, `sort`, `settled=1`, `hidden=1`. */

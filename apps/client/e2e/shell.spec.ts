@@ -33,9 +33,9 @@ async function open(page: Page, path: string, screen: string) {
   await expect(page.getByTestId(screen)).toBeVisible()
 }
 
-async function openDemo(page: Page) {
-  await enterDemo(page)
-  await expect(page.getByTestId('home-overview')).toBeVisible()
+async function openDemo(page: Page, path = '/') {
+  await enterDemo(page, path)
+  if (path === '/') await expect(page.getByTestId('home-overview')).toBeVisible()
 }
 
 /* Web keeps earlier pages of the stack mounted (hidden), so scope to the page on screen. */
@@ -181,7 +181,7 @@ test.describe('header rule set', () => {
     await page.setViewportSize(PHONE)
     await openDemo(page)
     await page.getByTestId('tab-people').click()
-    await page.getByTestId('person-Riya Sharma').click()
+    await page.getByTestId('screen-people').getByTestId('person-Riya Sharma').click()
     await expect(on(page, 'screen-person', 'person-name')).toHaveText(
       /^Riya Sharma( - Demo)?$/,
     )
@@ -459,7 +459,7 @@ test.describe('desktop: Bluesky left sidebar and full-width content', () => {
     await open(page, '/', 'screen-home')
     const items = await page
       .getByRole('navigation')
-      .locator('[data-testid^="tab-"]')
+      .locator('[data-testid^="tab-"]:not([data-testid="tab-label"])')
       .evaluateAll(els => els.map(e => e.getAttribute('data-testid')))
     // Every item always shows on the sidebar, in the chosen order, with no More (owner 155).
     expect(items).toEqual([
@@ -467,8 +467,8 @@ test.describe('desktop: Bluesky left sidebar and full-width content', () => {
       'tab-people',
       'tab-groups',
       'tab-analytics',
-      'tab-ask',
       'tab-activity',
+      'tab-ask',
       'tab-settings',
     ])
     await expect(page.getByTestId('tab-home')).toContainText('Home')
@@ -554,7 +554,8 @@ test.describe('desktop: Bluesky left sidebar and full-width content', () => {
     page,
   }) => {
     await page.setViewportSize(DESKTOP)
-    await openDemo(page)
+    // Home has no right column (owner 153): it is on the other pages.
+    await openDemo(page, '/groups')
     const recent = page
       .getByTestId('right-nav')
       .getByTestId('sidebar-recent-groups')
@@ -688,7 +689,7 @@ test.describe('phone: Bluesky bottom bar and FAB', () => {
     await openDemo(page)
     const items = await page
       .getByRole('navigation')
-      .locator('[data-testid^="tab-"]')
+      .locator('[data-testid^="tab-"]:not([data-testid="tab-label"])')
       .evaluateAll(els => els.map(e => e.getAttribute('data-testid')))
     expect(items).toEqual(TABS.map(tab => `tab-${tab}`))
     await expect(page.getByTestId('sidebar-add')).toHaveCount(0)
@@ -801,7 +802,7 @@ test('the tabs preference orders and hides tabs; hidden routes still open', asyn
   await expect(page.getByTestId('tab-analytics')).toHaveCount(0)
   const order = await page
     .getByRole('navigation')
-    .locator('[data-testid^="tab-"]')
+    .locator('[data-testid^="tab-"]:not([data-testid="tab-label"])')
     .evaluateAll(els => els.map(e => e.getAttribute('data-testid')))
   expect(order).toEqual(['tab-home', 'tab-groups'])
   // Hiding tabs never strands anything: the drawer still reaches every page.
@@ -811,11 +812,12 @@ test('the tabs preference orders and hides tabs; hidden routes still open', asyn
 
   // The sidebar lists every item (owner 155, no More): what is on in the chosen order, then the rest.
   await page.setViewportSize(LAPTOP)
-  const sidebar = await page
-    .getByRole('navigation')
-    .locator('[data-testid^="tab-"]')
-    .evaluateAll(els => els.map(e => e.getAttribute('data-testid')))
-  expect(sidebar).toEqual(['tab-home', 'tab-groups', 'tab-people', 'tab-analytics', 'tab-ask', 'tab-activity', 'tab-settings'])
+  const sidebar = () =>
+    page
+      .getByRole('navigation')
+      .locator('[data-testid^="tab-"]:not([data-testid="tab-label"])')
+      .evaluateAll(els => els.map(e => e.getAttribute('data-testid')))
+  await expect.poll(sidebar).toEqual(['tab-home', 'tab-groups', 'tab-people', 'tab-analytics', 'tab-ask', 'tab-activity', 'tab-settings'])
   await page.getByTestId('tab-settings').click()
   await expect(page.getByTestId('screen-settings')).toBeVisible()
 })

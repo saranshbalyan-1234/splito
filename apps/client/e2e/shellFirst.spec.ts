@@ -38,8 +38,9 @@ const skeletons = (page: Page) =>
   page.evaluate(() => (window as unknown as {__sk: {rowsSkeletonUnderRealHeader: number}}).__sk)
 
 test('opening a friend and a group with the data loaded shows no skeleton', async ({page}) => {
-  await page.goto('/')
-  await expect(page.getByTestId('screen-home')).toBeVisible()
+  /* People is the first page here, so Home is never mounted behind it (its Recently active lists would repeat the rows). */
+  await page.goto('/people')
+  await expect(page.getByTestId('screen-people')).toBeVisible()
   await page.waitForFunction(() => 'splito' in window)
   await page.evaluate(async () => {
     const s = (window as unknown as {splito: Splito}).splito
@@ -79,7 +80,7 @@ test('opening a friend and a group with the data loaded shows no skeleton', asyn
   await watchSkeletons(page)
   await page.getByTestId('person-Bela Joshi').tap()
   await expect(page.getByTestId('screen-person')).toBeVisible()
-  await expect(page.getByText('Rafting').first()).toBeVisible()
+  await expect(page.getByTestId('screen-person').getByText('Rafting').first()).toBeVisible()
   await page.waitForTimeout(500)
   expect((await skeletons(page)).rowsSkeletonUnderRealHeader).toBe(0)
 })

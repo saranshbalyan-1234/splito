@@ -109,7 +109,7 @@ for (const width of [1440, 860]) {
     const order = () =>
       page
         .getByRole('navigation')
-        .locator('[data-testid^="tab-"]')
+        .locator('[data-testid^="tab-"]:not([data-testid="tab-label"])')
         .evaluateAll(els => els.map(e => e.getAttribute('data-testid')))
     // Default: the bottom bar's five, then the rest (Ask Splito and Settings are off); never a More.
     const DEFAULT = ['tab-home', 'tab-people', 'tab-groups', 'tab-analytics', 'tab-activity', 'tab-ask', 'tab-settings']
@@ -175,7 +175,7 @@ test('Settings can join the phone bar, with arrows to reorder and Reset', async 
     .poll(() =>
       page
         .getByRole('navigation')
-        .locator('[data-testid^="tab-"]')
+        .locator('[data-testid^="tab-"]:not([data-testid="tab-label"])')
         .evaluateAll(els => els.map(e => e.getAttribute('data-testid'))),
     )
     .toEqual([

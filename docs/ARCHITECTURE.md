@@ -1474,16 +1474,20 @@ labelled sidebar); **wide** = web 1300 px and up (Bluesky `gtTablet`, right colu
 - **Home, People and Groups are three tabs; the Overview lives only on Home** [Built, F-256, web; native not yet checked on a simulator] (owner 153; replaces the
   Home-holds-the-friends-list layout of 120 and the Overview on Groups):
   - **Home** (`/`), top to bottom (owners 153, 154): the **Overview** (per-currency cards, owners 113/114/120,
-    "Analytics ›"); **Requests** (incoming friend requests with Accept / Decline and the "N invites waiting ›"
-    row, shown only when something is pending); **Recent transactions** (F-1415: the newest expenses and payments
+    "Analytics ›"); **Requests** (below the Overview, never above it: incoming friend requests with Accept / Decline, then
+    "Invites sent" rows, each with the avatar, name, status line and Resend + Cancel on the right in one line, the
+    `RequestRow` components, no red dots; 5 rows at most in all, requests first, "See all ›" to Friends and invites
+    when there are more; the section hides when nothing is pending; owners 153, 175); **Recent transactions** (F-1415: the newest expenses and payments
     across everything, "See all" -> Activity); **Recently active people** (the 5 friends with the newest change,
     by change time, with their per-currency net, "See all" -> People); **Recently active groups** (the 5 groups
     with the newest change, balance chips, "See all" -> Groups, same rule as § 26.17). Each section is short (5
     rows at most) and hides when empty. Header: avatar | logo (phone) / "Home" | Search & Ask (no Add friend
     here). On wide screens the right column is not shown on Home (its content is on the page), so nothing repeats.
   - **Ids and routes:** the tab ids are `home | people | groups | analytics | activity` (plus `ask`, `settings` in the shared list) and the routes `Home` (`/`) and `People` (`/people`); the old route and id `people` meant Home. The Groups tab glyph is Lucide `Group` now, since `Users` is People's.
-  - **People** (`/people`, new tab, Lucide `Users`): incoming friend requests (Accept / Decline, the same ones
-    Home shows), the "N invites waiting ›" row, then the Friends list with its search and Filters (owners 91, 120, 130); no Overview. Header:
+  - **People** (`/people`, new tab, Lucide `Users`): the same Requests and Invites sent rows Home shows (owner 175),
+    then the Friends list with its search, Filters and, last, a gear icon "Manage friends and invites" that opens
+    Friends and invites (owner 177: no "Manage" text button; Friends header icons, left to right: search, Filters,
+    gear; owners 91, 120, 130); no Overview. Header:
     avatar | "People" | Search & Ask + Add friend. A friend still opens `/people/:id`.
   - **Groups** (`/groups`): the groups list with search and Filters; no Overview. Header unchanged.
   - **Navigation:** the shared list becomes Home, People, Groups, Analytics, Ask Splito, Activity, Settings; the
@@ -1847,6 +1851,13 @@ pages". § 17 holds the engineering rules that meet these budgets.
 group there"; "add overview in both friends and groups, with search and filters as well, search icon only,
 expands once I click". *Where:* `screens/People`, `screens/Groups`, `screens/Group`, `components/ListToolsHeader.tsx`.
 
+- **The Overview has a scope** (owner 176): small chips "All" (default) / "Groups" / "Direct" (non-group
+  expenses with friends) in its header beside "Analytics ›". It changes only the per-currency cards and their counts
+  line, never the sections below; currencies are never summed. The choice is the preference `home.overviewScope`
+  (decision 90) and the address (`/?overview=groups|direct|all`; a param that is present wins, `all` is written when
+  a saved Groups/Direct would otherwise apply). "Analytics ›" and each card carry it as Analytics' scope
+  (`scope=` `0:all` for Groups, `1:` for Direct, none for All). It does not follow the friends list's Include groups
+  filter. `personSummary(rows, {includeGroups, scope})` in domain; `screens/Home/overviewScope.ts`.
 - **Overview cards: only the net is coloured and on the right** (owners 156-161; with F-256). Each currency
   card reads:
   - line 1: "You are owed" / "You owe" / "Settled" with the currency chip on the LEFT ... the NET on the RIGHT,
@@ -2598,6 +2609,9 @@ Every owner decision, in the order it was made (all 2026-10-26). "Replaced" name
 | 161 | mock-up: net large green on the right of line 1; "Owed to you ₹49,243.00" and "You owe ₹450.00" small, white/grey, on the left; "4 friends" | Only the net is coloured and right-aligned; breakdown lines stay left in normal colours | § 26.12 | Breakdown amounts coloured on the right (160) |
 | 162 | "add all these to architecture" (the iOS, tap-speed and links review findings) | Lessons recorded in § 23 (sheet presenting, sheet host provider, tab links on native, SQLite sync batching, no dedupe on idempotent nav, deferred-render contract, sideways overflow, renders baseline upkeep) | § 23 | - |
 | 163 | "make sure you do it yourself always, whenever you think this should be in app" | Claude records lessons and rules (§ 23 or the section) on its own in the same turn, plus BACKLOG work, commit and push, without being asked | § 0 rule 10 | Recording lessons only when asked |
+| 175 | coordinator, from the owner: show the invites "the way they used to look" on Home | Home's Requests section shows incoming requests then "Invites sent" rows (Resend + Cancel on one line), 5 rows at most, "See all ›" to Friends and invites, hidden when none; People shows the same; replaces the compact "N invites waiting" row | § 26.3 | Home had only the "N invites waiting ›" row (owner 120) |
+| 176 | coordinator, from the owner: an Overview scope of All, Groups or Direct | Overview chips All (default) / Groups / Direct beside "Analytics ›"; only the cards and their counts; remembered (`home.overviewScope`) and in the address; Analytics gets the same scope | § 26.12 | The Overview always counted everything (and followed the friends' Include groups filter) |
+| 177 | coordinator, from the owner: remove "Manage" from the Friends header, gear on the right | Friends section header icons: search, Filters, gear ("Manage friends and invites" -> Friends and invites); no text button | § 26.3 | A "Manage" text button between the title and the icons |
 
 New decisions follow § 0 rule 9: rewrite the rule in its topic so only the current truth remains, then add a
 row here.

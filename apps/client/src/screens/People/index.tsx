@@ -24,7 +24,9 @@ import {EmptyState} from '#/view/com/util/EmptyState'
 import {List} from '#/view/com/util/List'
 import {AddExpenseFAB, AddExpenseFABInset} from '#/components/AddExpenseFAB'
 import {useDialogControl} from '#/components/Dialog'
-import {Button, ButtonText} from '#/components/Button'
+import {Button, ButtonIcon} from '#/components/Button'
+import {HITSLOP_10} from '#/lib/constants'
+import {SettingsGear2_Stroke2_Corner0_Rounded as GearIcon} from '#/components/icons/Settings'
 import {SearchAskButton} from '#/components/SearchAsk/SearchAskButton'
 import {HeaderAvatar} from '#/components/HeaderAvatar'
 import {MagnifyingGlass_Stroke2_Corner0_Rounded as SearchIcon} from '#/components/icons/MagnifyingGlass'
@@ -180,17 +182,17 @@ export function PeopleScreen() {
                     searchLabel={l`Search friends`}
                     activeFilterCount={activeCount}
                     onFiltersPress={() => filterControl.open()}
-                    action={
+                    endAction={
                       <Button
                         testID="people-manage-friends"
                         label={l`Manage friends and invites`}
                         size="small"
                         variant="ghost"
                         color="secondary"
+                        shape="round"
+                        hitSlop={HITSLOP_10}
                         onPress={() => navigation.navigate('FriendsAndInvites')}>
-                        <ButtonText>
-                          <Trans>Manage</Trans>
-                        </ButtonText>
+                        <ButtonIcon icon={GearIcon} size="md" />
                       </Button>
                     }
                   />

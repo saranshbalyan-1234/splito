@@ -1,5 +1,5 @@
 import {useState} from 'react'
-import {View} from 'react-native'
+import {Pressable, View} from 'react-native'
 import Animated from 'react-native-reanimated'
 import {Trans, useLingui} from '@lingui/react/macro'
 import {
@@ -7,6 +7,7 @@ import {
   formatAmount,
   getCurrency,
   magnitude,
+  type SummaryScope,
   ZERO,
 } from '@splito/domain'
 
@@ -19,6 +20,7 @@ import {MoneyArrow, useMoneyStyle} from '#/components/MoneyDirection'
 import {AnimatedAmount} from '#/motion/AnimatedAmount'
 import {usePressScale} from '#/motion/PressableScale'
 import {amountSize, overviewColumns} from '../overviewGrid'
+import {analyticsHref, OVERVIEW_SCOPES} from '../overviewScope'
 import {SectionHeader} from '#/screens/People/components/SectionHeader'
 import {SectionLink} from '#/components/SectionLink'
 
@@ -42,6 +44,8 @@ export function Overview({
   totals,
   locale,
   counts,
+  scope,
+  onScopeChange,
   captions = {},
   testID = 'home-overview',
   titleTestID = 'home-overview-title',
@@ -50,6 +54,9 @@ export function Overview({
   locale: string
   /** "6 friends · 2 settled", the plain line under the grid. */
   counts: string
+  /** Which balances the cards count (owner 176); it never changes the sections below. */
+  scope: SummaryScope
+  onScopeChange: (scope: SummaryScope) => void
   /** Per currency, who the card's figure comes from ("5 friends"). */
   captions?: Record<string, string>
   testID?: string
@@ -67,7 +74,12 @@ export function Overview({
       <SectionHeader
         testID={titleTestID}
         title={l`Overview`}
-        action={<AnalyticsLink />}
+        action={
+          <View style={[a.flex_row, a.align_center, a.gap_xs]}>
+            <ScopeChips scope={scope} onChange={onScopeChange} />
+            <AnalyticsLink scope={scope} />
+          </View>
+        }
       />
       <View style={[a.px_lg, a.pb_sm, a.gap_sm]}>
         <View
@@ -99,6 +111,7 @@ export function Overview({
                 total={total}
                 locale={locale}
                 caption={captions[total.currency]}
+                scope={scope}
                 width={cardWidth}
               />
             ))
@@ -115,11 +128,44 @@ export function Overview({
   )
 }
 
-/** "Analytics ›" on the Overview heading. */
-function AnalyticsLink() {
+/** All / Groups / Direct (owner 176): small chips beside "Analytics ›"; one is always on. */
+function ScopeChips({scope, onChange}: {scope: SummaryScope; onChange: (scope: SummaryScope) => void}) {
+  const t = useTheme()
+  const {t: l} = useLingui()
+  const names = {all: l`All`, groups: l`Groups`, direct: l`Direct`}
+  return (
+    <View testID="overview-scope" accessibilityRole="radiogroup" style={[a.flex_row, a.gap_2xs]}>
+      {OVERVIEW_SCOPES.map(value => {
+        const isOn = value === scope
+        return (
+          <Pressable
+            key={value}
+            testID={`overview-scope-${value}`}
+            role="radio"
+            aria-checked={isOn}
+            accessibilityLabel={names[value]}
+            hitSlop={{top: 8, bottom: 8}}
+            onPress={() => onChange(value)}
+            style={[
+              a.rounded_full,
+              {paddingHorizontal: 9, paddingVertical: 4},
+              isOn ? {backgroundColor: t.palette.primary_500} : t.atoms.bg_contrast_50,
+            ]}>
+            <Text style={[a.text_xs, a.font_semi_bold, isOn ? {color: t.palette.white} : t.atoms.text_contrast_medium]}>
+              {names[value]}
+            </Text>
+          </Pressable>
+        )
+      })}
+    </View>
+  )
+}
+
+/** "Analytics ›" on the Overview heading, carrying the Overview's scope. */
+function AnalyticsLink({scope}: {scope: SummaryScope}) {
   const {t: l} = useLingui()
   return (
-    <SectionLink testID="overview-analytics" href="/analytics" label={l`Open Analytics`}>
+    <SectionLink testID="overview-analytics" href={analyticsHref(scope)} label={l`Open Analytics`}>
       <Trans>Analytics</Trans>
     </SectionLink>
   )
@@ -134,11 +180,13 @@ function SummaryCard({
   total,
   locale,
   caption,
+  scope,
   width,
 }: {
   total: CurrencyTotal
   locale: string
   caption: string | undefined
+  scope: SummaryScope
   /** Px, from the grid's measured width; undefined until measured (one full-width column). */
   width: number | undefined
 }) {
@@ -175,7 +223,7 @@ function SummaryCard({
         testID={`summary-${currency}`}
         onPressIn={press.onPressIn}
         onPressOut={press.onPressOut}
-        href={`/analytics?currency=${currency}`}
+        href={analyticsHref(scope, currency)}
         asAnchor
         anchorNoUnderline
         accessibilityLabel={l`${getCurrency(currency).name} balance - open analytics`}

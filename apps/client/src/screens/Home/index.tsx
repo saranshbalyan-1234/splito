@@ -1,11 +1,12 @@
 import {Deferred} from '#/components/Deferred'
 import {plural} from '@lingui/core/macro'
 import {Trans, useLingui} from '@lingui/react/macro'
-import {useNavigation} from '@react-navigation/native'
-import {balanceTotals, isSettledBalance, personSummary} from '@splito/domain'
+import {useNavigation, useRoute} from '@react-navigation/native'
+import {balanceTotals, isSettledBalance, personSummary, type SummaryScope} from '@splito/domain'
 import {type Group, type Person} from '@splito/sync'
 import {useEffect} from 'react'
 
+import {type Params} from '#/lib/links/listState'
 import {type NavigationProp} from '#/lib/routes/types'
 import {perfMark} from '#/lib/perfMark'
 import {useGroupChipNames} from '#/data/groupVisibility'
@@ -21,6 +22,7 @@ import {
   useSeenCurrencies,
 } from '#/data/hooks'
 import {EmptyState} from '#/view/com/util/EmptyState'
+import {List} from '#/view/com/util/List'
 import {useDemoMode} from '#/state/demo'
 import {atoms as a, useBreakpoints, useTheme} from '#/alf'
 import {Text} from '#/components/Typography'
@@ -36,7 +38,11 @@ import {PersonRowPlaceholder, type PersonRowData} from '#/screens/People/compone
 import {RequestsSection} from '#/screens/People/components/RequestsSection'
 import {hideSettled, listedFriends, seenByPerson, sortFriends} from '#/screens/People/sort'
 import {Overview, OverviewPlaceholder} from './components/Overview'
+import {overviewParam, readOverviewScope} from './overviewScope'
 import {HOME_ROWS, RecentGroups, RecentPeople, RecentTransactions} from './components/Recent'
+
+const NO_ROWS: never[] = []
+const renderNothing = () => null
 
 /**
  * Home (F-256, owners 153/154), top to bottom, each section at most 5 rows and gone when empty: the Overview
@@ -59,7 +65,10 @@ export function HomeScreen() {
   const balanceRows = useBalanceRows()
   const seen = useSeenCurrencies()
   const lastActivity = useLastActivity(true)
-  const [includeGroups = true] = usePref('includeGroupsDefault')
+  const [savedScope = 'all', setSavedScope] = usePref('home.overviewScope')
+  const route = useRoute()
+  /* The Overview's scope is the address (`/?overview=groups`, owner 176); a param that is present wins over the saved choice. */
+  const scope: SummaryScope = readOverviewScope(route.params as Params) ?? savedScope
   const [showHidden] = useShowHidden()
   const [showSettled = false] = usePref('people.showSettled')
   const hiddenIds = useHiddenItems()
@@ -70,13 +79,13 @@ export function HomeScreen() {
     if (!isLoading) perfMark('splito:home-ready')
   }, [isLoading])
 
-  const summaries = balanceRows ? personSummary(balanceRows, {includeGroups}) : []
+  const summaries = balanceRows ? personSummary(balanceRows, {includeGroups: true, scope}) : []
   const byPerson = new Map(summaries.map(s => [s.person, s]))
   const groupNames = useGroupChipNames(groups)
   const friends = listedFriends(people ?? [], byPerson, hiddenIds).filter(f => showHidden || !f.isHidden)
   /* A removed friend is in the list but is no friend now: the counts and figures cover the live rows. */
   const live = friends.filter(f => f.deletedAt === undefined)
-  const seenCurrencies = seenByPerson(seen?.people ?? {}, includeGroups)
+  const seenCurrencies = seenByPerson(seen?.people ?? {}, true)
   /* The newest change first; a friend with no record yet has no activity to show. */
   const activity = lastActivity ?? new Map<string, number>()
   const recentPeople: PersonRowData[] = hideSettled(
@@ -105,8 +114,6 @@ export function HomeScreen() {
     <Layout.Screen testID="screen-home">
       <Layout.Header.Outer>
         <HeaderAvatar />
-        {/* Search & Ask on the right, so the logo stays centred. */}
-        <Layout.Header.Slot />
         <Layout.Header.Content>
           {/* Phones show the home mark (inactive here); rail and desktop already show it in the sidebar, so the title (ARCHITECTURE 26.4). */}
           {gtMobile ? (
@@ -142,33 +149,50 @@ export function HomeScreen() {
           </Shimmer>
         }>
         {() => (
-          <Layout.Content>
-            {hasFriends && (
-              <Overview totals={totals} locale={locale} counts={counts} captions={captions} />
-            )}
-            <RequestsSection max={HOME_ROWS} />
-            <RecentTransactions locale={locale} />
-            <RecentPeople rows={recentPeople} groupNames={groupNames} locale={locale} />
-            <RecentGroups locale={locale} />
-            {!hasFriends && (groups?.length ?? 0) === 0 && (
-              <EmptyState
-                testID="home-empty"
-                /* Same layout, motion and button as every other screen's empty state (owner 146). */
-                illustration="empty-people"
-                message={l`No friends yet. Add a friend, then split any bill with them. They don’t need the app.`}
-                button={{
-                  testID: 'home-empty-add-friend',
-                  label: l`Add a friend`,
-                  text: l`Add a friend`,
-                  icon: PersonPlusIcon,
-                  onPress: () => navigation.navigate('AddFriend'),
-                  size: 'small',
-                  color: 'secondary',
-                }}
-              />
-            )}
-            <AddExpenseFABInset />
-          </Layout.Content>
+          /* Bluesky's List with the sections as its header, so the phone header hides on scroll like on every tab (owner 81, 87). */
+          <List
+            data={NO_ROWS}
+            renderItem={renderNothing}
+            ListHeaderComponent={
+              <>
+                {hasFriends && (
+                  <Overview
+                    totals={totals}
+                    locale={locale}
+                    counts={counts}
+                    captions={captions}
+                    scope={scope}
+                    onScopeChange={next => {
+                      navigation.setParams({overview: overviewParam(next, savedScope)} as never)
+                      void setSavedScope(next)
+                    }}
+                  />
+                )}
+                <RequestsSection />
+                <RecentTransactions locale={locale} />
+                <RecentPeople rows={recentPeople} groupNames={groupNames} locale={locale} />
+                <RecentGroups locale={locale} />
+                {!hasFriends && (groups?.length ?? 0) === 0 && (
+                  <EmptyState
+                    testID="home-empty"
+                    /* Same layout, motion and button as every other screen's empty state (owner 146). */
+                    illustration="empty-people"
+                    message={l`No friends yet. Add a friend, then split any bill with them. They don’t need the app.`}
+                    button={{
+                      testID: 'home-empty-add-friend',
+                      label: l`Add a friend`,
+                      text: l`Add a friend`,
+                      icon: PersonPlusIcon,
+                      onPress: () => navigation.navigate('AddFriend'),
+                      size: 'small',
+                      color: 'secondary',
+                    }}
+                  />
+                )}
+              </>
+            }
+            ListFooterComponent={<AddExpenseFABInset />}
+          />
         )}
       </Deferred>
       {/* The empty state's own buttons are the actions; a FAB would be a third Add. */}

@@ -73,7 +73,7 @@ async function expectNoMessageIds(page: Page) {
 test('People shows each friend with real words and the right balance per currency', async ({
   page,
 }) => {
-  await openDemo(page)
+  await openDemo(page, '/people')
   await showSettled(page)
   for (const [key, name] of Object.entries(STORY)) {
     const row = await reveal(page, `person-${name}`)

@@ -217,6 +217,8 @@ export const PREFS = {
   /** The one "Show hidden" filter of People, Groups, a group's Expenses and a person's history (decision 105): off, hidden deleted items and hidden groups stay out of the lists. */
   'lists.showHidden': def('lists.showHidden', 'lists', 'account', 'Show hidden', false, isBool),
   /** F-1413 (owner 90, 112): fully settled friends / groups are hidden from Home and Groups unless this is on. Set from each filter sheet's "Show settled". */
+  /** Home's Overview scope (26.12, owner 176): every balance, only the groups' parts, or only the direct ones. Also `/?overview=`. */
+  'home.overviewScope': def<'all' | 'groups' | 'direct'>('home.overviewScope', 'lists', 'account', 'Overview scope', 'all', oneOf('all', 'groups', 'direct')),
   'people.showSettled': def('people.showSettled', 'lists', 'account', 'Show settled friends', false, isBool),
   /** The Groups filter's sort, saved on Apply so it survives a reload (owner 128, decision 90). */
   'groups.sort': def('groups.sort', 'lists', 'account', 'Sort groups by', 'recent', oneOf('recent', 'name', 'amount')),

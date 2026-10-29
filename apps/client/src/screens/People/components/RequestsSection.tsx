@@ -19,9 +19,6 @@ import {type NavigationProp} from '#/lib/routes/types'
 import {logger} from '#/logger'
 import {directory} from '#/data/friends'
 import {useMutationCtx, usePendingRequests, useStore} from '#/data/hooks'
-import {atoms as a} from '#/alf'
-import {Button, ButtonIcon, ButtonText} from '#/components/Button'
-import {ChevronRight_Stroke2_Corner0_Rounded as ChevronIcon} from '#/components/icons/Chevron'
 import {Check_Stroke2_Corner0_Rounded as CheckIcon} from '#/components/icons/Check'
 import {PaperPlane_Stroke2_Corner0_Rounded as ResendIcon} from '#/components/icons/Invite'
 import {TimesLarge_Stroke2_Corner0_Rounded as XIcon} from '#/components/icons/Times'
@@ -33,57 +30,54 @@ import {SectionHeader} from './SectionHeader'
 
 const DAY = 86_400_000
 
+/** Rows the section shows at most (owner 153, 175); "See all" opens Friends and invites for the rest. */
+const MAX_ROWS = 5
+
 /**
- * On Home under the Overview and at the top of People (26.3, owner 153): "Requests" waiting for your
- * answer (Accept / Decline), then one compact "N invites waiting" row when
- * some of your own invites are unanswered. The sent invites themselves
- * (Resend / Cancel) live on Friends and invites (F-621).
+ * On Home under the Overview and at the top of People (26.3, owners 153, 175): "Requests" waiting for your
+ * answer (Accept / Decline), then "Invites sent" (Resend / Cancel), each row on one line as on Friends and invites
+ * (F-621). At most 5 rows in all, requests first; more than that adds "See all" to Friends and invites. Hidden
+ * when nothing is pending.
  */
-export function RequestsSection({max}: {max?: number} = {}) {
+export function RequestsSection() {
   const {t: l} = useLingui()
-  const navigation = useNavigation<NavigationProp>()
   const {incoming, outgoing} = usePendingRequests()
   if (incoming.length === 0 && outgoing.length === 0) return null
-  const waiting = plural(outgoing.length, {
-    one: '# invite waiting',
-    other: '# invites waiting',
-  })
+  const shownIncoming = incoming.slice(0, MAX_ROWS)
+  const shownOutgoing = outgoing.slice(0, MAX_ROWS - shownIncoming.length)
+  const hasMore = shownIncoming.length + shownOutgoing.length < incoming.length + outgoing.length
+  const seeAll = (
+    <SectionLink testID="people-requests-all" href="/settings/friends" label={l`See all requests and invites`}>
+      <Trans>See all</Trans>
+    </SectionLink>
+  )
   return (
     <View testID="people-requests">
-      {incoming.length > 0 ? (
+      {shownIncoming.length > 0 ? (
         <>
           <SectionHeader
             title={l`Requests`}
             testID="people-requests-title"
             count={incoming.length}
-            /* Home shows the first few (owner 153); the rest wait on People. */
-            action={
-              max !== undefined && incoming.length > max ? (
-                <SectionLink testID="people-requests-all" href="/people" label={l`See all requests`}>
-                  <Trans>See all</Trans>
-                </SectionLink>
-              ) : undefined
-            }
+            action={hasMore && shownOutgoing.length === 0 ? seeAll : undefined}
           />
-          {incoming.slice(0, max).map(r => (
+          {shownIncoming.map(r => (
             <IncomingRow key={r.id} request={r} />
           ))}
         </>
       ) : null}
-      {outgoing.length > 0 ? (
-        <Button
-          testID="people-invites-waiting"
-          label={waiting}
-          variant="ghost"
-          color="secondary"
-          size="small"
-          style={[a.mx_md, a.my_xs, a.justify_between]}
-          onPress={() => navigation.navigate('FriendsAndInvites')}>
-          <ButtonText>
-            {waiting}
-          </ButtonText>
-          <ButtonIcon icon={ChevronIcon} />
-        </Button>
+      {shownOutgoing.length > 0 ? (
+        <>
+          <SectionHeader
+            title={l`Invites sent`}
+            testID="people-invites-title"
+            count={outgoing.length}
+            action={hasMore ? seeAll : undefined}
+          />
+          {shownOutgoing.map(r => (
+            <OutgoingRow key={r.id} request={r} />
+          ))}
+        </>
       ) : null}
     </View>
   )

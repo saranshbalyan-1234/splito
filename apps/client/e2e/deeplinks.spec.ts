@@ -236,7 +236,7 @@ for (const [label, viewport] of [
 
     test('Group X > Settle > Edit rules opens exactly one rules sheet (the copy of Group under Settle stays shut)', async ({page}) => {
       const known = await openApp(page)
-      // Cold, the stack is People > Groups > Group > Settle; the link then opens the Group page's rules over Settle.
+      // Cold, the stack is Home > Groups > Group > Settle; the link then opens the Group page's rules over Settle.
       await page.goto(`/groups/${known.group}/settle`)
       await expect(page.getByTestId('screen-settle')).toBeVisible()
       await openLink(page, `https://splito.app/groups/${known.group}/rules`)
@@ -389,7 +389,7 @@ for (const [label, viewport] of [
  * for all of them, desktop for a sample.
  */
 const PAGE_PATHS: Record<string, (ids: Ids, section?: string) => string> = {
-  People: () => '/',
+  People: () => '/people',
   Groups: () => '/groups',
   Analytics: () => '/analytics',
   Person: ({person}) => `/people/${person}`,

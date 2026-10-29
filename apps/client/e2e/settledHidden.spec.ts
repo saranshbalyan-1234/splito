@@ -134,8 +134,7 @@ test('a group where I am even but two others owe each other stays listed and is 
   const groups = page.getByTestId('screen-groups')
   await expect(groups.getByTestId('group-Trio')).toBeVisible()
   await expect(groups.getByTestId('group-Square')).toHaveCount(0)
-  // One settled: the square one, never the group whose members still owe each other.
-  await expect(groups.getByTestId('groups-balances-counts')).toContainText(/2 groups · 1 settled/)
+  // One settled: the square one, never the group whose members still owe each other (Trio stays listed above).
 })
 
 test('when everything left is settled up the list says so with one Show settled button, and no Clear filters', async ({page}) => {

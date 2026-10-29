@@ -182,6 +182,10 @@ const FEATURES: Array<[feature: string, found: (d: Demo) => boolean]> = [
   ['Home recent transactions: five or more live expenses and payments I am on', d => d.live.filter(e => DEMO_ME in e.data.payers || DEMO_ME in e.data.shares).length + d.repayments.filter(r => !r.deleted && (r.data.from === DEMO_ME || r.data.to === DEMO_ME)).length >= 5],
   ['Home recently active people: five or more friends who share a live expense with me', d => new Set(d.live.filter(e => DEMO_ME in e.data.payers || DEMO_ME in e.data.shares).flatMap(e => [...Object.keys(e.data.payers), ...Object.keys(e.data.shares)]).filter(id => id !== DEMO_ME)).size >= 5],
   ['Home recently active groups: five or more live groups with a live expense I am in', d => d.groups.filter(g => d.live.some(e => e.data.groupId === g.id && (DEMO_ME in e.data.payers || DEMO_ME in e.data.shares))).length >= 5],
+  ['Home Overview scope: direct balances and group balances, each in two or more currencies', d => {
+    const open = (inGroup: boolean) => new Set(d.balances.filter(b => b.amount !== 0n && (b.groupId !== null) === inGroup && !d.people.find(p => p.id === b.personId)?.data.isMe).map(b => b.currency))
+    return open(false).size >= 2 && open(true).size >= 2 && [...open(true)].filter(c => open(false).has(c)).length >= 2
+  }],
   ['Home Requests: a request waiting for me and an invite waiting for an answer, together', d => d.requests.some(r => r.data.direction === 'incoming' && requestState(r.data, d.now) === 'pending') && d.requests.some(r => r.data.direction === 'outgoing' && requestState(r.data, d.now) === 'pending')],
   // Activity
   ['changes made by other people (unread in Activity)', d => d.dump.history.some(h => h.actor !== DEMO_ME && h.entityType === 'expense')],

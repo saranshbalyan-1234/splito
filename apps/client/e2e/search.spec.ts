@@ -244,7 +244,7 @@ test.describe('phone', () => {
     await openDemo(page)
     await expect(page.getByTestId('screen-home')).toBeVisible()
     for (const [path, screen, action] of [
-      ['/', 'screen-people', 'people-add-friend'],
+      ['/people', 'screen-people', 'people-add-friend'],
       ['/groups', 'screen-groups', 'groups-new'],
       ['/analytics', 'screen-analytics', 'analytics-export'],
       ['/activity', 'screen-activity', 'activity-mark-all-read'],

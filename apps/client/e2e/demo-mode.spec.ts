@@ -88,6 +88,8 @@ test('the real data is untouched by a demo session; Switch back returns Home wit
   await expect(page).toHaveURL(/\/$/)
   // The demo database is erased behind the blocking cover: let it finish before anything reloads the page.
   await expect(page.getByTestId('demo-busy')).toHaveCount(0)
+  // Back on Home (the first tab); a friend with no record yet is on People, not in Recently active.
+  await page.getByTestId('tab-people').click()
   await expect(page.getByTestId('person-Real Asha').last()).toBeVisible()
   await expect(page.getByTestId('person-Riya Sharma')).toHaveCount(0)
   const realAfter = await names(page, 'person')
@@ -141,7 +143,7 @@ test('turning demo mode off erases the demo database and every key it kept; turn
 })
 
 test('the store swapping under an open Add friend sheet drops the sheet and writes nothing to either database', async ({page}) => {
-  await page.goto('/')
+  await page.goto('/people')
   await page.waitForFunction(() => 'splito' in window)
   await page.getByTestId('people-add-friend').click()
   await expect(page.getByTestId('screen-add-friend')).toBeVisible()
@@ -159,6 +161,7 @@ test('the store swapping under an open Add friend sheet drops the sheet and writ
   expect(inDemo).not.toContain('zed.mid.swap')
 
   // Off again, with another sheet open on the demo side: the same, the other way round.
+  await page.getByTestId('tab-people').click()
   await page.getByTestId('people-add-friend').click()
   await page.getByTestId('add-friend-contact').fill('zed.back@example.com')
   await closeDemo(page)
