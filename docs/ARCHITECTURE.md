@@ -349,11 +349,23 @@ All user-facing strings go through Lingui; English default, Hindi second, Englis
 - **Honesty:** "Synced" appears only in the sync-status component's messages. FX-, OCR- and AI-derived
   values carry "Estimated rate" / "From receipt" until confirmed; converted totals carry "≈" and "rate from
   DATE"; a receipt field that was not read stays empty. A bun test scans the source catalog (A-013).
-- **Every empty state looks the same** (owner 146): one `EmptyState` layout on every screen (Home, Groups,
-  Analytics, Activity, Group): the same illustration size and motion, the same top spacing, one short message and
-  at most one small secondary button; no per-screen titles, large buttons, second buttons or custom centring.
-  *Why:* "make the home empty screen animation like other screens, there is slight diff in button and top
-  paddings".
+- **Every empty state looks the same and is animated with art about that screen** (owners 146, 172): one
+  `EmptyState` layout on every screen and state (first-use empty, search with no match, filters with no match,
+  all settled, no history, no balances, nothing to settle, no feedback, no invite links, not found, Ask with nothing
+  yet): the same structure (animated illustration, one short message, at most one small secondary button), the same
+  illustration size, motion and top spacing; never a bare icon or text only. Each illustration is original and
+  about its own screen (people, groups, activity, analytics, search, settled, history, balances, settle up,
+  feedback, invites, not found), light and dark variants, played once and resting (§ 17), static under reduced
+  motion. A test fails on any `EmptyState` without an illustration. *Why:* "make the home empty screen animation
+  like other screens"; "why there is no animation here"; "empty screen animations should be there always, and
+  related to those screens only, and design/structure should be same".
+- **Every list has a type filter where items have types; Activity filters by type** (owner 173; F-259, Wave C):
+  Activity's Filters offer the type (Expenses, Payments, Comments, Groups, Friends and invites, Reminders, Disputes)
+  besides All / Me / Others (owner 92), remembered (decision 90) and in the URL (`/activity?type=transactions`).
+  Every "See all" of Recent transactions (Home, right column, Group) lands on Activity with the transactions type
+  already applied (`/activity?type=transactions`, scoped to the group from a Group page). *Why:* "in activity add
+  the filter option to choose the type, like transaction etc; when I click on see all transactions it should land
+  here".
 - **No "coming soon"** and no placeholder UI. A section with no data returns `null`; list screens use
   Bluesky's empty state. Empty states always use the empty-state component with a glyph, never bare text.
 - **Never invent data:** no name splitting, no currency or category inferred for a record; show `-`. A figure
@@ -1788,7 +1800,9 @@ good"; "the left sidebar looks bad on desktop". *Where:* `view/shell/desktop/Lef
   within ms and it still switches". *Where:* no `useDedupe` on a tab press (it dropped every tap within 250 ms of
   another, app-wide on native and per tab on web; `useNavigationDeduped().navigate` no longer dedupes, it is
   idempotent); e2e `tabTaps.spec.ts`.
-- **Main bottom-bar / sidebar switches are animated** (owner override of Bluesky's instant switch): a
+- **Main bottom-bar / sidebar switches are animated** (owner override of Bluesky's instant switch; reaffirmed by
+  owner 174 on 2026-10-30, "in tab switch, it should switch with sliding animation": F-257, next in Wave C, not built
+  yet; it must stay interruptible per owner 150 and must not redraw per owner 166): a
   direction-aware horizontal slide (from the right when moving to a tab on the right, else from the left;
   native ~220 ms via a bottom-tabs `sceneStyleInterpolator` + `transitionSpec`, web ~200 ms transform of the
   content area). A small indicator under the active bottom-bar icon / beside the active sidebar item springs
@@ -2203,6 +2217,9 @@ built yet.
   group; the chart/table toggle sits in that filter row, never in the header; the header's one action is
   Export CSV. One chart per currency, or converted with the rate labelled. *Why:* "analytics also needed, with
   graphs and all". *Where:* `screens/Analytics`, § 25 "Analytics and export", spec § 4.
+- **All Analytics filters sit on one line** (owner 171): currency, scope, period (‹ 2026 ›) and the Charts/Table
+  switch in one row that scrolls sideways on narrow screens rather than wrapping. *Why:* "all filters to be in one
+  line".
 - **One scope control, not a dropdown plus a toggle.** The filter row has a single "scope" chip whose label
   says what is counted: "Everything" (default), "Non-group only", "Goa trip", "Goa trip + 2" (up to 3 groups named), "4 groups" (a count from 4),
   "Non-group + 2 groups". Tapping it opens one sheet (bottom drawer on phones, popup on desktop) titled "Show
@@ -2631,6 +2648,10 @@ Every owner decision, in the order it was made (all 2026-10-26). "Replaced" name
 | 168 | "even for the first time, the rendering should happen once the tab is open, or drawer is open or popup is open" | Tabs, drawers and sheets open first with light content; heavy content mounts after the opening finishes (real opened/transition-end signal), first visit included | § 26.9 | Deferral of two frames only (151/152) |
 | 169 | "pull to refresh should work, wherever header is shown" | Pull to refresh on every page with a header (lists and detail pages, Settings included), built once in the shared scaffold; not in sheets, popups or the drawer | § 26.9 | List screens only (167) |
 | 170 | "not even with header, pull to refresh should work everywhere on all screens" | Pull to refresh on every full screen, header or not, via the shared scaffold with a test over all routes; sheets keep drag-to-close (§ 26.8) | § 26.9 | Screens with a header only (169) |
+| 171 | "all filters to be in one line" (Analytics screenshot) | Analytics currency, scope, period and the table switch share one filter line | § 26.16 | Period stepper on its own line |
+| 172 | "why there is no animation here"; "empty screen animations should be there always, and related to those screens only, and design/structure should be same" | Every empty state animated, same structure, with original art about its own screen; test fails on an EmptyState without illustration | § 7 | Some empty states icon-only or text-only |
+| 173 | "in activity add the filter option to choose the type, like transaction etc, when I click on see all transaction it should land here" | Activity type filter (in URL, remembered); every Recent transactions "See all" opens Activity filtered to transactions | § 7 / § 26.14 | See all opened unfiltered Activity |
+| 174 | "and in tab switch, it should switch with sliding animation" | Main tab switches slide (F-257) next in Wave C, interruptible, no redraw | § 26.9 | Slide specified but not built |
 
 New decisions follow § 0 rule 9: rewrite the rule in its topic so only the current truth remains, then add a
 row here.

@@ -562,6 +562,28 @@ Pull down at the top of Home, People, Groups, Activity, Analytics, Person and Gr
   3. Until sync: re-reads local data and ends in under 1 s with honest status; offline ends at once, no error toast; with the backend it calls syncNow().
   4. Nothing redraws unless data changed (owner 166); renders gate and tap-latency spec do not regress.
 
+### F-259 Activity type filter; See all transactions lands there `spec: owner § 26.14 (decision 173)`
+
+Activity Filters gain the type (Expenses, Payments, Comments, Groups, Friends and invites, Reminders, Disputes), remembered and in the URL; every Recent transactions "See all" opens Activity with type=transactions (group-scoped from a Group page).
+
+- **Effort** S · **Impact** 8 · **Backend** no · **Status** todo, Wave C (with F-1213 All/Me/Others) · **Deps** F-1213, F-256
+- **Prefs** `activity.type` (account)
+- **Acceptance**
+  1. Filters sheet on Activity has Type (multi-select) besides All/Me/Others; badge and empty state follow it; remembered after reload; `/activity?type=transactions` deep-links it.
+  2. Home, right column and Group "See all" of Recent transactions land on Activity filtered to transactions (and to that group from a Group page).
+  3. e2e at 390/1440; demo data has every type.
+
+### F-260 Screen-specific empty-state illustrations `spec: owner § 7 (decisions 146, 172)`
+
+Original animated illustrations (light and dark) for every empty state: search no match, filtered no match, all settled, no history, no balances, nothing to settle, no feedback, no invite links, not found, Ask empty, besides the existing people, groups, activity and analytics.
+
+- **Effort** M · **Impact** 7 · **Backend** no · **Status** in progress (every empty state animated with the 4 existing pieces; screen-specific art next) · **Deps** -
+- **Prefs** -
+- **Acceptance**
+  1. Each empty state uses art about its own screen, original (scripts/lottie.ts style), light and dark, lazy-loaded, plays once then rests, static under reduced motion.
+  2. A test fails on any `EmptyState` without an `illustration`.
+  3. Same size, spacing and structure everywhere; screenshots of each.
+
 ### F-250 Sign-in required (auth gate) `spec: owner § 26.15 (decision 125)`
 
 Nothing of the app is visible signed out: only the welcome tour, the logged-out flow, language and legal pages. The local database opens per account only with a session; offline after sign-in; deep links resume after sign-in.
