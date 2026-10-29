@@ -1292,6 +1292,12 @@ labelled sidebar); **wide** = web 1300 px and up (Bluesky `gtTablet`, right colu
   fixer once before the next feature starts. *Why:* "use sonnet for all implementation and opus for decisions
   and reviews".
 - **Large work fans out** into parallel throwaway worktrees (§ 20) with judges and review. *Why:* "Fanout".
+- **Push to GitHub after every merge** (owner 149): `main` is pushed to `origin`
+  (`github.com/saranshbalyan-1234/splito`, public; Render auto-deploys `main` to https://splito-web.onrender.com)
+  right after each merge, using the personal account `saranshbalyan-1234` (a repo-local credential helper reads
+  its `gh` token; the global `gh` account is left alone). Only reviewed, merged work reaches `main`; feature
+  branches stay local unless asked. Never commit secrets (`.env.local` is git-ignored). *Why:* "now keep on
+  pushing to github as well"; "use saranshbalyan-1234 account to push"; "the personal account".
 - **The main line is `main`** (owner 147, 2026-10-29; renamed from `m1-foundation`, which stays as a git alias
   pointing at `main` so old references still resolve). Waves assemble on an integration branch and merge into
   `main`. *Why:* "change the main branch to main".
@@ -2397,6 +2403,7 @@ Every owner decision, in the order it was made (all 2026-10-26). "Replaced" name
 | 146 | "make the home empty screen animation like other screens, there is slight diff in button and top paddings" | One empty-state layout everywhere: same illustration, motion, top spacing, one small secondary button | § 7 | Home had a title, large primary + secondary buttons and its own centring |
 | 147 | "change the main branch to main" | Main line renamed from m1-foundation to main (old name kept as an alias) | § 26.1 | m1-foundation as the main line |
 | 148 | "i dont see demo mode in deployed app" (https://splito-web.onrender.com, auto deploy on main) | Demo mode ships in every build, production included, as lazy chunks; start-up bundle stays demo-free | § 26.1 | Demo mode dev/e2e only (F-227 c4) |
+| 149 | "now keep on pushing to github as well"; "use saranshbalyan-1234 account to push" | Push main to origin after every merge as saranshbalyan-1234 (repo-local credential helper); Render auto-deploys main | § 26.1 | No remote; never push |
 
 New decisions follow § 0 rule 9: rewrite the rule in its topic so only the current truth remains, then add a
 row here.
