@@ -1202,6 +1202,11 @@ Splito lessons (add newest last, dated, with PR):
   rules: a build guard matches strings that only the guarded thing contains (a test pins the near-miss), and every
   merge to `main` is followed by checking that the Render deploy succeeded (`render deploys list`), not only the
   GitHub workflow, before saying it is live.
+- 2026-10-30, Render: **auto-deploy was switched off by our own Blueprint.** `render.yaml` said
+  `autoDeployTrigger: 'off'` (deploys were meant to come from deploy hooks, whose secrets were never set), and a
+  Blueprint sync applied it to `splito-web`, so ten pushes after 5b60890 never deployed and nothing failed. Rule: the
+  Blueprint is the source of truth for service settings, so a setting the owner relies on (auto-deploy of `main`)
+  is written there; "no new deploy in `render deploys list` after a push" counts as a failed deploy.
 - 2026-10-30, owner on iPhone Safari: **the tap-speed fix passed in Chrome and still felt broken on the phone.**
   Chrome (desktop and touch emulation) measured every tab at 4-15 ms, but Home re-rendered synchronously on switch
   (about 50 ms on the Mac, several times that on a phone) and the page had no `touch-action: manipulation`, so iOS
@@ -2048,6 +2053,13 @@ expands once I click". *Where:* `screens/People`, `screens/Groups`, `screens/Gro
   Payment rules are reached from the header overflow (§ 26.4). testIDs `friends-filters`, `groups-balances`,
   `group-tab-balances`.
 
+- **A trip asks where it is** (owner 182): New group and Edit group show "Where? (optional)" for the Trip type
+  only, beside the trip dates: one plain text field ("Goa", "Lisbon & Sintra"), offline, no map or place search
+  (F-313 adds those online later). It is saved on the group (`location`), shown with the type and dates ("Trip ·
+  Goa · 12-18 Mar") on the group row and the group header, searchable as a place (§ 26.19 "places"), and carried
+  into the CSV. Changing the type away from Trip keeps the value hidden, not erased. Every demo trip has one.
+  *Why:* "for trip ask for location as well".
+
 ### 26.13 Expenses and itemize
 
 *Why:* "an expense can be one expense or with multiple expense, like dinner $100, but can be divided into
@@ -2756,7 +2768,8 @@ Every owner decision, in the order it was made (all 2026-10-26). "Replaced" name
 | 179 | "even if you go to main screen from some links, it should show back button, in case you dont go directly from tabs" | A main screen opened from a link (See all, cards, results, notifications, deep links) is a pushed page with Back to the origin; the tab itself gives the plain tab screen | § 26.3 | Links switched tabs with no way back |
 | 180 | Assistant ruling after the F-250 review (owner asleep, "take your own decisions"; owners 164/165 review the front end on Render first) | Render builds a "preview" tier: labelled local dev account allowed, `noindex`, never on stage/prod tiers; real production refused until the auth HTTP client exists; intro keeps animated Lottie art | § 26.15 | Render built `production`, which refused the dev account and broke the deploy |
 | 181 | "name should be capitalized first letter in complete name" | Every word of a person's name starts with a capital, saved and shown through one `capitalizeName`; rest of each word as typed; groups, titles, emails unchanged | § 26.3 | Names shown exactly as typed |
-| 182 | Assistant ruling after the F-1210 review | After one reopen only a group admin accepts or rejects (outside a group the adder or payer still answers and a second reopen is refused); one-tap "Accept and apply" only when the fix keeps the record's split mode (an amount fix on an itemised or exact split and a share fix on anything but an exact split are "Edit it" only, with the reason shown), and the panel states what the edit will change | § 26.20 | Admin-only closing after the first reopen without saying who answers it; one-tap fixes that converted a split to exact amounts |
+| 182 | "for trip ask for location as well" | Trip groups get an optional "Where?" text field in New/Edit group; shown with type and dates, searchable, in CSV, in demo trips | § 26.12 | Trips had name and dates only |
+| 183 | Assistant ruling after the F-1210 review | After one reopen only a group admin accepts or rejects (outside a group the adder or payer still answers and a second reopen is refused); one-tap "Accept and apply" only when the fix keeps the record's split mode (an amount fix on an itemised or exact split and a share fix on anything but an exact split are "Edit it" only, with the reason shown), and the panel states what the edit will change | § 26.20 | Admin-only closing after the first reopen without saying who answers it; one-tap fixes that converted a split to exact amounts |
 
 New decisions follow § 0 rule 9: rewrite the rule in its topic so only the current truth remains, then add a
 row here.

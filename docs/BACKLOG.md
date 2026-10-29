@@ -599,7 +599,7 @@ One shared PersonLink (avatar + name) used on every screen; tapping either opens
 
 Every word of a person's full name starts with a capital, on save and on display.
 
-- **Effort** S · **Impact** 6 · **Backend** no (the API applies the same function in M2) · **Status** in progress, Wave C · **Deps** -
+- **Effort** S · **Impact** 6 · **Backend** no (the API applies the same function in M2) · **Status** done (web), Wave C; native unverified · **Deps** -
 - **Prefs** -
 - **Acceptance**
   1. `capitalizeName` in `packages/domain` (unit-tested: spaces, hyphens, apostrophes, "McDonald" kept, Devanagari unchanged, trims and collapses spaces).
@@ -1792,6 +1792,17 @@ One Settings page (`/settings/friends`) that manages friends and invites. Reques
 
 Everything a group trip needs, from first booking to closing the books.
 
+### F-705 Trip location ("Where?") `spec: owner § 26.12 (decision 182)`
+
+Trip groups ask where the trip is: an optional plain-text place on New and Edit group, shown and searchable.
+
+- **Effort** S · **Impact** 6 · **Backend** no (synced with the group in M2) · **Status** in progress, Wave C · **Deps** -
+- **Prefs** -
+- **Acceptance**
+  1. "Where? (optional)" shows for Trip only, beside the dates; saved as `group.location` (trimmed, null when empty) through createGroup / updateGroup with history and outbox.
+  2. Group row and header read "Trip · Goa · 12-18 Mar" (parts that are missing drop out); search finds the group by its location; CSV has a Location column.
+  3. Switching type away from Trip hides the field and keeps the value; demo trips have locations; en + hi; e2e at 390 and 1440.
+
 ### F-701 Trip kitty v2: multi-currency, holder hand-off, cash count `spec v2`
 
 Several currencies in one pot, named holder with recorded hand-off, "Count the kitty" turning gaps into unrecorded spend, top-ups, card kitty, leftover return.
@@ -2619,7 +2630,7 @@ Dispute or hold an expense, one item of a bill, a repayment or a write-off, with
 - **Prefs** `group:settleIncludeDisputed` (off)
 - **Acceptance**
   1. Raise from the row menu, the detail page, an itemized item's portion and a repayment/write-off; reason chips as § 26.20, note required for Other, proposed fix for amount, share, payer and duplicate; one open dispute per person per record.
-  2. `disputes` store with `byTarget` and `byStatus`; raise, hold, release, accept, reject, withdraw and reopen are sync mutations with history and an outbox op; `canDispute` / `canResolveDispute` in `domain/permissions.ts` with bun tests (raiser cannot resolve except withdraw; adder, payer or admin resolve; reopen once; after a reopen only a group admin answers, and outside a group the adder or payer still answers and a second reopen is refused, ruling 182).
+  2. `disputes` store with `byTarget` and `byStatus`; raise, hold, release, accept, reject, withdraw and reopen are sync mutations with history and an outbox op; `canDispute` / `canResolveDispute` in `domain/permissions.ts` with bun tests (raiser cannot resolve except withdraw; adder, payer or admin resolve; reopen once; after a reopen only a group admin answers, and outside a group the adder or payer still answers and a second reopen is refused, ruling 183).
   3. Balances, totals, overview, charts and exports still count a disputed or held record exactly as recorded (property test: balances identical with and without open disputes).
   4. Every balance surface shows a per-currency "of which disputed" line from a projection kept in the balance transaction (no scan); rows and detail show "Disputed" / "On hold" badges with icon and text.
   5. Settle up leaves disputed and held amounts out of the plan by default, states the left-out amount per currency, and "Include disputed" (remembered per group) puts them back; the plan hash changes on raise, accept, release (F-1101).

@@ -1,10 +1,11 @@
-# Render Blueprint: the web app, the API and its Postgres. Deploys come from .github/workflows/deploy-render.yml
-# (deploy hooks, after the checks pass), so Render's own auto-deploy is off.
+# Render Blueprint: the web app, the API and its Postgres. The web app auto-deploys every push to main (the owner
+# reviews the front end there, owners 164/165); a Blueprint sync with 'off' here silently stopped it on 2026-10-29.
+# The API still deploys from .github/workflows/deploy-render.yml (deploy hooks, after the checks pass).
 services:
   - type: web
     name: splito-web
     runtime: static
-    autoDeployTrigger: 'off'
+    autoDeployTrigger: commit
     buildCommand: >-
       npm install -g pnpm@11.28.5 &&
       pnpm install --frozen-lockfile &&

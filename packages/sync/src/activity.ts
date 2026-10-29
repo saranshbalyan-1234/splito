@@ -1,6 +1,6 @@
 import {type Dispute, disputeEventKind} from './disputes'
 import {type FriendRequest} from './friends'
-import {type Expense, type Group, isGroupInactive, type Person, type Tombstone, type Repayment, type WriteOff} from './mutations'
+import {displayPerson, type Expense, type Group, isGroupInactive, type Person, type Tombstone, type Repayment, type WriteOff} from './mutations'
 import {type Reminder} from './reminders'
 import {type Key} from './schema'
 import {type Store, type StoreChange, touches} from './store'
@@ -235,7 +235,7 @@ export function activityTracker(store: Store, want: () => number = () => ACTIVIT
     }
     const hasMore = list.length > size
     list = list.slice(0, size)
-    people ??= await store.getAll('person')
+    people ??= (await store.getAll<Person>('person')).map(displayPerson)
     groups ??= await store.getAll('group')
     // Only what the events name: an expense or a request row shows its current state.
     // A dispute row names the record it is about (an expense, payment or write-off), not the dispute itself.
@@ -260,7 +260,7 @@ export function activityTracker(store: Store, want: () => number = () => ACTIVIT
       // A payment or write-off appears here only as the subject of a dispute; its own events carry their data.
       repayment: named('repayment'),
       writeoff: named('writeoff'),
-      friendRequest: named('friendRequest'),
+      friendRequest: named('friendRequest').map(e => displayPerson(e as Entity<FriendRequest>)),
       reminder: [],
       dispute: [],
     } satisfies Record<FeedType, Entity[]>
