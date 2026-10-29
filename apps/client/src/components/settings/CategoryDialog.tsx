@@ -81,6 +81,7 @@ function Inner({
 
   return (
     <FormSheet.Inner
+      deferBody
       title={category ? l`Edit category` : l`New category`}
       isDirty={
         name !== shownName ||

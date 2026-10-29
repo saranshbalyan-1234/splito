@@ -1,6 +1,7 @@
 import {useState} from 'react'
 import {Pressable, View} from 'react-native'
 import {LayoutAnimationConfig} from 'react-native-reanimated'
+import {Deferred} from '#/components/Deferred'
 import {plural} from '@lingui/core/macro'
 import {Trans, useLingui} from '@lingui/react/macro'
 import {useNavigation, useRoute} from '@react-navigation/native'
@@ -189,7 +190,10 @@ export function GroupsScreen() {
           onPress={createGroup}
         />
       </Layout.Header.Outer>
-      {isLoading ? (
+      {/* Shell first (owner 152): the header paints at once, a skeleton while the data is missing, the list mounts after as a transition. */}
+      <Deferred
+        when={!isLoading}
+        fallback={
         <Shimmer testID="groups-loading">
           <BalanceSummaryPlaceholder />
           <SectionHeader title={l`Groups`} />
@@ -197,7 +201,8 @@ export function GroupsScreen() {
             <GroupRowPlaceholder key={i} hideTopBorder={i === 0} />
           ))}
         </Shimmer>
-      ) : (
+        }>
+        {() => (
         <LayoutAnimationConfig skipEntering skipExiting>
           <List
             data={shown}
@@ -385,7 +390,8 @@ export function GroupsScreen() {
             }
           />
         </LayoutAnimationConfig>
-      )}
+        )}
+      </Deferred>
       <AddExpenseFAB />
       <GroupsFilterDialog
         control={filterControl}

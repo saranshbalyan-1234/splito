@@ -111,6 +111,7 @@ function Form({
 
   return (
     <FormSheet.Inner
+      deferBody
       title={l`Add members`}
       isDirty={selected.length > 0 || newName.trim() !== ''}
       footer={{

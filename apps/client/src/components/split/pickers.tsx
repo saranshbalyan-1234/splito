@@ -66,7 +66,7 @@ function CurrencyInner({
   ].filter((c): c is CurrencyInfo => !!c && matches(c))
 
   return (
-    <FormSheet.Inner title={l`Currency`}>
+    <FormSheet.Inner deferBody title={l`Currency`}>
       <SearchInput
         testID="currency-search"
         value={query}
@@ -165,7 +165,7 @@ function CategoryInner({
   const columns = gtMobile ? 4 : 3
 
   return (
-    <FormSheet.Inner title={l`Category`}>
+    <FormSheet.Inner deferBody title={l`Category`}>
       <FormSheet.Description>{l`Change categories in Settings.`}</FormSheet.Description>
       <View style={[a.flex_row, a.flex_wrap, {marginHorizontal: -4}]}>
         {categories.map(c => {

@@ -168,3 +168,63 @@ the 10,000-expense ledger, median of 5, same machine, alternating with an m1-fou
 spec's 10,000-expense Ask typing assertion (chat input keeps every character) failed under machine load on both builds
 and passes alone.
 
+
+## Tap latency and shell first (owners 150, 151, 152; branch fix/tab-taps)
+
+Root cause of the dropped tab taps: `useDedupe(250)` on tab presses. The native `BottomBar` shared one dedupe across
+every tab (any tap within 250 ms of another, whatever the tab, was dropped); on phone web each `Link` had its own, so
+A, B, A within 250 ms dropped the second A and the landing tab was not the last one tapped. `navigate` is idempotent,
+so `useNavigationDeduped().navigate` and the bottom bar no longer dedupe. e2e `tabTaps.spec.ts` (18 tests: 6 and 10
+taps 50 ms apart, bursts 20 ms and 0 ms apart, bottom bar at 390 touch, sidebar at 1440, rail at 900, Group and
+Activity tabs including the list behind them, no tab widening the page, full and reduced motion): 5 of 14 failed before
+the fix, all pass now (three runs in a row).
+
+Second cause, found with the 0-10 ms burst (a hand cannot do it, but it exposed this): the Analytics loading skeleton
+(`SummaryPlaceholder`) had three fixed 120 px columns plus gaps, 417 px wide on a 390 px screen. For the frames the
+skeleton was on screen the layout viewport widened to 417, and the fixed bottom bar, laid out against it, sat 57 px
+below the fold, so a tap on a tab hit the page behind. Columns are shares of the row now. A burst of six taps 0-10 ms
+apart lost its last tap in 10 of 30 bursts before (4 of 30 on the phase-1 build), 0 of 90 after (two runs of 40 and 50). `html, body {
+overflow-x: clip }` was tried as a second guard and broke window scrolling (`scrollWeb.spec.ts`), so it is not used.
+
+Tap to first visual change (`perf/tapLatency.spec.ts`, 390 px touch, large demo ledger, app reloaded per run, median of
+3, DOM-change time via MutationObserver, quiet machine with load under 6; headless Chrome, so a 10 ms result is one
+frame). Before = the phase-1 build; after = this branch. Milliseconds from touchstart to the result in the DOM.
+
+| Tap | Before x1 | After x1 | Before x4 CPU | After x4 CPU |
+|---|---|---|---|---|
+| Tab: Groups / Analytics / Activity | 18 / 20 / 54 | 19 / 18 / 18 | 36 / 41 / 160 | 35 / 47 / 40 |
+| Friend row, group row | 21, 14 | 20, 37 | 36, 34 | 71, 61 |
+| FAB (Add expense opens) | 44 | 40 | 86 | 88 |
+| Open filters sheet | 35 | 35 | 47 | 61 |
+| Filter chip, switch | 11, 10 | 14, 10 | 13, 14 | 16, 13 |
+| Add expense Save | 33 | 36 | 46 | 51 |
+| Tab, 50 ms, next tab (second tap latency) | 175 (118 ms long task) | 36 | 169 | 59 |
+| Sheet X (exit slide begins) | 39 | 45 | 45 | 37 |
+| Longest JS task after Activity first visit, x4 | 188-202 | 0 | | |
+
+Every tap is under the 100 ms (x1) and 200 ms (x4) budgets. The gains are where a heavy body used to sit in front of the
+next tap (Activity tab 54 to 18 ms, 160 to 40 ms at x4; second tap 175 to 36 ms, 169 to 59 ms at x4). The friend and group rows at x4 are
+about 30 ms slower after (header and a frame of waiting before the rows mount) and stay well inside the budget.
+On a machine at load 20 to 140 the same runs read 100-500 ms for both builds; numbers taken under load are not used.
+
+Renders gate (`pnpm --filter @splito/client renders`, 10 % + 1 over `baseline.json`). Totals against main's baseline:
+launch updates 448 to 403, tabs updates 5,977 to 4,418, addExpense updates 211 to 164, closeAdd 237 to 183, scroll 37,876
+to 38,0xx (the same rows; SubtleHover below), ask 733 to 798-866 (see below), type 771 to 782. Every per-component
+increase, with its cause:
+- `Deferred` (update 7 launch, 13 tabs, 17 scroll; mount 4 tabs), `SheetBody` (update 11 while typing in the composer):
+  new wrapper components of this branch, one cheap render per screen body or composer keystroke; they replace the
+  skeleton and placeholder renders that disappeared (`PersonRowPlaceholder`, `Shimmer`, `BalanceSummaryPlaceholder`,
+  `FriendsHeader`, `AddExpenseFAB` and `DesktopLeftNav` updates all fell).
+- `Block` mount 7 to 10 (tabs): the Analytics chart placeholder holds the chart's height for the two frames before the
+  charts mount (`Deferred sameSize`).
+- addExpense mounts `View` 72 to 105, `Text` 55 to 66: the composer's skeleton body stands in for the one frame the
+  heavy body waits (`deferBody`), so the sheet shell opens at once and nothing flashes.
+- Present on pristine main (checked in a clean worktree of main at 088b270; not from this branch): `Icon(CircleCheck)`
+  18 to 24 (tabs), `Icon(Banknote)` 45 to 53, `Icon(Handshake)` 7 to 14, `Rect` 45 to 53, `Strong` 2 to 5 (scroll).
+  They are Activity row furniture (a check on a live row, Banknote for payments, Handshake for settle-up and "call it
+  even" rows, bold text in row notes): more of those rows fall in the scrolled window since main's activity and history
+  row work (F-251/F-1203 merges and the unsynced-row styling, f4b3979); not bisected to one commit.
+- `SubtleHover` update 35 to 43 (scroll) and the whole `ask` phase (733 to 798-866; `View` 175 to 220): main's baseline
+  was already stale at those (earlier merges plus the links work); both are timing-noisy between runs (the ask answer
+  streams in chunks, the scroll count follows scroll timing), so they are recorded at the highest value seen in 8 runs.
+Eight consecutive runs after recording: 8 of 8 pass.

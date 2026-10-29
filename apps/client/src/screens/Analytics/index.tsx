@@ -1,5 +1,6 @@
 import {View} from 'react-native'
 import {LayoutAnimationConfig} from 'react-native-reanimated'
+import {Deferred} from '#/components/Deferred'
 import {Trans, useLingui} from '@lingui/react/macro'
 import {useNavigation} from '@react-navigation/native'
 import {formatAmount, reportCsv} from '@splito/domain'
@@ -75,7 +76,10 @@ export function AnalyticsScreen() {
           onPress={() => report && void exportRows(report)}
         />
       </Layout.Header.Outer>
-      {!report ? (
+      {/* Shell first (owner 152): the header paints at once, a skeleton while the data is missing, the charts and list mount after as a transition. */}
+      <Deferred
+        when={!!report}
+        fallback={
         <Shimmer testID="analytics-loading">
           <SummaryPlaceholder />
           <ChartsPlaceholder />
@@ -83,7 +87,8 @@ export function AnalyticsScreen() {
             <ExpenseRowPlaceholder key={i} />
           ))}
         </Shimmer>
-      ) : !report.hasExpenses ? (
+        }>
+        {() => !report ? null : !report.hasExpenses ? (
         <EmptyState
           testID="analytics-empty"
           illustration="empty-analytics"
@@ -131,7 +136,10 @@ export function AnalyticsScreen() {
                   }
                 />
                 <Summary report={report} locale={locale} />
-                <Charts report={report} locale={locale} isTable={isTable} />
+                {/* Its own commit, a frame after the list (a 120 ms layout otherwise blocks the next tap); the chart placeholder holds the chart's height, the table view (another height) just waits empty. */}
+                <Deferred sameSize={!isTable} fallback={<ChartsPlaceholder />}>
+                  <Charts report={report} locale={locale} isTable={isTable} />
+                </Deferred>
                 {report.totals.count > 0 && (
                   <ExpensesHeader report={report} locale={locale} />
                 )}
@@ -140,7 +148,8 @@ export function AnalyticsScreen() {
             ListFooterComponent={<AddExpenseFABInset />}
           />
         </LayoutAnimationConfig>
-      )}
+        )}
+      </Deferred>
       <AddExpenseFAB />
     </Layout.Screen>
   )

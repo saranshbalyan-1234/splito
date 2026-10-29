@@ -23,6 +23,7 @@ import {
   type WriteOff,
 } from '@splito/sync'
 
+import {useDeferredReady} from '#/lib/hooks/useAfterTransition'
 import {type AllNavigatorParams, type NavigationProp} from '#/lib/routes/types'
 import {goBack} from '#/navigation/goBack'
 import {DeletedMeta} from '#/components/DeletedMeta'
@@ -161,6 +162,8 @@ export function PersonScreen() {
   )
 
   const isLoading = !me || !people || !groups || !balanceRows || !pairHistory
+  /* Shell first (owner 152): the header paints at once; the history rows mount a frame later as a transition. Only missing data shows a skeleton. */
+  const rowsReady = useDeferredReady(!isLoading)
   const person = people?.find(p => p.id === personId)
   const isDeleted = !!person?.deleted
   const {visible, hidden, showHidden} = useVisibleEntries(pairHistory?.entries ?? [])
@@ -503,7 +506,7 @@ export function PersonScreen() {
       </Layout.Header.Outer>
       <LayoutAnimationConfig skipEntering skipExiting>
         <List
-          data={isLoading ? [] : items}
+          data={rowsReady ? items : []}
           onEndReached={onEndReached}
           keyExtractor={(item: HistoryItem) => item.key}
           renderItem={({item, index}: {item: HistoryItem; index: number}) =>
@@ -535,12 +538,12 @@ export function PersonScreen() {
           ListHeaderComponent={header}
           ListEmptyComponent={
             isLoading ? (
-              <Shimmer>
+              <Shimmer testID="person-history-loading">
                 {Array.from({length: 4}, (_, i) => (
                   <HistoryRowPlaceholder key={i} />
                 ))}
               </Shimmer>
-            ) : (
+            ) : !rowsReady ? <></> : (
               <EmptyState
                 testID="person-history-empty"
                 icon={null}

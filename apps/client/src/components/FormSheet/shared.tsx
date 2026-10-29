@@ -14,6 +14,7 @@ import {useWorkAtStake} from '#/lib/pwa/workAtStake'
 import {atoms as a, useBreakpoints, useTheme} from '#/alf'
 import {Button, ButtonIcon, ButtonText} from '#/components/Button'
 import * as Dialog from '#/components/Dialog'
+import {useDeferredReady} from '#/lib/hooks/useAfterTransition'
 import {TimesLarge_Stroke2_Corner0_Rounded as XIcon} from '#/components/icons/Times'
 import {Loader} from '#/components/Loader'
 import * as Prompt from '#/components/Prompt'
@@ -53,6 +54,30 @@ export const SheetContext = createContext<SheetContextValue>({
   setIsDirty: () => {},
 })
 SheetContext.displayName = 'FormSheetContext'
+
+/** A heavy body's blank stand-in while it waits a frame; a sheet passes its own skeleton for a closer match. */
+const SHEET_BODY_STAND_IN_HEIGHT = 280
+
+/**
+ * A heavy sheet's body (owner 152, `deferBody` on `FormSheet.Inner` / `Screen`):
+ * the title, cross and footer start the open motion at once; the rows, pickers
+ * and fields mount a frame later as a transition, after `standIn`. Small sheets
+ * do not use it: they open complete, with no jump (owner 129).
+ * ponytail: one fixed stand-in height, not a measured one; the sheet grows while it is still rising.
+ */
+export function SheetBody({
+  children,
+  standIn,
+}: {
+  children: React.ReactNode
+  standIn?: React.ReactNode
+}) {
+  return useDeferredReady() ? (
+    children
+  ) : (
+    (standIn ?? <View style={{minHeight: SHEET_BODY_STAND_IN_HEIGHT}} />)
+  )
+}
 
 /** The open sheet's close request, for a body that ends with its own buttons. */
 export function useFormSheet() {

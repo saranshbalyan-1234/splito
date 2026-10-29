@@ -194,7 +194,7 @@ function ContentInner<T>({
 
   return (
     <Context.Provider value={{control, ...context}}>
-      <FormSheet.Inner title={label ?? _(msg`Select an option`)}>
+      <FormSheet.Inner deferBody title={label ?? _(msg`Select an option`)}>
         {items.map((item, index) => (
           <Fragment key={valueExtractor!(item)}>
             {renderItem(item, index, context.value)}

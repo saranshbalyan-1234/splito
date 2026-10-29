@@ -56,6 +56,7 @@ function Form({
 
   return (
     <FormSheet.Inner
+      deferBody
       title={l`Filters`}
       isDirty={JSON.stringify(draft) !== JSON.stringify(filters)}
       footer={{

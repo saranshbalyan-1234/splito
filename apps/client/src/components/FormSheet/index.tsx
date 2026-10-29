@@ -12,6 +12,7 @@ import {
   Footer,
   type FooterProps,
   Header,
+  SheetBody,
   useFormSheet,
   useIsScrolled,
 } from './shared'
@@ -29,11 +30,14 @@ export function Inner({
   isDirty = false,
   footer,
   readout,
+  deferBody,
   children,
 }: {
   title: string
   isDirty?: boolean
   footer?: FooterProps
+  /** Mount the body a frame after the open motion starts (heavy bodies only); `true` shows a blank stand-in, a node replaces it. */
+  deferBody?: boolean | React.ReactNode
   /** A live line just above the footer, e.g. what is left to assign. */
   readout?: React.ReactNode
   children: React.ReactNode
@@ -57,7 +61,9 @@ export function Inner({
           </KeyboardSticky>
         ) : undefined
       }>
-      <View style={[inset, a.pt_xs, a.pb_lg]}>{children}</View>
+      <View style={[inset, a.pt_xs, a.pb_lg]}>
+        {deferBody ? <SheetBody standIn={deferBody === true ? undefined : deferBody}>{children}</SheetBody> : children}
+      </View>
     </Dialog.ScrollableInner>
   )
 }
