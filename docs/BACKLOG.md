@@ -77,10 +77,13 @@ Every row of the ARCHITECTURE § 26.23 decision log (rows 1-63) and the feature(
 | 58 service worker and PWA | § 26.21 | F-1901 |
 | 59 comments, remind, export | § 26.20 | F-1204, F-2208, F-1118, F-1119, F-1111, F-2210, F-2001, F-2007, F-2004 |
 | 61 sync-status dot on the avatar | § 26.7 | F-223, F-2103 |
+| 137 push notifications on iOS, Android and web | § 26.20 | F-2201 (first backend batch) |
+| 135 demo data downloaded from the backend, not bundled | § 26.1 | F-252 (backend) |
 | 128 customization only where needed; Language menu switch removed | § 26.1 | F-251 |
+| 145 deep links end to end | § 26.3 | F-254 (with F-241) |
 | 125 sign-in required, nothing visible signed out | § 26.15 | F-250 (Wave C), F-2101/F-2102 moved up after Wave C |
 | 124 footer links on one line | § 26.5 | fixed on integrate/wB |
-| 123 welcome tour on first launch and first-use tips | § 26.2 | F-249 (Wave C) |
+| 123, 142 intro slides before sign-in; guided tour after first sign-in | § 26.2 | F-249, F-253 (Wave C) |
 | 120 Home layout fixes (order, no truncation, no red dots, two-line friend rows) | § 26.12 | F-248 |
 | 119 disputes and holds; disputed records still count, left out of Settle up by default | § 26.20 | F-1210 (Wave C) |
 | 85 best of both per feature: pull features from Expensify and Bluesky, whichever is better | § 26.1 | F-229..F-236, F-318..F-321, F-620, F-1211, F-1212, F-1412, F-1507, F-1816 (Batch 4d), amendments to F-211, F-214, F-219, F-312, F-501, F-502, F-504, F-516, F-709, F-1204, F-1207, F-1210, F-1402, F-1403, F-1405, F-1407, F-2202, F-2208; `docs/scouting/2026-10-27-bluesky-expensify.md` |
@@ -455,6 +458,19 @@ Language picker in native scripts, name and avatar, region-prefilled currency / 
   5. The purpose chips share the name screen, so criterion 1's three-screen limit holds; skipping is allowed; each purpose's defaults live in one typed map with a bun test, and changing the purpose later changes only future defaults.
   6. Killing the app mid-onboarding resumes on the same step.
 
+### F-252 Demo data served by the backend `spec: owner § 26.1 (decision 135)`
+
+The demo dataset and generator move to the API; Demo mode downloads a versioned snapshot into the separate demo database; the client ships no demo seed.
+
+- **Effort** M · **Impact** 6 · **Backend** yes · **Status** todo, backend batch (after F-2101/F-2103) · **Deps** F-228a, F-2101, F-2103
+- **Prefs** -
+- **Acceptance**
+  1. `GET /v1/demo/snapshot` (versioned, same shape as a sync pull, cacheable) returns the one dataset generated server-side through the same domain code.
+  2. Turning Demo mode on downloads it into the demo database (progress shown, resumable); turning it off erases the demo database (owner 136); the real account is never read or written.
+  3. Offline: turning it on says it needs a connection; once on, demo works offline until switched off.
+  4. The production client bundle contains no demo seed, generator or fixtures (build check); dev/e2e keep a local seed only until this ships.
+  5. demoCoverage runs against the server snapshot.
+
 ### F-251 Settings prune: only what is needed `spec: owner § 26.1 (decision 128)`
 
 Opus audits every Settings row and registry key against decision 128 (keep only where people genuinely differ; one good default otherwise), the owner-decided settings are kept, the rest are retired with their reads, tests and copy. The "Language menu" switch is removed first (owner).
@@ -464,8 +480,35 @@ Opus audits every Settings row and registry key against decision 128 (keep only 
 - **Acceptance**
   1. A written audit (docs/audit/SETTINGS-PRUNE-<date>.md) lists every row: keep / remove / merge, with the reason; owner-decided settings (decision log) are always kept.
   2. Removed rows' keys are retired without data loss or crashes on old stored values; the "every key has a Settings row" test holds.
-  3. Settings sections are no longer than needed (7 pages); no Settings search (owner decided none).
+  3. Settings has the 7 pages of docs/audit/SETTINGS-PRUNE-2026-10-29.md; no Settings search; old section URLs (`/settings/motion`, `/settings/lists`) redirect (owner 100); a merge whose screen control does not save its key yet is gated on that control saving it first.
   4. Demo data, e2e and Lingui (--clean) updated; screenshots of Settings before and after.
+
+### F-253 Guided tour after the first sign-in `spec: owner § 26.2 (decision 142)`
+
+After the first sign-in and setup, a short coach-mark walkthrough over the real app (FAB / Add expense, a friend row, Groups +, Settle up, Search & Ask, Activity), one spotlight at a time with Next / Skip; Expensify FeatureTraining and Bluesky ProgressGuide patterns, Bluesky look.
+
+- **Effort** M · **Impact** 8 · **Backend** no · **Status** todo, Wave C (after F-249, F-250) · **Deps** F-249, F-250, F-211
+- **Prefs** `onboarding.tourSeen` (account), `tips.enabled`
+- **Acceptance**
+  1. Runs once per account right after setup lands on Home; Skip ends it; Settings > Help "Take the tour" replays it.
+  2. Each step keeps the real control sharp and blurs the rest of the screen (owner 143: blur + slight dim, rounded cut-out, caption beside it; web backdrop-filter, native expo-blur, plain dim under reduced transparency), focus moved to it, screen reader reads the step and "Step N of 6"), adapts to phone, rail and desktop (sidebar items on desktop).
+  3. Steps that need data use empty-state wording when there is none; the tour never creates records.
+  4. Never in demo mode or e2e unless its spec asks; reduced motion respected; no overlap with toasts or sheets.
+  5. e2e at 390 and 1440 plus screenshots.
+
+### F-254 Deep links end to end `spec: owner § 26.3 (decision 145)`
+
+Every F-241 URL opens the right screen from anywhere: iOS Universal Links, Android App Links, `splito://`, web fallback; one resolver for push, invites, QR, reminders, shares; signed-out resume, demo handling, deferred link after install.
+
+- **Effort** M · **Impact** 9 · **Backend** partly (hosted AASA and assetlinks, deferred-link handoff) · **Status** todo, with F-241 right after Wave B · **Deps** F-241, F-619, F-2201 (push taps), F-250
+- **Prefs** -
+- **Acceptance**
+  1. A route table test parses every route from `https://splito.app/...` and `splito://...` to the same screen and params; unknown paths go Home.
+  2. iOS associated domains + `apple-app-site-association` and Android verified `assetlinks.json` (per tier host, § 14); simulator checks with `xcrun simctl openurl` and `adb shell am start -d` open the exact screen cold and warm.
+  3. Web: pasting any URL opens that screen with its sheet/tab/picker (F-241); browser Back behaves.
+  4. Signed out: intro/Continue, then resume at the target; demo mode: asks to switch back before opening real data; entity not on device: "Not on this device yet".
+  5. Push, invite, QR, reminder and share links all go through the one resolver; links never perform an action.
+  6. Deferred link: install from a link, first open lands on its target, no third-party SDK.
 
 ### F-250 Sign-in required (auth gate) `spec: owner § 26.15 (decision 125)`
 
@@ -481,8 +524,11 @@ Nothing of the app is visible signed out: only the welcome tour, the logged-out 
   5. Offline after sign-in the app opens and works; sign-in offline says it needs a connection.
   6. Dev/e2e builds show "Continue with a dev account" (labelled, local); production builds have no such path and the release script refuses to build without the auth API URL; e2e signs in through `window.__splitoTest.signIn`.
   7. Data already on the device before this change is offered once: "Move this device's data into your account" (F-2104).
+  10. One Continue screen only (owners 140, 141): Apple, Google, email or phone; existing account then the user's choice of Password or Code, equal options, last choice remembered per device (owner 144), Forgot password flow; new account created in-flow: verify, only the missing details, set a password (min 8, strength shown); no Create account screen anywhere.
+  9. A new account requires name, email and phone, both verified by code; an account missing either (Google/Apple, older accounts) gets a blocking "Add your phone number" / "Add your email" step after sign-in, with only Log out besides (owner 139).
+  8. The Continue screen shows "Continue with Apple" and "Continue with Google" (owner 138; Apple first on iOS, Google first on Android/web, platform button styles); until F-2102 they say it arrives with sync, no fake success.
 
-### F-249 Welcome tour and first-use tips `spec: owner § 26.2 (decision 123)`
+### F-249 Intro slides before sign-in `spec: owner § 26.2 (decisions 123, 142)`
 
 First-launch tour of up to 5 slides (what Splito is and how to use it) with Skip / Next / Get started, then setup (F-211); first-use tips after it. Bluesky Pager and ProgressGuide, Expensify FeatureTraining (`src/components/FeatureTrainingModal.tsx`) and onboarding header (`src/components/OnboardingHeader.tsx`); illustrations original (never Expensify's or Bluesky's artwork).
 
@@ -3658,7 +3704,9 @@ Email OTP, mobile OTP, Google and Apple; refresh and revoke; OTP throttling; sec
 - **Acceptance**
   1. A15: session expiry and revoke verified; OTP throttled.
   2. No secrets in the client bundle or logs.
-  3. One account can add and remove sign-in methods (email, phone, Google, Apple) and change its email or phone; the last method cannot be removed.
+  3. Google (Google Sign-In native, Google Identity Services web) and Apple (expo-apple-authentication native, Sign in with Apple JS web) work on iOS, Android and web; the server verifies ID tokens, links by verified email only, supports Apple's hidden relay email, and new social accounts go through setup (owner 138).
+  3c. Sign-up requires both email and phone, each verified by OTP; the API refuses to finish an account without both and returns `CONTACT_REQUIRED` with which one is missing, used by the blocking step (owner 139).
+  3b. One account can add and remove sign-in methods (email, phone, Google, Apple) and change its email or phone; the last method cannot be removed.
   4. Signed in, Settings > Account shows an account row (avatar, name, email/phone, sync status) and a destructive "Log out" row opening "Log out?", which warns when the outbox holds unsynced changes ("N changes haven't synced yet") and offers "Keep this device's data" / "Erase this device's data"; logout never silently deletes unsynced outbox rows (§ 26.15).
 
 ### F-2103 Sync push/pull and conflicts `spec v1`
@@ -3776,16 +3824,20 @@ Receives feedback from the outbox (F-226) and reports its status back to "Your f
 
 Features that need other people's devices or a server.
 
-### F-2201 Push notifications with actions `spec v1`
+### F-2201 Push notifications on iOS, Android and web `spec v1, owner § 26.20 (decision 137)`
 
-Push for new group expense, payment recorded, invite accepted; Bluesky's NSE rewrites text, threads per group and adds actions.
+Real push on every platform: APNs and FCM through expo-notifications, Web Push (VAPID) in the PWA service worker. Types follow Settings > Notifications (owner 131): Payments (expense with me, payment to/from me, edit or delete that changes my share), Comments (comment, @mention), Invites (request, accepted), disputes (F-1210). Bluesky's NSE rewrites text, threads per group and adds safe actions.
 
-- **Effort** L · **Impact** 8 · **Backend** yes · **Status** todo · **Deps** F-2103
-- **Prefs** `notify.expense`, `notify.payment`, `notify.invite`, `notify.edit`, `notify.comment`
+- **Effort** L · **Impact** 9 · **Backend** yes · **Status** todo, first backend batch (right after F-2101..F-2103) · **Deps** F-2101, F-2102, F-2103, F-1901
+- **Prefs** `notify.payment`, `notify.comments`, `notify.invite` (existing; no new settings, owner 128)
 - **Acceptance**
-  1. Payloads respect notification privacy levels (F-1605).
-  2. Each notification type obeys its notify.* toggle.
-  3. Edits or deletes that change my share notify me; text is in the recipient's app language.
+  1. Push arrives on an iOS device, an Android device and a closed-tab Chrome/Edge/Firefox PWA (Safari where supported) for each type, and not when its switch is off.
+  2. Permission only from a tap after a primer; refusal shows a state with a Settings link; never asked at launch.
+  3. Text in the recipient's language; lock-screen content follows F-1605 privacy levels; per-group threads; actions limited to Open / Mark read.
+  4. Tapping opens the exact screen by URL (owner 100), including when the app was killed; signed out, it goes to sign-in and resumes (owner 125).
+  5. The payload is a hint: the app pulls, never writes the payload to the store; duplicates and out-of-order pushes show once.
+  6. Tokens per device and account, refreshed on schedule, deleted on log out and on the server when invalid; one push issue per launch at most (§ 25).
+  7. e2e/Maestro checks on simulators and the web service worker; no test hands anything to a real app (owner 118).
 
 ### F-2202 Notification digest, mute and "only if it affects me"
 

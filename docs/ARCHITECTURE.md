@@ -536,9 +536,8 @@ The spec's labels are `Saved on this device`, `Waiting for connection`, `Syncing
   not. If IndexedDB cannot open or persist (private mode, quota, eviction), show a persistent notice that
   data will not be kept on this device. [Planned]
 - **Sample data never counts.** Demo data is built through real mutations, uses invented names, is labelled,
-  and is never merged into a real account or used as a fallback. [Built] Demo mode (dev/e2e builds only) is a
-  switch over a separate database, `splito-demo` (`data/demoMode.ts`, `data/demoSeed.ts`); the real database's
-  only footprint is the one `demo.mode` preference row.
+  and is never merged into a real account or used as a fallback. [Built] `?demo=1` seeds only in dev/e2e
+  builds (`data/demo.ts`).
 
 ### 9.8 Local database schema (binding; scalability first)
 
@@ -570,9 +569,6 @@ with every hot screen reading by index, never by full scan (§ 17 budgets, F-109
   title, amount and meta in the lighter `text_contrast_medium` tokens (never below WCAG AA: 4.5:1 body, 3:1
   large), so synced data reads full strength and unsynced data visibly lighter; the change animates (fade to full
   strength) when the server acknowledges. `failed` keeps full strength plus the "Needs attention" marker (§ 9.5).
-  [Built, F-244] `Text` reads `SyncToneContext` and swaps its default colour for `text_contrast_medium`; explicit colours
-  (money direction, errors) are kept, so a balance keeps its hue while its title reads lighter. Rows get the status in
-  their view-model (no per-row subscription); the Settings > Sync status switch is gone with the dot.
   No per-row coloured dot; the avatar dot (§ 26.7) stays the aggregate. Accessibility label adds "Not synced yet".
   Until the backend exists every record is `local`, so the whole app reads in the lighter style, which is the
   honest state. *Why:* "until the data is synced, keep that unsynced data a little light, so we know this is not
@@ -1180,12 +1176,21 @@ labelled sidebar); **wide** = web 1300 px and up (Bluesky `gtTablet`, right colu
   never copied. Each feature's reuse row names both apps' equivalents and why one won. *Why:* "make sure to
   pull features from Expensify and Bluesky whatever you think is better for user experience and features".
   *Where:* `docs/reuse/<feature>.md`; scouting list in `docs/BACKLOG.md`.
+- **Simple, with every feature and the customization that matters** (owner 129). Splito keeps every
+  feature and the settings people genuinely need (decision 128), but it must feel simple: each screen shows
+  only what that moment needs (one primary action, the essentials first, power features one tap deeper in a
+  menu, sheet, "More" or detail page, never removed); defaults do the right thing so nobody has to configure
+  anything to start; no screen is a wall of chips, badges, counts or toggles; copy is short (one line per
+  card, one sentence of help at most); a new feature is placed where it is used, not added as a new section
+  or setting by default. Every Opus review checks a change for clutter as well as correctness, and the UX
+  audit (F-240) and Settings prune (F-251) apply this rule. *Why:* "we need to make this app simple with all
+  the features and customization".
 - **Customizable where it helps, never forced** (owner 128, replaces "everything customizable"). A setting
   exists only when people genuinely want different answers and the default cannot serve them all (language,
   theme, default currency, timezone, home tab, bottom bar, list filters and sorts, motion, reminders, privacy).
   No setting for a detail nobody changes, no switch that duplicates another control, no setting just to
   hide a small UI element: those get one good default (Bluesky's or Expensify's) and no row. Settings stays
-  short and grouped; every remaining choice keeps its preferences-registry entry and its Settings
+  short and grouped (7 pages after F-251; no Settings search, none is needed at that size); every remaining choice keeps its preferences-registry entry and its Settings
   row (§ 24), and every user choice that does exist is remembered in the database (decision 90). Collections
   (cards, tabs, lists) can still be shown, hidden or reordered where people really differ. *Why:* "customization
   are needed, but not forcefully, only whats needed"; "remove this, its not needed" (the "Language menu"
@@ -1197,30 +1202,36 @@ labelled sidebar); **wide** = web 1300 px and up (Bluesky `gtTablet`, right colu
   simplicity. Previews show seeded, populated screens (demo data in dev/e2e builds only), never empty shells.
   *Why:* "make sure this is best in terms of features, looks, simplicity"; "this is way too basic like 10th
   class app"; "make it look professional not some third grade project".
-- **One demo dataset, behind one Settings switch, for the owner's own testing** (dev and e2e builds only for
-  now, production ships none, F-227 c4). A deterministic generator (fixed seed) writes a year of realistic use
-  through the real mutations: about 30 friends plus a hand-checked story, 12+ groups (trips abroad, flat, office
-  lunch, family, wedding, sports), ~1,500 expenses in 6 currencies with every split mode (equal, exact, percent,
-  shares, itemised with portions, multiple payers), repayments, write-offs, notes, categories, recurring rent and
-  subscriptions and deleted items, plus the whole invites flow of § 26.18 (requests waiting for me and one declined;
-  invites sent in every state: Sent, Opened, Joined, Expired, Cancelled; private "only for you" friends, one of
-  them linked when it joined; friend and group invite links active, limited, unlimited, used up, expired and
-  revoked; group links that need my approval and have been opened by people; matching Activity rows) with the
-  fake account directory, and some saved feedback. Demo is a **mode switch**, Settings > Data > "Demo mode" (on/off),
-  backed by its **own separate local database** (its own IndexedDB database / SQLite file, with its own
-  preferences, history and outbox). Turning it on switches the app to the demo database, seeded once; turning it
-  off switches back to the real data, which demo mode never reads or writes (the real database keeps one device
-  row, `demo.mode`). Demo data never syncs and never merges into an account. There is no banner (owner 133): while on,
-  every page header title ends in " - Demo" ("Home - Demo", "Goa trip - Demo"; the phone Home logo gets a small
-  "Demo" label, the window title follows, owner 134), the avatar shows its "Demo" dot, and the Settings switch
-  turns it off. Turning it off erases the separate demo database and every device key demo mode kept (drafts, search history, read marks, Ask chat, the reminders bookkeeping) after returning to the real data; turning it on again seeds a fresh dataset, so there is no "Reset demo" (owner 136). Demo reminders are never scheduled as OS notifications and the real ones are left alone. There is ONE dataset and ONE switch: no
-  URL switch, no `EXPO_PUBLIC_*` variable, no Add/Remove demo data. e2e turns demo mode on only through the
-  test-only hook `window.__splitoTest.demoMode(true)`, which runs the same switch (F-228a). A `demoCoverage`
-  test (`data/demoCoverage.test.ts`) lists every user-facing feature and fails when the seeded demo database has
-  no record exercising it; a new feature adds its line and its demo records in the same change. *Why:* "add a lot
-  of demo data to my account"; "only one demo mode from settings"; "make it a switch ... both accounts keep
-  different". *Where:* `apps/client/src/data/demoMode.ts`, `demoSeed.ts`, `packages/sync/src/demoLarge.ts`,
-  `e2e/openDemo.ts`.
+- **A large demo dataset for the owner's own testing** (dev and e2e builds only, never production): a
+  deterministic generator (fixed seed) that writes a year of realistic use through the real mutations: about
+  30 friends, 12 groups (trips abroad, flat, office lunch, family, wedding, sports), ~1,500 expenses in 6
+  currencies with every split mode (equal, exact, percent, shares, itemised with portions, multiple payers),
+  repayments, write-offs, notes, categories, recurring rent and subscriptions, and deleted items for the bin.
+  It is loaded with `?demo=large` (web) / `EXPO_PUBLIC_DEMO=large` (native) or from Settings > Data > "Add
+  demo data" (shown only in dev/e2e builds), adds to whatever is already on the device, and has a matching
+  "Remove demo data". **Owner 94 + 95 supersede the URL switches and Add/Remove:** demo is a **mode switch**, Settings > Data >
+  "Demo mode" (on/off), backed by its **own separate local database** (its own IndexedDB database / SQLite file,
+  with its own preferences, history and outbox). Turning it on switches the app to the demo database, seeded
+  once with the one demo dataset; turning it off switches back to the real data, which demo mode never reads
+  or writes. Demo data never syncs and never merges into an account. While on, no banner shows (owner 133); the Settings switch and the avatar's "Demo" state say so; "Reset demo" reseeds it. There is ONE demo dataset and ONE
+  switch: no small set, no URL (`?demo=1`, `?demo=large` gone), no `EXPO_PUBLIC_DEMO`, no Add/Remove demo
+  data; e2e turns demo mode on only through a test-only hook (`window.__splitoTest.demoMode`) that runs the same
+  switch (F-228a, being built on feat/demo-mode). Dev and e2e builds only for now
+  (production ships none, F-227 c4). *Why:* "add a lot of demo data to my
+  account".
+- **Once the backend exists, the demo data comes from the backend, not the app** (owner 135; F-252, backend
+  batch). The demo dataset and its generator move to the server: turning Demo mode on downloads the one demo
+  dataset (a versioned snapshot, same shape as a sync pull) into the separate local demo database, and "Reset
+  demo" downloads it again; the client bundle then ships no demo seed, generator or fixtures (a build check
+  fails if it does). The download is read-only and never touches the real account; offline, the switch says it
+  needs a connection and works offline while it stays on. Until the backend
+  exists the dev/e2e builds keep seeding locally as today. *Why:* "remember when backend is built, you need to
+  download the demo data from backend, not store in frontend".
+- **Switching demo mode off deletes the demo data** (owner 136, now and with the backend): turning the switch off
+  returns to the real data and then erases the separate demo database and every demo-scoped device key (drafts,
+  search history, read marks), so nothing of the demo stays on the device; turning it on again starts fresh
+  (seeded locally today, downloaded from the backend once F-252 ships). "Reset demo" goes away, since off and on
+  is the reset. *Why:* "and remove when demo mode is switched off".
 - **The demo dataset grows with every feature, in the same change** (owner 109). A feature is not done until the
   one demo dataset (§ 26.1 demo mode) shows it with realistic, multi-currency examples: e.g. the Supper Factory
   bill with tax classes and stacked charges (F-403), comment threads (F-1204), reminders (F-1118/F-1119), inactive
@@ -1288,8 +1299,8 @@ labelled sidebar); **wide** = web 1300 px and up (Bluesky `gtTablet`, right colu
 - **GameRun's Expo architecture is adopted where it fits** (§§ 21-22 record the calls). *Why:* "can you also
   look into architecture md file from GameRun expo".
 
-- **Welcome tour on first launch** (owner 123; F-249, Wave C, before F-211's setup steps). A fresh install
-  opens a short swipeable tour that says what Splito is and how to use it, then hands over to setup (F-211):
+- **Welcome tour on first launch** (owner 123; F-249, Wave C). A fresh install opens short swipeable intro
+  slides that say what Splito is and what you can do, before sign-in, then hands over to the Continue screen:
   - **5 slides max**, each an original animated illustration (Lottie, static under reduced motion), a title and
     one sentence, built on Bluesky's Pager with dot indicators (tappable) and its direction-aware slide:
     1. Split anything with anyone: friends, groups, trips, any currency, never mixed.
@@ -1297,18 +1308,24 @@ labelled sidebar); **wide** = web 1300 px and up (Bluesky `gtTablet`, right colu
     3. Settle up in fewest payments, record cash or UPI, remind gently.
     4. Search or ask anything: "how much did I spend on food in Goa?".
     5. Yours, offline: everything is saved on this device first (copy says sync only once it exists, § 0 rule 6).
-  - **Controls:** "Skip" top right on every slide (goes straight to setup, never past it), "Next" as the bottom
+  - **Controls:** "Skip" top right on every slide (goes straight to the Continue screen), "Next" as the bottom
     primary, the last slide's primary is "Get started"; swipe and the dots move both ways; a language chip top
     left on the first slide (English / हिन्दी), because the tour is the first thing read. Phone: full screen;
     rail and desktop: a centred card (~560 px) over a dimmed app, Escape = Skip.
   - **Once, then on demand:** shown once per install (`onboarding.tourSeen`, device preference kept in the
-    database, decision 90); Settings > Help "Take the tour" replays it; never shown in demo mode or to e2e runs
+    database, decision 90); Settings > Help "See the intro" replays it; never shown in demo mode or to e2e runs
     (the test hook marks it seen; one spec covers the tour itself). Every slide has a URL (`/welcome/1` .. `/5`,
     owner 100).
-  - **After the tour, first-use tips** (Expensify FeatureTraining / Bluesky ProgressGuide style): one small
-    dismissible tip the first time a screen is opened (FAB "Add your first expense", Groups "+", Analytics
-    scope chip, Search & Ask icon, row swipe/long-press), at most one tip on screen, each shown once, all
-    switchable off (`tips.enabled`), "Reset tips" in Settings > Help.
+  - **Two different things** (owner 142): these swipeable **intro slides come BEFORE sign-in** (what Splito is,
+    like many apps' first-open screens; "Get started" leads to the Continue screen, owner 140), and the **tour
+    comes AFTER the first sign-in and setup**: a guided walkthrough over the real app (F-253), a few coach marks
+    one at a time with Next / Skip: the FAB or "Add expense" ("Add your first expense"), a friend row ("Tap a
+    friend to see what you owe each other"), Groups "+", Settle up, the Search & Ask icon, and Activity; each
+    mark spotlights the real control and **blurs everything else** (owner 143: a blur plus slight dim over the rest of
+    the screen, the focused control sharp with a rounded cut-out and a short caption beside it; web `backdrop-filter`,
+    native `expo-blur`; reduced transparency falls back to a plain dim), works at every
+    width (sidebar items on desktop), shown once per account, replayable from Settings > Help "Take the tour".
+    After the tour, small first-use tips may still appear once per screen (`tips.enabled`, "Reset tips").
   - Screen readers hear "Step 2 of 5" and each title as a heading; tap targets 44 px; works at 320 px in Hindi.
   *Why:* "like what you get when you install one app and you get one overview, where you have to click next or
   skip which explains you what this app is and how to use".
@@ -1369,6 +1386,21 @@ labelled sidebar); **wide** = web 1300 px and up (Bluesky `gtTablet`, right colu
   addressable, and no URL ever performs or arms an action (§ 14 "links carry no command"); a sheet URL only
   opens the sheet. *Why:* "for every tab, every popup it should be via url, so that even if i copy paste the
   url i land on same place".
+- **Deep links work end to end, everywhere** (owner 145; F-254, built with F-241 right after Wave B; the
+  hosted files ship with the backend/domain). Every URL of F-241 (pages, tabs, sheets, drawers, pickers, list
+  state) is also a deep link: `https://splito.app/<path>` opens the installed app at that exact screen through
+  iOS Universal Links (associated domains + `apple-app-site-association`) and Android App Links (verified
+  `assetlinks.json`), falls back to the web app when the app is not installed, and `splito://<path>` works as
+  the custom scheme; the same resolver (§ 14) handles links from push notifications (F-2201), invite links and
+  QR codes (F-619), email/SMS reminders, the share sheet, Ask answers and Search results. Opening a link:
+  signed out -> intro/Continue, then resumes at the target (owner 125); in demo mode -> asks to switch back
+  first when the target is real data; not on this device yet -> "Not on this device yet" until the pull
+  (§ 14); unknown path -> Home. Links only navigate, never act (§ 14). After an install from a link, the first
+  open goes to that link's target (deferred link, store-safe: the link is kept on the web page and handed over
+  by the app's first open, no third-party SDK). Each build claims only its tier's host (§ 14). Tests: a table
+  of every route parsed from both `https` and `splito://`, e2e opening links cold and warm on web, and
+  iOS/Android simulator checks with `xcrun simctl openurl` / `adb shell am start -d`. *Why:* "integrate deep
+  links properly as well".
 - **Activity's route is `/activity`; `/notifications` redirects to it.**
 - **Pushed pages** (Person, Group, Settle, Expense, Profile, Settings and its sections, Add friend, Create
   group) show Back in the header; top-level pages (People, Groups, Analytics, Activity) show the avatar. This
@@ -1646,13 +1678,17 @@ expands once I click". *Where:* `screens/People`, `screens/Groups`, `screens/Gro
     sub-lines because both directions exist, the others reserve that space), so no card is taller or emptier.
   - **No red per-row dots** on friend, request or invite rows (owner 111: unsynced rows are drawn lighter).
   - **Friend rows stay on two lines at phone width:** name plus at most two group chips and "+N" (the rest in
-    the row's detail), and on the right one net line per currency (max 3, then "+N"; a currency open both ways that nets to zero keeps its
-    two lines, owed and owe, so it never reads settled); chips never wrap to a
+    the row's detail), and on the right one net line per currency (max 3, then "+N"); chips never wrap to a
     second chip line, and the per-currency nets are not repeated inside the chips. The list's last row clears
     the FAB (§ 26.6 bottom padding).
   - **Friends header** gets its list search back (owner 91, F-1414) beside Filters.
   *Why:* "ui issues" (screenshot: Invites sent above the Overview, "You are o..." and "₹307,786.(" cut off,
   uneven cards, red dots on invite rows, a friend row with two lines of chips and amounts under the FAB).
+- **Amounts in a row are always vertically centred** (owner 130): in every list row with an amounts column
+  (friends, groups, history, right-column rows), the amounts sit centred on the row's vertical middle whether
+  they are one line, two or more, and the avatar and the name block are centred the same way; never
+  top-aligned. *Why:* "how much I owe or these things should always be vertically center, whether it's one row
+  or two rows or any number of rows".
 - **People (Friends) and Groups both start with an "Overview" section:** one card per currency, "You are owed"
   / "You owe" (never summing currencies), a counts line ("6 friends - 2 settled" / "3 groups - 1 settled"),
   and an "Analytics >" link. Each group row shows your balance in that group per currency.
@@ -1660,7 +1696,7 @@ expands once I click". *Where:* `screens/People`, `screens/Groups`, `screens/Gro
   search (Lucide `Search`, testID `list-search`; on Home the global search field replaces it) and Filters (`list-filters`, with a dot/count when non-default
   filters are active). Both hide while the list is empty (§ 25).
 - **The Friends list has its own search, besides Search & Ask** (owner 91; F-222 removed the icon, F-1414
-  restores it; built with F-248). It filters only the list it sits on, combines with the filters, and the query is
+  restores it; not built yet). It filters only the list it sits on, combines with the filters, and the query is
   not kept after leaving the screen.
 - **Search is an icon until tapped,** then expands (Reanimated width/opacity, reduced-motion aware) into a
   full-width Bluesky `SearchInput` in the same row, autofocused, with an X that collapses and clears. Results
@@ -1668,9 +1704,9 @@ expands once I click". *Where:* `screens/People`, `screens/Groups`, `screens/Gro
   matches for '...'".
 - **Filters open a form sheet (§ 26.8) with Cancel + Apply; changes apply only on Apply,** and drive both the
   overview cards and the list. Filters and search combine. Friends: "Include groups" (default from the
-  `includeGroupsDefault` preference, on), currency (All / each present), show (All / Owes you / You owe; the
-  "Show settled" switch covers settled), sort (Amount / Name / Recent, default from `peopleSort`). Groups: type (Trip / Home / Couple /
-  Other), status (Active / Inactive / All), show (Shown / Hidden / All), currency, show (All / You are owed / You owe), sort (Recent
+  `includeGroupsDefault` preference, on), currency (All / each present), show (All / Owes you / You owe /
+  Settled), sort (Amount / Name / Recent, default from `peopleSort`). Groups: type (Trip / Home / Couple /
+  Other), status (Active / Inactive / All), show (Shown / Hidden / All), currency, show (All / You are owed / You owe / Settled), sort (Recent
   activity / Name / Amount). The Person page's history obeys the same Include groups choice.
 - **Groups are Active or Inactive, and Shown or Hidden: two separate controls, no "Archive"** (owner 89,
   replaces 88's single Archive). Both live in the group's header overflow, are recorded in history, and have an
@@ -1682,7 +1718,7 @@ expands once I click". *Where:* `screens/People`, `screens/Groups`, `screens/Gro
     even and comments still work, so open money can be closed. Making a group inactive with an open balance is
     allowed after a prompt that lists the open amounts per currency and offers "Settle up first". Inactive
     groups leave the main view: the Groups list shows them only in an "Inactive (N)" fold at the end
-    (always shown), and they are out of recent groups and every group
+    (preference `groups.showInactiveFold`, default on), and they are out of recent groups and every group
     picker.
   - **Show / Hide is personal** (my account only, never changes the group for others; preference
     `groups.hidden`, a list of group ids synced across my own devices). A hidden group leaves my Groups list,
@@ -1698,20 +1734,22 @@ expands once I click". *Where:* `screens/People`, `screens/Groups`, `screens/Gro
     Groups made before roles existed treat their creator as admin. Server enforcement follows with F-2108. The old `archived` flag reads as Inactive (read-time adapter, no schema change).
   *Why:* "add archive group option as well, when archived it stops showing in main view and no expense can be
   added", then "or make it as active inactive and hide show instead of archive".
-- **Settled is hidden by default; every choice is remembered in the database** (owner 90, 112; [Built] for Show
-  settled and for the saved Sort / Include groups / groups Sort, F-1413; the rest of the list state is not yet).
-  Friends and groups that are settled up are hidden from the Home / People and Groups lists by default; each filter
-  sheet gets a "Show settled" switch (default off, preferences `people.showSettled` / `groups.showSettled`) and the
-  counts line keeps saying "N settled" so nothing looks lost. "Settled up" means nothing is open and there have been
-  records: a friend or group with no records yet is new and is never hidden. Hidden rows still count in the Overview
-  and the totals, and the Show = Settled filter and search still find them. Apply on the Home filter sheet also saves
-  `peopleSort` and `includeGroupsDefault` (owner 128: their Settings rows go), and on the Groups sheet `groups.sort`, so
-  they survive a reload. Every choice a user makes (filters, sorts, Show settled, Include groups, currency, scope
-  chips, tab choices) is stored in the local database as a preference and is still applied after a reload or restart,
-  instead of living in screen state. Device-scope preferences also move from MMKV / localStorage into the database's
-  preferences store (device scope = not synced, but in the database); only secrets stay in the OS secure store, and a
-  boot copy may mirror theme for a flash-free first paint while the database stays the source of truth. *Why:* "by
-  default hide settled, in filters option for show settled, every setting that we choose to be stored in db".
+- **"Settled" means everyone is square, not only me** (assistant's ruling after the Wave B review, 2026-10-29):
+  a group counts as settled, and is hidden by default, only when every member's net in every currency is zero;
+  a friend is settled when our shared balance is zero in every currency. A group where I am even but others
+  still owe each other stays listed. One list-level projection decides it (never per row, § 9.6). The filter
+  sheets have one "Show settled" switch (no separate "Settled" choice in Show); the all-settled empty state reads
+  "All settled up" with a single "Show settled" button.
+- **Settled is hidden by default; every choice is remembered in the database** (owner 90; not built yet,
+  BACKLOG F-1413). Friends and groups that are fully settled (every currency at zero) are hidden from the Home /
+  People and Groups lists by default; each filter sheet gets a "Show settled" switch (default off) and the
+  counts line keeps saying "N settled" so nothing looks lost. Balances and totals are unaffected. Every choice a
+  user makes (filters, sorts, Show settled, Include groups, currency, scope chips, tab choices) is stored in the
+  local database as a preference and is still applied after a reload or restart, instead of living in screen
+  state. Device-scope preferences also move from MMKV / localStorage into the database's preferences store
+  (device scope = not synced, but in the database); only secrets stay in the OS secure store, and a boot copy
+  may mirror theme for a flash-free first paint while the database stays the source of truth. *Why:* "by default
+  hide settled, in filters option for show settled, every setting that we choose to be stored in db".
 - **Group page:** Pager tabs Expenses / Balances / Members (§ 26.9). Balances shows each member's net per
   currency, a "who owes whom" list (pairwise, from the direct-mode settlement plan) and "Settle up".
   Payment rules are reached from the header overflow (§ 26.4). testIDs `friends-filters`, `groups-balances`,
@@ -1824,35 +1862,17 @@ dishes etc and each item can be assigned to each in split"; "in itemize don't sh
 *Why:* "add sign in option, and logout as well in settings". *Where:* `screens/Settings`; `useSession()` not
 built yet.
 
-- **Seven Settings pages, switches for on/off** (F-251, owners 128, 131, 132). Appearance (Color mode with Dark
-  mode style, Accent colour, Text size, Money colours, Animations, Haptics), Navigation, Defaults (currency, new
-  bills start with, tax classes), Categories, Language and region, Notifications, Privacy; no Settings search.
-  Removed with their defaults as constants: list density, shake to feedback, default split (equal), amount keypad
-  (on; the system keyboard stays for screen readers), service-charge default (0), round-off spread (shares), charges
-  per merchant (on), amount shortcuts (on), inactive-groups fold (shown), Activity swipes (left delete, right mark
-  read), recent searches (kept, Clear all in Search), edit history in discussions (shown), the sync-status switch,
-  and the placeholder recurring and digest notification keys. The choice lives where it acts and is remembered
-  there: the bill's Amount / % toggle, the expense's round control (switch and unit per currency), Analytics'
-  period chip and Charts / Table toggle, and the People filter's Sort and Include groups (saved on Apply); their
-  keys stay but have no Settings row. Old links `/settings/motion` and `/settings/lists` redirect (to Appearance
-  and Settings). Every boolean setting is drawn as a switch on every platform, web included (owner 132; list
-  choices stay radio / checkbox). **Notifications** (owner 131): Payments ("When someone adds an expense with you or
-  records a payment to or from you", replacing New expenses; an old stored off on either key reads as off),
-  Comments (default on: "When someone comments on, or @mentions you in, an expense or payment you're in"),
-  Invites, and Reminders I set; the notice says the first three start once sync is on.
 - **Settings starts with an "Account" section** (copied from Bluesky's Settings account section and its
   Login/Signup screens' layout, `src/screens/Login`, `src/screens/Settings`).
-- **Signed out:** a "Sign in" row, subtitle "Back up and share with friends", opens **Bluesky's own logged-out
-  flow, copied screen for screen** (not a new design): `view/com/auth/LoggedOut.tsx` + `SplashScreen(.web).tsx`
-  (logo mark, tagline, "Create account" and "Sign in" buttons), `screens/Login/` (`FormContainer`,
-  `LoginForm` with "Email or phone" in place of the handle field, password, "Forgot?" link, Back / Next;
-  `ChooseAccountForm` for several accounts; `ForgotPasswordForm` -> `SetNewPasswordForm` (emailed/texted
-  code + new password) -> `PasswordUpdatedForm`), and `screens/Signup/` (`StepInfo`: name, email or phone,
-  password; Bluesky's step indicator and `BackNextButtons`; the handle and captcha steps are dropped).
-  Only the replacements required for Splito change (copy text, field types, logo, routes). Presented as the whole app while signed out (owner 125: sign-in is required; it cannot be closed). Every field is
-  validated. Until the auth backend exists (BACKLOG F-2101..F-2105), Next shows Bluesky's Admonition
-  "Sign-in arrives with sync. Your data stays safe on this device." No fake success, no fake account. *Why:*
-  "there is signin page already there in bluesky, use that".
+- **Signed out, the app is the logged-out flow** (owners 125, 138-140): Bluesky's logged-out look, copied screen
+  for screen where it still applies (`view/com/auth/LoggedOut.tsx`, `SplashScreen(.web).tsx` with the logo mark and
+  tagline, `screens/Login/FormContainer` and `LoginForm` layout, Bluesky's step indicator and `BackNextButtons`),
+  reduced to one Continue screen: Apple, Google, "Email or phone"; then password (or a one-time code) for an
+  existing account, or, for a new one, verify, the missing details, a password and setup (owner 141). No Create
+  account, handle or captcha screens. It is the whole app while signed out and cannot be closed. Every
+  field is validated. Until the auth backend exists (F-2101..F-2105) the code step shows Bluesky's Admonition
+  "Sign-in arrives with sync" and only the dev/e2e "Continue with a dev account" works; no fake success, no fake
+  account. *Why:* "there is signin page already there in bluesky, use that"; "basically no signup needed".
 - **Signed in (only once the backend exists):** an account row (avatar, name, email/phone, sync status) and
   a destructive "Log out" row opening a prompt "Log out?" that warns when the outbox holds unsynced changes
   ("N changes haven't synced yet") and offers "Keep this device's data" / "Erase this device's data". Logout
@@ -1871,8 +1891,44 @@ built yet.
   feedback is kept in "Your feedback" with its status. Until the backend feedback endpoint exists, Send saves it
   on the device (status "Saved on this device") and offers "Send by email" (a prefilled email draft to the
   support address, `FEEDBACK_EMAIL`, a release-checklist item); once the backend exists it goes through the
-  outbox. There is no shake gesture (F-251).
+  outbox. No shake-to-send preference (removed by F-251, owner 128).
 
+- **One "Continue" screen, no separate sign-up, with a password** (owners 140, 141; replaces the separate Create
+  account / Sign in screens). The logged-out flow starts on one screen built from Bluesky's `LoginForm` layout:
+  "Continue with Apple", "Continue with Google", then one "Email or phone" field and Continue. Splito then checks
+  whether that account exists:
+  - **Existing account: password or one-time code, the user's choice** (owner 144): the next step offers both as
+    equals, a segmented choice "Password | Code" over the field (Bluesky's password field with "Forgot?", or the
+    6-digit code sent to that email or phone); the choice last used on this device is preselected, and either can
+    be switched to at any time. An account without a password (made with Google or Apple) sees Code only. Forgot password sends a code to the email or phone, then a new
+    password (Bluesky's `ForgotPasswordForm` -> `SetNewPasswordForm` -> `PasswordUpdatedForm`).
+  - **New account (created in the same flow, no "Create account" anywhere):** the next steps verify the entered
+    email or phone with a code, ask only for what is missing (name, the other of email/phone, verified by code,
+    owner 139) and a password (minimum 8 characters, strength shown, never a hint of which accounts exist beyond
+    "We'll create your account"), then setup (F-211).
+  - **Google / Apple:** no password needed for them; a first-time social sign-in runs the same missing-info steps
+    and may set a password later in Settings > Account.
+  *Why:* "we can have signup and login as same screen only, no separate screen needed, basically no signup
+  needed"; then "password should be there as well".
+- **Every account has both an email and a phone number, both verified** (owner 139; F-250 UI, F-2102 server).
+  A new account needs name, email and phone (E.164, region default); both email and phone are required and
+  each is confirmed with a one-time code before the account is usable (owner 140: collected in the one Continue
+  flow, no separate sign-up). Continue accepts either one. Any signed-in account missing one of them (signed up with Google or Apple, which give only an email, or an
+  older email-only or phone-only account) sees a blocking "Add your phone number" (or "Add your email") step right
+  after sign-in, before Home or setup: enter, verify with a code, continue; it cannot be skipped, and the only
+  other action is Log out. Offline the step says it needs a connection. The directory lookup (§ 26.18) uses both.
+  *Why:* "on signup, make email and phone both mandatory; if logged in via email only and no phone is there, ask
+  to update phone first".
+- **Sign in with Google and Apple** (owner 138; UI with F-250 in Wave C, real with F-2102). The Continue
+  screen (owner 140) offers "Continue with Apple" and "Continue with Google" above the email or phone
+  option, on every platform (Apple first on iOS, Google first on Android and web; the platforms' own button
+  styles: Apple's black/white button, Google's branded button). Native: `expo-apple-authentication` and Google
+  Sign-In; web: Sign in with Apple JS and Google Identity Services. The server verifies the ID token, creates or
+  finds the account and links by verified email (never merges silently on an unverified one; asks); Apple's
+  "Hide my email" relay works. A new account from Google/Apple still goes through setup (F-211). Until the auth
+  API exists, the buttons are shown in dev/e2e builds but say "Sign-in with Google and Apple arrives with
+  sync" (no fake success); the dev account stays the only working path there. *Why:* "on login, sign in with
+  google and apple as well".
 - **Sign-in is required: without an account nothing of the app is visible** (owner 125; replaces "signing in
   is optional" and F-211's zero-signup start; F-250, Wave C, right after the welcome tour). Signed out, the app
   shows only: the welcome tour (owner 123), Bluesky's logged-out flow (splash, Sign in, Create account, Forgot
@@ -1895,6 +1951,17 @@ built yet.
     e2e signs in through `window.__splitoTest`); production builds refuse to ship without the real auth API
     (release blocker § 26.22).
   *Why:* "also without login, nothing should be visible, auth is required".
+
+- **On/off settings are switches, on every platform** (owner 132): every boolean setting (Demo mode, each
+  Notifications row, Animations, Haptics and the rest) uses Bluesky's `Toggle.Switch` on iOS, Android and web,
+  never a checkbox (Bluesky's `Toggle.Platform` draws a checkbox on web and Android, so it is not used for
+  settings). Multi-choice settings keep radio rows. *Why:* "it should be a switch not a checkbox".
+- **No demo banner** (owner 133, replaces the "persistent banner on every screen" of § 26.1 and 132's compact
+  banner): demo mode shows no banner anywhere and reserves no space; it is visible only as the Settings > Data
+  "Demo mode" switch, the avatar's "Demo" state and **every header title ending in " - Demo"** ("Home - Demo",
+  "Groups - Demo", "Goa trip - Demo"; on phone Home, where the header shows the logo, a small "Demo" label beside
+  it; the web document title too), done once in the shared header title (owner 134). *Why:* "don't show that
+  banner, not needed"; "in all headers, write Home - Demo like this instead".
 
 ### 26.16 Analytics
 
@@ -1992,10 +2059,9 @@ add anyway (only for you)"; "also i should be able to select from contacts". *Wh
   Same row components as Home and the invite sheet; Settings > Privacy keeps "Let people find me by email /
   phone" and links here. *Why:* "add invite management in settings as well"; "add one option in settings of
   friends, where you can add remove friends as well, and invite management as well".
-- **Privacy settings (preferences registry):** Settings > Privacy shows only "Find me by email or phone" (default
-  on) and a "Friends and invites" link; "Friend requests from" (everyone / people with my link only), the invite-link
-  uses and expiry, and "Approve group joins" live only on the Friends and invites page (F-251, no duplicates).
-- Demo mode (the Settings switch) ships a fake directory so every branch of the flow can be seen; production uses the
+- **Privacy settings (preferences registry):** "Let people find me by email / phone" (default on),
+  "Who can send me friend requests" (everyone / people with my link only), default invite-link limits.
+- Demo mode (`?demo=1`) ships a fake directory so every branch of the flow can be seen; production uses the
   backend directory API (backend batch). No fake "sent" states in production builds.
 
 ### 26.19 Ask Splito (AI chat)
@@ -2108,6 +2174,28 @@ add anyway (only for you)"; "also i should be able to select from contacts". *Wh
     two-sided with sync (F-2208). Demo data carries every state (owner 109).
   *Why:* "add an option for disputes as well, think about it properly"; "should we calculate disputed expense
   or wait until they are resolved".
+
+- **Notifications: one switch for money, one for comments** (owner 131; built with F-251). Settings >
+  Notifications has "Payments" (one switch for both new expenses that include me and payments to or from me;
+  replaces the separate "New expenses" and "Payments" switches, `notify.expense` folds into `notify.payment`,
+  an old "off" on either reads as off), "Comments" (`notify.comments`, on: a comment or @mention on an expense or
+  payment I am in), "Invites" and "Reminders I set". Like the others, Comments only notifies once sync exists
+  (§ 0 rule 6), and the page says so. *Why:* "new expense and payment should be one, make it payment, add one
+  more notification for comments".
+
+- **Push notifications on every platform** (owner 137; F-2201, in the first backend batch right after sign-in
+  and sync, F-2101..F-2103). Real push, not only local alerts: iOS (APNs) and Android (FCM) through
+  `expo-notifications`, and web through Web Push (VAPID) in the PWA's service worker, so a browser tab that is
+  closed still gets them where the browser allows. What pushes follows Settings > Notifications exactly
+  (Payments, Comments, Invites; Reminders stay local): an expense that includes me, a payment to or from me, an
+  edit or delete that changes my share, a comment or @mention, a friend request or accepted invite, a dispute
+  raised or answered (F-1210). Text is in the recipient's language and never shows amounts or names on the lock
+  screen unless the privacy level allows (F-1605); tapping opens the exact screen by its URL (owner 100);
+  per-group threads; actions where safe ("Mark read", "Open"; never "Settle" or "Delete", § 14). Permission is
+  asked only from a tap, after a one-screen primer, never at launch; refusing is a state with a Settings link,
+  not an error. A push payload is only a hint: the app pulls and shows local data, never writes the payload to
+  the store (§ 9.3). Tokens are per device and account, refreshed on a schedule, removed on log out. *Why:* "we
+  need to add push notifications as well".
 
 ### 26.21 Offline web app (service worker and PWA)
 
@@ -2267,12 +2355,23 @@ Every owner decision, in the order it was made (all 2026-10-26). "Replaced" name
 | 126 | "add a little padding from top, on sidebar on logo" | Sidebar logo sits 12 px lower than the header centre line | § 26.5 | Logo on the header row centre line |
 | 127 | "navigation changes reflect on mobile only, it should be same on desktop as well" | Settings > Navigation drives the bottom bar, the rail and the desktop sidebar alike (same items, same order); items turned off go under "More" at the end of the sidebar/rail; the drawer follows the same order | § 26.3 | Desktop and rail always showed the full list |
 | 128 | "remove this, its not needed" (Language menu switch); "customization are needed, but not forcefully, only whats needed" | Settings only where people genuinely differ; no switches for small UI details or duplicates; Language menu switch removed (dropdown always shown); F-251 prunes the rest | § 26.1 | Everything customizable |
-| 131 | notifications: one Payments switch plus Comments | "New expenses" folded into Payments ("When someone adds an expense with you or records a payment to or from you"; an old stored off on either reads as off); new Comments switch (default on) for comments and @mentions; the notice says they notify once sync exists | § 26.15 | Separate New expenses and Payments switches |
-| 132 | "every on/off setting is a switch on every platform" | Boolean settings use Toggle.Switch (role switch, checked state) on web and Android too; list choices stay radio / checkbox | § 26.15 | Bluesky's checkbox on web and Android |
-| 133 | "remove the demo banner completely" | No demo banner on any screen and no reserved space; demo mode shows in the Settings switch and the avatar's Demo dot | § 26.1 | "Demo mode · Switch back" banner |
-| 134 | "append - Demo to every header title in demo mode" | Shared header TitleText adds " - Demo" (phone Home logo gets a "Demo" label); the window title follows | § 26.1 | Nothing in the header said demo |
-| 135 | settled means the group's debts are all zero | A group is settled only when no member owes another (one `balances` read for the whole list, never per row); where only I am even it stays listed and is not counted settled; the all-settled state reads "All settled up" with one "Show settled" button, and Clear filters also resets Show settled and Show hidden | § 26.12 | Settled judged from my own net |
-| 136 | "switching demo mode off erases it" | Off erases the demo database and every demo-scoped device key after returning to the real store; on seeds afresh; "Reset demo" removed | § 26.1 | Demo kept its edits between sessions, with a Reset row |
+| 129 | "remember, we need to make this app simple with all the features and customization" | Simple first: every feature kept, each screen shows only what the moment needs, power features one tap deeper, good defaults, short copy, no clutter; reviews check for clutter | § 26.1 | - (complements 128) |
+| 130 | "how much i owe or these things should always be vertically center, whether its one row or two rows or any number of rows" | Row amounts (and avatar, name block) are vertically centred, never top-aligned | § 26.12 | Friend rows top-aligned the first net on the name line |
+| 131 | "new expense and payment should be one i guess, make it payment, add one more notification for comments" | One "Payments" notification switch covers new expenses and payments; new "Comments" switch | § 26.20 | Separate New expenses and Payments switches; no comments switch |
+| 132 | "in demo mode i see extra space on top, and it should be a switch not a checkbox" | Boolean settings are Bluesky switches on every platform; demo banner compact, text visible, no empty band | § 26.15 | Toggle.Platform checkboxes on web; blank demo banner band on desktop |
+| 133 | "dont show that banner, not needed" | No demo banner at all; demo state shown by the Settings switch and the avatar's Demo state | § 26.15, § 26.1 | Banner on every screen (94/95), compact banner (132) |
+| 134 | "in all headers, write Home - Demo like this instead" | In demo mode every header title ends with " - Demo" (logo + "Demo" label on phone Home; document title too) | § 26.15 | - (with 133) |
+| 135 | "remember when backend is build, you need to download the demo data from backend not store in frontend" | With the backend, Demo mode downloads the demo dataset from the server into the demo DB; no demo seed in the client bundle | § 26.1 | Demo dataset generated in the app (dev/e2e) |
+| 136 | "and remove when demo mode is switched off" | Switching demo off erases the demo database and demo-scoped keys; on again starts fresh; no Reset demo | § 26.1 | Demo DB kept between sessions; Reset demo |
+| 137 | "we need to add push notifications as well" | Real push on iOS (APNs), Android (FCM) and web (Web Push in the PWA), following the Notifications switches; privacy-aware text; opens the exact screen; permission only from a tap; first backend batch | § 26.20 | Push planned without platform detail (F-2201) |
+| 138 | "on login, signin with google and apple as well" | "Continue with Apple" and "Continue with Google" on splash, Sign in and Create account, every platform; server verifies tokens, links by verified email | § 26.15 | Email/phone only on the sign-in screens |
+| 139 | "on signup, make email and phone both mandatory; if logged in via email only and no phone is there ask to update phone first" | Sign-up requires email and phone, both verified by code; any account missing one gets a blocking add-and-verify step after sign-in (only Log out besides) | § 26.15 | Sign-up with email or phone (one field) |
+| 140 | "we can have signup and login as same screen only, no separate screen needed, basically no signup needed" | One Continue screen (Apple, Google, email or phone + one-time code); new accounts created in-flow by asking only what is missing; no passwords, no Create account or Forgot password screens | § 26.15 | Bluesky Create account / Sign in / password / Forgot password screens |
+| 141 | "password should be there as well" | Passwords kept inside the one Continue flow: existing account enters password (or one-time code, Forgot password); new account sets one after verifying; Google/Apple need none | § 26.15 | Code-only, no passwords (row 140) |
+| 142 | "tour is when i have logged in, and want the swipable screen before login like some app does" | Swipeable intro slides before sign-in (F-249); a separate guided coach-mark tour over the real app after first sign-in and setup (F-253) | § 26.2 | One welcome tour before setup (row 123) |
+| 143 | "tour focuses on the feature and blur other places" | Each tour step keeps the focused control sharp and blurs (plus slight dim) the rest of the screen | § 26.2 | Dimmed backdrop only |
+| 144 | "either signin with password otp, users choice" | Existing accounts choose Password or Code as equal options (segmented), last choice remembered per device | § 26.15 | Password first with "Use a one-time code instead" |
+| 145 | "integrate deep links properly as well" | Every URL is a deep link: Universal Links, App Links, splito:// scheme, web fallback; one resolver for push, invites, QR, reminders, shares; signed-out and demo handling; deferred link after install; simulator tests | § 26.3 | Deep links partly wired (§ 14), no universal/app links |
 
 New decisions follow § 0 rule 9: rewrite the rule in its topic so only the current truth remains, then add a
 row here.
