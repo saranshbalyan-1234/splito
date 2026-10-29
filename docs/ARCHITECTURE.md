@@ -1606,7 +1606,11 @@ good"; "the left sidebar looks bad on desktop". *Where:* `view/shell/desktop/Lef
   any tap (rows, buttons, chips, switches, filters, sheets, tabs, menus, the FAB) changes what the user sees in
   the same frame or the next: the pressed state, the selected chip, the switch thumb, the opening sheet's motion,
   the new screen's header and a same-size skeleton. Anything slow (long lists, charts, breakdowns, the next tab's
-  body, search results) renders after that first frame, via React transitions (`startTransition` /
+  body, search results) renders after that first frame (owner 152, the pattern: **tabs** switch first (indicator,
+  header, a same-size skeleton body) and fill in after; **popups and sheets** start their open motion at once with
+  their shell (title, X, footer) and mount the body after; **screen changes** start the header and transition at
+  once and render the body after the transition; one shared helper does it for every screen, `useAfterTransition()`
+  plus a `<Deferred fallback={<Skeleton/>}>` wrapper, never a per-screen timer), via React transitions (`startTransition` /
   `useDeferredValue`), mounting the body after the transition (§ 3) or on idle; a busy body never delays the
   tap's own feedback, and later taps are never queued behind it. Measured: an e2e/perf check of tap-to-first-
   visual-change under 100 ms (§ 26.10) for the main tappables at 390 px, and none of them waits on a JS long
@@ -2429,6 +2433,7 @@ Every owner decision, in the order it was made (all 2026-10-26). "Replaced" name
 | 149 | "now keep on pushing to github as well"; "use saranshbalyan-1234 account to push" | Push main to origin after every merge as saranshbalyan-1234 (repo-local credential helper); Render auto-deploys main | § 26.1 | No remote; never push |
 | 150 | "when i click on tabs immediately it doesnt work, in other apps i keep clicking on tabs within ms it still switches" | Every tab tap switches at once, even milliseconds apart or mid-animation; newest tap wins; nothing debounced or swallowed, every platform | § 26.9 | Taps during a switch could be ignored |
 | 151 | "all the taps everywhere should reflect immediately, maybe deffer some renderring" | Every tap shows its result in the same or next frame; slow bodies render after via transitions/deferred mount; tap-to-first-change < 100 ms measured | § 26.9, § 26.10 | Only tap feedback within 100 ms (body could block) |
+| 152 | "for example switch tabs first, and render content later, same for popups or diff screen that happen"; "make sure such things are stored in architecture, and it should be self updating whenever we make such decisions" | Shell first, content later for tabs, sheets and screens via one shared helper; every such decision recorded in § 26 + log + BACKLOG in the same turn (§ 0 rule 9, prompt hook) | § 26.9, § 0 | - (spells out 151) |
 
 New decisions follow § 0 rule 9: rewrite the rule in its topic so only the current truth remains, then add a
 row here.
