@@ -1,7 +1,9 @@
 /* Lucide glyphs (ISC) for the Activity feed: row actions, and the kind badges on avatars. */
 import {
+  AlarmClock,
   Archive,
   Banknote,
+  BellRing,
   CheckCheck,
   CircleCheck,
   CircleDot,
@@ -45,3 +47,7 @@ export const PaymentBadge = createIcon(Banknote, BADGE)
 export const WriteOffBadge = createIcon(Handshake, BADGE)
 export const FriendAcceptedBadge = createIcon(UserRoundCheck, BADGE)
 export const RequestSentBadge = createIcon(Send, BADGE)
+/** Remind: a friendly nudge shared with someone. */
+export const NudgeBadge = createIcon(BellRing, BADGE)
+/** Remind me: a notification scheduled for myself. */
+export const ReminderSetBadge = createIcon(AlarmClock, BADGE)

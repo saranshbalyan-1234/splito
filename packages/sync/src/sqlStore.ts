@@ -1,6 +1,6 @@
 import {createStore} from './core'
 import {type Engine, type RangeQuery, type RowAccess} from './engine'
-import {type LegacyV1, migrateFromV1, migrateV2ToV3, stampSchemaVersion} from './migrate'
+import {type LegacyV1, migrateFromV1, migrateV2ToV3, migrateV3ToV4, stampSchemaVersion} from './migrate'
 import {type ColumnType, indexColumns, type Row, SCHEMA_VERSION, STORES, type StoreName, type StoreSpec} from './schema'
 import {type Store} from './store'
 
@@ -18,7 +18,7 @@ const q = (name: string) => `"${name}"`
 const SQL_TYPE: Record<ColumnType, string> = {text: 'TEXT NOT NULL', int: 'INTEGER NOT NULL', 'text?': 'TEXT', 'int?': 'INTEGER'}
 const spec = (store: StoreName) => STORES[store] as StoreSpec
 
-/** CREATE statements for every v2 table and index (same names, columns, keys and indexes as IndexedDB). */
+/** CREATE statements for every table and index (same names, columns, keys and indexes as IndexedDB). */
 export function schemaSql(): string[] {
   const out: string[] = []
   for (const name of STORE_NAMES) {
@@ -140,7 +140,7 @@ async function readV1(db: SqlExecutor): Promise<LegacyV1> {
 
 /**
  * Brings the database to the current layout, once: a fresh file gets the
- * tables; a v2 file gets the v3 additions and a rebuild; a v1 file (`PRAGMA user_version` 0 with an `entities` table) is
+ * tables; a v2 file gets the v3 additions and a rebuild; a v3 file gets the `reminders` table; a v1 file (`PRAGMA user_version` 0 with an `entities` table) is
  * read whole, its tables replaced and every row written back in the new
  * layout, all inside one transaction that also sets `user_version`, so a
  * crash leaves v1 untouched and a finished migration is never run again.
@@ -162,6 +162,14 @@ async function migrate(db: SqlExecutor) {
       await db.exec('ALTER TABLE "people" ADD COLUMN "lastActivityAt" INTEGER NOT NULL DEFAULT 0')
       for (const sql of schemaSql()) await db.exec(sql)
       await migrateV2ToV3(sqlRows(db))
+      await migrateV3ToV4(sqlRows(db))
+      await db.exec(`PRAGMA user_version = ${SCHEMA_VERSION}`)
+      return
+    }
+    // v3 -> v4: every table is kept; the new `reminders` table and its indexes are created (IF NOT EXISTS).
+    if (version === 3) {
+      for (const sql of schemaSql()) await db.exec(sql)
+      await migrateV3ToV4(sqlRows(db))
       await db.exec(`PRAGMA user_version = ${SCHEMA_VERSION}`)
       return
     }

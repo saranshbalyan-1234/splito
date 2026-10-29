@@ -9,7 +9,7 @@ Status words are the same as `docs/BACKLOG.md`: **done** (built, tested and merg
 | Core rules | Exact money (bigint), all split modes, rounding, multi-currency maths | F-101 | done (domain, 68 tests) |
 | Core rules | Settlement planner with allowed / preferred / excluded routes | F-102 | done (domain) |
 | Storage | Offline local store (SQLite / IndexedDB), history, outbox, preferences registry | F-103, F-104 | done (sync, 40 tests) |
-| Storage | Local database schema v3: a store per entity type on IndexedDB and SQLite, normalised members and parties, in-transaction balance sums, monthly aggregates and search terms (Analytics and Search never load the ledger), per-row sync status, v1 and v2 migrations, cursor-paged hot reads | F-117 | done (feat/wA-35a: Home cold open 46 ms on 1.5k expenses, 46 ms on 10k; write + UI 16 ms; Analytics open 35 / 21 ms; narrow search 16-43 ms; see BACKLOG F-117) |
+| Storage | Local database schema v4 (v3 plus the `reminders` store): a store per entity type on IndexedDB and SQLite, normalised members and parties, in-transaction balance sums, monthly aggregates and search terms (Analytics and Search never load the ledger), per-row sync status, v1 and v2 migrations, cursor-paged hot reads | F-117 | done (feat/wA-35a: Home cold open 46 ms on 1.5k expenses, 46 ms on 10k; write + UI 16 ms; Analytics open 35 / 21 ms; narrow search 16-43 ms; see BACKLOG F-117) |
 | Engineering | Guardrails: CI architecture test | F-108 | in progress (built and tested on feat/b-*, unmerged) |
 | Integration | Merge the UI line + Batch 4 streams + phone bottom drawers into m1-foundation | Batch 4b row 30 | todo (first item of Batch 4b) |
 | Shell | Bluesky sidebar / bottom bar / FAB (phones only, no-Back screens) / drawer / header rules / owner logo in the accent colour | F-201 | in progress (built and tested on the unmerged UI line) |
@@ -54,8 +54,8 @@ Status words are the same as `docs/BACKLOG.md`: **done** (built, tested and merg
 | Expenses+ | Comments on expenses and repayments (local + outbox) | F-1204 | todo (Batch 4b) |
 | Expenses+ | Disputes, flags and hold | F-1210 | todo |
 | Expenses+ | Shared comments and disputes | F-2208 | todo (needs backend) |
-| Reminders | Remind via share sheet (Person, group Balances, Settle plan), logged in Activity | F-1118 | todo (Batch 4b) |
-| Reminders | Remind me (local notification for yourself) | F-1119, F-1907 | todo (Batch 4b) |
+| Reminders | Remind via share sheet (Person, group Balances, Settle plan), logged in Activity | F-1118 | done (feat/wB-B5; Person, group Balances, Settle plan; e2e `remind.spec`) |
+| Reminders | Remind me (local notification for yourself) | F-1119, F-1907 | done (feat/wB-B5; native OS scheduling not run on a device; web fires only while open) |
 | Reminders | Reminder policy, tone, language, snooze | F-1111 | todo |
 | Reminders | In-app reminders (1 per person per 3 days) and opt-in automatic reminders | F-2210 | todo (needs backend) |
 | Data | JSON backup export + import / restore (Settings > Data) | F-2001 | todo (Batch 4b) |

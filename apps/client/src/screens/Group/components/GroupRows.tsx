@@ -3,6 +3,7 @@ import Animated from 'react-native-reanimated'
 import {Trans, useLingui} from '@lingui/react/macro'
 import {formatAmount, magnitude, ZERO} from '@splito/domain'
 
+import {RemindMenuItems} from '#/features/remind/RemindMenuItems'
 import {Link} from '#/view/com/util/Link'
 import {UserAvatar} from '#/view/com/util/UserAvatar'
 import {atoms as a, useTheme} from '#/alf'
@@ -139,6 +140,7 @@ export function OweRow({
   currency,
   locale,
   testID,
+  remind,
   onCallItEven,
 }: {
   /** "Arjun owes you", "You owe Riya", "Sam owes Priya". */
@@ -150,6 +152,8 @@ export function OweRow({
   currency: string
   locale: string
   testID?: string
+  /** Adds Remind (when they owe me) and Remind me to the row's menu: the other person in this payment and the group (F-1118). */
+  remind?: {personId: string; groupId: string}
   /** Adds the row's "..." menu with "Call it even" (F-1113). */
   onCallItEven?: () => void
 }) {
@@ -185,7 +189,7 @@ export function OweRow({
       <Text style={[a.text_md, a.font_semi_bold, tabular, {color}]}>
         {formatAmount(amount, currency, locale)}
       </Text>
-      {onCallItEven && (
+      {(onCallItEven || remind) && (
         /* Bluesky's row overflow: a sibling of the row's content, never nested in a Pressable. */
         <Menu.Root>
           <Menu.Trigger label={l`More options for ${sentence}`}>
@@ -204,15 +208,25 @@ export function OweRow({
             )}
           </Menu.Trigger>
           <Menu.Outer>
-            <Menu.Item
-              testID="owe-call-even"
-              label={l`Call it even`}
-              onPress={onCallItEven}>
-              <Menu.ItemText>
-                <Trans>Call it even</Trans>
-              </Menu.ItemText>
-              <Menu.ItemIcon icon={HandshakeIcon} position="right" />
-            </Menu.Item>
+            {onCallItEven && (
+              <Menu.Item
+                testID="owe-call-even"
+                label={l`Call it even`}
+                onPress={onCallItEven}>
+                <Menu.ItemText>
+                  <Trans>Call it even</Trans>
+                </Menu.ItemText>
+                <Menu.ItemIcon icon={HandshakeIcon} position="right" />
+              </Menu.Item>
+            )}
+            {remind && (
+              <RemindMenuItems
+                personId={remind.personId}
+                groupId={remind.groupId}
+                owed={direction === 'toMe' ? {[currency]: amount} : {}}
+                isOpen
+              />
+            )}
           </Menu.Outer>
         </Menu.Root>
       )}

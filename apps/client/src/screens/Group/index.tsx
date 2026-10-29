@@ -693,6 +693,7 @@ export function GroupScreen() {
                     amount={item.amount}
                     currency={item.currency}
                     locale={locale}
+                    remind={me && (item.to === me.id || item.from === me.id) ? {personId: item.to === me.id ? item.from : item.to, groupId} : undefined}
                     onCallItEven={() => {
                       // One part: this group's transfer, `from` owes `to`.
                       setEvenDraft({

@@ -50,6 +50,8 @@ const config: ExpoConfig = {
   },
   plugins: [
     'expo-sqlite',
+    /* Local reminders (F-1907, F-1119): scheduled on the device, no push token and no server. The permission is asked only by Splito's own primer. */
+    ['expo-notifications', {color: '#006AFF'}],
     /* Adapted from bluesky-social/social-app@4e4ad9c (MIT) - app.config.js. The shell's SystemBars sets the bar icon colours per theme. */
     ['react-native-edge-to-edge', {android: {enforceNavigationBarContrast: false}}],
     /* Adapted from bluesky-social/social-app@4e4ad9c (MIT) - app.config.js (expo-contacts). Asked only after Splito's primer (26.18, F-216). */

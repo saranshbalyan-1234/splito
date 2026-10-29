@@ -10,6 +10,7 @@ import {tmpdir} from 'node:os'
 import {join} from 'node:path'
 
 import {createExpense, createGroup, createPerson, createRepayment, ensureMe} from '../src/mutations'
+import {recordNudge, remindersAbout, scheduleReminder, selfReminders} from '../src/reminders'
 import {openSqlStore, type SqlExecutor} from '../src/sqlStore'
 import {bunExecutor} from './bunExecutor'
 import {makeCtx} from './storeV2Contract'
@@ -33,6 +34,9 @@ test('the typed reads use an index on every table they touch', async () => {
     date: '2026-10-01', tz: 'UTC', category: 'c', notes: '',
   })
   await createRepayment(s, ctx, {groupId: null, currency: 'INR', from: 'me', to: a.id, amount: 5n, date: '2026-10-02', tz: 'UTC', note: ''})
+
+  await scheduleReminder(s, ctx, {personId: a.id, groupId: null, dueAt: 1_800_000_000_000, repeat: 'weekly'})
+  await recordNudge(s, ctx, {personId: a.id, groupId: g.id, amounts: {INR: 500n}, via: 'share'})
 
   recording = true
   await s.get('expense', e.id)
@@ -58,6 +62,9 @@ test('the typed reads use an index on every table they touch', async () => {
   await s.historyPage({limit: 20})
   await s.history('expense', e.id)
   await s.outboxByStatus('queued')
+  await selfReminders(s)
+  await remindersAbout(s, a.id)
+  await s.page('reminder', {index: 'byDue', eq: ['self'], min: 0, max: 2_000_000_000_000, limit: 20})
   await s.syncCounts()
   recording = false
 

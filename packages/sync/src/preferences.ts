@@ -195,6 +195,14 @@ export const PREFS = {
   'notify.expense': def('notify.expense', 'notifications', 'account', 'New expenses', true, isBool),
   'notify.payment': def('notify.payment', 'notifications', 'account', 'Payments', true, isBool),
   'notify.invite': def('notify.invite', 'notifications', 'account', 'Invites', true, isBool),
+  /*
+   * Local notifications (F-1907): they live on this device, so the switches do too. Each kind has its own:
+   * reminders you set (Remind me, F-1119), recurring expenses coming due and a periodic digest (their
+   * features arrive later; the switches exist so the notification module honours them from the start).
+   */
+  'notify.reminders': def('notify.reminders', 'notifications', 'device', 'Reminders I set', true, isBool),
+  'notify.recurring': def('notify.recurring', 'notifications', 'device', 'Recurring expenses due', true, isBool),
+  'notify.digest': def('notify.digest', 'notifications', 'device', 'Digest', false, isBool),
   /** Telemetry (16.1): off, nothing is sent. No Settings row until a vendor exists (A-046); recording still honours it. */
   sendDiagnostics: def('sendDiagnostics', 'privacy', 'device', 'Send diagnostics', true, isBool),
   /** How long Recently deleted lists a deleted expense, payment or write-off (F-1203). */

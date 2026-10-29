@@ -30,6 +30,7 @@ import {
 } from '../src/mutations'
 import {deleteFeedback, loadFeedback, saveFeedback} from '../src/feedback'
 import {setPref} from '../src/preferences'
+import {scheduleReminder} from '../src/reminders'
 import {createInviteLink, sendFriendRequest} from '../src/friends'
 import {SCHEMA_VERSION, STORES} from '../src/schema'
 import {openSqlStore, type SqlExecutor} from '../src/sqlStore'
@@ -295,16 +296,18 @@ describe.each(Object.keys(open))('%s v1 -> current', engine => {
 /* -------------------------------------------------------------------------- */
 
 /** Rewrites a current (v3) IndexedDB database as the v2 layout that shipped before: no aggregates, no search terms, no people activity. */
-async function downgradeIdb(from: IDBFactory, name: string): Promise<IDBFactory> {
+async function downgradeIdb(from: IDBFactory, name: string, version: 2 | 3 = 2): Promise<IDBFactory> {
   const source = (await wrap(from.open(name))) as IDBPDatabase
   const to = new IDBFactory()
-  const req = to.open(name, 2)
-  const kept = Object.keys(STORES).filter(n => n !== 'aggregates' && n !== 'search_terms') as Array<keyof typeof STORES>
+  const req = to.open(name, version)
+  // v3 (and v2) had no `reminders`; v2 had neither projections nor the people activity column.
+  const gone = version === 3 ? ['reminders'] : ['aggregates', 'search_terms', 'reminders']
+  const kept = Object.keys(STORES).filter(n => !gone.includes(n)) as Array<keyof typeof STORES>
   req.onupgradeneeded = () => {
     for (const store of kept) {
       const spec = STORES[store] as {key: readonly string[]; auto?: boolean; indexes: Record<string, {columns: readonly string[]; unique?: boolean}>}
       const os = spec.auto ? req.result.createObjectStore(store, {keyPath: spec.key[0]!, autoIncrement: true}) : req.result.createObjectStore(store, {keyPath: [...spec.key]})
-      for (const [ix, def] of Object.entries(spec.indexes)) if (!(store === 'people' && ix === 'byActivity')) os.createIndex(ix, [...def.columns], {unique: !!def.unique})
+      for (const [ix, def] of Object.entries(spec.indexes)) if (version === 3 || !(store === 'people' && ix === 'byActivity')) os.createIndex(ix, [...def.columns], {unique: !!def.unique})
     }
   }
   const target = (await wrap(req)) as IDBPDatabase
@@ -314,7 +317,7 @@ async function downgradeIdb(from: IDBFactory, name: string): Promise<IDBFactory>
   for (const store of kept)
     for (const row of rows.get(store)!) {
       const { lastActivityAt: _skip, ...v2 } = row
-      void t.objectStore(store).put(store === 'people' ? v2 : row)
+      void t.objectStore(store).put(store === 'people' && version === 2 ? v2 : row)
     }
   await t.done
   source.close()
@@ -325,6 +328,7 @@ async function downgradeIdb(from: IDBFactory, name: string): Promise<IDBFactory>
 /** The same for SQLite: drop what v3 added and stamp version 2. */
 function downgradeSql(path: string) {
   const db = new Database(path)
+  db.run('DROP TABLE reminders')
   db.run('DROP TABLE aggregates')
   db.run('DROP TABLE search_terms')
   db.run('DROP INDEX ix_people_byActivity')
@@ -377,6 +381,77 @@ describe.each(['IndexedDB', 'SQLite'])('%s v2 -> v3', engine => {
     })
     await expectDerivedTablesMatch(upgraded)
     await upgraded.close()
+  }, 120_000)
+})
+
+/* -------------------------------------------------------------------------- */
+/* v3 -> v4                                                                    */
+/* -------------------------------------------------------------------------- */
+
+/** The same for SQLite: drop the v4 table and stamp version 3. */
+function downgradeSqlToV3(path: string) {
+  const db = new Database(path)
+  db.run('DROP TABLE reminders')
+  db.run("UPDATE meta SET value = '3' WHERE key = 'schemaVersion'")
+  db.run('PRAGMA user_version = 3')
+  db.close()
+}
+
+describe.each(['IndexedDB', 'SQLite'])('%s v3 -> v4 (the reminders store)', engine => {
+  let smallDump: StoreDump
+  beforeAll(async () => {
+    smallDump = await smallSet()
+  })
+  const fixtures: Array<[string, () => StoreDump]> = [['a small set', () => smallDump], ['the large demo set', () => large]]
+
+  /** A v3 database holding `dump`: the current layout of the v1 fixture, with v4's store removed. */
+  async function v3Of(set: StoreDump) {
+    const handle = await open[engine]!('v3', set)
+    const current = await handle.store()
+    const before = await current.dump()
+    const balances = await current.balances()
+    const aggregates = await storedAggregates(current)
+    const terms = await storedTerms(current)
+    await current.close()
+    if (engine === 'IndexedDB') {
+      const factory = (handle as unknown as {factory: IDBFactory}).factory
+      const v3 = await downgradeIdb(factory, 'v3', 3)
+      return {before, balances, aggregates, terms, reopen: () => openIdbStore('v3', v3), version: async () => { const db = (await wrap(v3.open('v3'))) as IDBPDatabase; const v = db.version; db.close(); return v }, factory: v3}
+    }
+    const path = (handle as unknown as {path: string}).path
+    downgradeSqlToV3(path)
+    return {
+      before, balances, aggregates, terms, reopen: () => openSqlStore(bunExecutor(path)),
+      version: async () => { const db = new Database(path); const v = (db.query('PRAGMA user_version').get() as {user_version: number}).user_version; db.close(); return v },
+      factory: undefined,
+    }
+  }
+
+  test.each(fixtures)('%s: every row, history entry, op and balance survives; the store starts empty and works', async (_name, dump) => {
+    const v3 = await v3Of(dump())
+    expect(await v3.version()).toBe(3)
+    const store = await v3.reopen()
+    expect(await store.dump()).toEqual(v3.before)
+    expect(sorted(await store.balances())).toEqual(sorted(v3.balances))
+    expect(await storedAggregates(store)).toEqual(v3.aggregates)
+    expect(await storedTerms(store)).toEqual(v3.terms)
+    await expectDerivedTablesMatch(store)
+    expect(await store.getAll('reminder')).toEqual([])
+    expect((await store.syncCounts()).reminders).toEqual({local: 0, pending: 0, syncing: 0, synced: 0, failed: 0})
+    // New writes land in the new store and leave every other table exact.
+    const me = v3.before.entities.find(e => e.type === 'person' && (e.data as {isMe: boolean}).isMe)!.id
+    const friend = v3.before.entities.find(e => e.type === 'person' && !e.deleted && !(e.data as {isMe: boolean}).isMe)!.id
+    const ctx = {...makeCtx(), actor: me, newId: () => 'later-' + Math.random().toString(36).slice(2)}
+    const r = await scheduleReminder(store, ctx, {personId: friend, groupId: null, dueAt: Date.parse('2026-11-01T09:00:00Z'), repeat: 'weekly'})
+    expect((await store.getAll('reminder')).map(e => e.id)).toEqual([r.id])
+    expect((await store.page('reminder', {index: 'byDue', eq: ['self']})).items.map(e => e.id)).toEqual([r.id])
+    await expectDerivedTablesMatch(store)
+    await store.close()
+    expect(await v3.version()).toBe(SCHEMA_VERSION)
+    // Idempotent: a second open runs no step and keeps the reminder.
+    const again = await v3.reopen()
+    expect((await again.getAll('reminder')).map(e => e.id)).toEqual([r.id])
+    await again.close()
   }, 120_000)
 })
 
@@ -488,6 +563,28 @@ test('a v2-shaped SQLite file with a lost user_version is upgraded to v3, not st
     split: {mode: 'equal', participants: ['me', a.id]}, date: '2026-10-03', tz: 'UTC', category: 'food', notes: '',
   })
   await expectDerivedTablesMatch(second)
+  await second.close()
+  const check = new Database(path)
+  expect((check.query('PRAGMA user_version').get() as {user_version: number}).user_version).toBe(SCHEMA_VERSION)
+  check.close()
+})
+
+test('a v3-shaped SQLite file with a lost user_version still gets the reminders table', async () => {
+  const path = join(mkdtempSync(join(tmpdir(), 'splito-lost3-')), 'db.sqlite')
+  const first = await openSqlStore(bunExecutor(path))
+  const ctx = makeCtx()
+  await ensureMe(first, ctx, 'Me')
+  const a = await createPerson(first, ctx, {name: 'Asha'})
+  const before = await first.dump()
+  await first.close()
+  downgradeSqlToV3(path)
+  const raw = new Database(path)
+  raw.run('PRAGMA user_version = 0')
+  raw.close()
+  const second = await openSqlStore(bunExecutor(path))
+  expect((await second.dump()).entities).toEqual(before.entities)
+  await scheduleReminder(second, {...makeCtx(), newId: () => 'rem-1'}, {personId: a.id, groupId: null, dueAt: 1_800_000_000_000, repeat: 'none'})
+  expect(await second.getAll('reminder')).toHaveLength(1)
   await second.close()
   const check = new Database(path)
   expect((check.query('PRAGMA user_version').get() as {user_version: number}).user_version).toBe(SCHEMA_VERSION)

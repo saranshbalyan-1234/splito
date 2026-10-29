@@ -1,11 +1,16 @@
 import {View} from 'react-native'
 import Animated from 'react-native-reanimated'
 import {Trans, useLingui} from '@lingui/react/macro'
+import {type RouteProp, useRoute} from '@react-navigation/native'
 import {formatAmount, repaymentFlow, type Transfer, ZERO} from '@splito/domain'
 
+import {type AllNavigatorParams} from '#/lib/routes/types'
+import {RemindMenuItems} from '#/features/remind/RemindMenuItems'
 import {UserAvatar} from '#/view/com/util/UserAvatar'
 import {atoms as a, useTheme} from '#/alf'
-import {Button, ButtonText} from '#/components/Button'
+import {Button, ButtonIcon, ButtonText} from '#/components/Button'
+import {DotGrid3x1_Stroke2_Corner0_Rounded as DotsIcon} from '#/components/icons/DotGrid'
+import * as Menu from '#/components/Menu'
 import {ArrowRight_Stroke2_Corner0_Rounded as ArrowRightIcon} from '#/components/icons/Arrow'
 import {Text} from '#/components/Typography'
 import {moneyGlyph, useMoneyStyle} from '#/components/MoneyDirection'
@@ -39,6 +44,7 @@ export function TransferRow({
   const {t: l} = useLingui()
   const listAnimations = useListAnimations()
   const {from, to, amount} = transfer
+  const {groupId} = useRoute<RouteProp<AllNavigatorParams, 'Settle'>>().params
   const name = (id: string) => names.get(id) ?? l`Someone`
   const avatarName = (id: string) => (id === me ? meName : name(id))
   const isIncoming = to === me
@@ -100,6 +106,34 @@ export function TransferRow({
             : `${moneyGlyph(mine)}\u00a0${formatAmount(amount, currency, locale)}`}
         </Text>
       </View>
+      {(isIncoming || isOutgoing) && (
+        /* The row's overflow (Bluesky's pattern): Remind them when they pay me, Remind me either way (F-1118, F-1119). */
+        <Menu.Root>
+          <Menu.Trigger label={l`More options for ${sentence}`}>
+            {({props}) => (
+              <Button
+                {...props}
+                testID="transfer-more"
+                label={props.accessibilityLabel}
+                size="small"
+                color="secondary"
+                variant="ghost"
+                shape="round"
+                style={{marginRight: -4}}>
+                <ButtonIcon icon={DotsIcon} />
+              </Button>
+            )}
+          </Menu.Trigger>
+          <Menu.Outer>
+            <RemindMenuItems
+              personId={isIncoming ? from : to}
+              groupId={groupId}
+              owed={isIncoming ? {[currency]: amount} : {}}
+              isOpen
+            />
+          </Menu.Outer>
+        </Menu.Root>
+      )}
       <Button
         testID="transfer-record"
         label={l`Record this payment`}

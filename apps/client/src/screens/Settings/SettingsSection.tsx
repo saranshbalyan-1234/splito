@@ -114,8 +114,9 @@ function Section({group, title}: {group: PrefGroup; title: string}) {
       {group === 'notifications' && (
         <Notice>
           <Trans>
-            Notifications start once you sign in and turn on sync. Your choices
-            are saved now and apply from then.
+            Reminders you set with Remind me work now, on this device. New
+            expense, payment and invite notifications start once you sign in
+            and turn on sync; those choices are saved now and apply from then.
           </Trans>
         </Notice>
       )}

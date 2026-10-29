@@ -6,11 +6,12 @@
  * shared; an engine only reads its own v1 layout into `LegacyV1` and hands
  * over a `RowAccess` on the new layout.
  *
- * Steps: v1 -> v2 (per-type stores, members, parties, balances) and
+ * Steps: v1 -> v2 (per-type stores, members, parties, balances),
  * v2 -> v3 (the `aggregates` and `search_terms` projections and the people
  * activity column, all derived: rebuilt from the rows, so the step is
- * idempotent and loses nothing). A v1 database goes straight to the current
- * layout, v2 had shipped in this branch's builds, so it keeps its own step.
+ * idempotent and loses nothing) and v3 -> v4 (the `reminders` store, empty:
+ * nothing is derived and no row changes). A v1 database goes straight to the
+ * current layout, v2 had shipped in this branch's builds, so it keeps its own step.
  */
 import {decode} from './codec'
 import {type RowAccess} from './engine'
@@ -74,7 +75,16 @@ export async function migrateFromV1(legacy: LegacyV1, rows: RowAccess): Promise<
  */
 export async function migrateV2ToV3(rows: RowAccess): Promise<void> {
   await rebuildProjections(rows, async type => (await rows.range(ENTITY_STORE[type], {})).map(r => entityOfRow(type, r)))
-  await rows.put('meta', {key: 'schemaVersion', value: String(SCHEMA_VERSION)})
+  await rows.put('meta', {key: 'schemaVersion', value: '3'})
+}
+
+/**
+ * v3 -> v4: the empty `reminders` store exists (the engine made it); no other
+ * store, row or projection changes, so there is nothing to copy and the step
+ * only stamps the version. Running it again changes nothing.
+ */
+export async function migrateV3ToV4(rows: RowAccess): Promise<void> {
+  await rows.put('meta', {key: 'schemaVersion', value: '4'})
 }
 
 /** A freshly created database starts at the current version. */

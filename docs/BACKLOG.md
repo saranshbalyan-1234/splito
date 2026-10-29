@@ -233,6 +233,8 @@ Per-type stores, normalised relations, indexes for every query path, in-transact
 - **Sync status reading**: `history`, `meta`, `balances`, `pair_balances`, `aggregates` and `search_terms` carry no `syncStatus` by design: history is an append-only audit trail of rows that carry their own state, `meta` is local bookkeeping, and the last four are projections derived from rows (rebuilt, never sent), so they are exactly as synced as the rows behind them. Acceptance 7 means every store that holds data a user wrote (entity and relation stores).
 - **Measured at head** (web, Chrome, desktop 1440 px, median of 5; `pnpm perf schema-v2`): Home cold open 46 ms (large set, 1,566 expenses) / 46 ms (10,000); write + UI 16 / 16 ms; **Analytics open** (tab to figures, default year, busiest currency) 35 / 21 ms; **search keystroke to results** on the large set 43 / 40 / 16 ms ("udaipur", "netflix", "goa") and on 10,000 expenses 27 ms ("Bulk expense 9993", a narrow query), 27 ms ("perf write"), 68 ms ("> 90", about a thousand matches) and 484 ms ("Bulk Friend 4", about 2,500 matches: every match row loads, and the per-currency totals need them all). Budgets: Home < 150, write + UI < 50, Analytics < 150 and a narrow search < 50 are met; a search that matches thousands of rows is not (follow-up below). Migration v1 -> v3 of the large set: about 260 ms on IndexedDB (fake-indexeddb) and 140 ms on SQLite (bun).
 - **Integrated onto m1-foundation (2026-10-27, integrate/wA-35a)**: Wave A's feedback (F-215) lives in its own `feedback` store per § 9.8 (key `id`, `byUpdatedAt`, `bySyncStatus`; a row nothing sends is `local`, never `pending`) and is kept by both migrations (tests in `migrate.test`: v1 -> v3 and v2 -> v3, rows, tombstone with content stripped, syncCounts, still listed, new feedback after the upgrade); Search & Ask (F-222, F-115 day formatting) reads `searchStore`.
+
+- **Schema v4 (Wave B, B5)**: adds the `reminders` store (entity type `reminder`; columns `personId`, `groupId` ('' for none), `kind` nudge|self, `dueAt`, `repeat`; indexes `byPerson`, `byDue`, `bySyncStatus`). The v3 to v4 step creates the empty store and stamps the version on IndexedDB and SQLite; no other row changes (`migrate.test` loads a v3 fixture incl. the large demo set; `queryPlan.test` covers the new reads).
 - **Search pages (the § 9.8 / § 26.10 ruling)**: the query is parsed and each word's reach counted from the keys (its own words, its groups' and people's expenses, its category). A rare query (the rarest word reaches 150 expenses or fewer) reads its candidates by key and is complete after one read. A broad one walks the expenses newest first through `byDate`, 200 rows a step, checking every word on each row; the first page (30 expenses, same day ties by creation time; people and groups, which are few, come with it) is ready after the first chunk whatever the match count. "Show more" and scrolling read the next chunk by cursor. The count and per-currency totals of a broad match are worked out after the first paint by walking the rest, cancelled by the next keystroke ("Calculating totals…", then the values; a narrow query has them at once). This walk is the one deliberate full read of the money store, in the background; it is a method call of the session, not a loop over `store.page`. Tests: `search.test` (page equals the full answer, order across chunks, totals, cancellation, overlapping steps), e2e `search.spec`.
 - **Perf after paging** (web, Chrome, 1440 px, median of 5, `pnpm perf schema-v2`, idle machine): 10,000 expenses, first page: "Bulk expense 9993" 27 ms, "Bulk Friend 4" (about 2,500 matches) **19 ms** (was 484), "perf write" 26 ms, "> 90" (about 1,000 matches) **20 ms** (was 68); their totals fill in at 27 / 189 / 26 / 177 ms. Large set: "udaipur" 42, "netflix" 40, "goa" 25 ms. Home cold open 41 / 47 ms, write + UI 16 / 17 ms, Analytics open 34 / 16 ms. The perf spec asserts the 50 ms search budget on an unthrottled CPU.
 - **Coordinator's minors (2026-10-27)**: a v2-shaped SQLite file with `user_version` 0 is read by its layout and upgraded; upgrade errors name their cause; the property test randomises category, text, items and renames/deletes people and groups; `moneyFullRead` flags any unbounded money read (`full-read-ok:` markers replace whole-file allowlists); `demoStaticImport` catches side-effect imports and `require`; period cells read from `byDate` use the projection's own row guard (`cellsOfEntity`); a search finds an expense by exactly the words its keys carry.
@@ -2264,7 +2266,7 @@ From a person page, record one real transfer and split it into linked repayment 
 
 "Remind" on the Person page (header overflow), on each debtor row in group Balances and in the Settle plan: a friendly message with the amount per currency and the UPI / payment link, opened in the share sheet (WhatsApp, SMS, email). In-app delivery comes with F-2210.
 
-- **Effort** S · **Impact** 9 · **Backend** no · **Status** todo · **Deps** F-1103, F-207, F-208
+- **Effort** S · **Impact** 9 · **Backend** no · **Status** done (feat/wB-B5, 2026-10-27; `lib/remind/message.test`, `owed.test`, sync `reminders.test`, e2e `remind.spec` Person, group Balances and Settle plan; native share sheet not run on a device) · **Deps** F-1103, F-207, F-208
 - **Prefs** -
 - **Acceptance**
   1. "Remind" appears in the Person overflow, on each debtor row in group Balances and in the Settle plan, never for someone who owes nothing.
@@ -2276,7 +2278,7 @@ From a person page, record one real transfer and split it into linked repayment 
 
 "Remind me" next to Remind schedules a local notification for yourself about a balance (date and time, optional repeat). Nothing is sent to anyone.
 
-- **Effort** S · **Impact** 7 · **Backend** no · **Status** todo · **Deps** F-1118, F-1907
+- **Effort** S · **Impact** 7 · **Backend** no · **Status** done (feat/wB-B5, 2026-10-27; sync `reminders.test` incl. `nextOccurrence`, `lib/remind/when.test`, `lib/notifications/plan.test`, e2e `remind.spec` primer, list, edit, cancel, due while open; native scheduling not run on a device) · **Deps** F-1118, F-1907
 - **Prefs** -
 - **Acceptance**
   1. Picking a date and time and a repeat (none, daily, weekly, monthly) schedules a local notification that fires offline and opens the person or group.
@@ -3421,11 +3423,13 @@ Add expense, What does X owe me, Show group balance, Settle up with, Scan receip
 
 expo-notifications local scheduling for recurring due, settle nudges, digests and budgets; no server.
 
-- **Effort** M · **Impact** 7 · **Backend** no · **Status** todo · **Deps** -
+- **Effort** M · **Impact** 7 · **Backend** no · **Status** done (feat/wB-B5, 2026-10-27; `lib/notifications/plan.test`, e2e `remind.spec` Settings and due-while-open; OS scheduling in airplane mode needs a device run; web fires only while open, said in the UI) · **Deps** -
 - **Prefs** `notify.recurring`, `notify.reminders`, `notify.digest`
 - **Acceptance**
   1. Notifications fire in airplane mode.
   2. Each type has its own toggle.
+
+- **Built (Wave B, B5)**: `lib/notifications/` on expo-notifications: native arms OS notifications (date, daily, weekly, monthly triggers; a one-shot stands in when a repeat's first time is more than one period away and is swapped when Splito next opens), so they fire in airplane mode; the web build checks every 15 s while open, shows a toast (or a browser notification when the tab is hidden), and shows what came due while closed as a toast on the next open. Only `notify.reminders` has a Settings row; `notify.recurring` and `notify.digest` exist in the registry and are honoured by the module but have no row until recurring expenses (F-306) and the digest exist (a switch that changes nothing would be a placeholder). All three are device-scope. OS notification ids live in device storage, never synced.
 
 ### F-1908 Home-screen icon quick actions `spec v3`
 

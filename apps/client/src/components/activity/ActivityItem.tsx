@@ -46,7 +46,9 @@ import {
   FriendAddedBadge,
   FriendRemovedBadge,
   GroupBadge,
+  NudgeBadge,
   PaymentBadge,
+  ReminderSetBadge,
   RequestSentBadge,
   RestoredBadge,
   WriteOffBadge,
@@ -467,7 +469,7 @@ function useDescribe(
   open?: () => void
 } {
   const t = useTheme()
-  const {t: l} = useLingui()
+  const {t: l, i18n} = useLingui()
   const nameOf = (id: string) =>
     snapshot.people.get(id)?.data.name ?? l`Someone`
   const shownName = (id: string) => (id === me ? l`You` : nameOf(id))
@@ -888,6 +890,71 @@ function useDescribe(
           w.groupId
             ? navigation.push('Group', {groupId: w.groupId})
             : navigation.push('Person', {personId: other}),
+      }
+    }
+    case 'reminder': {
+      const r = event.data
+      const subject = <Strong>{r.personId ? nameOf(r.personId) : (groupName(r.groupId) ?? l`a group`)}</Strong>
+      const open = () =>
+        r.groupId
+          ? navigation.push('Group', {groupId: r.groupId})
+          : navigation.push('Person', {personId: r.personId})
+      if (event.kind === 'reminder.nudged') {
+        return {
+          avatarName: actorAvatar,
+          icon: NudgeBadge,
+          tone: 'neutral',
+          headline: (
+            <Trans>
+              {actor} reminded {subject}
+            </Trans>
+          ),
+          detail: (
+            <Detail>
+              {Object.entries(r.amounts)
+                .sort(([x], [y]) => (x < y ? -1 : 1))
+                .map(([currency, amount]) => money(amount, currency))
+                .join(' · ')}
+              {groupName(r.groupId) ? (
+                <>
+                  <Dot />
+                  {groupName(r.groupId)}
+                </>
+              ) : null}
+            </Detail>
+          ),
+          open,
+        }
+      }
+      return {
+        avatarName: actorAvatar,
+        icon: ReminderSetBadge,
+        tone: 'neutral',
+        headline: <Trans>Reminder set for {subject}</Trans>,
+        detail: (
+          <Detail>
+            {r.dueAt === null
+              ? ''
+              : i18n.date(new Date(r.dueAt), {
+                  // A reminder fires on the device clock, so it is shown in the device's own zone (not the Timezone preference).
+                  dateStyle: 'medium',
+                  timeStyle: 'short',
+                })}
+            {r.repeat === 'none' ? null : (
+              <>
+                <Dot />
+                {r.repeat === 'daily' ? (
+                  <Trans>Every day</Trans>
+                ) : r.repeat === 'weekly' ? (
+                  <Trans>Every week</Trans>
+                ) : (
+                  <Trans>Every month</Trans>
+                )}
+              </>
+            )}
+          </Detail>
+        ),
+        open,
       }
     }
   }
