@@ -1,11 +1,10 @@
-import {type ComponentProps} from 'react'
-import {View} from 'react-native'
+import {type ReactNode} from 'react'
+import {type StyleProp, View, type ViewStyle} from 'react-native'
 import Animated from 'react-native-reanimated'
 import {Trans, useLingui} from '@lingui/react/macro'
 import {formatAmount, magnitude, ZERO} from '@splito/domain'
 import {type Entity, type Repayment, type WriteOff} from '@splito/sync'
 
-import {HideRow} from '#/features/hidden/HideItem'
 import {Link} from '#/view/com/util/Link'
 import {PressableWithHover} from '#/view/com/util/PressableWithHover'
 import {atoms as a, useTheme} from '#/alf'
@@ -39,7 +38,6 @@ export function HistoryRow({
   onRepaymentPress,
   hideTopBorder = false,
   hide,
-  isHidden = false,
 }: {
   /** The first row under a month heading: the heading's rule already separates them. */
   hideTopBorder?: boolean
@@ -53,10 +51,14 @@ export function HistoryRow({
   /** The group's name, shown in a person's history. */
   groupName?: string | null
   locale: string
-  /** A deleted row's Hide / Unhide menu, drawn beside the row. Live rows have none. */
-  hide?: Omit<ComponentProps<typeof HideRow>, 'row' | 'style'>
-  /** Hidden by me and brought back by "Show hidden": says so. */
-  isHidden?: boolean
+  /*
+   * A deleted row's Hide / Unhide menu, drawn beside the row (supplied by the screen: components never import
+   * features). Live rows have none. `isHidden`: hidden by me and brought back by "Show hidden", so the row says so.
+   */
+  hide?: {
+    isHidden: boolean
+    wrap: (row: (onLongPress?: () => void) => ReactNode, style: StyleProp<ViewStyle>) => ReactNode
+  }
   /** Opens a payment's or a write-off's details (`kind` says which). */
   onRepaymentPress: (
     repayment: Entity<Repayment | WriteOff>,
@@ -187,7 +189,7 @@ export function HistoryRow({
         {isDeleted ? (
           <View style={[a.flex_row, a.align_center, a.gap_sm]}>
             <DeletedMeta testID={`history-${entry.entity.id}-deleted`} at={entry.entity.updatedAt} />
-            {isHidden ? (
+            {hide?.isHidden ? (
               <Text testID={`history-${entry.entity.id}-hidden`} style={[a.text_sm, a.leading_snug, t.atoms.text_contrast_medium]}>
                 {'· '}
                 <Trans>Hidden</Trans>
@@ -249,7 +251,7 @@ export function HistoryRow({
   return (
     <Animated.View {...listAnimations}>
       {hide ? (
-        <HideRow {...hide} style={!hideTopBorder && [a.border_t, t.atoms.border_contrast_low]} row={row} />
+        hide.wrap(row, !hideTopBorder && [a.border_t, t.atoms.border_contrast_low])
       ) : (
         row()
       )}

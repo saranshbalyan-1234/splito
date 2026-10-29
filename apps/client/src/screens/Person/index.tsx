@@ -502,7 +502,6 @@ export function PersonScreen() {
                 }
                 locale={locale}
                 hide={historyRowHide(item.entry, hidden, l`this record`)}
-                isHidden={hidden.has(item.entry.entity.id)}
                 onRepaymentPress={(r, kind) => {
                   setOpenRepayment(r)
                   setOpenKind(kind)

@@ -210,14 +210,14 @@ msgstr "हर एक {0} · {1}"
 #. placeholder {0}: name(w.to)
 #. placeholder {1}: name(from)
 #. placeholder {1}: name(w.from)
-#: src/components/people/HistoryRow.tsx:110
+#: src/components/people/HistoryRow.tsx:112
 #: src/components/people/PaymentDetailsDialog.tsx:107
 msgid "{0} forgave {1}"
 msgstr "{0} ने {1} का कर्ज़ माफ़ किया"
 
 #. placeholder {0}: name(to)
 #. placeholder {0}: name(w.to)
-#: src/components/people/HistoryRow.tsx:109
+#: src/components/people/HistoryRow.tsx:111
 #: src/components/people/PaymentDetailsDialog.tsx:106
 msgid "{0} forgave you"
 msgstr "{0} ने आपका कर्ज़ माफ़ किया"
@@ -319,20 +319,20 @@ msgstr "{0} ने भुगतान किया"
 #. placeholder {0}: name(r.from)
 #. placeholder {1}: name(r.to)
 #. placeholder {1}: name(to)
-#: src/components/people/HistoryRow.tsx:133
+#: src/components/people/HistoryRow.tsx:135
 #: src/components/people/PaymentDetailsDialog.tsx:112
 #: src/components/people/RecordPaymentDialog.tsx:157
 msgid "{0} paid {1}"
 msgstr "{0} ने {1} को भुगतान किया"
 
 #. placeholder {0}: firstName(payers[0]!)
-#: src/components/people/HistoryRow.tsx:92
+#: src/components/people/HistoryRow.tsx:94
 msgid "{0} paid {total}"
 msgstr "{0} ने {total} चुकाए"
 
 #. placeholder {0}: name(from)
 #. placeholder {0}: name(r.from)
-#: src/components/people/HistoryRow.tsx:132
+#: src/components/people/HistoryRow.tsx:134
 #: src/components/people/PaymentDetailsDialog.tsx:111
 #: src/components/people/RecordPaymentDialog.tsx:156
 msgid "{0} paid you"
@@ -344,7 +344,7 @@ msgid "{0} payments"
 msgstr "{0} भुगतान"
 
 #. placeholder {0}: item.payments
-#: src/screens/Group/index.tsx:825
+#: src/screens/Group/index.tsx:824
 msgid "{0} payments settle everyone up."
 msgstr "{0} भुगतानों से सबका हिसाब बराबर हो जाता है।"
 
@@ -370,7 +370,7 @@ msgid "{0} people paid"
 msgstr "{0} लोगों ने भुगतान किया"
 
 #. placeholder {0}: payers.length
-#: src/components/people/HistoryRow.tsx:89
+#: src/components/people/HistoryRow.tsx:91
 msgid "{0} people paid {total}"
 msgstr "{0} लोगों ने {total} चुकाए"
 
@@ -603,11 +603,11 @@ msgstr "{formatted} पहले"
 msgid "{friends, plural, one {# friend} other {# friends}}"
 msgstr "{friends, plural, one {# दोस्त} other {# दोस्त}}"
 
-#: src/screens/Group/index.tsx:750
+#: src/screens/Group/index.tsx:749
 msgid "{from} owes {to}"
 msgstr "{from} को {to} को देने हैं"
 
-#: src/screens/Group/index.tsx:749
+#: src/screens/Group/index.tsx:748
 msgid "{from} owes you"
 msgstr "{from} से आपको मिलने हैं"
 
@@ -784,7 +784,7 @@ msgstr "1 सदस्य जोड़ा गया"
 msgid "1 payment"
 msgstr "1 भुगतान"
 
-#: src/screens/Group/index.tsx:824
+#: src/screens/Group/index.tsx:823
 msgid "1 payment settles everyone up."
 msgstr "1 भुगतान से सबका हिसाब बराबर हो जाता है।"
 
@@ -994,8 +994,8 @@ msgstr "हर आइटम और किसने लिया, जोड़े
 #: src/navigation/Navigation.tsx:76
 #: src/screens/Group/index.tsx:536
 #: src/screens/Group/index.tsx:537
+#: src/screens/Person/index.tsx:533
 #: src/screens/Person/index.tsx:534
-#: src/screens/Person/index.tsx:535
 #: src/view/shell/desktop/LeftNav.tsx:400
 msgid "Add expense"
 msgstr "खर्च जोड़ें"
@@ -1039,8 +1039,8 @@ msgstr "सदस्य जोड़ें"
 #: src/components/groups/AddMembersDialog.tsx:113
 #: src/screens/Group/index.tsx:623
 #: src/screens/Group/index.tsx:626
-#: src/screens/Group/index.tsx:700
-#: src/screens/Group/index.tsx:706
+#: src/screens/Group/index.tsx:699
+#: src/screens/Group/index.tsx:705
 msgid "Add members"
 msgstr "सदस्य जोड़ें"
 
@@ -1272,7 +1272,7 @@ msgid "Appearance"
 msgstr "रूप-रंग"
 
 #: src/components/settings/AccentPicker.tsx:125
-#: src/features/hidden/ShowHidden.tsx:53
+#: src/features/hidden/ShowHidden.tsx:54
 #: src/screens/Analytics/components/RangeDialog.tsx:112
 #: src/screens/Analytics/components/ScopeDialog.tsx:108
 #: src/screens/Groups/components/GroupsFilterDialog.tsx:61
@@ -1391,7 +1391,7 @@ msgstr "दोनों ओर: आप एक-दूसरे का कर्�
 msgid "Bottom bar"
 msgstr "नीचे की पट्टी"
 
-#: src/features/hidden/ShowHidden.tsx:27
+#: src/features/hidden/ShowHidden.tsx:28
 msgid "Bring back what you hid from your lists. Only you ever see this choice."
 msgstr "अपनी सूचियों से छिपाई चीज़ें वापस लाएँ। यह चुनाव सिर्फ़ आपको दिखता है।"
 
@@ -1445,7 +1445,7 @@ msgstr "कैलकुलेटर"
 msgid "Call it even"
 msgstr "हिसाब बराबर करें"
 
-#: src/components/people/HistoryRow.tsx:111
+#: src/components/people/HistoryRow.tsx:113
 #: src/components/people/PaymentDetailsDialog.tsx:59
 msgid "Called it even"
 msgstr "हिसाब बराबर किया"
@@ -2256,12 +2256,12 @@ msgstr "ग्रुप बदलें"
 msgid "Edit profile"
 msgstr "प्रोफ़ाइल बदलें"
 
-#: src/screens/Group/index.tsx:799
+#: src/screens/Group/index.tsx:798
 #: src/screens/Settle/index.tsx:436
 msgid "Edit rules"
 msgstr "नियम बदलें"
 
-#: src/screens/Group/index.tsx:795
+#: src/screens/Group/index.tsx:794
 #: src/screens/Settle/index.tsx:427
 msgid "Edit who you settle with"
 msgstr "किसके साथ हिसाब चुकाएं, बदलें"
@@ -2535,7 +2535,7 @@ msgstr "फ़ीडबैक हटाया गया"
 msgid "Fewer shares"
 msgstr "कम हिस्से"
 
-#: src/features/hidden/ShowHidden.tsx:51
+#: src/features/hidden/ShowHidden.tsx:52
 #: src/screens/Group/index.tsx:495
 #: src/screens/Group/index.tsx:501
 #: src/screens/Person/components/HistoryFilterDialog.tsx:59
@@ -2780,7 +2780,7 @@ msgstr "मदद"
 msgid "Hex color"
 msgstr "हेक्स रंग"
 
-#: src/components/people/HistoryRow.tsx:193
+#: src/components/people/HistoryRow.tsx:195
 #: src/components/SearchAsk/ResultRows.tsx:365
 #: src/components/settings/CategoriesEditor.tsx:197
 #: src/screens/Groups/components/GroupRow.tsx:132
@@ -3003,7 +3003,7 @@ msgid "Invite link"
 msgstr "आमंत्रण लिंक"
 
 #: src/screens/AddFriend.tsx:529
-#: src/screens/Group/index.tsx:866
+#: src/screens/Group/index.tsx:865
 msgid "Invite link or QR code"
 msgstr "आमंत्रण लिंक या QR कोड"
 
@@ -3030,7 +3030,7 @@ msgid "Invite to {0}"
 msgstr "{0} में आमंत्रित करें"
 
 #: src/screens/AddFriend.tsx:522
-#: src/screens/Group/index.tsx:854
+#: src/screens/Group/index.tsx:853
 msgid "Invite with a link or QR code"
 msgstr "लिंक या QR कोड से आमंत्रित करें"
 
@@ -3300,7 +3300,7 @@ msgstr "माप"
 #: src/screens/Group/index.tsx:483
 #: src/screens/Group/index.tsx:614
 #: src/screens/Group/index.tsx:617
-#: src/screens/Group/index.tsx:694
+#: src/screens/Group/index.tsx:693
 msgid "Members"
 msgstr "सदस्य"
 
@@ -3528,7 +3528,7 @@ msgstr "{0} में कोई {currency} खर्च नहीं"
 msgid "No active invite links"
 msgstr "कोई सक्रिय आमंत्रण लिंक नहीं"
 
-#: src/components/people/HistoryRow.tsx:279
+#: src/components/people/HistoryRow.tsx:281
 msgid "no balance change"
 msgstr "बैलेंस नहीं बदला"
 
@@ -3545,7 +3545,7 @@ msgid "No currency matches “{query}”"
 msgstr "“{query}” से कोई मुद्रा नहीं मिली"
 
 #. placeholder {0}: person!.data.name
-#: src/screens/Person/index.tsx:529
+#: src/screens/Person/index.tsx:528
 msgid "No direct expenses with {0}. Group expenses are hidden by the filter."
 msgstr "{0} के साथ कोई सीधा खर्च नहीं। समूह के खर्च फ़िल्टर से छिपे हैं।"
 
@@ -3660,7 +3660,7 @@ msgid "Non-group only"
 msgstr "केवल बिना समूह"
 
 #: src/components/activity/ActivityItem.tsx:585
-#: src/components/people/HistoryRow.tsx:281
+#: src/components/people/HistoryRow.tsx:283
 msgid "not involved"
 msgstr "शामिल नहीं"
 
@@ -3723,7 +3723,7 @@ msgid "Nothing to settle. This group has no expenses yet."
 msgstr "चुकाने को कुछ नहीं। इस समूह में अभी कोई खर्च नहीं।"
 
 #. placeholder {0}: person!.data.name
-#: src/screens/Person/index.tsx:528
+#: src/screens/Person/index.tsx:527
 msgid "Nothing with {0} yet. Add an expense you shared and it shows up here."
 msgstr "{0} के साथ अभी कुछ नहीं। साझा खर्च जोड़ें, वह यहां दिखेगा।"
 
@@ -3806,7 +3806,7 @@ msgstr "यह केवल ग्रुप एडमिन कर सकता 
 msgid "Only allowed pairs"
 msgstr "सिर्फ़ अनुमति वाली जोड़ियाँ"
 
-#: src/screens/Person/index.tsx:625
+#: src/screens/Person/index.tsx:624
 msgid "Only friends with no expenses, payments or groups can be removed."
 msgstr "सिर्फ़ वे दोस्त हटाए जा सकते हैं जिनका कोई खर्च, भुगतान या समूह नहीं है।"
 
@@ -4020,7 +4020,7 @@ msgstr "पासवर्ड अपडेट हो गया!"
 msgid "Pay with UPI"
 msgstr "UPI से भुगतान करें"
 
-#: src/components/people/HistoryRow.tsx:134
+#: src/components/people/HistoryRow.tsx:136
 msgid "Payment"
 msgstr "भुगतान"
 
@@ -4288,13 +4288,13 @@ msgstr "आपकी खोजें याद रखें"
 
 #: src/features/feedback/FeedbackSheet.tsx:388
 #: src/screens/Group/components/MemberExitDialog.tsx:207
-#: src/screens/Person/index.tsx:626
+#: src/screens/Person/index.tsx:625
 #: src/screens/Settings/DemoData.tsx:192
 msgid "Remove"
 msgstr "हटाएं"
 
 #. placeholder {0}: person.data.name
-#: src/screens/Person/index.tsx:624
+#: src/screens/Person/index.tsx:623
 msgid "Remove {0}?"
 msgstr "{0} को हटाएं?"
 
@@ -4767,8 +4767,8 @@ msgstr "सेटिंग्स रीसेट हो गईं"
 #: src/components/settings/AboutSettings.tsx:97
 #: src/navigation/Navigation.tsx:75
 #: src/screens/Group/index.tsx:574
-#: src/screens/Group/index.tsx:829
-#: src/screens/Group/index.tsx:835
+#: src/screens/Group/index.tsx:828
+#: src/screens/Group/index.tsx:834
 #: src/screens/Person/index.tsx:422
 #: src/screens/Settle/index.tsx:136
 #: src/screens/Settle/index.tsx:282
@@ -4895,8 +4895,8 @@ msgstr "इनके खर्च दिखाएँ: {label}"
 msgid "Show group"
 msgstr "ग्रुप दिखाएँ"
 
-#: src/features/hidden/ShowHidden.tsx:21
-#: src/features/hidden/ShowHidden.tsx:24
+#: src/features/hidden/ShowHidden.tsx:22
+#: src/features/hidden/ShowHidden.tsx:25
 msgid "Show hidden"
 msgstr "छिपी हुई दिखाएँ"
 
@@ -4928,15 +4928,15 @@ msgstr "दिखाएँ"
 msgid "Shown on your expenses and payments."
 msgstr "आपके खर्चों और भुगतानों पर दिखता है।"
 
-#: src/components/people/HistoryRow.tsx:238
+#: src/components/people/HistoryRow.tsx:240
 msgid "Shows the deleted record and lets you restore it"
 msgstr "हटाया गया रिकॉर्ड दिखाता है और उसे वापस लाने देता है"
 
-#: src/components/people/HistoryRow.tsx:241
+#: src/components/people/HistoryRow.tsx:243
 msgid "Shows the payment and lets you delete it"
 msgstr "भुगतान दिखाता है और उसे हटाने देता है"
 
-#: src/components/people/HistoryRow.tsx:240
+#: src/components/people/HistoryRow.tsx:242
 msgid "Shows the write-off and lets you undo it"
 msgstr "माफ़ी दिखाता है और उसे वापस लेने देता है"
 
@@ -4982,7 +4982,7 @@ msgstr "कुछ"
 
 #: src/components/activity/ActivityItem.tsx:492
 #: src/components/groups/RulesEditor.tsx:219
-#: src/components/people/HistoryRow.tsx:74
+#: src/components/people/HistoryRow.tsx:76
 #: src/components/people/PaymentDetailsDialog.tsx:101
 #: src/components/people/RecordPaymentDialog.tsx:148
 #: src/components/SearchAsk/ResultRows.tsx:225
@@ -4990,10 +4990,10 @@ msgstr "कुछ"
 #: src/features/settlement/CallItEvenDialog.tsx:132
 #: src/screens/Analytics/useReport.ts:310
 #: src/screens/Group/components/MemberExitDialog.tsx:99
-#: src/screens/Group/index.tsx:681
-#: src/screens/Group/index.tsx:717
+#: src/screens/Group/index.tsx:680
+#: src/screens/Group/index.tsx:716
+#: src/screens/Group/index.tsx:739
 #: src/screens/Group/index.tsx:740
-#: src/screens/Group/index.tsx:741
 #: src/screens/Settle/components/TransferRow.tsx:42
 msgid "Someone"
 msgstr "कोई"
@@ -5862,7 +5862,7 @@ msgstr "इस रंग पर सफ़ेद टेक्स्ट पढ़�
 msgid "Who can send me friend requests"
 msgstr "मुझे दोस्ती के अनुरोध कौन भेज सकता है"
 
-#: src/screens/Group/index.tsx:736
+#: src/screens/Group/index.tsx:735
 msgid "Who owes whom"
 msgstr "किसे किसको देना है"
 
@@ -6011,7 +6011,7 @@ msgstr "आपको मिलेंगे <0>{figure}</0>"
 msgid "You are the only admin, so someone has to take over before you go."
 msgstr "आप अकेले एडमिन हैं, इसलिए जाने से पहले किसी को कमान संभालनी होगी।"
 
-#: src/components/people/HistoryRow.tsx:286
+#: src/components/people/HistoryRow.tsx:288
 msgid "you borrowed"
 msgstr "आपने उधार लिए"
 
@@ -6047,7 +6047,7 @@ msgstr "आपने अस्वीकार किया"
 
 #. placeholder {0}: name(from)
 #. placeholder {0}: name(w.from)
-#: src/components/people/HistoryRow.tsx:107
+#: src/components/people/HistoryRow.tsx:109
 #: src/components/people/PaymentDetailsDialog.tsx:104
 msgid "You forgave {0}"
 msgstr "आपने {0} का कर्ज़ माफ़ किया"
@@ -6076,7 +6076,7 @@ msgstr "आपने {groupName} छोड़ दिया"
 msgid "You left this group. Open balances stay until they are settled."
 msgstr "आपने यह ग्रुप छोड़ दिया है। खुले बैलेंस चुकता होने तक बने रहते हैं।"
 
-#: src/components/people/HistoryRow.tsx:284
+#: src/components/people/HistoryRow.tsx:286
 msgid "you lent"
 msgstr "आपने उधार दिए"
 
@@ -6120,7 +6120,7 @@ msgstr "आप पर {0} बकाया है"
 msgid "You owe {0}"
 msgstr "आपको देने हैं {0}"
 
-#: src/screens/Group/index.tsx:747
+#: src/screens/Group/index.tsx:746
 msgid "You owe {to}"
 msgstr "आपको {to} को देने हैं"
 
@@ -6146,13 +6146,13 @@ msgstr "आपने चुकाया"
 
 #. placeholder {0}: name(r.to)
 #. placeholder {0}: name(to)
-#: src/components/people/HistoryRow.tsx:130
+#: src/components/people/HistoryRow.tsx:132
 #: src/components/people/PaymentDetailsDialog.tsx:109
 #: src/components/people/RecordPaymentDialog.tsx:154
 msgid "You paid {0}"
 msgstr "आपने {0} को भुगतान किया"
 
-#: src/components/people/HistoryRow.tsx:91
+#: src/components/people/HistoryRow.tsx:93
 msgid "You paid {total}"
 msgstr "आपने {total} चुकाए"
 
@@ -6283,11 +6283,11 @@ msgid "Your payment rules give no allowed pair to pay anyone who is owed: {0}. T
 msgstr "आपके भुगतान नियमों में इनके लिए किसी बकायेदार को चुकाने की कोई अनुमत जोड़ी नहीं है: {0}। ये भुगतान फिर भी सबका हिसाब बराबर करते हैं।"
 
 #. placeholder {0}: item.currencies.join(', ')
-#: src/screens/Group/index.tsx:790
+#: src/screens/Group/index.tsx:789
 msgid "Your payment rules leave no way to settle up in {0}, so that plan goes outside them."
 msgstr "आपके भुगतान नियमों से {0} में हिसाब बराबर करने का कोई तरीका नहीं बचता, इसलिए वह योजना नियमों से बाहर जाती है।"
 
-#: src/screens/Group/index.tsx:789
+#: src/screens/Group/index.tsx:788
 msgid "Your payment rules leave no way to settle up, so this plan goes outside them."
 msgstr "आपके भुगतान नियमों से हिसाब बराबर करने का कोई तरीका नहीं बचता, इसलिए यह योजना नियमों से बाहर जाती है।"
 

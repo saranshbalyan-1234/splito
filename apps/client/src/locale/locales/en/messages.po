@@ -210,14 +210,14 @@ msgstr "{0} each · {1}"
 #. placeholder {0}: name(w.to)
 #. placeholder {1}: name(from)
 #. placeholder {1}: name(w.from)
-#: src/components/people/HistoryRow.tsx:110
+#: src/components/people/HistoryRow.tsx:112
 #: src/components/people/PaymentDetailsDialog.tsx:107
 msgid "{0} forgave {1}"
 msgstr "{0} forgave {1}"
 
 #. placeholder {0}: name(to)
 #. placeholder {0}: name(w.to)
-#: src/components/people/HistoryRow.tsx:109
+#: src/components/people/HistoryRow.tsx:111
 #: src/components/people/PaymentDetailsDialog.tsx:106
 msgid "{0} forgave you"
 msgstr "{0} forgave you"
@@ -319,20 +319,20 @@ msgstr "{0} paid"
 #. placeholder {0}: name(r.from)
 #. placeholder {1}: name(r.to)
 #. placeholder {1}: name(to)
-#: src/components/people/HistoryRow.tsx:133
+#: src/components/people/HistoryRow.tsx:135
 #: src/components/people/PaymentDetailsDialog.tsx:112
 #: src/components/people/RecordPaymentDialog.tsx:157
 msgid "{0} paid {1}"
 msgstr "{0} paid {1}"
 
 #. placeholder {0}: firstName(payers[0]!)
-#: src/components/people/HistoryRow.tsx:92
+#: src/components/people/HistoryRow.tsx:94
 msgid "{0} paid {total}"
 msgstr "{0} paid {total}"
 
 #. placeholder {0}: name(from)
 #. placeholder {0}: name(r.from)
-#: src/components/people/HistoryRow.tsx:132
+#: src/components/people/HistoryRow.tsx:134
 #: src/components/people/PaymentDetailsDialog.tsx:111
 #: src/components/people/RecordPaymentDialog.tsx:156
 msgid "{0} paid you"
@@ -344,7 +344,7 @@ msgid "{0} payments"
 msgstr "{0} payments"
 
 #. placeholder {0}: item.payments
-#: src/screens/Group/index.tsx:825
+#: src/screens/Group/index.tsx:824
 msgid "{0} payments settle everyone up."
 msgstr "{0} payments settle everyone up."
 
@@ -370,7 +370,7 @@ msgid "{0} people paid"
 msgstr "{0} people paid"
 
 #. placeholder {0}: payers.length
-#: src/components/people/HistoryRow.tsx:89
+#: src/components/people/HistoryRow.tsx:91
 msgid "{0} people paid {total}"
 msgstr "{0} people paid {total}"
 
@@ -603,11 +603,11 @@ msgstr "{formatted} ago"
 msgid "{friends, plural, one {# friend} other {# friends}}"
 msgstr "{friends, plural, one {# friend} other {# friends}}"
 
-#: src/screens/Group/index.tsx:750
+#: src/screens/Group/index.tsx:749
 msgid "{from} owes {to}"
 msgstr "{from} owes {to}"
 
-#: src/screens/Group/index.tsx:749
+#: src/screens/Group/index.tsx:748
 msgid "{from} owes you"
 msgstr "{from} owes you"
 
@@ -784,7 +784,7 @@ msgstr "1 member added"
 msgid "1 payment"
 msgstr "1 payment"
 
-#: src/screens/Group/index.tsx:824
+#: src/screens/Group/index.tsx:823
 msgid "1 payment settles everyone up."
 msgstr "1 payment settles everyone up."
 
@@ -994,8 +994,8 @@ msgstr "Add each item and who had it. Tap a name again for another portion; righ
 #: src/navigation/Navigation.tsx:76
 #: src/screens/Group/index.tsx:536
 #: src/screens/Group/index.tsx:537
+#: src/screens/Person/index.tsx:533
 #: src/screens/Person/index.tsx:534
-#: src/screens/Person/index.tsx:535
 #: src/view/shell/desktop/LeftNav.tsx:400
 msgid "Add expense"
 msgstr "Add expense"
@@ -1039,8 +1039,8 @@ msgstr "Add member"
 #: src/components/groups/AddMembersDialog.tsx:113
 #: src/screens/Group/index.tsx:623
 #: src/screens/Group/index.tsx:626
-#: src/screens/Group/index.tsx:700
-#: src/screens/Group/index.tsx:706
+#: src/screens/Group/index.tsx:699
+#: src/screens/Group/index.tsx:705
 msgid "Add members"
 msgstr "Add members"
 
@@ -1272,7 +1272,7 @@ msgid "Appearance"
 msgstr "Appearance"
 
 #: src/components/settings/AccentPicker.tsx:125
-#: src/features/hidden/ShowHidden.tsx:53
+#: src/features/hidden/ShowHidden.tsx:54
 #: src/screens/Analytics/components/RangeDialog.tsx:112
 #: src/screens/Analytics/components/ScopeDialog.tsx:108
 #: src/screens/Groups/components/GroupsFilterDialog.tsx:61
@@ -1391,7 +1391,7 @@ msgstr "Both ways: each of you lets the other off, and you’ll be even in {curr
 msgid "Bottom bar"
 msgstr "Bottom bar"
 
-#: src/features/hidden/ShowHidden.tsx:27
+#: src/features/hidden/ShowHidden.tsx:28
 msgid "Bring back what you hid from your lists. Only you ever see this choice."
 msgstr "Bring back what you hid from your lists. Only you ever see this choice."
 
@@ -1445,7 +1445,7 @@ msgstr "Calculator"
 msgid "Call it even"
 msgstr "Call it even"
 
-#: src/components/people/HistoryRow.tsx:111
+#: src/components/people/HistoryRow.tsx:113
 #: src/components/people/PaymentDetailsDialog.tsx:59
 msgid "Called it even"
 msgstr "Called it even"
@@ -2256,12 +2256,12 @@ msgstr "Edit group"
 msgid "Edit profile"
 msgstr "Edit profile"
 
-#: src/screens/Group/index.tsx:799
+#: src/screens/Group/index.tsx:798
 #: src/screens/Settle/index.tsx:436
 msgid "Edit rules"
 msgstr "Edit rules"
 
-#: src/screens/Group/index.tsx:795
+#: src/screens/Group/index.tsx:794
 #: src/screens/Settle/index.tsx:427
 msgid "Edit who you settle with"
 msgstr "Edit who you settle with"
@@ -2535,7 +2535,7 @@ msgstr "Feedback deleted"
 msgid "Fewer shares"
 msgstr "Fewer shares"
 
-#: src/features/hidden/ShowHidden.tsx:51
+#: src/features/hidden/ShowHidden.tsx:52
 #: src/screens/Group/index.tsx:495
 #: src/screens/Group/index.tsx:501
 #: src/screens/Person/components/HistoryFilterDialog.tsx:59
@@ -2780,7 +2780,7 @@ msgstr "Help"
 msgid "Hex color"
 msgstr "Hex color"
 
-#: src/components/people/HistoryRow.tsx:193
+#: src/components/people/HistoryRow.tsx:195
 #: src/components/SearchAsk/ResultRows.tsx:365
 #: src/components/settings/CategoriesEditor.tsx:197
 #: src/screens/Groups/components/GroupRow.tsx:132
@@ -3003,7 +3003,7 @@ msgid "Invite link"
 msgstr "Invite link"
 
 #: src/screens/AddFriend.tsx:529
-#: src/screens/Group/index.tsx:866
+#: src/screens/Group/index.tsx:865
 msgid "Invite link or QR code"
 msgstr "Invite link or QR code"
 
@@ -3030,7 +3030,7 @@ msgid "Invite to {0}"
 msgstr "Invite to {0}"
 
 #: src/screens/AddFriend.tsx:522
-#: src/screens/Group/index.tsx:854
+#: src/screens/Group/index.tsx:853
 msgid "Invite with a link or QR code"
 msgstr "Invite with a link or QR code"
 
@@ -3300,7 +3300,7 @@ msgstr "Measure"
 #: src/screens/Group/index.tsx:483
 #: src/screens/Group/index.tsx:614
 #: src/screens/Group/index.tsx:617
-#: src/screens/Group/index.tsx:694
+#: src/screens/Group/index.tsx:693
 msgid "Members"
 msgstr "Members"
 
@@ -3528,7 +3528,7 @@ msgstr "No {currency} expenses in {0}"
 msgid "No active invite links"
 msgstr "No active invite links"
 
-#: src/components/people/HistoryRow.tsx:279
+#: src/components/people/HistoryRow.tsx:281
 msgid "no balance change"
 msgstr "no balance change"
 
@@ -3545,7 +3545,7 @@ msgid "No currency matches “{query}”"
 msgstr "No currency matches “{query}”"
 
 #. placeholder {0}: person!.data.name
-#: src/screens/Person/index.tsx:529
+#: src/screens/Person/index.tsx:528
 msgid "No direct expenses with {0}. Group expenses are hidden by the filter."
 msgstr "No direct expenses with {0}. Group expenses are hidden by the filter."
 
@@ -3660,7 +3660,7 @@ msgid "Non-group only"
 msgstr "Non-group only"
 
 #: src/components/activity/ActivityItem.tsx:585
-#: src/components/people/HistoryRow.tsx:281
+#: src/components/people/HistoryRow.tsx:283
 msgid "not involved"
 msgstr "not involved"
 
@@ -3723,7 +3723,7 @@ msgid "Nothing to settle. This group has no expenses yet."
 msgstr "Nothing to settle. This group has no expenses yet."
 
 #. placeholder {0}: person!.data.name
-#: src/screens/Person/index.tsx:528
+#: src/screens/Person/index.tsx:527
 msgid "Nothing with {0} yet. Add an expense you shared and it shows up here."
 msgstr "Nothing with {0} yet. Add an expense you shared and it shows up here."
 
@@ -3806,7 +3806,7 @@ msgstr "Only a group admin can do that."
 msgid "Only allowed pairs"
 msgstr "Only allowed pairs"
 
-#: src/screens/Person/index.tsx:625
+#: src/screens/Person/index.tsx:624
 msgid "Only friends with no expenses, payments or groups can be removed."
 msgstr "Only friends with no expenses, payments or groups can be removed."
 
@@ -4020,7 +4020,7 @@ msgstr "Password updated!"
 msgid "Pay with UPI"
 msgstr "Pay with UPI"
 
-#: src/components/people/HistoryRow.tsx:134
+#: src/components/people/HistoryRow.tsx:136
 msgid "Payment"
 msgstr "Payment"
 
@@ -4288,13 +4288,13 @@ msgstr "Remember what you search for"
 
 #: src/features/feedback/FeedbackSheet.tsx:388
 #: src/screens/Group/components/MemberExitDialog.tsx:207
-#: src/screens/Person/index.tsx:626
+#: src/screens/Person/index.tsx:625
 #: src/screens/Settings/DemoData.tsx:192
 msgid "Remove"
 msgstr "Remove"
 
 #. placeholder {0}: person.data.name
-#: src/screens/Person/index.tsx:624
+#: src/screens/Person/index.tsx:623
 msgid "Remove {0}?"
 msgstr "Remove {0}?"
 
@@ -4767,8 +4767,8 @@ msgstr "Settings reset"
 #: src/components/settings/AboutSettings.tsx:97
 #: src/navigation/Navigation.tsx:75
 #: src/screens/Group/index.tsx:574
-#: src/screens/Group/index.tsx:829
-#: src/screens/Group/index.tsx:835
+#: src/screens/Group/index.tsx:828
+#: src/screens/Group/index.tsx:834
 #: src/screens/Person/index.tsx:422
 #: src/screens/Settle/index.tsx:136
 #: src/screens/Settle/index.tsx:282
@@ -4895,8 +4895,8 @@ msgstr "Show expenses from: {label}"
 msgid "Show group"
 msgstr "Show group"
 
-#: src/features/hidden/ShowHidden.tsx:21
-#: src/features/hidden/ShowHidden.tsx:24
+#: src/features/hidden/ShowHidden.tsx:22
+#: src/features/hidden/ShowHidden.tsx:25
 msgid "Show hidden"
 msgstr "Show hidden"
 
@@ -4928,15 +4928,15 @@ msgstr "Show them"
 msgid "Shown on your expenses and payments."
 msgstr "Shown on your expenses and payments."
 
-#: src/components/people/HistoryRow.tsx:238
+#: src/components/people/HistoryRow.tsx:240
 msgid "Shows the deleted record and lets you restore it"
 msgstr "Shows the deleted record and lets you restore it"
 
-#: src/components/people/HistoryRow.tsx:241
+#: src/components/people/HistoryRow.tsx:243
 msgid "Shows the payment and lets you delete it"
 msgstr "Shows the payment and lets you delete it"
 
-#: src/components/people/HistoryRow.tsx:240
+#: src/components/people/HistoryRow.tsx:242
 msgid "Shows the write-off and lets you undo it"
 msgstr "Shows the write-off and lets you undo it"
 
@@ -4982,7 +4982,7 @@ msgstr "Some"
 
 #: src/components/activity/ActivityItem.tsx:492
 #: src/components/groups/RulesEditor.tsx:219
-#: src/components/people/HistoryRow.tsx:74
+#: src/components/people/HistoryRow.tsx:76
 #: src/components/people/PaymentDetailsDialog.tsx:101
 #: src/components/people/RecordPaymentDialog.tsx:148
 #: src/components/SearchAsk/ResultRows.tsx:225
@@ -4990,10 +4990,10 @@ msgstr "Some"
 #: src/features/settlement/CallItEvenDialog.tsx:132
 #: src/screens/Analytics/useReport.ts:310
 #: src/screens/Group/components/MemberExitDialog.tsx:99
-#: src/screens/Group/index.tsx:681
-#: src/screens/Group/index.tsx:717
+#: src/screens/Group/index.tsx:680
+#: src/screens/Group/index.tsx:716
+#: src/screens/Group/index.tsx:739
 #: src/screens/Group/index.tsx:740
-#: src/screens/Group/index.tsx:741
 #: src/screens/Settle/components/TransferRow.tsx:42
 msgid "Someone"
 msgstr "Someone"
@@ -5862,7 +5862,7 @@ msgstr "White text is hard to read on this color. A darker shade works better."
 msgid "Who can send me friend requests"
 msgstr "Who can send me friend requests"
 
-#: src/screens/Group/index.tsx:736
+#: src/screens/Group/index.tsx:735
 msgid "Who owes whom"
 msgstr "Who owes whom"
 
@@ -6011,7 +6011,7 @@ msgstr "you are owed <0>{figure}</0>"
 msgid "You are the only admin, so someone has to take over before you go."
 msgstr "You are the only admin, so someone has to take over before you go."
 
-#: src/components/people/HistoryRow.tsx:286
+#: src/components/people/HistoryRow.tsx:288
 msgid "you borrowed"
 msgstr "you borrowed"
 
@@ -6047,7 +6047,7 @@ msgstr "You declined"
 
 #. placeholder {0}: name(from)
 #. placeholder {0}: name(w.from)
-#: src/components/people/HistoryRow.tsx:107
+#: src/components/people/HistoryRow.tsx:109
 #: src/components/people/PaymentDetailsDialog.tsx:104
 msgid "You forgave {0}"
 msgstr "You forgave {0}"
@@ -6076,7 +6076,7 @@ msgstr "You left {groupName}"
 msgid "You left this group. Open balances stay until they are settled."
 msgstr "You left this group. Open balances stay until they are settled."
 
-#: src/components/people/HistoryRow.tsx:284
+#: src/components/people/HistoryRow.tsx:286
 msgid "you lent"
 msgstr "you lent"
 
@@ -6120,7 +6120,7 @@ msgstr "you owe {0}"
 msgid "You owe {0}"
 msgstr "You owe {0}"
 
-#: src/screens/Group/index.tsx:747
+#: src/screens/Group/index.tsx:746
 msgid "You owe {to}"
 msgstr "You owe {to}"
 
@@ -6146,13 +6146,13 @@ msgstr "You paid"
 
 #. placeholder {0}: name(r.to)
 #. placeholder {0}: name(to)
-#: src/components/people/HistoryRow.tsx:130
+#: src/components/people/HistoryRow.tsx:132
 #: src/components/people/PaymentDetailsDialog.tsx:109
 #: src/components/people/RecordPaymentDialog.tsx:154
 msgid "You paid {0}"
 msgstr "You paid {0}"
 
-#: src/components/people/HistoryRow.tsx:91
+#: src/components/people/HistoryRow.tsx:93
 msgid "You paid {total}"
 msgstr "You paid {total}"
 
@@ -6283,11 +6283,11 @@ msgid "Your payment rules give no allowed pair to pay anyone who is owed: {0}. T
 msgstr "Your payment rules give no allowed pair to pay anyone who is owed: {0}. These payments still settle everyone up."
 
 #. placeholder {0}: item.currencies.join(', ')
-#: src/screens/Group/index.tsx:790
+#: src/screens/Group/index.tsx:789
 msgid "Your payment rules leave no way to settle up in {0}, so that plan goes outside them."
 msgstr "Your payment rules leave no way to settle up in {0}, so that plan goes outside them."
 
-#: src/screens/Group/index.tsx:789
+#: src/screens/Group/index.tsx:788
 msgid "Your payment rules leave no way to settle up, so this plan goes outside them."
 msgstr "Your payment rules leave no way to settle up, so this plan goes outside them."
 

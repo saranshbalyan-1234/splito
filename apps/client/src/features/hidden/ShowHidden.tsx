@@ -1,4 +1,4 @@
-import {useMemo, useState} from 'react'
+import {type ComponentProps, useMemo, useState} from 'react'
 import {View} from 'react-native'
 import {Trans, useLingui} from '@lingui/react/macro'
 
@@ -7,6 +7,7 @@ import {atoms as a, useTheme} from '#/alf'
 import * as Dialog from '#/components/Dialog'
 import * as Toggle from '#/components/forms/Toggle'
 import * as FormSheet from '#/components/FormSheet'
+import {HideRow} from '#/features/hidden/HideItem'
 import {type HistoryEntry} from '#/components/people/ledger'
 import {Text} from '#/components/Typography'
 
@@ -69,13 +70,22 @@ export function useVisibleEntries(entries: HistoryEntry[]) {
   return {visible, hidden, showHidden}
 }
 
-/** Hide / Unhide props of a deleted history row; live rows have none. */
+/** Hide / Unhide of a deleted history row, for `HistoryRow`'s `hide` prop; live rows have none. */
 export function historyRowHide(entry: HistoryEntry, hidden: ReadonlySet<string>, fallbackName: string) {
   if (!entry.entity.deleted) return undefined
+  const isHidden = hidden.has(entry.entity.id)
+  const name = entry.kind === 'expense' ? entry.entity.data.title : fallbackName
   return {
-    testID: `history-${entry.entity.id}-more`,
-    target: {type: entry.kind, id: entry.entity.id},
-    isHidden: hidden.has(entry.entity.id),
-    name: entry.kind === 'expense' ? entry.entity.data.title : fallbackName,
+    isHidden,
+    wrap: (row: ComponentProps<typeof HideRow>['row'], style: ComponentProps<typeof HideRow>['style']) => (
+      <HideRow
+        testID={`history-${entry.entity.id}-more`}
+        target={{type: entry.kind, id: entry.entity.id}}
+        isHidden={isHidden}
+        name={name}
+        style={style}
+        row={row}
+      />
+    ),
   }
 }
