@@ -81,7 +81,7 @@ async function seedSettledEuro(page: Page) {
   })
 }
 
-test('m3: a currency settled with a friend stays on offer and filters under Settled', async ({
+test('m3: a currency settled with a friend stays on offer and filters (Show settled lists them)', async ({
   page,
 }) => {
   await ready(page)
@@ -90,7 +90,7 @@ test('m3: a currency settled with a friend stays on offer and filters under Sett
   await expect(page.getByTestId('person-Bob Mehta')).toBeVisible()
   await page.getByTestId('screen-people').getByTestId('list-filters').click()
   await page.getByTestId('filter-currency-EUR').click()
-  await page.getByTestId('filter-show-settled').click()
+  await page.getByTestId('filter-settled-toggle').click()
   await page.getByTestId('sheet-save').click()
   await expect(page.getByTestId('person-Bob Mehta')).toBeVisible()
   // Open in rupees, but the filter asked for euros and euros are square.
@@ -107,7 +107,7 @@ test('m3: a currency settled in a group stays filterable on Groups', async ({
   const groups = page.getByTestId('screen-groups')
   await groups.getByTestId('list-filters').click()
   await page.getByTestId('filter-currency-EUR').click()
-  await page.getByTestId('filter-show-settled').click()
+  await page.getByTestId('filter-settled-toggle').click()
   await page.getByTestId('sheet-save').click()
   await expect(groups.getByTestId('group-Lisbon')).toBeVisible()
 })

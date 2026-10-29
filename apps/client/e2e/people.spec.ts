@@ -248,16 +248,16 @@ test('People filters: one currency, which way, and the order drive the list and 
 
   // Cancel leaves the applied filters alone; nobody matching shows a way back.
   await people.getByTestId('list-filters').click()
-  await page.getByTestId('filter-show-settled').click()
+  await page.getByTestId('filter-show-owesYou').click()
   // A changed sheet asks before it drops the change.
   await page.getByTestId('sheet-cancel').click()
   await expect(page.getByText('Discard changes?')).toBeVisible()
   await page.getByTestId('confirmBtn').click()
   await expect(people.getByTestId('person-Sam Carter')).toBeVisible()
   await people.getByTestId('list-filters').click()
-  await page.getByTestId('filter-show-settled').click()
+  await page.getByTestId('filter-show-owesYou').click()
   await page.getByTestId('sheet-save').click()
-  // Settled in euros: Sam, who still owes euros, is gone; friends square in euros stay filterable (F-112 m3).
+  // Owed to me in euros: Sam, whom I owe, is gone (F-112 m3: friends square in euros stay filterable through Show settled).
   await expect(people.getByTestId('person-Sam Carter')).toHaveCount(0)
   // A currency and direction nobody matches shows the way back.
   const [emptyCurrency, emptyShow] = emptyFilter()

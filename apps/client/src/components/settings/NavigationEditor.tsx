@@ -119,8 +119,8 @@ export function NavigationEditor() {
     <PrefSection
       pref={pref}
       icon={TabsIcon}
-      title={l`Navigation`}
-      description={l`Choose the items and their order. They make the bottom bar on phones and the sidebar on bigger screens: as many as you like, with Home first. Everything else sits under More, and in the menu behind your avatar on phones. Reset restores the default everywhere.`}>
+      title={l`Items`}
+      description={l`On items make the bottom bar and sidebar; the rest sit under More.`}>
       <View
         style={[
           a.w_full,
@@ -260,14 +260,14 @@ function TabRow({
         </>
       )}
       <Toggle.Item
-        type="checkbox"
+        type="switch"
         testID={`tabs-toggle-${row.tab}`}
         name={row.tab}
         label={row.isVisible ? l`Hide ${label}` : l`Show ${label}`}
         value={row.isVisible}
         disabled={isLocked}
         onChange={onToggle}>
-        <Toggle.Platform />
+        <Toggle.Switch />
       </Toggle.Item>
     </View>
   )

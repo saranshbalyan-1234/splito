@@ -269,14 +269,26 @@ export function PeopleScreen() {
                   message={l`No matches for “${query.trim()}”`}
                 />
               ) : friends.length > 0 ? (
+                filtered.length > 0 && !showSettled ? (
+                  /* Everything that matches is settled up: one button brings it back (it sets the preference). */
+                  <EmptyState
+                    testID="people-all-settled"
+                    icon={null}
+                    message={l`All settled up`}
+                    button={{
+                      testID: 'people-show-settled',
+                      label: l`Show settled`,
+                      text: l`Show settled`,
+                      onPress: () => void setShowSettled(true),
+                      size: 'small',
+                      color: 'secondary',
+                    }}
+                  />
+                ) : (
                 <EmptyState
                   testID="people-filtered-empty"
                   icon={null}
-                  message={
-                    filtered.length > 0
-                      ? l`Everyone is settled up. Turn on Show settled in Filters to list them.`
-                      : l`No friends match these filters.`
-                  }
+                  message={l`No friends match these filters.`}
                   button={{
                     testID: 'people-clear-filters',
                     label: l`Clear filters`,
@@ -285,11 +297,14 @@ export function PeopleScreen() {
                       setApplied(null)
                       void setSortDefault('amount')
                       void setIncludeDefault(true)
+                      void setShowSettled(false)
+                      void setShowHidden(false)
                     },
                     size: 'small',
                     color: 'secondary',
                   }}
                 />
+                )
               ) : (
                 <EmptyState
                   testID="people-empty"
