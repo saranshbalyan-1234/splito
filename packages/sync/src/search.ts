@@ -1,6 +1,6 @@
 import {addDays, type CurrencyCode, DomainError, type LocalDate, numberReadings, parseAmount, sumByCurrency} from '@splito/domain'
 
-import {type Expense, type Group, type Person} from './mutations'
+import {displayPerson, type Expense, type Group, type Person} from './mutations'
 import {type Key} from './schema'
 import {amountBounds, amountTerm, fold, type SearchTerm, WORD, wordsOf} from './searchTerms'
 import {type Page, type Store} from './store'
@@ -399,7 +399,7 @@ export async function openSearch(store: Store, query: string, {today, mark = '.'
     x.data.date === y.data.date ? y.createdAt - x.createdAt || (x.id < y.id ? -1 : 1) : x.data.date < y.data.date ? 1 : -1
 
   const base = {
-    people: await named<Person>('person', p => !p.data.isMe),
+    people: (await named<Person>('person', p => !p.data.isMe)).map(displayPerson),
     groups: await named<Group>('group', () => true),
     terms: tokens.flatMap(t => ('text' in t ? [t.text] : [])),
   }

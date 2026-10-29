@@ -2,11 +2,13 @@ import {
   ACTIVITY_PAGE,
   type ActivityState,
   activityTracker,
+  displayPerson,
   type Entity,
   type EntityType,
   type HistoryRow,
   MONEY_TYPES,
   mergeChanges,
+  type Person,
   type Store,
   type StoreChange,
   touches,
@@ -130,6 +132,9 @@ export function projectionFor<T>(store: Store, query: Query<T>): Projection<T> {
 /* Queries                                                                    */
 /* -------------------------------------------------------------------------- */
 
+/** Person names are capitalised word by word on display (owner 181), so rows saved lower-case read right. Every screen reads people through these queries. */
+const shown = <T>(type: EntityType, e: Entity<T>): Entity<T> => (type === 'person' ? (displayPerson(e as unknown as Entity<Person>) as unknown as Entity<T>) : e)
+
 /* The sync status counts: an acknowledgement changes only that, and the row must redraw at full strength (decision 111). */
 const isSameRow = (a: Entity, b: Entity) =>
   a.id === b.id && a.version === b.version && a.deleted === b.deleted && a.updatedAt === b.updatedAt && a.syncStatus === b.syncStatus
@@ -166,7 +171,7 @@ export function entitiesQuery<T>(type: EntityType): Query<Entity<T>[]> {
     q = {
       key: `entities:${type}`,
       isTouchedBy: change => touches(change, type),
-      loader: store => async (_change, prev) => shareRows(prev, await store.getAll(type)),
+      loader: store => async (_change, prev) => shareRows(prev, (await store.getAll<T>(type)).map(e => shown(type, e))),
     }
     entityQueries.set(type, q)
   }
@@ -184,7 +189,8 @@ export function entityQuery<T>(type: EntityType, id: string): Query<Entity<T> | 
       key,
       isTouchedBy: change => touches(change, type, id),
       loader: store => async (_change, prev) => {
-        const next = (await store.get(type, id)) ?? null
+        const row = await store.get(type, id)
+        const next = row ? shown(type, row) : null
         return prev && next && isSameRow(prev, next) ? prev : next
       },
     }
