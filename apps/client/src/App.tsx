@@ -1,5 +1,6 @@
 import {KeyboardProvider as KeyboardControllerProvider} from 'react-native-keyboard-controller'
 import {SafeAreaProvider} from 'react-native-safe-area-context'
+import {BottomSheetOutlet, BottomSheetProvider} from '@bsky.app/bottom-sheet'
 import {I18nProvider} from '@lingui/react'
 
 import {i18n} from '#/locale/i18n'
@@ -37,8 +38,12 @@ function Themed() {
               <LocaleFromPrefs />
               <PrefsMirror />
               <PwaHost />
-              <RemindHost />
-              <LinkHost />
+              {/* RemindHost and LinkHost sit above the Shell, outside its BottomSheetProvider: their sheets need a portal of their own on native. */}
+              <BottomSheetProvider>
+                <RemindHost />
+                <LinkHost />
+                <BottomSheetOutlet />
+              </BottomSheetProvider>
               <Shell />
               <ToastOutlet />
             </StoreProvider>

@@ -54,7 +54,7 @@ import {
 import {RequestsSection} from './components/RequestsSection'
 import {SectionHeader} from './components/SectionHeader'
 import {peopleParams, readPeopleParams} from './urlState'
-import {filterFriends, hideSettled, listedFriends, seenByPerson, sortFriends} from './sort'
+import {filterFriends, listedFriends, searchFriends, seenByPerson, sortFriends} from './sort'
 
 const PLACEHOLDER_ROWS = 6
 
@@ -147,10 +147,7 @@ export function PeopleScreen() {
    * Settled up friends leave the list only (owner 90, 112): the figures and the counts below still cover them,
    * and a search still finds them.
    */
-  const q = query.trim().toLocaleLowerCase()
-  const listed = q
-    ? filtered.filter(row => row.name.toLocaleLowerCase().includes(q))
-    : hideSettled(filtered, filters, seenCurrencies)
+  const {listed, count: listedCount, total: searchTotal} = searchFriends(filtered, query, filters, seenCurrencies)
   /* The summary follows the filters too, so its figures always match the list. */
   const totals = balanceTotals(
     rows.flatMap(row => (row.summary ? [row.summary] : [])),
@@ -241,8 +238,9 @@ export function PeopleScreen() {
                   <ListToolsHeader
                     title={l`Friends`}
                     titleTestID="people-friends-title"
-                    count={listed.filter(row => row.deletedAt === undefined).length}
-                    total={rows.length}
+                    count={listedCount}
+                    /* "N of M": M is what the search runs over (settled friends included), so N never exceeds it. */
+                    total={searchTotal}
                     query={query}
                     onQueryChange={setQuery}
                     searchLabel={l`Search friends`}
@@ -268,7 +266,7 @@ export function PeopleScreen() {
               )
             }
             ListEmptyComponent={
-              friends.length > 0 && q ? (
+              friends.length > 0 && query.trim() ? (
                 <EmptyState
                   testID="people-search-empty"
                   icon={SearchIcon}

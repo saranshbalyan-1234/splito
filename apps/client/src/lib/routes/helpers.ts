@@ -1,7 +1,7 @@
 // Adapted from bluesky-social/social-app@4e4ad9c (MIT) - src/lib/routes/helpers.ts
 import {type NavigationProp} from '@react-navigation/native'
 
-import {type RouteParams, type State} from './types'
+import {type RouteParams, type State, type TabParams} from './types'
 
 export function getRootNavigation<T extends {}>(
   nav: NavigationProp<T>,
@@ -128,4 +128,25 @@ export function buildStateObject(
       },
     ],
   }
+}
+
+/* Exhaustive on purpose: a tab added to TabParams (People comes with decision 153) fails to compile here until it is listed. */
+const TAB_ROUTES: readonly string[] = Object.keys({People: 1, Groups: 1, Analytics: 1, Activity: 1} satisfies Record<keyof TabParams, 1>)
+
+/**
+ * How a pressed link reaches its route. A tab is not on the stack the press happens in (a Profile stat tile, an
+ * Overview card on Groups), so a stack push never finds it ("The action 'PUSH' ... was not handled by any
+ * navigator"). On native the tabs are nested in the root stack's `Tabs` screen, so the stack pops back to `Tabs`
+ * and selects the tab with its params (the shape the drawer uses); on web the tab is a route of its own and is
+ * navigated to. Every other route is pushed (Bluesky's behaviour): `null`.
+ */
+export function tabLink(
+  routeName: string,
+  params: object | undefined,
+  isWeb: boolean,
+): {kind: 'popTo' | 'navigate'; name: string; params: object | undefined} | null {
+  if (!TAB_ROUTES.includes(routeName)) return null
+  return isWeb
+    ? {kind: 'navigate', name: routeName, params}
+    : {kind: 'popTo', name: 'Tabs', params: {screen: routeName, params}}
 }

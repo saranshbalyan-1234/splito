@@ -1130,6 +1130,8 @@ Inherited from GameRun (2026-10-26); each holds for Splito's stack:
 
 Splito lessons (add newest last, dated, with PR):
 
+- 2026-10-29, iOS QA: a native bottom sheet presented from the root view controller fails ("already presenting RNSScreen") when a route sheet (Add expense) is up, so its Discard prompt and every picker never opened. `modules/bottom-sheet/ios/SheetView.swift` now presents from the top-most presented controller (Bluesky's composer is an RN `Modal`, which never met this). Sheets mounted outside the shell's `BottomSheetProvider` (RemindHost) get the context default `{}` as their portal and crash ("Element type is invalid ... BottomSheetNativeComponent"): `App.tsx` gives RemindHost its own provider and outlet. UIKit also asks `onAttemptDismiss` before a clean sheet is dismissed, so only a dirty `FormSheet` may open Discard.
+- 2026-10-29, iOS QA: inside a transaction `data/store.ts` runs statements through expo-sqlite's synchronous API with prepared statements; seeding demo mode went from 5.5 s to 2.0 s on the simulator debug build (38,000 statements, each async hop ~0.14 ms).
 - 2026-10-29, fix/web-scroll: **mobile Safari scrolled to a blank page.** `react-native-safe-area-context` 5.10.1's
   web provider reports its rect in viewport coordinates, so on a page whose window scrolls (ours) the top inset
   became the scroll offset whenever it re-measured; Safari fires `resize` as its toolbar collapses mid-scroll,

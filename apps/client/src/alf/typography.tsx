@@ -75,10 +75,16 @@ export type TextProps = RNTextProps & {
 
 const EMOJI = createEmojiRegex()
 
+/*
+ * Splito: the inline money arrows (components/MoneyDirection.tsx TO_YOU_GLYPH / FROM_YOU_GLYPH) are plain text
+ * glyphs that emoji-regex also matches; they are drawn as text, never as emoji, so they do not count.
+ */
+const MONEY_ARROWS = /[\u2199\u2197]/g
+
 export function childHasEmoji(children: React.ReactNode) {
   let hasEmoji = false
   Children.forEach(children, child => {
-    if (typeof child === 'string' && createEmojiRegex().test(child)) {
+    if (typeof child === 'string' && createEmojiRegex().test(child.replace(MONEY_ARROWS, ''))) {
       hasEmoji = true
     }
   })
