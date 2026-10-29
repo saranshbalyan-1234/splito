@@ -24,6 +24,8 @@ test('Settings > Data has the Demo mode switch, no Add / Remove demo data, and n
   await expect(page.getByTestId('people-empty')).toBeVisible()
 })
 
+const COMPOSERS = new Set(['/expense/new', '/friends/new', '/groups/new', '/signin'])
+
 test('turning it on seeds the demo database in under 10 s, shows the banner and "Demo", and a reload keeps the mode', async ({page}) => {
   await page.goto('/settings')
   await expect(page.getByTestId('settings-demo-mode')).toBeVisible()
@@ -61,8 +63,8 @@ test('turning it on seeds the demo database in under 10 s, shows the banner and 
     const box = (await banner.boundingBox())!
     const found = page.getByTestId(screen).first()
     const screenBox = (await found.count()) ? await found.boundingBox() : null
-    // Above the screen, never covering it.
-    if (screenBox) expect(screenBox.y, `${path}: screen starts below the banner`).toBeGreaterThanOrEqual(box.y + box.height - 1)
+    // Pages start below it. Composers and sign-in are drawn over the page by design: the banner is still there, behind them.
+    if (screenBox && !COMPOSERS.has(path)) expect(screenBox.y, `${path}: screen starts below the banner`).toBeGreaterThanOrEqual(box.y + box.height - 1)
   }
 
   // The Search & Ask drawer opens over a screen: the banner stays.
