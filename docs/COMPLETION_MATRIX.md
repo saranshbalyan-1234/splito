@@ -189,7 +189,7 @@ phase 2. Milliseconds from touchstart to the result in the DOM.
 | Open filters sheet | n/a | 84 | n/a | 86 |
 | Filter chip, switch | 51, 52 | 49, 49 | 52, 51 | 53, 53 |
 | Add expense Save | 85 | 81 | 84 | 88 |
-| Tab, 50 ms, next tab (second tap latency) | 137 to 231 (123-143 ms long task) | 43 (4 of 12 runs 230-410) | 89 | 38 |
+| Tab, 50 ms, next tab (second tap latency) | 137 to 231 (123-143 ms long task) | 36 on a quiet machine (13 of 14 runs 21-46, one 198; 4 of 12 runs 230-410 while the machine was loaded) | 89 | 38 |
 | Sheet X (exit slide begins) | 117 | 104-116 | 116 | 127 |
 | Longest JS task after Activity first visit, x4 | 188-202 | 0 | | |
 
@@ -197,7 +197,8 @@ Not fixed: (1) a burst of six taps 0-10 ms apart (faster than a hand) loses the 
 web, on the phase-1 build too: for two frames, twice per burst, the bottom bar's tabs render at y 845 and 6 % wider (the
 bar sits below the viewport), and the tap lands on the screen behind it (`analytics-loading`); cause not found, 50 ms
 gaps never reproduce it in 100+ bursts. (2) the exit slide of a sheet starts 100-127 ms after the X tap in this harness (the isolated trace shows the
-slide moving at 60 ms; the press feedback is immediate); and the second tab tap still waits 230-410 ms in about a
-third of cold first visits to Analytics then Activity (browser layout of the first screen's commit, not JS).
+slide moving at 60 ms; the press feedback is immediate); and, under machine load, the second tab tap waits 230-410 ms in about a
+third of cold first visits to Analytics then Activity (browser layout of the first screen's commit, not JS); on a quiet
+machine 1 of 14.
 Renders gate: skeleton and placeholder renders on a hot tab switch are gone (launch updates 448 to 403, scroll updates
 5,977 to 4,384); `Deferred` and `SheetBody` are new entries in `baseline.json`.
