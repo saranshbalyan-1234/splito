@@ -557,7 +557,7 @@ Pull down at the top of Home, People, Groups, Activity, Analytics, Person and Gr
 - **Effort** M · **Impact** 8 · **Backend** no (syncNow() hook ready for F-2103) · **Status** todo, Wave C (next free slot) · **Deps** F-255, F-256
 - **Prefs** -
 - **Acceptance**
-  1. Every page that shows a header refreshes on pull at the top (owner 169: lists, Person, Group, Expense, Payment, Settle up, Profile, Settings sections, Friends and invites), built once in the shared scaffold; sheets, popups and the drawer don't; the spinner sits under the header; the header never moves or hides during the pull (e2e checks its top stays at 0 while pulling at 390).
+  1. Every full screen refreshes on pull at the top, header or not (owners 169, 170), built once in the shared scaffold with a test over every route; sheets and popups keep drag-to-close (§ 26.8); the spinner sits under the header; the header never moves or hides during the pull (e2e checks its top stays at 0 while pulling at 390).
   2. Native: List RefreshControl on iOS and Android (simulator checked); phone web: a pull handler on the window scroll in iOS Safari (simulator) and Android Chrome, no fight with browser overscroll, scrolling unaffected (scrollWeb.spec green).
   3. Until sync: re-reads local data and ends in under 1 s with honest status; offline ends at once, no error toast; with the backend it calls syncNow().
   4. Nothing redraws unless data changed (owner 166); renders gate and tap-latency spec do not regress.
