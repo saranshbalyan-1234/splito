@@ -2133,6 +2133,12 @@ built yet.
 
 - **Settings starts with an "Account" section** (copied from Bluesky's Settings account section and its
   Login/Signup screens' layout, `src/screens/Login`, `src/screens/Settings`).
+- **The review site is a "preview" build** (assistant's ruling 2026-10-30, after the F-250 review; the owner
+  reviews the front end on https://splito-web.onrender.com before any backend, owners 164/165): Render builds with
+  `EXPO_PUBLIC_ENV=preview`, which allows the labelled dev account ("Preview build: local dev account, data stays in
+  this browser, don't use a real password", `noindex`), never on a stage or prod tier; a real production build is
+  refused until the auth HTTP client exists. The intro slides keep their animated (Lottie) art (owners 123, 172); the
+  Pager is replaced by Bluesky's `ScreenTransition` plus a swipe, because `react-native-pager-view` is not shipped.
 - **Signed out, the app is the logged-out flow** (owners 125, 138-140): Bluesky's logged-out look, copied screen
   for screen where it still applies (`view/com/auth/LoggedOut.tsx`, `SplashScreen(.web).tsx` with the logo mark and
   tagline, `screens/Login/FormContainer` and `LoginForm` layout, Bluesky's step indicator and `BackNextButtons`),
