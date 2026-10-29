@@ -1178,6 +1178,12 @@ Splito lessons (add newest last, dated, with PR):
   provider" check first ran for every Dialog, including closed ones, and took the app down on iOS. Checks that
   depend on context a closed dialog doesn't need run when the sheet opens, never at mount (§ 4: a closed dialog
   renders and reads nothing).
+- 2026-10-30, Render: **production builds failed for hours unnoticed.** The demo-leak check in `scripts/pwa.ts`
+  matched the text `demo-large-` in the start-up bundle, which the F-241 link resolver's id check contains on
+  purpose; every Render build after that merge failed, and the live site silently stayed on the older build. Two
+  rules: a build guard matches strings that only the guarded thing contains (a test pins the near-miss), and every
+  merge to `main` is followed by checking that the Render deploy succeeded (`render deploys list`), not only the
+  GitHub workflow, before saying it is live.
 
 ---
 
