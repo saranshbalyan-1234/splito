@@ -1,6 +1,6 @@
 # Checks every push to main, then deploys the web app and the API to Render (render.yaml).
-# Needs two repository secrets, each a service's deploy hook URL from Render > Settings > Deploy Hook:
-#   RENDER_DEPLOY_HOOK_WEB (splito-web) and RENDER_DEPLOY_HOOK_API (splito-api).
+# Render auto-deploys main on its own; the optional secrets RENDER_DEPLOY_HOOK_WEB / RENDER_DEPLOY_HOOK_API
+# (Render > Settings > Deploy Hook) are only needed if auto-deploy is turned off.
 name: Deploy to Render
 
 on:
@@ -47,7 +47,8 @@ jobs:
           API_HOOK: ${{ secrets.RENDER_DEPLOY_HOOK_API }}
         run: |
           for hook in "$WEB_HOOK" "$API_HOOK"; do
-            [ -n "$hook" ] || { echo "::error::Set RENDER_DEPLOY_HOOK_WEB and RENDER_DEPLOY_HOOK_API in the repo secrets"; exit 1; }
+            # Render's own auto-deploy on main is on, so without hook secrets there is nothing to trigger here.
+            [ -n "$hook" ] || { echo "::notice::No deploy hook secret set; Render auto-deploys main itself"; continue; }
             curl -fsS -X POST "$hook&ref=$GITHUB_SHA"
             echo
           done
