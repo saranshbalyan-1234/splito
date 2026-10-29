@@ -41,4 +41,7 @@ test('displayPerson fixes old lower-case rows and returns a correct row as is', 
   expect(displayPerson(ok)).toBe(ok)
   const mail = row('amy@example.com', {kind: 'email', value: 'amy@example.com'})
   expect(displayPerson(mail)).toBe(mail)
+  // Friend requests carry their own name and read the same way.
+  const req = {id: 'r', data: {direction: 'incoming', name: 'sara ali', contact: null, status: 'pending'}} as unknown as Entity<{name: string; contact: null}>
+  expect(displayPerson(req).data.name).toBe('Sara Ali')
 })

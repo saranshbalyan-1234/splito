@@ -206,8 +206,8 @@ export function cleanPersonName(name: string) {
   return cleanName(capitalizeName(name))
 }
 
-/** A person row with its name capitalised, for display: old lower-case rows read right, a correct row comes back as is. */
-export function displayPerson<E extends Entity<Person>>(e: E): E {
+/** A person (or friend request) row with its name capitalised, for display: old lower-case rows read right, a correct row comes back as is. */
+export function displayPerson<E extends Entity<{name: string; contact?: Contact | null}>>(e: E): E {
   if (e.data.contact && e.data.name === formatContact(e.data.contact)) return e // the contact stood in for a name
   const name = capitalizeName(e.data.name)
   return name === e.data.name ? e : {...e, data: {...e.data, name}}

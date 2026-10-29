@@ -238,7 +238,7 @@ export function activityTracker(store: Store, want: () => number = () => ACTIVIT
       expense: named('expense'),
       repayment: [],
       writeoff: [],
-      friendRequest: named('friendRequest'),
+      friendRequest: named('friendRequest').map(e => displayPerson(e as Entity<FriendRequest>)),
       reminder: [],
     } satisfies Record<FeedType, Entity[]>
     return {events: list, entities, isDone: isDone && !hasMore}
