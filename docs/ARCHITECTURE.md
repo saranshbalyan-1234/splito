@@ -1614,14 +1614,22 @@ good"; "the left sidebar looks bad on desktop". *Where:* `view/shell/desktop/Lef
   `useDeferredValue`), mounting the body after the transition (§ 3) or on idle; a busy body never delays the
   tap's own feedback, and later taps are never queued behind it. Measured: an e2e/perf check of tap-to-first-
   visual-change under 100 ms (§ 26.10) for the main tappables at 390 px, and none of them waits on a JS long
-  task. *Why:* "all the taps everywhere should reflect immediately, maybe defer some rendering".
+  task. *Why:* "all the taps everywhere should reflect immediately, maybe defer some rendering". *Where:*
+  `lib/hooks/useAfterTransition.ts` (`useAfterTransition`: false for the first two frames; `useDeferredReady(flag)`:
+  the flag and a painted first frame, data landing later also deferred), `components/Deferred.tsx`,
+  `FormSheet.Inner` / `FormSheet.Screen` bodies via `SheetBody`, the tab screens' `isLoading` (People, Groups,
+  Analytics, Activity, Person, Group) and the in-page tabs (`useDeferredValue(tab)`: the bar follows the tap, the
+  list re-renders as a transition); check `perf/tapLatency.spec.ts` (`E2E_PORT=8231 pnpm perf -- tapLatency`, CPU x1
+  and x4, plus taps 50 ms after a screen-changing tap).
 - **Tab taps always win, however fast** (owner 150): every tap on a bottom-bar, sidebar, rail or in-page tab
   switches at once, even when taps come milliseconds apart or during a running switch animation: the newest tap
   cancels or redirects the animation, nothing is debounced, locked or swallowed (the first tap after a screen
   change included), on iOS, Android, phone web (iOS Safari) and desktop. The switch acts on press-in where the
   platform allows (as Bluesky's bottom bar), the heavy body may mount after, and the landing tab is always the
   last one tapped. *Why:* "when I click on tabs immediately it doesn't work; in other apps I keep clicking on tabs
-  within ms and it still switches".
+  within ms and it still switches". *Where:* no `useDedupe` on a tab press (it dropped every tap within 250 ms of
+  another, app-wide on native and per tab on web; `useNavigationDeduped().navigate` no longer dedupes, it is
+  idempotent); e2e `tabTaps.spec.ts`.
 - **Main bottom-bar / sidebar switches are animated** (owner override of Bluesky's instant switch): a
   direction-aware horizontal slide (from the right when moving to a tab on the right, else from the left;
   native ~220 ms via a bottom-tabs `sceneStyleInterpolator` + `transitionSpec`, web ~200 ms transform of the

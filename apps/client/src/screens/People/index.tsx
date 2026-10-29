@@ -1,5 +1,6 @@
 import {useEffect, useState} from 'react'
 import {LayoutAnimationConfig} from 'react-native-reanimated'
+import {Deferred} from '#/components/Deferred'
 import {plural} from '@lingui/core/macro'
 import {Trans, useLingui} from '@lingui/react/macro'
 import {useNavigation} from '@react-navigation/native'
@@ -203,7 +204,10 @@ export function PeopleScreen() {
           onPress={() => navigation.navigate('AddFriend')}
         />
       </Layout.Header.Outer>
-      {isLoading ? (
+      {/* Shell first (owner 152): the header paints at once, a skeleton while the data is missing, the list mounts after as a transition. */}
+      <Deferred
+        when={!isLoading}
+        fallback={
         <Shimmer testID="people-loading">
           <BalanceSummaryPlaceholder />
           <FriendsHeader count={undefined} />
@@ -211,7 +215,8 @@ export function PeopleScreen() {
             <PersonRowPlaceholder key={i} />
           ))}
         </Shimmer>
-      ) : (
+        }>
+        {() => (
         /* Upstream's list idiom: rows already there on mount appear at once; later inserts and removals animate. */
         <LayoutAnimationConfig skipEntering skipExiting>
           <List
@@ -324,7 +329,8 @@ export function PeopleScreen() {
             ListFooterComponent={<AddExpenseFABInset />}
           />
         </LayoutAnimationConfig>
-      )}
+        )}
+      </Deferred>
       {/* The empty state's own buttons are the actions; a FAB would be a third Add. */}
       {(isLoading || friends.length > 0) && <AddExpenseFAB />}
       <FriendsFilterDialog

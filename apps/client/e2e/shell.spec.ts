@@ -419,9 +419,10 @@ test.describe("activity: a tab with Bluesky's unread badge", () => {
     // The badge counted these: the plan holds at least 30 changes by others (so it reads 30+), and the tab fills with them
     // (the list mounts a window of the first page, never fewer than a screenful).
     expect(othersChanges).toBeGreaterThanOrEqual(PAGE)
+    // The list behind the tab bar re-renders as a transition (owner 151): wait for the old tab's rows to go before counting.
+    await expect(rows.filter({hasText: 'You added'})).toHaveCount(0)
     await expect.poll(() => rows.count()).toBeGreaterThanOrEqual(20)
     expect(await rows.count()).toBeLessThanOrEqual(PAGE)
-    await expect(rows.filter({hasText: 'You added'})).toHaveCount(0)
 
     // Mark all read clears the badge, and it stays cleared after a reload.
     await page.getByTestId('activity-mark-all-read').click()

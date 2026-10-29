@@ -22,6 +22,7 @@ import {
   type WriteOff,
 } from '@splito/sync'
 
+import {useDeferredReady} from '#/lib/hooks/useAfterTransition'
 import {type AllNavigatorParams, type NavigationProp} from '#/lib/routes/types'
 import {goBack} from '#/navigation/goBack'
 import {DeletedMeta} from '#/components/DeletedMeta'
@@ -142,7 +143,9 @@ export function PersonScreen() {
     'repayment',
   )
 
-  const isLoading = !me || !people || !groups || !balanceRows || !pairHistory
+  const dataMissing = !me || !people || !groups || !balanceRows || !pairHistory
+  /* Shell first (owner 152): the header and a skeleton paint, the list mounts after as a transition. */
+  const isLoading = !useDeferredReady(!dataMissing) || dataMissing
   const person = people?.find(p => p.id === personId)
   const isDeleted = !!person?.deleted
   const {visible, hidden, showHidden} = useVisibleEntries(pairHistory?.entries ?? [])

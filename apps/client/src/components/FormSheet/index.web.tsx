@@ -8,6 +8,7 @@ import {
   Footer,
   type FooterProps,
   Header,
+  SheetBody,
   useFormSheet,
   useIsScrolled,
   useIsSheet,
@@ -72,7 +73,7 @@ export function Inner({
               scrollEventThrottle={50}
               style={[a.flex_shrink, {minHeight: 0}]}
               contentContainerStyle={[inset, a.pt_xs, a.pb_xl]}>
-              {children}
+              <SheetBody>{children}</SheetBody>
             </ScrollView>
             {footer ? <Footer {...footer} readout={readout} /> : null}
           </View>

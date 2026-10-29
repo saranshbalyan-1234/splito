@@ -20,6 +20,7 @@ import {
   Footer,
   type FooterProps,
   Header,
+  SheetBody,
   SheetContext,
   useIsScrolled,
 } from './shared'
@@ -111,7 +112,7 @@ export function Screen({
             scrollEventThrottle={50}
             style={[a.flex_1, web([a.flex_shrink, {minHeight: 0}])]}
             contentContainerStyle={[a.pb_2xl]}>
-            {children}
+            <SheetBody>{children}</SheetBody>
           </ScrollView>
           {footer ? <Footer {...footer} readout={readout} /> : null}
         </KeyboardAvoidingView>

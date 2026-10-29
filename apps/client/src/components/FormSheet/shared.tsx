@@ -14,6 +14,7 @@ import {useWorkAtStake} from '#/lib/pwa/workAtStake'
 import {atoms as a, useBreakpoints, useTheme} from '#/alf'
 import {Button, ButtonIcon, ButtonText} from '#/components/Button'
 import * as Dialog from '#/components/Dialog'
+import {useDeferredReady} from '#/lib/hooks/useAfterTransition'
 import {TimesLarge_Stroke2_Corner0_Rounded as XIcon} from '#/components/icons/Times'
 import {Loader} from '#/components/Loader'
 import * as Prompt from '#/components/Prompt'
@@ -53,6 +54,16 @@ export const SheetContext = createContext<SheetContextValue>({
   setIsDirty: () => {},
 })
 SheetContext.displayName = 'FormSheetContext'
+
+/**
+ * A sheet's body (owner 152): the title, cross and footer start the open motion
+ * at once; the rows, pickers and fields mount a frame later as a transition,
+ * after a blank stand-in of a typical body's height.
+ * ponytail: one fixed height, not a measured one; the sheet grows while it is still rising.
+ */
+export function SheetBody({children}: {children: React.ReactNode}) {
+  return useDeferredReady() ? children : <View style={{minHeight: 120}} />
+}
 
 /** The open sheet's close request, for a body that ends with its own buttons. */
 export function useFormSheet() {

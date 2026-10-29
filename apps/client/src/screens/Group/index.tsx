@@ -1,4 +1,4 @@
-import {useEffect, useState} from 'react'
+import {useDeferredValue, useEffect, useState} from 'react'
 import {View} from 'react-native'
 import {LayoutAnimationConfig} from 'react-native-reanimated'
 import {Trans, useLingui} from '@lingui/react/macro'
@@ -13,6 +13,7 @@ import {
   type WriteOff,
 } from '@splito/sync'
 
+import {useDeferredReady} from '#/lib/hooks/useAfterTransition'
 import {usePagedRows} from '#/lib/hooks/usePagedRows'
 import {type AllNavigatorParams, type NavigationProp} from '#/lib/routes/types'
 import {
@@ -140,6 +141,8 @@ export function GroupScreen() {
       ? 'expenses'
       : (route.params.tab ?? 'expenses'),
   )
+  /* The tab bar follows the tap at once; the list behind it re-renders as a transition (owner 151). */
+  const bodyTab = useDeferredValue(tab)
   const me = useMe()
   /* Removed friends too: the records still name them. */
   const people = useAllEntities<Person>('person')
@@ -165,8 +168,9 @@ export function GroupScreen() {
   const [evenDraft, setEvenDraft] = useState<EvenDraft | null>(null)
   const openHide = useHideItem({type: openKind, id: openRepayment?.id ?? ''})
 
-  const isLoading =
-    !me || !people || !groups || !storedNets || !groupHistory
+  /* Shell first (owner 152): the header and a skeleton paint, the list mounts after as a transition. */
+  const dataMissing = !me || !people || !groups || !storedNets || !groupHistory
+  const isLoading = !useDeferredReady(!dataMissing) || dataMissing
   const wantsRules = route.params.tab === 'rules'
   useEffect(() => {
     if (!wantsRules || isLoading) return
@@ -179,7 +183,7 @@ export function GroupScreen() {
   /* Deleted records stay in their date place, struck; the ones I hid are out unless "Show hidden" is on. */
   const {visible, hidden, showHidden} = useVisibleEntries(groupHistory?.entries ?? [])
 
-  const pageOf = usePagedRows(tab)
+  const pageOf = usePagedRows(bodyTab)
   if (!isLoading && !group) {
     return (
       <Layout.Screen testID="screen-group">
@@ -246,8 +250,8 @@ export function GroupScreen() {
 
   let items: Item[] = []
   if (!isLoading && group) {
-    if (tab === 'expenses') items = withMonths(history)
-    else if (tab === 'balances') {
+    if (bodyTab === 'expenses') items = withMonths(history)
+    else if (bodyTab === 'balances') {
       /*
        * Who owes whom: the group's settle-up plan (`directPlan`), as Settle
        * up and People show it. When the rules leave no plan it goes outside
@@ -487,7 +491,7 @@ export function GroupScreen() {
             onSelect={i => setTab(TABS[i]!)}
           />
         </View>
-        {tab === 'expenses' ? (
+        {bodyTab === 'expenses' ? (
           <SectionHeader
             title={l`Expenses`}
             testID="group-expenses-title"
@@ -521,7 +525,7 @@ export function GroupScreen() {
         <HistoryRowPlaceholder key={i} />
       ))}
     </Shimmer>
-  ) : tab === 'balances' ? (
+  ) : bodyTab === 'balances' ? (
     <EmptyState
       testID="group-balances-empty"
       icon={null}
@@ -550,7 +554,7 @@ export function GroupScreen() {
   const {shown, onEndReached: showMore} = pageOf(items)
   /* Expenses page by index (the next page is read as the end comes near); the other tabs hold few rows. */
   const onEndReached = () => {
-    if (tab !== 'expenses') showMore()
+    if (bodyTab !== 'expenses') showMore()
     else if (groupHistory && !groupHistory.isDone) groupHistory.loadMore()
   }
 
@@ -650,7 +654,7 @@ export function GroupScreen() {
       </Layout.Header.Outer>
       <LayoutAnimationConfig skipEntering skipExiting>
         <List
-          data={tab === 'expenses' ? items : shown}
+          data={bodyTab === 'expenses' ? items : shown}
           onEndReached={onEndReached}
           keyExtractor={(item: Item) => item.key}
           renderItem={({item, index}: {item: Item; index: number}) => {

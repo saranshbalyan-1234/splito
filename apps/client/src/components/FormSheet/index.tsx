@@ -12,6 +12,7 @@ import {
   Footer,
   type FooterProps,
   Header,
+  SheetBody,
   useFormSheet,
   useIsScrolled,
 } from './shared'
@@ -57,7 +58,9 @@ export function Inner({
           </KeyboardSticky>
         ) : undefined
       }>
-      <View style={[inset, a.pt_xs, a.pb_lg]}>{children}</View>
+      <View style={[inset, a.pt_xs, a.pb_lg]}>
+        <SheetBody>{children}</SheetBody>
+      </View>
     </Dialog.ScrollableInner>
   )
 }

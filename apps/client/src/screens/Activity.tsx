@@ -1,6 +1,7 @@
 // Adapted from bluesky-social/social-app@4e4ad9c (MIT) - src/view/screens/Notifications.tsx
-import {useState} from 'react'
+import {useDeferredValue, useState} from 'react'
 import {View} from 'react-native'
+import {Deferred} from '#/components/Deferred'
 import Animated, {LayoutAnimationConfig} from 'react-native-reanimated'
 import {Plural, Trans, useLingui} from '@lingui/react/macro'
 
@@ -46,10 +47,12 @@ export function ActivityScreen() {
   const locale = useNumberLocale()
   const listAnimations = useListAnimations()
   const [tab, setTab] = useState(0)
-  const feed = useActivityFeed(tab === 0 ? 'all' : 'others')
+  /* The tab bar follows the tap at once; the list behind it re-renders as a transition (owner 151). */
+  const bodyTab = useDeferredValue(tab)
+  const feed = useActivityFeed(bodyTab === 0 ? 'all' : 'others')
   const actions = useActivityActions(feed)
   const {snapshot, rows, hiddenCount, unreadCount, me} = feed
-  const {shown, onEndReached: showMore} = usePagedRows(tab)(rows)
+  const {shown, onEndReached: showMore} = usePagedRows(bodyTab)(rows)
   /* Rows already loaded appear a page at a time; past the last one, older history is read by cursor. */
   const onEndReached = () => {
     if (shown.length < rows.length) showMore()
@@ -119,11 +122,15 @@ export function ActivityScreen() {
           onSelect={setTab}
         />
       </Layout.Header.Sticky>
-      {snapshot === undefined ? (
+      {/* Shell first (owner 152): the header paints at once, a skeleton while the data is missing, the list mounts after as a transition. */}
+      <Deferred
+        when={snapshot !== undefined}
+        fallback={
         <Shimmer testID="activity-loading">
           <LoadingSkeleton />
         </Shimmer>
-      ) : (
+        }>
+        {() => (
         <LayoutAnimationConfig skipEntering skipExiting>
           <List
             testID="activity-list"
@@ -139,7 +146,7 @@ export function ActivityScreen() {
                 message={
                   hiddenCount > 0
                     ? l`You've hidden everything here. New expenses, payments and group changes will show up as they happen.`
-                    : tab === 1
+                    : bodyTab === 1
                       ? l`Nothing from other people yet. When someone else adds or changes something you share, it shows up here.`
                       : l`Nothing here yet. Expenses, payments and group changes will show up here.`
                 }
@@ -188,7 +195,8 @@ export function ActivityScreen() {
             }
           />
         </LayoutAnimationConfig>
-      )}
+        )}
+      </Deferred>
       <AddExpenseFAB />
     </Layout.Screen>
   )
