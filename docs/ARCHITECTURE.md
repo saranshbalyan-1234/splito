@@ -1938,7 +1938,7 @@ add anyway (only for you)"; "also i should be able to select from contacts". *Wh
 - **Privacy:** AI is opt-in (preference "Ask Splito uses AI", default off until signed in); the first use
   shows exactly what data is sent; nothing is sent for on-device answers.
 
-### 26.20 Comments, reminders and export
+### 26.20 Comments, reminders, disputes and export
 
 *Why:* "add comment feature, remind, export etc". *Where:* `components/comments/`, `lib/remind/`,
 `lib/export/`, `screens/Settings/Data`.
@@ -1956,6 +1956,51 @@ add anyway (only for you)"; "also i should be able to select from contacts". *Wh
   person, currency) with Import (JSON backup restore); plus Group overflow "Export", Person overflow "Export
   statement", Analytics overflow "Export CSV". Exports are generated on the device; amounts exact, per
   currency.
+
+- **Disputes and holds** (owner 119; F-1210, Wave C after comments merge). Anyone in a shared record can say
+  "this is wrong" or "wait", without editing someone else's expense, and it is settled in the open.
+  - **What can be disputed:** an expense, one item of an itemized bill (my portion), a repayment ("I didn't
+    receive this") and a write-off ("Call it even" I don't agree with). Not comments or groups.
+  - **Who:** any participant of the record, plus any group member for "I was left out" (they may not be a
+    participant yet). One open dispute per person per record; several people may dispute the same record.
+  - **Reason is structured** (one chip, then an optional note, required for "Other"): Not part of this / I was
+    left out / Wrong amount / Wrong split or my share / Wrong payer / Duplicate (pick the other expense) / Wrong
+    currency or date / Payment not received (repayments) / Other. A reason may carry a **proposed fix** (amount,
+    my share, payer, the duplicate's id), so the answer can be one tap.
+  - **Hold is the light version** (Expensify's hold): "Put on hold" with a required reason ("waiting for the
+    refund", "need the receipt") pauses a record that is not wrong yet; any participant may release it in one
+    tap. Disputes and holds share the badge, the sub-total and the settle rule below.
+  - **States:** Open, then exactly one of Accepted (the fix was applied: one tap applies the proposed fix as a
+    normal edit with history, or the resolver edits by hand), Rejected (reason required), Withdrawn (by the
+    person who raised it) or Gone (the record was deleted). After a rejection the raiser may reopen once with a
+    new note; after that only a group admin can close it. Editing a disputed record asks the editor "Does this
+    resolve <name>'s dispute?". **Who resolves:** the person who added the record, or its payer, or a group
+    admin (also when the adder has left). Nobody resolves their own dispute except by withdrawing.
+  - **Money: a disputed or held record still counts; it does not wait.** Balances, totals, the overview, charts
+    and exports keep counting it as recorded, because the record stands until someone changes it, and a dispute
+    that removed money would let anyone erase what they owe with one tap and make everyone's balances jump. What
+    changes: every place that shows a balance adds a per-currency "of which disputed" line (‹₹1,200 · ₹400
+    disputed›), the row and the detail page carry an amber "Disputed" or "On hold" badge (icon plus text, never
+    colour alone), and **Settle up leaves disputed and held amounts out of the plan by default**, says so
+    ("₹400 disputed, not in this plan") and offers "Include disputed" (remembered per group,
+    `group:settleIncludeDisputed`, default off), so nobody pays or chases money that is being questioned.
+    Accepting a fix changes the balance through the edit; rejecting it changes nothing. A dispute on a record
+    before a settle-up checkpoint (F-1205) shows as "Adjustment after settle-up" when accepted.
+  - **Where it shows:** raising and resolving each post a system line into the record's comment thread (the
+    discussion happens there, § 26.20 comments); Activity rows for raised, answered, reopened and released
+    (unread for the resolver and the raiser respectively); a "Needs your answer" item on the For you card
+    (F-230) and a Disputed filter on lists, Activity and Search (`status: disputed`); a dispute column in CSV.
+    A dispute open 3 days nudges the resolver once on the For you card; no push spam.
+  - **Data:** its own `disputes` store (§ 9.8): id, targetType, targetId, itemIndex?, raisedBy, kind
+    (dispute | hold), reason, note, proposedFix, status, resolvedBy, resolution note, timestamps; indexes
+    `byTarget` and `byStatus`; every change a sync mutation with history and an outbox op; the
+    "of which disputed" figures come from a projection kept in the same transaction as `balances`, never a scan.
+    Permission checks (`canDispute`, `canResolveDispute`) live in `domain/permissions.ts`; the server re-checks.
+  - **Before the backend** every record is mine, so a dispute raised on this device records "raised by" a chosen
+    participant (default me, labelled "recorded by you", like recording a payment for others); it becomes
+    two-sided with sync (F-2208). Demo data carries every state (owner 109).
+  *Why:* "add an option for disputes as well, think about it properly"; "should we calculate disputed expense
+  or wait until they are resolved".
 
 ### 26.21 Offline web app (service worker and PWA)
 
@@ -2105,6 +2150,7 @@ Every owner decision, in the order it was made (all 2026-10-26). "Replaced" name
 | 116 | "make sure the search works logically with most of the things like name, place, amount, category, type, group etc etc" | Search covers people, places, amounts, category, type, group, dates, currency, payer, status; AND across facets, OR within; facet chips; per-currency totals; paged | § 26.19 | Words, names and simple amount filters |
 | 117 | "create one env file and ask for token there, i would paste" | Claude key in git-ignored `.env.local` (ANTHROPIC_API_KEY), read only by a dev-only local AI proxy; never EXPO_PUBLIC_*, never in the bundle | § 26.19 | Key entered in Settings, stored in OS secure store (row 115) |
 | 118 | "remove email test, the emails are being triggered and app is opened" | The "Send by email" e2e test is removed on every branch; no e2e spec clicks a control that hands a link to another app unless it goes through `openExternal` (records only) | § 26.1 | e2e asserted the mailto hand-off (feedback.spec) |
+| 119 | "add an option for disputes as well, think about it properly"; "should we calculate disputed expense or wait until they are resolved" | Disputes (structured reason, proposed fix, one-tap accept, reject with reason, withdraw, reopen once, admin closes) and holds on expenses, items, repayments and write-offs; a disputed record keeps counting in balances with an "of which disputed" line and a badge, and is left out of the Settle up plan by default with "Include disputed" | § 26.20 | F-1210 draft (disputed amounts out of the plan, no states or resolver rules) |
 
 New decisions follow § 0 rule 9: rewrite the rule in its topic so only the current truth remains, then add a
 row here.

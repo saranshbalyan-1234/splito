@@ -77,6 +77,7 @@ Every row of the ARCHITECTURE § 26.23 decision log (rows 1-63) and the feature(
 | 58 service worker and PWA | § 26.21 | F-1901 |
 | 59 comments, remind, export | § 26.20 | F-1204, F-2208, F-1118, F-1119, F-1111, F-2210, F-2001, F-2007, F-2004 |
 | 61 sync-status dot on the avatar | § 26.7 | F-223, F-2103 |
+| 119 disputes and holds; disputed records still count, left out of Settle up by default | § 26.20 | F-1210 (Wave C) |
 | 85 best of both per feature: pull features from Expensify and Bluesky, whichever is better | § 26.1 | F-229..F-236, F-318..F-321, F-620, F-1211, F-1212, F-1412, F-1507, F-1816 (Batch 4d), amendments to F-211, F-214, F-219, F-312, F-501, F-502, F-504, F-516, F-709, F-1204, F-1207, F-1210, F-1402, F-1403, F-1405, F-1407, F-2202, F-2208; `docs/scouting/2026-10-27-bluesky-expensify.md` |
 
 ## Epics
@@ -2389,19 +2390,23 @@ Tap any balance to see a line-by-line running total per currency since the last 
   2. The Include groups choice applies; each line opens its record.
   3. Shareable as text with only that pair's lines.
 
-### F-1210 Disputes, flags and hold `spec v2 (extended)`
+### F-1210 Disputes and holds `spec v2 (extended), owner § 26.20 (decision 119)`
 
-Flags on an expense (not there, wrong amount, wrong payer, duplicate) raised in its comment thread; disputed amounts stay visible but leave the plan by default until resolved. **Best of both (2026-10-27, docs/scouting/2026-10-27-bluesky-expensify.md):** Expensify's hold (`src/pages/iou/DynamicHoldReasonPage.tsx`, `src/libs/actions/IOU/Hold.ts`, `ProcessMoneyReportHoldMenu.tsx`): any participant can put an expense on hold ("waiting for the refund") with a required reason posted as a comment; it gets a "Held" badge, leaves the settle plan by default with Settle all / Settle without held in Settle up, and the first hold shows a one-time explainer. Unhold is one tap and recorded.
+Dispute or hold an expense, one item of a bill, a repayment or a write-off, with a structured reason and an optional proposed fix; the adder, payer or an admin answers (accept = one-tap fix as a normal edit, reject with reason), the raiser can withdraw or reopen once. A disputed record keeps counting in balances (with an "of which disputed" line and a badge) and is left out of the Settle up plan by default. Full rule: ARCHITECTURE § 26.20 "Disputes and holds". **Best of both (2026-10-27):** Expensify's hold (`src/pages/iou/DynamicHoldReasonPage.tsx`, `src/libs/actions/IOU/Hold.ts`, `ProcessMoneyReportHoldMenu.tsx`) is the hold half, with its one-time explainer.
 
-- **Effort** M · **Impact** 7 · **Backend** no · **Status** todo · **Deps** F-1204
-- **Prefs** `group:excludeDisputed`, `group:excludeHeld` (on)
+- **Effort** L · **Impact** 8 · **Backend** no (two-sided with F-2208) · **Status** todo, Wave C (after F-1204 merges) · **Deps** F-1204, F-230, F-1205 (for acceptance 9)
+- **Prefs** `group:settleIncludeDisputed` (off)
 - **Acceptance**
-  1. Balances show a "disputed" sub-total.
-  2. The settle plan excludes disputed amounts unless toggled.
-  3. The creator's resolution is recorded in history.
-  4. Hold and unhold are mutations with history and an outbox row; the reason is required and becomes a comment.
-  5. Settle up shows held totals per currency and the Settle all / Settle without held choice; holding or releasing changes the plan hash (F-1101).
-  6. Held expenses appear in the "On hold" view (F-1403) and the For you card (F-230).
+  1. Raise from the row menu, the detail page, an itemized item's portion and a repayment/write-off; reason chips as § 26.20, note required for Other, proposed fix for amount, share, payer and duplicate; one open dispute per person per record.
+  2. `disputes` store with `byTarget` and `byStatus`; raise, hold, release, accept, reject, withdraw and reopen are sync mutations with history and an outbox op; `canDispute` / `canResolveDispute` in `domain/permissions.ts` with bun tests (raiser cannot resolve except withdraw; adder, payer or admin resolve; reopen once, then admin only).
+  3. Balances, totals, overview, charts and exports still count a disputed or held record exactly as recorded (property test: balances identical with and without open disputes).
+  4. Every balance surface shows a per-currency "of which disputed" line from a projection kept in the balance transaction (no scan); rows and detail show "Disputed" / "On hold" badges with icon and text.
+  5. Settle up leaves disputed and held amounts out of the plan by default, states the left-out amount per currency, and "Include disputed" (remembered per group) puts them back; the plan hash changes on raise, accept, release (F-1101).
+  6. Accept applies the proposed fix in one tap as a normal edit (history "changed the amount from ... to ..."); editing a disputed record asks "Does this resolve <name>'s dispute?"; deleting the record closes it as Gone.
+  7. Raise and answer post system lines in the comment thread; Activity rows for raised, answered, reopened, released; For you card "Needs your answer"; Disputed filter on lists, Activity and Search (`status: disputed`); CSV dispute column; a 3-day nudge on the For you card only.
+  8. Before the backend, "raised by" picks a participant (default me, "recorded by you").
+  9. Accepting a dispute on a record before a settle-up checkpoint shows "Adjustment after settle-up" (with F-1205).
+  10. Demo data has disputes and holds in every state (open, accepted, rejected, withdrawn, reopened, gone) in at least two currencies; demoCoverage lists them; e2e (no external hand-offs, owner 118) and the perf gate on the 10k fixture pass.
 
 ### F-1211 Group discussion thread `spec: owner § 26.1 best of both (Expensify group chats, Bluesky group chats)`
 
