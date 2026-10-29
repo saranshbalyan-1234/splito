@@ -175,7 +175,7 @@ every tab (any tap within 250 ms of another, whatever the tab, was dropped); on 
 A, B, A within 250 ms dropped the second A and the landing tab was not the last one tapped. `navigate` is idempotent,
 so `useNavigationDeduped().navigate` and the bottom bar no longer dedupe (e2e `tabTaps.spec.ts`: 6 and 10 taps 50 ms
 and 0 ms apart, bottom bar at 390 touch, sidebar at 1440, rail at 900, Group and Activity tabs, full and reduced motion;
-failed 4 of 14 before, 14 of 14 after, three runs in a row).
+failed 5 of 14 before, 14 of 14 after, three runs in a row).
 
 Tap to first visual change (`perf/tapLatency.spec.ts`, 390 px touch, large demo ledger, app reloaded per run, median of
 3; headless Chrome on a loaded laptop, so the 50 ms floor is mostly frame cadence). Before = phase 1 only; after =

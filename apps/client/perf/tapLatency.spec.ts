@@ -133,10 +133,23 @@ function watch([done, nth]: [Done, number]) {
   window.addEventListener('touchstart', e => ++touches === nth && (t0 = e.timeStamp), {capture: true})
   w.__tap = new Promise(resolve => {
     const started = performance.now()
+    let finished = false
+    const finish = (ms: number) => {
+      if (finished) return
+      finished = true
+      mutations.disconnect()
+      resolve({ms, longest: ms < 99998 ? longestTask() : longest})
+    }
+    /* The DOM change itself (a mutation callback runs right after it), so a stalled animation-frame loop in a headless browser cannot inflate the number; the frame that paints it follows within 16 ms. */
+    const mutations = new MutationObserver(() => {
+      if (t0 >= 0 && check()) finish(performance.now() - t0)
+    })
+    mutations.observe(document, {subtree: true, childList: true, attributes: true})
     const frame = (now: number) => {
-      if (t0 < 0 && now - started > 15000) resolve({ms: 99998, longest}) // the touch never landed
-      if (t0 >= 0 && check()) resolve({ms: now - t0, longest: longestTask()})
-      else if (t0 >= 0 && now - t0 > 5000) resolve({ms: 99999, longest}) // never happened
+      if (finished) return
+      if (t0 < 0 && now - started > 15000) finish(99998) // the touch never landed
+      else if (t0 >= 0 && check()) finish(performance.now() - t0)
+      else if (t0 >= 0 && now - t0 > 5000) finish(99999) // never happened
       else requestAnimationFrame(frame)
     }
     requestAnimationFrame(frame)
@@ -168,7 +181,7 @@ async function measure(page: Page, c: Case) {
   page.on('console', m => process.env.TAP_DEBUG && m.text().startsWith('moved') && console.log('  ' + m.text()))
   await page.evaluate(() => ((window as unknown as {__dbg?: boolean}).__dbg = true))
   const result = await page.evaluate(() => (window as unknown as {__tap: Promise<{ms: number; longest: number}>}).__tap)
-  if (result.ms >= 99998) {
+  if (result.ms >= 300) {
     const where = await page.evaluate(() => [...document.querySelectorAll('[data-testid^="screen-"]')].map(e => `${e.getAttribute('data-testid')}:${e.getClientRects().length}`).join(' '))
     console.log('  events', JSON.stringify(await page.evaluate(() => (window as unknown as {__events: string[]}).__events)))
     console.log(`  ${c.name}: result never showed; url ${page.url()}; screens ${where}`)
