@@ -200,8 +200,10 @@ test('the sidebar, the drawer and a pinned bar tab all open the drawer in Ask mo
 test('a six-tab bar fits a phone: every tab is on screen, equal in width, with its badge', async ({page}) => {
   await page.setViewportSize(PHONE)
   await page.goto('/settings/navigation')
-  for (const tab of ['ask', 'settings'])
+  for (const tab of ['ask', 'settings']) {
     await page.getByTestId(`tabs-toggle-${tab}`).click()
+    await expect(page.getByTestId(`tab-${tab}`)).toHaveCount(1)
+  }
   await page.goto('/?demo=1')
   await expect(page.getByTestId('person-Arjun Mehta')).toBeVisible()
   const ids = ['people', 'groups', 'analytics', 'ask', 'activity', 'settings']
@@ -218,8 +220,10 @@ test('a six-tab bar fits a phone: every tab is on screen, equal in width, with i
   // Icons keep their size however many tabs there are.
   const icon = await page.getByTestId('tab-groups').locator('svg').first().boundingBox()
   await page.goto('/settings/navigation')
-  for (const tab of ['ask', 'settings'])
+  for (const tab of ['ask', 'settings']) {
     await page.getByTestId(`tabs-toggle-${tab}`).click()
+    await expect(page.getByTestId(`tab-${tab}`)).toHaveCount(0)
+  }
   await page.goto('/?demo=1')
   await expect(page.getByTestId('tab-settings')).toHaveCount(0)
   const four = await page.getByTestId('tab-groups').locator('svg').first().boundingBox()
