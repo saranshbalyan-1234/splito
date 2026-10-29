@@ -16,7 +16,7 @@ import {
   useNavigationDeduped,
 } from '#/lib/hooks/useNavigationDeduped'
 import {openExternal} from '#/lib/openExternal'
-import {getTabState, TabState} from '#/lib/routes/helpers'
+import {getTabState, linkNavigation, TabState} from '#/lib/routes/helpers'
 import {WebAuxClickWrapper} from '#/view/com/util/WebAuxClickWrapper'
 import {useTheme} from '#/alf'
 import {Text} from '#/components/Typography'
@@ -189,7 +189,10 @@ function onPressInner(
       void openExternal(href)
     } else {
       const [routeName, params] = router.matchPath(href)
-      if (navigationAction === 'push') {
+      if (navigationAction === 'push' && linkNavigation(routeName) === 'navigate') {
+        // @ts-expect-error a tab route name and its params, resolved by the tab navigator above this stack
+        navigation.navigate(routeName, params)
+      } else if (navigationAction === 'push') {
         navigation.dispatch(StackActions.push(routeName, params))
       } else if (navigationAction === 'replace') {
         navigation.dispatch(StackActions.replace(routeName, params))

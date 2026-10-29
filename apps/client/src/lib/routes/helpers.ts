@@ -1,7 +1,7 @@
 // Adapted from bluesky-social/social-app@4e4ad9c (MIT) - src/lib/routes/helpers.ts
 import {type NavigationProp} from '@react-navigation/native'
 
-import {type RouteParams, type State} from './types'
+import {type RouteParams, type State, type TabParams} from './types'
 
 export function getRootNavigation<T extends {}>(
   nav: NavigationProp<T>,
@@ -116,4 +116,15 @@ export function buildStateObject(
       },
     ],
   }
+}
+
+const TAB_ROUTES: readonly string[] = ['People', 'Groups', 'Analytics', 'Activity'] satisfies (keyof TabParams)[]
+
+/**
+ * How a pressed link reaches its route. A tab is a sibling of the stack the press happens in (an Overview card on
+ * Groups opening `/analytics?currency=GBP`), so a stack push never finds it ("The action 'PUSH' ... was not handled
+ * by any navigator"); it is navigated to, with its params. Every other route is pushed (Bluesky's behaviour).
+ */
+export function linkNavigation(routeName: string): 'navigate' | 'push' {
+  return TAB_ROUTES.includes(routeName) ? 'navigate' : 'push'
 }
