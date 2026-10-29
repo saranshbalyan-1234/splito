@@ -178,8 +178,8 @@ const FEATURES: Array<[feature: string, found: (d: Demo) => boolean]> = [
   ['a reminder I scheduled for myself about a group', d => d.reminders.some(r => !r.deleted && r.data.kind === 'self' && r.data.groupId !== null)],
   // Disputes and holds (F-1210, owner 119): every state, in more than one currency
   ['an open dispute with a proposed fix, waiting for me', d => d.disputes.some(x => x.data.kind === 'dispute' && x.data.status === 'open' && x.data.proposedFix !== null && x.data.raisedBy !== DEMO_ME)],
-  ['an open dispute I raised myself', d => d.disputes.some(x => x.data.kind === 'dispute' && x.data.status === 'open' && x.data.raisedBy === DEMO_ME && x.data.itemIndex === null)],
-  ['a disputed item of an itemised bill (my portion)', d => d.disputes.some(x => x.data.status === 'open' && x.data.itemIndex !== null)],
+  ['an open dispute I raised myself', d => d.disputes.some(x => x.data.kind === 'dispute' && x.data.status === 'open' && x.data.raisedBy === DEMO_ME && x.data.itemId === null)],
+  ['a disputed item of an itemised bill (my portion)', d => d.disputes.some(x => x.data.status === 'open' && x.data.itemId !== null)],
   ['an accepted dispute (the record was fixed)', d => d.disputes.some(x => x.data.status === 'accepted')],
   ['a rejected dispute, with the reason', d => d.disputes.some(x => x.data.status === 'rejected' && x.data.resolution !== '')],
   ['a withdrawn dispute', d => d.disputes.some(x => x.data.status === 'withdrawn')],

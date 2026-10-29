@@ -1,3 +1,4 @@
+import {HITSLOP_10} from '#/lib/constants'
 import {Button, ButtonText} from '#/components/Button'
 
 /** A pick-one pill (a reason, a person): the selected one is filled. */
@@ -19,6 +20,7 @@ export function Chip({
       accessibilityRole="radio"
       accessibilityState={{checked: selected}}
       size="small"
+      hitSlop={HITSLOP_10}
       color={selected ? 'primary' : 'secondary'}
       onPress={onPress}>
       <ButtonText>{label}</ButtonText>

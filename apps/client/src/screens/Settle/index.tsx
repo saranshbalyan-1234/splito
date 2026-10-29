@@ -43,7 +43,7 @@ import * as Skeleton from '#/components/Skeleton'
 import {Text} from '#/components/Typography'
 import {MoneyArrow, useMoneyStyle} from '#/components/MoneyDirection'
 import {Shimmer} from '#/motion/Shimmer'
-import {DisputedNotice} from './components/DisputedNotice'
+import {DisputedNotice} from '#/components/disputes/DisputedNotice'
 import {TransferRow} from './components/TransferRow'
 
 type CurrencyPlan = {currency: string; plan: DirectPlan | null}

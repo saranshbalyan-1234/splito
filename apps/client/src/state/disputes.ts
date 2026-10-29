@@ -14,6 +14,8 @@ import {
   type Group,
   groupAdmins,
   holdRecord,
+  type HistoryEntry,
+  loadDisputedRecords,
   type Key,
   listDisputes,
   listOpenDisputes,
@@ -176,6 +178,8 @@ export function useDisputeAccess(type: DisputeTarget, id: string | undefined) {
   return {
     me: actor,
     record,
+    /** The record itself (an expense, payment or write-off), for what a fix would change. */
+    entity,
     /** May `raisedBy` (default me) raise a dispute with `reason`, or a hold? */
     canRaise: (reason: DisputeReason, raisedBy = actor, kind: 'dispute' | 'hold' = 'dispute', hasOpen = false): PermissionResult =>
       record ? canDispute(record, {raisedBy, kind, reason}, hasOpen) : {ok: false, code: 'LOADING'},
@@ -265,4 +269,21 @@ export function useResolvableDisputes(expenseId: string | undefined): Entity<Dis
   const access = useDisputeAccess('expense', expenseId)
   const list = expenseId ? open?.byRecord.get(keyOf('expense', expenseId)) : undefined
   return useMemo(() => (list ?? NONE).filter(d => d.data.kind === 'dispute' && access.canDo(d.data, 'accept')), [list, access.record]) // eslint-disable-line react-hooks/exhaustive-deps
+}
+
+const recordsQuery: Query<HistoryEntry[]> = {
+  key: 'disputes:records',
+  isTouchedBy: c => touches(c, 'dispute') || isMoneyChange(c),
+  loader: store => async (_c, prev) => {
+    const next = await loadDisputedRecords(store)
+    return prev && prev.length === next.length && prev.every((p, i) => p.entity.id === next[i]!.entity.id && p.entity.version === next[i]!.entity.version) ? prev : next
+  },
+}
+
+/**
+ * The live records with an open dispute or hold, newest first, whichever pages of a list are loaded: what "Disputed only"
+ * shows on a group and a person. Read only while `enabled`. Undefined while loading.
+ */
+export function useDisputedRecords(enabled: boolean): HistoryEntry[] | undefined {
+  return useProjection(enabled ? recordsQuery : null)
 }

@@ -13,7 +13,7 @@ import {Text} from '#/components/Typography'
  * this says how much per currency ("₹600 disputed, not in this plan") with "Include disputed", remembered per group.
  * Switched on, it says they are in and offers to leave them out again.
  */
-export function DisputedNotice({leftOut, isIncluded, onToggle}: {leftOut: Record<string, bigint>; isIncluded: boolean; onToggle: (include: boolean) => void}) {
+export function DisputedNotice({leftOut, isIncluded, onToggle, scope = 'plan', testIDPrefix = 'settle'}: {leftOut: Record<string, bigint>; isIncluded: boolean; onToggle: (include: boolean) => void; /** A group's plan, or one friend's Settle up and Call it even. */ scope?: 'plan' | 'friend'; testIDPrefix?: string}) {
   const {t: l} = useLingui()
   const locale = useNumberLocale()
   const amounts = Object.entries(leftOut)
@@ -26,8 +26,8 @@ export function DisputedNotice({leftOut, isIncluded, onToggle}: {leftOut: Record
       <Admonition.Row>
         <Admonition.Icon />
         <Admonition.Content>
-          <Text testID="settle-disputed-notice" style={[a.text_md, a.leading_snug]}>
-            {isIncluded ? <Trans>{list} disputed or on hold is in this plan.</Trans> : <Trans>{list} disputed or on hold, not in this plan.</Trans>}
+          <Text testID={`${testIDPrefix}-disputed-notice`} style={[a.text_md, a.leading_snug]}>
+            {scope === 'friend' ? (isIncluded ? <Trans>{list} disputed or on hold is included in Settle up and Call it even.</Trans> : <Trans>{list} disputed or on hold, not included in Settle up or Call it even.</Trans>) : isIncluded ? <Trans>{list} disputed or on hold is in this plan.</Trans> : <Trans>{list} disputed or on hold, not in this plan.</Trans>}
           </Text>
           <View>
             <Text style={[a.text_sm, a.leading_snug]}>
@@ -36,7 +36,7 @@ export function DisputedNotice({leftOut, isIncluded, onToggle}: {leftOut: Record
           </View>
         </Admonition.Content>
         <Admonition.Button
-          testID={isIncluded ? 'settle-exclude-disputed' : 'settle-include-disputed'}
+          testID={isIncluded ? `${testIDPrefix}-exclude-disputed` : `${testIDPrefix}-include-disputed`}
           label={isIncluded ? l`Leave disputed out` : l`Include disputed`}
           color="secondary"
           onPress={() => onToggle(!isIncluded)}>

@@ -256,6 +256,14 @@ function Detail({
   const open = useOpenDisputes()
   const mark = markOf(open, 'expense', expense.id)
   const openHere = open?.byRecord.get(`expense:${expense.id}`)
+  /* Built once per render, not per item: the items with an open dispute (by id), and who may raise one on an item. */
+  const itemDispute = {
+    marked: new Set((openHere ?? []).flatMap(d => (d.data.itemId === null ? [] : [d.data.itemId]))),
+    me: ctx.actor,
+    onRaise: expense.deleted
+      ? undefined
+      : (itemId: string) => requestDispute({kind: 'raise', targetType: 'expense', targetId: expense.id, itemId}),
+  }
   const scroll = useAnimatedRef<Animated.ScrollView>()
   const panel = useRef<React.ComponentRef<typeof ScrollView>>(null)
   const e = expense.data
@@ -471,23 +479,7 @@ function Detail({
           fmt={fmt}
           name={name}
           avatarName={avatarName}
-          dispute={{
-            marked: new Set(
-              (openHere ?? []).flatMap(d =>
-                d.data.itemIndex === null ? [] : [d.data.itemIndex],
-              ),
-            ),
-            onRaise:
-              expense.deleted
-                ? undefined
-                : index =>
-                    requestDispute({
-                      kind: 'raise',
-                      targetType: 'expense',
-                      targetId: expense.id,
-                      itemIndex: index,
-                    }),
-          }}
+          dispute={itemDispute}
         />
       ) : null}
 

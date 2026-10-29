@@ -60,13 +60,13 @@ function Form({request}: {request: Raise}) {
   const actions = useDisputeActions()
   const {targetType, targetId} = request
   const isHold = request.kind === 'hold'
-  const itemIndex = request.kind === 'raise' ? request.itemIndex : undefined
+  const itemId = request.kind === 'raise' ? request.itemId : undefined
   const record = useEntity<Expense & Repayment>(targetType, targetId)
   const access = useDisputeAccess(targetType, targetId)
   const groups = useAllEntities<Group>('group')
   const d = record?.data
   const currency = d?.currency ?? 'INR'
-  const item = targetType === 'expense' && itemIndex !== undefined && d?.split.mode === 'items' ? d.split.items[itemIndex] : undefined
+  const item = targetType === 'expense' && itemId !== undefined && d?.split.mode === 'items' ? d.split.items.find(i => i.id === itemId) : undefined
   const participants = access.record?.participants ?? []
 
   const [reason, setReason] = useState<DisputeReason | null>(null)
@@ -110,7 +110,7 @@ function Form({request}: {request: Raise}) {
     setIsSaving(true)
     try {
       if (isHold) await actions.hold({targetType, targetId, raisedBy: who, note})
-      else await actions.raise({targetType, targetId, itemIndex: item ? itemIndex : null, raisedBy: who, reason: reason!, note, proposedFix: fix()})
+      else await actions.raise({targetType, targetId, itemId: item ? itemId : null, raisedBy: who, reason: reason!, note, proposedFix: fix()})
       haptics.success()
       control.close(() => Toast.show(isHold ? l`Put on hold. It still counts in balances.` : l`Dispute raised. It still counts in balances.`, {type: 'success'}))
     } catch (e) {

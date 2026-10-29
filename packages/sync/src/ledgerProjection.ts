@@ -289,12 +289,12 @@ export async function rebuildProjections(rows: RowAccess, entities: (type: Entit
 /* -------------------------------------------------------------------------- */
 
 /** An open dispute or hold with its id. */
-type OpenDispute = Pick<Dispute, 'itemIndex'> & {id: string}
+type OpenDispute = Pick<Dispute, 'itemId'> & {id: string}
 
 /** The open disputes and holds on one record, by `byTargetStatus` (a handful of rows at most). */
 async function openDisputesOf(rows: RowAccess, targetType: string, targetId: string): Promise<OpenDispute[]> {
   const found = await rows.range('disputes', {index: 'byTargetStatus', eq: [targetType, targetId, 'open']})
-  return found.filter(r => r.deleted === 0).map(r => ({id: r.id as string, itemIndex: (decode(r.data as string) as Dispute).itemIndex ?? null}))
+  return found.filter(r => r.deleted === 0).map(r => ({id: r.id as string, itemId: (decode(r.data as string) as Dispute).itemId ?? null}))
 }
 
 /**
@@ -303,13 +303,15 @@ async function openDisputesOf(rows: RowAccess, targetType: string, targetId: str
  * participants by weight, paid by the payers in proportion to what they paid; charges are not part of an item).
  * ponytail: an item's share of tax and tip is not counted as disputed; refine with `itemBreakdown` if asked.
  */
-function disputedPart(e: Entity | undefined, open: ReadonlyArray<Pick<OpenDispute, 'itemIndex'>>): LedgerRecord | undefined {
+function disputedPart(e: Entity | undefined, open: ReadonlyArray<Pick<OpenDispute, 'itemId'>>): LedgerRecord | undefined {
   const record = recordOf(e)
   if (!record || open.length === 0) return undefined
   const split = record.kind === 'expense' ? (e!.data as Expense).split : undefined
-  if (!split || split.mode !== 'items' || open.some(d => d.itemIndex === null)) return record
-  const picked = [...new Set(open.map(d => d.itemIndex!))].flatMap(i => (split.items[i] ? [split.items[i]!] : []))
-  if (picked.length === 0) return record
+  if (!split || split.mode !== 'items' || open.some(d => d.itemId === null)) return record
+  /* Items are found by their own id: a reordered bill moves nothing, and an item an edit removed counts for nothing. */
+  const wanted = new Set(open.map(d => d.itemId))
+  const picked = split.items.filter(i => wanted.has(i.id))
+  if (picked.length === 0) return undefined
   const shares: Record<string, bigint> = {}
   let total = 0n
   for (const item of picked) {
@@ -368,14 +370,14 @@ async function projectDispute(rows: RowAccess, prev: Entity<Dispute> | undefined
   const is = next && !next.deleted && next.data?.status === 'open' ? next.data : undefined
   if (!was && !is) return
   const d = (is ?? was)!
-  if (was && is && was.itemIndex === is.itemIndex && was.targetId === is.targetId) return
+  if (was && is && was.itemId === is.itemId && was.targetId === is.targetId) return
   const id = (next ?? prev)!.id
   const raw = await rows.get(ENTITY_STORE[d.targetType], [d.targetId])
   const target = raw ? entityOfRow(d.targetType, raw) : undefined
   if (!live(target)) return
   const others = (await openDisputesOf(rows, d.targetType, d.targetId)).filter(o => o.id !== id)
-  const before = was ? [...others, {id, itemIndex: was.itemIndex ?? null}] : others
-  const after = is ? [...others, {id, itemIndex: is.itemIndex ?? null}] : others
+  const before = was ? [...others, {id, itemId: was.itemId ?? null}] : others
+  const after = is ? [...others, {id, itemId: is.itemId ?? null}] : others
   const nets: Sums = new Map()
   const pairs: Sums = new Map()
   addDisputed(disputedPart(target, before), -1, nets, pairs)
@@ -392,7 +394,7 @@ export async function rebuildDisputedProjections(rows: RowAccess, entities: (typ
     if (e.deleted || e.data?.status !== 'open') continue
     const key = `${e.data.targetType}:${e.data.targetId}`
     const group = byTarget.get(key) ?? {type: e.data.targetType, id: e.data.targetId, open: []}
-    group.open.push({id: e.id, itemIndex: e.data.itemIndex ?? null})
+    group.open.push({id: e.id, itemId: e.data.itemId ?? null})
     byTarget.set(key, group)
   }
   const nets: Sums = new Map()

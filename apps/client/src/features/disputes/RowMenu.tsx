@@ -13,25 +13,26 @@ import {IS_NATIVE, IS_WEB} from '#/env'
 
 /**
  * A live history row's menu (F-1210): Dispute and Put on hold. Right-click (web) and long-press (native, via the
- * `onLongPress` the `row` render function hands to the row's Link) open it; on wide screens a "..." button beside the
- * row does too. Phones keep the row exactly as it was: no extra button (web adapts, mobile stays the same).
+ * `onLongPress` the `row` render function hands to the row's Link, also on phone-width web) open it; on wide screens a
+ * "..." button beside the row does too. Phones keep the row exactly as it was: no extra button (web adapts, mobile stays the same).
  */
 function RowMenu({
   row,
   style,
   testID,
-  name,
+  entry,
   targetType,
   targetId,
 }: {
   row: (onLongPress?: () => void) => ReactNode
   style?: StyleProp<ViewStyle>
   testID: string
-  name: string
+  entry: HistoryEntry
   targetType: DisputeTarget
   targetId: string
 }) {
   const {t: l} = useLingui()
+  const name = entry.kind === 'expense' ? entry.entity.data.title : l`this record`
   const {gtMobile} = useBreakpoints()
   const control = Menu.useMenuControl()
   const haptics = useHaptics()
@@ -50,7 +51,8 @@ function RowMenu({
             },
           }
         : {})}>
-      <View style={[a.flex_1]}>{row(IS_NATIVE ? open : undefined)}</View>
+      <View style={[a.flex_1]}>{/* Long-press on native and on phone-width web (iOS Safari fires no contextmenu on a long-press); wide screens right-click or use the button. */}
+      {row(IS_NATIVE || !gtMobile ? open : undefined)}</View>
       <Menu.Root control={control}>
         <Menu.Trigger label={l`More options for ${name}`}>
           {({props}) =>
@@ -82,13 +84,10 @@ function RowMenu({
   )
 }
 
-/** The menu of a live history row, for `HistoryRow`'s `rowMenu` prop; deleted rows have none (their Hide menu is `hide`). */
-export function historyRowMenu(entry: HistoryEntry, fallbackName: string) {
-  if (entry.entity.deleted) return undefined
-  const name = entry.kind === 'expense' ? entry.entity.data.title : fallbackName
-  return {
-    wrap: (row: (onLongPress?: () => void) => ReactNode, style: StyleProp<ViewStyle>) => (
-      <RowMenu testID={`history-${entry.entity.id}-record-menu`} name={name} targetType={entry.kind} targetId={entry.entity.id} style={style} row={row} />
-    ),
-  }
+/**
+ * The menu of a live history row, for `HistoryRow`'s `rowMenu` prop (a module-level function, so rows get the same
+ * `rowMenu` every render and the compiler can keep them still); deleted rows have none (their Hide menu is `hide`).
+ */
+export function rowMenuWrap(entry: HistoryEntry, row: (onLongPress?: () => void) => ReactNode, style: StyleProp<ViewStyle>) {
+  return <RowMenu testID={`history-${entry.entity.id}-record-menu`} entry={entry} targetType={entry.kind} targetId={entry.entity.id} style={style} row={row} />
 }

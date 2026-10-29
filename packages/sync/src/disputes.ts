@@ -21,8 +21,10 @@ import {
 } from '@splito/domain'
 
 import {deleteExpense, deleteRepayment, deleteWriteOffs, type Expense, type ExpenseDraft, type Group, groupAdmins, requireLive, type Repayment, updateExpense, write} from './mutations'
+import {encode} from './codec'
 import {type Key} from './schema'
 import {insideTransaction, type Page, type Store, type Tx} from './store'
+import {type HistoryEntry} from './selectors'
 import {type Entity, type HistoryRow, type MutationCtx} from './types'
 
 export {DISPUTE_REASONS}
@@ -46,7 +48,7 @@ export interface Dispute {
   targetType: DisputeTarget
   targetId: string
   /** The disputed item of an itemized bill (its portion); null: the whole record. */
-  itemIndex: number | null
+  itemId: string | null
   /** Where the record lives (null: outside groups); copied so a list or filter needs no second read. */
   groupId: string | null
   /** Who it is raised as: me, or (before the backend) a participant I recorded it for. */
@@ -73,7 +75,7 @@ export interface DisputeInput {
   id?: string
   targetType: DisputeTarget
   targetId: string
-  itemIndex?: number | null
+  itemId?: string | null
   /** Who it is raised as; default me. */
   raisedBy?: string
   reason: DisputeReason
@@ -141,7 +143,7 @@ const stateOf = (d: Dispute): DisputeState => ({raisedBy: d.raisedBy, recordedBy
 async function raise(
   store: Store,
   ctx: MutationCtx,
-  input: {id?: string; targetType: DisputeTarget; targetId: string; itemIndex?: number | null; raisedBy?: string; kind: DisputeKind; reason: StoredReason; note: string; proposedFix?: ProposedFix | null},
+  input: {id?: string; targetType: DisputeTarget; targetId: string; itemId?: string | null; raisedBy?: string; kind: DisputeKind; reason: StoredReason; note: string; proposedFix?: ProposedFix | null},
 ): Promise<Entity<Dispute>> {
   if (!DISPUTE_TARGETS.includes(input.targetType)) throw new DomainError('INVALID_DISPUTE_TARGET')
   if (input.kind === 'dispute' && !(DISPUTE_REASONS as readonly string[]).includes(input.reason)) throw new DomainError('INVALID_REASON')
@@ -150,18 +152,27 @@ async function raise(
   if (fix) {
     if (input.kind !== 'dispute' || input.targetType !== 'expense' || FIX_FOR[input.reason as DisputeReason] !== fix.kind) throw new DomainError('INVALID_FIX')
     if ((fix.kind === 'amount' || fix.kind === 'share') && fix.amount < 0n) throw new DomainError('INVALID_FIX')
+    // An item's dispute is about that portion: a whole-bill change (amount, payer, duplicate) is not its fix.
+    if (input.itemId) throw new DomainError('INVALID_FIX')
+    if (fix.kind === 'duplicate' && fix.of === input.targetId) throw new DomainError('INVALID_FIX')
   }
   const raisedBy = input.raisedBy ?? ctx.actor
   const id = input.id ?? ctx.newId()
   return store.transaction(async tx => {
     const existing = await tx.get<Dispute>('dispute', id)
-    if (existing) return existing
+    if (existing) {
+      // A retry carries the same input and gets what is stored; a different input under the same id is not a retry.
+      const e = existing.data
+      const same = e.targetType === input.targetType && e.targetId === input.targetId && e.itemId === (input.itemId ?? null) && e.raisedBy === raisedBy && e.kind === input.kind && e.reason === input.reason && e.note === input.note && encode(e.proposedFix) === encode(fix)
+      if (!same) throw new DomainError('IDEMPOTENCY_CONFLICT')
+      return existing
+    }
     const {entity, record} = await recordOf(tx, input.targetType, input.targetId)
     await requireLive(tx, 'person', raisedBy, 'UNKNOWN_PERSON')
-    const itemIndex = input.itemIndex ?? null
-    if (itemIndex !== null) {
+    const itemId = input.itemId ?? null
+    if (itemId !== null) {
       const split = input.targetType === 'expense' ? entity.data.split : undefined
-      if (split?.mode !== 'items' || !Number.isInteger(itemIndex) || !split.items[itemIndex]) throw new DomainError('INVALID_ITEM')
+      if (split?.mode !== 'items' || !split.items.some(i => i.id === itemId)) throw new DomainError('INVALID_ITEM')
     }
     if (fix?.kind === 'duplicate') await requireLive(tx, 'expense', fix.of, 'INVALID_FIX')
     if (fix && (fix.kind === 'share' || fix.kind === 'payer')) await requireLive(tx, 'person', fix.personId, 'UNKNOWN_PERSON')
@@ -170,7 +181,7 @@ async function raise(
     const data: Dispute = {
       targetType: input.targetType,
       targetId: input.targetId,
-      itemIndex,
+      itemId,
       groupId: entity.data.groupId ?? null,
       raisedBy,
       recordedBy: ctx.actor,
@@ -260,22 +271,40 @@ function scaled(total: bigint, amounts: Record<string, bigint>): Record<string, 
 }
 
 /**
- * The expense the proposed fix makes, as a draft for `updateExpense` (the same validation as any edit). An amount
- * fix keeps the split rule when it scales (equal, percent, shares, adjusted) and becomes exact amounts in the same
- * proportions otherwise; a share fix becomes exact amounts with the rest spread over the others; a payer fix makes
- * that person the only payer.
+ * Whether a proposed fix can be applied in one tap without changing how the record is split (ruling after the F-1210
+ * review): an amount fix scales an equal, percent, shares or adjusted split (the rule stays) but not exact amounts or
+ * a bill of items; a share fix needs an exact split (it sets that person's amount); a payer fix never touches the
+ * split. A duplicate is deleted. Anything else is for "Edit it", by hand.
+ */
+export function fixApplies(e: Expense, fix: ProposedFix): boolean {
+  switch (fix.kind) {
+    case 'amount':
+      return e.split.mode === 'equal' || e.split.mode === 'percent' || e.split.mode === 'shares' || e.split.mode === 'adjusted'
+    case 'share':
+      return e.split.mode === 'exact'
+    case 'payer':
+    case 'duplicate':
+      return true
+  }
+}
+
+/**
+ * The expense the proposed fix makes, as a draft for `updateExpense` (the same validation as any edit); `NO_FIX` when
+ * the fix does not apply in one tap (`fixApplies`). The split mode is never converted: an amount fix keeps the split
+ * rule and scales what it needs to, a share fix sets one exact amount and spreads the rest over the others in
+ * proportion, a payer fix makes that person the only payer.
  */
 export function applyFix(e: Expense, fix: Exclude<ProposedFix, {kind: 'duplicate'}>): ExpenseDraft {
+  if (!fixApplies(e, fix)) throw new DomainError('NO_FIX')
   const {shares, ...draft} = e
   if (fix.kind === 'payer') return {...draft, payers: {[fix.personId]: e.total}}
   if (fix.kind === 'amount') {
     const total = fix.amount
     if (total <= 0n) throw new DomainError('INVALID_FIX')
     const payers = Object.keys(e.payers).length === 1 ? {[Object.keys(e.payers)[0]!]: total} : scaled(total, e.payers)
-    const keeps = e.split.mode === 'equal' || e.split.mode === 'percent' || e.split.mode === 'shares' || e.split.mode === 'adjusted'
-    return {...draft, total, payers, split: keeps ? e.split : {mode: 'exact', amounts: scaled(total, shares)}}
+    return {...draft, total, payers}
   }
-  // share: the person's share becomes `amount`; everyone else keeps their proportion of what is left.
+  // share (exact split): the person's share becomes `amount`; everyone else keeps their proportion of what is left.
   if (fix.amount > e.total) throw new DomainError('INVALID_FIX')
   const others = Object.fromEntries(Object.entries(shares).filter(([id]) => id !== fix.personId))
   const rest = e.total - fix.amount
@@ -400,3 +429,21 @@ export const listDisputedBalances = (store: Store, q: {personId?: string; groupI
 
 /** The disputed or held part of what others owe `personId` (or `otherId` owes them). */
 export const listDisputedPairs = (store: Store, personId: string, otherId?: string) => store.disputedPairs(personId, otherId)
+
+/**
+ * Every live expense, payment and write-off with an open dispute or hold, newest first, as history entries: what the
+ * "Disputed only" filter lists. Read from `byStatus` (the open disputes) and the records they name by id, so it never
+ * depends on which pages of a list are loaded.
+ */
+export async function loadDisputedRecords(store: Store): Promise<HistoryEntry[]> {
+  const ids: Record<DisputeTarget, Set<string>> = {expense: new Set(), repayment: new Set(), writeoff: new Set()}
+  let after: Key | null = null
+  do {
+    const page: Page<Entity<Dispute>> = await listOpenDisputes(store, {after})
+    for (const d of page.items) ids[d.data.targetType].add(d.data.targetId)
+    after = page.next
+  } while (after)
+  const out: HistoryEntry[] = []
+  for (const kind of DISPUTE_TARGETS) for (const entity of await store.getMany(kind, [...ids[kind]])) if (!entity.deleted) out.push({kind, entity} as HistoryEntry)
+  return out.sort((x, y) => (x.entity.data as {date: string}).date < (y.entity.data as {date: string}).date ? 1 : (x.entity.data as {date: string}).date > (y.entity.data as {date: string}).date ? -1 : x.entity.id < y.entity.id ? -1 : 1)
+}

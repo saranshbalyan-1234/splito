@@ -33,7 +33,10 @@ import {
   type ExpenseDraft,
   restoreExpense,
   updateExpense,
+  write,
 } from '../src/mutations'
+import {deleteGroup} from '../src/groupLifecycle'
+import {setSettleIncludeDisputed} from '../src/preferences'
 import {openSqlStore} from '../src/sqlStore'
 import {type Store} from '../src/store'
 import {type MutationCtx} from '../src/types'
@@ -45,7 +48,7 @@ let n = 0
 let me: MutationCtx
 /** Bob is the adder of nothing here; Ann added the group expense and Cy is a member who is not on it. */
 let as: (actor: string) => MutationCtx
-let ids: {bob: string; ann: string; cy: string; group: string; direct: string; shared: string; items: string; pay: string}
+let ids: {bob: string; ann: string; cy: string; group: string; direct: string; shared: string; items: string; pay: string; exact: string; percent: string}
 
 const draft = (over: Partial<ExpenseDraft> = {}): ExpenseDraft => ({
   title: 'Dinner', groupId: null, currency: 'INR', total: 1200n, payers: {me: 1200n}, split: {mode: 'equal', participants: ['me', ids.bob]},
@@ -62,7 +65,7 @@ async function setup(open: () => Promise<Store>) {
   const ann = (await createPerson(s, me, {name: 'Ann'})).id
   const cy = (await createPerson(s, me, {name: 'Cy'})).id
   const group = (await createGroup(s, me, {name: 'Goa', kind: 'trip', currency: 'INR', memberIds: [bob, ann, cy], startDate: null, endDate: null})).id
-  ids = {bob, ann, cy, group, direct: '', shared: '', items: '', pay: ''}
+  ids = {bob, ann, cy, group, direct: '', shared: '', items: '', pay: '', exact: '', percent: ''}
   ids.direct = (await createExpense(s, me, draft())).id
   // Added by Ann, paid by Ann, in the group, shared by me, Bob and Ann.
   ids.shared = (
@@ -74,6 +77,9 @@ async function setup(open: () => Promise<Store>) {
       split: {mode: 'items', items: [{id: 'a', name: 'Beer', amount: 600n, participants: [bob, 'me']}, {id: 'b', name: 'Fries', amount: 400n, participants: [ann]}], tax: 0n, tip: 0n, discount: 0n},
     }))
   ).id
+  // An exact split (Ann paid, 300 each) and a percent split, both in the group.
+  ids.exact = (await createExpense(s, as(ann), draft({title: 'Taxi', groupId: group, total: 900n, payers: {[ann]: 900n}, split: {mode: 'exact', amounts: {me: 300n, [bob]: 300n, [ann]: 300n}}}))).id
+  ids.percent = (await createExpense(s, as(ann), draft({title: 'Rent', groupId: group, total: 1000n, payers: {[ann]: 1000n}, split: {mode: 'percent', basisPoints: {me: 5000, [bob]: 5000}}}))).id
   ids.pay = (await createRepayment(s, me, {groupId: null, currency: 'USD', from: bob, to: 'me', amount: 500n, date: '2026-10-27', tz: 'UTC', note: ''})).id
 }
 
@@ -95,7 +101,7 @@ describe.each(engines)('disputes on %s', (_name, open) => {
     const balances = await s.balances()
     const outbox = (await s.outbox()).length
     const d = await raiseDispute(s, as(ids.bob), {targetType: 'expense', targetId: ids.direct, reason: 'wrong_amount', note: 'It was 900', proposedFix: {kind: 'amount', amount: 900n}})
-    expect(d.data).toMatchObject({status: 'open', kind: 'dispute', raisedBy: ids.bob, recordedBy: ids.bob, itemIndex: null, groupId: null, reason: 'wrong_amount'})
+    expect(d.data).toMatchObject({status: 'open', kind: 'dispute', raisedBy: ids.bob, recordedBy: ids.bob, itemId: null, groupId: null, reason: 'wrong_amount'})
     expect(d.syncStatus).toBe('pending')
     expect(await s.history('dispute', d.id)).toHaveLength(1)
     expect((await s.outbox()).slice(outbox).map(o => o.opType)).toEqual(['dispute.raise'])
@@ -120,7 +126,7 @@ describe.each(engines)('disputes on %s', (_name, open) => {
   })
 
   test('a disputed item counts only that item, an item dispute and a whole one add up to the record', async () => {
-    const item = await raiseDispute(s, as(ids.bob), {targetType: 'expense', targetId: ids.items, itemIndex: 0, reason: 'not_part', note: ''})
+    const item = await raiseDispute(s, as(ids.bob), {targetType: 'expense', targetId: ids.items, itemId: 'a', reason: 'not_part', note: ''})
     const net = Object.fromEntries((await s.disputedBalances({groupId: ids.group})).map(b => [b.personId, b.amount]))
     // Beer 600 between Bob and me (300 each), paid by me: I lent 300, Bob borrowed 300.
     expect(net).toEqual({me: 300n, [ids.bob]: -300n})
@@ -148,7 +154,7 @@ describe.each(engines)('disputes on %s', (_name, open) => {
     await fails(raiseDispute(s, as(ids.bob), {targetType: 'expense', targetId: ids.direct, reason: 'other', note: '   '}), 'NOTE_REQUIRED')
     await fails(raiseDispute(s, as(ids.bob), {targetType: 'expense', targetId: ids.direct, reason: 'not_received', note: ''}), 'INVALID_REASON')
     await fails(raiseDispute(s, as(ids.bob), {targetType: 'expense', targetId: ids.direct, reason: 'wrong_amount', note: '', proposedFix: {kind: 'payer', personId: 'me'}}), 'INVALID_FIX')
-    await fails(raiseDispute(s, as(ids.bob), {targetType: 'expense', targetId: ids.direct, itemIndex: 0, reason: 'not_part', note: ''}), 'INVALID_ITEM')
+    await fails(raiseDispute(s, as(ids.bob), {targetType: 'expense', targetId: ids.direct, itemId: 'a', reason: 'not_part', note: ''}), 'INVALID_ITEM')
     await fails(raiseDispute(s, as(ids.bob), {targetType: 'expense', targetId: 'nope', reason: 'not_part', note: ''}), 'NOT_FOUND')
     await fails(raiseDispute(s, as(ids.bob), {targetType: 'expense', targetId: ids.direct, reason: 'other', note: 'x'.repeat(1001)}), 'NOTE_TOO_LONG')
   })
@@ -193,7 +199,10 @@ describe.each(engines)('disputes on %s', (_name, open) => {
     const reopened = await reopenDispute(s, as(ids.bob), d.id, {note: 'Here is the receipt'})
     expect(reopened.data).toMatchObject({status: 'open', note: 'Here is the receipt', reopenCount: 1, resolvedBy: null})
     expect((await s.disputedBalances()).length).toBeGreaterThan(0)
-    await rejectDispute(s, as(ids.ann), d.id, {note: 'still no'})
+    // After a reopen only a group admin answers: Ann (the adder and payer, not an admin) is refused, I (admin) am not.
+    await fails(rejectDispute(s, as(ids.ann), d.id, {note: 'still no'}), 'ADMIN_ONLY')
+    await fails(acceptDispute(s, as(ids.ann), d.id), 'ADMIN_ONLY')
+    await rejectDispute(s, me, d.id, {note: 'still no'})
     await fails(reopenDispute(s, as(ids.bob), d.id, {note: 'third'}), 'ADMIN_ONLY')
     expect((await reopenDispute(s, me, d.id, {note: 'admin looks again'})).data.reopenCount).toBe(2)
     await expectDisputedMatch(s)
@@ -214,9 +223,9 @@ describe.each(engines)('disputes on %s', (_name, open) => {
   })
 
   test('share, payer and duplicate fixes', async () => {
-    const share = await raiseDispute(s, as(ids.bob), {targetType: 'expense', targetId: ids.shared, reason: 'wrong_share', note: '', proposedFix: {kind: 'share', personId: ids.bob, amount: 100n}})
+    const share = await raiseDispute(s, as(ids.bob), {targetType: 'expense', targetId: ids.exact, reason: 'wrong_share', note: '', proposedFix: {kind: 'share', personId: ids.bob, amount: 100n}})
     await acceptDispute(s, as(ids.ann), share.id, {apply: true})
-    const e = (await s.get<Expense>('expense', ids.shared))!
+    const e = (await s.get<Expense>('expense', ids.exact))!
     expect(e.data.shares[ids.bob]).toBe(100n)
     expect(Object.values(e.data.shares).reduce((a, b) => a + b, 0n)).toBe(900n)
     expect(e.data.split.mode).toBe('exact')
@@ -239,7 +248,7 @@ describe.each(engines)('disputes on %s', (_name, open) => {
     const d = await raiseDispute(s, as(ids.bob), {targetType: 'expense', targetId: ids.direct, reason: 'other', note: 'x'})
     await fails(acceptDispute(s, me, d.id, {apply: true}), 'NO_FIX')
     expect((await s.get<Dispute>('dispute', d.id))!.data.status).toBe('open')
-    const big = await raiseDispute(s, as(ids.bob), {targetType: 'expense', targetId: ids.shared, reason: 'wrong_share', note: '', proposedFix: {kind: 'share', personId: ids.bob, amount: 99999n}})
+    const big = await raiseDispute(s, as(ids.bob), {targetType: 'expense', targetId: ids.exact, reason: 'wrong_share', note: '', proposedFix: {kind: 'share', personId: ids.bob, amount: 99999n}})
     await fails(acceptDispute(s, as(ids.ann), big.id, {apply: true}), 'INVALID_FIX')
     expect((await s.get<Dispute>('dispute', big.id))!.data.status).toBe('open')
   })
@@ -322,5 +331,96 @@ describe.each(engines)('disputes on %s', (_name, open) => {
     expect((await s.get<Dispute>('dispute', w.id))!.data.status).toBe('gone')
     const kinds = (await loadActivity(s)).filter(e => e.entityType === 'dispute').map(e => e.kind)
     expect([...kinds].sort()).toEqual(['dispute.held', 'dispute.raised', 'dispute.raised', 'dispute.rejected', 'dispute.released', 'dispute.reopened', 'dispute.withdrawn'])
+  })
+
+  test('one-tap apply never changes the split mode: an amount fix on an exact or itemised split, or a share fix on anything but exact, is NO_FIX', async () => {
+    const before = async (id: string) => (await s.get<Expense>('expense', id))!.version
+    const cases: Array<[string, Parameters<typeof raiseDispute>[2]]> = [
+      [ids.exact, {targetType: 'expense', targetId: ids.exact, reason: 'wrong_amount', note: '', proposedFix: {kind: 'amount', amount: 600n}}],
+      [ids.items, {targetType: 'expense', targetId: ids.items, reason: 'wrong_amount', note: '', proposedFix: {kind: 'amount', amount: 900n}}],
+      [ids.shared, {targetType: 'expense', targetId: ids.shared, reason: 'wrong_share', note: '', proposedFix: {kind: 'share', personId: ids.bob, amount: 100n}}],
+      [ids.percent, {targetType: 'expense', targetId: ids.percent, reason: 'wrong_share', note: '', proposedFix: {kind: 'share', personId: ids.bob, amount: 100n}}],
+    ]
+    for (const [target, input] of cases) {
+      const v = await before(target)
+      const d = await raiseDispute(s, as(ids.bob), input)
+      await fails(acceptDispute(s, as(ids.ann), d.id, {apply: true}).catch(e => (e as DomainError).code === 'NOT_RESOLVER' ? acceptDispute(s, me, d.id, {apply: true}) : Promise.reject(e)), 'NO_FIX')
+      expect((await s.get<Dispute>('dispute', d.id))!.data.status).toBe('open')
+      expect(await before(target)).toBe(v)
+    }
+    for (const d of (await s.getAll<Dispute>('dispute')).filter(x => x.data.status === 'open')) await withdrawDispute(s, as(d.data.raisedBy), d.id)
+    // An amount fix on a percent split keeps the rule and moves the total and payer.
+    const p = await raiseDispute(s, as(ids.bob), {targetType: 'expense', targetId: ids.percent, reason: 'wrong_amount', note: '', proposedFix: {kind: 'amount', amount: 800n}})
+    await acceptDispute(s, me, p.id, {apply: true})
+    const e = (await s.get<Expense>('expense', ids.percent))!
+    expect(e.data.split).toEqual({mode: 'percent', basisPoints: {me: 5000, [ids.bob]: 5000}})
+    expect([e.data.total, e.data.payers[ids.ann]]).toEqual([800n, 800n])
+    await expectProjectionsMatchLedger(s)
+  })
+
+  test('an item dispute follows the item by id: reordering moves nothing, removing it counts nothing and closes the dispute as Gone', async () => {
+    const e = (await s.get<Expense>('expense', ids.items))!
+    const split = e.data.split as Extract<Expense['split'], {mode: 'items'}>
+    const d = await raiseDispute(s, as(ids.bob), {targetType: 'expense', targetId: ids.items, itemId: 'b', reason: 'wrong_amount', note: ''})
+    const own = async () => Object.fromEntries((await s.disputedBalances({groupId: ids.group})).map(b => [b.personId, b.amount]))
+    // Fries (id b, 400, only Ann): Ann owes 400 to me.
+    expect(await own()).toEqual({me: 400n, [ids.ann]: -400n})
+    const draftOf = (items: typeof split.items, total: bigint) => ({title: 'Bill', groupId: ids.group, currency: 'INR', total, payers: {me: total}, split: {...split, items}, date: '2026-10-26', tz: 'Asia/Kolkata', category: 'food', notes: ''}) as ExpenseDraft
+    // Reordered: the same item, the same part.
+    await updateExpense(s, me, ids.items, draftOf([...split.items].reverse(), 1000n))
+    expect(await own()).toEqual({me: 400n, [ids.ann]: -400n})
+    // The item's price changes: its part follows.
+    await updateExpense(s, me, ids.items, draftOf(split.items.map(i => (i.id === 'b' ? {...i, amount: 500n} : i)), 1100n))
+    expect(await own()).toEqual({me: 500n, [ids.ann]: -500n})
+    await expectDisputedMatch(s)
+    // Removed: nothing counts, never the whole bill, and the dispute is Gone with a history line.
+    await updateExpense(s, me, ids.items, draftOf(split.items.filter(i => i.id === 'a'), 600n))
+    expect(await s.disputedBalances()).toEqual([])
+    expect((await s.get<Dispute>('dispute', d.id))!.data.status).toBe('gone')
+    expect((await s.history('dispute', d.id)).at(-1)!.data).toMatchObject({status: 'gone'})
+    expect(disputeEvents(await s.history('dispute', d.id)).map(x => x.kind)).toEqual(['raised', 'gone'])
+    await expectProjectionsMatchLedger(s)
+  })
+
+  test('deleting a group closes the disputes of every record in it as Gone and forgets its remembered Include disputed', async () => {
+    await setSettleIncludeDisputed(s, me, ids.group, true)
+    const a = await raiseDispute(s, as(ids.bob), {targetType: 'expense', targetId: ids.shared, reason: 'other', note: 'x'})
+    const b = await holdRecord(s, me, {targetType: 'expense', targetId: ids.items, note: 'wait'})
+    await deleteGroup(s, me, ids.group)
+    for (const id of [a.id, b.id]) expect((await s.get<Dispute>('dispute', id))!.data.status).toBe('gone')
+    expect(await s.disputedBalances()).toEqual([])
+    expect(await s.disputedPairs('me')).toEqual([])
+    const pref = (await s.get<{value: string[]}>('preference', 'group:settleIncludeDisputed'))!
+    expect(pref.data.value).toEqual([])
+    await expectProjectionsMatchLedger(s)
+  })
+
+  test('erasing a disputed record takes its disputes with it, in the same call', async () => {
+    const d = await raiseDispute(s, as(ids.bob), {targetType: 'expense', targetId: ids.direct, reason: 'other', note: 'x'})
+    await s.erase([{type: 'expense', id: ids.direct}])
+    expect(await s.get('dispute', d.id)).toBeUndefined()
+    expect(await s.history('dispute', d.id)).toEqual([])
+    expect(await s.disputedBalances({personId: 'me'})).toEqual([])
+    await expectProjectionsMatchLedger(s)
+  })
+
+  test('a retried raise with the same id and another input is a conflict; whole-bill fixes and a self-duplicate are refused', async () => {
+    const input = {id: 'd-same', targetType: 'expense' as const, targetId: ids.direct, reason: 'other' as const, note: 'x'}
+    const first = await raiseDispute(s, as(ids.bob), input)
+    expect((await raiseDispute(s, as(ids.bob), input)).version).toBe(first.version)
+    await fails(raiseDispute(s, as(ids.bob), {...input, note: 'y'}), 'IDEMPOTENCY_CONFLICT')
+    await fails(raiseDispute(s, as(ids.ann), {targetType: 'expense', targetId: ids.items, itemId: 'a', reason: 'wrong_amount', note: '', proposedFix: {kind: 'amount', amount: 500n}}), 'INVALID_FIX')
+    await fails(raiseDispute(s, as(ids.ann), {targetType: 'expense', targetId: ids.shared, reason: 'duplicate', note: '', proposedFix: {kind: 'duplicate', of: ids.shared}}), 'INVALID_FIX')
+  })
+
+  test('closing a dispute as Gone queues nothing when the record write itself is not queued', async () => {
+    const d = await raiseDispute(s, as(ids.bob), {targetType: 'expense', targetId: ids.direct, reason: 'other', note: 'x'})
+    const before = (await s.outbox()).length
+    await s.transaction(async tx => {
+      const e = (await tx.get<Expense>('expense', ids.direct))!
+      await write(tx, me, 'expense', ids.direct, e.data, true, null)
+    })
+    expect((await s.get<Dispute>('dispute', d.id))!.data.status).toBe('gone')
+    expect((await s.outbox()).length).toBe(before)
   })
 })

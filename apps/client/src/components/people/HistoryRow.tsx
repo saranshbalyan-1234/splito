@@ -65,7 +65,7 @@ export function HistoryRow({
     wrap: (row: (onLongPress?: () => void) => ReactNode, style: StyleProp<ViewStyle>) => ReactNode
   }
   /** A live row's Dispute / Put on hold menu (right-click, long press, and a button on wide screens); same shape as `hide`. */
-  rowMenu?: {wrap: (row: (onLongPress?: () => void) => ReactNode, style: StyleProp<ViewStyle>) => ReactNode}
+  rowMenu?: (entry: HistoryEntry, row: (onLongPress?: () => void) => ReactNode, style: StyleProp<ViewStyle>) => ReactNode
   /** Whether the record has an open dispute or hold (F-1210); the screen reads the open list once and passes each row's. */
   mark?: 'disputed' | 'hold'
   /** Opens a payment's or a write-off's details (`kind` says which). */
@@ -269,7 +269,7 @@ export function HistoryRow({
       {hide ? (
         hide.wrap(row, !hideTopBorder && [a.border_t, t.atoms.border_contrast_low])
       ) : rowMenu ? (
-        rowMenu.wrap(row, !hideTopBorder && [a.border_t, t.atoms.border_contrast_low])
+        rowMenu(entry, row, !hideTopBorder && [a.border_t, t.atoms.border_contrast_low])
       ) : (
         row()
       )}

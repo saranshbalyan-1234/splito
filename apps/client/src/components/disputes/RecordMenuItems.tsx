@@ -10,11 +10,11 @@ import * as Menu from '#/components/Menu'
  * history row's long-press / right-click menu. The sheets open from `DisputeHost`, since a menu is gone by the time
  * its item has been pressed. Whether this person may is checked in the sheet, with the mutation's own rules.
  */
-export function RecordMenuItems({targetType, targetId, itemIndex}: {targetType: DisputeTarget; targetId: string; itemIndex?: number}) {
+export function RecordMenuItems({targetType, targetId, itemId}: {targetType: DisputeTarget; targetId: string; itemId?: string}) {
   const {t: l} = useLingui()
   return (
     <>
-      <Menu.Item testID="record-dispute" label={l`Dispute`} onPress={() => requestDispute({kind: 'raise', targetType, targetId, itemIndex})}>
+      <Menu.Item testID="record-dispute" label={l`Dispute`} onPress={() => requestDispute({kind: 'raise', targetType, targetId, itemId})}>
         <Menu.ItemText>
           <Trans>Dispute</Trans>
         </Menu.ItemText>

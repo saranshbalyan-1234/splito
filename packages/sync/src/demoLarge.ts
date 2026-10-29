@@ -1134,7 +1134,7 @@ export function generateLargeDemo({me, today, now, seed = DEMO_LARGE_SEED}: {me:
       // Open, raised by me, waiting for Sam.
       ops.push({kind: 'dispute', at: soon('Parasailing', 2 * HOUR), actor: me, id: d('open-mine'), input: {targetType: 'expense', targetId: ids.Parasailing!, reason: 'wrong_share', note: 'I skipped the second ride.'}})
       // One item of the bar tab: my portion of the pints.
-      ops.push({kind: 'dispute', at: soon(bar, 4 * HOUR), actor: me, id: d('item'), input: {targetType: 'expense', targetId: ids[bar]!, itemIndex: 0, reason: 'wrong_share', note: 'I only had one pint.'}})
+      ops.push({kind: 'dispute', at: soon(bar, 4 * HOUR), actor: me, id: d('item'), input: {targetType: 'expense', targetId: ids[bar]!, itemId: 'item-0', reason: 'wrong_share', note: 'I only had one pint.'}})
       // Accepted (euros): the tram ticket was cheaper; Diego fixed it by hand and said yes.
       ops.push({kind: 'dispute', at: soon('Tram 28 tickets', HOUR), actor: me, id: d('accepted'), input: {targetType: 'expense', targetId: ids['Tram 28 tickets']!, reason: 'wrong_amount', note: 'The tickets were 10, not 12.', proposedFix: {kind: 'amount', amount: 1000n}}})
       ops.push({kind: 'expense.update', at: soon('Tram 28 tickets', 2 * HOUR), actor: cid('diego'), id: ids['Tram 28 tickets']!, draft: {...drafts['Tram 28 tickets']!, total: 1000n, payers: {[cid('diego')]: 1000n}}})

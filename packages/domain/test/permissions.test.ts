@@ -80,6 +80,19 @@ describe('canResolveDispute', () => {
     expect(can({...rejected, reopenCount: 1}, 'admin', 'reopen')).toBe(true)
     expect(can({}, 'bob', 'reopen')).toBe(false)
   })
+  test('after a reopen only a group admin answers; outside a group the adder or payer still does', () => {
+    const reopened = {reopenCount: 1}
+    expect(can(reopened, 'adder', 'accept')).toBe(false)
+    expect(can(reopened, 'payer', 'reject')).toBe(false)
+    expect(can(reopened, 'admin', 'accept')).toBe(true)
+    expect(can(reopened, 'admin', 'reject')).toBe(true)
+    const direct = {...record, groupMembers: [], groupAdmins: []}
+    expect(can(reopened, 'adder', 'accept', direct)).toBe(true)
+    expect(can(reopened, 'payer', 'reject', direct)).toBe(true)
+    // ...and a second reopen is refused there: nobody is an admin.
+    expect(can({status: 'rejected', reopenCount: 1}, 'bob', 'reopen', direct)).toBe(false)
+    expect(can({status: 'rejected', reopenCount: 1}, 'adder', 'reopen', direct)).toBe(false)
+  })
   test('outside a group nobody is an admin', () => {
     const direct = {...record, groupMembers: [], groupAdmins: []}
     expect(can({status: 'rejected', reopenCount: 1}, 'admin', 'reopen', direct)).toBe(false)

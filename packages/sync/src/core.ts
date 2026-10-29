@@ -368,7 +368,13 @@ export function createStore(engine: Engine): Store {
     erase: refs =>
       write(async (rows, recorder) => {
         let isMoney = false
-        for (const {type, id} of refs) {
+        /* A disputed record takes its disputes with it (they name something that is gone): same call, same transaction. */
+        const named = new Set(refs.map(r => `${r.type}:${r.id}`))
+        const extra: Array<{type: EntityType; id: string}> = []
+        for (const {type, id} of refs)
+          if ((MONEY_TYPES as readonly string[]).includes(type))
+            for (const d of await rows.range('disputes', {index: 'byTarget', eq: [type, id]})) if (!named.has(`dispute:${d.id as string}`)) extra.push({type: 'dispute', id: d.id as string})
+        for (const {type, id} of [...extra, ...refs]) {
           recorder.record(type, id)
           const prev = await loadEntity(rows, type, id)
           await rows.delete(ENTITY_STORE[type], [id])

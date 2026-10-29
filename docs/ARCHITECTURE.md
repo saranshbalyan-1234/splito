@@ -1218,6 +1218,9 @@ Splito lessons (add newest last, dated, with PR):
 - 2026-10-30, F-1210: **components cannot import features or data** (`layerDirection`). A piece used by a component (the payment sheet needs the dispute panel) lives in `components/<area>/` and reads through `state/`; only the hosts and sheets that need `data/` stay in `features/`. Count a new `useDialogControl` too: a sheet without an address is listed in `table.test.ts` `NOT_ADDRESSABLE` with its reason.
 - 2026-10-30, F-1210: **Lingui turns a call expression in a message into `{0}`**: assign it to a named variable first (`const ago = getTimeAgo(...)`), so the Hindi translator sees `{ago}`. Do not build a sentence by gluing `": " + note` onto a translated one; show the note as its own line.
 - 2026-10-30, F-1210 e2e: **never `goto` right after a click that writes.** The write is a transaction still in flight; the reload drops it and the next assertion fails (it looked like a missing feature). Wait for the sheet to close or the toast first. A search drawer input also needs `toBeEditable()` before `fill` under load.
+- 2026-10-30, F-1210 review: **a derived adjustment must stay between zero and the thing it adjusts.** The first "leave disputed out of the plan" subtracted the disputed part from every net, which flipped signs on a settled or part-repaid group and asked someone to pay twice for a disputed "payment not received". `withoutDisputed` now shrinks each net toward zero only and rebalances with `allocate`, with a property test (sums to zero, never flips, never grows). Likewise a stored pointer into a list (an item's position) must be the item's own id: reorders and edits moved the dispute onto the wrong item.
+- 2026-10-30, F-1210 review: **an "apply the suggestion" action must never change the shape of the record to fit it.** Converting an itemised or percent split to exact amounts to apply an amount fix lost the items. One tap applies a fix only when the split mode survives it (`fixApplies`); otherwise it is an edit by hand, and the panel says why.
+
 
 ## 24. Checklists
 
@@ -2443,10 +2446,15 @@ add anyway (only for you)"; "also i should be able to select from contacts". *Wh
     refund", "need the receipt") pauses a record that is not wrong yet; any participant may release it in one
     tap. Disputes and holds share the badge, the sub-total and the settle rule below.
   - **States:** Open, then exactly one of Accepted (the fix was applied: one tap applies the proposed fix as a
-    normal edit with history, or the resolver edits by hand), Rejected (reason required), Withdrawn (by the
+    normal edit with history, or the resolver edits by hand; **one tap only when the fix keeps the record's split mode:** an
+    amount fix scales an equal, percent, shares or adjusted split, a share fix needs an exact split, a payer fix never touches
+    the split, a duplicate or an unreceived payment is deleted; an amount fix on an itemised or exact split, or a share fix on
+    anything but an exact split, is not offered as one tap, only "Edit it", with a line saying why, and where one tap is offered
+    the panel says what the edit will change), Rejected (reason required), Withdrawn (by the
     person who raised it) or Gone (the record was deleted). After a rejection the raiser may reopen once with a
-    new note; after that only a group admin can close it. Editing a disputed record asks the editor "Does this
-    resolve <name>'s dispute?". **Who resolves:** the person who added the record, or its payer, or a group
+    new note; after that only a group admin answers it (accepts, rejects or reopens it): the adder and payer already said
+    no once. A record outside a group has no admin, so its adder or payer still answers a reopened dispute and a second
+    reopen is refused. Editing a disputed record asks the editor "Does this resolve <name>'s dispute?". **Who resolves:** the person who added the record, or its payer, or a group
     admin (also when the adder has left). Nobody resolves their own dispute except by withdrawing.
   - **Money: a disputed or held record still counts; it does not wait.** Balances, totals, the overview, charts
     and exports keep counting it as recorded, because the record stands until someone changes it, and a dispute
@@ -2456,6 +2464,12 @@ add anyway (only for you)"; "also i should be able to select from contacts". *Wh
     colour alone), and **Settle up leaves disputed and held amounts out of the plan by default**, says so
     ("₹400 disputed, not in this plan") and offers "Include disputed" (remembered per group,
     `group:settleIncludeDisputed`, default off), so nobody pays or chases money that is being questioned.
+    What "left out" means: per person and currency the net only shrinks toward zero by their disputed part, never flips or grows
+    (a settled group stays settled, a part-repaid balance loses at most what is still owed, a disputed "payment not received"
+    never asks anyone to pay twice), and the other side is scaled back so each currency still sums to zero; the amount stated is
+    what was actually removed. A friend's Settle up and Call it even do the same: the prefill and the write-off leave the disputed
+    part out unless "Include disputed" is on there. Item disputes name the item by its own id, so reordering a bill moves
+    nothing, and an edit that removes the item counts nothing for it and closes the dispute as Gone.
     Accepting a fix changes the balance through the edit; rejecting it changes nothing. A dispute on a record
     before a settle-up checkpoint (F-1205) shows as "Adjustment after settle-up" when accepted.
   - **Where it shows:** raising and resolving each post a system line into the record's comment thread (the
@@ -2742,6 +2756,7 @@ Every owner decision, in the order it was made (all 2026-10-26). "Replaced" name
 | 179 | "even if you go to main screen from some links, it should show back button, in case you dont go directly from tabs" | A main screen opened from a link (See all, cards, results, notifications, deep links) is a pushed page with Back to the origin; the tab itself gives the plain tab screen | § 26.3 | Links switched tabs with no way back |
 | 180 | Assistant ruling after the F-250 review (owner asleep, "take your own decisions"; owners 164/165 review the front end on Render first) | Render builds a "preview" tier: labelled local dev account allowed, `noindex`, never on stage/prod tiers; real production refused until the auth HTTP client exists; intro keeps animated Lottie art | § 26.15 | Render built `production`, which refused the dev account and broke the deploy |
 | 181 | "name should be capitalized first letter in complete name" | Every word of a person's name starts with a capital, saved and shown through one `capitalizeName`; rest of each word as typed; groups, titles, emails unchanged | § 26.3 | Names shown exactly as typed |
+| 182 | Assistant ruling after the F-1210 review | After one reopen only a group admin accepts or rejects (outside a group the adder or payer still answers and a second reopen is refused); one-tap "Accept and apply" only when the fix keeps the record's split mode (an amount fix on an itemised or exact split and a share fix on anything but an exact split are "Edit it" only, with the reason shown), and the panel states what the edit will change | § 26.20 | Admin-only closing after the first reopen without saying who answers it; one-tap fixes that converted a split to exact amounts |
 
 New decisions follow § 0 rule 9: rewrite the rule in its topic so only the current truth remains, then add a
 row here.

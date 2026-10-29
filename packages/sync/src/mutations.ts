@@ -175,8 +175,9 @@ export async function write<T>(
   const e: Entity<T> = {type, id, data, version, deleted, createdAt: prev?.createdAt ?? at, updatedAt: at, ...sync}
   await tx.put(e)
   await tx.appendHistory({entityType: type, entityId: id, version: e.version, data, deleted, at, actor: ctx.actor})
-  // A deleted record's open disputes close as Gone in the same transaction (F-1210), whoever deleted it and from where.
-  if (deleted && (type === 'expense' || type === 'repayment' || type === 'writeoff')) await closeDisputesGone(tx, ctx, type, id, remote)
+  // A deleted record's open disputes close as Gone in the same transaction (F-1210), whoever deleted it and from where;
+  // so do those of a bill item an edit took out of the bill. Nothing is queued for a write that is not queued itself.
+  if ((type === 'expense' || type === 'repayment' || type === 'writeoff') && (deleted || prev)) await closeDisputesGone(tx, ctx, type, id, deleted ? undefined : data, remote || opType === null)
   if (remote || opType === null) return e
   await tx.enqueue({
     opId: ctx.newId(),
@@ -196,11 +197,19 @@ export async function write<T>(
   return e
 }
 
-/** Closes a deleted record's open disputes and holds as `gone` (the delete is the answer). */
-async function closeDisputesGone(tx: Tx, ctx: MutationCtx, type: MoneyType, id: string, remote: boolean) {
+/**
+ * Closes open disputes and holds as `gone`: all of a deleted record's (`live` undefined), or only the item disputes of an
+ * expense whose item is no longer in its bill (`live` is the saved expense).
+ */
+async function closeDisputesGone(tx: Tx, ctx: MutationCtx, type: MoneyType, id: string, live: unknown, localOnly: boolean) {
+  if (live !== undefined && type !== 'expense') return
   const open = await tx.page<Dispute>('dispute', {index: 'byTargetStatus', eq: [type, id, 'open'], limit: 100})
-  for (const d of open.items)
-    await write(tx, ctx, 'dispute', d.id, {...d.data, status: 'gone', resolvedBy: ctx.actor, resolution: '', resolvedAt: ctx.now()}, false, 'dispute.gone', {remote})
+  const split = (live as Partial<Expense> | undefined)?.split
+  const items = new Set(split?.mode === 'items' ? split.items.map(i => i.id) : [])
+  for (const d of open.items) {
+    if (live !== undefined && (d.data.itemId === null || items.has(d.data.itemId))) continue
+    await write(tx, ctx, 'dispute', d.id, {...d.data, status: 'gone', resolvedBy: ctx.actor, resolution: '', resolvedAt: ctx.now()}, false, localOnly ? null : 'dispute.gone')
+  }
 }
 
 /** @internal */

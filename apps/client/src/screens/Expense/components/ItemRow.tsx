@@ -14,10 +14,12 @@ const tabular = {fontVariant: ['tabular-nums' as const]}
 
 /** What the expense page lets a person do about one item (F-1210): see it is disputed, and dispute their portion. */
 export type ItemDispute = {
-  /** The items with an open dispute. */
-  marked: ReadonlySet<number>
-  /** Opens the raise sheet for this item; undefined when this person cannot (not on the item, or the record is deleted). */
-  onRaise?: (index: number) => void
+  /** The items with an open dispute, by id. */
+  marked: ReadonlySet<string>
+  /** Me: "Dispute my portion" is offered only on items I am on. */
+  me: string
+  /** Opens the raise sheet for this item; undefined when the record is deleted. */
+  onRaise?: (itemId: string) => void
 }
 
 /** One item of a bill: its price and who had it, each person's part ("Riya x2 - INR 600"). */
@@ -43,6 +45,7 @@ export function ItemRow({
   const t = useTheme()
   const {t: l} = useLingui()
   const itemLabel = item.name || l`Item ${i + 1}`
+  const isOnItem = !!dispute && item.participants.some(p => participantId(p) === dispute.me)
   return (
     <View
       testID={`expense-item-${i}`}
@@ -62,10 +65,10 @@ export function ItemRow({
           {fmt(item.amount)}
         </Text>
       </View>
-      {dispute?.marked.has(i) || dispute?.onRaise ? (
+      {dispute && (dispute.marked.has(item.id) || (dispute.onRaise && isOnItem)) ? (
         <View style={[a.flex_row, a.align_center, a.gap_sm]}>
-          {dispute.marked.has(i) ? <DisputeBadge kind="dispute" testID={`expense-item-${i}-disputed`} /> : null}
-          {dispute.onRaise && !dispute.marked.has(i) ? (
+          {dispute.marked.has(item.id) ? <DisputeBadge kind="dispute" testID={`expense-item-${i}-disputed`} /> : null}
+          {dispute.onRaise && isOnItem && !dispute.marked.has(item.id) ? (
             <Button
               testID={`item-dispute-${i}`}
               label={l`Dispute my portion of ${itemLabel}`}
@@ -73,7 +76,7 @@ export function ItemRow({
               variant="ghost"
               color="secondary"
               style={[{marginLeft: -8}]}
-              onPress={() => dispute.onRaise!(i)}>
+              onPress={() => dispute.onRaise!(item.id)}>
               <ButtonIcon icon={RaiseIcon} />
               <ButtonText>
                 <Trans>Dispute my portion</Trans>

@@ -42,8 +42,8 @@ import {DotGrid3x1_Stroke2_Corner0_Rounded as DotsIcon} from '#/components/icons
 import {Pencil_Stroke2_Corner0_Rounded as PencilIcon} from '#/components/icons/Pencil'
 import {SettingsSliderVertical_Stroke2_Corner0_Rounded as FilterIcon} from '#/components/icons/SettingsSlider'
 import {historyRowHide, ShowHiddenSheet, useVisibleEntries} from '#/features/hidden/ShowHidden'
-import {historyRowMenu} from '#/features/disputes/RowMenu'
-import {markOf, useDisputedBalances, useOpenDisputes} from '#/state/disputes'
+import {rowMenuWrap} from '#/features/disputes/RowMenu'
+import {markOf, useDisputedBalances, useDisputedRecords, useOpenDisputes} from '#/state/disputes'
 import {useHideItem} from '#/features/hidden/HideItem'
 import {Group3_Stroke2_Corner0_Rounded as GroupIcon} from '#/components/icons/Group'
 import {Handshake_Stroke2_Corner0_Rounded as HandCoinsIcon} from '#/components/icons/Money'
@@ -216,7 +216,9 @@ export function GroupScreen() {
   const names = new Map(
     (people ?? []).map(p => [p.id, p.id === me?.id ? l`You` : p.data.name]),
   )
-  const history = onlyDisputed ? visible.filter(e => markOf(openDisputes, e.kind, e.entity.id) !== undefined) : visible
+  const disputedRecords = useDisputedRecords(onlyDisputed)
+  /* "Disputed only" lists this group's disputed records from the open disputes themselves, not just the pages loaded. */
+  const history = onlyDisputed ? (disputedRecords ?? []).filter(e => e.entity.data.groupId === groupId) : visible
   /* Every member listed, zero when they have no records yet, so a settlement plan can route through them. */
   const nets =
     group && storedNets
@@ -682,7 +684,7 @@ export function GroupScreen() {
                     names={names}
                     locale={locale}
                     hide={historyRowHide(item.entry, hidden, l`this record`)}
-                    rowMenu={historyRowMenu(item.entry, l`this record`)}
+                    rowMenu={item.entry.entity.deleted ? undefined : rowMenuWrap}
                     mark={markOf(openDisputes, item.entry.kind, item.entry.entity.id)}
                     onRepaymentPress={(r, kind) => {
                       setOpenRepayment(r)

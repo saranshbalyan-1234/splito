@@ -75,7 +75,8 @@ export interface DisputeState {
 /**
  * May `actor` do `action`? Rules (26.20):
  * - accept / reject: the person who added the record, its payer or a group admin, never the raiser themselves, and
- *   only while open; a hold is released, not answered.
+ *   only while open; a hold is released, not answered. After a reopen only a group admin answers (the adder and payer
+ *   already said no once); outside a group there is no admin, so the adder or payer still answers.
  * - withdraw: only the raiser (or the person who recorded it for them), while open.
  * - release: any participant, the adder or an admin, while a hold is open.
  * - reopen: after a rejection, the raiser once; after that only a group admin.
@@ -96,6 +97,7 @@ export function canResolveDispute(record: DisputeRecord, d: DisputeState, actor:
       if (d.status !== 'open' || d.kind !== 'dispute') return no('NOT_OPEN')
       // Nobody answers their own dispute, even one recorded on someone's behalf.
       if (actor === d.raisedBy) return no('OWN_DISPUTE')
+      if (d.reopenCount > 0 && record.groupAdmins.length > 0) return isAdmin ? OK : no('ADMIN_ONLY')
       return isResolver ? OK : no('NOT_RESOLVER')
     case 'reopen':
       if (d.status !== 'rejected' || d.kind !== 'dispute') return no('NOT_REJECTED')

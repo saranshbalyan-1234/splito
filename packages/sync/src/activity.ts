@@ -241,9 +241,11 @@ export function activityTracker(store: Store, want: () => number = () => ACTIVIT
     // A dispute row names the record it is about (an expense, payment or write-off), not the dispute itself.
     const subject = (e: ActivityEvent): {type: EntityType; id: string} => (e.entityType === 'dispute' ? {type: e.data.targetType, id: e.data.targetId} : {type: e.entityType, id: e.entityId})
     const subjects = list.map(subject)
+    /* The records disputes are about, built once (a payment or write-off is fetched only as a dispute's subject). */
+    const disputed = new Set(list.flatMap(e => (e.entityType === 'dispute' ? [keyOf(e.data.targetType, e.data.targetId)] : [])))
     const wanted = new Map<EntityType, string[]>()
     for (const {type, id} of subjects) {
-      if (type !== 'expense' && type !== 'friendRequest' && !list.some(e => e.entityType === 'dispute' && e.data.targetType === type && e.data.targetId === id)) continue
+      if (type !== 'expense' && type !== 'friendRequest' && !disputed.has(keyOf(type, id))) continue
       if (known.has(keyOf(type, id))) continue
       const ids = wanted.get(type) ?? []
       if (!ids.includes(id)) ids.push(id)

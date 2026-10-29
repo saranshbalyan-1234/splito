@@ -72,7 +72,7 @@ function rng(seed: number) {
   return {next, int, pick, some}
 }
 
-async function run(s: Store, seed: number, steps: number, {erases = true, disputes: withDisputes = true}: {erases?: boolean; disputes?: boolean} = {}) {
+async function run(s: Store, seed: number, steps: number, {erases = true, disputes: withDisputes = true, applyFixes = true}: {erases?: boolean; disputes?: boolean; /** False for the twin run: applying a fix edits the ledger, which the twin comparison must not see. */ applyFixes?: boolean} = {}) {
   const r = rng(seed)
   const ctx = makeCtx()
   /* Some rows get the demo set's id tag, so "remove demo data" has something to erase. */
@@ -121,6 +121,13 @@ async function run(s: Store, seed: number, steps: number, {erases = true, disput
   let minted = 0
   /* Dispute writes mint their ids apart, so the records' ids are the same with or without them. */
   const dctx = {...ctx, newId: () => `dsp-${++minted}`}
+  /* A reason and a proposed fix that fit it, now and then (amount, payer or a share): accepting one with `apply` edits the expense. */
+  const fixOf = (who: string) => {
+    const roll = dr.next()
+    if (roll < 0.4) return {reason: 'wrong_amount' as const, proposedFix: {kind: 'amount' as const, amount: BigInt(dr.int(1, 900_000))}}
+    if (roll < 0.7) return {reason: 'wrong_payer' as const, proposedFix: {kind: 'payer' as const, personId: who}}
+    return {reason: 'wrong_share' as const, proposedFix: {kind: 'share' as const, personId: who, amount: BigInt(dr.int(0, 1000))}}
+  }
   const disputeStep = async () => {
     if (dr.next() < 0.6) {
       // A dispute or hold on a random record, as a random participant (the rules refuse the wrong ones); an item of a bill sometimes.
@@ -132,10 +139,10 @@ async function run(s: Store, seed: number, steps: number, {erases = true, disput
       if (!pool.length) return
       const [targetType, targetId] = dr.pick(pool)
       const raisedBy = dr.pick(people)
-      const wholeOrItem = targetType === 'expense' && dr.next() < 0.4 ? {itemIndex: dr.int(0, 2)} : {}
+      const wholeOrItem = targetType === 'expense' && dr.next() < 0.4 ? {itemId: `i${dr.int(0, 2)}`} : {}
       const made =
         dr.next() < 0.7
-          ? await raiseDispute(s, dctx, {targetType, targetId, raisedBy, reason: 'other', note: 'x', ...wholeOrItem})
+          ? await raiseDispute(s, dctx, {targetType, targetId, raisedBy, reason: 'other', note: 'x', ...wholeOrItem, ...(targetType === 'expense' && !('itemId' in wholeOrItem) && dr.next() < 0.5 ? fixOf(raisedBy) : {})})
           : await holdRecord(s, dctx, {targetType, targetId, raisedBy, note: 'wait'})
       disputes.push(made.id)
       return
@@ -145,7 +152,9 @@ async function run(s: Store, seed: number, steps: number, {erases = true, disput
     const who = {...dctx, actor: dr.pick(people)}
     const id = dr.pick(disputes)
     const roll = dr.next()
-    if (roll < 0.25) await acceptDispute(s, who, id, {})
+    // Half the accepts apply the proposed fix (the random disputes carry none, so most are NO_FIX, which the rules refuse; the
+    // ones that carry a fix are raised below) and the rest only record the agreement.
+    if (roll < 0.25) await acceptDispute(s, who, id, {apply: dr.next() < 0.5 && applyFixes})
     else if (roll < 0.45) await rejectDispute(s, who, id, {note: 'no'})
     else if (roll < 0.65) await withdrawDispute(s, who, id)
     else if (roll < 0.8) await releaseHold(s, who, id)
@@ -333,7 +342,7 @@ describe('projection == recomputation over random operation sequences', () => {
     )
   }, 120_000)
 
-  test('disputes and holds never move a balance: the same ledger gives the same balances, pairs and aggregates with and without open ones (F-1210)', async () => {
+  test.each([['SQLite', () => openSqlStore(bunExecutor(':memory:'))], ['IndexedDB', () => openIdbStore('twin', new IDBFactory())]] as const)('disputes and holds never move a balance on %s: the same ledger gives the same balances, pairs and aggregates with and without open ones (F-1210)', async (_name, open) => {
     let total = 0
     /* A gone-closing write mints an op id, so later group ids differ between the runs: groups are compared by creation order. */
     const keep = async (s: Store) => {
@@ -346,10 +355,11 @@ describe('projection == recomputation over random operation sequences', () => {
       }
     }
     for (const seed of [11, 12, 13, 14, 15]) {
-      const plain = await openSqlStore(bunExecutor(':memory:'))
+      // (IndexedDB gets a fresh factory per store, so the twins never share a database.)
+      const plain = await open()
       await run(plain, seed, 140, {erases: false, disputes: false})
-      const disputed = await openSqlStore(bunExecutor(':memory:'))
-      await run(disputed, seed, 140, {erases: false})
+      const disputed = await open()
+      await run(disputed, seed, 140, {erases: false, applyFixes: false})
       expect(await disputed.getAll('dispute')).not.toEqual([])
       expect(await keep(disputed)).toEqual(await keep(plain))
       await expectProjectionsMatchLedger(disputed)
@@ -379,7 +389,7 @@ describe('projection == recomputation over random operation sequences', () => {
 
   test('the generator reaches real states: live and deleted expenses, payments, write-offs, balances in many currencies', async () => {
     const s = await openSqlStore(bunExecutor(':memory:'))
-    await run(s, 12345, 260, {erases: false})
+    await run(s, 12345, 400, {erases: false})
     await expectProjectionsMatchLedger(s)
     const { entities } = await s.dump()
     const of = (type: string, deleted: boolean) => entities.filter(e => e.type === type && e.deleted === deleted).length

@@ -666,8 +666,9 @@ function ResolvePrompt({
   onResolved: () => void
   onKeptOpen: () => void
 }) {
-  const {t: l} = useLingui()
-  const who = names.length === 1 ? names[0]! : names.slice(0, -1).join(', ') + ' & ' + names.at(-1)!
+  const {t: l, i18n} = useLingui()
+  /* "Bob, Cy and Dee" in the person's language, never a hand-built join. */
+  const who = new Intl.ListFormat(i18n.locale, {style: 'long', type: 'conjunction'}).format(names)
   return (
     <Prompt.Outer control={control} testID="expense-resolve-prompt">
       <Prompt.Content>

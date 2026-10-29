@@ -85,12 +85,14 @@ async function expectedDisputed(s: Store) {
     }
     let payers = d.payers
     let shares = d.shares
-    if (d.split.mode === 'items' && disputes.every(x => x.itemIndex !== null)) {
-      const idx = [...new Set(disputes.map(x => x.itemIndex!))]
+    if (d.split.mode === 'items' && disputes.every(x => x.itemId !== null)) {
+      const ids = new Set(disputes.map(x => x.itemId))
       shares = {}
       let total = 0n
-      for (const i of idx) {
-        const item = d.split.items[i]!
+      const picked = d.split.items.filter(i => ids.has(i.id))
+      // An item no edit left in the bill counts for nothing (its dispute is closed as Gone).
+      if (picked.length === 0) continue
+      for (const item of picked) {
         total += item.amount
         for (const [id, v] of Object.entries(allocate(item.amount, item.participants.map(p => ({id: participantId(p), weight: BigInt(participantWeight(p))}))))) shares[id] = (shares[id] ?? 0n) + v
       }

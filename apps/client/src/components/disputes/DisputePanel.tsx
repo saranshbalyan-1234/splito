@@ -1,8 +1,9 @@
 import {View} from 'react-native'
 import {Trans, useLingui} from '@lingui/react/macro'
 import {useNavigation} from '@react-navigation/native'
-import {type Dispute, type DisputeTarget, type Entity} from '@splito/sync'
+import {type Dispute, type DisputeTarget, type Entity, type Expense, fixApplies} from '@splito/sync'
 
+import {HITSLOP_10} from '#/lib/constants'
 import {useHaptics} from '#/lib/haptics'
 import {useGetTimeAgo} from '#/lib/hooks/useTimeAgo'
 import {requestDispute} from '#/lib/disputes/bus'
@@ -58,9 +59,13 @@ function DisputeCard({dispute, targetType, targetId, currency}: {dispute: Entity
   const isOpen = d.status === 'open'
   const raiser = name(d.raisedBy)
   const resolver = d.resolvedBy ? name(d.resolvedBy) : ''
-  const hasFix = !!d.proposedFix && d.proposedFix.kind !== undefined
-  const canApply = hasFix || d.reason === 'not_received'
-  const itemName = d.itemIndex !== null ? l`one item` : null
+  const hasFix = !!d.proposedFix
+  /* One tap only when the fix keeps the split as it is (ruling after the F-1210 review); otherwise only "Edit it". */
+  const expense = targetType === 'expense' ? (access.entity?.data as Expense | undefined) : undefined
+  const isBlocked = hasFix && !!d.proposedFix && d.proposedFix.kind !== 'duplicate' && !!expense && !fixApplies(expense, d.proposedFix)
+  const canApply = (hasFix && !isBlocked) || d.reason === 'not_received'
+  const willDo = !isOpen || !canApply ? '' : d.proposedFix?.kind === 'duplicate' ? l`Accepting deletes this expense.` : d.reason === 'not_received' ? l`Accepting deletes this payment.` : d.proposedFix?.kind === 'share' ? l`Accepting sets that share and scales the others to match.` : l`Accepting applies this change as an edit.`
+  const itemName = d.itemId !== null ? l`one item` : null
   const ago = getTimeAgo(dispute.createdAt, now)
   const fixText = d.proposedFix ? words.fix(d.proposedFix, currency) : ''
 
@@ -110,6 +115,16 @@ function DisputeCard({dispute, targetType, targetId, currency}: {dispute: Entity
           <Trans>Proposed: {fixText}</Trans>
         </Text>
       ) : null}
+      {willDo ? (
+        <Text testID="dispute-will-do" style={[a.text_sm, a.leading_snug, t.atoms.text_contrast_medium]}>
+          {willDo}
+        </Text>
+      ) : null}
+      {isOpen && isBlocked ? (
+        <Text testID="dispute-blocked" style={[a.text_sm, a.leading_snug, t.atoms.text_contrast_medium]}>
+          <Trans>This can’t be applied in one tap, because it would change how the expense is split. Use Edit it to make the change yourself.</Trans>
+        </Text>
+      ) : null}
       {!isOpen && resolver ? (
         <View style={[a.gap_2xs]}>
           <Text testID="dispute-resolution" style={[a.text_sm, a.leading_snug, t.atoms.text_contrast_medium]}>
@@ -134,9 +149,10 @@ function DisputeCard({dispute, targetType, targetId, currency}: {dispute: Entity
       ) : null}
 
       <View style={[a.flex_row, a.flex_wrap, a.gap_sm]}>
-        {access.canDo(d, 'accept') && (
+        {access.canDo(d, 'accept') && !isBlocked && (
           <Button
             testID="dispute-accept"
+            hitSlop={HITSLOP_10}
             label={canApply ? l`Accept and apply` : l`Accept`}
             size="small"
             color="primary"
@@ -147,7 +163,7 @@ function DisputeCard({dispute, targetType, targetId, currency}: {dispute: Entity
           </Button>
         )}
         {access.canDo(d, 'accept') && targetType === 'expense' && (
-          <Button testID="dispute-edit" label={l`Edit it`} size="small" color="secondary" onPress={() => navigation.navigate('EditExpense', {expenseId: targetId})}>
+          <Button testID="dispute-edit" hitSlop={HITSLOP_10} label={l`Edit it`} size="small" color="secondary" onPress={() => navigation.navigate('EditExpense', {expenseId: targetId})}>
             <ButtonIcon icon={PencilIcon} />
             <ButtonText>
               <Trans>Edit it</Trans>
@@ -155,21 +171,21 @@ function DisputeCard({dispute, targetType, targetId, currency}: {dispute: Entity
           </Button>
         )}
         {access.canDo(d, 'reject') && (
-          <Button testID="dispute-reject" label={l`Reject`} size="small" color="secondary" onPress={() => requestDispute({kind: 'reject', disputeId: dispute.id})}>
+          <Button testID="dispute-reject" hitSlop={HITSLOP_10} label={l`Reject`} size="small" color="secondary" onPress={() => requestDispute({kind: 'reject', disputeId: dispute.id})}>
             <ButtonText>
               <Trans>Reject</Trans>
             </ButtonText>
           </Button>
         )}
         {access.canDo(d, 'withdraw') && (
-          <Button testID="dispute-withdraw" label={l`Withdraw`} size="small" color="secondary" onPress={() => void run(() => actions.withdraw(dispute.id), l`Withdrawn`)}>
+          <Button testID="dispute-withdraw" hitSlop={HITSLOP_10} label={l`Withdraw`} size="small" color="secondary" onPress={() => void run(() => actions.withdraw(dispute.id), l`Withdrawn`)}>
             <ButtonText>
               <Trans>Withdraw</Trans>
             </ButtonText>
           </Button>
         )}
         {access.canDo(d, 'release') && (
-          <Button testID="dispute-release" label={l`Release`} size="small" color="primary" onPress={() => void run(() => actions.release(dispute.id), l`Released`)}>
+          <Button testID="dispute-release" hitSlop={HITSLOP_10} label={l`Release`} size="small" color="primary" onPress={() => void run(() => actions.release(dispute.id), l`Released`)}>
             <ButtonIcon icon={ReleaseIcon} />
             <ButtonText>
               <Trans>Release</Trans>
@@ -177,7 +193,7 @@ function DisputeCard({dispute, targetType, targetId, currency}: {dispute: Entity
           </Button>
         )}
         {access.canDo(d, 'reopen') && (
-          <Button testID="dispute-reopen" label={l`Reopen`} size="small" color="secondary" onPress={() => requestDispute({kind: 'reopen', disputeId: dispute.id})}>
+          <Button testID="dispute-reopen" hitSlop={HITSLOP_10} label={l`Reopen`} size="small" color="secondary" onPress={() => requestDispute({kind: 'reopen', disputeId: dispute.id})}>
             <ButtonText>
               <Trans>Reopen</Trans>
             </ButtonText>

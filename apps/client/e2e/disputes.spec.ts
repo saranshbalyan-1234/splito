@@ -222,6 +222,64 @@ for (const [label, size] of SIZES) {
       await expect(page.getByTestId('transfer-amount')).toContainText('₹450.00')
     })
 
+    test('a settled group whose record is disputed afterwards has no plan and no notice; nobody is asked to pay twice', async ({page}) => {
+      const {bob} = await seed(page)
+      const {group, trip} = await page.evaluate(
+        async ([b, base]) => {
+          const s = (window as unknown as {splito: Splito}).splito
+          const group = await s.createGroup({name: 'Trip two', kind: 'trip', currency: 'INR', startDate: null, endDate: null, memberIds: [b]})
+          const trip = await s.createExpense({...(base as object), title: 'Trip dinner', groupId: group, total: '60000', payers: {[s.me]: '60000'}, split: {mode: 'equal', participants: [s.me, b]}})
+          await s.createRepayment({groupId: group, currency: 'INR', from: b, to: s.me, amount: '30000', date: '2026-10-21', tz: 'Asia/Kolkata', note: ''})
+          await s.disputeAs(b as string, {targetType: 'expense', targetId: trip, reason: 'other', note: 'x'})
+          return {group, trip}
+        },
+        [bob, BASE] as const,
+      )
+      expect(trip).toBeTruthy()
+      await page.goto(`/groups/${group}/settle`)
+      await expect(page.getByTestId('settle-settled-INR')).toBeVisible()
+      await expect(page.getByTestId('settle-disputed-notice')).toHaveCount(0)
+      await expect(page.getByTestId('transfer-amount')).toHaveCount(0)
+    })
+
+    test("a friend's Settle up prefills without the disputed part and says so; Include disputed puts it back", async ({page}) => {
+      const {bob, dinner} = await seed(page)
+      await page.evaluate(([by, target]) => (window as unknown as {splito: Splito}).splito.disputeAs(by!, {targetType: 'expense', targetId: target, reason: 'other', note: 'x'}), [bob, dinner])
+      await page.goto(`/people/${bob}`)
+      await expect(page.getByTestId('person-disputed-notice')).toContainText('₹600.00 disputed or on hold, not included in Settle up or Call it even.')
+      await page.getByTestId('person-record-payment').click()
+      // 1,550 owed less the 600 in dispute.
+      await expect(page.getByTestId('payment-amount')).toHaveValue(/^950(\.00)?$/)
+      await page.getByTestId('sheet-cancel').click()
+      await page.getByTestId('person-include-disputed').click()
+      await expect(page.getByTestId('person-disputed-notice')).toContainText('is included in Settle up and Call it even')
+      await page.getByTestId('person-record-payment').click()
+      await expect(page.getByTestId('payment-amount')).toHaveValue(/^1,?550(\.00)?$/)
+    })
+
+    test('a fix that would change how the bill is split is not one tap: only "Edit it", with the reason', async ({page}) => {
+      const {bob, bill, dinner} = await seed(page)
+      await page.evaluate(
+        ([by, target, other]) => {
+          const s = (window as unknown as {splito: Splito}).splito
+          return Promise.all([
+            s.disputeAs(by!, {targetType: 'expense', targetId: target, reason: 'wrong_amount', note: '', proposedFix: {kind: 'amount', amount: '90000'}}),
+            s.disputeAs(by!, {targetType: 'expense', targetId: other, reason: 'wrong_amount', note: '', proposedFix: {kind: 'amount', amount: '90000'}}),
+          ])
+        },
+        [bob, bill, dinner],
+      )
+      await page.goto(`/expense/${bill}`)
+      await expect(page.getByTestId('dispute-blocked')).toContainText('can’t be applied in one tap')
+      await expect(page.getByTestId('dispute-accept')).toHaveCount(0)
+      await expect(page.getByTestId('dispute-edit')).toBeVisible()
+      await expect(page.getByTestId('dispute-reject')).toBeVisible()
+      // An equal split keeps its rule, and the panel says what accepting does.
+      await page.goto(`/expense/${dinner}`)
+      await expect(page.getByTestId('dispute-will-do')).toContainText('applies this change as an edit')
+      await expect(page.getByTestId('dispute-accept')).toBeVisible()
+    })
+
     test('the group Balances and Person pages say how much of a balance is disputed', async ({page}) => {
       const {bob, group, cab} = await seed(page)
       await page.evaluate(([by, target]) => (window as unknown as {splito: Splito}).splito.holdAs(by!, {targetType: 'expense', targetId: target, note: 'refund'}), [bob, cab])
@@ -306,7 +364,8 @@ for (const [label, size] of SIZES) {
       await page.getByTestId('sheet-save').click()
       await expect(page.getByTestId('expense-item-0-disputed')).toContainText('Disputed')
       await expect(page.getByTestId('item-dispute-0')).toHaveCount(0)
-      await expect(page.getByTestId('item-dispute-1')).toBeVisible()
+      // Fries is Bob's alone: no "Dispute my portion" for me there.
+      await expect(page.getByTestId('item-dispute-1')).toHaveCount(0)
       await expect(page.getByTestId('dispute-card-You')).toContainText('one item')
       await expect(page.getByTestId('expense-detail-amount')).toHaveText('₹1,000.00')
     })

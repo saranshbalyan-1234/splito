@@ -29,12 +29,12 @@ msgid "{0, plural, one {# expired, used or revoked link isn’t shown.} other {#
 msgstr "{0, plural, one {# expired, used or revoked link isn’t shown.} other {# expired, used or revoked links aren’t shown.}}"
 
 #. placeholder {0}: rows.length
-#: src/screens/People/index.tsx:171
+#: src/screens/People/index.tsx:170
 msgid "{0, plural, one {# friend} other {# friends}}"
 msgstr "{0, plural, one {# friend} other {# friends}}"
 
 #. placeholder {0}: overviewRows.length
-#: src/screens/Groups/index.tsx:169
+#: src/screens/Groups/index.tsx:168
 msgid "{0, plural, one {# group} other {# groups}}"
 msgstr "{0, plural, one {# group} other {# groups}}"
 
@@ -84,12 +84,12 @@ msgid "{0, plural, one {# second} other {# seconds}}"
 msgstr "{0, plural, one {# second} other {# seconds}}"
 
 #. placeholder {0}: s.shares[id]
-#: src/screens/Expense/index.tsx:651
+#: src/screens/Expense/index.tsx:642
 msgid "{0, plural, one {# share} other {# shares}}"
 msgstr "{0, plural, one {# share} other {# shares}}"
 
 #. placeholder {0}: sharedGroups.length
-#: src/screens/Person/index.tsx:236
+#: src/screens/Person/index.tsx:250
 msgid "{0, plural, one {# shared group} other {# shared groups}}"
 msgstr "{0, plural, one {# shared group} other {# shared groups}}"
 
@@ -167,19 +167,19 @@ msgstr "{0} (included)"
 
 #. placeholder {0}: name(summary.groupId)
 #. placeholder {1}: summary.more
-#: src/screens/Analytics/components/FilterBar.tsx:155
+#: src/screens/Analytics/components/FilterBar.tsx:157
 msgid "{0} + {1}"
 msgstr "{0} + {1}"
 
 #. placeholder {0}: fmt(items)
 #. placeholder {1}: fmt(extra)
-#: src/screens/Expense/index.tsx:667
+#: src/screens/Expense/index.tsx:658
 msgid "{0} + {1} charges"
 msgstr "{0} + {1} charges"
 
 #. placeholder {0}: fmt(items)
 #. placeholder {1}: fmt(magnitude(extra))
-#: src/screens/Expense/index.tsx:669
+#: src/screens/Expense/index.tsx:660
 msgid "{0} − {1} discount"
 msgstr "{0} − {1} discount"
 
@@ -242,7 +242,7 @@ msgstr "{0} doesn’t round to {1}, so it goes on your share. Everything still a
 
 #. placeholder {0}: fmt(most)
 #. placeholder {1}: peopleCount(n)
-#: src/components/split/ExpenseComposer.tsx:770
+#: src/components/split/ExpenseComposer.tsx:771
 msgid "{0} each · {1}"
 msgstr "{0} each · {1}"
 
@@ -268,7 +268,7 @@ msgid "{0} forgave you"
 msgstr "{0} forgave you"
 
 #. placeholder {0}: summary.count
-#: src/screens/Analytics/components/FilterBar.tsx:162
+#: src/screens/Analytics/components/FilterBar.tsx:164
 msgid "{0} groups"
 msgstr "{0} groups"
 
@@ -283,7 +283,7 @@ msgid "{0} is already your friend."
 msgstr "{0} is already your friend."
 
 #. placeholder {0}: person?.data.name ?? ''
-#: src/screens/Person/index.tsx:293
+#: src/screens/Person/index.tsx:315
 msgid "{0} is back in your friends"
 msgstr "{0} is back in your friends"
 
@@ -298,7 +298,7 @@ msgid "{0} is splitting"
 msgstr "{0} is splitting"
 
 #. placeholder {0}: fmt(remaining.value)
-#: src/components/split/ExpenseComposer.tsx:752
+#: src/components/split/ExpenseComposer.tsx:753
 msgid "{0} left to assign"
 msgstr "{0} left to assign"
 
@@ -347,12 +347,12 @@ msgid "{0} of {total}"
 msgstr "{0} of {total}"
 
 #. placeholder {0}: fmt(items)
-#: src/screens/Expense/index.tsx:670
+#: src/screens/Expense/index.tsx:661
 msgid "{0} of items"
 msgstr "{0} of items"
 
 #. placeholder {0}: fmt(magnitude(remaining.value))
-#: src/components/split/ExpenseComposer.tsx:753
+#: src/components/split/ExpenseComposer.tsx:754
 msgid "{0} over the total"
 msgstr "{0} over the total"
 
@@ -382,7 +382,7 @@ msgstr "{0} paid"
 #: src/components/people/PaymentDetailsDialog.tsx:123
 #: src/components/people/RecordPaymentDialog.tsx:178
 #: src/features/export/statementText.ts:27
-#: src/screens/Repayment/index.tsx:155
+#: src/screens/Repayment/index.tsx:154
 msgid "{0} paid {1}"
 msgstr "{0} paid {1}"
 
@@ -396,17 +396,17 @@ msgstr "{0} paid {total}"
 #: src/components/people/HistoryRow.tsx:144
 #: src/components/people/PaymentDetailsDialog.tsx:122
 #: src/components/people/RecordPaymentDialog.tsx:177
-#: src/screens/Repayment/index.tsx:154
+#: src/screens/Repayment/index.tsx:153
 msgid "{0} paid you"
 msgstr "{0} paid you"
 
 #. placeholder {0}: item.count
-#: src/screens/Settle/index.tsx:336
+#: src/screens/Settle/index.tsx:337
 msgid "{0} payments"
 msgstr "{0} payments"
 
 #. placeholder {0}: item.payments
-#: src/screens/Group/index.tsx:843
+#: src/screens/Group/index.tsx:846
 msgid "{0} payments settle everyone up."
 msgstr "{0} payments settle everyone up."
 
@@ -464,7 +464,7 @@ msgstr "{0} too much"
 #. placeholder {0}: fmt(least)
 #. placeholder {1}: fmt(most)
 #. placeholder {2}: peopleCount(n)
-#: src/components/split/ExpenseComposer.tsx:771
+#: src/components/split/ExpenseComposer.tsx:772
 msgid "{0}–{1} each · {2}"
 msgstr "{0}–{1} each · {2}"
 
@@ -510,12 +510,12 @@ msgid "{0}'s spending"
 msgstr "{0}'s spending"
 
 #. placeholder {0}: pct(remaining.value)
-#: src/components/split/ExpenseComposer.tsx:744
+#: src/components/split/ExpenseComposer.tsx:745
 msgid "{0}% left to assign"
 msgstr "{0}% left to assign"
 
 #. placeholder {0}: pct(remaining.value)
-#: src/components/split/ExpenseComposer.tsx:745
+#: src/components/split/ExpenseComposer.tsx:746
 msgid "{0}% over 100%"
 msgstr "{0}% over 100%"
 
@@ -740,11 +740,11 @@ msgstr "{first}, {second} +{rest}"
 msgid "{formatted} ago"
 msgstr "{formatted} ago"
 
-#: src/screens/Group/index.tsx:767
+#: src/screens/Group/index.tsx:770
 msgid "{from} owes {to}"
 msgstr "{from} owes {to}"
 
-#: src/screens/Group/index.tsx:766
+#: src/screens/Group/index.tsx:769
 msgid "{from} owes you"
 msgstr "{from} owes you"
 
@@ -802,29 +802,37 @@ msgstr "{left} of {0} uses left"
 msgid "{length} / {FEEDBACK_MAX_LENGTH}"
 msgstr "{length} / {FEEDBACK_MAX_LENGTH}"
 
-#: src/screens/Settle/components/DisputedNotice.tsx:30
+#: src/components/disputes/DisputedNotice.tsx:30
 msgid "{list} disputed or on hold is in this plan."
 msgstr "{list} disputed or on hold is in this plan."
 
-#: src/screens/Settle/components/DisputedNotice.tsx:30
+#: src/components/disputes/DisputedNotice.tsx:30
+msgid "{list} disputed or on hold is included in Settle up and Call it even."
+msgstr "{list} disputed or on hold is included in Settle up and Call it even."
+
+#: src/components/disputes/DisputedNotice.tsx:30
 msgid "{list} disputed or on hold, not in this plan."
 msgstr "{list} disputed or on hold, not in this plan."
 
+#: src/components/disputes/DisputedNotice.tsx:30
+msgid "{list} disputed or on hold, not included in Settle up or Call it even."
+msgstr "{list} disputed or on hold, not included in Settle up or Call it even."
+
 #: src/components/SearchAsk/ResultRows.tsx:375
-#: src/screens/Group/index.tsx:353
+#: src/screens/Group/index.tsx:356
 #: src/screens/Groups/components/GroupRow.tsx:65
 msgid "{memberCount} members"
 msgstr "{memberCount} members"
 
-#: src/screens/People/index.tsx:167
+#: src/screens/People/index.tsx:166
 msgid "{n, plural, one {# friend} other {# friends}}"
 msgstr "{n, plural, one {# friend} other {# friends}}"
 
-#: src/screens/Groups/index.tsx:165
+#: src/screens/Groups/index.tsx:164
 msgid "{n, plural, one {# group} other {# groups}}"
 msgstr "{n, plural, one {# group} other {# groups}}"
 
-#: src/components/split/ExpenseComposer.tsx:691
+#: src/components/split/ExpenseComposer.tsx:692
 msgid "{n, plural, one {# person} other {# people}}"
 msgstr "{n, plural, one {# person} other {# people}}"
 
@@ -865,11 +873,11 @@ msgstr "{name}. Tap to select"
 msgid "{name}’s UPI ID"
 msgstr "{name}’s UPI ID"
 
-#: src/components/disputes/DisputePanel.tsx:91
+#: src/components/disputes/DisputePanel.tsx:96
 msgid "{raiser} · {ago}"
 msgstr "{raiser} · {ago}"
 
-#: src/components/disputes/DisputePanel.tsx:87
+#: src/components/disputes/DisputePanel.tsx:92
 msgid "{raiser} · recorded by you · {ago}"
 msgstr "{raiser} · recorded by you · {ago}"
 
@@ -905,24 +913,24 @@ msgstr "{raiser} withdrew a dispute on {subject}"
 msgid "{raiser} withdrew the dispute"
 msgstr "{raiser} withdrew the dispute"
 
-#: src/components/disputes/DisputePanel.tsx:119
+#: src/components/disputes/DisputePanel.tsx:134
 msgid "{resolver} accepted it"
 msgstr "{resolver} accepted it"
 
-#: src/components/disputes/DisputePanel.tsx:125
+#: src/components/disputes/DisputePanel.tsx:140
 msgid "{resolver} closed it"
 msgstr "{resolver} closed it"
 
-#: src/components/disputes/DisputePanel.tsx:117
+#: src/components/disputes/DisputePanel.tsx:132
 msgid "{resolver} rejected it"
 msgstr "{resolver} rejected it"
 
-#: src/components/disputes/DisputePanel.tsx:121
+#: src/components/disputes/DisputePanel.tsx:136
 msgid "{resolver} released it"
 msgstr "{resolver} released it"
 
-#: src/screens/Groups/index.tsx:170
-#: src/screens/People/index.tsx:172
+#: src/screens/Groups/index.tsx:169
+#: src/screens/People/index.tsx:171
 msgid "{settledCount} settled"
 msgstr "{settledCount} settled"
 
@@ -982,7 +990,7 @@ msgstr "{who} added this expense"
 msgid "{who} deleted this expense"
 msgstr "{who} deleted this expense"
 
-#: src/screens/Repayment/index.tsx:175
+#: src/screens/Repayment/index.tsx:174
 msgid "{who} deleted this payment"
 msgstr "{who} deleted this payment"
 
@@ -1014,7 +1022,7 @@ msgstr "{who} owes you {0} and you owe {who} {1}."
 msgid "{who} owes you {0}."
 msgstr "{who} owes you {0}."
 
-#: src/screens/Repayment/index.tsx:174
+#: src/screens/Repayment/index.tsx:173
 msgid "{who} recorded this payment"
 msgstr "{who} recorded this payment"
 
@@ -1022,7 +1030,7 @@ msgstr "{who} recorded this payment"
 msgid "{who} restored this expense"
 msgstr "{who} restored this expense"
 
-#: src/screens/Repayment/index.tsx:176
+#: src/screens/Repayment/index.tsx:175
 msgid "{who} restored this payment"
 msgstr "{who} restored this payment"
 
@@ -1069,7 +1077,7 @@ msgid "1 day"
 msgstr "1 day"
 
 #: src/components/SearchAsk/ResultRows.tsx:375
-#: src/screens/Group/index.tsx:353
+#: src/screens/Group/index.tsx:356
 #: src/screens/Groups/components/GroupRow.tsx:65
 msgid "1 member"
 msgstr "1 member"
@@ -1078,15 +1086,15 @@ msgstr "1 member"
 msgid "1 member added"
 msgstr "1 member added"
 
-#: src/screens/Settle/index.tsx:334
+#: src/screens/Settle/index.tsx:335
 msgid "1 payment"
 msgstr "1 payment"
 
-#: src/screens/Group/index.tsx:842
+#: src/screens/Group/index.tsx:845
 msgid "1 payment settles everyone up."
 msgstr "1 payment settles everyone up."
 
-#: src/components/split/ExpenseComposer.tsx:742
+#: src/components/split/ExpenseComposer.tsx:743
 msgid "100% assigned"
 msgstr "100% assigned"
 
@@ -1144,7 +1152,7 @@ msgstr "A friendly reminder from Splito: you owe me the following:"
 msgid "a group"
 msgstr "a group"
 
-#: src/screens/Repayment/index.tsx:216
+#: src/screens/Repayment/index.tsx:215
 msgid "A group"
 msgstr "A group"
 
@@ -1176,7 +1184,7 @@ msgstr "A notification for you about {subject}. Nothing is sent to anyone."
 msgid "a payment"
 msgstr "a payment"
 
-#: src/screens/Repayment/index.tsx:225
+#: src/screens/Repayment/index.tsx:224
 msgid "A record of money that changed hands outside Splito."
 msgstr "A record of money that changed hands outside Splito."
 
@@ -1214,8 +1222,8 @@ msgstr "Accent color"
 msgid "Accent color: {name}. Change"
 msgstr "Accent color: {name}. Change"
 
-#: src/components/disputes/DisputePanel.tsx:140
-#: src/components/disputes/DisputePanel.tsx:146
+#: src/components/disputes/DisputePanel.tsx:156
+#: src/components/disputes/DisputePanel.tsx:162
 #: src/screens/Invites/Invite.tsx:224
 msgid "Accept"
 msgstr "Accept"
@@ -1231,8 +1239,8 @@ msgstr "Accept"
 msgid "Accept {name}’s friend request"
 msgstr "Accept {name}’s friend request"
 
-#: src/components/disputes/DisputePanel.tsx:140
-#: src/components/disputes/DisputePanel.tsx:146
+#: src/components/disputes/DisputePanel.tsx:156
+#: src/components/disputes/DisputePanel.tsx:162
 msgid "Accept and apply"
 msgstr "Accept and apply"
 
@@ -1253,14 +1261,30 @@ msgstr "Accept to split expenses together"
 msgid "Accept to split expenses with {0}. You’ll both see what you share."
 msgstr "Accept to split expenses with {0}. You’ll both see what you share."
 
-#: src/components/disputes/DisputePanel.tsx:144
+#: src/components/disputes/DisputePanel.tsx:160
 #: src/components/disputes/words.ts:32
 msgid "Accepted"
 msgstr "Accepted"
 
-#: src/components/disputes/DisputePanel.tsx:144
+#: src/components/disputes/DisputePanel.tsx:160
 msgid "Accepted. The change was applied."
 msgstr "Accepted. The change was applied."
+
+#: src/components/disputes/DisputePanel.tsx:67
+msgid "Accepting applies this change as an edit."
+msgstr "Accepting applies this change as an edit."
+
+#: src/components/disputes/DisputePanel.tsx:67
+msgid "Accepting deletes this expense."
+msgstr "Accepting deletes this expense."
+
+#: src/components/disputes/DisputePanel.tsx:67
+msgid "Accepting deletes this payment."
+msgstr "Accepting deletes this payment."
+
+#: src/components/disputes/DisputePanel.tsx:67
+msgid "Accepting sets that share and scales the others to match."
+msgstr "Accepting sets that share and scales the others to match."
 
 #: src/screens/Settings/index.tsx:85
 msgid "Account"
@@ -1307,8 +1331,8 @@ msgctxt "placeholder"
 msgid "Add a comment"
 msgstr "Add a comment"
 
+#: src/screens/People/index.tsx:324
 #: src/screens/People/index.tsx:325
-#: src/screens/People/index.tsx:326
 msgid "Add a friend"
 msgstr "Add a friend"
 
@@ -1389,10 +1413,10 @@ msgid "Add each item and who had it. Tap a name again for another portion; right
 msgstr "Add each item and who had it. Tap a name again for another portion; right-click to take them off."
 
 #: src/navigation/Navigation.tsx:81
-#: src/screens/Group/index.tsx:551
-#: src/screens/Group/index.tsx:552
-#: src/screens/Person/index.tsx:573
-#: src/screens/Person/index.tsx:574
+#: src/screens/Group/index.tsx:554
+#: src/screens/Group/index.tsx:555
+#: src/screens/Person/index.tsx:596
+#: src/screens/Person/index.tsx:597
 #: src/view/shell/desktop/LeftNav.tsx:510
 msgid "Add expense"
 msgstr "Add expense"
@@ -1402,10 +1426,10 @@ msgstr "Add expense"
 #: src/screens/AddExpense.tsx:61
 #: src/screens/Analytics/index.tsx:97
 #: src/screens/Analytics/index.tsx:98
-#: src/screens/Group/index.tsx:393
-#: src/screens/Group/index.tsx:399
-#: src/screens/Person/index.tsx:323
-#: src/screens/Person/index.tsx:329
+#: src/screens/Group/index.tsx:396
+#: src/screens/Group/index.tsx:402
+#: src/screens/Person/index.tsx:345
+#: src/screens/Person/index.tsx:351
 #: src/view/shell/desktop/LeftNav.tsx:518
 msgctxt "action"
 msgid "Add expense"
@@ -1419,8 +1443,8 @@ msgstr "Add expense"
 msgid "Add friend"
 msgstr "Add friend"
 
-#: src/screens/Person/index.tsx:506
-#: src/screens/Person/index.tsx:510
+#: src/screens/Person/index.tsx:529
+#: src/screens/Person/index.tsx:533
 msgid "Add friend back"
 msgstr "Add friend back"
 
@@ -1443,10 +1467,10 @@ msgid "Add member"
 msgstr "Add member"
 
 #: src/components/groups/AddMembersDialog.tsx:115
-#: src/screens/Group/index.tsx:639
 #: src/screens/Group/index.tsx:642
-#: src/screens/Group/index.tsx:717
-#: src/screens/Group/index.tsx:723
+#: src/screens/Group/index.tsx:645
+#: src/screens/Group/index.tsx:720
+#: src/screens/Group/index.tsx:726
 msgid "Add members"
 msgstr "Add members"
 
@@ -1534,7 +1558,7 @@ msgid "All"
 msgstr "All"
 
 #. placeholder {0}: fmt(total!)
-#: src/components/split/ExpenseComposer.tsx:750
+#: src/components/split/ExpenseComposer.tsx:751
 msgid "All {0} assigned"
 msgstr "All {0} assigned"
 
@@ -1558,7 +1582,7 @@ msgstr "All even"
 
 #: src/features/export/ExportSheet.tsx:208
 #: src/features/export/ExportSheet.tsx:246
-#: src/screens/Analytics/components/FilterBar.tsx:148
+#: src/screens/Analytics/components/FilterBar.tsx:150
 msgid "All groups"
 msgstr "All groups"
 
@@ -1575,15 +1599,15 @@ msgstr "All items"
 msgid "All settled"
 msgstr "All settled"
 
-#: src/screens/Groups/index.tsx:257
+#: src/screens/Groups/index.tsx:256
 #: src/screens/People/components/BalanceSummary.tsx:221
-#: src/screens/People/index.tsx:286
-#: src/screens/Settle/index.tsx:395
+#: src/screens/People/index.tsx:285
+#: src/screens/Settle/index.tsx:396
 msgid "All settled up"
 msgstr "All settled up"
 
 #: src/features/export/ExportSheet.tsx:108
-#: src/screens/Analytics/components/Summary.tsx:195
+#: src/screens/Analytics/components/Summary.tsx:198
 #: src/screens/Analytics/useReport.ts:321
 msgid "All time"
 msgstr "All time"
@@ -1660,7 +1684,7 @@ msgstr "Amount to let go"
 msgid "Amount: {0} → {1}"
 msgstr "Amount: {0} → {1}"
 
-#: src/screens/Analytics/components/FilterBar.tsx:61
+#: src/screens/Analytics/components/FilterBar.tsx:62
 msgid "Amounts are never added across currencies."
 msgstr "Amounts are never added across currencies."
 
@@ -1816,15 +1840,15 @@ msgstr "Back"
 msgid "Back in your lists"
 msgstr "Back in your lists"
 
-#: src/screens/Group/index.tsx:204
 #: src/screens/Group/index.tsx:205
-#: src/screens/Settle/index.tsx:155
+#: src/screens/Group/index.tsx:206
 #: src/screens/Settle/index.tsx:156
+#: src/screens/Settle/index.tsx:157
 msgid "Back to Groups"
 msgstr "Back to Groups"
 
-#: src/screens/Person/index.tsx:196
-#: src/screens/Person/index.tsx:197
+#: src/screens/Person/index.tsx:201
+#: src/screens/Person/index.tsx:202
 msgid "Back to People"
 msgstr "Back to People"
 
@@ -1863,11 +1887,11 @@ msgid "Balance written off"
 msgstr "Balance written off"
 
 #: src/components/settings/AboutSettings.tsx:102
-#: src/screens/Group/index.tsx:492
+#: src/screens/Group/index.tsx:495
 msgid "Balances"
 msgstr "Balances"
 
-#: src/screens/Settle/index.tsx:266
+#: src/screens/Settle/index.tsx:267
 msgid "Balances or rules changed since this plan was made."
 msgstr "Balances or rules changed since this plan was made."
 
@@ -1946,8 +1970,8 @@ msgstr "Calculator"
 #: src/screens/Group/components/GroupRows.tsx:221
 #: src/screens/Group/components/GroupRows.tsx:224
 #: src/screens/Group/components/MemberExitDialog.tsx:191
-#: src/screens/Person/index.tsx:485
-#: src/screens/Person/index.tsx:488
+#: src/screens/Person/index.tsx:508
+#: src/screens/Person/index.tsx:511
 msgid "Call it even"
 msgstr "Call it even"
 
@@ -2043,7 +2067,7 @@ msgstr "Charge setup"
 msgid "Charges"
 msgstr "Charges"
 
-#: src/screens/Analytics/components/FilterBar.tsx:92
+#: src/screens/Analytics/components/FilterBar.tsx:94
 msgid "Charts"
 msgstr "Charts"
 
@@ -2175,10 +2199,10 @@ msgstr "Clear chat?"
 msgid "Clear filter: {0}"
 msgstr "Clear filter: {0}"
 
+#: src/screens/Groups/index.tsx:273
 #: src/screens/Groups/index.tsx:274
-#: src/screens/Groups/index.tsx:275
+#: src/screens/People/index.tsx:302
 #: src/screens/People/index.tsx:303
-#: src/screens/People/index.tsx:304
 msgid "Clear filters"
 msgstr "Clear filters"
 
@@ -2353,7 +2377,7 @@ msgstr "Couldn’t add that person. Please try again."
 
 #: src/screens/AddFriend.tsx:526
 #: src/screens/FriendsAndInvites/index.tsx:344
-#: src/screens/Person/index.tsx:294
+#: src/screens/Person/index.tsx:316
 msgid "Couldn’t add them back. Please try again."
 msgstr "Couldn’t add them back. Please try again."
 
@@ -2538,7 +2562,7 @@ msgstr "Counts towards: {settles}"
 
 #: src/components/groups/GroupFields.tsx:45
 #: src/components/SearchAsk/ResultRows.tsx:369
-#: src/screens/Group/index.tsx:343
+#: src/screens/Group/index.tsx:346
 #: src/screens/Groups/components/GroupRow.tsx:57
 #: src/screens/Groups/components/GroupsFilterDialog.tsx:77
 msgid "Couple"
@@ -2558,9 +2582,9 @@ msgid "Create account"
 msgstr "Create account"
 
 #: src/screens/CreateGroup.tsx:140
-#: src/screens/Groups/index.tsx:187
-#: src/screens/Groups/index.tsx:377
-#: src/screens/Groups/index.tsx:383
+#: src/screens/Groups/index.tsx:186
+#: src/screens/Groups/index.tsx:376
+#: src/screens/Groups/index.tsx:382
 msgid "Create group"
 msgstr "Create group"
 
@@ -2603,7 +2627,7 @@ msgstr "Currency"
 #. placeholder {0}: currencyName(value.currency, i18n.locale)
 #. placeholder {0}: report.currency
 #: src/components/groups/GroupFields.tsx:104
-#: src/screens/Analytics/components/FilterBar.tsx:46
+#: src/screens/Analytics/components/FilterBar.tsx:47
 msgid "Currency: {0}"
 msgstr "Currency: {0}"
 
@@ -2631,12 +2655,12 @@ msgstr "Custom color {applied}"
 #: src/features/export/ExportSheet.tsx:108
 #: src/features/export/ExportSheet.tsx:233
 #: src/screens/Analytics/components/RangeDialog.tsx:109
-#: src/screens/Analytics/components/Summary.tsx:199
+#: src/screens/Analytics/components/Summary.tsx:202
 msgid "Custom range"
 msgstr "Custom range"
 
-#: src/screens/Analytics/components/Summary.tsx:245
 #: src/screens/Analytics/components/Summary.tsx:248
+#: src/screens/Analytics/components/Summary.tsx:251
 msgid "Custom range…"
 msgstr "Custom range…"
 
@@ -2665,7 +2689,7 @@ msgstr "Data"
 #: src/features/remind/RemindMeSheet.tsx:194
 #: src/features/remind/RemindMeSheet.tsx:196
 #: src/screens/Analytics/index.tsx:224
-#: src/screens/Repayment/index.tsx:209
+#: src/screens/Repayment/index.tsx:208
 msgid "Date"
 msgstr "Date"
 
@@ -2745,8 +2769,8 @@ msgid "Delete {0}?"
 msgstr "Delete {0}?"
 
 #: src/components/activity/useActivityActions.tsx:70
-#: src/screens/Expense/index.tsx:221
-#: src/screens/Expense/index.tsx:224
+#: src/screens/Expense/index.tsx:220
+#: src/screens/Expense/index.tsx:223
 msgid "Delete expense"
 msgstr "Delete expense"
 
@@ -2807,7 +2831,7 @@ msgstr "Delivery"
 #: src/components/Layout/Header/index.tsx:251
 #: src/components/SyncStatusDot.tsx:22
 #: src/navigation/Navigation.tsx:256
-#: src/screens/People/index.tsx:197
+#: src/screens/People/index.tsx:196
 msgid "Demo"
 msgstr "Demo"
 
@@ -2850,12 +2874,12 @@ msgstr "Direct {0}"
 msgid "Direct {0}{1}"
 msgstr "Direct {0}{1}"
 
-#: src/screens/Person/index.tsx:404
+#: src/screens/Person/index.tsx:427
 msgid "Direct only"
 msgstr "Direct only"
 
 #: src/components/people/PaymentDetailsDialog.tsx:211
-#: src/screens/Repayment/index.tsx:216
+#: src/screens/Repayment/index.tsx:215
 msgid "Direct, no group"
 msgstr "Direct, no group"
 
@@ -2884,8 +2908,8 @@ msgstr "Discount"
 msgid "Discount comes off the items first; service, tax and tip are then worked out on what is left."
 msgstr "Discount comes off the items first; service, tax and tip are then worked out on what is left."
 
-#: src/screens/Expense/index.tsx:566
-#: src/screens/Repayment/index.tsx:272
+#: src/screens/Expense/index.tsx:557
+#: src/screens/Repayment/index.tsx:271
 msgid "Discussion"
 msgstr "Discussion"
 
@@ -2906,11 +2930,11 @@ msgstr "Dispute"
 msgid "Dispute {itemName}"
 msgstr "Dispute {itemName}"
 
-#: src/screens/Expense/components/ItemRow.tsx:79
+#: src/screens/Expense/components/ItemRow.tsx:82
 msgid "Dispute my portion"
 msgstr "Dispute my portion"
 
-#: src/screens/Expense/components/ItemRow.tsx:71
+#: src/screens/Expense/components/ItemRow.tsx:74
 msgid "Dispute my portion of {itemLabel}"
 msgstr "Dispute my portion of {itemLabel}"
 
@@ -2934,8 +2958,8 @@ msgstr "Disputed"
 
 #: src/components/disputes/DisputedOnlyToggle.tsx:13
 #: src/components/disputes/DisputedOnlyToggle.tsx:16
-#: src/screens/Group/index.tsx:515
-#: src/screens/Person/index.tsx:414
+#: src/screens/Group/index.tsx:518
+#: src/screens/Person/index.tsx:437
 msgid "Disputed only"
 msgstr "Disputed only"
 
@@ -2943,11 +2967,11 @@ msgstr "Disputed only"
 msgid "Divided by"
 msgstr "Divided by"
 
-#: src/components/split/ExpenseComposer.tsx:675
+#: src/components/split/ExpenseComposer.tsx:676
 msgid "Does this resolve {who}’s dispute?"
 msgstr "Does this resolve {who}’s dispute?"
 
-#: src/components/split/ExpenseComposer.tsx:675
+#: src/components/split/ExpenseComposer.tsx:676
 msgid "Does this resolve the disputes from {who}?"
 msgstr "Does this resolve the disputes from {who}?"
 
@@ -3025,24 +3049,24 @@ msgstr "Edit comment"
 #: src/navigation/Navigation.tsx:84
 #: src/screens/EditExpense.tsx:35
 #: src/screens/EditExpense.tsx:74
-#: src/screens/Expense/index.tsx:122
+#: src/screens/Expense/index.tsx:121
 msgid "Edit expense"
 msgstr "Edit expense"
 
 #: src/components/people/EditFriendDialog.tsx:67
-#: src/screens/Person/index.tsx:496
-#: src/screens/Person/index.tsx:499
+#: src/screens/Person/index.tsx:519
+#: src/screens/Person/index.tsx:522
 msgid "Edit friend"
 msgstr "Edit friend"
 
 #: src/components/groups/EditGroupDialog.tsx:89
-#: src/screens/Group/index.tsx:620
 #: src/screens/Group/index.tsx:623
+#: src/screens/Group/index.tsx:626
 msgid "Edit group"
 msgstr "Edit group"
 
-#: src/components/disputes/DisputePanel.tsx:150
-#: src/components/disputes/DisputePanel.tsx:153
+#: src/components/disputes/DisputePanel.tsx:166
+#: src/components/disputes/DisputePanel.tsx:169
 msgid "Edit it"
 msgstr "Edit it"
 
@@ -3058,13 +3082,13 @@ msgstr "Edit profile"
 msgid "Edit reminder"
 msgstr "Edit reminder"
 
-#: src/screens/Group/index.tsx:817
-#: src/screens/Settle/index.tsx:442
+#: src/screens/Group/index.tsx:820
+#: src/screens/Settle/index.tsx:443
 msgid "Edit rules"
 msgstr "Edit rules"
 
-#: src/screens/Group/index.tsx:813
-#: src/screens/Settle/index.tsx:438
+#: src/screens/Group/index.tsx:816
+#: src/screens/Settle/index.tsx:439
 msgid "Edit who you settle with"
 msgstr "Edit who you settle with"
 
@@ -3152,7 +3176,7 @@ msgstr "Enter an amount"
 msgid "Enter an amount greater than zero."
 msgstr "Enter an amount greater than zero."
 
-#: src/components/split/ExpenseComposer.tsx:755
+#: src/components/split/ExpenseComposer.tsx:756
 msgid "Enter an amount to see everyone’s share"
 msgstr "Enter an amount to see everyone’s share"
 
@@ -3242,8 +3266,8 @@ msgstr "Every week"
 msgid "Everyone"
 msgstr "Everyone"
 
-#: src/screens/Group/index.tsx:592
-#: src/screens/Settle/index.tsx:403
+#: src/screens/Group/index.tsx:595
+#: src/screens/Settle/index.tsx:404
 msgid "Everyone is settled up."
 msgstr "Everyone is settled up."
 
@@ -3255,7 +3279,7 @@ msgstr "Everyone on a group expense needs to be in the group"
 msgid "Everyone ticked pays the same."
 msgstr "Everyone ticked pays the same."
 
-#: src/screens/Settle/index.tsx:253
+#: src/screens/Settle/index.tsx:254
 msgid "Everyone who owes pays the people who are owed, straight to them. Only pairs allowed in Who you settle with are used, preferred pairs first, so the plan isn’t always the fewest payments."
 msgstr "Everyone who owes pays the people who are owed, straight to them. Only pairs allowed in Who you settle with are used, preferred pairs first, so the plan isn’t always the fewest payments."
 
@@ -3267,7 +3291,7 @@ msgstr "Everyone, one portion each"
 msgid "Everyone’s share of these expenses"
 msgstr "Everyone’s share of these expenses"
 
-#: src/screens/Analytics/components/Summary.tsx:170
+#: src/screens/Analytics/components/Summary.tsx:133
 msgid "Everyone’s shares"
 msgstr "Everyone’s shares"
 
@@ -3275,7 +3299,7 @@ msgstr "Everyone’s shares"
 msgid "Everyone's total"
 msgstr "Everyone's total"
 
-#: src/screens/Analytics/components/FilterBar.tsx:140
+#: src/screens/Analytics/components/FilterBar.tsx:142
 msgid "Everything"
 msgstr "Everything"
 
@@ -3318,7 +3342,7 @@ msgstr "Excluded"
 #: src/features/export/statementText.ts:34
 #: src/navigation/Navigation.tsx:82
 #: src/screens/Analytics/components/ExpenseRow.tsx:47
-#: src/screens/Expense/index.tsx:111
+#: src/screens/Expense/index.tsx:110
 msgid "Expense"
 msgstr "Expense"
 
@@ -3328,11 +3352,11 @@ msgid "Expense added"
 msgstr "Expense added"
 
 #: src/components/activity/useActivityActions.tsx:96
-#: src/screens/Expense/index.tsx:179
+#: src/screens/Expense/index.tsx:178
 msgid "Expense deleted"
 msgstr "Expense deleted"
 
-#: src/screens/Expense/index.tsx:198
+#: src/screens/Expense/index.tsx:197
 msgid "Expense options"
 msgstr "Expense options"
 
@@ -3342,10 +3366,10 @@ msgstr "Expense options"
 #: src/screens/Analytics/components/Charts.tsx:188
 #: src/screens/Analytics/components/Charts.tsx:280
 #: src/screens/Analytics/components/Charts.tsx:325
-#: src/screens/Analytics/components/Summary.tsx:174
+#: src/screens/Analytics/components/Summary.tsx:137
 #: src/screens/Analytics/index.tsx:167
-#: src/screens/Group/index.tsx:492
-#: src/screens/Group/index.tsx:499
+#: src/screens/Group/index.tsx:495
+#: src/screens/Group/index.tsx:502
 #: src/screens/Profile.tsx:249
 msgid "Expenses"
 msgstr "Expenses"
@@ -3367,7 +3391,7 @@ msgid "Explore Splito with sample data. Your own data is kept separately and unt
 msgstr "Explore Splito with sample data. Your own data is kept separately and untouched."
 
 #: src/features/export/ExportSheet.tsx:175
-#: src/screens/Group/index.tsx:627
+#: src/screens/Group/index.tsx:630
 #: src/screens/Settings/index.tsx:230
 #: src/screens/Settings/index.tsx:234
 msgid "Export"
@@ -3382,7 +3406,7 @@ msgstr "Export CSV"
 msgid "Export format"
 msgstr "Export format"
 
-#: src/screens/Person/index.tsx:503
+#: src/screens/Person/index.tsx:526
 msgid "Export statement"
 msgstr "Export statement"
 
@@ -3416,11 +3440,11 @@ msgid "Fewer shares"
 msgstr "Fewer shares"
 
 #: src/features/hidden/ShowHidden.tsx:54
-#: src/screens/Group/index.tsx:504
-#: src/screens/Group/index.tsx:510
+#: src/screens/Group/index.tsx:507
+#: src/screens/Group/index.tsx:513
 #: src/screens/Person/components/HistoryFilterDialog.tsx:67
-#: src/screens/Person/index.tsx:419
-#: src/screens/Person/index.tsx:425
+#: src/screens/Person/index.tsx:442
+#: src/screens/Person/index.tsx:448
 msgid "Filter"
 msgstr "Filter"
 
@@ -3498,8 +3522,8 @@ msgstr "Found at least {n, plural, one {# expense} other {# expenses}} for “{0
 #: src/components/SearchAsk/ResultRows.tsx:337
 #: src/features/export/ExportSheet.tsx:210
 #: src/features/export/ExportSheet.tsx:253
-#: src/screens/Person/index.tsx:187
-#: src/screens/Person/index.tsx:447
+#: src/screens/Person/index.tsx:191
+#: src/screens/Person/index.tsx:470
 msgid "Friend"
 msgstr "Friend"
 
@@ -3525,8 +3549,8 @@ msgstr "Friend requests from"
 
 #: src/components/groups/AddMembersDialog.tsx:139
 #: src/screens/FriendsAndInvites/index.tsx:98
-#: src/screens/People/index.tsx:244
-#: src/screens/People/index.tsx:364
+#: src/screens/People/index.tsx:243
+#: src/screens/People/index.tsx:363
 #: src/screens/Profile.tsx:237
 msgid "Friends"
 msgstr "Friends"
@@ -3541,11 +3565,11 @@ msgid "Friends and invites"
 msgstr "Friends and invites"
 
 #. placeholder {0}: line.people
-#: src/screens/Settle/index.tsx:589
+#: src/screens/Settle/index.tsx:590
 msgid "From {0} people"
 msgstr "From {0} people"
 
-#: src/screens/Settle/index.tsx:587
+#: src/screens/Settle/index.tsx:588
 msgid "From 1 person"
 msgstr "From 1 person"
 
@@ -3586,12 +3610,12 @@ msgstr "Go back to previous step"
 msgid "Go to next"
 msgstr "Go to next"
 
+#: src/screens/Expense/index.tsx:144
 #: src/screens/Expense/index.tsx:145
-#: src/screens/Expense/index.tsx:146
 #: src/screens/Invites/Invite.tsx:294
 #: src/screens/Invites/Invite.tsx:300
+#: src/screens/Repayment/index.tsx:112
 #: src/screens/Repayment/index.tsx:113
-#: src/screens/Repayment/index.tsx:114
 msgid "Go to People"
 msgstr "Go to People"
 
@@ -3636,8 +3660,8 @@ msgstr "Groceries"
 #: src/screens/Analytics/index.tsx:227
 #: src/screens/Analytics/useReport.ts:333
 #: src/screens/Group/index.tsx:195
-#: src/screens/Group/index.tsx:343
-#: src/screens/Group/index.tsx:578
+#: src/screens/Group/index.tsx:346
+#: src/screens/Group/index.tsx:581
 #: src/screens/Groups/components/GroupRow.tsx:58
 #: src/screens/People/components/PersonRow.tsx:106
 #: src/screens/Person/components/PersonBalances.tsx:105
@@ -3664,7 +3688,7 @@ msgstr "Group name"
 msgid "Group settle-up routing"
 msgstr "Group settle-up routing"
 
-#: src/screens/Analytics/components/Summary.tsx:168
+#: src/screens/Analytics/components/Summary.tsx:131
 msgid "Group total"
 msgstr "Group total"
 
@@ -3680,9 +3704,9 @@ msgstr "Group updated"
 #: src/components/TabGlyph.tsx:39
 #: src/features/export/ImportSheet.tsx:171
 #: src/navigation/Navigation.tsx:69
-#: src/screens/Groups/index.tsx:181
-#: src/screens/Groups/index.tsx:199
-#: src/screens/Groups/index.tsx:231
+#: src/screens/Groups/index.tsx:180
+#: src/screens/Groups/index.tsx:198
+#: src/screens/Groups/index.tsx:230
 #: src/screens/Profile.tsx:243
 msgid "Groups"
 msgstr "Groups"
@@ -3765,8 +3789,8 @@ msgstr "Hidden from your lists"
 msgid "Hidden from your lists. Only you see this; the group is unchanged for everyone else."
 msgstr "Hidden from your lists. Only you see this; the group is unchanged for everyone else."
 
-#: src/screens/Group/index.tsx:521
-#: src/screens/Person/index.tsx:409
+#: src/screens/Group/index.tsx:524
+#: src/screens/Person/index.tsx:432
 msgid "Hidden shown"
 msgstr "Hidden shown"
 
@@ -3774,10 +3798,10 @@ msgstr "Hidden shown"
 #: src/components/people/PaymentDetailsDialog.tsx:303
 #: src/features/hidden/HideItem.tsx:86
 #: src/features/hidden/HideItem.tsx:88
-#: src/screens/Expense/index.tsx:552
-#: src/screens/Expense/index.tsx:557
-#: src/screens/Person/index.tsx:376
-#: src/screens/Person/index.tsx:380
+#: src/screens/Expense/index.tsx:543
+#: src/screens/Expense/index.tsx:548
+#: src/screens/Person/index.tsx:398
+#: src/screens/Person/index.tsx:402
 msgid "Hide"
 msgstr "Hide"
 
@@ -3805,7 +3829,7 @@ msgstr "Hide group"
 msgid "Hide password"
 msgstr "Hide password"
 
-#: src/screens/Person/index.tsx:397
+#: src/screens/Person/index.tsx:420
 msgid "History"
 msgstr "History"
 
@@ -3813,10 +3837,10 @@ msgstr "History"
 #: src/components/SearchAsk/ResultRows.tsx:368
 #: src/components/TabGlyph.tsx:38
 #: src/navigation/Navigation.tsx:257
-#: src/screens/Group/index.tsx:343
+#: src/screens/Group/index.tsx:346
 #: src/screens/Groups/components/GroupRow.tsx:56
 #: src/screens/Groups/components/GroupsFilterDialog.tsx:76
-#: src/screens/People/index.tsx:184
+#: src/screens/People/index.tsx:183
 msgid "Home"
 msgstr "Home"
 
@@ -3840,8 +3864,8 @@ msgstr "How much did I spend on food this month?"
 msgid "How much did I spend this month?"
 msgstr "How much did I spend this month?"
 
-#: src/screens/Settle/index.tsx:232
-#: src/screens/Settle/index.tsx:240
+#: src/screens/Settle/index.tsx:233
+#: src/screens/Settle/index.tsx:241
 msgid "How this plan works"
 msgstr "How this plan works"
 
@@ -3935,7 +3959,7 @@ msgstr "in the last {0} days"
 msgid "in the last {0} months"
 msgstr "in the last {0} months"
 
-#: src/screens/Analytics/components/Summary.tsx:176
+#: src/screens/Analytics/components/Summary.tsx:139
 msgid "In this period"
 msgstr "In this period"
 
@@ -3955,12 +3979,12 @@ msgid "Inactive · Make active to add expenses"
 msgstr "Inactive · Make active to add expenses"
 
 #. placeholder {0}: folded.length
-#: src/screens/Groups/index.tsx:328
+#: src/screens/Groups/index.tsx:327
 msgid "Inactive ({0})"
 msgstr "Inactive ({0})"
 
 #: src/screens/Analytics/components/ScopeDialog.tsx:180
-#: src/screens/Groups/index.tsx:310
+#: src/screens/Groups/index.tsx:309
 msgid "Inactive groups"
 msgstr "Inactive groups"
 
@@ -3969,8 +3993,8 @@ msgstr "Inactive groups"
 msgid "Include app info"
 msgstr "Include app info"
 
-#: src/screens/Settle/components/DisputedNotice.tsx:40
-#: src/screens/Settle/components/DisputedNotice.tsx:43
+#: src/components/disputes/DisputedNotice.tsx:40
+#: src/components/disputes/DisputedNotice.tsx:43
 msgid "Include disputed"
 msgstr "Include disputed"
 
@@ -4049,7 +4073,7 @@ msgid "Invite link"
 msgstr "Invite link"
 
 #: src/screens/AddFriend.tsx:542
-#: src/screens/Group/index.tsx:884
+#: src/screens/Group/index.tsx:887
 msgid "Invite link or QR code"
 msgstr "Invite link or QR code"
 
@@ -4067,7 +4091,7 @@ msgstr "Invite links need a connection to Splito’s servers, which arrive with 
 msgid "Invite links need a connection. Try again when you’re online."
 msgstr "Invite links need a connection. Try again when you’re online."
 
-#: src/screens/People/index.tsx:206
+#: src/screens/People/index.tsx:205
 msgid "Invite people"
 msgstr "Invite people"
 
@@ -4077,7 +4101,7 @@ msgid "Invite to {0}"
 msgstr "Invite to {0}"
 
 #: src/screens/AddFriend.tsx:535
-#: src/screens/Group/index.tsx:872
+#: src/screens/Group/index.tsx:875
 msgid "Invite with a link or QR code"
 msgstr "Invite with a link or QR code"
 
@@ -4127,7 +4151,7 @@ msgstr "It hasn't been sent anywhere yet. Send it by email now, or find it later
 msgid "It is removed from Your feedback. If you already emailed it, that email isn't affected."
 msgstr "It is removed from Your feedback. If you already emailed it, that email isn't affected."
 
-#: src/screens/Settle/components/DisputedNotice.tsx:34
+#: src/components/disputes/DisputedNotice.tsx:34
 msgid "It is still being questioned. Leave it out to settle only what nobody disputes."
 msgstr "It is still being questioned. Leave it out to settle only what nobody disputes."
 
@@ -4167,8 +4191,8 @@ msgstr "Item"
 #: src/components/split/SplitEditor.tsx:590
 #: src/components/split/SplitEditor.tsx:601
 #: src/screens/Expense/components/ChargedBreakdown.tsx:70
-#: src/screens/Expense/components/ItemRow.tsx:45
-#: src/screens/Expense/components/ItemRow.tsx:59
+#: src/screens/Expense/components/ItemRow.tsx:47
+#: src/screens/Expense/components/ItemRow.tsx:62
 msgid "Item {0}"
 msgstr "Item {0}"
 
@@ -4224,7 +4248,7 @@ msgstr "Keep as an inactive member"
 
 #: src/components/FormSheet/shared.tsx:165
 #: src/components/split/ExpenseComposer.tsx:651
-#: src/components/split/ExpenseComposer.tsx:684
+#: src/components/split/ExpenseComposer.tsx:685
 msgid "Keep editing"
 msgstr "Keep editing"
 
@@ -4270,7 +4294,7 @@ msgstr "last year"
 msgid "Later years"
 msgstr "Later years"
 
-#: src/screens/Settle/components/DisputedNotice.tsx:40
+#: src/components/disputes/DisputedNotice.tsx:40
 msgid "Leave disputed out"
 msgstr "Leave disputed out"
 
@@ -4283,7 +4307,7 @@ msgstr "Leave disputed out"
 msgid "Leave group"
 msgstr "Leave group"
 
-#: src/screens/Settle/components/DisputedNotice.tsx:43
+#: src/components/disputes/DisputedNotice.tsx:43
 msgid "Leave out"
 msgstr "Leave out"
 
@@ -4394,11 +4418,11 @@ msgstr "Make inactive anyway"
 msgid "Makes this device match the file. Anything here that the file doesn’t have is removed (its history is kept)."
 msgstr "Makes this device match the file. Anything here that the file doesn’t have is removed (its history is kept)."
 
-#: src/screens/People/index.tsx:263
+#: src/screens/People/index.tsx:262
 msgid "Manage"
 msgstr "Manage"
 
-#: src/screens/People/index.tsx:257
+#: src/screens/People/index.tsx:256
 msgid "Manage friends and invites"
 msgstr "Manage friends and invites"
 
@@ -4439,10 +4463,10 @@ msgstr "Measure"
 
 #: src/screens/CreateGroup.tsx:182
 #: src/screens/CreateGroup.tsx:202
-#: src/screens/Group/index.tsx:492
-#: src/screens/Group/index.tsx:630
+#: src/screens/Group/index.tsx:495
 #: src/screens/Group/index.tsx:633
-#: src/screens/Group/index.tsx:711
+#: src/screens/Group/index.tsx:636
+#: src/screens/Group/index.tsx:714
 msgid "Members"
 msgstr "Members"
 
@@ -4487,7 +4511,7 @@ msgstr "Money colours"
 msgid "Monochrome"
 msgstr "Monochrome"
 
-#: src/screens/Analytics/components/Summary.tsx:193
+#: src/screens/Analytics/components/Summary.tsx:196
 msgid "Month"
 msgstr "Month"
 
@@ -4509,12 +4533,12 @@ msgstr "More"
 msgid "More actions"
 msgstr "More actions"
 
-#: src/screens/Group/index.tsx:597
-#: src/screens/Person/index.tsx:465
+#: src/screens/Group/index.tsx:600
+#: src/screens/Person/index.tsx:488
 msgid "More options"
 msgstr "More options"
 
-#: src/features/disputes/RowMenu.tsx:55
+#: src/features/disputes/RowMenu.tsx:57
 #: src/features/hidden/HideItem.tsx:68
 #: src/screens/Group/components/GroupRows.tsx:331
 msgid "More options for {name}"
@@ -4665,8 +4689,8 @@ msgstr "New friend – no account needed"
 
 #: src/navigation/Navigation.tsx:90
 #: src/screens/CreateGroup.tsx:134
+#: src/screens/Groups/index.tsx:292
 #: src/screens/Groups/index.tsx:293
-#: src/screens/Groups/index.tsx:294
 msgid "New group"
 msgstr "New group"
 
@@ -4710,7 +4734,7 @@ msgstr "Next Monday"
 msgid "Next month"
 msgstr "Next month"
 
-#: src/screens/Analytics/components/Summary.tsx:128
+#: src/screens/Analytics/components/Summary.tsx:172
 msgid "Next period"
 msgstr "Next period"
 
@@ -4731,7 +4755,7 @@ msgstr "No active invite links. Make one to add friends without typing their num
 msgid "no balance change"
 msgstr "no balance change"
 
-#: src/screens/Group/index.tsx:541
+#: src/screens/Group/index.tsx:544
 msgid "No balances yet. They appear once the group has an expense."
 msgstr "No balances yet. They appear once the group has an expense."
 
@@ -4764,7 +4788,7 @@ msgid "No currency matches “{query}”"
 msgstr "No currency matches “{query}”"
 
 #. placeholder {0}: person!.data.name
-#: src/screens/Person/index.tsx:568
+#: src/screens/Person/index.tsx:591
 msgid "No direct expenses with {0}. Group expenses are hidden by the filter."
 msgstr "No direct expenses with {0}. Group expenses are hidden by the filter."
 
@@ -4781,7 +4805,7 @@ msgstr "No email app found. Your feedback is saved on this device."
 msgid "No email or number? Add just a name and they’re only for you."
 msgstr "No email or number? Add just a name and they’re only for you."
 
-#: src/screens/Group/index.tsx:547
+#: src/screens/Group/index.tsx:550
 msgid "No expenses in this group yet. Add the first one and everyone’s share is worked out for you."
 msgstr "No expenses in this group yet. Add the first one and everyone’s share is worked out for you."
 
@@ -4794,11 +4818,11 @@ msgstr "No feedback yet"
 msgid "No friends match “{0}”."
 msgstr "No friends match “{0}”."
 
-#: src/screens/People/index.tsx:300
+#: src/screens/People/index.tsx:299
 msgid "No friends match these filters."
 msgstr "No friends match these filters."
 
-#: src/screens/People/index.tsx:322
+#: src/screens/People/index.tsx:321
 msgid "No friends yet. Add a friend, then split any bill with them. They don’t need the app."
 msgstr "No friends yet. Add a friend, then split any bill with them. They don’t need the app."
 
@@ -4815,11 +4839,11 @@ msgstr "No group"
 msgid "No groups match “{query}”"
 msgstr "No groups match “{query}”"
 
-#: src/screens/Groups/index.tsx:271
+#: src/screens/Groups/index.tsx:270
 msgid "No groups match these filters."
 msgstr "No groups match these filters."
 
-#: src/screens/Groups/index.tsx:291
+#: src/screens/Groups/index.tsx:290
 msgid "No groups yet. A group keeps a trip’s or a flat’s expenses and balances in one place."
 msgstr "No groups yet. A group keeps a trip’s or a flat’s expenses and balances in one place."
 
@@ -4829,8 +4853,8 @@ msgid "No limit"
 msgstr "No limit"
 
 #. placeholder {0}: query.trim()
-#: src/screens/Groups/index.tsx:249
-#: src/screens/People/index.tsx:278
+#: src/screens/Groups/index.tsx:248
+#: src/screens/People/index.tsx:277
 msgid "No matches for “{0}”"
 msgstr "No matches for “{0}”"
 
@@ -4842,7 +4866,7 @@ msgstr "No one’s share can go below zero – make the adjustments smaller"
 msgid "No results found for “<0>{query}</0>”."
 msgstr "No results found for “<0>{query}</0>”."
 
-#: src/screens/Person/index.tsx:235
+#: src/screens/Person/index.tsx:249
 msgid "No shared groups"
 msgstr "No shared groups"
 
@@ -4854,7 +4878,7 @@ msgstr "No tracking"
 msgid "No UPI app on this device can open the payment."
 msgstr "No UPI app on this device can open the payment."
 
-#: src/components/split/ExpenseComposer.tsx:683
+#: src/components/split/ExpenseComposer.tsx:684
 msgid "No, keep it open"
 msgstr "No, keep it open"
 
@@ -4870,7 +4894,7 @@ msgstr "Nobody matches “{query}”"
 msgid "Nobody owes you anything right now."
 msgstr "Nobody owes you anything right now."
 
-#: src/screens/Settle/components/DisputedNotice.tsx:34
+#: src/components/disputes/DisputedNotice.tsx:34
 msgid "Nobody pays or chases it until it is answered."
 msgstr "Nobody pays or chases it until it is answered."
 
@@ -4888,12 +4912,12 @@ msgid "Non-group"
 msgstr "Non-group"
 
 #. placeholder {0}: name(summary.groupId)
-#: src/screens/Analytics/components/FilterBar.tsx:167
+#: src/screens/Analytics/components/FilterBar.tsx:169
 msgid "Non-group + {0}"
 msgstr "Non-group + {0}"
 
 #. placeholder {0}: summary.count
-#: src/screens/Analytics/components/FilterBar.tsx:168
+#: src/screens/Analytics/components/FilterBar.tsx:170
 msgid "Non-group + {0} groups"
 msgstr "Non-group + {0} groups"
 
@@ -4901,7 +4925,7 @@ msgstr "Non-group + {0} groups"
 msgid "Non-group expenses"
 msgstr "Non-group expenses"
 
-#: src/screens/Analytics/components/FilterBar.tsx:144
+#: src/screens/Analytics/components/FilterBar.tsx:146
 msgid "Non-group only"
 msgstr "Non-group only"
 
@@ -4937,7 +4961,7 @@ msgstr "Not yet"
 #: src/components/people/RecordPaymentDialog.tsx:444
 #: src/features/disputes/RaiseSheet.tsx:244
 #: src/features/settlement/CallItEvenDialog.tsx:413
-#: src/screens/Repayment/index.tsx:219
+#: src/screens/Repayment/index.tsx:218
 msgid "Note"
 msgstr "Note"
 
@@ -4949,7 +4973,7 @@ msgstr "Note (optional)"
 
 #: src/components/split/ExpenseComposer.tsx:582
 #: src/components/split/ExpenseComposer.tsx:595
-#: src/screens/Expense/index.tsx:498
+#: src/screens/Expense/index.tsx:489
 msgid "Notes"
 msgstr "Notes"
 
@@ -4990,7 +5014,7 @@ msgstr "Nothing recorded in this range."
 msgid "Nothing to restore: everything in this file is already here."
 msgstr "Nothing to restore: everything in this file is already here."
 
-#: src/screens/Settle/index.tsx:457
+#: src/screens/Settle/index.tsx:458
 msgid "Nothing to settle. This group has no expenses yet."
 msgstr "Nothing to settle. This group has no expenses yet."
 
@@ -4999,7 +5023,7 @@ msgid "Nothing was changed."
 msgstr "Nothing was changed."
 
 #. placeholder {0}: person!.data.name
-#: src/screens/Person/index.tsx:567
+#: src/screens/Person/index.tsx:590
 msgid "Nothing with {0} yet. Add an expense you shared and it shows up here."
 msgstr "Nothing with {0} yet. Add an expense you shared and it shows up here."
 
@@ -5073,7 +5097,7 @@ msgid "on {on}"
 msgstr "on {on}"
 
 #: src/components/activity/ActivityItem.tsx:1022
-#: src/components/disputes/DisputePanel.tsx:99
+#: src/components/disputes/DisputePanel.tsx:104
 #: src/components/disputes/words.ts:25
 #: src/components/disputes/words.ts:31
 #: src/features/export/ExportSheet.tsx:124
@@ -5101,7 +5125,7 @@ msgstr "On this device only"
 msgid "Once"
 msgstr "Once"
 
-#: src/components/disputes/DisputePanel.tsx:63
+#: src/components/disputes/DisputePanel.tsx:68
 msgid "one item"
 msgstr "one item"
 
@@ -5328,7 +5352,7 @@ msgstr "Other account"
 msgid "Other currency"
 msgstr "Other currency"
 
-#: src/screens/Analytics/components/Summary.tsx:163
+#: src/screens/Analytics/components/Summary.tsx:126
 msgid "Out of your pocket"
 msgstr "Out of your pocket"
 
@@ -5384,7 +5408,7 @@ msgstr "Paid · change who paid to remove"
 
 #: src/components/split/ExpenseComposer.tsx:558
 #: src/features/export/statementText.ts:42
-#: src/screens/Expense/index.tsx:435
+#: src/screens/Expense/index.tsx:442
 msgid "Paid by"
 msgstr "Paid by"
 
@@ -5437,15 +5461,15 @@ msgid "Pay here:"
 msgstr "Pay here:"
 
 #: src/components/people/UpiPayDialog.tsx:137
-#: src/screens/Person/index.tsx:336
-#: src/screens/Person/index.tsx:342
+#: src/screens/Person/index.tsx:358
+#: src/screens/Person/index.tsx:364
 msgid "Pay with UPI"
 msgstr "Pay with UPI"
 
 #: src/components/people/HistoryRow.tsx:146
 #: src/features/export/statementText.ts:34
 #: src/navigation/Navigation.tsx:83
-#: src/screens/Repayment/index.tsx:76
+#: src/screens/Repayment/index.tsx:75
 msgid "Payment"
 msgstr "Payment"
 
@@ -5462,7 +5486,7 @@ msgstr "Payment details"
 msgid "Payment not received"
 msgstr "Payment not received"
 
-#: src/screens/Repayment/index.tsx:81
+#: src/screens/Repayment/index.tsx:80
 msgid "Payment options"
 msgstr "Payment options"
 
@@ -5472,8 +5496,8 @@ msgid "Payment recorded"
 msgstr "Payment recorded"
 
 #: src/components/groups/RulesEditor.tsx:97
-#: src/screens/Group/index.tsx:648
 #: src/screens/Group/index.tsx:651
+#: src/screens/Group/index.tsx:654
 msgid "Payment rules"
 msgstr "Payment rules"
 
@@ -5533,7 +5557,7 @@ msgid "Period"
 msgstr "Period"
 
 #. placeholder {0}: report.periodLabel
-#: src/screens/Analytics/components/Summary.tsx:205
+#: src/screens/Analytics/components/Summary.tsx:208
 msgid "Period: {periodName}, {0}"
 msgstr "Period: {periodName}, {0}"
 
@@ -5586,7 +5610,7 @@ msgstr "Pick the first day"
 msgid "Pink"
 msgstr "Pink"
 
-#: src/screens/Groups/index.tsx:370
+#: src/screens/Groups/index.tsx:369
 msgid "Planning a trip or sharing a flat? Keep its expenses in one place."
 msgstr "Planning a trip or sharing a flat? Keep its expenses in one place."
 
@@ -5640,7 +5664,7 @@ msgstr "Preview"
 msgid "Previous month"
 msgstr "Previous month"
 
-#: src/screens/Analytics/components/Summary.tsx:114
+#: src/screens/Analytics/components/Summary.tsx:158
 msgid "Previous period"
 msgstr "Previous period"
 
@@ -5669,7 +5693,7 @@ msgstr "Privacy"
 msgid "Profile"
 msgstr "Profile"
 
-#: src/components/disputes/DisputePanel.tsx:110
+#: src/components/disputes/DisputePanel.tsx:115
 msgid "Proposed: {fixText}"
 msgstr "Proposed: {fixText}"
 
@@ -5741,7 +5765,7 @@ msgid "Record a payment"
 msgstr "Record a payment"
 
 #: src/components/people/RecordPaymentDialog.tsx:290
-#: src/screens/Person/index.tsx:458
+#: src/screens/Person/index.tsx:481
 msgid "Record payment"
 msgstr "Record payment"
 
@@ -5769,8 +5793,8 @@ msgstr "Reduced"
 msgid "Reduced swaps movement for gentle fades. Off shows every change instantly."
 msgstr "Reduced swaps movement for gentle fades. Off shows every change instantly."
 
-#: src/components/disputes/DisputePanel.tsx:158
-#: src/components/disputes/DisputePanel.tsx:160
+#: src/components/disputes/DisputePanel.tsx:174
+#: src/components/disputes/DisputePanel.tsx:176
 #: src/features/disputes/AnswerSheet.tsx:67
 msgid "Reject"
 msgstr "Reject"
@@ -5787,12 +5811,12 @@ msgstr "Rejected"
 msgid "Rejected. Nothing on the record changed."
 msgstr "Rejected. Nothing on the record changed."
 
-#: src/components/disputes/DisputePanel.tsx:172
-#: src/components/disputes/DisputePanel.tsx:175
+#: src/components/disputes/DisputePanel.tsx:188
+#: src/components/disputes/DisputePanel.tsx:191
 msgid "Release"
 msgstr "Release"
 
-#: src/components/disputes/DisputePanel.tsx:172
+#: src/components/disputes/DisputePanel.tsx:188
 #: src/components/disputes/words.ts:35
 msgid "Released"
 msgstr "Released"
@@ -5911,8 +5935,8 @@ msgstr "Remove {who}"
 
 #: src/screens/FriendsAndInvites/index.tsx:310
 #: src/screens/FriendsAndInvites/index.tsx:312
-#: src/screens/Person/index.tsx:506
-#: src/screens/Person/index.tsx:510
+#: src/screens/Person/index.tsx:529
+#: src/screens/Person/index.tsx:533
 msgid "Remove friend"
 msgstr "Remove friend"
 
@@ -5934,7 +5958,7 @@ msgid "Remove round-off"
 msgstr "Remove round-off"
 
 #: src/screens/People/components/PersonRow.tsx:199
-#: src/screens/Person/index.tsx:232
+#: src/screens/Person/index.tsx:246
 msgid "Removed"
 msgstr "Removed"
 
@@ -5954,8 +5978,8 @@ msgstr "Rename {name}"
 msgid "Rename tax class"
 msgstr "Rename tax class"
 
-#: src/components/disputes/DisputePanel.tsx:180
-#: src/components/disputes/DisputePanel.tsx:182
+#: src/components/disputes/DisputePanel.tsx:196
+#: src/components/disputes/DisputePanel.tsx:198
 #: src/features/disputes/AnswerSheet.tsx:67
 msgid "Reopen"
 msgstr "Reopen"
@@ -5964,7 +5988,7 @@ msgstr "Reopen"
 msgid "Reopen dispute"
 msgstr "Reopen dispute"
 
-#: src/components/disputes/DisputePanel.tsx:101
+#: src/components/disputes/DisputePanel.tsx:106
 msgid "reopened"
 msgstr "reopened"
 
@@ -6099,18 +6123,18 @@ msgstr "Restaurant India"
 
 #: src/components/people/PaymentDetailsDialog.tsx:289
 #: src/features/export/ImportSheet.tsx:187
-#: src/screens/Expense/index.tsx:547
+#: src/screens/Expense/index.tsx:538
 #: src/screens/Group/components/GroupLifecycle.tsx:486
-#: src/screens/Person/index.tsx:371
-#: src/screens/Repayment/index.tsx:263
+#: src/screens/Person/index.tsx:393
+#: src/screens/Repayment/index.tsx:262
 msgid "Restore"
 msgstr "Restore"
 
-#: src/screens/Expense/index.tsx:535
+#: src/screens/Expense/index.tsx:526
 msgid "Restore expense"
 msgstr "Restore expense"
 
-#: src/screens/Person/index.tsx:361
+#: src/screens/Person/index.tsx:383
 msgid "Restore friend"
 msgstr "Restore friend"
 
@@ -6121,7 +6145,7 @@ msgid "Restore group"
 msgstr "Restore group"
 
 #: src/components/people/PaymentDetailsDialog.tsx:283
-#: src/screens/Repayment/index.tsx:251
+#: src/screens/Repayment/index.tsx:250
 msgid "Restore payment"
 msgstr "Restore payment"
 
@@ -6192,18 +6216,18 @@ msgstr "Round-off {0}"
 msgid "Round-off can’t be more than one whole unit"
 msgstr "Round-off can’t be more than one whole unit"
 
-#: src/screens/Expense/index.tsx:790
+#: src/screens/Expense/index.tsx:781
 msgid "Rounded to {unit} for cash."
 msgstr "Rounded to {unit} for cash."
 
 #. placeholder {0}: fmt(cash.remainder)
 #. placeholder {1}: name(cash.remainderTo)
-#: src/screens/Expense/index.tsx:789
+#: src/screens/Expense/index.tsx:780
 msgid "Rounded to {unit} for cash. {0} left over is on {1}’s share."
 msgstr "Rounded to {unit} for cash. {0} left over is on {1}’s share."
 
 #. placeholder {0}: fmt(cash.remainder)
-#: src/screens/Expense/index.tsx:787
+#: src/screens/Expense/index.tsx:778
 msgid "Rounded to {unit} for cash. {0} left over is on your share."
 msgstr "Rounded to {unit} for cash. {0} left over is on your share."
 
@@ -6320,7 +6344,7 @@ msgstr "Saved. We’ll check and send it when you’re online."
 msgid "Saved. We’ll send it when you’re online."
 msgstr "Saved. We’ll send it when you’re online."
 
-#: src/components/split/ExpenseComposer.tsx:678
+#: src/components/split/ExpenseComposer.tsx:679
 msgid "Saving applies your edit either way. Yes marks it accepted; No leaves it open for them to answer."
 msgstr "Saving applies your edit either way. Yes marks it accepted; No leaves it open for them to answer."
 
@@ -6365,7 +6389,7 @@ msgstr "Search for {q}"
 #: src/features/export/ExportSheet.tsx:254
 #: src/screens/FriendsAndInvites/index.tsx:200
 #: src/screens/FriendsAndInvites/index.tsx:201
-#: src/screens/People/index.tsx:251
+#: src/screens/People/index.tsx:250
 msgid "Search friends"
 msgstr "Search friends"
 
@@ -6375,7 +6399,7 @@ msgstr "Search friends"
 msgid "Search groups"
 msgstr "Search groups"
 
-#: src/screens/Groups/index.tsx:237
+#: src/screens/Groups/index.tsx:236
 msgid "Search groups or members"
 msgstr "Search groups or members"
 
@@ -6581,12 +6605,12 @@ msgstr "Settings reset"
 #: src/features/friends/RemoveFriendDialog.tsx:105
 #: src/features/searchAsk/AskAnswer.tsx:272
 #: src/navigation/Navigation.tsx:80
-#: src/screens/Group/index.tsx:589
-#: src/screens/Group/index.tsx:847
-#: src/screens/Group/index.tsx:853
-#: src/screens/Person/index.tsx:458
+#: src/screens/Group/index.tsx:592
+#: src/screens/Group/index.tsx:850
+#: src/screens/Group/index.tsx:856
+#: src/screens/Person/index.tsx:481
 #: src/screens/Settle/index.tsx:146
-#: src/screens/Settle/index.tsx:293
+#: src/screens/Settle/index.tsx:294
 msgid "Settle up"
 msgstr "Settle up"
 
@@ -6682,11 +6706,11 @@ msgstr "Show all in Search"
 msgid "Show all time"
 msgstr "Show all time"
 
-#: src/screens/Analytics/components/FilterBar.tsx:86
+#: src/screens/Analytics/components/FilterBar.tsx:88
 msgid "Show as tables"
 msgstr "Show as tables"
 
-#: src/screens/Analytics/components/FilterBar.tsx:86
+#: src/screens/Analytics/components/FilterBar.tsx:88
 msgid "Show charts"
 msgstr "Show charts"
 
@@ -6704,7 +6728,7 @@ msgstr "Show earlier comments"
 msgid "Show expenses from"
 msgstr "Show expenses from"
 
-#: src/screens/Analytics/components/FilterBar.tsx:176
+#: src/screens/Analytics/components/FilterBar.tsx:178
 msgid "Show expenses from: {label}"
 msgstr "Show expenses from: {label}"
 
@@ -6755,10 +6779,10 @@ msgstr "Show QR code and share"
 
 #: src/components/ShowSettledToggle.tsx:14
 #: src/components/ShowSettledToggle.tsx:16
+#: src/screens/Groups/index.tsx:259
 #: src/screens/Groups/index.tsx:260
-#: src/screens/Groups/index.tsx:261
+#: src/screens/People/index.tsx:288
 #: src/screens/People/index.tsx:289
-#: src/screens/People/index.tsx:290
 msgid "Show settled"
 msgstr "Show settled"
 
@@ -6856,10 +6880,10 @@ msgstr "Some"
 #: src/features/settlement/CallItEvenDialog.tsx:132
 #: src/screens/Analytics/useReport.ts:331
 #: src/screens/Group/components/MemberExitDialog.tsx:99
-#: src/screens/Group/index.tsx:698
-#: src/screens/Group/index.tsx:734
-#: src/screens/Group/index.tsx:757
-#: src/screens/Group/index.tsx:758
+#: src/screens/Group/index.tsx:701
+#: src/screens/Group/index.tsx:737
+#: src/screens/Group/index.tsx:760
+#: src/screens/Group/index.tsx:761
 #: src/screens/Settle/components/TransferRow.tsx:48
 msgid "Someone"
 msgstr "Someone"
@@ -6894,7 +6918,7 @@ msgid "Split"
 msgstr "Split"
 
 #. placeholder {0}: peopleCount(n)
-#: src/components/split/ExpenseComposer.tsx:772
+#: src/components/split/ExpenseComposer.tsx:773
 msgid "Split between {0}"
 msgstr "Split between {0}"
 
@@ -6903,19 +6927,19 @@ msgstr "Split between {0}"
 msgid "Split bills, stay friends."
 msgstr "Split bills, stay friends."
 
-#: src/screens/Expense/index.tsx:274
+#: src/screens/Expense/index.tsx:281
 msgid "Split by exact amounts"
 msgstr "Split by exact amounts"
 
-#: src/screens/Expense/index.tsx:278
+#: src/screens/Expense/index.tsx:285
 msgid "Split by items"
 msgstr "Split by items"
 
-#: src/screens/Expense/index.tsx:275
+#: src/screens/Expense/index.tsx:282
 msgid "Split by percentages"
 msgstr "Split by percentages"
 
-#: src/screens/Expense/index.tsx:276
+#: src/screens/Expense/index.tsx:283
 msgid "Split by shares"
 msgstr "Split by shares"
 
@@ -6923,7 +6947,7 @@ msgstr "Split by shares"
 msgid "Split by shares – say 2 for a couple, 1 for everyone else."
 msgstr "Split by shares – say 2 for a couple, 1 for everyone else."
 
-#: src/screens/Expense/index.tsx:273
+#: src/screens/Expense/index.tsx:280
 msgid "Split equally"
 msgstr "Split equally"
 
@@ -6931,7 +6955,7 @@ msgstr "Split equally"
 msgid "Split equally, then add or take away an amount for someone."
 msgstr "Split equally, then add or take away an amount for someone."
 
-#: src/screens/Expense/index.tsx:277
+#: src/screens/Expense/index.tsx:284
 msgid "Split equally, with adjustments"
 msgstr "Split equally, with adjustments"
 
@@ -6953,7 +6977,7 @@ msgstr "Split with"
 msgid "Splito"
 msgstr "Splito"
 
-#: src/screens/People/index.tsx:190
+#: src/screens/People/index.tsx:189
 #: src/view/shell/desktop/LeftNav.tsx:141
 msgid "Splito - Home"
 msgstr "Splito - Home"
@@ -6982,7 +7006,7 @@ msgstr "Splito is installed"
 msgid "Splito needs your permission to show this reminder. It’s used only for reminders you set; the alert is scheduled on this device, not sent from a server."
 msgstr "Splito needs your permission to show this reminder. It’s used only for reminders you set; the alert is scheduled on this device, not sent from a server."
 
-#: src/screens/Settle/index.tsx:479
+#: src/screens/Settle/index.tsx:480
 msgid "Splito never moves money. Record each payment once it has happened – part payments are fine."
 msgstr "Splito never moves money. Record each payment once it has happened – part payments are fine."
 
@@ -7102,7 +7126,7 @@ msgstr "Syncing to your other devices."
 msgid "System"
 msgstr "System"
 
-#: src/screens/Analytics/components/FilterBar.tsx:92
+#: src/screens/Analytics/components/FilterBar.tsx:94
 msgid "Table"
 msgstr "Table"
 
@@ -7279,7 +7303,7 @@ msgstr "The printed total {0} is {1} more than the items and charges."
 msgid "The receipt says…"
 msgstr "The receipt says…"
 
-#: src/components/disputes/DisputePanel.tsx:123
+#: src/components/disputes/DisputePanel.tsx:138
 msgid "The record was deleted"
 msgstr "The record was deleted"
 
@@ -7377,6 +7401,10 @@ msgstr "this balance"
 msgid "This browser can’t show notifications. You’ll see this reminder inside Splito when you open it."
 msgstr "This browser can’t show notifications. You’ll see this reminder inside Splito when you open it."
 
+#: src/components/disputes/DisputePanel.tsx:125
+msgid "This can’t be applied in one tap, because it would change how the expense is split. Use Edit it to make the change yourself."
+msgstr "This can’t be applied in one tap, because it would change how the expense is split. Use Edit it to make the change yourself."
+
 #: src/components/SearchAsk/SearchHistory.tsx:188
 msgid "This can’t be undone, and all of your recent searches will be removed."
 msgstr "This can’t be undone, and all of your recent searches will be removed."
@@ -7405,7 +7433,7 @@ msgstr "This dispute proposes no change. Edit the record, or reject it."
 msgid "This expense can’t be edited"
 msgstr "This expense can’t be edited"
 
-#: src/screens/Expense/index.tsx:143
+#: src/screens/Expense/index.tsx:142
 msgid "This expense doesn’t exist. The link may be wrong."
 msgstr "This expense doesn’t exist. The link may be wrong."
 
@@ -7417,7 +7445,7 @@ msgstr "This expense needs attention: it hasn’t synced."
 msgid "This expense no longer exists"
 msgstr "This expense no longer exists"
 
-#: src/screens/Expense/index.tsx:528
+#: src/screens/Expense/index.tsx:519
 msgid "This expense was deleted. It no longer counts towards any balance."
 msgstr "This expense was deleted. It no longer counts towards any balance."
 
@@ -7425,11 +7453,11 @@ msgstr "This expense was deleted. It no longer counts towards any balance."
 msgid "This file is damaged or was changed after it was saved, so Splito won’t use it."
 msgstr "This file is damaged or was changed after it was saved, so Splito won’t use it."
 
-#: src/screens/Person/index.tsx:194
+#: src/screens/Person/index.tsx:199
 msgid "This friend isn’t on this device. They may have been removed."
 msgstr "This friend isn’t on this device. They may have been removed."
 
-#: src/screens/Person/index.tsx:354
+#: src/screens/Person/index.tsx:376
 msgid "This friend was removed. Their expenses and payments stay here, struck through."
 msgstr "This friend was removed. Their expenses and payments stay here, struck through."
 
@@ -7437,8 +7465,8 @@ msgstr "This friend was removed. Their expenses and payments stay here, struck t
 msgid "This group is inactive. Make it active first."
 msgstr "This group is inactive. Make it active first."
 
-#: src/screens/Group/index.tsx:202
-#: src/screens/Settle/index.tsx:153
+#: src/screens/Group/index.tsx:203
+#: src/screens/Settle/index.tsx:154
 msgid "This group isn’t on this device. It may have been removed."
 msgstr "This group isn’t on this device. It may have been removed."
 
@@ -7486,23 +7514,22 @@ msgstr "this month"
 msgid "This month"
 msgstr "This month"
 
-#: src/screens/Repayment/index.tsx:111
+#: src/screens/Repayment/index.tsx:110
 msgid "This payment doesn’t exist. The link may be wrong."
 msgstr "This payment doesn’t exist. The link may be wrong."
 
 #: src/components/people/PaymentDetailsDialog.tsx:221
-#: src/screens/Repayment/index.tsx:245
+#: src/screens/Repayment/index.tsx:244
 msgid "This payment was deleted. It no longer counts towards any balance."
 msgstr "This payment was deleted. It no longer counts towards any balance."
 
-#: src/screens/Settle/index.tsx:416
+#: src/screens/Settle/index.tsx:417
 msgid "This plan goes outside your rules"
 msgstr "This plan goes outside your rules"
 
-#: src/screens/Group/index.tsx:683
-#: src/screens/Group/index.tsx:684
-#: src/screens/Person/index.tsx:542
-#: src/screens/Person/index.tsx:543
+#: src/features/disputes/RowMenu.tsx:35
+#: src/screens/Group/index.tsx:686
+#: src/screens/Person/index.tsx:565
 msgid "this record"
 msgstr "this record"
 
@@ -7578,11 +7605,11 @@ msgid "Title: {0} → {1}"
 msgstr "Title: {0} → {1}"
 
 #. placeholder {0}: line.people
-#: src/screens/Settle/index.tsx:594
+#: src/screens/Settle/index.tsx:595
 msgid "To {0} people"
 msgstr "To {0} people"
 
-#: src/screens/Settle/index.tsx:592
+#: src/screens/Settle/index.tsx:593
 msgid "To 1 person"
 msgstr "To 1 person"
 
@@ -7642,7 +7669,7 @@ msgstr "Transport"
 
 #: src/components/groups/GroupFields.tsx:43
 #: src/components/SearchAsk/ResultRows.tsx:367
-#: src/screens/Group/index.tsx:343
+#: src/screens/Group/index.tsx:346
 #: src/screens/Groups/components/GroupRow.tsx:55
 #: src/screens/Groups/components/GroupsFilterDialog.tsx:75
 msgid "Trip"
@@ -7688,8 +7715,8 @@ msgstr "Type what each person owes."
 #: src/features/friends/RemoveFriendDialog.tsx:76
 #: src/features/hidden/HideItem.tsx:40
 #: src/features/settlement/CallItEvenDialog.tsx:242
-#: src/screens/Expense/index.tsx:182
-#: src/screens/Expense/index.tsx:190
+#: src/screens/Expense/index.tsx:181
+#: src/screens/Expense/index.tsx:189
 #: src/screens/Group/components/GroupLifecycle.tsx:123
 #: src/screens/Group/components/GroupLifecycle.tsx:137
 #: src/screens/Group/components/GroupLifecycle.tsx:232
@@ -7715,10 +7742,10 @@ msgstr "Undo write-off"
 #: src/components/people/PaymentDetailsDialog.tsx:303
 #: src/features/hidden/HideItem.tsx:86
 #: src/features/hidden/HideItem.tsx:88
-#: src/screens/Expense/index.tsx:552
-#: src/screens/Expense/index.tsx:557
-#: src/screens/Person/index.tsx:376
-#: src/screens/Person/index.tsx:380
+#: src/screens/Expense/index.tsx:543
+#: src/screens/Expense/index.tsx:548
+#: src/screens/Person/index.tsx:398
+#: src/screens/Person/index.tsx:402
 msgid "Unhide"
 msgstr "Unhide"
 
@@ -7730,18 +7757,18 @@ msgstr "Unlimited uses"
 msgid "Unread"
 msgstr "Unread"
 
-#: src/components/split/ExpenseComposer.tsx:707
-#: src/screens/Expense/index.tsx:377
+#: src/components/split/ExpenseComposer.tsx:708
+#: src/screens/Expense/index.tsx:384
 msgid "Upcoming"
 msgstr "Upcoming"
 
-#: src/screens/Settle/index.tsx:273
-#: src/screens/Settle/index.tsx:278
+#: src/screens/Settle/index.tsx:274
+#: src/screens/Settle/index.tsx:279
 msgid "Update plan"
 msgstr "Update plan"
 
 #. placeholder {0}: person.data.upiId
-#: src/screens/Person/index.tsx:233
+#: src/screens/Person/index.tsx:247
 msgid "UPI {0}"
 msgstr "UPI {0}"
 
@@ -7871,7 +7898,7 @@ msgstr "We’ll send it when you’re online"
 msgid "We’re so excited to have you join us!"
 msgstr "We’re so excited to have you join us!"
 
-#: src/screens/Analytics/components/Summary.tsx:192
+#: src/screens/Analytics/components/Summary.tsx:195
 msgid "Week"
 msgstr "Week"
 
@@ -7907,6 +7934,10 @@ msgstr "What has changed?"
 #: src/features/feedback/FeedbackSheet.tsx:178
 msgid "What is it about?"
 msgstr "What is it about?"
+
+#: src/screens/Person/index.tsx:297
+msgid "What is open is disputed or on hold. Include disputed to call it even."
+msgstr "What is open is disputed or on hold. Include disputed to call it even."
 
 #: src/features/disputes/RaiseSheet.tsx:189
 msgid "What looks wrong?"
@@ -7990,7 +8021,7 @@ msgid "When you pay"
 msgstr "When you pay"
 
 #: src/components/people/PaymentDetailsDialog.tsx:211
-#: src/screens/Repayment/index.tsx:214
+#: src/screens/Repayment/index.tsx:213
 msgid "Where"
 msgstr "Where"
 
@@ -8020,7 +8051,7 @@ msgid "Who owes me the most?"
 msgstr "Who owes me the most?"
 
 #: src/features/searchAsk/AskAnswer.tsx:261
-#: src/screens/Group/index.tsx:753
+#: src/screens/Group/index.tsx:756
 msgid "Who owes whom"
 msgstr "Who owes whom"
 
@@ -8067,12 +8098,12 @@ msgstr "Why not?"
 msgid "With {personName}"
 msgstr "With {personName}"
 
-#: src/components/disputes/DisputePanel.tsx:165
-#: src/components/disputes/DisputePanel.tsx:167
+#: src/components/disputes/DisputePanel.tsx:181
+#: src/components/disputes/DisputePanel.tsx:183
 msgid "Withdraw"
 msgstr "Withdraw"
 
-#: src/components/disputes/DisputePanel.tsx:165
+#: src/components/disputes/DisputePanel.tsx:181
 #: src/components/disputes/words.ts:34
 msgid "Withdrawn"
 msgstr "Withdrawn"
@@ -8134,7 +8165,7 @@ msgstr "Wrong payer"
 msgid "Wrong split or my share"
 msgstr "Wrong split or my share"
 
-#: src/screens/Analytics/components/Summary.tsx:194
+#: src/screens/Analytics/components/Summary.tsx:197
 msgid "Year"
 msgstr "Year"
 
@@ -8142,7 +8173,7 @@ msgstr "Year"
 msgid "Year first"
 msgstr "Year first"
 
-#: src/components/split/ExpenseComposer.tsx:682
+#: src/components/split/ExpenseComposer.tsx:683
 msgid "Yes, it resolves it"
 msgstr "Yes, it resolves it"
 
@@ -8182,8 +8213,8 @@ msgstr "you"
 #: src/screens/Analytics/useReport.ts:331
 #: src/screens/CreateGroup.tsx:195
 #: src/screens/Group/components/MemberExitDialog.tsx:99
-#: src/screens/Group/index.tsx:216
-#: src/screens/Person/index.tsx:208
+#: src/screens/Group/index.tsx:217
+#: src/screens/Person/index.tsx:213
 #: src/screens/Settle/index.tsx:98
 msgid "You"
 msgstr "You"
@@ -8252,7 +8283,7 @@ msgid "you borrowed"
 msgstr "you borrowed"
 
 #. placeholder {0}: fmt(magnitude(myNet))
-#: src/screens/Expense/index.tsx:417
+#: src/screens/Expense/index.tsx:424
 msgid "You borrowed {0}"
 msgstr "You borrowed {0}"
 
@@ -8337,7 +8368,7 @@ msgid "you lent"
 msgstr "you lent"
 
 #. placeholder {0}: fmt(myNet)
-#: src/screens/Expense/index.tsx:415
+#: src/screens/Expense/index.tsx:422
 msgid "You lent {0}"
 msgstr "You lent {0}"
 
@@ -8386,7 +8417,7 @@ msgstr "You owe {0}"
 msgid "You owe {0} the most: {1}."
 msgstr "You owe {0} the most: {1}."
 
-#: src/screens/Group/index.tsx:764
+#: src/screens/Group/index.tsx:767
 msgid "You owe {to}"
 msgstr "You owe {to}"
 
@@ -8416,7 +8447,7 @@ msgstr "you owe <0>{figure}</0>"
 #: src/screens/Analytics/components/Charts.tsx:148
 #: src/screens/Analytics/components/Charts.tsx:249
 #: src/screens/Analytics/components/Charts.tsx:259
-#: src/screens/Analytics/components/Summary.tsx:161
+#: src/screens/Analytics/components/Summary.tsx:124
 #: src/screens/Analytics/index.tsx:230
 #: src/view/shell/desktop/RecentTransactions.tsx:54
 msgid "You paid"
@@ -8427,7 +8458,7 @@ msgstr "You paid"
 #: src/components/people/HistoryRow.tsx:142
 #: src/components/people/PaymentDetailsDialog.tsx:120
 #: src/components/people/RecordPaymentDialog.tsx:175
-#: src/screens/Repayment/index.tsx:152
+#: src/screens/Repayment/index.tsx:151
 msgid "You paid {0}"
 msgstr "You paid {0}"
 
@@ -8447,7 +8478,7 @@ msgstr "You paid exactly your share."
 msgid "you paid for others, beyond your share"
 msgstr "you paid for others, beyond your share"
 
-#: src/screens/Expense/index.tsx:419
+#: src/screens/Expense/index.tsx:426
 msgid "You paid your own share"
 msgstr "You paid your own share"
 
@@ -8473,11 +8504,11 @@ msgstr "You will no longer be in {groupName}. Earlier expenses and the history s
 msgid "You will receive a \"reset code\" by email or text. Enter that code here, then enter your new password."
 msgstr "You will receive a \"reset code\" by email or text. Enter that code here, then enter your new password."
 
-#: src/screens/Settle/index.tsx:565
+#: src/screens/Settle/index.tsx:566
 msgid "You’ll get"
 msgstr "You’ll get"
 
-#: src/screens/Settle/index.tsx:567
+#: src/screens/Settle/index.tsx:568
 msgid "You’ll pay"
 msgstr "You’ll pay"
 
@@ -8493,11 +8524,11 @@ msgstr "You’re already friends."
 msgid "You’re friends now"
 msgstr "You’re friends now"
 
-#: src/screens/Settle/index.tsx:555
+#: src/screens/Settle/index.tsx:556
 msgid "You’re not part of any of these payments."
 msgstr "You’re not part of any of these payments."
 
-#: src/screens/Expense/index.tsx:425
+#: src/screens/Expense/index.tsx:432
 msgid "You’re not part of this expense"
 msgstr "You’re not part of this expense"
 
@@ -8574,18 +8605,18 @@ msgid "Your password must be at least {MIN_PASSWORD_LENGTH} characters long."
 msgstr "Your password must be at least {MIN_PASSWORD_LENGTH} characters long."
 
 #. placeholder {0}: nameList(item.stuck)
-#: src/screens/Settle/index.tsx:421
+#: src/screens/Settle/index.tsx:422
 msgid "Your payment rules give no allowed pair to pay anyone who is owed: {0}. These payments still settle everyone up."
 msgstr "Your payment rules give no allowed pair to pay anyone who is owed: {0}. These payments still settle everyone up."
 
 #. placeholder {0}: item.currencies.join(', ')
 #. placeholder {0}: outside.join(', ')
 #: src/features/searchAsk/AskAnswer.tsx:252
-#: src/screens/Group/index.tsx:808
+#: src/screens/Group/index.tsx:811
 msgid "Your payment rules leave no way to settle up in {0}, so that plan goes outside them."
 msgstr "Your payment rules leave no way to settle up in {0}, so that plan goes outside them."
 
-#: src/screens/Group/index.tsx:807
+#: src/screens/Group/index.tsx:810
 msgid "Your payment rules leave no way to settle up, so this plan goes outside them."
 msgstr "Your payment rules leave no way to settle up, so this plan goes outside them."
 
@@ -8652,7 +8683,7 @@ msgstr "Your share in each group"
 msgid "Your share of each category"
 msgstr "Your share of each category"
 
-#: src/screens/Analytics/components/Summary.tsx:142
+#: src/screens/Analytics/components/Summary.tsx:105
 msgid "Your share of expenses"
 msgstr "Your share of expenses"
 

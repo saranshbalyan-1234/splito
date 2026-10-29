@@ -6,7 +6,7 @@ import {type DisputeTarget} from '@splito/sync'
  * live in one host (`DisputeHost`, mounted once) and menus ask it through this tiny store (like Remind).
  */
 export type DisputeRequest =
-  | {kind: 'raise' | 'hold'; targetType: DisputeTarget; targetId: string; /** The disputed item of a bill; absent: the whole record. */ itemIndex?: number}
+  | {kind: 'raise' | 'hold'; targetType: DisputeTarget; targetId: string; /** The disputed item of a bill (its id); absent: the whole record. */ itemId?: string}
   | {kind: 'reject' | 'reopen'; disputeId: string}
 
 let current: DisputeRequest | null = null
