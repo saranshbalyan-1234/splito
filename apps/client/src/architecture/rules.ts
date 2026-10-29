@@ -315,6 +315,12 @@ export function hardDeletes(source: string): number {
   )
 }
 
+/** A direct `Linking.openURL(`, `Share.share(` or `navigator.share(`: a hand-off to another app. */
+export function externalHandOffs(source: string): number {
+  const text = blank(source, {strings: true})
+  return countMatches(text, /\bLinking\s*\.\s*openURL\s*\(/g) + countMatches(text, /\bShare\s*\.\s*share\s*\(/g) + countMatches(text, /\bnavigator\s*\.\s*share\s*\(/g)
+}
+
 /* -------------------------------------------------------------------------- */
 /* Rules                                                                      */
 /* -------------------------------------------------------------------------- */
@@ -488,6 +494,11 @@ export const RULES = {
     why: "A record row (expense, payment, write-off, person, group) removed for good: store.erase, a row delete of its table, or DELETE FROM. Deleting is a tombstone and a deleted item stays in its list forever (owner 103); only migration, the store's erase primitive, the engines and the dev tools (HARD_DELETE_ALLOWED) remove rows.",
     appliesTo: p => (isClient(p) || p.startsWith(SYNC)) && !HARD_DELETE_ALLOWED.has(p),
     count: (_p, s) => hardDeletes(s),
+  },
+  externalHandOff: {
+    why: 'A link or text handed to another app (mailto, tel, sms, whatsapp, upi, https out, the share sheet) without the one gate. Linking.openURL lives only in lib/openExternal.ts and Share.share / navigator.share only in lib/sharing.ts, because an e2e build records the hand-off instead of opening Mail, Messages, WhatsApp or a UPI app (owner 118). Linking.openSettings is not a hand-off of content.',
+    appliesTo: p => isClient(p) && !/\/lib\/(?:openExternal|sharing)\.ts$/.test(p),
+    count: (_p, s) => externalHandOffs(s),
   },
   demoStaticImport: {
     why: 'A static import of the large demo set (#/data/demoLarge, #/screens/Settings/DemoData, @splito/sync/demoLarge) outside the demo files: `import x from`, `export ... from`, a side-effect `import \'...\'` and `require()` all bundle it. It must load with import() under __DEV__ / EXPO_PUBLIC_ENV so production bundles hold none of it (ARCHITECTURE 26.1).',

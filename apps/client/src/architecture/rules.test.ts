@@ -79,6 +79,18 @@ describe('counters', () => {
     expect(count('hardDelete', 'if (refs.length) await store.erase(refs)', `${CLIENT}data/demoLarge.ts`)).toBe(0)
   })
 
+  test('externalHandOff: Linking.openURL, Share.share and navigator.share outside their one gate', () => {
+    const screen = `${CLIENT}screens/Person/index.tsx`
+    expect(count('externalHandOff', 'await Linking.openURL(url)', screen)).toBe(1)
+    expect(count('externalHandOff', 'await Share.share({message})', `${CLIENT}lib/remind/share.ts`)).toBe(1)
+    expect(count('externalHandOff', 'await navigator.share({text})', screen)).toBe(1)
+    // The gates, other Linking calls and comments are fine.
+    expect(count('externalHandOff', 'await Linking.openURL(url)', `${CLIENT}lib/openExternal.ts`)).toBe(0)
+    expect(count('externalHandOff', 'await Share.share({message}); await navigator.share({text})', `${CLIENT}lib/sharing.ts`)).toBe(0)
+    expect(count('externalHandOff', 'void Linking.openSettings()', screen)).toBe(0)
+    expect(count('externalHandOff', '// Linking.openURL(url) is forbidden here', screen)).toBe(0)
+  })
+
   test('moneyFullRead', () => {
     const screen = `${CLIENT}screens/People/index.tsx`
     expect(count('moneyFullRead', "const all = await store.getAll<Expense>('expense')", screen)).toBe(1)

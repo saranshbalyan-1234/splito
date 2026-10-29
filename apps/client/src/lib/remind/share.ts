@@ -1,7 +1,7 @@
-import {Linking, Share} from 'react-native'
 import {setStringAsync} from 'expo-clipboard'
 
-import {IS_NATIVE} from '#/env'
+import {openExternal} from '#/lib/openExternal'
+import {shareSheet} from '#/lib/sharing'
 
 /**
  * What happened to the text: the system share sheet or WhatsApp opened (`shared`), it was copied because
@@ -12,19 +12,8 @@ export type ShareResult = 'shared' | 'copied' | 'cancelled'
 
 /** Hands plain text to the share sheet: native sheet, the Web Share API, else the clipboard. */
 export async function shareText(text: string): Promise<ShareResult> {
-  if (IS_NATIVE) {
-    const result = await Share.share({message: text})
-    return result.action === Share.dismissedAction ? 'cancelled' : 'shared'
-  }
-  if (typeof navigator !== 'undefined' && 'share' in navigator) {
-    try {
-      await navigator.share({text})
-      return 'shared'
-    } catch (e) {
-      // Closing the sheet rejects with AbortError; anything else falls back to the clipboard.
-      if (e instanceof Error && e.name === 'AbortError') return 'cancelled'
-    }
-  }
+  const result = await shareSheet({text})
+  if (result !== 'unavailable') return result
   await setStringAsync(text)
   return 'copied'
 }
@@ -35,7 +24,6 @@ export async function copyReminder(text: string): Promise<void> {
 }
 
 /** Opens WhatsApp at a chat with the text filled in (the app on phones, WhatsApp Web on a computer). */
-export async function openWhatsapp(url: string): Promise<void> {
-  if (IS_NATIVE) await Linking.openURL(url)
-  else window.open(url, '_blank', 'noopener')
+export function openWhatsapp(url: string): Promise<void> {
+  return openExternal(url)
 }

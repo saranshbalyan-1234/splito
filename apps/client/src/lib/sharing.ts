@@ -3,9 +3,42 @@ import {Share} from 'react-native'
 import {setStringAsync} from 'expo-clipboard'
 import {t} from '@lingui/core/macro'
 
-import {openExternal} from '#/lib/openExternal'
+import {openExternal, testHandOffs} from '#/lib/openExternal'
 import * as Toast from '#/components/Toast'
-import {IS_ANDROID, IS_IOS, IS_NATIVE} from '#/env'
+import {IS_ANDROID, IS_E2E, IS_IOS, IS_NATIVE, IS_WEB} from '#/env'
+
+/** What happened at the share sheet: shown, closed without choosing an app, or this device has none. */
+export type ShareSheetResult = 'shared' | 'cancelled' | 'unavailable'
+
+/**
+ * The one way to open the system share sheet (native `Share.share`, the Web Share API); no other file may call
+ * either. An e2e build never opens a sheet: it records the text on `window.__splitoTest.sharedTexts` (owner 118),
+ * so a test can assert what would have been shared without handing anything to a real app.
+ */
+export async function shareSheet({text, url}: {text?: string; url?: string}): Promise<ShareSheetResult> {
+  if (IS_E2E && IS_WEB) {
+    testHandOffs().sharedTexts.push([text, url].filter(Boolean).join(' '))
+    return 'shared'
+  }
+  if (IS_IOS) {
+    const result = await Share.share(url ? {url, message: text} : {message: text ?? ''})
+    return result.action === Share.dismissedAction ? 'cancelled' : 'shared'
+  }
+  if (IS_ANDROID) {
+    const result = await Share.share({message: [text, url].filter(Boolean).join(' ')})
+    return result.action === Share.dismissedAction ? 'cancelled' : 'shared'
+  }
+  if (typeof navigator !== 'undefined' && 'share' in navigator) {
+    try {
+      await navigator.share({url, text})
+      return 'shared'
+    } catch (e) {
+      // Closing the sheet rejects with AbortError; anything else is as good as no sheet.
+      if (e instanceof Error && e.name === 'AbortError') return 'cancelled'
+    }
+  }
+  return 'unavailable'
+}
 
 /**
  * Shares a link with a line of text: the native share sheet on iOS and
@@ -14,19 +47,7 @@ import {IS_ANDROID, IS_IOS, IS_NATIVE} from '#/env'
  * a missing capability is a planned fallback).
  */
 export async function shareUrl(url: string, message?: string) {
-  if (IS_IOS) {
-    await Share.share({url, message})
-  } else if (IS_ANDROID) {
-    await Share.share({message: message ? `${message} ${url}` : url})
-  } else if (typeof navigator !== 'undefined' && 'share' in navigator) {
-    try {
-      await navigator.share({url, text: message})
-    } catch {
-      // Dismissed: nothing to do.
-    }
-  } else {
-    await copyText(url)
-  }
+  if ((await shareSheet({url, text: message})) === 'unavailable') await copyText(url)
 }
 
 /** Copies text and confirms with a toast. */

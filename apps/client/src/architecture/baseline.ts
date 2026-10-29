@@ -70,6 +70,7 @@ export const BASELINE: Record<RuleName, Record<string, number>> = {
   },
   moneyFullRead: {},
   hardDelete: {},
+  externalHandOff: {},
   demoStaticImport: {},
   attribution: {},
 }

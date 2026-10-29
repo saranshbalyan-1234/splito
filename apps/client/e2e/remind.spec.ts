@@ -8,12 +8,13 @@ type Splito = {
   createExpense(draft: unknown): Promise<string>
 }
 
-/** A browser whose Notification API answers like a granted-after-asking one, and whose share sheet is observable. */
+/**
+ * A browser whose Notification API answers like a granted-after-asking one. The share sheet is never opened: the e2e
+ * build records the shared text on window.__splitoTest.sharedTexts (owner 118).
+ */
 async function stubBrowser(page: Page, permission: 'default' | 'granted' = 'default') {
   await page.addInitScript(initial => {
     const w = window as unknown as Record<string, unknown>
-    w.__shared = []
-    Object.defineProperty(navigator, 'share', {configurable: true, value: async (d: {text?: string}) => void (w.__shared as unknown[]).push(d.text)})
     class FakeNotification {
       static permission = initial
       static async requestPermission() {
@@ -81,9 +82,9 @@ test('Remind from the Person page: per-currency message, share sheet, logged in 
 
   await page.getByTestId('sheet-save').click()
   await expect(page.getByTestId('remind-sheet')).toBeHidden()
-  const shared = await page.evaluate(() => (window as unknown as {__shared: string[]}).__shared)
+  const shared = await page.evaluate(() => (window as unknown as {__splitoTest?: {sharedTexts: string[]}}).__splitoTest?.sharedTexts)
   expect(shared).toHaveLength(1)
-  expect(shared[0]).toContain('€20.00')
+  expect(shared![0]).toContain('€20.00')
   // The toast never claims the message was sent.
   await expect(page.getByText('Splito can’t see whether it was sent.')).toBeVisible()
 
