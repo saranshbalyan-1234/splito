@@ -69,6 +69,8 @@ test('rows and detail pages say a queued row is saved on this device, never sync
 test('a sending row is yellow, a refused one is written out; even an acknowledged row is not called synced without an account', async ({page}) => {
   const {friend, expense} = await seed(page)
   await page.goto(`/people/${friend}`)
+  // The dev tools bind when the store is adopted, a moment after the page loads.
+  await page.waitForFunction(() => 'splito' in window)
   const dot = page.getByTestId(`sync-${expense}`)
   await page.evaluate(id => (window as unknown as {splito: Splito}).splito.setOpState(id, 'sending'), expense)
   // No account yet: the engine would never run, but the state is still shown as what it is.
