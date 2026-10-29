@@ -1172,6 +1172,10 @@ Splito lessons (add newest last, dated, with PR):
 - 2026-10-30, F-241 merge: **the renders gate baseline is re-recorded with reasons whenever a reviewed change adds
   renders** (`RENDERS_BASELINE=write`, every increase and its cause listed in `docs/COMPLETION_MATRIX.md`), never
   silently; a merge that leaves the gate red on `main` is not done.
+- 2026-10-30, fix/ios-wB: **a guard that throws at mount crashes the native app at launch.** The "sheet needs a
+  provider" check first ran for every Dialog, including closed ones, and took the app down on iOS. Checks that
+  depend on context a closed dialog doesn't need run when the sheet opens, never at mount (§ 4: a closed dialog
+  renders and reads nothing).
 
 ---
 
