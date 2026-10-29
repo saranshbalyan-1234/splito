@@ -1759,6 +1759,14 @@ good"; "the left sidebar looks bad on desktop". *Where:* `view/shell/desktop/Lef
   calls one `syncNow()` (drain, then pull, § 9.3); offline it ends at once with the status, never an error toast.
   Shell first (owner 152): the spinner appears in the same frame as the pull threshold; nothing else redraws unless
   data changed (owner 166). *Why:* "also add pull to refresh, header should stay while pulling down to refresh".
+- **Open first, render after, even the first time** (owner 168, sharpens 151/152): a tab switch, a drawer and a
+  popup or sheet first OPEN (the tab highlights and its shell shows, the drawer slides in, the sheet slides up or
+  the popup scales in) with only light content (header, title, X, footer, a same-size skeleton), and the heavy
+  content mounts after the opening has finished (transition end / the sheet's or drawer's opened event, not a
+  fixed two frames), so rendering never competes with the opening, on the first visit as much as on later ones.
+  Later visits show the frozen content at once (owner 166). One shared helper (`useAfterTransition` /
+  `<Deferred>` / `deferBody`) waits for the real "opened" signal of tabs, drawers and sheets. *Why:* "even for the
+  first time, the rendering should happen once the tab is open, or drawer is open or popup is open".
 - **Switching tabs never redraws** (owner 166): a tab already visited stays mounted and is frozen while hidden
   (react-native-screens `freezeOnBlur` / react-freeze, as Bluesky; the web twin too), so switching back shows it
   instantly, exactly as it was left (scroll position included), with zero re-render of its content unless its data
@@ -2615,6 +2623,7 @@ Every owner decision, in the order it was made (all 2026-10-26). "Replaced" name
 | 165 | "once i say i am okay with all forntend changes" | Backend starts only after the owner explicitly signs off on all front-end changes | § 26.2 | Backend after front-end batches finish (164) |
 | 166 | "it should not redraw" (on switching back to Home / any tab) | Visited tabs stay mounted and frozen while hidden; switching back shows them as left with zero re-render unless data changed; deferral only on first visit | § 26.9 | Home re-rendered on every switch |
 | 167 | "also add pull to refresh, header should stay while pulling down to refresh" | Pull to refresh on every list (native RefreshControl, phone-web pull handler); header fixed and visible during the pull; local re-read now, syncNow() with the backend | § 26.9 | No pull to refresh |
+| 168 | "even for the first time, the rendering should happen once the tab is open, or drawer is open or popup is open" | Tabs, drawers and sheets open first with light content; heavy content mounts after the opening finishes (real opened/transition-end signal), first visit included | § 26.9 | Deferral of two frames only (151/152) |
 
 New decisions follow § 0 rule 9: rewrite the rule in its topic so only the current truth remains, then add a
 row here.
