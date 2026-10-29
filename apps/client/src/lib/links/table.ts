@@ -57,6 +57,14 @@ export const SHEETS = {
   EditExpense: ['currency', 'date', 'category', 'group', 'people', 'payers', 'charge', 'tax-class'],
 } as const satisfies Partial<Record<RouteName, readonly string[]>>
 
+/** A Settings editor opens only on the page that hosts its control (`/settings/regional/timezone`, never `/settings/appearance/timezone`). */
+export const SETTINGS_SECTION_SHEETS: Record<string, readonly string[]> = {
+  appearance: ['accent'],
+  defaults: ['currency', 'tax-class'],
+  categories: ['category'],
+  regional: ['timezone'],
+}
+
 /** Sheets that open over whatever page is showing: they belong to the shell, not a page. */
 export const GLOBAL_SHEETS = ['search', 'drawer', 'feedback', 'install'] as const
 export type GlobalSheet = (typeof GLOBAL_SHEETS)[number]
@@ -73,9 +81,11 @@ export function pathParamNames(name: string): string[] {
   return pattern ? [...pattern.matchAll(/:(\w+)/g)].map(m => m[1]!) : []
 }
 
-export function isPageSheet(name: string, chain: readonly string[]): boolean {
+export function isPageSheet(name: string, chain: readonly string[], params?: Record<string, string>): boolean {
   const list = (SHEETS as Record<string, readonly string[]>)[name]
-  return !!list && list.includes(chain.join('/'))
+  if (!list || !list.includes(chain.join('/'))) return false
+  if (name !== 'SettingsSection' || !params) return true
+  return (SETTINGS_SECTION_SHEETS[params.section ?? ''] ?? []).includes(chain.join('/'))
 }
 
 export function isGlobalSheet(chain: readonly string[]): boolean {
@@ -88,3 +98,51 @@ export function isSheetChain(name: string, chain: readonly string[]): boolean {
 
 /** The route name Splito shows a link's page as: Search is not a page (26.3), it is the Search & Ask sheet over Home. */
 export type PageName = Exclude<RouteName, 'Search'>
+
+/**
+ * The query keys each page reads from its address (list state, prefill, one-shot hints); every other key is dropped
+ * by the resolver, so a link can carry nothing a page does not look at.
+ */
+export const QUERY_KEYS: Partial<Record<PageName, readonly string[]>> = {
+  People: ['show', 'sort', 'currency', 'groups', 'settled', 'hidden'],
+  Groups: ['type', 'status', 'show', 'currency', 'sort', 'settled', 'hidden'],
+  Person: ['groups'],
+  Analytics: ['currency', 'period', 'offset', 'from', 'to', 'scope'],
+  AddExpense: ['personId', 'groupId', 'title', 'amount', 'currency'],
+  Settings: ['note'],
+  FriendsAndInvites: ['section'],
+  CreateInvite: ['kind', 'groupId'],
+}
+
+/** Page params that name an entity: a UUID, or a demo-set id (`demo-large-...`). */
+const ENTITY_ID = /^(?:[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}|demo-large-[a-z0-9-]{1,48})$/i
+export const isEntityId = (value: string) => ENTITY_ID.test(value)
+
+const PATH_KEYS: Record<string, (value: string) => boolean> = {
+  personId: isEntityId,
+  groupId: isEntityId,
+  expenseId: isEntityId,
+  repaymentId: isEntityId,
+  /** Invite codes are 16 lower-case characters (`mintInviteCode`); older ones may be longer or upper-case. */
+  code: v => /^[A-Za-z0-9]{6,64}$/.test(v),
+  section: v => /^[a-z][a-z-]{0,31}$/.test(v),
+}
+export function isValidPathParam(key: string, value: string): boolean {
+  return (PATH_KEYS[key] ?? (() => false))(value)
+}
+
+/** Query keys that carry an entity id; checked like a path param. */
+export const ENTITY_QUERY_KEYS = ['personId', 'groupId'] as const
+
+/** Pages that are formSheet / modal routes on a phone: nothing opens over them from a link (ARCHITECTURE 4, one native modal). */
+const COMPOSER_PAGES: readonly string[] = ['AddExpense', 'EditExpense', 'CreateGroup']
+
+/**
+ * What a phone opens of a link's sheet chain: the first sheet, never a picker inside it, and nothing over a
+ * composer (its pickers are dialogs over a native modal). The in-sheet picker hand-over is being fixed on iOS
+ * (fix/ios-wB); until then a link to a picker opens its parent.
+ */
+export function nativeSheets(name: string, chain: readonly string[]): string[] {
+  if (COMPOSER_PAGES.includes(name)) return []
+  return chain.slice(0, 1)
+}

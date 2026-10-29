@@ -1,4 +1,5 @@
-import {useEffect, useRef, useState} from 'react'
+import {useState} from 'react'
+import {flagParam} from '#/lib/links/listState'
 import {View} from 'react-native'
 import {LayoutAnimationConfig} from 'react-native-reanimated'
 import {plural} from '@lingui/core/macro'
@@ -109,7 +110,7 @@ export function PersonScreen() {
   const {gtMobile} = useBreakpoints()
   const locale = useNumberLocale()
   const navigation = useNavigation<NavigationProp>()
-  const {personId, action, groups: groupsParam} = useRoute<RouteProp<AllNavigatorParams, 'Person'>>().params
+  const {personId, groups: groupsParam} = useRoute<RouteProp<AllNavigatorParams, 'Person'>>().params
   const store = useStore()
   const ctx = useMutationCtx()
   const me = useMe()
@@ -129,16 +130,26 @@ export function PersonScreen() {
   const paymentControl = useDialogControl({
     url: 'record-payment',
     /* A pasted address: wait for the balances, then open as the Settle up button does. */
-    onUrlOpen: () => !isLoading && person && !person.data.isMe && recordPayment(),
+    onUrlOpen: () => (isLoading ? 'wait' : person && !person.data.isMe ? recordPayment() : false),
   })
-  const upiControl = useDialogControl({url: 'pay-upi'})
+  const upiControl = useDialogControl({
+    url: 'pay-upi',
+    /* Only a friend I owe in rupees can be paid by UPI; otherwise the address has nothing to open. */
+    onUrlOpen: () => {
+      if (isLoading) return 'wait'
+      if (!person || person.data.isMe) return false
+      if (owedInr === null || isDeleted) return false
+      upiControl.open()
+      return true
+    },
+  })
   const detailsControl = useDialogControl()
   const editControl = useDialogControl({url: 'edit'})
   const exportSheet = useExportSheet({personId})
   const removeControl = useDialogControl()
   const evenControl = useDialogControl({
     url: 'call-it-even',
-    onUrlOpen: () => !isLoading && person && !person.data.isMe && callItEven(),
+    onUrlOpen: () => (isLoading ? 'wait' : person && !person.data.isMe ? callItEven() : false),
   })
   const [evenDraft, setEvenDraft] = useState<EvenDraft | null>(null)
   const [paymentDraft, setPaymentDraft] = useState<PaymentDraft | null>(null)
@@ -234,7 +245,7 @@ export function PersonScreen() {
   /* Any currency can be recorded (§ 26.13); the open ones lead, the default when settled (audit M8). */
   const payment = paymentCurrencies(openCurrencies, defaultCurrency)
   const recordPayment = (draft?: Partial<PaymentDraft>) => {
-    if (!me) return
+    if (!me) return false
     const currency = draft?.currency ?? payment.initial
     const total = totals[currency]?.total ?? ZERO
     // Default direction follows the balance: whoever owes pays.
@@ -248,11 +259,12 @@ export function PersonScreen() {
       ...draft,
     })
     paymentControl.open()
+    return true
   }
 
   /* "Call it even": every open currency, part by part (> 0: they owe me). */
   const callItEven = () => {
-    if (!me || !hasOpenBalance) return
+    if (!me || !hasOpenBalance) return false
     setEvenDraft({
       a: me.id,
       b: personId,
@@ -263,6 +275,7 @@ export function PersonScreen() {
         : openCurrencies[0]!,
     })
     evenControl.open()
+    return true
   }
 
   const addBack = () =>
@@ -561,7 +574,7 @@ export function PersonScreen() {
             control={filterControl}
             name={person.data.name}
             includeGroups={includeGroups}
-            onFilterApplied={v => navigation.setParams({groups: v === (includeDefault ?? true) ? undefined : v ? '1' : '0'})}
+            onFilterApplied={v => navigation.setParams({groups: flagParam(v, true, includeDefault ?? true)})}
           />
           {
             <RecordPaymentDialog
@@ -619,7 +632,6 @@ export function PersonScreen() {
                 : undefined
             }
           />
-          <OpenOnArrival action={action} onSettle={() => recordPayment()} onEven={callItEven} />
           {exportSheet.element}
           <EditFriendDialog control={editControl} person={person} />
           <CallItEvenDialog
@@ -639,21 +651,6 @@ export function PersonScreen() {
       )}
     </Layout.Screen>
   )
-}
-
-/**
- * Arrived from "Settle up" or "Call it even" in the removal prompt: opens that
- * flow once, now that the page has its balances.
- */
-function OpenOnArrival({action, onSettle, onEven}: {action?: 'settle' | 'even'; onSettle: () => void; onEven: () => void}) {
-  const didAct = useRef(false)
-  useEffect(() => {
-    if (!action || didAct.current) return
-    didAct.current = true
-    if (action === 'settle') onSettle()
-    else onEven()
-  })
-  return null
 }
 
 function PersonHeroPlaceholder() {

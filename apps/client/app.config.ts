@@ -1,6 +1,9 @@
 import {type ExpoConfig} from 'expo/config'
 
 import linkHosts from './link-hosts.json'
+import {tierFrom} from './link-tier'
+
+type Tier = keyof typeof linkHosts.tiers
 
 /*
  * Brand assets are generated from assets-owner/logo-owner-provided.svg by
@@ -16,12 +19,10 @@ const SPLASH = {
   },
 }
 
-type Tier = keyof typeof linkHosts.tiers
-
 /**
  * Universal Links and App Links (F-254, ARCHITECTURE 14): a build claims only its own tier's host, so a dev build
  * never opens prod links. Hosts and the claimed paths come from `link-hosts.json`, the one file the resolver
- * (`src/lib/links`) reads too; `app.config.test.ts` checks every tier claims exactly its host.
+ * (`src/lib/links`) reads too; `src/lib/links/appConfig.test.ts` checks every tier claims exactly its host.
  */
 export function linkClaims(tier: Tier) {
   const host = linkHosts.tiers[tier]
@@ -32,7 +33,8 @@ export function linkClaims(tier: Tier) {
         {
           action: 'VIEW',
           autoVerify: true,
-          data: linkHosts.appPaths.map(pathPrefix => ({scheme: 'https', host, pathPrefix})),
+          /* "/" is the Home page alone (a prefix of it would claim every path, downloads and callbacks included). */
+          data: linkHosts.appPaths.map(p => (p === '/' ? {scheme: 'https', host, path: '/'} : {scheme: 'https', host, pathPrefix: p})),
           category: ['BROWSABLE', 'DEFAULT'],
         },
       ],
@@ -40,7 +42,7 @@ export function linkClaims(tier: Tier) {
   }
 }
 
-const TIER = (process.env.EXPO_PUBLIC_TIER ?? 'prod') as Tier
+const TIER = tierFrom(process.env.EXPO_PUBLIC_TIER)
 
 const config: ExpoConfig = {
   name: 'Splito',

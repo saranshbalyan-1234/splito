@@ -2890,6 +2890,10 @@ Copy any URL and land on the same screen: pages, in-page tabs, sheets and popups
   5. List state in the URL and the database preferences (F-1413) agree: the URL wins when present, otherwise the saved preference.
   6. e2e: for every route in the table, load it cold at phone and desktop widths and assert the right screen, tab or sheet is open.
 
+- **Assistant rulings, 2026-10-29** (made while reviewing the build; the owner has not seen them, change on request): (1) **Tab switches replace the history entry** (`/groups/:id/balances`, `/activity/others`): Back never steps through tab taps, and the heavy page is not mounted twice. This is the reading of acceptance 2 for tabs; sheets and pickers do push. (2) **A pasted sheet-plus-picker URL is one history entry**: the browser's Back leaves to the previous site, while the in-app X steps back one level (picker to sheet to page).
+- **Deferred:** "Not on this device yet" for an entity a link names but the device has not pulled (acceptance 3, § 14) waits for sync (F-2103). Until then a sheet whose target is missing is dropped and the page shows its own not-found state; a page's own "isn't on this device" empty state is unchanged.
+- **Native, until the in-sheet picker hand-over lands (fix/ios-wB):** a link to a picker opens its parent sheet only, and nothing opens over a composer (Add / Edit expense, New group); a phone keeps sheets as dialog state, with the link's sheet held for its page.
+
 ### F-242 why-did-you-render and the wasted-render gate `spec: owner § 17, § 26.10 (decision 108)`
 
 Add `@welldone-software/why-did-you-render` to dev builds and a Playwright render scenario that fails on any avoidable re-render, then fix every report it finds. Runs first among the post-merge items so later work is held to it.

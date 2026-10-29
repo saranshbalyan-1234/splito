@@ -10,7 +10,7 @@ Blocking items that must be closed before any public release (public web deploy,
 ## Deep links (F-254; hosts and paths live in `apps/client/link-hosts.json`)
 
 - [ ] Backend/domain: host `/.well-known/apple-app-site-association` (applinks for the app id, `paths` = the `appPaths` of `link-hosts.json`, nothing for auth callbacks or downloads) and `/.well-known/assetlinks.json` (package `app.splito`, the release signing SHA-256) on **each tier's host only** (`dev.splito.app`, `stage.splito.app`, `splito.app`). Each build claims only its own tier's host (`EXPO_PUBLIC_TIER`, default `prod`; `app.config.ts`, checked by `src/lib/links/appConfig.test.ts`). The web deploy keeps dot-paths.
-- [ ] Set `EXPO_PUBLIC_TIER` (`dev`, `stage`, `prod`) in each build profile: it picks the claimed host and the host in the links the app makes (invites, copy link).
+- [ ] Build with the `eas.json` profile of the tier (`dev`, `stage`, `prod`): each sets `EXPO_PUBLIC_TIER`, which picks the claimed host and the host in the links the app makes (invites, copy link). An unknown value fails the build. `appPaths` claims `/` (Home alone, exact on Android) and `/notifications`; keep downloads and auth callbacks out of the AASA `paths` and `assetlinks`.
 - [ ] Deferred link after install (`src/lib/links/deferred.ts` is a stub): needs the backend claim endpoint; no third-party SDK.
 - [ ] Signed-out resume (`src/lib/links/intent.ts`) switches on with F-250 (`isSignInRequired`).
 

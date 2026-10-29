@@ -3,10 +3,10 @@ import {describe, expect, test} from 'bun:test'
 import {ROUTE_PATHS, type RouteName} from '#/routes'
 import {TIER_HOSTS} from './hosts'
 import {buildPath, type LinkTarget, resolveLink, touchesRealData} from './resolve'
-import {GLOBAL_SHEETS, PAGE_TABS, SHEETS} from './table'
+import {GLOBAL_SHEETS, PAGE_TABS, SETTINGS_SECTION_SHEETS, SHEETS} from './table'
 
-const ID = 'abc123'
-const sample = (path: string) => path.replace(/:(\w+)/g, (_m, key: string) => (key === 'section' ? 'regional' : ID))
+const ID = '3f2b8c1e-7d4a-4e9b-9a61-0c5d2e8f1a77'
+const sample = (path: string, section = 'regional') => path.replace(/:(\w+)/g, (_m, key: string) => (key === 'section' ? section : key === 'code' ? 'k3j9x2m4q8w1z5v7' : ID))
 const forms = (path: string) => [
   `https://${TIER_HOSTS.prod}${path}`,
   `https://${TIER_HOSTS.dev}${path}`,
@@ -44,7 +44,8 @@ describe('every tab, sheet and picker', () => {
   for (const [name, chains] of Object.entries(SHEETS)) {
     for (const chain of chains) {
       test(`${name} sheet ${chain}`, () => {
-        const base = sample(ROUTE_PATHS[name as RouteName]).replace(/\/$/, '')
+        const section = Object.entries(SETTINGS_SECTION_SHEETS).find(([, list]) => list.includes(chain))?.[0]
+        const base = sample(ROUTE_PATHS[name as RouteName], section).replace(/\/$/, '')
         const path = `${base}/${chain}`
         const r = resolveLink(path)
         expect(r.isKnown).toBe(true)
@@ -82,15 +83,15 @@ describe('list state', () => {
     const r = resolveLink('https://splito.app/groups?sort=name&show=owed&currency=EUR&settled=1')
     expect(r.target.params).toEqual({sort: 'name', show: 'owed', currency: 'EUR', settled: '1'})
     expect(buildPath(r.target)).toBe('/groups?currency=EUR&settled=1&show=owed&sort=name')
-    const sheet = resolveLink('/people/abc123/filters?groups=0')
+    const sheet = resolveLink(`/people/${ID}/filters?groups=0`)
     expect(sheet.target).toMatchObject({name: 'Person', params: {personId: ID, groups: '0'}, sheets: ['filters']})
   })
   test('the old Group ?tab=rules link opens the rules sheet', () => {
-    expect(resolveLink('/groups/abc123?tab=rules').target).toMatchObject({name: 'Group', sheets: ['rules'], params: {groupId: ID}})
+    expect(resolveLink(`/groups/${ID}?tab=rules`).target).toMatchObject({name: 'Group', sheets: ['rules'], params: {groupId: ID}})
   })
   test('default tab prints no segment and a stray tab value is dropped', () => {
-    expect(buildPath({name: 'Group', params: {groupId: ID, tab: 'expenses'}, sheets: [], query: {}})).toBe('/groups/abc123')
-    expect(resolveLink('/groups/abc123?tab=bogus').target.params).toEqual({groupId: ID})
+    expect(buildPath({name: 'Group', params: {groupId: ID, tab: 'expenses'}, sheets: [], query: {}})).toBe(`/groups/${ID}`)
+    expect(resolveLink(`/groups/${ID}?tab=bogus`).target.params).toEqual({groupId: ID})
   })
 })
 
@@ -98,14 +99,14 @@ describe('unknown and unsafe links open Home', () => {
   const home: LinkTarget = {name: 'People', params: {}, sheets: [], query: {}}
   for (const bad of [
     '/no/such/page',
-    '/groups/abc123/settle/extra',
-    '/groups/abc123/nope',
-    '/people/abc123/record-payment/nope',
-    '/groups/abc123/record-payment',
-    'https://evil.example/people/abc123',
-    'https://splito.app.evil.example/people/abc123',
+    `/groups/${ID}/settle/extra`,
+    `/groups/${ID}/nope`,
+    `/people/${ID}/record-payment/nope`,
+    `/groups/${ID}/record-payment`,
+    `https://evil.example/people/${ID}`,
+    `https://splito.app.evil.example/people/${ID}`,
     'javascript:alert(1)',
-    'ftp://splito.app/people/abc123',
+    `ftp://splito.app/people/${ID}`,
     '/people/a%20b',
     '/people/' + 'x'.repeat(65),
     'splito://',
@@ -130,15 +131,15 @@ describe('unknown and unsafe links open Home', () => {
 })
 
 test('links only navigate: no URL carries a command', () => {
-  const t = resolveLink('/people/abc123?action=settle&delete=1&confirm=yes').target
-  // `action` is the page's own arrival hint (opens the Settle up sheet); nothing else survives as a command.
-  expect(Object.keys(t.params).sort()).toEqual(['action', 'confirm', 'delete', 'personId'].sort())
+  const t = resolveLink(`/people/${ID}?action=settle&delete=1&confirm=yes`).target
+  // Only the keys a page reads survive: no `action`, nothing that could read as a command.
+  expect(t.params).toEqual({personId: ID})
 })
 
 test('real-data links: ids ask in demo mode, generic pages do not', () => {
   expect(touchesRealData(resolveLink('/groups').target)).toBe(false)
   expect(touchesRealData(resolveLink('/settings/regional').target)).toBe(false)
-  expect(touchesRealData(resolveLink('/groups/abc123/balances').target)).toBe(true)
-  expect(touchesRealData(resolveLink('/expense/new?personId=abc123').target)).toBe(true)
-  expect(touchesRealData(resolveLink('/invite/abc123').target)).toBe(true)
+  expect(touchesRealData(resolveLink(`/groups/${ID}/balances`).target)).toBe(true)
+  expect(touchesRealData(resolveLink(`/expense/new?personId=${ID}`).target)).toBe(true)
+  expect(touchesRealData(resolveLink(`/invite/k3j9x2m4q8w1z5v7`).target)).toBe(true)
 })

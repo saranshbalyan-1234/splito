@@ -44,11 +44,13 @@ export type DialogControlProps = DialogControlRefProps & {
     owner: SheetOwner
     notifyOpen: () => void
     notifyClosed: () => void
+    /** The Dialog mounted: a host that waited for it can open it now. */
+    notifyMounted: () => void
   }
 }
 
 /** The page a sheet belongs to (its name and path params), or null for a sheet of the shell (Search, the drawer). */
-export type SheetOwner = {name: string; params: Record<string, string>} | null
+export type SheetOwner = {name: string; params: Record<string, string>; key?: string} | null
 
 export type DialogContextProps = {
   close: DialogControlProps['close']

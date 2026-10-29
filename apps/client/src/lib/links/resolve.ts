@@ -1,9 +1,13 @@
 import {redirectOldPath, ROUTE_PATHS, router, type RouteName} from '#/routes'
 import {LINK_SCHEME, TIER_HOSTS} from './hosts'
 import {
+  ENTITY_QUERY_KEYS,
+  isEntityId,
   isPageSheet,
+  isValidPathParam,
   PAGE_TABS,
   pathParamNames,
+  QUERY_KEYS,
   QUERY_SHEETS,
   SETTINGS_SHEET_SEGMENTS,
   type PageName,
@@ -29,7 +33,6 @@ export type Resolved = {isKnown: boolean; target: LinkTarget}
 
 const HOME: LinkTarget = {name: 'People', params: {}, sheets: [], query: {}}
 
-const SAFE_PATH_PARAM = /^[A-Za-z0-9_-]{1,64}$/
 const SAFE_VALUE = /^[A-Za-z0-9_.,:~ -]{1,64}$/
 /** Free text a link may carry: a search question, an expense title. Control characters never. */
 const FREE_TEXT: Record<string, number> = {q: 200, title: 120}
@@ -77,7 +80,6 @@ export function resolveLink(input: string): Resolved {
     if (matched === 'NotFound') continue
     const name = matched as RouteName
     let rest = segs.slice(i)
-    if (Object.values(pathParams).some(v => !SAFE_PATH_PARAM.test(v))) return {isKnown: false, target: HOME}
 
     /* `/settings/export` reads as a section called "export"; it is Settings' own sheet. */
     if (name === 'SettingsSection' && (SETTINGS_SHEET_SEGMENTS as readonly string[]).includes(pathParams.section!)) {
@@ -85,12 +87,13 @@ export function resolveLink(input: string): Resolved {
     }
     /* `/groups/filters` reads as a group called "filters"; no id is, so it is the Groups list's own sheet. */
     if (name === 'Group' && pathParams.groupId === 'filters') return finish('Groups', {}, ['filters', ...rest], query)
+    if (Object.entries(pathParams).some(([k, v]) => !isValidPathParam(k, v))) return {isKnown: false, target: HOME}
     if (name === 'Search') {
       if (rest.length > 0) continue
-      const {q, mode, ...others} = query
+      const {q, mode} = query
       return {
         isKnown: true,
-        target: {name: 'People', params: others, sheets: ['search'], query: {...(q ? {q} : {}), ...(mode === 'ask' ? {mode} : {})}},
+        target: {name: 'People', params: {}, sheets: ['search'], query: {...(q ? {q} : {}), ...(mode === 'ask' ? {mode} : {})}},
       }
     }
     const params: Record<string, string> = {...pathParams}
@@ -113,14 +116,19 @@ function finish(name: PageName, params: Record<string, string>, chain: string[],
   delete pageQuery.tab
   if (queryTab && !params.tab && tabs?.includes(queryTab)) params.tab = queryTab
   let sheets = chain
-  if (sheets.length > 0 && !isPageSheet(name, sheets)) return {isKnown: false, target: HOME}
+  if (sheets.length > 0 && !isPageSheet(name, sheets, params)) return {isKnown: false, target: HOME}
   if (name === 'Group' && queryTab === 'rules' && sheets.length === 0) sheets = ['rules']
   /* `?drawer=menu` opens the side drawer over the page, unless a sheet is already named. */
   for (const [id, value] of Object.entries(QUERY_SHEETS)) {
     if (pageQuery[id] === value && sheets.length === 0) sheets = [id]
     delete pageQuery[id]
   }
-  return {isKnown: true, target: {name, params: {...pageQuery, ...params}, sheets, query: {}}}
+  /* Only the keys this page reads survive, and an id in them must look like one. */
+  const allowed = QUERY_KEYS[name] ?? []
+  const kept = Object.fromEntries(
+    Object.entries(pageQuery).filter(([k, v]) => allowed.includes(k) && (!(ENTITY_QUERY_KEYS as readonly string[]).includes(k) || isEntityId(v))),
+  )
+  return {isKnown: true, target: {name, params: {...kept, ...params}, sheets, query: {}}}
 }
 
 /** A target's URL path (with its query): the inverse of `resolveLink`, which is also the address bar's text. */

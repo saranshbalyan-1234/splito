@@ -35,7 +35,7 @@ import {
   scopeFromPref,
   scopeToPref,
 } from '#/screens/Analytics/scope'
-import {readAnalyticsParams, scopeToParam} from '#/screens/Analytics/urlState'
+import {MAX_OFFSET, readAnalyticsParams, scopeToParam} from '#/screens/Analytics/urlState'
 
 export type PeriodChoice = 'week' | 'month' | 'year' | 'all' | 'custom'
 
@@ -63,6 +63,17 @@ export type GroupOption = {
 
 /** `key` for the non-group slice in the by-group chart (group ids are never empty). */
 export const DIRECT_KEY = ''
+
+/** `periodRange`, never throwing and never leaving real calendars: an address can carry any offset. */
+function safePeriodRange(period: Exclude<PeriodChoice, 'all' | 'custom'>, today: string, weekStart: WeekStart, offset: number): DateRange {
+  try {
+    const range = periodRange(period, today, weekStart, offset)
+    if (/^\d{4}-\d{2}-\d{2}$/.test(range.from) && /^\d{4}-\d{2}-\d{2}$/.test(range.to)) return range
+  } catch {
+    // fall through to the current period
+  }
+  return periodRange(period, today, weekStart, 0)
+}
 
 /** `YYYY-MM-DD` as a Date at UTC midnight; always format it with `timeZone: 'UTC'`. */
 export function utcDate(d: string) {
@@ -162,7 +173,7 @@ export function useReport() {
       ? bounds
       : period === 'custom'
         ? state.custom!
-        : periodRange(period, today, weekStart, state.offset)
+        : safePeriodRange(period, today, weekStart, state.offset)
   const granularity: Granularity =
     period === 'week' || period === 'month'
       ? 'day'
@@ -391,7 +402,10 @@ export function useReport() {
       void saveDefaultPeriod(period)
     },
     setCustom: (custom: DateRange) => setParams({period: 'custom', from: custom.from, to: custom.to, offset: undefined}),
-    step: (by: number) => setParams({offset: state.offset + by === 0 ? undefined : String(state.offset + by)}),
+    step: (by: number) => {
+      const next = Math.max(-MAX_OFFSET, Math.min(MAX_OFFSET, state.offset + by))
+      setParams({offset: next === 0 ? undefined : String(next)})
+    },
     setCurrency: (currency: string) => setParams({currency}),
     /** In the address and remembered on this device (`analyticsScope`). */
     setScope: (next: Scope) => {

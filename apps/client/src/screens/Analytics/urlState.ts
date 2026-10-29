@@ -21,13 +21,21 @@ export type AnalyticsUrlState = {
 
 type Params = Record<string, string | undefined> | undefined
 
+/** Periods back or forward a link may ask for: a century of months, 23 years of weeks. Past it the date maths leaves real calendars. */
+export const MAX_OFFSET = 1200
+
+/** Only a short signed integer counts; anything else (`1e9`, `0x10`, ` 5`, `9999999`) is no offset. */
+export function readOffset(value: string | undefined): number {
+  if (value === undefined || !/^-?\d{1,4}$/.test(value)) return 0
+  return Math.max(-MAX_OFFSET, Math.min(MAX_OFFSET, Number(value)))
+}
+
 export function readAnalyticsParams(params: Params): AnalyticsUrlState {
-  const offset = Number(params?.offset)
   const from = params?.from
   const to = params?.to
   return {
     period: params?.period && PERIODS.includes(params.period) ? (params.period as PeriodParam) : undefined,
-    offset: Number.isInteger(offset) ? offset : 0,
+    offset: readOffset(params?.offset),
     custom: from && to && DAY.test(from) && DAY.test(to) && from <= to ? {from, to} : undefined,
     currency: params?.currency && /^[A-Z]{3}$/.test(params.currency) ? params.currency : undefined,
     scope: params?.scope ? scopeFromParam(params.scope) : undefined,

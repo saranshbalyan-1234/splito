@@ -5,5 +5,5 @@
     "stage": "stage.splito.app",
     "prod": "splito.app"
   },
-  "appPaths": ["/people", "/groups", "/expense", "/payment", "/invite", "/invites", "/friends", "/activity", "/analytics", "/settings", "/profile", "/search"]
+  "appPaths": ["/", "/notifications", "/people", "/groups", "/expense", "/payment", "/invite", "/invites", "/friends", "/activity", "/analytics", "/settings", "/profile", "/search"]
 }

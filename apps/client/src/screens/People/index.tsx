@@ -352,7 +352,7 @@ export function PeopleScreen() {
         filters={filters}
         currencies={currencies}
         onFiltersApplied={f => {
-          navigation.setParams(peopleParams(f, STOCK as PeopleFilters) as never)
+          navigation.setParams(peopleParams(f, STOCK as PeopleFilters, {sort: sortDefault, includeGroups: includeDefault ?? true, showSettled, showHidden}) as never)
           if (f.showHidden !== showHidden) void setShowHidden(f.showHidden)
           if (f.showSettled !== showSettled) void setShowSettled(f.showSettled)
           /* Sort and Include groups are saved too (owner 128): the choice is the new default and survives a reload. */

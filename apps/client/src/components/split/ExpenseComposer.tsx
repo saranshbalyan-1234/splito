@@ -1,4 +1,4 @@
-import {useEffect, useState} from 'react'
+import {useEffect, useRef, useState} from 'react'
 import {View} from 'react-native'
 import Animated, {
   useAnimatedStyle,
@@ -89,6 +89,7 @@ export function ExpenseComposer({
   tz,
   draftContext,
   isDraftRestored = false,
+  onFirstEdit,
   onClose,
 }: {
   testID: string
@@ -102,6 +103,8 @@ export function ExpenseComposer({
   /** Add mode: keeps a device draft for this place. */
   draftContext?: DraftContext
   isDraftRestored?: boolean
+  /** The first change the person makes (not the mount): a prefilled form drops its one-shot address params here (F-241). */
+  onFirstEdit?: () => void
   onClose: () => void
 }) {
   const t = useTheme()
@@ -143,7 +146,14 @@ export function ExpenseComposer({
   const isEdit = !!expenseId
   const isDirty = form !== initialForm
 
-  const update = (fn: (f: ExpenseForm) => ExpenseForm) => setForm(fn)
+  const didEdit = useRef(false)
+  const update = (fn: (f: ExpenseForm) => ExpenseForm) => {
+    setForm(fn)
+    if (!didEdit.current) {
+      didEdit.current = true
+      onFirstEdit?.()
+    }
+  }
 
   const currencyControl = Dialog.useDialogControl({url: 'currency'})
   const dateControl = Dialog.useDialogControl({url: 'date'})

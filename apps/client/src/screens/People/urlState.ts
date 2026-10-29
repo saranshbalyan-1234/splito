@@ -1,4 +1,4 @@
-import {flag, oneOf, type Params} from '#/lib/links/listState'
+import {flag, flagParam, oneOf, type Params, param} from '#/lib/links/listState'
 import {type PeopleFilters} from './components/FriendsFilterDialog'
 
 const SHOW = ['all', 'owesYou', 'youOwe', 'settled'] as const
@@ -18,14 +18,17 @@ export function readPeopleParams(params: Params): Partial<PeopleFilters> {
   return out
 }
 
-/** The params an Apply writes: what differs from `stock`; a value back at stock clears its key. */
-export function peopleParams(f: PeopleFilters, stock: PeopleFilters): Record<string, string | undefined> {
+/**
+ * The params an Apply writes (one rule, `param` / `flagParam`): a value is left out only when it is the stock
+ * one and so is the saved preference it would fall back to (`saved`, as it was before this Apply).
+ */
+export function peopleParams(f: PeopleFilters, stock: PeopleFilters, saved: Partial<PeopleFilters> = {}): Record<string, string | undefined> {
   return {
-    show: f.show === stock.show ? undefined : f.show,
-    sort: f.sort === stock.sort ? undefined : f.sort,
-    currency: f.currency === stock.currency ? undefined : f.currency,
-    groups: f.includeGroups === stock.includeGroups ? undefined : f.includeGroups ? '1' : '0',
-    settled: f.showSettled ? '1' : undefined,
-    hidden: f.showHidden ? '1' : undefined,
+    show: param(f.show, stock.show),
+    sort: param(f.sort, stock.sort, saved.sort),
+    currency: param(f.currency, stock.currency),
+    groups: flagParam(f.includeGroups, stock.includeGroups, saved.includeGroups),
+    settled: flagParam(f.showSettled, stock.showSettled, saved.showSettled),
+    hidden: flagParam(f.showHidden, stock.showHidden, saved.showHidden),
   }
 }

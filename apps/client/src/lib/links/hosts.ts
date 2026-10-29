@@ -1,4 +1,5 @@
 import linkHosts from '../../../link-hosts.json'
+import {tierFrom} from '../../../link-tier'
 
 /**
  * The link hosts of every tier, from the one JSON the app config also reads (ARCHITECTURE 14, 26.3). A build
@@ -11,10 +12,11 @@ export const LINK_SCHEME: string = linkHosts.scheme
 export const TIER_HOSTS: Record<Tier, string> = linkHosts.tiers
 export const APP_PATHS: readonly string[] = linkHosts.appPaths
 
-/** This build's tier (`EXPO_PUBLIC_TIER`); prod when unset, so e2e and local builds print the production host. */
+export {tierFrom}
+
+/** This build's tier (`EXPO_PUBLIC_TIER`). */
 export function currentTier(): Tier {
-  const tier = process.env.EXPO_PUBLIC_TIER as string | undefined
-  return tier && tier in TIER_HOSTS ? (tier as Tier) : 'prod'
+  return tierFrom(process.env.EXPO_PUBLIC_TIER)
 }
 
 /** The host this build puts in the links it makes (invites, share, copy link). */

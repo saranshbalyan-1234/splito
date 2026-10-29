@@ -751,9 +751,14 @@ call it; `/notifications` aliases to `/activity`; a bare `/` opens the Home tab 
   to its address: `control.open()` pushes the marker (Back closes the sheet, Forward reopens it), a marker already in
   the stack (a pasted or refreshed address) opens the dialog over its page, and closing from inside (X, Cancel,
   Save, scrim) removes the marker. `onUrlOpen` lets a host prepare its draft first (Record payment waits for the
-  balances). The marker keeps the page's params, so the address keeps its tab and filters. On a phone there is no
-  address bar and the native sheet has its own dismiss, so a sheet stays dialog state there; a link's sheets wait in
-  `navigation/sheets` (`queueSheets`) until their page mounts. Prompts, "..." menus and generic dropdowns have no
+  balances; `'wait'` while data loads, `false` when it cannot show it, which takes the address off again). A marker
+  belongs to the page route directly under the run of markers (its route key), so a second mounted copy of the same
+  page never opens it too, and a dialog with no page of its own, or one the table does not list for its page, opens
+  as a plain dialog with no address. The marker keeps the page's params, so the address keeps its tab and filters.
+  On a phone there is no address bar and the native sheet has its own dismiss, so a sheet stays dialog state there;
+  a link's first sheet is held (`lib/links/pending`) until the dialog of its page has opened, expires, and is dropped
+  when the person leaves the page. Until the in-sheet picker hand-over lands (fix/ios-wB) a phone never opens a
+  picker from a link, nor anything over a composer (§ 4, one native modal). Prompts, "..." menus and generic dropdowns have no
   URL; sheets that need a target (Remind, Leave group, a payment's peek, Call it even on one transfer) are listed
   with the reason in `lib/links/table.test.ts`.
 - **List state is the address, written on Apply or a tap.** `/groups?sort=name&show=owe&currency=EUR&settled=1`,
@@ -764,8 +769,8 @@ call it; `/notifications` aliases to `/activity`; a bare `/` opens the Home tab 
 - **One resolver** handles https, the custom scheme and notification URLs. Hosts live in one JSON
   (`apps/client/link-hosts.json`) shared with the app config. Invite, QR, reminder, share, Ask and Search links are
   made with `lib/links/make.ts` and opened through `openLink` (`lib/links/open.ts`).
-- **Unknown paths open home** and the address bar is rewritten to `/`; the `dead_link` friction record (route
-  shape only) is still [Planned] (A-014), the resolver logs a debug line today.
+- **Unknown paths open home** and the address bar is rewritten to `/`; the `dead_link` friction is recorded
+  (kind only).
 - **Deep links resolve from local data first** and push the final screen directly. An entity not yet on
   this device shows loading until the first pull (offline: "Not on this device yet"), never "Not found"; a
   tombstoned or unknown id shows "not found" with `goBack`. A failed read is an error with retry, never the
@@ -777,8 +782,14 @@ call it; `/notifications` aliases to `/activity`; a bare `/` opens the Home tab 
 - **Sign-in preserves intent (M2):** an invite or claim link opened signed out stores its relative target in
   the device store (`lib/links/intent.ts`), runs sign-in or local-profile creation, then resumes (`LinkHost`).
   [Stub] until F-250 turns `isSignInRequired` on.
+- **Every incoming URL goes through `openLink`:** on a phone the cold start's and each later URL is held
+  (`lib/links/incoming`, `linking.getInitialURL` / `subscribe`) and `LinkHost` opens it; on web the page-load address
+  is checked once the mode is known (`checkInitialLink`). Both apply the demo question and the signed-out hold, and a
+  dead link records the `dead_link` friction.
 - **Demo mode asks first:** a link that names something by id, opened from outside while demo mode is on, asks
   "Switch back to your data?" (`LinkHost`, `lib/links/gate.ts`); a screen's own buttons (Search, Ask) do not ask.
+- **Link params are checked per page:** ids are UUIDs or demo ids, only the query keys a page reads survive
+  (`QUERY_KEYS`), an offset is a short signed integer clamped to ±1200.
 - **Deferred link:** `lib/links/deferred.ts` is a documented stub; the hand-over of a link kept on the web page
   needs the backend (F-254 acceptance 6).
 - **Public pages (M2):** `/join/:token`, `/i/<token>`, `/b/<token>` are matched exactly (near-miss tests),
@@ -1409,7 +1420,9 @@ labelled sidebar); **wide** = web 1300 px and up (Bluesky `gtTablet`, right colu
   Exceptions, for safety: confirmation prompts (Delete?, Log out?, Discard changes?) and "..." menus are not
   addressable, and no URL ever performs or arms an action (§ 14 "links carry no command"); a sheet URL only
   opens the sheet. *Why:* "for every tab, every popup it should be via url, so that even if i copy paste the
-  url i land on same place".
+  url i land on same place". *Assistant rulings, 2026-10-29 (not yet seen by the owner):* tab switches replace the
+  history entry, so Back never steps through tab taps; a pasted sheet-plus-picker URL is one history entry, the
+  browser's Back leaves to the previous site and the in-app X steps back one level.
 - **Deep links work end to end, everywhere** (owner 145; F-254, client part built with F-241; the hosted
   files and the deferred-link hand-over ship with the backend/domain). Every URL of F-241 (pages, tabs, sheets, drawers, pickers, list
   state) is also a deep link: `https://splito.app/<path>` opens the installed app at that exact screen through

@@ -1,6 +1,6 @@
-import {logger} from '#/logger'
+import {recordFriction} from '#/logger'
 import {IS_WEB} from '#/env'
-import {navigationRef} from '#/navigation/ref'
+import {navigationRef, resetToRoot} from '#/navigation/ref'
 import {openSheetMarkers, ownerOf, queueSheets} from '#/navigation/sheets'
 import {TAB_NAMES} from '#/lib/routes/tabs'
 import {holdLinkIntent, isSignInRequired} from './intent'
@@ -42,7 +42,7 @@ export function navigateToTarget(target: LinkTarget): boolean {
  */
 export function openLink(input: string, options: {isDemo?: boolean} = {}): OpenResult {
   const {isKnown, target} = resolveLink(input)
-  if (!isKnown) logger.debug('dead link opened Home', {route: 'unknown'})
+  if (!isKnown) recordFriction('dead_link')
   const path = buildPath(target)
   if (isSignInRequired()) {
     holdLinkIntent(path)
@@ -59,4 +59,28 @@ export function openLink(input: string, options: {isDemo?: boolean} = {}): OpenR
 /** `openLink`, retried until the navigator exists: a notification tap can arrive before the first screen. */
 export function openLinkWhenReady(input: string, options: {isDemo?: boolean} = {}, tries = 0) {
   if (openLink(input, options) === 'not-ready' && tries < 40) setTimeout(() => openLinkWhenReady(input, options, tries + 1), 250)
+}
+
+/**
+ * The address a web page was loaded with is shown by the navigator before the app knows its mode; this checks it
+ * once it does (F-254): a dead link is friction, and a link to real data in demo mode, or any link while signed
+ * out, is held and the page falls back to Home, so the question or the sign-in comes first.
+ */
+export function checkInitialLink(path: string, options: {isDemo: boolean}) {
+  const {isKnown, target} = resolveLink(path)
+  if (!isKnown) {
+    recordFriction('dead_link')
+    return
+  }
+  const held = buildPath(target)
+  if (isSignInRequired()) holdLinkIntent(held)
+  else if (options.isDemo && touchesRealData(target)) holdForDemoSwitch(held)
+  else return
+  whenReady(resetToRoot)
+}
+
+/** Runs `fn` once the navigator exists (a link can arrive before the first screen). */
+export function whenReady(fn: () => void, tries = 0) {
+  if (navigationRef.isReady()) fn()
+  else if (tries < 40) setTimeout(() => whenReady(fn, tries + 1), 250)
 }

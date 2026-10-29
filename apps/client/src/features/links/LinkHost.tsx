@@ -2,10 +2,12 @@ import {useEffect} from 'react'
 import {useLingui} from '@lingui/react/macro'
 
 import {IS_E2E, IS_WEB} from '#/env'
+import {device} from '#/storage'
 import {readDeferredLink} from '#/lib/links/deferred'
 import {releaseDemoSwitch, takeWaitingLink, useLinkWaitingForDemo} from '#/lib/links/gate'
+import {takeIncoming, takeInitialPath, useIncomingLink} from '#/lib/links/incoming'
 import {takeLinkIntent} from '#/lib/links/intent'
-import {openLink} from '#/lib/links/open'
+import {checkInitialLink, openLink, openLinkWhenReady} from '#/lib/links/open'
 import {useDemoMode} from '#/state/demo'
 import {useSession} from '#/state/session'
 import * as Prompt from '#/components/Prompt'
@@ -39,8 +41,23 @@ export function LinkHost() {
     w.__splitoTest = {...w.__splitoTest, openLink: (url: string) => openLink(url, {isDemo: demo})}
   }, [demo])
 
-  /* The first open after an install from a link (the server hand-over is a stub until the backend). */
+  /* Links from outside (a tap on a link, a push, a share) wait in `incoming`; they open through `openLink` now that the mode is known. */
+  const incoming = useIncomingLink()
   useEffect(() => {
+    const url = incoming && takeIncoming()
+    if (url) openLinkWhenReady(url, {isDemo: demo})
+  }, [incoming, demo])
+
+  /* The address the web page loaded with: dead link, demo mode, signed out (the navigator showed it before the mode was known). */
+  useEffect(() => {
+    const path = takeInitialPath()
+    if (path) checkInitialLink(path, {isDemo: demo})
+  }, [demo])
+
+  /* The first open after an install from a link (the server hand-over is a stub until the backend), on the first launch only. */
+  useEffect(() => {
+    if (device.get(['deferredLinkChecked'])) return
+    device.set(['deferredLinkChecked'], true)
     void readDeferredLink().then(link => link && openLink(link, {isDemo: false}))
   }, [])
 

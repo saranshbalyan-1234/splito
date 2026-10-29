@@ -1,6 +1,7 @@
 import {findFocusedRoute, type LinkingOptions} from '@react-navigation/native'
 
 import {ownLinkHost} from '#/lib/links/hosts'
+import {captureInitialPath} from '#/lib/links/incoming'
 import {resolveLink} from '#/lib/links/resolve'
 import {pathForRoute, webState} from '#/lib/links/state'
 import {tabHref} from '#/lib/routes/tabs'
@@ -30,7 +31,11 @@ if (homeTab && homeTab !== 'people' && window.location.pathname === '/') {
  */
 export const linking: LinkingOptions<FlatNavigatorParams> = {
   prefixes: [`https://${ownLinkHost()}`],
-  getStateFromPath: path => webState(resolveLink(path).target) as ReturnType<NonNullable<LinkingOptions<FlatNavigatorParams>['getStateFromPath']>>,
+  getStateFromPath: path => {
+    /* The first call is the page load: `LinkHost` checks it (dead link, demo mode, signed out) once it knows the mode. */
+    captureInitialPath(path)
+    return webState(resolveLink(path).target) as ReturnType<NonNullable<LinkingOptions<FlatNavigatorParams>['getStateFromPath']>>
+  },
   getPathFromState: state => {
     const leaf = findFocusedRoute(state as Parameters<typeof findFocusedRoute>[0])
     return leaf ? pathForRoute(leaf) : '/'

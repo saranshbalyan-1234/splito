@@ -392,7 +392,7 @@ export function GroupsScreen() {
         filters={filters}
         currencies={currencies}
         onFiltersApplied={f => {
-          navigation.setParams(groupParams(f, DEFAULT_GROUP_FILTERS) as never)
+          navigation.setParams(groupParams(f, DEFAULT_GROUP_FILTERS, {sort: sortDefault, showSettled, showHidden}) as never)
           if (f.showHidden !== showHidden) void setShowHidden(f.showHidden)
           if (f.showSettled !== showSettled) void setShowSettled(f.showSettled)
           if (f.sort !== sortDefault) void setSortDefault(f.sort)

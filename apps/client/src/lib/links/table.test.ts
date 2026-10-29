@@ -31,48 +31,58 @@ test('every sheet a host binds to a URL is in the table, and every table entry h
  * is not. A new sheet fails this test until it is one or the other.
  */
 const NOT_ADDRESSABLE: Record<string, string> = {
-  'call-even-sheet': 'Group: one transfer row opens it with that transfer as its draft; Person: addressable (call-it-even)',
   'payment-details-sheet': 'a quick peek at one payment; the payment has its own page (/payment/:id)',
   'member-exit-sheet': 'needs the member it is about; opened from a member row',
   'remind-sheet': 'needs the expense, person or group it reminds about; opened by the Remind menu item',
   'remind-me-sheet': 'needs the thing it reminds you about; opened by the Remind me menu item',
   'select-sheet': 'the generic dropdown of a Select (its options belong to the control that owns it)',
-  'friends-filters-sheet': 'addressable: People filters (url filters)',
-  'groups-filters-sheet': 'addressable: Groups filters (url filters)',
 }
 
 test('every form sheet is addressable or listed with its reason', () => {
   const ids = all.flatMap(f => [...f.text.matchAll(/<FormSheet\.Outer[^>]*?testID="([^"]+)"/g)].map(m => m[1]!))
   expect(ids.length).toBeGreaterThan(20)
-  const unlisted = ids.filter(id => !(id in NOT_ADDRESSABLE) && !ADDRESSABLE.has(id))
+  const unlisted = ids.filter(id => !(id in NOT_ADDRESSABLE) && !(id in ADDRESSABLE))
   expect(unlisted).toEqual([])
+  // A sheet is in one list, not both.
+  for (const id of Object.keys(ADDRESSABLE)) expect([id, id in NOT_ADDRESSABLE]).toEqual([id, false])
 })
 
-/** Form sheets whose host passes a `url` (checked against `used` above by the first test). */
-const ADDRESSABLE = new Set([
-  'feedback-sheet',
-  'import-sheet',
-  'export-sheet',
-  'history-filter-sheet',
-  'analytics-range-dialog',
-  'analytics-scope-sheet',
-  'date-dialog',
-  'payers-dialog',
-  'currency-dialog',
-  'category-dialog',
-  'group-dialog',
-  'charge-sheet',
-  'people-dialog',
-  'class-picker',
-  'accent-sheet',
-  'category-sheet',
-  'taxclass-sheet',
-  'edit-group-sheet',
-  'add-members-sheet',
-  'rules-sheet',
-  'record-payment-sheet',
-  'upi-sheet',
-  'edit-friend-sheet',
-  'search-ask-sheet',
-  'install-help-sheet',
-])
+test('every addressable sheet names the url its host binds, and that url is bound somewhere', () => {
+  for (const [testID, url] of Object.entries(ADDRESSABLE)) {
+    expect([testID, used.has(url) || GLOBAL_SHEETS.includes(url as never)]).toEqual([testID, true])
+    expect([testID, [...Object.values(SHEETS).flat(), ...GLOBAL_SHEETS].includes(url as never)]).toEqual([testID, true])
+  }
+})
+
+/** Form sheet testID -> the `url` its host passes to `useDialogControl` (checked against `used` above). */
+const ADDRESSABLE: Record<string, string> = {
+  'feedback-sheet': 'feedback',
+  'install-help-sheet': 'install',
+  'import-sheet': 'import',
+  'export-sheet': 'export',
+  'history-filter-sheet': 'filters',
+  'group-filter-sheet': 'filters',
+  'analytics-range-dialog': 'range',
+  'analytics-scope-sheet': 'scope',
+  'date-dialog': 'date',
+  'payers-dialog': 'payers',
+  'currency-dialog': 'currency',
+  'category-dialog': 'category',
+  'group-dialog': 'group',
+  'charge-sheet': 'charge',
+  'people-dialog': 'people',
+  'class-picker': 'tax-class',
+  'accent-sheet': 'accent',
+  'category-sheet': 'category',
+  'taxclass-sheet': 'tax-class',
+  'edit-group-sheet': 'edit',
+  'add-members-sheet': 'add-members',
+  'rules-sheet': 'rules',
+  'record-payment-sheet': 'record-payment',
+  'upi-sheet': 'pay-upi',
+  'edit-friend-sheet': 'edit',
+  'timezone-dialog': 'timezone',
+  'friends-filters-sheet': 'filters',
+  'groups-filters-sheet': 'filters',
+  'call-even-sheet': 'call-it-even',
+}

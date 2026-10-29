@@ -76,6 +76,7 @@ export function AddExpenseScreen() {
       personId={params?.personId}
       groupId={params?.groupId}
       prefill={{title: params?.title, amount: params?.amount, currency: params?.currency}}
+      onPrefillEdited={() => navigation.setParams({title: undefined, amount: undefined, currency: undefined})}
       onClose={close}
     />
   )
@@ -92,6 +93,7 @@ function AddExpenseForm({
   personId,
   groupId,
   prefill,
+  onPrefillEdited,
   onClose,
 }: {
   me: string
@@ -106,6 +108,7 @@ function AddExpenseForm({
   groupId?: string
   /** An Ask Splito action card starts the form with these; the saved draft then waits, untouched (ARCHITECTURE 26.19). */
   prefill?: {title?: string; amount?: string; currency?: string}
+  onPrefillEdited?: () => void
   onClose: () => void
 }) {
   const {t: l} = useLingui()
@@ -171,6 +174,8 @@ function AddExpenseForm({
       /* A prefilled form owns no draft slot: it never writes over, or clears, the draft the user saved. */
       draftContext={draftContextFor(context, isPrefilled)}
       isDraftRestored={!!draft}
+      /* Once the person edits, the prefill leaves the address, so a refresh restores their draft instead of starting over (F-241). */
+      onFirstEdit={isPrefilled ? onPrefillEdited : undefined}
       onClose={onClose}
     />
   )

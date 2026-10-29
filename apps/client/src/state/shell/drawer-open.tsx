@@ -5,13 +5,16 @@ import {useHotkeysContext} from '#/lib/hotkeys'
 import {IS_WEB} from '#/env'
 import {
   closeSheetMarkers,
-  hasPending,
   markerFor,
   openSheetMarkers,
   sheetsVersion,
   subscribeSheets,
-  takePending,
+  donePending,
+  peekPending,
 } from '#/navigation/sheets'
+
+const noSubscribe = () => () => {}
+const never = () => 0
 
 type StateContext = boolean
 type SetContext = (v: boolean) => void
@@ -30,8 +33,8 @@ export function Provider({children}: React.PropsWithChildren<{}>) {
   const [local, setLocal] = useState(false)
   const {disableScope, enableScope} = useHotkeysContext()
   /* The store's own value, read inside the snapshot: React Compiler would cache a bare `markerFor(...)` call here. */
-  const isMarked = useSyncExternalStore(subscribeSheets, () => IS_WEB && !!markerFor(null, ['drawer']))
-  const version = useSyncExternalStore(subscribeSheets, sheetsVersion)
+  const isMarked = useSyncExternalStore(IS_WEB ? subscribeSheets : noSubscribe, () => IS_WEB && !!markerFor(null, ['drawer']))
+  const version = useSyncExternalStore(IS_WEB ? noSubscribe : subscribeSheets, IS_WEB ? never : sheetsVersion)
   const state = IS_WEB ? isMarked : local
 
   useEffect(() => {
@@ -41,7 +44,9 @@ export function Provider({children}: React.PropsWithChildren<{}>) {
 
   /* A phone's deep link to the drawer waits in `navigation/sheets`; take it as soon as it is queued. */
   useEffect(() => {
-    if (!IS_WEB && hasPending() && takePending(null, ['drawer'])) setLocal(true)
+    if (IS_WEB || !peekPending(null, ['drawer'])) return
+    setLocal(true)
+    donePending()
   }, [version])
 
   const setDrawerOpen = useCallback((open: boolean) => {

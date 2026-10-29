@@ -123,14 +123,16 @@ function NativeStackNavigator({
   if (IS_WEB) {
     const focusedKey = activeRoute.key
 
-    // Update LRU: move focused key to front
+    // Update LRU: move focused key to front. A `Sheet` marker draws nothing, so it never takes a cache slot.
     const lru = lruKeysRef.current
     const idx = lru.indexOf(focusedKey)
-    if (idx > 0) {
-      lru.splice(idx, 1)
-      lru.unshift(focusedKey)
-    } else if (idx === -1) {
-      lru.unshift(focusedKey)
+    if (activeRoute.name !== 'Sheet') {
+      if (idx > 0) {
+        lru.splice(idx, 1)
+        lru.unshift(focusedKey)
+      } else if (idx === -1) {
+        lru.unshift(focusedKey)
+      }
     }
 
     // Remove keys for routes no longer in the stack

@@ -3,6 +3,7 @@ import {
   forwardRef,
   useCallback,
   useContext,
+  useEffect,
   useImperativeHandle,
   useMemo,
   useRef,
@@ -164,6 +165,10 @@ export function Outer({
     },
     [webOptions, close, isClosing],
   )
+
+  /* A host that wanted this dialog open before it existed (an address, a held link) is told it can now. */
+  const notifyMounted = control.url?.notifyMounted
+  useEffect(() => notifyMounted?.(), [notifyMounted])
 
   useImperativeHandle(
     control.ref,

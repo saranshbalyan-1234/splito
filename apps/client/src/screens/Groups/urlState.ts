@@ -1,4 +1,4 @@
-import {flag, oneOf, type Params} from '#/lib/links/listState'
+import {flag, flagParam, oneOf, type Params, param} from '#/lib/links/listState'
 import {type GroupFilters} from './filter'
 
 const TYPE = ['all', 'trip', 'home', 'couple', 'other'] as const
@@ -23,15 +23,15 @@ export function readGroupParams(params: Params): Partial<GroupFilters> {
   return out
 }
 
-export function groupParams(f: GroupFilters, stock: GroupFilters): Record<string, string | undefined> {
-  const diff = <K extends 'type' | 'status' | 'show' | 'sort' | 'currency'>(k: K) => (f[k] === stock[k] ? undefined : f[k])
+/** The params an Apply writes: the same rule as People (`peopleParams`). */
+export function groupParams(f: GroupFilters, stock: GroupFilters, saved: Partial<GroupFilters> = {}): Record<string, string | undefined> {
   return {
-    type: diff('type'),
-    status: diff('status'),
-    show: diff('show'),
-    sort: diff('sort'),
-    currency: diff('currency'),
-    settled: f.showSettled ? '1' : undefined,
-    hidden: f.showHidden ? '1' : undefined,
+    type: param(f.type, stock.type),
+    status: param(f.status, stock.status),
+    show: param(f.show, stock.show),
+    sort: param(f.sort, stock.sort, saved.sort),
+    currency: param(f.currency, stock.currency),
+    settled: flagParam(f.showSettled, stock.showSettled, saved.showSettled),
+    hidden: flagParam(f.showHidden, stock.showHidden, saved.showHidden),
   }
 }
