@@ -105,6 +105,17 @@ class SheetViewController: UIViewController,
     self.applyUserInterfaceStyle()
   }
 
+  /*
+   * A sheet torn down with its route (the screen it sits over is removed, so UIKit dismisses it without a
+   * presentation-controller callback) still tells JS it closed. `destroy()` is idempotent.
+   */
+  override func viewDidDisappear(_ animated: Bool) {
+    super.viewDidDisappear(animated)
+    if self.isBeingDismissed || self.presentingViewController == nil {
+      self.onDidDismiss?()
+    }
+  }
+
   override func viewDidLayoutSubviews() {
     super.viewDidLayoutSubviews()
     self.applyUserInterfaceStyle()

@@ -28,6 +28,11 @@ const NativeView: React.ComponentType<
 
 const NativeModule = requireNativeModule('BottomSheet')
 
+/* A component, a memo or a forwardRef; not the context default `{}`. */
+function isComponentType(value: unknown): value is React.ElementType {
+  return typeof value === 'function' || (typeof value === 'object' && value !== null && '$$typeof' in value)
+}
+
 export class BottomSheetNativeComponent extends Component<
   BottomSheetViewProps,
   {
@@ -80,7 +85,8 @@ export class BottomSheetNativeComponent extends Component<
 
   render() {
     const Portal = this.context as React.ContextType<typeof PortalContext>
-    if (!Portal) {
+    // The context default is `{}` (truthy, and not a component): a sheet mounted outside every provider would otherwise crash with "Element type is invalid".
+    if (!isComponentType(Portal)) {
       throw new Error(
         'BottomSheet: You need to wrap your component tree with a <BottomSheetPortalProvider> to use the bottom sheet.',
       )

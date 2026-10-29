@@ -96,6 +96,23 @@ export function hideSettled<T extends {id: string; summary?: PersonSummary; dele
   return rows.filter(row => row.deletedAt !== undefined || !isSettledUp(row.summary, seen?.get(row.id)))
 }
 
+/**
+ * What the list shows and what "N of M" says about it. A search runs over every friend the filters keep, settled
+ * ones included (it finds them), so M is that set's live rows and N the matches: N never exceeds M. Without a
+ * search the list is the settled-hidden one and the count line is not drawn.
+ */
+export function searchFriends<T extends {id: string; name: string; summary?: PersonSummary; deletedAt?: number}>(
+  filtered: T[],
+  query: string,
+  hiding: {showSettled: boolean; show: FriendFilter['show']},
+  seen?: ReadonlyMap<string, ReadonlySet<string>>,
+): {listed: T[]; count: number; total: number} {
+  const q = query.trim().toLocaleLowerCase()
+  const listed = q ? filtered.filter(row => row.name.toLocaleLowerCase().includes(q)) : hideSettled(filtered, hiding, seen)
+  const live = (rows: T[]) => rows.filter(row => row.deletedAt === undefined).length
+  return {listed, count: live(listed), total: live(filtered)}
+}
+
 /** What the People filter keeps: one currency or all, and which way the balance goes. */
 export type FriendFilter = {
   currency: string | 'all'

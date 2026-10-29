@@ -66,6 +66,9 @@ class SheetView: ExpoView {
   private var lastPresentedBottomOffset: CGFloat?
   private var lastPresentedIsPopover: Bool?
 
+  /// How many times present() has waited for a dismissing controller; reset once it presents.
+  private var presentRetries = 0
+
   private var isOpening = false {
     didSet {
       if isOpening {
@@ -208,6 +211,30 @@ class SheetView: ExpoView {
       return
     }
 
+    /*
+     * Present from the top-most presented controller. A sheet opened from inside a modal route (Add expense is a
+     * form-sheet RNSScreen) finds the root controller as its react view controller, which is already presenting
+     * that screen, so UIKit refused the present ("already presenting RNSScreen") and the Discard prompt and every
+     * picker never appeared. Splito patch: Bluesky's composer is an RN Modal, so it never met this.
+     */
+    var presenter: UIViewController = rvc
+    while let next = presenter.presentedViewController, !next.isBeingDismissed {
+      presenter = next
+    }
+    // The top one is on its way out: nothing is marked as opening yet, so wait for it and try again.
+    if let leaving = presenter.presentedViewController {
+      guard self.presentRetries < 20 else { return }
+      self.presentRetries += 1
+      let retry = { [weak self] in self?.present() }
+      if let coordinator = leaving.transitionCoordinator {
+        coordinator.animate(alongsideTransition: nil) { _ in DispatchQueue.main.async(execute: retry) }
+      } else {
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.05, execute: retry)
+      }
+      return
+    }
+    self.presentRetries = 0
+
     let sheetVc = SheetViewController(
       popoverMode: self.popover,
       popoverWidth: self.popoverWidth,
@@ -272,7 +299,7 @@ class SheetView: ExpoView {
         sourceView = anchoredView
         sourceRect = anchoredView.bounds
       } else {
-        sourceView = rvc.view
+        sourceView = presenter.view
         sourceRect = CGRect(
           x: sourceView.bounds.midX,
           y: sourceView.bounds.midY,
@@ -297,17 +324,6 @@ class SheetView: ExpoView {
     self.isOpening = true
     if !self.fullHeight {
       self.startObservingContentHeight()
-    }
-
-    /*
-     * Present from the top-most presented controller. A sheet opened from inside a modal route (Add expense is a
-     * form-sheet RNSScreen) finds the root controller as its react view controller, which is already presenting
-     * that screen, so UIKit refused the present ("already presenting RNSScreen") and the Discard prompt and every
-     * picker never appeared. Splito patch: Bluesky's composer is an RN Modal, so it never met this.
-     */
-    var presenter: UIViewController = rvc
-    while let next = presenter.presentedViewController, !next.isBeingDismissed, next !== sheetVc {
-      presenter = next
     }
 
     presenter.present(sheetVc, animated: true) { [weak self] in

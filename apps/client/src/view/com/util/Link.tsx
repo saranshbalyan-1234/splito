@@ -9,14 +9,15 @@ import {
   View,
   type ViewStyle,
 } from 'react-native'
-import {StackActions} from '@react-navigation/native'
+import {CommonActions, StackActions} from '@react-navigation/native'
 
 import {
   type DebouncedNavigationProp,
   useNavigationDeduped,
 } from '#/lib/hooks/useNavigationDeduped'
+import {IS_WEB} from '#/env'
 import {openExternal} from '#/lib/openExternal'
-import {getTabState, linkNavigation, TabState} from '#/lib/routes/helpers'
+import {getTabState, tabLink, TabState} from '#/lib/routes/helpers'
 import {WebAuxClickWrapper} from '#/view/com/util/WebAuxClickWrapper'
 import {useTheme} from '#/alf'
 import {Text} from '#/components/Typography'
@@ -189,9 +190,13 @@ function onPressInner(
       void openExternal(href)
     } else {
       const [routeName, params] = router.matchPath(href)
-      if (navigationAction === 'push' && linkNavigation(routeName) === 'navigate') {
-        // @ts-expect-error a tab route name and its params, resolved by the tab navigator above this stack
-        navigation.navigate(routeName, params)
+      const tab = navigationAction === 'push' ? tabLink(routeName, params, IS_WEB) : null
+      if (tab) {
+        navigation.dispatch(
+          tab.kind === 'popTo'
+            ? StackActions.popTo(tab.name, tab.params)
+            : CommonActions.navigate(tab.name, tab.params),
+        )
       } else if (navigationAction === 'push') {
         navigation.dispatch(StackActions.push(routeName, params))
       } else if (navigationAction === 'replace') {
