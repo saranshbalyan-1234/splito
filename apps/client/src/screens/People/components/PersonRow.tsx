@@ -10,7 +10,7 @@ import {
   ZERO,
 } from '@splito/domain'
 
-import {HideMenu} from '#/features/hidden/HideItem'
+import {HideRow} from '#/features/hidden/HideItem'
 import {useRowPadding} from '#/state/preferences/density'
 import {Link} from '#/view/com/util/Link'
 import {UserAvatar} from '#/view/com/util/UserAvatar'
@@ -147,8 +147,9 @@ export function PersonRow({
   const moreBalances = open.length > 1 ? balanceColumn(open.slice(1)) : null
 
   /* The row content shrinks on press; the separator stays put. */
-  const link = (
+  const link = (onLongPress?: () => void) => (
       <Link
+        onLongPress={onLongPress}
         testID={`person-${row.name}`}
         onPressIn={press.onPressIn}
         onPressOut={press.onPressOut}
@@ -252,12 +253,16 @@ export function PersonRow({
     <Animated.View {...listAnimations}>
       {isDeleted ? (
         /* The menu is a sibling of the link, never nested in it. */
-        <View style={[a.flex_row, a.align_center, a.border_t, t.atoms.border_contrast_low]}>
-          <View style={[a.flex_1]}>{link}</View>
-          <HideMenu testID={`person-${row.id}-more`} target={{type: 'person', id: row.id}} isHidden={!!row.isHidden} name={row.name} />
-        </View>
+        <HideRow
+          style={[a.border_t, t.atoms.border_contrast_low]}
+          testID={`person-${row.id}-more`}
+          target={{type: 'person', id: row.id}}
+          isHidden={!!row.isHidden}
+          name={row.name}
+          row={link}
+        />
       ) : (
-        link
+        link()
       )}
     </Animated.View>
   )

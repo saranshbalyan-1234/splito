@@ -1,9 +1,11 @@
+import {type ComponentProps} from 'react'
 import {View} from 'react-native'
 import Animated from 'react-native-reanimated'
 import {Trans, useLingui} from '@lingui/react/macro'
 import {formatAmount, magnitude, ZERO} from '@splito/domain'
 import {type Entity, type Repayment, type WriteOff} from '@splito/sync'
 
+import {HideRow} from '#/features/hidden/HideItem'
 import {Link} from '#/view/com/util/Link'
 import {PressableWithHover} from '#/view/com/util/PressableWithHover'
 import {atoms as a, useTheme} from '#/alf'
@@ -36,7 +38,7 @@ export function HistoryRow({
   locale,
   onRepaymentPress,
   hideTopBorder = false,
-  menu,
+  hide,
   isHidden = false,
 }: {
   /** The first row under a month heading: the heading's rule already separates them. */
@@ -51,8 +53,8 @@ export function HistoryRow({
   /** The group's name, shown in a person's history. */
   groupName?: string | null
   locale: string
-  /** A deleted row's "..." menu (Hide / Unhide), drawn beside the row. Live rows have none. */
-  menu?: React.ReactNode
+  /** A deleted row's Hide / Unhide menu, drawn beside the row. Live rows have none. */
+  hide?: Omit<ComponentProps<typeof HideRow>, 'row' | 'style'>
   /** Hidden by me and brought back by "Show hidden": says so. */
   isHidden?: boolean
   /** Opens a payment's or a write-off's details (`kind` says which). */
@@ -202,13 +204,14 @@ export function HistoryRow({
   const rowStyle = [
     a.px_lg,
     a.py_md,
-    !hideTopBorder && !menu && [a.border_t, t.atoms.border_contrast_low],
+    !hideTopBorder && !hide && [a.border_t, t.atoms.border_contrast_low],
     a.transition_color,
   ]
 
-  const row =
+  const row = (onLongPress?: () => void) =>
     entry.kind === 'expense' ? (
       <Link
+        onLongPress={onLongPress}
         testID={`history-${entry.entity.id}`}
         onPressIn={press.onPressIn}
         onPressOut={press.onPressOut}
@@ -223,6 +226,7 @@ export function HistoryRow({
       </Link>
     ) : (
       <PressableWithHover
+        onLongPress={onLongPress}
         testID={`history-${entry.entity.id}`}
         onPressIn={press.onPressIn}
         onPressOut={press.onPressOut}
@@ -244,18 +248,10 @@ export function HistoryRow({
 
   return (
     <Animated.View {...listAnimations}>
-      {menu ? (
-        <View
-          style={[
-            a.flex_row,
-            a.align_center,
-            !hideTopBorder && [a.border_t, t.atoms.border_contrast_low],
-          ]}>
-          <View style={[a.flex_1]}>{row}</View>
-          {menu}
-        </View>
+      {hide ? (
+        <HideRow {...hide} style={!hideTopBorder && [a.border_t, t.atoms.border_contrast_low]} row={row} />
       ) : (
-        row
+        row()
       )}
     </Animated.View>
   )

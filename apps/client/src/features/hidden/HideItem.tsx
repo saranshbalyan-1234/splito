@@ -1,5 +1,10 @@
+import {type ReactNode} from 'react'
+import {type StyleProp, View, type ViewStyle} from 'react-native'
 import {Trans, useLingui} from '@lingui/react/macro'
 import {type MoneyType} from '@splito/sync'
+
+import {IS_NATIVE, IS_WEB} from '#/env'
+import {atoms as a} from '#/alf'
 
 import {useHaptics} from '#/lib/haptics'
 import {useHiddenItems, useSetHidden} from '#/data/hiddenItems'
@@ -43,26 +48,23 @@ export function useHideItem(target: HideTarget) {
   return {isHidden: target.type !== 'group' && hidden.has(target.id), toggle}
 }
 
-/**
- * A deleted row's "..." menu: Hide, or Unhide when "Show hidden" has brought it back. A sibling of the row's link,
- * never nested in it (Bluesky's row overflow). Rows of live items have no such menu: only a deleted one can be hidden.
- */
-export function HideMenu({
-  testID,
-  target,
-  isHidden,
-  name,
-}: {
+type HideProps = {
   testID: string
   target: HideTarget
   isHidden: boolean
   /** The row's title, for the screen reader. */
   name: string
-}) {
+}
+
+/**
+ * A deleted row's "..." menu: Hide, or Unhide when "Show hidden" has brought it back. A sibling of the row's link,
+ * never nested in it (Bluesky's row overflow). Rows of live items have no such menu: only a deleted one can be hidden.
+ */
+export function HideMenu({testID, target, isHidden, name, control}: HideProps & {control?: ReturnType<typeof Menu.useMenuControl>}) {
   const {t: l} = useLingui()
   const {toggle} = useHideItem(target)
   return (
-    <Menu.Root>
+    <Menu.Root control={control}>
       <Menu.Trigger label={l`More options for ${name}`}>
         {({props}) => (
           <Button
@@ -88,5 +90,26 @@ export function HideMenu({
         </Menu.Item>
       </Menu.Outer>
     </Menu.Root>
+  )
+}
+
+/**
+ * A deleted row with its Hide menu beside it. Right-click (web) and long-press (native, via the `onLongPress` the
+ * `row` render function hands to the row's Link) open the same menu as the "..." button.
+ */
+export function HideRow({row, style, ...menu}: HideProps & {row: (onLongPress?: () => void) => ReactNode; style?: StyleProp<ViewStyle>}) {
+  const control = Menu.useMenuControl()
+  const haptics = useHaptics()
+  const open = () => {
+    haptics.longPress()
+    control.open()
+  }
+  return (
+    <View
+      style={[a.flex_row, a.align_center, style]}
+      {...(IS_WEB ? {onContextMenu: (e: {preventDefault(): void}) => { e.preventDefault(); open() }} : {})}>
+      <View style={[a.flex_1]}>{row(IS_NATIVE ? open : undefined)}</View>
+      <HideMenu {...menu} control={control} />
+    </View>
   )
 }

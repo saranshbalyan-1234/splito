@@ -39,7 +39,7 @@ import {NO_RULES, RulesDialog} from '#/components/groups/RulesEditor'
 import {DotGrid3x1_Stroke2_Corner0_Rounded as DotsIcon} from '#/components/icons/DotGrid'
 import {Pencil_Stroke2_Corner0_Rounded as PencilIcon} from '#/components/icons/Pencil'
 import {SettingsSliderVertical_Stroke2_Corner0_Rounded as FilterIcon} from '#/components/icons/SettingsSlider'
-import {historyRowMenu, ShowHiddenSheet, useVisibleEntries} from '#/features/hidden/ShowHidden'
+import {historyRowHide, ShowHiddenSheet, useVisibleEntries} from '#/features/hidden/ShowHidden'
 import {useHideItem} from '#/features/hidden/HideItem'
 import {Group3_Stroke2_Corner0_Rounded as GroupIcon} from '#/components/icons/Group'
 import {Handshake_Stroke2_Corner0_Rounded as HandCoinsIcon} from '#/components/icons/Money'
@@ -664,7 +664,7 @@ export function GroupScreen() {
                     me={me!.id}
                     names={names}
                     locale={locale}
-                    menu={historyRowMenu(item.entry, hidden, l`this record`)}
+                    hide={historyRowHide(item.entry, hidden, l`this record`)}
                     isHidden={hidden.has(item.entry.entity.id)}
                     onRepaymentPress={(r, kind) => {
                       setOpenRepayment(r)

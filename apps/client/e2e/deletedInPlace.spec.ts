@@ -57,6 +57,8 @@ for (const {name, width, height} of [
       await page.goto(`/expense/${camp}`)
       await page.getByTestId('expense-menu').click()
       await page.getByTestId('expense-delete').click()
+      // The write must land before a hard navigation drops the page.
+      await expect(page.getByText('Expense deleted')).toBeVisible()
       await page.goto(`/groups/${group}`)
 
       const row = page.getByTestId(`history-${camp}`)
@@ -107,6 +109,9 @@ for (const {name, width, height} of [
       await expect(page.getByTestId('groups-balances')).not.toContainText('225')
 
       await row.click()
+      // The Groups list keeps the page it came from under this one, so reload to one instance (also checks § 26.3).
+      await expect(page).toHaveURL(new RegExp(`/groups/${group}`))
+      await page.reload()
       await expect(page.getByTestId('group-deleted')).toBeVisible()
       await expect(page.getByTestId('group-add-expense')).toHaveCount(0)
       await expect(page.getByTestId('group-settle')).toBeDisabled()
@@ -117,7 +122,7 @@ for (const {name, width, height} of [
       await expect(page.getByTestId('group-add-expense')).toBeVisible()
       await expect(page.getByTestId(`history-${rafting}`).getByText('Rafting')).not.toHaveCSS('text-decoration-line', STRUCK)
       await page.getByTestId('group-tab-balances').click()
-      await expect(page.getByTestId('group-net-INR-Bela Joshi-text')).toContainText('is owed')
+      await expect(page.getByTestId('group-net-INR-Bela Joshi-text')).toContainText('375.00')
     })
 
     test('Hide is for a deleted expense only; hiding it removes it, and Show hidden brings it back with Unhide', async ({page}) => {
@@ -167,7 +172,8 @@ for (const {name, width, height} of [
       await expect(friend).toBeVisible()
       await expect(friend).toContainText('Deleted')
       await expect(friend.getByText('Bela Joshi', {exact: true})).toHaveCSS('text-decoration-line', STRUCK)
-      await page.getByTestId(`person-${bela}-more`).click()
+      // Right-click opens the same menu as the "..." button.
+      await friend.click({button: 'right'})
       await page.getByTestId(`person-${bela}-more-hide`).click()
       await expect(friend).toHaveCount(0)
 

@@ -9,7 +9,6 @@ import * as Toggle from '#/components/forms/Toggle'
 import * as FormSheet from '#/components/FormSheet'
 import {type HistoryEntry} from '#/components/people/ledger'
 import {Text} from '#/components/Typography'
-import {HideMenu} from './HideItem'
 
 /**
  * The one "Show hidden" switch (decision 105) in a list's filters: off, what I hid (deleted items, and groups hidden
@@ -70,15 +69,13 @@ export function useVisibleEntries(entries: HistoryEntry[]) {
   return {visible, hidden, showHidden}
 }
 
-/** The "..." menu of a deleted history row (Hide, or Unhide when it is hidden and shown again); live rows have none. */
-export function historyRowMenu(entry: HistoryEntry, hidden: ReadonlySet<string>, fallbackName: string) {
+/** Hide / Unhide props of a deleted history row; live rows have none. */
+export function historyRowHide(entry: HistoryEntry, hidden: ReadonlySet<string>, fallbackName: string) {
   if (!entry.entity.deleted) return undefined
-  return (
-    <HideMenu
-      testID={`history-${entry.entity.id}-more`}
-      target={{type: entry.kind, id: entry.entity.id}}
-      isHidden={hidden.has(entry.entity.id)}
-      name={entry.kind === 'expense' ? entry.entity.data.title : fallbackName}
-    />
-  )
+  return {
+    testID: `history-${entry.entity.id}-more`,
+    target: {type: entry.kind, id: entry.entity.id},
+    isHidden: hidden.has(entry.entity.id),
+    name: entry.kind === 'expense' ? entry.entity.data.title : fallbackName,
+  }
 }

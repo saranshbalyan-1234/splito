@@ -7,7 +7,7 @@ import {type Entity, type Group, isGroupInactive} from '@splito/sync'
 
 import {useRowPadding} from '#/state/preferences/density'
 import {Link} from '#/view/com/util/Link'
-import {HideMenu} from '#/features/hidden/HideItem'
+import {HideRow} from '#/features/hidden/HideItem'
 import {atoms as a, useTheme} from '#/alf'
 import {DeletedMeta, useStruck} from '#/components/DeletedMeta'
 import {BalanceBlock, SettledPill} from '#/components/BalanceText'
@@ -87,8 +87,9 @@ export function GroupRow({
   )
 
   /* The row content shrinks on press; the separator stays put. */
-  const link = (
+  const link = (onLongPress?: () => void) => (
       <Link
+        onLongPress={onLongPress}
         testID={`group-${name}`}
         onPressIn={press.onPressIn}
         onPressOut={press.onPressOut}
@@ -149,12 +150,16 @@ export function GroupRow({
     <Animated.View {...listAnimations}>
       {isDeleted ? (
         /* The menu is a sibling of the link, never nested in it. */
-        <View style={[a.flex_row, a.align_center, !hideTopBorder && [a.border_t, t.atoms.border_contrast_low]]}>
-          <View style={[a.flex_1]}>{link}</View>
-          <HideMenu testID={`group-${group.id}-more`} target={{type: 'group', id: group.id}} isHidden={isHidden} name={name} />
-        </View>
+        <HideRow
+          style={!hideTopBorder && [a.border_t, t.atoms.border_contrast_low]}
+          testID={`group-${group.id}-more`}
+          target={{type: 'group', id: group.id}}
+          isHidden={isHidden}
+          name={name}
+          row={link}
+        />
       ) : (
-        link
+        link()
       )}
     </Animated.View>
   )

@@ -28,7 +28,7 @@ import {DeletedMeta} from '#/components/DeletedMeta'
 import {ArrowRotateCounterClockwise_Stroke2_Corner0_Rounded as UndoIcon} from '#/components/icons/ArrowRotate'
 import {useErrorText} from '#/components/split/shared'
 import {useHideItem} from '#/features/hidden/HideItem'
-import {historyRowMenu, useVisibleEntries} from '#/features/hidden/ShowHidden'
+import {historyRowHide, useVisibleEntries} from '#/features/hidden/ShowHidden'
 import {
   useAllEntities,
   useBalanceRows,
@@ -501,7 +501,7 @@ export function PersonScreen() {
                     : null
                 }
                 locale={locale}
-                menu={historyRowMenu(item.entry, hidden, l`this record`)}
+                hide={historyRowHide(item.entry, hidden, l`this record`)}
                 isHidden={hidden.has(item.entry.entity.id)}
                 onRepaymentPress={(r, kind) => {
                   setOpenRepayment(r)
