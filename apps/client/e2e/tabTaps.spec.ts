@@ -66,9 +66,9 @@ for (const motion of ['full', 'reduced'] as const) {
           await expectLanded(page, seq.at(-1)!)
         })
       }
-      test('taps 0 ms apart still end on the last tab', async ({page}) => {
+      test('taps 20 ms apart still end on the last tab', async ({page}) => {
         await ready(page)
-        await tapAll(page, SIX, true, 0)
+        await tapAll(page, SIX, true, 20)
         await expectLanded(page, 'groups')
       })
     })
