@@ -1,4 +1,4 @@
-import {useEffect} from 'react'
+import {useEffect, useState} from 'react'
 import {plural} from '@lingui/core/macro'
 import {useLingui} from '@lingui/react/macro'
 
@@ -15,17 +15,31 @@ export const requestLogOut = () => openPrompt?.()
  * "Log out?" (ARCHITECTURE 26.15): warns when changes have not reached a server (all of them, until sync exists), then
  * keeps or erases this device's data. Log out never silently deletes: Keep is the first button and leaves the account's
  * database, ready for the next sign-in; Erase deletes it after a second look at the wording. Mounted once by the app
- * (a prompt inside the drawer would sit under its scrim).
+ * (a prompt inside the drawer would sit under its scrim), and its dialog and its unsynced count only on the first request,
+ * so launch pays for neither.
  */
 export function LogOutHost() {
-  const {t: l} = useLingui()
   const control = Prompt.usePromptControl()
+  const [isRequested, setRequested] = useState(false)
+  const [opens, setOpens] = useState(0)
   useEffect(() => {
-    openPrompt = () => control.open()
+    openPrompt = () => {
+      setRequested(true)
+      setOpens(n => n + 1)
+    }
     return () => {
       openPrompt = null
     }
-  }, [control])
+  }, [])
+  /* After the dialog has mounted (children's effects run first), on every request. */
+  useEffect(() => {
+    if (opens > 0) control.open()
+  }, [opens, control])
+  return isRequested ? <LogOutPrompt control={control} /> : null
+}
+
+function LogOutPrompt({control}: {control: Prompt.PromptControlProps}) {
+  const {t: l} = useLingui()
   const {currentAccount} = useSession()
   const unsynced = useUnsyncedCount() ?? 0
   const id = currentAccount?.id

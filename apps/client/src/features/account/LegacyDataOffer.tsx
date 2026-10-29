@@ -1,4 +1,4 @@
-import {useEffect} from 'react'
+import {useEffect, useState} from 'react'
 import {useLingui} from '@lingui/react/macro'
 
 import {hasLegacyData, markLegacyAnswered, useMoveLegacyData} from '#/data/account'
@@ -13,10 +13,8 @@ import {logger} from '#/logger'
  * untouched on the device. ponytail: one offer; a Settings > Data row to ask again is the upgrade. Renders only the prompt.
  */
 export function LegacyDataOffer() {
-  const {t: l} = useLingui()
-  const move = useMoveLegacyData()
   const {demo} = useDemoMode()
-  const prompt = Prompt.usePromptControl()
+  const [isOffered, setOffered] = useState(false)
 
   useEffect(() => {
     if (demo) return
@@ -26,13 +24,25 @@ export function LegacyDataOffer() {
         if (!isCurrent) return
         /* Offered once: a database that is not there will never be, and one that is gets the question now. */
         markLegacyAnswered()
-        if (has) prompt.open()
+        if (has) setOffered(true)
       })
       .catch(e => logger.error(e, {where: 'LegacyDataOffer'}))
     return () => {
       isCurrent = false
     }
-  }, [demo, prompt])
+  }, [demo])
+
+  /* The dialog exists only when there is something to offer. */
+  return isOffered ? <OfferPrompt /> : null
+}
+
+function OfferPrompt() {
+  const {t: l} = useLingui()
+  const move = useMoveLegacyData()
+  const prompt = Prompt.usePromptControl()
+  useEffect(() => {
+    prompt.open()
+  }, [prompt])
 
   return (
     <Prompt.Outer control={prompt} testID="legacy-offer">

@@ -228,3 +228,18 @@ increase, with its cause:
   was already stale at those (earlier merges plus the links work); both are timing-noisy between runs (the ask answer
   streams in chunks, the scroll count follows scroll timing), so they are recorded at the highest value seen in 8 runs.
 Eight consecutive runs after recording: 8 of 8 pass.
+
+## Sign-in required and the intro (F-249, F-250; branch feat/wC-F249-F250-auth, web only, measured 2026-10-30)
+
+Machine load was 18-66 for most runs (other builders), so timings are upper bounds; the perf rule is "under ~20".
+
+| Check | Result |
+|---|---|
+| `pnpm check` (lint, typecheck, package and client tests incl. architecture rules) | green; client tests 639 pass (new: `password.test.ts`, `authConfig.test.ts`) |
+| Lingui | en 1790 / hi 1790, 0 missing (about 80 new strings, Hindi written for each) |
+| Full e2e (`e2e:build --clear`, `--workers=2`, port 8267) | 540 tests: 536 passed on the first run, the 4 that failed (3 in `language.spec.ts`, 1 in `shell.spec.ts` drawer rows) were specs of the old Sign in / Create account screens and are rewritten; re-run green. New: `welcome.spec.ts` (11), `introReplay.spec.ts` (2), `auth.spec.ts` (37), `authConfig.spec.ts` (3), `authShots.spec.ts` (6) |
+| `e2e:pwa` (production build, signed out) | 7 passed, 1 skipped (the update toast needs a signed-in session; production has no dev sign-in). New: no dev sign-in in the production export (`bundle.spec.ts`), Continue says "arrives with sync" and holds no dev button, no database, no `__splitoTest` |
+| Perf (`pnpm perf`, CPU x1 and x4) | save 500 expenses: pref 1 read / 29 ms, expense 18 reads / 13 ms, 0 long tasks; 10,000 expenses: Home cold open 101 ms, write 32 ms, Analytics 44 ms, Ask 17 ms open / 27 ms answer; demo switch on/off 23 / 34 ms; every tap under 100 ms at x1 (Groups 20, Analytics 24, Activity 21, FAB 39, sheet 40, Save 45) and under 200 ms at x4 (FAB 107, sheet 83, Save 78). One red: `tab, 50 ms, tab` at x1 (188 to 244 ms, one long task of 134 to 143 ms), the same on pristine `bf82d1d` built and run in a clean worktree on the same loaded machine (189 ms, long task 143 ms), so it is not from this branch |
+| Renders gate | 1 passed, baseline unchanged. First run read `mount:Outer` 18 vs 14 (the two always-mounted prompts, Log out and the legacy offer); both now mount their dialog only when needed (Log out on its first request, the offer when old data exists), which brings the count back |
+
+Cost of the gate: signed out no store is opened (`indexedDB.databases()` is empty on every signed-out address, asserted); signed in, launch adds one `indexedDB.databases()` check for the old database (once per install, then the flag stops it) and no store reads.
