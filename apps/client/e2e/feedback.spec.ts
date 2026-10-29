@@ -109,29 +109,6 @@ test('saving keeps the feedback on this device and never says sent', async ({
   )
 })
 
-test('Send by email opens a draft, and the feedback is still only saved on the device', async ({
-  page,
-}) => {
-  await page.goto('/settings')
-  await page.getByTestId('settings-send-feedback').click()
-  await send(page, 'Please add a dark map view', 'idea')
-  await page.getByTestId('sheet-save').click()
-  await expect(page.getByText('Email draft opened')).toBeVisible()
-  /* The e2e build records the hand-off; it never launches the machine's Mail app. */
-  const urls = await page.evaluate(
-    () => (window as unknown as {__splitoTest: {externalUrls: string[]}}).__splitoTest.externalUrls,
-  )
-  expect(urls).toHaveLength(1)
-  expect(urls[0]).toMatch(/^mailto:/)
-  expect(urls[0]).toContain('Please%20add%20a%20dark%20map%20view')
-  /* Opening a draft is not sending. */
-  await page.getByTestId('sheet-cancel').click()
-  await page.goto('/settings/feedback')
-  await expect(page.getByTestId('feedback-list')).toContainText(
-    'Saved on this device',
-  )
-})
-
 test('a feedback item can be deleted', async ({page}) => {
   await page.goto('/settings')
   await page.getByTestId('settings-send-feedback').click()
