@@ -55,7 +55,7 @@ import {ProfileScreen} from '#/screens/Profile'
 import {SettingsScreen} from '#/screens/Settings'
 import {FriendsAndInvitesScreen} from '#/screens/FriendsAndInvites'
 import {SettingsSectionScreen} from '#/screens/Settings/SettingsSection'
-import {SignInScreen} from '#/screens/SignIn'
+import {WelcomeScreen} from '#/screens/Welcome/Replay'
 import {SearchScreen} from '#/screens/Search'
 import {SettleScreen} from '#/screens/Settle'
 import {useDemoMode} from '#/state/demo'
@@ -72,7 +72,7 @@ const TITLES: Partial<Record<keyof FlatNavigatorParams, MessageDescriptor>> = {
   Profile: msg`Profile`,
   Settings: msg`Settings`,
   SettingsSection: msg`Settings`,
-  SignIn: msg`Sign in`,
+  Welcome: msg`Welcome`,
   FriendsAndInvites: msg`Friends and invites`,
   Search: msg`Search`,
   Person: msg`Person`,
@@ -208,7 +208,7 @@ export function TabsNavigator({
       <Stack.Screen name="Settings" component={SettingsScreen} />
       <Stack.Screen name="Search" component={SearchScreen} />
       <Stack.Screen name="SettingsSection" component={SettingsSectionScreen} />
-      <Stack.Screen name="SignIn" component={SignInScreen} />
+      <Stack.Screen name="Welcome" component={WelcomeScreen} />
       <Stack.Screen name="FriendsAndInvites" component={FriendsAndInvitesScreen} />
       <Stack.Screen name="Person" component={PersonScreen} />
       <Stack.Screen name="Group" component={GroupScreen} />
@@ -304,9 +304,9 @@ export function FlatNavigator({
         options={{title: title('SettingsSection')}}
       />
       <Flat.Screen
-        name="SignIn"
-        component={SignInScreen}
-        options={{title: title('SignIn')}}
+        name="Welcome"
+        component={WelcomeScreen}
+        options={{title: title('Welcome')}}
       />
       <Flat.Screen
         name="FriendsAndInvites"

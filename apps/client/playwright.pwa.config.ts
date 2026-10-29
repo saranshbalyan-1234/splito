@@ -15,7 +15,7 @@ export default defineConfig({
   use: {baseURL: `http://localhost:${PORT}`, channel: 'chrome', trace: 'retain-on-failure'},
   webServer: {
     // E2E_PWA_REBUILD_SW=1 skips the two-minute export and only regenerates sw.js in the existing dist-pwa.
-    command: `${process.env.E2E_PWA_REBUILD_SW ? 'true' : 'EXPO_PUBLIC_ENV=production pnpm exec expo export -p web --clear --output-dir dist-pwa'} && node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/pwa.ts dist-pwa && npx --yes serve@14 -s dist-pwa -l ${PORT}`,
+    command: `${process.env.E2E_PWA_REBUILD_SW ? 'true' : 'EXPO_PUBLIC_ENV=production EXPO_PUBLIC_AUTH_API_URL=https://auth.invalid pnpm exec expo export -p web --clear --output-dir dist-pwa'} && node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/pwa.ts dist-pwa && npx --yes serve@14 -s dist-pwa -l ${PORT}`,
     port: PORT,
     timeout: 600_000,
     reuseExistingServer: false,

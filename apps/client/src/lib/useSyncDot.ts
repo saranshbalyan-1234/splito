@@ -10,7 +10,7 @@ import {type SyncDotState, syncDotState} from './syncState'
  * conservative and reports 'syncing'.
  */
 export function useSyncDot(): SyncDotState {
-  const {hasSession} = useSession()
+  const {canSync: hasSession} = useSession()
   const {demo} = useDemoMode()
   return syncDotState({
     demo,

@@ -6,7 +6,7 @@ import {buildPath, type LinkTarget, resolveLink, touchesRealData} from './resolv
 import {GLOBAL_SHEETS, PAGE_TABS, SETTINGS_SECTION_SHEETS, SHEETS} from './table'
 
 const ID = '3f2b8c1e-7d4a-4e9b-9a61-0c5d2e8f1a77'
-const sample = (path: string, section = 'regional') => path.replace(/:(\w+)/g, (_m, key: string) => (key === 'section' ? section : key === 'code' ? 'k3j9x2m4q8w1z5v7' : ID))
+const sample = (path: string, section = 'regional') => path.replace(/:(\w+)/g, (_m, key: string) => (key === 'section' ? section : key === 'code' ? 'k3j9x2m4q8w1z5v7' : key === 'step' ? '2' : ID))
 const forms = (path: string) => [
   `https://${TIER_HOSTS.prod}${path}`,
   `https://${TIER_HOSTS.dev}${path}`,

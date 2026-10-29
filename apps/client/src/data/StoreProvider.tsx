@@ -11,11 +11,12 @@ import {resetToRoot} from '#/navigation/ref'
 import {DemoContext, type DemoModeValue, setDemoProgress} from '#/state/demo'
 import {useDialogStateControlContext} from '#/state/dialogs'
 import {flush, logger, setDiagnosticsEnabled, setTelemetryIdentity} from '#/logger'
-import {device, setStorageScope} from '#/storage'
+import {accountScope, device, setStorageScope} from '#/storage'
 import {installDevTools} from '#/data/devTools'
 import {setDirectory} from '#/data/friends'
 import {entitiesQuery, projectionFor} from '#/data/projections'
 import {openStore} from '#/data/store'
+import {accountStoreName} from '#/data/storeNames'
 
 type DataContext = {store: Store; ctx: MutationCtx}
 /** A store ready to be shown: the demo one brings its directory (who is on Splito there). */
@@ -63,17 +64,22 @@ function wireTelemetry(store: Store, ctx: MutationCtx) {
  */
 const loadDemo = () => import('#/data/demoMode')
 
+/** The close of the store most recently unmounted, so an erase on log out can wait for its connection to end. */
+let closing: Promise<unknown> = Promise.resolve()
+export const whenStoreClosed = () => closing
+
 /** A store that is open and showing, with what to undo when it goes. */
 type Live = DataContext & {demo: boolean; unwire: () => void}
 
 /**
- * Opens the local store and ensures the "me" person exists before rendering
- * children. In dev and e2e builds it can swap to the separate demo database and
+ * Opens the signed-in account's local store (one database per account, `accountStoreName`) and ensures the "me"
+ * person exists before rendering children. It is mounted only while someone is signed in (`AuthGate`) and keyed
+ * by the account, so signing out closes the database and another account opens its own. In dev and e2e builds it can swap to the separate demo database and
  * back (`setDemo`): the new store is opened and ready first, then it replaces
  * the old one in the one context value and the old connection is closed. The
  * tree never remounts (§ 3 "Root contexts stay still").
  */
-export function StoreProvider({children, fallback = null}: {children: React.ReactNode; fallback?: React.ReactNode}) {
+export function StoreProvider({accountId, children, fallback = null}: {accountId: string; children: React.ReactNode; fallback?: React.ReactNode}) {
   const [value, setValue] = useState<DataContext | null>(null)
   const [demo, setDemoFlag] = useState(false)
   const [hasDirectory, setHasDirectory] = useState(false)
@@ -111,7 +117,7 @@ export function StoreProvider({children, fallback = null}: {children: React.Reac
       live.current = {...next, unwire}
       setDirectory(next.demo ? (next.directory ?? null) : null)
       // Search history, read marks, drafts and the first-frame copies of preferences typed in demo mode stay in demo mode.
-      setStorageScope(next.demo ? 'demo:' : '')
+      setStorageScope(next.demo ? 'demo:' : accountScope(accountId))
       installDevTools(next.store, next.ctx)
       perfMark('splito:store-adopt')
       if (prev) dropOpenUi()
@@ -125,13 +131,13 @@ export function StoreProvider({children, fallback = null}: {children: React.Reac
         else resolve()
       })
     },
-    [dropOpenUi],
+    [accountId, dropOpenUi],
   )
 
   /** The real store. `ensure: false` skips the "me" write for a start that is about to open the demo database instead. */
   const openReal = useCallback(async (ensure = true) => {
     const ctx = getMutationCtx()
-    const store = await openStore(notices.current)
+    const store = await openStore(notices.current, accountStoreName(accountId))
     try {
       if (ensure) await ensureMe(store, ctx, 'Me')
     } catch (e) {
@@ -139,7 +145,7 @@ export function StoreProvider({children, fallback = null}: {children: React.Reac
       throw e
     }
     return {store, ctx}
-  }, [])
+  }, [accountId])
 
   useEffect(() => {
     let cancelled = false
@@ -178,7 +184,7 @@ export function StoreProvider({children, fallback = null}: {children: React.Reac
       const cur = live.current
       live.current = null
       cur?.unwire()
-      void cur?.store.close()
+      if (cur) closing = cur.store.close().catch(() => {})
     }
   }, [adopt, openReal])
 
@@ -258,6 +264,11 @@ export function StoreProvider({children, fallback = null}: {children: React.Reac
       <DemoContext.Provider value={demoValue}>{children}</DemoContext.Provider>
     </Context.Provider>
   )
+}
+
+/** The open store, or null where none is (the signed-out screens): only shared primitives such as motion ask this way. */
+export function useMaybeData(): DataContext | null {
+  return useContext(Context)
 }
 
 export function useData(): DataContext {

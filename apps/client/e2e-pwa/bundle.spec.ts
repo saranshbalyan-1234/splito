@@ -28,3 +28,18 @@ test('the production build holds no why-did-you-render', () => {
       expect(text, `${f} contains ${marker}`).not.toContain(marker)
   }
 })
+
+/*
+ * F-250 acc 6: production has no dev sign-in. The dev AuthClient, its codes banner, the dev-account button and the e2e
+ * hooks are folded out of the production export; the test strings are what only those files contain.
+ */
+test('the production build holds no dev sign-in', () => {
+  const dist = join(__dirname, '..', 'dist-pwa')
+  const walk = (dir: string): string[] =>
+    readdirSync(dir, {withFileTypes: true}).flatMap(e => (e.isDirectory() ? walk(join(dir, e.name)) : [join(dir, e.name)]))
+  for (const f of walk(dist).filter(f => /\.js$/.test(f))) {
+    const text = readFileSync(f, 'utf8')
+    for (const marker of ['devpassword', 'dev@splito.test', 'Continue with a dev account', 'seedAccount', 'seedLegacy', 'Dev build: code for'])
+      expect(text, `${f} contains ${marker}`).not.toContain(marker)
+  }
+})

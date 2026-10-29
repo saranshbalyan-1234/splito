@@ -27,6 +27,7 @@ import {Message_Stroke2_Corner0_Rounded as MessageIcon, PeopleGroup_Stroke2_Corn
 import * as Layout from '#/components/Layout'
 import {useTabLabels} from '#/components/settings/NavigationEditor'
 import * as Prompt from '#/components/Prompt'
+import {requestLogOut} from '#/features/account/LogOutPrompt'
 import {SETTINGS_SECTIONS, type SettingsSectionId, useSectionInfo} from '#/components/settings/sections'
 import * as Toast from '#/components/Toast'
 import {SignIn_Stroke2_Corner0_Rounded as SignInIcon} from '#/components/icons/Auth'
@@ -59,7 +60,7 @@ export function SettingsScreen() {
   const summary = useSectionSummary()
   const resetPrompt = Prompt.usePromptControl()
   const me = useMe()
-  const {hasSession} = useSession()
+  const {currentAccount} = useSession()
   const note = (useRoute().params as {note?: string} | undefined)?.note
   const openFeedback = useOpenFeedback()
   const exportSheet = useExportSheet()
@@ -84,29 +85,6 @@ export function SettingsScreen() {
           <SectionTitle>
             <Trans>Account</Trans>
           </SectionTitle>
-          {!hasSession && (
-            <SettingsList.LinkItem
-              testID="settings-sign-in"
-              to="/signin"
-              label={l`Sign in`}
-              contentContainerStyle={[a.py_md]}>
-              <SettingsList.ItemIcon icon={SignInIcon} />
-              <View style={[a.flex_1, a.gap_2xs]}>
-                <SettingsList.ItemText>
-                  <Trans>Sign in</Trans>
-                </SettingsList.ItemText>
-                <Text
-                  numberOfLines={1}
-                  style={[
-                    a.text_sm,
-                    a.leading_snug,
-                    t.atoms.text_contrast_medium,
-                  ]}>
-                  <Trans>Back up and share with friends</Trans>
-                </Text>
-              </View>
-            </SettingsList.LinkItem>
-          )}
           <SettingsList.LinkItem
             testID="settings-profile"
             to="/profile"
@@ -127,7 +105,7 @@ export function SettingsScreen() {
                   a.leading_snug,
                   t.atoms.text_contrast_medium,
                 ]}>
-                <Trans>Your profile · saved on this device</Trans>
+                {currentAccount?.email ?? currentAccount?.phone ?? l`Your profile`} · <Trans>saved on this device</Trans>
               </Text>
             </View>
           </SettingsList.LinkItem>
@@ -140,6 +118,12 @@ export function SettingsScreen() {
               <Trans>Friends and invites</Trans>
             </SettingsList.ItemText>
           </SettingsList.LinkItem>
+          <SettingsList.PressableItem testID="settings-log-out" destructive label={l`Log out`} onPress={requestLogOut}>
+            <SettingsList.ItemIcon icon={SignInIcon} />
+            <SettingsList.ItemText>
+              <Trans>Log out</Trans>
+            </SettingsList.ItemText>
+          </SettingsList.PressableItem>
           <SettingsList.Divider />
           <SectionTitle>
             <Trans>Preferences</Trans>

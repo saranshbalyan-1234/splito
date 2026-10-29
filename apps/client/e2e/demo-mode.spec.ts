@@ -126,7 +126,7 @@ test('turning demo mode off erases the demo database and every key it kept; turn
   await closeDemo(page)
   await expect.poll(() => databases(page)).not.toContain('splito-demo')
   // The real database is still there.
-  expect(await databases(page)).toContain('splito')
+  expect(await databases(page)).toContain('splito-acct-dev')
 
   await openDemo(page)
   expect(await databases(page)).toContain('splito-demo')

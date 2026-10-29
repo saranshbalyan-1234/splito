@@ -4,7 +4,8 @@ Blocking items that must be closed before any public release (public web deploy,
 
 - [ ] **Replace the logo.** The current mark (`assets-owner/logo-owner-provided.svg`) is Bluesky's butterfly trademark, used at the owner's request for development only. Bluesky's ASSETS.md excludes its marks from the MIT licence and app stores reject look-alike apps. Replace it with an original mark in the single logo source file/component and regenerate the brand kit (`apps/client/scripts/brand.ts`).
 - [ ] Remove dev-only switches from release builds (Demo mode, EXPO_PUBLIC_TOUR) - verify they are inert in production.
-- [ ] Real authentication and sync live (no "arrives with sync" placeholders shipped as features).
+- [ ] Real authentication and sync live (no "arrives with sync" placeholders shipped as features). Set `EXPO_PUBLIC_AUTH_API_URL` (https) for every release build, in `render.yaml`'s web build command and the `stage`/`prod` EAS profiles: `auth-config.js` refuses to build without it (F-250). Replace the `unavailable` AuthClient with the HTTP client; Google and Apple sign-in (the buttons say "arrives with sync" today).
+- [ ] After the real auth API exists: re-enable the update-toast e2e (`e2e-pwa/pwa.spec.ts`, skipped because a production build has no dev sign-in), and show the update toast signed out too.
 - [ ] Set `EXPO_PUBLIC_FEEDBACK_EMAIL` (`FEEDBACK_EMAIL` in `#/env`; support address for "Send by email" feedback; it defaults to `feedback@splito.app`, which must be a real mailbox before release) and the backend feedback endpoint.
 
 ## Deep links (F-254; hosts and paths live in `apps/client/link-hosts.json`)
@@ -12,7 +13,7 @@ Blocking items that must be closed before any public release (public web deploy,
 - [ ] Backend/domain: host `/.well-known/apple-app-site-association` (applinks for the app id, `paths` = the `appPaths` of `link-hosts.json`, nothing for auth callbacks or downloads) and `/.well-known/assetlinks.json` (package `app.splito`, the release signing SHA-256) on **each tier's host only** (`dev.splito.app`, `stage.splito.app`, `splito.app`). Each build claims only its own tier's host (`EXPO_PUBLIC_TIER`, default `prod`; `app.config.ts`, checked by `src/lib/links/appConfig.test.ts`). The web deploy keeps dot-paths.
 - [ ] Build with the `eas.json` profile of the tier (`dev`, `stage`, `prod`): each sets `EXPO_PUBLIC_TIER`, which picks the claimed host and the host in the links the app makes (invites, copy link). An unknown value fails the build. `appPaths` claims `/` (Home alone, exact on Android) and `/notifications`; keep downloads and auth callbacks out of the AASA `paths` and `assetlinks`.
 - [ ] Deferred link after install (`src/lib/links/deferred.ts` is a stub): needs the backend claim endpoint; no third-party SDK.
-- [ ] Signed-out resume (`src/lib/links/intent.ts`) switches on with F-250 (`isSignInRequired`).
+- [x] Signed-out resume (`src/lib/links/intent.ts`) is on with F-250 (`isSignInRequired`); run the cold-start links of the simulator list below signed out as well (native not run).
 
 ### Simulator and emulator checks (run by hand on a dev build, cold and warm)
 

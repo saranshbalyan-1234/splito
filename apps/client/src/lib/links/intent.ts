@@ -1,16 +1,26 @@
+import {isSignedIn} from '#/state/session'
 import {device} from '#/storage'
+import {buildPath, resolveLink} from './resolve'
 
 /**
- * Sign-in preserves intent (ARCHITECTURE 14, F-254): a link opened signed out keeps its relative target, the
- * person signs in (intro, Continue), and the app resumes there. Splito has no sign-in gate yet (F-250), so
- * `isSignInRequired` is false and nothing is held; the store, the hook and `openLink` are ready for it.
+ * Sign-in preserves intent (ARCHITECTURE 14, F-254, F-250): a link opened signed out keeps its relative target, the
+ * person goes through the intro and Continue, and the app resumes there (`LinkHost`). Sign-in is required, so every
+ * link is held until someone is signed in.
  * ponytail: one slot; a second link before sign-in replaces the first. Upgrade: none needed.
  */
-export const isSignInRequired = () => false
+export const isSignInRequired = () => !isSignedIn()
 
 /** Keeps a link's path for after sign-in. Tokens and codes in it are scrubbed from logs by `#/logger`. */
 export function holdLinkIntent(path: string) {
   device.set(['linkIntent'], path)
+}
+
+/** A link opened while signed out (the address the page loaded with, a cold-start or later URL): held when it names somewhere inside the app. Home and the intro itself are not "somewhere". */
+export function holdSignedOutLink(input: string) {
+  const {isKnown, target} = resolveLink(input)
+  if (!isKnown || target.name === 'Welcome') return
+  const path = buildPath(target)
+  if (path !== '/') holdLinkIntent(path)
 }
 
 /** The held link, once: reading it clears it. */

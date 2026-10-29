@@ -12,6 +12,7 @@ export default defineConfig({
   testDir: 'perf',
   timeout: 600_000,
   workers: 1,
-  use: {baseURL: `http://localhost:${PORT}`, channel: 'chrome'},
+  globalSetup: './e2e/globalSignIn.ts',
+  use: {baseURL: `http://localhost:${PORT}`, channel: 'chrome', storageState: `.auth/perf-${PORT}.json`},
   webServer: {command: `npx --yes serve@14 -s ${DIST} -l ${PORT}`, port: PORT, reuseExistingServer: false},
 })

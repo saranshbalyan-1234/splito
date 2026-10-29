@@ -69,13 +69,18 @@ import {
   type Projection,
   type Query,
 } from '#/data/projections'
-import {useData} from '#/data/StoreProvider'
+import {useData, useMaybeData} from '#/data/StoreProvider'
 
 import {directory} from '#/data/friends'
 import {useTickEveryMinute} from '#/state/shell/tick-every-minute'
 
 export function useStore(): Store {
   return useData().store
+}
+
+/** The store, or null signed out (no store is open then). */
+export function useMaybeStore(): Store | null {
+  return useMaybeData()?.store ?? null
 }
 
 export function useMutationCtx(): MutationCtx {

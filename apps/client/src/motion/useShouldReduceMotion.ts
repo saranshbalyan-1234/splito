@@ -2,7 +2,7 @@ import {useSyncExternalStore} from 'react'
 import {PREFS, prefFrom, type Store} from '@splito/sync'
 
 import {useA11y} from '#/state/a11y'
-import {useStore} from '#/data/hooks'
+import {useMaybeStore} from '#/data/hooks'
 import {entitiesQuery, projectionFor} from '#/data/projections'
 
 type Source = {
@@ -12,6 +12,8 @@ type Source = {
 }
 
 const sources = new WeakMap<Store, Source>()
+/* Signed out there is no preference to read: the OS setting alone decides. */
+const NO_STORE: Source = {value: PREFS.motion.default, listeners: new Set(), subscribe: () => () => {}}
 
 /*
  * One motion value for the whole app, not one subscription per animated
@@ -46,11 +48,12 @@ function motionSource(store: Store): Source {
 /**
  * True when animation should be skipped or replaced by a static frame: the OS
  * reduce-motion setting is on, or the Animations preference is 'reduced' or
- * 'off'. Must be used inside StoreProvider.
+ * 'off'. Works signed out too (the intro and Continue screens), where only the OS setting counts.
  */
 export function useShouldReduceMotion(): boolean {
   const {reduceMotionEnabled} = useA11y()
-  const src = motionSource(useStore())
+  const store = useMaybeStore()
+  const src = store ? motionSource(store) : NO_STORE
   const motion = useSyncExternalStore(src.subscribe, () => src.value)
   return reduceMotionEnabled || motion !== 'full'
 }

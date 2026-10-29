@@ -31,8 +31,8 @@ export type RootStackParams = {
   /** The old Search page's link: opens the Search & Ask drawer with `q` typed in (`/search?q=dinner`). */
   Search: {q?: string} | undefined
   SettingsSection: {section: string}
-  /** Settings > Account: honest until the auth backend exists. */
-  SignIn: undefined
+  /** The intro slides, replayed from Settings > Help (F-249); signed out they are the host's own, same address. */
+  Welcome: {step?: string} | undefined
   /** Settings > Friends and invites; `section: 'links'` scrolls to the invite links. */
   FriendsAndInvites: {section?: 'links'} | undefined
   Person: {personId: string; groups?: string}

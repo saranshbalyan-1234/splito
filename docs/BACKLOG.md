@@ -553,7 +553,7 @@ Found 2026-10-30 by the tap-speed work: § 26.9's direction-aware slide between 
 
 Nothing of the app is visible signed out: only the welcome tour, the logged-out flow, language and legal pages. The local database opens per account only with a session; offline after sign-in; deep links resume after sign-in.
 
-- **Effort** M · **Impact** 10 · **Backend** front end now (dev account), real with F-2102 · **Status** todo, Wave C (right after F-249) · **Deps** F-225, F-249, F-2102 (production)
+- **Effort** M · **Impact** 10 · **Backend** front end now (dev account), real with F-2102 · **Status** built on feat/wC-F249-F250-auth (unmerged, 2026-10-30): front end against the dev AuthClient; criteria 1-4, 6-10 met on web (e2e `auth.spec.ts`, `authConfig.spec.ts`), 5 (offline) partly (the sign-in screens say they need a connection; the app opens offline from the device copy of the session); native not run; Google/Apple are buttons only; real auth waits for F-2101/F-2102 · **Deps** F-225, F-249, F-2102 (production)
 - **Prefs** -
 - **Acceptance**
   1. Signed out, every route (including deep links and `?drawer=` URLs) shows the logged-out flow; no store is opened and no ledger data is in the DOM (e2e asserts zero store reads before sign-in).
@@ -571,7 +571,7 @@ Nothing of the app is visible signed out: only the welcome tour, the logged-out 
 
 First-launch tour of up to 5 slides (what Splito is and how to use it) with Skip / Next / Get started, then setup (F-211); first-use tips after it. Bluesky Pager and ProgressGuide, Expensify FeatureTraining (`src/components/FeatureTrainingModal.tsx`) and onboarding header (`src/components/OnboardingHeader.tsx`); illustrations original (never Expensify's or Bluesky's artwork).
 
-- **Effort** M · **Impact** 8 · **Backend** no · **Status** todo, Wave C (first, before F-211) · **Deps** F-1712 (Lottie), F-203 (Pager)
+- **Effort** M · **Impact** 8 · **Backend** no · **Status** built on feat/wC-F249-F250-auth (unmerged, 2026-10-30): static SVG art and `ScreenTransition` + touch swipe in place of Lottie and the native Pager; `onboarding.tourSeen` is a device-storage key (the database is closed while signed out); criteria 1-4 met on web (e2e `welcome.spec.ts`, `introReplay.spec.ts`), 5 (tips) is F-253's, 6 measured · **Deps** F-1712 (Lottie), F-203 (Pager)
 - **Prefs** `onboarding.tourSeen` (device, in the database), `tips.enabled` (on), `tips.seen` (device)
 - **Acceptance**
   1. A fresh install opens the tour; slides as § 26.2 with titles and one sentence each, en and hi, no claim of sync or features not built.
