@@ -3057,7 +3057,7 @@ Use Claude to turn free-form questions into structured queries the on-device eng
   5. When the backend exists, calls switch to the backend proxy and the per-device key path is removed (tracked in the backend batch).
   6. Model ids and API usage follow the current Claude API docs (latest models) at build time.
 
-### F-262 Fix the `tab, 50 ms, tab` tap-latency red `spec: owner § 26.9 (decisions 150-152), found in the F-250 perf run`
+### F-263 Fix the `tab, 50 ms, tab` tap-latency red `spec: owner § 26.9 (decisions 150-152), found in the F-250 perf run`
 
 `perf/tapLatency.spec.ts` "tab, 50 ms, tab" at CPU x1 fails the 100 ms budget (188 to 244 ms, one long task of 134 to 143 ms; once "result never showed" on `/activity`): a tap on Analytics, then a tap on Activity 50 ms later. It is not from F-250: pristine `bf82d1d` (the base of that branch), built and run in a clean worktree on the same machine, fails identically (189 ms, long task 143 ms). Likely the first Analytics mount (a long task) landing between the two taps.
 
