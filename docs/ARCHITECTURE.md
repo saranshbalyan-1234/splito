@@ -1651,6 +1651,11 @@ expands once I click". *Where:* `screens/People`, `screens/Groups`, `screens/Gro
   - **Friends header** gets its list search back (owner 91, F-1414) beside Filters.
   *Why:* "ui issues" (screenshot: Invites sent above the Overview, "You are o..." and "₹307,786.(" cut off,
   uneven cards, red dots on invite rows, a friend row with two lines of chips and amounts under the FAB).
+- **Amounts in a row are always vertically centred** (owner 130): in every list row with an amounts column
+  (friends, groups, history, right-column rows), the amounts sit centred on the row's vertical middle whether
+  they are one line, two or more, and the avatar and the name block are centred the same way; never
+  top-aligned. *Why:* "how much I owe or these things should always be vertically center, whether it's one row
+  or two rows or any number of rows".
 - **People (Friends) and Groups both start with an "Overview" section:** one card per currency, "You are owed"
   / "You owe" (never summing currencies), a counts line ("6 friends - 2 settled" / "3 groups - 1 settled"),
   and an "Analytics >" link. Each group row shows your balance in that group per currency.
@@ -2086,6 +2091,14 @@ add anyway (only for you)"; "also i should be able to select from contacts". *Wh
   *Why:* "add an option for disputes as well, think about it properly"; "should we calculate disputed expense
   or wait until they are resolved".
 
+- **Notifications: one switch for money, one for comments** (owner 131; built with F-251). Settings >
+  Notifications has "Payments" (one switch for both new expenses that include me and payments to or from me;
+  replaces the separate "New expenses" and "Payments" switches, `notify.expense` folds into `notify.payment`,
+  an old "off" on either reads as off), "Comments" (`notify.comments`, on: a comment or @mention on an expense or
+  payment I am in), "Invites" and "Reminders I set". Like the others, Comments only notifies once sync exists
+  (§ 0 rule 6), and the page says so. *Why:* "new expense and payment should be one, make it payment, add one
+  more notification for comments".
+
 ### 26.21 Offline web app (service worker and PWA)
 
 *Why:* "also add service worker for cache and pwa". *Where:* `apps/client/web/`, export post-step.
@@ -2245,6 +2258,8 @@ Every owner decision, in the order it was made (all 2026-10-26). "Replaced" name
 | 127 | "navigation changes reflect on mobile only, it should be same on desktop as well" | Settings > Navigation drives the bottom bar, the rail and the desktop sidebar alike (same items, same order); items turned off go under "More" at the end of the sidebar/rail; the drawer follows the same order | § 26.3 | Desktop and rail always showed the full list |
 | 128 | "remove this, its not needed" (Language menu switch); "customization are needed, but not forcefully, only whats needed" | Settings only where people genuinely differ; no switches for small UI details or duplicates; Language menu switch removed (dropdown always shown); F-251 prunes the rest | § 26.1 | Everything customizable |
 | 129 | "remember, we need to make this app simple with all the features and customization" | Simple first: every feature kept, each screen shows only what the moment needs, power features one tap deeper, good defaults, short copy, no clutter; reviews check for clutter | § 26.1 | - (complements 128) |
+| 130 | "how much i owe or these things should always be vertically center, whether its one row or two rows or any number of rows" | Row amounts (and avatar, name block) are vertically centred, never top-aligned | § 26.12 | Friend rows top-aligned the first net on the name line |
+| 131 | "new expense and payment should be one i guess, make it payment, add one more notification for comments" | One "Payments" notification switch covers new expenses and payments; new "Comments" switch | § 26.20 | Separate New expenses and Payments switches; no comments switch |
 
 New decisions follow § 0 rule 9: rewrite the rule in its topic so only the current truth remains, then add a
 row here.
