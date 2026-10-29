@@ -1792,6 +1792,17 @@ One Settings page (`/settings/friends`) that manages friends and invites. Reques
 
 Everything a group trip needs, from first booking to closing the books.
 
+### F-705 Trip location ("Where?") `spec: owner § 26.12 (decision 182)`
+
+Trip groups ask where the trip is: an optional plain-text place on New and Edit group, shown and searchable.
+
+- **Effort** S · **Impact** 6 · **Backend** no (synced with the group in M2) · **Status** in progress, Wave C · **Deps** -
+- **Prefs** -
+- **Acceptance**
+  1. "Where? (optional)" shows for Trip only, beside the dates; saved as `group.location` (trimmed, null when empty) through createGroup / updateGroup with history and outbox.
+  2. Group row and header read "Trip · Goa · 12-18 Mar" (parts that are missing drop out); search finds the group by its location; CSV has a Location column.
+  3. Switching type away from Trip hides the field and keeps the value; demo trips have locations; en + hi; e2e at 390 and 1440.
+
 ### F-701 Trip kitty v2: multi-currency, holder hand-off, cash count `spec v2`
 
 Several currencies in one pot, named holder with recorded hand-off, "Count the kitty" turning gaps into unrecorded spend, top-ups, card kitty, leftover return.

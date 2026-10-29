@@ -2036,6 +2036,13 @@ expands once I click". *Where:* `screens/People`, `screens/Groups`, `screens/Gro
   Payment rules are reached from the header overflow (§ 26.4). testIDs `friends-filters`, `groups-balances`,
   `group-tab-balances`.
 
+- **A trip asks where it is** (owner 182): New group and Edit group show "Where? (optional)" for the Trip type
+  only, beside the trip dates: one plain text field ("Goa", "Lisbon & Sintra"), offline, no map or place search
+  (F-313 adds those online later). It is saved on the group (`location`), shown with the type and dates ("Trip ·
+  Goa · 12-18 Mar") on the group row and the group header, searchable as a place (§ 26.19 "places"), and carried
+  into the CSV. Changing the type away from Trip keeps the value hidden, not erased. Every demo trip has one.
+  *Why:* "for trip ask for location as well".
+
 ### 26.13 Expenses and itemize
 
 *Why:* "an expense can be one expense or with multiple expense, like dinner $100, but can be divided into
@@ -2698,6 +2705,7 @@ Every owner decision, in the order it was made (all 2026-10-26). "Replaced" name
 | 179 | "even if you go to main screen from some links, it should show back button, in case you dont go directly from tabs" | A main screen opened from a link (See all, cards, results, notifications, deep links) is a pushed page with Back to the origin; the tab itself gives the plain tab screen | § 26.3 | Links switched tabs with no way back |
 | 180 | Assistant ruling after the F-250 review (owner asleep, "take your own decisions"; owners 164/165 review the front end on Render first) | Render builds a "preview" tier: labelled local dev account allowed, `noindex`, never on stage/prod tiers; real production refused until the auth HTTP client exists; intro keeps animated Lottie art | § 26.15 | Render built `production`, which refused the dev account and broke the deploy |
 | 181 | "name should be capitalized first letter in complete name" | Every word of a person's name starts with a capital, saved and shown through one `capitalizeName`; rest of each word as typed; groups, titles, emails unchanged | § 26.3 | Names shown exactly as typed |
+| 182 | "for trip ask for location as well" | Trip groups get an optional "Where?" text field in New/Edit group; shown with type and dates, searchable, in CSV, in demo trips | § 26.12 | Trips had name and dates only |
 
 New decisions follow § 0 rule 9: rewrite the rule in its topic so only the current truth remains, then add a
 row here.
