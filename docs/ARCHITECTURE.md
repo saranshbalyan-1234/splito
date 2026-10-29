@@ -1181,7 +1181,7 @@ labelled sidebar); **wide** = web 1300 px and up (Bluesky `gtTablet`, right colu
   theme, default currency, timezone, home tab, bottom bar, list filters and sorts, motion, reminders, privacy).
   No setting for a detail nobody changes, no switch that duplicates another control, no setting just to
   hide a small UI element: those get one good default (Bluesky's or Expensify's) and no row. Settings stays
-  short, grouped and searchable; every remaining choice keeps its preferences-registry entry and its Settings
+  short and grouped (7 pages after F-251; no Settings search, none is needed at that size); every remaining choice keeps its preferences-registry entry and its Settings
   row (§ 24), and every user choice that does exist is remembered in the database (decision 90). Collections
   (cards, tabs, lists) can still be shown, hidden or reordered where people really differ. *Why:* "customization
   are needed, but not forcefully, only whats needed"; "remove this, its not needed" (the "Language menu"
@@ -1840,7 +1840,7 @@ built yet.
   feedback is kept in "Your feedback" with its status. Until the backend feedback endpoint exists, Send saves it
   on the device (status "Saved on this device") and offers "Send by email" (a prefilled email draft to the
   support address, `FEEDBACK_EMAIL`, a release-checklist item); once the backend exists it goes through the
-  outbox. Preference "Shake to send feedback" (phones, default off).
+  outbox. No shake-to-send preference (removed by F-251, owner 128).
 
 - **Sign-in is required: without an account nothing of the app is visible** (owner 125; replaces "signing in
   is optional" and F-211's zero-signup start; F-250, Wave C, right after the welcome tour). Signed out, the app

@@ -462,7 +462,7 @@ Opus audits every Settings row and registry key against decision 128 (keep only 
 - **Acceptance**
   1. A written audit (docs/audit/SETTINGS-PRUNE-<date>.md) lists every row: keep / remove / merge, with the reason; owner-decided settings (decision log) are always kept.
   2. Removed rows' keys are retired without data loss or crashes on old stored values; the "every key has a Settings row" test holds.
-  3. Settings sections are no longer than needed; Settings search still finds every remaining row.
+  3. Settings has the 7 pages of docs/audit/SETTINGS-PRUNE-2026-10-29.md; old section URLs (`/settings/motion`, `/settings/lists`) redirect (owner 100); a merge whose screen control does not save its key yet is gated on that control saving it first.
   4. Demo data, e2e and Lingui (--clean) updated; screenshots of Settings before and after.
 
 ### F-250 Sign-in required (auth gate) `spec: owner § 26.15 (decision 125)`
