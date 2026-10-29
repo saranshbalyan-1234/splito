@@ -488,7 +488,7 @@ After the first sign-in and setup, a short coach-mark walkthrough over the real 
 - **Prefs** `onboarding.tourSeen` (account), `tips.enabled`
 - **Acceptance**
   1. Runs once per account right after setup lands on Home; Skip ends it; Settings > Help "Take the tour" replays it.
-  2. Each step spotlights the real control (dimmed backdrop, focus moved to it, screen reader reads the step and "Step N of 6"), adapts to phone, rail and desktop (sidebar items on desktop).
+  2. Each step keeps the real control sharp and blurs the rest of the screen (owner 143: blur + slight dim, rounded cut-out, caption beside it; web backdrop-filter, native expo-blur, plain dim under reduced transparency), focus moved to it, screen reader reads the step and "Step N of 6"), adapts to phone, rail and desktop (sidebar items on desktop).
   3. Steps that need data use empty-state wording when there is none; the tour never creates records.
   4. Never in demo mode or e2e unless its spec asks; reduced motion respected; no overlap with toasts or sheets.
   5. e2e at 390 and 1440 plus screenshots.

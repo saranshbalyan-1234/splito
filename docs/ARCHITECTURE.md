@@ -1321,7 +1321,9 @@ labelled sidebar); **wide** = web 1300 px and up (Bluesky `gtTablet`, right colu
     comes AFTER the first sign-in and setup**: a guided walkthrough over the real app (F-253), a few coach marks
     one at a time with Next / Skip: the FAB or "Add expense" ("Add your first expense"), a friend row ("Tap a
     friend to see what you owe each other"), Groups "+", Settle up, the Search & Ask icon, and Activity; each
-    mark spotlights the real control (dimmed backdrop, Bluesky/Expensify FeatureTraining style), works at every
+    mark spotlights the real control and **blurs everything else** (owner 143: a blur plus slight dim over the rest of
+    the screen, the focused control sharp with a rounded cut-out and a short caption beside it; web `backdrop-filter`,
+    native `expo-blur`; reduced transparency falls back to a plain dim), works at every
     width (sidebar items on desktop), shown once per account, replayable from Settings > Help "Take the tour".
     After the tour, small first-use tips may still appear once per screen (`tips.enabled`, "Reset tips").
   - Screen readers hear "Step 2 of 5" and each title as a heading; tap targets 44 px; works at 320 px in Hindi.
@@ -2350,6 +2352,7 @@ Every owner decision, in the order it was made (all 2026-10-26). "Replaced" name
 | 140 | "we can have signup and login as same screen only, no separate screen needed, basically no signup needed" | One Continue screen (Apple, Google, email or phone + one-time code); new accounts created in-flow by asking only what is missing; no passwords, no Create account or Forgot password screens | § 26.15 | Bluesky Create account / Sign in / password / Forgot password screens |
 | 141 | "password should be there as well" | Passwords kept inside the one Continue flow: existing account enters password (or one-time code, Forgot password); new account sets one after verifying; Google/Apple need none | § 26.15 | Code-only, no passwords (row 140) |
 | 142 | "tour is when i have logged in, and want the swipable screen before login like some app does" | Swipeable intro slides before sign-in (F-249); a separate guided coach-mark tour over the real app after first sign-in and setup (F-253) | § 26.2 | One welcome tour before setup (row 123) |
+| 143 | "tour focuses on the feature and blur other places" | Each tour step keeps the focused control sharp and blurs (plus slight dim) the rest of the screen | § 26.2 | Dimmed backdrop only |
 
 New decisions follow § 0 rule 9: rewrite the rule in its topic so only the current truth remains, then add a
 row here.
