@@ -1278,6 +1278,9 @@ labelled sidebar); **wide** = web 1300 px and up (Bluesky `gtTablet`, right colu
   fixer once before the next feature starts. *Why:* "use sonnet for all implementation and opus for decisions
   and reviews".
 - **Large work fans out** into parallel throwaway worktrees (§ 20) with judges and review. *Why:* "Fanout".
+- **The main line is `main`** (owner 147, 2026-10-29; renamed from `m1-foundation`, which stays as a git alias
+  pointing at `main` so old references still resolve). Waves assemble on an integration branch and merge into
+  `main`. *Why:* "change the main branch to main".
 - **No e2e test ever opens another app on the machine** (owner 118). Playwright runs in a real Chrome on the
   owner's Mac, which hands `mailto:`, `sms:`, `tel:`, `upi:`, WhatsApp links and the Web Share sheet to macOS apps.
   So there is no e2e test of "Send by email" (removed on every branch, 2026-10-29), and no spec clicks a share,
@@ -2378,6 +2381,7 @@ Every owner decision, in the order it was made (all 2026-10-26). "Replaced" name
 | 144 | "either signin with password otp, users choice" | Existing accounts choose Password or Code as equal options (segmented), last choice remembered per device | § 26.15 | Password first with "Use a one-time code instead" |
 | 145 | "integrate deep links properly as well" | Every URL is a deep link: Universal Links, App Links, splito:// scheme, web fallback; one resolver for push, invites, QR, reminders, shares; signed-out and demo handling; deferred link after install; simulator tests | § 26.3 | Deep links partly wired (§ 14), no universal/app links |
 | 146 | "make the home empty screen animation like other screens, there is slight diff in button and top paddings" | One empty-state layout everywhere: same illustration, motion, top spacing, one small secondary button | § 7 | Home had a title, large primary + secondary buttons and its own centring |
+| 147 | "change the main branch to main" | Main line renamed from m1-foundation to main (old name kept as an alias) | § 26.1 | m1-foundation as the main line |
 
 New decisions follow § 0 rule 9: rewrite the rule in its topic so only the current truth remains, then add a
 row here.
