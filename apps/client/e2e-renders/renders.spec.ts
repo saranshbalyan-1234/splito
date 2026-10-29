@@ -1,5 +1,5 @@
 import {existsSync, readFileSync, writeFileSync} from 'node:fs'
-import {join} from 'node:path'
+import {dirname, join} from 'node:path'
 
 import {expect, type Page, test} from '@playwright/test'
 
@@ -27,6 +27,7 @@ type Report = {
   kind: string
   keys: string[]
   detail?: string
+  chain?: string
 }
 type Win = {
   __renders: {phase: string; last: number; counts: Record<string, Counts>}
@@ -137,14 +138,12 @@ const LIBRARY_OWNERS = new Set([
   'CellRenderer',
   'VirtualizedList',
   'FlatList',
-  'Unknown',
 ])
 const LIBRARY_NAMES = new Set([
   'LocaleProvider',
   'Svg',
   'Path',
   'Circle',
-  'Unknown',
   'ScrollView',
   'FlatList',
   'VirtualizedList',
@@ -155,12 +154,34 @@ const LIBRARY_NAMES = new Set([
   'FocusScope',
   'PreventRemoveProvider',
 ])
+/*
+ * lucide's icons render an anonymous inner component ("Unknown") from a forwardRef named for the icon. Those
+ * names come from the package's own type declarations, so an anonymous component of ours is never excused.
+ */
+const LUCIDE_ICONS = new Set(
+  [
+    ...readFileSync(
+      join(
+        dirname(require.resolve('lucide-react-native')),
+        '..',
+        'types',
+        'lucide-react-native.d.ts',
+      ),
+      'utf8',
+    ).matchAll(/declare const (\w+): LucideIcon/g),
+  ].map(m => m[1]),
+)
+
 /** react-native-web's LocaleContext value: View and Text read it with useContext. */
 const isLocaleContext = (r: Report) =>
   r.kind === 'hook' && !!r.detail?.startsWith('{"direction"')
 
 function isLibrary(r: Report) {
   if (LIBRARY_NAMES.has(r.name) || isLocaleContext(r)) return true
+  if (r.name === 'Unknown' && LUCIDE_ICONS.has(r.owner)) return true
+  // An anonymous owner counts only when the component right above it is a library one (react-native-web's ScrollView renders one).
+  if (r.owner === 'Unknown' && LIBRARY_OWNERS.has(r.chain?.split('<')[1] ?? ''))
+    return true
   return r.kind === 'props' && LIBRARY_OWNERS.has(r.owner)
 }
 
@@ -209,6 +230,8 @@ test('no wasted renders, no render above the baseline', async ({page}) => {
     seen = Math.max(seen, await rows.count())
   }
   console.log(`SCROLLED rows mounted: ${seen}`)
+  // Positive control: a scroll that never reached 1,000 rows measured nothing.
+  expect(seen, 'rows mounted by the scroll').toBeGreaterThanOrEqual(1000)
 
   await phase(page, 'ask')
   await page
@@ -222,7 +245,7 @@ test('no wasted renders, no render above the baseline', async ({page}) => {
 
   const {counts, wdyr} = await page.evaluate(() => ({
     counts: (window as unknown as Win).__renders.counts,
-    wdyr: (window as unknown as Win).__wdyr,
+    wdyr: (window as unknown as Win).__wdyr ?? [],
   }))
   const phases: Baseline['phases'] = {}
   for (const [name, c] of Object.entries(counts)) {
@@ -251,11 +274,11 @@ test('no wasted renders, no render above the baseline', async ({page}) => {
     ),
   }
   writeFileSync(
-    join(__dirname, '..', 'test-results', 'renders-last.json'),
+    test.info().outputPath('renders-last.json'),
     JSON.stringify(now, null, 1),
   )
   writeFileSync(
-    join(__dirname, '..', 'test-results', 'renders-reports.json'),
+    test.info().outputPath('renders-reports.json'),
     JSON.stringify(wdyr),
   )
   console.log(
@@ -264,35 +287,53 @@ test('no wasted renders, no render above the baseline', async ({page}) => {
       .join(' ')} reports=${own.length} (library ${wdyr.length - own.length})`,
   )
 
-  if (process.env.RENDERS_BASELINE === 'write') {
-    writeFileSync(BASELINE, JSON.stringify(now, null, 1) + '\n')
-    return
-  }
-  expect(
-    existsSync(BASELINE),
-    'e2e-renders/baseline.json missing: RENDERS_BASELINE=write records it',
-  ).toBe(true)
-  const base = JSON.parse(readFileSync(BASELINE, 'utf8')) as Baseline
+  // Positive controls: with the library not loaded (or the dev JSX runtime off) there are no reports, and a gate
+  // that sees nothing passes vacuously. The app always has some, from the libraries counted above.
+  expect(wdyr.length, 'why-did-you-render reports collected').toBeGreaterThan(0)
+
+  const isWrite = process.env.RENDERS_BASELINE === 'write'
   const problems: string[] = []
-  for (const [key, n] of Object.entries(now.reports)) {
-    const allowed = base.reports[key] ?? 0
-    // A key the baseline lacks is a new wasted render: no slack. A known one may fire once more on a slow run.
-    if (n > (allowed === 0 ? 0 : Math.ceil(allowed * (1 + SLACK)) + 1))
-      problems.push(`wasted render: ${key} x${n} (baseline ${allowed})`)
-  }
-  for (const [name, p] of Object.entries(now.phases)) {
-    const b = base.phases[name]
-    if (!b) problems.push(`phase ${name} has no baseline`)
-    else {
-      for (const kind of ['mounts', 'updates'] as const)
-        if (p[kind] > Math.ceil(b[kind] * (1 + SLACK)) + 1)
-          problems.push(`${name}: ${p[kind]} ${kind}, baseline ${b[kind]}`)
-      for (const [c, n] of Object.entries(p.components)) {
-        const allowed = b.components[c] ?? MIN_COMPONENT - 1
-        if (n > Math.ceil(allowed * (1 + SLACK)) + 1)
-          problems.push(`${name}: ${c} rendered ${n}x, baseline ${allowed}`)
+  if (!isWrite)
+    expect(
+      existsSync(BASELINE),
+      'e2e-renders/baseline.json missing: RENDERS_BASELINE=write records it',
+    ).toBe(true)
+  if (existsSync(BASELINE)) {
+    const base = JSON.parse(readFileSync(BASELINE, 'utf8')) as Baseline
+    for (const [key, n] of Object.entries(now.reports)) {
+      const allowed = base.reports[key] ?? 0
+      // A key the baseline lacks is a new wasted render: no slack. A known one may fire once more on a slow run.
+      if (n > (allowed === 0 ? 0 : Math.ceil(allowed * (1 + SLACK)) + 1))
+        problems.push(`wasted render: ${key} x${n} (baseline ${allowed})`)
+    }
+    for (const [name, b] of Object.entries(base.phases)) {
+      const p = now.phases[name]
+      // A phase that counted under half of its baseline did not run the same scenario.
+      if (!p || p.mounts + p.updates < (b.mounts + b.updates) / 2)
+        problems.push(
+          `${name}: ${p ? p.mounts + p.updates : 'missing'} renders, baseline ${b.mounts + b.updates}: under half, the scenario did not run`,
+        )
+    }
+    for (const [name, p] of Object.entries(now.phases)) {
+      const b = base.phases[name]
+      if (!b) problems.push(`phase ${name} has no baseline`)
+      else {
+        for (const kind of ['mounts', 'updates'] as const)
+          if (p[kind] > Math.ceil(b[kind] * (1 + SLACK)) + 1)
+            problems.push(`${name}: ${p[kind]} ${kind}, baseline ${b[kind]}`)
+        for (const [c, n] of Object.entries(p.components)) {
+          const allowed = b.components[c] ?? MIN_COMPONENT - 1
+          if (n > Math.ceil(allowed * (1 + SLACK)) + 1)
+            problems.push(`${name}: ${c} rendered ${n}x, baseline ${allowed}`)
+        }
       }
     }
+  }
+  // Written only after the comparison, which is printed either way: a record of a regression is a decision.
+  if (problems.length) console.log(`PROBLEMS\n${problems.join('\n')}`)
+  if (isWrite) {
+    writeFileSync(BASELINE, JSON.stringify(now, null, 1) + '\n')
+    return
   }
   expect(problems, problems.join('\n')).toEqual([])
 })

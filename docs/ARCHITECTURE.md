@@ -931,8 +931,9 @@ are written; nothing records them automatically (A-037).
   React Compiler: it sees compiled and plain components alike because `babel.config.js` sends the dev JSX runtime
   through the library, with `include: [/.*/]` and hook tracking). `index.ts` / `index.web.ts` run
   `if (__DEV__) require('#/lib/whyDidYouRender')`; Metro folds it out of every production and `expo export` bundle
-  (`e2e/bundle.spec.ts` checks the e2e bundle). Each report is logged to the console and kept compactly on
-  `window.__wdyr`. The library applies its "values really changed" filter only in its own console notifier, so
+  (`e2e/bundle.spec.ts` checks the e2e export, `e2e-pwa/bundle.spec.ts` the production `build-web` output, which also holds
+  no `package.json`: the version is inlined from `app.config.ts`). Each report is kept compactly on `window.__wdyr`
+  (the gate reads it there); the console log is opt-in with `EXPO_PUBLIC_WDYR_LOG=1`. The library applies its "values really changed" filter only in its own console notifier, so
   `whyDidYouRender.ts` applies it too. Typical causes, fixed at the root: new objects/arrays/closures passed as props
   each render, unstable context values, a state setter given a new object for an equal value, a store hook returning
   a new snapshot for an equal answer (§ 9.6), list rows not memoised, selectors not narrow enough, **and a component
@@ -944,7 +945,8 @@ are written; nothing records them automatically (A-037).
   `demoMode` / `DemoMode` overwrite each other on a case-insensitive disk). One scenario: demo switched on, a cold
   launch to Home, a tab round, open Add expense, type 10 characters, close it, scroll 1,000 rows of Activity, open
   Search & Ask and ask one question. Per phase it counts renders of components being shown (`mounts`) and of mounted
-  ones (`updates`), per component. It fails on (1) any wasted-render report whose origin is our code and that
+  ones (`updates`), per component. It also fails when it saw nothing: fewer than 1,000 rows scrolled, no report at all
+  (the library or its JSX runtime is off), or a phase under half its baseline. It fails on (1) any wasted-render report whose origin is our code and that
   `e2e-renders/baseline.json` does not hold (reports that start inside react-native-web, react-native-svg, lucide,
   radix, react-navigation or VirtualizedList are counted, not failed: the list is in the spec), and (2) a phase or
   component count above the baseline by more than 10 % + 1. `RENDERS_BASELINE=write` records an improvement or a

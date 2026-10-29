@@ -54,6 +54,30 @@ whyDidYouRender(React, {
       }
     ).nextOwner?.type
     const owner = ownerType?.displayName || ownerType?.name || ''
+    // The component fibers above the owner, nearest first: tells a library's anonymous inner component from ours.
+    const chain: string[] = []
+    type Fiber = {
+      type?:
+        | {
+            displayName?: string
+            name?: string
+            type?: {name?: string}
+            render?: {name?: string}
+          }
+        | string
+      return?: Fiber | null
+    }
+    for (
+      let f = (info as {nextOwner?: Fiber | null}).nextOwner ?? null;
+      f && chain.length < 6;
+      f = f.return ?? null
+    ) {
+      const t = f.type
+      if (t && typeof t !== 'string')
+        chain.push(
+          t.displayName || t.name || t.type?.name || t.render?.name || '?',
+        )
+    }
     const r = info.reason
     // The library applies this filter only in its own console notifier: a render where any value really changed is not wasted.
     const changed = (d: unknown) =>
@@ -86,7 +110,11 @@ whyDidYouRender(React, {
     // Neither props, state nor a hook differ: the parent re-rendered and passed nothing new.
     if (!found.length) found.push({kind: 'same', keys: []})
     const detail = info.hookName ? preview(info.nextHookResult) : undefined
-    reports.push(...found.map(f => ({name, owner, ...f, detail})))
-    whyDidYouRender.defaultNotifier(info)
+    reports.push(
+      ...found.map(f => ({name, owner, ...f, detail, chain: chain.join('<')})),
+    )
+    // The console log is opt-in (EXPO_PUBLIC_WDYR_LOG=1): thousands of groups would flood the dev console and a native device.
+    if (process.env.EXPO_PUBLIC_WDYR_LOG === '1')
+      whyDidYouRender.defaultNotifier(info)
   },
 })

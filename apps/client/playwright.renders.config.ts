@@ -21,7 +21,7 @@ export default defineConfig({
     actionTimeout: 20_000,
   },
   webServer: {
-    command: `CI=1 EXPO_NO_TELEMETRY=1 EXPO_PUBLIC_ENV=e2e npx expo start --web --port ${PORT}`,
+    command: `CI=1 EXPO_NO_TELEMETRY=1 EXPO_PUBLIC_ENV=e2e npx expo start --web --port ${PORT}${process.env.RENDERS_CLEAR ? ' --clear' : ''}`,
     url: `http://localhost:${PORT}`,
     timeout: 300_000,
     reuseExistingServer: false,

@@ -19,7 +19,7 @@ No upstream code is copied. One new dev dependency and our own glue.
 | `src/lib/whyDidYouRender.ts` | Starts the library (`include: [/.*/]`, hooks on), keeps a compact copy of each report on `window.__wdyr`, and applies the "a value really changed is not wasted" filter that the library applies only in its own console notifier |
 | `babel.config.js` | `jsxImportSource` set when the caller is a dev build |
 | `playwright.renders.config.ts`, `e2e-renders/renders.spec.ts`, `e2e-renders/baseline.json` | The gate (`pnpm --filter @splito/client renders`) |
-| `e2e/bundle.spec.ts` | Production-bundle check |
+| `e2e/bundle.spec.ts`, `e2e-pwa/bundle.spec.ts` | Bundle checks: the e2e export and the production `build-web` output hold none of it |
 
 ## Findings worth knowing
 
