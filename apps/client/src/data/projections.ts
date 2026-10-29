@@ -211,7 +211,7 @@ export function historyQuery(type: EntityType, id: string): Query<HistoryRow[]> 
 }
 
 /** The Activity feed value: the newest events, and a way to ask for older ones. */
-export type ActivityFeed = ActivityState & {loadMore: () => void}
+export type ActivityFeed = ActivityState & {loadMore: (pages?: number) => void}
 
 /**
  * The Activity feed: the newest events by cursor, re-reading only the
@@ -229,8 +229,8 @@ export const activityQuery: Query<ActivityFeed> = {
   loader: (store, controls) => {
     let want = ACTIVITY_PAGE
     const track = activityTracker(store, () => want)
-    const loadMore = () => {
-      want += ACTIVITY_PAGE
+    const loadMore = (pages = 1) => {
+      want += ACTIVITY_PAGE * pages
       controls.reload()
     }
     return async change => ({...(await track(change)), loadMore})

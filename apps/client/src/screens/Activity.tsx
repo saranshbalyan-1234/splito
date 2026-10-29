@@ -1,5 +1,5 @@
 // Adapted from bluesky-social/social-app@4e4ad9c (MIT) - src/view/screens/Notifications.tsx
-import {useDeferredValue, useEffect} from 'react'
+import {useDeferredValue, useEffect, useMemo} from 'react'
 import {View} from 'react-native'
 import Animated, {LayoutAnimationConfig, ZoomIn, ZoomOut} from 'react-native-reanimated'
 import {Plural, Trans, useLingui} from '@lingui/react/macro'
@@ -92,11 +92,13 @@ export function ActivityScreen() {
   const shouldReduceMotion = useShouldReduceMotion()
   /* The tab bar follows the tap at once; the list behind it re-renders as a transition (owner 151). */
   const bodyTab = useDeferredValue(tabName)
-  const bodyTypes = useDeferredValue(types)
-  const feed = useActivityFeed({tab: bodyTab, types: bodyTypes, group})
-    const actions = useActivityActions(feed)
+  /* Deferred as a string: the types are a new array each render, which a deferred value would chase forever. */
+  const bodyTypesKey = useDeferredValue(typesToParam(types))
+  const bodyTypes = useMemo(() => readActivityParams({type: bodyTypesKey}).types ?? NO_TYPES, [bodyTypesKey])
+  const feed = useActivityFeed(bodyTab, bodyTypes, group)
+  const actions = useActivityActions(feed)
   const {snapshot, rows, hiddenCount, unreadCount, me} = feed
-  const {shown, onEndReached: showMore} = usePagedRows(`${bodyTab}|${typesToParam(bodyTypes)}|${group}`)(rows)
+  const {shown, onEndReached: showMore} = usePagedRows(`${bodyTab}|${bodyTypesKey}|${group}`)(rows)
   /* Rows already loaded appear a page at a time; past the last one, older history is read by cursor. */
   const onEndReached = () => {
     if (shown.length < rows.length) showMore()
@@ -111,7 +113,8 @@ export function ActivityScreen() {
   const isSearchingOlder = !feed.isDone && !!feed.loadMore && eventCount < MIN_LISTED && isNarrowedViewOrTab(bodyTab, bodyTypes, group)
   const loadMore = feed.loadMore
   useEffect(() => {
-    if (isSearchingOlder) loadMore?.()
+    /* Five pages at a time: each load rebuilds the window, so fewer, wider loads reach the end sooner. */
+    if (isSearchingOlder) loadMore?.(5)
   }, [isSearchingOlder, snapshot, loadMore])
 
   /* The empty state follows the tab and the filters (owner 173): it says what is missing, and a narrowed list offers the way out. */
@@ -163,7 +166,8 @@ export function ActivityScreen() {
       <Layout.Header.Sticky>
         <Layout.Header.Outer noBottomBorder sticky={false}>
           <HeaderLead />
-          {/* Balances Search & Ask on the right, so the title stays centred. */}
+          {/* Balances Search & Ask and Filters on the right, so the title stays centred. */}
+          <Layout.Header.Slot />
           <Layout.Header.Slot />
           <Layout.Header.Content>
             <Layout.Header.TitleText>

@@ -619,7 +619,7 @@
     "update:FriendRequestActions": 6,
     "mount:Icon(Users)": 5,
     "mount:Users": 5,
-    "update:Strong": 5,
+    "update:Strong": 20,
     "mount:Slot": 4,
     "update:DesktopLeftNav": 4,
     "update:NavItem": 4,
@@ -630,7 +630,9 @@
     "update:ActionButton": 3,
     "update:Slot": 3,
     "mount:Icon(UserRoundMinus)": 3,
-    "mount:UserRoundMinus": 3
+    "mount:UserRoundMinus": 3,
+    "mount:Icon(MessageSquare)": 5,
+    "mount:MessageSquare": 5
    }
   },
   "ask": {

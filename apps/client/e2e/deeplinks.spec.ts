@@ -392,6 +392,7 @@ const PAGE_PATHS: Record<string, (ids: Ids, section?: string) => string> = {
   People: () => '/',
   Groups: () => '/groups',
   Analytics: () => '/analytics',
+  Activity: () => '/activity',
   Person: ({person}) => `/people/${person}`,
   Group: ({group}) => `/groups/${group}`,
   Profile: () => '/profile',

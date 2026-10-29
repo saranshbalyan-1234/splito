@@ -2,6 +2,7 @@ import {useMemo} from 'react'
 import {plural} from '@lingui/core/macro'
 import {
   type ActivityEvent,
+  type ActivityTypeId,
   type ActivityState,
   type Entity,
   type Expense,
@@ -17,7 +18,7 @@ import {
   ALL_ACTIVITY,
   buildRows,
   EMPTY_FEED_STATE,
-  type FeedFilter,
+  type ActivityTab,
   type FeedState,
 } from './feed'
 
@@ -68,7 +69,11 @@ const FEED_KEY: ['activityFeed'] = ['activityFeed']
  * until the first load. `update` changes the marks from their latest stored
  * value, so quick successive actions never overwrite each other.
  */
-export function useActivityFeed(filter: FeedFilter = ALL_ACTIVITY) {
+export function useActivityFeed(
+  tab: ActivityTab = ALL_ACTIVITY.tab,
+  types: readonly ActivityTypeId[] = ALL_ACTIVITY.types,
+  group?: string,
+) {
   const {actor: me} = useMutationCtx()
   const tz = useTimeZone()
   const loaded = useActivityState()
@@ -78,21 +83,18 @@ export function useActivityFeed(filter: FeedFilter = ALL_ACTIVITY) {
   const update = (fn: (s: FeedState) => FeedState) =>
     setStored(fn(device.get(FEED_KEY) ?? EMPTY_FEED_STATE))
   const events = snapshot?.events ?? NO_EVENTS
-  /* The filter is rebuilt each render by its caller, so the memo keys on its parts. */
-  const {tab, group} = filter
-  const typesKey = filter.types.join()
+  /* The parts are primitives or a memoized list, so the result stays one object between renders (the rows' actions depend on it, 17). */
   const feed = useMemo(
     () =>
       buildRows(
         events,
         state,
         me,
-        {tab, types: filter.types, group},
+        {tab, types, group},
         tz,
         id => snapshot?.expenses.get(id)?.data.groupId,
       ),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [events, state, me, tab, typesKey, group, tz, snapshot],
+    [events, state, me, tab, types, group, tz, snapshot],
   )
   return {
     me,
@@ -103,7 +105,7 @@ export function useActivityFeed(filter: FeedFilter = ALL_ACTIVITY) {
     loadMore: loaded?.loadMore,
     isDone: loaded?.isDone ?? false,
     /** A type or group narrows the list: "Mark all read" then marks only what is listed. */
-    isNarrowed: filter.types.length > 0 || !!filter.group,
+    isNarrowed: types.length > 0 || !!group,
     ...feed,
   }
 }

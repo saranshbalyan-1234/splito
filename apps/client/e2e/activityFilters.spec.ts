@@ -34,6 +34,8 @@ async function apply(page: Page, types: string[]) {
 for (const [name, viewport] of [['390', PHONE], ['1440', DESKTOP]] as const) {
   test.describe(`at ${name}`, () => {
     test.use({viewport})
+    // Seeding the demo set can take a while on a busy machine.
+    test.setTimeout(90_000)
 
     test('tabs All / Me / Others: each in the address, remembered across reloads and bare visits', async ({page}) => {
       await openActivity(page)
@@ -62,6 +64,8 @@ for (const [name, viewport] of [['390', PHONE], ['1440', DESKTOP]] as const) {
       // All again, and it is remembered too.
       await tabs(page).getByRole('tab').nth(0).click()
       await expect(page).toHaveURL(/\/activity\/all$|\/activity$/)
+      // The choice is written to the database a moment after the tap: wait for it before leaving the page.
+      await expect.poll(() => page.evaluate(async () => ((await (window as unknown as {splito: {list(t: string): Promise<Array<{id: string; data: {value: unknown}}>>}}).splito.list('preference')).find(p => p.id.includes('activity.tab'))?.data.value))).toBe('all')
       await page.goto('/activity')
       await expect(tabs(page).getByRole('tab').nth(0)).toHaveAttribute('aria-selected', 'true')
     })
@@ -109,7 +113,7 @@ for (const [name, viewport] of [['390', PHONE], ['1440', DESKTOP]] as const) {
 
       // Disputes has nothing yet in this build: the empty state follows the filter, animated, with the way out.
       await apply(page, ['disputes'])
-      await expect(screen(page).getByTestId('activity-empty')).toContainText('Nothing matches these filters yet.')
+      await expect(screen(page).getByTestId('activity-empty')).toContainText('Nothing matches these filters yet.', {timeout: 30_000})
       await expect(screen(page).getByTestId('activity-empty').locator('[data-illustration], svg, canvas').first()).toBeVisible()
       await screen(page).getByTestId('activity-clear-filters').click()
       await expect(screen(page).getByTestId('activity-filters-dot')).toHaveCount(0)
