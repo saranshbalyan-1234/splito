@@ -240,5 +240,19 @@ for (const [label, viewport] of [
       await openLink(page, 'https://splito.app/analytics')
       await expect(page.getByTestId('screen-analytics')).toBeVisible()
     })
+
+    test('a refresh on a picker URL restores the draft under it (the composer keeps one per place)', async ({page}) => {
+      await openApp(page)
+      await page.goto('/expense/new')
+      await page.getByTestId('expense-title').fill('Dinner at Thalassa')
+      await page.getByTestId('amount-currency').click()
+      await expect(page.getByTestId('currency-dialog')).toBeVisible()
+      await expect.poll(() => here(page)).toBe('/expense/new/currency')
+      await page.reload()
+      await expect(page.getByTestId('currency-dialog')).toBeVisible()
+      await page.getByTestId('sheet-close').last().click()
+      await expect.poll(() => here(page)).toBe('/expense/new')
+      await expect(page.getByTestId('expense-title')).toHaveValue('Dinner at Thalassa')
+    })
   })
 }

@@ -500,7 +500,7 @@ After the first sign-in and setup, a short coach-mark walkthrough over the real 
 
 Every F-241 URL opens the right screen from anywhere: iOS Universal Links, Android App Links, `splito://`, web fallback; one resolver for push, invites, QR, reminders, shares; signed-out resume, demo handling, deferred link after install.
 
-- **Effort** M · **Impact** 9 · **Backend** partly (hosted AASA and assetlinks, deferred-link handoff) · **Status** todo, with F-241 right after Wave B · **Deps** F-241, F-619, F-2201 (push taps), F-250
+- **Effort** M · **Impact** 9 · **Backend** partly (hosted AASA and assetlinks, deferred-link handoff) · **Status** client part built on feat/wC-F241-254 (unmerged): resolver + route table test, tier claims in `app.config.ts`, demo gate, signed-out intent store (stub until F-250), deferred link stub, simulator commands in RELEASE_CHECKLIST (native not run); hosted files and the deferred hand-over wait for the backend · **Deps** F-241, F-619, F-2201 (push taps), F-250
 - **Prefs** -
 - **Acceptance**
   1. A route table test parses every route from `https://splito.app/...` and `splito://...` to the same screen and params; unknown paths go Home.
@@ -2880,7 +2880,7 @@ Fix every finding of the 2026-10-28 UX audit marked "F-240" (1 critical, 6 major
 
 Copy any URL and land on the same screen: pages, in-page tabs, sheets and popups, and the list state that matters are all routes (web path/query, native deep link), following Expensify's route-per-modal model on Bluesky's navigator. Queued right after the Wave B merge and F-228a.
 
-- **Effort** L · **Impact** 9 · **Backend** no · **Status** todo · **Deps** Wave B merged, F-228a
+- **Effort** L · **Impact** 9 · **Backend** no · **Status** built on feat/wC-F241-254 (unmerged), web verified (e2e `deeplinks.spec.ts` at 390 and 1440); native opens the page then the sheet through a queue, not run · **Deps** Wave B merged, F-228a
 - **Prefs** -
 - **Acceptance**
   1. A route table in `routes.ts` covers every page, tab (e.g. `/groups/:id/balances`, `/activity/others`), sheet (e.g. `/expense/new?group=:id`, `/people/:id/record-payment`, `/groups/:id/settle`, `/settings/regional/timezone`, `/search?q=&mode=ask`), every drawer (side drawer `?drawer=menu`, Search & Ask), pickers inside sheets as sub-routes (e.g. `/expense/new/currency`; decision 101) and list state as query params (filters, sort, showSettled, scope, period, currency); a test asserts every sheet and tab component has a route.
