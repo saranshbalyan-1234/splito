@@ -1691,20 +1691,20 @@ expands once I click". *Where:* `screens/People`, `screens/Groups`, `screens/Gro
     Groups made before roles existed treat their creator as admin. Server enforcement follows with F-2108. The old `archived` flag reads as Inactive (read-time adapter, no schema change).
   *Why:* "add archive group option as well, when archived it stops showing in main view and no expense can be
   added", then "or make it as active inactive and hide show instead of archive".
-- **Settled is hidden by default; every choice is remembered in the database** (owner 90; the Show settled part and
-  the saved Sort / Include groups / groups Sort are [Built], F-1413; the rest of the list state is not yet).
-  "Settled" means there have been balances and every part is zero now: a friend or group with no records yet is new, not
-  settled, and is never hidden. Hidden settled rows still count in the counts line, the Overview and the totals. The
-  Show = Settled filter and search still find them. Apply on the Home filter sheet also saves `peopleSort` and
-  `includeGroupsDefault` (owner 128: the Settings rows that set them are removed), and on the Groups sheet `groups.sort`. Friends and groups that are fully settled (every currency at zero) are hidden from the Home /
-  People and Groups lists by default; each filter sheet gets a "Show settled" switch (default off) and the
-  counts line keeps saying "N settled" so nothing looks lost. Balances and totals are unaffected. Every choice a
-  user makes (filters, sorts, Show settled, Include groups, currency, scope chips, tab choices) is stored in the
-  local database as a preference and is still applied after a reload or restart, instead of living in screen
-  state. Device-scope preferences also move from MMKV / localStorage into the database's preferences store
-  (device scope = not synced, but in the database); only secrets stay in the OS secure store, and a boot copy
-  may mirror theme for a flash-free first paint while the database stays the source of truth. *Why:* "by default
-  hide settled, in filters option for show settled, every setting that we choose to be stored in db".
+- **Settled is hidden by default; every choice is remembered in the database** (owner 90, 112; [Built] for Show
+  settled and for the saved Sort / Include groups / groups Sort, F-1413; the rest of the list state is not yet).
+  Friends and groups that are settled up are hidden from the Home / People and Groups lists by default; each filter
+  sheet gets a "Show settled" switch (default off, preferences `people.showSettled` / `groups.showSettled`) and the
+  counts line keeps saying "N settled" so nothing looks lost. "Settled up" means nothing is open and there have been
+  records: a friend or group with no records yet is new and is never hidden. Hidden rows still count in the Overview
+  and the totals, and the Show = Settled filter and search still find them. Apply on the Home filter sheet also saves
+  `peopleSort` and `includeGroupsDefault` (owner 128: their Settings rows go), and on the Groups sheet `groups.sort`, so
+  they survive a reload. Every choice a user makes (filters, sorts, Show settled, Include groups, currency, scope
+  chips, tab choices) is stored in the local database as a preference and is still applied after a reload or restart,
+  instead of living in screen state. Device-scope preferences also move from MMKV / localStorage into the database's
+  preferences store (device scope = not synced, but in the database); only secrets stay in the OS secure store, and a
+  boot copy may mirror theme for a flash-free first paint while the database stays the source of truth. *Why:* "by
+  default hide settled, in filters option for show settled, every setting that we choose to be stored in db".
 - **Group page:** Pager tabs Expenses / Balances / Members (§ 26.9). Balances shows each member's net per
   currency, a "who owes whom" list (pairwise, from the direct-mode settlement plan) and "Settle up".
   Payment rules are reached from the header overflow (§ 26.4). testIDs `friends-filters`, `groups-balances`,

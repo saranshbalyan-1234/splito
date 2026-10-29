@@ -35,6 +35,8 @@ test('Add demo data loads a year of data in under 10 s; Remove restores what was
   await expect(page.getByTestId('settings-demo-remove')).toBeVisible()
 
   // The data shows on the screens, next to the user's own.
+  // Settled groups and friends are hidden by default (F-1413); this spec reads them, so show them.
+  await page.evaluate(() => (window as unknown as {splito: {setPref(k: string, v: unknown): Promise<void>}}).splito.setPref('groups.showSettled', true))
   await page.goto('/groups')
   await expect(page.getByTestId('group-Tokyo')).toBeVisible()
   await expect(page.getByTestId('group-Goa getaway')).toBeVisible()
@@ -70,7 +72,8 @@ test('Add demo data loads a year of data in under 10 s; Remove restores what was
 
 test('?demo=large loads the set on open', async ({page}) => {
   await page.goto('/groups?demo=large')
-  await expect(page.getByTestId('group-Coorg road trip')).toBeVisible({
+  // .first(): while the set loads, a row that moves is drawn twice for one exit animation.
+  await expect(page.getByTestId('group-Coorg road trip').first()).toBeVisible({
     timeout: 30_000,
   })
   await expect(page.getByTestId('group-Flat 4B')).toBeVisible()
