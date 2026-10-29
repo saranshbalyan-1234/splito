@@ -178,13 +178,25 @@ for (const {name, width, height} of [
       await expect(friend).toHaveCount(0)
 
       // The one Show hidden switch, in People's filters, brings back the friend ...
-      await page.getByTestId('list-filters').click()
+      await page.getByTestId('screen-people').getByTestId('list-filters').click()
       await page.getByTestId('filter-show-hidden').click()
       await page.getByTestId('sheet-save').click()
       await expect(friend).toBeVisible()
-      // ... and, being the same switch, the hidden deleted group in Groups.
+      // ... and, being the same switch, a hidden deleted group in Groups.
       await page.goto('/groups')
-      await expect(page.getByTestId('screen-groups').getByTestId('group-Rishikesh')).toBeVisible()
+      const groupRow = page.getByTestId('screen-groups').getByTestId('group-Rishikesh')
+      await expect(groupRow).toBeVisible()
+      await groupRow.click({button: 'right'})
+      await page.getByTestId(`group-${group}-more-hide`).click()
+      // Show hidden is on (one remembered switch), so it stays, now offering Unhide; switching it off removes it.
+      await expect(groupRow).toBeVisible()
+      await page.getByTestId('screen-groups').getByTestId('list-filters').click()
+      await page.getByTestId('filter-show-hidden').click()
+      await page.getByTestId('sheet-save').click()
+      await expect(groupRow).toHaveCount(0)
+      await page.reload()
+      await expect(page.getByTestId('screen-groups')).toBeVisible()
+      await expect(groupRow).toHaveCount(0)
     })
 
     test('Search lists a deleted expense struck, and the old Recently deleted link says deleted items stay in their lists', async ({page}) => {
