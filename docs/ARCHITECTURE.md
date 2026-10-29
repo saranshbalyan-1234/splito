@@ -1884,7 +1884,10 @@ built yet.
   settings). Multi-choice settings keep radio rows. *Why:* "it should be a switch not a checkbox".
 - **No demo banner** (owner 133, replaces the "persistent banner on every screen" of § 26.1 and 132's compact
   banner): demo mode shows no banner anywhere and reserves no space; it is visible only as the Settings > Data
-  "Demo mode" switch and the avatar's "Demo" state. *Why:* "don't show that banner, not needed".
+  "Demo mode" switch, the avatar's "Demo" state and **every header title ending in " - Demo"** ("Home - Demo",
+  "Groups - Demo", "Goa trip - Demo"; on phone Home, where the header shows the logo, a small "Demo" label beside
+  it; the web document title too), done once in the shared header title (owner 134). *Why:* "don't show that
+  banner, not needed"; "in all headers, write Home - Demo like this instead".
 
 ### 26.16 Analytics
 
@@ -2269,6 +2272,7 @@ Every owner decision, in the order it was made (all 2026-10-26). "Replaced" name
 | 131 | "new expense and payment should be one i guess, make it payment, add one more notification for comments" | One "Payments" notification switch covers new expenses and payments; new "Comments" switch | § 26.20 | Separate New expenses and Payments switches; no comments switch |
 | 132 | "in demo mode i see extra space on top, and it should be a switch not a checkbox" | Boolean settings are Bluesky switches on every platform; demo banner compact, text visible, no empty band | § 26.15 | Toggle.Platform checkboxes on web; blank demo banner band on desktop |
 | 133 | "dont show that banner, not needed" | No demo banner at all; demo state shown by the Settings switch and the avatar's Demo state | § 26.15, § 26.1 | Banner on every screen (94/95), compact banner (132) |
+| 134 | "in all headers, write Home - Demo like this instead" | In demo mode every header title ends with " - Demo" (logo + "Demo" label on phone Home; document title too) | § 26.15 | - (with 133) |
 
 New decisions follow § 0 rule 9: rewrite the rule in its topic so only the current truth remains, then add a
 row here.
