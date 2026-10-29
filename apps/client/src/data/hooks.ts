@@ -268,6 +268,8 @@ export function useSearch(rawQuery: string, today: string, mark: '.' | ','): Sea
   const {store} = useData()
   const isDisputed = DISPUTED_FILTER.test(rawQuery)
   const query = isDisputed ? rawQuery.replace(DISPUTED_FILTER, ' ').trim() : rawQuery
+  /* A boolean, not the text: the read below must not run again for every keystroke, only when this flips. */
+  const isRestEmpty = isDisputed && query.trim() === ''
   /* The expenses with an open dispute or hold, kept current while the filter is in the query. */
   const [disputedExpenses, setDisputedExpenses] = useState<Entity<Expense>[]>()
   useEffect(() => {
@@ -323,7 +325,7 @@ export function useSearch(rawQuery: string, today: string, mark: '.' | ','): Sea
     const show = (summary?: SearchSummary) => {
       /* With the disputed filter: the disputed expenses alone, or (with words) the search's matches that are among them. */
       const disputedIds = new Set((disputedExpenses ?? []).map(e => e.id))
-      const found = isDisputed ? (query.trim() === '' ? (disputedExpenses ?? []) : session.found().filter(e => disputedIds.has(e.id))) : session.found()
+      const found = isDisputed ? (isRestEmpty ? (disputedExpenses ?? []) : session.found().filter(e => disputedIds.has(e.id))) : session.found()
       const isDone = session.isDone()
       setView({
         people: session.people,
@@ -351,7 +353,7 @@ export function useSearch(rawQuery: string, today: string, mark: '.' | ','): Sea
     return () => {
       isCurrent = false
     }
-  }, [session, wanted, isDisputed, disputedExpenses, query])
+  }, [session, wanted, isDisputed, isRestEmpty, disputedExpenses])
   return view && {...view, loadMore: () => setPaging({key: rawQuery, pages: pages + 1})}
 }
 

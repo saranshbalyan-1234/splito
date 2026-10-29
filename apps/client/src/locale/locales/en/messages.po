@@ -242,7 +242,7 @@ msgstr "{0} doesn’t round to {1}, so it goes on your share. Everything still a
 
 #. placeholder {0}: fmt(most)
 #. placeholder {1}: peopleCount(n)
-#: src/components/split/ExpenseComposer.tsx:767
+#: src/components/split/ExpenseComposer.tsx:770
 msgid "{0} each · {1}"
 msgstr "{0} each · {1}"
 
@@ -298,7 +298,7 @@ msgid "{0} is splitting"
 msgstr "{0} is splitting"
 
 #. placeholder {0}: fmt(remaining.value)
-#: src/components/split/ExpenseComposer.tsx:749
+#: src/components/split/ExpenseComposer.tsx:752
 msgid "{0} left to assign"
 msgstr "{0} left to assign"
 
@@ -352,7 +352,7 @@ msgid "{0} of items"
 msgstr "{0} of items"
 
 #. placeholder {0}: fmt(magnitude(remaining.value))
-#: src/components/split/ExpenseComposer.tsx:750
+#: src/components/split/ExpenseComposer.tsx:753
 msgid "{0} over the total"
 msgstr "{0} over the total"
 
@@ -464,7 +464,7 @@ msgstr "{0} too much"
 #. placeholder {0}: fmt(least)
 #. placeholder {1}: fmt(most)
 #. placeholder {2}: peopleCount(n)
-#: src/components/split/ExpenseComposer.tsx:768
+#: src/components/split/ExpenseComposer.tsx:771
 msgid "{0}–{1} each · {2}"
 msgstr "{0}–{1} each · {2}"
 
@@ -510,12 +510,12 @@ msgid "{0}'s spending"
 msgstr "{0}'s spending"
 
 #. placeholder {0}: pct(remaining.value)
-#: src/components/split/ExpenseComposer.tsx:741
+#: src/components/split/ExpenseComposer.tsx:744
 msgid "{0}% left to assign"
 msgstr "{0}% left to assign"
 
 #. placeholder {0}: pct(remaining.value)
-#: src/components/split/ExpenseComposer.tsx:742
+#: src/components/split/ExpenseComposer.tsx:745
 msgid "{0}% over 100%"
 msgstr "{0}% over 100%"
 
@@ -824,7 +824,7 @@ msgstr "{n, plural, one {# friend} other {# friends}}"
 msgid "{n, plural, one {# group} other {# groups}}"
 msgstr "{n, plural, one {# group} other {# groups}}"
 
-#: src/components/split/ExpenseComposer.tsx:688
+#: src/components/split/ExpenseComposer.tsx:691
 msgid "{n, plural, one {# person} other {# people}}"
 msgstr "{n, plural, one {# person} other {# people}}"
 
@@ -1086,7 +1086,7 @@ msgstr "1 payment"
 msgid "1 payment settles everyone up."
 msgstr "1 payment settles everyone up."
 
-#: src/components/split/ExpenseComposer.tsx:739
+#: src/components/split/ExpenseComposer.tsx:742
 msgid "100% assigned"
 msgstr "100% assigned"
 
@@ -1534,7 +1534,7 @@ msgid "All"
 msgstr "All"
 
 #. placeholder {0}: fmt(total!)
-#: src/components/split/ExpenseComposer.tsx:747
+#: src/components/split/ExpenseComposer.tsx:750
 msgid "All {0} assigned"
 msgstr "All {0} assigned"
 
@@ -2864,12 +2864,12 @@ msgid "Directly with friends, outside any group"
 msgstr "Directly with friends, outside any group"
 
 #: src/components/FormSheet/shared.tsx:163
-#: src/components/split/ExpenseComposer.tsx:638
+#: src/components/split/ExpenseComposer.tsx:641
 msgid "Discard"
 msgstr "Discard"
 
 #: src/components/FormSheet/shared.tsx:161
-#: src/components/split/ExpenseComposer.tsx:629
+#: src/components/split/ExpenseComposer.tsx:632
 msgid "Discard changes?"
 msgstr "Discard changes?"
 
@@ -2943,11 +2943,11 @@ msgstr "Disputed only"
 msgid "Divided by"
 msgstr "Divided by"
 
-#: src/components/split/ExpenseComposer.tsx:672
+#: src/components/split/ExpenseComposer.tsx:675
 msgid "Does this resolve {who}’s dispute?"
 msgstr "Does this resolve {who}’s dispute?"
 
-#: src/components/split/ExpenseComposer.tsx:672
+#: src/components/split/ExpenseComposer.tsx:675
 msgid "Does this resolve the disputes from {who}?"
 msgstr "Does this resolve the disputes from {who}?"
 
@@ -3152,7 +3152,7 @@ msgstr "Enter an amount"
 msgid "Enter an amount greater than zero."
 msgstr "Enter an amount greater than zero."
 
-#: src/components/split/ExpenseComposer.tsx:752
+#: src/components/split/ExpenseComposer.tsx:755
 msgid "Enter an amount to see everyone’s share"
 msgstr "Enter an amount to see everyone’s share"
 
@@ -4223,8 +4223,8 @@ msgid "Keep as an inactive member"
 msgstr "Keep as an inactive member"
 
 #: src/components/FormSheet/shared.tsx:165
-#: src/components/split/ExpenseComposer.tsx:648
-#: src/components/split/ExpenseComposer.tsx:681
+#: src/components/split/ExpenseComposer.tsx:651
+#: src/components/split/ExpenseComposer.tsx:684
 msgid "Keep editing"
 msgstr "Keep editing"
 
@@ -4854,7 +4854,7 @@ msgstr "No tracking"
 msgid "No UPI app on this device can open the payment."
 msgstr "No UPI app on this device can open the payment."
 
-#: src/components/split/ExpenseComposer.tsx:680
+#: src/components/split/ExpenseComposer.tsx:683
 msgid "No, keep it open"
 msgstr "No, keep it open"
 
@@ -5299,7 +5299,7 @@ msgstr "Opens your UPI app with {name} and the amount filled in. You confirm the
 msgid "Options for {name}"
 msgstr "Options for {name}"
 
-#: src/components/split/ExpenseComposer.tsx:632
+#: src/components/split/ExpenseComposer.tsx:635
 msgid "Or keep them as a draft to finish later."
 msgstr "Or keep them as a draft to finish later."
 
@@ -6264,7 +6264,7 @@ msgstr "Save backup"
 msgid "Save comment"
 msgstr "Save comment"
 
-#: src/components/split/ExpenseComposer.tsx:644
+#: src/components/split/ExpenseComposer.tsx:647
 msgid "Save draft"
 msgstr "Save draft"
 
@@ -6320,7 +6320,7 @@ msgstr "Saved. We’ll check and send it when you’re online."
 msgid "Saved. We’ll send it when you’re online."
 msgstr "Saved. We’ll send it when you’re online."
 
-#: src/components/split/ExpenseComposer.tsx:675
+#: src/components/split/ExpenseComposer.tsx:678
 msgid "Saving applies your edit either way. Yes marks it accepted; No leaves it open for them to answer."
 msgstr "Saving applies your edit either way. Yes marks it accepted; No leaves it open for them to answer."
 
@@ -6894,7 +6894,7 @@ msgid "Split"
 msgstr "Split"
 
 #. placeholder {0}: peopleCount(n)
-#: src/components/split/ExpenseComposer.tsx:769
+#: src/components/split/ExpenseComposer.tsx:772
 msgid "Split between {0}"
 msgstr "Split between {0}"
 
@@ -7730,7 +7730,7 @@ msgstr "Unlimited uses"
 msgid "Unread"
 msgstr "Unread"
 
-#: src/components/split/ExpenseComposer.tsx:704
+#: src/components/split/ExpenseComposer.tsx:707
 #: src/screens/Expense/index.tsx:377
 msgid "Upcoming"
 msgstr "Upcoming"
@@ -7999,7 +7999,7 @@ msgstr "Where"
 msgid "Which “{0}” do you mean?"
 msgstr "Which “{0}” do you mean?"
 
-#: src/features/disputes/RaiseSheet.tsx:289
+#: src/features/disputes/RaiseSheet.tsx:288
 msgid "Which expense is this the same as? (optional)"
 msgstr "Which expense is this the same as? (optional)"
 
@@ -8142,7 +8142,7 @@ msgstr "Year"
 msgid "Year first"
 msgstr "Year first"
 
-#: src/components/split/ExpenseComposer.tsx:679
+#: src/components/split/ExpenseComposer.tsx:682
 msgid "Yes, it resolves it"
 msgstr "Yes, it resolves it"
 

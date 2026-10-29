@@ -242,7 +242,7 @@ msgstr "{0} {1} में पूरा नहीं बँटता, इसल�
 
 #. placeholder {0}: fmt(most)
 #. placeholder {1}: peopleCount(n)
-#: src/components/split/ExpenseComposer.tsx:767
+#: src/components/split/ExpenseComposer.tsx:770
 msgid "{0} each · {1}"
 msgstr "हर एक {0} · {1}"
 
@@ -298,7 +298,7 @@ msgid "{0} is splitting"
 msgstr "{0} बाँट रहे हैं"
 
 #. placeholder {0}: fmt(remaining.value)
-#: src/components/split/ExpenseComposer.tsx:749
+#: src/components/split/ExpenseComposer.tsx:752
 msgid "{0} left to assign"
 msgstr "{0} बाँटना बाकी है"
 
@@ -352,7 +352,7 @@ msgid "{0} of items"
 msgstr "चीज़ों के {0}"
 
 #. placeholder {0}: fmt(magnitude(remaining.value))
-#: src/components/split/ExpenseComposer.tsx:750
+#: src/components/split/ExpenseComposer.tsx:753
 msgid "{0} over the total"
 msgstr "कुल से {0} ज़्यादा"
 
@@ -464,7 +464,7 @@ msgstr "{0} ज़्यादा"
 #. placeholder {0}: fmt(least)
 #. placeholder {1}: fmt(most)
 #. placeholder {2}: peopleCount(n)
-#: src/components/split/ExpenseComposer.tsx:768
+#: src/components/split/ExpenseComposer.tsx:771
 msgid "{0}–{1} each · {2}"
 msgstr "हर एक {0}–{1} · {2}"
 
@@ -510,12 +510,12 @@ msgid "{0}'s spending"
 msgstr "{0} का खर्च"
 
 #. placeholder {0}: pct(remaining.value)
-#: src/components/split/ExpenseComposer.tsx:741
+#: src/components/split/ExpenseComposer.tsx:744
 msgid "{0}% left to assign"
 msgstr "{0}% बाँटना बाकी है"
 
 #. placeholder {0}: pct(remaining.value)
-#: src/components/split/ExpenseComposer.tsx:742
+#: src/components/split/ExpenseComposer.tsx:745
 msgid "{0}% over 100%"
 msgstr "100% से {0}% ज़्यादा"
 
@@ -824,7 +824,7 @@ msgstr "{n, plural, one {# मित्र} other {# मित्र}}"
 msgid "{n, plural, one {# group} other {# groups}}"
 msgstr "{n, plural, one {# समूह} other {# समूह}}"
 
-#: src/components/split/ExpenseComposer.tsx:688
+#: src/components/split/ExpenseComposer.tsx:691
 msgid "{n, plural, one {# person} other {# people}}"
 msgstr "{n, plural, one {# व्यक्ति} other {# लोग}}"
 
@@ -1086,7 +1086,7 @@ msgstr "1 भुगतान"
 msgid "1 payment settles everyone up."
 msgstr "1 भुगतान से सबका हिसाब बराबर हो जाता है।"
 
-#: src/components/split/ExpenseComposer.tsx:739
+#: src/components/split/ExpenseComposer.tsx:742
 msgid "100% assigned"
 msgstr "100% बँट गया"
 
@@ -1534,7 +1534,7 @@ msgid "All"
 msgstr "सभी"
 
 #. placeholder {0}: fmt(total!)
-#: src/components/split/ExpenseComposer.tsx:747
+#: src/components/split/ExpenseComposer.tsx:750
 msgid "All {0} assigned"
 msgstr "पूरे {0} बँट गए"
 
@@ -2864,12 +2864,12 @@ msgid "Directly with friends, outside any group"
 msgstr "दोस्तों के साथ सीधे, किसी समूह के बाहर"
 
 #: src/components/FormSheet/shared.tsx:163
-#: src/components/split/ExpenseComposer.tsx:638
+#: src/components/split/ExpenseComposer.tsx:641
 msgid "Discard"
 msgstr "छोड़ दें"
 
 #: src/components/FormSheet/shared.tsx:161
-#: src/components/split/ExpenseComposer.tsx:629
+#: src/components/split/ExpenseComposer.tsx:632
 msgid "Discard changes?"
 msgstr "बदलाव छोड़ दें?"
 
@@ -2943,11 +2943,11 @@ msgstr "सिर्फ़ विवादित"
 msgid "Divided by"
 msgstr "भाग"
 
-#: src/components/split/ExpenseComposer.tsx:672
+#: src/components/split/ExpenseComposer.tsx:675
 msgid "Does this resolve {who}’s dispute?"
 msgstr "क्या इससे {who} का विवाद सुलझ गया?"
 
-#: src/components/split/ExpenseComposer.tsx:672
+#: src/components/split/ExpenseComposer.tsx:675
 msgid "Does this resolve the disputes from {who}?"
 msgstr "क्या इससे {who} के विवाद सुलझ गए?"
 
@@ -3152,7 +3152,7 @@ msgstr "रकम लिखें"
 msgid "Enter an amount greater than zero."
 msgstr "शून्य से ज़्यादा राशि लिखें।"
 
-#: src/components/split/ExpenseComposer.tsx:752
+#: src/components/split/ExpenseComposer.tsx:755
 msgid "Enter an amount to see everyone’s share"
 msgstr "सबका हिस्सा देखने के लिए रकम लिखें"
 
@@ -4223,8 +4223,8 @@ msgid "Keep as an inactive member"
 msgstr "निष्क्रिय सदस्य के रूप में रखें"
 
 #: src/components/FormSheet/shared.tsx:165
-#: src/components/split/ExpenseComposer.tsx:648
-#: src/components/split/ExpenseComposer.tsx:681
+#: src/components/split/ExpenseComposer.tsx:651
+#: src/components/split/ExpenseComposer.tsx:684
 msgid "Keep editing"
 msgstr "बदलाव जारी रखें"
 
@@ -4854,7 +4854,7 @@ msgstr "कोई ट्रैकिंग नहीं"
 msgid "No UPI app on this device can open the payment."
 msgstr "इस डिवाइस पर कोई UPI ऐप यह भुगतान नहीं खोल सकता।"
 
-#: src/components/split/ExpenseComposer.tsx:680
+#: src/components/split/ExpenseComposer.tsx:683
 msgid "No, keep it open"
 msgstr "नहीं, खुला रहने दें"
 
@@ -5299,7 +5299,7 @@ msgstr "आपका UPI ऐप {name} और राशि भरकर खु�
 msgid "Options for {name}"
 msgstr "{name} के विकल्प"
 
-#: src/components/split/ExpenseComposer.tsx:632
+#: src/components/split/ExpenseComposer.tsx:635
 msgid "Or keep them as a draft to finish later."
 msgstr "या इन्हें ड्राफ़्ट में रखें और बाद में पूरा करें।"
 
@@ -6264,7 +6264,7 @@ msgstr "बैकअप सहेजें"
 msgid "Save comment"
 msgstr "टिप्पणी सहेजें"
 
-#: src/components/split/ExpenseComposer.tsx:644
+#: src/components/split/ExpenseComposer.tsx:647
 msgid "Save draft"
 msgstr "ड्राफ़्ट सहेजें"
 
@@ -6320,7 +6320,7 @@ msgstr "सहेजा गया। ऑनलाइन होने पर ह�
 msgid "Saved. We’ll send it when you’re online."
 msgstr "सहेजा गया। ऑनलाइन होने पर हम भेज देंगे।"
 
-#: src/components/split/ExpenseComposer.tsx:675
+#: src/components/split/ExpenseComposer.tsx:678
 msgid "Saving applies your edit either way. Yes marks it accepted; No leaves it open for them to answer."
 msgstr "सहेजने पर आपका बदलाव दोनों हाल में लागू होता है। हाँ से यह स्वीकार माना जाता है; नहीं से यह उनके जवाब के लिए खुला रहता है।"
 
@@ -6894,7 +6894,7 @@ msgid "Split"
 msgstr "बँटवारा"
 
 #. placeholder {0}: peopleCount(n)
-#: src/components/split/ExpenseComposer.tsx:769
+#: src/components/split/ExpenseComposer.tsx:772
 msgid "Split between {0}"
 msgstr "{0} में बँटा"
 
@@ -7730,7 +7730,7 @@ msgstr "असीमित इस्तेमाल"
 msgid "Unread"
 msgstr "अपठित"
 
-#: src/components/split/ExpenseComposer.tsx:704
+#: src/components/split/ExpenseComposer.tsx:707
 #: src/screens/Expense/index.tsx:377
 msgid "Upcoming"
 msgstr "आगामी"
@@ -7999,7 +7999,7 @@ msgstr "कहां"
 msgid "Which “{0}” do you mean?"
 msgstr "आपका मतलब कौन-सा “{0}” है?"
 
-#: src/features/disputes/RaiseSheet.tsx:289
+#: src/features/disputes/RaiseSheet.tsx:288
 msgid "Which expense is this the same as? (optional)"
 msgstr "यह किस खर्च जैसा ही है? (वैकल्पिक)"
 
@@ -8142,7 +8142,7 @@ msgstr "साल"
 msgid "Year first"
 msgstr "पहले साल"
 
-#: src/components/split/ExpenseComposer.tsx:679
+#: src/components/split/ExpenseComposer.tsx:682
 msgid "Yes, it resolves it"
 msgstr "हाँ, इससे सुलझ गया"
 

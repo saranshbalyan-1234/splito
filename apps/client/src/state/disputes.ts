@@ -35,16 +35,8 @@ import {
   type PermissionResult,
 } from '@splito/domain'
 
-import {
-  useAllEntities,
-  useEntity,
-  useHistory,
-  useMutationCtx,
-  usePref,
-  useProjection,
-  useStore,
-} from '#/data/hooks'
-import {type Query, shareRows} from '#/data/projections'
+import {useMutationCtx, usePref, useProjection, useStore} from '#/data/hooks'
+import {entitiesQuery, entityQuery, historyQuery, type Query, shareRows} from '#/data/projections'
 
 /**
  * Reads and writes of disputes and holds (F-1210). Components come here, never to the store (ARCHITECTURE 1). The
@@ -161,11 +153,12 @@ export function useDisputeEvents(type: DisputeTarget, id: string): DisputeEvent[
  * The permission checks for one record, with everything they need read (the record, who added it, its group). Mutations
  * re-check the same rules; this only decides which buttons to show. Undefined while loading.
  */
-export function useDisputeAccess(type: DisputeTarget, id: string) {
+export function useDisputeAccess(type: DisputeTarget, id: string | undefined) {
   const {actor} = useMutationCtx()
-  const entity = useEntity<Expense & Repayment>(type, id)
-  const history = useHistory(type, id)
-  const groups = useAllEntities<Group>('group')
+  /* No id (Add expense): nothing is read, so a composer with nothing to answer holds no extra subscription. */
+  const entity = useProjection(id ? entityQuery<Expense & Repayment>(type, id) : null)
+  const history = useProjection(id ? historyQuery(type, id) : null)
+  const groups = useProjection(id ? entitiesQuery<Group>('group') : null)
   const groupId = entity?.data.groupId ?? null
   const record = useMemo((): DisputeRecord | undefined => {
     if (!entity || !history || !groups) return undefined
@@ -268,8 +261,8 @@ export function useSettleIncludeDisputed(groupId: string): [boolean, (include: b
  * group). Editing the expense asks whether it resolves them (F-1210, 26.20). Empty in Add mode (no `expenseId`).
  */
 export function useResolvableDisputes(expenseId: string | undefined): Entity<Dispute>[] {
-  const open = useOpenDisputes()
-  const access = useDisputeAccess('expense', expenseId ?? '')
+  const open = useProjection(expenseId ? openQuery : null)
+  const access = useDisputeAccess('expense', expenseId)
   const list = expenseId ? open?.byRecord.get(keyOf('expense', expenseId)) : undefined
   return useMemo(() => (list ?? NONE).filter(d => d.data.kind === 'dispute' && access.canDo(d.data, 'accept')), [list, access.record]) // eslint-disable-line react-hooks/exhaustive-deps
 }

@@ -598,12 +598,15 @@ export function ExpenseComposer({
           style={[a.flex_1, {lineHeight: 20, minHeight: 44, paddingTop: 0}]}
         />
       </View>
-      <ResolvePrompt
-        control={resolveControl}
-        names={resolvable.map(d => name(d.data.raisedBy))}
-        onResolved={() => void save(resolvable.map(d => d.id))}
-        onKeptOpen={() => void save()}
-      />
+      {/* Only an expense someone disputed mounts the question: Add expense and a plain edit carry no extra dialog. */}
+      {resolvable.length > 0 ? (
+        <ResolvePrompt
+          control={resolveControl}
+          names={resolvable.map(d => name(d.data.raisedBy))}
+          onResolved={() => void save(resolvable.map(d => d.id))}
+          onKeptOpen={() => void save()}
+        />
+      ) : null}
     </FormSheet.Screen>
   )
 }
