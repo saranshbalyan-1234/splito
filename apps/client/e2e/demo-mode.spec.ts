@@ -86,6 +86,8 @@ test('the real data is untouched by a demo session; Switch back returns Home wit
   await page.goto('/settings')
   await page.getByTestId('settings-demo-mode').click()
   await expect(page).toHaveURL(/\/$/)
+  // The demo database is erased behind the blocking cover: let it finish before anything reloads the page.
+  await expect(page.getByTestId('demo-busy')).toHaveCount(0)
   await expect(page.getByTestId('person-Real Asha').last()).toBeVisible()
   await expect(page.getByTestId('person-Riya Sharma')).toHaveCount(0)
   const realAfter = await names(page, 'person')

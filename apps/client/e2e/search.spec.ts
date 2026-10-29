@@ -15,7 +15,7 @@ const plan = generateLargeDemo({me: ME, today: localToday(), now: Date.now()})
 const fold = (x: string) => x.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase()
 const wordsOf = (x: string) => fold(x).match(/[\p{L}\p{N}\p{M}]+/gu) ?? []
 
-type Planned = {id: string; title: string; date: string; created: number; currency: string; total: bigint; isLive: boolean; words: string[]}
+type Planned = {id: string; title: string; date: string; created: number; currency: string; total: bigint; isLive: boolean; words: string[]; groupId: string | null}
 
 /** Every expense of the plan in its final state, deleted ones included (search lists them, struck). */
 function plannedExpenses(): Planned[] {
@@ -29,7 +29,7 @@ function plannedExpenses(): Planned[] {
   return [...drafts].map(([id, op]) => {
     const d = op.draft
     const text = [d.title, d.notes, ...(d.split.mode === 'items' ? d.split.items.map(i => i.name) : [])].join(' ')
-    return {id, title: d.title, date: d.date, created: created.get(id) ?? 0, currency: d.currency, total: d.total, isLive: live.has(id), words: wordsOf(text)}
+    return {id, title: d.title, date: d.date, created: created.get(id) ?? 0, currency: d.currency, total: d.total, isLive: live.has(id), words: wordsOf(text), groupId: d.groupId}
   })
 }
 
@@ -48,10 +48,12 @@ function expectedMatches(match: (e: Planned) => boolean) {
 }
 
 function expectedSearch(word: string) {
-  // A group, friend or category named like the word would add matches this model does not know: say so loudly.
-  const names = plan.ops.flatMap(o => (o.kind === 'person' ? [o.name] : o.kind === 'group' ? [o.input.name] : []))
-  expect(names.filter(n => wordsOf(n).some(w => w.startsWith(word)))).toEqual([])
-  return expectedMatches(e => e.words.some(w => w.startsWith(word)))
+  // Expenses of a group named like the word match too (a word of the group's name); a friend named like it would too, which this model does not cover: say so loudly.
+  const people = plan.ops.flatMap(o => (o.kind === 'person' ? [o.name] : []))
+  expect(people.filter(n => wordsOf(n).some(w => w.startsWith(word)))).toEqual([])
+  const groups = new Set(plan.ops.flatMap(o => (o.kind === 'group' && wordsOf(o.input.name).some(w => w.startsWith(word)) ? [o.id] : [])))
+  // The matching groups are listed before the expenses (people and groups come first), each taking a row.
+  return {...expectedMatches(e => e.words.some(w => w.startsWith(word)) || (e.groupId !== null && groups.has(e.groupId))), lead: groups.size}
 }
 
 const PHONE = {width: 390, height: 844}
@@ -94,11 +96,11 @@ test('the header button opens the drawer; a title finds it, a note finds its exp
   const dinner = expectedSearch('dinner')
   expect(dinner.rows.length).toBeGreaterThan(30)
   await page.getByTestId('search-input').fill('dinner')
-  await expect(screen.getByTestId('search-section-expenses')).toContainText(new RegExp(`Expenses\\s+${dinner.rows.length}\\b`), {timeout: 30_000})
+  await expect(screen.getByTestId('search-section-expenses')).toContainText(new RegExp(`Expenses\\s+${dinner.rows.length}(?!\\d)`), {timeout: 30_000})
   // The totals arrive once every match is read; only live matches are added up.
   await expect(screen.getByTestId('search-totals')).toHaveText(dinner.line, {timeout: 30_000})
   // Row 0 is the "Ask Splito" row; the expenses follow it, newest first.
-  for (const [i, r] of dinner.rows.slice(0, 8).entries()) await expect(screen.getByTestId(`search-row-${i + 1}`)).toContainText(r.title)
+  for (const [i, r] of dinner.rows.slice(0, 8).entries()) await expect(screen.getByTestId(`search-row-${i + 1 + dinner.lead}`)).toContainText(r.title)
 })
 
 test('a deleted match stays in the list but never in the totals', async ({page}) => {
@@ -112,13 +114,13 @@ test('a deleted match stays in the list but never in the totals', async ({page})
   expect(word, 'the plan has a word with live and deleted matches').toBeDefined()
   const e = expectedSearch(word!)
   await page.getByTestId('search-input').fill(word!)
-  await expect(screen.getByTestId('search-section-expenses')).toContainText(new RegExp(`Expenses\\s+${e.rows.length}\\b`), {timeout: 30_000})
+  await expect(screen.getByTestId('search-section-expenses')).toContainText(new RegExp(`Expenses\\s+${e.rows.length}(?!\\d)`), {timeout: 30_000})
   await expect(screen.getByTestId('search-totals')).toHaveText(e.line, {timeout: 30_000})
 })
 
 test('amount and date queries', async ({page}) => {
   const screen = await openSearch(page)
-  const count = (n: number) => new RegExp(`Expenses\\s+${n}\\b`)
+  const count = (n: number) => new RegExp(`Expenses\\s+${n}(?!\\d)`)
   const unit = (currency: string) => 10n ** BigInt(getCurrency(currency).scale)
 
   // Over 1000 in the major units of its own currency (yen has no minor unit, dinar has three); deleted ones are listed too.
