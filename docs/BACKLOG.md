@@ -82,7 +82,7 @@ Every row of the ARCHITECTURE § 26.23 decision log (rows 1-63) and the feature(
 | 128 customization only where needed; Language menu switch removed | § 26.1 | F-251 |
 | 125 sign-in required, nothing visible signed out | § 26.15 | F-250 (Wave C), F-2101/F-2102 moved up after Wave C |
 | 124 footer links on one line | § 26.5 | fixed on integrate/wB |
-| 123 welcome tour on first launch and first-use tips | § 26.2 | F-249 (Wave C) |
+| 123, 142 intro slides before sign-in; guided tour after first sign-in | § 26.2 | F-249, F-253 (Wave C) |
 | 120 Home layout fixes (order, no truncation, no red dots, two-line friend rows) | § 26.12 | F-248 |
 | 119 disputes and holds; disputed records still count, left out of Settle up by default | § 26.20 | F-1210 (Wave C) |
 | 85 best of both per feature: pull features from Expensify and Bluesky, whichever is better | § 26.1 | F-229..F-236, F-318..F-321, F-620, F-1211, F-1212, F-1412, F-1507, F-1816 (Batch 4d), amendments to F-211, F-214, F-219, F-312, F-501, F-502, F-504, F-516, F-709, F-1204, F-1207, F-1210, F-1402, F-1403, F-1405, F-1407, F-2202, F-2208; `docs/scouting/2026-10-27-bluesky-expensify.md` |
@@ -480,6 +480,19 @@ Opus audits every Settings row and registry key against decision 128 (keep only 
   3. Settings has the 7 pages of docs/audit/SETTINGS-PRUNE-2026-10-29.md; old section URLs (`/settings/motion`, `/settings/lists`) redirect (owner 100); a merge whose screen control does not save its key yet is gated on that control saving it first.
   4. Demo data, e2e and Lingui (--clean) updated; screenshots of Settings before and after.
 
+### F-253 Guided tour after the first sign-in `spec: owner § 26.2 (decision 142)`
+
+After the first sign-in and setup, a short coach-mark walkthrough over the real app (FAB / Add expense, a friend row, Groups +, Settle up, Search & Ask, Activity), one spotlight at a time with Next / Skip; Expensify FeatureTraining and Bluesky ProgressGuide patterns, Bluesky look.
+
+- **Effort** M · **Impact** 8 · **Backend** no · **Status** todo, Wave C (after F-249, F-250) · **Deps** F-249, F-250, F-211
+- **Prefs** `onboarding.tourSeen` (account), `tips.enabled`
+- **Acceptance**
+  1. Runs once per account right after setup lands on Home; Skip ends it; Settings > Help "Take the tour" replays it.
+  2. Each step spotlights the real control (dimmed backdrop, focus moved to it, screen reader reads the step and "Step N of 6"), adapts to phone, rail and desktop (sidebar items on desktop).
+  3. Steps that need data use empty-state wording when there is none; the tour never creates records.
+  4. Never in demo mode or e2e unless its spec asks; reduced motion respected; no overlap with toasts or sheets.
+  5. e2e at 390 and 1440 plus screenshots.
+
 ### F-250 Sign-in required (auth gate) `spec: owner § 26.15 (decision 125)`
 
 Nothing of the app is visible signed out: only the welcome tour, the logged-out flow, language and legal pages. The local database opens per account only with a session; offline after sign-in; deep links resume after sign-in.
@@ -498,7 +511,7 @@ Nothing of the app is visible signed out: only the welcome tour, the logged-out 
   9. A new account requires name, email and phone, both verified by code; an account missing either (Google/Apple, older accounts) gets a blocking "Add your phone number" / "Add your email" step after sign-in, with only Log out besides (owner 139).
   8. The Continue screen shows "Continue with Apple" and "Continue with Google" (owner 138; Apple first on iOS, Google first on Android/web, platform button styles); until F-2102 they say it arrives with sync, no fake success.
 
-### F-249 Welcome tour and first-use tips `spec: owner § 26.2 (decision 123)`
+### F-249 Intro slides before sign-in `spec: owner § 26.2 (decisions 123, 142)`
 
 First-launch tour of up to 5 slides (what Splito is and how to use it) with Skip / Next / Get started, then setup (F-211); first-use tips after it. Bluesky Pager and ProgressGuide, Expensify FeatureTraining (`src/components/FeatureTrainingModal.tsx`) and onboarding header (`src/components/OnboardingHeader.tsx`); illustrations original (never Expensify's or Bluesky's artwork).
 

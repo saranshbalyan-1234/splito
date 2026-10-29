@@ -1299,8 +1299,8 @@ labelled sidebar); **wide** = web 1300 px and up (Bluesky `gtTablet`, right colu
 - **GameRun's Expo architecture is adopted where it fits** (§§ 21-22 record the calls). *Why:* "can you also
   look into architecture md file from GameRun expo".
 
-- **Welcome tour on first launch** (owner 123; F-249, Wave C, before F-211's setup steps). A fresh install
-  opens a short swipeable tour that says what Splito is and how to use it, then hands over to setup (F-211):
+- **Welcome tour on first launch** (owner 123; F-249, Wave C). A fresh install opens short swipeable intro
+  slides that say what Splito is and what you can do, before sign-in, then hands over to the Continue screen:
   - **5 slides max**, each an original animated illustration (Lottie, static under reduced motion), a title and
     one sentence, built on Bluesky's Pager with dot indicators (tappable) and its direction-aware slide:
     1. Split anything with anyone: friends, groups, trips, any currency, never mixed.
@@ -1308,18 +1308,22 @@ labelled sidebar); **wide** = web 1300 px and up (Bluesky `gtTablet`, right colu
     3. Settle up in fewest payments, record cash or UPI, remind gently.
     4. Search or ask anything: "how much did I spend on food in Goa?".
     5. Yours, offline: everything is saved on this device first (copy says sync only once it exists, § 0 rule 6).
-  - **Controls:** "Skip" top right on every slide (goes straight to setup, never past it), "Next" as the bottom
+  - **Controls:** "Skip" top right on every slide (goes straight to the Continue screen), "Next" as the bottom
     primary, the last slide's primary is "Get started"; swipe and the dots move both ways; a language chip top
     left on the first slide (English / हिन्दी), because the tour is the first thing read. Phone: full screen;
     rail and desktop: a centred card (~560 px) over a dimmed app, Escape = Skip.
   - **Once, then on demand:** shown once per install (`onboarding.tourSeen`, device preference kept in the
-    database, decision 90); Settings > Help "Take the tour" replays it; never shown in demo mode or to e2e runs
+    database, decision 90); Settings > Help "See the intro" replays it; never shown in demo mode or to e2e runs
     (the test hook marks it seen; one spec covers the tour itself). Every slide has a URL (`/welcome/1` .. `/5`,
     owner 100).
-  - **After the tour, first-use tips** (Expensify FeatureTraining / Bluesky ProgressGuide style): one small
-    dismissible tip the first time a screen is opened (FAB "Add your first expense", Groups "+", Analytics
-    scope chip, Search & Ask icon, row swipe/long-press), at most one tip on screen, each shown once, all
-    switchable off (`tips.enabled`), "Reset tips" in Settings > Help.
+  - **Two different things** (owner 142): these swipeable **intro slides come BEFORE sign-in** (what Splito is,
+    like many apps' first-open screens; "Get started" leads to the Continue screen, owner 140), and the **tour
+    comes AFTER the first sign-in and setup**: a guided walkthrough over the real app (F-253), a few coach marks
+    one at a time with Next / Skip: the FAB or "Add expense" ("Add your first expense"), a friend row ("Tap a
+    friend to see what you owe each other"), Groups "+", Settle up, the Search & Ask icon, and Activity; each
+    mark spotlights the real control (dimmed backdrop, Bluesky/Expensify FeatureTraining style), works at every
+    width (sidebar items on desktop), shown once per account, replayable from Settings > Help "Take the tour".
+    After the tour, small first-use tips may still appear once per screen (`tips.enabled`, "Reset tips").
   - Screen readers hear "Step 2 of 5" and each title as a heading; tap targets 44 px; works at 320 px in Hindi.
   *Why:* "like what you get when you install one app and you get one overview, where you have to click next or
   skip which explains you what this app is and how to use".
@@ -2345,6 +2349,7 @@ Every owner decision, in the order it was made (all 2026-10-26). "Replaced" name
 | 139 | "on signup, make email and phone both mandatory; if logged in via email only and no phone is there ask to update phone first" | Sign-up requires email and phone, both verified by code; any account missing one gets a blocking add-and-verify step after sign-in (only Log out besides) | § 26.15 | Sign-up with email or phone (one field) |
 | 140 | "we can have signup and login as same screen only, no separate screen needed, basically no signup needed" | One Continue screen (Apple, Google, email or phone + one-time code); new accounts created in-flow by asking only what is missing; no passwords, no Create account or Forgot password screens | § 26.15 | Bluesky Create account / Sign in / password / Forgot password screens |
 | 141 | "password should be there as well" | Passwords kept inside the one Continue flow: existing account enters password (or one-time code, Forgot password); new account sets one after verifying; Google/Apple need none | § 26.15 | Code-only, no passwords (row 140) |
+| 142 | "tour is when i have logged in, and want the swipable screen before login like some app does" | Swipeable intro slides before sign-in (F-249); a separate guided coach-mark tour over the real app after first sign-in and setup (F-253) | § 26.2 | One welcome tour before setup (row 123) |
 
 New decisions follow § 0 rule 9: rewrite the rule in its topic so only the current truth remains, then add a
 row here.
