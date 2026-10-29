@@ -1,5 +1,5 @@
 // Adapted from bluesky-social/social-app@4e4ad9c (MIT) - src/view/shell/Composer.web.tsx
-import {useRef} from 'react'
+import {useRef, useState} from 'react'
 import {StyleSheet} from 'react-native'
 import Animated from 'react-native-reanimated'
 import * as DismissableLayer from '@radix-ui/react-dismissable-layer'
@@ -7,6 +7,7 @@ import * as FocusGuards from '@radix-ui/react-focus-guards'
 import * as FocusScope from '@radix-ui/react-focus-scope'
 import {RemoveScrollBar} from 'react-remove-scroll-bar'
 
+import {OpenedContext} from '#/lib/hooks/useAfterTransition'
 import {atoms as a, flatten, useTheme} from '#/alf'
 import {
   DrawerHandle,
@@ -38,7 +39,13 @@ export function Outer({
 }) {
   const t = useTheme()
   const isSheet = useIsWebDrawer()
-  const drawer = useDrawer({enabled: isSheet, onRequestClose: onDismiss})
+  /* The rise (or the popup's zoom) has ended: deferred bodies in it mount now (owner 168). */
+  const [opened, setOpened] = useState(false)
+  const drawer = useDrawer({
+    enabled: isSheet,
+    onRequestClose: onDismiss,
+    onOpened: () => setOpened(true),
+  })
   const reduceMotionEnabled = drawer.reduceMotion
   /* Only a press that starts and ends on the scrim closes (not a text drag out of a field). */
   const pressStart = useRef<EventTarget | null>(null)
@@ -102,7 +109,7 @@ export function Outer({
               drawer.sheetStyle,
             ]}>
             {isSheet && <DrawerHandle handleProps={drawer.handleProps} />}
-            {children}
+            <OpenedContext.Provider value={opened}>{children}</OpenedContext.Provider>
           </Animated.View>
         </DismissableLayer.DismissableLayer>
       </FocusScope.FocusScope>

@@ -2,6 +2,8 @@
 import {View} from 'react-native'
 import {useSafeAreaInsets} from 'react-native-safe-area-context'
 
+import {OpenedContext} from '#/lib/hooks/useAfterTransition'
+import {useScreenOpened} from '#/lib/hooks/useScreenOpened'
 import {atoms as a, useTheme} from '#/alf'
 import {IS_ANDROID} from '#/env'
 
@@ -21,13 +23,15 @@ export function Outer({
 }) {
   const t = useTheme()
   const {top} = useSafeAreaInsets()
+  /* The page sheet's present transition ends before the heavy body mounts (owner 168). */
+  const opened = useScreenOpened()
   return (
     <View
       testID={testID}
       aria-modal
       accessibilityViewIsModal
       style={[a.flex_1, t.atoms.bg, IS_ANDROID && {paddingTop: top}]}>
-      {children}
+      <OpenedContext.Provider value={opened}>{children}</OpenedContext.Provider>
     </View>
   )
 }

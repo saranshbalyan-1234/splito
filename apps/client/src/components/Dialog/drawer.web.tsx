@@ -43,6 +43,9 @@ export function useIsWebDrawer() {
   return !useBreakpoints().gtMobile
 }
 
+/** A centred popup's zoom-in: its 0.1 s delay and 0.3 s. */
+const POPUP_OPEN_MS = 400
+
 /** Dialog.Outer -> Dialog.Inner: whether to draw a drawer, and its exit. */
 export const DrawerContext = createContext<{
   isDrawer: boolean
@@ -135,9 +138,15 @@ export function useDrawer({
           if (finished && onOpened) scheduleOnRN(onOpened)
         }),
       )
-    // Not animated (reduced motion, a popup): it is open as it is drawn.
-    else if (!isClosing) onOpened?.()
-  }, [animate, isClosing, y, onOpened])
+    else if (!isClosing && onOpened) {
+      // Reduced motion: open as drawn. A centred popup zooms in with CSS (0.1 s delay + 0.3 s, atoms.zoom_fade_in).
+      if (reduceMotion) onOpened()
+      else {
+        const id = setTimeout(onOpened, POPUP_OPEN_MS)
+        return () => clearTimeout(id)
+      }
+    }
+  }, [animate, isClosing, y, onOpened, reduceMotion])
 
   useEffect(() => {
     if (!isClosing || !onExited) return
