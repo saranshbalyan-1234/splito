@@ -2558,7 +2558,7 @@ Overview first; requests, recent transactions, then Friends; Invites sent move t
 
 Dispute or hold an expense, one item of a bill, a repayment or a write-off, with a structured reason and an optional proposed fix; the adder, payer or an admin answers (accept = one-tap fix as a normal edit, reject with reason), the raiser can withdraw or reopen once. A disputed record keeps counting in balances (with an "of which disputed" line and a badge) and is left out of the Settle up plan by default. Full rule: ARCHITECTURE § 26.20 "Disputes and holds". **Best of both (2026-10-27):** Expensify's hold (`src/pages/iou/DynamicHoldReasonPage.tsx`, `src/libs/actions/IOU/Hold.ts`, `ProcessMoneyReportHoldMenu.tsx`) is the hold half, with its one-time explainer.
 
-- **Effort** L · **Impact** 8 · **Backend** no (two-sided with F-2208) · **Status** todo, Wave C (after F-1204 merges) · **Deps** F-1204, F-230, F-1205 (for acceptance 9)
+- **Effort** L · **Impact** 8 · **Backend** no (two-sided with F-2208) · **Status** built on `feat/wC-F1210-disputes` (2026-10-30; client, local, both engines), with follow-ups below · **Deps** F-1204, F-230, F-1205 (for acceptance 9)
 - **Prefs** `group:settleIncludeDisputed` (off)
 - **Acceptance**
   1. Raise from the row menu, the detail page, an itemized item's portion and a repayment/write-off; reason chips as § 26.20, note required for Other, proposed fix for amount, share, payer and duplicate; one open dispute per person per record.
@@ -2571,6 +2571,13 @@ Dispute or hold an expense, one item of a bill, a repayment or a write-off, with
   8. Before the backend, "raised by" picks a participant (default me, "recorded by you").
   9. Accepting a dispute on a record before a settle-up checkpoint shows "Adjustment after settle-up" (with F-1205).
   10. Demo data has disputes and holds in every state (open, accepted, rejected, withdrawn, reopened, gone) in at least two currencies; demoCoverage lists them; e2e (no external hand-offs, owner 118) and the perf gate on the 10k fixture pass.
+
+**Built (2026-10-30), acceptance 1-8 and 10:** see ARCHITECTURE § 26.20 "[Built] (F-1210)". **Follow-ups, not built:**
+  - **F-230 For you card:** "Needs your answer" (open disputes on records I may answer, via `useOpenDisputes()` in `state/disputes.ts`) and the 3-day nudge on that card only. The card does not exist yet and Home is being redesigned by another builder.
+  - **Home overview cards:** the "of which disputed" line on the per-currency overview cards (another builder owns them). Person and Group balances have it; `disputed_balances` already holds the figures per person, group and currency.
+  - **Acceptance 9, "Adjustment after settle-up":** needs F-1205 checkpoints.
+  - **Disputed filter in the address** (F-241): "Disputed only" on a group and a person is page state today.
+  - **Two-sided disputes** wait for F-2208 (sync); until then "raised by" records for a chosen participant, "recorded by you".
 
 ### F-1211 Group discussion thread `spec: owner § 26.1 best of both (Expensify group chats, Bluesky group chats)`
 

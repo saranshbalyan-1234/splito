@@ -562,7 +562,7 @@ with every hot screen reading by index, never by full scan (§ 17 budgets, F-109
 
 - **One store / table per entity type** (IndexedDB object stores and SQLite tables share names and columns):
   `people`, `groups`, `group_members`, `expenses`, `expense_parties`, `repayments`, `writeoffs`, `comments`,
-  `friend_requests`, `invite_links`, `feedback`, `preferences`, plus infrastructure `history`, `outbox`,
+  `friend_requests`, `invite_links`, `feedback`, `preferences`, `reminders`, `disputes`, plus infrastructure `history`, `outbox`,
   `meta`. A new entity type gets its own store and a migration; nothing is "clubbed" into a shared store.
 - **Every row** carries `id` (UUID), `version`, `createdAt` / `updatedAt` (UTC ms), `deleted` (+ `deletedAt`,
   `purgedAt`), and for money rows `currency` + amounts as bigint minor units encoded with the codec (§ 9.3);
@@ -594,13 +594,19 @@ with every hot screen reading by index, never by full scan (§ 17 budgets, F-109
 - **Indexes for every query path** (name them `by<Field>`): people `byName`, `byUpdatedAt`; groups
   `byUpdatedAt`, `byArchived`; group_members `byPerson`; expenses `byGroupDate` `[groupId, date]`, `byDate`,
   `byUpdatedAt`, `byDeleted`; expense_parties `byPersonDate` `[personId, date]`, `byGroupPerson`; repayments and
-  writeoffs `byGroup`, `byFrom`, `byTo`, `byDate`; comments `byTarget` `[targetType, targetId]`; friend_requests
+  writeoffs `byGroup`, `byFrom`, `byTo`, `byDate`; comments `byTarget` `[targetType, targetId]`; disputes `byTarget` `[targetType, targetId]`, `byTargetStatus` `[targetType, targetId, status]` (a record's open ones: the badge, the one-open-per-person rule, the projection) and `byStatus` (every open one: the Disputed filter); friend_requests
   `byStatus`; history `byEntity` `[type, id]` and `byChangedAt`; outbox `opId` (unique), `byStatus`.
 - **Materialised balance projection** `balances` (`[personId, groupId|'', currency]` -> net minor units),
   maintained in the SAME transaction as every money write (expense, repayment, write-off, delete, restore) by
   the sync mutations, so Home, People, Groups and the right column read balances in O(rows shown) instead of
   re-deriving from the whole ledger; a `rebuildProjections()` maintenance routine recomputes it from source rows
   and a test asserts projection == recomputation after random operation sequences.
+- **Disputed projections** `disputed_balances` (`[personId, groupId|'', currency]` -> the part of that net that sits on
+  records with an open dispute or hold, plus a count) and `disputed_pairs` (`[personId, otherId, groupId|'', currency]`
+  -> the same as debts), kept in the SAME transaction as `balances` (F-1210, § 26.20): a dispute opening or closing moves
+  its record's disputed part (an item dispute counts only that item's portion), and a disputed record that is edited or
+  deleted moves it with the record. They never change `balances`; `rebuildProjections()` rebuilds them and the property test
+  compares them with a recomputation after random sequences that raise, answer and delete under disputes.
 - **Reads page by cursor** (`[date, id]` or `[updatedAt, id]`) for every list; selectors never `getAll` a money
   store on a hot path (only maintenance, export and tests may).
   A loop that pages a money store from end to end is a full read and is banned the same way.
@@ -615,7 +621,7 @@ with every hot screen reading by index, never by full scan (§ 17 budgets, F-109
   resolve at query time, so a rename rewrites no terms.
 - **One transaction per mutation** spans the entity, its projections, history and outbox (atomic, § 9.3).
 - **Versioned migrations:** `meta.schemaVersion`; IndexedDB `onupgradeneeded` and SQLite `PRAGMA user_version`
-  run ordered, idempotent steps; v1 -> v2 copies rows from `entities` into the per-type stores, builds
+  run ordered, idempotent steps (v5: the `disputes`, `disputed_balances` and `disputed_pairs` stores; v4 -> v5 adds them empty); v1 -> v2 copies rows from `entities` into the per-type stores, builds
   `group_members`, `expense_parties` and `balances`, then drops `entities`. Each migration has a test that
   loads a v1 fixture (incl. the large demo set) and checks every row and balance survives exactly.
 - **The Store interface stays the boundary** (§ 1): screens and hooks never touch IndexedDB/SQLite directly;
@@ -1180,6 +1186,14 @@ Splito lessons (add newest last, dated, with PR):
   renders and reads nothing).
 
 ---
+
+- 2026-10-30, F-1210 (disputes): **adding a store has a checklist, and each step has failed once.** (1) `STORES`, `ENTITY_STORE`, the `EXTRA` row builder and `EntityType`; (2) IndexedDB `onupgradeneeded` creates the new stores on every old-version path (v2, v3 and v4 each need them, before the rebuild reads the entity stores); (3) SQLite's step uses `CREATE ... IF NOT EXISTS` and a lost `user_version` is read from `meta.schemaVersion`; (4) the migration tests' downgrade helpers drop the new tables, and every fixture built from the large demo plan must **exclude the new type** (an older file cannot hold it; keep one fixture with it for the v1 upgrade); (5) the backup test's writer table needs the new type (`satisfies Record<EntityType, ...>` fails the typecheck otherwise).
+- 2026-10-30, F-1210: **a projection that depends on rows of another store is moved from both sides.** The disputed sums change when a dispute opens or closes AND when the record they name is edited or deleted (`projectEntity` handles both; the record's own write takes its disputed part off first, so the delete-then-close order leaves nothing behind). The property test sprinkles disputes over the existing random sequences on a **separate random stream and id minter**, so every existing seed still builds the same ledger; and a twin run without disputes proves balances, pairs and aggregates are identical. A write that mints ids (closing disputes as Gone mints an outbox op id) still shifts later ids: compare groups by creation order, not by id.
+- 2026-10-30, F-1210: **a host-mounted sheet needs a fresh mount and a fresh dialog control per request.** On a phone-width web page (and native) a closed sheet keeps its form state (an old note, `isSaving`), and a control that is still closing ignores `open()`: the second Reject/Reopen opened late or never, with a disabled Save. `DisputeHost` mounts a keyed sheet that owns its control and opens it as it mounts. (Remind's host reuses one sheet; its forms are stateless enough to get away with it.)
+- 2026-10-30, F-1210: **arithmetic on money belongs in `packages/domain`, even a `min` or a sum for a label** (the architecture rules `moneyArithmetic` and `unlikeCurrencySum` fail a new file in the client): the "of which disputed" capping and the Settle exclusion are `domain/disputed.ts` with tests. Raw `store.method()` calls are banned outside `data/` the same way: a `state/` hook calls a `packages/sync` function (`loadDisputeEvents`, `listDisputedBalances`), never `store.historyMany`.
+- 2026-10-30, F-1210: **components cannot import features or data** (`layerDirection`). A piece used by a component (the payment sheet needs the dispute panel) lives in `components/<area>/` and reads through `state/`; only the hosts and sheets that need `data/` stay in `features/`. Count a new `useDialogControl` too: a sheet without an address is listed in `table.test.ts` `NOT_ADDRESSABLE` with its reason.
+- 2026-10-30, F-1210: **Lingui turns a call expression in a message into `{0}`**: assign it to a named variable first (`const ago = getTimeAgo(...)`), so the Hindi translator sees `{ago}`. Do not build a sentence by gluing `": " + note` onto a translated one; show the note as its own line.
+- 2026-10-30, F-1210 e2e: **never `goto` right after a click that writes.** The write is a transaction still in flight; the reload drops it and the next assertion fails (it looked like a missing feature). Wait for the sheet to close or the toast first. A search drawer input also needs `toBeEditable()` before `fill` under load.
 
 ## 24. Checklists
 
@@ -2358,6 +2372,41 @@ add anyway (only for you)"; "also i should be able to select from contacts". *Wh
     two-sided with sync (F-2208). Demo data carries every state (owner 109).
   *Why:* "add an option for disputes as well, think about it properly"; "should we calculate disputed expense
   or wait until they are resolved".
+
+  - **[Built] (F-1210, 2026-10-30)** `packages/sync/src/disputes.ts` (mutations `dispute.raise|hold|release|accept|reject|withdraw|
+    reopen|gone`, each a versioned write with history and an outbox op; accept with `apply` runs the fix through `updateExpense`
+    in the same transaction; `updateExpenseResolving` saves an edit and accepts in one), `packages/domain/src/permissions.ts`
+    (`canDispute`, `canResolveDispute`: the raiser, or whoever recorded it for them, may only withdraw or reopen; the adder, a
+    payer or an admin answer; a second reopen is admin only) and `disputed.ts` (the "of which" and Settle arithmetic).
+    Client: `components/disputes/` (badge, "of which disputed" line, panel, thread line, row menu items), `features/disputes/`
+    (`DisputeHost` at the app root with the raise/hold sheet and the reject/reopen note sheet), `state/disputes.ts` (reads and
+    writes), `lib/disputes/bus.ts`. A hold's reason is free text (required); a dispute's `other` needs a note. A proposed fix
+    exists for amount, share, payer and duplicate; "Payment not received" applies by deleting the payment; accepting without a fix
+    only records that the resolver agreed. A deleted record closes its open disputes as Gone in the deleting transaction
+    (`write()` does it for every path, a group delete included).
+  - Where it shows: Expense and Payment pages (badge, panel, thread lines), history rows (badge; right-click, long-press or a
+    "..." button on wide screens opens Dispute / Put on hold), an itemised bill's items ("Dispute my portion"), Person and Group
+    balances ("of which ₹400 disputed", per currency, pointing the way the balance does and never above it), Settle up (disputed
+    and held amounts left out by default with the amount stated, "Include disputed" remembered per group in
+    `group:settleIncludeDisputed`, a new plan hash on every raise, accept and release), the edit prompt "Does this resolve
+    <name>'s dispute?", Activity (a Disputed tab, `/activity/disputed`, and rows for raised, held, answered, reopened, released,
+    withdrawn; Gone is the delete's own row), "Disputed only" in the Group and Person filter sheets (the page's own choice,
+    not in the address yet), Search (`status: disputed`, alone or with words), and a Dispute column in the CSV statement.
+  - **Not built (why):** the For you card's "Needs your answer" and its 3-day nudge (the card, F-230, is not built and Home is
+    being redesigned: `useOpenDisputes()` in `state/disputes.ts` is the read it needs); "Adjustment after settle-up" (needs the
+    F-1205 checkpoints); "of which disputed" on the Home overview cards (another builder owns them: follow-up note in
+    BACKLOG F-1210); the Disputed filter in the address (F-241).
+  - *Reads/writes*: stores `disputes`, `disputed_balances`, `disputed_pairs`; reads `byTargetStatus` (a record), `byStatus` (all open,
+    one projection for every list and badge), `byTarget` (a record's history), `disputedBalances`, `disputedPairs`; outbox op types
+    `dispute.raise`, `dispute.hold`, `dispute.release`, `dispute.accept`, `dispute.reject`, `dispute.withdraw`, `dispute.reopen`,
+    `dispute.gone`; no server routes yet.
+  - *Cost*: raising is one transaction (the dispute, its history row, one outbox op, plus the disputed sums of one record: two index
+    reads and a few row writes). Every money write adds one indexed read of the record's open disputes. Lists read the open
+    disputes once, not per row. No timers, no dependencies; one bundled sheet host at the root.
+  - *Telemetry*: none added (no new metric name).
+  - *Checks*: bun `permissions.test.ts`, `disputed.test.ts`, `disputes.test.ts` (both engines), `ledgerProjection.property.test.ts`
+    ("never move a balance" with disputes riding on their own random stream), `migrate.test.ts` (v4 -> v5 on both engines and the
+    large set), `demoCoverage.test.ts` (13 lines); Playwright `disputes.spec.ts` at 390 and 1440. iOS and Android: not yet.
 
 - **Notifications: one switch for money, one for comments** (owner 131; built with F-251). Settings >
   Notifications has "Payments" (one switch for both new expenses that include me and payments to or from me;

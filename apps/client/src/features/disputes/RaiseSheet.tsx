@@ -277,7 +277,6 @@ function RecentCandidates(props: PickerProps) {
 }
 
 function Candidates({entries, currency, selfId, value, onChange}: PickerProps & {entries: HistoryEntry[] | undefined}) {
-  const {t: l} = useLingui()
   const locale = useNumberLocale()
   const options = (entries ?? [])
     .flatMap(e => (e.kind === 'expense' && !e.entity.deleted && e.entity.id !== selfId && e.entity.data.currency === currency ? [e.entity as Entity<Expense>] : []))
