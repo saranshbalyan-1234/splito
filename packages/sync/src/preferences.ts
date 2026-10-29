@@ -218,7 +218,6 @@ export const PREFS = {
   /** F-310: amounts read 2k, 1.5L, 1cr and 2m. */
   'amount.shorthand': def('amount.shorthand', 'regional', 'account', 'Amount shortcuts', true, isBool),
   /** F-1816: Bluesky's language dropdown on the web splash, sign-up and the desktop right column. */
-  'rightColumn.languageDropdown': def('rightColumn.languageDropdown', 'regional', 'device', 'Language menu on sign-in screens and the right column', true, isBool),
   peopleSort: def('peopleSort', 'lists', 'account', 'Sort people by', 'amount', oneOf('amount', 'name', 'recent')),
   includeGroupsDefault: def('includeGroupsDefault', 'lists', 'account', 'Include groups by default', true, isBool),
   /** The "Inactive (N)" fold at the end of the Groups list (decision 89). */

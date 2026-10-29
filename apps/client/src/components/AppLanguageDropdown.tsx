@@ -12,15 +12,14 @@ import {Earth_Stroke2_Corner2_Rounded as EarthIcon} from './icons/Globe'
  * Bluesky's app language dropdown: a ghost button with a globe, the current
  * language and a chevron, opening a dropdown on web and a sheet on phones.
  * It writes the `language` preference (what Settings > Language edits), which
- * `LocaleFromPrefs` activates without a reload. The device preference
- * `rightColumn.languageDropdown` (Settings > Regional) hides it everywhere it
- * is mounted: the web splash, sign-up and the desktop right column.
+ * `LocaleFromPrefs` activates without a reload. It is always shown where
+ * Bluesky shows it: the web splash, sign-up and the desktop right column
+ * (owner 128).
  */
 export function AppLanguageDropdown() {
   const t = useTheme()
   const {t: l} = useLingui()
-  const {language, setLanguage, isShown} = useAppLanguage()
-  if (!isShown) return null
+  const {language, setLanguage} = useAppLanguage()
 
   return (
     <Select.Root

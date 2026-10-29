@@ -537,19 +537,6 @@ function LanguagePref() {
   )
 }
 
-function LanguageDropdownPref() {
-  const {t: l} = useLingui()
-  return (
-    <SwitchPref
-      pref={usePrefControl('rightColumn.languageDropdown')}
-      icon={LanguageIcon}
-      title={l`Language menu`}
-      label={l`Show the language menu on the sign-in screens and in the right column`}
-      description={l`The same choice as Language above, one tap away. Hiding it never changes your language.`}
-    />
-  )
-}
-
 function TimeZonePref() {
   const {t: l} = useLingui()
   const pref = usePrefControl('timezone')
@@ -1046,7 +1033,6 @@ export const PREF_CONTROLS = {
   dateFormat: DateFormatPref,
   numberLocale: NumberFormatPref,
   'amount.shorthand': AmountShorthandPref,
-  'rightColumn.languageDropdown': LanguageDropdownPref,
   peopleSort: PeopleSortPref,
   includeGroupsDefault: IncludeGroupsPref,
   'groups.showInactiveFold': ShowInactiveFoldPref,

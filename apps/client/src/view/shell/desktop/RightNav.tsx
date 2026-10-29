@@ -1,7 +1,6 @@
 // Adapted from bluesky-social/social-app@4e4ad9c (MIT) - src/view/shell/desktop/RightNav.tsx (fixed right column, width, borders)
 import {ScrollView, View} from 'react-native'
 
-import {usePref} from '#/data/hooks'
 import {atoms as a, useBreakpoints, useTheme, web} from '#/alf'
 import {AppLanguageDropdown} from '#/components/AppLanguageDropdown'
 import {RecentGroups} from './LeftNav'
@@ -20,7 +19,6 @@ export function useRightNavWidth() {
 export function DesktopRightNav() {
   const t = useTheme()
   const width = useRightNavWidth()
-  const [isLanguageShown = true] = usePref('rightColumn.languageDropdown')
   if (!width) return null
   return (
     <View
@@ -37,11 +35,9 @@ export function DesktopRightNav() {
         <RecentGroups />
       </ScrollView>
       {/* Bluesky's footer row: the language dropdown, pinned under the scrolling content (F-1816). */}
-      {isLanguageShown && (
-        <View style={[a.px_md, a.py_sm]}>
-          <AppLanguageDropdown />
-        </View>
-      )}
+      <View style={[a.px_md, a.py_sm]}>
+        <AppLanguageDropdown />
+      </View>
     </View>
   )
 }

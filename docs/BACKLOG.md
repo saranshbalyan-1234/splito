@@ -3390,7 +3390,7 @@ Bluesky's `src/components/AppLanguageDropdown.tsx` (no props): a ghost button wi
 Bluesky's fourth placement, the logged-out `NavSignupCard` in the LeftNav and drawer, is not copied: Splito's sidebar and drawer already carry Sign in (§ 26.3). Choosing a language writes the existing `language` preference (the same value as Settings > Language and onboarding, F-1810, F-211), activates its Lingui catalog without a reload (Bluesky `dynamicActivate`) and sets `document.documentElement.lang` on web. Options come from the one supported-language list, each labelled in its own script plus English ("हिन्दी – Hindi"), so languages added by F-1811 appear automatically.
 
 - **Effort** S · **Impact** 7 · **Backend** no · **Status** done (feat/wB-B2; `components/AppLanguageDropdown`, `components/Select`, `locale/languages.ts`, mounts in the web splash, Signup and RightNav; `e2e/language.spec.ts`; adds `@radix-ui/react-select` 2.2.6) · **Deps** F-1810, F-225, F-224
-- **Prefs** `language` (existing, no new value); `rightColumn.languageDropdown` (device, on)
+- **Prefs** `language` (existing, no new value); the `rightColumn.languageDropdown` switch was removed (owner 128)
 - **Acceptance**
   1. Copied from Bluesky with the attribution header; the reuse row names Bluesky's version (won) and Expensify's (a Preferences page only, `src/pages/settings/Preferences/`).
   2. Rendered in exactly the three places above.

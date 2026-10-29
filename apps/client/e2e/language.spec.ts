@@ -91,23 +91,6 @@ test('desktop right column: the dropdown switches the sidebar labels', async ({
   )
 })
 
-test('the device preference hides the dropdown in every place', async ({
-  page,
-}) => {
-  await page.setViewportSize(WIDE)
-  await page.goto('/?demo=1')
-  await expect(
-    page.getByTestId('right-nav').getByTestId('app-language'),
-  ).toBeVisible()
-  await page.goto('/settings/regional')
-  await page.getByTestId('rightColumn.languageDropdown-switch').click()
-  await page.goto('/')
-  await expect(page.getByTestId('right-nav')).toBeVisible()
-  await expect(page.getByTestId('app-language')).toHaveCount(0)
-  await openSplash(page)
-  await expect(page.getByTestId('app-language')).toHaveCount(0)
-})
-
 test('phone width: the same select opens as a bottom sheet with the current option checked', async ({
   page,
 }) => {

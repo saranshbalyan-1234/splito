@@ -1262,7 +1262,8 @@ labelled sidebar); **wide** = web 1300 px and up (Bluesky `gtTablet`, right colu
 - **Analytics with graphs is required** (§ 26.16). *Why:* "analytics also needed, with graphs and all".
 - **Multi-language: English is the default; Hindi is the second launch language** (Hindi is the assistant's
   call). Indian number grouping under Hindi and en-IN. *Why:* "multi language support", "default eng". *Where:*
-  § 7, `locale/`.
+  § 7, `locale/`. The app-language dropdown (Bluesky's `AppLanguageDropdown`) always shows where Bluesky shows
+  it (sign-in screens, the desktop right column); there is no switch to hide it (owner 128).
 - **The user sets their own timezone** (Settings > Regional); each expense keeps its local date and IANA tz.
   *Why:* "set your timezone". *Where:* spec § 5, preferences registry.
 - **All platforms (iOS, Android, web/PWA) get the full polish: splash, branding, icons.** *Why:* "for all
@@ -2228,6 +2229,7 @@ Every owner decision, in the order it was made (all 2026-10-26). "Replaced" name
 | 125 | "also without login, nothing should be visible, auth is required" | Sign-in required: signed out shows only the tour, the logged-out flow, language and legal pages; DB opens only with a session; offline after sign-in; one DB per account; dev/e2e dev account until the auth API; auth backend moved up after Wave C | § 26.15 | Sign-in optional, zero-signup onboarding (F-211), closable sign-in screen |
 | 126 | "add a little padding from top, on sidebar on logo" | Sidebar logo sits 12 px lower than the header centre line | § 26.5 | Logo on the header row centre line |
 | 127 | "navigation changes reflect on mobile only, it should be same on desktop as well" | Settings > Navigation drives the bottom bar, the rail and the desktop sidebar alike (same items, same order); items turned off go under "More" at the end of the sidebar/rail; the drawer follows the same order | § 26.3 | Desktop and rail always showed the full list |
+| 128 | "remove the Language menu setting" | The language dropdown always shows where Bluesky shows it; the `rightColumn.languageDropdown` preference and its Settings row are removed (an old stored row is ignored) | § 26.2 | A device switch that hid the dropdown |
 
 New decisions follow § 0 rule 9: rewrite the rule in its topic so only the current truth remains, then add a
 row here.
