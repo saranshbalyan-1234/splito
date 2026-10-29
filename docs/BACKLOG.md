@@ -80,6 +80,7 @@ Every row of the ARCHITECTURE § 26.23 decision log (rows 1-63) and the feature(
 | 137 push notifications on iOS, Android and web | § 26.20 | F-2201 (first backend batch) |
 | 135 demo data downloaded from the backend, not bundled | § 26.1 | F-252 (backend) |
 | 128 customization only where needed; Language menu switch removed | § 26.1 | F-251 |
+| 153 Home = Overview + Recent transactions; People tab; Overview only on Home | § 26.3 | F-256 |
 | 145 deep links end to end | § 26.3 | F-254 (with F-241) |
 | 125 sign-in required, nothing visible signed out | § 26.15 | F-250 (Wave C), F-2101/F-2102 moved up after Wave C |
 | 124 footer links on one line | § 26.5 | fixed on integrate/wB |
@@ -521,6 +522,20 @@ Every tap changes the screen in the same or next frame; slow bodies (lists, char
   2. A perf/e2e check measures tap-to-first-visual-change for the main tappables (tabs, a friend row, a group row, FAB, a filter chip, a switch, Add expense Save, a sheet's X) at 390 px: under 100 ms, with CPU 4x throttled under 200 ms.
   3. Heavy bodies use startTransition / useDeferredValue or mount after the transition, with same-size skeletons; no JS long task over 50 ms between a tap and its first frame.
   4. iOS Safari and iOS native checked on the simulator; the renders gate does not regress.
+
+### F-256 Home, People and Groups tabs; Overview only on Home `spec: owner § 26.3 (decision 153)`
+
+Home shows the Overview and Recent transactions (F-1415); a new People tab holds requests, the invites row and the friends list with search and filters; Groups drops its Overview; nav and default bottom bar gain People.
+
+- **Effort** M · **Impact** 9 · **Backend** no · **Status** todo, next after the tap fix (F-255) merges; F-241's WIP rebases onto it · **Deps** F-1415, F-255, F-241
+- **Prefs** `tabs` default changes to Home, People, Groups, Analytics, Activity (existing users keep their own order; People is added after Home if absent)
+- **Acceptance**
+  1. `/` shows Overview then Recent transactions (newest expenses and payments across everything, "See all" -> Activity), no friends list, no requests; phone header has Search & Ask only.
+  2. `/people` shows requests, "N invites waiting ›", Friends (count, search, Filters, Show settled), no Overview; header Search & Ask + Add friend; `/people/:id` unchanged.
+  3. `/groups` has no Overview; everything else unchanged.
+  4. Nav list order Home, People, Groups, Analytics, Ask Splito, Activity, Settings in bottom bar, sidebar, rail, drawer; default bar of 5 with labels; Settings > Navigation includes People; saved tabs migrate by inserting People after Home.
+  5. Right column at 1300 px hides its Recent transactions while Home is shown.
+  6. Shell-first rendering (owner 152), e2e at 390/1440, demo data covers recent transactions, Lingui en + hi, perf and renders gate.
 
 ### F-250 Sign-in required (auth gate) `spec: owner § 26.15 (decision 125)`
 
