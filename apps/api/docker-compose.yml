@@ -1,0 +1,30 @@
+# Local development only: NODE_ENV=development enables the x-splito-dev-account header.
+services:
+  db:
+    image: postgres:17
+    environment:
+      POSTGRES_PASSWORD: splito
+      POSTGRES_DB: splito
+    ports:
+      - '55432:5432'
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U postgres']
+      interval: 2s
+      retries: 30
+  api:
+    build:
+      context: ../..
+      dockerfile: apps/api/Dockerfile
+    environment:
+      DATABASE_URL: postgres://postgres:splito@db:5432/splito
+      NODE_ENV: development
+      PORT: '3000'
+    ports:
+      - '3000:3000'
+    depends_on:
+      db:
+        condition: service_healthy
+volumes:
+  pgdata: {}
