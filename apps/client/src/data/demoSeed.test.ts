@@ -248,7 +248,7 @@ for (const engine of [sqlite, indexedDb]) {
       async () => {
         const real = await engine().open('real')
         await realData(real)
-        // What `?demo=large` left behind: the whole dataset, in the real database next to real data.
+        // What the old large-set URL switch left behind: the whole dataset, in the real database next to real data.
         await seedDemo(real, {...realCtx, now: () => Date.now()})
         expect((await real.dump()).entities.some(x => x.id.startsWith('demo-large-'))).toBe(true)
         let done = false

@@ -4470,7 +4470,7 @@ msgid "Sets the email or phone number for password reset"
 msgstr "पासवर्ड रीसेट के लिए ईमेल या फ़ोन नंबर तय करता है"
 
 #. placeholder {0}: Math.round(done * 100)
-#: src/components/DemoBanner.tsx:66
+#: src/components/DemoBanner.tsx:67
 msgid "Setting up the demo… {0}%"
 msgstr "डेमो तैयार हो रहा है… {0}%"
 
@@ -4887,7 +4887,7 @@ msgstr "गतिविधि पर दाएँ स्वाइप"
 msgid "Switch back"
 msgstr "वापस जाएँ"
 
-#: src/components/DemoBanner.tsx:66
+#: src/components/DemoBanner.tsx:67
 msgid "Switching…"
 msgstr "बदला जा रहा है…"
 

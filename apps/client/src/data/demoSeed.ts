@@ -297,7 +297,7 @@ export async function resumeDemo<T>(real: {store: Store; ctx: MutationCtx}, open
 }
 
 /**
- * Demo rows that older builds (`?demo=large`, "Add demo data") wrote into the REAL
+ * Demo rows that older builds (the large-set URL switch, "Add demo data") wrote into the REAL
  * database can no longer be removed from the app. Once per device (`flag`), erases
  * every row in the old `demo-large-` id range, with its history and outbox ops.
  * The old small set used random ids and cannot be told apart: those devices use

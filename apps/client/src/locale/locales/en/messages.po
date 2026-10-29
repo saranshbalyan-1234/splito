@@ -4470,7 +4470,7 @@ msgid "Sets the email or phone number for password reset"
 msgstr "Sets the email or phone number for password reset"
 
 #. placeholder {0}: Math.round(done * 100)
-#: src/components/DemoBanner.tsx:66
+#: src/components/DemoBanner.tsx:67
 msgid "Setting up the demo… {0}%"
 msgstr "Setting up the demo… {0}%"
 
@@ -4887,7 +4887,7 @@ msgstr "Swipe right on Activity"
 msgid "Switch back"
 msgstr "Switch back"
 
-#: src/components/DemoBanner.tsx:66
+#: src/components/DemoBanner.tsx:67
 msgid "Switching…"
 msgstr "Switching…"
 
