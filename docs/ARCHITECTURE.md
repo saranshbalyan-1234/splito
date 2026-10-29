@@ -1879,6 +1879,14 @@ built yet.
     (release blocker § 26.22).
   *Why:* "also without login, nothing should be visible, auth is required".
 
+- **On/off settings are switches, on every platform** (owner 132): every boolean setting (Demo mode, each
+  Notifications row, Animations, Haptics and the rest) uses Bluesky's `Toggle.Switch` on iOS, Android and web,
+  never a checkbox (Bluesky's `Toggle.Platform` draws a checkbox on web and Android, so it is not used for
+  settings). Multi-choice settings keep radio rows. *Why:* "it should be a switch not a checkbox".
+- **The demo banner is compact** (owner 132): "Demo mode · Switch back" in one line at the top, no taller than
+  its content (at most 48 px on desktop), never an empty band above the header. *Why:* "in demo mode I see
+  extra space on top".
+
 ### 26.16 Analytics
 
 - **Analytics is a main destination with graphs** (charts and a table view), filtered by period, currency and
@@ -2260,6 +2268,7 @@ Every owner decision, in the order it was made (all 2026-10-26). "Replaced" name
 | 129 | "remember, we need to make this app simple with all the features and customization" | Simple first: every feature kept, each screen shows only what the moment needs, power features one tap deeper, good defaults, short copy, no clutter; reviews check for clutter | § 26.1 | - (complements 128) |
 | 130 | "how much i owe or these things should always be vertically center, whether its one row or two rows or any number of rows" | Row amounts (and avatar, name block) are vertically centred, never top-aligned | § 26.12 | Friend rows top-aligned the first net on the name line |
 | 131 | "new expense and payment should be one i guess, make it payment, add one more notification for comments" | One "Payments" notification switch covers new expenses and payments; new "Comments" switch | § 26.20 | Separate New expenses and Payments switches; no comments switch |
+| 132 | "in demo mode i see extra space on top, and it should be a switch not a checkbox" | Boolean settings are Bluesky switches on every platform; demo banner compact, text visible, no empty band | § 26.15 | Toggle.Platform checkboxes on web; blank demo banner band on desktop |
 
 New decisions follow § 0 rule 9: rewrite the rule in its topic so only the current truth remains, then add a
 row here.
