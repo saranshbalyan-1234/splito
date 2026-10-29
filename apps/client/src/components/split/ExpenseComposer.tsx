@@ -145,12 +145,12 @@ export function ExpenseComposer({
 
   const update = (fn: (f: ExpenseForm) => ExpenseForm) => setForm(fn)
 
-  const currencyControl = Dialog.useDialogControl()
-  const dateControl = Dialog.useDialogControl()
-  const categoryControl = Dialog.useDialogControl()
-  const groupControl = Dialog.useDialogControl()
-  const peopleControl = Dialog.useDialogControl()
-  const payersControl = Dialog.useDialogControl()
+  const currencyControl = Dialog.useDialogControl({url: 'currency'})
+  const dateControl = Dialog.useDialogControl({url: 'date'})
+  const categoryControl = Dialog.useDialogControl({url: 'category'})
+  const groupControl = Dialog.useDialogControl({url: 'group'})
+  const peopleControl = Dialog.useDialogControl({url: 'people'})
+  const payersControl = Dialog.useDialogControl({url: 'payers'})
 
   /* Drafts survive closing: every change is kept on the device until Save or Discard. */
   useEffect(() => {

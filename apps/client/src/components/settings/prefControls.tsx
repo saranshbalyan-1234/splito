@@ -225,7 +225,7 @@ function useCurrencyName() {
 function CurrencyPref() {
   const {t: l} = useLingui()
   const pref = usePrefControl('defaultCurrency')
-  const control = useDialogControl()
+  const control = useDialogControl({url: 'currency'})
   const nameOf = useCurrencyName()
   if (!pref.value) return null
   const options = Object.values(CURRENCIES).map(c => ({
@@ -276,7 +276,7 @@ function LanguagePref() {
 function TimeZonePref() {
   const {t: l} = useLingui()
   const pref = usePrefControl('timezone')
-  const control = useDialogControl()
+  const control = useDialogControl({url: 'timezone'})
   if (!pref.value) return null
   const zoneName = (zone: string) => zone.replace(/_/g, ' ')
   const deviceZone = zoneName(deviceTimeZone())

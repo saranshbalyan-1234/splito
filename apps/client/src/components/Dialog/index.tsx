@@ -58,7 +58,11 @@ import {
   useTheme,
 } from '#/alf'
 import {useThemeName} from '#/alf/util/useColorModeTheme'
-import {Context, useDialogContext} from '#/components/Dialog/context'
+import {
+  Context,
+  SheetOwnerContext,
+  useDialogContext,
+} from '#/components/Dialog/context'
 import {
   getMeasuredDialogContentHeight,
   shouldMeasureDialogContentHeight,
@@ -156,6 +160,7 @@ export function Outer({
       showShell()
       onOpen?.()
       setDialogIsOpen(control.id, true)
+      control.url?.notifyOpen()
       ref.current?.present()
     },
     [
@@ -164,6 +169,7 @@ export function Outer({
       callQueuedCallbacks,
       onOpen,
       showShell,
+      control.url,
       nativeOptions?.popover,
       nativeOptions?.sourceViewTag,
       nativeOptions?.fullHeight,
@@ -187,10 +193,12 @@ export function Outer({
     setDialogIsOpen(control.id, false)
     setDesiredContentHeight(undefined)
     callQueuedCallbacks()
+    control.url?.notifyClosed()
     onClose?.()
   }, [
     callQueuedCallbacks,
     control.id,
+    control.url,
     onClose,
     setDialogIsOpen,
     setDesiredContentHeight,
@@ -320,7 +328,13 @@ export function Outer({
                     maxHeight: presentationMaxHeight,
                   },
                 ]}>
-                {children}
+                {control.url ? (
+                  <SheetOwnerContext.Provider value={control.url.owner}>
+                    {children}
+                  </SheetOwnerContext.Provider>
+                ) : (
+                  children
+                )}
               </View>
             </SheetGestureRoot>
           </BreakpointWidthContext.Provider>

@@ -17,15 +17,21 @@ import {SearchAskBody} from './SearchAskBody'
  * It opens as search, or straight in the Ask Splito chat (`mode: 'ask'`).
  */
 export function SearchAskProvider({children}: {children: React.ReactNode}) {
-  const control = Dialog.useDialogControl()
-  const isOpen = useRef(false)
   const [initial, setInitial] = useState<{query: string; mode: SearchAskMode}>({query: '', mode: 'search'})
+  /* The address carries the opening query and mode (`/search?q=dinner&mode=ask`, F-241); a pasted one seeds them. */
+  const control = Dialog.useDialogControl({
+    url: 'search',
+    onUrlQuery: q => setInitial({query: q.q ?? '', mode: q.mode === 'ask' ? 'ask' : 'search'}),
+  })
+  const isOpen = useRef(false)
 
   const api = useMemo<SearchAskApi & {isOpen: () => boolean}>(() => {
     const open: SearchAskApi['open'] = options => {
       if (isOpen.current) return
       setInitial({query: options?.query ?? '', mode: options?.mode ?? 'search'})
-      control.open()
+      control.open({
+        urlQuery: {...(options?.query ? {q: options.query} : {}), ...(options?.mode === 'ask' ? {mode: 'ask'} : {})},
+      })
     }
     return {
       open,

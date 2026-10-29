@@ -1,38 +1,22 @@
-import {getStateFromPath, type LinkingOptions} from '@react-navigation/native'
+import {type LinkingOptions} from '@react-navigation/native'
 
-import {type RootStackParams, type TabParams} from '#/lib/routes/types'
-import {redirectOldPath, ROUTE_PATHS, type RouteName} from '#/routes'
-
-const TABS: RouteName[] = [
-  'People',
-  'Groups',
-  'Analytics',
-  'Activity',
-] satisfies (keyof TabParams)[]
-
-function pathsFor(names: RouteName[]) {
-  return Object.fromEntries(
-    names.map(name => [name, ROUTE_PATHS[name].slice(1)]),
-  )
-}
+import {LINK_SCHEME, ownLinkHost} from '#/lib/links/hosts'
+import {resolveLink} from '#/lib/links/resolve'
+import {nativeState} from '#/lib/links/state'
+import {type RootStackParams} from '#/lib/routes/types'
+import {queueSheets} from '#/navigation/sheets'
 
 /*
- * Native nests the tab routes in `Tabs`. `initialRouteName` puts the tabs
- * under a deep-linked screen, so its back button returns into the app.
+ * Native: iOS Universal Links and Android App Links claim this build's tier host (app.config.ts, one JSON), and
+ * `splito://` is the custom scheme. Every URL goes through the one resolver (F-254): the page, its params and
+ * the sheet over it. A sheet cannot be a stack route on a phone (the native sheet has its own dismiss), so it is
+ * held until its page mounts (`queueSheets`). Unknown links open Home.
  */
 export const linking: LinkingOptions<RootStackParams> = {
-  prefixes: ['splito://', 'https://splito.app'],
-  getStateFromPath: (path, options) =>
-    getStateFromPath(redirectOldPath(path), options),
-  config: {
-    initialRouteName: 'Tabs',
-    screens: {
-      Tabs: {screens: pathsFor(TABS)},
-      ...pathsFor(
-        (Object.keys(ROUTE_PATHS) as RouteName[]).filter(
-          name => !TABS.includes(name),
-        ),
-      ),
-    },
+  prefixes: [`${LINK_SCHEME}://`, `https://${ownLinkHost()}`],
+  getStateFromPath: path => {
+    const {target} = resolveLink(path)
+    queueSheets(target)
+    return nativeState(target) as ReturnType<NonNullable<LinkingOptions<RootStackParams>['getStateFromPath']>>
   },
 }

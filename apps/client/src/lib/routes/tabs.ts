@@ -13,6 +13,9 @@ export const TAB_ROUTE = {
   activity: 'Activity',
 } as const satisfies Record<TabId, keyof TabParams>
 
+/** The tab routes, in display order (native nests them under `Tabs`). */
+export const TAB_NAMES = Object.values(TAB_ROUTE)
+
 /** Each tab's path. */
 export function tabHref(tab: TabId) {
   return ROUTE_PATHS[TAB_ROUTE[tab]]

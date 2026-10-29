@@ -33,7 +33,7 @@ import {useDialogStateControlContext} from '#/state/dialogs'
 import {useShowShell} from '#/state/shell/minimal-mode'
 import {type ListMethods} from '#/view/com/util/List'
 import {atoms as a, flatten, useBreakpoints, useTheme, web} from '#/alf'
-import {Context} from '#/components/Dialog/context'
+import {Context, SheetOwnerContext} from '#/components/Dialog/context'
 import {
   DrawerContext,
   DrawerHandle,
@@ -88,10 +88,11 @@ export function Outer({
     showShell()
     onOpen?.()
     setDialogIsOpen(control.id, true)
+    control.url?.notifyOpen()
     pendingClose.current = null
     setIsClosing(false)
     setIsOpen(true)
-  }, [setIsOpen, setDialogIsOpen, control.id, onOpen, showShell])
+  }, [setIsOpen, setDialogIsOpen, control.id, control.url, onOpen, showShell])
 
   const finishClose = useCallback(
     (cb?: () => void) => {
@@ -119,9 +120,10 @@ export function Outer({
         })
       }
 
+      control.url?.notifyClosed()
       onClose?.()
     },
-    [control.id, onClose, setDialogIsOpen],
+    [control.id, control.url, onClose, setDialogIsOpen],
   )
 
   const animateExit = isOpen && isDrawer && !reduceMotion
@@ -236,7 +238,13 @@ export function Outer({
                       a.align_center,
                       web({minHeight: '60vh', position: 'static'}),
                     ]}>
-                    {children}
+                    {control.url ? (
+                      <SheetOwnerContext.Provider value={control.url.owner}>
+                        {children}
+                      </SheetOwnerContext.Provider>
+                    ) : (
+                      children
+                    )}
                   </View>
                 </View>
               </Pressable>

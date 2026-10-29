@@ -460,7 +460,7 @@ function ItemsEditor({
   const avatarName = useAvatarName()
   const errorText = useErrorText()
   /* Tax classes (F-403): the item whose picker is open, and a multi-select of items. */
-  const classPicker = useDialogControl()
+  const classPicker = useDialogControl({url: 'tax-class'})
   const [pickingFor, setPickingFor] = useState<string>()
   const [selection, setSelection] = useState<string[]>()
 

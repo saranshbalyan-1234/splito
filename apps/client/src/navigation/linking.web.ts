@@ -1,9 +1,10 @@
-import {getStateFromPath, type LinkingOptions} from '@react-navigation/native'
+import {findFocusedRoute, type LinkingOptions} from '@react-navigation/native'
 
-import {backChain} from '#/navigation/goBack'
+import {ownLinkHost} from '#/lib/links/hosts'
+import {resolveLink} from '#/lib/links/resolve'
+import {pathForRoute, webState} from '#/lib/links/state'
 import {tabHref} from '#/lib/routes/tabs'
 import {type FlatNavigatorParams} from '#/lib/routes/types'
-import {redirectOldPath, ROUTE_PATHS} from '#/routes'
 import {device} from '#/storage'
 
 /*
@@ -21,24 +22,17 @@ if (homeTab && homeTab !== 'people' && window.location.pathname === '/') {
 }
 
 /*
- * Web uses one flat stack (see `FlatNavigator`), so every path maps to a
- * top-level route. A deep link or refresh has no history, so the state puts
- * the page's parents under it (`backChain`: Settle -> Group -> Groups -> People),
- * which makes Back go up instead of leaving; People under Add expense is what
- * its dialog dims.
+ * Web uses one flat stack (see `FlatNavigator`), so every path maps to a top-level route. The one resolver reads
+ * the URL (F-241, F-254): the page, its tab and list state, and the sheets or pickers over it, each a `Sheet`
+ * marker route so the browser's Back closes the top one. A deep link or refresh has no history, so the state
+ * puts the page's parents under it (`backChain`: Settle -> Group -> Groups -> People). Unknown paths open Home
+ * and the address bar is rewritten to "/".
  */
 export const linking: LinkingOptions<FlatNavigatorParams> = {
-  prefixes: ['https://splito.app'],
-  getStateFromPath: (path, options) => {
-    const state = getStateFromPath(redirectOldPath(path), options)
-    const leaf = state?.routes.at(-1)
-    if (!state || !leaf) return state
-    return {...state, routes: backChain(leaf) as typeof state.routes}
-  },
-  config: {
-    initialRouteName: 'People',
-    screens: Object.fromEntries(
-      Object.entries(ROUTE_PATHS).map(([name, path]) => [name, path.slice(1)]),
-    ),
+  prefixes: [`https://${ownLinkHost()}`],
+  getStateFromPath: path => webState(resolveLink(path).target) as ReturnType<NonNullable<LinkingOptions<FlatNavigatorParams>['getStateFromPath']>>,
+  getPathFromState: state => {
+    const leaf = findFocusedRoute(state as Parameters<typeof findFocusedRoute>[0])
+    return leaf ? pathForRoute(leaf) : '/'
   },
 }

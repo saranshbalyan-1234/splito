@@ -47,7 +47,7 @@ export function AccentPicker() {
   const {t: l} = useLingui()
   const names = useAccentNames()
   const pref = usePrefControl('accent')
-  const control = Dialog.useDialogControl()
+  const control = Dialog.useDialogControl({url: 'accent'})
 
   if (pref.value === undefined) return null
   const applied = normalize(pref.value)

@@ -184,7 +184,7 @@ export function Summary({report, locale}: {report: Report; locale: string}) {
 function PeriodMenu({report}: {report: Report}) {
   const t = useTheme()
   const {t: l} = useLingui()
-  const rangeControl = Dialog.useDialogControl()
+  const rangeControl = Dialog.useDialogControl({url: 'range'})
   const periods: Array<{
     value: Exclude<PeriodChoice, 'custom'>
     label: string

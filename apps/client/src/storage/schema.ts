@@ -30,6 +30,8 @@ export type Device = {
   askChat: string
   /** The question being typed in Ask Splito, kept when the drawer closes. */
   askDraft: string
+  /** A link opened before sign-in, as its path (`/groups/abc/balances`): resumed once someone is signed in (F-254, F-250). */
+  linkIntent: string
   /** Dev and e2e: the old `demo-large-` rows were purged from the real database (one time). */
   demoLegacyPurged: boolean
 }

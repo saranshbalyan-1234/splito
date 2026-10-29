@@ -25,6 +25,7 @@ import {List} from '#/view/com/util/List'
 import {atoms as a, useBreakpoints, useTheme} from '#/alf'
 import * as Admonition from '#/components/Admonition'
 import {Button, ButtonIcon, ButtonText} from '#/components/Button'
+import {useOpenLink} from '#/lib/links/useOpenLink'
 import {useDialogControl} from '#/components/Dialog'
 import {NO_RULES} from '#/components/groups/RulesEditor'
 import {ArrowRotateCounterClockwise_Stroke2_Corner0_Rounded as RefreshIcon} from '#/components/icons/ArrowRotate'
@@ -73,6 +74,7 @@ export function SettleScreen() {
   const locale = useNumberLocale()
   const navigation = useNavigation<NavigationProp>()
   const {groupId} = useRoute<RouteProp<AllNavigatorParams, 'Settle'>>().params
+  const openLink = useOpenLink()
   const me = useMe()
   const people = useEntities<Person>('person')
   const groups = useEntities<Group>('group')
@@ -426,12 +428,7 @@ export function SettleScreen() {
                           testID="settle-edit-rules"
                           label={l`Edit who you settle with`}
                           color="secondary"
-                          onPress={() =>
-                            navigation.navigate('Group', {
-                              groupId,
-                              tab: 'rules',
-                            })
-                          }>
+                          onPress={() => openLink.open(`/groups/${groupId}/rules`)}>
                           <ButtonText>
                             <Trans>Edit rules</Trans>
                           </ButtonText>

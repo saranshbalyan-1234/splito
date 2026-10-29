@@ -142,6 +142,13 @@ function NativeStackNavigator({
     mountSet.add(focusedKey)
     const homeKey = state.routes.find(r => r.name === 'People')?.key
     if (homeKey) mountSet.add(homeKey)
+    /* A sheet's page stays mounted under its `Sheet` marker (F-241), also on a cold start where it was never focused. */
+    state.routes.forEach((route, i) => {
+      if (route.name !== 'Sheet') return
+      let below = i - 1
+      while (below > 0 && state.routes[below]!.name === 'Sheet') below--
+      mountSet.add(state.routes[below]!.key)
+    })
     let cached = 0
     for (const key of lruKeysRef.current) {
       if (cached >= WEB_MAX_CACHED_SCREENS) break

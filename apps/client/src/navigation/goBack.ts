@@ -2,8 +2,8 @@ import {type AllNavigatorParams} from '#/lib/routes/types'
 
 /** A route to land on: a name plus its params. */
 export type Fallback = {
-  [K in keyof AllNavigatorParams]: AllNavigatorParams[K] extends undefined
-    ? {name: K; params?: undefined}
+  [K in keyof AllNavigatorParams]: undefined extends AllNavigatorParams[K]
+    ? {name: K; params?: AllNavigatorParams[K]}
     : {name: K; params: AllNavigatorParams[K]}
 }[keyof AllNavigatorParams]
 

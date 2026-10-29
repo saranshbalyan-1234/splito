@@ -1,4 +1,4 @@
-import {useEffect, useState} from 'react'
+import {useState} from 'react'
 import {View} from 'react-native'
 import {LayoutAnimationConfig} from 'react-native-reanimated'
 import {Trans, useLingui} from '@lingui/react/macro'
@@ -134,12 +134,12 @@ export function GroupScreen() {
   const navigation = useNavigation<NavigationProp>()
   const route = useRoute<RouteProp<AllNavigatorParams, 'Group'>>()
   const {groupId} = route.params
-  /* `?tab=rules` (Settle up's "Edit rules") opens the Payment rules sheet over Expenses. */
-  const [tab, setTab] = useState<Tab>(
-    route.params.tab === 'rules'
-      ? 'expenses'
-      : (route.params.tab ?? 'expenses'),
-  )
+  /*
+   * The tab is the address (`/groups/:id/balances`, F-241): written on a tap, read from the route. The old
+   * `?tab=rules` link is the Payment rules sheet now (the resolver maps it).
+   */
+  const tab: Tab = route.params.tab && TABS.includes(route.params.tab as Tab) ? (route.params.tab as Tab) : 'expenses'
+  const setTab = (next: Tab) => navigation.setParams({tab: next === 'expenses' ? undefined : next})
   const me = useMe()
   /* Removed friends too: the records still name them. */
   const people = useAllEntities<Person>('person')
@@ -149,10 +149,10 @@ export function GroupScreen() {
   const storedNets = useGroupNets(groupId)
   const groupHistory = useGroupHistory(groupId)
   const detailsControl = useDialogControl()
-  const filterControl = useDialogControl()
-  const addMembersControl = useDialogControl()
-  const editControl = useDialogControl()
-  const rulesControl = useDialogControl()
+  const filterControl = useDialogControl({url: 'filters'})
+  const addMembersControl = useDialogControl({url: 'add-members'})
+  const editControl = useDialogControl({url: 'edit'})
+  const rulesControl = useDialogControl({url: 'rules'})
   const lifecycle = useGroupLifecycle()
   const exportSheet = useExportSheet({groupId})
   const [openRepayment, setOpenRepayment] = useState<Entity<
@@ -167,12 +167,6 @@ export function GroupScreen() {
 
   const isLoading =
     !me || !people || !groups || !storedNets || !groupHistory
-  const wantsRules = route.params.tab === 'rules'
-  useEffect(() => {
-    if (!wantsRules || isLoading) return
-    rulesControl.open()
-    navigation.setParams({tab: undefined})
-  }, [wantsRules, isLoading, rulesControl, navigation])
   const group = groups?.find(g => g.id === groupId)
   const isDeleted = !!group?.deleted
   const isMeAdmin = !!group && !!me && groupAdmins(group.data).includes(me.id)

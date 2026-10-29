@@ -109,7 +109,7 @@ export function PersonScreen() {
   const {gtMobile} = useBreakpoints()
   const locale = useNumberLocale()
   const navigation = useNavigation<NavigationProp>()
-  const {personId, action} = useRoute<RouteProp<AllNavigatorParams, 'Person'>>().params
+  const {personId, action, groups: groupsParam} = useRoute<RouteProp<AllNavigatorParams, 'Person'>>().params
   const store = useStore()
   const ctx = useMutationCtx()
   const me = useMe()
@@ -119,20 +119,27 @@ export function PersonScreen() {
   const balanceRows = useBalanceRows()
   const [includeDefault] = usePref('includeGroupsDefault')
   const [defaultCurrency] = usePref('defaultCurrency')
-  const [applied, setApplied] = useState<boolean | null>(null)
   const errorText = useErrorText()
-  const includeGroups = applied ?? includeDefault ?? true
+  /* Include groups is the address (`/people/:id?groups=0`, F-241); absent, the saved default. */
+  const includeGroups = (groupsParam === undefined ? undefined : groupsParam === '1') ?? includeDefault ?? true
   /* The expenses and payments between us, newest first, a page at a time (by index). */
   const pairHistory = usePairHistory(personId, includeGroups)
 
-  const filterControl = useDialogControl()
-  const paymentControl = useDialogControl()
-  const upiControl = useDialogControl()
+  const filterControl = useDialogControl({url: 'filters'})
+  const paymentControl = useDialogControl({
+    url: 'record-payment',
+    /* A pasted address: wait for the balances, then open as the Settle up button does. */
+    onUrlOpen: () => !isLoading && person && !person.data.isMe && recordPayment(),
+  })
+  const upiControl = useDialogControl({url: 'pay-upi'})
   const detailsControl = useDialogControl()
-  const editControl = useDialogControl()
+  const editControl = useDialogControl({url: 'edit'})
   const exportSheet = useExportSheet({personId})
   const removeControl = useDialogControl()
-  const evenControl = useDialogControl()
+  const evenControl = useDialogControl({
+    url: 'call-it-even',
+    onUrlOpen: () => !isLoading && person && !person.data.isMe && callItEven(),
+  })
   const [evenDraft, setEvenDraft] = useState<EvenDraft | null>(null)
   const [paymentDraft, setPaymentDraft] = useState<PaymentDraft | null>(null)
   const [openRepayment, setOpenRepayment] = useState<Entity<
@@ -554,7 +561,7 @@ export function PersonScreen() {
             control={filterControl}
             name={person.data.name}
             includeGroups={includeGroups}
-            onFilterApplied={setApplied}
+            onFilterApplied={v => navigation.setParams({groups: v === (includeDefault ?? true) ? undefined : v ? '1' : '0'})}
           />
           {
             <RecordPaymentDialog

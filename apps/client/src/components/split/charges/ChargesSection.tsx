@@ -233,7 +233,7 @@ export function ChargeList({
   const {gtMobile} = useBreakpoints()
   const kindName = useKindName()
   const {nameOf} = useTaxClasses()
-  const dialog = useDialogControl()
+  const dialog = useDialogControl({url: 'charge'})
   const [editing, setEditing] = useState<ChargeForm>(() => emptyCharge('new'))
   const merchants = usePrefControl('bill.merchantSetups')
   const setups = merchants.value ?? PREFS['bill.merchantSetups'].default
