@@ -1747,6 +1747,13 @@ good"; "the left sidebar looks bad on desktop". *Where:* `view/shell/desktop/Lef
   Analytics, Activity, Person, Group) and the in-page tabs (`useDeferredValue(tab)`: the bar follows the tap, the
   list re-renders as a transition); check `perf/tapLatency.spec.ts` (`E2E_PORT=8231 pnpm perf -- tapLatency`, CPU x1
   and x4, plus taps 50 ms after a screen-changing tap).
+- **Switching tabs never redraws** (owner 166): a tab already visited stays mounted and is frozen while hidden
+  (react-native-screens `freezeOnBlur` / react-freeze, as Bluesky; the web twin too), so switching back shows it
+  instantly, exactly as it was left (scroll position included), with zero re-render of its content unless its data
+  actually changed while away. Focus is never a reason to re-render (no work in focus effects that rebuilds the
+  body, no store hook returning a new snapshot for an equal answer, no re-keying). Deferral (owners 151/152) applies
+  only to a tab's first visit or to data that really changed. The renders gate's tab round enforces it. *Why:* "it
+  should not redraw".
 - **Tab taps always win, however fast** (owner 150): every tap on a bottom-bar, sidebar, rail or in-page tab
   switches at once, even when taps come milliseconds apart or during a running switch animation: the newest tap
   cancels or redirects the animation, nothing is debounced, locked or swallowed (the first tap after a screen
@@ -2594,6 +2601,7 @@ Every owner decision, in the order it was made (all 2026-10-26). "Replaced" name
 | 163 | "make sure you do it yourself always, whenever you think this should be in app" | Claude records lessons and rules (§ 23 or the section) on its own in the same turn, plus BACKLOG work, commit and push, without being asked | § 0 rule 10 | Recording lessons only when asked |
 | 164 | "finish the frontend first, and then start backend" | All front-end batches finish before any backend work; dev account and local data until then | § 26.2 | Backend batch 1 to start after Wave C / in parallel (125 plan) |
 | 165 | "once i say i am okay with all forntend changes" | Backend starts only after the owner explicitly signs off on all front-end changes | § 26.2 | Backend after front-end batches finish (164) |
+| 166 | "it should not redraw" (on switching back to Home / any tab) | Visited tabs stay mounted and frozen while hidden; switching back shows them as left with zero re-render unless data changed; deferral only on first visit | § 26.9 | Home re-rendered on every switch |
 
 New decisions follow § 0 rule 9: rewrite the rule in its topic so only the current truth remains, then add a
 row here.
