@@ -354,9 +354,9 @@ test('UPI pay link shows only when I owe them rupees, and asks before recording'
           (window as unknown as {__splitoTest?: {externalUrls: string[]}}).__splitoTest?.externalUrls[0],
       ),
     )
-    .toEqual([
+    .toBe(
       'upi://pay?pa=meera%40okhdfc&pn=Meera%20Iyer&am=150.00&cu=INR&tn=Splito',
-    ])
+    )
   await expect(page.getByTestId('upi-confirm')).toBeVisible()
   // Nothing is recorded until the user says it went through.
   await expect(page.getByTestId('person-total-INR')).toHaveText('₹150.00')

@@ -408,7 +408,8 @@ test.describe("activity: a tab with Bluesky's unread badge", () => {
       'true',
     )
     await expect.poll(() => rows.count()).toBe(unread)
-    expect(unread).toBeLessThan(all)
+    // The first page holds 24 rows; with the larger demo history all 24 newest can be from others, so equal is fine.
+    expect(unread).toBeLessThanOrEqual(all)
     await expect(rows.filter({hasText: 'You added'})).toHaveCount(0)
 
     // Mark all read clears the badge, and it stays cleared after a reload.
