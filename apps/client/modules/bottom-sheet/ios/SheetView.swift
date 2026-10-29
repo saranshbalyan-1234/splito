@@ -225,11 +225,11 @@ class SheetView: ExpoView {
     if let leaving = presenter.presentedViewController {
       guard self.presentRetries < 20 else { return }
       self.presentRetries += 1
-      let retry = { [weak self] in self?.present() }
+      let retry: () -> Void = { [weak self] in self?.present() }
       if let coordinator = leaving.transitionCoordinator {
-        coordinator.animate(alongsideTransition: nil) { _ in DispatchQueue.main.async(execute: retry) }
+        coordinator.animate(alongsideTransition: nil) { _ in DispatchQueue.main.async { retry() } }
       } else {
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.05, execute: retry)
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) { retry() }
       }
       return
     }

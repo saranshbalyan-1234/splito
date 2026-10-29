@@ -85,15 +85,15 @@ export class BottomSheetNativeComponent extends Component<
 
   render() {
     const Portal = this.context as React.ContextType<typeof PortalContext>
+    if (!this.state.open) {
+      return null
+    }
+
     // The context default is `{}` (truthy, and not a component): a sheet mounted outside every provider would otherwise crash with "Element type is invalid".
     if (!isComponentType(Portal)) {
       throw new Error(
         'BottomSheet: You need to wrap your component tree with a <BottomSheetPortalProvider> to use the bottom sheet.',
       )
-    }
-
-    if (!this.state.open) {
-      return null
     }
 
     return (
