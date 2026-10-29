@@ -9,6 +9,7 @@ import {
   type EventArg,
   type NavigatorTypeBagBase,
   type ParamListBase,
+  type Router,
   type StackActionHelpers,
   StackActions,
   type StackNavigationState,
@@ -33,6 +34,69 @@ import {IS_WEB} from '#/env'
 import {BottomBarWeb} from './bottom-bar/BottomBarWeb'
 import {DesktopLeftNav, useLeftNavWidth} from './desktop/LeftNav'
 import {DesktopRightNav, useRightNavWidth} from './desktop/RightNav'
+
+/*
+ * Tabs stay mounted (owner 166): popping back to Home used to unmount Groups, Analytics or Activity and
+ * remount them on the next visit (and every row's exit animation ran: Analytics -> Home was 600 ms, 5.9 s at 6x
+ * CPU). A tab the stack drops is parked among the router's `preloadedRoutes` instead: the same key keeps its
+ * tree, state and scroll, `NAVIGATE` / `PUSH` to it re-uses the key, and the view renders it hidden. Home is
+ * pinned already (below). Removing the route from the URL history is unaffected: only `state.routes` is the URL.
+ */
+type RouteLike = {key: string; name: string; path?: string; params?: object}
+function shallowEqual(a: object | undefined, b: object | undefined) {
+  const x = (a ?? {}) as Record<string, unknown>
+  const y = (b ?? {}) as Record<string, unknown>
+  const keys = Object.keys(x)
+  return keys.length === Object.keys(y).length && keys.every(k => Object.is(x[k], y[k]))
+}
+const PARKED_TABS = new Set(['Groups', 'Analytics', 'Activity'])
+const DROPPING = new Set(['POP', 'POP_TO', 'POP_TO_TOP', 'GO_BACK', 'NAVIGATE'])
+function parkTabs(original: Router<any, any>): Router<any, any> {
+  return {
+    ...original,
+    getStateForAction(state, action, options) {
+      /*
+       * `navigate(..., {pop: true})` to a parked tab is a no-op in the stack router (it looks for the route in
+       * `routes` only and never adds the preloaded one), so it is a `PUSH`, which re-uses the parked key.
+       */
+      const name = (action as {payload?: {name?: string; pop?: boolean}}).payload?.name
+      const revive =
+        action.type === 'NAVIGATE' &&
+        !!name &&
+        PARKED_TABS.has(name) &&
+        !state.routes.some((r: {name: string}) => r.name === name) &&
+        state.preloadedRoutes.some((r: {name: string}) => r.name === name)
+      const made = original.getStateForAction(state, revive ? {...action, type: 'PUSH'} : action, options)
+      if (!made || made === state || !DROPPING.has(action.type)) return made
+      /*
+       * A route navigated to with the params it already has stays the same object: the stack router makes a new
+       * one on every `navigate`, which re-renders the whole screen behind it (its `route` prop changed) when you
+       * return to a tab you left, however little changed.
+       */
+      const before = new Map<string, RouteLike>(
+        [...state.routes, ...state.preloadedRoutes].map((r: RouteLike) => [r.key, r]),
+      )
+      const same = (r: RouteLike) => {
+        const old = before.get(r.key)
+        return old && old.name === r.name && old.path === r.path && shallowEqual(old.params, r.params) ? old : r
+      }
+      const next = {...made, routes: made.routes.map(same), preloadedRoutes: made.preloadedRoutes.map(same)}
+      const kept = new Set(next.routes.map((r: {key: string}) => r.key))
+      const dropped = state.routes.filter(
+        (r: {key: string; name: string}) => PARKED_TABS.has(r.name) && !kept.has(r.key),
+      )
+      if (!dropped.length) return next
+      const names = new Set(dropped.map((r: {name: string}) => r.name))
+      return {
+        ...next,
+        preloadedRoutes: [
+          ...next.preloadedRoutes.filter((r: {name: string}) => !names.has(r.name)),
+          ...dropped,
+        ],
+      }
+    },
+  }
+}
 
 // On web, only this many screens (beyond Home + focused) stay mounted.
 // Older screens are unmounted to prevent memory growth during long sessions.
@@ -72,7 +136,7 @@ function NativeStackNavigator({
       screenListeners,
       screenOptions,
       screenLayout,
-      UNSTABLE_router,
+      UNSTABLE_router: IS_WEB ? parkTabs : UNSTABLE_router,
     })
 
   useEffect(
@@ -174,6 +238,39 @@ function NativeStackNavigator({
     }
   }
 
+  /*
+   * A parked tab keeps the screen element it had while live, so neither parking nor reviving it re-renders it
+   * (owner 166). `describe(route, true)` would make a new element on every navigator render, with the navigator's
+   * own `navigation` instead of the route's, and a revived route comes back as a new object: both change what the
+   * screen reads from context and re-render all of its rows. The live element stays valid: it is keyed by the
+   * route key, which the router keeps, and its params are compared before it is re-used.
+   */
+  const lastLive = useRef(new Map<string, {route: RouteLike; descriptor: (typeof descriptors)[string]}>())
+  const everParked = useRef(new Set<string>())
+  const describeParked: typeof describe = (route, placeholder) => {
+    const kept = IS_WEB && placeholder ? lastLive.current.get(route.key) : undefined
+    return kept ? kept.descriptor : describe(route, placeholder)
+  }
+  if (IS_WEB) {
+    for (const r of state.preloadedRoutes) everParked.current.add(r.key)
+    const swapped: typeof finalDescriptors = {...finalDescriptors}
+    for (const route of state.routes) {
+      const d = finalDescriptors[route.key]
+      const before = lastLive.current.get(route.key)
+      if (d && before && everParked.current.has(route.key) && before.route.name === route.name && before.route.path === route.path && shallowEqual(before.route.params, route.params)) {
+        swapped[route.key] = {...d, render: before.descriptor.render}
+      } else if (d) {
+        lastLive.current.set(route.key, {route: route as RouteLike, descriptor: d})
+      }
+    }
+    finalDescriptors = swapped
+    for (const key of [...lastLive.current.keys()])
+      if (!state.preloadedRoutes.some(r => r.key === key) && !state.routes.some(r => r.key === key)) {
+        lastLive.current.delete(key)
+        everParked.current.delete(key)
+      }
+  }
+
   // Bluesky shows the bottom bar on mobile web when signed in; Splito is always "signed in" locally.
   const showBottomBar = isMobile
 
@@ -191,7 +288,7 @@ function NativeStackNavigator({
           state={state}
           navigation={navigation}
           descriptors={finalDescriptors}
-          describe={describe}
+          describe={describeParked}
         />
       </View>
       {IS_WEB && (

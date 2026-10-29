@@ -92,7 +92,8 @@ export function ListToolsHeader({
 
   return (
     <View
-      onLayout={e => setRowWidth(e.nativeEvent.layout.width - 32 - ICON - GAP)}
+      /* A hidden tab measures 0: keep the last real width (owner 166). */
+      onLayout={e => e.nativeEvent.layout.width > 0 && setRowWidth(e.nativeEvent.layout.width - 32 - ICON - GAP)}
       style={[a.px_lg, a.pt_md, a.pb_sm, a.justify_center, {minHeight: 60}]}>
       <View style={[a.flex_row, a.align_center, {gap: GAP}]}>
         <Animated.View

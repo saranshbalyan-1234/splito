@@ -301,64 +301,6 @@ function ListImpl<ItemT>(
   const containerRef = useRef(null)
   useResizeObserver(containerRef, onContentSizeChange)
 
-  // --- onScroll ---
-  const [isInsideVisibleTree, setIsInsideVisibleTree] = useState(false)
-  useWebListTelemetry({
-    containerRef: nativeRef,
-    enabled: isInsideVisibleTree,
-    itemCount: data?.length ?? 0,
-    rowNodesRef,
-  })
-  const handleScroll = useNonReactiveCallback(() => {
-    if (!isInsideVisibleTree) return
-
-    const element = getScrollableNode()
-    contextScrollHandlers.onScroll?.(
-      {
-        contentOffset: {
-          x: Math.max(0, element?.scrollX ?? 0),
-          y: Math.max(0, element?.scrollY ?? 0),
-        },
-        layoutMeasurement: {
-          width: element?.clientWidth,
-          height: element?.clientHeight,
-        },
-        contentSize: {
-          width: element?.scrollWidth,
-          height: element?.scrollHeight,
-        },
-      } as Exclude<
-        ReanimatedScrollEvent,
-        | 'velocity'
-        | 'eventName'
-        | 'zoomScale'
-        | 'targetContentOffset'
-        | 'contentInset'
-      >,
-      {},
-    )
-  })
-
-  useEffect(() => {
-    if (!isInsideVisibleTree) {
-      // Prevents hidden tabs from firing scroll events.
-      // Only one list is expected to be firing these at a time.
-      return
-    }
-
-    const element = getScrollableNode()
-
-    element?.addEventListener('scroll', handleScroll)
-    return () => {
-      element?.removeEventListener('scroll', handleScroll)
-    }
-  }, [
-    isInsideVisibleTree,
-    handleScroll,
-    disableFullWindowScroll,
-    getScrollableNode,
-  ])
-
   // --- onScrolledDownChange ---
   const isScrolledDown = useRef(false)
   function handleAboveTheFoldVisibleChange(isAboveTheFold: boolean) {
@@ -409,13 +351,13 @@ function ListImpl<ItemT>(
         },
       ]}
       ref={nativeRef as unknown as React.Ref<React.ComponentRef<typeof View>>}>
-      <Visibility
-        onVisibleChange={setIsInsideVisibleTree}
-        style={
-          // This has position: fixed, so it should always report as visible
-          // unless we're within a display: none tree (like a hidden tab).
-          styles.parentTreeVisibilityDetector
-        }
+      <VisibleTreeEffects
+        nativeRef={nativeRef}
+        getScrollableNode={getScrollableNode}
+        scrollHandlers={contextScrollHandlers}
+        itemCount={data?.length ?? 0}
+        rowNodesRef={rowNodesRef}
+        disableFullWindowScroll={disableFullWindowScroll}
       />
       <Layout.Center>
         <View
@@ -579,6 +521,95 @@ function useWebListTelemetry({
       report()
     }
   }, [ax, containerRef, enabled, isLargeList, rowNodesRef])
+}
+
+/**
+ * Whether the list is in the visible tree (not under a hidden tab), and what depends on it: the scroll events
+ * (hidden tabs fire none) and the telemetry. It is its own component so the flip when a tab is shown or hidden
+ * re-renders only this node, not the whole list and every row (owner 166: showing a visited tab re-renders nothing).
+ */
+function VisibleTreeEffects({
+  nativeRef,
+  getScrollableNode,
+  scrollHandlers,
+  itemCount,
+  rowNodesRef,
+  disableFullWindowScroll,
+}: {
+  nativeRef: React.RefObject<HTMLDivElement | null>
+  getScrollableNode: () => any
+  scrollHandlers: ReturnType<typeof useScrollHandlers>
+  itemCount: number
+  rowNodesRef: React.RefObject<Map<number, HTMLElement>>
+  disableFullWindowScroll: boolean | undefined
+}) {
+  const [isInsideVisibleTree, setIsInsideVisibleTree] = useState(false)
+  useWebListTelemetry({
+    containerRef: nativeRef,
+    enabled: isInsideVisibleTree,
+    itemCount,
+    rowNodesRef,
+  })
+  const handleScroll = useNonReactiveCallback(() => {
+    if (!isInsideVisibleTree) return
+
+    const element = getScrollableNode()
+    scrollHandlers.onScroll?.(
+      {
+        contentOffset: {
+          x: Math.max(0, element?.scrollX ?? 0),
+          y: Math.max(0, element?.scrollY ?? 0),
+        },
+        layoutMeasurement: {
+          width: element?.clientWidth,
+          height: element?.clientHeight,
+        },
+        contentSize: {
+          width: element?.scrollWidth,
+          height: element?.scrollHeight,
+        },
+      } as Exclude<
+        ReanimatedScrollEvent,
+        | 'velocity'
+        | 'eventName'
+        | 'zoomScale'
+        | 'targetContentOffset'
+        | 'contentInset'
+      >,
+      {},
+    )
+  })
+
+  useEffect(() => {
+    if (!isInsideVisibleTree) {
+      // Prevents hidden tabs from firing scroll events.
+      // Only one list is expected to be firing these at a time.
+      return
+    }
+
+    const element = getScrollableNode()
+
+    element?.addEventListener('scroll', handleScroll)
+    return () => {
+      element?.removeEventListener('scroll', handleScroll)
+    }
+  }, [
+    isInsideVisibleTree,
+    handleScroll,
+    disableFullWindowScroll,
+    getScrollableNode,
+  ])
+
+  return (
+    <Visibility
+      onVisibleChange={setIsInsideVisibleTree}
+      style={
+        // This has position: fixed, so it should always report as visible
+        // unless we're within a display: none tree (like a hidden tab).
+        styles.parentTreeVisibilityDetector
+      }
+    />
+  )
 }
 
 function EdgeVisibility({

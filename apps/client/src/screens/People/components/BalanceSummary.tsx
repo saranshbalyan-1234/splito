@@ -73,7 +73,8 @@ export function BalanceSummary({
       />
       <View style={[a.px_lg, a.pb_sm, a.gap_sm]}>
         <View
-          onLayout={e => setWidth(e.nativeEvent.layout.width)}
+          /* A tab that is hidden measures 0: keep the last real width, so showing it again re-renders nothing (owner 166). */
+          onLayout={e => e.nativeEvent.layout.width > 0 && setWidth(e.nativeEvent.layout.width)}
           style={[a.flex_row, a.flex_wrap, {gap: GAP}]}>
           {totals.length === 0 ? (
             <View

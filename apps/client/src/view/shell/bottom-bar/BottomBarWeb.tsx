@@ -136,6 +136,7 @@ const NavItem: React.FC<{
       href={href}
       style={[styles.ctrl, a.pb_lg]}
       navigationAction="navigate"
+      activateOnPressIn
       aria-role="link"
       aria-label={label}
       aria-current={isActive ? 'page' : undefined}

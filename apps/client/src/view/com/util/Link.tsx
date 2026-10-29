@@ -1,5 +1,5 @@
 // Adapted from bluesky-social/social-app@4e4ad9c (MIT) - src/view/com/util/Link.tsx
-import {memo, useCallback} from 'react'
+import {memo, useCallback, useRef} from 'react'
 import {
   type GestureResponderEvent,
   Platform,
@@ -42,6 +42,12 @@ interface Props extends React.ComponentProps<typeof TouchableOpacity> {
   onPointerEnter?: () => void
   onPointerLeave?: () => void
   onBeforePress?: () => void
+  /**
+   * Navigate on press-in, not on release (owner 150, Bluesky's bottom bar does): a finger rests ~100 ms before it
+   * lifts, and on iOS Safari a quick second tap can be taken for a double-tap zoom and never click at all. The
+   * release that follows is then ignored. Only for idempotent navigation (switching tab).
+   */
+  activateOnPressIn?: boolean
 }
 
 /**
@@ -59,6 +65,7 @@ export const Link = memo(function Link({
   anchorNoUnderline,
   navigationAction,
   onBeforePress,
+  activateOnPressIn,
   accessibilityActions,
   onAccessibilityAction,
   dataSet: dataSetProp,
@@ -77,6 +84,29 @@ export const Link = memo(function Link({
       }
     },
     [navigation, navigationAction, href, onBeforePress],
+  )
+
+  /* Set by a press-in that already navigated, so the release does not do it again; every press-in re-arms it. */
+  const pressedIn = useRef(false)
+  const onPressIn = useCallback(
+    (e: GestureResponderEvent) => {
+      props.onPressIn?.(e)
+      if (activateOnPressIn && IS_WEB) {
+        pressedIn.current = true
+        onPress(e)
+      }
+    },
+    [activateOnPressIn, onPress, props.onPressIn],
+  )
+  const onPressOnce = useCallback(
+    (e?: Event) => {
+      if (pressedIn.current) {
+        pressedIn.current = false
+        return
+      }
+      onPress(e)
+    },
+    [onPress],
   )
 
   const accessibilityActionsWithActivate = [
@@ -124,7 +154,7 @@ export const Link = memo(function Link({
     <Com
       testID={testID}
       style={style}
-      onPress={onPress}
+      onPress={activateOnPressIn ? onPressOnce : onPress}
       accessible={accessible}
       accessibilityRole="link"
       accessibilityLabel={props.accessibilityLabel ?? title}
@@ -132,7 +162,8 @@ export const Link = memo(function Link({
       // @ts-expect-error web only -prf
       href={anchorHref}
       dataSet={dataSet}
-      {...props}>
+      {...props}
+      onPressIn={activateOnPressIn ? onPressIn : props.onPressIn}>
       {children ? children : <Text>{title || 'link'}</Text>}
     </Com>
   )

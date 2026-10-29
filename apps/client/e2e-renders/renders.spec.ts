@@ -337,3 +337,36 @@ test('no wasted renders, no render above the baseline', async ({page}) => {
   }
   expect(problems, problems.join('\n')).toEqual([])
 })
+
+/*
+ * Owner 166 (ARCHITECTURE 26.9): a tab you have visited is shown again as it was left, nothing in it re-renders.
+ * Home > Groups > Home on a phone, both tabs already visited: the only renders allowed are the bottom bar's own
+ * (its tab glyphs and links light up) and the navigator's. Any screen body component that renders fails.
+ */
+test('switching back to a visited tab re-renders none of its content', async ({page}) => {
+  await page.setViewportSize({width: 390, height: 844})
+  await page.addInitScript(instrument)
+  await openDemo(page)
+  await page.reload()
+  await expect(page.getByTestId('screen-people')).toBeVisible({timeout: 60_000})
+  await page.getByTestId('tab-groups').click()
+  await expect(page.getByTestId('screen-groups')).toBeVisible()
+  await quiet(page)
+  await page.getByTestId('tab-people').click()
+  await expect(page.getByTestId('screen-people')).toBeVisible()
+  await phase(page, 'toGroups')
+  await page.getByTestId('tab-groups').click()
+  await expect(page.getByTestId('screen-groups')).toBeVisible()
+  await phase(page, 'toHome')
+  await page.getByTestId('tab-people').click()
+  await expect(page.getByTestId('screen-people')).toBeVisible()
+  await quiet(page)
+  const all = await page.evaluate(() => (window as unknown as Win).__renders.counts)
+  console.log(`TOGROUPS ${JSON.stringify(all.toGroups ?? {})}`)
+  console.log(`TOHOME ${JSON.stringify(all.toHome ?? {})}`)
+  const round = all.toHome ?? {}
+  // What may render on a tab switch: the bar and the navigator (they own the highlight and the visible screen).
+  const SHELL = /^(mount|update):(NavItem|Link|Pressable|PressableWithHover|TabGlyph|View|Text|Svg|Path|Circle|LocaleProvider|Unknown|AnimatedComponent\(View\)|Anonymous|Freeze|SceneView|Screen|MaybeScreen|Navigator|NativeStackNavigator|NavigationContent|StaticContainer|Header|ScreenStackItem)$/
+  const bodies = Object.entries(round).filter(([name]) => !SHELL.test(name))
+  expect(bodies, `screen content that re-rendered on a tab switch: ${JSON.stringify(bodies)}`).toEqual([])
+})

@@ -1,5 +1,7 @@
 import {expect, type Page, test} from '@playwright/test'
 
+import {openDemo} from './openDemo'
+
 /* Owner 150 (§ 26.9): every tab tap switches at once, however fast; the newest tap wins. */
 type Splito = {
   createPerson(name: string): Promise<string>
@@ -169,3 +171,78 @@ for (const motion of ['full', 'reduced'] as const) {
     })
   })
 }
+
+/*
+ * Owner 150/166, found on a real iPhone: Analytics -> Home took 600 ms (5.9 s at 6x CPU) because popping a tab
+ * unmounted it and every row ran its exit animation; Home answered only after that. A tab you left stays mounted.
+ */
+test.describe('phone: tabs stay mounted and answer in the first frame', () => {
+  test.use({viewport: {width: 390, height: 844}, hasTouch: true, isMobile: true})
+
+  const tap = async (page: Page, tab: string) => {
+    const b = (await page.getByTestId(`tab-${tab}`).boundingBox())!
+    await page.touchscreen.tap(b.x + b.width / 2, b.y + b.height / 2)
+  }
+
+  test('a visited tab is not unmounted or rebuilt when you come back to it', async ({page}) => {
+    await openDemo(page)
+    await expect(page.getByTestId('screen-people')).toBeVisible()
+    await tap(page, 'analytics')
+    await expect(page.getByTestId('screen-analytics')).toBeVisible()
+    await page.evaluate(() => document.querySelector('[data-testid="screen-analytics"]')!.setAttribute('data-mark', 'kept'))
+    await tap(page, 'people')
+    await expect(page.getByTestId('screen-people')).toBeVisible()
+    await tap(page, 'analytics')
+    await expect(page.getByTestId('screen-analytics')).toBeVisible()
+    await expect(page.getByTestId('screen-analytics')).toHaveAttribute('data-mark', 'kept')
+    // Browser Back still walks the history (Analytics -> Home), and forward comes back to the same tab.
+    await page.goBack()
+    await expect(page.getByTestId('screen-people')).toBeVisible()
+    await expect(page.getByTestId('tab-people')).toHaveAttribute('aria-current', 'page')
+    await page.goForward()
+    await expect(page.getByTestId('screen-analytics')).toBeVisible()
+    await expect(page.getByTestId('tab-analytics')).toHaveAttribute('aria-current', 'page')
+  })
+
+  for (const rate of [1, 6]) {
+    test(`Home switch shows its shell in the first frame (CPU x${rate})`, async ({page}) => {
+      // Open on Groups, so Home is cold: its first visit shows the header and the bar's highlight at once, the rows may follow.
+      await openDemo(page, '/groups')
+      await expect(page.getByTestId('screen-groups')).toBeVisible()
+      await tap(page, 'analytics')
+      await expect(page.getByTestId('screen-analytics')).toBeVisible()
+      await page.waitForTimeout(1500)
+      const cdp = await page.context().newCDPSession(page)
+      await cdp.send('Emulation.setCPUThrottlingRate', {rate})
+      await page.evaluate(() => {
+        const w = window as unknown as {__frames: Array<{t: number; screen: boolean; header: boolean; selected: boolean}>; __t0: number}
+        w.__frames = []
+        const shown = (id: string) => [...document.querySelectorAll(`[data-testid="${id}"]`)].some(e => e.getClientRects().length > 0)
+        addEventListener('touchstart', () => (w.__t0 = performance.now()), {capture: true, once: true})
+        const frame = () => {
+          w.__frames.push({
+            t: performance.now(),
+            screen: shown('screen-people'),
+            header: shown('people-add-friend'),
+            selected: document.querySelector('[data-testid="tab-people"]')?.getAttribute('aria-current') === 'page',
+          })
+          requestAnimationFrame(frame)
+        }
+        requestAnimationFrame(frame)
+      })
+      await tap(page, 'people')
+      await expect(page.getByTestId('screen-people')).toBeVisible()
+      await page.waitForTimeout(400)
+      const {frames, t0} = await page.evaluate(() => {
+        const w = window as unknown as {__frames: Array<{t: number; screen: boolean; header: boolean; selected: boolean}>; __t0: number}
+        return {frames: w.__frames, t0: w.__t0}
+      })
+      const first = frames.find(f => f.t >= t0 && f.screen)
+      expect(first, 'a frame with Home visible').toBeTruthy()
+      // The tab's highlight, the screen and its header arrive in the same frame, never the screen before the rest.
+      expect(first).toMatchObject({selected: true, header: true})
+      // Never later than the budget (generous: the suite runs several workers on one machine).
+      expect(first!.t - t0).toBeLessThan(rate === 1 ? 150 : 600)
+    })
+  }
+})
