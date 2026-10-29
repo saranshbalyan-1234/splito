@@ -1421,7 +1421,10 @@ labelled sidebar); **wide** = web 1300 px and up (Bluesky `gtTablet`, right colu
   and a drag handle (Bluesky's reorderable list): what is on and its order is the bottom bar, with **any number of
   tabs** (from Home alone up to every item; Home cannot be turned off). Tabs share the bar width equally; with
   more than 5 the labels hide and icons stay at Bluesky size with their badges. Items not in the bar stay in the
-  drawer. Default bar: Home, Groups, Analytics, Activity. "Ask Splito" placed in the bar opens the Search & Ask drawer in Ask mode instead of switching tab. **The same choice drives every width** (owner 127, replaces "desktop and rail always show the full list"): the rail and desktop sidebar show exactly the items that are on, in the same order as the bottom bar (labels shown on desktop, icons on the rail); the items that are off sit under a "More" item (Lucide `Ellipsis`) at the end of the sidebar/rail list, which opens a menu with them, the phone drawer's equivalent. The phone drawer lists every item in the same order. Settings stays reachable on every width (via More, the drawer, or the avatar's Profile page).
+  drawer. Default bar: Home, Groups, Analytics, Activity. "Ask Splito" placed in the bar opens the Search & Ask drawer in Ask mode instead of switching tab. **On rail and desktop every item always shows** (owner 155, replaces 127's "off items under More" on wide
+  screens): the sidebar and rail list all items (Home, People, Groups, Analytics, Ask Splito, Activity, Settings),
+  in the order chosen in Settings > Navigation, with no "More" item; the on/off choice shapes only the phone bottom
+  bar (off items stay in the phone drawer).
   "Reset" restores the default. Stored in the existing `tabs` preference. *Why:* "all of the sidebar options to
   be available in settings to be added in navigation bar".
 - **Every place has a URL, so a copied link lands on the same screen** (owner 100; F-241, queued after the Wave B
@@ -2455,6 +2458,7 @@ Every owner decision, in the order it was made (all 2026-10-26). "Replaced" name
 | 152 | "for example switch tabs first, and render content later, same for popups or diff screen that happen"; "make sure such things are stored in architecture, and it should be self updating whenever we make such decisions" | Shell first, content later for tabs, sheets and screens via one shared helper; every such decision recorded in § 26 + log + BACKLOG in the same turn (§ 0 rule 9, prompt hook) | § 26.9, § 0 | - (spells out 151) |
 | 153 | "on home show overview and recent transactions, then create a people tab as well, the group tab is already there, the overview is needed only in home" | Home = Overview + Recent transactions; new People tab (requests, invites row, friends list with search/filters); Groups list without Overview; nav Home, People, Groups, Analytics, Ask, Activity, Settings; default bar Home, People, Groups, Analytics, Activity | § 26.3 | Home held the Overview and friends list; Groups had its own Overview; bar Home, Groups, Analytics, Activity |
 | 154 | "also on home show recent active people, and recent active group"; "also request and all" | Home adds Requests (when pending), Recently active people and Recently active groups (5 each, See all); right column not shown on Home at wide | § 26.3 | Home = Overview + Recent transactions only (row 153) |
+| 155 | "also on desktop show all the tabs" | Rail and desktop sidebar always list every item in the chosen order, no More; on/off shapes only the phone bar | § 26.3 | Desktop followed the on/off choice with off items under More (127) |
 
 New decisions follow § 0 rule 9: rewrite the rule in its topic so only the current truth remains, then add a
 row here.
