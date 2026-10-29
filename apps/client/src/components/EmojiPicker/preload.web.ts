@@ -1,6 +1,4 @@
 // Adapted from bluesky-social/social-app@4e4ad9c (MIT) - src/components/EmojiPicker/preload.web.ts
-import {init} from 'emoji-mart'
-
 /** Only load the emoji picker data once per page load; every caller shares the one load. */
 let loading: Promise<void> | undefined
 
@@ -14,7 +12,11 @@ let loading: Promise<void> | undefined
 function loadEmojiData(): Promise<void> {
   loading ??= (async () => {
     try {
-      const data = (await import('@emoji-mart/data')).default
+      // Core and data are both dynamic: neither is in the main bundle.
+      const [{init}, {default: data}] = await Promise.all([
+        import('emoji-mart'),
+        import('@emoji-mart/data'),
+      ])
       init({data})
     } catch {
       loading = undefined
