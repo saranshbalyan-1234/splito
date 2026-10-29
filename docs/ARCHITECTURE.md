@@ -1213,7 +1213,7 @@ labelled sidebar); **wide** = web 1300 px and up (Bluesky `gtTablet`, right colu
   row, `demo.mode`). Demo data never syncs and never merges into an account. There is no banner (owner 133): while on,
   every page header title ends in " - Demo" ("Home - Demo", "Goa trip - Demo"; the phone Home logo gets a small
   "Demo" label, the window title follows, owner 134), the avatar shows its "Demo" dot, and the Settings switch
-  turns it off; "Reset demo" reseeds it. There is ONE dataset and ONE switch: no
+  turns it off. Turning it off erases the separate demo database and every device key demo mode kept (drafts, search history, read marks, Ask chat, the reminders bookkeeping) after returning to the real data; turning it on again seeds a fresh dataset, so there is no "Reset demo" (owner 136). Demo reminders are never scheduled as OS notifications and the real ones are left alone. There is ONE dataset and ONE switch: no
   URL switch, no `EXPO_PUBLIC_*` variable, no Add/Remove demo data. e2e turns demo mode on only through the
   test-only hook `window.__splitoTest.demoMode(true)`, which runs the same switch (F-228a). A `demoCoverage`
   test (`data/demoCoverage.test.ts`) lists every user-facing feature and fails when the seeded demo database has
@@ -1668,9 +1668,9 @@ expands once I click". *Where:* `screens/People`, `screens/Groups`, `screens/Gro
   matches for '...'".
 - **Filters open a form sheet (§ 26.8) with Cancel + Apply; changes apply only on Apply,** and drive both the
   overview cards and the list. Filters and search combine. Friends: "Include groups" (default from the
-  `includeGroupsDefault` preference, on), currency (All / each present), show (All / Owes you / You owe /
-  Settled), sort (Amount / Name / Recent, default from `peopleSort`). Groups: type (Trip / Home / Couple /
-  Other), status (Active / Inactive / All), show (Shown / Hidden / All), currency, show (All / You are owed / You owe / Settled), sort (Recent
+  `includeGroupsDefault` preference, on), currency (All / each present), show (All / Owes you / You owe; the
+  "Show settled" switch covers settled), sort (Amount / Name / Recent, default from `peopleSort`). Groups: type (Trip / Home / Couple /
+  Other), status (Active / Inactive / All), show (Shown / Hidden / All), currency, show (All / You are owed / You owe), sort (Recent
   activity / Name / Amount). The Person page's history obeys the same Include groups choice.
 - **Groups are Active or Inactive, and Shown or Hidden: two separate controls, no "Archive"** (owner 89,
   replaces 88's single Archive). Both live in the group's header overflow, are recorded in history, and have an
@@ -2271,6 +2271,8 @@ Every owner decision, in the order it was made (all 2026-10-26). "Replaced" name
 | 132 | "every on/off setting is a switch on every platform" | Boolean settings use Toggle.Switch (role switch, checked state) on web and Android too; list choices stay radio / checkbox | § 26.15 | Bluesky's checkbox on web and Android |
 | 133 | "remove the demo banner completely" | No demo banner on any screen and no reserved space; demo mode shows in the Settings switch and the avatar's Demo dot | § 26.1 | "Demo mode · Switch back" banner |
 | 134 | "append - Demo to every header title in demo mode" | Shared header TitleText adds " - Demo" (phone Home logo gets a "Demo" label); the window title follows | § 26.1 | Nothing in the header said demo |
+| 135 | settled means the group's debts are all zero | A group is settled only when no member owes another (one `balances` read for the whole list, never per row); where only I am even it stays listed and is not counted settled; the all-settled state reads "All settled up" with one "Show settled" button, and Clear filters also resets Show settled and Show hidden | § 26.12 | Settled judged from my own net |
+| 136 | "switching demo mode off erases it" | Off erases the demo database and every demo-scoped device key after returning to the real store; on seeds afresh; "Reset demo" removed | § 26.1 | Demo kept its edits between sessions, with a Reset row |
 
 New decisions follow § 0 rule 9: rewrite the rule in its topic so only the current truth remains, then add a
 row here.
