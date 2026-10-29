@@ -5,7 +5,7 @@
  * back to an interpreter where `new Function` is unavailable (Hermes, CSP).
  * A breaking change gets a new route version, never an edit here.
  */
-import Type, {type Static} from 'typebox'
+import {Type, type Static} from 'typebox'
 
 /** Upper bound on ops in one push. Larger batches are rejected with VALIDATION. */
 export const MAX_PUSH_OPS = 200

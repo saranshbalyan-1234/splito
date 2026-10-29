@@ -10,7 +10,7 @@ import {
 } from '@splito/sync'
 import {bunExecutor} from '@splito/sync/test/bunExecutor'
 import {Settings} from 'typebox/system'
-import Value from 'typebox/value'
+import {Value} from 'typebox/value'
 
 import {
   ERRORS,
