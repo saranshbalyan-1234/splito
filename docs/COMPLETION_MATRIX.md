@@ -2,7 +2,7 @@
 
 Updated 2026-10-27. Binding rules source: `docs/ARCHITECTURE.md` § 26 "Product & UI rules (owner decisions, binding)" (decision log rows 1-63). Feature IDs, acceptance criteria and build order: `docs/BACKLOG.md` (owner requests not yet built are its Batch 4b). Other sources: Splito-Claude-Prompt.txt (original handoff), docs/superpowers/specs/2026-10-26-splito-design.md.
 
-Status words are the same as `docs/BACKLOG.md`: **done** (built, tested and merged on m1-foundation), **in progress** (being built, or built and tested on an unmerged branch, named; work counts as in progress until it is merged into m1-foundation), **todo** (not started). "(needs backend)" marks work that waits for the sync/auth server, which is built after the UI. Unmerged UI line = branches `ui/r1-polish-2` and `ui/preview-latest`; Batch 4 streams = branches `feat/b-*`.
+Status words are the same as `docs/BACKLOG.md`: **done** (built, tested and merged on main), **in progress** (being built, or built and tested on an unmerged branch, named; work counts as in progress until it is merged into main), **todo** (not started). "(needs backend)" marks work that waits for the sync/auth server, which is built after the UI. Unmerged UI line = branches `ui/r1-polish-2` and `ui/preview-latest`; Batch 4 streams = branches `feat/b-*`.
 
 | Area | Feature | ID | Status |
 |---|---|---|---|

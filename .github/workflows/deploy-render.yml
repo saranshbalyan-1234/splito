@@ -1,0 +1,53 @@
+# Checks every push to main, then deploys the web app and the API to Render (render.yaml).
+# Needs two repository secrets, each a service's deploy hook URL from Render > Settings > Deploy Hook:
+#   RENDER_DEPLOY_HOOK_WEB (splito-web) and RENDER_DEPLOY_HOOK_API (splito-api).
+name: Deploy to Render
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: render-deploy
+  cancel-in-progress: false
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    services:
+      # Matches TEST_DATABASE_URL's default in apps/api/test/db.ts.
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_PASSWORD: splito
+        ports: ['55432:5432']
+        options: --health-cmd pg_isready --health-interval 2s --health-retries 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.2
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm check
+      - run: pnpm --filter @splito/api test
+
+  deploy:
+    needs: check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger Render deploys of this commit
+        env:
+          WEB_HOOK: ${{ secrets.RENDER_DEPLOY_HOOK_WEB }}
+          API_HOOK: ${{ secrets.RENDER_DEPLOY_HOOK_API }}
+        run: |
+          for hook in "$WEB_HOOK" "$API_HOOK"; do
+            [ -n "$hook" ] || { echo "::error::Set RENDER_DEPLOY_HOOK_WEB and RENDER_DEPLOY_HOOK_API in the repo secrets"; exit 1; }
+            curl -fsS -X POST "$hook&ref=$GITHUB_SHA"
+            echo
+          done

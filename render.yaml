@@ -1,0 +1,48 @@
+# Render Blueprint: the web app, the API and its Postgres. Deploys come from .github/workflows/deploy-render.yml
+# (deploy hooks, after the checks pass), so Render's own auto-deploy is off.
+services:
+  - type: web
+    name: splito-web
+    runtime: static
+    autoDeployTrigger: 'off'
+    buildCommand: >-
+      npm install -g pnpm@11.28.5 &&
+      pnpm install --frozen-lockfile &&
+      EXPO_PUBLIC_ENV=production pnpm --filter @splito/client build-web
+    staticPublishPath: ./apps/client/dist
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
+    headers:
+      # The service worker must be re-checked on every load, or a new release never reaches installed PWAs.
+      - path: /sw.js
+        name: Cache-Control
+        value: no-cache
+      - path: /_expo/*
+        name: Cache-Control
+        value: public, max-age=31536000, immutable
+
+  - type: web
+    name: splito-api
+    runtime: docker
+    plan: free
+    region: singapore
+    autoDeployTrigger: 'off'
+    dockerfilePath: ./apps/api/Dockerfile
+    dockerContext: .
+    healthCheckPath: /healthz
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: splito-db
+          property: connectionString
+      - key: LOG_LEVEL
+        value: info
+
+databases:
+  - name: splito-db
+    # ponytail: free Postgres expires 30 days after creation; move to a paid plan before real users.
+    plan: free
+    region: singapore
+    postgresMajorVersion: '17'
