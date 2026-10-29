@@ -131,6 +131,10 @@ test('Apply saves Sort and Include groups as preferences: both are still applied
   await groups.getByTestId('list-filters').click()
   await page.getByTestId('filter-sort-amount').click()
   await page.getByTestId('sheet-save').click()
+  // The preference is written after Apply closes the sheet; reload only once it is in the database.
+  await expect
+    .poll(() => page.evaluate(async () => JSON.stringify(await (window as unknown as {splito: {list(t: string): Promise<unknown>}}).splito.list('preference'))))
+    .toContain('groups.sort')
   await page.reload()
   await page.getByTestId('screen-groups').getByTestId('list-filters').click()
   await expect(page.getByTestId('filter-sort-amount')).toHaveAttribute('aria-checked', 'true')

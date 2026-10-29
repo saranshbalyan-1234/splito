@@ -36,11 +36,13 @@ test('desktop: the toast stacks at the top right, below the header line, with a 
   await expect(page.getByTestId('update-reload')).toHaveCount(0)
 })
 
-test('phone: the toast sits at the top, full width inside the gutters, and the X closes it', async ({page}) => {
+test('phone: the toast sits at the top below the header, full width inside the gutters, and the X closes it', async ({page}) => {
   await page.setViewportSize({width: 390, height: 844})
   const toast = await showToast(page)
   const box = (await toast.boundingBox())!
-  expect(box.y).toBeLessThan(40)
+  // Below the header line, so the header's actions stay reachable.
+  expect(box.y).toBeGreaterThanOrEqual(52)
+  expect(box.y).toBeLessThan(120)
   expect(box.x).toBeGreaterThanOrEqual(0)
   expect(box.x + box.width).toBeLessThanOrEqual(390)
   expect(box.width).toBeGreaterThanOrEqual(390 - 2 * 24)

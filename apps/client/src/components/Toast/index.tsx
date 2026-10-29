@@ -7,6 +7,7 @@ import {toast as sonner, Toaster} from 'sonner-native'
 
 import {useShouldReduceMotion} from '#/motion/useShouldReduceMotion'
 import {atoms as a} from '#/alf'
+import {HEADER_HEIGHT} from '#/components/Layout/const'
 import {space} from '#/alf/tokens'
 import {DURATION, TOAST_MAX_WIDTH} from '#/components/Toast/const'
 import {
@@ -39,6 +40,8 @@ export function ToastOutlet() {
       visibleToasts={3}
       swipeToDismissDirection="up"
       gap={a.gap_sm.gap}
+      /* Below the header line, so a toast never covers the header's actions (F-243). */
+      offset={HEADER_HEIGHT.native + a.gap_sm.gap}
       animation={
         isReduced ? {enter: FadeIn.duration(1), exit: FadeOut.duration(1)} : undefined
       }

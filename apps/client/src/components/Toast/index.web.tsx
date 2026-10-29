@@ -43,7 +43,7 @@ export function ToastOutlet() {
         gap={a.gap_sm.gap}
         offset={{top, right: a.p_xl.padding, left: a.p_xl.padding}}
         mobileOffset={{
-          top: `calc(env(safe-area-inset-top, 0px) + ${a.gap_sm.gap}px)`,
+          top: `calc(env(safe-area-inset-top, 0px) + ${top}px)`,
           left: a.p_xl.padding,
           right: a.p_xl.padding,
         }}
