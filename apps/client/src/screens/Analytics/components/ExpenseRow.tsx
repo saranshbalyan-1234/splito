@@ -1,9 +1,11 @@
 import {View} from 'react-native'
 import Animated from 'react-native-reanimated'
 import {Trans, useLingui} from '@lingui/react/macro'
-import {formatAmount, type ReportExpense, ZERO} from '@splito/domain'
+import {formatAmount, ZERO} from '@splito/domain'
 
+import {type ListedExpense} from '#/data/analyticsQueries'
 import {Link} from '#/view/com/util/Link'
+import {SyncToneContext, useSyncTone} from '#/components/SyncTone'
 import {atoms as a, useTheme} from '#/alf'
 import * as Skeleton from '#/components/Skeleton'
 import {Text} from '#/components/Typography'
@@ -28,7 +30,7 @@ export function ExpenseRow({
   groupName,
   locale,
 }: {
-  expense: ReportExpense
+  expense: ListedExpense
   shareOf: string
   shareLabel: string
   category: {name: string; color: string; icon: string}
@@ -40,6 +42,7 @@ export function ExpenseRow({
   const formatDay = useFormatDay()
   const listAnimations = useListAnimations()
   const press = usePressScale()
+  const tone = useSyncTone(expense.syncStatus)
   const share = expense.shares[shareOf] ?? ZERO
   const title = expense.title || l`Expense`
   const date = formatDay(expense.date, {
@@ -58,7 +61,7 @@ export function ExpenseRow({
         href={`/expense/${expense.id}`}
         asAnchor
         anchorNoUnderline
-        accessibilityLabel={l`${title}, ${byline}, ${shareLabel} ${shareText} of ${totalText}`}
+        accessibilityLabel={tone.isUnsynced ? l`${title}, ${byline}, ${shareLabel} ${shareText} of ${totalText}, not synced yet` : l`${title}, ${byline}, ${shareLabel} ${shareText} of ${totalText}`}
         accessibilityHint=""
         hoverStyle={t.atoms.bg_contrast_25}
         style={[
@@ -68,8 +71,9 @@ export function ExpenseRow({
           t.atoms.border_contrast_low,
           a.transition_color,
         ]}>
+        <SyncToneContext.Provider value={tone.isUnsynced}>
         <Animated.View
-          style={[a.flex_row, a.align_center, a.gap_md, press.style]}>
+          style={[a.flex_row, a.align_center, a.gap_md, press.style, tone.fade]}>
           <CategoryIcon icon={category.icon} color={category.color} />
           <View style={[a.flex_1, a.gap_2xs]}>
             <Text
@@ -109,6 +113,7 @@ export function ExpenseRow({
             </Text>
           </View>
         </Animated.View>
+        </SyncToneContext.Provider>
       </Link>
     </Animated.View>
   )

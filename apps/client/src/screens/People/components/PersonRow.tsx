@@ -231,21 +231,9 @@ export function PersonRow({
                   </View>
                 )}
               </View>
-            ) : (
-              <Text
-                numberOfLines={1}
-                style={[
-                  a.text_sm,
-                  a.leading_snug,
-                  t.atoms.text_contrast_medium,
-                ]}>
-                {isSettled ? (
-                  <Trans>No open balances</Trans>
-                ) : (
-                  <Trans>Direct expenses</Trans>
-                )}
-              </Text>
-            )}
+            ) : null}
+            {/* A live row that failed to sync says so too, not only a deleted one. */}
+            {!isDeleted && !row.isRemoved ? <NeedsAttention status={row.syncStatus} testID={`person-${row.id}-sync`} /> : null}
           </View>
           {balances}
         </Animated.View>

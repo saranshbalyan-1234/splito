@@ -17,11 +17,6 @@ export function setDirectory(next: DirectoryClient | null) {
   active = next ?? offlineDirectory
 }
 
-/** True when a directory answers (demo mode today, the backend later); false offline, where invite links fail closed. */
-export function isDirectoryAvailable() {
-  return active !== offlineDirectory
-}
-
 /**
  * The directory and invite API (26.18). Production has no backend yet, so
  * lookups are 'unavailable' and sends stay queued; only demo mode answers.

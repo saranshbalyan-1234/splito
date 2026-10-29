@@ -12,14 +12,13 @@ import {
   type Granularity,
   granularityFor,
   periodRange,
-  type ReportExpense,
   type WeekStart,
   ZERO,
 } from '@splito/domain'
 import {DEFAULT_CATEGORIES, type Group, isGroupInactive, type Person} from '@splito/sync'
 
 import {useFormatDay, useToday} from '#/locale/useDates'
-import {readRows} from '#/data/analyticsQueries'
+import {type ListedExpense, readRows} from '#/data/analyticsQueries'
 import {
   useAnalyticsBounds,
   useAnalyticsCells,
@@ -262,7 +261,7 @@ export function useReport() {
         : undefined
   const rowCount = !selection ? totals.count : (inBar?.count ?? slice?.count ?? 0)
   const rowsTotal = !selection ? totals.share : (inBar?.share ?? slice?.share ?? ZERO)
-  const rows: ReportExpense[] = listed?.rows ?? []
+  const rows: ListedExpense[] = listed?.rows ?? []
 
   const date = (d: string, o: Intl.DateTimeFormatOptions) =>
     i18n.date(utcDate(d), {...o, timeZone: 'UTC'})

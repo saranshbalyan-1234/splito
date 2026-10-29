@@ -290,30 +290,35 @@ export async function getPref<K extends PrefKey>(store: Store, key: K): Promise<
 async function putPref(tx: Tx, ctx: MutationCtx, key: PrefKey, value: unknown, deleted: boolean) {
   const def = PREFS[key] as PrefDef<unknown>
   const prev = await tx.get('preference', key)
-  const version = (prev?.version ?? 0) + 1
-  await tx.put({type: 'preference', id: key, data: {value}, version, deleted, updatedAt: ctx.now()})
-  // The folded-in "New expenses" row would keep reading as off after Payments is changed here: this write is the latest word.
+  await tx.put({type: 'preference', id: key, data: {value}, version: (prev?.version ?? 0) + 1, deleted, updatedAt: ctx.now()})
+  if (def.scope === 'account') await enqueuePref(tx, ctx, key, prev?.version ?? 0, deleted, value)
+  // The folded-in "New expenses" row would keep reading as off after Payments is changed here: this write is the latest word,
+  // and its tombstone is queued too, so another device pulling the old row cannot win by its newer updatedAt.
   if (key === 'notify.payment') {
     const old = await tx.get('preference', 'notify.expense')
-    if (old && !old.deleted) await tx.put({...old, version: old.version + 1, deleted: true, updatedAt: ctx.now()})
+    if (old && !old.deleted) {
+      await tx.put({...old, version: old.version + 1, deleted: true, updatedAt: ctx.now()})
+      await enqueuePref(tx, ctx, 'notify.expense', old.version, true, null)
+    }
   }
-  if (def.scope === 'account')
-    await tx.enqueue({
-      opId: ctx.newId(),
-      deviceId: ctx.deviceId,
-      actor: ctx.actor,
-      entityType: 'preference',
-      entityId: key,
-      opType: deleted ? 'preference.reset' : 'preference.set',
-      baseVersion: prev?.version ?? 0,
-      payload: {value},
-      schemaVersion: 1,
-      deps: [],
-      attempts: 0,
-      nextAttemptAt: null,
-      lastError: null,
-    })
 }
+
+const enqueuePref = (tx: Tx, ctx: MutationCtx, id: string, baseVersion: number, deleted: boolean, value: unknown) =>
+  tx.enqueue({
+    opId: ctx.newId(),
+    deviceId: ctx.deviceId,
+    actor: ctx.actor,
+    entityType: 'preference',
+    entityId: id,
+    opType: deleted ? 'preference.reset' : 'preference.set',
+    baseVersion,
+    payload: {value},
+    schemaVersion: 1,
+    deps: [],
+    attempts: 0,
+    nextAttemptAt: null,
+    lastError: null,
+  })
 
 /**
  * Edits a list-of-ids preference inside the caller's transaction (read and write together, so two changes never

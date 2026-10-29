@@ -6,6 +6,7 @@ import {
   type Key,
   type Page,
   type Repayment,
+  type RowSyncStatus,
   type Store,
   toExpenseRecord,
   touches,
@@ -186,13 +187,15 @@ const keepRow = (e: Entity<Expense>, s: RowsSpec) => {
   return true
 }
 
-const asRow = (e: Entity<Expense>): ReportExpense => ({...toExpenseRecord(e), category: e.data.category, title: e.data.title})
+/** A row of the list behind the charts; `syncStatus` comes with it so the row is drawn lighter while unsynced, with no store read of its own. */
+export type ListedExpense = ReportExpense & {syncStatus?: RowSyncStatus}
+const asRow = (e: Entity<Expense>): ListedExpense => ({...toExpenseRecord(e), category: e.data.category, title: e.data.title, syncStatus: e.syncStatus})
 const sameParts = (a: Record<string, bigint>, b: Record<string, bigint>) => {
   const ka = Object.keys(a)
   return ka.length === Object.keys(b).length && ka.every(k => a[k] === b[k])
 }
-const sameRow = (a: ReportExpense, b: ReportExpense) =>
-  a.id === b.id && a.total === b.total && a.date === b.date && a.title === b.title && a.category === b.category && a.groupId === b.groupId && a.currency === b.currency && sameParts(a.payers, b.payers) && sameParts(a.shares, b.shares)
+const sameRow = (a: ListedExpense, b: ListedExpense) =>
+  a.syncStatus === b.syncStatus && a.id === b.id && a.total === b.total && a.date === b.date && a.title === b.title && a.category === b.category && a.groupId === b.groupId && a.currency === b.currency && sameParts(a.payers, b.payers) && sameParts(a.shares, b.shares)
 const byDateDesc = (x: ReportExpense, y: ReportExpense) => (x.date === y.date ? (x.id < y.id ? -1 : 1) : x.date > y.date ? -1 : 1)
 
 /**
@@ -202,8 +205,8 @@ const byDateDesc = (x: ReportExpense, y: ReportExpense) => (x.date === y.date ? 
  * `byGroupDate` per chosen group would skip them. Ties on one date are
  * ordered within the rows read.
  */
-export async function readRows(store: Store, spec: RowsSpec, want: number): Promise<{rows: ReportExpense[]; isDone: boolean}> {
-  const rows: ReportExpense[] = []
+export async function readRows(store: Store, spec: RowsSpec, want: number): Promise<{rows: ListedExpense[]; isDone: boolean}> {
+  const rows: ListedExpense[] = []
   let after: Key | null = null
   let isDone = false
   while (rows.length < want && !isDone) {
@@ -215,7 +218,7 @@ export async function readRows(store: Store, spec: RowsSpec, want: number): Prom
   return {rows: rows.sort(byDateDesc), isDone}
 }
 
-export type RowsPager = {rows: ReportExpense[]; isDone: boolean; loadMore: () => void}
+export type RowsPager = {rows: ListedExpense[]; isDone: boolean; loadMore: () => void}
 
 const rowQueries = new Map<string, Query<RowsPager>>()
 

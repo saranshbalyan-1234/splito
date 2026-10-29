@@ -12,6 +12,7 @@ import {
   highlightRanges,
   isGroupInactive,
   type Person,
+  type RowSyncStatus,
 } from '@splito/sync'
 
 import {PressableWithHover} from '#/view/com/util/PressableWithHover'
@@ -22,6 +23,7 @@ import {GroupAvatar} from '#/components/groups/GroupAvatar'
 import {ChevronRight_Stroke2_Corner0_Rounded as ChevronIcon} from '#/components/icons/Chevron'
 import {Sparkles_Stroke2_Corner0_Rounded as SparklesIcon} from '#/components/icons/Sparkles'
 import {EntryIcon} from '#/components/people/EntryIcon'
+import {SyncToneContext, useSyncTone} from '#/components/SyncTone'
 import {Text} from '#/components/Typography'
 import {useListAnimations} from '#/motion/listAnimations'
 import {usePressScale} from '#/motion/PressableScale'
@@ -153,17 +155,22 @@ function ResultRow({
   label,
   isActive,
   onPress,
+  syncStatus,
   children,
 }: {
   nav: number
   label: string
   isActive: boolean
   onPress: () => void
+  /** The record's sync state, from the entity already in hand: unsynced rows are drawn lighter (owner 111). */
+  syncStatus?: RowSyncStatus
   children: React.ReactNode
 }) {
   const t = useTheme()
+  const {t: l} = useLingui()
   const listAnimations = useListAnimations()
   const press = usePressScale()
+  const tone = useSyncTone(syncStatus)
   return (
     <Animated.View {...listAnimations}>
       <PressableWithHover
@@ -172,7 +179,7 @@ function ResultRow({
         onPressIn={press.onPressIn}
         onPressOut={press.onPressOut}
         accessibilityRole="link"
-        accessibilityLabel={label}
+        accessibilityLabel={tone.isUnsynced ? l`${label}, not synced yet` : label}
         accessibilityHint=""
         aria-selected={isActive}
         hoverStyle={t.atoms.bg_contrast_25}
@@ -182,10 +189,12 @@ function ResultRow({
           a.transition_color,
           isActive && t.atoms.bg_contrast_25,
         ]}>
-        <Animated.View
-          style={[a.flex_row, a.align_center, a.gap_md, press.style]}>
-          {children}
-        </Animated.View>
+        <SyncToneContext.Provider value={tone.isUnsynced}>
+          <Animated.View
+            style={[a.flex_row, a.align_center, a.gap_md, press.style, tone.fade]}>
+            {children}
+          </Animated.View>
+        </SyncToneContext.Provider>
       </PressableWithHover>
     </Animated.View>
   )
@@ -250,6 +259,7 @@ export function ExpenseResult({
       nav={nav}
       label={l`${e.title}, ${total}, ${date}`}
       isActive={isActive}
+      syncStatus={expense.syncStatus}
       onPress={onPress}>
       <EntryIcon category={e.category} />
       <View style={[a.flex_1, a.gap_2xs]}>
@@ -309,6 +319,7 @@ export function PersonResult({
       nav={nav}
       label={person.data.name}
       isActive={isActive}
+      syncStatus={person.syncStatus}
       onPress={onPress}>
       <UserAvatar size={42} name={person.data.name} type="user" />
       <View style={[a.flex_1, a.gap_2xs]}>
@@ -368,7 +379,7 @@ export function GroupResult({
     .filter(Boolean)
     .join(' · ')
   return (
-    <ResultRow nav={nav} label={name} isActive={isActive} onPress={onPress}>
+    <ResultRow nav={nav} label={name} isActive={isActive} syncStatus={group.syncStatus} onPress={onPress}>
       <GroupAvatar kind={kind} name={name} size={42} />
       <View style={[a.flex_1, a.gap_2xs]}>
         <Highlight

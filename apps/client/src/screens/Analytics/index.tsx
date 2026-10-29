@@ -2,7 +2,8 @@ import {View} from 'react-native'
 import {LayoutAnimationConfig} from 'react-native-reanimated'
 import {Trans, useLingui} from '@lingui/react/macro'
 import {useNavigation} from '@react-navigation/native'
-import {formatAmount, type ReportExpense, reportCsv} from '@splito/domain'
+import {formatAmount, reportCsv} from '@splito/domain'
+import {type ListedExpense} from '#/data/analyticsQueries'
 
 import {type NavigationProp} from '#/lib/routes/types'
 import {useNumberLocale} from '#/locale/numberLocale'
@@ -103,8 +104,8 @@ export function AnalyticsScreen() {
             onEndReached={() => {
               if (!report.isRowsDone) report.loadMoreRows()
             }}
-            keyExtractor={(e: ReportExpense) => e.id}
-            renderItem={({item}: {item: ReportExpense}) => (
+            keyExtractor={(e: ListedExpense) => e.id}
+            renderItem={({item}: {item: ListedExpense}) => (
               <ExpenseRow
                 expense={item}
                 shareOf={report.shareOf}

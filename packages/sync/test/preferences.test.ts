@@ -250,6 +250,9 @@ test('Payments folds in New expenses: an old stored off on either key reads as o
   await put('notify.expense', false)
   await setPref(s, ctx, 'notify.payment', true)
   expect(await getPref(s, 'notify.payment')).toBe(true)
+  // The tombstone of the folded-in key is queued as an op too, so it syncs.
+  const ops = (await s.dump()).outbox.filter(o => o.entityId === 'notify.expense')
+  expect(ops.map(o => o.opType)).toEqual(['preference.reset'])
   await put('notify.payment', false)
   expect(await getPref(s, 'notify.payment')).toBe(false)
   expect(await getPref(s, 'notify.comments')).toBe(true)

@@ -15,7 +15,7 @@ import {
 import {useHaptics} from '#/lib/haptics'
 import {type AllNavigatorParams, type NavigationProp} from '#/lib/routes/types'
 import {logger} from '#/logger'
-import {inviteUrl, isDirectoryAvailable, makeInviteLink} from '#/data/friends'
+import {inviteUrl, makeInviteLink} from '#/data/friends'
 import {useEntities, useInviteLinks, useMutationCtx, usePref, useStore} from '#/data/hooks'
 import * as SettingsList from '#/screens/Settings/components/SettingsList'
 import {atoms as a, useTheme} from '#/alf'
@@ -28,6 +28,7 @@ import {useDescribeLink} from '#/components/invites/describe'
 import {InviteShare} from '#/components/invites/InviteShare'
 import * as Toast from '#/components/Toast'
 import {Text} from '#/components/Typography'
+import {useDemoMode} from '#/state/demo'
 import {useTickEveryMinute} from '#/state/shell/tick-every-minute'
 import {useShouldReduceMotion} from '#/motion/useShouldReduceMotion'
 
@@ -78,7 +79,7 @@ export function CreateInviteScreen() {
   const chosenUses = uses ?? defaultUses ?? (kind === 'group' ? 25 : 1)
   const chosenExpiry = expiry ?? defaultExpiry ?? '7d'
   /* Invite links need the server (section 10: they fail closed, never a made-up URL). */
-  const isLinkAvailable = isDirectoryAvailable()
+  const {hasDirectory: isLinkAvailable} = useDemoMode()
 
   const close = () => {
     if (navigation.canGoBack()) navigation.goBack()

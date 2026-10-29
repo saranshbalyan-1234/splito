@@ -32,6 +32,7 @@ import {PlusLarge_Stroke2_Corner0_Rounded as PlusIcon} from '#/components/icons/
 import {useDescribeLink} from '#/components/invites/describe'
 import * as Layout from '#/components/Layout'
 import * as Prompt from '#/components/Prompt'
+import {SyncToned} from '#/components/SyncTone'
 import * as Toast from '#/components/Toast'
 import {Text} from '#/components/Typography'
 import {useListAnimations} from '#/motion/listAnimations'
@@ -113,7 +114,7 @@ export function useInviteLinkRows(now: number) {
             <LinkIcon size="md" fill={t.palette.primary_500} />
           )}
         </View>
-        <View style={[a.flex_1, a.gap_2xs]}>
+        <SyncToned status={link.syncStatus} style={[a.flex_1, a.gap_2xs]}>
           <Text emoji numberOfLines={1} style={[a.text_md, a.font_semi_bold]}>
             {name}
           </Text>
@@ -165,7 +166,7 @@ export function useInviteLinkRows(now: number) {
               </ButtonText>
             </Button>
           </View>
-        </View>
+        </SyncToned>
       </Animated.View>
     )
   }

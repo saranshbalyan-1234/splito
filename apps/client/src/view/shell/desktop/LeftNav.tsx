@@ -74,6 +74,7 @@ import {HEADER_HEIGHT} from '#/components/Layout/const'
 import * as Menu from '#/components/Menu'
 import {NavFooterLinks} from '#/components/NavFooterLinks'
 import {useSearchAsk} from '#/components/SearchAsk/context'
+import {SyncToned} from '#/components/SyncTone'
 import {GLYPHS, NAV_LABELS} from '#/components/TabGlyph'
 import {Text} from '#/components/Typography'
 import {useAnalytics} from '#/analytics'
@@ -334,12 +335,15 @@ function MoreItem({
   items,
   selected,
   minimal,
+  unread,
   onLayout,
   onNavigateTab,
 }: {
   items: {navItem: NavClickItem; label: string; href: string}[]
   selected: NavClickItem | undefined
   minimal: boolean
+  /** The Activity badge while Activity sits under More ('' otherwise): a dot says something waits there. */
+  unread: string
   onLayout: (e: LayoutChangeEvent) => void
   onNavigateTab?: (tab: SidebarTab) => void
 }) {
@@ -381,6 +385,14 @@ function MoreItem({
                 width={NAV_ICON_WIDTH}
                 style={t.atoms.text}
               />
+              {unread ? (
+                <View
+                  testID="nav-badge-more"
+                  accessible={true}
+                  accessibilityLabel={describeUnread(unread)}
+                  style={[a.absolute, a.rounded_full, a.z_20, {backgroundColor: t.palette.primary_500, width: 8, height: 8, right: -2, top: -4}]}
+                />
+              ) : null}
             </View>
             {!minimal && (
               <Text
@@ -550,6 +562,7 @@ export function RecentGroups() {
         kind: g.data.kind,
         balances: balances[g.id] ?? {},
         members: [],
+        syncStatus: g.syncStatus,
       })),
       'recent',
       {
@@ -613,6 +626,7 @@ export function RecentGroups() {
               {paddingVertical: 6},
               current && {backgroundColor: t.palette.primary_50},
             ]}>
+            <SyncToned status={group.syncStatus} style={[a.flex_1, a.flex_row, a.align_center, a.gap_sm]}>
             <GroupAvatar kind={group.kind} name={group.name} size={24} />
             <Text
               emoji
@@ -671,6 +685,7 @@ export function RecentGroups() {
                 <Trans>settled</Trans>
               </Text>
             )}
+            </SyncToned>
           </Link>
         )
       })}
@@ -828,6 +843,7 @@ export function DesktopLeftNav({
               items={moreItems}
               selected={selectedMore}
               minimal={leftNavMinimal}
+              unread={moreItems.some(i => i.navItem === 'activity') ? activityBadge : ''}
               onLayout={onItemLayout('more')}
               onNavigateTab={onNavigateTab}
             />

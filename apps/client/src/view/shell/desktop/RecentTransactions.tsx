@@ -4,6 +4,7 @@ import {View} from 'react-native'
 import {utils} from '@bsky.app/alf'
 import {formatAmount, magnitude, personNet, repaymentFlow, ZERO} from '@splito/domain'
 import {Trans, useLingui} from '@lingui/react/macro'
+import {type RowSyncStatus} from '@splito/sync'
 
 import {useNumberLocale} from '#/locale/numberLocale'
 import {useMe, useRecentTransactions} from '#/data/hooks'
@@ -13,6 +14,7 @@ import {ChevronRight_Stroke2_Corner0_Rounded as ChevronRightIcon} from '#/compon
 import {CategoryTile, useCategories} from '#/components/split/shared'
 import {Text} from '#/components/Typography'
 import {useMoneyStyle} from '#/components/MoneyDirection'
+import {SyncToned} from '#/components/SyncTone'
 
 const RECENT = 5
 
@@ -26,6 +28,7 @@ type Row = {
   net: bigint
   date: string
   updatedAt: number
+  syncStatus: RowSyncStatus
 }
 
 /** The sidebar's last transactions that involve me, newest first. */
@@ -45,10 +48,10 @@ export function RecentTransactions() {
     for (const entry of recent.entries) {
       if (entry.kind === 'expense') {
         const e = entry.entity
-        out.push({id: e.id, href: `/expense/${e.id}`, title: e.data.title, category: e.data.category, currency: e.data.currency, net: personNet(e.data, me.id), date: e.data.date, updatedAt: e.updatedAt})
+        out.push({id: e.id, href: `/expense/${e.id}`, title: e.data.title, category: e.data.category, currency: e.data.currency, net: personNet(e.data, me.id), date: e.data.date, updatedAt: e.updatedAt, syncStatus: e.syncStatus})
       } else if (entry.kind === 'repayment') {
         const r = entry.entity
-        out.push({id: r.id, href: '/activity', title: r.data.from === me.id ? l`You paid` : l`You got paid`, category: null, currency: r.data.currency, net: repaymentFlow(r.data, me.id), date: r.data.date, updatedAt: r.updatedAt})
+        out.push({id: r.id, href: '/activity', title: r.data.from === me.id ? l`You paid` : l`You got paid`, category: null, currency: r.data.currency, net: repaymentFlow(r.data, me.id), date: r.data.date, updatedAt: r.updatedAt, syncStatus: r.syncStatus})
       }
     }
     return out
@@ -97,6 +100,7 @@ export function RecentTransactions() {
               a.px_md,
               {paddingVertical: 6},
             ]}>
+            <SyncToned status={row.syncStatus} style={[a.flex_1, a.flex_row, a.align_center, a.gap_sm]}>
             {category ? (
               <CategoryTile category={category} size={24} />
             ) : (
@@ -136,6 +140,7 @@ export function RecentTransactions() {
                   formatAmount(magnitude(row.net), row.currency, locale)}
               </Text>
             )}
+            </SyncToned>
           </Link>
         )
       })}

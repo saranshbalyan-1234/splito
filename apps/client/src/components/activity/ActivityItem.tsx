@@ -7,6 +7,7 @@ import {
   View,
   type ViewStyle,
 } from 'react-native'
+import Animated from 'react-native-reanimated'
 import {type I18n} from '@lingui/core'
 import {defineMessage} from '@lingui/core/macro'
 import {Trans, useLingui} from '@lingui/react/macro'
@@ -55,6 +56,7 @@ import {
 } from './icons'
 import {useTimeZone, useToday} from '#/locale/useDates'
 import {dayOf, daysAgo, writeOffParties} from './feed'
+import {SyncToneContext, useSyncTone} from '#/components/SyncTone'
 import {type ActivityActions, type RowAction} from './useActivityActions'
 import {type ActivitySnapshot} from './useActivityFeed'
 
@@ -146,6 +148,18 @@ export function ActivityItem({
   const {gtMobile} = useBreakpoints()
   const backgroundColor = useRowBackgroundColor(isRead)
   const rowPaddingTop = 12
+  /* The record the change is about, from the snapshot already in hand (a map lookup, no subscription): lighter while unsynced (owner 111). */
+  const subject =
+    event.entityType === 'expense'
+      ? snapshot.expenses.get(event.entityId)
+      : event.entityType === 'group'
+        ? snapshot.groups.get(event.entityId)
+        : event.entityType === 'person'
+          ? snapshot.people.get(event.entityId)
+          : event.entityType === 'friendRequest'
+            ? snapshot.requests.get(event.entityId)
+            : undefined
+  const tone = useSyncTone(subject?.syncStatus)
   const menuControl = Menu.useMenuControl()
   const [menuAt, setMenuAt] = useState({x: 0, y: 0})
   const [isHovered, setIsHovered] = useState(false)
@@ -321,7 +335,8 @@ export function ActivityItem({
             tone={content.tone}
             ringColor={backgroundColor}
           />
-          <View style={[a.flex_1, a.gap_xs]}>
+          <SyncToneContext.Provider value={tone.isUnsynced}>
+          <Animated.View style={[a.flex_1, a.gap_xs, tone.fade]}>
             <Text
               style={[a.text_md, a.leading_snug, t.atoms.text]}
               numberOfLines={3}>
@@ -338,7 +353,8 @@ export function ActivityItem({
             ) : (
               <Timestamp at={event.at} />
             )}
-          </View>
+          </Animated.View>
+          </SyncToneContext.Provider>
           {!isRead && (
             <View
               testID="activity-unread-dot"
