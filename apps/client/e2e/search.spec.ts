@@ -61,7 +61,7 @@ const DESKTOP = {width: 1440, height: 900}
 
 async function openSearch(page: Page) {
   await openDemo(page)
-  await expect(page.getByTestId('screen-people')).toBeVisible()
+  await expect(page.getByTestId('screen-home')).toBeVisible()
   await page.getByTestId('header-search-ask').click()
   const screen = page.getByTestId('search-ask')
   await expect(screen).toBeVisible()
@@ -242,7 +242,7 @@ test.describe('phone', () => {
     page,
   }) => {
     await openDemo(page)
-    await expect(page.getByTestId('screen-people')).toBeVisible()
+    await expect(page.getByTestId('screen-home')).toBeVisible()
     for (const [path, screen, action] of [
       ['/', 'screen-people', 'people-add-friend'],
       ['/groups', 'screen-groups', 'groups-new'],
@@ -268,7 +268,7 @@ test.describe('phone', () => {
     await expect(sheet.getByTestId('search-section-groups')).toBeVisible()
     await page.getByTestId('search-ask-cancel').click()
     await expect(sheet).toHaveCount(0)
-    await expect(page.getByTestId('screen-people')).toBeVisible()
+    await expect(page.getByTestId('screen-home')).toBeVisible()
   })
 })
 

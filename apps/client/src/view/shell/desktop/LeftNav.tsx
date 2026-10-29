@@ -67,11 +67,9 @@ import {
 import {Button, ButtonIcon, ButtonText} from '#/components/Button'
 import {GroupAvatar} from '#/components/groups/GroupAvatar'
 import {ChevronRight_Stroke2_Corner0_Rounded as ChevronRightIcon} from '#/components/icons/Chevron'
-import {Ellipsis_Stroke2_Corner0_Rounded as EllipsisIcon} from '#/components/icons/Feedback'
 import {type Props as SVGIconProps} from '#/components/icons/common'
 import {PlusLarge_Stroke2_Corner0_Rounded as PlusIcon} from '#/components/icons/Plus'
 import {HEADER_HEIGHT} from '#/components/Layout/const'
-import * as Menu from '#/components/Menu'
 import {NavFooterLinks} from '#/components/NavFooterLinks'
 import {useSearchAsk} from '#/components/SearchAsk/context'
 import {SyncToned} from '#/components/SyncTone'
@@ -108,19 +106,19 @@ export function useLeftNavWidth() {
 
 /*
  * The Splito logo heads the sidebar (owner directive), with the wordmark
- * beside the mark except on the icon rail. It returns to People and is
- * inactive on People (spec: App shell). Its row is the header's height from
+ * beside the mark except on the icon rail. It returns Home and is
+ * inactive on Home (spec: App shell). Its row is the header's height from
  * the top edge, so the logo sits on the header's centre line.
  */
 function LogoCard({minimal}: {minimal: boolean}) {
   const {t: l} = useLingui()
   const currentRouteName = useNavigationState(state => {
     if (!state) {
-      return 'People'
+      return 'Home'
     }
     return getCurrentRoute(state).name
   })
-  const isHome = isTab(currentRouteName, 'People')
+  const isHome = isTab(currentRouteName, 'Home')
 
   return (
     <View
@@ -156,8 +154,7 @@ function LogoCard({minimal}: {minimal: boolean}) {
 }
 
 /*
- * What pressing a nav item does, shared by the sidebar rows and the "More"
- * menu: Ask Splito opens the Search & Ask drawer, a tab switches tab on
+ * What pressing a nav item does, for the sidebar rows: Ask Splito opens the Search & Ask drawer, a tab switches tab on
  * native, anything else navigates (pressing the current page is a no-op,
  * as Splito screens have no soft reset).
  */
@@ -322,105 +319,6 @@ function NavItem({
         </View>
       )}
     </PressableWithHover>
-  )
-}
-
-/*
- * "More" (Lucide Ellipsis) ends the list when some items are off in
- * Settings > Navigation (ARCHITECTURE 26.3): a Bluesky Menu with those
- * items, each opening like its sidebar row. It is lit when the page is one of
- * them. No store reads of its own.
- */
-function MoreItem({
-  items,
-  selected,
-  minimal,
-  unread,
-  onLayout,
-  onNavigateTab,
-}: {
-  items: {navItem: NavClickItem; label: string; href: string}[]
-  selected: NavClickItem | undefined
-  minimal: boolean
-  /** The Activity badge while Activity sits under More ('' otherwise): a dot says something waits there. */
-  unread: string
-  onLayout: (e: LayoutChangeEvent) => void
-  onNavigateTab?: (tab: SidebarTab) => void
-}) {
-  const t = useTheme()
-  const {t: l} = useLingui()
-  const ax = useAnalytics()
-  const openNavItem = useOpenNavItem(onNavigateTab)
-  const isSelected = selected !== undefined
-  const label = l`More`
-
-  return (
-    <Menu.Root>
-      <Menu.Trigger label={label}>
-        {({props}) => (
-          <PressableWithHover
-            {...props}
-            testID="tab-more"
-            onLayout={onLayout}
-            style={[
-              a.flex_row,
-              a.align_center,
-              a.p_md,
-              a.rounded_full,
-              a.gap_sm,
-              a.outline_inset_1,
-              a.transition_color,
-            ]}
-            hoverStyle={t.atoms.bg_contrast_25}
-            aria-current={isSelected ? 'page' : undefined}
-            accessibilityHint="">
-            <View
-              style={[
-                a.align_center,
-                a.justify_center,
-                {width: 24, height: 24},
-              ]}>
-              <EllipsisIcon
-                aria-hidden={true}
-                width={NAV_ICON_WIDTH}
-                style={t.atoms.text}
-              />
-              {unread ? (
-                <View
-                  testID="nav-badge-more"
-                  accessible={true}
-                  accessibilityLabel={describeUnread(unread)}
-                  style={[a.absolute, a.rounded_full, a.z_20, {backgroundColor: t.palette.primary_500, width: 8, height: 8, right: -2, top: -4}]}
-                />
-              ) : null}
-            </View>
-            {!minimal && (
-              <Text
-                style={[a.text_xl, isSelected ? a.font_bold : a.font_normal]}>
-                {label}
-              </Text>
-            )}
-          </PressableWithHover>
-        )}
-      </Menu.Trigger>
-      <Menu.Outer>
-        <Menu.Group>
-          {items.map(({navItem, label: itemLabel, href}) => (
-            <Menu.Item
-              key={navItem}
-              testID={`more-${navItem}`}
-              label={itemLabel}
-              onPress={() => {
-                ax.metric('nav:click', {item: navItem, surface: 'leftNav'})
-                openNavItem(navItem, href, navItem === selected)
-              }}>
-              <Menu.ItemText>{itemLabel}</Menu.ItemText>
-              <Menu.ItemIcon icon={GLYPHS[navItem].icon} position="right" />
-            </Menu.Item>
-          ))}
-        </Menu.Group>
-      </Menu.Outer>
-    </Menu.Root>
   )
 }
 
@@ -767,14 +665,17 @@ export function DesktopLeftNav({
   const section = useNavigationState(state => currentSection(state))
   const tabs = useTabs()
   const [layouts, setLayouts] = useState<
-    Partial<Record<NavClickItem | 'more', {y: number; height: number}>>
+    Partial<Record<NavClickItem, {y: number; height: number}>>
   >({})
 
   if (!gtMobile) {
     return null
   }
 
-  /* The one shared list (26.3), split by Settings > Navigation: what is on, then "More" holds the rest. */
+  /*
+   * The one shared list (26.3), every item always (owner 155): the order chosen in Settings > Navigation (what is on,
+   * then what is off, in the shared order); the on/off choice shapes only the phone bar. No "More".
+   */
   const {on, off} = splitNavigationItems(tabs)
   const toItem = (id: NavClickItem) => ({
     navItem: id,
@@ -783,12 +684,9 @@ export function DesktopLeftNav({
     icons: {inactive: GLYPHS[id].icon, active: GLYPHS[id].filled},
     count: id === 'activity' ? activityBadge : undefined,
   })
-  const items = on.map(toItem)
-  const moreItems = off.map(toItem)
-  const lit = selectedItem(navigationState, [...items, ...moreItems], section)
-  const selected = lit && off.includes(lit) ? undefined : lit
-  const selectedMore = lit && off.includes(lit) ? lit : undefined
-  const onItemLayout = (navItem: NavClickItem | 'more') => (e: LayoutChangeEvent) => {
+  const items = [...on, ...off].map(toItem)
+  const selected = selectedItem(navigationState, items, section)
+  const onItemLayout = (navItem: NavClickItem) => (e: LayoutChangeEvent) => {
     const {y, height} = e.nativeEvent.layout
     setLayouts(prev =>
       prev[navItem]?.y === y && prev[navItem]?.height === height
@@ -830,7 +728,7 @@ export function DesktopLeftNav({
         <LogoCard minimal={leftNavMinimal} />
         <View style={[a.pt_sm]} />
         <View style={[a.relative, !leftNavMinimal && a.w_full]}>
-          <ActiveIndicator layout={selectedMore ? layouts.more : selected ? layouts[selected] : undefined} />
+          <ActiveIndicator layout={selected ? layouts[selected] : undefined} />
           {items.map(item => (
             <NavItem
               key={item.navItem}
@@ -843,16 +741,6 @@ export function DesktopLeftNav({
               }
             />
           ))}
-          {moreItems.length > 0 && (
-            <MoreItem
-              items={moreItems}
-              selected={selectedMore}
-              minimal={leftNavMinimal}
-              unread={moreItems.some(i => i.navItem === 'activity') ? activityBadge : ''}
-              onLayout={onItemLayout('more')}
-              onNavigateTab={onNavigateTab}
-            />
-          )}
         </View>
         <ComposeBtn minimal={leftNavMinimal} />
       </ScrollView>

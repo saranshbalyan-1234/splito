@@ -72,7 +72,7 @@ test('an accent is only previewed until Apply, then tints the app and survives a
   await expect.poll(() => background(page, 'sidebar-add')).toBe(BLUESKY_BLUE)
 })
 
-test('hiding Groups removes it from the phone bar and the sidebar; the drawer and More keep it', async ({
+test('hiding Groups removes it from the phone bar only; the drawer and the sidebar keep it (owner 155)', async ({
   page,
 }) => {
   await page.setViewportSize(PHONE)
@@ -82,26 +82,26 @@ test('hiding Groups removes it from the phone bar and the sidebar; the drawer an
   // The bottom bar is on screen here too, and follows the saved preference.
   await expect(page.getByTestId('tab-groups')).toHaveCount(0)
 
-  await open(page, '/', 'screen-people')
-  await expect(page.getByTestId('tab-people')).toBeVisible()
+  await open(page, '/', 'screen-home')
+  await expect(page.getByTestId('tab-home')).toBeVisible()
   await expect(page.getByTestId('tab-groups')).toHaveCount(0)
   // The avatar's drawer still lists every item and reaches Settings.
-  await page.getByTestId('screen-people').getByTestId('header-avatar').click()
+  await page.getByTestId('screen-home').getByTestId('header-avatar').click()
   await expect(page.getByTestId('drawer-groups')).toBeVisible()
   await page.getByTestId('drawer-settings').click()
   await expect(page.getByTestId('screen-settings')).toBeVisible()
 
+  // Wide screens always list every item: Groups is still on the sidebar, after the items that are on.
   await page.setViewportSize(LAPTOP)
-  await open(page, '/', 'screen-people')
-  await expect(page.getByTestId('tab-groups')).toHaveCount(0)
-  await page.getByTestId('tab-more').click()
-  await page.getByTestId('more-groups').click()
+  await open(page, '/', 'screen-home')
+  await expect(page.getByTestId('tab-more')).toHaveCount(0)
+  await page.getByTestId('tab-groups').click()
   await expect(page.getByTestId('screen-groups')).toBeVisible()
 })
 
-/* Owner 127: the one choice drives the sidebar (1440) and the rail (860) too. */
+/* Owners 127, 155: the one choice drives the phone bar's order; the sidebar (1440) and the rail (860) list every item in it. */
 for (const width of [1440, 860]) {
-  test(`Settings > Navigation drives the ${width < 1000 ? 'rail' : 'sidebar'} at ${width}px: off, reorder, More, Reset`, async ({
+  test(`Settings > Navigation orders the ${width < 1000 ? 'rail' : 'sidebar'} at ${width}px, which always lists every item: off, reorder, Reset`, async ({
     page,
   }) => {
     await page.setViewportSize({width, height: 900})
@@ -111,31 +111,25 @@ for (const width of [1440, 860]) {
         .getByRole('navigation')
         .locator('[data-testid^="tab-"]')
         .evaluateAll(els => els.map(e => e.getAttribute('data-testid')))
-    // Default: the bottom bar's four, then More (Ask Splito and Settings are off).
-    await expect
-      .poll(order)
-      .toEqual(['tab-people', 'tab-groups', 'tab-analytics', 'tab-activity', 'tab-more'])
-    await expect(page.getByTestId('tab-ask')).toHaveCount(0)
+    // Default: the bottom bar's five, then the rest (Ask Splito and Settings are off); never a More.
+    const DEFAULT = ['tab-home', 'tab-people', 'tab-groups', 'tab-analytics', 'tab-activity', 'tab-ask', 'tab-settings']
+    await expect.poll(order).toEqual(DEFAULT)
+    await expect(page.getByTestId('tab-more')).toHaveCount(0)
 
     await page.getByTestId('tabs-toggle-groups').click()
     await page.getByTestId('tabs-up-activity').click()
+    // Off items follow the ones that are on, in the shared order.
     await expect
       .poll(order)
-      .toEqual(['tab-people', 'tab-activity', 'tab-analytics', 'tab-more'])
+      .toEqual(['tab-home', 'tab-people', 'tab-activity', 'tab-analytics', 'tab-groups', 'tab-ask', 'tab-settings'])
 
-    // The off item sits under More and opens like its row; More is lit there.
-    await page.getByTestId('tab-more').click()
-    await expect(page.getByTestId('more-groups')).toBeVisible()
-    await expect(page.getByTestId('more-ask')).toBeVisible()
-    await expect(page.getByTestId('more-settings')).toBeVisible()
-    await expect(page.getByTestId('more-analytics')).toHaveCount(0)
-    await page.getByTestId('more-groups').click()
+    // An off item opens like any row and is lit there.
+    await page.getByTestId('tab-groups').click()
     await expect(page.getByTestId('screen-groups')).toBeVisible()
-    await expect(page.getByTestId('tab-more')).toHaveAttribute('aria-current', 'page')
+    await expect(page.getByTestId('tab-groups')).toHaveAttribute('aria-current', 'page')
 
-    // Ask Splito under More keeps its Search & Ask behaviour.
-    await page.getByTestId('tab-more').click()
-    await page.getByTestId('more-ask').click()
+    // Ask Splito keeps its Search & Ask behaviour.
+    await page.getByTestId('tab-ask').click()
     await expect(page.getByTestId('ask-chat')).toBeVisible()
     await page.keyboard.press('Escape')
 
@@ -143,18 +137,14 @@ for (const width of [1440, 860]) {
     await expect(page.getByTestId('screen-settings-section')).toBeVisible()
     await expect
       .poll(order)
-      .toEqual(['tab-people', 'tab-activity', 'tab-analytics', 'tab-more'])
+      .toEqual(['tab-home', 'tab-people', 'tab-activity', 'tab-analytics', 'tab-groups', 'tab-ask', 'tab-settings'])
     await page.getByTestId('reset-tabs').click()
-    await expect
-      .poll(order)
-      .toEqual(['tab-people', 'tab-groups', 'tab-analytics', 'tab-activity', 'tab-more'])
+    await expect.poll(order).toEqual(DEFAULT)
 
-    // With every item on there is nothing to put under More.
+    // With every item on the list is the same.
     for (const tab of ['ask', 'settings'])
       await page.getByTestId(`tabs-toggle-${tab}`).click()
-    await expect(page.getByTestId('tab-more')).toHaveCount(0)
-    await expect(page.getByTestId('tab-ask')).toBeVisible()
-    await expect(page.getByTestId('tab-settings')).toBeVisible()
+    await expect.poll(order).toEqual(DEFAULT)
   })
 }
 
@@ -165,12 +155,17 @@ test('Settings can join the phone bar, with arrows to reorder and Reset', async 
   await open(page, '/settings/navigation', 'screen-settings-section')
   const top = async (tab: string) =>
     (await page.getByTestId(`tabs-toggle-${tab}`).boundingBox())!.y
+  expect(await top('home')).toBeLessThan(await top('people'))
   expect(await top('people')).toBeLessThan(await top('groups'))
   await page.getByTestId('tabs-up-analytics').click()
   await expect
     .poll(async () => (await top('analytics')) < (await top('groups')))
     .toBe(true)
-  // Home stays first: nothing moves above it.
+  // Home stays first: nothing moves above it, so the row under it can go no higher.
+  await page.getByTestId('tabs-up-analytics').click()
+  await expect
+    .poll(async () => (await top('analytics')) < (await top('people')))
+    .toBe(true)
   await expect(page.getByTestId('tabs-up-analytics')).toBeDisabled()
 
   await page.getByTestId('tabs-toggle-settings').click()
@@ -184,8 +179,9 @@ test('Settings can join the phone bar, with arrows to reorder and Reset', async 
         .evaluateAll(els => els.map(e => e.getAttribute('data-testid'))),
     )
     .toEqual([
-      'tab-people',
+      'tab-home',
       'tab-analytics',
+      'tab-people',
       'tab-groups',
       'tab-activity',
       'tab-settings',
@@ -206,7 +202,7 @@ test('the bar takes any number of tabs, down to Home alone, and Home cannot be h
   page,
 }) => {
   await open(page, '/settings/navigation', 'screen-settings-section')
-  for (const tab of ['groups', 'analytics', 'activity']) {
+  for (const tab of ['people', 'groups', 'analytics', 'activity']) {
     await page.getByTestId(`tabs-toggle-${tab}`).click()
     await expect(page.getByTestId(`tabs-toggle-${tab}`)).toHaveAttribute(
       'aria-checked',
@@ -214,7 +210,7 @@ test('the bar takes any number of tabs, down to Home alone, and Home cannot be h
     )
   }
   // Nothing is locked but Home, even with Home alone left.
-  await expect(page.getByTestId('tabs-toggle-people')).toHaveAttribute(
+  await expect(page.getByTestId('tabs-toggle-home')).toHaveAttribute(
     'aria-disabled',
     'true',
   )
@@ -223,13 +219,13 @@ test('the bar takes any number of tabs, down to Home alone, and Home cannot be h
     'true',
   )
   await expect(page.getByTestId('tabs-count-note')).toContainText('Only Home')
-  // Every item can go on, past five: six tabs.
-  for (const tab of ['groups', 'analytics', 'ask', 'activity', 'settings']) {
+  // Every item can go on, past five: seven tabs.
+  for (const tab of ['people', 'groups', 'analytics', 'ask', 'activity', 'settings']) {
     const toggle = page.getByTestId(`tabs-toggle-${tab}`)
     if ((await toggle.getAttribute('aria-checked')) !== 'true') await toggle.click()
     await expect(toggle).toHaveAttribute('aria-checked', 'true')
   }
-  await expect(page.getByTestId('tabs-count-note')).toContainText('6 tabs')
+  await expect(page.getByTestId('tabs-count-note')).toContainText('7 tabs')
 })
 
 test('choosing Hindi switches the whole UI live and persists', async ({
@@ -239,13 +235,13 @@ test('choosing Hindi switches the whole UI live and persists', async ({
   await open(page, '/settings/regional', 'screen-settings-section')
   await page.getByTestId('language-hi').click()
   await expect(page.getByText('भाषा और क्षेत्र').first()).toBeVisible()
-  await expect(page.getByTestId('tab-people')).toContainText('घर')
+  await expect(page.getByTestId('tab-home')).toContainText('घर')
   await expect(page.getByTestId('pref-timezone')).toContainText('समय क्षेत्र')
 
   await page.reload()
-  await expect(page.getByTestId('tab-people')).toContainText('घर')
+  await expect(page.getByTestId('tab-home')).toContainText('घर')
   await page.getByTestId('language-en').click()
-  await expect(page.getByTestId('tab-people')).toContainText('Home')
+  await expect(page.getByTestId('tab-home')).toContainText('Home')
 })
 
 test('Reset restores one default, and Reset all restores every default', async ({

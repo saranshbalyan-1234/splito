@@ -8,6 +8,7 @@ export const IS_ASK_SPLITO_AVAILABLE = true
 
 /** The route each item opens; Ask Splito opens the Search & Ask drawer instead. */
 export const NAV_ITEM_ROUTE = {
+  home: 'Home',
   people: 'People',
   groups: 'Groups',
   analytics: 'Analytics',
@@ -22,7 +23,8 @@ export type NavItemRoute = NonNullable<
 
 /** Each item's path, for web links (Ask Splito has none). */
 export const NAV_ITEM_HREF = {
-  people: '/',
+  home: '/',
+  people: '/people',
   groups: '/groups',
   analytics: '/analytics',
   ask: undefined,
@@ -38,8 +40,8 @@ export function isNavItemAvailable(
 }
 
 /**
- * The one list of every item (ARCHITECTURE 26.3, § 3): Home, Groups,
- * Analytics, Ask Splito, Activity, Settings. The bottom bar, sidebar and
+ * The one list of every item (ARCHITECTURE 26.3, § 3): Home, People,
+ * Groups, Analytics, Ask Splito, Activity, Settings. The bottom bar, sidebar and
  * drawer show it ordered by the `tabs` preference (`splitNavigationItems`).
  */
 export function navigationItems(
@@ -51,7 +53,7 @@ export function navigationItems(
 /**
  * What Settings > Navigation sets for every width (ARCHITECTURE 26.3): the
  * items that are on, in the user's order, then the ones that are off in the
- * shared order. The sidebar shows `on` and puts `off` under "More"; the
+ * shared order. The sidebar and rail list `on` then `off` (no "More", owner 155); the
  * drawer lists both, in this order.
  */
 export function splitNavigationItems(

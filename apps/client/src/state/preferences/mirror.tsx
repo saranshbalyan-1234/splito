@@ -66,7 +66,7 @@ export function PrefsMirror() {
     put('accent', accent)
     put('hapticsEnabled', haptics)
     put('moneyPalette', moneyPalette)
-    put('homeTab', homeTab)
+    put('startTab', homeTab)
     const scale = fontScaleFor(textScale)
     if (scale !== getFontScale()) setFontScale(scale)
   }, [theme, darkTheme, accent, textScale, haptics, homeTab, moneyPalette, setFontScale])

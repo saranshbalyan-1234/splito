@@ -6,12 +6,12 @@ const params = {currency: 'GBP'}
 
 describe('tabLink: a link to a tab pressed on a pushed screen (Profile tile, Overview card)', () => {
   test('native pops back to the root `Tabs` screen and selects the tab with its params', () => {
-    for (const tab of ['People', 'Groups', 'Analytics', 'Activity'])
+    for (const tab of ['Home', 'People', 'Groups', 'Analytics', 'Activity'])
       expect(tabLink(tab, params, false)).toEqual({kind: 'popTo', name: 'Tabs', params: {screen: tab, params}})
   })
 
   test('web navigates to the tab route with its params', () => {
-    for (const tab of ['People', 'Groups', 'Analytics', 'Activity'])
+    for (const tab of ['Home', 'People', 'Groups', 'Analytics', 'Activity'])
       expect(tabLink(tab, params, true)).toEqual({kind: 'navigate', name: tab, params})
   })
 

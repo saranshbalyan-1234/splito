@@ -200,7 +200,7 @@ for (const [label, viewport] of [
     test('an unknown address opens Home and the bar says /', async ({page}) => {
       await openApp(page)
       await page.goto('/no/such/place')
-      await expect(page.getByTestId('screen-people')).toBeVisible()
+      await expect(page.getByTestId('screen-home')).toBeVisible()
       expect(here(page)).toBe('/')
     })
 
@@ -348,7 +348,7 @@ for (const [label, viewport] of [
       await expect(page.getByRole('button', {name: 'Stay in demo'})).toBeVisible()
       await page.getByRole('button', {name: 'Stay in demo'}).click()
       await expect.poll(() => here(page)).toBe('/')
-      await expect(page.getByTestId('screen-people')).toBeVisible()
+      await expect(page.getByTestId('screen-home')).toBeVisible()
     })
 
     test('demo mode: a link to real data asks to switch back first; Stay keeps the demo, Switch back opens it', async ({page}) => {

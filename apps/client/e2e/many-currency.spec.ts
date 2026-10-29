@@ -86,7 +86,7 @@ test('m3: a currency settled with a friend stays on offer and filters (Show sett
 }) => {
   await ready(page)
   await seedSettledEuro(page)
-  await page.goto('/')
+  await page.goto('/people')
   await expect(page.getByTestId('person-Bob Mehta')).toBeVisible()
   await page.getByTestId('screen-people').getByTestId('list-filters').click()
   await page.getByTestId('filter-currency-EUR').click()
@@ -176,8 +176,9 @@ test('M12, m2: Recently active groups shows a chip per open currency, with exact
   page,
 }) => {
   await page.setViewportSize(DESKTOP)
-  await openDemo(page)
-  await expect(page.getByTestId('person-Riya Sharma')).toBeVisible()
+  /* Home shows the groups in its body and no right column (owner 153); the right column is on Groups. */
+  await openDemo(page, '/groups')
+  await expect(page.getByTestId('screen-groups')).toBeVisible()
   const recent = page
     .getByTestId('right-nav')
     .getByTestId('sidebar-recent-groups')
@@ -196,14 +197,14 @@ test('m21: an Overview currency card opens Analytics in that currency, every tim
 }) => {
   await page.setViewportSize(DESKTOP)
   await openDemo(page)
-  await expect(page.getByTestId('person-Riya Sharma')).toBeVisible()
+  await expect(page.getByTestId('summary-EUR')).toBeVisible()
   await page.getByTestId('summary-EUR').click()
   await expect(page.getByTestId('analytics-currency')).toContainText('EUR')
   // Pick another currency there, go home and tap the same card again: it must seed again.
   await page.getByTestId('analytics-currency').click()
   await page.getByTestId('analytics-currency-INR').click()
   await expect(page.getByTestId('analytics-currency')).toContainText('INR')
-  await page.getByTestId('tab-people').click()
+  await page.getByTestId('tab-home').click()
   await page.getByTestId('summary-EUR').click()
   await expect(page.getByTestId('analytics-currency')).toContainText('EUR')
 })

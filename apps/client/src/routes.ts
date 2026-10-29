@@ -8,7 +8,8 @@ import {type FlatNavigatorParams} from './lib/routes/types'
  * paths they would otherwise match.
  */
 export const ROUTE_PATHS = {
-  People: '/',
+  Home: '/',
+  People: '/people',
   Groups: '/groups',
   Analytics: '/analytics',
   Activity: '/activity',

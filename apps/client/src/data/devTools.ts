@@ -74,6 +74,12 @@ export function installDevTools(store: Store, ctx: MutationCtx) {
       await store.setOpStatus(op.opId, status, {error})
     },
     setPref: <K extends PrefKey>(key: K, value: PrefValue<K>) => setPref(store, ctx, key, value),
+    /** Writes a preference row as an older build stored it, past validation (e2e of the read-time migrations, e.g. the saved `tabs` before the People tab). */
+    putRawPref: (key: string, value: unknown) =>
+      store.transaction(async tx => {
+        const prev = await tx.get('preference', key)
+        await tx.put({type: 'preference', id: key, data: {value}, version: (prev?.version ?? 0) + 1, deleted: false, updatedAt: ctx.now()})
+      }),
     /** What Home did before schema v2, for the perf spec's baseline: read the whole ledger, then work every balance out of it. */
     legacyHomeMs: async () => {
       const t0 = performance.now()

@@ -129,7 +129,7 @@ test('A07 / F-113 M11: when A->C is excluded the plan goes outside the rules, sa
   await page.goto(`/groups/${group}?tab=balances`)
   await expect(page.getByTestId('group-outside-rules')).toBeVisible()
   await expect(page.getByTestId('group-owe-You-Chirag Shah')).toBeVisible()
-  await page.goto('/')
+  await page.goto('/people')
   await expect(
     page.getByTestId('person-Chirag Shah').getByTestId('balance-INR'),
   ).toHaveText('you owe ↗ ₹100.00')

@@ -20,7 +20,8 @@ export type Device = {
   accent: string
   /** How money direction is coloured (F-1801), mirrored so every balance paints right at once. */
   moneyPalette: 'default' | 'colorblind' | 'mono'
-  homeTab: TabId
+  /** The tab the app opens on, mirrored from the `homeTab` preference. Renamed from `homeTab` in F-256, when the tab ids changed ('people' used to mean Home): an old value is never read. */
+  startTab: TabId
   hapticsEnabled: boolean
   /** Activity read/hidden marks: personal, so they stay on this device. */
   activityFeed: FeedState

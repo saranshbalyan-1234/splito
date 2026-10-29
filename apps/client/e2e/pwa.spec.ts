@@ -23,7 +23,7 @@ async function offerInstall(page: Page) {
 
 test('the e2e build never registers a service worker', async ({page}) => {
   await page.goto('/')
-  await expect(page.getByTestId('screen-people')).toBeVisible()
+  await expect(page.getByTestId('screen-home')).toBeVisible()
   const count = await page.evaluate(async () => (await navigator.serviceWorker.getRegistrations()).length)
   expect(count).toBe(0)
 })
@@ -40,14 +40,14 @@ test('Settings offers Install app once the browser says the app is installable',
 
 test('a one-time hint offers the install, and never returns after it was shown', async ({page}) => {
   await page.goto('/')
-  await expect(page.getByTestId('screen-people')).toBeVisible()
+  await expect(page.getByTestId('screen-home')).toBeVisible()
   await offerInstall(page)
   await expect(page.getByText('Install Splito for quick access, even offline.')).toBeVisible({timeout: 15_000})
   await page.getByTestId('install-hint-action').click()
   await expect.poll(() => page.evaluate(() => (window as unknown as {__installPrompts: number}).__installPrompts)).toBe(1)
   // Shown once: a fresh offer after a reload stays quiet.
   await page.reload()
-  await expect(page.getByTestId('screen-people')).toBeVisible()
+  await expect(page.getByTestId('screen-home')).toBeVisible()
   await offerInstall(page)
   await page.waitForTimeout(8000)
   await expect(page.getByText('Install Splito for quick access, even offline.')).toHaveCount(0)
@@ -58,18 +58,18 @@ const updateReady = (page: Page) => page.evaluate(() => (window as unknown as {s
 
 test('a waiting update only offers Reload; it reloads when asked', async ({page}) => {
   await page.goto('/')
-  await expect(page.getByTestId('screen-people')).toBeVisible()
+  await expect(page.getByTestId('screen-home')).toBeVisible()
   await updateReady(page)
   await expect(page.getByText('New version available')).toBeVisible()
   await page.waitForTimeout(1500)
   await expect(page.getByText('New version available')).toBeVisible()
   await Promise.all([page.waitForEvent('load'), page.getByTestId('update-reload').click()])
-  await expect(page.getByTestId('screen-people')).toBeVisible()
+  await expect(page.getByTestId('screen-home')).toBeVisible()
 })
 
 test('with unsaved input in a sheet, Reload asks first and Cancel keeps the offer', async ({page}) => {
   await page.setViewportSize({width: 1440, height: 900})
-  await openDemo(page)
+  await openDemo(page, '/people')
   await expect(page.getByTestId('person-Riya Sharma')).toBeVisible()
   await page.getByTestId('sidebar-add').click()
   await page.getByTestId('expense-title').fill('Dinner at Thalassa')

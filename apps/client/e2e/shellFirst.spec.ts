@@ -39,7 +39,7 @@ const skeletons = (page: Page) =>
 
 test('opening a friend and a group with the data loaded shows no skeleton', async ({page}) => {
   await page.goto('/')
-  await expect(page.getByTestId('screen-people')).toBeVisible()
+  await expect(page.getByTestId('screen-home')).toBeVisible()
   await page.waitForFunction(() => 'splito' in window)
   await page.evaluate(async () => {
     const s = (window as unknown as {splito: Splito}).splito
@@ -73,7 +73,7 @@ test('opening a friend and a group with the data loaded shows no skeleton', asyn
   expect((await skeletons(page)).rowsSkeletonUnderRealHeader).toBe(0)
 
   await page.goBack()
-  await page.getByTestId('tab-people').click()
+  await page.getByTestId('tab-home').click()
   await expect(page.getByTestId('person-Bela Joshi')).toBeVisible()
   await page.waitForTimeout(1000)
   await watchSkeletons(page)

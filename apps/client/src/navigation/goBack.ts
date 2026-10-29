@@ -15,7 +15,7 @@ type BackNavigation = {
 
 /**
  * Where Back goes when there is no history (a deep link, a refresh, a new
- * tab): each page's parent, else People (ARCHITECTURE 3, A-014).
+ * tab): each page's parent, else Home (ARCHITECTURE 3, A-014).
  */
 export function backFallback(route: {name: string; params?: object}): Fallback {
   const params = (route.params ?? {}) as Record<string, string | undefined>
@@ -23,21 +23,23 @@ export function backFallback(route: {name: string; params?: object}): Fallback {
     case 'Group':
     case 'CreateGroup':
       return {name: 'Groups'}
+    case 'Person':
+      return {name: 'People'}
     case 'Settle':
       return params.groupId ? {name: 'Group', params: {groupId: params.groupId}} : {name: 'Groups'}
     case 'EditExpense':
-      return params.expenseId ? {name: 'Expense', params: {expenseId: params.expenseId}} : {name: 'People'}
+      return params.expenseId ? {name: 'Expense', params: {expenseId: params.expenseId}} : {name: 'Home'}
     case 'SettingsSection':
       return {name: 'Settings'}
     default:
-      return {name: 'People'}
+      return {name: 'Home'}
   }
 }
 
 /**
  * The routes to put under a deep-linked page so Back has somewhere to go
  * (web has no stack history after a deep link or refresh): its parents from
- * `backFallback`, outermost first, then the page itself. People is always
+ * `backFallback`, outermost first, then the page itself. Home is always
  * at the bottom.
  */
 export function backChain<R extends {name: string; params?: object}>(route: R): Array<R | Fallback> {

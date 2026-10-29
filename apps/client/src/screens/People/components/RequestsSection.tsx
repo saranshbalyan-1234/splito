@@ -28,17 +28,18 @@ import {TimesLarge_Stroke2_Corner0_Rounded as XIcon} from '#/components/icons/Ti
 import * as Toast from '#/components/Toast'
 import {useTickEveryMinute} from '#/state/shell/tick-every-minute'
 import {RequestAction, RequestRow} from '#/components/people/RequestRow'
+import {SectionLink} from '#/components/SectionLink'
 import {SectionHeader} from './SectionHeader'
 
 const DAY = 86_400_000
 
 /**
- * Under the Overview on Home (26.12, owner 120): "Requests" waiting for your
+ * On Home under the Overview and at the top of People (26.3, owner 153): "Requests" waiting for your
  * answer (Accept / Decline), then one compact "N invites waiting" row when
  * some of your own invites are unanswered. The sent invites themselves
  * (Resend / Cancel) live on Friends and invites (F-621).
  */
-export function RequestsSection() {
+export function RequestsSection({max}: {max?: number} = {}) {
   const {t: l} = useLingui()
   const navigation = useNavigation<NavigationProp>()
   const {incoming, outgoing} = usePendingRequests()
@@ -55,8 +56,16 @@ export function RequestsSection() {
             title={l`Requests`}
             testID="people-requests-title"
             count={incoming.length}
+            /* Home shows the first few (owner 153); the rest wait on People. */
+            action={
+              max !== undefined && incoming.length > max ? (
+                <SectionLink testID="people-requests-all" href="/people" label={l`See all requests`}>
+                  <Trans>See all</Trans>
+                </SectionLink>
+              ) : undefined
+            }
           />
-          {incoming.map(r => (
+          {incoming.slice(0, max).map(r => (
             <IncomingRow key={r.id} request={r} />
           ))}
         </>

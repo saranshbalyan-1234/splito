@@ -12,7 +12,7 @@ const PHONE = {width: 390, height: 844}
 const DESKTOP = {width: 1440, height: 900}
 
 async function home(page: Page) {
-  await openDemo(page)
+  await openDemo(page, '/people')
   await expect(page.getByTestId('person-Arjun Mehta')).toBeVisible()
 }
 
@@ -194,7 +194,7 @@ test('the sidebar, the drawer and a pinned bar tab all open the drawer in Ask mo
   await expect(page.getByTestId('search-input')).toBeVisible()
   await page.getByTestId('search-ask-cancel').click()
 
-  await page.getByTestId('screen-people').getByTestId('header-avatar').click()
+  await page.getByTestId('screen-home').getByTestId('header-avatar').click()
   await page.getByTestId('drawer-ask').click()
   await expect(page.getByTestId('ask-chat')).toBeVisible()
 })
@@ -206,7 +206,7 @@ test('a six-tab bar fits a phone: every tab is on screen, equal in width, with i
     await page.getByTestId(`tabs-toggle-${tab}`).click()
     await expect(page.getByTestId(`tab-${tab}`)).toHaveCount(1)
   }
-  await page.goto('/')
+  await page.goto('/people')
   await expect(page.getByTestId('person-Arjun Mehta')).toBeVisible()
   const ids = ['people', 'groups', 'analytics', 'ask', 'activity', 'settings']
   const boxes = []

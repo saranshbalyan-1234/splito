@@ -14,7 +14,7 @@ export function getRootNavigation<T extends {}>(
 
 export function getCurrentRoute(state?: State) {
   if (!state) {
-    return {name: 'People', params: undefined}
+    return {name: 'Home', params: undefined}
   }
 
   /*
@@ -54,6 +54,7 @@ export function isStateAtTabRoot(state: State | undefined) {
   }
   const currentRoute = getCurrentRoute(state)
   return (
+    isTab(currentRoute.name, 'Home') ||
     isTab(currentRoute.name, 'People') ||
     isTab(currentRoute.name, 'Groups') ||
     isTab(currentRoute.name, 'Analytics') ||
@@ -130,8 +131,8 @@ export function buildStateObject(
   }
 }
 
-/* Exhaustive on purpose: a tab added to TabParams (People comes with decision 153) fails to compile here until it is listed. */
-const TAB_ROUTES: readonly string[] = Object.keys({People: 1, Groups: 1, Analytics: 1, Activity: 1} satisfies Record<keyof TabParams, 1>)
+/* Exhaustive on purpose: a tab added to TabParams (People came with decision 153) fails to compile here until it is listed. */
+const TAB_ROUTES: readonly string[] = Object.keys({Home: 1, People: 1, Groups: 1, Analytics: 1, Activity: 1} satisfies Record<keyof TabParams, 1>)
 
 /**
  * How a pressed link reaches its route. A tab is not on the stack the press happens in (a Profile stat tile, an

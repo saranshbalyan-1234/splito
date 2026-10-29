@@ -49,6 +49,7 @@ import {ExpenseScreen} from '#/screens/Expense'
 import {RepaymentScreen} from '#/screens/Repayment'
 import {GroupScreen} from '#/screens/Group'
 import {GroupsScreen} from '#/screens/Groups'
+import {HomeScreen} from '#/screens/Home'
 import {PeopleScreen} from '#/screens/People'
 import {PersonScreen} from '#/screens/Person'
 import {ProfileScreen} from '#/screens/Profile'
@@ -64,8 +65,9 @@ const Stack = createNativeStackNavigator<RootStackParams>()
 const Tab = createBottomTabNavigator<TabParams>()
 const Flat = createNativeStackNavigatorWithAuth<FlatNavigatorParams>()
 
-/** Window titles for web; People is home, so it is just "Splito". */
+/** Window titles for web; Home has none, so it is just "Splito". */
 const TITLES: Partial<Record<keyof FlatNavigatorParams, MessageDescriptor>> = {
+  People: msg`People`,
   Groups: msg`Groups`,
   Analytics: msg`Analytics`,
   Activity: msg`Activity`,
@@ -163,7 +165,7 @@ function Tabs() {
   return (
     <Tab.Navigator
       // The Home tab preference (Settings > Defaults), mirrored for a synchronous read at launch.
-      initialRouteName={TAB_ROUTE[device.get(['homeTab']) ?? 'people']}
+      initialRouteName={TAB_ROUTE[device.get(['startTab']) ?? 'home']}
       backBehavior="initialRoute"
       screenOptions={{
         headerShown: false,
@@ -172,6 +174,7 @@ function Tabs() {
         tabBarPosition: gtMobile ? 'left' : 'bottom',
       }}
       tabBar={props => <NativeTabBar {...props} />}>
+      <Tab.Screen name="Home" component={HomeScreen} />
       <Tab.Screen name="People" component={PeopleScreen} />
       <Tab.Screen name="Groups" component={GroupsScreen} />
       <Tab.Screen name="Analytics" component={AnalyticsScreen} />
@@ -263,6 +266,11 @@ export function FlatNavigator({
       layout={layout}
       screenListeners={screenListeners}
       screenOptions={screenOptions(t)}>
+      <Flat.Screen
+        name="Home"
+        component={HomeScreen}
+        options={{title: title('Home')}}
+      />
       <Flat.Screen
         name="People"
         component={PeopleScreen}

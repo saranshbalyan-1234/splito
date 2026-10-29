@@ -1,0 +1,234 @@
+import {expect, type Page, test} from '@playwright/test'
+
+import {openDemo} from './openDemo'
+
+/*
+ * F-256 (owners 153-161, ARCHITECTURE 26.3 and 26.12): Home, People and Groups are three tabs and the Overview lives only
+ * on Home. Home reads Overview, Requests, Recent transactions, Recently active people, Recently active groups, each at
+ * most 5 rows; People holds requests, invites and the Friends list; the nav lists every item on rail and desktop.
+ */
+
+const PHONE = {width: 390, height: 844}
+const RAIL = {width: 900, height: 800}
+const DESKTOP = {width: 1440, height: 900}
+
+type Splito = {putRawPref(key: string, value: unknown): Promise<void>}
+
+const ids = (page: Page, scope = 'navigation') =>
+  page
+    .getByRole(scope as 'navigation')
+    .locator('[data-testid^="tab-"]:not([data-testid="tab-label"])')
+    .evaluateAll(els => els.map(e => e.getAttribute('data-testid')))
+
+const y = async (page: Page, id: string) => (await page.getByTestId(id).boundingBox())!.y
+
+test('Home at 390: the sections in order, each at most 5 rows, no friends list, header holds Search & Ask only', async ({page}) => {
+  await page.setViewportSize(PHONE)
+  await openDemo(page)
+  const home = page.getByTestId('screen-home')
+  await expect(home.getByTestId('home-overview')).toBeVisible()
+  const order = ['home-overview-title', 'people-requests-title', 'people-invites-waiting', 'home-recent-transactions-title', 'home-recent-people-title', 'home-recent-groups-title']
+  const ys: number[] = []
+  for (const id of order) ys.push(await y(page, id))
+  expect([...ys].sort((p, q) => p - q)).toEqual(ys)
+
+  const rows = (section: string, selector: string) => home.getByTestId(section).locator(selector)
+  const transactions = await rows('home-recent-transactions', 'a[data-testid^="home-transaction-"]').count()
+  const people = await rows('home-recent-people', 'a[data-testid^="person-"]').count()
+  const groups = await rows('home-recent-groups', 'a[data-testid^="group-"]').count()
+  for (const n of [transactions, people, groups]) {
+    expect(n).toBeGreaterThan(0)
+    expect(n).toBeLessThanOrEqual(5)
+  }
+  expect(await home.getByTestId('people-requests').locator('[data-testid^="request-"][data-testid*=" "]').count()).toBeLessThanOrEqual(5)
+
+  await expect(home.getByTestId('people-friends-title')).toHaveCount(0)
+  await expect(home.getByTestId('list-filters')).toHaveCount(0)
+  await expect(home.getByTestId('header-search-ask')).toBeVisible()
+  await expect(home.getByTestId('people-add-friend')).toHaveCount(0)
+  // The See all links go where they say.
+  await expect(home.getByTestId('home-recent-transactions-all')).toHaveAttribute('href', '/activity')
+  await expect(home.getByTestId('home-recent-people-all')).toHaveAttribute('href', '/people')
+  await expect(home.getByTestId('home-recent-groups-all')).toHaveAttribute('href', '/groups')
+  await home.getByTestId('home-recent-people-all').click()
+  await expect(page).toHaveURL(/\/people$/)
+  await expect(page.getByTestId('screen-people')).toBeVisible()
+})
+
+test('Overview cards at 390: compact, the net alone is coloured and on the right, the breakdown is plain text on the left', async ({page}) => {
+  await page.setViewportSize(PHONE)
+  await openDemo(page)
+  await expect(page.getByTestId('home-overview')).toBeVisible()
+  const cards = await page.getByTestId('home-overview').evaluate(root => {
+    const sat = (c: string) => {
+      const m = c.match(/\d+(\.\d+)?/g)!.map(Number)
+      return Math.max(m[0]!, m[1]!, m[2]!) - Math.min(m[0]!, m[1]!, m[2]!)
+    }
+    return [...root.querySelectorAll<HTMLElement>('[data-testid$="-card"]')].map(card => {
+      const code = card.dataset.testid!.split('-')[1]!
+      const box = card.getBoundingClientRect()
+      const q = (id: string) => card.querySelector<HTMLElement>(`[data-testid="${id}"]`)
+      const label = q(`summary-${code}-label`)!.getBoundingClientRect()
+      const net = q(`summary-${code}-net`)!
+      const netBox = net.getBoundingClientRect()
+      const owed = q(`summary-${code}-owed`)
+      const owe = q(`summary-${code}-owe`)
+      // Every text leaf but the net: grey (no green or red) ones only.
+      const leaves = [...card.querySelectorAll<HTMLElement>('*')].filter(e => e.childElementCount === 0 && e.textContent?.trim() && !net.contains(e) && e !== net)
+      return {
+        code,
+        top: box.top,
+        bottom: box.bottom,
+        height: box.height,
+        right: box.right,
+        left: box.left,
+        netRight: netBox.right,
+        netLeft: netBox.left,
+        labelLeft: label.left,
+        netColour: getComputedStyle(net).color,
+        netSaturation: sat(getComputedStyle(net).color),
+        otherSaturation: Math.max(0, ...leaves.map(e => sat(getComputedStyle(e).color))),
+        owedLeft: owed?.getBoundingClientRect().left ?? null,
+        oweLeft: owe?.getBoundingClientRect().left ?? null,
+      }
+    })
+  })
+  expect(cards.length).toBeGreaterThanOrEqual(6)
+  for (const c of cards) {
+    // About 64-96 px; a card with both directions open is the tall one.
+    expect(c.height, c.code).toBeGreaterThanOrEqual(58)
+    expect(c.height, c.code).toBeLessThanOrEqual(100)
+    // The net sits on the right: its right edge keeps the card's inner padding, the same inset the label keeps on the left.
+    expect(Math.abs(c.right - c.netRight - (c.labelLeft - c.left)), c.code).toBeLessThanOrEqual(3)
+    expect(c.netLeft, c.code).toBeGreaterThan(c.labelLeft + 60)
+    // The net is the only coloured figure.
+    expect(c.netSaturation, c.code).toBeGreaterThan(60)
+    expect(c.otherSaturation, c.code).toBeLessThanOrEqual(45)
+    // The breakdown lines are on the left, under the label.
+    if (c.owedLeft !== null) {
+      expect(Math.abs(c.owedLeft - c.labelLeft), c.code).toBeLessThanOrEqual(2)
+      expect(Math.abs(c.oweLeft! - c.labelLeft), c.code).toBeLessThanOrEqual(2)
+      expect(c.height, c.code).toBeGreaterThan(80)
+    }
+  }
+  // Six currencies fit one phone screen with the header and the section title.
+  expect(cards[5]!.bottom).toBeLessThanOrEqual(PHONE.height)
+})
+
+test('People tab: requests, invites row, Friends with search, Filters and Show settled; no Overview', async ({page}) => {
+  await page.setViewportSize(PHONE)
+  await openDemo(page, '/people')
+  const people = page.getByTestId('screen-people')
+  await expect(people.getByTestId('people-requests-title')).toBeVisible()
+  await expect(people.getByTestId('people-invites-waiting')).toBeVisible()
+  await expect(people.getByTestId('people-friends-title')).toBeVisible()
+  await expect(people.getByTestId('list-search')).toBeVisible()
+  await expect(people.getByTestId('list-filters')).toBeVisible()
+  await expect(people.getByTestId('home-overview')).toHaveCount(0)
+  await expect(people.getByTestId('people-add-friend')).toBeVisible()
+  await expect(people.getByTestId('header-search-ask')).toBeVisible()
+  await expect(people.getByTestId('fab-add')).toBeVisible()
+  await people.getByTestId('list-filters').click()
+  await expect(page.getByTestId('filter-settled-toggle')).toBeVisible()
+  await page.getByTestId('sheet-close').click()
+  // A friend still opens /people/:id.
+  await people.getByTestId('person-Riya Sharma').click()
+  await expect(page).toHaveURL(/\/people\/[^/]+$/)
+  await expect(page.getByTestId('screen-person')).toBeVisible()
+})
+
+test('Groups has no Overview', async ({page}) => {
+  await page.setViewportSize(PHONE)
+  await openDemo(page, '/groups')
+  const groups = page.getByTestId('screen-groups')
+  await expect(groups.getByTestId('groups-list-title')).toBeVisible()
+  await expect(groups.getByTestId('groups-balances')).toHaveCount(0)
+  await expect(groups.getByTestId('home-overview')).toHaveCount(0)
+  await expect(groups.getByTestId('list-search')).toBeVisible()
+})
+
+test('navigation: phone bar, rail and desktop lists, in order', async ({page}) => {
+  await page.setViewportSize(PHONE)
+  await openDemo(page)
+  await expect(page.getByTestId('tab-home')).toBeVisible()
+  expect(await ids(page)).toEqual(['tab-home', 'tab-people', 'tab-groups', 'tab-analytics', 'tab-activity'])
+  // Five tabs show their labels.
+  await expect(page.getByTestId('tab-label')).toHaveCount(5)
+  await expect(page.getByTestId('tab-people')).toContainText('People')
+  await page.getByTestId('tab-people').click()
+  await expect(page.getByTestId('screen-people')).toBeVisible()
+  await expect(page).toHaveURL(/\/people$/)
+
+  const everyItem = ['tab-home', 'tab-people', 'tab-groups', 'tab-analytics', 'tab-activity', 'tab-ask', 'tab-settings']
+  for (const size of [RAIL, DESKTOP]) {
+    await page.setViewportSize(size)
+    await expect.poll(() => ids(page)).toEqual(everyItem)
+    await expect(page.getByTestId('tab-more')).toHaveCount(0)
+  }
+  await expect(page.getByTestId('tab-people')).toContainText('People')
+  await expect(page.getByTestId('tab-people')).toHaveAttribute('aria-current', 'page')
+  await page.getByTestId('tab-home').click()
+  await expect(page).toHaveURL(/\/$/)
+  await expect(page.getByTestId('tab-home')).toHaveAttribute('aria-current', 'page')
+  // The drawer lists the same.
+  await page.setViewportSize(PHONE)
+  await page.getByTestId('screen-home').getByTestId('header-avatar').click()
+  const rows = await page
+    .getByTestId('drawer')
+    .locator('[data-testid^="drawer-"]')
+    .evaluateAll(els => els.map(e => e.getAttribute('data-testid')))
+  expect(rows.slice(1, 8)).toEqual(['drawer-home', 'drawer-people', 'drawer-groups', 'drawer-analytics', 'drawer-activity', 'drawer-ask', 'drawer-settings'])
+})
+
+test('a saved bar from before the People tab gets People after Home, and keeps its own order', async ({page}) => {
+  await page.setViewportSize(PHONE)
+  await page.goto('/')
+  await page.waitForFunction(() => 'splito' in window)
+  await page.evaluate(() => (window as unknown as {splito: Splito}).splito.putRawPref('tabs', ['people', 'activity', 'groups']))
+  await expect.poll(() => ids(page)).toEqual(['tab-home', 'tab-people', 'tab-activity', 'tab-groups'])
+  await page.reload()
+  await expect.poll(() => ids(page)).toEqual(['tab-home', 'tab-people', 'tab-activity', 'tab-groups'])
+  await expect(page.getByTestId('screen-home')).toBeVisible()
+})
+
+test('the right column is not shown on Home at 1440, and other pages keep it', async ({page}) => {
+  await page.setViewportSize(DESKTOP)
+  await openDemo(page)
+  await expect(page.getByTestId('home-overview')).toBeVisible()
+  await expect(page.getByTestId('right-nav')).toHaveCount(0)
+  // The content takes the room: sidebar on the left, the window's edge on the right.
+  const box = (await page.getByTestId('screen-home').boundingBox())!
+  expect(box.x + box.width).toBe(DESKTOP.width)
+  for (const tab of ['tab-people', 'tab-groups', 'tab-activity']) {
+    await page.getByTestId(tab).click()
+    await expect(page.getByTestId('right-nav')).toBeVisible()
+  }
+  await page.getByTestId('tab-home').click()
+  await expect(page.getByTestId('right-nav')).toHaveCount(0)
+})
+
+test('deep links: / is Home, /people is People with list state, /people/filters opens its sheet', async ({page}) => {
+  await page.setViewportSize(PHONE)
+  await openDemo(page, '/')
+  await expect(page.getByTestId('screen-home')).toBeVisible()
+  await page.goto('/people?sort=name&show=owesYou')
+  await expect(page.getByTestId('screen-people')).toBeVisible()
+  await expect(page.getByTestId('people-friends-title')).toBeVisible()
+  await expect(page).toHaveURL(/\/people\?show=owesYou&sort=name$|\/people\?sort=name&show=owesYou$/)
+  await page.goto('/people/filters')
+  await expect(page.getByTestId('friends-filters-sheet')).toBeVisible()
+})
+
+test('no horizontal overflow on Home, People and Groups at 320 and 390', async ({page}) => {
+  await openDemo(page)
+  for (const width of [320, 390]) {
+    await page.setViewportSize({width, height: 800})
+    for (const [path, screen] of [['/', 'screen-home'], ['/people', 'screen-people'], ['/groups', 'screen-groups']]) {
+      await page.goto(path!)
+      await expect(page.getByTestId(screen!)).toBeVisible()
+      await page.waitForTimeout(800)
+      const over = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)
+      expect(over, `${path} @${width}`).toBeLessThanOrEqual(0)
+    }
+  }
+})

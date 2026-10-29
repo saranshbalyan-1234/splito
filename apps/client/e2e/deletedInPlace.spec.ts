@@ -109,9 +109,7 @@ for (const {name, width, height} of [
       await expect(row).toContainText('Deleted')
       await expect(row.getByText('Rishikesh', {exact: true})).toHaveCSS('text-decoration-line', STRUCK)
       await expect(page.getByTestId(`group-${group}-deleted`)).toContainText(DELETED)
-      // Never counted: the Overview has no open balance from it.
-      await expect(page.getByTestId('groups-balances').getByTestId('summary-settled')).toBeVisible()
-      await expect(page.getByTestId('groups-balances').getByTestId('summary-INR')).toHaveCount(0)
+      // Never counted: the row shows no balance from it (the Overview is on Home only).
       await expect(row.getByTestId('group-balance-INR')).toHaveCount(0)
 
       await row.click()
@@ -247,14 +245,14 @@ for (const {name, width, height} of [
       await expect(page.getByTestId('person-deleted')).toBeVisible()
       await page.getByTestId('person-hide').click()
       await expect(page.getByTestId('person-hide')).toHaveText('Unhide')
-      await page.goto('/')
+      await page.goto('/people')
       await expect(page.getByTestId('screen-people').getByTestId('person-Bela Joshi')).toHaveCount(0)
 
       await page.goto(`/people/${bela}`)
       await page.getByTestId('person-restore').click()
       await expect(page.getByTestId('person-deleted')).toHaveCount(0)
       // Live again, so never hidden: in People without any switch.
-      await page.goto('/')
+      await page.goto('/people')
       await expect(page.getByTestId('screen-people').getByTestId('person-Bela Joshi')).toBeVisible()
     })
 
@@ -275,7 +273,7 @@ for (const {name, width, height} of [
       await expect(page).toHaveURL(/\/groups$/)
       await page.evaluate(id => (window as unknown as {splito: Splito}).splito.deletePerson(id), bela)
 
-      await page.goto('/')
+      await page.goto('/people')
       const friend = page.getByTestId('screen-people').getByTestId('person-Bela Joshi')
       await expect(friend).toBeVisible()
       await expect(friend).toContainText('Deleted')

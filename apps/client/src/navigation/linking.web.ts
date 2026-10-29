@@ -11,10 +11,10 @@ import {device} from '#/storage'
 /*
  * The Home tab preference (Settings > Defaults): a bare visit to "/" opens
  * that tab. Runs once, before the navigator reads the URL; links to "/" from
- * inside the app (the logo) still open People.
+ * inside the app (the logo) still open Home.
  */
-const homeTab = device.get(['homeTab'])
-if (homeTab && homeTab !== 'people' && window.location.pathname === '/') {
+const homeTab = device.get(['startTab'])
+if (homeTab && homeTab !== 'home' && window.location.pathname === '/') {
   window.history.replaceState(
     window.history.state,
     '',

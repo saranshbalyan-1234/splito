@@ -25,7 +25,7 @@ async function owes(page: Page, name: string) {
 }
 
 test('Settings has a Friends and invites page; Home links to it and the sections show', async ({page}) => {
-  await openDemo(page)
+  await openDemo(page, '/people')
   await page.getByTestId('people-manage-friends').click()
   await expect(page).toHaveURL(/\/settings\/friends$/)
   await expect(page.getByTestId('screen-friends-invites')).toBeVisible()
@@ -90,13 +90,13 @@ test('removing a settled friend keeps history, hides them from lists and pickers
   // Gone from Home's list (settled friends are hidden by default, so show them: the removal is what hides him).
   // Settled groups and friends are hidden by default (F-1413); this spec reads them, so show them.
   await page.evaluate(() => (window as unknown as {splito: {setPref(k: string, v: unknown): Promise<void>}}).splito.setPref('people.showSettled', true))
-  await page.goto('/')
+  await page.goto('/people')
   await expect(page.getByTestId('person-Neel Joshi')).toHaveCount(0)
   // The expense is still there.
   await page.goto('/settings/friends')
   await page.getByTestId('hub-removed-Neel Joshi').getByTestId('hub-removed-add-back').click()
   await expect(page.getByTestId('hub-friend-Neel Joshi')).toBeVisible()
-  await page.goto('/')
+  await page.goto('/people')
   await expect(page.getByTestId('person-Neel Joshi')).toBeVisible()
 })
 
@@ -125,14 +125,14 @@ test('a removed friend who gets a balance through a group stays on Home, marked 
   await page.getByTestId('hub-friend-Tara Menon').getByTestId('hub-friend-remove').click()
   await page.getByTestId('confirmBtn').click()
   await expect(page.getByTestId('hub-removed-Tara Menon')).toBeVisible()
-  await page.goto('/')
+  await page.goto('/people')
   await expect(page.getByTestId('person-Tara Menon')).toHaveCount(0)
   // The group is still shared, and an expense in it gives them a balance.
   await page.evaluate(async ({f, g}) => {
     const s = (window as unknown as {splito: Splito}).splito
     await s.createExpense({currency: 'INR', tz: 'Asia/Kolkata', category: 'food', notes: '', groupId: g, title: 'Rent', total: '60000', payers: {[s.me]: '60000'}, split: {mode: 'equal', participants: [s.me, f]}, date: '2026-10-22'})
   }, ids)
-  await page.goto('/')
+  await page.goto('/people')
   const row = page.getByTestId('person-Tara Menon')
   await expect(row).toBeVisible()
   await expect(row).toContainText('Removed')

@@ -12,7 +12,6 @@ import {
 
 import {Link} from '#/view/com/util/Link'
 import {atoms as a, useAlf, useBreakpoints, useTheme} from '#/alf'
-import {ChevronRight_Stroke2_Corner0_Rounded as ChevronIcon} from '#/components/icons/Chevron'
 import {CircleCheck_Stroke2_Corner0_Rounded as CheckIcon} from '#/components/icons/CircleCheck'
 import * as Skeleton from '#/components/Skeleton'
 import {Text} from '#/components/Typography'
@@ -20,31 +19,32 @@ import {MoneyArrow, useMoneyStyle} from '#/components/MoneyDirection'
 import {AnimatedAmount} from '#/motion/AnimatedAmount'
 import {usePressScale} from '#/motion/PressableScale'
 import {amountSize, overviewColumns} from '../overviewGrid'
-import {SectionHeader} from './SectionHeader'
+import {SectionHeader} from '#/screens/People/components/SectionHeader'
+import {SectionLink} from '#/components/SectionLink'
 
 const tabular = {fontVariant: ['tabular-nums' as const]}
 
 const GAP = 12
-/* Card padding (16) and border (1) either side: what the figure's room is measured from. */
-const CARD_CHROME = 34
+/* Card padding (14) and border (1) either side: what the figure's room is measured from. */
+const CARD_CHROME = 30
 /* The direction arrow and its gap, beside the figure. */
 const ARROW_ROOM = 28
+/* The label and currency chip on the card's left ("You are owed" + "INR"), which the figure leaves room for. */
+const LEFT_ROOM = 124
 
 /**
- * The Overview at the top of People and Groups (owner: "add overview in
- * both friends and groups"): one separate card per currency (own border,
- * radius and padding) with the net balance, in a balanced grid whose column
- * count comes from the measured width (ARCHITECTURE 26.12, owners 113/114),
- * the counts as plain text under the grid, and Analytics on the heading's
- * right. Currencies are never added together. Each card opens Analytics too.
+ * The Overview at the top of Home, the only page that has one (owner 153): one separate compact card per
+ * currency (own border, radius and padding) in a balanced grid whose column count comes from the measured width
+ * (ARCHITECTURE 26.12, owners 113/114, 156-161), the counts as plain text under the grid, and Analytics on the
+ * heading's right. Currencies are never added together. Each card opens Analytics in its currency.
  */
-export function BalanceSummary({
+export function Overview({
   totals,
   locale,
   counts,
   captions = {},
-  testID = 'people-summary',
-  titleTestID = 'people-balances-title',
+  testID = 'home-overview',
+  titleTestID = 'home-overview-title',
 }: {
   totals: CurrencyTotal[]
   locale: string
@@ -61,8 +61,6 @@ export function BalanceSummary({
   const columns = overviewColumns(width, totals.length)
   const cardWidth =
     width > 0 ? Math.floor((width - GAP * (columns - 1)) / columns) : undefined
-  /* One card with both sides open gives every card the same sub-lines, so none is shorter or emptier. */
-  const hasBoth = totals.some(x => x.owed !== ZERO && x.owe !== ZERO)
 
   return (
     <View testID={testID}>
@@ -102,7 +100,6 @@ export function BalanceSummary({
                 locale={locale}
                 caption={captions[total.currency]}
                 width={cardWidth}
-                hasBoth={hasBoth}
               />
             ))
           )}
@@ -118,52 +115,32 @@ export function BalanceSummary({
   )
 }
 
-/** "Analytics ›" on the Overview heading, as Bluesky's section headers link out. */
+/** "Analytics ›" on the Overview heading. */
 function AnalyticsLink() {
-  const t = useTheme()
   const {t: l} = useLingui()
   return (
-    <Link
-      testID="overview-analytics"
-      href="/analytics"
-      title={l`Open Analytics`}
-      accessibilityLabel={l`Open Analytics`}
-      asAnchor
-      anchorNoUnderline
-      accessibilityHint=""
-      hoverStyle={t.atoms.bg_contrast_25}
-      style={[
-        a.flex_row,
-        a.align_center,
-        a.gap_2xs,
-        a.rounded_full,
-        a.pl_sm,
-        a.pr_xs,
-        a.py_xs,
-        a.transition_color,
-      ]}>
-      <Text
-        style={[a.text_sm, a.font_semi_bold, {color: t.palette.primary_500}]}>
-        <Trans>Analytics</Trans>
-      </Text>
-      <ChevronIcon size="sm" fill={t.palette.primary_500} />
-    </Link>
+    <SectionLink testID="overview-analytics" href="/analytics" label={l`Open Analytics`}>
+      <Trans>Analytics</Trans>
+    </SectionLink>
   )
 }
 
+/**
+ * One currency (owners 156-161): line 1 is the label and the currency chip on the left and the NET on the right,
+ * large, with its arrow (the only coloured figure); when both directions are open, "Owed to you" and "You owe"
+ * follow on the left, small, in the normal text colours; the count line ends the card. About 64-96 px tall.
+ */
 function SummaryCard({
   total,
   locale,
   caption,
   width,
-  hasBoth,
 }: {
   total: CurrencyTotal
   locale: string
   caption: string | undefined
   /** Px, from the grid's measured width; undefined until measured (one full-width column). */
   width: number | undefined
-  hasBoth: boolean
 }) {
   const t = useTheme()
   const {t: l} = useLingui()
@@ -174,10 +151,10 @@ function SummaryCard({
   const money = useMoneyStyle()
   const isBoth = owed !== ZERO && owe !== ZERO
   const figure = formatAmount(magnitude(net), currency, locale)
-  /* The figure shrinks to fit its card, down to text_lg, then wraps: never ellipsized. */
+  /* The figure shrinks to fit what the label leaves, down to text_lg, then wraps: never ellipsized. */
   const size = amountSize(
     figure,
-    (width ?? 288) - CARD_CHROME - ARROW_ROOM,
+    (width ?? 288) - CARD_CHROME - ARROW_ROOM - LEFT_ROOM,
     gtMobile ? 'text_3xl' : 'text_2xl',
     fonts.scaleMultiplier,
   )
@@ -185,6 +162,7 @@ function SummaryCard({
 
   return (
     <Animated.View
+      testID={`summary-${currency}-card`}
       style={[
         width === undefined ? a.w_full : {width},
         a.rounded_md,
@@ -203,97 +181,86 @@ function SummaryCard({
         accessibilityLabel={l`${getCurrency(currency).name} balance - open analytics`}
         accessibilityHint=""
         hoverStyle={t.atoms.bg_contrast_25}
-        style={[a.flex_1, a.px_lg, a.py_md, a.transition_color]}>
+        style={[a.flex_1, a.px_md, {paddingVertical: 10}, a.transition_color]}>
         <View style={[a.flex_row, a.align_center, a.justify_between, a.gap_sm]}>
-          <Text
-            testID={`summary-${currency}-label`}
-            style={[
-              a.flex_1,
-              a.text_sm,
-              a.font_medium,
-              t.atoms.text_contrast_medium,
-            ]}>
-            {net > ZERO ? (
-              <Trans>You are owed</Trans>
-            ) : net < ZERO ? (
-              <Trans>You owe</Trans>
-            ) : (
-              <Trans>All settled up</Trans>
-            )}
-          </Text>
-          {/* Which currency this card is: cards are never added together. */}
-          <View
-            style={[
-              a.rounded_xs,
-              a.px_xs,
-              a.flex_shrink_0,
-              {paddingVertical: 1},
-              t.atoms.bg_contrast_50,
-            ]}>
+          <View style={[a.flex_row, a.align_center, a.gap_sm, a.flex_shrink_0]}>
             <Text
-              style={[
-                a.text_2xs,
-                a.font_semi_bold,
-                {letterSpacing: 0.4},
-                t.atoms.text_contrast_medium,
-              ]}>
-              {currency}
+              testID={`summary-${currency}-label`}
+              style={[a.text_sm, a.font_medium, t.atoms.text_contrast_medium]}>
+              {net > ZERO ? (
+                <Trans>You are owed</Trans>
+              ) : net < ZERO ? (
+                <Trans>You owe</Trans>
+              ) : (
+                <Trans>All settled up</Trans>
+              )}
             </Text>
+            {/* Which currency this card is: cards are never added together. */}
+            <View
+              style={[
+                a.rounded_xs,
+                a.px_xs,
+                {paddingVertical: 1},
+                t.atoms.bg_contrast_50,
+              ]}>
+              <Text
+                style={[
+                  a.text_2xs,
+                  a.font_semi_bold,
+                  {letterSpacing: 0.4},
+                  t.atoms.text_contrast_medium,
+                ]}>
+                {currency}
+              </Text>
+            </View>
+          </View>
+          {/* The net, right-aligned with its arrow: the only coloured figure on the card. */}
+          <View
+            testID={`summary-${currency}-net-box`}
+            style={[a.flex_row, a.align_center, a.justify_end, a.gap_xs, a.flex_shrink, {minWidth: 0}]}>
+            <MoneyArrow amount={net} size={gtMobile ? 'lg' : 'md'} />
+            <View style={[a.flex_shrink, {minWidth: 0}]}>
+              <AnimatedAmount
+                testID={`summary-${currency}-net`}
+                minor={magnitude(net)}
+                currency={currency}
+                locale={locale}
+                style={[a[size], a.font_bold, a.leading_tight, a.text_right, money.style(net)]}
+              />
+            </View>
           </View>
         </View>
-        <View style={[a.pt_2xs, a.flex_row, a.align_center, a.gap_xs]}>
-          <MoneyArrow amount={net} size={gtMobile ? 'lg' : 'md'} />
-          <View style={[a.flex_1, {minWidth: 0}]}>
-            <AnimatedAmount
-              testID={`summary-${currency}-net`}
-              minor={magnitude(net)}
-              currency={currency}
-              locale={locale}
-              style={[a[size], a.font_bold, a.leading_tight, money.style(net)]}
-            />
-          </View>
-        </View>
-        {/* Both sides only when both are open; otherwise the caption. Cards without them hold the same lines. */}
-        {isBoth ? (
-          <View style={[a.pt_xs, a.gap_2xs]}>
-            <Text style={subStyle}>
+        {/* Both sides only when both are open; plain text colours, never coloured. */}
+        {isBoth && (
+          <View style={[a.pt_2xs, a.gap_2xs]}>
+            <Text testID={`summary-${currency}-owed`} style={subStyle}>
               <Trans>
                 Owed to you{' '}
-                <Text
-                  style={[a.text_xs, a.font_semi_bold, t.atoms.text, tabular]}>
+                <Text style={[a.text_xs, a.font_semi_bold, t.atoms.text, tabular]}>
                   {formatAmount(owed, currency, locale)}
                 </Text>
               </Trans>
             </Text>
-            <Text style={subStyle}>
+            <Text testID={`summary-${currency}-owe`} style={subStyle}>
               <Trans>
                 You owe{' '}
-                <Text
-                  style={[a.text_xs, a.font_semi_bold, t.atoms.text, tabular]}>
+                <Text style={[a.text_xs, a.font_semi_bold, t.atoms.text, tabular]}>
                   {formatAmount(owe, currency, locale)}
                 </Text>
               </Trans>
             </Text>
           </View>
-        ) : (
-          <View style={[a.pt_xs, a.gap_2xs]}>
-            <Text testID={`summary-${currency}-caption`} style={subStyle}>
-              {caption ?? '\u00a0'}
-            </Text>
-            {hasBoth && (
-              <Text aria-hidden style={subStyle}>
-                {'\u00a0'}
-              </Text>
-            )}
-          </View>
         )}
+        <Text testID={`summary-${currency}-caption`} style={[subStyle, a.pt_2xs]}>
+          {caption ?? '\u00a0'}
+        </Text>
       </Link>
     </Animated.View>
   )
 }
 
 /** Loading shape of the summary. */
-export function BalanceSummaryPlaceholder() {
+export function OverviewPlaceholder() {
   const t = useTheme()
   const {t: l} = useLingui()
   return (

@@ -98,7 +98,7 @@ test('an acknowledged row fades to full strength; a refused one keeps it and say
 test('a Home row is lighter while its friend record is unsynced and full strength once acknowledged', async ({page}) => {
   await seed(page)
   const lena = await page.evaluate(() => (window as unknown as {splito: Splito}).splito.createPerson('Lone Lena'))
-  await page.goto('/')
+  await page.goto('/people')
   const row = page.getByTestId('person-Lone Lena')
   await expect(row).toBeVisible()
   expect(await colourOf(row, 'Lone Lena')).toBe(MEDIUM_LIGHT)

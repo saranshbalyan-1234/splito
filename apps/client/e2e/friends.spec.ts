@@ -14,9 +14,9 @@ const PHONE = {width: 390, height: 844}
 
 type Splito = {acceptOutgoing(contactValue: string, name: string): Promise<string>}
 
-async function openDemo(page: Page) {
+async function openDemo(page: Page, path = '/people') {
   await page.setViewportSize(DESKTOP)
-  await enterDemo(page)
+  await enterDemo(page, path)
   await expect(page.getByTestId('person-Riya Sharma')).toBeVisible()
 }
 
@@ -82,7 +82,7 @@ test('incoming requests: People > Requests and Activity, Accept makes a friend',
   const activityRow = page.getByTestId('activity-friendRequest.received').filter({hasText: 'Sara Ali'})
   await expect(activityRow).toContainText('sent you a friend request')
   await expect(activityRow.getByTestId('activity-unread-dot')).toBeVisible()
-  await page.getByTestId('tab-people').click()
+  await page.getByTestId('tab-home').click()
   await page.getByTestId('request-Ishaan Verma').getByTestId('request-accept').click()
   await expect(page.getByTestId('person-name')).toHaveText(/^Ishaan Verma( - Demo)?$/)
 })

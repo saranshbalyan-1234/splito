@@ -202,7 +202,7 @@ test('People: the Include groups filter changes the totals only on Apply', async
 }) => {
   await ready(page)
   await seedA04(page)
-  await page.goto('/')
+  await page.goto('/people')
   const row = page.getByTestId('person-Kavya Rao')
   await expect(row.getByTestId('balance-INR')).toHaveText('owes you ↙ ₹150.00')
   await expect(page.getByTestId('list-filters-dot')).toHaveCount(0)
@@ -222,10 +222,9 @@ test('People: the Include groups filter changes the totals only on Apply', async
 test('People filters: one currency, which way, and the order drive the list and the summary', async ({
   page,
 }) => {
-  await openDemo(page)
+  await openDemo(page, '/people')
   const people = page.getByTestId('screen-people')
   await expect(people.getByTestId('person-Arjun Mehta')).toBeVisible()
-  await expect(people.getByTestId('summary-EUR-net')).toBeVisible()
 
   await people.getByTestId('list-filters').click()
   await page.getByTestId('filter-currency-EUR').click()
@@ -240,7 +239,6 @@ test('People filters: one currency, which way, and the order drive the list and 
   await expect(
     people.getByTestId('person-Sam Carter').getByTestId('balance-INR'),
   ).toHaveCount(0)
-  await expect(people.getByTestId('summary-INR-net')).toHaveCount(0)
   await expect(people.getByTestId('list-filters')).toHaveAttribute(
     'aria-label',
     'Filters, 2 on',
@@ -309,7 +307,7 @@ test('People sorts by the biggest balance, recent activity or name (preference)'
         '[data-testid^="person-"][data-testid$="Small"], [data-testid^="person-"][data-testid$="Big"]',
       )
       .evaluateAll(els => els.map(e => e.getAttribute('data-testid')))
-  await page.goto('/')
+  await page.goto('/people')
   await expect(page.getByTestId('person-Zoya Big')).toBeVisible()
   expect(await order()).toEqual(['person-Zoya Big', 'person-Aarav Small'])
   await page.evaluate(() =>

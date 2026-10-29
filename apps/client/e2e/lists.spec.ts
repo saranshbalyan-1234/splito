@@ -60,13 +60,14 @@ async function seedA04(page: Page) {
   })
 }
 
-test('A04 on People: the Overview reads 150 with groups and 100 without, the row follows', async ({
+test('A04: Include groups reads 150 with groups and 100 without on People, and Home follows the saved choice', async ({
   page,
 }) => {
   await seedA04(page)
   await page.goto('/')
+  await expect(page.getByTestId('screen-home').getByTestId('summary-INR-net')).toHaveText('₹150.00')
+  await page.goto('/people')
   const people = page.getByTestId('screen-people')
-  await expect(people.getByTestId('summary-INR-net')).toHaveText('₹150.00')
   await expect(
     people.getByTestId('person-Kavya Rao').getByTestId('balance-INR'),
   ).toHaveText('owes you ↙ ₹150.00')
@@ -74,18 +75,22 @@ test('A04 on People: the Overview reads 150 with groups and 100 without, the row
   await people.getByTestId('list-filters').click()
   await page.getByTestId('filter-include-groups').click()
   await page.getByTestId('sheet-save').click()
-  await expect(people.getByTestId('summary-INR-net')).toHaveText('₹100.00')
   await expect(
     people.getByTestId('person-Kavya Rao').getByTestId('balance-INR'),
   ).toHaveText('owes you ↙ ₹100.00')
   await expect(people.getByTestId('list-filters-dot')).toBeVisible()
+  // The choice is saved (owner 128), so the Overview on Home reads the same way.
+  await page.getByTestId('tab-home').click()
+  await expect(page.getByTestId('screen-home').getByTestId('summary-INR-net')).toHaveText('₹100.00')
 
   // Back on: the defaults again, so the dot goes.
+  await page.getByTestId('tab-people').click()
   await people.getByTestId('list-filters').click()
   await page.getByTestId('filter-include-groups').click()
   await page.getByTestId('sheet-save').click()
-  await expect(people.getByTestId('summary-INR-net')).toHaveText('₹150.00')
   await expect(people.getByTestId('list-filters-dot')).toHaveCount(0)
+  await page.getByTestId('tab-home').click()
+  await expect(page.getByTestId('screen-home').getByTestId('summary-INR-net')).toHaveText('₹150.00')
 })
 
 test('search grows from the icon to the row width, Escape folds it, and it combines with filters', async ({
@@ -158,7 +163,8 @@ test('Groups: Cancel leaves the filters as they were; Apply sets the dot', async
 })
 
 for (const [name, path, screen] of [
-  ['People', '/', 'screen-people'],
+  ['Home', '/', 'screen-home'],
+  ['People', '/people', 'screen-people'],
   ['Groups', '/groups', 'screen-groups'],
   ['Activity', '/activity', 'screen-activity'],
 ] as const) {
