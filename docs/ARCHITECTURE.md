@@ -1334,7 +1334,7 @@ labelled sidebar); **wide** = web 1300 px and up (Bluesky `gtTablet`, right colu
   and a drag handle (Bluesky's reorderable list): what is on and its order is the bottom bar, with **any number of
   tabs** (from Home alone up to every item; Home cannot be turned off). Tabs share the bar width equally; with
   more than 5 the labels hide and icons stay at Bluesky size with their badges. Items not in the bar stay in the
-  drawer. Default bar: Home, Groups, Analytics, Activity. "Ask Splito" placed in the bar opens the Search & Ask drawer in Ask mode instead of switching tab. Desktop and rail always show the full list.
+  drawer. Default bar: Home, Groups, Analytics, Activity. "Ask Splito" placed in the bar opens the Search & Ask drawer in Ask mode instead of switching tab. **The same choice drives every width** (owner 127, replaces "desktop and rail always show the full list"): the rail and desktop sidebar show exactly the items that are on, in the same order as the bottom bar (labels shown on desktop, icons on the rail); the items that are off sit under a "More" item (Lucide `Ellipsis`) at the end of the sidebar/rail list, which opens a menu with them, the phone drawer's equivalent. The phone drawer lists every item in the same order. Settings stays reachable on every width (via More, the drawer, or the avatar's Profile page).
   "Reset" restores the default. Stored in the existing `tabs` preference. *Why:* "all of the sidebar options to
   be available in settings to be added in navigation bar".
 - **Every place has a URL, so a copied link lands on the same screen** (owner 100; F-241, queued after the Wave B
@@ -2227,6 +2227,7 @@ Every owner decision, in the order it was made (all 2026-10-26). "Replaced" name
 | 124 | "Feedback ∙ Help ∙ Privacy ∙ About should be in one line" | The footer links are one line in the sidebar and the drawer (nowrap row, text_xs), English and Hindi | § 26.5 | Inline text that wrapped in the 240 px sidebar |
 | 125 | "also without login, nothing should be visible, auth is required" | Sign-in required: signed out shows only the tour, the logged-out flow, language and legal pages; DB opens only with a session; offline after sign-in; one DB per account; dev/e2e dev account until the auth API; auth backend moved up after Wave C | § 26.15 | Sign-in optional, zero-signup onboarding (F-211), closable sign-in screen |
 | 126 | "add a little padding from top, on sidebar on logo" | Sidebar logo sits 12 px lower than the header centre line | § 26.5 | Logo on the header row centre line |
+| 127 | "navigation changes reflect on mobile only, it should be same on desktop as well" | Settings > Navigation drives the bottom bar, the rail and the desktop sidebar alike (same items, same order); items turned off go under "More" at the end of the sidebar/rail; the drawer follows the same order | § 26.3 | Desktop and rail always showed the full list |
 
 New decisions follow § 0 rule 9: rewrite the rule in its topic so only the current truth remains, then add a
 row here.
