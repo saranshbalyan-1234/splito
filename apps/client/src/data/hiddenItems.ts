@@ -21,9 +21,6 @@ export function useShowHidden(): [boolean, (v: boolean) => Promise<void>] {
   return [value, set]
 }
 
-/** Whether a row stays out of a list: hidden by me, and "Show hidden" is off. */
-export const isOutOfList = (hidden: ReadonlySet<string>, id: string, showHidden: boolean) => !showHidden && hidden.has(id)
-
 /** Hide / Unhide one deleted item (or a group), each with its error logged; the caller shows the Undo toast. */
 export function useSetHidden() {
   const store = useStore()

@@ -155,6 +155,11 @@ async function migrate(db: SqlExecutor) {
     // table without the v3 column is v2, whatever it says; the fresh path would index the missing column as a literal.
     const people = await db.all<{name: string}>('PRAGMA table_info(people)', [])
     if (people.length > 0 && !people.some(c => c.name === 'lastActivityAt')) version = 2
+    // A v3 file (the column exists) with a lost number: `meta.schemaVersion` still says 3, and v4 needs its rebuild.
+    else if (people.length > 0) {
+      const meta = await db.all<{value: string}>("SELECT value FROM meta WHERE key = 'schemaVersion'", []).catch(() => [])
+      if (meta[0]?.value === '3') version = 3
+    }
   }
   await db.withTransaction(async () => {
     // v2 -> v3: the older tables are kept (their indexes already exist); the new column is added before its index.

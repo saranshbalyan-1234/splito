@@ -169,10 +169,12 @@ async function keptPageOf<T>(rows: RowAccess, store: StoreName, q: PageQuery, ma
   const limit = q.limit ?? DEFAULT_PAGE
   const items: T[] = []
   let after = q.after ?? null
+  // Chunks, not `limit + 1`: a page of 1 would otherwise cost a range read per row skipped.
+  const chunk = Math.max(limit + 1, 50)
   for (;;) {
-    const found = await rows.range(store, {index: q.index, eq: q.eq, min: q.min, max: q.max, after, dir: q.dir, limit: limit + 1})
-    const more = found.length > limit
-    for (const r of more ? found.slice(0, limit) : found) {
+    const found = await rows.range(store, {index: q.index, eq: q.eq, min: q.min, max: q.max, after, dir: q.dir, limit: chunk + 1})
+    const more = found.length > chunk
+    for (const r of more ? found.slice(0, chunk) : found) {
       // The cursor sits just before this row, so the next page starts with it.
       if (keep(r) && items.length === limit) return {items, next: after}
       if (keep(r)) items.push(map(r))

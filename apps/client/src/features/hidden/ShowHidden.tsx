@@ -66,7 +66,7 @@ function Form() {
 export function useVisibleEntries(entries: HistoryEntry[]) {
   const hidden = useHiddenItems()
   const [showHidden] = useShowHidden()
-  const visible = useMemo(() => (showHidden || hidden.size === 0 ? entries : entries.filter(e => !hidden.has(e.entity.id))), [entries, hidden, showHidden])
+  const visible = useMemo(() => (showHidden || hidden.size === 0 ? entries : entries.filter(e => !(e.entity.deleted && hidden.has(e.entity.id)))), [entries, hidden, showHidden])
   return {visible, hidden, showHidden}
 }
 

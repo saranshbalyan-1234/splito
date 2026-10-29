@@ -33,7 +33,7 @@ import {
   requireRestorable,
   write,
 } from './mutations'
-import {getPref, setPref} from './preferences'
+import {editIdsPref, unhideItems} from './preferences'
 import {type Key} from './schema'
 import {insideTransaction, type Page, type Store} from './store'
 import {type Entity, type MutationCtx} from './types'
@@ -64,9 +64,9 @@ export const makeGroupActive = (store: Store, ctx: MutationCtx, groupId: string)
  * preference `groups.hidden`, never the group, so nobody else sees a change.
  */
 export async function setGroupHidden(store: Store, ctx: MutationCtx, groupId: string, hidden: boolean): Promise<void> {
-  const ids = await getPref(store, 'groups.hidden')
-  if (ids.includes(groupId) === hidden) return
-  await setPref(store, ctx, 'groups.hidden', hidden ? [...ids, groupId] : ids.filter(id => id !== groupId))
+  await store.transaction(tx =>
+    editIdsPref(tx, ctx, 'groups.hidden', ids => (ids.includes(groupId) === hidden ? ids : hidden ? [...ids, groupId] : ids.filter(id => id !== groupId))),
+  )
 }
 
 /* -------------------------- reading a group's records ------------------------ */
@@ -241,5 +241,7 @@ export async function restoreGroup(store: Store, ctx: MutationCtx, groupId: stri
         await write(tx, ctx, type, id, rest, false, `${type}.restore`)
       }
     }
+    // The group's own hide stays; its records were hidden only while deleted, and are live again.
+    await unhideItems(tx, ctx, MONEY.flatMap(type => kids[type].map(k => k.id)))
   })
 }

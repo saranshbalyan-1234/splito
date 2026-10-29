@@ -491,6 +491,30 @@ test('a v2-shaped SQLite file with a lost user_version is upgraded to v3, not st
   check.close()
 })
 
+test('a v3 SQLite file with a lost user_version still gets the v4 rebuild', async () => {
+  const path = join(mkdtempSync(join(tmpdir(), 'splito-v3-lost-')), 'db.sqlite')
+  const first = await openSqlStore(bunExecutor(path))
+  const ctx = makeCtx()
+  await ensureMe(first, ctx, 'Me')
+  const a = await createPerson(first, ctx, {name: 'Asha'})
+  const e = await createExpense(first, ctx, {
+    title: 'Dinner', groupId: null, currency: 'INR', total: 600n, payers: {me: 600n},
+    split: {mode: 'equal', participants: ['me', a.id]}, date: '2026-10-02', tz: 'UTC', category: 'food', notes: '',
+  })
+  await deleteExpense(first, ctx, e.id)
+  await first.close()
+  const raw = new Database(path)
+  raw.run('DELETE FROM expense_parties')
+  raw.run("UPDATE meta SET value = '3' WHERE key = 'schemaVersion'")
+  raw.run('PRAGMA user_version = 0')
+  raw.close()
+  const second = await openSqlStore(bunExecutor(path))
+  const parties = await second.parties({index: 'byPersonDate', eq: [a.id], includeDeleted: true})
+  expect(parties.items.map(p => [p.expenseId, p.deleted])).toEqual([[e.id, true]])
+  await expectDerivedTablesMatch(second)
+  await second.close()
+})
+
 test('a v3 SQLite file upgrades to v4: deleted expenses get their party rows and search terms back, history.binDays goes', async () => {
   const path = join(mkdtempSync(join(tmpdir(), 'splito-v3-')), 'db.sqlite')
   const first = await openSqlStore(bunExecutor(path))

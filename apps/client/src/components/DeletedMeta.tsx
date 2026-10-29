@@ -21,10 +21,13 @@ const ClockIcon = createIcon(Clock)
  */
 export function DeletedMeta({
   at,
+  by,
   testID,
   onPress,
 }: {
   at: number
+  /** Who deleted it, only when that is not me (never "by You"). Nothing supplies it until members share a group (M2). */
+  by?: string | null
   testID?: string
   /** The row this sits in opens on press; the line must not swallow that tap (it only adds the long press). */
   onPress?: () => void
@@ -66,7 +69,7 @@ export function DeletedMeta({
       <Text
         title={exact}
         style={[a.text_sm, a.leading_snug, t.atoms.text_contrast_medium]}>
-        {label}
+        {by ? l`${label} · by ${by}` : label}
       </Text>
     </Pressable>
   )

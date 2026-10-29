@@ -281,6 +281,23 @@ async function putPref(tx: Tx, ctx: MutationCtx, key: PrefKey, value: unknown, d
     })
 }
 
+/**
+ * Edits a list-of-ids preference inside the caller's transaction (read and write together, so two changes never
+ * lose one another). Writes only when `edit` changes the list.
+ */
+export async function editIdsPref(tx: Tx, ctx: MutationCtx, key: 'lists.hiddenItems' | 'groups.hidden', edit: (ids: string[]) => string[]) {
+  const row = await tx.get<{value: unknown}>('preference', key)
+  const ids = prefFrom(row ? [row] : [], key)
+  const next = edit(ids)
+  if (next.length === ids.length && next.every((id, i) => id === ids[i])) return
+  if (!PREFS[key].validate(next)) throw new DomainError('INVALID_PREF')
+  await putPref(tx, ctx, key, next, false)
+}
+
+/** Takes ids out of `lists.hiddenItems` (a restored item is live again, so a hide no longer applies). */
+export const unhideItems = (tx: Tx, ctx: MutationCtx, ids: string[]) =>
+  editIdsPref(tx, ctx, 'lists.hiddenItems', cur => (cur.some(x => ids.includes(x)) ? cur.filter(x => !ids.includes(x)) : cur))
+
 const writePref = (store: Store, ctx: MutationCtx, key: PrefKey, value: unknown, deleted: boolean) =>
   store.transaction(tx => putPref(tx, ctx, key, value, deleted))
 

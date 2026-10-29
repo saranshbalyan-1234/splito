@@ -446,13 +446,14 @@ export function GroupNotices({
  * A deleted group (decision 103): it stays in Groups and opens read-only, its expenses and payments struck, with
  * Restore (an admin's, `NOT_ADMIN` otherwise) and, as for any group, Hide / Show for me only.
  */
-export function GroupDeletedBanner({group}: {group: Entity<Group>}) {
+export function GroupDeletedBanner({group, me}: {group: Entity<Group>; me: string}) {
   const t = useTheme()
   const {t: l} = useLingui()
   const store = useStore()
   const ctx = useMutationCtx()
   const haptics = useHaptics()
   const errorText = useErrorText()
+  const isAdmin = groupAdmins(group.data).includes(me)
   const restore = async () => {
     try {
       await restoreGroup(store, ctx, group.id)
@@ -472,19 +473,26 @@ export function GroupDeletedBanner({group}: {group: Entity<Group>}) {
           <Trans>This group was deleted. Its expenses and payments are kept here, struck through, and no longer count.</Trans>
         </Text>
         <DeletedMeta testID="group-deleted-at" at={group.updatedAt} />
+        {!isAdmin && (
+          <Text testID="group-restore-admin-only" style={[a.text_sm, a.leading_snug, t.atoms.text_contrast_medium]}>
+            <Trans>Only a group admin can restore it.</Trans>
+          </Text>
+        )}
       </View>
-      <Button testID="group-restore" label={l`Restore group`} size="small" color="secondary" onPress={() => void restore()}>
-        <ButtonIcon icon={UndoIcon} />
-        <ButtonText>
-          <Trans>Restore</Trans>
-        </ButtonText>
-      </Button>
+      {isAdmin && (
+        <Button testID="group-restore" label={l`Restore group`} size="small" color="secondary" onPress={() => void restore()}>
+          <ButtonIcon icon={UndoIcon} />
+          <ButtonText>
+            <Trans>Restore</Trans>
+          </ButtonText>
+        </Button>
+      )}
     </View>
   )
 }
 
 /** The overflow of a deleted group: Restore, and Hide / Show for me only (the rest of the menu would change a deleted group). */
-export function DeletedGroupItems({group}: {group: Entity<Group>}) {
+export function DeletedGroupItems({group, me}: {group: Entity<Group>; me: string}) {
   const {t: l} = useLingui()
   const store = useStore()
   const ctx = useMutationCtx()
@@ -492,8 +500,10 @@ export function DeletedGroupItems({group}: {group: Entity<Group>}) {
   const errorText = useErrorText()
   const {toggle} = useHideItem({type: 'group', id: group.id})
   const isHidden = hiddenIds.has(group.id)
+  const isAdmin = groupAdmins(group.data).includes(me)
   return (
     <>
+      {isAdmin && (
       <Menu.Item
         testID="group-menu-restore"
         label={l`Restore group`}
@@ -507,6 +517,7 @@ export function DeletedGroupItems({group}: {group: Entity<Group>}) {
         </Menu.ItemText>
         <Menu.ItemIcon icon={UndoIcon} position="right" />
       </Menu.Item>
+      )}
       <Menu.Item testID="group-menu-hide" label={isHidden ? l`Show group` : l`Hide group`} onPress={() => void toggle(!isHidden)}>
         <Menu.ItemText>{isHidden ? <Trans>Show group</Trans> : <Trans>Hide group</Trans>}</Menu.ItemText>
         <Menu.ItemIcon icon={isHidden ? EyeIcon : EyeOffIcon} position="right" />

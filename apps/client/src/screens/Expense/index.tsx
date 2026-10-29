@@ -444,7 +444,8 @@ function Detail({
   )
 
   const hide = useHideItem({type: 'expense', id: expense.id})
-  const isHidden = useHiddenItems().has(expense.id)
+  const hiddenIds = useHiddenItems()
+  const isHidden = expense.deleted && hiddenIds.has(expense.id)
   const deletedBanner = expense.deleted ? (
     <View
       testID="expense-deleted"

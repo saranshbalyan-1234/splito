@@ -14,7 +14,7 @@ import {
 } from '@splito/domain'
 
 import {formatContact, isContact} from './contact'
-import {getPref, setPref} from './preferences'
+import {editIdsPref, unhideItems} from './preferences'
 import {type Key} from './schema'
 import {type Page, type Store, type Tx} from './store'
 import {type Entity, type EntityType, type MutationCtx} from './types'
@@ -263,6 +263,7 @@ export async function restorePerson(store: Store, ctx: MutationCtx, id: string):
     const p = await tx.get<Person>('person', id)
     if (!p?.deleted) throw new DomainError('NOT_FOUND')
     await write(tx, ctx, 'person', id, p.data, false, 'person.restore')
+    await unhideItems(tx, ctx, [id])
   })
 }
 
@@ -272,10 +273,10 @@ export async function restorePerson(store: Store, ctx: MutationCtx, id: string):
  * payment, write-off or friend can be hidden (a live one has no "Hide"); a group hides through `setGroupHidden`.
  */
 export async function setItemHidden(store: Store, ctx: MutationCtx, type: MoneyType | 'person', id: string, hidden: boolean): Promise<void> {
-  const ids = await getPref(store, 'lists.hiddenItems')
-  if (ids.includes(id) === hidden) return
-  if (hidden && !(await store.get(type, id))?.deleted) throw new DomainError('NOT_DELETED')
-  await setPref(store, ctx, 'lists.hiddenItems', hidden ? [...ids, id] : ids.filter(x => x !== id))
+  await store.transaction(async tx => {
+    if (hidden && !(await tx.get(type, id))?.deleted) throw new DomainError('NOT_DELETED')
+    await editIdsPref(tx, ctx, 'lists.hiddenItems', ids => (ids.includes(id) === hidden ? ids : hidden ? [...ids, id] : ids.filter(x => x !== id)))
+  })
 }
 
 /** Whether any live expense, group or payment names the person: index reads, no scan. */
@@ -413,6 +414,8 @@ async function restore(store: Store, ctx: MutationCtx, type: MoneyType, id: stri
     if (into && isGroupInactive(into)) throw new DomainError('GROUP_INACTIVE')
     const {deletedWithGroup: _g, ...data} = e.data
     await write(tx, ctx, type, id, data, false, `${type}.restore`)
+    // Live again: a hide made while it was deleted no longer applies (it would leave a counted row out of the lists).
+    await unhideItems(tx, ctx, [id])
   })
 }
 

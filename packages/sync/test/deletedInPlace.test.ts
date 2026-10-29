@@ -17,9 +17,11 @@ import {
   ensureMe,
   type ExpenseDraft,
   restoreExpense,
+  restorePerson,
+  restoreRepayment,
   setItemHidden,
 } from '../src/mutations'
-import {deleteGroup} from '../src/groupLifecycle'
+import {deleteGroup, restoreGroup, setGroupHidden} from '../src/groupLifecycle'
 import {getPref, prefFrom, PREFS} from '../src/preferences'
 import {searchStore} from '../src/search'
 import {openSqlStore} from '../src/sqlStore'
@@ -148,6 +150,37 @@ test('Hide works on a deleted item only; Unhide undoes it; the id set is one pre
   expect((await s.outbox()).filter(o => o.entityId === gone.id).map(o => o.opType)).toEqual(['expense.create', 'expense.delete'])
   await setItemHidden(s, ctx, 'expense', gone.id, false)
   expect(await getPref(s, 'lists.hiddenItems')).toEqual([])
+})
+
+test('restoring an item takes its hide away, so it can never be live, counted and out of every list', async () => {
+  const {gone, g, bob} = await trip()
+  await setItemHidden(s, ctx, 'expense', gone.id, true)
+  await restoreExpense(s, ctx, gone.id)
+  expect(await getPref(s, 'lists.hiddenItems')).toEqual([])
+  // A payment the same way.
+  const pay = await createRepayment(s, ctx, {from: bob.id, to: 'me', amount: 50n, currency: 'INR', groupId: g.id, date: '2026-10-23', tz: 'Asia/Kolkata', note: ''})
+  await deleteRepayment(s, ctx, pay.id)
+  await setItemHidden(s, ctx, 'repayment', pay.id, true)
+  await restoreRepayment(s, ctx, pay.id)
+  expect(await getPref(s, 'lists.hiddenItems')).toEqual([])
+  // A friend the same way.
+  const solo = await createPerson(s, ctx, {name: 'Solo'})
+  await deletePerson(s, ctx, solo.id)
+  await setItemHidden(s, ctx, 'person', solo.id, true)
+  await restorePerson(s, ctx, solo.id)
+  expect(await getPref(s, 'lists.hiddenItems')).toEqual([])
+})
+
+test('restoring a group drops the hides of its records but keeps the group hidden', async () => {
+  const {g, gone, keep} = await trip()
+  await setItemHidden(s, ctx, 'expense', gone.id, true)
+  await deleteGroup(s, ctx, g.id)
+  await setItemHidden(s, ctx, 'expense', keep.id, true) // deleted with the group
+  await setGroupHidden(s, ctx, g.id, true)
+  await restoreGroup(s, ctx, g.id)
+  // Taxi was deleted before the group, so it is still deleted and still hidden; Hotel is live again.
+  expect(await getPref(s, 'lists.hiddenItems')).toEqual([gone.id])
+  expect(await getPref(s, 'groups.hidden')).toEqual([g.id])
 })
 
 test('the hidden set defaults to empty and ignores a bad stored value', () => {

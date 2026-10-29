@@ -64,7 +64,7 @@ msgid "{0, plural, one {# second} other {# seconds}}"
 msgstr "{0, plural, one {# सेकंड} other {# सेकंड}}"
 
 #. placeholder {0}: s.shares[id]
-#: src/screens/Expense/index.tsx:546
+#: src/screens/Expense/index.tsx:547
 msgid "{0, plural, one {# share} other {# shares}}"
 msgstr "{0, plural, one {# हिस्सा} other {# हिस्से}}"
 
@@ -85,22 +85,22 @@ msgid "{0, plural, one {#mo} other {#mo}}"
 msgstr "{0, plural, one {#मा} other {#मा}}"
 
 #. placeholder {0}: age.value
-#: src/components/DeletedMeta.tsx:52
+#: src/components/DeletedMeta.tsx:55
 msgid "{0, plural, one {Deleted # day ago} other {Deleted # days ago}}"
 msgstr "{0, plural, one {# दिन पहले हटाया} other {# दिन पहले हटाया}}"
 
 #. placeholder {0}: age.value
-#: src/components/DeletedMeta.tsx:50
+#: src/components/DeletedMeta.tsx:53
 msgid "{0, plural, one {Deleted # hour ago} other {Deleted # hours ago}}"
 msgstr "{0, plural, one {# घंटे पहले हटाया} other {# घंटे पहले हटाया}}"
 
 #. placeholder {0}: age.value
-#: src/components/DeletedMeta.tsx:48
+#: src/components/DeletedMeta.tsx:51
 msgid "{0, plural, one {Deleted # minute ago} other {Deleted # minutes ago}}"
 msgstr "{0, plural, one {# मिनट पहले हटाया} other {# मिनट पहले हटाया}}"
 
 #. placeholder {0}: age.value
-#: src/components/DeletedMeta.tsx:53
+#: src/components/DeletedMeta.tsx:56
 msgid "{0, plural, one {Deleted # month ago} other {Deleted # months ago}}"
 msgstr "{0, plural, one {# महीने पहले हटाया} other {# महीने पहले हटाया}}"
 
@@ -138,13 +138,13 @@ msgstr "{0} + {1}"
 
 #. placeholder {0}: fmt(items)
 #. placeholder {1}: fmt(extra)
-#: src/screens/Expense/index.tsx:562
+#: src/screens/Expense/index.tsx:563
 msgid "{0} + {1} charges"
 msgstr "{0} + {1} शुल्क"
 
 #. placeholder {0}: fmt(items)
 #. placeholder {1}: fmt(magnitude(extra))
-#: src/screens/Expense/index.tsx:564
+#: src/screens/Expense/index.tsx:565
 msgid "{0} − {1} discount"
 msgstr "{0} − {1} छूट"
 
@@ -296,7 +296,7 @@ msgid "{0} of {total}"
 msgstr "{total} में से {0}"
 
 #. placeholder {0}: fmt(items)
-#: src/screens/Expense/index.tsx:565
+#: src/screens/Expense/index.tsx:566
 msgid "{0} of items"
 msgstr "चीज़ों के {0}"
 
@@ -647,6 +647,10 @@ msgstr "{groups, plural, one {# ग्रुप} other {# ग्रुप}}"
 #: src/screens/Activity.tsx:172
 msgid "{hiddenCount, plural, one {# change hidden from your activity} other {# changes hidden from your activity}}"
 msgstr "{hiddenCount, plural, one {# बदलाव आपकी गतिविधि से छिपा है} other {# बदलाव आपकी गतिविधि से छिपे हैं}}"
+
+#: src/components/DeletedMeta.tsx:72
+msgid "{label} · by {by}"
+msgstr "{label} · {by} द्वारा"
 
 #. placeholder {0}: link.maxUses
 #: src/components/invites/describe.ts:21
@@ -2091,16 +2095,16 @@ msgstr "हटाया गया"
 msgid "Deleted items now stay in their lists."
 msgstr "हटाई गई चीज़ें अब अपनी सूची में ही रहती हैं।"
 
-#: src/components/DeletedMeta.tsx:44
+#: src/components/DeletedMeta.tsx:47
 msgid "Deleted just now"
 msgstr "अभी हटाया"
 
 #. placeholder {0}: i18n.date(new Date(at), {dateStyle: 'medium', timeZone: tz})
-#: src/components/DeletedMeta.tsx:46
+#: src/components/DeletedMeta.tsx:49
 msgid "Deleted on {0}"
 msgstr "{0} को हटाया"
 
-#: src/components/DeletedMeta.tsx:59
+#: src/components/DeletedMeta.tsx:62
 msgid "Deleted, {exact}"
 msgstr "हटाया, {exact}"
 
@@ -2810,8 +2814,8 @@ msgstr "छिपी हुई दिख रही हैं"
 #: src/components/people/PaymentDetailsDialog.tsx:242
 #: src/features/hidden/HideItem.tsx:86
 #: src/features/hidden/HideItem.tsx:88
-#: src/screens/Expense/index.tsx:487
-#: src/screens/Expense/index.tsx:492
+#: src/screens/Expense/index.tsx:488
+#: src/screens/Expense/index.tsx:493
 #: src/screens/Person/index.tsx:347
 #: src/screens/Person/index.tsx:351
 msgid "Hide"
@@ -2835,8 +2839,8 @@ msgstr "गतिविधि से छिपाएँ"
 
 #: src/screens/Group/components/GroupLifecycle.tsx:163
 #: src/screens/Group/components/GroupLifecycle.tsx:166
-#: src/screens/Group/components/GroupLifecycle.tsx:510
-#: src/screens/Group/components/GroupLifecycle.tsx:511
+#: src/screens/Group/components/GroupLifecycle.tsx:521
+#: src/screens/Group/components/GroupLifecycle.tsx:522
 msgid "Hide group"
 msgstr "ग्रुप छिपाएँ"
 
@@ -3801,6 +3805,10 @@ msgstr "सिर्फ़ हटाई गई चीज़ को छिपा�
 msgid "Only a group admin can do that."
 msgstr "यह केवल ग्रुप एडमिन कर सकता है।"
 
+#: src/screens/Group/components/GroupLifecycle.tsx:478
+msgid "Only a group admin can restore it."
+msgstr "इसे केवल ग्रुप एडमिन वापस ला सकता है।"
+
 #: src/components/groups/RulesEditor.tsx:179
 #: src/components/groups/RulesEditor.tsx:185
 msgid "Only allowed pairs"
@@ -4439,13 +4447,13 @@ msgid "Reset your password by sending a code to your email or phone"
 msgstr "अपने ईमेल या फ़ोन पर कोड भेजकर पासवर्ड रीसेट करें"
 
 #: src/components/people/PaymentDetailsDialog.tsx:228
-#: src/screens/Expense/index.tsx:482
-#: src/screens/Group/components/GroupLifecycle.tsx:479
+#: src/screens/Expense/index.tsx:483
+#: src/screens/Group/components/GroupLifecycle.tsx:486
 #: src/screens/Person/index.tsx:342
 msgid "Restore"
 msgstr "वापस लाएँ"
 
-#: src/screens/Expense/index.tsx:470
+#: src/screens/Expense/index.tsx:471
 msgid "Restore expense"
 msgstr "खर्च वापस लाएँ"
 
@@ -4453,9 +4461,9 @@ msgstr "खर्च वापस लाएँ"
 msgid "Restore friend"
 msgstr "दोस्त को वापस लाएँ"
 
-#: src/screens/Group/components/GroupLifecycle.tsx:476
-#: src/screens/Group/components/GroupLifecycle.tsx:499
-#: src/screens/Group/components/GroupLifecycle.tsx:506
+#: src/screens/Group/components/GroupLifecycle.tsx:483
+#: src/screens/Group/components/GroupLifecycle.tsx:509
+#: src/screens/Group/components/GroupLifecycle.tsx:516
 msgid "Restore group"
 msgstr "ग्रुप बहाल करें"
 
@@ -4504,18 +4512,18 @@ msgstr "इतने तक पूर्णांकित करें"
 msgid "Round to {0}"
 msgstr "{0} तक पूर्णांकित करें"
 
-#: src/screens/Expense/index.tsx:684
+#: src/screens/Expense/index.tsx:685
 msgid "Rounded to {unit} for cash."
 msgstr "नकद के लिए {unit} तक पूर्णांकित।"
 
 #. placeholder {0}: fmt(cash.remainder)
 #. placeholder {1}: name(cash.remainderTo)
-#: src/screens/Expense/index.tsx:683
+#: src/screens/Expense/index.tsx:684
 msgid "Rounded to {unit} for cash. {0} left over is on {1}’s share."
 msgstr "नकद के लिए {unit} तक पूर्णांकित। बचे हुए {0} {1} के हिस्से में हैं।"
 
 #. placeholder {0}: fmt(cash.remainder)
-#: src/screens/Expense/index.tsx:681
+#: src/screens/Expense/index.tsx:682
 msgid "Rounded to {unit} for cash. {0} left over is on your share."
 msgstr "नकद के लिए {unit} तक पूर्णांकित। बचे हुए {0} आपके हिस्से में हैं।"
 
@@ -4890,8 +4898,8 @@ msgstr "इनके खर्च दिखाएँ: {label}"
 #: src/screens/Group/components/GroupLifecycle.tsx:163
 #: src/screens/Group/components/GroupLifecycle.tsx:166
 #: src/screens/Group/components/GroupLifecycle.tsx:411
-#: src/screens/Group/components/GroupLifecycle.tsx:510
-#: src/screens/Group/components/GroupLifecycle.tsx:511
+#: src/screens/Group/components/GroupLifecycle.tsx:521
+#: src/screens/Group/components/GroupLifecycle.tsx:522
 msgid "Show group"
 msgstr "ग्रुप दिखाएँ"
 
@@ -5402,7 +5410,7 @@ msgstr "इस खर्च पर ध्यान देने की ज़र
 msgid "This expense no longer exists"
 msgstr "यह खर्च अब मौजूद नहीं है"
 
-#: src/screens/Expense/index.tsx:463
+#: src/screens/Expense/index.tsx:464
 msgid "This expense was deleted. It no longer counts towards any balance."
 msgstr "यह खर्च हटा दिया गया है। अब यह किसी हिसाब में नहीं गिना जाता।"
 
@@ -5423,7 +5431,7 @@ msgstr "यह ग्रुप निष्क्रिय है। पहल�
 msgid "This group isn’t on this device. It may have been removed."
 msgstr "यह समूह इस डिवाइस पर नहीं है। शायद हटा दिया गया है।"
 
-#: src/screens/Group/components/GroupLifecycle.tsx:472
+#: src/screens/Group/components/GroupLifecycle.tsx:473
 msgid "This group was deleted. Its expenses and payments are kept here, struck through, and no longer count."
 msgstr "यह ग्रुप हटा दिया गया है। इसके खर्च और भुगतान यहाँ कटे हुए रखे हैं और अब गिने नहीं जाते।"
 
@@ -5615,8 +5623,8 @@ msgstr "माफ़ी वापस लें"
 #: src/components/people/PaymentDetailsDialog.tsx:242
 #: src/features/hidden/HideItem.tsx:86
 #: src/features/hidden/HideItem.tsx:88
-#: src/screens/Expense/index.tsx:487
-#: src/screens/Expense/index.tsx:492
+#: src/screens/Expense/index.tsx:488
+#: src/screens/Expense/index.tsx:493
 #: src/screens/Person/index.tsx:347
 #: src/screens/Person/index.tsx:351
 msgid "Unhide"

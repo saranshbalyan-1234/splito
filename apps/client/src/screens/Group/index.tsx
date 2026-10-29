@@ -467,7 +467,7 @@ export function GroupScreen() {
               </Text>
             )}
           </View>
-          {isDeleted ? <GroupDeletedBanner group={group} /> : me ? <GroupNotices group={group} me={me.id} /> : null}
+          {isDeleted && me ? <GroupDeletedBanner group={group} me={me.id} /> : me ? <GroupNotices group={group} me={me.id} /> : null}
           <GroupBalanceCards
             openCurrencies={openCurrencies}
             mine={mine}
@@ -597,7 +597,7 @@ export function GroupScreen() {
             </Menu.Trigger>
             <Menu.Outer>
               {isDeleted ? (
-                <DeletedGroupItems group={group} />
+                me ? <DeletedGroupItems group={group} me={me.id} /> : null
               ) : (
                 <>
               <Menu.Item
