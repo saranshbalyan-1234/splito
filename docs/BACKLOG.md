@@ -2456,7 +2456,7 @@ Tap any balance to see a line-by-line running total per currency since the last 
 
 Overview first; requests, recent transactions, then Friends; Invites sent move to the Friends and invites page with a compact "N invites waiting" row on Home; overview labels and amounts never truncated, cards even; no red per-row dots; friend rows two lines; Friends search back.
 
-- **Effort** S · **Impact** 9 · **Backend** no · **Status** todo, Wave B post-assemble batch (with F-244, F-245) · **Deps** F-621 (B6), F-245
+- **Effort** S · **Impact** 9 · **Backend** no · **Status** done on feat/wB-post-home (e2e `homeLayout.spec.ts`; screenshots in `apps/client/qa/home/`) · **Deps** F-621 (B6), F-245
 - **Prefs** -
 - **Acceptance**
   1. Home order is Overview, incoming requests, Recent transactions (when F-1415 lands), Friends; "Invites sent" rows appear only on the Friends and invites page; Home shows "N invites waiting ›" when N > 0.
@@ -2882,7 +2882,7 @@ Replace the per-row red sync dot with a lighter, AA-safe text style for every re
 
 On Home/People and Groups, each currency card is its own box of equal size in a grid whose columns keep rows even for any number of currencies. Queued by the owner ("don't fix, just remember to fix").
 
-- **Effort** S · **Impact** 7 · **Backend** no · **Status** todo · **Deps** -
+- **Effort** S · **Impact** 7 · **Backend** no · **Status** done on feat/wB-post-home (unit `overviewGrid.test.ts`, e2e `homeLayout.spec.ts`) · **Deps** -
 - **Prefs** -
 - **Acceptance**
   1. Each currency card has its own border, radius and padding with a gap between cards; no shared outer box with dividers.

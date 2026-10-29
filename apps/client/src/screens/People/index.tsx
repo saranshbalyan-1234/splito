@@ -30,6 +30,7 @@ import {useDialogControl} from '#/components/Dialog'
 import {Button, ButtonText} from '#/components/Button'
 import {SearchAskButton} from '#/components/SearchAsk/SearchAskButton'
 import {HeaderAvatar} from '#/components/HeaderAvatar'
+import {MagnifyingGlass_Stroke2_Corner0_Rounded as SearchIcon} from '#/components/icons/MagnifyingGlass'
 import {PersonPlus_Filled_Stroke2_Corner0_Rounded as PersonPlusIcon} from '#/components/icons/Person'
 import * as Layout from '#/components/Layout'
 import {ListToolsHeader} from '#/components/ListToolsHeader'
@@ -87,6 +88,8 @@ export function PeopleScreen() {
     showHidden: false,
   }
   const [applied, setApplied] = useState<PeopleFilters | null>(null)
+  /* The list's own search (26.12): by name, combined with the filters; not kept after leaving. */
+  const [query, setQuery] = useState('')
   const filters: PeopleFilters = {...(applied ?? defaults), showHidden}
   const {includeGroups, sort} = filters
   const lastActivity = useLastActivity(sort === 'recent')
@@ -115,7 +118,7 @@ export function PeopleScreen() {
       ...friends.flatMap(f => [...(seenCurrencies.get(f.id) ?? [])]),
     ]),
   ].sort()
-  const listed: PersonRowData[] = sortFriends(
+  const filtered: PersonRowData[] = sortFriends(
     filterFriends(friends, filters, seenCurrencies).filter(f => showHidden || !f.isHidden),
     sort,
     {
@@ -124,7 +127,11 @@ export function PeopleScreen() {
     },
   )
   /* A removed friend is in the list but is no friend now: the counts and figures cover the live rows. */
-  const rows = listed.filter(row => row.deletedAt === undefined)
+  const rows = filtered.filter(row => row.deletedAt === undefined)
+  const q = query.trim().toLocaleLowerCase()
+  const listed = q
+    ? filtered.filter(row => row.name.toLocaleLowerCase().includes(q))
+    : filtered
   /* The summary follows the filters too, so its figures always match the list. */
   const totals = balanceTotals(
     rows.flatMap(row => (row.summary ? [row.summary] : [])),
@@ -199,17 +206,21 @@ export function PeopleScreen() {
             ListHeaderComponent={
               friends.length > 0 ? (
                 <>
-                  <RequestsSection />
                   <BalanceSummary
                     totals={totals}
                     locale={locale}
                     counts={counts}
                     captions={captions}
                   />
+                  <RequestsSection />
                   <ListToolsHeader
                     title={l`Friends`}
                     titleTestID="people-friends-title"
-                    count={rows.length}
+                    count={listed.filter(row => row.deletedAt === undefined).length}
+                    total={rows.length}
+                    query={query}
+                    onQueryChange={setQuery}
+                    searchLabel={l`Search friends`}
                     activeFilterCount={activeCount}
                     onFiltersPress={() => filterControl.open()}
                     action={
@@ -232,7 +243,13 @@ export function PeopleScreen() {
               )
             }
             ListEmptyComponent={
-              friends.length > 0 ? (
+              friends.length > 0 && q ? (
+                <EmptyState
+                  testID="people-search-empty"
+                  icon={SearchIcon}
+                  message={l`No matches for “${query.trim()}”`}
+                />
+              ) : friends.length > 0 ? (
                 <EmptyState
                   testID="people-filtered-empty"
                   icon={null}

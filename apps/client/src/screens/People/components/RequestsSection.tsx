@@ -19,6 +19,9 @@ import {type NavigationProp} from '#/lib/routes/types'
 import {logger} from '#/logger'
 import {directory} from '#/data/friends'
 import {useMutationCtx, usePendingRequests, useStore} from '#/data/hooks'
+import {atoms as a} from '#/alf'
+import {Button, ButtonIcon, ButtonText} from '#/components/Button'
+import {ChevronRight_Stroke2_Corner0_Rounded as ChevronIcon} from '#/components/icons/Chevron'
 import {Check_Stroke2_Corner0_Rounded as CheckIcon} from '#/components/icons/Check'
 import {PaperPlane_Stroke2_Corner0_Rounded as ResendIcon} from '#/components/icons/Invite'
 import {TimesLarge_Stroke2_Corner0_Rounded as XIcon} from '#/components/icons/Times'
@@ -30,14 +33,20 @@ import {SectionHeader} from './SectionHeader'
 const DAY = 86_400_000
 
 /**
- * The top of People (26.18): "Requests" waiting for your answer (Accept /
- * Decline) and "Invites sent" waiting for theirs (Resend / Cancel). Each
- * section shows only when it has rows; both read one shared request source.
+ * Under the Overview on Home (26.12, owner 120): "Requests" waiting for your
+ * answer (Accept / Decline), then one compact "N invites waiting" row when
+ * some of your own invites are unanswered. The sent invites themselves
+ * (Resend / Cancel) live on Friends and invites (F-621).
  */
 export function RequestsSection() {
   const {t: l} = useLingui()
+  const navigation = useNavigation<NavigationProp>()
   const {incoming, outgoing} = usePendingRequests()
   if (incoming.length === 0 && outgoing.length === 0) return null
+  const waiting = plural(outgoing.length, {
+    one: '# invite waiting',
+    other: '# invites waiting',
+  })
   return (
     <View testID="people-requests">
       {incoming.length > 0 ? (
@@ -53,16 +62,19 @@ export function RequestsSection() {
         </>
       ) : null}
       {outgoing.length > 0 ? (
-        <>
-          <SectionHeader
-            title={l`Invites sent`}
-            testID="people-invites-title"
-            count={outgoing.length}
-          />
-          {outgoing.map(r => (
-            <OutgoingRow key={r.id} request={r} />
-          ))}
-        </>
+        <Button
+          testID="people-invites-waiting"
+          label={waiting}
+          variant="ghost"
+          color="secondary"
+          size="small"
+          style={[a.mx_md, a.my_xs, a.justify_between]}
+          onPress={() => navigation.navigate('FriendsAndInvites')}>
+          <ButtonText>
+            {waiting}
+          </ButtonText>
+          <ButtonIcon icon={ChevronIcon} />
+        </Button>
       ) : null}
     </View>
   )
@@ -102,7 +114,6 @@ export function IncomingRow({request}: {request: Entity<FriendRequest>}) {
     <RequestRow
       testID={`request-${name}`}
       name={name}
-      sync={request}
       detail={
         <Trans>Wants to be friends · {ago(now - request.data.sentAt)}</Trans>
       }>
@@ -166,7 +177,6 @@ export function OutgoingRow({request}: {request: Entity<FriendRequest>}) {
     <RequestRow
       testID={`invite-sent-${name}`}
       name={name}
-      sync={request}
       detail={detail}>
       <RequestAction
         testID="invite-sent-resend"

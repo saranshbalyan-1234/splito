@@ -3,9 +3,7 @@ import Animated from 'react-native-reanimated'
 import {Trans, useLingui} from '@lingui/react/macro'
 import {
   balanceSides,
-  formatAmount,
   isSettledBalance,
-  magnitude,
   type PersonSummary,
   ZERO,
 } from '@splito/domain'
@@ -14,13 +12,12 @@ import {HideRow} from '#/features/hidden/HideItem'
 import {useRowPadding} from '#/state/preferences/density'
 import {Link} from '#/view/com/util/Link'
 import {UserAvatar} from '#/view/com/util/UserAvatar'
-import {atoms as a, useBreakpoints, useTheme} from '#/alf'
+import {atoms as a, useTheme} from '#/alf'
 import {DeletedMeta, useStruck} from '#/components/DeletedMeta'
 import {BalanceText, SettledPill} from '#/components/BalanceText'
 import * as Pills from '#/components/Pills'
 import * as ProfileCard from '#/components/ProfileCard'
 import {Text} from '#/components/Typography'
-import {useMoneyStyle} from '#/components/MoneyDirection'
 import {useListAnimations} from '#/motion/listAnimations'
 import {usePressScale} from '#/motion/PressableScale'
 
@@ -37,6 +34,26 @@ export type PersonRowData = {
 }
 
 const AVATAR_SIZE = 42
+const MAX_CHIPS = 2
+const MAX_NETS = 3
+
+/** A group chip that shortens its name before it would wrap. */
+function ChipTag({name}: {name: string}) {
+  const t = useTheme()
+  return (
+    <View
+      style={[
+        a.rounded_xs,
+        a.justify_center,
+        t.atoms.bg_contrast_50,
+        {paddingHorizontal: 6, paddingVertical: 3},
+      ]}>
+      <Text numberOfLines={1} style={[a.text_xs, a.leading_tight]}>
+        {name}
+      </Text>
+    </View>
+  )
+}
 
 /**
  * Bluesky's profile-card row: avatar, name, a secondary line (here the
@@ -53,10 +70,8 @@ export function PersonRow({
   locale: string
 }) {
   const t = useTheme()
-  const money = useMoneyStyle()
   const rowPadding = useRowPadding()
   const {t: l} = useLingui()
-  const {gtMobile} = useBreakpoints()
   const listAnimations = useListAnimations()
   const press = usePressScale()
   const struck = useStruck()
@@ -71,58 +86,49 @@ export function PersonRow({
     .sort()
 
   /*
-   * Chips explain the balance, so once any group is involved every part
-   * shows - direct ones included, in every currency - and they add up to
-   * the amounts on the right.
+   * Chips name the groups behind the balance (a group with any open part);
+   * the nets stay on the right and are not repeated here. Two chips, then "+N".
    */
-  const hasGroupPart = currencies.some(c =>
-    Object.values(byCurrency[c]!.groups).some(v => v !== ZERO),
-  )
-  const chips = !hasGroupPart
-    ? []
-    : currencies.flatMap(currency => {
-        const c = byCurrency[currency]!
-        const groups = Object.entries(c.groups)
+  const groupIds = [
+    ...new Set(
+      currencies.flatMap(c =>
+        Object.entries(byCurrency[c]!.groups)
           .filter(([, v]) => v !== ZERO)
-          .map(([groupId, v]) => ({
-            key: `${currency}-${groupId}`,
-            name: groupNames.get(groupId) ?? l`Group`,
-            v,
-          }))
-          .sort((x, y) => x.name.localeCompare(y.name))
-        return [
-          ...(c.direct !== ZERO
-            ? [{key: `${currency}-direct`, name: l`Direct`, v: c.direct}]
-            : []),
-          ...groups,
-        ].map(chip => ({...chip, currency}))
-      })
+          .map(([groupId]) => groupId),
+      ),
+    ),
+  ]
+  const groupChips = groupIds
+    .map(groupId => ({groupId, name: groupNames.get(groupId) ?? l`Group`}))
+    .sort((x, y) => x.name.localeCompare(y.name))
+  const chips = groupChips.slice(0, MAX_CHIPS)
+  const moreChips = groupChips.length - chips.length
   /* Settled means every part is zero, not just the net (audit M10). */
   const isSettled = currencies.every(c => isSettledBalance(byCurrency[c]!))
 
   const open = currencies.filter(c => !isSettledBalance(byCurrency[c]!))
   /*
-   * Each way on its own line, never netted across direct and groups (as
-   * the Overview adds them and a payment settles them): owed 10 directly
-   * and owing 10 in a group reads both, not "Settled".
+   * One net per currency (max 3, then "+N"). Only when a currency is open
+   * both ways and nets to zero does it take two lines, owed and owe, so it
+   * never reads "Settled" (audit M10).
    */
   const lines = (currency: string) => {
-    const {owed, owe} = balanceSides(byCurrency[currency]!)
-    const isBoth = owed !== ZERO && owe !== ZERO
-    return [
-      {
-        amount: owed,
-        testID: isBoth ? `balance-${currency}-owed` : `balance-${currency}`,
-      },
-      {
-        amount: -owe,
-        testID: isBoth ? `balance-${currency}-owe` : `balance-${currency}`,
-      },
-    ].filter(line => line.amount !== ZERO)
+    const balance = byCurrency[currency]!
+    const {owed, owe} = balanceSides(balance)
+    if (owed !== ZERO && owe !== ZERO && balance.total === ZERO)
+      return [
+        {amount: owed, testID: `balance-${currency}-owed`},
+        {amount: -owe, testID: `balance-${currency}-owe`},
+      ]
+    return [{amount: balance.total, testID: `balance-${currency}`}]
   }
-  const balanceColumn = (list: string[]) => (
+  const shownCurrencies = open.slice(0, MAX_NETS)
+  const moreNets = open.length - shownCurrencies.length
+  const balances = isDeleted ? null : isSettled ? (
+    <SettledPill testID="person-row-settled" />
+  ) : (
     <View style={[a.align_end, a.gap_2xs, a.flex_shrink_0]}>
-      {list.flatMap(currency =>
+      {shownCurrencies.flatMap(currency =>
         lines(currency).map(line => (
           <BalanceText
             key={line.testID}
@@ -134,19 +140,15 @@ export function PersonRow({
           />
         )),
       )}
+      {moreNets > 0 && (
+        <Text
+          testID="person-row-more-nets"
+          style={[a.text_xs, t.atoms.text_contrast_medium]}>
+          +{moreNets}
+        </Text>
+      )}
     </View>
   )
-  const balances = isDeleted ? null : isSettled ? (
-    <SettledPill testID="person-row-settled" />
-  ) : (
-    balanceColumn(open)
-  )
-  /*
-   * Phones: the first currency shares the name's line and any others share
-   * the chips' line, so a second currency never leaves a gap under the name.
-   */
-  const firstBalance = isDeleted ? null : isSettled ? balances : balanceColumn(open.slice(0, 1))
-  const moreBalances = open.length > 1 ? balanceColumn(open.slice(1)) : null
 
   /* The row content shrinks on press; the separator stays put. */
   const link = (onLongPress?: () => void) => (
@@ -171,89 +173,72 @@ export function PersonRow({
         <Animated.View
           style={[
             a.flex_row,
-            /* Top-aligned at every width: the amount reads on the name's line. */
+            /* Top-aligned: the first net reads on the name's line. */
             a.align_start,
             a.gap_md,
             press.style,
           ]}>
           <UserAvatar size={AVATAR_SIZE} name={row.name} type="user" />
-          {/*
-           * Wide screens: name and chips are one column, the balances
-           * another, so a second currency never pushes the chips down.
-           */}
-          <View style={[a.flex_1, a.gap_2xs]}>
-            {/* Phones: the balance shares the name's line, so the chips get the full width. */}
-            <View
-              style={[a.flex_row, a.align_start, a.justify_between, a.gap_md]}>
-              <View style={[a.flex_1]}>
-                <ProfileCard.Name profile={row} textStyle={isDeleted ? struck : undefined} />
-                {row.isRemoved ? (
-                  <Pills.Row style={[a.pt_2xs]}>
-                    <Pills.Tag>
-                      <Trans>Removed</Trans>
-                    </Pills.Tag>
-                  </Pills.Row>
+          {/* Two lines at most: the name, then the group chips (or a state); the nets are the right column. */}
+          <View style={[a.flex_1, a.gap_2xs, {minWidth: 0}]}>
+            <ProfileCard.Name
+              profile={row}
+              textStyle={isDeleted ? struck : undefined}
+            />
+            {row.isRemoved ? (
+              <Pills.Row style={[a.pt_2xs]}>
+                <Pills.Tag>
+                  <Trans>Removed</Trans>
+                </Pills.Tag>
+              </Pills.Row>
+            ) : isDeleted ? (
+              <View style={[a.flex_row, a.align_center, a.gap_sm, a.pt_2xs]}>
+                <Pills.Tag>
+                  <Trans>Deleted</Trans>
+                </Pills.Tag>
+                <DeletedMeta
+                  testID={`person-${row.id}-deleted`}
+                  at={row.deletedAt!}
+                />
+                {row.isHidden ? (
+                  <Pills.Tag>
+                    <Trans>Hidden</Trans>
+                  </Pills.Tag>
                 ) : null}
               </View>
-              {!gtMobile && firstBalance}
-            </View>
-            <View
-              style={[a.flex_row, a.align_start, a.justify_between, a.gap_md]}>
-              <View style={[a.flex_1]}>
-                {isDeleted ? (
-                  <View style={[a.flex_row, a.align_center, a.gap_sm, a.pt_2xs]}>
-                    <Pills.Tag>
-                      <Trans>Deleted</Trans>
-                    </Pills.Tag>
-                    <DeletedMeta testID={`person-${row.id}-deleted`} at={row.deletedAt!} />
-                    {row.isHidden ? (
-                      <Pills.Tag>
-                        <Trans>Hidden</Trans>
-                      </Pills.Tag>
-                    ) : null}
+            ) : chips.length > 0 ? (
+              /* Never wraps: a long group name shortens instead. */
+              <View
+                testID={`person-${row.id}-chips`}
+                style={[a.flex_row, a.gap_xs, a.pt_2xs, a.overflow_hidden]}>
+                {chips.map(chip => (
+                  <View key={chip.groupId} style={[a.flex_shrink, {minWidth: 0}]}>
+                    <ChipTag name={chip.name} />
                   </View>
-                ) : chips.length > 0 ? (
-                  <Pills.Row style={[a.pt_2xs]}>
-                    {chips.map(chip => (
-                      <Pills.Tag key={chip.key}>
-                        {chip.name}{' '}
-                        <Text
-                          style={[
-                            a.text_xs,
-                            a.font_semi_bold,
-                            {fontVariant: ['tabular-nums']},
-                            money.style(chip.v),
-                          ]}>
-                          {(chip.v > ZERO ? '+' : '−') +
-                            formatAmount(
-                              magnitude(chip.v),
-                              chip.currency,
-                              locale,
-                            )}
-                        </Text>
-                      </Pills.Tag>
-                    ))}
-                  </Pills.Row>
-                ) : (
-                  <Text
-                    numberOfLines={1}
-                    style={[
-                      a.text_sm,
-                      a.leading_snug,
-                      t.atoms.text_contrast_medium,
-                    ]}>
-                    {isSettled ? (
-                      <Trans>No open balances</Trans>
-                    ) : (
-                      <Trans>Direct expenses</Trans>
-                    )}
-                  </Text>
+                ))}
+                {moreChips > 0 && (
+                  <View style={a.flex_shrink_0}>
+                    <ChipTag name={`+${moreChips}`} />
+                  </View>
                 )}
               </View>
-              {!gtMobile && moreBalances}
-            </View>
+            ) : (
+              <Text
+                numberOfLines={1}
+                style={[
+                  a.text_sm,
+                  a.leading_snug,
+                  t.atoms.text_contrast_medium,
+                ]}>
+                {isSettled ? (
+                  <Trans>No open balances</Trans>
+                ) : (
+                  <Trans>Direct expenses</Trans>
+                )}
+              </Text>
+            )}
           </View>
-          {gtMobile && balances}
+          {balances}
         </Animated.View>
       </Link>
   )

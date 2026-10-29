@@ -1649,7 +1649,7 @@ expands once I click". *Where:* `screens/People`, `screens/Groups`, `screens/Gro
   search (Lucide `Search`, testID `list-search`; on Home the global search field replaces it) and Filters (`list-filters`, with a dot/count when non-default
   filters are active). Both hide while the list is empty (§ 25).
 - **The Friends list has its own search, besides Search & Ask** (owner 91; F-222 removed the icon, F-1414
-  restores it; not built yet). It filters only the list it sits on, combines with the filters, and the query is
+  restores it; built with F-248). It filters only the list it sits on, combines with the filters, and the query is
   not kept after leaving the screen.
 - **Search is an icon until tapped,** then expands (Reanimated width/opacity, reduced-motion aware) into a
   full-width Bluesky `SearchInput` in the same row, autofocused, with an X that collapses and clears. Results
