@@ -469,7 +469,7 @@ msgid "{0}, {portions} portions"
 msgstr "{0}, {portions} portions"
 
 #. placeholder {0}: group.name
-#: src/view/shell/desktop/LeftNav.tsx:501
+#: src/view/shell/desktop/LeftNav.tsx:600
 msgid "{0}, {spokenList}"
 msgstr "{0}, {spokenList}"
 
@@ -479,7 +479,7 @@ msgid "{0}, {total}, {date}"
 msgstr "{0}, {total}, {date}"
 
 #. placeholder {0}: group.name
-#: src/view/shell/desktop/LeftNav.tsx:502
+#: src/view/shell/desktop/LeftNav.tsx:601
 msgid "{0}, settled up"
 msgstr "{0}, settled up"
 
@@ -863,9 +863,9 @@ msgstr "{title}, {byline}, {shareLabel} {shareText} of {totalText}"
 msgid "{visible} categories"
 msgstr "{visible} categories"
 
-#: src/components/settings/NavigationEditor.tsx:177
-msgid "{visibleCount} tabs share the bar equally."
-msgstr "{visibleCount} tabs share the bar equally."
+#: src/components/settings/NavigationEditor.tsx:175
+msgid "{visibleCount} tabs share the phone bar equally."
+msgstr "{visibleCount} tabs share the phone bar equally."
 
 #: src/features/searchAsk/AskAnswer.tsx:352
 msgid "{what} {bucketWord} {scope} {period}."
@@ -1288,7 +1288,7 @@ msgstr "Add each item and who had it. Tap a name again for another portion; righ
 #: src/screens/Group/index.tsx:539
 #: src/screens/Person/index.tsx:535
 #: src/screens/Person/index.tsx:536
-#: src/view/shell/desktop/LeftNav.tsx:398
+#: src/view/shell/desktop/LeftNav.tsx:497
 msgid "Add expense"
 msgstr "Add expense"
 
@@ -1303,7 +1303,7 @@ msgstr "Add expense"
 #: src/screens/People/index.tsx:269
 #: src/screens/Person/index.tsx:293
 #: src/screens/Person/index.tsx:299
-#: src/view/shell/desktop/LeftNav.tsx:406
+#: src/view/shell/desktop/LeftNav.tsx:505
 msgctxt "action"
 msgid "Add expense"
 msgstr "Add expense"
@@ -1376,7 +1376,7 @@ msgstr "Add this expense"
 msgid "Add to group"
 msgstr "Add to group"
 
-#: src/navigation/Drawer.tsx:85
+#: src/navigation/Drawer.tsx:86
 #: src/screens/Profile.tsx:151
 #: src/screens/Profile.tsx:164
 msgid "Add your name"
@@ -1834,10 +1834,6 @@ msgstr "Blue and orange, easy to tell apart with any colour vision"
 msgid "Both ways: each of you lets the other off, and you’ll be even in {currency}. Other currencies stay as they are."
 msgstr "Both ways: each of you lets the other off, and you’ll be even in {currency}. Other currencies stay as they are."
 
-#: src/components/settings/NavigationEditor.tsx:124
-msgid "Bottom bar"
-msgstr "Bottom bar"
-
 #: src/features/hidden/ShowHidden.tsx:28
 msgid "Bring back what you hid from your lists. Only you ever see this choice."
 msgstr "Bring back what you hid from your lists. Only you ever see this choice."
@@ -2079,9 +2075,9 @@ msgstr "Choose period"
 msgid "Choose the currency to set"
 msgstr "Choose the currency to set"
 
-#: src/components/settings/NavigationEditor.tsx:125
-msgid "Choose the tabs on the phone bottom bar and their order: as many as you like, with Home first. Everything else stays in the menu behind your avatar."
-msgstr "Choose the tabs on the phone bottom bar and their order: as many as you like, with Home first. Everything else stays in the menu behind your avatar."
+#: src/components/settings/NavigationEditor.tsx:123
+msgid "Choose the items and their order. They make the bottom bar on phones and the sidebar on bigger screens: as many as you like, with Home first. Everything else sits under More, and in the menu behind your avatar on phones. Reset restores the default everywhere."
+msgstr "Choose the items and their order. They make the bottom bar on phones and the sidebar on bigger screens: as many as you like, with Home first. Everything else sits under More, and in the menu behind your avatar on phones. Reset restores the default everywhere."
 
 #: src/components/settings/prefControls.tsx:580
 msgid "Choose timezone"
@@ -2275,7 +2271,7 @@ msgstr "Continue"
 msgid "Continue to next step"
 msgstr "Continue to next step"
 
-#: src/lib/sharing.ts:35
+#: src/lib/sharing.ts:56
 msgid "Copied to clipboard"
 msgstr "Copied to clipboard"
 
@@ -2380,7 +2376,7 @@ msgstr "Couldn’t leave the group. Please try again."
 msgid "Couldn’t log this reminder. Please try again."
 msgstr "Couldn’t log this reminder. Please try again."
 
-#: src/lib/sharing.ts:63
+#: src/lib/sharing.ts:84
 msgid "Couldn’t open an app for that. Copy the link instead."
 msgstr "Couldn’t open an app for that. Copy the link instead."
 
@@ -3713,7 +3709,7 @@ msgstr "Hidden shown"
 msgid "Hide"
 msgstr "Hide"
 
-#: src/components/settings/NavigationEditor.tsx:268
+#: src/components/settings/NavigationEditor.tsx:266
 msgid "Hide {label}"
 msgstr "Hide {label}"
 
@@ -4428,6 +4424,10 @@ msgstr "Month first"
 msgid "Monthly"
 msgstr "Monthly"
 
+#: src/view/shell/desktop/LeftNav.tsx:351
+msgid "More"
+msgstr "More"
+
 #: src/components/activity/ActivityItem.tsx:297
 #: src/components/activity/ActivityItem.tsx:381
 #: src/components/activity/ActivityItem.tsx:439
@@ -4471,11 +4471,11 @@ msgstr "Move {0} down"
 msgid "Move {0} up"
 msgstr "Move {0} up"
 
-#: src/components/settings/NavigationEditor.tsx:253
+#: src/components/settings/NavigationEditor.tsx:251
 msgid "Move {label} down"
 msgstr "Move {label} down"
 
-#: src/components/settings/NavigationEditor.tsx:242
+#: src/components/settings/NavigationEditor.tsx:240
 msgid "Move {label} up"
 msgstr "Move {label} up"
 
@@ -4542,6 +4542,7 @@ msgstr "name@example.com or +91 98765 43210"
 msgid "Navigates to the next screen"
 msgstr "Navigates to the next screen"
 
+#: src/components/settings/NavigationEditor.tsx:122
 #: src/components/settings/sections.ts:51
 msgid "Navigation"
 msgstr "Navigation"
@@ -5051,9 +5052,9 @@ msgstr "Only a group admin can restore it."
 msgid "Only allowed pairs"
 msgstr "Only allowed pairs"
 
-#: src/components/settings/NavigationEditor.tsx:176
-msgid "Only Home is on the bar. The rest stay in the menu behind your avatar."
-msgstr "Only Home is on the bar. The rest stay in the menu behind your avatar."
+#: src/components/settings/NavigationEditor.tsx:174
+msgid "Only Home is on. The rest sit under More, and in the menu behind your avatar on phones."
+msgstr "Only Home is on. The rest sit under More, and in the menu behind your avatar on phones."
 
 #: src/screens/Expense/components/History.tsx:177
 msgid "Only on this device. Sign in to sync it to your other devices."
@@ -5185,7 +5186,7 @@ msgstr "Opens the settle-up plan for {g}"
 msgid "Opens what changed"
 msgstr "Opens what changed"
 
-#: src/navigation/Drawer.tsx:62
+#: src/navigation/Drawer.tsx:63
 msgid "Opens your profile"
 msgstr "Opens your profile"
 
@@ -5549,7 +5550,7 @@ msgstr "Print dialog opened. Choose Save as PDF."
 msgid "Privacy"
 msgstr "Privacy"
 
-#: src/navigation/Drawer.tsx:61
+#: src/navigation/Drawer.tsx:62
 #: src/navigation/Navigation.tsx:70
 #: src/screens/Profile.tsx:40
 #: src/screens/Settings/index.tsx:113
@@ -5591,7 +5592,7 @@ msgstr "Recent searches"
 msgid "Recent transactions"
 msgstr "Recent transactions"
 
-#: src/view/shell/desktop/LeftNav.tsx:475
+#: src/view/shell/desktop/LeftNav.tsx:574
 msgid "Recently active groups"
 msgstr "Recently active groups"
 
@@ -6252,7 +6253,7 @@ msgstr "Search timezones"
 msgid "Searches “{0}” with every match"
 msgstr "Searches “{0}” with every match"
 
-#: src/view/shell/desktop/LeftNav.tsx:608
+#: src/view/shell/desktop/LeftNav.tsx:707
 #: src/view/shell/desktop/RecentTransactions.tsx:173
 msgid "See all"
 msgstr "See all"
@@ -6261,7 +6262,7 @@ msgstr "See all"
 msgid "See all activity"
 msgstr "See all activity"
 
-#: src/view/shell/desktop/LeftNav.tsx:581
+#: src/view/shell/desktop/LeftNav.tsx:680
 msgid "See all groups"
 msgstr "See all groups"
 
@@ -6442,7 +6443,7 @@ msgstr "Settle up with {person}"
 msgid "Settle up with {person} in {group}"
 msgstr "Settle up with {person} in {group}"
 
-#: src/view/shell/desktop/LeftNav.tsx:571
+#: src/view/shell/desktop/LeftNav.tsx:670
 msgid "settled"
 msgstr "settled"
 
@@ -6510,7 +6511,7 @@ msgstr "Shopping"
 msgid "Show"
 msgstr "Show"
 
-#: src/components/settings/NavigationEditor.tsx:268
+#: src/components/settings/NavigationEditor.tsx:266
 msgid "Show {label}"
 msgstr "Show {label}"
 
@@ -6635,8 +6636,8 @@ msgstr "Shows the tax portion and adds nothing to the total"
 msgid "Shows the write-off and lets you undo it"
 msgstr "Shows the write-off and lets you undo it"
 
-#: src/navigation/Drawer.tsx:224
-#: src/navigation/Drawer.tsx:231
+#: src/navigation/Drawer.tsx:228
+#: src/navigation/Drawer.tsx:235
 #: src/navigation/Navigation.tsx:73
 #: src/screens/LoggedOut/SplashScreen.tsx:78
 #: src/screens/LoggedOut/SplashScreen.tsx:85
@@ -6815,7 +6816,7 @@ msgid "Splito"
 msgstr "Splito"
 
 #: src/screens/People/index.tsx:166
-#: src/view/shell/desktop/LeftNav.tsx:136
+#: src/view/shell/desktop/LeftNav.tsx:140
 msgid "Splito - Home"
 msgstr "Splito - Home"
 
@@ -8025,7 +8026,7 @@ msgstr "You are owed"
 #. placeholder {0}: formatAmount(amount, c, locale)
 #. placeholder {0}: money(v, currency)
 #: src/screens/Group/components/MemberExitDialog.tsx:138
-#: src/view/shell/desktop/LeftNav.tsx:487
+#: src/view/shell/desktop/LeftNav.tsx:586
 msgid "you are owed {0}"
 msgstr "you are owed {0}"
 
@@ -8158,7 +8159,7 @@ msgstr "You owe"
 #. placeholder {0}: formatAmount(magnitude(amount), c, locale)
 #. placeholder {0}: money(v, currency)
 #: src/screens/Group/components/MemberExitDialog.tsx:141
-#: src/view/shell/desktop/LeftNav.tsx:488
+#: src/view/shell/desktop/LeftNav.tsx:587
 msgid "you owe {0}"
 msgstr "you owe {0}"
 

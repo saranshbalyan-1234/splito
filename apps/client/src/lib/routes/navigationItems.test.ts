@@ -7,6 +7,7 @@ import {
   NAV_ITEM_HREF,
   NAV_ITEM_ROUTE,
   navigationItems,
+  splitNavigationItems,
 } from './navigationItems'
 
 test('one list, in the order of ARCHITECTURE 26.3', () => {
@@ -42,4 +43,19 @@ test('every item opens a route with a path, except Ask Splito, which opens the d
     expect(NAV_ITEM_ROUTE[id] === undefined).toBe(id === 'ask')
     expect(NAV_ITEM_HREF[id] === undefined).toBe(id === 'ask')
   }
+})
+
+test('the sidebar and drawer order: what is on in its order, then the rest in the shared order', () => {
+  expect(splitNavigationItems(PREFS.tabs.default)).toEqual({
+    on: ['people', 'groups', 'analytics', 'activity'],
+    off: ['ask', 'settings'],
+  })
+  expect(splitNavigationItems(['people', 'settings', 'groups'])).toEqual({
+    on: ['people', 'settings', 'groups'],
+    off: ['analytics', 'ask', 'activity'],
+  })
+  expect(splitNavigationItems(['people', 'ask'], false)).toEqual({
+    on: ['people'],
+    off: ['groups', 'analytics', 'activity', 'settings'],
+  })
 })

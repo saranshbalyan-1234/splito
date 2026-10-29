@@ -6,7 +6,7 @@ import {useLingui as useLinguiCore} from '@lingui/react'
 import {useLingui} from '@lingui/react/macro'
 
 import {useHaptics} from '#/lib/haptics'
-import {bottomBarItems, navigationItems} from '#/lib/routes/navigationItems'
+import {splitNavigationItems} from '#/lib/routes/navigationItems'
 import {useA11y} from '#/state/a11y'
 import {atoms as a, useBreakpoints, useTheme} from '#/alf'
 import {Button, ButtonIcon} from '#/components/Button'
@@ -52,11 +52,10 @@ function visibleKey(rows: Row[]) {
 }
 
 function rowsFor(stored: readonly NavItemId[]): Row[] {
-  const visible = bottomBarItems(stored)
-  const hidden = navigationItems().filter(tab => !visible.includes(tab))
+  const {on, off} = splitNavigationItems(stored)
   return [
-    ...visible.map(tab => ({tab, isVisible: true})),
-    ...hidden.map(tab => ({tab, isVisible: false})),
+    ...on.map(tab => ({tab, isVisible: true})),
+    ...off.map(tab => ({tab, isVisible: false})),
   ]
 }
 
@@ -70,11 +69,10 @@ function homeFirst(rows: Row[]) {
 
 /**
  * Settings > Navigation (ARCHITECTURE 26.3, decision 70): every item of the
- * shared sidebar / drawer list can go in the phone bottom bar, each with a
+ * shared list can go in the bottom bar and the sidebar, each with a
  * switch and a drag handle (Bluesky's pinned-feeds list), or arrow buttons on
  * wide web and for screen readers. The bar takes any number of tabs, from
- * Home alone to every item (decision 84); Home stays on and first. Items not in the bar stay in the drawer; desktop and rail always
- * show the full list. Reset (the section's) restores Home, Groups, Analytics,
+ * Home alone to every item (decision 84); Home stays on and first. Items that are off stay in the drawer and sit under the sidebar's "More". Reset (the section's) restores Home, Groups, Analytics,
  * Activity.
  */
 export function NavigationEditor() {
@@ -121,8 +119,8 @@ export function NavigationEditor() {
     <PrefSection
       pref={pref}
       icon={TabsIcon}
-      title={l`Bottom bar`}
-      description={l`Choose the tabs on the phone bottom bar and their order: as many as you like, with Home first. Everything else stays in the menu behind your avatar.`}>
+      title={l`Navigation`}
+      description={l`Choose the items and their order. They make the bottom bar on phones and the sidebar on bigger screens: as many as you like, with Home first. Everything else sits under More, and in the menu behind your avatar on phones. Reset restores the default everywhere.`}>
       <View
         style={[
           a.w_full,
@@ -173,8 +171,8 @@ export function NavigationEditor() {
           aria-live="polite"
           style={[a.text_sm, a.leading_snug, t.atoms.text_contrast_medium]}>
           {visibleCount === 1
-            ? l`Only Home is on the bar. The rest stay in the menu behind your avatar.`
-            : l`${visibleCount} tabs share the bar equally.`}
+            ? l`Only Home is on. The rest sit under More, and in the menu behind your avatar on phones.`
+            : l`${visibleCount} tabs share the phone bar equally.`}
         </Text>
       )}
     </PrefSection>

@@ -71,7 +71,7 @@ test('an accent is only previewed until Apply, then tints the app and survives a
   await expect.poll(() => background(page, 'sidebar-add')).toBe(BLUESKY_BLUE)
 })
 
-test('hiding Groups removes it from the phone bar only; the sidebar and drawer keep it', async ({
+test('hiding Groups removes it from the phone bar and the sidebar; the drawer and More keep it', async ({
   page,
 }) => {
   await page.setViewportSize(PHONE)
@@ -92,10 +92,70 @@ test('hiding Groups removes it from the phone bar only; the sidebar and drawer k
 
   await page.setViewportSize(LAPTOP)
   await open(page, '/', 'screen-people')
-  await expect(page.getByTestId('tab-groups')).toBeVisible()
-  await expect(page.getByTestId('tab-settings')).toBeVisible()
-  await open(page, '/groups', 'screen-groups')
+  await expect(page.getByTestId('tab-groups')).toHaveCount(0)
+  await page.getByTestId('tab-more').click()
+  await page.getByTestId('more-groups').click()
+  await expect(page.getByTestId('screen-groups')).toBeVisible()
 })
+
+/* Owner 127: the one choice drives the sidebar (1440) and the rail (860) too. */
+for (const width of [1440, 860]) {
+  test(`Settings > Navigation drives the ${width < 1000 ? 'rail' : 'sidebar'} at ${width}px: off, reorder, More, Reset`, async ({
+    page,
+  }) => {
+    await page.setViewportSize({width, height: 900})
+    await open(page, '/settings/navigation', 'screen-settings-section')
+    const order = () =>
+      page
+        .getByRole('navigation')
+        .locator('[data-testid^="tab-"]')
+        .evaluateAll(els => els.map(e => e.getAttribute('data-testid')))
+    // Default: the bottom bar's four, then More (Ask Splito and Settings are off).
+    await expect
+      .poll(order)
+      .toEqual(['tab-people', 'tab-groups', 'tab-analytics', 'tab-activity', 'tab-more'])
+    await expect(page.getByTestId('tab-ask')).toHaveCount(0)
+
+    await page.getByTestId('tabs-toggle-groups').click()
+    await page.getByTestId('tabs-up-activity').click()
+    await expect
+      .poll(order)
+      .toEqual(['tab-people', 'tab-activity', 'tab-analytics', 'tab-more'])
+
+    // The off item sits under More and opens like its row; More is lit there.
+    await page.getByTestId('tab-more').click()
+    await expect(page.getByTestId('more-groups')).toBeVisible()
+    await expect(page.getByTestId('more-ask')).toBeVisible()
+    await expect(page.getByTestId('more-settings')).toBeVisible()
+    await expect(page.getByTestId('more-analytics')).toHaveCount(0)
+    await page.getByTestId('more-groups').click()
+    await expect(page.getByTestId('screen-groups')).toBeVisible()
+    await expect(page.getByTestId('tab-more')).toHaveAttribute('aria-current', 'page')
+
+    // Ask Splito under More keeps its Search & Ask behaviour.
+    await page.getByTestId('tab-more').click()
+    await page.getByTestId('more-ask').click()
+    await expect(page.getByTestId('ask-chat')).toBeVisible()
+    await page.keyboard.press('Escape')
+
+    await page.goto('/settings/navigation')
+    await expect(page.getByTestId('screen-settings-section')).toBeVisible()
+    await expect
+      .poll(order)
+      .toEqual(['tab-people', 'tab-activity', 'tab-analytics', 'tab-more'])
+    await page.getByTestId('reset-tabs').click()
+    await expect
+      .poll(order)
+      .toEqual(['tab-people', 'tab-groups', 'tab-analytics', 'tab-activity', 'tab-more'])
+
+    // With every item on there is nothing to put under More.
+    for (const tab of ['ask', 'settings'])
+      await page.getByTestId(`tabs-toggle-${tab}`).click()
+    await expect(page.getByTestId('tab-more')).toHaveCount(0)
+    await expect(page.getByTestId('tab-ask')).toBeVisible()
+    await expect(page.getByTestId('tab-settings')).toBeVisible()
+  })
+}
 
 test('Settings can join the phone bar, with arrows to reorder and Reset', async ({
   page,

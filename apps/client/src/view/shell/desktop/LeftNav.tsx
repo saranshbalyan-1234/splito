@@ -32,8 +32,8 @@ import {
   TabState,
 } from '#/lib/routes/helpers'
 import {currentSection} from '#/lib/routes/section'
-import {NAV_ITEM_HREF, navigationItems} from '#/lib/routes/navigationItems'
-import {TAB_ROUTE} from '#/lib/routes/tabs'
+import {NAV_ITEM_HREF, splitNavigationItems} from '#/lib/routes/navigationItems'
+import {TAB_ROUTE, useTabs} from '#/lib/routes/tabs'
 import {
   type NavigationProp,
   type State,
@@ -67,9 +67,11 @@ import {
 import {Button, ButtonIcon, ButtonText} from '#/components/Button'
 import {GroupAvatar} from '#/components/groups/GroupAvatar'
 import {ChevronRight_Stroke2_Corner0_Rounded as ChevronRightIcon} from '#/components/icons/Chevron'
+import {Ellipsis_Stroke2_Corner0_Rounded as EllipsisIcon} from '#/components/icons/Feedback'
 import {type Props as SVGIconProps} from '#/components/icons/common'
 import {PlusLarge_Stroke2_Corner0_Rounded as PlusIcon} from '#/components/icons/Plus'
 import {HEADER_HEIGHT} from '#/components/Layout/const'
+import * as Menu from '#/components/Menu'
 import {NavFooterLinks} from '#/components/NavFooterLinks'
 import {useSearchAsk} from '#/components/SearchAsk/context'
 import {GLYPHS, NAV_LABELS} from '#/components/TabGlyph'
@@ -152,6 +154,29 @@ function LogoCard({minimal}: {minimal: boolean}) {
   )
 }
 
+/*
+ * What pressing a nav item does, shared by the sidebar rows and the "More"
+ * menu: Ask Splito opens the Search & Ask drawer, a tab switches tab on
+ * native, anything else navigates (pressing the current page is a no-op,
+ * as Splito screens have no soft reset).
+ */
+function useOpenNavItem(onNavigateTab?: (tab: SidebarTab) => void) {
+  const navigation = useNavigation<NavigationProp>()
+  const searchAsk = useSearchAsk()
+  return (navItem: NavClickItem, href: string, isCurrent: boolean) => {
+    const tab = NAV_ITEM_TO_TAB[navItem]
+    if (navItem === 'ask') {
+      searchAsk.open({mode: 'ask'})
+    } else if (tab && onNavigateTab) {
+      onNavigateTab(tab)
+    } else if (!isCurrent) {
+      const [screen, params] = router.matchPath(href)
+      // @ts-expect-error TODO: type matchPath well enough that it can be plugged into navigation.navigate directly
+      navigation.navigate(screen, params, {pop: true})
+    }
+  }
+}
+
 interface NavItemProps {
   count?: string
   hasNew?: boolean
@@ -185,10 +210,8 @@ function NavItem({
 
   const [pathName] = useMemo(() => router.matchPath(href), [href])
   const currentRouteInfo = useNavigationState(state => getCurrentRoute(state))
-  const tab = NAV_ITEM_TO_TAB[navItem]
   const isCurrent = isTab(currentRouteInfo.name, pathName)
-  const navigation = useNavigation<NavigationProp>()
-  const searchAsk = useSearchAsk()
+  const openNavItem = useOpenNavItem(onNavigateTab)
   const onPressWrapped = useCallback(
     (e: React.MouseEvent<HTMLAnchorElement, MouseEvent>) => {
       ax.metric('nav:click', {item: navItem, surface: 'leftNav'})
@@ -196,22 +219,9 @@ function NavItem({
         return
       }
       e.preventDefault?.()
-      if (navItem === 'ask') {
-        searchAsk.open({mode: 'ask'})
-        return
-      }
-      if (tab && onNavigateTab) {
-        onNavigateTab(tab)
-        return
-      }
-      // Splito screens have no soft reset, so pressing the current item is a no-op.
-      if (!isCurrent) {
-        const [screen, params] = router.matchPath(href)
-        // @ts-expect-error TODO: type matchPath well enough that it can be plugged into navigation.navigate directly
-        navigation.navigate(screen, params, {pop: true})
-      }
+      openNavItem(navItem, href, isCurrent)
     },
-    [navigation, href, isCurrent, ax, navItem, onNavigateTab, tab, searchAsk],
+    [href, isCurrent, ax, navItem, openNavItem],
   )
 
   const Icon = isSelected ? icons.active : icons.inactive
@@ -311,6 +321,94 @@ function NavItem({
         </View>
       )}
     </PressableWithHover>
+  )
+}
+
+/*
+ * "More" (Lucide Ellipsis) ends the list when some items are off in
+ * Settings > Navigation (ARCHITECTURE 26.3): a Bluesky Menu with those
+ * items, each opening like its sidebar row. It is lit when the page is one of
+ * them. No store reads of its own.
+ */
+function MoreItem({
+  items,
+  selected,
+  minimal,
+  onLayout,
+  onNavigateTab,
+}: {
+  items: {navItem: NavClickItem; label: string; href: string}[]
+  selected: NavClickItem | undefined
+  minimal: boolean
+  onLayout: (e: LayoutChangeEvent) => void
+  onNavigateTab?: (tab: SidebarTab) => void
+}) {
+  const t = useTheme()
+  const {t: l} = useLingui()
+  const ax = useAnalytics()
+  const openNavItem = useOpenNavItem(onNavigateTab)
+  const isSelected = selected !== undefined
+  const label = l`More`
+
+  return (
+    <Menu.Root>
+      <Menu.Trigger label={label}>
+        {({props}) => (
+          <PressableWithHover
+            {...props}
+            testID="tab-more"
+            onLayout={onLayout}
+            style={[
+              a.flex_row,
+              a.align_center,
+              a.p_md,
+              a.rounded_full,
+              a.gap_sm,
+              a.outline_inset_1,
+              a.transition_color,
+            ]}
+            hoverStyle={t.atoms.bg_contrast_25}
+            aria-current={isSelected ? 'page' : undefined}
+            accessibilityHint="">
+            <View
+              style={[
+                a.align_center,
+                a.justify_center,
+                {width: 24, height: 24},
+              ]}>
+              <EllipsisIcon
+                aria-hidden={true}
+                width={NAV_ICON_WIDTH}
+                style={t.atoms.text}
+              />
+            </View>
+            {!minimal && (
+              <Text
+                style={[a.text_xl, isSelected ? a.font_bold : a.font_normal]}>
+                {label}
+              </Text>
+            )}
+          </PressableWithHover>
+        )}
+      </Menu.Trigger>
+      <Menu.Outer>
+        <Menu.Group>
+          {items.map(({navItem, label: itemLabel, href}) => (
+            <Menu.Item
+              key={navItem}
+              testID={`more-${navItem}`}
+              label={itemLabel}
+              onPress={() => {
+                ax.metric('nav:click', {item: navItem, surface: 'leftNav'})
+                openNavItem(navItem, href, navItem === selected)
+              }}>
+              <Menu.ItemText>{itemLabel}</Menu.ItemText>
+              <Menu.ItemIcon icon={GLYPHS[navItem].icon} position="right" />
+            </Menu.Item>
+          ))}
+        </Menu.Group>
+      </Menu.Outer>
+    </Menu.Root>
   )
 }
 
@@ -647,27 +745,30 @@ export function DesktopLeftNav({
   const insets = useSafeAreaInsets()
   const activityBadge = useActivityBadge()
   const navigationState = useNavigationState(state => state)
+  const tabs = useTabs()
   const [layouts, setLayouts] = useState<
-    Partial<Record<NavClickItem, {y: number; height: number}>>
+    Partial<Record<NavClickItem | 'more', {y: number; height: number}>>
   >({})
 
   if (!gtMobile) {
     return null
   }
 
-  /* The one shared list (26.3): the drawer renders the same items. Desktop and rail always show all of them. */
-  const items: (Omit<
-    NavItemProps,
-    'isSelected' | 'minimal' | 'onLayout' | 'onNavigateTab'
-  > & {navItem: NavClickItem})[] = navigationItems().map(id => ({
+  /* The one shared list (26.3), split by Settings > Navigation: what is on, then "More" holds the rest. */
+  const {on, off} = splitNavigationItems(tabs)
+  const toItem = (id: NavClickItem) => ({
     navItem: id,
     label: _(NAV_LABELS[id]),
     href: NAV_ITEM_HREF[id] ?? '',
     icons: {inactive: GLYPHS[id].icon, active: GLYPHS[id].filled},
     count: id === 'activity' ? activityBadge : undefined,
-  }))
-  const selected = selectedItem(navigationState, items)
-  const onItemLayout = (navItem: NavClickItem) => (e: LayoutChangeEvent) => {
+  })
+  const items = on.map(toItem)
+  const moreItems = off.map(toItem)
+  const lit = selectedItem(navigationState, [...items, ...moreItems])
+  const selected = lit && off.includes(lit) ? undefined : lit
+  const selectedMore = lit && off.includes(lit) ? lit : undefined
+  const onItemLayout = (navItem: NavClickItem | 'more') => (e: LayoutChangeEvent) => {
     const {y, height} = e.nativeEvent.layout
     setLayouts(prev =>
       prev[navItem]?.y === y && prev[navItem]?.height === height
@@ -709,7 +810,7 @@ export function DesktopLeftNav({
         <LogoCard minimal={leftNavMinimal} />
         <View style={[a.pt_sm]} />
         <View style={[a.relative, !leftNavMinimal && a.w_full]}>
-          <ActiveIndicator layout={selected ? layouts[selected] : undefined} />
+          <ActiveIndicator layout={selectedMore ? layouts.more : selected ? layouts[selected] : undefined} />
           {items.map(item => (
             <NavItem
               key={item.navItem}
@@ -722,6 +823,15 @@ export function DesktopLeftNav({
               }
             />
           ))}
+          {moreItems.length > 0 && (
+            <MoreItem
+              items={moreItems}
+              selected={selectedMore}
+              minimal={leftNavMinimal}
+              onLayout={onItemLayout('more')}
+              onNavigateTab={onNavigateTab}
+            />
+          )}
         </View>
         <ComposeBtn minimal={leftNavMinimal} />
       </ScrollView>

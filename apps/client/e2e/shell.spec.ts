@@ -316,11 +316,12 @@ test.describe('drawer: Bluesky drawer from the header avatar', () => {
       .evaluateAll(els => els.map(e => e.getAttribute('data-testid')))
     expect(rows).toEqual([
       'drawer-profile',
+      // The default bar's items first, then the rest (26.3).
       'drawer-people',
       'drawer-groups',
       'drawer-analytics',
-      'drawer-ask',
       'drawer-activity',
+      'drawer-ask',
       'drawer-settings',
       'drawer-sign-in',
     ])
@@ -445,9 +446,8 @@ test.describe('desktop: Bluesky left sidebar and full-width content', () => {
       'tab-people',
       'tab-groups',
       'tab-analytics',
-      'tab-ask',
       'tab-activity',
-      'tab-settings',
+      'tab-more',
     ])
     await expect(page.getByTestId('tab-people')).toContainText('Home')
     // The sidebar already shows the mark, so the home header shows its title (26.4).
@@ -488,7 +488,7 @@ test.describe('desktop: Bluesky left sidebar and full-width content', () => {
     await page.setViewportSize(DESKTOP)
     await openDemo(page)
     const nav = page.getByRole('navigation')
-    const order = ['logo', 'tab-people', 'tab-settings', 'sidebar-add']
+    const order = ['logo', 'tab-people', 'tab-more', 'sidebar-add']
     const ys: number[] = []
     for (const id of order)
       ys.push((await nav.getByTestId(id).boundingBox())!.y)
@@ -638,12 +638,19 @@ test.describe('desktop: Bluesky left sidebar and full-width content', () => {
     )
   })
 
-  test('Settings is a sidebar item', async ({page}) => {
+  test('Settings is reachable from the sidebar (under More by default) and lights More', async ({
+    page,
+  }) => {
     await page.setViewportSize(LAPTOP)
     await open(page, '/', 'screen-people')
-    await page.getByTestId('tab-settings').click()
+    await page.getByTestId('tab-more').click()
+    await page.getByTestId('more-settings').click()
     await expect(page.getByTestId('screen-settings')).toBeVisible()
-    await expect(page.getByTestId('tab-settings')).toHaveAttribute(
+    await expect(page.getByTestId('tab-more')).toHaveAttribute(
+      'aria-current',
+      'page',
+    )
+    await expect(page.getByTestId('tab-people')).not.toHaveAttribute(
       'aria-current',
       'page',
     )
@@ -775,11 +782,14 @@ test('the tabs preference orders and hides tabs; hidden routes still open', asyn
   await page.getByTestId('drawer-analytics').click()
   await expect(page.getByTestId('screen-analytics')).toBeVisible()
 
-  // The sidebar always lists every item, whatever the phone bar holds (26.3).
+  // The sidebar follows the same choice (26.3): the items that are off sit under More.
   await page.setViewportSize(LAPTOP)
-  await expect(page.getByTestId('tab-analytics')).toBeVisible()
-  await expect(page.getByTestId('tab-settings')).toBeVisible()
-  await open(page, '/analytics', 'screen-analytics')
+  await expect(page.getByTestId('tab-analytics')).toHaveCount(0)
+  await page.getByTestId('tab-more').click()
+  await expect(page.getByTestId('more-analytics')).toBeVisible()
+  await expect(page.getByTestId('more-settings')).toBeVisible()
+  await page.getByTestId('more-analytics').click()
+  await expect(page.getByTestId('screen-analytics')).toBeVisible()
 })
 
 test('dev tools seed data in e2e builds', async ({page}) => {

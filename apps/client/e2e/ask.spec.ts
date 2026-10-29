@@ -14,6 +14,12 @@ async function home(page: Page) {
   await expect(page.getByTestId('person-Arjun Mehta')).toBeVisible()
 }
 
+/* Ask Splito is off the default bar, so the sidebar holds it under More (26.3). */
+async function openAsk(page: Page) {
+  await page.getByTestId('tab-more').click()
+  await page.getByTestId('more-ask').click()
+}
+
 async function ask(page: Page, question: string) {
   await page.getByTestId('ask-input').fill(question)
   await page.getByTestId('ask-input').press('Enter')
@@ -105,7 +111,7 @@ test('an Ask prefill never writes over or clears the draft the user saved', asyn
   await page.getByTestId('draft-save').click()
   await expect(page.getByTestId('screen-add-expense')).toHaveCount(0)
 
-  await page.getByTestId('tab-ask').click()
+  await openAsk(page)
   await ask(page, 'split 1200 4 ways')
   await page.getByTestId('ask-action-add').click()
   await expect(page.getByTestId('amount-input')).toHaveValue('1200.00')
@@ -124,7 +130,7 @@ test('an Ask prefill never writes over or clears the draft the user saved', asyn
 
 test('questions asked in quick succession are all answered, in order', async ({page}) => {
   await home(page)
-  await page.getByTestId('tab-ask').click()
+  await openAsk(page)
   await ask(page, 'Who owes me the most?')
   await ask(page, 'how much did I spend today')
   await ask(page, 'my balance')
@@ -136,7 +142,7 @@ test('questions asked in quick succession are all answered, in order', async ({p
 
 test('a question that is not about me, or about a place nothing here knows, is not answered as if it were', async ({page}) => {
   await home(page)
-  await page.getByTestId('tab-ask').click()
+  await openAsk(page)
   await ask(page, 'Who owes Riya?')
   await expect(page.getByTestId('ask-lead').last()).toContainText('I can answer this once you sign in')
   await expect(page.getByTestId('ask-balance-card')).toHaveCount(0)
@@ -151,7 +157,7 @@ test('a question that is not about me, or about a place nothing here knows, is n
 
 test('the chat and the draft survive closing, and Clear chat empties it', async ({page}) => {
   await home(page)
-  await page.getByTestId('tab-ask').click()
+  await openAsk(page)
   await expect(page.getByTestId('ask-empty')).toBeVisible()
   await expect(page.getByTestId('ask-chip')).toHaveCount(4)
   await ask(page, 'How much did I spend on food in december 2025?')
@@ -160,7 +166,7 @@ test('the chat and the draft survive closing, and Clear chat empties it', async 
   await page.keyboard.press('Escape')
   await expect(page.getByTestId('ask-chat')).toHaveCount(0)
 
-  await page.getByTestId('tab-ask').click()
+  await openAsk(page)
   await expect(page.getByTestId('ask-message-user')).toContainText('december 2025')
   await expect(page.getByTestId('ask-input')).toHaveValue('half-typed')
 
@@ -171,7 +177,7 @@ test('the chat and the draft survive closing, and Clear chat empties it', async 
 
 test('the sidebar, the drawer and a pinned bar tab all open the drawer in Ask mode', async ({page}) => {
   await home(page)
-  await page.getByTestId('tab-ask').click()
+  await openAsk(page)
   await expect(page.getByTestId('ask-chat')).toBeVisible()
   await page.keyboard.press('Escape')
 

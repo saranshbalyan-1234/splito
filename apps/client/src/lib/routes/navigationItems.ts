@@ -38,14 +38,28 @@ export function isNavItemAvailable(
 }
 
 /**
- * The one list the desktop / rail sidebar and the phone drawer both render
- * (ARCHITECTURE 26.3, § 3): Home, Groups, Analytics, Ask Splito, Activity,
- * Settings. It never changes while data loads; only badges do.
+ * The one list of every item (ARCHITECTURE 26.3, § 3): Home, Groups,
+ * Analytics, Ask Splito, Activity, Settings. The bottom bar, sidebar and
+ * drawer show it ordered by the `tabs` preference (`splitNavigationItems`).
  */
 export function navigationItems(
   isAskAvailable: boolean = IS_ASK_SPLITO_AVAILABLE,
 ): NavItemId[] {
   return NAV_ITEM_IDS.filter(id => isNavItemAvailable(id, isAskAvailable))
+}
+
+/**
+ * What Settings > Navigation sets for every width (ARCHITECTURE 26.3): the
+ * items that are on, in the user's order, then the ones that are off in the
+ * shared order. The sidebar shows `on` and puts `off` under "More"; the
+ * drawer lists both, in this order.
+ */
+export function splitNavigationItems(
+  tabs: readonly NavItemId[],
+  isAskAvailable: boolean = IS_ASK_SPLITO_AVAILABLE,
+): {on: NavItemId[]; off: NavItemId[]} {
+  const on = bottomBarItems(tabs, isAskAvailable)
+  return {on, off: navigationItems(isAskAvailable).filter(id => !on.includes(id))}
 }
 
 /** The bottom bar: the `tabs` preference, less any item not built yet. */

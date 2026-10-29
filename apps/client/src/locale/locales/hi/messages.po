@@ -469,7 +469,7 @@ msgid "{0}, {portions} portions"
 msgstr "{0}, {portions} हिस्से"
 
 #. placeholder {0}: group.name
-#: src/view/shell/desktop/LeftNav.tsx:501
+#: src/view/shell/desktop/LeftNav.tsx:600
 msgid "{0}, {spokenList}"
 msgstr "{0}, {spokenList}"
 
@@ -479,7 +479,7 @@ msgid "{0}, {total}, {date}"
 msgstr "{0}, {total}, {date}"
 
 #. placeholder {0}: group.name
-#: src/view/shell/desktop/LeftNav.tsx:502
+#: src/view/shell/desktop/LeftNav.tsx:601
 msgid "{0}, settled up"
 msgstr "{0}, हिसाब बराबर"
 
@@ -863,9 +863,9 @@ msgstr "{title}, {byline}, {totalText} में से {shareLabel} {shareText}
 msgid "{visible} categories"
 msgstr "{visible} श्रेणियाँ"
 
-#: src/components/settings/NavigationEditor.tsx:177
-msgid "{visibleCount} tabs share the bar equally."
-msgstr "बार में {visibleCount} टैब बराबर जगह बांटते हैं।"
+#: src/components/settings/NavigationEditor.tsx:175
+msgid "{visibleCount} tabs share the phone bar equally."
+msgstr "फ़ोन के बार में {visibleCount} टैब बराबर जगह बांटते हैं।"
 
 #: src/features/searchAsk/AskAnswer.tsx:352
 msgid "{what} {bucketWord} {scope} {period}."
@@ -1288,7 +1288,7 @@ msgstr "हर आइटम और किसने लिया, जोड़े
 #: src/screens/Group/index.tsx:539
 #: src/screens/Person/index.tsx:535
 #: src/screens/Person/index.tsx:536
-#: src/view/shell/desktop/LeftNav.tsx:398
+#: src/view/shell/desktop/LeftNav.tsx:497
 msgid "Add expense"
 msgstr "खर्च जोड़ें"
 
@@ -1303,7 +1303,7 @@ msgstr "खर्च जोड़ें"
 #: src/screens/People/index.tsx:269
 #: src/screens/Person/index.tsx:293
 #: src/screens/Person/index.tsx:299
-#: src/view/shell/desktop/LeftNav.tsx:406
+#: src/view/shell/desktop/LeftNav.tsx:505
 msgctxt "action"
 msgid "Add expense"
 msgstr "खर्च जोड़ें"
@@ -1376,7 +1376,7 @@ msgstr "यह खर्च जोड़ें"
 msgid "Add to group"
 msgstr "समूह में जोड़ें"
 
-#: src/navigation/Drawer.tsx:85
+#: src/navigation/Drawer.tsx:86
 #: src/screens/Profile.tsx:151
 #: src/screens/Profile.tsx:164
 msgid "Add your name"
@@ -1834,10 +1834,6 @@ msgstr "नीला और नारंगी, हर तरह की रं�
 msgid "Both ways: each of you lets the other off, and you’ll be even in {currency}. Other currencies stay as they are."
 msgstr "दोनों ओर: आप एक-दूसरे का कर्ज़ माफ़ करते हैं, और {currency} में हिसाब बराबर हो जाएगा। बाकी मुद्राएँ वैसी ही रहेंगी।"
 
-#: src/components/settings/NavigationEditor.tsx:124
-msgid "Bottom bar"
-msgstr "नीचे की पट्टी"
-
 #: src/features/hidden/ShowHidden.tsx:28
 msgid "Bring back what you hid from your lists. Only you ever see this choice."
 msgstr "अपनी सूचियों से छिपाई चीज़ें वापस लाएँ। यह चुनाव सिर्फ़ आपको दिखता है।"
@@ -2079,9 +2075,9 @@ msgstr "अवधि चुनें"
 msgid "Choose the currency to set"
 msgstr "जिस मुद्रा की इकाई बदलनी है, उसे चुनें"
 
-#: src/components/settings/NavigationEditor.tsx:125
-msgid "Choose the tabs on the phone bottom bar and their order: as many as you like, with Home first. Everything else stays in the menu behind your avatar."
-msgstr "फ़ोन के निचले बार के टैब और उनका क्रम चुनें: जितने चाहें, होम सबसे पहले। बाकी सब आपके अवतार के पीछे वाले मेनू में रहता है।"
+#: src/components/settings/NavigationEditor.tsx:123
+msgid "Choose the items and their order. They make the bottom bar on phones and the sidebar on bigger screens: as many as you like, with Home first. Everything else sits under More, and in the menu behind your avatar on phones. Reset restores the default everywhere."
+msgstr "आइटम और उनका क्रम चुनें। यही फ़ोन पर निचला बार और बड़ी स्क्रीन पर साइडबार बनता है: जितने चाहें, होम सबसे पहले। बाकी सब \"और\" के अंदर रहता है, और फ़ोन पर आपके अवतार के पीछे वाले मेनू में भी। रीसेट हर जगह डिफ़ॉल्ट लौटा देता है।"
 
 #: src/components/settings/prefControls.tsx:580
 msgid "Choose timezone"
@@ -2275,7 +2271,7 @@ msgstr "जारी रखें"
 msgid "Continue to next step"
 msgstr "अगले चरण पर जाएँ"
 
-#: src/lib/sharing.ts:35
+#: src/lib/sharing.ts:56
 msgid "Copied to clipboard"
 msgstr "क्लिपबोर्ड पर कॉपी हुआ"
 
@@ -2380,7 +2376,7 @@ msgstr "ग्रुप छोड़ नहीं सके। कृपया �
 msgid "Couldn’t log this reminder. Please try again."
 msgstr "यह रिमाइंडर दर्ज नहीं हो सका। कृपया फिर कोशिश करें।"
 
-#: src/lib/sharing.ts:63
+#: src/lib/sharing.ts:84
 msgid "Couldn’t open an app for that. Copy the link instead."
 msgstr "इसके लिए कोई ऐप नहीं खुला। इसके बजाय लिंक कॉपी करें।"
 
@@ -3713,7 +3709,7 @@ msgstr "छिपी हुई दिख रही हैं"
 msgid "Hide"
 msgstr "छिपाएँ"
 
-#: src/components/settings/NavigationEditor.tsx:268
+#: src/components/settings/NavigationEditor.tsx:266
 msgid "Hide {label}"
 msgstr "{label} छिपाएँ"
 
@@ -4428,6 +4424,10 @@ msgstr "पहले महीना"
 msgid "Monthly"
 msgstr "हर महीने"
 
+#: src/view/shell/desktop/LeftNav.tsx:351
+msgid "More"
+msgstr "और"
+
 #: src/components/activity/ActivityItem.tsx:297
 #: src/components/activity/ActivityItem.tsx:381
 #: src/components/activity/ActivityItem.tsx:439
@@ -4471,11 +4471,11 @@ msgstr "{0} को नीचे ले जाएँ"
 msgid "Move {0} up"
 msgstr "{0} को ऊपर ले जाएँ"
 
-#: src/components/settings/NavigationEditor.tsx:253
+#: src/components/settings/NavigationEditor.tsx:251
 msgid "Move {label} down"
 msgstr "{label} नीचे ले जाएँ"
 
-#: src/components/settings/NavigationEditor.tsx:242
+#: src/components/settings/NavigationEditor.tsx:240
 msgid "Move {label} up"
 msgstr "{label} ऊपर ले जाएँ"
 
@@ -4542,6 +4542,7 @@ msgstr "name@example.com या +91 98765 43210"
 msgid "Navigates to the next screen"
 msgstr "अगली स्क्रीन पर ले जाता है"
 
+#: src/components/settings/NavigationEditor.tsx:122
 #: src/components/settings/sections.ts:51
 msgid "Navigation"
 msgstr "नेविगेशन"
@@ -5051,9 +5052,9 @@ msgstr "इसे केवल ग्रुप एडमिन वापस ल�
 msgid "Only allowed pairs"
 msgstr "सिर्फ़ अनुमति वाली जोड़ियाँ"
 
-#: src/components/settings/NavigationEditor.tsx:176
-msgid "Only Home is on the bar. The rest stay in the menu behind your avatar."
-msgstr "बार में सिर्फ़ होम है। बाकी आपके अवतार के पीछे वाले मेनू में रहते हैं।"
+#: src/components/settings/NavigationEditor.tsx:174
+msgid "Only Home is on. The rest sit under More, and in the menu behind your avatar on phones."
+msgstr "सिर्फ़ होम चालू है। बाकी \"और\" के अंदर हैं, और फ़ोन पर आपके अवतार के पीछे वाले मेनू में भी।"
 
 #: src/screens/Expense/components/History.tsx:177
 msgid "Only on this device. Sign in to sync it to your other devices."
@@ -5185,7 +5186,7 @@ msgstr "{g} की सेटल-अप योजना खुलती है"
 msgid "Opens what changed"
 msgstr "जो बदला, उसे खोलता है"
 
-#: src/navigation/Drawer.tsx:62
+#: src/navigation/Drawer.tsx:63
 msgid "Opens your profile"
 msgstr "आपकी प्रोफ़ाइल खोलता है"
 
@@ -5549,7 +5550,7 @@ msgstr "प्रिंट डायलॉग खुल गया। PDF के 
 msgid "Privacy"
 msgstr "गोपनीयता"
 
-#: src/navigation/Drawer.tsx:61
+#: src/navigation/Drawer.tsx:62
 #: src/navigation/Navigation.tsx:70
 #: src/screens/Profile.tsx:40
 #: src/screens/Settings/index.tsx:113
@@ -5591,7 +5592,7 @@ msgstr "हाल की खोजें"
 msgid "Recent transactions"
 msgstr "हाल के लेन-देन"
 
-#: src/view/shell/desktop/LeftNav.tsx:475
+#: src/view/shell/desktop/LeftNav.tsx:574
 msgid "Recently active groups"
 msgstr "हाल में सक्रिय ग्रुप"
 
@@ -6252,7 +6253,7 @@ msgstr "समय क्षेत्र खोजें"
 msgid "Searches “{0}” with every match"
 msgstr "“{0}” की सभी खोजें खुलती हैं"
 
-#: src/view/shell/desktop/LeftNav.tsx:608
+#: src/view/shell/desktop/LeftNav.tsx:707
 #: src/view/shell/desktop/RecentTransactions.tsx:173
 msgid "See all"
 msgstr "सभी देखें"
@@ -6261,7 +6262,7 @@ msgstr "सभी देखें"
 msgid "See all activity"
 msgstr "सारी गतिविधि देखें"
 
-#: src/view/shell/desktop/LeftNav.tsx:581
+#: src/view/shell/desktop/LeftNav.tsx:680
 msgid "See all groups"
 msgstr "सभी समूह देखें"
 
@@ -6442,7 +6443,7 @@ msgstr "{person} से हिसाब चुकता करें"
 msgid "Settle up with {person} in {group}"
 msgstr "{group} में {person} से हिसाब चुकता करें"
 
-#: src/view/shell/desktop/LeftNav.tsx:571
+#: src/view/shell/desktop/LeftNav.tsx:670
 msgid "settled"
 msgstr "बराबर"
 
@@ -6510,7 +6511,7 @@ msgstr "शॉपिंग"
 msgid "Show"
 msgstr "दिखाएँ"
 
-#: src/components/settings/NavigationEditor.tsx:268
+#: src/components/settings/NavigationEditor.tsx:266
 msgid "Show {label}"
 msgstr "{label} दिखाएँ"
 
@@ -6635,8 +6636,8 @@ msgstr "टैक्स वाला हिस्सा दिखाता ह�
 msgid "Shows the write-off and lets you undo it"
 msgstr "माफ़ी दिखाता है और उसे वापस लेने देता है"
 
-#: src/navigation/Drawer.tsx:224
-#: src/navigation/Drawer.tsx:231
+#: src/navigation/Drawer.tsx:228
+#: src/navigation/Drawer.tsx:235
 #: src/navigation/Navigation.tsx:73
 #: src/screens/LoggedOut/SplashScreen.tsx:78
 #: src/screens/LoggedOut/SplashScreen.tsx:85
@@ -6815,7 +6816,7 @@ msgid "Splito"
 msgstr "Splito"
 
 #: src/screens/People/index.tsx:166
-#: src/view/shell/desktop/LeftNav.tsx:136
+#: src/view/shell/desktop/LeftNav.tsx:140
 msgid "Splito - Home"
 msgstr "Splito - घर"
 
@@ -8025,7 +8026,7 @@ msgstr "आपको मिलेंगे"
 #. placeholder {0}: formatAmount(amount, c, locale)
 #. placeholder {0}: money(v, currency)
 #: src/screens/Group/components/MemberExitDialog.tsx:138
-#: src/view/shell/desktop/LeftNav.tsx:487
+#: src/view/shell/desktop/LeftNav.tsx:586
 msgid "you are owed {0}"
 msgstr "आपको {0} मिलने हैं"
 
@@ -8158,7 +8159,7 @@ msgstr "आपको देने हैं"
 #. placeholder {0}: formatAmount(magnitude(amount), c, locale)
 #. placeholder {0}: money(v, currency)
 #: src/screens/Group/components/MemberExitDialog.tsx:141
-#: src/view/shell/desktop/LeftNav.tsx:488
+#: src/view/shell/desktop/LeftNav.tsx:587
 msgid "you owe {0}"
 msgstr "आप पर {0} बकाया है"
 

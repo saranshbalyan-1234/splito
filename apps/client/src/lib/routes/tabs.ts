@@ -19,9 +19,10 @@ export function tabHref(tab: TabId) {
 }
 
 /**
- * The phone bottom bar's items, in the user's order (the `tabs` preference,
- * Settings > Navigation). Items not in the bar stay in the drawer, and the
- * sidebar always shows the full list (ARCHITECTURE 26.3).
+ * The items that are on, in the user's order (the `tabs` preference,
+ * Settings > Navigation): the phone bottom bar, and the desktop / rail
+ * sidebar too. Items that are off sit in the drawer and under the sidebar's
+ * "More" (ARCHITECTURE 26.3).
  */
 export function useTabs(): NavItemId[] {
   const [tabs] = usePref('tabs')

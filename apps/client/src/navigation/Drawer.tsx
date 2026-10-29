@@ -11,7 +11,8 @@ import {
 } from '@react-navigation/native'
 import {type NavItemId} from '@splito/sync'
 
-import {navigationItems, NAV_ITEM_ROUTE} from '#/lib/routes/navigationItems'
+import {NAV_ITEM_ROUTE, splitNavigationItems} from '#/lib/routes/navigationItems'
+import {useTabs} from '#/lib/routes/tabs'
 import {getCurrentRoute} from '#/lib/routes/helpers'
 import {type NavigationProp} from '#/lib/routes/types'
 import {useSession} from '#/state/session'
@@ -92,8 +93,9 @@ DrawerProfileCard = memo(DrawerProfileCard)
 /**
  * Bluesky's drawer, opened from the header avatar on phone and rail. Its rows
  * are the one shared list the desktop sidebar renders (ARCHITECTURE 26.3,
- * 26.7): Home, Groups, Analytics, Ask Splito, Activity (with Bluesky's unread
- * count), Settings; then the shared footer links and Sign in.
+ * 26.7), every item in the Settings > Navigation order (on first, then off):
+ * Home, Groups, Analytics, Ask Splito, Activity (with Bluesky's unread
+ * count), Settings by default; then the shared footer links and Sign in.
  */
 function DrawerContentInner(): React.ReactNode {
   const t = useTheme()
@@ -106,6 +108,8 @@ function DrawerContentInner(): React.ReactNode {
     state ? getCurrentRoute(state).name : 'People',
   )
   const unreadCount = useActivityBadge()
+  /* Same order as the sidebar and bottom bar: what is on, then the rest (26.3). */
+  const {on, off} = splitNavigationItems(useTabs())
 
   const onPressItem = (id: NavItemId) => {
     setDrawerOpen(false)
@@ -161,7 +165,7 @@ function DrawerContentInner(): React.ReactNode {
           <Divider style={[a.mt_xl, a.mb_sm]} />
         </View>
 
-        {navigationItems().map(id => (
+        {[...on, ...off].map(id => (
           <MenuItem
             key={id}
             testID={`drawer-${id}`}
