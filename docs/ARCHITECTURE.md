@@ -1420,6 +1420,11 @@ labelled sidebar); **wide** = web 1300 px and up (Bluesky `gtTablet`, right colu
   *Why:* "set your timezone". *Where:* spec § 5, preferences registry.
 - **All platforms (iOS, Android, web/PWA) get the full polish: splash, branding, icons, and every wave is checked on each** (an iOS simulator pass and an Android emulator pass after each wave; Android not yet run for Wave B, scheduled after Wave C, 2026-10-30). *Why:* "for all
   platforms: splash, branding etc". *Where:* § 8, `apps/client/scripts/brand.ts`.
+- **Front end first, then the backend** (owner 164, 2026-10-30, reaffirms 93 and replaces the plan to start the
+  auth/sync backend right after Wave C or in parallel with it): every front-end batch in BACKLOG is finished
+  (Wave C, then the remaining front-end batches) before backend work starts; until then sign-in runs on the
+  labelled dev account (owner 125) and everything stays local. *Why:* "finish the frontend first, and then start
+  backend".
 - **Backend comes after the UI, and it is mandatory, not optional** (owner 93: "we need to implement the backend as well, once we are done with all the features"): when the front-end batches are done, every BACKLOG backend item (E21, E22, the server halves of E23 and of any item marked Backend yes) is built before the product is called done. **Backend comes after the UI.** Front-end batches first; the server is Fastify on Bun with **Postgres**.
   *Why:* "let's build backend later once we are done with UI"; "use Postgres". *Where:* `docs/RESUME.md`, § 9.4.
 - **GameRun's Expo architecture is adopted where it fits** (§§ 21-22 record the calls). *Why:* "can you also
@@ -2136,10 +2141,10 @@ built yet.
     or erase this device's data, unsynced warning) still applies.
   - **Data already on a device from before this rule** is offered once after the first sign-in: "Move this
     device's data into your account" (F-2104), never merged silently.
-  - **Until the auth API exists** (F-2101/F-2102, moved up to start right after Wave C): dev and e2e builds offer
+  - **Until the auth API exists** (F-2101/F-2102, built after the whole front end, owner 164): dev and e2e builds offer
     "Continue with a dev account" on the sign-in screen (a local, clearly labelled account, never in production;
     e2e signs in through `window.__splitoTest`); production builds refuse to ship without the real auth API
-    (release blocker § 26.22).
+    (release blocker § 26.22). The auth API itself comes with the backend, after the whole front end (owner 164).
   *Why:* "also without login, nothing should be visible, auth is required".
 
 - **On/off settings are switches, on every platform** (owner 132): every boolean setting (Demo mode, each
@@ -2580,6 +2585,7 @@ Every owner decision, in the order it was made (all 2026-10-26). "Replaced" name
 | 161 | mock-up: net large green on the right of line 1; "Owed to you ₹49,243.00" and "You owe ₹450.00" small, white/grey, on the left; "4 friends" | Only the net is coloured and right-aligned; breakdown lines stay left in normal colours | § 26.12 | Breakdown amounts coloured on the right (160) |
 | 162 | "add all these to architecture" (the iOS, tap-speed and links review findings) | Lessons recorded in § 23 (sheet presenting, sheet host provider, tab links on native, SQLite sync batching, no dedupe on idempotent nav, deferred-render contract, sideways overflow, renders baseline upkeep) | § 23 | - |
 | 163 | "make sure you do it yourself always, whenever you think this should be in app" | Claude records lessons and rules (§ 23 or the section) on its own in the same turn, plus BACKLOG work, commit and push, without being asked | § 0 rule 10 | Recording lessons only when asked |
+| 164 | "finish the frontend first, and then start backend" | All front-end batches finish before any backend work; dev account and local data until then | § 26.2 | Backend batch 1 to start after Wave C / in parallel (125 plan) |
 
 New decisions follow § 0 rule 9: rewrite the rule in its topic so only the current truth remains, then add a
 row here.
