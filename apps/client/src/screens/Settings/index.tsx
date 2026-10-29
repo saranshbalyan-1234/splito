@@ -40,10 +40,10 @@ import {useSession} from '#/state/session'
  * would not fold), so a production bundle holds neither. `IS_DEV || IS_E2E`
  * in `#/env` says the same at run time.
  */
-const DemoModeRows =
-  __DEV__ || process.env.EXPO_PUBLIC_ENV === 'e2e'
-    ? lazy(() => import('#/screens/Settings/DemoMode').then(m => ({default: m.DemoModeRows})))
-    : null
+// Every build (owner 148), as a lazy chunk.
+const DemoModeRows: ReturnType<typeof lazy> | null = lazy(() =>
+  import('#/screens/Settings/DemoMode').then(m => ({default: m.DemoModeRows})),
+)
 
 /**
  * Bluesky's Settings list, one row per preferences-registry group, then
