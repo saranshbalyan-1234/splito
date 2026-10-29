@@ -2783,7 +2783,7 @@ Get the numbers to people who do not have the app.
 
 Settled friends and groups are hidden by default with a "Show settled" filter switch, and every choice the user makes is a database preference that survives reload. Queued by the owner for later ("store and pick later"); not in Wave B.
 
-- **Effort** M · **Impact** 8 · **Backend** no · **Status** todo · **Deps** F-117
+- **Effort** M · **Impact** 8 · **Backend** no · **Status** partly done (wave B post-shell: criterion 1, plus Sort / Include groups / groups Sort saved on Apply; criteria 2-5 todo) · **Deps** F-117
 - **Prefs** `people.showSettled` (account, default off), `groups.showSettled` (account, default off), plus a preference for every filter and sort field on People, Groups, Analytics, Activity and Search (account scope unless device-specific)
 - **Acceptance**
   1. Home / People and Groups hide fully settled rows by default; the filter sheet has "Show settled" (off); the counts line still shows "N settled"; balances and overview totals are unchanged.
@@ -2860,7 +2860,7 @@ Add `@welldone-software/why-did-you-render` to dev builds and a Playwright rende
 
 Move every toast to the top right (rail/desktop; top full-width on phones) and give each a close X. Done in the Wave B assemble step (small, one component).
 
-- **Effort** S · **Impact** 6 · **Backend** no · **Status** todo · **Deps** -
+- **Effort** S · **Impact** 6 · **Backend** no · **Status** done (wave B post-shell) · **Deps** -
 - **Prefs** -
 - **Acceptance**
   1. Web sonner `position="top-right"` with offset below the header; native toasts slide in from the top below the safe area; phone web top full width.
@@ -2872,7 +2872,7 @@ Move every toast to the top right (rail/desktop; top full-width on phones) and g
 
 Replace the per-row red sync dot with a lighter, AA-safe text style for every record not yet synced; full strength once the server acknowledges.
 
-- **Effort** S · **Impact** 7 · **Backend** no · **Status** todo · **Deps** F-117
+- **Effort** S · **Impact** 7 · **Backend** no · **Status** done (wave B post-shell) · **Deps** F-117
 - **Prefs** -
 - **Acceptance**
   1. One `useSyncTone(row)` (or row prop) maps syncStatus local/pending/syncing to the `text_contrast_medium` tone for titles, amounts, chips and meta on every list row, card, chip and detail page; synced = full strength; failed = full strength + "Needs attention".

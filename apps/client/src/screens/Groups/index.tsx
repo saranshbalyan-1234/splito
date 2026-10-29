@@ -81,7 +81,9 @@ export function GroupsScreen() {
   const [isFoldOpen, setIsFoldOpen] = useState(false)
   const [applied, setApplied] = useState<GroupFilters | null>(null)
   const [showHidden, setShowHidden] = useShowHidden()
-  const filters: GroupFilters = {...(applied ?? DEFAULT_GROUP_FILTERS), showHidden}
+  const [showSettled = false, setShowSettled] = usePref('groups.showSettled')
+  const [sortDefault = 'recent', setSortDefault] = usePref('groups.sort')
+  const filters: GroupFilters = {...(applied ?? DEFAULT_GROUP_FILTERS), sort: applied?.sort ?? sortDefault, showHidden, showSettled}
   /* The filter dot counts what differs from the defaults. */
   const activeCount = (Object.keys(filters) as (keyof GroupFilters)[]).filter(
     k => filters[k] !== DEFAULT_GROUP_FILTERS[k],
@@ -121,7 +123,7 @@ export function GroupsScreen() {
   /* Search reaches inactive and hidden groups too (decision 89); it narrows the list only. */
   const isSearching = query.trim() !== ''
   const searched = isSearching
-    ? order(filterGroups(all, {...filters, status: 'all', showHidden: true}))
+    ? order(filterGroups(all, {...filters, status: 'all', showHidden: true, showSettled: true}))
     : listed
   const shown = searched.filter(g => matchesGroupSearch(g, query))
   /* The Inactive (N) fold at the end of the default view: inactive groups I have not hidden. */
@@ -137,6 +139,7 @@ export function GroupsScreen() {
     ...filters,
     status: 'all',
     showHidden: true,
+    showSettled: true,
   }).filter(g => !g.deleted)
   const overall = groupTotals(overviewRows.map(g => g.balances))
   /* The captions and the count line cover the same groups as the totals above them. */
@@ -234,12 +237,19 @@ export function GroupsScreen() {
                 <EmptyState
                   testID="groups-filtered-empty"
                   icon={null}
-                  message={l`No groups match these filters.`}
+                  message={
+                    filterGroups(all, {...filters, showSettled: true}).length > 0
+                      ? l`Every group is settled up. Turn on Show settled in Filters to list them.`
+                      : l`No groups match these filters.`
+                  }
                   button={{
                     testID: 'groups-clear-filters',
                     label: l`Clear filters`,
                     text: l`Clear filters`,
-                    onPress: () => setApplied(null),
+                    onPress: () => {
+                      setApplied(null)
+                      void setSortDefault(DEFAULT_GROUP_FILTERS.sort)
+                    },
                     size: 'small',
                     color: 'secondary',
                   }}
@@ -359,6 +369,8 @@ export function GroupsScreen() {
         onFiltersApplied={f => {
           setApplied(f)
           if (f.showHidden !== showHidden) void setShowHidden(f.showHidden)
+          if (f.showSettled !== showSettled) void setShowSettled(f.showSettled)
+          if (f.sort !== sortDefault) void setSortDefault(f.sort)
         }}
       />
     </Layout.Screen>

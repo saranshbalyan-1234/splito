@@ -6,6 +6,7 @@ import {atoms as a} from '#/alf'
 import * as Dialog from '#/components/Dialog'
 import * as FormSheet from '#/components/FormSheet'
 import {ShowHiddenToggle} from '#/features/hidden/ShowHidden'
+import {ShowSettledToggle} from '#/components/ShowSettledToggle'
 import {Choices} from '#/screens/People/components/FriendsFilterDialog'
 import {type GroupFilters} from '../filter'
 
@@ -62,6 +63,7 @@ function Form({
         onSave: () => control.close(() => onFiltersApplied(draft)),
       }}>
       <View style={[a.gap_lg]}>
+        <ShowSettledToggle value={draft.showSettled} onChange={showSettled => set({showSettled})} />
         <ShowHiddenToggle value={draft.showHidden} onChange={showHidden => set({showHidden})} />
         <Choices
           testID="filter-type"

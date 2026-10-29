@@ -11,7 +11,8 @@ import {atoms as a, useTheme} from '#/alf'
 import {DeletedMeta, useStruck} from '#/components/DeletedMeta'
 import {EntryIcon} from '#/components/people/EntryIcon'
 import {CommentCount} from '#/components/comments/CommentCount'
-import {SyncDot} from '#/components/SyncStatus'
+import {NeedsAttention} from '#/components/SyncStatus'
+import {SyncToneContext, useSyncTone} from '#/components/SyncTone'
 import {type HistoryEntry, utcDate} from '#/components/people/ledger'
 import * as Skeleton from '#/components/Skeleton'
 import {Text} from '#/components/Typography'
@@ -70,6 +71,7 @@ export function HistoryRow({
   const {t: l} = useLingui()
   const listAnimations = useListAnimations()
   const press = usePressScale()
+  const tone = useSyncTone(entry.entity.syncStatus)
   const data = entry.entity.data
   /* A deleted record stays in its place, drawn struck (owner 98, 103); only live ones say what they did to a balance. */
   const isDeleted = entry.entity.deleted
@@ -142,7 +144,6 @@ export function HistoryRow({
           a.text_md,
           a.font_semi_bold,
           a.leading_snug,
-          t.atoms.text,
           tabular,
           isDeleted && struck,
         ]}>
@@ -157,7 +158,8 @@ export function HistoryRow({
    * both right-aligned, so the title and byline keep the row's width.
    */
   const content = (
-    <Animated.View style={[a.flex_row, a.align_center, a.gap_md, press.style]}>
+    <SyncToneContext.Provider value={tone.isUnsynced}>
+    <Animated.View style={[a.flex_row, a.align_center, a.gap_md, press.style, tone.fade]}>
       <EntryIcon
         category={
           entry.kind === 'expense' ? entry.entity.data.category : undefined
@@ -185,7 +187,7 @@ export function HistoryRow({
             ]}>
             {byline.join(' · ')}
           </Text>
-          <SyncDot row={entry.entity} testID={`sync-${entry.entity.id}`} />
+          <NeedsAttention status={entry.entity.syncStatus} testID={`sync-${entry.entity.id}`} />
           {entry.kind !== 'writeoff' ? (
             <CommentCount targetType={entry.kind} targetId={entry.entity.id} />
           ) : null}
@@ -206,7 +208,9 @@ export function HistoryRow({
         {trailing}
       </View>
     </Animated.View>
+    </SyncToneContext.Provider>
   )
+  const label = tone.isUnsynced ? l`${title}, not synced yet` : title
   const rowStyle = [
     a.px_lg,
     a.py_md,
@@ -224,7 +228,7 @@ export function HistoryRow({
         href={`/expense/${entry.entity.id}`}
         asAnchor
         anchorNoUnderline
-        accessibilityLabel={title}
+        accessibilityLabel={label}
         accessibilityHint=""
         hoverStyle={t.atoms.bg_contrast_25}
         style={rowStyle}>
@@ -238,7 +242,7 @@ export function HistoryRow({
         onPressOut={press.onPressOut}
         onPress={() => onRepaymentPress(entry.entity, entry.kind)}
         accessibilityRole="button"
-        accessibilityLabel={title}
+        accessibilityLabel={label}
         accessibilityHint={
           isDeleted
             ? l`Shows the deleted record and lets you restore it`

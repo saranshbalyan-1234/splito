@@ -3,7 +3,7 @@ import {type PersonSummary} from '@splito/domain'
 
 import {type Entity, type Person} from '@splito/sync'
 
-import {filterFriends, type FriendRow, listedFriends, seenByPerson, sortFriends} from './sort'
+import {filterFriends, type FriendRow, hideSettled, listedFriends, seenByPerson, sortFriends} from './sort'
 
 const summary = (
   person: string,
@@ -170,4 +170,20 @@ test('a removed friend stays listed, marked Removed, while any currency is open,
   const listed = listedFriends(people, byPerson)
   expect(listed.map(r => [r.id, !!r.isRemoved])).toEqual([['a', false], ['r1', true]])
   expect(listed[1]!.summary?.byCurrency.INR?.total).toBe(700n)
+})
+
+test('Show settled off hides friends settled up; a new friend, a deleted one and the Settled filter stay', () => {
+  const list = [
+    {id: 'open', name: 'Open', summary: summary('open', {INR: 500n})},
+    {id: 'even', name: 'Even', summary: summary('even', {INR: 0n})},
+    {id: 'paid', name: 'Paid back'},
+    {id: 'new', name: 'New'},
+    {id: 'gone', name: 'Gone', summary: summary('gone', {INR: 0n}), deletedAt: 1},
+  ]
+  // Fully squared friends have no open currency at all; `seen` says they had records.
+  const seen = new Map([['paid', new Set(['INR'])]])
+  const ids = (r: typeof list) => r.map(x => x.id)
+  expect(ids(hideSettled(list, {showSettled: false, show: 'all'}, seen))).toEqual(['open', 'new', 'gone'])
+  expect(ids(hideSettled(list, {showSettled: true, show: 'all'}, seen))).toHaveLength(5)
+  expect(ids(hideSettled(list, {showSettled: false, show: 'settled'}, seen))).toHaveLength(5)
 })

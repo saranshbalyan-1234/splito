@@ -7,6 +7,7 @@ import {
   type PersonSummary,
   ZERO,
 } from '@splito/domain'
+import {type RowSyncStatus} from '@splito/sync'
 
 import {HideRow} from '#/features/hidden/HideItem'
 import {useRowPadding} from '#/state/preferences/density'
@@ -16,6 +17,8 @@ import {atoms as a, useTheme} from '#/alf'
 import {DeletedMeta, useStruck} from '#/components/DeletedMeta'
 import {BalanceText, SettledPill} from '#/components/BalanceText'
 import * as Pills from '#/components/Pills'
+import {NeedsAttention} from '#/components/SyncStatus'
+import {SyncToneContext, useSyncTone} from '#/components/SyncTone'
 import * as ProfileCard from '#/components/ProfileCard'
 import {Text} from '#/components/Typography'
 import {useListAnimations} from '#/motion/listAnimations'
@@ -31,6 +34,8 @@ export type PersonRowData = {
   isHidden?: boolean
   /** A removed friend who still has an open balance (shown until it is settled). */
   isRemoved?: boolean
+  /** The friend record's sync state, so the row draws lighter until the server has it (decision 111). */
+  syncStatus?: RowSyncStatus
 }
 
 const AVATAR_SIZE = 42
@@ -75,6 +80,7 @@ export function PersonRow({
   const listAnimations = useListAnimations()
   const press = usePressScale()
   const struck = useStruck()
+  const tone = useSyncTone(row.syncStatus)
   const isDeleted = row.deletedAt !== undefined
   const byCurrency = row.summary?.byCurrency ?? {}
   const currencies = Object.keys(byCurrency)
@@ -160,7 +166,7 @@ export function PersonRow({
         href={`/people/${row.id}`}
         asAnchor
         anchorNoUnderline
-        accessibilityLabel={row.name}
+        accessibilityLabel={tone.isUnsynced ? l`${row.name}, not synced yet` : row.name}
         accessibilityHint=""
         hoverStyle={t.atoms.bg_contrast_25}
         style={[
@@ -170,6 +176,7 @@ export function PersonRow({
           t.atoms.border_contrast_low,
           a.transition_color,
         ]}>
+        <SyncToneContext.Provider value={tone.isUnsynced}>
         <Animated.View
           style={[
             a.flex_row,
@@ -177,6 +184,7 @@ export function PersonRow({
             a.align_start,
             a.gap_md,
             press.style,
+            tone.fade,
           ]}>
           <UserAvatar size={AVATAR_SIZE} name={row.name} type="user" />
           {/* Two lines at most: the name, then the group chips (or a state); the nets are the right column. */}
@@ -205,6 +213,7 @@ export function PersonRow({
                     <Trans>Hidden</Trans>
                   </Pills.Tag>
                 ) : null}
+                <NeedsAttention status={row.syncStatus} testID={`person-${row.id}-sync`} />
               </View>
             ) : chips.length > 0 ? (
               /* Never wraps: a long group name shortens instead. */
@@ -240,6 +249,7 @@ export function PersonRow({
           </View>
           {balances}
         </Animated.View>
+        </SyncToneContext.Provider>
       </Link>
   )
 

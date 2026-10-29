@@ -2,9 +2,12 @@
 import {isValidElement} from 'react'
 import {View} from 'react-native'
 import {nanoid} from 'nanoid/non-secure'
+import {FadeIn, FadeOut} from 'react-native-reanimated'
 import {toast as sonner, Toaster} from 'sonner-native'
 
+import {useShouldReduceMotion} from '#/motion/useShouldReduceMotion'
 import {atoms as a} from '#/alf'
+import {HEADER_HEIGHT} from '#/components/Layout/const'
 import {space} from '#/alf/tokens'
 import {DURATION, TOAST_MAX_WIDTH} from '#/components/Toast/const'
 import {
@@ -24,7 +27,26 @@ export {type ToastType} from '#/components/Toast/types'
  * component tree.
  */
 export function ToastOutlet() {
-  return <Toaster pauseWhenPageIsHidden gap={a.gap_sm.gap} />
+  const isReduced = useShouldReduceMotion()
+  /*
+   * Owner 110: top of the screen below the safe area (sonner-native's top-center),
+   * three at most, swiped up to dismiss; the X is in every toast (Toast.tsx).
+   * Reduced motion swaps the slide for an instant appearance.
+   */
+  return (
+    <Toaster
+      pauseWhenPageIsHidden
+      position="top-center"
+      visibleToasts={3}
+      swipeToDismissDirection="up"
+      gap={a.gap_sm.gap}
+      /* Below the header line, so a toast never covers the header's actions (F-243). */
+      offset={HEADER_HEIGHT.native + a.gap_sm.gap}
+      animation={
+        isReduced ? {enter: FadeIn.duration(1), exit: FadeOut.duration(1)} : undefined
+      }
+    />
+  )
 }
 
 export function Outer({children}: {children: React.ReactNode}) {

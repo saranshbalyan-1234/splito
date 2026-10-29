@@ -34,14 +34,10 @@ export function rowStatusKind(status: RowSyncStatus, hasSession: boolean): RowSt
   }
 }
 
-/** The dot's colour role, the avatar dot's: green synced, yellow on its way, red only here or refused. */
-export type RowStatusTone = 'positive' | 'warning' | 'negative'
-
-export const ROW_STATUS_TONE: Record<RowStatusKind, RowStatusTone> = {
-  local: 'negative',
-  device: 'negative',
-  waiting: 'warning',
-  syncing: 'warning',
-  synced: 'positive',
-  attention: 'negative',
+/**
+ * Not yet acknowledged by the server and not refused: drawn lighter (decision 111).
+ * `failed` keeps full strength and says "Needs attention" instead.
+ */
+export function isUnsynced(status: RowSyncStatus): boolean {
+  return status === 'local' || status === 'pending' || status === 'syncing'
 }

@@ -69,6 +69,8 @@ test('shareRows keeps unchanged rows and the array itself when nothing changed',
   expect(next[0]).toBe(prev[0]!)
   expect(next[1]).not.toBe(prev[1]!)
   expect(shareRows(prev, [row('a')])).toEqual([prev[0]!])
+  // An acknowledgement changes only the sync status; the row still has to be replaced so it redraws at full strength.
+  expect(shareRows(prev, [{...row('a'), syncStatus: 'synced'}, row('b')])).not.toBe(prev)
   expect(shareRows(undefined, prev)).toBe(prev)
 })
 

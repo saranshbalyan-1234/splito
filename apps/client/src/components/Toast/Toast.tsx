@@ -1,6 +1,7 @@
 // Adapted from bluesky-social/social-app@4e4ad9c (MIT) — src/components/Toast/Toast.tsx
 import {createContext, useContext, useMemo} from 'react'
-import {type GestureResponderEvent, View} from 'react-native'
+import {type GestureResponderEvent, Pressable, View} from 'react-native'
+import {useLingui} from '@lingui/react/macro'
 
 import {atoms as a, select, useAlf, useTheme} from '#/alf'
 import {
@@ -14,6 +15,7 @@ import {
   CircleInfo_Stroke2_Corner0_Rounded as ErrorIcon,
 } from '#/components/icons/CircleInfo'
 import {type Props as SVGIconProps} from '#/components/icons/common'
+import {TimesLarge_Stroke2_Corner0_Rounded as XIcon} from '#/components/icons/Times'
 import {Warning_Stroke2_Corner0_Rounded as WarningIcon} from '#/components/icons/Warning'
 import {dismiss} from '#/components/Toast/sonner'
 import {type ToastType} from '#/components/Toast/types'
@@ -60,6 +62,7 @@ export function Outer({children}: {children: React.ReactNode}) {
 
   return (
     <View
+      testID="toast"
       style={[
         a.flex_1,
         a.p_lg,
@@ -75,7 +78,50 @@ export function Outer({children}: {children: React.ReactNode}) {
         },
       ]}>
       {children}
+      <Close />
     </View>
+  )
+}
+
+/**
+ * The round X every toast carries (ARCHITECTURE 26.8, owner 110), beside any
+ * action. A 44 px hit area around a 28 px circle: the negative margin keeps
+ * the toast as short as it was.
+ */
+function Close() {
+  const t = useTheme()
+  const {t: l} = useLingui()
+  const {id, type} = useContext(ToastConfigContext)
+  const {iconColor} = useToastStyles({type})
+  return (
+    <Pressable
+      testID="toast-close"
+      accessibilityRole="button"
+      accessibilityLabel={l`Dismiss`}
+      onPress={() => dismiss(id)}
+      style={({pressed, hovered}: {pressed: boolean; hovered?: boolean}) => [
+        a.align_center,
+        a.justify_center,
+        a.flex_shrink_0,
+        {
+          width: 44,
+          height: 44,
+          margin: -8,
+          marginLeft: -4,
+          opacity: pressed || hovered ? 0.6 : 1,
+        },
+      ]}>
+      <View
+        style={[
+          a.align_center,
+          a.justify_center,
+          a.rounded_full,
+          t.atoms.bg_contrast_50,
+          {width: 28, height: 28},
+        ]}>
+        <XIcon size="xs" fill={iconColor} />
+      </View>
+    </Pressable>
   )
 }
 

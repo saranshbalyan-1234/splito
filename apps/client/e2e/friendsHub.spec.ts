@@ -86,7 +86,9 @@ test('removing a settled friend keeps history, hides them from lists and pickers
   await expect(page.getByText('Neel Joshi removed')).toBeVisible()
   await expect(row).toHaveCount(0)
   await expect(page.getByTestId('hub-removed-Neel Joshi')).toBeVisible()
-  // Gone from Home's list.
+  // Gone from Home's list (settled friends are hidden by default, so show them: the removal is what hides him).
+  // Settled groups and friends are hidden by default (F-1413); this spec reads them, so show them.
+  await page.evaluate(() => (window as unknown as {splito: {setPref(k: string, v: unknown): Promise<void>}}).splito.setPref('people.showSettled', true))
   await page.goto('/')
   await expect(page.getByTestId('person-Neel Joshi')).toHaveCount(0)
   // The expense is still there.

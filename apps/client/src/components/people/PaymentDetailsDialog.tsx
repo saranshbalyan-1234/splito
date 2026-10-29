@@ -29,6 +29,7 @@ import {Trash_Stroke2_Corner0_Rounded as TrashIcon} from '#/components/icons/Tra
 import {EyeIcon, EyeOffIcon} from '#/components/settings/icons'
 import {useErrorText} from '#/components/split/shared'
 import {SyncStatusLine} from '#/components/SyncStatus'
+import {SyncToned} from '#/components/SyncTone'
 import {useFormatDay} from '#/locale/useDates'
 import * as Toast from '#/components/Toast'
 import {Text} from '#/components/Typography'
@@ -177,6 +178,7 @@ function Details({
 
   return (
     <View style={[a.gap_lg]}>
+      <SyncToned status={repayment.syncStatus} style={[a.gap_lg]}>
       <View style={[a.gap_xs]}>
         <Text emoji style={[a.text_xl, a.font_semi_bold, a.leading_tight, isDeleted && struck]}>
           {title}
@@ -200,6 +202,7 @@ function Details({
         <DetailRow label={l`Where`} value={groupName ?? l`Direct, no group`} />
         {note ? <DetailRow label={l`Note`} value={note} /> : null}
       </View>
+      </SyncToned>
       <SyncStatusLine row={repayment} testID="payment-sync-status" />
       <Text style={[a.text_sm, a.leading_snug, t.atoms.text_contrast_medium]}>
         {isDeleted ? (

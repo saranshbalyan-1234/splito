@@ -49,10 +49,9 @@ export function PrefsMirror() {
   const [density] = usePref('density')
   const [homeTab] = usePref('homeTab')
   const [moneyPalette] = usePref('moneyPalette')
-  const [showSyncStatus] = usePref('showSyncStatus')
 
   useEffect(() => {
-    // All eight come from the same rows, so they arrive together.
+    // All seven come from the same rows, so they arrive together.
     if (
       theme === undefined ||
       darkTheme === undefined ||
@@ -61,8 +60,7 @@ export function PrefsMirror() {
       haptics === undefined ||
       density === undefined ||
       homeTab === undefined ||
-      moneyPalette === undefined ||
-      showSyncStatus === undefined
+      moneyPalette === undefined
     )
       return
     put('colorMode', theme)
@@ -71,11 +69,10 @@ export function PrefsMirror() {
     put('hapticsEnabled', haptics)
     put('density', density)
     put('moneyPalette', moneyPalette)
-    put('showSyncStatus', showSyncStatus)
     put('homeTab', homeTab)
     const scale = fontScaleFor(textScale)
     if (scale !== getFontScale()) setFontScale(scale)
-  }, [theme, darkTheme, accent, textScale, haptics, density, homeTab, moneyPalette, showSyncStatus, setFontScale])
+  }, [theme, darkTheme, accent, textScale, haptics, density, homeTab, moneyPalette, setFontScale])
 
   /*
    * The Animations preference (or the OS setting) also reaches every

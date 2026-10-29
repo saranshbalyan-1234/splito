@@ -2,10 +2,15 @@
 import {useEffect, useRef, useState} from 'react'
 import {View} from 'react-native'
 import Animated from 'react-native-reanimated'
+import {useLingui} from '@lingui/react/macro'
+import {type RowSync} from '@splito/sync'
+
 import {UserAvatar} from '#/view/com/util/UserAvatar'
 import {atoms as a, useBreakpoints, useTheme} from '#/alf'
 import {Button, ButtonIcon, ButtonText} from '#/components/Button'
 import {type Props as SVGIconProps} from '#/components/icons/common'
+import {NeedsAttention} from '#/components/SyncStatus'
+import {SyncToneContext, useSyncTone} from '#/components/SyncTone'
 import {Text} from '#/components/Typography'
 import {useListAnimations} from '#/motion/listAnimations'
 
@@ -20,22 +25,31 @@ export function RequestRow({
   testID,
   name,
   detail,
+  sync,
   children,
 }: {
   testID: string
   name: string
   detail: React.ReactNode
+  /** The record's own sync state: unsynced draws the text lighter, a refusal says Needs attention (decision 111). */
+  sync?: Pick<RowSync, 'syncStatus'>
   children: React.ReactNode
 }) {
   const t = useTheme()
+  const {t: l} = useLingui()
   const listAnimations = useListAnimations()
+  const tone = useSyncTone(sync?.syncStatus)
   return (
     <Animated.View
       {...listAnimations}
       testID={testID}
-      style={[a.flex_row, a.align_center, a.gap_md, a.px_lg, a.py_sm]}>
+      style={[a.flex_row, a.align_center, a.gap_md, a.px_lg, a.py_sm, tone.fade]}>
       <UserAvatar size={40} name={name} type="user" />
-      <View style={[a.flex_1, a.gap_2xs, {minWidth: 0}]}>
+      <SyncToneContext.Provider value={tone.isUnsynced}>
+      <View
+        style={[a.flex_1, a.gap_2xs, {minWidth: 0}]}
+        accessible={tone.isUnsynced ? true : undefined}
+        accessibilityLabel={tone.isUnsynced ? l`${name}, not synced yet` : undefined}>
         <View style={[a.flex_row, a.align_center, a.gap_sm]}>
           <Text
             emoji
@@ -43,6 +57,7 @@ export function RequestRow({
             style={[a.flex_shrink, a.text_md, a.font_semi_bold, {minWidth: 0}]}>
             {name}
           </Text>
+          <NeedsAttention status={sync?.syncStatus} testID={`${testID}-sync`} />
         </View>
         <Text
           numberOfLines={1}
@@ -50,6 +65,7 @@ export function RequestRow({
           {detail}
         </Text>
       </View>
+      </SyncToneContext.Provider>
       <View
         testID={`${testID}-actions`}
         style={[a.flex_row, a.align_center, a.gap_xs, a.flex_shrink_0]}>

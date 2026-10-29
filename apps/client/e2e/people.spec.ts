@@ -189,7 +189,9 @@ test('paying the whole balance from a friend’s page settles the group part too
   await expect(page.getByTestId('payment-recorded')).toBeVisible()
   await expect(page.getByTestId('person-settled')).toBeVisible()
 
-  // The group agrees: nothing left to settle there.
+  // The group agrees: nothing left to settle there (a settled group is hidden by default, so show it).
+  // Settled groups and friends are hidden by default (F-1413); this spec reads them, so show them.
+  await page.evaluate(() => (window as unknown as {splito: {setPref(k: string, v: unknown): Promise<void>}}).splito.setPref('groups.showSettled', true))
   await page.goto('/groups')
   await page.getByTestId('screen-groups').getByText('Pune trip').click()
   await expect(page.getByTestId('group-settle')).toBeDisabled()

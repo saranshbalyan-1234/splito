@@ -130,8 +130,9 @@ export function projectionFor<T>(store: Store, query: Query<T>): Projection<T> {
 /* Queries                                                                    */
 /* -------------------------------------------------------------------------- */
 
+/* The sync status counts: an acknowledgement changes only that, and the row must redraw at full strength (decision 111). */
 const isSameRow = (a: Entity, b: Entity) =>
-  a.id === b.id && a.version === b.version && a.deleted === b.deleted && a.updatedAt === b.updatedAt
+  a.id === b.id && a.version === b.version && a.deleted === b.deleted && a.updatedAt === b.updatedAt && a.syncStatus === b.syncStatus
 
 /**
  * `next` with every unchanged row replaced by its previous object, and the
