@@ -224,8 +224,12 @@ footer bottom right on rail and desktop). On phones every modal, prompts include
   menus and overflow menus mount their dialog body only while open. [Partial] Bluesky's Dialog unmounts
   content; the body/shell split is A-022.
 - **Run post-close work inside `control.close(() => ...)`** (Bluesky footgun). [Built] in `AGENTS.md`.
-- **One native modal at a time.** A FormSheet that opens a picker (currency, date, category, people) never
-  presents a second native modal over the sheet on iOS: either push the picker inside the sheet, or hand
+- **One native modal at a time, except one dialog over a route sheet** (assistant's ruling 2026-10-30, after
+  the iOS QA of Wave B; Bluesky's composer does the same): a route-level sheet (Add / Edit expense, presented as
+  a native form sheet) may have ONE dialog sheet (a picker, Discard changes?, a global sheet) presented over it,
+  from the top-most presented controller (`modules/bottom-sheet/ios/SheetView.swift`). Never two dialogs stacked.
+  A FormSheet dialog that opens a picker (currency, date, category, people) never presents a second native modal
+  over itself on iOS: either push the picker inside the sheet, or hand
   over (`control.close(() => picker.open())`, keep form state, restore scroll). Check each on the iOS
   simulator (A-023).
 - **Never reset a dialog by changing its key** (iOS can drop the re-present). Multi-step sheets (Add expense
