@@ -133,7 +133,9 @@ export function PersonRow({
   const balances = isDeleted ? null : isSettled ? (
     <SettledPill testID="person-row-settled" />
   ) : (
-    <View style={[a.align_end, a.gap_2xs, a.flex_shrink_0]}>
+    <View
+      testID="person-row-nets"
+      style={[a.align_end, a.gap_2xs, a.flex_shrink_0]}>
       {shownCurrencies.flatMap(currency =>
         lines(currency).map(line => (
           <BalanceText
@@ -180,8 +182,8 @@ export function PersonRow({
         <Animated.View
           style={[
             a.flex_row,
-            /* Top-aligned: the first net reads on the name's line. */
-            a.align_start,
+            /* Avatar, name block and the amounts column are all vertically centred, however many lines each has (owner 130). */
+            a.align_center,
             a.gap_md,
             press.style,
             tone.fade,
