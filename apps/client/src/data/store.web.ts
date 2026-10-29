@@ -6,3 +6,12 @@ export async function openStore(notices?: StorageNotices, name = 'splito'): Prom
   void navigator.storage?.persist?.()
   return openIdbStore(name, undefined, notices)
 }
+
+/** Deletes a database for good (the demo one, when demo mode goes off). Its connection must be closed first; a blocked delete finishes when the last connection closes. */
+export function deleteStore(name: string): Promise<void> {
+  return new Promise((resolve, reject) => {
+    const req = indexedDB.deleteDatabase(name)
+    req.onsuccess = () => resolve()
+    req.onerror = () => reject(req.error)
+  })
+}

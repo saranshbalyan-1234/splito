@@ -93,17 +93,67 @@ test('Groups hides settled groups by default; Show settled is remembered', async
   await expect(page.getByTestId('group-Done Trip')).toBeVisible()
 })
 
-test('the Show = Settled filter still lists settled friends with Show settled off', async ({page}) => {
-  await seed(page)
+test('a group where I am even but two others owe each other stays listed and is not counted settled (F-1413)', async ({page}) => {
   await page.goto('/')
-  const home = page.getByTestId('screen-people')
-  await expect(home.getByTestId('person-Open Olive')).toBeVisible()
-  await expect(home.getByTestId('person-Even Evan')).toHaveCount(0)
-  await home.getByTestId('list-filters').click()
-  await page.getByTestId('filter-show-settled').click()
-  await page.getByTestId('sheet-save').click()
-  await expect(home.getByTestId('person-Even Evan')).toBeVisible()
-  await expect(home.getByTestId('person-Open Olive')).toHaveCount(0)
+  await page.waitForFunction(() => 'splito' in window)
+  await page.evaluate(async () => {
+    const s = (window as unknown as {splito: Splito}).splito
+    const ana = await s.createPerson('Ana Trio')
+    const ben = await s.createPerson('Ben Trio')
+    const trio = await s.createGroup({name: 'Trio', kind: 'trip', currency: 'INR', memberIds: [ana, ben], startDate: null, endDate: null})
+    // Ana paid 100 for her and Ben only: I owe nothing and am owed nothing, but Ben owes Ana.
+    await s.createExpense({
+      title: 'Cab for two',
+      groupId: trio,
+      currency: 'INR',
+      tz: 'Asia/Kolkata',
+      category: 'food',
+      notes: '',
+      total: '10000',
+      payers: {[ana]: '10000'},
+      split: {mode: 'equal', participants: [ana, ben]},
+      date: '2026-10-20',
+    })
+    // A group that really is square: I paid, Ana paid her half back.
+    const sq = await s.createGroup({name: 'Square', kind: 'trip', currency: 'INR', memberIds: [ana], startDate: null, endDate: null})
+    await s.createExpense({
+      title: 'Lunch',
+      groupId: sq,
+      currency: 'INR',
+      tz: 'Asia/Kolkata',
+      category: 'food',
+      notes: '',
+      total: '20000',
+      payers: {[s.me]: '20000'},
+      split: {mode: 'equal', participants: [s.me, ana]},
+      date: '2026-10-20',
+    })
+    await s.createRepayment({groupId: sq, currency: 'INR', from: ana, to: s.me, amount: '10000', date: '2026-10-21', tz: 'Asia/Kolkata', note: ''})
+  })
+  await page.goto('/groups')
+  const groups = page.getByTestId('screen-groups')
+  await expect(groups.getByTestId('group-Trio')).toBeVisible()
+  await expect(groups.getByTestId('group-Square')).toHaveCount(0)
+  // One settled: the square one, never the group whose members still owe each other.
+  await expect(groups.getByTestId('groups-balances-counts')).toContainText(/2 groups · 1 settled/)
+})
+
+test('when everything left is settled up the list says so with one Show settled button, and no Clear filters', async ({page}) => {
+  await page.goto('/')
+  await page.waitForFunction(() => 'splito' in window)
+  await page.evaluate(async () => {
+    const s = (window as unknown as {splito: Splito}).splito
+    const ana = await s.createPerson('Ana Even')
+    const g = await s.createGroup({name: 'Even Trip', kind: 'trip', currency: 'INR', memberIds: [ana], startDate: null, endDate: null})
+    await s.createExpense({title: 'Lunch', groupId: g, currency: 'INR', tz: 'Asia/Kolkata', category: 'food', notes: '', total: '20000', payers: {[s.me]: '20000'}, split: {mode: 'equal', participants: [s.me, ana]}, date: '2026-10-20'})
+    await s.createRepayment({groupId: g, currency: 'INR', from: ana, to: s.me, amount: '10000', date: '2026-10-21', tz: 'Asia/Kolkata', note: ''})
+  })
+  await page.goto('/groups')
+  const groups = page.getByTestId('screen-groups')
+  await expect(groups.getByTestId('groups-all-settled')).toContainText('All settled up')
+  await expect(groups.getByTestId('groups-clear-filters')).toHaveCount(0)
+  await groups.getByTestId('groups-show-settled').click()
+  await expect(groups.getByTestId('group-Even Trip')).toBeVisible()
 })
 
 test('Apply saves Sort and Include groups as preferences: both are still applied after a reload', async ({page}) => {

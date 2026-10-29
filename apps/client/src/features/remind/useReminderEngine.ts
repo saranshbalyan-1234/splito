@@ -10,6 +10,7 @@ import {resyncNotifications, syncNotifications} from '#/lib/notifications/sync'
 import {type NotificationTarget} from '#/lib/notifications/types'
 import {useNotificationPermission} from '#/lib/notifications/usePermission'
 import {useEntities, usePref} from '#/data/hooks'
+import {useDemoMode} from '#/state/demo'
 import {useSelfReminders} from '#/data/remind'
 import {navigationRef} from '#/navigation/ref'
 import * as Toast from '#/components/Toast'
@@ -40,6 +41,10 @@ export function useReminderEngine() {
   const people = useEntities<Person>('person')
   const groups = useEntities<Group>('group')
   const [isOn = true] = usePref('notify.reminders')
+  /* Demo reminders are never scheduled as OS notifications and never checked: the real ones stay as they are (owner 136). */
+  const {demo} = useDemoMode()
+  const demoRef = useRef(demo)
+  demoRef.current = demo
   const {state: permission} = useNotificationPermission()
 
   const ready = !!reminders && !!people && !!groups
@@ -69,16 +74,16 @@ export function useReminderEngine() {
 
   // Native: the OS holds the notifications.
   useEffect(() => {
-    if (!ready || permission === undefined || !canFireWhenClosed) return
+    if (!ready || permission === undefined || !canFireWhenClosed || demo) return
     void syncNotifications(isOn && permission === 'granted' ? liveRef.current : [])
     // armKey covers the reminders, the switch, the permission and the language.
-  }, [armKey, ready, isOn, permission])
+  }, [armKey, ready, isOn, permission, demo])
 
   useEffect(() => {
     if (!canFireWhenClosed) return
-    const sub = AppState.addEventListener('change', s => s === 'active' && void resyncNotifications())
+    const sub = AppState.addEventListener('change', s => s === 'active' && !demoRef.current && void resyncNotifications())
     const offTaps = listenForTaps(openTarget)
-    const offArrivals = listenForArrivals(() => void resyncNotifications())
+    const offArrivals = listenForArrivals(() => !demoRef.current && void resyncNotifications())
     return () => {
       sub.remove()
       offTaps()
@@ -88,7 +93,7 @@ export function useReminderEngine() {
 
   // Web: fire while open, and catch up on what came due while closed.
   useEffect(() => {
-    if (canFireWhenClosed || !ready || !isOn) return
+    if (canFireWhenClosed || !ready || !isOn || demo) return
     const nameOf = (r: LiveReminder) => r.body
     const check = (isCatchUp: boolean) => {
       const now = Date.now()
@@ -123,5 +128,5 @@ export function useReminderEngine() {
     hasCaughtUp.current = true
     const timer = setInterval(() => check(false), TICK_MS)
     return () => clearInterval(timer)
-  }, [armKey, ready, isOn, permission, l])
+  }, [armKey, ready, isOn, permission, l, demo])
 }

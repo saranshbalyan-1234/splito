@@ -297,21 +297,6 @@ export async function seedDemo(store: Store, ctx: MutationCtx, onProgress?: (don
 
 const ALL_TYPES: EntityType[] = ['person', 'group', 'expense', 'repayment', 'writeoff', 'preference', 'friendRequest', 'inviteLink', 'comment', 'feedback', 'reminder']
 
-/** Erases everything in a demo store (rows, their history and outbox ops), in bounded pages. */
-export async function wipeDemo(store: Store): Promise<void> {
-  for (const type of ALL_TYPES) {
-    let after: Key | null = null
-    do {
-      // full-read-ok: the demo database is disposable and this erases it, a page at a time.
-      const page: Page<Entity> = await store.page(type, {after, limit: 500})
-      if (page.items.length) await store.erase(page.items.map(e => ({type: e.type, id: e.id})))
-      after = page.next
-    } while (after)
-  }
-  await store.rebuildProjections()
-}
-
-
 /**
  * A start with `demo.mode` on: opens the demo database through `open`. When that
  * fails the app must not be locked in a mode it cannot open: the failure is passed
@@ -328,6 +313,28 @@ export async function resumeDemo<T>(real: {store: Store; ctx: MutationCtx}, open
   }
 }
 
+/** Whether `value` names a `demo-large-` id anywhere inside it (a field, a map key or a list). */
+function mentionsDemo(value: unknown): boolean {
+  if (typeof value === 'string') return value.startsWith(DEMO_LARGE_PREFIX)
+  if (Array.isArray(value)) return value.some(mentionsDemo)
+  if (value && typeof value === 'object') return Object.entries(value).some(([k, v]) => k.startsWith(DEMO_LARGE_PREFIX) || mentionsDemo(v))
+  return false
+}
+
+/** One real expense, payment or write-off outside the demo id range that refers to a demo person or group. */
+async function realRowPointsAtDemo(real: Store): Promise<boolean> {
+  for (const type of ['expense', 'repayment', 'writeoff'] as const) {
+    let after: Key | null = null
+    do {
+      // full-read-ok: a one-time check (once per device, flagged) that the purge leaves no real record dangling.
+      const page: Page<Entity> = await real.page(type, {after, limit: 500})
+      if (page.items.some(e => !e.id.startsWith(DEMO_LARGE_PREFIX) && mentionsDemo(e.data))) return true
+      after = page.next
+    } while (after)
+  }
+  return false
+}
+
 /**
  * Demo rows that older builds (the large-set URL switch, "Add demo data") wrote into the REAL
  * database can no longer be removed from the app. Once per device (`flag`), erases
@@ -337,6 +344,11 @@ export async function resumeDemo<T>(real: {store: Store; ctx: MutationCtx}, open
  */
 export async function purgeLegacyDemo(real: Store, flag: {isDone(): boolean; markDone(): void}): Promise<number> {
   if (flag.isDone()) return 0
+  // Real records that point at the old demo people or groups would be left dangling: skip the purge then (still once per device).
+  if (await realRowPointsAtDemo(real)) {
+    flag.markDone()
+    return 0
+  }
   let erased = 0
   for (const type of ALL_TYPES) {
     for (;;) {

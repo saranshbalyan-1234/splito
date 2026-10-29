@@ -4,6 +4,7 @@ import {
   DEFAULT_GROUP_FILTERS,
   filterGroups,
   type GroupRowData,
+  isGroupSettledUp,
   matchesGroupSearch,
   sortGroups,
 } from './filter'
@@ -46,6 +47,14 @@ test('Show settled is off by default: a group settled up leaves the list, a new 
   // A group with no balances yet is new, not settled up.
   expect(ids(filterGroups([row('new', 'New', 'trip', {})], DEFAULT_GROUP_FILTERS))).toEqual(['new'])
   expect(ids(filterGroups(rows, {...DEFAULT_GROUP_FILTERS, show: 'settled'}))).toEqual(['date', 'gone'])
+})
+
+test('a group where I am even but two others still owe each other is not settled: it stays listed (F-1413)', () => {
+  const open = {...row('trio', 'Trio', 'trip', {}), currencies: ['INR'], isOpen: true}
+  const square = {...row('square', 'Square', 'trip', {}), currencies: ['INR'], isOpen: false}
+  expect(ids(filterGroups([open, square], DEFAULT_GROUP_FILTERS))).toEqual(['trio'])
+  expect(isGroupSettledUp(open)).toBe(false)
+  expect(isGroupSettledUp(square)).toBe(true)
 })
 
 test('status, type and show filter on their own fields', () => {

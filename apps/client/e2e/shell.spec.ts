@@ -1,6 +1,13 @@
 import {expect, type Page, test} from '@playwright/test'
 
+import {DEMO_LARGE_PREFIX, generateLargeDemo, localToday} from '@splito/sync/demoLarge'
+
 import {openDemo as enterDemo} from './openDemo'
+
+/* Changes by other people in the demo history, from the same deterministic plan the app seeded. */
+const DEMO_ME = `${DEMO_LARGE_PREFIX}me`
+const PAGE = 30
+const othersChanges = generateLargeDemo({me: DEMO_ME, today: localToday(), now: Date.now()}).ops.filter(o => o.actor !== DEMO_ME).length
 
 const DESKTOP = {width: 1440, height: 900}
 const LAPTOP = {width: 1280, height: 800}
@@ -409,7 +416,9 @@ test.describe("activity: a tab with Bluesky's unread badge", () => {
       'aria-selected',
       'true',
     )
-    await expect.poll(() => rows.count()).toBeGreaterThan(0)
+    // The badge counted exactly these: over 30 of them (so it reads 30+), and the first page of "From others" is full.
+    expect(othersChanges).toBeGreaterThanOrEqual(PAGE)
+    await expect.poll(() => rows.count()).toBe(Math.min(PAGE, othersChanges))
     await expect(rows.filter({hasText: 'You added'})).toHaveCount(0)
 
     // Mark all read clears the badge, and it stays cleared after a reload.

@@ -15,8 +15,8 @@ import {randomUUID} from 'expo-crypto'
 import {type DirectoryClient, demoDirectory, ensureMe, type MutationCtx, type StorageNotices, type Store} from '@splito/sync'
 
 import {logger} from '#/logger'
-import {DEMO_DIRECTORY, DEMO_ME, purgeLegacyDemo, resumeDemo as resume, seedDemo, wipeDemo} from '#/data/demoSeed'
-import {openStore} from '#/data/store'
+import {DEMO_DIRECTORY, DEMO_ME, purgeLegacyDemo, resumeDemo as resume, seedDemo} from '#/data/demoSeed'
+import {deleteStore, openStore} from '#/data/store'
 import {IS_E2E} from '#/env'
 import {clearStorageScope, device} from '#/storage'
 
@@ -36,27 +36,31 @@ export type Opened = {store: Store; ctx: MutationCtx; directory: DirectoryClient
 export const DEMO_SCOPE = 'demo:'
 
 /**
- * Opens the demo database, ensures its own "me" and seeds it when empty (or
- * after `fresh`, a reset, which also drops the search history, read marks and
- * drafts demo mode kept). Touches nothing global: the directory and the key
- * scope switch only when the store is adopted. Closes the store again if
- * anything fails.
+ * Opens the demo database, ensures its own "me" and seeds it when empty (always, after demo mode was turned off and
+ * on again: turning it off erases it, `eraseDemo`). Touches nothing global: the directory and the key scope switch
+ * only when the store is adopted. Closes the store again if anything fails.
  */
-export async function openDemo(real: MutationCtx, notices?: StorageNotices, onProgress?: (done: number) => void, existing?: Store, fresh = false): Promise<Opened> {
-  const store = existing ?? (await openStore(notices, DEMO_STORE))
+export async function openDemo(real: MutationCtx, notices?: StorageNotices, onProgress?: (done: number) => void): Promise<Opened> {
+  const store = await openStore(notices, DEMO_STORE)
   const ctx = demoCtx(real)
   try {
-    if (fresh) {
-      await wipeDemo(store)
-      clearStorageScope(DEMO_SCOPE)
-    }
     await ensureMe(store, ctx, 'Me')
     await seedDemo(store, ctx, onProgress)
     return {store, ctx, directory: demoDirectory(DEMO_DIRECTORY)}
   } catch (e) {
-    if (!existing) await store.close()
+    await store.close()
     throw e
   }
+}
+
+/**
+ * Turning demo mode off erases everything demo mode kept (owner 136): the demo database itself, and every device key under
+ * its scope (drafts, search history, read marks, Ask chat, the reminders bookkeeping). Call it once the real store is showing
+ * and the demo connection is closed; turning it on again seeds a fresh dataset.
+ */
+export async function eraseDemo(): Promise<void> {
+  clearStorageScope(DEMO_SCOPE)
+  await deleteStore(DEMO_STORE)
 }
 
 /**

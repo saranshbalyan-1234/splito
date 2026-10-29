@@ -52,6 +52,7 @@ import {
   indexStream,
   lastActivityQuery,
   myGroupBalancesQuery,
+  openGroupsQuery,
   balanceRowsQuery,
   type SeenCurrencies,
   seenCurrenciesQuery,
@@ -142,6 +143,11 @@ export function useBalanceRows(): BalanceRow[] | undefined {
 export function useMyGroupBalances(): GroupBalances | undefined {
   const {actor} = useMutationCtx()
   return useProjection(myGroupBalancesQuery(actor))
+}
+
+/** The ids of groups with any open net between any members, from one query for the whole list (never per row). */
+export function useOpenGroups(): ReadonlySet<string> | undefined {
+  return useProjection(openGroupsQuery())
 }
 
 /** The currencies each friend and group has had with me, settled ones too: what the currency filters offer (audit m3). */

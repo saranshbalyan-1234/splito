@@ -1,5 +1,5 @@
 import {magnitude, ZERO} from '@splito/domain'
-import {type Group} from '@splito/sync'
+import {type Group, type RowSyncStatus} from '@splito/sync'
 
 /** One group on the Groups list: my balance in it per currency, and who is in it (for search). */
 export type GroupRowData = {
@@ -13,10 +13,14 @@ export type GroupRowData = {
   /** Deleted: it stays in the list, struck through, and opens read-only (decision 103). */
   deleted?: boolean
   balances: Record<string, bigint>
+  /** Any member owes any other in this group (not just me): settled means every net is zero (F-1413). */
+  isOpen?: boolean
   /** Every currency the group has had, settled ones too (a filter offers them). */
   currencies?: string[]
   /** Member names, so search finds a group by who is in it. */
   members: string[]
+  /** Unsynced rows are drawn lighter (owner 111); set where a row view-model is built for a list that shows it. */
+  syncStatus?: RowSyncStatus
 }
 
 /** Everything the Groups filter sets; applied together with Apply. */
@@ -40,6 +44,16 @@ export const DEFAULT_GROUP_FILTERS: GroupFilters = {
   currency: 'all',
   show: 'all',
   sort: 'recent',
+}
+
+/**
+ * Settled up = the group's debts are all zero (no member owes another) and it has had records (`currencies` lists
+ * settled ones too); a group with no expenses yet is new, not settled. My own net being zero is not enough.
+ */
+export function isGroupSettledUp(row: GroupRowData): boolean {
+  const nets = Object.values(row.balances)
+  const isOpen = row.isOpen ?? nets.some(v => v !== ZERO)
+  return !isOpen && (nets.length > 0 || (row.currencies?.length ?? 0) > 0)
 }
 
 /**
@@ -70,8 +84,7 @@ export function filterGroups(
       (show === 'owed' && nets.some(v => v > ZERO)) ||
       (show === 'owe' && nets.some(v => v < ZERO)) ||
       (show === 'settled' && nets.every(v => v === ZERO))
-    // Settled up = nothing open and it has had records (`currencies` lists settled ones too); a group with no expenses yet is new, not settled.
-    const isSettledUp = nets.every(v => v === ZERO) && (nets.length > 0 || (row.currencies?.length ?? 0) > 0)
+    const isSettledUp = isGroupSettledUp(row)
     if (!keep || (isSettledUp && !showSettled && show !== 'settled' && !row.deleted)) return []
     return [{...row, balances}]
   })

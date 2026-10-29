@@ -18,7 +18,7 @@ import {
 import {IDBFactory} from 'fake-indexeddb'
 import {parseMinor} from '@splito/domain'
 
-import {DEMO_ME, purgeLegacyDemo, readDemoMode, resumeDemo, seedDemo, wipeDemo, writeDemoMode} from '#/data/demoSeed'
+import {DEMO_ME, purgeLegacyDemo, readDemoMode, resumeDemo, seedDemo, writeDemoMode} from '#/data/demoSeed'
 
 /*
  * Demo mode's data side (ARCHITECTURE 26.1, F-228a) on both store engines:
@@ -130,10 +130,6 @@ for (const engine of [sqlite, indexedDb]) {
           notes: '',
         })
         await setPref(demo, demoCtx, 'theme', 'light')
-        // Reset demo: everything erased (the second dataset is covered below, on SQLite).
-        await wipeDemo(demo)
-        await ensureMe(demo, demoCtx, 'Me')
-        await createPerson(demo, demoCtx, {name: 'Typed after reset'})
         await demo.close()
 
         // Turn it off: only the mode row changes in the real database.
@@ -271,6 +267,34 @@ for (const engine of [sqlite, indexedDb]) {
     )
 
     onSqlite(
+      'the old demo purge leaves everything alone when a real expense points at a demo person (it would dangle), and does not look again',
+      async () => {
+        const real = await engine().open('real')
+        await realData(real)
+        await seedDemo(real, {...realCtx, now: () => Date.now()})
+        await createExpense(real, realCtx, {
+          title: 'Real lunch with a demo person',
+          groupId: null,
+          currency: 'INR',
+          total: parseMinor('900'),
+          payers: {[realCtx.actor]: parseMinor('900')},
+          split: {mode: 'equal', participants: [realCtx.actor, 'demo-large-p-riya']},
+          date: '2026-10-21',
+          tz: 'Asia/Kolkata',
+          category: 'food',
+          notes: '',
+        })
+        let done = false
+        const flag = {isDone: () => done, markDone: () => void (done = true)}
+        expect(await purgeLegacyDemo(real, flag)).toBe(0)
+        expect(done).toBe(true)
+        expect((await real.dump()).entities.some(x => x.id === 'demo-large-p-riya')).toBe(true)
+        await real.close()
+      },
+      300_000,
+    )
+
+    onSqlite(
       'seeding is atomic and resumable: a failure half-way leaves nothing, the next try completes',
       async () => {
         const e = engine()
@@ -311,14 +335,6 @@ for (const engine of [sqlite, indexedDb]) {
         expect((await demo.dump()).history.length).toBe(before)
         expect(await seedDemo(demo, demoCtx)).toBe(false)
 
-        // Reset: wiped, then the same dataset again.
-        await wipeDemo(demo)
-        expect(await demo.getAll('person')).toEqual([])
-        expect(await demo.count('expense')).toBe(0)
-        expect((await demo.dump()).outbox).toEqual([])
-        await ensureMe(demo, demoCtx, 'Me')
-        expect(await seedDemo(demo, demoCtx)).toBe(true)
-        expect((await demo.getAll('group')).length).toBe(21)
         await demo.close()
       },
       300_000,

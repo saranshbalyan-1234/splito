@@ -8,15 +8,13 @@ import {useDemoMode} from '#/state/demo'
 import * as SettingsList from '#/screens/Settings/components/SettingsList'
 import {atoms as a, useTheme} from '#/alf'
 import * as Toggle from '#/components/forms/Toggle'
-import {ArrowRotateCounterClockwise_Stroke2_Corner0_Rounded as ResetIcon} from '#/components/icons/ArrowRotate'
 import {createIcon} from '#/components/icons/lucide'
-import * as Prompt from '#/components/Prompt'
 import * as Toast from '#/components/Toast'
 import {Text} from '#/components/Typography'
 
 const DemoIcon = createIcon(DatabaseZap)
 
-/** The blocking dialog and the banner are the outcome of a switch or reset; only a failure is told. */
+/** The blocking dialog is the outcome of a switch; only a failure is told. */
 function failure(e: unknown, message: string) {
   logger.error(e, {where: 'DemoMode'})
   Toast.show(message, {type: 'error'})
@@ -24,16 +22,15 @@ function failure(e: unknown, message: string) {
 
 /**
  * Settings > Data > Demo mode (ARCHITECTURE 26.1, owner decisions 94 + 95): a
- * switch onto a separate local database holding sample data, and while on, a
- * "Reset demo" row. Dev and e2e builds only: loaded on demand (the
+ * switch onto a separate local database holding sample data; turning it off
+ * erases that database (owner 136), turning it on seeds a fresh one. Dev and e2e builds only: loaded on demand (the
  * `demoStaticImport` rule).
  */
 export function DemoModeRows() {
   const {t: l} = useLingui()
   const t = useTheme()
   const haptics = useHaptics()
-  const {demo, busy, setDemo, resetDemo} = useDemoMode()
-  const resetPrompt = Prompt.usePromptControl()
+  const {demo, busy, setDemo} = useDemoMode()
 
   const toggle = (on: boolean) => {
     haptics.confirm()
@@ -69,23 +66,6 @@ export function DemoModeRows() {
           <Toggle.Switch />
         </Toggle.Item>
       </SettingsList.Item>
-      {demo && (
-        <SettingsList.PressableItem testID="settings-demo-reset" label={l`Reset demo`} disabled={busy} onPress={() => resetPrompt.open()}>
-          <SettingsList.ItemIcon icon={ResetIcon} />
-          <SettingsList.ItemText>
-            <Trans>Reset demo</Trans>
-          </SettingsList.ItemText>
-        </SettingsList.PressableItem>
-      )}
-
-      <Prompt.Basic
-        control={resetPrompt}
-        title={l`Reset demo?`}
-        description={l`Puts the sample data back as it was and drops what you changed in demo mode. Your own data is not touched.`}
-        confirmButtonCta={l`Reset`}
-        confirmButtonColor="negative"
-        onConfirm={() => resetDemo().then(undefined, e => failure(e, l`Couldn’t reset the demo. Try again.`))}
-      />
     </>
   )
 }

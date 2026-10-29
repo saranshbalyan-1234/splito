@@ -21,6 +21,7 @@ import {
   useGroupActivity,
   useMe,
   useMyGroupBalances,
+  useOpenGroups,
   useSeenCurrencies,
   usePref,
 } from '#/data/hooks'
@@ -49,6 +50,7 @@ import {GroupsFilterDialog} from './components/GroupsFilterDialog'
 import {
   DEFAULT_GROUP_FILTERS,
   filterGroups,
+  isGroupSettledUp,
   type GroupFilters,
   type GroupRowData,
   matchesGroupSearch,
@@ -73,6 +75,7 @@ export function GroupsScreen() {
   const groups = useAllEntities<Group>('group')
   const people = useAllEntities<Person>('person')
   const myBalances = useMyGroupBalances()
+  const openGroups = useOpenGroups()
   const seen = useSeenCurrencies()
   const groupActivity = useGroupActivity()
   const [defaultCurrency = 'INR'] = usePref('defaultCurrency')
@@ -90,7 +93,7 @@ export function GroupsScreen() {
   const filterControl = useDialogControl()
   const [query, setQuery] = useState('')
 
-  const isLoading = !me || !groups || !myBalances || !people
+  const isLoading = !me || !groups || !myBalances || !openGroups || !people
   const balances = myBalances ?? {}
   const names = new Map((people ?? []).map(p => [p.id, p.data.name]))
   const byId = new Map((groups ?? []).map(g => [g.id, g]))
@@ -102,6 +105,7 @@ export function GroupsScreen() {
     hidden: hiddenIds.has(g.id),
     deleted: g.deleted,
     balances: balances[g.id] ?? {},
+    isOpen: openGroups?.has(g.id) ?? false,
     currencies: seen?.groups[g.id],
     members: g.data.members
       .filter(m => m.leftAt === null)
@@ -142,9 +146,7 @@ export function GroupsScreen() {
   }).filter(g => !g.deleted)
   const overall = groupTotals(overviewRows.map(g => g.balances))
   /* The captions and the count line cover the same groups as the totals above them. */
-  const settledCount = overviewRows.filter(g =>
-    Object.values(g.balances).every(v => v === ZERO),
-  ).length
+  const settledCount = overviewRows.filter(isGroupSettledUp).length
   const captions = Object.fromEntries(
     overall.map(({currency}) => {
       const n = overviewRows.filter(
@@ -233,14 +235,26 @@ export function GroupsScreen() {
                   message={l`No matches for “${query.trim()}”`}
                 />
               ) : all.length > 0 ? (
+                filterGroups(all, {...filters, showSettled: true}).length > 0 && !showSettled ? (
+                  /* Everything that matches is settled up: one button brings it back (it sets the preference). */
+                  <EmptyState
+                    testID="groups-all-settled"
+                    icon={null}
+                    message={l`All settled up`}
+                    button={{
+                      testID: 'groups-show-settled',
+                      label: l`Show settled`,
+                      text: l`Show settled`,
+                      onPress: () => void setShowSettled(true),
+                      size: 'small',
+                      color: 'secondary',
+                    }}
+                  />
+                ) : (
                 <EmptyState
                   testID="groups-filtered-empty"
                   icon={null}
-                  message={
-                    filterGroups(all, {...filters, showSettled: true}).length > 0
-                      ? l`Every group is settled up. Turn on Show settled in Filters to list them.`
-                      : l`No groups match these filters.`
-                  }
+                  message={l`No groups match these filters.`}
                   button={{
                     testID: 'groups-clear-filters',
                     label: l`Clear filters`,
@@ -248,11 +262,14 @@ export function GroupsScreen() {
                     onPress: () => {
                       setApplied(null)
                       void setSortDefault(DEFAULT_GROUP_FILTERS.sort)
+                      void setShowSettled(false)
+                      void setShowHidden(false)
                     },
                     size: 'small',
                     color: 'secondary',
                   }}
                 />
+                )
               ) : (
                 <EmptyState
                   testID="groups-empty"

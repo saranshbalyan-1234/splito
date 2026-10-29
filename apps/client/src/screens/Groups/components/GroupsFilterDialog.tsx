@@ -109,7 +109,6 @@ function Form({
             {value: 'all', label: l`All`},
             {value: 'owed', label: l`You are owed`},
             {value: 'owe', label: l`You owe`},
-            {value: 'settled', label: l`Settled`},
           ]}
           onChange={show => set({show})}
         />

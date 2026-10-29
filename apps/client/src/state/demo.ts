@@ -11,15 +11,15 @@ import {createContext, useContext, useSyncExternalStore} from 'react'
 export type DemoModeValue = {
   /** The app is on the separate demo database. */
   demo: boolean
-  /** A switch or a reset is running (a blocking dialog covers the app meanwhile). */
+  /** A directory answers (demo mode today, the backend later); false offline, where invite links fail closed. Read here, never from a module variable during render. */
+  hasDirectory: boolean
+  /** A switch is running (a blocking dialog covers the app meanwhile). */
   busy: boolean
-  /** Turns demo mode on (seeding it the first time) or off; resolves when the other store is showing. */
+  /** Turns demo mode on (seeding a fresh dataset) or off (erasing the demo database and everything it kept); resolves when the other store is showing. */
   setDemo: (on: boolean, onProgress?: (done: number) => void) => Promise<void>
-  /** Wipes the demo database and seeds it again. */
-  resetDemo: (onProgress?: (done: number) => void) => Promise<void>
 }
 
-export const DEMO_OFF: DemoModeValue = {demo: false, busy: false, setDemo: async () => {}, resetDemo: async () => {}}
+export const DEMO_OFF: DemoModeValue = {demo: false, hasDirectory: false, busy: false, setDemo: async () => {}}
 
 export const DemoContext = createContext<DemoModeValue>(DEMO_OFF)
 DemoContext.displayName = 'SplitoDemoModeContext'

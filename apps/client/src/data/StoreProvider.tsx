@@ -81,6 +81,7 @@ type Live = DataContext & {demo: boolean; unwire: () => void}
 export function StoreProvider({children, fallback = null}: {children: React.ReactNode; fallback?: React.ReactNode}) {
   const [value, setValue] = useState<DataContext | null>(null)
   const [demo, setDemoFlag] = useState(false)
+  const [hasDirectory, setHasDirectory] = useState(false)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<unknown>(null)
   /* Web only: another tab holds an older version open (`blocked`), or a newer build took the database over (`changed`). */
@@ -105,9 +106,9 @@ export function StoreProvider({children, fallback = null}: {children: React.Reac
     resetToRoot()
   }, [])
 
-  /** Makes `next` the store everything reads, then closes the one it replaces (after in-flight reads have landed). */
+  /** Makes `next` the store everything reads, then closes the one it replaces (after in-flight reads have landed); resolves when that is done. */
   const adopt = useCallback(
-    (next: Next) => {
+    (next: Next): Promise<void> => {
       const prev = live.current
       prev?.unwire()
       // Telemetry follows the real store; demo mode records nothing (and `Send diagnostics` is the real one's setting).
@@ -121,8 +122,13 @@ export function StoreProvider({children, fallback = null}: {children: React.Reac
       if (prev) dropOpenUi()
       setValue({store: next.store, ctx: next.ctx})
       setDemoFlag(next.demo)
+      setHasDirectory(next.demo && !!next.directory)
       setNotice(current => (current === 'blocked' ? null : current))
-      if (prev) setTimeout(() => void prev.store.close(), 300)
+      // Resolves once the replaced store's connection is closed (a database can only be deleted then).
+      return new Promise<void>(resolve => {
+        if (prev) setTimeout(() => void prev.store.close().then(resolve, resolve), 300)
+        else resolve()
+      })
     },
     [dropOpenUi],
   )
@@ -158,15 +164,15 @@ export function StoreProvider({children, fallback = null}: {children: React.Reac
       if (resumed) {
         // A reload keeps the mode: the real database said so; the demo one opens, the real one closes.
         if (cancelled) return void Promise.all([resumed.store.close(), real.store.close()])
-        adopt({...resumed, demo: true})
+        void adopt({...resumed, demo: true})
         setTimeout(() => void real.store.close(), 300)
       } else {
         if (loadDemo) await ensureMe(real.store, real.ctx, 'Me')
-        adopt({...real, demo: false})
+        // Only ever on the real store, before anything can switch away from (and close) it: erase the rows older builds left in it, once.
+        if (loadDemo && !demoOn) await (await loadDemo()).purgeLegacy(real.store)
+        void adopt({...real, demo: false})
         // The demo database would not open and the mode is now off: say so.
         if (demoOn) Toast.show(t`Couldn’t open the demo. Showing your own data.`, {type: 'error'})
-        // Fetch the demo chunk in the background so the first switch does not wait for it, and tidy the real database of old demo rows once.
-        if (loadDemo && !demoOn) void loadDemo().then(m => setTimeout(() => void m.purgeLegacy(real.store), 2000))
       }
       perfMark('splito:store-ready')
     })().catch(e => {
@@ -182,7 +188,7 @@ export function StoreProvider({children, fallback = null}: {children: React.Reac
     }
   }, [adopt, openReal])
 
-  /* A switch and a reset never overlap: each waits for the one before it (a double tap, the e2e hook, a banner press). */
+  /* Switches never overlap: each waits for the one before it (a double tap, the e2e hook). */
   const queue = useRef<Promise<unknown>>(Promise.resolve())
   const pending = useRef(0)
   const serial = useCallback(<T,>(work: () => Promise<T>): Promise<T> => {
@@ -224,7 +230,7 @@ export function StoreProvider({children, fallback = null}: {children: React.Reac
               await opened.store.close()
               throw e
             }
-            adopt({...opened, demo: true})
+            void adopt({...opened, demo: true})
           } else {
             const real = await openReal()
             try {
@@ -233,34 +239,20 @@ export function StoreProvider({children, fallback = null}: {children: React.Reac
               await real.store.close()
               throw e
             }
-            adopt({...real, demo: false})
+            // Back on the real data first; then the demo database and everything it kept are erased (owner 136).
+            await adopt({...real, demo: false})
+            await m.eraseDemo()
           }
         }),
       ),
     [adopt, openReal, serial, withProgress],
   )
 
-  const resetDemo = useCallback(
-    (onProgress?: (done: number) => void) =>
-      serial(() =>
-        withProgress(onProgress, async report => {
-          await booted.current
-          const cur = live.current
-          if (!loadDemo || !cur?.demo) return
-          const m = await loadDemo()
-          await m.openDemo(cur.ctx, notices.current, report, cur.store, true)
-          // The same store, reseeded: what was open was built on rows that are gone.
-          dropOpenUi()
-        }),
-      ),
-    [dropOpenUi, serial, withProgress],
-  )
-
   useEffect(() => {
     if (loadDemo) void loadDemo().then(m => m.installTestHook(setDemo))
   }, [setDemo])
 
-  const demoValue = useMemo<DemoModeValue>(() => (loadDemo ? {demo, busy, setDemo, resetDemo} : DEMO_OFF), [demo, busy, setDemo, resetDemo])
+  const demoValue = useMemo<DemoModeValue>(() => (loadDemo ? {demo, hasDirectory, busy, setDemo} : DEMO_OFF), [demo, hasDirectory, busy, setDemo])
 
   if (error) throw error
   /* The connection of a replaced tab is closed: nothing can be read or saved until it reloads. */

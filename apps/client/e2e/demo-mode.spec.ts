@@ -37,7 +37,8 @@ test('turning it on seeds the demo database in under 10 s, shows "Demo" on the a
   await expect(page.getByTestId('header-avatar').last()).toHaveAttribute('aria-label', /Demo$/)
   await expect(page.getByTestId('header-avatar').last().getByTestId('sync-dot-demo')).toBeAttached()
   await page.goto('/settings')
-  await expect(page.getByTestId('settings-demo-reset')).toBeVisible()
+  // There is no Reset demo row (owner 136): off then on is the reset.
+  await expect(page.getByTestId('settings-demo-reset')).toHaveCount(0)
 
   // Owner 133: no banner on any screen; the switch and the avatar's Demo dot are the only signs.
   for (const path of ['/', '/groups', '/activity', '/analytics', '/settings', '/expense/new', '/friends/new', '/groups/new', '/invites', '/signin']) {
@@ -94,17 +95,47 @@ test('the real data is untouched by a demo session; Switch back returns Home wit
   await page.reload()
   await expect(page.getByTestId('person-Real Asha').last()).toBeVisible()
 
-  // Back on: the demo database kept its own edit.
+  // Back on: a fresh dataset, the edit made in the first session is gone (owner 136).
   await openDemo(page)
-  expect(await names(page, 'person')).toContain('Typed in demo')
-
-  // Reset demo drops it and seeds the dataset again.
-  await page.goto('/settings')
-  await page.getByTestId('settings-demo-reset').click()
-  await page.getByTestId('confirmBtn').click()
-  await expect.poll(async () => { const n = await names(page, 'person'); return n.includes('Riya Sharma') && !n.includes('Typed in demo') }, {timeout: 60_000}).toBe(true)
+  expect(await names(page, 'person')).toContain('Riya Sharma')
+  expect(await names(page, 'person')).not.toContain('Typed in demo')
   await closeDemo(page)
   expect(await names(page, 'person')).toContain('Real Asha')
+})
+
+const databases = (page: Page) => page.evaluate(async () => (await indexedDB.databases()).map(d => d.name))
+
+test('turning demo mode off erases the demo database and every key it kept; turning it on again seeds afresh (owner 136)', async ({page}) => {
+  await page.goto('/')
+  await page.waitForFunction(() => 'splito' in window)
+  expect(await databases(page)).not.toContain('splito-demo')
+
+  await openDemo(page)
+  expect(await databases(page)).toContain('splito-demo')
+  await page.evaluate(() => (window as unknown as {splito: Splito}).splito.createPerson('Gone after off'))
+  // A device key demo mode kept: a recent search lives under the demo scope.
+  await page.getByTestId('header-search-ask').click()
+  await page.getByTestId('search-input').fill('gonesearch')
+  await page.getByTestId('search-input').press('Enter')
+  await page.getByTestId('search-input').fill('')
+  await expect(page.getByTestId('search-recent-gonesearch')).toBeVisible()
+  await page.keyboard.press('Escape')
+
+  await closeDemo(page)
+  await expect.poll(() => databases(page)).not.toContain('splito-demo')
+  // The real database is still there.
+  expect(await databases(page)).toContain('splito')
+
+  await openDemo(page)
+  expect(await databases(page)).toContain('splito-demo')
+  const again = await names(page, 'person')
+  expect(again).toContain('Riya Sharma')
+  expect(again).not.toContain('Gone after off')
+  await page.getByTestId('header-search-ask').click()
+  await expect(page.getByTestId('search-tips')).toBeVisible()
+  await expect(page.getByTestId('search-recent-gonesearch')).toHaveCount(0)
+  await page.keyboard.press('Escape')
+  await closeDemo(page)
 })
 
 test('the store swapping under an open Add friend sheet drops the sheet and writes nothing to either database', async ({page}) => {

@@ -153,6 +153,21 @@ function sameGroupBalances(a: GroupBalances, b: GroupBalances) {
   })
 }
 
+/**
+ * The groups with any open net between ANY members (not just mine): one read of the `balances` projection, never per row.
+ * A group where I am even but two others still owe each other is open, so the Groups list keeps it (F-1413).
+ */
+const openGroupQuery: Query<ReadonlySet<string>> = {
+  key: 'openGroups',
+  isTouchedBy: isMoney,
+  loader: store => async (_c, prev) => {
+    const open = new Set<string>()
+    for (const b of await store.balances()) if (b.groupId && b.amount !== ZERO) open.add(b.groupId)
+    return prev && prev.size === open.size && [...open].every(id => prev.has(id)) ? prev : open
+  },
+}
+export const openGroupsQuery = (): Query<ReadonlySet<string>> => openGroupQuery
+
 /** A currency a person has had with me, and where: in a group, or outside groups (`groupId` null). */
 export type SeenCurrency = {currency: string; groupId: string | null}
 
