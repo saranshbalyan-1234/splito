@@ -494,7 +494,7 @@ Nothing of the app is visible signed out: only the welcome tour, the logged-out 
   5. Offline after sign-in the app opens and works; sign-in offline says it needs a connection.
   6. Dev/e2e builds show "Continue with a dev account" (labelled, local); production builds have no such path and the release script refuses to build without the auth API URL; e2e signs in through `window.__splitoTest.signIn`.
   7. Data already on the device before this change is offered once: "Move this device's data into your account" (F-2104).
-  10. One Continue screen only (owner 140): Apple, Google, email or phone + one-time code; a new account is created in-flow by asking only for what is missing; no password, no Create account or Forgot password screen anywhere.
+  10. One Continue screen only (owners 140, 141): Apple, Google, email or phone; existing account then password (or one-time code, Forgot password flow); new account created in-flow: verify, only the missing details, set a password (min 8, strength shown); no Create account screen anywhere.
   9. A new account requires name, email and phone, both verified by code; an account missing either (Google/Apple, older accounts) gets a blocking "Add your phone number" / "Add your email" step after sign-in, with only Log out besides (owner 139).
   8. The Continue screen shows "Continue with Apple" and "Continue with Google" (owner 138; Apple first on iOS, Google first on Android/web, platform button styles); until F-2102 they say it arrives with sync, no fake success.
 

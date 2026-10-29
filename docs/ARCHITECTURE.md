@@ -1846,9 +1846,9 @@ built yet.
 - **Signed out, the app is the logged-out flow** (owners 125, 138-140): Bluesky's logged-out look, copied screen
   for screen where it still applies (`view/com/auth/LoggedOut.tsx`, `SplashScreen(.web).tsx` with the logo mark and
   tagline, `screens/Login/FormContainer` and `LoginForm` layout, Bluesky's step indicator and `BackNextButtons`),
-  reduced to one Continue screen: Apple, Google, "Email or phone" + one-time code; the steps after it ask only for
-  what a new account lacks (name, the other contact, verified) and then setup. No password, Create account,
-  Forgot password, handle or captcha screens. It is the whole app while signed out and cannot be closed. Every
+  reduced to one Continue screen: Apple, Google, "Email or phone"; then password (or a one-time code) for an
+  existing account, or, for a new one, verify, the missing details, a password and setup (owner 141). No Create
+  account, handle or captcha screens. It is the whole app while signed out and cannot be closed. Every
   field is validated. Until the auth backend exists (F-2101..F-2105) the code step shows Bluesky's Admonition
   "Sign-in arrives with sync" and only the dev/e2e "Continue with a dev account" works; no fake success, no fake
   account. *Why:* "there is signin page already there in bluesky, use that"; "basically no signup needed".
@@ -1872,14 +1872,21 @@ built yet.
   support address, `FEEDBACK_EMAIL`, a release-checklist item); once the backend exists it goes through the
   outbox. No shake-to-send preference (removed by F-251, owner 128).
 
-- **One "Continue" screen, no separate sign-up** (owner 140; replaces the Create account / Sign in split, the
-  password and the Forgot password screens of the copied Bluesky flow). The logged-out flow is one screen built
-  from Bluesky's `LoginForm` layout: "Continue with Apple", "Continue with Google", then one "Email or phone"
-  field and Continue. Splito sends a one-time code (no passwords, so no Forgot password); entering it signs in.
-  If no account exists yet it is created in the same flow: the next step asks only for what is missing (name,
-  and the other of email/phone, verified by code, owner 139), then setup (F-211). The same steps run for a
-  first-time Google or Apple sign-in. No "Create account" button, screen or wording anywhere. *Why:* "we can have
-  signup and login as same screen only, no separate screen needed, basically no signup needed".
+- **One "Continue" screen, no separate sign-up, with a password** (owners 140, 141; replaces the separate Create
+  account / Sign in screens). The logged-out flow starts on one screen built from Bluesky's `LoginForm` layout:
+  "Continue with Apple", "Continue with Google", then one "Email or phone" field and Continue. Splito then checks
+  whether that account exists:
+  - **Existing account:** the next step asks for the password (Bluesky's password field with "Forgot?"), with
+    "Use a one-time code instead" below it. Forgot password sends a code to the email or phone, then a new
+    password (Bluesky's `ForgotPasswordForm` -> `SetNewPasswordForm` -> `PasswordUpdatedForm`).
+  - **New account (created in the same flow, no "Create account" anywhere):** the next steps verify the entered
+    email or phone with a code, ask only for what is missing (name, the other of email/phone, verified by code,
+    owner 139) and a password (minimum 8 characters, strength shown, never a hint of which accounts exist beyond
+    "We'll create your account"), then setup (F-211).
+  - **Google / Apple:** no password needed for them; a first-time social sign-in runs the same missing-info steps
+    and may set a password later in Settings > Account.
+  *Why:* "we can have signup and login as same screen only, no separate screen needed, basically no signup
+  needed"; then "password should be there as well".
 - **Every account has both an email and a phone number, both verified** (owner 139; F-250 UI, F-2102 server).
   A new account needs name, email and phone (E.164, region default); both email and phone are required and
   each is confirmed with a one-time code before the account is usable (owner 140: collected in the one Continue
@@ -2337,6 +2344,7 @@ Every owner decision, in the order it was made (all 2026-10-26). "Replaced" name
 | 138 | "on login, signin with google and apple as well" | "Continue with Apple" and "Continue with Google" on splash, Sign in and Create account, every platform; server verifies tokens, links by verified email | § 26.15 | Email/phone only on the sign-in screens |
 | 139 | "on signup, make email and phone both mandatory; if logged in via email only and no phone is there ask to update phone first" | Sign-up requires email and phone, both verified by code; any account missing one gets a blocking add-and-verify step after sign-in (only Log out besides) | § 26.15 | Sign-up with email or phone (one field) |
 | 140 | "we can have signup and login as same screen only, no separate screen needed, basically no signup needed" | One Continue screen (Apple, Google, email or phone + one-time code); new accounts created in-flow by asking only what is missing; no passwords, no Create account or Forgot password screens | § 26.15 | Bluesky Create account / Sign in / password / Forgot password screens |
+| 141 | "password should be there as well" | Passwords kept inside the one Continue flow: existing account enters password (or one-time code, Forgot password); new account sets one after verifying; Google/Apple need none | § 26.15 | Code-only, no passwords (row 140) |
 
 New decisions follow § 0 rule 9: rewrite the rule in its topic so only the current truth remains, then add a
 row here.
