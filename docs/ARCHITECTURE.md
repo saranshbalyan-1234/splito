@@ -1167,8 +1167,10 @@ Splito lessons (add newest last, dated, with PR):
   nothing jumps from a stand-in height.
 - 2026-10-30, fix/tab-taps review: **a page wider than the phone moves the fixed bottom bar off screen.** If the
   document overflows sideways, mobile browsers widen the layout viewport and the fixed bar slips below the fold for
-  a frame, so a fast tap hits the screen behind. `html, body { overflow-x: clip }` and no element may overflow
-  the viewport width (e2e checks horizontal overflow, § 19).
+  a frame, so a fast tap hits the screen behind (found: the Analytics loading skeleton had three fixed 120 px
+  columns, 417 px wide at 390 px). No element, skeletons included, may be wider than the viewport: size columns with
+  flex, not fixed widths; `tabTaps.spec` "no tab widens the page" and the § 19 horizontal-overflow check guard it.
+  Do NOT put `overflow-x: clip` on `html`/`body`: it stops the window from scrolling (`scrollWeb.spec` measured 0 px).
 - 2026-10-30, F-241 merge: **the renders gate baseline is re-recorded with reasons whenever a reviewed change adds
   renders** (`RENDERS_BASELINE=write`, every increase and its cause listed in `docs/COMPLETION_MATRIX.md`), never
   silently; a merge that leaves the gate red on `main` is not done.

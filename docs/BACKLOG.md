@@ -515,7 +515,7 @@ Every F-241 URL opens the right screen from anywhere: iOS Universal Links, Andro
 
 Every tap changes the screen in the same or next frame; slow bodies (lists, charts, breakdowns, next tab, search results) render after via React transitions or deferred mounting; nothing queues behind a busy render.
 
-- **Effort** M · **Impact** 10 · **Backend** no · **Status** in progress (tabs first on fix/tab-taps, then the app-wide audit) · **Deps** F-242
+- **Effort** M · **Impact** 10 · **Backend** no · **Status** done on web 2026-10-30 (fix/tab-taps merged; tap-latency spec, tabTaps 18/18, burst loss 0/90); iOS Safari and native not yet verified · **Deps** F-242
 - **Prefs** -
 - **Acceptance**
   1. Rapid taps on any tab set (bottom bar, sidebar, rail, in-page) land on the last tap; e2e at 390 and 1440.
