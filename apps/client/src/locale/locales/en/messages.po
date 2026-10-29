@@ -846,7 +846,7 @@ msgstr "{subject} accepted your friend request"
 msgid "{subject} sent you a friend request"
 msgstr "{subject} sent you a friend request"
 
-#: src/screens/Settings/index.tsx:314
+#: src/screens/Settings/index.tsx:312
 msgid "{tabCount, plural, one {# tab} other {# tabs}}"
 msgstr "{tabCount, plural, one {# tab} other {# tabs}}"
 
@@ -870,11 +870,11 @@ msgstr "{title}, {byline}, {shareLabel} {shareText} of {totalText}, not synced y
 msgid "{title}, not synced yet"
 msgstr "{title}, not synced yet"
 
-#: src/features/account/LogOutPrompt.tsx:21
+#: src/features/account/LogOutPrompt.tsx:34
 msgid "{unsynced, plural, one {# change hasn’t synced yet. Erasing this device’s data loses it.} other {# changes haven’t synced yet. Erasing this device’s data loses them.}}"
 msgstr "{unsynced, plural, one {# change hasn’t synced yet. Erasing this device’s data loses it.} other {# changes haven’t synced yet. Erasing this device’s data loses them.}}"
 
-#: src/screens/Settings/index.tsx:317
+#: src/screens/Settings/index.tsx:315
 msgid "{visible} categories"
 msgstr "{visible} categories"
 
@@ -975,7 +975,7 @@ msgstr "<0>{value}</0> isn’t on Splito yet. Send an invite, or add them just f
 msgid "= Use result"
 msgstr "= Use result"
 
-#: src/screens/Settings/index.tsx:317
+#: src/screens/Settings/index.tsx:315
 msgid "1 category"
 msgstr "1 category"
 
@@ -1114,8 +1114,8 @@ msgstr "A trip, a flat or anything you split often."
 #: src/components/NavFooterLinks.tsx:35
 #: src/screens/Profile.tsx:73
 #: src/screens/Profile.tsx:76
-#: src/screens/Settings/index.tsx:194
-#: src/screens/Settings/index.tsx:197
+#: src/screens/Settings/index.tsx:193
+#: src/screens/Settings/index.tsx:196
 #: src/screens/Settings/SettingsSection.tsx:51
 msgid "About"
 msgstr "About"
@@ -1161,7 +1161,7 @@ msgstr "Accept to split expenses together"
 msgid "Accept to split expenses with {0}. You’ll both see what you share."
 msgstr "Accept to split expenses with {0}. You’ll both see what you share."
 
-#: src/screens/Settings/index.tsx:87
+#: src/screens/Settings/index.tsx:86
 msgid "Account"
 msgstr "Account"
 
@@ -1387,7 +1387,7 @@ msgstr "Add to group"
 msgid "Add your email"
 msgstr "Add your email"
 
-#: src/navigation/Drawer.tsx:87
+#: src/navigation/Drawer.tsx:86
 #: src/screens/Profile.tsx:151
 #: src/screens/Profile.tsx:164
 msgid "Add your name"
@@ -2317,7 +2317,7 @@ msgstr "Couldn’t leave the group. Please try again."
 msgid "Couldn’t log this reminder. Please try again."
 msgstr "Couldn’t log this reminder. Please try again."
 
-#: src/features/account/LegacyDataOffer.tsx:53
+#: src/features/account/LegacyDataOffer.tsx:52
 msgid "Couldn’t move your data. It is still on this device."
 msgstr "Couldn’t move your data. It is still on this device."
 
@@ -2357,7 +2357,7 @@ msgstr "Couldn’t remove {name}. Settle up first, or try again."
 msgid "Couldn’t remove {who}. Please try again."
 msgstr "Couldn’t remove {who}. Please try again."
 
-#: src/screens/Settings/index.tsx:281
+#: src/screens/Settings/index.tsx:279
 msgid "Couldn’t reset settings. Please try again."
 msgstr "Couldn’t reset settings. Please try again."
 
@@ -2564,7 +2564,7 @@ msgid "Daily"
 msgstr "Daily"
 
 #: src/components/settings/prefControls.tsx:81
-#: src/screens/Settings/index.tsx:309
+#: src/screens/Settings/index.tsx:307
 msgid "Dark"
 msgstr "Dark"
 
@@ -2572,7 +2572,7 @@ msgstr "Dark"
 msgid "Dark mode style"
 msgstr "Dark mode style"
 
-#: src/screens/Settings/index.tsx:202
+#: src/screens/Settings/index.tsx:201
 msgid "Data"
 msgstr "Data"
 
@@ -2694,7 +2694,7 @@ msgstr "Delete this feedback?"
 msgid "Deleted"
 msgstr "Deleted"
 
-#: src/screens/Settings/index.tsx:208
+#: src/screens/Settings/index.tsx:207
 msgid "Deleted items now stay in their lists."
 msgstr "Deleted items now stay in their lists."
 
@@ -3064,7 +3064,7 @@ msgstr "Entertainment"
 msgid "Equally"
 msgstr "Equally"
 
-#: src/features/account/LogOutPrompt.tsx:32
+#: src/features/account/LogOutPrompt.tsx:45
 msgid "Erase this device’s data"
 msgstr "Erase this device’s data"
 
@@ -3166,7 +3166,7 @@ msgstr "Everything in the backup was already here"
 msgid "Everything is saved on this device first, so Splito works without a connection."
 msgstr "Everything is saved on this device first, so Splito works without a connection."
 
-#: src/features/account/LogOutPrompt.tsx:22
+#: src/features/account/LogOutPrompt.tsx:35
 msgid "Everything is saved on this device."
 msgstr "Everything is saved on this device."
 
@@ -3247,8 +3247,8 @@ msgstr "Explore Splito with sample data. Your own data is kept separately and un
 
 #: src/features/export/ExportSheet.tsx:172
 #: src/screens/Group/index.tsx:612
-#: src/screens/Settings/index.tsx:215
-#: src/screens/Settings/index.tsx:219
+#: src/screens/Settings/index.tsx:214
+#: src/screens/Settings/index.tsx:218
 msgid "Export"
 msgstr "Export"
 
@@ -3325,7 +3325,7 @@ msgstr "Find any expense, friend or group on this device"
 msgid "Find me by email or phone"
 msgstr "Find me by email or phone"
 
-#: src/screens/Settings/index.tsx:320
+#: src/screens/Settings/index.tsx:318
 msgid "Findable"
 msgstr "Findable"
 
@@ -3416,8 +3416,8 @@ msgstr "Friends"
 
 #: src/navigation/Navigation.tsx:76
 #: src/screens/FriendsAndInvites/index.tsx:139
-#: src/screens/Settings/index.tsx:116
-#: src/screens/Settings/index.tsx:119
+#: src/screens/Settings/index.tsx:115
+#: src/screens/Settings/index.tsx:118
 #: src/screens/Settings/SettingsSection.tsx:154
 #: src/screens/Settings/SettingsSection.tsx:157
 msgid "Friends and invites"
@@ -3580,8 +3580,8 @@ msgid "Haptics"
 msgstr "Haptics"
 
 #: src/components/NavFooterLinks.tsx:33
-#: src/screens/Settings/index.tsx:185
-#: src/screens/Settings/index.tsx:188
+#: src/screens/Settings/index.tsx:184
+#: src/screens/Settings/index.tsx:187
 #: src/screens/Settings/SettingsSection.tsx:65
 msgid "Help"
 msgstr "Help"
@@ -3625,7 +3625,7 @@ msgstr "Hi {name},"
 #: src/components/settings/TaxClassesEditor.tsx:188
 #: src/screens/Groups/components/GroupRow.tsx:134
 #: src/screens/People/components/PersonRow.tsx:213
-#: src/screens/Settings/index.tsx:320
+#: src/screens/Settings/index.tsx:318
 msgid "Hidden"
 msgstr "Hidden"
 
@@ -3761,8 +3761,8 @@ msgstr "If you change your mind later, only the Undo that follows this restore c
 msgid "If you choose Not now, the reminder is still saved, but it can’t alert you until you allow notifications."
 msgstr "If you choose Not now, the reminder is still saved, but it can’t alert you until you allow notifications."
 
-#: src/screens/Settings/index.tsx:224
-#: src/screens/Settings/index.tsx:228
+#: src/screens/Settings/index.tsx:223
+#: src/screens/Settings/index.tsx:227
 msgid "Import"
 msgstr "Import"
 
@@ -4080,7 +4080,7 @@ msgstr "Keep as an inactive member"
 msgid "Keep editing"
 msgstr "Keep editing"
 
-#: src/features/account/LogOutPrompt.tsx:31
+#: src/features/account/LogOutPrompt.tsx:44
 msgid "Keep this device’s data"
 msgstr "Keep this device’s data"
 
@@ -4161,7 +4161,7 @@ msgid "Let's split it {ways} ways. Add the amount and who is in on it."
 msgstr "Let's split it {ways} ways. Add the amount and who is in on it."
 
 #: src/components/settings/prefControls.tsx:80
-#: src/screens/Settings/index.tsx:309
+#: src/screens/Settings/index.tsx:307
 msgid "Light"
 msgstr "Light"
 
@@ -4193,16 +4193,16 @@ msgstr "Links that still work. Revoke one and it stops working straight away; fr
 msgid "Liquor VAT"
 msgstr "Liquor VAT"
 
-#: src/navigation/Drawer.tsx:215
-#: src/navigation/Drawer.tsx:222
+#: src/navigation/Drawer.tsx:213
+#: src/navigation/Drawer.tsx:223
 #: src/screens/Login/AddMissingContact.tsx:51
 #: src/screens/Login/AddMissingContact.tsx:53
-#: src/screens/Settings/index.tsx:122
-#: src/screens/Settings/index.tsx:125
+#: src/screens/Settings/index.tsx:121
+#: src/screens/Settings/index.tsx:124
 msgid "Log out"
 msgstr "Log out"
 
-#: src/features/account/LogOutPrompt.tsx:27
+#: src/features/account/LogOutPrompt.tsx:40
 msgid "Log out?"
 msgstr "Log out?"
 
@@ -4423,15 +4423,15 @@ msgstr "Move item {0} down"
 msgid "Move item {0} up"
 msgstr "Move item {0} up"
 
-#: src/features/account/LegacyDataOffer.tsx:47
+#: src/features/account/LegacyDataOffer.tsx:46
 msgid "Move this device’s data into your account"
 msgstr "Move this device’s data into your account"
 
-#: src/features/account/LegacyDataOffer.tsx:41
+#: src/features/account/LegacyDataOffer.tsx:40
 msgid "Move this device’s data into your account?"
 msgstr "Move this device’s data into your account?"
 
-#: src/features/account/LegacyDataOffer.tsx:50
+#: src/features/account/LegacyDataOffer.tsx:49
 msgid "Moved into your account"
 msgstr "Moved into your account"
 
@@ -4757,7 +4757,7 @@ msgstr "Not in a group"
 msgid "not involved"
 msgstr "not involved"
 
-#: src/features/account/LegacyDataOffer.tsx:58
+#: src/features/account/LegacyDataOffer.tsx:57
 #: src/features/remind/RemindMeSheet.tsx:131
 #: src/screens/AddFriend.tsx:302
 msgid "Not now"
@@ -4881,7 +4881,7 @@ msgid "of your share was paid by others"
 msgstr "of your share was paid by others"
 
 #: src/components/settings/prefControls.tsx:171
-#: src/screens/Settings/index.tsx:319
+#: src/screens/Settings/index.tsx:317
 msgid "Off"
 msgstr "Off"
 
@@ -4889,7 +4889,7 @@ msgstr "Off"
 msgid "Okay"
 msgstr "Okay"
 
-#: src/screens/Settings/index.tsx:319
+#: src/screens/Settings/index.tsx:317
 msgid "On"
 msgstr "On"
 
@@ -5086,7 +5086,7 @@ msgstr "Opens the settle-up plan for {g}"
 msgid "Opens what changed"
 msgstr "Opens what changed"
 
-#: src/navigation/Drawer.tsx:64
+#: src/navigation/Drawer.tsx:63
 msgid "Opens your profile"
 msgstr "Opens your profile"
 
@@ -5400,7 +5400,7 @@ msgstr "Plus"
 msgid "Positive means you are owed, negative means you owe. Every currency is its own balance; Splito never adds different currencies together. Splito records what you tell it; it does not move money. A “Group settle-up routing” line means a group settles through someone else, so your balance with this friend is not the plain sum of the records above it."
 msgstr "Positive means you are owed, negative means you owe. Every currency is its own balance; Splito never adds different currencies together. Splito records what you tell it; it does not move money. A “Group settle-up routing” line means a group settles through someone else, so your balance with this friend is not the plain sum of the records above it."
 
-#: src/screens/Settings/index.tsx:130
+#: src/screens/Settings/index.tsx:129
 msgid "Preferences"
 msgstr "Preferences"
 
@@ -5440,10 +5440,10 @@ msgstr "Print dialog opened. Choose Save as PDF."
 msgid "Privacy"
 msgstr "Privacy"
 
-#: src/navigation/Drawer.tsx:63
+#: src/navigation/Drawer.tsx:62
 #: src/navigation/Navigation.tsx:72
 #: src/screens/Profile.tsx:40
-#: src/screens/Settings/index.tsx:92
+#: src/screens/Settings/index.tsx:91
 msgid "Profile"
 msgstr "Profile"
 
@@ -5755,16 +5755,16 @@ msgstr "Reset {title} to default"
 msgid "Reset {title}?"
 msgstr "Reset {title}?"
 
-#: src/screens/Settings/index.tsx:273
+#: src/screens/Settings/index.tsx:271
 msgid "Reset all"
 msgstr "Reset all"
 
-#: src/screens/Settings/index.tsx:241
-#: src/screens/Settings/index.tsx:245
+#: src/screens/Settings/index.tsx:240
+#: src/screens/Settings/index.tsx:244
 msgid "Reset all settings"
 msgstr "Reset all settings"
 
-#: src/screens/Settings/index.tsx:271
+#: src/screens/Settings/index.tsx:269
 msgid "Reset all settings?"
 msgstr "Reset all settings?"
 
@@ -5992,7 +5992,7 @@ msgstr "Saved {0}"
 msgid "Saved now; applies once the directory is live."
 msgstr "Saved now; applies once the directory is live."
 
-#: src/screens/Settings/index.tsx:109
+#: src/screens/Settings/index.tsx:108
 msgid "saved on this device"
 msgstr "saved on this device"
 
@@ -6186,8 +6186,8 @@ msgstr "Send email"
 #: src/features/feedback/FeedbackList.tsx:72
 #: src/features/feedback/FeedbackSheet.tsx:135
 #: src/features/feedback/FeedbackSheet.tsx:159
-#: src/screens/Settings/index.tsx:163
-#: src/screens/Settings/index.tsx:167
+#: src/screens/Settings/index.tsx:162
+#: src/screens/Settings/index.tsx:166
 msgid "Send feedback"
 msgstr "Send feedback"
 
@@ -6267,7 +6267,7 @@ msgstr "Setting up the demo… {0}%"
 #: src/navigation/Navigation.tsx:74
 #: src/screens/Profile.tsx:64
 #: src/screens/Profile.tsx:67
-#: src/screens/Settings/index.tsx:78
+#: src/screens/Settings/index.tsx:77
 #: src/screens/Settings/SettingsSection.tsx:75
 msgid "Settings"
 msgstr "Settings"
@@ -6276,11 +6276,11 @@ msgstr "Settings"
 msgid "Settings and other records"
 msgstr "Settings and other records"
 
-#: src/screens/Settings/index.tsx:257
+#: src/screens/Settings/index.tsx:256
 msgid "Settings are saved on this device and follow you to your other devices once sync is on."
 msgstr "Settings are saved on this device and follow you to your other devices once sync is on."
 
-#: src/screens/Settings/index.tsx:279
+#: src/screens/Settings/index.tsx:277
 msgid "Settings reset"
 msgstr "Settings reset"
 
@@ -6547,7 +6547,7 @@ msgstr "So friends know it’s you."
 msgid "Soft drinks"
 msgstr "Soft drinks"
 
-#: src/screens/Settings/index.tsx:319
+#: src/screens/Settings/index.tsx:317
 msgid "Some"
 msgstr "Some"
 
@@ -6753,7 +6753,7 @@ msgstr "Stay"
 msgid "Stay as an inactive member"
 msgstr "Stay as an inactive member"
 
-#: src/features/links/LinkHost.tsx:74
+#: src/features/links/LinkHost.tsx:75
 msgid "Stay in demo"
 msgstr "Stay in demo"
 
@@ -6774,7 +6774,7 @@ msgstr "Strong"
 msgid "suggested"
 msgstr "suggested"
 
-#: src/screens/Settings/index.tsx:159
+#: src/screens/Settings/index.tsx:158
 msgid "Support"
 msgstr "Support"
 
@@ -6782,11 +6782,11 @@ msgstr "Support"
 msgid "Swap who paid"
 msgstr "Swap who paid"
 
-#: src/features/links/LinkHost.tsx:73
+#: src/features/links/LinkHost.tsx:74
 msgid "Switch back"
 msgstr "Switch back"
 
-#: src/features/links/LinkHost.tsx:71
+#: src/features/links/LinkHost.tsx:72
 msgid "Switch back to your data?"
 msgstr "Switch back to your data?"
 
@@ -6814,7 +6814,7 @@ msgstr "Syncing to your other devices."
 
 #: src/components/settings/prefControls.tsx:79
 #: src/features/feedback/FeedbackSheet.tsx:415
-#: src/screens/Settings/index.tsx:309
+#: src/screens/Settings/index.tsx:307
 msgid "System"
 msgstr "System"
 
@@ -7013,7 +7013,7 @@ msgstr "The whole balance: you’ll be even in {currency}. Other currencies stay
 msgid "Their balance"
 msgstr "Their balance"
 
-#: src/screens/Settings/index.tsx:272
+#: src/screens/Settings/index.tsx:270
 msgid "Theme, tabs, categories, language and every other setting go back to how Splito starts. Your people, groups and expenses stay as they are."
 msgstr "Theme, tabs, categories, language and every other setting go back to how Splito starts. Your people, groups and expenses stay as they are."
 
@@ -7150,7 +7150,7 @@ msgstr "This is your invite link"
 msgid "This isn’t a Splito backup file."
 msgstr "This isn’t a Splito backup file."
 
-#: src/features/links/LinkHost.tsx:72
+#: src/features/links/LinkHost.tsx:73
 msgid "This link is for your own groups and friends, and demo mode shows sample data. Switch demo mode off to open it."
 msgstr "This link is for your own groups and friends, and demo mode shows sample data. Switch demo mode off to open it."
 
@@ -7858,7 +7858,7 @@ msgstr "You"
 msgid "You accepted {subject}’s friend request"
 msgstr "You accepted {subject}’s friend request"
 
-#: src/features/account/LegacyDataOffer.tsx:42
+#: src/features/account/LegacyDataOffer.tsx:41
 msgid "You added people, groups and expenses on this device before accounts. Move them into this account? Nothing moves unless you say so."
 msgstr "You added people, groups and expenses on this device before accounts. Move them into this account? Nothing moves unless you say so."
 
@@ -8203,8 +8203,8 @@ msgstr "Your device asks for reduced motion, so movement stays gentle."
 msgid "Your edits to this expense won’t be saved."
 msgstr "Your edits to this expense won’t be saved."
 
-#: src/screens/Settings/index.tsx:173
-#: src/screens/Settings/index.tsx:176
+#: src/screens/Settings/index.tsx:172
+#: src/screens/Settings/index.tsx:175
 #: src/screens/Settings/SettingsSection.tsx:58
 msgid "Your feedback"
 msgstr "Your feedback"
@@ -8259,7 +8259,7 @@ msgstr "Your personal invite is ready. When {0} joins with it, you’re friends 
 msgid "Your phone will ask to let Splito open your contacts. You pick one person; only the email or number you choose is used."
 msgstr "Your phone will ask to let Splito open your contacts. You pick one person; only the email or number you choose is used."
 
-#: src/screens/Settings/index.tsx:109
+#: src/screens/Settings/index.tsx:108
 msgid "Your profile"
 msgstr "Your profile"
 

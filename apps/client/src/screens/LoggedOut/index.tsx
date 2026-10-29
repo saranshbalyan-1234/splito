@@ -1,4 +1,4 @@
-import {useEffect, useLayoutEffect, useState} from 'react'
+import {lazy, Suspense, useEffect, useLayoutEffect, useState} from 'react'
 import {Linking, View} from 'react-native'
 import {useSafeAreaInsets} from 'react-native-safe-area-context'
 import {BottomSheetOutlet, BottomSheetProvider} from '@bsky.app/bottom-sheet'
@@ -11,7 +11,9 @@ import {Login} from '#/screens/Login'
 import {SLIDE_COUNT, slideFrom, Welcome} from '#/screens/Welcome'
 import {atoms as a, useBreakpoints, useTheme} from '#/alf'
 import {IS_WEB} from '#/env'
-import {DevBanner} from './DevBanner'
+
+/* A lazy chunk behind the folded dev check: a production bundle holds none of the dev banner. */
+const DevBanner = __DEV__ || process.env.EXPO_PUBLIC_ENV === 'e2e' ? lazy(() => import('./DevBanner').then(m => ({default: m.DevBanner}))) : null
 
 /**
  * What a signed-out device (or one blocked on a missing contact) shows instead of the app (ARCHITECTURE 26.15): the same
@@ -23,7 +25,11 @@ export function LoggedOutShell({children}: {children: React.ReactNode}) {
   return (
     <BottomSheetProvider>
       <View testID="logged-out" style={[a.util_screen_outer, a.flex_1, t.atoms.bg, {paddingTop: insets.top, paddingBottom: insets.bottom}]}>
-        <DevBanner />
+        {DevBanner && (
+          <Suspense fallback={null}>
+            <DevBanner />
+          </Suspense>
+        )}
         {children}
       </View>
       <BottomSheetOutlet />

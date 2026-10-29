@@ -846,7 +846,7 @@ msgstr "{subject} ने आपका दोस्ती का अनुरो�
 msgid "{subject} sent you a friend request"
 msgstr "{subject} ने आपको दोस्ती का अनुरोध भेजा"
 
-#: src/screens/Settings/index.tsx:314
+#: src/screens/Settings/index.tsx:312
 msgid "{tabCount, plural, one {# tab} other {# tabs}}"
 msgstr "{tabCount, plural, one {# टैब} other {# टैब}}"
 
@@ -870,11 +870,11 @@ msgstr "{title}, {byline}, {shareLabel} {shareText} (कुल {totalText}), अ
 msgid "{title}, not synced yet"
 msgstr "{title}, अभी सिंक नहीं हुआ"
 
-#: src/features/account/LogOutPrompt.tsx:21
+#: src/features/account/LogOutPrompt.tsx:34
 msgid "{unsynced, plural, one {# change hasn’t synced yet. Erasing this device’s data loses it.} other {# changes haven’t synced yet. Erasing this device’s data loses them.}}"
 msgstr "{unsynced, plural, one {# बदलाव अभी सिंक नहीं हुआ है। इस डिवाइस का डेटा मिटाने पर यह खो जाएगा।} other {# बदलाव अभी सिंक नहीं हुए हैं। इस डिवाइस का डेटा मिटाने पर ये खो जाएँगे।}}"
 
-#: src/screens/Settings/index.tsx:317
+#: src/screens/Settings/index.tsx:315
 msgid "{visible} categories"
 msgstr "{visible} श्रेणियाँ"
 
@@ -975,7 +975,7 @@ msgstr "<0>{value}</0> अभी Splito पर नहीं हैं। आम�
 msgid "= Use result"
 msgstr "= नतीजा लें"
 
-#: src/screens/Settings/index.tsx:317
+#: src/screens/Settings/index.tsx:315
 msgid "1 category"
 msgstr "1 श्रेणी"
 
@@ -1114,8 +1114,8 @@ msgstr "कोई यात्रा, फ़्लैट या कुछ भी
 #: src/components/NavFooterLinks.tsx:35
 #: src/screens/Profile.tsx:73
 #: src/screens/Profile.tsx:76
-#: src/screens/Settings/index.tsx:194
-#: src/screens/Settings/index.tsx:197
+#: src/screens/Settings/index.tsx:193
+#: src/screens/Settings/index.tsx:196
 #: src/screens/Settings/SettingsSection.tsx:51
 msgid "About"
 msgstr "परिचय"
@@ -1161,7 +1161,7 @@ msgstr "साथ में खर्च बाँटने के लिए स
 msgid "Accept to split expenses with {0}. You’ll both see what you share."
 msgstr "{0} के साथ खर्च बाँटने के लिए स्वीकार करें। जो साझा है, दोनों को दिखेगा।"
 
-#: src/screens/Settings/index.tsx:87
+#: src/screens/Settings/index.tsx:86
 msgid "Account"
 msgstr "खाता"
 
@@ -1387,7 +1387,7 @@ msgstr "समूह में जोड़ें"
 msgid "Add your email"
 msgstr "अपना ईमेल जोड़ें"
 
-#: src/navigation/Drawer.tsx:87
+#: src/navigation/Drawer.tsx:86
 #: src/screens/Profile.tsx:151
 #: src/screens/Profile.tsx:164
 msgid "Add your name"
@@ -2317,7 +2317,7 @@ msgstr "ग्रुप छोड़ नहीं सके। कृपया �
 msgid "Couldn’t log this reminder. Please try again."
 msgstr "यह रिमाइंडर दर्ज नहीं हो सका। कृपया फिर कोशिश करें।"
 
-#: src/features/account/LegacyDataOffer.tsx:53
+#: src/features/account/LegacyDataOffer.tsx:52
 msgid "Couldn’t move your data. It is still on this device."
 msgstr "आपका डेटा नहीं ले जा सके। वह अब भी इस डिवाइस पर है।"
 
@@ -2357,7 +2357,7 @@ msgstr "{name} को हटाया नहीं जा सका। पहल
 msgid "Couldn’t remove {who}. Please try again."
 msgstr "{who} को हटा नहीं सके। कृपया फिर कोशिश करें।"
 
-#: src/screens/Settings/index.tsx:281
+#: src/screens/Settings/index.tsx:279
 msgid "Couldn’t reset settings. Please try again."
 msgstr "सेटिंग्स रीसेट नहीं हो सकीं। कृपया फिर से कोशिश करें।"
 
@@ -2564,7 +2564,7 @@ msgid "Daily"
 msgstr "रोज़"
 
 #: src/components/settings/prefControls.tsx:81
-#: src/screens/Settings/index.tsx:309
+#: src/screens/Settings/index.tsx:307
 msgid "Dark"
 msgstr "डार्क"
 
@@ -2572,7 +2572,7 @@ msgstr "डार्क"
 msgid "Dark mode style"
 msgstr "डार्क मोड की शैली"
 
-#: src/screens/Settings/index.tsx:202
+#: src/screens/Settings/index.tsx:201
 msgid "Data"
 msgstr "डेटा"
 
@@ -2694,7 +2694,7 @@ msgstr "यह फ़ीडबैक हटाएँ?"
 msgid "Deleted"
 msgstr "हटाया गया"
 
-#: src/screens/Settings/index.tsx:208
+#: src/screens/Settings/index.tsx:207
 msgid "Deleted items now stay in their lists."
 msgstr "हटाई गई चीज़ें अब अपनी सूची में ही रहती हैं।"
 
@@ -3064,7 +3064,7 @@ msgstr "मनोरंजन"
 msgid "Equally"
 msgstr "बराबर"
 
-#: src/features/account/LogOutPrompt.tsx:32
+#: src/features/account/LogOutPrompt.tsx:45
 msgid "Erase this device’s data"
 msgstr "इस डिवाइस का डेटा मिटाएँ"
 
@@ -3166,7 +3166,7 @@ msgstr "बैकअप में सब कुछ पहले से यहा
 msgid "Everything is saved on this device first, so Splito works without a connection."
 msgstr "सब कुछ पहले इसी डिवाइस पर सहेजा जाता है, इसलिए Splito बिना कनेक्शन के भी चलता है।"
 
-#: src/features/account/LogOutPrompt.tsx:22
+#: src/features/account/LogOutPrompt.tsx:35
 msgid "Everything is saved on this device."
 msgstr "सब कुछ इसी डिवाइस पर सहेजा है।"
 
@@ -3247,8 +3247,8 @@ msgstr "नमूना डेटा के साथ Splito आज़माए�
 
 #: src/features/export/ExportSheet.tsx:172
 #: src/screens/Group/index.tsx:612
-#: src/screens/Settings/index.tsx:215
-#: src/screens/Settings/index.tsx:219
+#: src/screens/Settings/index.tsx:214
+#: src/screens/Settings/index.tsx:218
 msgid "Export"
 msgstr "एक्सपोर्ट"
 
@@ -3325,7 +3325,7 @@ msgstr "इस डिवाइस पर कोई भी खर्च, दो�
 msgid "Find me by email or phone"
 msgstr "ईमेल या फ़ोन से मुझे खोजा जा सके"
 
-#: src/screens/Settings/index.tsx:320
+#: src/screens/Settings/index.tsx:318
 msgid "Findable"
 msgstr "खोजे जा सकते हैं"
 
@@ -3416,8 +3416,8 @@ msgstr "दोस्त"
 
 #: src/navigation/Navigation.tsx:76
 #: src/screens/FriendsAndInvites/index.tsx:139
-#: src/screens/Settings/index.tsx:116
-#: src/screens/Settings/index.tsx:119
+#: src/screens/Settings/index.tsx:115
+#: src/screens/Settings/index.tsx:118
 #: src/screens/Settings/SettingsSection.tsx:154
 #: src/screens/Settings/SettingsSection.tsx:157
 msgid "Friends and invites"
@@ -3580,8 +3580,8 @@ msgid "Haptics"
 msgstr "हैप्टिक्स"
 
 #: src/components/NavFooterLinks.tsx:33
-#: src/screens/Settings/index.tsx:185
-#: src/screens/Settings/index.tsx:188
+#: src/screens/Settings/index.tsx:184
+#: src/screens/Settings/index.tsx:187
 #: src/screens/Settings/SettingsSection.tsx:65
 msgid "Help"
 msgstr "मदद"
@@ -3625,7 +3625,7 @@ msgstr "नमस्ते {name},"
 #: src/components/settings/TaxClassesEditor.tsx:188
 #: src/screens/Groups/components/GroupRow.tsx:134
 #: src/screens/People/components/PersonRow.tsx:213
-#: src/screens/Settings/index.tsx:320
+#: src/screens/Settings/index.tsx:318
 msgid "Hidden"
 msgstr "छिपी हुई"
 
@@ -3761,8 +3761,8 @@ msgstr "अगर आप बाद में मन बदलें, तो इ�
 msgid "If you choose Not now, the reminder is still saved, but it can’t alert you until you allow notifications."
 msgstr "अभी नहीं चुनने पर भी रिमाइंडर सहेजा जाता है, लेकिन सूचनाओं की अनुमति देने तक वह आपको सचेत नहीं कर पाएगा।"
 
-#: src/screens/Settings/index.tsx:224
-#: src/screens/Settings/index.tsx:228
+#: src/screens/Settings/index.tsx:223
+#: src/screens/Settings/index.tsx:227
 msgid "Import"
 msgstr "इम्पोर्ट"
 
@@ -4080,7 +4080,7 @@ msgstr "निष्क्रिय सदस्य के रूप में �
 msgid "Keep editing"
 msgstr "बदलाव जारी रखें"
 
-#: src/features/account/LogOutPrompt.tsx:31
+#: src/features/account/LogOutPrompt.tsx:44
 msgid "Keep this device’s data"
 msgstr "इस डिवाइस का डेटा रखें"
 
@@ -4161,7 +4161,7 @@ msgid "Let's split it {ways} ways. Add the amount and who is in on it."
 msgstr "इसे {ways} लोगों में बांटते हैं। रकम और कौन-कौन शामिल है, जोड़ें।"
 
 #: src/components/settings/prefControls.tsx:80
-#: src/screens/Settings/index.tsx:309
+#: src/screens/Settings/index.tsx:307
 msgid "Light"
 msgstr "लाइट"
 
@@ -4193,16 +4193,16 @@ msgstr "जो लिंक अभी काम करते हैं। रद
 msgid "Liquor VAT"
 msgstr "शराब पर वैट"
 
-#: src/navigation/Drawer.tsx:215
-#: src/navigation/Drawer.tsx:222
+#: src/navigation/Drawer.tsx:213
+#: src/navigation/Drawer.tsx:223
 #: src/screens/Login/AddMissingContact.tsx:51
 #: src/screens/Login/AddMissingContact.tsx:53
-#: src/screens/Settings/index.tsx:122
-#: src/screens/Settings/index.tsx:125
+#: src/screens/Settings/index.tsx:121
+#: src/screens/Settings/index.tsx:124
 msgid "Log out"
 msgstr "लॉग आउट"
 
-#: src/features/account/LogOutPrompt.tsx:27
+#: src/features/account/LogOutPrompt.tsx:40
 msgid "Log out?"
 msgstr "लॉग आउट करें?"
 
@@ -4423,15 +4423,15 @@ msgstr "आइटम {0} को नीचे ले जाएँ"
 msgid "Move item {0} up"
 msgstr "आइटम {0} को ऊपर ले जाएँ"
 
-#: src/features/account/LegacyDataOffer.tsx:47
+#: src/features/account/LegacyDataOffer.tsx:46
 msgid "Move this device’s data into your account"
 msgstr "इस डिवाइस का डेटा अपने खाते में ले जाएँ"
 
-#: src/features/account/LegacyDataOffer.tsx:41
+#: src/features/account/LegacyDataOffer.tsx:40
 msgid "Move this device’s data into your account?"
 msgstr "इस डिवाइस का डेटा अपने खाते में ले जाएँ?"
 
-#: src/features/account/LegacyDataOffer.tsx:50
+#: src/features/account/LegacyDataOffer.tsx:49
 msgid "Moved into your account"
 msgstr "आपके खाते में ले जाया गया"
 
@@ -4757,7 +4757,7 @@ msgstr "ग्रुप में नहीं"
 msgid "not involved"
 msgstr "शामिल नहीं"
 
-#: src/features/account/LegacyDataOffer.tsx:58
+#: src/features/account/LegacyDataOffer.tsx:57
 #: src/features/remind/RemindMeSheet.tsx:131
 #: src/screens/AddFriend.tsx:302
 msgid "Not now"
@@ -4881,7 +4881,7 @@ msgid "of your share was paid by others"
 msgstr "आपके हिस्से में से दूसरों ने चुकाया"
 
 #: src/components/settings/prefControls.tsx:171
-#: src/screens/Settings/index.tsx:319
+#: src/screens/Settings/index.tsx:317
 msgid "Off"
 msgstr "बंद"
 
@@ -4889,7 +4889,7 @@ msgstr "बंद"
 msgid "Okay"
 msgstr "ठीक है"
 
-#: src/screens/Settings/index.tsx:319
+#: src/screens/Settings/index.tsx:317
 msgid "On"
 msgstr "चालू"
 
@@ -5086,7 +5086,7 @@ msgstr "{g} की सेटल-अप योजना खुलती है"
 msgid "Opens what changed"
 msgstr "जो बदला, उसे खोलता है"
 
-#: src/navigation/Drawer.tsx:64
+#: src/navigation/Drawer.tsx:63
 msgid "Opens your profile"
 msgstr "आपकी प्रोफ़ाइल खोलता है"
 
@@ -5400,7 +5400,7 @@ msgstr "जोड़"
 msgid "Positive means you are owed, negative means you owe. Every currency is its own balance; Splito never adds different currencies together. Splito records what you tell it; it does not move money. A “Group settle-up routing” line means a group settles through someone else, so your balance with this friend is not the plain sum of the records above it."
 msgstr "धनात्मक का मतलब आपको मिलना है, ऋणात्मक का मतलब आपको देना है। हर मुद्रा का अपना बैलेंस है; Splito अलग-अलग मुद्राओं को कभी नहीं जोड़ता। Splito वही दर्ज करता है जो आप बताते हैं; यह पैसे नहीं भेजता। “ग्रुप हिसाब-निपटान का तरीका” वाली पंक्ति का मतलब है कि ग्रुप में निपटान किसी और के ज़रिए होता है, इसलिए इस दोस्त के साथ आपका बैलेंस ऊपर के रिकॉर्ड का सीधा जोड़ नहीं है।"
 
-#: src/screens/Settings/index.tsx:130
+#: src/screens/Settings/index.tsx:129
 msgid "Preferences"
 msgstr "प्राथमिकताएँ"
 
@@ -5440,10 +5440,10 @@ msgstr "प्रिंट डायलॉग खुल गया। PDF के 
 msgid "Privacy"
 msgstr "गोपनीयता"
 
-#: src/navigation/Drawer.tsx:63
+#: src/navigation/Drawer.tsx:62
 #: src/navigation/Navigation.tsx:72
 #: src/screens/Profile.tsx:40
-#: src/screens/Settings/index.tsx:92
+#: src/screens/Settings/index.tsx:91
 msgid "Profile"
 msgstr "प्रोफ़ाइल"
 
@@ -5755,16 +5755,16 @@ msgstr "{title} को डिफ़ॉल्ट पर रीसेट करे
 msgid "Reset {title}?"
 msgstr "{title} रीसेट करें?"
 
-#: src/screens/Settings/index.tsx:273
+#: src/screens/Settings/index.tsx:271
 msgid "Reset all"
 msgstr "सब रीसेट करें"
 
-#: src/screens/Settings/index.tsx:241
-#: src/screens/Settings/index.tsx:245
+#: src/screens/Settings/index.tsx:240
+#: src/screens/Settings/index.tsx:244
 msgid "Reset all settings"
 msgstr "सभी सेटिंग्स रीसेट करें"
 
-#: src/screens/Settings/index.tsx:271
+#: src/screens/Settings/index.tsx:269
 msgid "Reset all settings?"
 msgstr "सभी सेटिंग्स रीसेट करें?"
 
@@ -5992,7 +5992,7 @@ msgstr "{0} को सहेजा गया"
 msgid "Saved now; applies once the directory is live."
 msgstr "अभी सहेजा गया; डायरेक्टरी चालू होने पर लागू होगा।"
 
-#: src/screens/Settings/index.tsx:109
+#: src/screens/Settings/index.tsx:108
 msgid "saved on this device"
 msgstr "इसी डिवाइस पर सहेजा"
 
@@ -6186,8 +6186,8 @@ msgstr "ईमेल भेजें"
 #: src/features/feedback/FeedbackList.tsx:72
 #: src/features/feedback/FeedbackSheet.tsx:135
 #: src/features/feedback/FeedbackSheet.tsx:159
-#: src/screens/Settings/index.tsx:163
-#: src/screens/Settings/index.tsx:167
+#: src/screens/Settings/index.tsx:162
+#: src/screens/Settings/index.tsx:166
 msgid "Send feedback"
 msgstr "फ़ीडबैक भेजें"
 
@@ -6267,7 +6267,7 @@ msgstr "डेमो तैयार हो रहा है… {0}%"
 #: src/navigation/Navigation.tsx:74
 #: src/screens/Profile.tsx:64
 #: src/screens/Profile.tsx:67
-#: src/screens/Settings/index.tsx:78
+#: src/screens/Settings/index.tsx:77
 #: src/screens/Settings/SettingsSection.tsx:75
 msgid "Settings"
 msgstr "सेटिंग्स"
@@ -6276,11 +6276,11 @@ msgstr "सेटिंग्स"
 msgid "Settings and other records"
 msgstr "सेटिंग और अन्य रिकॉर्ड"
 
-#: src/screens/Settings/index.tsx:257
+#: src/screens/Settings/index.tsx:256
 msgid "Settings are saved on this device and follow you to your other devices once sync is on."
 msgstr "सेटिंग इस डिवाइस पर सहेजी जाती हैं और सिंक चालू होने पर आपके दूसरे डिवाइस पर भी पहुँचेंगी।"
 
-#: src/screens/Settings/index.tsx:279
+#: src/screens/Settings/index.tsx:277
 msgid "Settings reset"
 msgstr "सेटिंग्स रीसेट हो गईं"
 
@@ -6547,7 +6547,7 @@ msgstr "ताकि दोस्त जानें कि यह आप है
 msgid "Soft drinks"
 msgstr "कोल्ड ड्रिंक"
 
-#: src/screens/Settings/index.tsx:319
+#: src/screens/Settings/index.tsx:317
 msgid "Some"
 msgstr "कुछ"
 
@@ -6753,7 +6753,7 @@ msgstr "ठहरना"
 msgid "Stay as an inactive member"
 msgstr "निष्क्रिय सदस्य बने रहें"
 
-#: src/features/links/LinkHost.tsx:74
+#: src/features/links/LinkHost.tsx:75
 msgid "Stay in demo"
 msgstr "डेमो में रहें"
 
@@ -6774,7 +6774,7 @@ msgstr "मज़बूत"
 msgid "suggested"
 msgstr "सुझाया गया"
 
-#: src/screens/Settings/index.tsx:159
+#: src/screens/Settings/index.tsx:158
 msgid "Support"
 msgstr "सहायता"
 
@@ -6782,11 +6782,11 @@ msgstr "सहायता"
 msgid "Swap who paid"
 msgstr "भुगतान करने वाला बदलें"
 
-#: src/features/links/LinkHost.tsx:73
+#: src/features/links/LinkHost.tsx:74
 msgid "Switch back"
 msgstr "वापस जाएँ"
 
-#: src/features/links/LinkHost.tsx:71
+#: src/features/links/LinkHost.tsx:72
 msgid "Switch back to your data?"
 msgstr "अपने डेटा पर वापस जाएँ?"
 
@@ -6814,7 +6814,7 @@ msgstr "आपके दूसरे डिवाइस पर सिंक ह�
 
 #: src/components/settings/prefControls.tsx:79
 #: src/features/feedback/FeedbackSheet.tsx:415
-#: src/screens/Settings/index.tsx:309
+#: src/screens/Settings/index.tsx:307
 msgid "System"
 msgstr "सिस्टम"
 
@@ -7013,7 +7013,7 @@ msgstr "पूरा बैलेंस: {currency} में हिसाब �
 msgid "Their balance"
 msgstr "उनका बैलेंस"
 
-#: src/screens/Settings/index.tsx:272
+#: src/screens/Settings/index.tsx:270
 msgid "Theme, tabs, categories, language and every other setting go back to how Splito starts. Your people, groups and expenses stay as they are."
 msgstr "थीम, टैब, श्रेणियाँ, भाषा और बाकी हर सेटिंग Splito की शुरुआती सेटिंग पर लौट आएगी। आपके लोग, समूह और खर्च जैसे हैं वैसे ही रहेंगे।"
 
@@ -7150,7 +7150,7 @@ msgstr "यह आपका आमंत्रण लिंक है"
 msgid "This isn’t a Splito backup file."
 msgstr "यह Splito की बैकअप फ़ाइल नहीं है।"
 
-#: src/features/links/LinkHost.tsx:72
+#: src/features/links/LinkHost.tsx:73
 msgid "This link is for your own groups and friends, and demo mode shows sample data. Switch demo mode off to open it."
 msgstr "यह लिंक आपके अपने ग्रुप और दोस्तों के लिए है, और डेमो मोड में नमूना डेटा दिखता है। इसे खोलने के लिए डेमो मोड बंद करें।"
 
@@ -7858,7 +7858,7 @@ msgstr "आप"
 msgid "You accepted {subject}’s friend request"
 msgstr "आपने {subject} का दोस्ती का अनुरोध स्वीकार किया"
 
-#: src/features/account/LegacyDataOffer.tsx:42
+#: src/features/account/LegacyDataOffer.tsx:41
 msgid "You added people, groups and expenses on this device before accounts. Move them into this account? Nothing moves unless you say so."
 msgstr "खातों से पहले आपने इस डिवाइस पर लोग, समूह और खर्च जोड़े थे। क्या उन्हें इस खाते में ले जाएँ? आपकी हाँ के बिना कुछ नहीं जाएगा।"
 
@@ -8203,8 +8203,8 @@ msgstr "आपका डिवाइस कम गति माँगता ह�
 msgid "Your edits to this expense won’t be saved."
 msgstr "इस खर्च में आपके बदलाव सहेजे नहीं जाएँगे।"
 
-#: src/screens/Settings/index.tsx:173
-#: src/screens/Settings/index.tsx:176
+#: src/screens/Settings/index.tsx:172
+#: src/screens/Settings/index.tsx:175
 #: src/screens/Settings/SettingsSection.tsx:58
 msgid "Your feedback"
 msgstr "आपका फ़ीडबैक"
@@ -8259,7 +8259,7 @@ msgstr "आपका निजी आमंत्रण तैयार है�
 msgid "Your phone will ask to let Splito open your contacts. You pick one person; only the email or number you choose is used."
 msgstr "आपका फ़ोन Splito को संपर्क खोलने की अनुमति माँगेगा। आप एक व्यक्ति चुनें; सिर्फ़ आपका चुना ईमेल या नंबर इस्तेमाल होगा।"
 
-#: src/screens/Settings/index.tsx:109
+#: src/screens/Settings/index.tsx:108
 msgid "Your profile"
 msgstr "आपकी प्रोफ़ाइल"
 

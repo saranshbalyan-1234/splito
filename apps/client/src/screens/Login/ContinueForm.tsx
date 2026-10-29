@@ -6,7 +6,7 @@ import {type Contact} from '@splito/domain'
 import {parseContact} from '@splito/sync'
 
 import {deviceRegion} from '#/data/friends'
-import {AuthError, getAuthClient, hasDevAuth, type Lookup} from '#/lib/auth'
+import {AuthError, getAuthClient, type Lookup} from '#/lib/auth'
 import {atoms as a, useTheme} from '#/alf'
 import {Admonition} from '#/components/Admonition'
 import {LogoMark} from '#/components/brand/Logo'
@@ -87,7 +87,8 @@ export function ContinueForm({
       )}
       <FormActions testID="continue" isBusy={isBusy} onNext={submit} />
 
-      {hasDevAuth && (
+      {/* Inline so a production bundle folds it away (a const from another module would not fold). */}
+      {(__DEV__ || process.env.EXPO_PUBLIC_ENV === 'e2e') && (
         <View style={[a.gap_xs, a.pt_md, a.align_center]}>
           <Button testID="continue-dev-account" label={l`Continue with a dev account`} size="small" variant="outline" color="secondary" onPress={onDevAccount}>
             <ButtonText>

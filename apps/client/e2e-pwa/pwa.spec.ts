@@ -92,3 +92,16 @@ test('the manifest is standalone with the Dim background and brand icons', async
   expect(manifest).toMatchObject({display: 'standalone', background_color: '#151D28', short_name: 'Splito'})
   expect(manifest.icons.length).toBeGreaterThanOrEqual(3)
 })
+
+test('production has no dev sign-in: no dev account, and Continue says sign-in arrives with sync', async ({page}) => {
+  await page.goto('/')
+  await page.getByTestId('welcome-skip').click()
+  await expect(page.getByTestId('continue-form')).toBeVisible()
+  await expect(page.getByTestId('continue-dev-account')).toHaveCount(0)
+  await expect(page.getByTestId('dev-banner')).toHaveCount(0)
+  await page.getByTestId('continue-input').fill('dev@splito.test')
+  await page.getByTestId('continue-next').click()
+  await expect(page.getByTestId('continue-error')).toContainText('arrives with sync')
+  expect(await page.evaluate(() => (window as unknown as {__splitoTest?: unknown}).__splitoTest)).toBeUndefined()
+  expect(await page.evaluate(async () => (await indexedDB.databases()).length)).toBe(0)
+})

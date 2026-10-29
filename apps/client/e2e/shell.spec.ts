@@ -335,7 +335,7 @@ test.describe('drawer: Bluesky drawer from the header avatar', () => {
       'drawer-activity',
       'drawer-ask',
       'drawer-settings',
-      'drawer-sign-in',
+      'drawer-log-out',
     ])
     // The footer links are the sidebar's component (26.3).
     await expect(drawer.getByTestId('nav-footer-links')).toContainText(
