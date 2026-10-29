@@ -1,8 +1,14 @@
 import {createContext, useContext} from 'react'
 
+export type SearchAskMode = 'search' | 'ask'
+
 export type SearchAskApi = {
-  /** Opens the Search & Ask drawer, with `query` typed in (the old `/search?q=` link). */
-  open: (options?: {query?: string}) => void
+  /**
+   * Opens the Search & Ask drawer, with `query` typed in (the old `/search?q=` link).
+   * `mode: 'ask'` opens it straight in the Ask Splito chat (the nav item, the
+   * bottom bar's Ask tab); with a `query` the chat asks it at once.
+   */
+  open: (options?: {query?: string; mode?: SearchAskMode}) => void
   /** Cmd/Ctrl+K: opens it, or closes it when open. */
   toggle: () => void
 }

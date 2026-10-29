@@ -8,6 +8,7 @@ import {
   type ExpenseForm,
   formFromExpense,
   formPayers,
+  knownCurrency,
   pruneDraft,
   pruneForm,
   withPeople,
@@ -636,4 +637,11 @@ describe('pruneDraft', () => {
     expect(pruneDraft(inGroup, alive, {isFound: false, isInactive: false}).draft).toBeUndefined()
     expect(pruneDraft(base(), alive, undefined).draft?.title).toBe('Dinner')
   })
+})
+
+test('a currency in a route parameter is used only when this build knows it', () => {
+  expect(knownCurrency('INR')).toBe('INR')
+  expect(knownCurrency('XYZ')).toBeUndefined()
+  expect(knownCurrency('')).toBeUndefined()
+  expect(knownCurrency(undefined)).toBeUndefined()
 })

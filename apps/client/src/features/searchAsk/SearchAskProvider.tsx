@@ -4,6 +4,7 @@ import * as Dialog from '#/components/Dialog'
 import {
   type SearchAskApi,
   SearchAskContext,
+  type SearchAskMode,
 } from '#/components/SearchAsk/context'
 import {useSearchAskHotkey} from '#/components/SearchAsk/useSearchAskHotkey'
 import {SearchAskBody} from './SearchAskBody'
@@ -13,16 +14,17 @@ import {SearchAskBody} from './SearchAskBody'
  * so the header button, the old `/search` link and Cmd/Ctrl+K all open the
  * same sheet: a full-height drag-to-close drawer on phones, a centred
  * command-palette popup on rail and desktop. The body mounts only while open.
+ * It opens as search, or straight in the Ask Splito chat (`mode: 'ask'`).
  */
 export function SearchAskProvider({children}: {children: React.ReactNode}) {
   const control = Dialog.useDialogControl()
   const isOpen = useRef(false)
-  const [initialQuery, setInitialQuery] = useState('')
+  const [initial, setInitial] = useState<{query: string; mode: SearchAskMode}>({query: '', mode: 'search'})
 
   const api = useMemo<SearchAskApi & {isOpen: () => boolean}>(() => {
     const open: SearchAskApi['open'] = options => {
       if (isOpen.current) return
-      setInitialQuery(options?.query ?? '')
+      setInitial({query: options?.query ?? '', mode: options?.mode ?? 'search'})
       control.open()
     }
     return {
@@ -51,7 +53,7 @@ export function SearchAskProvider({children}: {children: React.ReactNode}) {
         }}
         nativeOptions={{fullHeight: true}}
         testID="search-ask-sheet">
-        <SearchAskBody initialQuery={initialQuery} />
+        <SearchAskBody initialQuery={initial.query} initialMode={initial.mode} />
       </Dialog.Outer>
     </SearchAskContext.Provider>
   )

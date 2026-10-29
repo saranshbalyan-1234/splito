@@ -111,8 +111,7 @@ function DrawerContentInner(): React.ReactNode {
     setDrawerOpen(false)
     const route = NAV_ITEM_ROUTE[id]
     if (!route) {
-      // TODO(F-2301): open straight in Ask mode.
-      searchAsk.open()
+      searchAsk.open({mode: 'ask'})
     } else if (route === 'Settings') {
       navigation.navigate('Settings')
     } else {

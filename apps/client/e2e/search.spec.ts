@@ -40,9 +40,11 @@ test('the header button opens the drawer; "dinner" finds titles and notes, with 
   await expect(screen.getByTestId('search-totals')).toHaveText(
     '€344.00  ·  ₹13,400.00',
   )
-  await expect(screen.getByTestId('search-row-0')).toContainText('Movie night')
-  await expect(screen.getByTestId('search-row-0')).toContainText('Pizza dinner')
-  await expect(screen.getByTestId('search-row-3')).toContainText(
+  // Row 0 is the "Ask Splito" row (F-2301); the results follow it.
+  await expect(screen.getByTestId('search-row-0')).toContainText('Ask Splito')
+  await expect(screen.getByTestId('search-row-1')).toContainText('Movie night')
+  await expect(screen.getByTestId('search-row-1')).toContainText('Pizza dinner')
+  await expect(screen.getByTestId('search-row-4')).toContainText(
     'Dinner at Thalassa',
   )
 })
@@ -57,21 +59,21 @@ test('amount and date queries', async ({page}) => {
   await expect(screen.getByTestId('search-section-expenses')).toContainText(
     String(over1000),
   )
-  await expect(screen.getByTestId(`search-row-${over1000 - 1}`)).toBeVisible()
-  await expect(screen.getByTestId(`search-row-${over1000}`)).toHaveCount(0)
+  await expect(screen.getByTestId(`search-row-${over1000}`)).toBeVisible()
+  await expect(screen.getByTestId(`search-row-${over1000 + 1}`)).toHaveCount(0)
 
   await page.getByTestId('search-input').fill('4500')
-  await expect(screen.getByTestId('search-row-0')).toContainText(
+  await expect(screen.getByTestId('search-row-1')).toContainText(
     'Beach shack lunch',
   )
-  await expect(screen.getByTestId('search-row-1')).toHaveCount(0)
+  await expect(screen.getByTestId('search-row-2')).toHaveCount(0)
 
   await page.getByTestId('search-input').fill('march')
-  // Newest first: the March 20 ramen, then the March 8 concert.
-  await expect(screen.getByTestId('search-row-0')).toContainText(
+  // Row 0 is the "Ask Splito" row; newest first: the March 20 ramen, then the March 8 concert.
+  await expect(screen.getByTestId('search-row-1')).toContainText(
     'Ramen in Shibuya',
   )
-  await expect(screen.getByTestId('search-row-1')).toContainText(
+  await expect(screen.getByTestId('search-row-2')).toContainText(
     'Concert tickets',
   )
 
@@ -88,18 +90,20 @@ test('arrow keys move through results and Enter opens one; people and groups com
   const input = page.getByTestId('search-input')
   await input.fill('sam')
   await expect(screen.getByTestId('search-section-people')).toBeVisible()
-  await expect(screen.getByTestId('search-row-0')).toContainText('Sam Carter')
+  await expect(screen.getByTestId('search-row-1')).toContainText('Sam Carter')
   await input.press('ArrowDown')
   await input.press('ArrowDown')
   await expect(screen.getByTestId('search-row-1')).toHaveAttribute(
     'aria-selected',
     'true',
   )
+  // The Ask Splito row is the first stop of the keyboard.
   await input.press('ArrowUp')
   await expect(screen.getByTestId('search-row-0')).toHaveAttribute(
     'aria-selected',
     'true',
   )
+  await input.press('ArrowDown')
   await input.press('Enter')
   await expect(page.getByTestId('screen-person')).toBeVisible()
   await expect(page).toHaveURL(/\/people\//)
@@ -161,7 +165,7 @@ test('/search opens the drawer with the query; tapping a result opens it and clo
 }) => {
   await page.goto('/search?q=goa&demo=1')
   await expect(page.getByTestId('search-input')).toHaveValue('goa')
-  await page.getByTestId('search-row-0').click()
+  await page.getByTestId('search-row-1').click()
   await expect(page.getByTestId('search-ask')).toHaveCount(0)
   await expect(page.getByTestId('screen-group')).toBeVisible()
 })

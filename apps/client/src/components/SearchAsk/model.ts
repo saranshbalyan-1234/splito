@@ -21,6 +21,8 @@ export type SearchRow =
   | {type: 'person'; key: string; nav: number; person: Entity<Person>}
   | {type: 'group'; key: string; nav: number; group: Entity<Group>}
   | {type: 'expense'; key: string; nav: number; expense: Entity<Expense>}
+  /** "Ask Splito: '<query>'", first in keyboard order (ARCHITECTURE 26.3). */
+  | {type: 'ask'; key: string; nav: number; query: string}
 
 export type SearchResultRow = Exclude<SearchRow, {type: 'header'}>
 
@@ -32,9 +34,12 @@ export function searchRows(
   results: Pick<SearchResults, 'people' | 'groups' | 'expenses'>,
   /** Expenses only: how many match, and whether that is known yet. Defaults to the rows given. */
   expenseCount?: {count: number; isPartial: boolean},
+  /** The typed query: puts the "Ask Splito" row first. */
+  askQuery?: string,
 ): SearchRow[] {
   const rows: SearchRow[] = []
   let nav = 0
+  if (askQuery) rows.push({type: 'ask', key: 'ask', nav: nav++, query: askQuery})
   const section = <T>(
     name: SearchSection,
     items: T[],

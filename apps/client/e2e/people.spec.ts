@@ -345,14 +345,14 @@ test.skip('UPI pay link shows only when I owe them rupees, and asks before recor
   await expect(page.getByTestId('sheet-save')).toHaveText('Open UPI app')
   await expect(page.getByTestId('sheet-save')).toBeDisabled()
   await page.getByTestId('upi-id').fill('meera@okhdfc')
+  // The e2e build records the UPI link (lib/openExternal) instead of handing it to the OS.
   await page.getByTestId('sheet-save').click()
   // The e2e build records the hand-off instead of opening a UPI app.
   await expect
     .poll(() =>
       page.evaluate(
         () =>
-          (window as unknown as {__splitoTest?: {externalUrls: string[]}})
-            .__splitoTest?.externalUrls,
+          (window as unknown as {__splitoTest?: {externalUrls: string[]}}).__splitoTest?.externalUrls[0],
       ),
     )
     .toEqual([

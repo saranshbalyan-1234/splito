@@ -14,9 +14,10 @@ import {
 import {type AllNavigatorParams, type NavigationProp} from '#/lib/routes/types'
 import {useEntities, useMe, usePref} from '#/data/hooks'
 import {ComposerSkeleton} from '#/components/split/ComposerSkeleton'
+import {draftContextFor} from '#/components/split/draftKey'
 import {readDraft} from '#/components/split/drafts'
 import {ExpenseComposer} from '#/components/split/ExpenseComposer'
-import {emptyForm, type ExpenseForm, pruneDraft} from '#/components/split/form'
+import {emptyForm, type ExpenseForm, knownCurrency, pruneDraft} from '#/components/split/form'
 import {todayIn} from '#/locale/dates'
 import {useTimeZone} from '#/locale/useDates'
 import * as Toast from '#/components/Toast'
@@ -77,6 +78,7 @@ export function AddExpenseScreen() {
       tz={tz}
       personId={params?.personId}
       groupId={params?.groupId}
+      prefill={{title: params?.title, amount: params?.amount, currency: params?.currency}}
       onClose={close}
     />
   )
@@ -93,6 +95,7 @@ function AddExpenseForm({
   tz,
   personId,
   groupId,
+  prefill,
   onClose,
 }: {
   me: string
@@ -106,11 +109,20 @@ function AddExpenseForm({
   tz: string
   personId?: string
   groupId?: string
+  /** An Ask Splito action card starts the form with these; the saved draft then waits, untouched (ARCHITECTURE 26.19). */
+  prefill?: {title?: string; amount?: string; currency?: string}
   onClose: () => void
 }) {
   const {t: l} = useLingui()
   const context = {personId, groupId}
+  const isPrefilled = !!(prefill?.title || prefill?.amount)
   const [fresh] = useState(() => {
+    const form = freshFormFor()
+    return isPrefilled
+      ? {...form, title: prefill?.title ?? form.title, amount: prefill?.amount ?? form.amount, currency: knownCurrency(prefill?.currency) ?? form.currency}
+      : form
+  })
+  function freshFormFor() {
     /* An inactive group takes no new expenses (decision 89): a link or button naming one opens a plain expense. */
     const group = groups.find(g => g.id === groupId && !isGroupInactive(g.data))
     if (group) {
@@ -140,8 +152,9 @@ function AddExpenseForm({
       adjustModes,
       roundTo: roundTo ? roundToFor(roundTo, currency) : 0,
     })
-  })
+  }
   const [{draft, isGroupDropped}] = useState(() => {
+    if (isPrefilled) return {draft: undefined, isGroupDropped: false}
     const d = readDraft(context)
     if (!d) return {draft: undefined, isGroupDropped: false}
     // People removed since the draft was written drop out of every field of it.
@@ -160,7 +173,8 @@ function AddExpenseForm({
       initialForm={draft ?? fresh}
       freshForm={fresh}
       tz={tz}
-      draftContext={context}
+      /* A prefilled form owns no draft slot: it never writes over, or clears, the draft the user saved. */
+      draftContext={draftContextFor(context, isPrefilled)}
       isDraftRestored={!!draft}
       onClose={onClose}
     />

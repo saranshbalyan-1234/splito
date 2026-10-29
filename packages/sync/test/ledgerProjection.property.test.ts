@@ -210,10 +210,11 @@ async function run(s: Store, seed: number, steps: number, {erases = true}: {eras
           break
         }
         case 21: {
-          // A group deleted (a tombstone; there is no screen for it yet, the projections must still follow).
+          // A group deleted (a tombstone; there is no screen for it yet, the projections must still follow). Stamped from the
+          // context clock, like every real write: a stamp ahead of it made a later restore look older than the delete.
           if (!groups.length) break
           const g = await s.get<Group>('group', r.pick(groups).id)
-          if (g && !g.deleted) await s.transaction(tx => tx.put({...g, version: g.version + 1, updatedAt: g.updatedAt + 1, deleted: true}))
+          if (g && !g.deleted) await s.transaction(tx => tx.put({...g, version: g.version + 1, updatedAt: ctx.now(), deleted: true}))
           break
         }
         case 22: {

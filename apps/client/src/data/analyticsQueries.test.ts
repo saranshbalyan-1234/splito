@@ -114,5 +114,12 @@ test('period cells equal the cells of the records, for random ranges (partial he
       expect([range, exact, folded(got.period)]).toEqual([range, exact, folded(inside)])
       expect([range, exact, folded(got.before)]).toEqual([range, exact, folded(earlier)])
     }
+  // One group: the same cells as the records of that group, read by its own date index.
+  const g1 = all.filter(c => c.groupId === 'g1')
+  for (const range of ranges.slice(0, 6))
+    for (const exact of [false, true]) {
+      const got = await cellsQuery('INR', range, exact, 'g1').loader(store, {reload() {}})('unknown', undefined)
+      expect([range, exact, folded(got.period)]).toEqual([range, exact, folded(g1.filter(c => c.date >= range.from && c.date <= range.to))])
+    }
   await store.close()
 })

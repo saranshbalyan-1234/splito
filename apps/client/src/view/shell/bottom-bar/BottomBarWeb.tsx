@@ -70,8 +70,7 @@ export function BottomBarWeb() {
                 accessibilityLabel={_(NAV_LABELS[tab])}
                 accessibilityHint=""
                 targetScale={0.8}
-                // TODO(F-2301): open straight in Ask mode.
-                onPress={() => searchAsk.open()}>
+                onPress={() => searchAsk.open({mode: 'ask'})}>
                 <TabGlyph tab={tab} isActive={false} size={iconWidth} />
               </PressableScale>
             )

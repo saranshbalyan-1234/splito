@@ -13,6 +13,7 @@ import {
   computeShares,
   DomainError,
   evaluateAmount,
+  getCurrency,
   type ItemParticipant,
   parseBasisPoints,
   participantId,
@@ -808,4 +809,15 @@ export function hasContent(f: ExpenseForm): boolean {
   return Boolean(
     f.title.trim() || f.amount.trim() || f.notes.trim() || f.items.length,
   )
+}
+
+/** A route parameter is untrusted text: a code this build does not know falls back to the form's own currency. */
+export function knownCurrency(code: string | undefined): string | undefined {
+  if (!code) return undefined
+  try {
+    getCurrency(code)
+    return code
+  } catch {
+    return undefined
+  }
 }

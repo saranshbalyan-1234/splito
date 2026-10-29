@@ -1,7 +1,7 @@
 // Adapted from bluesky-social/social-app@4e4ad9c (MIT) - src/screens/SavedFeeds.tsx (PinnedFeedItem, onMoveUp/onMoveDown)
 import {useState} from 'react'
 import {View} from 'react-native'
-import {MAX_TABS, MIN_TABS, type NavItemId, type TabId} from '@splito/sync'
+import {type NavItemId, type TabId} from '@splito/sync'
 import {useLingui as useLinguiCore} from '@lingui/react'
 import {useLingui} from '@lingui/react/macro'
 
@@ -72,8 +72,8 @@ function homeFirst(rows: Row[]) {
  * Settings > Navigation (ARCHITECTURE 26.3, decision 70): every item of the
  * shared sidebar / drawer list can go in the phone bottom bar, each with a
  * switch and a drag handle (Bluesky's pinned-feeds list), or arrow buttons on
- * wide web and for screen readers. The bar holds 2 to 5 tabs; Home stays on
- * and first. Items not in the bar stay in the drawer; desktop and rail always
+ * wide web and for screen readers. The bar takes any number of tabs, from
+ * Home alone to every item (decision 84); Home stays on and first. Items not in the bar stay in the drawer; desktop and rail always
  * show the full list. Reset (the section's) restores Home, Groups, Analytics,
  * Activity.
  */
@@ -106,8 +106,6 @@ export function NavigationEditor() {
     void pref.set(ordered.filter(r => r.isVisible).map(r => r.tab))
   }
   const visibleCount = rows.filter(r => r.isVisible).length
-  const isFull = visibleCount >= MAX_TABS
-  const isAtMinimum = visibleCount <= MIN_TABS
   // Keyboard users on wide web and screen readers get arrows; touch drags.
   const showArrows = (IS_WEB && gtMobile) || screenReaderEnabled
 
@@ -124,7 +122,7 @@ export function NavigationEditor() {
       pref={pref}
       icon={TabsIcon}
       title={l`Bottom bar`}
-      description={l`Choose the tabs on the phone bottom bar and their order: 2 to 5, with Home first. Everything else stays in the menu behind your avatar.`}>
+      description={l`Choose the tabs on the phone bottom bar and their order: as many as you like, with Home first. Everything else stays in the menu behind your avatar.`}>
       <View
         style={[
           a.w_full,
@@ -147,11 +145,7 @@ export function NavigationEditor() {
                 label={labels[row.tab]}
                 dragHandle={isHome ? <HandleSpacer /> : dragHandle}
                 isLast={index === rows.length - 1}
-                isLocked={
-                  isHome ||
-                  (row.isVisible && isAtMinimum) ||
-                  (!row.isVisible && isFull)
-                }
+                isLocked={isHome}
                 onToggle={isVisible =>
                   save(
                     rows.map(r => (r.tab === row.tab ? {...r, isVisible} : r)),
@@ -173,14 +167,14 @@ export function NavigationEditor() {
           }}
         />
       </View>
-      {(isFull || isAtMinimum) && (
+      {(visibleCount === 1 || visibleCount > 5) && (
         <Text
-          testID="tabs-limit-note"
+          testID="tabs-count-note"
           aria-live="polite"
           style={[a.text_sm, a.leading_snug, t.atoms.text_contrast_medium]}>
-          {isFull
-            ? l`The bar holds up to 5 tabs. Turn one off to add another.`
-            : l`The bar needs at least 2 tabs.`}
+          {visibleCount === 1
+            ? l`Only Home is on the bar. The rest stay in the menu behind your avatar.`
+            : l`${visibleCount} tabs share the bar equally.`}
         </Text>
       )}
     </PrefSection>
@@ -205,7 +199,7 @@ function TabRow({
   label: string
   dragHandle: React.ReactNode
   isLast: boolean
-  /** Home, the last tabs above the minimum, or a sixth tab: the switch can't move. */
+  /** Home: its switch can't move. */
   isLocked: boolean
   onToggle: (isVisible: boolean) => void
   arrows?: {onUp?: () => void; onDown?: () => void}

@@ -419,7 +419,7 @@ Pager tabs Expenses / Balances / Members (F-203). Balances shows each member's n
 
 Choose and order the phone bottom-bar destinations (Home, Groups, Analytics, Activity, Ask Splito) with a guaranteed recovery route to Settings.
 
-- **Effort** S · **Impact** 6 · **Backend** no · **Status** in progress (Settings) · **Deps** F-201
+- **Effort** S · **Impact** 6 · **Backend** no · **Status** done (Settings > Navigation takes any number of tabs, Ask Splito pinnable) · **Deps** F-201
 - **Prefs** `tabs`, `homeTab`
 - **Acceptance**
   1. Hiding every optional tab still leaves Settings reachable from the drawer.
@@ -567,13 +567,13 @@ Pin friends and groups to the top of their lists and of the right column's Recen
 
 One `navigationItems` array and one `NavFooterLinks` component feed the desktop/rail sidebar and the phone drawer, so both show Home, Groups, Analytics, Ask Splito, Activity, Settings, then Feedback · Help · Privacy · About. The home destination is "Home"; its header shows the logo on phones and the title "Home" on rail and desktop. The drawer header shows the avatar and the person's real name only.
 
-- **Effort** S · **Impact** 8 · **Backend** no · **Status** done (web checked in Chrome; Cmd/Ctrl+K on native hardware keyboards and native hardware-keyboard shortcuts wait for a native key-command module; Ask Splito item and the drawer's Ask mode wait for F-2301) · **Deps** F-201, F-204
+- **Effort** S · **Impact** 8 · **Backend** no · **Status** done (web checked in Chrome; Cmd/Ctrl+K on native hardware keyboards and native hardware-keyboard shortcuts wait for a native key-command module) · **Deps** F-201, F-204
 - **Prefs** `tabs` (now takes every shared item, group Navigation)
 - **Acceptance**
   1. Sidebar and drawer show the same items in the same order with the same icons and labels, rendered from one `navigationItems` array and one `NavFooterLinks` component (a unit test asserts both lists are identical). The sidebar adds only the logo and the "Add expense" pill; the drawer adds only its profile header and Sign in / Log out (F-225).
   2. Profile is never a nav item (the avatar opens it). The drawer has no Profile row, no theme toggle, no "Me" label and no "Saved on this device" text; its header shows the avatar (with the F-223 dot) and the real name, and tapping it opens Profile.
   3. The home destination is labelled "Home" with a house icon in the bottom bar, sidebar and drawer; the Home header shows the logo mark on phones and the centred title "Home" on rail and desktop.
-  4. Ask Splito sits between Analytics and Activity; until F-2301 ships the item is hidden rather than a dead link.
+  4. Ask Splito sits between Analytics and Activity and opens the Search & Ask drawer in Ask mode (F-2301).
   9. Settings > Navigation offers every shared sidebar item (Home, Groups, Analytics, Ask Splito, Activity, Settings) for the phone bottom bar with toggles + drag reorder, any number of tabs (decision 84), Home fixed, default Home/Groups/Analytics/Activity (Ask Splito in the bar opens the drawer in Ask mode), items not in the bar stay in the drawer, Reset restores default (`tabs` pref; § 26.3, decision 70).
   10. Search & Ask drawer: header icon on every top-level page (left of its action) opens a drag-to-close bottom drawer (phones) / centred command-palette popup (desktop) with one input, recent searches, grouped live results (People, Groups, Expenses) and an "Ask Splito" row that switches the drawer into the chat; web "/" and Cmd/Ctrl+K; no Search page or nav item, `/search` opens the drawer; Friends section search icon removed; default bottom bar Home, Groups, Analytics, Activity (§ 26.3, decision 73).
   11. Phones (native and mobile web): the header, bottom bar and FAB scroll away on scroll down and slide back on a slight scroll up, driven by Bluesky's minimal-shell handlers; top of list always shows; a tab switch or a sheet opening resets them to shown; rail/desktop headers stay sticky (§ 26.4, decision 81). A Playwright test scrolls mobile web 300 px down (hidden) and 30 px up (shown).
@@ -4053,10 +4053,10 @@ Answers from real records, never invented numbers.
 
 One AI entry point, "Ask Splito" (Lucide sparkles): a nav item between Analytics and Activity, the Analytics header action, and an "Ask Splito about '<query>'" row in Search. The chat screen copies Bluesky's DM conversation; questions over your own data are answered on the device by a deterministic engine.
 
-- **Effort** L · **Impact** 8 · **Backend** no · **Status** todo · **Deps** F-1301, F-222, F-1401
+- **Effort** L · **Impact** 8 · **Backend** no · **Status** done (web checked in Chrome and e2e; the iOS/Android composer and sheet are the same Dialog/FlatListFooter code and wait for a device pass) · **Deps** F-1301, F-222, F-1401
 - **Prefs** -
 - **Acceptance**
-  1. Placement: the shared sidebar / drawer item between Analytics and Activity, the Analytics header's right action, and an "Ask Splito about '<query>'" row at the top of Search results; phones keep four bottom-bar tabs (F-209 can pin it).
+  1. Placement: the shared sidebar / drawer item between Analytics and Activity (opens the Search & Ask drawer in Ask mode), the Sparkles Search & Ask button already in every top-level header including Analytics (§ 26.19: no second Analytics button), and an "Ask Splito: '<query>'" row at the top of Search results; phones keep four bottom-bar tabs (F-209 can pin it).
   2. The chat screen copies Bluesky's DM conversation screen (message list, composer bar above the keyboard, day separators). The empty state shows suggestion chips ("How much did I spend on food this month?", "Who owes me the most?", "Split last night's dinner 3 ways", "Show my Goa trip spending by day"). Closing and reopening keeps history and the draft (A14).
   3. A deterministic engine in `lib/ask` answers totals, who owes whom, spend by category / person / group / period and trends with `@splito/domain` (exact money, never summing currencies), labelled "answered on this device"; "What does Riya owe me?" equals the People balance. Nothing leaves the device for these answers.
   4. Answers can carry rich cards: an inline chart (the Analytics chart components), a small table, a balance card, or an action card ("Add this expense", "Record payment", "Remind Riya") that opens the normal sheet pre-filled; nothing is written without that confirmation.

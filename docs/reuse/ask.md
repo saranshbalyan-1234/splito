@@ -1,0 +1,18 @@
+# Reuse record - Ask Splito (F-2301)
+
+Upstream: `bluesky-social/social-app@4e4ad9c5f5cc584bd06473ab6f16318fd0bd8465` (MIT).
+Every file below starts with `// Adapted from bluesky-social/social-app@4e4ad9c (MIT) - <upstream path>`.
+Paths are relative to `apps/client/`. Icons are Lucide (ISC); no Bluesky glyphs, illustrations or logos are copied.
+
+| Splito file | Upstream file | Splito changes |
+|---|---|---|
+| `src/features/searchAsk/AskChat.tsx` | `src/screens/Messages/components/MessagesList.tsx`, `src/components/dms/MessageItem.tsx`, `src/components/dms/DateDivider.tsx` | The DM conversation inside the Search & Ask drawer: a header with a back arrow, a message list with day dividers ("Today at 3:41 PM"), 20 px bubbles with the sender's foot squared (own messages on the accent, answers on the muted fill), the composer as a footer that follows the keyboard, suggestion chips while empty. No convo state, reactions, replies, embeds, avatars, long-press actions or network: the conversation is a device-only list (`lib/ask/history`, newest 200) with "Clear chat" |
+| `src/components/SearchAsk/AskComposer.tsx` | `src/screens/Messages/components/MessageComposer.tsx` | The rounded field that grows with its text and the round send button (muted until there is text); Enter sends on the web, Shift+Enter breaks the line. No rich text, mentions, emoji picker, embeds or reply bar |
+
+Expensify (`Expensify/App@44387bc7`, MIT) was read for the shape of its side-panel assistant (`src/components/SidePanel/`) and natural-language search page (`src/pages/Search/SearchNLFilterPage.tsx`): a question in, a structured result out. Nothing is copied; Splito answers on the device from a closed grammar.
+
+Written for Splito (no Bluesky equivalent): `src/lib/ask/` (the parser, the answer engine, the stored-chat codec), `src/data/askSource.ts` (what the engine may read: People's, Group's and Analytics' own queries), `src/features/searchAsk/{AskAnswer,askQuestions,useAskEngine}.ts(x)`, `src/components/SearchAsk/AskCards.tsx` (balance, ranking, plan, spend, trend and expense cards over the Analytics chart components), `src/components/icons/PaperPlane.tsx` (Lucide `SendHorizontal` through `createIcon`).
+
+Edited shared files: `src/features/searchAsk/{SearchAskBody,SearchAskProvider}.tsx` (the drawer's two views), `src/components/SearchAsk/{context,model,ResultRows,SearchHistory}` (the "Ask Splito" row and suggested questions), `src/navigation/Drawer.tsx`, `src/view/shell/bottom-bar/*`, `src/view/shell/desktop/LeftNav.tsx` (the Ask item opens the chat), `src/lib/routes/{navigationItems,types}.ts`, `src/screens/AddExpense.tsx` (pre-filled `title`, `amount`, `currency`), `src/storage/schema.ts` (`askChat`, `askDraft`), `src/components/settings/NavigationEditor.tsx` and `packages/sync/src/preferences.ts` (`tabs`: any number of tabs, decision 84).
+
+Shared behaviour changed by this stream (not an upstream copy): `src/lib/openExternal.ts` is now the one way to open a mail, phone, message, UPI or chat link. In a production web build a `mailto:` / `sms:` / `tel:` / `upi:` / `whatsapp:` link is opened with an anchor click (it was `location.href` or `Linking.openURL`; an anchor click hands a custom scheme to the installed app and leaves the page where it is). In an e2e build such a link is recorded on `window.__splitoTest.externalUrls` and never launched. Other links and native still go through `Linking.openURL`. `src/screens/AddExpense.tsx`: a form pre-filled by an Ask card owns no draft slot (`draftContextFor`), so it never writes over or clears the draft the user saved, and its close prompt is the sheet's own "Discard changes?".
