@@ -3,7 +3,7 @@ import {join} from 'node:path'
 
 import {expect, type Page, test} from '@playwright/test'
 
-import {openDemo} from './openDemo'
+import {openDemo, showSettled} from './openDemo'
 import {
   balanceRows,
   balanceSides,
@@ -74,6 +74,7 @@ test('People shows each friend with real words and the right balance per currenc
   page,
 }) => {
   await openDemo(page)
+  await showSettled(page)
   for (const [key, name] of Object.entries(STORY)) {
     const row = await reveal(page, `person-${name}`)
     await expect(row).toBeVisible()

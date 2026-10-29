@@ -240,20 +240,14 @@ test('hide works from the keyboard, offers undo, and hidden rows come back from 
   await expect(coffee).toBeVisible()
 })
 
-test('the swipe preferences pick the row buttons', async ({page}) => {
+test('the row buttons are Mark read and Delete (swipe left deletes, right marks read; no settings, F-251)', async ({page}) => {
   await page.setViewportSize(DESKTOP)
   await openActivity(page)
-  await page.waitForFunction(() => 'splito' in window)
-  await page.evaluate(async () => {
-    const s = (window as any).splito
-    await s.setPref('swipeLeft', 'hide')
-    await s.setPref('swipeRight', 'none')
-  })
   const dinner = row(page, 'expense.edited', 'Dinner at Thalassa')
   await dinner.hover()
-  await expect(dinner.getByTestId('activity-action-hide')).toBeVisible()
-  await expect(dinner.getByTestId('activity-action-markRead')).toHaveCount(0)
-  await expect(dinner.getByTestId('activity-action-delete')).toHaveCount(0)
+  await expect(dinner.getByTestId('activity-action-delete')).toBeVisible()
+  await expect(dinner.getByTestId('activity-action-markRead')).toBeVisible()
+  await expect(dinner.getByTestId('activity-action-hide')).toHaveCount(0)
 })
 
 test('a row opens what it is about and becomes read', async ({page}) => {

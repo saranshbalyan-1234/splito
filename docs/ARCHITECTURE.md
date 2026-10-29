@@ -1185,7 +1185,7 @@ labelled sidebar); **wide** = web 1300 px and up (Bluesky `gtTablet`, right colu
   theme, default currency, timezone, home tab, bottom bar, list filters and sorts, motion, reminders, privacy).
   No setting for a detail nobody changes, no switch that duplicates another control, no setting just to
   hide a small UI element: those get one good default (Bluesky's or Expensify's) and no row. Settings stays
-  short, grouped and searchable; every remaining choice keeps its preferences-registry entry and its Settings
+  short and grouped; every remaining choice keeps its preferences-registry entry and its Settings
   row (§ 24), and every user choice that does exist is remembered in the database (decision 90). Collections
   (cards, tabs, lists) can still be shown, hidden or reordered where people really differ. *Why:* "customization
   are needed, but not forcefully, only whats needed"; "remove this, its not needed" (the "Language menu"
@@ -1210,8 +1210,10 @@ labelled sidebar); **wide** = web 1300 px and up (Bluesky `gtTablet`, right colu
   backed by its **own separate local database** (its own IndexedDB database / SQLite file, with its own
   preferences, history and outbox). Turning it on switches the app to the demo database, seeded once; turning it
   off switches back to the real data, which demo mode never reads or writes (the real database keeps one device
-  row, `demo.mode`). Demo data never syncs and never merges into an account. While on, a persistent "Demo mode ·
-  Switch back" banner shows on every screen; "Reset demo" reseeds it. There is ONE dataset and ONE switch: no
+  row, `demo.mode`). Demo data never syncs and never merges into an account. There is no banner (owner 133): while on,
+  every page header title ends in " - Demo" ("Home - Demo", "Goa trip - Demo"; the phone Home logo gets a small
+  "Demo" label, the window title follows, owner 134), the avatar shows its "Demo" dot, and the Settings switch
+  turns it off; "Reset demo" reseeds it. There is ONE dataset and ONE switch: no
   URL switch, no `EXPO_PUBLIC_*` variable, no Add/Remove demo data. e2e turns demo mode on only through the
   test-only hook `window.__splitoTest.demoMode(true)`, which runs the same switch (F-228a). A `demoCoverage`
   test (`data/demoCoverage.test.ts`) lists every user-facing feature and fails when the seeded demo database has
@@ -1680,7 +1682,7 @@ expands once I click". *Where:* `screens/People`, `screens/Groups`, `screens/Gro
     even and comments still work, so open money can be closed. Making a group inactive with an open balance is
     allowed after a prompt that lists the open amounts per currency and offers "Settle up first". Inactive
     groups leave the main view: the Groups list shows them only in an "Inactive (N)" fold at the end
-    (preference `groups.showInactiveFold`, default on), and they are out of recent groups and every group
+    (always shown), and they are out of recent groups and every group
     picker.
   - **Show / Hide is personal** (my account only, never changes the group for others; preference
     `groups.hidden`, a list of group ids synced across my own devices). A hidden group leaves my Groups list,
@@ -1822,6 +1824,22 @@ dishes etc and each item can be assigned to each in split"; "in itemize don't sh
 *Why:* "add sign in option, and logout as well in settings". *Where:* `screens/Settings`; `useSession()` not
 built yet.
 
+- **Seven Settings pages, switches for on/off** (F-251, owners 128, 131, 132). Appearance (Color mode with Dark
+  mode style, Accent colour, Text size, Money colours, Animations, Haptics), Navigation, Defaults (currency, new
+  bills start with, tax classes), Categories, Language and region, Notifications, Privacy; no Settings search.
+  Removed with their defaults as constants: list density, shake to feedback, default split (equal), amount keypad
+  (on; the system keyboard stays for screen readers), service-charge default (0), round-off spread (shares), charges
+  per merchant (on), amount shortcuts (on), inactive-groups fold (shown), Activity swipes (left delete, right mark
+  read), recent searches (kept, Clear all in Search), edit history in discussions (shown), the sync-status switch,
+  and the placeholder recurring and digest notification keys. The choice lives where it acts and is remembered
+  there: the bill's Amount / % toggle, the expense's round control (switch and unit per currency), Analytics'
+  period chip and Charts / Table toggle, and the People filter's Sort and Include groups (saved on Apply); their
+  keys stay but have no Settings row. Old links `/settings/motion` and `/settings/lists` redirect (to Appearance
+  and Settings). Every boolean setting is drawn as a switch on every platform, web included (owner 132; list
+  choices stay radio / checkbox). **Notifications** (owner 131): Payments ("When someone adds an expense with you or
+  records a payment to or from you", replacing New expenses; an old stored off on either key reads as off),
+  Comments (default on: "When someone comments on, or @mentions you in, an expense or payment you're in"),
+  Invites, and Reminders I set; the notice says the first three start once sync is on.
 - **Settings starts with an "Account" section** (copied from Bluesky's Settings account section and its
   Login/Signup screens' layout, `src/screens/Login`, `src/screens/Settings`).
 - **Signed out:** a "Sign in" row, subtitle "Back up and share with friends", opens **Bluesky's own logged-out
@@ -1853,7 +1871,7 @@ built yet.
   feedback is kept in "Your feedback" with its status. Until the backend feedback endpoint exists, Send saves it
   on the device (status "Saved on this device") and offers "Send by email" (a prefilled email draft to the
   support address, `FEEDBACK_EMAIL`, a release-checklist item); once the backend exists it goes through the
-  outbox. Preference "Shake to send feedback" (phones, default off).
+  outbox. There is no shake gesture (F-251).
 
 - **Sign-in is required: without an account nothing of the app is visible** (owner 125; replaces "signing in
   is optional" and F-211's zero-signup start; F-250, Wave C, right after the welcome tour). Signed out, the app
@@ -1974,8 +1992,9 @@ add anyway (only for you)"; "also i should be able to select from contacts". *Wh
   Same row components as Home and the invite sheet; Settings > Privacy keeps "Let people find me by email /
   phone" and links here. *Why:* "add invite management in settings as well"; "add one option in settings of
   friends, where you can add remove friends as well, and invite management as well".
-- **Privacy settings (preferences registry):** "Let people find me by email / phone" (default on),
-  "Who can send me friend requests" (everyone / people with my link only), default invite-link limits.
+- **Privacy settings (preferences registry):** Settings > Privacy shows only "Find me by email or phone" (default
+  on) and a "Friends and invites" link; "Friend requests from" (everyone / people with my link only), the invite-link
+  uses and expiry, and "Approve group joins" live only on the Friends and invites page (F-251, no duplicates).
 - Demo mode (the Settings switch) ships a fake directory so every branch of the flow can be seen; production uses the
   backend directory API (backend batch). No fake "sent" states in production builds.
 
@@ -2248,6 +2267,10 @@ Every owner decision, in the order it was made (all 2026-10-26). "Replaced" name
 | 126 | "add a little padding from top, on sidebar on logo" | Sidebar logo sits 12 px lower than the header centre line | § 26.5 | Logo on the header row centre line |
 | 127 | "navigation changes reflect on mobile only, it should be same on desktop as well" | Settings > Navigation drives the bottom bar, the rail and the desktop sidebar alike (same items, same order); items turned off go under "More" at the end of the sidebar/rail; the drawer follows the same order | § 26.3 | Desktop and rail always showed the full list |
 | 128 | "remove this, its not needed" (Language menu switch); "customization are needed, but not forcefully, only whats needed" | Settings only where people genuinely differ; no switches for small UI details or duplicates; Language menu switch removed (dropdown always shown); F-251 prunes the rest | § 26.1 | Everything customizable |
+| 131 | notifications: one Payments switch plus Comments | "New expenses" folded into Payments ("When someone adds an expense with you or records a payment to or from you"; an old stored off on either reads as off); new Comments switch (default on) for comments and @mentions; the notice says they notify once sync exists | § 26.15 | Separate New expenses and Payments switches |
+| 132 | "every on/off setting is a switch on every platform" | Boolean settings use Toggle.Switch (role switch, checked state) on web and Android too; list choices stay radio / checkbox | § 26.15 | Bluesky's checkbox on web and Android |
+| 133 | "remove the demo banner completely" | No demo banner on any screen and no reserved space; demo mode shows in the Settings switch and the avatar's Demo dot | § 26.1 | "Demo mode · Switch back" banner |
+| 134 | "append - Demo to every header title in demo mode" | Shared header TitleText adds " - Demo" (phone Home logo gets a "Demo" label); the window title follows | § 26.1 | Nothing in the header said demo |
 
 New decisions follow § 0 rule 9: rewrite the rule in its topic so only the current truth remains, then add a
 row here.

@@ -20,5 +20,5 @@ highlight ranges), `packages/domain` `sumByCurrency`, `src/screens/Search/model.
 Edited shared files: `navigation/Navigation.tsx` (route), `navigation/Drawer.tsx` (row),
 `view/shell/desktop/LeftNav.tsx` (nav item), `routes.ts`, `lib/routes/types.ts`, `lib/routes/section.ts`,
 `storage/schema.ts` (`searchHistory`), `components/settings/prefControls.tsx` + `icons.ts`
-(`rememberSearches` row), `data/demoData.ts` + `data/demo.ts` (notes on three demo expenses),
+(the `rememberSearches` row, removed in F-251), `data/demoData.ts` + `data/demo.ts` (notes on three demo expenses),
 `e2e/shell.spec.ts` (nav lists).

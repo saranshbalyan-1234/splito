@@ -1,6 +1,6 @@
 import {expect, type Page, test} from '@playwright/test'
 
-import {closeDemo, openDemo} from './openDemo'
+import {closeDemo, openDemo, showSettled} from './openDemo'
 
 /*
  * Demo mode (F-228a, ARCHITECTURE 26.1): a Settings > Data switch onto a
@@ -47,6 +47,7 @@ test('turning it on seeds the demo database in under 10 s, shows "Demo" on the a
   }
 
   // A year of activity: a page at a time, the next on scroll.
+  await showSettled(page)
   await page.goto('/groups')
   await expect(page.getByTestId('group-Tokyo')).toBeVisible()
   await expect(page.getByTestId('group-Goa trip')).toBeVisible()

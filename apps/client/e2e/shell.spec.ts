@@ -169,7 +169,7 @@ test.describe('header rule set', () => {
     await openDemo(page)
     await page.getByTestId('person-Riya Sharma').click()
     await expect(on(page, 'screen-person', 'person-name')).toHaveText(
-      'Riya Sharma',
+      /^Riya Sharma( - Demo)?$/,
     )
     await expect(on(page, 'screen-person', 'person-byline')).toBeVisible()
     await expect(
@@ -183,7 +183,7 @@ test.describe('header rule set', () => {
 
     await open(page, '/groups', 'screen-groups')
     await on(page, 'screen-groups', 'group-Goa trip').click()
-    await expect(on(page, 'screen-group', 'group-name')).toHaveText('Goa trip')
+    await expect(on(page, 'screen-group', 'group-name')).toHaveText(/^Goa trip( - Demo)?$/)
     await expect(on(page, 'screen-group', 'group-byline')).toHaveText(
       'Trip · 5 members',
     )

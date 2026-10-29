@@ -459,12 +459,12 @@ Language picker in native scripts, name and avatar, region-prefilled currency / 
 
 Opus audits every Settings row and registry key against decision 128 (keep only where people genuinely differ; one good default otherwise), the owner-decided settings are kept, the rest are retired with their reads, tests and copy. The "Language menu" switch is removed first (owner).
 
-- **Effort** S · **Impact** 7 · **Backend** no · **Status** in progress (Language menu removed on integrate/wB; audit in the Wave B post-assemble batch) · **Deps** -
-- **Prefs** retires keys; adds none
+- **Effort** S · **Impact** 7 · **Backend** no · **Status** done on integrate/wB (audit docs/audit/SETTINGS-PRUNE-2026-10-29.md; 62 registry keys -> 47: 15 retired with showSyncStatus already gone, New expenses folded into Payments, Comments added; 9 Settings pages -> 7, controls 48 -> 22; 7 merges write their key where they act) · **Deps** -
+- **Prefs** retires 16 keys (`notify.expense` folded into `notify.payment`), adds `notify.comments`
 - **Acceptance**
   1. A written audit (docs/audit/SETTINGS-PRUNE-<date>.md) lists every row: keep / remove / merge, with the reason; owner-decided settings (decision log) are always kept.
   2. Removed rows' keys are retired without data loss or crashes on old stored values; the "every key has a Settings row" test holds.
-  3. Settings sections are no longer than needed; Settings search still finds every remaining row.
+  3. Settings sections are no longer than needed (7 pages); no Settings search (owner decided none).
   4. Demo data, e2e and Lingui (--clean) updated; screenshots of Settings before and after.
 
 ### F-250 Sign-in required (auth gate) `spec: owner § 26.15 (decision 125)`

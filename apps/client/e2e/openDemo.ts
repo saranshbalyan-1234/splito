@@ -22,3 +22,13 @@ export async function openDemo(page: Page, path = '/') {
 export async function closeDemo(page: Page) {
   await page.evaluate(() => (window as unknown as Hooks).__splitoTest!.demoMode!(false))
 }
+
+/** Fully settled friends and groups are hidden by default (F-1413); a spec that reads them turns Show settled on first. */
+export async function showSettled(page: Page) {
+  await page.waitForFunction(() => 'splito' in window, undefined, {timeout: 30_000})
+  await page.evaluate(async () => {
+    const s = (window as unknown as {splito: {setPref(k: string, v: unknown): Promise<void>}}).splito
+    await s.setPref('people.showSettled', true)
+    await s.setPref('groups.showSettled', true)
+  })
+}

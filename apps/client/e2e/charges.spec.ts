@@ -220,9 +220,6 @@ test('Simple to Custom keeps the tax and tip typed in the Simple rows', async ({
 /** Two unnamed items (600 and 400) that only You had; Riya is on the bill but has no item. 10% packing on item 2 only, printed total 1,041.00 (a 1.00 gap). */
 async function unnamedItemsBill(page: Page) {
   await openAddExpense(page, DESKTOP)
-  await page.evaluate(() =>
-    (window as unknown as {splito: {setPref: (k: string, v: string) => Promise<unknown>}}).splito.setPref('bill.roundOffSpread', 'payer'),
-  )
   await page.getByTestId('expense-title').fill('Mixed bill')
   await page.getByTestId('amount-input').fill('1041')
   await page.getByTestId('expense-people').click()
@@ -249,31 +246,15 @@ async function unnamedItemsBill(page: Page) {
   await page.getByTestId('bill-round-off-add').click()
 }
 
-test('round-off to the payer: a payer with no items appears in the breakdown, and an unnamed item is numbered by the bill', async ({page}) => {
+test('a round-off is shared by everyone by share (F-251: no setting), and an unnamed item is numbered by the bill', async ({page}) => {
   await unnamedItemsBill(page)
-  await page.getByTestId('expense-payers').click()
-  await page.getByTestId('payers-single').click()
-  await page.getByTestId('payer-Riya Sharma').click()
   await expect(page.getByTestId('bill-line-round-off')).toContainText('₹1.00')
   await page.getByTestId('sheet-save').click()
   await expect(page.getByTestId('expense-saved')).toBeVisible()
   await page.getByRole('button', {name: 'View expense'}).click()
   const detail = page.getByTestId('expense-items')
   await expect(detail.getByTestId('expense-charge-0')).toContainText('on Item 2')
-  await expect(detail.getByTestId('expense-charge-round-off')).toContainText('paid by Riya Sharma')
-  const riya = detail.getByTestId('expense-person-Riya Sharma')
-  await expect(riya).toContainText('Round-off')
-  await expect(riya).toContainText('₹1.00')
-})
-
-test('with several payers a round-off "to the payer" says it is shared by everyone', async ({page}) => {
-  await unnamedItemsBill(page)
-  await page.getByTestId('expense-payers').click()
-  await page.getByTestId('payers-multiple').click()
-  await page.getByTestId('paid-You').fill('520.50')
-  await page.getByTestId('paid-Riya Sharma').fill('520.50')
-  await page.getByTestId('payers-dialog').getByTestId('sheet-close').click()
-  await expect(page.getByTestId('bill-line-round-off')).toContainText('shared by everyone')
+  await expect(detail.getByTestId('expense-charge-round-off')).toBeVisible()
 })
 
 test('desktop: Escape closes the charge sheet and focus returns to Add charge', async ({page}) => {

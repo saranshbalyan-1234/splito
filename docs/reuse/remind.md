@@ -35,5 +35,5 @@ owed amounts, share, when), `src/lib/notifications/plan.ts`, `sync.ts`, `storage
 `src/screens/Group/components/GroupRows.tsx` (`OweRow` menu) with its one `remind` prop in
 `src/screens/Group/index.tsx`, `src/screens/Settle/components/TransferRow.tsx`,
 `src/components/settings/prefControls.tsx` (three map lines), `src/components/activity/ActivityItem.tsx` and
-`icons.ts` (the reminder rows), `packages/sync/src/preferences.ts` (`notify.reminders`, `notify.recurring`,
-`notify.digest`), `app.config.ts` (the expo-notifications plugin).
+`icons.ts` (the reminder rows), `packages/sync/src/preferences.ts` (`notify.reminders`; the `notify.recurring` and
+`notify.digest` placeholders were retired in F-251), `app.config.ts` (the expo-notifications plugin).

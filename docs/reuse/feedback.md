@@ -22,7 +22,7 @@ like Bluesky's footer Feedback link its action opens the in-app sheet (`state/fe
 ## Written for Splito (no Bluesky equivalent)
 
 `src/features/feedback/FeedbackSheet.tsx` (on the shared `FormSheet`), `FeedbackList.tsx`, `FeedbackProvider.tsx`
-(one global sheet, mounted in the shell as Bluesky mounts its global dialogs), `useShake.ts` (expo-sensors
+(one global sheet, mounted in the shell as Bluesky mounts its global dialogs), `useShake.ts` (expo-sensors; removed in F-251, no shake gesture
 accelerometer), `email.ts`, `appInfo.ts`, `userAgent.ts`, `labels.ts`, `attachment.ts`;
 `packages/sync/src/feedback.ts` (entity, whitelist of app info, `mailto:` draft).
 
@@ -30,6 +30,6 @@ accelerometer), `email.ts`, `appInfo.ts`, `userAgent.ts`, `labels.ts`, `attachme
 
 `navigation/Drawer.tsx` (Feedback footer button), `screens/Settings/index.tsx` (Support section, "About and data"
 renamed "Data"), `screens/Settings/SettingsSection.tsx` (`/settings/feedback` page),
-`components/settings/prefControls.tsx` (`shakeToFeedback` row, `feedback.includeAppInfo` has none),
+`components/settings/prefControls.tsx` (`feedback.includeAppInfo` has no row; the shake row went in F-251),
 `view/shell/index.tsx` + `index.web.tsx` (`FeedbackProvider`), `state/session.ts` (account type gains `email`),
 `env/common.ts` (`FEEDBACK_EMAIL`), `packages/sync/src/{mutations,types,index,preferences}.ts`.

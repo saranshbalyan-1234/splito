@@ -13,7 +13,7 @@ no mode banner. What it does have, and what is reused unchanged in role:
 
 | Splito file | Upstream file | Splito changes |
 |---|---|---|
-| `src/components/DemoBanner.tsx`, `DemoFrame.tsx` | `src/components/Admonition.tsx` (`Outer`, `Row`, `Icon`, `Content`, `Text`, `Button`) | The banner is an Admonition of type `tip`: icon, "Demo mode ·" text and a small secondary "Switch back" button. Bluesky uses Admonition for in-page notices (language, labels); here it is the one persistent banner, drawn once by the shell (`DemoFrame`) above every screen, with a blocking cover while a switch runs |
+| `src/components/DemoBusy.tsx`, `DemoBusyCover.tsx` | - | The blocking "Setting up the demo" cover only; the demo banner was removed (owner 133). Demo mode shows in the Settings switch, the avatar's Demo dot and a " - Demo" suffix on header titles (owner 134, `Layout.Header.TitleText`). |
 | `src/screens/Settings/DemoMode.tsx` | `src/screens/Settings/components/SettingsList.tsx` (`Item`, `PressableItem`, `ItemIcon`, `ItemText`), `src/components/forms/Toggle.tsx` | A Settings > Data row with a switch (Bluesky's settings checkbox row) and, while on, a "Reset demo" pressable row with a `Prompt.Basic` confirm |
 | `src/storage/index.ts` (edited) | `src/storage/index.ts` | `Storage` gains an optional key scope prefix (`setStorageScope`), so demo mode keeps its own search history, read marks and drafts; the MMKV classes are otherwise unchanged |
 

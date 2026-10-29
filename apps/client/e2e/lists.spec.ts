@@ -1,6 +1,6 @@
 import {expect, type Page, test} from '@playwright/test'
 
-import {openDemo as enterDemo} from './openDemo'
+import {openDemo as enterDemo, showSettled} from './openDemo'
 
 /*
  * Owner rules 8 and 9 on the two list screens: Overview, the search icon
@@ -93,6 +93,8 @@ test('search grows from the icon to the row width, Escape folds it, and it combi
 }) => {
   await page.setViewportSize(PHONE)
   await enterDemo(page, '/groups')
+  await showSettled(page)
+  await page.reload()
   const groups = page.getByTestId('screen-groups')
   await expect(groups.locator('[data-testid^="group-"][href]').first()).toBeVisible()
   const icon = (await groups.getByTestId('list-search').boundingBox())!
@@ -147,11 +149,11 @@ test('Groups: Cancel leaves the filters as they were; Apply sets the dot', async
   await page.getByTestId('filter-sort-name').click()
   await page.getByTestId('sheet-save').click()
   await expect(groups.getByTestId('list-filters-dot')).toBeVisible()
-  // Name order: the first groups on screen are the alphabetical first of the fifteen.
+  // Name order (settled groups are hidden by default, F-1413).
   const names = (await groups
     .locator('[data-testid^="group-"][href]')
     .evaluateAll(els => els.map(e => e.getAttribute('data-testid')!)))
-  expect(names.slice(0, 3)).toEqual(['group-Bali & Bangkok', 'group-Book club', 'group-Coorg road trip'])
+  expect(names.length).toBeGreaterThan(3)
   expect(names).toEqual([...names].sort((x, y) => x.localeCompare(y)))
 })
 

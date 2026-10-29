@@ -310,3 +310,19 @@ test('categories: rename one, add one, then hide it', async ({page}) => {
   await row.getByRole('button', {name: 'Hide Rent'}).click()
   await expect(row).toContainText('Hidden')
 })
+
+test('every on/off setting is a switch, on web too, with its label and checked state (owner 132)', async ({
+  page,
+}) => {
+  await open(page, '/settings/notifications', 'screen-settings-section')
+  for (const key of ['notify.payment', 'notify.comments', 'notify.invite', 'notify.reminders']) {
+    const sw = page.getByTestId(`${key}-switch`)
+    await expect(sw).toHaveAttribute('role', 'switch')
+    await expect(sw).toHaveAttribute('aria-checked', 'true')
+    await expect(sw).toHaveAttribute('aria-label', /.+/)
+  }
+  await page.getByTestId('notify.comments-switch').click()
+  await expect(page.getByTestId('notify.comments-switch')).toHaveAttribute('aria-checked', 'false')
+  await open(page, '/settings', 'screen-settings')
+  await expect(page.getByTestId('settings-demo-mode')).toHaveAttribute('role', 'switch')
+})

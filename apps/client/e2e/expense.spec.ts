@@ -65,7 +65,7 @@ test('add an expense: category suggestion, calculator, exact split readout, save
 
   await saveAndView(page)
   await expect(page.getByTestId('expense-detail-title')).toHaveText(
-    'Dinner at Thalassa',
+    /^Dinner at Thalassa( - Demo)?$/,
   )
   await expect(page.getByTestId('expense-detail-amount')).toHaveText(
     '₹1,500.00',
@@ -220,7 +220,7 @@ test('edit, then delete with undo', async ({page}) => {
   await page.goForward()
   await expect(page).toHaveURL(new RegExp(`/expense/${id}$`))
   await expect(page.getByTestId('expense-detail-title')).toHaveText(
-    'Cab to airport',
+    /^Cab to airport( - Demo)?$/,
   )
   await expect(page.getByTestId('expense-deleted')).toHaveCount(0)
   await expect(page.getByTestId('history-restored')).toBeVisible()

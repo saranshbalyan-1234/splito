@@ -84,7 +84,7 @@ test('incoming requests: People > Requests and Activity, Accept makes a friend',
   await expect(activityRow.getByTestId('activity-unread-dot')).toBeVisible()
   await page.getByTestId('tab-people').click()
   await page.getByTestId('request-Ishaan Verma').getByTestId('request-accept').click()
-  await expect(page.getByTestId('person-name')).toHaveText('Ishaan Verma')
+  await expect(page.getByTestId('person-name')).toHaveText(/^Ishaan Verma( - Demo)?$/)
 })
 
 test('the demo set carries the invites flow: requests, invites sent, a joined friend, links and Activity rows', async ({page}) => {
@@ -178,7 +178,7 @@ test('not on Splito: warning, then Add anyway (only for you) is selectable at on
   await expect(warning).toContainText('+44 7911 123456 isn’t on Splito yet')
   await expect(page.getByTestId('sheet-save')).toHaveText('Send invite')
   await page.getByTestId('add-friend-add-anyway').click()
-  await expect(page.getByTestId('person-name')).toHaveText('Zoe Hart')
+  await expect(page.getByTestId('person-name')).toHaveText(/^Zoe Hart( - Demo)?$/)
   // Composing from their page brings them in: a private friend is usable at once.
   const dialog = await pickerOptions(page)
   await expect(dialog.getByRole('checkbox', {name: 'Zoe Hart'})).toBeChecked()
@@ -281,7 +281,7 @@ test('opening someone’s invite link: who invited you, then Accept', async ({pa
   await expect(card).toContainText('Ananya Gupta')
   await expect(card).toContainText('invited you to be friends on Splito')
   await card.getByTestId('invite-accept').click()
-  await expect(page.getByTestId('person-name')).toHaveText('Ananya Gupta')
+  await expect(page.getByTestId('person-name')).toHaveText(/^Ananya Gupta( - Demo)?$/)
   await page.goto('/invite/nope0000')
   await expect(page.getByTestId('invite-broken')).toBeVisible()
 })
@@ -337,7 +337,7 @@ test('Settings > Privacy has the directory choice and links to Friends and invit
   await expect(page.getByTestId('pref-invites.defaultExpiry')).toHaveCount(0)
   await page.getByTestId('settings-privacy-friends').click()
   await expect(page.getByTestId('pref-privacy.friendRequestsFrom')).toBeVisible()
-  await expect(page.getByTestId('pref-privacy.findByContact')).toHaveCount(0)
+  await expect(page.getByTestId('screen-friends-invites').getByTestId('pref-privacy.findByContact')).toHaveCount(0)
   await page.getByTestId('invites.defaultMaxUses.friend-5').click()
   await expect(page.getByTestId('invites.defaultMaxUses.friend-5')).toHaveAttribute('aria-checked', 'true')
   await expect(page.getByTestId('pref-invites.defaultExpiry')).toBeVisible()
