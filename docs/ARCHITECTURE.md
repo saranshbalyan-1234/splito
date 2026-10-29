@@ -1736,6 +1736,14 @@ pages". § 17 holds the engineering rules that meet these budgets.
 group there"; "add overview in both friends and groups, with search and filters as well, search icon only,
 expands once I click". *Where:* `screens/People`, `screens/Groups`, `screens/Group`, `components/ListToolsHeader.tsx`.
 
+- **Overview cards are compact, amount on the right** (owner 156, from the owner's phone screenshot; with F-256):
+  each currency card is one short row: on the LEFT the label ("You owe" / "You are owed"), the currency chip and
+  the small lines ("2 friends", or "Owed to you ₹49,243 · You owe ₹450"); on the RIGHT the net amount, large, in the
+  red/green money colour with its arrow, right-aligned and vertically centred (owner 130). A card is about 64-72 px
+  tall on phones instead of a tall box, so several currencies fit above the fold; the same internal layout is used
+  in the desktop grid (owners 113/114 still decide columns and equal heights). Amounts never truncate (owner 120:
+  shrink to fit, then wrap the small lines, never the amount). *Why:* "the overview looks bad in mobile, in the
+  overview move the red and green to right or think of something else".
 - **Overview currency cards are separate, equal boxes in a balanced grid** (owner 113; F-245, queued): each
   currency is its own card (own border, radius, padding, gap between cards), never cells of one shared box; all
   cards in a row have the same width and height (the row takes the tallest card's height, content top-aligned).
@@ -2463,6 +2471,7 @@ Every owner decision, in the order it was made (all 2026-10-26). "Replaced" name
 | 153 | "on home show overview and recent transactions, then create a people tab as well, the group tab is already there, the overview is needed only in home" | Home = Overview + Recent transactions; new People tab (requests, invites row, friends list with search/filters); Groups list without Overview; nav Home, People, Groups, Analytics, Ask, Activity, Settings; default bar Home, People, Groups, Analytics, Activity | § 26.3 | Home held the Overview and friends list; Groups had its own Overview; bar Home, Groups, Analytics, Activity |
 | 154 | "also on home show recent active people, and recent active group"; "also request and all" | Home adds Requests (when pending), Recently active people and Recently active groups (5 each, See all); right column not shown on Home at wide | § 26.3 | Home = Overview + Recent transactions only (row 153) |
 | 155 | "also on desktop show all the tabs" | Rail and desktop sidebar always list every item in the chosen order, no More; on/off shapes only the phone bar | § 26.3 | Desktop followed the on/off choice with off items under More (127) |
+| 156 | "the overview, this looks bad in mobile, in the overview move the red and green to right or think of something else" | Compact overview cards: label and small lines left, large red/green net amount right and vertically centred; ~64-72 px on phones; same layout in the desktop grid | § 26.12 | Tall boxes with the amount under the label |
 
 New decisions follow § 0 rule 9: rewrite the rule in its topic so only the current truth remains, then add a
 row here.
