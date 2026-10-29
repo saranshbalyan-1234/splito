@@ -2,7 +2,6 @@
 import {memo, useCallback} from 'react'
 import {
   type GestureResponderEvent,
-  Linking,
   Platform,
   Pressable,
   type StyleProp,
@@ -16,6 +15,7 @@ import {
   type DebouncedNavigationProp,
   useNavigationDeduped,
 } from '#/lib/hooks/useNavigationDeduped'
+import {openExternal} from '#/lib/openExternal'
 import {getTabState, TabState} from '#/lib/routes/helpers'
 import {WebAuxClickWrapper} from '#/view/com/util/WebAuxClickWrapper'
 import {useTheme} from '#/alf'
@@ -186,7 +186,7 @@ function onPressInner(
       href.startsWith('mailto') ||
       EXEMPT_PATHS.some(path => href.startsWith(path))
     ) {
-      void Linking.openURL(href)
+      void openExternal(href)
     } else {
       const [routeName, params] = router.matchPath(href)
       if (navigationAction === 'push') {

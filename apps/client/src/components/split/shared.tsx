@@ -146,6 +146,14 @@ export function useErrorText() {
         return l`Only a group admin can do that.`
       case 'NOT_FOUND':
         return l`This expense no longer exists`
+      case 'BILL_GAP':
+        return l`The total doesn’t match the items and charges`
+      case 'CHARGE_NO_ITEMS':
+        return l`A fixed charge needs items to apply to`
+      case 'INVALID_CHARGE':
+        return l`A charge has a rate from 0 to 100% or an amount that isn’t below zero`
+      case 'ROUND_OFF_TOO_LARGE':
+        return l`Round-off can’t be more than one whole unit`
       case 'INVALID_NAME':
         return l`Add a name`
       default:

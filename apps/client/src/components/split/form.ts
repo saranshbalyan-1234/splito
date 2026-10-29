@@ -4,6 +4,8 @@ import {
   type AmountOptions,
   amountReadings,
   amountInputText,
+  type BillBreakdown,
+  billBreakdown,
   type CashAllocation,
   cashSplit,
   cashUnit,
@@ -18,6 +20,8 @@ import {
   parseLocalDate,
   remainingMinor,
   resolveItemAdjustments,
+  type RoundOff,
+  billGap,
   type SplitInput,
   splitItem,
   sumMinor,
@@ -25,6 +29,12 @@ import {
   ZERO,
 } from '@splito/domain'
 import {type Expense, type ExpenseDraft} from '@splito/sync'
+
+import {
+  type ChargeForm,
+  chargesFromForms,
+  formsFromCharges,
+} from './charges/chargeForm'
 
 /** The split modes the form offers; `adjusted` is "equal with adjustments". */
 export type SplitMode =
@@ -55,6 +65,8 @@ export type ItemForm = {
   people: string[]
   /** Portions above one, by person ("2 of 3 beers"); everyone else had one. */
   portions?: Record<string, number>
+  /** The item's tax class (F-403); absent is Standard. Only used on a bill with a charge list. */
+  taxClass?: string
 }
 
 /**
@@ -100,6 +112,13 @@ export type ExpenseForm = {
   discount: string
   /** Which charges are typed as a percentage of the items. */
   adjustModes?: AdjustModes
+  /**
+   * Scoped, stacked charges (F-403). Undefined is the Simple preset (the
+   * four plain rows above); a list, even an empty one, replaces those rows.
+   */
+  charges?: ChargeForm[]
+  /** A gap to the printed total was added as round-off, shared like this. */
+  roundOff?: 'shares' | 'payer'
   notes: string
 }
 
@@ -332,7 +351,13 @@ export function formFromExpense(
             .filter(p => participantWeight(p) > 1)
             .map(p => [participantId(p), participantWeight(p)]),
         ),
+        ...(i.taxClass === undefined ? {} : {taxClass: i.taxClass}),
       }))
+      if (s.charges) {
+        form.charges = formsFromCharges(s.charges, e.currency, mark)
+        if (s.roundOff)
+          form.roundOff = s.roundOff.to === undefined ? 'shares' : 'payer'
+      }
       form.adjustModes = {}
       for (const kind of ADJUSTMENT_KINDS) {
         const rate = s.rates?.[kind]
@@ -373,6 +398,14 @@ export type FormEvaluation = {
   adjustments?: Record<AdjustmentKind, bigint>
   /** Items mode: each priced, assigned item split by its portions, by item key then person. */
   itemParts?: Record<string, Record<string, bigint>>
+  /** Charged bills (F-403): the charges worked out, line by line. */
+  bill?: BillBreakdown
+  /** Charged bills: the total minus items and charges (what round-off would cover); zero when they tie. */
+  gap?: bigint
+  /** Charged bills: the gap is small enough to add as round-off. */
+  canRoundOff?: boolean
+  /** Charged bills: the round-off line in use. */
+  roundOff?: RoundOff
   /** Each person's share once the split is complete. */
   shares?: Record<string, bigint>
   /** Present only when the expense passes `validateExpense`; Save stays disabled until then. */
@@ -556,6 +589,7 @@ export function evaluateForm(
         name: string
         amount: bigint
         participants: ItemParticipant[]
+        taxClass?: string
       }> = []
       let isComplete = true
       for (const item of f.items) {
@@ -579,8 +613,89 @@ export function evaluateForm(
             name: item.name.trim(),
             amount: v,
             participants,
+            ...(f.charges && item.taxClass ? {taxClass: item.taxClass} : {}),
           })
         }
+      }
+      if (f.charges) {
+        /* Charged bill (F-403): classes, scopes, stacking and round-off. */
+        const {charges, errors: chargeErrors} = chargesFromForms(f.charges, {
+          currency: f.currency,
+          mark,
+          shorthand,
+          itemIds: new Set(items.map(i => i.id)),
+        })
+        Object.assign(r.rowErrors, chargeErrors)
+        let bill: BillBreakdown | undefined
+        let failure = 'INVALID_ROW_AMOUNT'
+        if (!isComplete) {
+          if (Object.values(r.rowErrors).includes('UNASSIGNED_ITEM'))
+            failure = 'UNASSIGNED_ITEM'
+        } else if (Object.keys(chargeErrors).length > 0) {
+          if (Object.values(chargeErrors).includes('INVALID_PERCENT'))
+            failure = 'INVALID_PERCENT'
+        } else {
+          try {
+            bill = billBreakdown(
+              items.map(i => ({
+                id: i.id,
+                ...(i.taxClass === undefined ? {} : {taxClass: i.taxClass}),
+                parts: r.itemParts![i.id]!,
+              })),
+              charges,
+            )
+          } catch (e) {
+            // A fixed amount on items that are not on the bill.
+            failure = codeOf(e)
+            for (const c of charges)
+              if (c.appliesTo.type !== 'all')
+                r.rowErrors[`charge:${c.id}`] = failure
+          }
+        }
+        if (!bill) {
+          errors.push(failure)
+          break
+        }
+        r.bill = bill
+        r.itemsTotal = bill.computedTotal
+        if (items.length === 0) {
+          errors.push('NO_ITEMS')
+          break
+        }
+        let roundOff: RoundOff | undefined
+        if (total !== undefined) {
+          const {gap, canRoundOff} = billGap(bill, total, f.currency)
+          r.gap = gap
+          r.canRoundOff = canRoundOff
+          if (f.roundOff && r.canRoundOff)
+            roundOff = {
+              minor: gap,
+              ...(f.roundOff === 'payer' && f.payerMode === 'single'
+                ? {to: f.payer}
+                : {}),
+            }
+          r.roundOff = roundOff
+          r.remaining = {
+            kind: 'money',
+            value: roundOff ? ZERO : gap,
+          }
+          if (r.remaining.value !== ZERO) {
+            // Never hidden: the editor shows the gap in red and Save says why it waits.
+            errors.push('BILL_GAP')
+            break
+          }
+        }
+        split = {
+          mode: 'items',
+          items,
+          tax: ZERO,
+          tip: ZERO,
+          service: ZERO,
+          discount: ZERO,
+          charges,
+          ...(roundOff ? {roundOff} : {}),
+        }
+        break
       }
       /* Each charge as typed: an amount, or a percentage turned into money by the domain. */
       const inputs: Partial<Record<AdjustmentKind, AdjustmentInput>> = {}

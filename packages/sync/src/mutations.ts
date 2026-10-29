@@ -348,7 +348,8 @@ async function buildExpense(tx: Tx, d: ExpenseDraft): Promise<Expense> {
   getCurrency(d.currency)
   parseLocalDate(d.date)
   const shares = computeShares(d.total, d.split)
-  validateExpense({total: d.total, payers: d.payers, shares})
+  const bill = d.split.mode === 'items' ? d.split : undefined
+  validateExpense({total: d.total, payers: d.payers, shares, charges: bill?.charges, roundOff: bill?.roundOff, currency: d.currency})
   const people = [...new Set([...Object.keys(d.payers), ...Object.keys(shares)])]
   for (const pid of people) await requireLive(tx, 'person', pid, 'UNKNOWN_PERSON')
   if (d.groupId) {

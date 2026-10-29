@@ -1,5 +1,6 @@
 import {type AdjustmentKind} from './adjustments'
 import {allocate, allocateCash, type CashAllocation} from './allocate'
+import {assertCharge, assertRoundOff, type BillBreakdown, billBreakdown, billShares, type Charge, type RoundOff} from './charges'
 import {assertInRange, DomainError} from './errors'
 
 /** Who had an item: a person id (one portion), or an id with a whole number of portions ("2 of 3 beers"). */
@@ -31,13 +32,21 @@ export type SplitInput =
   /** A bill of items; tax, tip, service charge (optional, older records have none) and discount follow each person's item subtotal. */
   | {
       mode: 'items'
-      items: Array<{id: string; name?: string; amount: bigint; participants: ItemParticipant[]}>
+      items: Array<{id: string; name?: string; amount: bigint; participants: ItemParticipant[]; taxClass?: string}>
       tax: bigint
       tip: bigint
       service?: bigint
       discount: bigint
       /** The rates (basis points) charges were entered as, for "Tax 18%" lines; the money above is what counts. */
       rates?: Partial<Record<AdjustmentKind, number>>
+      /**
+       * Scoped, stacked charges (F-403). When present they replace tax, tip,
+       * service and discount above (stored as zero); the money is worked out
+       * by `billBreakdown`. Absent on older expenses, which load unchanged.
+       */
+      charges?: Charge[]
+      /** The line that ties the charged total to the printed one (charged bills only). */
+      roundOff?: RoundOff
     }
   /** Equal with adjustments: each adjustment is added to (or taken from) that person, the rest is split equally. */
   | {mode: 'adjusted'; participants: string[]; adjustments: Record<string, bigint>}
@@ -133,9 +142,18 @@ export function splitItem(amount: bigint, participants: ItemParticipant[]): Reco
   return allocate(amount, weights)
 }
 
-/** Tax + tip + service charge - discount: what is spread over the item subtotals. */
+/** Tax + tip + service charge - discount (or the charges and round-off of a charged bill): what is spread over the item subtotals. */
 export function itemsAdjustment(split: ItemsSplit): bigint {
+  if (split.charges) return billOf(split).chargesTotal + (split.roundOff?.minor ?? 0n)
   return split.tax + split.tip + (split.service ?? 0n) - split.discount
+}
+
+/** A charged bill's items split by portion and its charges worked out (F-403); the split must have `charges`. */
+export function billOf(split: ItemsSplit): BillBreakdown {
+  return billBreakdown(
+    split.items.map(i => ({id: i.id, ...(i.taxClass === undefined ? {} : {taxClass: i.taxClass}), parts: splitItem(i.amount, i.participants)})),
+    split.charges ?? [],
+  )
 }
 
 /**
@@ -156,6 +174,13 @@ export function itemBreakdown(split: ItemsSplit): {
     items[item.id] = splitItem(item.amount, item.participants)
     for (const [id, v] of Object.entries(items[item.id]!)) subtotals[id] = (subtotals[id] ?? 0n) + v
   }
+  if (split.charges) {
+    const bill = billOf(split)
+    const shares = billShares(bill, split.roundOff)
+    const extras: Record<string, bigint> = {}
+    for (const [id, v] of Object.entries(shares)) if (v !== (subtotals[id] ?? 0n)) extras[id] = v - (subtotals[id] ?? 0n)
+    return {items, subtotals, extras}
+  }
   const adjustment = itemsAdjustment(split)
   let extras: Record<string, bigint> = {}
   if (adjustment !== 0n) {
@@ -172,8 +197,17 @@ export function itemBreakdown(split: ItemsSplit): {
  * total's sign (a +150 / -50 payer pair would make pairwise and group
  * balances disagree). Every write goes through here via `buildExpense`.
  */
-export function validateExpense(e: {total: bigint; payers: Record<string, bigint>; shares: Record<string, bigint>}): void {
+export function validateExpense(e: {
+  total: bigint
+  payers: Record<string, bigint>
+  shares: Record<string, bigint>
+  charges?: Charge[]
+  roundOff?: RoundOff
+  currency?: string
+}): void {
   assertInRange(e.total)
+  e.charges?.forEach(assertCharge)
+  if (e.currency) assertRoundOff(e.roundOff, e.currency)
   const isAgainstTotal = (v: bigint) => (e.total >= 0n ? v < 0n : v > 0n)
   if ([...Object.values(e.payers), ...Object.values(e.shares)].some(isAgainstTotal)) throw new DomainError('SIGN_MISMATCH')
   if (sum(Object.values(e.payers)) !== e.total) throw new DomainError('PAYERS_MISMATCH')

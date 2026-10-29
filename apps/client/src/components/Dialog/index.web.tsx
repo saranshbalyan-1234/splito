@@ -296,7 +296,20 @@ export function Inner({
           isDrawer ? drawer.frameStyle : web({display: 'contents'}),
           drawer.sheetStyle,
         ]}>
-        <FocusScope.FocusScope loop asChild trapped>
+        {/*
+         * Once the sheet starts to leave, focus is free: a trap held for the
+         * whole exit pulled focus back from a field the user had already
+         * tapped, and their first keystrokes went nowhere. On unmount focus
+         * returns to the opener only if it was left inside the sheet.
+         */}
+        <FocusScope.FocusScope
+          loop
+          asChild
+          trapped={!isClosing}
+          onUnmountAutoFocus={e => {
+            const active = document.activeElement
+            if (active && active !== document.body) e.preventDefault()
+          }}>
           <View
             role="dialog"
             aria-role="dialog"
