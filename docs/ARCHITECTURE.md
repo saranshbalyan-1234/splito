@@ -1812,8 +1812,7 @@ built yet.
   `ChooseAccountForm` for several accounts; `ForgotPasswordForm` -> `SetNewPasswordForm` (emailed/texted
   code + new password) -> `PasswordUpdatedForm`), and `screens/Signup/` (`StepInfo`: name, email or phone,
   password; Bluesky's step indicator and `BackNextButtons`; the handle and captcha steps are dropped).
-  Only the replacements required for Splito change (copy text, field types, logo, routes). Presented as a full
-  screen over the app (Splito is offline-first, so signing in is optional and can be closed). Every field is
+  Only the replacements required for Splito change (copy text, field types, logo, routes). Presented as the whole app while signed out (owner 125: sign-in is required; it cannot be closed). Every field is
   validated. Until the auth backend exists (BACKLOG F-2101..F-2105), Next shows Bluesky's Admonition
   "Sign-in arrives with sync. Your data stays safe on this device." No fake success, no fake account. *Why:*
   "there is signin page already there in bluesky, use that".
@@ -1836,6 +1835,29 @@ built yet.
   on the device (status "Saved on this device") and offers "Send by email" (a prefilled email draft to the
   support address, `FEEDBACK_EMAIL`, a release-checklist item); once the backend exists it goes through the
   outbox. Preference "Shake to send feedback" (phones, default off).
+
+- **Sign-in is required: without an account nothing of the app is visible** (owner 125; replaces "signing in
+  is optional" and F-211's zero-signup start; F-250, Wave C, right after the welcome tour). Signed out, the app
+  shows only: the welcome tour (owner 123), Bluesky's logged-out flow (splash, Sign in, Create account, Forgot
+  password; copied as above), language choice and the legal/help pages. No ledger, list, Settings page,
+  search, demo switch or deep-linked record renders, and the local database is not opened, until a session
+  exists. A deep link opened signed out (expense, group, invite) is kept and resumed after sign-in (§ 14
+  "sign-in preserves intent"); public invite pages (`/join/:token`) stay public and lead to sign-in.
+  - **Order on a fresh install:** welcome tour -> Create account or Sign in -> setup (F-211: name, purpose,
+    currency) -> Home.
+  - **Offline-first still holds after sign-in:** the session is kept on the device (credential store, § 11), the
+    app opens and works offline with the account's local database (one database per account, so two accounts on
+    one device never mix), and only an API 401 ends the session (§ 11). Sign-in itself needs a connection, and
+    says so offline.
+  - **Log out** returns to the logged-out flow and closes that account's database; the prompt of § 26.15 (keep
+    or erase this device's data, unsynced warning) still applies.
+  - **Data already on a device from before this rule** is offered once after the first sign-in: "Move this
+    device's data into your account" (F-2104), never merged silently.
+  - **Until the auth API exists** (F-2101/F-2102, moved up to start right after Wave C): dev and e2e builds offer
+    "Continue with a dev account" on the sign-in screen (a local, clearly labelled account, never in production;
+    e2e signs in through `window.__splitoTest`); production builds refuse to ship without the real auth API
+    (release blocker § 26.22).
+  *Why:* "also without login, nothing should be visible, auth is required".
 
 ### 26.16 Analytics
 
@@ -2202,6 +2224,8 @@ Every owner decision, in the order it was made (all 2026-10-26). "Replaced" name
 | 121 | "I don't see invites related data in demo" | The one demo dataset carries the invites flow in every state: incoming requests (waiting, declined), invites sent (Sent, Opened, Joined, Expired, Cancelled), private "only for you" friends incl. one linked on joining, friend and group invite links in every state, a group join request, and their Activity rows; "Opened" and "join request" are stand-ins until F-2105 | § 26.1 | Demo had no invites data |
 | 122 | "keep rebuilding app after changes, i see very old always" | localhost:8090 is rebuilt automatically after every commit to the integration branch or main line | § 26.1 | Preview rebuilt only at the end of a wave |
 | 123 | "add another feature, like what you get when you install one app ... click next or skip which explains you what this app is and how to use" | Welcome tour on first launch: up to 5 slides (Pager, dots, Skip / Next / Get started, language chip), then setup (F-211); once per install, replay from Settings > Help; first-use tips after it, one at a time, each once | § 26.2 | F-211 began at the language/name step with one FAB coach mark |
+| 124 | "Feedback ∙ Help ∙ Privacy ∙ About should be in one line" | The footer links are one line in the sidebar and the drawer (nowrap row, text_xs), English and Hindi | § 26.5 | Inline text that wrapped in the 240 px sidebar |
+| 125 | "also without login, nothing should be visible, auth is required" | Sign-in required: signed out shows only the tour, the logged-out flow, language and legal pages; DB opens only with a session; offline after sign-in; one DB per account; dev/e2e dev account until the auth API; auth backend moved up after Wave C | § 26.15 | Sign-in optional, zero-signup onboarding (F-211), closable sign-in screen |
 
 New decisions follow § 0 rule 9: rewrite the rule in its topic so only the current truth remains, then add a
 row here.

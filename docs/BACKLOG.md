@@ -77,6 +77,8 @@ Every row of the ARCHITECTURE § 26.23 decision log (rows 1-63) and the feature(
 | 58 service worker and PWA | § 26.21 | F-1901 |
 | 59 comments, remind, export | § 26.20 | F-1204, F-2208, F-1118, F-1119, F-1111, F-2210, F-2001, F-2007, F-2004 |
 | 61 sync-status dot on the avatar | § 26.7 | F-223, F-2103 |
+| 125 sign-in required, nothing visible signed out | § 26.15 | F-250 (Wave C), F-2101/F-2102 moved up after Wave C |
+| 124 footer links on one line | § 26.5 | fixed on integrate/wB |
 | 123 welcome tour on first launch and first-use tips | § 26.2 | F-249 (Wave C) |
 | 120 Home layout fixes (order, no truncation, no red dots, two-line friend rows) | § 26.12 | F-248 |
 | 119 disputes and holds; disputed records still count, left out of Settle up by default | § 26.20 | F-1210 (Wave C) |
@@ -436,7 +438,7 @@ Each empty screen gets its own copy, one primary action, optional secondary, and
   2. A filter with no results offers "Clear filters".
   3. Reduced motion shows the static illustration.
 
-### F-211 60-second zero-signup onboarding
+### F-211 60-second setup after sign-up (owner 125: sign-in is required, so this runs after Create account)
 
 Language picker in native scripts, name and avatar, region-prefilled currency / number format / week start, land on People with one FAB coach mark. **Best of both (2026-10-27, docs/scouting/2026-10-27-bluesky-expensify.md):** Expensify's purpose picker (`src/pages/OnboardingPurpose/BaseOnboardingPurpose.tsx`) joins the name step as chips: "What will you use Splito for?" (Trip, Flat or home, Couple, Friends, Just me). The answer sets defaults (default split, category set, group template once F-606 ships) and the first suggested action. Steps use Bluesky's direction-aware slide and persisted step (`src/screens/Onboarding/index.tsx`, `src/state/shell/onboarding.tsx`), and onboarding ends by starting the Getting started checklist (F-231).
 
@@ -449,6 +451,21 @@ Language picker in native scripts, name and avatar, region-prefilled currency / 
   4. Onboarding says plainly that data lives only on this device until a backup or sign-in, with a link to backups.
   5. The purpose chips share the name screen, so criterion 1's three-screen limit holds; skipping is allowed; each purpose's defaults live in one typed map with a bun test, and changing the purpose later changes only future defaults.
   6. Killing the app mid-onboarding resumes on the same step.
+
+### F-250 Sign-in required (auth gate) `spec: owner § 26.15 (decision 125)`
+
+Nothing of the app is visible signed out: only the welcome tour, the logged-out flow, language and legal pages. The local database opens per account only with a session; offline after sign-in; deep links resume after sign-in.
+
+- **Effort** M · **Impact** 10 · **Backend** front end now (dev account), real with F-2102 · **Status** todo, Wave C (right after F-249) · **Deps** F-225, F-249, F-2102 (production)
+- **Prefs** -
+- **Acceptance**
+  1. Signed out, every route (including deep links and `?drawer=` URLs) shows the logged-out flow; no store is opened and no ledger data is in the DOM (e2e asserts zero store reads before sign-in).
+  2. Fresh install order: tour, Create account / Sign in, setup (F-211), Home.
+  3. One database per account (name or file keyed by the account id); switching accounts never shows the other's data; Log out closes the database and returns to the logged-out flow with the § 26.15 prompt.
+  4. A deep link opened signed out resumes after sign-in; `/join/:token` stays public.
+  5. Offline after sign-in the app opens and works; sign-in offline says it needs a connection.
+  6. Dev/e2e builds show "Continue with a dev account" (labelled, local); production builds have no such path and the release script refuses to build without the auth API URL; e2e signs in through `window.__splitoTest.signIn`.
+  7. Data already on the device before this change is offered once: "Move this device's data into your account" (F-2104).
 
 ### F-249 Welcome tour and first-use tips `spec: owner § 26.2 (decision 123)`
 
