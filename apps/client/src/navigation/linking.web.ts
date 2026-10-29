@@ -4,17 +4,16 @@ import {ownLinkHost} from '#/lib/links/hosts'
 import {captureInitialPath} from '#/lib/links/incoming'
 import {resolveLink} from '#/lib/links/resolve'
 import {pathForRoute, webState} from '#/lib/links/state'
-import {tabHref} from '#/lib/routes/tabs'
+import {bootStartTab, tabHref} from '#/lib/routes/tabs'
 import {type FlatNavigatorParams} from '#/lib/routes/types'
-import {device} from '#/storage'
 
 /*
  * The Home tab preference (Settings > Defaults): a bare visit to "/" opens
  * that tab. Runs once, before the navigator reads the URL; links to "/" from
  * inside the app (the logo) still open Home.
  */
-const homeTab = device.get(['startTab'])
-if (homeTab && homeTab !== 'home' && window.location.pathname === '/') {
+const homeTab = bootStartTab()
+if (homeTab !== 'home' && window.location.pathname === '/') {
   window.history.replaceState(
     window.history.state,
     '',

@@ -2,11 +2,11 @@ import {View} from 'react-native'
 import {useLingui} from '@lingui/react/macro'
 import {useNavigation} from '@react-navigation/native'
 
-import {useIsPushedTab} from '#/lib/hooks/useIsPushedTab'
 import {type NavigationProp} from '#/lib/routes/types'
 import {FAB} from '#/view/com/util/fab/FAB'
 import {useFabInset} from '#/view/com/util/fab/FABInner'
 import {useTheme} from '#/alf'
+import {usePushedTab} from '#/components/TabScreen'
 import {PlusLarge_Stroke2_Corner0_Rounded as PlusIcon} from '#/components/icons/Plus'
 
 /**
@@ -23,7 +23,7 @@ export function AddExpenseFAB({
 }) {
   const t = useTheme()
   const {t: l} = useLingui()
-  const isPushed = useIsPushedTab()
+  const isPushed = usePushedTab()
   const navigation = useNavigation<NavigationProp>()
   /* Pages with Back have no FAB (§ 26.6): that includes a main screen opened from a link (owner 179). */
   if (isPushed) return null

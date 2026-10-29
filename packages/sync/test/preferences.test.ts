@@ -17,7 +17,7 @@ test('default returned when unset', async () => {
   expect(await getPref(s, 'defaultCurrency')).toBe('INR')
   expect(await getPref(s, 'includeGroupsDefault')).toBe(true)
   expect(await getPref(s, 'tabs')).toEqual(['home', 'people', 'groups', 'analytics', 'activity'])
-  expect(await getPref(s, 'homeTab')).toBe('home')
+  expect(await getPref(s, 'startTab')).toBe('home')
 })
 
 test('set then get', async () => {
@@ -73,12 +73,23 @@ test('a bar saved before the People tab (F-256): its "people" was Home, so Home 
   // A list already in the new shape is untouched.
   await stored('tabs', ['home', 'groups'])
   expect(await getPref(s, 'tabs')).toEqual(['home', 'groups'])
-  // The "Open on" tab 'people' meant Home with a bar of that time; with a new-shape bar it is the People tab.
-  await stored('tabs', ['people', 'groups'])
+})
+
+test('the "Open on" tab was the homeTab key before F-256, and its people meant Home: that old row is read once', async () => {
+  const stored = (id: string, value: unknown) =>
+    s.transaction(async tx => tx.put({type: 'preference', id, data: {value}, version: 1, deleted: false, updatedAt: 1}))
+  // An old open-on of People (Home) with no saved bar at all: Home, never the People tab.
   await stored('homeTab', 'people')
-  expect(await getPref(s, 'homeTab')).toBe('home')
-  await stored('tabs', ['home', 'people', 'groups'])
-  expect(await getPref(s, 'homeTab')).toBe('people')
+  expect(await getPref(s, 'startTab')).toBe('home')
+  // Any other old choice carries over, while the bar still holds it.
+  await stored('homeTab', 'groups')
+  expect(await getPref(s, 'startTab')).toBe('groups')
+  // The new key wins once there is one, and People is a real choice now.
+  await setPref(s, ctx, 'startTab', 'people')
+  expect(await getPref(s, 'startTab')).toBe('people')
+  // A choice the saved bar no longer holds falls back to Home.
+  await setPref(s, ctx, 'tabs', ['home', 'analytics'])
+  expect(await getPref(s, 'startTab')).toBe('home')
 })
 
 test('an order stored before Home was fixed keeps its tabs, with Home first and People after it', async () => {
@@ -88,7 +99,7 @@ test('an order stored before Home was fixed keeps its tabs, with Home first and 
   await stored('tabs', ['groups', 'activity', 'people'])
   await stored('homeTab', 'activity')
   expect(await getPref(s, 'tabs')).toEqual(['home', 'people', 'groups', 'activity'])
-  expect(await getPref(s, 'homeTab')).toBe('activity')
+  expect(await getPref(s, 'startTab')).toBe('activity')
   // Without Home, Home joins at the front.
   await stored('tabs', ['activity', 'analytics'])
   expect(await getPref(s, 'tabs')).toEqual(['home', 'people', 'activity', 'analytics'])
@@ -98,16 +109,16 @@ test('an order stored before Home was fixed keeps its tabs, with Home first and 
 })
 
 test('home tab must be a visible destination', async () => {
-  await setPref(s, ctx, 'homeTab', 'groups')
+  await setPref(s, ctx, 'startTab', 'groups')
   await setPref(s, ctx, 'tabs', ['home', 'analytics', 'settings'])
-  expect(await getPref(s, 'homeTab')).toBe('home')
+  expect(await getPref(s, 'startTab')).toBe('home')
 })
 
 test('an order saved while Profile was a tab predates the Analytics tab, so Analytics joins it', async () => {
   await s.transaction(async tx =>
-    tx.put({type: 'preference', id: 'tabs', data: {value: ['home', 'groups', 'activity', 'profile']}, version: 1, deleted: false, updatedAt: 1}),
+    tx.put({type: 'preference', id: 'tabs', data: {value: ['people', 'groups', 'activity', 'profile']}, version: 1, deleted: false, updatedAt: 1}),
   )
-  expect(await getPref(s, 'tabs')).toEqual(['home', 'groups', 'activity', 'analytics'])
+  expect(await getPref(s, 'tabs')).toEqual(['home', 'people', 'groups', 'activity', 'analytics'])
 })
 
 test('reset restores default', async () => {
@@ -181,7 +192,7 @@ test('prefFrom reads a value from loaded preference rows exactly as getPref read
   }
   await same()
   await setPref(s, ctx, 'tabs', ['home', 'people', 'groups', 'analytics', 'activity'])
-  await setPref(s, ctx, 'homeTab', 'groups')
+  await setPref(s, ctx, 'startTab', 'groups')
   await setPref(s, ctx, 'accent', '#7c3aed')
   await same()
   await resetPref(s, ctx, 'accent')

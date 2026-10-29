@@ -203,10 +203,21 @@ test('with demo mode on every header title ends in " - Demo" (and the window tit
     await expect(page.getByText(title, {exact: true}).first()).toBeVisible()
     await expect(page).toHaveTitle(`${title} - Splito`)
   }
-  // Phones show the logo on Home, so the title slot gets a small "Demo" label beside it.
+  // Phones too, on every main screen: Home reads "Home - Demo" (not the logo with a label), like its neighbours.
   await page.setViewportSize({width: 390, height: 844})
-  await page.goto('/')
-  await expect(page.getByTestId('header-demo-label')).toHaveText('Demo')
+  for (const [path, title, screen] of [
+    ['/', 'Home - Demo', 'screen-home'],
+    ['/people', 'People - Demo', 'screen-people'],
+    ['/groups', 'Groups - Demo', 'screen-groups'],
+    ['/analytics', 'Analytics - Demo', 'screen-analytics'],
+    ['/activity', 'Activity - Demo', 'screen-activity'],
+  ] as const) {
+    await page.goto(path)
+    await expect(page.getByTestId(screen).getByText(title, {exact: true})).toBeVisible()
+  }
+  await expect(page.getByTestId('header-logo')).toHaveCount(0)
   await closeDemo(page)
-  await expect(page.getByTestId('header-demo-label')).toHaveCount(0)
+  // Off demo, the phone's Home keeps the logo.
+  await page.goto('/')
+  await expect(page.getByTestId('screen-home').getByTestId('header-logo')).toBeVisible()
 })

@@ -42,7 +42,8 @@ export function RecentTransactions({locale}: {locale: string}) {
         testID="home-recent-transactions-title"
         title={l`Recent transactions`}
         action={
-          <SectionLink testID="home-recent-transactions-all" href="/activity" label={l`See all activity`}>
+          /* TODO(F-259): Activity reads `type` once its type filter lands; until then this opens the whole feed. */
+          <SectionLink testID="home-recent-transactions-all" href="/activity?type=transactions" label={l`See all activity`}>
             <Trans>See all</Trans>
           </SectionLink>
         }

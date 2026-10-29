@@ -31,6 +31,7 @@ import {SearchAskButton} from '#/components/SearchAsk/SearchAskButton'
 import {HeaderAvatar} from '#/components/HeaderAvatar'
 import {PersonPlus_Filled_Stroke2_Corner0_Rounded as PersonPlusIcon} from '#/components/icons/Person'
 import * as Layout from '#/components/Layout'
+import {TabScreen} from '#/components/TabScreen'
 import {ListToolsHeader} from '#/components/ListToolsHeader'
 import {Shimmer} from '#/motion/Shimmer'
 import {
@@ -53,7 +54,7 @@ const PLACEHOLDER_ROWS = 6
 const STOCK = {includeGroups: true, currency: 'all', show: 'all', sort: 'amount', showHidden: false, showSettled: false} as const
 
 /**
- * People (F-256, owner 153): the requests waiting for an answer, the "N invites waiting" row, then one row per
+ * People (F-256, owners 153, 175): the requests waiting for an answer and the Invites sent rows, then one row per
  * friend with their balance per currency and each group's part, under a heading with search and filters (Show
  * settled included). The Overview lives on Home only. The Include groups filter (default from preferences,
  * applied with Apply) drives the rows.
@@ -127,7 +128,7 @@ export function PeopleScreen() {
   const {listed, count: listedCount, total: searchTotal} = searchFriends(filtered, query, filters, seenCurrencies)
 
   return (
-    <Layout.Screen testID="screen-people">
+    <TabScreen testID="screen-people">
       <Layout.Header.Outer>
         <HeaderAvatar />
         {/* Search & Ask and Add friend on the right, so the title stays centred. */}
@@ -282,7 +283,7 @@ export function PeopleScreen() {
           if (f.includeGroups !== (includeDefault ?? true)) void setIncludeDefault(f.includeGroups)
         }}
       />
-    </Layout.Screen>
+    </TabScreen>
   )
 }
 

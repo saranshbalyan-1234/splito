@@ -1516,8 +1516,8 @@ labelled sidebar); **wide** = web 1300 px and up (Bluesky `gtTablet`, right colu
     rows at most) and hides when empty. Header: avatar | logo (phone) / "Home" | Search & Ask (no Add friend
     here). On wide screens the right column is not shown on Home (its content is on the page), so nothing repeats.
   - **Ids and routes:** the tab ids are `home | people | groups | analytics | activity` (plus `ask`, `settings` in the shared list) and the routes `Home` (`/`) and `People` (`/people`); the old route and id `people` meant Home. The Groups tab glyph is Lucide `Group` now, since `Users` is People's.
-  - **People** (`/people`, new tab, Lucide `Users`): incoming friend requests (Accept / Decline, the same ones
-    Home shows), the "N invites waiting ›" row, then the Friends list with its search and Filters (owners 91, 120, 130) and a settings (gear) icon on the right of the
+  - **People** (`/people`, new tab, Lucide `Users`): the same Requests and Invites sent rows Home shows (owner 175),
+    then the Friends list with its search and Filters (owners 91, 120, 130) and a settings (gear) icon on the right of the
     Friends header (search, Filters, gear; it opens Friends and invites; no "Manage" text button, owner 177); no Overview. Header:
     avatar | "People" | Search & Ask + Add friend. A friend still opens `/people/:id`.
   - **Groups** (`/groups`): the groups list with search and Filters; no Overview. Header unchanged.
@@ -1950,8 +1950,9 @@ expands once I click". *Where:* `screens/People`, `screens/Groups`, `screens/Gro
   line, never the sections below; currencies are never summed. The choice is the preference `home.overviewScope`
   (decision 90) and the address (`/?overview=groups|direct|all`; a param that is present wins, `all` is written when
   a saved Groups/Direct would otherwise apply). "Analytics ›" and each card carry it as Analytics' scope
-  (`scope=` `0:all` for Groups, `1:` for Direct, none for All). It does not follow the friends list's Include groups
-  filter. `personSummary(rows, {includeGroups, scope})` in domain; `screens/Home/overviewScope.ts`.
+  (`scope=` `0:all` for Groups, `1:` for Direct, `1:all` for All, written out so Analytics never keeps the scope it saved
+  last). It does not follow the friends list's Include groups filter, and it never changes Recently active people
+  or the other sections. `personSummary(rows, {includeGroups, scope})` in domain; `screens/Home/overviewScope.ts`.
 - **Overview cards: only the net is coloured and on the right** (owners 156-161; with F-256). Each currency
   card reads:
   - line 1: "You are owed" / "You owe" / "Settled" with the currency chip on the LEFT ... the NET on the RIGHT,
@@ -1981,8 +1982,9 @@ expands once I click". *Where:* `screens/People`, `screens/Groups`, `screens/Gro
   2026-10-29; F-248, fixed in the Wave B post-assemble batch with F-244 and F-245):
   - **Order:** Overview first, then incoming friend requests that need my answer (Accept / Decline), then
     Recent transactions (F-1415), then Recently active people and Recently active groups (§ 26.3, owners 153/154;
-    the Friends list itself moved to People). "Invites sent" leaves Home: it lives on the Friends and invites
-    page (F-621); Home shows one compact row "2 invites waiting ›" only when some are pending.
+    the Friends list itself moved to People). "Invites sent" rows are back on Home below the requests (owner 175,
+    replacing the compact "N invites waiting ›" row of this rule's first version); the full list stays on the Friends
+    and invites page (F-621).
   - **Overview amounts and labels are never truncated:** the label is written in full ("You are owed", "You
     owe"), the amount auto-shrinks to fit what the label leaves it on the card's right (down to `text_lg`, then
     wraps the currency symbol line rather than ellipsize); cards in one grid row stretch to the tallest card's
@@ -2016,7 +2018,7 @@ expands once I click". *Where:* `screens/People`, `screens/Groups`, `screens/Gro
   filter live: friends by name, groups by group or member name; no match shows Bluesky's empty state "No
   matches for '...'".
 - **Filters open a form sheet (§ 26.8) with Cancel + Apply; changes apply only on Apply,** and drive the list
-  (the Overview on Home reads the saved Include groups choice, owner 128). Filters and search combine. Friends: "Include groups" (default from the
+  (not the Overview on Home, which has its own scope, owner 176). Filters and search combine. Friends: "Include groups" (default from the
   `includeGroupsDefault` preference, on), currency (All / each present), show (All / Owes you / You owe /
   Settled), sort (Amount / Name / Recent, default from `peopleSort`). Groups: type (Trip / Home / Couple /
   Other), status (Active / Inactive / All), show (Shown / Hidden / All), currency, show (All / You are owed / You owe / Settled), sort (Recent

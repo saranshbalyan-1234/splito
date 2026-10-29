@@ -47,7 +47,7 @@ test('Home at 390: the sections in order, each at most 5 rows, no friends list, 
   await expect(home.getByTestId('header-search-ask')).toBeVisible()
   await expect(home.getByTestId('people-add-friend')).toHaveCount(0)
   // The See all links go where they say.
-  await expect(home.getByTestId('home-recent-transactions-all')).toHaveAttribute('href', '/activity')
+  await expect(home.getByTestId('home-recent-transactions-all')).toHaveAttribute('href', '/activity?type=transactions')
   await expect(home.getByTestId('home-recent-people-all')).toHaveAttribute('href', '/people')
   await expect(home.getByTestId('home-recent-groups-all')).toHaveAttribute('href', '/groups')
   await home.getByTestId('home-recent-people-all').click()
@@ -111,7 +111,9 @@ test('Overview cards at 390: compact, the net alone is coloured and on the right
       expect(c.height, c.code).toBeGreaterThan(80)
     }
   }
-  // Six currencies fit one phone screen with the header and the section title.
+  // Six currencies fit one phone screen with the header, the section title and the bottom bar.
+  const barTop = (await page.getByTestId('tab-home').boundingBox())!.y
+  expect(cards[5]!.bottom).toBeLessThanOrEqual(barTop)
   expect(cards[5]!.bottom).toBeLessThanOrEqual(PHONE.height)
 })
 
@@ -279,8 +281,12 @@ test('Overview scope: All, Groups and Direct change only the cards; it is in the
   const home = page.getByTestId('screen-home')
   await expect(home.getByTestId('overview-scope-all')).toHaveAttribute('aria-checked', 'true')
   const all = await overviewNets(page)
-  const peopleBefore = await home.getByTestId('home-recent-people').locator('a[data-testid^="person-"]').count()
+  const peopleText = () => home.getByTestId('home-recent-people').innerText()
+  const peopleBefore = await peopleText()
+  expect(peopleBefore).toContain('Riya Sharma')
   expect(Object.keys(all).length).toBeGreaterThanOrEqual(3)
+  // The chips are 44 px targets.
+  for (const id of ['all', 'groups', 'direct']) expect((await home.getByTestId(`overview-scope-${id}`).boundingBox())!.height).toBeGreaterThanOrEqual(44)
 
   await home.getByTestId('overview-scope-groups').click()
   await expect(page).toHaveURL(/\?overview=groups$/)
@@ -298,8 +304,12 @@ test('Overview scope: All, Groups and Direct change only the cards; it is in the
   expect(direct).not.toEqual(all)
   // Per currency, never summed across currencies: all = groups + direct.
   for (const code of Object.keys(all)) expect(all[code]!, code).toBeCloseTo((groups[code] ?? 0) + (direct[code] ?? 0), 2)
-  // The sections below are the same whatever the scope.
-  expect(await home.getByTestId('home-recent-people').locator('a[data-testid^="person-"]').count()).toBe(peopleBefore)
+  // The sections below are the same whatever the scope: the rows of Recently active people read the same text (their
+  // balances included), not just the same count.
+  expect(await peopleText()).toBe(peopleBefore)
+  await home.getByTestId('overview-scope-groups').click()
+  expect(await peopleText()).toBe(peopleBefore)
+  await home.getByTestId('overview-scope-direct').click()
 
   // Analytics carries the scope: Everything, all groups, non-group only.
   await expect(home.getByTestId('overview-analytics')).toHaveAttribute('href', /scope=1(:|%3A)$/)
@@ -320,7 +330,8 @@ test('Overview scope: All, Groups and Direct change only the cards; it is in the
   await page.getByTestId('screen-home').getByTestId('overview-scope-all').click()
   await expect(page).toHaveURL(/\?overview=all$/)
   expect(await overviewNets(page)).toEqual(all)
-  await expect(page.getByTestId('screen-home').getByTestId('overview-analytics')).toHaveAttribute('href', '/analytics')
+  // All carries an explicit Everything scope too, or Analytics would keep the scope it saved last.
+  await expect(page.getByTestId('screen-home').getByTestId('overview-analytics')).toHaveAttribute('href', /scope=1(:|%3A)all$/)
 })
 
 test('a main screen opened from a link is a pushed page: Back to Home, no FAB; its own tab has the avatar (owner 179)', async ({page}) => {
@@ -354,4 +365,41 @@ test('a main screen opened from a link is a pushed page: Back to Home, no FAB; i
   const people = page.getByTestId('screen-people').last()
   await expect(people.getByTestId('header-back')).toBeVisible()
   await expect(people.getByTestId('fab-add')).toHaveCount(0)
+})
+
+for (const [name, size, bar] of [['390', PHONE, 'tab-groups'], ['1440', DESKTOP, 'tab-groups']] as const) {
+  test(`pressing a tab while on its own pushed copy gives the plain tab at ${name} (owner 179)`, async ({page}) => {
+    await page.setViewportSize(size)
+    await openDemo(page)
+    await page.getByTestId('screen-home').getByTestId('home-recent-groups-all').click()
+    const copy = page.getByTestId('screen-groups').last()
+    await expect(copy.getByTestId('header-back')).toBeVisible()
+    // The tab's own press is not a no-op on the copy: it becomes the plain tab, with the avatar and no Back.
+    await page.getByTestId(bar).click()
+    const plain = page.getByTestId('screen-groups').last()
+    await expect(plain.getByTestId('header-avatar')).toBeVisible()
+    await expect(plain.getByTestId('header-back')).toHaveCount(0)
+    await expect(page).toHaveURL(/\/groups$/)
+    if (size.width < 800) await expect(plain.getByTestId('fab-add')).toBeVisible()
+    // And the tab press on the plain tab changes nothing.
+    await page.getByTestId(bar).click()
+    await expect(plain.getByTestId('header-avatar')).toBeVisible()
+  })
+}
+
+test('a link the running app opens (a Search & Ask suggestion, a deep link) to a main screen is a pushed copy; a cold address is the plain tab (owner 179)', async ({page}) => {
+  await page.setViewportSize(PHONE)
+  await openDemo(page)
+  // Warm: openLink, the one function behind notifications, shares, results and deep links.
+  await page.evaluate(() => (window as unknown as {__splitoTest: {openLink(path: string): void}}).__splitoTest.openLink('/groups'))
+  const warm = page.getByTestId('screen-groups').last()
+  await expect(warm.getByTestId('header-back')).toBeVisible()
+  await expect(warm.getByTestId('fab-add')).toHaveCount(0)
+  await warm.getByTestId('header-back').click()
+  await expect(page.getByTestId('screen-home').getByTestId('header-avatar')).toBeVisible()
+  // Cold: the same address typed into the browser is the plain tab.
+  await page.goto('/groups')
+  const cold = page.getByTestId('screen-groups').last()
+  await expect(cold.getByTestId('header-avatar')).toBeVisible()
+  await expect(cold.getByTestId('header-back')).toHaveCount(0)
 })

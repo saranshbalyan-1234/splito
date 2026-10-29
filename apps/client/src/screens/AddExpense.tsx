@@ -43,7 +43,7 @@ export function AddExpenseScreen() {
 
   const close = () => {
     if (navigation.canGoBack()) navigation.goBack()
-    else navigation.navigate('People')
+    else navigation.navigate('Home')
   }
 
   if (

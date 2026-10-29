@@ -232,7 +232,7 @@ function Preview({code, preview}: {code: string; preview: InvitePreview}) {
               disabled={isSaving}
               onPress={() => {
                 Toast.show(l`Invite declined`)
-                navigation.navigate('People')
+                navigation.navigate('Home')
               }}>
               <ButtonText>
                 <Trans>Decline</Trans>

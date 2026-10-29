@@ -22,6 +22,8 @@ export type Device = {
   moneyPalette: 'default' | 'colorblind' | 'mono'
   /** The tab the app opens on, mirrored from the `homeTab` preference. Renamed from `homeTab` in F-256, when the tab ids changed ('people' used to mean Home): an old value is never read. */
   startTab: TabId
+  /** The key before F-256 (its 'people' meant Home): read only as a fallback for `startTab` at launch, never written. */
+  homeTab: string
   hapticsEnabled: boolean
   /** Activity read/hidden marks: personal, so they stay on this device. */
   activityFeed: FeedState

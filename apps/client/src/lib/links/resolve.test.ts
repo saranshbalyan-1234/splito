@@ -158,7 +158,12 @@ test('/people is the People tab (F-256) with its list state; person pages are /p
   expect(resolveLink('/people/filters').target).toMatchObject({name: 'People', sheets: ['filters']})
 })
 
-test('Home is "/" and takes no list state (the Friends list moved to /people)', () => {
+test('Home is "/" and takes only its Overview scope; the old Home list state and /filters now belong to People (F-256)', () => {
   expect(resolveLink('/').target).toEqual({name: 'Home', params: {}, sheets: [], query: {}})
-  expect(resolveLink('/?sort=name&show=owesYou').target).toEqual({name: 'Home', params: {}, sheets: [], query: {}})
+  expect(resolveLink('/?overview=groups').target).toEqual({name: 'Home', params: {overview: 'groups'}, sheets: [], query: {}})
+  // Only the key is checked here; the page ignores a value it does not know.
+  expect(resolveLink('/?junk=1').target).toEqual({name: 'Home', params: {}, sheets: [], query: {}})
+  expect(resolveLink('/?sort=name&show=owesYou').target).toEqual({name: 'People', params: {sort: 'name', show: 'owesYou'}, sheets: [], query: {}})
+  expect(resolveLink('/?groups=0&settled=1').target).toMatchObject({name: 'People', params: {groups: '0', settled: '1'}})
+  expect(resolveLink('/filters').target).toMatchObject({name: 'People', sheets: ['filters']})
 })

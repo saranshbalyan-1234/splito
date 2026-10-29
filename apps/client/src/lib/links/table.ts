@@ -111,6 +111,8 @@ export const QUERY_KEYS: Partial<Record<PageName, readonly string[]>> = {
   Analytics: ['currency', 'period', 'offset', 'from', 'to', 'scope'],
   AddExpense: ['personId', 'groupId', 'title', 'amount', 'currency'],
   Settings: ['note'],
+  /* `type=transactions`: Recent transactions' "See all" (owner 173). The type filter itself is F-259; until then Activity ignores it. */
+  Activity: ['type'],
   FriendsAndInvites: ['section'],
   CreateInvite: ['kind', 'groupId'],
 }

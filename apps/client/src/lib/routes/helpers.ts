@@ -86,6 +86,8 @@ export function getTabState(state: State | undefined, tab: string): TabState {
   }
 
   const currentRoute = getCurrentRoute(state)
+  /* A pushed copy of the tab is never "at the tab root": pressing the tab is not a no-op there (owner 179). */
+  if (pushedCopyOf(state, tab)) return TabState.Outside
   const activeTabRoute = state.routes[state.index || 0].name
   if (isTab(currentRoute.name, tab)) {
     return TabState.InsideAtRoot
@@ -133,6 +135,19 @@ export function buildStateObject(
 
 /* Exhaustive on purpose: a tab added to TabParams (People came with decision 153) fails to compile here until it is listed. */
 const TAB_ROUTES: readonly string[] = Object.keys({Home: 1, People: 1, Groups: 1, Analytics: 1, Activity: 1} satisfies Record<keyof TabParams, 1>)
+
+/**
+ * When the focused route is a pushed copy of tab `tab` (owner 179), the params the plain tab has: the copy's own
+ * without the `pushed` marker. Otherwise null. Pressing the tab replaces the copy with the plain route; popping would
+ * land on the page below it, not on the tab that was pressed.
+ */
+export function pushedCopyOf(state: State | undefined, tab: string): {params: object | undefined} | null {
+  if (!state) return null
+  const route = getCurrentRoute(state)
+  if (!isPushedTabRoute(route) || !isTab(route.name.startsWith(PUSHED_PREFIX) ? route.name.slice(PUSHED_PREFIX.length) : route.name, tab)) return null
+  const {[PUSHED_PARAM]: _pushed, ...rest} = (route.params ?? {}) as Record<string, unknown>
+  return {params: Object.keys(rest).length > 0 ? rest : undefined}
+}
 
 /** The route param that marks a tab screen pushed as a copy on web (never written to the address bar). */
 export const PUSHED_PARAM = 'pushed'

@@ -23,12 +23,14 @@ import {type Group, isGroupInactive, type NavItemId} from '@splito/sync'
 import {useHiddenGroups} from '#/data/groupVisibility'
 import {Trans, useLingui} from '@lingui/react/macro'
 import {useLingui as useLinguiCore} from '@lingui/react'
-import {useNavigation, useNavigationState} from '@react-navigation/native'
+import {StackActions, useNavigation, useNavigationState} from '@react-navigation/native'
 
 import {
   getCurrentRoute,
   getTabState,
+  isPushedTabRoute,
   isTab,
+  pushedCopyOf,
   TabState,
 } from '#/lib/routes/helpers'
 import {currentSection} from '#/lib/routes/section'
@@ -169,6 +171,11 @@ function useOpenNavItem(onNavigateTab?: (tab: SidebarTab) => void) {
       onNavigateTab(tab)
     } else if (!isCurrent) {
       const [screen, params] = router.matchPath(href)
+      const copy = pushedCopyOf(navigation.getState(), screen)
+      if (copy) {
+        navigation.dispatch(StackActions.replace(screen, copy.params))
+        return
+      }
       // @ts-expect-error TODO: type matchPath well enough that it can be plugged into navigation.navigate directly
       navigation.navigate(screen, params, {pop: true})
     }
@@ -208,7 +215,8 @@ function NavItem({
 
   const [pathName] = useMemo(() => router.matchPath(href), [href])
   const currentRouteInfo = useNavigationState(state => getCurrentRoute(state))
-  const isCurrent = isTab(currentRouteInfo.name, pathName)
+  /* A pushed copy of the tab (opened from a link, owner 179) is not the tab itself: pressing the item must still act. */
+  const isCurrent = isTab(currentRouteInfo.name, pathName) && !isPushedTabRoute(currentRouteInfo)
   const openNavItem = useOpenNavItem(onNavigateTab)
   const onPressWrapped = useCallback(
     (e: React.MouseEvent<HTMLAnchorElement, MouseEvent>) => {

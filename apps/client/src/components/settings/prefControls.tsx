@@ -203,7 +203,7 @@ function HomeTabPref() {
   )
   return (
     <RadioPref
-      pref={usePrefControl('homeTab')}
+      pref={usePrefControl('startTab')}
       icon={HomeIcon}
       title={l`Open on`}
       options={destinations.map(tab => ({value: tab, label: labels[tab]}))}
@@ -551,7 +551,7 @@ export const PREF_CONTROLS = {
   motion: MotionPref,
   haptics: HapticsPref,
   tabs: NavigationEditor,
-  homeTab: HomeTabPref,
+  startTab: HomeTabPref,
   defaultCurrency: CurrencyPref,
   // Chosen with each charge's Amount / % toggle on a bill, which remembers it; Reset all resets it.
   itemizeAdjustmentModes: null,

@@ -155,7 +155,8 @@ export const PREFS = {
       new Set(v).size === v.length &&
       v.every(t => NAV_ITEM_IDS.includes(t)),
   ),
-  homeTab: def<TabId>('homeTab', 'navigation', 'account', 'Open on', 'home', oneOf(...TAB_IDS)),
+  /** The tab the app opens on. Stored as `homeTab` until F-256, when 'people' meant Home: that old row is read once (`readRaw`). */
+  startTab: def<TabId>('startTab', 'navigation', 'account', 'Open on', 'home', oneOf(...TAB_IDS)),
   defaultCurrency: def('defaultCurrency', 'defaults', 'account', 'Default currency', 'INR', (v): v is string => typeof v === 'string' && v in CURRENCIES),
   itemizeAdjustmentModes: def<AdjustmentModes>(
     'itemizeAdjustmentModes',
@@ -272,8 +273,11 @@ function readRaw<K extends PrefKey>(rows: ReadonlyArray<PrefRow>, key: K): PrefV
       value = ['home', ...(value as NavItemId[]).filter(t => t !== 'home')]
     }
   }
-  // The same rename for the "Open on" tab: a legacy 'people' meant Home.
-  if (key === 'homeTab' && value === 'people' && isLegacyTabs(rows.find(p => p.id === 'tabs' && !p.deleted)?.data.value)) value = 'home'
+  // The "Open on" tab was the `homeTab` key before F-256, and its 'people' meant Home: read that old row once when there is no new one.
+  if (key === 'startTab' && value === undefined) {
+    const old = rows.find(p => p.id === 'homeTab' && !p.deleted)?.data.value
+    if (typeof old === 'string') value = old === 'people' ? 'home' : old
+  }
   // The "New expenses" switch folded into "Payments" (owner 131): an old stored off on either reads as off.
   if (key === 'notify.payment' && value !== false && rows.some(p => p.id === 'notify.expense' && !p.deleted && p.data.value === false)) value = false
   // The account-wide unit saved before units were per currency (F-112) belongs to the default currency, where it was meant.
@@ -290,7 +294,7 @@ function readRaw<K extends PrefKey>(rows: ReadonlyArray<PrefRow>, key: K): PrefV
  */
 export function prefFrom<K extends PrefKey>(rows: ReadonlyArray<PrefRow>, key: K): PrefValue<K> {
   const value = readRaw(rows, key)
-  if (key === 'homeTab') {
+  if (key === 'startTab') {
     const tabs = readRaw(rows, 'tabs')
     return (tabs.includes(value as TabId) ? value : 'home') as PrefValue<K>
   }

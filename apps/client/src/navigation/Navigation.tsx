@@ -18,14 +18,13 @@ import {
 } from '@react-navigation/native-stack'
 
 import {useWebScrollRestoration} from '#/lib/hooks/useWebScrollRestoration'
-import {TAB_ROUTE} from '#/lib/routes/tabs'
+import {bootStartTab, TAB_ROUTE} from '#/lib/routes/tabs'
 import {
   type FlatNavigatorParams,
   type RootStackParams,
   type TabParams,
 } from '#/lib/routes/types'
 import {useShellLayout} from '#/state/shell/shell-layout'
-import {device} from '#/storage'
 import {BottomBar} from '#/view/shell/bottom-bar/BottomBar'
 import {createNativeStackNavigatorWithAuth} from '#/view/shell/createNativeStackNavigatorWithAuth'
 import {DesktopLeftNav, type SidebarTab} from '#/view/shell/desktop/LeftNav'
@@ -165,7 +164,7 @@ function Tabs() {
   return (
     <Tab.Navigator
       // The Home tab preference (Settings > Defaults), mirrored for a synchronous read at launch.
-      initialRouteName={TAB_ROUTE[device.get(['startTab']) ?? 'home']}
+      initialRouteName={TAB_ROUTE[bootStartTab()]}
       backBehavior="initialRoute"
       screenOptions={{
         headerShown: false,

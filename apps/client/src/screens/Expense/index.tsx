@@ -165,7 +165,7 @@ function ExpenseMenu({expense}: {expense: Entity<Expense>}) {
       return
     }
     if (navigation.canGoBack()) navigation.goBack()
-    else navigation.navigate('People')
+    else navigation.navigate('Home')
     Toast.show(
       <Toast.Outer>
         <Toast.Icon icon={TrashIcon} />

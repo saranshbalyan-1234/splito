@@ -532,7 +532,7 @@ Home shows the Overview and Recent transactions (F-1415); a new People tab holds
 - **Prefs** `tabs` default changes to Home, People, Groups, Analytics, Activity (existing users keep their own order; People is added after Home if absent)
 - **Acceptance**
   1. `/` shows, in order: Overview; Requests with the invites row (only when pending); Recent transactions (See all -> Activity); Recently active people (5, by change time, net per currency, See all -> People); Recently active groups (5, balance chips, See all -> Groups); each hides when empty; no full friends list; phone header has Search & Ask only (owners 153, 154).
-  2. `/people` shows requests, "N invites waiting ›", Friends (count, search, Filters, Show settled), no Overview; header Search & Ask + Add friend; `/people/:id` unchanged.
+  2. `/people` shows the Requests and Invites sent rows (owner 175), Friends (count, search, Filters, Show settled, gear "Manage friends and invites" last, owner 177), no Overview; header Search & Ask + Add friend; `/people/:id` unchanged.
   3. `/groups` has no Overview; everything else unchanged.
   4. Nav list order Home, People, Groups, Analytics, Ask Splito, Activity, Settings; the rail and desktop sidebar always show every item in the chosen order with no More (owner 155), the phone bar shows the on items; default bar of 5 with labels; Settings > Navigation includes People; saved tabs migrate by inserting People after Home.
   5. The right column (1300 px and up) is not shown on Home, since the page holds its content; other pages keep it.

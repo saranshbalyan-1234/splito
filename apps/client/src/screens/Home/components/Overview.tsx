@@ -26,7 +26,7 @@ import {SectionLink} from '#/components/SectionLink'
 
 const tabular = {fontVariant: ['tabular-nums' as const]}
 
-const GAP = 12
+const GAP = 8
 /* Card padding (14) and border (1) either side: what the figure's room is measured from. */
 const CARD_CHROME = 30
 /* The direction arrow and its gap, beside the figure. */
@@ -144,16 +144,19 @@ function ScopeChips({scope, onChange}: {scope: SummaryScope; onChange: (scope: S
             role="radio"
             aria-checked={isOn}
             accessibilityLabel={names[value]}
-            hitSlop={{top: 8, bottom: 8}}
             onPress={() => onChange(value)}
-            style={[
-              a.rounded_full,
-              {paddingHorizontal: 9, paddingVertical: 4},
-              isOn ? {backgroundColor: t.palette.primary_500} : t.atoms.bg_contrast_50,
-            ]}>
-            <Text style={[a.text_xs, a.font_semi_bold, isOn ? {color: t.palette.white} : t.atoms.text_contrast_medium]}>
-              {names[value]}
-            </Text>
+            /* A 44 px target (hitSlop does nothing on web): the chip is that tall, the pill inside is drawn smaller. */
+            style={[a.justify_center, {minHeight: 44}]}>
+            <View
+              style={[
+                a.rounded_full,
+                {paddingHorizontal: 9, paddingVertical: 4},
+                isOn ? {backgroundColor: t.palette.primary_500} : t.atoms.bg_contrast_50,
+              ]}>
+              <Text style={[a.text_xs, a.font_semi_bold, isOn ? {color: t.palette.white} : t.atoms.text_contrast_medium]}>
+                {names[value]}
+              </Text>
+            </View>
           </Pressable>
         )
       })}

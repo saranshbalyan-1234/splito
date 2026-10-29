@@ -17,7 +17,7 @@ import {
 } from '#/lib/hooks/useNavigationDeduped'
 import {IS_WEB} from '#/env'
 import {openExternal} from '#/lib/openExternal'
-import {getTabState, tabLink, TabState} from '#/lib/routes/helpers'
+import {getTabState, pushedCopyOf, tabLink, TabState} from '#/lib/routes/helpers'
 import {WebAuxClickWrapper} from '#/view/com/util/WebAuxClickWrapper'
 import {useTheme} from '#/alf'
 import {Text} from '#/components/Typography'
@@ -199,9 +199,13 @@ function onPressInner(
         navigation.dispatch(StackActions.replace(routeName, params))
       } else if (navigationAction === 'navigate') {
         const state = navigation.getState()
+        const copy = pushedCopyOf(state, routeName)
         const tabState = getTabState(state, routeName)
         // Splito screens have no soft reset (scroll-to-top/refresh) yet, so a press on the current tab root is a no-op.
-        if (tabState !== TabState.InsideAtRoot) {
+        if (copy) {
+          /* On the pushed copy of this very tab: the press turns it into the plain tab (owner 179). */
+          navigation.dispatch(StackActions.replace(routeName, copy.params))
+        } else if (tabState !== TabState.InsideAtRoot) {
           // note: 'navigate' actually acts the same as 'push' nowadays
           // therefore we need to add 'pop' -sfn
           // @ts-expect-error we're not able to type check on this one -prf

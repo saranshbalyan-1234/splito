@@ -36,6 +36,7 @@ import {SearchAskButton} from '#/components/SearchAsk/SearchAskButton'
 import {HeaderAvatar} from '#/components/HeaderAvatar'
 import {PlusLarge_Stroke2_Corner0_Rounded as PlusIcon} from '#/components/icons/Plus'
 import * as Layout from '#/components/Layout'
+import {TabScreen} from '#/components/TabScreen'
 import {ListToolsHeader} from '#/components/ListToolsHeader'
 import {Text} from '#/components/Typography'
 import {Shimmer} from '#/motion/Shimmer'
@@ -140,7 +141,7 @@ export function GroupsScreen() {
   const createGroup = () => navigation.navigate('CreateGroup')
 
   return (
-    <Layout.Screen testID="screen-groups">
+    <TabScreen testID="screen-groups">
       <Layout.Header.Outer>
         <HeaderAvatar />
         {/* Balances Search & Ask on the right, so the title stays centred. */}
@@ -363,6 +364,6 @@ export function GroupsScreen() {
           if (f.sort !== sortDefault) void setSortDefault(f.sort)
         }}
       />
-    </Layout.Screen>
+    </TabScreen>
   )
 }

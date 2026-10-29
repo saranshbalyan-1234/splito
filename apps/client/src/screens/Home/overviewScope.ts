@@ -14,16 +14,18 @@ export function overviewParam(scope: SummaryScope, saved: SummaryScope): string 
   return param(scope, 'all', saved)
 }
 
-/** The same choice as Analytics' scope (`scope=` of its address, owner 176): everything, non-group only, or all groups. */
-export function analyticsScopeParam(scope: SummaryScope): string | undefined {
-  return scope === 'groups' ? '0:all' : scope === 'direct' ? '1:' : undefined
+/**
+ * The same choice as Analytics' scope (`scope=` of its address, owner 176): everything, non-group only, or all groups.
+ * Always written, All too: left out, Analytics would fall back to the scope it saved last and not show what All counted.
+ */
+export function analyticsScopeParam(scope: SummaryScope): string {
+  return scope === 'groups' ? '0:all' : scope === 'direct' ? '1:' : '1:all'
 }
 
 /** `/analytics` for a currency (or none) carrying the Overview's scope. */
 export function analyticsHref(scope: SummaryScope, currency?: string): string {
   const q = new URLSearchParams()
   if (currency) q.set('currency', currency)
-  const s = analyticsScopeParam(scope)
-  if (s) q.set('scope', s)
-  return q.size > 0 ? `/analytics?${q}` : '/analytics'
+  q.set('scope', analyticsScopeParam(scope))
+  return `/analytics?${q}`
 }
