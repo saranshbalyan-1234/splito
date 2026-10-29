@@ -1588,6 +1588,13 @@ labelled sidebar); **wide** = web 1300 px and up (Bluesky `gtTablet`, right colu
   target) does it, so no screen wires its own; where the whole row already opens something else (an expense row),
   the avatar and name are their own nested targets that open the person. Shell first (owner 152), no redraw (166).
   *Why:* "clicking on avatar or name anywhere on the website should open that friend's details".
+- **Person names are capitalised word by word** (owner 181): every word of a person's full name starts with a
+  capital letter ("saransh balyan" -> "Saransh Balyan"); the rest of each word stays as typed, so "McDonald" and
+  "D'Souza" survive. Saved that way on every path (add friend, own profile name, contacts, invites, join, demo
+  seed, sign-up) through one `capitalizeName` in `packages/domain`, and shown that way through the same function,
+  so names already saved lower-case read right too. Scripts without letter case (Devanagari) are unchanged.
+  Group names, expense titles and emails are not names and stay as typed.
+  *Why:* "name should be capitalized first letter in complete name".
 - **Activity's route is `/activity`; `/notifications` redirects to it.**
 - **A main screen reached from a link shows Back** (owner 179): when Home, People, Groups, Analytics or Activity
   is opened from something other than its own tab or sidebar item (a "See all", an Overview card, a search or Ask
@@ -2685,6 +2692,7 @@ Every owner decision, in the order it was made (all 2026-10-26). "Replaced" name
 | 178 | "clicking on avatar or name anywhere on the website, should open that friend details" | One shared PersonLink: any avatar or name opens /people/:id (Me -> Profile), on every screen | § 26.3 | Only friend rows opened a person |
 | 179 | "even if you go to main screen from some links, it should show back button, in case you dont go directly from tabs" | A main screen opened from a link (See all, cards, results, notifications, deep links) is a pushed page with Back to the origin; the tab itself gives the plain tab screen | § 26.3 | Links switched tabs with no way back |
 | 180 | Assistant ruling after the F-250 review (owner asleep, "take your own decisions"; owners 164/165 review the front end on Render first) | Render builds a "preview" tier: labelled local dev account allowed, `noindex`, never on stage/prod tiers; real production refused until the auth HTTP client exists; intro keeps animated Lottie art | § 26.15 | Render built `production`, which refused the dev account and broke the deploy |
+| 181 | "name should be capitalized first letter in complete name" | Every word of a person's name starts with a capital, saved and shown through one `capitalizeName`; rest of each word as typed; groups, titles, emails unchanged | § 26.3 | Names shown exactly as typed |
 
 New decisions follow § 0 rule 9: rewrite the rule in its topic so only the current truth remains, then add a
 row here.
