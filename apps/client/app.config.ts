@@ -1,5 +1,7 @@
 import {type ExpoConfig} from 'expo/config'
 
+import linkHosts from './link-hosts.json'
+
 /*
  * Brand assets are generated from assets-owner/logo-owner-provided.svg by
  * `pnpm brand` (scripts/brand.ts) - edit the script, not the PNGs.
@@ -14,10 +16,36 @@ const SPLASH = {
   },
 }
 
+type Tier = keyof typeof linkHosts.tiers
+
+/**
+ * Universal Links and App Links (F-254, ARCHITECTURE 14): a build claims only its own tier's host, so a dev build
+ * never opens prod links. Hosts and the claimed paths come from `link-hosts.json`, the one file the resolver
+ * (`src/lib/links`) reads too; `app.config.test.ts` checks every tier claims exactly its host.
+ */
+export function linkClaims(tier: Tier) {
+  const host = linkHosts.tiers[tier]
+  return {
+    ios: {associatedDomains: [`applinks:${host}`]},
+    android: {
+      intentFilters: [
+        {
+          action: 'VIEW',
+          autoVerify: true,
+          data: linkHosts.appPaths.map(pathPrefix => ({scheme: 'https', host, pathPrefix})),
+          category: ['BROWSABLE', 'DEFAULT'],
+        },
+      ],
+    },
+  }
+}
+
+const TIER = (process.env.EXPO_PUBLIC_TIER ?? 'prod') as Tier
+
 const config: ExpoConfig = {
   name: 'Splito',
   slug: 'splito',
-  scheme: 'splito',
+  scheme: linkHosts.scheme,
   version: '0.1.0',
   orientation: 'default',
   userInterfaceStyle: 'automatic',
@@ -25,6 +53,7 @@ const config: ExpoConfig = {
   ios: {
     bundleIdentifier: 'app.splito',
     supportsTablet: true,
+    ...linkClaims(TIER).ios,
     icon: {
       light: './assets/brand/icon.png',
       dark: './assets/brand/icon-dark.png',
@@ -33,6 +62,7 @@ const config: ExpoConfig = {
   },
   android: {
     package: 'app.splito',
+    ...linkClaims(TIER).android,
     adaptiveIcon: {
       foregroundImage: './assets/brand/adaptive-foreground.png',
       backgroundImage: './assets/brand/adaptive-background.png',

@@ -2,10 +2,11 @@
 import {useRef, useState} from 'react'
 import {type TextInput, type TextInputKeyPressEvent, View} from 'react-native'
 import {Trans, useLingui} from '@lingui/react/macro'
-import {useNavigation} from '@react-navigation/native'
 import {decimalMark} from '@splito/domain'
 
-import {type NavigationProp} from '#/lib/routes/types'
+import {pathTo} from '#/lib/links/make'
+import {setSheetQuery} from '#/navigation/sheets'
+import {useOpenLink} from '#/lib/links/useOpenLink'
 import {useNumberLocale} from '#/locale/numberLocale'
 import {useFormatDay, useToday} from '#/locale/useDates'
 import {useHiddenGroups} from '#/data/groupVisibility'
@@ -67,18 +68,23 @@ export function SearchAskBody({
   const [mode, setMode] = useState<SearchAskMode>(initialMode)
   const [query, setQuery] = useState(initialQuery)
   const [question, setQuestion] = useState<string>()
+  /* The address follows the view (`/search?q=dinner&mode=ask`, F-241); a refresh reopens it as it was. */
+  const show = (next: SearchAskMode, q: string) => {
+    setMode(next)
+    setSheetQuery(['search'], {...(q ? {q} : {}), ...(next === 'ask' ? {mode: 'ask'} : {})})
+  }
   if (mode === 'ask')
     return (
       <AskChat
         initialQuestion={question}
         onBack={() => {
           setQuestion(undefined)
-          setMode('search')
+          show('search', query)
         }}
         onSearch={q => {
           setQuery(q)
           setQuestion(undefined)
-          setMode('search')
+          show('search', q)
         }}
       />
     )
@@ -88,7 +94,7 @@ export function SearchAskBody({
       setQuery={setQuery}
       onAsk={q => {
         setQuestion(q)
-        setMode('ask')
+        show('ask', q)
       }}
     />
   )
@@ -106,7 +112,7 @@ function SearchPanel({
   const t = useTheme()
   const {t: l} = useLingui()
   const {gtMobile} = useBreakpoints()
-  const navigation = useNavigation<NavigationProp>()
+  const openLink = useOpenLink()
   const {close} = Dialog.useDialogContext()
   const textInput = useRef<React.ComponentRef<typeof TextInput>>(null)
   const [activeNav, setActiveNav] = useState(-1)
@@ -155,11 +161,9 @@ function SearchPanel({
     }
     rememberQuery(query)
     close(() => {
-      if (row.type === 'person')
-        navigation.navigate('Person', {personId: row.person.id})
-      else if (row.type === 'group')
-        navigation.navigate('Group', {groupId: row.group.id})
-      else navigation.navigate('Expense', {expenseId: row.expense.id})
+      if (row.type === 'person') openLink.go(pathTo('Person', {personId: row.person.id}))
+      else if (row.type === 'group') openLink.go(pathTo('Group', {groupId: row.group.id}))
+      else openLink.go(pathTo('Expense', {expenseId: row.expense.id}))
     })
   }
 

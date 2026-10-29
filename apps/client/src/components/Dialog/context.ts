@@ -6,6 +6,7 @@ import {
   useId,
   useMemo,
   useRef,
+  useState,
   useSyncExternalStore,
 } from 'react'
 import {BottomSheetSnapPoint} from '@bsky.app/bottom-sheet/src/BottomSheet.types'
@@ -90,10 +91,11 @@ export function useDialogControl(settings?: DialogControlSettings): DialogOuterP
   const parentOwner = useContext(SheetOwnerContext)
   const owner: SheetOwner = chain && !isGlobalSheet(chain) ? (parentOwner ?? (route ? ownerOf(route) : null)) : null
   useSyncExternalStore(subscribeSheets, sheetsVersion)
+  /* Read through the store, so React Compiler cannot cache the stack lookup between renders. */
+  const marker = useSyncExternalStore(subscribeSheets, () => (chain && IS_WEB ? markerFor(owner, chain) : undefined))
 
   /* Everything the control's functions read lives here, so they stay one object across renders. */
   const live = useRef({owner, isUrlOpen: false})
-  const marker = chain && IS_WEB ? markerFor(owner, chain) : undefined
   const isUrlOpen = !!marker
   useEffect(() => {
     live.current = {owner, isUrlOpen}
@@ -102,8 +104,11 @@ export function useDialogControl(settings?: DialogControlSettings): DialogOuterP
   const closedByUi = useRef(false)
   const hostOptions = useRef<DialogControlOpenOptions | null>(null)
 
+  const [, setTick] = useState(0)
+  const tries = useRef(0)
   /* The address and the dialog agree: a marker opens it, the marker going (browser Back) closes it. */
   useEffect(() => {
+    let retry: ReturnType<typeof setTimeout> | undefined
     if (!chain) return
     if (!IS_WEB) {
       if (!isOpen.current && hasPending()) {
@@ -128,10 +133,17 @@ export function useDialogControl(settings?: DialogControlSettings): DialogOuterP
         settings?.onUrlQuery?.(marker?.query ?? {})
         control.current.open()
       }
+      /* The dialog may not be mounted yet (its host renders it a commit later), or the host still waits for data: look again shortly. */
+      if (!isOpen.current && tries.current < 40) {
+        tries.current++
+        retry = setTimeout(() => setTick(n => n + 1), 100)
+      }
     } else {
       closedByUi.current = false
+      tries.current = 0
       if (isOpen.current) control.current.close()
     }
+    return () => clearTimeout(retry)
   })
 
   return useMemo<DialogOuterProps['control']>(

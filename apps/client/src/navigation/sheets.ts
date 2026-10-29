@@ -108,6 +108,13 @@ export function closeSheetMarkers(owner: Owner, chain: readonly string[]) {
   })
 }
 
+/** Replaces the query in a sheet's address (Search & Ask switching to Ask) without adding a history entry. */
+export function setSheetQuery(chain: readonly string[], query: Record<string, string>) {
+  if (!navigationRef.isReady()) return
+  const marker = markersOnTop().find(m => sameChain(m.data.sheets, chain))
+  if (marker) navigationRef.dispatch({...CommonActions.setParams({query}), source: marker.key})
+}
+
 /** The page under the markers: its name and every param it has (list state included). */
 function focusedPage(): {name: string; params: Record<string, string>} | null {
   if (!navigationRef.isReady()) return null

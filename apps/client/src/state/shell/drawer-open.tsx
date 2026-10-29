@@ -29,8 +29,10 @@ setContext.displayName = 'DrawerOpenSetContext'
 export function Provider({children}: React.PropsWithChildren<{}>) {
   const [local, setLocal] = useState(false)
   const {disableScope, enableScope} = useHotkeysContext()
+  /* The store's own value, read inside the snapshot: React Compiler would cache a bare `markerFor(...)` call here. */
+  const isMarked = useSyncExternalStore(subscribeSheets, () => IS_WEB && !!markerFor(null, ['drawer']))
   const version = useSyncExternalStore(subscribeSheets, sheetsVersion)
-  const state = IS_WEB ? !!markerFor(null, ['drawer']) : local
+  const state = IS_WEB ? isMarked : local
 
   useEffect(() => {
     if (state) disableScope('global')

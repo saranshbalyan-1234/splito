@@ -21,15 +21,15 @@ export function navigateToTarget(target: LinkTarget): boolean {
   const isTab = (TAB_NAMES as readonly string[]).includes(target.name)
   const params = Object.keys(target.params).length > 0 ? target.params : undefined
   if (IS_WEB) {
-    /* The page the sheet covers is already showing for a shell sheet (Search, the drawer opened from here). */
-    if (target.sheets.length === 0 || !isGlobalSheet(target.sheets)) go(target.name, params)
+    /* Search & Ask belongs to no page: it opens over the one now showing. Every other link names its page. */
+    if (target.sheets[0] !== 'search') go(target.name, params)
     if (target.sheets.length > 0) {
       openSheetMarkers(isGlobalSheet(target.sheets) ? null : ownerOf({name: target.name, params: target.params}), target.sheets, target.query)
     }
     return true
   }
   queueSheets(target)
-  if (target.sheets.length === 0 || !isGlobalSheet(target.sheets)) {
+  if (target.sheets[0] !== 'search') {
     if (isTab) go('Tabs', {screen: target.name, params})
     else go(target.name, params)
   }

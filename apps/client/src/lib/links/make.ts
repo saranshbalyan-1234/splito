@@ -8,3 +8,8 @@ import {webLink} from './hosts'
 export function linkTo(name: LinkTarget['name'], params: Record<string, string> = {}, sheets: string[] = [], query: Record<string, string> = {}) {
   return webLink(buildPath({name, params, sheets, query}))
 }
+
+/** The in-app path for a screen (`/people/abc`), for `openLink`: screens open their targets through the resolver too. */
+export function pathTo(name: LinkTarget['name'], params: Record<string, string> = {}, sheets: string[] = [], query: Record<string, string> = {}) {
+  return buildPath({name, params, sheets, query})
+}

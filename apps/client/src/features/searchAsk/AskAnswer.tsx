@@ -1,11 +1,11 @@
 import {View} from 'react-native'
 import {plural} from '@lingui/core/macro'
 import {useLingui} from '@lingui/react/macro'
-import {useNavigation} from '@react-navigation/native'
 import {amountInputText, decimalMark, formatAmount, magnitude, ZERO} from '@splito/domain'
 
 import {type Answer, type PeriodInfo, type Ref, type Suggestion} from '#/lib/ask/types'
-import {type NavigationProp} from '#/lib/routes/types'
+import {pathTo} from '#/lib/links/make'
+import {useOpenLink} from '#/lib/links/useOpenLink'
 import {useNumberLocale} from '#/locale/numberLocale'
 import {useFormatDay, useToday} from '#/locale/useDates'
 import {useMe, usePref} from '#/data/hooks'
@@ -48,7 +48,7 @@ export function AskAnswer({answer, me, question, onAsk, onSearch}: Props) {
   const t = useTheme()
   const {t: l, i18n} = useLingui()
   const locale = useNumberLocale()
-  const navigation = useNavigation<NavigationProp>()
+  const openLink = useOpenLink()
   const {close} = Dialog.useDialogContext()
   const questions = useAskQuestions()
   const formatDay = useFormatDay()
@@ -170,7 +170,7 @@ export function AskAnswer({answer, me, question, onAsk, onSearch}: Props) {
             testID="ask-action-person"
             title={isOwed ? l`Remind ${who}` : l`Record a payment`}
             subtitle={l`Opens ${who}'s page`}
-            onPress={() => go(() => navigation.navigate('Person', {personId: answer.person.id}))}
+            onPress={() => go(() => openLink.go(pathTo('Person', {personId: answer.person.id})))}
           />
         </View>
       )
@@ -271,7 +271,7 @@ export function AskAnswer({answer, me, question, onAsk, onSearch}: Props) {
               testID="ask-action-settle"
               title={l`Settle up`}
               subtitle={l`Opens the settle-up plan for ${g}`}
-              onPress={() => go(() => navigation.navigate('Settle', {groupId: answer.group.id}))}
+              onPress={() => go(() => openLink.go(pathTo('Settle', {groupId: answer.group.id})))}
             />
           )}
         </View>
@@ -394,7 +394,7 @@ export function AskAnswer({answer, me, question, onAsk, onSearch}: Props) {
               testID="ask-found"
               locale={locale}
               rows={answer.rows.map(r => ({id: r.id, title: r.title, currency: r.currency, total: r.total, byline: [formatDay(r.date), r.group].filter(Boolean).join(' · ')}))}
-              onOpen={id => go(() => navigation.navigate('Expense', {expenseId: id}))}
+              onOpen={id => go(() => openLink.go(pathTo('Expense', {expenseId: id})))}
             />
           )}
           <ActionCard testID="ask-action-search" tone="secondary" title={l`Show all in Search`} subtitle={l`Searches “${answer.query}” with every match`} onPress={() => onSearch(answer.query)} />
@@ -420,11 +420,12 @@ export function AskAnswer({answer, me, question, onAsk, onSearch}: Props) {
             subtitle={l`Opens the expense sheet. Nothing is saved until you do.`}
             onPress={() =>
               go(() =>
-                navigation.navigate('AddExpense', {
-                  title,
-                  amount: amount ? amountInputText(amount.amount, amount.currency, decimalMark(locale)) : undefined,
-                  currency: amount?.currency,
-                }),
+                openLink.go(
+                  pathTo('AddExpense', {
+                    ...(title ? {title} : {}),
+                    ...(amount ? {amount: amountInputText(amount.amount, amount.currency, decimalMark(locale)), currency: amount.currency} : {}),
+                  }),
+                ),
               )
             }
           />

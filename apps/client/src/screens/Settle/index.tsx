@@ -25,6 +25,7 @@ import {List} from '#/view/com/util/List'
 import {atoms as a, useBreakpoints, useTheme} from '#/alf'
 import * as Admonition from '#/components/Admonition'
 import {Button, ButtonIcon, ButtonText} from '#/components/Button'
+import {pathTo} from '#/lib/links/make'
 import {useOpenLink} from '#/lib/links/useOpenLink'
 import {useDialogControl} from '#/components/Dialog'
 import {NO_RULES} from '#/components/groups/RulesEditor'
@@ -428,7 +429,7 @@ export function SettleScreen() {
                           testID="settle-edit-rules"
                           label={l`Edit who you settle with`}
                           color="secondary"
-                          onPress={() => openLink.open(`/groups/${groupId}/rules`)}>
+                          onPress={() => openLink.go(pathTo('Group', {groupId}, ['rules']))}>
                           <ButtonText>
                             <Trans>Edit rules</Trans>
                           </ButtonText>

@@ -1,6 +1,7 @@
 import {useEffect} from 'react'
 import {useLingui} from '@lingui/react/macro'
 
+import {IS_E2E, IS_WEB} from '#/env'
 import {readDeferredLink} from '#/lib/links/deferred'
 import {releaseDemoSwitch, takeWaitingLink, useLinkWaitingForDemo} from '#/lib/links/gate'
 import {takeLinkIntent} from '#/lib/links/intent'
@@ -30,6 +31,13 @@ export function LinkHost() {
     const held = takeLinkIntent()
     if (held) openLink(held, {isDemo: demo})
   }, [hasSession, demo])
+
+  /* E2E builds only: `window.__splitoTest.openLink(url)` opens a link as a push tap or a shared link would (warm). */
+  useEffect(() => {
+    if (!IS_E2E || !IS_WEB) return
+    const w = window as unknown as {__splitoTest?: Record<string, unknown>}
+    w.__splitoTest = {...w.__splitoTest, openLink: (url: string) => openLink(url, {isDemo: demo})}
+  }, [demo])
 
   /* The first open after an install from a link (the server hand-over is a stub until the backend). */
   useEffect(() => {
