@@ -43,7 +43,6 @@ import {Pencil_Stroke2_Corner0_Rounded as PencilIcon} from '#/components/icons/P
 import {SettingsSliderVertical_Stroke2_Corner0_Rounded as FilterIcon} from '#/components/icons/SettingsSlider'
 import {historyRowHide, ShowHiddenSheet, useVisibleEntries} from '#/features/hidden/ShowHidden'
 import {historyRowMenu} from '#/features/disputes/RowMenu'
-import {DisputedLine} from '#/components/disputes/DisputedLine'
 import {markOf, useDisputedBalances, useOpenDisputes} from '#/state/disputes'
 import {useHideItem} from '#/features/hidden/HideItem'
 import {Group3_Stroke2_Corner0_Rounded as GroupIcon} from '#/components/icons/Group'

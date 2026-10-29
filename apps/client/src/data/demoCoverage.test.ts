@@ -6,6 +6,8 @@ import {
   ensureMe,
   type BackupFile,
   type Comment,
+  type Dispute,
+  type DisputedBalance,
   createBackup,
   type Entity,
   type Expense,
@@ -58,6 +60,9 @@ type Demo = {
   allPeople: Entity<Person>[]
   comments: Entity<Comment>[]
   reminders: Entity<Reminder>[]
+  disputes: Entity<Dispute>[]
+  /** The disputed or held part of the balances (`store.disputedBalances()`). */
+  disputed: DisputedBalance[]
   /** Account preferences by key (value only). */
   prefs: Record<string, unknown>
   /** The demo database exported as a backup file and read back: what Export centre and Backup would hand over. */
@@ -171,8 +176,22 @@ const FEATURES: Array<[feature: string, found: (d: Demo) => boolean]> = [
   ['a nudge with an amount in a second currency', d => d.reminders.some(r => r.data.kind === 'nudge' && 'EUR' in r.data.amounts)],
   ['a reminder I scheduled for myself about a friend, repeating (Remind me)', d => d.reminders.some(r => !r.deleted && r.data.kind === 'self' && r.data.personId !== '' && r.data.repeat !== 'none')],
   ['a reminder I scheduled for myself about a group', d => d.reminders.some(r => !r.deleted && r.data.kind === 'self' && r.data.groupId !== null)],
+  // Disputes and holds (F-1210, owner 119): every state, in more than one currency
+  ['an open dispute with a proposed fix, waiting for me', d => d.disputes.some(x => x.data.kind === 'dispute' && x.data.status === 'open' && x.data.proposedFix !== null && x.data.raisedBy !== DEMO_ME)],
+  ['an open dispute I raised myself', d => d.disputes.some(x => x.data.kind === 'dispute' && x.data.status === 'open' && x.data.raisedBy === DEMO_ME && x.data.itemIndex === null)],
+  ['a disputed item of an itemised bill (my portion)', d => d.disputes.some(x => x.data.status === 'open' && x.data.itemIndex !== null)],
+  ['an accepted dispute (the record was fixed)', d => d.disputes.some(x => x.data.status === 'accepted')],
+  ['a rejected dispute, with the reason', d => d.disputes.some(x => x.data.status === 'rejected' && x.data.resolution !== '')],
+  ['a withdrawn dispute', d => d.disputes.some(x => x.data.status === 'withdrawn')],
+  ['a reopened dispute (rejected once, open again)', d => d.disputes.some(x => x.data.status === 'open' && x.data.reopenCount > 0)],
+  ['a dispute closed as Gone (the record was deleted)', d => d.disputes.some(x => x.data.status === 'gone')],
+  ['a record on hold, with its reason', d => d.disputes.some(x => x.data.kind === 'hold' && x.data.status === 'open' && x.data.note !== '')],
+  ['a hold that was released', d => d.disputes.some(x => x.data.kind === 'hold' && x.data.status === 'released')],
+  ['a payment disputed as not received', d => d.disputes.some(x => x.data.targetType === 'repayment' && x.data.reason === 'not_received' && x.data.status === 'open')],
+  ['disputes and holds in rupees, euros, dollars and pounds', d => ['INR', 'EUR', 'USD', 'GBP'].every(c => d.disputes.some(x => d.dump.entities.some(r => r.id === x.data.targetId && (r.data as {currency?: string}).currency === c)))],
+  ['"of which disputed" figures in several currencies (a disputed balance projection)', d => new Set(d.disputed.filter(b => b.amount !== 0n).map(b => b.currency)).size >= 3],
   // Exports and backups (F-2001, F-2007)
-  ['a backup of the demo reads back and restores as a preview (comments, reminders, groups, setups included)', d => (d.backup.entities.comment?.length ?? 0) > 0 && (d.backup.entities.reminder?.length ?? 0) > 0 && (d.backup.entities.group?.length ?? 0) >= 20 && (d.backup.entities.expense?.length ?? 0) > 1400 && d.backup.entities.preference!.some(p => p.id === 'bill.merchantSetups')],
+  ['a backup of the demo reads back and restores as a preview (comments, reminders, groups, setups included)', d => (d.backup.entities.comment?.length ?? 0) > 0 && (d.backup.entities.reminder?.length ?? 0) > 0 && (d.backup.entities.dispute?.length ?? 0) > 0 && (d.backup.entities.group?.length ?? 0) >= 20 && (d.backup.entities.expense?.length ?? 0) > 1400 && d.backup.entities.preference!.some(p => p.id === 'bill.merchantSetups')],
   // Ask Splito (F-2301)
   ['Ask-ready balances: people owe me and I owe people, in rupees and two other currencies', d => ['INR', 'EUR', 'USD'].every(c => d.balances.some(b => b.currency === c && b.amount > 0n) && d.balances.some(b => b.currency === c && b.amount < 0n))],
   // Feedback
@@ -201,6 +220,8 @@ async function readDemo(now: number): Promise<Demo> {
     allPeople: of<Person>('person'),
     comments: of<Comment>('comment'),
     reminders: of<Reminder>('reminder'),
+    disputes: of<Dispute>('dispute'),
+    disputed: await store.disputedBalances(),
     prefs,
     backup,
     balances: await store.balances(),

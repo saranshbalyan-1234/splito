@@ -77,6 +77,8 @@ async function smallSet(): Promise<StoreDump> {
 }
 
 let large: StoreDump
+/** The same with its disputes: a v1 file can hold any entity type, so the v1 upgrade must rebuild the disputed sums too. */
+let largeWithDisputes: StoreDump
 /** The balance sums the mutations kept while the large set was written: what a migration must rebuild exactly. */
 let largeBalances: Awaited<ReturnType<Store['balances']>>
 const sorted = (rows: Awaited<ReturnType<Store['balances']>>) => [...rows].sort((x, y) => (encode(x) < encode(y) ? -1 : 1))
@@ -95,13 +97,15 @@ beforeAll(async () => {
   // The ops that read the store first (removing a friend, a group going, a member leaving) cannot join a batch.
   for (const op of ops.filter(isDeferredOp)) await applyDemoOp(s, ctx, op)
   const full = await s.dump()
-  // The reminders store is new in v4: the v1 to v3 fixtures cannot hold reminders.
-  large = {
+  // The reminders store is new in v4 and the disputes store in v5: the older fixtures cannot hold them.
+  const without = (types: string[]): StoreDump => ({
     ...full,
-    entities: full.entities.filter(e => e.type !== 'reminder'),
-    history: full.history.filter(h => h.entityType !== 'reminder'),
-    outbox: full.outbox.filter(o => o.entityType !== 'reminder'),
-  }
+    entities: full.entities.filter(e => !types.includes(e.type)),
+    history: full.history.filter(h => !types.includes(h.entityType)),
+    outbox: full.outbox.filter(o => !types.includes(o.entityType)),
+  })
+  large = without(['reminder', 'dispute'])
+  largeWithDisputes = without(['reminder'])
   largeBalances = await s.balances()
   await s.close()
 }, 120_000)
@@ -258,12 +262,14 @@ describe.each(Object.keys(open))('%s v1 -> current', engine => {
   })
 
   test('the large demo set: every row, history entry, op and balance identical', async () => {
-    const v1 = await open[engine]!('large', large)
+    const v1 = await open[engine]!('large', largeWithDisputes)
     const t0 = performance.now()
     const store = await v1.store()
     const ms = performance.now() - t0
     console.log(`${engine} v1 -> v2 migration of ${large.entities.length} rows, ${large.history.length} history rows, ${large.outbox.length} ops: ${ms.toFixed(0)} ms`)
-    await expectSameAsV1(store, large)
+    await expectSameAsV1(store, largeWithDisputes)
+    expect((await store.getAll('dispute')).length).toBeGreaterThan(8)
+    expect((await store.disputedBalances()).length).toBeGreaterThan(0)
     // The sums the migration built equal the ones the mutations kept while the source set was written.
     expect(sorted(await store.balances())).toEqual(sorted(largeBalances))
     const people = large.entities.filter(e => e.type === 'person' && !e.deleted).map(e => e.id)

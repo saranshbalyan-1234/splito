@@ -74,7 +74,6 @@ import {Shimmer} from '#/motion/Shimmer'
 import {SyncToned} from '#/components/SyncTone'
 import {
   HistoryLine,
-  type HistoryLineData,
   SyncFooter,
   useHistoryLines,
 } from './components/History'
