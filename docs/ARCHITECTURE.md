@@ -1843,17 +1843,15 @@ built yet.
 
 - **Settings starts with an "Account" section** (copied from Bluesky's Settings account section and its
   Login/Signup screens' layout, `src/screens/Login`, `src/screens/Settings`).
-- **Signed out:** a "Sign in" row, subtitle "Back up and share with friends", opens **Bluesky's own logged-out
-  flow, copied screen for screen** (not a new design): `view/com/auth/LoggedOut.tsx` + `SplashScreen(.web).tsx`
-  (logo mark, tagline, "Create account" and "Sign in" buttons), `screens/Login/` (`FormContainer`,
-  `LoginForm` with "Email or phone" in place of the handle field, password, "Forgot?" link, Back / Next;
-  `ChooseAccountForm` for several accounts; `ForgotPasswordForm` -> `SetNewPasswordForm` (emailed/texted
-  code + new password) -> `PasswordUpdatedForm`), and `screens/Signup/` (`StepInfo`: name, email or phone,
-  password; Bluesky's step indicator and `BackNextButtons`; the handle and captcha steps are dropped).
-  Only the replacements required for Splito change (copy text, field types, logo, routes). Presented as the whole app while signed out (owner 125: sign-in is required; it cannot be closed). Every field is
-  validated. Until the auth backend exists (BACKLOG F-2101..F-2105), Next shows Bluesky's Admonition
-  "Sign-in arrives with sync. Your data stays safe on this device." No fake success, no fake account. *Why:*
-  "there is signin page already there in bluesky, use that".
+- **Signed out, the app is the logged-out flow** (owners 125, 138-140): Bluesky's logged-out look, copied screen
+  for screen where it still applies (`view/com/auth/LoggedOut.tsx`, `SplashScreen(.web).tsx` with the logo mark and
+  tagline, `screens/Login/FormContainer` and `LoginForm` layout, Bluesky's step indicator and `BackNextButtons`),
+  reduced to one Continue screen: Apple, Google, "Email or phone" + one-time code; the steps after it ask only for
+  what a new account lacks (name, the other contact, verified) and then setup. No password, Create account,
+  Forgot password, handle or captcha screens. It is the whole app while signed out and cannot be closed. Every
+  field is validated. Until the auth backend exists (F-2101..F-2105) the code step shows Bluesky's Admonition
+  "Sign-in arrives with sync" and only the dev/e2e "Continue with a dev account" works; no fake success, no fake
+  account. *Why:* "there is signin page already there in bluesky, use that"; "basically no signup needed".
 - **Signed in (only once the backend exists):** an account row (avatar, name, email/phone, sync status) and
   a destructive "Log out" row opening a prompt "Log out?" that warns when the outbox holds unsynced changes
   ("N changes haven't synced yet") and offers "Keep this device's data" / "Erase this device's data". Logout
