@@ -2,13 +2,15 @@ import {type IDBPDatabase, type IDBPTransaction, wrap} from 'idb'
 
 import {createStore} from './core'
 import {type Engine, type RangeQuery, type RowAccess} from './engine'
-import {type LegacyV1, migrateFromV1, migrateToV4, stampSchemaVersion} from './migrate'
+import {type LegacyV1, migrateFromV1, migrateToV4, migrateToV5, stampSchemaVersion} from './migrate'
 import {indexColumns, type Key, type Row, SCHEMA_VERSION, STORES, type StoreName} from './schema'
 import {transactionRows} from './txRows'
 import {changeFromJson, changeToJson, type Store, type StoreChange} from './store'
 
 const CHANNEL = 'splito-store'
 const STORE_NAMES = Object.keys(STORES) as StoreName[]
+/** The stores v5 added. */
+const V5_STORES = ['disputes', 'disputed_balances', 'disputed_pairs'] as const satisfies StoreName[]
 
 // Typed as read-write: a read-only transaction simply has no writes issued on it.
 type Tx = IDBPTransaction<unknown, string[], 'readwrite'>
@@ -137,16 +139,22 @@ export async function openIdbStore(name: string, factory: IDBFactory = indexedDB
         for (const old of ['entities', 'history', 'outbox']) raw.deleteObjectStore(old)
         createStores(raw)
         await pipelined(t, cmp, rows => migrateFromV1(legacy, rows))
-      } else if (e.oldVersion === 2 || e.oldVersion === 3) {
+      } else if (e.oldVersion >= 2 && e.oldVersion <= 4) {
         if (e.oldVersion === 2) {
           // v2 -> v3: two new stores and one new index.
           createStores(raw, ['aggregates', 'search_terms'])
           req.transaction!.objectStore('people').createIndex('byActivity', [...STORES.people.indexes.byActivity.columns])
         }
-        // v3 -> v4: the empty `reminders` store, created before the rebuild reads every entity store. One rebuild
-        // serves a v2 and a v3 file (deleted expenses keep parties and search terms; history.binDays goes).
-        createStores(raw, ['reminders'])
-        await pipelined(t, cmp, rows => migrateToV4(rows))
+        if (e.oldVersion <= 3) {
+          // v3 -> v4: the empty `reminders` store, created before the rebuild reads every entity store. One rebuild
+          // serves a v2 and a v3 file (deleted expenses keep parties and search terms; history.binDays goes).
+          createStores(raw, ['reminders', ...V5_STORES])
+          await pipelined(t, cmp, rows => migrateToV4(rows))
+        } else {
+          // v4 -> v5: the dispute stores, empty.
+          createStores(raw, V5_STORES)
+          await pipelined(t, cmp, rows => migrateToV5(rows))
+        }
       }
     })().catch(error => {
       // Aborting the upgrade leaves the v1 database exactly as it was.

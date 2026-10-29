@@ -90,6 +90,12 @@ function makeTx(rows: RowAccess, recorder: ReturnType<typeof changeRecorder>): T
       recorder.record(h.entityType, h.entityId)
       await rows.add('history', historyRow(h))
     },
+    async page<T>(type: EntityType, q: PageQuery) {
+      return (await pageOf(rows, ENTITY_STORE[type], q, r => entityOfRow(type, r))) as Page<Entity<T>>
+    },
+    async history(type, id) {
+      return (await rows.range('history', {eq: [type, id]})).map(historyOfRow)
+    },
     async enqueue(op) {
       await rows.add('outbox', outboxRow(op))
       // The row waits for the server from the moment its op is queued.
@@ -149,6 +155,14 @@ const toCell = (r: Row): SpendCell => ({
 const toTerm = (r: Row): SearchTerm => ({kind: r.kind as TermKind, term: r.term as string, entityType: r.entityType as TermEntity, entityId: r.entityId as string})
 
 const termQuery = (q: TermQuery) => ({eq: [q.kind], min: q.min, max: q.max, limit: q.limit})
+
+const toDisputed = (r: Row) => ({
+  personId: r.personId as string,
+  groupId: (r.groupId as string) || null,
+  currency: r.currency as string,
+  amount: BigInt(r.amount as string),
+  count: r.count as number,
+})
 
 const toPair = (r: Row): PairBalance => ({personId: r.personId as string, otherId: r.otherId as string, currency: r.currency as string, amount: BigInt(r.amount as string)})
 
@@ -248,6 +262,29 @@ export function createStore(engine: Engine): Store {
               : await rows.range('balances', {})
         return found.map(toNet)
       }),
+
+    disputedBalances: (q = {}) =>
+      read(async rows => {
+        const eq = q.personId !== undefined ? [q.personId, ...(q.groupId !== undefined ? [q.groupId ?? ''] : [])] : undefined
+        const found =
+          eq !== undefined
+            ? await rows.range('disputed_balances', {eq})
+            : q.groupId !== undefined
+              ? await rows.range('disputed_balances', {index: 'byGroup', eq: [q.groupId ?? '']})
+              : await rows.range('disputed_balances', {})
+        return found.map(toDisputed)
+      }),
+
+    disputedPairs: (personId, otherId) =>
+      read(async rows =>
+        (await rows.range('disputed_pairs', {eq: otherId === undefined ? [personId] : [personId, otherId]})).map(r => ({
+          personId: r.personId as string,
+          otherId: r.otherId as string,
+          groupId: (r.groupId as string) || null,
+          currency: r.currency as string,
+          amount: BigInt(r.amount as string),
+        })),
+      ),
 
     pairBalances: personId => read(async rows => (await rows.range('pair_balances', {eq: [personId]})).map(toPair)),
 

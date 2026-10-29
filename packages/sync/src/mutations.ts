@@ -14,6 +14,7 @@ import {
 } from '@splito/domain'
 
 import {formatContact, isContact} from './contact'
+import {type Dispute} from './disputes'
 import {editIdsPref, unhideItems} from './preferences'
 import {type Key} from './schema'
 import {type Page, type Store, type Tx} from './store'
@@ -174,6 +175,8 @@ export async function write<T>(
   const e: Entity<T> = {type, id, data, version, deleted, createdAt: prev?.createdAt ?? at, updatedAt: at, ...sync}
   await tx.put(e)
   await tx.appendHistory({entityType: type, entityId: id, version: e.version, data, deleted, at, actor: ctx.actor})
+  // A deleted record's open disputes close as Gone in the same transaction (F-1210), whoever deleted it and from where.
+  if (deleted && (type === 'expense' || type === 'repayment' || type === 'writeoff')) await closeDisputesGone(tx, ctx, type, id, remote)
   if (remote || opType === null) return e
   await tx.enqueue({
     opId: ctx.newId(),
@@ -191,6 +194,13 @@ export async function write<T>(
     lastError: null,
   })
   return e
+}
+
+/** Closes a deleted record's open disputes and holds as `gone` (the delete is the answer). */
+async function closeDisputesGone(tx: Tx, ctx: MutationCtx, type: MoneyType, id: string, remote: boolean) {
+  const open = await tx.page<Dispute>('dispute', {index: 'byTargetStatus', eq: [type, id, 'open'], limit: 100})
+  for (const d of open.items)
+    await write(tx, ctx, 'dispute', d.id, {...d.data, status: 'gone', resolvedBy: ctx.actor, resolution: '', resolvedAt: ctx.now()}, false, 'dispute.gone', {remote})
 }
 
 /** @internal */
