@@ -599,7 +599,7 @@ One shared PersonLink (avatar + name) used on every screen; tapping either opens
 
 Every word of a person's full name starts with a capital, on save and on display.
 
-- **Effort** S · **Impact** 6 · **Backend** no (the API applies the same function in M2) · **Status** in progress, Wave C · **Deps** -
+- **Effort** S · **Impact** 6 · **Backend** no (the API applies the same function in M2) · **Status** done (web), Wave C; native unverified · **Deps** -
 - **Prefs** -
 - **Acceptance**
   1. `capitalizeName` in `packages/domain` (unit-tested: spaces, hyphens, apostrophes, "McDonald" kept, Devanagari unchanged, trims and collapses spaces).
