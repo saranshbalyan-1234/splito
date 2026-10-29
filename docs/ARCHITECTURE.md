@@ -1168,23 +1168,25 @@ labelled sidebar); **wide** = web 1300 px and up (Bluesky `gtTablet`, right colu
   simplicity. Previews show seeded, populated screens (demo data in dev/e2e builds only), never empty shells.
   *Why:* "make sure this is best in terms of features, looks, simplicity"; "this is way too basic like 10th
   class app"; "make it look professional not some third grade project".
-- **A large demo dataset for the owner's own testing** (dev and e2e builds only, never production): a
-  deterministic generator (fixed seed) that writes a year of realistic use through the real mutations: about
-  30 friends, 12 groups (trips abroad, flat, office lunch, family, wedding, sports), ~1,500 expenses in 6
-  currencies with every split mode (equal, exact, percent, shares, itemised with portions, multiple payers),
-  repayments, write-offs, notes, categories, recurring rent and subscriptions, and deleted items for the bin.
-  It is loaded with `?demo=large` (web) / `EXPO_PUBLIC_DEMO=large` (native) or from Settings > Data > "Add
-  demo data" (shown only in dev/e2e builds), adds to whatever is already on the device, and has a matching
-  "Remove demo data". **Owner 94 + 95 supersede the URL switches and Add/Remove:** demo is a **mode switch**, Settings > Data >
-  "Demo mode" (on/off), backed by its **own separate local database** (its own IndexedDB database / SQLite file,
-  with its own preferences, history and outbox). Turning it on switches the app to the demo database, seeded
-  once with the one demo dataset; turning it off switches back to the real data, which demo mode never reads
-  or writes. Demo data never syncs and never merges into an account. While on, a persistent "Demo mode ·
-  Switch back" banner shows on every screen; "Reset demo" reseeds it. `?demo=1`, `?demo=large`,
-  `EXPO_PUBLIC_DEMO` and Add/Remove demo data are removed; e2e turns demo mode on through a test-only hook that
-  runs the same switch (F-228a, queued right after the Wave B merge). Dev and e2e builds only for now
-  (production ships none, F-227 c4). *Why:* "add a lot of demo data to my
-  account".
+- **One demo dataset, behind one Settings switch, for the owner's own testing** (dev and e2e builds only for
+  now, production ships none, F-227 c4). A deterministic generator (fixed seed) writes a year of realistic use
+  through the real mutations: about 30 friends plus a hand-checked story, 12+ groups (trips abroad, flat, office
+  lunch, family, wedding, sports), ~1,500 expenses in 6 currencies with every split mode (equal, exact, percent,
+  shares, itemised with portions, multiple payers), repayments, write-offs, notes, categories, recurring rent and
+  subscriptions and deleted items, plus the friend requests, invites sent, invite links and the fake account
+  directory of § 26.18, and some saved feedback. Demo is a **mode switch**, Settings > Data > "Demo mode" (on/off),
+  backed by its **own separate local database** (its own IndexedDB database / SQLite file, with its own
+  preferences, history and outbox). Turning it on switches the app to the demo database, seeded once; turning it
+  off switches back to the real data, which demo mode never reads or writes (the real database keeps one device
+  row, `demo.mode`). Demo data never syncs and never merges into an account. While on, a persistent "Demo mode ·
+  Switch back" banner shows on every screen; "Reset demo" reseeds it. There is ONE dataset and ONE switch: no
+  URL switch, no `EXPO_PUBLIC_*` variable, no Add/Remove demo data. e2e turns demo mode on only through the
+  test-only hook `window.__splitoTest.demoMode(true)`, which runs the same switch (F-228a). A `demoCoverage`
+  test (`data/demoCoverage.test.ts`) lists every user-facing feature and fails when the seeded demo database has
+  no record exercising it; a new feature adds its line and its demo records in the same change. *Why:* "add a lot
+  of demo data to my account"; "only one demo mode from settings"; "make it a switch ... both accounts keep
+  different". *Where:* `apps/client/src/data/demoMode.ts`, `demoSeed.ts`, `packages/sync/src/demoLarge.ts`,
+  `e2e/openDemo.ts`.
 - **Don't ask; decide.** The owner has delegated every open choice: make the call, record it (spec decision
   table or here), deliver the final version, and do not interrupt with questions. *Why:* "don't ask me
   anything, take your own decisions, give final version"; "do what you want to do, take own decisions, don't

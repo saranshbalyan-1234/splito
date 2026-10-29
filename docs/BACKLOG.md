@@ -1554,7 +1554,7 @@ Add friend asks for an email or mobile number (one field, auto-detected) plus an
   3. They must accept: nobody becomes a friend or joins your groups without consent. Pending people show greyed with "Waiting for <name> to accept" and cannot be selected in expenses or groups; once accepted they are full friends usable anywhere (any group, any expense, settle up) and both sides see the shared history.
   4. Incoming requests show in Activity (From others, unread badge) and at the top of People ("Requests": Accept / Decline). Declining is silent to the sender, whose request stays pending until it expires after 30 days.
   5. Privacy settings "Let people find me by email / phone" (default on) and "Who can send me friend requests" (everyone / people with my link only) are registry entries with Settings rows.
-  6. Demo mode (`?demo=1`) ships a fake directory so every branch can be seen; production builds use the backend directory (F-2111) and never show a fake "sent" state.
+  6. Demo mode ships a fake directory (seeded with requests, invites sent and invite links) so every branch can be seen; production builds use the backend directory (F-2111) and never show a fake "sent" state.
 
 ### F-619 Invite link and QR with limits `spec: owner § 26.18`
 

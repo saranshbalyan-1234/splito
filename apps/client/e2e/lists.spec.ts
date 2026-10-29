@@ -18,11 +18,6 @@ type Splito = {
   createExpense(draft: unknown): Promise<string>
 }
 
-async function openDemo(page: Page) {
-  await enterDemo(page)
-  await expect(page.getByTestId('person-Arjun Mehta')).toBeVisible()
-}
-
 /** A04: Kavya owes me 100 directly and 50 in a shared group. */
 async function seedA04(page: Page) {
   await page.goto('/')

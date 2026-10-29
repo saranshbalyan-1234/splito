@@ -42,7 +42,7 @@ emulators on the machine are never picked by mistake.
 From `apps/client`:
 
 ```bash
-EXPO_PUBLIC_DEMO=1 EXPO_PUBLIC_TOUR=1 CI=1 npx expo run:android --port 8226 --device emulator-5584
+EXPO_PUBLIC_TOUR=1 CI=1 npx expo run:android --port 8226 --device emulator-5584
 ```
 
 - `expo run:android` runs prebuild (generating the gitignored `android/`), builds the debug APK, installs it,
