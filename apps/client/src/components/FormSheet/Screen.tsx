@@ -45,6 +45,7 @@ export function Screen({
   readout,
   scrollTestID,
   overlay,
+  deferBody,
   children,
 }: {
   testID: string
@@ -63,6 +64,8 @@ export function Screen({
   footer?: FooterProps
   readout?: React.ReactNode
   scrollTestID?: string
+  /** Mount the body a frame after the open motion starts (heavy bodies only); `true` shows a blank stand-in, a node replaces it. */
+  deferBody?: boolean | React.ReactNode
   /** Drawn over the whole sheet, e.g. the saved check. */
   overlay?: React.ReactNode
   children: React.ReactNode
@@ -112,7 +115,7 @@ export function Screen({
             scrollEventThrottle={50}
             style={[a.flex_1, web([a.flex_shrink, {minHeight: 0}])]}
             contentContainerStyle={[a.pb_2xl]}>
-            <SheetBody>{children}</SheetBody>
+            {deferBody ? <SheetBody standIn={deferBody === true ? undefined : deferBody}>{children}</SheetBody> : children}
           </ScrollView>
           {footer ? <Footer {...footer} readout={readout} /> : null}
         </KeyboardAvoidingView>

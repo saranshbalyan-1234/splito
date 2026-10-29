@@ -35,6 +35,7 @@ import {useEntities, useMutationCtx, usePref, useStore} from '#/data/hooks'
 import {atoms as a, useBreakpoints, useTheme} from '#/alf'
 import {Button, ButtonText} from '#/components/Button'
 import * as FormSheet from '#/components/FormSheet'
+import {ComposerSkeletonBody} from '#/components/split/ComposerSkeleton'
 import * as Dialog from '#/components/Dialog'
 import {Divider} from '#/components/Divider'
 import * as Prompt from '#/components/Prompt'
@@ -291,6 +292,7 @@ export function ExpenseComposer({
     <FormSheet.Screen
       testID={testID}
       scrollTestID="expense-form"
+      deferBody={<ComposerSkeletonBody />}
       title={
         isEdit
           ? l`Edit expense`

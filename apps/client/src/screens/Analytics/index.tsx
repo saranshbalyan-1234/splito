@@ -136,8 +136,8 @@ export function AnalyticsScreen() {
                   }
                 />
                 <Summary report={report} locale={locale} />
-                {/* Its own commit, a frame after the list (a 120 ms layout otherwise blocks the next tap). */}
-                <Deferred sameSize fallback={<ChartsPlaceholder />}>
+                {/* Its own commit, a frame after the list (a 120 ms layout otherwise blocks the next tap); the chart placeholder holds the chart's height, the table view (another height) just waits empty. */}
+                <Deferred sameSize={!isTable} fallback={<ChartsPlaceholder />}>
                   <Charts report={report} locale={locale} isTable={isTable} />
                 </Deferred>
                 {report.totals.count > 0 && (

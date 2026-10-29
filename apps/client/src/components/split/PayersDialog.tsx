@@ -63,7 +63,7 @@ function PayersInner({
   const left = evaluation.payersRemaining
 
   return (
-    <FormSheet.Inner title={l`Who paid?`}>
+    <FormSheet.Inner deferBody title={l`Who paid?`}>
       <SegmentedControl.Root
         label={l`Number of payers`}
         type="radio"

@@ -273,10 +273,11 @@ export function SummaryPlaceholder() {
         <Skeleton.Text style={[a.text_5xl, {width: 260}]} />
       </View>
       <View style={[a.flex_row, a.gap_xl]}>
+        {/* Shares of the row, never fixed widths: three 120 px columns plus gaps overflowed a 390 px screen and widened the page (the fixed bottom bar slipped below the fold). */}
         {[0, 1, 2].map(i => (
-          <View key={i} style={[a.gap_xs, {width: 120}]}>
-            <Skeleton.Text style={[a.text_sm, {width: 70}]} />
-            <Skeleton.Text style={[a.text_md, {width: 100}]} />
+          <View key={i} style={[a.flex_1, a.gap_xs, {minWidth: 0}]}>
+            <Skeleton.Text style={[a.text_sm, {width: '60%'}]} />
+            <Skeleton.Text style={[a.text_md, {width: '85%'}]} />
           </View>
         ))}
       </View>

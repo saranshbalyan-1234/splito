@@ -29,12 +29,14 @@ export function useAfterTransition() {
 
 /**
  * Whether a screen's heavy body may render: `flag` (its data is there) AND the
- * first frame has painted. Data that lands later is deferred too, so the body
+ * first frame has painted. Data that lands later is deferred, so the body
  * mounts as an interruptible transition and a tap in the meantime is handled
- * first. Screens swap their skeleton for the body on this, not on `flag`.
+ * first; data that goes away is not: `flag` false is false in the same render
+ * (a body must never draw rows of data that is gone), so only the rising edge
+ * lags. Screens swap their skeleton for the body on this, not on `flag`.
  */
 export function useDeferredReady(flag = true) {
   const afterFrame = useAfterTransition()
   const deferred = useDeferredValue(flag)
-  return afterFrame && deferred
+  return afterFrame && flag && deferred
 }

@@ -168,7 +168,7 @@ export function GroupScreen() {
   const [evenDraft, setEvenDraft] = useState<EvenDraft | null>(null)
   const openHide = useHideItem({type: openKind, id: openRepayment?.id ?? ''})
 
-  /* The header paints at once; the rows mount after the first frame as a transition, so only missing data shows a skeleton (owners 151/152). */
+  /* The header paints at once; the rows mount a frame later as a transition, and only missing data shows a skeleton (owners 151/152). */
   const isLoading = !me || !people || !groups || !storedNets || !groupHistory
   const rowsReady = useDeferredReady(!isLoading)
   const group = groups?.find(g => g.id === groupId)
@@ -514,12 +514,12 @@ export function GroupScreen() {
     )
 
   const empty = isLoading ? (
-    <Shimmer>
+    <Shimmer testID="group-history-loading">
       {Array.from({length: 5}, (_, i) => (
         <HistoryRowPlaceholder key={i} />
       ))}
     </Shimmer>
-  ) : bodyTab === 'balances' ? (
+  ) : !rowsReady ? <></> : bodyTab === 'balances' ? (
     <EmptyState
       testID="group-balances-empty"
       icon={null}
@@ -648,7 +648,7 @@ export function GroupScreen() {
       </Layout.Header.Outer>
       <LayoutAnimationConfig skipEntering skipExiting>
         <List
-          data={bodyTab === 'expenses' ? items : shown}
+          data={rowsReady ? (bodyTab === 'expenses' ? items : shown) : []}
           onEndReached={onEndReached}
           keyExtractor={(item: Item) => item.key}
           renderItem={({item, index}: {item: Item; index: number}) => {

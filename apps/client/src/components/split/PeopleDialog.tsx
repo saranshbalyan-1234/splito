@@ -123,7 +123,7 @@ function PeopleInner({
     })
 
   return (
-    <FormSheet.Inner title={title}>
+    <FormSheet.Inner deferBody title={title}>
       {description ? (
         <FormSheet.Description>{description}</FormSheet.Description>
       ) : null}
