@@ -33,6 +33,8 @@ export type RootStackParams = {
   Settle: {groupId: string}
   AddExpense: {personId?: string; groupId?: string}
   Expense: {expenseId: string}
+  /** A recorded payment's page: its details and discussion (F-1204). */
+  Repayment: {repaymentId: string}
   EditExpense: {expenseId: string}
   AddFriend: undefined
   /** Manage invite links. */

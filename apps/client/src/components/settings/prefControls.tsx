@@ -71,6 +71,7 @@ import {
   PersonCheck_Stroke2_Corner0_Rounded as PersonCheckIcon,
 } from '#/components/icons/Invite'
 import {MagnifyingGlass_Stroke2_Corner0_Rounded as SearchIcon} from '#/components/icons/MagnifyingGlass'
+import {CommentsShowHistoryPref} from '#/components/comments/CommentsPref'
 import {OptionDialog} from '#/components/settings/OptionDialog'
 import {NotifyRemindersPref} from '#/components/settings/NotifyRemindersPref'
 import {PrefSection, usePrefControl} from '#/components/settings/PrefSection'
@@ -1070,6 +1071,7 @@ export const PREF_CONTROLS = {
   'lists.hiddenItems': null,
   // The "Show hidden" switch sits in each list's filters, where its effect shows.
   'lists.showHidden': null,
+  'comments.showHistory': CommentsShowHistoryPref,
   'privacy.findByContact': FindablePref,
   'privacy.friendRequestsFrom': FriendRequestsFromPref,
   'invites.defaultMaxUses.friend': FriendInviteUsesPref,

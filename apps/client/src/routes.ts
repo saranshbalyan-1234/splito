@@ -29,6 +29,7 @@ export const ROUTE_PATHS = {
   AddExpense: '/expense/new',
   EditExpense: '/expense/:expenseId/edit',
   Expense: '/expense/:expenseId',
+  Repayment: '/payment/:repaymentId',
 } as const satisfies Record<keyof FlatNavigatorParams, string>
 
 export type RouteName = keyof typeof ROUTE_PATHS

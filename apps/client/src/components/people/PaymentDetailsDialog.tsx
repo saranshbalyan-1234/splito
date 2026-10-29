@@ -1,5 +1,6 @@
 import {View} from 'react-native'
 import {Trans, useLingui} from '@lingui/react/macro'
+import {useNavigation} from '@react-navigation/native'
 import {formatAmount} from '@splito/domain'
 import {
   deleteRepayment,
@@ -12,6 +13,7 @@ import {
 } from '@splito/sync'
 
 import {useHaptics} from '#/lib/haptics'
+import {type NavigationProp} from '#/lib/routes/types'
 import {logger} from '#/logger'
 import {useMutationCtx, useStore} from '#/data/hooks'
 import {useNumberLocale} from '#/locale/numberLocale'
@@ -20,7 +22,9 @@ import {Button, ButtonIcon, ButtonText} from '#/components/Button'
 import {DeletedMeta, useStruck} from '#/components/DeletedMeta'
 import * as Dialog from '#/components/Dialog'
 import * as FormSheet from '#/components/FormSheet'
+import {CommentCount} from '#/components/comments/CommentCount'
 import {ArrowRotateCounterClockwise_Stroke2_Corner0_Rounded as UndoIcon} from '#/components/icons/ArrowRotate'
+import {Bubble_Stroke2_Corner2_Rounded as BubbleIcon} from '#/components/icons/Message'
 import {Trash_Stroke2_Corner0_Rounded as TrashIcon} from '#/components/icons/Trash'
 import {EyeIcon, EyeOffIcon} from '#/components/settings/icons'
 import {useErrorText} from '#/components/split/shared'
@@ -93,6 +97,7 @@ function Details({
   const {t: l} = useLingui()
   const formatDay = useFormatDay()
   const control = Dialog.useDialogContext()
+  const navigation = useNavigation<NavigationProp>()
   const store = useStore()
   const ctx = useMutationCtx()
   const haptics = useHaptics()
@@ -215,6 +220,24 @@ function Details({
           </Trans>
         )}
       </Text>
+      {isWriteOff ? null : (
+        <Button
+          testID="payment-discussion"
+          label={l`Open the discussion`}
+          size="large"
+          color="secondary"
+          onPress={() =>
+            control.close(() =>
+              navigation.navigate('Repayment', {repaymentId: repayment.id}),
+            )
+          }>
+          <ButtonIcon icon={BubbleIcon} />
+          <ButtonText>
+            <Trans>Comments</Trans>
+          </ButtonText>
+          <CommentCount targetType="repayment" targetId={repayment.id} />
+        </Button>
+      )}
       {isDeleted ? (
         <View style={[a.gap_sm]}>
           <Button

@@ -7,6 +7,7 @@ import {Link} from '#/view/com/util/Link'
 import {atoms as a, useTheme} from '#/alf'
 import * as Skeleton from '#/components/Skeleton'
 import {Text} from '#/components/Typography'
+import {CommentCount} from '#/components/comments/CommentCount'
 import {useListAnimations} from '#/motion/listAnimations'
 import {usePressScale} from '#/motion/PressableScale'
 import {CategoryIcon} from '#/screens/Analytics/components/CategoryIcon'
@@ -76,11 +77,20 @@ export function ExpenseRow({
               style={[a.text_md, a.font_semi_bold, a.leading_snug]}>
               {title}
             </Text>
-            <Text
-              numberOfLines={1}
-              style={[a.text_sm, a.leading_snug, t.atoms.text_contrast_medium]}>
-              {byline}
-            </Text>
+            <View style={[a.flex_row, a.align_center, a.gap_sm]}>
+              <Text
+                numberOfLines={1}
+                style={[
+                  a.flex_shrink,
+                  a.text_sm,
+                  a.leading_snug,
+                  t.atoms.text_contrast_medium,
+                  {minWidth: 0},
+                ]}>
+                {byline}
+              </Text>
+              <CommentCount targetType="expense" targetId={expense.id} />
+            </View>
           </View>
           <View style={[a.align_end, a.gap_2xs, a.flex_shrink_0]}>
             <Text

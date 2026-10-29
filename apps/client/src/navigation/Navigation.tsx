@@ -45,6 +45,7 @@ import {AnalyticsScreen} from '#/screens/Analytics'
 import {CreateGroupScreen} from '#/screens/CreateGroup'
 import {EditExpenseScreen} from '#/screens/EditExpense'
 import {ExpenseScreen} from '#/screens/Expense'
+import {RepaymentScreen} from '#/screens/Repayment'
 import {GroupScreen} from '#/screens/Group'
 import {GroupsScreen} from '#/screens/Groups'
 import {PeopleScreen} from '#/screens/People'
@@ -75,6 +76,7 @@ const TITLES: Partial<Record<keyof FlatNavigatorParams, MessageDescriptor>> = {
   Settle: msg`Settle up`,
   AddExpense: msg`Add expense`,
   Expense: msg`Expense`,
+  Repayment: msg`Payment`,
   EditExpense: msg`Edit expense`,
   AddFriend: msg`Add friend`,
   InviteLinks: msg`Invite links`,
@@ -202,6 +204,7 @@ export function TabsNavigator({
       <Stack.Screen name="Group" component={GroupScreen} />
       <Stack.Screen name="Settle" component={SettleScreen} />
       <Stack.Screen name="Expense" component={ExpenseScreen} />
+      <Stack.Screen name="Repayment" component={RepaymentScreen} />
       <Stack.Screen name="InviteLinks" component={InviteLinksScreen} />
       <Stack.Screen name="Invite" component={InviteScreen} />
       {/* The composers (owner: one sheet layout for Add / Edit expense, Add friend, New group) open like Bluesky's composer. */}
@@ -310,6 +313,11 @@ export function FlatNavigator({
         name="Expense"
         component={ExpenseScreen}
         options={{title: title('Expense')}}
+      />
+      <Flat.Screen
+        name="Repayment"
+        component={RepaymentScreen}
+        options={{title: title('Repayment')}}
       />
       <Flat.Screen
         name="EditExpense"

@@ -252,6 +252,8 @@ export const PREFS = {
   'notify.digest': def('notify.digest', 'notifications', 'device', 'Digest', false, isBool),
   /** Telemetry (16.1): off, nothing is sent. No Settings row until a vendor exists (A-046); recording still honours it. */
   sendDiagnostics: def('sendDiagnostics', 'privacy', 'device', 'Send diagnostics', true, isBool),
+  /** F-1204: an expense's page lists its edit history between the comments; off, only the comments show. */
+  'comments.showHistory': def('comments.showHistory', 'lists', 'account', 'Show edit history in the discussion', true, isBool),
   // Privacy: the directory server enforces these; saved now, applied once you sign in.
   'privacy.findByContact': def('privacy.findByContact', 'privacy', 'account', 'Let people find me by email or phone', true, isBool),
   'privacy.friendRequestsFrom': def('privacy.friendRequestsFrom', 'privacy', 'account', 'Who can send me friend requests', 'everyone', oneOf('everyone', 'link-only')),

@@ -19,3 +19,5 @@ apps/client/dist-*/
 .env
 .env.local
 .env.*.local
+# Local QA screenshots (re-shot per review)
+apps/client/qa/

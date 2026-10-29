@@ -10,6 +10,7 @@ import {PressableWithHover} from '#/view/com/util/PressableWithHover'
 import {atoms as a, useTheme} from '#/alf'
 import {DeletedMeta, useStruck} from '#/components/DeletedMeta'
 import {EntryIcon} from '#/components/people/EntryIcon'
+import {CommentCount} from '#/components/comments/CommentCount'
 import {SyncDot} from '#/components/SyncStatus'
 import {type HistoryEntry, utcDate} from '#/components/people/ledger'
 import * as Skeleton from '#/components/Skeleton'
@@ -185,6 +186,9 @@ export function HistoryRow({
             {byline.join(' · ')}
           </Text>
           <SyncDot row={entry.entity} testID={`sync-${entry.entity.id}`} />
+          {entry.kind !== 'writeoff' ? (
+            <CommentCount targetType={entry.kind} targetId={entry.entity.id} />
+          ) : null}
         </View>
         {isDeleted ? (
           <View style={[a.flex_row, a.align_center, a.gap_sm]}>
