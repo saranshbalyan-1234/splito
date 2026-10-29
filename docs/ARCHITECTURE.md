@@ -1422,9 +1422,10 @@ labelled sidebar); **wide** = web 1300 px and up (Bluesky `gtTablet`, right colu
   platforms: splash, branding etc". *Where:* § 8, `apps/client/scripts/brand.ts`.
 - **Front end first, then the backend** (owner 164, 2026-10-30, reaffirms 93 and replaces the plan to start the
   auth/sync backend right after Wave C or in parallel with it): every front-end batch in BACKLOG is finished
-  (Wave C, then the remaining front-end batches) before backend work starts; until then sign-in runs on the
+  (Wave C, then the remaining front-end batches) AND the owner says they are okay with all the front-end changes
+  (an explicit sign-off) before any backend work starts; until then sign-in runs on the
   labelled dev account (owner 125) and everything stays local. *Why:* "finish the frontend first, and then start
-  backend".
+  backend"; "once I say I am okay with all frontend changes".
 - **Backend comes after the UI, and it is mandatory, not optional** (owner 93: "we need to implement the backend as well, once we are done with all the features"): when the front-end batches are done, every BACKLOG backend item (E21, E22, the server halves of E23 and of any item marked Backend yes) is built before the product is called done. **Backend comes after the UI.** Front-end batches first; the server is Fastify on Bun with **Postgres**.
   *Why:* "let's build backend later once we are done with UI"; "use Postgres". *Where:* `docs/RESUME.md`, § 9.4.
 - **GameRun's Expo architecture is adopted where it fits** (§§ 21-22 record the calls). *Why:* "can you also
@@ -2586,6 +2587,7 @@ Every owner decision, in the order it was made (all 2026-10-26). "Replaced" name
 | 162 | "add all these to architecture" (the iOS, tap-speed and links review findings) | Lessons recorded in § 23 (sheet presenting, sheet host provider, tab links on native, SQLite sync batching, no dedupe on idempotent nav, deferred-render contract, sideways overflow, renders baseline upkeep) | § 23 | - |
 | 163 | "make sure you do it yourself always, whenever you think this should be in app" | Claude records lessons and rules (§ 23 or the section) on its own in the same turn, plus BACKLOG work, commit and push, without being asked | § 0 rule 10 | Recording lessons only when asked |
 | 164 | "finish the frontend first, and then start backend" | All front-end batches finish before any backend work; dev account and local data until then | § 26.2 | Backend batch 1 to start after Wave C / in parallel (125 plan) |
+| 165 | "once i say i am okay with all forntend changes" | Backend starts only after the owner explicitly signs off on all front-end changes | § 26.2 | Backend after front-end batches finish (164) |
 
 New decisions follow § 0 rule 9: rewrite the rule in its topic so only the current truth remains, then add a
 row here.
