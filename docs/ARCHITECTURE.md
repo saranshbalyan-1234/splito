@@ -1272,6 +1272,31 @@ labelled sidebar); **wide** = web 1300 px and up (Bluesky `gtTablet`, right colu
 - **GameRun's Expo architecture is adopted where it fits** (§§ 21-22 record the calls). *Why:* "can you also
   look into architecture md file from GameRun expo".
 
+- **Welcome tour on first launch** (owner 123; F-249, Wave C, before F-211's setup steps). A fresh install
+  opens a short swipeable tour that says what Splito is and how to use it, then hands over to setup (F-211):
+  - **5 slides max**, each an original animated illustration (Lottie, static under reduced motion), a title and
+    one sentence, built on Bluesky's Pager with dot indicators (tappable) and its direction-aware slide:
+    1. Split anything with anyone: friends, groups, trips, any currency, never mixed.
+    2. Bills done right: items, portions, different taxes per item, service and round-off.
+    3. Settle up in fewest payments, record cash or UPI, remind gently.
+    4. Search or ask anything: "how much did I spend on food in Goa?".
+    5. Yours, offline: everything is saved on this device first (copy says sync only once it exists, § 0 rule 6).
+  - **Controls:** "Skip" top right on every slide (goes straight to setup, never past it), "Next" as the bottom
+    primary, the last slide's primary is "Get started"; swipe and the dots move both ways; a language chip top
+    left on the first slide (English / हिन्दी), because the tour is the first thing read. Phone: full screen;
+    rail and desktop: a centred card (~560 px) over a dimmed app, Escape = Skip.
+  - **Once, then on demand:** shown once per install (`onboarding.tourSeen`, device preference kept in the
+    database, decision 90); Settings > Help "Take the tour" replays it; never shown in demo mode or to e2e runs
+    (the test hook marks it seen; one spec covers the tour itself). Every slide has a URL (`/welcome/1` .. `/5`,
+    owner 100).
+  - **After the tour, first-use tips** (Expensify FeatureTraining / Bluesky ProgressGuide style): one small
+    dismissible tip the first time a screen is opened (FAB "Add your first expense", Groups "+", Analytics
+    scope chip, Search & Ask icon, row swipe/long-press), at most one tip on screen, each shown once, all
+    switchable off (`tips.enabled`), "Reset tips" in Settings > Help.
+  - Screen readers hear "Step 2 of 5" and each title as a heading; tap targets 44 px; works at 320 px in Hindi.
+  *Why:* "like what you get when you install one app and you get one overview, where you have to click next or
+  skip which explains you what this app is and how to use".
+
 ### 26.3 Shell and navigation
 
 - **Bluesky's shell on every width.** Web fills the whole screen: left sidebar plus main content (plus the
@@ -2176,6 +2201,7 @@ Every owner decision, in the order it was made (all 2026-10-26). "Replaced" name
 | 120 | "ui issues" (Home screenshot, 2026-10-29) | Home order Overview, requests, recent, Friends; Invites sent move to the Friends and invites page; overview labels and amounts never truncated and cards even; no red per-row dots; friend rows two lines (2 chips + N, one net per currency); Friends search back | § 26.12 | Invites sent above the Overview; truncating cards; chips wrapping |
 | 121 | "I don't see invites related data in demo" | The one demo dataset carries the invites flow in every state: incoming requests (waiting, declined), invites sent (Sent, Opened, Joined, Expired, Cancelled), private "only for you" friends incl. one linked on joining, friend and group invite links in every state, a group join request, and their Activity rows; "Opened" and "join request" are stand-ins until F-2105 | § 26.1 | Demo had no invites data |
 | 122 | "keep rebuilding app after changes, i see very old always" | localhost:8090 is rebuilt automatically after every commit to the integration branch or main line | § 26.1 | Preview rebuilt only at the end of a wave |
+| 123 | "add another feature, like what you get when you install one app ... click next or skip which explains you what this app is and how to use" | Welcome tour on first launch: up to 5 slides (Pager, dots, Skip / Next / Get started, language chip), then setup (F-211); once per install, replay from Settings > Help; first-use tips after it, one at a time, each once | § 26.2 | F-211 began at the language/name step with one FAB coach mark |
 
 New decisions follow § 0 rule 9: rewrite the rule in its topic so only the current truth remains, then add a
 row here.

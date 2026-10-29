@@ -77,6 +77,7 @@ Every row of the ARCHITECTURE § 26.23 decision log (rows 1-63) and the feature(
 | 58 service worker and PWA | § 26.21 | F-1901 |
 | 59 comments, remind, export | § 26.20 | F-1204, F-2208, F-1118, F-1119, F-1111, F-2210, F-2001, F-2007, F-2004 |
 | 61 sync-status dot on the avatar | § 26.7 | F-223, F-2103 |
+| 123 welcome tour on first launch and first-use tips | § 26.2 | F-249 (Wave C) |
 | 120 Home layout fixes (order, no truncation, no red dots, two-line friend rows) | § 26.12 | F-248 |
 | 119 disputes and holds; disputed records still count, left out of Settle up by default | § 26.20 | F-1210 (Wave C) |
 | 85 best of both per feature: pull features from Expensify and Bluesky, whichever is better | § 26.1 | F-229..F-236, F-318..F-321, F-620, F-1211, F-1212, F-1412, F-1507, F-1816 (Batch 4d), amendments to F-211, F-214, F-219, F-312, F-501, F-502, F-504, F-516, F-709, F-1204, F-1207, F-1210, F-1402, F-1403, F-1405, F-1407, F-2202, F-2208; `docs/scouting/2026-10-27-bluesky-expensify.md` |
@@ -448,6 +449,20 @@ Language picker in native scripts, name and avatar, region-prefilled currency / 
   4. Onboarding says plainly that data lives only on this device until a backup or sign-in, with a link to backups.
   5. The purpose chips share the name screen, so criterion 1's three-screen limit holds; skipping is allowed; each purpose's defaults live in one typed map with a bun test, and changing the purpose later changes only future defaults.
   6. Killing the app mid-onboarding resumes on the same step.
+
+### F-249 Welcome tour and first-use tips `spec: owner § 26.2 (decision 123)`
+
+First-launch tour of up to 5 slides (what Splito is and how to use it) with Skip / Next / Get started, then setup (F-211); first-use tips after it. Bluesky Pager and ProgressGuide, Expensify FeatureTraining (`src/components/FeatureTrainingModal.tsx`) and onboarding header (`src/components/OnboardingHeader.tsx`); illustrations original (never Expensify's or Bluesky's artwork).
+
+- **Effort** M · **Impact** 8 · **Backend** no · **Status** todo, Wave C (first, before F-211) · **Deps** F-1712 (Lottie), F-203 (Pager)
+- **Prefs** `onboarding.tourSeen` (device, in the database), `tips.enabled` (on), `tips.seen` (device)
+- **Acceptance**
+  1. A fresh install opens the tour; slides as § 26.2 with titles and one sentence each, en and hi, no claim of sync or features not built.
+  2. Skip on any slide and Get started on the last go to setup (F-211); swipe and dots move both ways; Escape skips on web; the language chip switches the tour live.
+  3. Shown once per install; Settings > Help "Take the tour" replays it; demo mode and e2e builds never show it unless the tour spec asks; `/welcome/1`..`/5` deep-link to a slide.
+  4. Phone full screen, rail/desktop centred card; reduced motion shows static art; screen reader reads "Step N of 5"; no overflow at 320 px in Hindi.
+  5. First-use tips: one per screen at most, each once, dismissible, off with `tips.enabled`, "Reset tips" in Settings > Help.
+  6. Perf: the tour's first slide renders within the § 26.10 cold-start budget; Lottie loads lazily; e2e and screenshots (light, Dim, 390, 1440).
 
 ### F-212 Simple mode
 
