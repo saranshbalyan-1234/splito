@@ -29,7 +29,6 @@ export function Summary({report, locale}: {report: Report; locale: string}) {
   const {t: l} = useLingui()
   const {gtMobile} = useBreakpoints()
   const {currency, totals} = report
-  const canStep = report.period !== 'all' && report.period !== 'custom'
 
   /* One cell of the stat strip: label, figure, and a line saying what it counts. */
   const stat = (
@@ -100,42 +99,6 @@ export function Summary({report, locale}: {report: Report; locale: string}) {
 
   return (
     <View style={[a.px_lg, a.pt_md, a.pb_sm, a.gap_md]}>
-      {/* One period control: step back and forward, or open the label to pick the kind of period. */}
-      <View
-        style={[
-          a.flex_row,
-          a.align_center,
-          a.gap_2xs,
-          canStep && {marginLeft: -8},
-        ]}>
-        {canStep && (
-          <Button
-            testID="analytics-prev"
-            label={l`Previous period`}
-            size="small"
-            color="secondary"
-            variant="ghost"
-            shape="round"
-            disabled={!report.canGoBack}
-            onPress={() => report.step(-1)}>
-            <ButtonIcon icon={ChevronLeftIcon} size="md" />
-          </Button>
-        )}
-        <PeriodMenu report={report} />
-        {canStep && (
-          <Button
-            testID="analytics-next"
-            label={l`Next period`}
-            size="small"
-            color="secondary"
-            variant="ghost"
-            shape="round"
-            disabled={!report.canGoForward}
-            onPress={() => report.step(1)}>
-            <ButtonIcon icon={ChevronRightIcon} size="md" />
-          </Button>
-        )}
-      </View>
       <View style={a.gap_2xs}>
         <Text
           style={[a.text_sm, a.font_semi_bold, t.atoms.text_contrast_medium]}>
@@ -176,6 +139,46 @@ export function Summary({report, locale}: {report: Report; locale: string}) {
           l`In this period`,
         )}
       </View>
+    </View>
+  )
+}
+
+/**
+ * The period control: step back and forward, or open the label to pick the kind of period. It sits in the
+ * filter row with currency and scope, so every filter is on one line (owner 171).
+ */
+export function PeriodControl({report}: {report: Report}) {
+  const {t: l} = useLingui()
+  const canStep = report.period !== 'all' && report.period !== 'custom'
+  return (
+    <View style={[a.flex_row, a.align_center, a.gap_2xs]}>
+      {canStep && (
+        <Button
+          testID="analytics-prev"
+          label={l`Previous period`}
+          size="small"
+          color="secondary"
+          variant="ghost"
+          shape="round"
+          disabled={!report.canGoBack}
+          onPress={() => report.step(-1)}>
+          <ButtonIcon icon={ChevronLeftIcon} size="md" />
+        </Button>
+      )}
+      <PeriodMenu report={report} />
+      {canStep && (
+        <Button
+          testID="analytics-next"
+          label={l`Next period`}
+          size="small"
+          color="secondary"
+          variant="ghost"
+          shape="round"
+          disabled={!report.canGoForward}
+          onPress={() => report.step(1)}>
+          <ButtonIcon icon={ChevronRightIcon} size="md" />
+        </Button>
+      )}
     </View>
   )
 }
