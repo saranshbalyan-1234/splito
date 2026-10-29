@@ -340,6 +340,11 @@ All user-facing strings go through Lingui; English default, Hindi second, Englis
 - **Honesty:** "Synced" appears only in the sync-status component's messages. FX-, OCR- and AI-derived
   values carry "Estimated rate" / "From receipt" until confirmed; converted totals carry "≈" and "rate from
   DATE"; a receipt field that was not read stays empty. A bun test scans the source catalog (A-013).
+- **Every empty state looks the same** (owner 146): one `EmptyState` layout on every screen (Home, Groups,
+  Analytics, Activity, Group): the same illustration size and motion, the same top spacing, one short message and
+  at most one small secondary button; no per-screen titles, large buttons, second buttons or custom centring.
+  *Why:* "make the home empty screen animation like other screens, there is slight diff in button and top
+  paddings".
 - **No "coming soon"** and no placeholder UI. A section with no data returns `null`; list screens use
   Bluesky's empty state. Empty states always use the empty-state component with a glyph, never bare text.
 - **Never invent data:** no name splitting, no currency or category inferred for a record; show `-`. A figure
@@ -2372,6 +2377,7 @@ Every owner decision, in the order it was made (all 2026-10-26). "Replaced" name
 | 143 | "tour focuses on the feature and blur other places" | Each tour step keeps the focused control sharp and blurs (plus slight dim) the rest of the screen | § 26.2 | Dimmed backdrop only |
 | 144 | "either signin with password otp, users choice" | Existing accounts choose Password or Code as equal options (segmented), last choice remembered per device | § 26.15 | Password first with "Use a one-time code instead" |
 | 145 | "integrate deep links properly as well" | Every URL is a deep link: Universal Links, App Links, splito:// scheme, web fallback; one resolver for push, invites, QR, reminders, shares; signed-out and demo handling; deferred link after install; simulator tests | § 26.3 | Deep links partly wired (§ 14), no universal/app links |
+| 146 | "make the home empty screen animation like other screens, there is slight diff in button and top paddings" | One empty-state layout everywhere: same illustration, motion, top spacing, one small secondary button | § 7 | Home had a title, large primary + secondary buttons and its own centring |
 
 New decisions follow § 0 rule 9: rewrite the rule in its topic so only the current truth remains, then add a
 row here.
