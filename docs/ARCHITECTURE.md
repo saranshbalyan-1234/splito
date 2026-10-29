@@ -1417,8 +1417,8 @@ good"; "the left sidebar looks bad on desktop". *Where:* `view/shell/desktop/Lef
   links pinned at the bottom (Feedback · Help · Privacy · About; same component as the drawer). No avatar or
   `ProfileCard`, no "Splito" wordmark, no recent groups or transactions (those live in the right column,
   § 26.17). *Why:* "remove the avatar from sidebar"; "remove label from logo".
-- **Logo:** the mark only (§ 26.11), 40 px, horizontally centred in the sidebar column, vertically aligned with
-  the content header row (same top padding and height as `Layout.Header`). *Why:* "make the branding in
+- **Logo:** the mark only (§ 26.11), 40 px, horizontally centred in the sidebar column, 12 px (space.md) below the
+  content header row's centre line, for a little air on top (owner 126; was aligned with the header row). *Why:* "make the branding in
   centre".
 - **Nav items:** Bluesky `NavItem` exactly (24 px icon, `text_xl`, active = bold + filled icon,
   `rounded_full` hover background, Bluesky badge/dot): the shared list of § 26.3. The
@@ -2226,6 +2226,7 @@ Every owner decision, in the order it was made (all 2026-10-26). "Replaced" name
 | 123 | "add another feature, like what you get when you install one app ... click next or skip which explains you what this app is and how to use" | Welcome tour on first launch: up to 5 slides (Pager, dots, Skip / Next / Get started, language chip), then setup (F-211); once per install, replay from Settings > Help; first-use tips after it, one at a time, each once | § 26.2 | F-211 began at the language/name step with one FAB coach mark |
 | 124 | "Feedback ∙ Help ∙ Privacy ∙ About should be in one line" | The footer links are one line in the sidebar and the drawer (nowrap row, text_xs), English and Hindi | § 26.5 | Inline text that wrapped in the 240 px sidebar |
 | 125 | "also without login, nothing should be visible, auth is required" | Sign-in required: signed out shows only the tour, the logged-out flow, language and legal pages; DB opens only with a session; offline after sign-in; one DB per account; dev/e2e dev account until the auth API; auth backend moved up after Wave C | § 26.15 | Sign-in optional, zero-signup onboarding (F-211), closable sign-in screen |
+| 126 | "add a little padding from top, on sidebar on logo" | Sidebar logo sits 12 px lower than the header centre line | § 26.5 | Logo on the header row centre line |
 
 New decisions follow § 0 rule 9: rewrite the rule in its topic so only the current truth remains, then add a
 row here.
