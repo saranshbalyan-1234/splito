@@ -1485,8 +1485,10 @@ labelled sidebar); **wide** = web 1300 px and up (Bluesky `gtTablet`, right colu
 - **Home, People and Groups are three tabs; the Overview lives only on Home** (owner 153; F-256; replaces the
   Home-holds-the-friends-list layout of 120 and the Overview on Groups):
   - **Home** (`/`), top to bottom (owners 153, 154): the **Overview** (per-currency cards, owners 113/114/120,
-    "Analytics ›"); **Requests** (incoming friend requests with Accept / Decline and the "N invites waiting ›"
-    row, shown only when something is pending); **Recent transactions** (F-1415: the newest expenses and payments
+    "Analytics ›"); **Requests** (shown only when something is pending, below the Overview: incoming friend requests
+    with Accept / Decline, then **Invites sent** as real rows like before, each with avatar, name, status line and
+    Resend + Cancel on one horizontal line, at most 5 rows then "See all ›" to Friends and invites; owner 175,
+    replaces the compact "N invites waiting ›" row of 120/153); **Recent transactions** (F-1415: the newest expenses and payments
     across everything, "See all" -> Activity); **Recently active people** (the 5 friends with the newest change,
     by change time, with their per-currency net, "See all" -> People); **Recently active groups** (the 5 groups
     with the newest change, balance chips, "See all" -> Groups, same rule as § 26.17). Each section is short (5
@@ -2652,6 +2654,7 @@ Every owner decision, in the order it was made (all 2026-10-26). "Replaced" name
 | 172 | "why there is no animation here"; "empty screen animations should be there always, and related to those screens only, and design/structure should be same" | Every empty state animated, same structure, with original art about its own screen; test fails on an EmptyState without illustration | § 7 | Some empty states icon-only or text-only |
 | 173 | "in activity add the filter option to choose the type, like transaction etc, when I click on see all transaction it should land here" | Activity type filter (in URL, remembered); every Recent transactions "See all" opens Activity filtered to transactions | § 7 / § 26.14 | See all opened unfiltered Activity |
 | 174 | "and in tab switch, it should switch with sliding animation" | Main tab switches slide (F-257) next in Wave C, interruptible, no redraw | § 26.9 | Slide specified but not built |
+| 175 | "on the home, invite should be shown like previously" (screenshot of the compact "2 invites waiting" row) | Home Requests section shows Invites sent as full rows (Resend / Cancel) again, below the Overview, max 5 then See all | § 26.3 | Compact "N invites waiting ›" row (120, 153) |
 
 New decisions follow § 0 rule 9: rewrite the rule in its topic so only the current truth remains, then add a
 row here.
