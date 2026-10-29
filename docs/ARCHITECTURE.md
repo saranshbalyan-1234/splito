@@ -1736,16 +1736,19 @@ pages". § 17 holds the engineering rules that meet these budgets.
 group there"; "add overview in both friends and groups, with search and filters as well, search icon only,
 expands once I click". *Where:* `screens/People`, `screens/Groups`, `screens/Group`, `components/ListToolsHeader.tsx`.
 
-- **Overview cards: details on the left; net, green and red amounts on the right** (owners 156-159; with F-256):
-  each currency card is one short row styled like a friend row (owner 130). RIGHT, right-aligned and vertically
-  centred: the NET amount on top, large, coloured by its sign with its arrow ("↙ ₹48,793.00"); under it, small, the
-  money lines in the friend-row style, "owed to you ₹49,243.00" in green and "you owe ₹450.00" in red, only the
-  directions that are open (when only one direction is open it equals the net, so only the net shows). LEFT: the
-  details, the label ("You are owed" / "You owe" / "Settled") with the currency chip and a small count line ("4
-  friends"). No long breakdown sentence. About 64-80 px tall on phones; the same layout in the desktop grid
-  (owners 113/114 still decide columns and equal heights). Amounts never truncate (owner 120). Tapping a card opens
-  Analytics in that currency. *Why:* "move the red and green to right"; "Owed to you ₹49,243 · You owe ₹450 ...
-  looks bad"; "right side we can have green/red with same styles and left other details"; "net amount on right".
+- **Overview cards: words on the left, red/green amounts on the right, line by line** (owners 156-160; with
+  F-256): each currency card is a small two-column table; every coloured amount sits on the RIGHT, right-aligned,
+  on the same line as its words on the LEFT:
+  - line 1: "You are owed" / "You owe" / "Settled" with the currency chip ... the NET, large, green or red with its
+    arrow ("↙ ₹48,793.00");
+  - line 2 (only when both directions are open): "Owed to you" ... "₹49,243.00" in green, small;
+  - line 3 (same): "You owe" ... "₹450.00" in red, small;
+  - last line, left only: the count ("4 friends").
+  No amount ever sits on the left and no breakdown sentence runs across the card. About 64-96 px tall on phones;
+  the same layout in the desktop grid (owners 113/114 decide columns and equal heights). Amounts never truncate
+  (owner 120). Tapping a card opens Analytics in that currency. *Why:* "move the red and green to right"; "Owed to
+  you ... · You owe ... looks bad"; "right side green/red with same styles, left other details"; "net amount on
+  right"; "in this red/green text on right and other text keep on left".
 - **Overview currency cards are separate, equal boxes in a balanced grid** (owner 113; F-245, queued): each
   currency is its own card (own border, radius, padding, gap between cards), never cells of one shared box; all
   cards in a row have the same width and height (the row takes the tallest card's height, content top-aligned).
@@ -2477,6 +2480,7 @@ Every owner decision, in the order it was made (all 2026-10-26). "Replaced" name
 | 157 | "Owed to you ₹49,243 · You owe ₹450 ↙ ₹48,793.00 ... this looks bad" | Overview card drops the owed/owe breakdown line; left: label + chip + count only; right: big net; breakdown lives in Analytics (card tap) | § 26.12 | Breakdown line on the card (row 156 draft) |
 | 158 | "right side we can have green/red with same styles, and left we can have other details" | Overview card: right = green "owed to you" and red "you owe" lines in friend-row style, vertically centred; left = currency chip, net headline, count line | § 26.12 | Net-only right side (157) |
 | 159 | "net amount on right" | Overview card right column: net (large, coloured) on top, then small green owed-to-you and red you-owe lines when both directions are open; left: label, chip, count | § 26.12 | Net headline on the left (158) |
+| 160 | "in this red/green text on right and other text keep on left" (screenshot of the card) | Card is a two-column table: each line's words left, its red/green amount right (net large on line 1; owed-to-you green and you-owe red small when both open; count line left only) | § 26.12 | Net and lines stacked on the right (159) |
 
 New decisions follow § 0 rule 9: rewrite the rule in its topic so only the current truth remains, then add a
 row here.
