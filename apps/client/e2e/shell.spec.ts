@@ -111,10 +111,10 @@ test.describe('header rule set', () => {
       // The action's glyph sits on the right gutter (Bluesky's 3px visual offset), left of the right column.
       expect(DESKTOP.width - RIGHT_COLUMN - (act.x + act.width)).toBe(20 - 3)
       expect(act.y).toBeLessThan(20)
-      // The sidebar logo sits on the header row's centre line.
+      // The sidebar logo sits 12 px (space.md) below the header row's centre line: a little air on top (owner 126).
       const logo = (await page.getByTestId('logo').boundingBox())!
       expect(
-        Math.abs(logo.y + logo.height / 2 - (act.y + act.height / 2)),
+        Math.abs(logo.y + logo.height / 2 - (act.y + act.height / 2) - 12),
       ).toBeLessThan(2)
       await expect(page.getByTestId('header-notifications')).toHaveCount(0)
     }

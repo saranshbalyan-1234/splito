@@ -123,6 +123,8 @@ function LogoCard({minimal}: {minimal: boolean}) {
     <View
       style={[
         a.justify_center,
+        // A little air above the mark (owner 126).
+        a.mt_md,
         platform({
           native: {height: HEADER_HEIGHT.native},
           web: {height: HEADER_HEIGHT.web},
@@ -726,7 +728,7 @@ export function DesktopLeftNav({
       {/* The drawer's footer links, pinned at the bottom (26.5); the icon rail has no room, its drawer has them. */}
       {!leftNavMinimal && (
         <NavFooterLinks
-          style={[a.px_xl, a.pt_md, web(a.pb_lg), {paddingLeft: 26}]}
+          style={[a.pr_md, a.pt_md, web(a.pb_lg), {paddingLeft: 16}]}
         />
       )}
     </View>

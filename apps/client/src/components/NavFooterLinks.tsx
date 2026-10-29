@@ -35,31 +35,29 @@ export function NavFooterLinks({
     {section: 'about', label: l`About`},
   ]
 
+  /* One line, never wrapped (owner 124): a nowrap row with text_xs fits the
+   * 240 px sidebar and the drawer in English and Hindi. */
   return (
-    <View testID="nav-footer-links" style={style}>
-      <Text style={[a.text_sm, a.leading_snug, t.atoms.text_contrast_low]}>
-        {links.map(({section, label}, i) => (
-          <Fragment key={section}>
-            {i > 0 && (
-              <Text style={[a.text_sm, t.atoms.text_contrast_low]}>
-                {' ∙ '}
-              </Text>
-            )}
-            <FooterLink
-              testID={`nav-footer-${section}`}
-              label={label}
-              href={
-                section === 'feedback' ? undefined : `/settings/${section}`
-              }
-              onPress={() => {
-                onBeforeNavigate?.()
-                if (section === 'feedback') openFeedback()
-                else navigation.navigate('SettingsSection', {section})
-              }}
-            />
-          </Fragment>
-        ))}
-      </Text>
+    <View
+      testID="nav-footer-links"
+      style={[a.flex_row, a.align_center, {flexWrap: 'nowrap'}, style]}>
+      {links.map(({section, label}, i) => (
+        <Fragment key={section}>
+          {i > 0 && (
+            <Text style={[a.text_xs, t.atoms.text_contrast_low]}>{' ∙ '}</Text>
+          )}
+          <FooterLink
+            testID={`nav-footer-${section}`}
+            label={label}
+            href={section === 'feedback' ? undefined : `/settings/${section}`}
+            onPress={() => {
+              onBeforeNavigate?.()
+              if (section === 'feedback') openFeedback()
+              else navigation.navigate('SettingsSection', {section})
+            }}
+          />
+        </Fragment>
+      ))}
     </View>
   )
 }
@@ -96,8 +94,9 @@ function FooterLink({
         onMouseEnter: () => setIsActive(true),
         onMouseLeave: () => setIsActive(false),
       })}
+      numberOfLines={1}
       style={[
-        a.text_sm,
+        a.text_xs,
         a.leading_snug,
         t.atoms.text_contrast_medium,
         isActive && web({textDecorationLine: 'underline', outline: 0}),
