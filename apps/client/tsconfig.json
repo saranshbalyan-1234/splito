@@ -10,6 +10,6 @@
       "#/*": ["./src/*"]
     }
   },
-  "include": ["index.ts", "src", "e2e", "e2e-pwa", "perf", "app.config.ts"],
+  "include": ["index.ts", "src", "e2e", "e2e-pwa", "e2e-renders", "perf", "app.config.ts", "playwright.renders.config.ts"],
   "exclude": ["dist", "node_modules"]
 }

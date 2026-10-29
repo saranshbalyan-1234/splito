@@ -36,3 +36,6 @@ export function Pressable({children, style, ...props}: PressableProps) {
     </NativePressable>
   )
 }
+
+/* Distinct from react-native-web's own `Pressable`, so the wasted-render gate tells ours from the library's (owner 108). */
+Pressable.displayName = 'PressableWithState'

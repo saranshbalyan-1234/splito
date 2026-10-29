@@ -169,71 +169,55 @@ export const Button = forwardRef<React.ComponentRef<typeof View>, ButtonProps>(
     }
 
     const t = useTheme()
-    const [state, setState] = useState({
-      pressed: false,
-      hovered: false,
-      focused: false,
-    })
+    /*
+     * Three booleans, not one object: a flag set to the value it holds renders nothing, and the context
+     * below changes only when a flag really does (owner 108).
+     */
+    const [pressed, setPressed] = useState(false)
+    const [hovered, setHovered] = useState(false)
+    const [focused, setFocused] = useState(false)
 
     const onPressIn = useCallback(
       (e: GestureResponderEvent) => {
-        setState(s => ({
-          ...s,
-          pressed: true,
-        }))
+        setPressed(true)
         onPressInOuter?.(e)
       },
-      [setState, onPressInOuter],
+      [onPressInOuter],
     )
     const onPressOut = useCallback(
       (e: GestureResponderEvent) => {
-        setState(s => ({
-          ...s,
-          pressed: false,
-        }))
+        setPressed(false)
         onPressOutOuter?.(e)
       },
-      [setState, onPressOutOuter],
+      [onPressOutOuter],
     )
     const onHoverIn = useCallback(
       (e: MouseEvent) => {
-        setState(s => ({
-          ...s,
-          hovered: true,
-        }))
+        setHovered(true)
         onHoverInOuter?.(e)
       },
-      [setState, onHoverInOuter],
+      [onHoverInOuter],
     )
     const onHoverOut = useCallback(
       (e: MouseEvent) => {
-        setState(s => ({
-          ...s,
-          hovered: false,
-        }))
+        setHovered(false)
         onHoverOutOuter?.(e)
       },
-      [setState, onHoverOutOuter],
+      [onHoverOutOuter],
     )
     const onFocus = useCallback(
       (e: NativeSyntheticEvent<TargetedEvent>) => {
-        setState(s => ({
-          ...s,
-          focused: true,
-        }))
+        setFocused(true)
         onFocusOuter?.(e)
       },
-      [setState, onFocusOuter],
+      [onFocusOuter],
     )
     const onBlur = useCallback(
       (e: NativeSyntheticEvent<TargetedEvent>) => {
-        setState(s => ({
-          ...s,
-          focused: false,
-        }))
+        setFocused(false)
         onBlurOuter?.(e)
       },
-      [setState, onBlurOuter],
+      [onBlurOuter],
     )
 
     const {baseStyles, hoverStyles} = useMemo(() => {
@@ -563,15 +547,17 @@ export const Button = forwardRef<React.ComponentRef<typeof View>, ButtonProps>(
 
     const context = useMemo<ButtonContext>(
       () => ({
-        ...state,
-        interacting: state.hovered || state.focused || state.pressed,
+        pressed,
+        hovered,
+        focused,
+        interacting: hovered || focused || pressed,
         variant,
         color,
         size,
         shape,
         disabled: disabled || false,
       }),
-      [state, variant, color, size, shape, disabled],
+      [pressed, hovered, focused, variant, color, size, shape, disabled],
     )
 
     return (
@@ -581,7 +567,7 @@ export const Button = forwardRef<React.ComponentRef<typeof View>, ButtonProps>(
         {...rest}
         ref={ref}
         aria-label={label}
-        aria-pressed={state.pressed}
+        aria-pressed={pressed}
         accessibilityLabel={label}
         disabled={disabled || false}
         accessibilityState={{
@@ -594,7 +580,7 @@ export const Button = forwardRef<React.ComponentRef<typeof View>, ButtonProps>(
           a.curve_continuous,
           baseStyles,
           style,
-          ...(state.hovered || state.pressed
+          ...(hovered || pressed
             ? [hoverStyles, hoverStyleProp]
             : []),
         ]}

@@ -930,19 +930,33 @@ are written; nothing records them automatically (A-037).
 - **Bundles:** keep Bluesky's lazy imports and inline requires; measure web first-load chunks before adding
   a lazy boundary (tap-opened dialogs first); warm tab modules on idle one per turn only if a first visit is
   measured slow; illustrations ship as WebP; unreferenced assets are deleted.
-- **No wasted renders** (owner 108). A component re-renders only when what it draws changed. Dev builds (web and
-  native, never production or e2e timing runs) load `@welldone-software/why-did-you-render` from the client entry,
-  tracking every component (`trackAllPureComponents` plus hooks), and log each avoidable re-render ("props/state
-  equal by value but not by reference", context churn); version pinned to one that supports React 19.3 and the
-  React Compiler, checked before adoption (fallback: React DevTools Profiler "why did this render" plus the render
-  counter below). A Playwright scenario runs the dev build through launch -> Home, a tab round, open/close Add
-  expense, type 10 characters, scroll 1,000 rows, open Search & Ask and ask one question, and fails on any
-  why-did-you-render report or a render count above the recorded baseline; every merge runs it (decision 107
-  gate). Typical causes it catches, fixed at the root: new objects/arrays/closures passed as props each render,
-  unstable context values, a store hook returning a new snapshot for an equal answer (§ 9.6), list rows not
-  memoised, selectors not narrow enough.
-- **Render gate:** a Playwright scenario counts renders (launch to People, tab round, add expense, search
-  four characters) on main vs branch; numbers go in the PR.
+- **No wasted renders** (owner 108). [Built] (F-242, web; native dev builds load the same library and log to the
+  console, with no automated native run yet.) A component re-renders only when what it draws changed. Dev builds only
+  load `@welldone-software/why-did-you-render` **10.0.1** (pinned; peer `react ^19`; checked on React 19.3 and the
+  React Compiler: it sees compiled and plain components alike because `babel.config.js` sends the dev JSX runtime
+  through the library, with `include: [/.*/]` and hook tracking). `index.ts` / `index.web.ts` run
+  `if (__DEV__) require('#/lib/whyDidYouRender')`; Metro folds it out of every production and `expo export` bundle
+  (`e2e/bundle.spec.ts` checks the e2e export, `e2e-pwa/bundle.spec.ts` the production `build-web` output, which also holds
+  no `package.json`: the version is inlined from `app.config.ts`). Each report is kept compactly on `window.__wdyr`
+  (the gate reads it there); the console log is opt-in with `EXPO_PUBLIC_WDYR_LOG=1`. The library applies its "values really changed" filter only in its own console notifier, so
+  `whyDidYouRender.ts` applies it too. Typical causes, fixed at the root: new objects/arrays/closures passed as props
+  each render, unstable context values, a state setter given a new object for an equal value, a store hook returning
+  a new snapshot for an equal answer (§ 9.6), list rows not memoised, selectors not narrow enough, **and a component
+  the React Compiler skips** (a computed key in a destructuring pattern, a `try`/`catch` around a conditional, a
+  function used before its declaration): it re-renders every child on every state change, which no report shows and
+  only the render counts do.
+- **Render gate:** `pnpm --filter @splito/client renders` runs `e2e-renders/renders.spec.ts` against the Metro dev
+  server (own port 8191, `EXPO_PUBLIC_ENV=e2e` for the demo hook; not `expo export --dev`, whose async chunks
+  `demoMode` / `DemoMode` overwrite each other on a case-insensitive disk). One scenario: demo switched on, a cold
+  launch to Home, a tab round, open Add expense, type 10 characters, close it, scroll 1,000 rows of Activity, open
+  Search & Ask and ask one question. Per phase it counts renders of components being shown (`mounts`) and of mounted
+  ones (`updates`), per component. It also fails when it saw nothing: fewer than 1,000 rows scrolled, no report at all
+  (the library or its JSX runtime is off), or a phase under half its baseline. It fails on (1) any wasted-render report whose origin is our code and that
+  `e2e-renders/baseline.json` does not hold (reports that start inside react-native-web, react-native-svg, lucide,
+  radix, react-navigation or VirtualizedList are counted, not failed: the list is in the spec), and (2) a phase or
+  component count above the baseline by more than 10 % + 1. `RENDERS_BASELINE=write` records an improvement or a
+  reviewed increase; numbers go in `docs/COMPLETION_MATRIX.md`. Every merge runs it with the perf spec (decision 107
+  gate; merge-gate notes in the matrix).
 - **Dev-only tools never ship:** the release script refuses to build with any `EXPO_PUBLIC_` debug,
   profiler or override variable set.
 
