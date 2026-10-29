@@ -1213,8 +1213,7 @@ labelled sidebar); **wide** = web 1300 px and up (Bluesky `gtTablet`, right colu
   "Demo mode" (on/off), backed by its **own separate local database** (its own IndexedDB database / SQLite file,
   with its own preferences, history and outbox). Turning it on switches the app to the demo database, seeded
   once with the one demo dataset; turning it off switches back to the real data, which demo mode never reads
-  or writes. Demo data never syncs and never merges into an account. While on, a persistent "Demo mode ·
-  Switch back" banner shows on every screen; "Reset demo" reseeds it. There is ONE demo dataset and ONE
+  or writes. Demo data never syncs and never merges into an account. While on, no banner shows (owner 133); the Settings switch and the avatar's "Demo" state say so; "Reset demo" reseeds it. There is ONE demo dataset and ONE
   switch: no small set, no URL (`?demo=1`, `?demo=large` gone), no `EXPO_PUBLIC_DEMO`, no Add/Remove demo
   data; e2e turns demo mode on only through a test-only hook (`window.__splitoTest.demoMode`) that runs the same
   switch (F-228a, being built on feat/demo-mode). Dev and e2e builds only for now
@@ -1883,9 +1882,9 @@ built yet.
   Notifications row, Animations, Haptics and the rest) uses Bluesky's `Toggle.Switch` on iOS, Android and web,
   never a checkbox (Bluesky's `Toggle.Platform` draws a checkbox on web and Android, so it is not used for
   settings). Multi-choice settings keep radio rows. *Why:* "it should be a switch not a checkbox".
-- **The demo banner is compact** (owner 132): "Demo mode · Switch back" in one line at the top, no taller than
-  its content (at most 48 px on desktop), never an empty band above the header. *Why:* "in demo mode I see
-  extra space on top".
+- **No demo banner** (owner 133, replaces the "persistent banner on every screen" of § 26.1 and 132's compact
+  banner): demo mode shows no banner anywhere and reserves no space; it is visible only as the Settings > Data
+  "Demo mode" switch and the avatar's "Demo" state. *Why:* "don't show that banner, not needed".
 
 ### 26.16 Analytics
 
@@ -2269,6 +2268,7 @@ Every owner decision, in the order it was made (all 2026-10-26). "Replaced" name
 | 130 | "how much i owe or these things should always be vertically center, whether its one row or two rows or any number of rows" | Row amounts (and avatar, name block) are vertically centred, never top-aligned | § 26.12 | Friend rows top-aligned the first net on the name line |
 | 131 | "new expense and payment should be one i guess, make it payment, add one more notification for comments" | One "Payments" notification switch covers new expenses and payments; new "Comments" switch | § 26.20 | Separate New expenses and Payments switches; no comments switch |
 | 132 | "in demo mode i see extra space on top, and it should be a switch not a checkbox" | Boolean settings are Bluesky switches on every platform; demo banner compact, text visible, no empty band | § 26.15 | Toggle.Platform checkboxes on web; blank demo banner band on desktop |
+| 133 | "dont show that banner, not needed" | No demo banner at all; demo state shown by the Settings switch and the avatar's Demo state | § 26.15, § 26.1 | Banner on every screen (94/95), compact banner (132) |
 
 New decisions follow § 0 rule 9: rewrite the rule in its topic so only the current truth remains, then add a
 row here.
