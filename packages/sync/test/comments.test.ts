@@ -112,6 +112,14 @@ test('deletes only my own comment: a tombstone with the text stripped, every ear
   expect((await s.outbox()).filter(o => o.entityId === c.id).map(o => o.opType)).toEqual(['comment.create', 'comment.delete'])
 })
 
+test('a comment on a deleted expense can be deleted but not edited', async () => {
+  const c = await add('Before it went')
+  await deleteExpense(s, ctx, expenseId)
+  await fails(editComment(s, ctx, c.id, {body: 'After it went'}), 'NOT_FOUND')
+  await deleteComment(s, ctx, c.id)
+  expect((await s.get<Comment>('comment', c.id))?.deleted).toBe(true)
+})
+
 test('a thread pages newest first by cursor and never reads other targets', async () => {
   for (let i = 1; i <= 7; i++) await add(`c${i}`)
   const second = (await createExpense(s, ctx, {

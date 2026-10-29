@@ -87,6 +87,8 @@ export function useCommentCount(
   const key = `comment-count:${type}:${id}`
   let q = countQueries.get(key)
   if (!q) {
+    // ponytail: any comment write reloads every mounted CommentCount (one index count each);
+    // fine for a list page's visible rows, key the touch on the target if a long list shows it.
     q = {
       key,
       isTouchedBy: change => touches(change, 'comment'),

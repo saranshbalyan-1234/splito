@@ -145,7 +145,7 @@ export function DiscussionProvider({
       <Prompt.Basic
         control={deletePrompt}
         title={l`Delete this comment?`}
-        description={l`It disappears from the discussion for everyone. The edit history of the expense is not affected.`}
+        description={l`It shows as deleted in this discussion. Earlier versions stay in its history.`}
         confirmButtonCta={l`Delete`}
         confirmButtonColor="negative"
         onConfirm={() => {
@@ -241,6 +241,7 @@ export function DiscussionTimeline<H extends TimelineLine>({
               authorName={name(c.data.authorId)}
               avatarName={avatarName(c.data.authorId)}
               isMine={c.data.authorId === me}
+              canComment={canComment}
               isFirstInCluster={!clusters(prev, prev?.at ?? 0, item.at)}
               isLastInCluster={!clusters(next, item.at, next?.at ?? 0)}
               onEdit={startEdit}

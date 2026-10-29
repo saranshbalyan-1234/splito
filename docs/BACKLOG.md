@@ -2299,7 +2299,7 @@ Tombstoned expenses and payments listed for a configurable window with who, when
 
 A comment thread at the bottom of every expense and repayment detail, using Bluesky's reply rows and the Bluesky DM composer bar. Local and in the outbox now; shared once sync exists (F-2208). Disputes are F-1210. **Best of both (2026-10-27, docs/scouting/2026-10-27-bluesky-expensify.md):** The expense page shows one timeline, as Expensify does (`src/pages/inbox/report/ReportActionsList.tsx`, `src/libs/ModifiedExpenseMessage.ts`): comments interleaved with F-1202 history lines ("Riya changed the amount from 1,200 to 1,250") under Bluesky DM date dividers (Today / Yesterday, `src/components/dms/DateDivider.tsx`). Long-press or right-click opens Bluesky's ContextMenu (`src/components/ContextMenu/`) with Expensify's actions (Copy, Edit, Delete, React, Copy link); on web, Up arrow in an empty composer edits my last comment.
 
-- **Effort** M · **Impact** 8 · **Backend** no · **Status** done except acceptance 4 (built and tested on feat/wB-B4, unmerged; criterion 4 arrives with F-2208) · **Deps** F-301, F-1201
+- **Effort** M · **Impact** 8 · **Backend** no · **Status** in progress (built and tested on feat/wB-B4, unmerged; acceptance 4 with F-2208) · **Deps** F-301, F-1201
 - **Prefs** `comments.showHistory` (on)
 - **Acceptance**
   1. Every expense and repayment detail ends with a thread (Bluesky reply rows) and a composer bar above the keyboard (Bluesky DM composer) with emoji and @mention of the expense's participants.

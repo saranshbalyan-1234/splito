@@ -1,6 +1,7 @@
 // Adapted from bluesky-social/social-app@4e4ad9c (MIT) - src/components/dms/MessageItem.tsx
 import {memo} from 'react'
 import {Pressable, View, type ViewStyle} from 'react-native'
+import {setStringAsync} from 'expo-clipboard'
 import {Trans, useLingui} from '@lingui/react/macro'
 import {type Comment, type Entity, mentionRanges} from '@splito/sync'
 
@@ -18,6 +19,7 @@ import {DotGrid3x1_Stroke2_Corner0_Rounded as DotsIcon} from '#/components/icons
 import {Pencil_Stroke2_Corner0_Rounded as PencilIcon} from '#/components/icons/Pencil'
 import {Trash_Stroke2_Corner0_Rounded as TrashIcon} from '#/components/icons/Trash'
 import * as Menu from '#/components/Menu'
+import * as Toast from '#/components/Toast'
 import {Text} from '#/components/Typography'
 import {IS_WEB} from '#/env'
 
@@ -34,6 +36,8 @@ export interface CommentRowProps {
   /** The author's own name, for the avatar initials. */
   avatarName: string
   isMine: boolean
+  /** False when the expense or payment is deleted: the thread is read-only, so no Edit (Delete stays). */
+  canComment: boolean
   /** Neighbours from the same person within a few minutes cluster, as in Bluesky's chats. */
   isFirstInCluster: boolean
   isLastInCluster: boolean
@@ -48,7 +52,7 @@ export interface CommentRowProps {
  * accent colour, others' on the left with their avatar and name, neighbours
  * clustered. A deleted comment keeps its place as a quiet line. The long-press /
  * right-click menu offers only what is allowed: Copy and Copy link for anyone,
- * Edit and Delete on my own.
+ * Edit (while the thread is open) and Delete on my own.
  */
 let CommentRow = ({
   comment,
@@ -56,6 +60,7 @@ let CommentRow = ({
   authorName,
   avatarName,
   isMine,
+  canComment,
   isFirstInCluster,
   isLastInCluster,
   onEdit,
@@ -112,7 +117,13 @@ let CommentRow = ({
 
   const actions = {
     copy: () => void copyText(body),
-    link: () => void copyText(link),
+    link: () =>
+      void setStringAsync(link).then(() =>
+        Toast.show(
+          l`Link copied. It opens this expense on a device that has it.`,
+          {type: 'success'},
+        ),
+      ),
     edit: () => onEdit(comment),
     del: () => onDelete(comment),
   }
@@ -123,7 +134,7 @@ let CommentRow = ({
         {name: 'link', label: l`Copy link`},
         ...(isMine
           ? [
-              {name: 'edit', label: l`Edit`},
+              ...(canComment ? [{name: 'edit', label: l`Edit`}] : []),
               {name: 'del', label: l`Delete`},
             ]
           : []),
@@ -188,10 +199,24 @@ let CommentRow = ({
               onLongPress={
                 canAct ? () => (haptics.longPress(), control.open()) : undefined
               }
-              // @ts-expect-error web only
               onContextMenu={
                 canAct && IS_WEB
                   ? (e: Event) => (e.preventDefault(), control.open())
+                  : undefined
+              }
+              // @ts-expect-error web only
+              onKeyDown={
+                canAct && IS_WEB
+                  ? (e: KeyboardEvent) => {
+                      // The keyboard's own "context menu" (ContextMenu key, Shift+F10): the only way in at phone width, where there is no "..." button.
+                      if (
+                        e.key === 'ContextMenu' ||
+                        (e.shiftKey && e.key === 'F10')
+                      ) {
+                        e.preventDefault()
+                        control.open()
+                      }
+                    }
                   : undefined
               }
               delayLongPress={300}
@@ -263,7 +288,7 @@ let CommentRow = ({
             </Menu.ItemText>
             <Menu.ItemIcon icon={CopyIcon} position="right" />
           </Menu.Item>
-          {isMine ? (
+          {isMine && canComment ? (
             <Menu.Item
               testID="comment-edit"
               label={l`Edit`}

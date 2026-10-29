@@ -232,6 +232,57 @@ test('phone: the composer bar is pinned under the page, the send button adds, lo
   await context.close()
 })
 
+test('desktop: Tab from a bubble lands on its "..." button and Enter opens the menu', async ({
+  page,
+}) => {
+  await page.setViewportSize(DESKTOP)
+  const {friend, expense} = await seed(page)
+  await page.evaluate(
+    ([f, e]) =>
+      (window as unknown as {splito: Splito}).splito.commentAs(f!, {
+        targetType: 'expense',
+        targetId: e!,
+        body: 'Keyboard only',
+      }),
+    [friend, expense],
+  )
+  await page.goto(`/expense/${expense}`)
+  const bubble = page
+    .getByTestId('comment-bubble')
+    .filter({hasText: 'Keyboard only'})
+  await bubble.focus()
+  await page.keyboard.press('Tab')
+  await expect(page.getByTestId('comment-menu')).toBeFocused()
+  await page.keyboard.press('Enter')
+  await expect(page.getByTestId('comment-copy')).toBeVisible()
+  await expect(page.getByTestId('comment-copy-link')).toBeVisible()
+})
+
+test('phone: Shift+F10 and the ContextMenu key on a focused bubble open the menu', async ({
+  browser,
+}) => {
+  const context = await browser.newContext({viewport: PHONE})
+  const page = await context.newPage()
+  const {expense} = await seed(page)
+  await page.goto(`/expense/${expense}`)
+  await send(page, 'Mine, phone width')
+  const bubble = page
+    .getByTestId('comment-bubble')
+    .filter({hasText: 'Mine, phone width'})
+  await expect(bubble).toBeVisible()
+  // No "..." button at this width; the keyboard's context-menu keys are the way in.
+  await expect(page.getByTestId('comment-menu')).toHaveCount(0)
+  for (const key of ['Shift+F10', 'ContextMenu']) {
+    await bubble.focus()
+    await page.keyboard.press(key)
+    await expect(page.getByTestId('comment-edit')).toBeVisible()
+    await expect(page.getByTestId('comment-delete')).toBeVisible()
+    await page.keyboard.press('Escape')
+    await expect(page.getByTestId('comment-edit')).toHaveCount(0)
+  }
+  await context.close()
+})
+
 test('a payment has its own page and thread, reached from its details', async ({
   page,
 }) => {

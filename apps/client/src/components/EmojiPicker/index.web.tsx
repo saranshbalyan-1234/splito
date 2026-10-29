@@ -1,13 +1,14 @@
 // Adapted from bluesky-social/social-app@4e4ad9c (MIT) - src/components/EmojiPicker/index.web.tsx
 import {
   createContext,
+  lazy,
+  Suspense,
   useContext,
   useEffect,
   useMemo,
   useRef,
   useState,
 } from 'react'
-import EmojiPicker from '@emoji-mart/react'
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu'
 
 import {useShouldReduceMotion} from '#/motion/useShouldReduceMotion'
@@ -22,6 +23,9 @@ import {
 } from './types'
 
 export * from './types'
+
+// The picker UI is its own chunk too (emoji-mart core stays out of the main bundle).
+const EmojiPicker = lazy(() => import('@emoji-mart/react'))
 
 const EmojiPickerContext = createContext<{
   onEmojiSelect: (emoji: Emoji) => void
@@ -134,16 +138,18 @@ export function Picker({keepOpenWhenShiftHeld = true}: PickerProps) {
           onWheel={evt => evt.stopPropagation()}
           style={flatten([!reduceMotionEnabled && a.zoom_fade_in])}>
           {isReady ? (
-            <EmojiPicker
-              autoFocus
-              onEmojiSelect={(emoji: Emoji) => {
-                onEmojiSelect(emoji)
+            <Suspense fallback={null}>
+              <EmojiPicker
+                autoFocus
+                onEmojiSelect={(emoji: Emoji) => {
+                  onEmojiSelect(emoji)
 
-                if (!keepOpenWhenShiftHeld || !isShiftDown.current) {
-                  control.close()
-                }
-              }}
-            />
+                  if (!keepOpenWhenShiftHeld || !isShiftDown.current) {
+                    control.close()
+                  }
+                }}
+              />
+            </Suspense>
           ) : null}
         </div>
       </DropdownMenu.Content>

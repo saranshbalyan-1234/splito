@@ -1,14 +1,13 @@
 // Adapted from bluesky-social/social-app@4e4ad9c (MIT) - src/components/dms/DateDivider.tsx
 import {memo} from 'react'
 import {View} from 'react-native'
+import {addDays} from '@splito/domain'
 import {Trans, useLingui} from '@lingui/react/macro'
 
-import {useTimeZone} from '#/locale/useDates'
+import {useTimeZone, useToday} from '#/locale/useDates'
 import {atoms as a, useTheme} from '#/alf'
 import {Text} from '#/components/Typography'
 import {dayKey} from './timeline'
-
-const DAY_MS = 24 * 3600_000
 
 /** "Today at 4:15 PM", "Yesterday at ...", a weekday within the week, otherwise the date: Bluesky's DM divider, in the Timezone preference. */
 let DateDivider = ({at}: {at: number}): React.ReactNode => {
@@ -16,17 +15,18 @@ let DateDivider = ({at}: {at: number}): React.ReactNode => {
   const {t: l, i18n} = useLingui()
   const timeZone = useTimeZone()
 
-  const now = Date.now()
+  // Today comes from the shared clock (§ 10): it rolls over at local midnight and follows DST.
+  const today = useToday()
   const day = dayKey(at, timeZone)
   const time = i18n.date(at, {hour: 'numeric', minute: 'numeric', timeZone})
 
   let date: string
-  if (day === dayKey(now, timeZone)) {
+  if (day === today) {
     date = l`Today`
-  } else if (day === dayKey(now - DAY_MS, timeZone)) {
+  } else if (day === addDays(today, -1)) {
     date = l`Yesterday`
-  } else if (at < now - 7 * DAY_MS) {
-    const sameYear = day.slice(0, 4) === dayKey(now, timeZone).slice(0, 4)
+  } else if (day < addDays(today, -6)) {
+    const sameYear = day.slice(0, 4) === today.slice(0, 4)
     date = i18n.date(at, {
       weekday: 'short',
       month: 'long',

@@ -504,11 +504,11 @@ msgstr "{actor} undid a write-off"
 msgid "{actor} updated the group {subject}"
 msgstr "{actor} updated the group {subject}"
 
-#: src/components/comments/CommentRow.tsx:110
+#: src/components/comments/CommentRow.tsx:115
 msgid "{authorName}: {body}"
 msgstr "{authorName}: {body}"
 
-#: src/components/comments/CommentRow.tsx:109
+#: src/components/comments/CommentRow.tsx:114
 msgid "{authorName}: deleted comment"
 msgstr "{authorName}: deleted comment"
 
@@ -649,7 +649,7 @@ msgstr "{subject} sent you a friend request"
 msgid "{tabCount, plural, one {# tab} other {# tabs}}"
 msgstr "{tabCount, plural, one {# tab} other {# tabs}}"
 
-#: src/components/comments/CommentRow.tsx:247
+#: src/components/comments/CommentRow.tsx:273
 msgid "{time} · Edited"
 msgstr "{time} · Edited"
 
@@ -1274,7 +1274,7 @@ msgstr "Archived · {0}"
 msgid "Archived groups"
 msgstr "Archived groups"
 
-#: src/components/comments/Discussion.tsx:282
+#: src/components/comments/Discussion.tsx:283
 msgid "Ask a question or leave a note about this. Use @ to mention someone."
 msgstr "Ask a question or leave a note about this. Use @ to mention someone."
 
@@ -1670,7 +1670,7 @@ msgstr "Colour-blind safe"
 msgid "Comfortable"
 msgstr "Comfortable"
 
-#: src/components/comments/CommentRow.tsx:310
+#: src/components/comments/CommentRow.tsx:336
 msgid "Comment options"
 msgstr "Comment options"
 
@@ -1719,16 +1719,16 @@ msgstr "Copy"
 msgid "Copy invite link"
 msgstr "Copy invite link"
 
-#: src/components/comments/CommentRow.tsx:123
-#: src/components/comments/CommentRow.tsx:279
-#: src/components/comments/CommentRow.tsx:282
+#: src/components/comments/CommentRow.tsx:134
+#: src/components/comments/CommentRow.tsx:305
+#: src/components/comments/CommentRow.tsx:308
 #: src/screens/Invites/InviteLinks.tsx:144
 msgid "Copy link"
 msgstr "Copy link"
 
-#: src/components/comments/CommentRow.tsx:122
-#: src/components/comments/CommentRow.tsx:259
-#: src/components/comments/CommentRow.tsx:262
+#: src/components/comments/CommentRow.tsx:133
+#: src/components/comments/CommentRow.tsx:285
+#: src/components/comments/CommentRow.tsx:288
 msgid "Copy text"
 msgstr "Copy text"
 
@@ -2024,9 +2024,9 @@ msgstr "Default split"
 msgid "Defaults"
 msgstr "Defaults"
 
-#: src/components/comments/CommentRow.tsx:127
-#: src/components/comments/CommentRow.tsx:289
-#: src/components/comments/CommentRow.tsx:293
+#: src/components/comments/CommentRow.tsx:138
+#: src/components/comments/CommentRow.tsx:315
+#: src/components/comments/CommentRow.tsx:319
 #: src/components/comments/Discussion.tsx:149
 #: src/components/split/AmountKeypad.tsx:66
 #: src/features/feedback/FeedbackList.tsx:89
@@ -2209,9 +2209,9 @@ msgstr "Each person’s share"
 msgid "Earlier years"
 msgstr "Earlier years"
 
-#: src/components/comments/CommentRow.tsx:126
-#: src/components/comments/CommentRow.tsx:269
-#: src/components/comments/CommentRow.tsx:272
+#: src/components/comments/CommentRow.tsx:137
+#: src/components/comments/CommentRow.tsx:295
+#: src/components/comments/CommentRow.tsx:298
 msgid "Edit"
 msgstr "Edit"
 
@@ -3015,10 +3015,6 @@ msgstr "is owed <0>{figure}</0>"
 msgid "Is that a thousands separator or decimals? Write it without the separator, like 1234"
 msgstr "Is that a thousands separator or decimals? Write it without the separator, like 1234"
 
-#: src/components/comments/Discussion.tsx:148
-msgid "It disappears from the discussion for everyone. The edit history of the expense is not affected."
-msgstr "It disappears from the discussion for everyone. The edit history of the expense is not affected."
-
 #: src/features/feedback/FeedbackSheet.tsx:469
 msgid "It hasn't been sent anywhere yet. Send it by email now, or find it later in Your feedback."
 msgstr "It hasn't been sent anywhere yet. Send it by email now, or find it later in Your feedback."
@@ -3038,6 +3034,10 @@ msgstr "It may have expired, been used up or revoked. Ask for a new one."
 #: src/screens/Settings/SettingsSection.tsx:222
 msgid "It may have moved. Everything is still in Settings."
 msgstr "It may have moved. Everything is still in Settings."
+
+#: src/components/comments/Discussion.tsx:148
+msgid "It shows as deleted in this discussion. Earlier versions stay in its history."
+msgstr "It shows as deleted in this discussion. Earlier versions stay in its history."
 
 #: src/screens/EditExpense.tsx:88
 msgid "It was deleted, or the link is wrong."
@@ -3147,6 +3147,10 @@ msgstr "Let's get your password reset!"
 msgid "Light"
 msgstr "Light"
 
+#: src/components/comments/CommentRow.tsx:123
+msgid "Link copied. It opens this expense on a device that has it."
+msgstr "Link copied. It opens this expense on a device that has it."
+
 #: src/screens/Invites/CreateInvite.tsx:233
 msgid "Link expires after"
 msgstr "Link expires after"
@@ -3171,7 +3175,7 @@ msgstr "List density"
 msgid "Loading…"
 msgstr "Loading…"
 
-#: src/components/comments/CommentRow.tsx:183
+#: src/components/comments/CommentRow.tsx:194
 msgid "Long press for options"
 msgstr "Long press for options"
 
@@ -3458,11 +3462,11 @@ msgstr "No balances yet. They appear once the group has an expense."
 msgid "No colour: arrows and bold type show the direction"
 msgstr "No colour: arrows and bold type show the direction"
 
-#: src/components/comments/Discussion.tsx:271
+#: src/components/comments/Discussion.tsx:272
 msgid "No comments"
 msgstr "No comments"
 
-#: src/components/comments/Discussion.tsx:269
+#: src/components/comments/Discussion.tsx:270
 msgid "No comments yet"
 msgstr "No comments yet"
 
@@ -5259,7 +5263,7 @@ msgstr "This can’t be undone, and all of your recent searches will be removed.
 msgid "This comment or its expense no longer exists"
 msgstr "This comment or its expense no longer exists"
 
-#: src/components/comments/CommentRow.tsx:222
+#: src/components/comments/CommentRow.tsx:248
 msgid "This comment was deleted"
 msgstr "This comment was deleted"
 

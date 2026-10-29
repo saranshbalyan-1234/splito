@@ -57,12 +57,14 @@ export async function createComment(store: Store, ctx: MutationCtx, input: Comme
   })
 }
 
-/** Edits my own comment as a new version. An unchanged body writes nothing. */
+/** Edits my own comment as a new version. An unchanged body writes nothing. Needs the target still live. */
 export async function editComment(store: Store, ctx: MutationCtx, id: string, input: {body: string; mentions?: string[]}): Promise<Entity<Comment>> {
   const body = cleanBody(input.body)
   return store.transaction(async tx => {
     const c = await requireLive<Comment>(tx, 'comment', id)
     if (c.data.authorId !== ctx.actor) throw new DomainError('NOT_YOUR_COMMENT')
+    // A deleted expense or payment is read-only: its thread can be tidied (delete) but not rewritten.
+    await requireLive(tx, c.data.targetType, c.data.targetId)
     const mentions = [...new Set(input.mentions ?? c.data.mentions)]
     if (body === c.data.body && mentions.join() === c.data.mentions.join()) return c
     for (const pid of mentions) await requireLive(tx, 'person', pid, 'UNKNOWN_PERSON')

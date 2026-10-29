@@ -504,11 +504,11 @@ msgstr "{actor} ने एक माफ़ी वापस ली"
 msgid "{actor} updated the group {subject}"
 msgstr "{actor} ने समूह {subject} को अपडेट किया"
 
-#: src/components/comments/CommentRow.tsx:110
+#: src/components/comments/CommentRow.tsx:115
 msgid "{authorName}: {body}"
 msgstr "{authorName}: {body}"
 
-#: src/components/comments/CommentRow.tsx:109
+#: src/components/comments/CommentRow.tsx:114
 msgid "{authorName}: deleted comment"
 msgstr "{authorName}: हटाई गई टिप्पणी"
 
@@ -649,7 +649,7 @@ msgstr "{subject} ने आपको दोस्ती का अनुरो�
 msgid "{tabCount, plural, one {# tab} other {# tabs}}"
 msgstr "{tabCount, plural, one {# टैब} other {# टैब}}"
 
-#: src/components/comments/CommentRow.tsx:247
+#: src/components/comments/CommentRow.tsx:273
 msgid "{time} · Edited"
 msgstr "{time} · संपादित"
 
@@ -1274,7 +1274,7 @@ msgstr "संग्रहीत · {0}"
 msgid "Archived groups"
 msgstr "संग्रहीत समूह"
 
-#: src/components/comments/Discussion.tsx:282
+#: src/components/comments/Discussion.tsx:283
 msgid "Ask a question or leave a note about this. Use @ to mention someone."
 msgstr "इस बारे में कोई सवाल पूछें या नोट छोड़ें। किसी को टैग करने के लिए @ लिखें।"
 
@@ -1670,7 +1670,7 @@ msgstr "कलर-ब्लाइंड के लिए सुरक्षि�
 msgid "Comfortable"
 msgstr "आरामदायक"
 
-#: src/components/comments/CommentRow.tsx:310
+#: src/components/comments/CommentRow.tsx:336
 msgid "Comment options"
 msgstr "टिप्पणी के विकल्प"
 
@@ -1719,16 +1719,16 @@ msgstr "कॉपी करें"
 msgid "Copy invite link"
 msgstr "आमंत्रण लिंक कॉपी करें"
 
-#: src/components/comments/CommentRow.tsx:123
-#: src/components/comments/CommentRow.tsx:279
-#: src/components/comments/CommentRow.tsx:282
+#: src/components/comments/CommentRow.tsx:134
+#: src/components/comments/CommentRow.tsx:305
+#: src/components/comments/CommentRow.tsx:308
 #: src/screens/Invites/InviteLinks.tsx:144
 msgid "Copy link"
 msgstr "लिंक कॉपी करें"
 
-#: src/components/comments/CommentRow.tsx:122
-#: src/components/comments/CommentRow.tsx:259
-#: src/components/comments/CommentRow.tsx:262
+#: src/components/comments/CommentRow.tsx:133
+#: src/components/comments/CommentRow.tsx:285
+#: src/components/comments/CommentRow.tsx:288
 msgid "Copy text"
 msgstr "टेक्स्ट कॉपी करें"
 
@@ -2024,9 +2024,9 @@ msgstr "डिफ़ॉल्ट बँटवारा"
 msgid "Defaults"
 msgstr "डिफ़ॉल्ट"
 
-#: src/components/comments/CommentRow.tsx:127
-#: src/components/comments/CommentRow.tsx:289
-#: src/components/comments/CommentRow.tsx:293
+#: src/components/comments/CommentRow.tsx:138
+#: src/components/comments/CommentRow.tsx:315
+#: src/components/comments/CommentRow.tsx:319
 #: src/components/comments/Discussion.tsx:149
 #: src/components/split/AmountKeypad.tsx:66
 #: src/features/feedback/FeedbackList.tsx:89
@@ -2209,9 +2209,9 @@ msgstr "हर व्यक्ति का हिस्सा"
 msgid "Earlier years"
 msgstr "पिछले साल"
 
-#: src/components/comments/CommentRow.tsx:126
-#: src/components/comments/CommentRow.tsx:269
-#: src/components/comments/CommentRow.tsx:272
+#: src/components/comments/CommentRow.tsx:137
+#: src/components/comments/CommentRow.tsx:295
+#: src/components/comments/CommentRow.tsx:298
 msgid "Edit"
 msgstr "संपादित करें"
 
@@ -3015,10 +3015,6 @@ msgstr "को मिलने हैं <0>{figure}</0>"
 msgid "Is that a thousands separator or decimals? Write it without the separator, like 1234"
 msgstr "यह हज़ार का विभाजक है या दशमलव? इसे विभाजक के बिना लिखें, जैसे 1234"
 
-#: src/components/comments/Discussion.tsx:148
-msgid "It disappears from the discussion for everyone. The edit history of the expense is not affected."
-msgstr "यह चर्चा से सबके लिए हट जाती है। खर्च के बदलावों का इतिहास वैसा ही रहता है।"
-
 #: src/features/feedback/FeedbackSheet.tsx:469
 msgid "It hasn't been sent anywhere yet. Send it by email now, or find it later in Your feedback."
 msgstr "इसे अभी कहीं भेजा नहीं गया है। इसे अभी ईमेल से भेजें, या बाद में आपका फ़ीडबैक में देखें।"
@@ -3038,6 +3034,10 @@ msgstr "हो सकता है यह समाप्त, पूरा इ�
 #: src/screens/Settings/SettingsSection.tsx:222
 msgid "It may have moved. Everything is still in Settings."
 msgstr "शायद यह कहीं और चला गया है। सब कुछ अब भी सेटिंग्स में है।"
+
+#: src/components/comments/Discussion.tsx:148
+msgid "It shows as deleted in this discussion. Earlier versions stay in its history."
+msgstr "यह इस चर्चा में हटाया हुआ दिखेगा। पुराने संस्करण इसके इतिहास में रहेंगे।"
 
 #: src/screens/EditExpense.tsx:88
 msgid "It was deleted, or the link is wrong."
@@ -3147,6 +3147,10 @@ msgstr "चलिए आपका पासवर्ड रीसेट कर�
 msgid "Light"
 msgstr "लाइट"
 
+#: src/components/comments/CommentRow.tsx:123
+msgid "Link copied. It opens this expense on a device that has it."
+msgstr "लिंक कॉपी हुआ। यह उस डिवाइस पर इस खर्च को खोलता है जिसमें यह मौजूद है।"
+
 #: src/screens/Invites/CreateInvite.tsx:233
 msgid "Link expires after"
 msgstr "लिंक कितने समय बाद समाप्त हो"
@@ -3171,7 +3175,7 @@ msgstr "सूची का घनापन"
 msgid "Loading…"
 msgstr "लोड हो रहा है…"
 
-#: src/components/comments/CommentRow.tsx:183
+#: src/components/comments/CommentRow.tsx:194
 msgid "Long press for options"
 msgstr "विकल्पों के लिए देर तक दबाएँ"
 
@@ -3458,11 +3462,11 @@ msgstr "अभी कोई बैलेंस नहीं। समूह म�
 msgid "No colour: arrows and bold type show the direction"
 msgstr "कोई रंग नहीं: तीर और मोटे अक्षर दिशा बताते हैं"
 
-#: src/components/comments/Discussion.tsx:271
+#: src/components/comments/Discussion.tsx:272
 msgid "No comments"
 msgstr "कोई टिप्पणी नहीं"
 
-#: src/components/comments/Discussion.tsx:269
+#: src/components/comments/Discussion.tsx:270
 msgid "No comments yet"
 msgstr "अभी कोई टिप्पणी नहीं"
 
@@ -5259,7 +5263,7 @@ msgstr "इसे वापस नहीं किया जा सकता, �
 msgid "This comment or its expense no longer exists"
 msgstr "यह टिप्पणी या इसका खर्च अब मौजूद नहीं है"
 
-#: src/components/comments/CommentRow.tsx:222
+#: src/components/comments/CommentRow.tsx:248
 msgid "This comment was deleted"
 msgstr "यह टिप्पणी हटा दी गई"
 
