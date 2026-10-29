@@ -1602,6 +1602,13 @@ good"; "the left sidebar looks bad on desktop". *Where:* `view/shell/desktop/Lef
   uses Bluesky's web pager. Group: Expenses / Balances / Members; Activity: All / From others; Analytics,
   Person and Settings if tabbed. *Why:* "there is no animation when switching tabs, but it's there in Bluesky,
   why it's not there". *Where:* `components/TabBar.tsx` (Pager not copied yet, § 1 table).
+- **Tab taps always win, however fast** (owner 150): every tap on a bottom-bar, sidebar, rail or in-page tab
+  switches at once, even when taps come milliseconds apart or during a running switch animation: the newest tap
+  cancels or redirects the animation, nothing is debounced, locked or swallowed (the first tap after a screen
+  change included), on iOS, Android, phone web (iOS Safari) and desktop. The switch acts on press-in where the
+  platform allows (as Bluesky's bottom bar), the heavy body may mount after, and the landing tab is always the
+  last one tapped. *Why:* "when I click on tabs immediately it doesn't work; in other apps I keep clicking on tabs
+  within ms and it still switches".
 - **Main bottom-bar / sidebar switches are animated** (owner override of Bluesky's instant switch): a
   direction-aware horizontal slide (from the right when moving to a tab on the right, else from the left;
   native ~220 ms via a bottom-tabs `sceneStyleInterpolator` + `transitionSpec`, web ~200 ms transform of the
@@ -2411,6 +2418,7 @@ Every owner decision, in the order it was made (all 2026-10-26). "Replaced" name
 | 147 | "change the main branch to main" | Main line renamed from m1-foundation to main (old name kept as an alias) | § 26.1 | m1-foundation as the main line |
 | 148 | "i dont see demo mode in deployed app" (https://splito-web.onrender.com, auto deploy on main) | Demo mode ships in every build, production included, as lazy chunks; start-up bundle stays demo-free | § 26.1 | Demo mode dev/e2e only (F-227 c4) |
 | 149 | "now keep on pushing to github as well"; "use saranshbalyan-1234 account to push" | Push main to origin after every merge as saranshbalyan-1234 (repo-local credential helper); Render auto-deploys main | § 26.1 | No remote; never push |
+| 150 | "when i click on tabs immediately it doesnt work, in other apps i keep clicking on tabs within ms it still switches" | Every tab tap switches at once, even milliseconds apart or mid-animation; newest tap wins; nothing debounced or swallowed, every platform | § 26.9 | Taps during a switch could be ignored |
 
 New decisions follow § 0 rule 9: rewrite the rule in its topic so only the current truth remains, then add a
 row here.
