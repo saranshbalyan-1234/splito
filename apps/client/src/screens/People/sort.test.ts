@@ -3,7 +3,7 @@ import {type PersonSummary} from '@splito/domain'
 
 import {type Entity, type Person} from '@splito/sync'
 
-import {filterFriends, type FriendRow, hideSettled, listedFriends, seenByPerson, sortFriends} from './sort'
+import {filterFriends, type FriendRow, hideSettled, listedFriends, searchFriends, seenByPerson, sortFriends} from './sort'
 
 const summary = (
   person: string,
@@ -186,4 +186,25 @@ test('Show settled off hides friends settled up; a new friend, a deleted one and
   expect(ids(hideSettled(list, {showSettled: false, show: 'all'}, seen))).toEqual(['open', 'new', 'gone'])
   expect(ids(hideSettled(list, {showSettled: true, show: 'all'}, seen))).toHaveLength(5)
   expect(ids(hideSettled(list, {showSettled: false, show: 'settled'}, seen))).toHaveLength(5)
+})
+
+test('the search count "N of M" never exceeds M: M is every live friend the search runs over, settled ones included', () => {
+  const list = [
+    {id: 'a', name: 'Sam open', summary: summary('a', {INR: 500n})},
+    {id: 'b', name: 'Sam even', summary: summary('b', {INR: 0n})},
+    {id: 'c', name: 'Sama paid', summary: summary('c', {INR: 0n})},
+    {id: 'd', name: 'Sam gone', summary: summary('d', {INR: 0n}), deletedAt: 1},
+    {id: 'e', name: 'Eve', summary: summary('e', {INR: 9n})},
+  ]
+  const hiding = {showSettled: false, show: 'all' as const}
+  // Without a search the list hides the settled friends; M still counts what a search would cover (4 live).
+  const none = searchFriends(list, '', hiding)
+  expect([none.count, none.total]).toEqual([2, 4])
+  // A search finds the settled ones too (3 live matches: a, b, c; the removed one is not counted).
+  const sam = searchFriends(list, ' SAM ', hiding)
+  expect([sam.count, sam.total]).toEqual([3, 4])
+  for (const q of ['', 'sam', 'e', 'zzz', 'a']) {
+    const r = searchFriends(list, q, hiding)
+    expect(r.count).toBeLessThanOrEqual(r.total)
+  }
 })

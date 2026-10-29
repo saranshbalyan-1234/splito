@@ -13,6 +13,7 @@ import {
 import {useHaptics} from '#/lib/haptics'
 import {canFireWhenClosed, openSystemSettings} from '#/lib/notifications'
 import {useNotificationPermission} from '#/lib/notifications/usePermission'
+import {type PermissionState} from '#/lib/notifications/types'
 import {type RemindRequest} from '#/lib/remind/bus'
 import {dateInput, parseWhen, quickPicks, timeInput} from '#/lib/remind/when'
 import {logger} from '#/logger'
@@ -86,7 +87,8 @@ function Form({request}: {request: RemindMe}) {
     setTime(timeInput(ms))
   }
 
-  const save = async () => {
+  /* `granted` is the answer the primer just got: `permission.state` is still the pre-prompt value in this closure. */
+  const save = async (granted?: PermissionState) => {
     if (at === null || next === null) return
     setIsSaving(true)
     try {
@@ -99,7 +101,7 @@ function Form({request}: {request: RemindMe}) {
       return
     }
     haptics.success()
-    const state = permission.state
+    const state = granted ?? permission.state
     control.close(() =>
       Toast.show(
         !isOn
@@ -128,7 +130,7 @@ function Form({request}: {request: RemindMe}) {
           saveLabel: l`Allow`,
           cancelLabel: l`Not now`,
           isSaving,
-          onSave: () => void permission.ask().then(() => save()),
+          onSave: () => void permission.ask().then(answer => save(answer)),
           onCancel: () => void save(),
         }}>
         <View testID="remind-primer" style={[a.gap_md]}>

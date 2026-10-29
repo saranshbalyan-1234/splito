@@ -60,6 +60,11 @@ them do yet.
    owner decisions in `AGENTS.md`. A `UserPromptSubmit` hook in the repo's `.claude/settings.json` injects
    this reminder on every prompt. Reason: owner, 2026-10-26: "make sure this file updates on its own,
    whenever there is any such decision".
+10. **Record lessons and rules without being asked** (owner 163). Whenever work turns up something every future
+    change should follow (a root cause, a library quirk, a review finding, a platform rule, a test or perf rule, a
+    convention), Claude writes it here in the same turn as a dated § 23 lesson or a rule in its section, updates
+    BACKLOG when it implies work, commits and pushes, without waiting for the owner to say "add this". Reason:
+    owner, 2026-10-30: "make sure you do it yourself always, whenever you think this should be in the app".
 
 ---
 
@@ -1125,6 +1130,8 @@ Inherited from GameRun (2026-10-26); each holds for Splito's stack:
 
 Splito lessons (add newest last, dated, with PR):
 
+- 2026-10-29, iOS QA: a native bottom sheet presented from the root view controller fails ("already presenting RNSScreen") when a route sheet (Add expense) is up, so its Discard prompt and every picker never opened. `modules/bottom-sheet/ios/SheetView.swift` now presents from the top-most presented controller (Bluesky's composer is an RN `Modal`, which never met this). Sheets mounted outside the shell's `BottomSheetProvider` (RemindHost) get the context default `{}` as their portal and crash ("Element type is invalid ... BottomSheetNativeComponent"): `App.tsx` gives RemindHost its own provider and outlet. UIKit also asks `onAttemptDismiss` before a clean sheet is dismissed, so only a dirty `FormSheet` may open Discard.
+- 2026-10-29, iOS QA: inside a transaction `data/store.ts` runs statements through expo-sqlite's synchronous API with prepared statements; seeding demo mode went from 5.5 s to 2.0 s on the simulator debug build (38,000 statements, each async hop ~0.14 ms).
 - 2026-10-29, fix/web-scroll: **mobile Safari scrolled to a blank page.** `react-native-safe-area-context` 5.10.1's
   web provider reports its rect in viewport coordinates, so on a page whose window scrolls (ours) the top inset
   became the scroll offset whenever it re-measured; Safari fires `resize` as its toolbar collapses mid-scroll,
@@ -1133,6 +1140,42 @@ Splito lessons (add newest last, dated, with PR):
   5.6; remove the patch once upstream measures in document coordinates). Test: `e2e/scrollWeb.spec.ts` dispatches
   the same `resize` while scrolled and fails without the patch (3,029 px displacement). Chromium never shows it
   (no toolbar), so check scroll fixes in real Mobile Safari, not only Playwright.
+- 2026-10-30, fix/ios-wB: **a sheet over a route sheet never opened on iOS** ("Attempt to present ... which is
+  already presenting RNSScreen"): the native bottom sheet presented from the root view controller, which was
+  already presenting the Add expense form-sheet route, so Discard and every composer picker silently failed and
+  a dirty sheet could not close. Fix: `modules/bottom-sheet/ios/SheetView.swift` presents from the top-most
+  presented controller (retry when that one is being dismissed; `viewDidDisappear` reports a sheet torn down with
+  its route). Rule: § 4 allows one dialog over a route sheet, never two. Check sheets on the iOS simulator.
+- 2026-10-30, fix/ios-wB: **a sheet host outside the Shell crashed** ("Element type is invalid ...
+  BottomSheetNativeComponent"): `RemindHost` sat outside the shell's `BottomSheetProvider`, so its portal was the
+  context default `{}`. Any sheet host mounted outside the Shell gets its own `BottomSheetPortalProvider`.
+- 2026-10-30, fix/ios-wB: **tab links from pushed screens did nothing on native.** Tabs are nested in the
+  root-stack `Tabs` route and React Navigation 7 doesn't send NAVIGATE into a child navigator, so a link to a tab
+  navigates `('Tabs', {screen, params})` on native and `(screen, params)` on web (`linkNavigation()`), with an
+  exhaustive tab list (`satisfies Record<keyof TabParams, 1>`).
+- 2026-10-30, fix/ios-wB: **SQLite seeding was 38,000 async hops.** Inside a transaction the native store runs
+  statements through expo-sqlite's synchronous API with cached prepared statements (seed 5.5 -> 2 s), yielding to
+  the event loop every ~500 statements so a bulk transaction is not one long JS task; atomicity unchanged.
+- 2026-10-30, fix/tab-taps: **`useDedupe(250)` on tab presses swallowed fast taps** (and per-Link dedupe made A, B,
+  A land on B). Idempotent navigation (switching tab, `navigate` with `pop`, `popToTop`) is never deduped; only
+  pushes keep a dedupe (owner 150).
+- 2026-10-30, fix/tab-taps review: **deferring rendering has a contract** (owners 151/152): `useDeferredReady`
+  returns `afterFrame && flag && deferred` (it must not lag when data disappears) and `<Deferred>` shows its
+  fallback whenever data is missing (an empty slot only when data was there at mount); a pushed page renders its
+  header at once and defers only heavy rows, never skeleton-flashing data it already has; `FormSheet.SheetBody`
+  defers only heavy bodies (the composer, long pickers, big filter sheets), never small dialogs (owner 129), so
+  nothing jumps from a stand-in height.
+- 2026-10-30, fix/tab-taps review: **a page wider than the phone moves the fixed bottom bar off screen.** If the
+  document overflows sideways, mobile browsers widen the layout viewport and the fixed bar slips below the fold for
+  a frame, so a fast tap hits the screen behind. `html, body { overflow-x: clip }` and no element may overflow
+  the viewport width (e2e checks horizontal overflow, § 19).
+- 2026-10-30, F-241 merge: **the renders gate baseline is re-recorded with reasons whenever a reviewed change adds
+  renders** (`RENDERS_BASELINE=write`, every increase and its cause listed in `docs/COMPLETION_MATRIX.md`), never
+  silently; a merge that leaves the gate red on `main` is not done.
+- 2026-10-30, fix/ios-wB: **a guard that throws at mount crashes the native app at launch.** The "sheet needs a
+  provider" check first ran for every Dialog, including closed ones, and took the app down on iOS. Checks that
+  depend on context a closed dialog doesn't need run when the sheet opens, never at mount (§ 4: a closed dialog
+  renders and reads nothing).
 
 ---
 
@@ -2527,6 +2570,8 @@ Every owner decision, in the order it was made (all 2026-10-26). "Replaced" name
 | 159 | "net amount on right" | Overview card right column: net (large, coloured) on top, then small green owed-to-you and red you-owe lines when both directions are open; left: label, chip, count | § 26.12 | Net headline on the left (158) |
 | 160 | "in this red/green text on right and other text keep on left" (screenshot of the card) | Card is a two-column table: each line's words left, its red/green amount right (net large on line 1; owed-to-you green and you-owe red small when both open; count line left only) | § 26.12 | Net and lines stacked on the right (159) |
 | 161 | mock-up: net large green on the right of line 1; "Owed to you ₹49,243.00" and "You owe ₹450.00" small, white/grey, on the left; "4 friends" | Only the net is coloured and right-aligned; breakdown lines stay left in normal colours | § 26.12 | Breakdown amounts coloured on the right (160) |
+| 162 | "add all these to architecture" (the iOS, tap-speed and links review findings) | Lessons recorded in § 23 (sheet presenting, sheet host provider, tab links on native, SQLite sync batching, no dedupe on idempotent nav, deferred-render contract, sideways overflow, renders baseline upkeep) | § 23 | - |
+| 163 | "make sure you do it yourself always, whenever you think this should be in app" | Claude records lessons and rules (§ 23 or the section) on its own in the same turn, plus BACKLOG work, commit and push, without being asked | § 0 rule 10 | Recording lessons only when asked |
 
 New decisions follow § 0 rule 9: rewrite the rule in its topic so only the current truth remains, then add a
 row here.

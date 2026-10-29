@@ -126,7 +126,10 @@ export function Outer({
         fullHeight,
         preventExpansion: !fullHeight,
         preventDismiss: isDirty,
-        onAttemptDismiss: () => discardControl.open(),
+        /* UIKit also asks before a clean sheet goes (a tap on the scrim): only unsaved changes may stop it. */
+        onAttemptDismiss: () => {
+          if (isDirty) discardControl.open()
+        },
       }}
       webOptions={{alignCenter: true, onBackgroundPress: requestClose}}>
       <Dialog.Handle />
