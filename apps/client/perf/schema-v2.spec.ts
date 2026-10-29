@@ -193,7 +193,7 @@ function expectSearchBudget(r: {cpu: number; searchKeystrokeMs: Record<string, n
 async function askCase(page: Page) {
   // Ask Splito is off the default bar, so put it on the sidebar (26.3) to measure its tab.
   await page.evaluate(() =>
-    (window as unknown as {splito: {setPref(k: string, v: unknown): Promise<void>}}).splito.setPref('tabs', ['people', 'groups', 'analytics', 'ask', 'activity']),
+    (window as unknown as {splito: {setPref(k: string, v: unknown): Promise<void>}}).splito.setPref('tabs', ['home', 'people', 'groups', 'analytics', 'ask', 'activity']),
   )
   await page.getByTestId('tab-ask').waitFor()
   const question = 'Who owes me the most?'

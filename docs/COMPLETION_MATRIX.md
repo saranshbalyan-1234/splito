@@ -228,3 +228,29 @@ increase, with its cause:
   was already stale at those (earlier merges plus the links work); both are timing-noisy between runs (the ask answer
   streams in chunks, the scroll count follows scroll timing), so they are recorded at the highest value seen in 8 runs.
 Eight consecutive runs after recording: 8 of 8 pass.
+
+## Home, People and Groups tabs (F-256, F-1415; owners 153-161, 175-177, 179; branch feat/wC-F256-home)
+
+Home (`/`): compact Overview (scope All / Groups / Direct), Requests and Invites sent rows, Recent transactions,
+Recently active people and groups; People (`/people`): the same request rows, the Friends list (search, Filters, gear);
+Groups: no Overview. Tab ids `home | people | ...` with the saved `tabs` read-time migration; every item on the rail
+and desktop sidebar (no More); the right column hidden on Home; bottom-bar labels up to 5 tabs; a main screen opened
+from a link is a pushed page with Back. Web verified; native not run (the `Pushed<Tab>` twins and the Lucide glyphs
+need a simulator check).
+
+Checks, 2026-10-30, machine load under 6 for the perf runs (e2e at load 5-135 from other builders):
+- `pnpm check` green; client bun tests 646+, sync `preferences.test.ts` (legacy `tabs` shapes), domain `ledger.test.ts` (scope).
+- e2e build `--clear`, full e2e `--workers=2`: see the report (new `homeTabs.spec.ts`, rewritten `homeLayout.spec.ts`; ~35 specs updated for the new Home).
+- Renders gate re-recorded (`RENDERS_BASELINE=write`). Home is lighter than the old friends-list Home at launch (launch
+  mounts 3,580 -> 2,063, updates 403 -> 293); the tab round now also mounts the People list and Home's own lists
+  (tabs mounts 21,440 -> 24,133, updates 4,418 -> 3,532); scroll 50,113 -> 42,805 mounts; add/close/type/ask unchanged
+  within noise. Reviewed increases: (1) `tabs` mounts, from People now being mounted on top of Home on the same round;
+  (2) three wasted-render reports x1 (`HeaderAvatar`, `AddExpenseFAB`, `ActivityScreen`, hook `useContext`): the pushed-copy
+  check reads the route context, which changes once on focus; they re-render with equal output, once per launch.
+- Tap to first visual change (`perf/tapLatency.spec.ts`, 390 px, large demo, median of 3, load under 6), x1 / x4 CPU: tab People
+  20 / 32, Home 35 / 165, Groups 22 / 45, Analytics 17 / 39, Activity 13 / 33; friend row 17 / 35; group row 15 / 47;
+  FAB 21 / 51; open sheet 28 / 73; Save 37 / 47; tab 50 ms tab 32 / 54. Budgets 100 / 200 met; Home at x4 (165) is the
+  slowest (it draws the Overview and three lists), below the 200 budget.
+- Perf `schema-v2` (Home now shows recent transactions in its body): large demo set (1,590 expenses) Home cold open 27 ms (was 25),
+  write + UI 16 ms; 10,000 expenses cold open 25 ms (24), write + UI 16-32 ms (16), Analytics 43 ms (44), search 20-25 ms; Ask open 35 ms, answer 30 ms.
+- Screenshots: apps/client/qa/home2/ (Home, People, Groups; light and Dim; 390 and 1440; demo on).
