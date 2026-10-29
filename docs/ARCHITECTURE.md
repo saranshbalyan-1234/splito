@@ -1224,9 +1224,14 @@ labelled sidebar); **wide** = web 1300 px and up (Bluesky `gtTablet`, right colu
   dataset (a versioned snapshot, same shape as a sync pull) into the separate local demo database, and "Reset
   demo" downloads it again; the client bundle then ships no demo seed, generator or fixtures (a build check
   fails if it does). The download is read-only and never touches the real account; offline, the switch says it
-  needs a connection the first time and works offline afterwards from the local demo database. Until the backend
+  needs a connection and works offline while it stays on. Until the backend
   exists the dev/e2e builds keep seeding locally as today. *Why:* "remember when backend is built, you need to
   download the demo data from backend, not store in frontend".
+- **Switching demo mode off deletes the demo data** (owner 136, now and with the backend): turning the switch off
+  returns to the real data and then erases the separate demo database and every demo-scoped device key (drafts,
+  search history, read marks), so nothing of the demo stays on the device; turning it on again starts fresh
+  (seeded locally today, downloaded from the backend once F-252 ships). "Reset demo" goes away, since off and on
+  is the reset. *Why:* "and remove when demo mode is switched off".
 - **The demo dataset grows with every feature, in the same change** (owner 109). A feature is not done until the
   one demo dataset (§ 26.1 demo mode) shows it with realistic, multi-currency examples: e.g. the Supper Factory
   bill with tax classes and stacked charges (F-403), comment threads (F-1204), reminders (F-1118/F-1119), inactive
@@ -2282,6 +2287,7 @@ Every owner decision, in the order it was made (all 2026-10-26). "Replaced" name
 | 133 | "dont show that banner, not needed" | No demo banner at all; demo state shown by the Settings switch and the avatar's Demo state | § 26.15, § 26.1 | Banner on every screen (94/95), compact banner (132) |
 | 134 | "in all headers, write Home - Demo like this instead" | In demo mode every header title ends with " - Demo" (logo + "Demo" label on phone Home; document title too) | § 26.15 | - (with 133) |
 | 135 | "remember when backend is build, you need to download the demo data from backend not store in frontend" | With the backend, Demo mode downloads the demo dataset from the server into the demo DB; no demo seed in the client bundle | § 26.1 | Demo dataset generated in the app (dev/e2e) |
+| 136 | "and remove when demo mode is switched off" | Switching demo off erases the demo database and demo-scoped keys; on again starts fresh; no Reset demo | § 26.1 | Demo DB kept between sessions; Reset demo |
 
 New decisions follow § 0 rule 9: rewrite the rule in its topic so only the current truth remains, then add a
 row here.

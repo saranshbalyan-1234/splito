@@ -462,8 +462,8 @@ The demo dataset and generator move to the API; Demo mode downloads a versioned 
 - **Prefs** -
 - **Acceptance**
   1. `GET /v1/demo/snapshot` (versioned, same shape as a sync pull, cacheable) returns the one dataset generated server-side through the same domain code.
-  2. Turning Demo mode on downloads it into the demo database (progress shown, resumable); Reset demo re-downloads; the real account is never read or written.
-  3. Offline first time: the switch says it needs a connection; afterwards demo works offline from the local demo database.
+  2. Turning Demo mode on downloads it into the demo database (progress shown, resumable); turning it off erases the demo database (owner 136); the real account is never read or written.
+  3. Offline: turning it on says it needs a connection; once on, demo works offline until switched off.
   4. The production client bundle contains no demo seed, generator or fixtures (build check); dev/e2e keep a local seed only until this ships.
   5. demoCoverage runs against the server snapshot.
 
