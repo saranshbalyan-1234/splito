@@ -3125,10 +3125,6 @@ msgstr "It was deleted, or the link is wrong."
 msgid "Item {0}"
 msgstr "Item {0}"
 
-#: src/components/split/SplitEditor.tsx:599
-msgid "Item name"
-msgstr "Item name"
-
 #: src/components/split/SplitEditor.tsx:106
 msgid "Itemize"
 msgstr "Itemize"
@@ -3440,6 +3436,11 @@ msgstr "Name"
 #: src/screens/AddFriend.tsx:487
 msgid "Name (optional)"
 msgstr "Name (optional)"
+
+#. placeholder {0}: index + 1
+#: src/components/split/SplitEditor.tsx:599
+msgid "Name of item {0}"
+msgstr "Name of item {0}"
 
 #: src/screens/AddFriend.tsx:458
 msgid "name@example.com or +91 98765 43210"

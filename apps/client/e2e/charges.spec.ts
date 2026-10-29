@@ -273,3 +273,17 @@ test('with several payers a round-off "to the payer" says it is shared by everyo
   await page.getByTestId('payers-dialog').getByTestId('sheet-close').click()
   await expect(page.getByTestId('bill-line-round-off')).toContainText('shared by everyone')
 })
+
+test('desktop: Escape closes the charge sheet and focus returns to Add charge', async ({page}) => {
+  await openAddExpense(page, DESKTOP)
+  await page.getByTestId('split-mode-items').click()
+  await page.getByTestId('charge-preset-custom').click()
+  const opener = page.getByTestId('charge-add')
+  await opener.click()
+  await expect(page.getByTestId('charge-sheet')).toBeVisible()
+  await page.keyboard.press('Escape')
+  await expect(page.getByTestId('charge-sheet')).toHaveCount(0)
+  await expect
+    .poll(() => page.evaluate(() => document.activeElement?.getAttribute('data-testid')))
+    .toBe('charge-add')
+})

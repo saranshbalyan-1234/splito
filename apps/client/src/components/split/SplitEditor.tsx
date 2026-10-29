@@ -596,7 +596,7 @@ function ItemsEditor({
                 <TextField.Root>
                   <TextField.Input
                     testID={`item-${index}-name`}
-                    label={l`Item name`}
+                    label={l`Name of item ${index + 1}`}
                     placeholder={l`Item ${index + 1}`}
                     value={item.name}
                     onChangeText={v => setItem(item.key, {name: v})}

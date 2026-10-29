@@ -3125,10 +3125,6 @@ msgstr "यह हटा दिया गया है, या लिंक ग�
 msgid "Item {0}"
 msgstr "चीज़ {0}"
 
-#: src/components/split/SplitEditor.tsx:599
-msgid "Item name"
-msgstr "चीज़ का नाम"
-
 #: src/components/split/SplitEditor.tsx:106
 msgid "Itemize"
 msgstr "चीज़ों से"
@@ -3440,6 +3436,11 @@ msgstr "नाम"
 #: src/screens/AddFriend.tsx:487
 msgid "Name (optional)"
 msgstr "नाम (वैकल्पिक)"
+
+#. placeholder {0}: index + 1
+#: src/components/split/SplitEditor.tsx:599
+msgid "Name of item {0}"
+msgstr "चीज़ {0} का नाम"
 
 #: src/screens/AddFriend.tsx:458
 msgid "name@example.com or +91 98765 43210"
