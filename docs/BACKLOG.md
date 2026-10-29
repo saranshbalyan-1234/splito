@@ -595,6 +595,17 @@ One shared PersonLink (avatar + name) used on every screen; tapping either opens
   2. Built as one `PersonLink` (architecture test: no screen renders `UserAvatar` with a person id outside it); nested targets inside rows that open something else; 44 px targets; hover underline on web; keyboard focusable.
   3. e2e samples each surface at 390 and 1440; no redraw regressions (renders gate).
 
+### F-262 Person names capitalised word by word `spec: owner § 26.3 (decision 181)`
+
+Every word of a person's full name starts with a capital, on save and on display.
+
+- **Effort** S · **Impact** 6 · **Backend** no (the API applies the same function in M2) · **Status** done (web), Wave C; native unverified · **Deps** -
+- **Prefs** -
+- **Acceptance**
+  1. `capitalizeName` in `packages/domain` (unit-tested: spaces, hyphens, apostrophes, "McDonald" kept, Devanagari unchanged, trims and collapses spaces).
+  2. Every save path for a person's name uses it; every display of a person's name uses it (old lower-case data reads right).
+  3. Group names, expense titles, emails untouched; e2e adds "saransh balyan" and sees "Saransh Balyan".
+
 ### F-250 Sign-in required (auth gate) `spec: owner § 26.15 (decision 125)`
 
 Nothing of the app is visible signed out: only the welcome tour, the logged-out flow, language and legal pages. The local database opens per account only with a session; offline after sign-in; deep links resume after sign-in.
@@ -1780,6 +1791,17 @@ One Settings page (`/settings/friends`) that manages friends and invites. Reques
 ## E7 Trips and travel
 
 Everything a group trip needs, from first booking to closing the books.
+
+### F-705 Trip location ("Where?") `spec: owner § 26.12 (decision 182)`
+
+Trip groups ask where the trip is: an optional plain-text place on New and Edit group, shown and searchable.
+
+- **Effort** S · **Impact** 6 · **Backend** no (synced with the group in M2) · **Status** in progress, Wave C · **Deps** -
+- **Prefs** -
+- **Acceptance**
+  1. "Where? (optional)" shows for Trip only, beside the dates; saved as `group.location` (trimmed, null when empty) through createGroup / updateGroup with history and outbox.
+  2. Group row and header read "Trip · Goa · 12-18 Mar" (parts that are missing drop out); search finds the group by its location; CSV has a Location column.
+  3. Switching type away from Trip hides the field and keeps the value; demo trips have locations; en + hi; e2e at 390 and 1440.
 
 ### F-701 Trip kitty v2: multi-currency, holder hand-off, cash count `spec v2`
 

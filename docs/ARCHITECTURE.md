@@ -1222,6 +1222,11 @@ Splito lessons (add newest last, dated, with PR):
   rules: a build guard matches strings that only the guarded thing contains (a test pins the near-miss), and every
   merge to `main` is followed by checking that the Render deploy succeeded (`render deploys list`), not only the
   GitHub workflow, before saying it is live.
+- 2026-10-30, Render: **auto-deploy was switched off by our own Blueprint.** `render.yaml` said
+  `autoDeployTrigger: 'off'` (deploys were meant to come from deploy hooks, whose secrets were never set), and a
+  Blueprint sync applied it to `splito-web`, so ten pushes after 5b60890 never deployed and nothing failed. Rule: the
+  Blueprint is the source of truth for service settings, so a setting the owner relies on (auto-deploy of `main`)
+  is written there; "no new deploy in `render deploys list` after a push" counts as a failed deploy.
 - 2026-10-30, owner on iPhone Safari: **the tap-speed fix passed in Chrome and still felt broken on the phone.**
   Chrome (desktop and touch emulation) measured every tab at 4-15 ms, but Home re-rendered synchronously on switch
   (about 50 ms on the Mac, several times that on a phone) and the page had no `touch-action: manipulation`, so iOS
@@ -1614,6 +1619,13 @@ labelled sidebar); **wide** = web 1300 px and up (Bluesky `gtTablet`, right colu
   target) does it, so no screen wires its own; where the whole row already opens something else (an expense row),
   the avatar and name are their own nested targets that open the person. Shell first (owner 152), no redraw (166).
   *Why:* "clicking on avatar or name anywhere on the website should open that friend's details".
+- **Person names are capitalised word by word** (owner 181): every word of a person's full name starts with a
+  capital letter ("saransh balyan" -> "Saransh Balyan"); the rest of each word stays as typed, so "McDonald" and
+  "D'Souza" survive. Saved that way on every path (add friend, own profile name, contacts, invites, join, demo
+  seed, sign-up) through one `capitalizeName` in `packages/domain`, and shown that way through the same function,
+  so names already saved lower-case read right too. Scripts without letter case (Devanagari) are unchanged.
+  Group names, expense titles and emails are not names and stay as typed.
+  *Why:* "name should be capitalized first letter in complete name".
 - **Activity's route is `/activity`; `/notifications` redirects to it.**
 - **A main screen reached from a link shows Back** (owner 179): when Home, People, Groups, Analytics or Activity
   is opened from something other than its own tab or sidebar item (a "See all", an Overview card, a search or Ask
@@ -2049,6 +2061,13 @@ expands once I click". *Where:* `screens/People`, `screens/Groups`, `screens/Gro
   currency, a "who owes whom" list (pairwise, from the direct-mode settlement plan) and "Settle up".
   Payment rules are reached from the header overflow (§ 26.4). testIDs `friends-filters`, `groups-balances`,
   `group-tab-balances`.
+
+- **A trip asks where it is** (owner 182): New group and Edit group show "Where? (optional)" for the Trip type
+  only, beside the trip dates: one plain text field ("Goa", "Lisbon & Sintra"), offline, no map or place search
+  (F-313 adds those online later). It is saved on the group (`location`), shown with the type and dates ("Trip ·
+  Goa · 12-18 Mar") on the group row and the group header, searchable as a place (§ 26.19 "places"), and carried
+  into the CSV. Changing the type away from Trip keeps the value hidden, not erased. Every demo trip has one.
+  *Why:* "for trip ask for location as well".
 
 ### 26.13 Expenses and itemize
 
@@ -2757,6 +2776,9 @@ Every owner decision, in the order it was made (all 2026-10-26). "Replaced" name
 | 177 | "instead of manage button in middle, make it as a settings icon on right in friends in home" | Friends header: gear icon on the right (after search and Filters) opens Friends and invites; no Manage text button | § 26.3 | "Manage" text button in the middle of the header |
 | 178 | "clicking on avatar or name anywhere on the website, should open that friend details" | One shared PersonLink: any avatar or name opens /people/:id (Me -> Profile), on every screen | § 26.3 | Only friend rows opened a person |
 | 179 | "even if you go to main screen from some links, it should show back button, in case you dont go directly from tabs" | A main screen opened from a link (See all, cards, results, notifications, deep links) is a pushed page with Back to the origin; the tab itself gives the plain tab screen | § 26.3 | Links switched tabs with no way back |
+| 180 | Assistant ruling after the F-250 review (owner asleep, "take your own decisions"; owners 164/165 review the front end on Render first) | Render builds a "preview" tier: labelled local dev account allowed, `noindex`, never on stage/prod tiers; real production refused until the auth HTTP client exists; intro keeps animated Lottie art | § 26.15 | Render built `production`, which refused the dev account and broke the deploy |
+| 181 | "name should be capitalized first letter in complete name" | Every word of a person's name starts with a capital, saved and shown through one `capitalizeName`; rest of each word as typed; groups, titles, emails unchanged | § 26.3 | Names shown exactly as typed |
+| 182 | "for trip ask for location as well" | Trip groups get an optional "Where?" text field in New/Edit group; shown with type and dates, searchable, in CSV, in demo trips | § 26.12 | Trips had name and dates only |
 
 New decisions follow § 0 rule 9: rewrite the rule in its topic so only the current truth remains, then add a
 row here.

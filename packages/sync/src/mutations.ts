@@ -1,5 +1,6 @@
 import {
   assertInRange,
+  capitalizeName,
   computeShares,
   type Contact,
   type CurrencyCode,
@@ -200,6 +201,18 @@ export function cleanName(name: string) {
   return n
 }
 
+/** A person's name as saved (owner 181): capitalised word by word, never empty. Group names and titles use `cleanName`. */
+export function cleanPersonName(name: string) {
+  return cleanName(capitalizeName(name))
+}
+
+/** A person (or friend request) row with its name capitalised, for display: old lower-case rows read right, a correct row comes back as is. */
+export function displayPerson<E extends Entity<{name: string; contact?: Contact | null}>>(e: E): E {
+  if (e.data.contact && e.data.name === formatContact(e.data.contact)) return e // the contact stood in for a name
+  const name = capitalizeName(e.data.name)
+  return name === e.data.name ? e : {...e, data: {...e.data, name}}
+}
+
 /** @internal */
 export async function requireLive<T>(tx: Tx, type: EntityType, id: string, code = 'NOT_FOUND'): Promise<Entity<T>> {
   const e = await tx.get<T>(type, id)
@@ -208,7 +221,7 @@ export async function requireLive<T>(tx: Tx, type: EntityType, id: string, code 
 }
 
 export async function ensureMe(store: Store, ctx: MutationCtx, name: string): Promise<Entity<Person>> {
-  return store.transaction(async tx => (await tx.get<Person>('person', ctx.actor)) ?? write(tx, ctx, 'person', ctx.actor, {name: cleanName(name), isMe: true}, false, 'person.create'))
+  return store.transaction(async tx => (await tx.get<Person>('person', ctx.actor)) ?? write(tx, ctx, 'person', ctx.actor, {name: cleanPersonName(name), isMe: true}, false, 'person.create'))
 }
 
 // ponytail: shape check only (handle@psp); the payer's UPI app is the real validator.
@@ -232,13 +245,14 @@ export async function createPerson(
 ): Promise<Entity<Person>> {
   const contact = input.contact ?? null
   if (contact && !isContact(contact)) throw new DomainError('INVALID_CONTACT')
-  const name = input.name.trim() || (contact ? formatContact(contact) : '')
+  // A contact used as the name (an email, a phone number) is not a name to capitalise.
+  const name = capitalizeName(input.name) || (contact ? formatContact(contact) : '')
   const data: Person = {name: cleanName(name), isMe: false, upiId: cleanUpi(input.upiId), ...(contact ? {contact} : {})}
   return store.transaction(tx => write(tx, ctx, 'person', ctx.newId(), data, false, 'person.create'))
 }
 
 export async function updatePerson(store: Store, ctx: MutationCtx, id: string, input: {name: string; upiId?: string | null}): Promise<Entity<Person>> {
-  const name = cleanName(input.name)
+  const name = cleanPersonName(input.name)
   const upiId = cleanUpi(input.upiId)
   return store.transaction(async tx => {
     const p = await requireLive<Person>(tx, 'person', id)

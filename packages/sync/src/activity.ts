@@ -1,5 +1,5 @@
 import {type FriendRequest} from './friends'
-import {type Expense, type Group, isGroupInactive, type Person, type Tombstone, type Repayment, type WriteOff} from './mutations'
+import {displayPerson, type Expense, type Group, isGroupInactive, type Person, type Tombstone, type Repayment, type WriteOff} from './mutations'
 import {type Reminder} from './reminders'
 import {type Key} from './schema'
 import {type Store, type StoreChange, touches} from './store'
@@ -219,7 +219,7 @@ export function activityTracker(store: Store, want: () => number = () => ACTIVIT
     }
     const hasMore = list.length > size
     list = list.slice(0, size)
-    people ??= await store.getAll('person')
+    people ??= (await store.getAll<Person>('person')).map(displayPerson)
     groups ??= await store.getAll('group')
     // Only what the events name: an expense or a request row shows its current state.
     const wanted = new Map<EntityType, string[]>()
@@ -238,7 +238,7 @@ export function activityTracker(store: Store, want: () => number = () => ACTIVIT
       expense: named('expense'),
       repayment: [],
       writeoff: [],
-      friendRequest: named('friendRequest'),
+      friendRequest: named('friendRequest').map(e => displayPerson(e as Entity<FriendRequest>)),
       reminder: [],
     } satisfies Record<FeedType, Entity[]>
     return {events: list, entities, isDone: isDone && !hasMore}
