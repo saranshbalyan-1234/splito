@@ -25,6 +25,8 @@ export type GroupFilters = {
   status: 'active' | 'inactive' | 'all'
   /** The one "Show hidden" switch (decision 105): the groups I hid come back. */
   showHidden: boolean
+  /** "Show settled" (decision 90, 112): off, groups with no open balance leave the list; the Overview counts them still. */
+  showSettled: boolean
   currency: string | 'all'
   show: 'all' | 'owed' | 'owe' | 'settled'
   sort: 'recent' | 'name' | 'amount'
@@ -34,6 +36,7 @@ export const DEFAULT_GROUP_FILTERS: GroupFilters = {
   type: 'all',
   status: 'active',
   showHidden: false,
+  showSettled: false,
   currency: 'all',
   show: 'all',
   sort: 'recent',
@@ -47,7 +50,7 @@ export const DEFAULT_GROUP_FILTERS: GroupFilters = {
  */
 export function filterGroups(
   rows: GroupRowData[],
-  {type, status, showHidden, currency, show}: GroupFilters,
+  {type, status, showHidden, showSettled, currency, show}: GroupFilters,
 ): GroupRowData[] {
   return rows.flatMap(row => {
     if (type !== 'all' && row.kind !== type) return []
@@ -67,7 +70,10 @@ export function filterGroups(
       (show === 'owed' && nets.some(v => v > ZERO)) ||
       (show === 'owe' && nets.some(v => v < ZERO)) ||
       (show === 'settled' && nets.every(v => v === ZERO))
-    return keep ? [{...row, balances}] : []
+    // Settled up = nothing open and it has had records (`currencies` lists settled ones too); a group with no expenses yet is new, not settled.
+    const isSettledUp = nets.every(v => v === ZERO) && (nets.length > 0 || (row.currencies?.length ?? 0) > 0)
+    if (!keep || (isSettledUp && !showSettled && show !== 'settled' && !row.deleted)) return []
+    return [{...row, balances}]
   })
 }
 

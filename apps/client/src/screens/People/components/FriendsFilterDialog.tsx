@@ -3,6 +3,7 @@ import {View} from 'react-native'
 import {Trans, useLingui} from '@lingui/react/macro'
 
 import {ShowHiddenToggle} from '#/features/hidden/ShowHidden'
+import {ShowSettledToggle} from '#/components/ShowSettledToggle'
 import {atoms as a, useTheme} from '#/alf'
 import {Button, ButtonText} from '#/components/Button'
 import * as Dialog from '#/components/Dialog'
@@ -17,6 +18,8 @@ export type PeopleFilters = FriendFilter & {
   sort: 'amount' | 'name' | 'recent'
   /** The one "Show hidden" switch (decision 105): the removed friends I hid come back. */
   showHidden: boolean
+  /** "Show settled" (decision 90, 112): off, friends settled up leave the list. */
+  showSettled: boolean
 }
 
 /**
@@ -95,6 +98,7 @@ function Form({
           <Toggle.Switch />
         </Toggle.Item>
 
+        <ShowSettledToggle value={draft.showSettled} onChange={showSettled => set({showSettled})} />
         <ShowHiddenToggle value={draft.showHidden} onChange={showHidden => set({showHidden})} />
 
         {currencies.length > 1 && (

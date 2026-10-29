@@ -51,9 +51,12 @@ import {
 } from './components/FriendsFilterDialog'
 import {RequestsSection} from './components/RequestsSection'
 import {SectionHeader} from './components/SectionHeader'
-import {filterFriends, listedFriends, seenByPerson, sortFriends} from './sort'
+import {filterFriends, hideSettled, listedFriends, seenByPerson, sortFriends} from './sort'
 
 const PLACEHOLDER_ROWS = 6
+
+/* What the filter dot compares with: the stock choices. Sort and Include groups are saved on Apply (owner 128), so they are the defaults only until changed. */
+const STOCK = {includeGroups: true, currency: 'all', show: 'all', sort: 'amount', showHidden: false, showSettled: false} as const
 
 /**
  * Home: the Overview (balances per currency, counts, Analytics), then one
@@ -75,10 +78,11 @@ export function PeopleScreen() {
   const groups = useEntities<Group>('group')
   const balanceRows = useBalanceRows()
   const seen = useSeenCurrencies()
-  const [sortDefault = 'amount'] = usePref('peopleSort')
+  const [sortDefault = 'amount', setSortDefault] = usePref('peopleSort')
   const [currency = 'INR'] = usePref('defaultCurrency')
-  const [includeDefault] = usePref('includeGroupsDefault')
+  const [includeDefault, setIncludeDefault] = usePref('includeGroupsDefault')
   const [showHidden, setShowHidden] = useShowHidden()
+  const [showSettled = false, setShowSettled] = usePref('people.showSettled')
   const hiddenIds = useHiddenItems()
   const defaults: PeopleFilters = {
     includeGroups: includeDefault ?? true,
@@ -86,17 +90,18 @@ export function PeopleScreen() {
     show: 'all',
     sort: sortDefault,
     showHidden: false,
+    showSettled: false,
   }
   const [applied, setApplied] = useState<PeopleFilters | null>(null)
   /* The list's own search (26.12): by name, combined with the filters; not kept after leaving. */
   const [query, setQuery] = useState('')
-  const filters: PeopleFilters = {...(applied ?? defaults), showHidden}
+  const filters: PeopleFilters = {...(applied ?? defaults), showHidden, showSettled}
   const {includeGroups, sort} = filters
   const lastActivity = useLastActivity(sort === 'recent')
   /* The filter button counts what differs from the defaults (Settings › Sorting and filters). */
   const activeCount = (
-    ['includeGroups', 'currency', 'show', 'sort', 'showHidden'] as const
-  ).filter(k => filters[k] !== defaults[k]).length
+    ['includeGroups', 'currency', 'show', 'sort', 'showHidden', 'showSettled'] as const
+  ).filter(k => filters[k] !== STOCK[k]).length
   const filterControl = useDialogControl()
 
   const isLoading = !me || !people || !groups || !balanceRows
@@ -128,10 +133,14 @@ export function PeopleScreen() {
   )
   /* A removed friend is in the list but is no friend now: the counts and figures cover the live rows. */
   const rows = filtered.filter(row => row.deletedAt === undefined)
+  /*
+   * Settled up friends leave the list only (owner 90, 112): the figures and the counts below still cover them,
+   * and a search still finds them.
+   */
   const q = query.trim().toLocaleLowerCase()
   const listed = q
     ? filtered.filter(row => row.name.toLocaleLowerCase().includes(q))
-    : filtered
+    : hideSettled(filtered, filters, seenCurrencies)
   /* The summary follows the filters too, so its figures always match the list. */
   const totals = balanceTotals(
     rows.flatMap(row => (row.summary ? [row.summary] : [])),
@@ -253,12 +262,20 @@ export function PeopleScreen() {
                 <EmptyState
                   testID="people-filtered-empty"
                   icon={null}
-                  message={l`No friends match these filters.`}
+                  message={
+                    filtered.length > 0
+                      ? l`Everyone is settled up. Turn on Show settled in Filters to list them.`
+                      : l`No friends match these filters.`
+                  }
                   button={{
                     testID: 'people-clear-filters',
                     label: l`Clear filters`,
                     text: l`Clear filters`,
-                    onPress: () => setApplied(null),
+                    onPress: () => {
+                      setApplied(null)
+                      void setSortDefault('amount')
+                      void setIncludeDefault(true)
+                    },
                     size: 'small',
                     color: 'secondary',
                   }}
@@ -304,6 +321,10 @@ export function PeopleScreen() {
         onFiltersApplied={f => {
           setApplied(f)
           if (f.showHidden !== showHidden) void setShowHidden(f.showHidden)
+          if (f.showSettled !== showSettled) void setShowSettled(f.showSettled)
+          /* Sort and Include groups are saved too (owner 128): the choice is the new default and survives a reload. */
+          if (f.sort !== sortDefault) void setSortDefault(f.sort)
+          if (f.includeGroups !== (includeDefault ?? true)) void setIncludeDefault(f.includeGroups)
         }}
       />
     </Layout.Screen>

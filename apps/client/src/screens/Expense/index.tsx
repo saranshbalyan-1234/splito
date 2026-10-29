@@ -65,7 +65,7 @@ import * as Toast from '#/components/Toast'
 import {Text} from '#/components/Typography'
 import {MoneyArrow, useMoneyStyle} from '#/components/MoneyDirection'
 import {Shimmer} from '#/motion/Shimmer'
-import {SyncStatusLine} from '#/components/SyncStatus'
+import {SyncToned} from '#/components/SyncTone'
 import {
   HistoryLine,
   type HistoryLineData,
@@ -346,7 +346,6 @@ function Detail({
               },
             })}
           </Text>
-          <SyncStatusLine row={expense} testID="expense-sync-chip" />
           {isUpcoming ? (
             <View
               testID="expense-upcoming"
@@ -557,8 +556,10 @@ function Detail({
           <View style={[a.flex_1, {flexGrow: 3, flexBasis: 0, minWidth: 0}]}>
             <Layout.Content contentContainerStyle={[a.pb_5xl]}>
               {deletedBanner}
-              {hero}
-              {breakdown}
+              <SyncToned status={expense.syncStatus}>
+                {hero}
+                {breakdown}
+              </SyncToned>
             </Layout.Content>
           </View>
           <View
@@ -582,8 +583,10 @@ function Detail({
         <>
           <Layout.Content ref={scroll} contentContainerStyle={[a.pb_5xl]}>
             {deletedBanner}
-            {hero}
-            {breakdown}
+            <SyncToned status={expense.syncStatus}>
+              {hero}
+              {breakdown}
+            </SyncToned>
             {discussion}
           </Layout.Content>
           <DiscussionComposer />

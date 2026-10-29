@@ -114,6 +114,7 @@ export function IncomingRow({request}: {request: Entity<FriendRequest>}) {
     <RequestRow
       testID={`request-${name}`}
       name={name}
+      sync={request}
       detail={
         <Trans>Wants to be friends · {ago(now - request.data.sentAt)}</Trans>
       }>
@@ -177,6 +178,7 @@ export function OutgoingRow({request}: {request: Entity<FriendRequest>}) {
     <RequestRow
       testID={`invite-sent-${name}`}
       name={name}
+      sync={request}
       detail={detail}>
       <RequestAction
         testID="invite-sent-resend"

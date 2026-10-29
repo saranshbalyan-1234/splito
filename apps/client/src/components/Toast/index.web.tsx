@@ -3,7 +3,9 @@ import {isValidElement} from 'react'
 import {nanoid} from 'nanoid/non-secure'
 import {toast as sonner, Toaster} from 'sonner'
 
-import {atoms as a} from '#/alf'
+import {useShouldReduceMotion} from '#/motion/useShouldReduceMotion'
+import {atoms as a, useBreakpoints} from '#/alf'
+import {HEADER_HEIGHT} from '#/components/Layout/const'
 import {DURATION} from '#/components/Toast/const'
 import {
   Icon as ToastIcon,
@@ -19,16 +21,34 @@ export {type ToastType} from '#/components/Toast/types'
 
 /**
  * Toasts are rendered in a global outlet, which is placed at the top of the
- * component tree.
+ * component tree. Owner 110 (ARCHITECTURE 26.8): rail and desktop stack at the
+ * top right below the header line, phones sit at the top full width inside the
+ * gutters below the safe area; newest on top, three at most. Swiping up (phone)
+ * or right (corner) dismisses; sonner slides them in from the top.
  */
 export function ToastOutlet() {
+  const {gtMobile} = useBreakpoints()
+  const isReduced = useShouldReduceMotion()
+  const top = HEADER_HEIGHT.web + a.gap_sm.gap
   return (
-    <Toaster
-      position="bottom-left"
-      gap={a.gap_sm.gap}
-      offset={a.p_xl.padding}
-      mobileOffset={a.p_xl.padding}
-    />
+    <>
+      {isReduced && (
+        // The `motion` preference (the OS setting is already honoured by sonner's own CSS).
+        <style>{'[data-sonner-toast],[data-sonner-toast]*{transition:none!important;animation:none!important}'}</style>
+      )}
+      <Toaster
+        position={gtMobile ? 'top-right' : 'top-center'}
+        visibleToasts={3}
+        swipeDirections={gtMobile ? ['right'] : ['top']}
+        gap={a.gap_sm.gap}
+        offset={{top, right: a.p_xl.padding, left: a.p_xl.padding}}
+        mobileOffset={{
+          top: `calc(env(safe-area-inset-top, 0px) + ${a.gap_sm.gap}px)`,
+          left: a.p_xl.padding,
+          right: a.p_xl.padding,
+        }}
+      />
+    </>
   )
 }
 

@@ -12,6 +12,8 @@ import {atoms as a, useTheme} from '#/alf'
 import {DeletedMeta, useStruck} from '#/components/DeletedMeta'
 import {BalanceBlock, SettledPill} from '#/components/BalanceText'
 import {GroupAvatar} from '#/components/groups/GroupAvatar'
+import {NeedsAttention} from '#/components/SyncStatus'
+import {SyncToneContext, useSyncTone} from '#/components/SyncTone'
 import * as Pills from '#/components/Pills'
 import * as Skeleton from '#/components/Skeleton'
 import {Text} from '#/components/Typography'
@@ -46,6 +48,7 @@ export function GroupRow({
   const formatDay = useFormatDay()
   const listAnimations = useListAnimations()
   const press = usePressScale()
+  const tone = useSyncTone(group.syncStatus)
   const {name, kind, startDate, endDate, members} = group.data
   /* A deleted group stays in the list, struck through; it opens read-only (decision 103). */
   const isDeleted = group.deleted
@@ -96,7 +99,7 @@ export function GroupRow({
         href={`/groups/${group.id}`}
         asAnchor
         anchorNoUnderline
-        accessibilityLabel={name}
+        accessibilityLabel={tone.isUnsynced ? l`${name}, not synced yet` : name}
         accessibilityHint=""
         hoverStyle={t.atoms.bg_contrast_25}
         style={[
@@ -106,8 +109,9 @@ export function GroupRow({
           t.atoms.border_contrast_low,
           a.transition_color,
         ]}>
+        <SyncToneContext.Provider value={tone.isUnsynced}>
         <Animated.View
-          style={[a.flex_row, a.align_center, a.gap_md, press.style]}>
+          style={[a.flex_row, a.align_center, a.gap_md, press.style, tone.fade]}>
           <GroupAvatar kind={kind} name={name} size={AVATAR_SIZE} />
           <View style={[a.flex_1, a.gap_2xs]}>
             <View style={[a.flex_row, a.align_center, a.gap_sm]}>
@@ -132,6 +136,7 @@ export function GroupRow({
                   <Trans>Hidden</Trans>
                 </Pills.Tag>
               )}
+              <NeedsAttention status={group.syncStatus} testID={`group-${group.id}-sync`} />
             </View>
             {/* Two lines at most, so a trip's dates are never cut off by the balance beside them. */}
             <Text
@@ -143,6 +148,7 @@ export function GroupRow({
           </View>
           {balanceView}
         </Animated.View>
+        </SyncToneContext.Provider>
       </Link>
   )
 

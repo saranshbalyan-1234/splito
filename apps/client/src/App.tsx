@@ -38,8 +38,8 @@ function Themed() {
               <PwaHost />
               <RemindHost />
               <Shell />
+              <ToastOutlet />
             </StoreProvider>
-            <ToastOutlet />
           </ShellStateProvider>
         </DialogStateProvider>
       </PortalProvider>

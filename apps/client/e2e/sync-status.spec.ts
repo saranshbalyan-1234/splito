@@ -1,10 +1,11 @@
-import {expect, type Page, test} from '@playwright/test'
+import {expect, type Locator, type Page, test} from '@playwright/test'
 
 /*
- * F-117: every row carries its own sync state (ARCHITECTURE 9.8), shown as a
- * small dot on rows and in words on detail pages, in the avatar dot's colours.
- * With no backend nothing is ever "Synced": a queued row says it is saved on
- * this device, and the dot is red.
+ * F-117 / F-244: every row carries its own sync state (ARCHITECTURE 9.8). An
+ * unsynced row (local, pending, syncing) is drawn in text_contrast_medium and
+ * fades to full strength when the server acknowledges; a refused one keeps full
+ * strength and says "Needs attention". Detail pages say it in words. With no
+ * backend nothing is ever "Synced".
  */
 type Splito = {
   me: string
@@ -47,17 +48,24 @@ async function seed(page: Page) {
   })
 }
 
-test('rows and detail pages say a queued row is saved on this device, never synced', async ({page}) => {
+/** The computed colour of the first text with this content inside a row. */
+const colourOf = (row: Locator, text: string) => row.getByText(text, {exact: true}).first().evaluate(el => getComputedStyle(el).color)
+const MEDIUM_LIGHT = 'rgb(64, 81, 104)' // text_contrast_medium in the light theme (#405168)
+
+test('an unsynced row draws its title lighter and says "not synced yet"; the words live on the detail page', async ({page}) => {
   const {friend, expense, payment} = await seed(page)
   await page.goto(`/people/${friend}`)
-  const dot = page.getByTestId(`sync-${expense}`)
-  await expect(dot).toBeVisible()
-  await expect(dot).toHaveAttribute('aria-label', 'Saved on this device')
-  await expect(page.getByTestId(`sync-${payment}`)).toHaveAttribute('aria-label', 'Saved on this device')
+  const row = page.getByTestId(`history-${expense}`)
+  await expect(row).toBeVisible()
+  expect(await colourOf(row, 'Concert')).toBe(MEDIUM_LIGHT)
+  await expect(row).toHaveAttribute('aria-label', /not synced yet/i)
+  await expect(page.getByTestId(`history-${payment}`)).toHaveAttribute('aria-label', /not synced yet/i)
+  // No per-row marker any more (decision 111); the avatar dot stays the aggregate.
+  await expect(page.getByTestId(`sync-${expense}`)).toHaveCount(0)
 
-  // The expense page: the marker in words beside the date, and the same state in the history footer.
-  await page.getByTestId(`history-${expense}`).click()
-  await expect(page.getByTestId('expense-sync-chip-label')).toHaveText('Saved on this device')
+  // The expense page: one line in words (the history footer), no dot, no second chip.
+  await row.click()
+  await expect(page.getByTestId('expense-sync-chip')).toHaveCount(0)
   await expect(page.getByTestId('expense-sync-status')).toContainText('Saved on this device')
 
   // The payment's details.
@@ -66,27 +74,35 @@ test('rows and detail pages say a queued row is saved on this device, never sync
   await expect(page.getByTestId('payment-sync-status-label')).toHaveText('Saved on this device')
 })
 
-test('a sending row is yellow, a refused one is written out; even an acknowledged row is not called synced without an account', async ({page}) => {
+test('an acknowledged row fades to full strength; a refused one keeps it and says Needs attention', async ({page}) => {
   const {friend, expense} = await seed(page)
   await page.goto(`/people/${friend}`)
-  const dot = page.getByTestId(`sync-${expense}`)
+  const row = page.getByTestId(`history-${expense}`)
+  expect(await colourOf(row, 'Concert')).toBe(MEDIUM_LIGHT)
   await page.evaluate(id => (window as unknown as {splito: Splito}).splito.setOpState(id, 'sending'), expense)
-  // No account yet: the engine would never run, but the state is still shown as what it is.
-  await expect(dot).toHaveAttribute('aria-label', 'Syncing')
+  // Syncing is still lighter.
+  expect(await colourOf(row, 'Concert')).toBe(MEDIUM_LIGHT)
   await page.evaluate(id => (window as unknown as {splito: Splito}).splito.setOpState(id, 'failed', 'Refused'), expense)
-  await expect(page.getByTestId(`history-${expense}`)).toContainText('Needs attention')
+  await expect(page.getByTestId(`sync-${expense}`)).toHaveText('Needs attention')
+  await expect.poll(() => colourOf(row, 'Concert')).not.toBe(MEDIUM_LIGHT)
+  await page.evaluate(id => (window as unknown as {splito: Splito}).splito.setOpState(id, 'sending'), expense)
+  await expect.poll(() => colourOf(row, 'Concert')).toBe(MEDIUM_LIGHT)
   await page.evaluate(id => (window as unknown as {splito: Splito}).splito.setOpState(id, 'acked'), expense)
-  await expect(dot).toHaveAttribute('aria-label', 'Saved on this device')
+  await expect.poll(() => colourOf(row, 'Concert')).not.toBe(MEDIUM_LIGHT)
+  await expect(page.getByTestId(`sync-${expense}`)).toHaveCount(0)
+  await expect(row).not.toHaveAttribute('aria-label', /not synced yet/i)
 })
 
-test('Settings > Sync status hides the routine dots; detail pages still say it', async ({page}) => {
-  const {friend, expense} = await seed(page)
-  await page.goto(`/people/${friend}`)
-  await expect(page.getByTestId(`sync-${expense}`)).toBeVisible()
-  await page.evaluate(() => (window as unknown as {splito: Splito}).splito.setPref('showSyncStatus', false))
-  await expect(page.getByTestId(`sync-${expense}`)).toHaveCount(0)
-  await page.getByTestId(`history-${expense}`).click()
-  await expect(page.getByTestId('expense-sync-chip-label')).toHaveText('Saved on this device')
+test('a Home row is lighter while its friend record is unsynced and full strength once acknowledged', async ({page}) => {
+  await seed(page)
+  const lena = await page.evaluate(() => (window as unknown as {splito: Splito}).splito.createPerson('Lone Lena'))
+  await page.goto('/')
+  const row = page.getByTestId('person-Lone Lena')
+  await expect(row).toBeVisible()
+  expect(await colourOf(row, 'Lone Lena')).toBe(MEDIUM_LIGHT)
+  await expect(row).toHaveAttribute('aria-label', /not synced yet/i)
+  await page.evaluate(id => (window as unknown as {splito: Splito}).splito.setOpState(id, 'acked'), lena)
+  await expect.poll(() => colourOf(row, 'Lone Lena')).not.toBe(MEDIUM_LIGHT)
 })
 
 test('the marker holds at phone and desktop widths without overflow', async ({page}) => {

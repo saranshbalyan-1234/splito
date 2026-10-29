@@ -569,6 +569,9 @@ with every hot screen reading by index, never by full scan (§ 17 budgets, F-109
   title, amount and meta in the lighter `text_contrast_medium` tokens (never below WCAG AA: 4.5:1 body, 3:1
   large), so synced data reads full strength and unsynced data visibly lighter; the change animates (fade to full
   strength) when the server acknowledges. `failed` keeps full strength plus the "Needs attention" marker (§ 9.5).
+  [Built, F-244] `Text` reads `SyncToneContext` and swaps its default colour for `text_contrast_medium`; explicit colours
+  (money direction, errors) are kept, so a balance keeps its hue while its title reads lighter. Rows get the status in
+  their view-model (no per-row subscription); the Settings > Sync status switch is gone with the dot.
   No per-row coloured dot; the avatar dot (§ 26.7) stays the aggregate. Accessibility label adds "Not synced yet".
   Until the backend exists every record is `local`, so the whole app reads in the lighter style, which is the
   honest state. *Why:* "until the data is synced, keep that unsynced data a little light, so we know this is not
@@ -1688,8 +1691,12 @@ expands once I click". *Where:* `screens/People`, `screens/Groups`, `screens/Gro
     Groups made before roles existed treat their creator as admin. Server enforcement follows with F-2108. The old `archived` flag reads as Inactive (read-time adapter, no schema change).
   *Why:* "add archive group option as well, when archived it stops showing in main view and no expense can be
   added", then "or make it as active inactive and hide show instead of archive".
-- **Settled is hidden by default; every choice is remembered in the database** (owner 90; not built yet,
-  BACKLOG F-1413). Friends and groups that are fully settled (every currency at zero) are hidden from the Home /
+- **Settled is hidden by default; every choice is remembered in the database** (owner 90; the Show settled part and
+  the saved Sort / Include groups / groups Sort are [Built], F-1413; the rest of the list state is not yet).
+  "Settled" means there have been balances and every part is zero now: a friend or group with no records yet is new, not
+  settled, and is never hidden. Hidden settled rows still count in the counts line, the Overview and the totals. The
+  Show = Settled filter and search still find them. Apply on the Home filter sheet also saves `peopleSort` and
+  `includeGroupsDefault` (owner 128: the Settings rows that set them are removed), and on the Groups sheet `groups.sort`. Friends and groups that are fully settled (every currency at zero) are hidden from the Home /
   People and Groups lists by default; each filter sheet gets a "Show settled" switch (default off) and the
   counts line keeps saying "N settled" so nothing looks lost. Balances and totals are unaffected. Every choice a
   user makes (filters, sorts, Show settled, Include groups, currency, scope chips, tab choices) is stored in the

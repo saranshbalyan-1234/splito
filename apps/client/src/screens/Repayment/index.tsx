@@ -46,6 +46,7 @@ import {ReceiptIcon} from '#/components/split/icons'
 import * as Toast from '#/components/Toast'
 import {Text} from '#/components/Typography'
 import {SyncStatusLine} from '#/components/SyncStatus'
+import {SyncToned} from '#/components/SyncTone'
 
 /**
  * One recorded payment: who paid whom, how much, when and where, and the
@@ -293,7 +294,7 @@ function Detail({
           <View style={[a.flex_1, {flexGrow: 3, flexBasis: 0, minWidth: 0}]}>
             <Layout.Content contentContainerStyle={[a.pb_5xl]}>
               {deletedBanner}
-              {hero}
+              <SyncToned status={payment.syncStatus}>{hero}</SyncToned>
             </Layout.Content>
           </View>
           <View
@@ -317,7 +318,7 @@ function Detail({
         <>
           <Layout.Content ref={page} contentContainerStyle={[a.pb_5xl]}>
             {deletedBanner}
-            {hero}
+            <SyncToned status={payment.syncStatus}>{hero}</SyncToned>
             {discussion}
           </Layout.Content>
           <DiscussionComposer />

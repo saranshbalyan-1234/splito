@@ -1,4 +1,4 @@
-import {type Entity, isRemovedFriend, type Person} from '@splito/sync'
+import {type Entity, isRemovedFriend, type Person, type RowSyncStatus} from '@splito/sync'
 import {
   balanceSides,
   isSettledBalance,
@@ -12,7 +12,7 @@ import {
 export type FriendRow = {id: string; name: string; summary?: PersonSummary; isRemoved?: boolean}
 
 /** A friend as Home lists it: also a deleted one (struck, `deletedAt`) and whether I hid it. */
-export type ListedFriend = Omit<FriendRow, 'summary'> & {summary: PersonSummary | undefined; deletedAt?: number; isHidden?: boolean}
+export type ListedFriend = Omit<FriendRow, 'summary'> & {summary: PersonSummary | undefined; deletedAt?: number; isHidden?: boolean; syncStatus?: RowSyncStatus}
 
 /**
  * The friends Home lists: everyone but me and removed friends, plus a removed
@@ -36,6 +36,7 @@ export function listedFriends(
         summary,
         deletedAt: p.deleted ? p.updatedAt : undefined,
         isHidden: p.deleted && hiddenIds.has(p.id),
+        syncStatus: p.syncStatus,
         ...(isRemoved ? {isRemoved} : {}),
       },
     ]
@@ -71,6 +72,28 @@ export function sortFriends<T extends FriendRow>(
     }
     return byName(x, y)
   })
+}
+
+/**
+ * Settled up (decision 90, 112): nothing is open and there have been records (`seen`: the currencies they
+ * were in, settled ones too). A friend with no records yet is new, not settled, so adding one never makes them vanish.
+ */
+export function isSettledUp(summary: PersonSummary | undefined, seen: ReadonlySet<string> | undefined): boolean {
+  const open = Object.values(summary?.byCurrency ?? {})
+  return open.every(isSettledBalance) && (open.length > 0 || (seen?.size ?? 0) > 0)
+}
+
+/**
+ * The list without friends who are settled up, unless "Show settled" is on or the Show filter asks for
+ * Settled. Only the list: totals and the counts line are computed before this, so no balance changes.
+ */
+export function hideSettled<T extends {id: string; summary?: PersonSummary; deletedAt?: number}>(
+  rows: T[],
+  {showSettled, show}: {showSettled: boolean; show: FriendFilter['show']},
+  seen?: ReadonlyMap<string, ReadonlySet<string>>,
+): T[] {
+  if (showSettled || show === 'settled') return rows
+  return rows.filter(row => row.deletedAt !== undefined || !isSettledUp(row.summary, seen?.get(row.id)))
 }
 
 /** What the People filter keeps: one currency or all, and which way the balance goes. */

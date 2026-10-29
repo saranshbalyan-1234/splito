@@ -1,8 +1,10 @@
 // Adapted from bluesky-social/social-app@4e4ad9c (MIT) — src/components/Typography.tsx
+import {useContext} from 'react'
 import {UITextView} from '@bsky.app/react-native-uitextview'
 
 import {logger} from '#/logger'
 import {atoms as a, type TextStyleProp, useAlf, useTheme, web} from '#/alf'
+import {SyncToneContext} from '#/alf/syncTone'
 import {
   childHasEmoji,
   normalizeTextStyles,
@@ -29,10 +31,11 @@ export function Text({
 }: TextProps) {
   const {fonts, flags} = useAlf()
   const t = useTheme()
+  const isUnsynced = useContext(SyncToneContext)
   const s = normalizeTextStyles(
     [
       a.text_sm,
-      t.atoms.text,
+      isUnsynced ? t.atoms.text_contrast_medium : t.atoms.text,
       a.leading_snug,
       web(numberOfLines === 1 && numberOfLinesClippingFix),
       style,

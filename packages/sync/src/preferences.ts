@@ -232,8 +232,11 @@ export const PREFS = {
   'lists.hiddenItems': def<string[]>('lists.hiddenItems', 'lists', 'account', 'Hidden deleted items', [], (v): v is string[] => Array.isArray(v) && v.length <= 5000 && v.every(isString) && new Set(v).size === v.length),
   /** The one "Show hidden" filter of People, Groups, a group's Expenses and a person's history (decision 105): off, hidden deleted items and hidden groups stay out of the lists. */
   'lists.showHidden': def('lists.showHidden', 'lists', 'account', 'Show hidden', false, isBool),
-  /** The small sync dot on expense, payment and request rows (ARCHITECTURE 9.8); detail pages always say it in words. */
-  showSyncStatus: def('showSyncStatus', 'lists', 'device', 'Show sync status on rows', true, isBool),
+  /** F-1413 (owner 90, 112): fully settled friends / groups are hidden from Home and Groups unless this is on. Set from each filter sheet's "Show settled". */
+  'people.showSettled': def('people.showSettled', 'lists', 'account', 'Show settled friends', false, isBool),
+  /** The Groups filter's sort, saved on Apply so it survives a reload (owner 128, decision 90). */
+  'groups.sort': def('groups.sort', 'lists', 'account', 'Sort groups by', 'recent', oneOf('recent', 'name', 'amount')),
+  'groups.showSettled': def('groups.showSettled', 'lists', 'account', 'Show settled groups', false, isBool),
   swipeLeft: def<SwipeAction>('swipeLeft', 'lists', 'account', 'Swipe left', 'delete', oneOf('markRead', 'hide', 'delete', 'none')),
   swipeRight: def<SwipeAction>('swipeRight', 'lists', 'account', 'Swipe right', 'markRead', oneOf('markRead', 'hide', 'delete', 'none')),
   /** Search keeps your last searches on this device only, like Bluesky's history. */
