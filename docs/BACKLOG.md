@@ -494,6 +494,7 @@ Nothing of the app is visible signed out: only the welcome tour, the logged-out 
   5. Offline after sign-in the app opens and works; sign-in offline says it needs a connection.
   6. Dev/e2e builds show "Continue with a dev account" (labelled, local); production builds have no such path and the release script refuses to build without the auth API URL; e2e signs in through `window.__splitoTest.signIn`.
   7. Data already on the device before this change is offered once: "Move this device's data into your account" (F-2104).
+  9. Create account requires name, email, phone and password, both email and phone verified by code; an account missing either (Google/Apple, older accounts) gets a blocking "Add your phone number" / "Add your email" step after sign-in, with only Log out besides (owner 139).
   8. Splash, Sign in and Create account show "Continue with Apple" and "Continue with Google" (owner 138; Apple first on iOS, Google first on Android/web, platform button styles); until F-2102 they say it arrives with sync, no fake success.
 
 ### F-249 Welcome tour and first-use tips `spec: owner § 26.2 (decision 123)`
@@ -3651,6 +3652,7 @@ Email OTP, mobile OTP, Google and Apple; refresh and revoke; OTP throttling; sec
   1. A15: session expiry and revoke verified; OTP throttled.
   2. No secrets in the client bundle or logs.
   3. Google (Google Sign-In native, Google Identity Services web) and Apple (expo-apple-authentication native, Sign in with Apple JS web) work on iOS, Android and web; the server verifies ID tokens, links by verified email only, supports Apple's hidden relay email, and new social accounts go through setup (owner 138).
+  3c. Sign-up requires both email and phone, each verified by OTP; the API refuses to finish an account without both and returns `CONTACT_REQUIRED` with which one is missing, used by the blocking step (owner 139).
   3b. One account can add and remove sign-in methods (email, phone, Google, Apple) and change its email or phone; the last method cannot be removed.
   4. Signed in, Settings > Account shows an account row (avatar, name, email/phone, sync status) and a destructive "Log out" row opening "Log out?", which warns when the outbox holds unsynced changes ("N changes haven't synced yet") and offers "Keep this device's data" / "Erase this device's data"; logout never silently deletes unsynced outbox rows (§ 26.15).
 

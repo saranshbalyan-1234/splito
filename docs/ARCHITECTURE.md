@@ -1874,6 +1874,15 @@ built yet.
   support address, `FEEDBACK_EMAIL`, a release-checklist item); once the backend exists it goes through the
   outbox. No shake-to-send preference (removed by F-251, owner 128).
 
+- **Every account has both an email and a phone number, both verified** (owner 139; F-250 UI, F-2102 server).
+  Create account asks for name, email, phone (E.164, region default) and password; both email and phone are
+  required and each is confirmed with a one-time code before the account is usable. Sign-in still accepts either
+  one. Any signed-in account missing one of them (signed up with Google or Apple, which give only an email, or an
+  older email-only or phone-only account) sees a blocking "Add your phone number" (or "Add your email") step right
+  after sign-in, before Home or setup: enter, verify with a code, continue; it cannot be skipped, and the only
+  other action is Log out. Offline the step says it needs a connection. The directory lookup (§ 26.18) uses both.
+  *Why:* "on signup, make email and phone both mandatory; if logged in via email only and no phone is there, ask
+  to update phone first".
 - **Sign in with Google and Apple** (owner 138; UI with F-250 in Wave C, real with F-2102). The splash, Sign
   in and Create account screens offer "Continue with Apple" and "Continue with Google" above the email or phone
   option, on every platform (Apple first on iOS, Google first on Android and web; the platforms' own button
@@ -2320,6 +2329,7 @@ Every owner decision, in the order it was made (all 2026-10-26). "Replaced" name
 | 136 | "and remove when demo mode is switched off" | Switching demo off erases the demo database and demo-scoped keys; on again starts fresh; no Reset demo | § 26.1 | Demo DB kept between sessions; Reset demo |
 | 137 | "we need to add push notifications as well" | Real push on iOS (APNs), Android (FCM) and web (Web Push in the PWA), following the Notifications switches; privacy-aware text; opens the exact screen; permission only from a tap; first backend batch | § 26.20 | Push planned without platform detail (F-2201) |
 | 138 | "on login, signin with google and apple as well" | "Continue with Apple" and "Continue with Google" on splash, Sign in and Create account, every platform; server verifies tokens, links by verified email | § 26.15 | Email/phone only on the sign-in screens |
+| 139 | "on signup, make email and phone both mandatory; if logged in via email only and no phone is there ask to update phone first" | Sign-up requires email and phone, both verified by code; any account missing one gets a blocking add-and-verify step after sign-in (only Log out besides) | § 26.15 | Sign-up with email or phone (one field) |
 
 New decisions follow § 0 rule 9: rewrite the rule in its topic so only the current truth remains, then add a
 row here.
