@@ -665,7 +665,8 @@ function CashRoundingNote({
   const t = useTheme()
   const {t: l} = useLingui()
   const cash = cashSplit(total, split)
-  if (!cash || !('roundTo' in split) || split.roundTo === undefined) return null
+  if (!cash || cash.isExact || !('roundTo' in split) || split.roundTo === undefined)
+    return null
   const unit = cashUnitText(currency, cashUnitWhole(currency, split.roundTo))
   return (
     <Text

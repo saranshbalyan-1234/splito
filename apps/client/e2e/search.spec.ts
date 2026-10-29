@@ -1,4 +1,5 @@
 import {expect, type Page, test} from '@playwright/test'
+import {getCurrency} from '@splito/domain'
 
 import {DEMO_EXPENSES} from '../src/data/demoData'
 
@@ -48,8 +49,10 @@ test('the header button opens the drawer; "dinner" finds titles and notes, with 
 
 test('amount and date queries', async ({page}) => {
   const screen = await openSearch(page)
-  // Two deleted demo expenses (Sunset cruise, Takeout pizza) are over 1000 too: listed, struck, never in the totals.
-  const over1000 = DEMO_EXPENSES.filter(e => e.total > 100000n).length + 2
+  /* Over 1000 in major units of its own currency (yen has no minor unit, dinar has three). Two deleted demo expenses
+   (Sunset cruise, Takeout pizza) are over 1000 too: listed, struck, never in the totals. */
+  const over1000 =
+    DEMO_EXPENSES.filter(e => e.total > 1000n * 10n ** BigInt(getCurrency(e.currency).scale)).length + 2
   await page.getByTestId('search-input').fill('> 1000')
   await expect(screen.getByTestId('search-section-expenses')).toContainText(
     String(over1000),
@@ -64,7 +67,11 @@ test('amount and date queries', async ({page}) => {
   await expect(screen.getByTestId('search-row-1')).toHaveCount(0)
 
   await page.getByTestId('search-input').fill('march')
+  // Newest first: the March 20 ramen, then the March 8 concert.
   await expect(screen.getByTestId('search-row-0')).toContainText(
+    'Ramen in Shibuya',
+  )
+  await expect(screen.getByTestId('search-row-1')).toContainText(
     'Concert tickets',
   )
 
@@ -130,9 +137,14 @@ test('Ctrl+K toggles the drawer from anywhere and "/" opens it; the button toolt
 }) => {
   await page.goto('/groups?demo=1')
   await expect(page.getByTestId('group-Lisbon')).toBeVisible()
-  const button = page.getByTestId('screen-groups').getByTestId('header-search-ask')
+  const button = page
+    .getByTestId('screen-groups')
+    .getByTestId('header-search-ask')
   await expect(button).toBeVisible()
-  await expect(button.locator('xpath=ancestor::*[@title][1]')).toHaveAttribute('title', /Search or ask Splito \((⌘K|Ctrl K)\)/)
+  await expect(button.locator('xpath=ancestor::*[@title][1]')).toHaveAttribute(
+    'title',
+    /Search or ask Splito \((⌘K|Ctrl K)\)/,
+  )
   await page.keyboard.press('Control+k')
   await expect(page.getByTestId('search-ask')).toBeVisible()
   await expect(page.getByTestId('search-ask-shortcut')).toHaveText(/⌘K|Ctrl K/)
@@ -192,11 +204,23 @@ test.describe('phone', () => {
 })
 
 test.describe('a broad query pages: the first page at once, the totals after, more by cursor', () => {
-  test('600 matches show 30 rows, "Calculating totals…" then the count and totals, and Show more adds a page', async ({page}) => {
+  test('600 matches show 30 rows, "Calculating totals…" then the count and totals, and Show more adds a page', async ({
+    page,
+  }) => {
     await page.goto('/')
     await page.waitForFunction(() => 'splito' in window)
     await page.evaluate(() =>
-      (window as unknown as {splito: {seedBulk(i: {friends: number; groups: number; expenses: number}): Promise<number>}}).splito.seedBulk({friends: 20, groups: 5, expenses: 600}),
+      (
+        window as unknown as {
+          splito: {
+            seedBulk(i: {
+              friends: number
+              groups: number
+              expenses: number
+            }): Promise<number>
+          }
+        }
+      ).splito.seedBulk({friends: 20, groups: 5, expenses: 600}),
     )
     await page.reload()
     await page.getByTestId('header-search-ask').last().click()
@@ -210,9 +234,13 @@ test.describe('a broad query pages: the first page at once, the totals after, mo
     expect(shown).toBeLessThan(80)
     await expect(screen.getByTestId('search-show-more')).toBeVisible()
     // Totals fill in after it: the heading's count becomes the real one, with one total per currency.
-    await expect(screen.getByTestId('search-totals')).toBeVisible({timeout: 30_000})
+    await expect(screen.getByTestId('search-totals')).toBeVisible({
+      timeout: 30_000,
+    })
     await expect(screen.getByTestId('search-totals-pending')).toHaveCount(0)
-    await expect(screen.getByTestId('search-section-expenses')).toContainText('600')
+    await expect(screen.getByTestId('search-section-expenses')).toContainText(
+      '600',
+    )
     const before = await rows.count()
     await screen.getByTestId('search-show-more').click()
     await expect.poll(() => rows.count()).toBeGreaterThan(before)

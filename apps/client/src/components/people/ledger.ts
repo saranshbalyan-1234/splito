@@ -84,6 +84,23 @@ export function effectInGroup(
 
 export {balanceParts, partsOwedBy} from '@splito/domain'
 
+/**
+ * The currencies Record payment lists up front and the one it starts on: the
+ * open ones (the default first when it is open), or just the default when the
+ * pair is settled. Any other currency stays reachable from the dialog (audit M8).
+ */
+export function paymentCurrencies(
+  open: string[],
+  defaultCurrency: string | undefined,
+): {currencies: string[]; initial: string} {
+  const fallback = defaultCurrency ?? 'INR'
+  if (open.length === 0) return {currencies: [fallback], initial: fallback}
+  return {
+    currencies: open,
+    initial: open.includes(fallback) ? fallback : open[0]!,
+  }
+}
+
 /** A local `YYYY-MM-DD` (or `YYYY-MM`) at UTC midnight, so formatting never shifts the day. */
 export function utcDate(d: string) {
   return new Date(`${d.length === 7 ? `${d}-01` : d}T00:00:00Z`)

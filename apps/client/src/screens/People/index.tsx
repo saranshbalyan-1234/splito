@@ -15,6 +15,7 @@ import {useNumberLocale} from '#/locale/numberLocale'
 import {
   useAllEntities,
   useBalanceRows,
+  useSeenCurrencies,
   useEntities,
   useLastActivity,
   useMe,
@@ -48,7 +49,7 @@ import {
 } from './components/FriendsFilterDialog'
 import {RequestsSection} from './components/RequestsSection'
 import {SectionHeader} from './components/SectionHeader'
-import {filterFriends, sortFriends} from './sort'
+import {filterFriends, seenByPerson, sortFriends} from './sort'
 
 const PLACEHOLDER_ROWS = 6
 
@@ -71,6 +72,7 @@ export function PeopleScreen() {
   const people = useAllEntities<Person>('person')
   const groups = useEntities<Group>('group')
   const balanceRows = useBalanceRows()
+  const seen = useSeenCurrencies()
   const [sortDefault = 'amount'] = usePref('peopleSort')
   const [currency = 'INR'] = usePref('defaultCurrency')
   const [includeDefault] = usePref('includeGroupsDefault')
@@ -112,11 +114,16 @@ export function PeopleScreen() {
       deletedAt: p.deleted ? p.updatedAt : undefined,
       isHidden: p.deleted && hiddenIds.has(p.id),
     }))
+  /* Settled currencies stay on offer and filterable (audit m3). */
+  const seenCurrencies = seenByPerson(seen?.people ?? {}, includeGroups)
   const currencies = [
-    ...new Set(summaries.flatMap(s => Object.keys(s.byCurrency))),
+    ...new Set([
+      ...summaries.flatMap(s => Object.keys(s.byCurrency)),
+      ...friends.flatMap(f => [...(seenCurrencies.get(f.id) ?? [])]),
+    ]),
   ].sort()
   const listed: PersonRowData[] = sortFriends(
-    filterFriends(friends, filters).filter(f => showHidden || !f.isHidden),
+    filterFriends(friends, filters, seenCurrencies).filter(f => showHidden || !f.isHidden),
     sort,
     {
       currency: filters.currency === 'all' ? currency : filters.currency,

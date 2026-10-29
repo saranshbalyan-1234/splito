@@ -2,7 +2,7 @@
 import {useMemo} from 'react'
 import {View} from 'react-native'
 import {utils} from '@bsky.app/alf'
-import {formatAmountCompact, magnitude, personNet, repaymentFlow, ZERO} from '@splito/domain'
+import {formatAmount, magnitude, personNet, repaymentFlow, ZERO} from '@splito/domain'
 import {Trans, useLingui} from '@lingui/react/macro'
 
 import {useNumberLocale} from '#/locale/numberLocale'
@@ -133,7 +133,7 @@ export function RecentTransactions() {
                   },
                 ]}>
                 {(positive ? '+' : '−') +
-                  formatAmountCompact(magnitude(row.net), row.currency, locale)}
+                  formatAmount(magnitude(row.net), row.currency, locale)}
               </Text>
             )}
           </Link>

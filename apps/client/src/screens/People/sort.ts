@@ -3,6 +3,7 @@ import {
   isSettledBalance,
   magnitude,
   type PersonSummary,
+  SETTLED_BALANCE,
   ZERO,
 } from '@splito/domain'
 
@@ -51,18 +52,28 @@ export type FriendFilter = {
  * that currency, so the rows and the totals above them show only it.
  * `owesYou` / `youOwe` keep a friend with any balance that way (a friend can
  * be both, in different currencies, or directly and in a group); `settled`
- * keeps those with every part zero.
+ * keeps those with every part zero. `seen` lists each friend's currencies
+ * that are square now: a settled currency still filters, and shows as zero
+ * (audit m3).
  */
 export function filterFriends<T extends FriendRow>(
   rows: T[],
   {currency, show}: FriendFilter,
+  seen?: ReadonlyMap<string, ReadonlySet<string>>,
 ): T[] {
   return rows.flatMap(row => {
     const all = row.summary?.byCurrency ?? {}
     let summary = row.summary
     if (currency !== 'all') {
-      if (!all[currency]) return []
-      summary = {...row.summary!, byCurrency: {[currency]: all[currency]}}
+      const balance =
+        all[currency] ??
+        (seen?.get(row.id)?.has(currency) ? SETTLED_BALANCE : undefined)
+      if (!balance) return []
+      summary = {
+        person: row.id,
+        ...row.summary,
+        byCurrency: {[currency]: balance},
+      }
     }
     // Each way part by part, never netted across direct and groups (audit M10).
     const sides = Object.values(summary?.byCurrency ?? {}).map(balanceSides)
@@ -74,4 +85,25 @@ export function filterFriends<T extends FriendRow>(
         sides.every(v => v.owed === ZERO && v.owe === ZERO))
     return keep ? [{...row, summary}] : []
   })
+}
+
+/**
+ * Each friend's settled-or-open currencies as the filter reads them. With
+ * Include groups off, a currency a friend only has in groups is left out, so
+ * it is neither offered nor matched (audit m3).
+ */
+export function seenByPerson(
+  seen: Record<string, {currency: string; groupId: string | null}[]>,
+  includeGroups: boolean,
+): Map<string, Set<string>> {
+  return new Map(
+    Object.entries(seen).map(([id, entries]) => [
+      id,
+      new Set(
+        entries
+          .filter(e => includeGroups || e.groupId === null)
+          .map(e => e.currency),
+      ),
+    ]),
+  )
 }

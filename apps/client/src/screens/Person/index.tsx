@@ -73,6 +73,7 @@ import {
   effectWithPerson,
   type HistoryItem,
   partsOwedBy,
+  paymentCurrencies,
   withMonths,
 } from '#/components/people/ledger'
 import {PaymentDetailsDialog} from '#/components/people/PaymentDetailsDialog'
@@ -220,9 +221,11 @@ export function PersonScreen() {
   // What I owe them in rupees, if anything: the only case a UPI link helps.
   const owedInr = totals.INR && totals.INR.total < ZERO ? owedFor('INR') : null
 
+  /* Any currency can be recorded (§ 26.13); the open ones lead, the default when settled (audit M8). */
+  const payment = paymentCurrencies(openCurrencies, defaultCurrency)
   const recordPayment = (draft?: Partial<PaymentDraft>) => {
     if (!me) return
-    const currency = draft?.currency ?? openCurrencies[0] ?? 'INR'
+    const currency = draft?.currency ?? payment.initial
     const total = totals[currency]?.total ?? ZERO
     // Default direction follows the balance: whoever owes pays.
     const theyPay = total >= ZERO
@@ -565,14 +568,13 @@ export function PersonScreen() {
                 paymentDraft ?? {
                   from: personId,
                   to: me.id,
-                  currency: 'INR',
+                  currency: payment.initial,
                   amount: null,
                   groupId: null,
                 }
               }
-              currencies={
-                openCurrencies.length > 1 ? openCurrencies : undefined
-              }
+              currencies={payment.currencies}
+              canPickAnyCurrency
               suggestions={Object.fromEntries(
                 openCurrencies.map(c => [c, owedFor(c)]),
               )}

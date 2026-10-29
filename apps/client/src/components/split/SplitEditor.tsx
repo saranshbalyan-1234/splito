@@ -958,7 +958,9 @@ function CashRounding({
                 t.atoms.text_contrast_high,
                 {paddingLeft: 48, fontVariant: ['tabular-nums']},
               ]}>
-              {cash.remainder !== ZERO && cash.remainderTo === actor
+              {cash.isExact
+                ? l`The total is too small to round to ${unitText(roundTo)} for everyone, so it is split exactly. Everything adds up to ${fmt(evaluation.total!)}.`
+                : cash.remainder !== ZERO && cash.remainderTo === actor
                 ? l`${fmt(cash.remainder)} doesn’t round to ${unitText(roundTo)}, so it goes on your share. Everything still adds up to ${fmt(evaluation.total!)}.`
                 : cash.remainder !== ZERO && cash.remainderTo
                   ? l`${fmt(cash.remainder)} doesn’t round to ${unitText(roundTo)}, so it goes on ${name(cash.remainderTo)}’s share. Everything still adds up to ${fmt(evaluation.total!)}.`

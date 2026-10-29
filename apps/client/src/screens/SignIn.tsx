@@ -17,7 +17,9 @@ import {IS_WEB} from '#/env'
  *
  * Native: a pushed screen already covers the app. Web: the screen mounts the
  * flow in the shell's portal outlet, so it sits above the sidebar, header and
- * right column (their stacking contexts are siblings of the page).
+ * right column (their stacking contexts are siblings of the page). No z-index: the
+ * outlet already sits above the page, and a sheet opened from inside the flow (the
+ * language select) is mounted later, so it stacks above the flow.
  */
 export function SignInScreen() {
   const navigation = useNavigation<NavigationProp>()
@@ -26,7 +28,7 @@ export function SignInScreen() {
       testID="screen-sign-in"
       role="dialog"
       aria-modal={true}
-      style={[a.flex_1, web({position: 'fixed', inset: 0, zIndex: 1000})]}>
+      style={[a.flex_1, web({position: 'fixed', inset: 0})]}>
       <LoggedOut onDismiss={() => goBack(navigation, {name: 'People'})} />
     </View>
   )

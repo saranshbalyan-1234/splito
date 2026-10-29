@@ -1,6 +1,6 @@
 import {expect, test} from 'bun:test'
 
-import {parseTypedAmount, upiPayUrl} from './ledger'
+import {parseTypedAmount, paymentCurrencies, upiPayUrl} from './ledger'
 
 test('typed amounts: grouping ignored, decimal mark by position and scale', () => {
   expect(parseTypedAmount('1,200', 'INR', 'en-IN')).toBe(120000n)
@@ -22,4 +22,17 @@ test('UPI link: payee, name and amount in rupees, INR only', () => {
   ).toBe(
     'upi://pay?pa=riya%40okaxis&pn=Riya%20Sharma&am=1500.50&cu=INR&tn=Splito',
   )
+})
+
+test('Record payment: open currencies first, the default when settled (audit M8)', () => {
+  expect(paymentCurrencies([], 'EUR')).toEqual({
+    currencies: ['EUR'],
+    initial: 'EUR',
+  })
+  expect(paymentCurrencies([], undefined).initial).toBe('INR')
+  expect(paymentCurrencies(['EUR'], 'INR')).toEqual({
+    currencies: ['EUR'],
+    initial: 'EUR',
+  })
+  expect(paymentCurrencies(['EUR', 'INR'], 'INR').initial).toBe('INR')
 })

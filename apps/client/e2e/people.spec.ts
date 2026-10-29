@@ -235,6 +235,13 @@ test('People filters: one currency, which way, and the order drive the list and 
   await people.getByTestId('list-filters').click()
   await page.getByTestId('filter-show-settled').click()
   await page.getByTestId('sheet-save').click()
+  // Settled in euros: Sam, who still owes euros, is gone; friends square in euros stay filterable (F-112 m3).
+  await expect(people.getByTestId('person-Sam Carter')).toHaveCount(0)
+  // Nobody owes me in dinar (I owe Diego), so that filter shows the way back.
+  await people.getByTestId('list-filters').click()
+  await page.getByTestId('filter-currency-BHD').click()
+  await page.getByTestId('filter-show-owesYou').click()
+  await page.getByTestId('sheet-save').click()
   await expect(people.getByTestId('people-filtered-empty')).toBeVisible()
   await people.getByTestId('people-clear-filters').click()
   await expect(people.getByTestId('person-Arjun Mehta')).toBeVisible()

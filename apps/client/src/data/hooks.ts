@@ -53,6 +53,8 @@ import {
   lastActivityQuery,
   myGroupBalancesQuery,
   balanceRowsQuery,
+  type SeenCurrencies,
+  seenCurrenciesQuery,
   countQuery,
   partyStream,
 } from '#/data/ledgerQueries'
@@ -139,6 +141,12 @@ export function useBalanceRows(): BalanceRow[] | undefined {
 export function useMyGroupBalances(): GroupBalances | undefined {
   const {actor} = useMutationCtx()
   return useProjection(myGroupBalancesQuery(actor))
+}
+
+/** The currencies each friend and group has had with me, settled ones too: what the currency filters offer (audit m3). */
+export function useSeenCurrencies(): SeenCurrencies | undefined {
+  const {actor} = useMutationCtx()
+  return useProjection(seenCurrenciesQuery(actor))
 }
 
 /** One group's net per currency and person (no zero-fill; people with no records are absent). */

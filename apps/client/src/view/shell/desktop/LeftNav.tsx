@@ -14,7 +14,6 @@ import Animated, {
 } from 'react-native-reanimated'
 import {useSafeAreaInsets} from 'react-native-safe-area-context'
 import {
-  formatAmountCompact,
   formatAmount,
   magnitude,
   ZERO,
@@ -413,6 +412,13 @@ function ComposeBtn({minimal}: {minimal: boolean}) {
   )
 }
 
+/* A spoken list in the app language; Hermes has no Intl.ListFormat, so phones fall back to commas (ponytail: add a polyfill if a language needs its own "and"). */
+function joinList(items: string[], locale: string): string {
+  return typeof Intl.ListFormat === 'function'
+    ? new Intl.ListFormat(locale, {style: 'long', type: 'conjunction'}).format(items)
+    : items.join(', ')
+}
+
 /*
  * Bluesky's pinned-feeds list (src/view/shell/desktop/Feeds.tsx: FeedItem
  * rows and the "More feeds" link) as the five most recently active groups,
@@ -420,7 +426,7 @@ function ComposeBtn({minimal}: {minimal: boolean}) {
  */
 export function RecentGroups() {
   const t = useTheme()
-  const {t: l} = useLingui()
+  const {t: l, i18n} = useLingui()
   const locale = useNumberLocale()
   const me = useMe()
   const groups = useEntities<Group>('group')
@@ -471,12 +477,19 @@ export function RecentGroups() {
       </Text>
       {recent.map(group => {
         const current = group.id === openGroupId
-        const currency = Object.keys(group.balances)
+        /* One chip per open currency, never added together (§ 26.13, audit M12). */
+        const open = Object.keys(group.balances)
           .sort()
-          .find(c => group.balances[c] !== ZERO)
-        const amount = currency ? group.balances[currency]! : ZERO
-        const color =
-          amount > ZERO ? t.palette.positive_600 : t.palette.negative_500
+          .filter(c => group.balances[c] !== ZERO)
+        const spoken = open
+          .map(c => {
+            const amount = group.balances[c]!
+            return amount > ZERO
+              ? l`you are owed ${formatAmount(amount, c, locale)}`
+              : l`you owe ${formatAmount(magnitude(amount), c, locale)}`
+          })
+        // Joined in the app language ("you owe €7.00 and you are owed ₹63,000.00").
+        const spokenList = joinList(spoken, i18n.locale)
         return (
           <Link
             key={group.id}
@@ -485,10 +498,8 @@ export function RecentGroups() {
             asAnchor
             anchorNoUnderline
             accessibilityLabel={
-              currency
-                ? amount > ZERO
-                  ? l`${group.name}, you are owed ${formatAmount(amount, currency, locale)}`
-                  : l`${group.name}, you owe ${formatAmount(magnitude(amount), currency, locale)}`
+              open.length > 0
+                ? l`${group.name}, ${spokenList}`
                 : l`${group.name}, settled up`
             }
             accessibilityHint=""
@@ -515,28 +526,42 @@ export function RecentGroups() {
               ]}>
               {group.name}
             </Text>
-            {currency ? (
-              <Text
+            {open.length > 0 ? (
+              <View
                 testID={`sidebar-group-balance-${group.name}`}
-                numberOfLines={1}
-                style={[
-                  a.text_xs,
-                  a.font_semi_bold,
-                  a.rounded_full,
-                  {
-                    color,
-                    backgroundColor: utils.alpha(
-                      color,
-                      t.scheme === 'light' ? 0.1 : 0.18,
-                    ),
-                    paddingHorizontal: 6,
-                    paddingVertical: 2,
-                    fontVariant: ['tabular-nums'],
-                  },
-                ]}>
-                {(amount > ZERO ? '+' : '−') +
-                  formatAmountCompact(magnitude(amount), currency, locale)}
-              </Text>
+                style={[a.align_end, a.flex_shrink_0, {gap: 2}]}>
+                {open.map(currency => {
+                  const amount = group.balances[currency]!
+                  const color =
+                    amount > ZERO
+                      ? t.palette.positive_600
+                      : t.palette.negative_500
+                  return (
+                    <Text
+                      key={currency}
+                      testID={`sidebar-group-balance-${group.name}-${currency}`}
+                      numberOfLines={1}
+                      style={[
+                        a.text_xs,
+                        a.font_semi_bold,
+                        a.rounded_full,
+                        {
+                          color,
+                          backgroundColor: utils.alpha(
+                            color,
+                            t.scheme === 'light' ? 0.1 : 0.18,
+                          ),
+                          paddingHorizontal: 6,
+                          paddingVertical: 2,
+                          fontVariant: ['tabular-nums'],
+                        },
+                      ]}>
+                      {(amount > ZERO ? '+' : '−') +
+                        formatAmount(magnitude(amount), currency, locale)}
+                    </Text>
+                  )
+                })}
+              </View>
             ) : (
               <Text
                 style={[

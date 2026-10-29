@@ -9,7 +9,8 @@ import {type NativeStackNavigationProp} from '@react-navigation/native-stack'
 export type TabParams = {
   People: undefined
   Groups: undefined
-  Analytics: undefined
+  /** `currency` opens the report in that currency (`/analytics?currency=EUR`, an Overview card). */
+  Analytics: {currency?: string} | undefined
   Activity: undefined
 }
 

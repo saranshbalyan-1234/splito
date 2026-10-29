@@ -21,6 +21,7 @@ import {
   useGroupActivity,
   useMe,
   useMyGroupBalances,
+  useSeenCurrencies,
   usePref,
 } from '#/data/hooks'
 import {EmptyState} from '#/view/com/util/EmptyState'
@@ -72,6 +73,7 @@ export function GroupsScreen() {
   const groups = useAllEntities<Group>('group')
   const people = useAllEntities<Person>('person')
   const myBalances = useMyGroupBalances()
+  const seen = useSeenCurrencies()
   const groupActivity = useGroupActivity()
   const [defaultCurrency = 'INR'] = usePref('defaultCurrency')
   const [showInactiveFold = true] = usePref('groups.showInactiveFold')
@@ -99,12 +101,16 @@ export function GroupsScreen() {
     hidden: hiddenIds.has(g.id),
     deleted: g.deleted,
     balances: balances[g.id] ?? {},
+    currencies: seen?.groups[g.id],
     members: g.data.members
       .filter(m => m.leftAt === null)
       .map(m => names.get(m.personId) ?? ''),
   }))
+  /* Settled currencies stay on offer and filterable (audit m3). */
   const currencies = [
-    ...new Set(all.flatMap(g => Object.keys(g.balances))),
+    ...new Set(
+      all.flatMap(g => [...Object.keys(g.balances), ...(g.currencies ?? [])]),
+    ),
   ].sort()
   const order = (rows: GroupRowData[]) =>
     sortGroups(rows, filters.sort, {

@@ -1,6 +1,6 @@
 import {beforeEach, expect, test} from 'bun:test'
 
-import {DEFAULT_CATEGORIES, getPref, INVITE_EXPIRY_MS, type PrefKey, prefFrom, PREFS, resetAllPrefs, resetPref, setPref} from '../src/preferences'
+import {DEFAULT_CATEGORIES, getPref, INVITE_EXPIRY_MS, type PrefKey, prefFrom, PREFS, resetAllPrefs, resetPref, roundToFor, setPref} from '../src/preferences'
 import {openSqlStore} from '../src/sqlStore'
 import type {Store} from '../src/store'
 import type {MutationCtx} from '../src/types'
@@ -170,11 +170,24 @@ test('money input, cash rounding and money colours (F-310, F-402, F-1801)', asyn
   expect(await getPref(s, 'amount.shorthand')).toBe(true)
   expect(await getPref(s, 'amount.keypad')).toBe(true)
   expect(await getPref(s, 'split.roundCash')).toBe(false)
-  expect(await getPref(s, 'split.roundTo')).toBe(1)
+  // The cash unit is kept per currency (F-112, audit M15): a ₹100 unit is not a €100 one.
+  expect(await getPref(s, 'split.roundTo')).toEqual({})
   expect(await getPref(s, 'moneyPalette')).toBe('default')
-  await setPref(s, ctx, 'split.roundTo', 10)
-  expect(await getPref(s, 'split.roundTo')).toBe(10)
-  await expect(setPref(s, ctx, 'split.roundTo', 3 as never)).rejects.toThrow('INVALID_PREF')
+  await setPref(s, ctx, 'split.roundTo', {INR: 100, JPY: 10})
+  const unit = await getPref(s, 'split.roundTo')
+  expect(roundToFor(unit, 'INR')).toBe(100)
+  expect(roundToFor(unit, 'JPY')).toBe(10)
+  expect(roundToFor(unit, 'EUR')).toBe(1)
+  for (const bad of [10, {INR: 3}, {NOPE: 5}, {toString: 5}, null, []])
+    await expect(setPref(s, ctx, 'split.roundTo', bad as never)).rejects.toThrow('INVALID_PREF')
+  // A number stored by the old, account-wide pref reads as that unit for the default currency (INR unless set); a number that was never offered is the default.
+  const legacy = (value: unknown) => s.transaction(tx => tx.put({type: 'preference', id: 'split.roundTo', data: {value}, version: 9, deleted: false, updatedAt: 1}))
+  await legacy(100)
+  expect(await getPref(s, 'split.roundTo')).toEqual({INR: 100})
+  await setPref(s, ctx, 'defaultCurrency', 'EUR')
+  expect(await getPref(s, 'split.roundTo')).toEqual({EUR: 100})
+  await legacy(3)
+  expect(await getPref(s, 'split.roundTo')).toEqual({})
   await expect(setPref(s, ctx, 'moneyPalette', 'red' as never)).rejects.toThrow('INVALID_PREF')
   expect(PREFS['amount.keypad'].scope).toBe('device')
 })

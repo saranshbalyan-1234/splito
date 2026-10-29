@@ -91,6 +91,15 @@ const isAnalyticsScope = (v: unknown): v is AnalyticsScope => {
   return Array.isArray(groups) && groups.length <= 1000 && groups.every(isString) && new Set(groups).size === groups.length && (nonGroup || groups.length > 0)
 }
 
+/** The cash units on offer, in whole currency units. */
+export const ROUND_TO_UNITS = [1, 5, 10, 50, 100] as const
+export type RoundToByCurrency = Record<string, number>
+const isRoundToByCurrency = (v: unknown): v is RoundToByCurrency =>
+  typeof v === 'object' && v !== null && !Array.isArray(v) && Object.entries(v).every(([c, n]) => Object.hasOwn(CURRENCIES, c) && (ROUND_TO_UNITS as readonly unknown[]).includes(n))
+
+/** The cash unit `currency` rounds to, in whole units (1 when none is set). */
+export const roundToFor = (units: RoundToByCurrency, currency: string): number => (Object.hasOwn(units, currency) ? units[currency]! : 1)
+
 function def<T>(key: string, group: PrefGroup, scope: PrefDef<T>['scope'], label: string, dflt: T, validate: (v: unknown) => v is T): PrefDef<T> {
   return {key, group, scope, label, default: dflt, validate}
 }
@@ -154,8 +163,8 @@ export const PREFS = {
   defaultSplitMode: def('defaultSplitMode', 'defaults', 'account', 'Default split', 'equal', oneOf('equal', 'exact', 'percent', 'shares')),
   /** F-402: new equal, shares and percent splits start rounded to whole cash units. */
   'split.roundCash': def('split.roundCash', 'defaults', 'account', 'Round shares to cash', false, isBool),
-  /** The cash unit those splits round to, in whole currency units (INR 1, 5, 10 ...). */
-  'split.roundTo': def('split.roundTo', 'defaults', 'account', 'Round to', 1, oneOf(1, 5, 10, 50, 100)),
+  /** The cash unit those splits round to, per currency, in whole units (INR 10 is ₹10, JPY 100 is ¥100); a currency not listed rounds to 1 (F-112, audit M15). */
+  'split.roundTo': def<RoundToByCurrency>('split.roundTo', 'defaults', 'account', 'Round to', {}, isRoundToByCurrency),
   /** F-310: the calculator keypad replaces the system keyboard for amounts on phones (Expensify's number pad). */
   'amount.keypad': def('amount.keypad', 'defaults', 'device', 'Amount keypad', true, isBool),
   analyticsPeriod: def('analyticsPeriod', 'defaults', 'account', 'Analytics period', 'year', oneOf('week', 'month', 'year', 'all')),
@@ -184,6 +193,8 @@ export const PREFS = {
   numberLocale: def('numberLocale', 'regional', 'account', 'Number format', 'auto', oneOf('auto', 'en-IN', 'en-US', 'de-DE', 'fr-FR')),
   /** F-310: amounts read 2k, 1.5L, 1cr and 2m. */
   'amount.shorthand': def('amount.shorthand', 'regional', 'account', 'Amount shortcuts', true, isBool),
+  /** F-1816: Bluesky's language dropdown on the web splash, sign-up and the desktop right column. */
+  'rightColumn.languageDropdown': def('rightColumn.languageDropdown', 'regional', 'device', 'Language menu on sign-in screens and the right column', true, isBool),
   peopleSort: def('peopleSort', 'lists', 'account', 'Sort people by', 'amount', oneOf('amount', 'name', 'recent')),
   includeGroupsDefault: def('includeGroupsDefault', 'lists', 'account', 'Include groups by default', true, isBool),
   /** The "Inactive (N)" fold at the end of the Groups list (decision 89). */
@@ -244,6 +255,11 @@ function readRaw<K extends PrefKey>(rows: ReadonlyArray<PrefRow>, key: K): PrefV
     if (isPreAnalytics && !(value as TabId[]).includes('analytics')) value = [...(value as TabId[]), 'analytics']
     // Home became fixed (26.3): orders saved before then keep their tabs, with Home first.
     value = ['people', ...(value as NavItemId[]).filter(t => t !== 'people')]
+  }
+  // The account-wide unit saved before units were per currency (F-112) belongs to the default currency, where it was meant.
+  if (key === 'split.roundTo' && typeof value === 'number' && (ROUND_TO_UNITS as readonly number[]).includes(value)) {
+    const currency = readRaw(rows, 'defaultCurrency')
+    value = value === 1 ? {} : {[currency]: value}
   }
   return value !== undefined && def.validate(value) ? (value as PrefValue<K>) : def.default
 }

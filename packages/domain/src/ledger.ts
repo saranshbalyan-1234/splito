@@ -321,6 +321,9 @@ export interface CurrencyTotal {
 /** One person's balance in one currency: the net, and its direct and per-group parts. */
 export type CurrencyBalance = PersonSummary['byCurrency'][CurrencyCode]
 
+/** A balance in a currency the pair has had that is now square: every part zero (a filter lists it, an Overview does not). */
+export const SETTLED_BALANCE: Readonly<CurrencyBalance> = Object.freeze({total: 0n, direct: 0n, groups: Object.freeze({}) as Record<string, bigint>})
+
 /**
  * What a balance's parts owe each way (both >= 0), never netted across
  * direct and groups (audit M10): owed directly 10 and owing 10 in a group is

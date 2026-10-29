@@ -225,6 +225,8 @@ test.describe('touch screens', () => {
     const row = page.getByTestId('person-Arjun Mehta')
     const content = row.locator('> div').first()
     const scale = () => content.evaluate(el => getComputedStyle(el).transform)
+    // The demo's Overview holds more currencies now, so the row can sit below the fold.
+    await row.scrollIntoViewIfNeeded()
     const box = (await row.boundingBox())!
     await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2)
     await page.mouse.down()
