@@ -8,10 +8,11 @@
  *
  * Steps: v1 -> v2 (per-type stores, members, parties, balances),
  * v2 -> v3 (the `aggregates` and `search_terms` projections and the people
- * activity column, all derived: rebuilt from the rows, so the step is
- * idempotent and loses nothing) and v3 -> v4 (the `reminders` store, empty:
- * nothing is derived and no row changes). A v1 database goes straight to the
- * current layout, v2 had shipped in this branch's builds, so it keeps its own step.
+ * activity column) and v3 -> v4 (the empty `reminders` store, a deleted
+ * expense keeps its party rows and search terms, the `history.binDays`
+ * preference goes): the projections are all derived, so `migrateToV4`
+ * rebuilds them from the rows and serves a v2 and a v3 file alike, and is
+ * idempotent. A v1 database goes straight to the current layout.
  */
 import {decode} from './codec'
 import {type RowAccess} from './engine'
@@ -70,21 +71,15 @@ export async function migrateFromV1(legacy: LegacyV1, rows: RowAccess): Promise<
 }
 
 /**
- * v2 -> v3: the new stores and column exist (the engine made them, empty);
- * fills them, and recomputes the older projections with them, from the rows.
+ * v2 or v3 -> v4: the stores and columns exist (the engine made them, empty); everything derived is rebuilt from the
+ * rows, so it is idempotent and loses nothing. v4 keeps a deleted expense's party rows and search terms (decision
+ * 103) and drops the stored `history.binDays` preference (the Recently deleted bin is gone; the preference's history
+ * and ops stay in the audit trail). The `reminders` store starts empty: nothing derives from it.
  */
-export async function migrateV2ToV3(rows: RowAccess): Promise<void> {
+export async function migrateToV4(rows: RowAccess): Promise<void> {
+  await rows.delete(ENTITY_STORE.preference, ['history.binDays'])
   await rebuildProjections(rows, async type => (await rows.range(ENTITY_STORE[type], {})).map(r => entityOfRow(type, r)))
-  await rows.put('meta', {key: 'schemaVersion', value: '3'})
-}
-
-/**
- * v3 -> v4: the empty `reminders` store exists (the engine made it); no other
- * store, row or projection changes, so there is nothing to copy and the step
- * only stamps the version. Running it again changes nothing.
- */
-export async function migrateV3ToV4(rows: RowAccess): Promise<void> {
-  await rows.put('meta', {key: 'schemaVersion', value: '4'})
+  await rows.put('meta', {key: 'schemaVersion', value: String(SCHEMA_VERSION)})
 }
 
 /** A freshly created database starts at the current version. */

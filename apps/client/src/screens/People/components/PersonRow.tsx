@@ -10,10 +10,12 @@ import {
   ZERO,
 } from '@splito/domain'
 
+import {HideRow} from '#/features/hidden/HideItem'
 import {useRowPadding} from '#/state/preferences/density'
 import {Link} from '#/view/com/util/Link'
 import {UserAvatar} from '#/view/com/util/UserAvatar'
 import {atoms as a, useBreakpoints, useTheme} from '#/alf'
+import {DeletedMeta, useStruck} from '#/components/DeletedMeta'
 import {BalanceText, SettledPill} from '#/components/BalanceText'
 import * as Pills from '#/components/Pills'
 import * as ProfileCard from '#/components/ProfileCard'
@@ -26,6 +28,10 @@ export type PersonRowData = {
   id: string
   name: string
   summary: PersonSummary | undefined
+  /** A removed friend stays in the list, struck through (decision 103); this is when. */
+  deletedAt?: number
+  /** Hidden by me (only a deleted friend can be): out of the list unless "Show hidden" is on. */
+  isHidden?: boolean
 }
 
 const AVATAR_SIZE = 42
@@ -51,6 +57,8 @@ export function PersonRow({
   const {gtMobile} = useBreakpoints()
   const listAnimations = useListAnimations()
   const press = usePressScale()
+  const struck = useStruck()
+  const isDeleted = row.deletedAt !== undefined
   const byCurrency = row.summary?.byCurrency ?? {}
   const currencies = Object.keys(byCurrency)
     .filter(
@@ -126,7 +134,7 @@ export function PersonRow({
       )}
     </View>
   )
-  const balances = isSettled ? (
+  const balances = isDeleted ? null : isSettled ? (
     <SettledPill testID="person-row-settled" />
   ) : (
     balanceColumn(open)
@@ -135,13 +143,13 @@ export function PersonRow({
    * Phones: the first currency shares the name's line and any others share
    * the chips' line, so a second currency never leaves a gap under the name.
    */
-  const firstBalance = isSettled ? balances : balanceColumn(open.slice(0, 1))
+  const firstBalance = isDeleted ? null : isSettled ? balances : balanceColumn(open.slice(0, 1))
   const moreBalances = open.length > 1 ? balanceColumn(open.slice(1)) : null
 
   /* The row content shrinks on press; the separator stays put. */
-  return (
-    <Animated.View {...listAnimations}>
+  const link = (onLongPress?: () => void) => (
       <Link
+        onLongPress={onLongPress}
         testID={`person-${row.name}`}
         onPressIn={press.onPressIn}
         onPressOut={press.onPressOut}
@@ -154,7 +162,7 @@ export function PersonRow({
         style={[
           a.px_lg,
           rowPadding,
-          a.border_t,
+          !isDeleted && a.border_t,
           t.atoms.border_contrast_low,
           a.transition_color,
         ]}>
@@ -176,14 +184,26 @@ export function PersonRow({
             <View
               style={[a.flex_row, a.align_start, a.justify_between, a.gap_md]}>
               <View style={[a.flex_1]}>
-                <ProfileCard.Name profile={row} />
+                <ProfileCard.Name profile={row} textStyle={isDeleted ? struck : undefined} />
               </View>
               {!gtMobile && firstBalance}
             </View>
             <View
               style={[a.flex_row, a.align_start, a.justify_between, a.gap_md]}>
               <View style={[a.flex_1]}>
-                {chips.length > 0 ? (
+                {isDeleted ? (
+                  <View style={[a.flex_row, a.align_center, a.gap_sm, a.pt_2xs]}>
+                    <Pills.Tag>
+                      <Trans>Deleted</Trans>
+                    </Pills.Tag>
+                    <DeletedMeta testID={`person-${row.id}-deleted`} at={row.deletedAt!} />
+                    {row.isHidden ? (
+                      <Pills.Tag>
+                        <Trans>Hidden</Trans>
+                      </Pills.Tag>
+                    ) : null}
+                  </View>
+                ) : chips.length > 0 ? (
                   <Pills.Row style={[a.pt_2xs]}>
                     {chips.map(chip => (
                       <Pills.Tag key={chip.key}>
@@ -227,6 +247,23 @@ export function PersonRow({
           {gtMobile && balances}
         </Animated.View>
       </Link>
+  )
+
+  return (
+    <Animated.View {...listAnimations}>
+      {isDeleted ? (
+        /* The menu is a sibling of the link, never nested in it. */
+        <HideRow
+          style={[a.border_t, t.atoms.border_contrast_low]}
+          testID={`person-${row.id}-more`}
+          target={{type: 'person', id: row.id}}
+          isHidden={!!row.isHidden}
+          name={row.name}
+          row={link}
+        />
+      ) : (
+        link()
+      )}
     </Animated.View>
   )
 }

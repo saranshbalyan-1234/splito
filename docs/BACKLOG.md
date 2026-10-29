@@ -285,7 +285,7 @@ Fixes for logic-audit findings M6, M10, M11, m5, m7, m10, m16 (see the report fo
 
 Fixes for logic-audit findings M4, m1, m11, m15, m17, m18, m19, m20 (see the report for scenario, evidence and fix per finding).
 
-- **Effort** M · **Impact** 8 · **Backend** no · **Status** todo · **Deps** merge row 30
+- **Effort** M · **Impact** 8 · **Backend** no · **Status** done (feat/wB-B3; sync `historyIntegrity.test.ts`, `activity.test.ts`, `ledgerProjection.property.test.ts`, client `demoSeed.test.ts`; m20's Include groups part left open, see the audit; m15 and m19 were already fixed by F-117 and now have regression tests) · **Deps** merge row 30
 - **Prefs** -
 - **Acceptance**
   1. Restore never brings back records that point to a deleted person (restore the person too, or block with an explanation); restored payments/write-offs show as "restored" in Activity; idempotent retries never return a tombstone or stale amount; search ties broken by creation time; purge outbox ops keep purgedAt; demo seed uses local dates and is idempotent; "recently active" counts deletes; People "Recent" sort uses change time, only records I am in, and honours Include groups.
@@ -1370,7 +1370,7 @@ Friends without accounts or invites, visible and usable only on your side: the "
 - **Acceptance**
   1. A friend can be added offline with only a name.
   2. Deleting a friend with ledger rows never erases history.
-  3. A deleted friend shows by name with a "former friend" label on every past record and can be restored from Recently deleted.
+  3. A deleted friend shows by name with a "former friend" label on every past record stays in People, struck through, and can be restored from its page.
   4. A private friend is selectable in expenses and groups at once; when that person later joins and accepts, the private friend is linked to their account (F-2106) and history merges (F-616).
 
 ### F-602 Add friend from device contacts `spec: owner § 26.18`
@@ -1399,7 +1399,7 @@ Name, type, currency, members, roles, trip dates; membership changes never rewri
 
 Two controls instead of "Archive": Active / Inactive is the group's state for every member (inactive takes no new expenses but can still settle), Show / Hide is personal visibility. Balances are never hidden.
 
-- **Effort** M · **Impact** 7 · **Backend** no · **Status** todo · **Deps** F-603
+- **Effort** M · **Impact** 7 · **Backend** no · **Status** done (feat/wB-B3; sync `groupLifecycle.test.ts` + the shared store contract on SQLite and IndexedDB, `activity.test.ts`, `preferences`; client `filter.test.ts`; e2e `groupLifecycle.spec.ts` at phone and desktop widths; web verified, native not yet run) · **Deps** F-603
 - **Prefs** `groups.showInactiveFold` (account, default on), `groups.hidden` (account, default empty list of group ids)
 - **Acceptance**
   1. "Make inactive" / "Make active" and "Hide group" / "Show group" in the group header overflow; state change in one transaction with history and outbox, Activity row for inactive/active; hide/show writes only the preference; Undo toast for both.
@@ -1497,7 +1497,7 @@ Copy members, households, rules, currencies, categories, budget and kitty setup 
 
 Removing a member with a balance offers settle, forgive or keep inactive; a wizard walks their expenses: still pays, refund, or re-split.
 
-- **Effort** M · **Impact** 7 · **Backend** no · **Status** todo · **Deps** F-1113
+- **Effort** M · **Impact** 7 · **Backend** no · **Status** part 1 done (feat/wB-B3: settle, forgive or keep inactive from the Members tab with a balance preview; sync `groupLifecycle.test.ts`, domain `memberExit.test.ts`, e2e `groupLifecycle.spec.ts`); the drop-out re-split wizard (criterion 2) moves to Wave C · **Deps** F-1113
 - **Prefs** -
 - **Acceptance**
   1. Each choice previews every member's balance change.
@@ -1515,12 +1515,12 @@ Members get one or more presence ranges, away days and guest nights; new expense
 
 ### F-615 Leave or delete a group
 
-Leave a group yourself or delete a whole group. A non-zero balance offers settle, forgive (F-1113) or stay as an inactive member; delete tombstones the group and its records into Recently deleted; the last admin hands admin on first.
+Leave a group yourself or delete a whole group. A non-zero balance offers settle, forgive (F-1113) or stay as an inactive member; delete tombstones the group and its records, which stay in their lists struck through (F-1203); the last admin hands admin on first.
 
-- **Effort** M · **Impact** 8 · **Backend** no · **Status** todo · **Deps** F-603, F-1113, F-1203
+- **Effort** M · **Impact** 8 · **Backend** no · **Status** done (feat/wB-B3; sync `groupLifecycle.test.ts`, e2e `groupLifecycle.spec.ts`; web verified, native not yet run; server enforcement of the leaver's read access waits for F-2108) · **Deps** F-603, F-1113, F-1203
 - **Prefs** -
 - **Acceptance**
-  1. Deleting a group lists what goes, lands in Recently deleted and restores with every expense and payment intact.
+  1. Deleting a group lists what goes, stays struck in Groups, opens read-only, and restores with every expense and payment intact.
   2. Leaving with a balance never drops it silently; the choice is recorded in history.
   3. The last admin cannot leave until admin is handed on; server enforcement of the leaver's read access arrives with F-2108.
 
@@ -2314,14 +2314,14 @@ An expense History tab with plain diffs per version; an Activity row whenever an
 
 No Recently deleted bin. A deleted expense, payment, write-off, comment, group or friend stays in its own list, struck through with a clock and "Deleted <time>", never purged and never counted; it opens read-only with Restore. Replaces the bin (and decision 102's per-item purge).
 
-- **Effort** M · **Impact** 8 · **Backend** no · **Status** todo (built on feat/wB-B3x) · **Deps** F-114, F-615
+- **Effort** M · **Impact** 8 · **Backend** no · **Status** done (feat/wB-B3x; sync `deletedInPlace.test.ts`, `migrate.test.ts` v3 to v4, client `ledgerQueries.test.ts`, `groups/filter.test.ts`, architecture rule `hardDelete`, e2e `deletedInPlace.spec.ts`; web verified, native not yet run) · **Deps** F-114, F-615
 - **Prefs** `lists.hiddenItems` (account, set of ids, default empty); `history.binDays` removed (migration drops it)
 - **Acceptance**
   1. The Recently deleted screen, route (`/settings/recently-deleted` redirects to Settings > Data with a short note), Settings row, purge code (`purgeDeleted`, auto-purge, "Delete forever", days-left lines) and `history.binDays` are removed; no code path hard-deletes a record (architecture rule test).
   2. Deleted records render in place in the group Expenses tab, person history, Activity, search results, Groups list and People list, in date order, with decision 98's look; their amounts are excluded from every balance, total, chart, export total and settle plan (projection tests unchanged: tombstones already contribute nothing).
   3. A deleted group stays in the Groups list (struck, chip "Deleted"), its page opens read-only with its records struck and a Restore action; restoring a group restores exactly the records deleted with it (existing deletedWithGroup logic).
   4. A deleted expense/payment opens read-only with history and Restore (same guards: missing person or group, GROUP_INACTIVE); Undo toasts still work.
-  5. Deleted items always show. Each deleted row and page has "Hide" (personal, per item, Undo) writing `lists.hiddenItems`; one "Show hidden" filter (default off) on People, Groups, the Group Expenses tab and Person history reveals hidden items (with "Unhide") and also hidden groups (replaces the Groups "Visibility" filter); no global hide-all-deleted switch (decisions 104, 105).
+  5. Deleted items always show. Each deleted row (row "..." menu, right-click on web, long-press on native) and page has "Hide" (personal, per item, Undo) writing `lists.hiddenItems`; one "Show hidden" filter (default off) on People, Groups, the Group Expenses tab and Person history reveals hidden items (with "Unhide") and also hidden groups (replaces the Groups "Visibility" filter); no global hide-all-deleted switch (decisions 104, 105).
   6. deletePerson no longer counts "bin items"; a person named on any record (deleted or not) is kept as a struck friend rather than removed from records.
   7. e2e: delete an expense, it stays struck in the group list with clock and time and balances drop it; restore from its page; delete a group, it stays struck in Groups, opens read-only, restores; Hide one deleted expense, it disappears; "Show hidden" brings it back with Unhide. Phone and desktop.
 
@@ -4152,7 +4152,7 @@ Small, high-impact, independent.
 | 23 | F-310 | Smart amount input | composer amount field | S | 8 | F-302 |
 | 24 | F-402 | Cash rounding with visible remainder | domain allocate rounding | S | 8 | F-101 |
 | 25 | F-1801 | Money direction never shown by colour alone | balance display components | S | 8 | - |
-| 26 | F-1203 | Recently deleted bin | Recently deleted screen | S | 8 | F-103 |
+| 26 | F-1203 | Deleted items stay in place | struck rows, Restore, Hide and Show hidden | M | 8 | F-114, F-615 |
 | 27 | F-1113 | Call it even: forgive or write off | write-off ledger kind + person action | S | 7 | F-101 |
 | 28 | F-1401 | Free search across expenses | expense search index | S | 8 | F-301 |
 | 29 | F-1903 | Android build and emulator run | Android build config | S | 8 | - |

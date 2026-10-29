@@ -287,6 +287,35 @@ const FULL_READ_ALLOWED: ReadonlySet<string> = new Set([
 ])
 
 /* -------------------------------------------------------------------------- */
+/* Hard deletes                                                               */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * Places that may remove a record row for good: migration, the store's own `erase` (the one primitive the dev/e2e
+ * "Remove demo data" and, later, "Erase this device's data" call), the engines' row primitives, and the dev tools.
+ */
+const HARD_DELETE_ALLOWED: ReadonlySet<string> = new Set([
+  `${SYNC}migrate.ts`,
+  `${SYNC}core.ts`,
+  `${SYNC}engine.ts`,
+  `${SYNC}idbStore.ts`,
+  `${SYNC}sqlStore.ts`,
+  `${SYNC}txRows.ts`,
+  `${CLIENT}data/devTools.ts`,
+  `${CLIENT}data/demoLarge.ts`,
+])
+
+/** A `store.erase(...)`, a row delete of a money / people / group table (or one picked by entity type), or SQL that does it. */
+export function hardDeletes(source: string): number {
+  const text = blank(source, {strings: true})
+  return (
+    countMatches(text, /\.erase\s*\(/g) +
+    countMatches(text, /\.delete\s*\(\s*(?:ENTITY_STORE\b|['"`](?:people|groups|expenses|repayments|writeoffs)['"`])/g) +
+    countMatches(text, /\bDELETE\s+FROM\s+["`]?(?:people|groups|expenses|repayments|writeoffs|entities)\b/gi)
+  )
+}
+
+/* -------------------------------------------------------------------------- */
 /* Rules                                                                      */
 /* -------------------------------------------------------------------------- */
 
@@ -454,6 +483,11 @@ export const RULES = {
     appliesTo: p => (isClient(p) || p.startsWith(SYNC)) && !FULL_READ_ALLOWED.has(p),
     count: (_p, s) =>
       moneyFullReads(s),
+  },
+  hardDelete: {
+    why: "A record row (expense, payment, write-off, person, group) removed for good: store.erase, a row delete of its table, or DELETE FROM. Deleting is a tombstone and a deleted item stays in its list forever (owner 103); only migration, the store's erase primitive, the engines and the dev tools (HARD_DELETE_ALLOWED) remove rows.",
+    appliesTo: p => (isClient(p) || p.startsWith(SYNC)) && !HARD_DELETE_ALLOWED.has(p),
+    count: (_p, s) => hardDeletes(s),
   },
   demoStaticImport: {
     why: 'A static import of the large demo set (#/data/demoLarge, #/screens/Settings/DemoData, @splito/sync/demoLarge) outside the demo files: `import x from`, `export ... from`, a side-effect `import \'...\'` and `require()` all bundle it. It must load with import() under __DEV__ / EXPO_PUBLIC_ENV so production bundles hold none of it (ARCHITECTURE 26.1).',

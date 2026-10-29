@@ -1,16 +1,23 @@
 import {useState} from 'react'
-import {View} from 'react-native'
+import {Pressable, View} from 'react-native'
 import {LayoutAnimationConfig} from 'react-native-reanimated'
 import {plural} from '@lingui/core/macro'
 import {Trans, useLingui} from '@lingui/react/macro'
 import {useNavigation} from '@react-navigation/native'
 import {groupTotals, ZERO} from '@splito/domain'
-import {type Entity, type Group, type Person} from '@splito/sync'
+import {
+  type Entity,
+  type Group,
+  isGroupInactive,
+  type Person,
+} from '@splito/sync'
 
 import {type NavigationProp} from '#/lib/routes/types'
 import {useNumberLocale} from '#/locale/numberLocale'
+import {useHiddenGroups} from '#/data/groupVisibility'
+import {useShowHidden} from '#/data/hiddenItems'
 import {
-  useEntities,
+  useAllEntities,
   useGroupActivity,
   useMe,
   useMyGroupBalances,
@@ -21,6 +28,7 @@ import {List} from '#/view/com/util/List'
 import {atoms as a, useTheme} from '#/alf'
 import {AddExpenseFAB, AddExpenseFABInset} from '#/components/AddExpenseFAB'
 import {Button, ButtonIcon, ButtonText} from '#/components/Button'
+import {ChevronBottom_Stroke2_Corner0_Rounded as ChevronDownIcon} from '#/components/icons/Chevron'
 import {useDialogControl} from '#/components/Dialog'
 import {SearchAskButton} from '#/components/SearchAsk/SearchAskButton'
 import {HeaderAvatar} from '#/components/HeaderAvatar'
@@ -60,13 +68,18 @@ export function GroupsScreen() {
   const locale = useNumberLocale()
   const navigation = useNavigation<NavigationProp>()
   const me = useMe()
-  const groups = useEntities<Group>('group')
-  const people = useEntities<Person>('person')
+  /* Tombstones too: a deleted group stays in the list, struck through (decision 103). */
+  const groups = useAllEntities<Group>('group')
+  const people = useAllEntities<Person>('person')
   const myBalances = useMyGroupBalances()
   const groupActivity = useGroupActivity()
   const [defaultCurrency = 'INR'] = usePref('defaultCurrency')
+  const [showInactiveFold = true] = usePref('groups.showInactiveFold')
+  const hiddenIds = useHiddenGroups()
+  const [isFoldOpen, setIsFoldOpen] = useState(false)
   const [applied, setApplied] = useState<GroupFilters | null>(null)
-  const filters = applied ?? DEFAULT_GROUP_FILTERS
+  const [showHidden, setShowHidden] = useShowHidden()
+  const filters: GroupFilters = {...(applied ?? DEFAULT_GROUP_FILTERS), showHidden}
   /* The filter dot counts what differs from the defaults. */
   const activeCount = (Object.keys(filters) as (keyof GroupFilters)[]).filter(
     k => filters[k] !== DEFAULT_GROUP_FILTERS[k],
@@ -82,7 +95,9 @@ export function GroupsScreen() {
     id: g.id,
     name: g.data.name,
     kind: g.data.kind,
-    archived: g.data.archived,
+    inactive: isGroupInactive(g.data),
+    hidden: hiddenIds.has(g.id),
+    deleted: g.deleted,
     balances: balances[g.id] ?? {},
     members: g.data.members
       .filter(m => m.leftAt === null)
@@ -91,28 +106,47 @@ export function GroupsScreen() {
   const currencies = [
     ...new Set(all.flatMap(g => Object.keys(g.balances))),
   ].sort()
-  const listed = sortGroups(filterGroups(all, filters), filters.sort, {
-    currency: filters.currency === 'all' ? defaultCurrency : filters.currency,
-    activity: filters.sort === 'recent' ? (groupActivity ?? new Map()) : new Map(),
-  })
-  /* Search narrows the list only; the Overview keeps showing what the filters chose. */
-  const shown = listed.filter(g => matchesGroupSearch(g, query))
+  const order = (rows: GroupRowData[]) =>
+    sortGroups(rows, filters.sort, {
+      currency: filters.currency === 'all' ? defaultCurrency : filters.currency,
+      activity: filters.sort === 'recent' ? (groupActivity ?? new Map()) : new Map(),
+    })
+  const listed = order(filterGroups(all, filters))
+  /* Search reaches inactive and hidden groups too (decision 89); it narrows the list only. */
+  const isSearching = query.trim() !== ''
+  const searched = isSearching
+    ? order(filterGroups(all, {...filters, status: 'all', showHidden: true}))
+    : listed
+  const shown = searched.filter(g => matchesGroupSearch(g, query))
+  /* The Inactive (N) fold at the end of the default view: inactive groups I have not hidden. */
+  const isDefaultView = filters.status === 'active' && !filters.showHidden
+  const folded =
+    showInactiveFold && isDefaultView && !isSearching
+      ? order(filterGroups(all, {...filters, status: 'inactive'}))
+      : []
   const createGroup = () => navigation.navigate('CreateGroup')
   /* Per currency, never across currencies; owed and owe summed apart (domain). */
-  const overall = groupTotals(listed.map(g => g.balances))
-  const settledCount = listed.filter(g =>
+  /* Money is never hidden: inactive and hidden groups count in the Overview whatever the status and visibility filters say. */
+  const overviewRows = filterGroups(all, {
+    ...filters,
+    status: 'all',
+    showHidden: true,
+  }).filter(g => !g.deleted)
+  const overall = groupTotals(overviewRows.map(g => g.balances))
+  /* The captions and the count line cover the same groups as the totals above them. */
+  const settledCount = overviewRows.filter(g =>
     Object.values(g.balances).every(v => v === ZERO),
   ).length
   const captions = Object.fromEntries(
     overall.map(({currency}) => {
-      const n = listed.filter(
+      const n = overviewRows.filter(
         g => (g.balances[currency] ?? ZERO) !== ZERO,
       ).length
       return [currency, plural(n, {one: '# group', other: '# groups'})]
     }),
   )
   const counts = [
-    plural(listed.length, {one: '# group', other: '# groups'}),
+    plural(overviewRows.length, {one: '# group', other: '# groups'}),
     l`${settledCount} settled`,
   ].join(' · ')
 
@@ -153,6 +187,7 @@ export function GroupsScreen() {
               <GroupRow
                 group={byId.get(item.id) as Entity<Group>}
                 balances={item.balances}
+                isHidden={item.hidden}
                 locale={locale}
               />
             )}
@@ -171,8 +206,8 @@ export function GroupsScreen() {
                   <ListToolsHeader
                     title={l`Groups`}
                     titleTestID="groups-list-title"
-                    count={shown.length}
-                    total={listed.length}
+                    count={shown.filter(g => !g.deleted).length}
+                    total={listed.filter(g => !g.deleted).length}
                     query={query}
                     onQueryChange={setQuery}
                     searchLabel={l`Search groups or members`}
@@ -221,6 +256,53 @@ export function GroupsScreen() {
             }
             ListFooterComponent={
               <>
+                {folded.length > 0 && (
+                  <View testID="groups-inactive-fold">
+                    <Pressable
+                      testID="groups-inactive-fold-toggle"
+                      accessibilityRole="button"
+                      accessibilityLabel={l`Inactive groups`}
+                      accessibilityState={{expanded: isFoldOpen}}
+                      onPress={() => setIsFoldOpen(o => !o)}
+                      style={[
+                        a.flex_row,
+                        a.align_center,
+                        a.gap_xs,
+                        a.px_lg,
+                        a.py_md,
+                        a.border_t,
+                        t.atoms.border_contrast_low,
+                      ]}>
+                      <Text
+                        style={[
+                          a.text_sm,
+                          a.font_semi_bold,
+                          t.atoms.text_contrast_medium,
+                        ]}>
+                        <Trans>Inactive ({folded.length})</Trans>
+                      </Text>
+                      <ChevronDownIcon
+                        size="sm"
+                        fill={t.atoms.text_contrast_medium.color}
+                        style={{
+                          transform: [
+                            {rotate: isFoldOpen ? '180deg' : '0deg'},
+                          ],
+                        }}
+                      />
+                    </Pressable>
+                    {isFoldOpen &&
+                      folded.map(item => (
+                        <GroupRow
+                          key={item.id}
+                          group={byId.get(item.id) as Entity<Group>}
+                          balances={item.balances}
+                          isHidden={item.hidden}
+                          locale={locale}
+                        />
+                      ))}
+                  </View>
+                )}
                 {shown.length > 0 && (
                   /* The list ends on a next step, not on blank space. */
                   <View
@@ -268,7 +350,10 @@ export function GroupsScreen() {
         control={filterControl}
         filters={filters}
         currencies={currencies}
-        onFiltersApplied={setApplied}
+        onFiltersApplied={f => {
+          setApplied(f)
+          if (f.showHidden !== showHidden) void setShowHidden(f.showHidden)
+        }}
       />
     </Layout.Screen>
   )

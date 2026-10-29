@@ -77,11 +77,6 @@
       "count": 1
     }
   },
-  "apps/client/src/screens/Person/index.tsx": {
-    "no-unused-vars": {
-      "count": 2
-    }
-  },
   "apps/client/src/storage/index.ts": {
     "typescript/no-explicit-any": {
       "count": 8

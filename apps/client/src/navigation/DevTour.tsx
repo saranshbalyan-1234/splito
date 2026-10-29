@@ -1,6 +1,6 @@
 import {useEffect, useRef} from 'react'
 import {createNavigationContainerRef} from '@react-navigation/native'
-import {type Group} from '@splito/sync'
+import {type Group, isGroupInactive} from '@splito/sync'
 
 import {useEntities} from '#/data/hooks'
 
@@ -26,7 +26,7 @@ export function DevTour() {
   setDrawerOpenRef.current = setDrawerOpen
   /* The busiest active group, read when its step runs (demo data seeds after mount). */
   const groupIdRef = useRef<string>(undefined)
-  groupIdRef.current = useEntities<Group>('group')?.find(g => !g.data.archived)?.id
+  groupIdRef.current = useEntities<Group>('group')?.find(g => !isGroupInactive(g.data))?.id
   useEffect(() => {
     if (!(__DEV__ && process.env.EXPO_PUBLIC_TOUR === '1')) return
     const go = (name: string, params?: object) => () =>

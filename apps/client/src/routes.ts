@@ -15,7 +15,6 @@ export const ROUTE_PATHS = {
   Profile: '/profile',
   Settings: '/settings',
   SignIn: '/signin',
-  RecentlyDeleted: '/settings/recently-deleted',
   Search: '/search',
   SettingsSection: '/settings/:section',
   AddFriend: '/friends/new',
@@ -36,10 +35,13 @@ export type RouteName = keyof typeof ROUTE_PATHS
 
 /**
  * Old paths that redirect, so the URL changes too: the feed was briefly
- * Notifications. Both linking configs read paths through this.
+ * Notifications, and Recently deleted is gone (deleted items stay in their lists, decision 103): its link opens
+ * Settings with a note under Data. Both linking configs read paths through this.
  */
 export function redirectOldPath(path: string) {
-  return path.replace(/^\/?notifications(?=[/?#]|$)/, '/activity')
+  return path
+    .replace(/^\/?notifications(?=[/?#]|$)/, '/activity')
+    .replace(/^\/?settings\/recently-deleted(?=[/?#]|$)/, '/settings?note=deleted-stay')
 }
 
 export const router = new Router<FlatNavigatorParams>(ROUTE_PATHS)

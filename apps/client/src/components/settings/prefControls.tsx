@@ -33,7 +33,6 @@ import {
   SwitchPref,
 } from '#/components/settings/controls'
 import {
-  BinIcon,
   CalendarIcon,
   CashIcon,
   ClockIcon,
@@ -637,6 +636,19 @@ function IncludeGroupsPref() {
   )
 }
 
+function ShowInactiveFoldPref() {
+  const {t: l} = useLingui()
+  return (
+    <SwitchPref
+      pref={usePrefControl('groups.showInactiveFold')}
+      icon={GroupsIcon}
+      title={l`Inactive groups`}
+      label={l`Show an Inactive fold at the end of the Groups list`}
+      description={l`Inactive groups take no new expenses but can still be settled. Turn this off to reach them only through the Groups filter and search.`}
+    />
+  )
+}
+
 function ShowSyncStatusPref() {
   const {t: l} = useLingui()
   return (
@@ -646,25 +658,6 @@ function ShowSyncStatusPref() {
       title={l`Sync status`}
       label={l`Show a small dot on each expense, payment and request`}
       description={l`Green when synced, yellow while it syncs, red when it is only on this device. Each item's page always says it in words.`}
-    />
-  )
-}
-
-/** Recently deleted's window; the row sits at the top of that screen. */
-function BinDaysPref() {
-  const {t: l} = useLingui()
-  return (
-    <SegmentedPref
-      pref={usePrefControl('history.binDays')}
-      icon={BinIcon}
-      title={l`Keep deleted items for`}
-      description={l`After that they leave this list. Their history stays in each record’s audit trail.`}
-      options={[
-        {value: 7, label: l`7 days`},
-        {value: 30, label: l`30 days`},
-        {value: 90, label: l`90 days`},
-        {value: 365, label: l`1 year`},
-      ]}
     />
   )
 }
@@ -888,6 +881,9 @@ export const PREF_CONTROLS = {
   'amount.shorthand': AmountShorthandPref,
   peopleSort: PeopleSortPref,
   includeGroupsDefault: IncludeGroupsPref,
+  'groups.showInactiveFold': ShowInactiveFoldPref,
+  // Set from a group's menu (Hide group / Show group), where its effect shows; Reset all resets it.
+  'groups.hidden': null,
   showSyncStatus: ShowSyncStatusPref,
   swipeLeft: SwipeLeftPref,
   swipeRight: SwipeRightPref,
@@ -903,7 +899,10 @@ export const PREF_CONTROLS = {
   sendDiagnostics: null,
   // Remembers the switch in the Send feedback sheet, where its effect shows.
   'feedback.includeAppInfo': null,
-  'history.binDays': BinDaysPref,
+  // Set from a deleted item's "Hide" (and the lists' "Show hidden"), where its effect shows; Reset all clears it.
+  'lists.hiddenItems': null,
+  // The "Show hidden" switch sits in each list's filters, where its effect shows.
+  'lists.showHidden': null,
   'privacy.findByContact': FindablePref,
   'privacy.friendRequestsFrom': FriendRequestsFromPref,
   'invites.defaultMaxUses.friend': FriendInviteUsesPref,

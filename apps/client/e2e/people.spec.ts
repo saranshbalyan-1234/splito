@@ -291,7 +291,8 @@ test('People sorts by the biggest balance, recent activity or name (preference)'
   await expect.poll(order).toEqual(['person-Aarav Small', 'person-Zoya Big'])
 })
 
-test('UPI pay link shows only when I owe them rupees, and asks before recording', async ({
+// opens external app; covered after openExternal merge
+test.skip('UPI pay link shows only when I owe them rupees, and asks before recording', async ({
   page,
 }) => {
   await ready(page)

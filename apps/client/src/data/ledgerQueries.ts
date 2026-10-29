@@ -279,12 +279,16 @@ type IndexRead = {index: string; eq: Key}
 /** A few more rows than wanted (some are filtered out), never more than a page. */
 const pageFor = (want: number) => Math.min(PAGE, Math.max(want * 2, 8))
 
-/** The live rows of one money type through one index, newest date first, kept if `accept` says so. */
+/**
+ * The rows of one money type through one index, newest date first, kept if `accept` says so. Live rows only, unless
+ * `includeDeleted`: a list that shows deleted items in place (decision 103) reads them through the same index.
+ */
 export function indexStream<T extends Expense | Repayment | WriteOff>(
   store: Store,
   kind: HistoryEntry['kind'],
   read: IndexRead,
   accept: (e: Entity<T>) => boolean = () => true,
+  includeDeleted = false,
 ): HistoryStream {
   let after: Key | null = null
   return {
@@ -298,7 +302,7 @@ export function indexStream<T extends Expense | Repayment | WriteOff>(
         after = page.next
         this.isDone = !page.next
         for (const entity of page.items) {
-          if (entity.deleted || !accept(entity)) continue
+          if ((entity.deleted && !includeDeleted) || !accept(entity)) continue
           this.items.push({kind, entity} as HistoryEntry)
           added++
         }
@@ -308,8 +312,8 @@ export function indexStream<T extends Expense | Repayment | WriteOff>(
 }
 
 /**
- * A person's live expenses, newest date first, through their `expense_parties`
- * rows (one index read, then the expenses by id), kept if `accept` says so.
+ * A person's live expenses (deleted ones too with `includeDeleted`), newest date first, through their
+ * `expense_parties` rows (one index read, then the expenses by id), kept if `accept` says so.
  * `onlyDirect` skips group expenses before reading them.
  */
 export function partyStream(
@@ -317,6 +321,7 @@ export function partyStream(
   read: IndexRead,
   accept: (e: Entity<Expense>) => boolean,
   onlyDirect = false,
+  includeDeleted = false,
 ): HistoryStream {
   let after: Key | null = null
   return {
@@ -326,12 +331,12 @@ export function partyStream(
       let added = 0
       while (added < want && !this.isDone) {
         // full-read-ok: `read` carries the eq range; the pager reads only as far as was asked (`want`)
-        const page = await store.parties({...read, dir: 'prev', after, limit: pageFor(want)})
+        const page = await store.parties({...read, dir: 'prev', after, limit: pageFor(want), includeDeleted})
         after = page.next
         this.isDone = !page.next
         const ids = page.items.filter(p => !onlyDirect || p.groupId === null).map(p => p.expenseId)
         for (const entity of await store.getMany<Expense>('expense', ids)) {
-          if (entity.deleted || !accept(entity)) continue
+          if ((entity.deleted && !includeDeleted) || !accept(entity)) continue
           this.items.push({kind: 'expense', entity})
           added++
         }

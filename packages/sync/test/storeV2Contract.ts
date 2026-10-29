@@ -1,5 +1,6 @@
 import {describe, expect, test} from 'bun:test'
 
+import {makeGroupActive, makeGroupInactive} from '../src/groupLifecycle'
 import {
   createExpense,
   createGroup,
@@ -298,6 +299,29 @@ export function runV2Contract(name: string, open: () => Promise<Store>) {
       await updateExpense(s, ctx, m.id, draft({with: [a.id], groupId: g2.id}))
       const moved = await s.groupActivity()
       expect(moved.get(g2.id)).toBe(moved.get(g.id))
+      await s.close()
+    })
+
+    test('an inactive group rejects add, edit, move-into and restore-into with GROUP_INACTIVE (decision 89); payments still record', async () => {
+      const { s, ctx, a, g } = await seeded()
+      const inGroup = await createExpense(s, ctx, draft({with: [a.id], groupId: g.id}))
+      const gone = await createExpense(s, ctx, draft({with: [a.id], groupId: g.id}))
+      const direct = await createExpense(s, ctx, draft({with: [a.id]}))
+      await deleteExpense(s, ctx, gone.id)
+      await makeGroupInactive(s, ctx, g.id)
+      const code = async (p: Promise<unknown>) => p.then(() => 'ok', (e: { code?: string }) => e.code)
+      expect(await code(createExpense(s, ctx, draft({with: [a.id], groupId: g.id})))).toBe('GROUP_INACTIVE')
+      expect(await code(updateExpense(s, ctx, inGroup.id, draft({with: [a.id], groupId: g.id, title: 'x'})))).toBe('GROUP_INACTIVE')
+      expect(await code(updateExpense(s, ctx, direct.id, draft({with: [a.id], groupId: g.id})))).toBe('GROUP_INACTIVE')
+      expect(await code(restoreExpense(s, ctx, gone.id))).toBe('GROUP_INACTIVE')
+      const paid = await code(createRepayment(s, ctx, {groupId: g.id, currency: 'INR', from: a.id, to: 'me', amount: 10n, date: '2026-10-08', tz: 'Asia/Kolkata', note: ''}))
+      expect(paid).toBe('ok')
+      // An expense that sits in the inactive group cannot be moved out of it either: that would change its balances.
+      expect(await code(updateExpense(s, ctx, inGroup.id, draft({with: [a.id], groupId: null})))).toBe('GROUP_INACTIVE')
+      expect((await s.get<ExpenseDraft>('expense', inGroup.id))!.data.groupId).toBe(g.id)
+      await makeGroupActive(s, ctx, g.id)
+      expect(await code(updateExpense(s, ctx, inGroup.id, draft({with: [a.id], groupId: null})))).toBe('ok')
+      expect(await code(createExpense(s, ctx, draft({with: [a.id], groupId: g.id})))).toBe('ok')
       await s.close()
     })
 

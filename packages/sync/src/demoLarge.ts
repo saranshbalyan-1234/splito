@@ -824,7 +824,7 @@ export function generateLargeDemo({me, today, now, seed = DEMO_LARGE_SEED}: {me:
     }
   }
 
-  /* --------------------- Recently deleted (the bin) ----------------------- */
+  /* --------------------- Deleted items (they stay in their lists, struck) ----------------------- */
 
   // Expenses added twice by mistake in the last few weeks, then deleted.
   const recent = records.filter(r => r.record.kind === 'expense' && r.at > now - 25 * DAY && r.at < now - 2 * HOUR)

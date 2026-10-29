@@ -3,7 +3,7 @@ import {CURRENCIES, DomainError} from '@splito/domain'
 import type {Store, Tx} from './store'
 import type {Entity, MutationCtx} from './types'
 
-export type PrefGroup = 'appearance' | 'motion' | 'navigation' | 'defaults' | 'categories' | 'regional' | 'lists' | 'notifications' | 'privacy' | 'history'
+export type PrefGroup = 'appearance' | 'motion' | 'navigation' | 'defaults' | 'categories' | 'regional' | 'lists' | 'notifications' | 'privacy'
 
 export interface PrefDef<T> {
   key: string
@@ -186,6 +186,18 @@ export const PREFS = {
   'amount.shorthand': def('amount.shorthand', 'regional', 'account', 'Amount shortcuts', true, isBool),
   peopleSort: def('peopleSort', 'lists', 'account', 'Sort people by', 'amount', oneOf('amount', 'name', 'recent')),
   includeGroupsDefault: def('includeGroupsDefault', 'lists', 'account', 'Include groups by default', true, isBool),
+  /** The "Inactive (N)" fold at the end of the Groups list (decision 89). */
+  'groups.showInactiveFold': def('groups.showInactiveFold', 'lists', 'account', 'Show inactive groups', true, isBool),
+  /** Groups I have hidden from my own lists (decision 89); set from a group's menu, personal to my account, no Settings row. */
+  'groups.hidden': def<string[]>('groups.hidden', 'lists', 'account', 'Hidden groups', [], (v): v is string[] => Array.isArray(v) && v.length <= 1000 && v.every(isString) && new Set(v).size === v.length),
+  /**
+   * Deleted items I have hidden from my own lists (decisions 104, 105, 106): one id each, personal to my account, set
+   * from a deleted row's or page's "Hide"; "Show hidden" brings them back with "Unhide". Never changes anything for others.
+   */
+  // ponytail: id set in one pref, move to a personal table if it grows past a few thousand
+  'lists.hiddenItems': def<string[]>('lists.hiddenItems', 'lists', 'account', 'Hidden deleted items', [], (v): v is string[] => Array.isArray(v) && v.length <= 5000 && v.every(isString) && new Set(v).size === v.length),
+  /** The one "Show hidden" filter of People, Groups, a group's Expenses and a person's history (decision 105): off, hidden deleted items and hidden groups stay out of the lists. */
+  'lists.showHidden': def('lists.showHidden', 'lists', 'account', 'Show hidden', false, isBool),
   /** The small sync dot on expense, payment and request rows (ARCHITECTURE 9.8); detail pages always say it in words. */
   showSyncStatus: def('showSyncStatus', 'lists', 'device', 'Show sync status on rows', true, isBool),
   swipeLeft: def<SwipeAction>('swipeLeft', 'lists', 'account', 'Swipe left', 'delete', oneOf('markRead', 'hide', 'delete', 'none')),
@@ -205,8 +217,6 @@ export const PREFS = {
   'notify.digest': def('notify.digest', 'notifications', 'device', 'Digest', false, isBool),
   /** Telemetry (16.1): off, nothing is sent. No Settings row until a vendor exists (A-046); recording still honours it. */
   sendDiagnostics: def('sendDiagnostics', 'privacy', 'device', 'Send diagnostics', true, isBool),
-  /** How long Recently deleted lists a deleted expense, payment or write-off (F-1203). */
-  'history.binDays': def('history.binDays', 'history', 'account', 'Keep deleted items for', 30, oneOf(7, 30, 90, 365)),
   // Privacy: the directory server enforces these; saved now, applied once you sign in.
   'privacy.findByContact': def('privacy.findByContact', 'privacy', 'account', 'Let people find me by email or phone', true, isBool),
   'privacy.friendRequestsFrom': def('privacy.friendRequestsFrom', 'privacy', 'account', 'Who can send me friend requests', 'everyone', oneOf('everyone', 'link-only')),
@@ -278,6 +288,23 @@ async function putPref(tx: Tx, ctx: MutationCtx, key: PrefKey, value: unknown, d
       lastError: null,
     })
 }
+
+/**
+ * Edits a list-of-ids preference inside the caller's transaction (read and write together, so two changes never
+ * lose one another). Writes only when `edit` changes the list.
+ */
+export async function editIdsPref(tx: Tx, ctx: MutationCtx, key: 'lists.hiddenItems' | 'groups.hidden', edit: (ids: string[]) => string[]) {
+  const row = await tx.get<{value: unknown}>('preference', key)
+  const ids = prefFrom(row ? [row] : [], key)
+  const next = edit(ids)
+  if (next.length === ids.length && next.every((id, i) => id === ids[i])) return
+  if (!PREFS[key].validate(next)) throw new DomainError('INVALID_PREF')
+  await putPref(tx, ctx, key, next, false)
+}
+
+/** Takes ids out of `lists.hiddenItems` (a restored item is live again, so a hide no longer applies). */
+export const unhideItems = (tx: Tx, ctx: MutationCtx, ids: string[]) =>
+  editIdsPref(tx, ctx, 'lists.hiddenItems', cur => (cur.some(x => ids.includes(x)) ? cur.filter(x => !ids.includes(x)) : cur))
 
 const writePref = (store: Store, ctx: MutationCtx, key: PrefKey, value: unknown, deleted: boolean) =>
   store.transaction(tx => putPref(tx, ctx, key, value, deleted))

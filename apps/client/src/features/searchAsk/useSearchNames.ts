@@ -1,7 +1,7 @@
 import {useMemo} from 'react'
 import {type Group, type Person} from '@splito/sync'
 
-import {useEntities} from '#/data/hooks'
+import {useAllEntities} from '#/data/hooks'
 
 /**
  * The names a result row draws (people and groups are small stores, read
@@ -9,8 +9,8 @@ import {useEntities} from '#/data/hooks'
  * the rows a query matches. Undefined entries until the store has loaded.
  */
 export function useSearchNames() {
-  const people = useEntities<Person>('person')
-  const groups = useEntities<Group>('group')
+  const people = useAllEntities<Person>('person')
+  const groups = useAllEntities<Group>('group')
   const names = useMemo(
     () => new Map(people?.map(p => [p.id, p.data.name])),
     [people],

@@ -17,13 +17,18 @@ import {
   type Entity,
   type Expense,
   type Group,
+  isGroupInactive,
   restoreExpense,
 } from '@splito/sync'
 
 import {type AllNavigatorParams, type NavigationProp} from '#/lib/routes/types'
 import {useNumberLocale} from '#/locale/numberLocale'
 import {useFormatDay, useToday} from '#/locale/useDates'
-import {useEntities, useMutationCtx, useStore} from '#/data/hooks'
+import {useAllEntities, useEntities, useMutationCtx, useStore} from '#/data/hooks'
+import {DeletedMeta, useStruck} from '#/components/DeletedMeta'
+import {EyeIcon, EyeOffIcon} from '#/components/settings/icons'
+import {useHiddenItems} from '#/data/hiddenItems'
+import {useHideItem} from '#/features/hidden/HideItem'
 import {Link} from '#/view/com/util/Link'
 import {EmptyState} from '#/view/com/util/EmptyState'
 import {UserAvatar} from '#/view/com/util/UserAvatar'
@@ -65,6 +70,14 @@ export function ExpenseScreen() {
   const {params} = useRoute<RouteProp<AllNavigatorParams, 'Expense'>>()
   const navigation = useNavigation<NavigationProp>()
   const {expense, history} = useExpense(params.expenseId)
+  const struck = useStruck()
+  const groups = useEntities<Group>('group')
+  /* An expense in an inactive group cannot be edited: that would change the group's balances (decision 89). */
+  const isInInactiveGroup =
+    !!expense?.data.groupId &&
+    !!groups?.some(
+      g => g.id === expense.data.groupId && isGroupInactive(g.data),
+    )
 
   return (
     <Layout.Screen testID="screen-expense">
@@ -73,20 +86,26 @@ export function ExpenseScreen() {
         {/* Balances Edit and the overflow on the right, so the title stays centred. */}
         <Layout.Header.Slot />
         <Layout.Header.Content>
-          <Layout.Header.TitleText testID="expense-detail-title">
+          <Layout.Header.TitleText
+            testID="expense-detail-title"
+            style={expense?.deleted ? struck : undefined}>
             {expense?.data.title ?? <Trans>Expense</Trans>}
           </Layout.Header.TitleText>
         </Layout.Header.Content>
         {expense && !expense.deleted ? (
           <>
-            <Layout.Header.ActionButton
-              testID="expense-edit-button"
-              icon={PencilIcon}
-              label={l`Edit expense`}
-              onPress={() =>
-                navigation.navigate('EditExpense', {expenseId: expense.id})
-              }
-            />
+            {isInInactiveGroup ? (
+              <Layout.Header.Slot />
+            ) : (
+              <Layout.Header.ActionButton
+                testID="expense-edit-button"
+                icon={PencilIcon}
+                label={l`Edit expense`}
+                onPress={() =>
+                  navigation.navigate('EditExpense', {expenseId: expense.id})
+                }
+              />
+            )}
             <ExpenseMenu expense={expense} />
           </>
         ) : (
@@ -198,6 +217,7 @@ function Detail({
   history: Parameters<typeof History>[0]['history']
 }) {
   const t = useTheme()
+  const struck = useStruck()
   const {t: l, i18n} = useLingui()
   const {gtTablet} = useBreakpoints()
   const store = useStore()
@@ -208,7 +228,7 @@ function Detail({
   const name = useDisplayName()
   const avatarName = useAvatarName()
   const errorText = useErrorText()
-  const groups = useEntities<Group>('group')
+  const groups = useAllEntities<Group>('group')
   const e = expense.data
   const category = useCategory(e.category)
   const group = e.groupId ? groups?.find(g => g.id === e.groupId) : undefined
@@ -270,10 +290,15 @@ function Detail({
             a.text_5xl,
             a.font_bold,
             a.leading_tight,
+            expense.deleted && struck,
             {fontVariant: ['tabular-nums']},
           ]}>
           {fmt(e.total)}
         </Text>
+        {/* A deleted expense says when, right under its struck amount (owner 98). */}
+        {expense.deleted ? (
+          <DeletedMeta testID="expense-deleted-at" at={expense.updatedAt} />
+        ) : null}
         <View style={[a.flex_row, a.align_center, a.gap_sm, a.flex_wrap]}>
           <Text
             testID="expense-detail-date"
@@ -418,6 +443,9 @@ function Detail({
     </View>
   )
 
+  const hide = useHideItem({type: 'expense', id: expense.id})
+  const hiddenIds = useHiddenItems()
+  const isHidden = expense.deleted && hiddenIds.has(expense.id)
   const deletedBanner = expense.deleted ? (
     <View
       testID="expense-deleted"
@@ -437,6 +465,7 @@ function Detail({
           This expense was deleted. It no longer counts towards any balance.
         </Trans>
       </Text>
+      <View style={[a.gap_xs]}>
       <Button
         testID="expense-restore"
         label={l`Restore expense`}
@@ -454,6 +483,16 @@ function Detail({
           <Trans>Restore</Trans>
         </ButtonText>
       </Button>
+      <Button
+        testID="expense-hide"
+        label={isHidden ? l`Unhide` : l`Hide`}
+        size="small"
+        color="secondary"
+        onPress={() => void hide.toggle(!isHidden)}>
+        <ButtonIcon icon={isHidden ? EyeIcon : EyeOffIcon} />
+        <ButtonText>{isHidden ? <Trans>Unhide</Trans> : <Trans>Hide</Trans>}</ButtonText>
+      </Button>
+      </View>
     </View>
   ) : null
 

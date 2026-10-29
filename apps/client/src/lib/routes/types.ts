@@ -19,14 +19,13 @@ export type RootStackParams = {
   Tabs: NavigatorScreenParams<TabParams> | undefined
   /** Opened from the avatar's drawer, so it is pushed like Settings. */
   Profile: undefined
+  /** The old Recently deleted link lands here as `?note=deleted-stay` (read raw: a short note under Data). */
   Settings: undefined
   /** The old Search page's link: opens the Search & Ask drawer with `q` typed in (`/search?q=dinner`). */
   Search: {q?: string} | undefined
   SettingsSection: {section: string}
   /** Settings > Account: honest until the auth backend exists. */
   SignIn: undefined
-  /** Settings > Recently deleted (also in the drawer). */
-  RecentlyDeleted: undefined
   Person: {personId: string}
   /** `tab` opens a section directly (`/groups/:groupId?tab=rules`). */
   Group: {groupId: string; tab?: 'expenses' | 'balances' | 'members' | 'rules'}

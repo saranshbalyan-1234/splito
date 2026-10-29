@@ -25,7 +25,9 @@ import {type Entity, type EntityInput, type EntityType, type HistoryRow, type Ou
  * 1: one `entities` store. 2: a store per entity type, relations and balance
  * projections. 3: the `aggregates` and `search_terms` projections and
  * `people.lastActivityAt` (so Analytics and Search never load the ledger).
- * 4: the `reminders` store (Remind nudges and Remind me, F-1118 / F-1119).
+ * 4: the `reminders` store (Remind nudges and Remind me, F-1118 / F-1119); a deleted expense keeps its
+ * `expense_parties` rows (flagged) and its search terms, so lists show deleted items in place (decision 103); the
+ * `history.binDays` preference is gone.
  */
 export const SCHEMA_VERSION = 4
 

@@ -2,6 +2,8 @@ import {useState} from 'react'
 import {View} from 'react-native'
 import {Trans, useLingui} from '@lingui/react/macro'
 
+import {useShowHidden} from '#/data/hiddenItems'
+import {ShowHiddenToggle} from '#/features/hidden/ShowHidden'
 import {atoms as a, useTheme} from '#/alf'
 import * as Dialog from '#/components/Dialog'
 import * as Toggle from '#/components/forms/Toggle'
@@ -49,14 +51,20 @@ function Form({
   const {t: l} = useLingui()
   const control = Dialog.useDialogContext()
   const [draft, setDraft] = useState(includeGroups)
+  const [showHidden, setShowHidden] = useShowHidden()
+  const [draftHidden, setDraftHidden] = useState(showHidden)
 
   return (
     <FormSheet.Inner
       title={l`Filter`}
-      isDirty={draft !== includeGroups}
+      isDirty={draft !== includeGroups || draftHidden !== showHidden}
       footer={{
         saveLabel: l`Apply`,
-        onSave: () => control.close(() => onFilterApplied(draft)),
+        onSave: () =>
+          control.close(() => {
+            onFilterApplied(draft)
+            if (draftHidden !== showHidden) void setShowHidden(draftHidden)
+          }),
       }}>
       <View style={[a.gap_lg]}>
         <Toggle.Item
@@ -87,6 +95,7 @@ function Form({
           </View>
           <Toggle.Switch />
         </Toggle.Item>
+        <ShowHiddenToggle value={draftHidden} onChange={setDraftHidden} />
         <Text style={[a.text_sm, a.leading_snug, t.atoms.text_contrast_medium]}>
           <Trans>The starting value is set in Settings › Lists.</Trans>
         </Text>

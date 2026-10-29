@@ -6,28 +6,22 @@ import {
   createExpense,
   createGroup,
   createPerson,
-  createRepayment,
   createWriteOffs,
   deleteExpense,
-  deleteRepayment,
   deleteWriteOff,
   deleteWriteOffs,
   ensureMe,
   type ExpenseDraft,
-  purgeDeleted,
   restoreExpense,
-  restoreRepayment,
   restoreWriteOff,
   type WriteOffInput,
 } from '../src/mutations'
-import {getPref, setPref} from '../src/preferences'
-import {loadBin, loadLedger} from '../src/selectors'
+import {loadLedger} from '../src/selectors'
 import {openSqlStore} from '../src/sqlStore'
 import {type Store} from '../src/store'
 import {type MutationCtx} from '../src/types'
 import {bunExecutor} from './bunExecutor'
 
-const DAY = 86_400_000
 let s: Store
 let ctx: MutationCtx
 let n = 0
@@ -142,66 +136,15 @@ test('write-offs show in Activity as recorded and removed', async () => {
   expect(activityFromHistory(await s.history('writeoff', w!.id)).map(e => e.kind)).toEqual(['writeoff.removed', 'writeoff.recorded'])
 })
 
-/* F-1203 Recently deleted */
+/* F-1203 Deleted items stay in place */
 
-test('the bin lists deleted expenses, payments and write-offs inside the window, newest first, with who deleted them', async () => {
-  const x = await createPerson(s, ctx, {name: 'Riya'})
-  const e = await createExpense(s, ctx, expense({split: {mode: 'equal', participants: ['me', x.id]}}))
-  const r = await createRepayment(s, ctx, {groupId: null, currency: 'INR', from: x.id, to: 'me', amount: 10n, date: '2026-10-26', tz: 'UTC', note: ''})
-  const [w] = await createWriteOffs(s, ctx, [off({from: x.id, to: 'me', amount: 5n})])
-  const old = await createExpense(s, ctx, expense({title: 'Old', split: {mode: 'equal', participants: ['me', x.id]}}))
-  await deleteExpense(s, ctx, old.id)
-  clock += 40 * DAY
-  await deleteExpense(s, {...ctx, actor: x.id}, e.id)
-  clock += 1000
-  await deleteRepayment(s, ctx, r.id)
-  clock += 1000
-  await deleteWriteOff(s, ctx, w!.id)
-  const bin = await loadBin(s, clock + 10, 30)
-  expect(bin.map(b => [b.type, b.entity.id])).toEqual([
-    ['writeoff', w!.id],
-    ['repayment', r.id],
-    ['expense', e.id],
-  ])
-  expect(bin.find(b => b.entity.id === e.id)).toMatchObject({deletedBy: x.id})
-  // A longer window reaches the older delete.
-  expect((await loadBin(s, clock + 10, 90)).map(b => b.entity.id)).toContain(old.id)
-})
-
-test('restore takes an item out of the bin and its balance comes back; restoring twice fails', async () => {
+test('restore brings the balance back; restoring twice fails', async () => {
   const x = await createPerson(s, ctx, {name: 'Riya'})
   const e = await createExpense(s, ctx, expense({split: {mode: 'equal', participants: ['me', x.id]}}))
   await deleteExpense(s, ctx, e.id)
   expect(pairwiseBalances(await loadLedger(s), 'me')).toEqual([])
   await restoreExpense(s, ctx, e.id)
   expect(pairwiseBalances(await loadLedger(s), 'me')).toEqual([{person: x.id, groupId: null, currency: 'INR', amount: 100n}])
-  expect(await loadBin(s, clock + 10, 30)).toEqual([])
   await expect(restoreExpense(s, ctx, e.id)).rejects.toThrow('NOT_FOUND')
 })
 
-test('delete forever hides the item from the bin and blocks restore, but the tombstone and its history stay', async () => {
-  const x = await createPerson(s, ctx, {name: 'Riya'})
-  const r = await createRepayment(s, ctx, {groupId: null, currency: 'INR', from: x.id, to: 'me', amount: 10n, date: '2026-10-26', tz: 'UTC', note: ''})
-  await deleteRepayment(s, ctx, r.id)
-  await purgeDeleted(s, ctx, 'repayment', r.id)
-  expect(await loadBin(s, clock + 10, 30)).toEqual([])
-  await expect(restoreRepayment(s, ctx, r.id)).rejects.toThrow('NOT_FOUND')
-  const all = await s.getAll('repayment')
-  expect(all).toHaveLength(1)
-  expect(all[0]!.deleted).toBe(true)
-  expect((await s.history('repayment', r.id)).map(h => h.deleted)).toEqual([false, true, true])
-  expect((await s.outbox()).filter(o => o.entityId === r.id).map(o => o.opType)).toEqual(['repayment.create', 'repayment.delete', 'repayment.purge'])
-  // The purge is not a second "removed" in Activity.
-  expect((await loadActivity(s)).filter(a => a.entityId === r.id).map(a => a.kind)).toEqual(['repayment.removed', 'repayment.recorded'])
-  // Only deleted items can be purged, and only once.
-  await expect(purgeDeleted(s, ctx, 'repayment', r.id)).rejects.toThrow('NOT_FOUND')
-  const e = await createExpense(s, ctx, expense({split: {mode: 'equal', participants: ['me', x.id]}}))
-  await expect(purgeDeleted(s, ctx, 'expense', e.id)).rejects.toThrow('NOT_FOUND')
-})
-
-test('history.binDays defaults to 30 and accepts only the offered windows', async () => {
-  expect(await getPref(s, 'history.binDays')).toBe(30)
-  await setPref(s, ctx, 'history.binDays', 90)
-  expect(await getPref(s, 'history.binDays')).toBe(90)
-  await expect(setPref(s, ctx, 'history.binDays', 12 as never)).rejects.toThrow('INVALID_PREF')
-})

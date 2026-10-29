@@ -9,8 +9,11 @@ import {type Group, type Person} from '@splito/sync'
 
 import {type NavigationProp} from '#/lib/routes/types'
 import {perfMark} from '#/lib/perfMark'
+import {useGroupChipNames} from '#/data/groupVisibility'
+import {useHiddenItems, useShowHidden} from '#/data/hiddenItems'
 import {useNumberLocale} from '#/locale/numberLocale'
 import {
+  useAllEntities,
   useBalanceRows,
   useEntities,
   useLastActivity,
@@ -64,25 +67,29 @@ export function PeopleScreen() {
   const navigation = useNavigation<NavigationProp>()
   const {height} = useWindowDimensions()
   const me = useMe()
-  const people = useEntities<Person>('person')
+  /* Tombstones too: a removed friend stays in the list, struck through (decision 103). */
+  const people = useAllEntities<Person>('person')
   const groups = useEntities<Group>('group')
   const balanceRows = useBalanceRows()
   const [sortDefault = 'amount'] = usePref('peopleSort')
   const [currency = 'INR'] = usePref('defaultCurrency')
   const [includeDefault] = usePref('includeGroupsDefault')
+  const [showHidden, setShowHidden] = useShowHidden()
+  const hiddenIds = useHiddenItems()
   const defaults: PeopleFilters = {
     includeGroups: includeDefault ?? true,
     currency: 'all',
     show: 'all',
     sort: sortDefault,
+    showHidden: false,
   }
   const [applied, setApplied] = useState<PeopleFilters | null>(null)
-  const filters = applied ?? defaults
+  const filters: PeopleFilters = {...(applied ?? defaults), showHidden}
   const {includeGroups, sort} = filters
   const lastActivity = useLastActivity(sort === 'recent')
   /* The filter button counts what differs from the defaults (Settings › Sorting and filters). */
   const activeCount = (
-    ['includeGroups', 'currency', 'show', 'sort'] as const
+    ['includeGroups', 'currency', 'show', 'sort', 'showHidden'] as const
   ).filter(k => filters[k] !== defaults[k]).length
   const filterControl = useDialogControl()
 
@@ -95,21 +102,29 @@ export function PeopleScreen() {
     ? personSummary(balanceRows, {includeGroups})
     : []
   const byPerson = new Map(summaries.map(s => [s.person, s]))
-  const groupNames = new Map((groups ?? []).map(g => [g.id, g.data.name]))
+  const groupNames = useGroupChipNames(groups)
   const friends = (people ?? [])
     .filter(p => !p.data.isMe)
-    .map(p => ({id: p.id, name: p.data.name, summary: byPerson.get(p.id)}))
+    .map(p => ({
+      id: p.id,
+      name: p.data.name,
+      summary: byPerson.get(p.id),
+      deletedAt: p.deleted ? p.updatedAt : undefined,
+      isHidden: p.deleted && hiddenIds.has(p.id),
+    }))
   const currencies = [
     ...new Set(summaries.flatMap(s => Object.keys(s.byCurrency))),
   ].sort()
-  const rows: PersonRowData[] = sortFriends(
-    filterFriends(friends, filters),
+  const listed: PersonRowData[] = sortFriends(
+    filterFriends(friends, filters).filter(f => showHidden || !f.isHidden),
     sort,
     {
       currency: filters.currency === 'all' ? currency : filters.currency,
       activity: lastActivity ?? new Map(),
     },
   )
+  /* A removed friend is in the list but is no friend now: the counts and figures cover the live rows. */
+  const rows = listed.filter(row => row.deletedAt === undefined)
   /* The summary follows the filters too, so its figures always match the list. */
   const totals = balanceTotals(
     rows.flatMap(row => (row.summary ? [row.summary] : [])),
@@ -176,7 +191,7 @@ export function PeopleScreen() {
         /* Upstream's list idiom: rows already there on mount appear at once; later inserts and removals animate. */
         <LayoutAnimationConfig skipEntering skipExiting>
           <List
-            data={rows}
+            data={listed}
             keyExtractor={(row: PersonRowData) => row.id}
             renderItem={({item}: {item: PersonRowData}) => (
               <PersonRow row={item} groupNames={groupNames} locale={locale} />
@@ -256,7 +271,10 @@ export function PeopleScreen() {
         control={filterControl}
         filters={filters}
         currencies={currencies}
-        onFiltersApplied={setApplied}
+        onFiltersApplied={f => {
+          setApplied(f)
+          if (f.showHidden !== showHidden) void setShowHidden(f.showHidden)
+        }}
       />
     </Layout.Screen>
   )

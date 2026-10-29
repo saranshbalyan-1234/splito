@@ -10,12 +10,14 @@ import {
   type Expense,
   type Group,
   highlightRanges,
+  isGroupInactive,
   type Person,
 } from '@splito/sync'
 
 import {PressableWithHover} from '#/view/com/util/PressableWithHover'
 import {UserAvatar} from '#/view/com/util/UserAvatar'
 import {atoms as a, type TextStyleProp, useTheme} from '#/alf'
+import {DeletedMeta, useStruck} from '#/components/DeletedMeta'
 import {GroupAvatar} from '#/components/groups/GroupAvatar'
 import {ChevronRight_Stroke2_Corner0_Rounded as ChevronIcon} from '#/components/icons/Chevron'
 import {EntryIcon} from '#/components/people/EntryIcon'
@@ -214,6 +216,9 @@ export function ExpenseResult({
 }) {
   const t = useTheme()
   const {t: l} = useLingui()
+  const struck = useStruck()
+  /* A deleted expense stays among the results, struck through; the totals above never count it (decision 103). */
+  const isDeleted = expense.deleted
   const e = expense.data
   const total = formatAmount(e.total, e.currency, locale)
   const payers = Object.keys(e.payers).filter(id => e.payers[id] !== ZERO)
@@ -250,7 +255,7 @@ export function ExpenseResult({
         <Highlight
           text={e.title}
           terms={terms}
-          style={[a.text_md, a.font_semi_bold, a.leading_snug]}
+          style={[a.text_md, a.font_semi_bold, a.leading_snug, isDeleted && struck]}
         />
         {/* Payer and group names match too, so they light up here. */}
         <Highlight
@@ -265,11 +270,12 @@ export function ExpenseResult({
             style={[a.text_sm, a.leading_snug, t.atoms.text_contrast_medium]}
           />
         ) : null}
+        {isDeleted ? <DeletedMeta testID={`search-deleted-${expense.id}`} at={expense.updatedAt} /> : null}
       </View>
       <View style={[a.align_end, a.gap_2xs, a.flex_shrink_0]}>
         <Text
           numberOfLines={1}
-          style={[a.text_md, a.font_semi_bold, a.leading_snug, tabular]}>
+          style={[a.text_md, a.font_semi_bold, a.leading_snug, tabular, isDeleted && struck]}>
           {total}
         </Text>
         <Text
@@ -296,6 +302,7 @@ export function PersonResult({
   onPress: () => void
 }) {
   const t = useTheme()
+  const struck = useStruck()
   return (
     <ResultRow
       nav={nav}
@@ -307,13 +314,17 @@ export function PersonResult({
         <Highlight
           text={person.data.name}
           terms={terms}
-          style={[a.text_md, a.font_semi_bold, a.leading_snug]}
+          style={[a.text_md, a.font_semi_bold, a.leading_snug, person.deleted && struck]}
         />
-        <Text
-          numberOfLines={1}
-          style={[a.text_sm, a.leading_snug, t.atoms.text_contrast_medium]}>
-          <Trans>Friend</Trans>
-        </Text>
+        {person.deleted ? (
+          <DeletedMeta testID={`search-deleted-${person.id}`} at={person.updatedAt} />
+        ) : (
+          <Text
+            numberOfLines={1}
+            style={[a.text_sm, a.leading_snug, t.atoms.text_contrast_medium]}>
+            <Trans>Friend</Trans>
+          </Text>
+        )}
       </View>
       <ChevronIcon size="sm" style={t.atoms.text_contrast_low} />
     </ResultRow>
@@ -323,19 +334,23 @@ export function PersonResult({
 export function GroupResult({
   nav,
   group,
+  isHidden = false,
   terms,
   isActive,
   onPress,
 }: {
   nav: number
   group: Entity<Group>
+  /** I have hidden this group (decision 89). */
+  isHidden?: boolean
   terms: string[]
   isActive: boolean
   onPress: () => void
 }) {
   const t = useTheme()
   const {t: l} = useLingui()
-  const {name, kind, members, archived} = group.data
+  const struck = useStruck()
+  const {name, kind, members} = group.data
   const kindLabel = {
     trip: l`Trip`,
     home: l`Home`,
@@ -346,7 +361,8 @@ export function GroupResult({
   const byline = [
     kindLabel,
     memberCount === 1 ? l`1 member` : l`${memberCount} members`,
-    archived ? l`Archived` : undefined,
+    group.deleted ? l`Deleted` : isGroupInactive(group.data) ? l`Inactive` : undefined,
+    isHidden ? l`Hidden` : undefined,
   ]
     .filter(Boolean)
     .join(' · ')
@@ -357,13 +373,14 @@ export function GroupResult({
         <Highlight
           text={name}
           terms={terms}
-          style={[a.text_md, a.font_semi_bold, a.leading_snug]}
+          style={[a.text_md, a.font_semi_bold, a.leading_snug, group.deleted && struck]}
         />
         <Text
           numberOfLines={1}
           style={[a.text_sm, a.leading_snug, t.atoms.text_contrast_medium]}>
           {byline}
         </Text>
+        {group.deleted ? <DeletedMeta testID={`search-deleted-${group.id}`} at={group.updatedAt} /> : null}
       </View>
       <ChevronIcon size="sm" style={t.atoms.text_contrast_low} />
     </ResultRow>

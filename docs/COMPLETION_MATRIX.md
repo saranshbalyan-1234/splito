@@ -37,7 +37,7 @@ Status words are the same as `docs/BACKLOG.md`: **done** (built, tested and merg
 | Settle up | Plan per group, payment rules, record repayment, UPI link and "Mark as paid?" | F-1101, F-1103 | in progress (built and tested on the unmerged UI line) |
 | Settle up | Call it even: forgive or write off | F-1113 | in progress (built and tested on feat/b-*, unmerged) |
 | Activity | Feed, read/unread, All / From others, actor avatar, day headers, lent/borrowed rows, swipe, hide, undo | F-1201 | in progress (built and tested on the unmerged UI line) |
-| Activity | Recently deleted bin | F-1203 | in progress (built and tested on feat/b-*, unmerged) |
+| Activity | Deleted items stay in their lists, struck through, forever; Restore; Hide and Show hidden (no Recently deleted bin) | F-1203 | done on feat/wB-B3x (unmerged; pnpm check green, full web e2e 241 passed, 1 skipped (UPI test, opens an external app), the "large demo under 10 s" timing test passes alone, incl. `deletedInPlace.spec.ts` (18 tests) on phone and desktop; perf on the 10,000-expense ledger: Home cold open 46 ms (5 runs 44 to 56), write + UI 16 ms, Analytics open 18 ms, search keystroke 19 to 41 ms; large demo set 1,569 expenses: cold open 48 ms, write + UI 16 ms; native long-press not yet run) |
 | Analytics | Charts + table, period / currency / group filters, Export CSV in the header overflow | F-1301 | in progress (built and tested on the unmerged UI line) |
 | Settings | Every preference incl. Dim / Black dark style, accent, timezone | F-1701 | in progress (built and tested on the unmerged UI line) |
 | Settings | Account section: Sign in / Create account (Bluesky LoggedOut, Login, Signup copied; honest until sync; Log out ships with F-2102) | F-225 | done (feat/wA-30b; backend submit answers "arrives with sync" until F-2102) |
@@ -73,7 +73,10 @@ Status words are the same as `docs/BACKLOG.md`: **done** (built, tested and merg
 | Expenses+ | Receipt capture: camera / photo / file, on-device OCR, review before saving | F-501, F-502 | todo |
 | Expenses+ | Attachments (photos, PDFs) | F-312 | todo |
 | Expenses+ | Location: manual place, optional automatic | F-313 | todo |
-| Groups+ | Archive groups | F-604 | todo |
+| Groups+ | Active / inactive and show / hide groups (decision 89) | F-604 | done (feat/wB-B3; sync `groupLifecycle.test.ts` + store contract on both engines, client `filter.test.ts`, e2e `groupLifecycle.spec.ts` phone + desktop; web verified, native not yet run) |
+| Groups+ | Leave a group, delete a group (restores whole), hand over admin | F-615 | done (feat/wB-B3; sync `groupLifecycle.test.ts`, e2e `groupLifecycle.spec.ts`; web verified) |
+| Groups+ | Safe member removal: settle, forgive or keep inactive, with a balance preview | F-613 part 1 | done (feat/wB-B3; domain `memberExit.test.ts`, sync `groupLifecycle.test.ts`, e2e); re-split wizard is Wave C |
+| Groups+ | History, bin and sync integrity (audit M4, m1, m11, m15, m17, m18, m19, m20) | F-114 | done (feat/wB-B3; sync `historyIntegrity.test.ts`; m20 Include groups part open) |
 | Groups+ | Trip kitty (shared cash pot) | F-701 | todo |
 | Groups+ | Split accommodation by nights stayed | F-702 | todo |
 | Groups+ | Trip budget (total + per category) | F-1304 | todo |

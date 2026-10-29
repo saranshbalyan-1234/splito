@@ -11,6 +11,7 @@ import {Button, ButtonIcon} from '#/components/Button'
 import {ChevronRight_Stroke2_Corner0_Rounded as ChevronIcon} from '#/components/icons/Chevron'
 import {DotGrid3x1_Stroke2_Corner0_Rounded as DotsIcon} from '#/components/icons/DotGrid'
 import {Handshake_Stroke2_Corner0_Rounded as HandshakeIcon} from '#/components/icons/Money'
+import {LogOutIcon as ExitIcon} from '#/screens/Group/components/groupIcons'
 import * as Menu from '#/components/Menu'
 import {currencyName} from '#/components/people/ledger'
 import * as Pills from '#/components/Pills'
@@ -234,13 +235,19 @@ export function OweRow({
   )
 }
 
-/** A member row; friends open their page. */
+/**
+ * A member row; friends open their page. An active member has a "..." menu: "Leave group" on my own row,
+ * "Remove from group" on a friend's (F-615, F-613), as Bluesky's group member menu. The menu is a sibling
+ * of the row's link, never nested inside it.
+ */
 export function MemberRow({
   personId,
   name,
   avatarName = name,
   isMe,
   hasLeft,
+  isAdmin = false,
+  onExitPressed,
 }: {
   personId: string
   name: string
@@ -248,10 +255,15 @@ export function MemberRow({
   avatarName?: string
   isMe: boolean
   hasLeft: boolean
+  isAdmin?: boolean
+  /** Opens the leave / remove sheet; the row has no menu without it, or once the member has left. */
+  onExitPressed?: () => void
 }) {
   const t = useTheme()
+  const {t: l} = useLingui()
   const listAnimations = useListAnimations()
   const press = usePressScale()
+  const hasMenu = !!onExitPressed && !hasLeft
   const content = (
     <Animated.View style={[a.flex_row, a.align_center, a.gap_md, press.style]}>
       <UserAvatar size={42} name={avatarName} type="user" />
@@ -261,39 +273,85 @@ export function MemberRow({
         style={[a.flex_1, a.text_md, a.font_semi_bold]}>
         {name}
       </Text>
+      {isAdmin && !hasLeft && (
+        <Pills.Tag>
+          <Trans>Admin</Trans>
+        </Pills.Tag>
+      )}
       {hasLeft && (
         <Pills.Tag>
           <Trans>Left the group</Trans>
         </Pills.Tag>
       )}
-      {!isMe && (
+      {!isMe && !hasMenu && (
         <ChevronIcon size="sm" fill={t.atoms.text_contrast_low.color} />
       )}
     </Animated.View>
   )
-  const rowStyle = [a.px_lg, a.py_md, a.border_t, t.atoms.border_contrast_low]
+  const rowStyle = [a.px_lg, a.py_md]
 
   return (
     <Animated.View {...listAnimations}>
-      {isMe ? (
-        <View testID={`member-${name}`} style={rowStyle}>
-          {content}
+      <View
+        style={[
+          a.flex_row,
+          a.align_center,
+          a.border_t,
+          t.atoms.border_contrast_low,
+        ]}>
+        <View style={[a.flex_1]}>
+          {isMe ? (
+            <View testID={`member-${name}`} style={rowStyle}>
+              {content}
+            </View>
+          ) : (
+            <Link
+              testID={`member-${name}`}
+              href={`/people/${personId}`}
+              asAnchor
+              anchorNoUnderline
+              onPressIn={press.onPressIn}
+              onPressOut={press.onPressOut}
+              accessibilityLabel={name}
+              accessibilityHint=""
+              hoverStyle={t.atoms.bg_contrast_25}
+              style={[rowStyle, a.transition_color]}>
+              {content}
+            </Link>
+          )}
         </View>
-      ) : (
-        <Link
-          testID={`member-${name}`}
-          href={`/people/${personId}`}
-          asAnchor
-          anchorNoUnderline
-          onPressIn={press.onPressIn}
-          onPressOut={press.onPressOut}
-          accessibilityLabel={name}
-          accessibilityHint=""
-          hoverStyle={t.atoms.bg_contrast_25}
-          style={[rowStyle, a.transition_color]}>
-          {content}
-        </Link>
-      )}
+        {hasMenu && (
+          <Menu.Root>
+            <Menu.Trigger label={l`More options for ${name}`}>
+              {({props}) => (
+                <Button
+                  {...props}
+                  testID={`member-${name}-more`}
+                  label={props.accessibilityLabel}
+                  size="small"
+                  color="secondary"
+                  variant="ghost"
+                  shape="round"
+                  style={{marginRight: 8}}>
+                  <ButtonIcon icon={DotsIcon} />
+                </Button>
+              )}
+            </Menu.Trigger>
+            <Menu.Outer>
+              <Menu.Item
+                testID={`member-${name}-exit`}
+                label={isMe ? l`Leave group` : l`Remove ${name} from group`}
+                destructive
+                onPress={onExitPressed}>
+                <Menu.ItemText>
+                  {isMe ? <Trans>Leave group</Trans> : <Trans>Remove from group</Trans>}
+                </Menu.ItemText>
+                <Menu.ItemIcon icon={ExitIcon} position="right" />
+              </Menu.Item>
+            </Menu.Outer>
+          </Menu.Root>
+        )}
+      </View>
     </Animated.View>
   )
 }

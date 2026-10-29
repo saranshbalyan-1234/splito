@@ -2,7 +2,7 @@ import {type IDBPDatabase, type IDBPTransaction, wrap} from 'idb'
 
 import {createStore} from './core'
 import {type Engine, type RangeQuery, type RowAccess} from './engine'
-import {type LegacyV1, migrateFromV1, migrateV2ToV3, migrateV3ToV4, stampSchemaVersion} from './migrate'
+import {type LegacyV1, migrateFromV1, migrateToV4, stampSchemaVersion} from './migrate'
 import {indexColumns, type Key, type Row, SCHEMA_VERSION, STORES, type StoreName} from './schema'
 import {transactionRows} from './txRows'
 import {changeFromJson, changeToJson, type Store, type StoreChange} from './store'
@@ -137,18 +137,16 @@ export async function openIdbStore(name: string, factory: IDBFactory = indexedDB
         for (const old of ['entities', 'history', 'outbox']) raw.deleteObjectStore(old)
         createStores(raw)
         await pipelined(t, cmp, rows => migrateFromV1(legacy, rows))
-      } else {
-        // Ordered steps, each skipped once the database is past it (the upgrade is one transaction).
+      } else if (e.oldVersion === 2 || e.oldVersion === 3) {
         if (e.oldVersion === 2) {
-          // v2 -> v3: two new stores and one new index; every older row is rewritten by the rebuild.
+          // v2 -> v3: two new stores and one new index.
           createStores(raw, ['aggregates', 'search_terms'])
           req.transaction!.objectStore('people').createIndex('byActivity', [...STORES.people.indexes.byActivity.columns])
-          // The rebuild reads every entity store, so v4's store is created in the same upgrade (ordered steps), empty, before it runs.
-          createStores(raw, ['reminders'])
-          await pipelined(t, cmp, rows => migrateV2ToV3(rows))
         }
-        if (e.oldVersion === 3) createStores(raw, ['reminders'])
-        if (e.oldVersion === 2 || e.oldVersion === 3) await pipelined(t, cmp, rows => migrateV3ToV4(rows))
+        // v3 -> v4: the empty `reminders` store, created before the rebuild reads every entity store. One rebuild
+        // serves a v2 and a v3 file (deleted expenses keep parties and search terms; history.binDays goes).
+        createStores(raw, ['reminders'])
+        await pipelined(t, cmp, rows => migrateToV4(rows))
       }
     })().catch(error => {
       // Aborting the upgrade leaves the v1 database exactly as it was.

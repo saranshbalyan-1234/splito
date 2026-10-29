@@ -15,7 +15,7 @@ import {type LedgerRecord, recordCells, recordEffects, type SpendCell} from '@sp
 
 import {decode} from './codec'
 import {type RowAccess} from './engine'
-import {type Expense, type Group, type Repayment} from './mutations'
+import {type Expense, type Group, normalizeRoles, type Repayment} from './mutations'
 import {type Key, type Row} from './schema'
 import {termKey, termRows} from './searchTerms'
 import {toExpenseRecord, toRepaymentRecord, toWriteOffRecord} from './selectors'
@@ -51,9 +51,9 @@ const syncFields = (e: Entity) => ({
   syncError: e.syncError,
 })
 
-/** One row per person on a live expense. */
+/** One row per person on an expense; a deleted expense keeps its rows (`deleted` 1) so a person's history can list it in place. */
 export function partyRows(e: Entity<Expense> | undefined): Row[] {
-  if (!e || e.deleted || !e.data?.payers || !e.data.shares) return []
+  if (!e || !e.data?.payers || !e.data.shares) return []
   const d = e.data
   const people = [...new Set([...Object.keys(d.payers ?? {}), ...Object.keys(d.shares ?? {})])]
   return people.map(personId => ({
@@ -66,7 +66,7 @@ export function partyRows(e: Entity<Expense> | undefined): Row[] {
     currency: d.currency ?? '',
     date: d.date ?? '',
     createdAt: e.createdAt,
-    deleted: 0,
+    deleted: e.deleted ? 1 : 0,
     ...syncFields(e),
   }))
 }
@@ -74,13 +74,13 @@ export function partyRows(e: Entity<Expense> | undefined): Row[] {
 /** One row per member of a live group. */
 export function memberRows(e: Entity<Group> | undefined): Row[] {
   if (!e || e.deleted || !Array.isArray(e.data?.members)) return []
-  return e.data.members.map(m => ({
+  return normalizeRoles(e.data.members).map(m => ({
     id: `${e.id}:${m.personId}`,
     groupId: e.id,
     personId: m.personId,
     joinedAt: m.joinedAt,
     leftAt: m.leftAt ?? null,
-    role: 'member',
+    role: m.role ?? 'member',
     createdAt: m.joinedAt,
     deleted: 0,
     ...syncFields(e),
@@ -203,7 +203,11 @@ export async function projectEntity(rows: RowAccess, prev: Entity | undefined, n
     // Any change to a record in a group or on a person, a delete included, is their latest activity (26.17).
     if (next) {
       for (const groupId of new Set([groupOf(prev), groupOf(next)])) if (groupId) await bumpActivity(rows, 'groups', groupId, next.updatedAt)
-      for (const personId of new Set([...peopleOf(prev), ...peopleOf(next)])) await bumpActivity(rows, 'people', personId, next.updatedAt)
+      // A friend is active when a record I am on changes; two friends' own record is not my activity (audit m20).
+      for (const side of [prev, next]) {
+        const names = peopleOf(side)
+        if (await isMeAmong(rows, names)) for (const personId of names) await bumpActivity(rows, 'people', personId, next.updatedAt)
+      }
     }
   }
   if (type === 'expense' || type === 'person' || type === 'group') {
@@ -224,6 +228,12 @@ function peopleOf(e: Entity | undefined): string[] {
   if (!d) return []
   if (e!.type === 'expense') return [...new Set([...Object.keys(d.payers ?? {}), ...Object.keys(d.shares ?? {})])]
   return [d.from, d.to].filter((p): p is string => typeof p === 'string')
+}
+
+/** Whether one of `ids` is the local "me" (its people row says `isMe`). */
+async function isMeAmong(rows: RowAccess, ids: string[]): Promise<boolean> {
+  for (const id of ids) if ((await rows.get('people', [id]))?.isMe === 1) return true
+  return false
 }
 
 /** Raises a group's `activityAt` or a person's `lastActivityAt`, never lowers it. */
@@ -265,7 +275,7 @@ export async function rebuildProjections(rows: RowAccess, entities: (type: Entit
  * Sets each group's `activityAt` and each person's `lastActivityAt` from the
  * history: every version of a money record bumps the groups and people it and
  * the version before it name, at that version's time, exactly as the write
- * did (a record moved out of a group is activity there too). `money` is the
+ * did (a record moved out of a group is activity there too; a friend only counts for a record I am on, audit m20). `money` is the
  * live and deleted money entities, for any whose history is missing.
  */
 export async function rebuildActivity(rows: RowAccess, money: Entity[]): Promise<void> {
@@ -276,9 +286,11 @@ export async function rebuildActivity(rows: RowAccess, money: Entity[]): Promise
     for (const e of [data, ...before]) {
       const groupId = groupOf(e)
       if (groupId) bump(groupAt, groupId, at)
-      for (const personId of peopleOf(e)) bump(personAt, personId, at)
+      const names = peopleOf(e)
+      if (names.some(p => me.has(p))) for (const personId of names) bump(personAt, personId, at)
     }
   }
+  const me = new Set((await rows.range('people', {})).filter(p => p.isMe === 1).map(p => p.id as string))
   const isMoney = new Set<string>(['expense', 'repayment', 'writeoff'])
   let previous: {key: string; entity: Entity} | undefined
   for (const h of await rows.range('history', {})) {

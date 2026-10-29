@@ -3,7 +3,7 @@
  * any sequence of money writes. Random operation sequences (add, edit,
  * delete, restore for expenses; add, delete, restore for payments and
  * write-offs; members and groups; moving an expense between groups and
- * between a group and direct; "delete forever"; erasing rows outright, the
+ * between a group and direct; erasing rows outright, the
  * demo set's removal among them; many currencies, three of them with
  * non-two-decimal scales) run through the real mutations on both engines;
  * after each sequence the stored sums, the monthly aggregates, the search
@@ -33,7 +33,6 @@ import {
   type ExpenseDraft,
   type Group,
   ensureMe,
-  purgeDeleted,
   restoreExpense,
   restoreRepayment,
   restoreWriteOff,
@@ -42,6 +41,7 @@ import {
   updatePerson,
   deletePerson,
 } from '../src/mutations'
+import {deleteGroup, makeGroupActive, makeGroupInactive, removeGroupMember, restoreGroup} from '../src/groupLifecycle'
 import {openSqlStore} from '../src/sqlStore'
 import {type Store} from '../src/store'
 import {bunExecutor} from './bunExecutor'
@@ -117,7 +117,7 @@ async function run(s: Store, seed: number, steps: number, {erases = true}: {eras
 
   for (let step = 0; step < steps; step++) {
     try {
-      switch (r.int(0, 21)) {
+      switch (r.int(0, 24)) {
         case 0: {
           const members = r.some(people.filter(p => p !== 'me'), 2, 4)
           const g = await createGroup(s, mint(), {name: `G${groups.length}`, kind: 'trip', currency: r.pick(CURRENCIES), memberIds: members, startDate: null, endDate: null})
@@ -180,13 +180,6 @@ async function run(s: Store, seed: number, steps: number, {erases = true}: {eras
           await updateExpense(s, ctx, r.pick(expenses), draft(target ? target.members : people, target?.id ?? null))
           break
         }
-        case 13: {
-          // "Delete forever" of something already deleted.
-          const types = [['expense', expenses], ['repayment', repayments], ['writeoff', writeOffs]] as const
-          const [type, ids] = r.pick(types)
-          if (ids.length) await purgeDeleted(s, ctx, type, r.pick(ids))
-          break
-        }
         case 14: {
           // Erases a few rows outright (any type), with their history and ops.
           const { entities } = await s.dump()
@@ -221,6 +214,25 @@ async function run(s: Store, seed: number, steps: number, {erases = true}: {eras
           if (!groups.length) break
           const g = await s.get<Group>('group', r.pick(groups).id)
           if (g && !g.deleted) await s.transaction(tx => tx.put({...g, version: g.version + 1, updatedAt: g.updatedAt + 1, deleted: true}))
+          break
+        }
+        case 22: {
+          // A member leaves, settling, forgiving or keeping a balance (F-615, F-613).
+          if (!groups.length) break
+          const g = r.pick(groups)
+          const who = r.pick(g.members.filter(p => p !== 'me'))
+          await removeGroupMember(s, ctx, {groupId: g.id, personId: who, choice: r.pick(['settle', 'forgive', 'keep'] as const), date: date(), tz: 'UTC'})
+          break
+        }
+        case 23: {
+          // A group is made inactive or active, or deleted with its records and brought back (F-604, F-615).
+          if (!groups.length) break
+          const g = r.pick(groups)
+          const roll = r.next()
+          if (roll < 0.3) await makeGroupInactive(s, ctx, g.id)
+          else if (roll < 0.5) await makeGroupActive(s, ctx, g.id)
+          else if (roll < 0.8) await deleteGroup(s, ctx, g.id)
+          else await restoreGroup(s, ctx, g.id)
           break
         }
         case 15: {
@@ -288,16 +300,16 @@ describe('projection == recomputation over random operation sequences', () => {
     await s.close()
   })
 
-  test('the generator moves expenses between groups and direct, and deletes forever', async () => {
+  test('the generator moves expenses between groups and direct', async () => {
     const s = await openSqlStore(bunExecutor(':memory:'))
     await run(s, 777, 300, {erases: false})
     await expectProjectionsMatchLedger(s)
-    const { entities, history } = await s.dump()
+    const { history } = await s.dump()
     const places = new Map<string, Set<string | null>>()
     for (const h of history.filter(h => h.entityType === 'expense')) places.set(h.entityId, (places.get(h.entityId) ?? new Set()).add((h.data as {groupId: string | null}).groupId))
     expect([...places.values()].filter(p => p.size > 1).length).toBeGreaterThan(0)
     expect([...places.values()].some(p => p.has(null) && p.size > 1)).toBe(true)
-    expect(entities.filter(e => (e.data as {purgedAt?: number}).purgedAt !== undefined).length).toBeGreaterThan(0)
+
     await s.close()
   })
 
@@ -313,5 +325,22 @@ describe('projection == recomputation over random operation sequences', () => {
     }
     expect(total.erased).toBeGreaterThan(0)
     expect(total.demoRemoved).toBeGreaterThan(0)
+  })
+
+  test('the generator reaches the group life cycle: a member left, a group went with its records, one was made inactive', async () => {
+    const seen = {left: false, inactive: false, withGroup: false, restored: false}
+    for (const seed of [11, 12, 13, 14, 15, 16, 17, 18]) {
+      const s = await openSqlStore(bunExecutor(':memory:'))
+      await run(s, seed, 200, {erases: false})
+      await expectProjectionsMatchLedger(s)
+      const {entities, history} = await s.dump()
+      const groupsNow = entities.filter(e => e.type === 'group').map(e => e.data as Group)
+      seen.left ||= groupsNow.some(g => g.members.some(m => m.leftAt !== null))
+      seen.inactive ||= groupsNow.some(g => g.inactive === true)
+      seen.withGroup ||= entities.some(e => (e.data as {deletedWithGroup?: string}).deletedWithGroup !== undefined)
+      seen.restored ||= history.some(h => h.entityType === 'group' && !h.deleted && history.some(p => p.entityType === 'group' && p.entityId === h.entityId && p.deleted && p.version < h.version))
+      await s.close()
+    }
+    expect(seen).toEqual({left: true, inactive: true, withGroup: true, restored: true})
   })
 })

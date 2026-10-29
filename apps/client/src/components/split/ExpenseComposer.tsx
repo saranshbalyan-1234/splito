@@ -110,6 +110,7 @@ export function ExpenseComposer({
   const locale = useNumberLocale()
   const categories = useCategories()
   const groups = useEntities<Group>('group')
+  const [hiddenGroupIds = []] = usePref('groups.hidden')
   const [adjustModes, saveAdjustModes] = usePref('itemizeAdjustmentModes')
   const [defaultRoundTo = 1] = usePref('split.roundTo')
   const people = useEntities<Person>('person')
@@ -350,6 +351,7 @@ export function ExpenseComposer({
           <GroupDialog
             control={groupControl}
             groups={groups ?? []}
+            hidden={new Set(hiddenGroupIds)}
             value={form.groupId}
             onSelect={selectGroup}
           />

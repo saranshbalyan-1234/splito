@@ -26,7 +26,6 @@ import {
   createWriteOffs,
   deleteExpense,
   ensureMe,
-  purgeDeleted,
 } from '../src/mutations'
 import {deleteFeedback, loadFeedback, saveFeedback} from '../src/feedback'
 import {setPref} from '../src/preferences'
@@ -59,7 +58,6 @@ async function smallSet(): Promise<StoreDump> {
     split: {mode: 'equal', participants: ['me', a.id]}, date: '2026-10-03', tz: 'Europe/Lisbon', category: 'other', notes: '',
   })
   await deleteExpense(s, ctx, gone.id)
-  await purgeDeleted(s, ctx, 'expense', gone.id)
   await createRepayment(s, ctx, {groupId: null, currency: 'EUR', from: 'me', to: a.id, amount: 10n, date: '2026-10-04', tz: 'UTC', note: ''})
   await createWriteOffs(s, ctx, [{groupId: g.id, currency: 'INR', from: b.id, to: 'me', amount: 100n, date: '2026-10-05', tz: 'UTC', note: ''}])
   await setPref(s, ctx, 'defaultCurrency', 'EUR') // account scope: queued
@@ -244,9 +242,8 @@ describe.each(Object.keys(open))('%s v1 -> current', engine => {
     await expectDerivedTablesMatch(store)
     expect(await v1.version()).toBe(SCHEMA_VERSION)
     await expectFeedbackKept(store, dump)
-    // The tombstone that was purged is still in the audit trail.
-    const purged = (await store.dump()).entities.find(e => e.type === 'expense' && e.deleted)
-    expect((purged?.data as {purgedAt?: number}).purgedAt).toBeGreaterThan(0)
+    // The deleted expense is still there, to be listed struck in its place.
+    expect((await store.dump()).entities.some(e => e.type === 'expense' && e.deleted)).toBe(true)
     await store.close()
   })
 
@@ -589,4 +586,116 @@ test('a v3-shaped SQLite file with a lost user_version still gets the reminders 
   const check = new Database(path)
   expect((check.query('PRAGMA user_version').get() as {user_version: number}).user_version).toBe(SCHEMA_VERSION)
   check.close()
+})
+
+test('a v3 SQLite file with a lost user_version (reminders table gone too) still gets the v4 rebuild', async () => {
+  const path = join(mkdtempSync(join(tmpdir(), 'splito-v3-lost-')), 'db.sqlite')
+  const first = await openSqlStore(bunExecutor(path))
+  const ctx = makeCtx()
+  await ensureMe(first, ctx, 'Me')
+  const a = await createPerson(first, ctx, {name: 'Asha'})
+  const e = await createExpense(first, ctx, {
+    title: 'Dinner', groupId: null, currency: 'INR', total: 600n, payers: {me: 600n},
+    split: {mode: 'equal', participants: ['me', a.id]}, date: '2026-10-02', tz: 'UTC', category: 'food', notes: '',
+  })
+  await deleteExpense(first, ctx, e.id)
+  await first.close()
+  downgradeSqlToV3(path)
+  const raw = new Database(path)
+  raw.run('DELETE FROM expense_parties')
+  raw.run('PRAGMA user_version = 0')
+  raw.close()
+  const second = await openSqlStore(bunExecutor(path))
+  const parties = await second.parties({index: 'byPersonDate', eq: [a.id], includeDeleted: true})
+  expect(parties.items.map(p => [p.expenseId, p.deleted])).toEqual([[e.id, true]])
+  expect(await second.getAll('reminder')).toEqual([])
+  await expectDerivedTablesMatch(second)
+  await second.close()
+})
+
+test('a v3 SQLite file upgrades to v4: reminders table, deleted expenses get their party rows and search terms back, history.binDays goes', async () => {
+  const path = join(mkdtempSync(join(tmpdir(), 'splito-v3-')), 'db.sqlite')
+  const first = await openSqlStore(bunExecutor(path))
+  const ctx = makeCtx()
+  await ensureMe(first, ctx, 'Me')
+  const a = await createPerson(first, ctx, {name: 'Asha'})
+  const e = await createExpense(first, ctx, {
+    title: 'Dinner', groupId: null, currency: 'INR', total: 600n, payers: {me: 600n},
+    split: {mode: 'equal', participants: ['me', a.id]}, date: '2026-10-02', tz: 'UTC', category: 'food', notes: '',
+  })
+  await deleteExpense(first, ctx, e.id)
+  await first.transaction(tx => tx.put({type: 'preference', id: 'history.binDays', data: {value: 7}, version: 1, deleted: false, updatedAt: 1}))
+  await first.close()
+  // What a v3 build left: no reminders table, no rows for the deleted expense, and the old preference.
+  downgradeSqlToV3(path)
+  const raw = new Database(path)
+  raw.run('DELETE FROM expense_parties')
+  raw.run("DELETE FROM search_terms WHERE entityType = 'expense'")
+  raw.close()
+  const second = await openSqlStore(bunExecutor(path))
+  expect(await second.get('preference', 'history.binDays')).toBeUndefined()
+  expect(await second.getAll('reminder')).toEqual([])
+  const parties = await second.parties({index: 'byPersonDate', eq: [a.id], includeDeleted: true})
+  expect(parties.items.map(p => [p.expenseId, p.deleted])).toEqual([[e.id, true]])
+  expect((await second.parties({index: 'byPersonDate', eq: [a.id]})).items).toEqual([])
+  expect((await storedTerms(second)).some(t => t.includes(e.id))).toBe(true)
+  await expectDerivedTablesMatch(second)
+  await second.close()
+})
+
+test('a v2 SQLite file upgrades straight to v4: one migration holds the reminders table and the B3x rebuild', async () => {
+  const path = join(mkdtempSync(join(tmpdir(), 'splito-v2-v4-')), 'db.sqlite')
+  const first = await openSqlStore(bunExecutor(path))
+  const ctx = makeCtx()
+  await ensureMe(first, ctx, 'Me')
+  const a = await createPerson(first, ctx, {name: 'Asha'})
+  const e = await createExpense(first, ctx, {
+    title: 'Dinner', groupId: null, currency: 'INR', total: 600n, payers: {me: 600n},
+    split: {mode: 'equal', participants: ['me', a.id]}, date: '2026-10-02', tz: 'UTC', category: 'food', notes: '',
+  })
+  await deleteExpense(first, ctx, e.id)
+  await first.transaction(tx => tx.put({type: 'preference', id: 'history.binDays', data: {value: 7}, version: 1, deleted: false, updatedAt: 1}))
+  await first.close()
+  downgradeSql(path)
+  const second = await openSqlStore(bunExecutor(path))
+  expect(await second.get('preference', 'history.binDays')).toBeUndefined()
+  const parties = await second.parties({index: 'byPersonDate', eq: [a.id], includeDeleted: true})
+  expect(parties.items.map(p => [p.expenseId, p.deleted])).toEqual([[e.id, true]])
+  await scheduleReminder(second, {...makeCtx(), newId: () => 'rem-2'}, {personId: a.id, groupId: null, dueAt: 1_800_000_000_000, repeat: 'none'})
+  expect(await second.getAll('reminder')).toHaveLength(1)
+  await expectDerivedTablesMatch(second)
+  await second.close()
+  const check = new Database(path)
+  expect((check.query('PRAGMA user_version').get() as {user_version: number}).user_version).toBe(SCHEMA_VERSION)
+  check.close()
+})
+
+describe.each([2, 3] as const)('IndexedDB v%i -> v4 in one upgrade', from => {
+  test('history.binDays goes, a deleted expense keeps its party rows, the reminders store works', async () => {
+    const factory = new IDBFactory()
+    const first = await openIdbStore('combo', factory)
+    const ctx = makeCtx()
+    await ensureMe(first, ctx, 'Me')
+    const a = await createPerson(first, ctx, {name: 'Asha'})
+    const e = await createExpense(first, ctx, {
+      title: 'Dinner', groupId: null, currency: 'INR', total: 600n, payers: {me: 600n},
+      split: {mode: 'equal', participants: ['me', a.id]}, date: '2026-10-02', tz: 'UTC', category: 'food', notes: '',
+    })
+    await deleteExpense(first, ctx, e.id)
+    await first.transaction(tx => tx.put({type: 'preference', id: 'history.binDays', data: {value: 7}, version: 1, deleted: false, updatedAt: 1}))
+    await first.close()
+    const old = await downgradeIdb(factory, 'combo', from)
+    // What an old build left: no party rows for the deleted expense.
+    const raw = (await wrap(old.open('combo'))) as IDBPDatabase
+    await raw.clear('expense_parties')
+    raw.close()
+    const second = await openIdbStore('combo', old)
+    expect(await second.get('preference', 'history.binDays')).toBeUndefined()
+    const parties = await second.parties({index: 'byPersonDate', eq: [a.id], includeDeleted: true})
+    expect(parties.items.map(p => [p.expenseId, p.deleted])).toEqual([[e.id, true]])
+    await scheduleReminder(second, {...makeCtx(), newId: () => 'rem-3'}, {personId: a.id, groupId: null, dueAt: 1_800_000_000_000, repeat: 'none'})
+    expect(await second.getAll('reminder')).toHaveLength(1)
+    await expectDerivedTablesMatch(second)
+    await second.close()
+  })
 })

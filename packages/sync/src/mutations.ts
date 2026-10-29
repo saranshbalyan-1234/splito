@@ -14,6 +14,7 @@ import {
 } from '@splito/domain'
 
 import {formatContact, isContact} from './contact'
+import {editIdsPref, unhideItems} from './preferences'
 import {type Key} from './schema'
 import {type Page, type Store, type Tx} from './store'
 import {type Entity, type EntityType, type MutationCtx} from './types'
@@ -29,16 +30,62 @@ export interface Person {
   accountId?: string | null
 }
 
+/** How a member's balance stood when they left (F-613, F-615): nothing owed, settled, forgiven, or left open. */
+export type MemberExit = 'none' | 'settled' | 'forgiven' | 'kept'
+
+/** One place in a group. `role` absent on older groups: see `groupAdmins`. */
+export interface GroupMemberEntry {
+  personId: string
+  joinedAt: number
+  leftAt: number | null
+  role?: 'admin' | 'member'
+  /** Set when `leftAt` is: the choice made about the balance, kept in history. */
+  exit?: MemberExit
+}
+
+/** What a group's deletion took with it, kept on its tombstone so the deleted group can say what comes back. */
+export interface GroupRemoval {
+  expenses: number
+  repayments: number
+  writeoffs: number
+}
+
 export interface Group {
   name: string
   kind: 'trip' | 'home' | 'couple' | 'other'
   currency: CurrencyCode
-  members: Array<{personId: string; joinedAt: number; leftAt: number | null}>
+  members: GroupMemberEntry[]
   startDate: LocalDate | null
   endDate: LocalDate | null
+  /** Legacy flag from before Active / Inactive (decision 89): it reads as inactive (`isGroupInactive`) and is cleared by "Make active". */
   archived: boolean
+  /** Inactive (decision 89): takes no new expenses but can still settle. Absent: active. */
+  inactive?: boolean
   /** "Who you settle with" rules. Absent: every member pair is allowed. */
   rules?: SettlementRules
+  /** Set on the tombstone by "Delete group"; cleared by restore. */
+  removed?: GroupRemoval
+}
+
+/** Whether a group is inactive: the new flag, or the old `archived` one (read-time adapter, no schema change). */
+export function isGroupInactive(g: Pick<Group, 'archived' | 'inactive'>): boolean {
+  return g.inactive === true || g.archived === true
+}
+
+/**
+ * The members with every role filled in. Groups made before roles existed have none: their first member,
+ * the creator, is the admin and the rest are members.
+ */
+export function normalizeRoles(members: Group['members']): Group['members'] {
+  const hasRoles = members.some(m => m.role !== undefined)
+  return members.map((m, i) => ({...m, role: m.role ?? (!hasRoles && i === 0 ? 'admin' : 'member')}))
+}
+
+/** The people who run a group right now: admins who have not left. */
+export function groupAdmins(g: Pick<Group, 'members'>): string[] {
+  return normalizeRoles(g.members)
+    .filter(m => m.role === 'admin' && m.leftAt === null)
+    .map(m => m.personId)
 }
 
 export interface Expense {
@@ -82,11 +129,20 @@ export type WriteOff = Repayment
 /** `id` makes a retried save idempotent, as for payments. */
 export type WriteOffInput = WriteOff & {id?: string}
 
-/** Entity types the Recently deleted bin holds. */
-export type BinType = 'expense' | 'repayment' | 'writeoff'
+/** The money entity types: a deleted one stays in its list, struck through, forever (decision 103). */
+export type MoneyType = 'expense' | 'repayment' | 'writeoff'
 
-/** Set on a tombstone by "Delete forever": out of the bin, kept in the audit trail. */
-export type Purged = {purgedAt?: number}
+/**
+ * The mark on a tombstone. `deletedWithGroup`: the group whose deletion took this record with it, so restoring
+ * the group brings back exactly these (F-615). (Older builds also wrote `purgedAt`; it is ignored now.)
+ */
+export type Tombstone = {deletedWithGroup?: string}
+
+/** What a tombstone sends to the server: the delete, and the mark that decides whether others may restore it. */
+function tombstonePayload(data: unknown): Tombstone & {deleted: true} {
+  const {deletedWithGroup} = (data ?? {}) as Tombstone
+  return {deleted: true, ...(deletedWithGroup !== undefined && {deletedWithGroup})}
+}
 
 /**
  * Versioned write: entity, history row and outbox op, all inside the caller's
@@ -127,7 +183,7 @@ export async function write<T>(
     entityId: id,
     opType,
     baseVersion: prev?.version ?? 0,
-    payload: deleted ? {deleted: true} : data,
+    payload: deleted ? tombstonePayload(data) : data,
     schemaVersion: 1,
     deps: [],
     attempts: 0,
@@ -201,6 +257,28 @@ export async function deletePerson(store: Store, ctx: MutationCtx, id: string): 
   })
 }
 
+/** Brings a deleted friend back (the person stays in People, struck, until then). */
+export async function restorePerson(store: Store, ctx: MutationCtx, id: string): Promise<void> {
+  await store.transaction(async tx => {
+    const p = await tx.get<Person>('person', id)
+    if (!p?.deleted) throw new DomainError('NOT_FOUND')
+    await write(tx, ctx, 'person', id, p.data, false, 'person.restore')
+    await unhideItems(tx, ctx, [id])
+  })
+}
+
+/**
+ * Hides one deleted item from my own lists, or shows it again (decisions 104 to 106). Personal: only the account
+ * preference `lists.hiddenItems` changes, never the item, so nobody else sees a thing. Only a deleted expense,
+ * payment, write-off or friend can be hidden (a live one has no "Hide"); a group hides through `setGroupHidden`.
+ */
+export async function setItemHidden(store: Store, ctx: MutationCtx, type: MoneyType | 'person', id: string, hidden: boolean): Promise<void> {
+  await store.transaction(async tx => {
+    if (hidden && !(await tx.get(type, id))?.deleted) throw new DomainError('NOT_DELETED')
+    await editIdsPref(tx, ctx, 'lists.hiddenItems', ids => (ids.includes(id) === hidden ? ids : hidden ? [...ids, id] : ids.filter(x => x !== id)))
+  })
+}
+
 /** Whether any live expense, group or payment names the person: index reads, no scan. */
 async function isPersonUsed(store: Store, id: string): Promise<boolean> {
   if ((await store.parties({index: 'byPersonDate', eq: [id], limit: 1})).items.length > 0) return true
@@ -217,6 +295,14 @@ async function isPersonUsed(store: Store, id: string): Promise<boolean> {
   return false
 }
 
+/** Who a money record or a group names, as stored. */
+function namedIn(type: MoneyType | 'group', data: unknown): string[] {
+  const d = data as Partial<Expense & Repayment & Group> | null
+  if (type === 'group') return (d?.members ?? []).map(m => m.personId)
+  if (type === 'expense') return [...Object.keys(d?.payers ?? {}), ...Object.keys(d?.shares ?? {})]
+  return [d?.from, d?.to].filter((p): p is string => typeof p === 'string')
+}
+
 export async function createGroup(
   store: Store,
   ctx: MutationCtx,
@@ -231,7 +317,8 @@ export async function createGroup(
     for (const pid of ids) await requireLive(tx, 'person', pid, 'UNKNOWN_PERSON')
     const joinedAt = ctx.now()
     const {memberIds: _m, ...rest} = input
-    const data: Group = {...rest, name: cleanName(input.name), members: ids.map(personId => ({personId, joinedAt, leftAt: null})), archived: false}
+    const members = ids.map(personId => ({personId, joinedAt, leftAt: null, role: personId === ctx.actor ? ('admin' as const) : ('member' as const)}))
+    const data: Group = {...rest, name: cleanName(input.name), members, archived: false}
     return write(tx, ctx, 'group', ctx.newId(), data, false, 'group.create')
   })
 }
@@ -266,6 +353,8 @@ async function buildExpense(tx: Tx, d: ExpenseDraft): Promise<Expense> {
   for (const pid of people) await requireLive(tx, 'person', pid, 'UNKNOWN_PERSON')
   if (d.groupId) {
     const g = await requireLive<Group>(tx, 'group', d.groupId)
+    // An inactive group takes no new, edited or moved-in expenses (decision 89); settling and payments are fine.
+    if (isGroupInactive(g.data)) throw new DomainError('GROUP_INACTIVE')
     const current = new Set(g.data.members.filter(m => m.leftAt === null).map(m => m.personId))
     if (people.some(p => !current.has(p))) throw new DomainError('NOT_A_MEMBER')
   }
@@ -278,7 +367,10 @@ export async function createExpense(store: Store, ctx: MutationCtx, d: ExpenseDr
 
 export async function updateExpense(store: Store, ctx: MutationCtx, id: string, d: ExpenseDraft): Promise<Entity<Expense>> {
   return store.transaction(async tx => {
-    await requireLive(tx, 'expense', id)
+    const stored = await requireLive<Expense>(tx, 'expense', id)
+    // An expense in an inactive group cannot be edited or moved out: that changes the group's balances (decision 89).
+    const from = stored.data.groupId ? (await tx.get<Group>('group', stored.data.groupId))?.data : undefined
+    if (from && isGroupInactive(from)) throw new DomainError('GROUP_INACTIVE')
     return write(tx, ctx, 'expense', id, await buildExpense(tx, d), false, 'expense.update')
   })
 }
@@ -292,32 +384,38 @@ export async function restoreExpense(store: Store, ctx: MutationCtx, id: string)
 }
 
 /** Tombstones a live ledger entity: a new version, never a hard delete. */
-async function softDelete(store: Store, ctx: MutationCtx, type: BinType, id: string) {
+async function softDelete(store: Store, ctx: MutationCtx, type: MoneyType, id: string) {
   await store.transaction(async tx => {
     const e = await requireLive(tx, type, id)
     await write(tx, ctx, type, id, e.data, true, `${type}.delete`)
   })
 }
 
-/** Brings a tombstone back as a new version. A purged one ("Delete forever") stays gone. */
-async function restore(store: Store, ctx: MutationCtx, type: BinType, id: string) {
-  await store.transaction(async tx => {
-    const e = await tx.get<Purged>(type, id)
-    if (!e?.deleted || e.data.purgedAt !== undefined) throw new DomainError('NOT_FOUND')
-    await write(tx, ctx, type, id, e.data, false, `${type}.restore`)
-  })
+/**
+ * A tombstone comes back only if everything it names is live, as when it was created (audit M4):
+ * UNKNOWN_PERSON for a person who is gone, GROUP_DELETED for a deleted group (restore the group first).
+ */
+/** @internal shared with the group lifecycle. */
+export async function requireRestorable(tx: Tx, type: MoneyType | 'group', data: unknown) {
+  for (const pid of new Set(namedIn(type, data))) await requireLive(tx, 'person', pid, 'UNKNOWN_PERSON')
+  const groupId = (data as {groupId?: string | null}).groupId
+  if (groupId) await requireLive(tx, 'group', groupId, 'GROUP_DELETED')
 }
 
-/**
- * "Delete forever" from Recently deleted: the tombstone gets `purgedAt`, so it
- * leaves the bin and can't be restored, while the entity and every history
- * version stay in the audit trail (deletes are never hard).
- */
-export async function purgeDeleted(store: Store, ctx: MutationCtx, type: BinType, id: string): Promise<void> {
+/** Brings a tombstone back as a new version. */
+async function restore(store: Store, ctx: MutationCtx, type: MoneyType, id: string) {
   await store.transaction(async tx => {
-    const e = await tx.get<Purged>(type, id)
-    if (!e?.deleted || e.data.purgedAt !== undefined) throw new DomainError('NOT_FOUND')
-    await write(tx, ctx, type, id, {...e.data, purgedAt: ctx.now()}, true, `${type}.purge`)
+    const e = await tx.get<Tombstone>(type, id)
+    if (!e?.deleted) throw new DomainError('NOT_FOUND')
+    await requireRestorable(tx, type, e.data)
+    // Restoring an expense into an inactive group is a new expense there (decision 89). Payments may come back.
+    const groupId = (e.data as {groupId?: string | null}).groupId
+    const into = type === 'expense' && groupId ? (await tx.get<Group>('group', groupId))?.data : undefined
+    if (into && isGroupInactive(into)) throw new DomainError('GROUP_INACTIVE')
+    const {deletedWithGroup: _g, ...data} = e.data
+    await write(tx, ctx, type, id, data, false, `${type}.restore`)
+    // Live again: a hide made while it was deleted no longer applies (it would leave a counted row out of the lists).
+    await unhideItems(tx, ctx, [id])
   })
 }
 
@@ -343,6 +441,9 @@ export async function createWriteOffs(store: Store, ctx: MutationCtx, inputs: Wr
   return recordTransfers(store, ctx, 'writeoff', inputs)
 }
 
+const isSameTransfer = (x: Repayment, y: Repayment) =>
+  x.groupId === y.groupId && x.currency === y.currency && x.from === y.from && x.to === y.to && x.amount === y.amount && x.date === y.date && x.tz === y.tz && x.note === y.note
+
 /** Payments and write-offs: validated alike, written as `<type>.create`. */
 async function recordTransfers(store: Store, ctx: MutationCtx, type: 'repayment' | 'writeoff', inputs: RepaymentInput[]): Promise<Entity<Repayment>[]> {
   const parts = inputs.map(({id, ...rest}) => {
@@ -358,6 +459,8 @@ async function recordTransfers(store: Store, ctx: MutationCtx, type: 'repayment'
     for (const {id, data} of parts) {
       const existing = await tx.get<Repayment>(type, id)
       if (existing) {
+        // A retry returns what is stored. A tombstone or different data under the same id is not a retry (audit m11).
+        if (existing.deleted || !isSameTransfer(existing.data, data)) throw new DomainError('IDEMPOTENCY_CONFLICT')
         written.push(existing)
         continue
       }
@@ -428,12 +531,17 @@ export async function addGroupMembers(store: Store, ctx: MutationCtx, groupId: s
   return store.transaction(async tx => {
     const g = await requireLive<Group>(tx, 'group', groupId)
     const joinedAt = ctx.now()
-    const members = [...g.data.members]
+    // Roles filled in first, so a group made before roles keeps its creator as admin (not demoted by the new member's 'member').
+    const members = [...normalizeRoles(g.data.members)]
     for (const personId of new Set(personIds)) {
       await requireLive(tx, 'person', personId, 'UNKNOWN_PERSON')
       const i = members.findIndex(m => m.personId === personId)
-      if (i === -1) members.push({personId, joinedAt, leftAt: null})
-      else if (members[i]!.leftAt !== null) members[i] = {...members[i]!, leftAt: null}
+      if (i === -1) members.push({personId, joinedAt, leftAt: null, role: 'member'})
+      else if (members[i]!.leftAt !== null) {
+        // Back in: the old exit choice is history now, and a returning admin comes back as a member.
+        const {exit: _exit, ...rest} = members[i]!
+        members[i] = {...rest, leftAt: null, role: 'member'}
+      }
     }
     return write(tx, ctx, 'group', groupId, {...g.data, members}, false, 'group.members')
   })

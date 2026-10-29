@@ -156,20 +156,23 @@ export function useLastActivity(enabled: boolean) {
   return useProjection(enabled ? lastActivityQuery : null)
 }
 
-/** One group's expenses, payments and write-offs, newest first, a page at a time. */
+/**
+ * One group's expenses, payments and write-offs, newest first, a page at a time. Deleted ones stay in their date
+ * place (read through the same indexes) and are drawn struck by the row; balances never count them.
+ */
 export function useGroupHistory(groupId: string): HistoryPager | undefined {
   return useProjection(
     historyPagerQuery(`history:group:${groupId}`, store => [
-      indexStream<Expense>(store, 'expense', {index: 'byGroupDate', eq: [groupId]}),
-      indexStream<Repayment>(store, 'repayment', {index: 'byGroup', eq: [groupId]}),
-      indexStream<WriteOff>(store, 'writeoff', {index: 'byGroup', eq: [groupId]}),
+      indexStream<Expense>(store, 'expense', {index: 'byGroupDate', eq: [groupId]}, undefined, true),
+      indexStream<Repayment>(store, 'repayment', {index: 'byGroup', eq: [groupId]}, undefined, true),
+      indexStream<WriteOff>(store, 'writeoff', {index: 'byGroup', eq: [groupId]}, undefined, true),
     ]),
   )
 }
 
 /**
  * The expenses and payments between me and one friend that move their
- * balance, newest first, a page at a time; `includeGroups` off keeps only
+ * balance, newest first, a page at a time (deleted ones in their place, struck); `includeGroups` off keeps only
  * those outside groups.
  */
 export function usePairHistory(personId: string, includeGroups: boolean): HistoryPager | undefined {
@@ -178,19 +181,20 @@ export function usePairHistory(personId: string, includeGroups: boolean): Histor
     historyPagerQuery(`history:pair:${me}:${personId}:${includeGroups}`, store => {
       const inScope = (groupId: string | null) => includeGroups || groupId === null
       const movesBalance = (e: Entity<Expense>) =>
+        // A deleted expense is judged as it was live: it stays in the history, struck, where it once moved the balance.
         e.data.payers[me] !== undefined || e.data.shares[me] !== undefined
-          ? pairBalance([toExpenseRecord(e)], me, personId) !== ZERO
+          ? pairBalance([toExpenseRecord({...e, deleted: false})], me, personId) !== ZERO
           : false
       const both = (e: Entity<Expense>) =>
         (personId in e.data.payers || personId in e.data.shares) && inScope(e.data.groupId) && movesBalance(e)
       const between = (from: string, to: string) => (r: Entity<Repayment>) =>
         r.data.from === from && r.data.to === to && inScope(r.data.groupId)
       return [
-        partyStream(store, {index: 'byPersonDate', eq: [personId]}, both, !includeGroups),
-        indexStream<Repayment>(store, 'repayment', {index: 'byFrom', eq: [personId]}, between(personId, me)),
-        indexStream<Repayment>(store, 'repayment', {index: 'byTo', eq: [personId]}, between(me, personId)),
-        indexStream<WriteOff>(store, 'writeoff', {index: 'byFrom', eq: [personId]}, between(personId, me)),
-        indexStream<WriteOff>(store, 'writeoff', {index: 'byTo', eq: [personId]}, between(me, personId)),
+        partyStream(store, {index: 'byPersonDate', eq: [personId]}, both, !includeGroups, true),
+        indexStream<Repayment>(store, 'repayment', {index: 'byFrom', eq: [personId]}, between(personId, me), true),
+        indexStream<Repayment>(store, 'repayment', {index: 'byTo', eq: [personId]}, between(me, personId), true),
+        indexStream<WriteOff>(store, 'writeoff', {index: 'byFrom', eq: [personId]}, between(personId, me), true),
+        indexStream<WriteOff>(store, 'writeoff', {index: 'byTo', eq: [personId]}, between(me, personId), true),
       ]
     }),
   )

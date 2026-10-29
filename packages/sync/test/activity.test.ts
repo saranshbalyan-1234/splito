@@ -71,7 +71,7 @@ const row = (over: Partial<HistoryRow> & Pick<HistoryRow, 'entityType' | 'entity
   ...over,
 })
 
-test('repayments are recorded, edited and removed; a restored one counts as recorded again', () => {
+test('repayments are recorded, edited, removed and restored (audit m1: a restore is not a second payment)', () => {
   const data = {from: 'riya', to: 'me', amount: 500n, currency: 'INR', groupId: null, date: '2026-10-26'}
   const feed = activityFromHistory([
     row({entityType: 'repayment', entityId: 'r1', version: 1, data, actor: 'riya'}),
@@ -79,19 +79,47 @@ test('repayments are recorded, edited and removed; a restored one counts as reco
     row({entityType: 'repayment', entityId: 'r1', version: 3, data, deleted: true}),
     row({entityType: 'repayment', entityId: 'r1', version: 4, data}),
   ])
-  expect(feed.map(x => x.kind)).toEqual(['repayment.recorded', 'repayment.removed', 'repayment.edited', 'repayment.recorded'])
+  expect(feed.map(x => x.kind)).toEqual(['repayment.restored', 'repayment.removed', 'repayment.edited', 'repayment.recorded'])
   expect(feed.at(-1)!.actor).toBe('riya')
 })
 
-test('groups: archiving reads as archived, other changes as edited, tombstones as deleted', () => {
+test('write-offs: a restored one is "restored", not recorded again (audit m1)', () => {
+  const data = {from: 'riya', to: 'me', amount: 500n, currency: 'INR', groupId: null, date: '2026-10-26'}
+  const feed = activityFromHistory([
+    row({entityType: 'writeoff', entityId: 'w1', version: 1, data}),
+    row({entityType: 'writeoff', entityId: 'w1', version: 2, data, deleted: true}),
+    row({entityType: 'writeoff', entityId: 'w1', version: 3, data}),
+  ])
+  expect(feed.map(x => x.kind)).toEqual(['writeoff.restored', 'writeoff.removed', 'writeoff.recorded'])
+})
+
+test('groups: active again, restore and a member leaving have their own kinds; records a group delete took with it stay out of the feed', () => {
+  const m = (personId: string, leftAt: number | null) => ({personId, joinedAt: 1, leftAt})
+  const g = {name: 'Flat', archived: false, members: [m('me', null), m('bob', null)]}
+  const exp = {title: 'Rent', groupId: 'g1'}
+  const feed = activityFromHistory([
+    row({entityType: 'group', entityId: 'g1', version: 1, at: 100, data: g}),
+    row({entityType: 'group', entityId: 'g1', version: 2, at: 200, data: {...g, inactive: true}}),
+    row({entityType: 'group', entityId: 'g1', version: 3, at: 300, data: g}),
+    row({entityType: 'group', entityId: 'g1', version: 4, at: 400, data: {...g, members: [m('me', null), m('bob', 400)]}}),
+    row({entityType: 'group', entityId: 'g1', version: 5, at: 500, data: g, deleted: true}),
+    row({entityType: 'group', entityId: 'g1', version: 6, at: 600, data: g}),
+    row({entityType: 'expense', entityId: 'e1', version: 1, at: 150, data: exp}),
+    row({entityType: 'expense', entityId: 'e1', version: 2, at: 500, data: {...exp, deletedWithGroup: 'g1'}, deleted: true}),
+    row({entityType: 'expense', entityId: 'e1', version: 3, at: 600, data: exp}),
+  ])
+  expect(feed.map(x => x.kind)).toEqual(['group.restored', 'group.deleted', 'group.memberLeft', 'group.active', 'group.inactive', 'expense.created', 'group.created'])
+})
+
+test('groups: becoming inactive reads as inactive, other changes as edited, tombstones as deleted', () => {
   const g = {name: 'Flat', archived: false}
   const feed = activityFromHistory([
     row({entityType: 'group', entityId: 'g1', version: 1, data: g}),
     row({entityType: 'group', entityId: 'g1', version: 2, data: {...g, name: 'Flat 4B'}}),
-    row({entityType: 'group', entityId: 'g1', version: 3, data: {...g, archived: true}}),
+    row({entityType: 'group', entityId: 'g1', version: 3, data: {...g, inactive: true}}),
     row({entityType: 'group', entityId: 'g1', version: 4, data: g, deleted: true}),
   ])
-  expect(feed.map(x => x.kind)).toEqual(['group.deleted', 'group.archived', 'group.edited', 'group.created'])
+  expect(feed.map(x => x.kind)).toEqual(['group.deleted', 'group.inactive', 'group.edited', 'group.created'])
 })
 
 test('rows out of order still pair each version with the one before it; ties keep a stable order', () => {

@@ -231,7 +231,7 @@ test('Groups: Overview, search by member, and type / status filters', async ({
   await expect(groups.getByTestId('list-filters-dot')).toBeVisible()
   await groups.getByTestId('list-filters').click()
   await page.getByTestId('filter-type-all').click()
-  await page.getByTestId('filter-status-archived').click()
+  await page.getByTestId('filter-status-inactive').click()
   await page.getByTestId('sheet-save').click()
   await expect(groups.getByTestId('groups-filtered-empty')).toBeVisible()
   await groups.getByTestId('groups-clear-filters').click()

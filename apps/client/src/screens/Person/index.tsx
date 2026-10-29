@@ -15,14 +15,22 @@ import {
   deletePerson,
   type Entity,
   type Group,
+  isGroupInactive,
   type Person,
+  restorePerson,
   type Repayment,
   type WriteOff,
 } from '@splito/sync'
 
 import {type AllNavigatorParams, type NavigationProp} from '#/lib/routes/types'
 import {goBack} from '#/navigation/goBack'
+import {DeletedMeta} from '#/components/DeletedMeta'
+import {ArrowRotateCounterClockwise_Stroke2_Corner0_Rounded as UndoIcon} from '#/components/icons/ArrowRotate'
+import {useErrorText} from '#/components/split/shared'
+import {useHideItem} from '#/features/hidden/HideItem'
+import {historyRowHide, useVisibleEntries} from '#/features/hidden/ShowHidden'
 import {
+  useAllEntities,
   useBalanceRows,
   useEntities,
   useMe,
@@ -103,12 +111,14 @@ export function PersonScreen() {
   const store = useStore()
   const ctx = useMutationCtx()
   const me = useMe()
-  const people = useEntities<Person>('person')
+  /* Tombstones too: a deleted friend still opens, read-only, and still names the records they are on (decision 103). */
+  const people = useAllEntities<Person>('person')
   const groups = useEntities<Group>('group')
   const balanceRows = useBalanceRows()
   const [includeDefault] = usePref('includeGroupsDefault')
   const [defaultCurrency] = usePref('defaultCurrency')
   const [applied, setApplied] = useState<boolean | null>(null)
+  const errorText = useErrorText()
   const includeGroups = applied ?? includeDefault ?? true
   /* The expenses and payments between us, newest first, a page at a time (by index). */
   const pairHistory = usePairHistory(personId, includeGroups)
@@ -131,6 +141,10 @@ export function PersonScreen() {
 
   const isLoading = !me || !people || !groups || !balanceRows || !pairHistory
   const person = people?.find(p => p.id === personId)
+  const isDeleted = !!person?.deleted
+  const {visible, hidden, showHidden} = useVisibleEntries(pairHistory?.entries ?? [])
+  const hideFriend = useHideItem({type: 'person', id: personId})
+  const openHide = useHideItem({type: openKind, id: openRepayment?.id ?? ''})
 
   if (!isLoading && (!person || person.data.isMe)) {
     return (
@@ -168,11 +182,11 @@ export function PersonScreen() {
         s => s.person === personId,
       )
     : undefined
-  const history = pairHistory?.entries ?? []
+  const history = visible
   const items = withMonths(history)
   const sharedGroups = (groups ?? []).filter(
     g =>
-      !g.data.archived &&
+      !isGroupInactive(g.data) &&
       g.data.members.some(m => m.personId === personId && m.leftAt === null),
   )
 
@@ -276,6 +290,7 @@ export function PersonScreen() {
           />
           <View style={a.flex_1} />
           {/* Bluesky's profile action row; pushed pages have no FAB (owner rule 17). */}
+          {isDeleted ? null : (
           <Button
             testID="person-add-expense"
             label={l({message: 'Add expense', context: 'action'})}
@@ -287,7 +302,8 @@ export function PersonScreen() {
               <Trans context="action">Add expense</Trans>
             </ButtonText>
           </Button>
-          {owedInr !== null && (
+          )}
+          {owedInr !== null && !isDeleted && (
             <Button
               testID="person-upi"
               label={l`Pay with UPI`}
@@ -301,6 +317,44 @@ export function PersonScreen() {
             </Button>
           )}
         </View>
+        {isDeleted ? (
+          <View
+            testID="person-deleted"
+            style={[a.p_md, a.rounded_md, a.flex_row, a.align_center, a.gap_md, {backgroundColor: t.palette.negative_25}]}>
+            <TrashIcon size="md" fill={t.palette.negative_500} />
+            <View style={[a.flex_1, a.gap_2xs]}>
+              <Text style={[a.text_md, a.leading_snug]}>
+                <Trans>This friend was removed. Their expenses and payments stay here, struck through.</Trans>
+              </Text>
+              <DeletedMeta testID="person-deleted-at" at={person!.updatedAt} />
+            </View>
+            <View style={[a.gap_xs]}>
+              <Button
+                testID="person-restore"
+                label={l`Restore friend`}
+                size="small"
+                color="secondary"
+                onPress={() =>
+                  void restorePerson(store, ctx, personId).catch(e =>
+                    Toast.show(errorText((e as {code?: string}).code ?? ''), {type: 'error'}),
+                  )
+                }>
+                <ButtonIcon icon={UndoIcon} />
+                <ButtonText>
+                  <Trans>Restore</Trans>
+                </ButtonText>
+              </Button>
+              <Button
+                testID="person-hide"
+                label={hidden.has(personId) ? l`Unhide` : l`Hide`}
+                size="small"
+                color="secondary"
+                onPress={() => void hideFriend.toggle(!hidden.has(personId))}>
+                <ButtonText>{hidden.has(personId) ? <Trans>Unhide</Trans> : <Trans>Hide</Trans>}</ButtonText>
+              </Button>
+            </View>
+          </View>
+        ) : null}
         <View>
           <PersonBalances
             name={person!.data.name}
@@ -320,6 +374,11 @@ export function PersonScreen() {
             {!includeGroups && (
               <Pills.Tag>
                 <Trans>Direct only</Trans>
+              </Pills.Tag>
+            )}
+            {showHidden && (
+              <Pills.Tag>
+                <Trans>Hidden shown</Trans>
               </Pills.Tag>
             )}
             <Button
@@ -365,10 +424,10 @@ export function PersonScreen() {
           testID="person-record-payment"
           label={hasOpenBalance ? l`Settle up` : l`Record payment`}
           icon={HandshakeIcon}
-          disabled={!person}
+          disabled={!person || isDeleted}
           onPress={() => recordPayment()}
         />
-        {person ? (
+        {person && !isDeleted ? (
           <Menu.Root>
             <Menu.Trigger label={l`More options`}>
               {({props}) => (
@@ -446,6 +505,7 @@ export function PersonScreen() {
                     : null
                 }
                 locale={locale}
+                hide={historyRowHide(item.entry, hidden, l`this record`)}
                 onRepaymentPress={(r, kind) => {
                   setOpenRepayment(r)
                   setOpenKind(kind)
@@ -548,6 +608,11 @@ export function PersonScreen() {
               openRepayment?.data.groupId
                 ? (groupNames.get(openRepayment.data.groupId) ?? null)
                 : null
+            }
+            hide={
+              openRepayment?.deleted
+                ? {isHidden: hidden.has(openRepayment.id), onToggle: () => void openHide.toggle(!hidden.has(openRepayment.id))}
+                : undefined
             }
           />
           <EditFriendDialog control={editControl} person={person} />

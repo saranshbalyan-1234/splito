@@ -48,7 +48,7 @@ interface Synced {
   updatedAt: number
 }
 
-/** Who paid and owes what on one live expense (`expense_parties`). */
+/** Who paid and owes what on one expense (`expense_parties`); `deleted` once the expense is deleted (its row stays, for lists that show deleted items). */
 export interface ExpenseParty extends Synced {
   expenseId: string
   personId: string
@@ -58,6 +58,7 @@ export interface ExpenseParty extends Synced {
   groupId: string | null
   currency: string
   date: string
+  deleted: boolean
 }
 
 /** One person's place in one group (`group_members`). */
@@ -169,8 +170,11 @@ export interface Store {
   getAll<T>(type: EntityType): Promise<Entity<T>[]>
   /** Rows of one type through a named index, by cursor. */
   page<T>(type: EntityType, q: PageQuery): Promise<Page<Entity<T>>>
-  /** Live expenses' parties through `byPersonDate` or `byGroupPerson`, by cursor. */
-  parties(q: PageQuery): Promise<Page<ExpenseParty>>
+  /**
+   * Expenses' parties through `byPersonDate` or `byGroupPerson`, by cursor. Live expenses only, unless
+   * `includeDeleted` (a person's history lists deleted ones in place, decision 103): the pages are still full ones.
+   */
+  parties(q: PageQuery & {includeDeleted?: boolean}): Promise<Page<ExpenseParty>>
   /** The members of a group, or the groups a person belongs to. */
   members(q: {groupId: string} | {personId: string}): Promise<GroupMember[]>
   /** Net balances: one person's, one group's, or all. */

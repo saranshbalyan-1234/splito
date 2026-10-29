@@ -1,16 +1,17 @@
-import {useState} from 'react'
+import {useEffect, useState} from 'react'
 import {useLingui} from '@lingui/react/macro'
 import {useNavigation, useRoute, type RouteProp} from '@react-navigation/native'
-import {type Entity, type Group, type Person} from '@splito/sync'
+import {type Entity, type Group, isGroupInactive, type Person} from '@splito/sync'
 
 import {type AllNavigatorParams, type NavigationProp} from '#/lib/routes/types'
 import {useEntities, useMe, usePref} from '#/data/hooks'
 import {ComposerSkeleton} from '#/components/split/ComposerSkeleton'
 import {readDraft} from '#/components/split/drafts'
 import {ExpenseComposer} from '#/components/split/ExpenseComposer'
-import {emptyForm, type ExpenseForm, pruneForm} from '#/components/split/form'
+import {emptyForm, type ExpenseForm, pruneDraft} from '#/components/split/form'
 import {todayIn} from '#/locale/dates'
 import {useTimeZone} from '#/locale/useDates'
+import * as Toast from '#/components/Toast'
 
 /**
  * Add expense, opened from the sidebar pill or the FAB exactly the way
@@ -99,9 +100,11 @@ function AddExpenseForm({
   groupId?: string
   onClose: () => void
 }) {
+  const {t: l} = useLingui()
   const context = {personId, groupId}
   const [fresh] = useState(() => {
-    const group = groups.find(g => g.id === groupId)
+    /* An inactive group takes no new expenses (decision 89): a link or button naming one opens a plain expense. */
+    const group = groups.find(g => g.id === groupId && !isGroupInactive(g.data))
     if (group) {
       const members = group.data.members
         .filter(m => m.leftAt === null)
@@ -129,14 +132,18 @@ function AddExpenseForm({
       roundTo,
     })
   })
-  const [draft] = useState(() => {
+  const [{draft, isGroupDropped}] = useState(() => {
     const d = readDraft(context)
-    if (!d) return undefined
+    if (!d) return {draft: undefined, isGroupDropped: false}
     // People removed since the draft was written drop out of every field of it.
     const alive = new Set(people.map(p => p.id))
-    const isGroupAlive = !d.groupId || groups.some(g => g.id === d.groupId)
-    return isGroupAlive ? pruneForm(d, alive) : undefined
+    const group = d.groupId ? groups.find(g => g.id === d.groupId) : undefined
+    return pruneDraft(d, alive, d.groupId ? {isFound: !!group, isInactive: !!group && isGroupInactive(group.data)} : undefined)
   })
+  useEffect(() => {
+    if (isGroupDropped)
+      Toast.show(l`That group is inactive, so your draft is no longer in it.`)
+  }, [isGroupDropped, l])
 
   return (
     <ExpenseComposer
