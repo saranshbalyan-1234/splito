@@ -1412,7 +1412,7 @@ labelled sidebar); **wide** = web 1300 px and up (Bluesky `gtTablet`, right colu
   § 7, `locale/`.
 - **The user sets their own timezone** (Settings > Regional); each expense keeps its local date and IANA tz.
   *Why:* "set your timezone". *Where:* spec § 5, preferences registry.
-- **All platforms (iOS, Android, web/PWA) get the full polish: splash, branding, icons.** *Why:* "for all
+- **All platforms (iOS, Android, web/PWA) get the full polish: splash, branding, icons, and every wave is checked on each** (an iOS simulator pass and an Android emulator pass after each wave; Android not yet run for Wave B, scheduled after Wave C, 2026-10-30). *Why:* "for all
   platforms: splash, branding etc". *Where:* § 8, `apps/client/scripts/brand.ts`.
 - **Backend comes after the UI, and it is mandatory, not optional** (owner 93: "we need to implement the backend as well, once we are done with all the features"): when the front-end batches are done, every BACKLOG backend item (E21, E22, the server halves of E23 and of any item marked Backend yes) is built before the product is called done. **Backend comes after the UI.** Front-end batches first; the server is Fastify on Bun with **Postgres**.
   *Why:* "let's build backend later once we are done with UI"; "use Postgres". *Where:* `docs/RESUME.md`, § 9.4.

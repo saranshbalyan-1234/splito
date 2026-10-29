@@ -2988,7 +2988,7 @@ On Home/People and Groups, each currency card is its own box of equal size in a 
 
 Search & Ask understands people, places, amounts, category, type, group, dates, currency, payer and status, and combines them logically, with removable facet chips.
 
-- **Effort** M · **Impact** 9 · **Backend** no · **Status** todo · **Deps** F-117, F-222
+- **Effort** M · **Impact** 9 · **Backend** no · **Status** todo, Wave C (after the first slot merges; search across every field, front end) · **Deps** F-117, F-222
 - **Prefs** -
 - **Acceptance**
   1. `search_terms` indexes every field: title, notes, item names, group name and trip location, people (paid by / with), category, type (expense, payment, write-off, comment, group, friend, invite), currency, date (day, month, year), status (settled, owed, deleted, hidden, inactive), amount keys per currency.
@@ -3001,7 +3001,7 @@ Search & Ask understands people, places, amounts, category, type, group, dates, 
 
 Use Claude to turn free-form questions into structured queries the on-device engine runs; money is always computed on the device. The key lives in the OS secure store via Settings until the backend proxy exists.
 
-- **Effort** M · **Impact** 8 · **Backend** no (backend proxy later) · **Status** todo · **Deps** F-246, F-2301
+- **Effort** M · **Impact** 8 · **Backend** no (backend proxy later) · **Status** todo, backend batch 1 (Claude key server-side via the API proxy, not in the app) · **Deps** F-246, F-2301
 - **Prefs** `ai.enabled` (account, default off until a key or sign-in exists), `ai.model` (device; default the latest fast Claude model for query understanding)
 - **Acceptance**
   1. The key is read from the git-ignored `.env.local` (`ANTHROPIC_API_KEY`, decision 117) only by a dev-only local AI proxy (`scripts/ai-proxy`, started with the dev/preview server, bound to localhost, origin-checked); the app calls the proxy, never Anthropic directly; never an `EXPO_PUBLIC_*` variable; a test scans the built web bundle, backups and logs for `sk-ant-` and fails if found.
