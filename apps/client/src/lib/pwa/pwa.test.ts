@@ -87,10 +87,13 @@ describe('install and update helpers', () => {
   })
 })
 
-describe('a production export holds no demo mode', () => {
+describe('demo mode ships only as lazy chunks (owner 148)', () => {
   const file = (url: string, text: string) => ({url, bytes: new TextEncoder().encode(text)})
-  test('a chunk naming the demo database or its seed is reported', () => {
-    expect(demoLeaks([file('/a.js', 'openStore(n,"splito-demo")'), file('/b.js', 'id:"demo-large-p-riya"'), file('/c.js', 'plain')])).toEqual(['/a.js', '/b.js'])
-    expect(demoLeaks([file('/index.html', '<html></html>'), file('/c.js', 'plain')])).toEqual([])
+  const html = file('/index.html', '<html><script src="/a.js" defer></script><script src="/c.js"></script></html>')
+  test('a start-up script naming the demo database or its seed is reported', () => {
+    expect(demoLeaks([html, file('/a.js', 'openStore(n,"splito-demo")'), file('/c.js', 'plain')])).toEqual(['/a.js'])
+  })
+  test('a lazy chunk holding the demo is fine', () => {
+    expect(demoLeaks([html, file('/a.js', 'plain'), file('/c.js', 'plain'), file('/lazy.js', 'id:"demo-large-p-riya"')])).toEqual([])
   })
 })

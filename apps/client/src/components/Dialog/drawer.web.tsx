@@ -68,10 +68,11 @@ function useVisualViewport() {
   useEffect(() => {
     const vv = window.visualViewport
     if (!vv) return
+    // The same numbers keep the same object: a viewport event that moved nothing renders nothing (owner 108).
     const update = () =>
-      setState({
-        bottom: Math.max(0, window.innerHeight - vv.height - vv.offsetTop),
-        height: vv.height,
+      setState(s => {
+        const bottom = Math.max(0, window.innerHeight - vv.height - vv.offsetTop)
+        return s.bottom === bottom && s.height === vv.height ? s : {bottom, height: vv.height}
       })
     update()
     vv.addEventListener('resize', update)

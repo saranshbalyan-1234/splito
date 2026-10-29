@@ -18,6 +18,7 @@
     "e2e:build": "EXPO_PUBLIC_ENV=e2e expo export -p web",
     "preview:build": "EXPO_PUBLIC_ENV=e2e expo export -p web",
     "perf": "playwright test -c playwright.perf.config.ts",
+    "renders": "playwright test -c playwright.renders.config.ts",
     "e2e:pwa": "playwright test -c playwright.pwa.config.ts",
     "intl:extract": "lingui extract --clean",
     "intl:compile": "lingui compile"
@@ -101,6 +102,7 @@
     "@types/node": "^24.12.2",
     "@types/react": "^19.3.0",
     "@types/react-dom": "19.2.4",
+    "@welldone-software/why-did-you-render": "10.0.1",
     "babel-plugin-module-resolver": "^5.0.2",
     "babel-plugin-react-compiler": "1.0.0",
     "babel-preset-expo": "~58.0.17",

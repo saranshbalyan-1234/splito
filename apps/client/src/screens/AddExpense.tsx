@@ -111,12 +111,6 @@ function AddExpenseForm({
   const {t: l} = useLingui()
   const context = {personId, groupId}
   const isPrefilled = !!(prefill?.title || prefill?.amount)
-  const [fresh] = useState(() => {
-    const form = freshFormFor()
-    return isPrefilled
-      ? {...form, title: prefill?.title ?? form.title, amount: prefill?.amount ?? form.amount, currency: knownCurrency(prefill?.currency) ?? form.currency}
-      : form
-  })
   function freshFormFor() {
     /* An inactive group takes no new expenses (decision 89): a link or button naming one opens a plain expense. */
     const group = groups.find(g => g.id === groupId && !isGroupInactive(g.data))
@@ -148,6 +142,12 @@ function AddExpenseForm({
       roundTo: roundTo ? roundToFor(roundTo, currency) : 0,
     })
   }
+  const [fresh] = useState(() => {
+    const form = freshFormFor()
+    return isPrefilled
+      ? {...form, title: prefill?.title ?? form.title, amount: prefill?.amount ?? form.amount, currency: knownCurrency(prefill?.currency) ?? form.currency}
+      : form
+  })
   const [{draft, isGroupDropped}] = useState(() => {
     if (isPrefilled) return {draft: undefined, isGroupDropped: false}
     const d = readDraft(context)

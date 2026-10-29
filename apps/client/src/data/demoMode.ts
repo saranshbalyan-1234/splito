@@ -6,10 +6,9 @@
  * database's only footprint is one device preference row, `demo.mode`
  * (`demoSeed.ts`, with the seeding itself).
  *
- * Dev and e2e builds only: this module, the data behind it and the UI over it
- * are reached only through `import()` behind
- * `__DEV__ || EXPO_PUBLIC_ENV === 'e2e'` (the `demoStaticImport` rule), so a
- * production bundle holds none of it.
+ * Every build (owner 148): this module, the data behind it and the UI over it
+ * are reached only through `import()` (the `demoStaticImport` rule), so the
+ * start-up bundle holds none of it.
  */
 import {randomUUID} from 'expo-crypto'
 import {type DirectoryClient, demoDirectory, ensureMe, type MutationCtx, type StorageNotices, type Store} from '@splito/sync'

@@ -1,5 +1,4 @@
 import {useEffect, useState} from 'react'
-import {useWindowDimensions} from 'react-native'
 import {LayoutAnimationConfig} from 'react-native-reanimated'
 import {plural} from '@lingui/core/macro'
 import {Trans, useLingui} from '@lingui/react/macro'
@@ -75,7 +74,6 @@ export function PeopleScreen() {
   const {demo} = useDemoMode()
   const locale = useNumberLocale()
   const navigation = useNavigation<NavigationProp>()
-  const {height} = useWindowDimensions()
   const me = useMe()
   /* Tombstones too: a removed friend stays in the list, struck through (decision 103). */
   const people = useAllEntities<Person>('person')
@@ -310,26 +308,16 @@ export function PeopleScreen() {
               ) : (
                 <EmptyState
                   testID="people-empty"
-                  /* Centred in the space under the header, as Bluesky's empty states sit. */
-                  style={[a.justify_center, {minHeight: height - 160}]}
+                  /* Same layout, motion and button as every other screen's empty state (owner 146). */
                   illustration="empty-people"
-                  title={l`Split with friends`}
-                  message={l`Add a friend, then split any bill with them. They don’t need the app.`}
+                  message={l`No friends yet. Add a friend, then split any bill with them. They don’t need the app.`}
                   button={{
                     testID: 'people-empty-add-friend',
                     label: l`Add a friend`,
                     text: l`Add a friend`,
                     icon: PersonPlusIcon,
                     onPress: () => navigation.navigate('AddFriend'),
-                    size: 'large',
-                    color: 'primary',
-                  }}
-                  secondaryButton={{
-                    testID: 'people-empty-add-expense',
-                    label: l({message: 'Add expense', context: 'action'}),
-                    text: l({message: 'Add expense', context: 'action'}),
-                    onPress: () => navigation.navigate('AddExpense', {}),
-                    size: 'large',
+                    size: 'small',
                     color: 'secondary',
                   }}
                 />

@@ -36,7 +36,7 @@ Sources: `../Splito-Claude-Prompt.txt`, `docs/superpowers/specs/2026-10-26-split
 3. Fast and animated (ARCHITECTURE § 26.10): speed budgets measured and recorded; reduced-motion and `motion` pref honoured.
 4. Every user-facing choice has a registry entry; every string goes through Lingui with en and hi.
 5. Acceptance criteria below pass with recorded evidence (command, platform, result). Untested is not done.
-6. Merged into m1-foundation, with populated screenshots (light and Dim, phone and desktop) for any UI change (ARCHITECTURE § 26.1). Where an ARCHITECTURE § 26 rule and a criterion here disagree, § 26 wins and this file is corrected.
+6. Merged into main, with populated screenshots (light and Dim, phone and desktop) for any UI change (ARCHITECTURE § 26.1). Where an ARCHITECTURE § 26 rule and a criterion here disagree, § 26 wins and this file is corrected.
 
 ## Owner decisions to features
 
@@ -80,6 +80,7 @@ Every row of the ARCHITECTURE § 26.23 decision log (rows 1-63) and the feature(
 | 137 push notifications on iOS, Android and web | § 26.20 | F-2201 (first backend batch) |
 | 135 demo data downloaded from the backend, not bundled | § 26.1 | F-252 (backend) |
 | 128 customization only where needed; Language menu switch removed | § 26.1 | F-251 |
+| 153 Home = Overview + Recent transactions; People tab; Overview only on Home | § 26.3 | F-256 |
 | 145 deep links end to end | § 26.3 | F-254 (with F-241) |
 | 125 sign-in required, nothing visible signed out | § 26.15 | F-250 (Wave C), F-2101/F-2102 moved up after Wave C |
 | 124 footer links on one line | § 26.5 | fixed on integrate/wB |
@@ -509,6 +510,32 @@ Every F-241 URL opens the right screen from anywhere: iOS Universal Links, Andro
   4. Signed out: intro/Continue, then resume at the target; demo mode: asks to switch back before opening real data; entity not on device: "Not on this device yet".
   5. Push, invite, QR, reminder and share links all go through the one resolver; links never perform an action.
   6. Deferred link: install from a link, first open lands on its target, no third-party SDK.
+
+### F-255 Every tap reflects immediately `spec: owner § 26.9/26.10 (decisions 150, 151)`
+
+Every tap changes the screen in the same or next frame; slow bodies (lists, charts, breakdowns, next tab, search results) render after via React transitions or deferred mounting; nothing queues behind a busy render.
+
+- **Effort** M · **Impact** 10 · **Backend** no · **Status** in progress (tabs first on fix/tab-taps, then the app-wide audit) · **Deps** F-242
+- **Prefs** -
+- **Acceptance**
+  1. Rapid taps on any tab set (bottom bar, sidebar, rail, in-page) land on the last tap; e2e at 390 and 1440.
+  2. A perf/e2e check measures tap-to-first-visual-change for the main tappables (tabs, a friend row, a group row, FAB, a filter chip, a switch, Add expense Save, a sheet's X) at 390 px: under 100 ms, with CPU 4x throttled under 200 ms.
+  3. Heavy bodies use startTransition / useDeferredValue or mount after the transition, with same-size skeletons; no JS long task over 50 ms between a tap and its first frame.
+  4. iOS Safari and iOS native checked on the simulator; the renders gate does not regress.
+
+### F-256 Home, People and Groups tabs; Overview only on Home `spec: owner § 26.3 (decision 153)`
+
+Home shows the Overview and Recent transactions (F-1415); a new People tab holds requests, the invites row and the friends list with search and filters; Groups drops its Overview; nav and default bottom bar gain People.
+
+- **Effort** M · **Impact** 9 · **Backend** no · **Status** todo, next after the tap fix (F-255) merges; F-241's WIP rebases onto it · **Deps** F-1415, F-255, F-241
+- **Prefs** `tabs` default changes to Home, People, Groups, Analytics, Activity (existing users keep their own order; People is added after Home if absent)
+- **Acceptance**
+  1. `/` shows, in order: Overview; Requests with the invites row (only when pending); Recent transactions (See all -> Activity); Recently active people (5, by change time, net per currency, See all -> People); Recently active groups (5, balance chips, See all -> Groups); each hides when empty; no full friends list; phone header has Search & Ask only (owners 153, 154).
+  2. `/people` shows requests, "N invites waiting ›", Friends (count, search, Filters, Show settled), no Overview; header Search & Ask + Add friend; `/people/:id` unchanged.
+  3. `/groups` has no Overview; everything else unchanged.
+  4. Nav list order Home, People, Groups, Analytics, Ask Splito, Activity, Settings; the rail and desktop sidebar always show every item in the chosen order with no More (owner 155), the phone bar shows the on items; default bar of 5 with labels; Settings > Navigation includes People; saved tabs migrate by inserting People after Home.
+  5. The right column (1300 px and up) is not shown on Home, since the page holds its content; other pages keep it.
+  6. Shell-first rendering (owner 152), e2e at 390/1440, demo data covers recent transactions, Lingui en + hi, perf and renders gate.
 
 ### F-250 Sign-in required (auth gate) `spec: owner § 26.15 (decision 125)`
 
@@ -2894,7 +2921,7 @@ Copy any URL and land on the same screen: pages, in-page tabs, sheets and popups
 
 Add `@welldone-software/why-did-you-render` to dev builds and a Playwright render scenario that fails on any avoidable re-render, then fix every report it finds. Runs first among the post-merge items so later work is held to it.
 
-- **Effort** M · **Impact** 9 · **Backend** no · **Status** todo · **Deps** Wave B merged
+- **Effort** M · **Impact** 9 · **Backend** no · **Status** in progress (feat/wC-F242: gate, fixes and numbers in `docs/COMPLETION_MATRIX.md`; done once merged) · **Deps** Wave B merged
 - **Prefs** -
 - **Acceptance**
   1. why-did-you-render is loaded only in dev builds (web and native) from the client entry, version verified against React 19.3 + React Compiler (or the documented fallback), tracking all components and hooks; production and e2e-timing bundles contain none of it (bundle check).

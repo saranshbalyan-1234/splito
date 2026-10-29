@@ -1195,14 +1195,10 @@ msgctxt "placeholder"
 msgid "Add a comment"
 msgstr "टिप्पणी जोड़ें"
 
-#: src/screens/People/index.tsx:318
-#: src/screens/People/index.tsx:319
+#: src/screens/People/index.tsx:316
+#: src/screens/People/index.tsx:317
 msgid "Add a friend"
 msgstr "दोस्त जोड़ें"
-
-#: src/screens/People/index.tsx:315
-msgid "Add a friend, then split any bill with them. They don’t need the app."
-msgstr "दोस्त जोड़ें, फिर कोई भी बिल उनके साथ बाँटें। उन्हें ऐप की ज़रूरत नहीं।"
 
 #: src/components/split/shared.tsx:158
 msgid "Add a name"
@@ -1292,8 +1288,6 @@ msgstr "खर्च जोड़ें"
 #: src/screens/Analytics/index.tsx:93
 #: src/screens/Group/index.tsx:387
 #: src/screens/Group/index.tsx:393
-#: src/screens/People/index.tsx:327
-#: src/screens/People/index.tsx:328
 #: src/screens/Person/index.tsx:293
 #: src/screens/Person/index.tsx:299
 #: src/view/shell/desktop/LeftNav.tsx:518
@@ -3329,7 +3323,7 @@ msgstr "मित्र अनुरोध किनसे"
 #: src/components/groups/AddMembersDialog.tsx:138
 #: src/screens/FriendsAndInvites/index.tsx:95
 #: src/screens/People/index.tsx:236
-#: src/screens/People/index.tsx:364
+#: src/screens/People/index.tsx:354
 #: src/screens/Profile.tsx:237
 msgid "Friends"
 msgstr "दोस्त"
@@ -4543,6 +4537,10 @@ msgstr "“{0}” से कोई दोस्त मेल नहीं खा
 #: src/screens/People/index.tsx:291
 msgid "No friends match these filters."
 msgstr "इन फ़िल्टर से कोई दोस्त मेल नहीं खाता।"
+
+#: src/screens/People/index.tsx:313
+msgid "No friends yet. Add a friend, then split any bill with them. They don’t need the app."
+msgstr "अभी कोई दोस्त नहीं। एक दोस्त जोड़ें, फिर कोई भी बिल उनके साथ बाँटें। उन्हें ऐप की ज़रूरत नहीं है।"
 
 #: src/screens/FriendsAndInvites/index.tsx:98
 msgid "No friends yet. Add one with the button above."
@@ -6536,10 +6534,6 @@ msgstr "कल रात का डिनर 3 लोगों में बा�
 #: src/components/split/ExpenseComposer.tsx:522
 msgid "Split with"
 msgstr "किसके साथ बाँटें"
-
-#: src/screens/People/index.tsx:314
-msgid "Split with friends"
-msgstr "दोस्तों के साथ बाँटें"
 
 #: src/screens/LoggedOut/SplashScreen.tsx:39
 #: src/screens/LoggedOut/SplashScreen.web.tsx:40

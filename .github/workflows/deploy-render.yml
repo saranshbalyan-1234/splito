@@ -1,0 +1,54 @@
+# Checks every push to main, then deploys the web app and the API to Render (render.yaml).
+# Render auto-deploys main on its own; the optional secrets RENDER_DEPLOY_HOOK_WEB / RENDER_DEPLOY_HOOK_API
+# (Render > Settings > Deploy Hook) are only needed if auto-deploy is turned off.
+name: Deploy to Render
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: render-deploy
+  cancel-in-progress: false
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    services:
+      # Matches TEST_DATABASE_URL's default in apps/api/test/db.ts.
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_PASSWORD: splito
+        ports: ['55432:5432']
+        options: --health-cmd pg_isready --health-interval 2s --health-retries 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.2
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm check
+      - run: pnpm --filter @splito/api test
+
+  deploy:
+    needs: check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger Render deploys of this commit
+        env:
+          WEB_HOOK: ${{ secrets.RENDER_DEPLOY_HOOK_WEB }}
+          API_HOOK: ${{ secrets.RENDER_DEPLOY_HOOK_API }}
+        run: |
+          for hook in "$WEB_HOOK" "$API_HOOK"; do
+            # Render's own auto-deploy on main is on, so without hook secrets there is nothing to trigger here.
+            [ -n "$hook" ] || { echo "::notice::No deploy hook secret set; Render auto-deploys main itself"; continue; }
+            curl -fsS -X POST "$hook&ref=$GITHUB_SHA"
+            echo
+          done

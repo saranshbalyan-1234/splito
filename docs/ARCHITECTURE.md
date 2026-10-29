@@ -340,6 +340,11 @@ All user-facing strings go through Lingui; English default, Hindi second, Englis
 - **Honesty:** "Synced" appears only in the sync-status component's messages. FX-, OCR- and AI-derived
   values carry "Estimated rate" / "From receipt" until confirmed; converted totals carry "≈" and "rate from
   DATE"; a receipt field that was not read stays empty. A bun test scans the source catalog (A-013).
+- **Every empty state looks the same** (owner 146): one `EmptyState` layout on every screen (Home, Groups,
+  Analytics, Activity, Group): the same illustration size and motion, the same top spacing, one short message and
+  at most one small secondary button; no per-screen titles, large buttons, second buttons or custom centring.
+  *Why:* "make the home empty screen animation like other screens, there is slight diff in button and top
+  paddings".
 - **No "coming soon"** and no placeholder UI. A section with no data returns `null`; list screens use
   Bluesky's empty state. Empty states always use the empty-state component with a glyph, never bare text.
 - **Never invent data:** no name splitting, no currency or category inferred for a record; show `-`. A figure
@@ -925,19 +930,33 @@ are written; nothing records them automatically (A-037).
 - **Bundles:** keep Bluesky's lazy imports and inline requires; measure web first-load chunks before adding
   a lazy boundary (tap-opened dialogs first); warm tab modules on idle one per turn only if a first visit is
   measured slow; illustrations ship as WebP; unreferenced assets are deleted.
-- **No wasted renders** (owner 108). A component re-renders only when what it draws changed. Dev builds (web and
-  native, never production or e2e timing runs) load `@welldone-software/why-did-you-render` from the client entry,
-  tracking every component (`trackAllPureComponents` plus hooks), and log each avoidable re-render ("props/state
-  equal by value but not by reference", context churn); version pinned to one that supports React 19.3 and the
-  React Compiler, checked before adoption (fallback: React DevTools Profiler "why did this render" plus the render
-  counter below). A Playwright scenario runs the dev build through launch -> Home, a tab round, open/close Add
-  expense, type 10 characters, scroll 1,000 rows, open Search & Ask and ask one question, and fails on any
-  why-did-you-render report or a render count above the recorded baseline; every merge runs it (decision 107
-  gate). Typical causes it catches, fixed at the root: new objects/arrays/closures passed as props each render,
-  unstable context values, a store hook returning a new snapshot for an equal answer (§ 9.6), list rows not
-  memoised, selectors not narrow enough.
-- **Render gate:** a Playwright scenario counts renders (launch to People, tab round, add expense, search
-  four characters) on main vs branch; numbers go in the PR.
+- **No wasted renders** (owner 108). [Built] (F-242, web; native dev builds load the same library and log to the
+  console, with no automated native run yet.) A component re-renders only when what it draws changed. Dev builds only
+  load `@welldone-software/why-did-you-render` **10.0.1** (pinned; peer `react ^19`; checked on React 19.3 and the
+  React Compiler: it sees compiled and plain components alike because `babel.config.js` sends the dev JSX runtime
+  through the library, with `include: [/.*/]` and hook tracking). `index.ts` / `index.web.ts` run
+  `if (__DEV__) require('#/lib/whyDidYouRender')`; Metro folds it out of every production and `expo export` bundle
+  (`e2e/bundle.spec.ts` checks the e2e export, `e2e-pwa/bundle.spec.ts` the production `build-web` output, which also holds
+  no `package.json`: the version is inlined from `app.config.ts`). Each report is kept compactly on `window.__wdyr`
+  (the gate reads it there); the console log is opt-in with `EXPO_PUBLIC_WDYR_LOG=1`. The library applies its "values really changed" filter only in its own console notifier, so
+  `whyDidYouRender.ts` applies it too. Typical causes, fixed at the root: new objects/arrays/closures passed as props
+  each render, unstable context values, a state setter given a new object for an equal value, a store hook returning
+  a new snapshot for an equal answer (§ 9.6), list rows not memoised, selectors not narrow enough, **and a component
+  the React Compiler skips** (a computed key in a destructuring pattern, a `try`/`catch` around a conditional, a
+  function used before its declaration): it re-renders every child on every state change, which no report shows and
+  only the render counts do.
+- **Render gate:** `pnpm --filter @splito/client renders` runs `e2e-renders/renders.spec.ts` against the Metro dev
+  server (own port 8191, `EXPO_PUBLIC_ENV=e2e` for the demo hook; not `expo export --dev`, whose async chunks
+  `demoMode` / `DemoMode` overwrite each other on a case-insensitive disk). One scenario: demo switched on, a cold
+  launch to Home, a tab round, open Add expense, type 10 characters, close it, scroll 1,000 rows of Activity, open
+  Search & Ask and ask one question. Per phase it counts renders of components being shown (`mounts`) and of mounted
+  ones (`updates`), per component. It also fails when it saw nothing: fewer than 1,000 rows scrolled, no report at all
+  (the library or its JSX runtime is off), or a phase under half its baseline. It fails on (1) any wasted-render report whose origin is our code and that
+  `e2e-renders/baseline.json` does not hold (reports that start inside react-native-web, react-native-svg, lucide,
+  radix, react-navigation or VirtualizedList are counted, not failed: the list is in the spec), and (2) a phase or
+  component count above the baseline by more than 10 % + 1. `RENDERS_BASELINE=write` records an improvement or a
+  reviewed increase; numbers go in `docs/COMPLETION_MATRIX.md`. Every merge runs it with the perf spec (decision 107
+  gate; merge-gate notes in the matrix).
 - **Dev-only tools never ship:** the release script refuses to build with any `EXPO_PUBLIC_` debug,
   profiler or override variable set.
 
@@ -1068,6 +1087,14 @@ Splito lessons (add newest last, dated, with PR):
 
 - 2026-10-29, iOS QA: a native bottom sheet presented from the root view controller fails ("already presenting RNSScreen") when a route sheet (Add expense) is up, so its Discard prompt and every picker never opened. `modules/bottom-sheet/ios/SheetView.swift` now presents from the top-most presented controller (Bluesky's composer is an RN `Modal`, which never met this). Sheets mounted outside the shell's `BottomSheetProvider` (RemindHost) get the context default `{}` as their portal and crash ("Element type is invalid ... BottomSheetNativeComponent"): `App.tsx` gives RemindHost its own provider and outlet. UIKit also asks `onAttemptDismiss` before a clean sheet is dismissed, so only a dirty `FormSheet` may open Discard.
 - 2026-10-29, iOS QA: inside a transaction `data/store.ts` runs statements through expo-sqlite's synchronous API with prepared statements; seeding demo mode went from 5.5 s to 2.0 s on the simulator debug build (38,000 statements, each async hop ~0.14 ms).
+- 2026-10-29, fix/web-scroll: **mobile Safari scrolled to a blank page.** `react-native-safe-area-context` 5.10.1's
+  web provider reports its rect in viewport coordinates, so on a page whose window scrolls (ours) the top inset
+  became the scroll offset whenever it re-measured; Safari fires `resize` as its toolbar collapses mid-scroll,
+  `Layout.Screen` took that as `paddingTop` (measured 2,500 px) and the whole screen sat below the viewport.
+  Fixed by `patches/react-native-safe-area-context@5.10.1.patch` (insets from the window's `env()` only, as in
+  5.6; remove the patch once upstream measures in document coordinates). Test: `e2e/scrollWeb.spec.ts` dispatches
+  the same `resize` while scrolled and fails without the patch (3,029 px displacement). Chromium never shows it
+  (no toolbar), so check scroll fixes in real Mobile Safari, not only Playwright.
 
 ---
 
@@ -1217,8 +1244,8 @@ labelled sidebar); **wide** = web 1300 px and up (Bluesky `gtTablet`, right colu
   or writes. Demo data never syncs and never merges into an account. While on, no banner shows (owner 133); the Settings switch and the avatar's "Demo" state say so; "Reset demo" reseeds it. There is ONE demo dataset and ONE
   switch: no small set, no URL (`?demo=1`, `?demo=large` gone), no `EXPO_PUBLIC_DEMO`, no Add/Remove demo
   data; e2e turns demo mode on only through a test-only hook (`window.__splitoTest.demoMode`) that runs the same
-  switch (F-228a, being built on feat/demo-mode). Dev and e2e builds only for now
-  (production ships none, F-227 c4). *Why:* "add a lot of demo data to my
+  switch (F-228a, being built on feat/demo-mode). Available in every build, production included (owner 148), as lazy chunks the start-up bundle never
+  loads; the legacy cleanup and the e2e hook stay dev/e2e only. *Why:* "add a lot of demo data to my
   account".
 - **Once the backend exists, the demo data comes from the backend, not the app** (owner 135; F-252, backend
   batch). The demo dataset and its generator move to the server: turning Demo mode on downloads the one demo
@@ -1274,6 +1301,15 @@ labelled sidebar); **wide** = web 1300 px and up (Bluesky `gtTablet`, right colu
   fixer once before the next feature starts. *Why:* "use sonnet for all implementation and opus for decisions
   and reviews".
 - **Large work fans out** into parallel throwaway worktrees (§ 20) with judges and review. *Why:* "Fanout".
+- **Push to GitHub after every merge** (owner 149): `main` is pushed to `origin`
+  (`github.com/saranshbalyan-1234/splito`, public; Render auto-deploys `main` to https://splito-web.onrender.com)
+  right after each merge, using the personal account `saranshbalyan-1234` (a repo-local credential helper reads
+  its `gh` token; the global `gh` account is left alone). Only reviewed, merged work reaches `main`; feature
+  branches stay local unless asked. Never commit secrets (`.env.local` is git-ignored). *Why:* "now keep on
+  pushing to github as well"; "use saranshbalyan-1234 account to push"; "the personal account".
+- **The main line is `main`** (owner 147, 2026-10-29; renamed from `m1-foundation`, which stays as a git alias
+  pointing at `main` so old references still resolve). Waves assemble on an integration branch and merge into
+  `main`. *Why:* "change the main branch to main".
 - **No e2e test ever opens another app on the machine** (owner 118). Playwright runs in a real Chrome on the
   owner's Mac, which hands `mailto:`, `sms:`, `tel:`, `upi:`, WhatsApp links and the Web Share sheet to macOS apps.
   So there is no e2e test of "Send by email" (removed on every branch, 2026-10-29), and no spec clicks a share,
@@ -1333,6 +1369,25 @@ labelled sidebar); **wide** = web 1300 px and up (Bluesky `gtTablet`, right colu
 
 ### 26.3 Shell and navigation
 
+- **Home, People and Groups are three tabs; the Overview lives only on Home** (owner 153; F-256; replaces the
+  Home-holds-the-friends-list layout of 120 and the Overview on Groups):
+  - **Home** (`/`), top to bottom (owners 153, 154): the **Overview** (per-currency cards, owners 113/114/120,
+    "Analytics ›"); **Requests** (incoming friend requests with Accept / Decline and the "N invites waiting ›"
+    row, shown only when something is pending); **Recent transactions** (F-1415: the newest expenses and payments
+    across everything, "See all" -> Activity); **Recently active people** (the 5 friends with the newest change,
+    by change time, with their per-currency net, "See all" -> People); **Recently active groups** (the 5 groups
+    with the newest change, balance chips, "See all" -> Groups, same rule as § 26.17). Each section is short (5
+    rows at most) and hides when empty. Header: avatar | logo (phone) / "Home" | Search & Ask (no Add friend
+    here). On wide screens the right column is not shown on Home (its content is on the page), so nothing repeats.
+  - **People** (`/people`, new tab, Lucide `Users`): incoming friend requests (Accept / Decline, the same ones
+    Home shows), the "N invites waiting ›" row, then the Friends list with its search and Filters (owners 91, 120, 130); no Overview. Header:
+    avatar | "People" | Search & Ask + Add friend. A friend still opens `/people/:id`.
+  - **Groups** (`/groups`): the groups list with search and Filters; no Overview. Header unchanged.
+  - **Navigation:** the shared list becomes Home, People, Groups, Analytics, Ask Splito, Activity, Settings; the
+    default phone bottom bar is Home, People, Groups, Analytics, Activity (5 tabs, labels shown); Settings >
+    Navigation still lets the user change it (owners 84, 127). Every tab keeps the FAB rule (§ 26.6).
+  *Why:* "on home show overview and recent transactions, then create a people tab as well, the group tab is
+  already there, the overview is needed only in home".
 - **Bluesky's shell on every width.** Web fills the whole screen: left sidebar plus main content (plus the
   right column when wide, § 26.17). *Why:* "on web it should occupy complete screen", "the navigation should
   be like Bluesky", "for web, keep my left sidebar and main content".
@@ -1368,7 +1423,10 @@ labelled sidebar); **wide** = web 1300 px and up (Bluesky `gtTablet`, right colu
   and a drag handle (Bluesky's reorderable list): what is on and its order is the bottom bar, with **any number of
   tabs** (from Home alone up to every item; Home cannot be turned off). Tabs share the bar width equally; with
   more than 5 the labels hide and icons stay at Bluesky size with their badges. Items not in the bar stay in the
-  drawer. Default bar: Home, Groups, Analytics, Activity. "Ask Splito" placed in the bar opens the Search & Ask drawer in Ask mode instead of switching tab. **The same choice drives every width** (owner 127, replaces "desktop and rail always show the full list"): the rail and desktop sidebar show exactly the items that are on, in the same order as the bottom bar (labels shown on desktop, icons on the rail); the items that are off sit under a "More" item (Lucide `Ellipsis`) at the end of the sidebar/rail list, which opens a menu with them, the phone drawer's equivalent. The phone drawer lists every item in the same order. Settings stays reachable on every width (via More, the drawer, or the avatar's Profile page).
+  drawer. Default bar: Home, Groups, Analytics, Activity. "Ask Splito" placed in the bar opens the Search & Ask drawer in Ask mode instead of switching tab. **On rail and desktop every item always shows** (owner 155, replaces 127's "off items under More" on wide
+  screens): the sidebar and rail list all items (Home, People, Groups, Analytics, Ask Splito, Activity, Settings),
+  in the order chosen in Settings > Navigation, with no "More" item; the on/off choice shapes only the phone bottom
+  bar (off items stay in the phone drawer).
   "Reset" restores the default. Stored in the existing `tabs` preference. *Why:* "all of the sidebar options to
   be available in settings to be added in navigation bar".
 - **Every place has a URL, so a copied link lands on the same screen** (owner 100; F-241, queued after the Wave B
@@ -1568,6 +1626,26 @@ good"; "the left sidebar looks bad on desktop". *Where:* `view/shell/desktop/Lef
   uses Bluesky's web pager. Group: Expenses / Balances / Members; Activity: All / From others; Analytics,
   Person and Settings if tabbed. *Why:* "there is no animation when switching tabs, but it's there in Bluesky,
   why it's not there". *Where:* `components/TabBar.tsx` (Pager not copied yet, § 1 table).
+- **Every tap reflects immediately; heavy rendering is deferred** (owner 151, extends 150 to the whole app):
+  any tap (rows, buttons, chips, switches, filters, sheets, tabs, menus, the FAB) changes what the user sees in
+  the same frame or the next: the pressed state, the selected chip, the switch thumb, the opening sheet's motion,
+  the new screen's header and a same-size skeleton. Anything slow (long lists, charts, breakdowns, the next tab's
+  body, search results) renders after that first frame (owner 152, the pattern: **tabs** switch first (indicator,
+  header, a same-size skeleton body) and fill in after; **popups and sheets** start their open motion at once with
+  their shell (title, X, footer) and mount the body after; **screen changes** start the header and transition at
+  once and render the body after the transition; one shared helper does it for every screen, `useAfterTransition()`
+  plus a `<Deferred fallback={<Skeleton/>}>` wrapper, never a per-screen timer), via React transitions (`startTransition` /
+  `useDeferredValue`), mounting the body after the transition (§ 3) or on idle; a busy body never delays the
+  tap's own feedback, and later taps are never queued behind it. Measured: an e2e/perf check of tap-to-first-
+  visual-change under 100 ms (§ 26.10) for the main tappables at 390 px, and none of them waits on a JS long
+  task. *Why:* "all the taps everywhere should reflect immediately, maybe defer some rendering".
+- **Tab taps always win, however fast** (owner 150): every tap on a bottom-bar, sidebar, rail or in-page tab
+  switches at once, even when taps come milliseconds apart or during a running switch animation: the newest tap
+  cancels or redirects the animation, nothing is debounced, locked or swallowed (the first tap after a screen
+  change included), on iOS, Android, phone web (iOS Safari) and desktop. The switch acts on press-in where the
+  platform allows (as Bluesky's bottom bar), the heavy body may mount after, and the landing tab is always the
+  last one tapped. *Why:* "when I click on tabs immediately it doesn't work; in other apps I keep clicking on tabs
+  within ms and it still switches".
 - **Main bottom-bar / sidebar switches are animated** (owner override of Bluesky's instant switch): a
   direction-aware horizontal slide (from the right when moving to a tab on the right, else from the left;
   native ~220 ms via a bottom-tabs `sceneStyleInterpolator` + `transitionSpec`, web ~200 ms transform of the
@@ -2373,6 +2451,16 @@ Every owner decision, in the order it was made (all 2026-10-26). "Replaced" name
 | 143 | "tour focuses on the feature and blur other places" | Each tour step keeps the focused control sharp and blurs (plus slight dim) the rest of the screen | § 26.2 | Dimmed backdrop only |
 | 144 | "either signin with password otp, users choice" | Existing accounts choose Password or Code as equal options (segmented), last choice remembered per device | § 26.15 | Password first with "Use a one-time code instead" |
 | 145 | "integrate deep links properly as well" | Every URL is a deep link: Universal Links, App Links, splito:// scheme, web fallback; one resolver for push, invites, QR, reminders, shares; signed-out and demo handling; deferred link after install; simulator tests | § 26.3 | Deep links partly wired (§ 14), no universal/app links |
+| 146 | "make the home empty screen animation like other screens, there is slight diff in button and top paddings" | One empty-state layout everywhere: same illustration, motion, top spacing, one small secondary button | § 7 | Home had a title, large primary + secondary buttons and its own centring |
+| 147 | "change the main branch to main" | Main line renamed from m1-foundation to main (old name kept as an alias) | § 26.1 | m1-foundation as the main line |
+| 148 | "i dont see demo mode in deployed app" (https://splito-web.onrender.com, auto deploy on main) | Demo mode ships in every build, production included, as lazy chunks; start-up bundle stays demo-free | § 26.1 | Demo mode dev/e2e only (F-227 c4) |
+| 149 | "now keep on pushing to github as well"; "use saranshbalyan-1234 account to push" | Push main to origin after every merge as saranshbalyan-1234 (repo-local credential helper); Render auto-deploys main | § 26.1 | No remote; never push |
+| 150 | "when i click on tabs immediately it doesnt work, in other apps i keep clicking on tabs within ms it still switches" | Every tab tap switches at once, even milliseconds apart or mid-animation; newest tap wins; nothing debounced or swallowed, every platform | § 26.9 | Taps during a switch could be ignored |
+| 151 | "all the taps everywhere should reflect immediately, maybe deffer some renderring" | Every tap shows its result in the same or next frame; slow bodies render after via transitions/deferred mount; tap-to-first-change < 100 ms measured | § 26.9, § 26.10 | Only tap feedback within 100 ms (body could block) |
+| 152 | "for example switch tabs first, and render content later, same for popups or diff screen that happen"; "make sure such things are stored in architecture, and it should be self updating whenever we make such decisions" | Shell first, content later for tabs, sheets and screens via one shared helper; every such decision recorded in § 26 + log + BACKLOG in the same turn (§ 0 rule 9, prompt hook) | § 26.9, § 0 | - (spells out 151) |
+| 153 | "on home show overview and recent transactions, then create a people tab as well, the group tab is already there, the overview is needed only in home" | Home = Overview + Recent transactions; new People tab (requests, invites row, friends list with search/filters); Groups list without Overview; nav Home, People, Groups, Analytics, Ask, Activity, Settings; default bar Home, People, Groups, Analytics, Activity | § 26.3 | Home held the Overview and friends list; Groups had its own Overview; bar Home, Groups, Analytics, Activity |
+| 154 | "also on home show recent active people, and recent active group"; "also request and all" | Home adds Requests (when pending), Recently active people and Recently active groups (5 each, See all); right column not shown on Home at wide | § 26.3 | Home = Overview + Recent transactions only (row 153) |
+| 155 | "also on desktop show all the tabs" | Rail and desktop sidebar always list every item in the chosen order, no More; on/off shapes only the phone bar | § 26.3 | Desktop followed the on/off choice with off items under More (127) |
 
 New decisions follow § 0 rule 9: rewrite the rule in its topic so only the current truth remains, then add a
 row here.

@@ -1,0 +1,45 @@
+diff --git a/lib/commonjs/NativeSafeAreaProvider.web.js b/lib/commonjs/NativeSafeAreaProvider.web.js
+index d272a37b5cf0861b48d246b03a70d95616119ed7..ee29767acd3cf80ee45326efa3dd9313121c09cb 100644
+--- a/lib/commonjs/NativeSafeAreaProvider.web.js
++++ b/lib/commonjs/NativeSafeAreaProvider.web.js
+@@ -41,7 +41,8 @@ function NativeSafeAreaProvider({
+     const providerElement = viewRef.current;
+     // When the provider element cannot be measured or observed, insets and
+     // frame stay based on the window instead of the provider view.
+-    const canMeasureProviderElement = typeof ResizeObserver !== 'undefined' && providerElement != null && typeof providerElement.getBoundingClientRect === 'function';
++    // Splito patch: the provider's rect is in viewport coordinates, so on a page that scrolls the window it subtracted scrollY from the top inset (and added the page height to the bottom). Mobile Safari fires `resize` as its toolbar collapses, which then pushed every screen down by the scroll offset (blank page). Insets are the window's env() values only, as in 5.6.
++    const canMeasureProviderElement = false;
+     const element = createContextElement();
+     document.body.appendChild(element);
+     const onEnd = () => {
+diff --git a/lib/module/NativeSafeAreaProvider.web.js b/lib/module/NativeSafeAreaProvider.web.js
+index 359ed9f254889056cf31fc70129804eb16c48747..275caf7ba6ececc5790e243f99466e2adfd475ad 100644
+--- a/lib/module/NativeSafeAreaProvider.web.js
++++ b/lib/module/NativeSafeAreaProvider.web.js
+@@ -34,7 +34,8 @@ export function NativeSafeAreaProvider({
+     const providerElement = viewRef.current;
+     // When the provider element cannot be measured or observed, insets and
+     // frame stay based on the window instead of the provider view.
+-    const canMeasureProviderElement = typeof ResizeObserver !== 'undefined' && providerElement != null && typeof providerElement.getBoundingClientRect === 'function';
++    // Splito patch: the provider's rect is in viewport coordinates, so on a page that scrolls the window it subtracted scrollY from the top inset (and added the page height to the bottom). Mobile Safari fires `resize` as its toolbar collapses, which then pushed every screen down by the scroll offset (blank page). Insets are the window's env() values only, as in 5.6.
++    const canMeasureProviderElement = false;
+     const element = createContextElement();
+     document.body.appendChild(element);
+     const onEnd = () => {
+diff --git a/src/NativeSafeAreaProvider.web.tsx b/src/NativeSafeAreaProvider.web.tsx
+index 5bcdf5cd07567d54530d241097e04a6e29240d84..d5499d82f7cdcae716eae07e292ea7a9a0a4ada4 100644
+--- a/src/NativeSafeAreaProvider.web.tsx
++++ b/src/NativeSafeAreaProvider.web.tsx
+@@ -43,10 +43,8 @@ export function NativeSafeAreaProvider({
+     const providerElement = viewRef.current as unknown as HTMLElement | null;
+     // When the provider element cannot be measured or observed, insets and
+     // frame stay based on the window instead of the provider view.
+-    const canMeasureProviderElement =
+-      typeof ResizeObserver !== 'undefined' &&
+-      providerElement != null &&
+-      typeof providerElement.getBoundingClientRect === 'function';
++    // Splito patch: the provider's rect is in viewport coordinates, so on a page that scrolls the window it subtracted scrollY from the top inset (and added the page height to the bottom). Mobile Safari fires `resize` as its toolbar collapses, which then pushed every screen down by the scroll offset (blank page). Insets are the window's env() values only, as in 5.6.
++    const canMeasureProviderElement = false;
+ 
+     const element = createContextElement();
+     document.body.appendChild(element);
