@@ -123,10 +123,10 @@ async function seedFriendInvites(store: Store, ctx: MutationCtx, goaId: string, 
   await recordInviteUse(store, at(now - 2 * DAY), opened.id)
 
   // Joined: opened the link and accepted; the private "Tanvi Rao" above is now linked to the account.
-  const joined = await personalLink(now - 12 * DAY, 1, 7 * DAY)
-  const joinedReq = await sendFriendRequest(store, at(now - 12 * DAY), {contact: tanvi.contact!, name: tanvi.name, reach: 'invited', inviteCode: joined.id})
-  await recordInviteUse(store, at(now - 11 * DAY), joined.id)
-  await applyFriendRequestAccepted(store, at(now - 11 * DAY, tanvi.accountId), joinedReq.id, {accountId: tanvi.accountId, name: tanvi.name})
+  const joined = await personalLink(now - 4 * DAY, 1, 7 * DAY)
+  const joinedReq = await sendFriendRequest(store, at(now - 4 * DAY), {contact: tanvi.contact!, name: tanvi.name, reach: 'invited', inviteCode: joined.id})
+  await recordInviteUse(store, at(now - 2 * HOUR), joined.id)
+  await applyFriendRequestAccepted(store, at(now - 90 * MINUTE, tanvi.accountId), joinedReq.id, {accountId: tanvi.accountId, name: tanvi.name})
 
   // Expired: sent 40 days ago, never answered, and its link has lapsed too.
   const lapsed = await personalLink(now - 40 * DAY, 1, 7 * DAY)

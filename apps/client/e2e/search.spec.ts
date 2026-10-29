@@ -47,8 +47,10 @@ test('the header button opens the drawer; a title finds it, a note finds its exp
   // A word all over the year: one total per currency, never one mixed sum.
   await page.getByTestId('search-input').fill('dinner')
   await expect(screen.getByTestId('search-totals')).toBeVisible({timeout: 30_000})
-  const totals = (await screen.getByTestId('search-totals').innerText()).split('·').map(t => t.trim())
-  expect(totals.length).toBeGreaterThanOrEqual(3)
+  // Results stream in: wait until every currency's total is there.
+  const readTotals = async () => (await screen.getByTestId('search-totals').innerText()).split('·').map(t => t.trim())
+  await expect.poll(async () => (await readTotals()).length, {timeout: 30_000}).toBeGreaterThanOrEqual(3)
+  const totals = await readTotals()
   expect(totals.some(t => t.startsWith('₹'))).toBe(true)
   expect(totals.some(t => t.startsWith('€'))).toBe(true)
 })

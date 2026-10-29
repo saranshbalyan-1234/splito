@@ -36,7 +36,8 @@ const STORY = {
   diego: 'Diego Alves',
 } as const
 const summaryOf = (key: string) => byId.get(`${DEMO_LARGE_PREFIX}p-${key}`)
-const FRIENDS = plan.counts.people
+/** The generated friends plus the 3 private friends of the invites flow (`demoSeed.ts`): none owes anything. */
+const FRIENDS = plan.counts.people + 3
 
 /* Every compiled message id, so the UI can be checked for ids shown instead of words. */
 const MESSAGE_IDS = Object.keys(

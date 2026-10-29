@@ -226,7 +226,7 @@ test.describe('touch screens', () => {
   }) => {
     await ready(page, '/', 'person-Arjun Mehta', true)
     const row = page.getByTestId('person-Arjun Mehta')
-    // The demo list has 36 friends: bring this one on screen before pressing it.
+    // The demo list has 39 friends: bring this one on screen before pressing it.
     await row.scrollIntoViewIfNeeded()
     const content = row.locator('> div').first()
     const scale = () => content.evaluate(el => getComputedStyle(el).transform)

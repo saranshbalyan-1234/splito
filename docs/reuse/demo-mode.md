@@ -38,5 +38,5 @@ demo data", `data/demo.ts`, `data/demoData.ts`, `data/demoLarge.ts`.
 
 Every spec that used the URL switch now calls `openDemo(page, path?)` from `e2e/openDemo.ts`, which waits for
 `window.__splitoTest.demoMode`, runs `demoMode(true)` and then loads `path`. Specs must not rely on the six
-curated friends (Riya, Arjun, Priya, Sam, Lena, Diego) being on screen without scrolling: the dataset has 36
+curated friends (Riya, Arjun, Priya, Sam, Lena, Diego) being on screen without scrolling: the dataset has 39
 friends and 15 groups and lists are virtualised.
