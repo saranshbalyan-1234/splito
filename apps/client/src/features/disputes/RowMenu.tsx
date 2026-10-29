@@ -88,7 +88,7 @@ export function historyRowMenu(entry: HistoryEntry, fallbackName: string) {
   const name = entry.kind === 'expense' ? entry.entity.data.title : fallbackName
   return {
     wrap: (row: (onLongPress?: () => void) => ReactNode, style: StyleProp<ViewStyle>) => (
-      <RowMenu testID={`history-${entry.entity.id}-more`} name={name} targetType={entry.kind} targetId={entry.entity.id} style={style} row={row} />
+      <RowMenu testID={`history-${entry.entity.id}-record-menu`} name={name} targetType={entry.kind} targetId={entry.entity.id} style={style} row={row} />
     ),
   }
 }
