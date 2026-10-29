@@ -42,7 +42,7 @@ function Form({group}: {group: Entity<Group>}) {
   const store = useStore()
   const ctx = useMutationCtx()
   const haptics = useHaptics()
-  const currencyControl = Dialog.useDialogControl()
+  const currencyControl = Dialog.useDialogControl({url: 'edit/currency'})
   const [initial] = useState<GroupFieldValues>(() => ({
     name: group.data.name,
     kind: group.data.kind,

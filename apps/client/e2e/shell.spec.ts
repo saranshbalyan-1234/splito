@@ -71,6 +71,9 @@ test('logo heads the sidebar, is inactive on People and returns home elsewhere',
   )
 })
 
+/** Page ids are UUIDs (or demo ids): the resolver drops anything else (F-254). */
+const ID = '3f2b8c1e-7d4a-4e9b-9a61-0c5d2e8f1a77'
+
 test('every route in the route table resolves, including after a reload', async ({
   page,
 }) => {
@@ -82,12 +85,12 @@ test('every route in the route table resolves, including after a reload', async 
     ['/profile', 'screen-profile'],
     ['/settings', 'screen-settings'],
     ['/settings/appearance', 'screen-settings-section'],
-    ['/people/p1', 'screen-person'],
-    ['/groups/g1', 'screen-group'],
-    ['/groups/g1/settle', 'screen-settle'],
+    [`/people/${ID}`, 'screen-person'],
+    [`/groups/${ID}`, 'screen-group'],
+    [`/groups/${ID}/settle`, 'screen-settle'],
     ['/expense/new', 'screen-add-expense'],
-    ['/expense/e1', 'screen-expense'],
-    ['/expense/e1/edit', 'screen-edit-expense'],
+    [`/expense/${ID}`, 'screen-expense'],
+    [`/expense/${ID}/edit`, 'screen-edit-expense'],
     ['/friends/new', 'screen-add-friend'],
     ['/groups/new', 'screen-create-group'],
   ]
@@ -147,10 +150,10 @@ test.describe('header rule set', () => {
     for (const [path, screen] of [
       ['/profile', 'screen-profile'],
       ['/settings', 'screen-settings'],
-      ['/people/p1', 'screen-person'],
-      ['/groups/g1', 'screen-group'],
-      ['/groups/g1/settle', 'screen-settle'],
-      ['/expense/e1', 'screen-expense'],
+      [`/people/${ID}`, 'screen-person'],
+      [`/groups/${ID}`, 'screen-group'],
+      [`/groups/${ID}/settle`, 'screen-settle'],
+      [`/expense/${ID}`, 'screen-expense'],
       ['/settings/appearance', 'screen-settings-section'],
     ]) {
       await open(page, path, screen)
@@ -639,7 +642,7 @@ test.describe('desktop: Bluesky left sidebar and full-width content', () => {
     page,
   }) => {
     await page.setViewportSize(LAPTOP)
-    await open(page, '/people/p1', 'screen-person')
+    await open(page, `/people/${ID}`, 'screen-person')
     await expect(page.getByTestId('tab-people')).toHaveAttribute(
       'aria-current',
       'page',

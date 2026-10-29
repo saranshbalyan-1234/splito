@@ -58,7 +58,7 @@ export function ExportSheet({control, preset}: {control: Dialog.DialogControlPro
 
 /** The sheet for an entry point: `open()` and the element to render once. */
 export function useExportSheet(preset?: ExportPreset) {
-  const control = Dialog.useDialogControl()
+  const control = Dialog.useDialogControl({url: 'export'})
   return {open: control.open, element: <ExportSheet control={control} preset={preset} />}
 }
 
@@ -90,11 +90,11 @@ function Form({preset}: {preset?: ExportPreset}) {
   const [currency, setCurrency] = useState(preset?.currency ?? '')
   const [isBusy, setIsBusy] = useState(false)
   const [failed, setFailed] = useState(false)
-  const periodControl = Dialog.useDialogControl()
-  const groupControl = Dialog.useDialogControl()
-  const personControl = Dialog.useDialogControl()
-  const currencyControl = Dialog.useDialogControl()
-  const rangeControl = Dialog.useDialogControl()
+  const periodControl = Dialog.useDialogControl({url: 'export/period'})
+  const groupControl = Dialog.useDialogControl({url: 'export/group'})
+  const personControl = Dialog.useDialogControl({url: 'export/person'})
+  const currencyControl = Dialog.useDialogControl({url: 'export/currency'})
+  const rangeControl = Dialog.useDialogControl({url: 'export/range'})
 
   const range = (): DateRange | undefined => {
     const ws = weekStartPref as WeekStart

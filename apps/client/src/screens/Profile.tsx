@@ -109,7 +109,7 @@ function ProfilePreview({me}: {me: Entity<Person>}) {
   const t = useTheme()
   const {t: l} = useLingui()
   const {gtMobile} = useBreakpoints()
-  const editControl = useDialogControl()
+  const editControl = useDialogControl({url: 'edit'})
   const name = me.data.name
   /* "Me" is the name Splito starts with; until it is changed, ask for a real one. */
   const hasDefaultName = name.trim() === '' || name === 'Me'

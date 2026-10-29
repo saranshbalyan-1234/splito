@@ -104,6 +104,7 @@ export function ExpenseComposer({
   tz,
   draftContext,
   isDraftRestored = false,
+  onFirstEdit,
   onClose,
 }: {
   testID: string
@@ -117,6 +118,8 @@ export function ExpenseComposer({
   /** Add mode: keeps a device draft for this place. */
   draftContext?: DraftContext
   isDraftRestored?: boolean
+  /** The first change the person makes (not the mount): a prefilled form drops its one-shot address params here (F-241). */
+  onFirstEdit?: () => void
   onClose: () => void
 }) {
   const t = useTheme()
@@ -159,14 +162,18 @@ export function ExpenseComposer({
   const isEdit = !!expenseId
   const isDirty = form !== initialForm
 
-  const update = (fn: (f: ExpenseForm) => ExpenseForm) => setForm(fn)
+  /* `onFirstEdit` is idempotent (the caller checks), so no ref is read here: a ref in this function would stop React Compiler from compiling the whole composer. */
+  const update = (fn: (f: ExpenseForm) => ExpenseForm) => {
+    setForm(fn)
+    onFirstEdit?.()
+  }
 
-  const currencyControl = Dialog.useDialogControl()
-  const dateControl = Dialog.useDialogControl()
-  const categoryControl = Dialog.useDialogControl()
-  const groupControl = Dialog.useDialogControl()
-  const peopleControl = Dialog.useDialogControl()
-  const payersControl = Dialog.useDialogControl()
+  const currencyControl = Dialog.useDialogControl({url: 'currency'})
+  const dateControl = Dialog.useDialogControl({url: 'date'})
+  const categoryControl = Dialog.useDialogControl({url: 'category'})
+  const groupControl = Dialog.useDialogControl({url: 'group'})
+  const peopleControl = Dialog.useDialogControl({url: 'people'})
+  const payersControl = Dialog.useDialogControl({url: 'payers'})
 
   /* Drafts survive closing: every change is kept on the device until Save or Discard. */
   useEffect(() => {

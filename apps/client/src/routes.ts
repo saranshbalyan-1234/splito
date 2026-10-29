@@ -31,7 +31,7 @@ export const ROUTE_PATHS = {
   EditExpense: '/expense/:expenseId/edit',
   Expense: '/expense/:expenseId',
   Repayment: '/payment/:repaymentId',
-} as const satisfies Record<keyof FlatNavigatorParams, string>
+} as const satisfies Record<Exclude<keyof FlatNavigatorParams, 'Sheet'>, string>
 
 export type RouteName = keyof typeof ROUTE_PATHS
 
@@ -46,4 +46,4 @@ export function redirectOldPath(path: string) {
     .replace(/^\/?settings\/recently-deleted(?=[/?#]|$)/, '/settings?note=deleted-stay')
 }
 
-export const router = new Router<FlatNavigatorParams>(ROUTE_PATHS)
+export const router = new Router<Omit<FlatNavigatorParams, 'Sheet'>>(ROUTE_PATHS)

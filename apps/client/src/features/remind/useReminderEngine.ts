@@ -12,18 +12,17 @@ import {useNotificationPermission} from '#/lib/notifications/usePermission'
 import {useEntities, usePref} from '#/data/hooks'
 import {useDemoMode} from '#/state/demo'
 import {useSelfReminders} from '#/data/remind'
-import {navigationRef} from '#/navigation/ref'
+import {pathTo} from '#/lib/links/make'
+import {openLinkWhenReady} from '#/lib/links/open'
 import * as Toast from '#/components/Toast'
 
 /** How often an open page looks for a reminder that has come due (web). */
 const TICK_MS = 15_000
 
-/** Opens the friend or group a reminder is about, waiting for the navigator on a cold start from a tap. */
-function openTarget(target: NotificationTarget, tries = 0) {
-  if (navigationRef.isReady()) {
-    if (target.groupId) navigationRef.navigate('Group', {groupId: target.groupId})
-    else if (target.personId) navigationRef.navigate('Person', {personId: target.personId})
-  } else if (tries < 40) setTimeout(() => openTarget(target, tries + 1), 250)
+/** Opens the friend or group a reminder is about through the one link resolver, waiting for the navigator on a cold start from a tap. */
+function openTarget(target: NotificationTarget, isDemo = false) {
+  if (target.groupId) openLinkWhenReady(pathTo('Group', {groupId: target.groupId}), {isDemo})
+  else if (target.personId) openLinkWhenReady(pathTo('Person', {personId: target.personId}), {isDemo})
 }
 
 /**
@@ -82,7 +81,7 @@ export function useReminderEngine() {
   useEffect(() => {
     if (!canFireWhenClosed) return
     const sub = AppState.addEventListener('change', s => s === 'active' && !demoRef.current && void resyncNotifications())
-    const offTaps = listenForTaps(openTarget)
+    const offTaps = listenForTaps(target => openTarget(target, demoRef.current))
     const offArrivals = listenForArrivals(() => !demoRef.current && void resyncNotifications())
     return () => {
       sub.remove()
@@ -118,7 +117,7 @@ export function useReminderEngine() {
         const r = byId.get(id)!
         const target = {personId: r.personId, groupId: r.groupId}
         const isHidden = typeof document !== 'undefined' && document.visibilityState === 'hidden'
-        if (!(isHidden && permission === 'granted' && showNow({id: r.id, title: r.title, body: r.body, target}, openTarget))) {
+        if (!(isHidden && permission === 'granted' && showNow({id: r.id, title: r.title, body: r.body, target}, t => openTarget(t)))) {
           Toast.show(nameOf(r), {type: 'info', duration: 15_000, onPress: () => openTarget(target)})
         }
       }

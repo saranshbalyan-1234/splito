@@ -22,7 +22,7 @@ test('a known path still opens its screen', async ({page}) => {
 test('Back on a page opened directly goes to its parent, never a blank page (audit M16)', async ({page}) => {
   // Web puts the page's parents under a deep link (linking.web.ts), so Back runs the per-route fallback:
   // Group -> Groups -> People.
-  await page.goto('/groups/nope')
+  await page.goto('/groups/3f2b8c1e-7d4a-4e9b-9a61-0c5d2e8f1a77')
   await page.getByTestId('header-back').click()
   await expect(page.getByTestId('screen-groups')).toBeVisible()
 })

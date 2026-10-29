@@ -14,7 +14,7 @@ export {useOpenFeedback} from '#/state/feedback'
  * feedback came from, not where the sheet was left.
  */
 export function FeedbackProvider({children}: {children: React.ReactNode}) {
-  const control = Dialog.useDialogControl()
+  const control = Dialog.useDialogControl({url: 'feedback'})
   const [screen, setScreen] = useState('')
 
   const openFeedback = useCallback(() => {

@@ -1,12 +1,14 @@
 // Adapted from bluesky-social/social-app@4e4ad9c (MIT) - src/view/screens/Notifications.tsx
-import {useDeferredValue, useState} from 'react'
+import {useDeferredValue} from 'react'
 import {View} from 'react-native'
-import {Deferred} from '#/components/Deferred'
 import Animated, {LayoutAnimationConfig} from 'react-native-reanimated'
 import {Plural, Trans, useLingui} from '@lingui/react/macro'
+import {useNavigation, useRoute} from '@react-navigation/native'
 
 import {useNumberLocale} from '#/locale/numberLocale'
+import {Deferred} from '#/components/Deferred'
 import {usePagedRows} from '#/lib/hooks/usePagedRows'
+import {type NavigationProp} from '#/lib/routes/types'
 import {EmptyState} from '#/view/com/util/EmptyState'
 import {List} from '#/view/com/util/List'
 import {atoms as a, useTheme} from '#/alf'
@@ -46,7 +48,10 @@ export function ActivityScreen() {
   const {t: l} = useLingui()
   const locale = useNumberLocale()
   const listAnimations = useListAnimations()
-  const [tab, setTab] = useState(0)
+  /* The tab is the address (`/activity/others`, F-241): written on a tap, read from the route. */
+  const navigation = useNavigation<NavigationProp>()
+  const tab = (useRoute().params as {tab?: string} | undefined)?.tab === 'others' ? 1 : 0
+  const setTab = (i: number) => navigation.setParams({tab: i === 1 ? 'others' : undefined})
   /* The tab bar follows the tap at once; the list behind it re-renders as a transition (owner 151). */
   const bodyTab = useDeferredValue(tab)
   const feed = useActivityFeed(bodyTab === 0 ? 'all' : 'others')

@@ -4,7 +4,7 @@ import {LayoutAnimationConfig} from 'react-native-reanimated'
 import {Deferred} from '#/components/Deferred'
 import {plural} from '@lingui/core/macro'
 import {Trans, useLingui} from '@lingui/react/macro'
-import {useNavigation} from '@react-navigation/native'
+import {useNavigation, useRoute} from '@react-navigation/native'
 import {groupTotals, ZERO} from '@splito/domain'
 import {
   type Entity,
@@ -13,6 +13,7 @@ import {
   type Person,
 } from '@splito/sync'
 
+import {type Params} from '#/lib/links/listState'
 import {type NavigationProp} from '#/lib/routes/types'
 import {useNumberLocale} from '#/locale/numberLocale'
 import {useHiddenGroups} from '#/data/groupVisibility'
@@ -57,6 +58,7 @@ import {
   matchesGroupSearch,
   sortGroups,
 } from './filter'
+import {groupParams, readGroupParams} from './urlState'
 
 const PLACEHOLDER_ROWS = 4
 
@@ -82,16 +84,23 @@ export function GroupsScreen() {
   const [defaultCurrency = 'INR'] = usePref('defaultCurrency')
   const hiddenIds = useHiddenGroups()
   const [isFoldOpen, setIsFoldOpen] = useState(false)
-  const [applied, setApplied] = useState<GroupFilters | null>(null)
   const [showHidden, setShowHidden] = useShowHidden()
   const [showSettled = false, setShowSettled] = usePref('groups.showSettled')
   const [sortDefault = 'recent', setSortDefault] = usePref('groups.sort')
-  const filters: GroupFilters = {...(applied ?? DEFAULT_GROUP_FILTERS), sort: applied?.sort ?? sortDefault, showHidden, showSettled}
+  const route = useRoute()
+  /* The filters are the address (`/groups?sort=name&show=owe`, F-241): a param that is present wins over the saved preference. */
+  const filters: GroupFilters = {
+    ...DEFAULT_GROUP_FILTERS,
+    sort: sortDefault,
+    showHidden,
+    showSettled,
+    ...readGroupParams(route.params as Params),
+  }
   /* The filter dot counts what differs from the defaults. */
   const activeCount = (Object.keys(filters) as (keyof GroupFilters)[]).filter(
     k => filters[k] !== DEFAULT_GROUP_FILTERS[k],
   ).length
-  const filterControl = useDialogControl()
+  const filterControl = useDialogControl({url: 'filters'})
   const [query, setQuery] = useState('')
 
   const isLoading = !me || !groups || !myBalances || !openGroups || !people
@@ -265,7 +274,7 @@ export function GroupsScreen() {
                     label: l`Clear filters`,
                     text: l`Clear filters`,
                     onPress: () => {
-                      setApplied(null)
+                      navigation.setParams(groupParams(DEFAULT_GROUP_FILTERS, DEFAULT_GROUP_FILTERS) as never)
                       void setSortDefault(DEFAULT_GROUP_FILTERS.sort)
                       void setShowSettled(false)
                       void setShowHidden(false)
@@ -389,7 +398,7 @@ export function GroupsScreen() {
         filters={filters}
         currencies={currencies}
         onFiltersApplied={f => {
-          setApplied(f)
+          navigation.setParams(groupParams(f, DEFAULT_GROUP_FILTERS, {sort: sortDefault, showSettled, showHidden}) as never)
           if (f.showHidden !== showHidden) void setShowHidden(f.showHidden)
           if (f.showSettled !== showSettled) void setShowSettled(f.showSettled)
           if (f.sort !== sortDefault) void setSortDefault(f.sort)
