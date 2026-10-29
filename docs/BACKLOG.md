@@ -501,7 +501,7 @@ After the first sign-in and setup, a short coach-mark walkthrough over the real 
 
 Every F-241 URL opens the right screen from anywhere: iOS Universal Links, Android App Links, `splito://`, web fallback; one resolver for push, invites, QR, reminders, shares; signed-out resume, demo handling, deferred link after install.
 
-- **Effort** M · **Impact** 9 · **Backend** partly (hosted AASA and assetlinks, deferred-link handoff) · **Status** client part built on feat/wC-F241-254 (unmerged): resolver + route table test, tier claims in `app.config.ts`, demo gate, signed-out intent store (stub until F-250), deferred link stub, simulator commands in RELEASE_CHECKLIST (native not run); hosted files and the deferred hand-over wait for the backend · **Deps** F-241, F-619, F-2201 (push taps), F-250
+- **Effort** M · **Impact** 9 · **Backend** partly (hosted AASA and assetlinks, deferred-link handoff) · **Status** client part built on feat/wC-F241-254 (unmerged, review round done 2026-10-30): resolver + route table test, tier claims in `app.config.ts`, demo gate, signed-out intent store (stub until F-250), deferred link stub, simulator commands in RELEASE_CHECKLIST (native not run); hosted files and the deferred hand-over wait for the backend · **Deps** F-241, F-619, F-2201 (push taps), F-250
 - **Prefs** -
 - **Acceptance**
   1. A route table test parses every route from `https://splito.app/...` and `splito://...` to the same screen and params; unknown paths go Home.
