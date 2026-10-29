@@ -29,7 +29,7 @@ msgid "{0, plural, one {# expired, used or revoked link isn’t shown.} other {#
 msgstr "{0, plural, one {# समाप्त, इस्तेमाल हो चुका या रद्द लिंक नहीं दिखाया गया।} other {# समाप्त, इस्तेमाल हो चुके या रद्द लिंक नहीं दिखाए गए।}}"
 
 #. placeholder {0}: rows.length
-#: src/screens/People/index.tsx:147
+#: src/screens/People/index.tsx:154
 msgid "{0, plural, one {# friend} other {# friends}}"
 msgstr "{0, plural, one {# दोस्त} other {# दोस्त}}"
 
@@ -42,6 +42,11 @@ msgstr "{0, plural, one {# समूह} other {# समूह}}"
 #: src/lib/hooks/useTimeAgo.ts:160
 msgid "{0, plural, one {# hour} other {# hours}}"
 msgstr "{0, plural, one {# घंटा} other {# घंटे}}"
+
+#. placeholder {0}: outgoing.length
+#: src/screens/People/components/RequestsSection.tsx:46
+msgid "{0, plural, one {# invite waiting} other {# invites waiting}}"
+msgstr "{0, plural, one {# आमंत्रण जवाब के इंतज़ार में} other {# आमंत्रण जवाब के इंतज़ार में}}"
 
 #. placeholder {0}: diff.value
 #: src/lib/hooks/useTimeAgo.ts:150
@@ -206,7 +211,7 @@ msgid "{0} as an amount in {1}"
 msgstr "{0} {1} में राशि के रूप में"
 
 #. placeholder {0}: getCurrency(currency).name
-#: src/screens/People/components/BalanceSummary.tsx:177
+#: src/screens/People/components/BalanceSummary.tsx:203
 msgid "{0} balance - open analytics"
 msgstr "{0} बैलेंस - एनालिटिक्स खोलें"
 
@@ -697,7 +702,7 @@ msgstr "{date}, {time} बजे"
 msgid "{day} at {time}"
 msgstr "{day}, {time}"
 
-#: src/screens/People/components/RequestsSection.tsx:216
+#: src/screens/People/components/RequestsSection.tsx:226
 msgid "{days, plural, one {yesterday} other {# days ago}}"
 msgstr "{days, plural, one {कल} other {# दिन पहले}}"
 
@@ -786,7 +791,7 @@ msgstr "{length} / {FEEDBACK_MAX_LENGTH}"
 msgid "{memberCount} members"
 msgstr "{memberCount} सदस्य"
 
-#: src/screens/People/index.tsx:143
+#: src/screens/People/index.tsx:150
 msgid "{n, plural, one {# friend} other {# friends}}"
 msgstr "{n, plural, one {# मित्र} other {# मित्र}}"
 
@@ -831,7 +836,7 @@ msgid "{name}’s UPI ID"
 msgstr "{name} की UPI ID"
 
 #: src/screens/Groups/index.tsx:156
-#: src/screens/People/index.tsx:148
+#: src/screens/People/index.tsx:155
 msgid "{settledCount} settled"
 msgstr "{settledCount} हिसाब बराबर"
 
@@ -1120,13 +1125,13 @@ msgid "Accept"
 msgstr "स्वीकार करें"
 
 #: src/components/activity/ActivityItem.tsx:1238
-#: src/screens/People/components/RequestsSection.tsx:112
+#: src/screens/People/components/RequestsSection.tsx:123
 msgctxt "button"
 msgid "Accept"
 msgstr "स्वीकार करें"
 
 #: src/components/activity/ActivityItem.tsx:1237
-#: src/screens/People/components/RequestsSection.tsx:111
+#: src/screens/People/components/RequestsSection.tsx:122
 msgid "Accept {name}’s friend request"
 msgstr "{name} का दोस्ती का अनुरोध स्वीकार करें"
 
@@ -1192,12 +1197,12 @@ msgctxt "placeholder"
 msgid "Add a comment"
 msgstr "टिप्पणी जोड़ें"
 
-#: src/screens/People/index.tsx:259
-#: src/screens/People/index.tsx:260
+#: src/screens/People/index.tsx:276
+#: src/screens/People/index.tsx:277
 msgid "Add a friend"
 msgstr "दोस्त जोड़ें"
 
-#: src/screens/People/index.tsx:256
+#: src/screens/People/index.tsx:273
 msgid "Add a friend, then split any bill with them. They don’t need the app."
 msgstr "दोस्त जोड़ें, फिर कोई भी बिल उनके साथ बाँटें। उन्हें ऐप की ज़रूरत नहीं।"
 
@@ -1299,8 +1304,8 @@ msgstr "खर्च जोड़ें"
 #: src/screens/Analytics/index.tsx:92
 #: src/screens/Group/index.tsx:387
 #: src/screens/Group/index.tsx:393
-#: src/screens/People/index.tsx:268
-#: src/screens/People/index.tsx:269
+#: src/screens/People/index.tsx:285
+#: src/screens/People/index.tsx:286
 #: src/screens/Person/index.tsx:293
 #: src/screens/Person/index.tsx:299
 #: src/view/shell/desktop/LeftNav.tsx:506
@@ -1492,7 +1497,7 @@ msgstr "सभी चीज़ें"
 msgid "All settled"
 msgstr "सब चुकता"
 
-#: src/screens/People/components/BalanceSummary.tsx:195
+#: src/screens/People/components/BalanceSummary.tsx:221
 #: src/screens/Settle/index.tsx:384
 msgid "All settled up"
 msgstr "सब हिसाब बराबर"
@@ -1606,7 +1611,7 @@ msgstr "किसी भी मुद्रा में ठीक यही र
 #: src/components/TabGlyph.tsx:40
 #: src/navigation/Navigation.tsx:68
 #: src/screens/Analytics/index.tsx:64
-#: src/screens/People/components/BalanceSummary.tsx:138
+#: src/screens/People/components/BalanceSummary.tsx:147
 msgid "Analytics"
 msgstr "विश्लेषण"
 
@@ -1926,7 +1931,7 @@ msgstr "यह आमंत्रण अभी नहीं खुल सकत�
 msgid "Cancel"
 msgstr "रद्द करें"
 
-#: src/screens/People/components/RequestsSection.tsx:197
+#: src/screens/People/components/RequestsSection.tsx:207
 msgctxt "button"
 msgid "Cancel"
 msgstr "रद्द करें"
@@ -1939,7 +1944,7 @@ msgstr "संपादन रद्द करें"
 msgid "Cancel reminder"
 msgstr "रिमाइंडर रद्द करें"
 
-#: src/screens/People/components/RequestsSection.tsx:196
+#: src/screens/People/components/RequestsSection.tsx:206
 msgid "Cancel the request to {name}"
 msgstr "{name} को भेजा अनुरोध रद्द करें"
 
@@ -2137,8 +2142,8 @@ msgstr "फ़िल्टर हटाएँ: {0}"
 
 #: src/screens/Groups/index.tsx:240
 #: src/screens/Groups/index.tsx:241
-#: src/screens/People/index.tsx:242
-#: src/screens/People/index.tsx:243
+#: src/screens/People/index.tsx:259
+#: src/screens/People/index.tsx:260
 msgid "Clear filters"
 msgstr "फ़िल्टर हटाएँ"
 
@@ -2672,13 +2677,13 @@ msgid "Decline"
 msgstr "अस्वीकार करें"
 
 #: src/components/activity/ActivityItem.tsx:1247
-#: src/screens/People/components/RequestsSection.tsx:130
+#: src/screens/People/components/RequestsSection.tsx:141
 msgctxt "button"
 msgid "Decline"
 msgstr "अस्वीकार करें"
 
 #: src/components/activity/ActivityItem.tsx:1246
-#: src/screens/People/components/RequestsSection.tsx:129
+#: src/screens/People/components/RequestsSection.tsx:140
 msgid "Decline {name}’s friend request"
 msgstr "{name} का दोस्ती का अनुरोध अस्वीकार करें"
 
@@ -2755,7 +2760,7 @@ msgstr "यह फ़ीडबैक हटाएँ?"
 
 #: src/components/SearchAsk/ResultRows.tsx:365
 #: src/screens/Groups/components/GroupRow.tsx:122
-#: src/screens/People/components/PersonRow.tsx:206
+#: src/screens/People/components/PersonRow.tsx:197
 msgid "Deleted"
 msgstr "हटाया गया"
 
@@ -2813,7 +2818,6 @@ msgid "Dim"
 msgstr "मद्धम"
 
 #: src/features/settlement/CallItEvenDialog.tsx:160
-#: src/screens/People/components/PersonRow.tsx:95
 #: src/screens/Person/components/PersonBalances.tsx:95
 msgid "Direct"
 msgstr "सीधा"
@@ -2829,7 +2833,7 @@ msgstr "सीधा {0}"
 msgid "Direct {0}{1}"
 msgstr "सीधे {0}{1}"
 
-#: src/screens/People/components/PersonRow.tsx:248
+#: src/screens/People/components/PersonRow.tsx:236
 msgid "Direct expenses"
 msgstr "सीधे खर्च"
 
@@ -3458,8 +3462,8 @@ msgstr "{shownName} को दोस्ती का अनुरोध भे�
 
 #: src/components/groups/AddMembersDialog.tsx:138
 #: src/screens/FriendsAndInvites/index.tsx:96
-#: src/screens/People/index.tsx:210
-#: src/screens/People/index.tsx:301
+#: src/screens/People/index.tsx:217
+#: src/screens/People/index.tsx:318
 #: src/screens/Profile.tsx:237
 msgid "Friends"
 msgstr "दोस्त"
@@ -3571,7 +3575,7 @@ msgstr "किराना"
 #: src/screens/Group/index.tsx:337
 #: src/screens/Group/index.tsx:565
 #: src/screens/Groups/components/GroupRow.tsx:57
-#: src/screens/People/components/PersonRow.tsx:89
+#: src/screens/People/components/PersonRow.tsx:102
 #: src/screens/Person/components/PersonBalances.tsx:98
 msgid "Group"
 msgstr "समूह"
@@ -3676,7 +3680,7 @@ msgstr "नमस्ते {name},"
 #: src/components/settings/CategoriesEditor.tsx:197
 #: src/components/settings/TaxClassesEditor.tsx:188
 #: src/screens/Groups/components/GroupRow.tsx:132
-#: src/screens/People/components/PersonRow.tsx:211
+#: src/screens/People/components/PersonRow.tsx:205
 #: src/screens/Settings/index.tsx:342
 msgid "Hidden"
 msgstr "छिपी हुई"
@@ -3747,7 +3751,7 @@ msgstr "इतिहास"
 #: src/screens/Group/index.tsx:337
 #: src/screens/Groups/components/GroupRow.tsx:55
 #: src/screens/Groups/components/GroupsFilterDialog.tsx:73
-#: src/screens/People/index.tsx:160
+#: src/screens/People/index.tsx:167
 msgid "Home"
 msgstr "घर"
 
@@ -4002,7 +4006,7 @@ msgstr "आमंत्रण लिंक के लिए Splito के सर
 msgid "Invite links need a connection. Try again when you’re online."
 msgstr "आमंत्रण लिंक के लिए कनेक्शन चाहिए। ऑनलाइन होने पर फिर कोशिश करें।"
 
-#: src/screens/People/index.tsx:176
+#: src/screens/People/index.tsx:183
 msgid "Invite people"
 msgstr "लोगों को आमंत्रित करें"
 
@@ -4025,7 +4029,7 @@ msgstr "ने आपको Splito पर दोस्त बनने के �
 msgid "invited you to join {0}"
 msgstr "ने आपको {0} में जुड़ने के लिए आमंत्रित किया"
 
-#: src/screens/People/components/RequestsSection.tsx:158
+#: src/screens/People/components/RequestsSection.tsx:169
 msgid "Invited, not on Splito yet"
 msgstr "आमंत्रित, अभी Splito पर नहीं"
 
@@ -4038,7 +4042,6 @@ msgid "Invites need a connection. Try again when you’re online."
 msgstr "आमंत्रण के लिए कनेक्शन चाहिए। ऑनलाइन होने पर फिर कोशिश करें।"
 
 #: src/screens/FriendsAndInvites/index.tsx:93
-#: src/screens/People/components/RequestsSection.tsx:58
 msgid "Invites sent"
 msgstr "भेजे गए आमंत्रण"
 
@@ -4311,11 +4314,11 @@ msgstr "फिर भी निष्क्रिय करें"
 msgid "Makes this device match the file. Anything here that the file doesn’t have is removed (its history is kept)."
 msgstr "इस डिवाइस को फ़ाइल जैसा बना देता है। यहाँ जो फ़ाइल में नहीं है वह हटा दिया जाता है (उसका इतिहास रहता है)।"
 
-#: src/screens/People/index.tsx:224
+#: src/screens/People/index.tsx:235
 msgid "Manage"
 msgstr "प्रबंधित करें"
 
-#: src/screens/People/index.tsx:218
+#: src/screens/People/index.tsx:229
 msgid "Manage friends and invites"
 msgstr "दोस्त और आमंत्रण प्रबंधित करें"
 
@@ -4723,7 +4726,7 @@ msgstr "अभी कोई फ़ीडबैक नहीं"
 msgid "No friends match “{0}”."
 msgstr "“{0}” से कोई दोस्त मेल नहीं खाता।"
 
-#: src/screens/People/index.tsx:239
+#: src/screens/People/index.tsx:256
 msgid "No friends match these filters."
 msgstr "इन फ़िल्टर से कोई दोस्त मेल नहीं खाता।"
 
@@ -4755,6 +4758,7 @@ msgstr "कोई सीमा नहीं"
 
 #. placeholder {0}: query.trim()
 #: src/screens/Groups/index.tsx:231
+#: src/screens/People/index.tsx:250
 msgid "No matches for “{0}”"
 msgstr "“{0}” के लिए कोई नतीजा नहीं"
 
@@ -4762,7 +4766,7 @@ msgstr "“{0}” के लिए कोई नतीजा नहीं"
 msgid "No one’s share can go below zero – make the adjustments smaller"
 msgstr "किसी का हिस्सा शून्य से कम नहीं हो सकता – बदलाव छोटे करें"
 
-#: src/screens/People/components/PersonRow.tsx:246
+#: src/screens/People/components/PersonRow.tsx:234
 msgid "No open balances"
 msgstr "कोई बकाया नहीं"
 
@@ -5089,8 +5093,8 @@ msgstr "{name} खोलें"
 msgid "Open a friend or a group and choose Settle up to record a payment."
 msgstr "भुगतान दर्ज करने के लिए किसी दोस्त या समूह को खोलें और हिसाब चुकाएं चुनें।"
 
-#: src/screens/People/components/BalanceSummary.tsx:120
-#: src/screens/People/components/BalanceSummary.tsx:121
+#: src/screens/People/components/BalanceSummary.tsx:129
+#: src/screens/People/components/BalanceSummary.tsx:130
 msgid "Open Analytics"
 msgstr "एनालिटिक्स खोलें"
 
@@ -5229,8 +5233,8 @@ msgstr "आपकी जेब से"
 msgid "over all time"
 msgstr "अब तक"
 
-#: src/screens/People/components/BalanceSummary.tsx:57
-#: src/screens/People/components/BalanceSummary.tsx:273
+#: src/screens/People/components/BalanceSummary.tsx:71
+#: src/screens/People/components/BalanceSummary.tsx:301
 msgid "Overview"
 msgstr "सारांश"
 
@@ -5240,7 +5244,7 @@ msgid "Owed to you {0}"
 msgstr "आपको मिलने हैं {0}"
 
 #. placeholder {0}: formatAmount(owed, currency, locale)
-#: src/screens/People/components/BalanceSummary.tsx:243
+#: src/screens/People/components/BalanceSummary.tsx:260
 msgid "Owed to you <0>{0}</0>"
 msgstr "आपको मिलेंगे <0>{0}</0>"
 
@@ -5785,7 +5789,7 @@ msgstr "तस्वीर हटाएँ"
 msgid "Remove round-off"
 msgstr "राउंड-ऑफ़ हटाएँ"
 
-#: src/screens/People/components/PersonRow.tsx:193
+#: src/screens/People/components/PersonRow.tsx:191
 #: src/screens/Person/index.tsx:204
 msgid "Removed"
 msgstr "हटाए गए"
@@ -5846,11 +5850,11 @@ msgid "Reply email (optional)"
 msgstr "जवाब का ईमेल (वैकल्पिक)"
 
 #: src/components/activity/ActivityItem.tsx:1224
-#: src/screens/People/components/RequestsSection.tsx:137
+#: src/screens/People/components/RequestsSection.tsx:148
 msgid "Request declined. {name} isn’t told."
 msgstr "अनुरोध अस्वीकार किया। {name} को नहीं बताया जाएगा।"
 
-#: src/screens/People/components/RequestsSection.tsx:188
+#: src/screens/People/components/RequestsSection.tsx:198
 msgid "Request sent to {name} again"
 msgstr "{name} को अनुरोध फिर भेजा गया"
 
@@ -5859,21 +5863,21 @@ msgstr "{name} को अनुरोध फिर भेजा गया"
 msgid "Request sent. You’ll see {0} once you’re in."
 msgstr "अनुरोध भेजा गया। जुड़ने पर आपको {0} दिखेगा।"
 
-#: src/screens/People/components/RequestsSection.tsx:203
+#: src/screens/People/components/RequestsSection.tsx:213
 msgid "Request to {name} cancelled"
 msgstr "{name} को भेजा अनुरोध रद्द हुआ"
 
 #: src/screens/FriendsAndInvites/index.tsx:89
-#: src/screens/People/components/RequestsSection.tsx:46
+#: src/screens/People/components/RequestsSection.tsx:55
 msgid "Requests"
 msgstr "अनुरोध"
 
-#: src/screens/People/components/RequestsSection.tsx:174
+#: src/screens/People/components/RequestsSection.tsx:184
 msgctxt "button"
 msgid "Resend"
 msgstr "फिर से भेजें"
 
-#: src/screens/People/components/RequestsSection.tsx:173
+#: src/screens/People/components/RequestsSection.tsx:183
 msgid "Resend to {name}"
 msgstr "{name} को फिर भेजें"
 
@@ -6157,7 +6161,7 @@ msgid "Saved. We’ll check and send it when you’re online."
 msgstr "सहेजा गया। ऑनलाइन होने पर हम जाँचकर भेज देंगे।"
 
 #: src/screens/Invites/Invite.tsx:146
-#: src/screens/People/components/RequestsSection.tsx:189
+#: src/screens/People/components/RequestsSection.tsx:199
 msgid "Saved. We’ll send it when you’re online."
 msgstr "सहेजा गया। ऑनलाइन होने पर हम भेज देंगे।"
 
@@ -6199,6 +6203,7 @@ msgstr "{q} खोजें"
 #: src/features/export/ExportSheet.tsx:251
 #: src/screens/FriendsAndInvites/index.tsx:198
 #: src/screens/FriendsAndInvites/index.tsx:199
+#: src/screens/People/index.tsx:223
 msgid "Search friends"
 msgstr "दोस्त खोजें"
 
@@ -6798,7 +6803,7 @@ msgstr "कल रात का डिनर 3 लोगों में बा�
 msgid "Split with"
 msgstr "किसके साथ बाँटें"
 
-#: src/screens/People/index.tsx:255
+#: src/screens/People/index.tsx:272
 msgid "Split with friends"
 msgstr "दोस्तों के साथ बाँटें"
 
@@ -6807,7 +6812,7 @@ msgstr "दोस्तों के साथ बाँटें"
 msgid "Splito"
 msgstr "Splito"
 
-#: src/screens/People/index.tsx:166
+#: src/screens/People/index.tsx:173
 #: src/view/shell/desktop/LeftNav.tsx:140
 msgid "Splito - Home"
 msgstr "Splito - घर"
@@ -7032,7 +7037,7 @@ msgid "That comment is too long. Please shorten it."
 msgstr "यह टिप्पणी बहुत लंबी है। कृपया छोटी करें।"
 
 #: src/components/activity/ActivityItem.tsx:1229
-#: src/screens/People/components/RequestsSection.tsx:84
+#: src/screens/People/components/RequestsSection.tsx:96
 msgid "That didn’t work. Please try again."
 msgstr "यह नहीं हो सका। कृपया फिर कोशिश करें।"
 
@@ -7402,7 +7407,7 @@ msgid "To 1 person"
 msgstr "1 व्यक्ति को"
 
 #: src/features/searchAsk/AskAnswer.tsx:73
-#: src/screens/People/components/RequestsSection.tsx:215
+#: src/screens/People/components/RequestsSection.tsx:225
 msgid "today"
 msgstr "आज"
 
@@ -7661,7 +7666,7 @@ msgstr "बैंगनी"
 msgid "Waiting for {name} to accept"
 msgstr "{name} की स्वीकृति का इंतज़ार"
 
-#: src/screens/People/components/RequestsSection.tsx:162
+#: src/screens/People/components/RequestsSection.tsx:173
 msgid "Waiting to accept · {sent}"
 msgstr "स्वीकृति का इंतज़ार · {sent}"
 
@@ -7674,7 +7679,7 @@ msgid "Waiting to sync"
 msgstr "सिंक की प्रतीक्षा में"
 
 #. placeholder {0}: ago(now - request.data.sentAt)
-#: src/screens/People/components/RequestsSection.tsx:107
+#: src/screens/People/components/RequestsSection.tsx:118
 msgid "Wants to be friends · {0}"
 msgstr "दोस्त बनना चाहते हैं · {0}"
 
@@ -7686,7 +7691,7 @@ msgstr "आपका बिना सहेजा खर्च रखा गय�
 msgid "We’ll check when you’re online. Your request waits on this device until then."
 msgstr "ऑनलाइन होने पर हम जाँचेंगे। तब तक आपका अनुरोध इसी डिवाइस पर रहेगा।"
 
-#: src/screens/People/components/RequestsSection.tsx:160
+#: src/screens/People/components/RequestsSection.tsx:171
 msgid "We’ll send it when you’re online"
 msgstr "ऑनलाइन होने पर भेजेंगे"
 
@@ -7975,7 +7980,7 @@ msgstr "आपने {subject} का दोस्ती का अनुरो�
 #. placeholder {0}: inviter.name
 #. placeholder {0}: person.data.name
 #: src/screens/Invites/Invite.tsx:155
-#: src/screens/People/components/RequestsSection.tsx:120
+#: src/screens/People/components/RequestsSection.tsx:131
 msgid "You and {0} are friends now"
 msgstr "अब आप और {0} दोस्त हैं"
 
@@ -8007,7 +8012,7 @@ msgstr "आपको मिलने हैं"
 #: src/features/export/statementText.ts:63
 #: src/screens/Group/components/GroupBalanceCards.tsx:71
 #: src/screens/Groups/components/GroupsFilterDialog.tsx:108
-#: src/screens/People/components/BalanceSummary.tsx:191
+#: src/screens/People/components/BalanceSummary.tsx:217
 msgid "You are owed"
 msgstr "आपको मिलेंगे"
 
@@ -8138,7 +8143,7 @@ msgstr "आपको देने हैं"
 #: src/features/searchAsk/AskAnswer.tsx:222
 #: src/screens/Group/components/GroupBalanceCards.tsx:73
 #: src/screens/Groups/components/GroupsFilterDialog.tsx:109
-#: src/screens/People/components/BalanceSummary.tsx:193
+#: src/screens/People/components/BalanceSummary.tsx:219
 #: src/screens/People/components/FriendsFilterDialog.tsx:119
 #: src/screens/Person/components/PersonBalances.tsx:131
 msgid "You owe"
@@ -8177,7 +8182,7 @@ msgid "You owe {who} {0}."
 msgstr "आपको {who} को {0} देना है।"
 
 #. placeholder {0}: formatAmount(owe, currency, locale)
-#: src/screens/People/components/BalanceSummary.tsx:252
+#: src/screens/People/components/BalanceSummary.tsx:269
 msgid "You owe <0>{0}</0>"
 msgstr "आपको देने हैं <0>{0}</0>"
 
@@ -8257,7 +8262,7 @@ msgstr "आपको मिलेंगे"
 msgid "You’ll pay"
 msgstr "आप देंगे"
 
-#: src/screens/People/components/BalanceSummary.tsx:76
+#: src/screens/People/components/BalanceSummary.tsx:94
 msgid "You’re all settled up."
 msgstr "आपका सारा हिसाब बराबर है।"
 

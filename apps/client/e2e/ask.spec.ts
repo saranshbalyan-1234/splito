@@ -68,14 +68,14 @@ test('"What does Riya owe me?" is the People balance', async ({page}) => {
   await page.getByTestId('header-search-ask').click()
   await page.getByTestId('search-input').fill('What does Riya owe me?')
   await page.getByTestId('search-input').press('Enter')
-  // People shows each way on its own: what she owes me and what I owe her, never netted.
-  const money = (t: string) => (t.match(/₹[\d,]+\.\d\d/) ?? [''])[0]
+  // Ask lists each way; the People row shows one net per currency (26.12, owner 120).
+  const amount = (t: string) => Number((t.match(/₹([\d,]+\.\d\d)/) ?? ['', '0'])[1]!.replace(/,/g, ''))
   const owed = page.getByTestId('ask-balance-INR-owed')
   const owe = page.getByTestId('ask-balance-INR-owe')
   await expect(owed).toBeVisible()
   const compact = row.replace(/\s/g, '')
-  expect(compact).toContain(money(await owed.innerText()))
-  expect(compact).toContain(money(await owe.innerText()))
+  const net = amount(await owed.innerText()) - amount(await owe.innerText())
+  expect(compact).toContain(new Intl.NumberFormat('en-IN', {style: 'currency', currency: 'INR'}).format(net))
   await expect(page.getByTestId('ask-action-person')).toBeVisible()
 })
 

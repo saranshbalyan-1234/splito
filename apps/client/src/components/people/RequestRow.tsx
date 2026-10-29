@@ -2,13 +2,10 @@
 import {useEffect, useRef, useState} from 'react'
 import {View} from 'react-native'
 import Animated from 'react-native-reanimated'
-import {type RowSync} from '@splito/sync'
-
 import {UserAvatar} from '#/view/com/util/UserAvatar'
 import {atoms as a, useBreakpoints, useTheme} from '#/alf'
 import {Button, ButtonIcon, ButtonText} from '#/components/Button'
 import {type Props as SVGIconProps} from '#/components/icons/common'
-import {SyncDot} from '#/components/SyncStatus'
 import {Text} from '#/components/Typography'
 import {useListAnimations} from '#/motion/listAnimations'
 
@@ -23,14 +20,11 @@ export function RequestRow({
   testID,
   name,
   detail,
-  sync,
   children,
 }: {
   testID: string
   name: string
   detail: React.ReactNode
-  /** The request's own sync state, shown as the row's marker. */
-  sync?: Pick<RowSync, 'syncStatus'>
   children: React.ReactNode
 }) {
   const t = useTheme()
@@ -49,7 +43,6 @@ export function RequestRow({
             style={[a.flex_shrink, a.text_md, a.font_semi_bold, {minWidth: 0}]}>
             {name}
           </Text>
-          {sync ? <SyncDot row={sync} testID={`${testID}-sync`} /> : null}
         </View>
         <Text
           numberOfLines={1}

@@ -9,6 +9,7 @@ import {
   computeShares,
   type ExpenseRecord,
   formatAmount,
+  isSettledBalance,
   magnitude,
   personSummary,
 } from '@splito/domain'
@@ -73,23 +74,20 @@ test('People shows each friend with real words and the right balance per currenc
       await expect(row).toContainText('Settled up')
       continue
     }
-    // Each way on its own line, never netted across direct and groups (F-113 M10).
+    // One net per currency (26.12, owner 120); only a currency open both ways that nets to zero keeps two lines (F-113 M10).
     for (const [currency, balance] of Object.entries(summary.byCurrency)) {
+      if (isSettledBalance(balance)) continue
       const {owed, owe} = balanceSides(balance)
       const money = (v: bigint) => formatAmount(v, currency, LOCALE)
-      const isBoth = owed > 0n && owe > 0n
-      if (owed > 0n)
-        await expect(
-          row.getByTestId(
-            isBoth ? `balance-${currency}-owed` : `balance-${currency}`,
-          ),
-        ).toHaveText(`owes you ↙ ${money(owed)}`)
-      if (owe > 0n)
-        await expect(
-          row.getByTestId(
-            isBoth ? `balance-${currency}-owe` : `balance-${currency}`,
-          ),
-        ).toHaveText(`you owe ↗ ${money(owe)}`)
+      if (owed > 0n && owe > 0n && balance.total === 0n) {
+        await expect(row.getByTestId(`balance-${currency}-owed`)).toHaveText(`owes you ↙ ${money(owed)}`)
+        await expect(row.getByTestId(`balance-${currency}-owe`)).toHaveText(`you owe ↗ ${money(owe)}`)
+      } else {
+        const net = balance.total
+        await expect(row.getByTestId(`balance-${currency}`)).toHaveText(
+          net > 0n ? `owes you ↙ ${money(net)}` : `you owe ↗ ${money(-net)}`,
+        )
+      }
     }
   }
   await expect(page.getByTestId('people-balances-title')).toHaveText('Overview')
@@ -190,7 +188,7 @@ test('Profile holds identity: name prompt, counts, then Settings and About; no d
   await expect(page.getByTestId('screen-settings')).toBeVisible()
 })
 
-test('People: the Overview counts friends; search lives in the Search & Ask drawer, not in the list', async ({
+test('People: the Overview counts friends; the Friends list has its own search beside Filters', async ({
   page,
 }) => {
   await page.setViewportSize({width: 390, height: 844})
@@ -201,8 +199,9 @@ test('People: the Overview counts friends; search lives in the Search & Ask draw
     `${Object.keys(DEMO_FRIENDS).length} friends · ${settled} settled`,
   )
   await expect(people.getByTestId('overview-analytics')).toBeVisible()
-  // Home has no list search of its own: the header's Search & Ask drawer searches everything.
-  await expect(people.getByTestId('list-search')).toHaveCount(0)
+  // The list's own search (owner 91) sits beside Filters, besides the header's Search & Ask.
+  await expect(people.getByTestId('list-search')).toBeVisible()
+  await expect(people.getByTestId('list-filters')).toBeVisible()
   await expect(people.getByTestId('header-search-ask')).toBeVisible()
 })
 

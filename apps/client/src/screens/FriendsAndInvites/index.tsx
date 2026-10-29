@@ -275,7 +275,7 @@ function FriendRow({person, onRemove}: {person: Entity<Person>; onRemove: () => 
       <Plural value={open.length} one="Open in # currency" other="Open in # currencies" />
     )
   return (
-    <RequestRow testID={`hub-friend-${name}`} name={name} sync={person} detail={detail}>
+    <RequestRow testID={`hub-friend-${name}`} name={name} detail={detail}>
       <Button
         testID="hub-friend-open"
         label={l`Open ${name}`}
