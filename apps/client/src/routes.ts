@@ -15,6 +15,7 @@ export const ROUTE_PATHS = {
   Profile: '/profile',
   Settings: '/settings',
   SignIn: '/signin',
+  FriendsAndInvites: '/settings/friends',
   Search: '/search',
   SettingsSection: '/settings/:section',
   AddFriend: '/friends/new',

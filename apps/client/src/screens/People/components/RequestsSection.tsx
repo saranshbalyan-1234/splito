@@ -88,7 +88,7 @@ function useRowAction() {
   }
 }
 
-function IncomingRow({request}: {request: Entity<FriendRequest>}) {
+export function IncomingRow({request}: {request: Entity<FriendRequest>}) {
   const {t: l} = useLingui()
   const navigation = useNavigation<NavigationProp>()
   const store = useStore()
@@ -142,7 +142,7 @@ function IncomingRow({request}: {request: Entity<FriendRequest>}) {
   )
 }
 
-function OutgoingRow({request}: {request: Entity<FriendRequest>}) {
+export function OutgoingRow({request}: {request: Entity<FriendRequest>}) {
   const {t: l} = useLingui()
   const navigation = useNavigation<NavigationProp>()
   const store = useStore()

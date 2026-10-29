@@ -262,6 +262,16 @@ describe('CSV', () => {
     expect(csvCell('\tx')).toBe("'\tx")
     expect(csvCell('\rx')).toBe(`"'\rx"`)
   })
+  test('a formula hidden behind leading spaces or a newline is defused too', () => {
+    expect(csvCell(' =1+1')).toBe("' =1+1")
+    expect(csvCell('  @SUM(A1)')).toBe("'  @SUM(A1)")
+    expect(csvCell('\n=1+1')).toBe(`"'\n=1+1"`)
+    expect(csvCell(' \t-2+3')).toBe("' \t-2+3")
+    expect(csvCell(' +cmd')).toBe("' +cmd")
+    // Text that merely starts with a space is left alone, and so is a number.
+    expect(csvCell(' lunch')).toBe(' lunch')
+    expect(csvCell('-0.5')).toBe('-0.5')
+  })
   test('plain numbers stay numbers, even negative ones', () => {
     expect(csvCell('-12.50')).toBe('-12.50')
     expect(csvCell('1200')).toBe('1200')

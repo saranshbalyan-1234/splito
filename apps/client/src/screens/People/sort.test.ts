@@ -1,7 +1,9 @@
 import {expect, test} from 'bun:test'
 import {type PersonSummary} from '@splito/domain'
 
-import {filterFriends, type FriendRow, seenByPerson, sortFriends} from './sort'
+import {type Entity, type Person} from '@splito/sync'
+
+import {filterFriends, type FriendRow, listedFriends, seenByPerson, sortFriends} from './sort'
 
 const summary = (
   person: string,
@@ -153,4 +155,19 @@ test('seenByPerson leaves group-only currencies out when Include groups is off',
       seenByPerson(seen, true),
     ).map(r => r.id),
   ).toEqual(['bob'])
+})
+
+const person = (id: string, name: string, removedAt?: number): Entity<Person> =>
+  ({id, type: 'person', data: {name, isMe: false, ...(removedAt ? {removedAt} : {})}, deleted: false}) as unknown as Entity<Person>
+
+test('a removed friend stays listed, marked Removed, while any currency is open, and leaves once settled', () => {
+  const people = [person('a', 'Asha'), person('r1', 'Riya', 5), person('r2', 'Ravi', 5), person('me', 'Me')]
+  people[3]!.data.isMe = true
+  const byPerson = new Map([
+    ['r1', summary('r1', {INR: 700n})],
+    ['r2', summary('r2', {INR: 0n})],
+  ])
+  const listed = listedFriends(people, byPerson)
+  expect(listed.map(r => [r.id, !!r.isRemoved])).toEqual([['a', false], ['r1', true]])
+  expect(listed[1]!.summary?.byCurrency.INR?.total).toBe(700n)
 })

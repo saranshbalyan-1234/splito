@@ -195,7 +195,9 @@ test('invite link: limits, QR and link, then Manage invite links and Revoke', as
   const code = url!.split('/').pop()!
 
   await page.getByTestId('sheet-cancel').click() // "Manage links"
-  await expect(page.getByTestId('screen-invite-links')).toBeVisible()
+  // F-621: "Manage links" opens the Invite links section of Settings > Friends and invites.
+  await expect(page.getByTestId('screen-friends-invites')).toBeVisible()
+  await expect(page).toHaveURL(/\/settings\/friends/)
   const row = page.getByTestId(`invite-link-${code}`)
   await expect(row.getByTestId('invite-link-details')).toHaveText('5 of 5 uses left · Expires in 1 day')
   // The seeded group link shows its uses and approval.
@@ -204,7 +206,6 @@ test('invite link: limits, QR and link, then Manage invite links and Revoke', as
   await expect(page.getByText('Revoke this invite link?')).toBeVisible()
   await page.getByTestId('confirmBtn').click()
   await expect(row).toHaveCount(0)
-  await expect(page.getByTestId('invite-links-inactive')).toContainText('isn’t shown')
 
   // Opening your own revoked link says it no longer works.
   await page.goto(`/invite/${code}`)

@@ -18,6 +18,7 @@ import {
 import {
   createExpense,
   type Group,
+  isRemovedFriend,
   type Person,
   roundToFor,
   updateExpense,
@@ -155,11 +156,14 @@ export function ExpenseComposer({
   const group = form.groupId
     ? groups?.find(g => g.id === form.groupId)
     : undefined
+  /* A removed friend can still be in a group: they take no new expense (editing an old one keeps them). */
+  const removedIds = new Set((people ?? []).filter(p => isRemovedFriend(p.data)).map(p => p.id))
+  const isOffered = (id: string) => isEdit || !removedIds.has(id)
   const members = group?.data.members
-    .filter(m => m.leftAt === null)
+    .filter(m => m.leftAt === null && isOffered(m.personId))
     .map(m => m.personId)
   const friends = (people ?? [])
-    .filter(p => !p.data.isMe)
+    .filter(p => !p.data.isMe && !isRemovedFriend(p.data))
     .sort((x, y) => x.data.name.localeCompare(y.data.name))
     .map(p => p.id)
   const candidates = members ?? [ctx.actor, ...friends]
@@ -174,7 +178,11 @@ export function ExpenseComposer({
       if (!g) return f
       return formWithGroup(
         f,
-        {id: g.id, currency: g.data.currency, members: g.data.members},
+        {
+          id: g.id,
+          currency: g.data.currency,
+          members: g.data.members.filter(m => isOffered(m.personId)),
+        },
         ctx.actor,
         unitOf,
         {isEdit, isCurrencyPicked},

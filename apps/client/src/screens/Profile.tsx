@@ -1,7 +1,7 @@
 // Adapted from bluesky-social/social-app@4e4ad9c (MIT) - src/screens/Settings/Settings.tsx
 import {Pressable, View} from 'react-native'
 import {Trans, useLingui} from '@lingui/react/macro'
-import {type Entity, type Group, isGroupInactive, type Person} from '@splito/sync'
+import {type Entity, type Group, isGroupInactive, isRemovedFriend, type Person} from '@splito/sync'
 
 import {useCount, useEntities, useMe} from '#/data/hooks'
 import {Link} from '#/view/com/util/Link'
@@ -235,7 +235,7 @@ function ProfileStats() {
       key: 'friends',
       to: '/',
       label: l`Friends`,
-      value: (people ?? []).filter(p => !p.data.isMe).length,
+      value: (people ?? []).filter(p => !p.data.isMe && !isRemovedFriend(p.data)).length,
     },
     {
       key: 'groups',

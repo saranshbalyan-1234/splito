@@ -46,6 +46,7 @@ Status words are the same as `docs/BACKLOG.md`: **done** (built, tested and merg
 | Friends | Private friends ("Add anyway (only for you)") | F-601 | in progress (built on the unmerged UI line) |
 | Friends | Add friend by email or mobile, Splito directory check, consent, Requests and Invites sent | F-618 | done (feat/4b-31-33; directory answers in demo only, production says "We'll check when you're online" until F-2111) |
 | Friends | Invite link and QR with use / expiry limits, manage and revoke | F-619 | done (feat/4b-31-33; links fail closed outside demo until F-2105) |
+| Friends | Settings > Friends and invites hub, safe Remove friend | F-621 | done (feat/wB-B6) |
 | Friends | Choose from contacts | F-602 | done (feat/4b-31-33; web verified, native picker not yet run on a device) |
 | Friends | Directory lookup and friend requests on the server | F-2111 | todo (needs backend) |
 | Friends | Invites and invite links on the server; link a private friend to a real account | F-2105, F-2106 | todo (needs backend) |
@@ -60,8 +61,8 @@ Status words are the same as `docs/BACKLOG.md`: **done** (built, tested and merg
 | Reminders | Remind me (local notification for yourself) | F-1119, F-1907 | done (feat/wB-B5; native OS scheduling not run on a device; web fires only while open) |
 | Reminders | Reminder policy, tone, language, snooze | F-1111 | todo |
 | Reminders | In-app reminders (1 per person per 3 days) and opt-in automatic reminders | F-2210 | todo (needs backend) |
-| Data | JSON backup export + import / restore (Settings > Data) | F-2001 | todo (Batch 4b) |
-| Data | Export centre: CSV, PDF statement, filters; Group / Person / Analytics export entries | F-2007 | todo (Batch 4b) |
+| Data | JSON backup export + import / restore (Settings > Data) | F-2001 | done (feat/wB-B6) |
+| Data | Export centre: CSV, PDF statement, filters; Group / Person / Analytics export entries | F-2007 | done (feat/wB-B6) |
 | Data | Power exports (YNAB, Beancount, XLSX) | F-2004 | todo |
 | AI | Ask Splito: nav item, Analytics header, Search row; DM-style chat; on-device answers with rich cards | F-2301 | todo (Batch 4b) |
 | AI | Free-form answers via the backend model; AI opt-in and privacy | F-2302, F-2303 | todo (needs backend) |

@@ -1,3 +1,4 @@
+import {type Entity, isRemovedFriend, type Person} from '@splito/sync'
 import {
   balanceSides,
   isSettledBalance,
@@ -8,7 +9,38 @@ import {
 } from '@splito/domain'
 
 /** One friend on People: their balance with me, if any. */
-export type FriendRow = {id: string; name: string; summary?: PersonSummary}
+export type FriendRow = {id: string; name: string; summary?: PersonSummary; isRemoved?: boolean}
+
+/** A friend as Home lists it: also a deleted one (struck, `deletedAt`) and whether I hid it. */
+export type ListedFriend = Omit<FriendRow, 'summary'> & {summary: PersonSummary | undefined; deletedAt?: number; isHidden?: boolean}
+
+/**
+ * The friends Home lists: everyone but me and removed friends, plus a removed
+ * friend for as long as any currency is open between us (a group can still
+ * give them a balance, and the totals above must match the rows below).
+ */
+export function listedFriends(
+  people: Entity<Person>[],
+  byPerson: Map<string, PersonSummary>,
+  hiddenIds: ReadonlySet<string> = new Set(),
+): ListedFriend[] {
+  return people.flatMap(p => {
+    if (p.data.isMe) return []
+    const summary = byPerson.get(p.id)
+    const isRemoved = isRemovedFriend(p.data)
+    if (isRemoved && !Object.values(summary?.byCurrency ?? {}).some(c => !isSettledBalance(c))) return []
+    return [
+      {
+        id: p.id,
+        name: p.data.name,
+        summary,
+        deletedAt: p.deleted ? p.updatedAt : undefined,
+        isHidden: p.deleted && hiddenIds.has(p.id),
+        ...(isRemoved ? {isRemoved} : {}),
+      },
+    ]
+  })
+}
 
 /**
  * The `peopleSort` preference applied. `amount`: biggest balance in the

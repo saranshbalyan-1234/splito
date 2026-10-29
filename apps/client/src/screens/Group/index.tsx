@@ -32,6 +32,7 @@ import * as SettingsList from '#/screens/Settings/components/SettingsList'
 import {atoms as a, useBreakpoints, useTheme, web} from '#/alf'
 import {Button, ButtonIcon, ButtonText} from '#/components/Button'
 import {useDialogControl} from '#/components/Dialog'
+import {ExportMenuItem, useExportSheet} from '#/features/export/ExportSheet'
 import {AddMembersDialog} from '#/components/groups/AddMembersDialog'
 import {GroupAvatar} from '#/components/groups/GroupAvatar'
 import {EditGroupDialog} from '#/components/groups/EditGroupDialog'
@@ -153,6 +154,7 @@ export function GroupScreen() {
   const editControl = useDialogControl()
   const rulesControl = useDialogControl()
   const lifecycle = useGroupLifecycle()
+  const exportSheet = useExportSheet({groupId})
   const [openRepayment, setOpenRepayment] = useState<Entity<
     Repayment | WriteOff
   > | null>(null)
@@ -609,6 +611,7 @@ export function GroupScreen() {
                 </Menu.ItemText>
                 <Menu.ItemIcon icon={PencilIcon} position="right" />
               </Menu.Item>
+              <ExportMenuItem testID="group-menu-export" label={l`Export`} onPress={exportSheet.open} />
               <Menu.Item
                 testID="group-menu-members"
                 label={l`Members`}
@@ -871,6 +874,7 @@ export function GroupScreen() {
           }
         />
       )}
+      {exportSheet.element}
       <CallItEvenDialog control={evenControl} draft={evenDraft} names={names} />
       {group && <EditGroupDialog control={editControl} group={group} />}
       {group && me && <GroupLifecycleDialogs lifecycle={lifecycle} group={group} me={me.id} names={names} nets={nets} locale={locale} />}

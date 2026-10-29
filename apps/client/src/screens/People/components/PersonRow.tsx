@@ -28,10 +28,12 @@ export type PersonRowData = {
   id: string
   name: string
   summary: PersonSummary | undefined
-  /** A removed friend stays in the list, struck through (decision 103); this is when. */
+  /** A deleted friend stays in the list, struck through (decision 103); this is when. */
   deletedAt?: number
   /** Hidden by me (only a deleted friend can be): out of the list unless "Show hidden" is on. */
   isHidden?: boolean
+  /** A removed friend who still has an open balance (shown until it is settled). */
+  isRemoved?: boolean
 }
 
 const AVATAR_SIZE = 42
@@ -185,6 +187,13 @@ export function PersonRow({
               style={[a.flex_row, a.align_start, a.justify_between, a.gap_md]}>
               <View style={[a.flex_1]}>
                 <ProfileCard.Name profile={row} textStyle={isDeleted ? struck : undefined} />
+                {row.isRemoved ? (
+                  <Pills.Row style={[a.pt_2xs]}>
+                    <Pills.Tag>
+                      <Trans>Removed</Trans>
+                    </Pills.Tag>
+                  </Pills.Row>
+                ) : null}
               </View>
               {!gtMobile && firstBalance}
             </View>

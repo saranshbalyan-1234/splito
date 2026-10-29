@@ -27,7 +27,10 @@ export type RootStackParams = {
   SettingsSection: {section: string}
   /** Settings > Account: honest until the auth backend exists. */
   SignIn: undefined
-  Person: {personId: string}
+  /** Settings > Friends and invites; `section: 'links'` scrolls to the invite links. */
+  FriendsAndInvites: {section?: 'links'} | undefined
+  /** `action` opens that flow once the page has its balances (Friends and invites uses it). */
+  Person: {personId: string; action?: 'settle' | 'even'}
   /** `tab` opens a section directly (`/groups/:groupId?tab=rules`). */
   Group: {groupId: string; tab?: 'expenses' | 'balances' | 'members' | 'rules'}
   Settle: {groupId: string}

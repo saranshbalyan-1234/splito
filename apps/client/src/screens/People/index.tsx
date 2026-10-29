@@ -2,7 +2,7 @@ import {useEffect, useState} from 'react'
 import {useWindowDimensions} from 'react-native'
 import {LayoutAnimationConfig} from 'react-native-reanimated'
 import {plural} from '@lingui/core/macro'
-import {useLingui} from '@lingui/react/macro'
+import {Trans, useLingui} from '@lingui/react/macro'
 import {useNavigation} from '@react-navigation/native'
 import {balanceTotals, isSettledBalance, personSummary} from '@splito/domain'
 import {type Group, type Person} from '@splito/sync'
@@ -27,6 +27,7 @@ import {atoms as a, useBreakpoints} from '#/alf'
 import {AddExpenseFAB, AddExpenseFABInset} from '#/components/AddExpenseFAB'
 import {LogoMark} from '#/components/brand/Logo'
 import {useDialogControl} from '#/components/Dialog'
+import {Button, ButtonText} from '#/components/Button'
 import {SearchAskButton} from '#/components/SearchAsk/SearchAskButton'
 import {HeaderAvatar} from '#/components/HeaderAvatar'
 import {PersonPlus_Filled_Stroke2_Corner0_Rounded as PersonPlusIcon} from '#/components/icons/Person'
@@ -49,7 +50,7 @@ import {
 } from './components/FriendsFilterDialog'
 import {RequestsSection} from './components/RequestsSection'
 import {SectionHeader} from './components/SectionHeader'
-import {filterFriends, seenByPerson, sortFriends} from './sort'
+import {filterFriends, listedFriends, seenByPerson, sortFriends} from './sort'
 
 const PLACEHOLDER_ROWS = 6
 
@@ -105,15 +106,7 @@ export function PeopleScreen() {
     : []
   const byPerson = new Map(summaries.map(s => [s.person, s]))
   const groupNames = useGroupChipNames(groups)
-  const friends = (people ?? [])
-    .filter(p => !p.data.isMe)
-    .map(p => ({
-      id: p.id,
-      name: p.data.name,
-      summary: byPerson.get(p.id),
-      deletedAt: p.deleted ? p.updatedAt : undefined,
-      isHidden: p.deleted && hiddenIds.has(p.id),
-    }))
+  const friends = listedFriends(people ?? [], byPerson, hiddenIds)
   /* Settled currencies stay on offer and filterable (audit m3). */
   const seenCurrencies = seenByPerson(seen?.people ?? {}, includeGroups)
   const currencies = [
@@ -219,6 +212,19 @@ export function PeopleScreen() {
                     count={rows.length}
                     activeFilterCount={activeCount}
                     onFiltersPress={() => filterControl.open()}
+                    action={
+                      <Button
+                        testID="people-manage-friends"
+                        label={l`Manage friends and invites`}
+                        size="small"
+                        variant="ghost"
+                        color="secondary"
+                        onPress={() => navigation.navigate('FriendsAndInvites')}>
+                        <ButtonText>
+                          <Trans>Manage</Trans>
+                        </ButtonText>
+                      </Button>
+                    }
                   />
                 </>
               ) : (

@@ -413,11 +413,11 @@ export function formatAmountCompact(minor: bigint, code: CurrencyCode, locale: s
 }
 
 const NUMBER = /^-?\d+(\.\d+)?$/
-const FORMULA = /^[=+\-@\t\r]/
+const FORMULA = /^\s*[=+\-@]|^[\t\r]/
 
 /**
  * One CSV cell. Text a spreadsheet would run as a formula (leading `=`, `+`,
- * `-`, `@`, tab or CR) gets a leading apostrophe; plain numbers are left alone.
+ * `-`, `@`, even behind spaces or a newline, or a tab or CR) gets a leading apostrophe; plain numbers are left alone.
  * Then RFC 4180 quoting.
  */
 export function csvCell(value: string): string {

@@ -5,6 +5,7 @@ import {
   type Entity,
   type Group,
   isGroupInactive,
+  isRemovedFriend,
   type Person,
   type RoundToByCurrency,
   roundToFor,
@@ -113,8 +114,9 @@ function AddExpenseForm({
     /* An inactive group takes no new expenses (decision 89): a link or button naming one opens a plain expense. */
     const group = groups.find(g => g.id === groupId && !isGroupInactive(g.data))
     if (group) {
+      const removed = new Set(people.filter(p => isRemovedFriend(p.data)).map(p => p.id))
       const members = group.data.members
-        .filter(m => m.leftAt === null)
+        .filter(m => m.leftAt === null && !removed.has(m.personId))
         .map(m => m.personId)
       return emptyForm({
         me,
@@ -127,7 +129,7 @@ function AddExpenseForm({
         roundTo: roundTo ? roundToFor(roundTo, group.data.currency) : 0,
       })
     }
-    const person = people.find(p => p.id === personId)
+    const person = people.find(p => p.id === personId && !isRemovedFriend(p.data))
     return emptyForm({
       me,
       currency,

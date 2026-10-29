@@ -3,7 +3,7 @@ import {View} from 'react-native'
 import {Trans, useLingui} from '@lingui/react/macro'
 import {useNavigation} from '@react-navigation/native'
 import {DomainError, parseLocalDate} from '@splito/domain'
-import {createGroup, createPerson, type Group, type Person} from '@splito/sync'
+import {createGroup, createPerson, type Group, isRemovedFriend, type Person} from '@splito/sync'
 
 import {useHaptics} from '#/lib/haptics'
 import {useSingleFlight} from '#/lib/hooks/useSingleFlight'
@@ -69,7 +69,7 @@ export function CreateGroupScreen() {
     else navigation.navigate('Groups')
   }
   const friends = (people ?? [])
-    .filter(p => !p.data.isMe)
+    .filter(p => !p.data.isMe && !isRemovedFriend(p.data))
     .sort((x, y) => x.data.name.localeCompare(y.data.name))
 
   const addNewFriend = () =>
