@@ -2122,6 +2122,20 @@ add anyway (only for you)"; "also i should be able to select from contacts". *Wh
   (§ 0 rule 6), and the page says so. *Why:* "new expense and payment should be one, make it payment, add one
   more notification for comments".
 
+- **Push notifications on every platform** (owner 137; F-2201, in the first backend batch right after sign-in
+  and sync, F-2101..F-2103). Real push, not only local alerts: iOS (APNs) and Android (FCM) through
+  `expo-notifications`, and web through Web Push (VAPID) in the PWA's service worker, so a browser tab that is
+  closed still gets them where the browser allows. What pushes follows Settings > Notifications exactly
+  (Payments, Comments, Invites; Reminders stay local): an expense that includes me, a payment to or from me, an
+  edit or delete that changes my share, a comment or @mention, a friend request or accepted invite, a dispute
+  raised or answered (F-1210). Text is in the recipient's language and never shows amounts or names on the lock
+  screen unless the privacy level allows (F-1605); tapping opens the exact screen by its URL (owner 100);
+  per-group threads; actions where safe ("Mark read", "Open"; never "Settle" or "Delete", § 14). Permission is
+  asked only from a tap, after a one-screen primer, never at launch; refusing is a state with a Settings link,
+  not an error. A push payload is only a hint: the app pulls and shows local data, never writes the payload to
+  the store (§ 9.3). Tokens are per device and account, refreshed on a schedule, removed on log out. *Why:* "we
+  need to add push notifications as well".
+
 ### 26.21 Offline web app (service worker and PWA)
 
 *Why:* "also add service worker for cache and pwa". *Where:* `apps/client/web/`, export post-step.
@@ -2288,6 +2302,7 @@ Every owner decision, in the order it was made (all 2026-10-26). "Replaced" name
 | 134 | "in all headers, write Home - Demo like this instead" | In demo mode every header title ends with " - Demo" (logo + "Demo" label on phone Home; document title too) | § 26.15 | - (with 133) |
 | 135 | "remember when backend is build, you need to download the demo data from backend not store in frontend" | With the backend, Demo mode downloads the demo dataset from the server into the demo DB; no demo seed in the client bundle | § 26.1 | Demo dataset generated in the app (dev/e2e) |
 | 136 | "and remove when demo mode is switched off" | Switching demo off erases the demo database and demo-scoped keys; on again starts fresh; no Reset demo | § 26.1 | Demo DB kept between sessions; Reset demo |
+| 137 | "we need to add push notifications as well" | Real push on iOS (APNs), Android (FCM) and web (Web Push in the PWA), following the Notifications switches; privacy-aware text; opens the exact screen; permission only from a tap; first backend batch | § 26.20 | Push planned without platform detail (F-2201) |
 
 New decisions follow § 0 rule 9: rewrite the rule in its topic so only the current truth remains, then add a
 row here.

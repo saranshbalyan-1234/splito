@@ -77,6 +77,7 @@ Every row of the ARCHITECTURE § 26.23 decision log (rows 1-63) and the feature(
 | 58 service worker and PWA | § 26.21 | F-1901 |
 | 59 comments, remind, export | § 26.20 | F-1204, F-2208, F-1118, F-1119, F-1111, F-2210, F-2001, F-2007, F-2004 |
 | 61 sync-status dot on the avatar | § 26.7 | F-223, F-2103 |
+| 137 push notifications on iOS, Android and web | § 26.20 | F-2201 (first backend batch) |
 | 135 demo data downloaded from the backend, not bundled | § 26.1 | F-252 (backend) |
 | 128 customization only where needed; Language menu switch removed | § 26.1 | F-251 |
 | 125 sign-in required, nothing visible signed out | § 26.15 | F-250 (Wave C), F-2101/F-2102 moved up after Wave C |
@@ -3766,16 +3767,20 @@ Receives feedback from the outbox (F-226) and reports its status back to "Your f
 
 Features that need other people's devices or a server.
 
-### F-2201 Push notifications with actions `spec v1`
+### F-2201 Push notifications on iOS, Android and web `spec v1, owner § 26.20 (decision 137)`
 
-Push for new group expense, payment recorded, invite accepted; Bluesky's NSE rewrites text, threads per group and adds actions.
+Real push on every platform: APNs and FCM through expo-notifications, Web Push (VAPID) in the PWA service worker. Types follow Settings > Notifications (owner 131): Payments (expense with me, payment to/from me, edit or delete that changes my share), Comments (comment, @mention), Invites (request, accepted), disputes (F-1210). Bluesky's NSE rewrites text, threads per group and adds safe actions.
 
-- **Effort** L · **Impact** 8 · **Backend** yes · **Status** todo · **Deps** F-2103
-- **Prefs** `notify.expense`, `notify.payment`, `notify.invite`, `notify.edit`, `notify.comment`
+- **Effort** L · **Impact** 9 · **Backend** yes · **Status** todo, first backend batch (right after F-2101..F-2103) · **Deps** F-2101, F-2102, F-2103, F-1901
+- **Prefs** `notify.payment`, `notify.comments`, `notify.invite` (existing; no new settings, owner 128)
 - **Acceptance**
-  1. Payloads respect notification privacy levels (F-1605).
-  2. Each notification type obeys its notify.* toggle.
-  3. Edits or deletes that change my share notify me; text is in the recipient's app language.
+  1. Push arrives on an iOS device, an Android device and a closed-tab Chrome/Edge/Firefox PWA (Safari where supported) for each type, and not when its switch is off.
+  2. Permission only from a tap after a primer; refusal shows a state with a Settings link; never asked at launch.
+  3. Text in the recipient's language; lock-screen content follows F-1605 privacy levels; per-group threads; actions limited to Open / Mark read.
+  4. Tapping opens the exact screen by URL (owner 100), including when the app was killed; signed out, it goes to sign-in and resumes (owner 125).
+  5. The payload is a hint: the app pulls, never writes the payload to the store; duplicates and out-of-order pushes show once.
+  6. Tokens per device and account, refreshed on schedule, deleted on log out and on the server when invalid; one push issue per launch at most (§ 25).
+  7. e2e/Maestro checks on simulators and the web service worker; no test hands anything to a real app (owner 118).
 
 ### F-2202 Notification digest, mute and "only if it affects me"
 
