@@ -167,3 +167,34 @@ the 10,000-expense ledger, median of 5, same machine, alternating with an m1-fou
 spec's 10,000-expense Ask typing assertion (chat input keeps every character) failed under machine load on both builds
 and passes alone.
 
+
+## Tap latency and shell first (owners 150, 151, 152; branch fix/tab-taps)
+
+Root cause of the dropped tab taps: `useDedupe(250)` on tab presses. The native `BottomBar` shared one dedupe across
+every tab (any tap within 250 ms of another, whatever the tab, was dropped); on phone web each `Link` had its own, so
+A, B, A within 250 ms dropped the second A and the landing tab was not the last one tapped. `navigate` is idempotent,
+so `useNavigationDeduped().navigate` and the bottom bar no longer dedupe (e2e `tabTaps.spec.ts`: 6 and 10 taps 50 ms
+and 0 ms apart, bottom bar at 390 touch, sidebar at 1440, rail at 900, Group and Activity tabs, full and reduced motion;
+failed 4 of 14 before, 14 of 14 after, three runs in a row).
+
+Tap to first visual change (`perf/tapLatency.spec.ts`, 390 px touch, large demo ledger, app reloaded per run, median of
+3; headless Chrome on a loaded laptop, so the 50 ms floor is mostly frame cadence). Before = phase 1 only; after =
+phase 2. Milliseconds from touchstart to the result in the DOM.
+
+| Tap | Before x1 | After x1 | Before x4 CPU | After x4 CPU |
+|---|---|---|---|---|
+| Tab: Groups / Analytics / Activity | 55 / 60 / 56 | 47 / 55 / 50 | 49 / 48 / 49 | 52 / 51 / 51 |
+| Friend row, group row | 53, 50 | 51, 53 | 49, 48 | 52, 51 |
+| FAB (Add expense opens) | 85 | 85 | 81 | 85 |
+| Open filters sheet | n/a | 84 | n/a | 86 |
+| Filter chip, switch | 51, 52 | 49, 49 | 52, 51 | 53, 53 |
+| Add expense Save | 85 | 81 | 84 | 88 |
+| Tab, 50 ms, next tab (second tap latency) | 137 to 231 (123-143 ms long task) | 43 (4 of 12 runs 230-410) | 89 | 38 |
+| Sheet X (exit slide begins) | 117 | 104-116 | 116 | 127 |
+| Longest JS task after Activity first visit, x4 | 188-202 | 0 | | |
+
+Not fixed: the exit slide of a sheet starts 100-127 ms after the X tap in this harness (the isolated trace shows the
+slide moving at 60 ms; the press feedback is immediate); and the second tab tap still waits 230-410 ms in about a
+third of cold first visits to Analytics then Activity (browser layout of the first screen's commit, not JS).
+Renders gate: skeleton and placeholder renders on a hot tab switch are gone (launch updates 448 to 403, scroll updates
+5,977 to 4,384); `Deferred` and `SheetBody` are new entries in `baseline.json`.
