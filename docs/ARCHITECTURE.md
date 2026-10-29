@@ -1085,7 +1085,14 @@ Inherited from GameRun (2026-10-26); each holds for Splito's stack:
 
 Splito lessons (add newest last, dated, with PR):
 
-- (none yet)
+- 2026-10-29, fix/web-scroll: **mobile Safari scrolled to a blank page.** `react-native-safe-area-context` 5.10.1's
+  web provider reports its rect in viewport coordinates, so on a page whose window scrolls (ours) the top inset
+  became the scroll offset whenever it re-measured; Safari fires `resize` as its toolbar collapses mid-scroll,
+  `Layout.Screen` took that as `paddingTop` (measured 2,500 px) and the whole screen sat below the viewport.
+  Fixed by `patches/react-native-safe-area-context@5.10.1.patch` (insets from the window's `env()` only, as in
+  5.6; remove the patch once upstream measures in document coordinates). Test: `e2e/scrollWeb.spec.ts` dispatches
+  the same `resize` while scrolled and fails without the patch (3,029 px displacement). Chromium never shows it
+  (no toolbar), so check scroll fixes in real Mobile Safari, not only Playwright.
 
 ---
 
