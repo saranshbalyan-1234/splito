@@ -42,6 +42,7 @@ export function ItemRow({
 }) {
   const t = useTheme()
   const {t: l} = useLingui()
+  const itemLabel = item.name || l`Item ${i + 1}`
   return (
     <View
       testID={`expense-item-${i}`}
@@ -67,7 +68,7 @@ export function ItemRow({
           {dispute.onRaise && !dispute.marked.has(i) ? (
             <Button
               testID={`item-dispute-${i}`}
-              label={l`Dispute my portion of ${item.name || l`Item ${i + 1}`}`}
+              label={l`Dispute my portion of ${itemLabel}`}
               size="small"
               variant="ghost"
               color="secondary"

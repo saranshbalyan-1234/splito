@@ -38,11 +38,14 @@ export function useDisputeWords() {
 
   const fix = (f: ProposedFix, currency: string): string => {
     switch (f.kind) {
-      case 'amount':
-        return l`Change the amount to ${formatAmount(f.amount, currency, locale)}`
+      case 'amount': {
+        const amount = formatAmount(f.amount, currency, locale)
+        return l`Change the amount to ${amount}`
+      }
       case 'share': {
         const who = name(f.personId)
-        return l`Set ${who}’s share to ${formatAmount(f.amount, currency, locale)}`
+        const amount = formatAmount(f.amount, currency, locale)
+        return l`Set ${who}’s share to ${amount}`
       }
       case 'payer': {
         const who = name(f.personId)

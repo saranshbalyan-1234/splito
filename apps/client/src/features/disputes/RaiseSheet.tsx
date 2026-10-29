@@ -121,9 +121,10 @@ function Form({request}: {request: Raise}) {
     }
   }
 
-  const title = isHold ? l`Put on hold` : item ? l`Dispute ${item.name ?? l`this item`}` : l`Dispute`
+  const itemName = item?.name || l`this item`
+  const title = isHold ? l`Put on hold` : item ? l`Dispute ${itemName}` : l`Dispute`
   const money = d ? formatAmount(targetType === 'expense' ? d.total : d.amount, currency, locale) : ''
-  const subject = item ? `${item.name ?? l`Item`} · ${formatAmount(item.amount, currency, locale)}` : targetType === 'expense' ? (d?.title ?? '') : money
+  const subject = item ? `${item.name || l`Item`} · ${formatAmount(item.amount, currency, locale)}` : targetType === 'expense' ? (d?.title ?? '') : money
   const totalText = money
 
   return (
@@ -292,7 +293,7 @@ function Candidates({entries, currency, selfId, value, onChange}: PickerProps & 
           <Chip
             key={o.id}
             testID={`dispute-duplicate-${o.data.title}`}
-            label={l`${o.data.title} · ${formatAmount(o.data.total, currency, locale)}`}
+            label={`${o.data.title} · ${formatAmount(o.data.total, currency, locale)}`}
             selected={value === o.id}
             onPress={() => onChange(value === o.id ? null : o.id)}
           />

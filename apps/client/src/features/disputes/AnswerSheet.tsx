@@ -42,6 +42,7 @@ function Form({request}: {request: {kind: 'reject' | 'reopen'; disputeId: string
   const [isSaving, setIsSaving] = useState(false)
   const isReject = request.kind === 'reject'
   const d = dispute?.data
+  const resolution = d?.resolution ?? ''
 
   const save = async () => {
     if (!note.trim()) return
@@ -75,7 +76,7 @@ function Form({request}: {request: {kind: 'reject' | 'reopen'; disputeId: string
             ) : null}
             {!isReject && d.resolution ? (
               <Text emoji style={[a.text_sm, a.leading_snug, t.atoms.text_contrast_medium]}>
-                <Trans>They said: {d.resolution}</Trans>
+                <Trans>They said: {resolution}</Trans>
               </Text>
             ) : null}
           </View>

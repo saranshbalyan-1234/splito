@@ -61,6 +61,8 @@ function DisputeCard({dispute, targetType, targetId, currency}: {dispute: Entity
   const hasFix = !!d.proposedFix && d.proposedFix.kind !== undefined
   const canApply = hasFix || d.reason === 'not_received'
   const itemName = d.itemIndex !== null ? l`one item` : null
+  const ago = getTimeAgo(dispute.createdAt, now)
+  const fixText = d.proposedFix ? words.fix(d.proposedFix, currency) : ''
 
   const run = async (act: () => Promise<unknown>, done: string) => {
     try {
@@ -83,11 +85,11 @@ function DisputeCard({dispute, targetType, targetId, currency}: {dispute: Entity
         <Text style={[a.flex_1, a.text_sm, a.leading_snug, t.atoms.text_contrast_medium, {minWidth: 120}]}>
           {d.recordedBy !== d.raisedBy && d.recordedBy === access.me ? (
             <Trans>
-              {raiser} · recorded by you · {getTimeAgo(dispute.createdAt, now)}
+              {raiser} · recorded by you · {ago}
             </Trans>
           ) : (
             <Trans>
-              {raiser} · {getTimeAgo(dispute.createdAt, now)}
+              {raiser} · {ago}
             </Trans>
           )}
         </Text>
@@ -105,27 +107,30 @@ function DisputeCard({dispute, targetType, targetId, currency}: {dispute: Entity
       ) : null}
       {d.proposedFix ? (
         <Text testID="dispute-fix" style={[a.text_sm, a.leading_snug, t.atoms.text_contrast_medium]}>
-          <Trans>Proposed: {words.fix(d.proposedFix, currency)}</Trans>
+          <Trans>Proposed: {fixText}</Trans>
         </Text>
       ) : null}
       {!isOpen && resolver ? (
-        <Text testID="dispute-resolution" emoji style={[a.text_sm, a.leading_snug, t.atoms.text_contrast_medium]}>
-          {d.status === 'rejected' ? (
-            <Trans>
-              {resolver} rejected it{d.resolution ? `: ${d.resolution}` : ''}
-            </Trans>
-          ) : d.status === 'accepted' ? (
-            <Trans>
-              {resolver} accepted it{d.resolution ? `: ${d.resolution}` : ''}
-            </Trans>
-          ) : d.status === 'released' ? (
-            <Trans>{resolver} released it</Trans>
-          ) : d.status === 'gone' ? (
-            <Trans>The record was deleted</Trans>
-          ) : (
-            <Trans>{resolver} closed it</Trans>
-          )}
-        </Text>
+        <View style={[a.gap_2xs]}>
+          <Text testID="dispute-resolution" style={[a.text_sm, a.leading_snug, t.atoms.text_contrast_medium]}>
+            {d.status === 'rejected' ? (
+              <Trans>{resolver} rejected it</Trans>
+            ) : d.status === 'accepted' ? (
+              <Trans>{resolver} accepted it</Trans>
+            ) : d.status === 'released' ? (
+              <Trans>{resolver} released it</Trans>
+            ) : d.status === 'gone' ? (
+              <Trans>The record was deleted</Trans>
+            ) : (
+              <Trans>{resolver} closed it</Trans>
+            )}
+          </Text>
+          {d.resolution ? (
+            <Text testID="dispute-resolution-note" emoji style={[a.text_md, a.leading_snug]}>
+              {d.resolution}
+            </Text>
+          ) : null}
+        </View>
       ) : null}
 
       <View style={[a.flex_row, a.flex_wrap, a.gap_sm]}>
