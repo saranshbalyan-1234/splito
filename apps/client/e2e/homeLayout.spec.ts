@@ -100,9 +100,9 @@ test('with nothing waiting there is no invites row', async ({page}) => {
   await expect(page.getByTestId('people-invites-waiting')).toHaveCount(0)
 })
 
-test('a friend row is at most two lines at 390px, chips do not wrap, the last row clears the FAB', async ({page}) => {
+test('a friend row is at most two lines at 390px, amounts vertically centred, chips do not wrap, the last row clears the FAB', async ({page}) => {
   await openHome(page, 390)
-  const rows = page.locator('[data-testid^="person-"]:not([data-testid*="-more"]):not([data-testid$="-chips"]):not([data-testid$="-deleted"])').filter({has: page.locator('[data-testid^="balance-"]')})
+  const rows = page.locator('[data-testid^="person-"]:not([data-testid*="-more"]):not([data-testid$="-chips"]):not([data-testid$="-deleted"]):not([data-testid="person-row-nets"])').filter({has: page.locator('[data-testid^="balance-"]')})
   const n = await rows.count()
   expect(n).toBeGreaterThan(3)
   for (let i = 0; i < n; i++) {
@@ -110,6 +110,10 @@ test('a friend row is at most two lines at 390px, chips do not wrap, the last ro
     const box = (await row.boundingBox())!
     // Name line + chip line + the row's padding: two lines, not three.
     expect(box.height, (await row.getAttribute('data-testid')) ?? '').toBeLessThanOrEqual(96)
+    // The amounts column is vertically centred in the row, whether it holds one line or several (owner 130).
+    const nets = (await row.getByTestId('person-row-nets').boundingBox())!
+    const avatarBlock = (await row.locator('xpath=./*').first().boundingBox())!
+    expect(Math.abs(nets.y + nets.height / 2 - (avatarBlock.y + avatarBlock.height / 2))).toBeLessThanOrEqual(2)
     const chips = row.locator('[data-testid$="-chips"]')
     if (await chips.count()) {
       const kids = chips.first().locator('> *')
