@@ -320,17 +320,26 @@ for (const [label, viewport] of [
       await expect(page.getByTestId('record-payment-sheet')).toHaveCount(0)
     })
 
-    test('a prefilled composer drops its prefill from the address on the first edit, so a refresh restores the draft', async ({page}) => {
+    test('a prefilled composer drops its prefill from the address on the first edit; a refresh then restores the saved draft', async ({page}) => {
       await openApp(page)
+      await page.goto('/expense/new')
+      await page.getByTestId('expense-title').fill('Half-typed groceries')
+      await page.waitForTimeout(600)
+      await page.getByTestId('sheet-close').click()
+      await page.getByTestId('draft-save').click()
+      await expect(page.getByTestId('screen-add-expense')).toHaveCount(0)
+
       await page.goto('/expense/new?title=Taxi+home&amount=250&currency=INR')
       await expect(page.getByTestId('expense-title')).toHaveValue('Taxi home')
       // Mounting writes nothing to the address.
       expect(here(page)).toBe('/expense/new?amount=250&currency=INR&title=Taxi+home')
       await page.getByTestId('expense-title').fill('Taxi home late')
       await expect.poll(() => here(page)).toBe('/expense/new')
-      await page.waitForTimeout(600)
-      await page.reload()
+      // The form is still the prefilled one (it owns no draft, owner rule 26.19) ...
       await expect(page.getByTestId('expense-title')).toHaveValue('Taxi home late')
+      await page.reload()
+      // ... and a refresh does not apply the prefill again: it opens the user's own saved draft.
+      await expect(page.getByTestId('expense-title')).toHaveValue('Half-typed groceries')
     })
 
     test('a pasted real-data address in demo mode asks to switch back first', async ({page}) => {

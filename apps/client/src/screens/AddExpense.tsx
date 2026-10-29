@@ -113,7 +113,8 @@ function AddExpenseForm({
 }) {
   const {t: l} = useLingui()
   const context = {personId, groupId}
-  const isPrefilled = !!(prefill?.title || prefill?.amount)
+  /* Fixed at the first render: the prefill leaves the address on the first edit, the form stays a prefilled one (no draft slot, ARCHITECTURE 26.19). */
+  const [isPrefilled] = useState(() => !!(prefill?.title || prefill?.amount))
   const [fresh] = useState(() => {
     const form = freshFormFor()
     return isPrefilled
@@ -174,7 +175,7 @@ function AddExpenseForm({
       /* A prefilled form owns no draft slot: it never writes over, or clears, the draft the user saved. */
       draftContext={draftContextFor(context, isPrefilled)}
       isDraftRestored={!!draft}
-      /* Once the person edits, the prefill leaves the address, so a refresh restores their draft instead of starting over (F-241). */
+      /* Once the person edits, the one-shot prefill leaves the address: a refresh opens the plain composer with the draft the user saved, not the prefill again (F-241). */
       onFirstEdit={isPrefilled ? onPrefillEdited : undefined}
       onClose={onClose}
     />

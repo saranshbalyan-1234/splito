@@ -141,5 +141,7 @@ test('real-data links: ids ask in demo mode, generic pages do not', () => {
   expect(touchesRealData(resolveLink('/settings/regional').target)).toBe(false)
   expect(touchesRealData(resolveLink(`/groups/${ID}/balances`).target)).toBe(true)
   expect(touchesRealData(resolveLink(`/expense/new?personId=${ID}`).target)).toBe(true)
-  expect(touchesRealData(resolveLink(`/invite/k3j9x2m4q8w1z5v7`).target)).toBe(true)
+  // An invite code is the directory's, not the ledger's: demo mode has its own sample invites.
+  expect(touchesRealData(resolveLink(`/invite/k3j9x2m4q8w1z5v7`).target)).toBe(false)
+  expect(touchesRealData(resolveLink(`/invites/k3j9x2m4q8w1z5v7/share`).target)).toBe(true)
 })

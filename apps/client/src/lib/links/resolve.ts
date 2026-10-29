@@ -158,5 +158,7 @@ export function buildPath(target: LinkTarget): string {
 
 /** Whether the target names something on this device by id: in demo mode such a link asks to switch back first (F-254). */
 export function touchesRealData(target: LinkTarget): boolean {
+  /* An invite code is looked up in the directory (demo mode has its own, with its own sample invites), not in the ledger. */
+  if (target.name === 'Invite') return false
   return pathParamNames(target.name).some(key => key !== 'section') || !!target.params.personId || !!target.params.groupId
 }

@@ -2,6 +2,9 @@ import {useEffect} from 'react'
 import {useLingui} from '@lingui/react/macro'
 
 import {IS_E2E, IS_WEB} from '#/env'
+import {useStore} from '#/data/hooks'
+import {isInStore} from '#/lib/links/inStore'
+import {type LinkTarget} from '#/lib/links/resolve'
 import {device} from '#/storage'
 import {readDeferredLink} from '#/lib/links/deferred'
 import {releaseDemoSwitch, takeWaitingLink, useLinkWaitingForDemo} from '#/lib/links/gate'
@@ -19,6 +22,7 @@ import * as Prompt from '#/components/Prompt'
 export function LinkHost() {
   const {t: l} = useLingui()
   const {demo, setDemo} = useDemoMode()
+  const store = useStore()
   const {hasSession} = useSession()
   const waiting = useLinkWaitingForDemo()
   const prompt = Prompt.usePromptControl()
@@ -31,28 +35,28 @@ export function LinkHost() {
   useEffect(() => {
     if (!hasSession) return
     const held = takeLinkIntent()
-    if (held) openLink(held, {isDemo: demo})
-  }, [hasSession, demo])
+    if (held) openLink(held, {isDemo: demo, isInStore: (target: LinkTarget) => isInStore(store, target)})
+  }, [hasSession, demo, store])
 
   /* E2E builds only: `window.__splitoTest.openLink(url)` opens a link as a push tap or a shared link would (warm). */
   useEffect(() => {
     if (!IS_E2E || !IS_WEB) return
     const w = window as unknown as {__splitoTest?: Record<string, unknown>}
-    w.__splitoTest = {...w.__splitoTest, openLink: (url: string) => openLink(url, {isDemo: demo})}
-  }, [demo])
+    w.__splitoTest = {...w.__splitoTest, openLink: (url: string) => openLink(url, {isDemo: demo, isInStore: (target: LinkTarget) => isInStore(store, target)})}
+  }, [demo, store])
 
   /* Links from outside (a tap on a link, a push, a share) wait in `incoming`; they open through `openLink` now that the mode is known. */
   const incoming = useIncomingLink()
   useEffect(() => {
     const url = incoming && takeIncoming()
-    if (url) openLinkWhenReady(url, {isDemo: demo})
-  }, [incoming, demo])
+    if (url) openLinkWhenReady(url, {isDemo: demo, isInStore: (target: LinkTarget) => isInStore(store, target)})
+  }, [incoming, demo, store])
 
   /* The address the web page loaded with: dead link, demo mode, signed out (the navigator showed it before the mode was known). */
   useEffect(() => {
     const path = takeInitialPath()
-    if (path) checkInitialLink(path, {isDemo: demo})
-  }, [demo])
+    if (path) checkInitialLink(path, {isDemo: demo, isInStore: (target: LinkTarget) => isInStore(store, target)})
+  }, [demo, store])
 
   /* The first open after an install from a link (the server hand-over is a stub until the backend), on the first launch only. */
   useEffect(() => {

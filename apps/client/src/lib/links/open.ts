@@ -8,7 +8,10 @@ import {holdForDemoSwitch} from './gate'
 import {buildPath, type LinkTarget, resolveLink, touchesRealData} from './resolve'
 import {isGlobalSheet} from './table'
 
-export type OpenResult = 'opened' | 'unknown' | 'held-for-sign-in' | 'held-for-demo' | 'not-ready'
+export type OpenResult = 'opened' | 'unknown' | 'held-for-sign-in' | 'held-for-demo' | 'checking' | 'not-ready'
+
+/** What `openLink` knows about the app: demo mode, and (in demo mode) how to ask whether the demo store holds what a link names. */
+export type OpenOptions = {isDemo?: boolean; isInStore?: (target: LinkTarget) => Promise<boolean>}
 
 /**
  * Takes the navigator to a link's screen from inside the app: one function behind push taps, reminders, invite
@@ -40,7 +43,7 @@ export function navigateToTarget(target: LinkTarget): boolean {
  * Opens a link or path. `isDemo` says demo mode is on: a link to real data then waits for the person to switch
  * back (the prompt is `LinkGate`). Signed out (F-250) it is held and resumed after sign-in.
  */
-export function openLink(input: string, options: {isDemo?: boolean} = {}): OpenResult {
+export function openLink(input: string, options: OpenOptions = {}): OpenResult {
   const {isKnown, target} = resolveLink(input)
   if (!isKnown) recordFriction('dead_link')
   const path = buildPath(target)
@@ -49,6 +52,11 @@ export function openLink(input: string, options: {isDemo?: boolean} = {}): OpenR
     return 'held-for-sign-in'
   }
   if (options.isDemo && touchesRealData(target)) {
+    /* Something the demo store holds (its own friend, a reload of its own expense) opens as it is; anything else is real data. */
+    if (options.isInStore) {
+      void options.isInStore(target).then(found => (found ? navigateToTarget(target) : holdForDemoSwitch(path)))
+      return 'checking'
+    }
     holdForDemoSwitch(path)
     return 'held-for-demo'
   }
@@ -57,7 +65,7 @@ export function openLink(input: string, options: {isDemo?: boolean} = {}): OpenR
 }
 
 /** `openLink`, retried until the navigator exists: a notification tap can arrive before the first screen. */
-export function openLinkWhenReady(input: string, options: {isDemo?: boolean} = {}, tries = 0) {
+export function openLinkWhenReady(input: string, options: OpenOptions = {}, tries = 0) {
   if (openLink(input, options) === 'not-ready' && tries < 40) setTimeout(() => openLinkWhenReady(input, options, tries + 1), 250)
 }
 
@@ -66,17 +74,25 @@ export function openLinkWhenReady(input: string, options: {isDemo?: boolean} = {
  * once it does (F-254): a dead link is friction, and a link to real data in demo mode, or any link while signed
  * out, is held and the page falls back to Home, so the question or the sign-in comes first.
  */
-export function checkInitialLink(path: string, options: {isDemo: boolean}) {
+export function checkInitialLink(path: string, options: OpenOptions) {
   const {isKnown, target} = resolveLink(path)
   if (!isKnown) {
     recordFriction('dead_link')
     return
   }
   const held = buildPath(target)
-  if (isSignInRequired()) holdLinkIntent(held)
-  else if (options.isDemo && touchesRealData(target)) holdForDemoSwitch(held)
-  else return
-  whenReady(resetToRoot)
+  const fallBack = () => whenReady(resetToRoot)
+  if (isSignInRequired()) {
+    holdLinkIntent(held)
+    fallBack()
+  } else if (options.isDemo && touchesRealData(target)) {
+    const hold = () => {
+      holdForDemoSwitch(held)
+      fallBack()
+    }
+    if (options.isInStore) void options.isInStore(target).then(found => !found && hold())
+    else hold()
+  }
 }
 
 /** Runs `fn` once the navigator exists (a link can arrive before the first screen). */
