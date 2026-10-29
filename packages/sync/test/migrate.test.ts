@@ -16,7 +16,7 @@ import {tmpdir} from 'node:os'
 import {join} from 'node:path'
 
 import {encode} from '../src/codec'
-import {applyDemoOp, generateLargeDemo} from '../src/demoLarge'
+import {applyDemoOp, generateLargeDemo, isDeferredOp} from '../src/demoLarge'
 import {openIdbStore} from '../src/idbStore'
 import {
   createExpense,
@@ -89,9 +89,18 @@ beforeAll(async () => {
   for (let i = 0; i < ops.length; i += 150)
     await s.transaction(async tx => {
       const batched = insideTransaction(s, tx)
-      for (const op of ops.slice(i, i + 150)) await applyDemoOp(batched, ctx, op)
+      for (const op of ops.slice(i, i + 150)) if (!isDeferredOp(op)) await applyDemoOp(batched, ctx, op)
     })
-  large = await s.dump()
+  // The ops that read the store first (removing a friend, a group going, a member leaving) cannot join a batch.
+  for (const op of ops.filter(isDeferredOp)) await applyDemoOp(s, ctx, op)
+  const full = await s.dump()
+  // The reminders store is new in v4: the v1 to v3 fixtures cannot hold reminders.
+  large = {
+    ...full,
+    entities: full.entities.filter(e => e.type !== 'reminder'),
+    history: full.history.filter(h => h.entityType !== 'reminder'),
+    outbox: full.outbox.filter(o => o.entityType !== 'reminder'),
+  }
   largeBalances = await s.balances()
   await s.close()
 }, 120_000)

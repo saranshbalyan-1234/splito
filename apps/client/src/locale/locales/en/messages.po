@@ -706,10 +706,6 @@ msgstr "{day} at {time}"
 msgid "{days, plural, one {yesterday} other {# days ago}}"
 msgstr "{days, plural, one {yesterday} other {# days ago}}"
 
-#: src/screens/Settings/DemoData.tsx:159
-msgid "{expenses, plural, one {# expense} other {# expenses}}"
-msgstr "{expenses, plural, one {# expense} other {# expenses}}"
-
 #: src/components/split/ExpenseComposer.tsx:245
 msgid "{first}, {second} +{rest}"
 msgstr "{first}, {second} +{rest}"
@@ -718,10 +714,6 @@ msgstr "{first}, {second} +{rest}"
 #: src/components/activity/ActivityItem.tsx:1142
 msgid "{formatted} ago"
 msgstr "{formatted} ago"
-
-#: src/screens/Settings/DemoData.tsx:157
-msgid "{friends, plural, one {# friend} other {# friends}}"
-msgstr "{friends, plural, one {# friend} other {# friends}}"
 
 #: src/screens/Group/index.tsx:752
 msgid "{from} owes {to}"
@@ -763,10 +755,6 @@ msgstr "{groupName} is back in your lists"
 #: src/screens/Group/components/GroupLifecycle.tsx:335
 msgid "{groupName} is inactive"
 msgstr "{groupName} is inactive"
-
-#: src/screens/Settings/DemoData.tsx:158
-msgid "{groups, plural, one {# group} other {# groups}}"
-msgstr "{groups, plural, one {# group} other {# groups}}"
 
 #: src/screens/Activity.tsx:172
 msgid "{hiddenCount, plural, one {# change hidden from your activity} other {# changes hidden from your activity}}"
@@ -970,7 +958,7 @@ msgid "1 category"
 msgstr "1 category"
 
 #: src/components/settings/prefControls.tsx:982
-#: src/screens/Invites/CreateInvite.tsx:239
+#: src/screens/Invites/CreateInvite.tsx:238
 msgid "1 day"
 msgstr "1 day"
 
@@ -1001,7 +989,7 @@ msgid "100% assigned"
 msgstr "100% assigned"
 
 #: src/components/settings/prefControls.tsx:984
-#: src/screens/Invites/CreateInvite.tsx:241
+#: src/screens/Invites/CreateInvite.tsx:240
 msgid "30 days"
 msgstr "30 days"
 
@@ -1010,7 +998,7 @@ msgid "6-digit reset code"
 msgstr "6-digit reset code"
 
 #: src/components/settings/prefControls.tsx:983
-#: src/screens/Invites/CreateInvite.tsx:240
+#: src/screens/Invites/CreateInvite.tsx:239
 msgid "7 days"
 msgstr "7 days"
 
@@ -1066,11 +1054,11 @@ msgstr "A group expense splits between the group’s members and uses its curren
 msgid "A link"
 msgstr "A link"
 
-#: src/screens/Invites/CreateInvite.tsx:206
+#: src/screens/Invites/CreateInvite.tsx:205
 msgid "A link and QR code people can use to join this group. You set how many people and for how long."
 msgstr "A link and QR code people can use to join this group. You set how many people and for how long."
 
-#: src/screens/Invites/CreateInvite.tsx:211
+#: src/screens/Invites/CreateInvite.tsx:210
 msgid "A link and QR code that makes people your friends when they use it. You set how many people and for how long."
 msgstr "A link and QR code that makes people your friends when they use it. You set how many people and for how long."
 
@@ -1097,10 +1085,6 @@ msgstr "A tidy statement with a running balance for each currency. Print it or s
 #: src/screens/CreateGroup.tsx:161
 msgid "A trip, a flat or anything you split often."
 msgstr "A trip, a flat or anything you split often."
-
-#: src/screens/Settings/DemoData.tsx:162
-msgid "A year of friends, groups and expenses, for testing"
-msgstr "A year of friends, groups and expenses, for testing"
 
 #: src/components/NavFooterLinks.tsx:35
 #: src/screens/Profile.tsx:73
@@ -1161,7 +1145,7 @@ msgid "Active"
 msgstr "Active"
 
 #: src/components/TabGlyph.tsx:42
-#: src/navigation/Navigation.tsx:69
+#: src/navigation/Navigation.tsx:70
 #: src/screens/Activity.tsx:108
 msgid "Activity"
 msgstr "Activity"
@@ -1270,16 +1254,6 @@ msgstr "Add category"
 msgid "Add charge"
 msgstr "Add charge"
 
-#: src/screens/Settings/DemoData.tsx:137
-#: src/screens/Settings/DemoData.tsx:147
-#: src/screens/Settings/DemoData.tsx:185
-msgid "Add demo data"
-msgstr "Add demo data"
-
-#: src/screens/Settings/DemoData.tsx:183
-msgid "Add demo data?"
-msgstr "Add demo data?"
-
 #: src/components/split/SplitEditor.tsx:117
 msgid "Add each item and who had it. Tap a name again for another portion; hold to take them off."
 msgstr "Add each item and who had it. Tap a name again for another portion; hold to take them off."
@@ -1288,7 +1262,7 @@ msgstr "Add each item and who had it. Tap a name again for another portion; hold
 msgid "Add each item and who had it. Tap a name again for another portion; right-click to take them off."
 msgstr "Add each item and who had it. Tap a name again for another portion; right-click to take them off."
 
-#: src/navigation/Navigation.tsx:79
+#: src/navigation/Navigation.tsx:80
 #: src/screens/Group/index.tsx:538
 #: src/screens/Group/index.tsx:539
 #: src/screens/Person/index.tsx:535
@@ -1313,7 +1287,7 @@ msgctxt "action"
 msgid "Add expense"
 msgstr "Add expense"
 
-#: src/navigation/Navigation.tsx:83
+#: src/navigation/Navigation.tsx:84
 #: src/screens/AddFriend.tsx:329
 #: src/screens/AddFriend.tsx:391
 #: src/screens/FriendsAndInvites/index.tsx:164
@@ -1387,29 +1361,9 @@ msgstr "Add to group"
 msgid "Add your name"
 msgstr "Add your name"
 
-#. placeholder {0}: import {useSyncExternalStore} from 'react' import {View} from 'react-native' import {DatabaseZap} from 'lucide-react-native' import {type MutationCtx, type Store, touches} from '@splito/sync' import {plural, t} from '@lingui/core/macro' import {Trans, useLingui} from '@lingui/react/macro' import {useHaptics} from '#/lib/haptics' import {logger} from '#/logger' import {addLargeDemo, type DemoCounts, demoCounts, removeLargeDemo} from '#/data/demoLarge' import {useMutationCtx, useProjection, useStore} from '#/data/hooks' import {type Query} from '#/data/projections' import * as SettingsList from '#/screens/Settings/components/SettingsList' import {atoms as a, useTheme} from '#/alf' import {Trash_Stroke2_Corner0_Rounded as TrashIcon} from '#/components/icons/Trash' import {createIcon} from '#/components/icons/lucide' import * as Prompt from '#/components/Prompt' import * as Toast from '#/components/Toast' import {dismiss as dismissToast} from '#/components/Toast/sonner' import {Text} from '#/components/Typography' const DemoIcon = createIcon(DatabaseZap) const demoCountsQuery: Query<DemoCounts> = { key: 'demoCounts', isTouchedBy: c => touches(c, 'person') || touches(c, 'group') || touches(c, 'expense'), loader: store => async (_c, prev) => { const next = await demoCounts(store) return prev && prev.friends === next.friends && prev.groups === next.groups && prev.expenses === next.expenses ? prev : next }, } /* What is running and how far along: one tiny module store, read by the toast and the rows. */ let progress: {action: 'add' | 'remove'; done: number} | null = null const listeners = new Set<() => void>() function setProgress(next: typeof progress) { progress = next listeners.forEach(l => l()) } const subscribe = (l: () => void) => ( listeners.add(l), () => void listeners.delete(l) ) const getProgress = () => progress const useProgress = () => useSyncExternalStore(subscribe, getProgress) function ProgressText() { const p = useProgress() const percent = Math.round((p?.done ?? 1) * 100) return p?.action === 'remove' ? ( <Trans>Removing demo data…</Trans> ) : ( <Trans>Adding demo data… {percent}%</Trans> ) } /** * Adds or removes the large demo set with a live progress toast (dev and e2e * builds only; callers check). Used by Settings and by `?demo=large`. */ export async function runLargeDemo( store: Store, ctx: MutationCtx, action: 'add' | 'remove', ) { if (progress) return setProgress({action, done: 0}) const toast = Toast.show( <Toast.Outer> <Toast.Icon /> <Toast.Text> <ProgressText /> </Toast.Text> </Toast.Outer>, {duration: 120_000}, ) const started = performance.now() let done: {text: string; type: Toast.ToastType} try { if (action === 'add') { const counts = await addLargeDemo(store, ctx, part => setProgress({action, done: part}), ) if (counts) { // Kept in the log for the owner's timing checks (dev and e2e builds only). logger.info('demo.large.added', { ms: Math.round(performance.now() - started), ...counts, }) done = { text: t`Demo data added: ${plural(counts.expenses, {one: '# expense', other: '# expenses'})}`, type: 'success', } } else done = {text: t`Demo data is already added`, type: 'default'} } else { await removeLargeDemo(store) done = {text: t`Demo data removed`, type: 'success'} } } catch (e) { logger.error(e, {where: 'runLargeDemo'}) done = { text: t`Couldn't finish. Try Remove demo data, then add it again.`, type: 'error', } } setProgress(null) dismissToast(toast) // The progress toast leaves first, then the outcome takes its place. setTimeout(() => Toast.show(done.text, {type: done.type}), 400) } /** * Settings > About and data rows for the large demo set (ARCHITECTURE 26.1). * The caller renders them only in dev and e2e builds. */ export function DemoDataRows() { const {t: l} = useLingui() const t = useTheme() const store = useStore() const ctx = useMutationCtx() const haptics = useHaptics() const addPrompt = Prompt.usePromptControl() const removePrompt = Prompt.usePromptControl() const busy = useProgress() const {friends = 0, groups = 0, expenses = 0} = useProjection(demoCountsQuery) ?? {} const isLoaded = friends + groups > 0 const run = (action: 'add' | 'remove') => { haptics.confirm() void runLargeDemo(store, ctx, action).then(() => haptics.success()) } return ( <> <SettingsList.PressableItem testID="settings-demo-add" label={l`Add demo data`} disabled={!!busy} onPress={() => isLoaded ? Toast.show(l`Demo data is already added`) : addPrompt.open() }> <SettingsList.ItemIcon icon={DemoIcon} /> <View style={[a.flex_1, a.gap_2xs]}> <SettingsList.ItemText> <Trans>Add demo data</Trans> </SettingsList.ItemText> <Text testID="settings-demo-summary" numberOfLines={2} style={[a.text_sm, a.leading_snug, t.atoms.text_contrast_medium]}> {busy?.action === 'add' ? ( <Trans>Adding… {Math.round(busy.done * 100)}%</Trans> ) : isLoaded ? ( <Trans> Added: {plural(friends, {one: '# friend', other: '# friends'})},{' '} {plural(groups, {one: '# group', other: '# groups'})},{' '} {plural(expenses, {one: '# expense', other: '# expenses'})} </Trans> ) : ( <Trans>A year of friends, groups and expenses, for testing</Trans> )} </Text> </View> </SettingsList.PressableItem> {isLoaded && ( <SettingsList.PressableItem testID="settings-demo-remove" destructive label={l`Remove demo data`} disabled={!!busy} onPress={() => removePrompt.open()}> <SettingsList.ItemIcon icon={TrashIcon} /> <SettingsList.ItemText> <Trans>Remove demo data</Trans> </SettingsList.ItemText> </SettingsList.PressableItem> )} <Prompt.Basic control={addPrompt} title={l`Add demo data?`} description={l`Adds about 30 friends, 12 groups and 1,500 expenses from the past year next to your own data. You can remove exactly this later.`} confirmButtonCta={l`Add demo data`} onConfirm={() => run('add')} /> <Prompt.Basic control={removePrompt} title={l`Remove demo data?`} description={l`Removes the demo friends, groups, expenses and payments, with their history. Everything you added yourself stays.`} confirmButtonCta={l`Remove`} confirmButtonColor="negative" onConfirm={() => run('remove')} /> </> ) } 
-#. placeholder {1}: import {useSyncExternalStore} from 'react' import {View} from 'react-native' import {DatabaseZap} from 'lucide-react-native' import {type MutationCtx, type Store, touches} from '@splito/sync' import {plural, t} from '@lingui/core/macro' import {Trans, useLingui} from '@lingui/react/macro' import {useHaptics} from '#/lib/haptics' import {logger} from '#/logger' import {addLargeDemo, type DemoCounts, demoCounts, removeLargeDemo} from '#/data/demoLarge' import {useMutationCtx, useProjection, useStore} from '#/data/hooks' import {type Query} from '#/data/projections' import * as SettingsList from '#/screens/Settings/components/SettingsList' import {atoms as a, useTheme} from '#/alf' import {Trash_Stroke2_Corner0_Rounded as TrashIcon} from '#/components/icons/Trash' import {createIcon} from '#/components/icons/lucide' import * as Prompt from '#/components/Prompt' import * as Toast from '#/components/Toast' import {dismiss as dismissToast} from '#/components/Toast/sonner' import {Text} from '#/components/Typography' const DemoIcon = createIcon(DatabaseZap) const demoCountsQuery: Query<DemoCounts> = { key: 'demoCounts', isTouchedBy: c => touches(c, 'person') || touches(c, 'group') || touches(c, 'expense'), loader: store => async (_c, prev) => { const next = await demoCounts(store) return prev && prev.friends === next.friends && prev.groups === next.groups && prev.expenses === next.expenses ? prev : next }, } /* What is running and how far along: one tiny module store, read by the toast and the rows. */ let progress: {action: 'add' | 'remove'; done: number} | null = null const listeners = new Set<() => void>() function setProgress(next: typeof progress) { progress = next listeners.forEach(l => l()) } const subscribe = (l: () => void) => ( listeners.add(l), () => void listeners.delete(l) ) const getProgress = () => progress const useProgress = () => useSyncExternalStore(subscribe, getProgress) function ProgressText() { const p = useProgress() const percent = Math.round((p?.done ?? 1) * 100) return p?.action === 'remove' ? ( <Trans>Removing demo data…</Trans> ) : ( <Trans>Adding demo data… {percent}%</Trans> ) } /** * Adds or removes the large demo set with a live progress toast (dev and e2e * builds only; callers check). Used by Settings and by `?demo=large`. */ export async function runLargeDemo( store: Store, ctx: MutationCtx, action: 'add' | 'remove', ) { if (progress) return setProgress({action, done: 0}) const toast = Toast.show( <Toast.Outer> <Toast.Icon /> <Toast.Text> <ProgressText /> </Toast.Text> </Toast.Outer>, {duration: 120_000}, ) const started = performance.now() let done: {text: string; type: Toast.ToastType} try { if (action === 'add') { const counts = await addLargeDemo(store, ctx, part => setProgress({action, done: part}), ) if (counts) { // Kept in the log for the owner's timing checks (dev and e2e builds only). logger.info('demo.large.added', { ms: Math.round(performance.now() - started), ...counts, }) done = { text: t`Demo data added: ${plural(counts.expenses, {one: '# expense', other: '# expenses'})}`, type: 'success', } } else done = {text: t`Demo data is already added`, type: 'default'} } else { await removeLargeDemo(store) done = {text: t`Demo data removed`, type: 'success'} } } catch (e) { logger.error(e, {where: 'runLargeDemo'}) done = { text: t`Couldn't finish. Try Remove demo data, then add it again.`, type: 'error', } } setProgress(null) dismissToast(toast) // The progress toast leaves first, then the outcome takes its place. setTimeout(() => Toast.show(done.text, {type: done.type}), 400) } /** * Settings > About and data rows for the large demo set (ARCHITECTURE 26.1). * The caller renders them only in dev and e2e builds. */ export function DemoDataRows() { const {t: l} = useLingui() const t = useTheme() const store = useStore() const ctx = useMutationCtx() const haptics = useHaptics() const addPrompt = Prompt.usePromptControl() const removePrompt = Prompt.usePromptControl() const busy = useProgress() const {friends = 0, groups = 0, expenses = 0} = useProjection(demoCountsQuery) ?? {} const isLoaded = friends + groups > 0 const run = (action: 'add' | 'remove') => { haptics.confirm() void runLargeDemo(store, ctx, action).then(() => haptics.success()) } return ( <> <SettingsList.PressableItem testID="settings-demo-add" label={l`Add demo data`} disabled={!!busy} onPress={() => isLoaded ? Toast.show(l`Demo data is already added`) : addPrompt.open() }> <SettingsList.ItemIcon icon={DemoIcon} /> <View style={[a.flex_1, a.gap_2xs]}> <SettingsList.ItemText> <Trans>Add demo data</Trans> </SettingsList.ItemText> <Text testID="settings-demo-summary" numberOfLines={2} style={[a.text_sm, a.leading_snug, t.atoms.text_contrast_medium]}> {busy?.action === 'add' ? ( <Trans>Adding… {Math.round(busy.done * 100)}%</Trans> ) : isLoaded ? ( <Trans> Added: {plural(friends, {one: '# friend', other: '# friends'})},{' '} {plural(groups, {one: '# group', other: '# groups'})},{' '} {plural(expenses, {one: '# expense', other: '# expenses'})} </Trans> ) : ( <Trans>A year of friends, groups and expenses, for testing</Trans> )} </Text> </View> </SettingsList.PressableItem> {isLoaded && ( <SettingsList.PressableItem testID="settings-demo-remove" destructive label={l`Remove demo data`} disabled={!!busy} onPress={() => removePrompt.open()}> <SettingsList.ItemIcon icon={TrashIcon} /> <SettingsList.ItemText> <Trans>Remove demo data</Trans> </SettingsList.ItemText> </SettingsList.PressableItem> )} <Prompt.Basic control={addPrompt} title={l`Add demo data?`} description={l`Adds about 30 friends, 12 groups and 1,500 expenses from the past year next to your own data. You can remove exactly this later.`} confirmButtonCta={l`Add demo data`} onConfirm={() => run('add')} /> <Prompt.Basic control={removePrompt} title={l`Remove demo data?`} description={l`Removes the demo friends, groups, expenses and payments, with their history. Everything you added yourself stays.`} confirmButtonCta={l`Remove`} confirmButtonColor="negative" onConfirm={() => run('remove')} /> </> ) } 
-#. placeholder {2}: import {useSyncExternalStore} from 'react' import {View} from 'react-native' import {DatabaseZap} from 'lucide-react-native' import {type MutationCtx, type Store, touches} from '@splito/sync' import {plural, t} from '@lingui/core/macro' import {Trans, useLingui} from '@lingui/react/macro' import {useHaptics} from '#/lib/haptics' import {logger} from '#/logger' import {addLargeDemo, type DemoCounts, demoCounts, removeLargeDemo} from '#/data/demoLarge' import {useMutationCtx, useProjection, useStore} from '#/data/hooks' import {type Query} from '#/data/projections' import * as SettingsList from '#/screens/Settings/components/SettingsList' import {atoms as a, useTheme} from '#/alf' import {Trash_Stroke2_Corner0_Rounded as TrashIcon} from '#/components/icons/Trash' import {createIcon} from '#/components/icons/lucide' import * as Prompt from '#/components/Prompt' import * as Toast from '#/components/Toast' import {dismiss as dismissToast} from '#/components/Toast/sonner' import {Text} from '#/components/Typography' const DemoIcon = createIcon(DatabaseZap) const demoCountsQuery: Query<DemoCounts> = { key: 'demoCounts', isTouchedBy: c => touches(c, 'person') || touches(c, 'group') || touches(c, 'expense'), loader: store => async (_c, prev) => { const next = await demoCounts(store) return prev && prev.friends === next.friends && prev.groups === next.groups && prev.expenses === next.expenses ? prev : next }, } /* What is running and how far along: one tiny module store, read by the toast and the rows. */ let progress: {action: 'add' | 'remove'; done: number} | null = null const listeners = new Set<() => void>() function setProgress(next: typeof progress) { progress = next listeners.forEach(l => l()) } const subscribe = (l: () => void) => ( listeners.add(l), () => void listeners.delete(l) ) const getProgress = () => progress const useProgress = () => useSyncExternalStore(subscribe, getProgress) function ProgressText() { const p = useProgress() const percent = Math.round((p?.done ?? 1) * 100) return p?.action === 'remove' ? ( <Trans>Removing demo data…</Trans> ) : ( <Trans>Adding demo data… {percent}%</Trans> ) } /** * Adds or removes the large demo set with a live progress toast (dev and e2e * builds only; callers check). Used by Settings and by `?demo=large`. */ export async function runLargeDemo( store: Store, ctx: MutationCtx, action: 'add' | 'remove', ) { if (progress) return setProgress({action, done: 0}) const toast = Toast.show( <Toast.Outer> <Toast.Icon /> <Toast.Text> <ProgressText /> </Toast.Text> </Toast.Outer>, {duration: 120_000}, ) const started = performance.now() let done: {text: string; type: Toast.ToastType} try { if (action === 'add') { const counts = await addLargeDemo(store, ctx, part => setProgress({action, done: part}), ) if (counts) { // Kept in the log for the owner's timing checks (dev and e2e builds only). logger.info('demo.large.added', { ms: Math.round(performance.now() - started), ...counts, }) done = { text: t`Demo data added: ${plural(counts.expenses, {one: '# expense', other: '# expenses'})}`, type: 'success', } } else done = {text: t`Demo data is already added`, type: 'default'} } else { await removeLargeDemo(store) done = {text: t`Demo data removed`, type: 'success'} } } catch (e) { logger.error(e, {where: 'runLargeDemo'}) done = { text: t`Couldn't finish. Try Remove demo data, then add it again.`, type: 'error', } } setProgress(null) dismissToast(toast) // The progress toast leaves first, then the outcome takes its place. setTimeout(() => Toast.show(done.text, {type: done.type}), 400) } /** * Settings > About and data rows for the large demo set (ARCHITECTURE 26.1). * The caller renders them only in dev and e2e builds. */ export function DemoDataRows() { const {t: l} = useLingui() const t = useTheme() const store = useStore() const ctx = useMutationCtx() const haptics = useHaptics() const addPrompt = Prompt.usePromptControl() const removePrompt = Prompt.usePromptControl() const busy = useProgress() const {friends = 0, groups = 0, expenses = 0} = useProjection(demoCountsQuery) ?? {} const isLoaded = friends + groups > 0 const run = (action: 'add' | 'remove') => { haptics.confirm() void runLargeDemo(store, ctx, action).then(() => haptics.success()) } return ( <> <SettingsList.PressableItem testID="settings-demo-add" label={l`Add demo data`} disabled={!!busy} onPress={() => isLoaded ? Toast.show(l`Demo data is already added`) : addPrompt.open() }> <SettingsList.ItemIcon icon={DemoIcon} /> <View style={[a.flex_1, a.gap_2xs]}> <SettingsList.ItemText> <Trans>Add demo data</Trans> </SettingsList.ItemText> <Text testID="settings-demo-summary" numberOfLines={2} style={[a.text_sm, a.leading_snug, t.atoms.text_contrast_medium]}> {busy?.action === 'add' ? ( <Trans>Adding… {Math.round(busy.done * 100)}%</Trans> ) : isLoaded ? ( <Trans> Added: {plural(friends, {one: '# friend', other: '# friends'})},{' '} {plural(groups, {one: '# group', other: '# groups'})},{' '} {plural(expenses, {one: '# expense', other: '# expenses'})} </Trans> ) : ( <Trans>A year of friends, groups and expenses, for testing</Trans> )} </Text> </View> </SettingsList.PressableItem> {isLoaded && ( <SettingsList.PressableItem testID="settings-demo-remove" destructive label={l`Remove demo data`} disabled={!!busy} onPress={() => removePrompt.open()}> <SettingsList.ItemIcon icon={TrashIcon} /> <SettingsList.ItemText> <Trans>Remove demo data</Trans> </SettingsList.ItemText> </SettingsList.PressableItem> )} <Prompt.Basic control={addPrompt} title={l`Add demo data?`} description={l`Adds about 30 friends, 12 groups and 1,500 expenses from the past year next to your own data. You can remove exactly this later.`} confirmButtonCta={l`Add demo data`} onConfirm={() => run('add')} /> <Prompt.Basic control={removePrompt} title={l`Remove demo data?`} description={l`Removes the demo friends, groups, expenses and payments, with their history. Everything you added yourself stays.`} confirmButtonCta={l`Remove`} confirmButtonColor="negative" onConfirm={() => run('remove')} /> </> ) } 
-#: src/screens/Settings/DemoData.tsx:156
-msgid "Added: {0}, {1}, {2}"
-msgstr "Added: {0}, {1}, {2}"
-
-#: src/screens/Settings/DemoData.tsx:53
-msgid "Adding demo data… {percent}%"
-msgstr "Adding demo data… {percent}%"
-
-#. placeholder {0}: Math.round(busy.done * 100)
-#: src/screens/Settings/DemoData.tsx:154
-msgid "Adding… {0}%"
-msgstr "Adding… {0}%"
-
 #: src/features/remind/RemindSheet.tsx:200
 msgid "Adds a link {name} can tap to pay you in a UPI app."
 msgstr "Adds a link {name} can tap to pay you in a UPI app."
-
-#: src/screens/Settings/DemoData.tsx:184
-msgid "Adds about 30 friends, 12 groups and 1,500 expenses from the past year next to your own data. You can remove exactly this later."
-msgstr "Adds about 30 friends, 12 groups and 1,500 expenses from the past year next to your own data. You can remove exactly this later."
 
 #: src/components/split/SplitEditor.tsx:671
 msgid "Adds them to this item"
@@ -1609,7 +1563,7 @@ msgid "An exact amount, in any currency"
 msgstr "An exact amount, in any currency"
 
 #: src/components/TabGlyph.tsx:40
-#: src/navigation/Navigation.tsx:68
+#: src/navigation/Navigation.tsx:69
 #: src/screens/Analytics/index.tsx:64
 #: src/screens/People/components/BalanceSummary.tsx:147
 msgid "Analytics"
@@ -1644,11 +1598,11 @@ msgstr "Answers from this device"
 msgid "Anyone who has it can no longer use it. You can always make a new one."
 msgstr "Anyone who has it can no longer use it. You can always make a new one."
 
-#: src/screens/Invites/CreateInvite.tsx:146
+#: src/screens/Invites/CreateInvite.tsx:145
 msgid "Anyone with this link or QR code can ask to join. Using it counts as accepting your invite."
 msgstr "Anyone with this link or QR code can ask to join. Using it counts as accepting your invite."
 
-#: src/screens/Invites/CreateInvite.tsx:151
+#: src/screens/Invites/CreateInvite.tsx:150
 msgid "Anyone with this link or QR code can become your friend on Splito. Using it counts as accepting."
 msgstr "Anyone with this link or QR code can become your friend on Splito. Using it counts as accepting."
 
@@ -1676,8 +1630,8 @@ msgstr "Applies to"
 msgid "Apply"
 msgstr "Apply"
 
-#: src/screens/Invites/CreateInvite.tsx:253
-#: src/screens/Invites/CreateInvite.tsx:259
+#: src/screens/Invites/CreateInvite.tsx:252
+#: src/screens/Invites/CreateInvite.tsx:258
 msgid "Approve each join"
 msgstr "Approve each join"
 
@@ -2170,8 +2124,8 @@ msgstr "Close active dialog"
 msgid "Close alert"
 msgstr "Close alert"
 
-#: src/view/shell/index.tsx:110
-#: src/view/shell/index.web.tsx:88
+#: src/view/shell/index.tsx:114
+#: src/view/shell/index.web.tsx:92
 msgid "Close drawer menu"
 msgstr "Close drawer menu"
 
@@ -2203,7 +2157,7 @@ msgstr "Closes without adding anyone"
 msgid "Closes without creating the group"
 msgstr "Closes without creating the group"
 
-#: src/screens/Invites/CreateInvite.tsx:184
+#: src/screens/Invites/CreateInvite.tsx:183
 msgid "Closes without making a link"
 msgstr "Closes without making a link"
 
@@ -2349,7 +2303,7 @@ msgstr "Couldn’t cancel this reminder. Please try again."
 msgid "Couldn’t create the group. Please try again."
 msgstr "Couldn’t create the group. Please try again."
 
-#: src/screens/Invites/CreateInvite.tsx:110
+#: src/screens/Invites/CreateInvite.tsx:109
 msgid "Couldn’t create the link. Please try again."
 msgstr "Couldn’t create the link. Please try again."
 
@@ -2369,10 +2323,6 @@ msgstr "Couldn’t export. Nothing was changed. Try again."
 msgid "Couldn’t export. Try again."
 msgstr "Couldn’t export. Try again."
 
-#: src/screens/Settings/DemoData.tsx:102
-msgid "Couldn't finish. Try Remove demo data, then add it again."
-msgstr "Couldn't finish. Try Remove demo data, then add it again."
-
 #: src/screens/Group/components/MemberExitDialog.tsx:173
 msgid "Couldn’t leave the group. Please try again."
 msgstr "Couldn’t leave the group. Please try again."
@@ -2384,6 +2334,10 @@ msgstr "Couldn’t log this reminder. Please try again."
 #: src/lib/sharing.ts:84
 msgid "Couldn’t open an app for that. Copy the link instead."
 msgstr "Couldn’t open an app for that. Copy the link instead."
+
+#: src/data/StoreProvider.tsx:167
+msgid "Couldn’t open the demo. Showing your own data."
+msgstr "Couldn’t open the demo. Showing your own data."
 
 #: src/features/remind/RemindSheet.tsx:117
 msgid "Couldn’t open the share sheet. Try Copy instead."
@@ -2416,6 +2370,10 @@ msgstr "Couldn’t remove {who}. Please try again."
 #: src/screens/Settings/index.tsx:295
 msgid "Couldn’t reset settings. Please try again."
 msgstr "Couldn’t reset settings. Please try again."
+
+#: src/screens/Settings/DemoMode.tsx:87
+msgid "Couldn’t reset the demo. Try again."
+msgstr "Couldn’t reset the demo. Try again."
 
 #: src/components/activity/useActivityActions.tsx:98
 msgid "Couldn't restore this expense"
@@ -2464,6 +2422,14 @@ msgstr "Couldn't save your feedback. Please try again."
 #: src/components/people/EditFriendDialog.tsx:60
 msgid "Couldn’t save. Please try again."
 msgstr "Couldn’t save. Please try again."
+
+#: src/components/DemoBanner.tsx:25
+msgid "Couldn’t switch back. Try again."
+msgstr "Couldn’t switch back. Try again."
+
+#: src/screens/Settings/DemoMode.tsx:40
+msgid "Couldn’t switch demo mode. Try again."
+msgstr "Couldn’t switch demo mode. Try again."
 
 #: src/features/settlement/CallItEvenDialog.tsx:218
 msgid "Couldn’t undo the write-off"
@@ -2545,7 +2511,7 @@ msgstr "Create group"
 msgid "Create invite link"
 msgstr "Create invite link"
 
-#: src/screens/Invites/CreateInvite.tsx:188
+#: src/screens/Invites/CreateInvite.tsx:187
 msgid "Create link"
 msgstr "Create link"
 
@@ -2785,19 +2751,18 @@ msgstr "Deleted, {exact}"
 msgid "Delivery"
 msgstr "Delivery"
 
-#. placeholder {0}: counts.expenses
-#: src/screens/Settings/DemoData.tsx:91
-msgid "Demo data added: {0, plural, one {# expense} other {# expenses}}"
-msgstr "Demo data added: {0, plural, one {# expense} other {# expenses}}"
+#: src/components/SyncStatusDot.tsx:22
+msgid "Demo"
+msgstr "Demo"
 
-#: src/screens/Settings/DemoData.tsx:94
-#: src/screens/Settings/DemoData.tsx:141
-msgid "Demo data is already added"
-msgstr "Demo data is already added"
+#: src/screens/Settings/DemoMode.tsx:56
+#: src/screens/Settings/DemoMode.tsx:63
+msgid "Demo mode"
+msgstr "Demo mode"
 
-#: src/screens/Settings/DemoData.tsx:97
-msgid "Demo data removed"
-msgstr "Demo data removed"
+#: src/components/DemoBanner.tsx:35
+msgid "Demo mode ·"
+msgstr "Demo mode ·"
 
 #: src/features/export/statementText.ts:38
 #: src/features/export/statementText.ts:64
@@ -2891,7 +2856,7 @@ msgstr "Divided by"
 #: src/components/split/charges/ItemClass.tsx:162
 #: src/features/feedback/FeedbackSheet.tsx:139
 #: src/screens/AddFriend.tsx:316
-#: src/screens/Invites/CreateInvite.tsx:132
+#: src/screens/Invites/CreateInvite.tsx:131
 msgid "Done"
 msgstr "Done"
 
@@ -2951,7 +2916,7 @@ msgid "Edit comment"
 msgstr "Edit comment"
 
 #: src/components/split/ExpenseComposer.tsx:269
-#: src/navigation/Navigation.tsx:82
+#: src/navigation/Navigation.tsx:83
 #: src/screens/EditExpense.tsx:35
 #: src/screens/EditExpense.tsx:74
 #: src/screens/Expense/index.tsx:117
@@ -3257,7 +3222,7 @@ msgid "Excluded"
 msgstr "Excluded"
 
 #: src/features/export/statementText.ts:34
-#: src/navigation/Navigation.tsx:80
+#: src/navigation/Navigation.tsx:81
 #: src/screens/Analytics/components/ExpenseRow.tsx:44
 #: src/screens/Expense/index.tsx:106
 msgid "Expense"
@@ -3298,6 +3263,10 @@ msgstr "Expired"
 #: src/components/invites/describe.ts:26
 msgid "Expires within the hour"
 msgstr "Expires within the hour"
+
+#: src/screens/Settings/DemoMode.tsx:66
+msgid "Explore Splito with sample data. Your own data is kept separately and untouched."
+msgstr "Explore Splito with sample data. Your own data is kept separately and untouched."
 
 #: src/features/export/ExportSheet.tsx:172
 #: src/screens/Group/index.tsx:614
@@ -3468,7 +3437,7 @@ msgstr "Friend request sent to {shownName}"
 msgid "Friends"
 msgstr "Friends"
 
-#: src/navigation/Navigation.tsx:74
+#: src/navigation/Navigation.tsx:75
 #: src/screens/FriendsAndInvites/index.tsx:137
 #: src/screens/Settings/index.tsx:137
 #: src/screens/Settings/index.tsx:140
@@ -3567,7 +3536,7 @@ msgstr "Groceries"
 #: src/features/export/statementText.ts:64
 #: src/features/searchAsk/AskAnswer.tsx:136
 #: src/features/settlement/CallItEvenDialog.tsx:160
-#: src/navigation/Navigation.tsx:77
+#: src/navigation/Navigation.tsx:78
 #: src/screens/Analytics/components/Charts.tsx:325
 #: src/screens/Analytics/index.tsx:217
 #: src/screens/Analytics/useReport.ts:327
@@ -3615,7 +3584,7 @@ msgstr "Group updated"
 #: src/components/SearchAsk/ResultRows.tsx:86
 #: src/components/TabGlyph.tsx:39
 #: src/features/export/ImportSheet.tsx:171
-#: src/navigation/Navigation.tsx:67
+#: src/navigation/Navigation.tsx:68
 #: src/screens/Groups/index.tsx:167
 #: src/screens/Groups/index.tsx:182
 #: src/screens/Groups/index.tsx:213
@@ -3767,7 +3736,7 @@ msgstr "How amounts are grouped and punctuated."
 msgid "How many people can use a new friend link. You can change it on each link."
 msgstr "How many people can use a new friend link. You can change it on each link."
 
-#: src/screens/Invites/CreateInvite.tsx:220
+#: src/screens/Invites/CreateInvite.tsx:219
 msgid "How many people can use it"
 msgstr "How many people can use it"
 
@@ -3962,7 +3931,7 @@ msgstr "Install Splito for quick access, even offline."
 msgid "International"
 msgstr "International"
 
-#: src/navigation/Navigation.tsx:87
+#: src/navigation/Navigation.tsx:88
 #: src/screens/Invites/Invite.tsx:68
 msgid "Invite"
 msgstr "Invite"
@@ -3981,9 +3950,9 @@ msgstr "Invite declined"
 msgid "Invite for {0}"
 msgstr "Invite for {0}"
 
-#: src/navigation/Navigation.tsx:85
 #: src/navigation/Navigation.tsx:86
-#: src/screens/Invites/CreateInvite.tsx:120
+#: src/navigation/Navigation.tsx:87
+#: src/screens/Invites/CreateInvite.tsx:119
 msgid "Invite link"
 msgstr "Invite link"
 
@@ -3992,17 +3961,17 @@ msgstr "Invite link"
 msgid "Invite link or QR code"
 msgstr "Invite link or QR code"
 
-#: src/navigation/Navigation.tsx:84
+#: src/navigation/Navigation.tsx:85
 #: src/screens/FriendsAndInvites/index.tsx:106
 #: src/screens/Invites/InviteLinks.tsx:206
 msgid "Invite links"
 msgstr "Invite links"
 
-#: src/screens/Invites/CreateInvite.tsx:271
+#: src/screens/Invites/CreateInvite.tsx:270
 msgid "Invite links need a connection to Splito’s servers, which arrive with sign-in and sync. Until then, add friends by email or number, or just by name."
 msgstr "Invite links need a connection to Splito’s servers, which arrive with sign-in and sync. Until then, add friends by email or number, or just by name."
 
-#: src/screens/Invites/CreateInvite.tsx:102
+#: src/screens/Invites/CreateInvite.tsx:101
 msgid "Invite links need a connection. Try again when you’re online."
 msgstr "Invite links need a connection. Try again when you’re online."
 
@@ -4011,7 +3980,7 @@ msgid "Invite people"
 msgstr "Invite people"
 
 #. placeholder {0}: group.data.name
-#: src/screens/Invites/CreateInvite.tsx:119
+#: src/screens/Invites/CreateInvite.tsx:118
 msgid "Invite to {0}"
 msgstr "Invite to {0}"
 
@@ -4129,17 +4098,17 @@ msgid "Items subtotal"
 msgstr "Items subtotal"
 
 #. placeholder {0}: group.data.name
-#: src/screens/Invites/CreateInvite.tsx:162
+#: src/screens/Invites/CreateInvite.tsx:161
 msgid "Join {0} on Splito:"
 msgstr "Join {0} on Splito:"
 
 #: src/screens/AddFriend.tsx:420
-#: src/screens/Invites/CreateInvite.tsx:159
+#: src/screens/Invites/CreateInvite.tsx:158
 msgid "Join me on Splito"
 msgstr "Join me on Splito"
 
 #: src/screens/AddFriend.tsx:421
-#: src/screens/Invites/CreateInvite.tsx:163
+#: src/screens/Invites/CreateInvite.tsx:162
 msgid "Join me on Splito so we can split expenses:"
 msgstr "Join me on Splito so we can split expenses:"
 
@@ -4245,7 +4214,7 @@ msgstr "Light"
 msgid "Link copied. It opens this expense on a device that has it."
 msgstr "Link copied. It opens this expense on a device that has it."
 
-#: src/screens/Invites/CreateInvite.tsx:233
+#: src/screens/Invites/CreateInvite.tsx:232
 msgid "Link expires after"
 msgstr "Link expires after"
 
@@ -4322,8 +4291,8 @@ msgstr "Manage"
 msgid "Manage friends and invites"
 msgstr "Manage friends and invites"
 
-#: src/screens/Invites/CreateInvite.tsx:282
-#: src/screens/Invites/CreateInvite.tsx:287
+#: src/screens/Invites/CreateInvite.tsx:281
+#: src/screens/Invites/CreateInvite.tsx:286
 #: src/screens/Invites/Invite.tsx:267
 #: src/screens/Invites/Invite.tsx:273
 #: src/screens/Settings/SettingsSection.tsx:143
@@ -4331,7 +4300,7 @@ msgstr "Manage friends and invites"
 msgid "Manage invite links"
 msgstr "Manage invite links"
 
-#: src/screens/Invites/CreateInvite.tsx:133
+#: src/screens/Invites/CreateInvite.tsx:132
 msgid "Manage links"
 msgstr "Manage links"
 
@@ -4381,7 +4350,7 @@ msgstr "Mention {0}"
 
 #: src/components/Menu/index.tsx:133
 #: src/components/Menu/index.web.tsx:240
-#: src/view/shell/index.web.tsx:134
+#: src/view/shell/index.web.tsx:138
 msgid "Menu"
 msgstr "Menu"
 
@@ -4551,7 +4520,7 @@ msgid "Needs attention"
 msgstr "Needs attention"
 
 #: src/components/settings/prefControls.tsx:985
-#: src/screens/Invites/CreateInvite.tsx:242
+#: src/screens/Invites/CreateInvite.tsx:241
 msgid "Never"
 msgstr "Never"
 
@@ -4591,7 +4560,7 @@ msgstr "New expenses start in this currency. You can change it on any expense."
 msgid "New friend – no account needed"
 msgstr "New friend – no account needed"
 
-#: src/navigation/Navigation.tsx:88
+#: src/navigation/Navigation.tsx:89
 #: src/screens/CreateGroup.tsx:134
 #: src/screens/Groups/index.tsx:253
 #: src/screens/Groups/index.tsx:254
@@ -4752,7 +4721,7 @@ msgid "No groups yet. A group keeps a trip’s or a flat’s expenses and balanc
 msgstr "No groups yet. A group keeps a trip’s or a flat’s expenses and balances in one place."
 
 #: src/components/settings/prefControls.tsx:933
-#: src/screens/Invites/CreateInvite.tsx:225
+#: src/screens/Invites/CreateInvite.tsx:224
 msgid "No limit"
 msgstr "No limit"
 
@@ -5337,7 +5306,7 @@ msgstr "Pay with UPI"
 
 #: src/components/people/HistoryRow.tsx:137
 #: src/features/export/statementText.ts:34
-#: src/navigation/Navigation.tsx:81
+#: src/navigation/Navigation.tsx:82
 #: src/screens/Repayment/index.tsx:69
 msgid "Payment"
 msgstr "Payment"
@@ -5391,7 +5360,7 @@ msgstr "People"
 msgid "People and Groups show who owes whom in each currency. Different currencies are never added together."
 msgstr "People and Groups show who owes whom in each currency. Different currencies are never added together."
 
-#: src/screens/Invites/CreateInvite.tsx:262
+#: src/screens/Invites/CreateInvite.tsx:261
 msgid "People who use the link wait until you let them in."
 msgstr "People who use the link wait until you let them in."
 
@@ -5425,7 +5394,7 @@ msgstr "Period"
 msgid "Period: {periodName}, {0}"
 msgstr "Period: {periodName}, {0}"
 
-#: src/navigation/Navigation.tsx:76
+#: src/navigation/Navigation.tsx:77
 #: src/screens/Analytics/components/Charts.tsx:280
 msgid "Person"
 msgstr "Person"
@@ -5551,11 +5520,15 @@ msgid "Privacy"
 msgstr "Privacy"
 
 #: src/navigation/Drawer.tsx:62
-#: src/navigation/Navigation.tsx:70
+#: src/navigation/Navigation.tsx:71
 #: src/screens/Profile.tsx:40
 #: src/screens/Settings/index.tsx:113
 msgid "Profile"
 msgstr "Profile"
+
+#: src/screens/Settings/DemoMode.tsx:84
+msgid "Puts the sample data back as it was and drops what you changed in demo mode. Your own data is not touched."
+msgstr "Puts the sample data back as it was and drops what you changed in demo mode. Your own data is not touched."
 
 #: src/screens/Invites/InviteLinks.tsx:140
 msgid "QR and share"
@@ -5722,7 +5695,6 @@ msgstr "Reminds you {firesAt}"
 #: src/features/feedback/FeedbackSheet.tsx:388
 #: src/features/friends/RemoveFriendDialog.tsx:109
 #: src/screens/Group/components/MemberExitDialog.tsx:207
-#: src/screens/Settings/DemoData.tsx:192
 msgid "Remove"
 msgstr "Remove"
 
@@ -5755,15 +5727,6 @@ msgstr "Remove {q}"
 #: src/screens/Group/components/MemberExitDialog.tsx:205
 msgid "Remove {who}"
 msgstr "Remove {who}"
-
-#: src/screens/Settings/DemoData.tsx:171
-#: src/screens/Settings/DemoData.tsx:176
-msgid "Remove demo data"
-msgstr "Remove demo data"
-
-#: src/screens/Settings/DemoData.tsx:190
-msgid "Remove demo data?"
-msgstr "Remove demo data?"
 
 #: src/screens/FriendsAndInvites/index.tsx:308
 #: src/screens/FriendsAndInvites/index.tsx:310
@@ -5801,14 +5764,6 @@ msgstr "Removed · history kept"
 #: src/screens/FriendsAndInvites/index.tsx:102
 msgid "Removed friends"
 msgstr "Removed friends"
-
-#: src/screens/Settings/DemoData.tsx:191
-msgid "Removes the demo friends, groups, expenses and payments, with their history. Everything you added yourself stays."
-msgstr "Removes the demo friends, groups, expenses and payments, with their history. Everything you added yourself stays."
-
-#: src/screens/Settings/DemoData.tsx:51
-msgid "Removing demo data…"
-msgstr "Removing demo data…"
 
 #: src/components/settings/TaxClassesEditor.tsx:228
 msgid "Rename {name}"
@@ -5882,6 +5837,7 @@ msgid "Resend to {name}"
 msgstr "Resend to {name}"
 
 #: src/components/settings/PrefSection.tsx:132
+#: src/screens/Settings/DemoMode.tsx:85
 #: src/screens/Settings/SettingsSection.tsx:169
 msgid "Reset"
 msgstr "Reset"
@@ -5914,6 +5870,15 @@ msgstr "Reset all settings?"
 #: src/screens/Login/SetNewPasswordForm.tsx:60
 msgid "Reset code"
 msgstr "Reset code"
+
+#: src/screens/Settings/DemoMode.tsx:73
+#: src/screens/Settings/DemoMode.tsx:76
+msgid "Reset demo"
+msgstr "Reset demo"
+
+#: src/screens/Settings/DemoMode.tsx:83
+msgid "Reset demo?"
+msgstr "Reset demo?"
 
 #: src/screens/Login/ForgotPasswordForm.tsx:52
 msgid "Reset password"
@@ -6179,7 +6144,7 @@ msgstr "Scroll down and choose Add to Home Screen."
 
 #: src/components/forms/SearchInput.tsx:52
 #: src/components/forms/SearchInput.tsx:54
-#: src/navigation/Navigation.tsx:75
+#: src/navigation/Navigation.tsx:76
 msgid "Search"
 msgstr "Search"
 
@@ -6389,9 +6354,14 @@ msgstr "Set the tax class of {count} selected"
 msgid "Sets the email or phone number for password reset"
 msgstr "Sets the email or phone number for password reset"
 
+#. placeholder {0}: Math.round(done * 100)
+#: src/components/DemoBanner.tsx:67
+msgid "Setting up the demo… {0}%"
+msgstr "Setting up the demo… {0}%"
+
 #: src/components/TabGlyph.tsx:43
-#: src/navigation/Navigation.tsx:71
 #: src/navigation/Navigation.tsx:72
+#: src/navigation/Navigation.tsx:73
 #: src/screens/Profile.tsx:64
 #: src/screens/Profile.tsx:67
 #: src/screens/Settings/index.tsx:76
@@ -6414,7 +6384,7 @@ msgstr "Settings reset"
 #: src/components/settings/AboutSettings.tsx:97
 #: src/features/friends/RemoveFriendDialog.tsx:105
 #: src/features/searchAsk/AskAnswer.tsx:272
-#: src/navigation/Navigation.tsx:78
+#: src/navigation/Navigation.tsx:79
 #: src/screens/Group/index.tsx:576
 #: src/screens/Group/index.tsx:832
 #: src/screens/Group/index.tsx:838
@@ -6635,7 +6605,7 @@ msgstr "Shows the write-off and lets you undo it"
 
 #: src/navigation/Drawer.tsx:228
 #: src/navigation/Drawer.tsx:235
-#: src/navigation/Navigation.tsx:73
+#: src/navigation/Navigation.tsx:74
 #: src/screens/LoggedOut/SplashScreen.tsx:78
 #: src/screens/LoggedOut/SplashScreen.tsx:85
 #: src/screens/LoggedOut/SplashScreen.web.tsx:66
@@ -6936,6 +6906,15 @@ msgstr "Swipe left on Activity"
 #: src/components/settings/prefControls.tsx:840
 msgid "Swipe right on Activity"
 msgstr "Swipe right on Activity"
+
+#: src/components/DemoBanner.tsx:37
+#: src/components/DemoBanner.tsx:39
+msgid "Switch back"
+msgstr "Switch back"
+
+#: src/components/DemoBanner.tsx:67
+msgid "Switching…"
+msgstr "Switching…"
 
 #: src/components/settings/prefControls.tsx:719
 msgid "Sync status"
@@ -7279,7 +7258,7 @@ msgstr "This group isn’t on this device. It may have been removed."
 msgid "This group was deleted. Its expenses and payments are kept here, struck through, and no longer count."
 msgstr "This group was deleted. Its expenses and payments are kept here, struck through, and no longer count."
 
-#: src/screens/Invites/CreateInvite.tsx:172
+#: src/screens/Invites/CreateInvite.tsx:171
 msgid "This invite link isn’t on this device."
 msgstr "This invite link isn’t on this device."
 
