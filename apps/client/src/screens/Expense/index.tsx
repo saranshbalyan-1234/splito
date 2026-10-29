@@ -65,7 +65,6 @@ import {
   useDisplayName,
   useErrorText,
 } from '#/components/split/shared'
-import {ReceiptIcon} from '#/components/split/icons'
 import {useExpense} from '#/components/split/useExpense'
 import * as Toast from '#/components/Toast'
 import {Text} from '#/components/Typography'
@@ -139,7 +138,7 @@ export function ExpenseScreen() {
       ) : expense === null ? (
         <EmptyState
           testID="expense-not-found"
-          icon={ReceiptIcon}
+          illustration="empty-activity"
           message={l`This expense doesn’t exist. The link may be wrong.`}
           button={{
             label: l`Go to People`,

@@ -41,7 +41,6 @@ import {
   useDisplayName,
   useErrorText,
 } from '#/components/split/shared'
-import {ReceiptIcon} from '#/components/split/icons'
 import * as Toast from '#/components/Toast'
 import {Text} from '#/components/Typography'
 import {SyncStatusLine} from '#/components/SyncStatus'
@@ -107,7 +106,7 @@ export function RepaymentScreen() {
       {payment === undefined || !history ? null : payment === null ? (
         <EmptyState
           testID="repayment-not-found"
-          icon={ReceiptIcon}
+          illustration="empty-activity"
           message={l`This payment doesn’t exist. The link may be wrong.`}
           button={{
             label: l`Go to People`,

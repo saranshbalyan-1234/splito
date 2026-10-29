@@ -32,9 +32,10 @@ export function buildPrecache(files: Array<{url: string; bytes: Uint8Array}>): P
 
 /*
  * Demo mode ships in every build (owner 148) but only as lazy chunks: the scripts index.html loads at start-up
- * must hold none of its seed or database. These strings are in the demo database's name and its seed.
+ * must hold none of its seed or database. These strings appear only in the demo database's name and its seed; not
+ * the `demo-large-` id prefix, which the link resolver's id check names on purpose (F-254).
  */
-const DEMO_MARKERS = ['splito-demo', 'demo-large-']
+const DEMO_MARKERS = ['splito-demo', 'demo.seed', 'Supper Factory']
 
 /** Start-up scripts (the ones index.html loads) whose bytes hold demo data: empty in a good build. */
 export function demoLeaks(files: Array<{url: string; bytes: Uint8Array}>): string[] {

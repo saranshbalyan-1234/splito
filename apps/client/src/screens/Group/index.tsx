@@ -199,6 +199,7 @@ export function GroupScreen() {
         </Layout.Header.Outer>
         <EmptyState
           testID="group-not-found"
+          illustration="empty-groups"
           message={l`This group isn’t on this device. It may have been removed.`}
           button={{
             label: l`Back to Groups`,
@@ -537,7 +538,7 @@ export function GroupScreen() {
   ) : !rowsReady ? <></> : bodyTab === 'balances' ? (
     <EmptyState
       testID="group-balances-empty"
-      icon={null}
+      illustration="empty-groups"
       message={l`No balances yet. They appear once the group has an expense.`}
     />
   ) : (

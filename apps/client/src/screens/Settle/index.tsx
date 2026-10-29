@@ -150,6 +150,7 @@ export function SettleScreen() {
         </Layout.Header.Outer>
         <EmptyState
           testID="settle-not-found"
+          illustration="empty-groups"
           message={l`This group isn’t on this device. It may have been removed.`}
           button={{
             label: l`Back to Groups`,
@@ -453,7 +454,7 @@ export function SettleScreen() {
             isLoading ? undefined : (
               <EmptyState
                 testID="settle-empty"
-                icon={null}
+                illustration="empty-groups"
                 message={l`Nothing to settle. This group has no expenses yet.`}
               />
             )

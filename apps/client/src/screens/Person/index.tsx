@@ -191,6 +191,7 @@ export function PersonScreen() {
         </Layout.Header.Outer>
         <EmptyState
           testID="person-not-found"
+          illustration="empty-people"
           message={l`This friend isn’t on this device. They may have been removed.`}
           button={{
             label: l`Back to People`,
@@ -561,7 +562,7 @@ export function PersonScreen() {
             ) : !rowsReady ? <></> : (
               <EmptyState
                 testID="person-history-empty"
-                icon={null}
+                illustration="empty-people"
                 message={
                   includeGroups
                     ? l`Nothing with ${person!.data.name} yet. Add an expense you shared and it shows up here.`

@@ -45,7 +45,7 @@ export function FeedbackList() {
     return (
       <EmptyState
         testID="feedback-empty"
-        icon={MessageIcon}
+        illustration="empty-activity"
         title={l`No feedback yet`}
         message={l`Tell us what to fix or build next. What you send is kept here, with where it is.`}
         button={{
