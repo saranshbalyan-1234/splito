@@ -183,7 +183,7 @@ Second cause, found with the 0-10 ms burst (a hand cannot do it, but it exposed 
 (`SummaryPlaceholder`) had three fixed 120 px columns plus gaps, 417 px wide on a 390 px screen. For the frames the
 skeleton was on screen the layout viewport widened to 417, and the fixed bottom bar, laid out against it, sat 57 px
 below the fold, so a tap on a tab hit the page behind. Columns are shares of the row now. A burst of six taps 0-10 ms
-apart lost its last tap in 10 of 30 bursts before (4 of 30 on the phase-1 build), 0 of 40 after. `html, body {
+apart lost its last tap in 10 of 30 bursts before (4 of 30 on the phase-1 build), 0 of 90 after (two runs of 40 and 50). `html, body {
 overflow-x: clip }` was tried as a second guard and broke window scrolling (`scrollWeb.spec.ts`), so it is not used.
 
 Tap to first visual change (`perf/tapLatency.spec.ts`, 390 px touch, large demo ledger, app reloaded per run, median of
