@@ -1747,8 +1747,11 @@ good"; "the left sidebar looks bad on desktop". *Where:* `view/shell/desktop/Lef
   Analytics, Activity, Person, Group) and the in-page tabs (`useDeferredValue(tab)`: the bar follows the tap, the
   list re-renders as a transition); check `perf/tapLatency.spec.ts` (`E2E_PORT=8231 pnpm perf -- tapLatency`, CPU x1
   and x4, plus taps 50 ms after a screen-changing tap).
-- **Pull to refresh on every list, with the header staying put** (owner 167; F-258, Wave C): Home, People,
-  Groups, Activity, Analytics, a Person and a Group page refresh by pulling down at the top. The header stays
+- **Pull to refresh on every screen that shows a header, with the header staying put** (owners 167, 169; F-258,
+  Wave C): every page with a `Layout.Header` (Home, People, Groups, Activity, Analytics, Person, Group, Expense,
+  Payment, Settle up, Profile, Settings and its sections, Friends and invites) refreshes by pulling down at the top;
+  sheets, popups and the drawer (no page header) do not. Built once in the shared screen/list scaffold, not per
+  screen. The header stays
   fixed and visible while pulling and refreshing (the minimal-shell hide never runs during a pull; the spinner
   sits under the header, never over or above it); the list content moves, the header does not. Native uses the
   List's `RefreshControl` (Bluesky's `List` already supports it; iOS bounce, Android material spinner); phone web
@@ -2624,6 +2627,7 @@ Every owner decision, in the order it was made (all 2026-10-26). "Replaced" name
 | 166 | "it should not redraw" (on switching back to Home / any tab) | Visited tabs stay mounted and frozen while hidden; switching back shows them as left with zero re-render unless data changed; deferral only on first visit | § 26.9 | Home re-rendered on every switch |
 | 167 | "also add pull to refresh, header should stay while pulling down to refresh" | Pull to refresh on every list (native RefreshControl, phone-web pull handler); header fixed and visible during the pull; local re-read now, syncNow() with the backend | § 26.9 | No pull to refresh |
 | 168 | "even for the first time, the rendering should happen once the tab is open, or drawer is open or popup is open" | Tabs, drawers and sheets open first with light content; heavy content mounts after the opening finishes (real opened/transition-end signal), first visit included | § 26.9 | Deferral of two frames only (151/152) |
+| 169 | "pull to refresh should work, wherever header is shown" | Pull to refresh on every page with a header (lists and detail pages, Settings included), built once in the shared scaffold; not in sheets, popups or the drawer | § 26.9 | List screens only (167) |
 
 New decisions follow § 0 rule 9: rewrite the rule in its topic so only the current truth remains, then add a
 row here.
