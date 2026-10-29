@@ -1219,6 +1219,14 @@ labelled sidebar); **wide** = web 1300 px and up (Bluesky `gtTablet`, right colu
   switch (F-228a, being built on feat/demo-mode). Dev and e2e builds only for now
   (production ships none, F-227 c4). *Why:* "add a lot of demo data to my
   account".
+- **Once the backend exists, the demo data comes from the backend, not the app** (owner 135; F-252, backend
+  batch). The demo dataset and its generator move to the server: turning Demo mode on downloads the one demo
+  dataset (a versioned snapshot, same shape as a sync pull) into the separate local demo database, and "Reset
+  demo" downloads it again; the client bundle then ships no demo seed, generator or fixtures (a build check
+  fails if it does). The download is read-only and never touches the real account; offline, the switch says it
+  needs a connection the first time and works offline afterwards from the local demo database. Until the backend
+  exists the dev/e2e builds keep seeding locally as today. *Why:* "remember when backend is built, you need to
+  download the demo data from backend, not store in frontend".
 - **The demo dataset grows with every feature, in the same change** (owner 109). A feature is not done until the
   one demo dataset (§ 26.1 demo mode) shows it with realistic, multi-currency examples: e.g. the Supper Factory
   bill with tax classes and stacked charges (F-403), comment threads (F-1204), reminders (F-1118/F-1119), inactive
@@ -2273,6 +2281,7 @@ Every owner decision, in the order it was made (all 2026-10-26). "Replaced" name
 | 132 | "in demo mode i see extra space on top, and it should be a switch not a checkbox" | Boolean settings are Bluesky switches on every platform; demo banner compact, text visible, no empty band | § 26.15 | Toggle.Platform checkboxes on web; blank demo banner band on desktop |
 | 133 | "dont show that banner, not needed" | No demo banner at all; demo state shown by the Settings switch and the avatar's Demo state | § 26.15, § 26.1 | Banner on every screen (94/95), compact banner (132) |
 | 134 | "in all headers, write Home - Demo like this instead" | In demo mode every header title ends with " - Demo" (logo + "Demo" label on phone Home; document title too) | § 26.15 | - (with 133) |
+| 135 | "remember when backend is build, you need to download the demo data from backend not store in frontend" | With the backend, Demo mode downloads the demo dataset from the server into the demo DB; no demo seed in the client bundle | § 26.1 | Demo dataset generated in the app (dev/e2e) |
 
 New decisions follow § 0 rule 9: rewrite the rule in its topic so only the current truth remains, then add a
 row here.

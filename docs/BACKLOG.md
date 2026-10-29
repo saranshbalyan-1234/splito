@@ -77,6 +77,7 @@ Every row of the ARCHITECTURE § 26.23 decision log (rows 1-63) and the feature(
 | 58 service worker and PWA | § 26.21 | F-1901 |
 | 59 comments, remind, export | § 26.20 | F-1204, F-2208, F-1118, F-1119, F-1111, F-2210, F-2001, F-2007, F-2004 |
 | 61 sync-status dot on the avatar | § 26.7 | F-223, F-2103 |
+| 135 demo data downloaded from the backend, not bundled | § 26.1 | F-252 (backend) |
 | 128 customization only where needed; Language menu switch removed | § 26.1 | F-251 |
 | 125 sign-in required, nothing visible signed out | § 26.15 | F-250 (Wave C), F-2101/F-2102 moved up after Wave C |
 | 124 footer links on one line | § 26.5 | fixed on integrate/wB |
@@ -452,6 +453,19 @@ Language picker in native scripts, name and avatar, region-prefilled currency / 
   4. Onboarding says plainly that data lives only on this device until a backup or sign-in, with a link to backups.
   5. The purpose chips share the name screen, so criterion 1's three-screen limit holds; skipping is allowed; each purpose's defaults live in one typed map with a bun test, and changing the purpose later changes only future defaults.
   6. Killing the app mid-onboarding resumes on the same step.
+
+### F-252 Demo data served by the backend `spec: owner § 26.1 (decision 135)`
+
+The demo dataset and generator move to the API; Demo mode downloads a versioned snapshot into the separate demo database; the client ships no demo seed.
+
+- **Effort** M · **Impact** 6 · **Backend** yes · **Status** todo, backend batch (after F-2101/F-2103) · **Deps** F-228a, F-2101, F-2103
+- **Prefs** -
+- **Acceptance**
+  1. `GET /v1/demo/snapshot` (versioned, same shape as a sync pull, cacheable) returns the one dataset generated server-side through the same domain code.
+  2. Turning Demo mode on downloads it into the demo database (progress shown, resumable); Reset demo re-downloads; the real account is never read or written.
+  3. Offline first time: the switch says it needs a connection; afterwards demo works offline from the local demo database.
+  4. The production client bundle contains no demo seed, generator or fixtures (build check); dev/e2e keep a local seed only until this ships.
+  5. demoCoverage runs against the server snapshot.
 
 ### F-251 Settings prune: only what is needed `spec: owner § 26.1 (decision 128)`
 
