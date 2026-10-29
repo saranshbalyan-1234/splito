@@ -1579,6 +1579,15 @@ labelled sidebar); **wide** = web 1300 px and up (Bluesky `gtTablet`, right colu
   of every route parsed from both `https` and `splito://`, e2e opening links cold and warm on web, and
   iOS/Android simulator checks with `xcrun simctl openurl` / `adb shell am start -d`. *Why:* "integrate deep
   links properly as well".
+- **A person's avatar or name opens that person, everywhere** (owner 178; F-261, Wave C): on every screen and
+  width, tapping or clicking a person's avatar or name opens their page (`/people/:id`): expense and payment detail
+  (paid by, split rows, items), Activity rows (the actor), comments (the author), group Members and Balances, the
+  Settle plan, search and Ask results, recent people, requests and invites, the right column. Me opens Profile; a
+  removed or unknown person opens their read-only page or "Not on this device yet", never nothing. One shared
+  `PersonLink` (Bluesky's profile-link pattern: `UserAvatar` + name as a link with hover underline on web, 44 px
+  target) does it, so no screen wires its own; where the whole row already opens something else (an expense row),
+  the avatar and name are their own nested targets that open the person. Shell first (owner 152), no redraw (166).
+  *Why:* "clicking on avatar or name anywhere on the website should open that friend's details".
 - **Activity's route is `/activity`; `/notifications` redirects to it.**
 - **Pushed pages** (Person, Group, Settle, Expense, Profile, Settings and its sections, Add friend, Create
   group) show Back in the header; top-level pages (People, Groups, Analytics, Activity) show the avatar. This
@@ -2660,6 +2669,7 @@ Every owner decision, in the order it was made (all 2026-10-26). "Replaced" name
 | 175 | "on the home, invite should be shown like previously" (screenshot of the compact "2 invites waiting" row) | Home Requests section shows Invites sent as full rows (Resend / Cancel) again, below the Overview, max 5 then See all | § 26.3 | Compact "N invites waiting ›" row (120, 153) |
 | 176 | "in overview by default it should select all, but options for group and direct" | Overview scope All (default) / Groups / Direct, remembered, in URL, carried into Analytics | § 26.3 | Overview always counted everything |
 | 177 | "instead of manage button in middle, make it as a settings icon on right in friends in home" | Friends header: gear icon on the right (after search and Filters) opens Friends and invites; no Manage text button | § 26.3 | "Manage" text button in the middle of the header |
+| 178 | "clicking on avatar or name anywhere on the website, should open that friend details" | One shared PersonLink: any avatar or name opens /people/:id (Me -> Profile), on every screen | § 26.3 | Only friend rows opened a person |
 
 New decisions follow § 0 rule 9: rewrite the rule in its topic so only the current truth remains, then add a
 row here.

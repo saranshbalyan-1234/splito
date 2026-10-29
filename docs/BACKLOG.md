@@ -584,6 +584,17 @@ Original animated illustrations (light and dark) for every empty state: search n
   2. A test fails on any `EmptyState` without an `illustration`.
   3. Same size, spacing and structure everywhere; screenshots of each.
 
+### F-261 Avatar or name opens the person, everywhere `spec: owner § 26.3 (decision 178)`
+
+One shared PersonLink (avatar + name) used on every screen; tapping either opens /people/:id (Me -> Profile).
+
+- **Effort** M · **Impact** 8 · **Backend** no · **Status** todo, Wave C (next free slot, with F-1213 / F-259) · **Deps** F-256
+- **Prefs** -
+- **Acceptance**
+  1. Every avatar or name of a person (expense/payment detail, items, Activity actor, comments, Members, Balances, Settle plan, search/Ask results, recent people, requests/invites, right column) opens that person; Me opens Profile; removed/unknown open the read-only page or "Not on this device yet".
+  2. Built as one `PersonLink` (architecture test: no screen renders `UserAvatar` with a person id outside it); nested targets inside rows that open something else; 44 px targets; hover underline on web; keyboard focusable.
+  3. e2e samples each surface at 390 and 1440; no redraw regressions (renders gate).
+
 ### F-250 Sign-in required (auth gate) `spec: owner § 26.15 (decision 125)`
 
 Nothing of the app is visible signed out: only the welcome tour, the logged-out flow, language and legal pages. The local database opens per account only with a session; offline after sign-in; deep links resume after sign-in.
