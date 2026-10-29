@@ -1874,17 +1874,25 @@ built yet.
   support address, `FEEDBACK_EMAIL`, a release-checklist item); once the backend exists it goes through the
   outbox. No shake-to-send preference (removed by F-251, owner 128).
 
+- **One "Continue" screen, no separate sign-up** (owner 140; replaces the Create account / Sign in split, the
+  password and the Forgot password screens of the copied Bluesky flow). The logged-out flow is one screen built
+  from Bluesky's `LoginForm` layout: "Continue with Apple", "Continue with Google", then one "Email or phone"
+  field and Continue. Splito sends a one-time code (no passwords, so no Forgot password); entering it signs in.
+  If no account exists yet it is created in the same flow: the next step asks only for what is missing (name,
+  and the other of email/phone, verified by code, owner 139), then setup (F-211). The same steps run for a
+  first-time Google or Apple sign-in. No "Create account" button, screen or wording anywhere. *Why:* "we can have
+  signup and login as same screen only, no separate screen needed, basically no signup needed".
 - **Every account has both an email and a phone number, both verified** (owner 139; F-250 UI, F-2102 server).
-  Create account asks for name, email, phone (E.164, region default) and password; both email and phone are
-  required and each is confirmed with a one-time code before the account is usable. Sign-in still accepts either
-  one. Any signed-in account missing one of them (signed up with Google or Apple, which give only an email, or an
+  A new account needs name, email and phone (E.164, region default); both email and phone are required and
+  each is confirmed with a one-time code before the account is usable (owner 140: collected in the one Continue
+  flow, no separate sign-up). Continue accepts either one. Any signed-in account missing one of them (signed up with Google or Apple, which give only an email, or an
   older email-only or phone-only account) sees a blocking "Add your phone number" (or "Add your email") step right
   after sign-in, before Home or setup: enter, verify with a code, continue; it cannot be skipped, and the only
   other action is Log out. Offline the step says it needs a connection. The directory lookup (§ 26.18) uses both.
   *Why:* "on signup, make email and phone both mandatory; if logged in via email only and no phone is there, ask
   to update phone first".
-- **Sign in with Google and Apple** (owner 138; UI with F-250 in Wave C, real with F-2102). The splash, Sign
-  in and Create account screens offer "Continue with Apple" and "Continue with Google" above the email or phone
+- **Sign in with Google and Apple** (owner 138; UI with F-250 in Wave C, real with F-2102). The Continue
+  screen (owner 140) offers "Continue with Apple" and "Continue with Google" above the email or phone
   option, on every platform (Apple first on iOS, Google first on Android and web; the platforms' own button
   styles: Apple's black/white button, Google's branded button). Native: `expo-apple-authentication` and Google
   Sign-In; web: Sign in with Apple JS and Google Identity Services. The server verifies the ID token, creates or
@@ -2330,6 +2338,7 @@ Every owner decision, in the order it was made (all 2026-10-26). "Replaced" name
 | 137 | "we need to add push notifications as well" | Real push on iOS (APNs), Android (FCM) and web (Web Push in the PWA), following the Notifications switches; privacy-aware text; opens the exact screen; permission only from a tap; first backend batch | § 26.20 | Push planned without platform detail (F-2201) |
 | 138 | "on login, signin with google and apple as well" | "Continue with Apple" and "Continue with Google" on splash, Sign in and Create account, every platform; server verifies tokens, links by verified email | § 26.15 | Email/phone only on the sign-in screens |
 | 139 | "on signup, make email and phone both mandatory; if logged in via email only and no phone is there ask to update phone first" | Sign-up requires email and phone, both verified by code; any account missing one gets a blocking add-and-verify step after sign-in (only Log out besides) | § 26.15 | Sign-up with email or phone (one field) |
+| 140 | "we can have signup and login as same screen only, no separate screen needed, basically no signup needed" | One Continue screen (Apple, Google, email or phone + one-time code); new accounts created in-flow by asking only what is missing; no passwords, no Create account or Forgot password screens | § 26.15 | Bluesky Create account / Sign in / password / Forgot password screens |
 
 New decisions follow § 0 rule 9: rewrite the rule in its topic so only the current truth remains, then add a
 row here.
