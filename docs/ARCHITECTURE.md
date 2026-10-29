@@ -1485,7 +1485,9 @@ labelled sidebar); **wide** = web 1300 px and up (Bluesky `gtTablet`, right colu
 - **Home, People and Groups are three tabs; the Overview lives only on Home** (owner 153; F-256; replaces the
   Home-holds-the-friends-list layout of 120 and the Overview on Groups):
   - **Home** (`/`), top to bottom (owners 153, 154): the **Overview** (per-currency cards, owners 113/114/120,
-    "Analytics ›"); **Requests** (shown only when something is pending, below the Overview: incoming friend requests
+    "Analytics ›"; a scope choice in its header, **All** (default) / **Groups** / **Direct** (non-group), changes
+    only the cards and their counts, remembered and in the URL `/?overview=groups|direct`, and "Analytics ›" carries
+    it over; owner 176); **Requests** (shown only when something is pending, below the Overview: incoming friend requests
     with Accept / Decline, then **Invites sent** as real rows like before, each with avatar, name, status line and
     Resend + Cancel on one horizontal line, at most 5 rows then "See all ›" to Friends and invites; owner 175,
     replaces the compact "N invites waiting ›" row of 120/153); **Recent transactions** (F-1415: the newest expenses and payments
@@ -2655,6 +2657,7 @@ Every owner decision, in the order it was made (all 2026-10-26). "Replaced" name
 | 173 | "in activity add the filter option to choose the type, like transaction etc, when I click on see all transaction it should land here" | Activity type filter (in URL, remembered); every Recent transactions "See all" opens Activity filtered to transactions | § 7 / § 26.14 | See all opened unfiltered Activity |
 | 174 | "and in tab switch, it should switch with sliding animation" | Main tab switches slide (F-257) next in Wave C, interruptible, no redraw | § 26.9 | Slide specified but not built |
 | 175 | "on the home, invite should be shown like previously" (screenshot of the compact "2 invites waiting" row) | Home Requests section shows Invites sent as full rows (Resend / Cancel) again, below the Overview, max 5 then See all | § 26.3 | Compact "N invites waiting ›" row (120, 153) |
+| 176 | "in overview by default it should select all, but options for group and direct" | Overview scope All (default) / Groups / Direct, remembered, in URL, carried into Analytics | § 26.3 | Overview always counted everything |
 
 New decisions follow § 0 rule 9: rewrite the rule in its topic so only the current truth remains, then add a
 row here.
