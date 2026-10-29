@@ -77,6 +77,7 @@ Every row of the ARCHITECTURE § 26.23 decision log (rows 1-63) and the feature(
 | 58 service worker and PWA | § 26.21 | F-1901 |
 | 59 comments, remind, export | § 26.20 | F-1204, F-2208, F-1118, F-1119, F-1111, F-2210, F-2001, F-2007, F-2004 |
 | 61 sync-status dot on the avatar | § 26.7 | F-223, F-2103 |
+| 120 Home layout fixes (order, no truncation, no red dots, two-line friend rows) | § 26.12 | F-248 |
 | 119 disputes and holds; disputed records still count, left out of Settle up by default | § 26.20 | F-1210 (Wave C) |
 | 85 best of both per feature: pull features from Expensify and Bluesky, whichever is better | § 26.1 | F-229..F-236, F-318..F-321, F-620, F-1211, F-1212, F-1412, F-1507, F-1816 (Batch 4d), amendments to F-211, F-214, F-219, F-312, F-501, F-502, F-504, F-516, F-709, F-1204, F-1207, F-1210, F-1402, F-1403, F-1405, F-1407, F-2202, F-2208; `docs/scouting/2026-10-27-bluesky-expensify.md` |
 
@@ -2389,6 +2390,20 @@ Tap any balance to see a line-by-line running total per currency since the last 
   1. The final running total equals the displayed balance in every currency (property test over random ledgers).
   2. The Include groups choice applies; each line opens its record.
   3. Shareable as text with only that pair's lines.
+
+### F-248 Home layout fixes from the owner's screenshot `spec: owner § 26.12 (decision 120)`
+
+Overview first; requests, recent transactions, then Friends; Invites sent move to the Friends and invites page with a compact "N invites waiting" row on Home; overview labels and amounts never truncated, cards even; no red per-row dots; friend rows two lines; Friends search back.
+
+- **Effort** S · **Impact** 9 · **Backend** no · **Status** todo, Wave B post-assemble batch (with F-244, F-245) · **Deps** F-621 (B6), F-245
+- **Prefs** -
+- **Acceptance**
+  1. Home order is Overview, incoming requests, Recent transactions (when F-1415 lands), Friends; "Invites sent" rows appear only on the Friends and invites page; Home shows "N invites waiting ›" when N > 0.
+  2. At 320, 390, 600, 800 and 1440 px no overview label or amount is ellipsized or clipped (e2e checks scrollWidth <= clientWidth for every label and amount), and every card in a row has the same height.
+  3. No coloured per-row dot on friend, request or invite rows.
+  4. At 390 px a friend row is at most two lines: name with up to two group chips and "+N", one net per currency on the right (max 3, then "+N"); the last row is not under the FAB.
+  5. Friends header shows search and Filters (F-1414).
+  6. Screenshots of Home in light and Dim at 390 and 1440 px with the demo data.
 
 ### F-1210 Disputes and holds `spec v2 (extended), owner § 26.20 (decision 119)`
 

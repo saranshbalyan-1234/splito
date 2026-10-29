@@ -1589,6 +1589,23 @@ expands once I click". *Where:* `screens/People`, `screens/Groups`, `screens/Gro
   1300 px, from 320 px phones to ultra-wide screens (where the 3-column cap keeps cards readable). The counts line ("15 groups · 6 settled") sits below the grid as plain text,
   not as a strip inside a box. *Why:* "the view is not good in the overview if I don't have either 3 or 6, it should
   be properly boxed each one" (screenshot: 4 currencies, the 4th card stretched across a shared box).
+- **Home reads top-down, nothing cut off, nothing crowded** (owner 120, from the owner's Home screenshot of
+  2026-10-29; F-248, fixed in the Wave B post-assemble batch with F-244 and F-245):
+  - **Order:** Overview first, then incoming friend requests that need my answer (Accept / Decline), then
+    Recent transactions (F-1415), then Friends. "Invites sent" leaves Home: it lives on the Friends and invites
+    page (F-621); Home shows one compact row "2 invites waiting ›" only when some are pending.
+  - **Overview amounts and labels are never truncated:** the label is written in full ("You are owed", "You
+    owe"), the amount auto-shrinks to fit its card (down to `text_lg`, then wraps the currency symbol line
+    rather than ellipsize); every card in a row has the same lines (when one card shows "Owed to you / You owe"
+    sub-lines because both directions exist, the others reserve that space), so no card is taller or emptier.
+  - **No red per-row dots** on friend, request or invite rows (owner 111: unsynced rows are drawn lighter).
+  - **Friend rows stay on two lines at phone width:** name plus at most two group chips and "+N" (the rest in
+    the row's detail), and on the right one net line per currency (max 3, then "+N"); chips never wrap to a
+    second chip line, and the per-currency nets are not repeated inside the chips. The list's last row clears
+    the FAB (§ 26.6 bottom padding).
+  - **Friends header** gets its list search back (owner 91, F-1414) beside Filters.
+  *Why:* "ui issues" (screenshot: Invites sent above the Overview, "You are o..." and "₹307,786.(" cut off,
+  uneven cards, red dots on invite rows, a friend row with two lines of chips and amounts under the FAB).
 - **People (Friends) and Groups both start with an "Overview" section:** one card per currency, "You are owed"
   / "You owe" (never summing currencies), a counts line ("6 friends - 2 settled" / "3 groups - 1 settled"),
   and an "Analytics >" link. Each group row shows your balance in that group per currency.
@@ -2151,6 +2168,7 @@ Every owner decision, in the order it was made (all 2026-10-26). "Replaced" name
 | 117 | "create one env file and ask for token there, i would paste" | Claude key in git-ignored `.env.local` (ANTHROPIC_API_KEY), read only by a dev-only local AI proxy; never EXPO_PUBLIC_*, never in the bundle | § 26.19 | Key entered in Settings, stored in OS secure store (row 115) |
 | 118 | "remove email test, the emails are being triggered and app is opened" | The "Send by email" e2e test is removed on every branch; no e2e spec clicks a control that hands a link to another app unless it goes through `openExternal` (records only) | § 26.1 | e2e asserted the mailto hand-off (feedback.spec) |
 | 119 | "add an option for disputes as well, think about it properly"; "should we calculate disputed expense or wait until they are resolved" | Disputes (structured reason, proposed fix, one-tap accept, reject with reason, withdraw, reopen once, admin closes) and holds on expenses, items, repayments and write-offs; a disputed record keeps counting in balances with an "of which disputed" line and a badge, and is left out of the Settle up plan by default with "Include disputed" | § 26.20 | F-1210 draft (disputed amounts out of the plan, no states or resolver rules) |
+| 120 | "ui issues" (Home screenshot, 2026-10-29) | Home order Overview, requests, recent, Friends; Invites sent move to the Friends and invites page; overview labels and amounts never truncated and cards even; no red per-row dots; friend rows two lines (2 chips + N, one net per currency); Friends search back | § 26.12 | Invites sent above the Overview; truncating cards; chips wrapping |
 
 New decisions follow § 0 rule 9: rewrite the rule in its topic so only the current truth remains, then add a
 row here.
