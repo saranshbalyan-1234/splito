@@ -1713,6 +1713,12 @@ expands once I click". *Where:* `screens/People`, `screens/Groups`, `screens/Gro
     Groups made before roles existed treat their creator as admin. Server enforcement follows with F-2108. The old `archived` flag reads as Inactive (read-time adapter, no schema change).
   *Why:* "add archive group option as well, when archived it stops showing in main view and no expense can be
   added", then "or make it as active inactive and hide show instead of archive".
+- **"Settled" means everyone is square, not only me** (assistant's ruling after the Wave B review, 2026-10-29):
+  a group counts as settled, and is hidden by default, only when every member's net in every currency is zero;
+  a friend is settled when our shared balance is zero in every currency. A group where I am even but others
+  still owe each other stays listed. One list-level projection decides it (never per row, § 9.6). The filter
+  sheets have one "Show settled" switch (no separate "Settled" choice in Show); the all-settled empty state reads
+  "All settled up" with a single "Show settled" button.
 - **Settled is hidden by default; every choice is remembered in the database** (owner 90; not built yet,
   BACKLOG F-1413). Friends and groups that are fully settled (every currency at zero) are hidden from the Home /
   People and Groups lists by default; each filter sheet gets a "Show settled" switch (default off) and the
