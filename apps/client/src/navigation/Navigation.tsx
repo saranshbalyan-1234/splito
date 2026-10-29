@@ -207,6 +207,12 @@ export function TabsNavigator({
         ...(reducedAnimation && {animation: reducedAnimation}),
       }}>
       <Stack.Screen name="Tabs" component={Tabs} />
+      {/* A main screen opened from a link: the same screen pushed above the tabs, with Back (owner 179). */}
+      <Stack.Screen name="PushedHome" component={HomeScreen} />
+      <Stack.Screen name="PushedPeople" component={PeopleScreen} />
+      <Stack.Screen name="PushedGroups" component={GroupsScreen} />
+      <Stack.Screen name="PushedAnalytics" component={AnalyticsScreen} />
+      <Stack.Screen name="PushedActivity" component={ActivityScreen} />
       <Stack.Screen name="Profile" component={ProfileScreen} />
       <Stack.Screen name="Settings" component={SettingsScreen} />
       <Stack.Screen name="Search" component={SearchScreen} />

@@ -9,7 +9,7 @@ import {
   View,
   type ViewStyle,
 } from 'react-native'
-import {CommonActions, StackActions} from '@react-navigation/native'
+import {StackActions} from '@react-navigation/native'
 
 import {
   type DebouncedNavigationProp,
@@ -192,11 +192,7 @@ function onPressInner(
       const [routeName, params] = router.matchPath(href)
       const tab = navigationAction === 'push' ? tabLink(routeName, params, IS_WEB) : null
       if (tab) {
-        navigation.dispatch(
-          tab.kind === 'popTo'
-            ? StackActions.popTo(tab.name, tab.params)
-            : CommonActions.navigate(tab.name, tab.params),
-        )
+        navigation.dispatch(StackActions.push(tab.name, tab.params))
       } else if (navigationAction === 'push') {
         navigation.dispatch(StackActions.push(routeName, params))
       } else if (navigationAction === 'replace') {

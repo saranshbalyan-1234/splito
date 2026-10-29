@@ -89,7 +89,7 @@ test('Home shows requests then Invites sent as rows, at most 5 in all, and the f
     .getByTestId('people-requests')
     .locator('[data-testid^="request-"], [data-testid^="invite-sent-"]')
   const named = await rows.evaluateAll(els =>
-    els.map(e => e.getAttribute('data-testid')!).filter(id => !/accept|decline|resend|cancel|-sync|tooltip|title/.test(id)),
+    els.map(e => e.getAttribute('data-testid')!).filter(id => !/accept|decline|resend|cancel|-sync|-actions|tooltip|title/.test(id)),
   )
   const unique = new Set(named)
   expect(unique.size).toBeGreaterThan(2)

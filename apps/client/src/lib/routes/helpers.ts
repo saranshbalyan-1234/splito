@@ -134,20 +134,33 @@ export function buildStateObject(
 /* Exhaustive on purpose: a tab added to TabParams (People came with decision 153) fails to compile here until it is listed. */
 const TAB_ROUTES: readonly string[] = Object.keys({Home: 1, People: 1, Groups: 1, Analytics: 1, Activity: 1} satisfies Record<keyof TabParams, 1>)
 
+/** The route param that marks a tab screen pushed as a copy on web (never written to the address bar). */
+export const PUSHED_PARAM = 'pushed'
+
+/** Native pushes the copy under its own root-stack name (`PushedGroups`), since the tabs live in the nested `Tabs` screen. */
+export const PUSHED_PREFIX = 'Pushed'
+
+/** Whether a route is a pushed copy of a tab screen (owner 179). */
+export function isPushedTabRoute(route: {name: string; params?: object | undefined}): boolean {
+  return route.name.startsWith(PUSHED_PREFIX) || (route.params as Record<string, unknown> | undefined)?.[PUSHED_PARAM] === '1'
+}
+
 /**
- * How a pressed link reaches its route. A tab is not on the stack the press happens in (a Profile stat tile, an
- * Overview card on Groups), so a stack push never finds it ("The action 'PUSH' ... was not handled by any
- * navigator"). On native the tabs are nested in the root stack's `Tabs` screen, so the stack pops back to `Tabs`
- * and selects the tab with its params (the shape the drawer uses); on web the tab is a route of its own and is
- * navigated to. Every other route is pushed (Bluesky's behaviour): `null`.
+ * How a pressed link reaches its route (owner 179, § 26.3). A main screen (Home, People, Groups, Analytics,
+ * Activity) opened from a link, rather than from its own tab or sidebar item, is a pushed page: a stack copy of the
+ * screen carrying its params, with Back in the header (returning to where the link was) and no FAB; the tab itself
+ * still gives the plain tab screen with the avatar. On web the tab routes live in the one flat stack, so the copy is
+ * the same route pushed with a `pushed` marker (kept out of the address); on native the tabs are nested in `Tabs`,
+ * so the root stack holds `Pushed<Tab>` twins of them. Every other route is pushed as it is (Bluesky's behaviour):
+ * `null`. Nav items use `navigationAction="navigate"` and never come through here.
  */
 export function tabLink(
   routeName: string,
   params: object | undefined,
   isWeb: boolean,
-): {kind: 'popTo' | 'navigate'; name: string; params: object | undefined} | null {
+): {kind: 'push'; name: string; params: object | undefined} | null {
   if (!TAB_ROUTES.includes(routeName)) return null
   return isWeb
-    ? {kind: 'navigate', name: routeName, params}
-    : {kind: 'popTo', name: 'Tabs', params: {screen: routeName, params}}
+    ? {kind: 'push', name: routeName, params: {...params, [PUSHED_PARAM]: '1'}}
+    : {kind: 'push', name: `${PUSHED_PREFIX}${routeName}`, params}
 }

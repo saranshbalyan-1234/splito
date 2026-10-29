@@ -1495,6 +1495,15 @@ labelled sidebar); **wide** = web 1300 px and up (Bluesky `gtTablet`, right colu
     Navigation still lets the user change it (owners 84, 127). Every tab keeps the FAB rule (§ 26.6).
   *Why:* "on home show overview and recent transactions, then create a people tab as well, the group tab is
   already there, the overview is needed only in home".
+- **A main screen opened from a link is a pushed page** (owner 179): when Home, People, Groups, Analytics or
+  Activity is reached by a link (Home's "See all" links, an Overview card's or the heading's "Analytics ›", the
+  recent people and groups "See all") rather than by its own tab, rail or sidebar item, it opens as a stack copy of
+  the screen carrying its params, with Back in the header (returning to where the link was) and no FAB (§ 26.6);
+  the tab itself still gives the plain tab screen with the avatar. One place does it: `tabLink()` in
+  `lib/routes/helpers.ts` (used by `Link` for the default `push` action; nav items use `navigationAction="navigate"`
+  and never push), `HeaderAvatar` renders Back and `AddExpenseFAB` nothing when `useIsPushedTab()`. Web pushes the tab
+  route with a `pushed` param kept out of the address (`buildPath` skips it); native pushes `Pushed<Tab>` twins
+  registered in the root stack. A pasted or refreshed address is the plain tab. e2e `homeTabs.spec.ts`.
 - **Bluesky's shell on every width.** Web fills the whole screen: left sidebar plus main content (plus the
   right column when wide, § 26.17). *Why:* "on web it should occupy complete screen", "the navigation should
   be like Bluesky", "for web, keep my left sidebar and main content".
@@ -2612,6 +2621,7 @@ Every owner decision, in the order it was made (all 2026-10-26). "Replaced" name
 | 175 | coordinator, from the owner: show the invites "the way they used to look" on Home | Home's Requests section shows incoming requests then "Invites sent" rows (Resend + Cancel on one line), 5 rows at most, "See all ›" to Friends and invites, hidden when none; People shows the same; replaces the compact "N invites waiting" row | § 26.3 | Home had only the "N invites waiting ›" row (owner 120) |
 | 176 | coordinator, from the owner: an Overview scope of All, Groups or Direct | Overview chips All (default) / Groups / Direct beside "Analytics ›"; only the cards and their counts; remembered (`home.overviewScope`) and in the address; Analytics gets the same scope | § 26.12 | The Overview always counted everything (and followed the friends' Include groups filter) |
 | 177 | coordinator, from the owner: remove "Manage" from the Friends header, gear on the right | Friends section header icons: search, Filters, gear ("Manage friends and invites" -> Friends and invites); no text button | § 26.3 | A "Manage" text button between the title and the icons |
+| 179 | coordinator, from the owner: a main screen opened from a link needs Back to Home | A main screen opened from a link (not its own tab) is a pushed copy with Back and no FAB; the tab still has the avatar; implemented once in `tabLink()` | § 26.3 | Links to a tab switched to the plain tab, so the header showed the avatar and no way back |
 
 New decisions follow § 0 rule 9: rewrite the rule in its topic so only the current truth remains, then add a
 row here.

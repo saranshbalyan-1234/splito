@@ -3,6 +3,7 @@ import {Keyboard, View} from 'react-native'
 import {useLingui} from '@lingui/react/macro'
 import {useNavigation} from '@react-navigation/native'
 
+import {useIsPushedTab} from '#/lib/hooks/useIsPushedTab'
 import {type NavigationProp} from '#/lib/routes/types'
 
 import {useSetDrawerOpen} from '#/state/shell'
@@ -24,6 +25,11 @@ const HITSLOP = {top: 30, bottom: 10, left: 30, right: 30}
  * the drawer.
  */
 export function HeaderAvatar() {
+  /* A main screen opened from a link is a pushed page: Back in this spot (owner 179, § 26.3). */
+  return useIsPushedTab() ? <Layout.Header.BackButton /> : <AccountAvatar />
+}
+
+function AccountAvatar() {
   const {t: l} = useLingui()
   const me = useMe()
   const setDrawerOpen = useSetDrawerOpen()
