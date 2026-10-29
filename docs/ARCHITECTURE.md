@@ -1882,8 +1882,10 @@ built yet.
   account / Sign in screens). The logged-out flow starts on one screen built from Bluesky's `LoginForm` layout:
   "Continue with Apple", "Continue with Google", then one "Email or phone" field and Continue. Splito then checks
   whether that account exists:
-  - **Existing account:** the next step asks for the password (Bluesky's password field with "Forgot?"), with
-    "Use a one-time code instead" below it. Forgot password sends a code to the email or phone, then a new
+  - **Existing account: password or one-time code, the user's choice** (owner 144): the next step offers both as
+    equals, a segmented choice "Password | Code" over the field (Bluesky's password field with "Forgot?", or the
+    6-digit code sent to that email or phone); the choice last used on this device is preselected, and either can
+    be switched to at any time. An account without a password (made with Google or Apple) sees Code only. Forgot password sends a code to the email or phone, then a new
     password (Bluesky's `ForgotPasswordForm` -> `SetNewPasswordForm` -> `PasswordUpdatedForm`).
   - **New account (created in the same flow, no "Create account" anywhere):** the next steps verify the entered
     email or phone with a code, ask only for what is missing (name, the other of email/phone, verified by code,
@@ -2353,6 +2355,7 @@ Every owner decision, in the order it was made (all 2026-10-26). "Replaced" name
 | 141 | "password should be there as well" | Passwords kept inside the one Continue flow: existing account enters password (or one-time code, Forgot password); new account sets one after verifying; Google/Apple need none | § 26.15 | Code-only, no passwords (row 140) |
 | 142 | "tour is when i have logged in, and want the swipable screen before login like some app does" | Swipeable intro slides before sign-in (F-249); a separate guided coach-mark tour over the real app after first sign-in and setup (F-253) | § 26.2 | One welcome tour before setup (row 123) |
 | 143 | "tour focuses on the feature and blur other places" | Each tour step keeps the focused control sharp and blurs (plus slight dim) the rest of the screen | § 26.2 | Dimmed backdrop only |
+| 144 | "either signin with password otp, users choice" | Existing accounts choose Password or Code as equal options (segmented), last choice remembered per device | § 26.15 | Password first with "Use a one-time code instead" |
 
 New decisions follow § 0 rule 9: rewrite the rule in its topic so only the current truth remains, then add a
 row here.
