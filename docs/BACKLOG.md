@@ -81,6 +81,7 @@ Every row of the ARCHITECTURE § 26.23 decision log (rows 1-63) and the feature(
 | 135 demo data downloaded from the backend, not bundled | § 26.1 | F-252 (backend) |
 | 128 customization only where needed; Language menu switch removed | § 26.1 | F-251 |
 | 153 Home = Overview + Recent transactions; People tab; Overview only on Home | § 26.3 | F-256 |
+| 167 pull to refresh, header stays | § 26.9 | F-258 (Wave C) |
 | 145 deep links end to end | § 26.3 | F-254 (with F-241) |
 | 125 sign-in required, nothing visible signed out | § 26.15 | F-250 (Wave C), F-2101/F-2102 moved up after Wave C |
 | 124 footer links on one line | § 26.5 | fixed on integrate/wB |
@@ -548,6 +549,18 @@ Found 2026-10-30 by the tap-speed work: § 26.9's direction-aware slide between 
   1. Slide direction follows tab order; a tap mid-slide redirects from the current position; the landing tab is the last tapped (tabTaps.spec stays green).
   2. Indicator springs; icon pops; haptic tap on native; badge springs on count change; re-tap of the active tab scrolls its list to top.
   3. Reduced motion / motion off: instant switch; renders gate and tap-latency spec do not regress.
+
+### F-258 Pull to refresh, header stays `spec: owner § 26.9 (decision 167)`
+
+Pull down at the top of Home, People, Groups, Activity, Analytics, Person and Group to refresh; the header stays fixed and visible throughout; native RefreshControl, phone-web pull handler.
+
+- **Effort** M · **Impact** 8 · **Backend** no (syncNow() hook ready for F-2103) · **Status** todo, Wave C (next free slot) · **Deps** F-255, F-256
+- **Prefs** -
+- **Acceptance**
+  1. Every list screen above refreshes on pull at the top; the spinner sits under the header; the header never moves or hides during the pull (e2e checks its top stays at 0 while pulling at 390).
+  2. Native: List RefreshControl on iOS and Android (simulator checked); phone web: a pull handler on the window scroll in iOS Safari (simulator) and Android Chrome, no fight with browser overscroll, scrolling unaffected (scrollWeb.spec green).
+  3. Until sync: re-reads local data and ends in under 1 s with honest status; offline ends at once, no error toast; with the backend it calls syncNow().
+  4. Nothing redraws unless data changed (owner 166); renders gate and tap-latency spec do not regress.
 
 ### F-250 Sign-in required (auth gate) `spec: owner § 26.15 (decision 125)`
 

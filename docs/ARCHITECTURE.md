@@ -1747,6 +1747,18 @@ good"; "the left sidebar looks bad on desktop". *Where:* `view/shell/desktop/Lef
   Analytics, Activity, Person, Group) and the in-page tabs (`useDeferredValue(tab)`: the bar follows the tap, the
   list re-renders as a transition); check `perf/tapLatency.spec.ts` (`E2E_PORT=8231 pnpm perf -- tapLatency`, CPU x1
   and x4, plus taps 50 ms after a screen-changing tap).
+- **Pull to refresh on every list, with the header staying put** (owner 167; F-258, Wave C): Home, People,
+  Groups, Activity, Analytics, a Person and a Group page refresh by pulling down at the top. The header stays
+  fixed and visible while pulling and refreshing (the minimal-shell hide never runs during a pull; the spinner
+  sits under the header, never over or above it); the list content moves, the header does not. Native uses the
+  List's `RefreshControl` (Bluesky's `List` already supports it; iOS bounce, Android material spinner); phone web
+  (iOS Safari, Android Chrome) gets the same gesture from a small shared pull handler on the window scroll that
+  works with the safe-area patch (§ 23) and never fights browser overscroll (`overscroll-behavior-y: contain` on the
+  scroller while pulling). What it does: until sync exists it re-reads the local data (projections and the current
+  page) and ends in well under a second, honestly ("Saved on this device", no "Synced"); once the backend exists it
+  calls one `syncNow()` (drain, then pull, § 9.3); offline it ends at once with the status, never an error toast.
+  Shell first (owner 152): the spinner appears in the same frame as the pull threshold; nothing else redraws unless
+  data changed (owner 166). *Why:* "also add pull to refresh, header should stay while pulling down to refresh".
 - **Switching tabs never redraws** (owner 166): a tab already visited stays mounted and is frozen while hidden
   (react-native-screens `freezeOnBlur` / react-freeze, as Bluesky; the web twin too), so switching back shows it
   instantly, exactly as it was left (scroll position included), with zero re-render of its content unless its data
@@ -2602,6 +2614,7 @@ Every owner decision, in the order it was made (all 2026-10-26). "Replaced" name
 | 164 | "finish the frontend first, and then start backend" | All front-end batches finish before any backend work; dev account and local data until then | § 26.2 | Backend batch 1 to start after Wave C / in parallel (125 plan) |
 | 165 | "once i say i am okay with all forntend changes" | Backend starts only after the owner explicitly signs off on all front-end changes | § 26.2 | Backend after front-end batches finish (164) |
 | 166 | "it should not redraw" (on switching back to Home / any tab) | Visited tabs stay mounted and frozen while hidden; switching back shows them as left with zero re-render unless data changed; deferral only on first visit | § 26.9 | Home re-rendered on every switch |
+| 167 | "also add pull to refresh, header should stay while pulling down to refresh" | Pull to refresh on every list (native RefreshControl, phone-web pull handler); header fixed and visible during the pull; local re-read now, syncNow() with the backend | § 26.9 | No pull to refresh |
 
 New decisions follow § 0 rule 9: rewrite the rule in its topic so only the current truth remains, then add a
 row here.
