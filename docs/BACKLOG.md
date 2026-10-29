@@ -77,6 +77,7 @@ Every row of the ARCHITECTURE § 26.23 decision log (rows 1-63) and the feature(
 | 58 service worker and PWA | § 26.21 | F-1901 |
 | 59 comments, remind, export | § 26.20 | F-1204, F-2208, F-1118, F-1119, F-1111, F-2210, F-2001, F-2007, F-2004 |
 | 61 sync-status dot on the avatar | § 26.7 | F-223, F-2103 |
+| 128 customization only where needed; Language menu switch removed | § 26.1 | F-251 |
 | 125 sign-in required, nothing visible signed out | § 26.15 | F-250 (Wave C), F-2101/F-2102 moved up after Wave C |
 | 124 footer links on one line | § 26.5 | fixed on integrate/wB |
 | 123 welcome tour on first launch and first-use tips | § 26.2 | F-249 (Wave C) |
@@ -451,6 +452,18 @@ Language picker in native scripts, name and avatar, region-prefilled currency / 
   4. Onboarding says plainly that data lives only on this device until a backup or sign-in, with a link to backups.
   5. The purpose chips share the name screen, so criterion 1's three-screen limit holds; skipping is allowed; each purpose's defaults live in one typed map with a bun test, and changing the purpose later changes only future defaults.
   6. Killing the app mid-onboarding resumes on the same step.
+
+### F-251 Settings prune: only what is needed `spec: owner § 26.1 (decision 128)`
+
+Opus audits every Settings row and registry key against decision 128 (keep only where people genuinely differ; one good default otherwise), the owner-decided settings are kept, the rest are retired with their reads, tests and copy. The "Language menu" switch is removed first (owner).
+
+- **Effort** S · **Impact** 7 · **Backend** no · **Status** in progress (Language menu removed on integrate/wB; audit in the Wave B post-assemble batch) · **Deps** -
+- **Prefs** retires keys; adds none
+- **Acceptance**
+  1. A written audit (docs/audit/SETTINGS-PRUNE-<date>.md) lists every row: keep / remove / merge, with the reason; owner-decided settings (decision log) are always kept.
+  2. Removed rows' keys are retired without data loss or crashes on old stored values; the "every key has a Settings row" test holds.
+  3. Settings sections are no longer than needed; Settings search still finds every remaining row.
+  4. Demo data, e2e and Lingui (--clean) updated; screenshots of Settings before and after.
 
 ### F-250 Sign-in required (auth gate) `spec: owner § 26.15 (decision 125)`
 

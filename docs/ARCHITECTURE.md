@@ -1176,11 +1176,17 @@ labelled sidebar); **wide** = web 1300 px and up (Bluesky `gtTablet`, right colu
   never copied. Each feature's reuse row names both apps' equivalents and why one won. *Why:* "make sure to
   pull features from Expensify and Bluesky whatever you think is better for user experience and features".
   *Where:* `docs/reuse/<feature>.md`; scouting list in `docs/BACKLOG.md`.
-- **Everything customizable.** Every user-facing choice the app makes has a setting with a sensible default,
-  and every surface that shows a collection (cards, tabs, lists, charts) can be shown, hidden, reordered and
-  restyled; dialog and form internals stay fixed. A new choice costs one preferences-registry entry plus its
-  Settings row (§ 24). *Why:* "remember every single thing to be customizable" (scope reading is the
-  assistant's, spec § 3a). *Where:* `packages/sync/src/preferences.ts`; spec § 3a has the v1 vs v2/v3 list.
+- **Customizable where it helps, never forced** (owner 128, replaces "everything customizable"). A setting
+  exists only when people genuinely want different answers and the default cannot serve them all (language,
+  theme, default currency, timezone, home tab, bottom bar, list filters and sorts, motion, reminders, privacy).
+  No setting for a detail nobody changes, no switch that duplicates another control, no setting just to
+  hide a small UI element: those get one good default (Bluesky's or Expensify's) and no row. Settings stays
+  short, grouped and searchable; every remaining choice keeps its preferences-registry entry and its Settings
+  row (§ 24), and every user choice that does exist is remembered in the database (decision 90). Collections
+  (cards, tabs, lists) can still be shown, hidden or reordered where people really differ. *Why:* "customization
+  are needed, but not forcefully, only whats needed"; "remove this, its not needed" (the "Language menu"
+  switch). Earlier: "remember every single thing to be customizable". *Where:*
+  `packages/sync/src/preferences.ts`; F-251 prunes the current list.
 - **Fast and animated, always:** no feature is done until it meets § 26.10. *Why:* "consider speed and
   animations always"; "make sure things are smooth like Bluesky"; "animations can be added like Expensify".
 - **Best in class, premium, never basic.** Splito aims to beat every competing app on features, looks and
@@ -2228,6 +2234,7 @@ Every owner decision, in the order it was made (all 2026-10-26). "Replaced" name
 | 125 | "also without login, nothing should be visible, auth is required" | Sign-in required: signed out shows only the tour, the logged-out flow, language and legal pages; DB opens only with a session; offline after sign-in; one DB per account; dev/e2e dev account until the auth API; auth backend moved up after Wave C | § 26.15 | Sign-in optional, zero-signup onboarding (F-211), closable sign-in screen |
 | 126 | "add a little padding from top, on sidebar on logo" | Sidebar logo sits 12 px lower than the header centre line | § 26.5 | Logo on the header row centre line |
 | 127 | "navigation changes reflect on mobile only, it should be same on desktop as well" | Settings > Navigation drives the bottom bar, the rail and the desktop sidebar alike (same items, same order); items turned off go under "More" at the end of the sidebar/rail; the drawer follows the same order | § 26.3 | Desktop and rail always showed the full list |
+| 128 | "remove this, its not needed" (Language menu switch); "customization are needed, but not forcefully, only whats needed" | Settings only where people genuinely differ; no switches for small UI details or duplicates; Language menu switch removed (dropdown always shown); F-251 prunes the rest | § 26.1 | Everything customizable |
 
 New decisions follow § 0 rule 9: rewrite the rule in its topic so only the current truth remains, then add a
 row here.
