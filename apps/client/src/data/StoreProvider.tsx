@@ -8,7 +8,7 @@ import {StorageNotice} from '#/components/StorageNotice'
 import * as Toast from '#/components/Toast'
 import {perfMark} from '#/lib/perfMark'
 import {resetToRoot} from '#/navigation/ref'
-import {DEMO_OFF, DemoContext, type DemoModeValue, setDemoProgress} from '#/state/demo'
+import {DemoContext, type DemoModeValue, setDemoProgress} from '#/state/demo'
 import {useDialogStateControlContext} from '#/state/dialogs'
 import {flush, logger, setDiagnosticsEnabled, setTelemetryIdentity} from '#/logger'
 import {device, setStorageScope} from '#/storage'
@@ -58,15 +58,10 @@ function wireTelemetry(store: Store, ctx: MutationCtx) {
 }
 
 /**
- * Dev and e2e builds only: demo mode (ARCHITECTURE 26.1) is loaded on demand
- * under a condition Metro folds at build time (`__DEV__` and the inlined
- * `EXPO_PUBLIC_ENV`; an imported constant would not fold), so a production
- * bundle holds none of it.
+ * Every build, production included (owner 148): demo mode (ARCHITECTURE 26.1) is a lazy chunk loaded on demand,
+ * so the start-up bundle holds none of it and a start in real mode never waits for it.
  */
-const loadDemo =
-  __DEV__ || process.env.EXPO_PUBLIC_ENV === 'e2e'
-    ? () => import('#/data/demoMode')
-    : null
+const loadDemo = () => import('#/data/demoMode')
 
 /** A store that is open and showing, with what to undo when it goes. */
 type Live = DataContext & {demo: boolean; unwire: () => void}
@@ -150,26 +145,25 @@ export function StoreProvider({children, fallback = null}: {children: React.Reac
     let cancelled = false
     perfMark('splito:store-open')
     booted.current = (async () => {
-      const real = await openReal(!loadDemo)
+      const real = await openReal(false)
       /* Dev StrictMode mounts twice: a store opened for the discarded mount is closed, never used. */
       if (cancelled) return void real.store.close()
       /*
-       * Only the one preference row is read here, inline under the folded dev/e2e condition (the key is
-       * `demoMode.ts`'s MODE_ID), so a start in real mode never waits for the demo chunk.
+       * Only the one preference row is read here (the key is `demoMode.ts`'s MODE_ID), so a start in real
+       * mode never waits for the demo chunk.
        */
-      const demoOn =
-        (__DEV__ || process.env.EXPO_PUBLIC_ENV === 'e2e') &&
-        (await real.store.get<{value: unknown}>('preference', 'demo.mode'))?.data.value === true
-      const resumed = demoOn && loadDemo ? await (await loadDemo()).resumeDemo(real, notices.current) : null
+      const demoOn = (await real.store.get<{value: unknown}>('preference', 'demo.mode'))?.data.value === true
+      const resumed = demoOn ? await (await loadDemo()).resumeDemo(real, notices.current) : null
       if (resumed) {
         // A reload keeps the mode: the real database said so; the demo one opens, the real one closes.
         if (cancelled) return void Promise.all([resumed.store.close(), real.store.close()])
         void adopt({...resumed, demo: true})
         setTimeout(() => void real.store.close(), 300)
       } else {
-        if (loadDemo) await ensureMe(real.store, real.ctx, 'Me')
+        await ensureMe(real.store, real.ctx, 'Me')
         // Only ever on the real store, before anything can switch away from (and close) it: erase the rows older builds left in it, once.
-        if (loadDemo && !demoOn) await (await loadDemo()).purgeLegacy(real.store)
+        // The old ?demo rows only ever existed in dev and e2e builds; production skips the cleanup and its chunk.
+        if ((__DEV__ || process.env.EXPO_PUBLIC_ENV === 'e2e') && !demoOn) await (await loadDemo()).purgeLegacy(real.store)
         void adopt({...real, demo: false})
         // The demo database would not open and the mode is now off: say so.
         if (demoOn) Toast.show(t`Couldn’t open the demo. Showing your own data.`, {type: 'error'})
@@ -219,7 +213,7 @@ export function StoreProvider({children, fallback = null}: {children: React.Reac
         withProgress(onProgress, async report => {
           await booted.current
           const cur = live.current
-          if (!loadDemo || !cur || cur.demo === on) return
+          if (!cur || cur.demo === on) return
           const m = await loadDemo()
           if (on) {
             // Seeded and ready before anything changes; the real database learns of the mode last, so a failure leaves it untouched.
@@ -249,10 +243,11 @@ export function StoreProvider({children, fallback = null}: {children: React.Reac
   )
 
   useEffect(() => {
-    if (loadDemo) void loadDemo().then(m => m.installTestHook(setDemo))
+    // The hook itself is e2e-only (installTestHook checks IS_E2E); production never loads the chunk for it.
+    if (process.env.EXPO_PUBLIC_ENV === 'e2e') void loadDemo().then(m => m.installTestHook(setDemo))
   }, [setDemo])
 
-  const demoValue = useMemo<DemoModeValue>(() => (loadDemo ? {demo, hasDirectory, busy, setDemo} : DEMO_OFF), [demo, hasDirectory, busy, setDemo])
+  const demoValue = useMemo<DemoModeValue>(() => ({demo, hasDirectory, busy, setDemo}), [demo, hasDirectory, busy, setDemo])
 
   if (error) throw error
   /* The connection of a replaced tab is closed: nothing can be read or saved until it reloads. */

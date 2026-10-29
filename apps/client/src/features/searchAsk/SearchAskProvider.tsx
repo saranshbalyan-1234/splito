@@ -28,10 +28,11 @@ export function SearchAskProvider({children}: {children: React.ReactNode}) {
   const api = useMemo<SearchAskApi & {isOpen: () => boolean}>(() => {
     const open: SearchAskApi['open'] = options => {
       if (isOpen.current) return
-      setInitial({query: options?.query ?? '', mode: options?.mode ?? 'search'})
-      control.open({
-        urlQuery: {...(options?.query ? {q: options.query} : {}), ...(options?.mode === 'ask' ? {mode: 'ask'} : {})},
-      })
+      const query = options?.query ?? ''
+      const mode = options?.mode ?? 'search'
+      // Opening again with the same start keeps the object: the body (not yet mounted) is not asked to render twice.
+      setInitial(s => (s.query === query && s.mode === mode ? s : {query, mode}))
+      control.open({urlQuery: {...(query ? {q: query} : {}), ...(mode === 'ask' ? {mode: 'ask'} : {})}})
     }
     return {
       open,

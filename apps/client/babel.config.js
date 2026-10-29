@@ -27,12 +27,15 @@ const stripSymbolLocs = () => ({
  * @returns {import("@babel/core").InputOptions}
  */
 module.exports = function (api) {
+  // Dev builds only (ARCHITECTURE 17): JSX goes through why-did-you-render's runtime so it sees every element.
+  const isDev = api.caller(caller => !!caller?.isDev)
   return {
     presets: [
       [
         'babel-preset-expo',
         {
           lazyImports: true,
+          ...(isDev && {jsxImportSource: '@welldone-software/why-did-you-render'}),
           native: {
             // Metro handles ESM -> CJS; Jest runs without Metro.
             disableImportExportTransform: !api.env('test'),

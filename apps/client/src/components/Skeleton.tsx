@@ -71,6 +71,9 @@ export function Circle({
   )
 }
 
+/* Distinct from react-native-svg's `Circle` for the wasted-render gate (owner 108). */
+Circle.displayName = 'SkeletonCircle'
+
 export function Pill({
   size,
   blend,

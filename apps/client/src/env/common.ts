@@ -1,14 +1,11 @@
 // Adapted from bluesky-social/social-app@4e4ad9c (MIT) — src/env/common.ts
 
-import packageJson from '#/../package.json'
-
 /**
- * The semver version of the app, as defined in `package.json.`
- *
- * N.B. The fallback is needed for Render.com deployments
+ * The semver version of the app: `package.json`'s, inlined as an env value by `app.config.ts` (importing the
+ * file would put the whole of it, dev dependencies included, in every bundle).
  */
 export const RELEASE_VERSION: string =
-  process.env.EXPO_PUBLIC_RELEASE_VERSION || packageJson.version
+  process.env.EXPO_PUBLIC_RELEASE_VERSION || '0.0.0'
 
 /**
  * The env the app is running in e.g. development, testflight, production, e2e

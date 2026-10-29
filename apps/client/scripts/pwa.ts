@@ -31,14 +31,18 @@ export function buildPrecache(files: Array<{url: string; bytes: Uint8Array}>): P
 }
 
 /*
- * Demo mode is dev and e2e only (ARCHITECTURE 26.1): a production export must hold none of it. These
- * strings are in the demo database's name, its seed and its legacy cleanup and nowhere else.
+ * Demo mode ships in every build (owner 148) but only as lazy chunks: the scripts index.html loads at start-up
+ * must hold none of its seed or database. These strings are in the demo database's name and its seed.
  */
-const DEMO_MARKERS = ['splito-demo', 'demo-large-', 'demo.mode']
+const DEMO_MARKERS = ['splito-demo', 'demo-large-']
 
-/** Exported files whose bytes mention demo mode: empty in a production build. */
+/** Start-up scripts (the ones index.html loads) whose bytes hold demo data: empty in a good build. */
 export function demoLeaks(files: Array<{url: string; bytes: Uint8Array}>): string[] {
-  return files.filter(f => DEMO_MARKERS.some(m => Buffer.from(f.bytes).includes(m))).map(f => f.url)
+  const html = Buffer.from(files.find(f => f.url === '/index.html')?.bytes ?? new Uint8Array()).toString('utf8')
+  const entry = new Set([...html.matchAll(/<script[^>]+src="([^"]+)"/g)].map(m => m[1]))
+  return files
+    .filter(f => entry.has(f.url) && DEMO_MARKERS.some(m => Buffer.from(f.bytes).includes(m)))
+    .map(f => f.url)
 }
 
 function sha(bytes: Uint8Array) {
@@ -54,7 +58,7 @@ if (import.meta.main) {
   const files = walk(dist).map(p => ({url: '/' + relative(dist, p).split('\\').join('/'), bytes: readFileSync(p)}))
   if (!files.some(f => f.url === '/index.html')) throw new Error(`${dist} has no index.html: run expo export first`)
   const leaks = demoLeaks(files)
-  if (leaks.length) throw new Error(`demo mode code is in the production export: ${leaks.join(', ')}`)
+  if (leaks.length) throw new Error(`demo data is in the start-up bundle: ${leaks.join(', ')}`)
   const precache = buildPrecache(files)
   writeFileSync(join(dist, 'sw.js'), `self.__PRECACHE = ${JSON.stringify(precache)};\n${readFileSync(join(ROOT, 'web/sw.js'), 'utf8')}`)
   console.log(`sw.js: ${precache.urls.length} files precached (${precache.name})`)
