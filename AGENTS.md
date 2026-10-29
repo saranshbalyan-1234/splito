@@ -45,6 +45,7 @@ pnpm --filter @splito/client ios   # dev client build (needs Xcode)
 CI=1 npx expo run:android --port 8226 --device emulator-5584   # build, install, run
 ANDROID_SERIAL=emulator-5584 METRO_PORT=8226 pnpm android:smoke <outDir>        # add expense + settle up
 pnpm --filter @splito/client e2e   # Playwright against the web build
+pnpm --filter @splito/client renders   # wasted-render gate: Metro dev server + why-did-you-render, fails above e2e-renders/baseline.json (~1.5 min)
 pnpm --filter @splito/client e2e:pwa   # production build + service worker (offline, update); ~2 min build
 pnpm --filter @splito/client build-web # production web build with sw.js (e2e:build has none)
 ```

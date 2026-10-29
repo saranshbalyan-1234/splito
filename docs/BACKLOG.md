@@ -2894,7 +2894,7 @@ Copy any URL and land on the same screen: pages, in-page tabs, sheets and popups
 
 Add `@welldone-software/why-did-you-render` to dev builds and a Playwright render scenario that fails on any avoidable re-render, then fix every report it finds. Runs first among the post-merge items so later work is held to it.
 
-- **Effort** M · **Impact** 9 · **Backend** no · **Status** todo · **Deps** Wave B merged
+- **Effort** M · **Impact** 9 · **Backend** no · **Status** in progress (feat/wC-F242: gate, fixes and numbers in `docs/COMPLETION_MATRIX.md`; done once merged) · **Deps** Wave B merged
 - **Prefs** -
 - **Acceptance**
   1. why-did-you-render is loaded only in dev builds (web and native) from the client entry, version verified against React 19.3 + React Compiler (or the documented fallback), tracking all components and hooks; production and e2e-timing bundles contain none of it (bundle check).

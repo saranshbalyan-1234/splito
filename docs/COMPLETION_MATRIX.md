@@ -106,3 +106,64 @@ Status words are the same as `docs/BACKLOG.md`: **done** (built, tested and merg
 | Languages | Bluesky AppLanguageDropdown on the web sign-in splash, sign-up and desktop right column | F-1816 | done (feat/wB-B2; native sign-up on the iOS simulator not run: see report) |
 | Best of both | Bluesky and Expensify scouting additions (`docs/scouting/2026-10-27-bluesky-expensify.md`) | F-229..F-236, F-318..F-321, F-620, F-1211, F-1212, F-1412, F-1507 | todo (Batch 4d; F-1211 Batch 13, F-1412 Batch 21) |
 | Process | Wave B assembled on integrate/wB: B5, B3x, B2, B7, B4, B6, B1 merged in order, one combined schema v4, one external hand-off gate (`openExternal`, `shareSheet`; architecture rule `externalHandOff`) | - | in progress (integrate/wB, 2026-10-29; not yet in m1-foundation). `pnpm check` green after each merge and at the end (domain, sync, client incl. architecture rules). Full web e2e at the end: 303 tests, 0 skipped (the UPI pay and Remind specs now run against the recorded hand-offs `__splitoTest.externalUrls` / `sharedTexts`); under load 6 specs failed once and pass alone (ask six-tab bar, comments Tab to menu, UPI poll, search recents, sync-status op state, shell unread badge = a real data change, test relaxed to `<=`), and the "large demo under 10 s" timing test failed once and passes alone. Perf on the 10,000-expense ledger vs m1-foundation, same machine, alternating runs (median of 5): Home cold open 49-56 ms vs 47-52 ms (+4 to +8%), write + UI 16 ms vs 16 ms, Analytics open 13-21 ms vs 14-16 ms, search keystroke 11-25 ms; 500-expense save 1 pref read / 7-8 expense reads, 73 expense renders (same); Ask Splito on 10k: open 15 ms, answer 23-40 ms. All inside the § 26.10 budgets and under the 10% regression gate. Native not run. |
+
+## Merge gate and wasted renders (F-242, owner 108 and decision 107)
+
+**Merge gate, every slot and every wave assemble:** `pnpm check`; the e2e build and full `pnpm --filter @splito/client e2e`;
+`pnpm --filter @splito/client perf` (budgets and the 10 % rule against m1-foundation, same machine, alternating runs);
+and `pnpm --filter @splito/client renders` (below). The renders run fails on any wasted-render report from our code
+that `apps/client/e2e-renders/baseline.json` does not hold, and on a mount or update count above the baseline by more
+than 10 % + 1, per phase and per component. After an intended change, `RENDERS_BASELINE=write pnpm --filter
+@splito/client renders` rewrites the baseline; the diff of that file is the review. Numbers go here.
+
+Status: **in progress** (feat/wC-F242, 2026-10-29; done when merged). Library: `@welldone-software/why-did-you-render`
+10.0.1, dev only (decision record `docs/reuse/renders.md`). The scenario uses the large demo (1,615 expenses, ~1,040
+Activity rows scrolled), not the 10,000-expense fixture: the perf spec stays the 10k gate. Web only; no native run.
+
+Scenario renders, desktop 1440 px, Metro dev server (React dev mode, so more than a production build), components
+being shown + components re-rendered; wasted-render reports from our code. Before = m1-foundation 53a0ec6 + the gate,
+no fixes; after = this branch.
+
+| Phase | Before | After |
+|---|---|---|
+| Launch to Home (cold, demo restored) | 3,652 + 448 | 3,652 + 447 |
+| Tab round (Groups, Activity, Analytics, People) | 21,577 + 5,977 | 21,577 + 5,977 |
+| Open Add expense | 444 + 361 | 444 + 211 |
+| Type 10 characters in the title | 0 + 2,241 (224 per keystroke) | 0 + 771 (77 per keystroke) |
+| Close Add expense | 75 + 387 | 75 + 237 |
+| Scroll Activity to 1,000+ rows | 50,343 + 37,909 | 50,343 + 37,888 |
+| Search & Ask, one question | 1,066 + 706 | 1,066 + 706 |
+| Wasted-render reports from our code | 19 | 4 |
+| Reports inside react-native-web, svg, lucide, radix, react-navigation (counted, not failed) | ~5,100 | ~4,700 |
+
+What was wasted and how it was fixed (at the root):
+
+| Where | Cause | Fix |
+|---|---|---|
+| `components/split/ExpenseComposer.tsx` | The React Compiler skipped the whole form (a computed key in a destructuring pattern; a `try`/`catch` around a conditional), so every keystroke re-created and re-rendered every row, button and dialog | `Object.fromEntries` filter; the write moved to `persistExpense`, which returns its failure |
+| `screens/AddExpense.tsx` | Compiler skipped `AddExpenseForm` (a function used before its declaration) | Declaration moved above its use |
+| `components/Button.tsx` | One `{pressed, hovered, focused}` state object set to an equal value on every hover/focus event, which also re-made the context `ButtonIcon` and `ButtonText` read (18 reports) | Three booleans; the context changes only when a flag does |
+| `components/Dialog/drawer.web.tsx` | `visualViewport` events set a new `{bottom, height}` for the same numbers (Dialog `Outer`, `Inner`) | Keep the object when the numbers are equal |
+| `components/Portal.tsx` | `remove` of an id that was not there still built a new outlet | Return early |
+| `features/searchAsk/SearchAskProvider.tsx` | `setInitial` with an equal `{query, mode}` | Keep the object when equal |
+
+Residual, in the baseline: 4 reports at one occurrence each. A `Portal` whose owner re-renders re-appends equal
+elements (`Provider`/`Portal`/`Outlet`), and one `View` whose owner is not reported. The store hooks (§ 9.6) returned
+no new snapshot for an equal answer in this scenario: every `useSyncExternalStore` report was a real change.
+
+Found, not fixed (outside the scenario's reports, each a separate item): the compiler still skips these components
+(`docs/reuse/renders.md`; the A-017 bail-out census is not built): `Menu/index.tsx`, `FormSheet/Screen.tsx`,
+`SearchAsk/AskComposer.tsx`, `AskChat`, `AskAnswer`, `StoreProvider`, `List.web.tsx` (`ListImpl`, imperative handle with
+getters), `FABInner`, `PeopleDialog`, `RequestsSection`, `CommentRow`, `RulesEditor`, `ItemRow`, and the sheets with
+`try`/`finally`. Each Activity row mounts ~50 components for its Radix menu (1,011 `Popper` mounts for 1,000 rows); the
+row is a mount cost, not a re-render, so the gate counts it and does not fail it. Typing still re-renders ~77
+components per keystroke (the form, its split rows and two dialogs take the whole `form`).
+
+Checks on this branch: `pnpm check` green (domain 350, sync 354, client 493 tests, 5 skipped); full web e2e 331 passed,
+1 failed once under 4 workers (`ask.spec.ts` "pinned bar tab", passes alone) after `bundle.spec.ts` was added; perf on
+the 10,000-expense ledger, median of 5, same machine, alternating with an m1-foundation build: Home cold open 66 ms vs
+66-69 ms, write + UI 32 ms vs 48 ms (noisy, 15-16 ms best case on both), Analytics open 34 vs 27 ms, search keystroke
+20-29 ms, Ask open 13 ms and answer 28 ms; 500-expense save 18 expense reads and 1 expense render on both. The perf
+spec's 10,000-expense Ask typing assertion (chat input keeps every character) failed under machine load on both builds
+and passes alone.
+
