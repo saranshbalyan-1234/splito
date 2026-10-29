@@ -4422,7 +4422,7 @@ msgstr "हर महीने"
 
 #: src/view/shell/desktop/LeftNav.tsx:351
 msgid "More"
-msgstr "और"
+msgstr "अधिक"
 
 #: src/components/activity/ActivityItem.tsx:297
 #: src/components/activity/ActivityItem.tsx:381
