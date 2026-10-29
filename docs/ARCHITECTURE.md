@@ -1218,6 +1218,11 @@ labelled sidebar); **wide** = web 1300 px and up (Bluesky `gtTablet`, right colu
   table or here), deliver the final version, and do not interrupt with questions. *Why:* "don't ask me
   anything, take your own decisions, give final version"; "do what you want to do, take own decisions, don't
   disturb me".
+- **The local preview is always the newest build** (owner 122). http://localhost:8090 serves the newest
+  integrated code: a watcher rebuilds it (e2e web build, demo mode available) within a few minutes of every
+  commit to the integration branch or the main line, so the owner never looks at an old build; the reply that
+  reports a change says which commit the preview shows. *Why:* "keep rebuilding app after changes, I see very
+  old always".
 - **Screenshots after every UI change the owner asks for:** populated light and dark (Dim), phone and
   desktop, sent in the same turn or as soon as they exist, work in progress labelled honestly. During an
   autonomous run the owner asked not to be disturbed: send one consolidated set at the end instead. *Why:*
@@ -2170,6 +2175,7 @@ Every owner decision, in the order it was made (all 2026-10-26). "Replaced" name
 | 119 | "add an option for disputes as well, think about it properly"; "should we calculate disputed expense or wait until they are resolved" | Disputes (structured reason, proposed fix, one-tap accept, reject with reason, withdraw, reopen once, admin closes) and holds on expenses, items, repayments and write-offs; a disputed record keeps counting in balances with an "of which disputed" line and a badge, and is left out of the Settle up plan by default with "Include disputed" | § 26.20 | F-1210 draft (disputed amounts out of the plan, no states or resolver rules) |
 | 120 | "ui issues" (Home screenshot, 2026-10-29) | Home order Overview, requests, recent, Friends; Invites sent move to the Friends and invites page; overview labels and amounts never truncated and cards even; no red per-row dots; friend rows two lines (2 chips + N, one net per currency); Friends search back | § 26.12 | Invites sent above the Overview; truncating cards; chips wrapping |
 | 121 | "I don't see invites related data in demo" | The one demo dataset carries the invites flow in every state: incoming requests (waiting, declined), invites sent (Sent, Opened, Joined, Expired, Cancelled), private "only for you" friends incl. one linked on joining, friend and group invite links in every state, a group join request, and their Activity rows; "Opened" and "join request" are stand-ins until F-2105 | § 26.1 | Demo had no invites data |
+| 122 | "keep rebuilding app after changes, i see very old always" | localhost:8090 is rebuilt automatically after every commit to the integration branch or main line | § 26.1 | Preview rebuilt only at the end of a wave |
 
 New decisions follow § 0 rule 9: rewrite the rule in its topic so only the current truth remains, then add a
 row here.
