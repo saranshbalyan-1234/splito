@@ -1,5 +1,7 @@
 import {expect, type Page, test} from '@playwright/test'
 
+import {openDemo} from './openDemo'
+
 const IPHONE_UA =
   'Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.0 Mobile/15E148 Safari/604.1'
 
@@ -67,7 +69,7 @@ test('a waiting update only offers Reload; it reloads when asked', async ({page}
 
 test('with unsaved input in a sheet, Reload asks first and Cancel keeps the offer', async ({page}) => {
   await page.setViewportSize({width: 1440, height: 900})
-  await page.goto('/?demo=1')
+  await openDemo(page)
   await expect(page.getByTestId('person-Riya Sharma')).toBeVisible()
   await page.getByTestId('sidebar-add').click()
   await page.getByTestId('expense-title').fill('Dinner at Thalassa')

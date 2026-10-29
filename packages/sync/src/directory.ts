@@ -4,8 +4,8 @@ import {type Contact, contactKey} from '@splito/domain'
  * The account directory and invite API (ARCHITECTURE 26.18). The backend
  * does not exist yet, so production uses `offlineDirectory`: every lookup is
  * 'unavailable' and every send stays queued in the outbox (the mutations put
- * it there), never a fake success. `demoDirectory` (dev and e2e builds with
- * ?demo=1 only) answers every branch from a fixed list.
+ * it there), never a fake success. `demoDirectory` (dev and e2e builds in
+ * Demo mode only) answers every branch from a fixed list.
  */
 
 /** Exact match only; the directory never says more than this. */

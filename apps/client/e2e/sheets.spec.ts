@@ -1,5 +1,7 @@
 import {expect, type Page, test} from '@playwright/test'
 
+import {openDemo as enterDemo} from './openDemo'
+
 /*
  * Owner rule 7: every form sheet shares one layout. Phones: a sheet from the
  * bottom edge, title left, round cross top right, Cancel and the primary
@@ -12,7 +14,7 @@ const DESKTOP = {width: 1440, height: 900}
 const PHONE = {width: 390, height: 844}
 
 async function openDemo(page: Page) {
-  await page.goto('/?demo=1')
+  await enterDemo(page)
   await expect(page.getByTestId('person-Arjun Mehta')).toBeVisible()
 }
 

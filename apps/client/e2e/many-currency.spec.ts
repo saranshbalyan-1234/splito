@@ -1,5 +1,7 @@
 import {expect, type Page, test} from '@playwright/test'
 
+import {openDemo} from './openDemo'
+
 /*
  * F-112, many-currency completeness (audit M5, M8, M12, M15, m2, m3, m21): each test
  * fails on the code before the fix. Seeded through window.splito; amounts are minor units.
@@ -114,7 +116,7 @@ test('M5: picking a group after typing an amount keeps the currency; a picked cu
   page,
 }) => {
   await page.setViewportSize(DESKTOP)
-  await page.goto('/?demo=1')
+  await openDemo(page)
   await expect(page.getByTestId('person-Riya Sharma')).toBeVisible()
   await page.getByTestId('sidebar-add').click()
   await expect(page.getByTestId('amount-currency')).toContainText('INR')
@@ -131,7 +133,7 @@ test('M5: an empty new expense still takes the group home currency, until one is
   page,
 }) => {
   await page.setViewportSize(DESKTOP)
-  await page.goto('/?demo=1')
+  await openDemo(page)
   await expect(page.getByTestId('person-Riya Sharma')).toBeVisible()
   await page.getByTestId('sidebar-add').click()
   await page.getByTestId('expense-group').click()
@@ -174,7 +176,7 @@ test('M12, m2: Recently active groups shows a chip per open currency, with exact
   page,
 }) => {
   await page.setViewportSize(DESKTOP)
-  await page.goto('/?demo=1')
+  await openDemo(page)
   await expect(page.getByTestId('person-Riya Sharma')).toBeVisible()
   const recent = page
     .getByTestId('right-nav')
@@ -194,7 +196,7 @@ test('m21: an Overview currency card opens Analytics in that currency, every tim
   page,
 }) => {
   await page.setViewportSize(DESKTOP)
-  await page.goto('/?demo=1')
+  await openDemo(page)
   await expect(page.getByTestId('person-Riya Sharma')).toBeVisible()
   await page.getByTestId('summary-EUR').click()
   await expect(page.getByTestId('analytics-currency')).toContainText('EUR')

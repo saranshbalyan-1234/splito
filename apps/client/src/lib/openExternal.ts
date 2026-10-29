@@ -10,13 +10,15 @@ const CHAT_LINK = /^https:\/\/wa\.me\//i
 
 declare global {
   interface Window {
-    __splitoTest?: {externalUrls: string[]; sharedTexts: string[]}
+    __splitoTest?: {externalUrls?: string[]; sharedTexts?: string[]; demoMode?: (on: boolean) => Promise<void>}
   }
 }
 
 /** What an e2e build records instead of handing something to another app (owner 118). */
 export function testHandOffs() {
-  return (window.__splitoTest ??= {externalUrls: [], sharedTexts: []})
+  // The demo-mode hook (data/demoMode.ts) shares this object and may have created it first.
+  const hooks = (window.__splitoTest ??= {})
+  return {externalUrls: (hooks.externalUrls ??= []), sharedTexts: (hooks.sharedTexts ??= [])}
 }
 
 /**

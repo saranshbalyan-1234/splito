@@ -33,8 +33,6 @@ export type Device = {
   askChat: string
   /** The question being typed in Ask Splito, kept when the drawer closes. */
   askDraft: string
-  /** Dev and e2e builds only: this install was opened with `?demo=1`, so the demo directory answers. */
-  demoMode: boolean
-  /** Dev and e2e builds only: the small demo set was asked for and has not finished going in. */
-  demoPending: boolean
+  /** Dev and e2e: the old `demo-large-` rows were purged from the real database (one time). */
+  demoLegacyPurged: boolean
 }

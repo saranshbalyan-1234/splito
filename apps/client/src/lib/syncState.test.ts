@@ -14,4 +14,8 @@ describe('syncDotState', () => {
     expect(syncDotState({hasSession: true, isOnline: true, pendingOps: 2})).toBe('syncing')
     expect(syncDotState({hasSession: true, isOnline: false, pendingOps: 0})).toBe('syncing')
   })
+  test('demo mode says so, whatever the account: its database never syncs', () => {
+    expect(syncDotState({hasSession: true, isOnline: true, pendingOps: 0, demo: true})).toBe('demo')
+    expect(syncDotState({hasSession: false, isOnline: false, pendingOps: 0, demo: true})).toBe('demo')
+  })
 })

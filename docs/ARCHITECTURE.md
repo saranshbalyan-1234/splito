@@ -536,8 +536,9 @@ The spec's labels are `Saved on this device`, `Waiting for connection`, `Syncing
   not. If IndexedDB cannot open or persist (private mode, quota, eviction), show a persistent notice that
   data will not be kept on this device. [Planned]
 - **Sample data never counts.** Demo data is built through real mutations, uses invented names, is labelled,
-  and is never merged into a real account or used as a fallback. [Built] `?demo=1` seeds only in dev/e2e
-  builds (`data/demo.ts`).
+  and is never merged into a real account or used as a fallback. [Built] Demo mode (dev/e2e builds only) is a
+  switch over a separate database, `splito-demo` (`data/demoMode.ts`, `data/demoSeed.ts`); the real database's
+  only footprint is the one `demo.mode` preference row.
 
 ### 9.8 Local database schema (binding; scalability first)
 
@@ -1193,24 +1194,28 @@ labelled sidebar); **wide** = web 1300 px and up (Bluesky `gtTablet`, right colu
   simplicity. Previews show seeded, populated screens (demo data in dev/e2e builds only), never empty shells.
   *Why:* "make sure this is best in terms of features, looks, simplicity"; "this is way too basic like 10th
   class app"; "make it look professional not some third grade project".
-- **A large demo dataset for the owner's own testing** (dev and e2e builds only, never production): a
-  deterministic generator (fixed seed) that writes a year of realistic use through the real mutations: about
-  30 friends, 12 groups (trips abroad, flat, office lunch, family, wedding, sports), ~1,500 expenses in 6
-  currencies with every split mode (equal, exact, percent, shares, itemised with portions, multiple payers),
-  repayments, write-offs, notes, categories, recurring rent and subscriptions, and deleted items for the bin.
-  It is loaded with `?demo=large` (web) / `EXPO_PUBLIC_DEMO=large` (native) or from Settings > Data > "Add
-  demo data" (shown only in dev/e2e builds), adds to whatever is already on the device, and has a matching
-  "Remove demo data". **Owner 94 + 95 supersede the URL switches and Add/Remove:** demo is a **mode switch**, Settings > Data >
-  "Demo mode" (on/off), backed by its **own separate local database** (its own IndexedDB database / SQLite file,
-  with its own preferences, history and outbox). Turning it on switches the app to the demo database, seeded
-  once with the one demo dataset; turning it off switches back to the real data, which demo mode never reads
-  or writes. Demo data never syncs and never merges into an account. While on, a persistent "Demo mode ·
-  Switch back" banner shows on every screen; "Reset demo" reseeds it. There is ONE demo dataset and ONE
-  switch: no small set, no URL (`?demo=1`, `?demo=large` gone), no `EXPO_PUBLIC_DEMO`, no Add/Remove demo
-  data; e2e turns demo mode on only through a test-only hook (`window.__splitoTest.demoMode`) that runs the same
-  switch (F-228a, being built on feat/demo-mode). Dev and e2e builds only for now
-  (production ships none, F-227 c4). *Why:* "add a lot of demo data to my
-  account".
+- **One demo dataset, behind one Settings switch, for the owner's own testing** (dev and e2e builds only for
+  now, production ships none, F-227 c4). A deterministic generator (fixed seed) writes a year of realistic use
+  through the real mutations: about 30 friends plus a hand-checked story, 12+ groups (trips abroad, flat, office
+  lunch, family, wedding, sports), ~1,500 expenses in 6 currencies with every split mode (equal, exact, percent,
+  shares, itemised with portions, multiple payers), repayments, write-offs, notes, categories, recurring rent and
+  subscriptions and deleted items, plus the whole invites flow of § 26.18 (requests waiting for me and one declined;
+  invites sent in every state: Sent, Opened, Joined, Expired, Cancelled; private "only for you" friends, one of
+  them linked when it joined; friend and group invite links active, limited, unlimited, used up, expired and
+  revoked; group links that need my approval and have been opened by people; matching Activity rows) with the
+  fake account directory, and some saved feedback. Demo is a **mode switch**, Settings > Data > "Demo mode" (on/off),
+  backed by its **own separate local database** (its own IndexedDB database / SQLite file, with its own
+  preferences, history and outbox). Turning it on switches the app to the demo database, seeded once; turning it
+  off switches back to the real data, which demo mode never reads or writes (the real database keeps one device
+  row, `demo.mode`). Demo data never syncs and never merges into an account. While on, a persistent "Demo mode ·
+  Switch back" banner shows on every screen; "Reset demo" reseeds it. There is ONE dataset and ONE switch: no
+  URL switch, no `EXPO_PUBLIC_*` variable, no Add/Remove demo data. e2e turns demo mode on only through the
+  test-only hook `window.__splitoTest.demoMode(true)`, which runs the same switch (F-228a). A `demoCoverage`
+  test (`data/demoCoverage.test.ts`) lists every user-facing feature and fails when the seeded demo database has
+  no record exercising it; a new feature adds its line and its demo records in the same change. *Why:* "add a lot
+  of demo data to my account"; "only one demo mode from settings"; "make it a switch ... both accounts keep
+  different". *Where:* `apps/client/src/data/demoMode.ts`, `demoSeed.ts`, `packages/sync/src/demoLarge.ts`,
+  `e2e/openDemo.ts`.
 - **The demo dataset grows with every feature, in the same change** (owner 109). A feature is not done until the
   one demo dataset (§ 26.1 demo mode) shows it with realistic, multi-currency examples: e.g. the Supper Factory
   bill with tax classes and stacked charges (F-403), comment threads (F-1204), reminders (F-1118/F-1119), inactive
@@ -1964,7 +1969,7 @@ add anyway (only for you)"; "also i should be able to select from contacts". *Wh
   friends, where you can add remove friends as well, and invite management as well".
 - **Privacy settings (preferences registry):** "Let people find me by email / phone" (default on),
   "Who can send me friend requests" (everyone / people with my link only), default invite-link limits.
-- Demo mode (`?demo=1`) ships a fake directory so every branch of the flow can be seen; production uses the
+- Demo mode (the Settings switch) ships a fake directory so every branch of the flow can be seen; production uses the
   backend directory API (backend batch). No fake "sent" states in production builds.
 
 ### 26.19 Ask Splito (AI chat)

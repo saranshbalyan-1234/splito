@@ -2,41 +2,43 @@ import {readFileSync} from 'node:fs'
 import {join} from 'node:path'
 
 import {expect, type Page, test} from '@playwright/test'
+
+import {openDemo} from './openDemo'
 import {
   balanceRows,
   balanceSides,
   balanceTotals,
-  computeShares,
-  type ExpenseRecord,
   formatAmount,
   isSettledBalance,
   magnitude,
   personSummary,
 } from '@splito/domain'
+import {DEMO_LARGE_PREFIX, generateLargeDemo, localToday, planLedger} from '@splito/sync/demoLarge'
 
-import {DEMO_EXPENSES, DEMO_FRIENDS, demoSplit} from '../src/data/demoData'
-
-/* Expected balances, recomputed from the demo dataset with the same domain rules the app uses. */
+/*
+ * Expected balances, recomputed from the one demo dataset with the same domain
+ * rules the app uses: the generator is deterministic for a day, so the spec
+ * rebuilds exactly the plan the app wrote.
+ */
 const LOCALE = 'en-US' // Playwright's default browser locale; `auto` number format follows it.
-const records: ExpenseRecord[] = DEMO_EXPENSES.map((e, i) => ({
-  kind: 'expense',
-  id: `e${i}`,
-  groupId: e.group,
-  currency: e.currency,
-  total: e.total,
-  payers: e.payers as Record<string, bigint>,
-  shares: computeShares(
-    e.total,
-    demoSplit(e, k => k),
-  ),
-  date: e.date,
-  deleted: false,
-}))
+// "Me" is the demo database's own person (`demoSeed.ts` DEMO_ME): remainders are shared out by id order, so the id must be the app's.
+const ME = `${DEMO_LARGE_PREFIX}me`
+const plan = generateLargeDemo({me: ME, today: localToday(), now: Date.now()})
 // Group parts follow each group's settle-up plan, as the app shows them (`balanceRows`; demo groups have no rules).
-const summaries = personSummary(balanceRows(records, 'me'), {
-  includeGroups: true,
-})
-const byKey = new Map(summaries.map(s => [s.person, s]))
+const summaries = personSummary(balanceRows(planLedger(plan), ME), {includeGroups: true})
+const byId = new Map(summaries.map(s => [s.person, s]))
+/** The six friends of the curated story, whose numbers the dataset fixes. */
+const STORY = {
+  riya: 'Riya Sharma',
+  arjun: 'Arjun Mehta',
+  priya: 'Priya Nair',
+  sam: 'Sam Carter',
+  lena: 'Lena Fischer',
+  diego: 'Diego Alves',
+} as const
+const summaryOf = (key: string) => byId.get(`${DEMO_LARGE_PREFIX}p-${key}`)
+/** The generated friends plus the 3 private friends of the invites flow (`demoSeed.ts`): none owes anything. */
+const FRIENDS = plan.counts.people + 3
 
 /* Every compiled message id, so the UI can be checked for ids shown instead of words. */
 const MESSAGE_IDS = Object.keys(
@@ -50,9 +52,16 @@ const MESSAGE_IDS = Object.keys(
   ),
 )
 
-async function openDemo(page: Page) {
-  await page.goto('/?demo=1')
-  await expect(page.getByTestId('person-Arjun Mehta')).toBeVisible()
+/** Scrolls the virtualised list until a row is mounted (the dataset has dozens of friends and groups). */
+async function reveal(page: Page, testID: string) {
+  const row = page.getByTestId(testID)
+  for (let i = 0; i < 60 && (await row.count()) === 0; i++) {
+    await page.mouse.move(700, 500)
+    await page.mouse.wheel(0, 700)
+    await page.waitForTimeout(60)
+  }
+  await row.scrollIntoViewIfNeeded()
+  return row
 }
 
 async function expectNoMessageIds(page: Page) {
@@ -65,11 +74,11 @@ test('People shows each friend with real words and the right balance per currenc
   page,
 }) => {
   await openDemo(page)
-  for (const [key, name] of Object.entries(DEMO_FRIENDS)) {
-    const row = page.getByTestId(`person-${name}`)
+  for (const [key, name] of Object.entries(STORY)) {
+    const row = await reveal(page, `person-${name}`)
     await expect(row).toBeVisible()
     // A friend whose group debts the settle-up plan routes to others has nothing open with me.
-    const summary = byKey.get(key)
+    const summary = summaryOf(key)
     if (!summary) {
       await expect(row).toContainText('Settled up')
       continue
@@ -92,7 +101,7 @@ test('People shows each friend with real words and the right balance per currenc
   }
   await expect(page.getByTestId('people-balances-title')).toHaveText('Overview')
   await expect(page.getByTestId('people-friends-title')).toHaveText(
-    `Friends  ${Object.keys(DEMO_FRIENDS).length}`,
+    `Friends  ${FRIENDS}`,
   )
   // Invite people is the header's one action (an icon button), not repeated in the list; no overflow.
   await expect(page.getByTestId('people-add-friend')).toHaveAttribute(
@@ -158,9 +167,9 @@ test('Hindi renders translated words with Indian grouping, never message ids', a
     'aria-label',
     'लोगों को आमंत्रित करें',
   )
-  const arjun = byKey.get('arjun')!.byCurrency.INR!.total
+  const arjun = summaryOf('arjun')!.byCurrency.INR!.total
   await expect(
-    page.getByTestId('person-Arjun Mehta').getByTestId('balance-INR'),
+    (await reveal(page, 'person-Arjun Mehta')).getByTestId('balance-INR'),
   ).toHaveText(`आपको मिलेंगे ↙ ${formatAmount(arjun, 'INR', 'hi-IN')}`)
   await expectNoMessageIds(page)
 })
@@ -177,9 +186,9 @@ test('Profile holds identity: name prompt, counts, then Settings and About; no d
     'Add your name',
   )
   await expect(page.getByTestId('profile-stat-friends')).toContainText(
-    String(Object.keys(DEMO_FRIENDS).length),
+    String(FRIENDS),
   )
-  await expect(page.getByTestId('profile-stat-groups')).toContainText('3')
+  await expect(page.getByTestId('profile-stat-groups')).toContainText(String(plan.counts.groups))
   await expect(page.getByTestId('profile-analytics')).toHaveCount(0)
   await expect(page.getByText('Coming with sync')).toHaveCount(0)
   await expect(page.getByTestId('profile-sync-note')).toBeVisible()
@@ -194,9 +203,9 @@ test('People: the Overview counts friends; the Friends list has its own search b
   await page.setViewportSize({width: 390, height: 844})
   await openDemo(page)
   const people = page.getByTestId('screen-people')
-  const settled = Object.keys(DEMO_FRIENDS).filter(k => !byKey.has(k)).length
+  const settled = FRIENDS - summaries.filter(s => s.person !== ME).length
   await expect(people.getByTestId('people-summary-counts')).toHaveText(
-    `${Object.keys(DEMO_FRIENDS).length} friends · ${settled} settled`,
+    `${FRIENDS} friends · ${settled} settled`,
   )
   await expect(people.getByTestId('overview-analytics')).toBeVisible()
   // The list's own search (owner 91) sits beside Filters, besides the header's Search & Ask.
@@ -213,7 +222,7 @@ test('Groups: Overview, search by member, and type / status filters', async ({
   const groups = page.getByTestId('screen-groups')
   await expect(groups.getByTestId('group-Lisbon')).toBeVisible()
   await expect(groups.getByTestId('groups-balances-counts')).toHaveText(
-    /^3 groups · \d+ settled$/,
+    /^15 groups · \d+ settled$/,
   )
   // Search finds a group by who is in it.
   await groups.getByTestId('list-search').click()

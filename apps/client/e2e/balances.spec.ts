@@ -1,5 +1,7 @@
 import {expect, type Page, test} from '@playwright/test'
 
+import {openDemo} from './openDemo'
+
 /* F-113: balances and settle consistency (audit M6, M10, m5, m7), seeded through window.splito. */
 type Splito = {
   me: string
@@ -88,7 +90,7 @@ test('M10 + m7 + m5: direct and group debts that net to zero stay open, and Call
 
 test('M6: the payer cannot be unticked from "Split with"', async ({page}) => {
   await page.setViewportSize({width: 1440, height: 900})
-  await page.goto('/?demo=1')
+  await openDemo(page)
   await expect(page.getByTestId('person-Riya Sharma')).toBeVisible()
   await page.getByTestId('sidebar-add').click()
   await page.getByTestId('amount-input').fill('900')

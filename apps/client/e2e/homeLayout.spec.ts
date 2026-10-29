@@ -1,5 +1,7 @@
 import {expect, type Page, test} from '@playwright/test'
 
+import {openDemo} from './openDemo'
+
 /*
  * ARCHITECTURE 26.12, owners 113/114/120 (F-245, F-248): Home reads top-down
  * (Overview, requests, invites row, Friends), nothing is cut off or crowded,
@@ -15,9 +17,9 @@ type Splito = {
   createExpense(draft: unknown): Promise<string>
 }
 
-async function openHome(page: Page, width: number, path = '/?demo=1') {
+async function openHome(page: Page, width: number, path = '/') {
   await page.setViewportSize({width, height: 900})
-  await page.goto(path)
+  await openDemo(page, path)
   await expect(page.getByTestId('person-Arjun Mehta')).toBeVisible()
 }
 
@@ -186,7 +188,7 @@ test('six currencies lay out 3 x 2, then 2 x 3 and 1 a row as the window narrows
 test('Groups uses the same cards, nothing cut off at every width', async ({page}) => {
   for (const width of WIDTHS) {
     await page.setViewportSize({width, height: 900})
-    await page.goto('/groups?demo=1')
+    await openDemo(page, '/groups')
     await expect(page.getByTestId('group-Goa trip')).toBeVisible()
     const all = await cards(page, 'screen-groups')
     expect(all.length).toBeGreaterThan(0)

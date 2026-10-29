@@ -1,7 +1,6 @@
 import {getLocales} from 'expo-localization'
 import {
   createInviteLink,
-  demoDirectory,
   type DirectoryClient,
   type Entity,
   type InviteLink,
@@ -11,16 +10,33 @@ import {
   type Store,
 } from '@splito/sync'
 
-import {IS_DEMO} from '#/data/demo'
-import {DEMO_DIRECTORY} from '#/data/demoData'
+let active: DirectoryClient = offlineDirectory
+
+/** Dev and e2e demo mode swaps the directory that answers (`#/data/demoMode`); turning it off puts the offline one back. */
+export function setDirectory(next: DirectoryClient | null) {
+  active = next ?? offlineDirectory
+}
+
+/** True when a directory answers (demo mode today, the backend later); false offline, where invite links fail closed. */
+export function isDirectoryAvailable() {
+  return active !== offlineDirectory
+}
 
 /**
  * The directory and invite API (26.18). Production has no backend yet, so
  * lookups are 'unavailable' and sends stay queued; only demo mode answers.
  */
-export const directory: DirectoryClient & {
-  accountFor?: ReturnType<typeof demoDirectory>['accountFor']
-} = IS_DEMO ? demoDirectory(DEMO_DIRECTORY) : offlineDirectory
+export const directory: DirectoryClient = {
+  get isDemo() {
+    return active.isDemo
+  },
+  lookup: contact => active.lookup(contact),
+  sendRequest: id => active.sendRequest(id),
+  createInviteLink: code => active.createInviteLink(code),
+  revoke: code => active.revoke(code),
+  accept: target => active.accept(target),
+  openInvite: code => active.openInvite(code),
+}
 
 /**
  * Makes an invite link: the directory registers the code first, and only then

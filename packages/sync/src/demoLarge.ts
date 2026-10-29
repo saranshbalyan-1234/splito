@@ -26,6 +26,10 @@ import {
   validateExpense,
 } from '@splito/domain'
 
+import {merchantSetupOf} from './bill'
+import {type CommentInput, createComment, deleteComment, editComment} from './comments'
+import {removeFriend} from './friends'
+import {deleteGroup, makeGroupInactive, type MemberExitInput, removeGroupMember, setGroupHidden} from './groupLifecycle'
 import {
   createExpense,
   createGroup,
@@ -33,13 +37,18 @@ import {
   createRepayments,
   createWriteOffs,
   deleteExpense,
+  deletePerson,
   deleteRepayment,
   deleteWriteOff,
   type ExpenseDraft,
   type Group,
   type RepaymentInput,
+  restoreExpense,
+  setItemHidden,
   updateExpense,
 } from './mutations'
+import {setPref} from './preferences'
+import {recordNudge, scheduleReminder} from './reminders'
 import {type Store} from './store'
 import {type MutationCtx} from './types'
 
@@ -124,10 +133,28 @@ const FRIENDS = {
   oliver: ['Oliver Bennett', null],
   emma: ['Emma Clarke', null],
   maya: ['Maya Thompson', null],
+  /* The friends of the Wave B story (below): a deleted and a removed friend, a settled one, people who left a group. */
+  raj: ['Raj Khanna', null],
+  deepa: ['Deepa Nambiar', null],
+  anil: ['Anil Joshi', null],
+  bhavna: ['Bhavna Shah', null],
+  chirag: ['Chirag Modi', null],
+  chloe: ['Chloé Martin', null],
+  ravi: ['Ravi Teja', null],
+  tara: ['Tara Bose', null],
+  /* The six friends of the curated story (below): the e2e specs, screenshots and the first-run tour lean on them. */
+  riya: ['Riya Sharma', null],
+  arjun: ['Arjun Mehta', null],
+  priya: ['Priya Nair', null],
+  sam: ['Sam Carter', null],
+  lena: ['Lena Fischer', null],
+  diego: ['Diego Alves', null],
 } as const satisfies Record<string, readonly [string, string | null]>
 
 type Friend = keyof typeof FRIENDS
 type Who = Friend | 'me'
+
+const WAVE_B_FRIENDS: Friend[] = ['raj', 'deepa', 'anil', 'bhavna', 'chirag', 'chloe', 'ravi', 'tara']
 
 const INDIAN: Friend[] = ['aanya', 'vihaan', 'kabir', 'neha', 'rohan', 'meera', 'ishaan', 'tanvi', 'aditya', 'sneha', 'karan', 'zara', 'rahul', 'dev']
 
@@ -157,7 +184,7 @@ const GROUPS: Ctx[] = [
   {key: 'tokyo', name: 'Tokyo', kind: 'trip', currency: 'JPY', tz: 'Asia/Tokyo', members: ['kenji', 'yuki', 'vihaan', 'sneha', 'rahul'], span: [84, 8]},
   {key: 'roadtrip', name: 'Coorg road trip', kind: 'trip', currency: 'INR', tz: 'Asia/Kolkata', members: ['kabir', 'zara', 'neha', 'ishaan'], span: [48, 5]},
   {key: 'london', name: 'London', kind: 'trip', currency: 'GBP', tz: 'Europe/London', members: ['oliver', 'emma', 'aanya', 'vihaan'], span: [24, 6]},
-  {key: 'flat', name: 'Flat 4B', kind: 'home', currency: 'INR', tz: 'Asia/Kolkata', members: ['aanya', 'vihaan']},
+  {key: 'flat', name: 'Koramangala flat', kind: 'home', currency: 'INR', tz: 'Asia/Kolkata', members: ['aanya', 'vihaan']},
   {key: 'office', name: 'Office lunch', kind: 'other', currency: 'INR', tz: 'Asia/Kolkata', members: ['vikram', 'sneha', 'rahul', 'pooja', 'karan', 'nisha', 'aditya']},
   {key: 'family', name: 'Family', kind: 'other', currency: 'INR', tz: 'Asia/Kolkata', members: ['mom', 'dad', 'ananya']},
   {key: 'football', name: 'Sunday football', kind: 'other', currency: 'INR', tz: 'Asia/Kolkata', members: ['dev', 'faisal', 'joseph', 'varun', 'karan', 'ishaan', 'rahul', 'aditya', 'vihaan']},
@@ -358,6 +385,119 @@ const NOTES: Record<string, string[]> = {
 }
 
 /* -------------------------------------------------------------------------- */
+/* The curated story                                                          */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * Three small groups and six friends with fixed, hand-checked numbers (ARCHITECTURE 26.1: the one demo set
+ * folds in what the old small set held). They stand beside the year of generated use, share none of its
+ * groups or people (so each friend's balance is exactly what is written here), and are never settled up.
+ * Their dates are fixed (the e2e specs search and read them), so over time they age like any old trip.
+ */
+
+type CuratedGroup = 'goa' | 'flat' | 'lisbon'
+type CuratedFriend = 'riya' | 'arjun' | 'priya' | 'sam' | 'lena' | 'diego'
+type CuratedWho = CuratedFriend | 'me'
+const STORY_FRIENDS: readonly CuratedFriend[] = ['riya', 'arjun', 'priya', 'sam', 'lena', 'diego']
+
+const CURATED_GROUPS: Record<CuratedGroup, {name: string; kind: Group['kind']; currency: CurrencyCode; start: string | null; end: string | null; tz: string; members: CuratedFriend[]}> = {
+  goa: {name: 'Goa trip', kind: 'trip', currency: 'INR', start: '2025-12-20', end: '2025-12-27', tz: 'Asia/Kolkata', members: ['riya', 'arjun', 'priya', 'sam']},
+  flat: {name: 'Flat 4B', kind: 'home', currency: 'INR', start: null, end: null, tz: 'Asia/Kolkata', members: ['riya', 'arjun']},
+  lisbon: {name: 'Lisbon', kind: 'trip', currency: 'EUR', start: '2026-04-10', end: '2026-04-15', tz: 'Europe/Lisbon', members: ['sam', 'lena', 'diego']},
+}
+
+type CuratedBill = {
+  items: Array<{name: string; amount: bigint; people: Array<CuratedWho | [CuratedWho, number]>}>
+  tax: bigint
+  tip: bigint
+  service: bigint
+  discount: bigint
+}
+type CuratedExpense = {
+  title: string
+  group: CuratedGroup | null
+  currency: CurrencyCode
+  total: bigint
+  payers: Partial<Record<CuratedWho, bigint>>
+  participants: CuratedWho[]
+  /** Itemised instead of equal (`participants` then lists everyone on the bill). */
+  bill?: CuratedBill
+  date: string
+  category: string
+  notes?: string
+}
+
+const GOA: CuratedWho[] = ['me', 'riya', 'arjun', 'priya', 'sam']
+const FLAT: CuratedWho[] = ['me', 'riya', 'arjun']
+const LISBON: CuratedWho[] = ['me', 'sam', 'lena', 'diego']
+
+/** Every split divides exactly, so balances never depend on the id-ordered tie-break for remainders. */
+const CURATED_EXPENSES: CuratedExpense[] = [
+  // Goa trip (INR)
+  {title: 'Villa, 4 nights', group: 'goa', currency: 'INR', total: 4000000n, payers: {me: 4000000n}, participants: GOA, date: '2025-12-20', category: 'stay'},
+  {title: 'Scooter rentals', group: 'goa', currency: 'INR', total: 600000n, payers: {arjun: 600000n}, participants: GOA, date: '2025-12-21', category: 'transport'},
+  {title: 'Groceries', group: 'goa', currency: 'INR', total: 320000n, payers: {me: 320000n}, participants: GOA, date: '2025-12-21', category: 'groceries'},
+  {title: 'Dinner at Thalassa', group: 'goa', currency: 'INR', total: 1250000n, payers: {riya: 750000n, priya: 500000n}, participants: GOA, date: '2025-12-22', category: 'food'},
+  {title: 'Parasailing', group: 'goa', currency: 'INR', total: 900000n, payers: {sam: 900000n}, participants: ['me', 'riya', 'sam'], date: '2025-12-23', category: 'entertainment'},
+  /*
+   * Itemised, with portions (owner rule 5): beers 2:3:1, 5% tax and 10% service on top.
+   * Subtotals 720 / 1,020 / 1,020 / 870 / 270 take 15% extras each, so every share is whole.
+   */
+  {
+    title: 'Bar tab at Britto’s',
+    group: 'goa',
+    currency: 'INR',
+    total: 448500n,
+    payers: {riya: 448500n},
+    participants: GOA,
+    bill: {
+      items: [
+        {name: 'Kingfisher, 6 pints', amount: 180000n, people: [['me', 2], ['sam', 3], 'riya']},
+        {name: 'Cocktails', amount: 120000n, people: ['riya', 'priya']},
+        {name: 'Nachos', amount: 60000n, people: ['me', 'riya', 'arjun', 'priya', 'sam']},
+        {name: 'Masala fries', amount: 30000n, people: ['arjun', 'priya']},
+      ],
+      tax: 19500n,
+      tip: 0n,
+      service: 39000n,
+      discount: 0n,
+    },
+    date: '2025-12-23',
+    category: 'food',
+  },
+  {title: 'Beach shack lunch', group: 'goa', currency: 'INR', total: 450000n, payers: {priya: 450000n}, participants: GOA, date: '2025-12-24', category: 'food'},
+  // Priced in another currency than the group's own (26.13): Sam bought gear abroad.
+  {title: 'Snorkel gear', group: 'goa', currency: 'USD', total: 10000n, payers: {sam: 10000n}, participants: GOA, date: '2025-12-22', category: 'shopping'},
+  {title: 'Cab to airport', group: 'goa', currency: 'INR', total: 240000n, payers: {me: 120000n, arjun: 120000n}, participants: ['me', 'riya', 'arjun', 'priya'], date: '2025-12-27', category: 'transport'},
+  // Flat 4B (INR)
+  {title: 'Rent, January', group: 'flat', currency: 'INR', total: 6000000n, payers: {me: 6000000n}, participants: FLAT, date: '2026-01-01', category: 'stay'},
+  {title: 'Electricity bill', group: 'flat', currency: 'INR', total: 345000n, payers: {riya: 345000n}, participants: FLAT, date: '2026-01-10', category: 'bills'},
+  {title: 'Wi-Fi', group: 'flat', currency: 'INR', total: 119700n, payers: {arjun: 119700n}, participants: FLAT, date: '2026-01-12', category: 'bills'},
+  {title: 'Rent, February', group: 'flat', currency: 'INR', total: 6000000n, payers: {riya: 6000000n}, participants: FLAT, date: '2026-02-01', category: 'stay'},
+  {title: 'BigBasket order', group: 'flat', currency: 'INR', total: 276000n, payers: {me: 276000n}, participants: FLAT, date: '2026-02-02', category: 'groceries'},
+  {title: 'Cleaning supplies', group: 'flat', currency: 'INR', total: 84000n, payers: {arjun: 84000n}, participants: FLAT, date: '2026-02-15', category: 'shopping'},
+  // Lisbon (EUR)
+  {title: 'Airbnb in Alfama', group: 'lisbon', currency: 'EUR', total: 72000n, payers: {lena: 72000n}, participants: LISBON, date: '2026-04-10', category: 'stay'},
+  {title: 'Pastéis de Belém', group: 'lisbon', currency: 'EUR', total: 2400n, payers: {me: 2400n}, participants: LISBON, date: '2026-04-11', category: 'food'},
+  {title: 'Tram 28 tickets', group: 'lisbon', currency: 'EUR', total: 1200n, payers: {diego: 1200n}, participants: LISBON, date: '2026-04-11', category: 'transport'},
+  {title: 'Fado night', group: 'lisbon', currency: 'EUR', total: 16000n, payers: {sam: 10000n, me: 6000n}, participants: LISBON, date: '2026-04-12', category: 'entertainment', notes: 'Dinner and a show in Alfama'},
+  {title: 'Seafood at Ramiro', group: 'lisbon', currency: 'EUR', total: 18400n, payers: {me: 18400n}, participants: LISBON, date: '2026-04-13', category: 'food', notes: 'Farewell dinner, Sam picked the wine'},
+  // A flight booked from India: Lisbon holds rupees and euros side by side.
+  {title: 'Flights from Delhi', group: 'lisbon', currency: 'INR', total: 8400000n, payers: {me: 8400000n}, participants: LISBON, date: '2026-04-02', category: 'transport'},
+  // Direct (no group)
+  {title: 'Concert tickets', group: null, currency: 'INR', total: 500000n, payers: {me: 500000n}, participants: ['me', 'priya'], date: '2026-03-08', category: 'entertainment'},
+  {title: 'Coffee beans', group: null, currency: 'EUR', total: 1800n, payers: {sam: 1800n}, participants: ['me', 'sam'], date: '2026-05-02', category: 'groceries'},
+  // One friend, a second currency each: Riya in euros, Priya in dollars.
+  {title: 'Duty-free chocolate', group: null, currency: 'EUR', total: 4000n, payers: {riya: 4000n}, participants: ['me', 'riya'], date: '2026-04-16', category: 'shopping'},
+  {title: 'Online course', group: null, currency: 'USD', total: 3000n, payers: {priya: 3000n}, participants: ['me', 'priya'], date: '2026-05-20', category: 'other'},
+  // Zero- and three-decimal currencies: yen has no minor unit, dinar has three.
+  {title: 'Ramen in Shibuya', group: null, currency: 'JPY', total: 4200n, payers: {me: 4200n}, participants: ['me', 'arjun'], date: '2026-03-20', category: 'food'},
+  {title: 'Layover duty-free', group: null, currency: 'BHD', total: 12500n, payers: {diego: 12500n}, participants: ['me', 'diego'], date: '2026-04-09', category: 'shopping'},
+  {title: 'Taxi in Kuwait City', group: null, currency: 'KWD', total: 4800n, payers: {me: 4800n}, participants: ['me', 'lena'], date: '2026-04-09', category: 'transport'},
+  {title: 'Movie night', group: null, currency: 'INR', total: 90000n, payers: {riya: 90000n}, participants: ['me', 'riya'], date: '2026-06-14', category: 'entertainment', notes: 'Pizza dinner at Riya’s before the film'},
+]
+
+/* -------------------------------------------------------------------------- */
 /* The plan                                                                   */
 /* -------------------------------------------------------------------------- */
 
@@ -366,8 +506,19 @@ export type DemoOp =
   | {kind: 'group'; at: number; actor: string; id: string; input: Parameters<typeof createGroup>[2]}
   | {kind: 'expense'; at: number; actor: string; id: string; draft: ExpenseDraft}
   | {kind: 'expense.update'; at: number; actor: string; id: string; draft: ExpenseDraft}
-  | {kind: 'expense.delete' | 'repayment.delete' | 'writeoff.delete'; at: number; actor: string; id: string}
+  | {kind: 'expense.delete' | 'expense.restore' | 'repayment.delete' | 'writeoff.delete'; at: number; actor: string; id: string}
   | {kind: 'repayment' | 'writeoff'; at: number; actor: string; id: string; input: RepaymentInput}
+  /* Wave B features (F-604, F-615, F-1118/9, F-1203, F-1204, F-403): each runs the real mutation. */
+  | {kind: 'person.delete' | 'person.remove'; at: number; actor: string; id: string}
+  | {kind: 'group.inactive' | 'group.hide' | 'group.delete'; at: number; actor: string; id: string}
+  | {kind: 'member.exit'; at: number; actor: string; id: string; input: Omit<MemberExitInput, 'groupId'>}
+  | {kind: 'item.hide'; at: number; actor: string; id: string; type: 'expense' | 'repayment' | 'writeoff' | 'person'}
+  | {kind: 'comment'; at: number; actor: string; id: string; input: Omit<CommentInput, 'id'>}
+  | {kind: 'comment.edit'; at: number; actor: string; id: string; body: string}
+  | {kind: 'comment.delete'; at: number; actor: string; id: string}
+  | {kind: 'reminder.self'; at: number; actor: string; id: string; input: Parameters<typeof scheduleReminder>[2]}
+  | {kind: 'reminder.nudge'; at: number; actor: string; id: string; input: Parameters<typeof recordNudge>[2]}
+  | {kind: 'merchant.setup'; at: number; actor: string; id: string; title: string; charges: Parameters<typeof merchantSetupOf>[1]}
 
 export type DemoPlan = {ops: DemoOp[]; counts: DemoCounts}
 export type DemoCounts = {people: number; groups: number; expenses: number; repayments: number; writeOffs: number; deleted: number; edits: number}
@@ -408,6 +559,8 @@ export function generateLargeDemo({me, today, now, seed = DEMO_LARGE_SEED}: {me:
   /* People, then groups: a year ago, a few minutes apart. */
   let clock = T - 372 * DAY + 19 * HOUR
   for (const [key, [name, upiId]] of Object.entries(FRIENDS)) {
+    // The story's six friends join two weeks ago, with their groups (below), so Activity opens on them.
+    if (STORY_FRIENDS.includes(key as CuratedFriend) || WAVE_B_FRIENDS.includes(key as Friend)) continue
     clock += rng.int(2, 40) * MINUTE
     ops.push({kind: 'person', at: clock, actor: me, id: pid(key as Friend), name, upiId})
     counts.people++
@@ -735,6 +888,7 @@ export function generateLargeDemo({me, today, now, seed = DEMO_LARGE_SEED}: {me:
     ['zara', 'GBP', 'Theatre tickets for December', 'entertainment', 90, 160, 'Europe/London'],
     ['faisal', 'BHD', 'Dinner in Manama', 'food', 18, 42, 'Asia/Bahrain'],
     ['faisal', 'BHD', 'Souq shopping', 'shopping', 9, 30, 'Asia/Bahrain'],
+    ['faisal', 'KWD', 'Stopover dinner in Kuwait City', 'food', 8, 20, 'Asia/Kuwait'],
     ['karan', 'USD', 'Concert tickets in Dubai', 'entertainment', 120, 220, 'Asia/Dubai'],
     ['kenji', 'INR', 'Dinner in Bandra', 'food', 2400, 4800, 'Asia/Kolkata'],
     ['maya', 'INR', 'Old Delhi food walk', 'food', 1800, 3600, 'Asia/Kolkata'],
@@ -846,22 +1000,323 @@ export function generateLargeDemo({me, today, now, seed = DEMO_LARGE_SEED}: {me:
     counts.deleted++
   }
 
+  /* ----------------------- the curated story (fixed numbers) -------------------- */
+
+  {
+    const MINUTE_ = MINUTE
+    const cdate = (date: LocalDate) => date
+    const cid = (w: CuratedWho) => pid(w)
+    const gidOf = (key: CuratedGroup) => `${DEMO_LARGE_PREFIX}g-story-${key}`
+    let at = now - 14 * DAY
+    for (const key of STORY_FRIENDS) {
+      at += 7 * MINUTE_
+      ops.push({kind: 'person', at, actor: me, id: pid(key), name: FRIENDS[key][0], upiId: null})
+      counts.people++
+    }
+    for (const [key, g] of Object.entries(CURATED_GROUPS) as Array<[CuratedGroup, (typeof CURATED_GROUPS)[CuratedGroup]]>) {
+      at += 5 * HOUR
+      ops.push({
+        kind: 'group',
+        at,
+        actor: me,
+        id: gidOf(key),
+        input: {name: g.name, kind: g.kind, currency: g.currency, startDate: g.start && cdate(g.start), endDate: g.end && cdate(g.end), memberIds: [me, ...g.members.map(cid)]},
+      })
+      counts.groups++
+    }
+    const start = now - 12 * DAY
+    const step = (12 * DAY - 2 * HOUR) / CURATED_EXPENSES.length
+    const ids: Record<string, string> = {}
+    for (const [i, e] of CURATED_EXPENSES.entries()) {
+      const split: SplitInput = e.bill
+        ? {
+            mode: 'items',
+            items: e.bill.items.map((item, k) => ({
+              id: `item-${k}`,
+              name: item.name,
+              amount: item.amount,
+              participants: item.people.map(p => (typeof p === 'string' ? cid(p) : {id: cid(p[0]), weight: p[1]})),
+            })),
+            tax: e.bill.tax,
+            tip: e.bill.tip,
+            service: e.bill.service,
+            discount: e.bill.discount,
+          }
+        : {mode: 'equal', participants: e.participants.map(cid)}
+      const draft: ExpenseDraft = {
+        title: e.title,
+        groupId: e.group ? gidOf(e.group) : null,
+        currency: e.currency,
+        total: e.total,
+        payers: Object.fromEntries(Object.entries(e.payers).map(([k, v]) => [cid(k as CuratedWho), v!])),
+        split,
+        date: cdate(e.date),
+        tz: e.group ? CURATED_GROUPS[e.group].tz : 'Asia/Kolkata',
+        category: e.category,
+        notes: e.notes ?? '',
+      }
+      const top = Object.entries(e.payers).sort(([, x], [, y]) => (x! > y! ? -1 : 1))[0]![0] as CuratedWho
+      const when = start + i * step + (i % 3) * 40 * MINUTE_
+      const id = nextId('e')
+      ids[e.title] = id
+      // The dinner went in with the wrong total and was fixed an hour ago (shows as an edit in Activity).
+      if (e.title === 'Dinner at Thalassa') {
+        ops.push({kind: 'expense', at: when, actor: cid(top), id, draft: {...draft, total: 1_000_000n, payers: {[cid('riya')]: 500_000n, [cid('priya')]: 500_000n}}})
+        ops.push({kind: 'expense.update', at: now - 70 * MINUTE_, actor: cid(top), id, draft})
+        counts.edits++
+      } else ops.push({kind: 'expense', at: when, actor: cid(top), id, draft})
+      counts.expenses++
+    }
+    /* Comments (F-1204): a thread on the dinner, with an edit and a deleted comment. */
+    const thread = (n: string, who: CuratedWho, ago: number, body: string, mentions: CuratedWho[] = []) => {
+      const id = `${DEMO_LARGE_PREFIX}c-${n}`
+      ops.push({kind: 'comment', at: now - ago, actor: cid(who), id, input: {targetType: 'expense', targetId: ids['Dinner at Thalassa']!, body, mentions: mentions.map(cid)}})
+      return id
+    }
+    thread('1', 'riya', 8 * DAY, 'Booked the table for eight, the sunset one.')
+    thread('2', 'priya', 8 * DAY - 50 * MINUTE, 'Can I pay my half of the starter separately?', ['riya'])
+    const typo = thread('3', 'me', 7 * DAY, 'Splitting it equally, the starters were shared.', ['priya'])
+    ops.push({kind: 'comment.edit', at: now - 7 * DAY + 20 * MINUTE, actor: me, id: typo, body: 'Splitting it equally, the starters and desserts were shared.'})
+    const oops = thread('4', 'sam', 7 * DAY - 3 * HOUR, 'Wrong thread, sorry!')
+    ops.push({kind: 'comment.delete', at: now - 7 * DAY + 4 * HOUR, actor: cid('sam'), id: oops})
+    thread('5', 'riya', 5 * DAY, 'All good. Total fixed an hour after (it was 10,000 by mistake).')
+    /* A deleted duplicate that the owner then hid from the list (decisions 104 to 106). */
+    {
+      const dup = nextId('e')
+      const g = CURATED_GROUPS.goa
+      ops.push({kind: 'expense', at: now - 6 * DAY, actor: cid('arjun'), id: dup, draft: {title: 'Scooter rentals (duplicate)', groupId: gidOf('goa'), currency: 'INR', total: 600_000n, payers: {[cid('arjun')]: 600_000n}, split: {mode: 'equal', participants: [me, ...g.members.map(cid)]}, date: dateOf(now - 6 * DAY), tz: g.tz, category: 'transport', notes: ''}})
+      ops.push({kind: 'expense.delete', at: now - 6 * DAY + HOUR, actor: cid('arjun'), id: dup})
+      ops.push({kind: 'item.hide', at: now - 6 * DAY + 2 * HOUR, actor: me, id: dup, type: 'expense'})
+      counts.deleted++
+    }
+    // Groceries deleted by mistake and put back: both show in Activity.
+    ops.push({kind: 'expense.delete', at: now - 40 * MINUTE_, actor: me, id: ids.Groceries!})
+    ops.push({kind: 'expense.restore', at: now - 38 * MINUTE_, actor: me, id: ids.Groceries!})
+    /* Recently deleted: added and then deleted, so balances are unchanged and the bin has one of each kind. */
+    const binned = (title: string, group: CuratedGroup, total: bigint, payer: CuratedWho, added: number, deleted: number, category: string) => {
+      const id = nextId('e')
+      const g = CURATED_GROUPS[group]
+      ops.push({
+        kind: 'expense',
+        at: added,
+        actor: cid(payer),
+        id,
+        draft: {title, groupId: gidOf(group), currency: 'INR', total, payers: {[cid(payer)]: total}, split: {mode: 'equal', participants: [me, ...g.members.map(cid)]}, date: dateOf(added), tz: g.tz, category, notes: ''},
+      })
+      ops.push({kind: 'expense.delete', at: deleted, actor: cid(payer), id})
+      counts.deleted++
+    }
+    binned('Sunset cruise', 'goa', 300_000n, 'arjun', now - 3 * DAY, now - 2 * DAY, 'entertainment')
+    binned('Takeout pizza', 'flat', 135_000n, 'me', now - 26 * HOUR, now - 20 * HOUR, 'food')
+    const paid = nextId('r')
+    ops.push({kind: 'repayment', at: now - 2 * DAY, actor: cid('priya'), id: paid, input: {id: paid, groupId: null, currency: 'INR', from: cid('priya'), to: me, amount: 250_000n, date: dateOf(now - 2 * DAY), tz: 'Asia/Kolkata', note: 'UPI'}})
+    ops.push({kind: 'repayment.delete', at: now - 5 * HOUR, actor: me, id: paid})
+    const forgiven = nextId('w')
+    ops.push({kind: 'writeoff', at: now - 4 * DAY, actor: cid('sam'), id: forgiven, input: {id: forgiven, groupId: null, currency: 'EUR', from: cid('sam'), to: me, amount: 900n, date: dateOf(now - 4 * DAY), tz: 'Europe/Lisbon', note: 'Coffee on me'}})
+    ops.push({kind: 'writeoff.delete', at: now - 3 * DAY, actor: me, id: forgiven})
+    counts.deleted += 2
+  }
+
+  /* ------------------ the Wave B story (every feature of owner decision 109) ------------------ */
+
+  {
+    const gB = (key: string) => `${DEMO_LARGE_PREFIX}g-b-${key}`
+    const gidOf = (key: CuratedGroup) => `${DEMO_LARGE_PREFIX}g-story-${key}`
+    const tz = 'Asia/Kolkata'
+    let at = now - 160 * DAY
+    for (const key of WAVE_B_FRIENDS) {
+      at += 9 * MINUTE
+      ops.push({kind: 'person', at, actor: me, id: pid(key), name: FRIENDS[key][0], upiId: null})
+      counts.people++
+    }
+    const group = (key: string, creator: Who, input: {name: string; kind: Group['kind']; currency: CurrencyCode; startDate?: string; endDate?: string; members: Who[]}, when: number) => {
+      ops.push({
+        kind: 'group',
+        at: when,
+        actor: pid(creator),
+        id: gB(key),
+        input: {name: input.name, kind: input.kind, currency: input.currency, startDate: input.startDate ?? null, endDate: input.endDate ?? null, memberIds: input.members.map(pid)},
+      })
+      counts.groups++
+    }
+    /** An equal-split expense in a story group, paid by one person. */
+    const spend = (key: string, title: string, category: string, currency: CurrencyCode, total: bigint, payer: Who, people: Who[], when: number, notes = '') => {
+      const id = nextId('e')
+      ops.push({
+        kind: 'expense',
+        at: when,
+        actor: pid(payer),
+        id,
+        draft: {title, groupId: gB(key), currency, total, payers: {[pid(payer)]: total}, split: {mode: 'equal', participants: people.map(pid)}, date: dateOf(when), tz, category, notes},
+      })
+      counts.expenses++
+      return id
+    }
+
+    /* A cabin weekend made by Anil: Chirag left, then Anil handed admin on to me (F-615). */
+    const cabin: Who[] = ['me', 'anil', 'bhavna', 'chirag']
+    group('cabin', 'anil', {name: 'Weekend cabin', kind: 'trip', currency: 'INR', startDate: dayAgo(33), endDate: dayAgo(31), members: cabin}, now - 36 * DAY)
+    spend('cabin', 'Cabin booking', 'stay', 'INR', 1_800_000n, 'anil', cabin, now - 33 * DAY, 'Two nights, firewood included')
+    spend('cabin', 'Groceries and firewood', 'groceries', 'INR', 640_000n, 'bhavna', cabin, now - 32 * DAY)
+    spend('cabin', 'Zip-line, charged in dollars', 'entertainment', 'USD', 12_000n, 'chirag', cabin, now - 32 * DAY + 2 * HOUR, 'Card billed in USD')
+    ops.push({kind: 'member.exit', at: now - 28 * DAY, actor: pid('chirag'), id: gB('cabin'), input: {personId: pid('chirag'), choice: 'keep', date: dayAgo(28), tz}})
+    ops.push({kind: 'member.exit', at: now - 27 * DAY, actor: pid('anil'), id: gB('cabin'), input: {personId: pid('anil'), choice: 'keep', handAdminTo: me, date: dayAgo(27), tz}})
+
+    /* An inactive group: takes no new expenses, balances still count (F-604). */
+    const chai: Who[] = ['me', 'raj', 'deepa']
+    group('chai', 'me', {name: 'Old office chai', kind: 'other', currency: 'INR', members: chai}, now - 150 * DAY)
+    spend('chai', 'Chai for the team', 'food', 'INR', 36_000n, 'raj', chai, now - 140 * DAY)
+    spend('chai', 'Biscuits and snacks', 'groceries', 'INR', 54_000n, 'me', chai, now - 120 * DAY)
+    ops.push({kind: 'group.inactive', at: now - 90 * DAY, actor: me, id: gB('chai')})
+
+    /* A hidden group: out of my lists, still reachable from the filter (F-604). */
+    const santa: Who[] = ['me', 'raj', 'deepa', 'bhavna']
+    group('santa', 'me', {name: 'Secret Santa', kind: 'other', currency: 'INR', members: santa}, now - 70 * DAY)
+    spend('santa', 'Gift exchange budget', 'shopping', 'INR', 480_000n, 'deepa', santa, now - 68 * DAY)
+    ops.push({kind: 'group.hide', at: now - 60 * DAY, actor: me, id: gB('santa')})
+
+    /* A deleted group: stays in the list, read only, its expenses struck (decisions 103, 105). */
+    const gym: Who[] = ['me', 'raj']
+    group('gym', 'me', {name: 'Gym buddies', kind: 'other', currency: 'INR', members: gym}, now - 100 * DAY)
+    spend('gym', 'Annual gym pass', 'other', 'INR', 2_400_000n, 'me', gym, now - 99 * DAY)
+    spend('gym', 'Protein tub', 'groceries', 'INR', 380_000n, 'raj', gym, now - 95 * DAY)
+    ops.push({kind: 'group.delete', at: now - 20 * DAY, actor: me, id: gB('gym')})
+    counts.deleted += 3
+
+    /* A settled group and friend: Paris in euros, squared up. Chloe's thank-you note hangs on the payment. */
+    const paris: Who[] = ['me', 'chloe']
+    group('paris', 'me', {name: 'Paris weekend', kind: 'trip', currency: 'EUR', startDate: dayAgo(55), endDate: dayAgo(53), members: paris}, now - 58 * DAY)
+    spend('paris', 'Hotel near Montmartre', 'stay', 'EUR', 24_000n, 'me', paris, now - 55 * DAY)
+    spend('paris', 'Metro passes', 'transport', 'EUR', 3_000n, 'chloe', paris, now - 54 * DAY)
+    // The train home was booked in pounds: a second currency, squared up too.
+    spend('paris', 'Eurostar to London', 'transport', 'GBP', 9_000n, 'chloe', paris, now - 53 * DAY)
+    const pounds = nextId('r')
+    ops.push({kind: 'repayment', at: now - 52 * DAY + MINUTE, actor: me, id: pounds, input: {id: pounds, groupId: gB('paris'), currency: 'GBP', from: me, to: pid('chloe'), amount: 4_500n, date: dayAgo(52), tz: 'Europe/London', note: 'Monzo'}})
+    counts.repayments++
+    const squared = nextId('r')
+    ops.push({kind: 'repayment', at: now - 52 * DAY, actor: me, id: squared, input: {id: squared, groupId: gB('paris'), currency: 'EUR', from: pid('chloe'), to: me, amount: 10_500n, date: dayAgo(52), tz: 'Europe/Paris', note: 'Revolut'}})
+    counts.repayments++
+    ops.push({kind: 'comment', at: now - 52 * DAY + 5 * MINUTE, actor: pid('chloe'), id: `${DEMO_LARGE_PREFIX}c-paid`, input: {targetType: 'repayment', targetId: squared, body: 'Sent! That makes us even.', mentions: []}})
+
+    /* The Supper Factory bill (F-403): food and alcohol taxed differently, service stacked, round-off to 2,522.00. */
+    const delhi: Who[] = ['me', 'raj', 'deepa']
+    group('delhi', 'me', {name: 'Delhi dinners', kind: 'other', currency: 'INR', members: delhi}, now - 30 * DAY)
+    const FOOD_B = [['Paneer Tikka', 20000n], ['Dal Makhani', 25000n], ['Butter Naan', 18000n], ['Biryani', 21000n], ['Kebab Platter', 19000n], ['Raita', 22000n], ['Gulab Jamun', 17100n], ['Masala Papad', 19000n]] as const
+    const ALCOHOL_B = [['Whisky', 25000n], ['Beer', 15000n]] as const
+    const supper = nextId('e')
+    ops.push({
+      kind: 'expense',
+      at: now - 29 * DAY,
+      actor: me,
+      id: supper,
+      draft: {
+        title: 'The Supper Factory',
+        groupId: gB('delhi'),
+        currency: 'INR',
+        total: 252_200n,
+        payers: {[me]: 252_200n},
+        split: {
+          mode: 'items',
+          items: [
+            // Raj had only food; I had food and both drinks; Deepa shared everything.
+            ...FOOD_B.map(([name, amount], n) => ({
+              id: `food-${n}`,
+              name,
+              amount,
+              taxClass: 'food',
+              participants: n < 3 ? [pid('raj'), pid('deepa')] : n < 6 ? [me, pid('deepa')] : [pid('raj'), me, pid('deepa')],
+            })),
+            ...ALCOHOL_B.map(([name, amount], n) => ({id: `alc-${n}`, name, amount, taxClass: 'alcohol', participants: [me, pid('deepa')] })),
+          ],
+          tax: 0n,
+          tip: 0n,
+          service: 0n,
+          discount: 0n,
+          charges: [
+            {id: 'service', name: 'Service charge', kind: 'service', value: {mode: 'percent', basisPoints: 1000}, appliesTo: {type: 'all'}, stacksOn: 'items'},
+            {id: 'vat-food', name: 'VAT 12.5%', kind: 'tax', value: {mode: 'percent', basisPoints: 1250}, appliesTo: {type: 'classes', classes: ['food']}, stacksOn: 'earlier'},
+            {id: 'vat-alc', name: 'VAT 20%', kind: 'tax', value: {mode: 'percent', basisPoints: 2000}, appliesTo: {type: 'classes', classes: ['alcohol']}, stacksOn: 'earlier'},
+          ],
+          roundOff: {minor: 39n},
+        },
+        date: dateOf(now - 29 * DAY),
+        tz,
+        category: 'food',
+        notes: 'Printed total 2,522.00 (round-off +0.39)',
+      },
+    })
+    counts.expenses++
+    ops.push({
+      kind: 'merchant.setup',
+      at: now - 29 * DAY + HOUR,
+      actor: me,
+      id: gB('setup'),
+      title: 'The Supper Factory',
+      charges: [
+        {name: 'Service charge', kind: 'service', mode: 'percent', basisPoints: 1000, stacksOn: 'items'},
+        {name: 'VAT 12.5%', kind: 'tax', mode: 'percent', basisPoints: 1250, classes: ['food'], stacksOn: 'earlier'},
+        {name: 'VAT 20%', kind: 'tax', mode: 'percent', basisPoints: 2000, classes: ['alcohol'], stacksOn: 'earlier'},
+      ],
+    })
+
+    /* A deleted friend (never used) and a removed friend (squared up first) stay in People (decisions 103, 105). */
+    ops.push({kind: 'person.delete', at: now - 25 * DAY, actor: me, id: pid('ravi')})
+    const parcel = nextId('e')
+    ops.push({kind: 'expense', at: now - 80 * DAY, actor: me, id: parcel, draft: {title: 'Shared parcel', groupId: null, currency: 'INR', total: 150_000n, payers: {[me]: 150_000n}, split: {mode: 'equal', participants: [me, pid('tara')]}, date: dateOf(now - 80 * DAY), tz, category: 'shopping', notes: ''}})
+    counts.expenses++
+    const back = nextId('r')
+    ops.push({kind: 'repayment', at: now - 78 * DAY, actor: me, id: back, input: {id: back, groupId: null, currency: 'INR', from: pid('tara'), to: me, amount: 75_000n, date: dayAgo(78), tz, note: 'UPI'}})
+    counts.repayments++
+    ops.push({kind: 'person.remove', at: now - 70 * DAY, actor: me, id: pid('tara')})
+
+    /* Reminders (F-1118 Remind, F-1119 Remind me): shared nudges and my own scheduled ones. */
+    const rem = (n: string) => `${DEMO_LARGE_PREFIX}rem-${n}`
+    ops.push({kind: 'reminder.nudge', at: now - 3 * DAY, actor: me, id: rem('1'), input: {personId: pid('priya'), groupId: gidOf('goa'), amounts: {INR: 250_000n}, via: 'share'}})
+    ops.push({kind: 'reminder.nudge', at: now - 2 * DAY, actor: me, id: rem('2'), input: {personId: pid('sam'), groupId: null, amounts: {EUR: 900n}, via: 'whatsapp'}})
+    ops.push({kind: 'reminder.self', at: now - 1 * DAY, actor: me, id: rem('3'), input: {personId: pid('riya'), groupId: null, dueAt: now + 2 * DAY, repeat: 'monthly'}})
+    ops.push({kind: 'reminder.self', at: now - 20 * HOUR, actor: me, id: rem('4'), input: {personId: '', groupId: gidOf('lisbon'), dueAt: now + 5 * DAY, repeat: 'none'}})
+  }
+
   // Stable time order: people and groups first (they come first in the list and in time).
   const order = new Map(ops.map((o, i) => [o, i]))
   ops.sort((x, y) => x.at - y.at || order.get(x)! - order.get(y)!)
   return {ops, counts}
 }
 
+/**
+ * Ops that read the store first (a friend's open balance, a member's exit preview), so they cannot run inside the
+ * ledger's one transaction: the seed applies them after it, each only if it has not happened yet.
+ */
+export function isDeferredOp(op: DemoOp): boolean {
+  return op.kind === 'person.remove' || op.kind === 'person.delete' || op.kind === 'group.delete' || op.kind === 'member.exit'
+}
+
 /** For tests: the plan's expenses as ledger records, as the app would read them back. */
 export function planRecords(plan: DemoPlan): ExpenseRecord[] {
   const live = new Map<string, ExpenseDraft>()
+  const gone = new Set<string>()
   for (const op of plan.ops) {
     if (op.kind === 'expense' || op.kind === 'expense.update') live.set(op.id, op.draft)
-    else if (op.kind === 'expense.delete') live.delete(op.id)
+    else if (op.kind === 'expense.delete') gone.add(op.id)
+    else if (op.kind === 'expense.restore') gone.delete(op.id)
   }
-  return [...live].map(([id, d]) => ({kind: 'expense', id, groupId: d.groupId, currency: d.currency, total: d.total, payers: d.payers, shares: computeShares(d.total, d.split), date: d.date, deleted: false}))
+  const deletedGroups = new Set(plan.ops.filter(o => o.kind === 'group.delete').map(o => o.id))
+  return [...live]
+    .filter(([id, d]) => !gone.has(id) && !(d.groupId && deletedGroups.has(d.groupId)))
+    .map(([id, d]) => ({kind: 'expense', id, groupId: d.groupId, currency: d.currency, total: d.total, payers: d.payers, shares: computeShares(d.total, d.split), date: d.date, deleted: false}))
 }
 
+/** For tests and e2e: the plan's whole final ledger, live expenses plus payments and write-offs not taken back. */
+export function planLedger(plan: DemoPlan): LedgerRecord[] {
+  const taken = new Set(plan.ops.filter(o => o.kind === 'repayment.delete' || o.kind === 'writeoff.delete').map(o => o.id))
+  const deletedGroups = new Set(plan.ops.filter(o => o.kind === 'group.delete').map(o => o.id))
+  return [
+    ...planRecords(plan),
+    ...plan.ops
+      .filter((o): o is Extract<DemoOp, {kind: 'repayment' | 'writeoff'}> => (o.kind === 'repayment' || o.kind === 'writeoff') && !taken.has(o.id) && !(o.input.groupId && deletedGroups.has(o.input.groupId)))
+      .map(o => ({...o.input, kind: o.kind, id: o.id, deleted: false}) as LedgerRecord),
+  ]
+}
 
 /**
  * Applies one write of the plan through the real mutations, as its actor at
@@ -869,7 +1324,8 @@ export function planRecords(plan: DemoPlan): ExpenseRecord[] {
  * every other id asked for is an outbox op id.
  */
 export async function applyDemoOp(store: Store, base: MutationCtx, op: DemoOp): Promise<void> {
-  let pending: string | undefined = op.kind === 'person' || op.kind === 'group' || op.kind === 'expense' ? op.id : undefined
+  let pending: string | undefined =
+    op.kind === 'person' || op.kind === 'group' || op.kind === 'expense' || op.kind === 'reminder.self' || op.kind === 'reminder.nudge' ? op.id : undefined
   const ctx: MutationCtx = {
     ...base,
     actor: op.actor,
@@ -894,6 +1350,8 @@ export async function applyDemoOp(store: Store, base: MutationCtx, op: DemoOp): 
       return void (await updateExpense(store, ctx, op.id, op.draft))
     case 'expense.delete':
       return deleteExpense(store, ctx, op.id)
+    case 'expense.restore':
+      return restoreExpense(store, ctx, op.id)
     case 'repayment':
       return void (await createRepayments(store, ctx, [op.input]))
     case 'writeoff':
@@ -902,5 +1360,31 @@ export async function applyDemoOp(store: Store, base: MutationCtx, op: DemoOp): 
       return deleteRepayment(store, ctx, op.id)
     case 'writeoff.delete':
       return deleteWriteOff(store, ctx, op.id)
+    case 'person.delete':
+      return deletePerson(store, ctx, op.id)
+    case 'person.remove':
+      return void (await removeFriend(store, ctx, op.id))
+    case 'group.inactive':
+      return void (await makeGroupInactive(store, ctx, op.id))
+    case 'group.hide':
+      return setGroupHidden(store, ctx, op.id, true)
+    case 'group.delete':
+      return void (await deleteGroup(store, ctx, op.id))
+    case 'member.exit':
+      return void (await removeGroupMember(store, ctx, {...op.input, groupId: op.id}))
+    case 'item.hide':
+      return setItemHidden(store, ctx, op.type, op.id, true)
+    case 'comment':
+      return check(await createComment(store, ctx, {...op.input, id: op.id}))
+    case 'comment.edit':
+      return void (await editComment(store, ctx, op.id, {body: op.body}))
+    case 'comment.delete':
+      return deleteComment(store, ctx, op.id)
+    case 'reminder.self':
+      return check(await scheduleReminder(store, ctx, op.input))
+    case 'reminder.nudge':
+      return check(await recordNudge(store, ctx, op.input))
+    case 'merchant.setup':
+      return setPref(store, ctx, 'bill.merchantSetups', [merchantSetupOf(op.title, op.charges)])
   }
 }

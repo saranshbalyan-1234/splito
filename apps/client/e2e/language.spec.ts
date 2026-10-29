@@ -1,5 +1,7 @@
 import {expect, type Page, test} from '@playwright/test'
 
+import {openDemo} from './openDemo'
+
 /*
  * F-1816: Bluesky's AppLanguageDropdown on the web sign-in splash, sign-up and the desktop right
  * column. It writes the `language` preference (the same value as Settings > Language) and switches
@@ -76,7 +78,7 @@ test('desktop right column: the dropdown switches the sidebar labels', async ({
   page,
 }) => {
   await page.setViewportSize(WIDE)
-  await page.goto('/?demo=1')
+  await openDemo(page)
   await expect(page.getByTestId('person-Riya Sharma')).toBeVisible()
   await expect(page.getByTestId('tab-people')).toContainText('Home')
   const dropdown = page.getByTestId('right-nav').getByTestId('app-language')

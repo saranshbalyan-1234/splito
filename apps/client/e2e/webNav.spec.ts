@@ -1,5 +1,7 @@
 import {expect, type Page, test} from '@playwright/test'
 
+import {openDemo} from './openDemo'
+
 /* F-116: web navigation and sheet robustness (audit M16, m26, m27). */
 
 type Splito = {
@@ -68,7 +70,7 @@ test('m26: reopening a phone drawer during its exit leaves it on screen', async 
   page,
 }) => {
   await page.setViewportSize({width: 390, height: 844})
-  await page.goto('/?demo=1')
+  await openDemo(page)
   await expect(page.getByTestId('person-Arjun Mehta')).toBeVisible()
   const people = page.getByTestId('screen-people')
   await people.getByTestId('list-filters').click()

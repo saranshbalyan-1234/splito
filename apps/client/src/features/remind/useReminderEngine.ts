@@ -11,7 +11,7 @@ import {type NotificationTarget} from '#/lib/notifications/types'
 import {useNotificationPermission} from '#/lib/notifications/usePermission'
 import {useEntities, usePref} from '#/data/hooks'
 import {useSelfReminders} from '#/data/remind'
-import {navigationRef} from '#/navigation/DevTour'
+import {navigationRef} from '#/navigation/ref'
 import * as Toast from '#/components/Toast'
 
 /** How often an open page looks for a reminder that has come due (web). */

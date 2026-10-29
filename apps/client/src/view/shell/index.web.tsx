@@ -13,6 +13,7 @@ import {DrawerContent} from '#/navigation/Drawer'
 import {FeedbackProvider} from '#/features/feedback/FeedbackProvider'
 import {FlatNavigator, RoutesContainer} from '#/navigation/Navigation'
 import {atoms as a, flatten, select, useTheme} from '#/alf'
+import {DemoBusy, DemoFrame} from '#/components/DemoFrame'
 import {Outlet as PortalOutlet} from '#/components/Portal'
 import {useShouldReduceMotion} from '#/motion/useShouldReduceMotion'
 
@@ -35,8 +36,11 @@ function drawerLayout({children}: {children: React.ReactNode}) {
 function ShellInner() {
   return (
     <FeedbackProvider>
-      <FlatNavigator layout={drawerLayout} />
+      <DemoFrame>
+        <FlatNavigator layout={drawerLayout} />
+      </DemoFrame>
       <PortalOutlet />
+      <DemoBusy />
     </FeedbackProvider>
   )
 }

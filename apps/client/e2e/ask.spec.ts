@@ -1,5 +1,7 @@
 import {expect, type Page, test} from '@playwright/test'
 
+import {openDemo} from './openDemo'
+
 /*
  * F-2301 Ask Splito: the chat inside the Search & Ask drawer, answered on the
  * device from the demo set. F-222 acc 9: the phone bar takes any number of
@@ -10,7 +12,7 @@ const PHONE = {width: 390, height: 844}
 const DESKTOP = {width: 1440, height: 900}
 
 async function home(page: Page) {
-  await page.goto('/?demo=1')
+  await openDemo(page)
   await expect(page.getByTestId('person-Arjun Mehta')).toBeVisible()
 }
 
@@ -184,7 +186,7 @@ test('the sidebar, the drawer and a pinned bar tab all open the drawer in Ask mo
   await page.setViewportSize(PHONE)
   await page.goto('/settings/navigation')
   await page.getByTestId('tabs-toggle-ask').click()
-  await page.goto('/?demo=1')
+  await page.goto('/')
   await expect(page.getByTestId('tab-ask')).toBeVisible()
   await page.getByTestId('tab-ask').click()
   await expect(page.getByTestId('ask-chat')).toBeVisible()
@@ -199,12 +201,12 @@ test('the sidebar, the drawer and a pinned bar tab all open the drawer in Ask mo
 
 test('a six-tab bar fits a phone: every tab is on screen, equal in width, with its badge', async ({page}) => {
   await page.setViewportSize(PHONE)
-  await page.goto('/settings/navigation')
+  await openDemo(page, '/settings/navigation')
   for (const tab of ['ask', 'settings']) {
     await page.getByTestId(`tabs-toggle-${tab}`).click()
     await expect(page.getByTestId(`tab-${tab}`)).toHaveCount(1)
   }
-  await page.goto('/?demo=1')
+  await page.goto('/')
   await expect(page.getByTestId('person-Arjun Mehta')).toBeVisible()
   const ids = ['people', 'groups', 'analytics', 'ask', 'activity', 'settings']
   const boxes = []
@@ -224,7 +226,7 @@ test('a six-tab bar fits a phone: every tab is on screen, equal in width, with i
     await page.getByTestId(`tabs-toggle-${tab}`).click()
     await expect(page.getByTestId(`tab-${tab}`)).toHaveCount(0)
   }
-  await page.goto('/?demo=1')
+  await page.goto('/')
   await expect(page.getByTestId('tab-settings')).toHaveCount(0)
   const four = await page.getByTestId('tab-groups').locator('svg').first().boundingBox()
   expect(Math.round(icon!.width)).toBe(Math.round(four!.width))

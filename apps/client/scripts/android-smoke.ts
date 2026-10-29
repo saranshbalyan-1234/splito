@@ -4,8 +4,9 @@
  *   node scripts/android-smoke.ts [outDir]
  *
  * Needs the debug app installed (`npx expo run:android`) and Metro serving a
- * demo bundle without the tour (EXPO_PUBLIC_DEMO=1, no EXPO_PUBLIC_TOUR) on
- * METRO_PORT (default 8081). ANDROID_SERIAL picks the device. See docs/ANDROID.md.
+ * dev bundle without the tour (no EXPO_PUBLIC_TOUR) on METRO_PORT (default
+ * 8081). The script switches Demo mode on from Settings > Data, as a person
+ * would. ANDROID_SERIAL picks the device. See docs/ANDROID.md.
  *
  * Bluesky drives native flows with Maestro (__e2e__/flows/*.yml); this runs the
  * same steps over adb + uiautomator, which ship with the Android SDK, so no
@@ -143,6 +144,13 @@ async function main() {
     '-d',
     `'${url}'`,
   )
+  await byId('screen-people')
+  /* Demo mode is a switch (ARCHITECTURE 26.1): Settings > Data > Demo mode seeds the separate demo database. */
+  await tap('header-avatar')
+  await tap('drawer-settings')
+  await tap('settings-demo-mode')
+  adb('shell', 'input', 'keyevent', 'KEYCODE_BACK')
+  await tap('drawer-people')
   await waitFor(
     n => n.id === 'person-Riya Sharma',
     'the seeded People list',

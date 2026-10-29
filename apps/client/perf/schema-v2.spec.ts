@@ -1,5 +1,7 @@
 import {type CDPSession, expect, type Page, test} from '@playwright/test'
 
+import {openDemo} from '../e2e/openDemo'
+
 /*
  * F-117 budgets (ARCHITECTURE 9.8, 26.10), measured on web: Home cold open
  * under 150 ms and a write plus the UI showing it under 50 ms, on the large
@@ -272,10 +274,9 @@ async function throttle(page: Page) {
   if (rate > 1) await cdp.send('Emulation.setCPUThrottlingRate', {rate})
 }
 
-test('the large demo set: Home cold open and a write', async ({page}) => {
+test('demo mode (the large demo set): Home cold open and a write', async ({page}) => {
   await page.setViewportSize({width: 1440, height: 900})
-  await page.goto('/?demo=large')
-  await expect(page.getByText(/Demo data added/)).toBeVisible({timeout: 120_000})
+  await openDemo(page) // the one demo dataset: a year, ~1,500 expenses (F-227, F-228a)
   await throttle(page)
   const r = await measure(page, 'large demo set', {}, [
     {q: 'udaipur', shows: 'Udaipur'},
@@ -284,6 +285,46 @@ test('the large demo set: Home cold open and a write', async ({page}) => {
   ])
   expect(r.coldOpenHomeMs).toBeGreaterThan(0)
   expectSearchBudget(r)
+})
+
+test('switching demo mode on and off shows the new data within 100 ms of the other store being open (owner decision 107)', async ({page}) => {
+  await page.setViewportSize({width: 1440, height: 900})
+  await page.goto('/')
+  await page.waitForFunction(() => !!(window as unknown as {__splitoTest?: {demoMode?: unknown}}).__splitoTest?.demoMode)
+  const hook = (on: boolean) =>
+    page.evaluate(async on => {
+      const hooks = (window as unknown as {__splitoTest: {demoMode(on: boolean): Promise<void>}}).__splitoTest
+      performance.clearMarks()
+      const began = performance.now()
+      await hooks.demoMode(on)
+      const switchMs = performance.now() - began
+      // The newest `home-ready` after the store was adopted: Home holds its figures (a skeleton at most before that).
+      await new Promise<void>(resolve => {
+        const check = () => {
+          const adopt = performance.getEntriesByName('splito:store-adopt').at(-1)
+          const ready = performance.getEntriesByName('splito:home-ready').at(-1)
+          if (adopt && ready && ready.startTime >= adopt.startTime) resolve()
+          else requestAnimationFrame(check)
+        }
+        check()
+      })
+      return {
+        // adopt to Home holding its figures (the budget), and the whole switch: open, seed, adopt (the first one seeds a year).
+        adoptToReadyMs: performance.getEntriesByName('splito:home-ready').at(-1)!.startTime - performance.getEntriesByName('splito:store-adopt').at(-1)!.startTime,
+        switchMs,
+      }
+    }, on)
+  const first = await hook(true) // seeds the demo database the first time
+  const on: number[] = []
+  const off: number[] = []
+  for (let i = 0; i < RUNS; i++) {
+    off.push((await hook(false)).adoptToReadyMs)
+    on.push((await hook(true)).adoptToReadyMs)
+  }
+  const result = {set: 'demo switch', seedMs: Math.round(first.switchMs), firstOnMs: Math.round(first.adoptToReadyMs), onMs: Math.round(median(on)), offMs: Math.round(median(off))}
+  console.log(`PERF ${JSON.stringify(result)}`)
+  expect(result.onMs).toBeLessThan(100)
+  expect(result.offMs).toBeLessThan(100)
 })
 
 test('a 10,000-expense ledger: Home cold open and a write', async ({page}) => {

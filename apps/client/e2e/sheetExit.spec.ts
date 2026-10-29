@@ -1,11 +1,13 @@
 /** Phone drawers: the page behind is usable the moment a sheet starts to leave. */
 import {expect, test} from '@playwright/test'
 
+import {openDemo} from './openDemo'
+
 test.describe('phone', () => {
 test.use({viewport: {width: 390, height: 844}, isMobile: true, hasTouch: true})
 
 test('typing into the page right after a sheet is closed is not lost to the exiting sheet', async ({page}) => {
-  await page.goto('/?demo=1')
+  await openDemo(page)
   await expect(page.getByTestId('person-Riya Sharma')).toBeVisible()
   await page.getByTestId('fab-add').click()
   await page.getByTestId('expense-title').fill('Race')
@@ -42,7 +44,7 @@ test.describe('desktop', () => {
   test.use({viewport: {width: 1440, height: 900}})
 
   test('Escape closes a popup and focus returns to the control that opened it', async ({page}) => {
-    await page.goto('/?demo=1')
+    await openDemo(page)
     await expect(page.getByTestId('person-Riya Sharma')).toBeVisible()
     await page.getByTestId('sidebar-add').click()
     const opener = page.getByTestId('expense-people')

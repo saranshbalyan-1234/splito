@@ -1,13 +1,10 @@
 import {useEffect, useRef} from 'react'
-import {createNavigationContainerRef} from '@react-navigation/native'
 import {type Group, isGroupInactive} from '@splito/sync'
 
 import {useEntities} from '#/data/hooks'
 
-import {type RootStackParams} from '#/lib/routes/types'
+import {navigationRef} from '#/navigation/ref'
 import {useSetDrawerOpen} from '#/state/shell/drawer-open'
-
-export const navigationRef = createNavigationContainerRef<RootStackParams>()
 
 const STEP_MS = 8000
 /* Module scope: the drawer remounts this component, which must not restart the tour. */

@@ -1,5 +1,7 @@
 import {expect, type Page, test} from '@playwright/test'
 
+import {openDemo} from './openDemo'
+
 /* F-621 Settings > Friends and invites, and the guarded Remove friend. */
 type Splito = {
   me: string
@@ -23,7 +25,7 @@ async function owes(page: Page, name: string) {
 }
 
 test('Settings has a Friends and invites page; Home links to it and the sections show', async ({page}) => {
-  await ready(page, '/?demo=1')
+  await openDemo(page)
   await page.getByTestId('people-manage-friends').click()
   await expect(page).toHaveURL(/\/settings\/friends$/)
   await expect(page.getByTestId('screen-friends-invites')).toBeVisible()

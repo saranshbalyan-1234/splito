@@ -34,15 +34,15 @@ import {Text} from '#/components/Typography'
 import {useSession} from '#/state/session'
 
 /*
- * Dev and e2e builds only (ARCHITECTURE 26.1): the demo rows and the generator
+ * Dev and e2e builds only (ARCHITECTURE 26.1): the demo rows and the data
  * behind them are loaded on demand under a condition Metro folds at build
  * time (`__DEV__` and the inlined `EXPO_PUBLIC_ENV`; an imported constant
  * would not fold), so a production bundle holds neither. `IS_DEV || IS_E2E`
  * in `#/env` says the same at run time.
  */
-const DemoDataRows =
+const DemoModeRows =
   __DEV__ || process.env.EXPO_PUBLIC_ENV === 'e2e'
-    ? lazy(() => import('#/screens/Settings/DemoData').then(m => ({default: m.DemoDataRows})))
+    ? lazy(() => import('#/screens/Settings/DemoMode').then(m => ({default: m.DemoModeRows})))
     : null
 
 /**
@@ -244,10 +244,10 @@ export function SettingsScreen() {
             </SettingsList.ItemText>
           </SettingsList.PressableItem>
           <InstallAppItem />
-          {/* Dev and e2e builds only: the large demo set (ARCHITECTURE 26.1). */}
-          {DemoDataRows && (
+          {/* Dev and e2e builds only: the demo mode switch (ARCHITECTURE 26.1). */}
+          {DemoModeRows && (
             <Suspense fallback={null}>
-              <DemoDataRows />
+              <DemoModeRows />
             </Suspense>
           )}
           <SettingsList.PressableItem

@@ -1,8 +1,10 @@
 import {expect, type Page, test} from '@playwright/test'
 
+import {openDemo as enterDemo} from './openDemo'
+
 /*
  * 26.18: adding friends by email or number, consent, invites and invite
- * links. Demo mode (?demo=1) has the fake directory: ananya@example.com is
+ * links. Demo mode has the fake directory: ananya@example.com is
  * on Splito, anything else is not. Without demo the directory is unavailable,
  * as production is until the backend exists.
  */
@@ -14,7 +16,7 @@ type Splito = {acceptOutgoing(contactValue: string, name: string): Promise<strin
 
 async function openDemo(page: Page) {
   await page.setViewportSize(DESKTOP)
-  await page.goto('/?demo=1')
+  await enterDemo(page)
   await expect(page.getByTestId('person-Riya Sharma')).toBeVisible()
 }
 
@@ -85,6 +87,27 @@ test('incoming requests: People > Requests and Activity, Accept makes a friend',
   await expect(page.getByTestId('person-name')).toHaveText('Ishaan Verma')
 })
 
+test('the demo set carries the invites flow: requests, invites sent, a joined friend, links and Activity rows', async ({page}) => {
+  await openDemo(page)
+  // Requests: two waiting (the one I declined is gone); invites sent: only the ones still waiting.
+  await expect(page.getByTestId('people-requests-title')).toHaveText('Requests  2')
+  await expect(page.getByTestId('people-invites-title')).toHaveText('Invites sent  3')
+  for (const name of ['Kabir', 'Neha Joshi', 'Aarav Mehta']) await expect(page.getByTestId(`invite-sent-${name}`)).toBeVisible()
+  for (const gone of ['Meera Nair', 'Zoya Khan']) await expect(page.getByTestId(`invite-sent-${gone}`)).toHaveCount(0)
+  // Joined: the private "Tanvi Rao" was linked to the account when they accepted.
+  await expect(page.getByTestId('person-Tanvi Rao')).toBeVisible()
+  // Links: the active ones are listed, the rest counted.
+  await page.goto('/invites')
+  await expect(page.getByTestId('screen-invite-links')).toBeVisible()
+  await expect(page.getByText('22 of 25 uses left · Expires in 26 days · You approve each join')).toBeVisible()
+  await expect(page.getByTestId('invite-links-inactive')).toContainText('n’t shown')
+  // Activity: received, sent and the accepted invite.
+  await page.goto('/activity')
+  await expect(page.getByTestId('activity-friendRequest.received').filter({hasText: 'Ishaan Verma'})).toBeVisible()
+  await expect(page.getByTestId('activity-friendRequest.sent').filter({hasText: 'Aarav Mehta'})).toBeVisible()
+  await expect(page.getByTestId('activity-friendRequest.accepted').filter({hasText: 'Tanvi Rao'})).toBeVisible()
+})
+
 /*
  * 26.18 decision 76: request and invite rows are one horizontal line, the
  * actions side by side on the right, centred on the name block; icon-only
@@ -98,7 +121,7 @@ const ROWS: [string, string, [string, string][]][] = [
 for (const viewport of [{width: 320, height: 800}, {width: 393, height: 852}, DESKTOP]) {
   test(`request and invite rows are one horizontal line at ${viewport.width}px`, async ({page}) => {
     await page.setViewportSize(viewport)
-    await page.goto('/?demo=1')
+    await enterDemo(page)
     const isPhone = viewport.width < 800
     for (const [rowID, name, actions] of ROWS) {
       // Requests are on Home; sent invites on Friends and invites.
@@ -226,6 +249,7 @@ test('invite link: limits, QR and link, then Manage invite links and Revoke', as
   await expect(page.getByText('Revoke this invite link?')).toBeVisible()
   await page.getByTestId('confirmBtn').click()
   await expect(row).toHaveCount(0)
+  await expect(page.getByTestId('invite-links-inactive')).toContainText('n’t shown')
 
   // Opening your own revoked link says it no longer works.
   await page.goto(`/invite/${code}`)
@@ -286,7 +310,7 @@ test('without the Contact Picker API the contacts button is hidden', async ({pag
 
 test('phone: Add friend is a bottom sheet, full width from the bottom edge', async ({page}) => {
   await page.setViewportSize(PHONE)
-  await page.goto('/?demo=1')
+  await enterDemo(page)
   await page.getByTestId('people-add-friend').click()
   const sheet = page.getByTestId('screen-add-friend')
   await expect(sheet).toBeVisible()

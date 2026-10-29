@@ -1,5 +1,7 @@
 import {expect, type Page, test} from '@playwright/test'
 
+import {openDemo} from './openDemo'
+
 const DESKTOP = {width: 1440, height: 900}
 const PHONE = {width: 390, height: 844}
 
@@ -21,7 +23,7 @@ const ALCOHOL = [
 
 async function openAddExpense(page: Page, size: {width: number; height: number}) {
   await page.setViewportSize(size)
-  await page.goto('/?demo=1')
+  await openDemo(page)
   await expect(page.getByTestId('person-Riya Sharma')).toBeVisible()
   await page.getByTestId(size.width < 600 ? 'fab-add' : 'sidebar-add').click()
   await expect(page.getByTestId('screen-add-expense')).toBeVisible()
@@ -153,7 +155,7 @@ test('presets in one tap; save a merchant setup and get it back as a dashed sugg
   await page.getByTestId('sheet-save').click()
   await expect(page.getByTestId('expense-saved')).toBeVisible()
   // The same merchant on a new bill: the setup is offered, not forced.
-  await page.goto('/?demo=1')
+  await openDemo(page)
   await expect(page.getByTestId('person-Riya Sharma')).toBeVisible()
   await page.getByTestId('sidebar-add').click()
   await expect(page.getByTestId('screen-add-expense')).toBeVisible()
@@ -177,7 +179,7 @@ test('Simple stays the default: the four plain rows, no classes', async ({page})
 
 test('Settings: tax classes can be added, renamed, hidden and used', async ({page}) => {
   await page.setViewportSize(DESKTOP)
-  await page.goto('/?demo=1')
+  await openDemo(page)
   await expect(page.getByTestId('person-Riya Sharma')).toBeVisible()
   await page.goto('/settings/defaults')
   const section = page.getByTestId('pref-bill.taxClasses')
@@ -189,7 +191,7 @@ test('Settings: tax classes can be added, renamed, hidden and used', async ({pag
   await section.getByTestId('taxclass-hide-soft').click()
   await expect(section.getByTestId('taxclass-soft')).toContainText('Hidden')
   // The picker offers the new class and not the hidden one.
-  await page.goto('/?demo=1')
+  await page.goto('/')
   await expect(page.getByTestId('person-Riya Sharma')).toBeVisible()
   await page.getByTestId('sidebar-add').click()
   await page.getByTestId('split-mode-items').click()

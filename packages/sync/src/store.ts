@@ -236,3 +236,24 @@ export interface Store {
 export function insideTransaction(store: Store, tx: Tx): Store {
   return {...store, transaction: fn => fn(tx)}
 }
+
+/*
+ * Stores that must never reach a server: the dev/e2e demo database queues ops like
+ * any store (they are its history) but its outbox is never drained. The sync client
+ * asks `sendableOps`, never `outboxByStatus` directly, so this is the one gate.
+ */
+const neverSync = new WeakSet<object>()
+
+/** Marks a store whose outbox is never sent (demo mode). */
+export function markNeverSync(store: Store): void {
+  neverSync.add(store)
+}
+
+export function isNeverSync(store: Store): boolean {
+  return neverSync.has(store)
+}
+
+/** The queued ops the sync client may send: none for a never-sync store. */
+export async function sendableOps(store: Store): Promise<OutboxOp[]> {
+  return isNeverSync(store) ? [] : store.outboxByStatus('queued')
+}

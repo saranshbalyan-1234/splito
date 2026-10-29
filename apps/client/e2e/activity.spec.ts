@@ -3,6 +3,8 @@ import {join} from 'node:path'
 
 import {expect, type Locator, type Page, test} from '@playwright/test'
 
+import {openDemo} from './openDemo'
+
 const DESKTOP = {width: 1440, height: 900}
 const PHONE = {width: 390, height: 844}
 
@@ -20,9 +22,7 @@ const MESSAGE_IDS = Object.keys(
 
 /** Seeds the demo (two weeks of history, some of it by friends) and opens Activity. */
 async function openActivity(page: Page) {
-  await page.goto('/?demo=1')
-  await expect(page.getByTestId('person-Arjun Mehta')).toBeVisible()
-  await page.goto('/activity')
+  await openDemo(page, '/activity')
   await expect(screen(page).getByTestId('activity-list')).toBeVisible()
 }
 
@@ -62,16 +62,17 @@ test('the demo history reads as a feed grouped by day, in real words', async ({
   await expect(dinner).toContainText(
     '₹10,000.00 → ₹12,500.00 · Goa trip · you borrowed ↗ ₹2,500.00',
   )
-  await expect(dinner).toContainText(/\d+m ago|1h ago/)
+  // A minute-old label, or the time of day once the hour has crossed midnight.
+  await expect(dinner).toContainText(/\d+m ago|\d+h ago|\d{1,2}:\d{2}\s?(AM|PM)/)
   await expect(row(page, 'expense.deleted', 'Groceries')).toContainText(
     'You deleted Groceries',
   )
   await expect(row(page, 'expense.restored', 'Groceries')).toContainText(
     'You restored Groceries',
   )
-  await expect(
-    await loaded(page, row(page, 'group.created', 'Goa trip')),
-  ).toContainText('You created the group Goa trip')
+  await expect(await loaded(page, row(page, 'group.created', 'Goa trip'))).toContainText(
+    'You created the group Goa trip',
+  )
   const added = await loaded(page, row(page, 'person.added', 'Riya Sharma'))
   await expect(added).toContainText('You added Riya Sharma as a friend')
   // Earlier days show the time of day, not "Nd ago", under their header.
@@ -98,7 +99,8 @@ test('changes by friends are unread with a badge; mark all read clears them, und
   expect(unread).toBeGreaterThan(5)
   // The Activity nav item badges the same count: unread changes by other people.
   await page.goto('/')
-  await expect(peopleBadge(page)).toHaveText(String(unread))
+  // A year of friends' changes is unread: the badge stops at 30+ (the dots on screen are the first pages).
+  await expect(peopleBadge(page)).toHaveText('30+')
   await page.getByTestId('tab-activity').click()
   await expect(screen(page).getByTestId('activity-list')).toBeVisible()
 
@@ -267,14 +269,12 @@ test('a row opens what it is about and becomes read', async ({page}) => {
     unreadDot(row(page, 'expense.edited', 'Dinner at Thalassa')),
   ).toHaveCount(0)
 
-  await (
-    await loaded(page, row(page, 'group.created', 'Goa trip'))
-  )
+  await (await loaded(page, row(page, 'group.created', 'Goa trip')))
     .getByText('created the group')
     .click()
   await expect(page.getByTestId('screen-group')).toBeVisible()
   await page.goBack()
-  await row(page, 'person.added', 'Priya Nair').getByText('as a friend').click()
+  await (await loaded(page, row(page, 'person.added', 'Priya Nair'))).getByText('as a friend').click()
   await expect(page.getByTestId('screen-person')).toBeVisible()
 })
 

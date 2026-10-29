@@ -1,5 +1,7 @@
 import {expect, type Page, test} from '@playwright/test'
 
+import {openDemo} from './openDemo'
+
 /* Seeds through the app's own mutations (window.splito, dev/E2E builds only). Amounts are minor units. */
 type Splito = {
   me: string
@@ -200,7 +202,7 @@ test('People: the Include groups filter changes the totals only on Apply', async
 test('People filters: one currency, which way, and the order drive the list and the summary', async ({
   page,
 }) => {
-  await page.goto('/?demo=1')
+  await openDemo(page)
   const people = page.getByTestId('screen-people')
   await expect(people.getByTestId('person-Arjun Mehta')).toBeVisible()
   await expect(people.getByTestId('summary-EUR-net')).toBeVisible()

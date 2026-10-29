@@ -1,305 +1,353 @@
-import {parseMinor as minor, todayIn} from '@splito/domain'
+/**
+ * The data side of demo mode (ARCHITECTURE 26.1, F-228a), free of any platform
+ * module so it runs under test on both store engines: the one preference row the
+ * REAL database keeps (`demo.mode`), the demo database's seeding (the one dataset
+ * from `@splito/sync` `generateLargeDemo`, through the real mutations) and its wipe.
+ *
+ * Dev and e2e builds only; see `demoMode.ts` for how it is reached.
+ */
 import {
-  createExpense,
-  createGroup,
+  applyFriendRequestAccepted,
+  cancelFriendRequest,
   createInviteLink,
   createPerson,
-  createRepayment,
-  createWriteOffs,
-  deleteExpense,
-  deleteRepayment,
-  deleteWriteOff,
-  type ExpenseDraft,
+  declineFriendRequest,
+  type demoDirectory,
+  type Entity,
+  type EntityType,
   type Group,
+  type Person,
   insideTransaction,
+  markNeverSync,
+  type Key,
   type MutationCtx,
+  type Page,
   receiveFriendRequest,
   recordInviteUse,
-  restoreExpense,
+  revokeInviteLink,
+  saveFeedback,
   sendFriendRequest,
   type Store,
-  updateExpense,
 } from '@splito/sync'
+import {applyDemoOp, DEMO_LARGE_PREFIX, generateLargeDemo, isDeferredOp, localToday} from '@splito/sync/demoLarge'
 
-import {
-  DEMO_DIRECTORY,
-  DEMO_EXPENSES,
-  DEMO_FRIENDS,
-  DEMO_GROUPS,
-  DEMO_INVITED,
-  demoSplit,
-  type DemoGroupKey,
-  type DemoPersonKey,
-} from '#/data/demoData'
+/** The preference row in the REAL database that says the demo database is showing. Not in the registry: no Settings page, never reset by "Reset all settings", never queued. */
+const MODE_ID = 'demo.mode'
 
-/*
- * The small demo set (`?demo=1`), written through the real mutations. The gates that decide whether it
- * runs (dev and e2e builds, the URL flag) live in `demo.ts`; this file has no platform imports so tests can run it.
- */
+export async function readDemoMode(real: Store): Promise<boolean> {
+  const row = await real.get<{value: unknown}>('preference', MODE_ID)
+  return !!row && !row.deleted && row.data.value === true
+}
+
+export async function writeDemoMode(real: Store, ctx: MutationCtx, on: boolean): Promise<void> {
+  await real.transaction(async tx => {
+    const prev = await tx.get('preference', MODE_ID)
+    // A device-only row: written without an outbox op, so it never reaches a sync queue.
+    await tx.put({type: 'preference', id: MODE_ID, data: {value: on}, version: (prev?.version ?? 0) + 1, deleted: false, updatedAt: ctx.now()})
+  })
+}
+
+/** Demo mode is a person of its own, so nothing of the real "me" (or its id) is in the demo database. */
+export const DEMO_ME = `${DEMO_LARGE_PREFIX}me`
 
 const MINUTE = 60_000
 const HOUR = 60 * MINUTE
 const DAY = 24 * HOUR
 
-/*
- * The demo history reads like two weeks of use rather than one burst, so
- * Activity has days to group: friends and groups first, then an expense every
- * few hours, and a fix-up or two in the last hour. Each expense is added by
- * whoever paid the most, as if synced in from their phone. The final data is
- * exactly the dataset, so every balance is unchanged.
+/* -------------------------------------------------------------------------- */
+/* The demo account directory (26.18)                                          */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * Who is "on Splito" in demo mode, and an invite code that opens someone
+ * else's invite. Invented people, example.com addresses and fictional numbers only.
  */
-export async function seedDemoData(outer: Store, ctx: MutationCtx) {
-  // Each stage guards itself, so a run repeated or cut short never doubles what is there (audit m18).
-  const groups = await outer.getAll<Group>('group')
-  if (groups.some(g => g.data.name === DEMO_GROUPS.goa.name)) return seedFriendInvitesOnce(outer, ctx, groups)
-
-  const now = Date.now()
-  let clock = now - 14 * DAY
-  /** The mutation context for a write at `time` by `actor`. */
-  const at = (time: number, actor = ctx.actor): MutationCtx => {
-    clock = time
-    return {...ctx, actor, now: () => clock}
-  }
-
-  // The people, groups and ledger go in as one transaction: all of it or none, in a few milliseconds,
-  // so there is no half-seeded state to leave a page in. (The friend requests below read the store
-  // first, so they cannot run inside it.)
-  const groupIds = await outer.transaction(tx =>
-    seedLedger(insideTransaction(outer, tx), ctx, now, at, () => clock),
-  )
-  await seedFriendInvites(outer, ctx, groupIds.goa, at, now)
+export const DEMO_DIRECTORY: Parameters<typeof demoDirectory>[0] = {
+  accounts: [
+    {accountId: 'demo-ananya', name: 'Ananya Gupta', contact: {kind: 'email', value: 'ananya@example.com'}},
+    {accountId: 'demo-kabir', name: 'Kabir Khan', contact: {kind: 'phone', value: '+919812345678'}},
+    {accountId: 'demo-maya', name: 'Maya Chen', contact: {kind: 'email', value: 'maya@example.com'}},
+    {accountId: 'demo-ishaan', name: 'Ishaan Verma', contact: {kind: 'email', value: 'ishaan@example.com'}},
+    {accountId: 'demo-sara', name: 'Sara Ali', contact: {kind: 'phone', value: '+14155550134'}},
+    {accountId: 'demo-leo', name: 'Leo Fischer', contact: {kind: 'email', value: 'leo@example.com'}},
+    {accountId: 'demo-tanvi', name: 'Tanvi Rao', contact: {kind: 'email', value: 'tanvi@example.com'}},
+  ],
+  invites: {
+    ananya2026demo: {kind: 'friend', inviter: 'demo-ananya', groupName: null},
+  },
 }
 
-/** The ledger is in but the requests may not be (the page was left between): finish them, once. */
-async function seedFriendInvitesOnce(
-  store: Store,
-  ctx: MutationCtx,
-  groups: Array<{id: string; data: Group}>,
-) {
-  const [requests, links] = await Promise.all([
-    store.count('friendRequest'),
-    store.count('inviteLink'),
-  ])
-  if (requests + links > 0) return
-  const now = Date.now()
-  const goa = groups.find(g => g.data.name === DEMO_GROUPS.goa.name)!
-  const at = (time: number, actor = ctx.actor): MutationCtx => ({
-    ...ctx,
-    actor,
-    now: () => time,
-  })
-  await seedFriendInvites(store, ctx, goa.id, at, now)
+/** Someone not on Splito, already invited in the demo. */
+const INVITED = {name: 'Neha Joshi', contact: {kind: 'phone', value: '+919988776655'}} as const
+
+/** The private friends of the invites block have fixed ids (a partial block is erased by them and redone). */
+const PRIVATE_PREFIX = `${DEMO_LARGE_PREFIX}p-inv-`
+const PRIVATE_IDS = ['pooja', 'rohan', 'tanvi'].map(k => PRIVATE_PREFIX + k)
+
+/** The same context, whose first new id is `id` (a mutation mints the entity id first). */
+function withFirstId(ctx: MutationCtx, id: string): MutationCtx {
+  let used = false
+  return {...ctx, newId: () => (used ? ctx.newId() : ((used = true), id))}
 }
 
-async function seedLedger(
-  store: Store,
-  ctx: MutationCtx,
-  now: number,
-  at: (time: number, actor?: string) => MutationCtx,
-  readClock: () => number,
-) {
-  const ids = {me: ctx.actor} as Record<DemoPersonKey, string>
-  for (const [key, name] of Object.entries(DEMO_FRIENDS)) {
-    const person = await createPerson(store, at(readClock() + 7 * MINUTE), {name})
-    ids[key as DemoPersonKey] = person.id
-  }
-
-  const groupIds = {} as Record<DemoGroupKey, string>
-  for (const [key, g] of Object.entries(DEMO_GROUPS)) {
-    const group = await createGroup(store, at(readClock() + 5 * HOUR), {
-      name: g.name,
-      kind: g.kind,
-      currency: g.currency,
-      startDate: g.startDate,
-      endDate: g.endDate,
-      memberIds: g.members.map(m => ids[m]),
-    })
-    groupIds[key as DemoGroupKey] = group.id
-  }
-
-  const expenseIds: Record<string, string> = {}
-  const start = now - 12 * DAY
-  const step = (12 * DAY - 2 * HOUR) / DEMO_EXPENSES.length
-  for (const [i, e] of DEMO_EXPENSES.entries()) {
-    const draft: ExpenseDraft = {
-      title: e.title,
-      groupId: e.group ? groupIds[e.group] : null,
-      currency: e.currency,
-      total: e.total,
-      payers: Object.fromEntries(
-        Object.entries(e.payers).map(([k, v]) => [ids[k as DemoPersonKey], v]),
-      ),
-      split: demoSplit(e, p => ids[p]),
-      date: e.date,
-      tz: e.group ? DEMO_GROUPS[e.group].tz : 'Asia/Kolkata',
-      category: e.category,
-      notes: e.notes ?? '',
-    }
-    const topPayer = Object.entries(e.payers).sort(([, x], [, y]) =>
-      x! > y! ? -1 : 1,
-    )[0]![0] as DemoPersonKey
-    const by = at(start + i * step + (i % 3) * 40 * MINUTE, ids[topPayer])
-    // Dinner first went in with the wrong total, and is fixed below.
-    const isDinner = e.title === 'Dinner at Thalassa'
-    const created = await createExpense(
-      store,
-      by,
-      isDinner
-        ? {
-            ...draft,
-            total: minor('1000000'),
-            payers: {[ids.riya]: minor('500000'), [ids.priya]: minor('500000')},
-          }
-        : draft,
-    )
-    expenseIds[e.title] = created.id
-    if (isDinner) {
-      await updateExpense(
-        store,
-        at(now - 70 * MINUTE, ids[topPayer]),
-        created.id,
-        draft,
-      )
-    }
-  }
-
-  // Groceries deleted by mistake and put back: both show in Activity.
-  await deleteExpense(store, at(now - 40 * MINUTE), expenseIds.Groceries!)
-  await restoreExpense(store, at(now - 38 * MINUTE), expenseIds.Groceries!)
-
-  /*
-   * Deleted items: records added and then deleted, so they show struck in their lists while balances are
-   * unchanged and there is one of each kind to show.
-   */
-  const binned = async (
-    title: string,
-    group: DemoGroupKey,
-    total: bigint,
-    payer: DemoPersonKey,
-    added: number,
-    deleted: number,
-    category: string,
-  ) => {
-    const members = DEMO_GROUPS[group].members.map(m => ids[m])
-    const e = await createExpense(store, at(added, ids[payer]), {
-      title,
-      groupId: groupIds[group],
-      currency: 'INR',
-      total,
-      payers: {[ids[payer]]: total},
-      split: {mode: 'equal', participants: [ctx.actor, ...members]},
-      date: todayIn(DEMO_GROUPS[group].tz, added),
-      tz: DEMO_GROUPS[group].tz,
-      category,
-      notes: '',
-    })
-    await deleteExpense(store, at(deleted, ids[payer]), e.id)
-  }
-  await binned(
-    'Sunset cruise',
-    'goa',
-    minor('300000'),
-    'arjun',
-    now - 3 * DAY,
-    now - 2 * DAY,
-    'entertainment',
-  )
-  await binned(
-    'Takeout pizza',
-    'flat',
-    minor('135000'),
-    'me',
-    now - 26 * HOUR,
-    now - 20 * HOUR,
-    'food',
-  )
-  const paid = await createRepayment(store, at(now - 2 * DAY, ids.priya), {
-    groupId: null,
-    currency: 'INR',
-    from: ids.priya,
-    to: ctx.actor,
-    amount: minor('250000'),
-    date: todayIn('Asia/Kolkata', now - 2 * DAY),
-    tz: 'Asia/Kolkata',
-    note: 'UPI',
-  })
-  await deleteRepayment(store, at(now - 5 * HOUR), paid.id)
-  const [forgiven] = await createWriteOffs(store, at(now - 4 * DAY), [
-    {
-      groupId: null,
-      currency: 'EUR',
-      from: ids.sam,
-      to: ctx.actor,
-      amount: minor('900'),
-      date: todayIn('Europe/Lisbon', now - 4 * DAY),
-      tz: 'Europe/Lisbon',
-      note: 'Coffee on me',
-    },
-  ])
-  await deleteWriteOff(store, at(now - 3 * DAY), forgiven!.id)
-
-  return groupIds
-}
+const email = (value: string) => ({kind: 'email', value}) as const
 
 /*
- * 26.18 in the demo: two requests waiting for you (from people on Splito),
- * two of yours waiting for them (one on Splito, one invited by SMS), and
- * invite links with limits, one of them already partly used.
+ * 26.18 in the demo, every state the flow can be in, through the real mutations.
+ * Requests I received: waiting (x2), declined. Invites I sent: Sent (waiting, link
+ * unopened), Opened (the person opened the personal link but has not answered), Joined
+ * (accepted; their private "only for you" entry was linked to the account, F-616),
+ * Expired (30 days passed), Cancelled. Private friends with no account. Invite links of
+ * both kinds: active, limited and partly used, unlimited, used up, expired, revoked; a
+ * group link that needs my approval has been opened by people (the join requests). These
+ * read the store first, so they cannot run inside the ledger's one transaction.
  */
-async function seedFriendInvites(
-  store: Store,
-  ctx: MutationCtx,
-  goaId: string,
-  at: (time: number, actor?: string) => MutationCtx,
-  now: number,
-) {
-  const account = (id: string) =>
-    DEMO_DIRECTORY.accounts.find(a => a.accountId === id)!
+async function seedFriendInvites(store: Store, ctx: MutationCtx, goaId: string, lisbonId: string, now: number) {
+  const at = (time: number, actor = ctx.actor): MutationCtx => ({...ctx, actor, now: () => time})
+  const account = (id: string) => DEMO_DIRECTORY.accounts.find(a => a.accountId === id)!
+  const personalLink = (time: number, maxUses: number, expiresInMs = 60 * DAY) =>
+    createInviteLink(store, at(time), {kind: 'friend', groupId: null, maxUses, expiresInMs, approveJoins: false})
+
+  // Requests for me: two waiting, one I declined.
   for (const [id, ago] of [
     ['demo-sara', 26 * HOUR],
     ['demo-ishaan', 25 * MINUTE],
+    ['demo-leo', 9 * DAY],
   ] as const) {
     const a = account(id)
-    await receiveFriendRequest(store, at(now - ago, a.accountId), {
-      id: ctx.newId(),
-      accountId: a.accountId,
-      name: a.name,
-      contact: a.contact,
+    const r = await receiveFriendRequest(store, at(now - ago, a.accountId), {id: ctx.newId(), accountId: a.accountId, name: a.name, contact: a.contact})
+    if (id === 'demo-leo') await declineFriendRequest(store, at(now - 8 * DAY), r.id)
+  }
+
+  // Private "only for you" friends: a name only, a contact, and one who will join below. Fixed ids, so a partial block can be erased and redone.
+  const tanvi = account('demo-tanvi')
+  const priv = (key: string, input: Parameters<typeof createPerson>[2], time: number) => createPerson(store, withFirstId(at(time), PRIVATE_PREFIX + key), input)
+  await priv('pooja', {name: 'Pooja (flatmate)'}, now - 60 * DAY)
+  await priv('rohan', {name: 'Rohan Das', contact: email('rohan@example.com')}, now - 45 * DAY)
+  await priv('tanvi', {name: tanvi.name, contact: tanvi.contact}, now - 30 * DAY)
+
+  // Sent: on Splito, waiting; and by SMS, the personal link not opened yet.
+  await sendFriendRequest(store, at(now - 2 * DAY), {contact: account('demo-kabir').contact!, name: 'Kabir', reach: 'on-splito'})
+  const sent = await personalLink(now - 5 * DAY, 1)
+  await sendFriendRequest(store, at(now - 5 * DAY), {contact: INVITED.contact, name: INVITED.name, reach: 'invited', inviteCode: sent.id})
+
+  // Opened: the person opened the link (a use) but has not answered.
+  // Three uses, so a link that was opened does not read "Used up" (the stand-in for Opened until F-2105).
+  const opened = await personalLink(now - 3 * DAY, 3)
+  await sendFriendRequest(store, at(now - 3 * DAY), {contact: email('aarav@example.com'), name: 'Aarav Mehta', reach: 'invited', inviteCode: opened.id})
+  await recordInviteUse(store, at(now - 2 * DAY), opened.id)
+
+  // Joined: opened the link and accepted; the private "Tanvi Rao" above is now linked to the account.
+  const joined = await personalLink(now - 4 * DAY, 1)
+  const joinedReq = await sendFriendRequest(store, at(now - 4 * DAY), {contact: tanvi.contact!, name: tanvi.name, reach: 'invited', inviteCode: joined.id})
+  await recordInviteUse(store, at(now - 2 * HOUR), joined.id)
+  await applyFriendRequestAccepted(store, at(now - 90 * MINUTE, tanvi.accountId), joinedReq.id, {accountId: tanvi.accountId, name: tanvi.name})
+
+  // Expired: sent 40 days ago, never answered, and its link has lapsed too.
+  const lapsed = await personalLink(now - 40 * DAY, 1, 7 * DAY) // lapsed on purpose
+  await sendFriendRequest(store, at(now - 40 * DAY), {contact: email('meera@example.com'), name: 'Meera Nair', reach: 'invited', inviteCode: lapsed.id})
+
+  // Cancelled: sent, then withdrawn.
+  const withdrawn = await sendFriendRequest(store, at(now - 6 * DAY), {contact: email('zoya@example.com'), name: 'Zoya Khan', reach: 'on-splito'})
+  await cancelFriendRequest(store, at(now - 5 * DAY), withdrawn.id)
+
+  // Links: friend (active and partly used, unlimited, revoked) and group (needs approval, open).
+  await createInviteLink(store, at(now - 3 * HOUR), {kind: 'friend', groupId: null, maxUses: 5, expiresInMs: 30 * DAY, approveJoins: false})
+  await createInviteLink(store, at(now - 20 * DAY), {kind: 'friend', groupId: null, maxUses: null, expiresInMs: null, approveJoins: false})
+  const old = await personalLink(now - 15 * DAY, 3, 30 * DAY)
+  await revokeInviteLink(store, at(now - 14 * DAY), old.id)
+  const goa = await createInviteLink(store, at(now - 4 * DAY), {kind: 'group', groupId: goaId, maxUses: 25, expiresInMs: 30 * DAY, approveJoins: true})
+  for (const id of ['demo-maya', 'demo-ananya', 'demo-sara']) await recordInviteUse(store, at(now - 3 * DAY, id), goa.id)
+  const lisbon = await createInviteLink(store, at(now - 2 * DAY), {kind: 'group', groupId: lisbonId, maxUses: null, expiresInMs: 30 * DAY, approveJoins: true})
+  await recordInviteUse(store, at(now - 1 * DAY, 'demo-kabir'), lisbon.id)
+}
+
+/**
+ * The ops that read the store first (deleting or removing a friend, a group going, a member leaving): applied one by one after the
+ * ledger's transaction, each only if its effect is not there yet, so a run cut off half-way finishes without doubling.
+ */
+async function seedLate(store: Store, ctx: MutationCtx, now: number) {
+  const {ops} = generateLargeDemo({me: ctx.actor, today: localToday(now), now})
+  for (const op of ops.filter(isDeferredOp)) {
+    if (op.kind === 'person.delete') {
+      const p = await store.get<Person>('person', op.id)
+      if (!p || p.deleted) continue
+    } else if (op.kind === 'person.remove') {
+      const p = await store.get<Person>('person', op.id)
+      if (!p || p.deleted || (p.data as {removedAt?: number | null}).removedAt) continue
+    } else if (op.kind === 'group.delete') {
+      const g = await store.get<Group>('group', op.id)
+      if (!g || g.deleted) continue
+    } else if (op.kind === 'member.exit') {
+      const g = await store.get<Group>('group', op.id)
+      if (!g || g.deleted || g.data.members.find(m => m.personId === op.input.personId)?.leftAt !== null) continue
+    }
+    await applyDemoOp(store, ctx, op)
+  }
+}
+
+/** "Your feedback" (Settings > Send feedback): three records saved on this device, one with a reply address. */
+async function seedFeedback(store: Store, ctx: MutationCtx, now: number) {
+  const at = (time: number): MutationCtx => ({...ctx, now: () => time})
+  const info = {version: '1.0.0', platform: 'web', os: 'Demo', language: 'en', screen: '/'}
+  await saveFeedback(store, at(now - 6 * DAY), {type: 'idea', message: 'Let me split a bill by dragging items onto people.', attachment: null, appInfo: info, replyEmail: null})
+  await saveFeedback(store, at(now - 3 * DAY), {type: 'bug', message: 'The total on the Goa trip flickers when I scroll the balances.', attachment: null, appInfo: info, replyEmail: 'riya@example.com'})
+  await saveFeedback(store, at(now - 40 * HOUR), {type: 'question', message: 'Can I settle in a currency the group did not use?', attachment: null, appInfo: null, replyEmail: null})
+}
+
+/* -------------------------------------------------------------------------- */
+/* Seeding                                                                    */
+/* -------------------------------------------------------------------------- */
+
+/** The first person the plan writes after "me" that every plan has: its presence says the ledger transaction committed. */
+const SEEDED_MARK = `${DEMO_LARGE_PREFIX}p-riya`
+const STORY_GOA = `${DEMO_LARGE_PREFIX}g-story-goa`
+const STORY_LISBON = `${DEMO_LARGE_PREFIX}g-story-lisbon`
+
+/**
+ * Completion markers of the two blocks that read the store first (so they cannot join the ledger's one
+ * transaction). A device-only preference row in the demo database, written LAST with the seeding time: no
+ * marker means the block never finished, and it is erased and written again.
+ */
+const MARK_INVITES = 'demo.seed.invites'
+const MARK_FEEDBACK = 'demo.seed.feedback'
+const MARK_LATE = 'demo.seed.late'
+
+/**
+ * The invites block holds states that age (a request lapses after 30 days, a link expires): when its marker is
+ * older than this it is redone, so "Sent", "Opened" and the links never go stale. Well inside the 30 days.
+ */
+export const INVITES_MAX_AGE_MS = 14 * DAY
+
+async function readMark(store: Store, id: string): Promise<number | null> {
+  const row = await store.get<{value: unknown}>('preference', id)
+  return row && !row.deleted && typeof row.data.value === 'number' ? row.data.value : null
+}
+
+async function writeMark(store: Store, id: string, at: number) {
+  await store.transaction(async tx => {
+    const prev = await tx.get('preference', id)
+    await tx.put({type: 'preference', id, data: {value: at}, version: (prev?.version ?? 0) + 1, deleted: false, updatedAt: at})
+  })
+}
+
+/** Erases every row of these types (a page at a time) plus the given people. */
+async function eraseBlock(store: Store, types: EntityType[], personIds: string[] = []) {
+  for (const type of types) {
+    let after: Key | null = null
+    do {
+      // full-read-ok: a block of the disposable demo database, erased a page at a time.
+      const page: Page<Entity> = await store.page(type, {after, limit: 500})
+      if (page.items.length) await store.erase(page.items.map(e => ({type: e.type, id: e.id})))
+      after = page.next
+    } while (after)
+  }
+  const people = await store.getMany('person', personIds)
+  if (people.length) {
+    await store.erase(people.map(e => ({type: 'person' as const, id: e.id})))
+    await store.rebuildProjections()
+  }
+}
+
+/**
+ * Writes the one demo dataset into an empty demo store through the real
+ * mutations. The people, groups and ledger go in as ONE transaction (all of
+ * it or none, so a page left half-way leaves nothing half-seeded). The invites
+ * and feedback blocks then go in one after the other, each ending with its
+ * marker: a block with no marker (cut off) is erased and written again, and the
+ * invites block is also redone once it is old (`INVITES_MAX_AGE_MS`). Marks the
+ * store as never-syncing. Returns false when everything was already there.
+ */
+export async function seedDemo(store: Store, ctx: MutationCtx, onProgress?: (done: number) => void): Promise<boolean> {
+  markNeverSync(store)
+  let wrote = false
+  const now = ctx.now()
+  if (!(await store.get('person', SEEDED_MARK))) {
+    wrote = true
+    const {ops} = generateLargeDemo({me: ctx.actor, today: localToday(now), now})
+    await store.transaction(async tx => {
+      const batched = insideTransaction(store, tx)
+      for (const [i, op] of ops.entries()) {
+        if (!isDeferredOp(op)) await applyDemoOp(batched, ctx, op)
+        if (onProgress && i % 100 === 0) onProgress(i / ops.length)
+      }
     })
   }
-  const kabir = account('demo-kabir')
-  await sendFriendRequest(store, at(now - 2 * DAY), {
-    contact: kabir.contact!,
-    name: 'Kabir',
-    reach: 'on-splito',
-  })
-  const personal = await createInviteLink(store, at(now - 5 * DAY), {
-    kind: 'friend',
-    groupId: null,
-    maxUses: 1,
-    expiresInMs: 7 * DAY,
-    approveJoins: false,
-  })
-  await sendFriendRequest(store, at(now - 5 * DAY), {
-    contact: DEMO_INVITED.contact,
-    name: DEMO_INVITED.name,
-    reach: 'invited',
-    inviteCode: personal.id,
-  })
-  await createInviteLink(store, at(now - 3 * HOUR), {
-    kind: 'friend',
-    groupId: null,
-    maxUses: 5,
-    expiresInMs: 30 * DAY,
-    approveJoins: false,
-  })
-  const goa = await createInviteLink(store, at(now - 4 * DAY), {
-    kind: 'group',
-    groupId: goaId,
-    maxUses: 25,
-    expiresInMs: 30 * DAY,
-    approveJoins: true,
-  })
-  for (const id of ['demo-maya', 'demo-ananya', 'demo-sara'])
-    await recordInviteUse(store, at(now - 3 * DAY, id), goa.id)
+  if ((await readMark(store, MARK_LATE)) === null) {
+    wrote = true
+    await seedLate(store, ctx, now)
+    await writeMark(store, MARK_LATE, now)
+  }
+  const invitesAt = await readMark(store, MARK_INVITES)
+  if (invitesAt === null || now - invitesAt > INVITES_MAX_AGE_MS || now < invitesAt) {
+    wrote = true
+    await eraseBlock(store, ['friendRequest', 'inviteLink'], PRIVATE_IDS)
+    await seedFriendInvites(store, ctx, STORY_GOA, STORY_LISBON, now)
+    await writeMark(store, MARK_INVITES, now)
+  }
+  if ((await readMark(store, MARK_FEEDBACK)) === null) {
+    wrote = true
+    await eraseBlock(store, ['feedback'])
+    await seedFeedback(store, ctx, now)
+    await writeMark(store, MARK_FEEDBACK, now)
+  }
+  onProgress?.(1)
+  return wrote
+}
+
+const ALL_TYPES: EntityType[] = ['person', 'group', 'expense', 'repayment', 'writeoff', 'preference', 'friendRequest', 'inviteLink', 'comment', 'feedback', 'reminder']
+
+/** Erases everything in a demo store (rows, their history and outbox ops), in bounded pages. */
+export async function wipeDemo(store: Store): Promise<void> {
+  for (const type of ALL_TYPES) {
+    let after: Key | null = null
+    do {
+      // full-read-ok: the demo database is disposable and this erases it, a page at a time.
+      const page: Page<Entity> = await store.page(type, {after, limit: 500})
+      if (page.items.length) await store.erase(page.items.map(e => ({type: e.type, id: e.id})))
+      after = page.next
+    } while (after)
+  }
+  await store.rebuildProjections()
+}
+
+
+/**
+ * A start with `demo.mode` on: opens the demo database through `open`. When that
+ * fails the app must not be locked in a mode it cannot open: the failure is passed
+ * to `onFail` (logged by the caller), the REAL database is told the mode is off,
+ * and null comes back (the caller shows the real store and a notice).
+ */
+export async function resumeDemo<T>(real: {store: Store; ctx: MutationCtx}, open: () => Promise<T>, onFail?: (e: unknown) => void): Promise<T | null> {
+  try {
+    return await open()
+  } catch (e) {
+    onFail?.(e)
+    await writeDemoMode(real.store, real.ctx, false)
+    return null
+  }
+}
+
+/**
+ * Demo rows that older builds (the large-set URL switch, "Add demo data") wrote into the REAL
+ * database can no longer be removed from the app. Once per device (`flag`), erases
+ * every row in the old `demo-large-` id range, with its history and outbox ops.
+ * The old small set used random ids and cannot be told apart: those devices use
+ * Settings > Data > Erase this device's data (RESUME.md). Returns how many rows went.
+ */
+export async function purgeLegacyDemo(real: Store, flag: {isDone(): boolean; markDone(): void}): Promise<number> {
+  if (flag.isDone()) return 0
+  let erased = 0
+  for (const type of ALL_TYPES) {
+    for (;;) {
+      // full-read-ok: a one-time range read of the old demo ids, erased a page at a time.
+      const page: Page<Entity> = await real.page(type, {min: DEMO_LARGE_PREFIX, max: `${DEMO_LARGE_PREFIX}\uffff`, limit: 500})
+      if (page.items.length === 0) break
+      await real.erase(page.items.map(e => ({type: e.type, id: e.id})))
+      erased += page.items.length
+    }
+  }
+  if (erased > 0) await real.rebuildProjections()
+  flag.markDone()
+  return erased
 }

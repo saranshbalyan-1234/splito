@@ -5,7 +5,6 @@ import {
   balanceSides,
   cellsByCategory,
   cellTotals,
-  computeShares,
   type CurrencyCode,
   personSummary,
   ZERO,
@@ -34,7 +33,7 @@ import {answerIntent, type AskEnv} from '#/lib/ask/answer'
 import {parseQuestion} from '#/lib/ask/parse'
 import {type Answer, type Vocab} from '#/lib/ask/types'
 import {storeAskSource} from '#/data/askSource'
-import {DEMO_EXPENSES, DEMO_FRIENDS, DEMO_GROUPS, demoSplit, type DemoGroupKey, type DemoPersonKey} from '#/data/demoData'
+import {DEMO_ME, seedDemo as seedDemoData} from '#/data/demoSeed'
 
 /*
  * Ask Splito's answers against the screens they quote (F-2301 acc 3): the
@@ -67,35 +66,19 @@ function memoryStore() {
   })
 }
 
+/** The six friends of the curated story, whose balances are fixed by hand (the generated cast is checked in bulk below). */
+const STORY_FRIENDS = {riya: 'Riya Sharma', arjun: 'Arjun Mehta', priya: 'Priya Nair', sam: 'Sam Carter', lena: 'Lena Fischer', diego: 'Diego Alves'}
+const PREFIX = 'demo-large-'
+
+/** The one demo dataset, written through the real mutations on a SQLite store (the same seed the app runs). */
 async function seedDemo() {
   const store: Store = await memoryStore()
   let n = 0
-  const ctx: MutationCtx = {deviceId: 'd', actor: 'me-0001', now: () => NOW, newId: () => `op-${++n}`}
+  const ctx: MutationCtx = {deviceId: 'd', actor: DEMO_ME, now: () => NOW, newId: () => `op-${++n}`}
   await ensureMe(store, ctx, 'Me')
-  const ids = {me: ctx.actor} as Record<DemoPersonKey, string>
-  for (const [key, name] of Object.entries(DEMO_FRIENDS)) ids[key as DemoPersonKey] = (await createPerson(store, ctx, {name})).id
-  const groupIds = {} as Record<DemoGroupKey, string>
-  for (const [key, g] of Object.entries(DEMO_GROUPS)) {
-    groupIds[key as DemoGroupKey] = (
-      await createGroup(store, ctx, {name: g.name, kind: g.kind, currency: g.currency, startDate: g.startDate, endDate: g.endDate, tz: g.tz, memberIds: g.members.map(m => ids[m])} as never)
-    ).id
-  }
-  for (const e of DEMO_EXPENSES) {
-    await createExpense(store, ctx, {
-      title: e.title,
-      groupId: e.group ? groupIds[e.group] : null,
-      currency: e.currency,
-      total: e.total,
-      payers: Object.fromEntries(Object.entries(e.payers).map(([k, v]) => [ids[k as DemoPersonKey], v])),
-      split: demoSplit(e, p => ids[p]),
-      date: e.date,
-      tz: e.group ? DEMO_GROUPS[e.group].tz : 'Asia/Kolkata',
-      category: e.category,
-      notes: e.notes ?? '',
-    })
-  }
-  // A settle-up the other way, so a balance has a payment in it.
-  await createRepayment(store, ctx, {groupId: null, currency: 'INR', from: ids.riya, to: ids.me, amount: 5_000_00n, date: '2026-06-20', tz: 'Asia/Kolkata', note: ''})
+  await seedDemoData(store, ctx)
+  const ids = Object.fromEntries(Object.keys(STORY_FRIENDS).map(k => [k, `${PREFIX}p-${k}`])) as Record<keyof typeof STORY_FRIENDS, string>
+  const groupIds = {goa: `${PREFIX}g-story-goa`}
   return {store, ctx, ids, groupIds}
 }
 
@@ -136,11 +119,11 @@ test('"What does Riya owe me?" is the People balance, down to the group parts, f
     {includeGroups: true},
   )
   let checked = 0
-  for (const [key, name] of Object.entries(DEMO_FRIENDS)) {
+  for (const [key, name] of Object.entries(STORY_FRIENDS)) {
     const a = await ask(`What does ${name.split(' ')[0]} owe me?`, env)
     expect(a.kind).toBe('balance')
     if (a.kind !== 'balance') continue
-    expect(a.person.id).toBe(ids[key as DemoPersonKey])
+    expect(a.person.id).toBe(ids[key as keyof typeof STORY_FRIENDS])
     const want = truth.find(s => s.person === a.person.id)
     // The figures People shows: each way on its own, never netted across direct and groups.
     const got = Object.fromEntries(a.lines.map(l => [l.currency, [l.owed, l.owe]]))
@@ -252,9 +235,8 @@ test('a group: the trip by day sums to my share, and who owes whom is the settle
   expect(trend.currencies.map(c => c.currency).sort()).toEqual(['INR', 'USD'])
   const line = trend.currencies.find(c => c.currency === 'INR')!
   expect(line.points).toHaveLength(8)
-  const goa = DEMO_EXPENSES.filter(e => e.group === 'goa' && e.currency === 'INR')
-  const mine = goa.map(e => computeShares(e.total, demoSplit(e, p => (p === 'me' ? ctx.actor : p)))[ctx.actor] ?? ZERO)
-  expect(line.total).toBe(mine.reduce((x, y) => x + y, ZERO))
+  const goa = (await store.getAll<Expense>('expense')).filter(e => !e.deleted && e.data.groupId === groupIds.goa && e.data.currency === 'INR')
+  expect(line.total).toBe(goa.reduce((sum, e) => sum + (e.data.shares[ctx.actor] ?? ZERO), ZERO))
 
   const owes = await ask('Who owes whom in Goa trip?', env)
   if (owes.kind !== 'groupBalance') throw new Error(owes.kind)
@@ -281,14 +263,9 @@ test('find hands the words to Search and says whether it read everything', async
   expect(over.rows.every(r => r.currency !== 'INR' || r.total > 50_000_00n)).toBe(true)
 })
 
-test('on the large demo set: every friend\'s balance equals People\'s and a year of category totals equals the records', async () => {
-  const {addLargeDemo} = await import('#/data/demoLarge')
-  const store: Store = await memoryStore()
-  let n = 0
-  const ctx: MutationCtx = {deviceId: 'd', actor: 'me-0001', now: () => NOW, newId: () => `op-${++n}`}
-  await ensureMe(store, ctx, 'Me')
-  await addLargeDemo(store, ctx)
-  const today = new Date().toISOString().slice(0, 10)
+test('on the whole demo set: every friend\'s balance equals People\'s and a year of category totals equals the records', async () => {
+  const {store, ctx} = await seedDemo()
+  const today = TODAY
   const env = {...(await envFor(store, ctx.actor)), today}
   const groups = (await store.getAll<Group>('group')).filter(g => !g.deleted)
   const truth = personSummary(balanceRows((await records(store)).all, ctx.actor, Object.fromEntries(groups.map(g => [g.id, g.data.rules]))), {includeGroups: true})

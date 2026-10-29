@@ -42,7 +42,7 @@ emulators on the machine are never picked by mistake.
 From `apps/client`:
 
 ```bash
-EXPO_PUBLIC_DEMO=1 EXPO_PUBLIC_TOUR=1 CI=1 npx expo run:android --port 8226 --device emulator-5584
+EXPO_PUBLIC_TOUR=1 CI=1 npx expo run:android --port 8226 --device emulator-5584
 ```
 
 - `expo run:android` runs prebuild (generating the gitignored `android/`), builds the debug APK, installs it,
@@ -51,7 +51,7 @@ EXPO_PUBLIC_DEMO=1 EXPO_PUBLIC_TOUR=1 CI=1 npx expo run:android --port 8226 --de
   takes about 2 minutes.
 - After changing `app.config.ts` plugins, run `CI=1 npx expo prebuild -p android --no-install` first: `run:android`
   does not re-run prebuild when `android/` already exists.
-- `EXPO_PUBLIC_DEMO=1` seeds the demo ledger; `EXPO_PUBLIC_TOUR=1` steps through People, drawer, Groups,
+- Demo data is the Settings > Data > Demo mode switch (a separate local database, ARCHITECTURE 26.1); `EXPO_PUBLIC_TOUR=1` steps through People, drawer, Groups,
   a group's Balances, Analytics, Activity, Settings and Add expense every 8 s (`navigation/DevTour.tsx`), so
   screenshots need no tapping. `CI=1` turns off Metro's watcher and prompts.
 - To reopen the app against a running Metro (for example after `adb shell pm clear app.splito`), use the URL
@@ -72,10 +72,11 @@ adb -s emulator-5584 shell cmd uimode night yes    # system dark mode -> Splito 
 
 ## 5. Smoke flow (add an expense, then settle up)
 
-Metro must serve the demo bundle without the tour, which would navigate under the test:
+Metro must serve the dev bundle without the tour, which would navigate under the test (the script turns
+Demo mode on from Settings > Data itself):
 
 ```bash
-EXPO_PUBLIC_DEMO=1 CI=1 npx expo start --dev-client --port 8226 &
+CI=1 npx expo start --dev-client --port 8226 &
 ANDROID_SERIAL=emulator-5584 METRO_PORT=8226 pnpm android:smoke /tmp/android-smoke
 ```
 

@@ -15,7 +15,7 @@ import {Trans, useLingui} from '@lingui/react/macro'
 
 import {useHaptics} from '#/lib/haptics'
 import {logger} from '#/logger'
-import {navigationRef} from '#/navigation/DevTour'
+import {navigationRef} from '#/navigation/ref'
 import {useSession} from '#/state/session'
 import {useMutationCtx, usePref, useStore} from '#/data/hooks'
 import {atoms as a, useTheme} from '#/alf'

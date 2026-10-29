@@ -2,8 +2,9 @@ import {openDatabaseAsync} from 'expo-sqlite'
 import {openSqlStore, type SqlExecutor, type StorageNotices, type Store} from '@splito/sync'
 
 /** Native durable store: expo-sqlite behind the shared SqlStore. SQLite is one process, so there is never another tab to wait for or to be replaced by. */
-export async function openStore(_notices?: StorageNotices): Promise<Store> {
-  const db = await openDatabaseAsync('splito.db')
+/** `name` picks the file (`splito` is the real data; the dev and e2e demo mode opens its own, `{name}.db`). */
+export async function openStore(_notices?: StorageNotices, name = 'splito'): Promise<Store> {
+  const db = await openDatabaseAsync(`${name}.db`)
   await db.execAsync('PRAGMA journal_mode = WAL')
   const exec: SqlExecutor = {
     exec: sql => db.execAsync(sql),

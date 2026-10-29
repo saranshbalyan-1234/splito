@@ -1,5 +1,7 @@
 import {expect, type Page, test} from '@playwright/test'
 
+import {openDemo} from './openDemo'
+
 /* The motion layer wired into the shell: illustrations, counting totals, row animations, skeletons, press scale. */
 
 type Splito = {
@@ -9,8 +11,9 @@ type Splito = {
   setPref: (key: string, value: unknown) => Promise<void>
 }
 
-async function ready(page: Page, path: string, testID: string) {
-  await page.goto(path)
+async function ready(page: Page, path: string, testID: string, demo = false) {
+  if (demo) await openDemo(page, path)
+  else await page.goto(path)
   await expect(page.getByTestId(testID)).toBeVisible()
   await page.waitForFunction(() => 'splito' in window)
 }
@@ -132,7 +135,7 @@ test('the Animations preference freezes illustrations without a reload', async (
 test('a balance total counts to its new value and lands exactly on it', async ({
   page,
 }) => {
-  await ready(page, '/?demo=1', 'summary-INR-net')
+  await ready(page, '/', 'summary-INR-net', true)
   const before = await page.getByTestId('summary-INR-net').innerText()
   const seen = await addExpenseAndWatchTotal(page)
   const after = await page.getByTestId('summary-INR-net').innerText()
@@ -148,7 +151,7 @@ test('a balance total counts to its new value and lands exactly on it', async ({
 })
 
 test('with Animations off a total changes in one step', async ({page}) => {
-  await ready(page, '/?demo=1', 'summary-INR-net')
+  await ready(page, '/', 'summary-INR-net', true)
   await setMotion(page, 'off')
   const seen = await addExpenseAndWatchTotal(page)
   expect(seen).toHaveLength(1)
@@ -158,7 +161,7 @@ test('with Animations off a total changes in one step', async ({page}) => {
 test('rows on screen at load appear at once; a new row animates in', async ({
   page,
 }) => {
-  await ready(page, '/?demo=1', 'person-Arjun Mehta')
+  await ready(page, '/', 'person-Arjun Mehta', true)
   expect(await rowAnimates(page, 'person-Arjun Mehta')).toBe(false)
   const id = page.evaluate(() =>
     (window as unknown as {splito: Splito}).splito.createPerson('Nina Rossi'),
@@ -168,7 +171,7 @@ test('rows on screen at load appear at once; a new row animates in', async ({
 })
 
 test('with Animations off a new row just appears', async ({page}) => {
-  await ready(page, '/?demo=1', 'person-Arjun Mehta')
+  await ready(page, '/', 'person-Arjun Mehta', true)
   await setMotion(page, 'off')
   const id = page.evaluate(() =>
     (window as unknown as {splito: Splito}).splito.createPerson('Nina Rossi'),
@@ -190,12 +193,12 @@ test('skeletons show while the local store loads', async ({page}) => {
     }).observe(document, {subtree: true, childList: true})
   })
   for (const [path, screen] of [
-    ['/?demo=1', 'person-Arjun Mehta'],
+    ['/', 'person-Arjun Mehta'],
     ['/groups', 'group-Goa trip'],
     ['/activity', 'screen-activity'],
     ['/profile', 'profileHeaderDisplayName'],
   ] as const) {
-    await page.goto(path)
+    await openDemo(page, path)
     await expect(page.getByTestId(screen).first()).toBeVisible()
   }
   const seen: string[] = await page.evaluate(() =>
@@ -221,8 +224,10 @@ test.describe('touch screens', () => {
   test('a row shrinks slightly while pressed and springs back', async ({
     page,
   }) => {
-    await ready(page, '/?demo=1', 'person-Arjun Mehta')
+    await ready(page, '/', 'person-Arjun Mehta', true)
     const row = page.getByTestId('person-Arjun Mehta')
+    // The demo list has 39 friends: bring this one on screen before pressing it.
+    await row.scrollIntoViewIfNeeded()
     const content = row.locator('> div').first()
     const scale = () => content.evaluate(el => getComputedStyle(el).transform)
     // The demo's Overview holds more currencies now, so the row can sit below the fold.
