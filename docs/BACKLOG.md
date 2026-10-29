@@ -510,6 +510,18 @@ Every F-241 URL opens the right screen from anywhere: iOS Universal Links, Andro
   5. Push, invite, QR, reminder and share links all go through the one resolver; links never perform an action.
   6. Deferred link: install from a link, first open lands on its target, no third-party SDK.
 
+### F-255 Every tap reflects immediately `spec: owner § 26.9/26.10 (decisions 150, 151)`
+
+Every tap changes the screen in the same or next frame; slow bodies (lists, charts, breakdowns, next tab, search results) render after via React transitions or deferred mounting; nothing queues behind a busy render.
+
+- **Effort** M · **Impact** 10 · **Backend** no · **Status** in progress (tabs first on fix/tab-taps, then the app-wide audit) · **Deps** F-242
+- **Prefs** -
+- **Acceptance**
+  1. Rapid taps on any tab set (bottom bar, sidebar, rail, in-page) land on the last tap; e2e at 390 and 1440.
+  2. A perf/e2e check measures tap-to-first-visual-change for the main tappables (tabs, a friend row, a group row, FAB, a filter chip, a switch, Add expense Save, a sheet's X) at 390 px: under 100 ms, with CPU 4x throttled under 200 ms.
+  3. Heavy bodies use startTransition / useDeferredValue or mount after the transition, with same-size skeletons; no JS long task over 50 ms between a tap and its first frame.
+  4. iOS Safari and iOS native checked on the simulator; the renders gate does not regress.
+
 ### F-250 Sign-in required (auth gate) `spec: owner § 26.15 (decision 125)`
 
 Nothing of the app is visible signed out: only the welcome tour, the logged-out flow, language and legal pages. The local database opens per account only with a session; offline after sign-in; deep links resume after sign-in.
