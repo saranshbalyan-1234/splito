@@ -570,7 +570,7 @@ Activity Filters gain the type (Expenses, Payments, Comments, Groups, Friends an
 - **Prefs** `activity.type` (account)
 - **Acceptance**
   1. Filters sheet on Activity has Type (multi-select) besides All/Me/Others; badge and empty state follow it; remembered after reload; `/activity?type=transactions` deep-links it.
-  2. Home, right column and Group "See all" of Recent transactions land on Activity filtered to transactions (and to that group from a Group page).
+  2. Home, right column and Group "See all" of Recent transactions land on Activity filtered to transactions (and to that group from a Group page), opened as a pushed page with Back to where they came from (owner 179); tapping the Activity tab still gives the plain tab.
   3. e2e at 390/1440; demo data has every type.
 
 ### F-260 Screen-specific empty-state illustrations `spec: owner § 7 (decisions 146, 172)`

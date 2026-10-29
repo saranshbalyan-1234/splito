@@ -1589,6 +1589,13 @@ labelled sidebar); **wide** = web 1300 px and up (Bluesky `gtTablet`, right colu
   the avatar and name are their own nested targets that open the person. Shell first (owner 152), no redraw (166).
   *Why:* "clicking on avatar or name anywhere on the website should open that friend's details".
 - **Activity's route is `/activity`; `/notifications` redirects to it.**
+- **A main screen reached from a link shows Back** (owner 179): when Home, People, Groups, Analytics or Activity
+  is opened from something other than its own tab or sidebar item (a "See all", an Overview card, a search or Ask
+  result, a notification, a deep link), it opens as a pushed page with Back in the header that returns to where the
+  person came from (filters from the link applied, e.g. Activity with type=transactions); tapping the tab itself
+  always gives the plain tab screen with the avatar. The FAB follows the header (§ 26.6: Back, so no FAB). One
+  helper decides (the link resolver / `tabLink()`), not each screen. *Why:* "even if you go to a main screen from
+  some links, it should show a back button, in case you don't go directly from tabs".
 - **Pushed pages** (Person, Group, Settle, Expense, Profile, Settings and its sections, Add friend, Create
   group) show Back in the header; top-level pages (People, Groups, Analytics, Activity) show the avatar. This
   one distinction also decides the FAB (§ 26.6).
@@ -2670,6 +2677,7 @@ Every owner decision, in the order it was made (all 2026-10-26). "Replaced" name
 | 176 | "in overview by default it should select all, but options for group and direct" | Overview scope All (default) / Groups / Direct, remembered, in URL, carried into Analytics | § 26.3 | Overview always counted everything |
 | 177 | "instead of manage button in middle, make it as a settings icon on right in friends in home" | Friends header: gear icon on the right (after search and Filters) opens Friends and invites; no Manage text button | § 26.3 | "Manage" text button in the middle of the header |
 | 178 | "clicking on avatar or name anywhere on the website, should open that friend details" | One shared PersonLink: any avatar or name opens /people/:id (Me -> Profile), on every screen | § 26.3 | Only friend rows opened a person |
+| 179 | "even if you go to main screen from some links, it should show back button, in case you dont go directly from tabs" | A main screen opened from a link (See all, cards, results, notifications, deep links) is a pushed page with Back to the origin; the tab itself gives the plain tab screen | § 26.3 | Links switched tabs with no way back |
 
 New decisions follow § 0 rule 9: rewrite the rule in its topic so only the current truth remains, then add a
 row here.
