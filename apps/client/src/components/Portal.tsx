@@ -42,6 +42,8 @@ export function createPortalGroup() {
     }, [])
 
     const remove = useCallback<ContextType['remove']>(id => {
+      // Nothing there (a strict-mode cleanup, a second remove): the outlet is what it was, so no new fragment.
+      if (!map.current[id]) return
       map.current[id] = null
       setOutlet(<>{Object.values(map.current)}</>)
     }, [])

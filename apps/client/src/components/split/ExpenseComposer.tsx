@@ -17,10 +17,13 @@ import {
 } from '@splito/domain'
 import {
   createExpense,
+  type ExpenseDraft,
   type Group,
   isRemovedFriend,
+  type MutationCtx,
   type Person,
   roundToFor,
+  type Store,
   updateExpense,
 } from '@splito/sync'
 
@@ -75,6 +78,18 @@ import {SplitEditor} from './SplitEditor'
 import {suggestCategory} from './suggestCategory'
 
 /**
+ * The write, with its failure returned: a try/catch around a conditional inside the component makes the React
+ * Compiler skip the whole form, so every keystroke re-rendered every row, button and dialog (owner 108).
+ */
+async function persistExpense(store: Store, ctx: MutationCtx, expenseId: string | undefined, draft: ExpenseDraft) {
+  try {
+    return {saved: expenseId ? await updateExpense(store, ctx, expenseId, draft) : await createExpense(store, ctx, draft)}
+  } catch (error) {
+    return {error}
+  }
+}
+
+/**
  * The Add / Edit expense form inside Bluesky's composer: Cancel and the Save
  * pill on top, the title beside its category (where Bluesky puts the
  * avatar), a calculator amount, detail rows, the split, notes, and a footer
@@ -123,7 +138,8 @@ export function ExpenseComposer({
   const rememberRounding = (unit: number) => {
     void saveRoundCash(unit > 0)
     if (unit === 0) return
-    const {[form.currency]: _, ...rest} = roundToUnits
+    // Not `{[form.currency]: _, ...rest}`: the React Compiler cannot lower a computed key in a pattern and skips the whole form.
+    const rest = Object.fromEntries(Object.entries(roundToUnits).filter(([currency]) => currency !== form.currency))
     void saveRoundToUnits(unit === 1 ? rest : {...rest, [form.currency]: unit})
   }
   const people = useEntities<Person>('person')
@@ -228,16 +244,14 @@ export function ExpenseComposer({
     const draft = evaluation.draft
     if (!draft || isSaving || savedId) return
     setIsSaving(true)
-    try {
-      const saved = expenseId
-        ? await updateExpense(store, ctx, expenseId, draft)
-        : await createExpense(store, ctx, draft)
-      if (draftContext) clearDraft(draftContext)
-      setSavedId(saved.id)
-    } catch (e) {
+    const result = await persistExpense(store, ctx, expenseId, draft)
+    if ('error' in result) {
       setIsSaving(false)
-      Toast.show(errorText((e as {code?: string}).code ?? ''), {type: 'error'})
+      Toast.show(errorText((result.error as {code?: string}).code ?? ''), {type: 'error'})
+      return
     }
+    if (draftContext) clearDraft(draftContext)
+    setSavedId(result.saved.id)
   }
 
   const first = form.people[0] ? name(form.people[0]) : ''
