@@ -60,6 +60,11 @@ them do yet.
    owner decisions in `AGENTS.md`. A `UserPromptSubmit` hook in the repo's `.claude/settings.json` injects
    this reminder on every prompt. Reason: owner, 2026-10-26: "make sure this file updates on its own,
    whenever there is any such decision".
+10. **Record lessons and rules without being asked** (owner 163). Whenever work turns up something every future
+    change should follow (a root cause, a library quirk, a review finding, a platform rule, a test or perf rule, a
+    convention), Claude writes it here in the same turn as a dated § 23 lesson or a rule in its section, updates
+    BACKLOG when it implies work, commits and pushes, without waiting for the owner to say "add this". Reason:
+    owner, 2026-10-30: "make sure you do it yourself always, whenever you think this should be in the app".
 
 ---
 
@@ -2552,6 +2557,7 @@ Every owner decision, in the order it was made (all 2026-10-26). "Replaced" name
 | 160 | "in this red/green text on right and other text keep on left" (screenshot of the card) | Card is a two-column table: each line's words left, its red/green amount right (net large on line 1; owed-to-you green and you-owe red small when both open; count line left only) | § 26.12 | Net and lines stacked on the right (159) |
 | 161 | mock-up: net large green on the right of line 1; "Owed to you ₹49,243.00" and "You owe ₹450.00" small, white/grey, on the left; "4 friends" | Only the net is coloured and right-aligned; breakdown lines stay left in normal colours | § 26.12 | Breakdown amounts coloured on the right (160) |
 | 162 | "add all these to architecture" (the iOS, tap-speed and links review findings) | Lessons recorded in § 23 (sheet presenting, sheet host provider, tab links on native, SQLite sync batching, no dedupe on idempotent nav, deferred-render contract, sideways overflow, renders baseline upkeep) | § 23 | - |
+| 163 | "make sure you do it yourself always, whenever you think this should be in app" | Claude records lessons and rules (§ 23 or the section) on its own in the same turn, plus BACKLOG work, commit and push, without being asked | § 0 rule 10 | Recording lessons only when asked |
 
 New decisions follow § 0 rule 9: rewrite the rule in its topic so only the current truth remains, then add a
 row here.
