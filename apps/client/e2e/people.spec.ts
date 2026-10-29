@@ -1,6 +1,24 @@
 import {expect, type Page, test} from '@playwright/test'
+import {balanceRows, balanceSides, personSummary} from '@splito/domain'
+import {DEMO_LARGE_PREFIX, generateLargeDemo, localToday, planLedger} from '@splito/sync/demoLarge'
 
 import {openDemo} from './openDemo'
+
+/** A currency and direction nobody matches in the demo dataset (computed from its plan, so it follows the data). */
+function emptyFilter(): [currency: string, show: 'owesYou' | 'youOwe'] {
+  const me = `${DEMO_LARGE_PREFIX}me`
+  const plan = generateLargeDemo({me, today: localToday(), now: Date.now()})
+  const people = personSummary(balanceRows(planLedger(plan), me), {includeGroups: true}).filter(p => p.person !== me)
+  for (const currency of ['BHD', 'KWD', 'JPY', 'THB', 'GBP'])
+    for (const show of ['owesYou', 'youOwe'] as const) {
+      const hit = people.some(p => {
+        const c = p.byCurrency[currency]
+        return c !== undefined && (show === 'owesYou' ? balanceSides(c).owed > 0n : balanceSides(c).owe > 0n)
+      })
+      if (!hit) return [currency, show]
+    }
+  throw new Error('every currency has a friend in both directions: pick another filter')
+}
 
 /* Seeds through the app's own mutations (window.splito, dev/E2E builds only). Amounts are minor units. */
 type Splito = {
@@ -239,10 +257,11 @@ test('People filters: one currency, which way, and the order drive the list and 
   await page.getByTestId('sheet-save').click()
   // Settled in euros: Sam, who still owes euros, is gone; friends square in euros stay filterable (F-112 m3).
   await expect(people.getByTestId('person-Sam Carter')).toHaveCount(0)
-  // Nobody owes me in dinar (I owe Diego), so that filter shows the way back.
+  // A currency and direction nobody matches shows the way back.
+  const [emptyCurrency, emptyShow] = emptyFilter()
   await people.getByTestId('list-filters').click()
-  await page.getByTestId('filter-currency-BHD').click()
-  await page.getByTestId('filter-show-owesYou').click()
+  await page.getByTestId(`filter-currency-${emptyCurrency}`).click()
+  await page.getByTestId(`filter-show-${emptyShow}`).click()
   await page.getByTestId('sheet-save').click()
   await expect(people.getByTestId('people-filtered-empty')).toBeVisible()
   await people.getByTestId('people-clear-filters').click()

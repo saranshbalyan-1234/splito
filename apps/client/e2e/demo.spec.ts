@@ -37,8 +37,8 @@ const STORY = {
   diego: 'Diego Alves',
 } as const
 const summaryOf = (key: string) => byId.get(`${DEMO_LARGE_PREFIX}p-${key}`)
-/** The generated friends plus the 3 private friends of the invites flow (`demoSeed.ts`): none owes anything. */
-const FRIENDS = plan.counts.people + 3
+/** The generated friends plus the 3 private friends of the invites flow (`demoSeed.ts`), less the deleted and the removed friend of the Wave B story, who leave the count. */
+const FRIENDS = plan.counts.people + 3 - 2
 
 /* Every compiled message id, so the UI can be checked for ids shown instead of words. */
 const MESSAGE_IDS = Object.keys(
@@ -188,7 +188,7 @@ test('Profile holds identity: name prompt, counts, then Settings and About; no d
   await expect(page.getByTestId('profile-stat-friends')).toContainText(
     String(FRIENDS),
   )
-  await expect(page.getByTestId('profile-stat-groups')).toContainText(String(plan.counts.groups))
+  await expect(page.getByTestId('profile-stat-groups')).toContainText(String(plan.counts.groups - 2)) // less the hidden and the deleted group of the Wave B story
   await expect(page.getByTestId('profile-analytics')).toHaveCount(0)
   await expect(page.getByText('Coming with sync')).toHaveCount(0)
   await expect(page.getByTestId('profile-sync-note')).toBeVisible()
@@ -222,7 +222,7 @@ test('Groups: Overview, search by member, and type / status filters', async ({
   const groups = page.getByTestId('screen-groups')
   await expect(groups.getByTestId('group-Lisbon')).toBeVisible()
   await expect(groups.getByTestId('groups-balances-counts')).toHaveText(
-    /^15 groups · \d+ settled$/,
+    /^20 groups · \d+ settled$/,
   )
   // Search finds a group by who is in it.
   await groups.getByTestId('list-search').click()
@@ -240,6 +240,11 @@ test('Groups: Overview, search by member, and type / status filters', async ({
   await groups.getByTestId('list-filters').click()
   await page.getByTestId('filter-type-all').click()
   await page.getByTestId('filter-status-inactive').click()
+  await page.getByTestId('sheet-save').click()
+  // The Wave B story's inactive group (F-604) is the only one; no home group is inactive.
+  await expect(groups.getByTestId('group-Old office chai')).toBeVisible()
+  await groups.getByTestId('list-filters').click()
+  await page.getByTestId('filter-type-home').click()
   await page.getByTestId('sheet-save').click()
   await expect(groups.getByTestId('groups-filtered-empty')).toBeVisible()
   await groups.getByTestId('groups-clear-filters').click()

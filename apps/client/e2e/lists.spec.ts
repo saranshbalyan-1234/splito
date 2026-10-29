@@ -106,7 +106,7 @@ test('search grows from the icon to the row width, Escape folds it, and it combi
   expect(icon.width).toBeLessThan(60)
   await expect(groups.getByTestId('list-filters')).toBeVisible()
   await field.fill('lena')
-  await expect(groups.getByTestId('list-search-count')).toHaveText('1 of 15')
+  await expect(groups.getByTestId('list-search-count')).toHaveText('1 of 18')
 
   await field.press('Escape')
   await expect(field).toHaveCount(0)

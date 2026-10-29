@@ -181,15 +181,14 @@ test('M12, m2: Recently active groups shows a chip per open currency, with exact
   const recent = page
     .getByTestId('right-nav')
     .getByTestId('sidebar-recent-groups')
-  // Lisbon holds euros and rupees side by side (the demo's flights were booked in India).
-  const euros = recent.getByTestId('sidebar-group-balance-Lisbon-EUR')
-  const rupees = recent.getByTestId('sidebar-group-balance-Lisbon-INR')
-  await expect(euros).toHaveText(/^−€[\d,]+\.\d\d$/)
+  // The Goa trip holds rupees and a dollar purchase (Snorkel gear, bought abroad) side by side: Sam paid $100 for five.
+  const rupees = recent.getByTestId('sidebar-group-balance-Goa trip-INR')
+  const dollars = recent.getByTestId('sidebar-group-balance-Goa trip-USD')
   await expect(rupees).toHaveText(/^\+₹[\d,]+\.\d\d$/)
-  await expect(recent.getByTestId('sidebar-group-Lisbon')).toHaveAttribute(
-    'aria-label',
-    /you owe €.*you are owed ₹/,
-  )
+  await expect(dollars).toHaveText('−$20.00')
+  const label = await recent.getByTestId('sidebar-group-Goa trip').getAttribute('aria-label')
+  expect(label).toMatch(/you are owed ₹/)
+  expect(label).toMatch(/you owe (US)?\$/)
 })
 
 test('m21: an Overview currency card opens Analytics in that currency, every time', async ({
