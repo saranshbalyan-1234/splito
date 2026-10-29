@@ -1,7 +1,9 @@
 import {Database} from 'bun:sqlite'
 import {beforeAll, describe, expect, test} from 'bun:test'
 import {
+  ACTIVITY_TYPE_IDS,
   type ActivityEvent,
+  type ActivityTypeId,
   activityFromHistory,
   ensureMe,
   type BackupFile,
@@ -27,7 +29,9 @@ import {
   type WriteOff,
 } from '@splito/sync'
 
+import {activityTypeOf} from '#/components/activity/feed'
 import {DEMO_ME, seedDemo} from '#/data/demoSeed'
+
 
 /*
  * DEMO COVERAGE (owner decision 109): the demo dataset grows with every feature.
@@ -181,6 +185,12 @@ const FEATURES: Array<[feature: string, found: (d: Demo) => boolean]> = [
   // Activity
   ['changes made by other people (unread in Activity)', d => d.dump.history.some(h => h.actor !== DEMO_ME && h.entityType === 'expense')],
   ['my own changes in Activity', d => d.dump.history.some(h => h.actor === DEMO_ME)],
+  // The Activity type filter (owner 173, F-259): one row of every type it offers. Disputes get theirs with the disputes
+  // feature (its own demo disputes and coverage lines), so that type is left to it here.
+  ...(ACTIVITY_TYPE_IDS as readonly ActivityTypeId[])
+    .filter(type => type !== 'disputes')
+    .map((type): [string, (d: Demo) => boolean] => [`Activity lists ${type} (the Type filter)`, d => d.activity.some(e => activityTypeOf(e.kind) === type)]),
+  ['a comment in Activity written by someone else (Others tab) and one by me (Me tab)', d => d.activity.some(e => e.kind === 'comment.added' && e.actor !== DEMO_ME) && d.activity.some(e => e.kind === 'comment.added' && e.actor === DEMO_ME)],
 ]
 
 let demo: Demo

@@ -2,6 +2,7 @@ import {View} from 'react-native'
 import {useLingui} from '@lingui/react/macro'
 import {useNavigation} from '@react-navigation/native'
 
+import {useIsPushedCopy} from '#/lib/hooks/useIsPushedCopy'
 import {type NavigationProp} from '#/lib/routes/types'
 import {FAB} from '#/view/com/util/fab/FAB'
 import {useFabInset} from '#/view/com/util/fab/FABInner'
@@ -23,6 +24,8 @@ export function AddExpenseFAB({
   const t = useTheme()
   const {t: l} = useLingui()
   const navigation = useNavigation<NavigationProp>()
+  /* The FAB follows the header (§ 26.6): a main screen pushed from a link shows Back, so no FAB. */
+  if (useIsPushedCopy()) return null
 
   return (
     <FAB
@@ -43,5 +46,6 @@ export function AddExpenseFAB({
  */
 export function AddExpenseFABInset() {
   const height = useFabInset()
-  return height > 0 ? <View testID="fab-inset" style={{height}} /> : null
+  const isPushed = useIsPushedCopy()
+  return height > 0 && !isPushed ? <View testID="fab-inset" style={{height}} /> : null
 }

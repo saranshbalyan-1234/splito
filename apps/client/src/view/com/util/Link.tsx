@@ -195,7 +195,9 @@ function onPressInner(
         navigation.dispatch(
           tab.kind === 'popTo'
             ? StackActions.popTo(tab.name, tab.params)
-            : CommonActions.navigate(tab.name, tab.params),
+            : tab.kind === 'push'
+              ? StackActions.push(tab.name, tab.params)
+              : CommonActions.navigate(tab.name, tab.params),
         )
       } else if (navigationAction === 'push') {
         navigation.dispatch(StackActions.push(routeName, params))

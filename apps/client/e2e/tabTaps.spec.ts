@@ -123,7 +123,7 @@ for (const motion of ['full', 'reduced'] as const) {
 
     test.describe('in-page tabs', () => {
       test.use({viewport: {width: 390, height: 844}, hasTouch: true, isMobile: true})
-      test('Group tabs: six taps 50 ms apart end on the last; Activity All / From others', async ({page}) => {
+      test('Group tabs: six taps 50 ms apart end on the last; Activity All / Me / Others', async ({page}) => {
         await ready(page)
         await setMotion(page, motion)
         const group = await page.evaluate(async () => {
@@ -154,16 +154,16 @@ for (const motion of ['full', 'reduced'] as const) {
 
         await page.goto('/activity')
         await expect(page.getByTestId('activity-tabs')).toBeVisible()
-        // The seeded person and group are my own changes: All lists them, From others does not.
+        // The seeded person and group are my own changes: All lists them, Others does not.
         const mine = page.getByTestId('screen-activity').locator('[data-testid^="activity-"][data-testid*="."]').filter({hasText: 'You added'})
         await expect(mine.first()).toBeVisible()
-        const one = (await page.getByTestId('activity-tabs-selector-1').boundingBox())!
+        const one = (await page.getByTestId('activity-tabs-selector-2').boundingBox())!
         const zero = (await page.getByTestId('activity-tabs-selector-0').boundingBox())!
         for (const b of [one, zero, one, zero, one]) {
           await page.touchscreen.tap(b.x + b.width / 2, b.y + b.height / 2)
           await page.waitForTimeout(GAP)
         }
-        await expect(page.getByTestId('activity-tabs-selector-1')).toHaveAttribute('aria-selected', 'true')
+        await expect(page.getByTestId('activity-tabs-selector-2')).toHaveAttribute('aria-selected', 'true')
         await expect(mine).toHaveCount(0)
       })
     })

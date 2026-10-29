@@ -113,7 +113,7 @@ const SAMPLES: Sample[] = [
     name: 'an Activity tab',
     path: () => '/activity/others',
     isOpen: async page => {
-      await expect(page.getByTestId('activity-tabs').getByRole('tab').nth(1)).toHaveAttribute('aria-selected', 'true')
+      await expect(page.getByTestId('activity-tabs').getByRole('tab').nth(2)).toHaveAttribute('aria-selected', 'true')
     },
     parent: () => '/',
   },

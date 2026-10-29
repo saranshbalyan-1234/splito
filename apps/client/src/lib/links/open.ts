@@ -1,7 +1,10 @@
+import {StackActions} from '@react-navigation/native'
+
 import {recordFriction} from '#/logger'
 import {IS_WEB} from '#/env'
 import {navigationRef, resetToRoot} from '#/navigation/ref'
 import {openSheetMarkers, ownerOf, queueSheets} from '#/navigation/sheets'
+import {isPushedCopy, tabLink} from '#/lib/routes/helpers'
 import {TAB_NAMES} from '#/lib/routes/tabs'
 import {holdLinkIntent, isSignInRequired} from './intent'
 import {holdForDemoSwitch} from './gate'
@@ -23,6 +26,13 @@ export function navigateToTarget(target: LinkTarget): boolean {
   const go = navigationRef.navigate as (name: string, params?: object) => void
   const isTab = (TAB_NAMES as readonly string[]).includes(target.name)
   const params = Object.keys(target.params).length > 0 ? target.params : undefined
+  /* A main screen opened from a link is a pushed page with Back (owner 179); one already showing as its own tab just takes the new params. */
+  const pushed = isTab && target.sheets.length === 0 ? tabLink(target.name, params, IS_WEB) : null
+  const current = navigationRef.getCurrentRoute()
+  if (pushed?.kind === 'push' && (current?.name !== target.name || isPushedCopy(current.params))) {
+    navigationRef.dispatch(StackActions.push(pushed.name, pushed.params))
+    return true
+  }
   if (IS_WEB) {
     /* Search & Ask belongs to no page: it opens over the one now showing. Every other link names its page. */
     if (target.sheets[0] !== 'search') go(target.name, params)

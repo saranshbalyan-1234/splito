@@ -13,3 +13,13 @@ export function linkTo(name: LinkTarget['name'], params: Record<string, string> 
 export function pathTo(name: LinkTarget['name'], params: Record<string, string> = {}, sheets: string[] = [], query: Record<string, string> = {}) {
   return buildPath({name, params, sheets, query})
 }
+
+/**
+ * Every "See all" of Recent transactions (F-259, owner 173): Activity on its All tab with the transactions type
+ * applied, scoped to a group from a Group page. Opened with `navigationAction="push"` (or `openLink`) it lands as a
+ * pushed page with Back (owner 179). The tab is named so a saved Me or Others never narrows it.
+ */
+export function seeAllTransactionsPath(groupId?: string) {
+  /* The tab is a query here because `Link` matches a bare route pattern (`/activity`); the address bar prints it as `/activity/all`. */
+  return `/activity?${new URLSearchParams({tab: 'all', type: 'transactions', ...(groupId ? {group: groupId} : {})})}`
+}

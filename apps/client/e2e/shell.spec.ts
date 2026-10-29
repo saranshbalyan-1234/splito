@@ -412,10 +412,10 @@ test.describe("activity: a tab with Bluesky's unread badge", () => {
       'page',
     )
 
-    // "From others" drops your own changes.
+    // "Others" drops your own changes.
     const rows = activityRows(page)
-    await page.getByTestId('activity-tabs-selector-1').click()
-    await expect(page.getByTestId('activity-tabs-selector-1')).toHaveAttribute(
+    await page.getByTestId('activity-tabs-selector-2').click()
+    await expect(page.getByTestId('activity-tabs-selector-2')).toHaveAttribute(
       'aria-selected',
       'true',
     )

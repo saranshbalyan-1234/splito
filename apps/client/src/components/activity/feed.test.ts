@@ -7,12 +7,16 @@ import {
   dayOf,
   daysAgo,
   EMPTY_FEED_STATE,
+  ALL_ACTIVITY,
+  activityTypeOf,
   isRead,
   markAllRead,
   setHidden,
   setRead,
   writeOffParties,
 } from './feed'
+
+const tab = (t: 'all' | 'me' | 'others') => ({...ALL_ACTIVITY, tab: t})
 
 const at = (day: number, hour: number) => Date.UTC(2026, 9, day, hour)
 const ev = (id: string, time: number, actor = 'riya') =>
@@ -28,8 +32,9 @@ test('own changes and anything up to "mark all read" are read; marks override pe
 
   s = setRead(s, theirs, true)
   expect(isRead(s, theirs, 'me')).toBe(true)
+  // My own changes are never unread, whatever is marked (owner 92).
   s = setRead(s, mine, false)
-  expect(isRead(s, mine, 'me')).toBe(false)
+  expect(isRead(s, mine, 'me')).toBe(true)
 
   s = markAllRead(s, [mine, theirs])
   expect([mine, theirs].every(e => isRead(s, e, 'me'))).toBe(true)
@@ -47,7 +52,7 @@ test('rows: one header per local day, dividers only between rows of a day, hidde
     ev('a', at(20, 12)),
   ]
   const s = setHidden(EMPTY_FEED_STATE, 'x', true)
-  const {rows, hiddenCount, unreadCount} = buildRows(events, s, 'me', 'all', 'UTC')
+  const {rows, hiddenCount, unreadCount} = buildRows(events, s, 'me', ALL_ACTIVITY, 'UTC')
   expect(
     rows.map(r =>
       r.type === 'section'
@@ -64,25 +69,46 @@ test('rows: one header per local day, dividers only between rows of a day, hidde
   expect(hiddenCount).toBe(1)
   // Hidden rows don't count as unread.
   expect(unreadCount).toBe(2)
-  expect(buildRows(events, setHidden(s, 'x', false), 'me', 'all', 'UTC').hiddenCount).toBe(0)
+  expect(buildRows(events, setHidden(s, 'x', false), 'me', ALL_ACTIVITY, 'UTC').hiddenCount).toBe(0)
 })
 
-test('"From others" leaves out your own changes; the badge counts only unread from others', () => {
+test('tabs: Me lists what I did, Others what other people did; only others\' changes can be unread', () => {
   const events = [
     ev('c', at(26, 9)),
     ev('b', at(26, 8), 'me'),
     ev('a', at(25, 12)),
   ]
-  // Your own change marked unread again shows as unread in All, but never badges.
+  // Marking my own change unread does nothing: the badge and "Mark all read" count only others.
   const s = setRead(EMPTY_FEED_STATE, events[1]!, false)
-  const all = buildRows(events, s, 'me', 'all', 'UTC')
-  expect(all.unreadCount).toBe(3)
-  expect(all.unreadFromOthers).toBe(2)
-  const others = buildRows(events, s, 'me', 'others', 'UTC')
-  expect(
-    others.rows.flatMap(r => (r.type === 'event' ? [r.event.id] : [])),
-  ).toEqual(['c', 'a'])
-  expect(others.unreadCount).toBe(2)
+  const ids = (t: 'all' | 'me' | 'others') =>
+    buildRows(events, s, 'me', tab(t), 'UTC').rows.flatMap(r => (r.type === 'event' ? [r.event.id] : []))
+  expect(ids('all')).toEqual(['c', 'b', 'a'])
+  expect(ids('me')).toEqual(['b'])
+  expect(ids('others')).toEqual(['c', 'a'])
+  expect(buildRows(events, s, 'me', tab('all'), 'UTC').unreadCount).toBe(2)
+  expect(buildRows(events, s, 'me', tab('me'), 'UTC').unreadCount).toBe(0)
+  expect(buildRows(events, s, 'me', tab('others'), 'UTC').unreadCount).toBe(2)
+})
+
+test('types: transactions are expenses and payments; disputes are read from their kind; a type list narrows, empty is all', () => {
+  const kinds = ['expense.created', 'repayment.recorded', 'writeoff.recorded', 'comment.added', 'group.created', 'person.added', 'friendRequest.sent', 'reminder.set', 'dispute.opened']
+  expect(kinds.map(k => activityTypeOf(k))).toEqual(['expenses', 'payments', 'payments', 'comments', 'groups', 'friends', 'friends', 'reminders', 'disputes'])
+  const events = kinds.map((kind, i) => ({id: String(i), at: at(26, 9 - i), actor: 'riya', kind}) as ActivityEvent)
+  const ids = (types: Parameters<typeof buildRows>[3]['types']) =>
+    buildRows(events, EMPTY_FEED_STATE, 'me', {tab: 'all', types}, 'UTC').rows.flatMap(r => (r.type === 'event' ? [r.event.kind as string] : []))
+  expect(ids(['expenses', 'payments'])).toEqual(['expense.created', 'repayment.recorded', 'writeoff.recorded'])
+  expect(ids(['disputes', 'comments'])).toEqual(['comment.added', 'dispute.opened'])
+  expect(ids([])).toHaveLength(kinds.length)
+})
+
+test('a group scope keeps that group\'s changes, a comment going by its expense', () => {
+  const events = [
+    {id: 'e1', at: at(26, 9), actor: 'riya', kind: 'expense.created', entityType: 'expense', data: {groupId: 'g1'}},
+    {id: 'e2', at: at(26, 8), actor: 'riya', kind: 'expense.created', entityType: 'expense', data: {groupId: 'g2'}},
+    {id: 'c1', at: at(26, 7), actor: 'riya', kind: 'comment.added', entityType: 'comment', data: {targetType: 'expense', targetId: 'x1'}},
+  ] as unknown as ActivityEvent[]
+  const rows = buildRows(events, EMPTY_FEED_STATE, 'me', {tab: 'all', types: [], group: 'g1'}, 'UTC', id => (id === 'x1' ? 'g1' : undefined)).rows
+  expect(rows.flatMap(r => (r.type === 'event' ? [r.event.id] : []))).toEqual(['e1', 'c1'])
 })
 
 test('daysAgo counts calendar days, not 24-hour periods', () => {
@@ -97,8 +123,8 @@ test('daysAgo counts calendar days, not 24-hour periods', () => {
 test('events are grouped by the day they fall on in the chosen timezone', () => {
   // 20:00Z on the 25th is 01:30 on the 26th in Kolkata but still the 25th in London.
   const events = [ev('a', at(25, 20))]
-  const ist = buildRows(events, EMPTY_FEED_STATE, 'me', 'all', 'Asia/Kolkata')
-  const la = buildRows(events, EMPTY_FEED_STATE, 'me', 'all', 'America/Los_Angeles')
+  const ist = buildRows(events, EMPTY_FEED_STATE, 'me', ALL_ACTIVITY, 'Asia/Kolkata')
+  const la = buildRows(events, EMPTY_FEED_STATE, 'me', ALL_ACTIVITY, 'America/Los_Angeles')
   expect(ist.rows[0]).toMatchObject({type: 'section', day: '2026-10-26'})
   expect(la.rows[0]).toMatchObject({type: 'section', day: '2026-10-25'})
   expect(dayOf(at(25, 20), 'Asia/Kolkata')).toBe('2026-10-26')

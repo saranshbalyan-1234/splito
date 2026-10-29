@@ -28,6 +28,7 @@ import {useNavigation, useNavigationState} from '@react-navigation/native'
 import {
   getCurrentRoute,
   getTabState,
+  isPushedCopy,
   isTab,
   TabState,
 } from '#/lib/routes/helpers'
@@ -211,7 +212,8 @@ function NavItem({
 
   const [pathName] = useMemo(() => router.matchPath(href), [href])
   const currentRouteInfo = useNavigationState(state => getCurrentRoute(state))
-  const isCurrent = isTab(currentRouteInfo.name, pathName)
+  /* A main screen pushed from a link (owner 179) is not the tab: pressing the tab brings up the plain one. */
+  const isCurrent = isTab(currentRouteInfo.name, pathName) && !isPushedCopy(currentRouteInfo.params)
   const openNavItem = useOpenNavItem(onNavigateTab)
   const onPressWrapped = useCallback(
     (e: React.MouseEvent<HTMLAnchorElement, MouseEvent>) => {

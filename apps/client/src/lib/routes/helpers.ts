@@ -53,12 +53,22 @@ export function isStateAtTabRoot(state: State | undefined) {
     return true
   }
   const currentRoute = getCurrentRoute(state)
+  /* A main screen pushed from a link shows Back (owner 179): it is a page, not the tab. */
+  if (isPushedCopy(currentRoute.params)) return false
   return (
     isTab(currentRoute.name, 'People') ||
     isTab(currentRoute.name, 'Groups') ||
     isTab(currentRoute.name, 'Analytics') ||
     isTab(currentRoute.name, 'Activity')
   )
+}
+
+/**
+ * Whether a main screen was opened as a pushed copy with Back (owner 179) rather than as its own tab: it carries
+ * `back: '1'` (never in the address, `buildPath` leaves it out). The tab screens read this for their header and FAB.
+ */
+export function isPushedCopy(params: object | undefined): boolean {
+  return (params as {back?: string} | undefined)?.back === '1'
 }
 
 export function isTab(current: string, route: string) {
@@ -86,7 +96,8 @@ export function getTabState(state: State | undefined, tab: string): TabState {
 
   const currentRoute = getCurrentRoute(state)
   const activeTabRoute = state.routes[state.index || 0].name
-  if (isTab(currentRoute.name, tab)) {
+  /* A pushed copy is not the tab's root: pressing the tab itself still brings up the plain tab. */
+  if (isTab(currentRoute.name, tab) && !isPushedCopy(currentRoute.params)) {
     return TabState.InsideAtRoot
   } else if (isTab(activeTabRoute, tab)) {
     return TabState.Inside
@@ -134,18 +145,31 @@ export function buildStateObject(
 const TAB_ROUTES: readonly string[] = Object.keys({People: 1, Groups: 1, Analytics: 1, Activity: 1} satisfies Record<keyof TabParams, 1>)
 
 /**
- * How a pressed link reaches its route. A tab is not on the stack the press happens in (a Profile stat tile, an
- * Overview card on Groups), so a stack push never finds it ("The action 'PUSH' ... was not handled by any
- * navigator"). On native the tabs are nested in the root stack's `Tabs` screen, so the stack pops back to `Tabs`
- * and selects the tab with its params (the shape the drawer uses); on web the tab is a route of its own and is
- * navigated to. Every other route is pushed (Bluesky's behaviour): `null`.
+ * The main screens that can open as a pushed copy with Back (owner 179), and the root-stack route a phone pushes
+ * for each (the tabs live inside `Tabs`, so a pushed copy needs a route of its own; web pushes the tab's own route,
+ * its flat stack has every route at the top). A screen joins when its header reads `useIsPushedCopy`: Activity
+ * first (F-259); Home, People, Groups and Analytics follow with their screens.
+ */
+const PUSHED_COPY: Readonly<Record<string, string>> = {Activity: 'ActivityPage'}
+
+/**
+ * How a pressed link reaches its route. A main screen opened from a link (a "See all", an Overview card, a search or
+ * Ask result, a notification, a deep link) is pushed as a page with Back (owner 179, `kind: 'push'`, the params
+ * carry `back: '1'`); where its screen cannot yet show Back, a tab is not on the stack the press happens in, so a
+ * stack push never finds it ("The action 'PUSH' ... was not handled by any navigator"): on native the stack pops
+ * back to `Tabs` and selects the tab with its params (the shape the drawer uses), on web the tab is a route of its
+ * own and is navigated to. Every other route is pushed (Bluesky's behaviour): `null`.
  */
 export function tabLink(
   routeName: string,
   params: object | undefined,
   isWeb: boolean,
-): {kind: 'popTo' | 'navigate'; name: string; params: object | undefined} | null {
+):
+  | {kind: 'push' | 'popTo' | 'navigate'; name: string; params: object | undefined}
+  | null {
   if (!TAB_ROUTES.includes(routeName)) return null
+  const pushed = PUSHED_COPY[routeName]
+  if (pushed) return {kind: 'push', name: isWeb ? routeName : pushed, params: {...params, back: '1'}}
   return isWeb
     ? {kind: 'navigate', name: routeName, params}
     : {kind: 'popTo', name: 'Tabs', params: {screen: routeName, params}}

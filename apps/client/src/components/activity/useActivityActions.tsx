@@ -37,6 +37,8 @@ export function useActivityActions(feed: ReturnType<typeof useActivityFeed>) {
   const answerRequest = useAnswerFriendRequest()
 
   const isAvailable = (action: RowAction, event: ActivityEvent) => {
+    /* My own changes are never unread (owner 92), so there is nothing to mark. */
+    if (action === 'markRead') return event.actor !== feed.me
     if (action !== 'delete') return true
     const expense =
       event.entityType === 'expense'
@@ -107,7 +109,9 @@ export function useActivityActions(feed: ReturnType<typeof useActivityFeed>) {
 
   const markEverythingRead = () => {
     const before = feed.state
-    update(s => markAllRead(s, snapshot?.events ?? []))
+    /* A narrowed list (a type, a group) marks only what it lists; the rest stays unread. */
+    const listed = feed.rows.flatMap(r => (r.type === 'event' ? [r.event] : []))
+    update(s => (feed.isNarrowed ? listed.reduce((acc, e) => setRead(acc, e, true), s) : markAllRead(s, snapshot?.events ?? [])))
     showUndo(<Trans>Marked everything as read</Trans>, () =>
       update(s => ({
         ...s,

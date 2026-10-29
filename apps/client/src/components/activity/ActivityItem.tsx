@@ -41,6 +41,7 @@ import {IS_NATIVE, IS_WEB, IS_WEB_TOUCH_DEVICE} from '#/env'
 import {
   AddedBadge,
   ArchivedBadge,
+  CommentBadge,
   DeletedBadge,
   EditedBadge,
   FriendAcceptedBadge,
@@ -158,7 +159,9 @@ export function ActivityItem({
           ? snapshot.people.get(event.entityId)
           : event.entityType === 'friendRequest'
             ? snapshot.requests.get(event.entityId)
-            : undefined
+            : event.entityType === 'comment' && event.data.targetType === 'expense'
+              ? snapshot.expenses.get(event.data.targetId)
+              : undefined
   const tone = useSyncTone(subject?.syncStatus)
   const menuControl = Menu.useMenuControl()
   const [menuAt, setMenuAt] = useState({x: 0, y: 0})
@@ -994,6 +997,30 @@ function useDescribe(
           w.groupId
             ? navigation.push('Group', {groupId: w.groupId})
             : navigation.push('Person', {personId: other}),
+      }
+    }
+    case 'comment': {
+      const c = event.data
+      const expense = c.targetType === 'expense' ? snapshot.expenses.get(c.targetId) : undefined
+      const subject = expense ? <Strong isDeleted={expense.deleted}>{expense.data.title}</Strong> : undefined
+      return {
+        avatarName: actorAvatar,
+        icon: CommentBadge,
+        tone: 'primary',
+        headline: subject ? (
+          <Trans>
+            {actor} commented on {subject}
+          </Trans>
+        ) : c.targetType === 'repayment' ? (
+          <Trans>{actor} commented on a payment</Trans>
+        ) : (
+          <Trans>{actor} commented on an expense</Trans>
+        ),
+        detail: groupName(expense?.data.groupId ?? null) ? <Detail>{groupName(expense?.data.groupId ?? null)}</Detail> : undefined,
+        open: () =>
+          c.targetType === 'repayment'
+            ? navigation.push('Repayment', {repaymentId: c.targetId})
+            : navigation.push('Expense', {expenseId: c.targetId}),
       }
     }
     case 'reminder': {

@@ -1,5 +1,5 @@
 import {type LocalDate} from '@splito/domain'
-import {type ActivityEvent} from '@splito/sync'
+import {type ActivityEvent, type ActivityTypeId} from '@splito/sync'
 
 import {daysBetween, todayIn} from '#/locale/dates'
 
@@ -34,8 +34,10 @@ type Readable = Pick<ActivityEvent, 'id' | 'at' | 'actor'>
  * with an older time counts as read; compare server receive times once sync exists.
  */
 export function isRead(s: FeedState, e: Readable, me: string): boolean {
+  // Your own changes are never unread (owner 92): they cannot be marked unread either.
+  if (e.actor === me) return true
   if (s.unread.includes(e.id)) return false
-  return e.actor === me || e.at <= s.readUpTo || s.read.includes(e.id)
+  return e.at <= s.readUpTo || s.read.includes(e.id)
 }
 
 export function setRead(s: FeedState, e: Readable, read: boolean): FeedState {
@@ -95,29 +97,88 @@ export type FeedRow =
       hasDivider: boolean
     }
 
-/** The Notifications tabs: everything, or only changes by other people (Bluesky's "Mentions" slot). */
-export type FeedFilter = 'all' | 'others'
+/** Activity's tabs (owner 92): everything, what I did, what other people did. */
+export type ActivityTab = 'all' | 'me' | 'others'
+
+/** What the list shows: the tab, the types (empty is every type, owner 173) and, from a Group's "See all", one group. */
+export type FeedFilter = {tab: ActivityTab; types: readonly ActivityTypeId[]; group?: string}
+
+export const ALL_ACTIVITY: FeedFilter = {tab: 'all', types: []}
+
+/** The type an event kind belongs to (owner 173); undefined for a kind this list does not know, which only the unfiltered list shows. */
+export function activityTypeOf(kind: string): ActivityTypeId | undefined {
+  const family = kind.slice(0, kind.indexOf('.'))
+  switch (family) {
+    case 'expense':
+      return 'expenses'
+    case 'repayment':
+    case 'writeoff':
+      return 'payments'
+    case 'comment':
+      return 'comments'
+    case 'group':
+      return 'groups'
+    case 'person':
+    case 'friendRequest':
+      return 'friends'
+    case 'reminder':
+      return 'reminders'
+    case 'dispute':
+    case 'hold':
+      return 'disputes'
+    default:
+      return undefined
+  }
+}
+
+/** The group a change belongs to, when it has one; `groupOfExpense` tells where a comment's expense lives. */
+function groupOf(e: ActivityEvent, groupOfExpense?: (id: string) => string | null | undefined): string | null | undefined {
+  switch (e.entityType) {
+    case 'group':
+      return e.entityId
+    case 'comment':
+      return e.data.targetType === 'expense' ? groupOfExpense?.(e.data.targetId) : undefined
+    case 'expense':
+    case 'repayment':
+    case 'writeoff':
+    case 'reminder':
+      return e.data.groupId
+    default:
+      return (e as {data?: {groupId?: string | null}}).data?.groupId
+  }
+}
+
+/** Whether `event` is in the list for `filter`. */
+export function matchesFilter(event: ActivityEvent, filter: FeedFilter, me: string, groupOfExpense?: (id: string) => string | null | undefined): boolean {
+  if (filter.tab === 'others' && event.actor === me) return false
+  if (filter.tab === 'me' && event.actor !== me) return false
+  if (filter.types.length > 0) {
+    const type = activityTypeOf(event.kind)
+    if (!type || !filter.types.includes(type)) return false
+  }
+  return !filter.group || groupOf(event, groupOfExpense) === filter.group
+}
 
 /**
  * The list's rows: the visible changes (newest first) under one header per
  * local day, as Bluesky's notifications sit under "Today" and "Earlier".
- * `unreadFromOthers` is the badge count: your own changes never badge.
+ * `unreadCount` is the badge count: your own changes are never unread.
  */
 export function buildRows(
   events: ActivityEvent[],
   s: FeedState,
   me: string,
-  filter: FeedFilter = 'all',
+  filter: FeedFilter,
   tz: string,
+  groupOfExpense?: (id: string) => string | null | undefined,
 ) {
   const hidden = new Set(s.hidden)
   const rows: FeedRow[] = []
   let hiddenCount = 0
   let unreadCount = 0
-  let unreadFromOthers = 0
   let day: LocalDate | undefined
   for (const event of events) {
-    if (filter === 'others' && event.actor === me) continue
+    if (!matchesFilter(event, filter, me, groupOfExpense)) continue
     if (hidden.has(event.id)) {
       hiddenCount++
       continue
@@ -130,7 +191,6 @@ export function buildRows(
     const read = isRead(s, event, me)
     if (!read) {
       unreadCount++
-      if (event.actor !== me) unreadFromOthers++
     }
     rows.push({
       type: 'event',
@@ -140,5 +200,5 @@ export function buildRows(
       hasDivider: rows.at(-1)?.type === 'event',
     })
   }
-  return {rows, hiddenCount, unreadCount, unreadFromOthers}
+  return {rows, hiddenCount, unreadCount}
 }

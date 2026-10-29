@@ -1,3 +1,4 @@
+import {type Comment} from './comments'
 import {type FriendRequest} from './friends'
 import {type Expense, type Group, isGroupInactive, type Person, type Tombstone, type Repayment, type WriteOff} from './mutations'
 import {type Reminder} from './reminders'
@@ -37,11 +38,12 @@ export type ActivityEvent = Base &
         prev?: FriendRequest
       }
     | {entityType: 'reminder'; kind: 'reminder.nudged' | 'reminder.set'; data: Reminder; prev?: Reminder}
+    | {entityType: 'comment'; kind: 'comment.added'; data: Comment; prev?: Comment}
   )
 
 export type ActivityKind = ActivityEvent['kind']
 
-const FEED_TYPES = ['person', 'group', 'expense', 'repayment', 'writeoff', 'friendRequest', 'reminder'] as const satisfies EntityType[]
+const FEED_TYPES = ['person', 'group', 'expense', 'repayment', 'writeoff', 'friendRequest', 'reminder', 'comment'] as const satisfies EntityType[]
 
 /** What a history row means, given the version before it. Undefined rows stay out of the feed. */
 function kindOf(row: HistoryRow, prev: HistoryRow | undefined): ActivityKind | undefined {
@@ -83,6 +85,9 @@ function kindOf(row: HistoryRow, prev: HistoryRow | undefined): ActivityKind | u
     case 'reminder':
       // A reminder shows once, when it is shared or set; moving or cancelling it is housekeeping.
       return !prev ? ((row.data as Reminder).kind === 'nudge' ? 'reminder.nudged' : 'reminder.set') : undefined
+    case 'comment':
+      // A comment shows once, when it is written; editing or deleting it is housekeeping (its text is not repeated here).
+      return !prev && !row.deleted ? 'comment.added' : undefined
     default:
       // Preferences are settings, not activity.
       return undefined
@@ -224,14 +229,18 @@ export function activityTracker(store: Store, want: () => number = () => ACTIVIT
     // Only what the events name: an expense or a request row shows its current state.
     const wanted = new Map<EntityType, string[]>()
     for (const e of list) {
-      if (e.entityType !== 'expense' && e.entityType !== 'friendRequest') continue
-      if (known.has(keyOf(e.entityType, e.entityId))) continue
-      const ids = wanted.get(e.entityType) ?? []
-      ids.push(e.entityId)
-      wanted.set(e.entityType, ids)
+      // A comment on an expense names that expense, so its row can say which one.
+      const ref = e.entityType === 'comment' ? (e.data.targetType === 'expense' ? {type: 'expense' as const, id: e.data.targetId} : undefined) : e.entityType === 'expense' || e.entityType === 'friendRequest' ? {type: e.entityType, id: e.entityId} : undefined
+      if (!ref || known.has(keyOf(ref.type, ref.id))) continue
+      const ids = wanted.get(ref.type) ?? []
+      ids.push(ref.id)
+      wanted.set(ref.type, ids)
     }
     for (const [type, ids] of wanted) for (const row of await store.getMany(type, ids)) known.set(keyOf(type, row.id), row)
-    const named = (type: EntityType) => [...new Set(list.filter(e => e.entityType === type).map(e => e.entityId))].map(id => known.get(keyOf(type, id))).filter((e): e is Entity => !!e)
+    const named = (type: EntityType) =>
+      [...new Set(list.flatMap(e => (e.entityType === type ? [e.entityId] : e.entityType === 'comment' && type === 'expense' && e.data.targetType === 'expense' ? [e.data.targetId] : [])))]
+        .map(id => known.get(keyOf(type, id)))
+        .filter((e): e is Entity => !!e)
     const entities = {
       person: people,
       group: groups,
@@ -240,6 +249,7 @@ export function activityTracker(store: Store, want: () => number = () => ACTIVIT
       writeoff: [],
       friendRequest: named('friendRequest'),
       reminder: [],
+      comment: [],
     } satisfies Record<FeedType, Entity[]>
     return {events: list, entities, isDone: isDone && !hasMore}
   }

@@ -6,6 +6,7 @@ import {
   isPageSheet,
   isValidPathParam,
   PAGE_TABS,
+  PREF_TABS,
   pathParamNames,
   QUERY_KEYS,
   QUERY_SHEETS,
@@ -147,8 +148,9 @@ export function buildPath(target: LinkTarget): string {
   const fixed = pathParamNames(name)
   let path = ROUTE_PATHS[name].replace(/:(\w+)/g, (_m, key: string) => encodeURIComponent(params[key] ?? '')).replace(/\/$/, '')
   const tabs = (PAGE_TABS as Record<string, readonly string[]>)[name]
-  if (tabs && params.tab && params.tab !== tabs[0] && tabs.includes(params.tab)) path += `/${params.tab}`
-  add(params, [...fixed, 'tab'])
+  if (tabs && params.tab && (params.tab !== tabs[0] || PREF_TABS.includes(name)) && tabs.includes(params.tab)) path += `/${params.tab}`
+  /* `back` is chrome (the page was pushed from a link and shows Back, owner 179), not part of the address. */
+  add(params, [...fixed, 'tab', 'back'])
   const queryId = sheets.length === 1 ? (sheets[0] as keyof typeof QUERY_SHEETS) : undefined
   if (queryId && queryId in QUERY_SHEETS) search.set(queryId, QUERY_SHEETS[queryId])
   else if (sheets.length > 0) path += `/${sheets.join('/')}`

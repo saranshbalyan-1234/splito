@@ -16,14 +16,19 @@ export type TabParams = {
   Groups: ListParams | undefined
   /** `currency` opens the report in that currency (`/analytics?currency=EUR`, an Overview card); also `period`, `offset`, `from`, `to`, `scope`. */
   Analytics: {currency?: string; period?: string; offset?: string; from?: string; to?: string; scope?: string} | undefined
-  /** `tab: 'others'` is `/activity/others`. */
-  Activity: {tab?: 'all' | 'others'} | undefined
+  /**
+   * `tab: 'others'` is `/activity/others`; `type=transactions` and `group=<id>` narrow the list (F-259). `back: '1'`
+   * marks a copy pushed from a link, which shows Back (owner 179) and is never in the address.
+   */
+  Activity: {tab?: 'all' | 'me' | 'others'; type?: string; group?: string; back?: '1'} | undefined
 }
 
 /** Every route in the owner's route table (paths live in `#/routes` and `#/navigation/linking`). */
 export type RootStackParams = {
   /** Native only: the drawer names a tab through here, since v7 doesn't navigate into children by name. */
   Tabs: NavigatorScreenParams<TabParams> | undefined
+  /** A phone's pushed copy of the Activity tab, opened from a link with Back (owner 179); web pushes `Activity` itself. */
+  ActivityPage: TabParams['Activity']
   /** Opened from the avatar's drawer, so it is pushed like Settings. */
   Profile: undefined
   /** The old Recently deleted link lands here as `?note=deleted-stay` (read raw: a short note under Data). */
@@ -71,7 +76,7 @@ export type SheetMarker = {
 }
 
 /** Web renders every route in one flat stack, like Bluesky's FlatNavigator. */
-export type FlatNavigatorParams = TabParams & Omit<RootStackParams, 'Tabs'> & {Sheet: SheetMarker}
+export type FlatNavigatorParams = TabParams & Omit<RootStackParams, 'Tabs' | 'ActivityPage'> & {Sheet: SheetMarker}
 
 export type AllNavigatorParams = RootStackParams & TabParams
 

@@ -204,6 +204,7 @@ export function TabsNavigator({
         ...(reducedAnimation && {animation: reducedAnimation}),
       }}>
       <Stack.Screen name="Tabs" component={Tabs} />
+      <Stack.Screen name="ActivityPage" component={ActivityScreen} />
       <Stack.Screen name="Profile" component={ProfileScreen} />
       <Stack.Screen name="Settings" component={SettingsScreen} />
       <Stack.Screen name="Search" component={SearchScreen} />
