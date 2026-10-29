@@ -535,7 +535,7 @@ Home shows the Overview and Recent transactions (F-1415); a new People tab holds
   3. `/groups` has no Overview; everything else unchanged.
   4. Nav list order Home, People, Groups, Analytics, Ask Splito, Activity, Settings; the rail and desktop sidebar always show every item in the chosen order with no More (owner 155), the phone bar shows the on items; default bar of 5 with labels; Settings > Navigation includes People; saved tabs migrate by inserting People after Home.
   5. The right column (1300 px and up) is not shown on Home, since the page holds its content; other pages keep it.
-  7. Overview cards are two-column tables (owners 156-160): each line has its words on the left and its red/green amount right-aligned on the right (line 1 label + chip ... net large; when both directions are open, "Owed to you" ... green amount and "You owe" ... red amount, small; count line left only); no amount on the left; about 64-72 px tall at 390 px; 6 currencies fit in one phone screen with the header; e2e checks height and that the amount's right edge aligns with the card's.
+  7. Overview cards (owners 156-161): line 1 label + chip left, net large green/red right-aligned; when both directions are open, "Owed to you ₹X" and "You owe ₹Y" small on the left in normal text colours; count line left; the net is the only coloured, right-side amount; about 64-72 px tall at 390 px; 6 currencies fit in one phone screen with the header; e2e checks height and that the amount's right edge aligns with the card's.
   6. Shell-first rendering (owner 152), e2e at 390/1440, demo data covers recent transactions, Lingui en + hi, perf and renders gate.
 
 ### F-257 Main-tab slide, indicator, icon pop and re-tap scroll-to-top (§ 26.9 gap) `spec: owner § 26.9`
