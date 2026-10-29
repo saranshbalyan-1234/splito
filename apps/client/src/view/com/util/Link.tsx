@@ -66,6 +66,7 @@ export const Link = memo(function Link({
   navigationAction,
   onBeforePress,
   activateOnPressIn,
+  onPressIn: onPressInProp,
   accessibilityActions,
   onAccessibilityAction,
   dataSet: dataSetProp,
@@ -90,14 +91,14 @@ export const Link = memo(function Link({
   const pressedIn = useRef(false)
   const onPressIn = useCallback(
     (e: GestureResponderEvent) => {
-      props.onPressIn?.(e)
+      onPressInProp?.(e)
       if (activateOnPressIn && IS_WEB) {
         pressedIn.current = true
         /* A frame later: the press-in's own feedback (the bar's highlight) paints first, then the page switches. */
         requestAnimationFrame(() => onPress(e))
       }
     },
-    [activateOnPressIn, onPress, props.onPressIn],
+    [activateOnPressIn, onPress, onPressInProp],
   )
   const onPressOnce = useCallback(
     (e?: Event) => {
@@ -138,6 +139,7 @@ export const Link = memo(function Link({
           // @ts-expect-error web only -sfn
           dataSet={dataSet}
           {...props}
+          onPressIn={onPressInProp}
           android_ripple={{
             color: t.atoms.bg_contrast_25.backgroundColor,
           }}>
@@ -164,7 +166,7 @@ export const Link = memo(function Link({
       href={anchorHref}
       dataSet={dataSet}
       {...props}
-      onPressIn={activateOnPressIn ? onPressIn : props.onPressIn}>
+      onPressIn={activateOnPressIn ? onPressIn : onPressInProp}>
       {children ? children : <Text>{title || 'link'}</Text>}
     </Com>
   )

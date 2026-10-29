@@ -51,6 +51,7 @@ function shallowEqual(a: object | undefined, b: object | undefined) {
 }
 const PARKED_TABS = new Set(['Groups', 'Analytics', 'Activity'])
 const DROPPING = new Set(['POP', 'POP_TO', 'POP_TO_TOP', 'GO_BACK', 'NAVIGATE'])
+// oxlint-disable-next-line typescript/no-explicit-any -- the router's state and action types are generic here
 function parkTabs(original: Router<any, any>): Router<any, any> {
   return {
     ...original,

@@ -17,6 +17,8 @@ import {useFocusEffect} from '@react-navigation/native'
 import {useEnableMinimalShellModeForScreen} from '#/state/shell'
 import {useShowShell} from '#/state/shell/minimal-mode'
 import {useShellLayout} from '#/state/shell/shell-layout'
+import {OpenedContext} from '#/lib/hooks/useAfterTransition'
+import {useScreenOpened} from '#/lib/hooks/useScreenOpened'
 import {useIsWithinSplitView} from '#/lib/splitView'
 import {
   atoms as a,
@@ -62,6 +64,8 @@ export const Screen = memo(function Screen({
   const {isWithinSplitView} = useIsWithinSplitView()
 
   useEnableMinimalShellModeForScreen({enabled: minimalShell})
+  /* Native: heavy bodies in this screen mount after its transition ends (owner 168); undefined on web. */
+  const opened = useScreenOpened()
   /* A tab switch or a page opening shows the header, bottom bar and FAB again (ARCHITECTURE 26.4). */
   const showShell = useShowShell()
   useFocusEffect(showShell)
@@ -81,7 +85,9 @@ export const Screen = memo(function Screen({
       ]}
       {...props}>
       <HeaderModeProvider>
-        <MainScrollProvider>{children}</MainScrollProvider>
+        <MainScrollProvider>
+          <OpenedContext.Provider value={opened}>{children}</OpenedContext.Provider>
+        </MainScrollProvider>
       </HeaderModeProvider>
     </View>
   )

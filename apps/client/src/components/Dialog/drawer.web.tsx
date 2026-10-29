@@ -48,7 +48,9 @@ export const DrawerContext = createContext<{
   isDrawer: boolean
   isClosing: boolean
   onExited: () => void
-}>({isDrawer: false, isClosing: false, onExited: () => {}})
+  /** The rise has stopped (the spring finished): what is deferred under the sheet may mount (owner 168). */
+  onOpened: () => void
+}>({isDrawer: false, isClosing: false, onExited: () => {}, onOpened: () => {}})
 DrawerContext.displayName = 'DialogDrawerContext'
 
 export function useDrawerContext() {
@@ -103,11 +105,13 @@ export function useDrawer({
   onRequestClose,
   isClosing = false,
   onExited,
+  onOpened,
 }: {
   enabled: boolean
   onRequestClose: () => void
   isClosing?: boolean
   onExited?: () => void
+  onOpened?: () => void
 }) {
   const reduceMotion = useShouldReduceMotion()
   const {height: windowHeight} = useWindowDimensions()
@@ -125,8 +129,15 @@ export function useDrawer({
 
   /* The rise on mount, and back up when a close is undone by reopening during the exit (audit m26). */
   useEffect(() => {
-    if (animate && !isClosing) y.set(withSpring(0, SHEET_SPRING))
-  }, [animate, isClosing, y])
+    if (animate && !isClosing)
+      y.set(
+        withSpring(0, SHEET_SPRING, finished => {
+          if (finished && onOpened) scheduleOnRN(onOpened)
+        }),
+      )
+    // Not animated (reduced motion, a popup): it is open as it is drawn.
+    else if (!isClosing) onOpened?.()
+  }, [animate, isClosing, y, onOpened])
 
   useEffect(() => {
     if (!isClosing || !onExited) return

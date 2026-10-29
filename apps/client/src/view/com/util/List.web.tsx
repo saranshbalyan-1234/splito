@@ -528,6 +528,19 @@ function useWebListTelemetry({
  * (hidden tabs fire none) and the telemetry. It is its own component so the flip when a tab is shown or hidden
  * re-renders only this node, not the whole list and every row (owner 166: showing a visited tab re-renders nothing).
  */
+type ScrollableNode =
+  | {
+      scrollX?: number
+      scrollY?: number
+      clientWidth?: number
+      clientHeight?: number
+      scrollWidth?: number
+      scrollHeight?: number
+      addEventListener: (type: 'scroll', cb: () => void) => void
+      removeEventListener: (type: 'scroll', cb: () => void) => void
+    }
+  | undefined
+
 function VisibleTreeEffects({
   nativeRef,
   getScrollableNode,
@@ -537,7 +550,7 @@ function VisibleTreeEffects({
   disableFullWindowScroll,
 }: {
   nativeRef: React.RefObject<HTMLDivElement | null>
-  getScrollableNode: () => any
+  getScrollableNode: () => ScrollableNode
   scrollHandlers: ReturnType<typeof useScrollHandlers>
   itemCount: number
   rowNodesRef: React.RefObject<Map<number, HTMLElement>>

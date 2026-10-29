@@ -28,6 +28,7 @@ import * as FocusGuards from '@radix-ui/react-focus-guards'
 import * as FocusScope from '@radix-ui/react-focus-scope'
 import {RemoveScrollBar} from 'react-remove-scroll-bar'
 
+import {OPENED_FALLBACK_MS, OpenedContext} from '#/lib/hooks/useAfterTransition'
 import {logger} from '#/logger'
 import {useShouldReduceMotion} from '#/motion/useShouldReduceMotion'
 import {useDialogStateControlContext} from '#/state/dialogs'
@@ -142,9 +143,21 @@ export function Outer({
     pendingClose.current = null
     if (pending) finishClose(pending.cb)
   }, [finishClose])
+  /*
+   * Whether the sheet has stopped moving: what a heavy body defers on (`OpenedContext`, owner 168). The drawer's
+   * spring reports its end; a popup, or reduced motion, is open as drawn (one frame). A timer opens it anyway if
+   * the end is never reported.
+   */
+  const [opened, setOpened] = useState(false)
+  const onOpened = useCallback(() => setOpened(true), [])
+  useEffect(() => {
+    if (!isOpen) return setOpened(false)
+    const id = setTimeout(onOpened, OPENED_FALLBACK_MS)
+    return () => clearTimeout(id)
+  }, [isOpen, onOpened])
   const drawer = useMemo(
-    () => ({isDrawer, isClosing, onExited}),
-    [isDrawer, isClosing, onExited],
+    () => ({isDrawer, isClosing, onExited, onOpened}),
+    [isDrawer, isClosing, onExited, onOpened],
   )
 
   /*
@@ -202,6 +215,7 @@ export function Outer({
         <Portal>
           <Context.Provider value={context}>
             <DrawerContext.Provider value={drawer}>
+             <OpenedContext.Provider value={opened}>
               <RemoveScrollBar />
               <Pressable
                 accessibilityHint={undefined}
@@ -253,6 +267,7 @@ export function Outer({
                   </View>
                 </View>
               </Pressable>
+             </OpenedContext.Provider>
             </DrawerContext.Provider>
           </Context.Provider>
         </Portal>
@@ -277,7 +292,7 @@ export function Inner({
   const t = useTheme()
   const {close} = useContext(Context)
   const {gtMobile} = useBreakpoints()
-  const {isDrawer, isClosing, onExited} = useDrawerContext()
+  const {isDrawer, isClosing, onExited, onOpened} = useDrawerContext()
   /*
    * Splito: a phone drawer. `close` is the context's, so a form sheet's
    * "Discard changes?" check runs on a drag down too.
@@ -287,6 +302,7 @@ export function Inner({
     onRequestClose: () => close(),
     isClosing,
     onExited,
+    onOpened,
   })
   const reduceMotionEnabled = drawer.reduceMotion
   FocusGuards.useFocusGuards()

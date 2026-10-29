@@ -1,5 +1,5 @@
 // Adapted from bluesky-social/social-app@4e4ad9c (MIT) - src/view/shell/index.tsx
-import {useEffect} from 'react'
+import {useEffect, useState} from 'react'
 import {useWindowDimensions, View} from 'react-native'
 import {Drawer} from 'react-native-drawer-layout'
 import {SystemBars} from 'react-native-edge-to-edge'
@@ -12,6 +12,7 @@ import {isStateAtTabRoot} from '#/lib/routes/helpers'
 import {useDialogFullyExpandedCountContext} from '#/state/dialogs'
 import {useIsDrawerOpen, useSetDrawerOpen} from '#/state/shell'
 import {SearchAskProvider} from '#/features/searchAsk/SearchAskProvider'
+import {OpenedContext} from '#/lib/hooks/useAfterTransition'
 import {DrawerContent} from '#/navigation/Drawer'
 import {FeedbackProvider} from '#/features/feedback/FeedbackProvider'
 import {RoutesContainer, TabsNavigator} from '#/navigation/Navigation'
@@ -66,10 +67,18 @@ function DrawerLayout({children}: {children: React.ReactNode}) {
 
   const canGoBack = useNavigationState(state => !isStateAtTabRoot(state))
   const swipeEnabled = !gtMobile && !canGoBack
+  /* The drawer's own slide decides when its menu mounts (owner 168): it opens first, the items follow. */
+  const [drawerSettled, setDrawerSettled] = useState(false)
 
   return (
     <Drawer
-      renderDrawerContent={() => <DrawerContent />}
+      onTransitionStart={closing => closing && setDrawerSettled(false)}
+      onTransitionEnd={closing => setDrawerSettled(!closing)}
+      renderDrawerContent={() => (
+        <OpenedContext.Provider value={drawerSettled}>
+          <DrawerContent />
+        </OpenedContext.Provider>
+      )}
       drawerStyle={{width: Math.min(400, winDim.width * 0.8)}}
       configureGestureHandler={handler => {
         if (swipeEnabled || isDrawerOpen) {
