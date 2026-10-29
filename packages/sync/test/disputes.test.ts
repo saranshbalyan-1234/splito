@@ -18,6 +18,7 @@ import {
   updateExpenseResolving,
   withdrawDispute,
 } from '../src/disputes'
+import {loadActivity} from '../src/activity'
 import {openIdbStore} from '../src/idbStore'
 import {
   createExpense,
@@ -307,5 +308,19 @@ describe.each(engines)('disputes on %s', (_name, open) => {
     await deleteExpense(s, me, ids.shared)
     const history = (await Promise.all([d.id, h.id].map(id => s.history('dispute', id)))).flat()
     expect(disputeEvents(history).map(e => e.kind)).toEqual(['raised', 'rejected', 'reopened', 'held', 'released', 'gone'])
+  })
+
+  test('Activity: raised, answered, reopened, released and withdrawn show; Gone does not (the delete is the event)', async () => {
+    const d = await raiseDispute(s, as(ids.bob), {targetType: 'expense', targetId: ids.shared, reason: 'other', note: 'x'})
+    await rejectDispute(s, as(ids.ann), d.id, {note: 'no'})
+    await reopenDispute(s, as(ids.bob), d.id, {note: 'y'})
+    const h = await holdRecord(s, me, {targetType: 'expense', targetId: ids.direct, note: 'wait'})
+    await releaseHold(s, me, h.id)
+    await withdrawDispute(s, as(ids.bob), d.id)
+    const w = await raiseDispute(s, as(ids.bob), {targetType: 'expense', targetId: ids.direct, reason: 'other', note: 'z'})
+    await deleteExpense(s, me, ids.direct)
+    expect((await s.get<Dispute>('dispute', w.id))!.data.status).toBe('gone')
+    const kinds = (await loadActivity(s)).filter(e => e.entityType === 'dispute').map(e => e.kind)
+    expect(kinds.sort()).toEqual(['dispute.held', 'dispute.raised', 'dispute.raised', 'dispute.rejected', 'dispute.released', 'dispute.reopened', 'dispute.withdrawn'].sort())
   })
 })
