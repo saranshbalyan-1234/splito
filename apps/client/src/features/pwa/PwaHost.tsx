@@ -24,7 +24,7 @@ export function PwaHost() {
   const {t: l} = useLingui()
   const pwa = usePwa()
   const [isHintShown, setHintShown] = usePref('pwa.installHintDismissed')
-  const helpControl = Dialog.useDialogControl()
+  const helpControl = Dialog.useDialogControl({url: 'install'})
   const reloadPrompt = Prompt.usePromptControl()
   const isUpdateToasted = useRef(false)
   const isReloadConfirmed = useRef(false)

@@ -1,4 +1,6 @@
 // Adapted from bluesky-social/social-app@4e4ad9c (MIT) - src/screens/Settings/Settings.tsx (settings page frame and rows)
+import {pathTo} from '#/lib/links/make'
+import {useOpenLink} from '#/data/useOpenLink'
 import {useEffect, useRef, useState} from 'react'
 import {View} from 'react-native'
 import {LayoutAnimationConfig} from 'react-native-reanimated'
@@ -66,6 +68,7 @@ type Item =
 export function FriendsAndInvitesScreen() {
   const {t: l} = useLingui()
   const navigation = useNavigation<NavigationProp>()
+  const openLink = useOpenLink()
   const route = useRoute<RouteProp<AllNavigatorParams, 'FriendsAndInvites'>>()
   const people = useEntities<Person>('person')
   const {incoming, outgoing} = usePendingRequests()
@@ -233,8 +236,8 @@ export function FriendsAndInvitesScreen() {
       <RemoveFriendDialog
         control={removeControl}
         person={removing}
-        onSettleUp={() => removing && navigation.navigate('Person', {personId: removing.id, action: 'settle'})}
-        onCallItEven={() => removing && navigation.navigate('Person', {personId: removing.id, action: 'even'})}
+        onSettleUp={() => removing && openLink.go(pathTo('Person', {personId: removing.id}, ['record-payment']))}
+        onCallItEven={() => removing && openLink.go(pathTo('Person', {personId: removing.id}, ['call-it-even']))}
       />
     </Layout.Screen>
   )

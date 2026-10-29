@@ -749,12 +749,37 @@ Splito records payments; it never moves money and sells nothing (free forever).
 
 ## 14. Links and deep links
 
-[Built] `navigation/linking.ts` (native: `splito://`, `https://splito.app`) and `linking.web.ts` resolve every
-route from `routes.ts`; `/notifications` aliases to `/activity`; a bare `/` opens the Home tab preference.
+[Built] (F-241, F-254) `lib/links/resolve.ts` is the one resolver: `https://<tier host>/<path>`, `splito://<path>`,
+a bare path and a notification's URL all give a page, its params (path, tab, list state) and the sheets open over
+it; `buildPath` is its inverse. `lib/links/table.ts` lists every in-page tab, sheet and picker (`SHEETS`, a picker
+is its sheet's path plus a segment) and the global sheets (Search & Ask as `/search?q=&mode=ask`, the side drawer as
+`?drawer=menu`, Send feedback, Add to Home Screen). `navigation/linking.ts` (native) and `linking.web.ts` only
+call it; `/notifications` aliases to `/activity`; a bare `/` opens the Home tab preference.
 
-- **One resolver** handles https, the custom scheme and notification URLs. Hosts live in one JSON shared with
-  the app config. Invite, QR and balance links resolve through it.
-- **Unknown paths open home** and record `dead_link` friction with the route shape only. [Planned] (A-014)
+- **A sheet is a `Sheet` marker route on web.** `useDialogControl({url: 'record-payment/currency'})` binds a dialog
+  to its address: `control.open()` pushes the marker (Back closes the sheet, Forward reopens it), a marker already in
+  the stack (a pasted or refreshed address) opens the dialog over its page, and closing from inside (X, Cancel,
+  Save, scrim) removes the marker. `onUrlOpen` lets a host prepare its draft first (Record payment waits for the
+  balances; `'wait'` while data loads, `false` when it cannot show it, which takes the address off again). A marker
+  belongs to the page route directly under the run of markers (its route key), so a second mounted copy of the same
+  page never opens it too, and a dialog with no page of its own, or one the table does not list for its page, opens
+  as a plain dialog with no address. The marker keeps the page's params, so the address keeps its tab and filters.
+  On a phone there is no address bar and the native sheet has its own dismiss, so a sheet stays dialog state there;
+  a link's first sheet is held (`lib/links/pending`) until the dialog of its page has opened, expires, and is dropped
+  when the person leaves the page. Until the in-sheet picker hand-over lands (fix/ios-wB) a phone never opens a
+  picker from a link, nor anything over a composer (§ 4, one native modal). Prompts, "..." menus and generic dropdowns have no
+  URL; sheets that need a target (Remind, Leave group, a payment's peek, Call it even on one transfer) are listed
+  with the reason in `lib/links/table.test.ts`.
+- **List state is the address, written on Apply or a tap.** `/groups?sort=name&show=owe&currency=EUR&settled=1`,
+  `/?show=owesYou&groups=0`, `/people/:id?groups=0`, `/analytics?period=month&offset=-1&currency=EUR&scope=0:g1,g2`;
+  a param that is present wins over the saved preference (F-1413), an absent one falls back to it. In-page tabs are
+  path segments (`/groups/:id/balances`, `/activity/others`) and replace the entry instead of pushing, so the page
+  is not mounted twice.
+- **One resolver** handles https, the custom scheme and notification URLs. Hosts live in one JSON
+  (`apps/client/link-hosts.json`) shared with the app config. Invite, QR, reminder, share, Ask and Search links are
+  made with `lib/links/make.ts` and opened through `openLink` (`lib/links/open.ts`).
+- **Unknown paths open home** and the address bar is rewritten to `/`; the `dead_link` friction is recorded
+  (kind only).
 - **Deep links resolve from local data first** and push the final screen directly. An entity not yet on
   this device shows loading until the first pull (offline: "Not on this device yet"), never "Not found"; a
   tombstoned or unknown id shows "not found" with `goBack`. A failed read is an error with retry, never the
@@ -764,7 +789,18 @@ route from `routes.ts`; `/notifications` aliases to `/activity`; a bare `/` open
 - **Links carry no command:** notification, QR and invite links only navigate; they never settle, delete or
   accept from the link.
 - **Sign-in preserves intent (M2):** an invite or claim link opened signed out stores its relative target in
-  the draft store, runs sign-in or local-profile creation, then resumes.
+  the device store (`lib/links/intent.ts`), runs sign-in or local-profile creation, then resumes (`LinkHost`).
+  [Stub] until F-250 turns `isSignInRequired` on.
+- **Every incoming URL goes through `openLink`:** on a phone the cold start's and each later URL is held
+  (`lib/links/incoming`, `linking.getInitialURL` / `subscribe`) and `LinkHost` opens it; on web the page-load address
+  is checked once the mode is known (`checkInitialLink`). Both apply the demo question and the signed-out hold, and a
+  dead link records the `dead_link` friction.
+- **Demo mode asks first:** a link that names something by id, opened from outside while demo mode is on, asks
+  "Switch back to your data?" (`LinkHost`, `lib/links/gate.ts`); a screen's own buttons (Search, Ask) do not ask.
+- **Link params are checked per page:** ids are UUIDs or demo ids, only the query keys a page reads survive
+  (`QUERY_KEYS`), an offset is a short signed integer clamped to ±1200.
+- **Deferred link:** `lib/links/deferred.ts` is a documented stub; the hand-over of a link kept on the web page
+  needs the backend (F-254 acceptance 6).
 - **Public pages (M2):** `/join/:token`, `/i/<token>`, `/b/<token>` are matched exactly (near-miss tests),
   render outside the app shell, and are served by Fastify with og tags (never amounts or names unless the
   owner chose) and a bounce into the app. Invite flow: preview, Accept, redeem; outcomes accepted /
@@ -1431,8 +1467,7 @@ labelled sidebar); **wide** = web 1300 px and up (Bluesky `gtTablet`, right colu
   bar (off items stay in the phone drawer).
   "Reset" restores the default. Stored in the existing `tabs` preference. *Why:* "all of the sidebar options to
   be available in settings to be added in navigation bar".
-- **Every place has a URL, so a copied link lands on the same screen** (owner 100; F-241, queued after the Wave B
-  merge; Expensify's model, where every side panel and modal is a route). Every page, every in-page tab (Group
+- **Every place has a URL, so a copied link lands on the same screen** (owner 100; F-241, built; Expensify's model, where every side panel and modal is a route). Every page, every in-page tab (Group
   Expenses / Balances / Members, Activity tabs, Analytics views), every sheet and popup (Add / Edit expense,
   Record payment, Settle up, Add friend / Invite people, Create / Edit group, Members, Payment rules, Filters,
   Search & Ask with its query and Ask mode, Send feedback, Export / Import, every Settings section and editor),
@@ -1446,9 +1481,11 @@ labelled sidebar); **wide** = web 1300 px and up (Bluesky `gtTablet`, right colu
   Exceptions, for safety: confirmation prompts (Delete?, Log out?, Discard changes?) and "..." menus are not
   addressable, and no URL ever performs or arms an action (§ 14 "links carry no command"); a sheet URL only
   opens the sheet. *Why:* "for every tab, every popup it should be via url, so that even if i copy paste the
-  url i land on same place".
-- **Deep links work end to end, everywhere** (owner 145; F-254, built with F-241 right after Wave B; the
-  hosted files ship with the backend/domain). Every URL of F-241 (pages, tabs, sheets, drawers, pickers, list
+  url i land on same place". *Assistant rulings, 2026-10-29 (not yet seen by the owner):* tab switches replace the
+  history entry, so Back never steps through tab taps; a pasted sheet-plus-picker URL is one history entry, the
+  browser's Back leaves to the previous site and the in-app X steps back one level.
+- **Deep links work end to end, everywhere** (owner 145; F-254, client part built with F-241; the hosted
+  files and the deferred-link hand-over ship with the backend/domain). Every URL of F-241 (pages, tabs, sheets, drawers, pickers, list
   state) is also a deep link: `https://splito.app/<path>` opens the installed app at that exact screen through
   iOS Universal Links (associated domains + `apple-app-site-association`) and Android App Links (verified
   `assetlinks.json`), falls back to the web app when the app is not installed, and `splito://<path>` works as

@@ -429,6 +429,6 @@ test('compose brings the friend: the sidebar pill on desktop, the page’s own b
 
 test('an unknown friend shows an honest not-found state', async ({page}) => {
   await ready(page)
-  await page.goto('/people/nobody-here')
+  await page.goto('/people/3f2b8c1e-7d4a-4e9b-9a61-0c5d2e8f1a77')
   await expect(page.getByTestId('person-not-found')).toBeVisible()
 })

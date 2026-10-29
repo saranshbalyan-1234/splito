@@ -13,7 +13,7 @@ import {
 } from '@splito/sync'
 
 import {useMutationCtx, useProjection, useStore} from '#/data/hooks'
-import {INVITE_HOST} from '#/data/friends'
+import {linkTo} from '#/lib/links/make'
 import {MORE, type Query, shareRows} from '#/data/projections'
 
 /**
@@ -120,5 +120,5 @@ export function useCommentActions(type: CommentTarget, id: string) {
 
 /** The web path of an expense or payment, for "Copy link". Opens it on a device that holds it. */
 export function commentLink(type: CommentTarget, id: string): string {
-  return `${INVITE_HOST}/${type === 'expense' ? 'expense' : 'payment'}/${id}`
+  return type === 'expense' ? linkTo('Expense', {expenseId: id}) : linkTo('Repayment', {repaymentId: id})
 }

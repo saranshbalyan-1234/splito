@@ -34,7 +34,7 @@ import {Text} from '#/components/Typography'
 
 /** The sheet for Settings > Import: `open()` and the element to render once. */
 export function useImportSheet() {
-  const control = Dialog.useDialogControl()
+  const control = Dialog.useDialogControl({url: 'import'})
   return {open: control.open, element: <ImportSheet control={control} />}
 }
 

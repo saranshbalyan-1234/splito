@@ -127,6 +127,11 @@ const COMPOSER_WEB: NativeStackNavigationOptions = {
   animation: 'none',
 }
 
+/** The `Sheet` route draws nothing: the page beneath renders its own sheet (`useDialogControl({url})`), this route is the URL. */
+function SheetMarkerScreen() {
+  return null
+}
+
 function NativeTabBar(props: BottomTabBarProps) {
   const {gtMobile} = useBreakpoints()
   const {footerHeight} = useShellLayout()
@@ -372,6 +377,15 @@ export function FlatNavigator({
         name="AddExpense"
         component={AddExpenseScreen}
         options={{...COMPOSER_WEB, title: title('AddExpense')}}
+      />
+      {/* A sheet, popup or drawer open over a page (F-241): a route so it has a URL and Back closes it; the page draws the sheet. */}
+      <Flat.Screen
+        name="Sheet"
+        component={SheetMarkerScreen}
+        options={({route}) => ({
+          ...COMPOSER_WEB,
+          title: title(route.params.page as keyof FlatNavigatorParams),
+        })}
       />
     </Flat.Navigator>
   )

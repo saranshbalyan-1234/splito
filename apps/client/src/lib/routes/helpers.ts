@@ -25,11 +25,23 @@ export function getCurrentRoute(state?: State) {
    * the tab root as the current route (which e.g. re-enabled the drawer
    * swipe gesture on top of a deep-linked screen).
    */
-  let node = state.routes[state.index || 0]
+  let node = state.routes[pageIndex(state.routes, state.index || 0)]!
   while (node.state?.routes) {
-    node = node.state.routes[node.state.index ?? node.state.routes.length - 1]
+    const routes = node.state.routes
+    node = routes[pageIndex(routes, node.state.index ?? routes.length - 1)]!
   }
   return node
+}
+
+/**
+ * The index of the route at `index`, or of the page under it when that is a `Sheet` marker (F-241): a sheet
+ * open over a page does not make it a different page, so the sidebar, the drawer and the swipe rule keep
+ * reading the page.
+ */
+function pageIndex(routes: readonly {name: string}[], index: number): number {
+  let i = index
+  while (i > 0 && routes[i]!.name === 'Sheet') i--
+  return i
 }
 
 export function isStateAtTabRoot(state: State | undefined) {

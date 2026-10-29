@@ -1,0 +1,9 @@
+{
+  "scheme": "splito",
+  "tiers": {
+    "dev": "dev.splito.app",
+    "stage": "stage.splito.app",
+    "prod": "splito.app"
+  },
+  "appPaths": ["/", "/notifications", "/people", "/groups", "/expense", "/payment", "/invite", "/invites", "/friends", "/activity", "/analytics", "/settings", "/profile", "/search"]
+}

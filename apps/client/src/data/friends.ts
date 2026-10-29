@@ -1,4 +1,5 @@
 import {getLocales} from 'expo-localization'
+import {linkTo} from '#/lib/links/make'
 import {
   createInviteLink,
   type DirectoryClient,
@@ -48,11 +49,9 @@ export async function makeInviteLink(
   return createInviteLink(store, ctx, {...input, code})
 }
 
-/** Where invite links point: the web path, which the app also claims (section 14). */
-export const INVITE_HOST = 'https://splito.app'
-
+/** Where invite links point: this build's tier host, whose paths the app also claims (section 14, F-254). */
 export function inviteUrl(code: string) {
-  return `${INVITE_HOST}/invite/${code}`
+  return linkTo('Invite', {code})
 }
 
 /** The region phone numbers default to: the device's, else India (Splito's first market). */

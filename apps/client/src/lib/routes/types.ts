@@ -5,13 +5,19 @@ import {
 } from '@react-navigation/native'
 import {type NativeStackNavigationProp} from '@react-navigation/native-stack'
 
+/** A list page's filters as the address carries them; every value a string (`#/lib/links/resolve`). */
+export type ListParams = {[key: string]: string | undefined}
+
 /** The bottom bar / sidebar destinations, in display order. */
 export type TabParams = {
-  People: undefined
-  Groups: undefined
-  /** `currency` opens the report in that currency (`/analytics?currency=EUR`, an Overview card). */
-  Analytics: {currency?: string} | undefined
-  Activity: undefined
+  /** List state in the address (F-241): `sort`, `show`, `currency`, `groups=0` (no group shares), `settled=1`, `hidden=1`. */
+  People: ListParams | undefined
+  /** `type`, `status`, `show`, `currency`, `sort`, `settled=1`, `hidden=1`. */
+  Groups: ListParams | undefined
+  /** `currency` opens the report in that currency (`/analytics?currency=EUR`, an Overview card); also `period`, `offset`, `from`, `to`, `scope`. */
+  Analytics: {currency?: string; period?: string; offset?: string; from?: string; to?: string; scope?: string} | undefined
+  /** `tab: 'others'` is `/activity/others`. */
+  Activity: {tab?: 'all' | 'others'} | undefined
 }
 
 /** Every route in the owner's route table (paths live in `#/routes` and `#/navigation/linking`). */
@@ -29,10 +35,9 @@ export type RootStackParams = {
   SignIn: undefined
   /** Settings > Friends and invites; `section: 'links'` scrolls to the invite links. */
   FriendsAndInvites: {section?: 'links'} | undefined
-  /** `action` opens that flow once the page has its balances (Friends and invites uses it). */
-  Person: {personId: string; action?: 'settle' | 'even'}
+  Person: {personId: string; groups?: string}
   /** `tab` opens a section directly (`/groups/:groupId?tab=rules`). */
-  Group: {groupId: string; tab?: 'expenses' | 'balances' | 'members' | 'rules'}
+  Group: {groupId: string; tab?: 'expenses' | 'balances' | 'members'}
   Settle: {groupId: string}
   /** `title`, `amount` (a decimal like "1200.00") and `currency` start the form pre-filled (an Ask Splito action card). */
   AddExpense: {personId?: string; groupId?: string; title?: string; amount?: string; currency?: string}
@@ -52,8 +57,21 @@ export type RootStackParams = {
   CreateGroup: undefined
 }
 
+/**
+ * A sheet, popup or drawer open over `page` (F-241): on web a route of its own, so the address bar shows it and
+ * the browser's Back closes it. It draws nothing; the page's `useDialogControl({url})` shows the sheet.
+ */
+export type SheetMarker = {
+  page: string
+  pageParams: Record<string, string>
+  /** Outermost first: `['record-payment', 'currency']` is the currency picker inside Record payment. */
+  sheets: string[]
+  /** Query that belongs to the sheet (`q`, `mode` of Search & Ask). */
+  query?: Record<string, string>
+}
+
 /** Web renders every route in one flat stack, like Bluesky's FlatNavigator. */
-export type FlatNavigatorParams = TabParams & Omit<RootStackParams, 'Tabs'>
+export type FlatNavigatorParams = TabParams & Omit<RootStackParams, 'Tabs'> & {Sheet: SheetMarker}
 
 export type AllNavigatorParams = RootStackParams & TabParams
 

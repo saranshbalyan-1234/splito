@@ -60,7 +60,7 @@ export function CreateGroupScreen() {
   const runOnce = useSingleFlight()
   const [error, setError] = useState<'name' | 'dates' | null>(null)
   const [isSaving, setIsSaving] = useState(false)
-  const currencyControl = Dialog.useDialogControl()
+  const currencyControl = Dialog.useDialogControl({url: 'currency'})
   const isDirty =
     name.trim() !== '' || memberIds.length > 0 || !!startDate || !!endDate
 

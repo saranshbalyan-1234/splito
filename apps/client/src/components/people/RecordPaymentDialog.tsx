@@ -140,7 +140,7 @@ function Form({
   const [currency, setCurrency] = useState(draft.currency)
   /* Currencies picked from "Other" join the quick options, so the choice stays visible. */
   const [extra, setExtra] = useState<string[]>([])
-  const currencyControl = Dialog.useDialogControl()
+  const currencyControl = Dialog.useDialogControl({url: 'record-payment/currency'})
   const options = [
     ...currencies,
     ...[draft.currency, ...extra].filter(c => !currencies.includes(c)),

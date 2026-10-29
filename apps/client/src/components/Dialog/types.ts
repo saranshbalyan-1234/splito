@@ -36,7 +36,21 @@ export type DialogControlProps = DialogControlRefProps & {
   id: string
   ref: React.RefObject<DialogControlRefProps | null>
   isOpen?: boolean
+  /**
+   * Set when the control was made with a `url` (F-241): the Dialog tells it when it opens and when it has
+   * closed, so the address bar follows, and passes `owner` down so a picker inside it knows its page.
+   */
+  url?: {
+    owner: SheetOwner
+    notifyOpen: () => void
+    notifyClosed: () => void
+    /** The Dialog mounted: a host that waited for it can open it now. */
+    notifyMounted: () => void
+  }
 }
+
+/** The page a sheet belongs to (its name and path params), or null for a sheet of the shell (Search, the drawer). */
+export type SheetOwner = {name: string; params: Record<string, string>; key?: string} | null
 
 export type DialogContextProps = {
   close: DialogControlProps['close']
@@ -59,6 +73,8 @@ export type DialogContextProps = {
 }
 
 export type DialogControlOpenOptions = {
+  /** With a `url` control: query that belongs to the sheet's address (`q` and `mode` of Search & Ask). */
+  urlQuery?: Record<string, string>
   /**
    * NATIVE ONLY
    *
