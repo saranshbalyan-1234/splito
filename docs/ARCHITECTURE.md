@@ -2400,8 +2400,11 @@ dishes etc and each item can be assigned to each in split"; "in itemize don't sh
   leads to a longer list of things that happened (transactions, disputes, comments, reminders, payments, group
   changes, friend activity, a group's or a person's history) opens Activity as a pushed copy with the matching
   filters already set: Type (any mix), `group=<id>` and `person=<id>` (events involving that friend), each shown as
-  a removable chip and in the Filters sheet; no screen grows its own long history list. Lists of things to act on
-  (incoming requests, invites sent) keep their own pages. One family of helpers builds these links
+  a removable chip and in the Filters sheet; no screen grows its own long history list. **Wherever a link can lead
+  to Activity, it does** (owner 195), including requests and invites: "See all requests and invites" and every
+  request or invite count opens Activity with Type = Friends and invites, and those rows carry their actions in
+  place (Accept / Decline on a request, Resend / Cancel on an invite sent), so Activity is where they are handled.
+  Friends and invites keeps only the tools that are not a list (invite link, QR, contacts, manage links). One family of helpers builds these links
   (`activityPath({types, groupId, personId})`, with `seeAllTransactionsPath` / `seeDisputedPath` as presets).
   *Why:* "this activity page should be used like this with filters everywhere". The window grows **incrementally**: `activityTracker` keeps its pool,
   cursor and a sorted event list when `want()` grows (`loadMore` reloads with an empty notice, never `'unknown'`) and
@@ -3122,6 +3125,7 @@ Every owner decision, in the order it was made (all 2026-10-26). "Replaced" name
 | 192 | "when click on disputed from anywhere, it loads up activuty with transaction and disputed filter" | Every disputed amount/count link opens Activity (pushed, Back) on All with Type = Expenses, Payments, Disputes, scoped to the group when in one; one helper `seeDisputedPath` | § 26.14 | Disputed links filtered only the page they were on |
 | 193 | "when click on txn it shows up activity again, with all txn including txn filter" | Every transactions heading, See all or count opens Activity (pushed, Back) on All with Type = Expenses + Payments, group-scoped in a group; single rows still open the transaction | § 26.14 | Only Home and right-column "See all" did (owner 173) |
 | 194 | "this activyty page whould be used like this with filters everywhere" | Activity is the one full list behind every "see all" of past events; links pre-set Type, group and person filters (new `person=`), shown as chips; action lists (requests, invites) keep their pages | § 26.14 | Group/Person pages and others kept their own history lists |
+| 195 | "whrever activiyt can be linked do it, also invites can be hanlded like this" | Every link that can lead to Activity does; requests/invites see-all and counts open Activity (Type = Friends and invites) with Accept/Decline and Resend/Cancel in the rows; Friends and invites keeps only its tools | § 26.14 | Requests and invites kept their own list pages (owner 194) |
 
 New decisions follow § 0 rule 9: rewrite the rule in its topic so only the current truth remains, then add a
 row here.
