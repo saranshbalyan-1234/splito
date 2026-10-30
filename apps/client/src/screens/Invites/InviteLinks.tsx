@@ -242,7 +242,7 @@ export function InviteLinksScreen() {
             ListEmptyComponent={
               <EmptyState
                 testID="invite-links-empty"
-                illustration="empty-people"
+                illustration="empty-invites"
                 title={l`No active invite links`}
                 message={l`Make a link or QR code to add friends or fill a group without typing anyone’s number.`}
                 button={{

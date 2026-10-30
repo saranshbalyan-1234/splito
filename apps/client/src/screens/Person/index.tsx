@@ -201,7 +201,7 @@ export function PersonScreen() {
         </Layout.Header.Outer>
         <EmptyState
           testID="person-not-found"
-          illustration="empty-people"
+          illustration="empty-not-found"
           message={l`This friend isn’t on this device. They may have been removed.`}
           button={{
             label: l`Back to People`,
@@ -594,25 +594,20 @@ export function PersonScreen() {
             ) : !rowsReady ? <></> : (
               <EmptyState
                 testID="person-history-empty"
-                illustration="empty-people"
+                illustration="empty-history"
                 message={
                   includeGroups
                     ? l`Nothing with ${person!.data.name} yet. Add an expense you shared and it shows up here.`
                     : l`No direct expenses with ${person!.data.name}. Group expenses are hidden by the filter.`
                 }
-                button={
-                  gtMobile
-                    ? {
-                        label: l`Add expense`,
-                        text: l`Add expense`,
-                        icon: PlusIcon,
-                        onPress: () =>
-                          navigation.navigate('AddExpense', {personId}),
-                        size: 'small',
-                        color: 'secondary',
-                      }
-                    : undefined
-                }
+                button={{
+                  label: l`Add expense`,
+                  text: l`Add expense`,
+                  icon: PlusIcon,
+                  onPress: () => navigation.navigate('AddExpense', {personId}),
+                  size: 'small',
+                  color: 'secondary',
+                }}
               />
             )
           }

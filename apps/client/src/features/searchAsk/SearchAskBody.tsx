@@ -360,7 +360,7 @@ function SearchPanel({
             onAsk={onAsk}
           />
         ) : results?.isDone ? (
-          <NoResults query={query.trim()} />
+          <NoResults query={query.trim()} onClear={() => changeQuery('')} />
         ) : undefined
       }
       onEndReached={results?.hasMore ? results.loadMore : undefined}
@@ -368,7 +368,7 @@ function SearchPanel({
       ListFooterComponent={
         /* Only the Ask row and nothing found: say so under it. */
         rows.length === 1 && results?.isDone ? (
-          <NoResults query={query.trim()} />
+          <NoResults query={query.trim()} onClear={() => changeQuery('')} />
         ) : results?.hasMore && rows.length > 0 ? (
           <View style={[a.align_center, a.pt_md, a.pb_sm]}>
             <Button

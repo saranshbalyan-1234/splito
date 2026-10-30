@@ -9,9 +9,10 @@ import {
   ChartPie_Filled_Corner0_Rounded as ChartPieFilled,
   ChartPie_Stroke2_Corner0_Rounded as ChartPie,
 } from '#/components/icons/ChartPie'
+import {MorphIcon} from '#/components/anim/AnimatedIcon'
 import {
-  Activity_Filled_Corner0_Rounded as ActivityFilled,
-  Activity_Stroke2_Corner0_Rounded as Activity,
+  ActivityTick_Filled_Corner0_Rounded as ActivityFilled,
+  ActivityTick_Stroke2_Corner0_Rounded as Activity,
 } from '#/components/icons/Activity'
 import {type Props as SVGIconProps} from '#/components/icons/common'
 import {
@@ -94,21 +95,32 @@ export function TabLabel({label, isActive}: {label: string; isActive: boolean}) 
 /** The bar shows labels up to this many items; beyond it they hide and the icons stay (decision 84). */
 export const MAX_LABELLED_TABS = 5
 
-/** A bottom-bar tab's glyph, filled when active. */
+/** Activity's unread badge ('', '3', '30+') as a number that goes up when an item lands: the pulse ticks on it. */
+export function badgeTick(badge?: string) {
+  return badge === undefined ? undefined : Number.parseInt(badge, 10) || 0
+}
+
+/** A bottom-bar tab's glyph, morphing to its filled form when active. */
 export function TabGlyph({
   tab,
   isActive,
   size,
+  badge,
 }: {
   tab: NavItemId
   isActive: boolean
   size: number
+  /** Activity's unread badge; a rise ticks the pulse. */
+  badge?: string
 }) {
   const t = useTheme()
   const glyph = GLYPHS[tab]
-  const Icon = isActive ? glyph.filled : glyph.icon
   return (
-    <Icon
+    <MorphIcon
+      outline={glyph.icon}
+      filled={glyph.filled}
+      isActive={isActive}
+      playKey={badgeTick(badge)}
       aria-hidden={true}
       width={size + glyph.widthAdjust}
       style={StyleSheet.flatten([styles.ctrlIcon, t.atoms.text, glyph.style])}

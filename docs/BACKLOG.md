@@ -579,7 +579,7 @@ Activity Filters gain the type (Expenses, Payments, Comments, Groups, Friends an
 
 Original animated illustrations (light and dark) for every empty state: search no match, filtered no match, all settled, no history, no balances, nothing to settle, no feedback, no invite links, not found, Ask empty, besides the existing people, groups, activity and analytics.
 
-- **Effort** M · **Impact** 7 · **Backend** no · **Status** in progress (every empty state animated with the 4 existing pieces; screen-specific art next) · **Deps** -
+- **Effort** M · **Impact** 7 · **Backend** no · **Status** done on `c-anim` (19 pieces, every EmptyState has its own art, one CTA and lazy JSON; merge pending) · **Deps** -
 - **Prefs** -
 - **Acceptance**
   1. Each empty state uses art about its own screen, original (scripts/lottie.ts style), light and dark, lazy-loaded, plays once then rests, static under reduced motion.
@@ -3468,7 +3468,7 @@ One table mapping intents to haptics, e.g. a rigid tick when remaining hits zero
 
 Animate icons where the motion carries meaning, and add Expensify-style success, empty-state and celebration animations, all on the UI thread with static fallbacks. Queued for Wave C.
 
-- **Effort** L · **Impact** 7 · **Backend** no · **Status** todo · **Deps** F-1704
+- **Effort** L · **Impact** 7 · **Backend** no · **Status** in progress (`c-anim`: the `AnimatedIcon` primitive with fill morph, tick, draw, lid, pulse, rotate wired; twinkle and plus-to-X skipped by owner 213; Expensify-style moments, `motion.iconAnimations` / `motion.celebrations` and the 1,000-row profile not built) · **Deps** F-1704
 - **Prefs** `motion` (existing: full / reduced / off), `motion.iconAnimations` (account, default on), `motion.celebrations` (account, default on)
 - **Acceptance**
   1. An `AnimatedIcon` primitive (react-native-svg animated props + Reanimated, Lucide geometry only) with variants: fill morph (bottom bar, sidebar, drawer selected state), draw (check on Save / Settle / Accept), lid (trash on Delete), pulse (sync dot while syncing), rotate (FAB plus to X, chevrons on expand), twinkle (Search & Ask sparkles on open), tick (Activity icon when a new item arrives).

@@ -75,7 +75,8 @@ import {HEADER_HEIGHT} from '#/components/Layout/const'
 import {NavFooterLinks} from '#/components/NavFooterLinks'
 import {useSearchAsk} from '#/components/SearchAsk/context'
 import {SyncToned} from '#/components/SyncTone'
-import {GLYPHS, NAV_LABELS} from '#/components/TabGlyph'
+import {MorphIcon} from '#/components/anim/AnimatedIcon'
+import {badgeTick, GLYPHS, NAV_LABELS} from '#/components/TabGlyph'
 import {Text} from '#/components/Typography'
 import {useAnalytics} from '#/analytics'
 import {IS_NATIVE} from '#/env'
@@ -235,7 +236,6 @@ function NavItem({
     [href, isCurrent, ax, navItem, openNavItem],
   )
 
-  const Icon = isSelected ? icons.active : icons.inactive
 
   return (
     <PressableWithHover
@@ -270,7 +270,7 @@ function NavItem({
           },
           a.z_10,
         ]}>
-        <Icon aria-hidden={true} width={NAV_ICON_WIDTH} style={t.atoms.text} />
+        <MorphIcon outline={icons.inactive} filled={icons.active} isActive={isSelected} playKey={badgeTick(count)} aria-hidden={true} width={NAV_ICON_WIDTH} style={t.atoms.text} />
         {typeof count === 'string' && count ? (
           <View
             style={[

@@ -358,16 +358,20 @@ All user-facing strings go through Lingui; English default, Hindi second, Englis
 - **Honesty:** "Synced" appears only in the sync-status component's messages. FX-, OCR- and AI-derived
   values carry "Estimated rate" / "From receipt" until confirmed; converted totals carry "≈" and "rate from
   DATE"; a receipt field that was not read stays empty. A bun test scans the source catalog (A-013).
-- **Every empty state looks the same and is animated with art about that screen** (owners 146, 172): one
+- **Every empty state looks the same and is animated with art about that screen** (owners 146, 172, 213): one
   `EmptyState` layout on every screen and state (first-use empty, search with no match, filters with no match,
   all settled, no history, no balances, nothing to settle, no feedback, no invite links, not found, Ask with nothing
-  yet): the same structure (animated illustration, one short message, at most one small secondary button), the same
-  illustration size, motion and top spacing; never a bare icon or text only. Each illustration is original and
-  about its own screen (people, groups, activity, analytics, search, settled, history, balances, settle up,
-  feedback, invites, not found), light and dark variants, played once and resting (§ 17), static under reduced
-  motion. A test fails on any `EmptyState` without an illustration. *Why:* "make the home empty screen animation
-  like other screens"; "why there is no animation here"; "empty screen animations should be there always, and
-  related to those screens only, and design/structure should be same".
+  yet): the same structure (animated illustration, one short message, **one** clear call to action that is the next
+  useful step, plus at most one lesser secondary button), the same illustration size (168 phone, 200 wider) and top
+  spacing; never a bare icon or text only, never a dead end. The `illustration` prop is required by the type.
+  Each illustration is original and about its own screen (19 pieces: people, groups, activity, analytics, search,
+  filter, settled, history, expenses, balances, settle, feedback, invites, not-found, ask, disputes, payments,
+  comments, reminders; an Activity empty state picks the one for its type or filter), light and dark variants, all
+  240 x 240, **played once to a resting frame and held** (§ 17), the same frame under reduced motion, lazy: the
+  JSON and `lottie-web` are dynamic imports. A test fails on any `EmptyState` without an illustration
+  (`architecture/emptyStateArt.test.ts`). *Why:* "make the home empty screen animation like other screens"; "why
+  there is no animation here"; "empty screen animations should be there always, and related to those screens
+  only, and design/structure should be same"; "proper empty screen and proper cta".
 - **Every list has a type filter where items have types; Activity filters by type** (owner 173; F-259, built for Activity, Home's "See all" follows with Home):
   Activity's Filters offer the type (Expenses, Payments, Comments, Groups, Friends and invites, Reminders, Disputes)
   besides All / Me / Others (owner 92), remembered (decision 90) and in the URL (`/activity?type=transactions`).
@@ -1067,6 +1071,16 @@ Each rule came from a measurement; the dated story is in § 23. Newest first wit
   as `FIRSTVISIT` without gating it, and gates the second round, where every tab is mounted and parked
   (69 mounts + 468 updates in 4 of 4 runs). Median of three, taken on a quiet machine, as below.
 
+- **Load animation assets and their player on first use, and read a module-level cache through state.** The
+  start-up bundle held `lottie-web` (168 KB) and, through `require()` in a registry object, every animation JSON
+  (inline requires do not help when the registry object is built at import); each is now a dynamic `import()`
+  behind `useIllustrationSource`, so the web first-load JS fell from 7,305,880 B to 7,028,860 B (gzip 1,545,216 to
+  1,497,565 B) while 19 new pieces of art (about 391 KB raw, 49 lazy chunks) were added. Measure the entry
+  chunks of `expo export` (the `index`, `__common` and runtime scripts in `index.html`) before and after, never the
+  folder total. A hook that reads a module-level `Map` during render must also hold what it read in state: the
+  React Compiler caches a bare `loaded.get(key)` on `key` alone, so the art never appeared after its chunk
+  arrived.
+
 - **A window that grows must keep what it read, and a render baseline is recorded as the median of three runs.**
   Activity's tracker rebuilt the whole history for every page a narrowed list read (10,000 expenses: 23.6 s, then
   72 ms per new expense); it now keeps its pool, cursor and sorted events and merges each page in (0.35 s SQLite /
@@ -1433,6 +1447,15 @@ Splito lessons (add newest last, dated, with PR):
 - 2026-10-30, F-1210 e2e: **never `goto` right after a click that writes.** The write is a transaction still in flight; the reload drops it and the next assertion fails (it looked like a missing feature). Wait for the sheet to close or the toast first. A search drawer input also needs `toBeEditable()` before `fill` under load.
 - 2026-10-30, F-1210 review: **a derived adjustment must stay between zero and the thing it adjusts.** The first "leave disputed out of the plan" subtracted the disputed part from every net, which flipped signs on a settled or part-repaid group and asked someone to pay twice for a disputed "payment not received". `withoutDisputed` now shrinks each net toward zero only and rebalances with `allocate`, with a property test (sums to zero, never flips, never grows). Likewise a stored pointer into a list (an item's position) must be the item's own id: reorders and edits moved the dispute onto the wrong item.
 - 2026-10-30, F-1210 review: **an "apply the suggestion" action must never change the shape of the record to fit it.** Converting an itemised or percent split to exact amounts to apply an amount fix lost the items. One tap applies a fix only when the split mode survives it (`fixApplies`); otherwise it is an edit by hand, and the panel says why.
+- 2026-10-31, F-260 / F-1713 (c-anim): **lazy art needs the player lazy too, and a compiled hook must not read a
+  module cache without state.** Moving the animation JSON behind `import()` was not enough on its own; `lottie-web`
+  was also in the entry (now dynamic) and together they took 277 KB (3.8 %) off the web first-load JS (7,305,880 to
+  7,028,860 B; gzip 1,545,216 to 1,497,565), with 19 new empty-state pieces added as 49 lazy chunks (391 KB). The first
+  version of `useIllustrationSource` drew nothing: the React Compiler memoised `loaded.get(key)` on `key`, so the
+  re-render after the fetch returned the old `undefined`; the hook now keeps `{key, json}` in state. Also: an empty
+  state plays once to a resting frame (`playSegments([0, staticFrame])`), so a looped file whose last frame equals
+  its first would end blank; every piece has an explicit resting frame, and reduced motion shows the same one.
+  Motion that does not explain a change was left out (owner 213): sparkles twinkle, plus-to-X without a menu.
 - 2026-10-31, fix/integration: **parked tabs make every unscoped locator ambiguous, and a gate must not count a race.**
   Four specs failed on the merged main with all tabs kept mounted: two asked for `request-Ishaan Verma` and
   `person-Bela Joshi` on the page when Home and People both list them (strict mode: scope to the screen you mean, here
@@ -2204,13 +2227,16 @@ pages". § 17 holds the engineering rules that meet these budgets.
   feedback (`PressableScale`) on every tappable row, card and button; tab switches (§ 26.9); expanding search;
   filter dot; `AnimatedAmount` whenever a money total changes; skeleton shimmer while loading; success check +
   haptic on save and settle; drawer open/close with scrim.
-- **Animated icons and Expensify-style animation wherever it helps** (owner 96; F-1713, queued for Wave C).
-  Icons animate on meaning, not decoration: tab and nav icons morph to their filled state on select (Bluesky
-  tab icon pattern), Activity bell/pulse ticks when a new item lands, the check draws on Save/Settle/Accept, the
-  trash lid lifts on Delete, the sync dot pulses while syncing, the FAB plus rotates to an X when its menu
-  opens, Search & Ask sparkles twinkle on open, chevrons rotate on expand. Built as animated SVG paths with
-  Reanimated on the UI thread (react-native-svg animated props; no per-icon Lottie), from Lucide geometry
-  only. Expensify-style moments in addition to the page illustrations below: a success animation when a
+- **Animated icons and Expensify-style animation wherever it helps** (owner 96, narrowed by 213; F-1713, built in
+  part). Icons animate on meaning, never as decoration, and every one is the single `AnimatedIcon` primitive
+  (`components/anim/AnimatedIcon.tsx`, Lucide geometry only, animated SVG paths and Reanimated on the UI thread, no
+  per-icon Lottie): tab, drawer and sidebar icons morph to their filled state on select (`MorphIcon`), the Activity
+  pulse redraws when the unread count goes up, the check draws on Accept (Save and Settle keep `SuccessCheck`), the
+  trash lid lifts while a Delete button is hovered, pressed or focused, the sync dot breathes while syncing and
+  rests otherwise, chevrons turn on expand. Two items of the original list are **not built** because motion there
+  would not explain a change (owner 213): Search & Ask sparkles twinkling on open (the drawer opening shows it) and
+  the FAB plus turning into an X (the FAB opens Add expense; no menu exists; add it with the first FAB menu).
+  Expensify-style moments in addition to the page illustrations below: a success animation when a
   balance reaches zero ("All settled"), a confetti-free celebratory Lottie on first expense and on settling a
   trip, animated empty states, and spring page/sheet transitions. Every animation honours reduced motion and
   the `motion` preference (static fallback), stays inside § 26.10 budgets (profiled), and never blocks input.

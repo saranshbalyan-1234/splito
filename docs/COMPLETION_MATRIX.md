@@ -301,3 +301,14 @@ Checks, 2026-10-30, machine load under 6 for the perf runs (e2e at load 5-135 fr
 - Perf `schema-v2` (Home now shows recent transactions in its body): large demo set (1,590 expenses) Home cold open 27 ms (was 25),
   write + UI 16 ms; 10,000 expenses cold open 25 ms (24), write + UI 16-32 ms (16), Analytics 43 ms (44), search 20-25 ms; Ask open 35 ms, answer 30 ms.
 - Screenshots: apps/client/qa/home2/ (Home, People, Groups; light and Dim; 390 and 1440; demo on).
+
+## Animated icons and empty-state art (F-1713, F-260; owners 96, 172, 210, 213; branch c-anim, web, measured 2026-10-31)
+
+- Web first-load JS (`expo export -p web`, e2e build; the `index`, `__common` and runtime scripts): 7,305,880 B before, 7,028,860 B after
+  (-277,020 B, -3.8 %); gzip 1,545,216 B before, 1,497,565 B after. Lazy: 391 KB raw in 49 chunks (`lottie-web` 168 KB plus 48 animation files; 19 empty
+  states and the 5 intro slides, light and dark; loading and success are lazy too).
+- Animations are UI-thread only (Reanimated shared values); each icon motion is 180-380 ms; the sync dot loops only while syncing and rests on blur or reduced motion.
+- Not profiled: the 1,000-row list scroll with animated icons visible (F-1713 acceptance 4). Native (iOS, Android) was not run for the art: the once-and-rest play on
+  `lottie-react-native` (`play(0, staticFrame)`) and the lid/tick motion are untested on a device.
+- Tests: `e2e/emptyArt.spec.ts` (every empty state at 390 and 1440 shows its own art and a button; reduced motion holds one frame, light and dark; one art plays once and rests),
+  `architecture/emptyStateArt.test.ts`, `activityEmptyArt` in `feed.test.ts`.

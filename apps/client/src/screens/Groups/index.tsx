@@ -30,7 +30,7 @@ import {List} from '#/view/com/util/List'
 import {atoms as a, useTheme} from '#/alf'
 import {AddExpenseFABInset} from '#/components/AddExpenseFAB'
 import {Button, ButtonIcon, ButtonText} from '#/components/Button'
-import {ChevronBottom_Stroke2_Corner0_Rounded as ChevronDownIcon} from '#/components/icons/Chevron'
+import {ChevronExpand_Stroke2_Corner0_Rounded as ChevronDownIcon} from '#/components/icons/Chevron'
 import {useDialogControl} from '#/components/Dialog'
 import {SearchAskButton} from '#/components/SearchAsk/SearchAskButton'
 import {HeaderAvatar} from '#/components/HeaderAvatar'
@@ -205,15 +205,23 @@ export function GroupsScreen() {
               all.length > 0 && query.trim() ? (
                 <EmptyState
                   testID="groups-search-empty"
-                  illustration="empty-groups"
+                  illustration="empty-search"
                   message={l`No matches for “${query.trim()}”`}
+                  button={{
+                    testID: 'groups-search-clear',
+                    label: l`Clear search`,
+                    text: l`Clear search`,
+                    onPress: () => setQuery(''),
+                    size: 'small',
+                    color: 'secondary',
+                  }}
                 />
               ) : all.length > 0 ? (
                 filterGroups(all, {...filters, showSettled: true}).length > 0 && !showSettled ? (
                   /* Everything that matches is settled up: one button brings it back (it sets the preference). */
                   <EmptyState
                     testID="groups-all-settled"
-                    illustration="empty-groups"
+                    illustration="empty-settled"
                     message={l`All settled up`}
                     button={{
                       testID: 'groups-show-settled',
@@ -227,7 +235,7 @@ export function GroupsScreen() {
                 ) : (
                 <EmptyState
                   testID="groups-filtered-empty"
-                  illustration="empty-groups"
+                  illustration="empty-filter"
                   message={l`No groups match these filters.`}
                   button={{
                     testID: 'groups-clear-filters',
@@ -290,11 +298,7 @@ export function GroupsScreen() {
                       <ChevronDownIcon
                         size="sm"
                         fill={t.atoms.text_contrast_medium.color}
-                        style={{
-                          transform: [
-                            {rotate: isFoldOpen ? '180deg' : '0deg'},
-                          ],
-                        }}
+                        active={isFoldOpen}
                       />
                     </Pressable>
                     {isFoldOpen &&

@@ -209,15 +209,23 @@ export function PeopleScreen() {
               friends.length > 0 && query.trim() ? (
                 <EmptyState
                   testID="people-search-empty"
-                  illustration="empty-people"
+                  illustration="empty-search"
                   message={l`No matches for “${query.trim()}”`}
+                  button={{
+                    testID: 'people-search-clear',
+                    label: l`Clear search`,
+                    text: l`Clear search`,
+                    onPress: () => setQuery(''),
+                    size: 'small',
+                    color: 'secondary',
+                  }}
                 />
               ) : friends.length > 0 ? (
                 filtered.length > 0 && !showSettled ? (
                   /* Everything that matches is settled up: one button brings it back (it sets the preference). */
                   <EmptyState
                     testID="people-all-settled"
-                    illustration="empty-people"
+                    illustration="empty-settled"
                     message={l`All settled up`}
                     button={{
                       testID: 'people-show-settled',
@@ -231,7 +239,7 @@ export function PeopleScreen() {
                 ) : (
                 <EmptyState
                   testID="people-filtered-empty"
-                  illustration="empty-people"
+                  illustration="empty-filter"
                   message={l`No friends match these filters.`}
                   button={{
                     testID: 'people-clear-filters',

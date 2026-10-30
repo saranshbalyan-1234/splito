@@ -205,7 +205,7 @@ export function GroupScreen() {
         </Layout.Header.Outer>
         <EmptyState
           testID="group-not-found"
-          illustration="empty-groups"
+          illustration="empty-not-found"
           message={l`This group isn’t on this device. It may have been removed.`}
           button={{
             label: l`Back to Groups`,
@@ -540,6 +540,19 @@ export function GroupScreen() {
       </>
     )
 
+  /* One next step on both empty tabs (owner 213); an inactive group takes no new expenses. */
+  const addExpenseButton =
+    group && isGroupInactive(group.data)
+      ? undefined
+      : {
+          label: l`Add expense`,
+          text: l`Add expense`,
+          icon: PlusIcon,
+          onPress: () => navigation.navigate('AddExpense', {groupId}),
+          size: 'small' as const,
+          color: 'secondary' as const,
+        }
+
   const empty = isLoading ? (
     <Shimmer testID="group-history-loading">
       {Array.from({length: 5}, (_, i) => (
@@ -549,26 +562,16 @@ export function GroupScreen() {
   ) : !rowsReady ? <></> : bodyTab === 'balances' ? (
     <EmptyState
       testID="group-balances-empty"
-      illustration="empty-groups"
+      illustration="empty-balances"
       message={l`No balances yet. They appear once the group has an expense.`}
+      button={addExpenseButton}
     />
   ) : (
     <EmptyState
       testID="group-expenses-empty"
-      illustration="empty-groups"
+      illustration="empty-expenses"
       message={l`No expenses in this group yet. Add the first one and everyone’s share is worked out for you.`}
-      button={
-        gtMobile && !(group && isGroupInactive(group.data))
-          ? {
-              label: l`Add expense`,
-              text: l`Add expense`,
-              icon: PlusIcon,
-              onPress: () => navigation.navigate('AddExpense', {groupId}),
-              size: 'small',
-              color: 'secondary',
-            }
-          : undefined
-      }
+      button={addExpenseButton}
     />
   )
 

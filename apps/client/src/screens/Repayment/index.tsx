@@ -116,7 +116,7 @@ export function RepaymentScreen() {
       {payment === undefined || !history ? null : payment === null ? (
         <EmptyState
           testID="repayment-not-found"
-          illustration="empty-activity"
+          illustration="empty-not-found"
           message={l`This payment doesn’t exist. The link may be wrong.`}
           button={{
             label: l`Go to People`,

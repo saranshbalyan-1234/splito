@@ -19,7 +19,7 @@ Pinned sources:
 
 | Source | Where it is used | What was taken | License |
 |---|---|---|---|
-| Expensify/App@a60491f `src/components/LottieAnimations/index.tsx` | `apps/client/src/motion/illustrations.ts` | The idea of one typed registry of animations with their metadata. | MIT |
+| Expensify/App@a60491f `src/components/LottieAnimations/index.tsx` | `apps/client/src/motion/illustrations.ts`, `useIllustrationSource.ts` | The idea of one typed registry of animations with their metadata; each is a lazy `import()` and the JSON loads on first use. | MIT |
 | Expensify/App@a60491f `src/components/LoadingBar.tsx` | `apps/client/src/motion/Shimmer.tsx`, `apps/client/scripts/lottie.ts` (`EASE.inOut`) | The easing curve `cubic-bezier(0.65, 0, 0.35, 1)`. | MIT |
 | Bluesky upstream idiom (`entering={FadeIn}`, `exiting={FadeOut}`, `layout={native(LinearTransition)}`, used across `src/`) | `apps/client/src/motion/listAnimations.ts` | The choice of presets, and layout transitions on native only. | MIT |
 | `@bsky.app/alf` `dist/palette.js` (primary_500) | `apps/client/scripts/lottie.ts` (`VARIANTS.light`), `apps/client/scripts/brand.ts` (`BLUE`) | The brand blue `#006AFF`. Lottie tints mix it with white, which reproduces primary_400/300/200 exactly. | MIT |
@@ -29,6 +29,25 @@ Pinned sources:
 | Upstream path | Splito path | Used by |
 |---|---|---|
 | bluesky-social/social-app@4e4ad9c `src/components/anim/AnimatedCheck.tsx` | `apps/client/src/components/anim/AnimatedCheck.tsx` | `apps/client/src/motion/SuccessCheck.tsx` wraps it and adds `useHaptics().success()`. |
+
+## Animated icons and empty-state art (F-1713, F-260; owners 96, 172, 210)
+
+Reuse search: inside Splito first (`createIcon`, `useCommonSVGProps`, `useShouldReduceMotion`, `useButtonContext`, `AnimatedCheck`'s dash-offset approach, `Illustration`, `ILLUSTRATIONS`, the `scripts/lottie.ts` helpers, the one `EmptyState`), then Bluesky (tab-icon fill morph, `AnimatedCheck`).
+
+| Piece | Where | Animation and source pattern |
+|---|---|---|
+| fill morph | `MorphIcon` in `components/anim/AnimatedIcon.tsx`; used by `TabGlyph`, `navigation/Drawer.tsx`, `view/shell/desktop/LeftNav.tsx` | Outline and filled glyphs cross-fade with a small pop on select (Bluesky's tab icon swap, on the UI thread, no remount). |
+| tick | `ActivityTick_*` (`icons/Activity.tsx`), fed the unread badge by the three nav surfaces | Stroke redraws (dash offset, as Bluesky's `AnimatedCheck`) each time the unread count goes up. |
+| draw | `CheckDrawn_*` (`icons/Check.tsx`): Accept in `RequestsSection` and `ActivityItem` | Check draws on mount and when the Button is pressed. Save and Settle keep `SuccessCheck` (Bluesky's drawn check). |
+| lid | `TrashLid_*` (`icons/Trash.tsx`): Delete buttons (feedback, payment, group, Ask clear chat) | Lid swings open and lifts while the enclosing Button is hovered, pressed or focused. |
+| pulse | `SyncStatusDot` | Dot breathes (opacity and scale) while syncing; rests on any other state, blur, or reduced motion. |
+| rotate | `ChevronExpand_*` (`icons/Chevron.tsx`): Groups "Inactive" and Analytics scope "Inactive" | A half turn while `active`. |
+
+Not built, because motion there would not explain a change (owner 213): the Search & Ask sparkles twinkle (the drawer opening already shows it opened) and the FAB plus turning into an X (no FAB menu exists: the FAB opens Add expense).
+
+All variants are one primitive, `AnimatedIcon` (`createAnimatedIcon` binds a Lucide glyph, read from `lucide-react-native/icons/<name>`, to a variant). Lucide is ISC (`LICENSES/lucide.txt`); no Bluesky glyph is used.
+
+Empty-state art (`scripts/lottie.ts`, 15 new pieces besides people, groups, activity, analytics): search, filter, settled, history, expenses, balances, settle, feedback, invites, not-found, ask, disputes, payments, comments, reminders. Glyphs for not-found, ask, disputes, feedback and reminders are Lucide paths read at build time (`lucide()`), the rest are original shapes. The JSON and `lottie-web` are dynamic imports (`useIllustrationSource`).
 
 ## Original Splito work (no upstream)
 

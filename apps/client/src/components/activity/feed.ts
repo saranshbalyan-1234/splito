@@ -2,6 +2,7 @@ import {type LocalDate} from '@splito/domain'
 import {type ActivityEvent, type ActivityTypeId} from '@splito/sync'
 
 import {daysBetween, todayIn} from '#/locale/dates'
+import {type IllustrationName} from '#/motion/illustrations'
 
 /**
  * Your personal view of the feed, kept on this device: what you've read and
@@ -112,6 +113,36 @@ export type ActivityTab = 'all' | 'me' | 'others'
 
 /** What the list shows: the tab, the types (empty is every type, owner 173) and, from a Group's "See all", one group. */
 export type FeedFilter = {tab: ActivityTab; types: readonly ActivityTypeId[]; group?: string; /** One friend (owner 194): events involving them. */ person?: string}
+
+/** The art of an empty Activity narrowed to one type (F-260): each is about what that type holds. */
+export const ACTIVITY_TYPE_ART = {
+  expenses: 'empty-expenses',
+  payments: 'empty-payments',
+  comments: 'empty-comments',
+  groups: 'empty-groups',
+  friends: 'empty-invites',
+  reminders: 'empty-reminders',
+  disputes: 'empty-disputes',
+} as const satisfies Record<ActivityTypeId, IllustrationName>
+
+/**
+ * The art for an empty Activity, in the same order as its message: all hidden, a search that found nothing in the latest
+ * changes, one type or transactions, other narrowing (several types, a group or a friend), then the plain empty feed.
+ */
+export function activityEmptyArt(
+  f: FeedFilter,
+  {hiddenCount, canLookFurther}: {hiddenCount: number; canLookFurther: boolean},
+): IllustrationName {
+  const isNarrowed = f.types.length > 0 || !!f.group || !!f.person
+  if (hiddenCount > 0) return 'empty-activity'
+  if (canLookFurther && (isNarrowed || f.tab !== 'all')) return 'empty-search'
+  if (!f.group && !f.person) {
+    if (f.types.length === 1) return ACTIVITY_TYPE_ART[f.types[0]!]
+    /* "Transactions" (every See all of Recent transactions) is expenses and payments: money moving, so the receipt. */
+    if (f.types.length === 2 && f.types.includes('expenses') && f.types.includes('payments')) return ACTIVITY_TYPE_ART.expenses
+  }
+  return isNarrowed ? 'empty-filter' : 'empty-activity'
+}
 
 export const ALL_ACTIVITY: FeedFilter = {tab: 'all', types: []}
 

@@ -20,7 +20,7 @@ import {List} from '#/view/com/util/List'
 import {atoms as a, useTheme} from '#/alf'
 import {OutgoingActions} from '#/screens/People/components/RequestsSection'
 import {ActivityItem} from '#/components/activity/ActivityItem'
-import {type ActivityTab, type FeedRow} from '#/components/activity/feed'
+import {activityEmptyArt, type ActivityTab, type FeedRow} from '#/components/activity/feed'
 import {LoadingSkeleton} from '#/components/activity/LoadingSkeleton'
 import {
   getBorderColor,
@@ -35,6 +35,7 @@ import {HeaderAvatar} from '#/components/HeaderAvatar'
 import {ActivityFilterDialog} from '#/components/activity/ActivityFilterDialog'
 import {ACTIVITY_TABS, readActivityParams, activityParams, typesToParam} from '#/components/activity/urlState'
 import {SettingsSliderVertical_Stroke2_Corner0_Rounded as FilterIcon} from '#/components/icons/SettingsSlider'
+import {PlusLarge_Stroke2_Corner0_Rounded as PlusIcon} from '#/components/icons/Plus'
 import {TimesLarge_Stroke2_Corner0_Rounded as ClearIcon} from '#/components/icons/Times'
 import {MarkAllReadIcon} from '#/components/activity/icons'
 import * as Layout from '#/components/Layout'
@@ -145,12 +146,17 @@ export function ActivityScreen() {
   /* "Show every type" clears the types and keeps a group; with only a group narrowing, "Show everything" clears it. */
   const clearButton = isNarrowedView
     ? bodyTypes.length > 0
-      ? {testID: 'activity-clear-filters', label: l`Show every type`, text: l`Show every type`, onPress: () => applyTypes([])}
-      : {testID: 'activity-clear-filters', label: l`Show everything`, text: l`Show everything`, onPress: () => (group ? clearGroup() : clearPerson())}
+      ? {testID: 'activity-clear-filters', label: l`Show every type`, text: l`Show every type`, onPress: () => applyTypes([]), size: 'small' as const, color: 'secondary' as const}
+      : {testID: 'activity-clear-filters', label: l`Show everything`, text: l`Show everything`, onPress: () => (group ? clearGroup() : clearPerson()), size: 'small' as const, color: 'secondary' as const}
     : undefined
   const lookFurtherButton = canLookFurther
-    ? {testID: 'activity-look-further', label: l`Look further back`, text: l`Look further back`, onPress: () => loadMore?.(5)}
+    ? {testID: 'activity-look-further', label: l`Look further back`, text: l`Look further back`, onPress: () => loadMore?.(5), size: 'small' as const, color: 'secondary' as const}
     : undefined
+  /* Nothing narrowing the list: the next useful step is the first expense (or showing what was hidden), never a dead end (owner 213). */
+  const nextStepButton =
+    hiddenCount > 0
+      ? {testID: 'activity-empty-unhide', label: l`Show hidden changes`, text: l`Show hidden changes`, onPress: actions.unhideAll, size: 'small' as const, color: 'secondary' as const}
+      : {testID: 'activity-empty-add-expense', label: l({message: 'Add expense', context: 'action'}), text: l({message: 'Add expense', context: 'action'}), icon: PlusIcon, onPress: () => navigation.navigate('AddExpense', {}), size: 'small' as const, color: 'secondary' as const}
 
   const renderItem = ({item: row, index}: {item: FeedRow; index: number}) => {
     if (!snapshot) return null
@@ -295,9 +301,9 @@ export function ActivityScreen() {
               ) : (
               <EmptyState
                 testID="activity-empty"
-                illustration="empty-activity"
+                illustration={activityEmptyArt({tab: bodyTab, types: bodyTypes, group, person}, {hiddenCount, canLookFurther})}
                 message={emptyMessage()}
-                button={lookFurtherButton ?? clearButton}
+                button={lookFurtherButton ?? clearButton ?? nextStepButton}
                 secondaryButton={lookFurtherButton ? clearButton : undefined}
               />
               )
