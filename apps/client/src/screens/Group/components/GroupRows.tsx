@@ -103,8 +103,7 @@ export function MemberBalanceRow({
         a.border_t,
         t.atoms.border_contrast_low,
       ]}>
-      <PersonLink id={personId} name={name} avatarName={avatarName} show="avatar" size={42} />
-      <PersonLink id={personId} name={name} show="name" style={a.flex_1} />
+      <PersonLink id={personId} name={name} avatarName={avatarName} size={42} style={a.flex_1} />
       <Text
         testID={`group-net-${currency}-${name}-text`}
         numberOfLines={1}

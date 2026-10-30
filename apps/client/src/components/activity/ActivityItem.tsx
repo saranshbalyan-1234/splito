@@ -65,6 +65,8 @@ import {useTimeZone, useToday} from '#/locale/useDates'
 import {dayOf, daysAgo, writeOffParties} from './feed'
 import {SyncToneContext, useSyncTone} from '#/components/SyncTone'
 import {type ActivityActions, type RowAction} from './useActivityActions'
+import {openPerson} from '#/lib/links/make'
+import {avatarPersonId} from './avatarPerson'
 import {type ActivitySnapshot} from './useActivityFeed'
 
 /** The size of the row's avatar, for anything that stands in for it. */
@@ -177,6 +179,7 @@ export function ActivityItem({
   const [menuAt, setMenuAt] = useState({x: 0, y: 0})
   const [isHovered, setIsHovered] = useState(false)
   const [isFocusWithin, setIsFocusWithin] = useState(false)
+  const avatarId = avatarPersonId(event, snapshot.requests)
   const content = useDescribe(event, snapshot, me, locale, navigation, actions, renderInviteActions)
   const isDeletedEvent = DELETED_KINDS.has(event.kind)
   /* A request awaiting an answer is one line: the answers on the right in place of "...", whose items are long-press / right-click (ARCHITECTURE 26.18). */
@@ -212,6 +215,7 @@ export function ActivityItem({
   const onAccessibilityAction = (e: AccessibilityActionEvent) => {
     const name = e.nativeEvent.actionName
     if (name === 'longpress' || name === 'magicTap') openMenu()
+    else if (name === 'openActor' && avatarId) openPerson(navigation, avatarId, me)
     else if (menuActions.includes(name as RowAction)) run(name as RowAction)
   }
 
@@ -319,6 +323,8 @@ export function ActivityItem({
                     label: actions.info(name, isRead).label,
                   })),
                   {name: 'longpress', label: l`More actions`},
+                  /* The avatar is a nested link; a screen reader reaches it from the row (owner 178). */
+                  ...(avatarId ? [{name: 'openActor', label: l`Open ${content.avatarName ?? ''}`}] : []),
                 ]
               : undefined
           }
@@ -343,7 +349,7 @@ export function ActivityItem({
           ]}>
           <SubtleHover hover={isHovered} />
           <Avatar
-            id={avatarPersonId(event, snapshot)}
+            id={avatarId}
             name={content.avatarName}
             icon={content.icon}
             tone={content.tone}
@@ -496,15 +502,6 @@ const DELETED_KINDS = new Set<ActivityEvent['kind']>([
   'person.removed',
 ])
 
-/** Who the row's avatar is (it shows who made the change, owner rule 6; a friend request shows the friend). */
-function avatarPersonId(event: ActivityEvent, snapshot: ActivitySnapshot): string | undefined {
-  if (event.entityType === 'friendRequest' && (event.kind === 'friendRequest.received' || event.kind === 'friendRequest.accepted'))
-    return (snapshot.requests.get(event.entityId)?.data ?? event.data).personId ?? undefined
-  if (event.entityType === 'dispute' && !(event.kind === 'dispute.accepted' || event.kind === 'dispute.rejected' || event.kind === 'dispute.released'))
-    return event.data.raisedBy
-  return event.actor
-}
-
 /** Everything that differs by kind: the badge, the sentence, the money line, where it goes. */
 function useDescribe(
   event: ActivityEvent,
@@ -642,8 +639,8 @@ function useDescribe(
           requestName(current))
         : requestName(current)
       const subject = <Strong>{friendName}</Strong>
-      const openPerson = current.personId
-        ? () => navigation.push('Person', {personId: current.personId!})
+      const openFriend = current.personId
+        ? () => openPerson(navigation, current.personId!, me)
         : () => navigation.navigate('People')
       if (event.kind === 'friendRequest.received') {
         const isPending = current.status === 'pending'
@@ -669,7 +666,7 @@ function useDescribe(
               onAnswer={accept => actions.answerRequest(event.entityId, accept)}
             />
           ) : undefined,
-          open: openPerson,
+          open: openFriend,
         }
       }
       if (event.kind === 'friendRequest.accepted') {
@@ -688,7 +685,7 @@ function useDescribe(
               <Trans>You can now split anything together</Trans>
             </Detail>
           ),
-          open: openPerson,
+          open: openFriend,
         }
       }
       const sentRequest = snapshot.requests.get(event.entityId)
@@ -708,7 +705,7 @@ function useDescribe(
               {actor} sent {subject} a friend request
             </Trans>
           ),
-        open: openPerson,
+        open: openFriend,
       }
     }
     case 'person': {
@@ -733,7 +730,7 @@ function useDescribe(
         ),
         // A removed friend has no page left to open.
         open: isAdded
-          ? () => navigation.push('Person', {personId: event.entityId})
+          ? () => openPerson(navigation, event.entityId, me)
           : undefined,
       }
     }
@@ -855,7 +852,6 @@ function useDescribe(
                   name={nameOf(m.personId)}
                   show="avatar"
                   size={PREVIEW_AVATAR_SIZE}
-                  nested
                 />
               ))}
               {members.length > MAX_PREVIEW_AVATARS ? (
@@ -941,7 +937,7 @@ function useDescribe(
         open: () =>
           r.groupId
             ? navigation.push('Group', {groupId: r.groupId})
-            : navigation.push('Person', {personId: other}),
+            : openPerson(navigation, other, me),
       }
     }
     case 'writeoff': {
@@ -1022,7 +1018,7 @@ function useDescribe(
         open: () =>
           w.groupId
             ? navigation.push('Group', {groupId: w.groupId})
-            : navigation.push('Person', {personId: other}),
+            : openPerson(navigation, other, me),
       }
     }
     case 'comment': {
@@ -1125,7 +1121,7 @@ function useDescribe(
       const open = () =>
         r.groupId
           ? navigation.push('Group', {groupId: r.groupId})
-          : navigation.push('Person', {personId: r.personId})
+          : openPerson(navigation, r.personId, me)
       if (event.kind === 'reminder.nudged') {
         return {
           avatarName: actorAvatar,
@@ -1306,7 +1302,7 @@ function Avatar({
     <View style={SLOT_SIZE}>
       {/* Its own press target inside a row that opens what changed (owner 178). */}
       {id ? (
-        <PersonLink id={id} name={name ?? ''} show="avatar" size={AVATAR_SIZE} nested />
+        <PersonLink id={id} name={name ?? ''} show="avatar" size={AVATAR_SIZE} />
       ) : (
         <UserAvatar type="user" size={AVATAR_SIZE} name={name} />
       )}

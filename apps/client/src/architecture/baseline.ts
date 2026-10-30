@@ -92,6 +92,7 @@ export const BASELINE: Record<RuleName, Record<string, number>> = {
     'apps/client/src/navigation/Drawer.tsx': 1,
     'apps/client/src/screens/AddFriend.tsx': 1,
     'apps/client/src/screens/CreateGroup.tsx': 2,
+    'apps/client/src/screens/Group/index.tsx': 1, // the header's member stack is one control: it opens Members, not each face
     'apps/client/src/screens/Invites/Invite.tsx': 1,
     'apps/client/src/screens/Person/index.tsx': 1,
     'apps/client/src/screens/Profile.tsx': 1,

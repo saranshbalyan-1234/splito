@@ -1,5 +1,5 @@
 import {useDeferredValue, useState} from 'react'
-import {View} from 'react-native'
+import {Pressable, View} from 'react-native'
 import {LayoutAnimationConfig} from 'react-native-reanimated'
 import {Trans, useLingui} from '@lingui/react/macro'
 import {type RouteProp, useNavigation, useRoute} from '@react-navigation/native'
@@ -26,7 +26,7 @@ import {useNumberLocale} from '#/locale/numberLocale'
 import {useFormatDay} from '#/locale/useDates'
 import {EmptyState} from '#/view/com/util/EmptyState'
 import {List} from '#/view/com/util/List'
-import {PersonLink} from '#/components/PersonLink'
+import {UserAvatar} from '#/view/com/util/UserAvatar'
 import {GroupBalanceCards} from '#/screens/Group/components/GroupBalanceCards'
 import {SectionHeader} from '#/screens/People/components/SectionHeader'
 import * as SettingsList from '#/screens/Settings/components/SettingsList'
@@ -412,7 +412,14 @@ export function GroupScreen() {
           </View>
           <View style={[a.gap_xs]}>
             <View style={[a.flex_row, a.align_center, a.gap_sm]}>
-              <View style={[a.flex_row, a.align_center]}>
+              {/* The whole stack opens Members, not each face (a stack is one control, owner ruling F-261). */}
+              <Pressable
+                testID="group-avatar-stack"
+                accessibilityRole="button"
+                accessibilityLabel={l`Members`}
+                accessibilityHint=""
+                onPress={() => setTab('members')}
+                style={[a.flex_row, a.align_center]}>
                 {stack.map((m, i) => (
                   <View
                     key={m.personId}
@@ -425,12 +432,15 @@ export function GroupScreen() {
                         zIndex: AVATAR_STACK - i,
                       },
                     ]}>
-                    <PersonLink
-                      id={m.personId}
-                      name={names.get(m.personId) ?? l`Someone`}
-                      avatarName={m.personId === me?.id ? me.data.name : undefined}
-                      show="avatar"
+                    <UserAvatar
                       size={32}
+                      name={
+                        m.personId === me?.id
+                          ? me.data.name
+                          : names.get(m.personId)
+                      }
+                      type="user"
+                      noBorder
                     />
                   </View>
                 ))}
@@ -460,7 +470,7 @@ export function GroupScreen() {
                     </Text>
                   </View>
                 )}
-              </View>
+              </Pressable>
               <Text
                 emoji
                 numberOfLines={1}

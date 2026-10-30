@@ -1,5 +1,6 @@
 import {type ActivityTypeId} from '@splito/sync'
 
+import {type NavigationProp} from '#/lib/routes/types'
 import {buildPath, type LinkTarget} from './resolve'
 import {webLink} from './hosts'
 
@@ -14,6 +15,21 @@ export function linkTo(name: LinkTarget['name'], params: Record<string, string> 
 /** The in-app path for a screen (`/people/abc`), for `openLink`: screens open their targets through the resolver too. */
 export function pathTo(name: LinkTarget['name'], params: Record<string, string> = {}, sheets: string[] = [], query: Record<string, string> = {}) {
   return buildPath({name, params, sheets, query})
+}
+
+/**
+ * Where a person opens (owner 178, 206): me -> Profile, anyone else (removed or unknown too) -> their page. The one
+ * rule behind `PersonLink`, `openPerson` and every link or push that names a person.
+ */
+export function personPath(personId: string, isMe: boolean) {
+  return isMe ? pathTo('Profile') : pathTo('Person', {personId})
+}
+
+/** Opens a person's page by the same rule as `personPath` (for a handler that cannot be a link). */
+export function openPerson(navigation: Pick<NavigationProp, 'push' | 'navigate'>, personId: string, myId: string, action: 'push' | 'navigate' = 'push') {
+  const go = action === 'push' ? navigation.push : navigation.navigate
+  if (personId === myId) go.call(navigation, 'Profile')
+  else go.call(navigation, 'Person', {personId})
 }
 
 /**

@@ -299,7 +299,6 @@ export function Charts({
                     avatarName={p.key === me?.id ? me.data.name : undefined}
                     show="avatar"
                     size={24}
-                    nested
                   />
                 ),
               }))}

@@ -245,7 +245,6 @@ function useOpenBalances(personId: string) {
 
 function FriendRow({person, onRemove}: {person: Entity<Person>; onRemove: () => void}) {
   const {t: l} = useLingui()
-  const navigation = useNavigation<NavigationProp>()
   const {gtMobile} = useBreakpoints()
   const locale = useNumberLocale()
   const open = useOpenBalances(person.id)
@@ -260,17 +259,6 @@ function FriendRow({person, onRemove}: {person: Entity<Person>; onRemove: () => 
     )
   return (
     <RequestRow testID={`hub-friend-${name}`} personId={person.id} name={name} sync={person} detail={detail}>
-      <Button
-        testID="hub-friend-open"
-        label={l`Open ${name}`}
-        size="small"
-        color="secondary"
-        variant="ghost"
-        onPress={() => navigation.navigate('Person', {personId: person.id})}>
-        <ButtonText>
-          <Trans>Open</Trans>
-        </ButtonText>
-      </Button>
       {gtMobile ? (
         <RequestAction
           testID="hub-friend-remove"

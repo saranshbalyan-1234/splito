@@ -712,15 +712,21 @@ function PersonAmount({
           ? [a.mx_sm, a.px_md, a.rounded_md, t.atoms.bg_contrast_25]
           : a.px_lg,
       ]}>
-      <PersonLink id={id} name={name} avatarName={avatar} show="avatar" size={36} />
-      <View style={[a.flex_1]}>
-        <PersonLink id={id} name={name} show="name" textStyle={a.font_medium} style={a.self_start} />
-        {detail ? (
-          <Text style={[a.text_sm, t.atoms.text_contrast_medium]}>
-            {detail}
-          </Text>
-        ) : null}
-      </View>
+      <PersonLink
+        id={id}
+        name={name}
+        avatarName={avatar}
+        size={36}
+        textStyle={a.font_medium}
+        style={a.flex_1}
+        below={
+          detail ? (
+            <Text style={[a.text_sm, t.atoms.text_contrast_medium]}>
+              {detail}
+            </Text>
+          ) : undefined
+        }
+      />
       <Text
         style={[
           a.text_md,
