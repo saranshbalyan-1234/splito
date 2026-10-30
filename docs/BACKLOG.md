@@ -726,6 +726,17 @@ Every new expense shows Paid by and starts with me as the payer, from every entr
   2. No smart default, remembered or predicted payer for a new expense; an Ask prefill naming a payer is the only exception; editing keeps the saved payer.
   3. Unit test of the form initialiser and group/person pick (`form.ts`, `formPick.ts`) for the default.
 
+### F-274 Reuse audit and consolidation `spec: owner § 26.1 (decision 210)`
+
+Audit the whole codebase for code that does the same job twice and merge each set into one shared piece.
+
+- **Effort** M-L · **Impact** 8 · **Backend** no · **Status** in progress (audit running; consolidation after the current builders merge), Wave C · **Deps** -
+- **Prefs** -
+- **Acceptance**
+  1. A ranked audit (files, what is duplicated, the shared piece, risk, effort) in `docs/reuse/consolidation.md`.
+  2. Consolidation in small non-overlapping slices, each with tests unchanged or improved and no visible regression (screenshots 390/1440 before/after).
+  3. An architecture test per consolidated piece where a pattern can be enforced (e.g. no `UserAvatar` with a person id outside PersonLink).
+
 ### F-250 Sign-in required (auth gate) `spec: owner § 26.15 (decision 125)`
 
 Nothing of the app is visible signed out: only the welcome tour, the logged-out flow, language and legal pages. The local database opens per account only with a session; offline after sign-in; deep links resume after sign-in.
