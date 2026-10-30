@@ -2347,6 +2347,13 @@ expands once I click". *Where:* `screens/People`, `screens/Groups`, `screens/Gro
 
 ### 26.13 Expenses and itemize
 
+- **Add expense always shows "Paid by", and it starts as me** (owner 207): the Paid by row is visible on every
+  Add expense, whatever the entry point (FAB, sidebar pill, a group or person page, Ask Splito's prefill, a
+  scanned receipt, a duplicate) and every width; a new expense always starts with me as the payer, never a
+  remembered or predicted payer, until the person picks someone else (an Ask prefill that names a payer, "Riya
+  paid", is the only exception). Editing keeps the saved payer. *Why:* "add expense should have paid by always,
+  by default to me".
+
 *Why:* "an expense can be one expense or with multiple expense, like dinner $100, but can be divided into
 dishes etc and each item can be assigned to each in split"; "in itemize don't show default tax tip discount"
 -> "let it be" -> "it should be there"; "but add the percentage option as well". *Where:*
@@ -3223,6 +3230,7 @@ Every owner decision, in the order it was made (all 2026-10-26). "Replaced" name
 | 204 | "make support a section, which opens up all these menus" | Settings shows one "Support" row opening /settings/support with Send feedback, Your feedback, Help, Privacy, About and the version | § 26.15 | Support items listed inline in the Settings list |
 | 205 | "and same for data, think of a proper name as well" | Settings shows one "Your data" row opening /settings/data with Export, Import, Move older data and Reset all settings | § 26.15 | Data items listed inline under a "Data" heading |
 | 206 | "make profile and settings as diff, avatar opens profile and settings as tab is diff" | Profile is its own page at /profile (avatar opens it, Back returns where you were); Settings is a tab (/settings) in the default bar and sidebar | § 26.4, § 26.3 | Profile inside Settings at /settings/profile (201); Settings reached from Profile Back |
+| 207 | "add expense should have paid by always, by default to me" | Paid by is always shown on Add expense and always starts as me on a new expense (any entry point); only an Ask prefill naming a payer differs; edits keep the saved payer | § 26.13 | - |
 
 New decisions follow § 0 rule 9: rewrite the rule in its topic so only the current truth remains, then add a
 row here.

@@ -714,6 +714,17 @@ A Sort button beside Filters: Last active (default), Name, Amount, Newest; remem
   2. Last active = newest change involving the friend or group (expense, payment, comment, edit), computed in the domain/sync layer, not in screens; ties by name.
   3. Sort leaves the Filters sheet; `?sort=` in the URL; old `peopleSort` values migrate; unit tests for each order; e2e at 390 and 1440.
 
+### F-273 Paid by always shown, starting as me `spec: owner § 26.13 (decision 207)`
+
+Every new expense shows Paid by and starts with me as the payer, from every entry point.
+
+- **Effort** S · **Impact** 7 · **Backend** no · **Status** todo, Wave C · **Deps** -
+- **Prefs** -
+- **Acceptance**
+  1. e2e from the FAB, the sidebar pill, a group page, a person page (pre-selected friend), Ask prefill without a payer, a scanned receipt and Duplicate: Paid by visible and reads "You" at 390 and 1440.
+  2. No smart default, remembered or predicted payer for a new expense; an Ask prefill naming a payer is the only exception; editing keeps the saved payer.
+  3. Unit test of the form initialiser and group/person pick (`form.ts`, `formPick.ts`) for the default.
+
 ### F-250 Sign-in required (auth gate) `spec: owner § 26.15 (decision 125)`
 
 Nothing of the app is visible signed out: only the welcome tour, the logged-out flow, language and legal pages. The local database opens per account only with a session; offline after sign-in; deep links resume after sign-in.
