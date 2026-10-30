@@ -1209,9 +1209,10 @@ Inherited from GameRun (2026-10-26); each holds for Splito's stack:
   shared one machine (load 25-130); each ran the full 500+ test e2e itself, several times per round, so every run
   took 20-30 min instead of ~10, timing tests failed under load and were re-run, and long-lived overlapping
   branches (Home, taps, Activity, disputes) forced repeated merges of main and conflict rounds; scope added
-  mid-round and a network outage added more. Rules: at most three builders at once; a builder runs only the specs
-  its change touches (plus lint, typecheck, unit tests and the renders gate) and the orchestrator runs the full
-  e2e once per merge, on the merged main; slices are small and merge the same day, in dependency order, so
+  mid-round and a network outage added more. Rules: a builder runs only the specs its change touches (plus lint,
+  typecheck, unit tests and the renders gate) and the orchestrator runs the full e2e once per merge, on the merged
+  main; builders fan out as wide as the independent work allows (owner 208, 2026-10-31: "fanout more to get things
+  done", replacing "at most three builders"), split so no two edit the same files; slices are small and merge the same day, in dependency order, so
   nothing builds on a moving target; perf numbers are taken only at load under 10.
 - A transparent RN `Modal` still swallows taps on iOS; iOS silently refuses a second modal over an open one;
   changing a dialog's `key` is dismiss + present and iOS can drop the present.
@@ -3231,6 +3232,7 @@ Every owner decision, in the order it was made (all 2026-10-26). "Replaced" name
 | 205 | "and same for data, think of a proper name as well" | Settings shows one "Your data" row opening /settings/data with Export, Import, Move older data and Reset all settings | § 26.15 | Data items listed inline under a "Data" heading |
 | 206 | "make profile and settings as diff, avatar opens profile and settings as tab is diff" | Profile is its own page at /profile (avatar opens it, Back returns where you were); Settings is a tab (/settings) in the default bar and sidebar | § 26.4, § 26.3 | Profile inside Settings at /settings/profile (201); Settings reached from Profile Back |
 | 207 | "add expense should have paid by always, by default to me" | Paid by is always shown on Add expense and always starts as me on a new expense (any entry point); only an Ask prefill naming a payer differs; edits keep the saved payer | § 26.13 | - |
+| 208 | "fanout more to get things done" | Run as many builders as there is independent work (no file overlap), each running only its touched specs; full e2e once per merge by the orchestrator; perf numbers only on a quiet machine | § 23 (process lesson) | At most three builders at once |
 
 New decisions follow § 0 rule 9: rewrite the rule in its topic so only the current truth remains, then add a
 row here.
