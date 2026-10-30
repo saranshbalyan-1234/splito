@@ -626,22 +626,10 @@ const FLOWS: Flow[] = [
         ct: {visible: T('list-filters-dot')},
         settle: 900,
       },
-      /* Back to unfiltered for the next lap. */
-      {
-        screen: 'Groups',
-        action: 'filter clear',
-        prepare: async c => {
-          await c.page.locator(`${T('list-filters')}:visible`).first().tap()
-          await c.page.waitForTimeout(900)
-          await c.page.locator(`${T('filter-show-owed')}:visible`).first().tap()
-          await c.page.waitForTimeout(300)
-        },
-        tap: tid('sheet-save'),
-        fb: {moves: DIALOG},
-        ct: {gone: T('list-filters-dot')},
-        info: true,
-        settle: 900,
-      },
+      /* Back to unfiltered for the next lap: the same three taps again, all measured. */
+      {screen: 'Groups', action: 'filters: reopen', tap: tid('list-filters'), fb: {moves: DIALOG}, ct: {ready: DIALOG}, settle: 900},
+      {screen: 'Groups', action: 'filter chip off', tap: tid('filter-show-owed'), fb: {flips: [T('filter-show-owed'), 'aria-checked']}, settle: 500},
+      {screen: 'Groups', action: 'filter clear', tap: tid('sheet-save'), fb: {moves: DIALOG}, ct: {gone: T('list-filters-dot')}, settle: 900},
     ],
   },
   {

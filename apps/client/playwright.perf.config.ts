@@ -16,7 +16,8 @@ export default defineConfig({
   testDir: 'perf',
   timeout: 600_000,
   workers: 1,
-  use: {baseURL: `http://localhost:${PORT}`},
+  /* The sweep walks 100+ interactions in one test: a missing element must fail its flow in seconds, not wait out the test. */
+  use: {baseURL: `http://localhost:${PORT}`, actionTimeout: 20_000},
   projects: [
     {name: 'chrome', testIgnore: /sweep/, use: {channel: 'chrome'}},
     {name: 'sweep-chrome', testMatch: /sweep/, use: {channel: 'chrome'}},
