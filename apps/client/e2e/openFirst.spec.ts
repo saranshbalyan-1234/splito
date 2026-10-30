@@ -15,9 +15,11 @@ type Frame = {t: number; shell: number | null; content: boolean}
 function sample(page: Page, shellSel: string, edge: 'top' | 'left', contentSel: string) {
   return page.evaluate(
     ([shellSel, edge, contentSel]) => {
-      const w = window as unknown as {__f: Frame[]}
+      const w = window as unknown as {__f: Frame[]; __stop?: boolean}
       w.__f = []
+      w.__stop = false
       const frame = () => {
+        if (w.__stop) return
         const el = document.querySelector(shellSel)
         w.__f.push({
           t: performance.now(),
@@ -31,7 +33,13 @@ function sample(page: Page, shellSel: string, edge: 'top' | 'left', contentSel: 
     [shellSel, edge, contentSel] as const,
   )
 }
-const frames = (page: Page) => page.evaluate(() => (window as unknown as {__f: Frame[]}).__f)
+/** The samples so far; the sampler stops (it must not run on for the rest of the test). */
+const frames = (page: Page) =>
+  page.evaluate(() => {
+    const w = window as unknown as {__f: Frame[]; __stop?: boolean}
+    w.__stop = true
+    return w.__f
+  })
 
 function check(f: Frame[]) {
   const withShell = f.filter(x => x.shell != null)

@@ -229,9 +229,9 @@ increase, with its cause:
   streams in chunks, the scroll count follows scroll timing), so they are recorded at the highest value seen in 8 runs.
 Eight consecutive runs after recording: 8 of 8 pass.
 
-Renders gate, fix/ios-safari-taps (tabs stay mounted, owners 166 / 168; baseline re-recorded at the highest of 3 runs, 4 consecutive
-passes after). Against the baseline of this branch's parent: tabs updates 4,418 to 3,440 (1,916 to 3,440 between runs: the large
-demo's background loading lands inside or outside the phase), scroll mounts 50,113 to 42,810 (the parked Activity is re-used, not
+Renders gate, fix/ios-safari-taps (tabs stay mounted, owners 166 / 168; the phases now start after an explicit "demo loaded" signal, the
+app's `splito:home-ready` mark plus one second without a commit; baseline re-recorded at the median of 3 runs, 3 consecutive passes after). Against the baseline of this branch's parent: tabs updates 4,418 to 3,435 (it used to vary 1,916 to 3,440 between runs, the large
+demo's background loading landing inside or outside the phase; 3,179 to 3,436 now), scroll mounts 50,113 to 42,810 (the parked Activity is re-used, not
 rebuilt), launch 403 to 398. Switching Home > Groups > Home on a phone, both visited: 303 renders per switch to 71, all of them the
 bar and the navigator, and none of PeopleScreen / PersonRow / BalanceSummary / SummaryCard / ListToolsHeader / ListImpl / GroupsScreen /
 GroupRow (`renders.spec` "switching back to a visited tab re-renders none of its content"). Every per-component increase, with its cause:

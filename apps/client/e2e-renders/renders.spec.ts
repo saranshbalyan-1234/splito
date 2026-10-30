@@ -107,6 +107,24 @@ function instrument() {
   }
 }
 
+/**
+ * The large demo has loaded: Home has its figures (the app's own `splito:home-ready` mark, the launch budget's end
+ * point) and nothing has committed for a full second after it, so the history pages the demo keeps loading in the
+ * background have landed. Without it the first phase counted a different amount of that loading on every run.
+ */
+async function demoLoaded(page: Page) {
+  await page.waitForFunction(
+    () => performance.getEntriesByName('splito:home-ready').length > 0,
+    undefined,
+    {timeout: 60_000},
+  )
+  await page.waitForFunction(
+    () => performance.now() - (window as unknown as Win).__renders.last > 1000,
+    undefined,
+    {timeout: 60_000, polling: 100},
+  )
+}
+
 /** Starts counting into `name`, after the previous step has gone quiet (no commit for 500 ms). */
 async function phase(page: Page, name: string) {
   await quiet(page)
@@ -197,6 +215,7 @@ test('no wasted renders, no render above the baseline', async ({page}) => {
   await openDemo(page)
   await page.reload()
   await expect(page.getByTestId('screen-people')).toBeVisible({timeout: 60_000})
+  await demoLoaded(page)
 
   await phase(page, 'tabs')
   for (const tab of ['groups', 'activity', 'analytics', 'people']) {
@@ -349,27 +368,31 @@ test('switching back to a visited tab re-renders none of its content', async ({p
   await openDemo(page)
   await page.reload()
   await expect(page.getByTestId('screen-people')).toBeVisible({timeout: 60_000})
-  await page.getByTestId('tab-groups').click()
-  await expect(page.getByTestId('screen-groups')).toBeVisible()
-  await quiet(page)
-  await page.getByTestId('tab-people').click()
-  await expect(page.getByTestId('screen-people')).toBeVisible()
-  await phase(page, 'toGroups')
-  await page.getByTestId('tab-groups').click()
-  await expect(page.getByTestId('screen-groups')).toBeVisible()
-  await phase(page, 'toHome')
-  await page.getByTestId('tab-people').click()
-  await expect(page.getByTestId('screen-people')).toBeVisible()
+  await demoLoaded(page)
+  // Visit every tab once, so each switch below is a return to one that is kept.
+  for (const tab of ['groups', 'analytics', 'activity', 'people']) {
+    await page.getByTestId(`tab-${tab}`).click()
+    await expect(page.getByTestId(`screen-${tab}`)).toBeVisible()
+    await quiet(page)
+  }
+  // Groups <-> Home, Analytics <-> Activity and Home <-> Analytics, each leg counted on its own.
+  const legs = ['groups', 'people', 'analytics', 'activity', 'analytics', 'people', 'analytics', 'people']
+  for (const [i, tab] of legs.entries()) {
+    await phase(page, `leg${i}:${tab}`)
+    await page.getByTestId(`tab-${tab}`).click()
+    await expect(page.getByTestId(`screen-${tab}`)).toBeVisible()
+  }
   await quiet(page)
   const all = await page.evaluate(() => (window as unknown as Win).__renders.counts)
-  console.log(`TOGROUPS ${JSON.stringify(all.toGroups ?? {})}`)
-  console.log(`TOHOME ${JSON.stringify(all.toHome ?? {})}`)
-  const round: Counts = {}
-  for (const phaseName of ['toGroups', 'toHome'])
-    for (const [k, n] of Object.entries(all[phaseName] ?? {})) round[k] = (round[k] ?? 0) + n
   // The screens' own content: the bar and the navigator shell may render (they own the highlight and the visible
   // screen), none of these may.
-  const CONTENT = /^(mount|update):(PeopleScreen|PersonRow|BalanceSummary|SummaryCard|RequestsSection|GroupsScreen|GroupRow|ListToolsHeader|ListImpl|RowImpl|ActivityScreen|AnalyticsScreen|ExpenseRow)$/
-  const bodies = Object.entries(round).filter(([name]) => CONTENT.test(name))
-  expect(bodies, `screen content that re-rendered on a tab switch: ${JSON.stringify(bodies)}`).toEqual([])
+  const CONTENT = /^(mount|update):(PeopleScreen|PersonRow|BalanceSummary|SummaryCard|RequestsSection|GroupsScreen|GroupRow|ListToolsHeader|ListImpl|RowImpl|ActivityScreen|AnalyticsScreen|ExpenseRow|ActivityRow|ChartCard|BarChart|LineChart)$/
+  const problems: string[] = []
+  for (const [leg, counts] of Object.entries(all)) {
+    if (!leg.startsWith('leg')) continue
+    console.log(`${leg.toUpperCase()} ${JSON.stringify(counts)}`)
+    const bodies = Object.entries(counts).filter(([name]) => CONTENT.test(name))
+    if (bodies.length) problems.push(`${leg}: ${JSON.stringify(bodies)}`)
+  }
+  expect(problems, `screen content that re-rendered on a tab switch:\n${problems.join('\n')}`).toEqual([])
 })
