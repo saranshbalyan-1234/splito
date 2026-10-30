@@ -1655,7 +1655,7 @@ labelled sidebar); **wide** = web 1300 px and up (Bluesky `gtTablet`, right colu
   some links, it should show a back button, in case you don't go directly from tabs". *Where:* `tabLink()` in
   `lib/routes/helpers.ts` (the `Link` default `push` action, `navigateToTarget` in `lib/links/open.ts` for links the
   running app opens; nav items use `navigationAction="navigate"` and never push), `HeaderAvatar` (Back instead of
-  the avatar) and `AddExpenseFAB` (none) read `PushedTabContext`, which the tab screen sets. Web pushes the tab route with
+  the avatar; the only difference from the tab, owner 190) reads `PushedTabContext`, which the tab screen sets; the FAB does not. Web pushes the tab route with
   a `from` param naming the tab it was opened from (it is in the address, owner 184); native pushes `Pushed<Tab>`
   twins registered in the root stack. A pushed copy is never the current tab: pressing its own tab replaces it with
   the plain tab, without `from`. A cold page load of a plain address is the plain tab. e2e `homeTabs.spec.ts`.
@@ -1766,7 +1766,7 @@ good"; "the left sidebar looks bad on desktop". *Where:* `view/shell/desktop/Lef
   expenses there. *Why:* "fab icon to show everywhere on the screen from nav bar"; "home and activity also should
   show the fab"; "the fab icon should not be visible on desktop as we have it on sidebar"; "all the + buttons or
   anything should be there" (replaces "if back button is not there show it").
-- **Decided once, in the shell, from the route** (a small allow-list of route names, pushed copies included; no per-screen flags). It keeps Bluesky's
+- **Decided once, from the route** (`fabParams` in `lib/routes/fab.ts`, a small allow-list of route names, pushed copies included; `RouteFAB` in the screen scaffold `Layout.Screen` renders it under every screen, so no screen has its own FAB; a screen can only hold it back with `useSuppressFab`: an empty Home or People, an inactive or deleted group; `FAB` draws nothing on wide screens). It keeps Bluesky's
   stays in place while scrolling (owner 87), and lists pad their bottom by the FAB clearance.
 - **Tapping it opens Add expense as a bottom sheet** (§ 26.8). On a Group or Person page it pre-selects that group or
   friend; wide screens, which have no FAB, keep the body's "Add expense". *Why:* "use the same flow of that FAB icon".

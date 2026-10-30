@@ -26,7 +26,8 @@ import {EmptyState} from '#/view/com/util/EmptyState'
 import {List} from '#/view/com/util/List'
 import {useDemoMode} from '#/state/demo'
 import {atoms as a, useBreakpoints} from '#/alf'
-import {AddExpenseFAB, AddExpenseFABInset} from '#/components/AddExpenseFAB'
+import {AddExpenseFABInset} from '#/components/AddExpenseFAB'
+import {useSuppressFab} from '#/components/RouteFAB'
 import {LogoMark} from '#/components/brand/Logo'
 import {SearchAskButton} from '#/components/SearchAsk/SearchAskButton'
 import {HeaderAvatar} from '#/components/HeaderAvatar'
@@ -81,6 +82,9 @@ export function HomeScreen() {
   /* Cheap: only whether the FAB shows. Everything derived (summaries, totals, the recent lists) is computed in the body, after the first frame (owner 152). */
   const hasContent = (people ?? []).some(p => !p.data.isMe && !p.deleted) || (groups?.length ?? 0) > 0
 
+  /* The empty state's own buttons are the actions; a FAB would be a third Add. */
+  useSuppressFab(!isLoading && !hasContent)
+
   return (
     <TabScreen testID="screen-home">
       <Layout.Header.Outer>
@@ -132,8 +136,6 @@ export function HomeScreen() {
           />
         )}
       </Deferred>
-      {/* The empty state's own buttons are the actions; a FAB would be a third Add. */}
-      {(isLoading || hasContent) && <AddExpenseFAB />}
     </TabScreen>
   )
 }

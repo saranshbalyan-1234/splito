@@ -335,7 +335,7 @@ test('Overview scope: All, Groups and Direct change only the cards; it is in the
   await expect(page.getByTestId('screen-home').getByTestId('overview-analytics')).toHaveAttribute('href', /scope=1(:|%3A)all$/)
 })
 
-test('a main screen opened from a link is a pushed page: Back to Home, no FAB; its own tab has the avatar (owner 179)', async ({page}) => {
+test('a main screen opened from a link is its tab with Back in place of the avatar: same FAB, same header actions (owners 179, 190)', async ({page}) => {
   await page.setViewportSize(PHONE)
   await openDemo(page)
   const home = page.getByTestId('screen-home')
@@ -345,7 +345,11 @@ test('a main screen opened from a link is a pushed page: Back to Home, no FAB; i
   const groups = page.getByTestId('screen-groups').last()
   await expect(groups.getByTestId('header-back')).toBeVisible()
   await expect(groups.getByTestId('header-avatar')).toHaveCount(0)
-  await expect(groups.getByTestId('fab-add')).toHaveCount(0)
+  // Same as the tab: the FAB and every header action (Search & Ask, Create group), the list's Filters.
+  await expect(groups.getByTestId('fab-add')).toBeVisible()
+  await expect(groups.getByTestId('header-search-ask')).toBeVisible()
+  await expect(groups.getByTestId('groups-new')).toBeVisible()
+  await expect(groups.getByTestId('list-filters')).toBeVisible()
   // Back returns to Home.
   await groups.getByTestId('header-back').click()
   await expect(page).toHaveURL(/\/$/)
@@ -357,6 +361,10 @@ test('a main screen opened from a link is a pushed page: Back to Home, no FAB; i
   await expect(tab.getByTestId('header-avatar')).toBeVisible()
   await expect(tab.getByTestId('header-back')).toHaveCount(0)
   await expect(tab.getByTestId('fab-add')).toBeVisible()
+  // Differs only by Back: the tab has the same actions.
+  await expect(tab.getByTestId('header-search-ask')).toBeVisible()
+  await expect(tab.getByTestId('groups-new')).toBeVisible()
+  await expect(tab.getByTestId('list-filters')).toBeVisible()
   // The other links: Analytics from an Overview card, People from the recent people.
   await page.getByTestId('tab-home').click()
   await page.getByTestId('screen-home').getByTestId('overview-analytics').click()
@@ -365,7 +373,41 @@ test('a main screen opened from a link is a pushed page: Back to Home, no FAB; i
   await page.getByTestId('screen-home').getByTestId('home-recent-people-all').click()
   const people = page.getByTestId('screen-people').last()
   await expect(people.getByTestId('header-back')).toBeVisible()
-  await expect(people.getByTestId('fab-add')).toHaveCount(0)
+  // People keeps the FAB and every header action of its tab: Search & Ask, Add friend, and the Friends row's search, Filters and gear.
+  await expect(people.getByTestId('fab-add')).toBeVisible()
+  for (const id of ['header-search-ask', 'people-add-friend', 'list-search', 'list-filters', 'people-manage-friends']) await expect(people.getByTestId(id)).toBeVisible()
+})
+
+test('the FAB on a Person and a Group page pre-selects that friend or group; Settings has none (owner 190)', async ({page}) => {
+  await page.setViewportSize(PHONE)
+  await openDemo(page)
+  const ids = await page.evaluate(async () => {
+    const s = (window as unknown as {splito: {me: string; list(t: string): Promise<{id: string}[]>}}).splito
+    return {person: (await s.list('person')).find(p => p.id !== s.me)!.id, group: (await s.list('group'))[0]!.id}
+  })
+  await page.goto(`/people/${ids.person}`)
+  await expect(page.getByTestId('screen-person').getByTestId('fab-add')).toBeVisible()
+  await page.getByTestId('screen-person').getByTestId('fab-add').click()
+  await expect(page).toHaveURL(new RegExp(`/expense/new\\?personId=${ids.person}`))
+  await page.goto(`/groups/${ids.group}`)
+  await expect(page.getByTestId('screen-group').getByTestId('fab-add')).toBeVisible()
+  await page.getByTestId('screen-group').getByTestId('fab-add').click()
+  await expect(page).toHaveURL(new RegExp(`/expense/new\\?groupId=${ids.group}`))
+  // Where adding an expense makes no sense there is none.
+  for (const [path, screen] of [['/settings', 'screen-settings'], ['/settings/appearance', 'screen-settings-section'], ['/profile', 'screen-profile']] as const) {
+    await page.goto(path)
+    await expect(page.getByTestId(screen)).toBeVisible()
+    await expect(page.getByTestId('fab-add')).toHaveCount(0)
+  }
+  // Wide screens have no FAB anywhere; Group and Person keep their body button.
+  await page.setViewportSize(DESKTOP)
+  await page.goto(`/groups/${ids.group}`)
+  await expect(page.getByTestId('screen-group')).toBeVisible()
+  await expect(page.getByTestId('fab-add')).toHaveCount(0)
+  await expect(page.getByTestId('group-add-expense')).toBeVisible()
+  await page.goto('/')
+  await expect(page.getByTestId('home-overview')).toBeVisible()
+  await expect(page.getByTestId('fab-add')).toHaveCount(0)
 })
 
 for (const [name, size, bar] of [['390', PHONE, 'tab-groups'], ['1440', DESKTOP, 'tab-groups']] as const) {
@@ -395,7 +437,7 @@ test('a link the running app opens (a Search & Ask suggestion, a deep link) to a
   await page.evaluate(() => (window as unknown as {__splitoTest: {openLink(path: string): void}}).__splitoTest.openLink('/groups'))
   const warm = page.getByTestId('screen-groups').last()
   await expect(warm.getByTestId('header-back')).toBeVisible()
-  await expect(warm.getByTestId('fab-add')).toHaveCount(0)
+  await expect(warm.getByTestId('fab-add')).toBeVisible()
   await warm.getByTestId('header-back').click()
   await expect(page.getByTestId('screen-home').getByTestId('header-avatar')).toBeVisible()
   // Cold: the same address typed into the browser is the plain tab.

@@ -21,7 +21,7 @@ import {
 } from '#/components/activity/SectionHeader'
 import {useActivityActions} from '#/components/activity/useActivityActions'
 import {useActivityFeed} from '#/components/activity/useActivityFeed'
-import {AddExpenseFAB, AddExpenseFABInset} from '#/components/AddExpenseFAB'
+import {AddExpenseFABInset} from '#/components/AddExpenseFAB'
 import {Button, ButtonText} from '#/components/Button'
 import {SearchAskButton} from '#/components/SearchAsk/SearchAskButton'
 import {HeaderAvatar} from '#/components/HeaderAvatar'
@@ -206,7 +206,6 @@ export function ActivityScreen() {
         </LayoutAnimationConfig>
         )}
       </Deferred>
-      <AddExpenseFAB />
     </TabScreen>
   )
 }

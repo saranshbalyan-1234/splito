@@ -12,7 +12,7 @@ import {usePref} from '#/data/hooks'
 import {EmptyState} from '#/view/com/util/EmptyState'
 import {List} from '#/view/com/util/List'
 import {atoms as a, useTheme} from '#/alf'
-import {AddExpenseFAB, AddExpenseFABInset} from '#/components/AddExpenseFAB'
+import {AddExpenseFABInset} from '#/components/AddExpenseFAB'
 import {Button, ButtonIcon, ButtonText} from '#/components/Button'
 import {SearchAskButton} from '#/components/SearchAsk/SearchAskButton'
 import {HeaderAvatar} from '#/components/HeaderAvatar'
@@ -151,7 +151,6 @@ export function AnalyticsScreen() {
         </LayoutAnimationConfig>
         )}
       </Deferred>
-      <AddExpenseFAB />
     </TabScreen>
   )
 }

@@ -22,7 +22,8 @@ import {
 } from '#/data/hooks'
 import {EmptyState} from '#/view/com/util/EmptyState'
 import {List} from '#/view/com/util/List'
-import {AddExpenseFAB, AddExpenseFABInset} from '#/components/AddExpenseFAB'
+import {AddExpenseFABInset} from '#/components/AddExpenseFAB'
+import {useSuppressFab} from '#/components/RouteFAB'
 import {useDialogControl} from '#/components/Dialog'
 import {Button, ButtonIcon} from '#/components/Button'
 import {HITSLOP_10} from '#/lib/constants'
@@ -126,6 +127,9 @@ export function PeopleScreen() {
   )
   /* Settled up friends leave the list only (owner 90, 112): a search still finds them. */
   const {listed, count: listedCount, total: searchTotal} = searchFriends(filtered, query, filters, seenCurrencies)
+
+  /* The empty state's own buttons are the actions; a FAB would be a third Add. */
+  useSuppressFab(!isLoading && friends.length === 0)
 
   return (
     <TabScreen testID="screen-people">
@@ -268,8 +272,6 @@ export function PeopleScreen() {
         </LayoutAnimationConfig>
         )}
       </Deferred>
-      {/* The empty state's own buttons are the actions; a FAB would be a third Add. */}
-      {(isLoading || friends.length > 0) && <AddExpenseFAB />}
       <FriendsFilterDialog
         control={filterControl}
         filters={filters}

@@ -28,7 +28,7 @@ import {
 import {EmptyState} from '#/view/com/util/EmptyState'
 import {List} from '#/view/com/util/List'
 import {atoms as a, useTheme} from '#/alf'
-import {AddExpenseFAB, AddExpenseFABInset} from '#/components/AddExpenseFAB'
+import {AddExpenseFABInset} from '#/components/AddExpenseFAB'
 import {Button, ButtonIcon, ButtonText} from '#/components/Button'
 import {ChevronBottom_Stroke2_Corner0_Rounded as ChevronDownIcon} from '#/components/icons/Chevron'
 import {useDialogControl} from '#/components/Dialog'
@@ -352,7 +352,6 @@ export function GroupsScreen() {
         </LayoutAnimationConfig>
         )}
       </Deferred>
-      <AddExpenseFAB />
       <GroupsFilterDialog
         control={filterControl}
         filters={filters}
