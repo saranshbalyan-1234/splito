@@ -498,6 +498,8 @@ After the first sign-in and setup, a short coach-mark walkthrough over the real 
   4. Never in demo mode or e2e unless its spec asks; reduced motion respected; no overlap with toasts or sheets.
   5. e2e at 390 and 1440 plus screenshots.
 
+- **Owner 213 scope:** only what a new user must know to start (add an expense, settle up, where balances are); a few steps at most, skippable, shown once; nothing more.
+
 ### F-254 Deep links end to end `spec: owner § 26.3 (decision 145)`
 
 Every F-241 URL opens the right screen from anywhere: iOS Universal Links, Android App Links, `splito://`, web fallback; one resolver for push, invites, QR, reminders, shares; signed-out resume, demo handling, deferred link after install.
