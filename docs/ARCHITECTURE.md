@@ -1876,10 +1876,12 @@ show what: centre may be page name, right maybe some basic action, and left may 
 `components/Layout/Header/`, `components/HeaderAvatar.tsx`.
 
 - **Left:** the avatar (testID `header-avatar`) on top-level pages at every width, desktop included; Bluesky
-  `BackButton` with `goBack(navigation, fallback)` on pushed pages. On phone and rail the avatar opens the
-  drawer; on desktop (full sidebar visible) it opens Profile, labelled "Open profile". No avatar on the right
-  and no avatar dropdown menu. *Why:* "it should open the drawer like Bluesky where all menu appears like the
-  hamburger", "and move this to left, where hamburger icon was there in Bluesky"; "on desktop when sidebar is
+  `BackButton` with `goBack(navigation, fallback)` on pushed pages. **At every width the avatar opens Profile,
+  which lives inside Settings** (owner 201, replaces "on phone and rail the avatar opens the drawer"):
+  `/settings/profile`, a Settings page whose Back goes to Settings (owner 184); the old `/profile` redirects there.
+  Labelled "Open profile". No avatar on the right
+  and no avatar dropdown menu. *Why:* "on click of avatar, now open profile inside settings" (owner 201; earlier: "it should open the drawer like Bluesky where all menu appears like the
+  hamburger"), "and move this to left, where hamburger icon was there in Bluesky"; "on desktop when sidebar is
   opened completely don't open sidebar on avatar click".
 - **Centre:** the page name, centred on all platforms (`TitleText`). Home shows the logo mark (§ 26.11) on
   phones only; on rail and desktop, where the sidebar already shows the logo, it shows the title "Home". *Why:*
@@ -1966,7 +1968,9 @@ good"; "the left sidebar looks bad on desktop". *Where:* `view/shell/desktop/Lef
   header block and footer; closes on scrim tap and swipe (native, Gesture Handler); focus trap and Escape on
   web. testID `drawer`. *Why:* "it should open the drawer like Bluesky where all menu appears like the
   hamburger".
-- **Opened by** the header avatar on phone and rail (on desktop the avatar opens Profile, § 26.4).
+- **Opened by** a swipe from the left edge on phones (native and phone web); the header avatar opens Profile
+  instead (owner 201, § 26.4). Everything the drawer offers is also reachable without it (tabs, Settings from
+  Profile's Back, the footer links in Settings > Support).
 - **Contents, the same as the desktop sidebar (§ 26.3):** a profile header (avatar with the sync-status dot,
   the person's real name; tapping it opens Profile; no "Me" label and no "Saved on this device" text); the
   shared nav items (§ 26.3); the shared footer links Feedback ·
@@ -3197,6 +3201,7 @@ Every owner decision, in the order it was made (all 2026-10-26). "Replaced" name
 | 198 | "move the overview section to analytivcs as well, and then remove home" | No Home tab; the Overview is the first section of Analytics (balances now, own All/Groups/Direct); tabs People, Groups, Analytics, Activity; app opens on People; `/` and old Home addresses redirect; Home fallbacks become the start tab | § 26.3, § 26.16 | Home tab with Overview, requests, recent transactions, recent people and groups (153, 175) |
 | 199 | "add sort filter people and group, default sort by last active" | Sort is its own button beside Filters on People and Groups: Last active (default), Name, Amount, Newest; remembered per list and in the URL | § 26.12 | Sort inside the Filters sheet; People defaulted to Amount |
 | 200 | "ask splito is not a tab" | Ask Splito is reached only from the header Search & Ask icon and "/" / Cmd+K; never a sidebar, drawer, bottom-bar or Settings > Navigation item; saved `ask` tab migrated away | § 26.19, § 26.3 | "Ask Splito" item in the shared nav list (57, 155) |
+| 201 | "on click of avatar, now open profile inside settings" | The header avatar opens Profile at every width; Profile lives at /settings/profile with Back to Settings (old /profile redirects); the phone drawer opens by edge swipe | § 26.4, § 26.7 | Avatar opened the drawer on phone and rail |
 
 New decisions follow § 0 rule 9: rewrite the rule in its topic so only the current truth remains, then add a
 row here.
