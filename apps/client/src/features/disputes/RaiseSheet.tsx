@@ -6,7 +6,6 @@ import {
   type DisputeReason,
   type Entity,
   type Expense,
-  type Group,
   type HistoryEntry,
   type ProposedFix,
   type Repayment,
@@ -16,7 +15,7 @@ import {useHaptics} from '#/lib/haptics'
 import {type DisputeRequest} from '#/lib/disputes/bus'
 import {logger} from '#/logger'
 import {useDisputeAccess, useDisputeActions} from '#/state/disputes'
-import {useAllEntities, useEntity, useGroupHistory, useRecentTransactions} from '#/data/hooks'
+import {useEntity, useGroupHistory, useRecentTransactions} from '#/data/hooks'
 import {useNumberLocale} from '#/locale/numberLocale'
 import {atoms as a, useTheme} from '#/alf'
 import * as Dialog from '#/components/Dialog'
@@ -63,7 +62,6 @@ function Form({request}: {request: Raise}) {
   const itemId = request.kind === 'raise' ? request.itemId : undefined
   const record = useEntity<Expense & Repayment>(targetType, targetId)
   const access = useDisputeAccess(targetType, targetId)
-  const groups = useAllEntities<Group>('group')
   const d = record?.data
   const currency = d?.currency ?? 'INR'
   const item = targetType === 'expense' && itemId !== undefined && d?.split.mode === 'items' ? d.split.items.find(i => i.id === itemId) : undefined
@@ -77,8 +75,8 @@ function Form({request}: {request: Raise}) {
   const [raisedBy, setRaisedBy] = useState<string | null>(null)
   const [isSaving, setIsSaving] = useState(false)
 
-  const group = d?.groupId ? groups?.find(g => g.id === d.groupId)?.data : undefined
-  const members = group ? group.members.filter(m => m.leftAt === null).map(m => m.personId) : []
+  /* The live group's members, as the mutation reads them (a deleted group has none). */
+  const members = access.record?.groupMembers ?? []
   /* Who it can be raised as: the people on the record; a group member who is not on it may only say they were left out. */
   const candidates = reason === 'left_out' ? [...new Set([...members.filter(m => !participants.includes(m))])] : participants
   const defaultWho = candidates.includes(access.me) ? access.me : (candidates[0] ?? access.me)

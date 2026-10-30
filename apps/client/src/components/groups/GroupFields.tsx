@@ -3,14 +3,13 @@ import {Trans, useLingui} from '@lingui/react/macro'
 import {type Group} from '@splito/sync'
 
 import {atoms as a, useTheme} from '#/alf'
-import {Button, ButtonIcon, ButtonText} from '#/components/Button'
 import {DateField} from '#/components/forms/DateField'
 import * as SegmentedControl from '#/components/forms/SegmentedControl'
 import * as TextField from '#/components/forms/TextField'
-import {ChevronRight_Stroke2_Corner0_Rounded as ChevronIcon} from '#/components/icons/Chevron'
 import {Group3_Stroke2_Corner0_Rounded as GroupIcon} from '#/components/icons/Group'
 import {MapPin_Stroke2_Corner0_Rounded as MapPinIcon} from '#/components/icons/MapPin'
 import {currencyName} from '#/components/people/ledger'
+import {PickerTrigger} from '#/components/settings/controls'
 import {Text} from '#/components/Typography'
 
 export type GroupFieldValues = Pick<Group, 'name' | 'kind' | 'currency'> & {
@@ -102,18 +101,12 @@ export function GroupFields({
         <TextField.LabelText>
           <Trans>Currency</Trans>
         </TextField.LabelText>
-        <Button
+        <PickerTrigger
           testID={`${testIDPrefix}-currency`}
           label={l`Currency: ${currencyName(value.currency, i18n.locale)}`}
-          size="large"
-          color="secondary"
-          style={[a.justify_between]}
-          onPress={onPressCurrency}>
-          <ButtonText style={[a.flex_1, a.text_left]}>
-            {value.currency} · {currencyName(value.currency, i18n.locale)}
-          </ButtonText>
-          <ButtonIcon icon={ChevronIcon} />
-        </Button>
+          value={`${value.currency} · ${currencyName(value.currency, i18n.locale)}`}
+          onPress={onPressCurrency}
+        />
       </View>
 
       {value.kind === 'trip' && (
