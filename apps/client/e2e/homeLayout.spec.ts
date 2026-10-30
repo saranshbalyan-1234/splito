@@ -106,9 +106,9 @@ test('Home shows requests then Invites sent as rows, at most 5 in all, and the f
   expect(row.height).toBeLessThan(72)
   // The rows come after the Overview.
   expect(await y(page, 'home-overview-title')).toBeLessThan(await y(page, 'people-requests-title'))
-  await page.goto('/settings/friends')
-  await expect(page.getByTestId('screen-friends-invites')).toBeVisible()
-  await expect(page.getByTestId('invite-sent-Kabir')).toBeVisible()
+  // The full list is Activity filtered to Friends and invites (owner 195); Friends and invites keeps only its tools.
+  await page.goto('/activity?tab=all&type=friends')
+  await expect(page.getByTestId('screen-activity').last().getByText('Kabir').first()).toBeVisible()
 })
 
 const y = async (page: Page, id: string) => (await page.getByTestId(id).boundingBox())!.y

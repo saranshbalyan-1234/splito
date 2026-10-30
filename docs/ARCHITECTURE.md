@@ -1215,6 +1215,12 @@ measures a long task); signed-URL caching for picked files (until attachments ex
 
 Inherited from GameRun (2026-10-26); each holds for Splito's stack:
 
+- 2026-10-31, process: **a builder's process cleanup killed the merge gate's test server**, and the 2.4 h full e2e run
+  on combined main came back as 647 connection-refused failures. Rules: nobody runs `pkill`/`killall` by name or
+  pattern (serve, node, playwright, expo); a process is stopped by its own PID or by its own port
+  (`lsof -ti tcp:<port> | xargs kill`); the orchestrator's merge gate serves its build from a copy outside the repo
+  on a reserved port with its own server, so no builder's cleanup can reach it; a run whose failures are mostly
+  ERR_CONNECTION_REFUSED is a broken run, not a red build.
 - 2026-10-30, process: **almost every builder took hours, mostly waiting on each other.** Six to seven builders
   shared one machine (load 25-130); each ran the full 500+ test e2e itself, several times per round, so every run
   took 20-30 min instead of ~10, timing tests failed under load and were re-run, and long-lived overlapping
