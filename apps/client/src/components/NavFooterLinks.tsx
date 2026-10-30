@@ -36,7 +36,7 @@ export function NavFooterLinks({
   ]
 
   /* One line, never wrapped (owner 124): a nowrap row with text_xs fits the
-   * 240 px sidebar and the drawer in English and Hindi. */
+   * 216 px sidebar and the drawer in English and Hindi. */
   return (
     <View
       testID="nav-footer-links"

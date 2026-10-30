@@ -95,7 +95,12 @@ const LOGO_SIZE = 40
 const RECENT_GROUPS = 5
 const INDICATOR_HEIGHT = 24
 
-export const LEFT_NAV_STANDARD_WIDTH = 240
+/*
+ * As wide as the content needs (owner 188), one constant for every language: the footer row (Feedback . Help .
+ * Privacy . About, 189 px in English, narrower in Hindi) is the widest piece, then "Splito se poochhen" bold (about
+ * 187 px with its padding). Measured in en and hi at 1440; a language that needs more raises this one number.
+ */
+export const LEFT_NAV_STANDARD_WIDTH = 216
 export const LEFT_NAV_MINIMAL_WIDTH = 80
 
 /** The sidebar's width at the current window size (0 when it is hidden). */
@@ -744,8 +749,8 @@ function selectedItem(
 /**
  * Bluesky's signed-in desktop/tablet sidebar, pinned to the window's left
  * edge (owner directive: sidebar plus full-width content, no centred column).
- * The logo, account card, nav, compose pill and recent groups scroll; the
- * footer stays pinned at the bottom.
+ * The logo, nav, compose pill and footer links are one block at the top; it
+ * scrolls on its own when the window is shorter than the block.
  */
 export function DesktopLeftNav({
   onNavigateTab,
@@ -855,13 +860,11 @@ export function DesktopLeftNav({
           )}
         </View>
         <ComposeBtn minimal={leftNavMinimal} />
+        {/* The drawer's footer links directly under the pill, not pinned (26.5, owner 188); the icon rail has no room, its drawer has them. The row bleeds 12 px into the right padding so it fits the compact width. */}
+        {!leftNavMinimal && (
+          <NavFooterLinks style={[a.pt_lg, {marginRight: -tokens.space.md}]} />
+        )}
       </ScrollView>
-      {/* The drawer's footer links, pinned at the bottom (26.5); the icon rail has no room, its drawer has them. */}
-      {!leftNavMinimal && (
-        <NavFooterLinks
-          style={[a.pr_md, a.pt_md, web(a.pb_lg), {paddingLeft: 16}]}
-        />
-      )}
     </View>
   )
 }
