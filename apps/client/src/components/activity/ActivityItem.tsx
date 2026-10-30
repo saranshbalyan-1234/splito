@@ -13,7 +13,7 @@ import {defineMessage} from '@lingui/core/macro'
 import {Trans, useLingui} from '@lingui/react/macro'
 import {useNavigation} from '@react-navigation/native'
 import {expenseNet, formatAmount, magnitude, ZERO} from '@splito/domain'
-import {type ActivityEvent, type Entity, type FriendRequest, requestName} from '@splito/sync'
+import {type ActivityEvent, type Entity, type FriendRequest, type GroupRequest, requestName} from '@splito/sync'
 
 import {useHaptics} from '#/lib/haptics'
 import {GestureActionView} from '#/lib/custom-animations/GestureActionView'
@@ -32,7 +32,6 @@ import {TimesLarge_Stroke2_Corner0_Rounded as XIcon} from '#/components/icons/Ti
 import {DotGrid3x1_Stroke2_Corner0_Rounded as DotsIcon} from '#/components/icons/DotGrid'
 import {type Props as SVGIconProps} from '#/components/icons/common'
 import * as Menu from '#/components/Menu'
-import {GroupRequestActions} from '#/components/people/GroupRequests'
 import {RequestAction} from '#/components/people/RequestRow'
 import {SubtleHover} from '#/components/SubtleHover'
 import * as Toast from '#/components/Toast'
@@ -139,6 +138,7 @@ export function ActivityItem({
   locale,
   actions,
   renderInviteActions,
+  renderGroupRequestActions,
   style,
 }: {
   event: ActivityEvent
@@ -149,6 +149,8 @@ export function ActivityItem({
   actions: ActivityActions
   /** Resend / Cancel for an invite still waiting (owner 195); the screen supplies the buttons Home's Invites sent uses. */
   renderInviteActions?: (request: Entity<FriendRequest>) => React.ReactNode
+  /** Join / Approve / Decline / Cancel for a group request still waiting (F-269); the screen supplies the Groups tab's buttons. */
+  renderGroupRequestActions?: (request: Entity<GroupRequest>) => React.ReactNode
   style?: StyleProp<ViewStyle>
 }) {
   const t = useTheme()
@@ -179,7 +181,7 @@ export function ActivityItem({
   const [menuAt, setMenuAt] = useState({x: 0, y: 0})
   const [isHovered, setIsHovered] = useState(false)
   const [isFocusWithin, setIsFocusWithin] = useState(false)
-  const content = useDescribe(event, snapshot, me, locale, navigation, actions, renderInviteActions)
+  const content = useDescribe(event, snapshot, me, locale, navigation, actions, renderInviteActions, renderGroupRequestActions)
   const isDeletedEvent = DELETED_KINDS.has(event.kind)
   /* A request awaiting an answer is one line: the answers on the right in place of "...", whose items are long-press / right-click (ARCHITECTURE 26.18). */
   const isRequestRow = !!content.actions
@@ -506,6 +508,7 @@ function useDescribe(
   navigation: NavigationProp,
   actions: ActivityActions,
   renderInviteActions?: (request: Entity<FriendRequest>) => React.ReactNode,
+  renderGroupRequestActions?: (request: Entity<GroupRequest>) => React.ReactNode,
 ): {
   avatarName: string | undefined
   icon: React.ComponentType<SVGIconProps>
@@ -711,7 +714,7 @@ function useDescribe(
       const group = <Strong>{current.groupName}</Strong>
       const who = <Strong>{current.name}</Strong>
       const isPending = !!request && !request.deleted && current.status === 'pending'
-      const actions = isPending ? <GroupRequestActions request={request} /> : undefined
+      const actions = isPending ? renderGroupRequestActions?.(request) : undefined
       const openGroup = snapshot.groups.get(current.groupId)
         ? () => navigation.push('Group', {groupId: current.groupId})
         : undefined

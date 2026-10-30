@@ -18,6 +18,7 @@ import {type NavigationProp} from '#/lib/routes/types'
 import {EmptyState} from '#/view/com/util/EmptyState'
 import {List} from '#/view/com/util/List'
 import {atoms as a, useTheme} from '#/alf'
+import {GroupRequestActions} from '#/screens/Groups/components/GroupRequests'
 import {OutgoingActions} from '#/screens/People/components/RequestsSection'
 import {ActivityItem} from '#/components/activity/ActivityItem'
 import {type ActivityTab, type FeedRow} from '#/components/activity/feed'
@@ -181,6 +182,7 @@ export function ActivityScreen() {
           locale={locale}
           actions={actions}
           renderInviteActions={request => <OutgoingActions request={request} />}
+          renderGroupRequestActions={request => <GroupRequestActions request={request} />}
         />
       </Animated.View>
     )

@@ -18,9 +18,9 @@ import {Check_Stroke2_Corner0_Rounded as CheckIcon} from '#/components/icons/Che
 import {TimesLarge_Stroke2_Corner0_Rounded as XIcon} from '#/components/icons/Times'
 import * as Toast from '#/components/Toast'
 import {useTickEveryMinute} from '#/state/shell/tick-every-minute'
-import {ago} from './ago'
-import {RequestAction, RequestRow} from './RequestRow'
-import {useRowAction} from './useRowAction'
+import {ago} from '#/components/people/ago'
+import {RequestAction, RequestRow} from '#/components/people/RequestRow'
+import {useRowAction} from '#/components/people/useRowAction'
 
 /**
  * The actions of a group request, in its row on the Groups tab and in place in Activity (owners 195, 197), the same

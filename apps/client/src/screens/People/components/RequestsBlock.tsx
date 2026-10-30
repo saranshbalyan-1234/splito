@@ -3,7 +3,7 @@ import {Trans, useLingui} from '@lingui/react/macro'
 
 import {seeRequestsPath} from '#/lib/links/make'
 import {SectionLink} from '#/components/SectionLink'
-import {SectionHeader} from '#/screens/People/components/SectionHeader'
+import {SectionHeader} from './SectionHeader'
 
 /** Rows the section shows at most (owner 153, 175, 197); "See all" opens Activity (Friends and invites) for the rest. */
 const MAX_ROWS = 5

@@ -1,8 +1,8 @@
 import {useLingui} from '@lingui/react/macro'
 
 import {usePendingGroupRequests} from '#/data/hooks'
-import {GroupRequestRow} from '#/components/people/GroupRequests'
-import {RequestsBlock} from '#/components/people/RequestsBlock'
+import {RequestsBlock} from '#/screens/People/components/RequestsBlock'
+import {GroupRequestRow} from './GroupRequests'
 
 /**
  * At the top of Groups (26.3, owner 197; F-269): group requests to me (Join / Decline), join requests for groups I run
