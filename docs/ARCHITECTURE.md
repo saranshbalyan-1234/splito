@@ -861,7 +861,8 @@ call it; `/notifications` aliases to `/activity`; a bare `/` opens the Home tab 
   script); AASA and assetlinks list only app paths (join, group, person), excluding auth callbacks and
   downloads; the web deploy keeps dot-paths.
 - **Share:** one share helper takes the entity id plus the screen's summary; screens never call Share APIs
-  directly; capability fallback per § 2.
+  directly; capability fallback per § 2. [Built] `lib/sharing.ts` is it: `copyText(text, {toast})`, `shareText`, `shareUrl`
+  (the Remind sheet, the invite field and comment rows all call these; no other file touches the clipboard).
 - **Secrets are scrubbed:** invite tokens and join codes are removed from URLs, breadcrumbs and nav spans in
   `#/logger`, with a bun test.
 
@@ -1444,6 +1445,16 @@ Splito lessons (add newest last, dated, with PR):
   updates on the same build: the first visit of a tab lets background history loading and the Analytics report land
   inside the phase, so it is printed and never gated; the second round, on parked tabs, is 69 + 468 every run. A
   frozen clock (`page.clock.setFixedTime`) stops the app reaching Home, so the clock is pinned by an offset.
+
+- 2026-10-31, F-274 P0-a/d/g (c-p0adg): **three more copies became one.** (1) Avatars: `initials(name, mode)` and `nameHash` live in
+  `lib/avatarName.ts` (pure, so bun can test it; `UserAvatar` re-exports them) and the Create group preview draws the same
+  `GroupAvatar` tile the created group wears ("Goa" is "GO" in both). (2) Days: `useDayLabel()` / `useFormatTime()` in
+  `locale/useDates.ts` over the pure `locale/dayLabel.ts` (`dayOfInstant`, `dayBucket`) word every day header and divider
+  (Activity sections, the Comments `DateDivider` now in `components/`, dispute lines) in the Timezone and Date format
+  preferences; one `MonthCalendar` (`components/forms`) serves the date field and the custom range. A Date format
+  change now reaches the Comments divider and statements. (3) Sharing: see § 14. Rule: a helper that a bun test must
+  reach cannot sit in a file that imports `react-native` (bun cannot parse its Flow source); put the pure part in
+  its own file and re-export.
 
 
 ## 24. Checklists

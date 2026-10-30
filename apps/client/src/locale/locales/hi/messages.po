@@ -301,7 +301,7 @@ msgstr "{0} का भुगतान बाकी है"
 
 #. placeholder {0}: person(r.to)
 #. placeholder {1}: person(r.from)
-#: src/features/export/statementText.ts:29
+#: src/features/export/statementText.ts:32
 msgid "{0} let {1}’s debt go"
 msgstr "{0} ने {1} का कर्ज़ माफ़ कर दिया"
 
@@ -371,7 +371,7 @@ msgstr "{0} ने भुगतान किया"
 #: src/components/people/HistoryRow.tsx:145
 #: src/components/people/PaymentDetailsDialog.tsx:123
 #: src/components/people/RecordPaymentDialog.tsx:178
-#: src/features/export/statementText.ts:29
+#: src/features/export/statementText.ts:32
 #: src/screens/Repayment/index.tsx:164
 msgid "{0} paid {1}"
 msgstr "{0} ने {1} को भुगतान किया"
@@ -442,7 +442,7 @@ msgstr "{0} को {ways} लोगों में बांटने पर {1
 
 #. placeholder {0}: opts.from ? day(opts.from) : '…'
 #. placeholder {1}: opts.to ? day(opts.to) : '…'
-#: src/features/export/statementText.ts:62
+#: src/features/export/statementText.ts:64
 msgid "{0} to {1}"
 msgstr "{0} से {1} तक"
 
@@ -721,7 +721,7 @@ msgstr "{creditor} ने {debtor} का कर्ज़ माफ़ किय
 msgid "{creditor} let you off"
 msgstr "{creditor} ने आपका कर्ज़ माफ़ किया"
 
-#: src/components/comments/DateDivider.tsx:50
+#: src/components/DateDivider.tsx:30
 msgid "{date} at {time}"
 msgstr "{date}, {time} बजे"
 
@@ -842,7 +842,7 @@ msgstr "{name} फिर से आपके दोस्तों में ह
 msgid "{name} leaves your friends list and the pickers. Every expense and payment you shared stays, and you can add them back any time."
 msgstr "{name} आपकी दोस्तों की सूची और चुनने वाली सूचियों से हट जाएँगे। आपके साझा किए हर खर्च और भुगतान बने रहेंगे, और आप उन्हें कभी भी वापस जोड़ सकते हैं।"
 
-#: src/features/remind/RemindSheet.tsx:153
+#: src/features/remind/RemindSheet.tsx:154
 msgid "{name} owes you"
 msgstr "{name} पर आपका बकाया है"
 
@@ -1540,7 +1540,7 @@ msgstr "अपना नाम जोड़ें"
 msgid "Add your phone number"
 msgstr "अपना फ़ोन नंबर जोड़ें"
 
-#: src/features/remind/RemindSheet.tsx:200
+#: src/features/remind/RemindSheet.tsx:201
 msgid "Adds a link {name} can tap to pay you in a UPI app."
 msgstr "एक लिंक जोड़ता है जिस पर टैप करके {name} UPI ऐप से आपको भुगतान कर सकते हैं।"
 
@@ -1605,7 +1605,7 @@ msgstr "सारी गतिविधि"
 msgid "All currencies"
 msgstr "सभी मुद्राएँ"
 
-#: src/features/export/statementText.ts:62
+#: src/features/export/statementText.ts:64
 msgid "All dates"
 msgstr "सभी तारीखें"
 
@@ -1629,7 +1629,7 @@ msgstr "सभी चीज़ें"
 msgid "All items"
 msgstr "सभी चीज़ें"
 
-#: src/features/export/statementText.ts:68
+#: src/features/export/statementText.ts:70
 msgid "All settled"
 msgstr "सब चुकता"
 
@@ -1685,8 +1685,8 @@ msgstr "हमेशा समूह में"
 #: src/components/split/fields.tsx:155
 #: src/components/split/fields.tsx:248
 #: src/components/split/fields.tsx:409
-#: src/features/export/statementText.ts:44
-#: src/features/export/statementText.ts:69
+#: src/features/export/statementText.ts:47
+#: src/features/export/statementText.ts:71
 #: src/screens/Analytics/components/Charts.tsx:247
 #: src/screens/Groups/components/GroupsFilterDialog.tsx:123
 #: src/screens/People/components/FriendsFilterDialog.tsx:133
@@ -1791,7 +1791,7 @@ msgstr "किस पर लगे"
 #: src/components/activity/ActivityFilterDialog.tsx:60
 #: src/components/settings/AccentPicker.tsx:125
 #: src/features/hidden/ShowHidden.tsx:57
-#: src/screens/Analytics/components/RangeDialog.tsx:112
+#: src/screens/Analytics/components/RangeDialog.tsx:83
 #: src/screens/Analytics/components/ScopeDialog.tsx:108
 #: src/screens/Groups/components/GroupsFilterDialog.tsx:63
 #: src/screens/People/components/FriendsFilterDialog.tsx:76
@@ -1898,8 +1898,8 @@ msgstr "बैकअप डाउनलोड हुआ ({count} रिकॉर
 msgid "Backup ready to save ({count} records)"
 msgstr "बैकअप सहेजने के लिए तैयार ({count} रिकॉर्ड)"
 
-#: src/features/export/statementText.ts:49
-#: src/features/export/statementText.ts:69
+#: src/features/export/statementText.ts:52
+#: src/features/export/statementText.ts:71
 #: src/screens/Analytics/components/Charts.tsx:370
 msgid "Balance"
 msgstr "बैलेंस"
@@ -1993,7 +1993,7 @@ msgid "Calculator"
 msgstr "कैलकुलेटर"
 
 #: src/features/export/ImportSheet.tsx:174
-#: src/features/export/statementText.ts:37
+#: src/features/export/statementText.ts:40
 #: src/features/friends/RemoveFriendDialog.tsx:106
 #: src/features/settlement/CallItEvenDialog.tsx:221
 #: src/features/settlement/CallItEvenDialog.tsx:281
@@ -2126,7 +2126,7 @@ msgstr "रकम जाँच रहे हैं"
 msgid "Choose a password"
 msgstr "पासवर्ड चुनें"
 
-#: src/components/split/DateDialog.tsx:111
+#: src/components/forms/MonthCalendar.tsx:83
 msgid "Choose a year"
 msgstr "साल चुनें"
 
@@ -2298,7 +2298,7 @@ msgstr "सेव किए बिना बंद करता है"
 msgid "Closes without saving your changes"
 msgstr "बदलाव सहेजे बिना बंद करता है"
 
-#: src/features/export/statementText.ts:54
+#: src/features/export/statementText.ts:57
 msgid "Closing balance"
 msgstr "अंतिम बैलेंस"
 
@@ -2387,7 +2387,7 @@ msgstr "क्लिपबोर्ड पर कॉपी हुआ"
 msgid "Copied!"
 msgstr "कॉपी हुआ!"
 
-#: src/features/remind/RemindSheet.tsx:218
+#: src/features/remind/RemindSheet.tsx:219
 #: src/screens/Invites/InviteLinks.tsx:152
 msgid "Copy"
 msgstr "कॉपी करें"
@@ -2413,7 +2413,7 @@ msgstr "कॉपी सहेजी गई"
 msgid "Copy text"
 msgstr "टेक्स्ट कॉपी करें"
 
-#: src/features/remind/RemindSheet.tsx:215
+#: src/features/remind/RemindSheet.tsx:216
 msgid "Copy the message"
 msgstr "संदेश कॉपी करें"
 
@@ -2476,7 +2476,7 @@ msgstr "एक्सपोर्ट नहीं हो सका। फिर �
 msgid "Couldn’t leave the group. Please try again."
 msgstr "ग्रुप छोड़ नहीं सके। कृपया फिर कोशिश करें।"
 
-#: src/features/remind/RemindSheet.tsx:96
+#: src/features/remind/RemindSheet.tsx:97
 msgid "Couldn’t log this reminder. Please try again."
 msgstr "यह रिमाइंडर दर्ज नहीं हो सका। कृपया फिर कोशिश करें।"
 
@@ -2484,7 +2484,7 @@ msgstr "यह रिमाइंडर दर्ज नहीं हो सक�
 msgid "Couldn’t move your data. It is still on this device."
 msgstr "आपका डेटा नहीं ले जा सके। वह अब भी इस डिवाइस पर है।"
 
-#: src/lib/sharing.ts:84
+#: src/lib/sharing.ts:106
 msgid "Couldn’t open an app for that. Copy the link instead."
 msgstr "इसके लिए कोई ऐप नहीं खुला। इसके बजाय लिंक कॉपी करें।"
 
@@ -2492,7 +2492,7 @@ msgstr "इसके लिए कोई ऐप नहीं खुला। इ
 msgid "Couldn’t open the demo. Showing your own data."
 msgstr "डेमो नहीं खुल सका। आपका अपना डेटा दिखाया जा रहा है।"
 
-#: src/features/remind/RemindSheet.tsx:117
+#: src/features/remind/RemindSheet.tsx:118
 msgid "Couldn’t open the share sheet. Try Copy instead."
 msgstr "शेयर शीट नहीं खुल सकी। इसके बजाय कॉपी आज़माएँ।"
 
@@ -2674,7 +2674,7 @@ msgstr "CSV"
 #: src/components/split/pickers.tsx:80
 #: src/features/export/ExportSheet.tsx:213
 #: src/features/export/ExportSheet.tsx:262
-#: src/features/export/statementText.ts:43
+#: src/features/export/statementText.ts:46
 #: src/features/settlement/CallItEvenDialog.tsx:328
 #: src/screens/Analytics/index.tsx:231
 #: src/screens/Groups/components/GroupsFilterDialog.tsx:96
@@ -2712,7 +2712,7 @@ msgstr "अपना रंग {applied}"
 
 #: src/features/export/ExportSheet.tsx:108
 #: src/features/export/ExportSheet.tsx:233
-#: src/screens/Analytics/components/RangeDialog.tsx:109
+#: src/screens/Analytics/components/RangeDialog.tsx:80
 #: src/screens/Analytics/components/Summary.tsx:202
 msgid "Custom range"
 msgstr "अपनी अवधि"
@@ -2742,8 +2742,8 @@ msgstr "डेटा"
 #: src/components/people/PaymentDetailsDialog.tsx:210
 #: src/components/split/ExpenseComposer.tsx:381
 #: src/components/split/ExpenseComposer.tsx:536
-#: src/features/export/statementText.ts:39
-#: src/features/export/statementText.ts:69
+#: src/features/export/statementText.ts:42
+#: src/features/export/statementText.ts:71
 #: src/features/remind/RemindMeSheet.tsx:194
 #: src/features/remind/RemindMeSheet.tsx:196
 #: src/screens/Analytics/index.tsx:227
@@ -2897,8 +2897,8 @@ msgstr "डेमो"
 msgid "Demo mode"
 msgstr "डेमो मोड"
 
-#: src/features/export/statementText.ts:41
-#: src/features/export/statementText.ts:69
+#: src/features/export/statementText.ts:44
+#: src/features/export/statementText.ts:71
 #: src/screens/Analytics/index.tsx:228
 msgid "Description"
 msgstr "विवरण"
@@ -2989,7 +2989,7 @@ msgstr "हटाएं"
 #: src/components/disputes/RecordMenuItems.tsx:19
 #: src/components/people/PaymentDetailsDialog.tsx:263
 #: src/features/disputes/RaiseSheet.tsx:125
-#: src/features/export/statementText.ts:51
+#: src/features/export/statementText.ts:54
 msgid "Dispute"
 msgstr "विवाद"
 
@@ -3088,7 +3088,7 @@ msgstr "हर चार्ज सिर्फ़ उन्हीं लोग�
 msgid "Each person’s share"
 msgstr "हर व्यक्ति का हिस्सा"
 
-#: src/components/split/DateDialog.tsx:127
+#: src/components/forms/MonthCalendar.tsx:106
 msgid "Earlier years"
 msgstr "पिछले साल"
 
@@ -3174,11 +3174,11 @@ msgstr "नोट बदले"
 msgid "Editing comment"
 msgstr "टिप्पणी संपादित हो रही है"
 
-#: src/features/export/statementText.ts:69
+#: src/features/export/statementText.ts:71
 msgid "Effect"
 msgstr "असर"
 
-#: src/features/export/statementText.ts:48
+#: src/features/export/statementText.ts:51
 msgid "Effect on your balance"
 msgstr "आपके बैलेंस पर असर"
 
@@ -3431,7 +3431,7 @@ msgstr "सटीक"
 msgid "Excluded"
 msgstr "बाहर"
 
-#: src/features/export/statementText.ts:37
+#: src/features/export/statementText.ts:40
 #: src/navigation/Navigation.tsx:84
 #: src/screens/Analytics/components/ExpenseRow.tsx:47
 #: src/screens/Expense/index.tsx:122
@@ -3686,7 +3686,7 @@ msgstr "1 व्यक्ति से"
 msgid "Full"
 msgstr "पूरा"
 
-#: src/components/split/DateDialog.tsx:271
+#: src/components/split/DateDialog.tsx:96
 msgid "Future dates are fine – they show as upcoming until the day arrives."
 msgstr "आगे की तारीखें भी चलेंगी – उस दिन तक वे आगामी दिखेंगी।"
 
@@ -3757,8 +3757,8 @@ msgstr "किराना"
 #: src/components/split/pickers.tsx:271
 #: src/features/export/ExportSheet.tsx:207
 #: src/features/export/ExportSheet.tsx:244
-#: src/features/export/statementText.ts:42
-#: src/features/export/statementText.ts:69
+#: src/features/export/statementText.ts:45
+#: src/features/export/statementText.ts:71
 #: src/features/searchAsk/AskAnswer.tsx:136
 #: src/features/settlement/CallItEvenDialog.tsx:160
 #: src/navigation/Navigation.tsx:81
@@ -3790,7 +3790,7 @@ msgstr "ग्रुप लिंक इतने समय तक चलते 
 msgid "Group name"
 msgstr "समूह का नाम"
 
-#: src/features/export/statementText.ts:55
+#: src/features/export/statementText.ts:58
 msgid "Group settle-up routing"
 msgstr "ग्रुप हिसाब-निपटान का तरीका"
 
@@ -4409,7 +4409,7 @@ msgstr "पिछले हफ्ते"
 msgid "last year"
 msgstr "पिछले साल"
 
-#: src/components/split/DateDialog.tsx:140
+#: src/components/forms/MonthCalendar.tsx:119
 msgid "Later years"
 msgstr "अगले साल"
 
@@ -4488,7 +4488,7 @@ msgstr "जो लिंक अभी काम करते हैं। रद
 msgid "Liquor VAT"
 msgstr "शराब पर वैट"
 
-#: src/features/export/statementText.ts:50
+#: src/features/export/statementText.ts:53
 #: src/screens/Analytics/index.tsx:235
 msgid "Location"
 msgstr "स्थान"
@@ -4524,8 +4524,8 @@ msgstr "और पीछे देखें"
 msgid "Made on another device: your side of every expense is matched to you here."
 msgstr "दूसरे डिवाइस पर बना: हर खर्च में आपका हिस्सा यहाँ आपसे जोड़ दिया गया है।"
 
-#. placeholder {0}: i18n.date(new Date(), {dateStyle: 'medium'})
-#: src/features/export/statementText.ts:63
+#. placeholder {0}: day(today)
+#: src/features/export/statementText.ts:65
 msgid "Made on this device on {0}"
 msgstr "इस डिवाइस पर {0} को बना"
 
@@ -4642,7 +4642,7 @@ msgstr "मेन्यू"
 msgid "Merge"
 msgstr "मर्ज करें"
 
-#: src/features/remind/RemindSheet.tsx:173
+#: src/features/remind/RemindSheet.tsx:174
 msgid "Message"
 msgstr "संदेश"
 
@@ -4883,9 +4883,8 @@ msgstr "आगे"
 msgid "Next Monday"
 msgstr "अगला सोमवार"
 
-#: src/components/split/DateDialog.tsx:140
+#: src/components/forms/MonthCalendar.tsx:119
 #: src/features/remind/RemindMeSheet.tsx:172
-#: src/screens/Analytics/components/RangeDialog.tsx:148
 msgid "Next month"
 msgstr "अगला महीना"
 
@@ -5085,7 +5084,7 @@ msgstr "बिना समूह के खर्च"
 msgid "Non-group only"
 msgstr "केवल बिना समूह"
 
-#: src/features/export/statementText.ts:21
+#: src/features/export/statementText.ts:24
 msgid "Not in a group"
 msgstr "ग्रुप में नहीं"
 
@@ -5175,7 +5174,7 @@ msgstr "इन फ़िल्टर से अभी कुछ नहीं म
 msgid "Nothing owed"
 msgstr "कुछ बाकी नहीं"
 
-#: src/features/export/statementText.ts:66
+#: src/features/export/statementText.ts:68
 msgid "Nothing recorded in this range."
 msgstr "इस अवधि में कुछ दर्ज नहीं है।"
 
@@ -5459,7 +5458,7 @@ msgstr "आपका फ़ीडबैक खोलें"
 msgid "Opening an invite needs a connection to Splito. Try again once you’re online."
 msgstr "आमंत्रण खोलने के लिए Splito से कनेक्शन चाहिए। ऑनलाइन होने पर फिर कोशिश करें।"
 
-#: src/features/export/statementText.ts:53
+#: src/features/export/statementText.ts:56
 msgid "Opening balance"
 msgstr "शुरुआती बैलेंस"
 
@@ -5578,7 +5577,7 @@ msgid "Paid · change who paid to remove"
 msgstr "भुगतान किया · हटाने के लिए भुगतानकर्ता बदलें"
 
 #: src/components/split/ExpenseComposer.tsx:558
-#: src/features/export/statementText.ts:45
+#: src/features/export/statementText.ts:48
 #: src/screens/Expense/index.tsx:454
 msgid "Paid by"
 msgstr "किसने दिया"
@@ -5640,7 +5639,7 @@ msgid "Pay with UPI"
 msgstr "UPI से भुगतान करें"
 
 #: src/components/people/HistoryRow.tsx:146
-#: src/features/export/statementText.ts:37
+#: src/features/export/statementText.ts:40
 #: src/navigation/Navigation.tsx:85
 #: src/screens/Repayment/index.tsx:85
 msgid "Payment"
@@ -5784,7 +5783,7 @@ msgstr "कम से कम एक टैक्स क्लास चुने
 msgid "Pick categories when you add an expense. Hidden ones stay on past expenses."
 msgstr "खर्च जोड़ते समय श्रेणी चुनें। छिपी हुई श्रेणियाँ पुराने खर्चों पर बनी रहती हैं।"
 
-#: src/screens/Analytics/components/RangeDialog.tsx:105
+#: src/screens/Analytics/components/RangeDialog.tsx:76
 msgid "Pick the first day"
 msgstr "पहला दिन चुनें"
 
@@ -5816,7 +5815,7 @@ msgstr "कृपया अपना पासवर्ड डालें"
 msgid "Plus"
 msgstr "जोड़"
 
-#: src/features/export/statementText.ts:65
+#: src/features/export/statementText.ts:67
 msgid "Positive means you are owed, negative means you owe. Every currency is its own balance; Splito never adds different currencies together. Splito records what you tell it; it does not move money. A “Group settle-up routing” line means a group settles through someone else, so your balance with this friend is not the plain sum of the records above it."
 msgstr "धनात्मक का मतलब आपको मिलना है, ऋणात्मक का मतलब आपको देना है। हर मुद्रा का अपना बैलेंस है; Splito अलग-अलग मुद्राओं को कभी नहीं जोड़ता। Splito वही दर्ज करता है जो आप बताते हैं; यह पैसे नहीं भेजता। “ग्रुप हिसाब-निपटान का तरीका” वाली पंक्ति का मतलब है कि ग्रुप में निपटान किसी और के ज़रिए होता है, इसलिए इस दोस्त के साथ आपका बैलेंस ऊपर के रिकॉर्ड का सीधा जोड़ नहीं है।"
 
@@ -5837,8 +5836,7 @@ msgstr "झलक"
 msgid "Preview build: local dev account, data stays in this browser, don't use a real password."
 msgstr "प्रीव्यू बिल्ड: लोकल डेव खाता, डेटा इसी ब्राउज़र में रहता है, असली पासवर्ड इस्तेमाल न करें।"
 
-#: src/components/split/DateDialog.tsx:127
-#: src/screens/Analytics/components/RangeDialog.tsx:135
+#: src/components/forms/MonthCalendar.tsx:106
 msgid "Previous month"
 msgstr "पिछला महीना"
 
@@ -6025,7 +6023,7 @@ msgstr "रीलोड करें और बदलाव खो दें?"
 msgid "Remind"
 msgstr "याद दिलाएँ"
 
-#: src/features/remind/RemindSheet.tsx:141
+#: src/features/remind/RemindSheet.tsx:142
 msgid "Remind {name}"
 msgstr "{name} को याद दिलाएँ"
 
@@ -6043,11 +6041,11 @@ msgstr "मुझे याद दिलाएँ"
 msgid "Reminder cancelled"
 msgstr "रिमाइंडर रद्द हुआ"
 
-#: src/features/remind/RemindSheet.tsx:103
+#: src/features/remind/RemindSheet.tsx:104
 msgid "Reminder copied. Paste it in a chat with {name}."
 msgstr "रिमाइंडर कॉपी हुआ। इसे {name} की चैट में चिपकाएँ।"
 
-#: src/features/remind/RemindSheet.tsx:104
+#: src/features/remind/RemindSheet.tsx:105
 msgid "Reminder opened for {name}. Splito can’t see whether it was sent."
 msgstr "{name} के लिए रिमाइंडर खुल गया। Splito यह नहीं देख सकता कि वह भेजा गया या नहीं।"
 
@@ -6520,7 +6518,7 @@ msgstr "इसी डिवाइस पर सहेजा"
 msgid "Saved on this device"
 msgstr "इस डिवाइस पर सहेजा गया"
 
-#: src/features/remind/RemindSheet.tsx:201
+#: src/features/remind/RemindSheet.tsx:202
 #: src/screens/Expense/components/History.tsx:179
 msgid "Saved on this device. It syncs to your other devices when you are online."
 msgstr "इस डिवाइस पर सहेजा गया। ऑनलाइन होने पर यह आपके दूसरे डिवाइस पर सिंक हो जाएगा।"
@@ -6755,7 +6753,7 @@ msgstr "आमंत्रण भेजें"
 msgid "Send message"
 msgstr "संदेश भेजें"
 
-#: src/features/remind/RemindSheet.tsx:208
+#: src/features/remind/RemindSheet.tsx:209
 msgid "Send on WhatsApp"
 msgstr "WhatsApp पर भेजें"
 
@@ -6898,7 +6896,7 @@ msgid "Settled up first"
 msgstr "पहले हिसाब चुकाया"
 
 #: src/components/invites/InviteShare.tsx:110
-#: src/features/remind/RemindSheet.tsx:144
+#: src/features/remind/RemindSheet.tsx:145
 #: src/screens/Analytics/components/Charts.tsx:280
 msgid "Share"
 msgstr "हिस्सा"
@@ -6956,7 +6954,7 @@ msgstr "टेबल के रूप में दिखाएँ"
 msgid "Show charts"
 msgstr "चार्ट दिखाएँ"
 
-#: src/components/split/DateDialog.tsx:111
+#: src/components/forms/MonthCalendar.tsx:83
 msgid "Show days"
 msgstr "दिन दिखाएँ"
 
@@ -7131,8 +7129,8 @@ msgstr "कुछ"
 #: src/components/people/RecordPaymentDialog.tsx:169
 #: src/components/SearchAsk/ResultRows.tsx:235
 #: src/components/split/shared.tsx:23
-#: src/features/export/statementText.ts:20
-#: src/features/remind/RemindSheet.tsx:67
+#: src/features/export/statementText.ts:23
+#: src/features/remind/RemindSheet.tsx:68
 #: src/features/searchAsk/AskAnswer.tsx:60
 #: src/features/settlement/CallItEvenDialog.tsx:132
 #: src/screens/Analytics/useReport.ts:331
@@ -7261,7 +7259,7 @@ msgstr "Splito आपका UPI ऐप नहीं देख सकता। �
 msgid "Splito collects no analytics and shows no ads."
 msgstr "Splito कोई एनालिटिक्स इकट्ठा नहीं करता और कोई विज्ञापन नहीं दिखाता।"
 
-#: src/features/remind/RemindSheet.tsx:226
+#: src/features/remind/RemindSheet.tsx:227
 msgid "Splito hands this to the app you pick. It can’t see whether the message is sent."
 msgstr "Splito इसे आपके चुने ऐप को सौंप देता है। वह नहीं देख सकता कि संदेश भेजा गया या नहीं।"
 
@@ -7281,7 +7279,7 @@ msgstr "Splito कभी पैसे नहीं भेजता। हर भ
 msgid "Splito reminder"
 msgstr "Splito रिमाइंडर"
 
-#: src/features/export/statementText.ts:60
+#: src/features/export/statementText.ts:62
 msgid "Splito statement"
 msgstr "Splito स्टेटमेंट"
 
@@ -7925,21 +7923,15 @@ msgstr "1 व्यक्ति को"
 msgid "today"
 msgstr "आज"
 
-#: src/components/comments/DateDivider.tsx:25
-#: src/components/split/DateDialog.tsx:245
-#: src/components/split/DateDialog.tsx:250
+#: src/components/split/DateDialog.tsx:70
+#: src/components/split/DateDialog.tsx:75
 #: src/features/searchAsk/AskChat.tsx:291
-#: src/locale/useDates.ts:83
-msgid "Today"
-msgstr "आज"
-
-#: src/components/activity/SectionHeader.tsx:56
-msgctxt "Activity section header"
+#: src/locale/useDates.ts:84
 msgid "Today"
 msgstr "आज"
 
 #: src/features/remind/RemindMeSheet.tsx:169
-#: src/locale/useDates.ts:85
+#: src/locale/useDates.ts:86
 msgid "Tomorrow"
 msgstr "आने वाला कल"
 
@@ -8012,7 +8004,7 @@ msgstr "इन्हें खोजकर देखें"
 #: src/components/activity/ActivityFilterDialog.tsx:78
 #: src/components/activity/ActivityFilterDialog.tsx:79
 #: src/components/groups/GroupFields.tsx:78
-#: src/features/export/statementText.ts:40
+#: src/features/export/statementText.ts:43
 #: src/screens/Groups/components/GroupsFilterDialog.tsx:71
 msgid "Type"
 msgstr "प्रकार"
@@ -8350,7 +8342,7 @@ msgstr "आपने जो लिखा वह नहीं रखा जाए
 msgid "What’s your name?"
 msgstr "आपका नाम क्या है?"
 
-#: src/features/remind/RemindSheet.tsx:211
+#: src/features/remind/RemindSheet.tsx:212
 msgid "WhatsApp"
 msgstr "WhatsApp"
 
@@ -8553,16 +8545,10 @@ msgstr "हां, {0} दर्ज करें"
 msgid "yesterday"
 msgstr "कल"
 
-#: src/components/comments/DateDivider.tsx:27
-#: src/components/split/DateDialog.tsx:255
-#: src/components/split/DateDialog.tsx:260
+#: src/components/split/DateDialog.tsx:80
+#: src/components/split/DateDialog.tsx:85
 #: src/features/searchAsk/AskChat.tsx:293
-#: src/locale/useDates.ts:84
-msgid "Yesterday"
-msgstr "कल"
-
-#: src/components/activity/SectionHeader.tsx:58
-msgctxt "Activity section header"
+#: src/locale/useDates.ts:85
 msgid "Yesterday"
 msgstr "कल"
 
@@ -8575,7 +8561,7 @@ msgstr "आप"
 #: src/components/activity/ActivityItem.tsx:521
 #: src/components/groups/RulesEditor.tsx:219
 #: src/components/split/shared.tsx:23
-#: src/features/export/statementText.ts:20
+#: src/features/export/statementText.ts:23
 #: src/features/searchAsk/AskAnswer.tsx:60
 #: src/screens/Analytics/useReport.ts:331
 #: src/screens/CreateGroup.tsx:198
@@ -8626,7 +8612,7 @@ msgstr "हर जुड़ने को आप मंज़ूरी देत�
 msgid "you are owed"
 msgstr "आपको मिलने हैं"
 
-#: src/features/export/statementText.ts:68
+#: src/features/export/statementText.ts:70
 #: src/screens/Group/components/GroupBalanceCards.tsx:78
 #: src/screens/Groups/components/GroupsFilterDialog.tsx:111
 #: src/screens/Home/components/Overview.tsx:243
@@ -8718,7 +8704,7 @@ msgstr "आपने गलत कोड डाला है। यह 6 अं�
 msgid "You have no expenses {scope} {period}."
 msgstr "{period} {scope} आपका कोई खर्च नहीं है।"
 
-#: src/features/remind/RemindSheet.tsx:224
+#: src/features/remind/RemindSheet.tsx:225
 msgid "You last reminded {name} {lastAgo} ago."
 msgstr "आपने {name} को {lastAgo} पहले याद दिलाया था।"
 
@@ -8760,7 +8746,7 @@ msgstr "आपने {debtor} का कर्ज़ माफ़ किया"
 msgid "you owe"
 msgstr "आपको देने हैं"
 
-#: src/features/export/statementText.ts:68
+#: src/features/export/statementText.ts:70
 #: src/features/searchAsk/AskAnswer.tsx:222
 #: src/screens/Group/components/GroupBalanceCards.tsx:80
 #: src/screens/Groups/components/GroupsFilterDialog.tsx:112
@@ -8814,7 +8800,7 @@ msgstr "आपको देने हैं <0>{figure}</0>"
 
 #: src/components/SearchAsk/ResultRows.tsx:240
 #: src/data/recentTransactionRows.ts:36
-#: src/features/export/statementText.ts:46
+#: src/features/export/statementText.ts:49
 #: src/features/searchAsk/AskAnswer.tsx:292
 #: src/screens/Analytics/components/Charts.tsx:148
 #: src/screens/Analytics/components/Charts.tsx:249
@@ -9015,7 +9001,7 @@ msgstr "आपकी प्रोफ़ाइल"
 msgid "Your reminders"
 msgstr "आपके रिमाइंडर"
 
-#: src/features/export/statementText.ts:47
+#: src/features/export/statementText.ts:50
 #: src/features/searchAsk/AskAnswer.tsx:295
 #: src/screens/Analytics/components/Charts.tsx:148
 #: src/screens/Analytics/components/Charts.tsx:188
@@ -9069,11 +9055,11 @@ msgstr "आपका खर्च"
 msgid "Your spending shows up here – by month, category, person and group – once you add an expense."
 msgstr "खर्च जोड़ते ही आपका खर्च यहाँ दिखेगा – महीने, श्रेणी, व्यक्ति और समूह के अनुसार।"
 
-#: src/features/remind/RemindSheet.tsx:190
+#: src/features/remind/RemindSheet.tsx:191
 msgid "Your UPI ID"
 msgstr "आपकी UPI ID"
 
-#: src/features/remind/RemindSheet.tsx:185
+#: src/features/remind/RemindSheet.tsx:186
 msgid "Your UPI ID (optional)"
 msgstr "आपकी UPI ID (वैकल्पिक)"
 

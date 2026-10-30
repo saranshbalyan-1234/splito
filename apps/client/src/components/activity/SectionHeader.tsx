@@ -1,12 +1,10 @@
 // Adapted from bluesky-social/social-app@4e4ad9c (MIT) - src/screens/Notifications/components/PageList.tsx (SectionHeader, getBorderColor)
 import {View} from 'react-native'
 import {type LocalDate} from '@splito/domain'
-import {useLingui} from '@lingui/react/macro'
 
 import {atoms as a, type Theme, useTheme} from '#/alf'
 import {Text} from '#/components/Typography'
-import {useFormatDay, useToday} from '#/locale/useDates'
-import {daysAgo} from './feed'
+import {useDayLabel} from '#/locale/useDates'
 
 /**
  * The colour of a border between rows: Bluesky's unread colour when it
@@ -47,28 +45,7 @@ export function SectionHeader({
   isUnreadBelow: boolean
 }) {
   const t = useTheme()
-  const {t: l, i18n} = useLingui()
-  const today = useToday()
-  const formatDay = useFormatDay()
-  const ago = daysAgo(day, today)
-  const label =
-    ago === 0
-      ? l({message: 'Today', context: 'Activity section header'})
-      : ago === 1
-        ? l({message: 'Yesterday', context: 'Activity section header'})
-        : ago < 7
-          ? i18n.date(new Date(`${day}T00:00:00Z`), {
-              weekday: 'long',
-              timeZone: 'UTC',
-            })
-          : formatDay(day, {
-              intl: {
-                weekday: 'short',
-                day: 'numeric',
-                month: 'short',
-                year: day.slice(0, 4) === today.slice(0, 4) ? undefined : 'numeric',
-              },
-            })
+  const dayLabel = useDayLabel()
 
   return (
     <View
@@ -89,7 +66,7 @@ export function SectionHeader({
         testID="activity-day-header"
         accessibilityRole="header"
         style={[a.text_sm, a.font_semi_bold, t.atoms.text_contrast_medium]}>
-        {label}
+        {dayLabel(day)}
       </Text>
     </View>
   )
