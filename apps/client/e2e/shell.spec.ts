@@ -14,7 +14,8 @@ const LAPTOP = {width: 1280, height: 800}
 const RAIL = {width: 900, height: 800}
 const PHONE = {width: 390, height: 844}
 
-const SIDEBAR = 240
+/* The compact desktop sidebar (owner 188): LEFT_NAV_STANDARD_WIDTH. */
+const SIDEBAR = 216
 /* Bluesky's RightNav column, shown from 1300px (owner rule 26.17). */
 const RIGHT_COLUMN = 320
 const TABS = ['home', 'people', 'groups', 'analytics', 'activity']
@@ -199,7 +200,7 @@ test.describe('header rule set', () => {
     await on(page, 'screen-groups', 'group-Goa trip').click()
     await expect(on(page, 'screen-group', 'group-name')).toHaveText(/^Goa trip( - Demo)?$/)
     await expect(on(page, 'screen-group', 'group-byline')).toHaveText(
-      'Trip · 5 members',
+      'Trip · Goa · 5 members',
     )
     await expect(on(page, 'screen-group', 'group-settle')).toBeVisible()
     await expect(on(page, 'screen-group', 'group-more')).toBeVisible()

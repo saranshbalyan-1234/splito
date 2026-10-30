@@ -65,6 +65,15 @@ them do yet.
     convention), Claude writes it here in the same turn as a dated § 23 lesson or a rule in its section, updates
     BACKLOG when it implies work, commits and pushes, without waiting for the owner to say "add this". Reason:
     owner, 2026-10-30: "make sure you do it yourself always, whenever you think this should be in the app".
+11. **This file learns by itself, performance first** (owner 191). Every performance finding (a measurement that
+    missed or surprised, a root cause, an approach tried and rejected, a review finding, a test-method lesson)
+    becomes, in the same change, a rule in § 17 "Performance rules learned" (what to do, why, the numbers) and a
+    dated § 23 lesson; a rule that a later finding contradicts is rewritten, never left beside it. Enforcement,
+    so it does not depend on memory: `pnpm check` runs `scripts/lessonsGate.ts`, which fails a branch that
+    changes perf specs, the renders baseline or measured numbers in `docs/COMPLETION_MATRIX.md` without also
+    changing § 17 or § 23 here; every builder brief says to record lessons; every Opus review lists findings
+    that should become rules; the repo's `UserPromptSubmit` hook repeats this. Reason: owner, 2026-10-30: "make
+    sure everything we learn from performance captures in architecture"; "that file should be self learning".
 
 ---
 
@@ -385,8 +394,26 @@ All user-facing strings go through Lingui; English default, Hindi second, Englis
 
 ## 8. Launch splash
 
-[Partial] The native splash comes from the `expo-splash-screen` plugin (auto-hide) and web shows a static
-mark in `public/index.html`. `StoreProvider` opens the store before rendering the shell. Not built (A-020):
+[Partial] The native splash comes from the `expo-splash-screen` plugin and web shows the launch mark in
+`public/index.html`. `StoreProvider` opens the store before rendering the shell. [Built] (F-264, owner 185) the
+mark breathes while the store opens, and the launch screen fades out (200 ms) over the first screen:
+
+- **Web:** `#launch` in `index.html` is a fixed overlay beside `#root` (not inside it, so React's first commit does
+  not remove it and the fade shifts nothing); its CSS keyframes (scale 1 -> 1.08 -> 1, 1.2 s, ease-in-out, infinite;
+  `prefers-reduced-motion` gets a 2.4 s opacity pulse) run from first paint, no script. `markLaunchReady()`
+  (`components/LaunchScreen/index.web.tsx`) fades it out and removes it. Dark mode is ALF Dim's background.
+- **iOS / Android:** `index.ts` calls `SplashScreen.preventAutoHideAsync()` at import; `components/LaunchScreen` draws
+  the same PNG as the splash plugin (200 dp, centred in the whole window, not the safe area, white or Dim by the
+  system scheme) and hides the native splash when the image has loaded, then breathes on the UI thread
+  (Reanimated `withRepeat`, `useReducedMotion` -> opacity pulse) until `markLaunchReady()`.
+- **The ready signal** is `StoreProvider`: the store is open, or a storage notice or an open error says it will not
+  be. It is a module call from an effect, so no component re-renders on ready; only the native launch screen
+  re-renders once (to unmount after its fade). Fonts are embedded natively / `font-display: swap` on web and
+  preferences read synchronously, so they need no wait. No cap is built yet (below).
+- Checks: `e2e/launch.spec.ts` (bundle held back by a gate; 390 and 1440, light and dark, reduced motion),
+  `src/alf/splash.test.ts`.
+
+Not built (A-020):
 
 - The splash holds until fonts, preferences and the local store are open and the first People/Groups
   queries have resolved, capped at 8 s; after the cap the app shows anyway.
@@ -1023,6 +1050,44 @@ are written; nothing records them automatically (A-037).
 - **Dev-only tools never ship:** the release script refuses to build with any `EXPO_PUBLIC_` debug,
   profiler or override variable set.
 
+
+### 17.1 Performance rules learned (self-updating, owner 191)
+
+Each rule came from a measurement; the dated story is in § 23. Newest first within each group.
+
+- **Measure on the slowest target, on a quiet machine.** Desktop Chrome at 1x hid a 600 ms tab switch that an
+  iPhone felt as 2 s; measure in WebKit (iPhone simulator Safari or Playwright WebKit) and Chrome at 6x CPU, and
+  only at machine load under 10 (at load 25-130 the same test read 2-5x slower and timing tests failed). Name
+  the pair you measured: Groups -> Home was 54 ms while Analytics -> Home was 5.9 s.
+- **The cost of a switch is often the screen you leave, not the one you open.** Popping a list screen ran a
+  Reanimated exit animation per row (a forced layout each), 617 ms at 1x and 5.9 s at 6x. Leaving screens must
+  not run row exit animations; main tabs stay mounted (parked) instead of being torn down (owner 166).
+- **Freezing tricks that break WebKit or Reanimated are out.** `react-freeze` / `freezeOnBlur` on web runs
+  class `componentWillUnmount` and brought the exit animations back (Analytics revisit 500 ms);
+  `content-visibility: hidden` on kept screens was fast in Chrome and showed a blank page in Safari.
+- **Feedback first, work a frame later.** The tab highlight paints in the press-in commit and the page switches
+  a frame later; the bar acts on press-in, not on click (which came ~45 ms after pointerdown, plus Safari's
+  double-tap wait without `touch-action: manipulation`).
+- **Open first, render after, on the real end of the motion.** Heavy bodies mount when the sheet, drawer, popup
+  or screen has finished moving (OpenedContext), not after two frames: before, the drawer menu mounted while the
+  panel was still 310 px off screen. Every opened signal has a timer fallback, so content never waits forever.
+- **A parked or cached screen never reuses a stand-in render.** The screen cache's placeholder (`<View />`)
+  must not be stored as the live descriptor, or a revived tab comes back blank for good.
+- **Hot write paths read nothing they can prove empty.** One indexed dispute read per money write cost ~40 % of
+  the demo seed (about 1,500 creations); a created record cannot have a dispute, so creations skip it.
+- **Growing a window keeps what it read.** A narrowed Activity list that rebuilt from zero five pages at a time
+  read the whole history (10,000 expenses: 20 rebuilds, 23.6 s, then 72 ms per new expense); windows grow
+  incrementally, automatic searching is bounded (about 10 pages, then "Look further back").
+- **Membership checks use a Set.** `read.includes(id)` per event made Mark all read and every rebuild
+  O(events x read); a persisted list of ids is read into a Set once.
+- **Search stays under 50 ms at 10,000 expenses** (`search.test.ts`); the slowest query was `> 1000` (amount
+  range), so amount scans need an index or a bound before the data grows.
+- **The renders baseline is a median, taken after the data has loaded.** Recording the highest of three noisy
+  runs (tabs updates 1,916-3,440) let a doubling pass; the gate waits for an explicit "demo loaded" signal
+  before a phase and records the median of three.
+- **Guards match only what they guard.** A build check that matched `demo-large-` in the start-up bundle failed
+  every Render build silently (§ 23); the Render deploy is checked after every merge, and "no new deploy" counts
+  as a failure.
 ---
 
 ## 18. Accessibility
@@ -1221,6 +1286,11 @@ Splito lessons (add newest last, dated, with PR):
   Safari's double-tap detection could hold or swallow quick taps. Rule: tap, scroll and gesture work is verified in
   real Mobile Safari (iOS simulator) and with Chrome CPU throttling at 6x before it is called done, every tab
   (Home included) is measured, and no fix is reported as working on phones from desktop numbers alone.
+- 2026-10-30, F-264 (c-splash): **the web launch mark lived inside `#root`, so React's first commit removed it** while
+  the store was still opening and the screen went blank. The launch screen is now a fixed `#launch` overlay beside
+  `#root` that `markLaunchReady()` fades out when `StoreProvider` has a store (or a notice or error). A native splash
+  can only be hidden once, so `preventAutoHideAsync()` runs in the entry and the JS launch screen hides it when its
+  image has loaded. Check the native handover in a release build: a dev client draws its own loading UI over it.
 
 - 2026-10-30, F-256 (feat/wC-F256-home): **the id `people` used to mean Home**, so adding a People tab was a rename:
   tab ids are `home | people | ...`, route `Home` at `/`, `People` at `/people`. Stored data is migrated on read, never by
@@ -1747,8 +1817,9 @@ good"; "the left sidebar looks bad on desktop". *Where:* `view/shell/desktop/Lef
   sliding active indicator (§ 26.9) sits beside the active item.
 - **Add expense:** Bluesky `ComposeBtn` as a large full-width pill with a plus icon; it opens the Add expense
   popup (§ 26.8). *Why:* "go with what Bluesky had".
-- **Compact, no space it does not need** (owner 188): the sidebar is as wide as its longest item needs (icon,
-  label, padding; about 200 px in English, wider only if a language needs it), so the content starts sooner; the
+- **Compact, no space it does not need** (owner 188): the sidebar is as wide as its content needs (icon,
+  label, padding; one constant, 216 px, set by the footer row in English and fitting Hindi's longest label; a language that
+  needs more raises that one number), so the content starts sooner; the
   logo, items, pill and footer links form one block at the top with no dead band between them, and nothing is
   pinned to the bottom. Hairline right border; sticky full height; scrolls on its own when tall. Phone and rail
   layouts are unchanged. *Why:* "on desktop there is a lot of space we don't need there in sidebar".
@@ -2871,6 +2942,7 @@ Every owner decision, in the order it was made (all 2026-10-26). "Replaced" name
 | 188 | "on desktop there is a lot of space we dont need ... there in sidebar" | Desktop sidebar fits its content (~200 px), footer links directly under Add expense, nothing pinned to the bottom | § 26.5 | Bluesky standard width; footer pinned at the bottom of the window |
 | 189 | "did it fix the performace everywhere, not just the taps"; "it should be everywhere" | Every screen and interaction meets the speed budgets, proven by a perf sweep over every route and interaction in WebKit and Chrome 6x on a quiet machine; misses fixed before the wave closes | § 26.10 | Budgets checked on a few flows and on reported problems |
 | 190 | "all the + buttons or anything should be there"; "the only diff should be whether back button is visible or not" (a main screen opened from a link) | Pushed copies keep the FAB and every header action; FAB also on Person and Group pages (pre-selecting); hidden only on Settings, Profile, detail, forms, sheets, keyboard, onboarding | § 26.6, § 26.3 | FAB only where the header had no Back; pushed copies had no FAB |
+| 191 | "make sure everything we learn from performace captures in architecture"; "that file should be self learning" | Every perf finding becomes a § 17.1 rule plus a § 23 lesson in the same change; `scripts/lessonsGate.ts` in `pnpm check` fails a branch that changes perf specs, the renders baseline or measured numbers without touching § 17/§ 23; briefs, reviews and the prompt hook repeat it | § 0 rule 11, § 17.1 | Lessons recorded when remembered (§ 0 rule 10) |
 
 New decisions follow § 0 rule 9: rewrite the rule in its topic so only the current truth remains, then add a
 row here.
