@@ -85,6 +85,7 @@ test.describe('the launch screen', () => {
     await expect(page.getByTestId('public-about')).toBeVisible()
     await expect(page.locator('#launch')).toHaveCount(0, {timeout: 10_000})
     await page.goto('/')
+    await page.waitForFunction(() => !!(window as unknown as {__splitoTest?: {seedAccount?: unknown}}).__splitoTest?.seedAccount)
     await page.evaluate(() => (window as unknown as {__splitoTest: {seedAccount(a: object): void}}).__splitoTest.seedAccount({name: 'Old', email: 'launch@example.com', password: 'oldpassword1'}))
     await signInWithPassword(page, 'launch@example.com', 'oldpassword1')
     await expect(page.getByTestId('add-missing')).toBeVisible()

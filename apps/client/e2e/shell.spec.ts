@@ -701,14 +701,14 @@ test.describe('phone: Bluesky bottom bar and FAB', () => {
     expect(box.y + box.height).toBeLessThan(bar.y)
   })
 
-  test('the FAB is on every top-level page (Analytics too), not on empty People', async ({
+  test('the FAB is on every top-level page (Analytics too), empty People included (F-275)', async ({
     page,
   }) => {
     await page.setViewportSize(PHONE)
-    // Empty People has its own Add a friend / Add expense buttons, so no third Add.
+    // Empty People keeps the FAB (the one Add expense); its own button is the one Add a friend.
     await open(page, '/people', 'screen-people')
     await expect(page.getByTestId('people-empty')).toBeVisible()
-    await expect(on(page, 'screen-people', 'fab-add')).toHaveCount(0)
+    await expect(on(page, 'screen-people', 'fab-add')).toHaveCount(1)
     await openDemo(page)
     for (const [path, screen] of [
       ['/people', 'screen-people'],
