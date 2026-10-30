@@ -1,5 +1,6 @@
 import {expect, type Page, test} from '@playwright/test'
 
+import {composeButton, openAddExpense} from './composer'
 import {openDemo} from './openDemo'
 
 /*
@@ -23,14 +24,11 @@ async function expectPaidByMe(page: Page) {
 }
 
 for (const [name, size] of sizes) {
-  const isPhone = size.width < 600
   test.describe(`at ${name}`, () => {
     test.use({viewport: size})
 
     test('the FAB (phone) or the sidebar pill (desktop)', async ({page}) => {
-      await openDemo(page, '/people')
-      await expect(page.getByTestId('person-Riya Sharma')).toBeVisible()
-      await page.getByTestId(isPhone ? 'fab-add' : 'sidebar-add').click()
+      await openAddExpense(page, size)
       await expectPaidByMe(page)
     })
 
@@ -41,17 +39,10 @@ for (const [name, size] of sizes) {
       await page.getByTestId('group-add-expense').click()
       await expectPaidByMe(page)
       await expect(page.getByTestId('expense-group-value')).toContainText('Goa trip')
-      if (isPhone) {
-        await page.goBack()
-        await page.getByTestId('screen-group').getByTestId('fab-add').click()
-        await expectPaidByMe(page)
-        await expect(page.getByTestId('expense-group-value')).toContainText('Goa trip')
-      } else {
-        await page.goBack()
-        await page.getByTestId('sidebar-add').click()
-        await expectPaidByMe(page)
-        await expect(page.getByTestId('expense-group-value')).toContainText('Goa trip')
-      }
+      await page.goBack()
+      await composeButton(page, 'screen-group').click()
+      await expectPaidByMe(page)
+      await expect(page.getByTestId('expense-group-value')).toContainText('Goa trip')
     })
 
     test('a person page: the friend is pre-selected but I am the payer', async ({page}) => {
@@ -62,7 +53,7 @@ for (const [name, size] of sizes) {
       await expectPaidByMe(page)
       await expect(page.getByTestId('expense-people-value')).toContainText('Riya')
       await page.goBack()
-      await page.getByTestId(isPhone ? 'fab-add' : 'sidebar-add').first().click()
+      await composeButton(page, 'screen-person').click()
       await expectPaidByMe(page)
       await expect(page.getByTestId('expense-people-value')).toContainText('Riya')
     })
@@ -80,10 +71,8 @@ for (const [name, size] of sizes) {
     })
 
     test('a restored draft: the payer is still me', async ({page}) => {
-      await openDemo(page, '/people')
-      await expect(page.getByTestId('person-Riya Sharma')).toBeVisible()
-      const add = page.getByTestId(isPhone ? 'fab-add' : 'sidebar-add')
-      await add.click()
+      await openAddExpense(page, size)
+      const add = composeButton(page)
       await page.getByTestId('expense-title').fill('Half-typed groceries')
       await page.getByTestId('sheet-close').click()
       await page.getByTestId('draft-save').click()
