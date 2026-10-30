@@ -2724,6 +2724,19 @@ add anyway (only for you)"; "also i should be able to select from contacts". *Wh
   group, it lives only inside the group's "Add members / Invite people" sheet. No header overflow, menu or page
   shows invite links outside these flows (the Home "..." overflow and the Group overflow entries are removed;
   "Manage invite links" is reached from the invite-link sheet's "Manage links" button and from Settings).
+- **Every group says who can join, and adding someone asks them** (owner 196). New group, Edit group and the
+  group's "Add members / Invite people" sheet show one choice, "Who can join", with three options in plain words:
+  - **Anyone with the link:** the group link and QR work, and whoever opens it joins at once.
+  - **Link, I approve each join** (the default): opening the link sends a join request; the group's admins see it
+    in Activity (Type = Friends and invites, owner 195) and Approve or Decline it in the row.
+  - **Invite only:** no link exists (an existing link stops working); people join only when a member adds them.
+  Adding someone to a group never puts them in without consent: adding a Splito friend sends them a group
+  request ("Riya added you to Goa trip", Join / Decline in their Activity), and they show in the members list as
+  "Invited" (greyed, not selectable in expenses) until they join; adding someone not on Splito sends an invite or
+  adds them "only for you" (as for friends above). The choice is shown on the group page under Members ("Anyone
+  with the link can join" and so on) so everyone can see it; only admins change it. *Why:* "in group link, it should
+  show anyone can join, or invites only, or add like this; if I add someone they would accept or I can send
+  request".
 - **Settings > "Friends and invites"** (its own Settings row and page, Bluesky settings-list layout) manages
   friends and invites in one place:
   - **Friends:** every friend (search when more than 10) with "Add friend" at the top (opens the Invite people
@@ -3157,6 +3170,7 @@ Every owner decision, in the order it was made (all 2026-10-26). "Replaced" name
 | 193 | "when click on txn it shows up activity again, with all txn including txn filter" | Every transactions heading, See all or count opens Activity (pushed, Back) on All with Type = Expenses + Payments, group-scoped in a group; single rows still open the transaction | § 26.14 | Only Home and right-column "See all" did (owner 173) |
 | 194 | "this activyty page whould be used like this with filters everywhere" | Activity is the one full list behind every "see all" of past events; links pre-set Type, group and person filters (new `person=`), shown as chips; action lists (requests, invites) keep their pages | § 26.14 | Group/Person pages and others kept their own history lists |
 | 195 | "whrever activiyt can be linked do it, also invites can be hanlded like this"; "this way we can handle everything from one place and user wont be confused" | Every link that can lead to Activity does; requests/invites see-all and counts open Activity (Type = Friends and invites) with Accept/Decline and Resend/Cancel in the rows; Friends and invites keeps only its tools | § 26.14 | Requests and invites kept their own list pages (owner 194) |
+| 196 | "in group link, it should show anyone can join, or invites only, or add like this, if i add someone they would acept or i can send request" | Group "Who can join": Anyone with the link / Link, I approve each join (default) / Invite only; adding a friend sends a group request they accept (shown "Invited" until then); join requests and group requests handled in Activity | § 26.18 | Group links always required approval; members were added directly |
 
 New decisions follow § 0 rule 9: rewrite the rule in its topic so only the current truth remains, then add a
 row here.

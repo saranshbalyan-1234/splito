@@ -664,6 +664,18 @@ Every disputed amount or count opens Activity on All with Expenses, Payments and
   6. Owner 195: every link that can lead to Activity does; requests/invites "See all" and counts open Activity with Type = Friends and invites; request rows carry Accept / Decline and invite-sent rows Resend / Cancel in place; Friends and invites keeps only invite link, QR, contacts and manage links.
   4. Owner 193: every transactions heading, See all and count (Home, Person, Group, Analytics, right column) uses `seeAllTransactionsPath({groupId})`: All, Type = Expenses + Payments, group-scoped in a group; single rows still open the transaction.
 
+### F-269 Group "Who can join" and consent to be added `spec: owner § 26.18 (decision 196)`
+
+Each group has a join setting (anyone with the link / approve each join / invite only), and adding someone sends them a group request.
+
+- **Effort** M · **Impact** 8 · **Backend** partly (real link joins and cross-device requests need F-2105; local flow and demo now) · **Status** todo, Wave C (after F-268) · **Deps** F-268
+- **Prefs** `group:joinPolicy` (per group: link / approve / invite)
+- **Acceptance**
+  1. New/Edit group and the Add members sheet show "Who can join" with the three options (default approve); admins only can change it; the group page shows the current rule under Members.
+  2. Invite only hides and revokes the group link; anyone-with-link joins at once; approve sends a join request that admins Approve/Decline in Activity rows.
+  3. Adding a Splito friend creates a group request (Join / Decline in their Activity); they show "Invited" (greyed, not selectable) until they join; not-on-Splito people get an invite or "only for you".
+  4. Demo carries every state (each policy, a pending join request, an invited member); en + hi; e2e at 390 and 1440.
+
 ### F-250 Sign-in required (auth gate) `spec: owner § 26.15 (decision 125)`
 
 Nothing of the app is visible signed out: only the welcome tour, the logged-out flow, language and legal pages. The local database opens per account only with a session; offline after sign-in; deep links resume after sign-in.
