@@ -753,11 +753,13 @@ export function DesktopLeftNav({
           ))}
         </View>
         <ComposeBtn minimal={leftNavMinimal} />
-        {/* The drawer's footer links directly under the pill, not pinned (26.5, owner 188); the icon rail has no room, its drawer has them. The row bleeds 12 px into the right padding so it fits the compact width. */}
-        {!leftNavMinimal && (
-          <NavFooterLinks style={[a.pt_lg, {marginRight: -tokens.space.md}]} />
-        )}
       </ScrollView>
+      {/* The drawer's footer links pinned at the bottom (26.5, owner 214; the logo, items and pill stay one block at the top); the icon rail has no room, its drawer has them. The row bleeds 12 px into the right padding so it fits the compact width. */}
+      {!leftNavMinimal && (
+        <View style={[a.px_lg, a.pb_lg]}>
+          <NavFooterLinks style={[a.pt_lg, {marginRight: -tokens.space.md}]} />
+        </View>
+      )}
     </View>
   )
 }

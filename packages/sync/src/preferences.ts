@@ -73,8 +73,8 @@ export const DEFAULT_CATEGORIES: Category[] = [
 export const NAV_ITEM_IDS: readonly NavItemId[] = ['people', 'groups', 'analytics', 'activity', 'settings']
 /** The tabs that hold the user's data: what the app can open on (Settings cannot be the start tab). */
 const START_TAB_IDS = ['people', 'groups', 'analytics', 'activity'] as const satisfies readonly TabId[]
-/** The bar before Settings became a tab (owner 206): a saved list that is exactly this was never customised and gains Settings. */
-const BAR_BEFORE_SETTINGS: readonly NavItemId[] = START_TAB_IDS
+/** The default bar before owners 198 and 206 (it had Home and no Settings): a saved list that is exactly this was never customised, so it reads as the new default. */
+const OLD_DEFAULT_BAR = 'home,people,groups,analytics,activity'
 /** What Activity can be filtered by (owner 173): "transactions" in an address is `expenses` and `payments` together. */
 export const ACTIVITY_TYPE_IDS = ['expenses', 'payments', 'comments', 'groups', 'friends', 'reminders', 'disputes'] as const
 export type ActivityTypeId = (typeof ACTIVITY_TYPE_IDS)[number]
@@ -278,11 +278,12 @@ function readRaw<K extends PrefKey>(rows: ReadonlyArray<PrefRow>, key: K): PrefV
   if (key === 'tabs' && Array.isArray(value)) {
     // Orders saved while Profile was a tab predate the Analytics tab, so it joins them.
     const isPreAnalytics = value.includes('profile')
+    const isOldDefault = value.join() === OLD_DEFAULT_BAR
     // Profile, Home (owner 198) and Ask Splito (owner 200) are not items now: a saved list loses them and keeps the order of the rest.
     const kept = (value as string[]).filter((t): t is NavItemId => (NAV_ITEM_IDS as readonly string[]).includes(t))
     value = isPreAnalytics && !kept.includes('analytics') ? [...kept, 'analytics'] : kept
-    // The default bar gained Settings (owner 206): a saved bar that is exactly the old default never was customised, so it gains it too; any other choice stays.
-    if ((value as NavItemId[]).join() === BAR_BEFORE_SETTINGS.join()) value = [...NAV_ITEM_IDS]
+    // The default bar lost Home and gained Settings (owners 198, 206): a saved bar that is exactly the old default never was customised, so it becomes the new one; any other choice keeps its tabs.
+    if (isOldDefault) value = [...NAV_ITEM_IDS]
   }
   // The "Open on" tab was the `homeTab` key before F-256: read that old row once when there is no new one. A saved 'home' fails validation and reads as People.
   if (key === 'startTab' && value === undefined) {

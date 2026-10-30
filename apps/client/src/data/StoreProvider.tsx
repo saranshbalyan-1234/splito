@@ -9,6 +9,7 @@ import {StorageNotice} from '#/components/StorageNotice'
 import * as Toast from '#/components/Toast'
 import {perfMark} from '#/lib/perfMark'
 import {resetToRoot} from '#/navigation/ref'
+import {accountName} from '#/state/session'
 import {DemoContext, type DemoModeValue, setDemoProgress} from '#/state/demo'
 import {useDialogStateControlContext} from '#/state/dialogs'
 import {flush, logger, setDiagnosticsEnabled, setTelemetryIdentity} from '#/logger'
@@ -160,7 +161,7 @@ export function StoreProvider({accountId, children, fallback = null}: {accountId
     const ctx = getMutationCtx(accountId)
     const store = await openStore(notices.current, accountStoreName(accountId))
     try {
-      if (ensure) await ensureMe(store, ctx, 'Me')
+      if (ensure) await ensureMe(store, ctx, accountName(accountId))
     } catch (e) {
       void store.close()
       throw e
@@ -193,7 +194,7 @@ export function StoreProvider({accountId, children, fallback = null}: {accountId
         void adopt({...resumed, demo: true})
         closingPrev.current.add(new Promise<void>(resolve => setTimeout(() => void real.store.close().then(resolve, resolve), 300)))
       } else {
-        await ensureMe(real.store, real.ctx, 'Me')
+        await ensureMe(real.store, real.ctx, accountName(accountId))
         // Only ever on the real store, before anything can switch away from (and close) it: erase the rows older builds left in it, once.
         // The old ?demo rows only ever existed in dev and e2e builds; production skips the cleanup and its chunk.
         if ((__DEV__ || process.env.EXPO_PUBLIC_ENV === 'e2e') && !demoOn) await (await loadDemo()).purgeLegacy(real.store)

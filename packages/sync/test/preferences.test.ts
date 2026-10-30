@@ -80,14 +80,15 @@ test('a saved bar naming home (owner 198) or ask (owner 200) reads without them,
   expect(await getPref(s, 'tabs')).toEqual(['groups', 'people', 'analytics'])
 })
 
-test('the default bar gained Settings (owner 206): a saved bar that never was customised gains it, any other choice stays', async () => {
+test('the default bar lost Home and gained Settings (owners 198, 206): the old default bar becomes the new one, any other choice stays', async () => {
   const stored = (id: string, value: unknown) =>
     s.transaction(async tx => tx.put({type: 'preference', id, data: {value}, version: 1, deleted: false, updatedAt: 1}))
-  await stored('tabs', ['people', 'groups', 'analytics', 'activity'])
-  expect(await getPref(s, 'tabs')).toEqual(['people', 'groups', 'analytics', 'activity', 'settings'])
-  // The same four with Home first (the bar before owner 198) is that default too.
+  // Home with the four (the bar before owner 198) was never customised.
   await stored('tabs', ['home', 'people', 'groups', 'analytics', 'activity'])
   expect(await getPref(s, 'tabs')).toEqual(['people', 'groups', 'analytics', 'activity', 'settings'])
+  // Settings taken off the new default stays off: the four alone are a choice, not the old default.
+  await stored('tabs', ['people', 'groups', 'analytics', 'activity'])
+  expect(await getPref(s, 'tabs')).toEqual(['people', 'groups', 'analytics', 'activity'])
   // Customised: another order, fewer tabs or Settings placed elsewhere are left alone.
   await stored('tabs', ['groups', 'people', 'analytics', 'activity'])
   expect(await getPref(s, 'tabs')).toEqual(['groups', 'people', 'analytics', 'activity'])

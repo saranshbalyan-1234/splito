@@ -3,16 +3,17 @@ import {expect, type Page, test} from '@playwright/test'
 import {openDemo} from './openDemo'
 
 /*
- * F-265 (owner 188): the desktop sidebar is as wide as its content needs and its footer links sit directly under
- * the Add expense pill. Checked at 1300, 1440 and 1920 in English and Hindi, with every item in the list (Ask Splito
+ * F-265 (owner 188, footer placement replaced by owner 214): the desktop sidebar is as wide as its content needs; the
+ * logo, items and Add expense pill are one block at the top and the footer links are pinned at the bottom. Checked at 1300, 1440 and 1920 in English and Hindi, with every item in the list (Ask Splito
  * is not an item, owner 200).
  */
 const WIDTHS = [1300, 1440, 1920]
+const HEIGHT = 900
 /* About 200 px in English; the footer row sets it. */
 const TARGET = {min: 196, max: 224}
 
 async function openSidebar(page: Page, width: number, lang: 'en' | 'hi') {
-  await page.setViewportSize({width, height: 900})
+  await page.setViewportSize({width, height: HEIGHT})
   await openDemo(page)
   await page.evaluate(async l => {
     const s = (window as any).splito
@@ -45,12 +46,14 @@ for (const lang of ['en', 'hi'] as const) {
       })
       expect(clipped).toEqual([])
 
-      // The footer starts right under the pill, not at the bottom of the window.
+      // The items and the pill stay at the top; the footer links sit at the bottom of the viewport (owner 214).
       const pill = (await page.getByTestId('sidebar-add').boundingBox())!
       const footer = (await page.getByTestId('nav-footer-links').boundingBox())!
-      const gap = footer.y - (pill.y + pill.height)
-      expect(gap).toBeGreaterThanOrEqual(0)
-      expect(gap).toBeLessThanOrEqual(40)
+      expect(pill.y + pill.height).toBeLessThan(HEIGHT / 2)
+      expect(footer.y).toBeGreaterThan(pill.y + pill.height + 100)
+      expect(HEIGHT - (footer.y + footer.height)).toBeLessThanOrEqual(40)
+      expect(footer.y + footer.height).toBeLessThanOrEqual(HEIGHT)
+      if (lang === 'en' && process.env.SIDEBAR_SHOTS && width !== 1300) await page.screenshot({path: `${process.env.SIDEBAR_SHOTS}/nohome-sidebar-${width}.png`})
 
       // The content column starts where the sidebar ends; nothing overflows sideways.
       const screen = (await page.getByTestId('screen-people').boundingBox())!

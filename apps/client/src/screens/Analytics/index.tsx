@@ -2,11 +2,9 @@ import {View} from 'react-native'
 import {LayoutAnimationConfig} from 'react-native-reanimated'
 import {Deferred} from '#/components/Deferred'
 import {Trans, useLingui} from '@lingui/react/macro'
-import {useNavigation} from '@react-navigation/native'
 import {formatAmount, reportCsv} from '@splito/domain'
 import {type ListedExpense} from '#/data/analyticsQueries'
 
-import {type NavigationProp} from '#/lib/routes/types'
 import {useNumberLocale} from '#/locale/numberLocale'
 import {usePref} from '#/data/hooks'
 import {EmptyState} from '#/view/com/util/EmptyState'
@@ -17,7 +15,6 @@ import {Button, ButtonIcon, ButtonText} from '#/components/Button'
 import {SearchAskButton} from '#/components/SearchAsk/SearchAskButton'
 import {HeaderAvatar} from '#/components/HeaderAvatar'
 import {Download_Stroke2_Corner0_Rounded as DownloadIcon} from '#/components/icons/Download'
-import {PlusLarge_Stroke2_Corner0_Rounded as PlusIcon} from '#/components/icons/Plus'
 import {TimesLarge_Stroke2_Corner0_Rounded as XIcon} from '#/components/icons/Times'
 import * as Layout from '#/components/Layout'
 import {TabScreen} from '#/components/TabScreen'
@@ -51,7 +48,6 @@ const PLACEHOLDER_ROWS = 4
 export function AnalyticsScreen() {
   const {t: l} = useLingui()
   const locale = useNumberLocale()
-  const navigation = useNavigation<NavigationProp>()
   const report = useReport()
   const [view = 'charts', setView] = usePref('analyticsView')
   const isTable = view === 'table'
@@ -96,14 +92,7 @@ export function AnalyticsScreen() {
           testID="analytics-empty"
           illustration="empty-analytics"
           message={l`Your spending shows up here – by month, category, person and group – once you add an expense.`}
-          button={{
-            label: l({message: 'Add expense', context: 'action'}),
-            text: l({message: 'Add expense', context: 'action'}),
-            icon: PlusIcon,
-            onPress: () => navigation.navigate('AddExpense', {}),
-            size: 'small',
-            color: 'secondary',
-          }}
+          /* No button of its own (F-275): the FAB is the one Add expense. */
         />
       ) : (
         <LayoutAnimationConfig skipEntering skipExiting>

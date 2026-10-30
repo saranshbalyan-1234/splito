@@ -130,12 +130,16 @@ function Frame({title, children}: {title: string; children: React.ReactNode}) {
   )
 }
 
+/** Preferences whose feature is not built yet: kept in the registry, never shown as a switch that does nothing. */
+const NOT_BUILT: ReadonlySet<string> = new Set(['notify.payment', 'notify.comments', 'notify.invite', 'privacy.findByContact'])
+
 function Section({group, title}: {group: SettingsSectionId; title: string}) {
   const {t: l} = useLingui()
   const {store, ctx} = useData()
   const haptics = useHaptics()
   const resetPrompt = Prompt.usePromptControl()
-  const keys = prefsIn(group)
+  /* Only what works (F-275): alerts and the directory choice start with sync, so their switches are not drawn. */
+  const keys = prefsIn(group).filter(key => !NOT_BUILT.has(key))
   const controls = keys.flatMap(key => {
     const Control = PREF_CONTROLS[key]
     return Control ? [{key, Control}] : []
@@ -146,14 +150,14 @@ function Section({group, title}: {group: SettingsSectionId; title: string}) {
       {group === 'notifications' && (
         <Notice>
           <Trans>
-            New expense, payment, comment and invite alerts start once sync is
-            on. Reminders work now.
+            Alerts for new expenses, payments, comments and invites come with
+            sync. Reminders work now.
           </Trans>
         </Notice>
       )}
       {group === 'privacy' && (
         <Notice>
-          <Trans>Saved now; applies once the directory is live.</Trans>
+          <Trans>Choosing who can find you comes with sync.</Trans>
         </Notice>
       )}
       {controls.map(({key, Control}, i) => (

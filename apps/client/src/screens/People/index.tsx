@@ -1,4 +1,4 @@
-import {useState} from 'react'
+import {useEffect, useState} from 'react'
 import {LayoutAnimationConfig} from 'react-native-reanimated'
 import {Deferred} from '#/components/Deferred'
 import {Trans, useLingui} from '@lingui/react/macro'
@@ -7,6 +7,7 @@ import {personSummary} from '@splito/domain'
 import {type Group, type Person} from '@splito/sync'
 
 import {type Params, readSort} from '#/lib/links/listState'
+import {perfMark} from '#/lib/perfMark'
 import {type NavigationProp} from '#/lib/routes/types'
 import {useGroupChipNames} from '#/data/groupVisibility'
 import {useHiddenItems, useShowHidden} from '#/data/hiddenItems'
@@ -23,7 +24,6 @@ import {
 import {EmptyState} from '#/view/com/util/EmptyState'
 import {List} from '#/view/com/util/List'
 import {AddExpenseFABInset} from '#/components/AddExpenseFAB'
-import {useSuppressFab} from '#/components/RouteFAB'
 import {useDialogControl} from '#/components/Dialog'
 import {Button, ButtonIcon} from '#/components/Button'
 import {HITSLOP_10} from '#/lib/constants'
@@ -105,6 +105,10 @@ export function PeopleScreen() {
   const filterControl = useDialogControl({url: 'filters'})
 
   const isLoading = !me || !people || !groups || !balanceRows
+  /* The launch budget's end point: People, the start tab, has its figures (the perf specs read the mark; Home used to carry it). */
+  useEffect(() => {
+    if (!isLoading) perfMark('splito:people-ready')
+  }, [isLoading])
   const summaries = balanceRows
     ? personSummary(balanceRows, {includeGroups})
     : []
@@ -129,9 +133,6 @@ export function PeopleScreen() {
   )
   /* Settled up friends leave the list only (owner 90, 112): a search still finds them. */
   const {listed, count: listedCount, total: searchTotal} = searchFriends(filtered, query, filters, seenCurrencies)
-
-  /* The empty state's own buttons are the actions; a FAB would be a third Add. */
-  useSuppressFab(!isLoading && friends.length === 0)
 
   return (
     <TabScreen testID="screen-people">
@@ -271,7 +272,7 @@ export function PeopleScreen() {
                     icon: PersonPlusIcon,
                     onPress: () => navigation.navigate('AddFriend'),
                     size: 'small',
-                    color: 'secondary',
+                    color: 'primary',
                   }}
                 />
               )

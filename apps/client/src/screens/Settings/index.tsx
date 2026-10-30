@@ -182,14 +182,7 @@ function useSectionSummary(): Partial<Record<SettingsSectionId, string>> {
   const tabLabels = useTabLabels()
   const [categories] = usePref('categories')
   const [language = 'en'] = usePref('language')
-  const [notifyComments = true] = usePref('notify.comments')
-  const [notifyPayment = true] = usePref('notify.payment')
-  const [notifyInvite = true] = usePref('notify.invite')
-  const [findable = true] = usePref('privacy.findByContact')
   const visible = (categories ?? []).filter(c => !c.hidden).length
-  const notifyOn = [notifyPayment, notifyComments, notifyInvite].filter(
-    Boolean,
-  ).length
   return {
     appearance: {system: l`System`, light: l`Light`, dark: l`Dark`}[theme],
     /* How many tabs the bottom bar holds, and where the app opens. */
@@ -201,8 +194,6 @@ function useSectionSummary(): Partial<Record<SettingsSectionId, string>> {
     defaults: currency,
     categories: visible === 1 ? l`1 category` : l`${visible} categories`,
     regional: {en: 'English', hi: 'हिन्दी'}[language],
-    notifications: notifyOn === 3 ? l`On` : notifyOn === 0 ? l`Off` : l`Some`,
-    privacy: findable ? l`Findable` : l`Hidden`,
   }
 }
 
