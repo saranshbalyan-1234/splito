@@ -8,6 +8,7 @@ import {takeInitialUrlOnce} from '#/lib/links/incoming'
 import {holdSignedOutLink} from '#/lib/links/intent'
 import {type PublicPage as Page, publicPageFor, publicPath} from '#/lib/links/public'
 import {device} from '#/storage'
+import {markLaunchReady} from '#/components/LaunchScreen'
 import {Outlet as PortalOutlet} from '#/components/Portal'
 import {ToastOutlet} from '#/components/Toast'
 import {Login} from '#/screens/Login'
@@ -26,6 +27,14 @@ const DevBanner = __DEV__ || process.env.EXPO_PUBLIC_ENV === 'e2e' || process.en
 export function LoggedOutShell({children}: {children: React.ReactNode}) {
   const t = useTheme()
   const insets = useSafeAreaInsets()
+  /*
+   * The launch screen waits for `markLaunchReady()`, which `StoreProvider` calls once its store opens. None opens here, so
+   * every screen that can show without one (the intro, Continue, the public pages, the blocking add step, "Logging out" and its
+   * failure, a session that did not restore) ends it as soon as it has painted.
+   */
+  useEffect(() => {
+    markLaunchReady()
+  }, [])
   return (
     <BottomSheetProvider>
       <View testID="logged-out" style={[a.util_screen_outer, a.flex_1, t.atoms.bg, {paddingTop: insets.top, paddingBottom: insets.bottom}]}>

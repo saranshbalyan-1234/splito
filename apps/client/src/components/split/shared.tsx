@@ -156,6 +156,33 @@ export function useErrorText() {
         return l`Round-off can’t be more than one whole unit`
       case 'INVALID_NAME':
         return l`Add a name`
+      case 'ALREADY_OPEN':
+        return l`There is already an open dispute or hold from this person on this`
+      case 'NOT_A_PARTICIPANT':
+        return l`Only someone on this can do that`
+      case 'ALREADY_PARTICIPANT':
+        return l`They are on this already, so they weren’t left out`
+      case 'NOTE_REQUIRED':
+        return l`Add a reason`
+      case 'NOTE_TOO_LONG':
+        return l`That note is too long. Please shorten it.`
+      case 'INVALID_FIX':
+        return l`That change can’t be made to this record`
+      case 'NO_FIX':
+        return l`This dispute proposes no change. Edit the record, or reject it.`
+      case 'OWN_DISPUTE':
+        return l`You can’t answer your own dispute. Withdraw it instead.`
+      case 'NOT_RESOLVER':
+        return l`Only whoever added this, its payer or a group admin can answer`
+      case 'NOT_RAISER':
+        return l`Only the person who raised it can do that`
+      case 'NOT_OPEN':
+      case 'NOT_REJECTED':
+        return l`This was already answered`
+      case 'ADMIN_ONLY':
+        return l`It was reopened once already. A group admin can take it from here.`
+      case 'INVALID_ITEM':
+        return l`That item isn’t on this bill`
       default:
         return l`Something isn’t right. Check the highlighted fields.`
     }

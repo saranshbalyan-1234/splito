@@ -295,7 +295,7 @@ export async function seedDemo(store: Store, ctx: MutationCtx, onProgress?: (don
   return wrote
 }
 
-const ALL_TYPES: EntityType[] = ['person', 'group', 'expense', 'repayment', 'writeoff', 'preference', 'friendRequest', 'inviteLink', 'comment', 'feedback', 'reminder']
+const ALL_TYPES: EntityType[] = ['person', 'group', 'expense', 'repayment', 'writeoff', 'preference', 'friendRequest', 'inviteLink', 'comment', 'feedback', 'reminder', 'dispute']
 
 /**
  * A start with `demo.mode` on: opens the demo database through `open`. When that

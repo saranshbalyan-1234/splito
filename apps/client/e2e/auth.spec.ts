@@ -67,6 +67,32 @@ test.describe('signed out, nothing of the app exists', () => {
   })
 })
 
+test.describe('the launch screen', () => {
+  test('a cold load signed out ends it: #launch is gone and the intro shows', async ({page}) => {
+    await page.goto('/')
+    await expect(page.getByTestId('welcome')).toBeVisible()
+    await expect(page.locator('#launch')).toHaveCount(0, {timeout: 10_000})
+    expect(await databases(page)).toEqual([])
+  })
+
+  test('a cold load on Continue, on a public page and on the blocking add step end it too', async ({page}) => {
+    await toContinue(page)
+    await page.reload()
+    await expect(page.getByTestId('continue-form')).toBeVisible()
+    await expect(page.locator('#launch')).toHaveCount(0, {timeout: 10_000})
+    await page.goto('/settings/about')
+    await expect(page.getByTestId('public-about')).toBeVisible()
+    await expect(page.locator('#launch')).toHaveCount(0, {timeout: 10_000})
+    await page.goto('/')
+    await page.evaluate(() => (window as unknown as {__splitoTest: {seedAccount(a: object): void}}).__splitoTest.seedAccount({name: 'Old', email: 'launch@example.com', password: 'oldpassword1'}))
+    await signInWithPassword(page, 'launch@example.com', 'oldpassword1')
+    await expect(page.getByTestId('add-missing')).toBeVisible()
+    await page.reload()
+    await expect(page.getByTestId('add-missing')).toBeVisible()
+    await expect(page.locator('#launch')).toHaveCount(0, {timeout: 10_000})
+  })
+})
+
 test.describe('the Continue screen', () => {
   test('Apple and Google first by platform, each saying it arrives with sync; no fake success', async ({page}) => {
     await page.setViewportSize(PHONE)

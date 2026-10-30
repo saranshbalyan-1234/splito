@@ -95,8 +95,8 @@ export type FeedRow =
       hasDivider: boolean
     }
 
-/** The Notifications tabs: everything, or only changes by other people (Bluesky's "Mentions" slot). */
-export type FeedFilter = 'all' | 'others'
+/** The Notifications tabs: everything, only changes by other people (Bluesky's "Mentions" slot), or only disputes and holds (F-1210). */
+export type FeedFilter = 'all' | 'others' | 'disputed'
 
 /**
  * The list's rows: the visible changes (newest first) under one header per
@@ -118,6 +118,7 @@ export function buildRows(
   let day: LocalDate | undefined
   for (const event of events) {
     if (filter === 'others' && event.actor === me) continue
+    if (filter === 'disputed' && event.entityType !== 'dispute') continue
     if (hidden.has(event.id)) {
       hiddenCount++
       continue

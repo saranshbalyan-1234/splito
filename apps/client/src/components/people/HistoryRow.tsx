@@ -9,6 +9,7 @@ import {Link} from '#/view/com/util/Link'
 import {PressableWithHover} from '#/view/com/util/PressableWithHover'
 import {atoms as a, useTheme} from '#/alf'
 import {DeletedMeta, useStruck} from '#/components/DeletedMeta'
+import {DisputeBadge} from '#/components/disputes/DisputeBadge'
 import {EntryIcon} from '#/components/people/EntryIcon'
 import {CommentCount} from '#/components/comments/CommentCount'
 import {NeedsAttention} from '#/components/SyncStatus'
@@ -40,6 +41,8 @@ export function HistoryRow({
   onRepaymentPress,
   hideTopBorder = false,
   hide,
+  rowMenu,
+  mark,
 }: {
   /** The first row under a month heading: the heading's rule already separates them. */
   hideTopBorder?: boolean
@@ -61,6 +64,10 @@ export function HistoryRow({
     isHidden: boolean
     wrap: (row: (onLongPress?: () => void) => ReactNode, style: StyleProp<ViewStyle>) => ReactNode
   }
+  /** A live row's Dispute / Put on hold menu (right-click, long press, and a button on wide screens); same shape as `hide`. */
+  rowMenu?: (entry: HistoryEntry, row: (onLongPress?: () => void) => ReactNode, style: StyleProp<ViewStyle>) => ReactNode
+  /** Whether the record has an open dispute or hold (F-1210); the screen reads the open list once and passes each row's. */
+  mark?: 'disputed' | 'hold'
   /** Opens a payment's or a write-off's details (`kind` says which). */
   onRepaymentPress: (
     repayment: Entity<Repayment | WriteOff>,
@@ -188,6 +195,7 @@ export function HistoryRow({
             {byline.join(' · ')}
           </Text>
           <NeedsAttention status={entry.entity.syncStatus} testID={`sync-${entry.entity.id}`} />
+          {mark && !isDeleted ? <DisputeBadge compact kind={mark === 'hold' ? 'hold' : 'dispute'} testID={`history-${entry.entity.id}-${mark}`} /> : null}
           {entry.kind !== 'writeoff' ? (
             <CommentCount targetType={entry.kind} targetId={entry.entity.id} />
           ) : null}
@@ -214,7 +222,7 @@ export function HistoryRow({
   const rowStyle = [
     a.px_lg,
     a.py_md,
-    !hideTopBorder && !hide && [a.border_t, t.atoms.border_contrast_low],
+    !hideTopBorder && !hide && !rowMenu && [a.border_t, t.atoms.border_contrast_low],
     a.transition_color,
   ]
 
@@ -260,6 +268,8 @@ export function HistoryRow({
     <Animated.View {...listAnimations}>
       {hide ? (
         hide.wrap(row, !hideTopBorder && [a.border_t, t.atoms.border_contrast_low])
+      ) : rowMenu ? (
+        rowMenu(entry, row, !hideTopBorder && [a.border_t, t.atoms.border_contrast_low])
       ) : (
         row()
       )}

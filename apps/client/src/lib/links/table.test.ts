@@ -35,6 +35,8 @@ const NOT_ADDRESSABLE: Record<string, string> = {
   'member-exit-sheet': 'needs the member it is about; opened from a member row',
   'remind-sheet': 'needs the expense, person or group it reminds about; opened by the Remind menu item',
   'remind-me-sheet': 'needs the thing it reminds you about; opened by the Remind me menu item',
+  'dispute-sheet': 'needs the record (and item) it is about; opened by the Dispute and Put on hold menu items',
+  'dispute-answer-sheet': 'needs the dispute it answers; opened by Reject and Reopen',
   'select-sheet': 'the generic dropdown of a Select (its options belong to the control that owns it)',
 }
 

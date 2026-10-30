@@ -28,8 +28,10 @@ import {type Entity, type EntityInput, type EntityType, type HistoryRow, type Ou
  * 4: the `reminders` store (Remind nudges and Remind me, F-1118 / F-1119); a deleted expense keeps its
  * `expense_parties` rows (flagged) and its search terms, so lists show deleted items in place (decision 103); the
  * `history.binDays` preference is gone.
+ * 5: the `disputes` store (disputes and holds, F-1210) and the `disputed_balances` / `disputed_pairs` projections
+ * (what part of each balance sits on a disputed or held record, kept in the balance transaction).
  */
-export const SCHEMA_VERSION = 4
+export const SCHEMA_VERSION = 5
 
 export type Scalar = string | number
 export type Key = Scalar[]
@@ -187,6 +189,21 @@ export const STORES = {
       bySyncStatus: ix('syncStatus', 'id'),
     },
   },
+  /*
+   * Disputes and holds (F-1210). `targetType`/`targetId` name the expense, payment or write-off; `status` is
+   * open | accepted | rejected | withdrawn | released | gone. `byTargetStatus` finds a record's open ones (the
+   * badge, the one-open-per-person rule, the projection); `byStatus` lists every open one (the Disputed filter).
+   */
+  disputes: {
+    key: ['id'],
+    columns: {...ENTITY_COLUMNS, targetType: 'text', targetId: 'text', status: 'text', raisedBy: 'text', kind: 'text'},
+    indexes: {
+      byTarget: ix('targetType', 'targetId', 'createdAt', 'id'),
+      byTargetStatus: ix('targetType', 'targetId', 'status', 'id'),
+      byStatus: ix('status', 'updatedAt', 'id'),
+      bySyncStatus: ix('syncStatus', 'id'),
+    },
+  },
   friend_requests: {
     key: ['id'],
     columns: {...ENTITY_COLUMNS, status: 'text', direction: 'text'},
@@ -275,6 +292,22 @@ export const STORES = {
     indexes: {},
   },
   /*
+   * The part of `balances` that sits on records with an open dispute or hold (F-1210, "of which disputed"): the
+   * same cells, summed over only those records (an item dispute counts only that item's portion), kept in the
+   * balance transaction. `count` is how many disputed records make the sum.
+   */
+  disputed_balances: {
+    key: ['personId', 'groupId', 'currency'],
+    columns: {personId: 'text', groupId: 'text', currency: 'text', amount: 'text', count: 'int', updatedAt: 'int'},
+    indexes: {byGroup: ix('groupId', 'currency', 'personId')},
+  },
+  /* What `otherId` owes `personId` on disputed records, per group ('' outside groups) and currency (> 0 they owe). */
+  disputed_pairs: {
+    key: ['personId', 'otherId', 'groupId', 'currency'],
+    columns: {personId: 'text', otherId: 'text', groupId: 'text', currency: 'text', amount: 'text', updatedAt: 'int'},
+    indexes: {},
+  },
+  /*
    * Spending and balance sums per `[currency, month, groupId|'', categoryId, personId, kind]`
    * (the cells of `recordCells`, folded to a month; minor units as decimal strings), kept in the same
    * transaction as `balances`. Analytics reads history-long charts from here. `personId` '' is the
@@ -324,6 +357,7 @@ export const ENTITY_STORE = {
   feedback: 'feedback',
   preference: 'preferences',
   reminder: 'reminders',
+  dispute: 'disputes',
 } as const satisfies Record<EntityType, StoreName>
 
 /** The index names of one entity type's store. */
@@ -386,6 +420,10 @@ const EXTRA: Record<EntityType, (data: unknown) => Row> = {
   comment: data => {
     const d = data as {targetType?: string; targetId?: string} | null
     return {targetType: d?.targetType ?? '', targetId: d?.targetId ?? ''}
+  },
+  dispute: data => {
+    const d = data as {targetType?: string; targetId?: string; status?: string; raisedBy?: string; kind?: string} | null
+    return {targetType: d?.targetType ?? '', targetId: d?.targetId ?? '', status: d?.status ?? '', raisedBy: d?.raisedBy ?? '', kind: d?.kind ?? ''}
   },
   friendRequest: data => {
     const d = data as {status?: string; direction?: string} | null

@@ -65,6 +65,15 @@ them do yet.
     convention), Claude writes it here in the same turn as a dated § 23 lesson or a rule in its section, updates
     BACKLOG when it implies work, commits and pushes, without waiting for the owner to say "add this". Reason:
     owner, 2026-10-30: "make sure you do it yourself always, whenever you think this should be in the app".
+11. **This file learns by itself, performance first** (owner 191). Every performance finding (a measurement that
+    missed or surprised, a root cause, an approach tried and rejected, a review finding, a test-method lesson)
+    becomes, in the same change, a rule in § 17 "Performance rules learned" (what to do, why, the numbers) and a
+    dated § 23 lesson; a rule that a later finding contradicts is rewritten, never left beside it. Enforcement,
+    so it does not depend on memory: `pnpm check` runs `scripts/lessonsGate.ts`, which fails a branch that
+    changes perf specs, the renders baseline or measured numbers in `docs/COMPLETION_MATRIX.md` without also
+    changing § 17 or § 23 here; every builder brief says to record lessons; every Opus review lists findings
+    that should become rules; the repo's `UserPromptSubmit` hook repeats this. Reason: owner, 2026-10-30: "make
+    sure everything we learn from performance captures in architecture"; "that file should be self learning".
 
 ---
 
@@ -385,8 +394,26 @@ All user-facing strings go through Lingui; English default, Hindi second, Englis
 
 ## 8. Launch splash
 
-[Partial] The native splash comes from the `expo-splash-screen` plugin (auto-hide) and web shows a static
-mark in `public/index.html`. `StoreProvider` opens the store before rendering the shell. Not built (A-020):
+[Partial] The native splash comes from the `expo-splash-screen` plugin and web shows the launch mark in
+`public/index.html`. `StoreProvider` opens the store before rendering the shell. [Built] (F-264, owner 185) the
+mark breathes while the store opens, and the launch screen fades out (200 ms) over the first screen:
+
+- **Web:** `#launch` in `index.html` is a fixed overlay beside `#root` (not inside it, so React's first commit does
+  not remove it and the fade shifts nothing); its CSS keyframes (scale 1 -> 1.08 -> 1, 1.2 s, ease-in-out, infinite;
+  `prefers-reduced-motion` gets a 2.4 s opacity pulse) run from first paint, no script. `markLaunchReady()`
+  (`components/LaunchScreen/index.web.tsx`) fades it out and removes it. Dark mode is ALF Dim's background.
+- **iOS / Android:** `index.ts` calls `SplashScreen.preventAutoHideAsync()` at import; `components/LaunchScreen` draws
+  the same PNG as the splash plugin (200 dp, centred in the whole window, not the safe area, white or Dim by the
+  system scheme) and hides the native splash when the image has loaded, then breathes on the UI thread
+  (Reanimated `withRepeat`, `useReducedMotion` -> opacity pulse) until `markLaunchReady()`.
+- **The ready signal** is `StoreProvider`: the store is open, or a storage notice or an open error says it will not
+  be. It is a module call from an effect, so no component re-renders on ready; only the native launch screen
+  re-renders once (to unmount after its fade). Fonts are embedded natively / `font-display: swap` on web and
+  preferences read synchronously, so they need no wait. No cap is built yet (below).
+- Checks: `e2e/launch.spec.ts` (bundle held back by a gate; 390 and 1440, light and dark, reduced motion),
+  `src/alf/splash.test.ts`.
+
+Not built (A-020):
 
 - The splash holds until fonts, preferences and the local store are open and the first People/Groups
   queries have resolved, capped at 8 s; after the cap the app shows anyway.
@@ -574,7 +601,7 @@ with every hot screen reading by index, never by full scan (§ 17 budgets, F-109
 
 - **One store / table per entity type** (IndexedDB object stores and SQLite tables share names and columns):
   `people`, `groups`, `group_members`, `expenses`, `expense_parties`, `repayments`, `writeoffs`, `comments`,
-  `friend_requests`, `invite_links`, `feedback`, `preferences`, plus infrastructure `history`, `outbox`,
+  `friend_requests`, `invite_links`, `feedback`, `preferences`, `reminders`, `disputes`, plus infrastructure `history`, `outbox`,
   `meta`. A new entity type gets its own store and a migration; nothing is "clubbed" into a shared store.
 - **Every row** carries `id` (UUID), `version`, `createdAt` / `updatedAt` (UTC ms), `deleted` (+ `deletedAt`,
   `purgedAt`), and for money rows `currency` + amounts as bigint minor units encoded with the codec (§ 9.3);
@@ -606,13 +633,19 @@ with every hot screen reading by index, never by full scan (§ 17 budgets, F-109
 - **Indexes for every query path** (name them `by<Field>`): people `byName`, `byUpdatedAt`; groups
   `byUpdatedAt`, `byArchived`; group_members `byPerson`; expenses `byGroupDate` `[groupId, date]`, `byDate`,
   `byUpdatedAt`, `byDeleted`; expense_parties `byPersonDate` `[personId, date]`, `byGroupPerson`; repayments and
-  writeoffs `byGroup`, `byFrom`, `byTo`, `byDate`; comments `byTarget` `[targetType, targetId]`; friend_requests
+  writeoffs `byGroup`, `byFrom`, `byTo`, `byDate`; comments `byTarget` `[targetType, targetId]`; disputes `byTarget` `[targetType, targetId]`, `byTargetStatus` `[targetType, targetId, status]` (a record's open ones: the badge, the one-open-per-person rule, the projection) and `byStatus` (every open one: the Disputed filter); friend_requests
   `byStatus`; history `byEntity` `[type, id]` and `byChangedAt`; outbox `opId` (unique), `byStatus`.
 - **Materialised balance projection** `balances` (`[personId, groupId|'', currency]` -> net minor units),
   maintained in the SAME transaction as every money write (expense, repayment, write-off, delete, restore) by
   the sync mutations, so Home, People, Groups and the right column read balances in O(rows shown) instead of
   re-deriving from the whole ledger; a `rebuildProjections()` maintenance routine recomputes it from source rows
   and a test asserts projection == recomputation after random operation sequences.
+- **Disputed projections** `disputed_balances` (`[personId, groupId|'', currency]` -> the part of that net that sits on
+  records with an open dispute or hold, plus a count) and `disputed_pairs` (`[personId, otherId, groupId|'', currency]`
+  -> the same as debts), kept in the SAME transaction as `balances` (F-1210, § 26.20): a dispute opening or closing moves
+  its record's disputed part (an item dispute counts only that item's portion), and a disputed record that is edited or
+  deleted moves it with the record. They never change `balances`; `rebuildProjections()` rebuilds them and the property test
+  compares them with a recomputation after random sequences that raise, answer and delete under disputes.
 - **Reads page by cursor** (`[date, id]` or `[updatedAt, id]`) for every list; selectors never `getAll` a money
   store on a hot path (only maintenance, export and tests may).
   A loop that pages a money store from end to end is a full read and is banned the same way.
@@ -627,7 +660,7 @@ with every hot screen reading by index, never by full scan (§ 17 budgets, F-109
   resolve at query time, so a rename rewrites no terms.
 - **One transaction per mutation** spans the entity, its projections, history and outbox (atomic, § 9.3).
 - **Versioned migrations:** `meta.schemaVersion`; IndexedDB `onupgradeneeded` and SQLite `PRAGMA user_version`
-  run ordered, idempotent steps; v1 -> v2 copies rows from `entities` into the per-type stores, builds
+  run ordered, idempotent steps (v5: the `disputes`, `disputed_balances` and `disputed_pairs` stores; v4 -> v5 adds them empty); v1 -> v2 copies rows from `entities` into the per-type stores, builds
   `group_members`, `expense_parties` and `balances`, then drops `entities`. Each migration has a test that
   loads a v1 fixture (incl. the large demo set) and checks every row and balance survives exactly.
 - **The Store interface stays the boundary** (§ 1): screens and hooks never touch IndexedDB/SQLite directly;
@@ -1019,6 +1052,44 @@ are written; nothing records them automatically (A-037).
 - **Dev-only tools never ship:** the release script refuses to build with any `EXPO_PUBLIC_` debug,
   profiler or override variable set.
 
+
+### 17.1 Performance rules learned (self-updating, owner 191)
+
+Each rule came from a measurement; the dated story is in § 23. Newest first within each group.
+
+- **Measure on the slowest target, on a quiet machine.** Desktop Chrome at 1x hid a 600 ms tab switch that an
+  iPhone felt as 2 s; measure in WebKit (iPhone simulator Safari or Playwright WebKit) and Chrome at 6x CPU, and
+  only at machine load under 10 (at load 25-130 the same test read 2-5x slower and timing tests failed). Name
+  the pair you measured: Groups -> Home was 54 ms while Analytics -> Home was 5.9 s.
+- **The cost of a switch is often the screen you leave, not the one you open.** Popping a list screen ran a
+  Reanimated exit animation per row (a forced layout each), 617 ms at 1x and 5.9 s at 6x. Leaving screens must
+  not run row exit animations; main tabs stay mounted (parked) instead of being torn down (owner 166).
+- **Freezing tricks that break WebKit or Reanimated are out.** `react-freeze` / `freezeOnBlur` on web runs
+  class `componentWillUnmount` and brought the exit animations back (Analytics revisit 500 ms);
+  `content-visibility: hidden` on kept screens was fast in Chrome and showed a blank page in Safari.
+- **Feedback first, work a frame later.** The tab highlight paints in the press-in commit and the page switches
+  a frame later; the bar acts on press-in, not on click (which came ~45 ms after pointerdown, plus Safari's
+  double-tap wait without `touch-action: manipulation`).
+- **Open first, render after, on the real end of the motion.** Heavy bodies mount when the sheet, drawer, popup
+  or screen has finished moving (OpenedContext), not after two frames: before, the drawer menu mounted while the
+  panel was still 310 px off screen. Every opened signal has a timer fallback, so content never waits forever.
+- **A parked or cached screen never reuses a stand-in render.** The screen cache's placeholder (`<View />`)
+  must not be stored as the live descriptor, or a revived tab comes back blank for good.
+- **Hot write paths read nothing they can prove empty.** One indexed dispute read per money write cost ~40 % of
+  the demo seed (about 1,500 creations); a created record cannot have a dispute, so creations skip it.
+- **Growing a window keeps what it read.** A narrowed Activity list that rebuilt from zero five pages at a time
+  read the whole history (10,000 expenses: 20 rebuilds, 23.6 s, then 72 ms per new expense); windows grow
+  incrementally, automatic searching is bounded (about 10 pages, then "Look further back").
+- **Membership checks use a Set.** `read.includes(id)` per event made Mark all read and every rebuild
+  O(events x read); a persisted list of ids is read into a Set once.
+- **Search stays under 50 ms at 10,000 expenses** (`search.test.ts`); the slowest query was `> 1000` (amount
+  range), so amount scans need an index or a bound before the data grows.
+- **The renders baseline is a median, taken after the data has loaded.** Recording the highest of three noisy
+  runs (tabs updates 1,916-3,440) let a doubling pass; the gate waits for an explicit "demo loaded" signal
+  before a phase and records the median of three.
+- **Guards match only what they guard.** A build check that matched `demo-large-` in the start-up bundle failed
+  every Render build silently (§ 23); the Render deploy is checked after every merge, and "no new deploy" counts
+  as a failure.
 ---
 
 ## 18. Accessibility
@@ -1126,6 +1197,14 @@ measures a long task); signed-URL caching for picked files (until attachments ex
 
 Inherited from GameRun (2026-10-26); each holds for Splito's stack:
 
+- 2026-10-30, process: **almost every builder took hours, mostly waiting on each other.** Six to seven builders
+  shared one machine (load 25-130); each ran the full 500+ test e2e itself, several times per round, so every run
+  took 20-30 min instead of ~10, timing tests failed under load and were re-run, and long-lived overlapping
+  branches (Home, taps, Activity, disputes) forced repeated merges of main and conflict rounds; scope added
+  mid-round and a network outage added more. Rules: at most three builders at once; a builder runs only the specs
+  its change touches (plus lint, typecheck, unit tests and the renders gate) and the orchestrator runs the full
+  e2e once per merge, on the merged main; slices are small and merge the same day, in dependency order, so
+  nothing builds on a moving target; perf numbers are taken only at load under 10.
 - A transparent RN `Modal` still swallows taps on iOS; iOS silently refuses a second modal over an open one;
   changing a dialog's `key` is dismiss + present and iOS can drop the present.
 - Yoga `flex: 1` is a 0 basis: text vanishes or wraps one letter per line on iOS/Android while web looks
@@ -1212,11 +1291,10 @@ Splito lessons (add newest last, dated, with PR):
   e2e build on a prod tier: each skipped the first guard. Builds now have explicit kinds, every kind but production is refused on
   a stage/prod tier, and an unset kind means production in an export. A preview build is a real, separate kind with its own
   checks (dev sign-in present, e2e hooks absent), not production with a switch.
-- 2026-10-30, F-250 (merge hazard with F-264, the breathing splash): the splash stays up until `markLaunchReady()` is called, today
-  by `StoreProvider`. With sign-in required the store opens only with a session, so every path that never opens it must call it
-  once it can paint: `LoggedOutApp` (intro, Continue, public pages), `AddMissingContact`, `LoggingOut` (and its failure state), and a
-  session that fails to restore. The merge of F-264 adds those calls and an e2e that cold-loads signed out, sees the intro and
-  checks `#launch` is gone.
+- 2026-10-30, F-250 + F-264 (the breathing splash): the splash stays up until `markLaunchReady()` is called, by `StoreProvider` once its
+  store opens. With sign-in required the store opens only with a session, so every path that never opens it must end the splash
+  itself: `LoggedOutShell` (the intro, Continue, the public pages, the blocking add step, "Logging out" and its failure, a session that
+  did not restore) calls it on mount. `auth.spec` cold-loads signed out and checks `#launch` is gone and the intro shows.
 - 2026-10-30, F-250: **the e2e sign-in is browser state, not per-spec code.** `e2e/globalSignIn.ts` signs the dev account
   in once per config and saves `storageState`, which every context starts from; a signed-out spec opts out with
   `test.use(signedOut)`. Playwright's `FullConfig.rootDir` is the test dir, not the config dir: resolve paths from
@@ -1238,8 +1316,24 @@ Splito lessons (add newest last, dated, with PR):
   Safari's double-tap detection could hold or swallow quick taps. Rule: tap, scroll and gesture work is verified in
   real Mobile Safari (iOS simulator) and with Chrome CPU throttling at 6x before it is called done, every tab
   (Home included) is measured, and no fix is reported as working on phones from desktop numbers alone.
+- 2026-10-30, F-264 (c-splash): **the web launch mark lived inside `#root`, so React's first commit removed it** while
+  the store was still opening and the screen went blank. The launch screen is now a fixed `#launch` overlay beside
+  `#root` that `markLaunchReady()` fades out when `StoreProvider` has a store (or a notice or error). A native splash
+  can only be hidden once, so `preventAutoHideAsync()` runs in the entry and the JS launch screen hides it when its
+  image has loaded. Check the native handover in a release build: a dev client draws its own loading UI over it.
 
 ---
+
+- 2026-10-30, F-1210 (disputes): **adding a store has a checklist, and each step has failed once.** (1) `STORES`, `ENTITY_STORE`, the `EXTRA` row builder and `EntityType`; (2) IndexedDB `onupgradeneeded` creates the new stores on every old-version path (v2, v3 and v4 each need them, before the rebuild reads the entity stores); (3) SQLite's step uses `CREATE ... IF NOT EXISTS` and a lost `user_version` is read from `meta.schemaVersion`; (4) the migration tests' downgrade helpers drop the new tables, and every fixture built from the large demo plan must **exclude the new type** (an older file cannot hold it; keep one fixture with it for the v1 upgrade); (5) the backup test's writer table needs the new type (`satisfies Record<EntityType, ...>` fails the typecheck otherwise).
+- 2026-10-30, F-1210: **a projection that depends on rows of another store is moved from both sides.** The disputed sums change when a dispute opens or closes AND when the record they name is edited or deleted (`projectEntity` handles both; the record's own write takes its disputed part off first, so the delete-then-close order leaves nothing behind). The property test sprinkles disputes over the existing random sequences on a **separate random stream and id minter**, so every existing seed still builds the same ledger; and a twin run without disputes proves balances, pairs and aggregates are identical. A write that mints ids (closing disputes as Gone mints an outbox op id) still shifts later ids: compare groups by creation order, not by id.
+- 2026-10-30, F-1210: **a host-mounted sheet needs a fresh mount and a fresh dialog control per request.** On a phone-width web page (and native) a closed sheet keeps its form state (an old note, `isSaving`), and a control that is still closing ignores `open()`: the second Reject/Reopen opened late or never, with a disabled Save. `DisputeHost` mounts a keyed sheet that owns its control and opens it as it mounts. (Remind's host reuses one sheet; its forms are stateless enough to get away with it.)
+- 2026-10-30, F-1210: **arithmetic on money belongs in `packages/domain`, even a `min` or a sum for a label** (the architecture rules `moneyArithmetic` and `unlikeCurrencySum` fail a new file in the client): the "of which disputed" capping and the Settle exclusion are `domain/disputed.ts` with tests. Raw `store.method()` calls are banned outside `data/` the same way: a `state/` hook calls a `packages/sync` function (`loadDisputeEvents`, `listDisputedBalances`), never `store.historyMany`.
+- 2026-10-30, F-1210: **components cannot import features or data** (`layerDirection`). A piece used by a component (the payment sheet needs the dispute panel) lives in `components/<area>/` and reads through `state/`; only the hosts and sheets that need `data/` stay in `features/`. Count a new `useDialogControl` too: a sheet without an address is listed in `table.test.ts` `NOT_ADDRESSABLE` with its reason.
+- 2026-10-30, F-1210: **Lingui turns a call expression in a message into `{0}`**: assign it to a named variable first (`const ago = getTimeAgo(...)`), so the Hindi translator sees `{ago}`. Do not build a sentence by gluing `": " + note` onto a translated one; show the note as its own line.
+- 2026-10-30, F-1210 e2e: **never `goto` right after a click that writes.** The write is a transaction still in flight; the reload drops it and the next assertion fails (it looked like a missing feature). Wait for the sheet to close or the toast first. A search drawer input also needs `toBeEditable()` before `fill` under load.
+- 2026-10-30, F-1210 review: **a derived adjustment must stay between zero and the thing it adjusts.** The first "leave disputed out of the plan" subtracted the disputed part from every net, which flipped signs on a settled or part-repaid group and asked someone to pay twice for a disputed "payment not received". `withoutDisputed` now shrinks each net toward zero only and rebalances with `allocate`, with a property test (sums to zero, never flips, never grows). Likewise a stored pointer into a list (an item's position) must be the item's own id: reorders and edits moved the dispute onto the wrong item.
+- 2026-10-30, F-1210 review: **an "apply the suggestion" action must never change the shape of the record to fit it.** Converting an itemised or percent split to exact amounts to apply an amount fix lost the items. One tap applies a fix only when the split mode survives it (`fixApplies`); otherwise it is an edit by hand, and the panel says why.
+
 
 ## 24. Checklists
 
@@ -1636,7 +1730,7 @@ labelled sidebar); **wide** = web 1300 px and up (Bluesky `gtTablet`, right colu
   is opened from something other than its own tab or sidebar item (a "See all", an Overview card, a search or Ask
   result, a notification, a deep link), it opens as a pushed page with Back in the header that returns to where the
   person came from (filters from the link applied, e.g. Activity with type=transactions); tapping the tab itself
-  always gives the plain tab screen with the avatar. The FAB follows the header (§ 26.6: Back, so no FAB). One
+  always gives the plain tab screen with the avatar. The pushed copy keeps the FAB and every header action of the tab; only Back replaces the avatar (owner 190). One
   helper decides (the link resolver / `tabLink()`), not each screen. *Why:* "even if you go to a main screen from
   some links, it should show a back button, in case you don't go directly from tabs".
 - **Every page has a fixed parent, so Back always goes somewhere specific** (owner 184): with history, Back
@@ -1653,8 +1747,10 @@ labelled sidebar); **wide** = web 1300 px and up (Bluesky `gtTablet`, right colu
   should be some specific set of back for sure, for example if I open Appearance in Settings, the flow is from
   Settings to Appearance".
 - **Pushed pages** (Person, Group, Settle, Expense, Profile, Settings and its sections, Add friend, Create
-  group) show Back in the header; top-level pages (People, Groups, Analytics, Activity) show the avatar. This
-  one distinction also decides the FAB (§ 26.6).
+  group) show Back in the header; top-level pages (Home, People, Groups, Analytics, Activity) show the avatar.
+  **A main screen opened from a link is the same screen as its tab; the only difference is Back in place of the
+  avatar** (owner 190): same header actions, same FAB, same filters, layout and content. The FAB follows § 26.6,
+  not the Back state. *Why:* "the only diff should be whether back button is visible or not".
 - **The logo returns home and is inactive on home** (spec).
 - **Page background (`html`/`body` on web) always follows the active theme** (no black band under Dim
   content).
@@ -1712,7 +1808,8 @@ Bluesky's `LeftNav`, copied as closely as possible. *Why:* "you need to improve 
 good"; "the left sidebar looks bad on desktop". *Where:* `view/shell/desktop/LeftNav.tsx`.
 
 - **It holds:** the logo mark, the shared nav items (§ 26.3), the "Add expense" pill, and the shared footer
-  links pinned at the bottom (Feedback · Help · Privacy · About; same component as the drawer). No avatar or
+  links (Feedback · Help · Privacy · About; same component as the drawer) directly under the pill, not pinned to
+  the bottom of the window (owner 188). No avatar or
   `ProfileCard`, no "Splito" wordmark, no recent groups or transactions (those live in the right column,
   § 26.17). *Why:* "remove the avatar from sidebar"; "remove label from logo".
 - **Logo:** the mark only (§ 26.11), 40 px, horizontally centred in the sidebar column, 12 px (space.md) below the
@@ -1723,22 +1820,30 @@ good"; "the left sidebar looks bad on desktop". *Where:* `view/shell/desktop/Lef
   sliding active indicator (§ 26.9) sits beside the active item.
 - **Add expense:** Bluesky `ComposeBtn` as a large full-width pill with a plus icon; it opens the Add expense
   popup (§ 26.8). *Why:* "go with what Bluesky had".
-- **Geometry:** widths and paddings from Bluesky's `LEFT_NAV_STANDARD_WIDTH` / `LEFT_NAV_MINIMAL_WIDTH`;
-  hairline right border; sticky full height; scrolls on its own when tall.
+- **Compact, no space it does not need** (owner 188): the sidebar is as wide as its content needs (icon,
+  label, padding; one constant, 216 px, set by the footer row in English and fitting Hindi's longest label; a language that
+  needs more raises that one number), so the content starts sooner; the
+  logo, items, pill and footer links form one block at the top with no dead band between them, and nothing is
+  pinned to the bottom. Hairline right border; sticky full height; scrolls on its own when tall. Phone and rail
+  layouts are unchanged. *Why:* "on desktop there is a lot of space we don't need there in sidebar".
 - **Rail (800-999 px):** Bluesky minimal mode: mark, icons only, round compose button.
 
 ### 26.6 FAB
 
-- **The Bluesky FAB shows only at phone widths, and only on screens whose header has no Back** (People,
-  Groups, Analytics, Activity). It is hidden on every pushed page (Profile and Settings included), while a
-  sheet is open, while the keyboard shows, and on onboarding (§ 3's suppression list). Rail and desktop have
-  no FAB; the sidebar pill adds expenses there. *Why:* "fab icon to show everywhere on the screen from nav
-  bar, basically if back button is not there show it"; "home and activity also should show the fab"; "the fab
-  icon should not be visible on desktop as we have it on sidebar".
-- **Decided once, in the shell, from the header's left-slot state** (no per-screen flags). It keeps Bluesky's
+- **The Bluesky FAB shows at phone widths on every screen where you would add an expense** (owner 190): the
+  main tabs (Home, People, Groups, Analytics, Activity) **and their pushed copies opened from a link** (Back
+  replaces only the avatar; the FAB, header actions such as Search & Ask, Filters, Add friend and the gear, and
+  every other control stay exactly as on the tab), the Person page (Add expense pre-selects that friend) and the
+  Group page (pre-selects that group). It is hidden where adding an expense makes no sense: Settings and its
+  sections, Profile, Expense and payment detail, forms and the composer, while a sheet is open, while the
+  keyboard shows, and on onboarding (§ 3's suppression list). Rail and desktop have no FAB; the sidebar pill adds
+  expenses there. *Why:* "fab icon to show everywhere on the screen from nav bar"; "home and activity also should
+  show the fab"; "the fab icon should not be visible on desktop as we have it on sidebar"; "all the + buttons or
+  anything should be there" (replaces "if back button is not there show it").
+- **Decided once, in the shell, from the route** (a small allow-list of route names, pushed copies included; no per-screen flags). It keeps Bluesky's
   stays in place while scrolling (owner 87), and lists pad their bottom by the FAB clearance.
-- **Tapping it opens Add expense as a bottom sheet** (§ 26.8). On a Group page (pushed, no FAB) "Add expense"
-  lives in the body and pre-selects the group. *Why:* "use the same flow of that FAB icon".
+- **Tapping it opens Add expense as a bottom sheet** (§ 26.8). On a Group or Person page it pre-selects that group or
+  friend; wide screens, which have no FAB, keep the body's "Add expense". *Why:* "use the same flow of that FAB icon".
 - *Where:* `components/AddExpenseFAB.tsx`, `view/com/util/fab/`.
 
 ### 26.7 Drawer (side drawer)
@@ -1910,6 +2015,18 @@ pages". § 17 holds the engineering rules that meet these budgets.
   regression over 10 % against the main line; Opus reviews check new code for extra store reads, re-renders,
   unbounded lists and JS-thread animation. Numbers go in `docs/COMPLETION_MATRIX.md`. *Why:* "keep performance in
   mind, it should be lightning fast, no delays in rendering anywhere".
+- **Fast everywhere, proven per screen on the slowest target** (owner 189): every screen and every
+  interaction meets the budgets above, not only the ones someone reported: opening and closing each screen and
+  pushed page (Person, Group, Expense, Settle, Settings and each section, Profile, Friends and invites, Search &
+  Ask), every tab and revisit, every sheet, popup, menu and picker, the drawer, scrolling every list, typing in
+  every field and search, saving, deleting, filtering, switching demo mode, and the first load. The proof is a
+  perf sweep spec that walks every route in the link table and every interaction, measured in WebKit (the iPhone
+  simulator's Safari or Playwright WebKit) and in Chrome at 6x CPU throttle, on the large demo set and the
+  10,000-expense fixture, on a quiet machine (load under 10, or the numbers are not used): tap to visible
+  feedback < 100 ms, tap to content < 200 ms at 6x, no long task > 50 ms, no exit animation on rows of a screen
+  that is leaving. A miss is fixed at its cause before the wave closes; the per-screen table lives in
+  `docs/COMPLETION_MATRIX.md`, and a new screen or interaction joins the sweep in the same change. *Why:* "did it
+  fix the performance everywhere, not just the taps"; "it should be everywhere".
 - **Animation on every surface, UI thread only** (Reanimated worklets, no JS loops): native stack push/pop and
   swipe-back; sheets and popups; list rows enter/exit/reorder (`LinearTransition` / `FadeInDown`); press
   feedback (`PressableScale`) on every tappable row, card and button; tab switches (§ 26.9); expanding search;
@@ -2542,10 +2659,15 @@ add anyway (only for you)"; "also i should be able to select from contacts". *Wh
     refund", "need the receipt") pauses a record that is not wrong yet; any participant may release it in one
     tap. Disputes and holds share the badge, the sub-total and the settle rule below.
   - **States:** Open, then exactly one of Accepted (the fix was applied: one tap applies the proposed fix as a
-    normal edit with history, or the resolver edits by hand), Rejected (reason required), Withdrawn (by the
+    normal edit with history, or the resolver edits by hand; **one tap only when the fix keeps the record's split mode:** an
+    amount fix scales an equal, percent, shares or adjusted split, a share fix needs an exact split, a payer fix never touches
+    the split, a duplicate or an unreceived payment is deleted; an amount fix on an itemised or exact split, or a share fix on
+    anything but an exact split, is not offered as one tap, only "Edit it", with a line saying why, and where one tap is offered
+    the panel says what the edit will change), Rejected (reason required), Withdrawn (by the
     person who raised it) or Gone (the record was deleted). After a rejection the raiser may reopen once with a
-    new note; after that only a group admin can close it. Editing a disputed record asks the editor "Does this
-    resolve <name>'s dispute?". **Who resolves:** the person who added the record, or its payer, or a group
+    new note; after that only a group admin answers it (accepts, rejects or reopens it): the adder and payer already said
+    no once. A record outside a group has no admin, so its adder or payer still answers a reopened dispute and a second
+    reopen is refused. Editing a disputed record asks the editor "Does this resolve <name>'s dispute?". **Who resolves:** the person who added the record, or its payer, or a group
     admin (also when the adder has left). Nobody resolves their own dispute except by withdrawing.
   - **Money: a disputed or held record still counts; it does not wait.** Balances, totals, the overview, charts
     and exports keep counting it as recorded, because the record stands until someone changes it, and a dispute
@@ -2555,6 +2677,12 @@ add anyway (only for you)"; "also i should be able to select from contacts". *Wh
     colour alone), and **Settle up leaves disputed and held amounts out of the plan by default**, says so
     ("₹400 disputed, not in this plan") and offers "Include disputed" (remembered per group,
     `group:settleIncludeDisputed`, default off), so nobody pays or chases money that is being questioned.
+    What "left out" means: per person and currency the net only shrinks toward zero by their disputed part, never flips or grows
+    (a settled group stays settled, a part-repaid balance loses at most what is still owed, a disputed "payment not received"
+    never asks anyone to pay twice), and the other side is scaled back so each currency still sums to zero; the amount stated is
+    what was actually removed. A friend's Settle up and Call it even do the same: the prefill and the write-off leave the disputed
+    part out unless "Include disputed" is on there. Item disputes name the item by its own id, so reordering a bill moves
+    nothing, and an edit that removes the item counts nothing for it and closes the dispute as Gone.
     Accepting a fix changes the balance through the edit; rejecting it changes nothing. A dispute on a record
     before a settle-up checkpoint (F-1205) shows as "Adjustment after settle-up" when accepted.
   - **Where it shows:** raising and resolving each post a system line into the record's comment thread (the
@@ -2572,6 +2700,41 @@ add anyway (only for you)"; "also i should be able to select from contacts". *Wh
     two-sided with sync (F-2208). Demo data carries every state (owner 109).
   *Why:* "add an option for disputes as well, think about it properly"; "should we calculate disputed expense
   or wait until they are resolved".
+
+  - **[Built] (F-1210, 2026-10-30)** `packages/sync/src/disputes.ts` (mutations `dispute.raise|hold|release|accept|reject|withdraw|
+    reopen|gone`, each a versioned write with history and an outbox op; accept with `apply` runs the fix through `updateExpense`
+    in the same transaction; `updateExpenseResolving` saves an edit and accepts in one), `packages/domain/src/permissions.ts`
+    (`canDispute`, `canResolveDispute`: the raiser, or whoever recorded it for them, may only withdraw or reopen; the adder, a
+    payer or an admin answer; a second reopen is admin only) and `disputed.ts` (the "of which" and Settle arithmetic).
+    Client: `components/disputes/` (badge, "of which disputed" line, panel, thread line, row menu items), `features/disputes/`
+    (`DisputeHost` at the app root with the raise/hold sheet and the reject/reopen note sheet), `state/disputes.ts` (reads and
+    writes), `lib/disputes/bus.ts`. A hold's reason is free text (required); a dispute's `other` needs a note. A proposed fix
+    exists for amount, share, payer and duplicate; "Payment not received" applies by deleting the payment; accepting without a fix
+    only records that the resolver agreed. A deleted record closes its open disputes as Gone in the deleting transaction
+    (`write()` does it for every path, a group delete included).
+  - Where it shows: Expense and Payment pages (badge, panel, thread lines), history rows (badge; right-click, long-press or a
+    "..." button on wide screens opens Dispute / Put on hold), an itemised bill's items ("Dispute my portion"), Person and Group
+    balances ("of which ₹400 disputed", per currency, pointing the way the balance does and never above it), Settle up (disputed
+    and held amounts left out by default with the amount stated, "Include disputed" remembered per group in
+    `group:settleIncludeDisputed`, a new plan hash on every raise, accept and release), the edit prompt "Does this resolve
+    <name>'s dispute?", Activity (a Disputed tab, `/activity/disputed`, and rows for raised, held, answered, reopened, released,
+    withdrawn; Gone is the delete's own row), "Disputed only" in the Group and Person filter sheets (the page's own choice,
+    not in the address yet), Search (`status: disputed`, alone or with words), and a Dispute column in the CSV statement.
+  - **Not built (why):** the For you card's "Needs your answer" and its 3-day nudge (the card, F-230, is not built and Home is
+    being redesigned: `useOpenDisputes()` in `state/disputes.ts` is the read it needs); "Adjustment after settle-up" (needs the
+    F-1205 checkpoints); "of which disputed" on the Home overview cards (another builder owns them: follow-up note in
+    BACKLOG F-1210); the Disputed filter in the address (F-241).
+  - *Reads/writes*: stores `disputes`, `disputed_balances`, `disputed_pairs`; reads `byTargetStatus` (a record), `byStatus` (all open,
+    one projection for every list and badge), `byTarget` (a record's history), `disputedBalances`, `disputedPairs`; outbox op types
+    `dispute.raise`, `dispute.hold`, `dispute.release`, `dispute.accept`, `dispute.reject`, `dispute.withdraw`, `dispute.reopen`,
+    `dispute.gone`; no server routes yet.
+  - *Cost*: raising is one transaction (the dispute, its history row, one outbox op, plus the disputed sums of one record: two index
+    reads and a few row writes). Every money write adds one indexed read of the record's open disputes. Lists read the open
+    disputes once, not per row. No timers, no dependencies; one bundled sheet host at the root.
+  - *Telemetry*: none added (no new metric name).
+  - *Checks*: bun `permissions.test.ts`, `disputed.test.ts`, `disputes.test.ts` (both engines), `ledgerProjection.property.test.ts`
+    ("never move a balance" with disputes riding on their own random stream), `migrate.test.ts` (v4 -> v5 on both engines and the
+    large set), `demoCoverage.test.ts` (13 lines); Playwright `disputes.spec.ts` at 390 and 1440. iOS and Android: not yet.
 
 - **Notifications: one switch for money, one for comments** (owner 131; built with F-251). Settings >
   Notifications has "Payments" (one switch for both new expenses that include me and payments to or from me;
@@ -2816,6 +2979,11 @@ Every owner decision, in the order it was made (all 2026-10-26). "Replaced" name
 | 184 | "there should be some specific set of back for sure, for example if i open appearance in settings, the flow is from settings to appearance" | Every page has a fixed parent; Back with no history goes to it (parents stacked); a main tab opened from a link keeps Back after refresh via `from` in the address | § 26.3 | Assistant ruling: a refreshed pushed copy became the plain tab; parents only for a few routes |
 | 185 | "also animate the splash screen icon, so that i see that its loading"; "like zoomin zoomout a little, so i know content is being downloaded" | Launch mark zooms 1 -> 1.08 -> 1 while loading, web from first paint (inline CSS), native via a matching JS launch screen; opacity pulse under reduced motion | § 26.11 | Static splash mark |
 | 186 | "when logout, it should remove all data from db" | Log out always erases the account's local DB, demo DB, account prefs, drafts, session and caches; device language/theme stay; prompt warns with the unsynced count first; no keep option | § 26.15 | Prompt offered "Keep this device's data" / "Erase this device's data" |
+| 187 | Assistant ruling after the F-1210 review | After one reopen only a group admin accepts or rejects (outside a group the adder or payer still answers and a second reopen is refused); one-tap "Accept and apply" only when the fix keeps the record's split mode (an amount fix on an itemised or exact split and a share fix on anything but an exact split are "Edit it" only, with the reason shown), and the panel states what the edit will change | § 26.20 | Admin-only closing after the first reopen without saying who answers it; one-tap fixes that converted a split to exact amounts |
+| 188 | "on desktop there is a lot of space we dont need ... there in sidebar" | Desktop sidebar fits its content (~200 px), footer links directly under Add expense, nothing pinned to the bottom | § 26.5 | Bluesky standard width; footer pinned at the bottom of the window |
+| 189 | "did it fix the performace everywhere, not just the taps"; "it should be everywhere" | Every screen and interaction meets the speed budgets, proven by a perf sweep over every route and interaction in WebKit and Chrome 6x on a quiet machine; misses fixed before the wave closes | § 26.10 | Budgets checked on a few flows and on reported problems |
+| 190 | "all the + buttons or anything should be there"; "the only diff should be whether back button is visible or not" (a main screen opened from a link) | Pushed copies keep the FAB and every header action; FAB also on Person and Group pages (pre-selecting); hidden only on Settings, Profile, detail, forms, sheets, keyboard, onboarding | § 26.6, § 26.3 | FAB only where the header had no Back; pushed copies had no FAB |
+| 191 | "make sure everything we learn from performace captures in architecture"; "that file should be self learning" | Every perf finding becomes a § 17.1 rule plus a § 23 lesson in the same change; `scripts/lessonsGate.ts` in `pnpm check` fails a branch that changes perf specs, the renders baseline or measured numbers without touching § 17/§ 23; briefs, reviews and the prompt hook repeat it | § 0 rule 11, § 17.1 | Lessons recorded when remembered (§ 0 rule 10) |
 
 New decisions follow § 0 rule 9: rewrite the rule in its topic so only the current truth remains, then add a
 row here.

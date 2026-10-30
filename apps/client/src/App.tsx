@@ -14,12 +14,14 @@ import {useAccentThemes} from '#/state/theme'
 import {ThemeProvider as Alf} from '#/alf'
 import {useColorModeTheme} from '#/alf/util/useColorModeTheme'
 import {GestureRoot} from '#/components/GestureRoot'
+import {LaunchScreen} from '#/components/LaunchScreen'
 import {Provider as PortalProvider} from '#/components/Portal'
 import {LegacyDataOffer} from '#/features/account/LegacyDataOffer'
 import {LoggingOut} from '#/features/account/LoggingOut'
 import {LogOutHost} from '#/features/account/LogOutPrompt'
 import {LinkHost} from '#/features/links/LinkHost'
 import {PwaHost} from '#/features/pwa/PwaHost'
+import {DisputeHost} from '#/features/disputes/DisputeHost'
 import {RemindHost} from '#/features/remind/RemindHost'
 import {ToastOutlet} from '#/components/Toast'
 import {StoreProvider} from '#/data/StoreProvider'
@@ -62,6 +64,7 @@ function SignedInApp({accountId}: {accountId: string}) {
       {/* RemindHost and LinkHost sit above the Shell, outside its BottomSheetProvider: their sheets need a portal of their own on native. */}
       <BottomSheetProvider>
         <RemindHost />
+        <DisputeHost />
         <LinkHost />
         <LegacyDataOffer />
         <LogOutHost />
@@ -89,6 +92,8 @@ function Themed() {
         <DialogStateProvider>
           <ShellStateProvider>
             <AuthGate />
+            {/* Outside the gate: it shows while the store opens, then fades out over the first screen; the paths where no store opens call `markLaunchReady()` themselves. */}
+            <LaunchScreen />
           </ShellStateProvider>
         </DialogStateProvider>
       </PortalProvider>

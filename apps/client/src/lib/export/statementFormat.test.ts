@@ -63,3 +63,21 @@ test('HTML: one table per currency, closing balance, and every cell escaped', ()
   expect(html).toContain('You are owed')
   expect(statementHtml(buildStatement([], 'me', {}), text, page, 'en-IN')).toContain('Nothing in this range.')
 })
+
+test('CSV: the dispute column is last, says Disputed or On hold for a marked record and is empty elsewhere (F-1210)', () => {
+  const st = buildStatement([expense('a', 'Lunch'), expense('b', 'Taxi'), expense('c', 'Tea')], 'me', {})
+  const withDispute: StatementText = {
+    ...text,
+    columns: {...text.columns, dispute: 'Dispute'},
+    dispute: row => ({a: 'Disputed', b: 'On hold'})[row.id as 'a' | 'b'] ?? '',
+  }
+  const lines = statementCsv(st, withDispute).trim().split('\r\n')
+  expect(lines[0]).toBe('Date,Type,Description,Group,Currency,Amount,Paid by,You paid,Your share,Effect,Balance,Location,Dispute')
+  expect(lines[1]!.endsWith(',5.00,,Disputed')).toBe(true)
+  expect(lines[2]!.endsWith(',10.00,,On hold')).toBe(true)
+  expect(lines[3]!.endsWith(',15.00,,')).toBe(true)
+  // The closing row keeps the same number of cells.
+  expect(lines.at(-1)!.split(',').length).toBe(13)
+  // Without the column nothing changes.
+  expect(statementCsv(st, text).split('\r\n')[0]).toBe('Date,Type,Description,Group,Currency,Amount,Paid by,You paid,Your share,Effect,Balance,Location')
+})
