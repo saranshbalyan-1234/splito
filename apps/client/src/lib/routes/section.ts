@@ -2,6 +2,13 @@ import {type State} from '#/lib/routes/types'
 
 /* The sidebar / bottom-bar item each route belongs to. */
 const SECTION: Record<string, string> = {
+  Home: 'Home',
+  /* Native's pushed copies of the main screens (owner 179) light the same drawer row as the tab. */
+  PushedHome: 'Home',
+  PushedPeople: 'People',
+  PushedGroups: 'Groups',
+  PushedAnalytics: 'Analytics',
+  PushedActivity: 'Activity',
   People: 'People',
   Person: 'People',
   AddFriend: 'People',
@@ -37,5 +44,5 @@ export function currentSection(
     const section = SECTION[routes[i]!.name]
     if (section && (!among || among.includes(section))) return section
   }
-  return among?.[0] ?? 'People'
+  return among?.[0] ?? 'Home'
 }

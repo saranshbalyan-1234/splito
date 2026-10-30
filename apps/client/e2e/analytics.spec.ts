@@ -278,12 +278,12 @@ test('this year: totals, every chart label, the list and the CSV agree', async (
   )
   expect(readFileSync((await download.path())!, 'utf8')).toBe(
     '﻿' +
-      'Date,Description,Category,Group,Currency,Total,You paid,Your share\r\n' +
-      `2026-10-22,"'=HYPERLINK(""http://x"")",Other,,INR,200.00,0.00,100.00\r\n` +
-      '2026-10-20,Hotel,Stay,Goa,INR,6000.00,0.00,3000.00\r\n' +
-      '2026-10-12,Cab,Transport,Goa,INR,900.00,0.00,300.00\r\n' +
-      '2026-10-05,Dinner,Food,,INR,1500.00,1500.00,500.00\r\n' +
-      '2026-09-28,Groceries,Groceries,,INR,800.00,800.00,400.00\r\n',
+      'Date,Description,Category,Group,Currency,Total,You paid,Your share,Location\r\n' +
+      `2026-10-22,"'=HYPERLINK(""http://x"")",Other,,INR,200.00,0.00,100.00,\r\n` +
+      '2026-10-20,Hotel,Stay,Goa,INR,6000.00,0.00,3000.00,\r\n' +
+      '2026-10-12,Cab,Transport,Goa,INR,900.00,0.00,300.00,\r\n' +
+      '2026-10-05,Dinner,Food,,INR,1500.00,1500.00,500.00,\r\n' +
+      '2026-09-28,Groceries,Groceries,,INR,800.00,800.00,400.00,\r\n',
   )
 
   const words = new Set((await page.locator('body').innerText()).split(/\s+/))
@@ -466,8 +466,8 @@ test('scope: one chip names what is counted; the checklist applies only on Apply
       .split('\r\n')
       .slice(1),
   ).toEqual([
-    '2026-10-20,Hotel,Stay,Goa,INR,6000.00,0.00,3000.00',
-    '2026-10-12,Cab,Transport,Goa,INR,900.00,0.00,300.00',
+    '2026-10-20,Hotel,Stay,Goa,INR,6000.00,0.00,3000.00,',
+    '2026-10-12,Cab,Transport,Goa,INR,900.00,0.00,300.00,',
   ])
 
   /* Remembered on this device. */

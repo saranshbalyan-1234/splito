@@ -14,12 +14,15 @@ import {
 } from '@splito/sync'
 
 import {type AllNavigatorParams, type NavigationProp} from '#/lib/routes/types'
+import {realParentsFor} from '#/navigation/goBack'
+import {useRealParents} from '#/navigation/realParents'
 import {useNumberLocale} from '#/locale/numberLocale'
 import {useFormatDay, useTimeZone} from '#/locale/useDates'
 import {
   useEntities,
   useEntity,
   useHistory,
+  useMe,
   useMutationCtx,
   useStore,
 } from '#/data/hooks'
@@ -41,11 +44,17 @@ import {
   useDisplayName,
   useErrorText,
 } from '#/components/split/shared'
-import {ReceiptIcon} from '#/components/split/icons'
 import * as Toast from '#/components/Toast'
 import {Text} from '#/components/Typography'
 import {SyncStatusLine} from '#/components/SyncStatus'
 import {SyncToned} from '#/components/SyncTone'
+import {DisputeLine, isDisputeLine} from '#/components/disputes/DisputeLine'
+import {DisputePanel} from '#/components/disputes/DisputePanel'
+import {RecordMenuItems} from '#/components/disputes/RecordMenuItems'
+import {markOf, useDisputeEvents, useOpenDisputes} from '#/state/disputes'
+import {DisputeBadge} from '#/components/disputes/DisputeBadge'
+import {DotGrid3x1_Stroke2_Corner0_Rounded as DotsIcon} from '#/components/icons/DotGrid'
+import * as Menu from '#/components/Menu'
 
 /**
  * One recorded payment: who paid whom, how much, when and where, and the
@@ -59,6 +68,13 @@ export function RepaymentScreen() {
   const navigation = useNavigation<NavigationProp>()
   const payment = useEntity<Repayment>('repayment', params.repaymentId)
   const history = useHistory('repayment', params.repaymentId)
+  const me = useMe()
+  /* Opened cold (a refresh), Back climbs to the payment's group, else the friend it is with (owner 184). */
+  useRealParents(
+    payment && me
+      ? realParentsFor({groupId: payment.data.groupId, others: [payment.data.from, payment.data.to].filter(id => id !== me.id)})
+      : undefined,
+  )
 
   return (
     <Layout.Screen testID="screen-repayment">
@@ -69,12 +85,38 @@ export function RepaymentScreen() {
             <Trans>Payment</Trans>
           </Layout.Header.TitleText>
         </Layout.Header.Content>
-        <Layout.Header.Slot />
+        {payment && !payment.deleted ? (
+          <Menu.Root>
+            <Menu.Trigger label={l`Payment options`}>
+              {({props}) => (
+                <Layout.Header.Slot>
+                  <Button
+                    {...props}
+                    testID="repayment-menu"
+                    label={props.accessibilityLabel}
+                    size="small"
+                    color="secondary"
+                    variant="ghost"
+                    shape="round">
+                    <ButtonIcon icon={DotsIcon} size="lg" />
+                  </Button>
+                </Layout.Header.Slot>
+              )}
+            </Menu.Trigger>
+            <Menu.Outer>
+              <Menu.Group>
+                <RecordMenuItems targetType="repayment" targetId={payment.id} />
+              </Menu.Group>
+            </Menu.Outer>
+          </Menu.Root>
+        ) : (
+          <Layout.Header.Slot />
+        )}
       </Layout.Header.Outer>
       {payment === undefined || !history ? null : payment === null ? (
         <EmptyState
           testID="repayment-not-found"
-          icon={ReceiptIcon}
+          illustration="empty-activity"
           message={l`This payment doesn’t exist. The link may be wrong.`}
           button={{
             label: l`Go to People`,
@@ -122,7 +164,7 @@ function Detail({
         : l`${name(from)} paid ${name(to)}`
 
   /* A payment is never edited: a version is its recording, a delete or a restore. */
-  const lines = history.map((row, i) => ({
+  const historyLines = history.map((row, i) => ({
     key: `history:${row.version}`,
     at: row.at,
     kind:
@@ -133,6 +175,9 @@ function Detail({
           : ('restored' as const),
     actor: row.actor,
   }))
+  const lines = [...historyLines, ...useDisputeEvents('repayment', payment.id)]
+  const open = useOpenDisputes()
+  const mark = markOf(open, 'repayment', payment.id)
   const lineText = (kind: 'created' | 'deleted' | 'restored', who: string) =>
     ({
       created: l`${who} recorded this payment`,
@@ -182,6 +227,8 @@ function Detail({
         />
         {note ? <Row label={l`Note`} value={note} /> : null}
       </View>
+      {mark && !payment.deleted ? <DisputeBadge kind={mark === 'hold' ? 'hold' : 'dispute'} testID="repayment-disputed" /> : null}
+      <DisputePanel targetType="repayment" targetId={payment.id} currency={currency} inset={false} />
       <SyncStatusLine row={payment} testID="repayment-sync-status" />
       <Text style={[a.text_sm, a.leading_snug, t.atoms.text_contrast_medium]}>
         <Trans>A record of money that changed hands outside Splito.</Trans>
@@ -235,7 +282,10 @@ function Detail({
       </SectionLabel>
       <DiscussionTimeline
         lines={lines}
-        renderLine={line => (
+        renderLine={line =>
+          isDisputeLine(line) ? (
+            <DisputeLine event={line} />
+          ) : (
           <View
             testID={`history-${line.kind}`}
             style={[
@@ -274,7 +324,8 @@ function Detail({
               </Text>
             </Text>
           </View>
-        )}
+          )
+        }
       />
     </>
   )

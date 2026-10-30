@@ -9,7 +9,7 @@ import {
   View,
   type ViewStyle,
 } from 'react-native'
-import {CommonActions, StackActions} from '@react-navigation/native'
+import {StackActions} from '@react-navigation/native'
 
 import {
   type DebouncedNavigationProp,
@@ -18,7 +18,7 @@ import {
 import {IS_WEB} from '#/env'
 import {openExternal} from '#/lib/openExternal'
 import {createPressInGate, isPlainPrimaryPress} from '#/lib/hooks/pressIn'
-import {getTabState, tabLink, TabState} from '#/lib/routes/helpers'
+import {getTabState, originTab, pushedCopyOf, tabLink, TabState} from '#/lib/routes/helpers'
 import {WebAuxClickWrapper} from '#/view/com/util/WebAuxClickWrapper'
 import {useTheme} from '#/alf'
 import {Text} from '#/components/Typography'
@@ -228,22 +228,22 @@ function onPressInner(
       void openExternal(href)
     } else {
       const [routeName, params] = router.matchPath(href)
-      const tab = navigationAction === 'push' ? tabLink(routeName, params, IS_WEB) : null
+      const tab = navigationAction === 'push' ? tabLink(routeName, params, IS_WEB, originTab(navigation.getState())) : null
       if (tab) {
-        navigation.dispatch(
-          tab.kind === 'popTo'
-            ? StackActions.popTo(tab.name, tab.params)
-            : CommonActions.navigate(tab.name, tab.params),
-        )
+        navigation.dispatch(StackActions.push(tab.name, tab.params))
       } else if (navigationAction === 'push') {
         navigation.dispatch(StackActions.push(routeName, params))
       } else if (navigationAction === 'replace') {
         navigation.dispatch(StackActions.replace(routeName, params))
       } else if (navigationAction === 'navigate') {
         const state = navigation.getState()
+        const copy = pushedCopyOf(state, routeName)
         const tabState = getTabState(state, routeName)
         // Splito screens have no soft reset (scroll-to-top/refresh) yet, so a press on the current tab root is a no-op.
-        if (tabState !== TabState.InsideAtRoot) {
+        if (copy) {
+          /* On the pushed copy of this very tab: the press turns it into the plain tab (owner 179). */
+          navigation.dispatch(StackActions.replace(routeName, copy.params))
+        } else if (tabState !== TabState.InsideAtRoot) {
           // note: 'navigate' actually acts the same as 'push' nowadays
           // therefore we need to add 'pop' -sfn
           // @ts-expect-error we're not able to type check on this one -prf

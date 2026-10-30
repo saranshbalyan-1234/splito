@@ -14,7 +14,7 @@ export type RouteLike = {key: string; name: string; path?: string; params?: obje
 type AnyRouter = Router<any, any>
 type Params = Record<string, unknown> | undefined
 
-export const PARKED_TABS: ReadonlySet<string> = new Set(['Groups', 'Analytics', 'Activity'])
+export const PARKED_TABS: ReadonlySet<string> = new Set(['Home', 'People', 'Groups', 'Analytics', 'Activity'])
 /** Actions that remove routes from the stack (a pushed page popped, a tab popped to, Back). */
 const DROPPING = new Set(['POP', 'POP_TO', 'POP_TO_TOP', 'GO_BACK', 'NAVIGATE'])
 

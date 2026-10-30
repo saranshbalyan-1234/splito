@@ -264,10 +264,20 @@ export function writeOffParts(parts: BalancePart[], amount: bigint): BalancePart
   return out
 }
 
-export function personSummary(rows: BalanceRow[], opts: {includeGroups: boolean}): PersonSummary[] {
+/** Which balances a summary counts (Home's Overview scope, owner 176): everything, only the shared groups' parts, or only the direct (non-group) ones. */
+export type SummaryScope = 'all' | 'groups' | 'direct'
+
+/**
+ * Each person's balance with me per currency. `includeGroups: false` keeps the direct parts only. `scope` (default
+ * 'all') narrows further: 'groups' keeps only the parts inside groups, 'direct' only the non-group part; it takes
+ * precedence over `includeGroups`. Currencies are never mixed.
+ */
+export function personSummary(rows: BalanceRow[], opts: {includeGroups: boolean; scope?: SummaryScope}): PersonSummary[] {
   const people = new Map<string, PersonSummary>()
+  const scope = opts.scope ?? (opts.includeGroups ? 'all' : 'direct')
   for (const r of rows) {
-    if (r.groupId !== null && !opts.includeGroups) continue
+    if (r.groupId !== null && scope === 'direct') continue
+    if (r.groupId === null && scope === 'groups') continue
     const s = people.get(r.person) ?? {person: r.person, byCurrency: {}}
     const c = (s.byCurrency[r.currency] ??= {total: 0n, direct: 0n, groups: {}})
     c.total += r.amount

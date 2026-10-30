@@ -20,7 +20,7 @@ import {
 } from '#/components/activity/useActivityFeed'
 import {PressableScale} from '#/motion/PressableScale'
 import {useSearchAsk} from '#/components/SearchAsk/context'
-import {NAV_LABELS, TabGlyph} from '#/components/TabGlyph'
+import {MAX_LABELLED_TABS, NAV_LABELS, TabGlyph, TabLabel} from '#/components/TabGlyph'
 import {Text} from '#/components/Typography'
 import {useAnalytics} from '#/analytics'
 import {styles} from './BottomBarStyles'
@@ -43,6 +43,7 @@ export function BottomBarWeb() {
   const {footerHeight} = useShellLayout()
   const tabs = useTabs()
   const iconWidth = 26
+  const hasLabels = tabs.length <= MAX_LABELLED_TABS
   const activityBadge = useActivityBadge()
   const searchAsk = useSearchAsk()
   /* Only the bar's own pages light up; under any other page the tab it was opened from stays lit. */
@@ -81,13 +82,14 @@ export function BottomBarWeb() {
               <PressableScale
                 key={tab}
                 testID={`tab-${tab}`}
-                style={[styles.ctrl, a.pb_lg]}
+                style={[styles.ctrl, hasLabels && styles.ctrlLabelled, a.pb_sm]}
                 accessibilityRole="button"
                 accessibilityLabel={_(NAV_LABELS[tab])}
                 accessibilityHint=""
                 targetScale={0.8}
                 onPress={() => searchAsk.open({mode: 'ask'})}>
                 <TabGlyph tab={tab} isActive={false} size={iconWidth} />
+                {hasLabels && <TabLabel label={_(NAV_LABELS[tab])} isActive={false} />}
               </PressableScale>
             )
           }
@@ -102,11 +104,15 @@ export function BottomBarWeb() {
               pending={pending}
               onPressStart={() => setPending(routeName)}
               onSettled={() => setPending(null)}
+              hasLabels={hasLabels}
               notificationCount={
                 tab === 'activity' ? activityBadge : undefined
               }>
               {({isActive}) => (
-                <TabGlyph tab={tab} isActive={isActive} size={iconWidth} />
+                <>
+                  <TabGlyph tab={tab} isActive={isActive} size={iconWidth} />
+                  {hasLabels && <TabLabel label={_(NAV_LABELS[tab])} isActive={isActive} />}
+                </>
               )}
             </NavItem>
           )
@@ -128,6 +134,8 @@ const NavItem: React.FC<{
   pending: string | null
   onPressStart: () => void
   onSettled: () => void
+  /** The bar shows a label under each icon (5 items or fewer). */
+  hasLabels: boolean
   hasNew?: boolean
   notificationCount?: string
   onLongPress?: () => void
@@ -141,6 +149,7 @@ const NavItem: React.FC<{
   pending,
   onPressStart,
   onSettled,
+  hasLabels,
   hasNew,
   notificationCount,
   onLongPress,
@@ -163,7 +172,7 @@ const NavItem: React.FC<{
     <Link
       testID={`tab-${navItem}`}
       href={href}
-      style={[styles.ctrl, a.pb_lg]}
+      style={[styles.ctrl, hasLabels && styles.ctrlLabelled, hasLabels ? a.pb_sm : a.pb_lg]}
       navigationAction="navigate"
       activateOnPressIn
       onActivated={onPressStart}

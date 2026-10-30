@@ -77,7 +77,9 @@ export function termRows(e: Entity | undefined): Row[] {
     if (typeof d.date === 'string' && d.date.length >= 7) add('m', d.date.slice(5, 7))
     if (typeof d.category === 'string') add('c', d.category)
   } else if (e.type === 'person' || e.type === 'group') {
-    for (const word of wordsOf((e.data as Partial<Person & Group> | null)?.name ?? '')) add(e.type === 'person' ? 'p' : 'g', word)
+    const d = e.data as Partial<Person & Group> | null
+    // A trip's place is found the way its name is (owner 182); persons have no location.
+    for (const word of wordsOf(`${d?.name ?? ''} ${e.type === 'group' ? (d?.location ?? '') : ''}`)) add(e.type === 'person' ? 'p' : 'g', word)
   }
   return [...out.values()]
 }

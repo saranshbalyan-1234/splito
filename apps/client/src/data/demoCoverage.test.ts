@@ -6,6 +6,8 @@ import {
   ensureMe,
   type BackupFile,
   type Comment,
+  type Dispute,
+  type DisputedBalance,
   createBackup,
   type Entity,
   type Expense,
@@ -58,6 +60,9 @@ type Demo = {
   allPeople: Entity<Person>[]
   comments: Entity<Comment>[]
   reminders: Entity<Reminder>[]
+  disputes: Entity<Dispute>[]
+  /** The disputed or held part of the balances (`store.disputedBalances()`). */
+  disputed: DisputedBalance[]
   /** Account preferences by key (value only). */
   prefs: Record<string, unknown>
   /** The demo database exported as a backup file and read back: what Export centre and Backup would hand over. */
@@ -80,6 +85,7 @@ const titleCount = (d: Demo, title: string) => d.live.filter(e => e.data.title =
 const FEATURES: Array<[feature: string, found: (d: Demo) => boolean]> = [
   // Groups
   ['a trip group with dates', d => d.groups.some(g => g.data.kind === 'trip' && g.data.startDate && g.data.endDate)],
+  ['every trip group says where it is (owner 182)', d => d.groups.some(g => g.data.kind === 'trip') && d.groups.filter(g => g.data.kind === 'trip').every(g => !!g.data.location)],
   ['a home (flat) group', d => d.groups.some(g => g.data.kind === 'home')],
   ['an other-kind group', d => d.groups.some(g => g.data.kind === 'other')],
   ['a multi-currency group (several currencies in one group, never mixed)', d => d.groups.some(g => currenciesIn(d, g.id).size >= 2)],
@@ -171,13 +177,36 @@ const FEATURES: Array<[feature: string, found: (d: Demo) => boolean]> = [
   ['a nudge with an amount in a second currency', d => d.reminders.some(r => r.data.kind === 'nudge' && 'EUR' in r.data.amounts)],
   ['a reminder I scheduled for myself about a friend, repeating (Remind me)', d => d.reminders.some(r => !r.deleted && r.data.kind === 'self' && r.data.personId !== '' && r.data.repeat !== 'none')],
   ['a reminder I scheduled for myself about a group', d => d.reminders.some(r => !r.deleted && r.data.kind === 'self' && r.data.groupId !== null)],
+  // Disputes and holds (F-1210, owner 119): every state, in more than one currency
+  ['an open dispute with a proposed fix, waiting for me', d => d.disputes.some(x => x.data.kind === 'dispute' && x.data.status === 'open' && x.data.proposedFix !== null && x.data.raisedBy !== DEMO_ME)],
+  ['an open dispute I raised myself', d => d.disputes.some(x => x.data.kind === 'dispute' && x.data.status === 'open' && x.data.raisedBy === DEMO_ME && x.data.itemId === null)],
+  ['a disputed item of an itemised bill (my portion)', d => d.disputes.some(x => x.data.status === 'open' && x.data.itemId !== null)],
+  ['an accepted dispute (the record was fixed)', d => d.disputes.some(x => x.data.status === 'accepted')],
+  ['a rejected dispute, with the reason', d => d.disputes.some(x => x.data.status === 'rejected' && x.data.resolution !== '')],
+  ['a withdrawn dispute', d => d.disputes.some(x => x.data.status === 'withdrawn')],
+  ['a reopened dispute (rejected once, open again)', d => d.disputes.some(x => x.data.status === 'open' && x.data.reopenCount > 0)],
+  ['a dispute closed as Gone (the record was deleted)', d => d.disputes.some(x => x.data.status === 'gone')],
+  ['a record on hold, with its reason', d => d.disputes.some(x => x.data.kind === 'hold' && x.data.status === 'open' && x.data.note !== '')],
+  ['a hold that was released', d => d.disputes.some(x => x.data.kind === 'hold' && x.data.status === 'released')],
+  ['a payment disputed as not received', d => d.disputes.some(x => x.data.targetType === 'repayment' && x.data.reason === 'not_received' && x.data.status === 'open')],
+  ['disputes and holds in rupees, euros, dollars and pounds', d => ['INR', 'EUR', 'USD', 'GBP'].every(c => d.disputes.some(x => d.dump.entities.some(r => r.id === x.data.targetId && (r.data as {currency?: string}).currency === c)))],
+  ['"of which disputed" figures in several currencies (a disputed balance projection)', d => new Set(d.disputed.filter(b => b.amount !== 0n).map(b => b.currency)).size >= 3],
   // Exports and backups (F-2001, F-2007)
-  ['a backup of the demo reads back and restores as a preview (comments, reminders, groups, setups included)', d => (d.backup.entities.comment?.length ?? 0) > 0 && (d.backup.entities.reminder?.length ?? 0) > 0 && (d.backup.entities.group?.length ?? 0) >= 20 && (d.backup.entities.expense?.length ?? 0) > 1400 && d.backup.entities.preference!.some(p => p.id === 'bill.merchantSetups')],
+  ['a backup of the demo reads back and restores as a preview (comments, reminders, groups, setups included)', d => (d.backup.entities.comment?.length ?? 0) > 0 && (d.backup.entities.reminder?.length ?? 0) > 0 && (d.backup.entities.dispute?.length ?? 0) > 0 && (d.backup.entities.group?.length ?? 0) >= 20 && (d.backup.entities.expense?.length ?? 0) > 1400 && d.backup.entities.preference!.some(p => p.id === 'bill.merchantSetups')],
   // Ask Splito (F-2301)
   ['Ask-ready balances: people owe me and I owe people, in rupees and two other currencies', d => ['INR', 'EUR', 'USD'].every(c => d.balances.some(b => b.currency === c && b.amount > 0n) && d.balances.some(b => b.currency === c && b.amount < 0n))],
   // Feedback
   ['feedback saved on this device', d => d.feedback.some(f => !f.deleted)],
   ['feedback with a reply address', d => d.feedback.some(f => !f.deleted && (f.data as {replyEmail: string | null}).replyEmail)],
+  // Home (F-256, F-1415): the short lists need records of mine, spread over several friends and groups
+  ['Home recent transactions: five or more live expenses and payments I am on', d => d.live.filter(e => DEMO_ME in e.data.payers || DEMO_ME in e.data.shares).length + d.repayments.filter(r => !r.deleted && (r.data.from === DEMO_ME || r.data.to === DEMO_ME)).length >= 5],
+  ['Home recently active people: five or more friends who share a live expense with me', d => new Set(d.live.filter(e => DEMO_ME in e.data.payers || DEMO_ME in e.data.shares).flatMap(e => [...Object.keys(e.data.payers), ...Object.keys(e.data.shares)]).filter(id => id !== DEMO_ME)).size >= 5],
+  ['Home recently active groups: five or more live groups with a live expense I am in', d => d.groups.filter(g => d.live.some(e => e.data.groupId === g.id && (DEMO_ME in e.data.payers || DEMO_ME in e.data.shares))).length >= 5],
+  ['Home Overview scope: direct balances and group balances, each in two or more currencies', d => {
+    const open = (inGroup: boolean) => new Set(d.balances.filter(b => b.amount !== 0n && (b.groupId !== null) === inGroup && !d.people.find(p => p.id === b.personId)?.data.isMe).map(b => b.currency))
+    return open(false).size >= 2 && open(true).size >= 2 && [...open(true)].filter(c => open(false).has(c)).length >= 2
+  }],
+  ['Home Requests: a request waiting for me and an invite waiting for an answer, together', d => d.requests.some(r => r.data.direction === 'incoming' && requestState(r.data, d.now) === 'pending') && d.requests.some(r => r.data.direction === 'outgoing' && requestState(r.data, d.now) === 'pending')],
   // Activity
   ['changes made by other people (unread in Activity)', d => d.dump.history.some(h => h.actor !== DEMO_ME && h.entityType === 'expense')],
   ['my own changes in Activity', d => d.dump.history.some(h => h.actor === DEMO_ME)],
@@ -201,6 +230,8 @@ async function readDemo(now: number): Promise<Demo> {
     allPeople: of<Person>('person'),
     comments: of<Comment>('comment'),
     reminders: of<Reminder>('reminder'),
+    disputes: of<Dispute>('dispute'),
+    disputed: await store.disputedBalances(),
     prefs,
     backup,
     balances: await store.balances(),

@@ -7,7 +7,7 @@ test.describe('phone', () => {
 test.use({viewport: {width: 390, height: 844}, isMobile: true, hasTouch: true})
 
 test('typing into the page right after a sheet is closed is not lost to the exiting sheet', async ({page}) => {
-  await openDemo(page)
+  await openDemo(page, '/people')
   await expect(page.getByTestId('person-Riya Sharma')).toBeVisible()
   await page.getByTestId('fab-add').click()
   await page.getByTestId('expense-title').fill('Race')
@@ -44,7 +44,7 @@ test.describe('desktop', () => {
   test.use({viewport: {width: 1440, height: 900}})
 
   test('Escape closes a popup and focus returns to the control that opened it', async ({page}) => {
-    await openDemo(page)
+    await openDemo(page, '/people')
     await expect(page.getByTestId('person-Riya Sharma')).toBeVisible()
     await page.getByTestId('sidebar-add').click()
     const opener = page.getByTestId('expense-people')

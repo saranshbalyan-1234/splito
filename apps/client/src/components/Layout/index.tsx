@@ -14,6 +14,8 @@ import Animated, {
 import {useSafeAreaInsets} from 'react-native-safe-area-context'
 import {useFocusEffect} from '@react-navigation/native'
 
+import {RouteFAB} from '#/components/RouteFAB'
+
 import {useEnableMinimalShellModeForScreen} from '#/state/shell'
 import {useShowShell} from '#/state/shell/minimal-mode'
 import {useShellLayout} from '#/state/shell/shell-layout'
@@ -88,6 +90,8 @@ export const Screen = memo(function Screen({
         <MainScrollProvider>
           <OpenedContext.Provider value={opened}>{children}</OpenedContext.Provider>
         </MainScrollProvider>
+        {/* The FAB is decided here, once, from the route (owner 190, § 26.6); a screen can only hold it back. */}
+        <RouteFAB />
       </HeaderModeProvider>
     </View>
   )

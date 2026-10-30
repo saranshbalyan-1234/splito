@@ -14,11 +14,13 @@ import {
   type Transfer,
   zeroFillNets,
   ZERO,
+  withoutDisputed,
 } from '@splito/domain'
 import {type Group, type Person} from '@splito/sync'
 
 import {type AllNavigatorParams, type NavigationProp} from '#/lib/routes/types'
 import {useEntities, useGroupNets, useMe} from '#/data/hooks'
+import {useDisputedBalances, useSettleIncludeDisputed} from '#/state/disputes'
 import {useNumberLocale} from '#/locale/numberLocale'
 import {EmptyState} from '#/view/com/util/EmptyState'
 import {List} from '#/view/com/util/List'
@@ -41,6 +43,7 @@ import * as Skeleton from '#/components/Skeleton'
 import {Text} from '#/components/Typography'
 import {MoneyArrow, useMoneyStyle} from '#/components/MoneyDirection'
 import {Shimmer} from '#/motion/Shimmer'
+import {DisputedNotice} from '#/components/disputes/DisputedNotice'
 import {TransferRow} from './components/TransferRow'
 
 type CurrencyPlan = {currency: string; plan: DirectPlan | null}
@@ -80,24 +83,30 @@ export function SettleScreen() {
   const people = useEntities<Person>('person')
   const groups = useEntities<Group>('group')
   const storedNets = useGroupNets(groupId)
+  /* Disputed and held amounts are left out of the plan unless this group's "Include disputed" is on (F-1210). */
+  const disputedRows = useDisputedBalances({groupId})
+  const [includeDisputed, setIncludeDisputed] = useSettleIncludeDisputed(groupId)
   const [snapshot, setSnapshot] = useState<Snapshot | null>(null)
   const [isAdopting, setIsAdopting] = useState(false)
   const [isExplained, setIsExplained] = useState(false)
   const paymentControl = useDialogControl()
   const [draft, setDraft] = useState<PaymentDraft | null>(null)
 
-  const isLoading = !me || !people || !groups || !storedNets
+  const isLoading = !me || !people || !groups || !storedNets || !disputedRows
   const group = groups?.find(g => g.id === groupId)
   const names = new Map(
     (people ?? []).map(p => [p.id, p.id === me?.id ? l`You` : p.data.name]),
   )
 
+  /* What the disputed records would take out of the plan (what was actually removed), whether or not it is left out. */
+  const adjusted = storedNets ? withoutDisputed(storedNets, disputedRows) : undefined
+  const leftOut = adjusted?.leftOut ?? {}
   let current: Snapshot | null = null
   if (!isLoading && group) {
     const rules = group.data.rules ?? NO_RULES
     const plans = Object.entries(
       zeroFillNets(
-        storedNets,
+        includeDisputed ? storedNets : adjusted!.nets,
         group.data.members.map(m => m.personId),
       ),
     ).map(
@@ -143,6 +152,7 @@ export function SettleScreen() {
         </Layout.Header.Outer>
         <EmptyState
           testID="settle-not-found"
+          illustration="empty-groups"
           message={l`This group isn’t on this device. It may have been removed.`}
           button={{
             label: l`Back to Groups`,
@@ -218,6 +228,7 @@ export function SettleScreen() {
   ) : (
     <View style={[a.px_lg, a.pt_lg, a.pb_md, a.gap_xs]}>
       <SettleSummary plans={shown} me={me!.id} locale={locale} />
+      <DisputedNotice leftOut={leftOut} isIncluded={includeDisputed} onToggle={include => void setIncludeDisputed(include).then(() => setIsAdopting(true))} />
       <View style={[a.flex_row]}>
         <Button
           testID="settle-how"
@@ -445,7 +456,7 @@ export function SettleScreen() {
             isLoading ? undefined : (
               <EmptyState
                 testID="settle-empty"
-                icon={null}
+                illustration="empty-groups"
                 message={l`Nothing to settle. This group has no expenses yet.`}
               />
             )

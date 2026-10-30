@@ -14,9 +14,9 @@ const PHONE = {width: 390, height: 844}
 
 type Splito = {acceptOutgoing(contactValue: string, name: string): Promise<string>}
 
-async function openDemo(page: Page) {
+async function openDemo(page: Page, path = '/people') {
   await page.setViewportSize(DESKTOP)
-  await enterDemo(page)
+  await enterDemo(page, path)
   await expect(page.getByTestId('person-Riya Sharma')).toBeVisible()
 }
 
@@ -25,9 +25,9 @@ async function openAddFriend(page: Page) {
   await expect(page.getByTestId('screen-add-friend')).toBeVisible()
 }
 
-/** Sent invites live on Friends and invites; Home links there with "N invites waiting" (26.12). Returns the row. */
+/** Sent invites are rows on Home and People too (owner 175); this opens the full list on Friends and invites. Returns the row. */
 async function openInvitesSent(page: Page, rowID: string) {
-  await page.getByTestId('people-invites-waiting').click()
+  await page.goto('/settings/friends')
   await expect(page.getByTestId('screen-friends-invites')).toBeVisible()
   return page.getByTestId(rowID)
 }
@@ -50,8 +50,8 @@ test('on Splito: request -> pending (not selectable) -> they accept -> a friend 
   await expect(page.getByTestId('screen-add-friend')).toHaveCount(0)
   await expect(page.getByText('Friend request sent to ananya@example.com')).toBeVisible()
 
-  // Waiting under Invites sent (on Friends and invites; Home only counts them).
-  await expect(page.getByTestId('invite-sent-ananya@example.com')).toHaveCount(0)
+  // Waiting under Invites sent. Home shows 5 rows at most (2 requests and 3 invites already), so this sixth adds "See all".
+  await expect(page.getByTestId('screen-people').getByTestId('people-requests-all')).toBeVisible()
   const row = await openInvitesSent(page, 'invite-sent-ananya@example.com')
   await expect(row).toContainText('Waiting to accept')
   await page.goBack()
@@ -66,7 +66,7 @@ test('on Splito: request -> pending (not selectable) -> they accept -> a friend 
   // They accept (stands in for the pull from their device).
   await page.evaluate(() => (window as unknown as {splito: Splito}).splito.acceptOutgoing('ananya@example.com', 'Ananya Gupta'))
   await expect(page.getByTestId('person-Ananya Gupta')).toBeVisible()
-  await page.getByTestId('people-invites-waiting').click()
+  await page.goto('/settings/friends')
   await expect(page.getByTestId('screen-friends-invites')).toBeVisible()
   await expect(row).toHaveCount(0)
   await page.goBack()
@@ -82,7 +82,7 @@ test('incoming requests: People > Requests and Activity, Accept makes a friend',
   const activityRow = page.getByTestId('activity-friendRequest.received').filter({hasText: 'Sara Ali'})
   await expect(activityRow).toContainText('sent you a friend request')
   await expect(activityRow.getByTestId('activity-unread-dot')).toBeVisible()
-  await page.getByTestId('tab-people').click()
+  await page.getByTestId('tab-home').click()
   await page.getByTestId('request-Ishaan Verma').getByTestId('request-accept').click()
   await expect(page.getByTestId('person-name')).toHaveText(/^Ishaan Verma( - Demo)?$/)
 })
@@ -91,8 +91,9 @@ test('the demo set carries the invites flow: requests, invites sent, a joined fr
   await openDemo(page)
   // Requests: two waiting (the one I declined is gone); invites sent: only the ones still waiting.
   await expect(page.getByTestId('people-requests-title')).toHaveText('Requests  2')
-  // Home keeps one compact row for the invites waiting; the rows themselves are on Friends and invites.
-  await page.getByTestId('people-invites-waiting').click()
+  // Home shows the invites sent as rows (owner 175), the same ones the Friends and invites page lists.
+  for (const name of ['Kabir', 'Neha Joshi', 'Aarav Mehta']) await expect(page.getByTestId('screen-people').getByTestId(`invite-sent-${name}`)).toBeVisible()
+  await page.goto('/settings/friends')
   await expect(page.getByTestId('screen-friends-invites')).toBeVisible()
   for (const name of ['Kabir', 'Neha Joshi', 'Aarav Mehta']) await expect(page.getByTestId(`invite-sent-${name}`)).toBeVisible()
   for (const gone of ['Meera Nair', 'Zoya Khan']) await expect(page.getByTestId(`invite-sent-${gone}`)).toHaveCount(0)
@@ -126,11 +127,7 @@ for (const viewport of [{width: 320, height: 800}, {width: 393, height: 852}, DE
     await enterDemo(page)
     const isPhone = viewport.width < 800
     for (const [rowID, name, actions] of ROWS) {
-      // Requests are on Home; sent invites on Friends and invites.
-      if (rowID.startsWith('invite-sent') && !(await page.getByTestId(rowID).count())) {
-        await page.getByTestId('people-invites-waiting').click()
-        await expect(page.getByTestId('screen-friends-invites')).toBeVisible()
-      }
+      // Requests and the invites sent are both rows on Home (owner 175).
       const row = page.getByTestId(rowID)
       await row.scrollIntoViewIfNeeded()
       const r = (await row.boundingBox())!
@@ -160,11 +157,10 @@ for (const viewport of [{width: 320, height: 800}, {width: 393, height: 852}, DE
     }
     if (isPhone) {
       // The icon-only button names itself on hover (and long-press on touch); the request is on Home.
-      await page.goBack()
-      const accept = page.getByTestId('screen-people').getByTestId('request-Ishaan Verma').getByTestId('request-accept')
+      const accept = page.getByTestId('screen-home').getByTestId('request-Ishaan Verma').getByTestId('request-accept')
       await expect(accept).toHaveAttribute('aria-label', 'Accept Ishaan Verma’s friend request')
       await accept.hover()
-      await expect(page.getByTestId('screen-people').getByTestId('request-accept-tooltip')).toHaveText('Accept')
+      await expect(page.getByTestId('screen-home').getByTestId('request-accept-tooltip')).toHaveText('Accept')
     }
   })
 }
@@ -183,6 +179,17 @@ test('not on Splito: warning, then Add anyway (only for you) is selectable at on
   const dialog = await pickerOptions(page)
   await expect(dialog.getByRole('checkbox', {name: 'Zoe Hart'})).toBeChecked()
   await expect(dialog.getByRole('checkbox', {name: 'Zoe Hart'})).toBeEnabled()
+})
+
+test('a friend typed in lower case is saved and shown capitalised word by word (decision 181)', async ({page}) => {
+  await openDemo(page)
+  await openAddFriend(page)
+  await page.getByTestId('add-friend-contact').fill('+44 7911 123457')
+  await page.getByTestId('add-friend-name').fill('saransh   balyan')
+  await page.getByTestId('add-friend-add-anyway').click()
+  await expect(page.getByTestId('person-name')).toHaveText(/^Saransh Balyan( - Demo)?$/)
+  await page.goBack()
+  await expect(page.getByTestId('person-Saransh Balyan')).toBeVisible()
 })
 
 test('not on Splito: Send invite makes a personal one-use link and lists them under Invites sent', async ({page}) => {
@@ -311,7 +318,7 @@ test('without the Contact Picker API the contacts button is hidden', async ({pag
 
 test('phone: Add friend is a bottom sheet, full width from the bottom edge', async ({page}) => {
   await page.setViewportSize(PHONE)
-  await enterDemo(page)
+  await enterDemo(page, '/people')
   await page.getByTestId('people-add-friend').click()
   const sheet = page.getByTestId('screen-add-friend')
   await expect(sheet).toBeVisible()

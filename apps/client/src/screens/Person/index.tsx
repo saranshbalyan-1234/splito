@@ -10,6 +10,8 @@ import {
   personSummary,
   sumMinor,
   ZERO,
+  disputedWith,
+  withoutDisputedParts,
 } from '@splito/domain'
 import {
   type Entity,
@@ -59,6 +61,8 @@ import {PlusLarge_Stroke2_Corner0_Rounded as PlusIcon} from '#/components/icons/
 import {SettingsSliderVertical_Stroke2_Corner0_Rounded as FilterIcon} from '#/components/icons/SettingsSlider'
 import {Trash_Stroke2_Corner0_Rounded as TrashIcon} from '#/components/icons/Trash'
 import * as Layout from '#/components/Layout'
+import {AddExpenseFABInset} from '#/components/AddExpenseFAB'
+import {useSuppressFab} from '#/components/RouteFAB'
 import * as Menu from '#/components/Menu'
 import {
   CallItEvenDialog,
@@ -94,6 +98,9 @@ import {Shimmer} from '#/motion/Shimmer'
 import {PersonReminders} from '#/features/remind/PersonReminders'
 import {RemindMenuItems} from '#/features/remind/RemindMenuItems'
 import {HistoryFilterDialog} from './components/HistoryFilterDialog'
+import {DisputedNotice} from '#/components/disputes/DisputedNotice'
+import {rowMenuWrap} from '#/features/disputes/RowMenu'
+import {markOf, useDisputedPairs, useDisputedRecords, useOpenDisputes} from '#/state/disputes'
 import {
   PersonBalances,
   PersonBalancesPlaceholder,
@@ -128,6 +135,13 @@ export function PersonScreen() {
   const pairHistory = usePairHistory(personId, includeGroups)
 
   const filterControl = useDialogControl({url: 'filters'})
+  /* "Disputed only" (F-1210): this page's own choice, not remembered. ponytail: not in the address yet. */
+  const [onlyDisputed, setOnlyDisputed] = useState(false)
+  /* "Include disputed" in this friend's Settle up and Call it even: this page's own choice (the group Settle remembers per group). */
+  const [includeDisputed, setIncludeDisputed] = useState(false)
+  const openDisputes = useOpenDisputes()
+  const disputedRecords = useDisputedRecords(onlyDisputed)
+  const disputedPairs = useDisputedPairs(me?.id ?? '', personId)
   const paymentControl = useDialogControl({
     url: 'record-payment',
     /* A pasted address: wait for the balances, then open as the Settle up button does. */
@@ -166,6 +180,8 @@ export function PersonScreen() {
   const rowsReady = useDeferredReady(!isLoading)
   const person = people?.find(p => p.id === personId)
   const isDeleted = !!person?.deleted
+  /* The FAB pre-selects this friend (owner 190). */
+  useSuppressFab(!person || isDeleted)
   const {visible, hidden, showHidden} = useVisibleEntries(pairHistory?.entries ?? [])
   const hideFriend = useHideItem({type: 'person', id: personId})
   const openHide = useHideItem({type: openKind, id: openRepayment?.id ?? ''})
@@ -184,6 +200,7 @@ export function PersonScreen() {
         </Layout.Header.Outer>
         <EmptyState
           testID="person-not-found"
+          illustration="empty-people"
           message={l`This friend isn’t on this device. They may have been removed.`}
           button={{
             label: l`Back to People`,
@@ -206,7 +223,15 @@ export function PersonScreen() {
         s => s.person === personId,
       )
     : undefined
-  const history = visible
+  /* "Disputed only" lists the disputed records between us from the open disputes themselves, not just the pages loaded. */
+  const history = onlyDisputed
+    ? (disputedRecords ?? []).filter(e => {
+        if (!includeGroups && e.entity.data.groupId !== null) return false
+        const me_ = me?.id
+        if (e.kind === 'expense') return !!me_ && (me_ in e.entity.data.payers || me_ in e.entity.data.shares) && (personId in e.entity.data.payers || personId in e.entity.data.shares)
+        return (e.entity.data.from === me_ && e.entity.data.to === personId) || (e.entity.data.from === personId && e.entity.data.to === me_)
+      })
+    : visible
   const items = withMonths(history)
   const sharedGroups = (groups ?? []).filter(
     g =>
@@ -233,9 +258,11 @@ export function PersonScreen() {
   ]
     .filter(Boolean)
     .join(' · ')
-  // Each currency's balance by part; a payment settles these (RecordPaymentDialog).
+  /* How much of each currency's balance sits on disputed or held records. Settle up and Call it even leave it out unless included. */
+  const disputedLeft = disputedWith(disputedPairs, Object.fromEntries(Object.entries(totals).map(([c, b]) => [c, b.total])), includeGroups)
+  // Each currency's balance by part, less the disputed part unless included; a payment settles these (RecordPaymentDialog).
   const balance = Object.fromEntries(
-    openCurrencies.map(c => [c, balanceParts(totals[c]!)]),
+    openCurrencies.map(c => [c, withoutDisputedParts(balanceParts(totals[c]!), totals[c]!.total > ZERO ? 1 : -1, includeDisputed ? ZERO : (disputedLeft[c] ?? ZERO))]),
   )
   /* What whoever owes overall still owes, part by part in their direction (never netted across groups). */
   const owedFor = (c: string) => {
@@ -257,7 +284,7 @@ export function PersonScreen() {
       from: theyPay ? personId : me.id,
       to: theyPay ? me.id : personId,
       currency,
-      amount: total === ZERO ? null : owedFor(currency),
+      amount: total === ZERO || owedFor(currency) <= ZERO ? null : owedFor(currency),
       groupId: null,
       ...draft,
     })
@@ -268,14 +295,20 @@ export function PersonScreen() {
   /* "Call it even": every open currency, part by part (> 0: they owe me). */
   const callItEven = () => {
     if (!me || !hasOpenBalance) return false
+    /* Only what is not disputed (unless included): a currency with nothing left to forgive is not offered. */
+    const forgivable = openCurrencies.filter(c => balance[c]!.some(p => p.amount !== ZERO))
+    if (forgivable.length === 0) {
+      Toast.show(l`What is open is disputed or on hold. Include disputed to call it even.`)
+      return false
+    }
     setEvenDraft({
       a: me.id,
       b: personId,
-      balance,
+      balance: Object.fromEntries(forgivable.map(c => [c, balance[c]!])),
       // The default currency first when it is open, else the first open one.
-      currency: openCurrencies.includes(defaultCurrency ?? '')
+      currency: forgivable.includes(defaultCurrency ?? '')
         ? defaultCurrency!
-        : openCurrencies[0]!,
+        : forgivable[0]!,
     })
     evenControl.open()
     return true
@@ -309,7 +342,7 @@ export function PersonScreen() {
             type="user"
           />
           <View style={a.flex_1} />
-          {/* Bluesky's profile action row; pushed pages have no FAB (owner rule 17). */}
+          {/* Bluesky's profile action row; wide screens have no FAB (owner 190), so adding here pre-selects the friend. */}
           {isDeleted ? null : (
           <Button
             testID="person-add-expense"
@@ -381,7 +414,9 @@ export function PersonScreen() {
             summary={summary}
             groupNames={groupNames}
             locale={locale}
+            disputed={disputedLeft}
           />
+          <DisputedNotice leftOut={disputedLeft} isIncluded={includeDisputed} onToggle={setIncludeDisputed} scope="friend" testIDPrefix="person" />
           <PersonReminders personId={personId} />
         </View>
       </View>
@@ -399,6 +434,11 @@ export function PersonScreen() {
             {showHidden && (
               <Pills.Tag>
                 <Trans>Hidden shown</Trans>
+              </Pills.Tag>
+            )}
+            {onlyDisputed && (
+              <Pills.Tag>
+                <Trans>Disputed only</Trans>
               </Pills.Tag>
             )}
             <Button
@@ -507,6 +547,8 @@ export function PersonScreen() {
       <LayoutAnimationConfig skipEntering skipExiting>
         <List
           data={rowsReady ? items : []}
+          /* The FAB's clearance, so it never covers the last row on a phone (owner 190). */
+          ListFooterComponent={<AddExpenseFABInset />}
           onEndReached={onEndReached}
           keyExtractor={(item: HistoryItem) => item.key}
           renderItem={({item, index}: {item: HistoryItem; index: number}) =>
@@ -527,6 +569,8 @@ export function PersonScreen() {
                 }
                 locale={locale}
                 hide={historyRowHide(item.entry, hidden, l`this record`)}
+                rowMenu={item.entry.entity.deleted ? undefined : rowMenuWrap}
+                mark={markOf(openDisputes, item.entry.kind, item.entry.entity.id)}
                 onRepaymentPress={(r, kind) => {
                   setOpenRepayment(r)
                   setOpenKind(kind)
@@ -546,7 +590,7 @@ export function PersonScreen() {
             ) : !rowsReady ? <></> : (
               <EmptyState
                 testID="person-history-empty"
-                icon={null}
+                illustration="empty-people"
                 message={
                   includeGroups
                     ? l`Nothing with ${person!.data.name} yet. Add an expense you shared and it shows up here.`
@@ -578,6 +622,7 @@ export function PersonScreen() {
             name={person.data.name}
             includeGroups={includeGroups}
             onFilterApplied={v => navigation.setParams({groups: flagParam(v, true, includeDefault ?? true)})}
+            disputed={{value: onlyDisputed, onApply: setOnlyDisputed}}
           />
           {
             <RecordPaymentDialog

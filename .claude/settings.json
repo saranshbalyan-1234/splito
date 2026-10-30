@@ -5,7 +5,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "printf %s \"{\\\"hookSpecificOutput\\\":{\\\"hookEventName\\\":\\\"UserPromptSubmit\\\",\\\"additionalContext\\\":\\\"SPLITO DECISION RULE: if this message contains any product, UI, UX, behaviour or architecture decision (including corrections like it should be X, move Y, keep Z), record it in the same turn in splito/docs/ARCHITECTURE.md section Product & UI rules (owner decisions, binding) plus one Decision log row (date, quote, rule), update any older rule it overrides, and commit with the code change.\\\"}}\""
+            "command": "printf %s \"{\\\"hookSpecificOutput\\\":{\\\"hookEventName\\\":\\\"UserPromptSubmit\\\",\\\"additionalContext\\\":\\\"SPLITO DECISION RULE: if this message contains any product, UI, UX, behaviour or architecture decision (including corrections like it should be X, move Y, keep Z), record it in the same turn in splito/docs/ARCHITECTURE.md section Product & UI rules (owner decisions, binding) plus one Decision log row (date, quote, rule), update any older rule it overrides, and commit with the code change. SPLITO LESSON RULE (owner 191): every performance finding, root cause, rejected approach or review finding becomes a rule in ARCHITECTURE section 17.1 Performance rules learned plus a dated section 23 lesson in the same change; pnpm check fails otherwise.\\\"}}\""
           }
         ]
       }

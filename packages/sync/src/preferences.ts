@@ -31,7 +31,7 @@ export interface PrefDef<T> {
  * The tab destinations (routes of their own). Activity was briefly a header
  * bell; lists stored before then still name 'activity' and read back unchanged.
  */
-export type TabId = 'people' | 'groups' | 'analytics' | 'activity'
+export type TabId = 'home' | 'people' | 'groups' | 'analytics' | 'activity'
 /**
  * Every item of the shared sidebar / drawer list (ARCHITECTURE 26.3), in its
  * order. The phone bottom bar shows 2 to 5 of them, Home first; 'ask' opens
@@ -66,9 +66,9 @@ export const DEFAULT_CATEGORIES: Category[] = [
   ['other', 'Other', '#94a3b8', 'circle'],
 ].map(([id, name, color, icon], order) => ({id: id!, name: name!, color: color!, icon: icon!, order, hidden: false}))
 
-const TAB_IDS: TabId[] = ['people', 'groups', 'analytics', 'activity']
-/** The shared list's order: Home, Groups, Analytics, Ask Splito, Activity, Settings. */
-export const NAV_ITEM_IDS: readonly NavItemId[] = ['people', 'groups', 'analytics', 'ask', 'activity', 'settings']
+const TAB_IDS: TabId[] = ['home', 'people', 'groups', 'analytics', 'activity']
+/** The shared list's order: Home, People, Groups, Analytics, Ask Splito, Activity, Settings. */
+export const NAV_ITEM_IDS: readonly NavItemId[] = ['home', 'people', 'groups', 'analytics', 'ask', 'activity', 'settings']
 /** The bottom bar holds any number of tabs, from Home alone to every item (decision 84). */
 export const MIN_TABS = 1
 export const MAX_TABS = NAV_ITEM_IDS.length
@@ -151,11 +151,12 @@ export const PREFS = {
       Array.isArray(v) &&
       v.length >= MIN_TABS &&
       v.length <= MAX_TABS &&
-      v[0] === 'people' &&
+      v[0] === 'home' &&
       new Set(v).size === v.length &&
       v.every(t => NAV_ITEM_IDS.includes(t)),
   ),
-  homeTab: def<TabId>('homeTab', 'navigation', 'account', 'Open on', 'people', oneOf(...TAB_IDS)),
+  /** The tab the app opens on. Stored as `homeTab` until F-256, when 'people' meant Home: that old row is read once (`readRaw`). */
+  startTab: def<TabId>('startTab', 'navigation', 'account', 'Open on', 'home', oneOf(...TAB_IDS)),
   defaultCurrency: def('defaultCurrency', 'defaults', 'account', 'Default currency', 'INR', (v): v is string => typeof v === 'string' && v in CURRENCIES),
   itemizeAdjustmentModes: def<AdjustmentModes>(
     'itemizeAdjustmentModes',
@@ -214,9 +215,16 @@ export const PREFS = {
    */
   // ponytail: id set in one pref, move to a personal table if it grows past a few thousand
   'lists.hiddenItems': def<string[]>('lists.hiddenItems', 'lists', 'account', 'Hidden deleted items', [], (v): v is string[] => Array.isArray(v) && v.length <= 5000 && v.every(isString) && new Set(v).size === v.length),
+  /**
+   * Settle up leaves disputed and held amounts out of a group's plan by default (F-1210, owner 119); the groups listed
+   * here put them back ("Include disputed"). One id each, remembered per group, set on the Settle screen, no Settings row.
+   */
+  'group:settleIncludeDisputed': def<string[]>('group:settleIncludeDisputed', 'lists', 'account', 'Groups whose Settle up includes disputed amounts', [], (v): v is string[] => Array.isArray(v) && v.length <= 1000 && v.every(isString) && new Set(v).size === v.length),
   /** The one "Show hidden" filter of People, Groups, a group's Expenses and a person's history (decision 105): off, hidden deleted items and hidden groups stay out of the lists. */
   'lists.showHidden': def('lists.showHidden', 'lists', 'account', 'Show hidden', false, isBool),
   /** F-1413 (owner 90, 112): fully settled friends / groups are hidden from Home and Groups unless this is on. Set from each filter sheet's "Show settled". */
+  /** Home's Overview scope (26.12, owner 176): every balance, only the groups' parts, or only the direct ones. Also `/?overview=`. */
+  'home.overviewScope': def<'all' | 'groups' | 'direct'>('home.overviewScope', 'lists', 'account', 'Overview scope', 'all', oneOf('all', 'groups', 'direct')),
   'people.showSettled': def('people.showSettled', 'lists', 'account', 'Show settled friends', false, isBool),
   /** The Groups filter's sort, saved on Apply so it survives a reload (owner 128, decision 90). */
   'groups.sort': def('groups.sort', 'lists', 'account', 'Sort groups by', 'recent', oneOf('recent', 'name', 'amount')),
@@ -246,6 +254,11 @@ export type PrefValue<K extends PrefKey> = (typeof PREFS)[K] extends PrefDef<inf
 
 type PrefRow = Pick<Entity<{value: unknown}>, 'id' | 'deleted' | 'data'>
 
+/** A stored `tabs` list from before F-256 (decision 153): it has no 'home'; its 'people' was Home. */
+function isLegacyTabs(v: unknown): boolean {
+  return Array.isArray(v) && !v.includes('home')
+}
+
 function readRaw<K extends PrefKey>(rows: ReadonlyArray<PrefRow>, key: K): PrefValue<K> {
   const def = PREFS[key] as PrefDef<PrefValue<K>>
   const e = rows.find(p => p.id === key)
@@ -254,10 +267,21 @@ function readRaw<K extends PrefKey>(rows: ReadonlyArray<PrefRow>, key: K): PrefV
     // Orders saved while Profile was a tab predate the Analytics tab, so it joins them.
     const isPreAnalytics = value.includes('profile')
     // Profile left the tabs for the header avatar; the rest keep their order.
-    value = value.filter(t => NAV_ITEM_IDS.includes(t))
-    if (isPreAnalytics && !(value as TabId[]).includes('analytics')) value = [...(value as TabId[]), 'analytics']
-    // Home became fixed (26.3): orders saved before then keep their tabs, with Home first.
-    value = ['people', ...(value as NavItemId[]).filter(t => t !== 'people')]
+    const kept = (value as string[]).filter((t): t is NavItemId => (NAV_ITEM_IDS as readonly string[]).includes(t))
+    value = kept
+    if (isPreAnalytics && !kept.includes('analytics')) value = [...kept, 'analytics']
+    if (isLegacyTabs(value)) {
+      // Before F-256 the id 'people' was Home and there was no People tab: Home keeps its place, first, and People joins right after it.
+      value = ['home', 'people', ...(value as NavItemId[]).filter(t => t !== 'people')]
+    } else {
+      // Home is fixed (26.3): orders saved before then keep their tabs, with Home first.
+      value = ['home', ...(value as NavItemId[]).filter(t => t !== 'home')]
+    }
+  }
+  // The "Open on" tab was the `homeTab` key before F-256, and its 'people' meant Home: read that old row once when there is no new one.
+  if (key === 'startTab' && value === undefined) {
+    const old = rows.find(p => p.id === 'homeTab' && !p.deleted)?.data.value
+    if (typeof old === 'string') value = old === 'people' ? 'home' : old
   }
   // The "New expenses" switch folded into "Payments" (owner 131): an old stored off on either reads as off.
   if (key === 'notify.payment' && value !== false && rows.some(p => p.id === 'notify.expense' && !p.deleted && p.data.value === false)) value = false
@@ -275,9 +299,9 @@ function readRaw<K extends PrefKey>(rows: ReadonlyArray<PrefRow>, key: K): PrefV
  */
 export function prefFrom<K extends PrefKey>(rows: ReadonlyArray<PrefRow>, key: K): PrefValue<K> {
   const value = readRaw(rows, key)
-  if (key === 'homeTab') {
+  if (key === 'startTab') {
     const tabs = readRaw(rows, 'tabs')
-    return (tabs.includes(value as TabId) ? value : 'people') as PrefValue<K>
+    return (tabs.includes(value as TabId) ? value : 'home') as PrefValue<K>
   }
   return value
 }
@@ -324,7 +348,7 @@ const enqueuePref = (tx: Tx, ctx: MutationCtx, id: string, baseVersion: number, 
  * Edits a list-of-ids preference inside the caller's transaction (read and write together, so two changes never
  * lose one another). Writes only when `edit` changes the list.
  */
-export async function editIdsPref(tx: Tx, ctx: MutationCtx, key: 'lists.hiddenItems' | 'groups.hidden', edit: (ids: string[]) => string[]) {
+export async function editIdsPref(tx: Tx, ctx: MutationCtx, key: 'lists.hiddenItems' | 'groups.hidden' | 'group:settleIncludeDisputed', edit: (ids: string[]) => string[]) {
   const row = await tx.get<{value: unknown}>('preference', key)
   const ids = prefFrom(row ? [row] : [], key)
   const next = edit(ids)
@@ -355,4 +379,11 @@ export async function resetAllPrefs(store: Store, ctx: MutationCtx): Promise<voi
   await store.transaction(async tx => {
     for (const p of set) await putPref(tx, ctx, p.id as PrefKey, PREFS[p.id as PrefKey].default, true)
   })
+}
+
+/** Remembers, for one group, whether Settle up includes disputed and held amounts (default: left out). */
+export async function setSettleIncludeDisputed(store: Store, ctx: MutationCtx, groupId: string, include: boolean): Promise<void> {
+  await store.transaction(tx =>
+    editIdsPref(tx, ctx, 'group:settleIncludeDisputed', ids => (ids.includes(groupId) === include ? ids : include ? [...ids, groupId] : ids.filter(id => id !== groupId))),
+  )
 }

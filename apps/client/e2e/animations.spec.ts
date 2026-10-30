@@ -91,11 +91,12 @@ function rowAnimates(page: Page, testID: string) {
   )
 }
 
-test('empty People, Groups and Activity show their animated illustration', async ({
+test('empty Home, People, Groups and Activity show their animated illustration', async ({
   page,
 }) => {
   for (const [path, id] of [
-    ['/', 'people-empty'],
+    ['/', 'home-empty'],
+    ['/people', 'people-empty'],
     ['/groups', 'groups-empty'],
     ['/activity', 'activity-empty'],
   ] as const) {
@@ -109,7 +110,7 @@ test('empty People, Groups and Activity show their animated illustration', async
 
 test('the OS reduce-motion setting freezes illustrations', async ({page}) => {
   await page.emulateMedia({reducedMotion: 'reduce'})
-  await page.goto('/')
+  await page.goto('/people')
   await expect(page.getByTestId('people-empty-illustration')).toHaveAttribute(
     'data-static',
     'true',
@@ -119,7 +120,7 @@ test('the OS reduce-motion setting freezes illustrations', async ({page}) => {
 test('the Animations preference freezes illustrations without a reload', async ({
   page,
 }) => {
-  await ready(page, '/', 'people-empty-illustration')
+  await ready(page, '/people', 'people-empty-illustration')
   await setMotion(page, 'off')
   await expect(page.getByTestId('people-empty-illustration')).toHaveAttribute(
     'data-static',
@@ -161,7 +162,7 @@ test('with Animations off a total changes in one step', async ({page}) => {
 test('rows on screen at load appear at once; a new row animates in', async ({
   page,
 }) => {
-  await ready(page, '/', 'person-Arjun Mehta', true)
+  await ready(page, '/people', 'person-Arjun Mehta', true)
   expect(await rowAnimates(page, 'person-Arjun Mehta')).toBe(false)
   const id = page.evaluate(() =>
     (window as unknown as {splito: Splito}).splito.createPerson('Nina Rossi'),
@@ -171,7 +172,7 @@ test('rows on screen at load appear at once; a new row animates in', async ({
 })
 
 test('with Animations off a new row just appears', async ({page}) => {
-  await ready(page, '/', 'person-Arjun Mehta', true)
+  await ready(page, '/people', 'person-Arjun Mehta', true)
   await setMotion(page, 'off')
   const id = page.evaluate(() =>
     (window as unknown as {splito: Splito}).splito.createPerson('Nina Rossi'),
@@ -193,7 +194,8 @@ test('skeletons show while the local store loads', async ({page}) => {
     }).observe(document, {subtree: true, childList: true})
   })
   for (const [path, screen] of [
-    ['/', 'person-Arjun Mehta'],
+    ['/', 'summary-INR'],
+    ['/people', 'person-Arjun Mehta'],
     ['/groups', 'group-Goa trip'],
     ['/activity', 'screen-activity'],
     ['/profile', 'profileHeaderDisplayName'],
@@ -207,6 +209,7 @@ test('skeletons show while the local store loads', async ({page}) => {
   expect(seen.sort()).toEqual([
     'activity-loading',
     'groups-loading',
+    'home-loading',
     'people-loading',
     'profile-loading',
   ])
@@ -224,7 +227,7 @@ test.describe('touch screens', () => {
   test('a row shrinks slightly while pressed and springs back', async ({
     page,
   }) => {
-    await ready(page, '/', 'person-Arjun Mehta', true)
+    await ready(page, '/people', 'person-Arjun Mehta', true)
     const row = page.getByTestId('person-Arjun Mehta')
     // The demo list has 39 friends: bring this one on screen before pressing it.
     await row.scrollIntoViewIfNeeded()

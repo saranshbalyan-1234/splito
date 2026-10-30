@@ -17,7 +17,7 @@ const PHONE = {width: 390, height: 844}
 type Win = {__long?: number[]}
 
 const screenPadTop = (page: Page) =>
-  page.getByTestId('screen-people').evaluate(el => parseFloat(getComputedStyle(el).paddingTop))
+  page.getByTestId('screen-home').evaluate(el => parseFloat(getComputedStyle(el).paddingTop))
 
 async function openHome(page: Page) {
   await page.setViewportSize(PHONE)
@@ -57,7 +57,7 @@ test.describe('mobile web scroll', () => {
       })
     })
     const cdp = await context.newCDPSession(page)
-    const header = page.getByTestId('screen-people').getByTestId('header-avatar')
+    const header = page.getByTestId('screen-home').getByTestId('header-avatar')
     for (let i = 0; i < 6; i++) {
       await cdp.send('Input.synthesizeScrollGesture', {
         x: 200,

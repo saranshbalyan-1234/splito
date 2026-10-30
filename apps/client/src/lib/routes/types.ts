@@ -10,18 +10,26 @@ export type ListParams = {[key: string]: string | undefined}
 
 /** The bottom bar / sidebar destinations, in display order. */
 export type TabParams = {
-  /** List state in the address (F-241): `sort`, `show`, `currency`, `groups=0` (no group shares), `settled=1`, `hidden=1`. */
+  /** The Overview and the short recent lists. `overview=all|groups|direct` is the Overview's scope (owner 176). */
+  Home: {overview?: string; from?: string} | undefined
+  /** The Friends list (F-256). List state in the address (F-241): `sort`, `show`, `currency`, `groups=0` (no group shares), `settled=1`, `hidden=1`. */
   People: ListParams | undefined
   /** `type`, `status`, `show`, `currency`, `sort`, `settled=1`, `hidden=1`. */
   Groups: ListParams | undefined
   /** `currency` opens the report in that currency (`/analytics?currency=EUR`, an Overview card); also `period`, `offset`, `from`, `to`, `scope`. */
   Analytics: {currency?: string; period?: string; offset?: string; from?: string; to?: string; scope?: string} | undefined
-  /** `tab: 'others'` is `/activity/others`. */
-  Activity: {tab?: 'all' | 'others'} | undefined
+  /** `tab: 'others'` is `/activity/others`, `tab: 'disputed'` is `/activity/disputed`; `type` filters it (F-259), `from` is the tab a copy opened from. */
+  Activity: {tab?: 'all' | 'others' | 'disputed'; type?: string; from?: string} | undefined
 }
 
 /** Every route in the owner's route table (paths live in `#/routes` and `#/navigation/linking`). */
 export type RootStackParams = {
+  /** Pushed copies of the tab screens (owner 179): a main screen opened from a link has Back and no FAB. Native only; web pushes the tab route itself with a `pushed` param. */
+  PushedHome: TabParams['Home']
+  PushedPeople: TabParams['People']
+  PushedGroups: TabParams['Groups']
+  PushedAnalytics: TabParams['Analytics']
+  PushedActivity: TabParams['Activity']
   /** Native only: the drawer names a tab through here, since v7 doesn't navigate into children by name. */
   Tabs: NavigatorScreenParams<TabParams> | undefined
   /** Opened from the avatar's drawer, so it is pushed like Settings. */
@@ -71,7 +79,10 @@ export type SheetMarker = {
 }
 
 /** Web renders every route in one flat stack, like Bluesky's FlatNavigator. */
-export type FlatNavigatorParams = TabParams & Omit<RootStackParams, 'Tabs'> & {Sheet: SheetMarker}
+/** The native-only twins of the tab screens; web pushes the tab route itself (owner 179). */
+export type PushedTabRoute = 'PushedHome' | 'PushedPeople' | 'PushedGroups' | 'PushedAnalytics' | 'PushedActivity'
+
+export type FlatNavigatorParams = TabParams & Omit<RootStackParams, 'Tabs' | PushedTabRoute> & {Sheet: SheetMarker}
 
 export type AllNavigatorParams = RootStackParams & TabParams
 

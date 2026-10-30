@@ -57,6 +57,7 @@ Status words are the same as `docs/BACKLOG.md`: **done** (built, tested and merg
 | Support | Feedback endpoint | F-2112 | todo (needs backend) |
 | Support | Help, About, licences, privacy | F-215 | todo |
 | Platform | PWA: production service worker, offline shell, update toast, manifest, Install app | F-1901 | done (feat/wA-38; verified in Chrome on a production build: registers, opens offline incl. deep routes, no API cached, update toast + Reload, install prompt and iPhone steps; Safari 7-day warning has no Export action until F-2001; native iOS/Android n/a) |
+| Expenses+ | Disputes and holds (owner 119): raise, hold, release, accept (one-tap fix), reject, withdraw, reopen; badges, "of which disputed", Settle up leaves them out, Disputed filter, Search `status: disputed`, CSV column | F-1210 | built on feat/wC-F1210-disputes, unmerged (2026-10-30; local, both engines; For you card "Needs your answer", the Home overview line and "Adjustment after settle-up" are follow-ups, BACKLOG F-1210). `pnpm check` green apart from `search.test.ts` "every query under 50 ms", which fails only at load above 20 (324 ms at load 25, 22 ms when quiet; the search code is untouched). Checks: domain 13 permission tests + 9 `disputed.test.ts`, sync 36 `disputes.test.ts` on SQLite and IndexedDB, the property test (disputes on their own random stream; a twin run without them gives identical balances, pairs and aggregates; disputed sums equal a recomputation), v4 -> v5 migration on both engines incl. the large set, 13 `demoCoverage` lines; Playwright `disputes.spec.ts` 24/24 at 390 and 1440; full web e2e 511 tests at 2 workers: 506 first run, the 5 misses were 4 from this change (the CSV's extra column, a row-menu testID that collided with Hide) and one existing race (`ask.spec` goes to `/` right after a pref write; passes alone), all fixed or shown to pass alone. Perf (load 16, this branch): 10,000 expenses Home cold open 28 ms, write + UI 16 ms, Analytics open 44 ms, Ask open 32 / answer 27 ms; large demo set cold open 37 ms, write + UI 15 ms; tap latency tabs 11-65 ms, FAB 40 ms (x1) / 105 ms (x4). Each money write adds one indexed read of the record's open disputes. Renders gate re-recorded: scroll phase +Strong/TriangleAlert (the Activity feed now holds the demo's dispute rows: 11 new rows with a triangle badge), ask phase +8 Text (one more search tip). Add expense stays at baseline (the resolve question mounts only for a disputed expense; the dispute reads skip when there is no expense id). Web verified; native and simulators not run |
 | Expenses+ | Comments on expenses and repayments (local + outbox) | F-1204 | in progress (built and tested on feat/wB-B4, unmerged; acceptance 4 with F-2208; others' comments in Activity wait for F-2208). Review minors fixed 2026-10-29: sync 242 tests (`comments.test.ts` 11, edit on a deleted target refused), client 224 tests, full web e2e 226/226 with the UPI pay test left out (it clicks a UPI link; machine at load ~30 made `demo-large` miss its 10 s bound once, 3.2 s alone), `comments.spec.ts` 8 incl. Tab to the row menu and Shift+F10 / ContextMenu at 390 px; perf (500 expenses, one save): pref 1 read / 1 commit / 363 renders / 15 ms, expense 7 reads / 2 commits / 73 renders / 18 ms; large demo set (1,569 expenses): cold open 53 ms, write+UI 15 ms; 10,000 expenses: cold open 49 ms, write+UI 16 ms, search 13-27 ms per keystroke; web verified, native not run |
 | Expenses+ | Disputes, flags and hold | F-1210 | todo |
 | Expenses+ | Shared comments and disputes | F-2208 | todo (needs backend) |
@@ -229,9 +230,9 @@ increase, with its cause:
   streams in chunks, the scroll count follows scroll timing), so they are recorded at the highest value seen in 8 runs.
 Eight consecutive runs after recording: 8 of 8 pass.
 
-Renders gate, fix/ios-safari-taps (tabs stay mounted, owners 166 / 168; the phases now start after an explicit "demo loaded" signal, the
-app's `splito:home-ready` mark plus one second without a commit; baseline re-recorded at the median of 3 runs, 3 consecutive passes after). Against the baseline of this branch's parent: tabs updates 4,418 to 3,435 (it used to vary 1,916 to 3,440 between runs, the large
-demo's background loading landing inside or outside the phase; 3,179 to 3,436 now), scroll mounts 50,113 to 42,810 (the parked Activity is re-used, not
+Renders gate, fix/ios-safari-taps, re-recorded after merging main's Home / People tabs, fix round 2 (tabs stay mounted, owners 166 / 168; the phases now start after an explicit "demo loaded" signal, the
+app's `splito:home-ready` mark plus one second without a commit; baseline re-recorded at the median of 3 runs, 3 consecutive passes after). Against the baseline of this branch's parent: tabs updates 4,418 to about 3,400 (it used to vary 1,916 to 3,440 between runs, the large
+demo's background loading landing inside or outside the phase; 3,401 to 3,402 in 3 runs after the merge with main's Home / People), scroll mounts 50,113 to 42,810 (the parked Activity is re-used, not
 rebuilt), launch 403 to 398. Switching Home > Groups > Home on a phone, both visited: 303 renders per switch to 71, all of them the
 bar and the navigator, and none of PeopleScreen / PersonRow / BalanceSummary / SummaryCard / ListToolsHeader / ListImpl / GroupsScreen /
 GroupRow (`renders.spec` "switching back to a visited tab re-renders none of its content"). Every per-component increase, with its cause:
@@ -246,3 +247,28 @@ GroupRow (`renders.spec` "switching back to a visited tab re-renders none of its
 - `update:DesktopLeftNav` 0 to 3 (launch), `BarChart` / `LineChart` 0 to 3 (tabs): the first visit's deferred body now mounts a frame later, so
   the chart lands inside the phase of the tab it belongs to; `ask` (see above) is the same timing-noisy phase as before, highest value recorded.
 Native (`transitionEnd`, the bottom sheet's state event) was not run on a device or simulator in this change.
+## Home, People and Groups tabs (F-256, F-1415; owners 153-161, 175-177, 179; branch feat/wC-F256-home)
+
+Home (`/`): compact Overview (scope All / Groups / Direct), Requests and Invites sent rows, Recent transactions,
+Recently active people and groups; People (`/people`): the same request rows, the Friends list (search, Filters, gear);
+Groups: no Overview. Tab ids `home | people | ...` with the saved `tabs` read-time migration; every item on the rail
+and desktop sidebar (no More); the right column hidden on Home; bottom-bar labels up to 5 tabs; a main screen opened
+from a link is a pushed page with Back. Web verified; native not run (the `Pushed<Tab>` twins and the Lucide glyphs
+need a simulator check).
+
+Checks, 2026-10-30, machine load under 6 for the perf runs (e2e at load 5-135 from other builders):
+- `pnpm check` green; client bun tests 646+, sync `preferences.test.ts` (legacy `tabs` shapes), domain `ledger.test.ts` (scope).
+- e2e build `--clear`, full e2e `--workers=2`: see the report (new `homeTabs.spec.ts`, rewritten `homeLayout.spec.ts`; ~35 specs updated for the new Home).
+- Renders gate re-recorded (`RENDERS_BASELINE=write`). Home is lighter than the old friends-list Home at launch (launch
+  mounts 3,580 -> 2,063, updates 403 -> 293); the tab round now also mounts the People list and Home's own lists
+  (tabs mounts 21,440 -> 24,133, updates 4,418 -> 3,532); scroll 50,113 -> 42,805 mounts; add/close/type/ask unchanged
+  within noise. Reviewed increases: (1) `tabs` mounts, from People now being mounted on top of Home on the same round;
+  (2) three wasted-render reports x1 (`HeaderAvatar`, `AddExpenseFAB`, `ActivityScreen`, hook `useContext`): the pushed-copy
+  check reads the route context, which changes once on focus; they re-render with equal output, once per launch.
+- Tap to first visual change (`perf/tapLatency.spec.ts`, 390 px, large demo, median of 3, load under 6), x1 / x4 CPU: tab People
+  20 / 32, Home 35 / 165, Groups 22 / 45, Analytics 17 / 39, Activity 13 / 33; friend row 17 / 35; group row 15 / 47;
+  FAB 21 / 51; open sheet 28 / 73; Save 37 / 47; tab 50 ms tab 32 / 54. Budgets 100 / 200 met; Home at x4 (165) is the
+  slowest (it draws the Overview and three lists), below the 200 budget.
+- Perf `schema-v2` (Home now shows recent transactions in its body): large demo set (1,590 expenses) Home cold open 27 ms (was 25),
+  write + UI 16 ms; 10,000 expenses cold open 25 ms (24), write + UI 16-32 ms (16), Analytics 43 ms (44), search 20-25 ms; Ask open 35 ms, answer 30 ms.
+- Screenshots: apps/client/qa/home2/ (Home, People, Groups; light and Dim; 390 and 1440; demo on).

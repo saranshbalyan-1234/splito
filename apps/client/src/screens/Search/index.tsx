@@ -23,8 +23,8 @@ export function SearchScreen() {
     else
       navigation.dispatch(
         IS_WEB
-          ? StackActions.replace('People')
-          : StackActions.replace('Tabs', {screen: 'People'}),
+          ? StackActions.replace('Home')
+          : StackActions.replace('Tabs', {screen: 'Home'}),
       )
     open({query})
   }, [navigation, open, query])

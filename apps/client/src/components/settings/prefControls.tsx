@@ -203,7 +203,7 @@ function HomeTabPref() {
   )
   return (
     <RadioPref
-      pref={usePrefControl('homeTab')}
+      pref={usePrefControl('startTab')}
       icon={HomeIcon}
       title={l`Open on`}
       options={destinations.map(tab => ({value: tab, label: labels[tab]}))}
@@ -551,7 +551,7 @@ export const PREF_CONTROLS = {
   motion: MotionPref,
   haptics: HapticsPref,
   tabs: NavigationEditor,
-  homeTab: HomeTabPref,
+  startTab: HomeTabPref,
   defaultCurrency: CurrencyPref,
   // Chosen with each charge's Amount / % toggle on a bill, which remembers it; Reset all resets it.
   itemizeAdjustmentModes: null,
@@ -581,7 +581,10 @@ export const PREF_CONTROLS = {
   includeGroupsDefault: null,
   // Set from a group's menu (Hide group / Show group), where its effect shows; Reset all resets it.
   'groups.hidden': null,
+  // Set on the Settle screen (Include disputed), where its effect shows; remembered per group.
+  'group:settleIncludeDisputed': null,
   // Chosen in each list's filter sheet (Show settled), next to the other filters; Reset all resets them.
+  'home.overviewScope': null,
   'people.showSettled': null,
   'groups.showSettled': null,
   'groups.sort': null,

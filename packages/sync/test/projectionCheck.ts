@@ -1,6 +1,7 @@
 import {expect} from 'bun:test'
-import {groupNet, type LedgerRecord, pairwiseBalances, recordCells} from '@splito/domain'
+import {allocate, expenseDebts, groupNet, type LedgerRecord, pairwiseBalances, participantId, participantWeight, recordCells} from '@splito/domain'
 
+import {type Dispute} from '../src/disputes'
 import {type Expense, type Repayment} from '../src/mutations'
 import {termKey, termRows} from '../src/searchTerms'
 import {toExpenseRecord, toRepaymentRecord, toWriteOffRecord} from '../src/selectors'
@@ -32,6 +33,7 @@ export async function ledgerOf(s: Store): Promise<LedgerRecord[]> {
  */
 export async function expectProjectionsMatchLedger(s: Store) {
   await expectDerivedTablesMatch(s)
+  await expectDisputedMatch(s)
   const records = await ledgerOf(s)
   const keyed = records.map(r => ({...r, groupId: r.groupId ?? DIRECT}))
   const groups = [...new Set(keyed.filter(r => !r.deleted).map(r => r.groupId))].sort()
@@ -52,6 +54,73 @@ export async function expectProjectionsMatchLedger(s: Store) {
     const sort = (rows: ReadonlyArray<readonly [string, string, bigint]>) => [...rows].sort((x, y) => (x[0] + x[1] < y[0] + y[1] ? -1 : 1))
     expect(sort(stored)).toEqual(sort(expected))
   }
+}
+
+/**
+ * The disputed sums recomputed from the rows: every live record with an open dispute or hold counts in full, or (when only
+ * items of a bill are disputed) as those items' portions, and nets and debts are folded per person / group / currency.
+ * Written from the records' own fields, not by the code that maintains `disputed_balances` and `disputed_pairs`.
+ */
+async function expectedDisputed(s: Store) {
+  const {entities} = await s.dump()
+  const open = new Map<string, Dispute[]>()
+  for (const e of entities) {
+    const d = e.data as Dispute
+    if (e.type === 'dispute' && !e.deleted && d.status === 'open') open.set(`${d.targetType}:${d.targetId}`, [...(open.get(`${d.targetType}:${d.targetId}`) ?? []), d])
+  }
+  const nets = new Map<string, bigint>()
+  const pairs = new Map<string, bigint>()
+  const add = (m: Map<string, bigint>, key: unknown[], v: bigint) => m.set(JSON.stringify(key), (m.get(JSON.stringify(key)) ?? 0n) + v)
+  for (const e of entities) {
+    const disputes = open.get(`${e.type}:${e.id}`)
+    if (!disputes || e.deleted || !MONEY.includes(e.type)) continue
+    const d = e.data as Expense & Repayment
+    const group = d.groupId ?? ''
+    if (e.type !== 'expense') {
+      add(nets, [d.from, group, d.currency], d.amount)
+      add(nets, [d.to, group, d.currency], -d.amount)
+      add(pairs, [d.from, d.to, group, d.currency], d.amount)
+      add(pairs, [d.to, d.from, group, d.currency], -d.amount)
+      continue
+    }
+    let payers = d.payers
+    let shares = d.shares
+    if (d.split.mode === 'items' && disputes.every(x => x.itemId !== null)) {
+      const ids = new Set(disputes.map(x => x.itemId))
+      shares = {}
+      let total = 0n
+      const picked = d.split.items.filter(i => ids.has(i.id))
+      // An item no edit left in the bill counts for nothing (its dispute is closed as Gone).
+      if (picked.length === 0) continue
+      for (const item of picked) {
+        total += item.amount
+        for (const [id, v] of Object.entries(allocate(item.amount, item.participants.map(p => ({id: participantId(p), weight: BigInt(participantWeight(p))}))))) shares[id] = (shares[id] ?? 0n) + v
+      }
+      const paid = Object.entries(d.payers).filter(([, v]) => v > 0n)
+      payers = paid.length ? allocate(total, paid.map(([id, weight]) => ({id, weight}))) : {}
+    }
+    for (const [p, v] of Object.entries(payers)) add(nets, [p, group, d.currency], v)
+    for (const [p, v] of Object.entries(shares)) add(nets, [p, group, d.currency], -v)
+    for (const t of expenseDebts({payers, shares})) {
+      add(pairs, [t.creditor, t.debtor, group, d.currency], t.amount)
+      add(pairs, [t.debtor, t.creditor, group, d.currency], -t.amount)
+    }
+  }
+  const clean = (m: Map<string, bigint>) => Object.fromEntries([...m].filter(([, v]) => v !== 0n).sort(([a], [b]) => (a < b ? -1 : 1)))
+  return {nets: clean(nets), pairs: clean(pairs)}
+}
+
+/** `disputed_balances` and `disputed_pairs` equal the recomputation (F-1210). */
+export async function expectDisputedMatch(s: Store) {
+  const want = await expectedDisputed(s)
+  const nets: Record<string, bigint> = {}
+  for (const b of await s.disputedBalances()) if (b.amount !== 0n) nets[JSON.stringify([b.personId, b.groupId ?? '', b.currency])] = b.amount
+  expect(Object.fromEntries(Object.entries(nets).sort(([a], [b]) => (a < b ? -1 : 1)))).toEqual(want.nets)
+  // Everyone who can hold a pair: the people rows, and whoever the expected keys name (a person may have been erased outright).
+  const people = [...new Set([...(await s.getAll('person')).map(p => p.id), ...Object.keys(want.pairs).map(k => (JSON.parse(k) as string[])[0]!)])]
+  const pairs: Record<string, bigint> = {}
+  for (const p of people) for (const r of await s.disputedPairs(p)) pairs[JSON.stringify([r.personId, r.otherId, r.groupId ?? '', r.currency])] = r.amount
+  expect(Object.fromEntries(Object.entries(pairs).sort(([a], [b]) => (a < b ? -1 : 1)))).toEqual(want.pairs)
 }
 
 /** Aggregates folded by key from the ledger, computed here from the records (not by the code that maintains the table). */

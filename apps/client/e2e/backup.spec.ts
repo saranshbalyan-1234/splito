@@ -60,7 +60,7 @@ test('a backup exports from Settings and restores into a fresh device with the s
   await expect(other.getByTestId('import-count-person')).toContainText('1 new')
   await other.getByTestId('sheet-save').click()
   await expect(other.getByText(/Restored/)).toBeVisible()
-  await other.goto('/')
+  await other.goto('/people')
   const row = other.getByTestId('person-Kavya Rao')
   await expect(row).toBeVisible()
   await expect(row.getByTestId('balance-INR')).toContainText('250.00')
@@ -100,7 +100,7 @@ test('a damaged backup is refused and nothing changes', async ({page}, info) => 
 test('Person > Export statement downloads a CSV with exact amounts per currency and formula-safe cells', async ({page}, info) => {
   await ready(page)
   await seed(page)
-  await page.goto('/')
+  await page.goto('/people')
   await page.getByTestId('person-Kavya Rao').click()
   await page.getByTestId('person-more').click()
   await page.getByTestId('person-export').click()
@@ -119,8 +119,8 @@ test('Person > Export statement downloads a CSV with exact amounts per currency 
   expect(lines.some(l => l.includes(',INR,') && l.includes('500.00'))).toBe(true)
   expect(lines.some(l => l.includes(',EUR,') && l.includes('-5.00'))).toBe(true)
   // The closing balance of each currency equals the figure on the friend's page.
-  expect(csv).toMatch(/Closing balance,[^\r\n]*,INR,[^\r\n]*,250\.00\r\n/)
-  expect(csv).toMatch(/Closing balance,[^\r\n]*,EUR,[^\r\n]*,-5\.00\r\n/)
+  expect(csv).toMatch(/Closing balance,[^\r\n]*,INR,[^\r\n]*,250\.00,,\r\n/)
+  expect(csv).toMatch(/Closing balance,[^\r\n]*,EUR,[^\r\n]*,-5\.00,,\r\n/)
 })
 
 test('the PDF statement opens a print-ready page with a table per currency', async ({page}) => {

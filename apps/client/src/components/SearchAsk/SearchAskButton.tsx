@@ -12,10 +12,10 @@ import {SHORTCUT_HINT} from './useSearchAskHotkey'
 /**
  * The Search & Ask button (ARCHITECTURE 26.3, decision 74): Lucide's
  * Sparkles, the widely recognised AI mark, in every top-level header to the
- * left of the page's action. It opens the one drawer for search and AI.
+ * left of the page's action (the page's only action on Home, where `edge` puts it at the far right). It opens the one drawer for search and AI.
  * Web shows the label as a tooltip, with the Cmd/Ctrl+K hint on desktop.
  */
-export function SearchAskButton() {
+export function SearchAskButton({edge = false}: {edge?: boolean} = {}) {
   const {t: l} = useLingui()
   const {open} = useSearchAsk()
   const {gtMobile} = useBreakpoints()
@@ -37,6 +37,7 @@ export function SearchAskButton() {
         testID="header-search-ask"
         label={label}
         icon={SparklesIcon}
+        edge={edge}
         onPress={() => open()}
       />
     </View>

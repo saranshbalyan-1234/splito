@@ -57,7 +57,7 @@ function check(f: Frame[]) {
 
 test('the drawer slides first, its menu mounts after the slide', async ({page}) => {
   await openDemo(page)
-  await expect(page.getByTestId('screen-people')).toBeVisible()
+  await expect(page.getByTestId('screen-home')).toBeVisible()
   await page.waitForTimeout(800)
   await sample(page, '[role="dialog"][aria-label="Menu"]', 'left', '[data-testid="drawer-groups"]')
   await page.getByTestId('header-avatar').tap()

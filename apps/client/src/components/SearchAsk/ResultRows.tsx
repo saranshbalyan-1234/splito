@@ -372,6 +372,7 @@ export function GroupResult({
   const memberCount = members.filter(m => m.leftAt === null).length
   const byline = [
     kindLabel,
+    kind === 'trip' ? group.data.location : undefined,
     memberCount === 1 ? l`1 member` : l`${memberCount} members`,
     group.deleted ? l`Deleted` : isGroupInactive(group.data) ? l`Inactive` : undefined,
     isHidden ? l`Hidden` : undefined,

@@ -3,6 +3,7 @@ import {Trans} from '@lingui/react/macro'
 import {magnitude, ZERO} from '@splito/domain'
 
 import {atoms as a, useBreakpoints, useTheme} from '#/alf'
+import {DisputedLine} from '#/components/disputes/DisputedLine'
 import {CircleCheck_Stroke2_Corner0_Rounded as CheckIcon} from '#/components/icons/CircleCheck'
 import {Text} from '#/components/Typography'
 import {MoneyArrow, useMoneyStyle} from '#/components/MoneyDirection'
@@ -17,10 +18,13 @@ export function GroupBalanceCards({
   openCurrencies,
   mine,
   locale,
+  disputed = {},
 }: {
   openCurrencies: string[]
   mine: Record<string, bigint>
   locale: string
+  /** My part of each currency's balance on disputed or held records (F-1210). */
+  disputed?: Record<string, bigint>
 }) {
   const t = useTheme()
   const money = useMoneyStyle()
@@ -87,6 +91,7 @@ export function GroupBalanceCards({
                     ]}
                   />
                 </View>
+                <DisputedLine testID="group-disputed" amounts={[{currency, amount: disputed[currency] ?? ZERO}]} />
               </View>
             )
           })

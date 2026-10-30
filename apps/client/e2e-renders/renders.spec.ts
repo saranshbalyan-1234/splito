@@ -214,7 +214,7 @@ test('no wasted renders, no render above the baseline', async ({page}) => {
   // Switch the large demo on (a year of use: ~50 activity pages), then count a cold launch into it: the mode survives a reload.
   await openDemo(page)
   await page.reload()
-  await expect(page.getByTestId('screen-people')).toBeVisible({timeout: 60_000})
+  await expect(page.getByTestId('screen-home')).toBeVisible({timeout: 60_000})
   await demoLoaded(page)
 
   await phase(page, 'tabs')
@@ -367,16 +367,16 @@ test('switching back to a visited tab re-renders none of its content', async ({p
   await page.addInitScript(instrument)
   await openDemo(page)
   await page.reload()
-  await expect(page.getByTestId('screen-people')).toBeVisible({timeout: 60_000})
+  await expect(page.getByTestId('screen-home')).toBeVisible({timeout: 60_000})
   await demoLoaded(page)
   // Visit every tab once, so each switch below is a return to one that is kept.
-  for (const tab of ['groups', 'analytics', 'activity', 'people']) {
+  for (const tab of ['groups', 'analytics', 'activity', 'home']) {
     await page.getByTestId(`tab-${tab}`).click()
     await expect(page.getByTestId(`screen-${tab}`)).toBeVisible()
     await quiet(page)
   }
   // Groups <-> Home, Analytics <-> Activity and Home <-> Analytics, each leg counted on its own.
-  const legs = ['groups', 'people', 'analytics', 'activity', 'analytics', 'people', 'analytics', 'people']
+  const legs = ['groups', 'home', 'analytics', 'activity', 'analytics', 'home', 'analytics', 'home']
   for (const [i, tab] of legs.entries()) {
     await phase(page, `leg${i}:${tab}`)
     await page.getByTestId(`tab-${tab}`).click()
@@ -386,7 +386,7 @@ test('switching back to a visited tab re-renders none of its content', async ({p
   const all = await page.evaluate(() => (window as unknown as Win).__renders.counts)
   // The screens' own content: the bar and the navigator shell may render (they own the highlight and the visible
   // screen), none of these may.
-  const CONTENT = /^(mount|update):(PeopleScreen|PersonRow|BalanceSummary|SummaryCard|RequestsSection|GroupsScreen|GroupRow|ListToolsHeader|ListImpl|RowImpl|ActivityScreen|AnalyticsScreen|ExpenseRow|ActivityRow|ChartCard|BarChart|LineChart)$/
+  const CONTENT = /^(mount|update):(HomeScreen|Overview|PeopleScreen|PersonRow|BalanceSummary|SummaryCard|RequestsSection|GroupsScreen|GroupRow|ListToolsHeader|ListImpl|RowImpl|ActivityScreen|AnalyticsScreen|ExpenseRow|ActivityRow|ChartCard|BarChart|LineChart)$/
   const problems: string[] = []
   for (const [leg, counts] of Object.entries(all)) {
     if (!leg.startsWith('leg')) continue

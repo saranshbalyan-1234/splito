@@ -27,7 +27,7 @@ const people = [
   entity<Person>('person', 'sam', {name: 'Sam Carter', isMe: false}),
 ]
 const groups = [
-  entity<Group>('group', 'goa', {name: 'Goa trip', kind: 'trip', currency: 'INR', members: [], startDate: null, endDate: null, archived: false}),
+  entity<Group>('group', 'goa', {name: 'Goa trip', location: 'Candolim beach', kind: 'trip', currency: 'INR', members: [], startDate: null, endDate: null, archived: false}),
   entity<Group>('group', 'lis', {name: 'Lisbon', kind: 'trip', currency: 'EUR', members: [], startDate: null, endDate: null, archived: false}),
 ]
 const categories = [
@@ -146,6 +146,10 @@ for (const [engine, open] of ENGINES) {
     test('people and groups match by name; a deleted expense is listed too (the app strikes it)', async () => {
       expect((await find('sa')).people.map(p => p.id)).toEqual(['sam'])
       expect((await find('goa')).groups.map(g => g.id)).toEqual(['goa'])
+      // A trip's location is found like its name (owner 182), and so are its expenses.
+      expect((await find('candol')).groups.map(g => g.id)).toEqual(['goa'])
+      expect((await find('beach')).groups.map(g => g.id)).toEqual(['goa'])
+      expect(await ids('candolim')).toEqual(['bar', 'dinner'])
       expect((await find('> 10')).people).toEqual([])
       expect(await ids('deleted')).toEqual(['gone'])
       // "Me" is not a result of its own, but its expenses are found by the name.

@@ -4,7 +4,10 @@ import 'react-native-gesture-handler' // must be first
 if (__DEV__) require('#/lib/whyDidYouRender')
 
 import {registerRootComponent} from 'expo'
+import * as SplashScreen from 'expo-splash-screen'
 
 import App from '#/App'
 
+/* The native splash stays until the JS launch screen (components/LaunchScreen) has drawn the same picture. */
+void SplashScreen.preventAutoHideAsync()
 registerRootComponent(App)
