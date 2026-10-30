@@ -1,24 +1,15 @@
 import {expect, type Page, test} from '@playwright/test'
 
-import {openDemo} from './openDemo'
-
-/* F-113: balances and settle consistency (audit M6, M10, m5, m7), seeded through window.splito. */
-type Splito = {
-  me: string
-  createPerson(name: string): Promise<string>
-  createGroup(input: unknown): Promise<string>
-  createExpense(draft: unknown): Promise<string>
-}
-
-async function ready(page: Page) {
-  await page.goto('/')
-  await page.waitForFunction(() => 'splito' in window)
-}
+import {type SplitoDevTools} from '../src/data/devTools'
+import {openAddExpense} from './composer'
+import {openApp} from './app'
+import {BASE} from './seed'
+import {DESKTOP} from './viewports'
 
 /** Bob owes me ₹10 directly; I owe Bob ₹10 in Goa. The net is zero, both parts are open. */
 async function seedBothWays(page: Page) {
-  return page.evaluate(async () => {
-    const s = (window as unknown as {splito: Splito}).splito
+  return page.evaluate(async draft => {
+    const s = (window as unknown as {splito: SplitoDevTools}).splito
     const bob = await s.createPerson('Bob Mehta')
     const group = await s.createGroup({
       name: 'Goa',
@@ -29,10 +20,7 @@ async function seedBothWays(page: Page) {
       memberIds: [bob],
     })
     const base = {
-      currency: 'INR',
-      tz: 'Asia/Kolkata',
-      category: 'food',
-      notes: '',
+      ...draft,
       total: '2000',
       split: {mode: 'equal', participants: [s.me, bob]},
       date: '2026-10-20',
@@ -50,13 +38,13 @@ async function seedBothWays(page: Page) {
       payers: {[bob]: '2000'},
     })
     return {bob}
-  })
+  }, BASE)
 }
 
 test('M10 + m7 + m5: direct and group debts that net to zero stay open, and Call it even clears both', async ({
   page,
 }) => {
-  await ready(page)
+  await openApp(page)
   const {bob} = await seedBothWays(page)
 
   // People: both ways on the row, never "Settled".
@@ -89,10 +77,7 @@ test('M10 + m7 + m5: direct and group debts that net to zero stay open, and Call
 })
 
 test('M6: the payer cannot be unticked from "Split with"', async ({page}) => {
-  await page.setViewportSize({width: 1440, height: 900})
-  await openDemo(page, '/people')
-  await expect(page.getByTestId('person-Riya Sharma')).toBeVisible()
-  await page.getByTestId('sidebar-add').click()
+  await openAddExpense(page, DESKTOP)
   await page.getByTestId('amount-input').fill('900')
   await page.getByTestId('expense-people').click()
   await page.getByTestId('person-option-Riya Sharma').click()

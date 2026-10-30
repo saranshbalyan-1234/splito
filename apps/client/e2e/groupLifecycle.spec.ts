@@ -1,57 +1,28 @@
 import {expect, type Page, test} from '@playwright/test'
 
-/* F-604 archive, F-615 leave and delete group, F-613 part 1 remove member. Seeded through window.splito. */
-type Splito = {
-  me: string
-  createPerson(name: string): Promise<string>
-  createGroup(input: unknown): Promise<string>
-  createExpense(draft: unknown): Promise<string>
-}
-
-async function ready(page: Page) {
-  await page.goto('/')
-  await page.waitForFunction(() => 'splito' in window)
-}
+import {type SplitoDevTools} from '../src/data/devTools'
+import {openApp} from './app'
+import {seedGroup} from './seed'
+import {DESKTOP, PHONE} from './viewports'
 
 /** Rishikesh: me, Bela, Chirag. Chirag paid 300 for the three of us, so I owe Chirag 100 and Bela owes him 100. */
 async function seed(page: Page) {
-  return page.evaluate(async () => {
-    const s = (window as unknown as {splito: Splito}).splito
-    const b = await s.createPerson('Bela Joshi')
-    const c = await s.createPerson('Chirag Shah')
-    const group = await s.createGroup({
-      name: 'Rishikesh',
-      kind: 'trip',
-      currency: 'INR',
-      startDate: null,
-      endDate: null,
-      memberIds: [b, c],
-    })
-    await s.createExpense({
-      title: 'Rafting',
-      groupId: group,
-      currency: 'INR',
-      total: '30000',
-      payers: {[c]: '30000'},
-      split: {mode: 'equal', participants: [s.me, b, c]},
-      date: '2026-09-05',
-      tz: 'Asia/Kolkata',
-      category: 'entertainment',
-      notes: '',
-    })
-    return {group, me: s.me, b, c}
+  const {group, me, people: [b, c]} = await seedGroup(page, {
+    people: ['Bela Joshi', 'Chirag Shah'],
+    expenses: [{title: 'Rafting', total: '30000', paidBy: 2, among: [0, 1, 2], date: '2026-09-05', category: 'entertainment'}],
   })
+  return {group, me, b: b!, c: c!}
 }
 
 const WIDTHS = [
-  {name: 'phone', width: 390, height: 844},
-  {name: 'desktop', width: 1440, height: 900},
+  {name: 'phone', ...PHONE},
+  {name: 'desktop', ...DESKTOP},
 ]
 
 for (const {name, width, height} of WIDTHS) {
   test(`${name}: inactive takes no expenses but can settle, sits in the Inactive fold, and active brings it back`, async ({page}) => {
     await page.setViewportSize({width, height})
-    await ready(page)
+    await openApp(page)
     const {group} = await seed(page)
     await page.goto(`/groups/${group}`)
     await expect(page.getByTestId('group-add-expense')).toBeVisible()
@@ -66,7 +37,7 @@ for (const {name, width, height} of WIDTHS) {
 
     // The sync mutation refuses on its own, whatever the UI shows.
     const refusal = await page.evaluate(async id => {
-      const s = (window as unknown as {splito: Splito}).splito
+      const s = (window as unknown as {splito: SplitoDevTools}).splito
       try {
         await s.createExpense({title: 'Late', groupId: id, currency: 'INR', total: '100', payers: {[s.me]: '100'}, split: {mode: 'equal', participants: [s.me]}, date: '2026-09-06', tz: 'Asia/Kolkata', category: 'food', notes: ''})
         return 'allowed'
@@ -101,7 +72,7 @@ for (const {name, width, height} of WIDTHS) {
 
   test(`${name}: hide is personal: out of my list, found by filter and search, still takes expenses, show brings it back`, async ({page}) => {
     await page.setViewportSize({width, height})
-    await ready(page)
+    await openApp(page)
     const {group} = await seed(page)
     await page.goto(`/groups/${group}`)
     await page.getByTestId('group-more').click()
@@ -131,7 +102,7 @@ for (const {name, width, height} of WIDTHS) {
 }
 
 test('remove a member: settle previews every balance change, then the member is marked as left', async ({page}) => {
-  await ready(page)
+  await openApp(page)
   const {group} = await seed(page)
   await page.goto(`/groups/${group}`)
   await page.getByTestId('group-tab-members').click()
@@ -153,7 +124,7 @@ test('remove a member: settle previews every balance change, then the member is 
 })
 
 test('keep as inactive leaves the balance open; the choice shows in Activity', async ({page}) => {
-  await ready(page)
+  await openApp(page)
   const {group} = await seed(page)
   await page.goto(`/groups/${group}`)
   await page.getByTestId('group-tab-members').click()
@@ -169,7 +140,7 @@ test('keep as inactive leaves the balance open; the choice shows in Activity', a
 })
 
 test('leaving as the last admin asks who takes over; then I am out and told so', async ({page}) => {
-  await ready(page)
+  await openApp(page)
   const {group} = await seed(page)
   await page.goto(`/groups/${group}`)
   await page.getByTestId('group-more').click()
@@ -190,7 +161,7 @@ test('leaving as the last admin asks who takes over; then I am out and told so',
 })
 
 test('delete group lists what goes, keeps the group struck in Groups, and restores everything', async ({page}) => {
-  await ready(page)
+  await openApp(page)
   const {group} = await seed(page)
   await page.goto(`/groups/${group}`)
   await page.getByTestId('group-more').click()

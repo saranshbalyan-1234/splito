@@ -1,5 +1,9 @@
 import {expect, type Page, test} from '@playwright/test'
 
+import {type SplitoDevTools} from '../src/data/devTools'
+import {openApp} from './app'
+import {DESKTOP} from './viewports'
+
 /*
  * F-111 (logic audit C1, C2): amounts the app writes into a field - the
  * Record payment and Call it even prefills, the Edit expense form - read
@@ -8,27 +12,18 @@ import {expect, type Page, test} from '@playwright/test'
  * are minor units.
  */
 
-type Splito = {
-  me: string
-  createPerson(name: string): Promise<string>
-  createExpense(draft: unknown): Promise<string>
-  setPref(key: string, value: unknown): Promise<void>
-}
-
-const DESKTOP = {width: 1440, height: 900}
 
 /** Bob owes me BHD 1.234 (I paid 2.468, split equally), or `total` when given. */
 async function seed(
   page: Page,
-  numberLocale: string,
+  numberLocale: 'en-US' | 'en-IN' | 'de-DE' | 'fr-FR',
   total = '2468',
 ): Promise<{bob: string; expense: string}> {
   await page.setViewportSize(DESKTOP)
-  await page.goto('/')
-  await page.waitForFunction(() => 'splito' in window)
+  await openApp(page)
   return page.evaluate(
     async ({numberLocale, total}) => {
-      const s = (window as unknown as {splito: Splito}).splito
+      const s = (window as unknown as {splito: SplitoDevTools}).splito
       await s.setPref('numberLocale', numberLocale)
       const bob = await s.createPerson('Bob Lee')
       const expense = await s.createExpense({

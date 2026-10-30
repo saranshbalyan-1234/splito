@@ -3,10 +3,10 @@ import {join} from 'node:path'
 
 import {expect, type Locator, type Page, test} from '@playwright/test'
 
+import {activityScreen} from './activity'
 import {openDemo} from './openDemo'
-
-const DESKTOP = {width: 1440, height: 900}
-const PHONE = {width: 390, height: 844}
+import {pinClock} from './pinClock'
+import {DESKTOP, PHONE} from './viewports'
 
 /* Every compiled message id, so the screen can be checked for ids shown instead of words. */
 const MESSAGE_IDS = Object.keys(
@@ -23,15 +23,13 @@ const MESSAGE_IDS = Object.keys(
 /** Seeds the demo (two weeks of history, some of it by friends) and opens Activity. */
 async function openActivity(page: Page) {
   await openDemo(page, '/activity')
-  await expect(screen(page).getByTestId('activity-list')).toBeVisible()
+  await expect(activityScreen(page).getByTestId('activity-list')).toBeVisible()
 }
 
-/* Web keeps earlier pages of the stack mounted (hidden), so scope to Activity. */
-const screen = (page: Page) => page.getByTestId('screen-activity')
 /* The Activity item's unread badge in the sidebar. */
 const peopleBadge = (page: Page) => page.getByTestId('nav-badge-activity')
 const row = (page: Page, kind: string, text: string) =>
-  screen(page).getByTestId(`activity-${kind}`).filter({hasText: text})
+  activityScreen(page).getByTestId(`activity-${kind}`).filter({hasText: text})
 /* Activity reads older history a page at a time (F-117): scroll to the end until the row has loaded. */
 async function loaded(page: Page, r: Locator) {
   await page.mouse.move(700, 450)
@@ -47,12 +45,10 @@ test('the demo history reads as a feed grouped by day, in real words', async ({
   page,
 }) => {
   await page.setViewportSize(DESKTOP)
-  // The demo seeds minutes and hours before "now"; at 00:30 those fall on yesterday. Noon keeps the same day.
-  const noon = new Date()
-  noon.setHours(12, 0, 0, 0)
-  await page.clock.setFixedTime(noon)
+  // The demo seeds minutes and hours before "now"; at 00:30 those fall on yesterday. A pinned noon keeps the same day.
+  await pinClock(page)
   await openActivity(page)
-  const headers = screen(page).getByRole('heading')
+  const headers = activityScreen(page).getByRole('heading')
   await expect(headers.first()).toHaveText('Today')
   expect(await headers.count()).toBeGreaterThan(3)
 
@@ -78,7 +74,7 @@ test('the demo history reads as a feed grouped by day, in real words', async ({
   // Earlier days show the time of day, not "Nd ago", under their header.
   await expect(added).toContainText(/\d{1,2}:\d{2}\s?(AM|PM)/)
 
-  const words = new Set((await screen(page).innerText()).split(/\s+/))
+  const words = new Set((await activityScreen(page).innerText()).split(/\s+/))
   expect(MESSAGE_IDS.filter(id => words.has(id))).toEqual([])
 })
 
@@ -94,7 +90,7 @@ test('changes by friends are unread with a badge; mark all read clears them, und
   await expect(
     unreadDot(row(page, 'expense.restored', 'Groceries')),
   ).toHaveCount(0)
-  const dots = screen(page).getByTestId('activity-unread-dot')
+  const dots = activityScreen(page).getByTestId('activity-unread-dot')
   const unread = await dots.count()
   expect(unread).toBeGreaterThan(5)
   // The Activity nav item badges the same count: unread changes by other people.
@@ -102,22 +98,22 @@ test('changes by friends are unread with a badge; mark all read clears them, und
   // A year of friends' changes is unread: the badge stops at 30+ (the dots on screen are the first pages).
   await expect(peopleBadge(page)).toHaveText('30+')
   await page.getByTestId('tab-activity').click()
-  await expect(screen(page).getByTestId('activity-list')).toBeVisible()
+  await expect(activityScreen(page).getByTestId('activity-list')).toBeVisible()
 
-  await screen(page).getByTestId('activity-mark-all-read').click()
+  await activityScreen(page).getByTestId('activity-mark-all-read').click()
   await expect(dots).toHaveCount(0)
   // The header keeps its one action in place, disabled, so the title stays centred.
   await expect(
-    screen(page).getByTestId('activity-mark-all-read'),
+    activityScreen(page).getByTestId('activity-mark-all-read'),
   ).toBeDisabled()
 
   await page.getByRole('button', {name: 'Undo'}).click()
   await expect(dots).toHaveCount(unread)
 
-  await screen(page).getByTestId('activity-mark-all-read').click()
+  await activityScreen(page).getByTestId('activity-mark-all-read').click()
   await expect(dots).toHaveCount(0)
   await page.reload()
-  await expect(screen(page).getByTestId('activity-list')).toBeVisible()
+  await expect(activityScreen(page).getByTestId('activity-list')).toBeVisible()
   await expect(row(page, 'expense.edited', 'Dinner at Thalassa')).toBeVisible()
   await expect(dots).toHaveCount(0)
   await page.goto('/')
@@ -148,10 +144,10 @@ test('"Others" leaves out your own changes', async ({page}) => {
   await page.setViewportSize(DESKTOP)
   await openActivity(page)
   await expect(row(page, 'expense.restored', 'Groceries')).toBeVisible()
-  await screen(page).getByTestId('activity-tabs-selector-2').click()
+  await activityScreen(page).getByTestId('activity-tabs-selector-2').click()
   await expect(row(page, 'expense.edited', 'Dinner at Thalassa')).toBeVisible()
   await expect(row(page, 'expense.restored', 'Groceries')).toHaveCount(0)
-  await screen(page).getByTestId('activity-tabs-selector-0').click()
+  await activityScreen(page).getByTestId('activity-tabs-selector-0').click()
   await expect(row(page, 'expense.restored', 'Groceries')).toBeVisible()
 })
 
@@ -218,13 +214,13 @@ test('hide works from the keyboard, offers undo, and hidden rows come back from 
   await expect(
     page.getByText('Hidden from your activity', {exact: true}),
   ).toBeVisible()
-  await expect(screen(page).getByTestId('activity-hidden-footer')).toHaveText(
+  await expect(activityScreen(page).getByTestId('activity-hidden-footer')).toHaveText(
     /1 change hidden from your activity/,
   )
 
   await page.getByRole('button', {name: 'Undo'}).click()
   await expect(coffee).toBeVisible()
-  await expect(screen(page).getByTestId('activity-hidden-footer')).toHaveCount(
+  await expect(activityScreen(page).getByTestId('activity-hidden-footer')).toHaveCount(
     0,
   )
 
@@ -235,8 +231,8 @@ test('hide works from the keyboard, offers undo, and hidden rows come back from 
   // Hiding is personal: the audit history still has the expense.
   await page.goto('/')
   await page.goto('/activity')
-  await expect(screen(page).getByTestId('activity-hidden-footer')).toBeVisible()
-  await screen(page).getByTestId('activity-unhide-all').click()
+  await expect(activityScreen(page).getByTestId('activity-hidden-footer')).toBeVisible()
+  await activityScreen(page).getByTestId('activity-unhide-all').click()
   await expect(coffee).toBeVisible()
 })
 
@@ -287,10 +283,10 @@ test('phones: the menu button is always there, the FAB and the tab badge show', 
       'activity-action-markRead',
     ),
   ).toHaveCount(0)
-  await expect(screen(page).getByTestId('fab-add')).toBeVisible()
+  await expect(activityScreen(page).getByTestId('fab-add')).toBeVisible()
   // A tab: no Back, the avatar at the top right, and the unread badge on the bottom bar's Activity tab.
-  await expect(screen(page).getByLabel('Go back')).toHaveCount(0)
-  await expect(screen(page).getByTestId('header-avatar')).toBeVisible()
+  await expect(activityScreen(page).getByLabel('Go back')).toHaveCount(0)
+  await expect(activityScreen(page).getByTestId('header-avatar')).toBeVisible()
   await page.goto('/')
   await expect(peopleBadge(page)).toContainText(/\d+/)
 })

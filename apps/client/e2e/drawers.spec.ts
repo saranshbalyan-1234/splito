@@ -1,6 +1,8 @@
 import {expect, type Locator, type Page, test} from '@playwright/test'
 
+import {composeButton} from './composer'
 import {openDemo} from './openDemo'
+import {DESKTOP, PHONE} from './viewports'
 
 /*
  * Owner rule: every modal on a phone is a drawer. Below 800px a prompt, a
@@ -9,8 +11,6 @@ import {openDemo} from './openDemo'
  * Bluesky's centred popup.
  */
 
-const PHONE = {width: 375, height: 667}
-const DESKTOP = {width: 1440, height: 900}
 
 async function settled(locator: Locator) {
   await expect(locator).toBeVisible()
@@ -157,7 +157,7 @@ test.describe('touch phone', () => {
 
   test('Add expense rises as a drawer with a handle', async ({page}) => {
     await openDemo(page)
-    await page.getByTestId('fab-add').click()
+    await composeButton(page).click()
     const sheet = page.getByTestId('screen-add-expense')
     await expectAtBottom(sheet)
     expect((await settled(sheet)).width).toBe(PHONE.width)

@@ -1,24 +1,15 @@
-import {expect, type Page, test} from '@playwright/test'
+import {expect, test} from '@playwright/test'
 
+import {openAddExpense, pickPeople} from './composer'
 import {openDemo} from './openDemo'
+import {DESKTOP, PHONE} from './viewports'
 
 /* F-310 smart amount input, F-402 cash rounding, F-1801 money direction. */
-
-const DESKTOP = {width: 1440, height: 900}
-const PHONE = {width: 390, height: 844}
-
-async function openAddExpense(page: Page) {
-  await page.setViewportSize(DESKTOP)
-  await openDemo(page, '/people')
-  await expect(page.getByTestId('person-Riya Sharma')).toBeVisible()
-  await page.getByTestId('sidebar-add').click()
-  await expect(page.getByTestId('screen-add-expense')).toBeVisible()
-}
 
 test('shorthand, pasted amounts and native digits read as amounts', async ({
   page,
 }) => {
-  await openAddExpense(page)
+  await openAddExpense(page, DESKTOP)
   const amount = page.getByTestId('amount-input')
   await amount.fill('1.5L')
   await expect(page.getByTestId('amount-result')).toHaveText(/= ₹1,?50,000\.00/)
@@ -35,7 +26,7 @@ test('shorthand, pasted amounts and native digits read as amounts', async ({
 test('an ambiguous amount asks which it is, and Save waits for the answer', async ({
   page,
 }) => {
-  await openAddExpense(page)
+  await openAddExpense(page, DESKTOP)
   await page.getByTestId('expense-title').fill('Hotel deposit')
   await page.getByTestId('amount-input').fill('1.234')
   await expect(page.getByTestId('amount-readings')).toBeVisible()
@@ -52,13 +43,10 @@ test('an ambiguous amount asks which it is, and Save waits for the answer', asyn
 test('cash rounding: whole shares, the remainder shown on one person, saved with the expense', async ({
   page,
 }) => {
-  await openAddExpense(page)
+  await openAddExpense(page, DESKTOP)
   await page.getByTestId('expense-title').fill('Cab to the station')
   await page.getByTestId('amount-input').fill('1000.50')
-  await page.getByTestId('expense-people').click()
-  for (const name of ['Riya Sharma', 'Sam Carter'])
-    await page.getByTestId(`person-option-${name}`).click()
-  await page.getByTestId('people-dialog').getByTestId('sheet-close').click()
+  await pickPeople(page, ['Riya Sharma', 'Sam Carter'])
   await expect(page.getByTestId('cash-rounding')).toBeVisible()
 
   await page.getByTestId('cash-rounding-switch').click()
@@ -89,11 +77,7 @@ test('cash rounding: whole shares, the remainder shown on one person, saved with
 test('phones: the keypad replaces the keyboard and works as a calculator', async ({
   page,
 }) => {
-  await page.setViewportSize(PHONE)
-  await openDemo(page, '/people')
-  await expect(page.getByTestId('person-Riya Sharma')).toBeVisible()
-  await page.getByTestId('fab-add').click()
-  await expect(page.getByTestId('screen-add-expense')).toBeVisible()
+  await openAddExpense(page, PHONE)
   await page.getByTestId('amount-input').click()
   await expect(page.getByTestId('amount-keypad')).toBeVisible()
   await expect(page.getByTestId('amount-input')).toHaveAttribute(
