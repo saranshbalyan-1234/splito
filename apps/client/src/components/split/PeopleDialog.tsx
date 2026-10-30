@@ -4,7 +4,7 @@ import {Trans, useLingui} from '@lingui/react/macro'
 import {createPerson} from '@splito/sync'
 
 import {useSingleFlight} from '#/lib/hooks/useSingleFlight'
-import {useMutationCtx, usePendingRequests, useStore} from '#/data/hooks'
+import {useInvitedPeople, useMutationCtx, usePendingRequests, useStore} from '#/data/hooks'
 import {UserAvatar} from '#/view/com/util/UserAvatar'
 import {atoms as a, useTheme} from '#/alf'
 import {Button} from '#/components/Button'
@@ -33,6 +33,7 @@ export function PeopleDialog({
   lockedNote,
   allowNew = false,
   showPending = false,
+  invitedIn,
   onChange,
 }: {
   control: Dialog.DialogControlProps
@@ -47,6 +48,8 @@ export function PeopleDialog({
   allowNew?: boolean
   /** Choosing from friends: list people who haven't accepted yet, greyed (26.18). */
   showPending?: boolean
+  /** Choosing from a group's members: list the people this group invited who have not joined, greyed (owner 196). */
+  invitedIn?: string
   onChange: (ids: string[]) => void
 }) {
   return (
@@ -60,6 +63,7 @@ export function PeopleDialog({
         lockedNote={lockedNote}
         allowNew={allowNew}
         showPending={showPending}
+        invitedIn={invitedIn}
         onChange={onChange}
       />
     </FormSheet.Outer>
@@ -75,6 +79,7 @@ function PeopleInner({
   lockedNote,
   allowNew,
   showPending,
+  invitedIn,
   onChange,
 }: {
   title: string
@@ -85,10 +90,12 @@ function PeopleInner({
   lockedNote?: string
   allowNew: boolean
   showPending: boolean
+  invitedIn?: string
   onChange: (ids: string[]) => void
 }) {
   const t = useTheme()
   const {outgoing: pending} = usePendingRequests()
+  const invited = useInvitedPeople(invitedIn ?? '')
   const {t: l} = useLingui()
   const store = useStore()
   const ctx = useMutationCtx()
@@ -220,6 +227,7 @@ function PeopleInner({
           rowStyle={[a.border_t, t.atoms.border_contrast_low]}
         />
       ) : null}
+      {invitedIn && !q ? <PendingPeople group pending={invited} rowStyle={[a.border_t, t.atoms.border_contrast_low]} /> : null}
       {rows.length === 0 && !allowNew ? (
         <Text
           style={[

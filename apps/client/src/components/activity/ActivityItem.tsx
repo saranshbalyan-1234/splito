@@ -32,6 +32,7 @@ import {TimesLarge_Stroke2_Corner0_Rounded as XIcon} from '#/components/icons/Ti
 import {DotGrid3x1_Stroke2_Corner0_Rounded as DotsIcon} from '#/components/icons/DotGrid'
 import {type Props as SVGIconProps} from '#/components/icons/common'
 import * as Menu from '#/components/Menu'
+import {GroupRequestActions} from '#/components/people/GroupRequests'
 import {RequestAction} from '#/components/people/RequestRow'
 import {SubtleHover} from '#/components/SubtleHover'
 import * as Toast from '#/components/Toast'
@@ -167,7 +168,9 @@ export function ActivityItem({
           ? snapshot.people.get(event.entityId)
           : event.entityType === 'friendRequest'
             ? snapshot.requests.get(event.entityId)
-            : event.entityType === 'comment' || event.entityType === 'dispute'
+            : event.entityType === 'groupRequest'
+              ? snapshot.groupRequests.get(event.entityId)
+              : event.entityType === 'comment' || event.entityType === 'dispute'
               ? /* A comment or a dispute is about a record: that record's sync state tones the row. */
                 (event.data.targetType === 'expense' ? snapshot.expenses : snapshot.transfers).get(event.data.targetId)
               : undefined
@@ -698,6 +701,84 @@ function useDescribe(
             </Trans>
           ),
         open: openPerson,
+      }
+    }
+    case 'groupRequest': {
+      /* Group requests carry their answers in the row, like friend requests (owners 195, 197): Join / Decline,
+         Approve / Decline, Cancel. The row shows the request's current state, so an answered one loses its buttons. */
+      const request = snapshot.groupRequests.get(event.entityId)
+      const current = request?.data ?? event.data
+      const group = <Strong>{current.groupName}</Strong>
+      const who = <Strong>{current.name}</Strong>
+      const isPending = !!request && !request.deleted && current.status === 'pending'
+      const actions = isPending ? <GroupRequestActions request={request} /> : undefined
+      const openGroup = snapshot.groups.get(current.groupId)
+        ? () => navigation.push('Group', {groupId: current.groupId})
+        : undefined
+      const answered =
+        current.status === 'accepted' ? (
+          <Trans>Joined</Trans>
+        ) : current.status === 'declined' ? (
+          <Trans>Declined</Trans>
+        ) : current.status === 'cancelled' ? (
+          <Trans>Cancelled</Trans>
+        ) : null
+      switch (event.kind) {
+        case 'groupRequest.invited':
+          return {
+            avatarName: current.name,
+            icon: FriendAddedBadge,
+            tone: 'primary',
+            headline: <Trans>{who} added you to {group}</Trans>,
+            detail: <Detail>{answered ?? <Trans>Join to split expenses with the group</Trans>}</Detail>,
+            actions,
+            open: openGroup,
+          }
+        case 'groupRequest.joinRequested':
+          return {
+            avatarName: current.name,
+            icon: FriendAddedBadge,
+            tone: 'primary',
+            headline: <Trans>{who} asked to join {group}</Trans>,
+            detail: <Detail>{answered ?? <Trans>Approve to let them in</Trans>}</Detail>,
+            actions,
+            open: openGroup,
+          }
+        case 'groupRequest.sent':
+          return {
+            avatarName: nameOf(event.actor),
+            icon: RequestSentBadge,
+            tone: 'neutral',
+            headline: <Trans>{actor} added {who} to {group}</Trans>,
+            detail: <Detail>{answered ?? <Trans>Waiting for them to join</Trans>}</Detail>,
+            actions,
+            open: openGroup,
+          }
+        case 'groupRequest.joinSent':
+          return {
+            avatarName: nameOf(event.actor),
+            icon: RequestSentBadge,
+            tone: 'neutral',
+            headline: <Trans>{actor} asked to join {group}</Trans>,
+            detail: <Detail>{answered ?? <Trans>Waiting for an admin to approve</Trans>}</Detail>,
+            actions,
+            open: openGroup,
+          }
+        case 'groupRequest.accepted':
+          return {
+            avatarName: current.name || nameOf(event.actor),
+            icon: FriendAcceptedBadge,
+            tone: 'primary',
+            headline:
+              current.direction === 'incoming' && current.kind === 'invite' ? (
+                <Trans>You joined {group}</Trans>
+              ) : current.kind === 'join' && current.direction === 'outgoing' ? (
+                <Trans>You’re in {group}</Trans>
+              ) : (
+                <Trans>{who} joined {group}</Trans>
+              ),
+            open: openGroup,
+          }
       }
     }
     case 'person': {

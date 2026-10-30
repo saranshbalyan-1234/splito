@@ -411,6 +411,7 @@ export function ExpenseComposer({
             lockedNote={l`Paid · change who paid to remove`}
             allowNew={!group}
             showPending={!group}
+            invitedIn={group?.id}
             onChange={setPeople}
           />
           <PayersDialog

@@ -199,7 +199,7 @@ for (const engine of [sqlite, indexedDb]) {
         // A cut-off block is finished by the next open (M2): the marker is written last, so with it gone (and part of the
         // block missing) the block is erased and written again, never doubled.
         const requests = await demo.getAll('friendRequest')
-        await demo.erase([...requests.slice(0, 4).map(r => ({type: 'friendRequest' as const, id: r.id})), {type: 'preference', id: 'demo.seed.invites'}])
+        await demo.erase([...requests.slice(0, 4).map(r => ({type: 'friendRequest' as const, id: r.id})), {type: 'preference', id: 'demo.seed.invites.2'}])
         await demo.erase([{type: 'preference', id: 'demo.seed.feedback'}])
         expect((await demo.getAll('friendRequest')).length).toBe(5)
         expect(await seedDemo(demo, demoCtx)).toBe(true)

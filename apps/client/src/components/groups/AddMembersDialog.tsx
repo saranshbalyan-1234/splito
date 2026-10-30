@@ -6,14 +6,17 @@ import {
   createPerson,
   type Entity,
   type Group,
+  groupAdmins,
   isRemovedFriend,
+  joinPolicyOf,
   type Person,
+  setJoinPolicy,
 } from '@splito/sync'
 
 import {useHaptics} from '#/lib/haptics'
 import {useSingleFlight} from '#/lib/hooks/useSingleFlight'
 import {logger} from '#/logger'
-import {useEntities, useMutationCtx, usePendingRequests, useStore} from '#/data/hooks'
+import {useEntities, useInvitedPeople, useMutationCtx, usePendingRequests, useStore} from '#/data/hooks'
 import {UserAvatar} from '#/view/com/util/UserAvatar'
 import {atoms as a, useTheme} from '#/alf'
 import {Button, ButtonIcon} from '#/components/Button'
@@ -23,7 +26,9 @@ import * as Toggle from '#/components/forms/Toggle'
 import {PlusLarge_Stroke2_Corner0_Rounded as PlusIcon} from '#/components/icons/Plus'
 import * as Toast from '#/components/Toast'
 import * as FormSheet from '#/components/FormSheet'
+import {JoinPolicyField, useJoinPolicyText} from '#/components/groups/JoinPolicyField'
 import {PendingPeople} from '#/components/people/PendingPeople'
+import {Text} from '#/components/Typography'
 
 /**
  * Adds friends (or someone new) to a group from now on, or opens the
@@ -56,6 +61,9 @@ function Form({
 }) {
   const t = useTheme()
   const {outgoing: pending} = usePendingRequests()
+  const invited = useInvitedPeople(group.id)
+  const policy = joinPolicyOf(group.data)
+  const policyText = useJoinPolicyText()
   const {t: l} = useLingui()
   const control = Dialog.useDialogContext()
   const store = useStore()
@@ -69,8 +77,10 @@ function Form({
   const current = new Set(
     group.data.members.filter(m => m.leftAt === null).map(m => m.personId),
   )
+  /* Someone already invited is waiting on their answer: not offered again, shown greyed below (owner 196). */
+  const invitedIds = new Set(invited.map(r => r.data.personId))
   const candidates = (people ?? [])
-    .filter(p => !p.data.isMe && !isRemovedFriend(p.data) && !current.has(p.id))
+    .filter(p => !p.data.isMe && !isRemovedFriend(p.data) && !current.has(p.id) && !invitedIds.has(p.id))
     .sort((x, y) => x.data.name.localeCompare(y.data.name))
 
   const addNew = () =>
@@ -94,11 +104,20 @@ function Form({
     try {
       await addGroupMembers(store, ctx, group.id, selected)
       haptics.success()
+      // A Splito friend is asked, not added (owner 196): they show as Invited until they join.
+      const asked = selected.filter(id => people?.find(p => p.id === id)?.data.accountId).length
+      const added = selected.length - asked
       control.close(() =>
         Toast.show(
-          selected.length === 1
-            ? l`1 member added`
-            : l`${selected.length} members added`,
+          asked === 0
+            ? added === 1
+              ? l`1 member added`
+              : l`${added} members added`
+            : added === 0
+              ? asked === 1
+                ? l`1 invite sent`
+                : l`${asked} invites sent`
+              : l`${added} added, ${asked} invited`,
           {type: 'success'},
         ),
       )
@@ -153,14 +172,31 @@ function Form({
                   t.atoms.border_contrast_low,
                 ]}>
                 <UserAvatar size={32} name={friend.data.name} type="user" />
-                <Toggle.LabelText style={[a.flex_1, a.text_md]}>
-                  {friend.data.name}
-                </Toggle.LabelText>
+                <View style={[a.flex_1]}>
+                  <Toggle.LabelText style={[a.text_md]}>
+                    {friend.data.name}
+                  </Toggle.LabelText>
+                  {friend.data.accountId ? (
+                    <Text style={[a.text_sm, t.atoms.text_contrast_medium]}>
+                      <Trans>Gets a request to join</Trans>
+                    </Text>
+                  ) : null}
+                </View>
                 <Toggle.Checkbox />
               </Toggle.Item>
             ))}
           </Toggle.Group>
         )}
+        <PendingPeople
+          group
+          pending={invited}
+          avatarSize={32}
+          rowStyle={[
+            a.px_md,
+            candidates.length > 0 && a.border_t,
+            t.atoms.border_contrast_low,
+          ]}
+        />
         <PendingPeople
           pending={pending}
           avatarSize={32}
@@ -207,8 +243,29 @@ function Form({
         </View>
       </View>
 
-      {/* The group's invite link lives only here (26.18 decision 77). */}
-      {inviteRow}
+      {/* Who can join (owner 196): applies at once; only admins change it. */}
+      <JoinPolicyField
+        testIDPrefix="add-members-join-policy"
+        value={policy}
+        isDisabled={!groupAdmins(group.data).includes(ctx.actor)}
+        onChange={next =>
+          void setJoinPolicy(store, ctx, group.id, next)
+            .then(() => Toast.show(l`Saved: ${policyText.title(next)}`))
+            .catch(e => {
+              logger.error(e, {where: 'AddMembersDialog.joinPolicy'})
+              Toast.show(l`Couldn’t change who can join. Please try again.`, {type: 'error'})
+            })
+        }
+      />
+
+      {/* The group's invite link lives only here (26.18 decision 77); invite only has none. */}
+      {policy === 'invite' ? (
+        <Text testID="add-members-no-link" style={[a.text_sm, a.leading_snug, t.atoms.text_contrast_medium]}>
+          <Trans>Invite only: there is no group link. Choose another option above to get one.</Trans>
+        </Text>
+      ) : (
+        inviteRow
+      )}
     </FormSheet.Inner>
   )
 }

@@ -232,7 +232,6 @@ test('privacy and invite-link defaults (26.18)', async () => {
   expect(await getPref(s, 'invites.defaultMaxUses.friend')).toBe(1)
   expect(await getPref(s, 'invites.defaultMaxUses.group')).toBe(25)
   expect(await getPref(s, 'invites.defaultExpiry')).toBe('7d')
-  expect(await getPref(s, 'invites.approveJoins')).toBe(false)
   await setPref(s, ctx, 'invites.defaultMaxUses.group', 'unlimited')
   expect(await getPref(s, 'invites.defaultMaxUses.group')).toBe('unlimited')
   await expect(setPref(s, ctx, 'invites.defaultMaxUses.friend', 7 as never)).rejects.toThrow('INVALID_PREF')

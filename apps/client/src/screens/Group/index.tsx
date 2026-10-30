@@ -7,7 +7,9 @@ import {
   type Entity,
   type Group,
   groupAdmins,
+  type GroupRequest,
   isGroupInactive,
+  joinPolicyOf,
   type Person,
   type Repayment,
   type WriteOff,
@@ -19,7 +21,9 @@ import {type AllNavigatorParams, type NavigationProp} from '#/lib/routes/types'
 import {
   useAllEntities,
   useGroupHistory,
+  useGroupJoinRequests,
   useGroupNets,
+  useInvitedPeople,
   useMe,
 } from '#/data/hooks'
 import {useNumberLocale} from '#/locale/numberLocale'
@@ -35,6 +39,8 @@ import {Button, ButtonIcon, ButtonText} from '#/components/Button'
 import {useDialogControl} from '#/components/Dialog'
 import {ExportMenuItem, useExportSheet} from '#/features/export/ExportSheet'
 import {AddMembersDialog} from '#/components/groups/AddMembersDialog'
+import {useJoinPolicyText} from '#/components/groups/JoinPolicyField'
+import {GroupRequestRow} from '#/components/people/GroupRequests'
 import {GroupAvatar} from '#/components/groups/GroupAvatar'
 import {EditGroupDialog} from '#/components/groups/EditGroupDialog'
 import {NO_RULES, RulesDialog} from '#/components/groups/RulesEditor'
@@ -108,6 +114,8 @@ type Item =
   | {type: 'net'; key: string; currency: string; personId: string; net: bigint}
   | {type: 'membersHeader'; key: string; count: number}
   | {type: 'member'; key: string; personId: string; hasLeft: boolean}
+  | {type: 'joinRule'; key: string}
+  | {type: 'groupRequest'; key: string; request: Entity<GroupRequest>}
   | {type: 'owesHeader'; key: string}
   | {
       type: 'owe'
@@ -164,6 +172,9 @@ export function GroupScreen() {
   const openDisputes = useOpenDisputes()
   const disputedRecords = useDisputedRecords(onlyDisputed)
   const disputedRows = useDisputedBalances({groupId})
+  const joinRuleText = useJoinPolicyText()
+  const invited = useInvitedPeople(groupId)
+  const joinRequests = useGroupJoinRequests(groupId)
   const addMembersControl = useDialogControl({url: 'add-members'})
   const editControl = useDialogControl({url: 'edit'})
   const rulesControl = useDialogControl({url: 'rules'})
@@ -338,6 +349,13 @@ export function GroupScreen() {
           key: 'members-header',
           count: members.filter(m => m.leftAt === null).length,
         },
+        /* Who can join (owner 196): everyone sees the rule; the admins also see the join requests, everyone the invited. */
+        {type: 'joinRule' as const, key: 'join-rule'},
+        ...[...(isMeAdmin ? joinRequests : []), ...invited].map(request => ({
+          type: 'groupRequest' as const,
+          key: `request-${request.id}`,
+          request,
+        })),
         ...members.map(m => ({
           type: 'member' as const,
           key: `member-${m.personId}`,
@@ -741,6 +759,14 @@ export function GroupScreen() {
                     }
                   />
                 )
+              case 'joinRule':
+                return group ? (
+                  <Text testID="group-join-rule" style={[a.px_lg, a.pb_sm, a.text_sm, a.leading_snug, t.atoms.text_contrast_medium]}>
+                    {joinRuleText.rule(joinPolicyOf(group.data))}
+                  </Text>
+                ) : null
+              case 'groupRequest':
+                return <GroupRequestRow request={item.request} />
               case 'member':
                 return (
                   <MemberRow

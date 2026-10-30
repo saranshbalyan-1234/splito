@@ -668,7 +668,7 @@ Every disputed amount or count opens Activity on All with Expenses, Payments and
 
 Each group has a join setting (anyone with the link / approve each join / invite only), and adding someone sends them a group request.
 
-- **Effort** M · **Impact** 8 · **Backend** partly (real link joins and cross-device requests need F-2105; local flow and demo now) · **Status** todo, Wave C (after F-268) · **Deps** F-268
+- **Effort** M · **Impact** 8 · **Backend** partly (real link joins and cross-device requests need F-2105; local flow and demo now) · **Status** done locally, Wave C (branch c-joins, 2026-10-31; link joins and cross-device requests stay local until F-2105; e2e `groupJoins.spec.ts`) · **Deps** F-268
 - **Prefs** `group:joinPolicy` (per group: link / approve / invite)
 - **Acceptance**
   1. New/Edit group and the Add members sheet show "Who can join" with the three options (default approve); admins only can change it; the group page shows the current rule under Members.
@@ -680,7 +680,7 @@ Each group has a join setting (anyone with the link / approve each join / invite
 
 Home drops its Requests section; People shows friend requests and invites, Groups shows group requests/join requests/invites, a group page its own.
 
-- **Effort** S · **Impact** 7 · **Backend** no · **Status** todo, Wave C (with F-268, before F-269) · **Deps** F-268
+- **Effort** S · **Impact** 7 · **Backend** no · **Status** People done (F-268); Groups top section done with F-269 (c-joins, `groupJoins.spec.ts`); Home's Requests section goes with F-271 · **Deps** F-268
 - **Prefs** -
 - **Acceptance**
   1. Home has no requests or invites section; People's top section holds friend requests and friend invites sent; Groups' top section holds group requests, join requests and group invites sent (fills in with F-269); a group page shows its own under Members.

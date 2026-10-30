@@ -601,7 +601,7 @@ with every hot screen reading by index, never by full scan (§ 17 budgets, F-109
 
 - **One store / table per entity type** (IndexedDB object stores and SQLite tables share names and columns):
   `people`, `groups`, `group_members`, `expenses`, `expense_parties`, `repayments`, `writeoffs`, `comments`,
-  `friend_requests`, `invite_links`, `feedback`, `preferences`, `reminders`, `disputes`, plus infrastructure `history`, `outbox`,
+  `friend_requests`, `group_requests`, `invite_links`, `feedback`, `preferences`, `reminders`, `disputes`, plus infrastructure `history`, `outbox`,
   `meta`. A new entity type gets its own store and a migration; nothing is "clubbed" into a shared store.
 - **Every row** carries `id` (UUID), `version`, `createdAt` / `updatedAt` (UTC ms), `deleted` (+ `deletedAt`,
   `purgedAt`), and for money rows `currency` + amounts as bigint minor units encoded with the codec (§ 9.3);
@@ -634,7 +634,7 @@ with every hot screen reading by index, never by full scan (§ 17 budgets, F-109
   `byUpdatedAt`, `byArchived`; group_members `byPerson`; expenses `byGroupDate` `[groupId, date]`, `byDate`,
   `byUpdatedAt`, `byDeleted`; expense_parties `byPersonDate` `[personId, date]`, `byGroupPerson`; repayments and
   writeoffs `byGroup`, `byFrom`, `byTo`, `byDate`; comments `byTarget` `[targetType, targetId]`; disputes `byTarget` `[targetType, targetId]`, `byTargetStatus` `[targetType, targetId, status]` (a record's open ones: the badge, the one-open-per-person rule, the projection) and `byStatus` (every open one: the Disputed filter); friend_requests
-  `byStatus`; history `byEntity` `[type, id]` and `byChangedAt`; outbox `opId` (unique), `byStatus`.
+  `byStatus`; group_requests `byStatus` and `byGroup` `[groupId, status]` (a group's pending join requests and invited people); history `byEntity` `[type, id]` and `byChangedAt`; outbox `opId` (unique), `byStatus`.
 - **Materialised balance projection** `balances` (`[personId, groupId|'', currency]` -> net minor units),
   maintained in the SAME transaction as every money write (expense, repayment, write-off, delete, restore) by
   the sync mutations, so Home, People, Groups and the right column read balances in O(rows shown) instead of
@@ -660,7 +660,7 @@ with every hot screen reading by index, never by full scan (§ 17 budgets, F-109
   resolve at query time, so a rename rewrites no terms.
 - **One transaction per mutation** spans the entity, its projections, history and outbox (atomic, § 9.3).
 - **Versioned migrations:** `meta.schemaVersion`; IndexedDB `onupgradeneeded` and SQLite `PRAGMA user_version`
-  run ordered, idempotent steps (v5: the `disputes`, `disputed_balances` and `disputed_pairs` stores; v4 -> v5 adds them empty); v1 -> v2 copies rows from `entities` into the per-type stores, builds
+  run ordered, idempotent steps (v5: the `disputes`, `disputed_balances` and `disputed_pairs` stores; v4 -> v5 adds them empty; v6: the `group_requests` store, v5 -> v6 adds it empty, and a group's `joinPolicy` lives in its data, absent reads as 'approve'); v1 -> v2 copies rows from `entities` into the per-type stores, builds
   `group_members`, `expense_parties` and `balances`, then drops `entities`. Each migration has a test that
   loads a v1 fixture (incl. the large demo set) and checks every row and balance survives exactly.
 - **The Store interface stays the boundary** (§ 1): screens and hooks never touch IndexedDB/SQLite directly;

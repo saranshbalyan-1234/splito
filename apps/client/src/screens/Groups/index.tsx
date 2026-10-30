@@ -41,6 +41,7 @@ import {ListToolsHeader} from '#/components/ListToolsHeader'
 import {Text} from '#/components/Typography'
 import {Shimmer} from '#/motion/Shimmer'
 import {SectionHeader} from '#/screens/People/components/SectionHeader'
+import {GroupRequestsSection} from './components/GroupRequestsSection'
 import {GroupRow, GroupRowPlaceholder} from './components/GroupRow'
 import {GroupsFilterDialog} from './components/GroupsFilterDialog'
 import {
@@ -185,8 +186,9 @@ export function GroupsScreen() {
               />
             )}
             ListHeaderComponent={
-              all.length > 0 ? (
-                <>
+              <>
+                <GroupRequestsSection />
+                {all.length > 0 ? (
                   <ListToolsHeader
                     title={l`Groups`}
                     titleTestID="groups-list-title"
@@ -198,8 +200,8 @@ export function GroupsScreen() {
                     activeFilterCount={activeCount}
                     onFiltersPress={() => filterControl.open()}
                   />
-                </>
-              ) : undefined
+                ) : null}
+              </>
             }
             ListEmptyComponent={
               all.length > 0 && query.trim() ? (

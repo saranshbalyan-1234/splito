@@ -44,7 +44,6 @@ const DEFAULT_PREFS = [
   'invites.defaultMaxUses.friend',
   'invites.defaultMaxUses.group',
   'invites.defaultExpiry',
-  'invites.approveJoins',
 ] as const
 
 type Item =

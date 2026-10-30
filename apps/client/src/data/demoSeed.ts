@@ -7,11 +7,14 @@
  * Dev and e2e builds only; see `demoMode.ts` for how it is reached.
  */
 import {
+  addGroupMembers,
   applyFriendRequestAccepted,
   cancelFriendRequest,
   createInviteLink,
   createPerson,
+  approveJoinRequest,
   declineFriendRequest,
+  declineGroupRequest,
   type demoDirectory,
   type Entity,
   type EntityType,
@@ -23,10 +26,14 @@ import {
   type MutationCtx,
   type Page,
   receiveFriendRequest,
+  receiveGroupInvite,
+  receiveJoinRequest,
   recordInviteUse,
+  requestToJoin,
   revokeInviteLink,
   saveFeedback,
   sendFriendRequest,
+  setJoinPolicy,
   type Store,
 } from '@splito/sync'
 import {applyDemoOp, DEMO_LARGE_PREFIX, generateLargeDemo, isDeferredOp, localToday} from '@splito/sync/demoLarge'
@@ -74,6 +81,10 @@ export const DEMO_DIRECTORY: Parameters<typeof demoDirectory>[0] = {
   ],
   invites: {
     ananya2026demo: {kind: 'friend', inviter: 'demo-ananya', groupName: null},
+    // Someone else's group links, one per rule (owner 196): in at once, ask to join, and invite only (no working link).
+    beachlink2026: {kind: 'group', inviter: 'demo-sara', groupName: 'Beach cleanup crew', group: {id: `${DEMO_LARGE_PREFIX}r-beach`, kind: 'trip', currency: 'INR', joinPolicy: 'link'}},
+    gamesask2026: {kind: 'group', inviter: 'demo-ishaan', groupName: 'Board games night', group: {id: `${DEMO_LARGE_PREFIX}r-games`, kind: 'trip', currency: 'INR', joinPolicy: 'approve'}},
+    runonly2026: {kind: 'group', inviter: 'demo-leo', groupName: 'Run club', group: {id: `${DEMO_LARGE_PREFIX}r-run`, kind: 'other', currency: 'INR', joinPolicy: 'invite'}},
   },
 }
 
@@ -99,10 +110,12 @@ const email = (value: string) => ({kind: 'email', value}) as const
  * (accepted; their private "only for you" entry was linked to the account, F-616),
  * Expired (30 days passed), Cancelled. Private friends with no account. Invite links of
  * both kinds: active, limited and partly used, unlimited, used up, expired, revoked; a
- * group link that needs my approval has been opened by people (the join requests). These
+ * group link that needs my approval has been opened by people (the join requests). Groups (F-269): every
+ * "Who can join" rule (Goa approve, Lisbon anyone with the link, the flat invite only), join requests waiting
+ * on Goa, group requests to me, an invited member on Goa, and my own join request. These
  * read the store first, so they cannot run inside the ledger's one transaction.
  */
-async function seedFriendInvites(store: Store, ctx: MutationCtx, goaId: string, lisbonId: string, now: number) {
+async function seedFriendInvites(store: Store, ctx: MutationCtx, goaId: string, lisbonId: string, flatId: string, now: number) {
   const at = (time: number, actor = ctx.actor): MutationCtx => ({...ctx, actor, now: () => time})
   const account = (id: string) => DEMO_DIRECTORY.accounts.find(a => a.accountId === id)!
   const personalLink = (time: number, maxUses: number, expiresInMs = 60 * DAY) =>
@@ -151,15 +164,38 @@ async function seedFriendInvites(store: Store, ctx: MutationCtx, goaId: string, 
   const withdrawn = await sendFriendRequest(store, at(now - 6 * DAY), {contact: email('zoya@example.com'), name: 'Zoya Khan', reach: 'on-splito'})
   await cancelFriendRequest(store, at(now - 5 * DAY), withdrawn.id)
 
+  // Who can join (owner 196): Goa keeps the default (approve each join), Lisbon is open to anyone with the link, the flat is invite only (no link).
+  await setJoinPolicy(store, at(now - 10 * DAY), lisbonId, 'link')
+  await setJoinPolicy(store, at(now - 10 * DAY), flatId, 'invite')
+
   // Links: friend (active and partly used, unlimited, revoked) and group (needs approval, open).
   await createInviteLink(store, at(now - 3 * HOUR), {kind: 'friend', groupId: null, maxUses: 5, expiresInMs: 30 * DAY, approveJoins: false})
   await createInviteLink(store, at(now - 20 * DAY), {kind: 'friend', groupId: null, maxUses: null, expiresInMs: null, approveJoins: false})
   const old = await personalLink(now - 15 * DAY, 3, 30 * DAY)
   await revokeInviteLink(store, at(now - 14 * DAY), old.id)
   const goa = await createInviteLink(store, at(now - 4 * DAY), {kind: 'group', groupId: goaId, maxUses: 25, expiresInMs: 30 * DAY, approveJoins: true})
-  for (const id of ['demo-maya', 'demo-ananya', 'demo-sara']) await recordInviteUse(store, at(now - 3 * DAY, id), goa.id)
+  // Three people opened Goa's link: Maya and Ananya wait for my approval (join requests), Sara was approved a day later.
+  for (const id of ['demo-maya', 'demo-ananya', 'demo-sara']) {
+    await recordInviteUse(store, at(now - 3 * DAY, id), goa.id)
+    const a = account(id)
+    const joinId = ctx.newId()
+    await receiveJoinRequest(store, at(now - 3 * DAY, id), {id: joinId, groupId: goaId, joiner: a})
+    if (id === 'demo-sara') await approveJoinRequest(store, at(now - 2 * DAY), joinId)
+  }
   const lisbon = await createInviteLink(store, at(now - 2 * DAY), {kind: 'group', groupId: lisbonId, maxUses: null, expiresInMs: 30 * DAY, approveJoins: true})
   await recordInviteUse(store, at(now - 1 * DAY, 'demo-kabir'), lisbon.id)
+
+  // Group requests (F-269): to me (Join / Decline), one I declined, an invited member waiting on Goa, and my own join request.
+  const remote = (id: string, name: string, kind: Group['kind']) => ({groupId: DEMO_LARGE_PREFIX + id, groupName: name, groupKind: kind, groupCurrency: 'INR'})
+  const sara = account('demo-sara')
+  const ishaan = account('demo-ishaan')
+  const leo = account('demo-leo')
+  await receiveGroupInvite(store, at(now - 5 * HOUR, sara.accountId), {id: ctx.newId(), ...remote('r-pune', 'Pune cabin weekend', 'trip'), inviter: sara})
+  await receiveGroupInvite(store, at(now - 40 * MINUTE, ishaan.accountId), {id: ctx.newId(), ...remote('r-lunch', 'Office lunch club', 'other'), inviter: ishaan})
+  const turned = await receiveGroupInvite(store, at(now - 6 * DAY, leo.accountId), {id: ctx.newId(), ...remote('r-hike', 'Sunday hikes', 'other'), inviter: leo})
+  await declineGroupRequest(store, at(now - 5 * DAY), turned.id)
+  await addGroupMembers(store, at(now - 2 * HOUR), goaId, [PRIVATE_PREFIX + 'tanvi'])
+  await requestToJoin(store, at(now - 4 * HOUR), remote('r-ski', 'Ski trip crew', 'trip'))
 }
 
 /**
@@ -203,13 +239,14 @@ async function seedFeedback(store: Store, ctx: MutationCtx, now: number) {
 const SEEDED_MARK = `${DEMO_LARGE_PREFIX}p-riya`
 const STORY_GOA = `${DEMO_LARGE_PREFIX}g-story-goa`
 const STORY_LISBON = `${DEMO_LARGE_PREFIX}g-story-lisbon`
+const STORY_FLAT = `${DEMO_LARGE_PREFIX}g-story-flat`
 
 /**
  * Completion markers of the two blocks that read the store first (so they cannot join the ledger's one
  * transaction). A device-only preference row in the demo database, written LAST with the seeding time: no
  * marker means the block never finished, and it is erased and written again.
  */
-const MARK_INVITES = 'demo.seed.invites'
+const MARK_INVITES = 'demo.seed.invites.2'
 const MARK_FEEDBACK = 'demo.seed.feedback'
 const MARK_LATE = 'demo.seed.late'
 
@@ -281,8 +318,8 @@ export async function seedDemo(store: Store, ctx: MutationCtx, onProgress?: (don
   const invitesAt = await readMark(store, MARK_INVITES)
   if (invitesAt === null || now - invitesAt > INVITES_MAX_AGE_MS || now < invitesAt) {
     wrote = true
-    await eraseBlock(store, ['friendRequest', 'inviteLink'], PRIVATE_IDS)
-    await seedFriendInvites(store, ctx, STORY_GOA, STORY_LISBON, now)
+    await eraseBlock(store, ['friendRequest', 'groupRequest', 'inviteLink'], PRIVATE_IDS)
+    await seedFriendInvites(store, ctx, STORY_GOA, STORY_LISBON, STORY_FLAT, now)
     await writeMark(store, MARK_INVITES, now)
   }
   if ((await readMark(store, MARK_FEEDBACK)) === null) {
@@ -295,7 +332,7 @@ export async function seedDemo(store: Store, ctx: MutationCtx, onProgress?: (don
   return wrote
 }
 
-const ALL_TYPES: EntityType[] = ['person', 'group', 'expense', 'repayment', 'writeoff', 'preference', 'friendRequest', 'inviteLink', 'comment', 'feedback', 'reminder', 'dispute']
+const ALL_TYPES: EntityType[] = ['person', 'group', 'expense', 'repayment', 'writeoff', 'preference', 'friendRequest', 'groupRequest', 'inviteLink', 'comment', 'feedback', 'reminder', 'dispute']
 
 /**
  * A start with `demo.mode` on: opens the demo database through `open`. When that

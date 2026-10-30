@@ -10,6 +10,7 @@ import {
   INVITE_EXPIRY_MS,
   type InviteLink,
   type InviteMaxUses,
+  joinPolicyOf,
 } from '@splito/sync'
 
 import {useHaptics} from '#/lib/haptics'
@@ -22,7 +23,7 @@ import {atoms as a, useTheme} from '#/alf'
 import {Admonition} from '#/components/Admonition'
 import * as FormSheet from '#/components/FormSheet'
 import * as SegmentedControl from '#/components/forms/SegmentedControl'
-import * as Toggle from '#/components/forms/Toggle'
+import {useJoinPolicyText} from '#/components/groups/JoinPolicyField'
 import {ChainLink_Stroke2_Corner0_Rounded as LinkIcon} from '#/components/icons/Invite'
 import {useDescribeLink} from '#/components/invites/describe'
 import {InviteShare} from '#/components/invites/InviteShare'
@@ -36,8 +37,8 @@ const USES: InviteMaxUses[] = [1, 5, 25, 'unlimited']
 const EXPIRIES: InviteExpiry[] = ['24h', '7d', '30d', 'never']
 
 /**
- * The invite link / QR sheet (26.18): choose max uses, expiry and (groups)
- * "approve each join", then Create; the sheet turns into the QR code, the
+ * The invite link / QR sheet (26.18): choose max uses and expiry (a group link
+ * follows the group's "Who can join"), then Create; the sheet turns into the QR code, the
  * link with Copy, and Share. `ShareInvite` opens it on an existing link.
  */
 export function CreateInviteScreen() {
@@ -71,9 +72,10 @@ export function CreateInviteScreen() {
   const [defaultExpiry] = usePref('invites.defaultExpiry')
   const [uses, setUses] = useState<InviteMaxUses | null>(null)
   const [expiry, setExpiry] = useState<InviteExpiry | null>(null)
-  const [defaultApproveJoins = false] = usePref('invites.approveJoins')
-  const [approveJoinsChoice, setApproveJoins] = useState<boolean | null>(null)
-  const approveJoins = approveJoinsChoice ?? defaultApproveJoins
+  /* A group link follows the group's "Who can join" (owner 196): it is shown here, changed in Edit group / Add members. */
+  const joinRule = useJoinPolicyText()
+  const policy = group ? joinPolicyOf(group.data) : null
+  const isInviteOnly = policy === 'invite'
   const [isSaving, setIsSaving] = useState(false)
   const busy = useRef(false)
   const chosenUses = uses ?? defaultUses ?? (kind === 'group' ? 25 : 1)
@@ -96,7 +98,7 @@ export function CreateInviteScreen() {
         groupId,
         maxUses: chosenUses === 'unlimited' ? null : chosenUses,
         expiresInMs: INVITE_EXPIRY_MS[chosenExpiry],
-        approveJoins: kind === 'group' && approveJoins,
+        approveJoins: false, // a group link takes the group's rule; a friend link has none
       })
       if (made === 'unavailable') {
         Toast.show(l`Invite links need a connection. Try again when you’re online.`, {type: 'error'})
@@ -186,7 +188,7 @@ export function CreateInviteScreen() {
       onClose={close}
       footer={{
         saveLabel: l`Create link`,
-        canSave: isLinkAvailable,
+        canSave: isLinkAvailable && !isInviteOnly,
         isSaving,
         onSave: () => void create(),
       }}>
@@ -245,25 +247,16 @@ export function CreateInviteScreen() {
           onChange={v => setExpiry(v as InviteExpiry)}
         />
 
-        {kind === 'group' ? (
-          <Toggle.Item
-            type="switch"
-            testID="invite-approve-joins"
-            name="approveJoins"
-            label={l`Approve each join`}
-            value={approveJoins}
-            onChange={setApproveJoins}
-            style={[a.w_full, a.gap_md]}>
-            <View style={[a.flex_1, a.gap_2xs]}>
-              <Toggle.LabelText style={[a.text_md, a.font_semi_bold]}>
-                <Trans>Approve each join</Trans>
-              </Toggle.LabelText>
-              <Text style={[a.text_sm, a.leading_snug, t.atoms.text_contrast_medium]}>
-                <Trans>People who use the link wait until you let them in.</Trans>
-              </Text>
-            </View>
-            <Toggle.Switch />
-          </Toggle.Item>
+        {kind === 'group' && policy ? (
+          <View style={[a.gap_2xs]}>
+            <Text style={[a.text_md, a.font_semi_bold]}>
+              <Trans>Who can join</Trans>
+            </Text>
+            <Text testID="invite-join-rule" style={[a.text_sm, a.leading_snug, t.atoms.text_contrast_medium]}>
+              {joinRule.rule(policy)}
+              {isInviteOnly ? ` ${l`There is no link. Change who can join in Edit group.`}` : ''}
+            </Text>
+          </View>
         ) : null}
 
         {isLinkAvailable ? null : (

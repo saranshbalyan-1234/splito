@@ -453,6 +453,15 @@ async function applyJoinPolicy(tx: Tx, ctx: MutationCtx, g: Entity<Group>, polic
   return next
 }
 
+/** Changes who can join a group and nothing else (the Add members sheet's "Who can join"); admins only. */
+export async function setJoinPolicy(store: Store, ctx: MutationCtx, groupId: string, policy: JoinPolicy): Promise<Entity<Group>> {
+  return store.transaction(async tx => {
+    const g = await requireLive<Group>(tx, 'group', groupId)
+    if (joinPolicyOf(g.data) === policy) return g
+    return write(tx, ctx, 'group', groupId, await applyJoinPolicy(tx, ctx, g, policy), false, 'group.joinPolicy')
+  })
+}
+
 /** The fields of an invite link this module touches (the whole type lives in `friends`). */
 type InviteLinkRow = {kind: 'friend' | 'group'; groupId: string | null; approveJoins: boolean; revoked: boolean}
 

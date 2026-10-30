@@ -266,7 +266,7 @@ test('invite link: limits, QR and link, then Manage invite links and Revoke', as
   await expect(page.getByTestId('invite-own')).toContainText('Revoked')
 })
 
-test('group invite: approve each join, from the Add members sheet only', async ({page}) => {
+test('group invite: the group\'s rule decides, from the Add members sheet only', async ({page}) => {
   await openDemo(page)
   await page.getByTestId('tab-groups').click()
   await page.getByTestId('screen-groups').getByTestId('group-Goa trip').click()
@@ -278,7 +278,7 @@ test('group invite: approve each join, from the Add members sheet only', async (
   await page.getByTestId('add-members-sheet').getByTestId('add-members-invite-link').click()
   await expect(page.getByText('Invite to Goa trip')).toBeVisible()
   await expect(page.getByTestId('invite-uses-25')).toHaveAttribute('aria-checked', 'true')
-  await page.getByTestId('invite-approve-joins').click()
+  await expect(page.getByTestId('invite-join-rule')).toHaveText('Joining by link needs an admin’s approval')
   await page.getByTestId('sheet-save').click()
   await expect(page.getByTestId('invite-details')).toHaveText('25 of 25 uses left · Expires in 7 days')
 })
