@@ -4,6 +4,7 @@ import {dirname, join} from 'node:path'
 import {expect, type Page, test} from '@playwright/test'
 
 import {openDemo} from '../e2e/openDemo'
+import {pinClock} from '../e2e/pinClock'
 
 /*
  * The wasted-render gate (ARCHITECTURE 17, owner 108, decision 107). One
@@ -209,6 +210,7 @@ function reportKey(r: Report) {
 
 test('no wasted renders, no render above the baseline', async ({page}) => {
   await page.setViewportSize({width: 1440, height: 900})
+  await pinClock(page)
   await page.addInitScript(instrument)
 
   // Switch the large demo on (a year of use: ~50 activity pages), then count a cold launch into it: the mode survives a reload.
@@ -217,6 +219,14 @@ test('no wasted renders, no render above the baseline', async ({page}) => {
   await expect(page.getByTestId('screen-home')).toBeVisible({timeout: 60_000})
   await demoLoaded(page)
 
+  // The first visit of a tab lets the demo's history loading and the Analytics report land inside whichever phase is
+  // running (the same build drew about 1,900 or about 3,400 updates here), so it is printed and never gated. The
+  // round that is gated is the second: every tab is mounted and parked, which is what a switch costs (17.1).
+  await phase(page, 'firstVisit')
+  for (const tab of ['groups', 'activity', 'analytics', 'people']) {
+    await page.getByTestId(`tab-${tab}`).click()
+    await quiet(page)
+  }
   await phase(page, 'tabs')
   for (const tab of ['groups', 'activity', 'analytics', 'people']) {
     await page.getByTestId(`tab-${tab}`).click()
@@ -283,6 +293,8 @@ test('no wasted renders, no render above the baseline', async ({page}) => {
       ),
     }
   }
+  console.log(`FIRSTVISIT ${phases.firstVisit?.mounts}+${phases.firstVisit?.updates} (not gated)`)
+  delete phases.firstVisit
   const reports: Counts = {}
   const own = wdyr.filter(r => !isLibrary(r))
   for (const r of own) reports[reportKey(r)] = (reports[reportKey(r)] ?? 0) + 1
@@ -364,6 +376,7 @@ test('no wasted renders, no render above the baseline', async ({page}) => {
  */
 test('switching back to a visited tab re-renders none of its content', async ({page}) => {
   await page.setViewportSize({width: 390, height: 844})
+  await pinClock(page)
   await page.addInitScript(instrument)
   await openDemo(page)
   await page.reload()

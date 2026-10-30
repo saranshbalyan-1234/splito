@@ -719,12 +719,23 @@ A Sort button beside Filters: Last active (default), Name, Amount, Newest; remem
 
 Every new expense shows Paid by and starts with me as the payer, from every entry point.
 
-- **Effort** S · **Impact** 7 · **Backend** no · **Status** todo, Wave C · **Deps** -
+- **Effort** S · **Impact** 7 · **Backend** no · **Status** done (web; the code already defaulted to me, now locked by unit + e2e tests from FAB, pill, group, person, Ask, draft restore; scanned receipt and Duplicate are not built yet) · **Deps** -
 - **Prefs** -
 - **Acceptance**
   1. e2e from the FAB, the sidebar pill, a group page, a person page (pre-selected friend), Ask prefill without a payer, a scanned receipt and Duplicate: Paid by visible and reads "You" at 390 and 1440.
   2. No smart default, remembered or predicted payer for a new expense; an Ask prefill naming a payer is the only exception; editing keeps the saved payer.
   3. Unit test of the form initialiser and group/person pick (`form.ts`, `formPick.ts`) for the default.
+
+### F-274 Reuse audit and consolidation `spec: owner § 26.1 (decision 210)`
+
+Audit the whole codebase for code that does the same job twice and merge each set into one shared piece.
+
+- **Effort** M-L · **Impact** 8 · **Backend** no · **Status** in progress (audit running; consolidation after the current builders merge), Wave C · **Deps** -
+- **Prefs** -
+- **Acceptance**
+  1. A ranked audit (files, what is duplicated, the shared piece, risk, effort) in `docs/reuse/consolidation.md`.
+  2. Consolidation in small non-overlapping slices, each with tests unchanged or improved and no visible regression (screenshots 390/1440 before/after).
+  3. An architecture test per consolidated piece where a pattern can be enforced (e.g. no `UserAvatar` with a person id outside PersonLink).
 
 ### F-250 Sign-in required (auth gate) `spec: owner § 26.15 (decision 125)`
 
