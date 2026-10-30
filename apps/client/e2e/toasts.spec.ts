@@ -9,7 +9,7 @@ type Splito = {setPwa(p: object): void}
 
 async function showToast(page: Page) {
   await page.goto('/')
-  await expect(page.getByTestId('screen-home')).toBeVisible()
+  await expect(page.getByTestId('screen-people')).toBeVisible()
   await page.evaluate(() => (window as unknown as {splito: Splito}).splito.setPwa({updateReady: true}))
   const toast = page.locator('[data-sonner-toast]').first()
   await expect(toast).toBeVisible()

@@ -176,7 +176,7 @@ test('M12, m2: Recently active groups shows a chip per open currency, with exact
   page,
 }) => {
   await page.setViewportSize(DESKTOP)
-  /* Home shows the groups in its body and no right column (owner 153); the right column is on Groups. */
+  /* The right column (>= 1300 px) lists the recently active groups; it is on every page (owner 198). */
   await openDemo(page, '/groups')
   await expect(page.getByTestId('screen-groups')).toBeVisible()
   const recent = page
@@ -192,19 +192,18 @@ test('M12, m2: Recently active groups shows a chip per open currency, with exact
   expect(label).toMatch(/you owe (US)?\$/)
 })
 
-test('m21: an Overview currency card opens Analytics in that currency, every time', async ({
+test('m21: an Overview currency card (top of Analytics) opens the rest of Analytics in that currency, every time', async ({
   page,
 }) => {
   await page.setViewportSize(DESKTOP)
-  await openDemo(page)
+  await openDemo(page, '/analytics')
   await expect(page.getByTestId('summary-EUR')).toBeVisible()
   await page.getByTestId('summary-EUR').click()
   await expect(page.getByTestId('analytics-currency')).toContainText('EUR')
-  // Pick another currency there, go home and tap the same card again: it must seed again.
+  // Pick another currency in the filter row, then tap the same card again: it must seed again.
   await page.getByTestId('analytics-currency').click()
   await page.getByTestId('analytics-currency-INR').click()
   await expect(page.getByTestId('analytics-currency')).toContainText('INR')
-  await page.getByTestId('tab-home').click()
   await page.getByTestId('summary-EUR').click()
   await expect(page.getByTestId('analytics-currency')).toContainText('EUR')
 })

@@ -269,7 +269,7 @@ test('phones: the FAB opens Add expense as a sheet from the bottom edge; the cro
 }) => {
   await page.setViewportSize(PHONE)
   await openDemo(page)
-  await expect(page.getByTestId('screen-home')).toBeVisible()
+  await expect(page.getByTestId('screen-people')).toBeVisible()
   await page.getByTestId('fab-add').click()
   const composer = page.getByTestId('screen-add-expense')
   await expect(composer).toBeVisible()

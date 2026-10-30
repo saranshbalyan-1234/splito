@@ -64,8 +64,10 @@ export async function createAccount(page: Page, a: {email: string; phone: string
   await page.getByTestId('setNewPassword-next').click()
 }
 
-/** The app is up: Home, or the People tab when the address named it. */
-export const signedInShown = (page: Page) => expect(page.getByTestId('screen-home').or(page.getByTestId('screen-people'))).toBeVisible({timeout: 20_000})
+/** The app is up: the start tab, People, or the tab the address named. */
+export const signedInShown = (page: Page) =>
+  // A tab parked behind another keeps its screen mounted and hidden, so more than one can match: the visible one counts.
+  expect(page.getByTestId(/^screen-(people|groups|analytics|activity|settings)$/).locator('visible=true').first()).toBeVisible({timeout: 20_000})
 
 export const hooks = (page: Page) => page.evaluate(() => Object.keys((window as unknown as Hooks).__splitoTest ?? {}))
 

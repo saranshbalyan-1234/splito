@@ -85,8 +85,8 @@ test('hiding Groups removes it from the phone bar only; the drawer and the sideb
   // The bottom bar is on screen here too, and follows the saved preference.
   await expect(page.getByTestId('tab-groups')).toHaveCount(0)
 
-  await open(page, '/', 'screen-home')
-  await expect(page.getByTestId('tab-home')).toBeVisible()
+  await open(page, '/', 'screen-people')
+  await expect(page.getByTestId('tab-people')).toBeVisible()
   await expect(page.getByTestId('tab-groups')).toHaveCount(0)
   // The avatar's drawer still lists every item and reaches Settings.
   await openDrawer(page)
@@ -96,7 +96,7 @@ test('hiding Groups removes it from the phone bar only; the drawer and the sideb
 
   // Wide screens always list every item: Groups is still on the sidebar, after the items that are on.
   await page.setViewportSize(LAPTOP)
-  await open(page, '/', 'screen-home')
+  await open(page, '/', 'screen-people')
   await expect(page.getByTestId('tab-more')).toHaveCount(0)
   await page.getByTestId('tab-groups').click()
   await expect(page.getByTestId('screen-groups')).toBeVisible()
@@ -114,8 +114,8 @@ for (const width of [1440, 860]) {
         .getByRole('navigation')
         .locator('[data-testid^="tab-"]:not([data-testid="tab-label"])')
         .evaluateAll(els => els.map(e => e.getAttribute('data-testid')))
-    // Default: the bottom bar's five, then the rest (Ask Splito and Settings are off); never a More.
-    const DEFAULT = ['tab-home', 'tab-people', 'tab-groups', 'tab-analytics', 'tab-activity', 'tab-ask', 'tab-settings']
+    // Default: the five items of the bar (no Home, no Ask Splito: owners 198, 200); never a More.
+    const DEFAULT = ['tab-people', 'tab-groups', 'tab-analytics', 'tab-activity', 'tab-settings']
     await expect.poll(order).toEqual(DEFAULT)
     await expect(page.getByTestId('tab-more')).toHaveCount(0)
 
@@ -124,29 +124,27 @@ for (const width of [1440, 860]) {
     // Off items follow the ones that are on, in the shared order.
     await expect
       .poll(order)
-      .toEqual(['tab-home', 'tab-people', 'tab-activity', 'tab-analytics', 'tab-groups', 'tab-ask', 'tab-settings'])
+      .toEqual(['tab-people', 'tab-activity', 'tab-analytics', 'tab-settings', 'tab-groups'])
 
     // An off item opens like any row and is lit there.
     await page.getByTestId('tab-groups').click()
     await expect(page.getByTestId('screen-groups')).toBeVisible()
     await expect(page.getByTestId('tab-groups')).toHaveAttribute('aria-current', 'page')
 
-    // Ask Splito keeps its Search & Ask behaviour.
-    await page.getByTestId('tab-ask').click()
-    await expect(page.getByTestId('ask-chat')).toBeVisible()
-    await page.keyboard.press('Escape')
+    // Ask Splito is not an item; it stays behind the header's Search & Ask icon.
+    await expect(page.getByTestId('tab-ask')).toHaveCount(0)
 
     await page.goto('/settings/navigation')
     await expect(page.getByTestId('screen-settings-section')).toBeVisible()
     await expect
       .poll(order)
-      .toEqual(['tab-home', 'tab-people', 'tab-activity', 'tab-analytics', 'tab-groups', 'tab-ask', 'tab-settings'])
+      .toEqual(['tab-people', 'tab-activity', 'tab-analytics', 'tab-settings', 'tab-groups'])
     await page.getByTestId('reset-tabs').click()
     await expect.poll(order).toEqual(DEFAULT)
 
-    // With every item on the list is the same.
-    for (const tab of ['ask', 'settings'])
-      await page.getByTestId(`tabs-toggle-${tab}`).click()
+    // Off and on again, the sidebar lists the same five.
+    await page.getByTestId('tabs-toggle-groups').click()
+    await page.getByTestId('tabs-toggle-groups').click()
     await expect.poll(order).toEqual(DEFAULT)
   })
 }
@@ -192,19 +190,19 @@ test('Settings is on the phone bar by default (owner 206); it can go off and Res
     .toBe(true)
 })
 
-test('the bar takes any number of tabs, down to Home alone, and Home cannot be hidden', async ({
+test('the bar takes any number of tabs, down to the start tab alone, and the start tab cannot be hidden', async ({
   page,
 }) => {
   await open(page, '/settings/navigation', 'screen-settings-section')
-  for (const tab of ['people', 'groups', 'analytics', 'activity']) {
+  for (const tab of ['groups', 'analytics', 'activity', 'settings']) {
     await page.getByTestId(`tabs-toggle-${tab}`).click()
     await expect(page.getByTestId(`tabs-toggle-${tab}`)).toHaveAttribute(
       'aria-checked',
       'false',
     )
   }
-  // Nothing is locked but Home, even with Home alone left.
-  await expect(page.getByTestId('tabs-toggle-home')).toHaveAttribute(
+  // Nothing is locked but the start tab (People), even with People alone left.
+  await expect(page.getByTestId('tabs-toggle-people')).toHaveAttribute(
     'aria-disabled',
     'true',
   )
@@ -212,14 +210,13 @@ test('the bar takes any number of tabs, down to Home alone, and Home cannot be h
     'aria-disabled',
     'true',
   )
-  await expect(page.getByTestId('tabs-count-note')).toContainText('Only Home')
-  // Every item can go on, past five: seven tabs.
-  for (const tab of ['people', 'groups', 'analytics', 'ask', 'activity', 'settings']) {
-    const toggle = page.getByTestId(`tabs-toggle-${tab}`)
-    if ((await toggle.getAttribute('aria-checked')) !== 'true') await toggle.click()
-    await expect(toggle).toHaveAttribute('aria-checked', 'true')
+  // The note about sharing the bar only comes above five tabs; every item is five.
+  // (Settings first: a bar of exactly People, Groups, Analytics, Activity reads as the pre-owner-206 default and gains Settings.)
+  for (const tab of ['settings', 'groups', 'analytics', 'activity']) {
+    await page.getByTestId(`tabs-toggle-${tab}`).click()
+    await expect(page.getByTestId(`tabs-toggle-${tab}`)).toHaveAttribute('aria-checked', 'true')
   }
-  await expect(page.getByTestId('tabs-count-note')).toContainText('7 tabs')
+  await expect(page.getByTestId('tabs-count-note')).toHaveCount(0)
 })
 
 test('choosing Hindi switches the whole UI live and persists', async ({
@@ -229,13 +226,13 @@ test('choosing Hindi switches the whole UI live and persists', async ({
   await open(page, '/settings/regional', 'screen-settings-section')
   await page.getByTestId('language-hi').click()
   await expect(page.getByText('भाषा और क्षेत्र').first()).toBeVisible()
-  await expect(page.getByTestId('tab-home')).toContainText('घर')
+  await expect(page.getByTestId('tab-people')).toContainText('लोग')
   await expect(page.getByTestId('pref-timezone')).toContainText('समय क्षेत्र')
 
   await page.reload()
-  await expect(page.getByTestId('tab-home')).toContainText('घर')
+  await expect(page.getByTestId('tab-people')).toContainText('लोग')
   await page.getByTestId('language-en').click()
-  await expect(page.getByTestId('tab-home')).toContainText('Home')
+  await expect(page.getByTestId('tab-people')).toContainText('People')
 })
 
 test('Reset restores one default, and Reset all restores every default', async ({

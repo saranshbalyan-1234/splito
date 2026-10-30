@@ -19,15 +19,15 @@ const PHONE = {width: 390, height: 844}
 const SIDEBAR = 216
 /* Bluesky's RightNav column, shown from 1300px (owner rule 26.17). */
 const RIGHT_COLUMN = 320
-const TABS = ['home', 'people', 'groups', 'analytics', 'activity']
+const TABS = ['people', 'groups', 'analytics', 'activity', 'settings']
 /* Top-level pages and their one header action, at the far right. */
 const TOP_LEVEL: [string, string, string][] = [
-  // Home: Search & Ask is the only action (owner 153); People adds Invite people (invite links live only in its sheet, 26.18 decision 77).
-  ['/', 'screen-home', 'header-search-ask'],
+  // People adds Invite people (invite links live only in its sheet, 26.18 decision 77); Settings, a tab (owner 206), has Search & Ask only.
   ['/people', 'screen-people', 'people-add-friend'],
   ['/groups', 'screen-groups', 'groups-new'],
   ['/analytics', 'screen-analytics', 'analytics-export'],
   ['/activity', 'screen-activity', 'activity-mark-all-read'],
+  ['/settings', 'screen-settings', 'header-search-ask'],
 ]
 
 async function open(page: Page, path: string, screen: string) {
@@ -37,7 +37,7 @@ async function open(page: Page, path: string, screen: string) {
 
 async function openDemo(page: Page, path = '/') {
   await enterDemo(page, path)
-  if (path === '/') await expect(page.getByTestId('home-overview')).toBeVisible()
+  if (path === '/') await expect(page.getByTestId('screen-people')).toBeVisible()
 }
 
 /* Web keeps earlier pages of the stack mounted (hidden), so scope to the page on screen. */
@@ -56,18 +56,21 @@ async function box(page: Page, screen: string, testID: string) {
   return (await on(page, screen, testID).boundingBox())!
 }
 
-test('Home is the initial route with no Home title on phones', async ({page}) => {
-  await open(page, '/', 'screen-home')
+test('there is no Home: the app opens on People, the start tab, and "/" goes there (owner 198)', async ({page}) => {
+  await open(page, '/', 'screen-people')
+  await expect(page).toHaveURL(/\/people$/)
   await expect(page.getByRole('heading', {name: 'Home'})).toHaveCount(0)
+  await expect(page.getByTestId('screen-home')).toHaveCount(0)
+  await expect(page.getByTestId('tab-home')).toHaveCount(0)
 })
 
-test('logo heads the sidebar, is inactive on Home and returns home elsewhere', async ({
+test('logo heads the sidebar, is inactive on the start tab and returns to it elsewhere', async ({
   page,
 }) => {
   await page.setViewportSize(LAPTOP)
   await open(page, '/groups', 'screen-groups')
   await page.getByTestId('logo').click()
-  await expect(page).toHaveURL(/\/$/)
+  await expect(page).toHaveURL(/\/people$/)
   await expect(page.getByTestId('logo')).toHaveAttribute(
     'aria-disabled',
     'true',
@@ -81,7 +84,7 @@ test('every route in the route table resolves, including after a reload', async 
   page,
 }) => {
   const routes: [string, string][] = [
-    ['/', 'screen-home'],
+    ['/', 'screen-people'],
     ['/people', 'screen-people'],
     ['/groups', 'screen-groups'],
     ['/analytics', 'screen-analytics'],
@@ -125,8 +128,7 @@ test.describe('header rule set', () => {
       await expect(page.getByTestId('sidebar-profile')).toHaveCount(0)
       const act = await box(page, screen, action)
       // The action's glyph sits on the right gutter (Bluesky's 3px visual offset), left of the right column.
-      // Home shows no right column (owner 153), so its action sits at the window's edge.
-      expect(DESKTOP.width - (path === '/' ? 0 : RIGHT_COLUMN) - (act.x + act.width)).toBe(20 - 3)
+      expect(DESKTOP.width - RIGHT_COLUMN - (act.x + act.width)).toBe(20 - 3)
       expect(act.y).toBeLessThan(20)
       // The sidebar logo sits 12 px (space.md) below the header row's centre line: a little air on top (owner 126).
       const logo = (await page.getByTestId('logo').boundingBox())!
@@ -154,7 +156,6 @@ test.describe('header rule set', () => {
     await page.setViewportSize(LAPTOP)
     for (const [path, screen] of [
       ['/profile', 'screen-profile'],
-      ['/settings', 'screen-settings'],
       [`/people/${ID}`, 'screen-person'],
       [`/groups/${ID}`, 'screen-group'],
       [`/groups/${ID}/settle`, 'screen-settle'],
@@ -227,12 +228,12 @@ test.describe('header rule set', () => {
       .toBeGreaterThanOrEqual(0)
   })
 
-  test('owner 81 + 87: only the header leaves after 300px down and returns after 30px up; bottom bar and FAB stay (Home, mobile web)', async ({
+  test('owner 81 + 87: only the header leaves after 300px down and returns after 30px up; bottom bar and FAB stay (People, mobile web)', async ({
     page,
   }) => {
     await page.setViewportSize(PHONE)
     await openDemo(page)
-    const header = on(page, 'screen-home', 'header-avatar')
+    const header = on(page, 'screen-people', 'header-avatar')
     const bar = page.getByTestId('tab-groups')
     const fab = page.getByTestId('fab-add')
     await expect(header).toBeVisible()
@@ -266,7 +267,7 @@ test.describe('header rule set', () => {
   }) => {
     await page.setViewportSize(PHONE)
     await openDemo(page)
-    const header = on(page, 'screen-home', 'header-avatar')
+    const header = on(page, 'screen-people', 'header-avatar')
     const bar = page.getByTestId('tab-groups')
     const hide = async () => {
       await page.mouse.move(200, 400)
@@ -356,7 +357,7 @@ test.describe('drawer: Bluesky drawer, opened by a swipe from the left edge (own
     await page.setViewportSize(PHONE)
     // The real data (demo mode has its own "Demo" dot, see demo-mode.spec).
     await page.goto('/')
-    const avatar = on(page, 'screen-home', 'header-avatar')
+    const avatar = on(page, 'screen-people', 'header-avatar')
     await expect(avatar.getByTestId('sync-dot-local')).toBeVisible()
     // Never colour alone: the label carries the state, and web shows a tooltip.
     await expect(avatar).toHaveAttribute('aria-label', /On this device only/)
@@ -375,7 +376,7 @@ test.describe('drawer: Bluesky drawer, opened by a swipe from the left edge (own
 
   test('the scrim closes it; rows navigate and close it', async ({page}) => {
     await page.setViewportSize(PHONE)
-    await open(page, '/', 'screen-home')
+    await open(page, '/', 'screen-people')
     await openDrawer(page)
     await page.mouse.click(PHONE.width - 10, PHONE.height / 2)
     await expect(page.getByTestId('drawer')).toHaveCount(0)
@@ -454,28 +455,27 @@ test.describe('desktop: Bluesky left sidebar and full-width content', () => {
     page,
   }) => {
     await page.setViewportSize(LAPTOP)
-    await open(page, '/', 'screen-home')
+    await open(page, '/', 'screen-people')
     const items = await page
       .getByRole('navigation')
       .locator('[data-testid^="tab-"]:not([data-testid="tab-label"])')
       .evaluateAll(els => els.map(e => e.getAttribute('data-testid')))
-    // Every item always shows on the sidebar, in the chosen order, with no More (owner 155).
+    // Every item always shows on the sidebar, in the chosen order, with no More (owner 155), no Home, no Ask Splito (owners 198, 200).
     expect(items).toEqual([
-      'tab-home',
       'tab-people',
       'tab-groups',
       'tab-analytics',
       'tab-activity',
-      'tab-ask',
       'tab-settings',
     ])
-    await expect(page.getByTestId('tab-home')).toContainText('Home')
-    // The sidebar already shows the mark, so the home header shows its title (26.4).
-    await expect(on(page, 'screen-home', 'header-logo')).toHaveCount(0)
+    await expect(page.getByTestId('tab-people')).toContainText('People')
+    await expect(page.getByTestId('tab-ask')).toHaveCount(0)
+    // The sidebar already shows the mark, so the header shows its title (26.4).
+    await expect(on(page, 'screen-people', 'header-logo')).toHaveCount(0)
     await expect(
-      page.getByTestId('screen-home').getByText('Home', {exact: true}),
+      page.getByTestId('screen-people').getByText('People', {exact: true}),
     ).toBeVisible()
-    await expect(page.getByTestId('tab-home')).toHaveAttribute(
+    await expect(page.getByTestId('tab-people')).toHaveAttribute(
       'aria-current',
       'page',
     )
@@ -508,7 +508,7 @@ test.describe('desktop: Bluesky left sidebar and full-width content', () => {
     await page.setViewportSize(DESKTOP)
     await openDemo(page)
     const nav = page.getByRole('navigation')
-    const order = ['logo', 'tab-home', 'tab-settings', 'sidebar-add']
+    const order = ['logo', 'tab-people', 'tab-settings', 'sidebar-add']
     const ys: number[] = []
     for (const id of order)
       ys.push((await nav.getByTestId(id).boundingBox())!.y)
@@ -533,7 +533,7 @@ test.describe('desktop: Bluesky left sidebar and full-width content', () => {
   test('the mark takes the accent, in Dim too', async ({page}) => {
     await page.setViewportSize(DESKTOP)
     await page.emulateMedia({colorScheme: 'dark'})
-    await open(page, '/', 'screen-home')
+    await open(page, '/', 'screen-people')
     await expect(page.locator('html')).toHaveClass(/theme--dim/)
     const fill = await page
       .getByTestId('logo')
@@ -552,7 +552,6 @@ test.describe('desktop: Bluesky left sidebar and full-width content', () => {
     page,
   }) => {
     await page.setViewportSize(DESKTOP)
-    // Home has no right column (owner 153): it is on the other pages.
     await openDemo(page, '/groups')
     const recent = page
       .getByTestId('right-nav')
@@ -575,14 +574,14 @@ test.describe('desktop: Bluesky left sidebar and full-width content', () => {
     page,
   }) => {
     await page.setViewportSize(LAPTOP)
-    await open(page, '/', 'screen-home')
+    await open(page, '/', 'screen-people')
     const centreY = async (id: string) => {
       const b = (await page.getByTestId(id).boundingBox())!
       return Math.round(b.y + b.height / 2)
     }
     await expect
       .poll(() => centreY('sidebar-indicator'))
-      .toBe(await centreY('tab-home'))
+      .toBe(await centreY('tab-people'))
     expect((await page.getByTestId('sidebar-indicator').boundingBox())!.x).toBe(
       0,
     )
@@ -601,13 +600,13 @@ test.describe('desktop: Bluesky left sidebar and full-width content', () => {
     // Bluesky's minimal mode: the mark, icons, the round pill; the header avatar opens Profile (owner 201).
     await expect(page.getByTestId('logo')).toBeVisible()
     await expect(page.getByTestId('logo-wordmark')).toHaveCount(0)
-    await expect(on(page, 'screen-home', 'header-avatar')).toHaveAttribute(
+    await expect(on(page, 'screen-people', 'header-avatar')).toHaveAttribute(
       'aria-label',
       /^Open profile\. /,
     )
     await expect(page.getByTestId('sidebar-recent-groups')).toHaveCount(0)
     await expect(page.getByTestId('sidebar-footer')).toHaveCount(0)
-    const box = (await page.getByTestId('screen-home').boundingBox())!
+    const box = (await page.getByTestId('screen-people').boundingBox())!
     expect(box.x).toBe(80)
   })
 
@@ -654,7 +653,7 @@ test.describe('desktop: Bluesky left sidebar and full-width content', () => {
       'aria-current',
       'page',
     )
-    await expect(page.getByTestId('tab-home')).not.toHaveAttribute(
+    await expect(page.getByTestId('tab-groups')).not.toHaveAttribute(
       'aria-current',
       'page',
     )
@@ -664,7 +663,7 @@ test.describe('desktop: Bluesky left sidebar and full-width content', () => {
     page,
   }) => {
     await page.setViewportSize(LAPTOP)
-    await open(page, '/', 'screen-home')
+    await open(page, '/', 'screen-people')
     await expect(page.getByTestId('tab-more')).toHaveCount(0)
     await page.getByTestId('tab-settings').click()
     await expect(page.getByTestId('screen-settings')).toBeVisible()
@@ -672,7 +671,7 @@ test.describe('desktop: Bluesky left sidebar and full-width content', () => {
       'aria-current',
       'page',
     )
-    await expect(page.getByTestId('tab-home')).not.toHaveAttribute(
+    await expect(page.getByTestId('tab-people')).not.toHaveAttribute(
       'aria-current',
       'page',
     )
@@ -680,7 +679,7 @@ test.describe('desktop: Bluesky left sidebar and full-width content', () => {
 })
 
 test.describe('phone: Bluesky bottom bar and FAB', () => {
-  test('five tabs with People and Activity, no Profile tab, no centre button, the FAB, no sidebar', async ({
+  test('five tabs with People, Activity and Settings, no Home, no Profile tab, no centre button, the FAB, no sidebar', async ({
     page,
   }) => {
     await page.setViewportSize(PHONE)
@@ -707,15 +706,11 @@ test.describe('phone: Bluesky bottom bar and FAB', () => {
   }) => {
     await page.setViewportSize(PHONE)
     // Empty People has its own Add a friend / Add expense buttons, so no third Add.
-    await open(page, '/', 'screen-home')
-    await expect(page.getByTestId('home-empty')).toBeVisible()
-    await expect(on(page, 'screen-home', 'fab-add')).toHaveCount(0)
     await open(page, '/people', 'screen-people')
     await expect(page.getByTestId('people-empty')).toBeVisible()
     await expect(on(page, 'screen-people', 'fab-add')).toHaveCount(0)
     await openDemo(page)
     for (const [path, screen] of [
-      ['/', 'screen-home'],
       ['/people', 'screen-people'],
       ['/groups', 'screen-groups'],
       ['/activity', 'screen-activity'],
@@ -749,11 +744,11 @@ test.describe('phone: Bluesky bottom bar and FAB', () => {
     await expect(page).toHaveURL(/\/expense\/new$/)
     await expect(page.getByTestId('screen-add-expense')).toBeVisible()
     await page.getByTestId('sheet-close').click()
-    await expect(page).toHaveURL(/\/$/)
+    await expect(page).toHaveURL(/\/people$/)
     await expect(page.getByTestId('screen-add-expense')).toHaveCount(0)
   })
 
-  test("the avatar is in Bluesky's hamburger spot at the top left; the logo stays centred", async ({
+  test("the avatar is in Bluesky's hamburger spot at the top left; the title stays centred", async ({
     page,
   }) => {
     await page.setViewportSize(PHONE)
@@ -764,16 +759,16 @@ test.describe('phone: Bluesky bottom bar and FAB', () => {
       expect(avatar.x).toBe(16)
       expect(avatar.y).toBeLessThan(20)
     }
-    await open(page, '/', 'screen-home')
-    const logo = await box(page, 'screen-home', 'header-logo')
-    expect(Math.abs(logo.x + logo.width / 2 - PHONE.width / 2)).toBeLessThan(1)
+    await open(page, '/groups', 'screen-groups')
+    const title = (await page.getByTestId('screen-groups').getByText('Groups', {exact: true}).first().boundingBox())!
+    expect(Math.abs(title.x + title.width / 2 - PHONE.width / 2)).toBeLessThan(2)
   })
 
   test('tabs navigate; the avatar opens Profile and Settings is a tab (owners 201, 206)', async ({
     page,
   }) => {
     await page.setViewportSize(PHONE)
-    await open(page, '/', 'screen-home')
+    await open(page, '/', 'screen-people')
     await page.getByTestId('tab-groups').click()
     await expect(page.getByTestId('screen-groups')).toBeVisible()
     await page.getByTestId('tab-activity').click()
@@ -791,17 +786,17 @@ test('the tabs preference orders and hides tabs; hidden routes still open', asyn
   page,
 }) => {
   await page.setViewportSize(PHONE)
-  await open(page, '/', 'screen-home')
+  await open(page, '/', 'screen-people')
   await page.waitForFunction(() => 'splito' in window)
   await page.evaluate(() =>
-    (window as any).splito.setPref('tabs', ['home', 'groups']),
+    (window as any).splito.setPref('tabs', ['people', 'groups']),
   )
   await expect(page.getByTestId('tab-analytics')).toHaveCount(0)
   const order = await page
     .getByRole('navigation')
     .locator('[data-testid^="tab-"]:not([data-testid="tab-label"])')
     .evaluateAll(els => els.map(e => e.getAttribute('data-testid')))
-  expect(order).toEqual(['tab-home', 'tab-groups'])
+  expect(order).toEqual(['tab-people', 'tab-groups'])
   // Hiding tabs never strands anything: the drawer still reaches every page.
   await openDrawer(page)
   await page.getByTestId('drawer-analytics').click()
@@ -814,7 +809,7 @@ test('the tabs preference orders and hides tabs; hidden routes still open', asyn
       .getByRole('navigation')
       .locator('[data-testid^="tab-"]:not([data-testid="tab-label"])')
       .evaluateAll(els => els.map(e => e.getAttribute('data-testid')))
-  await expect.poll(sidebar).toEqual(['tab-home', 'tab-groups', 'tab-people', 'tab-analytics', 'tab-ask', 'tab-activity', 'tab-settings'])
+  await expect.poll(sidebar).toEqual(['tab-people', 'tab-groups', 'tab-analytics', 'tab-activity', 'tab-settings'])
   await page.getByTestId('tab-settings').click()
   await expect(page.getByTestId('screen-settings')).toBeVisible()
 })

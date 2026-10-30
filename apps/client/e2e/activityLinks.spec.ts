@@ -118,7 +118,7 @@ for (const [name, viewport] of SIZES) {
     test('transactions: the right column, a Group heading and a Person heading open Activity on Expenses and Payments, scoped', async ({page}) => {
       await openDemo(page, '/')
       await page.evaluate(async () => (window as unknown as {splito: {setPref(k: string, v: unknown): Promise<void>}}).splito.setPref('activity.tab', 'me'))
-      /* The right column's heading and See all (>= 1300 px only; Home's own go with the Home tab, F-271). */
+      /* The right column's heading and See all (>= 1300 px only). */
       if (viewport.width >= 1300) {
         for (const id of ['sidebar-transactions-title', 'sidebar-transactions-all']) {
           await page.goto('/people')

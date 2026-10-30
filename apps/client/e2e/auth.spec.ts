@@ -1,6 +1,7 @@
 import {expect, type Page, test} from '@playwright/test'
 
 import {continueWith, createAccount, databases, DEV, devCode, logOutFromProfile, signedInShown, signInWithPassword, toContinue} from './auth'
+import {openProfile} from './nav'
 import {signedOut} from './signedOut'
 
 /*
@@ -17,7 +18,7 @@ test.describe('signed out, nothing of the app exists', () => {
     test(`${path} shows the Continue screen, renders no screen and opens no database`, async ({page}) => {
       await page.setViewportSize(PHONE)
       await toContinue(page, path)
-      for (const id of ['screen-home', 'screen-people', 'screen-groups', 'screen-settings', 'screen-activity', 'screen-analytics', 'screen-person', 'screen-expense', 'bottom-bar', 'sidebar', 'drawer', 'search-drawer'])
+      for (const id of ['screen-people', 'screen-groups', 'screen-settings', 'screen-activity', 'screen-analytics', 'screen-person', 'screen-expense', 'bottom-bar', 'sidebar', 'drawer', 'search-drawer'])
         await expect(page.getByTestId(id)).toHaveCount(0)
       expect(await databases(page)).toEqual([])
       // The page holds the sign-in and no ledger text at all.
@@ -37,7 +38,7 @@ test.describe('signed out, nothing of the app exists', () => {
     await expect(page.getByTestId('public-join')).toBeVisible()
     await expect(page).toHaveURL(/\/join\/abc123def456$/)
     expect(await databases(page)).toEqual([])
-    await expect(page.getByTestId('screen-home')).toHaveCount(0)
+    await expect(page.getByTestId('screen-people')).toHaveCount(0)
     await page.getByTestId('public-continue').click()
     await expect(page.getByTestId('continue-form')).toBeVisible()
     await page.goto('/join/abc')
@@ -60,7 +61,7 @@ test.describe('signed out, nothing of the app exists', () => {
     await expect(page.getByTestId('public-privacy')).toBeVisible()
     await expect(page.getByTestId('screen-settings-section')).toHaveCount(0)
     expect(await databases(page)).toEqual([])
-    // Nothing is held for later: signing in lands on Home, not on Privacy.
+    // Nothing is held for later: signing in lands on the start tab, not on Privacy.
     await page.getByTestId('public-back').click()
     await page.getByTestId('continue-dev-account').click()
     await signedInShown(page)
@@ -105,7 +106,7 @@ test.describe('the Continue screen', () => {
     await expect(page.getByTestId('auth-social-not-live')).toContainText('arrives with sync')
     await page.getByTestId('continue-apple').click()
     await expect(page.getByTestId('continue-form')).toBeVisible()
-    await expect(page.getByTestId('screen-home')).toHaveCount(0)
+    await expect(page.getByTestId('screen-people')).toHaveCount(0)
     expect(await databases(page)).toEqual([])
   })
 
@@ -286,8 +287,8 @@ test.describe('a missing email or phone blocks the app', () => {
     await signInWithPassword(page, 'old@example.com', 'oldpassword1')
     await expect(page.getByTestId('add-missing')).toBeVisible()
     await expect(page.getByText('Add your phone number').first()).toBeVisible()
-    // Not Home, not setup, no database; the only other action is Log out.
-    await expect(page.getByTestId('screen-home')).toHaveCount(0)
+    // Not the start tab, not setup, no database; the only other action is Log out.
+    await expect(page.getByTestId('screen-people')).toHaveCount(0)
     expect(await databases(page)).toEqual([])
     await page.reload()
     await expect(page.getByTestId('add-missing')).toBeVisible()
@@ -336,7 +337,7 @@ test.describe('sign-in preserves intent', () => {
     await toContinue(page, '/activity/others')
     await signInWithPassword(page, DEV.email, DEV.password)
     await expect(page.getByTestId('screen-activity')).toBeVisible({timeout: 20_000})
-    await expect(page).toHaveURL(/\/activity\/others(\?from=home)?$/)
+    await expect(page).toHaveURL(/\/activity\/others(\?from=[a-z]+)?$/)
   })
 
   test('a link that needed the intro first is still opened after it and sign-in', async ({page}) => {
@@ -347,7 +348,7 @@ test.describe('sign-in preserves intent', () => {
     await expect(page).toHaveURL(/\/settings\/regional$/)
   })
 
-  test('a plain visit to Home signs in to Home', async ({page}) => {
+  test('a plain visit signs in to the start tab, People', async ({page}) => {
     await toContinue(page)
     await page.getByTestId('continue-dev-account').click()
     await signedInShown(page)
@@ -383,7 +384,7 @@ test.describe('log out erases everything the account left (owner 186)', () => {
 
     await page.getByTestId('continue-dev-account').click()
     await signedInShown(page)
-    await page.goto('/people') // the People tab lists every friend; Home only the recently active
+    await page.goto('/people') // the People tab lists every friend
     await expect(page.getByText('Erased Friend')).toHaveCount(0)
     // Demo mode is off again, and the demo database was not kept.
     await expect(page.getByTestId('header-avatar').last()).not.toHaveAttribute('aria-label', /Demo$/)
@@ -407,7 +408,7 @@ test.describe('log out erases everything the account left (owner 186)', () => {
         return req
       }
     })
-    await page.getByTestId('header-avatar').first().click()
+    await openProfile(page)
     await page.getByTestId('profile-log-out').click()
     await page.getByTestId('logout-confirm').click()
     await expect(page.getByTestId('logout-failed')).toBeVisible({timeout: 30_000})
@@ -426,7 +427,7 @@ test.describe('log out erases everything the account left (owner 186)', () => {
     expect((await databases(page)).filter(n => n!.startsWith('splito-'))).toEqual([])
     await page.getByTestId('continue-dev-account').click()
     await signedInShown(page)
-    await page.goto('/people') // the People tab lists every friend; Home only the recently active
+    await page.goto('/people') // the People tab lists every friend
     await expect(page.getByText('Stubborn Friend')).toHaveCount(0)
   })
 
@@ -460,7 +461,7 @@ test.describe('log out erases everything the account left (owner 186)', () => {
     await signedInShown(page)
     await page.waitForFunction(() => 'splito' in window)
     await create(page, 'Only Dev')
-    await page.goto('/people') // the People tab lists every friend; Home only the recently active
+    await page.goto('/people') // the People tab lists every friend
     await expect(page.getByText('Only Dev')).toBeVisible()
     const devMe = await page.evaluate(() => (window as unknown as {splito: {me: string}}).splito.me)
     await logOutFromProfile(page)
@@ -469,19 +470,19 @@ test.describe('log out erases everything the account left (owner 186)', () => {
     await signedInShown(page)
     await page.waitForFunction(() => 'splito' in window)
     expect(await page.evaluate(() => (window as unknown as {splito: {me: string}}).splito.me)).not.toBe(devMe)
-    await page.goto('/people') // the People tab lists every friend; Home only the recently active
+    await page.goto('/people') // the People tab lists every friend
     await expect(page.getByText('Only Dev')).toHaveCount(0)
     await create(page, 'Only Riya')
-    await page.goto('/people') // the People tab lists every friend; Home only the recently active
+    await page.goto('/people') // the People tab lists every friend
     await expect(page.getByText('Only Riya')).toBeVisible()
     expect((await databases(page)).filter(n => n!.startsWith('splito-acct-'))).toHaveLength(1)
     await logOutFromProfile(page)
 
     await signInWithPassword(page, DEV.email, DEV.password)
     await signedInShown(page)
-    await page.goto('/people') // the People tab lists every friend; Home only the recently active
+    await page.goto('/people') // the People tab lists every friend
     await expect(page.getByText('Only Dev')).toHaveCount(0)
-    await page.goto('/people') // the People tab lists every friend; Home only the recently active
+    await page.goto('/people') // the People tab lists every friend
     await expect(page.getByText('Only Riya')).toHaveCount(0)
   })
 })
@@ -500,7 +501,7 @@ test.describe('data from before accounts', () => {
     await page.getByTestId('legacy-move').click()
     // The old database is gone once the move is done; only then look at the People tab (leaving earlier would cut it short).
     await expect.poll(() => databases(page), {timeout: 30_000}).not.toContain('splito')
-    await page.goto('/people') // the People tab lists every friend; Home only the recently active
+    await page.goto('/people') // the People tab lists every friend
     await expect(page.getByText('Old Friend')).toBeVisible({timeout: 15_000})
     await page.reload()
     await signedInShown(page)
@@ -520,7 +521,7 @@ test.describe('data from before accounts', () => {
     await signedInShown(page)
     await expect(offer).toBeVisible()
     await page.getByRole('button', {name: 'Not now'}).click()
-    await page.goto('/people') // the People tab lists every friend; Home only the recently active
+    await page.goto('/people') // the People tab lists every friend
     await expect(page.getByText('Old Friend')).toHaveCount(0)
     // Answered: not offered by itself any more, and the old database is untouched.
     await page.reload()
@@ -535,7 +536,7 @@ test.describe('data from before accounts', () => {
     await expect.poll(() => databases(page)).not.toContain('splito')
     await expect(page.getByTestId('settings-move-legacy')).toHaveCount(0)
     await page.goto('/')
-    await page.goto('/people') // the People tab lists every friend; Home only the recently active
+    await page.goto('/people') // the People tab lists every friend
     await expect(page.getByText('Old Friend')).toBeVisible({timeout: 15_000})
   })
 
@@ -554,10 +555,10 @@ test.describe('tabs, languages and codes', () => {
     await signedInShown(page)
     const other = await context.newPage()
     await other.goto('/')
-    await expect(other.getByTestId('screen-home')).toBeVisible({timeout: 20_000})
+    await signedInShown(other)
     await other.evaluate(() => (window as unknown as {__splitoTest: {signOut(): void}}).__splitoTest.signOut())
     await expect(page.getByTestId('continue-form')).toBeVisible({timeout: 10_000})
-    await expect(page.getByTestId('screen-home')).toHaveCount(0)
+    await expect(page.getByTestId('screen-people')).toHaveCount(0)
   })
 
   test('the language in use stays after log out, and on the next cold start', async ({page}) => {

@@ -96,7 +96,7 @@ const SAMPLES: Sample[] = [
     isOpen: async page => {
       await expect(page.getByTestId('ask-chat')).toBeVisible()
     },
-    parent: () => '/',
+    parent: () => '/people',
     close: async page => await page.keyboard.press('Escape'),
   },
   {
@@ -185,8 +185,8 @@ for (const [label, viewport] of [
         const before = here(page)
         await openLink(page, `https://splito.app${path}`)
         await sample.isOpen(page)
-        /* A link to a main screen opens its pushed copy, which names where it was opened from (owner 184): the address is the link's plus `from=home`. */
-        const withoutFrom = () => here(page).replace(/([?&])from=home&?/, '$1').replace(/[?&]$/, '')
+        /* A link to a main screen opens its pushed copy, which names where it was opened from (owner 184): the address is the link's plus `from=<that tab>`. */
+        const withoutFrom = () => here(page).replace(/([?&])from=[a-z]+&?/, '$1').replace(/[?&]$/, '')
         await expect.poll(withoutFrom).toBe(path)
         await page.goBack()
         await expect.poll(() => here(page)).toBe(before)
@@ -199,11 +199,11 @@ for (const [label, viewport] of [
       await expect(page.getByTestId('group-tab-balances')).toHaveAttribute('aria-selected', 'true')
     })
 
-    test('an unknown address opens Home and the bar says /', async ({page}) => {
+    test('an unknown address opens the start tab, People, and the bar says /people', async ({page}) => {
       await openApp(page)
       await page.goto('/no/such/place')
-      await expect(page.getByTestId('screen-home')).toBeVisible()
-      expect(here(page)).toBe('/')
+      await expect(page.getByTestId('screen-people')).toBeVisible()
+      expect(here(page)).toBe('/people')
     })
 
     test('browser Back closes the top sheet, Forward reopens it', async ({page}) => {
@@ -238,7 +238,7 @@ for (const [label, viewport] of [
 
     test('Group X > Settle > Edit rules opens exactly one rules sheet (the copy of Group under Settle stays shut)', async ({page}) => {
       const known = await openApp(page)
-      // Cold, the stack is Home > Groups > Group > Settle; the link then opens the Group page's rules over Settle.
+      // Cold, the stack is People (the start tab) > Groups > Group > Settle; the link then opens the Group page's rules over Settle.
       await page.goto(`/groups/${known.group}/settle`)
       await expect(page.getByTestId('screen-settle')).toBeVisible()
       await openLink(page, `https://splito.app/groups/${known.group}/rules`)
@@ -349,8 +349,8 @@ for (const [label, viewport] of [
       await page.goto('/groups/3f2b8c1e-7d4a-4e9b-9a61-0c5d2e8f1a77/balances')
       await expect(page.getByRole('button', {name: 'Stay in demo'})).toBeVisible()
       await page.getByRole('button', {name: 'Stay in demo'}).click()
-      await expect.poll(() => here(page)).toBe('/')
-      await expect(page.getByTestId('screen-home')).toBeVisible()
+      await expect.poll(() => here(page)).toBe('/people')
+      await expect(page.getByTestId('screen-people')).toBeVisible()
     })
 
     test('demo mode: a link to real data asks to switch back first; Stay keeps the demo, Switch back opens it', async ({page}) => {
@@ -360,7 +360,7 @@ for (const [label, viewport] of [
       await expect(page.getByRole('button', {name: 'Stay in demo'})).toBeVisible()
       await page.getByRole('button', {name: 'Stay in demo'}).click()
       await expect(page.getByRole('button', {name: 'Stay in demo'})).toBeHidden()
-      expect(here(page)).toBe('/')
+      expect(here(page)).toBe('/people')
       await openLink(page, 'https://splito.app/groups/3f2b8c1e-7d4a-4e9b-9a61-0c5d2e8f1a77/balances')
       await page.getByRole('button', {name: 'Switch back'}).click()
       await expect.poll(() => here(page)).toBe('/groups/3f2b8c1e-7d4a-4e9b-9a61-0c5d2e8f1a77/balances')

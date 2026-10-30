@@ -122,7 +122,7 @@ test('one save on a 500-expense ledger', async ({page}) => {
   await page.setViewportSize({width: 1440, height: 900})
   await page.addInitScript(instrument)
   await openDemo(page)
-  await expect(page.getByTestId('screen-home')).toBeVisible({timeout: 60_000})
+  await expect(page.getByTestId('screen-people')).toBeVisible({timeout: 60_000})
 
   const seedStart = Date.now()
   await page.evaluate(async n => {

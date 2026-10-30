@@ -4,8 +4,8 @@ import {openDemo} from './openDemo'
 
 /*
  * F-265 (owner 188): the desktop sidebar is as wide as its content needs and its footer links sit directly under
- * the Add expense pill. Checked at 1300, 1440 and 1920 in English and Hindi, with Ask Splito pinned (the longest
- * label) so the widest case is on screen.
+ * the Add expense pill. Checked at 1300, 1440 and 1920 in English and Hindi, with every item in the list (Ask Splito
+ * is not an item, owner 200).
  */
 const WIDTHS = [1300, 1440, 1920]
 /* About 200 px in English; the footer row sets it. */
@@ -17,9 +17,9 @@ async function openSidebar(page: Page, width: number, lang: 'en' | 'hi') {
   await page.evaluate(async l => {
     const s = (window as any).splito
     await s.setPref('language', l)
-    await s.setPref('tabs', ['home', 'people', 'groups', 'analytics', 'ask', 'activity'])
+    await s.setPref('tabs', ['people', 'groups', 'analytics', 'activity', 'settings'])
   }, lang)
-  await expect(page.getByTestId('tab-ask')).toBeVisible()
+  await expect(page.getByTestId('tab-settings')).toBeVisible()
 }
 
 for (const lang of ['en', 'hi'] as const) {
@@ -53,7 +53,7 @@ for (const lang of ['en', 'hi'] as const) {
       expect(gap).toBeLessThanOrEqual(40)
 
       // The content column starts where the sidebar ends; nothing overflows sideways.
-      const screen = (await page.getByTestId('screen-home').boundingBox())!
+      const screen = (await page.getByTestId('screen-people').boundingBox())!
       expect(screen.x).toBe(navBox.width)
       const overflow = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth)
       expect(overflow).toBeLessThanOrEqual(0)
