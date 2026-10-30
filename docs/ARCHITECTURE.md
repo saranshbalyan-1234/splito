@@ -1634,6 +1634,19 @@ labelled sidebar); **wide** = web 1300 px and up (Bluesky `gtTablet`, right colu
   always gives the plain tab screen with the avatar. The FAB follows the header (§ 26.6: Back, so no FAB). One
   helper decides (the link resolver / `tabLink()`), not each screen. *Why:* "even if you go to a main screen from
   some links, it should show a back button, in case you don't go directly from tabs".
+- **Every page has a fixed parent, so Back always goes somewhere specific** (owner 184): with history, Back
+  returns to the page you came from; with none (a refresh, a pasted address, a notification, a new tab), Back
+  goes to the page's parent and the parents are stacked under it, so a second Back keeps climbing. The parents:
+  a Settings section (Appearance, Language, Notifications ...) -> Settings; a person -> People; a group ->
+  Groups; an expense or payment -> its group, else the friend it is with, else Home; Edit -> the thing edited;
+  Settle -> its group or friend; Profile -> Settings; Friends and invites -> People; Analytics/Activity
+  sub-addresses -> that tab. Back never disappears from a pushed page, refreshed or not. A main tab screen opened
+  from a link (owner 179) keeps its Back after a refresh: the address carries its origin as a short `from`
+  (`/activity/all?type=transactions&from=home`), and Back returns there; tapping the tab itself drops it. One
+  table (`backFallback` in `navigation/goBack.ts`) holds every parent; an architecture test fails on a route
+  without one. Supersedes the assistant ruling "a refreshed pushed copy becomes the plain tab". *Why:* "there
+  should be some specific set of back for sure, for example if I open Appearance in Settings, the flow is from
+  Settings to Appearance".
 - **Pushed pages** (Person, Group, Settle, Expense, Profile, Settings and its sections, Add friend, Create
   group) show Back in the header; top-level pages (People, Groups, Analytics, Activity) show the avatar. This
   one distinction also decides the FAB (§ 26.6).
@@ -1937,6 +1950,13 @@ pages". § 17 holds the engineering rules that meet these budgets.
   (light, Dim, Black, sidebar, header): changing the accent recolours the logo everywhere. Static assets
   (favicon, app icons, native splash) keep the SVG's default blue (`#1185fe`). *Why:* "changing accent color
   should change logo color as well" (replaces "keep it blue always").
+- **The splash mark breathes while the app loads** (owner 185): the logo on the launch screen zooms gently in and
+  out (scale 1 -> 1.08 -> 1, about 1.2 s a cycle, ease-in-out) for as long as content is loading, so the person
+  sees it working: on web from the very first paint (CSS keyframes inline in `index.html`, before any script
+  arrives), on iOS and Android by a JS launch screen that matches the native splash pixel for pixel and takes over
+  the moment JS runs (Reanimated, UI thread). It stops and fades into the first screen when loading ends; reduced
+  motion swaps the zoom for a slow opacity pulse. *Why:* "animate the splash screen icon, so that I see that it's
+  loading; like zoom in zoom out a little, so I know content is being downloaded".
 - **Splash in dark mode uses the Dim background, never pure black** (native splash `dark.backgroundColor` and
   the web launch screen take ALF Dim's background token, logo centred); light mode keeps the light background.
   *Why:* "on splash show the dim instead of black".
@@ -2185,12 +2205,14 @@ dishes etc and each item can be assigned to each in split"; "in itemize don't sh
   createAccount, resetPassword, addContact). Dev and e2e builds get `lib/auth/dev.ts` (accounts in device storage, codes
   shown in the dev banner, a fixed dev account) as a lazy chunk reached only behind `__DEV__` / `EXPO_PUBLIC_ENV=e2e`
   (`e2e-pwa/bundle.spec.ts` checks the production export holds none of it); every other build gets the `unavailable`
-  client and the screens say "arrives with sync". `auth-config.js` (read by `app.config.ts`) refuses to build a release
-  (`EXPO_PUBLIC_ENV=production`, or a stage/prod tier build) without an https `EXPO_PUBLIC_AUTH_API_URL`.
+  client and the screens say "arrives with sync". `auth-config.js` (read by `app.config.ts`) sorts builds into kinds and refuses
+  production until the auth HTTP client exists (§ 26.22); the review site is the `preview` kind.
 - **One database per account; device keys too.** Search history, Ask chat, drafts, reminder bookkeeping and the
   first-frame preference copies are under `acct:<id>:` (`setStorageScope`), demo mode keeps `demo:`. Log out
-  (`data/account.ts logOut`, the `LogOutHost` prompt from Settings and the drawer footer) unmounts the provider, which
-  closes the database; Keep leaves it, Erase deletes it and its device keys after the close.
+  (`data/account.ts logOut`, the `LogOutHost` prompt from Settings and the drawer footer) always erases (owner 186): the app
+  shows `LoggingOut` (which unmounts the provider, closing the database), then `eraseAccountData` deletes the database, the
+  demo database, the account's and demo's device keys, its "me" id and the service worker's data caches, and only then does the
+  session end; the device's language and theme are copied out first and stay.
 - **Data from before accounts:** the old unkeyed `splito` database is offered once after sign-in (`LegacyDataOffer`,
   "Move this device's data into your account"): Move copies it through the backup path (`createBackup` ->
   `applyBackup`, merge) and deletes it; "Not now" leaves it on disk and the offer is not repeated (a Settings > Data row
@@ -2204,8 +2226,9 @@ dishes etc and each item can be assigned to each in split"; "in itemize don't sh
   sign-in or sign-out is followed through the `storage` event on the session key.
 - **Log out waits for the close:** `expectStoreClosed(accountId)` is armed before the session ends and settles when
   `StoreProvider`'s cleanup has closed every connection of that account (a store still opening, a swap's old store); only then
-  does Erase delete the database, retrying and reporting a failure. The prompt counts unsynced changes with `syncCounts()` (an index
-  read) and keeps Erase off until the count is known.
+  is the data deleted (with retries). A failure shows "Logging out" with Try again and the session stays (`loggingOut` device key,
+  so a restart resumes it), never a half-erased account. The prompt counts unsynced changes with `syncCounts()` (an index read) and
+  keeps Log out off until the count is known.
 - **The legacy offer is answered by Move, Not now or no old database;** an open or closed-by-reload offer comes again, and
   Settings > Data keeps "Move this device's older data" while the old database exists.
 - **Signed-out pages:** the intro, Continue, Help, Privacy, About (`/settings/help|privacy|about`) and `/join/<token>` (a stub page
@@ -2235,9 +2258,15 @@ dishes etc and each item can be assigned to each in split"; "in itemize don't sh
   "Sign-in arrives with sync" and only the dev/e2e "Continue with a dev account" works; no fake success, no fake
   account. *Why:* "there is signin page already there in bluesky, use that"; "basically no signup needed".
 - **Signed in (only once the backend exists):** an account row (avatar, name, email/phone, sync status) and
-  a destructive "Log out" row opening a prompt "Log out?" that warns when the outbox holds unsynced changes
-  ("N changes haven't synced yet") and offers "Keep this device's data" / "Erase this device's data". Logout
-  never silently deletes unsynced outbox rows (§ 11).
+  a destructive "Log out" row opening a prompt "Log out?". **Log out erases everything this account left on the
+  device** (owner 186): its local database (every store, the outbox, history, attachments cache), its demo
+  database, its account-scoped preferences, drafts, the session and any cached copies (service worker data
+  caches, search index); device-level choices (language, theme) stay so the logged-out flow still speaks the
+  person's language. There is no "keep" option. The prompt says what will happen ("This removes all your Splito
+  data from this device") and, when the outbox holds changes the server has not acknowledged, says so first with
+  the count ("N changes haven't synced yet and will be lost"), so nothing unsynced is deleted silently (§ 11).
+  The erase finishes before the logged-out flow shows; a failure is reported and retried, never left half-done.
+  *Why:* "when logout, it should remove all data from db".
 - **"Log out" also appears in the drawer footer** (§ 26.7; there is no "Sign in" while sign-in is required).
 - **Auth state comes from one `useSession()`** (Bluesky pattern, `src/state/session`), signed out until the
   backend lands.
@@ -2303,8 +2332,8 @@ dishes etc and each item can be assigned to each in split"; "in itemize don't sh
     app opens and works offline with the account's local database (one database per account, so two accounts on
     one device never mix), and only an API 401 ends the session (§ 11). Sign-in itself needs a connection, and
     says so offline.
-  - **Log out** returns to the logged-out flow and closes that account's database; the prompt of § 26.15 (keep
-    or erase this device's data, unsynced warning) still applies.
+  - **Log out** returns to the logged-out flow and closes that account's database; it erases all of that
+    account's data on the device (owner 186, § 26.15; unsynced warning first).
   - **Data already on a device from before this rule** is offered once after the first sign-in: "Move this
     device's data into your account" (F-2104), never merged silently.
   - **Until the auth API exists** (F-2101/F-2102, built after the whole front end, owner 164): dev and e2e builds offer
@@ -2779,6 +2808,9 @@ Every owner decision, in the order it was made (all 2026-10-26). "Replaced" name
 | 180 | Assistant ruling after the F-250 review (owner asleep, "take your own decisions"; owners 164/165 review the front end on Render first) | Render builds a "preview" tier: labelled local dev account allowed, `noindex`, never on stage/prod tiers; real production refused until the auth HTTP client exists; intro keeps animated Lottie art | § 26.15 | Render built `production`, which refused the dev account and broke the deploy |
 | 181 | "name should be capitalized first letter in complete name" | Every word of a person's name starts with a capital, saved and shown through one `capitalizeName`; rest of each word as typed; groups, titles, emails unchanged | § 26.3 | Names shown exactly as typed |
 | 182 | "for trip ask for location as well" | Trip groups get an optional "Where?" text field in New/Edit group; shown with type and dates, searchable, in CSV, in demo trips | § 26.12 | Trips had name and dates only |
+| 184 | "there should be some specific set of back for sure, for example if i open appearance in settings, the flow is from settings to appearance" | Every page has a fixed parent; Back with no history goes to it (parents stacked); a main tab opened from a link keeps Back after refresh via `from` in the address | § 26.3 | Assistant ruling: a refreshed pushed copy became the plain tab; parents only for a few routes |
+| 185 | "also animate the splash screen icon, so that i see that its loading"; "like zoomin zoomout a little, so i know content is being downloaded" | Launch mark zooms 1 -> 1.08 -> 1 while loading, web from first paint (inline CSS), native via a matching JS launch screen; opacity pulse under reduced motion | § 26.11 | Static splash mark |
+| 186 | "when logout, it should remove all data from db" | Log out always erases the account's local DB, demo DB, account prefs, drafts, session and caches; device language/theme stay; prompt warns with the unsynced count first; no keep option | § 26.15 | Prompt offered "Keep this device's data" / "Erase this device's data" |
 
 New decisions follow § 0 rule 9: rewrite the rule in its topic so only the current truth remains, then add a
 row here.

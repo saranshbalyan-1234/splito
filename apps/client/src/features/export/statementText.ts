@@ -20,6 +20,8 @@ export function useStatementText() {
   const person = (id: string) => (id === actor ? l`You` : (people?.find(p => p.id === id)?.data.name ?? l`Someone`))
   const group = (id: string | null) => (id === null ? l`Not in a group` : (groups?.find(g => g.id === id)?.data.name ?? ''))
 
+  const location = (id: string | null) => (id === null ? '' : (groups?.find(g => g.id === id)?.data.location ?? ''))
+
   const text: StatementText = {
     describe: (row: StatementRow) => {
       if (row.kind === 'expense') return row.title
@@ -27,6 +29,7 @@ export function useStatementText() {
       return row.kind === 'repayment' ? l`${person(r.from)} paid ${person(r.to)}` : l`${person(r.to)} let ${person(r.from)}’s debt go`
     },
     groupName: group,
+    groupLocation: location,
     paidBy: row => {
       const r = row.record
       return r.kind === 'expense' ? Object.keys(r.payers).map(person).join(', ') : person(r.from)
@@ -44,6 +47,7 @@ export function useStatementText() {
       yourShare: l`Your share`,
       effect: l`Effect on your balance`,
       balance: l`Balance`,
+      location: l`Location`,
     },
     opening: l`Opening balance`,
     closing: l`Closing balance`,

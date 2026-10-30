@@ -6,6 +6,7 @@ import {type Contact} from '@splito/domain'
 
 import {getAuthClient} from '#/lib/auth'
 import {useIsOffline} from '#/lib/auth/online'
+import {logOut} from '#/data/account'
 import {sessionApi, type SessionAccount} from '#/state/session'
 import {atoms as a} from '#/alf'
 import {LoggedOutLayout} from '#/components/LoggedOutLayout'
@@ -48,7 +49,7 @@ export function AddMissingContact({account, kind}: {account: SessionAccount; kin
           />
         )}
         <View style={[a.px_xl, a.pt_lg, a.align_start]}>
-          <Button testID="add-missing-logout" label={l`Log out`} size="small" variant="ghost" color="secondary" onPress={sessionApi.signOut}>
+          <Button testID="add-missing-logout" label={l`Log out`} size="small" variant="ghost" color="secondary" onPress={() => void logOut(account.id)}>
             <ButtonText>
               <Trans>Log out</Trans>
             </ButtonText>

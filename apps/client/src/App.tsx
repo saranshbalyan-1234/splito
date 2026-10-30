@@ -16,6 +16,7 @@ import {useColorModeTheme} from '#/alf/util/useColorModeTheme'
 import {GestureRoot} from '#/components/GestureRoot'
 import {Provider as PortalProvider} from '#/components/Portal'
 import {LegacyDataOffer} from '#/features/account/LegacyDataOffer'
+import {LoggingOut} from '#/features/account/LoggingOut'
 import {LogOutHost} from '#/features/account/LogOutPrompt'
 import {LinkHost} from '#/features/links/LinkHost'
 import {PwaHost} from '#/features/pwa/PwaHost'
@@ -32,8 +33,16 @@ import {Shell} from '#/view/shell'
  * database opens (`StoreProvider`, keyed by the account so two accounts never share one) and the app shows.
  */
 function AuthGate() {
-  const {currentAccount, missingContact} = useSession()
+  const {currentAccount, missingContact, isLoggingOut} = useSession()
   if (!currentAccount) return <LoggedOutApp />
+  /* A log out in progress (owner 186): its data is erased before anything else shows, and a restart finishes it. */
+  if (isLoggingOut) {
+    return (
+      <LoggedOutShell>
+        <LoggingOut accountId={currentAccount.id} />
+      </LoggedOutShell>
+    )
+  }
   if (missingContact) {
     return (
       <LoggedOutShell>

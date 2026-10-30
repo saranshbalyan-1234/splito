@@ -55,6 +55,7 @@ export function CreateGroupScreen() {
   const currency = chosenCurrency ?? defaultCurrency ?? 'INR'
   const [startDate, setStartDate] = useState('')
   const [endDate, setEndDate] = useState('')
+  const [location, setLocation] = useState('')
   const [memberIds, setMemberIds] = useState<string[]>([])
   const [newName, setNewName] = useState('')
   const runOnce = useSingleFlight()
@@ -62,7 +63,7 @@ export function CreateGroupScreen() {
   const [isSaving, setIsSaving] = useState(false)
   const currencyControl = Dialog.useDialogControl({url: 'currency'})
   const isDirty =
-    name.trim() !== '' || memberIds.length > 0 || !!startDate || !!endDate
+    name.trim() !== '' || memberIds.length > 0 || !!startDate || !!endDate || !!location
 
   const close = () => {
     if (navigation.canGoBack()) navigation.goBack()
@@ -108,6 +109,7 @@ export function CreateGroupScreen() {
         currency,
         startDate: isTrip && startDate ? startDate : null,
         endDate: isTrip && endDate ? endDate : null,
+        location: isTrip ? location : null,
         memberIds,
       })
       haptics.success()
@@ -164,13 +166,14 @@ export function CreateGroupScreen() {
         </View>
 
         <GroupFields
-          value={{name, kind, currency, startDate, endDate}}
+          value={{name, kind, currency, startDate, endDate, location}}
           error={error}
           onChange={patch => {
             if (patch.name !== undefined) setName(patch.name)
             if (patch.kind) setKind(patch.kind)
             if (patch.startDate !== undefined) setStartDate(patch.startDate)
             if (patch.endDate !== undefined) setEndDate(patch.endDate)
+            if (patch.location !== undefined) setLocation(patch.location)
             setError(null)
           }}
           onPressCurrency={() => currencyControl.open()}

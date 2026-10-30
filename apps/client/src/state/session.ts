@@ -26,6 +26,8 @@ export type SessionState = {
   currentAccount: SessionAccount | undefined
   /** A contact the account lacks (owner 139): the app stays blocked on "Add your ..." until it is added. */
   missingContact: 'phone' | 'email' | undefined
+  /** The account's log out has begun: its data is being erased and nothing else shows until that is done (owner 186). */
+  isLoggingOut: boolean
   /** Whether this account's changes can reach a server. False until the sync engine exists (F-2103), so rows stay "Saved on this device". */
   canSync: boolean
 }
@@ -41,6 +43,7 @@ function stateFor(account: SessionAccount | undefined): SessionState {
     hasSession: !!account,
     currentAccount: account,
     missingContact: account && (!account.email ? 'email' : !account.phone ? 'phone' : undefined),
+    isLoggingOut: !!account && device.get(['loggingOut']) === account.id,
     canSync: false,
   }
 }
@@ -69,10 +72,10 @@ function set(account: SessionAccount | undefined) {
  */
 if (typeof window !== 'undefined' && typeof window.addEventListener === 'function') {
   window.addEventListener('storage', e => {
-    if (e.key !== null && !e.key.endsWith('\\session')) return
+    if (e.key !== null && !/\\(session|loggingOut)$/.test(e.key)) return
     const next = readAccount()
     const was = state.currentAccount
-    if (next?.id === was?.id && next?.email === was?.email && next?.phone === was?.phone) return
+    if (next?.id === was?.id && next?.email === was?.email && next?.phone === was?.phone && stateFor(next).isLoggingOut === state.isLoggingOut) return
     adopt(next)
   })
 }
@@ -84,12 +87,20 @@ function signIn(account: SessionAccount) {
   set(account)
 }
 
-/** Ends the session. Closing the account's database and the keep-or-erase choice are `logOut` in `#/data/account`. */
+/** Ends the session (the e2e hook, a tab following another one, and the last step of `logOut`). */
 function signOut() {
+  device.remove(['loggingOut'])
   set(undefined)
 }
 
-export const sessionApi = {signIn, signOut}
+/** The log out starts: the account stays signed in, in a state that shows only "Logging out", until `signOut` ends it. */
+function beginLogout() {
+  if (!state.currentAccount) return
+  device.set(['loggingOut'], state.currentAccount.id)
+  adopt(state.currentAccount)
+}
+
+export const sessionApi = {signIn, signOut, beginLogout}
 export type SessionApi = typeof sessionApi
 
 /** Who is signed in. */

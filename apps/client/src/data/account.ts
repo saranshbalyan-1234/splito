@@ -1,7 +1,8 @@
-import {useEffect, useState} from 'react'
+import {useEffect, useState, useSyncExternalStore} from 'react'
 import {applyBackup, createBackup, type MutationCtx, type Store} from '@splito/sync'
 
 import {type AppLanguage, i18n} from '#/locale/i18n'
+import {logger} from '#/logger'
 import {sessionApi} from '#/state/session'
 import {accountScope, clearStorageScope, device} from '#/storage'
 import {expectStoreClosed, useData} from '#/data/StoreProvider'
@@ -20,25 +21,100 @@ async function deleteWithRetry(name: string) {
   }
 }
 
+/** The data caches of the service worker (never the app shell's precache): copies of an account's data do not outlive it. Web only. */
+async function clearDataCaches() {
+  if (typeof caches === 'undefined') return
+  for (const name of await caches.keys()) if (!name.startsWith('splito-precache-')) await caches.delete(name)
+}
+
+/** The device's choices that outlive an account (owner 186): the language in use and the theme, copied out of the account's own keys. */
+function readDeviceChoices() {
+  return {
+    language: i18n.locale as AppLanguage,
+    colorMode: device.get(['colorMode']),
+    darkTheme: device.get(['darkTheme']),
+    accent: device.get(['accent']),
+  }
+}
+function keepDeviceChoices(c: ReturnType<typeof readDeviceChoices>) {
+  device.set(['deviceLanguage'], c.language)
+  if (c.colorMode) device.set(['colorMode'], c.colorMode)
+  if (c.darkTheme) device.set(['darkTheme'], c.darkTheme)
+  if (c.accent) device.set(['accent'], c.accent)
+}
+
 /**
- * Log out: the account's store is closed first (`expectStoreClosed` is armed before the session ends, which unmounts
- * `StoreProvider`; it settles when every connection has really closed), then "erase" deletes that database and the
- * account's device keys. "Keep" leaves both for the next sign-in. A failed delete rejects, so the caller can say so; the
- * account is signed out either way. Unsynced changes are warned about in the prompt (`useUnsyncedCount`).
+ * Everything an account left on this device (owner 186), once its store is closed: its database (every store, outbox,
+ * history), its demo database and demo-scoped keys, its account-scoped keys (drafts, search history, first-frame preference
+ * copies), its "me" id and the service worker's data caches. Each step is safe to repeat, so a retry after a failure
+ * finishes the job instead of leaving a half-erased state.
  */
-export async function logOut(accountId: string, erase: boolean) {
-  // Web: the address belonged to this account's session; the next sign-in starts at Home.
-  if (typeof window !== 'undefined') window.history?.replaceState(window.history.state, '', '/')
-  // The language in use stays the device's for the signed-out screens (the next cold start too).
-  device.set(['deviceLanguage'], i18n.locale as AppLanguage)
-  const closed = expectStoreClosed(accountId)
-  sessionApi.signOut()
-  if (!erase) return
-  await closed
-  clearStorageScope(accountScope(accountId))
+async function eraseAccountData(accountId: string) {
   await deleteWithRetry(accountStoreName(accountId))
-  // The demo database belongs to this account; this device's data goes with it.
   await (await import('#/data/demoMode')).eraseDemo(accountId)
+  clearStorageScope(accountScope(accountId))
+  const ids = JSON.parse(device.get(['meIds']) ?? '{}') as Record<string, string>
+  if (accountId in ids) {
+    delete ids[accountId]
+    device.set(['meIds'], JSON.stringify(ids))
+  }
+  await clearDataCaches()
+}
+
+type LogoutPhase = 'running' | 'failed'
+let phase: LogoutPhase = 'running'
+let isRunning = false
+const phaseListeners = new Set<() => void>()
+function setPhase(next: LogoutPhase) {
+  phase = next
+  phaseListeners.forEach(l => l())
+}
+
+/** The last step is the only one that signs out: until the erase has finished the account stays "logging out", and a restart resumes it. */
+async function finishLogOut(accountId: string, closed: Promise<void>) {
+  isRunning = true
+  setPhase('running')
+  try {
+    await closed
+    const choices = readDeviceChoices()
+    await eraseAccountData(accountId)
+    // The account's own keys are gone and the session ends; the device's language and theme stay.
+    sessionApi.signOut()
+    keepDeviceChoices(choices)
+    // Web: the address belonged to this account's session; the next sign-in starts at Home.
+    if (typeof window !== 'undefined') window.history?.replaceState(window.history.state, '', '/')
+  } catch (e) {
+    logger.error(e, {where: 'logOut'})
+    setPhase('failed')
+  } finally {
+    isRunning = false
+  }
+}
+
+/**
+ * Log out (owner 186): erases everything the account left on this device, then shows the logged-out flow. The store is
+ * closed first (`expectStoreClosed` is armed before the "logging out" screen unmounts `StoreProvider`; it settles when every
+ * connection has really closed), then the data is deleted. A failure shows on the "Logging out" screen with Retry (`retryLogOut`);
+ * the session is not ended until the erase has finished.
+ */
+export function logOut(accountId: string) {
+  const closed = expectStoreClosed(accountId)
+  sessionApi.beginLogout()
+  return finishLogOut(accountId, closed)
+}
+
+/** Retry after a failure, or resume after a restart in the middle of a log out. */
+export function retryLogOut(accountId: string) {
+  if (isRunning) return
+  void finishLogOut(accountId, expectStoreClosed(accountId))
+}
+
+/** Whether the erase of a log out is running or has failed (the "Logging out" screen). */
+export function useLogoutPhase(): LogoutPhase {
+  return useSyncExternalStore(
+    l => (phaseListeners.add(l), () => void phaseListeners.delete(l)),
+    () => phase,
+  )
 }
 
 /**

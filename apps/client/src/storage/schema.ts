@@ -50,6 +50,8 @@ export type Device = {
   authMethod: 'password' | 'code'
   /** Dev and e2e only: the local accounts of the dev AuthClient, as JSON. */
   devAccounts: string
+  /** The account whose log out (erase) has started and not finished: the app shows "Logging out" until it has, even after a restart. */
+  loggingOut: string
   /** The one-time offer "Move this device's data into your account" (F-2104) was answered. */
   legacyOffered: boolean
 }

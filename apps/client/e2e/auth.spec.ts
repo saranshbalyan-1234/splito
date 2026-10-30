@@ -1,4 +1,4 @@
-import {expect, test} from '@playwright/test'
+import {expect, type Page, test} from '@playwright/test'
 
 import {continueWith, createAccount, databases, DEV, devCode, logOutFromSettings, signedInShown, signInWithPassword, toContinue} from './auth'
 import {signedOut} from './signedOut'
@@ -146,7 +146,7 @@ test.describe('an existing account', () => {
     await page.getByTestId('credential-code').fill(await devCode(page))
     await page.getByTestId('credential-next').click()
     await signedInShown(page)
-    await logOutFromSettings(page, 'keep')
+    await logOutFromSettings(page)
     await continueWith(page, DEV.email)
     await expect(page.getByTestId('method-code')).toHaveAttribute('aria-checked', 'true')
     // The other is a tap away.
@@ -246,7 +246,7 @@ test.describe('a new account', () => {
     await page.getByTestId('newPasswordInput').fill('longpassword2')
     await page.getByTestId('setNewPassword-next').click()
     await signedInShown(page)
-    await logOutFromSettings(page, 'keep')
+    await logOutFromSettings(page)
     // It exists now, by either contact.
     await signInWithPassword(page, 'two@example.com', 'longpassword2')
     await signedInShown(page)
@@ -328,39 +328,89 @@ test.describe('sign-in preserves intent', () => {
   })
 })
 
-test.describe('log out and one database per account', () => {
-  test('Log out asks: keep or erase this device\'s data; Keep closes the database and leaves it', async ({page}) => {
+test.describe('log out erases everything the account left (owner 186)', () => {
+  const create = (page: Page, name: string) =>
+    page.evaluate(n => (window as unknown as {splito: {createPerson(n: string): Promise<string>}}).splito.createPerson(n), name)
+
+  test('the prompt says what it removes and warns about unsynced changes first; afterwards the account starts empty, its demo is gone and no database is left', async ({page}) => {
     await toContinue(page)
     await page.getByTestId('continue-dev-account').click()
     await signedInShown(page)
     await page.waitForFunction(() => 'splito' in window)
-    await page.evaluate(() => (window as unknown as {splito: {createPerson(n: string): Promise<string>}}).splito.createPerson('Kept Friend'))
+    await create(page, 'Erased Friend')
+    // Demo mode too: its own database goes with the account.
+    await page.evaluate(() => (window as unknown as {__splitoTest: {demoMode(on: boolean): Promise<void>}}).__splitoTest.demoMode(true))
+    await expect.poll(() => databases(page)).toContain('splito-demo-dev')
+    await page.evaluate(() => (window as unknown as {__splitoTest: {demoMode(on: boolean): Promise<void>}}).__splitoTest.demoMode(false))
+    await expect.poll(() => databases(page)).not.toContain('splito-demo-dev')
+    await page.evaluate(() => (window as unknown as {__splitoTest: {demoMode(on: boolean): Promise<void>}}).__splitoTest.demoMode(true))
+    await expect.poll(() => databases(page)).toContain('splito-demo-dev')
+
     await page.goto('/settings')
     await page.getByTestId('settings-log-out').click()
-    await expect(page.getByRole('dialog').filter({hasText: 'Log out?'})).toContainText('Log out?')
-    await expect(page.getByRole('dialog').filter({hasText: 'Log out?'})).toContainText('haven’t synced yet')
-    await expect(page.getByTestId('logout-erase')).toBeEnabled()
-    await page.getByTestId('logout-keep').click()
-    await expect(page.getByTestId('continue-form')).toBeVisible()
-    await expect(page.getByTestId('screen-settings')).toHaveCount(0)
-    expect(await databases(page)).toContain('splito-acct-dev')
-    // Signed in again: the friend is still there.
-    await page.getByTestId('continue-dev-account').click()
-    await signedInShown(page)
-    await expect(page.getByText('Kept Friend')).toBeVisible()
-  })
+    const dialog = page.getByRole('dialog').filter({hasText: 'Log out?'})
+    await expect(dialog).toContainText('This removes all your Splito data from this device')
+    // The warning comes first, with the count (the person just written has not synced).
+    await expect(dialog).toContainText('haven’t synced yet and will be lost')
+    await expect(page.getByTestId('logout-confirm')).toBeEnabled()
+    await expect(page.getByTestId('logout-keep')).toHaveCount(0)
+    await page.getByTestId('logout-confirm').click()
+    await expect(page.getByTestId('continue-form')).toBeVisible({timeout: 30_000})
+    // Done before the logged-out flow showed: no database of that account, no demo one.
+    expect((await databases(page)).filter(n => n!.startsWith('splito-'))).toEqual([])
 
-  test('Erase deletes this device\'s data for the account', async ({page}) => {
-    await toContinue(page)
-    await page.getByTestId('continue-dev-account').click()
-    await signedInShown(page)
-    await page.waitForFunction(() => 'splito' in window)
-    await page.evaluate(() => (window as unknown as {splito: {createPerson(n: string): Promise<string>}}).splito.createPerson('Erased Friend'))
-    await logOutFromSettings(page, 'erase')
-    await expect.poll(() => databases(page)).not.toContain('splito-acct-dev')
     await page.getByTestId('continue-dev-account').click()
     await signedInShown(page)
     await expect(page.getByText('Erased Friend')).toHaveCount(0)
+    // Demo mode is off again, and the demo database was not kept.
+    await expect(page.getByTestId('header-avatar').last()).not.toHaveAttribute('aria-label', /Demo$/)
+    expect(await databases(page)).not.toContain('splito-demo-dev')
+  })
+
+  /** Signed in on a phone with a friend written, the browser then refusing to delete any database (another tab holds it, say), and the log out confirmed from the drawer. */
+  async function failedLogOut(page: Page) {
+    await page.setViewportSize(PHONE)
+    await toContinue(page)
+    await page.getByTestId('continue-dev-account').click()
+    await signedInShown(page)
+    await page.waitForFunction(() => 'splito' in window)
+    await create(page, 'Stubborn Friend')
+    await page.evaluate(() => {
+      const w = window as unknown as {__realDelete?: typeof indexedDB.deleteDatabase}
+      w.__realDelete = indexedDB.deleteDatabase.bind(indexedDB)
+      indexedDB.deleteDatabase = () => {
+        const req = {} as IDBOpenDBRequest
+        setTimeout(() => (req.onerror as (() => void) | null)?.(), 0)
+        return req
+      }
+    })
+    await page.getByTestId('header-avatar').first().click()
+    await page.getByTestId('drawer-log-out').click()
+    await page.getByTestId('logout-confirm').click()
+    await expect(page.getByTestId('logout-failed')).toBeVisible({timeout: 30_000})
+    // Half done is never shown as done: still not the logged-out flow, and the session is still there.
+    await expect(page.getByTestId('continue-form')).toHaveCount(0)
+  }
+
+  test('a failed erase is reported with Try again; the session stays until it is done, and retrying finishes it', async ({page}) => {
+    await failedLogOut(page)
+    await page.evaluate(() => {
+      const w = window as unknown as {__realDelete: typeof indexedDB.deleteDatabase}
+      indexedDB.deleteDatabase = w.__realDelete
+    })
+    await page.getByTestId('logout-retry').click()
+    await expect(page.getByTestId('continue-form')).toBeVisible({timeout: 30_000})
+    expect((await databases(page)).filter(n => n!.startsWith('splito-'))).toEqual([])
+    await page.getByTestId('continue-dev-account').click()
+    await signedInShown(page)
+    await expect(page.getByText('Stubborn Friend')).toHaveCount(0)
+  })
+
+  test('closing the page in the middle of a log out resumes it at the next launch', async ({page}) => {
+    await failedLogOut(page)
+    await page.reload()
+    await expect(page.getByTestId('continue-form')).toBeVisible({timeout: 30_000})
+    expect((await databases(page)).filter(n => n!.startsWith('splito-'))).toEqual([])
   })
 
   test('the drawer footer has Log out too', async ({page}) => {
@@ -370,34 +420,33 @@ test.describe('log out and one database per account', () => {
     await page.goto('/?drawer=menu')
     await page.getByTestId('drawer-log-out').click()
     await expect(page.getByRole('dialog').filter({hasText: 'Log out?'})).toBeVisible()
-    await page.getByTestId('logout-keep').click()
-    await expect(page.getByTestId('continue-form')).toBeVisible()
+    await page.getByTestId('logout-confirm').click()
+    await expect(page.getByTestId('continue-form')).toBeVisible({timeout: 30_000})
   })
 
-  test('two accounts on one device never see each other\'s data', async ({page}) => {
+  test('accounts on one device never see each other\'s data: each starts empty, with its own "me"', async ({page}) => {
     await toContinue(page)
     await page.getByTestId('continue-dev-account').click()
     await signedInShown(page)
     await page.waitForFunction(() => 'splito' in window)
-    await page.evaluate(() => (window as unknown as {splito: {createPerson(n: string): Promise<string>}}).splito.createPerson('Only Dev'))
+    await create(page, 'Only Dev')
     await expect(page.getByText('Only Dev')).toBeVisible()
     const devMe = await page.evaluate(() => (window as unknown as {splito: {me: string}}).splito.me)
-    await logOutFromSettings(page, 'keep')
+    await logOutFromSettings(page)
 
     await createAccount(page, NEW)
     await signedInShown(page)
     await page.waitForFunction(() => 'splito' in window)
-    // Each account is its own "me".
     expect(await page.evaluate(() => (window as unknown as {splito: {me: string}}).splito.me)).not.toBe(devMe)
     await expect(page.getByText('Only Dev')).toHaveCount(0)
-    await page.evaluate(() => (window as unknown as {splito: {createPerson(n: string): Promise<string>}}).splito.createPerson('Only Riya'))
+    await create(page, 'Only Riya')
     await expect(page.getByText('Only Riya')).toBeVisible()
-    expect((await databases(page)).filter(n => n!.startsWith('splito-acct-'))).toHaveLength(2)
-    await logOutFromSettings(page, 'keep')
+    expect((await databases(page)).filter(n => n!.startsWith('splito-acct-'))).toHaveLength(1)
+    await logOutFromSettings(page)
 
     await signInWithPassword(page, DEV.email, DEV.password)
     await signedInShown(page)
-    await expect(page.getByText('Only Dev')).toBeVisible()
+    await expect(page.getByText('Only Dev')).toHaveCount(0)
     await expect(page.getByText('Only Riya')).toHaveCount(0)
   })
 })
@@ -479,7 +528,7 @@ test.describe('tabs, languages and codes', () => {
     await page.waitForFunction(() => 'splito' in window)
     await page.evaluate(() => (window as unknown as {splito: {setPref(k: string, v: unknown): Promise<void>}}).splito.setPref('language', 'hi'))
     await expect(page.locator('html')).toHaveAttribute('lang', 'hi')
-    await logOutFromSettings(page, 'keep')
+    await logOutFromSettings(page)
     await expect(page.locator('html')).toHaveAttribute('lang', 'hi')
     await page.reload()
     await expect(page.locator('html')).toHaveAttribute('lang', 'hi')

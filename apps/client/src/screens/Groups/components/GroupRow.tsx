@@ -47,7 +47,7 @@ export function GroupRow({
   const listAnimations = useListAnimations()
   const press = usePressScale()
   const tone = useSyncTone(group.syncStatus)
-  const {name, kind, startDate, endDate, members} = group.data
+  const {name, kind, startDate, endDate, location, members} = group.data
   /* A deleted group stays in the list, struck through; it opens read-only (decision 103). */
   const isDeleted = group.deleted
   const struck = useStruck()
@@ -63,7 +63,7 @@ export function GroupRow({
       ? `${formatDay(startDate, {intl: {day: 'numeric', month: 'short'}})} – ${formatDay(endDate, {intl: {day: 'numeric', month: 'short', year: 'numeric'}})}`
       : null
   const memberText = memberCount === 1 ? l`1 member` : l`${memberCount} members`
-  const byline = [kindLabel, dates, memberText].filter(Boolean).join(' · ')
+  const byline = [kindLabel, kind === 'trip' ? location : null, dates, memberText].filter(Boolean).join(' · ')
   const open = Object.keys(balances)
     .filter(c => balances[c] !== ZERO)
     .sort()

@@ -13,6 +13,8 @@ export interface StatementText {
   /** The row's description: the expense title, or "Asha paid you". */
   describe(row: StatementRow): string
   groupName(groupId: string | null): string
+  /** The group's trip place (owner 182), empty when it has none. */
+  groupLocation(groupId: string | null): string
   /** Who paid an expense, as a comma-separated list. */
   paidBy(row: StatementRow): string
   kind(kind: StatementRow['kind']): string
@@ -28,6 +30,7 @@ export interface StatementText {
     yourShare: string
     effect: string
     balance: string
+    location: string
   }
   opening: string
   closing: string
@@ -43,10 +46,10 @@ const exact = (minor: bigint, currency: string) => toDecimalString(minor, getCur
  */
 export function statementCsv(st: Statement, text: StatementText): string {
   const c = text.columns
-  const rows: string[][] = [[c.date, c.type, c.description, c.group, c.currency, c.amount, c.paidBy, c.youPaid, c.yourShare, c.effect, c.balance]]
+  const rows: string[][] = [[c.date, c.type, c.description, c.group, c.currency, c.amount, c.paidBy, c.youPaid, c.yourShare, c.effect, c.balance, c.location]]
   if (st.filter.from)
     for (const cur of st.currencies)
-      rows.push([st.filter.from, text.opening, '', '', cur, '', '', '', '', '', exact(st.opening[cur] ?? ZERO, cur)])
+      rows.push([st.filter.from, text.opening, '', '', cur, '', '', '', '', '', exact(st.opening[cur] ?? ZERO, cur), ''])
   for (const r of st.rows)
     rows.push([
       r.date,
@@ -60,12 +63,13 @@ export function statementCsv(st: Statement, text: StatementText): string {
       exact(r.share, r.currency),
       exact(r.effect, r.currency),
       exact(r.balance, r.currency),
+      text.groupLocation(r.groupId),
     ])
   const last = st.filter.to ?? st.rows.at(-1)?.date ?? ''
   for (const cur of st.currencies) {
     const adjust = st.adjustments[cur]
-    if (adjust !== undefined) rows.push([last, text.adjustment, '', '', cur, '', '', '', '', exact(adjust, cur), exact(st.closing[cur] ?? ZERO, cur)])
-    rows.push([last, text.closing, '', '', cur, '', '', '', '', '', exact(st.closing[cur] ?? ZERO, cur)])
+    if (adjust !== undefined) rows.push([last, text.adjustment, '', '', cur, '', '', '', '', exact(adjust, cur), exact(st.closing[cur] ?? ZERO, cur), ''])
+    rows.push([last, text.closing, '', '', cur, '', '', '', '', '', exact(st.closing[cur] ?? ZERO, cur), ''])
   }
   return toCsv(rows)
 }
