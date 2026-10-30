@@ -51,7 +51,8 @@ test('Home at 390: the sections in order, each at most 5 rows, no friends list, 
   await expect(home.getByTestId('home-recent-people-all')).toHaveAttribute('href', '/people')
   await expect(home.getByTestId('home-recent-groups-all')).toHaveAttribute('href', '/groups')
   await home.getByTestId('home-recent-people-all').click()
-  await expect(page).toHaveURL(/\/people$/)
+  // Opened from a link: the address keeps where it came from, so a refresh keeps Back (owner 184).
+  await expect(page).toHaveURL(/\/people\?from=home$/)
   await expect(page.getByTestId('screen-people')).toBeVisible()
 })
 
@@ -314,7 +315,7 @@ test('Overview scope: All, Groups and Direct change only the cards; it is in the
   // Analytics carries the scope: Everything, all groups, non-group only.
   await expect(home.getByTestId('overview-analytics')).toHaveAttribute('href', /scope=1(:|%3A)$/)
   await home.getByTestId('overview-analytics').click()
-  await expect(page).toHaveURL(/\/analytics\?scope=1(:|%3A)$/)
+  await expect(page).toHaveURL(/\/analytics\?from=home&scope=1(:|%3A)$/)
   await expect(page.getByTestId('screen-analytics')).toBeVisible()
 
   // Remembered (a preference), so the bare address reads the same; All, from a saved Groups, is written out.
@@ -325,7 +326,7 @@ test('Overview scope: All, Groups and Direct change only the cards; it is in the
   await expect(page.getByTestId('screen-home').getByTestId('overview-scope-groups')).toHaveAttribute('aria-checked', 'true')
   expect(await overviewNets(page)).toEqual(groups)
   await page.getByTestId('screen-home').getByTestId('overview-analytics').click()
-  await expect(page).toHaveURL(/\/analytics\?scope=0(:|%3A)all$/)
+  await expect(page).toHaveURL(/\/analytics\?from=home&scope=0(:|%3A)all$/)
   await page.goto('/')
   await page.getByTestId('screen-home').getByTestId('overview-scope-all').click()
   await expect(page).toHaveURL(/\?overview=all$/)
@@ -340,7 +341,7 @@ test('a main screen opened from a link is a pushed page: Back to Home, no FAB; i
   const home = page.getByTestId('screen-home')
   await expect(home.getByTestId('header-avatar')).toBeVisible()
   await home.getByTestId('home-recent-groups-all').click()
-  await expect(page).toHaveURL(/\/groups$/)
+  await expect(page).toHaveURL(/\/groups\?from=home$/)
   const groups = page.getByTestId('screen-groups').last()
   await expect(groups.getByTestId('header-back')).toBeVisible()
   await expect(groups.getByTestId('header-avatar')).toHaveCount(0)
@@ -402,4 +403,78 @@ test('a link the running app opens (a Search & Ask suggestion, a deep link) to a
   const cold = page.getByTestId('screen-groups').last()
   await expect(cold.getByTestId('header-avatar')).toBeVisible()
   await expect(cold.getByTestId('header-back')).toHaveCount(0)
+})
+
+/* Owner 184 (F-263): every page has a fixed parent. Refreshed or pasted, Back goes to it, and a second Back keeps climbing. */
+const TAB_SCREENS = ['screen-home', 'screen-people', 'screen-groups', 'screen-analytics', 'screen-activity']
+/* From `from`, one Back per screen: the header's Back where the page has one, the browser's where it is a main tab (a tab shows the avatar). */
+async function backUp(page: Page, from: string, screens: string[]) {
+  let leaving = from
+  for (const screen of screens) {
+    if (TAB_SCREENS.includes(leaving) && !(await page.getByTestId(leaving).last().getByTestId('header-back').count())) await page.goBack()
+    else await page.getByTestId('header-back').last().click()
+    await expect(page.getByTestId(screen).last()).toBeVisible()
+    leaving = screen
+  }
+}
+
+test('refreshed or pasted, Back climbs to the fixed parent and on to Home (owner 184)', async ({page}) => {
+  await page.setViewportSize(PHONE)
+  await openDemo(page)
+  const ids = await page.evaluate(async () => {
+    const s = (window as unknown as {splito: {me: string; list(t: string): Promise<{id: string; data: {groupId?: string | null; payers?: Record<string, string>; shares?: Record<string, string>}}[]>}}).splito
+    const expenses = await s.list('expense')
+    const others = (e: (typeof expenses)[number]) => [...new Set([...Object.keys(e.data.payers ?? {}), ...Object.keys(e.data.shares ?? {})])].filter(id => id !== s.me)
+    return {
+      person: (await s.list('person')).find(p => p.id !== s.me)!.id,
+      group: (await s.list('group'))[0]!.id,
+      groupExpense: expenses.find(e => e.data.groupId)!.id,
+      directExpense: expenses.find(e => !e.data.groupId && others(e).length === 1)!.id,
+    }
+  })
+  // Settings > Appearance: Settings, then Home.
+  await page.goto('/settings/appearance')
+  await expect(page.getByTestId('screen-settings-section')).toBeVisible()
+  await backUp(page, 'screen-settings-section', ['screen-settings', 'screen-home'])
+  // A friend: People, then Home.
+  await page.goto(`/people/${ids.person}`)
+  await expect(page.getByTestId('screen-person')).toBeVisible()
+  await backUp(page, 'screen-person', ['screen-people', 'screen-home'])
+  // A group: Groups, then Home.
+  await page.goto(`/groups/${ids.group}`)
+  await expect(page.getByTestId('screen-group')).toBeVisible()
+  await backUp(page, 'screen-group', ['screen-groups', 'screen-home'])
+  // An expense in a group: that group, Groups, Home.
+  await page.goto(`/expense/${ids.groupExpense}`)
+  await expect(page.getByTestId('screen-expense')).toBeVisible()
+  await expect(page.getByTestId('expense-detail-title')).toBeVisible()
+  await backUp(page, 'screen-expense', ['screen-group', 'screen-groups', 'screen-home'])
+  // An expense with one friend and no group: that friend, People, Home.
+  await page.goto(`/expense/${ids.directExpense}`)
+  await expect(page.getByTestId('expense-detail-title')).toBeVisible()
+  await backUp(page, 'screen-expense', ['screen-person', 'screen-people', 'screen-home'])
+  // Profile: Settings, Home. Friends and invites: People, Home.
+  await page.goto('/profile')
+  await backUp(page, 'screen-profile', ['screen-settings', 'screen-home'])
+  await page.goto('/settings/friends')
+  await backUp(page, 'screen-friends-invites', ['screen-people', 'screen-home'])
+})
+
+test('a pushed Activity copy keeps its Back after a refresh, and tapping the tab drops it (owner 179, 184)', async ({page}) => {
+  for (const size of [PHONE, DESKTOP]) {
+    await page.setViewportSize(size)
+    await openDemo(page)
+    await page.getByTestId('screen-home').getByTestId('home-recent-transactions-all').click()
+    await expect(page).toHaveURL(/\/activity\?from=home&type=transactions$/)
+    await expect(page.getByTestId('screen-activity').last().getByTestId('header-back')).toBeVisible()
+    await page.reload()
+    const copy = page.getByTestId('screen-activity').last()
+    await expect(copy.getByTestId('header-back')).toBeVisible()
+    await expect(copy.getByTestId('header-avatar')).toHaveCount(0)
+    await backUp(page, 'screen-activity', ['screen-home'])
+    // The tab itself is the plain tab, and its address has no from.
+    await page.getByTestId('tab-activity').click()
+    await expect(page).toHaveURL(/\/activity$/)
+    await expect(page.getByTestId('screen-activity').last().getByTestId('header-avatar')).toBeVisible()
+  }
 })
