@@ -7,22 +7,23 @@ type Splito = {
 }
 
 const SCREEN: Record<string, string> = {
+  home: 'screen-home',
   people: 'screen-people',
   groups: 'screen-groups',
   analytics: 'screen-analytics',
   activity: 'screen-activity',
 }
 const GAP = 50
-/* From People; the last tap repeats a tab tapped two taps (~100 ms) earlier, which a per-link debounce swallows. */
+/* From Home; the last tap repeats a tab tapped two taps (~100 ms) earlier, which a per-link debounce swallows. */
 const SIX = ['groups', 'analytics', 'activity', 'groups', 'analytics', 'groups']
 const TEN = [
-  'activity', 'groups', 'people', 'analytics', 'groups',
-  'activity', 'people', 'groups', 'analytics', 'groups',
+  'activity', 'groups', 'home', 'analytics', 'people',
+  'activity', 'home', 'groups', 'analytics', 'people',
 ]
 
 async function ready(page: Page) {
   await page.goto('/')
-  await expect(page.getByTestId('screen-people')).toBeVisible()
+  await expect(page.getByTestId('screen-home')).toBeVisible()
   await page.waitForFunction(() => 'splito' in window)
 }
 
@@ -58,7 +59,7 @@ async function expectLanded(page: Page, last: string) {
   for (const other of Object.keys(SCREEN).filter(k => k !== last)) {
     await expect(page.getByTestId(`tab-${other}`)).not.toHaveAttribute('aria-current', 'page')
   }
-  await expect(page).toHaveURL(last === 'people' ? /\/$/ : new RegExp(`/${last}$`))
+  await expect(page).toHaveURL(last === 'home' ? /\/$/ : new RegExp(`/${last}$`))
 }
 
 for (const motion of ['full', 'reduced'] as const) {
@@ -85,7 +86,7 @@ for (const motion of ['full', 'reduced'] as const) {
           }
           requestAnimationFrame(frame)
         })
-        await tapAll(page, ['groups', 'analytics', 'activity', 'people', 'analytics', 'groups'], true, 120)
+        await tapAll(page, ['groups', 'analytics', 'activity', 'home', 'people', 'groups'], true, 120)
         await expectLanded(page, 'groups')
         expect(await page.evaluate(() => (window as unknown as {__widest: number}).__widest)).toBeLessThanOrEqual(390)
       })

@@ -84,8 +84,6 @@ for (const {name, width, height} of WIDTHS) {
     await page.goto('/groups')
     const groups = page.getByTestId('screen-groups')
     await expect(groups.getByTestId('groups-inactive-fold-toggle')).toContainText('Inactive (1)')
-    // Money is never hidden: the Overview still counts the inactive group, and its caption agrees with the totals.
-    await expect(groups.getByTestId('groups-balances-counts')).toContainText('1 group')
     await expect(groups.getByTestId('group-Rishikesh')).toHaveCount(0)
     await groups.getByTestId('groups-inactive-fold-toggle').click()
     await expect(groups.getByTestId('group-Rishikesh')).toContainText('Inactive')

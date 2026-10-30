@@ -20,6 +20,7 @@ export function SectionHeader({
     <View
       style={[
         a.flex_row,
+        a.flex_wrap,
         a.align_center,
         a.justify_between,
         a.px_lg,

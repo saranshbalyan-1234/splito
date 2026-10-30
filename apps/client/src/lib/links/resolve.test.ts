@@ -23,7 +23,7 @@ describe('route table: every route parses from https, splito:// and a bare path 
       for (const r of results) expect(r).toEqual(results[0]!)
       expect(results[0]!.isKnown).toBe(true)
       /* Search is not a page: the old route opens the Search & Ask sheet over Home. */
-      expect(results[0]!.target.name).toBe(name === 'Search' ? 'People' : name)
+      expect(results[0]!.target.name).toBe(name === 'Search' ? 'Home' : name)
     })
   }
 })
@@ -69,9 +69,9 @@ describe('every tab, sheet and picker', () => {
     const drawer = resolveLink('/groups?drawer=menu')
     expect(drawer.target).toMatchObject({name: 'Groups', sheets: ['drawer']})
     expect(buildPath(drawer.target)).toBe('/groups?drawer=menu')
-    expect(resolveLink('/?drawer=menu').target).toMatchObject({name: 'People', sheets: ['drawer']})
+    expect(resolveLink('/?drawer=menu').target).toMatchObject({name: 'Home', sheets: ['drawer']})
     const search = resolveLink('splito://search?q=dinner%20out&mode=ask')
-    expect(search.target).toMatchObject({name: 'People', sheets: ['search'], query: {q: 'dinner out', mode: 'ask'}})
+    expect(search.target).toMatchObject({name: 'Home', sheets: ['search'], query: {q: 'dinner out', mode: 'ask'}})
     expect(buildPath(search.target)).toBe('/search?mode=ask&q=dinner+out')
     expect(resolveLink('/feedback').isKnown).toBe(false)
     expect(resolveLink('/settings/regional?feedback=new').target.sheets).toEqual(['feedback'])
@@ -96,7 +96,7 @@ describe('list state', () => {
 })
 
 describe('unknown and unsafe links open Home', () => {
-  const home: LinkTarget = {name: 'People', params: {}, sheets: [], query: {}}
+  const home: LinkTarget = {name: 'Home', params: {}, sheets: [], query: {}}
   for (const bad of [
     '/no/such/page',
     `/groups/${ID}/settle/extra`,
@@ -146,10 +146,26 @@ test('real-data links: ids ask in demo mode, generic pages do not', () => {
   expect(touchesRealData(resolveLink(`/invites/k3j9x2m4q8w1z5v7/share`).target)).toBe(true)
 })
 
-test('/people itself stays free for a People list page (decisions 153-155); person pages are /people/:id', () => {
-  expect(resolveLink('/people').isKnown).toBe(false)
-  expect(resolveLink('/people/').isKnown).toBe(false)
+test('/people is the People tab (F-256) with its list state; person pages are /people/:id', () => {
+  for (const path of ['/people', '/people/']) {
+    expect(resolveLink(path)).toEqual({isKnown: true, target: {name: 'People', params: {}, sheets: [], query: {}}})
+  }
   expect(resolveLink(`/people/${ID}`).target.name).toBe('Person')
+  const list = resolveLink('/people?sort=name&show=owesYou&currency=EUR&groups=0&settled=1&hidden=1&junk=1')
+  expect(list.target).toEqual({name: 'People', params: {sort: 'name', show: 'owesYou', currency: 'EUR', groups: '0', settled: '1', hidden: '1'}, sheets: [], query: {}})
+  expect(buildPath(list.target)).toBe('/people?currency=EUR&groups=0&hidden=1&settled=1&show=owesYou&sort=name')
+  expect(buildPath(resolveLink('/people/filters').target)).toBe('/people/filters')
+  expect(resolveLink('/people/filters').target).toMatchObject({name: 'People', sheets: ['filters']})
+})
+
+test('Home is "/" and takes only its Overview scope; the old Home list state and /filters now belong to People (F-256)', () => {
+  expect(resolveLink('/').target).toEqual({name: 'Home', params: {}, sheets: [], query: {}})
+  expect(resolveLink('/?overview=groups').target).toEqual({name: 'Home', params: {overview: 'groups'}, sheets: [], query: {}})
+  // Only the key is checked here; the page ignores a value it does not know.
+  expect(resolveLink('/?junk=1').target).toEqual({name: 'Home', params: {}, sheets: [], query: {}})
+  expect(resolveLink('/?sort=name&show=owesYou').target).toEqual({name: 'People', params: {sort: 'name', show: 'owesYou'}, sheets: [], query: {}})
+  expect(resolveLink('/?groups=0&settled=1').target).toMatchObject({name: 'People', params: {groups: '0', settled: '1'}})
+  expect(resolveLink('/filters').target).toMatchObject({name: 'People', sheets: ['filters']})
 })
 
 describe('Activity (F-1213, F-259): tab, types and one group in the address', () => {
@@ -162,12 +178,11 @@ describe('Activity (F-1213, F-259): tab, types and one group in the address', ()
     expect(buildPath(resolveLink('/activity').target)).toBe('/activity')
   })
 
-  test('?type= and ?group= survive; a bad group id and unknown keys are dropped; `back` is never in an address', () => {
-    const r = resolveLink(`/activity/all?type=transactions&group=${ID}&back=1&x=1`)
-    expect(r.target.params).toEqual({tab: 'all', type: 'transactions', group: ID})
-    expect(buildPath(r.target)).toBe(`/activity/all?group=${ID}&type=transactions`)
+  test('?type=, ?group= and ?from= (the tab a pushed copy opened from) survive; a bad group id and unknown keys are dropped', () => {
+    const r = resolveLink(`/activity/all?type=transactions&group=${ID}&from=home&x=1`)
+    expect(r.target.params).toEqual({tab: 'all', type: 'transactions', group: ID, from: 'home'})
+    expect(buildPath(r.target)).toBe(`/activity/all?from=home&group=${ID}&type=transactions`)
     expect(resolveLink('/activity?group=nope').target.params).toEqual({})
-    expect(buildPath({name: 'Activity', params: {type: 'transactions', back: '1'}, sheets: [], query: {}})).toBe('/activity?type=transactions')
   })
 
   test('the Filters sheet is /activity/filters, with a tab before it', () => {

@@ -27,16 +27,17 @@ import {
 } from '#/components/activity/SectionHeader'
 import {useActivityActions} from '#/components/activity/useActivityActions'
 import {useActivityFeed} from '#/components/activity/useActivityFeed'
-import {AddExpenseFAB, AddExpenseFABInset} from '#/components/AddExpenseFAB'
+import {AddExpenseFABInset} from '#/components/AddExpenseFAB'
 import {Button, ButtonIcon, ButtonText} from '#/components/Button'
 import {SearchAskButton} from '#/components/SearchAsk/SearchAskButton'
-import {HeaderLead} from '#/components/HeaderLead'
+import {HeaderAvatar} from '#/components/HeaderAvatar'
 import {ActivityFilterDialog} from '#/components/activity/ActivityFilterDialog'
 import {ACTIVITY_TABS, readActivityParams, activityParams, typesToParam} from '#/components/activity/urlState'
 import {SettingsSliderVertical_Stroke2_Corner0_Rounded as FilterIcon} from '#/components/icons/SettingsSlider'
 import {TimesLarge_Stroke2_Corner0_Rounded as ClearIcon} from '#/components/icons/Times'
 import {MarkAllReadIcon} from '#/components/activity/icons'
 import * as Layout from '#/components/Layout'
+import {TabScreen} from '#/components/TabScreen'
 import {TabBar} from '#/components/TabBar'
 import {Text} from '#/components/Typography'
 import {Shimmer} from '#/motion/Shimmer'
@@ -178,11 +179,11 @@ export function ActivityScreen() {
   }
 
   return (
-    <Layout.Screen testID="screen-activity">
+    <TabScreen testID="screen-activity">
       {/* Rule set: avatar | Activity | Mark all read; the tabs travel with the header. */}
       <Layout.Header.Sticky>
         <Layout.Header.Outer noBottomBorder sticky={false}>
-          <HeaderLead />
+          <HeaderAvatar />
           {/* Balances Search & Ask and Filters on the right, so the title stays centred. */}
           <Layout.Header.Slot />
           <Layout.Header.Slot />
@@ -326,7 +327,6 @@ export function ActivityScreen() {
         )}
       </Deferred>
       <ActivityFilterDialog control={filterControl} types={types} onFiltersApplied={applyTypes} />
-      <AddExpenseFAB />
-    </Layout.Screen>
+    </TabScreen>
   )
 }

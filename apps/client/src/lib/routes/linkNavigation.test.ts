@@ -1,43 +1,35 @@
 import {describe, expect, test} from 'bun:test'
 
-import {getTabState, isPushedCopy, isStateAtTabRoot, tabLink, TabState} from './helpers'
+import {isPushedTabRoute, tabLink} from './helpers'
 
 const params = {currency: 'GBP'}
+const TABS = ['Home', 'People', 'Groups', 'Analytics', 'Activity']
 
-describe('tabLink: a link to a tab pressed on a pushed screen (Profile tile, Overview card)', () => {
-  test('native pops back to the root `Tabs` screen and selects the tab with its params', () => {
-    for (const tab of ['People', 'Groups', 'Analytics'])
-      expect(tabLink(tab, params, false)).toEqual({kind: 'popTo', name: 'Tabs', params: {screen: tab, params}})
+describe('tabLink: a main screen opened from a link is a pushed copy with Back (owners 179, 184)', () => {
+  test('native pushes the Pushed<Tab> twin of the screen with its params', () => {
+    for (const tab of TABS) expect(tabLink(tab, params, false)).toEqual({kind: 'push', name: `Pushed${tab}`, params})
   })
 
-  test('web navigates to the tab route with its params', () => {
-    for (const tab of ['People', 'Groups', 'Analytics'])
-      expect(tabLink(tab, params, true)).toEqual({kind: 'navigate', name: tab, params})
+  test('web pushes the tab route itself with from=<the tab it was opened from>, which stays in the address', () => {
+    for (const tab of TABS) expect(tabLink(tab, params, true)).toEqual({kind: 'push', name: tab, params: {...params, from: 'home'}})
+    expect(tabLink('Activity', undefined, true, 'people')).toEqual({kind: 'push', name: 'Activity', params: {from: 'people'}})
+    // Anything that is not a tab name falls back to Home.
+    expect(tabLink('Activity', undefined, true, 'settings')).toEqual({kind: 'push', name: 'Activity', params: {from: 'home'}})
   })
 
-  test('every other route is pushed on the stack', () => {
+  test('every other route is pushed on the stack as it is', () => {
     for (const route of ['Person', 'Group', 'Settings', 'Expense', 'Profile'])
       for (const isWeb of [true, false]) expect(tabLink(route, undefined, isWeb)).toBeNull()
   })
-})
 
-describe('a main screen opened from a link is a pushed copy with Back (owner 179)', () => {
-  const link = {type: 'transactions', group: 'g1'}
-
-  test('Activity is pushed with back=1: its own route on web, the root `ActivityPage` route on a phone', () => {
-    expect(tabLink('Activity', link, true)).toEqual({kind: 'push', name: 'Activity', params: {...link, back: '1'}})
-    expect(tabLink('Activity', link, false)).toEqual({kind: 'push', name: 'ActivityPage', params: {...link, back: '1'}})
-    expect(tabLink('Activity', undefined, true)?.params).toEqual({back: '1'})
-  })
-
-  test('the flag marks the copy: not the tab root, not the tab\'s own press target', () => {
-    const state = (params?: object) => ({index: 0, routes: [{name: 'Activity', params}]}) as never
-    expect(isPushedCopy({back: '1'})).toBe(true)
-    expect(isPushedCopy({tab: 'me'})).toBe(false)
-    expect(isPushedCopy(undefined)).toBe(false)
-    expect(isStateAtTabRoot(state())).toBe(true)
-    expect(isStateAtTabRoot(state({back: '1'}))).toBe(false)
-    expect(getTabState(state(), 'Activity')).toBe(TabState.InsideAtRoot)
-    expect(getTabState(state({back: '1'}), 'Activity')).toBe(TabState.Inside)
+  test('a pushed copy is recognised by its native name or its from, a plain tab never', () => {
+    expect(isPushedTabRoute({name: 'PushedGroups'})).toBe(true)
+    expect(isPushedTabRoute({name: 'Groups', params: {from: 'home'}})).toBe(true)
+    expect(isPushedTabRoute({name: 'Groups'})).toBe(false)
+    expect(isPushedTabRoute({name: 'Groups', params: {sort: 'name'}})).toBe(false)
+    // Analytics' custom range is a from too, but a date, not a tab.
+    expect(isPushedTabRoute({name: 'Analytics', params: {period: 'custom', from: '2026-01-01', to: '2026-02-01'}})).toBe(false)
+    // A page that is not a main screen never is.
+    expect(isPushedTabRoute({name: 'Person', params: {from: 'home'}})).toBe(false)
   })
 })

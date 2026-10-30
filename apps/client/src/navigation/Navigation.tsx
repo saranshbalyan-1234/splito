@@ -18,14 +18,13 @@ import {
 } from '@react-navigation/native-stack'
 
 import {useWebScrollRestoration} from '#/lib/hooks/useWebScrollRestoration'
-import {TAB_ROUTE} from '#/lib/routes/tabs'
+import {bootStartTab, TAB_ROUTE} from '#/lib/routes/tabs'
 import {
   type FlatNavigatorParams,
   type RootStackParams,
   type TabParams,
 } from '#/lib/routes/types'
 import {useShellLayout} from '#/state/shell/shell-layout'
-import {device} from '#/storage'
 import {BottomBar} from '#/view/shell/bottom-bar/BottomBar'
 import {createNativeStackNavigatorWithAuth} from '#/view/shell/createNativeStackNavigatorWithAuth'
 import {DesktopLeftNav, type SidebarTab} from '#/view/shell/desktop/LeftNav'
@@ -49,6 +48,7 @@ import {ExpenseScreen} from '#/screens/Expense'
 import {RepaymentScreen} from '#/screens/Repayment'
 import {GroupScreen} from '#/screens/Group'
 import {GroupsScreen} from '#/screens/Groups'
+import {HomeScreen} from '#/screens/Home'
 import {PeopleScreen} from '#/screens/People'
 import {PersonScreen} from '#/screens/Person'
 import {ProfileScreen} from '#/screens/Profile'
@@ -64,8 +64,9 @@ const Stack = createNativeStackNavigator<RootStackParams>()
 const Tab = createBottomTabNavigator<TabParams>()
 const Flat = createNativeStackNavigatorWithAuth<FlatNavigatorParams>()
 
-/** Window titles for web; People is home, so it is just "Splito". */
+/** Window titles for web; Home has none, so it is just "Splito". */
 const TITLES: Partial<Record<keyof FlatNavigatorParams, MessageDescriptor>> = {
+  People: msg`People`,
   Groups: msg`Groups`,
   Analytics: msg`Analytics`,
   Activity: msg`Activity`,
@@ -163,7 +164,7 @@ function Tabs() {
   return (
     <Tab.Navigator
       // The Home tab preference (Settings > Defaults), mirrored for a synchronous read at launch.
-      initialRouteName={TAB_ROUTE[device.get(['homeTab']) ?? 'people']}
+      initialRouteName={TAB_ROUTE[bootStartTab()]}
       backBehavior="initialRoute"
       screenOptions={{
         headerShown: false,
@@ -172,6 +173,7 @@ function Tabs() {
         tabBarPosition: gtMobile ? 'left' : 'bottom',
       }}
       tabBar={props => <NativeTabBar {...props} />}>
+      <Tab.Screen name="Home" component={HomeScreen} />
       <Tab.Screen name="People" component={PeopleScreen} />
       <Tab.Screen name="Groups" component={GroupsScreen} />
       <Tab.Screen name="Analytics" component={AnalyticsScreen} />
@@ -204,7 +206,12 @@ export function TabsNavigator({
         ...(reducedAnimation && {animation: reducedAnimation}),
       }}>
       <Stack.Screen name="Tabs" component={Tabs} />
-      <Stack.Screen name="ActivityPage" component={ActivityScreen} />
+      {/* A main screen opened from a link: the same screen pushed above the tabs, with Back (owner 179). */}
+      <Stack.Screen name="PushedHome" component={HomeScreen} />
+      <Stack.Screen name="PushedPeople" component={PeopleScreen} />
+      <Stack.Screen name="PushedGroups" component={GroupsScreen} />
+      <Stack.Screen name="PushedAnalytics" component={AnalyticsScreen} />
+      <Stack.Screen name="PushedActivity" component={ActivityScreen} />
       <Stack.Screen name="Profile" component={ProfileScreen} />
       <Stack.Screen name="Settings" component={SettingsScreen} />
       <Stack.Screen name="Search" component={SearchScreen} />
@@ -264,6 +271,11 @@ export function FlatNavigator({
       layout={layout}
       screenListeners={screenListeners}
       screenOptions={screenOptions(t)}>
+      <Flat.Screen
+        name="Home"
+        component={HomeScreen}
+        options={{title: title('Home')}}
+      />
       <Flat.Screen
         name="People"
         component={PeopleScreen}

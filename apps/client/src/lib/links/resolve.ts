@@ -32,7 +32,7 @@ export type LinkTarget = {
 
 export type Resolved = {isKnown: boolean; target: LinkTarget}
 
-const HOME: LinkTarget = {name: 'People', params: {}, sheets: [], query: {}}
+const HOME: LinkTarget = {name: 'Home', params: {}, sheets: [], query: {}}
 
 const SAFE_VALUE = /^[A-Za-z0-9_.,:~ -]{1,64}$/
 /** Free text a link may carry: a search question, an expense title. Control characters never. */
@@ -88,13 +88,15 @@ export function resolveLink(input: string): Resolved {
     }
     /* `/groups/filters` reads as a group called "filters"; no id is, so it is the Groups list's own sheet. */
     if (name === 'Group' && pathParams.groupId === 'filters') return finish('Groups', {}, ['filters', ...rest], query)
+    /* `/people/filters` likewise is the People list's own sheet. */
+    if (name === 'Person' && pathParams.personId === 'filters') return finish('People', {}, ['filters', ...rest], query)
     if (Object.entries(pathParams).some(([k, v]) => !isValidPathParam(k, v))) return {isKnown: false, target: HOME}
     if (name === 'Search') {
       if (rest.length > 0) continue
       const {q, mode} = query
       return {
         isKnown: true,
-        target: {name: 'People', params: {}, sheets: ['search'], query: {...(q ? {q} : {}), ...(mode === 'ask' ? {mode} : {})}},
+        target: {name: 'Home', params: {}, sheets: ['search'], query: {...(q ? {q} : {}), ...(mode === 'ask' ? {mode} : {})}},
       }
     }
     const params: Record<string, string> = {...pathParams}
@@ -149,8 +151,7 @@ export function buildPath(target: LinkTarget): string {
   let path = ROUTE_PATHS[name].replace(/:(\w+)/g, (_m, key: string) => encodeURIComponent(params[key] ?? '')).replace(/\/$/, '')
   const tabs = (PAGE_TABS as Record<string, readonly string[]>)[name]
   if (tabs && params.tab && (params.tab !== tabs[0] || PREF_TABS.includes(name)) && tabs.includes(params.tab)) path += `/${params.tab}`
-  /* `back` is chrome (the page was pushed from a link and shows Back, owner 179), not part of the address. */
-  add(params, [...fixed, 'tab', 'back'])
+  add(params, [...fixed, 'tab'])
   const queryId = sheets.length === 1 ? (sheets[0] as keyof typeof QUERY_SHEETS) : undefined
   if (queryId && queryId in QUERY_SHEETS) search.set(queryId, QUERY_SHEETS[queryId])
   else if (sheets.length > 0) path += `/${sheets.join('/')}`

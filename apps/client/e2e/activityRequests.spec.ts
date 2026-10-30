@@ -15,7 +15,7 @@ for (const viewport of [{width: 320, height: 800}, {width: 390, height: 844}, DE
     page,
   }) => {
     await page.setViewportSize(viewport)
-    await openDemo(page)
+    await openDemo(page, '/people')
     await expect(page.getByTestId('person-Arjun Mehta')).toBeVisible()
     await page.getByTestId('tab-activity').click()
     const row = page

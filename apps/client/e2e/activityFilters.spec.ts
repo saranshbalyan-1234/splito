@@ -169,10 +169,11 @@ for (const [name, viewport] of [['390', PHONE], ['1440', DESKTOP]] as const) {
       await expect(page.getByTestId('screen-groups')).toBeVisible()
       const group = await page.evaluate(async () => (await (window as unknown as Hooks).splito.list('group')).find(g => !g.data.name.startsWith('Bulk'))!.id)
       await page.evaluate(id => (window as unknown as Hooks).__splitoTest.openLink(`/activity?tab=all&type=transactions&group=${id}`), group)
-      await expect(page).toHaveURL(new RegExp(`/activity/all\\?group=${group}&type=transactions$`))
+      await expect(page).toHaveURL(new RegExp(`/activity/all\\?from=groups&group=${group}&type=transactions$`))
       await expect(screen(page).getByTestId('header-back')).toBeVisible()
       await expect(screen(page).getByTestId('header-avatar')).toHaveCount(0)
-      await expect(screen(page).getByTestId('fab-add')).toHaveCount(0)
+      // The pushed copy keeps the tab's FAB and actions; only Back replaces the avatar (owner 190).
+      if (viewport.width < 800) await expect(screen(page).getByTestId('fab-add')).toBeVisible()
       await expect(screen(page).getByTestId('activity-group-chip')).toBeVisible()
       await expect(screen(page).getByTestId('activity-filters-dot')).toBeVisible()
       await expect.poll(async () => (await kindsShown(page)).every(k => ['expense', 'repayment', 'writeoff'].includes(k))).toBe(true)
@@ -244,7 +245,7 @@ test.describe('at 1440: "See all" in the right column', () => {
     // Remembered Me and Others tabs never narrow a "See all".
     await page.evaluate(() => (window as unknown as {splito: {setPref(k: string, v: unknown): Promise<void>}}).splito.setPref('activity.tab', 'others'))
     await page.getByTestId('sidebar-transactions-all').click()
-    await expect(page).toHaveURL(/\/activity\/all\?type=transactions$/)
+    await expect(page).toHaveURL(/\/activity\/all\?from=groups&type=transactions$/)
     await expect(screen(page).getByTestId('header-back')).toBeVisible()
     await expect(screen(page).getByTestId('header-avatar')).toHaveCount(0)
     await expect(tabs(page).getByRole('tab').nth(0)).toHaveAttribute('aria-selected', 'true')

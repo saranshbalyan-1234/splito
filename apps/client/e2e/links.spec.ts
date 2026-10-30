@@ -4,13 +4,13 @@ import {expect, test} from '@playwright/test'
 
 test('an unknown path opens People and the address bar says /', async ({page}) => {
   await page.goto('/no/such/page')
-  await expect(page.getByTestId('screen-people')).toBeVisible()
+  await expect(page.getByTestId('screen-home')).toBeVisible()
   await expect(page).toHaveURL(/\/$/)
 })
 
 test('an unknown nested path under a real section opens People too', async ({page}) => {
   await page.goto('/groups/abc/settle/extra')
-  await expect(page.getByTestId('screen-people')).toBeVisible()
+  await expect(page.getByTestId('screen-home')).toBeVisible()
   await expect(page).toHaveURL(/\/$/)
 })
 

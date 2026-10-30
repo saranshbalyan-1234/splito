@@ -35,7 +35,7 @@ test('the drawer footer opens the Send feedback sheet as a bottom drawer on phon
   page,
 }) => {
   await page.setViewportSize(PHONE)
-  await openDemo(page)
+  await openDemo(page, '/people')
   await expect(page.getByTestId('person-Arjun Mehta')).toBeVisible()
   await page.getByTestId('header-avatar').click()
   await page.getByTestId('nav-footer-feedback').click()

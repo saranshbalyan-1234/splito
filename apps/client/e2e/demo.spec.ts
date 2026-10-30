@@ -73,7 +73,7 @@ async function expectNoMessageIds(page: Page) {
 test('People shows each friend with real words and the right balance per currency', async ({
   page,
 }) => {
-  await openDemo(page)
+  await openDemo(page, '/people')
   await showSettled(page)
   for (const [key, name] of Object.entries(STORY)) {
     const row = await reveal(page, `person-${name}`)
@@ -100,7 +100,6 @@ test('People shows each friend with real words and the right balance per currenc
       }
     }
   }
-  await expect(page.getByTestId('people-balances-title')).toHaveText('Overview')
   await expect(page.getByTestId('people-friends-title')).toHaveText(
     `Friends  ${FRIENDS}`,
   )
@@ -128,7 +127,7 @@ test('the summary shows one card per currency, never summed across, and opens An
 })
 
 test('a person row opens that person', async ({page}) => {
-  await openDemo(page)
+  await openDemo(page, '/people')
   await page.getByTestId('person-Riya Sharma').click()
   await expect(page).toHaveURL(/\/people\/[^/]+$/)
   await expect(page.getByTestId('screen-person')).toBeVisible()
@@ -146,23 +145,16 @@ test('Groups lists the demo groups with my balance in each', async ({page}) => {
   await expect(
     page.getByTestId('group-Goa trip').getByTestId('group-balance-INR'),
   ).toHaveText(/^you are owed\s*↙\s₹/)
-  // An Overview on top, People's style: one cell per currency, never added together.
-  await expect(page.getByTestId('groups-balances-title')).toHaveText('Overview')
-  await expect(
-    page.getByTestId('groups-balances').getByTestId('summary-INR-net'),
-  ).toBeVisible()
-  await expect(
-    page.getByTestId('groups-balances').getByTestId('summary-EUR-net'),
-  ).toBeVisible()
+  // No Overview on Groups: it lives on Home only (owner 153).
+  await expect(page.getByTestId('groups-balances')).toHaveCount(0)
   await expectNoMessageIds(page)
 })
 
 test('Hindi renders translated words with Indian grouping, never message ids', async ({
   page,
 }) => {
-  await openDemo(page)
+  await openDemo(page, '/people')
   await page.evaluate(() => (window as any).splito.setPref('language', 'hi'))
-  await expect(page.getByTestId('people-balances-title')).toHaveText('सारांश')
   await expect(page.getByTestId('people-friends-title')).toHaveText(/^दोस्त/)
   await expect(page.getByTestId('people-add-friend')).toHaveAttribute(
     'aria-label',
@@ -198,21 +190,24 @@ test('Profile holds identity: name prompt, counts, then Settings and About; no d
   await expect(page.getByTestId('screen-settings')).toBeVisible()
 })
 
-test('People: the Overview counts friends; the Friends list has its own search beside Filters', async ({
+test('Home: the Overview counts friends; People: the Friends list has its own search beside Filters', async ({
   page,
 }) => {
   await page.setViewportSize({width: 390, height: 844})
   await openDemo(page)
-  const people = page.getByTestId('screen-people')
+  const home = page.getByTestId('screen-home')
   const settled = FRIENDS - summaries.filter(s => s.person !== ME).length
-  await expect(people.getByTestId('people-summary-counts')).toHaveText(
+  await expect(home.getByTestId('home-overview-counts')).toHaveText(
     `${FRIENDS} friends · ${settled} settled`,
   )
-  await expect(people.getByTestId('overview-analytics')).toBeVisible()
+  await expect(home.getByTestId('overview-analytics')).toBeVisible()
+  await page.goto('/people')
+  const people = page.getByTestId('screen-people')
   // The list's own search (owner 91) sits beside Filters, besides the header's Search & Ask.
   await expect(people.getByTestId('list-search')).toBeVisible()
   await expect(people.getByTestId('list-filters')).toBeVisible()
   await expect(people.getByTestId('header-search-ask')).toBeVisible()
+  await expect(people.getByTestId('home-overview')).toHaveCount(0)
 })
 
 test('Groups: Overview, search by member, and type / status filters', async ({
@@ -222,9 +217,7 @@ test('Groups: Overview, search by member, and type / status filters', async ({
   await page.goto('/groups')
   const groups = page.getByTestId('screen-groups')
   await expect(groups.getByTestId('group-Lisbon')).toBeVisible()
-  await expect(groups.getByTestId('groups-balances-counts')).toHaveText(
-    /^20 groups · \d+ settled$/,
-  )
+  await expect(groups.getByTestId('groups-balances')).toHaveCount(0)
   // Search finds a group by who is in it.
   await groups.getByTestId('list-search').click()
   await groups.getByTestId('list-search-input').fill('lena')

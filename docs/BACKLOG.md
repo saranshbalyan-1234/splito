@@ -528,11 +528,11 @@ Every tap changes the screen in the same or next frame; slow bodies (lists, char
 
 Home shows the Overview and Recent transactions (F-1415); a new People tab holds requests, the invites row and the friends list with search and filters; Groups drops its Overview; nav and default bottom bar gain People.
 
-- **Effort** M · **Impact** 9 · **Backend** no · **Status** todo, next after the tap fix (F-255) merges; F-241's WIP rebases onto it · **Deps** F-1415, F-255, F-241
+- **Effort** M · **Impact** 9 · **Backend** no · **Status** built on feat/wC-F256-home 2026-10-30 (web verified; native not run; numbers in COMPLETION_MATRIX) · **Deps** F-1415, F-255, F-241
 - **Prefs** `tabs` default changes to Home, People, Groups, Analytics, Activity (existing users keep their own order; People is added after Home if absent)
 - **Acceptance**
   1. `/` shows, in order: Overview; Requests with the invites row (only when pending); Recent transactions (See all -> Activity); Recently active people (5, by change time, net per currency, See all -> People); Recently active groups (5, balance chips, See all -> Groups); each hides when empty; no full friends list; phone header has Search & Ask only (owners 153, 154).
-  2. `/people` shows requests, "N invites waiting ›", Friends (count, search, Filters, Show settled), no Overview; header Search & Ask + Add friend; `/people/:id` unchanged.
+  2. `/people` shows the Requests and Invites sent rows (owner 175), Friends (count, search, Filters, Show settled, gear "Manage friends and invites" last, owner 177), no Overview; header Search & Ask + Add friend; `/people/:id` unchanged.
   3. `/groups` has no Overview; everything else unchanged.
   4. Nav list order Home, People, Groups, Analytics, Ask Splito, Activity, Settings; the rail and desktop sidebar always show every item in the chosen order with no More (owner 155), the phone bar shows the on items; default bar of 5 with labels; Settings > Navigation includes People; saved tabs migrate by inserting People after Home.
   5. The right column (1300 px and up) is not shown on Home, since the page holds its content; other pages keep it.
@@ -621,7 +621,7 @@ Back with no history goes to the page's parent (stacked), never disappears; tab 
 
 The launch logo zooms gently in and out while content loads, on web from first paint and on native from the first JS frame.
 
-- **Effort** S · **Impact** 6 · **Backend** no · **Status** todo, Wave C · **Deps** -
+- **Effort** S · **Impact** 6 · **Backend** no · **Status** built on c-splash (web e2e and renders gate green; iOS simulator dev-client video; Android and a release build not yet checked), Wave C · **Deps** -
 - **Prefs** -
 - **Acceptance**
   1. Web: inline CSS keyframes in `index.html` animate the mark before any script loads; it fades into the first screen; `prefers-reduced-motion` gets an opacity pulse.
@@ -632,7 +632,7 @@ The launch logo zooms gently in and out while content loads, on web from first p
 
 The desktop sidebar is only as wide as its content and its footer links sit right under Add expense.
 
-- **Effort** S · **Impact** 6 · **Backend** no · **Status** in progress, Wave C · **Deps** -
+- **Effort** S · **Impact** 6 · **Backend** no · **Status** done, Wave C (branch c-sidebar) · **Deps** -
 - **Prefs** -
 - **Acceptance**
   1. At 1300, 1440 and 1920 the sidebar width fits the longest item (en and hi measured, no truncation); content starts sooner.
@@ -3012,7 +3012,7 @@ Restore the Friends list's own search (removed by F-222) next to its filters on 
 
 A "Recent transactions" section in the Home body (all expenses and repayments involving me, across friends and groups) and on every Group page (that group's only). Queued by the owner; build only when the owner says so.
 
-- **Effort** S · **Impact** 7 · **Backend** no · **Status** todo · **Deps** F-117
+- **Effort** S · **Impact** 7 · **Backend** no · **Status** Home part built with F-256 (5 newest, See all -> Activity, fixed count and position); the Group-page section and the three preferences below are still todo · **Deps** F-117
 - **Prefs** `home.recentTransactions` (account, default on), `group.recentTransactions` (account, default on), `recentTransactions.count` (account, default 5, 3-10), position via the existing Home section order
 - **Acceptance**
   1. Home shows the newest N expenses and repayments involving me (category tile, title, my net chip per currency, never summed); "See all" opens Activity.

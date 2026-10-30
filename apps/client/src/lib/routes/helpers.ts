@@ -1,6 +1,7 @@
 // Adapted from bluesky-social/social-app@4e4ad9c (MIT) - src/lib/routes/helpers.ts
 import {type NavigationProp} from '@react-navigation/native'
 
+import {currentSection} from './section'
 import {type RouteParams, type State, type TabParams} from './types'
 
 export function getRootNavigation<T extends {}>(
@@ -14,7 +15,7 @@ export function getRootNavigation<T extends {}>(
 
 export function getCurrentRoute(state?: State) {
   if (!state) {
-    return {name: 'People', params: undefined}
+    return {name: 'Home', params: undefined}
   }
 
   /*
@@ -53,22 +54,13 @@ export function isStateAtTabRoot(state: State | undefined) {
     return true
   }
   const currentRoute = getCurrentRoute(state)
-  /* A main screen pushed from a link shows Back (owner 179): it is a page, not the tab. */
-  if (isPushedCopy(currentRoute.params)) return false
   return (
+    isTab(currentRoute.name, 'Home') ||
     isTab(currentRoute.name, 'People') ||
     isTab(currentRoute.name, 'Groups') ||
     isTab(currentRoute.name, 'Analytics') ||
     isTab(currentRoute.name, 'Activity')
   )
-}
-
-/**
- * Whether a main screen was opened as a pushed copy with Back (owner 179) rather than as its own tab: it carries
- * `back: '1'` (never in the address, `buildPath` leaves it out). The tab screens read this for their header and FAB.
- */
-export function isPushedCopy(params: object | undefined): boolean {
-  return (params as {back?: string} | undefined)?.back === '1'
 }
 
 export function isTab(current: string, route: string) {
@@ -95,9 +87,10 @@ export function getTabState(state: State | undefined, tab: string): TabState {
   }
 
   const currentRoute = getCurrentRoute(state)
+  /* A pushed copy of the tab is never "at the tab root": pressing the tab is not a no-op there (owner 179). */
+  if (pushedCopyOf(state, tab)) return TabState.Outside
   const activeTabRoute = state.routes[state.index || 0].name
-  /* A pushed copy is not the tab's root: pressing the tab itself still brings up the plain tab. */
-  if (isTab(currentRoute.name, tab) && !isPushedCopy(currentRoute.params)) {
+  if (isTab(currentRoute.name, tab)) {
     return TabState.InsideAtRoot
   } else if (isTab(activeTabRoute, tab)) {
     return TabState.Inside
@@ -141,36 +134,70 @@ export function buildStateObject(
   }
 }
 
-/* Exhaustive on purpose: a tab added to TabParams (People comes with decision 153) fails to compile here until it is listed. */
-const TAB_ROUTES: readonly string[] = Object.keys({People: 1, Groups: 1, Analytics: 1, Activity: 1} satisfies Record<keyof TabParams, 1>)
+/* Exhaustive on purpose: a tab added to TabParams (People came with decision 153) fails to compile here until it is listed. */
+const TAB_ROUTES: readonly string[] = Object.keys({Home: 1, People: 1, Groups: 1, Analytics: 1, Activity: 1} satisfies Record<keyof TabParams, 1>)
+
+/** The main screens, as a link's `from` names them. */
+const FROM_TABS = {home: 'Home', people: 'People', groups: 'Groups', analytics: 'Analytics', activity: 'Activity'} as const
+
+/** The tab a `from` value names (`/activity?from=home` -> Home), else null (Analytics' custom range uses `from` for a date too). */
+export function fromTab(value: unknown): (typeof FROM_TABS)[keyof typeof FROM_TABS] | null {
+  return typeof value === 'string' && Object.hasOwn(FROM_TABS, value) ? FROM_TABS[value as keyof typeof FROM_TABS] : null
+}
+
+/** The route param that marks a tab screen pushed as a copy on web: the tab it was opened from (`from=home`), in the address so a refresh keeps Back (owner 184). */
+export const FROM_PARAM = 'from'
+
+/** Native pushes the copy under its own root-stack name (`PushedGroups`), since the tabs live in the nested `Tabs` screen. */
+export const PUSHED_PREFIX = 'Pushed'
+
+/** Whether a route is a pushed copy of a tab screen (owner 179): native's `Pushed<Tab>`, or a tab route carrying `from=<tab>`. */
+export function isPushedTabRoute(route: {name: string; params?: object | undefined}): boolean {
+  if (route.name.startsWith(PUSHED_PREFIX)) return true
+  return TAB_ROUTES.includes(route.name) && fromTab((route.params as Record<string, unknown> | undefined)?.[FROM_PARAM]) !== null
+}
 
 /**
- * The main screens that can open as a pushed copy with Back (owner 179), and the root-stack route a phone pushes
- * for each (the tabs live inside `Tabs`, so a pushed copy needs a route of its own; web pushes the tab's own route,
- * its flat stack has every route at the top). A screen joins when its header reads `useIsPushedCopy`: Activity
- * first (F-259); Home, People, Groups and Analytics follow with their screens.
+ * When the focused route is a pushed copy of tab `tab` (owner 179), the params the plain tab has: the copy's own
+ * without `from`. Otherwise null. Pressing the tab replaces the copy with the plain route; popping would land on the
+ * page below it, not on the tab that was pressed.
  */
-const PUSHED_COPY: Readonly<Record<string, string>> = {Activity: 'ActivityPage'}
+export function pushedCopyOf(state: State | undefined, tab: string): {params: object | undefined} | null {
+  if (!state) return null
+  const route = getCurrentRoute(state)
+  if (!isPushedTabRoute(route) || !isTab(route.name.startsWith(PUSHED_PREFIX) ? route.name.slice(PUSHED_PREFIX.length) : route.name, tab)) return null
+  const {[FROM_PARAM]: _from, ...rest} = (route.params ?? {}) as Record<string, unknown>
+  return {params: Object.keys(rest).length > 0 ? rest : undefined}
+}
 
 /**
- * How a pressed link reaches its route. A main screen opened from a link (a "See all", an Overview card, a search or
- * Ask result, a notification, a deep link) is pushed as a page with Back (owner 179, `kind: 'push'`, the params
- * carry `back: '1'`); where its screen cannot yet show Back, a tab is not on the stack the press happens in, so a
- * stack push never finds it ("The action 'PUSH' ... was not handled by any navigator"): on native the stack pops
- * back to `Tabs` and selects the tab with its params (the shape the drawer uses), on web the tab is a route of its
- * own and is navigated to. Every other route is pushed (Bluesky's behaviour): `null`.
+ * How a pressed link reaches its route (owner 179, § 26.3). A main screen (Home, People, Groups, Analytics,
+ * Activity) opened from a link, rather than from its own tab or sidebar item, is a pushed page: a stack copy of the
+ * screen carrying its params, with Back in the header (returning to where the link was) and no FAB; the tab itself
+ * still gives the plain tab screen with the avatar. On web the tab routes live in the one flat stack, so the copy is
+ * the same route pushed with `from=<the tab the link was pressed on>` (in the address, so a refresh keeps Back there,
+ * owner 184); on native the tabs are nested in `Tabs`, so the root stack holds `Pushed<Tab>` twins of them. Every
+ * other route is pushed as it is (Bluesky's behaviour): `null`. Nav items use `navigationAction="navigate"` and never
+ * come through here.
  */
 export function tabLink(
   routeName: string,
   params: object | undefined,
   isWeb: boolean,
-):
-  | {kind: 'push' | 'popTo' | 'navigate'; name: string; params: object | undefined}
-  | null {
+  from: string = 'home',
+): {kind: 'push'; name: string; params: object | undefined} | null {
   if (!TAB_ROUTES.includes(routeName)) return null
-  const pushed = PUSHED_COPY[routeName]
-  if (pushed) return {kind: 'push', name: isWeb ? routeName : pushed, params: {...params, back: '1'}}
   return isWeb
-    ? {kind: 'navigate', name: routeName, params}
-    : {kind: 'popTo', name: 'Tabs', params: {screen: routeName, params}}
+    ? {kind: 'push', name: routeName, params: {...params, [FROM_PARAM]: fromTab(from) ? from : 'home'}}
+    : {kind: 'push', name: `${PUSHED_PREFIX}${routeName}`, params}
+}
+
+/** The tab a link pressed on `state`'s page counts as opened from (its section, lower-cased); Home when the page is outside the tabs. */
+export function originTab(state: State | undefined): string {
+  const route = state ? getCurrentRoute(state) : undefined
+  if (!route) return 'home'
+  const name = route.name.startsWith(PUSHED_PREFIX) ? route.name.slice(PUSHED_PREFIX.length) : route.name
+  if (TAB_ROUTES.includes(name)) return name.toLowerCase()
+  const section = currentSection(state).toLowerCase()
+  return fromTab(section) ? section : 'home'
 }

@@ -193,7 +193,7 @@ export function useStorage<
 export const device = new Storage<[], Device>({
   id: 'splito_device',
   // Search history and read marks, and the first-frame copies of preferences (the mirror): demo mode has its own of each.
-  scoped: ['searchHistory', 'activityFeed', 'fontScale', 'colorMode', 'darkTheme', 'accent', 'hapticsEnabled', 'moneyPalette', 'homeTab', 'askChat', 'askDraft'],
+  scoped: ['searchHistory', 'activityFeed', 'fontScale', 'colorMode', 'darkTheme', 'accent', 'hapticsEnabled', 'moneyPalette', 'startTab', 'askChat', 'askDraft'],
 })
 
 /**

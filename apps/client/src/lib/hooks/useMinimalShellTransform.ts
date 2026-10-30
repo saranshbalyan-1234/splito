@@ -42,7 +42,7 @@ export function useMinimalShellFabTransform() {
           translateY: interpolate(
             footerMode.get(),
             [0, 1],
-            [-44, 0],
+            [-50, 0],
           ),
         },
       ],

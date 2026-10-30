@@ -111,12 +111,14 @@ export type PageName = Exclude<RouteName, 'Search'>
  * by the resolver, so a link can carry nothing a page does not look at.
  */
 export const QUERY_KEYS: Partial<Record<PageName, readonly string[]>> = {
-  People: ['show', 'sort', 'currency', 'groups', 'settled', 'hidden'],
-  Groups: ['type', 'status', 'show', 'currency', 'sort', 'settled', 'hidden'],
+  /* `from`: the tab a main screen was opened from, so a refresh keeps its Back (owner 179, 184). */
+  Home: ['overview', 'from'],
+  People: ['show', 'sort', 'currency', 'groups', 'settled', 'hidden', 'from'],
+  Groups: ['type', 'status', 'show', 'currency', 'sort', 'settled', 'hidden', 'from'],
   Person: ['groups'],
   Analytics: ['currency', 'period', 'offset', 'from', 'to', 'scope'],
-  /** `type=transactions`, and `group=<id>` from a Group's "See all" (F-259). */
-  Activity: ['type', 'group'],
+  /* `type=transactions` (Recent transactions' "See all", owners 173, 179), `group=<id>` from a Group's "See all" (F-259); `from` is the tab a pushed copy opened from. */
+  Activity: ['type', 'group', 'from'],
   AddExpense: ['personId', 'groupId', 'title', 'amount', 'currency'],
   Settings: ['note'],
   FriendsAndInvites: ['section'],

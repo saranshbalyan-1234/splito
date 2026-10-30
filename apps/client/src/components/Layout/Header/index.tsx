@@ -143,7 +143,7 @@ export function BackButton({onPress, style, ...props}: Partial<ButtonProps>) {
       if (evt.defaultPrevented) return
       // Opened directly (deep link, refresh): Back goes to this page's parent.
       const state = navigation.getState()
-      goBack(navigation, backFallback(state?.routes[state.index] ?? {name: 'People'}))
+      goBack(navigation, backFallback(state?.routes[state.index] ?? {name: 'Home'}))
     },
     [onPress, navigation],
   )

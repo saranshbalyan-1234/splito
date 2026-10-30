@@ -6,6 +6,7 @@ import {getTabState, TabState} from '#/lib/routes/helpers'
 export function useNavigationTabState() {
   return useNavigationState(state => {
     const res = {
+      isAtHome: getTabState(state, 'Home') !== TabState.Outside,
       isAtPeople: getTabState(state, 'People') !== TabState.Outside,
       isAtGroups: getTabState(state, 'Groups') !== TabState.Outside,
       isAtAnalytics: getTabState(state, 'Analytics') !== TabState.Outside,
@@ -13,6 +14,7 @@ export function useNavigationTabState() {
     }
 
     if (
+      !res.isAtHome &&
       !res.isAtPeople &&
       !res.isAtGroups &&
       !res.isAtAnalytics &&
@@ -21,7 +23,7 @@ export function useNavigationTabState() {
       // HACK for some reason useNavigationState will give us pre-hydration results
       //      and not update after, so we force isAtHome if all came back false
       //      -prf
-      res.isAtPeople = true
+      res.isAtHome = true
     }
     return res
   })

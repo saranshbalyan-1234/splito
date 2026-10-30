@@ -105,7 +105,7 @@ function DrawerContentInner(): React.ReactNode {
   const navigation = useNavigation<NavigationProp>()
   const searchAsk = useSearchAsk()
   const currentRouteName = useNavigationState(state =>
-    state ? getCurrentRoute(state).name : 'People',
+    state ? getCurrentRoute(state).name : 'Home',
   )
   const unreadCount = useActivityBadge()
   /* Same order as the sidebar and bottom bar: what is on, then the rest (26.3). */

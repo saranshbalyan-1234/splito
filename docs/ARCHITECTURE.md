@@ -65,6 +65,15 @@ them do yet.
     convention), Claude writes it here in the same turn as a dated § 23 lesson or a rule in its section, updates
     BACKLOG when it implies work, commits and pushes, without waiting for the owner to say "add this". Reason:
     owner, 2026-10-30: "make sure you do it yourself always, whenever you think this should be in the app".
+11. **This file learns by itself, performance first** (owner 191). Every performance finding (a measurement that
+    missed or surprised, a root cause, an approach tried and rejected, a review finding, a test-method lesson)
+    becomes, in the same change, a rule in § 17 "Performance rules learned" (what to do, why, the numbers) and a
+    dated § 23 lesson; a rule that a later finding contradicts is rewritten, never left beside it. Enforcement,
+    so it does not depend on memory: `pnpm check` runs `scripts/lessonsGate.ts`, which fails a branch that
+    changes perf specs, the renders baseline or measured numbers in `docs/COMPLETION_MATRIX.md` without also
+    changing § 17 or § 23 here; every builder brief says to record lessons; every Opus review lists findings
+    that should become rules; the repo's `UserPromptSubmit` hook repeats this. Reason: owner, 2026-10-30: "make
+    sure everything we learn from performance captures in architecture"; "that file should be self learning".
 
 ---
 
@@ -385,8 +394,26 @@ All user-facing strings go through Lingui; English default, Hindi second, Englis
 
 ## 8. Launch splash
 
-[Partial] The native splash comes from the `expo-splash-screen` plugin (auto-hide) and web shows a static
-mark in `public/index.html`. `StoreProvider` opens the store before rendering the shell. Not built (A-020):
+[Partial] The native splash comes from the `expo-splash-screen` plugin and web shows the launch mark in
+`public/index.html`. `StoreProvider` opens the store before rendering the shell. [Built] (F-264, owner 185) the
+mark breathes while the store opens, and the launch screen fades out (200 ms) over the first screen:
+
+- **Web:** `#launch` in `index.html` is a fixed overlay beside `#root` (not inside it, so React's first commit does
+  not remove it and the fade shifts nothing); its CSS keyframes (scale 1 -> 1.08 -> 1, 1.2 s, ease-in-out, infinite;
+  `prefers-reduced-motion` gets a 2.4 s opacity pulse) run from first paint, no script. `markLaunchReady()`
+  (`components/LaunchScreen/index.web.tsx`) fades it out and removes it. Dark mode is ALF Dim's background.
+- **iOS / Android:** `index.ts` calls `SplashScreen.preventAutoHideAsync()` at import; `components/LaunchScreen` draws
+  the same PNG as the splash plugin (200 dp, centred in the whole window, not the safe area, white or Dim by the
+  system scheme) and hides the native splash when the image has loaded, then breathes on the UI thread
+  (Reanimated `withRepeat`, `useReducedMotion` -> opacity pulse) until `markLaunchReady()`.
+- **The ready signal** is `StoreProvider`: the store is open, or a storage notice or an open error says it will not
+  be. It is a module call from an effect, so no component re-renders on ready; only the native launch screen
+  re-renders once (to unmount after its fade). Fonts are embedded natively / `font-display: swap` on web and
+  preferences read synchronously, so they need no wait. No cap is built yet (below).
+- Checks: `e2e/launch.spec.ts` (bundle held back by a gate; 390 and 1440, light and dark, reduced motion),
+  `src/alf/splash.test.ts`.
+
+Not built (A-020):
 
 - The splash holds until fonts, preferences and the local store are open and the first People/Groups
   queries have resolved, capped at 8 s; after the cap the app shows anyway.
@@ -1023,6 +1050,52 @@ are written; nothing records them automatically (A-037).
 - **Dev-only tools never ship:** the release script refuses to build with any `EXPO_PUBLIC_` debug,
   profiler or override variable set.
 
+
+### 17.1 Performance rules learned (self-updating, owner 191)
+
+Each rule came from a measurement; the dated story is in § 23. Newest first within each group.
+
+- **A window that grows must keep what it read, and a render baseline is recorded as the median of three runs.**
+  Activity's tracker rebuilt the whole history for every page a narrowed list read (10,000 expenses: 23.6 s, then
+  72 ms per new expense); it now keeps its pool, cursor and sorted events and merges each page in (0.35 s SQLite /
+  1.2 s IndexedDB, 8 / 13 ms per later change; `activityScale.test`). Bound any automatic search in the screen
+  (about ten pages) and let the person ask for more. The renders baseline (`RENDERS_BASELINE=write`) is the median of
+  three runs taken after the demo data has loaded and on a quiet machine, never the larger of two files and never a
+  single low sample: one sample read 4,178 tab updates against 4,418 and made the next run fail on noise.
+
+- **Measure on the slowest target, on a quiet machine.** Desktop Chrome at 1x hid a 600 ms tab switch that an
+  iPhone felt as 2 s; measure in WebKit (iPhone simulator Safari or Playwright WebKit) and Chrome at 6x CPU, and
+  only at machine load under 10 (at load 25-130 the same test read 2-5x slower and timing tests failed). Name
+  the pair you measured: Groups -> Home was 54 ms while Analytics -> Home was 5.9 s.
+- **The cost of a switch is often the screen you leave, not the one you open.** Popping a list screen ran a
+  Reanimated exit animation per row (a forced layout each), 617 ms at 1x and 5.9 s at 6x. Leaving screens must
+  not run row exit animations; main tabs stay mounted (parked) instead of being torn down (owner 166).
+- **Freezing tricks that break WebKit or Reanimated are out.** `react-freeze` / `freezeOnBlur` on web runs
+  class `componentWillUnmount` and brought the exit animations back (Analytics revisit 500 ms);
+  `content-visibility: hidden` on kept screens was fast in Chrome and showed a blank page in Safari.
+- **Feedback first, work a frame later.** The tab highlight paints in the press-in commit and the page switches
+  a frame later; the bar acts on press-in, not on click (which came ~45 ms after pointerdown, plus Safari's
+  double-tap wait without `touch-action: manipulation`).
+- **Open first, render after, on the real end of the motion.** Heavy bodies mount when the sheet, drawer, popup
+  or screen has finished moving (OpenedContext), not after two frames: before, the drawer menu mounted while the
+  panel was still 310 px off screen. Every opened signal has a timer fallback, so content never waits forever.
+- **A parked or cached screen never reuses a stand-in render.** The screen cache's placeholder (`<View />`)
+  must not be stored as the live descriptor, or a revived tab comes back blank for good.
+- **Hot write paths read nothing they can prove empty.** One indexed dispute read per money write cost ~40 % of
+  the demo seed (about 1,500 creations); a created record cannot have a dispute, so creations skip it.
+- **Growing a window keeps what it read.** A narrowed Activity list that rebuilt from zero five pages at a time
+  read the whole history (10,000 expenses: 20 rebuilds, 23.6 s, then 72 ms per new expense); windows grow
+  incrementally, automatic searching is bounded (about 10 pages, then "Look further back").
+- **Membership checks use a Set.** `read.includes(id)` per event made Mark all read and every rebuild
+  O(events x read); a persisted list of ids is read into a Set once.
+- **Search stays under 50 ms at 10,000 expenses** (`search.test.ts`); the slowest query was `> 1000` (amount
+  range), so amount scans need an index or a bound before the data grows.
+- **The renders baseline is a median, taken after the data has loaded.** Recording the highest of three noisy
+  runs (tabs updates 1,916-3,440) let a doubling pass; the gate waits for an explicit "demo loaded" signal
+  before a phase and records the median of three.
+- **Guards match only what they guard.** A build check that matched `demo-large-` in the start-up bundle failed
+  every Render build silently (§ 23); the Render deploy is checked after every merge, and "no new deploy" counts
+  as a failure.
 ---
 
 ## 18. Accessibility
@@ -1221,6 +1294,51 @@ Splito lessons (add newest last, dated, with PR):
   Safari's double-tap detection could hold or swallow quick taps. Rule: tap, scroll and gesture work is verified in
   real Mobile Safari (iOS simulator) and with Chrome CPU throttling at 6x before it is called done, every tab
   (Home included) is measured, and no fix is reported as working on phones from desktop numbers alone.
+- 2026-10-30, F-264 (c-splash): **the web launch mark lived inside `#root`, so React's first commit removed it** while
+  the store was still opening and the screen went blank. The launch screen is now a fixed `#launch` overlay beside
+  `#root` that `markLaunchReady()` fades out when `StoreProvider` has a store (or a notice or error). A native splash
+  can only be hidden once, so `preventAutoHideAsync()` runs in the entry and the JS launch screen hides it when its
+  image has loaded. Check the native handover in a release build: a dev client draws its own loading UI over it.
+
+- 2026-10-30, F-256 (feat/wC-F256-home): **the id `people` used to mean Home**, so adding a People tab was a rename:
+  tab ids are `home | people | ...`, route `Home` at `/`, `People` at `/people`. Stored data is migrated on read, never by
+  a write (`packages/sync/src/preferences.ts`): a `tabs` list with no `home` is from before F-256, its `people` was Home,
+  so it becomes `['home', 'people', ...rest]` (Home first, People right after it, the user's order kept); a stored
+  `homeTab` of `people` next to such a list reads as `home`. The device mirror of the open-on tab was renamed from
+  `homeTab` to `startTab`, because a stale `people` there would have opened the People tab for every existing user at the
+  first launch. Tests: `packages/sync/test/preferences.test.ts` (legacy shapes), `e2e/homeTabs.spec.ts` (a saved bar is
+  migrated; `window.splito.putRawPref` writes a row as an old build stored it, dev and e2e builds only). Rule: when a
+  stored id changes meaning, rename the key of any synchronously read mirror.
+- 2026-10-30, F-256: **the shell cannot read navigation state.** `createNativeStackNavigatorWithAuth` renders above the
+  navigator's context, so `useNavigationState` there throws "Couldn't get the navigation state" and blanks the whole
+  web app. The right column's width (hidden on Home) is computed from the shell's own `state` (`useRightNavWidthFor`);
+  only code inside a screen (the FAB, the column itself) uses `useRightNavWidth()`.
+- 2026-10-30, F-256: **a deep link to a tab mounts Home under it on web** (`backChain` plus the pinned Home screen), so
+  Home's hidden copy is in the DOM next to the page you opened: an e2e locator for a row, the FAB or an overview card
+  must be scoped to its screen (`getByTestId('screen-people').getByTestId(...)`), as the shell specs already do.
+- 2026-10-30, F-256: **the sidebar and rail list every item** (owner 155), so there is no "More" menu, no `tab-more`
+  and no `more-*` test ids; Settings and Ask Splito are ordinary sidebar rows (`tab-settings`, `tab-ask`).
+- 2026-10-30, F-256 (owner 190): **a hook called above the scaffold cannot read the scaffold's context.** The first FAB
+  host kept "a screen holds the FAB back" in React state inside `Layout.Screen` and exposed it by context, but
+  `useSuppressFab` is called by the screen, which is the provider's parent, so the context was always the default and an
+  empty Home showed a FAB. `RouteFAB.tsx` keeps a module-level set of route keys that hold the FAB (read with
+  `useSyncExternalStore`); the screen adds its own `useRoute().key` in an effect and removes it on cleanup. Rule: state
+  that a screen sets for its own scaffold goes in a module store keyed by route key, never in a provider the screen
+  itself renders under.
+- 2026-10-30, F-256 (owner 190): **a pushed copy of a tab is the same screen, so anything that differs is a bug.** The FAB
+  is decided by route name only (`fabParams`, `lib/routes/fab.ts`); a pushed Groups copy therefore shows the FAB and every
+  header action of the tab, and differs only by Back replacing the avatar (`PushedTabContext`, read only by
+  `HeaderAvatar`). Do not add `isPushed` checks to a screen or to the FAB.
+- 2026-10-30, F-256 (owner 184, F-263): **a fixed parent chain is a table, not a history.** `PARENT` in
+  `navigation/goBack.ts` names a parent for every route (default Home), `backChain` stacks them, and on web the cold parents
+  are keyed `cold-<name>-<i>` so `useRealParents` can swap in an expense's real group or friend chain once it loads.
+  A pushed copy keeps `from=<origin tab>` in the address so a refresh climbs back to that tab; tapping the tab drops it.
+- 2026-10-30, F-256: **read the route in a leaf, never in the component that builds the screen.** `useRoute()` hands back a
+  new (equal) route object on many navigation updates (16 times in the renders gate's scroll sweep), and each one
+  re-rendered `TabScreen` and so `Layout.Screen` and its children. `TabScreen` now has no hook and wraps the screen in
+  `PushedTabFlag`, whose `children` element is made once by `TabScreen`, so React skips the screen; only the tiny provider
+  re-renders (one `PushedTabFlag` x1 "wasted" line in `e2e-renders/baseline.json`, recorded on purpose). The gate's tab sweep
+  also mounts about 13% more now (`tabs` 21383 -> 24183) because it visits Home and People as well as the old tabs.
 
 - 2026-10-30, F-1213 / F-259 (Activity): four things that cost a rebuild each. (1) **`Link` matches bare route patterns
   only** (`router.matchPath('/activity/all?...')` is NotFound: the pattern ends at `/activity`), so an `href` that
@@ -1231,7 +1349,8 @@ Splito lessons (add newest last, dated, with PR):
   until something else changed. (4) **A filtered list over a paged window can be empty while older pages match**:
   read older pages until a screenful is listed or the history ends, and show the skeleton, not "nothing matches",
   meanwhile. Also: a main screen that is pushed from a link must be told apart from its tab by a param
-  (`back: '1'`) that stays out of the address, not by stack depth (a deep link puts People under every page).
+  (`from=<tab>`, owner 184, in the address so a refresh keeps Back), not by stack depth (a deep link puts People
+  under every page).
 
 ---
 
@@ -1523,7 +1642,7 @@ labelled sidebar); **wide** = web 1300 px and up (Bluesky `gtTablet`, right colu
 
 ### 26.3 Shell and navigation
 
-- **Home, People and Groups are three tabs; the Overview lives only on Home** (owner 153; F-256; replaces the
+- **Home, People and Groups are three tabs; the Overview lives only on Home** [Built, F-256, web; native not yet checked on a simulator] (owner 153; replaces the
   Home-holds-the-friends-list layout of 120 and the Overview on Groups):
   - **Home** (`/`), top to bottom (owners 153, 154): the **Overview** (per-currency cards, owners 113/114/120,
     "Analytics ›"; a scope choice in its header, **All** (default) / **Groups** / **Direct** (non-group), changes
@@ -1537,23 +1656,24 @@ labelled sidebar); **wide** = web 1300 px and up (Bluesky `gtTablet`, right colu
     with the newest change, balance chips, "See all" -> Groups, same rule as § 26.17). Each section is short (5
     rows at most) and hides when empty. Header: avatar | logo (phone) / "Home" | Search & Ask (no Add friend
     here). On wide screens the right column is not shown on Home (its content is on the page), so nothing repeats.
-  - **People** (`/people`, new tab, Lucide `Users`): incoming friend requests (Accept / Decline, the same ones
-    Home shows), the "N invites waiting ›" row, then the Friends list with its search and Filters (owners 91, 120, 130) and a settings (gear) icon on the right of the
+  - **Ids and routes:** the tab ids are `home | people | groups | analytics | activity` (plus `ask`, `settings` in the shared list) and the routes `Home` (`/`) and `People` (`/people`); the old route and id `people` meant Home. The Groups tab glyph is Lucide `Group` now, since `Users` is People's.
+  - **People** (`/people`, new tab, Lucide `Users`): the same Requests and Invites sent rows Home shows (owner 175),
+    then the Friends list with its search and Filters (owners 91, 120, 130) and a settings (gear) icon on the right of the
     Friends header (search, Filters, gear; it opens Friends and invites; no "Manage" text button, owner 177); no Overview. Header:
     avatar | "People" | Search & Ask + Add friend. A friend still opens `/people/:id`.
   - **Groups** (`/groups`): the groups list with search and Filters; no Overview. Header unchanged.
   - **Navigation:** the shared list becomes Home, People, Groups, Analytics, Ask Splito, Activity, Settings; the
-    default phone bottom bar is Home, People, Groups, Analytics, Activity (5 tabs, labels shown); Settings >
+    default phone bottom bar is Home, People, Groups, Analytics, Activity (5 tabs, labels shown under the icons up to 5 tabs, `components/TabGlyph.tsx` `TabLabel`); Settings >
     Navigation still lets the user change it (owners 84, 127). Every tab keeps the FAB rule (§ 26.6).
   *Why:* "on home show overview and recent transactions, then create a people tab as well, the group tab is
   already there, the overview is needed only in home".
 - **Bluesky's shell on every width.** Web fills the whole screen: left sidebar plus main content (plus the
   right column when wide, § 26.17). *Why:* "on web it should occupy complete screen", "the navigation should
   be like Bluesky", "for web, keep my left sidebar and main content".
-- **Destinations:** the home destination is labelled **"Home"** (house icon; it holds the Overview and the
-  friends list). Phone bottom bar by default = Home, Groups, Analytics, Activity, plus the FAB (§ 26.6). **Search and AI are not pages:** both live in the Search & Ask drawer opened from the header icon (below). *Why:* "that search to be available globally on home section instead of a separate page" (replaces "Search as the second tab"). **The desktop/rail
+- **Destinations:** the home destination is labelled **"Home"** (house icon; it holds the Overview and the short
+  recent lists). Phone bottom bar by default = Home, People, Groups, Analytics, Activity, plus the FAB (§ 26.6). **Search and AI are not pages:** both live in the Search & Ask drawer opened from the header icon (below). *Why:* "that search to be available globally on home section instead of a separate page" (replaces "Search as the second tab"). **The desktop/rail
   sidebar and the phone drawer show the same list, in the same order, with the same icons and labels:** Home,
-  Groups, Analytics, Ask Splito, Activity, Settings, then the same footer links (Feedback · Help · Privacy ·
+  People, Groups, Analytics, Ask Splito, Activity, Settings, then the same footer links (Feedback · Help · Privacy ·
   About). The sidebar adds only the logo and the "Add expense" pill; the drawer adds only its profile header
   (§ 26.7) and Sign in / Log out. One `navigationItems` array and one `NavFooterLinks` component feed all of
   them (§ 3). Profile is never a nav item (the avatar opens it). *Why:* "mobile sidebar and desktop seems to be
@@ -1562,7 +1682,7 @@ labelled sidebar); **wide** = web 1300 px and up (Bluesky `gtTablet`, right colu
   `navigation/Drawer.tsx`.
 - **Search & Ask: one drawer for search and AI.** An AI icon (Lucide `Sparkles`, the widely recognised AI
   mark; not a magnifier, not `Zap`, which reads as "fast") sits in the header of every top-level page
-  (Home, Groups, Analytics, Activity), to the LEFT of that page's action (on Home, left of Add friend), on every
+  (Home, People, Groups, Analytics, Activity), to the LEFT of that page's action (on Home, its only action, at the far right), on every
   platform; accessibility label "Search or ask Splito", tooltip on web. Tapping it opens the **Search & Ask
   drawer**: a full-height drag-to-close bottom drawer on phones,
   a large centred popup (command-palette style, ~720 px) on rail/desktop. Top: one Bluesky `SearchInput`
@@ -1578,11 +1698,11 @@ labelled sidebar); **wide** = web 1300 px and up (Bluesky `gtTablet`, right colu
   left of add people on the header, which expands on click"; "this search should open a drawer instead which
   would support ai as well".
 - **Settings > Navigation lets the user choose the phone bottom bar from every sidebar item.** All items of the
-  shared list (Home, Groups, Analytics, Ask Splito, Activity, Settings) are offered, each with a toggle
+  shared list (Home, People, Groups, Analytics, Ask Splito, Activity, Settings) are offered, each with a toggle
   and a drag handle (Bluesky's reorderable list): what is on and its order is the bottom bar, with **any number of
   tabs** (from Home alone up to every item; Home cannot be turned off). Tabs share the bar width equally; with
   more than 5 the labels hide and icons stay at Bluesky size with their badges. Items not in the bar stay in the
-  drawer. Default bar: Home, Groups, Analytics, Activity. "Ask Splito" placed in the bar opens the Search & Ask drawer in Ask mode instead of switching tab. **On rail and desktop every item always shows** (owner 155, replaces 127's "off items under More" on wide
+  drawer. Default bar: Home, People, Groups, Analytics, Activity. "Ask Splito" placed in the bar opens the Search & Ask drawer in Ask mode instead of switching tab. **On rail and desktop every item always shows** (owner 155, replaces 127's "off items under More" on wide
   screens): the sidebar and rail list all items (Home, People, Groups, Analytics, Ask Splito, Activity, Settings),
   in the order chosen in Settings > Navigation, with no "More" item; the on/off choice shapes only the phone bottom
   bar (off items stay in the phone drawer).
@@ -1641,21 +1761,15 @@ labelled sidebar); **wide** = web 1300 px and up (Bluesky `gtTablet`, right colu
   is opened from something other than its own tab or sidebar item (a "See all", an Overview card, a search or Ask
   result, a notification, a deep link), it opens as a pushed page with Back in the header that returns to where the
   person came from (filters from the link applied, e.g. Activity with type=transactions); tapping the tab itself
-  always gives the plain tab screen with the avatar. The FAB follows the header (§ 26.6: Back, so no FAB). One
-  helper decides (the link resolver / `tabLink()`), not each screen. **[Built for Activity, F-259; Home, People,
-  Groups and Analytics join with their screens]:** `tabLink()` returns `kind: 'push'` for a screen listed in
-  `PUSHED_COPY` (web pushes the tab's own route, a phone pushes the root-stack `ActivityPage`) with `back: '1'` in
-  its params; `openLink` (`navigateToTarget`) does the same for notifications, Ask and Search results, and `Link`
-  with `navigationAction="push"` for a "See all". `back` is chrome, never in the address (`buildPath` skips it; the
-  resolver drops it from a link), so a refreshed copy is the plain tab. The screen reads it with `useIsPushedCopy()`
-  / `<HeaderLead/>` (avatar or Back), `AddExpenseFAB` and its inset hide themselves, `isStateAtTabRoot` and
-  `getTabState` stop counting the copy as the tab root (so the sidebar and drawer swipe behave), and pressing the
-  tab itself (`navigate` to the same route replaces the params) drops `back`. Clicking a "See all" while already
-  on the plain tab only changes its params. A new screen adopts it by adding itself to `PUSHED_COPY` and using
-  `HeaderLead`. Every "See all" of Recent transactions uses `seeAllTransactionsPath(groupId?)` (`lib/links/make.ts`):
-  `/activity?tab=all&type=transactions[&group=<id>]` (the tab is a query there because `Link` matches bare route
-  patterns; the address bar prints `/activity/all?type=transactions`), All so a saved Me never narrows it. *Why:* "even if you go to a main screen from
-  some links, it should show a back button, in case you don't go directly from tabs".
+  always gives the plain tab screen with the avatar. The pushed copy keeps the FAB and every header action of the tab; only Back replaces the avatar (owner 190). One
+  helper decides (the link resolver / `tabLink()`), not each screen. *Why:* "even if you go to a main screen from
+  some links, it should show a back button, in case you don't go directly from tabs". *Where:* `tabLink()` in
+  `lib/routes/helpers.ts` (the `Link` default `push` action, `navigateToTarget` in `lib/links/open.ts` for links the
+  running app opens; nav items use `navigationAction="navigate"` and never push), `HeaderAvatar` (Back instead of
+  the avatar; the only difference from the tab, owner 190) reads `PushedTabContext`, which the tab screen sets; the FAB does not. Web pushes the tab route with
+  a `from` param naming the tab it was opened from (it is in the address, owner 184); native pushes `Pushed<Tab>`
+  twins registered in the root stack. A pushed copy is never the current tab: pressing its own tab replaces it with
+  the plain tab, without `from`. A cold page load of a plain address is the plain tab. e2e `homeTabs.spec.ts`. Every "See all" of Recent transactions (Home, the right column, a Group page) uses `seeAllTransactionsPath(groupId?)` (`lib/links/make.ts`): `/activity?tab=all&type=transactions[&group=<id>]` (the tab is a query there because `Link` matches bare route patterns; the address bar prints `/activity/all?from=<origin>&type=transactions`), All so a saved Me or Others never narrows it.
 - **Every page has a fixed parent, so Back always goes somewhere specific** (owner 184): with history, Back
   returns to the page you came from; with none (a refresh, a pasted address, a notification, a new tab), Back
   goes to the page's parent and the parents are stacked under it, so a second Back keeps climbing. The parents:
@@ -1670,8 +1784,10 @@ labelled sidebar); **wide** = web 1300 px and up (Bluesky `gtTablet`, right colu
   should be some specific set of back for sure, for example if I open Appearance in Settings, the flow is from
   Settings to Appearance".
 - **Pushed pages** (Person, Group, Settle, Expense, Profile, Settings and its sections, Add friend, Create
-  group) show Back in the header; top-level pages (People, Groups, Analytics, Activity) show the avatar. This
-  one distinction also decides the FAB (§ 26.6).
+  group) show Back in the header; top-level pages (Home, People, Groups, Analytics, Activity) show the avatar.
+  **A main screen opened from a link is the same screen as its tab; the only difference is Back in place of the
+  avatar** (owner 190): same header actions, same FAB, same filters, layout and content. The FAB follows § 26.6,
+  not the Back state. *Why:* "the only diff should be whether back button is visible or not".
 - **The logo returns home and is inactive on home** (spec).
 - **Page background (`html`/`body` on web) always follows the active theme** (no black band under Dim
   content).
@@ -1700,7 +1816,8 @@ show what: centre may be page name, right maybe some basic action, and left may 
 
   | Screen | Right slot |
   |---|---|
-  | Home | Search & Ask + Add friend |
+  | Home | Search & Ask only (owner 153) |
+  | People | Search & Ask + Add friend |
   | Groups | Search & Ask + Create group |
   | Analytics | Search & Ask + overflow (Export CSV) |
   | Activity | Search & Ask + Mark all read |
@@ -1741,8 +1858,9 @@ good"; "the left sidebar looks bad on desktop". *Where:* `view/shell/desktop/Lef
   sliding active indicator (§ 26.9) sits beside the active item.
 - **Add expense:** Bluesky `ComposeBtn` as a large full-width pill with a plus icon; it opens the Add expense
   popup (§ 26.8). *Why:* "go with what Bluesky had".
-- **Compact, no space it does not need** (owner 188): the sidebar is as wide as its longest item needs (icon,
-  label, padding; about 200 px in English, wider only if a language needs it), so the content starts sooner; the
+- **Compact, no space it does not need** (owner 188): the sidebar is as wide as its content needs (icon,
+  label, padding; one constant, 216 px, set by the footer row in English and fitting Hindi's longest label; a language that
+  needs more raises that one number), so the content starts sooner; the
   logo, items, pill and footer links form one block at the top with no dead band between them, and nothing is
   pinned to the bottom. Hairline right border; sticky full height; scrolls on its own when tall. Phone and rail
   layouts are unchanged. *Why:* "on desktop there is a lot of space we don't need there in sidebar".
@@ -1750,16 +1868,20 @@ good"; "the left sidebar looks bad on desktop". *Where:* `view/shell/desktop/Lef
 
 ### 26.6 FAB
 
-- **The Bluesky FAB shows only at phone widths, and only on screens whose header has no Back** (People,
-  Groups, Analytics, Activity). It is hidden on every pushed page (Profile and Settings included), while a
-  sheet is open, while the keyboard shows, and on onboarding (§ 3's suppression list). Rail and desktop have
-  no FAB; the sidebar pill adds expenses there. *Why:* "fab icon to show everywhere on the screen from nav
-  bar, basically if back button is not there show it"; "home and activity also should show the fab"; "the fab
-  icon should not be visible on desktop as we have it on sidebar".
-- **Decided once, in the shell, from the header's left-slot state** (no per-screen flags). It keeps Bluesky's
+- **The Bluesky FAB shows at phone widths on every screen where you would add an expense** (owner 190): the
+  main tabs (Home, People, Groups, Analytics, Activity) **and their pushed copies opened from a link** (Back
+  replaces only the avatar; the FAB, header actions such as Search & Ask, Filters, Add friend and the gear, and
+  every other control stay exactly as on the tab), the Person page (Add expense pre-selects that friend) and the
+  Group page (pre-selects that group). It is hidden where adding an expense makes no sense: Settings and its
+  sections, Profile, Expense and payment detail, forms and the composer, while a sheet is open, while the
+  keyboard shows, and on onboarding (§ 3's suppression list). Rail and desktop have no FAB; the sidebar pill adds
+  expenses there. *Why:* "fab icon to show everywhere on the screen from nav bar"; "home and activity also should
+  show the fab"; "the fab icon should not be visible on desktop as we have it on sidebar"; "all the + buttons or
+  anything should be there" (replaces "if back button is not there show it").
+- **Decided once, from the route** (`fabParams` in `lib/routes/fab.ts`, a small allow-list of route names, pushed copies included; `RouteFAB` in the screen scaffold `Layout.Screen` renders it under every screen, so no screen has its own FAB; a screen can only hold it back with `useSuppressFab`: an empty Home or People, an inactive or deleted group; `FAB` draws nothing on wide screens). It keeps Bluesky's
   stays in place while scrolling (owner 87), and lists pad their bottom by the FAB clearance.
-- **Tapping it opens Add expense as a bottom sheet** (§ 26.8). On a Group page (pushed, no FAB) "Add expense"
-  lives in the body and pre-selects the group. *Why:* "use the same flow of that FAB icon".
+- **Tapping it opens Add expense as a bottom sheet** (§ 26.8). On a Group or Person page it pre-selects that group or
+  friend; wide screens, which have no FAB, keep the body's "Add expense". *Why:* "use the same flow of that FAB icon".
 - *Where:* `components/AddExpenseFAB.tsx`, `view/com/util/fab/`.
 
 ### 26.7 Drawer (side drawer)
@@ -2007,6 +2129,14 @@ pages". § 17 holds the engineering rules that meet these budgets.
 group there"; "add overview in both friends and groups, with search and filters as well, search icon only,
 expands once I click". *Where:* `screens/People`, `screens/Groups`, `screens/Group`, `components/ListToolsHeader.tsx`.
 
+- **The Overview has a scope** (owner 176): small chips "All" (default) / "Groups" / "Direct" (non-group
+  expenses with friends) in its header beside "Analytics ›". It changes only the per-currency cards and their counts
+  line, never the sections below; currencies are never summed. The choice is the preference `home.overviewScope`
+  (decision 90) and the address (`/?overview=groups|direct|all`; a param that is present wins, `all` is written when
+  a saved Groups/Direct would otherwise apply). "Analytics ›" and each card carry it as Analytics' scope
+  (`scope=` `0:all` for Groups, `1:` for Direct, `1:all` for All, written out so Analytics never keeps the scope it saved
+  last). It does not follow the friends list's Include groups filter, and it never changes Recently active people
+  or the other sections. `personSummary(rows, {includeGroups, scope})` in domain; `screens/Home/overviewScope.ts`.
 - **Overview cards: only the net is coloured and on the right** (owners 156-161; with F-256). Each currency
   card reads:
   - line 1: "You are owed" / "You owe" / "Settled" with the currency chip on the LEFT ... the NET on the RIGHT,
@@ -2035,12 +2165,15 @@ expands once I click". *Where:* `screens/People`, `screens/Groups`, `screens/Gro
 - **Home reads top-down, nothing cut off, nothing crowded** (owner 120, from the owner's Home screenshot of
   2026-10-29; F-248, fixed in the Wave B post-assemble batch with F-244 and F-245):
   - **Order:** Overview first, then incoming friend requests that need my answer (Accept / Decline), then
-    Recent transactions (F-1415), then Friends. "Invites sent" leaves Home: it lives on the Friends and invites
-    page (F-621); Home shows one compact row "2 invites waiting ›" only when some are pending.
+    Recent transactions (F-1415), then Recently active people and Recently active groups (§ 26.3, owners 153/154;
+    the Friends list itself moved to People). "Invites sent" rows are back on Home below the requests (owner 175,
+    replacing the compact "N invites waiting ›" row of this rule's first version); the full list stays on the Friends
+    and invites page (F-621).
   - **Overview amounts and labels are never truncated:** the label is written in full ("You are owed", "You
-    owe"), the amount auto-shrinks to fit its card (down to `text_lg`, then wraps the currency symbol line
-    rather than ellipsize); every card in a row has the same lines (when one card shows "Owed to you / You owe"
-    sub-lines because both directions exist, the others reserve that space), so no card is taller or emptier.
+    owe"), the amount auto-shrinks to fit what the label leaves it on the card's right (down to `text_lg`, then
+    wraps the currency symbol line rather than ellipsize); cards in one grid row stretch to the tallest card's
+    height (a card without the "Owed to you / You owe" sub-lines is not padded with blank lines, so phone cards
+    stay compact).
   - **No red per-row dots** on friend, request or invite rows (owner 111: unsynced rows are drawn lighter).
   - **Friend rows stay on two lines at phone width:** name plus at most two group chips and "+N" (the rest in
     the row's detail), and on the right one net line per currency (max 3, then "+N"); chips never wrap to a
@@ -2054,9 +2187,10 @@ expands once I click". *Where:* `screens/People`, `screens/Groups`, `screens/Gro
   they are one line, two or more, and the avatar and the name block are centred the same way; never
   top-aligned. *Why:* "how much I owe or these things should always be vertically center, whether it's one row
   or two rows or any number of rows".
-- **People (Friends) and Groups both start with an "Overview" section:** one card per currency, "You are owed"
-  / "You owe" (never summing currencies), a counts line ("6 friends - 2 settled" / "3 groups - 1 settled"),
-  and an "Analytics >" link. Each group row shows your balance in that group per currency.
+- **Only Home has an "Overview" section** (owner 153, replaces owner 32's Overview on People and Groups): one
+  card per currency, "You are owed" / "You owe" (never summing currencies), a counts line ("6 friends - 2
+  settled"), and an "Analytics >" link. People and Groups start with their list. Each group row shows your
+  balance in that group per currency.
 - **The list section header row** ("Friends 6" / "Groups 3") carries icon buttons on its RIGHT: on Groups,
   search (Lucide `Search`, testID `list-search`; on Home the global search field replaces it) and Filters (`list-filters`, with a dot/count when non-default
   filters are active). Both hide while the list is empty (§ 25).
@@ -2067,8 +2201,8 @@ expands once I click". *Where:* `screens/People`, `screens/Groups`, `screens/Gro
   full-width Bluesky `SearchInput` in the same row, autofocused, with an X that collapses and clears. Results
   filter live: friends by name, groups by group or member name; no match shows Bluesky's empty state "No
   matches for '...'".
-- **Filters open a form sheet (§ 26.8) with Cancel + Apply; changes apply only on Apply,** and drive both the
-  overview cards and the list. Filters and search combine. Friends: "Include groups" (default from the
+- **Filters open a form sheet (§ 26.8) with Cancel + Apply; changes apply only on Apply,** and drive the list
+  (not the Overview on Home, which has its own scope, owner 176). Filters and search combine. Friends: "Include groups" (default from the
   `includeGroupsDefault` preference, on), currency (All / each present), show (All / Owes you / You owe /
   Settled), sort (Amount / Name / Recent, default from `peopleSort`). Groups: type (Trip / Home / Couple /
   Other), status (Active / Inactive / All), show (Shown / Hidden / All), currency, show (All / You are owed / You owe / Settled), sort (Recent
@@ -2411,12 +2545,12 @@ built yet.
   1300 px. Content fills the space between the two columns.
 - **"Recent transactions":** the 5 newest expenses and repayments involving me: category tile, title, my net
   chip (lent / borrowed, from domain `personNet`); a row opens the expense; "See all" -> Activity.
-- **Recent transactions also live in the page body** (owner 97; F-1415, queued): Home gets a "Recent
-  transactions" section with the newest expenses and repayments across everything (all friends, all groups);
-  a Group page gets the same section scoped to that group only. Same rows and "See all" as the right column
-  (Home -> Activity; Group -> the group's Expenses tab). On desktop, where the right column already shows them,
-  the body section is still shown on Group pages (group-scoped) and on Home follows the preference. Count,
-  visibility and position are preferences.
+- **Recent transactions also live in the page body** (owner 97; F-1415): Home has a "Recent transactions"
+  section with the newest 5 expenses and repayments across everything (all friends, all groups) [Built, F-256];
+  a Group page gets the same section scoped to that group only (queued). Rows: category tile (a banknote for a
+  payment), title, date, my part as a +/- chip; "See all" -> Activity (Group -> the group's Expenses tab). The
+  right column is not shown on Home (owner 153), so nothing repeats there; other pages keep it. Count,
+  visibility and position as preferences are queued with the Group section.
 - **"Recently active groups":** the 5 groups with the newest change (an expense or repayment added, edited
   or deleted in it, or the group itself edited), by change time, not expense date; balance chips; "See all" ->
   Groups. The Groups list "Recent activity" sort uses the same rule.
@@ -2884,6 +3018,8 @@ Every owner decision, in the order it was made (all 2026-10-26). "Replaced" name
 | 187 | Assistant ruling after the F-1210 review | After one reopen only a group admin accepts or rejects (outside a group the adder or payer still answers and a second reopen is refused); one-tap "Accept and apply" only when the fix keeps the record's split mode (an amount fix on an itemised or exact split and a share fix on anything but an exact split are "Edit it" only, with the reason shown), and the panel states what the edit will change | § 26.20 | Admin-only closing after the first reopen without saying who answers it; one-tap fixes that converted a split to exact amounts |
 | 188 | "on desktop there is a lot of space we dont need ... there in sidebar" | Desktop sidebar fits its content (~200 px), footer links directly under Add expense, nothing pinned to the bottom | § 26.5 | Bluesky standard width; footer pinned at the bottom of the window |
 | 189 | "did it fix the performace everywhere, not just the taps"; "it should be everywhere" | Every screen and interaction meets the speed budgets, proven by a perf sweep over every route and interaction in WebKit and Chrome 6x on a quiet machine; misses fixed before the wave closes | § 26.10 | Budgets checked on a few flows and on reported problems |
+| 190 | "all the + buttons or anything should be there"; "the only diff should be whether back button is visible or not" (a main screen opened from a link) | Pushed copies keep the FAB and every header action; FAB also on Person and Group pages (pre-selecting); hidden only on Settings, Profile, detail, forms, sheets, keyboard, onboarding | § 26.6, § 26.3 | FAB only where the header had no Back; pushed copies had no FAB |
+| 191 | "make sure everything we learn from performace captures in architecture"; "that file should be self learning" | Every perf finding becomes a § 17.1 rule plus a § 23 lesson in the same change; `scripts/lessonsGate.ts` in `pnpm check` fails a branch that changes perf specs, the renders baseline or measured numbers without touching § 17/§ 23; briefs, reviews and the prompt hook repeat it | § 0 rule 11, § 17.1 | Lessons recorded when remembered (§ 0 rule 10) |
 
 New decisions follow § 0 rule 9: rewrite the rule in its topic so only the current truth remains, then add a
 row here.

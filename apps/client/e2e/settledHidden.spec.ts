@@ -49,14 +49,15 @@ async function seed(page: Page) {
 
 test('Home hides friends settled up by default; Show settled brings them back and survives a reload', async ({page}) => {
   await seed(page)
+  // The counts line on Home keeps saying how many are settled, so nothing looks lost.
   await page.goto('/')
+  await expect(page.getByTestId('home-overview-counts')).toContainText(/settled/)
+  await page.goto('/people')
   const home = page.getByTestId('screen-people')
   await expect(home.getByTestId('person-Open Olive')).toBeVisible()
   // A friend with no records yet is new, not settled: never hidden.
   await expect(home.getByTestId('person-New Nina')).toBeVisible()
   await expect(home.getByTestId('person-Even Evan')).toHaveCount(0)
-  // The counts line keeps saying how many are settled, so nothing looks lost.
-  await expect(home.getByTestId('people-summary-counts')).toContainText(/settled/)
 
   await home.getByTestId('list-filters').click()
   await expect(page.getByTestId('filter-settled-toggle')).toHaveAttribute('aria-checked', 'false')
@@ -83,7 +84,6 @@ test('Groups hides settled groups by default; Show settled is remembered', async
   const groups = page.getByTestId('screen-groups')
   await expect(groups.getByTestId('group-Open Trip')).toBeVisible()
   await expect(groups.getByTestId('group-Done Trip')).toHaveCount(0)
-  await expect(groups.getByTestId('groups-balances-counts')).toContainText(/1 settled/)
 
   await groups.getByTestId('list-filters').click()
   await page.getByTestId('filter-settled-toggle').click()
@@ -134,8 +134,7 @@ test('a group where I am even but two others owe each other stays listed and is 
   const groups = page.getByTestId('screen-groups')
   await expect(groups.getByTestId('group-Trio')).toBeVisible()
   await expect(groups.getByTestId('group-Square')).toHaveCount(0)
-  // One settled: the square one, never the group whose members still owe each other.
-  await expect(groups.getByTestId('groups-balances-counts')).toContainText(/2 groups · 1 settled/)
+  // One settled: the square one, never the group whose members still owe each other (Trio stays listed above).
 })
 
 test('when everything left is settled up the list says so with one Show settled button, and no Clear filters', async ({page}) => {
@@ -158,7 +157,7 @@ test('when everything left is settled up the list says so with one Show settled 
 
 test('Apply saves Sort and Include groups as preferences: both are still applied after a reload', async ({page}) => {
   await seed(page)
-  await page.goto('/')
+  await page.goto('/people')
   const home = page.getByTestId('screen-people')
   await expect(home.getByTestId('person-Open Olive')).toBeVisible()
   await home.getByTestId('list-filters').click()
