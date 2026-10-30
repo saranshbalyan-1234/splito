@@ -65,6 +65,15 @@ them do yet.
     convention), Claude writes it here in the same turn as a dated § 23 lesson or a rule in its section, updates
     BACKLOG when it implies work, commits and pushes, without waiting for the owner to say "add this". Reason:
     owner, 2026-10-30: "make sure you do it yourself always, whenever you think this should be in the app".
+11. **This file learns by itself, performance first** (owner 191). Every performance finding (a measurement that
+    missed or surprised, a root cause, an approach tried and rejected, a review finding, a test-method lesson)
+    becomes, in the same change, a rule in § 17 "Performance rules learned" (what to do, why, the numbers) and a
+    dated § 23 lesson; a rule that a later finding contradicts is rewritten, never left beside it. Enforcement,
+    so it does not depend on memory: `pnpm check` runs `scripts/lessonsGate.ts`, which fails a branch that
+    changes perf specs, the renders baseline or measured numbers in `docs/COMPLETION_MATRIX.md` without also
+    changing § 17 or § 23 here; every builder brief says to record lessons; every Opus review lists findings
+    that should become rules; the repo's `UserPromptSubmit` hook repeats this. Reason: owner, 2026-10-30: "make
+    sure everything we learn from performance captures in architecture"; "that file should be self learning".
 
 ---
 
@@ -1023,6 +1032,44 @@ are written; nothing records them automatically (A-037).
 - **Dev-only tools never ship:** the release script refuses to build with any `EXPO_PUBLIC_` debug,
   profiler or override variable set.
 
+
+### 17.1 Performance rules learned (self-updating, owner 191)
+
+Each rule came from a measurement; the dated story is in § 23. Newest first within each group.
+
+- **Measure on the slowest target, on a quiet machine.** Desktop Chrome at 1x hid a 600 ms tab switch that an
+  iPhone felt as 2 s; measure in WebKit (iPhone simulator Safari or Playwright WebKit) and Chrome at 6x CPU, and
+  only at machine load under 10 (at load 25-130 the same test read 2-5x slower and timing tests failed). Name
+  the pair you measured: Groups -> Home was 54 ms while Analytics -> Home was 5.9 s.
+- **The cost of a switch is often the screen you leave, not the one you open.** Popping a list screen ran a
+  Reanimated exit animation per row (a forced layout each), 617 ms at 1x and 5.9 s at 6x. Leaving screens must
+  not run row exit animations; main tabs stay mounted (parked) instead of being torn down (owner 166).
+- **Freezing tricks that break WebKit or Reanimated are out.** `react-freeze` / `freezeOnBlur` on web runs
+  class `componentWillUnmount` and brought the exit animations back (Analytics revisit 500 ms);
+  `content-visibility: hidden` on kept screens was fast in Chrome and showed a blank page in Safari.
+- **Feedback first, work a frame later.** The tab highlight paints in the press-in commit and the page switches
+  a frame later; the bar acts on press-in, not on click (which came ~45 ms after pointerdown, plus Safari's
+  double-tap wait without `touch-action: manipulation`).
+- **Open first, render after, on the real end of the motion.** Heavy bodies mount when the sheet, drawer, popup
+  or screen has finished moving (OpenedContext), not after two frames: before, the drawer menu mounted while the
+  panel was still 310 px off screen. Every opened signal has a timer fallback, so content never waits forever.
+- **A parked or cached screen never reuses a stand-in render.** The screen cache's placeholder (`<View />`)
+  must not be stored as the live descriptor, or a revived tab comes back blank for good.
+- **Hot write paths read nothing they can prove empty.** One indexed dispute read per money write cost ~40 % of
+  the demo seed (about 1,500 creations); a created record cannot have a dispute, so creations skip it.
+- **Growing a window keeps what it read.** A narrowed Activity list that rebuilt from zero five pages at a time
+  read the whole history (10,000 expenses: 20 rebuilds, 23.6 s, then 72 ms per new expense); windows grow
+  incrementally, automatic searching is bounded (about 10 pages, then "Look further back").
+- **Membership checks use a Set.** `read.includes(id)` per event made Mark all read and every rebuild
+  O(events x read); a persisted list of ids is read into a Set once.
+- **Search stays under 50 ms at 10,000 expenses** (`search.test.ts`); the slowest query was `> 1000` (amount
+  range), so amount scans need an index or a bound before the data grows.
+- **The renders baseline is a median, taken after the data has loaded.** Recording the highest of three noisy
+  runs (tabs updates 1,916-3,440) let a doubling pass; the gate waits for an explicit "demo loaded" signal
+  before a phase and records the median of three.
+- **Guards match only what they guard.** A build check that matched `demo-large-` in the start-up bundle failed
+  every Render build silently (§ 23); the Render deploy is checked after every merge, and "no new deploy" counts
+  as a failure.
 ---
 
 ## 18. Accessibility
@@ -2832,6 +2879,7 @@ Every owner decision, in the order it was made (all 2026-10-26). "Replaced" name
 | 188 | "on desktop there is a lot of space we dont need ... there in sidebar" | Desktop sidebar fits its content (~200 px), footer links directly under Add expense, nothing pinned to the bottom | § 26.5 | Bluesky standard width; footer pinned at the bottom of the window |
 | 189 | "did it fix the performace everywhere, not just the taps"; "it should be everywhere" | Every screen and interaction meets the speed budgets, proven by a perf sweep over every route and interaction in WebKit and Chrome 6x on a quiet machine; misses fixed before the wave closes | § 26.10 | Budgets checked on a few flows and on reported problems |
 | 190 | "all the + buttons or anything should be there"; "the only diff should be whether back button is visible or not" (a main screen opened from a link) | Pushed copies keep the FAB and every header action; FAB also on Person and Group pages (pre-selecting); hidden only on Settings, Profile, detail, forms, sheets, keyboard, onboarding | § 26.6, § 26.3 | FAB only where the header had no Back; pushed copies had no FAB |
+| 191 | "make sure everything we learn from performace captures in architecture"; "that file should be self learning" | Every perf finding becomes a § 17.1 rule plus a § 23 lesson in the same change; `scripts/lessonsGate.ts` in `pnpm check` fails a branch that changes perf specs, the renders baseline or measured numbers without touching § 17/§ 23; briefs, reviews and the prompt hook repeat it | § 0 rule 11, § 17.1 | Lessons recorded when remembered (§ 0 rule 10) |
 
 New decisions follow § 0 rule 9: rewrite the rule in its topic so only the current truth remains, then add a
 row here.
