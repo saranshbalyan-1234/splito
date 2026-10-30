@@ -30,8 +30,10 @@ import {type Entity, type EntityInput, type EntityType, type HistoryRow, type Ou
  * `history.binDays` preference is gone.
  * 5: the `disputes` store (disputes and holds, F-1210) and the `disputed_balances` / `disputed_pairs` projections
  * (what part of each balance sits on a disputed or held record, kept in the balance transaction).
+ * 6: the `group_requests` store (group requests and join requests, F-269); a group's `joinPolicy` lives in its data
+ * (absent reads as 'approve'), so no group column changes.
  */
-export const SCHEMA_VERSION = 5
+export const SCHEMA_VERSION = 6
 
 export type Scalar = string | number
 export type Key = Scalar[]
@@ -212,6 +214,19 @@ export const STORES = {
       bySyncStatus: ix('syncStatus', 'id'),
     },
   },
+  /*
+   * Group requests (F-269): "X added you to G", "I added P to G", "S opened G's link" and "I asked to join G".
+   * `byGroup` finds a group's pending ones (its Members list, the admins' approvals); `byStatus` every pending one.
+   */
+  group_requests: {
+    key: ['id'],
+    columns: {...ENTITY_COLUMNS, status: 'text', direction: 'text', kind: 'text', groupId: 'text'},
+    indexes: {
+      byStatus: ix('status', 'updatedAt', 'id'),
+      byGroup: ix('groupId', 'status', 'id'),
+      bySyncStatus: ix('syncStatus', 'id'),
+    },
+  },
   invite_links: {
     key: ['id'],
     columns: {...ENTITY_COLUMNS, groupId: 'text', revoked: 'int'},
@@ -358,6 +373,7 @@ export const ENTITY_STORE = {
   preference: 'preferences',
   reminder: 'reminders',
   dispute: 'disputes',
+  groupRequest: 'group_requests',
 } as const satisfies Record<EntityType, StoreName>
 
 /** The index names of one entity type's store. */
@@ -428,6 +444,10 @@ const EXTRA: Record<EntityType, (data: unknown) => Row> = {
   friendRequest: data => {
     const d = data as {status?: string; direction?: string} | null
     return {status: d?.status ?? '', direction: d?.direction ?? ''}
+  },
+  groupRequest: data => {
+    const d = data as {status?: string; direction?: string; kind?: string; groupId?: string} | null
+    return {status: d?.status ?? '', direction: d?.direction ?? '', kind: d?.kind ?? '', groupId: d?.groupId ?? ''}
   },
   inviteLink: data => {
     const d = data as {groupId?: string | null; revoked?: boolean} | null

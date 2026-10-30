@@ -1,6 +1,7 @@
 import {type Comment} from './comments'
 import {type Dispute, disputeEventKind} from './disputes'
 import {type FriendRequest} from './friends'
+import {type GroupRequest} from './groupJoins'
 import {displayPerson, type Expense, type Group, isGroupInactive, type Person, type Tombstone, type Repayment, type WriteOff} from './mutations'
 import {type Reminder} from './reminders'
 import {type Key} from './schema'
@@ -48,6 +49,13 @@ export type ActivityEvent = Base &
         data: FriendRequest
         prev?: FriendRequest
       }
+    | {
+        entityType: 'groupRequest'
+        /** invited: someone added me (Join / Decline); sent: I added someone; joinRequested: someone opened my group's link (Approve / Decline); joinSent: I asked to join. */
+        kind: 'groupRequest.invited' | 'groupRequest.sent' | 'groupRequest.joinRequested' | 'groupRequest.joinSent' | 'groupRequest.accepted'
+        data: GroupRequest
+        prev?: GroupRequest
+      }
     | {entityType: 'reminder'; kind: 'reminder.nudged' | 'reminder.set'; data: Reminder; prev?: Reminder}
     | {entityType: 'comment'; kind: 'comment.added'; data: Comment; prev?: Comment}
     | {entityType: 'dispute'; kind: DisputeActivityKind; data: Dispute; prev?: Dispute}
@@ -55,7 +63,7 @@ export type ActivityEvent = Base &
 
 export type ActivityKind = ActivityEvent['kind']
 
-const FEED_TYPES = ['person', 'group', 'expense', 'repayment', 'writeoff', 'friendRequest', 'reminder', 'comment', 'dispute'] as const satisfies EntityType[]
+const FEED_TYPES = ['person', 'group', 'expense', 'repayment', 'writeoff', 'friendRequest', 'groupRequest', 'reminder', 'comment', 'dispute'] as const satisfies EntityType[]
 
 /** What a history row means, given the version before it. Undefined rows stay out of the feed. */
 function kindOf(row: HistoryRow, prev: HistoryRow | undefined): ActivityKind | undefined {
@@ -93,6 +101,15 @@ function kindOf(row: HistoryRow, prev: HistoryRow | undefined): ActivityKind | u
       if (!prev) return r.direction === 'incoming' ? 'friendRequest.received' : 'friendRequest.sent'
       // Resends, cancels and declines are housekeeping; only the moment you become friends is news.
       return r.status === 'accepted' && (prev.data as FriendRequest).status !== 'accepted' ? 'friendRequest.accepted' : undefined
+    }
+    case 'groupRequest': {
+      const r = row.data as GroupRequest
+      if (!prev) {
+        if (r.kind === 'invite') return r.direction === 'incoming' ? 'groupRequest.invited' : 'groupRequest.sent'
+        return r.direction === 'incoming' ? 'groupRequest.joinRequested' : 'groupRequest.joinSent'
+      }
+      // Cancels and declines are housekeeping; only someone getting in is news.
+      return r.status === 'accepted' && (prev.data as GroupRequest).status !== 'accepted' ? 'groupRequest.accepted' : undefined
     }
     case 'reminder':
       // A reminder shows once, when it is shared or set; moving or cancelling it is housekeeping.
@@ -304,7 +321,7 @@ export function activityTracker(store: Store, want: () => number = () => ACTIVIT
     const aboutOthers = new Set(list.flatMap(e => (e.entityType === 'dispute' || e.entityType === 'comment' ? [keyOf(e.data.targetType, e.data.targetId)] : [])))
     const wanted = new Map<EntityType, Set<string>>()
     for (const {type, id} of subjects) {
-      if (type !== 'expense' && type !== 'friendRequest' && !aboutOthers.has(keyOf(type, id))) continue
+      if (type !== 'expense' && type !== 'friendRequest' && type !== 'groupRequest' && !aboutOthers.has(keyOf(type, id))) continue
       if (known.has(keyOf(type, id))) continue
       const ids = wanted.get(type) ?? new Set<string>()
       ids.add(id)
@@ -320,6 +337,7 @@ export function activityTracker(store: Store, want: () => number = () => ACTIVIT
       repayment: named('repayment'),
       writeoff: named('writeoff'),
       friendRequest: named('friendRequest').map(e => displayPerson(e as Entity<FriendRequest>)),
+      groupRequest: named('groupRequest'),
       reminder: [],
       comment: [],
       dispute: [],
