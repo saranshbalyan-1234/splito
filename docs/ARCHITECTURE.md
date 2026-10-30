@@ -1702,7 +1702,8 @@ labelled sidebar); **wide** = web 1300 px and up (Bluesky `gtTablet`, right colu
 ### 26.3 Shell and navigation
 
 - **There is no Home tab; the Overview is the top of Analytics** (owner 198, replaces the Home tab of 153 below):
-  the tabs are **People, Groups, Analytics, Activity** (plus Ask Splito and Settings in the shared list). The
+  the tabs are **People, Groups, Analytics, Activity** (plus Settings in the shared list; Ask Splito is not a tab or
+  a nav item, owner 200). The
   Overview (per-currency balance cards with All / Groups / Direct, owners 113/114/120/161/176) is the first section of
   Analytics, above its filter row, labelled as balances right now (it ignores the period and currency filters
   below it); Recent transactions is Activity (Type = Expenses and Payments), and recently active people and groups
@@ -1773,12 +1774,12 @@ labelled sidebar); **wide** = web 1300 px and up (Bluesky `gtTablet`, right colu
   left of add people on the header, which expands on click"; "this search should open a drawer instead which
   would support ai as well".
 - **Settings > Navigation lets the user choose the phone bottom bar from every sidebar item.** All items of the
-  shared list (Home, People, Groups, Analytics, Ask Splito, Activity, Settings) are offered, each with a toggle
+  shared list (People, Groups, Analytics, Activity, Settings; owners 198, 200) are offered, each with a toggle
   and a drag handle (Bluesky's reorderable list): what is on and its order is the bottom bar, with **any number of
-  tabs** (from Home alone up to every item; Home cannot be turned off). Tabs share the bar width equally; with
+  tabs** (from one item up to every item; the start tab cannot be turned off). Tabs share the bar width equally; with
   more than 5 the labels hide and icons stay at Bluesky size with their badges. Items not in the bar stay in the
-  drawer. Default bar: Home, People, Groups, Analytics, Activity. "Ask Splito" placed in the bar opens the Search & Ask drawer in Ask mode instead of switching tab. **On rail and desktop every item always shows** (owner 155, replaces 127's "off items under More" on wide
-  screens): the sidebar and rail list all items (Home, People, Groups, Analytics, Ask Splito, Activity, Settings),
+  drawer. Default bar: People, Groups, Analytics, Activity. **On rail and desktop every item always shows** (owner 155, replaces 127's "off items under More" on wide
+  screens): the sidebar and rail list all items (People, Groups, Analytics, Activity, Settings),
   in the order chosen in Settings > Navigation, with no "More" item; the on/off choice shapes only the phone bottom
   bar (off items stay in the phone drawer).
   "Reset" restores the default. Stored in the existing `tabs` preference. *Why:* "all of the sidebar options to
@@ -2787,10 +2788,10 @@ add anyway (only for you)"; "also i should be able to select from contacts". *Wh
 *Why:* "add one ai chart option, think about the placement" (read as AI chat; answers include charts).
 *Where:* `components/SearchAsk/`, `lib/ask/`, backend AI endpoint (backend batch).
 
-- **Ask Splito lives inside the Search & Ask drawer (§ 26.3)**, reached on every platform from the header
-  search icon of every top-level page, from the "Ask Splito" item in the shared sidebar / drawer list (between
-  Analytics and Activity; opens the drawer straight in Ask mode, Lucide sparkles icon), and from web "/" or
-  Cmd/Ctrl+K. There is no separate Ask page.
+- **Ask Splito lives inside the Search & Ask drawer (§ 26.3) and is not a tab** (owner 200): it is reached on every
+  platform from the header Search & Ask icon (sparkles) of every top-level page, and from web "/" or Cmd/Ctrl+K.
+  It is never an item in the sidebar, rail, drawer list, bottom bar or Settings > Navigation; a saved tab list
+  naming `ask` is migrated (dropped). There is no separate Ask page. *Why:* "ask splito is not a tab".
 - **The conversation copies Bluesky's DM conversation layout** inside the drawer (message list, composer bar above the keyboard, day
   separators). Empty state: suggested question chips ("How much did I spend on food this month?", "Who owes
   me the most?", "Split last night's dinner 3 ways", "Show my Goa trip spending by day").
@@ -3195,6 +3196,7 @@ Every owner decision, in the order it was made (all 2026-10-26). "Replaced" name
 | 197 | "all these invites should show on their respectivr page not on home page, like group and people" | No requests or invites on Home; People shows friend requests and invites sent, Groups shows group requests, join requests and group invites, a group page its own; 5 rows then See all into Activity | § 26.3 | Home Requests section with invites sent (175) |
 | 198 | "move the overview section to analytivcs as well, and then remove home" | No Home tab; the Overview is the first section of Analytics (balances now, own All/Groups/Direct); tabs People, Groups, Analytics, Activity; app opens on People; `/` and old Home addresses redirect; Home fallbacks become the start tab | § 26.3, § 26.16 | Home tab with Overview, requests, recent transactions, recent people and groups (153, 175) |
 | 199 | "add sort filter people and group, default sort by last active" | Sort is its own button beside Filters on People and Groups: Last active (default), Name, Amount, Newest; remembered per list and in the URL | § 26.12 | Sort inside the Filters sheet; People defaulted to Amount |
+| 200 | "ask splito is not a tab" | Ask Splito is reached only from the header Search & Ask icon and "/" / Cmd+K; never a sidebar, drawer, bottom-bar or Settings > Navigation item; saved `ask` tab migrated away | § 26.19, § 26.3 | "Ask Splito" item in the shared nav list (57, 155) |
 
 New decisions follow § 0 rule 9: rewrite the rule in its topic so only the current truth remains, then add a
 row here.

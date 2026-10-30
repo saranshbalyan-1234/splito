@@ -696,6 +696,7 @@ The Home tab goes; its Overview becomes the first section of Analytics; the app 
 - **Acceptance**
   1. Tabs People, Groups, Analytics, Activity (+ Ask, Settings); no Home route or screen; `/` opens the start tab; `/?overview=` -> `/analytics?overview=`; saved `tabs`/`startTab` naming home migrate (tests).
   2. Analytics shows the Overview cards (All / Groups / Direct, owner 161 layout) above its filter row, labelled as balances now, ignoring period/currency; a card opens Analytics in that currency.
+  4. Owner 200: Ask Splito leaves the shared nav list (sidebar, rail, drawer, bottom bar, Settings > Navigation, `tab-ask`); reached from the header Search & Ask icon and "/" / Cmd+K only; saved `ask` in `tabs` migrates away.
   3. Logo, Back parents (owner 184), sign-in return and every Home fallback go to the start tab; Home's "See all" links and Recent sections are gone (Activity, People, Groups cover them); specs updated; e2e at 390 and 1440.
 
 ### F-272 Sort control on People and Groups `spec: owner § 26.12 (decision 199)`
