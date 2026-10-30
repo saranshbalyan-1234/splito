@@ -29,6 +29,7 @@ import {
 } from '../src/mutations'
 import {deleteFeedback, loadFeedback, saveFeedback} from '../src/feedback'
 import {setPref} from '../src/preferences'
+import {raiseDispute} from '../src/disputes'
 import {scheduleReminder} from '../src/reminders'
 import {createInviteLink, sendFriendRequest} from '../src/friends'
 import {SCHEMA_VERSION, STORES} from '../src/schema'
@@ -76,6 +77,8 @@ async function smallSet(): Promise<StoreDump> {
 }
 
 let large: StoreDump
+/** The same with its disputes: a v1 file can hold any entity type, so the v1 upgrade must rebuild the disputed sums too. */
+let largeWithDisputes: StoreDump
 /** The balance sums the mutations kept while the large set was written: what a migration must rebuild exactly. */
 let largeBalances: Awaited<ReturnType<Store['balances']>>
 const sorted = (rows: Awaited<ReturnType<Store['balances']>>) => [...rows].sort((x, y) => (encode(x) < encode(y) ? -1 : 1))
@@ -94,13 +97,15 @@ beforeAll(async () => {
   // The ops that read the store first (removing a friend, a group going, a member leaving) cannot join a batch.
   for (const op of ops.filter(isDeferredOp)) await applyDemoOp(s, ctx, op)
   const full = await s.dump()
-  // The reminders store is new in v4: the v1 to v3 fixtures cannot hold reminders.
-  large = {
+  // The reminders store is new in v4 and the disputes store in v5: the older fixtures cannot hold them.
+  const without = (types: string[]): StoreDump => ({
     ...full,
-    entities: full.entities.filter(e => e.type !== 'reminder'),
-    history: full.history.filter(h => h.entityType !== 'reminder'),
-    outbox: full.outbox.filter(o => o.entityType !== 'reminder'),
-  }
+    entities: full.entities.filter(e => !types.includes(e.type)),
+    history: full.history.filter(h => !types.includes(h.entityType)),
+    outbox: full.outbox.filter(o => !types.includes(o.entityType)),
+  })
+  large = without(['reminder', 'dispute'])
+  largeWithDisputes = without(['reminder'])
   largeBalances = await s.balances()
   await s.close()
 }, 120_000)
@@ -257,12 +262,14 @@ describe.each(Object.keys(open))('%s v1 -> current', engine => {
   })
 
   test('the large demo set: every row, history entry, op and balance identical', async () => {
-    const v1 = await open[engine]!('large', large)
+    const v1 = await open[engine]!('large', largeWithDisputes)
     const t0 = performance.now()
     const store = await v1.store()
     const ms = performance.now() - t0
     console.log(`${engine} v1 -> v2 migration of ${large.entities.length} rows, ${large.history.length} history rows, ${large.outbox.length} ops: ${ms.toFixed(0)} ms`)
-    await expectSameAsV1(store, large)
+    await expectSameAsV1(store, largeWithDisputes)
+    expect((await store.getAll('dispute')).length).toBeGreaterThan(8)
+    expect((await store.disputedBalances()).length).toBeGreaterThan(0)
     // The sums the migration built equal the ones the mutations kept while the source set was written.
     expect(sorted(await store.balances())).toEqual(sorted(largeBalances))
     const people = large.entities.filter(e => e.type === 'person' && !e.deleted).map(e => e.id)
@@ -302,18 +309,19 @@ describe.each(Object.keys(open))('%s v1 -> current', engine => {
 /* -------------------------------------------------------------------------- */
 
 /** Rewrites a current (v3) IndexedDB database as the v2 layout that shipped before: no aggregates, no search terms, no people activity. */
-async function downgradeIdb(from: IDBFactory, name: string, version: 2 | 3 = 2): Promise<IDBFactory> {
+async function downgradeIdb(from: IDBFactory, name: string, version: 2 | 3 | 4 = 2): Promise<IDBFactory> {
   const source = (await wrap(from.open(name))) as IDBPDatabase
   const to = new IDBFactory()
   const req = to.open(name, version)
   // v3 (and v2) had no `reminders`; v2 had neither projections nor the people activity column.
-  const gone = version === 3 ? ['reminders'] : ['aggregates', 'search_terms', 'reminders']
+  const v5 = ['disputes', 'disputed_balances', 'disputed_pairs']
+  const gone = version === 4 ? v5 : version === 3 ? ['reminders', ...v5] : ['aggregates', 'search_terms', 'reminders', ...v5]
   const kept = Object.keys(STORES).filter(n => !gone.includes(n)) as Array<keyof typeof STORES>
   req.onupgradeneeded = () => {
     for (const store of kept) {
       const spec = STORES[store] as {key: readonly string[]; auto?: boolean; indexes: Record<string, {columns: readonly string[]; unique?: boolean}>}
       const os = spec.auto ? req.result.createObjectStore(store, {keyPath: spec.key[0]!, autoIncrement: true}) : req.result.createObjectStore(store, {keyPath: [...spec.key]})
-      for (const [ix, def] of Object.entries(spec.indexes)) if (version === 3 || !(store === 'people' && ix === 'byActivity')) os.createIndex(ix, [...def.columns], {unique: !!def.unique})
+      for (const [ix, def] of Object.entries(spec.indexes)) if (version >= 3 || !(store === 'people' && ix === 'byActivity')) os.createIndex(ix, [...def.columns], {unique: !!def.unique})
     }
   }
   const target = (await wrap(req)) as IDBPDatabase
@@ -334,6 +342,7 @@ async function downgradeIdb(from: IDBFactory, name: string, version: 2 | 3 = 2):
 /** The same for SQLite: drop what v3 added and stamp version 2. */
 function downgradeSql(path: string) {
   const db = new Database(path)
+  for (const t of ['disputes', 'disputed_balances', 'disputed_pairs']) db.run(`DROP TABLE ${t}`)
   db.run('DROP TABLE reminders')
   db.run('DROP TABLE aggregates')
   db.run('DROP TABLE search_terms')
@@ -397,6 +406,7 @@ describe.each(['IndexedDB', 'SQLite'])('%s v2 -> v3', engine => {
 /** The same for SQLite: drop the v4 table and stamp version 3. */
 function downgradeSqlToV3(path: string) {
   const db = new Database(path)
+  for (const t of ['disputes', 'disputed_balances', 'disputed_pairs']) db.run(`DROP TABLE ${t}`)
   db.run('DROP TABLE reminders')
   db.run("UPDATE meta SET value = '3' WHERE key = 'schemaVersion'")
   db.run('PRAGMA user_version = 3')
@@ -457,6 +467,75 @@ describe.each(['IndexedDB', 'SQLite'])('%s v3 -> v4 (the reminders store)', engi
     // Idempotent: a second open runs no step and keeps the reminder.
     const again = await v3.reopen()
     expect((await again.getAll('reminder')).map(e => e.id)).toEqual([r.id])
+    await again.close()
+  }, 120_000)
+})
+
+/* -------------------------------------------------------------------------- */
+/* v4 -> v5                                                                    */
+/* -------------------------------------------------------------------------- */
+
+/** The same for SQLite: drop the v5 tables and stamp version 4. */
+function downgradeSqlToV4(path: string) {
+  const db = new Database(path)
+  for (const t of ['disputes', 'disputed_balances', 'disputed_pairs']) db.run(`DROP TABLE ${t}`)
+  db.run("UPDATE meta SET value = '4' WHERE key = 'schemaVersion'")
+  db.run('PRAGMA user_version = 4')
+  db.close()
+}
+
+describe.each(['IndexedDB', 'SQLite'])('%s v4 -> v5 (the disputes store)', engine => {
+  let smallDump: StoreDump
+  beforeAll(async () => {
+    smallDump = await smallSet()
+  })
+  const fixtures: Array<[string, () => StoreDump]> = [['a small set', () => smallDump], ['the large demo set', () => large]]
+
+  async function v4Of(set: StoreDump) {
+    const handle = await open[engine]!('v4', set)
+    const current = await handle.store()
+    const before = await current.dump()
+    const balances = await current.balances()
+    await current.close()
+    if (engine === 'IndexedDB') {
+      const factory = (handle as unknown as {factory: IDBFactory}).factory
+      const v4 = await downgradeIdb(factory, 'v4', 4)
+      return {before, balances, reopen: () => openIdbStore('v4', v4), version: async () => { const db = (await wrap(v4.open('v4'))) as IDBPDatabase; const v = db.version; db.close(); return v }}
+    }
+    const path = (handle as unknown as {path: string}).path
+    downgradeSqlToV4(path)
+    return {
+      before, balances, reopen: () => openSqlStore(bunExecutor(path)),
+      version: async () => { const db = new Database(path); const v = (db.query('PRAGMA user_version').get() as {user_version: number}).user_version; db.close(); return v },
+    }
+  }
+
+  test.each(fixtures)('%s: every row, history entry, op and balance survives; the disputes store starts empty and works', async (_name, dump) => {
+    const v4 = await v4Of(dump())
+    expect(await v4.version()).toBe(4)
+    const store = await v4.reopen()
+    expect(await store.dump()).toEqual(v4.before)
+    expect(sorted(await store.balances())).toEqual(sorted(v4.balances))
+    await expectDerivedTablesMatch(store)
+    expect(await store.getAll('dispute')).toEqual([])
+    expect(await store.disputedBalances()).toEqual([])
+    expect(await store.disputedPairs('nobody')).toEqual([])
+    expect((await store.syncCounts()).disputes).toEqual({local: 0, pending: 0, syncing: 0, synced: 0, failed: 0})
+    // A dispute lands in the new store, marks its record's balances as disputed and moves nothing else.
+    const me = v4.before.entities.find(e => e.type === 'person' && (e.data as {isMe: boolean}).isMe)!.id
+    const expense = v4.before.entities.find(e => e.type === 'expense' && !e.deleted && Object.keys((e.data as {shares: object}).shares).includes(me))!
+    const ctx = {...makeCtx(), actor: me, newId: () => 'later-' + Math.random().toString(36).slice(2)}
+    const d = await raiseDispute(store, ctx, {targetType: 'expense', targetId: expense.id, reason: 'wrong_amount', note: 'check'})
+    expect((await store.getAll('dispute')).map(e => e.id)).toEqual([d.id])
+    expect((await store.disputedBalances({personId: me})).length).toBeGreaterThan(0)
+    expect(sorted(await store.balances())).toEqual(sorted(v4.balances))
+    await expectDerivedTablesMatch(store)
+    await store.close()
+    expect(await v4.version()).toBe(SCHEMA_VERSION)
+    // Idempotent: a second open runs no step and keeps the dispute and its sums.
+    const again = await v4.reopen()
+    expect((await again.getAll('dispute')).map(e => e.id)).toEqual([d.id])
+    expect((await again.disputedBalances({personId: me})).length).toBeGreaterThan(0)
     await again.close()
   }, 120_000)
 })

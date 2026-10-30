@@ -13,6 +13,7 @@ import {
 } from '../src/backup'
 import {encode} from '../src/codec'
 import {createInviteLink, revokeInviteLink, sendFriendRequest} from '../src/friends'
+import {raiseDispute} from '../src/disputes'
 import {saveFeedback} from '../src/feedback'
 import {createExpense, createGroup, type ExpenseDraft, createPerson, createRepayment, createWriteOffs, deleteExpense, ensureMe, updateExpense} from '../src/mutations'
 import {setPref} from '../src/preferences'
@@ -119,6 +120,10 @@ const WRITERS = {
   },
   preference: async () => {
     await setPref(src, ctx, 'defaultCurrency', 'AED')
+  },
+  dispute: async () => {
+    const [e] = await src.getAll('expense')
+    await raiseDispute(src, ctx, {targetType: 'expense', targetId: e!.id, reason: 'wrong_amount', note: 'too high', proposedFix: {kind: 'amount', amount: 900n}})
   },
   reminder: async () => {
     const asha = (await src.getAll('person')).find(p => p.id !== 'me')!

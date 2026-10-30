@@ -18,7 +18,7 @@ import {atoms as a, useTheme} from '#/alf'
 import {useTaxClasses} from '#/components/split/charges/hooks'
 import {SectionLabel} from '#/components/split/shared'
 import {Text} from '#/components/Typography'
-import {ItemRow} from './ItemRow'
+import {ItemRow, type ItemDispute} from './ItemRow'
 
 const tabular = {fontVariant: ['tabular-nums' as const]}
 
@@ -34,11 +34,13 @@ export function ChargedBreakdown({
   fmt,
   name,
   avatarName,
+  dispute,
 }: {
   split: Extract<SplitInput, {mode: 'items'}>
   fmt: (v: bigint) => string
   name: (id: string) => string
   avatarName: (id: string) => string
+  dispute?: ItemDispute
 }) {
   const t = useTheme()
   const {t: l} = useLingui()
@@ -135,6 +137,7 @@ export function ChargedBreakdown({
                   name={name}
                   avatarName={avatarName}
                   isFirst={false}
+                  dispute={dispute}
                 />
               ))}
             </View>

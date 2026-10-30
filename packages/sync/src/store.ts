@@ -14,6 +14,10 @@ export interface Tx {
   appendHistory(h: HistoryRow): Promise<void>
   /** Queues an op and marks its row `pending` in the same transaction. */
   enqueue(op: OutboxInput): Promise<void>
+  /** Rows of one type through a named index, by cursor (reads inside the transaction see its own writes). */
+  page<T>(type: EntityType, q: PageQuery): Promise<Page<Entity<T>>>
+  /** The stored versions of one entity, oldest first. */
+  history(type: EntityType, id: string): Promise<HistoryRow[]>
 }
 
 /* -------------------------------------------------------------------------- */
@@ -78,6 +82,25 @@ export interface NetBalance {
   amount: bigint
   /** How many live record entries the sum is made of; the row is gone at 0. */
   count: number
+}
+
+/** The part of a net balance that sits on records with an open dispute or hold (F-1210). */
+export interface DisputedBalance {
+  personId: string
+  groupId: string | null
+  currency: string
+  amount: bigint
+  /** How many disputed records the sum is made of. */
+  count: number
+}
+
+/** What `otherId` owes `personId` on disputed records, in one group (null: outside groups) and currency (> 0 they owe). */
+export interface DisputedPair {
+  personId: string
+  otherId: string
+  groupId: string | null
+  currency: string
+  amount: bigint
 }
 
 /** What `otherId` owes `personId` outside groups, in one currency (> 0 they owe; the mirror row is the negative). */
@@ -181,6 +204,10 @@ export interface Store {
   balances(q?: {personId?: string; groupId?: string | null}): Promise<NetBalance[]>
   /** What each other person owes `personId` outside groups, per currency. */
   pairBalances(personId: string): Promise<PairBalance[]>
+  /** The disputed or held part of the net balances, same selection as `balances` (an index read, never a scan of records). */
+  disputedBalances(q?: {personId?: string; groupId?: string | null}): Promise<DisputedBalance[]>
+  /** The disputed or held part of what others owe `personId` (or of what `otherId` owes them), per group and currency. */
+  disputedPairs(personId: string, otherId?: string): Promise<DisputedPair[]>
   /**
    * When each person last saw activity (epoch ms): any change to an expense,
    * payment or write-off they are on, a delete included, newest first. People

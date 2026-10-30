@@ -7,6 +7,7 @@ import {RemindMenuItems} from '#/features/remind/RemindMenuItems'
 import {Link} from '#/view/com/util/Link'
 import {UserAvatar} from '#/view/com/util/UserAvatar'
 import {atoms as a, useTheme} from '#/alf'
+import {DisputedLine} from '#/components/disputes/DisputedLine'
 import {Button, ButtonIcon} from '#/components/Button'
 import {ChevronRight_Stroke2_Corner0_Rounded as ChevronIcon} from '#/components/icons/Chevron'
 import {DotGrid3x1_Stroke2_Corner0_Rounded as DotsIcon} from '#/components/icons/DotGrid'
@@ -23,7 +24,7 @@ import {usePressScale} from '#/motion/PressableScale'
 const tabular = {fontVariant: ['tabular-nums' as const]}
 
 /** A currency heading above a group's member balances. */
-export function CurrencyHeader({currency}: {currency: string}) {
+export function CurrencyHeader({currency, disputed}: {currency: string; /** What the disputed or held records in this group move, in this currency (F-1210). */ disputed?: bigint}) {
   const t = useTheme()
   const {i18n} = useLingui()
   return (
@@ -53,6 +54,11 @@ export function CurrencyHeader({currency}: {currency: string}) {
           {currency}
         </Text>
       </View>
+      {disputed ? (
+        <View style={[a.flex_1, a.align_end]}>
+          <DisputedLine testID="group-balances-disputed" amounts={[{currency, amount: disputed}]} />
+        </View>
+      ) : null}
     </View>
   )
 }

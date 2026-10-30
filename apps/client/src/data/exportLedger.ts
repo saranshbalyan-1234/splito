@@ -9,6 +9,7 @@ import {
 import {
   type Entity,
   friendOpenBalances,
+  listOpenDisputes,
   type Expense,
   type Key,
   type Repayment,
@@ -69,3 +70,15 @@ export async function loadStatement(store: Store, me: string, filter: StatementF
 }
 
 const pick = (o: Record<CurrencyCode, bigint>, c: CurrencyCode) => (c in o ? {[c]: o[c]!} : {})
+
+/** The records with an open dispute or hold, by id: `dispute` wins over `hold` (the CSV's dispute column, F-1210). */
+export async function loadDisputeMarks(store: Store): Promise<Map<string, 'dispute' | 'hold'>> {
+  const marks = new Map<string, 'dispute' | 'hold'>()
+  let after: Key | null = null
+  do {
+    const page: Awaited<ReturnType<typeof listOpenDisputes>> = await listOpenDisputes(store, {after})
+    for (const d of page.items) if (marks.get(d.data.targetId) !== 'dispute') marks.set(d.data.targetId, d.data.kind)
+    after = page.next
+  } while (after)
+  return marks
+}

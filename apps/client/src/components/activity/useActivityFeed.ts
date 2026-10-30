@@ -8,6 +8,8 @@ import {
   type FriendRequest,
   type Group,
   type Person,
+  type Repayment,
+  type WriteOff,
 } from '@splito/sync'
 
 import {useTimeZone} from '#/locale/useDates'
@@ -26,6 +28,8 @@ export type ActivitySnapshot = {
   people: Map<string, Entity<Person>>
   groups: Map<string, Entity<Group>>
   expenses: Map<string, Entity<Expense>>
+  /** Payments and write-offs the events name (a dispute row is about one), by id. */
+  transfers: Map<string, Entity<Repayment | WriteOff>>
   /** Friend requests by id, for their current state (a request row shows Accept until answered). */
   requests: Map<string, Entity<FriendRequest>>
 }
@@ -46,6 +50,12 @@ function snapshotOf(state: ActivityState): ActivitySnapshot {
       ),
       expenses: new Map(
         (state.entities.expense as Entity<Expense>[]).map(e => [e.id, e]),
+      ),
+      transfers: new Map(
+        [...state.entities.repayment, ...state.entities.writeoff].map(r => [
+          r.id,
+          r as Entity<Repayment | WriteOff>,
+        ]),
       ),
       requests: new Map(
         (state.entities.friendRequest as Entity<FriendRequest>[]).map(r => [

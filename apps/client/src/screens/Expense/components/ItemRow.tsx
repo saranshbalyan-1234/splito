@@ -1,13 +1,26 @@
 import {View} from 'react-native'
-import {useLingui} from '@lingui/react/macro'
+import {Trans, useLingui} from '@lingui/react/macro'
 import {participantId, participantWeight, type SplitInput} from '@splito/domain'
 
 import {UserAvatar} from '#/view/com/util/UserAvatar'
 import {atoms as a, useTheme} from '#/alf'
+import {Button, ButtonIcon, ButtonText} from '#/components/Button'
+import {DisputeBadge} from '#/components/disputes/DisputeBadge'
+import {RaiseIcon} from '#/components/disputes/icons'
 import {PortionBadge} from '#/components/split/PortionBadge'
 import {Text} from '#/components/Typography'
 
 const tabular = {fontVariant: ['tabular-nums' as const]}
+
+/** What the expense page lets a person do about one item (F-1210): see it is disputed, and dispute their portion. */
+export type ItemDispute = {
+  /** The items with an open dispute, by id. */
+  marked: ReadonlySet<string>
+  /** Me: "Dispute my portion" is offered only on items I am on. */
+  me: string
+  /** Opens the raise sheet for this item; undefined when the record is deleted. */
+  onRaise?: (itemId: string) => void
+}
 
 /** One item of a bill: its price and who had it, each person's part ("Riya x2 - INR 600"). */
 export function ItemRow({
@@ -18,6 +31,7 @@ export function ItemRow({
   name,
   avatarName,
   isFirst = i === 0,
+  dispute,
 }: {
   item: Extract<SplitInput, {mode: 'items'}>['items'][number]
   index: number
@@ -26,9 +40,12 @@ export function ItemRow({
   name: (id: string) => string
   avatarName: (id: string) => string
   isFirst?: boolean
+  dispute?: ItemDispute
 }) {
   const t = useTheme()
   const {t: l} = useLingui()
+  const itemLabel = item.name || l`Item ${i + 1}`
+  const isOnItem = !!dispute && item.participants.some(p => participantId(p) === dispute.me)
   return (
     <View
       testID={`expense-item-${i}`}
@@ -48,6 +65,26 @@ export function ItemRow({
           {fmt(item.amount)}
         </Text>
       </View>
+      {dispute && (dispute.marked.has(item.id) || (dispute.onRaise && isOnItem)) ? (
+        <View style={[a.flex_row, a.align_center, a.gap_sm]}>
+          {dispute.marked.has(item.id) ? <DisputeBadge kind="dispute" testID={`expense-item-${i}-disputed`} /> : null}
+          {dispute.onRaise && isOnItem && !dispute.marked.has(item.id) ? (
+            <Button
+              testID={`item-dispute-${i}`}
+              label={l`Dispute my portion of ${itemLabel}`}
+              size="small"
+              variant="ghost"
+              color="secondary"
+              style={[{marginLeft: -8}]}
+              onPress={() => dispute.onRaise!(item.id)}>
+              <ButtonIcon icon={RaiseIcon} />
+              <ButtonText>
+                <Trans>Dispute my portion</Trans>
+              </ButtonText>
+            </Button>
+          ) : null}
+        </View>
+      ) : null}
       <View style={[a.flex_row, a.flex_wrap, a.gap_xs]}>
         {item.participants.map(p => {
           const id = participantId(p)

@@ -3,6 +3,7 @@ import {Trans, useLingui} from '@lingui/react/macro'
 import {formatAmount, magnitude, type PersonSummary, ZERO} from '@splito/domain'
 
 import {atoms as a, useBreakpoints, useTheme} from '#/alf'
+import {DisputedLine} from '#/components/disputes/DisputedLine'
 import {CircleCheck_Stroke2_Corner0_Rounded as CheckIcon} from '#/components/icons/CircleCheck'
 import * as Skeleton from '#/components/Skeleton'
 import {Text} from '#/components/Typography'
@@ -22,11 +23,14 @@ export function PersonBalances({
   summary,
   groupNames,
   locale,
+  disputed = {},
 }: {
   name: string
   summary: PersonSummary | undefined
   groupNames: Map<string, string>
   locale: string
+  /** The part of each currency's balance on disputed or held records (F-1210). */
+  disputed?: Record<string, bigint>
 }) {
   const t = useTheme()
   const byCurrency = summary?.byCurrency ?? {}
@@ -65,6 +69,7 @@ export function PersonBalances({
           balance={byCurrency[currency]!}
           groupNames={groupNames}
           locale={locale}
+          disputed={disputed[currency] ?? ZERO}
         />
       ))}
     </View>
@@ -80,11 +85,13 @@ function BalanceCard({
   balance,
   groupNames,
   locale,
+  disputed,
 }: {
   currency: string
   balance: PersonSummary['byCurrency'][string]
   groupNames: Map<string, string>
   locale: string
+  disputed: bigint
 }) {
   const t = useTheme()
   const {t: l} = useLingui()
@@ -147,6 +154,7 @@ function BalanceCard({
           style={[a.text_3xl, a.font_bold, a.leading_tight, money.style(total)]}
         />
       </View>
+      <DisputedLine testID="person-disputed" amounts={[{currency, amount: disputed}]} />
       {showParts && (
         <View
           style={[
