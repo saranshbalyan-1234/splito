@@ -364,7 +364,7 @@ export async function openSearch(store: Store, query: string, {today, mark = '.'
   const wordsOfExpense = (e: Entity<Expense>) => {
     const d = e.data
     const group = d.groupId ? groups.get(d.groupId) : undefined
-    const text = [d.title, d.notes, categoryNames.get(d.category) ?? '', group && !group.deleted ? group.data.name : '']
+    const text = [d.title, d.notes, categoryNames.get(d.category) ?? '', group && !group.deleted ? `${group.data.name} ${group.data.location ?? ''}` : '']
     if (d.split.mode === 'items') for (const item of d.split.items) text.push(item.name ?? '')
     for (const id of new Set([...Object.keys(d.payers), ...Object.keys(d.shares)])) {
       const person = people.get(id)

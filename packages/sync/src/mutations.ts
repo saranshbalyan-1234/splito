@@ -58,6 +58,8 @@ export interface Group {
   members: GroupMemberEntry[]
   startDate: LocalDate | null
   endDate: LocalDate | null
+  /** Where a trip is, plain text (owner 182). Absent on groups made before it: reads as null. Kept when the type changes away from Trip. */
+  location?: string | null
   /** Legacy flag from before Active / Inactive (decision 89): it reads as inactive (`isGroupInactive`) and is cleared by "Make active". */
   archived: boolean
   /** Inactive (decision 89): takes no new expenses but can still settle. Absent: active. */
@@ -201,6 +203,11 @@ export function cleanName(name: string) {
   return n
 }
 
+/** A trip's place as saved (owner 182): trimmed, inner whitespace collapsed, null when empty. */
+export function cleanLocation(location: string | null | undefined): string | null {
+  return location?.replace(/\s+/g, ' ').trim() || null
+}
+
 /** A person's name as saved (owner 181): capitalised word by word, never empty. Group names and titles use `cleanName`. */
 export function cleanPersonName(name: string) {
   return cleanName(capitalizeName(name))
@@ -332,17 +339,17 @@ export async function createGroup(
     const joinedAt = ctx.now()
     const {memberIds: _m, ...rest} = input
     const members = ids.map(personId => ({personId, joinedAt, leftAt: null, role: personId === ctx.actor ? ('admin' as const) : ('member' as const)}))
-    const data: Group = {...rest, name: cleanName(input.name), members, archived: false}
+    const data: Group = {...rest, name: cleanName(input.name), location: cleanLocation(input.location), members, archived: false}
     return write(tx, ctx, 'group', ctx.newId(), data, false, 'group.create')
   })
 }
 
-/** Edits a group's name, type, currency and trip dates; members, rules and history stay. */
+/** Edits a group's name, type, currency, trip dates and place (`location` left out: unchanged); members, rules and history stay. */
 export async function updateGroup(
   store: Store,
   ctx: MutationCtx,
   groupId: string,
-  input: Pick<Group, 'name' | 'kind' | 'currency' | 'startDate' | 'endDate'>,
+  input: Pick<Group, 'name' | 'kind' | 'currency' | 'startDate' | 'endDate' | 'location'>,
 ): Promise<Entity<Group>> {
   const name = cleanName(input.name)
   getCurrency(input.currency)
@@ -352,7 +359,8 @@ export async function updateGroup(
   return store.transaction(async tx => {
     const g = await requireLive<Group>(tx, 'group', groupId)
     const {kind, currency, startDate, endDate} = input
-    return write(tx, ctx, 'group', groupId, {...g.data, name, kind, currency, startDate, endDate}, false, 'group.update')
+    const location = input.location === undefined ? (g.data.location ?? null) : cleanLocation(input.location)
+    return write(tx, ctx, 'group', groupId, {...g.data, name, kind, currency, startDate, endDate, location}, false, 'group.update')
   })
 }
 

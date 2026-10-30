@@ -162,6 +162,21 @@ test('updateGroup edits name, type, currency and dates; members and rules stay',
   await expect(updateGroup(s, ctx, 'nope', {name: 'Goa', kind: 'trip', currency: 'INR', startDate: null, endDate: null})).rejects.toThrow('NOT_FOUND')
 })
 
+test('a trip location is trimmed, collapsed, null when empty; update keeps it unless given; history and outbox follow', async () => {
+  const x = await createPerson(s, ctx, {name: 'Riya'})
+  const g = await createGroup(s, ctx, {name: 'Goa', kind: 'trip', currency: 'INR', memberIds: [x.id], startDate: null, endDate: null, location: '  Lisbon \n  &   Sintra '})
+  expect(g.data.location).toBe('Lisbon & Sintra')
+  expect((await createGroup(s, ctx, {name: 'A', kind: 'trip', currency: 'INR', memberIds: [], startDate: null, endDate: null, location: '   '})).data.location).toBeNull()
+  expect((await createGroup(s, ctx, {name: 'B', kind: 'trip', currency: 'INR', memberIds: [], startDate: null, endDate: null})).data.location).toBeNull()
+  const same = {name: 'Goa', kind: 'home', currency: 'INR', startDate: null, endDate: null} as const
+  expect((await updateGroup(s, ctx, g.id, same)).data.location).toBe('Lisbon & Sintra')
+  const u = await updateGroup(s, ctx, g.id, {...same, kind: 'trip', location: ' Bali  & Bangkok '})
+  expect(u.data.location).toBe('Bali & Bangkok')
+  expect((await s.history('group', g.id)).map(h => (h.data as {location: string | null}).location)).toEqual(['Lisbon & Sintra', 'Lisbon & Sintra', 'Bali & Bangkok'])
+  expect((await s.outbox()).filter(o => o.entityId === g.id).map(o => o.opType)).toEqual(['group.create', 'group.update', 'group.update'])
+  expect((await updateGroup(s, ctx, g.id, {...same, location: ''})).data.location).toBeNull()
+})
+
 test('dates outside October 2026 accepted, invalid dates rejected', async () => {
   const x = await createPerson(s, ctx, {name: 'Riya'})
   for (const d of ['2019-03-01', '2031-12-31']) await createExpense(s, ctx, draft(x.id, {date: d}))
