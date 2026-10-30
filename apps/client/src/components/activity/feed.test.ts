@@ -11,6 +11,8 @@ import {
   activityTypeOf,
   isRead,
   markAllRead,
+  markRows,
+  matchesFilter,
   setHidden,
   setRead,
   writeOffParties,
@@ -107,7 +109,7 @@ test('a group scope keeps that group\'s changes, a comment going by its expense'
     {id: 'e2', at: at(26, 8), actor: 'riya', kind: 'expense.created', entityType: 'expense', data: {groupId: 'g2'}},
     {id: 'c1', at: at(26, 7), actor: 'riya', kind: 'comment.added', entityType: 'comment', data: {targetType: 'expense', targetId: 'x1'}},
   ] as unknown as ActivityEvent[]
-  const rows = buildRows(events, EMPTY_FEED_STATE, 'me', {tab: 'all', types: [], group: 'g1'}, 'UTC', id => (id === 'x1' ? 'g1' : undefined)).rows
+  const rows = buildRows(events, EMPTY_FEED_STATE, 'me', {tab: 'all', types: [], group: 'g1'}, 'UTC', (_type, id) => (id === 'x1' ? 'g1' : undefined)).rows
   expect(rows.flatMap(r => (r.type === 'event' ? [r.event.id] : []))).toEqual(['e1', 'c1'])
 })
 
@@ -146,4 +148,36 @@ test('write-off rows name the person the actor called it even with', () => {
   expect(writeOffParties({from: 'me', to: 'bob'}, 'riya')).toEqual({
     kind: 'third',
   })
+})
+
+test('a narrowed "Mark all read" marks only the unread rows it lists, in one pass, and keeps the rest unread', () => {
+  const events = [ev('a', at(26, 9)), ev('b', at(26, 8)), ev('c', at(26, 7)), ev('own', at(26, 6), 'me')]
+  const listed = [events[0]!, events[1]!]
+  const s = markRows(setRead(EMPTY_FEED_STATE, events[1]!, false), listed)
+  expect(listed.every(e => isRead(s, e, 'me'))).toBe(true)
+  expect(isRead(s, events[2]!, 'me')).toBe(false)
+  // The per-row lists stay small: no duplicates, and an unread mark on a listed row is gone.
+  expect(s.read.sort()).toEqual(['a', 'b'])
+  expect(s.unread).toEqual([])
+  expect(buildRows(events, s, 'me', ALL_ACTIVITY, 'UTC').unreadCount).toBe(1)
+})
+
+test('the unread count and the badge never depend on the tab or the filter: all tabs agree on what is unread', () => {
+  const events = [ev('a', at(26, 9)), ev('b', at(26, 8), 'me'), ev('c', at(25, 9))]
+  const unread = (f: Parameters<typeof buildRows>[3]) => buildRows(events, EMPTY_FEED_STATE, 'me', f, 'UTC').unreadCount
+  // The badge counts the whole feed (ALL_ACTIVITY); the others tab holds the same unread rows, Me none.
+  expect(unread(ALL_ACTIVITY)).toBe(2)
+  expect(unread(tab('others'))).toBe(2)
+  expect(unread(tab('me'))).toBe(0)
+})
+
+test('a dispute is a type of its own and keeps its group; a comment on a payment goes by the payment\'s group', () => {
+  const dispute = {id: 'd', at: at(26, 9), actor: 'riya', kind: 'dispute.opened', entityType: 'dispute', data: {groupId: 'g1'}} as unknown as ActivityEvent
+  const comment = {id: 'c', at: at(26, 8), actor: 'riya', kind: 'comment.added', entityType: 'comment', data: {targetType: 'repayment', targetId: 'p1'}} as unknown as ActivityEvent
+  const of = (type: 'expense' | 'repayment', id: string) => (type === 'repayment' && id === 'p1' ? 'g1' : undefined)
+  expect(matchesFilter(dispute, {tab: 'all', types: ['disputes'], group: 'g1'}, 'me')).toBe(true)
+  expect(matchesFilter(dispute, {tab: 'all', types: ['disputes'], group: 'g2'}, 'me')).toBe(false)
+  expect(matchesFilter(dispute, {tab: 'all', types: ['expenses']}, 'me')).toBe(false)
+  expect(matchesFilter(comment, {tab: 'all', types: ['comments'], group: 'g1'}, 'me', of)).toBe(true)
+  expect(matchesFilter(comment, {tab: 'all', types: ['comments'], group: 'g1'}, 'me')).toBe(false)
 })

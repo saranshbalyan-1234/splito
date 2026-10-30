@@ -124,7 +124,7 @@ export function activityFromHistory(rows: HistoryRow[]): ActivityEvent[] {
       } as ActivityEvent)
     })
   }
-  return events.sort((x, y) => y.at - x.at || (x.id < y.id ? -1 : x.id > y.id ? 1 : 0))
+  return events.sort(byNewest)
 }
 
 /**
@@ -152,11 +152,31 @@ export type ActivityState = {events: ActivityEvent[]; entities: Record<FeedType,
 
 const FEED_SET = new Set<EntityType>(FEED_TYPES)
 
+/** The feed's order: newest first, ties by id. */
+const byNewest = (x: ActivityEvent, y: ActivityEvent) => y.at - x.at || (x.id < y.id ? -1 : x.id > y.id ? 1 : 0)
+
+/** Two lists in `byNewest` order merged into one, in a single pass. */
+function mergeNewest(a: ActivityEvent[], b: ActivityEvent[]): ActivityEvent[] {
+  if (b.length === 0) return a
+  if (a.length === 0) return b
+  const out: ActivityEvent[] = new Array(a.length + b.length)
+  let i = 0
+  let j = 0
+  let k = 0
+  while (i < a.length && j < b.length) out[k++] = byNewest(a[i]!, b[j]!) <= 0 ? a[i++]! : b[j++]!
+  while (i < a.length) out[k++] = a[i++]!
+  while (j < b.length) out[k++] = b[j++]!
+  return out
+}
+
 /**
  * The newest `want()` events, read by cursor from the history's
  * `byChangedAt` index, kept current from store change notices: a change
  * re-reads only the histories of the entities it names; asking for more
- * (`want()` grew) or an unknown change rebuilds the window. A history is read
+ * (`want()` grew, with an empty notice) goes on from the cursor and keeps the
+ * pool and the sorted events, merging each page in (reading a 10,000-expense
+ * history page by page costs about one read per row and 8 ms for a later
+ * change, `activityScale.test`); only an unknown change starts over. A history is read
  * whole per entity, so every event can tell what it changed (it needs the
  * version before). Loads run one at a time, so a slow one never overwrites a
  * newer read. Equal to the top of `loadActivity` after every load (tested).
@@ -168,7 +188,11 @@ const FEED_SET = new Set<EntityType>(FEED_TYPES)
  * rows that make no event (renames, housekeeping) never crowd out newer events.
  */
 export function activityTracker(store: Store, want: () => number = () => ACTIVITY_PAGE): (change: StoreChange) => Promise<ActivityState> {
+  /** Every entity read so far with its whole history, and the events each one makes (rebuilt only for the entities a read names). */
   const pool = new Map<string, HistoryRow[]>()
+  const eventsOf = new Map<string, ActivityEvent[]>()
+  /** Every event of the pool, newest first (`byNewest`). */
+  let sorted: ActivityEvent[] = []
   let cursor: Key | null | undefined
   /** The `at` of the last history row read: unread rows are no newer. */
   let readUpTo = Infinity
@@ -180,26 +204,55 @@ export function activityTracker(store: Store, want: () => number = () => ACTIVIT
   let queue: Promise<unknown> = Promise.resolve()
   const keyOf = (type: EntityType, id: string) => `${type}:${id}`
 
+  const reset = () => {
+    pool.clear()
+    eventsOf.clear()
+    sorted = []
+    known.clear()
+    cursor = undefined
+    readUpTo = Infinity
+    isDone = false
+    people = groups = undefined
+  }
+  /** Pools the named entities' histories and swaps in their events: the sorted list is merged, never rebuilt from the pool. */
   const readHistories = async (refs: Array<{type: EntityType; id: string}>) => {
     const rows = await store.historyMany(refs)
-    for (const r of refs) pool.set(keyOf(r.type, r.id), [])
+    const dirty = new Set<string>()
+    for (const r of refs) {
+      const key = keyOf(r.type, r.id)
+      pool.set(key, [])
+      dirty.add(key)
+    }
     for (const row of rows) pool.get(keyOf(row.entityType, row.entityId))!.push(row)
+    const fresh: ActivityEvent[] = []
+    let hadOld = false
+    for (const key of dirty) {
+      if (eventsOf.has(key)) hadOld = true
+      const events = activityFromHistory(pool.get(key)!)
+      eventsOf.set(key, events)
+      fresh.push(...events)
+    }
+    if (hadOld) sorted = sorted.filter(e => !dirty.has(keyOf(e.entityType, e.entityId)))
+    fresh.sort(byNewest)
+    sorted = mergeNewest(sorted, fresh)
   }
-  /** Events no unread history row can come before (strictly newer than the last row read; a tie may hide one). */
-  const finalEvents = () => {
-    const all = activityFromHistory([...pool.values()].flat())
-    return isDone ? all : all.filter(e => e.at > readUpTo)
+  /** How many of the newest events no unread history row can come before (strictly newer than the last row read; a tie may hide one). */
+  const finalCount = () => {
+    if (isDone) return sorted.length
+    let lo = 0
+    let hi = sorted.length
+    while (lo < hi) {
+      const mid = (lo + hi) >> 1
+      if (sorted[mid]!.at > readUpTo) lo = mid + 1
+      else hi = mid
+    }
+    return lo
   }
 
   const load = async (change: StoreChange): Promise<ActivityState> => {
     const size = want()
-    if (change === 'unknown' || size > held || held === 0) {
-      pool.clear()
-      known.clear()
-      cursor = undefined
-      readUpTo = Infinity
-      isDone = false
-      people = groups = undefined
+    if (change === 'unknown' || held === 0) {
+      reset()
     } else {
       const touched = FEED_TYPES.flatMap(type => [...(change[type] ?? [])].map(id => ({type, id})))
       if (touched.length) await readHistories(touched)
@@ -207,9 +260,9 @@ export function activityTracker(store: Store, want: () => number = () => ACTIVIT
       if (touches(change, 'group')) groups = undefined
       for (const t of touched) known.delete(keyOf(t.type, t.id))
     }
+    // A larger window keeps what was read and goes on from the cursor: growing it never starts over.
     held = size
-    let list = finalEvents()
-    while (list.length < size && !isDone) {
+    while (finalCount() < size && !isDone) {
       const page = await store.historyPage({after: cursor, limit: ACTIVITY_PAGE})
       cursor = page.next
       isDone = page.next === null
@@ -220,32 +273,37 @@ export function activityTracker(store: Store, want: () => number = () => ACTIVIT
         if (FEED_SET.has(h.entityType) && !pool.has(key)) fresh.set(key, {type: h.entityType, id: h.entityId})
       }
       if (fresh.size) await readHistories([...fresh.values()])
-      list = finalEvents()
     }
-    const hasMore = list.length > size
-    list = list.slice(0, size)
+    const count = finalCount()
+    const hasMore = count > size
+    const list = sorted.slice(0, Math.min(count, size))
     people ??= await store.getAll('person')
     groups ??= await store.getAll('group')
-    // Only what the events name: an expense or a request row shows its current state.
+    // Only what the events name: an expense or a request row shows its current state; a comment names what it is on.
     const wanted = new Map<EntityType, string[]>()
+    const refOf = (e: ActivityEvent) =>
+      e.entityType === 'comment' ? {type: e.data.targetType, id: e.data.targetId} : e.entityType === 'expense' || e.entityType === 'friendRequest' ? {type: e.entityType, id: e.entityId} : undefined
     for (const e of list) {
-      // A comment on an expense names that expense, so its row can say which one.
-      const ref = e.entityType === 'comment' ? (e.data.targetType === 'expense' ? {type: 'expense' as const, id: e.data.targetId} : undefined) : e.entityType === 'expense' || e.entityType === 'friendRequest' ? {type: e.entityType, id: e.entityId} : undefined
+      const ref = refOf(e)
       if (!ref || known.has(keyOf(ref.type, ref.id))) continue
       const ids = wanted.get(ref.type) ?? []
       ids.push(ref.id)
       wanted.set(ref.type, ids)
     }
     for (const [type, ids] of wanted) for (const row of await store.getMany(type, ids)) known.set(keyOf(type, row.id), row)
-    const named = (type: EntityType) =>
-      [...new Set(list.flatMap(e => (e.entityType === type ? [e.entityId] : e.entityType === 'comment' && type === 'expense' && e.data.targetType === 'expense' ? [e.data.targetId] : [])))]
-        .map(id => known.get(keyOf(type, id)))
-        .filter((e): e is Entity => !!e)
+    const named = (type: EntityType) => {
+      const ids = new Set<string>()
+      for (const e of list) {
+        const ref = refOf(e)
+        if (ref?.type === type) ids.add(ref.id)
+      }
+      return [...ids].map(id => known.get(keyOf(type, id))).filter((e): e is Entity => !!e)
+    }
     const entities = {
       person: people,
       group: groups,
       expense: named('expense'),
-      repayment: [],
+      repayment: named('repayment'),
       writeoff: [],
       friendRequest: named('friendRequest'),
       reminder: [],

@@ -33,11 +33,21 @@ type Readable = Pick<ActivityEvent, 'id' | 'at' | 'actor'>
  * ponytail: `readUpTo` compares change times, so a change that syncs in late
  * with an older time counts as read; compare server receive times once sync exists.
  */
-export function isRead(s: FeedState, e: Readable, me: string): boolean {
+export function isRead(s: FeedState, e: Readable, me: string, sets: ReadSets = readSets(s)): boolean {
   // Your own changes are never unread (owner 92): they cannot be marked unread either.
   if (e.actor === me) return true
-  if (s.unread.includes(e.id)) return false
-  return e.at <= s.readUpTo || s.read.includes(e.id)
+  if (sets.unread.has(e.id)) return false
+  return e.at <= s.readUpTo || sets.read.has(e.id)
+}
+
+/** The per-row marks as sets, built once per list so a row's check is O(1), not a scan of the marks. */
+export type ReadSets = {read: ReadonlySet<string>; unread: ReadonlySet<string>}
+export const readSets = (s: FeedState): ReadSets => ({read: new Set(s.read), unread: new Set(s.unread)})
+
+/** Marks every one of `events` read in one pass (a narrowed "Mark all read"): the per-row marks are rewritten once. */
+export function markRows(s: FeedState, events: readonly Readable[]): FeedState {
+  const ids = new Set(events.map(e => e.id))
+  return {...s, read: [...new Set([...s.read, ...ids])], unread: s.unread.filter(id => !ids.has(id))}
 }
 
 export function setRead(s: FeedState, e: Readable, read: boolean): FeedState {
@@ -124,20 +134,22 @@ export function activityTypeOf(kind: string): ActivityTypeId | undefined {
     case 'reminder':
       return 'reminders'
     case 'dispute':
-    case 'hold':
       return 'disputes'
     default:
       return undefined
   }
 }
 
-/** The group a change belongs to, when it has one; `groupOfExpense` tells where a comment's expense lives. */
-function groupOf(e: ActivityEvent, groupOfExpense?: (id: string) => string | null | undefined): string | null | undefined {
+/** Where a comment's target lives: the group of its expense or payment. */
+export type GroupOfTarget = (type: 'expense' | 'repayment', id: string) => string | null | undefined
+
+/** The group a change belongs to, when it has one. */
+function groupOf(e: ActivityEvent, groupOfTarget?: GroupOfTarget): string | null | undefined {
   switch (e.entityType) {
     case 'group':
       return e.entityId
     case 'comment':
-      return e.data.targetType === 'expense' ? groupOfExpense?.(e.data.targetId) : undefined
+      return groupOfTarget?.(e.data.targetType, e.data.targetId)
     case 'expense':
     case 'repayment':
     case 'writeoff':
@@ -149,14 +161,14 @@ function groupOf(e: ActivityEvent, groupOfExpense?: (id: string) => string | nul
 }
 
 /** Whether `event` is in the list for `filter`. */
-export function matchesFilter(event: ActivityEvent, filter: FeedFilter, me: string, groupOfExpense?: (id: string) => string | null | undefined): boolean {
+export function matchesFilter(event: ActivityEvent, filter: FeedFilter, me: string, groupOfTarget?: GroupOfTarget): boolean {
   if (filter.tab === 'others' && event.actor === me) return false
   if (filter.tab === 'me' && event.actor !== me) return false
   if (filter.types.length > 0) {
     const type = activityTypeOf(event.kind)
     if (!type || !filter.types.includes(type)) return false
   }
-  return !filter.group || groupOf(event, groupOfExpense) === filter.group
+  return !filter.group || groupOf(event, groupOfTarget) === filter.group
 }
 
 /**
@@ -170,15 +182,16 @@ export function buildRows(
   me: string,
   filter: FeedFilter,
   tz: string,
-  groupOfExpense?: (id: string) => string | null | undefined,
+  groupOfTarget?: GroupOfTarget,
 ) {
   const hidden = new Set(s.hidden)
+  const sets = readSets(s)
   const rows: FeedRow[] = []
   let hiddenCount = 0
   let unreadCount = 0
   let day: LocalDate | undefined
   for (const event of events) {
-    if (!matchesFilter(event, filter, me, groupOfExpense)) continue
+    if (!matchesFilter(event, filter, me, groupOfTarget)) continue
     if (hidden.has(event.id)) {
       hiddenCount++
       continue
@@ -188,7 +201,7 @@ export function buildRows(
       day = eventDay
       rows.push({type: 'section', key: `day-${day}`, day})
     }
-    const read = isRead(s, event, me)
+    const read = isRead(s, event, me, sets)
     if (!read) {
       unreadCount++
     }

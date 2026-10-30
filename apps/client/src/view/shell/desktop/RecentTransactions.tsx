@@ -149,7 +149,7 @@ export function RecentTransactions() {
         testID="sidebar-transactions-all"
         href={seeAllTransactionsPath()}
         navigationAction="push"
-        accessibilityLabel={l`See all activity`}
+        accessibilityLabel={l`See all transactions`}
         accessibilityHint=""
         hoverStyle={t.atoms.bg_contrast_25}
         style={[

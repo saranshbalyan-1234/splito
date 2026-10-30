@@ -1,6 +1,7 @@
 import {useMemo} from 'react'
 import {plural} from '@lingui/core/macro'
 import {
+  ACTIVITY_PAGE,
   type ActivityEvent,
   type ActivityTypeId,
   type ActivityState,
@@ -9,6 +10,7 @@ import {
   type FriendRequest,
   type Group,
   type Person,
+  type Repayment,
 } from '@splito/sync'
 
 import {useTimeZone} from '#/locale/useDates'
@@ -28,6 +30,8 @@ export type ActivitySnapshot = {
   people: Map<string, Entity<Person>>
   groups: Map<string, Entity<Group>>
   expenses: Map<string, Entity<Expense>>
+  /** The payments a comment is on, by id. */
+  repayments: Map<string, Entity<Repayment>>
   /** Friend requests by id, for their current state (a request row shows Accept until answered). */
   requests: Map<string, Entity<FriendRequest>>
 }
@@ -48,6 +52,9 @@ function snapshotOf(state: ActivityState): ActivitySnapshot {
       ),
       expenses: new Map(
         (state.entities.expense as Entity<Expense>[]).map(e => [e.id, e]),
+      ),
+      repayments: new Map(
+        (state.entities.repayment as Entity<Repayment>[]).map(r => [r.id, r]),
       ),
       requests: new Map(
         (state.entities.friendRequest as Entity<FriendRequest>[]).map(r => [
@@ -92,7 +99,7 @@ export function useActivityFeed(
         me,
         {tab, types, group},
         tz,
-        id => snapshot?.expenses.get(id)?.data.groupId,
+        (type, id) => (type === 'expense' ? snapshot?.expenses : snapshot?.repayments)?.get(id)?.data.groupId,
       ),
     [events, state, me, tab, types, group, tz, snapshot],
   )
@@ -113,10 +120,19 @@ export function useActivityFeed(
 /**
  * The Activity nav item's badge, as Bluesky badges Notifications: unread
  * changes by other people, capped at "30+" as upstream's
- * `useUnreadNotifications`; empty when there's nothing new.
+ * `useUnreadNotifications`; empty when there's nothing new. Counted over the
+ * newest page only, whatever tab, filter or window the screen holds: everything
+ * unread is newer than the stored read mark, so the first page holds the 30 the
+ * badge can show and it can never drift as the screen's window grows.
  */
 export function useActivityBadge() {
-  const {unreadCount: n} = useActivityFeed()
+  const {actor: me} = useMutationCtx()
+  const tz = useTimeZone()
+  const loaded = useActivityState()
+  const [stored] = useStorage(device, FEED_KEY)
+  const state = stored ?? EMPTY_FEED_STATE
+  const events = loaded?.events
+  const n = useMemo(() => (events ? buildRows(events.slice(0, ACTIVITY_PAGE), state, me, ALL_ACTIVITY, tz).unreadCount : 0), [events, state, me, tz])
   return n >= 30 ? '30+' : n > 0 ? String(n) : ''
 }
 

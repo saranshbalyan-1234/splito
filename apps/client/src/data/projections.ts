@@ -231,7 +231,8 @@ export const activityQuery: Query<ActivityFeed> = {
     const track = activityTracker(store, () => want)
     const loadMore = (pages = 1) => {
       want += ACTIVITY_PAGE * pages
-      controls.reload()
+      /* An empty notice, not 'unknown': the tracker keeps what it read and only goes on from its cursor. */
+      controls.reload({})
     }
     return async change => ({...(await track(change)), loadMore})
   },

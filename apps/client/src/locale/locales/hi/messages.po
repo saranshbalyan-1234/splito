@@ -687,11 +687,11 @@ msgstr "{count, plural, one {# टिप्पणी} other {# टिप्प�
 msgid "{count, plural, one {# expense} other {# expenses}}"
 msgstr "{count, plural, one {# खर्च} other {# खर्चे}}"
 
-#: src/components/activity/useActivityFeed.ts:126
+#: src/components/activity/useActivityFeed.ts:144
 msgid "{count, plural, one {# or more unread items} other {# or more unread items}}"
 msgstr "{count, plural, one {# या अधिक अपठित} other {# या अधिक अपठित}}"
 
-#: src/components/activity/useActivityFeed.ts:130
+#: src/components/activity/useActivityFeed.ts:148
 msgid "{count, plural, one {# unread item} other {# unread items}}"
 msgstr "{count, plural, one {# अपठित} other {# अपठित}}"
 
@@ -769,7 +769,7 @@ msgstr "{groupName} आपकी सूचियों में वापस �
 msgid "{groupName} is inactive"
 msgstr "{groupName} निष्क्रिय है"
 
-#: src/screens/Activity.tsx:270
+#: src/screens/Activity.tsx:300
 msgid "{hiddenCount, plural, one {# change hidden from your activity} other {# changes hidden from your activity}}"
 msgstr "{hiddenCount, plural, one {# बदलाव आपकी गतिविधि से छिपा है} other {# बदलाव आपकी गतिविधि से छिपे हैं}}"
 
@@ -1172,7 +1172,7 @@ msgstr "सक्रिय"
 
 #: src/components/TabGlyph.tsx:42
 #: src/navigation/Navigation.tsx:71
-#: src/screens/Activity.tsx:156
+#: src/screens/Activity.tsx:190
 msgid "Activity"
 msgstr "गतिविधि"
 
@@ -1420,7 +1420,7 @@ msgstr "शराब"
 
 #: src/components/activity/ActivityFilterDialog.tsx:62
 #: src/components/activity/ActivityFilterDialog.tsx:69
-#: src/screens/Activity.tsx:198
+#: src/screens/Activity.tsx:232
 #: src/screens/Analytics/components/ScopeDialog.tsx:134
 #: src/screens/Analytics/components/ScopeDialog.tsx:145
 #: src/screens/Groups/components/GroupsFilterDialog.tsx:74
@@ -3244,14 +3244,14 @@ msgstr "फ़िल्टर"
 
 #: src/components/activity/ActivityFilterDialog.tsx:50
 #: src/components/ListToolsHeader.tsx:144
-#: src/screens/Activity.tsx:162
+#: src/screens/Activity.tsx:196
 #: src/screens/Groups/components/GroupsFilterDialog.tsx:60
 #: src/screens/People/components/FriendsFilterDialog.tsx:73
 msgid "Filters"
 msgstr "फ़िल्टर"
 
 #: src/components/ListToolsHeader.tsx:143
-#: src/screens/Activity.tsx:162
+#: src/screens/Activity.tsx:196
 msgid "Filters, {activeFilterCount} on"
 msgstr "फ़िल्टर, {activeFilterCount} चालू"
 
@@ -4124,6 +4124,11 @@ msgstr "शराब पर वैट"
 msgid "Long press for options"
 msgstr "विकल्पों के लिए देर तक दबाएँ"
 
+#: src/screens/Activity.tsx:143
+#: src/screens/Activity.tsx:143
+msgid "Look further back"
+msgstr "और पीछे देखें"
+
 #: src/features/export/ImportSheet.tsx:233
 msgid "Made on another device: your side of every expense is matched to you here."
 msgstr "दूसरे डिवाइस पर बना: हर खर्च में आपका हिस्सा यहाँ आपसे जोड़ दिया गया है।"
@@ -4184,7 +4189,7 @@ msgstr "आमंत्रण लिंक प्रबंधित करें
 msgid "Manage links"
 msgstr "लिंक प्रबंधित करें"
 
-#: src/screens/Activity.tsx:188
+#: src/screens/Activity.tsx:222
 msgid "Mark all read"
 msgstr "सभी को पढ़ा हुआ मार्क करें"
 
@@ -4200,11 +4205,15 @@ msgstr "अपठित मार्क करें"
 msgid "Marked everything as read"
 msgstr "सब कुछ पढ़ा हुआ मार्क किया गया"
 
+#: src/components/activity/useActivityActions.tsx:115
+msgid "Marked these as read"
+msgstr "इन्हें पढ़ा हुआ चिह्नित किया"
+
 #: src/components/activity/ActivityItem.tsx:302
 msgid "Marks it as read"
 msgstr "इसे पढ़ा हुआ मार्क करता है"
 
-#: src/screens/Activity.tsx:198
+#: src/screens/Activity.tsx:232
 msgid "Me"
 msgstr "मैं"
 
@@ -4708,15 +4717,15 @@ msgstr "नोट"
 msgid "Nothing about your device or this screen is attached."
 msgstr "आपके डिवाइस या इस स्क्रीन की कोई जानकारी नहीं जुड़ी है।"
 
-#: src/screens/Activity.tsx:109
+#: src/screens/Activity.tsx:133
 msgid "Nothing from other people yet. When someone else adds or changes something you share, it shows up here."
 msgstr "अभी दूसरों की ओर से कुछ नहीं। जब कोई और आपके साझा खर्च में कुछ जोड़ता या बदलता है, तो वह यहाँ दिखेगा।"
 
-#: src/screens/Activity.tsx:108
+#: src/screens/Activity.tsx:132
 msgid "Nothing from you yet. What you add or change shows up here."
 msgstr "अभी आपकी ओर से कुछ नहीं। आप जो जोड़ते या बदलते हैं वह यहाँ दिखेगा।"
 
-#: src/screens/Activity.tsx:110
+#: src/screens/Activity.tsx:134
 msgid "Nothing here yet. Expenses, payments and group changes will show up here."
 msgstr "अभी यहां कुछ नहीं। खर्च, भुगतान और समूह के बदलाव यहां दिखेंगे।"
 
@@ -4733,7 +4742,11 @@ msgstr "“{0}” से कुछ नहीं मिला।"
 msgid "Nothing matches “{search}”"
 msgstr "“{search}” से कुछ नहीं मिला"
 
-#: src/screens/Activity.tsx:107
+#: src/screens/Activity.tsx:130
+msgid "Nothing matches in the latest changes."
+msgstr "हाल के बदलावों में कुछ नहीं मिलता।"
+
+#: src/screens/Activity.tsx:131
 msgid "Nothing matches these filters yet."
 msgstr "इन फ़िल्टर से अभी कुछ नहीं मिलता।"
 
@@ -4866,7 +4879,7 @@ msgid "One row per record, for a spreadsheet. Amounts are exact, with their curr
 msgstr "स्प्रेडशीट के लिए हर रिकॉर्ड की एक पंक्ति। रकम सटीक है, साथ में उसकी मुद्रा लिखी है।"
 
 #. placeholder {0}: feed.snapshot?.groups.get(group)?.data.name ?? l`this group`
-#: src/screens/Activity.tsx:205
+#: src/screens/Activity.tsx:239
 msgid "Only {0}. Show everything"
 msgstr "सिर्फ़ {0}। सब कुछ दिखाएँ"
 
@@ -5062,7 +5075,7 @@ msgstr "दूसरा खाता"
 msgid "Other currency"
 msgstr "दूसरी मुद्रा"
 
-#: src/screens/Activity.tsx:198
+#: src/screens/Activity.tsx:232
 msgid "Others"
 msgstr "दूसरे"
 
@@ -6060,13 +6073,13 @@ msgstr "“{0}” की सभी खोजें खुलती हैं"
 msgid "See all"
 msgstr "सभी देखें"
 
-#: src/view/shell/desktop/RecentTransactions.tsx:152
-msgid "See all activity"
-msgstr "सारी गतिविधि देखें"
-
 #: src/view/shell/desktop/LeftNav.tsx:698
 msgid "See all groups"
 msgstr "सभी समूह देखें"
+
+#: src/view/shell/desktop/RecentTransactions.tsx:152
+msgid "See all transactions"
+msgstr "सभी लेन-देन देखें"
 
 #: src/screens/Login/ChooseAccountForm.tsx:35
 msgid "Select account"
@@ -6338,10 +6351,15 @@ msgstr "दिन दिखाएँ"
 msgid "Show earlier comments"
 msgstr "पहले की टिप्पणियाँ दिखाएँ"
 
-#: src/screens/Activity.tsx:241
-#: src/screens/Activity.tsx:242
+#: src/screens/Activity.tsx:139
+#: src/screens/Activity.tsx:139
 msgid "Show every type"
 msgstr "हर प्रकार दिखाएँ"
+
+#: src/screens/Activity.tsx:140
+#: src/screens/Activity.tsx:140
+msgid "Show everything"
+msgstr "सब कुछ दिखाएँ"
 
 #: src/screens/Analytics/components/ScopeDialog.tsx:102
 #: src/screens/Analytics/components/ScopeDialog.tsx:153
@@ -6365,7 +6383,7 @@ msgstr "ग्रुप दिखाएँ"
 msgid "Show hidden"
 msgstr "छिपी हुई दिखाएँ"
 
-#: src/screens/Activity.tsx:278
+#: src/screens/Activity.tsx:308
 msgid "Show hidden changes"
 msgstr "छिपे बदलाव दिखाएँ"
 
@@ -6402,7 +6420,7 @@ msgstr "QR कोड दिखाएँ और शेयर करें"
 msgid "Show settled"
 msgstr "बराबर हिसाब दिखाएँ"
 
-#: src/screens/Activity.tsx:284
+#: src/screens/Activity.tsx:314
 msgid "Show them"
 msgstr "दिखाएँ"
 
@@ -7025,11 +7043,11 @@ msgstr "यह दोस्त इस डिवाइस पर नहीं ह
 msgid "This friend was removed. Their expenses and payments stay here, struck through."
 msgstr "इस दोस्त को हटा दिया गया है। उनके खर्च और भुगतान यहाँ कटे हुए दिखते रहेंगे।"
 
-#: src/screens/Activity.tsx:205
+#: src/screens/Activity.tsx:239
 msgid "this group"
 msgstr "यह ग्रुप"
 
-#: src/screens/Activity.tsx:209
+#: src/screens/Activity.tsx:243
 msgid "This group"
 msgstr "यह ग्रुप"
 
@@ -8036,7 +8054,7 @@ msgstr "सबके साथ आपका हिसाब बराबर ह�
 msgid "You’ve already asked {value}. It’s under Invites sent on People, where you can resend it."
 msgstr "आप {value} को पहले ही अनुरोध भेज चुके हैं। यह People में 'भेजे गए आमंत्रण' में है, जहाँ से फिर भेज सकते हैं।"
 
-#: src/screens/Activity.tsx:106
+#: src/screens/Activity.tsx:129
 msgid "You've hidden everything here. New expenses, payments and group changes will show up as they happen."
 msgstr "आपने यहाँ सब कुछ छिपा दिया है। नए खर्च, भुगतान और समूह के बदलाव होते ही यहाँ दिखेंगे।"
 

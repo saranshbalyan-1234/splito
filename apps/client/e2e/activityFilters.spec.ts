@@ -20,6 +20,15 @@ async function openActivity(page: Page, path = '/activity') {
   await expect(rows(page).first()).toBeVisible()
 }
 
+/** A narrowed list searches about ten pages back by itself; past that it offers "Look further back" (owner ruling, F-259). */
+async function lookBackUntilListed(page: Page) {
+  for (let i = 0; i < 30 && (await rows(page).count()) === 0; i++) {
+    const more = screen(page).getByTestId('activity-look-further')
+    if (!(await more.isVisible())) await page.waitForTimeout(150)
+    else await more.click()
+  }
+}
+
 async function apply(page: Page, types: string[]) {
   await screen(page).getByTestId('activity-filters').click()
   const sheet = page.getByTestId('activity-filters-sheet')
@@ -84,6 +93,7 @@ for (const [name, viewport] of [['390', PHONE], ['1440', DESKTOP]] as const) {
       const families: Record<string, string[]> = {expenses: ['expense'], payments: ['repayment', 'writeoff'], comments: ['comment'], groups: ['group'], friends: ['person', 'friendRequest'], reminders: ['reminder']}
       for (const [type, kinds] of Object.entries(families)) {
         await apply(page, [type])
+        await lookBackUntilListed(page)
         await expect.poll(async () => (await kindsShown(page)).length, {message: type}).toBeGreaterThan(0)
         expect((await kindsShown(page)).every(k => kinds.includes(k))).toBe(true)
       }
@@ -104,16 +114,23 @@ for (const [name, viewport] of [['390', PHONE], ['1440', DESKTOP]] as const) {
 
       await apply(page, ['groups', 'reminders'])
       await expect(page).toHaveURL(/type=groups%2Creminders|type=groups,reminders/)
+      await lookBackUntilListed(page)
       await expect.poll(() => kindsShown(page)).toEqual(['group', 'reminder'])
 
       // Remembered: a bare visit and a reload keep the choice.
       await page.goto('/activity')
       await expect(screen(page).getByTestId('activity-filters-dot')).toBeVisible()
+      await lookBackUntilListed(page)
       await expect.poll(() => kindsShown(page)).toEqual(['group', 'reminder'])
 
-      // Disputes has nothing yet in this build: the empty state follows the filter, animated, with the way out.
+      // Disputes has nothing yet in this build: the empty state follows the filter within half a second (a bounded search, not the whole history), animated, with the way out.
+      const t0 = Date.now()
       await apply(page, ['disputes'])
-      await expect(screen(page).getByTestId('activity-empty')).toContainText('Nothing matches these filters yet.', {timeout: 30_000})
+      await expect(screen(page).getByTestId('activity-empty')).toContainText(/Nothing matches/, {timeout: 2000})
+      expect(Date.now() - t0).toBeLessThan(500 + 700 /* the sheet's own close */)
+      // ... and "Look further back" reads on until the history ends.
+      for (let i = 0; i < 30 && (await screen(page).getByTestId('activity-look-further').isVisible()); i++) await screen(page).getByTestId('activity-look-further').click()
+      await expect(screen(page).getByTestId('activity-empty')).toContainText('Nothing matches these filters yet.')
       await expect(screen(page).getByTestId('activity-empty').locator('[data-illustration], svg, canvas').first()).toBeVisible()
       await screen(page).getByTestId('activity-clear-filters').click()
       await expect(screen(page).getByTestId('activity-filters-dot')).toHaveCount(0)
@@ -156,6 +173,50 @@ for (const [name, viewport] of [['390', PHONE], ['1440', DESKTOP]] as const) {
     })
   })
 }
+
+test.describe('narrowed Mark all read, /activity/filters, a comment on a payment under ?group=', () => {
+  test.use({viewport: DESKTOP})
+  test.setTimeout(90_000)
+
+  test('Mark all read on a narrowed list marks only what it lists; the nav badge ignores tab and filter', async ({page}) => {
+    await openActivity(page)
+    const badge = page.getByTestId('nav-badge-activity')
+    await expect(badge).toHaveText('30+')
+    await apply(page, ['expenses'])
+    await expect(badge).toHaveText('30+')
+    await screen(page).getByTestId('activity-mark-all-read').click()
+    await expect(page.getByText('Marked these as read')).toBeVisible()
+    await expect(screen(page).getByTestId('activity-unread-dot')).toHaveCount(0)
+    // The rest of the feed is still unread: the badge did not go to zero, and a tab does not change it.
+    await expect(badge).toHaveText('30+')
+    await tabs(page).getByRole('tab').nth(2).click()
+    await expect(badge).toHaveText('30+')
+    await expect(screen(page).getByTestId('activity-mark-all-read')).toBeEnabled()
+  })
+
+  test('/activity/filters opens the Filters sheet over Activity; closing it leaves the page', async ({page}) => {
+    await openActivity(page)
+    await page.goto('/activity/filters')
+    await expect(page.getByTestId('activity-filters-sheet')).toBeVisible()
+    await expect(screen(page).getByTestId('activity-tabs')).toBeVisible()
+    await page.getByTestId('activity-filters-sheet').getByRole('button', {name: 'Cancel'}).click()
+    await expect(page.getByTestId('activity-filters-sheet')).toBeHidden()
+    await expect(page).toHaveURL(/\/activity$/)
+  })
+
+  test('?group= keeps a comment on one of that group\'s payments', async ({page}) => {
+    await openActivity(page)
+    const target = await page.evaluate(async () => {
+      const s = (window as unknown as {splito: {me: string; list(t: string): Promise<Array<{id: string; deleted: boolean; data: {groupId: string | null}}>>; commentAs(a: string, i: unknown): Promise<string>}}).splito
+      const pay = (await s.list('repayment')).find(r => !r.deleted && r.data.groupId)!
+      await s.commentAs(s.me, {targetType: 'repayment', targetId: pay.id, body: 'about this payment'})
+      return pay.data.groupId!
+    })
+    await page.goto(`/activity?tab=all&type=comments&group=${target}`)
+    await expect(screen(page).getByTestId('activity-group-chip')).toBeVisible()
+    await expect(rows(page).filter({hasText: 'commented on a payment'})).toHaveCount(1)
+  })
+})
 
 test.describe('at 1440: "See all" in the right column', () => {
   test.use({viewport: DESKTOP})

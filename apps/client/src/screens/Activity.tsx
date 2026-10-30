@@ -45,7 +45,8 @@ import {useListAnimations} from '#/motion/listAnimations'
 const NO_TYPES: readonly ActivityTypeId[] = []
 /** A narrowed list reads older history until it shows this many changes. */
 const MIN_LISTED = 20
-const isNarrowedViewOrTab = (tab: ActivityTab, types: readonly ActivityTypeId[], group: string | undefined) => tab !== 'all' || types.length > 0 || !!group
+/** ... and stops searching by itself once the window holds this many changes (about ten pages). */
+const AUTO_SEARCH_EVENTS = 1000
 
 const isUnreadRow = (row: FeedRow | undefined) =>
   row?.type === 'event' && !row.isRead
@@ -76,6 +77,8 @@ export function ActivityScreen() {
   const types = fromAddress.types ?? savedTypes ?? NO_TYPES
   const group = fromAddress.group
   const tab = ACTIVITY_TABS.indexOf(tabName)
+  /* The saved choices load a moment after the screen: until they are known (and the address names nothing), no tab is lit and the body waits, so nothing flashes the wrong tab (owners 166, 168). */
+  const isChoiceKnown = (fromAddress.tab !== undefined || savedTab !== undefined) && (fromAddress.types !== undefined || savedTypes !== undefined)
   const setTab = (i: number) => {
     const next = ACTIVITY_TABS[i]!
     navigation.setParams({tab: param(next, 'all', savedTab ?? 'all') as ActivityTab | undefined})
@@ -106,14 +109,17 @@ export function ActivityScreen() {
   }
 
   /*
-   * A narrowed list (a tab, a type, a group) can find nothing in the newest page of history while older pages hold
-   * matches: read older pages until a screenful is listed or the history ends.
+   * A list narrowed by a type or a group can find nothing in the newest page of history while older pages hold
+   * matches: it reads on, five pages at a time, until a screenful is listed, the history ends or about ten pages
+   * (AUTO_SEARCH_EVENTS) are held. Past that it says so and offers "Look further back"; scrolling goes on reading.
+   * A tab alone (Me, Others) never searches by itself.
    */
   const eventCount = rows.length - rows.filter(r => r.type === 'section').length
-  const isSearchingOlder = !feed.isDone && !!feed.loadMore && eventCount < MIN_LISTED && isNarrowedViewOrTab(bodyTab, bodyTypes, group)
+  const windowSize = snapshot?.events.length ?? 0
+  const canLookFurther = !feed.isDone && !!feed.loadMore
+  const isSearchingOlder = canLookFurther && eventCount < MIN_LISTED && (bodyTypes.length > 0 || !!group) && windowSize < AUTO_SEARCH_EVENTS
   const loadMore = feed.loadMore
   useEffect(() => {
-    /* Five pages at a time: each load rebuilds the window, so fewer, wider loads reach the end sooner. */
     if (isSearchingOlder) loadMore?.(5)
   }, [isSearchingOlder, snapshot, loadMore])
 
@@ -121,11 +127,21 @@ export function ActivityScreen() {
   const isNarrowedView = bodyTypes.length > 0 || !!group
   const emptyMessage = () => {
     if (hiddenCount > 0) return l`You've hidden everything here. New expenses, payments and group changes will show up as they happen.`
+    if (canLookFurther && (isNarrowedView || bodyTab !== 'all')) return l`Nothing matches in the latest changes.`
     if (isNarrowedView) return l`Nothing matches these filters yet.`
     if (bodyTab === 'me') return l`Nothing from you yet. What you add or change shows up here.`
     if (bodyTab === 'others') return l`Nothing from other people yet. When someone else adds or changes something you share, it shows up here.`
     return l`Nothing here yet. Expenses, payments and group changes will show up here.`
   }
+  /* "Show every type" clears the types and keeps a group; with only a group narrowing, "Show everything" clears it. */
+  const clearButton = isNarrowedView
+    ? bodyTypes.length > 0
+      ? {testID: 'activity-clear-filters', label: l`Show every type`, text: l`Show every type`, onPress: () => applyTypes([])}
+      : {testID: 'activity-clear-filters', label: l`Show everything`, text: l`Show everything`, onPress: clearGroup}
+    : undefined
+  const lookFurtherButton = canLookFurther
+    ? {testID: 'activity-look-further', label: l`Look further back`, text: l`Look further back`, onPress: () => loadMore?.(5)}
+    : undefined
 
   const renderItem = ({item: row, index}: {item: FeedRow; index: number}) => {
     if (!snapshot) return null
@@ -212,7 +228,7 @@ export function ActivityScreen() {
         </Layout.Header.Outer>
         <TabBar
           testID="activity-tabs"
-          selectedPage={tab}
+          selectedPage={isChoiceKnown ? tab : -1}
           items={[l`All`, l`Me`, l`Others`]}
           onSelect={setTab}
         />
@@ -232,7 +248,7 @@ export function ActivityScreen() {
       </Layout.Header.Sticky>
       {/* Shell first (owner 152): the header paints at once, a skeleton while the data is missing, the list mounts after as a transition. */}
       <Deferred
-        when={snapshot !== undefined}
+        when={snapshot !== undefined && isChoiceKnown}
         fallback={
         <Shimmer testID="activity-loading">
           <LoadingSkeleton />
@@ -258,19 +274,8 @@ export function ActivityScreen() {
                 testID="activity-empty"
                 illustration="empty-activity"
                 message={emptyMessage()}
-                button={
-                  isNarrowedView
-                    ? {
-                        testID: 'activity-clear-filters',
-                        label: l`Show every type`,
-                        text: l`Show every type`,
-                        onPress: () => {
-                          applyTypes([])
-                          clearGroup()
-                        },
-                      }
-                    : undefined
-                }
+                button={lookFurtherButton ?? clearButton}
+                secondaryButton={lookFurtherButton ? clearButton : undefined}
               />
               )
             }

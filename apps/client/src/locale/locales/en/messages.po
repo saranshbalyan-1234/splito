@@ -687,11 +687,11 @@ msgstr "{count, plural, one {# comment} other {# comments}}"
 msgid "{count, plural, one {# expense} other {# expenses}}"
 msgstr "{count, plural, one {# expense} other {# expenses}}"
 
-#: src/components/activity/useActivityFeed.ts:126
+#: src/components/activity/useActivityFeed.ts:144
 msgid "{count, plural, one {# or more unread items} other {# or more unread items}}"
 msgstr "{count, plural, one {# or more unread items} other {# or more unread items}}"
 
-#: src/components/activity/useActivityFeed.ts:130
+#: src/components/activity/useActivityFeed.ts:148
 msgid "{count, plural, one {# unread item} other {# unread items}}"
 msgstr "{count, plural, one {# unread item} other {# unread items}}"
 
@@ -769,7 +769,7 @@ msgstr "{groupName} is back in your lists"
 msgid "{groupName} is inactive"
 msgstr "{groupName} is inactive"
 
-#: src/screens/Activity.tsx:270
+#: src/screens/Activity.tsx:300
 msgid "{hiddenCount, plural, one {# change hidden from your activity} other {# changes hidden from your activity}}"
 msgstr "{hiddenCount, plural, one {# change hidden from your activity} other {# changes hidden from your activity}}"
 
@@ -1172,7 +1172,7 @@ msgstr "Active"
 
 #: src/components/TabGlyph.tsx:42
 #: src/navigation/Navigation.tsx:71
-#: src/screens/Activity.tsx:156
+#: src/screens/Activity.tsx:190
 msgid "Activity"
 msgstr "Activity"
 
@@ -1420,7 +1420,7 @@ msgstr "Alcohol"
 
 #: src/components/activity/ActivityFilterDialog.tsx:62
 #: src/components/activity/ActivityFilterDialog.tsx:69
-#: src/screens/Activity.tsx:198
+#: src/screens/Activity.tsx:232
 #: src/screens/Analytics/components/ScopeDialog.tsx:134
 #: src/screens/Analytics/components/ScopeDialog.tsx:145
 #: src/screens/Groups/components/GroupsFilterDialog.tsx:74
@@ -3244,14 +3244,14 @@ msgstr "Filter"
 
 #: src/components/activity/ActivityFilterDialog.tsx:50
 #: src/components/ListToolsHeader.tsx:144
-#: src/screens/Activity.tsx:162
+#: src/screens/Activity.tsx:196
 #: src/screens/Groups/components/GroupsFilterDialog.tsx:60
 #: src/screens/People/components/FriendsFilterDialog.tsx:73
 msgid "Filters"
 msgstr "Filters"
 
 #: src/components/ListToolsHeader.tsx:143
-#: src/screens/Activity.tsx:162
+#: src/screens/Activity.tsx:196
 msgid "Filters, {activeFilterCount} on"
 msgstr "Filters, {activeFilterCount} on"
 
@@ -4124,6 +4124,11 @@ msgstr "Liquor VAT"
 msgid "Long press for options"
 msgstr "Long press for options"
 
+#: src/screens/Activity.tsx:143
+#: src/screens/Activity.tsx:143
+msgid "Look further back"
+msgstr "Look further back"
+
 #: src/features/export/ImportSheet.tsx:233
 msgid "Made on another device: your side of every expense is matched to you here."
 msgstr "Made on another device: your side of every expense is matched to you here."
@@ -4184,7 +4189,7 @@ msgstr "Manage invite links"
 msgid "Manage links"
 msgstr "Manage links"
 
-#: src/screens/Activity.tsx:188
+#: src/screens/Activity.tsx:222
 msgid "Mark all read"
 msgstr "Mark all read"
 
@@ -4200,11 +4205,15 @@ msgstr "Mark as unread"
 msgid "Marked everything as read"
 msgstr "Marked everything as read"
 
+#: src/components/activity/useActivityActions.tsx:115
+msgid "Marked these as read"
+msgstr "Marked these as read"
+
 #: src/components/activity/ActivityItem.tsx:302
 msgid "Marks it as read"
 msgstr "Marks it as read"
 
-#: src/screens/Activity.tsx:198
+#: src/screens/Activity.tsx:232
 msgid "Me"
 msgstr "Me"
 
@@ -4708,15 +4717,15 @@ msgstr "Notes"
 msgid "Nothing about your device or this screen is attached."
 msgstr "Nothing about your device or this screen is attached."
 
-#: src/screens/Activity.tsx:109
+#: src/screens/Activity.tsx:133
 msgid "Nothing from other people yet. When someone else adds or changes something you share, it shows up here."
 msgstr "Nothing from other people yet. When someone else adds or changes something you share, it shows up here."
 
-#: src/screens/Activity.tsx:108
+#: src/screens/Activity.tsx:132
 msgid "Nothing from you yet. What you add or change shows up here."
 msgstr "Nothing from you yet. What you add or change shows up here."
 
-#: src/screens/Activity.tsx:110
+#: src/screens/Activity.tsx:134
 msgid "Nothing here yet. Expenses, payments and group changes will show up here."
 msgstr "Nothing here yet. Expenses, payments and group changes will show up here."
 
@@ -4733,7 +4742,11 @@ msgstr "Nothing matches “{0}”."
 msgid "Nothing matches “{search}”"
 msgstr "Nothing matches “{search}”"
 
-#: src/screens/Activity.tsx:107
+#: src/screens/Activity.tsx:130
+msgid "Nothing matches in the latest changes."
+msgstr "Nothing matches in the latest changes."
+
+#: src/screens/Activity.tsx:131
 msgid "Nothing matches these filters yet."
 msgstr "Nothing matches these filters yet."
 
@@ -4866,7 +4879,7 @@ msgid "One row per record, for a spreadsheet. Amounts are exact, with their curr
 msgstr "One row per record, for a spreadsheet. Amounts are exact, with their currency beside them."
 
 #. placeholder {0}: feed.snapshot?.groups.get(group)?.data.name ?? l`this group`
-#: src/screens/Activity.tsx:205
+#: src/screens/Activity.tsx:239
 msgid "Only {0}. Show everything"
 msgstr "Only {0}. Show everything"
 
@@ -5062,7 +5075,7 @@ msgstr "Other account"
 msgid "Other currency"
 msgstr "Other currency"
 
-#: src/screens/Activity.tsx:198
+#: src/screens/Activity.tsx:232
 msgid "Others"
 msgstr "Others"
 
@@ -6060,13 +6073,13 @@ msgstr "Searches “{0}” with every match"
 msgid "See all"
 msgstr "See all"
 
-#: src/view/shell/desktop/RecentTransactions.tsx:152
-msgid "See all activity"
-msgstr "See all activity"
-
 #: src/view/shell/desktop/LeftNav.tsx:698
 msgid "See all groups"
 msgstr "See all groups"
+
+#: src/view/shell/desktop/RecentTransactions.tsx:152
+msgid "See all transactions"
+msgstr "See all transactions"
 
 #: src/screens/Login/ChooseAccountForm.tsx:35
 msgid "Select account"
@@ -6338,10 +6351,15 @@ msgstr "Show days"
 msgid "Show earlier comments"
 msgstr "Show earlier comments"
 
-#: src/screens/Activity.tsx:241
-#: src/screens/Activity.tsx:242
+#: src/screens/Activity.tsx:139
+#: src/screens/Activity.tsx:139
 msgid "Show every type"
 msgstr "Show every type"
+
+#: src/screens/Activity.tsx:140
+#: src/screens/Activity.tsx:140
+msgid "Show everything"
+msgstr "Show everything"
 
 #: src/screens/Analytics/components/ScopeDialog.tsx:102
 #: src/screens/Analytics/components/ScopeDialog.tsx:153
@@ -6365,7 +6383,7 @@ msgstr "Show group"
 msgid "Show hidden"
 msgstr "Show hidden"
 
-#: src/screens/Activity.tsx:278
+#: src/screens/Activity.tsx:308
 msgid "Show hidden changes"
 msgstr "Show hidden changes"
 
@@ -6402,7 +6420,7 @@ msgstr "Show QR code and share"
 msgid "Show settled"
 msgstr "Show settled"
 
-#: src/screens/Activity.tsx:284
+#: src/screens/Activity.tsx:314
 msgid "Show them"
 msgstr "Show them"
 
@@ -7025,11 +7043,11 @@ msgstr "This friend isn’t on this device. They may have been removed."
 msgid "This friend was removed. Their expenses and payments stay here, struck through."
 msgstr "This friend was removed. Their expenses and payments stay here, struck through."
 
-#: src/screens/Activity.tsx:205
+#: src/screens/Activity.tsx:239
 msgid "this group"
 msgstr "this group"
 
-#: src/screens/Activity.tsx:209
+#: src/screens/Activity.tsx:243
 msgid "This group"
 msgstr "This group"
 
@@ -8036,7 +8054,7 @@ msgstr "You're settled up with everyone."
 msgid "You’ve already asked {value}. It’s under Invites sent on People, where you can resend it."
 msgstr "You’ve already asked {value}. It’s under Invites sent on People, where you can resend it."
 
-#: src/screens/Activity.tsx:106
+#: src/screens/Activity.tsx:129
 msgid "You've hidden everything here. New expenses, payments and group changes will show up as they happen."
 msgstr "You've hidden everything here. New expenses, payments and group changes will show up as they happen."
 
