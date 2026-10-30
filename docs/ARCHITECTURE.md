@@ -1701,7 +1701,17 @@ labelled sidebar); **wide** = web 1300 px and up (Bluesky `gtTablet`, right colu
 
 ### 26.3 Shell and navigation
 
-- **Home, People and Groups are three tabs; the Overview lives only on Home** [Built, F-256, web; native not yet checked on a simulator] (owner 153; replaces the
+- **There is no Home tab; the Overview is the top of Analytics** (owner 198, replaces the Home tab of 153 below):
+  the tabs are **People, Groups, Analytics, Activity** (plus Ask Splito and Settings in the shared list). The
+  Overview (per-currency balance cards with All / Groups / Direct, owners 113/114/120/161/176) is the first section of
+  Analytics, above its filter row, labelled as balances right now (it ignores the period and currency filters
+  below it); Recent transactions is Activity (Type = Expenses and Payments), and recently active people and groups
+  are People and Groups sorted by Last active (owner 199). The app opens on **People** (the start tab; Settings >
+  Navigation can change it); `/` opens the start tab; the old `/?overview=` address redirects to
+  `/analytics?overview=`; a saved tab list or start tab naming `home` is migrated (dropped, start tab People). The
+  logo goes to the start tab; every "Home" fallback (Back parents, owner 184; sign-in return) becomes the start tab.
+  *Why:* "move the overview section to analytics as well, and then remove home".
+- **(Superseded by owner 198) Home, People and Groups are three tabs; the Overview lives only on Home** [Built, F-256, web; native not yet checked on a simulator] (owner 153; replaces the
   Home-holds-the-friends-list layout of 120 and the Overview on Groups):
   - **Home** (`/`), top to bottom (owners 153, 154): the **Overview** (per-currency cards, owners 113/114/120,
     "Analytics ›"; a scope choice in its header, **All** (default) / **Groups** / **Direct** (non-group), changes
@@ -2267,9 +2277,13 @@ expands once I click". *Where:* `screens/People`, `screens/Groups`, `screens/Gro
 - **Filters open a form sheet (§ 26.8) with Cancel + Apply; changes apply only on Apply,** and drive the list
   (not the Overview on Home, which has its own scope, owner 176). Filters and search combine. Friends: "Include groups" (default from the
   `includeGroupsDefault` preference, on), currency (All / each present), show (All / Owes you / You owe /
-  Settled), sort (Amount / Name / Recent, default from `peopleSort`). Groups: type (Trip / Home / Couple /
-  Other), status (Active / Inactive / All), show (Shown / Hidden / All), currency, show (All / You are owed / You owe / Settled), sort (Recent
-  activity / Name / Amount). The Person page's history obeys the same Include groups choice.
+  Settled). Groups: type (Trip / Home / Couple / Other), status (Active / Inactive / All), show (Shown / Hidden /
+  All), currency, show (All / You are owed / You owe / Settled). **Sort is its own control** (owner 199): a Sort
+  button beside Filters in the People and Groups list headers opens a menu (radio items): **Last active** (default:
+  newest change first, any expense, payment, comment or edit involving them), Name, Amount (largest balance first),
+  Newest (most recently added). The choice is remembered per list (`peopleSort`, `groupsSort`) and in the address
+  (`?sort=`); a non-default sort tints the button like an active filter. *Why:* "add sort filter people and group,
+  default sort by last active". The Person page's history obeys the same Include groups choice.
 - **Groups are Active or Inactive, and Shown or Hidden: two separate controls, no "Archive"** (owner 89,
   replaces 88's single Archive). Both live in the group's header overflow, are recorded in history, and have an
   Undo toast.
@@ -2650,6 +2664,9 @@ dishes etc and each item can be assigned to each in split"; "in itemize don't sh
 
 ### 26.16 Analytics
 
+- **The Overview opens Analytics** (owner 198): the per-currency balance cards (All / Groups / Direct) are its first
+  section, above the filter row, and show balances right now (not filtered by period or currency); a card opens the
+  rest of Analytics in that currency.
 - **Analytics is a main destination with graphs** (charts and a table view), filtered by period, currency and
   group; the chart/table toggle sits in that filter row, never in the header; the header's one action is
   Export CSV. One chart per currency, or converted with the rate labelled. *Why:* "analytics also needed, with
@@ -3176,6 +3193,8 @@ Every owner decision, in the order it was made (all 2026-10-26). "Replaced" name
 | 195 | "whrever activiyt can be linked do it, also invites can be hanlded like this"; "this way we can handle everything from one place and user wont be confused" | Every link that can lead to Activity does; requests/invites see-all and counts open Activity (Type = Friends and invites) with Accept/Decline and Resend/Cancel in the rows; Friends and invites keeps only its tools | § 26.14 | Requests and invites kept their own list pages (owner 194) |
 | 196 | "in group link, it should show anyone can join, or invites only, or add like this, if i add someone they would acept or i can send request" | Group "Who can join": Anyone with the link / Link, I approve each join (default) / Invite only; adding a friend sends a group request they accept (shown "Invited" until then); join requests and group requests handled in Activity | § 26.18 | Group links always required approval; members were added directly |
 | 197 | "all these invites should show on their respectivr page not on home page, like group and people" | No requests or invites on Home; People shows friend requests and invites sent, Groups shows group requests, join requests and group invites, a group page its own; 5 rows then See all into Activity | § 26.3 | Home Requests section with invites sent (175) |
+| 198 | "move the overview section to analytivcs as well, and then remove home" | No Home tab; the Overview is the first section of Analytics (balances now, own All/Groups/Direct); tabs People, Groups, Analytics, Activity; app opens on People; `/` and old Home addresses redirect; Home fallbacks become the start tab | § 26.3, § 26.16 | Home tab with Overview, requests, recent transactions, recent people and groups (153, 175) |
+| 199 | "add sort filter people and group, default sort by last active" | Sort is its own button beside Filters on People and Groups: Last active (default), Name, Amount, Newest; remembered per list and in the URL | § 26.12 | Sort inside the Filters sheet; People defaulted to Amount |
 
 New decisions follow § 0 rule 9: rewrite the rule in its topic so only the current truth remains, then add a
 row here.

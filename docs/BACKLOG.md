@@ -687,6 +687,28 @@ Home drops its Requests section; People shows friend requests and invites, Group
   2. One-line rows (§ 26.18), max 5, "See all" -> Activity (Friends and invites, group-scoped where relevant); hidden when empty.
   3. Specs that expected Home's Requests section move to People/Groups; e2e at 390 and 1440.
 
+### F-271 Remove Home; Overview at the top of Analytics `spec: owner § 26.3 (decision 198)`
+
+The Home tab goes; its Overview becomes the first section of Analytics; the app opens on People.
+
+- **Effort** M · **Impact** 8 · **Backend** no · **Status** in progress, Wave C · **Deps** F-256
+- **Prefs** start tab default `people`; `tabs` migration drops `home`
+- **Acceptance**
+  1. Tabs People, Groups, Analytics, Activity (+ Ask, Settings); no Home route or screen; `/` opens the start tab; `/?overview=` -> `/analytics?overview=`; saved `tabs`/`startTab` naming home migrate (tests).
+  2. Analytics shows the Overview cards (All / Groups / Direct, owner 161 layout) above its filter row, labelled as balances now, ignoring period/currency; a card opens Analytics in that currency.
+  3. Logo, Back parents (owner 184), sign-in return and every Home fallback go to the start tab; Home's "See all" links and Recent sections are gone (Activity, People, Groups cover them); specs updated; e2e at 390 and 1440.
+
+### F-272 Sort control on People and Groups `spec: owner § 26.12 (decision 199)`
+
+A Sort button beside Filters: Last active (default), Name, Amount, Newest; remembered and in the URL.
+
+- **Effort** S · **Impact** 7 · **Backend** no · **Status** in progress, Wave C · **Deps** -
+- **Prefs** `peopleSort` (default `lastActive`), `groupsSort` (default `lastActive`)
+- **Acceptance**
+  1. People and Groups headers: search, Filters, Sort (and People's gear last); Sort opens a radio menu; non-default tints the button.
+  2. Last active = newest change involving the friend or group (expense, payment, comment, edit), computed in the domain/sync layer, not in screens; ties by name.
+  3. Sort leaves the Filters sheet; `?sort=` in the URL; old `peopleSort` values migrate; unit tests for each order; e2e at 390 and 1440.
+
 ### F-250 Sign-in required (auth gate) `spec: owner § 26.15 (decision 125)`
 
 Nothing of the app is visible signed out: only the welcome tour, the logged-out flow, language and legal pages. The local database opens per account only with a session; offline after sign-in; deep links resume after sign-in.
