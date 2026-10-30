@@ -305,15 +305,16 @@ test.describe('phone: tabs stay mounted and answer in the first frame', () => {
     await page.getByTestId('tab-analytics').evaluate(el => (el as HTMLElement).click())
     await expect(page.getByTestId('screen-analytics')).toBeVisible()
 
-    // A press that is dragged off before it lifts has already acted at press-in; it must not leave the link
-    // swallowing the next click-only activation.
+    // A press that is cancelled (the browser takes the touch for a scroll or a system gesture) has already acted at
+    // press-in; it must not leave the link swallowing the next click-only activation. A real touch cancel, not a
+    // mouse drag: dragging across the page selects text, and react-native-web then drops the next click on that link
+    // by design (`_selectionTerminated`), which is its rule, not ours.
     const box = (await page.getByTestId('tab-activity').boundingBox())!
-    await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2)
-    await page.mouse.down()
-    // The finger rests a moment (the press-in has acted), then slides off before lifting.
-    await page.waitForTimeout(150)
-    await page.mouse.move(box.x + box.width / 2, 300)
-    await page.mouse.up()
+    const at = {x: Math.round(box.x + box.width / 2), y: Math.round(box.y + box.height / 2)}
+    const cdp = await page.context().newCDPSession(page)
+    await cdp.send('Input.dispatchTouchEvent', {type: 'touchStart', touchPoints: [at]})
+    await expect(page.getByTestId('tab-activity')).toHaveAttribute('aria-current', 'page')
+    await cdp.send('Input.dispatchTouchEvent', {type: 'touchCancel', touchPoints: []})
     await expect(page.getByTestId('screen-activity')).toBeVisible()
     await tap(page, 'home')
     await expect(page.getByTestId('screen-home')).toBeVisible()

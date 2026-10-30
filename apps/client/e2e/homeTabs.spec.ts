@@ -1,6 +1,7 @@
 import {expect, type Page, test} from '@playwright/test'
 
 import {openDemo} from './openDemo'
+import {pinClock} from './pinClock'
 
 /*
  * F-256 (owners 153-161, ARCHITECTURE 26.3 and 26.12): Home, People and Groups are three tabs and the Overview lives only
@@ -280,6 +281,8 @@ async function overviewNets(page: Page) {
 
 test('Overview scope: All, Groups and Direct change only the cards; it is in the address and remembered; Analytics carries it (owner 176)', async ({page}) => {
   await page.setViewportSize(PHONE)
+  // "Recently active people" is ordered by change times relative to now: pinned, the same people lead at any hour.
+  await pinClock(page)
   await openDemo(page)
   const home = page.getByTestId('screen-home')
   await expect(home.getByTestId('overview-scope-all')).toHaveAttribute('aria-checked', 'true')
