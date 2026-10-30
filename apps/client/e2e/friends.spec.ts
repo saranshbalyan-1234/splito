@@ -181,6 +181,17 @@ test('not on Splito: warning, then Add anyway (only for you) is selectable at on
   await expect(dialog.getByRole('checkbox', {name: 'Zoe Hart'})).toBeEnabled()
 })
 
+test('a friend typed in lower case is saved and shown capitalised word by word (decision 181)', async ({page}) => {
+  await openDemo(page)
+  await openAddFriend(page)
+  await page.getByTestId('add-friend-contact').fill('+44 7911 123457')
+  await page.getByTestId('add-friend-name').fill('saransh   balyan')
+  await page.getByTestId('add-friend-add-anyway').click()
+  await expect(page.getByTestId('person-name')).toHaveText(/^Saransh Balyan( - Demo)?$/)
+  await page.goBack()
+  await expect(page.getByTestId('person-Saransh Balyan')).toBeVisible()
+})
+
 test('not on Splito: Send invite makes a personal one-use link and lists them under Invites sent', async ({page}) => {
   await openDemo(page)
   await openAddFriend(page)

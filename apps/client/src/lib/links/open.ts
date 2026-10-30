@@ -2,7 +2,7 @@ import {recordFriction} from '#/logger'
 import {IS_WEB} from '#/env'
 import {navigationRef, resetToRoot} from '#/navigation/ref'
 import {openSheetMarkers, ownerOf, queueSheets} from '#/navigation/sheets'
-import {tabLink} from '#/lib/routes/helpers'
+import {originTab, tabLink} from '#/lib/routes/helpers'
 import {TAB_NAMES} from '#/lib/routes/tabs'
 import {StackActions} from '@react-navigation/native'
 import {holdLinkIntent, isSignInRequired} from './intent'
@@ -29,7 +29,7 @@ export function navigateToTarget(target: LinkTarget, {plain = false}: {plain?: b
   const go = navigationRef.navigate as (name: string, params?: object) => void
   const isTab = (TAB_NAMES as readonly string[]).includes(target.name)
   const params = Object.keys(target.params).length > 0 ? target.params : undefined
-  const pushed = isTab && !plain && !(target.name === 'Home' && isGlobalSheet(target.sheets)) ? tabLink(target.name, params, IS_WEB) : null
+  const pushed = isTab && !plain && !(target.name === 'Home' && isGlobalSheet(target.sheets)) ? tabLink(target.name, params, IS_WEB, originTab(navigationRef.getRootState())) : null
   const open = () => {
     if (pushed) navigationRef.dispatch(StackActions.push(pushed.name, pushed.params))
     else if (IS_WEB) go(target.name, params)

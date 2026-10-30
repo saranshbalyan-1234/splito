@@ -11,15 +11,15 @@ export type ListParams = {[key: string]: string | undefined}
 /** The bottom bar / sidebar destinations, in display order. */
 export type TabParams = {
   /** The Overview and the short recent lists. `overview=all|groups|direct` is the Overview's scope (owner 176). */
-  Home: {overview?: string; pushed?: string} | undefined
+  Home: {overview?: string; from?: string} | undefined
   /** The Friends list (F-256). List state in the address (F-241): `sort`, `show`, `currency`, `groups=0` (no group shares), `settled=1`, `hidden=1`. */
   People: ListParams | undefined
   /** `type`, `status`, `show`, `currency`, `sort`, `settled=1`, `hidden=1`. */
   Groups: ListParams | undefined
   /** `currency` opens the report in that currency (`/analytics?currency=EUR`, an Overview card); also `period`, `offset`, `from`, `to`, `scope`. */
-  Analytics: {pushed?: string; currency?: string; period?: string; offset?: string; from?: string; to?: string; scope?: string} | undefined
+  Analytics: {currency?: string; period?: string; offset?: string; from?: string; to?: string; scope?: string} | undefined
   /** `tab: 'others'` is `/activity/others`. */
-  Activity: {tab?: 'all' | 'others'; type?: string; pushed?: string} | undefined
+  Activity: {tab?: 'all' | 'others'; type?: string; from?: string} | undefined
 }
 
 /** Every route in the owner's route table (paths live in `#/routes` and `#/navigation/linking`). */

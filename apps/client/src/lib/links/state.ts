@@ -3,6 +3,9 @@ import {type SheetMarker} from '#/lib/routes/types'
 import {TAB_NAMES} from '#/lib/routes/tabs'
 import {buildPath, type LinkTarget} from './resolve'
 
+/** Key prefix of the routes `webState` puts under a deep-linked page. */
+export const COLD_KEY = 'cold-'
+
 /** Route params React Navigation takes: strings only, nothing undefined. */
 function routeParams(params: Record<string, string>) {
   return Object.keys(params).length > 0 ? params : undefined
@@ -27,7 +30,9 @@ export function sheetRoutes(target: LinkTarget) {
  */
 export function webState(target: LinkTarget) {
   const page = {name: target.name, params: routeParams(target.params)}
-  const routes = [...backChain(page), ...sheetRoutes(target)]
+  /* The parents are named `cold-...`: a page that knows its real parents (an expense's group) can tell they are only the default chain (`useRealParents`). */
+  const chain = backChain(page).map((route, i, all) => (i < all.length - 1 ? {...route, key: `${COLD_KEY}${route.name}-${i}`} : route))
+  const routes = [...chain, ...sheetRoutes(target)]
   return {index: routes.length - 1, routes}
 }
 

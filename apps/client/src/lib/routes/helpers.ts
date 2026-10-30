@@ -1,6 +1,7 @@
 // Adapted from bluesky-social/social-app@4e4ad9c (MIT) - src/lib/routes/helpers.ts
 import {type NavigationProp} from '@react-navigation/native'
 
+import {currentSection} from './section'
 import {type RouteParams, type State, type TabParams} from './types'
 
 export function getRootNavigation<T extends {}>(
@@ -136,28 +137,37 @@ export function buildStateObject(
 /* Exhaustive on purpose: a tab added to TabParams (People came with decision 153) fails to compile here until it is listed. */
 const TAB_ROUTES: readonly string[] = Object.keys({Home: 1, People: 1, Groups: 1, Analytics: 1, Activity: 1} satisfies Record<keyof TabParams, 1>)
 
+/** The main screens, as a link's `from` names them. */
+const FROM_TABS = {home: 'Home', people: 'People', groups: 'Groups', analytics: 'Analytics', activity: 'Activity'} as const
+
+/** The tab a `from` value names (`/activity?from=home` -> Home), else null (Analytics' custom range uses `from` for a date too). */
+export function fromTab(value: unknown): (typeof FROM_TABS)[keyof typeof FROM_TABS] | null {
+  return typeof value === 'string' && Object.hasOwn(FROM_TABS, value) ? FROM_TABS[value as keyof typeof FROM_TABS] : null
+}
+
+/** The route param that marks a tab screen pushed as a copy on web: the tab it was opened from (`from=home`), in the address so a refresh keeps Back (owner 184). */
+export const FROM_PARAM = 'from'
+
+/** Native pushes the copy under its own root-stack name (`PushedGroups`), since the tabs live in the nested `Tabs` screen. */
+export const PUSHED_PREFIX = 'Pushed'
+
+/** Whether a route is a pushed copy of a tab screen (owner 179): native's `Pushed<Tab>`, or a tab route carrying `from=<tab>`. */
+export function isPushedTabRoute(route: {name: string; params?: object | undefined}): boolean {
+  if (route.name.startsWith(PUSHED_PREFIX)) return true
+  return TAB_ROUTES.includes(route.name) && fromTab((route.params as Record<string, unknown> | undefined)?.[FROM_PARAM]) !== null
+}
+
 /**
  * When the focused route is a pushed copy of tab `tab` (owner 179), the params the plain tab has: the copy's own
- * without the `pushed` marker. Otherwise null. Pressing the tab replaces the copy with the plain route; popping would
- * land on the page below it, not on the tab that was pressed.
+ * without `from`. Otherwise null. Pressing the tab replaces the copy with the plain route; popping would land on the
+ * page below it, not on the tab that was pressed.
  */
 export function pushedCopyOf(state: State | undefined, tab: string): {params: object | undefined} | null {
   if (!state) return null
   const route = getCurrentRoute(state)
   if (!isPushedTabRoute(route) || !isTab(route.name.startsWith(PUSHED_PREFIX) ? route.name.slice(PUSHED_PREFIX.length) : route.name, tab)) return null
-  const {[PUSHED_PARAM]: _pushed, ...rest} = (route.params ?? {}) as Record<string, unknown>
+  const {[FROM_PARAM]: _from, ...rest} = (route.params ?? {}) as Record<string, unknown>
   return {params: Object.keys(rest).length > 0 ? rest : undefined}
-}
-
-/** The route param that marks a tab screen pushed as a copy on web (never written to the address bar). */
-export const PUSHED_PARAM = 'pushed'
-
-/** Native pushes the copy under its own root-stack name (`PushedGroups`), since the tabs live in the nested `Tabs` screen. */
-export const PUSHED_PREFIX = 'Pushed'
-
-/** Whether a route is a pushed copy of a tab screen (owner 179). */
-export function isPushedTabRoute(route: {name: string; params?: object | undefined}): boolean {
-  return route.name.startsWith(PUSHED_PREFIX) || (route.params as Record<string, unknown> | undefined)?.[PUSHED_PARAM] === '1'
 }
 
 /**
@@ -165,17 +175,29 @@ export function isPushedTabRoute(route: {name: string; params?: object | undefin
  * Activity) opened from a link, rather than from its own tab or sidebar item, is a pushed page: a stack copy of the
  * screen carrying its params, with Back in the header (returning to where the link was) and no FAB; the tab itself
  * still gives the plain tab screen with the avatar. On web the tab routes live in the one flat stack, so the copy is
- * the same route pushed with a `pushed` marker (kept out of the address); on native the tabs are nested in `Tabs`,
- * so the root stack holds `Pushed<Tab>` twins of them. Every other route is pushed as it is (Bluesky's behaviour):
- * `null`. Nav items use `navigationAction="navigate"` and never come through here.
+ * the same route pushed with `from=<the tab the link was pressed on>` (in the address, so a refresh keeps Back there,
+ * owner 184); on native the tabs are nested in `Tabs`, so the root stack holds `Pushed<Tab>` twins of them. Every
+ * other route is pushed as it is (Bluesky's behaviour): `null`. Nav items use `navigationAction="navigate"` and never
+ * come through here.
  */
 export function tabLink(
   routeName: string,
   params: object | undefined,
   isWeb: boolean,
+  from: string = 'home',
 ): {kind: 'push'; name: string; params: object | undefined} | null {
   if (!TAB_ROUTES.includes(routeName)) return null
   return isWeb
-    ? {kind: 'push', name: routeName, params: {...params, [PUSHED_PARAM]: '1'}}
+    ? {kind: 'push', name: routeName, params: {...params, [FROM_PARAM]: fromTab(from) ? from : 'home'}}
     : {kind: 'push', name: `${PUSHED_PREFIX}${routeName}`, params}
+}
+
+/** The tab a link pressed on `state`'s page counts as opened from (its section, lower-cased); Home when the page is outside the tabs. */
+export function originTab(state: State | undefined): string {
+  const route = state ? getCurrentRoute(state) : undefined
+  if (!route) return 'home'
+  const name = route.name.startsWith(PUSHED_PREFIX) ? route.name.slice(PUSHED_PREFIX.length) : route.name
+  if (TAB_ROUTES.includes(name)) return name.toLowerCase()
+  const section = currentSection(state).toLowerCase()
+  return fromTab(section) ? section : 'home'
 }

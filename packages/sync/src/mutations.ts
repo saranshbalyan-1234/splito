@@ -1,5 +1,6 @@
 import {
   assertInRange,
+  capitalizeName,
   computeShares,
   type Contact,
   type CurrencyCode,
@@ -57,6 +58,8 @@ export interface Group {
   members: GroupMemberEntry[]
   startDate: LocalDate | null
   endDate: LocalDate | null
+  /** Where a trip is, plain text (owner 182). Absent on groups made before it: reads as null. Kept when the type changes away from Trip. */
+  location?: string | null
   /** Legacy flag from before Active / Inactive (decision 89): it reads as inactive (`isGroupInactive`) and is cleared by "Make active". */
   archived: boolean
   /** Inactive (decision 89): takes no new expenses but can still settle. Absent: active. */
@@ -200,6 +203,23 @@ export function cleanName(name: string) {
   return n
 }
 
+/** A trip's place as saved (owner 182): trimmed, inner whitespace collapsed, null when empty. */
+export function cleanLocation(location: string | null | undefined): string | null {
+  return location?.replace(/\s+/g, ' ').trim() || null
+}
+
+/** A person's name as saved (owner 181): capitalised word by word, never empty. Group names and titles use `cleanName`. */
+export function cleanPersonName(name: string) {
+  return cleanName(capitalizeName(name))
+}
+
+/** A person (or friend request) row with its name capitalised, for display: old lower-case rows read right, a correct row comes back as is. */
+export function displayPerson<E extends Entity<{name: string; contact?: Contact | null}>>(e: E): E {
+  if (e.data.contact && e.data.name === formatContact(e.data.contact)) return e // the contact stood in for a name
+  const name = capitalizeName(e.data.name)
+  return name === e.data.name ? e : {...e, data: {...e.data, name}}
+}
+
 /** @internal */
 export async function requireLive<T>(tx: Tx, type: EntityType, id: string, code = 'NOT_FOUND'): Promise<Entity<T>> {
   const e = await tx.get<T>(type, id)
@@ -208,7 +228,7 @@ export async function requireLive<T>(tx: Tx, type: EntityType, id: string, code 
 }
 
 export async function ensureMe(store: Store, ctx: MutationCtx, name: string): Promise<Entity<Person>> {
-  return store.transaction(async tx => (await tx.get<Person>('person', ctx.actor)) ?? write(tx, ctx, 'person', ctx.actor, {name: cleanName(name), isMe: true}, false, 'person.create'))
+  return store.transaction(async tx => (await tx.get<Person>('person', ctx.actor)) ?? write(tx, ctx, 'person', ctx.actor, {name: cleanPersonName(name), isMe: true}, false, 'person.create'))
 }
 
 // ponytail: shape check only (handle@psp); the payer's UPI app is the real validator.
@@ -232,13 +252,14 @@ export async function createPerson(
 ): Promise<Entity<Person>> {
   const contact = input.contact ?? null
   if (contact && !isContact(contact)) throw new DomainError('INVALID_CONTACT')
-  const name = input.name.trim() || (contact ? formatContact(contact) : '')
+  // A contact used as the name (an email, a phone number) is not a name to capitalise.
+  const name = capitalizeName(input.name) || (contact ? formatContact(contact) : '')
   const data: Person = {name: cleanName(name), isMe: false, upiId: cleanUpi(input.upiId), ...(contact ? {contact} : {})}
   return store.transaction(tx => write(tx, ctx, 'person', ctx.newId(), data, false, 'person.create'))
 }
 
 export async function updatePerson(store: Store, ctx: MutationCtx, id: string, input: {name: string; upiId?: string | null}): Promise<Entity<Person>> {
-  const name = cleanName(input.name)
+  const name = cleanPersonName(input.name)
   const upiId = cleanUpi(input.upiId)
   return store.transaction(async tx => {
     const p = await requireLive<Person>(tx, 'person', id)
@@ -318,17 +339,17 @@ export async function createGroup(
     const joinedAt = ctx.now()
     const {memberIds: _m, ...rest} = input
     const members = ids.map(personId => ({personId, joinedAt, leftAt: null, role: personId === ctx.actor ? ('admin' as const) : ('member' as const)}))
-    const data: Group = {...rest, name: cleanName(input.name), members, archived: false}
+    const data: Group = {...rest, name: cleanName(input.name), location: cleanLocation(input.location), members, archived: false}
     return write(tx, ctx, 'group', ctx.newId(), data, false, 'group.create')
   })
 }
 
-/** Edits a group's name, type, currency and trip dates; members, rules and history stay. */
+/** Edits a group's name, type, currency, trip dates and place (`location` left out: unchanged); members, rules and history stay. */
 export async function updateGroup(
   store: Store,
   ctx: MutationCtx,
   groupId: string,
-  input: Pick<Group, 'name' | 'kind' | 'currency' | 'startDate' | 'endDate'>,
+  input: Pick<Group, 'name' | 'kind' | 'currency' | 'startDate' | 'endDate' | 'location'>,
 ): Promise<Entity<Group>> {
   const name = cleanName(input.name)
   getCurrency(input.currency)
@@ -338,7 +359,8 @@ export async function updateGroup(
   return store.transaction(async tx => {
     const g = await requireLive<Group>(tx, 'group', groupId)
     const {kind, currency, startDate, endDate} = input
-    return write(tx, ctx, 'group', groupId, {...g.data, name, kind, currency, startDate, endDate}, false, 'group.update')
+    const location = input.location === undefined ? (g.data.location ?? null) : cleanLocation(input.location)
+    return write(tx, ctx, 'group', groupId, {...g.data, name, kind, currency, startDate, endDate, location}, false, 'group.update')
   })
 }
 

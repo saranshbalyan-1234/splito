@@ -17,7 +17,7 @@ import {
 } from '#/lib/hooks/useNavigationDeduped'
 import {IS_WEB} from '#/env'
 import {openExternal} from '#/lib/openExternal'
-import {getTabState, pushedCopyOf, tabLink, TabState} from '#/lib/routes/helpers'
+import {getTabState, originTab, pushedCopyOf, tabLink, TabState} from '#/lib/routes/helpers'
 import {WebAuxClickWrapper} from '#/view/com/util/WebAuxClickWrapper'
 import {useTheme} from '#/alf'
 import {Text} from '#/components/Typography'
@@ -190,7 +190,7 @@ function onPressInner(
       void openExternal(href)
     } else {
       const [routeName, params] = router.matchPath(href)
-      const tab = navigationAction === 'push' ? tabLink(routeName, params, IS_WEB) : null
+      const tab = navigationAction === 'push' ? tabLink(routeName, params, IS_WEB, originTab(navigation.getState())) : null
       if (tab) {
         navigation.dispatch(StackActions.push(tab.name, tab.params))
       } else if (navigationAction === 'push') {

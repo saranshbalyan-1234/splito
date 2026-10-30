@@ -174,16 +174,18 @@ type Ctx = {
   members: Friend[]
   /** Trips and the wedding: days ago the dates start, and how many days. */
   span?: [number, number]
+  /** A trip's place (owner 182). */
+  location?: string
 }
 
 const GROUPS: Ctx[] = [
-  {key: 'goa', name: 'Goa getaway', kind: 'trip', currency: 'INR', tz: 'Asia/Kolkata', members: ['kabir', 'neha', 'rohan', 'meera', 'ishaan', 'tanvi'], span: [300, 6]},
-  {key: 'lisbon', name: 'Lisbon & Sintra', kind: 'trip', currency: 'EUR', tz: 'Europe/Lisbon', members: ['ines', 'mateo', 'zara', 'aditya'], span: [205, 6]},
-  {key: 'bali', name: 'Bali & Bangkok', kind: 'trip', currency: 'USD', tz: 'Asia/Makassar', members: ['aanya', 'kabir', 'zara', 'aditya'], span: [152, 9]},
+  {key: 'goa', name: 'Goa getaway', kind: 'trip', location: 'Goa', currency: 'INR', tz: 'Asia/Kolkata', members: ['kabir', 'neha', 'rohan', 'meera', 'ishaan', 'tanvi'], span: [300, 6]},
+  {key: 'lisbon', name: 'Lisbon & Sintra', kind: 'trip', location: 'Lisbon & Sintra', currency: 'EUR', tz: 'Europe/Lisbon', members: ['ines', 'mateo', 'zara', 'aditya'], span: [205, 6]},
+  {key: 'bali', name: 'Bali & Bangkok', kind: 'trip', location: 'Bali & Bangkok', currency: 'USD', tz: 'Asia/Makassar', members: ['aanya', 'kabir', 'zara', 'aditya'], span: [152, 9]},
   {key: 'wedding', name: 'Rohan & Meera’s wedding', kind: 'other', currency: 'INR', tz: 'Asia/Kolkata', members: ['rohan', 'meera', 'karan', 'neha', 'ishaan', 'tanvi', 'kabir'], span: [118, 4]},
-  {key: 'tokyo', name: 'Tokyo', kind: 'trip', currency: 'JPY', tz: 'Asia/Tokyo', members: ['kenji', 'yuki', 'vihaan', 'sneha', 'rahul'], span: [84, 8]},
-  {key: 'roadtrip', name: 'Coorg road trip', kind: 'trip', currency: 'INR', tz: 'Asia/Kolkata', members: ['kabir', 'zara', 'neha', 'ishaan'], span: [48, 5]},
-  {key: 'london', name: 'London', kind: 'trip', currency: 'GBP', tz: 'Europe/London', members: ['oliver', 'emma', 'aanya', 'vihaan'], span: [24, 6]},
+  {key: 'tokyo', name: 'Tokyo', kind: 'trip', location: 'Tokyo', currency: 'JPY', tz: 'Asia/Tokyo', members: ['kenji', 'yuki', 'vihaan', 'sneha', 'rahul'], span: [84, 8]},
+  {key: 'roadtrip', name: 'Coorg road trip', kind: 'trip', location: 'Coorg', currency: 'INR', tz: 'Asia/Kolkata', members: ['kabir', 'zara', 'neha', 'ishaan'], span: [48, 5]},
+  {key: 'london', name: 'London', kind: 'trip', location: 'London', currency: 'GBP', tz: 'Europe/London', members: ['oliver', 'emma', 'aanya', 'vihaan'], span: [24, 6]},
   {key: 'flat', name: 'Koramangala flat', kind: 'home', currency: 'INR', tz: 'Asia/Kolkata', members: ['aanya', 'vihaan']},
   {key: 'office', name: 'Office lunch', kind: 'other', currency: 'INR', tz: 'Asia/Kolkata', members: ['vikram', 'sneha', 'rahul', 'pooja', 'karan', 'nisha', 'aditya']},
   {key: 'family', name: 'Family', kind: 'other', currency: 'INR', tz: 'Asia/Kolkata', members: ['mom', 'dad', 'ananya']},
@@ -400,10 +402,10 @@ type CuratedFriend = 'riya' | 'arjun' | 'priya' | 'sam' | 'lena' | 'diego'
 type CuratedWho = CuratedFriend | 'me'
 const STORY_FRIENDS: readonly CuratedFriend[] = ['riya', 'arjun', 'priya', 'sam', 'lena', 'diego']
 
-const CURATED_GROUPS: Record<CuratedGroup, {name: string; kind: Group['kind']; currency: CurrencyCode; start: string | null; end: string | null; tz: string; members: CuratedFriend[]}> = {
-  goa: {name: 'Goa trip', kind: 'trip', currency: 'INR', start: '2025-12-20', end: '2025-12-27', tz: 'Asia/Kolkata', members: ['riya', 'arjun', 'priya', 'sam']},
+const CURATED_GROUPS: Record<CuratedGroup, {name: string; kind: Group['kind']; location?: string; currency: CurrencyCode; start: string | null; end: string | null; tz: string; members: CuratedFriend[]}> = {
+  goa: {name: 'Goa trip', kind: 'trip', location: 'Goa', currency: 'INR', start: '2025-12-20', end: '2025-12-27', tz: 'Asia/Kolkata', members: ['riya', 'arjun', 'priya', 'sam']},
   flat: {name: 'Flat 4B', kind: 'home', currency: 'INR', start: null, end: null, tz: 'Asia/Kolkata', members: ['riya', 'arjun']},
-  lisbon: {name: 'Lisbon', kind: 'trip', currency: 'EUR', start: '2026-04-10', end: '2026-04-15', tz: 'Europe/Lisbon', members: ['sam', 'lena', 'diego']},
+  lisbon: {name: 'Lisbon', kind: 'trip', location: 'Lisbon', currency: 'EUR', start: '2026-04-10', end: '2026-04-15', tz: 'Europe/Lisbon', members: ['sam', 'lena', 'diego']},
 }
 
 type CuratedBill = {
@@ -579,6 +581,7 @@ export function generateLargeDemo({me, today, now, seed = DEMO_LARGE_SEED}: {me:
         currency: g.currency,
         startDate: g.span ? dayAgo(g.span[0]) : null,
         endDate: g.span ? dayAgo(g.span[0] - g.span[1] + 1) : null,
+        location: g.location ?? null,
         memberIds: [me, ...g.members.map(pid)],
       },
     })
@@ -1020,7 +1023,7 @@ export function generateLargeDemo({me, today, now, seed = DEMO_LARGE_SEED}: {me:
         at,
         actor: me,
         id: gidOf(key),
-        input: {name: g.name, kind: g.kind, currency: g.currency, startDate: g.start && cdate(g.start), endDate: g.end && cdate(g.end), memberIds: [me, ...g.members.map(cid)]},
+        input: {name: g.name, kind: g.kind, currency: g.currency, startDate: g.start && cdate(g.start), endDate: g.end && cdate(g.end), location: g.location ?? null, memberIds: [me, ...g.members.map(cid)]},
       })
       counts.groups++
     }
@@ -1129,13 +1132,13 @@ export function generateLargeDemo({me, today, now, seed = DEMO_LARGE_SEED}: {me:
       ops.push({kind: 'person', at, actor: me, id: pid(key), name: FRIENDS[key][0], upiId: null})
       counts.people++
     }
-    const group = (key: string, creator: Who, input: {name: string; kind: Group['kind']; currency: CurrencyCode; startDate?: string; endDate?: string; members: Who[]}, when: number) => {
+    const group = (key: string, creator: Who, input: {name: string; kind: Group['kind']; location?: string; currency: CurrencyCode; startDate?: string; endDate?: string; members: Who[]}, when: number) => {
       ops.push({
         kind: 'group',
         at: when,
         actor: pid(creator),
         id: gB(key),
-        input: {name: input.name, kind: input.kind, currency: input.currency, startDate: input.startDate ?? null, endDate: input.endDate ?? null, memberIds: input.members.map(pid)},
+        input: {name: input.name, kind: input.kind, currency: input.currency, startDate: input.startDate ?? null, endDate: input.endDate ?? null, location: input.location ?? null, memberIds: input.members.map(pid)},
       })
       counts.groups++
     }
@@ -1155,7 +1158,7 @@ export function generateLargeDemo({me, today, now, seed = DEMO_LARGE_SEED}: {me:
 
     /* A cabin weekend made by Anil: Chirag left, then Anil handed admin on to me (F-615). */
     const cabin: Who[] = ['me', 'anil', 'bhavna', 'chirag']
-    group('cabin', 'anil', {name: 'Weekend cabin', kind: 'trip', currency: 'INR', startDate: dayAgo(33), endDate: dayAgo(31), members: cabin}, now - 36 * DAY)
+    group('cabin', 'anil', {name: 'Weekend cabin', kind: 'trip', location: 'Lonavala', currency: 'INR', startDate: dayAgo(33), endDate: dayAgo(31), members: cabin}, now - 36 * DAY)
     spend('cabin', 'Cabin booking', 'stay', 'INR', 1_800_000n, 'anil', cabin, now - 33 * DAY, 'Two nights, firewood included')
     spend('cabin', 'Groceries and firewood', 'groceries', 'INR', 640_000n, 'bhavna', cabin, now - 32 * DAY)
     spend('cabin', 'Zip-line, charged in dollars', 'entertainment', 'USD', 12_000n, 'chirag', cabin, now - 32 * DAY + 2 * HOUR, 'Card billed in USD')
@@ -1185,7 +1188,7 @@ export function generateLargeDemo({me, today, now, seed = DEMO_LARGE_SEED}: {me:
 
     /* A settled group and friend: Paris in euros, squared up. Chloe's thank-you note hangs on the payment. */
     const paris: Who[] = ['me', 'chloe']
-    group('paris', 'me', {name: 'Paris weekend', kind: 'trip', currency: 'EUR', startDate: dayAgo(55), endDate: dayAgo(53), members: paris}, now - 58 * DAY)
+    group('paris', 'me', {name: 'Paris weekend', kind: 'trip', location: 'Paris', currency: 'EUR', startDate: dayAgo(55), endDate: dayAgo(53), members: paris}, now - 58 * DAY)
     spend('paris', 'Hotel near Montmartre', 'stay', 'EUR', 24_000n, 'me', paris, now - 55 * DAY)
     spend('paris', 'Metro passes', 'transport', 'EUR', 3_000n, 'chloe', paris, now - 54 * DAY)
     // The train home was booked in pounds: a second currency, squared up too.

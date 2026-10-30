@@ -230,9 +230,11 @@ function useExportRows() {
           l`Total`,
           l`You paid`,
           l`Your share`,
+          l`Location`,
         ],
         categoryName: id => report.category(id).name,
         groupName: id => (id === null ? '' : report.nameOfGroup(id)),
+        groupLocation: report.locationOfGroup,
       })
       const name = `splito-${currency}-${report.range.from}-to-${report.range.to}.csv`
       if (await exportCsv(name, csv)) {

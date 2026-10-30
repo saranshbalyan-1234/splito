@@ -1,4 +1,3 @@
-import {PUSHED_PARAM} from '#/lib/routes/helpers'
 import {redirectOldPath, ROUTE_PATHS, router, type RouteName} from '#/routes'
 import {LINK_SCHEME, TIER_HOSTS} from './hosts'
 import {
@@ -151,7 +150,7 @@ export function buildPath(target: LinkTarget): string {
   let path = ROUTE_PATHS[name].replace(/:(\w+)/g, (_m, key: string) => encodeURIComponent(params[key] ?? '')).replace(/\/$/, '')
   const tabs = (PAGE_TABS as Record<string, readonly string[]>)[name]
   if (tabs && params.tab && params.tab !== tabs[0] && tabs.includes(params.tab)) path += `/${params.tab}`
-  add(params, [...fixed, 'tab', PUSHED_PARAM])
+  add(params, [...fixed, 'tab'])
   const queryId = sheets.length === 1 ? (sheets[0] as keyof typeof QUERY_SHEETS) : undefined
   if (queryId && queryId in QUERY_SHEETS) search.set(queryId, QUERY_SHEETS[queryId])
   else if (sheets.length > 0) path += `/${sheets.join('/')}`

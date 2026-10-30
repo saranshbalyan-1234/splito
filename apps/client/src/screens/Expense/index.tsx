@@ -28,7 +28,9 @@ import {
 import {type AllNavigatorParams, type NavigationProp} from '#/lib/routes/types'
 import {useNumberLocale} from '#/locale/numberLocale'
 import {useFormatDay, useToday} from '#/locale/useDates'
-import {useAllEntities, useEntities, useMutationCtx, useStore} from '#/data/hooks'
+import {useAllEntities, useEntities, useMe, useMutationCtx, useStore} from '#/data/hooks'
+import {realParentsFor} from '#/navigation/goBack'
+import {useRealParents} from '#/navigation/realParents'
 import {DeletedMeta, useStruck} from '#/components/DeletedMeta'
 import {EyeIcon, EyeOffIcon} from '#/components/settings/icons'
 import {useHiddenItems} from '#/data/hiddenItems'
@@ -83,6 +85,16 @@ export function ExpenseScreen() {
   const {params} = useRoute<RouteProp<AllNavigatorParams, 'Expense'>>()
   const navigation = useNavigation<NavigationProp>()
   const {expense, history} = useExpense(params.expenseId)
+  const me = useMe()
+  /* Opened cold (a refresh), Back climbs to the expense's group, else the friend it is with (owner 184). */
+  useRealParents(
+    expense && me
+      ? realParentsFor({
+          groupId: expense.data.groupId,
+          others: [...new Set([...Object.keys(expense.data.payers), ...Object.keys(expense.data.shares)])].filter(id => id !== me.id),
+        })
+      : undefined,
+  )
   const struck = useStruck()
   const groups = useEntities<Group>('group')
   /* An expense in an inactive group cannot be edited: that would change the group's balances (decision 89). */
