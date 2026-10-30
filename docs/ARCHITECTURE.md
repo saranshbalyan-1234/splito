@@ -1575,6 +1575,26 @@ labelled sidebar); **wide** = web 1300 px and up (Bluesky `gtTablet`, right colu
   or setting by default. Every Opus review checks a change for clutter as well as correctness, and the UX
   audit (F-240) and Settings prune (F-251) apply this rule. *Why:* "we need to make this app simple with all
   the features and customization".
+- **Simple for the user, simple in the code, instant on every tap** (owner 212). Every screen and flow is
+  designed from the user's side first: one obvious main action per screen, plain words (no jargon such as
+  "ledger", "outbox", "scope"), the fewest taps to finish a job, the same pattern for the same job everywhere, no
+  choice the person must make before they can start, and nothing shown that they cannot act on. Every Opus spec
+  states the flow tap by tap and why each step is needed; every Opus review checks it as a new user would and
+  lists friction as findings. The code stays as simple as the UI: the smallest change that works, no layer or
+  option without a present need, one shared piece per job (owner 210). And every tap answers at once: visible
+  feedback within 100 ms and content within 200 ms on the slowest target (owners 107, 189). *Why:* "think from
+  users perspective as well, app should be simple to use, nothing complex, make sure of UX"; "code should be
+  simple"; "it should be lightning fast when I click somewhere".
+- **Every screen has its finishing pieces, and none is overdone** (owner 213): a same-size skeleton wherever
+  content loads (never a blank area or a spinner on a list or card); a small loading indicator only where the
+  wait is not content (a button saving, a sync, an import, the splash); motion only where it explains a change
+  (opening, closing, a value changing, an item arriving), all short and quiet; Lucide icons that mean one thing
+  each, used the same way everywhere; an empty state on every list with its own art, one sentence and one clear
+  call to action (the next useful step, e.g. "Add a friend"); and one primary call to action per screen. The
+  guided tour (F-253) covers only what a new user must know to start (adding an expense, settling up, where
+  balances are), at most a few steps, skippable, shown once. Nothing is added for decoration. *Why:* "make sure
+  to use proper skeletons, proper animations, proper icons, proper empty screen and proper CTA"; "loading
+  wherever required"; "guided tour for required part only"; "don't overdo anything".
 - **Customizable where it helps, never forced** (owner 128, replaces "everything customizable"). A setting
   exists only when people genuinely want different answers and the default cannot serve them all (language,
   theme, default currency, timezone, home tab, bottom bar, list filters and sorts, motion, reminders, privacy).
@@ -1964,8 +1984,9 @@ Bluesky's `LeftNav`, copied as closely as possible. *Why:* "you need to improve 
 good"; "the left sidebar looks bad on desktop". *Where:* `view/shell/desktop/LeftNav.tsx`.
 
 - **It holds:** the logo mark, the shared nav items (§ 26.3), the "Add expense" pill, and the shared footer
-  links (Feedback · Help · Privacy · About; same component as the drawer) directly under the pill, not pinned to
-  the bottom of the window (owner 188). No avatar or
+  links (Feedback · Help · Privacy · About; same component as the drawer) pinned to the bottom of the sidebar
+  on desktop and rail-width web (owner 214, replacing owner 188's "directly under the pill"; the items and the pill
+  stay one block at the top). No avatar or
   `ProfileCard`, no "Splito" wordmark, no recent groups or transactions (those live in the right column,
   § 26.17). *Why:* "remove the avatar from sidebar"; "remove label from logo".
 - **Logo:** the mark only (§ 26.11), 40 px, horizontally centred in the sidebar column, 12 px (space.md) below the
@@ -1979,8 +2000,7 @@ good"; "the left sidebar looks bad on desktop". *Where:* `view/shell/desktop/Lef
 - **Compact, no space it does not need** (owner 188): the sidebar is as wide as its content needs (icon,
   label, padding; one constant, 216 px, set by the footer row in English and fitting Hindi's longest label; a language that
   needs more raises that one number), so the content starts sooner; the
-  logo, items, pill and footer links form one block at the top with no dead band between them, and nothing is
-  pinned to the bottom. Hairline right border; sticky full height; scrolls on its own when tall. Phone and rail
+  logo, items and pill form one block at the top and the footer links sit at the bottom (owner 214). Hairline right border; sticky full height; scrolls on its own when tall. Phone and rail
   layouts are unchanged. *Why:* "on desktop there is a lot of space we don't need there in sidebar".
 - **Rail (800-999 px):** Bluesky minimal mode: mark, icons only, round compose button.
 
@@ -3281,6 +3301,9 @@ Every owner decision, in the order it was made (all 2026-10-26). "Replaced" name
 | 209 | "also update profile page, it looks very less" | Profile becomes a full page: header with verified contacts and since-date, stat row linking out, Your balance, Payment details (UPI), Add me (QR, link), Your recent activity, Log out last | § 26.15 | Avatar, name and a few stats only |
 | 210 | "make sure whatever can be reused do it" | Reuse before writing, inside Splito first then Bluesky; duplicates are defects merged into one shared piece; briefs, reviews and reports enforce it | § 26.1 | Reuse rule covered Bluesky only |
 | 211 | "for importantn task use opus always like speed, new features decisions, etc etc"; "performance"; "important decisions like, what should bet ehre, what should be the flow"; "sonnet should be used to build only" | Opus makes every decision (what goes where, flows, data model), writes every spec, does all performance work and every review; Sonnet only implements Opus specs and stops on open product questions | § 26.1 | Sonnet implemented everything, Opus only decided and reviewed |
+| 212 | "think from users perspective as well, app should be simple to use, nothing complex, make sure of UX"; "code should be simple"; "it should be lightning fast when i click somewhere" | Design from the user's side (one main action, plain words, fewest taps, same pattern everywhere); specs state the flow tap by tap; reviews check as a new user; simplest code; every tap instant | § 26.1 | Simplicity stated for settings only (128, 129) |
+| 213 | "make sure to use proper skeletons, proper animations, proper icons, proper empty screen and proper cta"; "loading wheverever required"; "guided tour for required part only"; "dont overdo anything" | Skeletons where content loads, small loaders only for non-content waits, motion only where it explains, consistent Lucide icons, an empty state with art + one sentence + one CTA on every list, one primary CTA per screen; guided tour only for the essentials; nothing decorative | § 26.1, F-253 | - |
+| 214 | "for some reason, by desktop full width sidebar looks really bad"; "Feedback · Help · Privacy · About moves to bottom" | The sidebar footer links are pinned to the bottom again; items and Add expense stay a block at the top; width stays 216 px | § 26.5 | Footer links directly under Add expense (188) |
 
 New decisions follow § 0 rule 9: rewrite the rule in its topic so only the current truth remains, then add a
 row here.
