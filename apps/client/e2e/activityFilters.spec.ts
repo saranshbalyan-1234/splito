@@ -90,7 +90,7 @@ for (const [name, viewport] of [['390', PHONE], ['1440', DESKTOP]] as const) {
       await openActivity(page)
       await expect(screen(page).getByTestId('activity-filters-dot')).toHaveCount(0)
       // The demo history holds every type but disputes (those arrive with the disputes feature); older pages are read when a type is not in the newest one.
-      const families: Record<string, string[]> = {expenses: ['expense'], payments: ['repayment', 'writeoff'], comments: ['comment'], groups: ['group'], friends: ['person', 'friendRequest'], reminders: ['reminder'], disputes: ['dispute']}
+      const families: Record<string, string[]> = {expenses: ['expense'], payments: ['repayment', 'writeoff'], comments: ['comment'], groups: ['group'], friends: ['person', 'friendRequest', 'groupRequest'], reminders: ['reminder'], disputes: ['dispute']}
       for (const [type, kinds] of Object.entries(families)) {
         await apply(page, [type])
         await lookBackUntilListed(page)
