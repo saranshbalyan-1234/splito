@@ -1212,6 +1212,11 @@ Splito lessons (add newest last, dated, with PR):
   e2e build on a prod tier: each skipped the first guard. Builds now have explicit kinds, every kind but production is refused on
   a stage/prod tier, and an unset kind means production in an export. A preview build is a real, separate kind with its own
   checks (dev sign-in present, e2e hooks absent), not production with a switch.
+- 2026-10-30, F-250 (merge hazard with F-264, the breathing splash): the splash stays up until `markLaunchReady()` is called, today
+  by `StoreProvider`. With sign-in required the store opens only with a session, so every path that never opens it must call it
+  once it can paint: `LoggedOutApp` (intro, Continue, public pages), `AddMissingContact`, `LoggingOut` (and its failure state), and a
+  session that fails to restore. The merge of F-264 adds those calls and an e2e that cold-loads signed out, sees the intro and
+  checks `#launch` is gone.
 - 2026-10-30, F-250: **the e2e sign-in is browser state, not per-spec code.** `e2e/globalSignIn.ts` signs the dev account
   in once per config and saves `storageState`, which every context starts from; a signed-out spec opts out with
   `test.use(signedOut)`. Playwright's `FullConfig.rootDir` is the test dir, not the config dir: resolve paths from
