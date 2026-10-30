@@ -632,7 +632,7 @@ The launch logo zooms gently in and out while content loads, on web from first p
 
 The desktop sidebar is only as wide as its content and its footer links sit right under Add expense.
 
-- **Effort** S · **Impact** 6 · **Backend** no · **Status** in progress, Wave C · **Deps** -
+- **Effort** S · **Impact** 6 · **Backend** no · **Status** done, Wave C (branch c-sidebar) · **Deps** -
 - **Prefs** -
 - **Acceptance**
   1. At 1300, 1440 and 1920 the sidebar width fits the longest item (en and hi measured, no truncation); content starts sooner.

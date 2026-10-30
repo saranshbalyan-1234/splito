@@ -1767,8 +1767,9 @@ good"; "the left sidebar looks bad on desktop". *Where:* `view/shell/desktop/Lef
   sliding active indicator (§ 26.9) sits beside the active item.
 - **Add expense:** Bluesky `ComposeBtn` as a large full-width pill with a plus icon; it opens the Add expense
   popup (§ 26.8). *Why:* "go with what Bluesky had".
-- **Compact, no space it does not need** (owner 188): the sidebar is as wide as its longest item needs (icon,
-  label, padding; about 200 px in English, wider only if a language needs it), so the content starts sooner; the
+- **Compact, no space it does not need** (owner 188): the sidebar is as wide as its content needs (icon,
+  label, padding; one constant, 216 px, set by the footer row in English and fitting Hindi's longest label; a language that
+  needs more raises that one number), so the content starts sooner; the
   logo, items, pill and footer links form one block at the top with no dead band between them, and nothing is
   pinned to the bottom. Hairline right border; sticky full height; scrolls on its own when tall. Phone and rail
   layouts are unchanged. *Why:* "on desktop there is a lot of space we don't need there in sidebar".
