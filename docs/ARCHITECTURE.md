@@ -1310,6 +1310,27 @@ Splito lessons (add newest last, dated, with PR):
   must be scoped to its screen (`getByTestId('screen-people').getByTestId(...)`), as the shell specs already do.
 - 2026-10-30, F-256: **the sidebar and rail list every item** (owner 155), so there is no "More" menu, no `tab-more`
   and no `more-*` test ids; Settings and Ask Splito are ordinary sidebar rows (`tab-settings`, `tab-ask`).
+- 2026-10-30, F-256 (owner 190): **a hook called above the scaffold cannot read the scaffold's context.** The first FAB
+  host kept "a screen holds the FAB back" in React state inside `Layout.Screen` and exposed it by context, but
+  `useSuppressFab` is called by the screen, which is the provider's parent, so the context was always the default and an
+  empty Home showed a FAB. `RouteFAB.tsx` keeps a module-level set of route keys that hold the FAB (read with
+  `useSyncExternalStore`); the screen adds its own `useRoute().key` in an effect and removes it on cleanup. Rule: state
+  that a screen sets for its own scaffold goes in a module store keyed by route key, never in a provider the screen
+  itself renders under.
+- 2026-10-30, F-256 (owner 190): **a pushed copy of a tab is the same screen, so anything that differs is a bug.** The FAB
+  is decided by route name only (`fabParams`, `lib/routes/fab.ts`); a pushed Groups copy therefore shows the FAB and every
+  header action of the tab, and differs only by Back replacing the avatar (`PushedTabContext`, read only by
+  `HeaderAvatar`). Do not add `isPushed` checks to a screen or to the FAB.
+- 2026-10-30, F-256 (owner 184, F-263): **a fixed parent chain is a table, not a history.** `PARENT` in
+  `navigation/goBack.ts` names a parent for every route (default Home), `backChain` stacks them, and on web the cold parents
+  are keyed `cold-<name>-<i>` so `useRealParents` can swap in an expense's real group or friend chain once it loads.
+  A pushed copy keeps `from=<origin tab>` in the address so a refresh climbs back to that tab; tapping the tab drops it.
+- 2026-10-30, F-256: **read the route in a leaf, never in the component that builds the screen.** `useRoute()` hands back a
+  new (equal) route object on many navigation updates (16 times in the renders gate's scroll sweep), and each one
+  re-rendered `TabScreen` and so `Layout.Screen` and its children. `TabScreen` now has no hook and wraps the screen in
+  `PushedTabFlag`, whose `children` element is made once by `TabScreen`, so React skips the screen; only the tiny provider
+  re-renders (one `PushedTabFlag` x1 "wasted" line in `e2e-renders/baseline.json`, recorded on purpose). The gate's tab sweep
+  also mounts about 13% more now (`tabs` 21383 -> 24183) because it visits Home and People as well as the old tabs.
 
 ---
 

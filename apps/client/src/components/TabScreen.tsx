@@ -15,12 +15,17 @@ export function usePushedTab(): boolean {
   return useContext(PushedTabContext)
 }
 
-/** `Layout.Screen` for Home, People, Groups, Analytics and Activity: the screen plus the pushed-copy flag for its header and FAB. */
-export function TabScreen({testID, children}: {testID: string; children: React.ReactNode}) {
+/** Reads the route in a leaf, so a route object that changes re-renders only this provider: its `children` element is made by `TabScreen`, which never re-renders, so React skips the whole screen. */
+function PushedTabFlag({children}: {children: React.ReactNode}) {
   const isPushed = isPushedTabRoute(useRoute())
+  return <PushedTabContext.Provider value={isPushed}>{children}</PushedTabContext.Provider>
+}
+
+/** `Layout.Screen` for Home, People, Groups, Analytics and Activity: the screen plus the pushed-copy flag for its header. */
+export function TabScreen({testID, children}: {testID: string; children: React.ReactNode}) {
   return (
-    <PushedTabContext.Provider value={isPushed}>
+    <PushedTabFlag>
       <Layout.Screen testID={testID}>{children}</Layout.Screen>
-    </PushedTabContext.Provider>
+    </PushedTabFlag>
   )
 }
