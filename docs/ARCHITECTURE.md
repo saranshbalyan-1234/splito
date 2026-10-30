@@ -2839,10 +2839,12 @@ add anyway (only for you)"; "also i should be able to select from contacts". *Wh
   - **Link, I approve each join** (the default): opening the link sends a join request; the group's admins see it
     in Activity (Type = Friends and invites, owner 195) and Approve or Decline it in the row.
   - **Invite only:** no link exists (an existing link stops working); people join only when a member adds them.
-  Adding someone to a group never puts them in without consent: adding a Splito friend sends them a group
-  request ("Riya added you to Goa trip", Join / Decline in their Activity), and they show in the members list as
-  "Invited" (greyed, not selectable in expenses) until they join; adding someone not on Splito sends an invite or
-  adds them "only for you" (as for friends above). The choice is shown on the group page under Members ("Anyone
+  Adding someone to a group never puts them in without consent: adding a Splito friend whose account is linked
+  (possible only once a directory or the backend can deliver the request) sends them a group request ("Riya added you to Goa trip", Join / Decline in their Activity), and they show in the members list as
+  "Invited" (greyed, not selectable in expenses) until they join; a friend with no account link (private, local,
+  or any friend before sync exists) is added straight away, so nobody waits on an answer that cannot arrive
+  (assistant's ruling 2026-10-31, after the F-269 review; demo mode's directory answers group requests after its
+  usual delay); adding someone not on Splito sends an invite or adds them "only for you" (as for friends above). The choice is shown on the group page under Members ("Anyone
   with the link can join" and so on) so everyone can see it; only admins change it. *Why:* "in group link, it should
   show anyone can join, or invites only, or add like this; if I add someone they would accept or I can send
   request".
