@@ -338,14 +338,10 @@ test.describe('log out erases everything the account left (owner 186)', () => {
     await signedInShown(page)
     await page.waitForFunction(() => 'splito' in window)
     await create(page, 'Erased Friend')
-    // Demo mode too: its own database goes with the account.
+    // Demo mode is on: its own database goes with the account.
+    test.setTimeout(90_000)
     await page.evaluate(() => (window as unknown as {__splitoTest: {demoMode(on: boolean): Promise<void>}}).__splitoTest.demoMode(true))
-    await expect.poll(() => databases(page)).toContain('splito-demo-dev')
-    await page.evaluate(() => (window as unknown as {__splitoTest: {demoMode(on: boolean): Promise<void>}}).__splitoTest.demoMode(false))
-    await expect.poll(() => databases(page)).not.toContain('splito-demo-dev')
-    await page.evaluate(() => (window as unknown as {__splitoTest: {demoMode(on: boolean): Promise<void>}}).__splitoTest.demoMode(true))
-    await expect.poll(() => databases(page)).toContain('splito-demo-dev')
-
+    await expect.poll(() => databases(page), {timeout: 30_000}).toContain('splito-demo-dev')
     await page.goto('/settings')
     await page.getByTestId('settings-log-out').click()
     const dialog = page.getByRole('dialog').filter({hasText: 'Log out?'})

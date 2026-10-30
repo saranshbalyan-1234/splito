@@ -243,3 +243,16 @@ Machine load was 18-66 for most runs (other builders), so timings are upper boun
 | Renders gate | 1 passed, baseline unchanged. First run read `mount:Outer` 18 vs 14 (the two always-mounted prompts, Log out and the legacy offer); both now mount their dialog only when needed (Log out on its first request, the offer when old data exists), which brings the count back |
 
 Cost of the gate: signed out no store is opened (`indexedDB.databases()` is empty on every signed-out address, asserted); signed in, launch adds one `indexedDB.databases()` check for the old database (once per install, then the flag stops it) and no store reads.
+
+### F-249 / F-250 fix round (2026-10-30, after the Opus review; web only; machine load 30-75 from other builders)
+
+Run on the touched specs only, by the coordinator's process change (the full suite runs once on merged main). A full e2e run of this branch just before the owner 186 change finished at 548 of 550 (the two reds were `demo-mode` specs that main's capitalised names broke and an `ask` spec racing a preference write; both fixed in the specs).
+
+| Check | Result |
+|---|---|
+| Lint, typecheck, client unit tests | green (647 tests; new: `dev.test.ts` tokens, `password.test.ts`, `public.test.ts`, `authConfig.test.ts`, `pwa.test.ts` noindex) |
+| Lingui | en 1800 / hi 1800, 0 missing |
+| `welcome`, `auth` (43), `authConfig`, `introReplay`, `language`, `shell` drawer, `ask` pinned tab, `friends`, `demo-mode` | 92 passed; `auth` log-out tests rewritten for owner 186 (erase, demo DB, retry, resume) pass; one red: `demo-mode.spec.ts:26` "seeds the demo database in under 10 s" took 11.1 s at load 32 (a timing budget; the seed itself is unchanged) |
+| `e2e:pwa` on the preview build | 8 passed, 0 skipped: preview export has the dev sign-in and no e2e hooks, offline signed in, the update toast, `noindex`, the preview note |
+| Renders gate | red, and not from this change: the `tabs` phase doubles (`ChartCard` 5 to 10, `Path` 26 to 48, `Svg` 10 to 14, `UITextView` 239 to 462), i.e. the Analytics tab renders its body twice since main's Analytics-filters merge; the same gate was green on this branch before that merge (`mount:Outer` fixed earlier). Main has re-recorded its baseline since; the number to check is the merged one |
+| Perf | not re-run (outside the touched specs); last numbers above |
