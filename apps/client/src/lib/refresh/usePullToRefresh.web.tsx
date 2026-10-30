@@ -55,6 +55,7 @@ export function usePullToRefresh({enabled = true, onRefresh}: {enabled?: boolean
         indicator={indicator}
         spinner={spinner}
         label={label}
+        refreshingText={l`Refreshing…`}
         color={t.palette.primary_500}
         pillBackground={t.palette.contrast_50}
         pillColor={t.palette.contrast_700}
@@ -70,6 +71,7 @@ const PullIndicator = memo(function PullIndicator({
   indicator,
   spinner,
   label,
+  refreshingText,
   color,
   pillBackground,
   pillColor,
@@ -77,6 +79,7 @@ const PullIndicator = memo(function PullIndicator({
   indicator: NodeRef
   spinner: NodeRef
   label: NodeRef
+  refreshingText: string
   color: string
   pillBackground: string
   pillColor: string
@@ -85,6 +88,7 @@ const PullIndicator = memo(function PullIndicator({
     <div
       ref={indicator}
       role="status"
+      aria-label={refreshingText}
       aria-hidden="true"
       data-testid="pull-indicator"
       style={{

@@ -556,12 +556,12 @@ Found 2026-10-30 by the tap-speed work: § 26.9's direction-aware slide between 
 
 Pull down at the top of Home, People, Groups, Activity, Analytics, Person and Group to refresh; the header stays fixed and visible throughout; native RefreshControl, phone-web pull handler.
 
-- **Effort** M · **Impact** 8 · **Backend** no (syncNow() hook ready for F-2103) · **Status** built on c-refresh (web: `PullSurface` + `pullController`; native: `useRefreshControl` in `List` and `Layout.Content`; `refreshAll` re-reads live projections and calls `syncNow()`, a no-op until F-2103; `e2e/pullRefresh.spec.ts` green in Chrome touch and Playwright WebKit; native RefreshControl and real iOS Safari / Android Chrome not run) · **Deps** F-255, F-256
+- **Effort** M · **Impact** 8 · **Backend** no (syncNow() hook ready for F-2103) · **Status** built on c-refresh (web: `usePullToRefresh` + `pullController`; native: `useRefreshControl` in `List` and `Layout.Content`; `refreshAll` = `syncNow()` (a no-op until F-2103) + 400 ms minimum spinner, none offline; `e2e/pullRefresh.spec.ts` green in Chrome touch and Playwright WebKit; native RefreshControl and real iOS Safari / Android Chrome not run) · **Deps** F-255, F-256
 - **Prefs** -
 - **Acceptance**
   1. Every full screen refreshes on pull at the top, header or not (owners 169, 170), built once in the shared scaffold with a test over every route; sheets and popups keep drag-to-close (§ 26.8); the spinner sits under the header; the header never moves or hides during the pull (e2e checks its top stays at 0 while pulling at 390).
   2. Native: List RefreshControl on iOS and Android (simulator checked); phone web: a pull handler on the window scroll in iOS Safari (simulator) and Android Chrome, no fight with browser overscroll, scrolling unaffected (scrollWeb.spec green).
-  3. Until sync: re-reads local data and ends in under 1 s with honest status; offline ends at once, no error toast; with the backend it calls syncNow().
+  3. Calls syncNow() (a no-op until F-2103) and holds the spinner 400 ms; offline ends at once, no error toast. Projections are not re-run (they re-read on every commit).
   4. Nothing redraws unless data changed (owner 166); renders gate and tap-latency spec do not regress.
 
 ### F-259 Activity type filter; See all transactions lands there `spec: owner § 26.14 (decision 173)`

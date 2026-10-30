@@ -91,8 +91,21 @@ function startRefresh(s: Surface) {
     })
 }
 
+/** Ends the touch that is going. `cancelled` (a new touch arrived, or the browser took it) never refreshes. */
+function endGesture(cancelled: boolean) {
+  const g = gesture
+  gesture = null
+  document.documentElement.style.overscrollBehaviorY = ''
+  if (!g || g.state !== 'pull') return
+  if (!cancelled && g.pull >= THRESHOLD) startRefresh(g.surface)
+  else settle(g.surface)
+}
+
 function onTouchStart(e: TouchEvent) {
-  if (gesture || busy || e.touches.length !== 1 || scrollTop() > 0) return
+  // Every touch starts afresh: a touchend that never arrived (its target left the page mid-touch, so the event had no
+  // way up to the window) must not strand the last gesture and kill pull to refresh until a reload.
+  endGesture(true)
+  if (busy || e.touches.length !== 1 || scrollTop() > 0) return
   const target = e.target as Element | null
   if (!target || !('closest' in target)) return
   const surface = [...surfaces].reverse().find(s => s.screen.contains(target))
@@ -100,6 +113,8 @@ function onTouchStart(e: TouchEvent) {
   clearTimeout(settleTimer)
   const touch = e.touches[0]!
   gesture = {surface, x0: touch.clientX, y0: touch.clientY, state: 'pending', pull: 0}
+  // Android Chrome decides about its own pull to refresh when the touch begins: keep it out only for this touch.
+  document.documentElement.style.overscrollBehaviorY = 'contain'
 }
 
 function onTouchMove(e: TouchEvent) {
@@ -113,43 +128,55 @@ function onTouchMove(e: TouchEvent) {
     g.state = scrollTop() > 0 ? 'ignore' : intent(dx, dy)
     if (g.state !== 'pull') return
   }
-  if (dy <= 0) {
-    // Back up past where it started: give the touch back to the browser.
+  // Back up past where it started, or the browser has already begun scrolling (the move cannot be cancelled): the
+  // touch is the browser's, so there is no second movement on top of its own.
+  if (dy <= 0 || !e.cancelable) {
     g.state = 'ignore'
     settle(g.surface)
     return
   }
-  // Cancels the browser's overscroll; not cancelable once it has started scrolling, which is then no pull.
-  if (e.cancelable) e.preventDefault()
+  e.preventDefault()
   g.pull = pullDistance(dy)
   paint(g.surface, g.pull, 'drag')
 }
 
-function onTouchEnd() {
-  const g = gesture
-  gesture = null
-  if (!g || g.state !== 'pull') return
-  if (g.pull >= THRESHOLD) startRefresh(g.surface)
-  else settle(g.surface)
+const onTouchEnd = () => endGesture(false)
+const onTouchCancel = () => endGesture(true)
+
+/*
+ * A touchmove listener that can cancel (non-passive) makes the browser wait for the page before it scrolls, so it is
+ * attached only while the window is at the top, where a pull can start, and removed the moment the page scrolls away
+ * (a passive scroll listener toggles it).
+ */
+let moveOn = false
+function syncMove() {
+  if (scrollTop() <= 0 && !moveOn) {
+    moveOn = true
+    window.addEventListener('touchmove', onTouchMove, {passive: false})
+  } else if (scrollTop() > 0 && moveOn && !gesture) {
+    moveOn = false
+    window.removeEventListener('touchmove', onTouchMove)
+  }
 }
 
 let installed = false
 function install() {
   if (installed) return
   installed = true
-  /* Non-passive on purpose: a passive touchmove cannot cancel the overscroll. Android Chrome also needs the root not to chain it into its own refresh. */
   window.addEventListener('touchstart', onTouchStart, {passive: true})
-  window.addEventListener('touchmove', onTouchMove, {passive: false})
   window.addEventListener('touchend', onTouchEnd, {passive: true})
-  window.addEventListener('touchcancel', onTouchEnd, {passive: true})
-  document.documentElement.style.overscrollBehaviorY = 'contain'
+  window.addEventListener('touchcancel', onTouchCancel, {passive: true})
+  window.addEventListener('scroll', syncMove, {passive: true})
+  syncMove()
 }
 function uninstall() {
   installed = false
+  moveOn = false
   window.removeEventListener('touchstart', onTouchStart)
   window.removeEventListener('touchmove', onTouchMove)
   window.removeEventListener('touchend', onTouchEnd)
-  window.removeEventListener('touchcancel', onTouchEnd)
+  window.removeEventListener('touchcancel', onTouchCancel)
+  window.removeEventListener('scroll', syncMove)
   document.documentElement.style.overscrollBehaviorY = ''
 }
 

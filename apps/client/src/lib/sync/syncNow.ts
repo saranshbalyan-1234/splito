@@ -5,8 +5,5 @@
  * (offline ends at once with the status label, never a toast).
  */
 export async function syncNow(): Promise<void> {
-  // `navigator.onLine` is undefined on React Native, where the sync engine will ask the network state itself.
-  const isOnline = typeof navigator === 'undefined' || navigator.onLine !== false
-  if (!isOnline) return
-  // TODO(F-2103): FX rates, then drain the outbox, then pull.
+  // TODO(F-2103): FX rates (when online), then drain the outbox, then pull. Nothing to do until they exist.
 }
