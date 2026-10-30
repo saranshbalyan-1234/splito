@@ -1209,9 +1209,10 @@ Inherited from GameRun (2026-10-26); each holds for Splito's stack:
   shared one machine (load 25-130); each ran the full 500+ test e2e itself, several times per round, so every run
   took 20-30 min instead of ~10, timing tests failed under load and were re-run, and long-lived overlapping
   branches (Home, taps, Activity, disputes) forced repeated merges of main and conflict rounds; scope added
-  mid-round and a network outage added more. Rules: at most three builders at once; a builder runs only the specs
-  its change touches (plus lint, typecheck, unit tests and the renders gate) and the orchestrator runs the full
-  e2e once per merge, on the merged main; slices are small and merge the same day, in dependency order, so
+  mid-round and a network outage added more. Rules: a builder runs only the specs its change touches (plus lint,
+  typecheck, unit tests and the renders gate) and the orchestrator runs the full e2e once per merge, on the merged
+  main; builders fan out as wide as the independent work allows (owner 208, 2026-10-31: "fanout more to get things
+  done", replacing "at most three builders"), split so no two edit the same files; slices are small and merge the same day, in dependency order, so
   nothing builds on a moving target; perf numbers are taken only at load under 10.
 - A transparent RN `Modal` still swallows taps on iOS; iOS silently refuses a second modal over an open one;
   changing a dialog's `key` is dismiss + present and iOS can drop the present.
@@ -2347,6 +2348,13 @@ expands once I click". *Where:* `screens/People`, `screens/Groups`, `screens/Gro
 
 ### 26.13 Expenses and itemize
 
+- **Add expense always shows "Paid by", and it starts as me** (owner 207): the Paid by row is visible on every
+  Add expense, whatever the entry point (FAB, sidebar pill, a group or person page, Ask Splito's prefill, a
+  scanned receipt, a duplicate) and every width; a new expense always starts with me as the payer, never a
+  remembered or predicted payer, until the person picks someone else (an Ask prefill that names a payer, "Riya
+  paid", is the only exception). Editing keeps the saved payer. *Why:* "add expense should have paid by always,
+  by default to me".
+
 *Why:* "an expense can be one expense or with multiple expense, like dinner $100, but can be divided into
 dishes etc and each item can be assigned to each in split"; "in itemize don't show default tax tip discount"
 -> "let it be" -> "it should be there"; "but add the percentage option as well". *Where:*
@@ -2454,7 +2462,10 @@ dishes etc and each item can be assigned to each in split"; "in itemize don't sh
   leads to a longer list of things that happened (transactions, disputes, comments, reminders, payments, group
   changes, friend activity, a group's or a person's history) opens Activity as a pushed copy with the matching
   filters already set: Type (any mix), `group=<id>` and `person=<id>` (events involving that friend), each shown as
-  a removable chip and in the Filters sheet; no screen grows its own long history list. **Wherever a link can lead
+  a removable chip and in the Filters sheet. A group's Expenses and a friend's History stay full lists on their
+  pages (they are those pages' main content, with page-only filters: Show hidden, Disputed only), and their
+  headings link into Activity scoped to the group or friend (assistant's ruling 2026-10-31, after F-268); no other
+  screen grows its own long history list. **Wherever a link can lead
   to Activity, it does** (owner 195), including requests and invites: "See all requests and invites" and every
   request or invite count opens Activity with Type = Friends and invites, and those rows carry their actions in
   place (Accept / Decline on a request, Resend / Cancel on an invite sent), so Activity is where they are handled.
@@ -2577,7 +2588,15 @@ dishes etc and each item can be assigned to each in split"; "in itemize don't sh
   a destructive "Log out" row opening a prompt "Log out?". **Log out lives on Profile** (owner 202): the "Log out"
   row is the last row of Profile (`/profile`) and nowhere else (not in the Settings list, the drawer footer
   or the sidebar); the blocking add-contact step keeps its own Log out. **Profile holds only the person** (owner
-  203): avatar, name, contact details, stats and Log out; no "Settings" row on it (Settings is its own tab, owner 206).
+  203): no "Settings" row on it (Settings is its own tab, owner 206). **Profile is a full page about you** (owner
+  209), Bluesky profile layout, top to bottom: the header (large avatar you can change, name, email and phone with
+  a verified tick, "On Splito since <month year>", Edit profile); a stat row (Friends, Groups, Expenses, You paid
+  this year), each tapping through to People, Groups, Activity (Me, transactions) and Analytics; **Your balance**
+  (the net per currency in the owner-161 card style, "Analytics ›"); **Payment details** (your UPI ID and how
+  friends pay you, editable); **Add me** (your friend QR and link, Share); **Your recent activity** (your last 3
+  changes, "See all" -> Activity on Me); and Log out last. Sections hide when empty; each loads after the header
+  (owner 168). *Why:* "move the logout button inside profile"; "remove settings from profile"; "also update
+  profile page, it looks very less".
   *Why:* "move the logout button inside profile"; "remove settings from profile". **Log out erases everything this account left on the
   device** (owner 186): its local database (every store, the outbox, history, attachments cache), its demo
   database, its account-scoped preferences, drafts, the session and any cached copies (service worker data
@@ -3220,6 +3239,9 @@ Every owner decision, in the order it was made (all 2026-10-26). "Replaced" name
 | 204 | "make support a section, which opens up all these menus" | Settings shows one "Support" row opening /settings/support with Send feedback, Your feedback, Help, Privacy, About and the version | § 26.15 | Support items listed inline in the Settings list |
 | 205 | "and same for data, think of a proper name as well" | Settings shows one "Your data" row opening /settings/data with Export, Import, Move older data and Reset all settings | § 26.15 | Data items listed inline under a "Data" heading |
 | 206 | "make profile and settings as diff, avatar opens profile and settings as tab is diff" | Profile is its own page at /profile (avatar opens it, Back returns where you were); Settings is a tab (/settings) in the default bar and sidebar | § 26.4, § 26.3 | Profile inside Settings at /settings/profile (201); Settings reached from Profile Back |
+| 207 | "add expense should have paid by always, by default to me" | Paid by is always shown on Add expense and always starts as me on a new expense (any entry point); only an Ask prefill naming a payer differs; edits keep the saved payer | § 26.13 | - |
+| 208 | "fanout more to get things done" | Run as many builders as there is independent work (no file overlap), each running only its touched specs; full e2e once per merge by the orchestrator; perf numbers only on a quiet machine | § 23 (process lesson) | At most three builders at once |
+| 209 | "also update profile page, it looks very less" | Profile becomes a full page: header with verified contacts and since-date, stat row linking out, Your balance, Payment details (UPI), Add me (QR, link), Your recent activity, Log out last | § 26.15 | Avatar, name and a few stats only |
 
 New decisions follow § 0 rule 9: rewrite the rule in its topic so only the current truth remains, then add a
 row here.

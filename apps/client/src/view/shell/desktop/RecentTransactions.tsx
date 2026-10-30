@@ -7,6 +7,7 @@ import {Trans, useLingui} from '@lingui/react/macro'
 import {useNumberLocale} from '#/locale/numberLocale'
 import {useRecentRows} from '#/data/recentTransactionRows'
 import {seeAllTransactionsPath} from '#/lib/links/make'
+import {ActivityLink} from '#/components/ActivityLink'
 import {Link} from '#/view/com/util/Link'
 import {atoms as a, useTheme} from '#/alf'
 import {ChevronRight_Stroke2_Corner0_Rounded as ChevronRightIcon} from '#/components/icons/Chevron'
@@ -30,17 +31,11 @@ export function RecentTransactions() {
 
   return (
     <View testID="sidebar-recent-transactions" style={[a.pt_2xl, {gap: 2}]}>
-      <Text
-        style={[
-          a.px_md,
-          a.pb_xs,
-          a.text_sm,
-          a.font_semi_bold,
-          a.leading_snug,
-          t.atoms.text_contrast_medium,
-        ]}>
-        <Trans>Recent transactions</Trans>
-      </Text>
+      <ActivityLink testID="sidebar-transactions-title" href={seeAllTransactionsPath()} label={l`See all transactions`} style={[a.px_md]}>
+        <Text style={[a.text_sm, a.font_semi_bold, a.leading_snug, t.atoms.text_contrast_medium]}>
+          <Trans>Recent transactions</Trans>
+        </Text>
+      </ActivityLink>
       {rows.map(row => {
         const category = row.category
           ? categories.find(c => c.id === row.category)

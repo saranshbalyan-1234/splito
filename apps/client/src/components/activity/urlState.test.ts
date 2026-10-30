@@ -9,6 +9,7 @@ test('type=transactions is expenses and payments; unknown tokens are dropped; al
   expect(readActivityParams({type: 'all'}).types).toEqual([])
   expect(readActivityParams({type: 'bogus'}).types).toBeUndefined()
   expect(readActivityParams({tab: 'me', group: 'g1'})).toEqual({tab: 'me', group: 'g1'})
+  expect(readActivityParams({tab: 'all', type: 'expenses,payments,disputes', person: 'p1'})).toEqual({tab: 'all', types: ['expenses', 'payments', 'disputes'], person: 'p1'})
   expect(readActivityParams({tab: 'nope'}).tab).toBeUndefined()
 })
 

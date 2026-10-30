@@ -7,17 +7,16 @@ import {LayoutAnimationConfig} from 'react-native-reanimated'
 import {Plural, Trans, useLingui} from '@lingui/react/macro'
 import {type RouteProp, useNavigation, useRoute} from '@react-navigation/native'
 import {isSettledBalance, personSummary} from '@splito/domain'
-import {type Entity, type FriendRequest, type InviteLink, isRemovedFriend, type Person, restoreFriend} from '@splito/sync'
+import {type Entity, type InviteLink, isRemovedFriend, type Person, restoreFriend} from '@splito/sync'
 
 import {useHaptics} from '#/lib/haptics'
 import {type AllNavigatorParams, type NavigationProp} from '#/lib/routes/types'
 import {logger} from '#/logger'
-import {useBalanceRows, useEntities, useMutationCtx, usePendingRequests, useSortedInviteLinks, useStore} from '#/data/hooks'
+import {useBalanceRows, useEntities, useMutationCtx, useSortedInviteLinks, useStore} from '#/data/hooks'
 import {RemoveFriendDialog} from '#/features/friends/RemoveFriendDialog'
 import {useNumberLocale} from '#/locale/numberLocale'
 import {List, type ListMethods} from '#/view/com/util/List'
 import {useInviteLinkRows} from '#/screens/Invites/InviteLinks'
-import {IncomingRow, OutgoingRow} from '#/screens/People/components/RequestsSection'
 import {SectionHeader} from '#/screens/People/components/SectionHeader'
 import {atoms as a, useBreakpoints, useTheme} from '#/alf'
 import {BalanceText} from '#/components/BalanceText'
@@ -50,8 +49,6 @@ const DEFAULT_PREFS = [
 
 type Item =
   | {type: 'header'; key: string; title: string; count?: number; action?: 'add' | 'create'}
-  | {type: 'incoming'; key: string; request: Entity<FriendRequest>}
-  | {type: 'outgoing'; key: string; request: Entity<FriendRequest>}
   | {type: 'search'; key: string}
   | {type: 'friend'; key: string; person: Entity<Person>}
   | {type: 'removed'; key: string; person: Entity<Person>}
@@ -60,10 +57,8 @@ type Item =
   | {type: 'defaults'; key: string}
 
 /**
- * Settings > Friends and invites (ARCHITECTURE 26.18, F-621): requests and
- * invites sent while any wait, every friend with Remove, the invite links
- * and the defaults for new links, in one place. Rows are the ones Home and
- * the invite sheet use.
+ * Settings > Friends and invites (ARCHITECTURE 26.18, F-621): every friend with Remove, the invite links and the
+ * defaults for new links. Requests and invites sent are handled in Activity (owner 195), not listed here.
  */
 export function FriendsAndInvitesScreen() {
   const {t: l} = useLingui()
@@ -71,7 +66,6 @@ export function FriendsAndInvitesScreen() {
   const openLink = useOpenLink()
   const route = useRoute<RouteProp<AllNavigatorParams, 'FriendsAndInvites'>>()
   const people = useEntities<Person>('person')
-  const {incoming, outgoing} = usePendingRequests()
   const {active, inactive, now} = useSortedInviteLinks()
   const {renderLink, prompt} = useInviteLinkRows(now)
   const [query, setQuery] = useState('')
@@ -87,14 +81,6 @@ export function FriendsAndInvitesScreen() {
   const shown = q ? friends.filter(p => p.data.name.toLowerCase().includes(q)) : friends
 
   const items: Item[] = []
-  if (incoming.length > 0) {
-    items.push({type: 'header', key: 'h-requests', title: l`Requests`, count: incoming.length})
-    for (const r of incoming) items.push({type: 'incoming', key: r.id, request: r})
-  }
-  if (outgoing.length > 0) {
-    items.push({type: 'header', key: 'h-sent', title: l`Invites sent`, count: outgoing.length})
-    for (const r of outgoing) items.push({type: 'outgoing', key: r.id, request: r})
-  }
   items.push({type: 'header', key: 'h-friends', title: l`Friends`, count: friends.length, action: 'add'})
   if (friends.length > SEARCH_ABOVE) items.push({type: 'search', key: 'search'})
   for (const p of shown) items.push({type: 'friend', key: p.id, person: p})
@@ -188,10 +174,6 @@ export function FriendsAndInvitesScreen() {
                     }
                   />
                 )
-              case 'incoming':
-                return <IncomingRow request={item.request} />
-              case 'outgoing':
-                return <OutgoingRow request={item.request} />
               case 'search':
                 return (
                   <View style={[a.px_lg, a.pb_sm]}>

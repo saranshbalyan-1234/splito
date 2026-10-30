@@ -660,7 +660,7 @@ Every disputed amount or count opens Activity on All with Expenses, Payments and
   1. `seeDisputedPath({groupId?})` gives `/activity?tab=all&type=expenses,payments,disputes[&group=]`, pushed with Back; used by every disputed amount/count (Person, Group balances, Settle notice, friend Settle up notice, search tip).
   2. The Filters sheet shows those three types chosen; a saved Me/Others tab never narrows it.
   3. e2e from a Person page, a Group page and Settle at 390 and 1440; row badges still open the record.
-  5. Owner 194: `activityPath({types, groupId, personId})` with a new `person=<id>` filter (events involving that friend; chip + Filters sheet + URL); every "see all" of past events (group history, person history, comments, reminders, payments, friend activity) opens Activity with matching filters; no screen keeps its own long history list.
+  5. Owner 194: `activityPath({types, groupId, personId})` with a new `person=<id>` filter (events involving that friend; chip + Filters sheet + URL); every "see all" of past events (group history, person history, comments, reminders, payments, friend activity) opens Activity with matching filters; a group's Expenses and a friend's History stay full lists (their pages' main content) with headings linking into Activity (ruling 2026-10-31); no other screen keeps its own long history list.
   6. Owner 195: every link that can lead to Activity does; requests/invites "See all" and counts open Activity with Type = Friends and invites; request rows carry Accept / Decline and invite-sent rows Resend / Cancel in place; Friends and invites keeps only invite link, QR, contacts and manage links.
   4. Owner 193: every transactions heading, See all and count (Home, Person, Group, Analytics, right column) uses `seeAllTransactionsPath({groupId})`: All, Type = Expenses + Payments, group-scoped in a group; single rows still open the transaction.
 
@@ -696,6 +696,7 @@ The Home tab goes; its Overview becomes the first section of Analytics; the app 
 - **Acceptance**
   1. Tabs People, Groups, Analytics, Activity (+ Ask, Settings); no Home route or screen; `/` opens the start tab; `/?overview=` -> `/analytics?overview=`; saved `tabs`/`startTab` naming home migrate (tests).
   2. Analytics shows the Overview cards (All / Groups / Direct, owner 161 layout) above its filter row, labelled as balances now, ignoring period/currency; a card opens Analytics in that currency.
+  9. Owner 209: Profile is a full page: header (changeable avatar, name, verified email and phone, "On Splito since", Edit profile), stat row linking to People / Groups / Activity Me / Analytics, Your balance (owner-161 cards, Analytics ›), Payment details (UPI, editable), Add me (QR, link, Share), Your recent activity (3, See all -> Activity Me), Log out last; sections hide when empty and load after the header; screenshots 390/1440 light and Dim.
   8. Owner 205: the Data items collapse into one "Your data" row opening `/settings/data` (Back -> Settings) with Export, Import, Move older data (when present), Reset all settings and the deleted-items note; e2e.
   7. Owner 204: Settings shows one "Support" row opening `/settings/support` (Back -> Settings) with Send feedback, Your feedback, Help, Privacy, About and the app version; the inline items leave the Settings list; footer links still open each page directly; e2e.
   6. Owners 202/203: Log out moves to the last row of Profile and is removed from Settings, the drawer footer and the sidebar (AddMissingContact keeps its own; same erase prompt, owner 186); Profile's "Settings" row is removed; e2e.
@@ -713,6 +714,17 @@ A Sort button beside Filters: Last active (default), Name, Amount, Newest; remem
   1. People and Groups headers: search, Filters, Sort (and People's gear last); Sort opens a radio menu; non-default tints the button.
   2. Last active = newest change involving the friend or group (expense, payment, comment, edit), computed in the domain/sync layer, not in screens; ties by name.
   3. Sort leaves the Filters sheet; `?sort=` in the URL; old `peopleSort` values migrate; unit tests for each order; e2e at 390 and 1440.
+
+### F-273 Paid by always shown, starting as me `spec: owner § 26.13 (decision 207)`
+
+Every new expense shows Paid by and starts with me as the payer, from every entry point.
+
+- **Effort** S · **Impact** 7 · **Backend** no · **Status** todo, Wave C · **Deps** -
+- **Prefs** -
+- **Acceptance**
+  1. e2e from the FAB, the sidebar pill, a group page, a person page (pre-selected friend), Ask prefill without a payer, a scanned receipt and Duplicate: Paid by visible and reads "You" at 390 and 1440.
+  2. No smart default, remembered or predicted payer for a new expense; an Ask prefill naming a payer is the only exception; editing keeps the saved payer.
+  3. Unit test of the form initialiser and group/person pick (`form.ts`, `formPick.ts`) for the default.
 
 ### F-250 Sign-in required (auth gate) `spec: owner § 26.15 (decision 125)`
 

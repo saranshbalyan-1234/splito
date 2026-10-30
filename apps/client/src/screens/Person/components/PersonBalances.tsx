@@ -24,6 +24,7 @@ export function PersonBalances({
   groupNames,
   locale,
   disputed = {},
+  disputedHref,
 }: {
   name: string
   summary: PersonSummary | undefined
@@ -31,6 +32,8 @@ export function PersonBalances({
   locale: string
   /** The part of each currency's balance on disputed or held records (F-1210). */
   disputed?: Record<string, bigint>
+  /** Where "of which disputed" leads: Activity filtered to disputed transactions with this friend (owner 192). */
+  disputedHref?: string
 }) {
   const t = useTheme()
   const byCurrency = summary?.byCurrency ?? {}
@@ -70,6 +73,7 @@ export function PersonBalances({
           groupNames={groupNames}
           locale={locale}
           disputed={disputed[currency] ?? ZERO}
+          disputedHref={disputedHref}
         />
       ))}
     </View>
@@ -86,12 +90,14 @@ function BalanceCard({
   groupNames,
   locale,
   disputed,
+  disputedHref,
 }: {
   currency: string
   balance: PersonSummary['byCurrency'][string]
   groupNames: Map<string, string>
   locale: string
   disputed: bigint
+  disputedHref?: string
 }) {
   const t = useTheme()
   const {t: l} = useLingui()
@@ -154,7 +160,7 @@ function BalanceCard({
           style={[a.text_3xl, a.font_bold, a.leading_tight, money.style(total)]}
         />
       </View>
-      <DisputedLine testID="person-disputed" amounts={[{currency, amount: disputed}]} />
+      <DisputedLine testID="person-disputed" href={disputedHref} amounts={[{currency, amount: disputed}]} />
       {showParts && (
         <View
           style={[

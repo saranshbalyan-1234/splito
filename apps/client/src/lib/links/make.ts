@@ -1,3 +1,5 @@
+import {type ActivityTypeId} from '@splito/sync'
+
 import {buildPath, type LinkTarget} from './resolve'
 import {webLink} from './hosts'
 
@@ -15,11 +17,26 @@ export function pathTo(name: LinkTarget['name'], params: Record<string, string> 
 }
 
 /**
- * Every "See all" of Recent transactions (F-259, owner 173): Activity on its All tab with the transactions type
- * applied, scoped to a group from a Group page. Opened with `navigationAction="push"` (or `openLink`) it lands as a
- * pushed page with Back (owner 179). The tab is named so a saved Me or Others never narrows it.
+ * Activity behind every "see all" of past events (owners 173, 179, 192-195): All tab (so a saved Me or Others never
+ * narrows it), the types named, and the group and/or friend the link sits in. Opened with `navigationAction="push"`
+ * (or `openLink`) it lands as a pushed page with Back. The tab is a query here because `Link` matches a bare route
+ * pattern (`/activity`); the address bar prints it as `/activity/all`.
  */
-export function seeAllTransactionsPath(groupId?: string) {
-  /* The tab is a query here because `Link` matches a bare route pattern (`/activity`); the address bar prints it as `/activity/all`. */
-  return `/activity?${new URLSearchParams({tab: 'all', type: 'transactions', ...(groupId ? {group: groupId} : {})})}`
+export function activityPath({types = [], groupId, personId}: {types?: readonly ActivityTypeId[]; groupId?: string; personId?: string} = {}) {
+  return `/activity?${new URLSearchParams({tab: 'all', ...(types.length > 0 ? {type: types.join() === 'expenses,payments' ? 'transactions' : types.join(',')} : {}), ...(groupId ? {group: groupId} : {}), ...(personId ? {person: personId} : {})})}`
+}
+
+/** Every transactions heading, count and "See all": Expenses and Payments (owners 173, 193). */
+export function seeAllTransactionsPath({groupId, personId}: {groupId?: string; personId?: string} = {}) {
+  return activityPath({types: ['expenses', 'payments'], groupId, personId})
+}
+
+/** Every disputed amount or count (owner 192): Expenses, Payments and Disputes. */
+export function seeDisputedPath({groupId, personId}: {groupId?: string; personId?: string} = {}) {
+  return activityPath({types: ['expenses', 'payments', 'disputes'], groupId, personId})
+}
+
+/** Every request and invite count or "See all" (owner 195): Friends and invites. */
+export function seeRequestsPath() {
+  return activityPath({types: ['friends']})
 }

@@ -117,7 +117,7 @@ export const QUERY_KEYS: Partial<Record<PageName, readonly string[]>> = {
   Person: ['groups'],
   Analytics: ['currency', 'period', 'offset', 'from', 'to', 'scope', 'overview'],
   /* `type=transactions` (Recent transactions' "See all", owners 173, 179), `group=<id>` from a Group's "See all" (F-259); `from` is the tab a pushed copy opened from. */
-  Activity: ['type', 'group', 'from'],
+  Activity: ['type', 'group', 'person', 'from'],
   AddExpense: ['personId', 'groupId', 'title', 'amount', 'currency'],
   Settings: ['from'],
   SettingsSection: ['note'],
@@ -144,7 +144,7 @@ export function isValidPathParam(key: string, value: string): boolean {
 }
 
 /** Query keys that carry an entity id; checked like a path param. */
-export const ENTITY_QUERY_KEYS = ['personId', 'groupId', 'group'] as const
+export const ENTITY_QUERY_KEYS = ['personId', 'groupId', 'group', 'person'] as const
 
 /** Pages that are formSheet / modal routes on a phone: nothing opens over them from a link (ARCHITECTURE 4, one native modal). */
 const COMPOSER_PAGES: readonly string[] = ['AddExpense', 'EditExpense', 'CreateGroup']

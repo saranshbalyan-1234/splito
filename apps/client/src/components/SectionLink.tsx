@@ -36,6 +36,7 @@ export function SectionLink({
         a.pr_xs,
         a.py_xs,
         a.transition_color,
+        {minHeight: 44},
       ]}>
       <Text style={[a.text_sm, a.font_semi_bold, {color: t.palette.primary_500}]}>{children}</Text>
       <ChevronIcon size="sm" fill={t.palette.primary_500} />
