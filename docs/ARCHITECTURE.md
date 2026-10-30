@@ -1900,6 +1900,18 @@ pages". § 17 holds the engineering rules that meet these budgets.
   regression over 10 % against the main line; Opus reviews check new code for extra store reads, re-renders,
   unbounded lists and JS-thread animation. Numbers go in `docs/COMPLETION_MATRIX.md`. *Why:* "keep performance in
   mind, it should be lightning fast, no delays in rendering anywhere".
+- **Fast everywhere, proven per screen on the slowest target** (owner 189): every screen and every
+  interaction meets the budgets above, not only the ones someone reported: opening and closing each screen and
+  pushed page (Person, Group, Expense, Settle, Settings and each section, Profile, Friends and invites, Search &
+  Ask), every tab and revisit, every sheet, popup, menu and picker, the drawer, scrolling every list, typing in
+  every field and search, saving, deleting, filtering, switching demo mode, and the first load. The proof is a
+  perf sweep spec that walks every route in the link table and every interaction, measured in WebKit (the iPhone
+  simulator's Safari or Playwright WebKit) and in Chrome at 6x CPU throttle, on the large demo set and the
+  10,000-expense fixture, on a quiet machine (load under 10, or the numbers are not used): tap to visible
+  feedback < 100 ms, tap to content < 200 ms at 6x, no long task > 50 ms, no exit animation on rows of a screen
+  that is leaving. A miss is fixed at its cause before the wave closes; the per-screen table lives in
+  `docs/COMPLETION_MATRIX.md`, and a new screen or interaction joins the sweep in the same change. *Why:* "did it
+  fix the performance everywhere, not just the taps"; "it should be everywhere".
 - **Animation on every surface, UI thread only** (Reanimated worklets, no JS loops): native stack push/pop and
   swipe-back; sheets and popups; list rows enter/exit/reorder (`LinearTransition` / `FadeInDown`); press
   feedback (`PressableScale`) on every tappable row, card and button; tab switches (§ 26.9); expanding search;
@@ -2804,6 +2816,7 @@ Every owner decision, in the order it was made (all 2026-10-26). "Replaced" name
 | 186 | "when logout, it should remove all data from db" | Log out always erases the account's local DB, demo DB, account prefs, drafts, session and caches; device language/theme stay; prompt warns with the unsynced count first; no keep option | § 26.15 | Prompt offered "Keep this device's data" / "Erase this device's data" |
 | 187 | Assistant ruling after the F-1210 review | After one reopen only a group admin accepts or rejects (outside a group the adder or payer still answers and a second reopen is refused); one-tap "Accept and apply" only when the fix keeps the record's split mode (an amount fix on an itemised or exact split and a share fix on anything but an exact split are "Edit it" only, with the reason shown), and the panel states what the edit will change | § 26.20 | Admin-only closing after the first reopen without saying who answers it; one-tap fixes that converted a split to exact amounts |
 | 188 | "on desktop there is a lot of space we dont need ... there in sidebar" | Desktop sidebar fits its content (~200 px), footer links directly under Add expense, nothing pinned to the bottom | § 26.5 | Bluesky standard width; footer pinned at the bottom of the window |
+| 189 | "did it fix the performace everywhere, not just the taps"; "it should be everywhere" | Every screen and interaction meets the speed budgets, proven by a perf sweep over every route and interaction in WebKit and Chrome 6x on a quiet machine; misses fixed before the wave closes | § 26.10 | Budgets checked on a few flows and on reported problems |
 
 New decisions follow § 0 rule 9: rewrite the rule in its topic so only the current truth remains, then add a
 row here.
