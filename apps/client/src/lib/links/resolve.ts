@@ -31,7 +31,7 @@ export type LinkTarget = {
 
 export type Resolved = {isKnown: boolean; target: LinkTarget}
 
-const HOME: LinkTarget = {name: 'People', params: {}, sheets: [], query: {}}
+const HOME: LinkTarget = {name: 'Home', params: {}, sheets: [], query: {}}
 
 const SAFE_VALUE = /^[A-Za-z0-9_.,:~ -]{1,64}$/
 /** Free text a link may carry: a search question, an expense title. Control characters never. */
@@ -87,13 +87,15 @@ export function resolveLink(input: string): Resolved {
     }
     /* `/groups/filters` reads as a group called "filters"; no id is, so it is the Groups list's own sheet. */
     if (name === 'Group' && pathParams.groupId === 'filters') return finish('Groups', {}, ['filters', ...rest], query)
+    /* `/people/filters` likewise is the People list's own sheet. */
+    if (name === 'Person' && pathParams.personId === 'filters') return finish('People', {}, ['filters', ...rest], query)
     if (Object.entries(pathParams).some(([k, v]) => !isValidPathParam(k, v))) return {isKnown: false, target: HOME}
     if (name === 'Search') {
       if (rest.length > 0) continue
       const {q, mode} = query
       return {
         isKnown: true,
-        target: {name: 'People', params: {}, sheets: ['search'], query: {...(q ? {q} : {}), ...(mode === 'ask' ? {mode} : {})}},
+        target: {name: 'Home', params: {}, sheets: ['search'], query: {...(q ? {q} : {}), ...(mode === 'ask' ? {mode} : {})}},
       }
     }
     const params: Record<string, string> = {...pathParams}

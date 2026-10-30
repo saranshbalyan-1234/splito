@@ -2,10 +2,8 @@ import {useState} from 'react'
 import {Pressable, View} from 'react-native'
 import {LayoutAnimationConfig} from 'react-native-reanimated'
 import {Deferred} from '#/components/Deferred'
-import {plural} from '@lingui/core/macro'
 import {Trans, useLingui} from '@lingui/react/macro'
 import {useNavigation, useRoute} from '@react-navigation/native'
-import {groupTotals, ZERO} from '@splito/domain'
 import {
   type Entity,
   type Group,
@@ -30,7 +28,7 @@ import {
 import {EmptyState} from '#/view/com/util/EmptyState'
 import {List} from '#/view/com/util/List'
 import {atoms as a, useTheme} from '#/alf'
-import {AddExpenseFAB, AddExpenseFABInset} from '#/components/AddExpenseFAB'
+import {AddExpenseFABInset} from '#/components/AddExpenseFAB'
 import {Button, ButtonIcon, ButtonText} from '#/components/Button'
 import {ChevronBottom_Stroke2_Corner0_Rounded as ChevronDownIcon} from '#/components/icons/Chevron'
 import {useDialogControl} from '#/components/Dialog'
@@ -38,20 +36,16 @@ import {SearchAskButton} from '#/components/SearchAsk/SearchAskButton'
 import {HeaderAvatar} from '#/components/HeaderAvatar'
 import {PlusLarge_Stroke2_Corner0_Rounded as PlusIcon} from '#/components/icons/Plus'
 import * as Layout from '#/components/Layout'
+import {TabScreen} from '#/components/TabScreen'
 import {ListToolsHeader} from '#/components/ListToolsHeader'
 import {Text} from '#/components/Typography'
 import {Shimmer} from '#/motion/Shimmer'
-import {
-  BalanceSummary,
-  BalanceSummaryPlaceholder,
-} from '#/screens/People/components/BalanceSummary'
 import {SectionHeader} from '#/screens/People/components/SectionHeader'
 import {GroupRow, GroupRowPlaceholder} from './components/GroupRow'
 import {GroupsFilterDialog} from './components/GroupsFilterDialog'
 import {
   DEFAULT_GROUP_FILTERS,
   filterGroups,
-  isGroupSettledUp,
   type GroupFilters,
   type GroupRowData,
   matchesGroupSearch,
@@ -63,9 +57,9 @@ const PLACEHOLDER_ROWS = 4
 
 /**
  * Groups list: Bluesky's Lists screen (list-card rows); Create group is the
- * header's action, and the FAB adds an expense as on every tab. The
- * Overview sums my balance across the listed groups per currency (never
- * across currencies); search and filters sit on the list's heading.
+ * header's action, and the FAB adds an expense as on every tab. No Overview
+ * (it lives on Home only, owner 153); search and filters sit on the list's
+ * heading.
  */
 export function GroupsScreen() {
   const t = useTheme()
@@ -145,32 +139,9 @@ export function GroupsScreen() {
       ? order(filterGroups(all, {...filters, status: 'inactive'}))
       : []
   const createGroup = () => navigation.navigate('CreateGroup')
-  /* Per currency, never across currencies; owed and owe summed apart (domain). */
-  /* Money is never hidden: inactive and hidden groups count in the Overview whatever the status and visibility filters say. */
-  const overviewRows = filterGroups(all, {
-    ...filters,
-    status: 'all',
-    showHidden: true,
-    showSettled: true,
-  }).filter(g => !g.deleted)
-  const overall = groupTotals(overviewRows.map(g => g.balances))
-  /* The captions and the count line cover the same groups as the totals above them. */
-  const settledCount = overviewRows.filter(isGroupSettledUp).length
-  const captions = Object.fromEntries(
-    overall.map(({currency}) => {
-      const n = overviewRows.filter(
-        g => (g.balances[currency] ?? ZERO) !== ZERO,
-      ).length
-      return [currency, plural(n, {one: '# group', other: '# groups'})]
-    }),
-  )
-  const counts = [
-    plural(overviewRows.length, {one: '# group', other: '# groups'}),
-    l`${settledCount} settled`,
-  ].join(' · ')
 
   return (
-    <Layout.Screen testID="screen-groups">
+    <TabScreen testID="screen-groups">
       <Layout.Header.Outer>
         <HeaderAvatar />
         {/* Balances Search & Ask on the right, so the title stays centred. */}
@@ -194,7 +165,6 @@ export function GroupsScreen() {
         when={!isLoading}
         fallback={
         <Shimmer testID="groups-loading">
-          <BalanceSummaryPlaceholder />
           <SectionHeader title={l`Groups`} />
           {Array.from({length: PLACEHOLDER_ROWS}, (_, i) => (
             <GroupRowPlaceholder key={i} hideTopBorder={i === 0} />
@@ -217,15 +187,6 @@ export function GroupsScreen() {
             ListHeaderComponent={
               all.length > 0 ? (
                 <>
-                  {/* People's Overview, so both tabs read the same way: my net across the groups, per currency. */}
-                  <BalanceSummary
-                    testID="groups-balances"
-                    titleTestID="groups-balances-title"
-                    totals={overall}
-                    locale={locale}
-                    counts={counts}
-                    captions={captions}
-                  />
                   <ListToolsHeader
                     title={l`Groups`}
                     titleTestID="groups-list-title"
@@ -391,7 +352,6 @@ export function GroupsScreen() {
         </LayoutAnimationConfig>
         )}
       </Deferred>
-      <AddExpenseFAB />
       <GroupsFilterDialog
         control={filterControl}
         filters={filters}
@@ -403,6 +363,6 @@ export function GroupsScreen() {
           if (f.sort !== sortDefault) void setSortDefault(f.sort)
         }}
       />
-    </Layout.Screen>
+    </TabScreen>
   )
 }

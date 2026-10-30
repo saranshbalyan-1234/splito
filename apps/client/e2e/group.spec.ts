@@ -43,7 +43,7 @@ async function seedA07(page: Page) {
   })
 }
 
-test('phones: the pushed group page has no FAB; its own Add expense pre-selects the group', async ({
+test('phones: the group page has the FAB and its own Add expense, both pre-select the group (owner 190)', async ({
   page,
 }) => {
   await ready(page)
@@ -51,9 +51,10 @@ test('phones: the pushed group page has no FAB; its own Add expense pre-selects 
   await page.setViewportSize({width: 390, height: 844})
   await page.goto(`/groups/${group}`)
   await expect(page.getByTestId('screen-group')).toBeVisible()
-  await expect(
-    page.getByTestId('screen-group').getByTestId('fab-add'),
-  ).toHaveCount(0)
+  await expect(page.getByTestId('screen-group').getByTestId('fab-add')).toBeVisible()
+  await page.getByTestId('screen-group').getByTestId('fab-add').click()
+  await expect(page).toHaveURL(new RegExp(`/expense/new\\?groupId=${group}`))
+  await page.goBack()
   await page.getByTestId('group-add-expense').click()
   await expect(page).toHaveURL(new RegExp(`/expense/new\\?groupId=${group}`))
 })
@@ -129,7 +130,7 @@ test('A07 / F-113 M11: when A->C is excluded the plan goes outside the rules, sa
   await page.goto(`/groups/${group}?tab=balances`)
   await expect(page.getByTestId('group-outside-rules')).toBeVisible()
   await expect(page.getByTestId('group-owe-You-Chirag Shah')).toBeVisible()
-  await page.goto('/')
+  await page.goto('/people')
   await expect(
     page.getByTestId('person-Chirag Shah').getByTestId('balance-INR'),
   ).toHaveText('you owe ↗ ₹100.00')

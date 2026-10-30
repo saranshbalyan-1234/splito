@@ -27,6 +27,15 @@ describe('people aggregation (A04)', () => {
     expect(Object.keys(s.byCurrency).sort()).toEqual(['INR', 'USD'])
     expect(s.byCurrency.USD!.total).toBe(500n)
   })
+  test('scope groups keeps only the group parts, direct only the non-group part (Home Overview, owner 176)', () => {
+    const rows = pairwiseBalances([direct, grp, usd], 'me')
+    expect(personSummary(rows, {includeGroups: true, scope: 'groups'})[0]!.byCurrency).toEqual({INR: {total: 50n, direct: 0n, groups: {g1: 50n}}})
+    expect(personSummary(rows, {includeGroups: true, scope: 'direct'})[0]!.byCurrency).toEqual({
+      INR: {total: 100n, direct: 100n, groups: {}},
+      USD: {total: 500n, direct: 500n, groups: {}},
+    })
+    expect(personSummary(rows, {includeGroups: true, scope: 'all'})).toEqual(personSummary(rows, {includeGroups: true}))
+  })
   test('group-only person hidden when groups excluded', () =>
     expect(personSummary(pairwiseBalances([grp], 'me'), {includeGroups: false})).toEqual([]))
 })

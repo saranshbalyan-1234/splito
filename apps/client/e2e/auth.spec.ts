@@ -17,7 +17,7 @@ test.describe('signed out, nothing of the app exists', () => {
     test(`${path} shows the Continue screen, renders no screen and opens no database`, async ({page}) => {
       await page.setViewportSize(PHONE)
       await toContinue(page, path)
-      for (const id of ['screen-people', 'screen-groups', 'screen-settings', 'screen-activity', 'screen-analytics', 'screen-person', 'screen-expense', 'bottom-bar', 'sidebar', 'drawer', 'search-drawer'])
+      for (const id of ['screen-home', 'screen-people', 'screen-groups', 'screen-settings', 'screen-activity', 'screen-analytics', 'screen-person', 'screen-expense', 'bottom-bar', 'sidebar', 'drawer', 'search-drawer'])
         await expect(page.getByTestId(id)).toHaveCount(0)
       expect(await databases(page)).toEqual([])
       // The page holds the sign-in and no ledger text at all.
@@ -37,7 +37,7 @@ test.describe('signed out, nothing of the app exists', () => {
     await expect(page.getByTestId('public-join')).toBeVisible()
     await expect(page).toHaveURL(/\/join\/abc123def456$/)
     expect(await databases(page)).toEqual([])
-    await expect(page.getByTestId('screen-people')).toHaveCount(0)
+    await expect(page.getByTestId('screen-home')).toHaveCount(0)
     await page.getByTestId('public-continue').click()
     await expect(page.getByTestId('continue-form')).toBeVisible()
     await page.goto('/join/abc')
@@ -105,7 +105,7 @@ test.describe('the Continue screen', () => {
     await expect(page.getByTestId('auth-social-not-live')).toContainText('arrives with sync')
     await page.getByTestId('continue-apple').click()
     await expect(page.getByTestId('continue-form')).toBeVisible()
-    await expect(page.getByTestId('screen-people')).toHaveCount(0)
+    await expect(page.getByTestId('screen-home')).toHaveCount(0)
     expect(await databases(page)).toEqual([])
   })
 
@@ -287,7 +287,7 @@ test.describe('a missing email or phone blocks the app', () => {
     await expect(page.getByTestId('add-missing')).toBeVisible()
     await expect(page.getByText('Add your phone number').first()).toBeVisible()
     // Not Home, not setup, no database; the only other action is Log out.
-    await expect(page.getByTestId('screen-people')).toHaveCount(0)
+    await expect(page.getByTestId('screen-home')).toHaveCount(0)
     expect(await databases(page)).toEqual([])
     await page.reload()
     await expect(page.getByTestId('add-missing')).toBeVisible()
@@ -537,10 +537,10 @@ test.describe('tabs, languages and codes', () => {
     await signedInShown(page)
     const other = await context.newPage()
     await other.goto('/')
-    await expect(other.getByTestId('screen-people')).toBeVisible({timeout: 20_000})
+    await expect(other.getByTestId('screen-home')).toBeVisible({timeout: 20_000})
     await other.evaluate(() => (window as unknown as {__splitoTest: {signOut(): void}}).__splitoTest.signOut())
     await expect(page.getByTestId('continue-form')).toBeVisible({timeout: 10_000})
-    await expect(page.getByTestId('screen-people')).toHaveCount(0)
+    await expect(page.getByTestId('screen-home')).toHaveCount(0)
   })
 
   test('the language in use stays after log out, and on the next cold start', async ({page}) => {

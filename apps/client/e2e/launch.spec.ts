@@ -151,7 +151,7 @@ for (const size of SIZES) {
           document.getElementById('root')!.getBoundingClientRect().toJSON(),
         )
         release()
-        await expect(page.getByTestId('screen-people')).toBeAttached()
+        await expect(page.getByTestId('screen-home')).toBeAttached()
         await expect(launch).toHaveCount(0)
         const rootAfter = await page.evaluate(() =>
           document.getElementById('root')!.getBoundingClientRect().toJSON(),

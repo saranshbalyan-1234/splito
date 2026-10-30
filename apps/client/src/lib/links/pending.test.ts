@@ -30,7 +30,7 @@ describe('the phone holds a link\'s sheet for its page', () => {
   test('leak: leaving the page drops it, so a later visit does not open a sheet', () => {
     queue(target(`/people/${ID}/record-payment`), 0)
     // Before its page has shown (navigating there) a change elsewhere does not drop it.
-    expect(focusChanged({name: 'People', params: {}})).toBe(false)
+    expect(focusChanged({name: 'Home', params: {}})).toBe(false)
     expect(focusChanged({name: 'Person', params: {personId: ID}})).toBe(false)
     expect(peek(person, ['record-payment'], 10)).toBeDefined()
     // The person goes to another page: it is gone.

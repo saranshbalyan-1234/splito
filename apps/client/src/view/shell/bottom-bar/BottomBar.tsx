@@ -22,7 +22,7 @@ import {
   useActivityBadge,
 } from '#/components/activity/useActivityFeed'
 import {useSearchAsk} from '#/components/SearchAsk/context'
-import {NAV_LABELS, TabGlyph} from '#/components/TabGlyph'
+import {MAX_LABELLED_TABS, NAV_LABELS, TabGlyph, TabLabel} from '#/components/TabGlyph'
 import {Text} from '#/components/Typography'
 import {useAnalytics} from '#/analytics'
 import {styles} from './BottomBarStyles'
@@ -44,10 +44,12 @@ export function BottomBar({navigation}: BottomTabBarProps) {
   const dedupe = useDedupe()
   const footerMinimalShellTransform = useMinimalShellFooterTransform()
   const iconWidth = 28
+  const hasLabels = tabs.length <= MAX_LABELLED_TABS
   const activityBadge = useActivityBadge()
   const searchAsk = useSearchAsk()
 
   const isAt: Record<SidebarTab, boolean> = {
+    Home: tabState.isAtHome,
     People: tabState.isAtPeople,
     Groups: tabState.isAtGroups,
     Analytics: tabState.isAtAnalytics,
@@ -109,6 +111,14 @@ export function BottomBar({navigation}: BottomTabBarProps) {
                 size={iconWidth}
               />
             }
+            label={
+              hasLabels ? (
+                <TabLabel
+                  label={_(NAV_LABELS[tab])}
+                  isActive={tab !== 'ask' && tab !== 'settings' && isAt[TAB_ROUTE[tab]]}
+                />
+              ) : undefined
+            }
             onPress={() => {
               if (tab === 'settings') {
                 ax.metric('nav:click', {item: tab, surface: 'bottomBar'})
@@ -140,6 +150,8 @@ interface BtnProps extends Pick<
 > {
   testID?: string
   icon: JSX.Element
+  /** The visible label under the icon, while the bar is short enough to show them. */
+  label?: JSX.Element
   notificationCount?: string
   hasNew?: boolean
   onPress?: (event: GestureResponderEvent) => void
@@ -149,6 +161,7 @@ interface BtnProps extends Pick<
 function Btn({
   testID,
   icon,
+  label,
   hasNew,
   notificationCount,
   onPress,
@@ -162,7 +175,7 @@ function Btn({
   return (
     <PressableScale
       testID={testID}
-      style={[styles.ctrl, a.flex_1]}
+      style={[styles.ctrl, label && styles.ctrlLabelled, a.flex_1]}
       onPress={onPress}
       onLongPress={onLongPress}
       accessible={accessible}
@@ -172,6 +185,7 @@ function Btn({
       accessibilityLargeContentTitle={accessibilityLabel}
       accessibilityShowsLargeContentViewer>
       {icon}
+      {label}
       {notificationCount ? (
         <View
           style={[

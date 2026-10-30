@@ -9,9 +9,9 @@ import {useTheme} from '#/alf'
 import {PlusLarge_Stroke2_Corner0_Rounded as PlusIcon} from '#/components/icons/Plus'
 
 /**
- * Bluesky's compose FAB, opening Add expense. Screens render it where
- * Bluesky renders its compose FAB; `FAB` itself hides it at tablet and
- * desktop widths, where the sidebar's pill is the compose action.
+ * Bluesky's compose FAB, opening Add expense. `RouteFAB` renders it from the
+ * route allow-list (owner 190); `FAB` itself hides it at tablet and desktop
+ * widths, where the sidebar's pill is the compose action.
  */
 export function AddExpenseFAB({
   personId,
@@ -23,7 +23,6 @@ export function AddExpenseFAB({
   const t = useTheme()
   const {t: l} = useLingui()
   const navigation = useNavigation<NavigationProp>()
-
   return (
     <FAB
       testID="fab-add"

@@ -55,7 +55,7 @@ test('Continue screen: Hindi switches live, keeps across a reload and is the acc
   await expect(page.getByTestId('app-language')).toContainText('हिन्दी')
   // The account takes it at sign-in: Settings > Language agrees.
   await page.getByTestId('continue-dev-account').click()
-  await expect(page.getByTestId('screen-people')).toBeVisible({timeout: 20_000})
+  await expect(page.getByTestId('screen-home')).toBeVisible({timeout: 20_000})
   await page.goto('/settings/regional')
   await expect(page.getByTestId('language-hi')).toHaveAttribute(
     'aria-checked',
@@ -83,13 +83,14 @@ test('desktop right column: the dropdown switches the sidebar labels', async ({
   page,
 }) => {
   await page.setViewportSize(WIDE)
-  await openDemo(page)
-  await expect(page.getByTestId('person-Riya Sharma')).toBeVisible()
-  await expect(page.getByTestId('tab-people')).toContainText('Home')
+  /* Home shows no right column (owner 153), so the dropdown is found on Groups. */
+  await openDemo(page, '/groups')
+  await expect(page.getByTestId('screen-groups')).toBeVisible()
+  await expect(page.getByTestId('tab-home')).toContainText('Home')
   const dropdown = page.getByTestId('right-nav').getByTestId('app-language')
   await dropdown.click()
   await page.getByTestId('app-language-hi').click()
-  await expect(page.getByTestId('tab-people')).toContainText('घर')
+  await expect(page.getByTestId('tab-home')).toContainText('घर')
   // Settings > Language is the same preference.
   await page.goto('/settings/regional')
   await expect(page.getByTestId('language-hi')).toHaveAttribute(

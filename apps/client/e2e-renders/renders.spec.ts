@@ -196,7 +196,7 @@ test('no wasted renders, no render above the baseline', async ({page}) => {
   // Switch the large demo on (a year of use: ~50 activity pages), then count a cold launch into it: the mode survives a reload.
   await openDemo(page)
   await page.reload()
-  await expect(page.getByTestId('screen-people')).toBeVisible({timeout: 60_000})
+  await expect(page.getByTestId('screen-home')).toBeVisible({timeout: 60_000})
 
   await phase(page, 'tabs')
   for (const tab of ['groups', 'activity', 'analytics', 'people']) {

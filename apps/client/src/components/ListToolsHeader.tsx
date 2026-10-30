@@ -44,6 +44,7 @@ export function ListToolsHeader({
   activeFilterCount,
   onFiltersPress,
   action,
+  endAction,
 }: {
   title: string
   count: number | undefined
@@ -62,6 +63,8 @@ export function ListToolsHeader({
   onFiltersPress: () => void
   /** A small link beside the title (Home's friends: "Manage"). */
   action?: React.ReactNode
+  /** A third icon button after Filters (the Friends list's "Manage friends and invites" gear, owner 177). */
+  endAction?: React.ReactNode
 }) {
   const t = useTheme()
   const {t: l} = useLingui()
@@ -92,7 +95,7 @@ export function ListToolsHeader({
 
   return (
     <View
-      onLayout={e => setRowWidth(e.nativeEvent.layout.width - 32 - ICON - GAP)}
+      onLayout={e => setRowWidth(e.nativeEvent.layout.width - 32 - ICON - GAP - (endAction ? ICON + GAP : 0))}
       style={[a.px_lg, a.pt_md, a.pb_sm, a.justify_center, {minHeight: 60}]}>
       <View style={[a.flex_row, a.align_center, {gap: GAP}]}>
         <Animated.View
@@ -172,6 +175,7 @@ export function ListToolsHeader({
             />
           )}
         </Button>
+        {endAction}
       </View>
       {isSearching && (
         /* Grows leftwards from the search icon's spot to the full row. */
@@ -179,7 +183,7 @@ export function ListToolsHeader({
           style={[
             a.absolute,
             a.justify_center,
-            {right: 16 + ICON + GAP, top: 8, height: 44},
+            {right: 16 + ICON + GAP + (endAction ? ICON + GAP : 0), top: 8, height: 44},
             fieldStyle,
           ]}>
           <SearchInput

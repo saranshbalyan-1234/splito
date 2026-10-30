@@ -28,6 +28,7 @@ const ROW_HEIGHT = 56
 export function useNavLabels(): Record<NavItemId, string> {
   const {_} = useLinguiCore()
   return {
+    home: _(NAV_LABELS.home),
     people: _(NAV_LABELS.people),
     groups: _(NAV_LABELS.groups),
     analytics: _(NAV_LABELS.analytics),
@@ -62,8 +63,8 @@ function rowsFor(stored: readonly NavItemId[]): Row[] {
 /* Home is fixed first (26.3): any order a drag makes keeps it there. */
 function homeFirst(rows: Row[]) {
   return [
-    ...rows.filter(r => r.tab === 'people'),
-    ...rows.filter(r => r.tab !== 'people'),
+    ...rows.filter(r => r.tab === 'home'),
+    ...rows.filter(r => r.tab !== 'home'),
   ]
 }
 
@@ -72,7 +73,7 @@ function homeFirst(rows: Row[]) {
  * shared list can go in the bottom bar and the sidebar, each with a
  * switch and a drag handle (Bluesky's pinned-feeds list), or arrow buttons on
  * wide web and for screen readers. The bar takes any number of tabs, from
- * Home alone to every item (decision 84); Home stays on and first. Items that are off stay in the drawer and sit under the sidebar's "More". Reset (the section's) restores Home, Groups, Analytics,
+ * Home alone to every item (decision 84); Home stays on and first. Items that are off stay in the phone drawer; the sidebar and rail always list every item in this order (owner 155, no "More"). Reset (the section's) restores Home, People, Groups, Analytics,
  * Activity.
  */
 export function NavigationEditor() {
@@ -120,7 +121,7 @@ export function NavigationEditor() {
       pref={pref}
       icon={TabsIcon}
       title={l`Items`}
-      description={l`On items make the bottom bar and sidebar; the rest sit under More.`}>
+      description={l`On items make the phone bottom bar; the rest stay in the menu behind your avatar. The sidebar on wide screens always lists every item, in this order.`}>
       <View
         style={[
           a.w_full,
@@ -136,7 +137,7 @@ export function NavigationEditor() {
           onReorder={next => save(next)}
           renderItem={(row, dragHandle) => {
             const index = rows.indexOf(row)
-            const isHome = row.tab === 'people'
+            const isHome = row.tab === 'home'
             return (
               <TabRow
                 row={row}
@@ -171,7 +172,7 @@ export function NavigationEditor() {
           aria-live="polite"
           style={[a.text_sm, a.leading_snug, t.atoms.text_contrast_medium]}>
           {visibleCount === 1
-            ? l`Only Home is on. The rest sit under More, and in the menu behind your avatar on phones.`
+            ? l`Only Home is on. The rest stay in the menu behind your avatar on phones.`
             : l`${visibleCount} tabs share the phone bar equally.`}
         </Text>
       )}

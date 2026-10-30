@@ -3,10 +3,10 @@ import {expect, type Page, test} from '@playwright/test'
 import {openDemo} from './openDemo'
 
 /*
- * ARCHITECTURE 26.12, owners 113/114/120 (F-245, F-248): Home reads top-down
- * (Overview, requests, invites row, Friends), nothing is cut off or crowded,
- * the Overview cards are separate equal boxes in a balanced grid that re-lays
- * out with the width, and the Friends list has its own search.
+ * ARCHITECTURE 26.12, owners 113/114/120 (F-245, F-248, F-256): Home reads top-down
+ * (Overview, requests, invites row, then the recent lists), nothing is cut off or
+ * crowded, the Overview cards are separate equal boxes in a balanced grid that
+ * re-lays out with the width, and the Friends list (now on People) has its own search.
  */
 
 const WIDTHS = [320, 390, 600, 800, 1440]
@@ -20,11 +20,12 @@ type Splito = {
 async function openHome(page: Page, width: number, path = '/') {
   await page.setViewportSize({width, height: 900})
   await openDemo(page, path)
-  await expect(page.getByTestId('person-Arjun Mehta')).toBeVisible()
+  if (path === '/') await expect(page.getByTestId('home-overview')).toBeVisible()
+  else await expect(page.getByTestId('screen-people').getByTestId('person-Arjun Mehta')).toBeVisible()
 }
 
 /** Every Overview card on the screen: its box, plus whether any label or figure inside is clipped. */
-async function cards(page: Page, screen = 'screen-people') {
+async function cards(page: Page, screen = 'screen-home') {
   return page.getByTestId(screen).evaluate(root => {
     const out: {id: string; x: number; y: number; w: number; h: number; clipped: string[]}[] = []
     for (const link of root.querySelectorAll<HTMLElement>('[data-testid^="summary-"]')) {
@@ -66,30 +67,51 @@ for (const width of WIDTHS) {
     for (const row of rows) expect(Math.abs(row[0]!.x - rows[0]![0]!.x)).toBeLessThan(1.5)
     expect(Math.max(...rows.map(r => r.length))).toBeLessThanOrEqual(3)
 
-    // Overview, then requests, then the invites row, then Friends.
+    // Overview, then requests, then the invites row, then the recent lists; no Friends list on Home.
     const y = async (id: string) => (await page.getByTestId(id).boundingBox())!.y
-    const overview = await y('people-balances-title')
-    const requests = await y('people-requests-title')
-    const waiting = await y('people-invites-waiting')
-    const friends = await y('people-friends-title')
-    expect(overview).toBeLessThan(requests)
-    expect(requests).toBeLessThan(waiting)
-    expect(waiting).toBeLessThan(friends)
-    // Sent invites are not on Home, and no row carries a coloured sync dot.
-    await expect(page.getByTestId('invite-sent-Kabir')).toHaveCount(0)
-    await expect(page.getByTestId('people-invites-title')).toHaveCount(0)
+    const order = ['home-overview-title', 'people-requests-title', 'people-invites-title', 'home-recent-transactions-title', 'home-recent-people-title', 'home-recent-groups-title']
+    const ys: number[] = []
+    for (const id of order) ys.push(await y(id))
+    expect([...ys].sort((p, q) => p - q)).toEqual(ys)
+    await expect(page.getByTestId('people-friends-title')).toHaveCount(0)
+    // The invites sent are rows on Home (owner 175), and no row carries a coloured sync dot.
+    await expect(page.getByTestId('invite-sent-Kabir')).toBeVisible()
+    await expect(page.getByTestId('invite-sent-Kabir').locator('[data-testid$="-sync"]')).toHaveCount(0)
     await expect(page.getByTestId('request-Ishaan Verma').locator('[data-testid$="-sync"]')).toHaveCount(0)
   })
 }
 
-test('the invites row opens Friends and invites, where Invites sent live', async ({page}) => {
+test('Home shows requests then Invites sent as rows, at most 5 in all, and the full list is on Friends and invites', async ({page}) => {
   await openHome(page, 390)
-  await expect(page.getByTestId('people-invites-waiting')).toContainText(/\d+ invites? waiting/)
-  await page.getByTestId('people-invites-waiting').click()
+  const home = page.getByTestId('screen-home')
+  await expect(home.getByTestId('people-invites-title')).toContainText('Invites sent')
+  const rows = home
+    .getByTestId('people-requests')
+    .locator('[data-testid^="request-"], [data-testid^="invite-sent-"]')
+  const named = await rows.evaluateAll(els =>
+    els.map(e => e.getAttribute('data-testid')!).filter(id => !/accept|decline|resend|cancel|-sync|-actions|tooltip|title/.test(id)),
+  )
+  const unique = new Set(named)
+  expect(unique.size).toBeGreaterThan(2)
+  expect(unique.size, [...unique].join(', ')).toBeLessThanOrEqual(5)
+  const kabir = home.getByTestId('invite-sent-Kabir')
+  await expect(kabir).toContainText(/Invited, not on Splito yet|Waiting to accept/)
+  // Resend and Cancel sit on the right in one horizontal line.
+  const row = (await kabir.boundingBox())!
+  const resend = (await kabir.getByTestId('invite-sent-resend').boundingBox())!
+  const cancel = (await kabir.getByTestId('invite-sent-cancel').boundingBox())!
+  expect(Math.abs(resend.y - cancel.y)).toBeLessThan(1)
+  expect(cancel.x).toBeGreaterThan(resend.x + resend.width)
+  expect(resend.x).toBeGreaterThan(row.x + row.width / 2)
+  expect(row.height).toBeLessThan(72)
+  // The rows come after the Overview.
+  expect(await y(page, 'home-overview-title')).toBeLessThan(await y(page, 'people-requests-title'))
+  await page.goto('/settings/friends')
   await expect(page.getByTestId('screen-friends-invites')).toBeVisible()
   await expect(page.getByTestId('invite-sent-Kabir')).toBeVisible()
-  await expect(page.getByTestId('invite-sent-Kabir').locator('[data-testid$="-sync"]')).toHaveCount(0)
 })
+
+const y = async (page: Page, id: string) => (await page.getByTestId(id).boundingBox())!.y
 
 test('with nothing waiting there is no invites row', async ({page}) => {
   await page.goto('/')
@@ -97,14 +119,15 @@ test('with nothing waiting there is no invites row', async ({page}) => {
   await page.evaluate(async () => {
     await (window as unknown as {splito: Splito}).splito.createPerson('Kavya Rao')
   })
-  await page.goto('/')
+  await page.goto('/people')
   await expect(page.getByTestId('person-Kavya Rao')).toBeVisible()
-  await expect(page.getByTestId('people-invites-waiting')).toHaveCount(0)
+  await expect(page.getByTestId('people-invites-title')).toHaveCount(0)
+  await expect(page.getByTestId('people-requests-title')).toHaveCount(0)
 })
 
 test('a friend row is at most two lines at 390px, amounts vertically centred, chips do not wrap, the last row clears the FAB', async ({page}) => {
-  await openHome(page, 390)
-  const rows = page.locator('[data-testid^="person-"]:not([data-testid*="-more"]):not([data-testid$="-chips"]):not([data-testid$="-deleted"]):not([data-testid="person-row-nets"])').filter({has: page.locator('[data-testid^="balance-"]')})
+  await openHome(page, 390, '/people')
+  const rows = page.getByTestId('screen-people').locator('[data-testid^="person-"]:not([data-testid*="-more"]):not([data-testid$="-chips"]):not([data-testid$="-deleted"]):not([data-testid="person-row-nets"])').filter({has: page.locator('[data-testid^="balance-"]')})
   const n = await rows.count()
   expect(n).toBeGreaterThan(3)
   for (let i = 0; i < n; i++) {
@@ -128,13 +151,13 @@ test('a friend row is at most two lines at 390px, amounts vertically centred, ch
   const last = page.getByTestId('screen-people').locator('[data-testid^="person-"]').last()
   await last.scrollIntoViewIfNeeded()
   await page.getByTestId('screen-people').getByTestId('fab-inset').scrollIntoViewIfNeeded()
-  const fab = (await page.getByTestId('fab-add').boundingBox())!
+  const fab = (await page.getByTestId('screen-people').getByTestId('fab-add').boundingBox())!
   const lastBox = (await last.boundingBox())!
   expect(lastBox.y + lastBox.height).toBeLessThanOrEqual(fab.y + 1)
 })
 
 test('Friends search filters live by name and combines with Filters', async ({page}) => {
-  await openHome(page, 1440)
+  await openHome(page, 1440, '/people')
   const people = page.getByTestId('screen-people')
   const all = await people.locator('[data-testid^="person-"][data-testid*=" "]').count()
   await people.getByTestId('list-search').click()
@@ -171,7 +194,7 @@ async function seedCurrencies(page: Page, codes: string[]) {
       })
   }, codes)
   await page.goto('/')
-  await expect(page.getByTestId('person-Kavya Rao')).toBeVisible()
+  await expect(page.getByTestId('summary-INR')).toBeVisible()
 }
 
 test('six currencies lay out 3 x 2, then 2 x 3 and 1 a row as the window narrows, live', async ({page}) => {
@@ -189,14 +212,3 @@ test('six currencies lay out 3 x 2, then 2 x 3 and 1 a row as the window narrows
   }
 })
 
-test('Groups uses the same cards, nothing cut off at every width', async ({page}) => {
-  for (const width of WIDTHS) {
-    await page.setViewportSize({width, height: 900})
-    await openDemo(page, '/groups')
-    await expect(page.getByTestId('group-Goa trip')).toBeVisible()
-    const all = await cards(page, 'screen-groups')
-    expect(all.length).toBeGreaterThan(0)
-    for (const c of all) expect(c.clipped, `${c.id} @${width}`).toEqual([])
-    for (const row of rowsOf(all)) for (const c of row) expect(Math.abs(c.h - row[0]!.h)).toBeLessThan(1.5)
-  }
-})

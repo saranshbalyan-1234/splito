@@ -70,7 +70,7 @@ test('m26: reopening a phone drawer during its exit leaves it on screen', async 
   page,
 }) => {
   await page.setViewportSize({width: 390, height: 844})
-  await openDemo(page)
+  await openDemo(page, '/people')
   await expect(page.getByTestId('person-Arjun Mehta')).toBeVisible()
   const people = page.getByTestId('screen-people')
   await people.getByTestId('list-filters').click()
@@ -97,6 +97,7 @@ test('m27: browser Back on a dirty Add friend sheet asks "Discard changes?"', as
   page,
 }) => {
   await ready(page)
+  await page.goto('/people')
   await page.getByTestId('people-add-friend').click()
   await expect(page.getByTestId('screen-add-friend')).toBeVisible()
   await page.getByTestId('add-friend-name').fill('Zoe Hart')

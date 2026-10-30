@@ -303,7 +303,7 @@ function useSectionSummary(): Partial<Record<SettingsSectionId, string>> {
   const {t: l} = useLingui()
   const [theme = 'system'] = usePref('theme')
   const [currency = 'INR'] = usePref('defaultCurrency')
-  const [homeTab = 'people'] = usePref('homeTab')
+  const [homeTab = 'home'] = usePref('startTab')
   const [tabs] = usePref('tabs')
   const tabCount = tabs && bottomBarItems(tabs).length
   const tabLabels = useTabLabels()

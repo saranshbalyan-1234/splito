@@ -64,7 +64,7 @@ export async function createAccount(page: Page, a: {email: string; phone: string
   await page.getByTestId('setNewPassword-next').click()
 }
 
-export const signedInShown = (page: Page) => expect(page.getByTestId('screen-people')).toBeVisible({timeout: 20_000})
+export const signedInShown = (page: Page) => expect(page.getByTestId('screen-home')).toBeVisible({timeout: 20_000})
 
 export const hooks = (page: Page) => page.evaluate(() => Object.keys((window as unknown as Hooks).__splitoTest ?? {}))
 

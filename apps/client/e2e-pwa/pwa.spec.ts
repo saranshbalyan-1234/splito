@@ -15,7 +15,7 @@ async function controlled(page: Page) {
   await page.goto('/')
   await page.getByTestId('welcome-skip').click()
   await page.getByTestId('continue-dev-account').click()
-  await expect(page.getByTestId('screen-people')).toBeVisible({timeout: 20_000})
+  await expect(page.getByTestId('screen-home')).toBeVisible({timeout: 20_000})
   await page.goto('/settings')
   await expect(page.getByTestId('screen-settings')).toBeVisible()
   // The worker installs, activates and claims this page.
@@ -44,7 +44,7 @@ test('opens offline, refreshing a deep route included', async ({page, context}) 
   await page.goto('/settings/about')
   await expect(page.getByTestId('screen-settings-section')).toBeVisible()
   await page.goto('/')
-  await expect(page.getByTestId('screen-people')).toBeVisible()
+  await expect(page.getByTestId('screen-home')).toBeVisible()
   await context.setOffline(false)
 })
 

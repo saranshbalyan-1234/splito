@@ -4,7 +4,7 @@ import {type PeopleFilters} from './components/FriendsFilterDialog'
 const SHOW = ['all', 'owesYou', 'youOwe', 'settled'] as const
 const SORT = ['amount', 'name', 'recent'] as const
 
-/** What the address sets of the People filters (`/?show=owesYou&sort=name&currency=EUR&groups=0&settled=1&hidden=1`). */
+/** What the address sets of the People filters (`/people?show=owesYou&sort=name&currency=EUR&groups=0&settled=1&hidden=1`). */
 export function readPeopleParams(params: Params): Partial<PeopleFilters> {
   const out: Partial<PeopleFilters> = {}
   const show = oneOf(params?.show, SHOW)

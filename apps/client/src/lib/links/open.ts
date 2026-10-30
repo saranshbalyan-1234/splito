@@ -2,7 +2,9 @@ import {recordFriction} from '#/logger'
 import {IS_WEB} from '#/env'
 import {navigationRef, resetToRoot} from '#/navigation/ref'
 import {openSheetMarkers, ownerOf, queueSheets} from '#/navigation/sheets'
+import {originTab, tabLink} from '#/lib/routes/helpers'
 import {TAB_NAMES} from '#/lib/routes/tabs'
+import {StackActions} from '@react-navigation/native'
 import {holdLinkIntent, isSignInRequired} from './intent'
 import {holdForDemoSwitch} from './gate'
 import {buildPath, type LinkTarget, resolveLink, touchesRealData} from './resolve'
@@ -17,25 +19,33 @@ export type OpenOptions = {isDemo?: boolean; isInStore?: (target: LinkTarget) =>
  * Takes the navigator to a link's screen from inside the app: one function behind push taps, reminders, invite
  * and QR links, shares, Ask answers and Search results (F-254). Cold starts and the browser's address bar go
  * through the same resolver in `navigation/linking`. A link only navigates; it never performs an action.
+ *
+ * A main screen (Home, People, Groups, Analytics, Activity) named by a link opens as a pushed copy with Back, never
+ * as the plain tab (owner 179, `tabLink`); `plain` keeps the plain tab for what is no real link (an unknown address
+ * falling back to Home) and a global sheet that only needs a page under it.
  */
-export function navigateToTarget(target: LinkTarget): boolean {
+export function navigateToTarget(target: LinkTarget, {plain = false}: {plain?: boolean} = {}): boolean {
   if (!navigationRef.isReady()) return false
   const go = navigationRef.navigate as (name: string, params?: object) => void
   const isTab = (TAB_NAMES as readonly string[]).includes(target.name)
   const params = Object.keys(target.params).length > 0 ? target.params : undefined
+  const pushed = isTab && !plain && !(target.name === 'Home' && isGlobalSheet(target.sheets)) ? tabLink(target.name, params, IS_WEB, originTab(navigationRef.getRootState())) : null
+  const open = () => {
+    if (pushed) navigationRef.dispatch(StackActions.push(pushed.name, pushed.params))
+    else if (IS_WEB) go(target.name, params)
+    else if (isTab) go('Tabs', {screen: target.name, params})
+    else go(target.name, params)
+  }
   if (IS_WEB) {
     /* Search & Ask belongs to no page: it opens over the one now showing. Every other link names its page. */
-    if (target.sheets[0] !== 'search') go(target.name, params)
+    if (target.sheets[0] !== 'search') open()
     if (target.sheets.length > 0) {
       openSheetMarkers(isGlobalSheet(target.sheets) ? null : ownerOf({name: target.name, params: target.params}), target.sheets, target.query)
     }
     return true
   }
   queueSheets(target)
-  if (target.sheets[0] !== 'search') {
-    if (isTab) go('Tabs', {screen: target.name, params})
-    else go(target.name, params)
-  }
+  if (target.sheets[0] !== 'search') open()
   return true
 }
 
@@ -54,13 +64,13 @@ export function openLink(input: string, options: OpenOptions = {}): OpenResult {
   if (options.isDemo && touchesRealData(target)) {
     /* Something the demo store holds (its own friend, a reload of its own expense) opens as it is; anything else is real data. */
     if (options.isInStore) {
-      void options.isInStore(target).then(found => (found ? navigateToTarget(target) : holdForDemoSwitch(path)))
+      void options.isInStore(target).then(found => (found ? navigateToTarget(target, {plain: !isKnown}) : holdForDemoSwitch(path)))
       return 'checking'
     }
     holdForDemoSwitch(path)
     return 'held-for-demo'
   }
-  if (!navigateToTarget(target)) return 'not-ready'
+  if (!navigateToTarget(target, {plain: !isKnown})) return 'not-ready'
   return isKnown ? 'opened' : 'unknown'
 }
 

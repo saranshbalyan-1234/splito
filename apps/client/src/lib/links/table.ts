@@ -104,12 +104,16 @@ export type PageName = Exclude<RouteName, 'Search'>
  * by the resolver, so a link can carry nothing a page does not look at.
  */
 export const QUERY_KEYS: Partial<Record<PageName, readonly string[]>> = {
-  People: ['show', 'sort', 'currency', 'groups', 'settled', 'hidden'],
-  Groups: ['type', 'status', 'show', 'currency', 'sort', 'settled', 'hidden'],
+  /* `from`: the tab a main screen was opened from, so a refresh keeps its Back (owner 179, 184). */
+  Home: ['overview', 'from'],
+  People: ['show', 'sort', 'currency', 'groups', 'settled', 'hidden', 'from'],
+  Groups: ['type', 'status', 'show', 'currency', 'sort', 'settled', 'hidden', 'from'],
   Person: ['groups'],
   Analytics: ['currency', 'period', 'offset', 'from', 'to', 'scope'],
   AddExpense: ['personId', 'groupId', 'title', 'amount', 'currency'],
   Settings: ['note'],
+  /* `type=transactions`: Recent transactions' "See all" (owner 173). The type filter itself is F-259; until then Activity ignores it. */
+  Activity: ['type', 'from'],
   FriendsAndInvites: ['section'],
   CreateInvite: ['kind', 'groupId'],
 }

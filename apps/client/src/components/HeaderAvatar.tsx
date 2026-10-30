@@ -14,6 +14,7 @@ import * as Toast from '#/components/Toast'
 import {SyncStatusDot, useSyncLabel} from '#/components/SyncStatusDot'
 import {HEADER_SLOT_SIZE} from '#/components/Layout/const'
 import * as Layout from '#/components/Layout'
+import {usePushedTab} from '#/components/TabScreen'
 
 const AVATAR_SIZE = 32
 const HITSLOP = {top: 30, bottom: 10, left: 30, right: 30}
@@ -24,6 +25,11 @@ const HITSLOP = {top: 30, bottom: 10, left: 30, right: 30}
  * the drawer.
  */
 export function HeaderAvatar() {
+  /* A main screen opened from a link is a pushed page: Back in this spot (owner 179, § 26.3). */
+  return usePushedTab() ? <Layout.Header.BackButton /> : <AccountAvatar />
+}
+
+function AccountAvatar() {
   const {t: l} = useLingui()
   const me = useMe()
   const setDrawerOpen = useSetDrawerOpen()

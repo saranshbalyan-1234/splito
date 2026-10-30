@@ -1,15 +1,13 @@
-import {useEffect, useState} from 'react'
+import {useState} from 'react'
 import {LayoutAnimationConfig} from 'react-native-reanimated'
 import {Deferred} from '#/components/Deferred'
-import {plural} from '@lingui/core/macro'
 import {Trans, useLingui} from '@lingui/react/macro'
 import {useNavigation, useRoute} from '@react-navigation/native'
-import {balanceTotals, isSettledBalance, personSummary} from '@splito/domain'
+import {personSummary} from '@splito/domain'
 import {type Group, type Person} from '@splito/sync'
 
 import {type Params} from '#/lib/links/listState'
 import {type NavigationProp} from '#/lib/routes/types'
-import {perfMark} from '#/lib/perfMark'
 import {useGroupChipNames} from '#/data/groupVisibility'
 import {useHiddenItems, useShowHidden} from '#/data/hiddenItems'
 import {useNumberLocale} from '#/locale/numberLocale'
@@ -24,24 +22,19 @@ import {
 } from '#/data/hooks'
 import {EmptyState} from '#/view/com/util/EmptyState'
 import {List} from '#/view/com/util/List'
-import {useDemoMode} from '#/state/demo'
-import {atoms as a, useBreakpoints, useTheme} from '#/alf'
-import {Text} from '#/components/Typography'
-import {AddExpenseFAB, AddExpenseFABInset} from '#/components/AddExpenseFAB'
-import {LogoMark} from '#/components/brand/Logo'
+import {AddExpenseFABInset} from '#/components/AddExpenseFAB'
+import {useSuppressFab} from '#/components/RouteFAB'
 import {useDialogControl} from '#/components/Dialog'
-import {Button, ButtonText} from '#/components/Button'
+import {Button, ButtonIcon} from '#/components/Button'
+import {HITSLOP_10} from '#/lib/constants'
+import {SettingsGear2_Stroke2_Corner0_Rounded as GearIcon} from '#/components/icons/Settings'
 import {SearchAskButton} from '#/components/SearchAsk/SearchAskButton'
 import {HeaderAvatar} from '#/components/HeaderAvatar'
 import {PersonPlus_Filled_Stroke2_Corner0_Rounded as PersonPlusIcon} from '#/components/icons/Person'
 import * as Layout from '#/components/Layout'
+import {TabScreen} from '#/components/TabScreen'
 import {ListToolsHeader} from '#/components/ListToolsHeader'
-import {PressableScale} from '#/motion/PressableScale'
 import {Shimmer} from '#/motion/Shimmer'
-import {
-  BalanceSummary,
-  BalanceSummaryPlaceholder,
-} from './components/BalanceSummary'
 import {
   PersonRow,
   type PersonRowData,
@@ -62,18 +55,13 @@ const PLACEHOLDER_ROWS = 6
 const STOCK = {includeGroups: true, currency: 'all', show: 'all', sort: 'amount', showHidden: false, showSettled: false} as const
 
 /**
- * Home: the Overview (balances per currency, counts, Analytics), then one
- * row per friend with their balance per currency and each group's part,
- * under a heading with search and filters. No page title, by spec: the header
- * centres the logo, as Bluesky's home header does. The Include groups
- * filter (default from preferences, applied with Apply) drives the totals
- * and the rows.
+ * People (F-256, owners 153, 175): the requests waiting for an answer and the Invites sent rows, then one row per
+ * friend with their balance per currency and each group's part, under a heading with search and filters (Show
+ * settled included). The Overview lives on Home only. The Include groups filter (default from preferences,
+ * applied with Apply) drives the rows.
  */
 export function PeopleScreen() {
   const {t: l} = useLingui()
-  const {gtMobile} = useBreakpoints()
-  const t = useTheme()
-  const {demo} = useDemoMode()
   const locale = useNumberLocale()
   const navigation = useNavigation<NavigationProp>()
   const me = useMe()
@@ -99,7 +87,7 @@ export function PeopleScreen() {
   /* The list's own search (26.12): by name, combined with the filters; not kept after leaving. */
   const [query, setQuery] = useState('')
   const route = useRoute()
-  /* The filters are the address (`/?sort=name&show=owesYou`, F-241): a param that is present wins over the saved preference. */
+  /* The filters are the address (`/people?sort=name&show=owesYou`, F-241): a param that is present wins over the saved preference. */
   const filters: PeopleFilters = {
     ...defaults,
     showHidden,
@@ -115,10 +103,6 @@ export function PeopleScreen() {
   const filterControl = useDialogControl({url: 'filters'})
 
   const isLoading = !me || !people || !groups || !balanceRows
-  /* The launch budget's end point: Home has its figures (perf spec reads the mark). */
-  useEffect(() => {
-    if (!isLoading) perfMark('splito:home-ready')
-  }, [isLoading])
   const summaries = balanceRows
     ? personSummary(balanceRows, {includeGroups})
     : []
@@ -141,63 +125,22 @@ export function PeopleScreen() {
       activity: lastActivity ?? new Map(),
     },
   )
-  /* A removed friend is in the list but is no friend now: the counts and figures cover the live rows. */
-  const rows = filtered.filter(row => row.deletedAt === undefined)
-  /*
-   * Settled up friends leave the list only (owner 90, 112): the figures and the counts below still cover them,
-   * and a search still finds them.
-   */
+  /* Settled up friends leave the list only (owner 90, 112): a search still finds them. */
   const {listed, count: listedCount, total: searchTotal} = searchFriends(filtered, query, filters, seenCurrencies)
-  /* The summary follows the filters too, so its figures always match the list. */
-  const totals = balanceTotals(
-    rows.flatMap(row => (row.summary ? [row.summary] : [])),
-  )
-  /* Settled means every part is zero, not just the net (audit M10). */
-  const settledCount = rows.filter(row =>
-    Object.values(row.summary?.byCurrency ?? {}).every(isSettledBalance),
-  ).length
-  /* Per currency: how many friends the cell's figure is made of. */
-  const captions = Object.fromEntries(
-    totals.map(({currency: c}) => {
-      const n = rows.filter(row => {
-        const balance = row.summary?.byCurrency[c]
-        return !!balance && !isSettledBalance(balance)
-      }).length
-      return [c, plural(n, {one: '# friend', other: '# friends'})]
-    }),
-  )
-  const counts = [
-    plural(rows.length, {one: '# friend', other: '# friends'}),
-    l`${settledCount} settled`,
-  ].join(' · ')
+
+  /* The empty state's own buttons are the actions; a FAB would be a third Add. */
+  useSuppressFab(!isLoading && friends.length === 0)
 
   return (
-    <Layout.Screen testID="screen-people">
+    <TabScreen testID="screen-people">
       <Layout.Header.Outer>
         <HeaderAvatar />
-        {/* Search & Ask and Add friend on the right, so the logo stays centred. */}
+        {/* Search & Ask and Add friend on the right, so the title stays centred. */}
         <Layout.Header.Slot />
         <Layout.Header.Content>
-          {/* Phones show the home mark (inactive here); rail and desktop already show it in the sidebar, so the title (ARCHITECTURE 26.4). */}
-          {gtMobile ? (
-            <Layout.Header.TitleText>{l`Home`}</Layout.Header.TitleText>
-          ) : (
-            <PressableScale
-              testID="header-logo"
-              targetScale={0.9}
-              accessibilityRole="link"
-              accessibilityLabel={l`Splito - Home`}
-              aria-disabled={true}
-              style={[a.flex_row, a.align_center, a.gap_xs]}
-              disabled={true}>
-              <LogoMark size={30} />
-              {demo ? (
-                <Text testID="header-demo-label" style={[a.text_xs, a.font_semi_bold, t.atoms.text_contrast_medium]}>
-                  <Trans>Demo</Trans>
-                </Text>
-              ) : null}
-            </PressableScale>
-          )}
+          <Layout.Header.TitleText>
+            <Trans>People</Trans>
+          </Layout.Header.TitleText>
         </Layout.Header.Content>
         <SearchAskButton />
         <Layout.Header.ActionButton
@@ -213,7 +156,6 @@ export function PeopleScreen() {
         when={!isLoading}
         fallback={
         <Shimmer testID="people-loading">
-          <BalanceSummaryPlaceholder />
           <FriendsHeader count={undefined} />
           {Array.from({length: PLACEHOLDER_ROWS}, (_, i) => (
             <PersonRowPlaceholder key={i} />
@@ -232,12 +174,6 @@ export function PeopleScreen() {
             ListHeaderComponent={
               friends.length > 0 ? (
                 <>
-                  <BalanceSummary
-                    totals={totals}
-                    locale={locale}
-                    counts={counts}
-                    captions={captions}
-                  />
                   <RequestsSection />
                   <ListToolsHeader
                     title={l`Friends`}
@@ -250,17 +186,17 @@ export function PeopleScreen() {
                     searchLabel={l`Search friends`}
                     activeFilterCount={activeCount}
                     onFiltersPress={() => filterControl.open()}
-                    action={
+                    endAction={
                       <Button
                         testID="people-manage-friends"
                         label={l`Manage friends and invites`}
                         size="small"
                         variant="ghost"
                         color="secondary"
+                        shape="round"
+                        hitSlop={HITSLOP_10}
                         onPress={() => navigation.navigate('FriendsAndInvites')}>
-                        <ButtonText>
-                          <Trans>Manage</Trans>
-                        </ButtonText>
+                        <ButtonIcon icon={GearIcon} size="md" />
                       </Button>
                     }
                   />
@@ -336,8 +272,6 @@ export function PeopleScreen() {
         </LayoutAnimationConfig>
         )}
       </Deferred>
-      {/* The empty state's own buttons are the actions; a FAB would be a third Add. */}
-      {(isLoading || friends.length > 0) && <AddExpenseFAB />}
       <FriendsFilterDialog
         control={filterControl}
         filters={filters}
@@ -351,7 +285,7 @@ export function PeopleScreen() {
           if (f.includeGroups !== (includeDefault ?? true)) void setIncludeDefault(f.includeGroups)
         }}
       />
-    </Layout.Screen>
+    </TabScreen>
   )
 }
 

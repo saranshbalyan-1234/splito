@@ -19,6 +19,6 @@ test('Help > See the intro replays the slides at /welcome/N and returns to Help'
 
 test('a signed-in app never opens the intro by itself', async ({page}) => {
   await page.goto('/')
-  await expect(page.getByTestId('screen-people')).toBeVisible()
+  await expect(page.getByTestId('screen-home')).toBeVisible()
   await expect(page.getByTestId('welcome')).toHaveCount(0)
 })

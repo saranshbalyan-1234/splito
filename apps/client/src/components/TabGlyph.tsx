@@ -3,7 +3,8 @@ import {msg} from '@lingui/core/macro'
 import {type NavItemId} from '@splito/sync'
 
 import {styles} from '#/view/shell/bottom-bar/BottomBarStyles'
-import {useTheme} from '#/alf'
+import {atoms as a, useTheme} from '#/alf'
+import {Text} from '#/components/Typography'
 import {
   ChartPie_Filled_Corner0_Rounded as ChartPieFilled,
   ChartPie_Stroke2_Corner0_Rounded as ChartPie,
@@ -14,9 +15,13 @@ import {
 } from '#/components/icons/Activity'
 import {type Props as SVGIconProps} from '#/components/icons/common'
 import {
-  Group3_Filled_Corner0_Rounded as GroupFilled,
-  Group3_Stroke2_Corner0_Rounded as Group,
-} from '#/components/icons/Group'
+  GroupsTab_Filled_Corner0_Rounded as GroupFilled,
+  GroupsTab_Stroke2_Corner0_Rounded as Group,
+} from '#/components/icons/GroupsTab'
+import {
+  Users_Filled_Corner0_Rounded as UsersFilled,
+  Users_Stroke2_Corner0_Rounded as Users,
+} from '#/components/icons/Users'
 import {
   HomeOpen_Filled_Corner0_Rounded as HomeFilled,
   HomeOpen_Stoke2_Corner0_Rounded as Home,
@@ -35,7 +40,8 @@ import {
  * show it, the bottom bar reads it out (it has no visible labels).
  */
 export const NAV_LABELS = {
-  people: msg`Home`,
+  home: msg`Home`,
+  people: msg`People`,
   groups: msg`Groups`,
   analytics: msg`Analytics`,
   ask: msg`Ask Splito`,
@@ -53,18 +59,40 @@ export const GLYPHS: Record<
     style?: object
   }
 > = {
-  people: {
+  home: {
     icon: Home,
     filled: HomeFilled,
     widthAdjust: 1,
     style: styles.homeIcon,
   },
+  people: {icon: Users, filled: UsersFilled, widthAdjust: 1},
   groups: {icon: Group, filled: GroupFilled, widthAdjust: 1},
   analytics: {icon: ChartPie, filled: ChartPieFilled, widthAdjust: 0},
   ask: {icon: Sparkles, filled: SparklesFilled, widthAdjust: 0},
   activity: {icon: Activity, filled: ActivityFilled, widthAdjust: 0},
   settings: {icon: Settings, filled: SettingsFilled, widthAdjust: 0},
 }
+
+/** The bottom bar's visible label under a glyph, shown while the bar holds 5 items or fewer (ARCHITECTURE 26.3). */
+export function TabLabel({label, isActive}: {label: string; isActive: boolean}) {
+  const t = useTheme()
+  return (
+    <Text
+      testID="tab-label"
+      numberOfLines={1}
+      maxFontSizeMultiplier={1.2}
+      style={[
+        a.text_center,
+        {fontSize: 10, lineHeight: 12, marginTop: 1},
+        isActive ? [a.font_semi_bold, t.atoms.text] : t.atoms.text_contrast_medium,
+      ]}>
+      {label}
+    </Text>
+  )
+}
+
+/** The bar shows labels up to this many items; beyond it they hide and the icons stay (decision 84). */
+export const MAX_LABELLED_TABS = 5
 
 /** A bottom-bar tab's glyph, filled when active. */
 export function TabGlyph({

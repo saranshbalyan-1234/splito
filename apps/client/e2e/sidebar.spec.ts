@@ -17,7 +17,7 @@ async function openSidebar(page: Page, width: number, lang: 'en' | 'hi') {
   await page.evaluate(async l => {
     const s = (window as any).splito
     await s.setPref('language', l)
-    await s.setPref('tabs', ['people', 'groups', 'analytics', 'ask', 'activity'])
+    await s.setPref('tabs', ['home', 'people', 'groups', 'analytics', 'ask', 'activity'])
   }, lang)
   await expect(page.getByTestId('tab-ask')).toBeVisible()
 }
@@ -53,7 +53,7 @@ for (const lang of ['en', 'hi'] as const) {
       expect(gap).toBeLessThanOrEqual(40)
 
       // The content column starts where the sidebar ends; nothing overflows sideways.
-      const screen = (await page.getByTestId('screen-people').boundingBox())!
+      const screen = (await page.getByTestId('screen-home').boundingBox())!
       expect(screen.x).toBe(navBox.width)
       const overflow = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth)
       expect(overflow).toBeLessThanOrEqual(0)
