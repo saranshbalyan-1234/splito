@@ -1,5 +1,6 @@
 import {expect, type Page, test} from '@playwright/test'
 
+import {composeButton} from './composer'
 import {openDemo} from './openDemo'
 
 /*
@@ -130,7 +131,7 @@ for (const [size, viewport] of SIZES) {
       await page.keyboard.press('Escape')
       // And not selectable when splitting an expense in the group.
       await page.getByTestId('group-tab-expenses').click()
-      await page.getByTestId(size === '390' ? 'fab-add' : 'sidebar-add').click()
+      await composeButton(page, 'screen-group').click()
       await expect(page.getByTestId('screen-add-expense')).toBeVisible()
       await page.getByTestId('expense-people').click()
       await expect(page.getByTestId('people-dialog').getByTestId('invited-Tanvi Rao')).toBeVisible()
