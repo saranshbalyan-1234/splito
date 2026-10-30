@@ -498,6 +498,8 @@ After the first sign-in and setup, a short coach-mark walkthrough over the real 
   4. Never in demo mode or e2e unless its spec asks; reduced motion respected; no overlap with toasts or sheets.
   5. e2e at 390 and 1440 plus screenshots.
 
+- **Owner 213 scope:** only what a new user must know to start (add an expense, settle up, where balances are); a few steps at most, skippable, shown once; nothing more.
+
 ### F-254 Deep links end to end `spec: owner § 26.3 (decision 145)`
 
 Every F-241 URL opens the right screen from anywhere: iOS Universal Links, Android App Links, `splito://`, web fallback; one resolver for push, invites, QR, reminders, shares; signed-out resume, demo handling, deferred link after install.
@@ -736,6 +738,27 @@ Audit the whole codebase for code that does the same job twice and merge each se
   1. A ranked audit (files, what is duplicated, the shared piece, risk, effort) in `docs/reuse/consolidation.md`.
   2. Consolidation in small non-overlapping slices, each with tests unchanged or improved and no visible regression (screenshots 390/1440 before/after).
   3. An architecture test per consolidated piece where a pattern can be enforced (e.g. no `UserAvatar` with a person id outside PersonLink).
+
+### F-275 New-user UX fixes (audit 2026-10-31) `spec: owners 212/213; docs/ux/2026-10-31-new-user-audit.md`
+
+Fixes from the Opus new-user audit (3 blockers, 19 major, 21 minor). Rulings (assistant, 2026-10-31) where the audit and owner rules meet:
+
+- **Log out keeps owner 186** (erase everything): the audit asked to keep data, but the owner decided erase; the prompt instead says plainly that until sync exists the data cannot come back, with the unsynced count. No change of rule.
+- **Adding a friend before the backend makes a usable friend:** with no directory to check (no backend), Add friend creates a normal local friend ("only for you" rule of § 26.18), name first, email or phone optional; the request flow starts only when the directory exists. Fixes audit blocker 2.
+- **Settled stays hidden by default on both lists** (owner 90): People must hide settled friends like Groups does; the all-settled empty state shows "All settled up" with "Show settled". Fixes the inconsistency behind audit blocker 3.
+- **Save and Record are instant with one confirmation:** no full-sheet success animation; a quick check on the button and one toast that never covers the next screen's key content.
+- **One entry for problems:** "Report a problem" opens one sheet whose first choice is Dispute or Put on hold (owner 119's two kinds kept, one way in); no "Raised by" picker unless recording for someone else.
+- **Show only what works:** Settings rows and sign-in buttons for features not built (notifications, privacy controls, Google, Apple) are hidden or shown as small "Coming with sync" text, never as primary buttons.
+- **Itemize picks a person on tap** (one tap = assign; a stepper for portions appears only after), charges sit behind one "Tax, tip and discounts" row, and the total is computed from items when not typed.
+- **One export:** the Analytics icon opens the same Export sheet as Settings, pre-set to the current filters.
+- **Add expense shows essentials first:** amount, title, split with, paid by, group; focus lands on the amount; no duplicate "Add people" button; Itemize and more behind "More options".
+- **Sign-up keeps the typed name** (bug) and stays as owners 139-143 decided.
+
+- **Effort** L · **Impact** 10 · **Backend** no · **Status** in progress, Wave C (overlapping items handed to running builders; the rest after they merge) · **Deps** F-271, F-1713, F-266
+- **Acceptance**
+  1. Every blocker and major finding in the audit is fixed or has a recorded ruling; minors fixed or listed with a reason.
+  2. Tap counts for the audit's jobs drop (table in the audit doc updated).
+  3. Contrast AA (green, dark red, axes), 44 px targets, footer links and radio rows.
 
 ### F-250 Sign-in required (auth gate) `spec: owner § 26.15 (decision 125)`
 
