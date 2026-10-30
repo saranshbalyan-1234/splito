@@ -1,4 +1,3 @@
-import {Database} from 'bun:sqlite'
 import {expect, test} from 'bun:test'
 import {
   balanceRows,
@@ -24,6 +23,7 @@ import {
   type Repayment,
   type Entity,
 } from '@splito/sync'
+import {bunExecutor} from '@splito/sync/testing'
 
 import {answerIntent, type AskEnv} from '#/lib/ask/answer'
 import {parseQuestion} from '#/lib/ask/parse'
@@ -41,26 +41,7 @@ import {DEMO_ME, seedDemo as seedDemoData} from '#/data/demoSeed'
 const NOW = Date.parse('2026-10-27T14:30:00Z')
 const TODAY = '2026-10-27'
 
-function memoryStore() {
-  const db = new Database(':memory:')
-  return openSqlStore({
-    exec: async sql => void db.run(sql),
-    run: async (sql, params) => void db.query(sql).run(...(params as never[])),
-    all: async (sql, params) => db.query(sql).all(...(params as never[])) as never,
-    withTransaction: async fn => {
-      db.run('BEGIN IMMEDIATE')
-      try {
-        const r = await fn()
-        db.run('COMMIT')
-        return r
-      } catch (e) {
-        db.run('ROLLBACK')
-        throw e
-      }
-    },
-    close: async () => db.close(),
-  })
-}
+const memoryStore = () => openSqlStore(bunExecutor(':memory:'))
 
 /** The six friends of the curated story, whose balances are fixed by hand (the generated cast is checked in bulk below). */
 const STORY_FRIENDS = {riya: 'Riya Sharma', arjun: 'Arjun Mehta', priya: 'Priya Nair', sam: 'Sam Carter', lena: 'Lena Fischer', diego: 'Diego Alves'}

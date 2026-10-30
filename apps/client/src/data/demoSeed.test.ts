@@ -15,6 +15,7 @@ import {
   setPref,
   type Store,
 } from '@splito/sync'
+import {bunExecutor} from '@splito/sync/testing'
 import {IDBFactory} from 'fake-indexeddb'
 import {parseMinor} from '@splito/domain'
 
@@ -36,25 +37,8 @@ function sqlite(): Engine {
       // The same file reopened sees its rows: keep each in-memory database alive for the test.
       let db = dbs.get(which)
       if (!db) dbs.set(which, (db = new Database(':memory:')))
-      const d = db
-      return openSqlStore({
-        exec: async sql => void d.run(sql),
-        run: async (sql, params) => void d.query(sql).run(...(params as never[])),
-        all: async (sql, params) => d.query(sql).all(...(params as never[])) as never,
-        withTransaction: async fn => {
-          d.run('BEGIN IMMEDIATE')
-          try {
-            const r = await fn()
-            d.run('COMMIT')
-            return r
-          } catch (e) {
-            d.run('ROLLBACK')
-            throw e
-          }
-        },
-        // Closing a connection must not drop the data: the file stays.
-        close: async () => {},
-      })
+      // Closing a connection must not drop the data: a shared Database is left open by the executor.
+      return openSqlStore(bunExecutor(db))
     },
   }
 }
