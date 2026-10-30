@@ -489,8 +489,10 @@ export function AddFriendScreen() {
             </TextField.Root>
           </View>
 
+          {/* Fades in on each new answer; no fade-out, which ran as the sheet closed (two clones on a leaving screen, owner 189). */}
           <AnimatedListRow
             key={check.state}
+            exiting={undefined}
             testID={`add-friend-status-${check.state}`}>
             <Status
               check={check}

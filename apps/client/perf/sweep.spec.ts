@@ -194,7 +194,7 @@ function installProbe() {
       pending = start(a, a.now ? performance.now() : -1)
     },
     result: () => pending ?? Promise.reject(new Error('not armed')),
-    /* The first load: from navigation start to a People list with rows. */
+    /* The first load: from navigation start to Home with its recent transactions. */
     load: Promise.resolve({fb: -1, ct: -1, long: 0, exits: 0}),
     typeStart() {
       typed.length = 0
@@ -257,7 +257,7 @@ function installProbe() {
   probe.load = start(
     {
       fb: {visible: '[data-testid^="screen-"]'},
-      ct: {ready: '[data-testid="screen-people"]', rows: '[data-testid^="person-"]'},
+      ct: {ready: '[data-testid="screen-home"]', rows: '[data-testid^="home-transaction-"]'},
       now: false,
     },
     0,
@@ -477,13 +477,14 @@ const FLOWS: Flow[] = [
   {
     name: 'tabs',
     steps: [
+      TAB('people', 'People', P('person-')),
       TAB('groups', 'Groups', P('group-')),
       TAB('analytics', 'Analytics', P('analytics-over-time-chart')),
       TAB('activity', 'Activity', P('activity-')),
-      TAB('people', 'People', P('person-')),
+      TAB('home', 'Home', P('home-transaction-')),
     ],
   },
-  {name: 'Person', steps: [openPage('Person', 'person', personRow), back('Person')]},
+  {name: 'Person', start: '/people', steps: [openPage('Person', 'person', personRow), back('Person')]},
   {name: 'Group', start: '/groups', steps: [openPage('Group', 'group', groupRow), back('Group')]},
   {
     name: 'Group tabs',
@@ -549,12 +550,12 @@ const FLOWS: Flow[] = [
   },
   {
     name: 'AddFriend',
+    start: '/people',
     steps: [openPage('AddFriend', 'add-friend', tid('people-add-friend')), closeRoute('AddFriend', 'add-friend')],
   },
   {
-    name: 'SignIn',
-    start: '/settings',
-    steps: [openPage('SignIn', 'sign-in', undefined, {act: link('/signin')}), browserBack('SignIn', 'sign-in')],
+    name: 'Welcome',
+    steps: [openPage('Welcome', 'welcome', undefined, {act: link('/welcome/1')}), browserBack('Welcome')],
   },
   {
     name: 'CreateGroup',
@@ -629,6 +630,7 @@ const FLOWS: Flow[] = [
   },
   {
     name: 'Filters: People',
+    start: '/people',
     steps: sheet('People', 'filters', tid('list-filters')),
   },
   {
@@ -717,7 +719,7 @@ const FLOWS: Flow[] = [
     }),
   ),
   /* ---- typing */
-  typing('People search', '/', 'People', async c => {
+  typing('People search', '/people', 'People', async c => {
     if (!(await c.page.locator(`${T('list-search-input')}:visible`).count())) {
       await tapQuietly(c, 'list-search')
       await c.page.waitForTimeout(700)
@@ -742,7 +744,8 @@ const FLOWS: Flow[] = [
   typing('Expense comment', c => `/expense/${idsOf(c).expense}`, 'Expense', async () => {}, 'comment-input'),
   typing('Feedback message', '/?feedback=new', 'Feedback sheet', async c => void (await c.page.waitForTimeout(900)), 'feedback-message'),
   /* ---- scrolling */
-  scrolling('People', '/'),
+  scrolling('Home', '/'),
+  scrolling('People', '/people'),
   scrolling('Groups', '/groups'),
   scrolling('Activity', '/activity'),
   scrolling('Analytics', '/analytics'),
@@ -764,7 +767,7 @@ const FLOWS: Flow[] = [
           await p.locator(`${T('expense-title')}:visible`).first().fill('Sweep expense')
           await p.locator(`${T('amount-input')}:visible`).first().fill('120')
           await p.locator(`${T('expense-people')}:visible`).first().tap()
-          await p.locator(`${P('person-option-')}:not(${P('person-option-locked-')}):visible`).first().tap()
+          await p.locator(`${P('person-option-')}:not(${P('person-option-locked-')}):not([aria-disabled="true"]):visible`).first().tap()
           await p.locator(`${T('people-dialog')} ${T('sheet-close')}`).first().tap()
           await expect(p.locator(`${T('sheet-save')}:visible`).first()).toBeEnabled()
           await p.waitForTimeout(600)
@@ -784,7 +787,7 @@ const FLOWS: Flow[] = [
         action: 'delete: menu',
         /* Deleting may leave the page: come back to the live expense for every lap. */
         prepare: async c => {
-          await c.page.evaluate(id => (window as unknown as {splito: {restoreExpense(id: string): Promise<unknown>}}).splito.restoreExpense(id), idsOf(c).expense)
+          await c.page.evaluate(id => (window as unknown as {splito: {restoreExpense(id: string): Promise<unknown>}}).splito.restoreExpense(id).catch(() => {}), idsOf(c).expense)
           if (!(await c.page.locator(`${T('screen-expense')}:visible`).count())) await link(`/expense/${idsOf(c).expense}`)(c)
           await expect(c.page.locator(`${T('expense-menu')}:visible`).first()).toBeVisible()
         },
@@ -811,8 +814,8 @@ const FLOWS: Flow[] = [
       await onSettings(c)
     },
     steps: [
-      {screen: 'Settings', action: 'demo mode off', prepare: onSettings, tap: tid('settings-demo-mode'), fb: {flips: [T('settings-demo-mode'), 'aria-checked']}, ct: {all: [{flips: [T('settings-demo-mode'), 'aria-checked']}, {ready: T('screen-settings')}]}, settle: 2500},
-      {screen: 'Settings', action: 'demo mode on', prepare: onSettings, tap: tid('settings-demo-mode'), fb: {flips: [T('settings-demo-mode'), 'aria-checked']}, ct: {all: [{flips: [T('settings-demo-mode'), 'aria-checked']}, {ready: T('screen-settings')}]}, settle: 2500},
+      {screen: 'Settings', action: 'demo mode off', prepare: onSettings, tap: tid('settings-demo-mode'), fb: {flips: [T('settings-demo-mode'), 'aria-checked']}, ct: {all: [{flips: [T('settings-demo-mode'), 'aria-checked']}, {ready: T('screen-home')}]}, settle: 2500},
+      {screen: 'Settings', action: 'demo mode on', prepare: onSettings, tap: tid('settings-demo-mode'), fb: {flips: [T('settings-demo-mode'), 'aria-checked']}, ct: {all: [{flips: [T('settings-demo-mode'), 'aria-checked']}, {ready: T('screen-home')}]}, settle: 2500},
     ],
   },
   {
@@ -830,8 +833,9 @@ const FLOWS: Flow[] = [
  * stays open for all of that sheet's pickers (the parent's own open and close are reported but not budgeted twice).
  */
 const SHEET_BASE: Record<string, (c: Ctx) => string> = {
-  People: () => '/',
+  People: () => '/people',
   Groups: () => '/groups',
+  Activity: () => '/activity',
   Analytics: () => '/analytics',
   Person: c => `/people/${idsOf(c).person}`,
   Group: c => `/groups/${idsOf(c).group}`,
@@ -1107,7 +1111,7 @@ test('the sweep covers every route, in-page tab, sheet and global sheet of the l
   const has = (name: string) => screens.some(x => x === name || x.startsWith(`${name} `))
   const missing: string[] = []
   for (const route of Object.keys(ROUTE_PATHS)) {
-    const ok = route === 'Search' ? has('Search & Ask') : ['People', 'Groups', 'Analytics', 'Activity'].includes(route) ? has(`Tab ${route}`) : has(route)
+    const ok = route === 'Search' ? has('Search & Ask') : ['Home', 'People', 'Groups', 'Analytics', 'Activity'].includes(route) ? has(`Tab ${route}`) : has(route)
     if (!ok) missing.push(`route ${route}`)
   }
   for (const [page, chains] of Object.entries(SHEETS)) {
