@@ -1233,6 +1233,12 @@ measures a long task); signed-URL caching for picked files (until attachments ex
 
 Inherited from GameRun (2026-10-26); each holds for Splito's stack:
 
+- 2026-10-31, process: **a builder's process cleanup killed the merge gate's test server**, and the 2.4 h full e2e run
+  on combined main came back as 647 connection-refused failures. Rules: nobody runs `pkill`/`killall` by name or
+  pattern (serve, node, playwright, expo); a process is stopped by its own PID or by its own port
+  (`lsof -ti tcp:<port> | xargs kill`); the orchestrator's merge gate serves its build from a copy outside the repo
+  on a reserved port with its own server, so no builder's cleanup can reach it; a run whose failures are mostly
+  ERR_CONNECTION_REFUSED is a broken run, not a red build.
 - 2026-10-30, process: **almost every builder took hours, mostly waiting on each other.** Six to seven builders
   shared one machine (load 25-130); each ran the full 500+ test e2e itself, several times per round, so every run
   took 20-30 min instead of ~10, timing tests failed under load and were re-run, and long-lived overlapping
@@ -2874,10 +2880,12 @@ add anyway (only for you)"; "also i should be able to select from contacts". *Wh
   - **Link, I approve each join** (the default): opening the link sends a join request; the group's admins see it
     in Activity (Type = Friends and invites, owner 195) and Approve or Decline it in the row.
   - **Invite only:** no link exists (an existing link stops working); people join only when a member adds them.
-  Adding someone to a group never puts them in without consent: adding a Splito friend sends them a group
-  request ("Riya added you to Goa trip", Join / Decline in their Activity), and they show in the members list as
-  "Invited" (greyed, not selectable in expenses) until they join; adding someone not on Splito sends an invite or
-  adds them "only for you" (as for friends above). The choice is shown on the group page under Members ("Anyone
+  Adding someone to a group never puts them in without consent: adding a Splito friend whose account is linked
+  (possible only once a directory or the backend can deliver the request) sends them a group request ("Riya added you to Goa trip", Join / Decline in their Activity), and they show in the members list as
+  "Invited" (greyed, not selectable in expenses) until they join; a friend with no account link (private, local,
+  or any friend before sync exists) is added straight away, so nobody waits on an answer that cannot arrive
+  (assistant's ruling 2026-10-31, after the F-269 review; demo mode's directory answers group requests after its
+  usual delay); adding someone not on Splito sends an invite or adds them "only for you" (as for friends above). The choice is shown on the group page under Members ("Anyone
   with the link can join" and so on) so everyone can see it; only admins change it. *Why:* "in group link, it should
   show anyone can join, or invites only, or add like this; if I add someone they would accept or I can send
   request".
