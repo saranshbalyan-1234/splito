@@ -2454,7 +2454,10 @@ dishes etc and each item can be assigned to each in split"; "in itemize don't sh
   leads to a longer list of things that happened (transactions, disputes, comments, reminders, payments, group
   changes, friend activity, a group's or a person's history) opens Activity as a pushed copy with the matching
   filters already set: Type (any mix), `group=<id>` and `person=<id>` (events involving that friend), each shown as
-  a removable chip and in the Filters sheet; no screen grows its own long history list. **Wherever a link can lead
+  a removable chip and in the Filters sheet. A group's Expenses and a friend's History stay full lists on their
+  pages (they are those pages' main content, with page-only filters: Show hidden, Disputed only), and their
+  headings link into Activity scoped to the group or friend (assistant's ruling 2026-10-31, after F-268); no other
+  screen grows its own long history list. **Wherever a link can lead
   to Activity, it does** (owner 195), including requests and invites: "See all requests and invites" and every
   request or invite count opens Activity with Type = Friends and invites, and those rows carry their actions in
   place (Accept / Decline on a request, Resend / Cancel on an invite sent), so Activity is where they are handled.
