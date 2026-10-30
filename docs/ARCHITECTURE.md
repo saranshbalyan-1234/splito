@@ -1503,6 +1503,14 @@ labelled sidebar); **wide** = web 1300 px and up (Bluesky `gtTablet`, right colu
 
 ### 26.1 Principles and process
 
+- **Reuse before you write, inside Splito first** (owner 210). Before adding any component, hook, helper, row,
+  card, sheet, query, mutation, format or test helper, search this repo for one that already does it (and then
+  Bluesky, rule below) and use or extend it; two pieces of code that do the same job are a defect, fixed by
+  merging them into one shared piece. Examples that must stay single: the person row and `PersonLink`, request and
+  invite rows and their actions, the Overview card, balance chips, `activityPath` links, the invite link / QR
+  block, the FAB allow-list, empty states, filter and sort sheets, amount formatting. Every builder brief says so,
+  every Opus review lists duplicates as findings, and a builder report names what it reused. *Why:* "make sure
+  whatever can be reused do it".
 - **Bluesky first: copy, don't write.** Before writing any code (component, hook, screen, layout, list,
   dialog/sheet, menu, tabs/pager, search input, settings row, toggle, avatar, badge, toast, animation, gesture,
   haptics, keyboard handling, navigation, storage, i18n, error boundary, test helper, e2e pattern, build
@@ -3242,6 +3250,7 @@ Every owner decision, in the order it was made (all 2026-10-26). "Replaced" name
 | 207 | "add expense should have paid by always, by default to me" | Paid by is always shown on Add expense and always starts as me on a new expense (any entry point); only an Ask prefill naming a payer differs; edits keep the saved payer | § 26.13 | - |
 | 208 | "fanout more to get things done" | Run as many builders as there is independent work (no file overlap), each running only its touched specs; full e2e once per merge by the orchestrator; perf numbers only on a quiet machine | § 23 (process lesson) | At most three builders at once |
 | 209 | "also update profile page, it looks very less" | Profile becomes a full page: header with verified contacts and since-date, stat row linking out, Your balance, Payment details (UPI), Add me (QR, link), Your recent activity, Log out last | § 26.15 | Avatar, name and a few stats only |
+| 210 | "make sure whatever can be reused do it" | Reuse before writing, inside Splito first then Bluesky; duplicates are defects merged into one shared piece; briefs, reviews and reports enforce it | § 26.1 | Reuse rule covered Bluesky only |
 
 New decisions follow § 0 rule 9: rewrite the rule in its topic so only the current truth remains, then add a
 row here.
