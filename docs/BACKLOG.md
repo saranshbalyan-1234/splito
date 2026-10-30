@@ -719,7 +719,7 @@ A Sort button beside Filters: Last active (default), Name, Amount, Newest; remem
 
 Every new expense shows Paid by and starts with me as the payer, from every entry point.
 
-- **Effort** S · **Impact** 7 · **Backend** no · **Status** todo, Wave C · **Deps** -
+- **Effort** S · **Impact** 7 · **Backend** no · **Status** done (web; the code already defaulted to me, now locked by unit + e2e tests from FAB, pill, group, person, Ask, draft restore; scanned receipt and Duplicate are not built yet) · **Deps** -
 - **Prefs** -
 - **Acceptance**
   1. e2e from the FAB, the sidebar pill, a group page, a person page (pre-selected friend), Ask prefill without a payer, a scanned receipt and Duplicate: Paid by visible and reads "You" at 390 and 1440.
