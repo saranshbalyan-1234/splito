@@ -2953,6 +2953,14 @@ add anyway (only for you)"; "also i should be able to select from contacts". *Wh
   on; each row names the field that matched (Notes, Item, Group, Place, Category, With, Paid by, Comment, Amount, Date,
   Currency, status) and marks the words; each facet is a removable chip under the box. Not searched: invites and
   friend requests (they are not ledger records and have their own list in People).
+  *Reads/writes:* reads term ranges only (`store.terms`, `store.termCount`), `getMany` for the 30 rows of a page, the
+  people / groups / balances projections for the statuses, `listOpenDisputes` for *disputed*; writes up to 12 term rows
+  per expense, payment or write-off (about 5 more than before), none for a comment beyond its words. *Cost:* a query
+  touches the keys of its tokens plus the `d` and `a` ranges (about 0.2 us a key); no row is read to count or total;
+  the first search of an older database rebuilds its terms once. *Telemetry:* none added. *Checks:*
+  `search.test.ts` (parser, per-field, paging, speed at 5,000 and 10,000), `searchFields.test.ts` (every field on
+  SQLite and IndexedDB), `searchOracle.test.ts` (keys equal rows), `searchQuery.test.ts` (90-query table),
+  `searchMatch.test.ts`, `e2e/search.spec.ts` at 390 and 1440; web verified, native not run.
 - **Privacy:** AI is opt-in (preference "Ask Splito uses AI", default off until signed in); the first use
   shows exactly what data is sent; nothing is sent for on-device answers.
 

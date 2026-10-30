@@ -1,4 +1,5 @@
 import 'fake-indexeddb/auto'
+import os from 'node:os'
 import {IDBFactory} from 'fake-indexeddb'
 
 import {beforeAll, describe, expect, test} from 'bun:test'
@@ -361,18 +362,21 @@ describe('speed', () => {
         )
       const opts = {today, categories, me: 'me'}
       await openSearch(store, 'warm up', opts)
-      const timings: Array<[string, number]> = []
+      const timings: Array<[string, number, number]> = []
       for (const q of queries) {
-        const runs: number[] = []
+        const runs: Array<[wall: number, cpu: number]> = []
         for (let k = 0; k < 3; k++) {
+          const c0 = process.cpuUsage()
           const t0 = performance.now()
           await openSearch(store, q, opts)
-          runs.push(performance.now() - t0)
+          const c = process.cpuUsage(c0)
+          runs.push([performance.now() - t0, (c.user + c.system) / 1000])
         }
-        timings.push([q, runs.sort((x, y) => x - y)[1]!])
+        timings.push([q, runs.map(r => r[0]).sort((x, y) => x - y)[1]!, runs.map(r => r[1]).sort((x, y) => x - y)[1]!])
       }
-      const [slowest, worst] = timings.reduce((a, b) => (b[1] > a[1] ? b : a))
-      console.log(`search: worst query ${worst.toFixed(1)} ms ("${slowest}") over ${queries.length} queries on ${size} expenses (median of 3)`)
+      const [slowest, worst, cpu] = timings.reduce((a, b) => (b[1] > a[1] ? b : a))
+      // CPU time is printed beside the wall time: on a loaded machine the wall time is the scheduler's, the CPU time is the query's.
+      console.log(`search: worst query ${worst.toFixed(1)} ms wall, ${cpu.toFixed(1)} ms cpu ("${slowest}") over ${queries.length} queries on ${size} expenses (median of 3, load ${os.loadavg()[0]!.toFixed(1)})`)
       expect(worst).toBeLessThan(50)
       // The keys give the same answer as the rows: "> 1000" is every INR/EUR expense above 10.00.
       const all = await store.page<Expense>('expense', {index: 'byDate', limit: size + 1})

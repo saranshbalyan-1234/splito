@@ -357,13 +357,14 @@ for (const [name, viewport] of [
 
       // A comment on the dinner finds it, and says so.
       await input.fill('sunset')
-      await expect(screen.getByTestId('search-row-1')).toContainText('Dinner at Thalassa')
+      // (The deleted "Sunset cruise" is newer and comes first; the dinner is found by its comment.)
+      await expect(screen.getByText('Dinner at Thalassa').first()).toBeVisible()
       await expect(screen.locator('[data-testid$="-comment"]').first()).toContainText('Booked the table for eight')
 
       // An amount facet is named on the row too.
       await input.fill('thalassa between 12000 and 13000')
       await expect(screen.getByTestId('search-chip-amount')).toBeVisible()
-      await expect(screen.locator('[data-testid$="-amount"]').first()).toContainText('₹12,500.00')
+      await expect(screen.locator('[data-testid^="search-match-"][data-testid$="-amount"]').first()).toContainText('₹12,500.00')
 
       const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)
       expect(overflow).toBeLessThanOrEqual(0)
