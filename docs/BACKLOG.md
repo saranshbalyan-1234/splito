@@ -628,6 +628,28 @@ The launch logo zooms gently in and out while content loads, on web from first p
   2. iOS / Android: a JS launch screen identical to the native splash (light and Dim backgrounds, size, position) takes over without a jump and animates on the UI thread until ready.
   3. Throttled network e2e sees the animation running; no layout shift at handover; simulator video on iOS.
 
+### F-265 Compact desktop sidebar `spec: owner § 26.5 (decision 188)`
+
+The desktop sidebar is only as wide as its content and its footer links sit right under Add expense.
+
+- **Effort** S · **Impact** 6 · **Backend** no · **Status** in progress, Wave C · **Deps** -
+- **Prefs** -
+- **Acceptance**
+  1. At 1300, 1440 and 1920 the sidebar width fits the longest item (en and hi measured, no truncation); content starts sooner.
+  2. Footer links follow the Add expense pill with normal spacing; no pinned footer, no dead band.
+  3. Rail (800-999) and phone unchanged (390 before/after identical); screenshots light and Dim.
+
+### F-266 Fast everywhere: perf sweep of every screen and interaction `spec: owner § 26.10 (decision 189)`
+
+A perf sweep spec walks every route and interaction in WebKit and Chrome at 6x CPU, and every miss is fixed at its cause.
+
+- **Effort** L · **Impact** 10 · **Backend** no · **Status** in progress, Wave C (closes the wave) · **Deps** F-255
+- **Prefs** -
+- **Acceptance**
+  1. `perf/sweep.spec.ts` covers every link-table route (open, close, revisit) and every interaction listed in § 26.10 owner 189, on the large demo set and the 10,000-expense fixture, in WebKit and Chrome 6x; it fails above budget.
+  2. Known misses fixed: Analytics revisit (330 ms at 6x), row exit animations on popped pushed pages (Person, Group, Expense), Activity narrowed paging (F-1213 review C1).
+  3. Per-screen table in COMPLETION_MATRIX taken at load under 10; the sweep is part of the merge gate from then on.
+
 ### F-250 Sign-in required (auth gate) `spec: owner § 26.15 (decision 125)`
 
 Nothing of the app is visible signed out: only the welcome tour, the logged-out flow, language and legal pages. The local database opens per account only with a session; offline after sign-in; deep links resume after sign-in.
