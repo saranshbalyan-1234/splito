@@ -245,4 +245,48 @@ test.describe('phone: tabs stay mounted and answer in the first frame', () => {
       expect(first!.t - t0).toBeLessThan(rate === 1 ? 150 : 600)
     })
   }
+
+  test('a parked tab the LRU had evicted comes back with its content (never a stand-in)', async ({page}) => {
+    await openDemo(page)
+    await expect(page.getByTestId('screen-people')).toBeVisible()
+    for (const t of ['groups', 'analytics', 'activity']) {
+      await tap(page, t)
+      await expect(page.getByTestId(`screen-${t}`)).toBeVisible()
+    }
+    // Four pushed pages (four different routes) on top: the stack keeps only the most recent screens mounted, Groups falls out.
+    for (const url of ['/settings', '/profile', '/settings/friends', '/settings/appearance']) {
+      await page.evaluate(u => (window as unknown as {__splitoTest: {openLink(u: string): void}}).__splitoTest.openLink(u), url)
+      await expect(page).toHaveURL(new RegExp(`${url}$`))
+    }
+    await tap(page, 'people')
+    await expect(page.getByTestId('screen-people')).toBeVisible()
+    await tap(page, 'groups')
+    await expect(page.getByTestId('screen-groups')).toBeVisible()
+    await expect(page.getByTestId('screen-groups').getByTestId('list-filters')).toBeVisible()
+    await tap(page, 'analytics')
+    await expect(page.getByTestId('screen-analytics')).toBeVisible()
+  })
+
+  test('browser Back and Forward bring a tab back as it was, not rebuilt', async ({page}) => {
+    await openDemo(page)
+    await expect(page.getByTestId('screen-people')).toBeVisible()
+    await tap(page, 'groups')
+    await expect(page.getByTestId('screen-groups')).toBeVisible()
+    await page.evaluate(() => document.querySelector('[data-testid="screen-groups"]')!.setAttribute('data-mark', 'kept'))
+    await tap(page, 'analytics')
+    await expect(page.getByTestId('screen-analytics')).toBeVisible()
+    await tap(page, 'people')
+    await expect(page.getByTestId('screen-people')).toBeVisible()
+    // Going Home popped two history entries, so Forward walks back through Groups and Analytics (a history reset).
+    await page.goForward()
+    await expect(page.getByTestId('screen-groups')).toBeVisible()
+    await expect(page.getByTestId('screen-groups')).toHaveAttribute('data-mark', 'kept')
+    await page.goForward()
+    await expect(page.getByTestId('screen-analytics')).toBeVisible()
+    await page.goBack()
+    await expect(page.getByTestId('screen-groups')).toBeVisible()
+    await expect(page.getByTestId('screen-groups')).toHaveAttribute('data-mark', 'kept')
+    await page.goBack()
+    await expect(page.getByTestId('screen-people')).toBeVisible()
+  })
 })

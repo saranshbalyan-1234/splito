@@ -33,6 +33,7 @@ import {type Theme, useBreakpoints, useTheme} from '#/alf'
 import {IS_ANDROID, IS_IOS, IS_IPAD} from '#/env'
 import {usePref} from '#/data/hooks'
 import {useShouldReduceMotion} from '#/motion/useShouldReduceMotion'
+import {tabId} from '#/view/shell/parkTabs'
 import {DevTour} from '#/navigation/DevTour'
 import {navigationRef} from '#/navigation/ref'
 import {linking} from '#/navigation/linking'
@@ -266,21 +267,25 @@ export function FlatNavigator({
       <Flat.Screen
         name="People"
         component={PeopleScreen}
+        getId={tabId}
         options={{title: title('People')}}
       />
       <Flat.Screen
         name="Groups"
         component={GroupsScreen}
+        getId={tabId}
         options={{title: title('Groups')}}
       />
       <Flat.Screen
         name="Analytics"
         component={AnalyticsScreen}
+        getId={tabId}
         options={{title: title('Analytics')}}
       />
       <Flat.Screen
         name="Activity"
         component={ActivityScreen}
+        getId={tabId}
         options={{title: title('Activity')}}
       />
       <Flat.Screen
