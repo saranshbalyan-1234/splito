@@ -5,7 +5,7 @@ import {join} from 'node:path'
 import {type CDPSession, expect, type Locator, type Page, test} from '@playwright/test'
 
 import {openDemo} from '../e2e/openDemo'
-import {GLOBAL_SHEETS, PAGE_TABS, SHEETS} from '#/lib/links/table'
+import {GLOBAL_SHEETS, PAGE_TABS, SETTINGS_SECTION_SHEETS, SHEETS} from '#/lib/links/table'
 import {ROUTE_PATHS} from '#/routes'
 
 /*
@@ -269,10 +269,14 @@ type Step = {
   screen: string
   /** What is done to it. */
   action: string
+  /** Unmeasured work right before the step (focus a field, open the sheet it acts on). */
+  prepare?: (c: Ctx) => Promise<void>
   /** A pointer gesture: the element to press (found and scrolled to before the clock starts). */
   tap?: (c: Ctx) => Promise<Locator>
   /** Anything else (a link, keys, a wheel): the clock starts as it begins. */
   act?: (c: Ctx) => Promise<void>
+  /** `type`: keys into the focused field, measured key-down to the painted echo. `scroll`: wheel over the page, measured by its worst frame gap. */
+  kind?: 'type' | 'scroll'
   fb: Pred
   /** Defaults to `fb`. */
   ct?: Pred
@@ -285,7 +289,13 @@ type Step = {
   settle?: number
 }
 
-type Flow = {name: string; start?: string; before?: (c: Ctx) => Promise<void>; steps: Step[]; laps?: number}
+type Flow = {
+  name: string
+  start?: string | ((c: Ctx) => string)
+  before?: (c: Ctx) => Promise<void>
+  steps: Step[]
+  laps?: number
+}
 
 const T = (id: string) => `[data-testid="${id}"]`
 const P = (prefix: string) => `[data-testid^="${prefix}"]`
@@ -293,7 +303,7 @@ const PHONE = {width: 390, height: 844}
 const LAPS = Number(process.env.SWEEP_LAPS ?? 4)
 const BUDGET = {feedback: 100, content: 200, longTask: 50}
 const SCREEN = (name: string): Pred => ({ready: T(`screen-${name}`)})
-const DIALOG: Pred = {ready: '[role="dialog"]'}
+const DIALOG = '[role="dialog"]'
 
 /** The first on-screen test id inside `scope` that matches `re` (rows carry the entity's name in their test id). */
 async function firstTestId(page: Page, scope: string, re: RegExp, skip: RegExp = /$^/) {
@@ -301,33 +311,77 @@ async function firstTestId(page: Page, scope: string, re: RegExp, skip: RegExp =
     ([scope, source, skipSource]) => {
       const re = new RegExp(source!)
       const skip = new RegExp(skipSource!)
-      const root = document.querySelector(scope!) ?? document
-      for (const e of root.querySelectorAll('[data-testid]')) {
-        const id = e.getAttribute('data-testid')!
-        if (re.test(id) && !skip.test(id) && e.getClientRects().length > 0) return id
-      }
+      const roots = [...document.querySelectorAll(scope!)].filter(e => e.getClientRects().length > 0)
+      for (const root of roots)
+        for (const e of root.querySelectorAll('[data-testid]')) {
+          const id = e.getAttribute('data-testid')!
+          if (re.test(id) && !skip.test(id) && e.getClientRects().length > 0) return id
+        }
       return null
     },
     [scope, re.source, skip.source],
   )
   if (!id) throw new Error(`no row like ${re} in ${scope}`)
-  return page.getByTestId(id).first()
+  return page.locator(`[data-testid="${id}"]:visible`).first()
 }
 
 const personRow = (c: Ctx) => firstTestId(c.page, T('screen-people'), /^person-/, /^person-(row-|demo-)|-(chips|more|deleted|deleted-clock)$/)
-const groupRow = (c: Ctx) => firstTestId(c.page, T('screen-groups'), /^group-/, /^group-(balance|my-|demo-)|-(more|deleted|deleted-clock)$|^group-(tabs|tab-|name|byline|settle|more|add|dates|filter|menu|expenses|owes|history|outside|balances|owe-)/)
-const tid = (id: string) => (c: Ctx) => Promise.resolve(c.page.getByTestId(id).first())
-const link = (url: string) => async (c: Ctx) => void (await c.page.evaluate(u => (window as unknown as {__splitoTest: {openLink(u: string): void}}).__splitoTest.openLink(u), url))
-const back = (screen: string): Step => ({
+const groupRow = (c: Ctx) => firstTestId(c.page, T('screen-groups'), /^group-/, /^group-(balance|my-|demo-|bulk-)|-(more|deleted|deleted-clock)$/)
+const historyRow = (c: Ctx) => firstTestId(c.page, T('screen-group'), /^history-.*-e-|^history-bulk-/, /$^/)
+const activityRow = (c: Ctx) => firstTestId(c.page, T('screen-activity'), /^activity-expense\.(created|edited)$/)
+/* Kept-mounted screens behind the focused one hold copies of the same test ids, hidden: take the one on screen. */
+const tid = (id: string) => (c: Ctx) => Promise.resolve(c.page.locator(`${T(id)}:visible`).first())
+const css = (sel: string) => (c: Ctx) => Promise.resolve(c.page.locator(`${sel}:visible`).first())
+const link = (url: string | ((c: Ctx) => string)) => async (c: Ctx) =>
+  void (await c.page.evaluate(
+    u => (window as unknown as {__splitoTest: {openLink(u: string): void}}).__splitoTest.openLink(u),
+    typeof url === 'string' ? url : url(c),
+  ))
+const press = (key: string) => async (c: Ctx) => void (await c.page.keyboard.press(key))
+const settled = async (c: Ctx, ms = 700) => void (await c.page.waitForTimeout(ms))
+
+/** A pushed page's way back: the header's Back. */
+const back = (screen: string, id = screen.toLowerCase()): Step => ({
   screen,
   action: 'back',
   tap: tid('header-back'),
-  fb: {gone: `${T(`screen-${screen.toLowerCase()}`)}`},
-  ct: {all: [{gone: T(`screen-${screen.toLowerCase()}`)}, {ready: '[data-testid^="screen-"]'}]},
+  fb: {gone: T(`screen-${id}`)},
+  ct: {all: [{gone: T(`screen-${id}`)}, {ready: P('screen-')}]},
   leaving: true,
 })
+/** A page opened by a link: the browser's Back. */
+const browserBack = (screen: string, id = screen.toLowerCase()): Step => ({
+  screen,
+  action: 'back (browser)',
+  act: async c => void (await c.page.goBack()),
+  fb: {gone: T(`screen-${id}`)},
+  ct: {all: [{gone: T(`screen-${id}`)}, {ready: P('screen-')}]},
+  leaving: true,
+})
+/** A composer or sheet-like route closes with its cross. */
+const closeRoute = (screen: string, id: string): Step => ({
+  screen,
+  action: 'close',
+  tap: tid('sheet-close'),
+  fb: {gone: T(`screen-${id}`)},
+  ct: {all: [{gone: T(`screen-${id}`)}, {ready: P('screen-')}]},
+  leaving: true,
+})
+const openPage = (screen: string, id: string, tap: Step['tap'], extra: Partial<Step> = {}): Step => ({
+  screen,
+  action: 'open',
+  tap,
+  fb: {visible: T(`screen-${id}`)},
+  ct: SCREEN(id),
+  ...extra,
+})
 
-/** Tab switches (and revisits), the home screens. */
+/** A sheet, popup or menu opening from a tap and closing again. */
+const sheet = (screen: string, what: string, open: Step['tap'], extra: Partial<Step> = {}): Step[] => [
+  {screen, action: `${what}: open`, tap: open, fb: {moves: DIALOG}, ct: {ready: DIALOG}, settle: 900, ...extra},
+  {screen, action: `${what}: close`, act: press('Escape'), fb: {moves: DIALOG}, ct: {moves: DIALOG}, settle: 700},
+]
+
 const TAB = (to: string, screen: string, rows: string): Step => ({
   screen: `Tab ${screen}`,
   action: 'tab',
@@ -335,6 +389,63 @@ const TAB = (to: string, screen: string, rows: string): Step => ({
   fb: {flips: [T(`tab-${to}`), 'aria-current']},
   ct: {ready: T(`screen-${to}`), rows},
 })
+
+const SETTINGS_SECTIONS = ['appearance', 'navigation', 'defaults', 'categories', 'regional', 'notifications', 'privacy']
+const NO_CODE = 'abcdefabcdefabcd'
+
+const idsOf = (c: Ctx) => c.ids
+
+
+/** Typing in a field: every key down to its painted echo. `field` is focused (and emptied) before the clock starts. */
+function typing(screen: string, start: Flow['start'], row: string, open: (c: Ctx) => Promise<void>, field: string, text = 'rahul sharma 120'): Flow {
+  return {
+    name: `Type: ${screen}`,
+    start,
+    steps: [
+      {
+        screen: row,
+        action: `type in ${field}`,
+        kind: 'type',
+        prepare: async c => {
+          await open(c)
+          const input = c.page.locator(`${T(field)}:visible`).first()
+          await input.click()
+          await input.fill('')
+          await c.page.waitForTimeout(300)
+        },
+        act: async c => void (await c.page.keyboard.type(text, {delay: 45})),
+        fb: {visible: 'body'},
+        settle: 500,
+      },
+    ],
+  }
+}
+
+/** Scrolling a screen's list down and back up with the wheel: the worst frame gap and the longest block. */
+function scrolling(screen: string, start: Flow['start']): Flow {
+  return {
+    name: `Scroll: ${screen}`,
+    start,
+    steps: [
+      {
+        screen,
+        action: 'scroll',
+        kind: 'scroll',
+        prepare: async c => void (await c.page.mouse.move(195, 450)),
+        act: async c => {
+          for (const dir of [1, -1]) {
+            for (let i = 0; i < 8; i++) {
+              await c.page.mouse.wheel(0, dir * 420)
+              await c.page.waitForTimeout(50)
+            }
+          }
+        },
+        fb: {visible: 'body'},
+        settle: 500,
+      },
+    ],
+  }
+}
 
 const FLOWS: Flow[] = [
   {
@@ -346,22 +457,390 @@ const FLOWS: Flow[] = [
       TAB('people', 'People', P('person-')),
     ],
   },
+  {name: 'Person', steps: [openPage('Person', 'person', personRow), back('Person')]},
+  {name: 'Group', start: '/groups', steps: [openPage('Group', 'group', groupRow), back('Group')]},
   {
-    name: 'Person',
+    name: 'Group tabs',
+    start: c => `/groups/${idsOf(c).group}`,
+    steps: (['balances', 'members', 'expenses'] as const).map(t => ({
+      screen: 'Group',
+      action: `tab ${t}`,
+      tap: tid(`group-tab-${t}`),
+      fb: {flips: [T(`group-tab-${t}`), 'aria-selected']},
+      ct: {all: [{flips: [T(`group-tab-${t}`), 'aria-selected']}, {ready: T('screen-group')}]},
+    })),
+  },
+  {
+    name: 'Expense',
+    start: c => `/groups/${idsOf(c).group}`,
+    steps: [openPage('Expense', 'expense', historyRow), back('Expense')],
+  },
+  {
+    name: 'EditExpense',
+    start: c => `/expense/${idsOf(c).expense}`,
+    steps: [openPage('EditExpense', 'edit-expense', tid('expense-edit-button')), closeRoute('EditExpense', 'edit-expense')],
+  },
+  {
+    name: 'Settle',
+    start: c => `/groups/${idsOf(c).group}`,
+    steps: [openPage('Settle', 'settle', tid('group-settle')), back('Settle')],
+  },
+  {
+    name: 'Repayment',
+    start: '/',
     steps: [
-      {screen: 'Person', action: 'open', tap: personRow, fb: {visible: T('screen-person')}, ct: SCREEN('person')},
-      back('Person'),
+      openPage('Repayment', 'repayment', undefined, {act: link(c => `/payment/${idsOf(c).repayment}`), tap: undefined}),
+      browserBack('Repayment'),
     ],
   },
   {
-    name: 'Group',
+    name: 'Profile',
+    steps: [
+      {screen: 'Drawer', action: 'open', tap: tid('header-avatar'), fb: {moves: T('drawer')}, ct: {ready: T('drawer')}, settle: 900},
+      openPage('Profile', 'profile', tid('drawer-profile'), {settle: 900}),
+      back('Profile'),
+    ],
+  },
+  {
+    name: 'Settings',
+    start: '/profile',
+    steps: [openPage('Settings', 'settings', tid('profile-settings')), back('Settings')],
+  },
+  ...SETTINGS_SECTIONS.map(
+    (section): Flow => ({
+      name: `Settings ${section}`,
+      start: '/settings',
+      steps: [
+        openPage(`SettingsSection ${section}`, 'settings-section', tid(`settings-${section}`)),
+        back(`SettingsSection ${section}`, 'settings-section'),
+      ],
+    }),
+  ),
+  {
+    name: 'FriendsAndInvites',
+    start: '/settings',
+    steps: [openPage('FriendsAndInvites', 'friends-invites', tid('settings-friends')), back('FriendsAndInvites', 'friends-invites')],
+  },
+  {
+    name: 'AddFriend',
+    steps: [openPage('AddFriend', 'add-friend', tid('people-add-friend')), closeRoute('AddFriend', 'add-friend')],
+  },
+  {
+    name: 'SignIn',
+    start: '/settings',
+    steps: [openPage('SignIn', 'sign-in', undefined, {act: link('/signin')}), browserBack('SignIn', 'sign-in')],
+  },
+  {
+    name: 'CreateGroup',
+    start: '/groups',
+    steps: [openPage('CreateGroup', 'create-group', tid('groups-new')), closeRoute('CreateGroup', 'create-group')],
+  },
+  {
+    name: 'AddExpense',
+    steps: [openPage('AddExpense', 'add-expense', tid('fab-add')), closeRoute('AddExpense', 'add-expense')],
+  },
+  {
+    name: 'InviteLinks',
+    steps: [
+      openPage('InviteLinks', 'invite-links', undefined, {act: link('/invites')}),
+      browserBack('InviteLinks', 'invite-links'),
+    ],
+  },
+  {
+    name: 'CreateInvite',
+    steps: [
+      openPage('CreateInvite', 'create-invite', undefined, {act: link('/invites/new')}),
+      browserBack('CreateInvite', 'create-invite'),
+    ],
+  },
+  {
+    name: 'ShareInvite',
+    steps: [
+      openPage('ShareInvite', 'invite-link', undefined, {act: link(`/invites/${NO_CODE}/share`)}),
+      browserBack('ShareInvite', 'invite-link'),
+    ],
+  },
+  {
+    name: 'Invite',
+    steps: [openPage('Invite', 'invite', undefined, {act: link(`/invite/${NO_CODE}`)}), browserBack('Invite')],
+  },
+  /* ---- menus, filters and pickers opened by a tap */
+  {
+    name: 'Menus: Person',
+    start: c => `/people/${idsOf(c).person}`,
+    steps: [
+      ...sheet('Person', 'menu', tid('person-more')),
+      ...sheet('Person', 'filters', tid('person-filter')),
+    ],
+  },
+  {
+    name: 'Menus: Group',
+    start: c => `/groups/${idsOf(c).group}`,
+    steps: [
+      ...sheet('Group', 'menu', tid('group-more')),
+      ...sheet('Group', 'filters', tid('group-filter')),
+    ],
+  },
+  {
+    name: 'Menus: Expense',
+    start: c => `/expense/${idsOf(c).expense}`,
+    steps: sheet('Expense', 'menu', tid('expense-menu')),
+  },
+  {
+    name: 'Menus: Settle',
+    start: c => `/groups/${idsOf(c).group}/settle`,
+    steps: sheet('Settle', 'transfer menu', tid('transfer-more')),
+  },
+  {
+    name: 'Menus: Activity',
+    start: '/activity',
+    steps: sheet('Activity', 'row menu', tid('activity-menu')),
+  },
+  {
+    name: 'Menus: Friends hub',
+    start: '/settings/friends',
+    steps: sheet('FriendsAndInvites', 'friend menu', tid('hub-friend-menu')),
+  },
+  {
+    name: 'Filters: People',
+    steps: sheet('People', 'filters', tid('list-filters')),
+  },
+  {
+    name: 'Filters: Groups',
     start: '/groups',
     steps: [
-      {screen: 'Group', action: 'open', tap: groupRow, fb: {visible: T('screen-group')}, ct: SCREEN('group')},
-      back('Group'),
+      {
+        screen: 'Groups',
+        action: 'filters: open',
+        tap: tid('list-filters'),
+        fb: {moves: DIALOG},
+        ct: {ready: DIALOG},
+        settle: 900,
+      },
+      {screen: 'Groups', action: 'filter chip', tap: tid('filter-show-owed'), fb: {flips: [T('filter-show-owed'), 'aria-checked']}, settle: 500},
+      {
+        screen: 'Groups',
+        action: 'filter apply',
+        tap: tid('sheet-save'),
+        fb: {moves: DIALOG},
+        ct: {visible: T('list-filters-dot')},
+        settle: 900,
+      },
+      /* Back to unfiltered for the next lap. */
+      {
+        screen: 'Groups',
+        action: 'filter clear',
+        prepare: async c => {
+          await c.page.locator(`${T('list-filters')}:visible`).first().tap()
+          await c.page.waitForTimeout(900)
+          await c.page.locator(`${T('filter-show-owed')}:visible`).first().tap()
+          await c.page.waitForTimeout(300)
+        },
+        tap: tid('sheet-save'),
+        fb: {moves: DIALOG},
+        ct: {gone: T('list-filters-dot')},
+        info: true,
+        settle: 900,
+      },
+    ],
+  },
+  {
+    name: 'Filters: Activity',
+    start: '/activity',
+    steps: [1, 2, 0].map(
+      (i): Step => ({
+        screen: 'Activity',
+        action: `tab ${PAGE_TABS.Activity[i]}`,
+        tap: tid(`activity-tabs-selector-${i}`),
+        fb: {flips: [T(`activity-tabs-selector-${i}`), 'aria-selected']},
+        ct: {all: [{flips: [T(`activity-tabs-selector-${i}`), 'aria-selected']}, SCREEN('activity')]},
+      }),
+    ),
+  },
+  {
+    name: 'Analytics controls',
+    start: '/analytics',
+    steps: [
+      ...sheet('Analytics', 'scope', tid('analytics-scope')),
+      ...sheet('Analytics', 'period', tid('analytics-period')),
+      ...sheet('Analytics', 'currency', tid('analytics-currency')),
+      {
+        screen: 'Analytics',
+        action: 'previous period',
+        tap: tid('analytics-prev'),
+        fb: {moves: T('analytics-period-label')},
+        ct: {ready: T('screen-analytics'), rows: P('analytics-over-time-chart')},
+      },
+      {
+        screen: 'Analytics',
+        action: 'next period',
+        tap: tid('analytics-next'),
+        fb: {moves: T('analytics-period-label')},
+        ct: {ready: T('screen-analytics'), rows: P('analytics-over-time-chart')},
+      },
+      {
+        screen: 'Analytics',
+        action: 'view toggle',
+        tap: tid('analytics-view-toggle'),
+        fb: {flips: [T('analytics-view-toggle'), 'aria-checked']},
+        ct: {ready: T('screen-analytics')},
+      },
+      {
+        screen: 'Analytics',
+        action: 'view toggle back',
+        tap: tid('analytics-view-toggle'),
+        fb: {flips: [T('analytics-view-toggle'), 'aria-checked']},
+        ct: {ready: T('screen-analytics')},
+      },
+    ],
+  },
+  /* ---- global sheets by link */
+  ...(['feedback', 'install'] as const).map(
+    (name): Flow => ({
+      name: `Global sheet: ${name}`,
+      steps: [
+        {screen: `Global sheet ${name}`, action: 'open', act: link(`/?${name}=${name === 'feedback' ? 'new' : 'help'}`), fb: {moves: DIALOG}, ct: {ready: DIALOG}, settle: 900},
+        {screen: `Global sheet ${name}`, action: 'close', act: press('Escape'), fb: {moves: DIALOG}, ct: {moves: DIALOG}, settle: 700},
+      ],
+    }),
+  ),
+  /* ---- typing */
+  typing('People search', '/', 'People', async c => {
+    await c.page.locator(`${T('list-search')}:visible`).first().tap()
+    await c.page.waitForTimeout(700)
+  }, 'list-search-input'),
+  typing('Groups search', '/groups', 'Groups', async c => {
+    await c.page.locator(`${T('list-search')}:visible`).first().tap()
+    await c.page.waitForTimeout(700)
+  }, 'list-search-input'),
+  typing('Search & Ask', '/', 'Search & Ask', async c => {
+    if (!(await c.page.locator(`${DIALOG}:visible`).count())) {
+      await c.page.locator(`${T('header-search-ask')}:visible`).first().tap()
+      await c.page.waitForTimeout(900)
+    }
+  }, 'search-input'),
+  typing('Friends hub search', '/settings/friends', 'FriendsAndInvites', async () => {}, 'hub-friends-search'),
+  typing('Add friend name', '/friends/new', 'AddFriend', async () => {}, 'add-friend-name'),
+  typing('Add expense title', '/expense/new', 'AddExpense', async c => void (await c.page.waitForTimeout(800)), 'expense-title'),
+  typing('Add expense amount', '/expense/new', 'AddExpense', async c => void (await c.page.waitForTimeout(800)), 'amount-input', '120.50'),
+  typing('Expense comment', c => `/expense/${idsOf(c).expense}`, 'Expense', async () => {}, 'comment-input'),
+  typing('Feedback message', '/?feedback=new', 'Feedback sheet', async c => void (await c.page.waitForTimeout(900)), 'feedback-message'),
+  /* ---- scrolling */
+  scrolling('People', '/'),
+  scrolling('Groups', '/groups'),
+  scrolling('Activity', '/activity'),
+  scrolling('Analytics', '/analytics'),
+  scrolling('Group', c => `/groups/${idsOf(c).group}`),
+  scrolling('Person', c => `/people/${idsOf(c).person}`),
+  scrolling('Settings', '/settings'),
+  scrolling('FriendsAndInvites', '/settings/friends'),
+  scrolling('Expense', c => `/expense/${idsOf(c).expense}`),
+  /* ---- writes */
+  {
+    name: 'Save expense',
+    steps: [
+      openPage('AddExpense', 'add-expense', tid('fab-add'), {settle: 800}),
+      {
+        screen: 'AddExpense',
+        action: 'save',
+        prepare: async c => {
+          const p = c.page
+          await p.locator(`${T('expense-title')}:visible`).first().fill('Sweep expense')
+          await p.locator(`${T('amount-input')}:visible`).first().fill('120')
+          await p.locator(`${T('expense-people')}:visible`).first().tap()
+          await p.locator(`${P('person-option-')}:visible`).first().tap()
+          await p.locator(`${T('people-dialog')} ${T('sheet-close')}`).first().tap()
+          await expect(p.locator(`${T('sheet-save')}:visible`).first()).toBeEnabled()
+          await p.waitForTimeout(600)
+        },
+        tap: tid('sheet-save'),
+        fb: {visible: T('expense-saved')},
+        settle: 1500,
+      },
+    ],
+  },
+  {
+    name: 'Delete expense',
+    start: c => `/expense/${idsOf(c).expense}`,
+    steps: [
+      {screen: 'Expense', action: 'delete: menu', tap: tid('expense-menu'), fb: {moves: DIALOG}, ct: {ready: DIALOG}, settle: 900},
+      {screen: 'Expense', action: 'delete: ask', tap: tid('expense-delete'), fb: {moves: 'body'}, ct: {visible: T('confirmBtn')}, settle: 900},
+      {screen: 'Expense', action: 'delete: confirm', tap: tid('confirmBtn'), fb: {visible: T('expense-deleted')}, settle: 900},
+      {screen: 'Expense', action: 'restore', tap: tid('expense-restore'), fb: {gone: T('expense-deleted')}, settle: 900},
+    ],
+  },
+  /* ---- demo mode */
+  {
+    name: 'Demo mode switch',
+    start: '/settings',
+    before: async c => {
+      /* The first switch on seeds a year of data and is a job of its own; the sweep measures the switches after it. */
+      await c.page.evaluate(async () => {
+        const hook = (window as unknown as {__splitoTest: {demoMode(on: boolean): Promise<void>}}).__splitoTest
+        await hook.demoMode(true)
+        await hook.demoMode(false)
+        await hook.demoMode(true)
+      })
+      await c.page.waitForTimeout(1500)
+    },
+    steps: [
+      {screen: 'Settings', action: 'demo mode off', tap: tid('settings-demo-mode'), fb: {flips: [T('settings-demo-mode'), 'aria-checked']}, ct: {all: [{flips: [T('settings-demo-mode'), 'aria-checked']}, {ready: T('screen-settings')}]}, settle: 2500},
+      {screen: 'Settings', action: 'demo mode on', tap: tid('settings-demo-mode'), fb: {flips: [T('settings-demo-mode'), 'aria-checked']}, ct: {all: [{flips: [T('settings-demo-mode'), 'aria-checked']}, {ready: T('screen-settings')}]}, settle: 2500},
+    ],
+  },
+  {
+    name: 'Search',
+    steps: [
+      {screen: 'Search & Ask', action: 'open', tap: tid('header-search-ask'), fb: {moves: DIALOG}, ct: {ready: DIALOG}, settle: 900},
+      {screen: 'Search & Ask', action: 'close', tap: tid('search-ask-cancel'), fb: {moves: DIALOG}, ct: {moves: DIALOG}, settle: 700},
     ],
   },
 ]
+
+/*
+ * Every sheet, popup and picker of the link table (`SHEETS`): opened by its link from the page it belongs to (a link is
+ * how a tap, a push or a shared URL opens one), closed with Escape. A picker is opened over its parent sheet, which
+ * stays open for all of that sheet's pickers (the parent's own open and close are reported but not budgeted twice).
+ */
+const SHEET_BASE: Record<string, (c: Ctx) => string> = {
+  People: () => '/',
+  Groups: () => '/groups',
+  Analytics: () => '/analytics',
+  Person: c => `/people/${idsOf(c).person}`,
+  Group: c => `/groups/${idsOf(c).group}`,
+  Profile: () => '/profile',
+  Settings: () => '/settings',
+  CreateGroup: () => '/groups/new',
+  AddExpense: () => '/expense/new',
+  EditExpense: c => `/expense/${idsOf(c).expense}/edit`,
+}
+const sectionBase = (section: string) => (_: Ctx) => `/settings/${section}`
+
+function sheetFlows(): Flow[] {
+  const pages: Array<[string, (c: Ctx) => string, readonly string[]]> = [
+    ...Object.entries(SHEET_BASE).map(([name, base]): [string, (c: Ctx) => string, readonly string[]] => [name, base, (SHEETS as Record<string, readonly string[]>)[name] ?? []]),
+    ...Object.entries(SETTINGS_SECTION_SHEETS).map(([section, chains]): [string, (c: Ctx) => string, readonly string[]] => [`SettingsSection ${section}`, sectionBase(section), chains]),
+  ]
+  /* Settings' own export/import sheets live under /settings. */
+  pages.find(([n]) => n === 'Settings')![2] = (SHEETS as Record<string, readonly string[]>).Settings ?? []
+  return pages.map(([name, base, chains]) => {
+    const parents = chains.filter(ch => !ch.includes('/'))
+    const steps: Step[] = []
+    for (const parent of parents) {
+      const url = (c: Ctx) => `${base(c).replace(/\/$/, '')}/${parent}`
+      const kids = chains.filter(ch => ch.startsWith(`${parent}/`))
+      steps.push({screen: `${name} sheet`, action: parent, act: link(url), fb: {moves: DIALOG}, ct: {ready: DIALOG}, settle: 1000})
+      for (const kid of kids) {
+        steps.push({screen: `${name} sheet`, action: kid, act: link(c => `${base(c).replace(/\/$/, '')}/${kid}`), fb: {moves: DIALOG}, ct: {ready: DIALOG}, settle: 1000})
+        steps.push({screen: `${name} sheet`, action: `${kid}: close`, act: press('Escape'), fb: {moves: DIALOG}, ct: {moves: DIALOG}, settle: 700})
+      }
+      steps.push({screen: `${name} sheet`, action: `${parent}: close`, act: press('Escape'), fb: {moves: DIALOG}, ct: {moves: DIALOG}, settle: 700})
+    }
+    return {name: `Sheets: ${name}`, start: base, steps}
+  })
+}
+
+FLOWS.push(...sheetFlows())
 
 /* ---------------------------------------------------------------- runner */
 
@@ -426,18 +905,36 @@ async function throttle(run: Run, rate: number) {
 
 async function runStep(run: Run, c: Ctx, step: Step): Promise<Sample> {
   const {page} = run
+  await step.prepare?.(c)
   let target: Locator | null = null
   if (step.tap) {
     target = await step.tap(c)
     await aim(page, target)
   }
+  const probe = <T>(f: (p: Probe) => T) => page.evaluate(f as never) as Promise<T>
   await throttle(run, run.rate)
-  await page.evaluate(a => (window as unknown as {__sw: Probe}).__sw.arm(a), {fb: step.fb, ct: step.ct ?? step.fb, now: !step.tap})
-  if (target) {
-    const b = (await target.boundingBox())!
-    await page.touchscreen.tap(b.x + b.width / 2, b.y + b.height / 2)
-  } else await step.act!(c)
-  const r = await page.evaluate(() => (window as unknown as {__sw: Probe}).__sw.result())
+  let r: Sample
+  if (step.kind === 'type') {
+    await page.evaluate(() => (window as unknown as {__sw: Probe}).__sw.typeStart())
+    await step.act!(c)
+    await page.waitForTimeout(300)
+    const t = await page.evaluate(() => (window as unknown as {__sw: Probe}).__sw.typeEnd())
+    r = {fb: t.n ? t.max : -1, ct: t.n ? t.max : -1, long: t.long, exits: 0}
+  } else if (step.kind === 'scroll') {
+    await page.evaluate(() => (window as unknown as {__sw: Probe}).__sw.framesStart())
+    await step.act!(c)
+    await page.waitForTimeout(300)
+    const f = await page.evaluate(() => (window as unknown as {__sw: Probe}).__sw.framesEnd())
+    r = {fb: f.maxGap, ct: f.maxGap, long: f.long, exits: 0}
+  } else {
+    await page.evaluate(a => (window as unknown as {__sw: Probe}).__sw.arm(a), {fb: step.fb, ct: step.ct ?? step.fb, now: !step.tap})
+    if (target) {
+      const b = (await target.boundingBox())!
+      await page.touchscreen.tap(b.x + b.width / 2, b.y + b.height / 2)
+    } else await step.act!(c)
+    r = await page.evaluate(() => (window as unknown as {__sw: Probe}).__sw.result())
+  }
+  void probe
   await throttle(run, 1)
   await page.waitForTimeout(step.settle ?? 400)
   return r
@@ -446,7 +943,7 @@ async function runStep(run: Run, c: Ctx, step: Step): Promise<Sample> {
 async function runFlow(run: Run, c: Ctx, flow: Flow): Promise<Row[]> {
   const steps = flow.steps.filter(s => !s.data || s.data === run.data)
   const laps: Sample[][] = steps.map(() => [])
-  await boot(run, flow.start ?? '/')
+  await boot(run, typeof flow.start === 'function' ? flow.start(c) : (flow.start ?? '/'))
   await flow.before?.(c)
   for (let lap = 0; lap < (flow.laps ?? LAPS); lap++) {
     for (const [i, step] of steps.entries()) laps[i]!.push(await runStep(run, c, step))
@@ -466,6 +963,24 @@ async function runFlow(run: Run, c: Ctx, flow: Flow): Promise<Row[]> {
       misses: [...misses(first, step, 'open'), ...(again ? misses(again, step, 'revisit') : [])],
     }
   })
+}
+
+/** Ids the link-opened flows need, from the store: a person and group with history, an expense in that group, a payment. */
+async function findIds(page: Page, data: Data) {
+  return page.evaluate(async d => {
+    type E = {id: string; deleted: boolean; data: Record<string, unknown>}
+    const s = (window as unknown as {splito: {me: string; list(t: string): Promise<E[]>; createRepayment(i: unknown): Promise<string>}}).splito
+    const live = async (t: string) => (await s.list(t)).filter(e => !e.deleted)
+    const people = (await live('person')).filter(p => p.id !== s.me)
+    const groups = await live('group')
+    const expenses = (await live('expense')).filter(e => groups.some(g => g.id === e.data.groupId))
+    const group = groups.find(g => expenses.some(e => e.data.groupId === g.id)) ?? groups[0]!
+    const expense = expenses.find(e => e.data.groupId === group.id) ?? expenses[0]!
+    let repayment = (await live('repayment'))[0]?.id
+    if (!repayment && d === 'bulk')
+      repayment = await s.createRepayment({groupId: null, currency: 'INR', from: people[0]!.id, to: s.me, amount: '1000', date: '2026-10-01', tz: 'Asia/Kolkata', note: ''})
+    return {person: people[0]!.id, group: group.id, expense: expense.id, repayment: repayment ?? ''}
+  }, data)
 }
 
 /* ---------------------------------------------------------------- the report */
@@ -510,7 +1025,7 @@ for (const data of (process.env.SWEEP_DATA ?? 'demo,bulk').split(',') as Data[])
         (window as unknown as {splito: {seedBulk(a: object): Promise<number>}}).splito.seedBulk({friends: 60, groups: 12, expenses: 10_000}),
       )
     }
-    const c: Ctx = {page, data, ids: {person: '', group: '', expense: '', repayment: ''}}
+    const c: Ctx = {page, data, ids: await findIds(page, data)}
     const rows: Row[] = []
 
     /* First load: reload the app (the ledger stays on the device) and time it from navigation start. */
@@ -534,7 +1049,14 @@ for (const data of (process.env.SWEEP_DATA ?? 'demo,bulk').split(',') as Data[])
     })
 
     for (const flow of FLOWS.filter(f => !process.env.SWEEP_ONLY || f.name.includes(process.env.SWEEP_ONLY))) {
-      rows.push(...(await runFlow(run, c, flow)))
+      try {
+        rows.push(...(await runFlow(run, c, flow)))
+      } catch (e) {
+        /* A flow that cannot run is a miss of its own, not the end of the sweep. */
+        await throttle(run, 1)
+        const dead: Sample = {fb: -1, ct: -1, long: 0, exits: 0}
+        rows.push({screen: flow.name, action: 'flow failed', data, first: dead, again: null, info: false, leaving: false, misses: [`flow failed: ${String(e).split('\n')[0]}`]})
+      }
     }
     load.after = loadavg()[0]!
     report(info.project.name, data, rows, load)
@@ -544,13 +1066,27 @@ for (const data of (process.env.SWEEP_DATA ?? 'demo,bulk').split(',') as Data[])
   })
 }
 
-test('the sweep covers every route, in-page tab and sheet of the link table', () => {
-  const covered = new Set(FLOWS.flatMap(f => f.steps.map(s => s.screen)))
-  const routes = Object.keys(ROUTE_PATHS).filter(r => !['Search'].includes(r))
-  // Filled in as flows are added.
-  expect(routes.length).toBeGreaterThan(0)
-  expect(covered.size).toBeGreaterThan(0)
-  void GLOBAL_SHEETS
-  void PAGE_TABS
-  void SHEETS
+test('the sweep covers every route, in-page tab, sheet and global sheet of the link table', () => {
+  const screens = FLOWS.flatMap(f => f.steps.map(s => s.screen))
+  const has = (name: string) => screens.some(x => x === name || x.startsWith(`${name} `))
+  const missing: string[] = []
+  for (const route of Object.keys(ROUTE_PATHS)) {
+    const ok = route === 'Search' ? has('Search & Ask') : ['People', 'Groups', 'Analytics', 'Activity'].includes(route) ? has(`Tab ${route}`) : has(route)
+    if (!ok) missing.push(`route ${route}`)
+  }
+  for (const [page, chains] of Object.entries(SHEETS)) {
+    const flow = FLOWS.find(f => f.name === `Sheets: ${page}`) ?? FLOWS.filter(f => f.name.startsWith('Sheets: SettingsSection')).find(() => page === 'SettingsSection')
+    if (!flow) missing.push(`sheets of ${page}`)
+    else if (page !== 'SettingsSection')
+      for (const chain of chains as readonly string[]) if (!flow.steps.some(s => s.action === chain)) missing.push(`sheet ${page}/${chain}`)
+  }
+  for (const [section, chains] of Object.entries(SETTINGS_SECTION_SHEETS)) {
+    const flow = FLOWS.find(f => f.name === `Sheets: SettingsSection ${section}`)
+    for (const chain of chains) if (!flow?.steps.some(s => s.action === chain)) missing.push(`sheet SettingsSection ${section}/${chain}`)
+  }
+  for (const [page, tabs] of Object.entries(PAGE_TABS))
+    for (const tab of tabs) if (!FLOWS.some(f => f.steps.some(s => s.screen === page && s.action === `tab ${tab}`))) missing.push(`tab ${page}/${tab}`)
+  const globals: Record<(typeof GLOBAL_SHEETS)[number], string> = {search: 'Search & Ask', drawer: 'Drawer', feedback: 'Global sheet feedback', install: 'Global sheet install'}
+  for (const g of GLOBAL_SHEETS) if (!has(globals[g])) missing.push(`global sheet ${g}`)
+  expect(missing, 'link-table entries the sweep does not walk').toEqual([])
 })
