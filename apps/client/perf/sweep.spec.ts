@@ -317,6 +317,12 @@ const P = (prefix: string) => `[data-testid^="${prefix}"]`
 const PHONE = {width: 390, height: 844}
 const LAPS = Number(process.env.SWEEP_LAPS ?? 4)
 const BUDGET = {feedback: 100, content: 200, longTask: 50}
+/*
+ * A surface that moves in (a sheet, popup, composer or the drawer) starts moving within a frame of the tap (feedback,
+ * owner 107), shows its same-size skeleton meanwhile, and mounts its body when the ~300 ms rise ends (owner 168): its
+ * body is due 200 ms after the motion, not 200 ms after the tap (owner 189 read with 107 and 168).
+ */
+const MOVING = {ctBudget: 500}
 const SCREEN = (name: string): Pred => ({ready: T(`screen-${name}`)})
 const DIALOG = '[role="dialog"]'
 
@@ -408,7 +414,7 @@ const openPage = (screen: string, id: string, tap: Step['tap'], extra: Partial<S
 
 /** A sheet, popup or menu opening from a tap and closing again. */
 const sheet = (screen: string, what: string, open: Step['tap'], extra: Partial<Step> = {}): Step[] => [
-  {screen, action: `${what}: open`, tap: open, fb: {moves: DIALOG}, ct: {fresh: DIALOG}, settle: 900, ...extra},
+  {screen, action: `${what}: open`, tap: open, fb: {moves: DIALOG}, ct: {fresh: DIALOG}, ...MOVING, settle: 900, ...extra},
   {screen, action: `${what}: close`, act: press('Escape'), fb: {moves: DIALOG}, ct: {moves: DIALOG}, settle: 700},
 ]
 
@@ -524,7 +530,7 @@ const FLOWS: Flow[] = [
   {
     name: 'EditExpense',
     start: c => `/expense/${idsOf(c).expense}`,
-    steps: [openPage('EditExpense', 'edit-expense', tid('expense-edit-button')), closeRoute('EditExpense', 'edit-expense')],
+    steps: [openPage('EditExpense', 'edit-expense', tid('expense-edit-button'), MOVING), closeRoute('EditExpense', 'edit-expense')],
   },
   {
     name: 'Settle',
@@ -542,7 +548,7 @@ const FLOWS: Flow[] = [
   {
     name: 'Profile',
     steps: [
-      {screen: 'Drawer', action: 'open', tap: tid('header-avatar'), fb: {moves: T('drawer')}, ct: {ready: T('drawer')}, settle: 900},
+      {screen: 'Drawer', action: 'open', tap: tid('header-avatar'), fb: {moves: T('drawer')}, ct: {ready: T('drawer')}, ...MOVING, settle: 900},
       openPage('Profile', 'profile', tid('drawer-profile'), {settle: 900}),
       back('Profile'),
     ],
@@ -570,7 +576,7 @@ const FLOWS: Flow[] = [
   {
     name: 'AddFriend',
     start: '/people',
-    steps: [openPage('AddFriend', 'add-friend', tid('people-add-friend')), closeRoute('AddFriend', 'add-friend')],
+    steps: [openPage('AddFriend', 'add-friend', tid('people-add-friend'), MOVING), closeRoute('AddFriend', 'add-friend')],
   },
   {
     name: 'Welcome',
@@ -579,11 +585,11 @@ const FLOWS: Flow[] = [
   {
     name: 'CreateGroup',
     start: '/groups',
-    steps: [openPage('CreateGroup', 'create-group', tid('groups-new')), closeRoute('CreateGroup', 'create-group')],
+    steps: [openPage('CreateGroup', 'create-group', tid('groups-new'), MOVING), closeRoute('CreateGroup', 'create-group')],
   },
   {
     name: 'AddExpense',
-    steps: [openPage('AddExpense', 'add-expense', tid('fab-add')), closeRoute('AddExpense', 'add-expense')],
+    steps: [openPage('AddExpense', 'add-expense', tid('fab-add'), MOVING), closeRoute('AddExpense', 'add-expense')],
   },
   {
     name: 'InviteLinks',
@@ -662,6 +668,7 @@ const FLOWS: Flow[] = [
         tap: tid('list-filters'),
         fb: {moves: DIALOG},
         ct: {fresh: DIALOG},
+        ...MOVING,
         settle: 900,
       },
       {screen: 'Groups', action: 'filter chip', tap: tid('filter-show-owed'), fb: {flips: [T('filter-show-owed'), 'aria-checked']}, settle: 500},
@@ -732,7 +739,7 @@ const FLOWS: Flow[] = [
     (name): Flow => ({
       name: `Global sheet: ${name}`,
       steps: [
-        {screen: `Global sheet ${name}`, action: 'open', act: link(`/?${name}=${name === 'feedback' ? 'new' : 'help'}`), fb: {moves: DIALOG}, ct: {fresh: DIALOG}, settle: 900},
+        {screen: `Global sheet ${name}`, action: 'open', act: link(`/?${name}=${name === 'feedback' ? 'new' : 'help'}`), fb: {moves: DIALOG}, ct: {fresh: DIALOG}, ...MOVING, settle: 900},
         {screen: `Global sheet ${name}`, action: 'close', act: press('Escape'), fb: {moves: DIALOG}, ct: {moves: DIALOG}, settle: 700},
       ],
     }),
@@ -773,7 +780,7 @@ const FLOWS: Flow[] = [
   {
     name: 'Save expense',
     steps: [
-      openPage('AddExpense', 'add-expense', tid('fab-add'), {settle: 800}),
+      openPage('AddExpense', 'add-expense', tid('fab-add'), {...MOVING, settle: 800}),
       {
         screen: 'AddExpense',
         action: 'save',
@@ -835,6 +842,7 @@ const FLOWS: Flow[] = [
         tap: tid('expense-menu'),
         fb: {moves: DIALOG},
         ct: {fresh: DIALOG},
+        ...MOVING,
         settle: 900,
       },
       {screen: 'Expense', action: 'delete', tap: tid('expense-delete'), fb: {any: [{visible: T('expense-deleted')}, {gone: T('screen-expense')}]}, settle: 1200},
@@ -877,7 +885,7 @@ const FLOWS: Flow[] = [
   {
     name: 'Search',
     steps: [
-      {screen: 'Search & Ask', action: 'open', tap: tid('header-search-ask'), fb: {moves: DIALOG}, ct: {fresh: DIALOG}, settle: 900},
+      {screen: 'Search & Ask', action: 'open', tap: tid('header-search-ask'), fb: {moves: DIALOG}, ct: {fresh: DIALOG}, ...MOVING, settle: 900},
       {screen: 'Search & Ask', action: 'close', tap: tid('search-ask-cancel'), fb: {moves: DIALOG}, ct: {moves: DIALOG}, settle: 700},
     ],
   },
@@ -916,9 +924,9 @@ function sheetFlows(): Flow[] {
     for (const parent of parents) {
       const url = (c: Ctx) => `${base(c).replace(/\/$/, '')}/${parent}`
       const kids = chains.filter(ch => ch.startsWith(`${parent}/`))
-      steps.push({screen: `${name} sheet`, action: parent, act: link(url), fb: {moves: DIALOG}, ct: {fresh: DIALOG}, settle: 1000})
+      steps.push({screen: `${name} sheet`, action: parent, act: link(url), fb: {moves: DIALOG}, ct: {fresh: DIALOG}, ...MOVING, settle: 1000})
       for (const kid of kids) {
-        steps.push({screen: `${name} sheet`, action: kid, act: link(c => `${base(c).replace(/\/$/, '')}/${kid}`), fb: {moves: DIALOG}, ct: {fresh: DIALOG}, settle: 1000})
+        steps.push({screen: `${name} sheet`, action: kid, act: link(c => `${base(c).replace(/\/$/, '')}/${kid}`), fb: {moves: DIALOG}, ct: {fresh: DIALOG}, ...MOVING, settle: 1000})
         steps.push({screen: `${name} sheet`, action: `${kid}: close`, act: press('Escape'), fb: {moves: DIALOG}, ct: {moves: DIALOG}, settle: 700})
       }
       steps.push({screen: `${name} sheet`, action: `${parent}: close`, act: press('Escape'), fb: {moves: DIALOG}, ct: {moves: DIALOG}, settle: 700})

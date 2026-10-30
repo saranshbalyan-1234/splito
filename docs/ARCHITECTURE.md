@@ -1057,6 +1057,39 @@ are written; nothing records them automatically (A-037).
 
 Each rule came from a measurement; the dated story is in § 23. Newest first within each group.
 
+- **An animated row measures nothing while it mounts or updates.** Reanimated 4.7.1 on web called `saveSnapshot`
+  (`getBoundingClientRect` plus every ancestor's `scrollTop`) in `componentDidMount` and `componentDidUpdate` of every
+  component with an `exiting` prop, so each list row forced a style and layout pass as it mounted and on every
+  re-render: 191 forced reads opening Friends and invites (12-19 ms at 1x on a loaded machine), one per row per
+  keystroke in a list search. `patches/react-native-reanimated@4.7.1.patch` drops both calls; an exit reads the box
+  when it starts (`getSnapshotForElement`'s own fallback). `e2e/animations.spec.ts` counts the reads.
+- **Nothing that leaves runs its rows' exit animations: pages, tabs, sheets, popups and composers.** The exit scope
+  (`ScreenExitScope`, `motion/listAnimations.tsx`) wraps `Layout.Screen` and `OpenedProvider` (every web sheet, popup
+  and composer); a row a filter or delete takes off a list that stays still fades out. Popping Person cloned 60 rows
+  and Group 20 (Chrome, large demo); both now clone none (`e2e/animations.spec.ts`).
+- **A row reads nothing per row that is the same for every row.** Device locale (`deviceLocale()`, not
+  expo-localization's `getLocales()`, which builds `Intl` objects per call), breakpoints (one shared `matchMedia`
+  list per width, not `react-responsive`'s per-call query and listener) and a friend's balance summary
+  (`usePersonSummary`, one `personSummary` per balance snapshot, not one per row over every balance row) are read
+  once and shared. Each cost 4-5 % of opening a 45-row list at 6x, and the summary also ran on every keystroke.
+- **Long writes run behind progress, never a cover, and a write batch writes each rewritten row once.** The demo seed's
+  main thread was idle 94 % of the time (IndexedDB is in another process); what blocked the app was the full-screen
+  cover. Seeding now shows a pill and the app stays usable; only the store swap covers it. `txRows` holds the rows a
+  batch rewrites (projection sums, people and group activity times) and writes them once (43,400 -> 34,700 IndexedDB
+  requests for the seed); every other store writes through at once so IndexedDB works while JavaScript runs: holding
+  every store left the database idle until the commit and made the seed slower. The seed took 31-35 s at load 60-76
+  and 4-5 s at load 30-50 on the same build: its time is mostly the machine, so judge it on a quiet one.
+- **Measure Chrome with its accessibility tree off.** Playwright's CDP session turns Chrome's accessibility on, and every
+  commit then rebuilds the tree: 66 ms of a 213 ms Analytics revisit at 6x was `Blink.Accessibility`, which a phone
+  without a screen reader never pays. The sweep sends `Accessibility.disable` before each measured step.
+- **A sweep predicate names the surface it waits for.** "A dialog is on screen" was true at once for a picker opened
+  over its sheet (the parent counted), and "the dialog moved" watched the parent: picker opens read 3-11 ms and
+  picker closes read "never". The probe watches the topmost dialog and waits for a dialog that was not there when it
+  armed (`fresh`).
+- **A moving surface owes its skeleton at once and its body 200 ms after the motion.** Sheets, popups, composers and the
+  drawer start moving within a frame (feedback < 100 ms, owner 107) and mount their body when the ~300 ms rise ends
+  (owner 168); the sweep budgets their body at 500 ms from the tap, every other content at 200 ms (owner 189).
+
 - **Specs and render baselines that depend on "now" run on a pinned clock (`e2e/pinClock.ts`), and the gate counts
   only what is deterministic.** The demo's change times and "recently active" are relative to now: homeTabs "Overview
   scope" passed on 30 Oct and failed from midnight (pinned to 28 or 29 Oct it fails the same way; pinned to noon on
@@ -1456,6 +1489,25 @@ Splito lessons (add newest last, dated, with PR):
   inside the phase, so it is printed and never gated; the second round, on parked tabs, is 69 + 468 every run. A
   frozen clock (`page.clock.setFixedTime`) stops the app reaching Home, so the clock is pinned by an offset.
 
+
+- 2026-10-31, F-266 (c-perf): **the per-row costs nobody saw, and why the demo switch "took 70 s".** (1) Reanimated
+  4.7.1's web `AnimatedComponent` saves a layout snapshot (`getBoundingClientRect` + an ancestor `scrollTop` walk) on
+  every mount and update of a component with `exiting`, so every list row forced a style/layout pass: 191 reads opening
+  Friends and invites and one per row per keystroke. No upstream issue found (searched 2026-10-31); patched out in
+  `patches/react-native-reanimated@4.7.1.patch` (affects 4.x web; the exit falls back to reading the box when it starts),
+  and `e2e/animations.spec.ts` fails if rows measure again or if a filtered row stops fading out. (2) The exit scope
+  that stops a leaving page's rows from animating (Person popped: 60 clones, Group: 20, now 0) also had to cover every
+  sheet, popup and composer: it lives in `OpenedProvider`, the one piece they all share. (3) `getLocales()`, three
+  `react-responsive` media queries and a `personSummary` over every balance row ran once per row; they are module or
+  snapshot caches now. (4) The demo seed: the renderer's main thread was idle 94 % of the 35 s (all time in IndexedDB,
+  43,400 requests, at load 60-76; 4-5 s at load 30-50), so the "block" was the full-screen cover, not JavaScript. It is a
+  progress pill now, and activity bumps are written once per batch (-20 % requests). Holding every store's writes to the
+  end was tried and rejected: it took away the overlap between JavaScript and the database and made the seed slower.
+  (5) Test method: Playwright's CDP session switches Chrome's accessibility tree on (about 30 % of a tab revisit's
+  commit at 6x), so the sweep disables it; and the probe's "a dialog is ready" was true for the parent sheet under a
+  picker. (6) Open lead, not fixed: opening a URL sheet on People re-renders every row four times (the screen re-renders
+  once, the list four times with new `data`/`renderItem`); a fix needs the screen's derived rows and `renderItem` to keep
+  their identity, measured with the React DevTools commit hook (`flags & PerformedWork`) on the Metro dev build.
 
 ## 24. Checklists
 

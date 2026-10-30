@@ -251,7 +251,7 @@ test.describe('touch screens', () => {
  * measures itself while it mounts or updates (the patched `saveSnapshot`, patches/react-native-reanimated): 60 rows
  * forced 60 layouts on every open and every keystroke. Each half fails when its workaround stops applying.
  */
-test('a filtered-out row fades out, the rows of a page that is left do not, and mounting rows forces no layout per row', async ({page}) => {
+test('opening a page measures none of its rows, leaving it fades none out, and a filtered-out row fades out', async ({page}) => {
   await page.addInitScript(() => {
     const w = window as unknown as {__dummies: number; __rects: number}
     w.__dummies = 0
@@ -266,14 +266,21 @@ test('a filtered-out row fades out, the rows of a page that is left do not, and 
     }
   })
   await ready(page, '/groups', 'group-Goa trip', true)
-  const read = () => page.evaluate(() => (window as unknown as {__dummies: number; __rects: number}))
+  const read = () =>
+    page.evaluate(() => {
+      const w = window as unknown as {__dummies: number; __rects: number}
+      return {__dummies: w.__dummies, __rects: w.__rects}
+    })
   const groups = page.getByTestId('screen-groups')
 
-  // Opening a pushed page with its rows, then leaving it: no clones.
+  // Opening a pushed page with its rows measures no row; leaving it clones none.
+  const start = await read()
   await groups.getByTestId('group-Goa trip').click()
   await expect(page.getByTestId('screen-group')).toBeVisible()
   await page.waitForTimeout(1000)
   const atOpen = await read()
+  console.log(`group page open: ${atOpen.__rects - start.__rects} getBoundingClientRect calls`)
+  expect(atOpen.__rects - start.__rects).toBeLessThan(15)
   await page.getByTestId('header-back').last().click()
   await expect(page.getByTestId('screen-group')).toHaveCount(0)
   await page.waitForTimeout(500)
@@ -282,14 +289,9 @@ test('a filtered-out row fades out, the rows of a page that is left do not, and 
   // A search that leaves one group: the others fade out on the page that stays, measuring nothing as they mount.
   await groups.getByTestId('list-search').click()
   const before = await read()
-  await groups.getByTestId('list-search-input').fill('Goa')
-  await expect(groups.getByTestId('list-search-count')).toContainText('1 of')
+  await groups.getByTestId('list-search-input').fill('Goa trip')
+  await expect(groups.getByTestId('list-search-count')).toHaveText(/^1 of/)
   await page.waitForTimeout(500)
   const after = await read()
   expect(after.__dummies - before.__dummies).toBeGreaterThan(0)
-  await groups.getByTestId('list-search-input').fill('')
-  await page.waitForTimeout(800)
-  const back = await read()
-  // Every group row mounts again: a handful of reads (the search field, the list), never one per row.
-  expect(back.__rects - after.__rects).toBeLessThan(10)
 })
