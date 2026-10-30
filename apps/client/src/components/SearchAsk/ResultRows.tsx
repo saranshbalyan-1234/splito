@@ -239,11 +239,15 @@ export function ExpenseResult({
     .filter(Boolean)
     .join(' · ')
   const fieldLabel = useFieldLabel()
+  const isInGroup = !!e.groupId
+  const shown = match.slice(0, 2)
+  /* Screen readers hear why it is here too: "Notes: Farewell dinner", "Comment: Please send the receipt". */
+  const why = shown.map(m => ('text' in m ? `${fieldLabel(m, isInGroup)}: ${m.text}` : fieldLabel(m, isInGroup))).join(', ')
 
   return (
     <ResultRow
       nav={nav}
-      label={l`${e.title}, ${total}, ${date}`}
+      label={why ? l`${e.title}, ${total}, ${date}, ${why}` : l`${e.title}, ${total}, ${date}`}
       isActive={isActive}
       syncStatus={expense.syncStatus}
       onPress={onPress}>
@@ -261,18 +265,15 @@ export function ExpenseResult({
           style={[a.text_sm, a.leading_snug, t.atoms.text_contrast_medium]}
         />
         {/* Why it is here: the field that matched, named, with the matched words marked. */}
-        {match.slice(0, 2).map(m => (
+        {shown.map(m => (
           <View key={m.field} testID={`search-match-${expense.id}-${m.field}`} style={[a.flex_row, a.align_center, a.gap_xs]}>
-            <Pills.Tag>{fieldLabel(m)}</Pills.Tag>
+            <Pills.Tag>{fieldLabel(m, isInGroup)}</Pills.Tag>
+            {/* An amount, date, currency or status is already on the row (right column, tag): the tag alone says it matched. */}
             {'text' in m ? (
               <View style={[a.flex_1]}>
                 <Highlight text={m.text} terms={terms} style={[a.text_sm, a.leading_snug, t.atoms.text_contrast_medium]} />
               </View>
-            ) : (
-              <Text numberOfLines={1} style={[a.flex_1, a.text_sm, a.font_bold, a.leading_snug, {color: t.palette.primary_500}]}>
-                {m.field === 'amount' ? total : m.field === 'date' ? date : m.field === 'currency' ? e.currency : fieldLabel(m)}
-              </Text>
-            )}
+            ) : null}
           </View>
         ))}
         {isDeleted ? <DeletedMeta testID={`search-deleted-${expense.id}`} at={expense.updatedAt} /> : null}
@@ -293,19 +294,28 @@ export function ExpenseResult({
   )
 }
 
-/** The name of a matched field, in the person's language. */
+/** The name of a matched field, in the person's language; a balance status says where it applies. */
 function useFieldLabel() {
   const {t: l} = useLingui()
-  const status: Record<SearchStatus, string> = {
-    settled: l`Settled`,
-    owed: l`Owed`,
-    owe: l`You owe`,
-    disputed: l`Disputed`,
-    deleted: l`Deleted`,
-    hidden: l`Hidden`,
-    inactive: l`Inactive`,
+  const status = (s: SearchStatus, isInGroup: boolean): string => {
+    switch (s) {
+      case 'settled':
+        return isInGroup ? l`Settled in group` : l`Settled`
+      case 'owed':
+        return isInGroup ? l`Owed in group` : l`Owed`
+      case 'owe':
+        return isInGroup ? l`You owe in group` : l`You owe`
+      case 'disputed':
+        return l`Disputed`
+      case 'deleted':
+        return l`Deleted`
+      case 'hidden':
+        return l`Hidden`
+      case 'inactive':
+        return l`Inactive`
+    }
   }
-  return (m: MatchedField): string => {
+  return (m: MatchedField, isInGroup: boolean): string => {
     switch (m.field) {
       case 'notes':
         return l`Notes`
@@ -330,7 +340,7 @@ function useFieldLabel() {
       case 'currency':
         return l`Currency`
       case 'status':
-        return status[m.status]
+        return status(m.status, isInGroup)
     }
   }
 }
@@ -373,7 +383,7 @@ export function PaymentResult({
   return (
     <ResultRow
       nav={nav}
-      label={l`${who}, ${amount}, ${date}`}
+      label={comment ? l`${who}, ${amount}, ${date}, comment: ${comment}` : l`${who}, ${amount}, ${date}`}
       isActive={isActive}
       syncStatus={payment.syncStatus}
       onPress={onPress}>
@@ -444,9 +454,7 @@ export function SearchChips({chips, query, onQueryChange}: {chips: SearchChip[];
             color="secondary"
             hitSlop={HITSLOP_10}
             onPress={() => onQueryChange(removeChip(query, c))}>
-            <ButtonText>
-              {name}: {c.text}
-            </ButtonText>
+            <ButtonText>{l`${name}: ${typed}`}</ButtonText>
             <ButtonIcon icon={XIcon} />
           </Button>
         )
@@ -553,6 +561,26 @@ export function GroupResult({
       </View>
       <ChevronIcon size="sm" style={t.atoms.text_contrast_low} />
     </ResultRow>
+  )
+}
+
+/** The search could not be answered: say so, with Try again (never an endless wait). */
+export function SearchFailed({onRetry}: {onRetry: () => void}) {
+  const t = useTheme()
+  const {t: l} = useLingui()
+  return (
+    <View testID="search-failed" style={[a.p_xl]}>
+      <View style={[t.atoms.bg_contrast_25, a.rounded_sm, a.p_lg, a.gap_sm, a.align_start]}>
+        <Text style={[a.text_md]}>
+          <Trans>Search isn’t ready on this device.</Trans>
+        </Text>
+        <Button testID="search-retry" label={l`Try search again`} size="small" color="secondary" onPress={onRetry}>
+          <ButtonText>
+            <Trans>Try again</Trans>
+          </ButtonText>
+        </Button>
+      </View>
+    </View>
   )
 }
 

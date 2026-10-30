@@ -6,9 +6,13 @@
  *
  * - `w`: a folded word (lower case, no accents) of a record's title / note, notes
  *   and item names. A typed prefix is a key range over these.
- * - `p`, `g`: a folded word of a person's (name, contact, UPI id), or a group's
- *   (name, trip location), text. Kept apart from `w` so that finding who is
- *   called "bulk" never reads the thousands of expenses titled "bulk".
+ * - `p`, `g`: a folded word of a person's name, or a group's (name, trip
+ *   location). Kept apart from `w` so that finding who is called "bulk" never
+ *   reads the thousands of expenses titled "bulk". A `p` word also finds the
+ *   person's records (`h`), except mine (every record is mine).
+ * - `k`: a folded word of a person's contact (email parts, phone digits, the
+ *   last ten digits) or UPI id. It lists the person only and never expands to
+ *   their records: "98" or "91" would otherwise match a whole ledger.
  * - `a`: a record's amount, `<currency>:<zero-padded offset minor units>`, so an
  *   exact amount is one key, "> 1000" a key range per currency, and a currency
  *   alone is the range of its prefix.
@@ -59,7 +63,7 @@ export const amountOfTerm = (offset: string): bigint => BigInt(offset) - OFFSET
 /** The first and last `a` term of a currency: the bounds of "every amount in this currency". */
 export const amountBounds = (currency: CurrencyCode): [string, string] => [`${currency}:`, `${currency}:￿`]
 
-export const TERM_KINDS = ['w', 'p', 'g', 'a', 'm', 'c', 'b', 'h', 'G', 'd', 's', 'n'] as const
+export const TERM_KINDS = ['w', 'p', 'k', 'g', 'a', 'm', 'c', 'b', 'h', 'G', 'd', 's', 'n'] as const
 export type TermKind = (typeof TERM_KINDS)[number]
 /** The records a search lists besides people and groups: an expense, a payment, a write-off. */
 export type RecordType = 'expense' | 'repayment' | 'writeoff'
@@ -73,6 +77,12 @@ export interface SearchTerm {
   term: string
   entityType: TermEntity
   entityId: string
+}
+
+/** Who is on a record: its payers and sharers, or a payment's two sides (the `h` keys; the status filter reads the same list). */
+export function recordPeople(type: RecordType, d: Partial<Expense & Repayment>): string[] {
+  const ids = type === 'expense' ? [...Object.keys(d.payers ?? {}), ...Object.keys(d.shares ?? {})] : [d.from, d.to]
+  return [...new Set(ids.filter((id): id is string => typeof id === 'string'))]
 }
 
 const row = (kind: TermKind, term: string, entityType: TermEntity, entityId: string): Row => ({kind, term, entityType, entityId})
@@ -96,8 +106,9 @@ export function termRows(e: Entity | undefined): Row[] {
   if (e.type === 'comment') {
     // A comment is found through the record it hangs on; a deleted one has no text left to find.
     const d = e.data as Partial<Comment> | null
-    if (!e.deleted && d?.body && (d.targetType === 'expense' || d.targetType === 'repayment') && typeof d.targetId === 'string')
-      for (const word of wordsOf(d.body)) add('n', `${word}\u0000${e.id}`, d.targetType, d.targetId)
+    const target = d?.targetType as string | undefined
+    if (!e.deleted && d?.body && RECORD_TYPES.includes(target as RecordType) && typeof d.targetId === 'string')
+      for (const word of wordsOf(d.body)) add('n', `${word}\u0000${e.id}`, target as RecordType, d.targetId)
   } else if (e.type === 'expense' || e.type === 'repayment' || e.type === 'writeoff') {
     const d = e.data as Partial<Expense & Repayment> | null
     if (!d) return []
@@ -113,14 +124,18 @@ export function termRows(e: Entity | undefined): Row[] {
     if (e.type === 'expense' && typeof d.category === 'string') add('c', d.category)
     const payers = e.type === 'expense' ? Object.entries(d.payers ?? {}).filter(([, v]) => v !== 0n).map(([k]) => k) : [d.from]
     for (const id of payers) if (typeof id === 'string') add('b', id)
-    for (const id of e.type === 'expense' ? [...Object.keys(d.payers ?? {}), ...Object.keys(d.shares ?? {})] : [d.from, d.to]) if (typeof id === 'string') add('h', id)
+    for (const id of recordPeople(e.type, d)) add('h', id)
     add('G', d.groupId || NO_GROUP)
     if (e.deleted) add('s', 'deleted')
   } else if (e.type === 'person' || e.type === 'group') {
     const d = e.data as Partial<Person & Group> | null
-    // A trip's place is found the way its name is (owner 182); a person is also found by how to reach them.
-    const extra = e.type === 'group' ? (d?.location ?? '') : `${d?.contact ? contactWords(d.contact.value) : ''} ${d?.upiId ?? ''}`
-    for (const word of wordsOf(`${d?.name ?? ''} ${extra}`)) add(e.type === 'person' ? 'p' : 'g', word)
+    // A trip's place is found the way its name is (owner 182).
+    if (e.type === 'group') for (const word of wordsOf(`${d?.name ?? ''} ${d?.location ?? ''}`)) add('g', word)
+    else {
+      for (const word of wordsOf(d?.name ?? '')) add('p', word)
+      // How to reach a person finds the person, never their records (F-246 review C1).
+      for (const word of wordsOf(`${d?.contact ? contactWords(d.contact.value) : ''} ${d?.upiId ?? ''}`)) add('k', word)
+    }
   }
   return [...out.values()]
 }

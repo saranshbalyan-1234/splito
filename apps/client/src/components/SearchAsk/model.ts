@@ -29,14 +29,18 @@ export type SearchRow =
       nav: number
       payment: Entity<Repayment | WriteOff>
     }
+  /** "Show more payments" under the payments read so far (expenses page from the list's end). */
+  | {type: 'more'; key: string; section: 'payments'}
   /** "Ask Splito: '<query>'", first in keyboard order (ARCHITECTURE 26.3). */
   | {type: 'ask'; key: string; nav: number; query: string}
 
-export type SearchResultRow = Exclude<SearchRow, {type: 'header'}>
+export type SearchResultRow = Exclude<SearchRow, {type: 'header'} | {type: 'more'}>
 
 /**
  * The results as one list: people and groups first (few, and usually what a
- * name is looking for), then expenses and payments, each under its section heading.
+ * name is looking for), then payments, then expenses, each under its section
+ * heading. Payments come before expenses so that loading more expenses at the
+ * end of the list never moves a section (each has its own Show more).
  */
 export function searchRows(
   results: Pick<SearchResults, 'people' | 'groups' | 'expenses'> &
@@ -45,7 +49,7 @@ export function searchRows(
   expenseCount?: {count: number; isPartial: boolean},
   /** The typed query: puts the "Ask Splito" row first. */
   askQuery?: string,
-  /** Payments and write-offs: how many match in all (the rows given are the first page). Defaults to the rows given. */
+  /** Payments and write-offs: how many match in all (the rows given are the pages read). Defaults to the rows given. */
   paymentCount?: number,
 ): SearchRow[] {
   const rows: SearchRow[] = []
@@ -83,17 +87,6 @@ export function searchRows(
     group,
   }))
   section(
-    'expenses',
-    results.expenses,
-    (expense, n) => ({
-      type: 'expense',
-      key: `expense-${expense.id}`,
-      nav: n,
-      expense,
-    }),
-    expenseCount,
-  )
-  section(
     'payments',
     results.payments ?? [],
     (payment, n) => ({
@@ -105,6 +98,19 @@ export function searchRows(
     paymentCount === undefined
       ? undefined
       : {count: paymentCount, isPartial: false},
+  )
+  if (paymentCount !== undefined && (results.payments?.length ?? 0) < paymentCount)
+    rows.push({type: 'more', key: 'more-payments', section: 'payments'})
+  section(
+    'expenses',
+    results.expenses,
+    (expense, n) => ({
+      type: 'expense',
+      key: `expense-${expense.id}`,
+      nav: n,
+      expense,
+    }),
+    expenseCount,
   )
   return rows
 }

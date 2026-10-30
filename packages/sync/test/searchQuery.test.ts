@@ -111,6 +111,25 @@ const TABLE: Array<[query: string, tokens: string[], chips: string[]]> = [
   ['riya ने', ['person'], ['person']],
   ['riya के साथ', ['person'], ['person']],
   ['चाय', ['text'], []],
+  ['food या travel', ['any(text|text)'], ['any']],
+  ['खाना और goa', ['text', 'text'], []],
+  // Joining words go when they are not part of a facet; rupee spellings are INR
+  ['in march', ['month'], ['period']],
+  ['dinner in march', ['text', 'month'], ['period']],
+  ['spent on dinner', ['text'], []],
+  ['dinner on 4 march', ['text', 'month'], ['period']],
+  ['march 4', ['month'], ['period']],
+  ['4 march 2026', ['month'], ['period']],
+  ['for the cab', ['text'], []],
+  ['in', ['text'], []],
+  ['खाने के लिए', ['text', 'text'], []],
+  ['rs 500', ['amount'], ['amount']],
+  ['Rs. 500', ['amount'], ['amount']],
+  ['rs500', ['amount'], []],
+  ['रु 500', ['amount'], ['amount']],
+  ['500 rupees', ['amount'], ['amount']],
+  // An invite is not a record (People lists them): the word is text
+  ['invites', ['text'], []],
 ]
 
 describe('the query table', () => {
@@ -141,6 +160,16 @@ describe('the query table', () => {
     const q = 'dinner paid by riya last month over 500'
     const {chips} = parseQuery(q)
     expect(chips.map(c => removeChip(q, c))).toEqual(['dinner last month over 500', 'dinner paid by riya over 500', 'dinner paid by riya last month'])
+  })
+
+  test('joining words and rupee spellings', () => {
+    expect(parseQuery('spent on dinner').tokens).toEqual([{kind: 'text', text: 'dinner'}])
+    expect(parseQuery('dinner on 4 march').tokens).toEqual([{kind: 'text', text: 'dinner'}, {kind: 'month', month: '03', day: '04', text: 'march'}])
+    expect(parseQuery('4 march 2026').tokens).toEqual([{kind: 'month', month: '03', day: '04', year: '2026', text: 'march'}])
+    for (const q of ['rs 500', 'Rs. 500', 'rs500', 'rs.500', 'रु 500', '₹500']) expect(parseQuery(q).tokens).toEqual([{kind: 'amount', amounts: ['500'], text: '500', currency: 'INR'}])
+    // Hindi "और" is and, "या" is or.
+    expect(parseQuery('dinner और goa').tokens).toEqual([{kind: 'text', text: 'dinner'}, {kind: 'text', text: 'goa'}])
+    expect(parseQuery('dinner या lunch').tokens).toEqual([{kind: 'any', options: [{kind: 'text', text: 'dinner'}, {kind: 'text', text: 'lunch'}]}])
   })
 
   test('the literal reading keeps status and type words as text', () => {

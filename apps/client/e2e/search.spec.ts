@@ -1,4 +1,4 @@
-import {expect, type Page, test} from '@playwright/test'
+import {expect, type Locator, type Page, test} from '@playwright/test'
 
 import {formatAmount, getCurrency} from '@splito/domain'
 import {DEMO_LARGE_PREFIX, generateLargeDemo, localToday, planRecords} from '@splito/sync/demoLarge'
@@ -60,9 +60,11 @@ function expectedSearch(word: string) {
   const people = plan.ops.flatMap(o => (o.kind === 'person' ? [o.name] : []))
   expect(people.filter(n => wordsOf(n).some(w => w.startsWith(word)))).toEqual([])
   const groups = new Set(plan.ops.flatMap(o => (o.kind === 'group' && wordsOf(o.input.name).some(w => w.startsWith(word)) ? [o.id] : [])))
-  // The matching groups are listed before the expenses (people and groups come first), each taking a row.
-  return {...expectedMatches(e => e.words.some(w => w.startsWith(word)) || (e.groupId !== null && groups.has(e.groupId))), lead: groups.size}
+  return expectedMatches(e => e.words.some(w => w.startsWith(word)) || (e.groupId !== null && groups.has(e.groupId)))
 }
+
+/** The i-th expense row: payments that match are listed above the expenses (F-246), so rows are counted from the Expenses heading. */
+const expenseRow = (screen: Locator, i: number) => screen.getByTestId('search-section-expenses').locator('xpath=following::*[starts-with(@data-testid, "search-row-")]').nth(i)
 
 const PHONE = {width: 390, height: 844}
 const DESKTOP = {width: 1440, height: 900}
@@ -107,8 +109,8 @@ test('the header button opens the drawer; a title finds it, a note finds its exp
   await expect(screen.getByTestId('search-section-expenses')).toContainText(new RegExp(`Expenses\\s+${dinner.rows.length}(?!\\d)`), {timeout: 30_000})
   // The totals arrive once every match is read; only live matches are added up.
   await expect(screen.getByTestId('search-totals')).toHaveText(dinner.line, {timeout: 30_000})
-  // Row 0 is the "Ask Splito" row; the expenses follow it, newest first.
-  for (const [i, r] of dinner.rows.slice(0, 8).entries()) await expect(screen.getByTestId(`search-row-${i + 1 + dinner.lead}`)).toContainText(r.title)
+  // The expenses follow the "Ask Splito" row, the groups and any payments, newest first.
+  for (const [i, r] of dinner.rows.slice(0, 8).entries()) await expect(expenseRow(screen, i)).toContainText(r.title)
 })
 
 test('a deleted match stays in the list but never in the totals', async ({page}) => {
@@ -136,21 +138,21 @@ test('amount and date queries', async ({page}) => {
   await page.getByTestId('search-input').fill('> 1000')
   await expect(screen.getByTestId('search-section-expenses')).toContainText(count(over.rows.length), {timeout: 30_000})
   await expect(screen.getByTestId('search-totals')).toHaveText(over.line, {timeout: 30_000})
-  await expect(screen.getByTestId('search-row-1')).toContainText(over.rows[0]!.title)
+  await expect(expenseRow(screen, 0)).toContainText(over.rows[0]!.title)
 
   // An exact amount (or a word that starts with it): every expense of exactly 4500 in its own currency.
   const exact = expectedMatches(e => e.total === 4500n * unit(e.currency) || e.words.some(w => w.startsWith('4500')))
   expect(exact.rows.length).toBeGreaterThan(0)
   await page.getByTestId('search-input').fill('4500')
   await expect(screen.getByTestId('search-section-expenses')).toContainText(count(exact.rows.length), {timeout: 30_000})
-  await expect(screen.getByTestId('search-row-1')).toContainText(exact.rows[0]!.title)
-  await expect(screen.getByTestId(`search-row-${exact.rows.length + 1}`)).toHaveCount(0)
+  await expect(expenseRow(screen, 0)).toContainText(exact.rows[0]!.title)
+  await expect(expenseRow(screen, exact.rows.length)).toHaveCount(0)
 
   // A month by name, in any year, newest first.
   const march = expectedMatches(e => e.date.slice(5, 7) === '03' || e.words.some(w => w.startsWith('march')))
   await page.getByTestId('search-input').fill('march')
   await expect(screen.getByTestId('search-section-expenses')).toContainText(count(march.rows.length), {timeout: 30_000})
-  for (const [i, r] of march.rows.slice(0, 5).entries()) await expect(screen.getByTestId(`search-row-${i + 1}`)).toContainText(r.title)
+  for (const [i, r] of march.rows.slice(0, 5).entries()) await expect(expenseRow(screen, i)).toContainText(r.title)
 
   await page.getByTestId('search-input').fill('zzzz')
   await expect(screen.getByTestId('search-empty')).toContainText(
@@ -361,10 +363,12 @@ for (const [name, viewport] of [
       await expect(screen.getByText('Dinner at Thalassa').first()).toBeVisible()
       await expect(screen.locator('[data-testid$="-comment"]').first()).toContainText('Booked the table for eight')
 
-      // An amount facet is named on the row too.
+      // An amount facet is named on the row too (the amount itself is in the right column, never printed twice).
       await input.fill('thalassa between 12000 and 13000')
       await expect(screen.getByTestId('search-chip-amount')).toBeVisible()
-      await expect(screen.locator('[data-testid^="search-match-"][data-testid$="-amount"]').first()).toContainText('₹12,500.00')
+      const amount = screen.locator('[data-testid^="search-match-"][data-testid$="-amount"]').first()
+      await expect(amount).toHaveText('Amount')
+      await expect(expenseRow(screen, 0)).toContainText('₹12,500.00')
 
       const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)
       expect(overflow).toBeLessThanOrEqual(0)

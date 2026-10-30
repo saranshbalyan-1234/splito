@@ -17,8 +17,8 @@ import {decode} from './codec'
 import {type RowAccess} from './engine'
 import {type Dispute} from './disputes'
 import {type Expense, type Group, normalizeRoles, type Repayment} from './mutations'
-import {ENTITY_STORE, entityOfRow, type Key, type Row} from './schema'
-import {termKey, termRows} from './searchTerms'
+import {ENTITY_STORE, entityOfRow, indexKey, type Key, type Row} from './schema'
+import {RECORD_TYPES, termKey, termRows} from './searchTerms'
 import {toExpenseRecord, toRepaymentRecord, toWriteOffRecord} from './selectors'
 import {type Entity, type EntityType} from './types'
 
@@ -287,24 +287,41 @@ export async function rebuildProjections(rows: RowAccess, entities: (type: Entit
   await rebuildActivity(rows, money)
 }
 
-const INDEXED = ['person', 'group', 'expense', 'repayment', 'writeoff', 'comment'] as const
+/** The entity types `search_terms` holds terms for. */
+export const SEARCH_INDEXED = ['person', 'group', 'expense', 'repayment', 'writeoff', 'comment'] as const
 
 async function fillSearchTerms(rows: RowAccess, entities: (type: EntityType) => Promise<Entity[]>, groups?: Entity[]) {
-  for (const type of INDEXED) for (const e of type === 'group' && groups ? groups : await entities(type)) for (const r of termRows(e)) await rows.put('search_terms', r)
+  for (const type of SEARCH_INDEXED) for (const e of type === 'group' && groups ? groups : await entities(type)) for (const r of termRows(e)) await rows.put('search_terms', r)
 }
 
 /**
- * The version of what `search_terms` holds. Bumped whenever a term kind is added; a database opened with an older
- * one rebuilds the terms from its rows (derived data only, nothing else is touched), so no schema version is spent.
+ * The version of what `search_terms` holds. Bumped whenever a term kind is added or changes meaning; a database
+ * opened with an older one rebuilds the terms from its rows (derived data only, nothing else is touched), so no
+ * schema version is spent. 3: contact and UPI words moved from `p` to `k` (F-246 review C1).
  */
-export const SEARCH_INDEX_VERSION = '2'
+export const SEARCH_INDEX_VERSION = '3'
 
-/** Rebuilds `search_terms` when the stored index version is not the current one. Cheap (one meta read) otherwise. */
-export async function ensureSearchIndex(rows: RowAccess, entities: (type: EntityType) => Promise<Entity[]>): Promise<void> {
-  if ((await rows.get('meta', ['searchIndex']))?.value === SEARCH_INDEX_VERSION) return
-  await rows.clear('search_terms')
-  await fillSearchTerms(rows, entities)
-  await rows.put('meta', {key: 'searchIndex', value: SEARCH_INDEX_VERSION})
+/**
+ * Whether `search_terms` must be rebuilt: the stored index version is not the current one, or the version matches
+ * but the `d` keys (one per record) do not number the records. The second catches a tab still running an older build,
+ * or a build rolled back and forward again, that wrote records without the current terms (no schema bump spent).
+ * Counts only, no rows read.
+ */
+export async function isSearchIndexStale(rows: RowAccess): Promise<boolean> {
+  if ((await rows.get('meta', ['searchIndex']))?.value !== SEARCH_INDEX_VERSION) return true
+  let records = 0
+  for (const type of RECORD_TYPES) records += await rows.count(ENTITY_STORE[type], {})
+  return records !== (await rows.count('search_terms', {eq: ['d']}))
+}
+
+/**
+ * Writes the terms of up to `limit` rows of `type` after the primary key `after` (one chunk of a rebuild, its own
+ * transaction); the key to continue after, or null at the end.
+ */
+export async function fillSearchChunk(rows: RowAccess, type: (typeof SEARCH_INDEXED)[number], after: Key | null, limit: number): Promise<Key | null> {
+  const found = await rows.range(ENTITY_STORE[type], {after, limit})
+  for (const r of found) for (const t of termRows(entityOfRow(type, r))) await rows.put('search_terms', t)
+  return found.length === limit ? indexKey(ENTITY_STORE[type], undefined, found[found.length - 1]!) : null
 }
 
 /* -------------------------------------------------------------------------- */

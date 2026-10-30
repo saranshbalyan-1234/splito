@@ -1,25 +1,24 @@
-import {addDays, type CurrencyCode, DomainError, type LocalDate, parseAmount, sumByCurrency} from '@splito/domain'
+import {addDays, type CurrencyCode, DomainError, type LocalDate, parseAmount, periodRange, sumByCurrency, type WeekStart} from '@splito/domain'
 
 import {type Comment} from './comments'
 import {listOpenDisputes} from './disputes'
 import {displayPerson, type Expense, type Group, isGroupInactive, type Person, type Repayment, type WriteOff} from './mutations'
 import {type Key} from './schema'
 import {type CompareOp, parseQuery, type ParsedQuery, type SearchChip, type SearchStatus, type SearchToken, type SearchType} from './searchQuery'
-import {amountBounds, amountOfTerm, amountTerm, fold, NO_GROUP, type RecordType, type SearchTerm, wordsOf} from './searchTerms'
+import {amountBounds, amountOfTerm, amountTerm, dateTerm, fold, NO_GROUP, RECORD_TYPES, recordPeople, type RecordType, type SearchTerm, type TermKind, wordsOf} from './searchTerms'
 import {type Store} from './store'
 import {type Entity} from './types'
 
 /**
  * Free search across expenses, payments, write-offs, comments, people and groups (BACKLOG F-246, ARCHITECTURE 9.8
- * and 26.19). A query is resolved from the `search_terms` keys alone: each token becomes the set of record ids its
- * key ranges hold (a word, an amount range, a month, a payer, a group's records, a status ...), the sets are
- * intersected (AND across tokens, OR inside one facet), and the answer is ordered and totalled from the `d` and `a`
- * keys. Only the rows shown are read (a page at a time through `step`), so the cost follows the number of keys the
- * query touches (about a quarter of a microsecond each), never the ledger: 10,000 expenses answer in single-digit
- * milliseconds whatever the match count. A person's or group's name is not copied onto its records, so a word is
- * resolved to the live people and groups it names first and then to their records (`h`, `G` keys).
+ * and 26.19). A query is resolved from the `search_terms` keys: each token becomes the set of record ids its key
+ * ranges hold (a word, an amount range, a month, a payer, a group's records, a status ...), and the sets are
+ * intersected (AND across tokens, OR inside one facet). A narrow answer (at most SMALL records) is then read by id and
+ * ordered and totalled from its rows; a broad one is ordered from the `d` keys and totalled from the `a` keys, and only
+ * the rows shown are read (a page at a time through `step` / `stepPayments`). A person's or group's name is not copied
+ * onto its records, so a word is resolved to the live people and groups it names first and then to their records
+ * (`h`, `G` keys); contact and UPI words (`k`) list the person and never their records.
  */
-
 export {type SearchToken} from './searchQuery'
 
 /** What the matching expenses add up to: how many, and one total per currency. */
@@ -29,14 +28,13 @@ export interface SearchSummary {
 }
 
 /**
- * One query's search, readable a page at a time: the people, groups and payments (few, known at once) and the
- * matching expenses, newest first. The count and the totals are known at once; `step` reads the next rows.
+ * One query's search, readable a page at a time: the people and groups (few, known at once), and the matching payments
+ * and expenses, newest first, each paged. The counts and the totals are known at once; `step` reads the next rows.
  */
 export interface SearchSession {
   people: Entity<Person>[]
   groups: Entity<Group>[]
-  /** The newest payments and write-offs that match (one page), and how many match in all. */
-  payments: Entity<Repayment | WriteOff>[]
+  /** How many payments and write-offs match. */
   paymentCount: number
   /** Folded query words to highlight. */
   terms: string[]
@@ -54,12 +52,17 @@ export interface SearchSession {
   isDone(): boolean
   /** Reads the next page of rows. Calls overlap safely (they share the read in flight). */
   step(): Promise<void>
+  /** The payments and write-offs read so far, newest first (their own pages, like the expenses). */
+  foundPayments(): Entity<Repayment | WriteOff>[]
+  isPaymentsDone(): boolean
+  stepPayments(): Promise<void>
 }
 
 export interface SearchResults {
   expenses: Entity<Expense>[]
   people: Entity<Person>[]
   groups: Entity<Group>[]
+  /** Every matching payment and write-off, newest first. */
   payments: Entity<Repayment | WriteOff>[]
   /** Matching expenses' totals, one per currency. */
   totals: Record<CurrencyCode, bigint>
@@ -77,6 +80,19 @@ export const SEARCH_PAGE = 30
 /** More rows than any one key range holds: "all of them" for one range read. */
 const ALL = 1_000_000
 const WORD_CHAR = /[\p{L}\p{N}\p{M}]/u
+/**
+ * An answer of at most this many records is read by id and ordered, totalled and status-checked from its rows (about
+ * 7 us a row); a larger one is ordered and totalled from the date and amount keys (about 1 us a key over the whole
+ * ledger). 500 rows cost about what 3,500 keys do, and bound the narrow path whatever the ledger's size.
+ */
+const SMALL = 500
+/** A longer typed name is never spelled close to anyone's (and the edit distance grows with the square of it). */
+const FUZZY_MAX = 20
+/** The term kinds whose keys are records (the others are people and groups). */
+const RECORD_KINDS = new Set<TermKind>(['w', 'a', 'm', 'c', 'b', 'h', 'G', 'd', 's', 'n'])
+/** Statuses a narrow answer checks on its rows instead of listing every record in them. */
+const ROW_STATUSES = new Set<SearchStatus>(['settled', 'owed', 'owe', 'inactive', 'hidden'])
+type Rec = Expense | Repayment | WriteOff
 /** Sorts after any term. */
 const END = '\uffff'
 
@@ -93,6 +109,8 @@ export interface SearchOptions {
   /** The groups and the deleted records I have hidden from my lists (`groups.hidden`, `lists.hiddenItems`). */
   hiddenGroups?: ReadonlyArray<string>
   hiddenItems?: ReadonlyArray<string>
+  /** The first day of a week for "this week" / "last week" (the `weekStart` preference: 0 Sunday, 1 Monday, 6 Saturday). */
+  weekStart?: WeekStart
 }
 
 const startsWith = (words: readonly string[], prefix: string) => words.some(w => w.startsWith(prefix))
@@ -146,7 +164,6 @@ function wordsOfToken(t: SearchToken): string[] {
 const EMPTY: SearchSession = {
   people: [],
   groups: [],
-  payments: [],
   paymentCount: 0,
   terms: [],
   chips: [],
@@ -156,11 +173,14 @@ const EMPTY: SearchSession = {
   commentText: () => undefined,
   isDone: () => true,
   step: async () => undefined,
+  foundPayments: () => [],
+  isPaymentsDone: () => true,
+  stepPayments: async () => undefined,
 }
 
 /**
- * Starts a search. The people, groups and payments are ready in the session, and so are the count and totals; the
- * first page of expenses is read before this returns, and `session.step()` reads the next.
+ * Starts a search. The people and groups are ready in the session, and so are the counts and totals; the first page of
+ * expenses and of payments is read before this returns, and `step()` / `stepPayments()` read the next.
  */
 export async function openSearch(store: Store, query: string, options: SearchOptions): Promise<SearchSession> {
   const first = await run(store, parseQuery(query, {mark: options.mark}), options)
@@ -176,13 +196,19 @@ export async function openSearch(store: Store, query: string, options: SearchOpt
 async function run(store: Store, parsed: ParsedQuery, options: SearchOptions): Promise<SearchSession> {
   const {tokens, chips} = parsed
   if (tokens.length === 0) return EMPTY
-  const {today, categories = [], me} = options
+  const {today, categories = [], me, weekStart = 1} = options
 
   /* ------------------------------------------------------------------ */
   /* Key reads                                                           */
   /* ------------------------------------------------------------------ */
 
-  const hits = (kind: SearchTerm['kind'], min?: string, max = min) => store.terms({kind, min, max})
+  /** The kind of every record a key read named: a small answer reads its rows by id from the right store. */
+  const typeOf = new Map<string, RecordType>()
+  const hits = async (kind: SearchTerm['kind'], min?: string, max = min) => {
+    const rows = await store.terms({kind, min, max})
+    if (RECORD_KINDS.has(kind)) for (const r of rows) typeOf.set(r.entityId, r.entityType as RecordType)
+    return rows
+  }
   const prefix = (kind: SearchTerm['kind'], p: string) => hits(kind, p, p + END)
   const idsOf = (rows: SearchTerm[]) => rows.map(r => r.entityId)
   const liveGroups = async (ids: Iterable<string>) => (await store.getMany<Group>('group', [...new Set(ids)])).filter(g => !g.deleted)
@@ -229,25 +255,15 @@ async function run(store: Store, parsed: ParsedQuery, options: SearchOptions): P
 
   const dateIds = async (from: string, to: string) => new Set(idsOf(await hits('d', from, `${to}:${END}`)))
 
-  /** The first and last day of "this/last week/month/year". */
-  function periodRange(unit: 'week' | 'month' | 'year', offset: number): [string, string] {
-    const y = Number(today.slice(0, 4))
-    const m = Number(today.slice(5, 7)) - 1
-    if (unit === 'year') return [`${y + offset}-01-01`, `${y + offset}-12-31`]
-    if (unit === 'month') {
-      const at = new Date(Date.UTC(y, m + offset, 1))
-      const key = `${at.getUTCFullYear()}-${String(at.getUTCMonth() + 1).padStart(2, '0')}`
-      return [`${key}-01`, `${key}-31`]
-    }
-    const monday = addDays(today, -((new Date(`${today}T00:00:00Z`).getUTCDay() + 6) % 7) + 7 * offset)
-    return [monday, addDays(monday, 6)]
-  }
-
   /* ------------------------------------------------------------------ */
   /* One token -> the ids of the records it can match                    */
   /* ------------------------------------------------------------------ */
 
-  /** Records with a word, a comment word, a group, person or category that starts with `p`. */
+  /**
+   * Records with a word or a comment word that starts with `p`, in a group whose name or place does, on with a person
+   * whose name does (never me: every record is mine), or in a category whose name does. Contact and UPI words (`k`)
+   * find the person only, never their records.
+   */
   async function textIds(p: string): Promise<Set<string>> {
     const out = new Set<string>()
     const [own, comments, groupHits, personHits] = await Promise.all([prefix('w', p), prefix('n', p), prefix('g', p), prefix('p', p)])
@@ -257,18 +273,19 @@ async function run(store: Store, parsed: ParsedQuery, options: SearchOptions): P
       commentOf.set(r.entityId, r.term.slice(r.term.indexOf('\u0000') + 1))
     }
     const [groups, people] = await Promise.all([liveGroups(idsOf(groupHits)), livePeople(idsOf(personHits))])
-    const named = await Promise.all([recordsOf('G', groups.map(g => g.id)), recordsOf('h', people.map(x => x.id)), ...categories.filter(c => startsWith(wordsOf(c.name), p)).map(async c => new Set(idsOf(await hits('c', c.id))))])
+    const others = people.filter(x => !x.data.isMe)
+    const named = await Promise.all([recordsOf('G', groups.map(g => g.id)), recordsOf('h', others.map(x => x.id)), ...categories.filter(c => startsWith(wordsOf(c.name), p)).map(async c => new Set(idsOf(await hits('c', c.id))))])
     for (const set of named) for (const id of set) out.add(id)
     return out
   }
 
-  /** The live people a typed name can mean: the words it starts, else a close spelling. */
+  /** The live people a typed name can mean: the name words it starts, else a close spelling with the same first letter. */
   async function peopleNamed(text: string): Promise<string[]> {
     if (text === 'me') return me ? [me] : []
     let ids = idsOf(await prefix('p', text))
-    if (ids.length === 0 && text.length >= 4) {
+    if (ids.length === 0 && text.length >= 4 && text.length <= FUZZY_MAX) {
       const limit = text.length >= 7 ? 2 : 1
-      ids = (await hits('p')).filter(r => distance(r.term.slice(0, text.length), text) <= limit).map(r => r.entityId)
+      ids = (await prefix('p', text[0]!)).filter(r => distance(r.term.slice(0, text.length), text) <= limit).map(r => r.entityId)
     }
     return (await livePeople(ids)).map(p => p.id)
   }
@@ -295,7 +312,10 @@ async function run(store: Store, parsed: ParsedQuery, options: SearchOptions): P
         let after: Key | null = null
         do {
           const page: Awaited<ReturnType<typeof listOpenDisputes>> = await listOpenDisputes(store, {after})
-          for (const d of page.items) out.add(d.data.targetId)
+          for (const d of page.items) {
+            out.add(d.data.targetId)
+            typeOf.set(d.data.targetId, d.data.targetType)
+          }
           after = page.next
         } while (after)
         return out
@@ -349,12 +369,21 @@ async function run(store: Store, parsed: ParsedQuery, options: SearchOptions): P
         return out
       }
       case 'month': {
+        if (token.day) {
+          // "4 march": that day of the year given, else the latest one that is not after today.
+          let year = token.year ?? today.slice(0, 4)
+          if (!token.year && `${year}-${token.month}-${token.day}` > today) year = String(Number(year) - 1)
+          const day = `${year}-${token.month}-${token.day}`
+          return dateIds(day, day)
+        }
         const out = token.year ? await dateIds(`${token.year}-${token.month}-01`, `${token.year}-${token.month}-31`) : new Set(idsOf(await hits('m', token.month)))
         for (const id of await textIds(token.text)) out.add(id)
         return out
       }
-      case 'period':
-        return dateIds(...periodRange(token.unit, token.offset))
+      case 'period': {
+        const {from, to} = periodRange(token.unit, today, weekStart, token.offset)
+        return dateIds(from, to)
+      }
       case 'person': {
         const people = await peopleNamed(token.text)
         return people.length ? recordsOf(token.role === 'payer' ? 'b' : 'h', people) : wordsIds(token.words)
@@ -402,10 +431,13 @@ async function run(store: Store, parsed: ParsedQuery, options: SearchOptions): P
     if (!isNameQuery || (nameWords.length === 0 && statuses.length === 0)) return []
     let ids: Set<string> | undefined
     for (const w of nameWords) {
-      const hit = new Set(idsOf(await prefix(type === 'person' ? 'p' : 'g', w)))
+      // A person is listed by a word of the name, the contact or the UPI id.
+      const found = await Promise.all(type === 'person' ? [prefix('p', w), prefix('k', w)] : [prefix('g', w)])
+      const hit = new Set(found.flat().map(r => r.entityId))
       ids = ids ? intersect(ids, hit) : hit
       if (ids.size === 0) return []
     }
+    // full-read-ok: a status alone lists the matching people or groups (hundreds at most, never the records)
     const candidates = ids ? await store.getMany<T>(type, [...ids]) : (await (type === 'person' ? store.page<T>('person', {limit: ALL}) : store.page<T>('group', {limit: ALL}))).items
     const l = statuses.length ? await ledgerStatus() : undefined
     return candidates.filter(e => statuses.every(s => statusFits(type, e, s, l!, options))).sort((x, y) => (nameOf(x) < nameOf(y) ? -1 : nameOf(x) > nameOf(y) ? 1 : x.id < y.id ? -1 : 1))
@@ -420,51 +452,104 @@ async function run(store: Store, parsed: ParsedQuery, options: SearchOptions): P
   ])
 
   /* ------------------------------------------------------------------ */
-  /* Records: intersect the sets, order from the date keys, total from the amount keys */
+  /* Records: intersect the sets, then order and total them              */
   /* ------------------------------------------------------------------ */
 
-  /* One pass over the date keys picks the matches and orders them: an entry is `<date>:<createdAt> NUL <id>`, which sorts
-     as the list does (newest first once reversed; the same day, the later-created first). */
-  const expenseEntries: string[] = []
-  const paymentEntries: string[] = []
-  const paymentKind = new Map<string, RecordType>()
-  const expenseSet = new Set<string>()
-  if (isRecordsWanted) {
-    let acc: Set<string> | undefined
-    for (const set of (filters.length ? await Promise.all(filters.map(resolve)) : []).sort((x, y) => x.size - y.size)) {
+  /*
+   * A narrow answer (at most SMALL ids) reads its rows by id and is ordered, totalled and status-filtered from them; a
+   * broad one is ordered from one pass over the date keys and totalled from the amount keys. Either way the cost is
+   * bounded by the answer, not the ledger, except a broad answer, which costs its keys. A balance status (settled,
+   * owed, owe, inactive, hidden) on a narrow answer is checked on the rows in hand instead of listing every record in
+   * that status.
+   */
+  const isRowStatus = (t: SearchToken): t is Extract<SearchToken, {kind: 'status'}> => t.kind === 'status' && ROW_STATUSES.has(t.status)
+  const rowStatuses = filters.filter(isRowStatus)
+  const keyed = filters.filter(t => !isRowStatus(t))
+  let acc: Set<string> | undefined
+  if (isRecordsWanted)
+    for (const set of (await Promise.all(keyed.map(resolve))).sort((x, y) => x.size - y.size)) {
       acc = acc ? intersect(acc, set) : set
       if (acc.size === 0) break
     }
-    if (!acc || acc.size > 0)
-      for (const r of await hits('d', '', END)) {
-        const kind = r.entityType as RecordType
-        if ((acc && !acc.has(r.entityId)) || !kindWanted(kind)) continue
-        if (kind === 'expense') {
-          expenseEntries.push(`${r.term}\u0000${r.entityId}`)
-          expenseSet.add(r.entityId)
-        } else {
-          paymentEntries.push(`${r.term}\u0000${r.entityId}`)
-          paymentKind.set(r.entityId, kind)
-        }
+  let inHand: Entity<Rec>[] | undefined
+  if (isRecordsWanted) {
+    const isNarrow = () => !!acc && acc.size <= SMALL
+    const isByRows = rowStatuses.length > 0 && isNarrow()
+    if (!isByRows)
+      for (const t of rowStatuses) {
+        const set = await statusIds(t.status)
+        acc = acc ? intersect(acc, set) : set
       }
+    if (isNarrow()) {
+      inHand = await rowsOf(acc!)
+      if (isByRows) {
+        const l = await ledgerStatus()
+        inHand = inHand.filter(r => rowStatuses.every(t => recordFits(r, t.status, l, options)))
+      }
+    }
+  }
+
+  /** The rows of record ids, of the kinds the query wants, read by id. */
+  async function rowsOf(ids: Set<string>): Promise<Entity<Rec>[]> {
+    const byType: Record<RecordType, string[]> = {expense: [], repayment: [], writeoff: []}
+    const unknown: string[] = []
+    for (const id of ids) {
+      const t = typeOf.get(id)
+      if (t) byType[t].push(id)
+      else unknown.push(id)
+    }
+    // An id no key named (a hidden item): it can only be in one of the stores.
+    for (const t of RECORD_TYPES) byType[t].push(...unknown)
+    return (await Promise.all(RECORD_TYPES.filter(kindWanted).map(t => (byType[t].length ? store.getMany<Rec>(t, byType[t]) : [])))).flat()
+  }
+
+  /* An entry is `<date>:<createdAt> NUL <id>`, which sorts as the list does (newest first once reversed; the same day, the later-created first). */
+  const expenseEntries: string[] = []
+  const paymentEntries: string[] = []
+  const paymentKind = new Map<string, RecordType>()
+  const cache = new Map<string, Entity<Rec>>()
+  let totals: Record<CurrencyCode, bigint> = {}
+  if (inHand) {
+    const parts: Array<{currency: CurrencyCode; amount: bigint}> = []
+    for (const r of inHand) {
+      const d = r.data as Partial<Expense & Repayment>
+      // The same rule as the `d` and `a` keys: a record without a full date has no place in the list.
+      if (typeof d.date !== 'string' || d.date.length < 7) continue
+      const entry = `${dateTerm(d.date, r.createdAt)}\u0000${r.id}`
+      cache.set(r.id, r)
+      if (r.type === 'expense') {
+        expenseEntries.push(entry)
+        // The totals: a deleted match is listed but never added up (decision 103).
+        if (!r.deleted && typeof d.currency === 'string' && typeof d.total === 'bigint') parts.push({currency: d.currency, amount: d.total})
+      } else {
+        paymentEntries.push(entry)
+        paymentKind.set(r.id, r.type as RecordType)
+      }
+    }
+    totals = sumByCurrency(parts)
+  } else if (isRecordsWanted && (!acc || acc.size > 0)) {
+    const expenseSet = new Set<string>()
+    for (const r of await hits('d', '', END)) {
+      const kind = r.entityType as RecordType
+      if ((acc && !acc.has(r.entityId)) || !kindWanted(kind)) continue
+      if (kind === 'expense') {
+        expenseEntries.push(`${r.term}\u0000${r.entityId}`)
+        expenseSet.add(r.entityId)
+      } else {
+        paymentEntries.push(`${r.term}\u0000${r.entityId}`)
+        paymentKind.set(r.entityId, kind)
+      }
+    }
+    totals = await totalsOf(store, expenseSet)
   }
   const newestFirst = (entries: string[]) => entries.sort().reverse().map(e => e.slice(e.indexOf('\u0000') + 1))
   const expenseIds = newestFirst(expenseEntries)
   const paymentIds = newestFirst(paymentEntries)
 
-  /* The totals: a deleted match is listed but never added up (decision 103). */
-  const totals = await totalsOf(store, expenseSet)
-
-  const pagePayments = paymentIds.slice(0, SEARCH_PAGE)
-  const payments = (await Promise.all((['repayment', 'writeoff'] as const).map(kind => store.getMany<Repayment>(kind, pagePayments.filter(id => paymentKind.get(id) === kind)))))
-    .flat()
-    .sort((x, y) => pagePayments.indexOf(x.id) - pagePayments.indexOf(y.id)) as Entity<Repayment | WriteOff>[]
-
   /* ------------------------------------------------------------------ */
-  /* Expense rows, a page at a time                                      */
+  /* Rows, a page at a time                                              */
   /* ------------------------------------------------------------------ */
 
-  const rows: Entity<Expense>[] = []
   const comments = new Map<string, string>()
   /** The text of the comment each of these records was found through. */
   async function loadComments(ids: string[]) {
@@ -473,34 +558,52 @@ async function run(store: Store, parsed: ParsedQuery, options: SearchOptions): P
     const byComment = new Map(found.map(([target, comment]) => [comment, target]))
     for (const c of await store.getMany<Comment>('comment', [...byComment.keys()])) comments.set(byComment.get(c.id)!, c.data.body)
   }
-  let cursor = 0
-  let inFlight: Promise<void> | undefined
-  const read = async () => {
-    const ids = expenseIds.slice(cursor, cursor + SEARCH_PAGE)
-    cursor += ids.length
-    const byId = new Map((await store.getMany<Expense>('expense', ids)).map(e => [e.id, e]))
-    for (const id of ids) {
-      const e = byId.get(id)
-      if (e) rows.push(e)
+  /** Rows by id in the given order: from the rows in hand, else one read per kind. */
+  async function load<T>(ids: string[]): Promise<Entity<T>[]> {
+    const missing = ids.filter(id => !cache.has(id))
+    for (const kind of RECORD_TYPES) {
+      const of = missing.filter(id => (paymentKind.get(id) ?? 'expense') === kind)
+      if (of.length) for (const e of await store.getMany<Rec>(kind, of)) cache.set(e.id, e)
     }
     await loadComments(ids)
+    return ids.flatMap(id => (cache.has(id) ? [cache.get(id) as Entity<T>] : []))
   }
-  const step = () => (cursor >= expenseIds.length ? Promise.resolve() : (inFlight ??= read().finally(() => (inFlight = undefined))))
-  await Promise.all([step(), loadComments(pagePayments)])
+  const expensePages = pager(expenseIds, ids => load<Expense>(ids))
+  const paymentPages = pager(paymentIds, ids => load<Repayment | WriteOff>(ids))
+  await Promise.all([expensePages.step(), paymentPages.step()])
 
   return {
     people,
     groups,
-    payments,
     paymentCount: paymentIds.length,
     terms: tokens.flatMap(wordsOfToken),
     chips,
     tokens,
     summary: {count: expenseIds.length, totals},
-    found: () => rows,
+    found: () => expensePages.rows,
+    isDone: expensePages.isDone,
+    step: expensePages.step,
+    foundPayments: () => paymentPages.rows,
+    isPaymentsDone: paymentPages.isDone,
+    stepPayments: paymentPages.step,
     commentText: id => comments.get(id),
-    isDone: () => cursor >= expenseIds.length,
-    step,
+  }
+}
+
+/** Ids read a page (SEARCH_PAGE) at a time, in order; overlapping steps share the read in flight. */
+function pager<T>(ids: string[], load: (ids: string[]) => Promise<T[]>) {
+  const rows: T[] = []
+  let cursor = 0
+  let inFlight: Promise<void> | undefined
+  const read = async () => {
+    const page = ids.slice(cursor, cursor + SEARCH_PAGE)
+    cursor += page.length
+    rows.push(...(await load(page)))
+  }
+  return {
+    rows,
+    isDone: () => cursor >= ids.length,
+    step: () => (cursor >= ids.length ? Promise.resolve() : (inFlight ??= read().finally(() => (inFlight = undefined)))),
   }
 }
 
@@ -563,6 +666,28 @@ function statusFits(type: 'person' | 'group', e: Entity<unknown>, status: Search
   }
 }
 
+/** Whether a record is in a balance status: the row-by-row twin of `statusIds` (same groups, same people), for a narrow answer. */
+function recordFits(r: Entity<Rec>, status: SearchStatus, l: LedgerStatus, o: SearchOptions): boolean {
+  const d = r.data as Partial<Expense & Repayment>
+  const group = d.groupId || null
+  switch (status) {
+    case 'hidden':
+      return (!!group && !!o.hiddenGroups?.includes(group)) || !!o.hiddenItems?.includes(r.id)
+    case 'inactive':
+      return !!group && l.inactiveGroups.includes(group)
+    case 'settled':
+    case 'owed':
+    case 'owe': {
+      if (group) return (status === 'settled' ? l.settledGroups : status === 'owed' ? l.owedGroups : l.oweGroups).includes(group)
+      const on = recordPeople(r.type as RecordType, d)
+      if (status === 'settled') return !on.some(p => l.unsettledPeople.includes(p))
+      return on.some(p => (status === 'owed' ? l.owedPeople : l.owePeople).includes(p))
+    }
+    default:
+      return true
+  }
+}
+
 /** One total per currency over the expense ids, from the amount keys alone; a deleted expense is not added up. */
 async function totalsOf(store: Store, ids: ReadonlySet<string>): Promise<Record<CurrencyCode, bigint>> {
   if (ids.size === 0) return {}
@@ -590,7 +715,8 @@ export function summarizeSearch(found: ReadonlyArray<Entity<Expense>>): SearchSu
 export async function searchStore(store: Store, query: string, options: SearchOptions): Promise<SearchResults> {
   const session = await openSearch(store, query, options)
   while (!session.isDone()) await session.step()
-  return {expenses: session.found(), people: session.people, groups: session.groups, payments: session.payments, totals: session.summary.totals, terms: session.terms}
+  while (!session.isPaymentsDone()) await session.stepPayments()
+  return {expenses: session.found(), people: session.people, groups: session.groups, payments: session.foundPayments(), totals: session.summary.totals, terms: session.terms}
 }
 
 /** Where `terms` start words of `text`, as `[start, end)` ranges into the original text. */

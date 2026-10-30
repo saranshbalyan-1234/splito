@@ -8,7 +8,7 @@
 import {type SpendCell} from '@splito/domain'
 
 import {type Engine, type RowAccess} from './engine'
-import {ensureSearchIndex, projectEntity, rebuildActivity, rebuildProjections} from './ledgerProjection'
+import {fillSearchChunk, isSearchIndexStale, projectEntity, rebuildActivity, rebuildProjections, SEARCH_INDEX_VERSION, SEARCH_INDEXED} from './ledgerProjection'
 import {
   completeEntity,
   ENTITY_STORE,
@@ -17,6 +17,7 @@ import {
   historyOfRow,
   historyRow,
   indexKey,
+  type Key,
   MONEY_TYPES,
   outboxOfRow,
   outboxRow,
@@ -154,6 +155,9 @@ const toCell = (r: Row): SpendCell => ({
 
 const toTerm = (r: Row): SearchTerm => ({kind: r.kind as TermKind, term: r.term as string, entityType: r.entityType as TermEntity, entityId: r.entityId as string})
 
+/** Rows per transaction of a search index rebuild. */
+const SEARCH_CHUNK = 500
+
 const termQuery = (q: TermQuery) => ({eq: [q.kind], min: q.min, max: q.max, limit: q.limit})
 
 const toDisputed = (r: Row) => ({
@@ -203,13 +207,13 @@ export function createStore(engine: Engine): Store {
   const notify = (change: StoreChange) => listeners.forEach(l => l(change))
   engine.remote?.listen(notify)
   const read = <T>(fn: (rows: RowAccess) => Promise<T>) => engine.run('ro', fn)
-  const write = async <T>(fn: (rows: RowAccess, recorder: ReturnType<typeof changeRecorder>) => Promise<T>) => {
-    const recorder = changeRecorder()
-    const result = await engine.run('rw', async raw => {
+  /** One write transaction that tells nobody: derived data only (a search index chunk), so no screen re-reads. */
+  const quiet = <T>(fn: (rows: RowAccess) => Promise<T>) =>
+    engine.run('rw', async raw => {
       const tx = transactionRows(raw, {isPipelined: engine.pipelined})
       let done: T
       try {
-        done = await fn(tx.rows, recorder)
+        done = await fn(tx.rows)
       } catch (e) {
         // A pipelined write that already failed aborted the transaction under `fn`: report that cause.
         throw (await tx.failure())?.error ?? e
@@ -217,16 +221,45 @@ export function createStore(engine: Engine): Store {
       await tx.flush()
       return done
     })
+  const write = async <T>(fn: (rows: RowAccess, recorder: ReturnType<typeof changeRecorder>) => Promise<T>) => {
+    const recorder = changeRecorder()
+    const result = await quiet(rows => fn(rows, recorder))
     const change = recorder.change()
     notify(change)
     engine.remote?.post(change)
     return result
   }
 
-  /* The first search of a database whose terms predate the current index version rebuilds them once (derived data only). */
+  /*
+   * The search index is checked once per open (`prepareSearch`, called at idle after the app opens, and awaited by the
+   * first term read) and rebuilt from the rows when it is stale, in chunks of SEARCH_CHUNK rows, each its own
+   * transaction with a yield between, so a 10,000-expense rebuild is never one long task. Writes in between keep their
+   * own terms (`projectEntity`), and a chunk re-reads its rows, so nothing is lost. A failure forgets the attempt: the
+   * next read tries again (never a rejected promise kept for good).
+   */
   let searchIndex: Promise<void> | undefined
-  // full-read-ok: once per database, only when its terms predate the index version (maintenance, like `rebuildProjections`)
-  const searchIndexReady = () => (searchIndex ??= write(rows => ensureSearchIndex(rows, async type => allOf(rows, type))))
+  const rebuildSearchIndex = async () => {
+    await quiet(async rows => {
+      await rows.clear('search_terms')
+      await rows.delete('meta', ['searchIndex'])
+    })
+    for (const type of SEARCH_INDEXED) {
+      let after: Key | null = null
+      do {
+        const from: Key | null = after
+        after = await quiet(rows => fillSearchChunk(rows, type, from, SEARCH_CHUNK))
+        await new Promise(resolve => setTimeout(resolve, 0))
+      } while (after)
+    }
+    await quiet(rows => rows.put('meta', {key: 'searchIndex', value: SEARCH_INDEX_VERSION}))
+  }
+  const prepareSearch = () =>
+    (searchIndex ??= (async () => {
+      if (await read(isSearchIndexStale)) await rebuildSearchIndex()
+    })().catch(e => {
+      searchIndex = undefined
+      throw e
+    }))
 
   return {
     transaction: fn => write((rows, recorder) => fn(makeTx(rows, recorder))),
@@ -305,13 +338,15 @@ export function createStore(engine: Engine): Store {
         return found.map(toCell)
       }),
 
+    prepareSearch,
+
     terms: async q => {
-      await searchIndexReady()
+      await prepareSearch()
       return read(async rows => (await rows.range('search_terms', termQuery(q))).map(toTerm))
     },
 
     termCount: async q => {
-      await searchIndexReady()
+      await prepareSearch()
       return read(rows => rows.count('search_terms', termQuery(q)))
     },
 

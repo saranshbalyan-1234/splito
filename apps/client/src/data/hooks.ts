@@ -1,8 +1,7 @@
 import {useEffect, useState, useSyncExternalStore} from 'react'
-import {type BalanceRow, pairBalance, ZERO} from '@splito/domain'
+import {type BalanceRow, pairBalance, type WeekStart, ZERO} from '@splito/domain'
 import {
   acceptFriendRequest,
-  DEFAULT_CATEGORIES,
   declineFriendRequest,
   type Entity,
   type EntityType,
@@ -241,9 +240,12 @@ export function useRecentTransactions(size: number): HistoryPager | undefined {
 export interface SearchView {
   people: Entity<Person>[]
   groups: Entity<Group>[]
-  /** The newest matching payments and write-offs (one page) and how many match in all. */
+  /** The matching payments and write-offs shown: `SEARCH_PAGE` per page loaded so far, newest first. */
   payments: Entity<Repayment | WriteOff>[]
+  /** How many payments and write-offs match in all. */
   paymentCount: number
+  /** More payments than the pages shown: "Show more payments" loads the next page. */
+  hasMorePayments: boolean
   /** Folded query words to highlight. */
   terms: string[]
   /** The recognised facets, as removable chips. */
@@ -256,36 +258,62 @@ export interface SearchView {
   hasMore: boolean
   /** Every matching expense has been read, so "no results" is true. */
   isDone: boolean
+  /** The search could not be answered (the index could not be built or read): say so, with Try again. */
+  isFailed: boolean
   /** How many expenses match and their totals per currency (known with the first answer). */
   summary: SearchSummary
   /** The text of the comment a record was found through. */
   commentText(id: string): string | undefined
   loadMore(): void
+  loadMorePayments(): void
+  retry(): void
 }
 
 /** The kinds of record a search reads: a change to one runs the open query again. */
 const SEARCH_TYPES = ['expense', 'repayment', 'writeoff', 'comment', 'dispute', 'person', 'group'] as const satisfies readonly EntityType[]
 
+const FAILED_VIEW: Omit<SearchView, 'loadMore' | 'loadMorePayments' | 'retry'> = {
+  people: [],
+  groups: [],
+  payments: [],
+  paymentCount: 0,
+  hasMorePayments: false,
+  terms: [],
+  chips: [],
+  tokens: [],
+  expenses: [],
+  hasMore: false,
+  isDone: true,
+  isFailed: true,
+  summary: {count: 0, totals: {}},
+  commentText: () => undefined,
+}
+
 /**
  * Search for `query` (ARCHITECTURE 9.8, 26.19, F-246), paged: the query is resolved from the term keys, so the people,
- * groups, payments, the count and per-currency totals and the first page of expenses arrive together whatever the
- * match count, and "Show more" reads the next page by id. The previous answer stays up while a new one loads, and a
- * commit that touches a record, a person, a group, a comment or a dispute runs the query again. Undefined until the
- * first answer.
+ * groups, the counts and per-currency totals and the first page of payments and of expenses arrive together whatever
+ * the match count, and "Show more" reads the next page of either by id. `categories` are the category names as the
+ * person reads them (the localised stock names and the stored ones). The previous answer stays up while a new one
+ * loads, and a commit that touches a record, a person, a group, a comment or a dispute runs the query again. A
+ * failure is a view with `isFailed` (never an endless wait). Undefined until the first answer.
  */
-export function useSearch(rawQuery: string, today: string, mark: '.' | ','): SearchView | undefined {
+export function useSearch(rawQuery: string, today: string, mark: '.' | ',', categories: ReadonlyArray<{id: string; name: string}>): SearchView | undefined {
   const {store} = useData()
   const query = rawQuery
   const {actor: me} = useMutationCtx()
-  const [categories = DEFAULT_CATEGORIES] = usePref('categories')
+  /* By value: the caller builds the list on each render. */
+  const categoriesKey = JSON.stringify(categories)
   const [hiddenGroups] = usePref('groups.hidden')
   const [hiddenItems] = usePref('lists.hiddenItems')
+  const [weekStart = 1] = usePref('weekStart')
   const [commits, setCommits] = useState(0)
-  const [session, setSession] = useState<SearchSession>()
-  const [paging, setPaging] = useState({key: query, pages: 1})
-  const [view, setView] = useState<Omit<SearchView, 'loadMore'>>()
+  const [session, setSession] = useState<SearchSession | 'failed'>()
+  const [paging, setPaging] = useState({key: query, pages: 1, paymentPages: 1})
+  const [view, setView] = useState<Omit<SearchView, 'loadMore' | 'loadMorePayments' | 'retry'>>()
   const pages = paging.key === rawQuery ? paging.pages : 1
+  const paymentPages = paging.key === rawQuery ? paging.paymentPages : 1
   const wanted = pages * SEARCH_PAGE
+  const wantedPayments = paymentPages * SEARCH_PAGE
   useEffect(
     () =>
       store.subscribe(change => {
@@ -295,47 +323,75 @@ export function useSearch(rawQuery: string, today: string, mark: '.' | ','): Sea
   )
   useEffect(() => {
     let isCurrent = true
-    void openSearch(store, query, {today, mark, categories, me, hiddenGroups, hiddenItems}).then(opened => {
-      if (isCurrent) setSession(opened)
-    })
+    const options = {today, mark, categories: JSON.parse(categoriesKey) as Array<{id: string; name: string}>, me, hiddenGroups, hiddenItems, weekStart: weekStart as WeekStart}
+    openSearch(store, query, options).then(
+      opened => {
+        if (isCurrent) setSession(opened)
+      },
+      () => {
+        if (isCurrent) setSession('failed')
+      },
+    )
     return () => {
       isCurrent = false
     }
-  }, [store, query, today, mark, categories, me, hiddenGroups, hiddenItems, commits])
+  }, [store, query, today, mark, categoriesKey, me, hiddenGroups, hiddenItems, weekStart, commits])
   useEffect(() => {
     if (!session) return
+    if (session === 'failed') {
+      setView(FAILED_VIEW)
+      return
+    }
     let isCurrent = true
     const show = () => {
       const found = session.found()
       const isDone = session.isDone()
+      const pays = session.foundPayments()
+      const isPaysDone = session.isPaymentsDone()
       setView({
         people: session.people,
         groups: session.groups,
-        payments: session.payments,
+        payments: pays.slice(0, wantedPayments),
         paymentCount: session.paymentCount,
+        hasMorePayments: pays.length > wantedPayments || !isPaysDone,
         terms: session.terms,
         chips: session.chips,
         tokens: session.tokens,
         expenses: found.slice(0, wanted),
         hasMore: found.length > wanted || !isDone,
         isDone,
+        isFailed: false,
         summary: session.summary,
         commentText: session.commentText,
       })
-      return found.length >= wanted || isDone
+      return {isExpensesFull: found.length >= wanted || isDone, isPaymentsFull: pays.length >= wantedPayments || isPaysDone}
     }
     void (async () => {
-      // The page: read until it is full (the first is usually read already), showing what is found as it comes.
-      while (!show()) {
-        await session.step()
+      // The pages: read until they are full (the first is read already), showing what is found as it comes.
+      for (;;) {
+        const {isExpensesFull, isPaymentsFull} = show()
+        if (isExpensesFull && isPaymentsFull) return
+        try {
+          await Promise.all([isExpensesFull ? undefined : session.step(), isPaymentsFull ? undefined : session.stepPayments()])
+        } catch {
+          if (isCurrent) setView(FAILED_VIEW)
+          return
+        }
         if (!isCurrent) return
       }
     })()
     return () => {
       isCurrent = false
     }
-  }, [session, wanted])
-  return view && {...view, loadMore: () => setPaging({key: rawQuery, pages: pages + 1})}
+  }, [session, wanted, wantedPayments])
+  return (
+    view && {
+      ...view,
+      loadMore: () => setPaging({key: rawQuery, pages: pages + 1, paymentPages}),
+      loadMorePayments: () => setPaging({key: rawQuery, pages, paymentPages: paymentPages + 1}),
+      retry: () => setCommits(n => n + 1),
+    }
+  )
 }
 
 /* Analytics (ARCHITECTURE 9.8): stored month sums, date-index reads at the edges, a paged list. */

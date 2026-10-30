@@ -3,7 +3,7 @@ import {useRef, useState} from 'react'
 import {type TextInput, type TextInputKeyPressEvent, View} from 'react-native'
 import {Trans, useLingui} from '@lingui/react/macro'
 import {decimalMark} from '@splito/domain'
-import {matchedFields} from '@splito/sync'
+import {DEFAULT_CATEGORIES, matchedFields} from '@splito/sync'
 
 import {pathTo} from '#/lib/links/make'
 import {setSheetQuery} from '#/navigation/sheets'
@@ -15,6 +15,7 @@ import {useMutationCtx, usePref, useSearch} from '#/data/hooks'
 import {device, useStorage} from '#/storage'
 import {atoms as a, useBreakpoints, useTheme, web} from '#/alf'
 import {Button, ButtonText} from '#/components/Button'
+import {useCategoryName} from '#/components/settings/CategoryIcon'
 import * as Dialog from '#/components/Dialog'
 import {SearchInput} from '#/components/forms/SearchInput'
 import {
@@ -28,6 +29,7 @@ import {
   GroupResult,
   NoResults,
   PaymentResult,
+  SearchFailed,
   PersonResult,
   SearchChips,
   SectionHeader,
@@ -121,7 +123,13 @@ function SearchPanel({
   const [activeNav, setActiveNav] = useState(-1)
 
   const {names, groupNames, groupData} = useSearchNames()
-  const [categories] = usePref('categories')
+  const [categories = DEFAULT_CATEGORIES] = usePref('categories')
+  const categoryName = useCategoryName()
+  /* A category is found by the name the person reads (a stock one in their language) and by the stored one. */
+  const searchCategories = categories.flatMap(c => {
+    const shown = categoryName(c)
+    return shown === c.name ? [c] : [{id: c.id, name: shown}, c]
+  })
   const {vocab} = useAskEngine()
   const askQuestions = useAskQuestions()
   const {actor: me} = useMutationCtx()
@@ -132,7 +140,7 @@ function SearchPanel({
 
   const [history = [], setHistory] = useStorage(device, HISTORY_KEY)
 
-  const results = useSearch(query, today, decimalMark(locale))
+  const results = useSearch(query, today, decimalMark(locale), searchCategories)
   const rows = results
     ? searchRows(
         results,
@@ -141,7 +149,7 @@ function SearchPanel({
         results.paymentCount,
       )
     : []
-  const navRows = rows.filter((r): r is SearchResultRow => r.type !== 'header')
+  const navRows = rows.filter((r): r is SearchResultRow => r.type !== 'header' && r.type !== 'more')
   const isEmptyQuery = query.trim() === ''
 
   const rememberQuery = (q: string) => {
@@ -211,6 +219,11 @@ function SearchPanel({
     rememberQuery(item)
   }
 
+  const categoryNameOf = (id: string) => {
+    const category = categories.find(c => c.id === id)
+    return category ? categoryName(category) : undefined
+  }
+
   const renderItem = ({item: row}: {item: SearchRow}) => {
     switch (row.type) {
       case 'header':
@@ -224,6 +237,22 @@ function SearchPanel({
             }
             locale={locale}
           />
+        )
+      case 'more':
+        return (
+          <View style={[a.align_center, a.pt_xs, a.pb_sm]}>
+            <Button
+              testID="search-show-more-payments"
+              label={l`Show more payments`}
+              size="small"
+              variant="ghost"
+              color="secondary"
+              onPress={() => results?.loadMorePayments()}>
+              <ButtonText>
+                <Trans>Show more</Trans>
+              </ButtonText>
+            </Button>
+          </View>
         )
       case 'ask':
         return <AskResult nav={row.nav} query={row.query} isActive={row.nav === activeNav} onPress={() => open(row)} />
@@ -274,7 +303,7 @@ function SearchPanel({
               terms: results?.terms ?? [],
               names,
               group: row.expense.data.groupId ? groupData.get(row.expense.data.groupId) : undefined,
-              categoryName: categories?.find(c => c.id === row.expense.data.category)?.name,
+              categoryName: categoryNameOf(row.expense.data.category),
               comment: results?.commentText(row.expense.id),
             })}
             me={me}
@@ -391,6 +420,8 @@ function SearchPanel({
             questions={[askQuestions.spendFood(), askQuestions.owedMost(), askQuestions.split()]}
             onAsk={onAsk}
           />
+        ) : results?.isFailed ? (
+          <SearchFailed onRetry={results.retry} />
         ) : results?.isDone ? (
           <NoResults query={query.trim()} />
         ) : undefined
@@ -398,8 +429,10 @@ function SearchPanel({
       onEndReached={results?.hasMore ? results.loadMore : undefined}
       onEndReachedThreshold={2}
       ListFooterComponent={
-        /* Only the Ask row and nothing found: say so under it. */
-        rows.length === 1 && results?.isDone ? (
+        /* Only the Ask row and nothing found (or the search failed): say so under it. */
+        rows.length === 1 && results?.isFailed ? (
+          <SearchFailed onRetry={results.retry} />
+        ) : rows.length === 1 && results?.isDone ? (
           <NoResults query={query.trim()} />
         ) : results?.hasMore && rows.length > 0 ? (
           <View style={[a.align_center, a.pt_md, a.pb_sm]}>

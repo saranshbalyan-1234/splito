@@ -11,7 +11,7 @@ import {fold, WORD} from './searchTerms'
 
 export type CompareOp = '<' | '<=' | '>' | '>='
 export type SearchStatus = 'settled' | 'owed' | 'owe' | 'disputed' | 'deleted' | 'hidden' | 'inactive'
-export type SearchType = 'expense' | 'payment' | 'writeoff' | 'comment' | 'group' | 'friend' | 'invite'
+export type SearchType = 'expense' | 'payment' | 'writeoff' | 'comment' | 'group' | 'friend'
 export type PeriodUnit = 'week' | 'month' | 'year'
 
 /** A currency a number was typed with ("EUR 50", "€50"); absent: the amount in every currency. */
@@ -29,7 +29,8 @@ export type SearchToken =
   | ({kind: 'around'; amounts: string[]} & Money)
   /** "today" (0) or "yesterday" (-1). */
   | {kind: 'day'; offset: number; text: string}
-  | {kind: 'month'; month: string; year?: string; text: string}
+  /** A month ("march", any year unless one follows), or one day of it ("4 march": `day`). */
+  | {kind: 'month'; month: string; year?: string; day?: string; text: string}
   /** "this month", "last week": `offset` units back from now. */
   | {kind: 'period'; unit: PeriodUnit; offset: number}
   /** "paid by Riya" (payer) or "with Riya": a person's name (the start of a word of it). `words` are the typed words, for a name nobody has. */
@@ -138,10 +139,16 @@ const TYPES: Record<string, SearchType> = {
   friends: 'friend',
   दोस्त: 'friend',
   मित्र: 'friend',
-  invite: 'invite',
-  invites: 'invite',
-  निमंत्रण: 'invite',
 }
+/**
+ * Words that only join others ("spent on dinner", "dinner in march", "खाने के लिए"): dropped when they are not part
+ * of a facet and something else is left to search.
+ */
+const CONNECTORS = new Set(['in', 'on', 'for', 'spent', 'spend', 'at', 'of', 'the', 'to', 'from', 'में', 'पर', 'लिए', 'का', 'की', 'को'])
+/** Ways of writing the rupee that are not a currency code or a single symbol. */
+const RUPEE = new Set(['rs', 'rs.', 'rupee', 'rupees', 'रु', 'रु.', 'रुपये', 'रुपए', 'रुपया'])
+/** "rs500", "rs.500", "रु500": a rupee sign glued to the number. */
+const RUPEE_GLUED = /^(?:rs\.?|रु\.?)(?=\d)/
 const ME = new Set(['me', 'my', 'mine', 'myself', 'मैं', 'मैंने', 'मेरा'])
 
 const SYMBOLS = (() => {
@@ -164,6 +171,7 @@ const scale = (amounts: string[], suffix: string) => amounts.map(a => shift(a, S
 
 /** The currency a chunk names by itself ("€", "eur"): its code, or undefined. */
 function currencyOf(chunk: string, raw: string): CurrencyCode | undefined {
+  if (RUPEE.has(chunk)) return 'INR'
   const symbol = SYMBOLS.get(raw)
   if (symbol) return symbol
   const code = raw.toUpperCase()
@@ -184,7 +192,7 @@ interface Chunk {
  */
 export function parseQuery(query: string, {mark = '.', isLiteral = false}: ParseOptions = {}): ParsedQuery {
   const chunks: Chunk[] = [...query.matchAll(/\S+/g)].map(m => ({raw: m[0], w: fold(m[0]), start: m.index!, end: m.index! + m[0].length}))
-  const items: Array<{token: SearchToken; start: number; end: number; chip?: Omit<SearchChip, 'span' | 'text'>} | 'or' | 'and'> = []
+  const items: Array<{token: SearchToken; start: number; end: number; chip?: Omit<SearchChip, 'span' | 'text'>; isConnector?: boolean} | 'or' | 'and'> = []
   const at = (i: number) => chunks[i]
   const vocab = (i: number) => (at(i) ? VOCABULARY[at(i)!.w] : undefined)
 
@@ -192,18 +200,18 @@ export function parseQuery(query: string, {mark = '.', isLiteral = false}: Parse
   function number(i: number): {amounts: string[]; used: number; currency?: CurrencyCode} | undefined {
     const c = at(i)
     if (!c) return undefined
-    const suffixed = SUFFIXED.exec(c.w)
-    let currency = c.raw.length > 0 ? [...SYMBOLS].find(([s]) => c.raw.includes(s))?.[1] : undefined
+    const rupee = RUPEE_GLUED.exec(c.w)
+    const w = rupee ? c.w.slice(rupee[0].length) : c.w
+    const suffixed = SUFFIXED.exec(w)
+    const currency = rupee ? 'INR' : [...SYMBOLS].find(([s]) => c.raw.includes(s))?.[1]
     if (suffixed) {
       const amounts = numberReadings(suffixed[1]!, mark)
       return amounts.length ? {amounts: scale(amounts, suffixed[2]!), used: 1, currency} : undefined
     }
-    const amounts = numberReadings(c.w, mark)
+    const amounts = numberReadings(w, mark)
     if (amounts.length === 0) return undefined
     const next = at(i + 1)?.w
     if (next && next.length > 1 && MULTIPLIER[next]) return {amounts: scale(amounts, next), used: 2, currency}
-    // "50 eur", "eur 50"
-    currency ??= undefined
     return {amounts, used: 1, currency}
   }
 
@@ -215,8 +223,8 @@ export function parseQuery(query: string, {mark = '.', isLiteral = false}: Parse
       i = last
     }
 
-    // "or" / "and" between two tokens join facets; at either end they are words.
-    if ((w === 'or' || w === 'और' || w === 'या') && items.length > 0 && i < chunks.length - 1) {
+    // "or" / "and" between two tokens join facets; at either end they are words. Hindi "या" is or, "और" is and.
+    if ((w === 'or' || w === 'या') && items.length > 0 && i < chunks.length - 1) {
       items.push('or')
       continue
     }
@@ -291,6 +299,16 @@ export function parseQuery(query: string, {mark = '.', isLiteral = false}: Parse
     // Dates: "this month", "last week", "last year", a month name (and a year after it), "today", "yesterday".
     if ((vocab(i) === 'last' || vocab(i) === 'this') && ['week', 'month', 'year'].includes(vocab(i + 1) ?? '')) {
       push({kind: 'period', unit: vocab(i + 1) as PeriodUnit, offset: vocab(i) === 'last' ? -1 : 0}, i + 1, {facet: 'period'})
+      continue
+    }
+    // "4 march", "4 march 2026", "march 4": one day.
+    const dayOf = (x: string | undefined) => (x && /^\d{1,2}$/.test(x) && Number(x) >= 1 && Number(x) <= 31 ? x.padStart(2, '0') : undefined)
+    const dayFirst = dayOf(w) && at(i + 1)?.w && at(i + 1)!.w in MONTHS ? dayOf(w) : undefined
+    const dayAfter = w in MONTHS ? dayOf(at(i + 1)?.w) : undefined
+    if (dayFirst || dayAfter) {
+      const month = MONTHS[dayFirst ? at(i + 1)!.w : w]!
+      const year = at(i + 2)?.w && YEAR.test(at(i + 2)!.w) ? at(i + 2)!.w : undefined
+      push({kind: 'month', month, day: (dayFirst ?? dayAfter)!, ...(year ? {year} : {}), text: dayFirst ? at(i + 1)!.w : w}, i + (year ? 2 : 1), {facet: 'period'})
       continue
     }
     if (w in MONTHS) {
@@ -369,8 +387,15 @@ export function parseQuery(query: string, {mark = '.', isLiteral = false}: Parse
       push({kind: 'amount', amounts: read.amounts, text: read.amounts[0]!, ...(read.currency ? {currency: read.currency} : {})}, i + read.used - 1)
       continue
     }
-    for (const part of w.match(WORD) ?? []) items.push({token: {kind: 'text', text: part}, start: c.start, end: c.end})
+    for (const part of w.match(WORD) ?? []) items.push({token: {kind: 'text', text: part}, start: c.start, end: c.end, isConnector: CONNECTORS.has(w)})
   }
+
+  /* Joining words go when something else is left to search ("spent on dinner" is "dinner"). */
+  if (items.some(it => typeof it === 'object' && !it.isConnector))
+    for (let k = items.length - 1; k >= 0; k--) {
+      const it = items[k]!
+      if (typeof it === 'object' && it.isConnector) items.splice(k, 1)
+    }
 
   /* A currency word beside an amount belongs to it ("EUR between 10 and 50", "50 eur"): one token, one chip over both. */
   type Item = (typeof items)[number]

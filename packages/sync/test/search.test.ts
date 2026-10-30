@@ -5,7 +5,7 @@ import {IDBFactory} from 'fake-indexeddb'
 import {beforeAll, describe, expect, test} from 'bun:test'
 
 import {openIdbStore} from '../src/idbStore'
-import {type Expense, type Group, type Person} from '../src/mutations'
+import {type Expense, type Group, type Person, type Repayment} from '../src/mutations'
 import {highlightRanges, openSearch, parseSearchQuery, SEARCH_PAGE, searchStore, summarizeSearch} from '../src/search'
 import {openSqlStore} from '../src/sqlStore'
 import {type Store} from '../src/store'
@@ -126,9 +126,10 @@ for (const [engine, open] of ENGINES) {
       expect(await ids('candolim')).toEqual(['bar', 'dinner'])
       expect((await find('> 10')).people).toEqual([])
       expect(await ids('deleted')).toEqual(['gone'])
-      // "Me" is not a result of its own, but its expenses are found by the name.
+      // "Me" is not a result of its own, and my name does not list my whole ledger (every record is mine).
       expect((await find('asha')).people).toEqual([])
-      expect((await ids('asha')).length).toBe(expenses.length)
+      expect(await ids('asha')).toEqual([])
+      expect(await ids('as')).toEqual([])
     })
 
     test('totals per currency, never mixed', async () => {
@@ -308,10 +309,10 @@ describe('highlightRanges', () => {
 
 describe('speed', () => {
   /*
-   * What the drawer waits for: people, groups, payments, the count and per-currency totals of every match, and the first
-   * page of rows. A query is resolved from the term keys, so the cost follows the keys it touches, not the ledger.
-   * A wall-clock budget for a dev machine at load under 10 (docs/ARCHITECTURE 17.1): shared CI runners are several times
-   * slower and noisy (170 ms on GitHub's). The median of three runs of each query is judged, after one warm-up.
+   * What the drawer waits for: people, groups, the counts and per-currency totals of every match, and the first page
+   * of payments and of expenses. A wall-clock budget for a dev machine at load under 10 (docs/ARCHITECTURE 17.1): shared
+   * CI runners are several times slower and noisy (170 ms on GitHub's). The median of three runs of each query is
+   * judged, after one warm-up; CPU time is printed beside it (on a loaded machine the wall time is the scheduler's).
    */
   const words = ['dinner', 'lunch', 'cab', 'rent', 'groceries', 'movie', 'coffee', 'hotel', 'flight', 'snacks']
   const queries = [
@@ -320,7 +321,10 @@ describe('speed', () => {
     'din',
     'dinner',
     'dinner goa',
+    'zanzibar',
     '450',
+    '98',
+    'as',
     '> 1000',
     '>= 1000 EUR',
     '< 50 riya',
@@ -336,31 +340,65 @@ describe('speed', () => {
     'paid by riya',
     'with riya over 100',
     'food or travel in goa over 500',
+    'food or travel or rent',
+    'dinner or lunch or cab',
+    'payments',
     'deleted',
+    'settled',
+    'owed',
+    'dinner owed',
+    'zanzibar owed',
+    'hidden',
   ]
+  async function seed(store: Store, size: number) {
+    resetClock()
+    await put(store, [
+      entity<Person>('person', 'me', {name: 'Asha Rao', isMe: true}),
+      entity<Person>('person', 'riya', {name: 'Riya Sharma', isMe: false, contact: {kind: 'phone', value: '+919876543210'}}),
+      entity<Person>('person', 'sam', {name: 'Sam Carter', isMe: false, upiId: 'sam@okaxis'}),
+      ...groups,
+    ])
+    for (let from = 0; from < size; from += 500)
+      await put(
+        store,
+        Array.from({length: 500}, (_, k) => {
+          const i = from + k
+          const total = BigInt(1000 + ((i * 7919) % 500000))
+          const payer = i % 4 ? 'me' : 'riya'
+          const other = i % 2 ? 'riya' : 'sam'
+          const e = expense(`e${i}`, {
+            title: i === 777 ? 'Zanzibar ferry' : `${words[i % words.length]} ${i}`,
+            notes: i % 7 ? '' : 'with friends after work',
+            groupId: i % 3 ? 'goa' : null,
+            currency: i % 5 ? 'INR' : 'EUR',
+            total,
+            date: `2026-${String((i % 12) + 1).padStart(2, '0')}-${String((i % 28) + 1).padStart(2, '0')}`,
+            payers: {[payer]: total},
+            split: {mode: 'equal', participants: [payer, other]},
+            shares: {[payer]: total / 2n, [other]: total - total / 2n},
+          })
+          e.deleted = i % 50 === 0
+          return e
+        }),
+      )
+    await put(
+      store,
+      Array.from({length: 600}, (_, i) =>
+        entity<Repayment>(i % 6 ? 'repayment' : 'writeoff', `p${i}`, {groupId: i % 3 ? 'goa' : null, currency: 'INR', from: i % 2 ? 'riya' : 'sam', to: 'me', amount: BigInt(500 + i), date: `2026-${String((i % 12) + 1).padStart(2, '0')}-10`, tz: 'Asia/Kolkata', note: i % 4 ? '' : 'settle up'}),
+      ),
+    )
+  }
 
-  describe.skipIf(!!process.env.CI).each([5000, 10000])('%d expenses: every query under 50 ms', size => {
-    test('openSearch with the count, totals and first page', async () => {
-      const store = await openSqlStore(bunExecutor(':memory:'))
-      resetClock()
-      await put(store, [...people, ...groups])
-      for (let from = 0; from < size; from += 500)
-        await put(
-          store,
-          Array.from({length: 500}, (_, k) => {
-            const i = from + k
-            return expense(`e${i}`, {
-              title: `${words[i % words.length]} ${i}`,
-              notes: i % 7 ? '' : 'with friends after work',
-              groupId: i % 3 ? 'goa' : null,
-              currency: i % 5 ? 'INR' : 'EUR',
-              total: BigInt(1000 + ((i * 7919) % 500000)),
-              date: `2026-${String((i % 12) + 1).padStart(2, '0')}-${String((i % 28) + 1).padStart(2, '0')}`,
-              payers: {[i % 4 ? 'me' : 'riya']: 1000n},
-            })
-          }),
-        )
-      const opts = {today, categories, me: 'me'}
+  const SPEED: Array<[string, number, () => Promise<Store>]> = [
+    ['SQLite', 5000, () => openSqlStore(bunExecutor(':memory:'))],
+    ['SQLite', 10000, () => openSqlStore(bunExecutor(':memory:'))],
+    ['IndexedDB', 10000, () => openIdbStore('speed', new IDBFactory())],
+  ]
+  describe.skipIf(!!process.env.CI).each(SPEED)('%s, %d expenses and 600 payments: every query under 50 ms', (engine, size, open) => {
+    test('openSearch with the counts, totals and first pages', async () => {
+      const store = await open()
+      await seed(store, size)
+      const opts = {today, categories, me: 'me', hiddenGroups: ['lis'], hiddenItems: ['e7', 'p3']}
       await openSearch(store, 'warm up', opts)
       const timings: Array<[string, number, number]> = []
       for (const q of queries) {
@@ -375,15 +413,48 @@ describe('speed', () => {
         timings.push([q, runs.map(r => r[0]).sort((x, y) => x - y)[1]!, runs.map(r => r[1]).sort((x, y) => x - y)[1]!])
       }
       const [slowest, worst, cpu] = timings.reduce((a, b) => (b[1] > a[1] ? b : a))
-      // CPU time is printed beside the wall time: on a loaded machine the wall time is the scheduler's, the CPU time is the query's.
-      console.log(`search: worst query ${worst.toFixed(1)} ms wall, ${cpu.toFixed(1)} ms cpu ("${slowest}") over ${queries.length} queries on ${size} expenses (median of 3, load ${os.loadavg()[0]!.toFixed(1)})`)
+      console.log(`search ${engine}: worst query ${worst.toFixed(1)} ms wall, ${cpu.toFixed(1)} ms cpu ("${slowest}") over ${queries.length} queries on ${size} expenses (median of 3, load ${os.loadavg()[0]!.toFixed(1)})`)
       expect(worst).toBeLessThan(50)
       // The keys give the same answer as the rows: "> 1000" is every INR/EUR expense above 10.00.
       const all = await store.page<Expense>('expense', {index: 'byDate', limit: size + 1})
       expect((await openSearch(store, '> 1000', opts)).summary.count).toBe(all.items.filter(e => e.data.total > 100000n).length)
       await store.close()
-    }, 120_000)
+    }, 300_000)
   })
+
+  test.skipIf(!!process.env.CI)('IndexedDB, 10,000 expenses: a stale index is rebuilt in chunks that let the app run between them', async () => {
+    const factory = new IDBFactory()
+    const first = await openIdbStore('rebuild', factory)
+    await seed(first, 10000)
+    await first.close()
+    // An older index version: the next open rebuilds.
+    await new Promise<void>((resolve, reject) => {
+      const req = factory.open('rebuild')
+      req.onerror = () => reject(req.error)
+      req.onsuccess = () => {
+        const tx = req.result.transaction('meta', 'readwrite')
+        tx.objectStore('meta').put({key: 'searchIndex', value: '1'})
+        tx.oncomplete = () => {
+          req.result.close()
+          resolve()
+        }
+      }
+    })
+    const store = await openIdbStore('rebuild', factory)
+    let ticks = 0
+    const ticker = setInterval(() => ticks++, 0)
+    const t0 = performance.now()
+    const c0 = process.cpuUsage()
+    await store.prepareSearch()
+    const c = process.cpuUsage(c0)
+    clearInterval(ticker)
+    console.log(`search index rebuild IndexedDB: 10,600 records in ${(performance.now() - t0).toFixed(0)} ms wall, ${((c.user + c.system) / 1000).toFixed(0)} ms cpu, ${ticks} timer turns between chunks (load ${os.loadavg()[0]!.toFixed(1)})`)
+    // About 22 chunks of 500 rows (plus people, groups, comments): the timer ran between them.
+    expect(ticks).toBeGreaterThan(10)
+    expect((await openSearch(store, 'zanzibar', {today, categories})).found().map(e => e.id)).toEqual(['e777'])
+    expect((await openSearch(store, 'payments', {today, categories})).paymentCount).toBe(500)
+    await store.close()
+  }, 300_000)
 })
 
 describe('F-111 M14: amounts in the user number format', () => {

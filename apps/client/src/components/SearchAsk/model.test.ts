@@ -24,7 +24,7 @@ test('people and groups come first, then expenses; every result is reachable by 
   }
   expect(
     searchRows(results).map(r =>
-      r.type === 'header' ? `${r.section}:${r.count}` : `${r.key}#${r.nav}`,
+      r.type === 'header' ? `${r.section}:${r.count}` : r.type === 'more' ? r.key : `${r.key}#${r.nav}`,
     ),
   ).toEqual([
     'people:1',
@@ -55,14 +55,17 @@ test('a partial expense count is flagged; a known one is not', () => {
 test('the "Ask Splito" row heads the list and is the first stop of the keyboard, results follow', () => {
   const results = {people: [e('person', 'sam')], groups: [], expenses: [e('expense', 'x1')]}
   const rows = searchRows(results, undefined, 'who owes me?')
-  expect(rows.map(r => (r.type === 'header' ? r.section : `${r.key}#${r.nav}`))).toEqual(['ask#0', 'people', 'person-sam#1', 'expenses', 'expense-x1#2'])
+  expect(rows.map(r => (r.type === 'header' ? r.section : r.type === 'more' ? r.key : `${r.key}#${r.nav}`))).toEqual(['ask#0', 'people', 'person-sam#1', 'expenses', 'expense-x1#2'])
   expect(rows[0]).toMatchObject({type: 'ask', query: 'who owes me?'})
   // Nothing found still offers the question: it is answered from the books, not the search.
   expect(searchRows({people: [], groups: [], expenses: []}, undefined, 'who owes me?')).toHaveLength(1)
   expect(searchRows({people: [], groups: [], expenses: []})).toEqual([])
 })
 
-test('payments and write-offs follow the expenses under their own heading, with the count of all of them', () => {
+test('payments and write-offs come before the expenses under their own heading, with the count of all of them and Show more', () => {
   const results = {people: [], groups: [], expenses: [e('expense', 'x1')], payments: [e('repayment', 'p1'), e('writeoff', 'w1')]}
-  expect(searchRows(results, undefined, undefined, 5).map(r => (r.type === 'header' ? `${r.section}:${r.count}` : `${r.key}#${r.nav}`))).toEqual(['expenses:1', 'expense-x1#0', 'payments:5', 'payment-p1#1', 'payment-w1#2'])
+  const shape = (paymentCount?: number) => searchRows(results, undefined, undefined, paymentCount).map(r => (r.type === 'header' ? `${r.section}:${r.count}` : r.type === 'more' ? r.key : `${r.key}#${r.nav}`))
+  expect(shape(5)).toEqual(['payments:5', 'payment-p1#0', 'payment-w1#1', 'more-payments', 'expenses:1', 'expense-x1#2'])
+  // All of them shown: no Show more.
+  expect(shape(2)).toEqual(['payments:2', 'payment-p1#0', 'payment-w1#1', 'expenses:1', 'expense-x1#2'])
 })

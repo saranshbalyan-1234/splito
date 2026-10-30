@@ -96,6 +96,13 @@ type Live = DataContext & {demo: boolean; unwire: () => void}
  * the old one in the one context value and the old connection is closed. The
  * tree never remounts (§ 3 "Root contexts stay still").
  */
+/** Runs `fn` when the app is idle (at most 2 s later), or soon where there is no idle callback. */
+function whenIdle(fn: () => unknown) {
+  const idle = (globalThis as {requestIdleCallback?: (cb: () => void, opts: {timeout: number}) => void}).requestIdleCallback
+  if (idle) idle(() => void fn(), {timeout: 2000})
+  else setTimeout(() => void fn(), 500)
+}
+
 export function StoreProvider({accountId, children, fallback = null}: {accountId: string; children: React.ReactNode; fallback?: React.ReactNode}) {
   const [value, setValue] = useState<DataContext | null>(null)
   const [demo, setDemoFlag] = useState(false)
@@ -141,6 +148,13 @@ export function StoreProvider({accountId, children, fallback = null}: {accountId
       perfMark('splito:store-adopt')
       if (prev) dropOpenUi()
       setValue({store: next.store, ctx: next.ctx})
+      // The search index is checked (and rebuilt in chunks when stale) at idle after the store opens, never during the first keystrokes.
+      whenIdle(() =>
+        next.store.prepareSearch().catch(e => {
+          // A store closed under it (a switch) is not a failure; the search box says so and retries if it ever is one.
+          if (live.current?.store === next.store) logger.error(e, {where: 'StoreProvider.prepareSearch'})
+        }),
+      )
       setDemoFlag(next.demo)
       setHasDirectory(next.demo && !!next.directory)
       setNotice(current => (current === 'blocked' ? null : current))
