@@ -64,7 +64,8 @@ export async function createAccount(page: Page, a: {email: string; phone: string
   await page.getByTestId('setNewPassword-next').click()
 }
 
-export const signedInShown = (page: Page) => expect(page.getByTestId('screen-home')).toBeVisible({timeout: 20_000})
+/** The app is up: Home, or the People tab when the address named it. */
+export const signedInShown = (page: Page) => expect(page.getByTestId('screen-home').or(page.getByTestId('screen-people'))).toBeVisible({timeout: 20_000})
 
 export const hooks = (page: Page) => page.evaluate(() => Object.keys((window as unknown as Hooks).__splitoTest ?? {}))
 

@@ -336,7 +336,7 @@ test.describe('sign-in preserves intent', () => {
     await toContinue(page, '/activity/others')
     await signInWithPassword(page, DEV.email, DEV.password)
     await expect(page.getByTestId('screen-activity')).toBeVisible({timeout: 20_000})
-    await expect(page).toHaveURL(/\/activity\/others$/)
+    await expect(page).toHaveURL(/\/activity\/others(\?from=home)?$/)
   })
 
   test('a link that needed the intro first is still opened after it and sign-in', async ({page}) => {
@@ -383,6 +383,7 @@ test.describe('log out erases everything the account left (owner 186)', () => {
 
     await page.getByTestId('continue-dev-account').click()
     await signedInShown(page)
+    await page.goto('/people') // the People tab lists every friend; Home only the recently active
     await expect(page.getByText('Erased Friend')).toHaveCount(0)
     // Demo mode is off again, and the demo database was not kept.
     await expect(page.getByTestId('header-avatar').last()).not.toHaveAttribute('aria-label', /Demo$/)
@@ -425,6 +426,7 @@ test.describe('log out erases everything the account left (owner 186)', () => {
     expect((await databases(page)).filter(n => n!.startsWith('splito-'))).toEqual([])
     await page.getByTestId('continue-dev-account').click()
     await signedInShown(page)
+    await page.goto('/people') // the People tab lists every friend; Home only the recently active
     await expect(page.getByText('Stubborn Friend')).toHaveCount(0)
   })
 
@@ -452,6 +454,7 @@ test.describe('log out erases everything the account left (owner 186)', () => {
     await signedInShown(page)
     await page.waitForFunction(() => 'splito' in window)
     await create(page, 'Only Dev')
+    await page.goto('/people') // the People tab lists every friend; Home only the recently active
     await expect(page.getByText('Only Dev')).toBeVisible()
     const devMe = await page.evaluate(() => (window as unknown as {splito: {me: string}}).splito.me)
     await logOutFromSettings(page)
@@ -460,15 +463,19 @@ test.describe('log out erases everything the account left (owner 186)', () => {
     await signedInShown(page)
     await page.waitForFunction(() => 'splito' in window)
     expect(await page.evaluate(() => (window as unknown as {splito: {me: string}}).splito.me)).not.toBe(devMe)
+    await page.goto('/people') // the People tab lists every friend; Home only the recently active
     await expect(page.getByText('Only Dev')).toHaveCount(0)
     await create(page, 'Only Riya')
+    await page.goto('/people') // the People tab lists every friend; Home only the recently active
     await expect(page.getByText('Only Riya')).toBeVisible()
     expect((await databases(page)).filter(n => n!.startsWith('splito-acct-'))).toHaveLength(1)
     await logOutFromSettings(page)
 
     await signInWithPassword(page, DEV.email, DEV.password)
     await signedInShown(page)
+    await page.goto('/people') // the People tab lists every friend; Home only the recently active
     await expect(page.getByText('Only Dev')).toHaveCount(0)
+    await page.goto('/people') // the People tab lists every friend; Home only the recently active
     await expect(page.getByText('Only Riya')).toHaveCount(0)
   })
 })
@@ -485,8 +492,10 @@ test.describe('data from before accounts', () => {
     // Not merged silently: the old friend is not here yet.
     await expect(page.getByText('Old Friend')).toHaveCount(0)
     await page.getByTestId('legacy-move').click()
+    // The old database is gone once the move is done; only then look at the People tab (leaving earlier would cut it short).
+    await expect.poll(() => databases(page), {timeout: 30_000}).not.toContain('splito')
+    await page.goto('/people') // the People tab lists every friend; Home only the recently active
     await expect(page.getByText('Old Friend')).toBeVisible({timeout: 15_000})
-    await expect.poll(() => databases(page)).not.toContain('splito')
     await page.reload()
     await signedInShown(page)
     await expect(page.getByRole('dialog').filter({hasText: 'Move this device’s data into your account?'})).toHaveCount(0)
@@ -505,6 +514,7 @@ test.describe('data from before accounts', () => {
     await signedInShown(page)
     await expect(offer).toBeVisible()
     await page.getByRole('button', {name: 'Not now'}).click()
+    await page.goto('/people') // the People tab lists every friend; Home only the recently active
     await expect(page.getByText('Old Friend')).toHaveCount(0)
     // Answered: not offered by itself any more, and the old database is untouched.
     await page.reload()
@@ -519,6 +529,7 @@ test.describe('data from before accounts', () => {
     await expect.poll(() => databases(page)).not.toContain('splito')
     await expect(page.getByTestId('settings-move-legacy')).toHaveCount(0)
     await page.goto('/')
+    await page.goto('/people') // the People tab lists every friend; Home only the recently active
     await expect(page.getByText('Old Friend')).toBeVisible({timeout: 15_000})
   })
 
