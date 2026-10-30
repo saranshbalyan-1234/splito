@@ -11,12 +11,13 @@
  * The money arithmetic is the domain's `recordEffects`; this file only keeps
  * its sums.
  */
-import {type LedgerRecord, recordCells, recordEffects, type SpendCell} from '@splito/domain'
+import {allocate, type Debt, expenseDebts, type ExpenseRecord, type LedgerRecord, participantId, participantWeight, recordCells, recordEffects, type SpendCell} from '@splito/domain'
 
 import {decode} from './codec'
 import {type RowAccess} from './engine'
+import {type Dispute} from './disputes'
 import {type Expense, type Group, normalizeRoles, type Repayment} from './mutations'
-import {type Key, type Row} from './schema'
+import {ENTITY_STORE, entityOfRow, type Key, type Row} from './schema'
 import {termKey, termRows} from './searchTerms'
 import {toExpenseRecord, toRepaymentRecord, toWriteOffRecord} from './selectors'
 import {type Entity, type EntityType} from './types'
@@ -175,6 +176,7 @@ async function writeSums(rows: RowAccess, nets: Sums, pairs: Sums, now: number) 
  */
 export async function projectEntity(rows: RowAccess, prev: Entity | undefined, next: Entity | undefined): Promise<void> {
   const type = (next ?? prev)?.type
+  if (type === 'dispute') return projectDispute(rows, prev as Entity<Dispute> | undefined, next as Entity<Dispute> | undefined)
   if (type === 'expense') {
     const was = partyRows(prev as Entity<Expense> | undefined)
     const is = partyRows(next as Entity<Expense> | undefined)
@@ -196,6 +198,17 @@ export async function projectEntity(rows: RowAccess, prev: Entity | undefined, n
     addEffects(recordOf(prev), -1, nets, pairs)
     addEffects(recordOf(next), 1, nets, pairs)
     await writeSums(rows, nets, pairs, (next ?? prev)!.updatedAt)
+    // A disputed record that changes moves its disputed part with it (the open disputes are read by index, a few rows).
+    // A record being created (or brought back from a delete, which closed its disputes) has none: no read, so seeding
+    // thousands of records pays nothing for disputes.
+    const open = prev && !prev.deleted ? await openDisputesOf(rows, type, prev.id) : []
+    if (open.length) {
+      const dn: Sums = new Map()
+      const dp: Sums = new Map()
+      addDisputed(disputedPart(prev, open), -1, dn, dp)
+      addDisputed(disputedPart(next, open), 1, dn, dp)
+      await writeDisputed(rows, dn, dp, (next ?? prev)!.updatedAt)
+    }
     const aggs: Aggregates = new Map()
     addAggregates(aggs, cellsOfEntity(prev), -1)
     addAggregates(aggs, cellsOfEntity(next), 1)
@@ -248,7 +261,8 @@ async function bumpActivity(rows: RowAccess, store: 'groups' | 'people', id: str
  * replacing what is there. `entities` yields every row of the given type.
  */
 export async function rebuildProjections(rows: RowAccess, entities: (type: EntityType) => Promise<Entity[]>): Promise<void> {
-  for (const store of ['expense_parties', 'group_members', 'balances', 'pair_balances', 'aggregates', 'search_terms'] as const) await rows.clear(store)
+  for (const store of ['expense_parties', 'group_members', 'balances', 'pair_balances', 'aggregates', 'search_terms', 'disputed_balances', 'disputed_pairs'] as const)
+    await rows.clear(store)
   const groups = (await entities('group')) as Entity<Group>[]
   for (const g of groups) for (const r of memberRows(g)) await rows.put('group_members', r)
   const nets: Sums = new Map()
@@ -267,8 +281,134 @@ export async function rebuildProjections(rows: RowAccess, entities: (type: Entit
   }
   await writeSums(rows, nets, pairs, latest)
   await writeAggregates(rows, aggs, latest)
+  await rebuildDisputedProjections(rows, entities)
   for (const type of ['person', 'group', 'expense'] as const) for (const e of type === 'group' ? groups : await entities(type)) for (const r of termRows(e)) await rows.put('search_terms', r)
   await rebuildActivity(rows, money)
+}
+
+/* -------------------------------------------------------------------------- */
+/* Disputed sums (F-1210): the part of the balances on disputed or held records */
+/* -------------------------------------------------------------------------- */
+
+/** An open dispute or hold with its id. */
+type OpenDispute = Pick<Dispute, 'itemId'> & {id: string}
+
+/** The open disputes and holds on one record, by `byTargetStatus` (a handful of rows at most). */
+async function openDisputesOf(rows: RowAccess, targetType: string, targetId: string): Promise<OpenDispute[]> {
+  const found = await rows.range('disputes', {index: 'byTargetStatus', eq: [targetType, targetId, 'open']})
+  return found.filter(r => r.deleted === 0).map(r => ({id: r.id as string, itemId: (decode(r.data as string) as Dispute).itemId ?? null}))
+}
+
+/**
+ * The part of a live record that open disputes mark, as a ledger record: all of it when a dispute names the
+ * record (or the record has no items), otherwise only the disputed items' portions (each item split among its
+ * participants by weight, paid by the payers in proportion to what they paid; charges are not part of an item).
+ * ponytail: an item's share of tax and tip is not counted as disputed; refine with `itemBreakdown` if asked.
+ */
+function disputedPart(e: Entity | undefined, open: ReadonlyArray<Pick<OpenDispute, 'itemId'>>): LedgerRecord | undefined {
+  const record = recordOf(e)
+  if (!record || open.length === 0) return undefined
+  const split = record.kind === 'expense' ? (e!.data as Expense).split : undefined
+  if (!split || split.mode !== 'items' || open.some(d => d.itemId === null)) return record
+  /* Items are found by their own id: a reordered bill moves nothing, and an item an edit removed counts for nothing. */
+  const wanted = new Set(open.map(d => d.itemId))
+  const picked = split.items.filter(i => wanted.has(i.id))
+  if (picked.length === 0) return undefined
+  const shares: Record<string, bigint> = {}
+  let total = 0n
+  for (const item of picked) {
+    total += item.amount
+    const part = allocate(item.amount, item.participants.map(p => ({id: participantId(p), weight: BigInt(participantWeight(p))})))
+    for (const [id, v] of Object.entries(part)) shares[id] = (shares[id] ?? 0n) + v
+  }
+  const paid = Object.entries((record as ExpenseRecord).payers).filter(([, v]) => v > 0n)
+  const payers = paid.length ? allocate(total, paid.map(([id, v]) => ({id, weight: v}))) : {}
+  return {...(record as ExpenseRecord), payers, shares}
+}
+
+/** Who owes whom on a record, inside groups too (the stored `pair_balances` keep direct debts only). */
+function pairDebts(r: LedgerRecord): Debt[] {
+  if (r.kind === 'expense') return expenseDebts(r)
+  return [{debtor: r.to, creditor: r.from, amount: r.amount}]
+}
+
+/** Adds (`sign` 1) or removes (-1) a disputed part: nets per `[person, group, currency]`, debts per `[person, other, group, currency]`. */
+function addDisputed(r: LedgerRecord | undefined, sign: 1 | -1, nets: Sums, pairs: Sums) {
+  if (!r) return
+  const s = BigInt(sign)
+  for (const {person, amount} of recordEffects(r).net) addSum(nets, [person, r.groupId ?? '', r.currency], amount * s, sign)
+  for (const d of pairDebts(r)) {
+    addSum(pairs, [d.creditor, d.debtor, r.groupId ?? '', r.currency], d.amount * s, 0)
+    addSum(pairs, [d.debtor, d.creditor, r.groupId ?? '', r.currency], -d.amount * s, 0)
+  }
+}
+
+async function writeDisputed(rows: RowAccess, nets: Sums, pairs: Sums, now: number) {
+  for (const {key, amount, count} of nets.values()) {
+    const [personId, groupId, currency] = key as [string, string, string]
+    const cur = await rows.get('disputed_balances', key)
+    const total = (cur ? BigInt(cur.amount as string) : 0n) + amount
+    const n = ((cur?.count as number | undefined) ?? 0) + count
+    if (n <= 0 && total === 0n) {
+      if (cur) await rows.delete('disputed_balances', key)
+    } else await rows.put('disputed_balances', {personId, groupId, currency, amount: String(total), count: n, updatedAt: now})
+  }
+  for (const {key, amount} of pairs.values()) {
+    const [personId, otherId, groupId, currency] = key as [string, string, string, string]
+    const cur = await rows.get('disputed_pairs', key)
+    const total = (cur ? BigInt(cur.amount as string) : 0n) + amount
+    if (total === 0n) {
+      if (cur) await rows.delete('disputed_pairs', key)
+    } else await rows.put('disputed_pairs', {personId, otherId, groupId, currency, amount: String(total), updatedAt: now})
+  }
+}
+
+/**
+ * Moves the disputed sums when a dispute opens or closes: the record's disputed part before the change comes off,
+ * the part after goes on. A record that is not live counts for nothing (its own write already took its part off).
+ */
+async function projectDispute(rows: RowAccess, prev: Entity<Dispute> | undefined, next: Entity<Dispute> | undefined) {
+  const was = prev && !prev.deleted && prev.data?.status === 'open' ? prev.data : undefined
+  const is = next && !next.deleted && next.data?.status === 'open' ? next.data : undefined
+  if (!was && !is) return
+  const d = (is ?? was)!
+  if (was && is && was.itemId === is.itemId && was.targetId === is.targetId) return
+  const id = (next ?? prev)!.id
+  const raw = await rows.get(ENTITY_STORE[d.targetType], [d.targetId])
+  const target = raw ? entityOfRow(d.targetType, raw) : undefined
+  if (!live(target)) return
+  const others = (await openDisputesOf(rows, d.targetType, d.targetId)).filter(o => o.id !== id)
+  const before = was ? [...others, {id, itemId: was.itemId ?? null}] : others
+  const after = is ? [...others, {id, itemId: is.itemId ?? null}] : others
+  const nets: Sums = new Map()
+  const pairs: Sums = new Map()
+  addDisputed(disputedPart(target, before), -1, nets, pairs)
+  addDisputed(disputedPart(target, after), 1, nets, pairs)
+  await writeDisputed(rows, nets, pairs, (next ?? prev)!.updatedAt)
+}
+
+/** Recomputes `disputed_balances` and `disputed_pairs` from the open disputes and the live records they name. */
+export async function rebuildDisputedProjections(rows: RowAccess, entities: (type: EntityType) => Promise<Entity[]>): Promise<void> {
+  await rows.clear('disputed_balances')
+  await rows.clear('disputed_pairs')
+  const byTarget = new Map<string, {type: Dispute['targetType']; id: string; open: OpenDispute[]}>()
+  for (const e of (await entities('dispute')) as Entity<Dispute>[]) {
+    if (e.deleted || e.data?.status !== 'open') continue
+    const key = `${e.data.targetType}:${e.data.targetId}`
+    const group = byTarget.get(key) ?? {type: e.data.targetType, id: e.data.targetId, open: []}
+    group.open.push({id: e.id, itemId: e.data.itemId ?? null})
+    byTarget.set(key, group)
+  }
+  const nets: Sums = new Map()
+  const pairs: Sums = new Map()
+  let latest = 0
+  for (const {type, id, open} of byTarget.values()) {
+    const raw = await rows.get(ENTITY_STORE[type], [id])
+    const target = raw ? entityOfRow(type, raw) : undefined
+    addDisputed(disputedPart(target, open), 1, nets, pairs)
+    latest = Math.max(latest, target?.updatedAt ?? 0)
+  }
+  await writeDisputed(rows, nets, pairs, latest)
 }
 
 /**

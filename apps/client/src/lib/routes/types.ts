@@ -18,8 +18,8 @@ export type TabParams = {
   Groups: ListParams | undefined
   /** `currency` opens the report in that currency (`/analytics?currency=EUR`, an Overview card); also `period`, `offset`, `from`, `to`, `scope`. */
   Analytics: {currency?: string; period?: string; offset?: string; from?: string; to?: string; scope?: string} | undefined
-  /** `tab: 'others'` is `/activity/others`. */
-  Activity: {tab?: 'all' | 'others'; type?: string; from?: string} | undefined
+  /** `tab: 'others'` is `/activity/others`, `tab: 'disputed'` is `/activity/disputed`; `type` filters it (F-259), `from` is the tab a copy opened from. */
+  Activity: {tab?: 'all' | 'others' | 'disputed'; type?: string; from?: string} | undefined
 }
 
 /** Every route in the owner's route table (paths live in `#/routes` and `#/navigation/linking`). */

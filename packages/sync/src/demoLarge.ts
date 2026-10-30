@@ -28,6 +28,7 @@ import {
 
 import {merchantSetupOf} from './bill'
 import {type CommentInput, createComment, deleteComment, editComment} from './comments'
+import {type DisputeInput, type HoldInput, acceptDispute, holdRecord, raiseDispute, rejectDispute, releaseHold, reopenDispute, withdrawDispute} from './disputes'
 import {removeFriend} from './friends'
 import {deleteGroup, makeGroupInactive, type MemberExitInput, removeGroupMember, setGroupHidden} from './groupLifecycle'
 import {
@@ -521,6 +522,10 @@ export type DemoOp =
   | {kind: 'reminder.self'; at: number; actor: string; id: string; input: Parameters<typeof scheduleReminder>[2]}
   | {kind: 'reminder.nudge'; at: number; actor: string; id: string; input: Parameters<typeof recordNudge>[2]}
   | {kind: 'merchant.setup'; at: number; actor: string; id: string; title: string; charges: Parameters<typeof merchantSetupOf>[1]}
+  /* Disputes and holds (F-1210): raised as `actor` (or as `input.raisedBy`, recorded by `actor`), answered by `actor`. */
+  | {kind: 'dispute'; at: number; actor: string; id: string; input: Omit<DisputeInput, 'id'>}
+  | {kind: 'dispute.hold'; at: number; actor: string; id: string; input: Omit<HoldInput, 'id'>}
+  | {kind: 'dispute.answer'; at: number; actor: string; id: string; action: 'accept' | 'reject' | 'withdraw' | 'release' | 'reopen'; note?: string}
 
 export type DemoPlan = {ops: DemoOp[]; counts: DemoCounts}
 export type DemoCounts = {people: number; groups: number; expenses: number; repayments: number; writeOffs: number; deleted: number; edits: number}
@@ -1030,6 +1035,9 @@ export function generateLargeDemo({me, today, now, seed = DEMO_LARGE_SEED}: {me:
     const start = now - 12 * DAY
     const step = (12 * DAY - 2 * HOUR) / CURATED_EXPENSES.length
     const ids: Record<string, string> = {}
+    /* When each curated expense went in, and its draft: the disputes below hang on them. */
+    const whenOf: Record<string, number> = {}
+    const drafts: Record<string, ExpenseDraft> = {}
     for (const [i, e] of CURATED_EXPENSES.entries()) {
       const split: SplitInput = e.bill
         ? {
@@ -1062,6 +1070,8 @@ export function generateLargeDemo({me, today, now, seed = DEMO_LARGE_SEED}: {me:
       const when = start + i * step + (i % 3) * 40 * MINUTE_
       const id = nextId('e')
       ids[e.title] = id
+      whenOf[e.title] = when
+      drafts[e.title] = draft
       // The dinner went in with the wrong total and was fixed an hour ago (shows as an edit in Activity).
       if (e.title === 'Dinner at Thalassa') {
         ops.push({kind: 'expense', at: when, actor: cid(top), id, draft: {...draft, total: 1_000_000n, payers: {[cid('riya')]: 500_000n, [cid('priya')]: 500_000n}}})
@@ -1088,6 +1098,8 @@ export function generateLargeDemo({me, today, now, seed = DEMO_LARGE_SEED}: {me:
       const dup = nextId('e')
       const g = CURATED_GROUPS.goa
       ops.push({kind: 'expense', at: now - 6 * DAY, actor: cid('arjun'), id: dup, draft: {title: 'Scooter rentals (duplicate)', groupId: gidOf('goa'), currency: 'INR', total: 600_000n, payers: {[cid('arjun')]: 600_000n}, split: {mode: 'equal', participants: [me, ...g.members.map(cid)]}, date: dateOf(now - 6 * DAY), tz: g.tz, category: 'transport', notes: ''}})
+      /* Sam saw it twice and said so before Arjun deleted it: that dispute closes as Gone (the delete answers it). */
+      ops.push({kind: 'dispute', at: now - 6 * DAY + 20 * MINUTE_, actor: cid('sam'), id: `${DEMO_LARGE_PREFIX}d-gone`, input: {targetType: 'expense', targetId: dup, reason: 'duplicate', note: 'This is the scooter bill again.', proposedFix: {kind: 'duplicate', of: ids['Scooter rentals']!}}})
       ops.push({kind: 'expense.delete', at: now - 6 * DAY + HOUR, actor: cid('arjun'), id: dup})
       ops.push({kind: 'item.hide', at: now - 6 * DAY + 2 * HOUR, actor: me, id: dup, type: 'expense'})
       counts.deleted++
@@ -1111,6 +1123,45 @@ export function generateLargeDemo({me, today, now, seed = DEMO_LARGE_SEED}: {me:
     }
     binned('Sunset cruise', 'goa', 300_000n, 'arjun', now - 3 * DAY, now - 2 * DAY, 'entertainment')
     binned('Takeout pizza', 'flat', 135_000n, 'me', now - 26 * HOUR, now - 20 * HOUR, 'food')
+    /*
+     * Disputes and holds (F-1210) in every state, in rupees, euros, dollars and pounds. A disputed record keeps
+     * counting; "Disputed" / "On hold" mark it and its balances carry an "of which disputed" line.
+     */
+    {
+      const d = (n: string) => `${DEMO_LARGE_PREFIX}d-${n}`
+      /* Never before the record exists, never in the future. */
+      const soon = (title: string, plus: number) => Math.min(whenOf[title]! + plus, now - 5 * MINUTE_)
+      const bar = CURATED_EXPENSES.find(x => x.title.startsWith('Bar tab'))!.title
+      // Open, with a proposed fix, waiting for me (I administer the group): the shop charged less.
+      ops.push({kind: 'dispute', at: soon('Scooter rentals', 3 * HOUR), actor: cid('sam'), id: d('open-fix'), input: {targetType: 'expense', targetId: ids['Scooter rentals']!, reason: 'wrong_amount', note: 'The shop charged 5,400, not 6,000.', proposedFix: {kind: 'amount', amount: 540_000n}}})
+      // Open, raised by me, waiting for Sam.
+      ops.push({kind: 'dispute', at: soon('Parasailing', 2 * HOUR), actor: me, id: d('open-mine'), input: {targetType: 'expense', targetId: ids.Parasailing!, reason: 'wrong_share', note: 'I skipped the second ride.'}})
+      // One item of the bar tab: my portion of the pints.
+      ops.push({kind: 'dispute', at: soon(bar, 4 * HOUR), actor: me, id: d('item'), input: {targetType: 'expense', targetId: ids[bar]!, itemId: 'item-0', reason: 'wrong_share', note: 'I only had one pint.'}})
+      // Accepted (euros): the tram ticket was cheaper; Diego fixed it by hand and said yes.
+      ops.push({kind: 'dispute', at: soon('Tram 28 tickets', HOUR), actor: me, id: d('accepted'), input: {targetType: 'expense', targetId: ids['Tram 28 tickets']!, reason: 'wrong_amount', note: 'The tickets were 10, not 12.', proposedFix: {kind: 'amount', amount: 1000n}}})
+      ops.push({kind: 'expense.update', at: soon('Tram 28 tickets', 2 * HOUR), actor: cid('diego'), id: ids['Tram 28 tickets']!, draft: {...drafts['Tram 28 tickets']!, total: 1000n, payers: {[cid('diego')]: 1000n}}})
+      counts.edits++
+      ops.push({kind: 'dispute.answer', at: soon('Tram 28 tickets', 2 * HOUR + MINUTE_), actor: cid('diego'), id: d('accepted'), action: 'accept', note: 'Fixed, thanks.'})
+      // Rejected (euros): Sam picked the wine.
+      ops.push({kind: 'dispute', at: soon('Seafood at Ramiro', HOUR), actor: cid('sam'), id: d('rejected'), input: {targetType: 'expense', targetId: ids['Seafood at Ramiro']!, reason: 'wrong_share', note: 'I did not drink any of it.'}})
+      ops.push({kind: 'dispute.answer', at: soon('Seafood at Ramiro', 3 * HOUR), actor: me, id: d('rejected'), action: 'reject', note: 'You picked the wine!'})
+      // Withdrawn (dollars): Priya checked and dropped it.
+      ops.push({kind: 'dispute', at: soon('Snorkel gear', HOUR), actor: cid('priya'), id: d('withdrawn'), input: {targetType: 'expense', targetId: ids['Snorkel gear']!, reason: 'not_part', note: 'I thought this was only for the snorkellers.'}})
+      ops.push({kind: 'dispute.answer', at: soon('Snorkel gear', 5 * HOUR), actor: cid('priya'), id: d('withdrawn'), action: 'withdraw'})
+      // Reopened (rupees): rejected once, reopened with the receipt, open again.
+      ops.push({kind: 'dispute', at: soon('Beach shack lunch', HOUR), actor: cid('riya'), id: d('reopened'), input: {targetType: 'expense', targetId: ids['Beach shack lunch']!, reason: 'wrong_amount', note: 'The bill I saw was 4,200.', proposedFix: {kind: 'amount', amount: 420_000n}}})
+      ops.push({kind: 'dispute.answer', at: soon('Beach shack lunch', 3 * HOUR), actor: cid('priya'), id: d('reopened'), action: 'reject', note: 'That bill left out the tip.'})
+      ops.push({kind: 'dispute.answer', at: soon('Beach shack lunch', 6 * HOUR), actor: cid('riya'), id: d('reopened'), action: 'reopen', note: 'Here is the receipt photo, no tip on it.'})
+      // On hold (rupees): waiting for a refund.
+      ops.push({kind: 'dispute.hold', at: soon('Electricity bill', 2 * HOUR), actor: cid('arjun'), id: d('hold-open'), input: {targetType: 'expense', targetId: ids['Electricity bill']!, note: 'Waiting for the refund from the board.'}})
+      // Still open in euros (Lena left before the show) and in dollars (I asked Priya to hold the course until I see the invoice).
+      ops.push({kind: 'dispute', at: soon('Fado night', 2 * HOUR), actor: cid('lena'), id: d('open-eur'), input: {targetType: 'expense', targetId: ids['Fado night']!, reason: 'wrong_share', note: 'I left before the show started.'}})
+      ops.push({kind: 'dispute.hold', at: soon('Online course', HOUR), actor: me, id: d('hold-usd'), input: {targetType: 'expense', targetId: ids['Online course']!, note: 'Waiting for the invoice.'}})
+      // A hold let go (euros).
+      ops.push({kind: 'dispute.hold', at: soon('Airbnb in Alfama', HOUR), actor: me, id: d('hold-released'), input: {targetType: 'expense', targetId: ids['Airbnb in Alfama']!, note: 'Need the receipt first.'}})
+      ops.push({kind: 'dispute.answer', at: soon('Airbnb in Alfama', 4 * HOUR), actor: cid('lena'), id: d('hold-released'), action: 'release'})
+    }
     const paid = nextId('r')
     ops.push({kind: 'repayment', at: now - 2 * DAY, actor: cid('priya'), id: paid, input: {id: paid, groupId: null, currency: 'INR', from: cid('priya'), to: me, amount: 250_000n, date: dateOf(now - 2 * DAY), tz: 'Asia/Kolkata', note: 'UPI'}})
     ops.push({kind: 'repayment.delete', at: now - 5 * HOUR, actor: me, id: paid})
@@ -1196,6 +1247,8 @@ export function generateLargeDemo({me, today, now, seed = DEMO_LARGE_SEED}: {me:
     const pounds = nextId('r')
     ops.push({kind: 'repayment', at: now - 52 * DAY + MINUTE, actor: me, id: pounds, input: {id: pounds, groupId: gB('paris'), currency: 'GBP', from: me, to: pid('chloe'), amount: 4_500n, date: dayAgo(52), tz: 'Europe/London', note: 'Monzo'}})
     counts.repayments++
+    // Chloe says the pounds never arrived (pounds: a payment not received, open).
+    ops.push({kind: 'dispute', at: now - 3 * DAY, actor: pid('chloe'), id: `${DEMO_LARGE_PREFIX}d-payment`, input: {targetType: 'repayment', targetId: pounds, reason: 'not_received', note: 'Nothing in my Monzo yet.'}})
     const squared = nextId('r')
     ops.push({kind: 'repayment', at: now - 52 * DAY, actor: me, id: squared, input: {id: squared, groupId: gB('paris'), currency: 'EUR', from: pid('chloe'), to: me, amount: 10_500n, date: dayAgo(52), tz: 'Europe/Paris', note: 'Revolut'}})
     counts.repayments++
@@ -1389,5 +1442,22 @@ export async function applyDemoOp(store: Store, base: MutationCtx, op: DemoOp): 
       return check(await recordNudge(store, ctx, op.input))
     case 'merchant.setup':
       return setPref(store, ctx, 'bill.merchantSetups', [merchantSetupOf(op.title, op.charges)])
+    case 'dispute':
+      return check(await raiseDispute(store, ctx, {...op.input, id: op.id}))
+    case 'dispute.hold':
+      return check(await holdRecord(store, ctx, {...op.input, id: op.id}))
+    case 'dispute.answer':
+      switch (op.action) {
+        case 'accept':
+          return void (await acceptDispute(store, ctx, op.id, {note: op.note}))
+        case 'reject':
+          return void (await rejectDispute(store, ctx, op.id, {note: op.note ?? ''}))
+        case 'withdraw':
+          return void (await withdrawDispute(store, ctx, op.id))
+        case 'release':
+          return void (await releaseHold(store, ctx, op.id))
+        case 'reopen':
+          return void (await reopenDispute(store, ctx, op.id, {note: op.note ?? ''}))
+      }
   }
 }

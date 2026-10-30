@@ -42,6 +42,8 @@ import {DotGrid3x1_Stroke2_Corner0_Rounded as DotsIcon} from '#/components/icons
 import {Pencil_Stroke2_Corner0_Rounded as PencilIcon} from '#/components/icons/Pencil'
 import {SettingsSliderVertical_Stroke2_Corner0_Rounded as FilterIcon} from '#/components/icons/SettingsSlider'
 import {historyRowHide, ShowHiddenSheet, useVisibleEntries} from '#/features/hidden/ShowHidden'
+import {rowMenuWrap} from '#/features/disputes/RowMenu'
+import {markOf, useDisputedBalances, useDisputedRecords, useOpenDisputes} from '#/state/disputes'
 import {useHideItem} from '#/features/hidden/HideItem'
 import {Group3_Stroke2_Corner0_Rounded as GroupIcon} from '#/components/icons/Group'
 import {Handshake_Stroke2_Corner0_Rounded as HandCoinsIcon} from '#/components/icons/Money'
@@ -91,6 +93,7 @@ import {
   magnitude,
   zeroFillNets,
   ZERO,
+  disputedInGroup,
 } from '@splito/domain'
 
 type Tab = 'expenses' | 'balances' | 'members'
@@ -153,6 +156,11 @@ export function GroupScreen() {
   const groupHistory = useGroupHistory(groupId)
   const detailsControl = useDialogControl()
   const filterControl = useDialogControl({url: 'filters'})
+  /* "Disputed only" (F-1210): this page's own choice, not remembered. ponytail: not in the address yet. */
+  const [onlyDisputed, setOnlyDisputed] = useState(false)
+  const openDisputes = useOpenDisputes()
+  const disputedRecords = useDisputedRecords(onlyDisputed)
+  const disputedRows = useDisputedBalances({groupId})
   const addMembersControl = useDialogControl({url: 'add-members'})
   const editControl = useDialogControl({url: 'edit'})
   const rulesControl = useDialogControl({url: 'rules'})
@@ -209,7 +217,8 @@ export function GroupScreen() {
   const names = new Map(
     (people ?? []).map(p => [p.id, p.id === me?.id ? l`You` : p.data.name]),
   )
-  const history = visible
+  /* "Disputed only" lists this group's disputed records from the open disputes themselves, not just the pages loaded. */
+  const history = onlyDisputed ? (disputedRecords ?? []).filter(e => e.entity.data.groupId === groupId) : visible
   /* Every member listed, zero when they have no records yet, so a settlement plan can route through them. */
   const nets =
     group && storedNets
@@ -225,6 +234,7 @@ export function GroupScreen() {
       me ? (net[me.id] ?? ZERO) : ZERO,
     ]),
   )
+  const groupDisputed = disputedInGroup(disputedRows, me?.id ?? '', mine)
   const openCurrencies = Object.keys(mine)
     .filter(c => mine[c] !== ZERO)
     .sort()
@@ -474,6 +484,7 @@ export function GroupScreen() {
             openCurrencies={openCurrencies}
             mine={mine}
             locale={locale}
+            disputed={groupDisputed.mine}
           />
         </View>
 
@@ -502,6 +513,12 @@ export function GroupScreen() {
                 <ButtonText>
                   <Trans>Filter</Trans>
                 </ButtonText>
+                {onlyDisputed ? (
+                  <Text testID="group-filter-disputed" style={[a.text_sm, a.font_semi_bold]}>
+                    {' · '}
+                    <Trans>Disputed only</Trans>
+                  </Text>
+                ) : null}
                 {showHidden ? (
                   <Text testID="group-filter-active" style={[a.text_sm, a.font_semi_bold]}>
                     {' · '}
@@ -668,6 +685,8 @@ export function GroupScreen() {
                     names={names}
                     locale={locale}
                     hide={historyRowHide(item.entry, hidden, l`this record`)}
+                    rowMenu={item.entry.entity.deleted ? undefined : rowMenuWrap}
+                    mark={markOf(openDisputes, item.entry.kind, item.entry.entity.id)}
                     onRepaymentPress={(r, kind) => {
                       setOpenRepayment(r)
                       setOpenKind(kind)
@@ -676,7 +695,7 @@ export function GroupScreen() {
                   />
                 )
               case 'currency':
-                return <CurrencyHeader currency={item.currency} />
+                return <CurrencyHeader currency={item.currency} disputed={groupDisputed.total[item.currency]} />
               case 'net':
                 return (
                   <MemberBalanceRow
@@ -901,7 +920,7 @@ export function GroupScreen() {
           }
         />
       )}
-      <ShowHiddenSheet control={filterControl} testID="group-filter-sheet" />
+      <ShowHiddenSheet control={filterControl} testID="group-filter-sheet" disputed={{value: onlyDisputed, onApply: setOnlyDisputed}} />
     </Layout.Screen>
   )
 }

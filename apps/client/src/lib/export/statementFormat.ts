@@ -31,7 +31,11 @@ export interface StatementText {
     effect: string
     balance: string
     location: string
+    /** The dispute column (F-1210): present, the CSV gets a last column saying "Disputed" or "On hold" for a marked record. */
+    dispute?: string
   }
+  /** What a record's open dispute or hold is called in the dispute column; empty when it has none. */
+  dispute?(row: StatementRow): string
   opening: string
   closing: string
   adjustment: string
@@ -46,10 +50,13 @@ const exact = (minor: bigint, currency: string) => toDecimalString(minor, getCur
  */
 export function statementCsv(st: Statement, text: StatementText): string {
   const c = text.columns
-  const rows: string[][] = [[c.date, c.type, c.description, c.group, c.currency, c.amount, c.paidBy, c.youPaid, c.yourShare, c.effect, c.balance, c.location]]
+  const hasDispute = c.dispute !== undefined
+  /* The dispute column is last, so every other column keeps its place. */
+  const tail = (cell = ''): string[] => (hasDispute ? [cell] : [])
+  const rows: string[][] = [[c.date, c.type, c.description, c.group, c.currency, c.amount, c.paidBy, c.youPaid, c.yourShare, c.effect, c.balance, c.location, ...(hasDispute ? [c.dispute!] : [])]]
   if (st.filter.from)
     for (const cur of st.currencies)
-      rows.push([st.filter.from, text.opening, '', '', cur, '', '', '', '', '', exact(st.opening[cur] ?? ZERO, cur), ''])
+      rows.push([st.filter.from, text.opening, '', '', cur, '', '', '', '', '', exact(st.opening[cur] ?? ZERO, cur), '', ...tail()])
   for (const r of st.rows)
     rows.push([
       r.date,
@@ -64,12 +71,13 @@ export function statementCsv(st: Statement, text: StatementText): string {
       exact(r.effect, r.currency),
       exact(r.balance, r.currency),
       text.groupLocation(r.groupId),
+      ...tail(text.dispute?.(r) ?? ''),
     ])
   const last = st.filter.to ?? st.rows.at(-1)?.date ?? ''
   for (const cur of st.currencies) {
     const adjust = st.adjustments[cur]
-    if (adjust !== undefined) rows.push([last, text.adjustment, '', '', cur, '', '', '', '', exact(adjust, cur), exact(st.closing[cur] ?? ZERO, cur), ''])
-    rows.push([last, text.closing, '', '', cur, '', '', '', '', '', exact(st.closing[cur] ?? ZERO, cur), ''])
+    if (adjust !== undefined) rows.push([last, text.adjustment, '', '', cur, '', '', '', '', exact(adjust, cur), exact(st.closing[cur] ?? ZERO, cur), '', ...tail()])
+    rows.push([last, text.closing, '', '', cur, '', '', '', '', '', exact(st.closing[cur] ?? ZERO, cur), '', ...tail()])
   }
   return toCsv(rows)
 }

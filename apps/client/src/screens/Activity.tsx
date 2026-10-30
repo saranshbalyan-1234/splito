@@ -51,11 +51,12 @@ export function ActivityScreen() {
   const listAnimations = useListAnimations()
   /* The tab is the address (`/activity/others`, F-241): written on a tap, read from the route. */
   const navigation = useNavigation<NavigationProp>()
-  const tab = (useRoute().params as {tab?: string} | undefined)?.tab === 'others' ? 1 : 0
-  const setTab = (i: number) => navigation.setParams({tab: i === 1 ? 'others' : undefined})
+  const tabParam = (useRoute().params as {tab?: string} | undefined)?.tab
+  const tab = tabParam === 'others' ? 1 : tabParam === 'disputed' ? 2 : 0
+  const setTab = (i: number) => navigation.setParams({tab: i === 1 ? 'others' : i === 2 ? 'disputed' : undefined})
   /* The tab bar follows the tap at once; the list behind it re-renders as a transition (owner 151). */
   const bodyTab = useDeferredValue(tab)
-  const feed = useActivityFeed(bodyTab === 0 ? 'all' : 'others')
+  const feed = useActivityFeed(bodyTab === 0 ? 'all' : bodyTab === 1 ? 'others' : 'disputed')
   const actions = useActivityActions(feed)
   const {snapshot, rows, hiddenCount, unreadCount, me} = feed
   const {shown, onEndReached: showMore} = usePagedRows(bodyTab)(rows)
@@ -124,7 +125,7 @@ export function ActivityScreen() {
         <TabBar
           testID="activity-tabs"
           selectedPage={tab}
-          items={[l`All`, l`From others`]}
+          items={[l`All`, l`From others`, l`Disputed`]}
           onSelect={setTab}
         />
       </Layout.Header.Sticky>
@@ -152,6 +153,8 @@ export function ActivityScreen() {
                 message={
                   hiddenCount > 0
                     ? l`You've hidden everything here. New expenses, payments and group changes will show up as they happen.`
+                    : bodyTab === 2
+                      ? l`No disputes or holds. When someone questions an expense or puts it on hold, it shows up here.`
                     : bodyTab === 1
                       ? l`Nothing from other people yet. When someone else adds or changes something you share, it shows up here.`
                       : l`Nothing here yet. Expenses, payments and group changes will show up here.`
