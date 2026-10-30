@@ -2,13 +2,14 @@ import {Deferred} from '#/components/Deferred'
 import {plural} from '@lingui/core/macro'
 import {useLingui} from '@lingui/react/macro'
 import {useNavigation, useRoute} from '@react-navigation/native'
-import {balanceTotals, isSettledBalance, personSummary, type SummaryScope} from '@splito/domain'
-import {type Group, type Person} from '@splito/sync'
+import {type BalanceRow, balanceTotals, isSettledBalance, personSummary, type SummaryScope} from '@splito/domain'
+import {type Entity, type Group, type Person} from '@splito/sync'
 import {useEffect} from 'react'
 
 import {type Params} from '#/lib/links/listState'
 import {type NavigationProp} from '#/lib/routes/types'
 import {perfMark} from '#/lib/perfMark'
+import {type SeenCurrencies} from '#/data/ledgerQueries'
 import {useGroupChipNames} from '#/data/groupVisibility'
 import {useHiddenItems, useShowHidden} from '#/data/hiddenItems'
 import {useNumberLocale} from '#/locale/numberLocale'
@@ -55,8 +56,6 @@ export function HomeScreen() {
   const {t: l} = useLingui()
   const {gtMobile} = useBreakpoints()
   const {demo} = useDemoMode()
-  const locale = useNumberLocale()
-  const navigation = useNavigation<NavigationProp>()
   const me = useMe()
   /* Tombstones too: a removed friend with an open balance stays counted until it is settled (decision 103). */
   const people = useAllEntities<Person>('person')
@@ -79,40 +78,8 @@ export function HomeScreen() {
     if (!isLoading) perfMark('splito:home-ready')
   }, [isLoading])
 
-  /* The rows below the Overview never follow its scope (owner 176): they read every balance. The scope narrows only the cards. */
-  const summaries = balanceRows ? personSummary(balanceRows, {includeGroups: true}) : []
-  const byPerson = new Map(summaries.map(s => [s.person, s]))
-  const scoped = new Map((balanceRows ? personSummary(balanceRows, {includeGroups: true, scope}) : []).map(s => [s.person, s]))
-  const groupNames = useGroupChipNames(groups)
-  const friends = listedFriends(people ?? [], byPerson, hiddenIds).filter(f => showHidden || !f.isHidden)
-  /* A removed friend is in the list but is no friend now: the counts and figures cover the live rows. */
-  const live = friends.filter(f => f.deletedAt === undefined)
-  const seenCurrencies = seenByPerson(seen?.people ?? {}, true)
-  /* The newest change first; a friend with no record yet has no activity to show. */
-  const activity = lastActivity ?? new Map<string, number>()
-  const recentPeople: PersonRowData[] = hideSettled(
-    sortFriends(live, 'recent', {currency: defaultCurrency, activity}).filter(f => (activity.get(f.id) ?? 0) > 0),
-    {showSettled, show: 'all'},
-    seenCurrencies,
-  ).slice(0, HOME_ROWS)
-
-  /* Totals, captions and the counts line read the scoped summaries. */
-  const scopedOf = (id: string) => scoped.get(id)
-  const totals = balanceTotals(live.flatMap(row => scopedOf(row.id) ?? []))
-  /* Settled means every part is zero, not just the net (audit M10). */
-  const settledCount = live.filter(row => Object.values(scopedOf(row.id)?.byCurrency ?? {}).every(isSettledBalance)).length
-  /* Per currency: how many friends the card's figure is made of. */
-  const captions = Object.fromEntries(
-    totals.map(({currency: c}) => {
-      const n = live.filter(row => {
-        const balance = scopedOf(row.id)?.byCurrency[c]
-        return !!balance && !isSettledBalance(balance)
-      }).length
-      return [c, plural(n, {one: '# friend', other: '# friends'})]
-    }),
-  )
-  const counts = [plural(live.length, {one: '# friend', other: '# friends'}), l`${settledCount} settled`].join(' · ')
-  const hasFriends = live.length > 0
+  /* Cheap: only whether the FAB shows. Everything derived (summaries, totals, the recent lists) is computed in the body, after the first frame (owner 152). */
+  const hasContent = (people ?? []).some(p => !p.data.isMe && !p.deleted) || (groups?.length ?? 0) > 0
 
   return (
     <TabScreen testID="screen-home">
@@ -149,53 +116,126 @@ export function HomeScreen() {
         }>
         {() => (
           /* Bluesky's List with the sections as its header, so the phone header hides on scroll like on every tab (owner 81, 87). */
-          <List
-            data={NO_ROWS}
-            renderItem={renderNothing}
-            ListHeaderComponent={
-              <>
-                {hasFriends && (
-                  <Overview
-                    totals={totals}
-                    locale={locale}
-                    counts={counts}
-                    captions={captions}
-                    scope={scope}
-                    onScopeChange={next => {
-                      navigation.setParams({overview: overviewParam(next, savedScope)} as never)
-                      void setSavedScope(next)
-                    }}
-                  />
-                )}
-                <RequestsSection />
-                <RecentTransactions locale={locale} />
-                <RecentPeople rows={recentPeople} groupNames={groupNames} locale={locale} />
-                <RecentGroups locale={locale} />
-                {!hasFriends && (groups?.length ?? 0) === 0 && (
-                  <EmptyState
-                    testID="home-empty"
-                    /* Same layout, motion and button as every other screen's empty state (owner 146). */
-                    illustration="empty-people"
-                    message={l`No friends yet. Add a friend, then split any bill with them. They don’t need the app.`}
-                    button={{
-                      testID: 'home-empty-add-friend',
-                      label: l`Add a friend`,
-                      text: l`Add a friend`,
-                      icon: PersonPlusIcon,
-                      onPress: () => navigation.navigate('AddFriend'),
-                      size: 'small',
-                      color: 'secondary',
-                    }}
-                  />
-                )}
-              </>
-            }
-            ListFooterComponent={<AddExpenseFABInset />}
+          <HomeBody
+            people={people!}
+            groups={groups!}
+            balanceRows={balanceRows!}
+            seen={seen}
+            lastActivity={lastActivity}
+            scope={scope}
+            savedScope={savedScope}
+            setSavedScope={setSavedScope}
+            showHidden={showHidden}
+            showSettled={showSettled}
+            defaultCurrency={defaultCurrency}
+            hiddenIds={hiddenIds}
           />
         )}
       </Deferred>
       {/* The empty state's own buttons are the actions; a FAB would be a third Add. */}
-      {(isLoading || hasFriends || (groups?.length ?? 0) > 0) && <AddExpenseFAB />}
+      {(isLoading || hasContent) && <AddExpenseFAB />}
     </TabScreen>
+  )
+}
+
+type HomeData = {
+  people: Entity<Person>[]
+  groups: Entity<Group>[]
+  balanceRows: BalanceRow[]
+  seen: SeenCurrencies | undefined
+  lastActivity: Map<string, number> | undefined
+  scope: SummaryScope
+  savedScope: SummaryScope
+  setSavedScope: (scope: SummaryScope) => unknown
+  showHidden: boolean
+  showSettled: boolean
+  defaultCurrency: string
+  hiddenIds: ReadonlySet<string>
+}
+
+/** Home's sections. A child of `Deferred`, so its figures are worked out after the header's first frame, not before it. */
+function HomeBody({people, groups, balanceRows, seen, lastActivity, scope, savedScope, setSavedScope, showHidden, showSettled, defaultCurrency, hiddenIds}: HomeData) {
+  const {t: l} = useLingui()
+  const locale = useNumberLocale()
+  const navigation = useNavigation<NavigationProp>()
+  /* The rows below the Overview never follow its scope (owner 176): they read every balance. The scope narrows only the cards. */
+  const summaries = personSummary(balanceRows, {includeGroups: true})
+  const byPerson = new Map(summaries.map(s => [s.person, s]))
+  const scoped = new Map(personSummary(balanceRows, {includeGroups: true, scope}).map(s => [s.person, s]))
+  const groupNames = useGroupChipNames(groups)
+  const friends = listedFriends(people, byPerson, hiddenIds).filter(f => showHidden || !f.isHidden)
+  /* A removed friend is in the list but is no friend now: the counts and figures cover the live rows. */
+  const live = friends.filter(f => f.deletedAt === undefined)
+  const seenCurrencies = seenByPerson(seen?.people ?? {}, true)
+  /* The newest change first; a friend with no record yet has no activity to show. */
+  const activity = lastActivity ?? new Map<string, number>()
+  const recentPeople: PersonRowData[] = hideSettled(
+    sortFriends(live, 'recent', {currency: defaultCurrency, activity}).filter(f => (activity.get(f.id) ?? 0) > 0),
+    {showSettled, show: 'all'},
+    seenCurrencies,
+  ).slice(0, HOME_ROWS)
+
+  /* Totals, captions and the counts line read the scoped summaries. */
+  const scopedOf = (id: string) => scoped.get(id)
+  const totals = balanceTotals(live.flatMap(row => scopedOf(row.id) ?? []))
+  /* Settled means every part is zero, not just the net (audit M10). */
+  const settledCount = live.filter(row => Object.values(scopedOf(row.id)?.byCurrency ?? {}).every(isSettledBalance)).length
+  /* Per currency: how many friends the card's figure is made of. */
+  const captions = Object.fromEntries(
+    totals.map(({currency: c}) => {
+      const n = live.filter(row => {
+        const balance = scopedOf(row.id)?.byCurrency[c]
+        return !!balance && !isSettledBalance(balance)
+      }).length
+      return [c, plural(n, {one: '# friend', other: '# friends'})]
+    }),
+  )
+  const counts = [plural(live.length, {one: '# friend', other: '# friends'}), l`${settledCount} settled`].join(' · ')
+  const hasFriends = live.length > 0
+
+  return (
+    <List
+      data={NO_ROWS}
+      renderItem={renderNothing}
+      ListHeaderComponent={
+        <>
+          {hasFriends && (
+            <Overview
+              totals={totals}
+              locale={locale}
+              counts={counts}
+              captions={captions}
+              scope={scope}
+              onScopeChange={next => {
+                navigation.setParams({overview: overviewParam(next, savedScope)} as never)
+                void setSavedScope(next)
+              }}
+            />
+          )}
+          <RequestsSection />
+          <RecentTransactions locale={locale} />
+          <RecentPeople rows={recentPeople} groupNames={groupNames} locale={locale} />
+          <RecentGroups locale={locale} />
+          {!hasFriends && groups.length === 0 && (
+            <EmptyState
+              testID="home-empty"
+              /* Same layout, motion and button as every other screen's empty state (owner 146). */
+              illustration="empty-people"
+              message={l`No friends yet. Add a friend, then split any bill with them. They don’t need the app.`}
+              button={{
+                testID: 'home-empty-add-friend',
+                label: l`Add a friend`,
+                text: l`Add a friend`,
+                icon: PersonPlusIcon,
+                onPress: () => navigation.navigate('AddFriend'),
+                size: 'small',
+                color: 'secondary',
+              }}
+            />
+          )}
+        </>
+      }
+      ListFooterComponent={<AddExpenseFABInset />}
+    />
   )
 }
