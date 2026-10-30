@@ -34,12 +34,19 @@ const PHONE = {width: 390, height: 844}
 const RUNS = Number(process.env.TAP_RUNS ?? 3)
 const BUDGET = {full: 100, throttled: 200}
 
+/* The People tab: the Friends list is there (Home holds only the five most recent, F-256). */
 async function home(page: Page) {
-  await openDemo(page)
+  await openDemo(page, '/people')
   await expect(page.getByTestId('person-Riya Sharma')).toBeVisible({timeout: 60_000})
   // The large demo keeps loading its later history in the background; measure taps on a quiet app, not on that.
   await page.waitForTimeout(Number(process.env.TAP_QUIET ?? 3000))
 }
+async function onHome(page: Page) {
+  await openDemo(page)
+  await expect(page.getByTestId('home-overview')).toBeVisible({timeout: 60_000})
+  await page.waitForTimeout(Number(process.env.TAP_QUIET ?? 3000))
+}
+const onPeople = home
 async function onGroups(page: Page) {
   await home(page)
   await page.getByTestId('tab-groups').click()
@@ -53,6 +60,8 @@ async function groupsSheet(page: Page) {
 }
 
 const CASES: Case[] = [
+  {name: 'tab: People', prepare: onHome, tap: p => p.getByTestId('tab-people'), done: {visible: 'screen-people'}},
+  {name: 'tab: Home', prepare: onPeople, tap: p => p.getByTestId('tab-home'), done: {visible: 'screen-home'}},
   {name: 'tab: Groups', prepare: home, tap: p => p.getByTestId('tab-groups'), done: {visible: 'screen-groups'}},
   {name: 'tab: Analytics', prepare: home, tap: p => p.getByTestId('tab-analytics'), done: {visible: 'screen-analytics'}},
   {name: 'tab: Activity', prepare: home, tap: p => p.getByTestId('tab-activity'), done: {visible: 'screen-activity'}},

@@ -12,14 +12,13 @@ const PHONE = {width: 390, height: 844}
 const DESKTOP = {width: 1440, height: 900}
 
 async function home(page: Page) {
-  await openDemo(page)
+  await openDemo(page, '/people')
   await expect(page.getByTestId('person-Arjun Mehta')).toBeVisible()
 }
 
-/* Ask Splito is off the default bar, so the sidebar holds it under More (26.3). */
+/* Ask Splito is off the default bar but always on the sidebar (owner 155, 26.3). */
 async function openAsk(page: Page) {
-  await page.getByTestId('tab-more').click()
-  await page.getByTestId('more-ask').click()
+  await page.getByTestId('tab-ask').click()
 }
 
 async function ask(page: Page, question: string) {
@@ -59,7 +58,7 @@ test('typing a plain search and pressing Enter stays a search; the Ask row opens
   await page.getByTestId('search-row-0').click()
   await expect(page.getByTestId('ask-chat')).toBeVisible()
   // Outside what the device can answer: honest, with the closest question, never a figure.
-  await expect(page.getByTestId('ask-lead')).toContainText('I can answer this once you sign in')
+  await expect(page.getByTestId('ask-lead')).toContainText('I can answer this once sync arrives')
   await expect(page.getByTestId('ask-suggestion').first()).toBeVisible()
   await expect(page.getByTestId('ask-on-device')).toHaveCount(0)
 })
@@ -146,10 +145,10 @@ test('a question that is not about me, or about a place nothing here knows, is n
   await home(page)
   await openAsk(page)
   await ask(page, 'Who owes Riya?')
-  await expect(page.getByTestId('ask-lead').last()).toContainText('I can answer this once you sign in')
+  await expect(page.getByTestId('ask-lead').last()).toContainText('I can answer this once sync arrives')
   await expect(page.getByTestId('ask-balance-card')).toHaveCount(0)
   await ask(page, 'Can you delete the dinner expense?')
-  await expect(page.getByTestId('ask-lead').last()).toContainText('I can answer this once you sign in')
+  await expect(page.getByTestId('ask-lead').last()).toContainText('I can answer this once sync arrives')
   await expect(page.getByTestId('ask-spend-INR')).toHaveCount(0)
   // Unknown words in a spend question become a search, which says what it searched for.
   await ask(page, 'How much did I spend at Udaipur?')
@@ -186,6 +185,8 @@ test('the sidebar, the drawer and a pinned bar tab all open the drawer in Ask mo
   await page.setViewportSize(PHONE)
   await page.goto('/settings/navigation')
   await page.getByTestId('tabs-toggle-ask').click()
+  // The bar follows the saved preference; wait for that before leaving.
+  await expect(page.getByTestId('tab-ask')).toBeVisible()
   await page.goto('/')
   await expect(page.getByTestId('tab-ask')).toBeVisible()
   await page.getByTestId('tab-ask').click()
@@ -194,21 +195,21 @@ test('the sidebar, the drawer and a pinned bar tab all open the drawer in Ask mo
   await expect(page.getByTestId('search-input')).toBeVisible()
   await page.getByTestId('search-ask-cancel').click()
 
-  await page.getByTestId('screen-people').getByTestId('header-avatar').click()
+  await page.getByTestId('screen-home').getByTestId('header-avatar').click()
   await page.getByTestId('drawer-ask').click()
   await expect(page.getByTestId('ask-chat')).toBeVisible()
 })
 
-test('a six-tab bar fits a phone: every tab is on screen, equal in width, with its badge', async ({page}) => {
+test('a seven-tab bar fits a phone: every tab is on screen, equal in width, with its badge', async ({page}) => {
   await page.setViewportSize(PHONE)
   await openDemo(page, '/settings/navigation')
   for (const tab of ['ask', 'settings']) {
     await page.getByTestId(`tabs-toggle-${tab}`).click()
     await expect(page.getByTestId(`tab-${tab}`)).toHaveCount(1)
   }
-  await page.goto('/')
+  await page.goto('/people')
   await expect(page.getByTestId('person-Arjun Mehta')).toBeVisible()
-  const ids = ['people', 'groups', 'analytics', 'ask', 'activity', 'settings']
+  const ids = ['home', 'people', 'groups', 'analytics', 'ask', 'activity', 'settings']
   const boxes = []
   for (const id of ids) {
     const box = await page.getByTestId(`tab-${id}`).boundingBox()

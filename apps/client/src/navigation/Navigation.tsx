@@ -18,14 +18,13 @@ import {
 } from '@react-navigation/native-stack'
 
 import {useWebScrollRestoration} from '#/lib/hooks/useWebScrollRestoration'
-import {TAB_ROUTE} from '#/lib/routes/tabs'
+import {bootStartTab, TAB_ROUTE} from '#/lib/routes/tabs'
 import {
   type FlatNavigatorParams,
   type RootStackParams,
   type TabParams,
 } from '#/lib/routes/types'
 import {useShellLayout} from '#/state/shell/shell-layout'
-import {device} from '#/storage'
 import {BottomBar} from '#/view/shell/bottom-bar/BottomBar'
 import {createNativeStackNavigatorWithAuth} from '#/view/shell/createNativeStackNavigatorWithAuth'
 import {DesktopLeftNav, type SidebarTab} from '#/view/shell/desktop/LeftNav'
@@ -33,6 +32,7 @@ import {type Theme, useBreakpoints, useTheme} from '#/alf'
 import {IS_ANDROID, IS_IOS, IS_IPAD} from '#/env'
 import {usePref} from '#/data/hooks'
 import {useShouldReduceMotion} from '#/motion/useShouldReduceMotion'
+import {tabId} from '#/navigation/parkTabs'
 import {DevTour} from '#/navigation/DevTour'
 import {navigationRef} from '#/navigation/ref'
 import {linking} from '#/navigation/linking'
@@ -49,13 +49,14 @@ import {ExpenseScreen} from '#/screens/Expense'
 import {RepaymentScreen} from '#/screens/Repayment'
 import {GroupScreen} from '#/screens/Group'
 import {GroupsScreen} from '#/screens/Groups'
+import {HomeScreen} from '#/screens/Home'
 import {PeopleScreen} from '#/screens/People'
 import {PersonScreen} from '#/screens/Person'
 import {ProfileScreen} from '#/screens/Profile'
 import {SettingsScreen} from '#/screens/Settings'
 import {FriendsAndInvitesScreen} from '#/screens/FriendsAndInvites'
 import {SettingsSectionScreen} from '#/screens/Settings/SettingsSection'
-import {SignInScreen} from '#/screens/SignIn'
+import {WelcomeScreen} from '#/screens/Welcome/Replay'
 import {SearchScreen} from '#/screens/Search'
 import {SettleScreen} from '#/screens/Settle'
 import {useDemoMode} from '#/state/demo'
@@ -64,15 +65,16 @@ const Stack = createNativeStackNavigator<RootStackParams>()
 const Tab = createBottomTabNavigator<TabParams>()
 const Flat = createNativeStackNavigatorWithAuth<FlatNavigatorParams>()
 
-/** Window titles for web; People is home, so it is just "Splito". */
+/** Window titles for web; Home has none, so it is just "Splito". */
 const TITLES: Partial<Record<keyof FlatNavigatorParams, MessageDescriptor>> = {
+  People: msg`People`,
   Groups: msg`Groups`,
   Analytics: msg`Analytics`,
   Activity: msg`Activity`,
   Profile: msg`Profile`,
   Settings: msg`Settings`,
   SettingsSection: msg`Settings`,
-  SignIn: msg`Sign in`,
+  Welcome: msg`Welcome`,
   FriendsAndInvites: msg`Friends and invites`,
   Search: msg`Search`,
   Person: msg`Person`,
@@ -163,7 +165,7 @@ function Tabs() {
   return (
     <Tab.Navigator
       // The Home tab preference (Settings > Defaults), mirrored for a synchronous read at launch.
-      initialRouteName={TAB_ROUTE[device.get(['homeTab']) ?? 'people']}
+      initialRouteName={TAB_ROUTE[bootStartTab()]}
       backBehavior="initialRoute"
       screenOptions={{
         headerShown: false,
@@ -172,6 +174,7 @@ function Tabs() {
         tabBarPosition: gtMobile ? 'left' : 'bottom',
       }}
       tabBar={props => <NativeTabBar {...props} />}>
+      <Tab.Screen name="Home" component={HomeScreen} />
       <Tab.Screen name="People" component={PeopleScreen} />
       <Tab.Screen name="Groups" component={GroupsScreen} />
       <Tab.Screen name="Analytics" component={AnalyticsScreen} />
@@ -204,11 +207,17 @@ export function TabsNavigator({
         ...(reducedAnimation && {animation: reducedAnimation}),
       }}>
       <Stack.Screen name="Tabs" component={Tabs} />
+      {/* A main screen opened from a link: the same screen pushed above the tabs, with Back (owner 179). */}
+      <Stack.Screen name="PushedHome" component={HomeScreen} />
+      <Stack.Screen name="PushedPeople" component={PeopleScreen} />
+      <Stack.Screen name="PushedGroups" component={GroupsScreen} />
+      <Stack.Screen name="PushedAnalytics" component={AnalyticsScreen} />
+      <Stack.Screen name="PushedActivity" component={ActivityScreen} />
       <Stack.Screen name="Profile" component={ProfileScreen} />
       <Stack.Screen name="Settings" component={SettingsScreen} />
       <Stack.Screen name="Search" component={SearchScreen} />
       <Stack.Screen name="SettingsSection" component={SettingsSectionScreen} />
-      <Stack.Screen name="SignIn" component={SignInScreen} />
+      <Stack.Screen name="Welcome" component={WelcomeScreen} />
       <Stack.Screen name="FriendsAndInvites" component={FriendsAndInvitesScreen} />
       <Stack.Screen name="Person" component={PersonScreen} />
       <Stack.Screen name="Group" component={GroupScreen} />
@@ -264,23 +273,33 @@ export function FlatNavigator({
       screenListeners={screenListeners}
       screenOptions={screenOptions(t)}>
       <Flat.Screen
+        name="Home"
+        component={HomeScreen}
+        getId={tabId}
+        options={{title: title('Home')}}
+      />
+      <Flat.Screen
         name="People"
         component={PeopleScreen}
+        getId={tabId}
         options={{title: title('People')}}
       />
       <Flat.Screen
         name="Groups"
         component={GroupsScreen}
+        getId={tabId}
         options={{title: title('Groups')}}
       />
       <Flat.Screen
         name="Analytics"
         component={AnalyticsScreen}
+        getId={tabId}
         options={{title: title('Analytics')}}
       />
       <Flat.Screen
         name="Activity"
         component={ActivityScreen}
+        getId={tabId}
         options={{title: title('Activity')}}
       />
       <Flat.Screen
@@ -304,9 +323,9 @@ export function FlatNavigator({
         options={{title: title('SettingsSection')}}
       />
       <Flat.Screen
-        name="SignIn"
-        component={SignInScreen}
-        options={{title: title('SignIn')}}
+        name="Welcome"
+        component={WelcomeScreen}
+        options={{title: title('Welcome')}}
       />
       <Flat.Screen
         name="FriendsAndInvites"

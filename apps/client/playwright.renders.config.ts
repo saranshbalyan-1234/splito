@@ -14,7 +14,9 @@ export default defineConfig({
   testDir: 'e2e-renders',
   timeout: 300_000,
   workers: 1,
+  globalSetup: './e2e/globalSignIn.ts',
   use: {
+    storageState: `.auth/renders-${PORT}.json`,
     baseURL: `http://localhost:${PORT}`,
     channel: 'chrome',
     trace: 'retain-on-failure',

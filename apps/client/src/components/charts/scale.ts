@@ -11,7 +11,8 @@ export function useWidth(): [number, (e: LayoutChangeEvent) => void] {
     width,
     e => {
       const w = Math.round(e.nativeEvent.layout.width)
-      if (w !== width) setWidth(w)
+      // A hidden tab measures 0: keep the last real width, so showing it again re-renders nothing (owner 166).
+      if (w > 0 && w !== width) setWidth(w)
     },
   ]
 }

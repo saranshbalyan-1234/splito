@@ -20,12 +20,15 @@ import {
 } from '#/components/activity/useActivityFeed'
 import {PressableScale} from '#/motion/PressableScale'
 import {useSearchAsk} from '#/components/SearchAsk/context'
-import {NAV_LABELS, TabGlyph} from '#/components/TabGlyph'
+import {MAX_LABELLED_TABS, NAV_LABELS, TabGlyph, TabLabel} from '#/components/TabGlyph'
 import {Text} from '#/components/Typography'
 import {useAnalytics} from '#/analytics'
 import {styles} from './BottomBarStyles'
 
 type NavItemValue = NavItemId
+
+/** A net only: a pending highlight whose navigation was dropped is released after this. */
+const PENDING_NET_MS = 3000
 
 /*
  * Bluesky's signed-in mobile-web bottom bar with the items the `tabs`
@@ -40,6 +43,7 @@ export function BottomBarWeb() {
   const {footerHeight} = useShellLayout()
   const tabs = useTabs()
   const iconWidth = 26
+  const hasLabels = tabs.length <= MAX_LABELLED_TABS
   const activityBadge = useActivityBadge()
   const searchAsk = useSearchAsk()
   /* Only the bar's own pages light up; under any other page the tab it was opened from stays lit. */
@@ -47,12 +51,14 @@ export function BottomBarWeb() {
   /*
    * The tab under the finger lights up in the press-in's own commit, before the page behind it switches (the
    * switch is a frame later and may be heavy on a phone): the bar never waits for its screen. Cleared when the
-   * navigation state catches up, or after a second if the press led nowhere.
+   * navigation state catches up; a modified press (new tab) never sets it.
    */
   const [pending, setPending] = useState<string | null>(null)
   useEffect(() => {
     if (!pending) return
-    const id = setTimeout(() => setPending(null), 1000)
+    // It is set only by a press that navigates, so the navigation state catches up and clears it (below); this
+    // is a net for a dispatch that was dropped, far longer than any switch takes.
+    const id = setTimeout(() => setPending(null), PENDING_NET_MS)
     return () => clearTimeout(id)
   }, [pending])
 
@@ -76,13 +82,14 @@ export function BottomBarWeb() {
               <PressableScale
                 key={tab}
                 testID={`tab-${tab}`}
-                style={[styles.ctrl, a.pb_lg]}
+                style={[styles.ctrl, hasLabels && styles.ctrlLabelled, a.pb_sm]}
                 accessibilityRole="button"
                 accessibilityLabel={_(NAV_LABELS[tab])}
                 accessibilityHint=""
                 targetScale={0.8}
                 onPress={() => searchAsk.open({mode: 'ask'})}>
                 <TabGlyph tab={tab} isActive={false} size={iconWidth} />
+                {hasLabels && <TabLabel label={_(NAV_LABELS[tab])} isActive={false} />}
               </PressableScale>
             )
           }
@@ -97,11 +104,15 @@ export function BottomBarWeb() {
               pending={pending}
               onPressStart={() => setPending(routeName)}
               onSettled={() => setPending(null)}
+              hasLabels={hasLabels}
               notificationCount={
                 tab === 'activity' ? activityBadge : undefined
               }>
               {({isActive}) => (
-                <TabGlyph tab={tab} isActive={isActive} size={iconWidth} />
+                <>
+                  <TabGlyph tab={tab} isActive={isActive} size={iconWidth} />
+                  {hasLabels && <TabLabel label={_(NAV_LABELS[tab])} isActive={isActive} />}
+                </>
               )}
             </NavItem>
           )
@@ -123,6 +134,8 @@ const NavItem: React.FC<{
   pending: string | null
   onPressStart: () => void
   onSettled: () => void
+  /** The bar shows a label under each icon (5 items or fewer). */
+  hasLabels: boolean
   hasNew?: boolean
   notificationCount?: string
   onLongPress?: () => void
@@ -136,6 +149,7 @@ const NavItem: React.FC<{
   pending,
   onPressStart,
   onSettled,
+  hasLabels,
   hasNew,
   notificationCount,
   onLongPress,
@@ -158,10 +172,10 @@ const NavItem: React.FC<{
     <Link
       testID={`tab-${navItem}`}
       href={href}
-      style={[styles.ctrl, a.pb_lg]}
+      style={[styles.ctrl, hasLabels && styles.ctrlLabelled, hasLabels ? a.pb_sm : a.pb_lg]}
       navigationAction="navigate"
       activateOnPressIn
-      onPressIn={onPressStart}
+      onActivated={onPressStart}
       aria-role="link"
       aria-label={label}
       aria-current={isActive ? 'page' : undefined}

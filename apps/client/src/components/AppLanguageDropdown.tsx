@@ -2,7 +2,8 @@
 import {useLingui} from '@lingui/react/macro'
 
 import {APP_LANGUAGES, appLanguageName} from '#/locale/languages'
-import {useAppLanguage} from '#/state/preferences/language'
+import {type AppLanguage} from '#/locale/i18n'
+import {useAppLanguage, useDeviceLanguage} from '#/state/preferences/language'
 import {atoms as a, platform, useTheme, web} from '#/alf'
 import * as Select from '#/components/Select'
 import {Button, ButtonIcon} from './Button'
@@ -16,10 +17,25 @@ import {Earth_Stroke2_Corner2_Rounded as EarthIcon} from './icons/Globe'
  * Bluesky shows it: the web splash, sign-up and the desktop right column
  * (owner 128).
  */
-export function AppLanguageDropdown() {
+export function AppLanguageDropdown({isDevice = false}: {isDevice?: boolean}) {
+  return isDevice ? <DeviceLanguageSelect /> : <AccountLanguageSelect />
+}
+
+/** Signed in: the account's `language` preference. */
+function AccountLanguageSelect() {
+  const {language, setLanguage} = useAppLanguage()
+  return <LanguageSelect language={language} setLanguage={setLanguage} />
+}
+
+/** Signed out (the intro's chip): the device's own choice, because the account's database is closed. */
+function DeviceLanguageSelect() {
+  const {language, setLanguage} = useDeviceLanguage()
+  return <LanguageSelect language={language} setLanguage={setLanguage} />
+}
+
+function LanguageSelect({language, setLanguage}: {language: AppLanguage; setLanguage: (language: AppLanguage) => unknown}) {
   const t = useTheme()
   const {t: l} = useLingui()
-  const {language, setLanguage} = useAppLanguage()
 
   return (
     <Select.Root

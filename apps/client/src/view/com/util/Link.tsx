@@ -9,7 +9,7 @@ import {
   View,
   type ViewStyle,
 } from 'react-native'
-import {CommonActions, StackActions} from '@react-navigation/native'
+import {StackActions} from '@react-navigation/native'
 
 import {
   type DebouncedNavigationProp,
@@ -17,7 +17,8 @@ import {
 } from '#/lib/hooks/useNavigationDeduped'
 import {IS_WEB} from '#/env'
 import {openExternal} from '#/lib/openExternal'
-import {getTabState, tabLink, TabState} from '#/lib/routes/helpers'
+import {createPressInGate, isPlainPrimaryPress} from '#/lib/hooks/pressIn'
+import {getTabState, originTab, pushedCopyOf, tabLink, TabState} from '#/lib/routes/helpers'
 import {WebAuxClickWrapper} from '#/view/com/util/WebAuxClickWrapper'
 import {useTheme} from '#/alf'
 import {Text} from '#/components/Typography'
@@ -48,6 +49,8 @@ interface Props extends React.ComponentProps<typeof TouchableOpacity> {
    * release that follows is then ignored. Only for idempotent navigation (switching tab).
    */
   activateOnPressIn?: boolean
+  /** With `activateOnPressIn`: called when a press-in is about to navigate (not for a modified press). */
+  onActivated?: () => void
 }
 
 /**
@@ -66,6 +69,7 @@ export const Link = memo(function Link({
   navigationAction,
   onBeforePress,
   activateOnPressIn,
+  onActivated,
   onPressIn: onPressInProp,
   accessibilityActions,
   onAccessibilityAction,
@@ -87,28 +91,28 @@ export const Link = memo(function Link({
     [navigation, navigationAction, href, onBeforePress],
   )
 
-  /* Set by a press-in that already navigated, so the release does not do it again; every press-in re-arms it. */
-  const pressedIn = useRef(false)
+  /* Remembers a press-in that already navigated, so its own release does not do it again (pressIn.ts). */
+  const gate = useRef(createPressInGate()).current
   const onPressIn = useCallback(
     (e: GestureResponderEvent) => {
       onPressInProp?.(e)
-      if (activateOnPressIn && IS_WEB) {
-        pressedIn.current = true
-        /* A frame later: the press-in's own feedback (the bar's highlight) paints first, then the page switches. */
-        requestAnimationFrame(() => onPress(e))
-      }
+      if (!activateOnPressIn || !IS_WEB) return
+      // A modified or non-primary press (Cmd-click, middle click) is a new-tab request: the click path handles it.
+      const pointer = ((e as {nativeEvent?: object}).nativeEvent ?? e) as Parameters<typeof isPlainPrimaryPress>[0]
+      if (!isPlainPrimaryPress(pointer)) return
+      gate.acted()
+      onActivated?.()
+      /* A frame later: the press-in's own feedback (the bar's highlight) paints first, then the page switches. */
+      requestAnimationFrame(() => onPress(e))
     },
-    [activateOnPressIn, onPress, onPressInProp],
+    [activateOnPressIn, onActivated, onPress, onPressInProp, gate],
   )
   const onPressOnce = useCallback(
     (e?: Event) => {
-      if (pressedIn.current) {
-        pressedIn.current = false
-        return
-      }
+      if (gate.swallowsClick()) return
       onPress(e)
     },
-    [onPress],
+    [onPress, gate],
   )
 
   const accessibilityActionsWithActivate = [
@@ -224,22 +228,22 @@ function onPressInner(
       void openExternal(href)
     } else {
       const [routeName, params] = router.matchPath(href)
-      const tab = navigationAction === 'push' ? tabLink(routeName, params, IS_WEB) : null
+      const tab = navigationAction === 'push' ? tabLink(routeName, params, IS_WEB, originTab(navigation.getState())) : null
       if (tab) {
-        navigation.dispatch(
-          tab.kind === 'popTo'
-            ? StackActions.popTo(tab.name, tab.params)
-            : CommonActions.navigate(tab.name, tab.params),
-        )
+        navigation.dispatch(StackActions.push(tab.name, tab.params))
       } else if (navigationAction === 'push') {
         navigation.dispatch(StackActions.push(routeName, params))
       } else if (navigationAction === 'replace') {
         navigation.dispatch(StackActions.replace(routeName, params))
       } else if (navigationAction === 'navigate') {
         const state = navigation.getState()
+        const copy = pushedCopyOf(state, routeName)
         const tabState = getTabState(state, routeName)
         // Splito screens have no soft reset (scroll-to-top/refresh) yet, so a press on the current tab root is a no-op.
-        if (tabState !== TabState.InsideAtRoot) {
+        if (copy) {
+          /* On the pushed copy of this very tab: the press turns it into the plain tab (owner 179). */
+          navigation.dispatch(StackActions.replace(routeName, copy.params))
+        } else if (tabState !== TabState.InsideAtRoot) {
           // note: 'navigate' actually acts the same as 'push' nowadays
           // therefore we need to add 'pop' -sfn
           // @ts-expect-error we're not able to type check on this one -prf

@@ -82,6 +82,7 @@ Status words are the same as `docs/BACKLOG.md`: **done** (built, tested and merg
 | Expenses+ | Location: manual place, optional automatic | F-313 | todo |
 | Groups+ | Active / inactive and show / hide groups (decision 89) | F-604 | done (feat/wB-B3; sync `groupLifecycle.test.ts` + store contract on both engines, client `filter.test.ts`, e2e `groupLifecycle.spec.ts` phone + desktop; web verified, native not yet run) |
 | Groups+ | Leave a group, delete a group (restores whole), hand over admin | F-615 | done (feat/wB-B3; sync `groupLifecycle.test.ts`, e2e `groupLifecycle.spec.ts`; web verified) |
+| Activity | Tabs All / Me / Others, Type filter (Expenses, Payments, Comments, Groups, Friends and invites, Reminders, Disputes), `?type=transactions`, `?group=`, comments in the feed, "See all" of Recent transactions (Home, right column) lands as a pushed copy (`from=<tab>`, owner 184) | F-1213, F-259 | built on feat/wC-F1213-F259-activity, merged with F-256 and F-1210, web verified, unmerged. Touched specs (activity, activityFilters, deeplinks, shell, homeTabs, disputes) 240 run, all green after the merge fixes. Scale: 10,000 expenses walk to a 10,000-event window in 346 ms (SQLite) / 1,193 ms (IndexedDB), a new expense costs 8 / 13 ms (`activityScale.test`; before 23.6 s and 72 ms); an empty Disputes type answers in 338-540 ms under load 25-40. Renders baseline re-recorded as the median of 3 runs on the merged branch (launch 304 updates, tabs 3,557, scroll 31,876; the gate passes twice in a row); perf `tapLatency` earlier x1 Activity tab 15 ms, x4 61 ms; native not yet run |
 | Groups+ | Safe member removal: settle, forgive or keep inactive, with a balance preview | F-613 part 1 | done (feat/wB-B3; domain `memberExit.test.ts`, sync `groupLifecycle.test.ts`, e2e); re-split wizard is Wave C |
 | Groups+ | History, bin and sync integrity (audit M4, m1, m11, m15, m17, m18, m19, m20) | F-114 | done (feat/wB-B3; sync `historyIntegrity.test.ts`; m20 Include groups part open) |
 | Groups+ | Trip kitty (shared cash pot) | F-701 | todo |
@@ -230,9 +231,37 @@ increase, with its cause:
   streams in chunks, the scroll count follows scroll timing), so they are recorded at the highest value seen in 8 runs.
 Eight consecutive runs after recording: 8 of 8 pass.
 
-Renders gate, fix/ios-safari-taps (tabs stay mounted, owners 166 / 168; baseline re-recorded at the highest of 3 runs, 4 consecutive
-passes after). Against the baseline of this branch's parent: tabs updates 4,418 to 3,440 (1,916 to 3,440 between runs: the large
-demo's background loading lands inside or outside the phase), scroll mounts 50,113 to 42,810 (the parked Activity is re-used, not
+## Sign-in required and the intro (F-249, F-250; branch feat/wC-F249-F250-auth, web only, measured 2026-10-30)
+
+Machine load was 18-66 for most runs (other builders), so timings are upper bounds; the perf rule is "under ~20".
+
+| Check | Result |
+|---|---|
+| `pnpm check` (lint, typecheck, package and client tests incl. architecture rules) | green; client tests 639 pass (new: `password.test.ts`, `authConfig.test.ts`) |
+| Lingui | en 1790 / hi 1790, 0 missing (about 80 new strings, Hindi written for each) |
+| Full e2e (`e2e:build --clear`, `--workers=2`, port 8267) | 540 tests: 536 passed on the first run, the 4 that failed (3 in `language.spec.ts`, 1 in `shell.spec.ts` drawer rows) were specs of the old Sign in / Create account screens and are rewritten; re-run green. New: `welcome.spec.ts` (11), `introReplay.spec.ts` (2), `auth.spec.ts` (37), `authConfig.spec.ts` (3), `authShots.spec.ts` (6) |
+| `e2e:pwa` (production build, signed out) | 7 passed, 1 skipped (the update toast needs a signed-in session; production has no dev sign-in). New: no dev sign-in in the production export (`bundle.spec.ts`), Continue says "arrives with sync" and holds no dev button, no database, no `__splitoTest` |
+| Perf (`pnpm perf`, CPU x1 and x4) | save 500 expenses: pref 1 read / 29 ms, expense 18 reads / 13 ms, 0 long tasks; 10,000 expenses: Home cold open 101 ms, write 32 ms, Analytics 44 ms, Ask 17 ms open / 27 ms answer; demo switch on/off 23 / 34 ms; every tap under 100 ms at x1 (Groups 20, Analytics 24, Activity 21, FAB 39, sheet 40, Save 45) and under 200 ms at x4 (FAB 107, sheet 83, Save 78). One red: `tab, 50 ms, tab` at x1 (188 to 244 ms, one long task of 134 to 143 ms), the same on pristine `bf82d1d` built and run in a clean worktree on the same loaded machine (189 ms, long task 143 ms), so it is not from this branch |
+| Renders gate | 1 passed, baseline unchanged. First run read `mount:Outer` 18 vs 14 (the two always-mounted prompts, Log out and the legacy offer); both now mount their dialog only when needed (Log out on its first request, the offer when old data exists), which brings the count back |
+
+Cost of the gate: signed out no store is opened (`indexedDB.databases()` is empty on every signed-out address, asserted); signed in, launch adds one `indexedDB.databases()` check for the old database (once per install, then the flag stops it) and no store reads.
+
+### F-249 / F-250 fix round (2026-10-30, after the Opus review; web only; machine load 30-75 from other builders)
+
+Run on the touched specs only, by the coordinator's process change (the full suite runs once on merged main). A full e2e run of this branch just before the owner 186 change finished at 548 of 550 (the two reds were `demo-mode` specs that main's capitalised names broke and an `ask` spec racing a preference write; both fixed in the specs).
+
+| Check | Result |
+|---|---|
+| Lint, typecheck, client unit tests | green (647 tests; new: `dev.test.ts` tokens, `password.test.ts`, `public.test.ts`, `authConfig.test.ts`, `pwa.test.ts` noindex) |
+| Lingui | en 1800 / hi 1800, 0 missing |
+| `welcome`, `auth` (43), `authConfig`, `introReplay`, `language`, `shell` drawer, `ask` pinned tab, `friends`, `demo-mode` | 92 passed; `auth` log-out tests rewritten for owner 186 (erase, demo DB, retry, resume) pass; one red: `demo-mode.spec.ts:26` "seeds the demo database in under 10 s" took 11.1 s at load 32 (a timing budget; the seed itself is unchanged) |
+| `e2e:pwa` on the preview build | 8 passed, 0 skipped: preview export has the dev sign-in and no e2e hooks, offline signed in, the update toast, `noindex`, the preview note |
+| Renders gate | red, and not from this change: the `tabs` phase doubles (`ChartCard` 5 to 10, `Path` 26 to 48, `Svg` 10 to 14, `UITextView` 239 to 462), i.e. the Analytics tab renders its body twice since main's Analytics-filters merge; the same gate was green on this branch before that merge (`mount:Outer` fixed earlier). Main has re-recorded its baseline since; the number to check is the merged one |
+| Perf | not re-run (outside the touched specs); last numbers above |
+
+Renders gate, fix/ios-safari-taps, re-recorded after merging main's Home / People tabs, fix round 2 (tabs stay mounted, owners 166 / 168; the phases now start after an explicit "demo loaded" signal, the
+app's `splito:home-ready` mark plus one second without a commit; baseline re-recorded at the median of 3 runs, 3 consecutive passes after). Against the baseline of this branch's parent: tabs updates 4,418 to about 3,400 (it used to vary 1,916 to 3,440 between runs, the large
+demo's background loading landing inside or outside the phase; 3,401 to 3,402 in 3 runs after the merge with main's Home / People), scroll mounts 50,113 to 42,810 (the parked Activity is re-used, not
 rebuilt), launch 403 to 398. Switching Home > Groups > Home on a phone, both visited: 303 renders per switch to 71, all of them the
 bar and the navigator, and none of PeopleScreen / PersonRow / BalanceSummary / SummaryCard / ListToolsHeader / ListImpl / GroupsScreen /
 GroupRow (`renders.spec` "switching back to a visited tab re-renders none of its content"). Every per-component increase, with its cause:
@@ -247,3 +276,28 @@ GroupRow (`renders.spec` "switching back to a visited tab re-renders none of its
 - `update:DesktopLeftNav` 0 to 3 (launch), `BarChart` / `LineChart` 0 to 3 (tabs): the first visit's deferred body now mounts a frame later, so
   the chart lands inside the phase of the tab it belongs to; `ask` (see above) is the same timing-noisy phase as before, highest value recorded.
 Native (`transitionEnd`, the bottom sheet's state event) was not run on a device or simulator in this change.
+## Home, People and Groups tabs (F-256, F-1415; owners 153-161, 175-177, 179; branch feat/wC-F256-home)
+
+Home (`/`): compact Overview (scope All / Groups / Direct), Requests and Invites sent rows, Recent transactions,
+Recently active people and groups; People (`/people`): the same request rows, the Friends list (search, Filters, gear);
+Groups: no Overview. Tab ids `home | people | ...` with the saved `tabs` read-time migration; every item on the rail
+and desktop sidebar (no More); the right column hidden on Home; bottom-bar labels up to 5 tabs; a main screen opened
+from a link is a pushed page with Back. Web verified; native not run (the `Pushed<Tab>` twins and the Lucide glyphs
+need a simulator check).
+
+Checks, 2026-10-30, machine load under 6 for the perf runs (e2e at load 5-135 from other builders):
+- `pnpm check` green; client bun tests 646+, sync `preferences.test.ts` (legacy `tabs` shapes), domain `ledger.test.ts` (scope).
+- e2e build `--clear`, full e2e `--workers=2`: see the report (new `homeTabs.spec.ts`, rewritten `homeLayout.spec.ts`; ~35 specs updated for the new Home).
+- Renders gate re-recorded (`RENDERS_BASELINE=write`). Home is lighter than the old friends-list Home at launch (launch
+  mounts 3,580 -> 2,063, updates 403 -> 293); the tab round now also mounts the People list and Home's own lists
+  (tabs mounts 21,440 -> 24,133, updates 4,418 -> 3,532); scroll 50,113 -> 42,805 mounts; add/close/type/ask unchanged
+  within noise. Reviewed increases: (1) `tabs` mounts, from People now being mounted on top of Home on the same round;
+  (2) three wasted-render reports x1 (`HeaderAvatar`, `AddExpenseFAB`, `ActivityScreen`, hook `useContext`): the pushed-copy
+  check reads the route context, which changes once on focus; they re-render with equal output, once per launch.
+- Tap to first visual change (`perf/tapLatency.spec.ts`, 390 px, large demo, median of 3, load under 6), x1 / x4 CPU: tab People
+  20 / 32, Home 35 / 165, Groups 22 / 45, Analytics 17 / 39, Activity 13 / 33; friend row 17 / 35; group row 15 / 47;
+  FAB 21 / 51; open sheet 28 / 73; Save 37 / 47; tab 50 ms tab 32 / 54. Budgets 100 / 200 met; Home at x4 (165) is the
+  slowest (it draws the Overview and three lists), below the 200 budget.
+- Perf `schema-v2` (Home now shows recent transactions in its body): large demo set (1,590 expenses) Home cold open 27 ms (was 25),
+  write + UI 16 ms; 10,000 expenses cold open 25 ms (24), write + UI 16-32 ms (16), Analytics 43 ms (44), search 20-25 ms; Ask open 35 ms, answer 30 ms.
+- Screenshots: apps/client/qa/home2/ (Home, People, Groups; light and Dim; 390 and 1440; demo on).

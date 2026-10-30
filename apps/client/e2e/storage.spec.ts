@@ -16,7 +16,7 @@ test('a newer build taking the database over closes this tab with a Reload promp
   await page.evaluate(
     () =>
       new Promise<void>((resolve, reject) => {
-        const req = indexedDB.open("splito", 99)
+        const req = indexedDB.open("splito-acct-dev", 99)
         req.onupgradeneeded = () => undefined
         req.onsuccess = () => {
           req.result.close()

@@ -48,7 +48,7 @@ async function openResetPrompt(page: Page) {
 }
 
 async function openFilters(page: Page) {
-  await openDemo(page)
+  await openDemo(page, '/people')
   await expect(page.getByTestId('person-Arjun Mehta')).toBeVisible()
   await page.getByTestId('screen-people').getByTestId('list-filters').click()
   return page
@@ -137,7 +137,7 @@ test('phone: a menu opens as a drawer and its rows still act', async ({
   page,
 }) => {
   await page.setViewportSize(PHONE)
-  await openDemo(page)
+  await openDemo(page, '/people')
   /* The demo seed must have landed before navigating away, or /groups loads empty. */
   await expect(page.getByTestId('person-Arjun Mehta')).toBeVisible()
   await page.goto('/groups')

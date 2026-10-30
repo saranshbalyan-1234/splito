@@ -43,6 +43,7 @@ import {Pencil_Stroke2_Corner0_Rounded as PencilIcon} from '#/components/icons/P
 import {SettingsSliderVertical_Stroke2_Corner0_Rounded as FilterIcon} from '#/components/icons/SettingsSlider'
 import {historyRowHide, ShowHiddenSheet, useVisibleEntries} from '#/features/hidden/ShowHidden'
 import {rowMenuWrap} from '#/features/disputes/RowMenu'
+import {seeAllTransactionsPath, seeDisputedPath} from '#/lib/links/make'
 import {markOf, useDisputedBalances, useDisputedRecords, useOpenDisputes} from '#/state/disputes'
 import {useHideItem} from '#/features/hidden/HideItem'
 import {Group3_Stroke2_Corner0_Rounded as GroupIcon} from '#/components/icons/Group'
@@ -52,6 +53,8 @@ import {PlusLarge_Stroke2_Corner0_Rounded as PlusIcon} from '#/components/icons/
 import * as Admonition from '#/components/Admonition'
 import {QrCode_Stroke2_Corner0_Rounded as QrIcon} from '#/components/icons/Invite'
 import * as Layout from '#/components/Layout'
+import {AddExpenseFABInset} from '#/components/AddExpenseFAB'
+import {useSuppressFab} from '#/components/RouteFAB'
 import * as Menu from '#/components/Menu'
 import {
   HistoryRow,
@@ -181,6 +184,8 @@ export function GroupScreen() {
   const rowsReady = useDeferredReady(!isLoading)
   const group = groups?.find(g => g.id === groupId)
   const isDeleted = !!group?.deleted
+  /* The FAB pre-selects this group (owner 190); a group that takes no expense has none (decision 89). */
+  useSuppressFab(!group || isDeleted || isGroupInactive(group.data))
   const isMeAdmin = !!group && !!me && groupAdmins(group.data).includes(me.id)
   /* Deleted records stay in their date place, struck; the ones I hid are out unless "Show hidden" is on. */
   const {visible, hidden, showHidden} = useVisibleEntries(groupHistory?.entries ?? [])
@@ -389,7 +394,7 @@ export function GroupScreen() {
               name={group.data.name}
               size={gtMobile ? 64 : 56}
             />
-            {/* Pushed pages have no FAB (owner rule); adding here pre-selects the group. */}
+            {/* Wide screens have no FAB (owner 190): adding here pre-selects the group. */}
             {/* An inactive group takes no new expenses: its notice below says how to reopen it (decision 89). */}
             {isGroupInactive(group.data) || isDeleted ? null : (
               <Button
@@ -485,6 +490,7 @@ export function GroupScreen() {
             mine={mine}
             locale={locale}
             disputed={groupDisputed.mine}
+            disputedHref={seeDisputedPath({groupId})}
           />
         </View>
 
@@ -502,6 +508,8 @@ export function GroupScreen() {
           <SectionHeader
             title={l`Expenses`}
             testID="group-expenses-title"
+            href={seeAllTransactionsPath({groupId})}
+            hrefLabel={l`See all transactions`}
             action={
               <Button
                 testID="group-filter"
@@ -668,6 +676,8 @@ export function GroupScreen() {
       <LayoutAnimationConfig skipEntering skipExiting>
         <List
           data={rowsReady ? (bodyTab === 'expenses' ? items : shown) : []}
+          /* The FAB's clearance, so it never covers the last row on a phone (owner 190). */
+          ListFooterComponent={<AddExpenseFABInset />}
           onEndReached={onEndReached}
           keyExtractor={(item: Item) => item.key}
           renderItem={({item, index}: {item: Item; index: number}) => {
@@ -695,7 +705,7 @@ export function GroupScreen() {
                   />
                 )
               case 'currency':
-                return <CurrencyHeader currency={item.currency} disputed={groupDisputed.total[item.currency]} />
+                return <CurrencyHeader currency={item.currency} disputed={groupDisputed.total[item.currency]} disputedHref={seeDisputedPath({groupId})} />
               case 'net':
                 return (
                   <MemberBalanceRow

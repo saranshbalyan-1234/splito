@@ -1,6 +1,7 @@
 # Render Blueprint: the web app, the API and its Postgres. The web app auto-deploys every push to main (the owner
-# reviews the front end there, owners 164/165); a Blueprint sync with 'off' here silently stopped it on 2026-10-29.
-# The API still deploys from .github/workflows/deploy-render.yml (deploy hooks, after the checks pass).
+# reviews the front end there, owners 164/165) as a PREVIEW build: the labelled dev account, noindex (a production build is
+# refused until the auth HTTP client exists, apps/client/auth-config.js). A Blueprint sync with 'off' here silently stopped
+# it on 2026-10-29. The API still deploys from .github/workflows/deploy-render.yml (deploy hooks, after the checks pass).
 services:
   - type: web
     name: splito-web
@@ -9,7 +10,7 @@ services:
     buildCommand: >-
       npm install -g pnpm@11.28.5 &&
       pnpm install --frozen-lockfile &&
-      EXPO_PUBLIC_ENV=production pnpm --filter @splito/client build-web
+      EXPO_PUBLIC_ENV=preview pnpm --filter @splito/client build-web
     staticPublishPath: ./apps/client/dist
     routes:
       - type: rewrite

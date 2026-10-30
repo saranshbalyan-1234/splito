@@ -37,6 +37,7 @@ type Pred =
   | {moves: string} // the element's box or opacity changes (a sheet starting to move), or it appears/disappears
   | {ready: string; rows?: string} // on screen with no skeleton inside (aria-busy or *-loading) and, if given, a row
   | {all: Pred[]}
+  | {any: Pred[]}
 
 type Result = {fb: number; ct: number; long: number; exits: number}
 
@@ -104,6 +105,10 @@ function installProbe() {
         [...document.querySelectorAll(p.ready)].some(
           r => r.getClientRects().length > 0 && !busy(r) && (!p.rows || shown(p.rows, r)),
         )
+    }
+    if ('any' in p) {
+      const any = p.any.map(compile)
+      return () => any.some(f => f())
     }
     const all = p.all.map(compile)
     return () => all.every(f => f())
@@ -343,6 +348,13 @@ async function tapQuietly(c: Ctx, id: string) {
   const b = await aim(c.page, target)
   await c.page.touchscreen.tap(b.x + b.width / 2, b.y + b.height / 2)
   if (process.env.SWEEP_DEBUG) console.log('tapQuietly', id, JSON.stringify(b), await c.page.evaluate(([x, y]) => document.elementFromPoint(x!, y!)?.outerHTML.slice(0, 200), [b.x + b.width / 2, b.y + b.height / 2]))
+}
+/** The switch sends the app home; the next step starts from Settings again. */
+async function onSettings(c: Ctx) {
+  if (await c.page.locator(`${T('settings-demo-mode')}:visible`).count()) return
+  await c.page.goto('/settings')
+  await c.page.waitForFunction(() => !!document.querySelector('[data-testid="settings-demo-mode"]'))
+  await c.page.waitForTimeout(2000)
 }
 const press = (key: string) => async (c: Ctx) => void (await c.page.keyboard.press(key))
 const settled = async (c: Ctx, ms = 700) => void (await c.page.waitForTimeout(ms))
@@ -752,7 +764,7 @@ const FLOWS: Flow[] = [
           await p.locator(`${T('expense-title')}:visible`).first().fill('Sweep expense')
           await p.locator(`${T('amount-input')}:visible`).first().fill('120')
           await p.locator(`${T('expense-people')}:visible`).first().tap()
-          await p.locator(`${P('person-option-')}:visible`).first().tap()
+          await p.locator(`${P('person-option-')}:not(${P('person-option-locked-')}):visible`).first().tap()
           await p.locator(`${T('people-dialog')} ${T('sheet-close')}`).first().tap()
           await expect(p.locator(`${T('sheet-save')}:visible`).first()).toBeEnabled()
           await p.waitForTimeout(600)
@@ -767,10 +779,21 @@ const FLOWS: Flow[] = [
     name: 'Delete expense',
     start: c => `/expense/${idsOf(c).expense}`,
     steps: [
-      {screen: 'Expense', action: 'delete: menu', tap: tid('expense-menu'), fb: {moves: DIALOG}, ct: {ready: DIALOG}, settle: 900},
-      {screen: 'Expense', action: 'delete: ask', tap: tid('expense-delete'), fb: {moves: 'body'}, ct: {visible: T('confirmBtn')}, settle: 900},
-      {screen: 'Expense', action: 'delete: confirm', tap: tid('confirmBtn'), fb: {visible: T('expense-deleted')}, settle: 900},
-      {screen: 'Expense', action: 'restore', tap: tid('expense-restore'), fb: {gone: T('expense-deleted')}, settle: 900},
+      {
+        screen: 'Expense',
+        action: 'delete: menu',
+        /* Deleting may leave the page: come back to the live expense for every lap. */
+        prepare: async c => {
+          await c.page.evaluate(id => (window as unknown as {splito: {restoreExpense(id: string): Promise<unknown>}}).splito.restoreExpense(id), idsOf(c).expense)
+          if (!(await c.page.locator(`${T('screen-expense')}:visible`).count())) await link(`/expense/${idsOf(c).expense}`)(c)
+          await expect(c.page.locator(`${T('expense-menu')}:visible`).first()).toBeVisible()
+        },
+        tap: tid('expense-menu'),
+        fb: {moves: DIALOG},
+        ct: {ready: DIALOG},
+        settle: 900,
+      },
+      {screen: 'Expense', action: 'delete', tap: tid('expense-delete'), fb: {any: [{visible: T('expense-deleted')}, {gone: T('screen-expense')}]}, settle: 1200},
     ],
   },
   /* ---- demo mode */
@@ -785,11 +808,11 @@ const FLOWS: Flow[] = [
         await hook.demoMode(false)
         await hook.demoMode(true)
       })
-      await c.page.waitForTimeout(1500)
+      await onSettings(c)
     },
     steps: [
-      {screen: 'Settings', action: 'demo mode off', tap: tid('settings-demo-mode'), fb: {flips: [T('settings-demo-mode'), 'aria-checked']}, ct: {all: [{flips: [T('settings-demo-mode'), 'aria-checked']}, {ready: T('screen-settings')}]}, settle: 2500},
-      {screen: 'Settings', action: 'demo mode on', tap: tid('settings-demo-mode'), fb: {flips: [T('settings-demo-mode'), 'aria-checked']}, ct: {all: [{flips: [T('settings-demo-mode'), 'aria-checked']}, {ready: T('screen-settings')}]}, settle: 2500},
+      {screen: 'Settings', action: 'demo mode off', prepare: onSettings, tap: tid('settings-demo-mode'), fb: {flips: [T('settings-demo-mode'), 'aria-checked']}, ct: {all: [{flips: [T('settings-demo-mode'), 'aria-checked']}, {ready: T('screen-settings')}]}, settle: 2500},
+      {screen: 'Settings', action: 'demo mode on', prepare: onSettings, tap: tid('settings-demo-mode'), fb: {flips: [T('settings-demo-mode'), 'aria-checked']}, ct: {all: [{flips: [T('settings-demo-mode'), 'aria-checked']}, {ready: T('screen-settings')}]}, settle: 2500},
     ],
   },
   {

@@ -139,10 +139,12 @@ function DrawerPanel({
     if (!shouldAnimate || !isOpen) return
     const node = panel.current as unknown as HTMLElement | null
     const done = () => setOpened(true)
-    node?.addEventListener('animationend', done, {once: true})
+    // The panel's own slide, not an animation that bubbles up from something inside it.
+    const onEnd = (e: Event) => e.target === node && done()
+    node?.addEventListener('animationend', onEnd)
     const id = setTimeout(done, OPENED_FALLBACK_MS)
     return () => {
-      node?.removeEventListener('animationend', done)
+      node?.removeEventListener('animationend', onEnd)
       clearTimeout(id)
     }
   }, [shouldAnimate, isOpen])

@@ -16,8 +16,9 @@ export default defineConfig({
   testDir: 'perf',
   timeout: 600_000,
   workers: 1,
+  globalSetup: './e2e/globalSignIn.ts',
   /* The sweep walks 100+ interactions in one test: a missing element must fail its flow in seconds, not wait out the test. */
-  use: {baseURL: `http://localhost:${PORT}`, actionTimeout: 20_000},
+  use: {baseURL: `http://localhost:${PORT}`, actionTimeout: 20_000, storageState: `.auth/perf-${PORT}.json`},
   projects: [
     {name: 'chrome', testIgnore: /sweep/, use: {channel: 'chrome'}},
     {name: 'sweep-chrome', testMatch: /sweep/, use: {channel: 'chrome'}},

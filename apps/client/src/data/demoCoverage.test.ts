@@ -1,7 +1,9 @@
 import {Database} from 'bun:sqlite'
 import {beforeAll, describe, expect, test} from 'bun:test'
 import {
+  ACTIVITY_TYPE_IDS,
   type ActivityEvent,
+  type ActivityTypeId,
   activityFromHistory,
   ensureMe,
   type BackupFile,
@@ -29,7 +31,9 @@ import {
   type WriteOff,
 } from '@splito/sync'
 
+import {activityTypeOf} from '#/components/activity/feed'
 import {DEMO_ME, seedDemo} from '#/data/demoSeed'
+
 
 /*
  * DEMO COVERAGE (owner decision 109): the demo dataset grows with every feature.
@@ -198,9 +202,21 @@ const FEATURES: Array<[feature: string, found: (d: Demo) => boolean]> = [
   // Feedback
   ['feedback saved on this device', d => d.feedback.some(f => !f.deleted)],
   ['feedback with a reply address', d => d.feedback.some(f => !f.deleted && (f.data as {replyEmail: string | null}).replyEmail)],
+  // Home (F-256, F-1415): the short lists need records of mine, spread over several friends and groups
+  ['Home recent transactions: five or more live expenses and payments I am on', d => d.live.filter(e => DEMO_ME in e.data.payers || DEMO_ME in e.data.shares).length + d.repayments.filter(r => !r.deleted && (r.data.from === DEMO_ME || r.data.to === DEMO_ME)).length >= 5],
+  ['Home recently active people: five or more friends who share a live expense with me', d => new Set(d.live.filter(e => DEMO_ME in e.data.payers || DEMO_ME in e.data.shares).flatMap(e => [...Object.keys(e.data.payers), ...Object.keys(e.data.shares)]).filter(id => id !== DEMO_ME)).size >= 5],
+  ['Home recently active groups: five or more live groups with a live expense I am in', d => d.groups.filter(g => d.live.some(e => e.data.groupId === g.id && (DEMO_ME in e.data.payers || DEMO_ME in e.data.shares))).length >= 5],
+  ['Home Overview scope: direct balances and group balances, each in two or more currencies', d => {
+    const open = (inGroup: boolean) => new Set(d.balances.filter(b => b.amount !== 0n && (b.groupId !== null) === inGroup && !d.people.find(p => p.id === b.personId)?.data.isMe).map(b => b.currency))
+    return open(false).size >= 2 && open(true).size >= 2 && [...open(true)].filter(c => open(false).has(c)).length >= 2
+  }],
+  ['Home Requests: a request waiting for me and an invite waiting for an answer, together', d => d.requests.some(r => r.data.direction === 'incoming' && requestState(r.data, d.now) === 'pending') && d.requests.some(r => r.data.direction === 'outgoing' && requestState(r.data, d.now) === 'pending')],
   // Activity
   ['changes made by other people (unread in Activity)', d => d.dump.history.some(h => h.actor !== DEMO_ME && h.entityType === 'expense')],
   ['my own changes in Activity', d => d.dump.history.some(h => h.actor === DEMO_ME)],
+  // The Activity type filter (owner 173, F-259): one row of every type it offers.
+  ...(ACTIVITY_TYPE_IDS as readonly ActivityTypeId[]).map((type): [string, (d: Demo) => boolean] => [`Activity lists ${type} (the Type filter)`, d => d.activity.some(e => activityTypeOf(e.kind) === type)]),
+  ['a comment in Activity written by someone else (Others tab) and one by me (Me tab)', d => d.activity.some(e => e.kind === 'comment.added' && e.actor !== DEMO_ME) && d.activity.some(e => e.kind === 'comment.added' && e.actor === DEMO_ME)],
 ]
 
 let demo: Demo

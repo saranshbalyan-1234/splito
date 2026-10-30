@@ -4,135 +4,117 @@ import {View} from 'react-native'
 import {Trans, useLingui} from '@lingui/react/macro'
 import {isSignInCode, MIN_PASSWORD_LENGTH} from '@splito/domain'
 
-import {atoms as a, web} from '#/alf'
+import {AuthError} from '#/lib/auth'
+import {isPasswordLongEnough} from '#/lib/auth/password'
+import {atoms as a} from '#/alf'
 import {Admonition} from '#/components/Admonition'
-import {Button, ButtonText} from '#/components/Button'
 import {PasswordField} from '#/components/forms/PasswordField'
 import * as TextField from '#/components/forms/TextField'
 import {Key_Stroke2_Corner0_Rounded as KeyIcon} from '#/components/icons/Auth'
 import {Text} from '#/components/Typography'
-import {IS_WEB} from '#/env'
+import {onlyDigits} from './digits'
+import {FormActions} from './FormActions'
 import {FormContainer} from './FormContainer'
-import {NotLiveYet} from './NotLiveYet'
+import {useAuthErrorText} from './messages'
+import {StrengthMeter} from './StrengthMeter'
 
-/*
- * `onPasswordSet` is the step to PasswordUpdatedForm. It is never called
- * before the auth backend exists: no reset is performed, so none is reported.
+/**
+ * A new password with its strength shown (minimum 8, owner 141). With `needsCode` it also asks for the reset code
+ * (the forgot-password flow); a new account has already verified its contacts, so it asks for the password alone.
  */
 export const SetNewPasswordForm = ({
+  testID = 'setNewPasswordForm',
+  title,
+  description,
+  needsCode,
+  submitLabel,
   onPressBack,
+  onSubmit,
 }: {
+  testID?: string
+  title: React.ReactNode
+  description?: React.ReactNode
+  needsCode: boolean
+  submitLabel?: string
   onPressBack: () => void
-  onPasswordSet: () => void
+  /** Resolves when it worked; throws `AuthError` for a message under the form. */
+  onSubmit: (code: string, password: string) => Promise<void>
 }) => {
   const {t: l} = useLingui()
+  const errorText = useAuthErrorText()
   const [resetCode, setResetCode] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
-  const [isNotLive, setIsNotLive] = useState(false)
+  const [isBusy, setBusy] = useState(false)
 
-  const onPressNext = () => {
-    setIsNotLive(false)
-    if (!isSignInCode(resetCode)) {
-      return setError(
-        l`You have entered an invalid code. It should be 6 digits.`,
-      )
-    }
-    if (password.length < MIN_PASSWORD_LENGTH) {
-      return setError(l`Your password must be at least ${MIN_PASSWORD_LENGTH} characters long.`)
-    }
+  const submit = async () => {
+    if (needsCode && !isSignInCode(resetCode)) return setError(l`You have entered an invalid code. It should be 6 digits.`)
+    if (!isPasswordLongEnough(password)) return setError(l`Your password must be at least ${MIN_PASSWORD_LENGTH} characters long.`)
     setError('')
-    setIsNotLive(true)
+    setBusy(true)
+    try {
+      await onSubmit(resetCode.trim(), password)
+    } catch (e) {
+      setError(errorText(e instanceof AuthError ? e.code : 'unknown'))
+    } finally {
+      setBusy(false)
+    }
   }
 
   return (
-    <FormContainer
-      testID="setNewPasswordForm"
-      titleText={<Trans>Set new password</Trans>}>
-      <Text style={[a.leading_snug, a.mb_sm]}>
-        <Trans>
-          You will receive a "reset code" by email or text. Enter that code
-          here, then enter your new password.
-        </Trans>
-      </Text>
-      <View>
-        <TextField.LabelText>
-          <Trans>Reset code</Trans>
-        </TextField.LabelText>
-        <TextField.Root isInvalid={!!error && !isSignInCode(resetCode)}>
-          <TextField.Icon icon={KeyIcon} />
-          <TextField.Input
-            testID="resetCodeInput"
-            label={l`6-digit reset code`}
-            autoFocus
-            autoComplete="one-time-code"
-            textContentType="oneTimeCode"
-            inputMode="numeric"
-            keyboardType="number-pad"
-            maxLength={6}
-            value={resetCode}
-            onChangeText={v => {
-              setResetCode(v)
-              if (error) setError('')
-            }}
-          />
-        </TextField.Root>
-      </View>
-      <View>
-        <TextField.LabelText>
-          <Trans>New password</Trans>
-        </TextField.LabelText>
+    <FormContainer testID={testID} titleText={title}>
+      {!!description && <Text style={[a.leading_snug, a.mb_sm]}>{description}</Text>}
+      {needsCode && (
+        <View>
+          <TextField.LabelText>
+            <Trans>Reset code</Trans>
+          </TextField.LabelText>
+          <TextField.Root isInvalid={!!error && !isSignInCode(resetCode)}>
+            <TextField.Icon icon={KeyIcon} />
+            <TextField.Input
+              testID="resetCodeInput"
+              label={l`6-digit reset code`}
+              autoFocus
+              autoComplete="one-time-code"
+              textContentType="oneTimeCode"
+              inputMode="numeric"
+              keyboardType="number-pad"
+              value={resetCode}
+              onChangeText={v => {
+                setResetCode(onlyDigits(v))
+                if (error) setError('')
+              }}
+            />
+          </TextField.Root>
+        </View>
+      )}
+      <View style={[a.gap_sm]}>
+        <TextField.LabelText>{needsCode ? <Trans>New password</Trans> : <Trans>Password</Trans>}</TextField.LabelText>
         <PasswordField
           testID="newPasswordInput"
           label={l`Enter a password`}
+          autoFocus={!needsCode}
           returnKeyType="done"
           autoComplete="new-password"
           passwordRules={`minlength: ${MIN_PASSWORD_LENGTH};`}
           clearButtonMode="while-editing"
+          isInvalid={!!error && !needsCode}
           value={password}
           onChangeText={v => {
             setPassword(v)
             if (error) setError('')
           }}
-          onSubmitEditing={onPressNext}
+          onSubmitEditing={submit}
           accessibilityHint={l`Input new password`}
         />
+        <StrengthMeter password={password} />
       </View>
-      {error ? (
+      {!!error && (
         <View role="alert" testID="setNewPasswordError">
           <Admonition type="error">{error}</Admonition>
         </View>
-      ) : (
-        isNotLive && <NotLiveYet />
       )}
-      <View style={[web([a.flex_row, a.align_center]), a.pt_lg]}>
-        {IS_WEB && (
-          <>
-            <Button
-              testID="setNewPasswordBack"
-              label={l`Back`}
-              variant="solid"
-              color="secondary"
-              size="large"
-              onPress={onPressBack}>
-              <ButtonText>
-                <Trans>Back</Trans>
-              </ButtonText>
-            </Button>
-            <View style={a.flex_1} />
-          </>
-        )}
-        <Button
-          testID="setNewPasswordNext"
-          label={l`Next`}
-          color="primary"
-          size="large"
-          onPress={onPressNext}>
-          <ButtonText>
-            <Trans>Next</Trans>
-          </ButtonText>
-        </Button>
-      </View>
+      <FormActions testID="setNewPassword" nextLabel={submitLabel} isBusy={isBusy} onBack={onPressBack} onNext={submit} />
     </FormContainer>
   )
 }

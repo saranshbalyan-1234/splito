@@ -7,18 +7,12 @@ import {Button, ButtonText} from '#/components/Button'
 import {Text} from '#/components/Typography'
 import {FormContainer} from './FormContainer'
 
-export const PasswordUpdatedForm = ({
-  onPressNext,
-}: {
-  onPressNext: () => void
-}) => {
+export const PasswordUpdatedForm = ({onPressNext}: {onPressNext: () => void}) => {
   const {t: l} = useLingui()
   const {gtMobile} = useBreakpoints()
 
   return (
-    <FormContainer
-      testID="passwordUpdatedForm"
-      style={[a.gap_2xl, !gtMobile && a.mt_5xl]}>
+    <FormContainer testID="passwordUpdatedForm" style={[a.gap_2xl, !gtMobile && a.mt_5xl]}>
       <Text style={[a.text_3xl, a.font_bold, a.text_center]}>
         <Trans>Password updated!</Trans>
       </Text>
@@ -26,12 +20,7 @@ export const PasswordUpdatedForm = ({
         <Trans>You can now sign in with your new password.</Trans>
       </Text>
       <View style={web([a.flex_row, a.justify_center])}>
-        <Button
-          onPress={onPressNext}
-          label={l`Close alert`}
-          accessibilityHint={l`Closes password update alert`}
-          color="primary"
-          size="large">
+        <Button testID="passwordUpdatedOk" onPress={onPressNext} label={l`Close alert`} accessibilityHint={l`Closes password update alert`} color="primary" size="large">
           <ButtonText>
             <Trans>Okay</Trans>
           </ButtonText>

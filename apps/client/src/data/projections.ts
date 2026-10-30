@@ -218,7 +218,7 @@ export function historyQuery(type: EntityType, id: string): Query<HistoryRow[]> 
 }
 
 /** The Activity feed value: the newest events, and a way to ask for older ones. */
-export type ActivityFeed = ActivityState & {loadMore: () => void}
+export type ActivityFeed = ActivityState & {loadMore: (pages?: number) => void; /** Widens the window to at least this many events (never narrows it; a no-op when it already holds them). */ ensureWindow: (events: number) => void}
 
 /**
  * The Activity feed: the newest events by cursor, re-reading only the
@@ -231,14 +231,22 @@ export const activityQuery: Query<ActivityFeed> = {
     touches(change, 'repayment') ||
     touches(change, 'writeoff') ||
     touches(change, 'friendRequest') ||
+    touches(change, 'reminder') ||
+    touches(change, 'comment') ||
     touches(change, 'dispute'),
   loader: (store, controls) => {
     let want = ACTIVITY_PAGE
     const track = activityTracker(store, () => want)
-    const loadMore = () => {
-      want += ACTIVITY_PAGE
-      controls.reload()
+    const loadMore = (pages = 1) => {
+      want += ACTIVITY_PAGE * pages
+      /* An empty notice, not 'unknown': the tracker keeps what it read and only goes on from its cursor. */
+      controls.reload({})
     }
-    return async change => ({...(await track(change)), loadMore})
+    const ensureWindow = (events: number) => {
+      if (events <= want) return
+      want = events
+      controls.reload({})
+    }
+    return async change => ({...(await track(change)), loadMore, ensureWindow})
   },
 }

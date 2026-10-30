@@ -1,13 +1,13 @@
 // Adapted from bluesky-social/social-app@4e4ad9c (MIT) - src/view/shell/desktop/Feeds.tsx (row + "More feeds" link styling)
-import {useMemo} from 'react'
 import {View} from 'react-native'
 import {utils} from '@bsky.app/alf'
-import {formatAmount, magnitude, personNet, repaymentFlow, ZERO} from '@splito/domain'
+import {formatAmount, magnitude, ZERO} from '@splito/domain'
 import {Trans, useLingui} from '@lingui/react/macro'
-import {type RowSyncStatus} from '@splito/sync'
 
 import {useNumberLocale} from '#/locale/numberLocale'
-import {useMe, useRecentTransactions} from '#/data/hooks'
+import {useRecentRows} from '#/data/recentTransactionRows'
+import {seeAllTransactionsPath} from '#/lib/links/make'
+import {ActivityLink} from '#/components/ActivityLink'
 import {Link} from '#/view/com/util/Link'
 import {atoms as a, useTheme} from '#/alf'
 import {ChevronRight_Stroke2_Corner0_Rounded as ChevronRightIcon} from '#/components/icons/Chevron'
@@ -18,60 +18,24 @@ import {SyncToned} from '#/components/SyncTone'
 
 const RECENT = 5
 
-type Row = {
-  id: string
-  href: string
-  title: string
-  category: string | null
-  currency: string
-  /** > 0 you lent / were paid, < 0 you borrowed / paid. */
-  net: bigint
-  date: string
-  updatedAt: number
-  syncStatus: RowSyncStatus
-}
-
 /** The sidebar's last transactions that involve me, newest first. */
 export function RecentTransactions() {
   const t = useTheme()
   const money = useMoneyStyle()
   const {t: l} = useLingui()
   const locale = useNumberLocale()
-  const me = useMe()
-  /* The five newest, merged from my parties and payments by index (never the whole ledger). */
-  const recent = useRecentTransactions(RECENT)
+  const rows = useRecentRows(RECENT)
   const categories = useCategories()
-
-  const rows = useMemo<Row[]>(() => {
-    if (!me || !recent) return []
-    const out: Row[] = []
-    for (const entry of recent.entries) {
-      if (entry.kind === 'expense') {
-        const e = entry.entity
-        out.push({id: e.id, href: `/expense/${e.id}`, title: e.data.title, category: e.data.category, currency: e.data.currency, net: personNet(e.data, me.id), date: e.data.date, updatedAt: e.updatedAt, syncStatus: e.syncStatus})
-      } else if (entry.kind === 'repayment') {
-        const r = entry.entity
-        out.push({id: r.id, href: '/activity', title: r.data.from === me.id ? l`You paid` : l`You got paid`, category: null, currency: r.data.currency, net: repaymentFlow(r.data, me.id), date: r.data.date, updatedAt: r.updatedAt, syncStatus: r.syncStatus})
-      }
-    }
-    return out
-  }, [me, recent, l])
 
   if (rows.length === 0) return null
 
   return (
     <View testID="sidebar-recent-transactions" style={[a.pt_2xl, {gap: 2}]}>
-      <Text
-        style={[
-          a.px_md,
-          a.pb_xs,
-          a.text_sm,
-          a.font_semi_bold,
-          a.leading_snug,
-          t.atoms.text_contrast_medium,
-        ]}>
-        <Trans>Recent transactions</Trans>
-      </Text>
+      <ActivityLink testID="sidebar-transactions-title" href={seeAllTransactionsPath()} label={l`See all transactions`} style={[a.px_md]}>
+        <Text style={[a.text_sm, a.font_semi_bold, a.leading_snug, t.atoms.text_contrast_medium]}>
+          <Trans>Recent transactions</Trans>
+        </Text>
+      </ActivityLink>
       {rows.map(row => {
         const category = row.category
           ? categories.find(c => c.id === row.category)
@@ -146,9 +110,9 @@ export function RecentTransactions() {
       })}
       <Link
         testID="sidebar-transactions-all"
-        href="/activity"
-        navigationAction="navigate"
-        accessibilityLabel={l`See all activity`}
+        href={seeAllTransactionsPath()}
+        navigationAction="push"
+        accessibilityLabel={l`See all transactions`}
         accessibilityHint=""
         hoverStyle={t.atoms.bg_contrast_25}
         style={[

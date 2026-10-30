@@ -528,11 +528,11 @@ Every tap changes the screen in the same or next frame; slow bodies (lists, char
 
 Home shows the Overview and Recent transactions (F-1415); a new People tab holds requests, the invites row and the friends list with search and filters; Groups drops its Overview; nav and default bottom bar gain People.
 
-- **Effort** M · **Impact** 9 · **Backend** no · **Status** todo, next after the tap fix (F-255) merges; F-241's WIP rebases onto it · **Deps** F-1415, F-255, F-241
+- **Effort** M · **Impact** 9 · **Backend** no · **Status** built on feat/wC-F256-home 2026-10-30 (web verified; native not run; numbers in COMPLETION_MATRIX) · **Deps** F-1415, F-255, F-241
 - **Prefs** `tabs` default changes to Home, People, Groups, Analytics, Activity (existing users keep their own order; People is added after Home if absent)
 - **Acceptance**
   1. `/` shows, in order: Overview; Requests with the invites row (only when pending); Recent transactions (See all -> Activity); Recently active people (5, by change time, net per currency, See all -> People); Recently active groups (5, balance chips, See all -> Groups); each hides when empty; no full friends list; phone header has Search & Ask only (owners 153, 154).
-  2. `/people` shows requests, "N invites waiting ›", Friends (count, search, Filters, Show settled), no Overview; header Search & Ask + Add friend; `/people/:id` unchanged.
+  2. `/people` shows the Requests and Invites sent rows (owner 175), Friends (count, search, Filters, Show settled, gear "Manage friends and invites" last, owner 177), no Overview; header Search & Ask + Add friend; `/people/:id` unchanged.
   3. `/groups` has no Overview; everything else unchanged.
   4. Nav list order Home, People, Groups, Analytics, Ask Splito, Activity, Settings; the rail and desktop sidebar always show every item in the chosen order with no More (owner 155), the phone bar shows the on items; default bar of 5 with labels; Settings > Navigation includes People; saved tabs migrate by inserting People after Home.
   5. The right column (1300 px and up) is not shown on Home, since the page holds its content; other pages keep it.
@@ -566,7 +566,7 @@ Pull down at the top of Home, People, Groups, Activity, Analytics, Person and Gr
 
 Activity Filters gain the type (Expenses, Payments, Comments, Groups, Friends and invites, Reminders, Disputes), remembered and in the URL; every Recent transactions "See all" opens Activity with type=transactions (group-scoped from a Group page).
 
-- **Effort** S · **Impact** 8 · **Backend** no · **Status** todo, Wave C (with F-1213 All/Me/Others) · **Deps** F-1213, F-256
+- **Effort** S · **Impact** 8 · **Backend** no · **Status** built on feat/wC-F1213-F259-activity (Activity filter, `seeAllTransactionsPath`, right column wired; the Group page has no Recent transactions section yet and Home's "See all" is on the Home branch: both only call `seeAllTransactionsPath(groupId?)` with `navigationAction="push"`) · **Deps** F-1213, F-256
 - **Prefs** `activity.type` (account)
 - **Acceptance**
   1. Filters sheet on Activity has Type (multi-select) besides All/Me/Others; badge and empty state follow it; remembered after reload; `/activity?type=transactions` deep-links it.
@@ -621,7 +621,7 @@ Back with no history goes to the page's parent (stacked), never disappears; tab 
 
 The launch logo zooms gently in and out while content loads, on web from first paint and on native from the first JS frame.
 
-- **Effort** S · **Impact** 6 · **Backend** no · **Status** todo, Wave C · **Deps** -
+- **Effort** S · **Impact** 6 · **Backend** no · **Status** built on c-splash (web e2e and renders gate green; iOS simulator dev-client video; Android and a release build not yet checked), Wave C · **Deps** -
 - **Prefs** -
 - **Acceptance**
   1. Web: inline CSS keyframes in `index.html` animate the mark before any script loads; it fades into the first screen; `prefers-reduced-motion` gets an opacity pulse.
@@ -632,7 +632,7 @@ The launch logo zooms gently in and out while content loads, on web from first p
 
 The desktop sidebar is only as wide as its content and its footer links sit right under Add expense.
 
-- **Effort** S · **Impact** 6 · **Backend** no · **Status** in progress, Wave C · **Deps** -
+- **Effort** S · **Impact** 6 · **Backend** no · **Status** done, Wave C (branch c-sidebar) · **Deps** -
 - **Prefs** -
 - **Acceptance**
   1. At 1300, 1440 and 1920 the sidebar width fits the longest item (en and hi measured, no truncation); content starts sooner.
@@ -650,11 +650,87 @@ A perf sweep spec walks every route and interaction in WebKit and Chrome at 6x C
   2. Known misses fixed: Analytics revisit (330 ms at 6x), row exit animations on popped pushed pages (Person, Group, Expense), Activity narrowed paging (F-1213 review C1).
   3. Per-screen table in COMPLETION_MATRIX taken at load under 10; the sweep is part of the merge gate from then on.
 
+### F-268 Disputed links open Activity filtered `spec: owner § 26.14 (decision 192)`
+
+Every disputed amount or count opens Activity on All with Expenses, Payments and Disputes selected, group-scoped when in a group.
+
+- **Effort** S · **Impact** 7 · **Backend** no · **Status** in progress, Wave C · **Deps** F-1210, F-1213
+- **Prefs** -
+- **Acceptance**
+  1. `seeDisputedPath({groupId?})` gives `/activity?tab=all&type=expenses,payments,disputes[&group=]`, pushed with Back; used by every disputed amount/count (Person, Group balances, Settle notice, friend Settle up notice, search tip).
+  2. The Filters sheet shows those three types chosen; a saved Me/Others tab never narrows it.
+  3. e2e from a Person page, a Group page and Settle at 390 and 1440; row badges still open the record.
+  5. Owner 194: `activityPath({types, groupId, personId})` with a new `person=<id>` filter (events involving that friend; chip + Filters sheet + URL); every "see all" of past events (group history, person history, comments, reminders, payments, friend activity) opens Activity with matching filters; a group's Expenses and a friend's History stay full lists (their pages' main content) with headings linking into Activity (ruling 2026-10-31); no other screen keeps its own long history list.
+  6. Owner 195: every link that can lead to Activity does; requests/invites "See all" and counts open Activity with Type = Friends and invites; request rows carry Accept / Decline and invite-sent rows Resend / Cancel in place; Friends and invites keeps only invite link, QR, contacts and manage links.
+  4. Owner 193: every transactions heading, See all and count (Home, Person, Group, Analytics, right column) uses `seeAllTransactionsPath({groupId})`: All, Type = Expenses + Payments, group-scoped in a group; single rows still open the transaction.
+
+### F-269 Group "Who can join" and consent to be added `spec: owner § 26.18 (decision 196)`
+
+Each group has a join setting (anyone with the link / approve each join / invite only), and adding someone sends them a group request.
+
+- **Effort** M · **Impact** 8 · **Backend** partly (real link joins and cross-device requests need F-2105; local flow and demo now) · **Status** todo, Wave C (after F-268) · **Deps** F-268
+- **Prefs** `group:joinPolicy` (per group: link / approve / invite)
+- **Acceptance**
+  1. New/Edit group and the Add members sheet show "Who can join" with the three options (default approve); admins only can change it; the group page shows the current rule under Members.
+  2. Invite only hides and revokes the group link; anyone-with-link joins at once; approve sends a join request that admins Approve/Decline in Activity rows.
+  3. Adding a Splito friend creates a group request (Join / Decline in their Activity); they show "Invited" (greyed, not selectable) until they join; not-on-Splito people get an invite or "only for you".
+  4. Demo carries every state (each policy, a pending join request, an invited member); en + hi; e2e at 390 and 1440.
+
+### F-270 Requests and invites on their own pages, not Home `spec: owner § 26.3 (decision 197)`
+
+Home drops its Requests section; People shows friend requests and invites, Groups shows group requests/join requests/invites, a group page its own.
+
+- **Effort** S · **Impact** 7 · **Backend** no · **Status** todo, Wave C (with F-268, before F-269) · **Deps** F-268
+- **Prefs** -
+- **Acceptance**
+  1. Home has no requests or invites section; People's top section holds friend requests and friend invites sent; Groups' top section holds group requests, join requests and group invites sent (fills in with F-269); a group page shows its own under Members.
+  2. One-line rows (§ 26.18), max 5, "See all" -> Activity (Friends and invites, group-scoped where relevant); hidden when empty.
+  3. Specs that expected Home's Requests section move to People/Groups; e2e at 390 and 1440.
+
+### F-271 Remove Home; Overview at the top of Analytics `spec: owner § 26.3 (decision 198)`
+
+The Home tab goes; its Overview becomes the first section of Analytics; the app opens on People.
+
+- **Effort** M · **Impact** 8 · **Backend** no · **Status** in progress, Wave C · **Deps** F-256
+- **Prefs** start tab default `people`; `tabs` migration drops `home`
+- **Acceptance**
+  1. Tabs People, Groups, Analytics, Activity (+ Ask, Settings); no Home route or screen; `/` opens the start tab; `/?overview=` -> `/analytics?overview=`; saved `tabs`/`startTab` naming home migrate (tests).
+  2. Analytics shows the Overview cards (All / Groups / Direct, owner 161 layout) above its filter row, labelled as balances now, ignoring period/currency; a card opens Analytics in that currency.
+  9. Owner 209: Profile is a full page: header (changeable avatar, name, verified email and phone, "On Splito since", Edit profile), stat row linking to People / Groups / Activity Me / Analytics, Your balance (owner-161 cards, Analytics ›), Payment details (UPI, editable), Add me (QR, link, Share), Your recent activity (3, See all -> Activity Me), Log out last; sections hide when empty and load after the header; screenshots 390/1440 light and Dim.
+  8. Owner 205: the Data items collapse into one "Your data" row opening `/settings/data` (Back -> Settings) with Export, Import, Move older data (when present), Reset all settings and the deleted-items note; e2e.
+  7. Owner 204: Settings shows one "Support" row opening `/settings/support` (Back -> Settings) with Send feedback, Your feedback, Help, Privacy, About and the app version; the inline items leave the Settings list; footer links still open each page directly; e2e.
+  6. Owners 202/203: Log out moves to the last row of Profile and is removed from Settings, the drawer footer and the sidebar (AddMissingContact keeps its own; same erase prompt, owner 186); Profile's "Settings" row is removed; e2e.
+  5. Owners 201/206: the header avatar opens Profile at every width; Profile is its own page at `/profile` (Back returns where you were, else the start tab); Settings is a tab (`/settings`) in the default bottom bar (People, Groups, Analytics, Activity, Settings) and the sidebar; the phone drawer opens by left-edge swipe; e2e.
+  4. Owner 200: Ask Splito leaves the shared nav list (sidebar, rail, drawer, bottom bar, Settings > Navigation, `tab-ask`); reached from the header Search & Ask icon and "/" / Cmd+K only; saved `ask` in `tabs` migrates away.
+  3. Logo, Back parents (owner 184), sign-in return and every Home fallback go to the start tab; Home's "See all" links and Recent sections are gone (Activity, People, Groups cover them); specs updated; e2e at 390 and 1440.
+
+### F-272 Sort control on People and Groups `spec: owner § 26.12 (decision 199)`
+
+A Sort button beside Filters: Last active (default), Name, Amount, Newest; remembered and in the URL.
+
+- **Effort** S · **Impact** 7 · **Backend** no · **Status** in progress, Wave C · **Deps** -
+- **Prefs** `peopleSort` (default `lastActive`), `groupsSort` (default `lastActive`)
+- **Acceptance**
+  1. People and Groups headers: search, Filters, Sort (and People's gear last); Sort opens a radio menu; non-default tints the button.
+  2. Last active = newest change involving the friend or group (expense, payment, comment, edit), computed in the domain/sync layer, not in screens; ties by name.
+  3. Sort leaves the Filters sheet; `?sort=` in the URL; old `peopleSort` values migrate; unit tests for each order; e2e at 390 and 1440.
+
+### F-273 Paid by always shown, starting as me `spec: owner § 26.13 (decision 207)`
+
+Every new expense shows Paid by and starts with me as the payer, from every entry point.
+
+- **Effort** S · **Impact** 7 · **Backend** no · **Status** todo, Wave C · **Deps** -
+- **Prefs** -
+- **Acceptance**
+  1. e2e from the FAB, the sidebar pill, a group page, a person page (pre-selected friend), Ask prefill without a payer, a scanned receipt and Duplicate: Paid by visible and reads "You" at 390 and 1440.
+  2. No smart default, remembered or predicted payer for a new expense; an Ask prefill naming a payer is the only exception; editing keeps the saved payer.
+  3. Unit test of the form initialiser and group/person pick (`form.ts`, `formPick.ts`) for the default.
+
 ### F-250 Sign-in required (auth gate) `spec: owner § 26.15 (decision 125)`
 
 Nothing of the app is visible signed out: only the welcome tour, the logged-out flow, language and legal pages. The local database opens per account only with a session; offline after sign-in; deep links resume after sign-in.
 
-- **Effort** M · **Impact** 10 · **Backend** front end now (dev account), real with F-2102 · **Status** todo, Wave C (right after F-249) · **Deps** F-225, F-249, F-2102 (production)
+- **Effort** M · **Impact** 10 · **Backend** front end now (dev account), real with F-2102 · **Status** built on feat/wC-F249-F250-auth (unmerged, fix round 2026-10-30): front end against the dev AuthClient, web only (native not run); criteria 1, 3, 4, 6-10 met in e2e (`auth.spec.ts`, `authConfig.spec.ts`, preview checks in `e2e-pwa`); 2 only as far as intro then Continue (setup F-211 is not built, so Continue goes to Home); 5 partly (sign-in says it needs a connection; the app opens offline from the device copy of the session); Google/Apple are buttons only ("arrives with sync"); the review site is a preview build, production is refused until the auth HTTP client (F-2101/F-2102) exists · **Deps** F-225, F-249, F-2102 (production)
 - **Prefs** -
 - **Acceptance**
   1. Signed out, every route (including deep links and `?drawer=` URLs) shows the logged-out flow; no store is opened and no ledger data is in the DOM (e2e asserts zero store reads before sign-in).
@@ -672,7 +748,7 @@ Nothing of the app is visible signed out: only the welcome tour, the logged-out 
 
 First-launch tour of up to 5 slides (what Splito is and how to use it) with Skip / Next / Get started, then setup (F-211); first-use tips after it. Bluesky Pager and ProgressGuide, Expensify FeatureTraining (`src/components/FeatureTrainingModal.tsx`) and onboarding header (`src/components/OnboardingHeader.tsx`); illustrations original (never Expensify's or Bluesky's artwork).
 
-- **Effort** M · **Impact** 8 · **Backend** no · **Status** todo, Wave C (first, before F-211) · **Deps** F-1712 (Lottie), F-203 (Pager)
+- **Effort** M · **Impact** 8 · **Backend** no · **Status** built on feat/wC-F249-F250-auth (unmerged, fix round 2026-10-30): animated Lottie art (`pnpm lottie`), `ScreenTransition` + a touch swipe in place of the native Pager (pager-view is not shipped); `onboarding.tourSeen` is a device-storage key (the database is closed while signed out); criteria 1-4 met on web (e2e `welcome.spec.ts`, `introReplay.spec.ts`), with Skip/Get started going to Continue (setup F-211 is not built); 5 (tips) is F-253's; 6 measured (COMPLETION_MATRIX) · **Deps** F-1712 (Lottie), F-203 (Pager)
 - **Prefs** `onboarding.tourSeen` (device, in the database), `tips.enabled` (on), `tips.seen` (device)
 - **Acceptance**
   1. A fresh install opens the tour; slides as § 26.2 with titles and one sentence each, en and hi, no claim of sync or features not built.
@@ -2722,9 +2798,9 @@ Exact numbers from the ledger, never illustrative.
 
 ### F-1213 Activity tabs All / Me / Others `spec: owner § 26.14 (decision 92)`
 
-Replace Activity's "All" / "From others" tabs with "All" / "Me" / "Others". Queued by the owner; build only when the owner says so.
+Replace Activity's "All" / "From others" tabs with "All" / "Me" / "Others".
 
-- **Effort** S · **Impact** 6 · **Backend** no · **Status** todo · **Deps** F-1201
+- **Effort** S · **Impact** 6 · **Backend** no · **Status** built on feat/wC-F1213-F259-activity (owner 92; `activity.tabs` order not built, the three tabs are fixed) · **Deps** F-1201
 - **Prefs** `activity.tab` (account, default All; remembered per decision 90), `activity.tabs` (which of the three show and their order)
 - **Acceptance**
   1. Bluesky Pager tabs All / Me / Others on Activity; Me lists only items whose actor is me, Others only items by other people, All both; each paged by cursor (§ 9.8).
@@ -3012,7 +3088,7 @@ Restore the Friends list's own search (removed by F-222) next to its filters on 
 
 A "Recent transactions" section in the Home body (all expenses and repayments involving me, across friends and groups) and on every Group page (that group's only). Queued by the owner; build only when the owner says so.
 
-- **Effort** S · **Impact** 7 · **Backend** no · **Status** todo · **Deps** F-117
+- **Effort** S · **Impact** 7 · **Backend** no · **Status** Home part built with F-256 (5 newest, See all -> Activity, fixed count and position); the Group-page section and the three preferences below are still todo · **Deps** F-117
 - **Prefs** `home.recentTransactions` (account, default on), `group.recentTransactions` (account, default on), `recentTransactions.count` (account, default 5, 3-10), position via the existing Home section order
 - **Acceptance**
   1. Home shows the newest N expenses and repayments involving me (category tile, title, my net chip per currency, never summed); "See all" opens Activity.
@@ -3129,6 +3205,17 @@ Use Claude to turn free-form questions into structured queries the on-device eng
   4. Latency: answer within 1.5 s p50 on a normal connection with a streaming "Thinking…" state; cancel on new keystroke; cost guard (max tokens, one call per question).
   5. When the backend exists, calls switch to the backend proxy and the per-device key path is removed (tracked in the backend batch).
   6. Model ids and API usage follow the current Claude API docs (latest models) at build time.
+
+### F-267 Fix the `tab, 50 ms, tab` tap-latency red `spec: owner § 26.9 (decisions 150-152), found in the F-250 perf run`
+
+`perf/tapLatency.spec.ts` "tab, 50 ms, tab" at CPU x1 fails the 100 ms budget (188 to 244 ms, one long task of 134 to 143 ms; once "result never showed" on `/activity`): a tap on Analytics, then a tap on Activity 50 ms later. It is not from F-250: pristine `bf82d1d` (the base of that branch), built and run in a clean worktree on the same machine, fails identically (189 ms, long task 143 ms). Likely the first Analytics mount (a long task) landing between the two taps.
+
+- **Effort** S · **Impact** 6 · **Backend** no · **Status** todo, found 2026-10-30 · **Deps** F-255
+- **Prefs** -
+- **Acceptance**
+  1. Find the long task (Chrome trace at CPU x1) and split or defer it so the second tap is shown within 100 ms and no JS task over 50 ms runs between the taps.
+  2. `pnpm perf` is green at CPU x1 and x4, three runs in a row, on a machine under load 10.
+  3. The result is recorded in `docs/COMPLETION_MATRIX.md` with the trace's main cause.
 
 ### F-1501 Text summaries for WhatsApp `spec 4b v1`
 

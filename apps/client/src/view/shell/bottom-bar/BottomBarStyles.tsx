@@ -53,6 +53,11 @@ export const styles = StyleSheet.create({
     borderRadius: 4,
     zIndex: 1,
   },
+  /* With a label under the icon (up to 5 items, ARCHITECTURE 26.3): less air above, so the bar stays about as tall. */
+  ctrlLabelled: {
+    paddingTop: 6,
+    paddingBottom: 3,
+  },
   ctrlIcon: {
     marginLeft: 'auto',
     marginRight: 'auto',

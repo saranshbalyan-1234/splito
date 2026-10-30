@@ -1,6 +1,8 @@
 // Adapted from bluesky-social/social-app@4e4ad9c (MIT) - src/view/shell/desktop/RightNav.tsx (fixed right column, width, borders)
 import {ScrollView, View} from 'react-native'
+import {useNavigationState} from '@react-navigation/native'
 
+import {getCurrentRoute} from '#/lib/routes/helpers'
 import {atoms as a, useBreakpoints, useTheme, web} from '#/alf'
 import {AppLanguageDropdown} from '#/components/AppLanguageDropdown'
 import {RecentGroups} from './LeftNav'
@@ -9,10 +11,21 @@ import {RecentTransactions} from './RecentTransactions'
 /** Bluesky's right column width. */
 export const RIGHT_NAV_WIDTH = 320
 
-/** Width the content must leave for the right column (0 when hidden). */
-export function useRightNavWidth() {
+/**
+ * Width the content must leave for the right column (0 when hidden): hidden under 1300 px, and on Home, whose body
+ * already holds the same recent transactions and groups (owner 153, 26.3). A sheet over Home still reads as Home.
+ * `page` is the focused page's route name; the shell passes it from its own state, because it sits above the
+ * navigation context that `useRightNavWidth` reads.
+ */
+export function useRightNavWidthFor(page: string) {
   const {gtTablet} = useBreakpoints()
-  return gtTablet ? RIGHT_NAV_WIDTH : 0
+  return gtTablet && page !== 'Home' ? RIGHT_NAV_WIDTH : 0
+}
+
+/** The same width for anything inside a screen (the FAB, the column itself). */
+export function useRightNavWidth() {
+  const page = useNavigationState(state => (state ? getCurrentRoute(state).name : 'Home'))
+  return useRightNavWidthFor(page)
 }
 
 /** Desktop right column (>= 1300px, Bluesky's breakpoint): recent transactions and recent groups. */

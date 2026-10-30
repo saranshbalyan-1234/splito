@@ -14,9 +14,9 @@ const PHONE = {width: 390, height: 844}
 
 type Splito = {acceptOutgoing(contactValue: string, name: string): Promise<string>}
 
-async function openDemo(page: Page) {
+async function openDemo(page: Page, path = '/people') {
   await page.setViewportSize(DESKTOP)
-  await enterDemo(page)
+  await enterDemo(page, path)
   await expect(page.getByTestId('person-Riya Sharma')).toBeVisible()
 }
 
@@ -25,11 +25,13 @@ async function openAddFriend(page: Page) {
   await expect(page.getByTestId('screen-add-friend')).toBeVisible()
 }
 
-/** Sent invites live on Friends and invites; Home links there with "N invites waiting" (26.12). Returns the row. */
-async function openInvitesSent(page: Page, rowID: string) {
-  await page.getByTestId('people-invites-waiting').click()
-  await expect(page.getByTestId('screen-friends-invites')).toBeVisible()
-  return page.getByTestId(rowID)
+/** Sent invites are rows on Home and People too (owner 175, at most 5); the full list is Activity's Friends and invites type (owner 195). Returns the row. */
+async function openInvitesSent(page: Page, who: string) {
+  await page.goto('/activity/all?type=friends')
+  await expect(page.getByTestId('screen-activity').last().getByTestId('activity-list')).toBeVisible()
+  const row = page.getByTestId('activity-friendRequest.sent').filter({hasText: who})
+  await row.scrollIntoViewIfNeeded()
+  return row
 }
 
 async function pickerOptions(page: Page) {
@@ -50,10 +52,12 @@ test('on Splito: request -> pending (not selectable) -> they accept -> a friend 
   await expect(page.getByTestId('screen-add-friend')).toHaveCount(0)
   await expect(page.getByText('Friend request sent to ananya@example.com')).toBeVisible()
 
-  // Waiting under Invites sent (on Friends and invites; Home only counts them).
-  await expect(page.getByTestId('invite-sent-ananya@example.com')).toHaveCount(0)
-  const row = await openInvitesSent(page, 'invite-sent-ananya@example.com')
-  await expect(row).toContainText('Waiting to accept')
+  // Waiting under Invites sent. Home shows 5 rows at most (2 requests and 3 invites already), so this sixth adds "See all".
+  await expect(page.getByTestId('screen-people').getByTestId('people-requests-all')).toBeVisible()
+  const row = await openInvitesSent(page, 'ananya@example.com')
+  await expect(row).toContainText('ananya@example.com')
+  await expect(row.getByTestId('invite-sent-resend')).toBeVisible()
+  await expect(row.getByTestId('invite-sent-cancel')).toBeVisible()
   await page.goBack()
 
   // Not selectable while pending: greyed, no checkbox.
@@ -66,9 +70,9 @@ test('on Splito: request -> pending (not selectable) -> they accept -> a friend 
   // They accept (stands in for the pull from their device).
   await page.evaluate(() => (window as unknown as {splito: Splito}).splito.acceptOutgoing('ananya@example.com', 'Ananya Gupta'))
   await expect(page.getByTestId('person-Ananya Gupta')).toBeVisible()
-  await page.getByTestId('people-invites-waiting').click()
-  await expect(page.getByTestId('screen-friends-invites')).toBeVisible()
-  await expect(row).toHaveCount(0)
+  // The row names the friend now.
+  const answered = await openInvitesSent(page, 'Ananya Gupta')
+  await expect(answered.getByTestId('invite-sent-resend')).toHaveCount(0)
   await page.goBack()
   const after = await pickerOptions(page)
   await expect(after.getByTestId('person-option-Ananya Gupta')).toBeVisible()
@@ -83,7 +87,7 @@ test('incoming requests: People > Requests and Activity, Accept makes a friend',
   await expect(activityRow).toContainText('sent you a friend request')
   await expect(activityRow.getByTestId('activity-unread-dot')).toBeVisible()
   await page.getByTestId('tab-people').click()
-  await page.getByTestId('request-Ishaan Verma').getByTestId('request-accept').click()
+  await page.getByTestId('screen-people').last().getByTestId('request-Ishaan Verma').getByTestId('request-accept').click()
   await expect(page.getByTestId('person-name')).toHaveText(/^Ishaan Verma( - Demo)?$/)
 })
 
@@ -91,11 +95,10 @@ test('the demo set carries the invites flow: requests, invites sent, a joined fr
   await openDemo(page)
   // Requests: two waiting (the one I declined is gone); invites sent: only the ones still waiting.
   await expect(page.getByTestId('people-requests-title')).toHaveText('Requests  2')
-  // Home keeps one compact row for the invites waiting; the rows themselves are on Friends and invites.
-  await page.getByTestId('people-invites-waiting').click()
-  await expect(page.getByTestId('screen-friends-invites')).toBeVisible()
-  for (const name of ['Kabir', 'Neha Joshi', 'Aarav Mehta']) await expect(page.getByTestId(`invite-sent-${name}`)).toBeVisible()
-  for (const gone of ['Meera Nair', 'Zoya Khan']) await expect(page.getByTestId(`invite-sent-${gone}`)).toHaveCount(0)
+  // Home shows the invites sent as rows (owner 175); Activity's Friends and invites type holds the full list with Resend / Cancel in place (owner 195).
+  for (const name of ['Kabir', 'Neha Joshi', 'Aarav Mehta']) await expect(page.getByTestId('screen-people').getByTestId(`invite-sent-${name}`)).toBeVisible()
+  for (const name of ['Kabir', 'Neha Joshi', 'Aarav Mehta']) await expect((await openInvitesSent(page, name)).getByTestId('invite-sent-resend')).toBeVisible()
+  for (const gone of ['Meera Nair', 'Zoya Khan']) await expect(page.getByTestId('activity-friendRequest.sent').filter({hasText: gone}).getByTestId('invite-sent-resend')).toHaveCount(0)
   await page.goBack()
   // Joined: the private "Tanvi Rao" was linked to the account when they accepted.
   await expect(page.getByTestId('person-Tanvi Rao')).toBeVisible()
@@ -126,11 +129,7 @@ for (const viewport of [{width: 320, height: 800}, {width: 393, height: 852}, DE
     await enterDemo(page)
     const isPhone = viewport.width < 800
     for (const [rowID, name, actions] of ROWS) {
-      // Requests are on Home; sent invites on Friends and invites.
-      if (rowID.startsWith('invite-sent') && !(await page.getByTestId(rowID).count())) {
-        await page.getByTestId('people-invites-waiting').click()
-        await expect(page.getByTestId('screen-friends-invites')).toBeVisible()
-      }
+      // Requests and the invites sent are both rows on Home (owner 175).
       const row = page.getByTestId(rowID)
       await row.scrollIntoViewIfNeeded()
       const r = (await row.boundingBox())!
@@ -160,11 +159,10 @@ for (const viewport of [{width: 320, height: 800}, {width: 393, height: 852}, DE
     }
     if (isPhone) {
       // The icon-only button names itself on hover (and long-press on touch); the request is on Home.
-      await page.goBack()
-      const accept = page.getByTestId('screen-people').getByTestId('request-Ishaan Verma').getByTestId('request-accept')
+      const accept = page.getByTestId('screen-home').getByTestId('request-Ishaan Verma').getByTestId('request-accept')
       await expect(accept).toHaveAttribute('aria-label', 'Accept Ishaan Verma’s friend request')
       await accept.hover()
-      await expect(page.getByTestId('screen-people').getByTestId('request-accept-tooltip')).toHaveText('Accept')
+      await expect(page.getByTestId('screen-home').getByTestId('request-accept-tooltip')).toHaveText('Accept')
     }
   })
 }
@@ -206,8 +204,8 @@ test('not on Splito: Send invite makes a personal one-use link and lists them un
   await expect(page.getByTestId('invite-url')).toHaveText(/^https:\/\/splito\.app\/invite\/[a-z0-9]{16}$/)
   await expect(page.getByTestId('invite-email')).toBeVisible()
   await page.getByTestId('sheet-save').click()
-  const row = await openInvitesSent(page, 'invite-sent-new.person@example.com')
-  await expect(row).toContainText('Invited, not on Splito yet')
+  const row = await openInvitesSent(page, 'new.person@example.com')
+  await expect(row).toContainText('invited new.person@example.com to Splito')
 })
 
 test('offline (no directory): we’ll check when online, the request queues, Add anyway stays', async ({page}) => {
@@ -218,12 +216,12 @@ test('offline (no directory): we’ll check when online, the request queues, Add
   await expect(page.getByTestId('add-friend-add-anyway')).toBeVisible()
   await page.getByTestId('sheet-save').click()
   await expect(page.getByText('Saved. We’ll check and send it when you’re online.')).toBeVisible()
-  const row = await openInvitesSent(page, 'invite-sent-someone@example.com')
-  await expect(row).toContainText('We’ll send it when you’re online')
+  const row = await openInvitesSent(page, 'someone@example.com')
+  await expect(row.getByTestId('invite-sent-resend')).toBeVisible()
   // Invite links fail closed without the server: no made-up link.
   await page.goto('/invites/new')
   await expect(page.getByTestId('sheet-save')).toBeDisabled()
-  await expect(page.getByText('Invite links need a connection')).toBeVisible()
+  await expect(page.getByText('Invite links work once sync arrives')).toBeVisible()
 })
 
 test('a bad value says what is wrong after leaving the field', async ({page}) => {
@@ -322,7 +320,7 @@ test('without the Contact Picker API the contacts button is hidden', async ({pag
 
 test('phone: Add friend is a bottom sheet, full width from the bottom edge', async ({page}) => {
   await page.setViewportSize(PHONE)
-  await enterDemo(page)
+  await enterDemo(page, '/people')
   await page.getByTestId('people-add-friend').click()
   const sheet = page.getByTestId('screen-add-friend')
   await expect(sheet).toBeVisible()

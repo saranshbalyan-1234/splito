@@ -15,7 +15,7 @@ export function resetToRoot() {
   if (!navigationRef.isReady()) return
   navigationRef.resetRoot(
     IS_WEB
-      ? {index: 0, routes: [{name: 'People'}]}
-      : {index: 0, routes: [{name: 'Tabs', state: {index: 0, routes: [{name: 'People'}]}}]},
+      ? {index: 0, routes: [{name: 'Home'}]}
+      : {index: 0, routes: [{name: 'Tabs', state: {index: 0, routes: [{name: 'Home'}]}}]},
   )
 }

@@ -8,13 +8,14 @@ import {type FlatNavigatorParams} from './lib/routes/types'
  * paths they would otherwise match.
  */
 export const ROUTE_PATHS = {
-  People: '/',
+  Home: '/',
+  People: '/people',
   Groups: '/groups',
   Analytics: '/analytics',
   Activity: '/activity',
   Profile: '/profile',
   Settings: '/settings',
-  SignIn: '/signin',
+  Welcome: '/welcome/:step',
   FriendsAndInvites: '/settings/friends',
   Search: '/search',
   SettingsSection: '/settings/:section',
@@ -41,7 +42,11 @@ export type RouteName = keyof typeof ROUTE_PATHS
  * Settings with a note under Data. Both linking configs read paths through this.
  */
 export function redirectOldPath(path: string) {
+  /* Before F-256 the Friends list was Home: its list state (`/?sort=name&show=owesYou`) and Filters sheet (`/filters`) belong to People now. */
+  const rootQuery = path.match(/^\/?\?(.*)$/)
+  if (rootQuery && /(^|&)(show|sort|currency|groups|settled|hidden)=/.test(rootQuery[1]!)) return `/people?${rootQuery[1]}`
   return path
+    .replace(/^\/?filters(?=[/?#]|$)/, '/people/filters')
     .replace(/^\/?notifications(?=[/?#]|$)/, '/activity')
     .replace(/^\/?settings\/recently-deleted(?=[/?#]|$)/, '/settings?note=deleted-stay')
 }

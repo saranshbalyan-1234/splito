@@ -90,7 +90,7 @@ test('M10 + m7 + m5: direct and group debts that net to zero stay open, and Call
 
 test('M6: the payer cannot be unticked from "Split with"', async ({page}) => {
   await page.setViewportSize({width: 1440, height: 900})
-  await openDemo(page)
+  await openDemo(page, '/people')
   await expect(page.getByTestId('person-Riya Sharma')).toBeVisible()
   await page.getByTestId('sidebar-add').click()
   await page.getByTestId('amount-input').fill('900')

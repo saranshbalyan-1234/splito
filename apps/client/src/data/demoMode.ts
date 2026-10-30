@@ -1,6 +1,6 @@
 /**
  * Demo mode (ARCHITECTURE 26.1, F-228a): the app can run on a second, separate
- * local database (`splito-demo`: its own IndexedDB database / SQLite file)
+ * local database (`splito-demo-<account id>`: its own IndexedDB database / SQLite file)
  * holding the one demo dataset. It has its own preferences, history and outbox,
  * and nothing it does reaches the real database or any sync queue. The real
  * database's only footprint is one device preference row, `demo.mode`
@@ -18,11 +18,12 @@ import {DEMO_DIRECTORY, DEMO_ME, purgeLegacyDemo, resumeDemo as resume, seedDemo
 import {deleteStore, openStore} from '#/data/store'
 import {IS_E2E} from '#/env'
 import {clearStorageScope, device} from '#/storage'
+import {demoScope} from '#/data/storeNames'
 
 export {readDemoMode, writeDemoMode} from '#/data/demoSeed'
 
-/** The demo database's name (IndexedDB database, or the SQLite file `splito-demo.db`). */
-export const DEMO_STORE = 'splito-demo'
+/** One account's demo database (IndexedDB database, or the SQLite file `splito-demo-<id>.db`): never shared with another account's. */
+export const demoStoreName = (accountId: string) => `splito-demo-${accountId}`
 
 export function demoCtx(real: MutationCtx): MutationCtx {
   return {deviceId: real.deviceId, actor: DEMO_ME, now: () => Date.now(), newId: () => randomUUID()}
@@ -31,16 +32,14 @@ export function demoCtx(real: MutationCtx): MutationCtx {
 /** An open demo database; `directory` says who is on Splito there. `StoreProvider` installs it (and the key scope) when it adopts the store, never earlier. */
 export type Opened = {store: Store; ctx: MutationCtx; directory: DirectoryClient}
 
-/** The prefix of the device-storage keys that belong to demo mode (see `setStorageScope`). */
-export const DEMO_SCOPE = 'demo:'
 
 /**
  * Opens the demo database, ensures its own "me" and seeds it when empty (always, after demo mode was turned off and
  * on again: turning it off erases it, `eraseDemo`). Touches nothing global: the directory and the key scope switch
  * only when the store is adopted. Closes the store again if anything fails.
  */
-export async function openDemo(real: MutationCtx, notices?: StorageNotices, onProgress?: (done: number) => void): Promise<Opened> {
-  const store = await openStore(notices, DEMO_STORE)
+export async function openDemo(accountId: string, real: MutationCtx, notices?: StorageNotices, onProgress?: (done: number) => void): Promise<Opened> {
+  const store = await openStore(notices, demoStoreName(accountId))
   const ctx = demoCtx(real)
   try {
     await ensureMe(store, ctx, 'Me')
@@ -57,9 +56,9 @@ export async function openDemo(real: MutationCtx, notices?: StorageNotices, onPr
  * its scope (drafts, search history, read marks, Ask chat, the reminders bookkeeping). Call it once the real store is showing
  * and the demo connection is closed; turning it on again seeds a fresh dataset.
  */
-export async function eraseDemo(): Promise<void> {
-  clearStorageScope(DEMO_SCOPE)
-  await deleteStore(DEMO_STORE)
+export async function eraseDemo(accountId: string): Promise<void> {
+  clearStorageScope(demoScope(accountId))
+  await deleteStore(demoStoreName(accountId))
 }
 
 /**
@@ -67,8 +66,8 @@ export async function eraseDemo(): Promise<void> {
  * logged, the real database is told the mode is off and null comes back: the app must
  * never be locked in a mode it cannot open.
  */
-export function resumeDemo(real: {store: Store; ctx: MutationCtx}, notices?: StorageNotices): Promise<Opened | null> {
-  return resume(real, () => openDemo(real.ctx, notices), e => logger.error(e, {where: 'demoMode.resume'}))
+export function resumeDemo(accountId: string, real: {store: Store; ctx: MutationCtx}, notices?: StorageNotices): Promise<Opened | null> {
+  return resume(real, () => openDemo(accountId, real.ctx, notices), e => logger.error(e, {where: 'demoMode.resume'}))
 }
 
 /** Dev and e2e, once per device: erases the `demo-large-` rows older builds wrote into the real database. */

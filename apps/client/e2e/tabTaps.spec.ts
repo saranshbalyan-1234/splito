@@ -9,22 +9,23 @@ type Splito = {
 }
 
 const SCREEN: Record<string, string> = {
+  home: 'screen-home',
   people: 'screen-people',
   groups: 'screen-groups',
   analytics: 'screen-analytics',
   activity: 'screen-activity',
 }
 const GAP = 50
-/* From People; the last tap repeats a tab tapped two taps (~100 ms) earlier, which a per-link debounce swallows. */
+/* From Home; the last tap repeats a tab tapped two taps (~100 ms) earlier, which a per-link debounce swallows. */
 const SIX = ['groups', 'analytics', 'activity', 'groups', 'analytics', 'groups']
 const TEN = [
-  'activity', 'groups', 'people', 'analytics', 'groups',
-  'activity', 'people', 'groups', 'analytics', 'groups',
+  'activity', 'groups', 'home', 'analytics', 'people',
+  'activity', 'home', 'groups', 'analytics', 'people',
 ]
 
 async function ready(page: Page) {
   await page.goto('/')
-  await expect(page.getByTestId('screen-people')).toBeVisible()
+  await expect(page.getByTestId('screen-home')).toBeVisible()
   await page.waitForFunction(() => 'splito' in window)
 }
 
@@ -60,7 +61,7 @@ async function expectLanded(page: Page, last: string) {
   for (const other of Object.keys(SCREEN).filter(k => k !== last)) {
     await expect(page.getByTestId(`tab-${other}`)).not.toHaveAttribute('aria-current', 'page')
   }
-  await expect(page).toHaveURL(last === 'people' ? /\/$/ : new RegExp(`/${last}$`))
+  await expect(page).toHaveURL(last === 'home' ? /\/$/ : new RegExp(`/${last}$`))
 }
 
 for (const motion of ['full', 'reduced'] as const) {
@@ -87,7 +88,7 @@ for (const motion of ['full', 'reduced'] as const) {
           }
           requestAnimationFrame(frame)
         })
-        await tapAll(page, ['groups', 'analytics', 'activity', 'people', 'analytics', 'groups'], true, 120)
+        await tapAll(page, ['groups', 'analytics', 'activity', 'home', 'people', 'groups'], true, 120)
         await expectLanded(page, 'groups')
         expect(await page.evaluate(() => (window as unknown as {__widest: number}).__widest)).toBeLessThanOrEqual(390)
       })
@@ -125,7 +126,7 @@ for (const motion of ['full', 'reduced'] as const) {
 
     test.describe('in-page tabs', () => {
       test.use({viewport: {width: 390, height: 844}, hasTouch: true, isMobile: true})
-      test('Group tabs: six taps 50 ms apart end on the last; Activity All / From others', async ({page}) => {
+      test('Group tabs: six taps 50 ms apart end on the last; Activity All / Me / Others', async ({page}) => {
         await ready(page)
         await setMotion(page, motion)
         const group = await page.evaluate(async () => {
@@ -156,16 +157,16 @@ for (const motion of ['full', 'reduced'] as const) {
 
         await page.goto('/activity')
         await expect(page.getByTestId('activity-tabs')).toBeVisible()
-        // The seeded person and group are my own changes: All lists them, From others does not.
+        // The seeded person and group are my own changes: All lists them, Others does not.
         const mine = page.getByTestId('screen-activity').locator('[data-testid^="activity-"][data-testid*="."]').filter({hasText: 'You added'})
         await expect(mine.first()).toBeVisible()
-        const one = (await page.getByTestId('activity-tabs-selector-1').boundingBox())!
+        const one = (await page.getByTestId('activity-tabs-selector-2').boundingBox())!
         const zero = (await page.getByTestId('activity-tabs-selector-0').boundingBox())!
         for (const b of [one, zero, one, zero, one]) {
           await page.touchscreen.tap(b.x + b.width / 2, b.y + b.height / 2)
           await page.waitForTimeout(GAP)
         }
-        await expect(page.getByTestId('activity-tabs-selector-1')).toHaveAttribute('aria-selected', 'true')
+        await expect(page.getByTestId('activity-tabs-selector-2')).toHaveAttribute('aria-selected', 'true')
         await expect(mine).toHaveCount(0)
       })
     })
@@ -186,19 +187,19 @@ test.describe('phone: tabs stay mounted and answer in the first frame', () => {
 
   test('a visited tab is not unmounted or rebuilt when you come back to it', async ({page}) => {
     await openDemo(page)
-    await expect(page.getByTestId('screen-people')).toBeVisible()
+    await expect(page.getByTestId('screen-home')).toBeVisible()
     await tap(page, 'analytics')
     await expect(page.getByTestId('screen-analytics')).toBeVisible()
     await page.evaluate(() => document.querySelector('[data-testid="screen-analytics"]')!.setAttribute('data-mark', 'kept'))
-    await tap(page, 'people')
-    await expect(page.getByTestId('screen-people')).toBeVisible()
+    await tap(page, 'home')
+    await expect(page.getByTestId('screen-home')).toBeVisible()
     await tap(page, 'analytics')
     await expect(page.getByTestId('screen-analytics')).toBeVisible()
     await expect(page.getByTestId('screen-analytics')).toHaveAttribute('data-mark', 'kept')
     // Browser Back still walks the history (Analytics -> Home), and forward comes back to the same tab.
     await page.goBack()
-    await expect(page.getByTestId('screen-people')).toBeVisible()
-    await expect(page.getByTestId('tab-people')).toHaveAttribute('aria-current', 'page')
+    await expect(page.getByTestId('screen-home')).toBeVisible()
+    await expect(page.getByTestId('tab-home')).toHaveAttribute('aria-current', 'page')
     await page.goForward()
     await expect(page.getByTestId('screen-analytics')).toBeVisible()
     await expect(page.getByTestId('tab-analytics')).toHaveAttribute('aria-current', 'page')
@@ -222,16 +223,16 @@ test.describe('phone: tabs stay mounted and answer in the first frame', () => {
         const frame = () => {
           w.__frames.push({
             t: performance.now(),
-            screen: shown('screen-people'),
-            header: shown('people-add-friend'),
-            selected: document.querySelector('[data-testid="tab-people"]')?.getAttribute('aria-current') === 'page',
+            screen: shown('screen-home'),
+            header: [...document.querySelectorAll('[data-testid="screen-home"] [data-testid="header-avatar"]')].some(e => e.getClientRects().length > 0),
+            selected: document.querySelector('[data-testid="tab-home"]')?.getAttribute('aria-current') === 'page',
           })
           requestAnimationFrame(frame)
         }
         requestAnimationFrame(frame)
       })
-      await tap(page, 'people')
-      await expect(page.getByTestId('screen-people')).toBeVisible()
+      await tap(page, 'home')
+      await expect(page.getByTestId('screen-home')).toBeVisible()
       await page.waitForTimeout(400)
       const {frames, t0} = await page.evaluate(() => {
         const w = window as unknown as {__frames: Array<{t: number; screen: boolean; header: boolean; selected: boolean}>; __t0: number}
@@ -245,4 +246,89 @@ test.describe('phone: tabs stay mounted and answer in the first frame', () => {
       expect(first!.t - t0).toBeLessThan(rate === 1 ? 150 : 600)
     })
   }
+
+  test('a parked tab the LRU had evicted comes back with its content (never a stand-in)', async ({page}) => {
+    await openDemo(page)
+    await expect(page.getByTestId('screen-home')).toBeVisible()
+    for (const t of ['groups', 'analytics', 'activity']) {
+      await tap(page, t)
+      await expect(page.getByTestId(`screen-${t}`)).toBeVisible()
+    }
+    // Four pushed pages (four different routes) on top: the stack keeps only the most recent screens mounted, Groups falls out.
+    for (const url of ['/settings', '/profile', '/settings/friends', '/settings/appearance']) {
+      await page.evaluate(u => (window as unknown as {__splitoTest: {openLink(u: string): void}}).__splitoTest.openLink(u), url)
+      await expect(page).toHaveURL(new RegExp(`${url}$`))
+    }
+    await tap(page, 'home')
+    await expect(page.getByTestId('screen-home')).toBeVisible()
+    await tap(page, 'groups')
+    await expect(page.getByTestId('screen-groups')).toBeVisible()
+    await expect(page.getByTestId('screen-groups').getByTestId('list-filters')).toBeVisible()
+    await tap(page, 'analytics')
+    await expect(page.getByTestId('screen-analytics')).toBeVisible()
+  })
+
+  test('browser Back and Forward bring a tab back as it was, not rebuilt', async ({page}) => {
+    await openDemo(page)
+    await expect(page.getByTestId('screen-home')).toBeVisible()
+    await tap(page, 'groups')
+    await expect(page.getByTestId('screen-groups')).toBeVisible()
+    await page.evaluate(() => document.querySelector('[data-testid="screen-groups"]')!.setAttribute('data-mark', 'kept'))
+    await tap(page, 'analytics')
+    await expect(page.getByTestId('screen-analytics')).toBeVisible()
+    await tap(page, 'home')
+    await expect(page.getByTestId('screen-home')).toBeVisible()
+    // Going Home popped two history entries, so Forward walks back through Groups and Analytics (a history reset).
+    await page.goForward()
+    await expect(page.getByTestId('screen-groups')).toBeVisible()
+    await expect(page.getByTestId('screen-groups')).toHaveAttribute('data-mark', 'kept')
+    await page.goForward()
+    await expect(page.getByTestId('screen-analytics')).toBeVisible()
+    await page.goBack()
+    await expect(page.getByTestId('screen-groups')).toBeVisible()
+    await expect(page.getByTestId('screen-groups')).toHaveAttribute('data-mark', 'kept')
+    await page.goBack()
+    await expect(page.getByTestId('screen-home')).toBeVisible()
+  })
+
+  /* A press-in acts at once; the activations that are not a press-in must still work (keyboard, screen reader, modified click). */
+  test('the keyboard, a screen reader click and a cancelled press still switch tabs; a modified click stays in place', async ({page}) => {
+    await openDemo(page)
+    await expect(page.getByTestId('screen-home')).toBeVisible()
+
+    // Keyboard: Enter on a focused tab link.
+    await page.getByTestId('tab-groups').focus()
+    await page.keyboard.press('Enter')
+    await expect(page.getByTestId('screen-groups')).toBeVisible()
+
+    // A screen reader activates a link with a bare click event, no pointer press before it.
+    await page.getByTestId('tab-analytics').evaluate(el => (el as HTMLElement).click())
+    await expect(page.getByTestId('screen-analytics')).toBeVisible()
+
+    // A press that is dragged off before it lifts has already acted at press-in; it must not leave the link
+    // swallowing the next click-only activation.
+    const box = (await page.getByTestId('tab-activity').boundingBox())!
+    await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2)
+    await page.mouse.down()
+    // The finger rests a moment (the press-in has acted), then slides off before lifting.
+    await page.waitForTimeout(150)
+    await page.mouse.move(box.x + box.width / 2, 300)
+    await page.mouse.up()
+    await expect(page.getByTestId('screen-activity')).toBeVisible()
+    await tap(page, 'home')
+    await expect(page.getByTestId('screen-home')).toBeVisible()
+    await page.waitForTimeout(1200)
+    await page.getByTestId('tab-activity').evaluate(el => (el as HTMLElement).click())
+    await expect(page.getByTestId('screen-activity')).toBeVisible()
+
+    // Ctrl-click asks for a new tab: this page stays where it is.
+    await tap(page, 'home')
+    await expect(page.getByTestId('screen-home')).toBeVisible()
+    const popup = page.context().waitForEvent('page', {timeout: 3000}).catch(() => null)
+    await page.getByTestId('tab-groups').click({modifiers: ['Control']})
+    ;(await popup)?.close()
+    await page.waitForTimeout(300)
+    await expect(page.getByTestId('screen-home')).toBeVisible()
+    await expect(page.getByTestId('tab-home')).toHaveAttribute('aria-current', 'page')
+  })
 })

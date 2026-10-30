@@ -61,6 +61,8 @@ import {PlusLarge_Stroke2_Corner0_Rounded as PlusIcon} from '#/components/icons/
 import {SettingsSliderVertical_Stroke2_Corner0_Rounded as FilterIcon} from '#/components/icons/SettingsSlider'
 import {Trash_Stroke2_Corner0_Rounded as TrashIcon} from '#/components/icons/Trash'
 import * as Layout from '#/components/Layout'
+import {AddExpenseFABInset} from '#/components/AddExpenseFAB'
+import {useSuppressFab} from '#/components/RouteFAB'
 import * as Menu from '#/components/Menu'
 import {
   CallItEvenDialog,
@@ -96,6 +98,7 @@ import {Shimmer} from '#/motion/Shimmer'
 import {PersonReminders} from '#/features/remind/PersonReminders'
 import {RemindMenuItems} from '#/features/remind/RemindMenuItems'
 import {HistoryFilterDialog} from './components/HistoryFilterDialog'
+import {seeAllTransactionsPath, seeDisputedPath} from '#/lib/links/make'
 import {DisputedNotice} from '#/components/disputes/DisputedNotice'
 import {rowMenuWrap} from '#/features/disputes/RowMenu'
 import {markOf, useDisputedPairs, useDisputedRecords, useOpenDisputes} from '#/state/disputes'
@@ -178,6 +181,8 @@ export function PersonScreen() {
   const rowsReady = useDeferredReady(!isLoading)
   const person = people?.find(p => p.id === personId)
   const isDeleted = !!person?.deleted
+  /* The FAB pre-selects this friend (owner 190). */
+  useSuppressFab(!person || isDeleted)
   const {visible, hidden, showHidden} = useVisibleEntries(pairHistory?.entries ?? [])
   const hideFriend = useHideItem({type: 'person', id: personId})
   const openHide = useHideItem({type: openKind, id: openRepayment?.id ?? ''})
@@ -338,7 +343,7 @@ export function PersonScreen() {
             type="user"
           />
           <View style={a.flex_1} />
-          {/* Bluesky's profile action row; pushed pages have no FAB (owner rule 17). */}
+          {/* Bluesky's profile action row; wide screens have no FAB (owner 190), so adding here pre-selects the friend. */}
           {isDeleted ? null : (
           <Button
             testID="person-add-expense"
@@ -411,14 +416,17 @@ export function PersonScreen() {
             groupNames={groupNames}
             locale={locale}
             disputed={disputedLeft}
+            disputedHref={seeDisputedPath({personId})}
           />
-          <DisputedNotice leftOut={disputedLeft} isIncluded={includeDisputed} onToggle={setIncludeDisputed} scope="friend" testIDPrefix="person" />
+          <DisputedNotice leftOut={disputedLeft} isIncluded={includeDisputed} onToggle={setIncludeDisputed} scope="friend" testIDPrefix="person" href={seeDisputedPath({personId})} />
           <PersonReminders personId={personId} />
         </View>
       </View>
       <SectionHeader
         title={l`History`}
         testID="person-history-title"
+        href={seeAllTransactionsPath({personId})}
+        hrefLabel={l`See all transactions`}
         count={pairHistory?.isDone ? history.length : undefined}
         action={
           <View style={[a.flex_row, a.align_center, a.gap_sm]}>
@@ -543,6 +551,8 @@ export function PersonScreen() {
       <LayoutAnimationConfig skipEntering skipExiting>
         <List
           data={rowsReady ? items : []}
+          /* The FAB's clearance, so it never covers the last row on a phone (owner 190). */
+          ListFooterComponent={<AddExpenseFABInset />}
           onEndReached={onEndReached}
           keyExtractor={(item: HistoryItem) => item.key}
           renderItem={({item, index}: {item: HistoryItem; index: number}) =>

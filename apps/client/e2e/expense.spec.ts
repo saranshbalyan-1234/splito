@@ -7,7 +7,7 @@ const PHONE = {width: 390, height: 844}
 
 async function openAddExpense(page: Page) {
   await page.setViewportSize(DESKTOP)
-  await openDemo(page)
+  await openDemo(page, '/people')
   await expect(page.getByTestId('screen-people')).toBeVisible()
   await expect(page.getByTestId('person-Riya Sharma')).toBeVisible()
   await page.getByTestId('sidebar-add').click()
@@ -269,7 +269,7 @@ test('phones: the FAB opens Add expense as a sheet from the bottom edge; the cro
 }) => {
   await page.setViewportSize(PHONE)
   await openDemo(page)
-  await expect(page.getByTestId('screen-people')).toBeVisible()
+  await expect(page.getByTestId('screen-home')).toBeVisible()
   await page.getByTestId('fab-add').click()
   const composer = page.getByTestId('screen-add-expense')
   await expect(composer).toBeVisible()
@@ -345,7 +345,7 @@ test('expense page: an itemised bill lists every item with who had it, their por
   page,
 }) => {
   await page.setViewportSize(DESKTOP)
-  await openDemo(page)
+  await openDemo(page, '/people')
   await expect(page.getByTestId('person-Riya Sharma')).toBeVisible()
   await page.goto('/groups')
   await page.getByTestId('screen-groups').getByTestId('group-Goa trip').click()

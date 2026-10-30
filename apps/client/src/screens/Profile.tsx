@@ -1,4 +1,5 @@
 // Adapted from bluesky-social/social-app@4e4ad9c (MIT) - src/screens/Settings/Settings.tsx
+import {seeAllTransactionsPath} from '#/lib/links/make'
 import {Pressable, View} from 'react-native'
 import {Trans, useLingui} from '@lingui/react/macro'
 import {type Entity, type Group, isGroupInactive, isRemovedFriend, type Person} from '@splito/sync'
@@ -93,8 +94,8 @@ export function ProfileScreen() {
                 t.atoms.text_contrast_medium,
               ]}>
               <Trans>
-                Everything is saved on this device. Sign-in, and sync across
-                your devices, are on the way.
+                Everything is saved on this device. It will sync across your
+                devices once sync arrives.
               </Trans>
             </Text>
           </View>
@@ -245,7 +246,7 @@ function ProfileStats() {
     },
     {
       key: 'expenses',
-      to: '/analytics',
+      to: seeAllTransactionsPath(),
       label: l`Expenses`,
       value: expenseCount ?? 0,
     },

@@ -369,7 +369,7 @@ function suggest(words: string[], vocab: Vocab): Suggestion {
   return {key: 'owedMost'}
 }
 
-/** The supported question a free-form one is nearest to, shown with "I can answer this once you sign in". */
+/** The supported question a free-form one is nearest to, shown with "I can answer this once sync arrives". */
 export function closestSuggestion(question: string, vocab: Vocab): Suggestion {
   return suggest(tokens(question), vocab)
 }

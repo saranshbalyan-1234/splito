@@ -9,8 +9,14 @@ import {ROUTE_PATHS, type RouteName} from '#/routes'
 /** In-page tabs: the path segment after the page (`/groups/:id/balances`); the first is the default and prints no segment. */
 export const PAGE_TABS = {
   Group: ['expenses', 'balances', 'members'],
-  Activity: ['all', 'others', 'disputed'],
+  Activity: ['all', 'me', 'others'],
 } as const satisfies Partial<Record<RouteName, readonly string[]>>
+
+/**
+ * Pages whose bare path means "the tab I last used" (a saved preference, F-1213), so the first tab has a segment of
+ * its own (`/activity/all`) that is written whenever it is named; Group's first tab is simply the default.
+ */
+export const PREF_TABS: readonly string[] = ['Activity']
 
 export type TabbedPage = keyof typeof PAGE_TABS
 
@@ -22,6 +28,7 @@ export const SHEETS = {
   People: ['filters'],
   Groups: ['filters'],
   Analytics: ['scope', 'range'],
+  Activity: ['filters'],
   Person: [
     'filters',
     'record-payment',
@@ -104,10 +111,14 @@ export type PageName = Exclude<RouteName, 'Search'>
  * by the resolver, so a link can carry nothing a page does not look at.
  */
 export const QUERY_KEYS: Partial<Record<PageName, readonly string[]>> = {
-  People: ['show', 'sort', 'currency', 'groups', 'settled', 'hidden'],
-  Groups: ['type', 'status', 'show', 'currency', 'sort', 'settled', 'hidden'],
+  /* `from`: the tab a main screen was opened from, so a refresh keeps its Back (owner 179, 184). */
+  Home: ['overview', 'from'],
+  People: ['show', 'sort', 'currency', 'groups', 'settled', 'hidden', 'from'],
+  Groups: ['type', 'status', 'show', 'currency', 'sort', 'settled', 'hidden', 'from'],
   Person: ['groups'],
   Analytics: ['currency', 'period', 'offset', 'from', 'to', 'scope'],
+  /* `type=transactions` (Recent transactions' "See all", owners 173, 179), `group=<id>` from a Group's "See all" (F-259); `from` is the tab a pushed copy opened from. */
+  Activity: ['type', 'group', 'person', 'from'],
   AddExpense: ['personId', 'groupId', 'title', 'amount', 'currency'],
   Settings: ['note'],
   FriendsAndInvites: ['section'],
@@ -126,13 +137,14 @@ const PATH_KEYS: Record<string, (value: string) => boolean> = {
   /** Invite codes are 16 lower-case characters (`mintInviteCode`); older ones may be longer or upper-case. */
   code: v => /^[A-Za-z0-9]{6,64}$/.test(v),
   section: v => /^[a-z][a-z-]{0,31}$/.test(v),
+  step: v => /^[1-5]$/.test(v),
 }
 export function isValidPathParam(key: string, value: string): boolean {
   return (PATH_KEYS[key] ?? (() => false))(value)
 }
 
 /** Query keys that carry an entity id; checked like a path param. */
-export const ENTITY_QUERY_KEYS = ['personId', 'groupId'] as const
+export const ENTITY_QUERY_KEYS = ['personId', 'groupId', 'group', 'person'] as const
 
 /** Pages that are formSheet / modal routes on a phone: nothing opens over them from a link (ARCHITECTURE 4, one native modal). */
 const COMPOSER_PAGES: readonly string[] = ['AddExpense', 'EditExpense', 'CreateGroup']

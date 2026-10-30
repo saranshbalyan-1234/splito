@@ -14,12 +14,15 @@ import {
 } from '@splito/sync'
 
 import {type AllNavigatorParams, type NavigationProp} from '#/lib/routes/types'
+import {realParentsFor} from '#/navigation/goBack'
+import {useRealParents} from '#/navigation/realParents'
 import {useNumberLocale} from '#/locale/numberLocale'
 import {useFormatDay, useTimeZone} from '#/locale/useDates'
 import {
   useEntities,
   useEntity,
   useHistory,
+  useMe,
   useMutationCtx,
   useStore,
 } from '#/data/hooks'
@@ -65,6 +68,13 @@ export function RepaymentScreen() {
   const navigation = useNavigation<NavigationProp>()
   const payment = useEntity<Repayment>('repayment', params.repaymentId)
   const history = useHistory('repayment', params.repaymentId)
+  const me = useMe()
+  /* Opened cold (a refresh), Back climbs to the payment's group, else the friend it is with (owner 184). */
+  useRealParents(
+    payment && me
+      ? realParentsFor({groupId: payment.data.groupId, others: [payment.data.from, payment.data.to].filter(id => id !== me.id)})
+      : undefined,
+  )
 
   return (
     <Layout.Screen testID="screen-repayment">

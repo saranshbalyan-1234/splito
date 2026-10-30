@@ -15,3 +15,12 @@ export function deleteStore(name: string): Promise<void> {
     req.onerror = () => reject(req.error)
   })
 }
+
+/** Whether a database of that name exists (a check that creates nothing: opening would). Browsers without `databases()` say no. */
+export async function storeExists(name: string): Promise<boolean> {
+  try {
+    return (await indexedDB.databases()).some(d => d.name === name)
+  } catch {
+    return false
+  }
+}

@@ -21,3 +21,5 @@ apps/client/dist-*/
 .env.*.local
 # Local QA screenshots (re-shot per review)
 apps/client/qa/
+# Signed-in browser state e2e specs start from (e2e/globalSignIn.ts)
+apps/client/.auth/

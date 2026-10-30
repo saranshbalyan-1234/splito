@@ -24,7 +24,7 @@ import {usePressScale} from '#/motion/PressableScale'
 const tabular = {fontVariant: ['tabular-nums' as const]}
 
 /** A currency heading above a group's member balances. */
-export function CurrencyHeader({currency, disputed}: {currency: string; /** What the disputed or held records in this group move, in this currency (F-1210). */ disputed?: bigint}) {
+export function CurrencyHeader({currency, disputed, disputedHref}: {currency: string; disputedHref?: string; /** What the disputed or held records in this group move, in this currency (F-1210). */ disputed?: bigint}) {
   const t = useTheme()
   const {i18n} = useLingui()
   return (
@@ -56,7 +56,7 @@ export function CurrencyHeader({currency, disputed}: {currency: string; /** What
       </View>
       {disputed ? (
         <View style={[a.flex_1, a.align_end]}>
-          <DisputedLine testID="group-balances-disputed" amounts={[{currency, amount: disputed}]} />
+          <DisputedLine testID="group-balances-disputed" href={disputedHref} amounts={[{currency, amount: disputed}]} />
         </View>
       ) : null}
     </View>

@@ -1,6 +1,7 @@
 import {beforeEach, expect, test} from 'bun:test'
 
 import {activityFromHistory, activityTracker, loadActivity} from '../src/activity'
+import {createComment, deleteComment, editComment} from '../src/comments'
 import {createExpense, createGroup, createPerson, deleteExpense, deletePerson, type ExpenseDraft, ensureMe, restoreExpense, updateExpense} from '../src/mutations'
 import {setPref} from '../src/preferences'
 import {openSqlStore} from '../src/sqlStore'
@@ -200,4 +201,19 @@ test('the feed is a window of the newest events; asking for more reads older his
   const next = await again({expense: new Set([added.id])})
   expect(next.events[0]).toMatchObject({kind: 'expense.created', entityId: added.id})
   expect(next.events).toHaveLength(5)
+})
+
+test('a comment shows once when it is written; editing or deleting it makes no event, and the window names its expense', async () => {
+  const riya = await createPerson(s, ctx, {name: 'Riya'})
+  const e = await createExpense(s, ctx, draft(riya.id))
+  const c = await createComment(s, ctx, {targetType: 'expense', targetId: e.id, body: 'Who paid the cab?'})
+  await editComment(s, ctx, c.id, {body: 'Who paid the cab, again?'})
+  await deleteComment(s, ctx, c.id)
+
+  const kinds = (await loadActivity(s)).map(x => x.kind)
+  expect(kinds.filter(k => k.startsWith('comment'))).toEqual(['comment.added'])
+
+  const state = await activityTracker(s)('unknown')
+  expect(state.events.find(x => x.kind === 'comment.added')).toMatchObject({actor: 'me', entityType: 'comment'})
+  expect(state.entities.expense.map(x => x.id)).toEqual([e.id])
 })

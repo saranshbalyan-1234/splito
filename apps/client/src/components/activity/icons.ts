@@ -12,6 +12,7 @@ import {
   Eye,
   EyeOff,
   Handshake,
+  MessageSquare,
   Pencil,
   Send,
   TriangleAlert,
@@ -54,6 +55,8 @@ export const RequestSentBadge = createIcon(Send, BADGE)
 export const NudgeBadge = createIcon(BellRing, BADGE)
 /** Remind me: a notification scheduled for myself. */
 export const ReminderSetBadge = createIcon(AlarmClock, BADGE)
+/** A comment on an expense or a payment. */
+export const CommentBadge = createIcon(MessageSquare, BADGE)
 
 /** A dispute raised or reopened (amber triangle), a hold (pause), accepted (tick), rejected (cross), withdrawn or released. */
 export const DisputeRaisedBadge = createIcon(TriangleAlert, BADGE)

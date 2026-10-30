@@ -1,5 +1,5 @@
 // Adapted from bluesky-social/social-app@4e4ad9c (MIT) - src/view/shell/createNativeStackNavigatorWithAuth.tsx
-import {useEffect, useRef} from 'react'
+import {useCallback, useEffect, useRef} from 'react'
 import {View} from 'react-native'
 // Based on @react-navigation/native-stack/src/navigators/createNativeStackNavigator.ts
 // MIT License
@@ -9,7 +9,6 @@ import {
   type EventArg,
   type NavigatorTypeBagBase,
   type ParamListBase,
-  type Router,
   type StackActionHelpers,
   StackActions,
   type StackNavigationState,
@@ -33,71 +32,8 @@ import {atoms as a} from '#/alf'
 import {IS_WEB} from '#/env'
 import {BottomBarWeb} from './bottom-bar/BottomBarWeb'
 import {DesktopLeftNav, useLeftNavWidth} from './desktop/LeftNav'
-import {DesktopRightNav, useRightNavWidth} from './desktop/RightNav'
-
-/*
- * Tabs stay mounted (owner 166): popping back to Home used to unmount Groups, Analytics or Activity and
- * remount them on the next visit (and every row's exit animation ran: Analytics -> Home was 600 ms, 5.9 s at 6x
- * CPU). A tab the stack drops is parked among the router's `preloadedRoutes` instead: the same key keeps its
- * tree, state and scroll, `NAVIGATE` / `PUSH` to it re-uses the key, and the view renders it hidden. Home is
- * pinned already (below). Removing the route from the URL history is unaffected: only `state.routes` is the URL.
- */
-type RouteLike = {key: string; name: string; path?: string; params?: object}
-function shallowEqual(a: object | undefined, b: object | undefined) {
-  const x = (a ?? {}) as Record<string, unknown>
-  const y = (b ?? {}) as Record<string, unknown>
-  const keys = Object.keys(x)
-  return keys.length === Object.keys(y).length && keys.every(k => Object.is(x[k], y[k]))
-}
-const PARKED_TABS = new Set(['Groups', 'Analytics', 'Activity'])
-const DROPPING = new Set(['POP', 'POP_TO', 'POP_TO_TOP', 'GO_BACK', 'NAVIGATE'])
-// oxlint-disable-next-line typescript/no-explicit-any -- the router's state and action types are generic here
-function parkTabs(original: Router<any, any>): Router<any, any> {
-  return {
-    ...original,
-    getStateForAction(state, action, options) {
-      /*
-       * `navigate(..., {pop: true})` to a parked tab is a no-op in the stack router (it looks for the route in
-       * `routes` only and never adds the preloaded one), so it is a `PUSH`, which re-uses the parked key.
-       */
-      const name = (action as {payload?: {name?: string; pop?: boolean}}).payload?.name
-      const revive =
-        action.type === 'NAVIGATE' &&
-        !!name &&
-        PARKED_TABS.has(name) &&
-        !state.routes.some((r: {name: string}) => r.name === name) &&
-        state.preloadedRoutes.some((r: {name: string}) => r.name === name)
-      const made = original.getStateForAction(state, revive ? {...action, type: 'PUSH'} : action, options)
-      if (!made || made === state || !DROPPING.has(action.type)) return made
-      /*
-       * A route navigated to with the params it already has stays the same object: the stack router makes a new
-       * one on every `navigate`, which re-renders the whole screen behind it (its `route` prop changed) when you
-       * return to a tab you left, however little changed.
-       */
-      const before = new Map<string, RouteLike>(
-        [...state.routes, ...state.preloadedRoutes].map((r: RouteLike) => [r.key, r]),
-      )
-      const same = (r: RouteLike) => {
-        const old = before.get(r.key)
-        return old && old.name === r.name && old.path === r.path && shallowEqual(old.params, r.params) ? old : r
-      }
-      const next = {...made, routes: made.routes.map(same), preloadedRoutes: made.preloadedRoutes.map(same)}
-      const kept = new Set(next.routes.map((r: {key: string}) => r.key))
-      const dropped = state.routes.filter(
-        (r: {key: string; name: string}) => PARKED_TABS.has(r.name) && !kept.has(r.key),
-      )
-      if (!dropped.length) return next
-      const names = new Set(dropped.map((r: {name: string}) => r.name))
-      return {
-        ...next,
-        preloadedRoutes: [
-          ...next.preloadedRoutes.filter((r: {name: string}) => !names.has(r.name)),
-          ...dropped,
-        ],
-      }
-    },
-  }
-}
+import {DesktopRightNav, useRightNavWidthFor} from './desktop/RightNav'
+import {parkTabs, type RouteLike, shallowEqual} from '#/navigation/parkTabs'
 
 // On web, only this many screens (beyond Home + focused) stay mounted.
 // Older screens are unmounted to prevent memory growth during long sessions.
@@ -120,6 +56,12 @@ function NativeStackNavigator({
   UNSTABLE_router,
   ...rest
 }: NativeStackNavigatorProps) {
+  // Tabs are parked, over a caller's own router when it has one (parkTabs.ts); stable between renders.
+  const router = useCallback(
+    // oxlint-disable-next-line typescript/no-explicit-any -- the router's state and action types are generic here
+    (original: any) => parkTabs(original, UNSTABLE_router),
+    [UNSTABLE_router],
+  )
   // --- this is copy and pasted from the original native stack navigator ---
   const {state, describe, descriptors, navigation, NavigationContent} =
     useNavigationBuilder<
@@ -137,7 +79,7 @@ function NativeStackNavigator({
       screenListeners,
       screenOptions,
       screenLayout,
-      UNSTABLE_router: IS_WEB ? parkTabs : UNSTABLE_router,
+      UNSTABLE_router: IS_WEB ? router : UNSTABLE_router,
     })
 
   useEffect(
@@ -172,7 +114,10 @@ function NativeStackNavigator({
   const activeRoute = state.routes[state.index]
   const {isMobile} = useWebMediaQueries()
   const leftNavWidth = useLeftNavWidth()
-  const rightNavWidth = useRightNavWidth()
+  /* A `Sheet` marker is open over the page named in its params; that page decides the column. */
+  const focusedPage =
+    activeRoute.name === 'Sheet' ? String((activeRoute.params as {page?: string} | undefined)?.page ?? '') : activeRoute.name
+  const rightNavWidth = useRightNavWidthFor(focusedPage)
   const {footerHeight} = useShellLayout()
   useEffect(() => {
     // The bottom bar reports its height; nothing replaces it on wider windows.
@@ -180,11 +125,12 @@ function NativeStackNavigator({
   }, [isMobile, footerHeight])
   // Splito has no sign-in, sign-up queue or onboarding gate (Bluesky's auth branches are removed).
   // On web, limit how many screens stay mounted to prevent memory growth.
-  // Home is always pinned, the focused screen is always mounted, and the
+  // Home is pinned once visited, the focused screen is always mounted, and the
   // most recently visited screens are kept up to WEB_MAX_CACHED_SCREENS.
   // Evicted screens render a lightweight placeholder — the route stays in
   // state so browser back/forward still works; the component just re-mounts.
   let finalDescriptors = descriptors
+  const mountSet = new Set<string>()
   if (IS_WEB) {
     const focusedKey = activeRoute.key
 
@@ -205,10 +151,10 @@ function NativeStackNavigator({
     lruKeysRef.current = lruKeysRef.current.filter(k => routeKeySet.has(k))
 
     // Build mount set: Home (pinned) + focused + N most recent
-    const mountSet = new Set<string>()
     mountSet.add(focusedKey)
-    const homeKey = state.routes.find(r => r.name === 'People')?.key
-    if (homeKey) mountSet.add(homeKey)
+    /* Pinned once visited. A deep link to another page puts Home under it in the state, but it is never drawn: its three lists would otherwise render hidden beside the page that was opened (and duplicate its rows). */
+    const homeKey = state.routes.find(r => r.name === 'Home')?.key
+    if (homeKey && lruKeysRef.current.includes(homeKey)) mountSet.add(homeKey)
     /* A sheet's page stays mounted under its `Sheet` marker (F-241), also on a cold start where it was never focused. */
     state.routes.forEach((route, i) => {
       if (route.name !== 'Sheet') return
@@ -256,12 +202,21 @@ function NativeStackNavigator({
     for (const r of state.preloadedRoutes) everParked.current.add(r.key)
     const swapped: typeof finalDescriptors = {...finalDescriptors}
     for (const route of state.routes) {
-      const d = finalDescriptors[route.key]
+      // The real descriptor, never the LRU stand-in in `finalDescriptors` (reusing that would blank the tab for good).
+      const real = descriptors[route.key]
+      if (!real) continue
       const before = lastLive.current.get(route.key)
-      if (d && before && everParked.current.has(route.key) && before.route.name === route.name && before.route.path === route.path && shallowEqual(before.route.params, route.params)) {
-        swapped[route.key] = {...d, render: before.descriptor.render}
-      } else if (d) {
-        lastLive.current.set(route.key, {route: route as RouteLike, descriptor: d})
+      if (
+        before &&
+        mountSet.has(route.key) &&
+        everParked.current.has(route.key) &&
+        before.route.name === route.name &&
+        before.route.path === route.path &&
+        shallowEqual(before.route.params, route.params)
+      ) {
+        swapped[route.key] = {...real, render: before.descriptor.render}
+      } else {
+        lastLive.current.set(route.key, {route: route as RouteLike, descriptor: real})
       }
     }
     finalDescriptors = swapped
