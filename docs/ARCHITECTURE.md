@@ -1824,7 +1824,8 @@ labelled sidebar); **wide** = web 1300 px and up (Bluesky `gtTablet`, right colu
   `PersonLink` (Bluesky's profile-link pattern: `UserAvatar` + name as a link with hover underline on web, 44 px
   target) does it, so no screen wires its own; where the whole row already opens something else (an expense row),
   the avatar and name are their own nested targets that open the person. Shell first (owner 152), no redraw (166).
-  *Why:* "clicking on avatar or name anywhere on the website should open that friend's details".
+  *Why:* "clicking on avatar or name anywhere on the website should open that friend's details"; repeated
+  2026-10-31: "on click of others avatar, it should open up them as people" (own avatar opens Profile, owner 206).
 - **Person names are capitalised word by word** (owner 181): every word of a person's full name starts with a
   capital letter ("saransh balyan" -> "Saransh Balyan"); the rest of each word stays as typed, so "McDonald" and
   "D'Souza" survive. Saved that way on every path (add friend, own profile name, contacts, invites, join, demo
