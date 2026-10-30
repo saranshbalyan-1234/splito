@@ -2384,7 +2384,14 @@ dishes etc and each item can be assigned to each in split"; "in itemize don't sh
   empty state says "Nothing matches in the latest changes" with **"Look further back"** (five more pages a tap), and
   scrolling (`onEndReached`) keeps reading. A tab alone (Me, Others) never searches by itself. **Disputes get no tab
   of their own** (ruling 2026-10-31): the tabs stay All / Me / Others, Disputes is a Type, and its empty text is the
-  disputes copy ("No disputes or holds..."). The window grows **incrementally**: `activityTracker` keeps its pool,
+  disputes copy ("No disputes or holds..."). **Every "disputed" link opens Activity filtered to disputed
+  transactions** (owner 192): tapping a disputed amount or count anywhere (a person's or group's "of which ₹X
+  disputed", Settle's "₹X disputed, not in this plan", the friend Settle up notice, a search tip, any future Home
+  line) opens Activity as a pushed copy with Back (owners 179/190) on All with the Type filter set to Expenses,
+  Payments and Disputes (`?tab=all&type=expenses,payments,disputes`), scoped to the group (`&group=<id>`) when the
+  link sits in a group. One helper (`seeDisputedPath({groupId})`, beside `seeAllTransactionsPath`) builds it;
+  a dispute badge on a single row still opens that record. *Why:* "when click on disputed from anywhere, it loads
+  up activity with transaction and disputed filter". The window grows **incrementally**: `activityTracker` keeps its pool,
   cursor and a sorted event list when `want()` grows (`loadMore` reloads with an empty notice, never `'unknown'`) and
   rebuilds only the entities a read names; 10,000 expenses walk to a 10,000-event window in 0.35 s (SQLite) / 1.2 s
   (IndexedDB), a new expense then costs 8 / 13 ms (`activityScale.test`; it was 23.6 s and 72 ms per expense with
@@ -3100,6 +3107,7 @@ Every owner decision, in the order it was made (all 2026-10-26). "Replaced" name
 | 189 | "did it fix the performace everywhere, not just the taps"; "it should be everywhere" | Every screen and interaction meets the speed budgets, proven by a perf sweep over every route and interaction in WebKit and Chrome 6x on a quiet machine; misses fixed before the wave closes | § 26.10 | Budgets checked on a few flows and on reported problems |
 | 190 | "all the + buttons or anything should be there"; "the only diff should be whether back button is visible or not" (a main screen opened from a link) | Pushed copies keep the FAB and every header action; FAB also on Person and Group pages (pre-selecting); hidden only on Settings, Profile, detail, forms, sheets, keyboard, onboarding | § 26.6, § 26.3 | FAB only where the header had no Back; pushed copies had no FAB |
 | 191 | "make sure everything we learn from performace captures in architecture"; "that file should be self learning" | Every perf finding becomes a § 17.1 rule plus a § 23 lesson in the same change; `scripts/lessonsGate.ts` in `pnpm check` fails a branch that changes perf specs, the renders baseline or measured numbers without touching § 17/§ 23; briefs, reviews and the prompt hook repeat it | § 0 rule 11, § 17.1 | Lessons recorded when remembered (§ 0 rule 10) |
+| 192 | "when click on disputed from anywhere, it loads up activuty with transaction and disputed filter" | Every disputed amount/count link opens Activity (pushed, Back) on All with Type = Expenses, Payments, Disputes, scoped to the group when in one; one helper `seeDisputedPath` | § 26.14 | Disputed links filtered only the page they were on |
 
 New decisions follow § 0 rule 9: rewrite the rule in its topic so only the current truth remains, then add a
 row here.

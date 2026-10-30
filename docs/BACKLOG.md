@@ -650,6 +650,17 @@ A perf sweep spec walks every route and interaction in WebKit and Chrome at 6x C
   2. Known misses fixed: Analytics revisit (330 ms at 6x), row exit animations on popped pushed pages (Person, Group, Expense), Activity narrowed paging (F-1213 review C1).
   3. Per-screen table in COMPLETION_MATRIX taken at load under 10; the sweep is part of the merge gate from then on.
 
+### F-268 Disputed links open Activity filtered `spec: owner § 26.14 (decision 192)`
+
+Every disputed amount or count opens Activity on All with Expenses, Payments and Disputes selected, group-scoped when in a group.
+
+- **Effort** S · **Impact** 7 · **Backend** no · **Status** in progress, Wave C · **Deps** F-1210, F-1213
+- **Prefs** -
+- **Acceptance**
+  1. `seeDisputedPath({groupId?})` gives `/activity?tab=all&type=expenses,payments,disputes[&group=]`, pushed with Back; used by every disputed amount/count (Person, Group balances, Settle notice, friend Settle up notice, search tip).
+  2. The Filters sheet shows those three types chosen; a saved Me/Others tab never narrows it.
+  3. e2e from a Person page, a Group page and Settle at 390 and 1440; row badges still open the record.
+
 ### F-250 Sign-in required (auth gate) `spec: owner § 26.15 (decision 125)`
 
 Nothing of the app is visible signed out: only the welcome tour, the logged-out flow, language and legal pages. The local database opens per account only with a session; offline after sign-in; deep links resume after sign-in.
