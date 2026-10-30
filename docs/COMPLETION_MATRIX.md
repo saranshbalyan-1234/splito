@@ -245,4 +245,4 @@ GroupRow (`renders.spec` "switching back to a visited tab re-renders none of its
 - addExpense updates 164 to 178, closeAdd 183 to 196: the same navigator shell, and `SheetBody` +3 (it now waits for the real end of the rise).
 - `update:DesktopLeftNav` 0 to 3 (launch), `BarChart` / `LineChart` 0 to 3 (tabs): the first visit's deferred body now mounts a frame later, so
   the chart lands inside the phase of the tab it belongs to; `ask` (see above) is the same timing-noisy phase as before, highest value recorded.
-Native (`transitionEnd`, the bottom sheet's state event, `freezeOnBlur`) was not run on a device or simulator in this change.
+Native (`transitionEnd`, the bottom sheet's state event) was not run on a device or simulator in this change.
