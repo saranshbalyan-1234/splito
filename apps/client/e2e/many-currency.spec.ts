@@ -140,7 +140,7 @@ test('M5: an empty new expense still takes the group home currency, until one is
   await page.getByTestId('group-option-Lisbon').click()
   await expect(page.getByTestId('amount-currency')).toContainText('EUR')
   await page.getByTestId('amount-currency').click()
-  await page.getByTestId('currency-USD').click()
+  await page.getByTestId('currency-dialog-USD').click()
   await expect(page.getByTestId('amount-currency')).toContainText('USD')
   await page.getByTestId('expense-group').click()
   await page.getByTestId('group-option-Goa trip').click()
@@ -162,7 +162,7 @@ test('M8: Record payment on a settled friend offers every currency, starting on 
   await expect(page.getByTestId('payment-sentence')).toBeVisible()
   await expect(page.getByTestId('record-payment-sheet')).toContainText('EUR')
   await page.getByTestId('payment-other-currency').click()
-  await page.getByTestId('currency-JPY').click()
+  await page.getByTestId('currency-dialog-JPY').click()
   // The picker closes back into the payment sheet before the amount is typed.
   await expect(page.getByTestId('currency-dialog')).toHaveCount(0)
   await expect(page.getByTestId('record-payment-sheet')).toContainText('JPY')

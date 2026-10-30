@@ -26,12 +26,12 @@ import * as TextField from '#/components/forms/TextField'
 import {ArrowRight_Stroke2_Corner0_Rounded as ArrowRightIcon} from '#/components/icons/Arrow'
 import {ArrowRightLeft_Stroke2_Corner0_Rounded as SwapIcon} from '#/components/icons/Route'
 import {CoinsIcon} from '#/components/split/icons'
-import {CurrencyDialog} from '#/components/split/pickers'
+import {CurrencyDialog} from '#/components/CurrencyDialog'
 import {
-  currencyName,
   parseTypedAmount,
   partsOwedBy,
 } from '#/components/people/ledger'
+import {currencyName} from '#/locale/currencyName'
 import * as Toast from '#/components/Toast'
 import {Text} from '#/components/Typography'
 import * as FormSheet from '#/components/FormSheet'

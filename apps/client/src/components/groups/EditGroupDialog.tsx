@@ -14,7 +14,7 @@ import {
   GroupFields,
   type GroupFieldValues,
 } from '#/components/groups/GroupFields'
-import {CurrencyDialog} from '#/components/split/pickers'
+import {CurrencyDialog} from '#/components/CurrencyDialog'
 import * as Toast from '#/components/Toast'
 
 /**

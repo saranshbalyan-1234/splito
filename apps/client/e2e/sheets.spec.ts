@@ -167,7 +167,7 @@ test('pickers close with the cross alone and apply the choice at once', async ({
   await expect(picker.getByTestId('sheet-close')).toBeVisible()
   await expect(picker.getByTestId('sheet-save')).toHaveCount(0)
   await expect(picker.getByTestId('sheet-cancel')).toHaveCount(0)
-  await page.getByTestId('currency-EUR').click()
+  await page.getByTestId('currency-dialog-EUR').click()
   await expect(picker).toHaveCount(0)
   await expect(page.getByTestId('amount-currency')).toContainText('EUR')
 

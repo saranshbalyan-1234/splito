@@ -10,7 +10,7 @@ import * as TextField from '#/components/forms/TextField'
 import {ChevronRight_Stroke2_Corner0_Rounded as ChevronIcon} from '#/components/icons/Chevron'
 import {Group3_Stroke2_Corner0_Rounded as GroupIcon} from '#/components/icons/Group'
 import {MapPin_Stroke2_Corner0_Rounded as MapPinIcon} from '#/components/icons/MapPin'
-import {currencyName} from '#/components/people/ledger'
+import {currencyName} from '#/locale/currencyName'
 import {Text} from '#/components/Typography'
 
 export type GroupFieldValues = Pick<Group, 'name' | 'kind' | 'currency'> & {

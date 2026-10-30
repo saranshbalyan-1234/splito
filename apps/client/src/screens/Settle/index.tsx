@@ -21,6 +21,7 @@ import {type Group, type Person} from '@splito/sync'
 import {type AllNavigatorParams, type NavigationProp} from '#/lib/routes/types'
 import {useEntities, useGroupNets, useMe} from '#/data/hooks'
 import {useDisputedBalances, useSettleIncludeDisputed} from '#/state/disputes'
+import {joinList} from '#/locale/joinList'
 import {useNumberLocale} from '#/locale/numberLocale'
 import {EmptyState} from '#/view/com/util/EmptyState'
 import {List} from '#/view/com/util/List'
@@ -73,7 +74,7 @@ type Item =
  */
 export function SettleScreen() {
   const t = useTheme()
-  const {t: l} = useLingui()
+  const {t: l, i18n} = useLingui()
   const {gtMobile} = useBreakpoints()
   const locale = useNumberLocale()
   const navigation = useNavigation<NavigationProp>()
@@ -216,7 +217,7 @@ export function SettleScreen() {
     ]
   })
   const nameList = (ids: string[]) =>
-    ids.map(id => names.get(id) ?? '').join(', ')
+    joinList(ids.map(id => names.get(id) ?? ''), i18n.locale)
 
   const header = isLoading ? (
     <Shimmer testID="settle-loading">

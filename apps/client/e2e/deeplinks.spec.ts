@@ -287,7 +287,7 @@ for (const [label, viewport] of [
       await page.getByTestId('payment-other-currency').click()
       await expect.poll(() => here(page)).toBe(`/people/${known.person}/record-payment/currency`)
       expect(await length()).toBe(base + 2)
-      await page.getByTestId('currency-EUR').click()
+      await page.getByTestId('currency-dialog-EUR').click()
       await expect(page.getByTestId('currency-dialog')).toBeHidden()
       await expect.poll(() => here(page)).toBe(`/people/${known.person}/record-payment`)
       await expect(page.getByTestId('record-payment-sheet')).toBeVisible()
