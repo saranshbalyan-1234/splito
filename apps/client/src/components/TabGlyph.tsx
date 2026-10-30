@@ -20,9 +20,9 @@ import {
   GroupsTab_Stroke2_Corner0_Rounded as Group,
 } from '#/components/icons/GroupsTab'
 import {
-  Users_Filled_Corner0_Rounded as UsersFilled,
-  Users_Stroke2_Corner0_Rounded as Users,
-} from '#/components/icons/Users'
+  ContactRound_Filled_Corner0_Rounded as UsersFilled,
+  ContactRound_Stroke2_Corner0_Rounded as Users,
+} from '#/components/icons/ContactRound'
 import {
   HomeOpen_Filled_Corner0_Rounded as HomeFilled,
   HomeOpen_Stoke2_Corner0_Rounded as Home,

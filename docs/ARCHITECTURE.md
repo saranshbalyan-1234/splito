@@ -2231,7 +2231,7 @@ pages". § 17 holds the engineering rules that meet these budgets.
   part). Icons animate on meaning, never as decoration, and every one is the single `AnimatedIcon` primitive
   (`components/anim/AnimatedIcon.tsx`, Lucide geometry only, animated SVG paths and Reanimated on the UI thread, no
   per-icon Lottie): tab, drawer and sidebar icons morph to their filled state on select (`MorphIcon`), the Activity
-  pulse redraws when the unread count goes up, the check draws on Accept (Save and Settle keep `SuccessCheck`), the
+  pulse redraws when the unread count goes up, the check draws on Accept and on the Save, Record payment and Call it even buttons (no full-sheet success screen, F-275; the sheet closes with one toast), the
   trash lid lifts while a Delete button is hovered, pressed or focused, the sync dot breathes while syncing and
   rests otherwise, chevrons turn on expand. Two items of the original list are **not built** because motion there
   would not explain a change (owner 213): Search & Ask sparkles twinkling on open (the drawer opening shows it) and

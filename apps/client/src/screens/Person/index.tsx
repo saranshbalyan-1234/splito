@@ -53,6 +53,8 @@ import {Button, ButtonIcon, ButtonText} from '#/components/Button'
 import {useDialogControl} from '#/components/Dialog'
 import {DotGrid3x1_Stroke2_Corner0_Rounded as DotsIcon} from '#/components/icons/DotGrid'
 import {
+  Banknote_Stroke2_Corner0_Rounded as BanknoteIcon,
+  HandCoins_Stroke2_Corner0_Rounded as HandCoinsIcon,
   Handshake_Stroke2_Corner0_Rounded as HandshakeIcon,
   IndianRupee_Stroke2_Corner0_Rounded as RupeeIcon,
 } from '#/components/icons/Money'
@@ -487,7 +489,7 @@ export function PersonScreen() {
         <Layout.Header.ActionButton
           testID="person-record-payment"
           label={hasOpenBalance ? l`Settle up` : l`Record payment`}
-          icon={HandshakeIcon}
+          icon={hasOpenBalance ? HandCoinsIcon : BanknoteIcon}
           disabled={!person || isDeleted}
           onPress={() => recordPayment()}
         />
