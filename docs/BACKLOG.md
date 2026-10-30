@@ -606,6 +606,28 @@ Every word of a person's full name starts with a capital, on save and on display
   2. Every save path for a person's name uses it; every display of a person's name uses it (old lower-case data reads right).
   3. Group names, expense titles, emails untouched; e2e adds "saransh balyan" and sees "Saransh Balyan".
 
+### F-263 Every page has a fixed parent for Back `spec: owner § 26.3 (decision 184)`
+
+Back with no history goes to the page's parent (stacked), never disappears; tab copies opened from a link keep Back after a refresh via `from`.
+
+- **Effort** M · **Impact** 8 · **Backend** no · **Status** todo, Wave C (with the F-256 fix round) · **Deps** F-256
+- **Prefs** -
+- **Acceptance**
+  1. `backFallback` covers every route (architecture test fails on a missing one); default is Home, not People.
+  2. Refresh or paste /settings/appearance: Back -> Settings -> Home. Same for person, group, expense (group / friend), edit, settle, profile, friends and invites.
+  3. A pushed tab copy's address carries `from`; refresh keeps Back to the origin; tapping the tab drops it. e2e at 390 and 1440, web and the native route twins.
+
+### F-264 Breathing splash mark while loading `spec: owner § 26.11 (decision 185)`
+
+The launch logo zooms gently in and out while content loads, on web from first paint and on native from the first JS frame.
+
+- **Effort** S · **Impact** 6 · **Backend** no · **Status** todo, Wave C · **Deps** -
+- **Prefs** -
+- **Acceptance**
+  1. Web: inline CSS keyframes in `index.html` animate the mark before any script loads; it fades into the first screen; `prefers-reduced-motion` gets an opacity pulse.
+  2. iOS / Android: a JS launch screen identical to the native splash (light and Dim backgrounds, size, position) takes over without a jump and animates on the UI thread until ready.
+  3. Throttled network e2e sees the animation running; no layout shift at handover; simulator video on iOS.
+
 ### F-250 Sign-in required (auth gate) `spec: owner § 26.15 (decision 125)`
 
 Nothing of the app is visible signed out: only the welcome tour, the logged-out flow, language and legal pages. The local database opens per account only with a session; offline after sign-in; deep links resume after sign-in.
