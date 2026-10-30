@@ -1313,6 +1313,35 @@ Splito lessons (add newest last, dated, with PR):
   rules: a build guard matches strings that only the guarded thing contains (a test pins the near-miss), and every
   merge to `main` is followed by checking that the Render deploy succeeded (`render deploys list`), not only the
   GitHub workflow, before saying it is live.
+- 2026-10-30, fix/ios-safari-taps: **desktop Chrome at 1x CPU hid a 600 ms tab switch that a phone feels as 2 s.**
+  Owner on a real iPhone: tab switches "take time", rapid taps "don't work", Home worst. Measured in the simulator's
+  Mobile Safari and in Chrome at 6x CPU (`probe` timings from `pointerdown`, never from `click`): going back to Home
+  from Analytics took 617 ms (5.9 s at 6x) while every other pair was under 70 ms, because the flat stack popped
+  Analytics and unmounted it, and Reanimated's web exit animation ran for every row (`handleExitingAnimation`:
+  clone the node, a forced layout per row). Measure the slowest pair of tabs, not Home from Groups, and in a real
+  mobile browser. Fixes: (1) a tab the stack drops is parked in the router's `preloadedRoutes` and re-used by key
+  (`parkTabs`), so nothing unmounts or remounts; `navigate(..., {pop: true})` to a parked route is a no-op in the
+  stack router, so it is rewritten to `PUSH`; a parked tab keeps its live screen element so neither parking nor
+  reviving re-renders it (303 -> 71 renders per switch, all the bar's); (2) the list's "in the visible tree" flag
+  is its own component and `onLayout` widths ignore the 0 a hidden tab measures, or every show re-rendered the
+  list and its header; (3) the bottom bar navigates on press-in and its highlight paints in that commit, the page
+  a frame later (highlight 5-33 ms from `pointerdown` in Safari, 18-58 ms at 6x; it was the same as the screen,
+  52-984 ms); (4) `html { touch-action: manipulation }` and `minimum-scale=1` (Bluesky's base.html) so a quick
+  second tap is never taken for a double-tap zoom. Do NOT use `react-freeze` / `freezeOnBlur` on web: hiding a
+  tree runs class `componentWillUnmount`, so every row's Reanimated exit animation ran (the 500 ms came back) and
+  entering animations replayed. Do NOT hide kept screens with `content-visibility: hidden`: it is faster in Chrome
+  but real Safari showed a BLANK page on return (found only because the simulator was run; Chrome cannot see it).
+  `axe` taps cannot go faster than ~0.6 s apart (each step re-opens the HID session), so rapid-tap sequences were
+  verified in Chrome with touch emulation (`tabTaps.spec`), not in the simulator.
+- 2026-10-30, owner 168: **heavy content mounts on the real end of the open motion, not after two frames.**
+  `OpenedContext` (`lib/hooks/useAfterTransition.ts`) carries "this has stopped moving": the web drawer sheet's
+  spring end, a popup's zoom, the native bottom sheet's state event, the side drawer's `animationend` /
+  `onTransitionEnd`, the composer routes (`Composer.Outer`, `useScreenOpened`), and on native every screen
+  (`Layout.Screen`, `transitionEnd`). `useAfterTransition` / `useDeferredReady` / `<Deferred>` read it (an explicit
+  `opened` wins); web tabs and pages do not animate, so they keep two frames. Measured in Safari: Add expense and
+  the currency picker mounted their bodies 80 ms into a 296 ms rise (sheet at 574 px); now at the rise's end.
+  Native paths (`transitionEnd`, the bottom sheet's `open` state) are written defensively with a 700 ms timer and
+  were not run on a device here.
 - 2026-10-30, Render: **auto-deploy was switched off by our own Blueprint.** `render.yaml` said
   `autoDeployTrigger: 'off'` (deploys were meant to come from deploy hooks, whose secrets were never set), and a
   Blueprint sync applied it to `splito-web`, so ten pushes after 5b60890 never deployed and nothing failed. Rule: the
@@ -1672,26 +1701,42 @@ labelled sidebar); **wide** = web 1300 px and up (Bluesky `gtTablet`, right colu
 
 ### 26.3 Shell and navigation
 
-- **Home, People and Groups are three tabs; the Overview lives only on Home** [Built, F-256, web; native not yet checked on a simulator] (owner 153; replaces the
+- **There is no Home tab; the Overview is the top of Analytics** (owner 198, replaces the Home tab of 153 below):
+  the tabs are **People, Groups, Analytics, Activity** (plus Ask Splito and Settings in the shared list). The
+  Overview (per-currency balance cards with All / Groups / Direct, owners 113/114/120/161/176) is the first section of
+  Analytics, above its filter row, labelled as balances right now (it ignores the period and currency filters
+  below it); Recent transactions is Activity (Type = Expenses and Payments), and recently active people and groups
+  are People and Groups sorted by Last active (owner 199). The app opens on **People** (the start tab; Settings >
+  Navigation can change it); `/` opens the start tab; the old `/?overview=` address redirects to
+  `/analytics?overview=`; a saved tab list or start tab naming `home` is migrated (dropped, start tab People). The
+  logo goes to the start tab; every "Home" fallback (Back parents, owner 184; sign-in return) becomes the start tab.
+  *Why:* "move the overview section to analytics as well, and then remove home".
+- **(Superseded by owner 198) Home, People and Groups are three tabs; the Overview lives only on Home** [Built, F-256, web; native not yet checked on a simulator] (owner 153; replaces the
   Home-holds-the-friends-list layout of 120 and the Overview on Groups):
   - **Home** (`/`), top to bottom (owners 153, 154): the **Overview** (per-currency cards, owners 113/114/120,
     "Analytics ›"; a scope choice in its header, **All** (default) / **Groups** / **Direct** (non-group), changes
     only the cards and their counts, remembered and in the URL `/?overview=groups|direct`, and "Analytics ›" carries
-    it over; owner 176); **Requests** (shown only when something is pending, below the Overview: incoming friend requests
-    with Accept / Decline, then **Invites sent** as real rows like before, each with avatar, name, status line and
-    Resend + Cancel on one horizontal line, at most 5 rows then "See all ›" to Friends and invites; owner 175,
-    replaces the compact "N invites waiting ›" row of 120/153); **Recent transactions** (F-1415: the newest expenses and payments
+    it over; owner 176); **no requests or invites on Home** (owner 197: they live on their own pages, below);
+    **Recent transactions** (F-1415: the newest expenses and payments
     across everything, "See all" -> Activity); **Recently active people** (the 5 friends with the newest change,
     by change time, with their per-currency net, "See all" -> People); **Recently active groups** (the 5 groups
     with the newest change, balance chips, "See all" -> Groups, same rule as § 26.17). Each section is short (5
     rows at most) and hides when empty. Header: avatar | logo (phone) / "Home" | Search & Ask (no Add friend
     here). On wide screens the right column is not shown on Home (its content is on the page), so nothing repeats.
   - **Ids and routes:** the tab ids are `home | people | groups | analytics | activity` (plus `ask`, `settings` in the shared list) and the routes `Home` (`/`) and `People` (`/people`); the old route and id `people` meant Home. The Groups tab glyph is Lucide `Group` now, since `Users` is People's.
-  - **People** (`/people`, new tab, Lucide `Users`): the same Requests and Invites sent rows Home shows (owner 175),
+  - **Requests and invites live on their own pages, never on Home** (owner 197): **People** shows friend requests
+    (Accept / Decline) and friend invites sent (Resend / Cancel) at the top; **Groups** shows group requests to me
+    (Join / Decline), join requests for groups I run (Approve / Decline) and group invites sent, at the top; a
+    **group page** shows its own pending join requests and invited members under Members. Each section is the
+    one-line row layout of § 26.18, at most 5 rows, then "See all" into Activity filtered to Friends and invites (and
+    the group, owner 195), and hides when empty. *Why:* "all these invites should show on their respective page, not
+    on home page, like group and people".
+  - **People** (`/people`, new tab, Lucide `Users`): friend requests and invites sent at the top (owner 197),
     then the Friends list with its search and Filters (owners 91, 120, 130) and a settings (gear) icon on the right of the
     Friends header (search, Filters, gear; it opens Friends and invites; no "Manage" text button, owner 177); no Overview. Header:
     avatar | "People" | Search & Ask + Add friend. A friend still opens `/people/:id`.
-  - **Groups** (`/groups`): the groups list with search and Filters; no Overview. Header unchanged.
+  - **Groups** (`/groups`): group requests, join requests and group invites sent at the top (owner 197), then the
+    groups list with search and Filters; no Overview. Header unchanged.
   - **Navigation:** the shared list becomes Home, People, Groups, Analytics, Ask Splito, Activity, Settings; the
     default phone bottom bar is Home, People, Groups, Analytics, Activity (5 tabs, labels shown under the icons up to 5 tabs, `components/TabGlyph.tsx` `TabLabel`); Settings >
     Navigation still lets the user change it (owners 84, 127). Every tab keeps the FAB rule (§ 26.6).
@@ -2194,11 +2239,9 @@ expands once I click". *Where:* `screens/People`, `screens/Groups`, `screens/Gro
   be properly boxed each one" (screenshot: 4 currencies, the 4th card stretched across a shared box).
 - **Home reads top-down, nothing cut off, nothing crowded** (owner 120, from the owner's Home screenshot of
   2026-10-29; F-248, fixed in the Wave B post-assemble batch with F-244 and F-245):
-  - **Order:** Overview first, then incoming friend requests that need my answer (Accept / Decline), then
-    Recent transactions (F-1415), then Recently active people and Recently active groups (§ 26.3, owners 153/154;
-    the Friends list itself moved to People). "Invites sent" rows are back on Home below the requests (owner 175,
-    replacing the compact "N invites waiting ›" row of this rule's first version); the full list stays on the Friends
-    and invites page (F-621).
+  - **Order:** Overview first, then Recent transactions (F-1415), then Recently active people and Recently active
+    groups (§ 26.3, owners 153/154; the Friends list itself moved to People). Requests and invites are not on Home;
+    they are on People, Groups and the group page (owner 197, replacing owner 175's rows on Home).
   - **Overview amounts and labels are never truncated:** the label is written in full ("You are owed", "You
     owe"), the amount auto-shrinks to fit what the label leaves it on the card's right (down to `text_lg`, then
     wraps the currency symbol line rather than ellipsize); cards in one grid row stretch to the tallest card's
@@ -2234,9 +2277,13 @@ expands once I click". *Where:* `screens/People`, `screens/Groups`, `screens/Gro
 - **Filters open a form sheet (§ 26.8) with Cancel + Apply; changes apply only on Apply,** and drive the list
   (not the Overview on Home, which has its own scope, owner 176). Filters and search combine. Friends: "Include groups" (default from the
   `includeGroupsDefault` preference, on), currency (All / each present), show (All / Owes you / You owe /
-  Settled), sort (Amount / Name / Recent, default from `peopleSort`). Groups: type (Trip / Home / Couple /
-  Other), status (Active / Inactive / All), show (Shown / Hidden / All), currency, show (All / You are owed / You owe / Settled), sort (Recent
-  activity / Name / Amount). The Person page's history obeys the same Include groups choice.
+  Settled). Groups: type (Trip / Home / Couple / Other), status (Active / Inactive / All), show (Shown / Hidden /
+  All), currency, show (All / You are owed / You owe / Settled). **Sort is its own control** (owner 199): a Sort
+  button beside Filters in the People and Groups list headers opens a menu (radio items): **Last active** (default:
+  newest change first, any expense, payment, comment or edit involving them), Name, Amount (largest balance first),
+  Newest (most recently added). The choice is remembered per list (`peopleSort`, `groupsSort`) and in the address
+  (`?sort=`); a non-default sort tints the button like an active filter. *Why:* "add sort filter people and group,
+  default sort by last active". The Person page's history obeys the same Include groups choice.
 - **Groups are Active or Inactive, and Shown or Hidden: two separate controls, no "Archive"** (owner 89,
   replaces 88's single Archive). Both live in the group's header overflow, are recorded in history, and have an
   Undo toast.
@@ -2404,7 +2451,9 @@ dishes etc and each item can be assigned to each in split"; "in itemize don't sh
   to Activity, it does** (owner 195), including requests and invites: "See all requests and invites" and every
   request or invite count opens Activity with Type = Friends and invites, and those rows carry their actions in
   place (Accept / Decline on a request, Resend / Cancel on an invite sent), so Activity is where they are handled.
-  Friends and invites keeps only the tools that are not a list (invite link, QR, contacts, manage links). One family of helpers builds these links
+  Friends and invites keeps only the tools that are not a list (invite link, QR, contacts, manage links). The point:
+  one place to see and handle everything, so nobody wonders which screen holds what. *Why:* "this way we can
+  handle everything from one place and user won't be confused". One family of helpers builds these links
   (`activityPath({types, groupId, personId})`, with `seeAllTransactionsPath` / `seeDisputedPath` as presets).
   *Why:* "this activity page should be used like this with filters everywhere". The window grows **incrementally**: `activityTracker` keeps its pool,
   cursor and a sorted event list when `want()` grows (`loadMore` reloads with an empty notice, never `'unknown'`) and
@@ -2615,6 +2664,9 @@ dishes etc and each item can be assigned to each in split"; "in itemize don't sh
 
 ### 26.16 Analytics
 
+- **The Overview opens Analytics** (owner 198): the per-currency balance cards (All / Groups / Direct) are its first
+  section, above the filter row, and show balances right now (not filtered by period or currency); a card opens the
+  rest of Analytics in that currency.
 - **Analytics is a main destination with graphs** (charts and a table view), filtered by period, currency and
   group; the chart/table toggle sits in that filter row, never in the header; the header's one action is
   Export CSV. One chart per currency, or converted with the rate labelled. *Why:* "analytics also needed, with
@@ -2693,6 +2745,19 @@ add anyway (only for you)"; "also i should be able to select from contacts". *Wh
   group, it lives only inside the group's "Add members / Invite people" sheet. No header overflow, menu or page
   shows invite links outside these flows (the Home "..." overflow and the Group overflow entries are removed;
   "Manage invite links" is reached from the invite-link sheet's "Manage links" button and from Settings).
+- **Every group says who can join, and adding someone asks them** (owner 196). New group, Edit group and the
+  group's "Add members / Invite people" sheet show one choice, "Who can join", with three options in plain words:
+  - **Anyone with the link:** the group link and QR work, and whoever opens it joins at once.
+  - **Link, I approve each join** (the default): opening the link sends a join request; the group's admins see it
+    in Activity (Type = Friends and invites, owner 195) and Approve or Decline it in the row.
+  - **Invite only:** no link exists (an existing link stops working); people join only when a member adds them.
+  Adding someone to a group never puts them in without consent: adding a Splito friend sends them a group
+  request ("Riya added you to Goa trip", Join / Decline in their Activity), and they show in the members list as
+  "Invited" (greyed, not selectable in expenses) until they join; adding someone not on Splito sends an invite or
+  adds them "only for you" (as for friends above). The choice is shown on the group page under Members ("Anyone
+  with the link can join" and so on) so everyone can see it; only admins change it. *Why:* "in group link, it should
+  show anyone can join, or invites only, or add like this; if I add someone they would accept or I can send
+  request".
 - **Settings > "Friends and invites"** (its own Settings row and page, Bluesky settings-list layout) manages
   friends and invites in one place:
   - **Friends:** every friend (search when more than 10) with "Add friend" at the top (opens the Invite people
@@ -3125,7 +3190,11 @@ Every owner decision, in the order it was made (all 2026-10-26). "Replaced" name
 | 192 | "when click on disputed from anywhere, it loads up activuty with transaction and disputed filter" | Every disputed amount/count link opens Activity (pushed, Back) on All with Type = Expenses, Payments, Disputes, scoped to the group when in one; one helper `seeDisputedPath` | § 26.14 | Disputed links filtered only the page they were on |
 | 193 | "when click on txn it shows up activity again, with all txn including txn filter" | Every transactions heading, See all or count opens Activity (pushed, Back) on All with Type = Expenses + Payments, group-scoped in a group; single rows still open the transaction | § 26.14 | Only Home and right-column "See all" did (owner 173) |
 | 194 | "this activyty page whould be used like this with filters everywhere" | Activity is the one full list behind every "see all" of past events; links pre-set Type, group and person filters (new `person=`), shown as chips; action lists (requests, invites) keep their pages | § 26.14 | Group/Person pages and others kept their own history lists |
-| 195 | "whrever activiyt can be linked do it, also invites can be hanlded like this" | Every link that can lead to Activity does; requests/invites see-all and counts open Activity (Type = Friends and invites) with Accept/Decline and Resend/Cancel in the rows; Friends and invites keeps only its tools | § 26.14 | Requests and invites kept their own list pages (owner 194) |
+| 195 | "whrever activiyt can be linked do it, also invites can be hanlded like this"; "this way we can handle everything from one place and user wont be confused" | Every link that can lead to Activity does; requests/invites see-all and counts open Activity (Type = Friends and invites) with Accept/Decline and Resend/Cancel in the rows; Friends and invites keeps only its tools | § 26.14 | Requests and invites kept their own list pages (owner 194) |
+| 196 | "in group link, it should show anyone can join, or invites only, or add like this, if i add someone they would acept or i can send request" | Group "Who can join": Anyone with the link / Link, I approve each join (default) / Invite only; adding a friend sends a group request they accept (shown "Invited" until then); join requests and group requests handled in Activity | § 26.18 | Group links always required approval; members were added directly |
+| 197 | "all these invites should show on their respectivr page not on home page, like group and people" | No requests or invites on Home; People shows friend requests and invites sent, Groups shows group requests, join requests and group invites, a group page its own; 5 rows then See all into Activity | § 26.3 | Home Requests section with invites sent (175) |
+| 198 | "move the overview section to analytivcs as well, and then remove home" | No Home tab; the Overview is the first section of Analytics (balances now, own All/Groups/Direct); tabs People, Groups, Analytics, Activity; app opens on People; `/` and old Home addresses redirect; Home fallbacks become the start tab | § 26.3, § 26.16 | Home tab with Overview, requests, recent transactions, recent people and groups (153, 175) |
+| 199 | "add sort filter people and group, default sort by last active" | Sort is its own button beside Filters on People and Groups: Last active (default), Name, Amount, Newest; remembered per list and in the URL | § 26.12 | Sort inside the Filters sheet; People defaulted to Amount |
 
 New decisions follow § 0 rule 9: rewrite the rule in its topic so only the current truth remains, then add a
 row here.

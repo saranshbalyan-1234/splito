@@ -1,5 +1,5 @@
 // Adapted from bluesky-social/social-app@4e4ad9c (MIT) - src/view/shell/bottom-bar/BottomBarWeb.tsx
-import {useCallback} from 'react'
+import {useCallback, useEffect, useState} from 'react'
 import {View} from 'react-native'
 import Animated from 'react-native-reanimated'
 import {useLingui} from '@lingui/react'
@@ -27,6 +27,9 @@ import {styles} from './BottomBarStyles'
 
 type NavItemValue = NavItemId
 
+/** A net only: a pending highlight whose navigation was dropped is released after this. */
+const PENDING_NET_MS = 3000
+
 /*
  * Bluesky's signed-in mobile-web bottom bar with the items the `tabs`
  * preference picks from the shared nav list (Settings > Navigation), in its
@@ -45,6 +48,19 @@ export function BottomBarWeb() {
   const searchAsk = useSearchAsk()
   /* Only the bar's own pages light up; under any other page the tab it was opened from stays lit. */
   const sections = tabs.flatMap(tab => NAV_ITEM_ROUTE[tab] ?? [])
+  /*
+   * The tab under the finger lights up in the press-in's own commit, before the page behind it switches (the
+   * switch is a frame later and may be heavy on a phone): the bar never waits for its screen. Cleared when the
+   * navigation state catches up; a modified press (new tab) never sets it.
+   */
+  const [pending, setPending] = useState<string | null>(null)
+  useEffect(() => {
+    if (!pending) return
+    // It is set only by a press that navigates, so the navigation state catches up and clears it (below); this
+    // is a net for a dispatch that was dropped, far longer than any switch takes.
+    const id = setTimeout(() => setPending(null), PENDING_NET_MS)
+    return () => clearTimeout(id)
+  }, [pending])
 
   return (
     <>
@@ -85,6 +101,9 @@ export function BottomBarWeb() {
               label={_(NAV_LABELS[tab])}
               href={href}
               navItem={tab}
+              pending={pending}
+              onPressStart={() => setPending(routeName)}
+              onSettled={() => setPending(null)}
               hasLabels={hasLabels}
               notificationCount={
                 tab === 'activity' ? activityBadge : undefined
@@ -111,6 +130,10 @@ const NavItem: React.FC<{
   sections: readonly string[]
   label: string
   navItem: NavItemValue
+  /** The route a press-in is switching to (it lights up before the navigation state says so). */
+  pending: string | null
+  onPressStart: () => void
+  onSettled: () => void
   /** The bar shows a label under each icon (5 items or fewer). */
   hasLabels: boolean
   hasNew?: boolean
@@ -123,6 +146,9 @@ const NavItem: React.FC<{
   sections,
   label,
   navItem,
+  pending,
+  onPressStart,
+  onSettled,
   hasLabels,
   hasNew,
   notificationCount,
@@ -137,7 +163,10 @@ const NavItem: React.FC<{
     ax.metric('nav:click', {item: navItem, surface: 'bottomBar'})
   }, [ax, navItem])
 
-  const isActive = section === routeName
+  const isActive = pending ? pending === routeName : section === routeName
+  useEffect(() => {
+    if (pending && pending === routeName && section === routeName) onSettled()
+  }, [pending, routeName, section, onSettled])
 
   return (
     <Link
@@ -145,6 +174,8 @@ const NavItem: React.FC<{
       href={href}
       style={[styles.ctrl, hasLabels && styles.ctrlLabelled, hasLabels ? a.pb_sm : a.pb_lg]}
       navigationAction="navigate"
+      activateOnPressIn
+      onActivated={onPressStart}
       aria-role="link"
       aria-label={label}
       aria-current={isActive ? 'page' : undefined}

@@ -42,6 +42,7 @@ import {type BottomSheetNativeComponent} from '@bsky.app/bottom-sheet/src/Bottom
 import {msg} from '@lingui/core/macro'
 import {useLingui} from '@lingui/react'
 
+import {OPENED_FALLBACK_MS, OpenedContext} from '#/lib/hooks/useAfterTransition'
 import {ScrollProvider} from '#/lib/ScrollContext'
 import {logger} from '#/logger'
 import {useA11y} from '#/state/a11y'
@@ -161,6 +162,8 @@ export function Outer({
       onOpen?.()
       setDialogIsOpen(control.id, true)
       control.url?.notifyOpen()
+      setOpened(false)
+      setOpening(true)
       ref.current?.present()
     },
     [
@@ -204,6 +207,15 @@ export function Outer({
     setDesiredContentHeight,
   ])
 
+  /* True once the present motion ended; a timer opens it anyway where the state event never says "open". */
+  const [opened, setOpened] = useState(false)
+  const [opening, setOpening] = useState(false)
+  useEffect(() => {
+    if (!opening) return
+    const id = setTimeout(() => setOpened(true), OPENED_FALLBACK_MS)
+    return () => clearTimeout(id)
+  }, [opening])
+
   const onSnapPointChange = (e: BottomSheetSnapPointChangeEvent) => {
     const {snapPoint} = e.nativeEvent
     setSnapPoint(snapPoint)
@@ -230,7 +242,11 @@ export function Outer({
   )
 
   const onStateChange = (e: BottomSheetStateChangeEvent) => {
+    /* The sheet has stopped rising: what is deferred under it may mount (owner 168). */
+    if ((e.nativeEvent.state as string) === 'open') setOpened(true)
     if (e.nativeEvent.state === 'closed') {
+      setOpened(false)
+      setOpening(false)
       onCloseAnimationComplete()
       setPresentation(undefined)
 
@@ -321,6 +337,7 @@ export function Outer({
       <SafeAreaInsetsContext.Provider
         value={presentation?.safeAreaInsets ?? safeAreaInsets}>
         <Context.Provider value={context}>
+         <OpenedContext.Provider value={opened}>
           <BreakpointWidthContext.Provider value={presentation?.width}>
             <SheetGestureRoot style={isHeightConstrained && a.flex_1}>
               <View
@@ -342,6 +359,7 @@ export function Outer({
               </View>
             </SheetGestureRoot>
           </BreakpointWidthContext.Provider>
+         </OpenedContext.Provider>
         </Context.Provider>
       </SafeAreaInsetsContext.Provider>
     </BottomSheet>

@@ -259,6 +259,23 @@ Run on the touched specs only, by the coordinator's process change (the full sui
 | Renders gate | red, and not from this change: the `tabs` phase doubles (`ChartCard` 5 to 10, `Path` 26 to 48, `Svg` 10 to 14, `UITextView` 239 to 462), i.e. the Analytics tab renders its body twice since main's Analytics-filters merge; the same gate was green on this branch before that merge (`mount:Outer` fixed earlier). Main has re-recorded its baseline since; the number to check is the merged one |
 | Perf | not re-run (outside the touched specs); last numbers above |
 
+Renders gate, fix/ios-safari-taps, re-recorded after merging main's Home / People tabs, fix round 2 (tabs stay mounted, owners 166 / 168; the phases now start after an explicit "demo loaded" signal, the
+app's `splito:home-ready` mark plus one second without a commit; baseline re-recorded at the median of 3 runs, 3 consecutive passes after). Against the baseline of this branch's parent: tabs updates 4,418 to about 3,400 (it used to vary 1,916 to 3,440 between runs, the large
+demo's background loading landing inside or outside the phase; 3,401 to 3,402 in 3 runs after the merge with main's Home / People), scroll mounts 50,113 to 42,810 (the parked Activity is re-used, not
+rebuilt), launch 403 to 398. Switching Home > Groups > Home on a phone, both visited: 303 renders per switch to 71, all of them the
+bar and the navigator, and none of PeopleScreen / PersonRow / BalanceSummary / SummaryCard / ListToolsHeader / ListImpl / GroupsScreen /
+GroupRow (`renders.spec` "switching back to a visited tab re-renders none of its content"). Every per-component increase, with its cause:
+- `VisibleTreeEffects` (update 2 to 10 tabs, 17 scroll; mount 3): the list's "in the visible tree" flag now lives in its own component,
+  which is what re-renders when a tab is hidden or shown; `ListImpl` and every row used to re-render there instead (RowImpl 48 per round).
+- `NavigationProvider` / `SceneView` / `Screen` / `Background` / `AnimatedHeaderHeightProvider` (update +2 to +4 per phase): the
+  navigator's shell for the parked tabs (they are rendered hidden by the stack view, and its memo is defeated by `buildHref`); no screen
+  content in them. The one new report, `View < ? [props: children, style]` (1), is that `Screen` / `Background` pair.
+- `OpenedProvider` (update 11 while typing in the composer): a pass-through that re-renders with the composer, one cheap render per keystroke;
+  it replaces `opened` state in the composer's shell (which re-rendered the whole sheet and was a new wasted render).
+- addExpense updates 164 to 178, closeAdd 183 to 196: the same navigator shell, and `SheetBody` +3 (it now waits for the real end of the rise).
+- `update:DesktopLeftNav` 0 to 3 (launch), `BarChart` / `LineChart` 0 to 3 (tabs): the first visit's deferred body now mounts a frame later, so
+  the chart lands inside the phase of the tab it belongs to; `ask` (see above) is the same timing-noisy phase as before, highest value recorded.
+Native (`transitionEnd`, the bottom sheet's state event) was not run on a device or simulator in this change.
 ## Home, People and Groups tabs (F-256, F-1415; owners 153-161, 175-177, 179; branch feat/wC-F256-home)
 
 Home (`/`): compact Overview (scope All / Groups / Direct), Requests and Invites sent rows, Recent transactions,

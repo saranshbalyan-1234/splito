@@ -1,5 +1,5 @@
 // Adapted from bluesky-social/social-app@4e4ad9c (MIT) - src/view/shell/createNativeStackNavigatorWithAuth.tsx
-import {useEffect, useRef} from 'react'
+import {useCallback, useEffect, useRef} from 'react'
 import {View} from 'react-native'
 // Based on @react-navigation/native-stack/src/navigators/createNativeStackNavigator.ts
 // MIT License
@@ -33,6 +33,7 @@ import {IS_WEB} from '#/env'
 import {BottomBarWeb} from './bottom-bar/BottomBarWeb'
 import {DesktopLeftNav, useLeftNavWidth} from './desktop/LeftNav'
 import {DesktopRightNav, useRightNavWidthFor} from './desktop/RightNav'
+import {parkTabs, type RouteLike, shallowEqual} from '#/navigation/parkTabs'
 
 // On web, only this many screens (beyond Home + focused) stay mounted.
 // Older screens are unmounted to prevent memory growth during long sessions.
@@ -55,6 +56,12 @@ function NativeStackNavigator({
   UNSTABLE_router,
   ...rest
 }: NativeStackNavigatorProps) {
+  // Tabs are parked, over a caller's own router when it has one (parkTabs.ts); stable between renders.
+  const router = useCallback(
+    // oxlint-disable-next-line typescript/no-explicit-any -- the router's state and action types are generic here
+    (original: any) => parkTabs(original, UNSTABLE_router),
+    [UNSTABLE_router],
+  )
   // --- this is copy and pasted from the original native stack navigator ---
   const {state, describe, descriptors, navigation, NavigationContent} =
     useNavigationBuilder<
@@ -72,7 +79,7 @@ function NativeStackNavigator({
       screenListeners,
       screenOptions,
       screenLayout,
-      UNSTABLE_router,
+      UNSTABLE_router: IS_WEB ? router : UNSTABLE_router,
     })
 
   useEffect(
@@ -123,6 +130,7 @@ function NativeStackNavigator({
   // Evicted screens render a lightweight placeholder — the route stays in
   // state so browser back/forward still works; the component just re-mounts.
   let finalDescriptors = descriptors
+  const mountSet = new Set<string>()
   if (IS_WEB) {
     const focusedKey = activeRoute.key
 
@@ -143,7 +151,6 @@ function NativeStackNavigator({
     lruKeysRef.current = lruKeysRef.current.filter(k => routeKeySet.has(k))
 
     // Build mount set: Home (pinned) + focused + N most recent
-    const mountSet = new Set<string>()
     mountSet.add(focusedKey)
     /* Pinned once visited. A deep link to another page puts Home under it in the state, but it is never drawn: its three lists would otherwise render hidden beside the page that was opened (and duplicate its rows). */
     const homeKey = state.routes.find(r => r.name === 'Home')?.key
@@ -178,6 +185,48 @@ function NativeStackNavigator({
     }
   }
 
+  /*
+   * A parked tab keeps the screen element it had while live, so neither parking nor reviving it re-renders it
+   * (owner 166). `describe(route, true)` would make a new element on every navigator render, with the navigator's
+   * own `navigation` instead of the route's, and a revived route comes back as a new object: both change what the
+   * screen reads from context and re-render all of its rows. The live element stays valid: it is keyed by the
+   * route key, which the router keeps, and its params are compared before it is re-used.
+   */
+  const lastLive = useRef(new Map<string, {route: RouteLike; descriptor: (typeof descriptors)[string]}>())
+  const everParked = useRef(new Set<string>())
+  const describeParked: typeof describe = (route, placeholder) => {
+    const kept = IS_WEB && placeholder ? lastLive.current.get(route.key) : undefined
+    return kept ? kept.descriptor : describe(route, placeholder)
+  }
+  if (IS_WEB) {
+    for (const r of state.preloadedRoutes) everParked.current.add(r.key)
+    const swapped: typeof finalDescriptors = {...finalDescriptors}
+    for (const route of state.routes) {
+      // The real descriptor, never the LRU stand-in in `finalDescriptors` (reusing that would blank the tab for good).
+      const real = descriptors[route.key]
+      if (!real) continue
+      const before = lastLive.current.get(route.key)
+      if (
+        before &&
+        mountSet.has(route.key) &&
+        everParked.current.has(route.key) &&
+        before.route.name === route.name &&
+        before.route.path === route.path &&
+        shallowEqual(before.route.params, route.params)
+      ) {
+        swapped[route.key] = {...real, render: before.descriptor.render}
+      } else {
+        lastLive.current.set(route.key, {route: route as RouteLike, descriptor: real})
+      }
+    }
+    finalDescriptors = swapped
+    for (const key of [...lastLive.current.keys()])
+      if (!state.preloadedRoutes.some(r => r.key === key) && !state.routes.some(r => r.key === key)) {
+        lastLive.current.delete(key)
+        everParked.current.delete(key)
+      }
+  }
+
   // Bluesky shows the bottom bar on mobile web when signed in; Splito is always "signed in" locally.
   const showBottomBar = isMobile
 
@@ -195,7 +244,7 @@ function NativeStackNavigator({
           state={state}
           navigation={navigation}
           descriptors={finalDescriptors}
-          describe={describe}
+          describe={describeParked}
         />
       </View>
       {IS_WEB && (
