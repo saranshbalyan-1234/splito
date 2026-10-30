@@ -107,6 +107,24 @@ function instrument() {
   }
 }
 
+/**
+ * The large demo has loaded: Home has its figures (the app's own `splito:home-ready` mark, the launch budget's end
+ * point) and nothing has committed for a full second after it, so the history pages the demo keeps loading in the
+ * background have landed. Without it the first phase counted a different amount of that loading on every run.
+ */
+async function demoLoaded(page: Page) {
+  await page.waitForFunction(
+    () => performance.getEntriesByName('splito:home-ready').length > 0,
+    undefined,
+    {timeout: 60_000},
+  )
+  await page.waitForFunction(
+    () => performance.now() - (window as unknown as Win).__renders.last > 1000,
+    undefined,
+    {timeout: 60_000, polling: 100},
+  )
+}
+
 /** Starts counting into `name`, after the previous step has gone quiet (no commit for 500 ms). */
 async function phase(page: Page, name: string) {
   await quiet(page)
@@ -197,6 +215,7 @@ test('no wasted renders, no render above the baseline', async ({page}) => {
   await openDemo(page)
   await page.reload()
   await expect(page.getByTestId('screen-home')).toBeVisible({timeout: 60_000})
+  await demoLoaded(page)
 
   await phase(page, 'tabs')
   for (const tab of ['groups', 'activity', 'analytics', 'people']) {
@@ -336,4 +355,44 @@ test('no wasted renders, no render above the baseline', async ({page}) => {
     return
   }
   expect(problems, problems.join('\n')).toEqual([])
+})
+
+/*
+ * Owner 166 (ARCHITECTURE 26.9): a tab you have visited is shown again as it was left, nothing in it re-renders.
+ * Home > Groups > Home on a phone, both tabs already visited: the only renders allowed are the bottom bar's own
+ * (its tab glyphs and links light up) and the navigator's. Any screen body component that renders fails.
+ */
+test('switching back to a visited tab re-renders none of its content', async ({page}) => {
+  await page.setViewportSize({width: 390, height: 844})
+  await page.addInitScript(instrument)
+  await openDemo(page)
+  await page.reload()
+  await expect(page.getByTestId('screen-home')).toBeVisible({timeout: 60_000})
+  await demoLoaded(page)
+  // Visit every tab once, so each switch below is a return to one that is kept.
+  for (const tab of ['groups', 'analytics', 'activity', 'home']) {
+    await page.getByTestId(`tab-${tab}`).click()
+    await expect(page.getByTestId(`screen-${tab}`)).toBeVisible()
+    await quiet(page)
+  }
+  // Groups <-> Home, Analytics <-> Activity and Home <-> Analytics, each leg counted on its own.
+  const legs = ['groups', 'home', 'analytics', 'activity', 'analytics', 'home', 'analytics', 'home']
+  for (const [i, tab] of legs.entries()) {
+    await phase(page, `leg${i}:${tab}`)
+    await page.getByTestId(`tab-${tab}`).click()
+    await expect(page.getByTestId(`screen-${tab}`)).toBeVisible()
+  }
+  await quiet(page)
+  const all = await page.evaluate(() => (window as unknown as Win).__renders.counts)
+  // The screens' own content: the bar and the navigator shell may render (they own the highlight and the visible
+  // screen), none of these may.
+  const CONTENT = /^(mount|update):(HomeScreen|Overview|PeopleScreen|PersonRow|BalanceSummary|SummaryCard|RequestsSection|GroupsScreen|GroupRow|ListToolsHeader|ListImpl|RowImpl|ActivityScreen|AnalyticsScreen|ExpenseRow|ActivityRow|ChartCard|BarChart|LineChart)$/
+  const problems: string[] = []
+  for (const [leg, counts] of Object.entries(all)) {
+    if (!leg.startsWith('leg')) continue
+    console.log(`${leg.toUpperCase()} ${JSON.stringify(counts)}`)
+    const bodies = Object.entries(counts).filter(([name]) => CONTENT.test(name))
+    if (bodies.length) problems.push(`${leg}: ${JSON.stringify(bodies)}`)
+  }
+  expect(problems, `screen content that re-rendered on a tab switch:\n${problems.join('\n')}`).toEqual([])
 })

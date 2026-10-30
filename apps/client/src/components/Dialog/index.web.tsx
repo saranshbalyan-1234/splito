@@ -35,6 +35,7 @@ import {useShowShell} from '#/state/shell/minimal-mode'
 import {type ListMethods} from '#/view/com/util/List'
 import {atoms as a, flatten, useBreakpoints, useTheme, web} from '#/alf'
 import {Context, SheetOwnerContext} from '#/components/Dialog/context'
+import {OpenedProvider} from '#/components/Dialog/OpenedProvider'
 import {
   DrawerContext,
   DrawerHandle,
@@ -142,9 +143,16 @@ export function Outer({
     pendingClose.current = null
     if (pending) finishClose(pending.cb)
   }, [finishClose])
+  /*
+   * Whether the sheet has stopped moving: what a heavy body defers on (`OpenedContext`, owner 168). The state
+   * lives in `OpenedProvider`, below this component, so the flip re-renders only what reads it, not the dialog
+   * shell. The drawer's spring reports its end; a popup, or reduced motion, is open as drawn.
+   */
+  const setOpenedRef = useRef<(opened: boolean) => void>(null)
+  const onOpened = useCallback(() => setOpenedRef.current?.(true), [])
   const drawer = useMemo(
-    () => ({isDrawer, isClosing, onExited}),
-    [isDrawer, isClosing, onExited],
+    () => ({isDrawer, isClosing, onExited, onOpened}),
+    [isDrawer, isClosing, onExited, onOpened],
   )
 
   /*
@@ -202,6 +210,7 @@ export function Outer({
         <Portal>
           <Context.Provider value={context}>
             <DrawerContext.Provider value={drawer}>
+             <OpenedProvider setterRef={setOpenedRef} closing={isClosing}>
               <RemoveScrollBar />
               <Pressable
                 accessibilityHint={undefined}
@@ -253,6 +262,7 @@ export function Outer({
                   </View>
                 </View>
               </Pressable>
+             </OpenedProvider>
             </DrawerContext.Provider>
           </Context.Provider>
         </Portal>
@@ -277,7 +287,7 @@ export function Inner({
   const t = useTheme()
   const {close} = useContext(Context)
   const {gtMobile} = useBreakpoints()
-  const {isDrawer, isClosing, onExited} = useDrawerContext()
+  const {isDrawer, isClosing, onExited, onOpened} = useDrawerContext()
   /*
    * Splito: a phone drawer. `close` is the context's, so a form sheet's
    * "Discard changes?" check runs on a drag down too.
@@ -287,6 +297,7 @@ export function Inner({
     onRequestClose: () => close(),
     isClosing,
     onExited,
+    onOpened,
   })
   const reduceMotionEnabled = drawer.reduceMotion
   FocusGuards.useFocusGuards()

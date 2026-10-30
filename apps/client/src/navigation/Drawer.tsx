@@ -25,6 +25,7 @@ import {
   useActivityBadge,
 } from '#/components/activity/useActivityFeed'
 import {Button, ButtonText} from '#/components/Button'
+import {Deferred} from '#/components/Deferred'
 import {Divider} from '#/components/Divider'
 import {type Props as SVGIconProps} from '#/components/icons/common'
 import {NavFooterLinks} from '#/components/NavFooterLinks'
@@ -35,6 +36,8 @@ import {Text} from '#/components/Typography'
 import {IS_WEB} from '#/env'
 
 const iconWidth = 26
+/** A menu row's height, for the stand-in while the drawer slides. */
+const MENU_ITEM_HEIGHT = 52
 
 /*
  * Bluesky's account card, cut to the avatar and the person's real name
@@ -165,6 +168,8 @@ function DrawerContentInner(): React.ReactNode {
           <Divider style={[a.mt_xl, a.mb_sm]} />
         </View>
 
+        {/* The panel slides first; the menu mounts when it stopped (OpenedContext, owner 168). A stand-in keeps the footer where it will be. */}
+        <Deferred fallback={<View style={{height: MENU_ITEM_HEIGHT * (on.length + off.length)}} />}>
         {[...on, ...off].map(id => (
           <MenuItem
             key={id}
@@ -179,6 +184,7 @@ function DrawerContentInner(): React.ReactNode {
             onPress={() => onPressItem(id)}
           />
         ))}
+        </Deferred>
       </ScrollView>
 
       <DrawerFooter onBeforeNavigate={() => setDrawerOpen(false)} />

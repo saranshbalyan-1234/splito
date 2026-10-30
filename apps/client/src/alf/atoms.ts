@@ -7,6 +7,8 @@ import {native, platform, web} from '#/alf/util/platform'
 import * as Layout from '#/components/Layout'
 
 const EXP_CURVE = 'cubic-bezier(0.16, 1, 0.3, 1)'
+/** The popup zoom-in's length: `zoom_fade_in` below, and what a deferred popup body waits for (owner 168). */
+export const ZOOM_FADE_IN_MS = 300
 
 export const atoms = {
   ...baseAtoms,
@@ -106,7 +108,7 @@ export const atoms = {
   }),
   // special composite animation for dialogs
   zoom_fade_in: web({
-    animation: `zoomIn ${EXP_CURVE} 0.3s, fadeIn ${EXP_CURVE} 0.3s`,
+    animation: `zoomIn ${EXP_CURVE} ${ZOOM_FADE_IN_MS}ms, fadeIn ${EXP_CURVE} ${ZOOM_FADE_IN_MS}ms`,
   }),
 
   /**

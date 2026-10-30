@@ -36,15 +36,18 @@ export function Deferred({
   when = true,
   fallback = null,
   sameSize = false,
+  opened,
   children,
 }: {
   when?: boolean
+  /** The end of the motion this sits in, when the caller has it; sheets, popups and the drawer provide it through `OpenedContext`. */
+  opened?: boolean
   fallback?: ReactNode
   sameSize?: boolean
   children: ReactNode | (() => ReactNode)
 }) {
   const [wasReadyAtMount] = useState(when)
-  const ready = useDeferredReady(when)
+  const ready = useDeferredReady(when, opened)
   const slot = deferredSlot({ready, when, wasReadyAtMount, sameSize})
   if (slot === 'body') return typeof children === 'function' ? children() : children
   return slot === 'fallback' ? fallback : null

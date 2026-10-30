@@ -1,5 +1,5 @@
 // Adapted from bluesky-social/social-app@4e4ad9c (MIT) - src/view/shell/index.web.tsx
-import {useLayoutEffect, useState} from 'react'
+import {useEffect, useLayoutEffect, useRef, useState} from 'react'
 import {StyleSheet, TouchableWithoutFeedback, View} from 'react-native'
 import {useLingui} from '@lingui/react/macro'
 import * as DismissableLayer from '@radix-ui/react-dismissable-layer'
@@ -9,6 +9,7 @@ import {RemoveScrollBar} from 'react-remove-scroll-bar'
 
 import {useIsDrawerOpen, useSetDrawerOpen} from '#/state/shell'
 import {SearchAskProvider} from '#/features/searchAsk/SearchAskProvider'
+import {OPENED_FALLBACK_MS, OpenedContext} from '#/lib/hooks/useAfterTransition'
 import {DrawerContent} from '#/navigation/Drawer'
 import {FeedbackProvider} from '#/features/feedback/FeedbackProvider'
 import {FlatNavigator, RoutesContainer} from '#/navigation/Navigation'
@@ -128,9 +129,29 @@ function DrawerPanel({
 }) {
   const {t: l} = useLingui()
   useFocusGuards()
+  /*
+   * The slide decides when the menu mounts (owner 168): the panel and its scrim move first, the items follow
+   * `animationend`. A timer opens it anyway; without animation it is open as drawn.
+   */
+  const [opened, setOpened] = useState(!shouldAnimate)
+  const panel = useRef<React.ComponentRef<typeof View>>(null)
+  useEffect(() => {
+    if (!shouldAnimate || !isOpen) return
+    const node = panel.current as unknown as HTMLElement | null
+    const done = () => setOpened(true)
+    // The panel's own slide, not an animation that bubbles up from something inside it.
+    const onEnd = (e: Event) => e.target === node && done()
+    node?.addEventListener('animationend', onEnd)
+    const id = setTimeout(done, OPENED_FALLBACK_MS)
+    return () => {
+      node?.removeEventListener('animationend', onEnd)
+      clearTimeout(id)
+    }
+  }, [shouldAnimate, isOpen])
   return (
     <FocusScope.FocusScope loop asChild trapped={isOpen}>
       <View
+        ref={panel}
         role="dialog"
         aria-modal={true}
         aria-label={l`Menu`}
@@ -144,7 +165,9 @@ function DrawerPanel({
           onPointerDownOutside={ev => ev.preventDefault()}
           onFocusOutside={ev => ev.preventDefault()}
           style={{height: '100%', display: 'flex', flexDirection: 'column'}}>
-          <DrawerContent />
+          <OpenedContext.Provider value={opened}>
+            <DrawerContent />
+          </OpenedContext.Provider>
         </DismissableLayer.DismissableLayer>
       </View>
     </FocusScope.FocusScope>

@@ -1313,6 +1313,35 @@ Splito lessons (add newest last, dated, with PR):
   rules: a build guard matches strings that only the guarded thing contains (a test pins the near-miss), and every
   merge to `main` is followed by checking that the Render deploy succeeded (`render deploys list`), not only the
   GitHub workflow, before saying it is live.
+- 2026-10-30, fix/ios-safari-taps: **desktop Chrome at 1x CPU hid a 600 ms tab switch that a phone feels as 2 s.**
+  Owner on a real iPhone: tab switches "take time", rapid taps "don't work", Home worst. Measured in the simulator's
+  Mobile Safari and in Chrome at 6x CPU (`probe` timings from `pointerdown`, never from `click`): going back to Home
+  from Analytics took 617 ms (5.9 s at 6x) while every other pair was under 70 ms, because the flat stack popped
+  Analytics and unmounted it, and Reanimated's web exit animation ran for every row (`handleExitingAnimation`:
+  clone the node, a forced layout per row). Measure the slowest pair of tabs, not Home from Groups, and in a real
+  mobile browser. Fixes: (1) a tab the stack drops is parked in the router's `preloadedRoutes` and re-used by key
+  (`parkTabs`), so nothing unmounts or remounts; `navigate(..., {pop: true})` to a parked route is a no-op in the
+  stack router, so it is rewritten to `PUSH`; a parked tab keeps its live screen element so neither parking nor
+  reviving re-renders it (303 -> 71 renders per switch, all the bar's); (2) the list's "in the visible tree" flag
+  is its own component and `onLayout` widths ignore the 0 a hidden tab measures, or every show re-rendered the
+  list and its header; (3) the bottom bar navigates on press-in and its highlight paints in that commit, the page
+  a frame later (highlight 5-33 ms from `pointerdown` in Safari, 18-58 ms at 6x; it was the same as the screen,
+  52-984 ms); (4) `html { touch-action: manipulation }` and `minimum-scale=1` (Bluesky's base.html) so a quick
+  second tap is never taken for a double-tap zoom. Do NOT use `react-freeze` / `freezeOnBlur` on web: hiding a
+  tree runs class `componentWillUnmount`, so every row's Reanimated exit animation ran (the 500 ms came back) and
+  entering animations replayed. Do NOT hide kept screens with `content-visibility: hidden`: it is faster in Chrome
+  but real Safari showed a BLANK page on return (found only because the simulator was run; Chrome cannot see it).
+  `axe` taps cannot go faster than ~0.6 s apart (each step re-opens the HID session), so rapid-tap sequences were
+  verified in Chrome with touch emulation (`tabTaps.spec`), not in the simulator.
+- 2026-10-30, owner 168: **heavy content mounts on the real end of the open motion, not after two frames.**
+  `OpenedContext` (`lib/hooks/useAfterTransition.ts`) carries "this has stopped moving": the web drawer sheet's
+  spring end, a popup's zoom, the native bottom sheet's state event, the side drawer's `animationend` /
+  `onTransitionEnd`, the composer routes (`Composer.Outer`, `useScreenOpened`), and on native every screen
+  (`Layout.Screen`, `transitionEnd`). `useAfterTransition` / `useDeferredReady` / `<Deferred>` read it (an explicit
+  `opened` wins); web tabs and pages do not animate, so they keep two frames. Measured in Safari: Add expense and
+  the currency picker mounted their bodies 80 ms into a 296 ms rise (sheet at 574 px); now at the rise's end.
+  Native paths (`transitionEnd`, the bottom sheet's `open` state) are written defensively with a 700 ms timer and
+  were not run on a device here.
 - 2026-10-30, Render: **auto-deploy was switched off by our own Blueprint.** `render.yaml` said
   `autoDeployTrigger: 'off'` (deploys were meant to come from deploy hooks, whose secrets were never set), and a
   Blueprint sync applied it to `splito-web`, so ten pushes after 5b60890 never deployed and nothing failed. Rule: the

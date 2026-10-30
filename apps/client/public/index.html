@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <meta httpEquiv="X-UA-Compatible" content="IE=edge" />
-    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, viewport-fit=cover" />
     <meta name="theme-color" media="(prefers-color-scheme: light)" content="#FFFFFF" />
     <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#151D28" />
     <meta name="description" content="Split expenses with anyone, even offline." />
@@ -26,6 +26,8 @@
       body { overflow-y: scroll; background: #ffffff; }
       /* ALF Dim's background, never pure black (src/alf/splash.test.ts). */
       @media (prefers-color-scheme: dark) { body { background: #151D28; } }
+      /* Taps act at once: no double-tap-to-zoom wait, and a quick second tap on the bottom bar is never taken for a zoom (iOS Safari). Panning and pinch-zoom still work. */
+      html { touch-action: manipulation; }
       button, input, textarea { font: inherit; line-height: inherit; }
       /* As Bluesky's src/style.css: fields draw their own focus state. */
       textarea:focus, input:focus { outline: 0; }

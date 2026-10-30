@@ -1,5 +1,5 @@
 // Adapted from bluesky-social/social-app@4e4ad9c (MIT) - src/view/com/util/Link.tsx
-import {memo, useCallback} from 'react'
+import {memo, useCallback, useRef} from 'react'
 import {
   type GestureResponderEvent,
   Platform,
@@ -17,6 +17,7 @@ import {
 } from '#/lib/hooks/useNavigationDeduped'
 import {IS_WEB} from '#/env'
 import {openExternal} from '#/lib/openExternal'
+import {createPressInGate, isPlainPrimaryPress} from '#/lib/hooks/pressIn'
 import {getTabState, originTab, pushedCopyOf, tabLink, TabState} from '#/lib/routes/helpers'
 import {WebAuxClickWrapper} from '#/view/com/util/WebAuxClickWrapper'
 import {useTheme} from '#/alf'
@@ -42,6 +43,14 @@ interface Props extends React.ComponentProps<typeof TouchableOpacity> {
   onPointerEnter?: () => void
   onPointerLeave?: () => void
   onBeforePress?: () => void
+  /**
+   * Navigate on press-in, not on release (owner 150, Bluesky's bottom bar does): a finger rests ~100 ms before it
+   * lifts, and on iOS Safari a quick second tap can be taken for a double-tap zoom and never click at all. The
+   * release that follows is then ignored. Only for idempotent navigation (switching tab).
+   */
+  activateOnPressIn?: boolean
+  /** With `activateOnPressIn`: called when a press-in is about to navigate (not for a modified press). */
+  onActivated?: () => void
 }
 
 /**
@@ -59,6 +68,9 @@ export const Link = memo(function Link({
   anchorNoUnderline,
   navigationAction,
   onBeforePress,
+  activateOnPressIn,
+  onActivated,
+  onPressIn: onPressInProp,
   accessibilityActions,
   onAccessibilityAction,
   dataSet: dataSetProp,
@@ -77,6 +89,30 @@ export const Link = memo(function Link({
       }
     },
     [navigation, navigationAction, href, onBeforePress],
+  )
+
+  /* Remembers a press-in that already navigated, so its own release does not do it again (pressIn.ts). */
+  const gate = useRef(createPressInGate()).current
+  const onPressIn = useCallback(
+    (e: GestureResponderEvent) => {
+      onPressInProp?.(e)
+      if (!activateOnPressIn || !IS_WEB) return
+      // A modified or non-primary press (Cmd-click, middle click) is a new-tab request: the click path handles it.
+      const pointer = ((e as {nativeEvent?: object}).nativeEvent ?? e) as Parameters<typeof isPlainPrimaryPress>[0]
+      if (!isPlainPrimaryPress(pointer)) return
+      gate.acted()
+      onActivated?.()
+      /* A frame later: the press-in's own feedback (the bar's highlight) paints first, then the page switches. */
+      requestAnimationFrame(() => onPress(e))
+    },
+    [activateOnPressIn, onActivated, onPress, onPressInProp, gate],
+  )
+  const onPressOnce = useCallback(
+    (e?: Event) => {
+      if (gate.swallowsClick()) return
+      onPress(e)
+    },
+    [onPress, gate],
   )
 
   const accessibilityActionsWithActivate = [
@@ -107,6 +143,7 @@ export const Link = memo(function Link({
           // @ts-expect-error web only -sfn
           dataSet={dataSet}
           {...props}
+          onPressIn={onPressInProp}
           android_ripple={{
             color: t.atoms.bg_contrast_25.backgroundColor,
           }}>
@@ -124,7 +161,7 @@ export const Link = memo(function Link({
     <Com
       testID={testID}
       style={style}
-      onPress={onPress}
+      onPress={activateOnPressIn ? onPressOnce : onPress}
       accessible={accessible}
       accessibilityRole="link"
       accessibilityLabel={props.accessibilityLabel ?? title}
@@ -132,7 +169,8 @@ export const Link = memo(function Link({
       // @ts-expect-error web only -prf
       href={anchorHref}
       dataSet={dataSet}
-      {...props}>
+      {...props}
+      onPressIn={activateOnPressIn ? onPressIn : onPressInProp}>
       {children ? children : <Text>{title || 'link'}</Text>}
     </Com>
   )

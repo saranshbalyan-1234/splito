@@ -188,6 +188,8 @@ test('navigation: phone bar, rail and desktop lists, in order', async ({page}) =
   // The drawer lists the same.
   await page.setViewportSize(PHONE)
   await page.getByTestId('screen-home').getByTestId('header-avatar').click()
+  // The menu mounts when the drawer has stopped sliding (owner 168), so wait for it before reading the list.
+  await expect(page.getByTestId('drawer-settings')).toBeVisible()
   const rows = await page
     .getByTestId('drawer')
     .locator('[data-testid^="drawer-"]')
