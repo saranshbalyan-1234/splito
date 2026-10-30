@@ -654,16 +654,21 @@ with every hot screen reading by index, never by full scan (§ 17 budgets, F-109
   `aggregates` projection (`[currency, month, groupId|'', categoryId, personId|'', kind]` -> sum and count in minor units; `personId` '' is the whole record, a person id is that person's share, `kind` separates expenses from transfers), kept in
   the same transaction as `balances` and covered by `rebuildProjections()` and the property test. Search reads
   a `search_terms` store, also maintained in the mutation transaction, and resolves a whole query from its keys
-  (F-246). Kinds: `w` words of a record's title / note, notes and items, `p` / `g` words of a person's (name,
-  contact, UPI id) and a group's (name, trip place) text, `a` amount per currency, `m` month, `c` category, `b` /
-  `h` who paid / who is on a record, `G` its group (`-`: none), `d` `<date>:<createdAt>` (the list order), `s`
-  `deleted`, `n` a comment's words on the record it hangs on; expenses, payments and write-offs carry them, comments
-  contribute `n` only. Each token is a set of record ids from key ranges, the sets are intersected, and the order,
-  count and per-currency totals come from the `d` and `a` keys, so the first page, the count and the totals arrive
-  together and only the rows shown are read (30 by id per page). No in-memory ledger mirror. Person and group names
-  resolve at query time (to their live ids, then to their records by `h` / `G`), so a rename rewrites no terms.
-  What `search_terms` holds is versioned in `meta.searchIndex` (`SEARCH_INDEX_VERSION`): a database whose version
-  is older rebuilds the terms from its rows on its first search (derived data only, no schema version spent).
+  (F-246). Kinds: `w` words of a record's title / note, notes and items, `p` words of a person's name, `k` words of a
+  person's contact and UPI id (they list the person, never the person's records), `g` words of a group's name and trip
+  place, `a` amount per currency, `m` month, `c` category, `b` / `h` who paid / who is on a record, `G` its group (`-`:
+  none), `d` `<date>:<createdAt>` (the list order), `s` `deleted`, `n` a comment's words on the record it hangs on;
+  expenses, payments and write-offs carry them, comments contribute `n` only. Each token is a set of record ids from
+  key ranges and the sets are intersected. A narrow answer (at most 500 records) is then read by id and ordered,
+  totalled and status-checked from its rows; a broad one is ordered from the `d` keys and totalled from the `a` keys;
+  only the rows shown are read (30 by id per page, payments and expenses paged apart). No in-memory ledger mirror.
+  Person and group names resolve at query time (to their live ids, then to their records by `h` / `G`; my own name
+  never expands, every record is mine), so a rename rewrites no terms. What `search_terms` holds is versioned in
+  `meta.searchIndex` (`SEARCH_INDEX_VERSION`, 3); `store.prepareSearch()` runs at idle after the store opens (and the
+  first term read waits for it): it rebuilds the terms from the rows when the version is older or the `d` key count
+  differs from the record count (a tab of an older build, a rollback), in chunks of 500 rows, one transaction each
+  with a yield between; a failure is forgotten so the next read retries, and the search box shows "Try again" (derived
+  data only, no schema version spent).
 - **One transaction per mutation** spans the entity, its projections, history and outbox (atomic, § 9.3).
 - **Versioned migrations:** `meta.schemaVersion`; IndexedDB `onupgradeneeded` and SQLite `PRAGMA user_version`
   run ordered, idempotent steps (v5: the `disputes`, `disputed_balances` and `disputed_pairs` stores; v4 -> v5 adds them empty); v1 -> v2 copies rows from `entities` into the per-type stores, builds
@@ -1073,16 +1078,30 @@ Each rule came from a measurement; the dated story is in § 23. Newest first wit
   as `FIRSTVISIT` without gating it, and gates the second round, where every tab is mounted and parked
   (69 mounts + 468 updates in 4 of 4 runs). Median of three, taken on a quiet machine, as below.
 
-- **A query is answered from index keys, never by walking rows.** Search ran broad queries (`> 1000`, a common
-  prefix) by reading the ledger newest first in chunks of 200 and checking every row; the first page was fast but
-  the count and totals needed all of it (10,000 expenses: about 10 us per row of SQL, JSON decode and word checks,
-  0.1 s and growing with the ledger, so the `< 50 ms` test failed with load). Keys cost about 0.2 us a row, so each
-  token is now a set of ids from term ranges (`h` for who, `G` for a group, `d` for the date order, `a` for amount
-  ranges and totals), the sets are intersected, and only the 30 rows shown are read. The cost follows the keys a
-  query touches, so a rule: a new searchable field is a term kind, a facet is a key range, and a screen never
-  checks rows one by one to answer "how many" or "how much" (`search.test.ts` speed at 5,000 and 10,000, and the
-  oracle test that compares the keys with the rows). Measure it as the drawer waits for it (`openSearch`: people,
-  groups, payments, count, totals and the first page), not as the whole ledger read out.
+- **A query is answered from index keys, never by walking rows; and a narrow answer never reads the whole ledger's
+  keys either.** Search first ran broad queries (`> 1000`, a common prefix) by reading the ledger newest first in chunks
+  of 200 and checking every row (10,000 expenses: about 10 us per row of SQL, JSON decode and word checks, 0.1 s and
+  growing). Keys cost about 0.2-1 us a row, so each token became a set of ids from term ranges (`h` for who, `G` for a
+  group, `d` for the date order, `a` for amount ranges and totals) and the sets are intersected. But the first cut then
+  ordered and totalled every answer by reading all `d`, `a` and `s` keys, so one match still cost 21,201 keys at 10,000
+  expenses + 600 payments, a balance status 45,000 keys, and IndexedDB 50-130 ms of CPU per query (F-246 review I1).
+  Now: an answer of at most 500 records is read by id and ordered, totalled and status-checked from those rows (500
+  rows cost about what 3,500 keys do, whatever the ledger's size); only a broad answer reads the `d` and `a` ranges; a
+  balance status (settled, owed, owe, inactive, hidden) on a narrow answer is checked on the rows instead of listing
+  every record in it. Rules: a new searchable field is a term kind, a facet is a key range, a screen never checks rows
+  one by one to answer "how many" or "how much" over a broad set, and the cost of a query is bounded by its answer or,
+  for a broad answer, by its keys. Checked by `searchOracle.test.ts` (random changes on both engines; the keys equal
+  the rows' terms, every query equals a row-by-row reference, narrow and broad both exercised). Measure it as the
+  drawer waits for it (`openSearch`: people, groups, counts, totals and the first pages), not as the whole ledger
+  read out.
+- **Search stays under 50 ms at 10,000 expenses, on both engines** (`search.test.ts` speed: SQLite at 5,000 and
+  10,000, IndexedDB at 10,000, each with 600 payments, 33 queries including balance statuses and broad ORs; median of
+  three at load under 10). Numbers in `docs/COMPLETION_MATRIX.md` (F-246).
+- **Derived data that may be rebuilt is rebuilt at idle, in chunks, and a failure is forgotten.** The search index
+  rebuild first ran inside the first search (during the first keystrokes) as one transaction, and a rejected rebuild
+  was kept as a rejected promise, so search spun forever. Start such work at idle after open, run it in chunks of a
+  few hundred rows with a yield between (10,600 records on IndexedDB: the timer ran between chunks), drop the cached
+  promise on failure, and show an error state with Try again instead of a spinner.
 
 - **A window that grows must keep what it read, and a render baseline is recorded as the median of three runs.**
   Activity's tracker rebuilt the whole history for every page a narrowed list read (10,000 expenses: 23.6 s, then

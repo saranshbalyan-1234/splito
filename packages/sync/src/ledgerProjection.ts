@@ -319,6 +319,7 @@ export async function isSearchIndexStale(rows: RowAccess): Promise<boolean> {
  * transaction); the key to continue after, or null at the end.
  */
 export async function fillSearchChunk(rows: RowAccess, type: (typeof SEARCH_INDEXED)[number], after: Key | null, limit: number): Promise<Key | null> {
+  // full-read-ok: maintenance, a stale search index is rebuilt once, a chunk per transaction (like rebuildProjections)
   const found = await rows.range(ENTITY_STORE[type], {after, limit})
   for (const r of found) for (const t of termRows(entityOfRow(type, r))) await rows.put('search_terms', t)
   return found.length === limit ? indexKey(ENTITY_STORE[type], undefined, found[found.length - 1]!) : null
