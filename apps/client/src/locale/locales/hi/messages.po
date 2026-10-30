@@ -401,7 +401,7 @@ msgid "{0} paid you"
 msgstr "{0} ने आपको भुगतान किया"
 
 #. placeholder {0}: item.count
-#: src/screens/Settle/index.tsx:337
+#: src/screens/Settle/index.tsx:339
 msgid "{0} payments"
 msgstr "{0} भुगतान"
 
@@ -1086,7 +1086,7 @@ msgstr "1 सदस्य"
 msgid "1 member added"
 msgstr "1 सदस्य जोड़ा गया"
 
-#: src/screens/Settle/index.tsx:335
+#: src/screens/Settle/index.tsx:337
 msgid "1 payment"
 msgstr "1 भुगतान"
 
@@ -1602,7 +1602,7 @@ msgstr "सब चुकता"
 #: src/screens/Groups/index.tsx:256
 #: src/screens/People/components/BalanceSummary.tsx:221
 #: src/screens/People/index.tsx:285
-#: src/screens/Settle/index.tsx:396
+#: src/screens/Settle/index.tsx:398
 msgid "All settled up"
 msgstr "सब हिसाब बराबर"
 
@@ -1840,15 +1840,15 @@ msgstr "वापस"
 msgid "Back in your lists"
 msgstr "आपकी सूचियों में वापस"
 
-#: src/screens/Group/index.tsx:205
 #: src/screens/Group/index.tsx:206
-#: src/screens/Settle/index.tsx:156
-#: src/screens/Settle/index.tsx:157
+#: src/screens/Group/index.tsx:207
+#: src/screens/Settle/index.tsx:158
+#: src/screens/Settle/index.tsx:159
 msgid "Back to Groups"
 msgstr "समूहों पर वापस जाएं"
 
-#: src/screens/Person/index.tsx:201
 #: src/screens/Person/index.tsx:202
+#: src/screens/Person/index.tsx:203
 msgid "Back to People"
 msgstr "लोग पर वापस जाएं"
 
@@ -1891,7 +1891,7 @@ msgstr "बैलेंस माफ़ किया गया"
 msgid "Balances"
 msgstr "बैलेंस"
 
-#: src/screens/Settle/index.tsx:267
+#: src/screens/Settle/index.tsx:269
 msgid "Balances or rules changed since this plan was made."
 msgstr "यह योजना बनने के बाद बैलेंस या नियम बदल गए हैं।"
 
@@ -3083,12 +3083,12 @@ msgid "Edit reminder"
 msgstr "रिमाइंडर बदलें"
 
 #: src/screens/Group/index.tsx:820
-#: src/screens/Settle/index.tsx:443
+#: src/screens/Settle/index.tsx:445
 msgid "Edit rules"
 msgstr "नियम बदलें"
 
 #: src/screens/Group/index.tsx:816
-#: src/screens/Settle/index.tsx:439
+#: src/screens/Settle/index.tsx:441
 msgid "Edit who you settle with"
 msgstr "किसके साथ हिसाब चुकाएं, बदलें"
 
@@ -3267,7 +3267,7 @@ msgid "Everyone"
 msgstr "सभी"
 
 #: src/screens/Group/index.tsx:595
-#: src/screens/Settle/index.tsx:404
+#: src/screens/Settle/index.tsx:406
 msgid "Everyone is settled up."
 msgstr "सबका हिसाब बराबर है।"
 
@@ -3279,7 +3279,7 @@ msgstr "समूह के खर्च में सभी लोग समू
 msgid "Everyone ticked pays the same."
 msgstr "चुने गए सभी लोग बराबर देते हैं।"
 
-#: src/screens/Settle/index.tsx:254
+#: src/screens/Settle/index.tsx:256
 msgid "Everyone who owes pays the people who are owed, straight to them. Only pairs allowed in Who you settle with are used, preferred pairs first, so the plan isn’t always the fewest payments."
 msgstr "जिन्हें पैसे देने हैं, वे सीधे उन्हें देते हैं जिन्हें पैसे मिलने हैं। सिर्फ़ “किसके साथ हिसाब चुकाएं” में अनुमति वाली जोड़ियाँ इस्तेमाल होती हैं, पसंदीदा पहले, इसलिए योजना में हमेशा सबसे कम भुगतान नहीं होते।"
 
@@ -3522,7 +3522,7 @@ msgstr "“{0}” के लिए कम से कम {n, plural, one {# ख�
 #: src/components/SearchAsk/ResultRows.tsx:337
 #: src/features/export/ExportSheet.tsx:210
 #: src/features/export/ExportSheet.tsx:253
-#: src/screens/Person/index.tsx:191
+#: src/screens/Person/index.tsx:192
 #: src/screens/Person/index.tsx:470
 msgid "Friend"
 msgstr "दोस्त"
@@ -3565,11 +3565,11 @@ msgid "Friends and invites"
 msgstr "दोस्त और आमंत्रण"
 
 #. placeholder {0}: line.people
-#: src/screens/Settle/index.tsx:590
+#: src/screens/Settle/index.tsx:592
 msgid "From {0} people"
 msgstr "{0} लोगों से"
 
-#: src/screens/Settle/index.tsx:588
+#: src/screens/Settle/index.tsx:590
 msgid "From 1 person"
 msgstr "1 व्यक्ति से"
 
@@ -3659,7 +3659,7 @@ msgstr "किराना"
 #: src/screens/Analytics/components/Charts.tsx:325
 #: src/screens/Analytics/index.tsx:227
 #: src/screens/Analytics/useReport.ts:333
-#: src/screens/Group/index.tsx:195
+#: src/screens/Group/index.tsx:196
 #: src/screens/Group/index.tsx:346
 #: src/screens/Group/index.tsx:581
 #: src/screens/Groups/components/GroupRow.tsx:58
@@ -3864,8 +3864,8 @@ msgstr "इस महीने खाने पर मैंने कितन�
 msgid "How much did I spend this month?"
 msgstr "इस महीने मैंने कितना खर्च किया?"
 
-#: src/screens/Settle/index.tsx:233
-#: src/screens/Settle/index.tsx:241
+#: src/screens/Settle/index.tsx:235
+#: src/screens/Settle/index.tsx:243
 msgid "How this plan works"
 msgstr "यह योजना कैसे बनती है"
 
@@ -5014,7 +5014,7 @@ msgstr "इस अवधि में कुछ दर्ज नहीं है
 msgid "Nothing to restore: everything in this file is already here."
 msgstr "वापस लाने को कुछ नहीं: इस फ़ाइल का सब कुछ पहले से यहाँ है।"
 
-#: src/screens/Settle/index.tsx:458
+#: src/screens/Settle/index.tsx:460
 msgid "Nothing to settle. This group has no expenses yet."
 msgstr "चुकाने को कुछ नहीं। इस समूह में अभी कोई खर्च नहीं।"
 
@@ -6609,8 +6609,8 @@ msgstr "सेटिंग्स रीसेट हो गईं"
 #: src/screens/Group/index.tsx:850
 #: src/screens/Group/index.tsx:856
 #: src/screens/Person/index.tsx:481
-#: src/screens/Settle/index.tsx:146
-#: src/screens/Settle/index.tsx:294
+#: src/screens/Settle/index.tsx:148
+#: src/screens/Settle/index.tsx:296
 msgid "Settle up"
 msgstr "हिसाब चुकाएं"
 
@@ -7006,7 +7006,7 @@ msgstr "Splito इंस्टॉल हो गया"
 msgid "Splito needs your permission to show this reminder. It’s used only for reminders you set; the alert is scheduled on this device, not sent from a server."
 msgstr "यह रिमाइंडर दिखाने के लिए Splito को आपकी अनुमति चाहिए। इसका इस्तेमाल सिर्फ़ आपके लगाए रिमाइंडर के लिए होता है; अलर्ट इसी डिवाइस पर शेड्यूल होता है, किसी सर्वर से नहीं भेजा जाता।"
 
-#: src/screens/Settle/index.tsx:480
+#: src/screens/Settle/index.tsx:482
 msgid "Splito never moves money. Record each payment once it has happened – part payments are fine."
 msgstr "Splito कभी पैसे नहीं भेजता। हर भुगतान होने के बाद उसे दर्ज करें – आंशिक भुगतान भी ठीक है।"
 
@@ -7453,7 +7453,7 @@ msgstr "यह खर्च हटा दिया गया है। अब �
 msgid "This file is damaged or was changed after it was saved, so Splito won’t use it."
 msgstr "यह फ़ाइल ख़राब है या सहेजने के बाद बदली गई है, इसलिए Splito इसका इस्तेमाल नहीं करेगा।"
 
-#: src/screens/Person/index.tsx:199
+#: src/screens/Person/index.tsx:200
 msgid "This friend isn’t on this device. They may have been removed."
 msgstr "यह दोस्त इस डिवाइस पर नहीं है। शायद हटा दिया गया है।"
 
@@ -7465,8 +7465,8 @@ msgstr "इस दोस्त को हटा दिया गया है।
 msgid "This group is inactive. Make it active first."
 msgstr "यह ग्रुप निष्क्रिय है। पहले इसे सक्रिय करें।"
 
-#: src/screens/Group/index.tsx:203
-#: src/screens/Settle/index.tsx:154
+#: src/screens/Group/index.tsx:204
+#: src/screens/Settle/index.tsx:156
 msgid "This group isn’t on this device. It may have been removed."
 msgstr "यह समूह इस डिवाइस पर नहीं है। शायद हटा दिया गया है।"
 
@@ -7523,7 +7523,7 @@ msgstr "यह भुगतान मौजूद नहीं है। लि�
 msgid "This payment was deleted. It no longer counts towards any balance."
 msgstr "यह भुगतान हटा दिया गया था। अब यह किसी बैलेंस में नहीं गिना जाता।"
 
-#: src/screens/Settle/index.tsx:417
+#: src/screens/Settle/index.tsx:419
 msgid "This plan goes outside your rules"
 msgstr "यह योजना आपके नियमों से बाहर जाती है"
 
@@ -7605,11 +7605,11 @@ msgid "Title: {0} → {1}"
 msgstr "शीर्षक: {0} → {1}"
 
 #. placeholder {0}: line.people
-#: src/screens/Settle/index.tsx:595
+#: src/screens/Settle/index.tsx:597
 msgid "To {0} people"
 msgstr "{0} लोगों को"
 
-#: src/screens/Settle/index.tsx:593
+#: src/screens/Settle/index.tsx:595
 msgid "To 1 person"
 msgstr "1 व्यक्ति को"
 
@@ -7762,8 +7762,8 @@ msgstr "अपठित"
 msgid "Upcoming"
 msgstr "आगामी"
 
-#: src/screens/Settle/index.tsx:274
-#: src/screens/Settle/index.tsx:279
+#: src/screens/Settle/index.tsx:276
+#: src/screens/Settle/index.tsx:281
 msgid "Update plan"
 msgstr "योजना अपडेट करें"
 
@@ -8213,8 +8213,8 @@ msgstr "आप"
 #: src/screens/Analytics/useReport.ts:331
 #: src/screens/CreateGroup.tsx:195
 #: src/screens/Group/components/MemberExitDialog.tsx:99
-#: src/screens/Group/index.tsx:217
-#: src/screens/Person/index.tsx:213
+#: src/screens/Group/index.tsx:218
+#: src/screens/Person/index.tsx:214
 #: src/screens/Settle/index.tsx:98
 msgid "You"
 msgstr "आप"
@@ -8504,11 +8504,11 @@ msgstr "आप अब {groupName} में नहीं रहेंगे। �
 msgid "You will receive a \"reset code\" by email or text. Enter that code here, then enter your new password."
 msgstr "आपको ईमेल या टेक्स्ट से एक \"रीसेट कोड\" मिलेगा। वह कोड यहाँ डालें, फिर अपना नया पासवर्ड डालें।"
 
-#: src/screens/Settle/index.tsx:566
+#: src/screens/Settle/index.tsx:568
 msgid "You’ll get"
 msgstr "आपको मिलेंगे"
 
-#: src/screens/Settle/index.tsx:568
+#: src/screens/Settle/index.tsx:570
 msgid "You’ll pay"
 msgstr "आप देंगे"
 
@@ -8524,7 +8524,7 @@ msgstr "आप पहले से दोस्त हैं।"
 msgid "You’re friends now"
 msgstr "अब आप दोस्त हैं"
 
-#: src/screens/Settle/index.tsx:556
+#: src/screens/Settle/index.tsx:558
 msgid "You’re not part of any of these payments."
 msgstr "इनमें से किसी भुगतान में आप शामिल नहीं हैं।"
 
@@ -8605,7 +8605,7 @@ msgid "Your password must be at least {MIN_PASSWORD_LENGTH} characters long."
 msgstr "आपका पासवर्ड कम से कम {MIN_PASSWORD_LENGTH} अक्षरों का होना चाहिए।"
 
 #. placeholder {0}: nameList(item.stuck)
-#: src/screens/Settle/index.tsx:422
+#: src/screens/Settle/index.tsx:424
 msgid "Your payment rules give no allowed pair to pay anyone who is owed: {0}. These payments still settle everyone up."
 msgstr "आपके भुगतान नियमों में इनके लिए किसी बकायेदार को चुकाने की कोई अनुमत जोड़ी नहीं है: {0}। ये भुगतान फिर भी सबका हिसाब बराबर करते हैं।"
 

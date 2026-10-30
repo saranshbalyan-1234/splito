@@ -401,7 +401,7 @@ msgid "{0} paid you"
 msgstr "{0} paid you"
 
 #. placeholder {0}: item.count
-#: src/screens/Settle/index.tsx:337
+#: src/screens/Settle/index.tsx:339
 msgid "{0} payments"
 msgstr "{0} payments"
 
@@ -1086,7 +1086,7 @@ msgstr "1 member"
 msgid "1 member added"
 msgstr "1 member added"
 
-#: src/screens/Settle/index.tsx:335
+#: src/screens/Settle/index.tsx:337
 msgid "1 payment"
 msgstr "1 payment"
 
@@ -1602,7 +1602,7 @@ msgstr "All settled"
 #: src/screens/Groups/index.tsx:256
 #: src/screens/People/components/BalanceSummary.tsx:221
 #: src/screens/People/index.tsx:285
-#: src/screens/Settle/index.tsx:396
+#: src/screens/Settle/index.tsx:398
 msgid "All settled up"
 msgstr "All settled up"
 
@@ -1840,15 +1840,15 @@ msgstr "Back"
 msgid "Back in your lists"
 msgstr "Back in your lists"
 
-#: src/screens/Group/index.tsx:205
 #: src/screens/Group/index.tsx:206
-#: src/screens/Settle/index.tsx:156
-#: src/screens/Settle/index.tsx:157
+#: src/screens/Group/index.tsx:207
+#: src/screens/Settle/index.tsx:158
+#: src/screens/Settle/index.tsx:159
 msgid "Back to Groups"
 msgstr "Back to Groups"
 
-#: src/screens/Person/index.tsx:201
 #: src/screens/Person/index.tsx:202
+#: src/screens/Person/index.tsx:203
 msgid "Back to People"
 msgstr "Back to People"
 
@@ -1891,7 +1891,7 @@ msgstr "Balance written off"
 msgid "Balances"
 msgstr "Balances"
 
-#: src/screens/Settle/index.tsx:267
+#: src/screens/Settle/index.tsx:269
 msgid "Balances or rules changed since this plan was made."
 msgstr "Balances or rules changed since this plan was made."
 
@@ -3083,12 +3083,12 @@ msgid "Edit reminder"
 msgstr "Edit reminder"
 
 #: src/screens/Group/index.tsx:820
-#: src/screens/Settle/index.tsx:443
+#: src/screens/Settle/index.tsx:445
 msgid "Edit rules"
 msgstr "Edit rules"
 
 #: src/screens/Group/index.tsx:816
-#: src/screens/Settle/index.tsx:439
+#: src/screens/Settle/index.tsx:441
 msgid "Edit who you settle with"
 msgstr "Edit who you settle with"
 
@@ -3267,7 +3267,7 @@ msgid "Everyone"
 msgstr "Everyone"
 
 #: src/screens/Group/index.tsx:595
-#: src/screens/Settle/index.tsx:404
+#: src/screens/Settle/index.tsx:406
 msgid "Everyone is settled up."
 msgstr "Everyone is settled up."
 
@@ -3279,7 +3279,7 @@ msgstr "Everyone on a group expense needs to be in the group"
 msgid "Everyone ticked pays the same."
 msgstr "Everyone ticked pays the same."
 
-#: src/screens/Settle/index.tsx:254
+#: src/screens/Settle/index.tsx:256
 msgid "Everyone who owes pays the people who are owed, straight to them. Only pairs allowed in Who you settle with are used, preferred pairs first, so the plan isn’t always the fewest payments."
 msgstr "Everyone who owes pays the people who are owed, straight to them. Only pairs allowed in Who you settle with are used, preferred pairs first, so the plan isn’t always the fewest payments."
 
@@ -3522,7 +3522,7 @@ msgstr "Found at least {n, plural, one {# expense} other {# expenses}} for “{0
 #: src/components/SearchAsk/ResultRows.tsx:337
 #: src/features/export/ExportSheet.tsx:210
 #: src/features/export/ExportSheet.tsx:253
-#: src/screens/Person/index.tsx:191
+#: src/screens/Person/index.tsx:192
 #: src/screens/Person/index.tsx:470
 msgid "Friend"
 msgstr "Friend"
@@ -3565,11 +3565,11 @@ msgid "Friends and invites"
 msgstr "Friends and invites"
 
 #. placeholder {0}: line.people
-#: src/screens/Settle/index.tsx:590
+#: src/screens/Settle/index.tsx:592
 msgid "From {0} people"
 msgstr "From {0} people"
 
-#: src/screens/Settle/index.tsx:588
+#: src/screens/Settle/index.tsx:590
 msgid "From 1 person"
 msgstr "From 1 person"
 
@@ -3659,7 +3659,7 @@ msgstr "Groceries"
 #: src/screens/Analytics/components/Charts.tsx:325
 #: src/screens/Analytics/index.tsx:227
 #: src/screens/Analytics/useReport.ts:333
-#: src/screens/Group/index.tsx:195
+#: src/screens/Group/index.tsx:196
 #: src/screens/Group/index.tsx:346
 #: src/screens/Group/index.tsx:581
 #: src/screens/Groups/components/GroupRow.tsx:58
@@ -3864,8 +3864,8 @@ msgstr "How much did I spend on food this month?"
 msgid "How much did I spend this month?"
 msgstr "How much did I spend this month?"
 
-#: src/screens/Settle/index.tsx:233
-#: src/screens/Settle/index.tsx:241
+#: src/screens/Settle/index.tsx:235
+#: src/screens/Settle/index.tsx:243
 msgid "How this plan works"
 msgstr "How this plan works"
 
@@ -5014,7 +5014,7 @@ msgstr "Nothing recorded in this range."
 msgid "Nothing to restore: everything in this file is already here."
 msgstr "Nothing to restore: everything in this file is already here."
 
-#: src/screens/Settle/index.tsx:458
+#: src/screens/Settle/index.tsx:460
 msgid "Nothing to settle. This group has no expenses yet."
 msgstr "Nothing to settle. This group has no expenses yet."
 
@@ -6609,8 +6609,8 @@ msgstr "Settings reset"
 #: src/screens/Group/index.tsx:850
 #: src/screens/Group/index.tsx:856
 #: src/screens/Person/index.tsx:481
-#: src/screens/Settle/index.tsx:146
-#: src/screens/Settle/index.tsx:294
+#: src/screens/Settle/index.tsx:148
+#: src/screens/Settle/index.tsx:296
 msgid "Settle up"
 msgstr "Settle up"
 
@@ -7006,7 +7006,7 @@ msgstr "Splito is installed"
 msgid "Splito needs your permission to show this reminder. It’s used only for reminders you set; the alert is scheduled on this device, not sent from a server."
 msgstr "Splito needs your permission to show this reminder. It’s used only for reminders you set; the alert is scheduled on this device, not sent from a server."
 
-#: src/screens/Settle/index.tsx:480
+#: src/screens/Settle/index.tsx:482
 msgid "Splito never moves money. Record each payment once it has happened – part payments are fine."
 msgstr "Splito never moves money. Record each payment once it has happened – part payments are fine."
 
@@ -7453,7 +7453,7 @@ msgstr "This expense was deleted. It no longer counts towards any balance."
 msgid "This file is damaged or was changed after it was saved, so Splito won’t use it."
 msgstr "This file is damaged or was changed after it was saved, so Splito won’t use it."
 
-#: src/screens/Person/index.tsx:199
+#: src/screens/Person/index.tsx:200
 msgid "This friend isn’t on this device. They may have been removed."
 msgstr "This friend isn’t on this device. They may have been removed."
 
@@ -7465,8 +7465,8 @@ msgstr "This friend was removed. Their expenses and payments stay here, struck t
 msgid "This group is inactive. Make it active first."
 msgstr "This group is inactive. Make it active first."
 
-#: src/screens/Group/index.tsx:203
-#: src/screens/Settle/index.tsx:154
+#: src/screens/Group/index.tsx:204
+#: src/screens/Settle/index.tsx:156
 msgid "This group isn’t on this device. It may have been removed."
 msgstr "This group isn’t on this device. It may have been removed."
 
@@ -7523,7 +7523,7 @@ msgstr "This payment doesn’t exist. The link may be wrong."
 msgid "This payment was deleted. It no longer counts towards any balance."
 msgstr "This payment was deleted. It no longer counts towards any balance."
 
-#: src/screens/Settle/index.tsx:417
+#: src/screens/Settle/index.tsx:419
 msgid "This plan goes outside your rules"
 msgstr "This plan goes outside your rules"
 
@@ -7605,11 +7605,11 @@ msgid "Title: {0} → {1}"
 msgstr "Title: {0} → {1}"
 
 #. placeholder {0}: line.people
-#: src/screens/Settle/index.tsx:595
+#: src/screens/Settle/index.tsx:597
 msgid "To {0} people"
 msgstr "To {0} people"
 
-#: src/screens/Settle/index.tsx:593
+#: src/screens/Settle/index.tsx:595
 msgid "To 1 person"
 msgstr "To 1 person"
 
@@ -7762,8 +7762,8 @@ msgstr "Unread"
 msgid "Upcoming"
 msgstr "Upcoming"
 
-#: src/screens/Settle/index.tsx:274
-#: src/screens/Settle/index.tsx:279
+#: src/screens/Settle/index.tsx:276
+#: src/screens/Settle/index.tsx:281
 msgid "Update plan"
 msgstr "Update plan"
 
@@ -8213,8 +8213,8 @@ msgstr "you"
 #: src/screens/Analytics/useReport.ts:331
 #: src/screens/CreateGroup.tsx:195
 #: src/screens/Group/components/MemberExitDialog.tsx:99
-#: src/screens/Group/index.tsx:217
-#: src/screens/Person/index.tsx:213
+#: src/screens/Group/index.tsx:218
+#: src/screens/Person/index.tsx:214
 #: src/screens/Settle/index.tsx:98
 msgid "You"
 msgstr "You"
@@ -8504,11 +8504,11 @@ msgstr "You will no longer be in {groupName}. Earlier expenses and the history s
 msgid "You will receive a \"reset code\" by email or text. Enter that code here, then enter your new password."
 msgstr "You will receive a \"reset code\" by email or text. Enter that code here, then enter your new password."
 
-#: src/screens/Settle/index.tsx:566
+#: src/screens/Settle/index.tsx:568
 msgid "You’ll get"
 msgstr "You’ll get"
 
-#: src/screens/Settle/index.tsx:568
+#: src/screens/Settle/index.tsx:570
 msgid "You’ll pay"
 msgstr "You’ll pay"
 
@@ -8524,7 +8524,7 @@ msgstr "You’re already friends."
 msgid "You’re friends now"
 msgstr "You’re friends now"
 
-#: src/screens/Settle/index.tsx:556
+#: src/screens/Settle/index.tsx:558
 msgid "You’re not part of any of these payments."
 msgstr "You’re not part of any of these payments."
 
@@ -8605,7 +8605,7 @@ msgid "Your password must be at least {MIN_PASSWORD_LENGTH} characters long."
 msgstr "Your password must be at least {MIN_PASSWORD_LENGTH} characters long."
 
 #. placeholder {0}: nameList(item.stuck)
-#: src/screens/Settle/index.tsx:422
+#: src/screens/Settle/index.tsx:424
 msgid "Your payment rules give no allowed pair to pay anyone who is owed: {0}. These payments still settle everyone up."
 msgstr "Your payment rules give no allowed pair to pay anyone who is owed: {0}. These payments still settle everyone up."
 
