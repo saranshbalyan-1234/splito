@@ -28,7 +28,6 @@ import * as FocusGuards from '@radix-ui/react-focus-guards'
 import * as FocusScope from '@radix-ui/react-focus-scope'
 import {RemoveScrollBar} from 'react-remove-scroll-bar'
 
-import {OPENED_FALLBACK_MS, OpenedContext} from '#/lib/hooks/useAfterTransition'
 import {logger} from '#/logger'
 import {useShouldReduceMotion} from '#/motion/useShouldReduceMotion'
 import {useDialogStateControlContext} from '#/state/dialogs'
@@ -36,6 +35,7 @@ import {useShowShell} from '#/state/shell/minimal-mode'
 import {type ListMethods} from '#/view/com/util/List'
 import {atoms as a, flatten, useBreakpoints, useTheme, web} from '#/alf'
 import {Context, SheetOwnerContext} from '#/components/Dialog/context'
+import {OpenedProvider} from '#/components/Dialog/OpenedProvider'
 import {
   DrawerContext,
   DrawerHandle,
@@ -144,17 +144,12 @@ export function Outer({
     if (pending) finishClose(pending.cb)
   }, [finishClose])
   /*
-   * Whether the sheet has stopped moving: what a heavy body defers on (`OpenedContext`, owner 168). The drawer's
-   * spring reports its end; a popup, or reduced motion, is open as drawn (one frame). A timer opens it anyway if
-   * the end is never reported.
+   * Whether the sheet has stopped moving: what a heavy body defers on (`OpenedContext`, owner 168). The state
+   * lives in `OpenedProvider`, below this component, so the flip re-renders only what reads it, not the dialog
+   * shell. The drawer's spring reports its end; a popup, or reduced motion, is open as drawn.
    */
-  const [opened, setOpened] = useState(false)
-  const onOpened = useCallback(() => setOpened(true), [])
-  useEffect(() => {
-    if (!isOpen) return setOpened(false)
-    const id = setTimeout(onOpened, OPENED_FALLBACK_MS)
-    return () => clearTimeout(id)
-  }, [isOpen, onOpened])
+  const setOpenedRef = useRef<(opened: boolean) => void>(null)
+  const onOpened = useCallback(() => setOpenedRef.current?.(true), [])
   const drawer = useMemo(
     () => ({isDrawer, isClosing, onExited, onOpened}),
     [isDrawer, isClosing, onExited, onOpened],
@@ -215,7 +210,7 @@ export function Outer({
         <Portal>
           <Context.Provider value={context}>
             <DrawerContext.Provider value={drawer}>
-             <OpenedContext.Provider value={opened}>
+             <OpenedProvider setterRef={setOpenedRef}>
               <RemoveScrollBar />
               <Pressable
                 accessibilityHint={undefined}
@@ -267,7 +262,7 @@ export function Outer({
                   </View>
                 </View>
               </Pressable>
-             </OpenedContext.Provider>
+             </OpenedProvider>
             </DrawerContext.Provider>
           </Context.Provider>
         </Portal>

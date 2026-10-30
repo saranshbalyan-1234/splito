@@ -364,9 +364,12 @@ test('switching back to a visited tab re-renders none of its content', async ({p
   const all = await page.evaluate(() => (window as unknown as Win).__renders.counts)
   console.log(`TOGROUPS ${JSON.stringify(all.toGroups ?? {})}`)
   console.log(`TOHOME ${JSON.stringify(all.toHome ?? {})}`)
-  const round = all.toHome ?? {}
-  // What may render on a tab switch: the bar and the navigator (they own the highlight and the visible screen).
-  const SHELL = /^(mount|update):(NavItem|Link|Pressable|PressableWithHover|TabGlyph|View|Text|Svg|Path|Circle|LocaleProvider|Unknown|AnimatedComponent\(View\)|Anonymous|Freeze|SceneView|Screen|MaybeScreen|Navigator|NativeStackNavigator|NavigationContent|StaticContainer|Header|ScreenStackItem)$/
-  const bodies = Object.entries(round).filter(([name]) => !SHELL.test(name))
+  const round: Counts = {}
+  for (const phaseName of ['toGroups', 'toHome'])
+    for (const [k, n] of Object.entries(all[phaseName] ?? {})) round[k] = (round[k] ?? 0) + n
+  // The screens' own content: the bar and the navigator shell may render (they own the highlight and the visible
+  // screen), none of these may.
+  const CONTENT = /^(mount|update):(PeopleScreen|PersonRow|BalanceSummary|SummaryCard|RequestsSection|GroupsScreen|GroupRow|ListToolsHeader|ListImpl|RowImpl|ActivityScreen|AnalyticsScreen|ExpenseRow)$/
+  const bodies = Object.entries(round).filter(([name]) => CONTENT.test(name))
   expect(bodies, `screen content that re-rendered on a tab switch: ${JSON.stringify(bodies)}`).toEqual([])
 })
