@@ -74,11 +74,13 @@ test('opening a friend and a group with the data loaded shows no skeleton', asyn
   expect((await skeletons(page)).rowsSkeletonUnderRealHeader).toBe(0)
 
   await page.goBack()
-  await page.getByTestId('tab-home').click()
-  await expect(page.getByTestId('person-Bela Joshi')).toBeVisible()
+  // Home and People both list friends and both stay mounted (owner 166): ask the People screen.
+  await page.getByTestId('tab-people').click()
+  const bela = page.getByTestId('screen-people').getByTestId('person-Bela Joshi')
+  await expect(bela).toBeVisible()
   await page.waitForTimeout(1000)
   await watchSkeletons(page)
-  await page.getByTestId('person-Bela Joshi').tap()
+  await bela.tap()
   await expect(page.getByTestId('screen-person')).toBeVisible()
   await expect(page.getByTestId('screen-person').getByText('Rafting').first()).toBeVisible()
   await page.waitForTimeout(500)

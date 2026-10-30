@@ -1057,6 +1057,16 @@ are written; nothing records them automatically (A-037).
 
 Each rule came from a measurement; the dated story is in § 23. Newest first within each group.
 
+- **Specs and render baselines that depend on "now" run on a pinned clock (`e2e/pinClock.ts`), and the gate counts
+  only what is deterministic.** The demo's change times and "recently active" are relative to now: homeTabs "Overview
+  scope" passed on 30 Oct and failed from midnight (pinned to 28 or 29 Oct it fails the same way; pinned to noon on
+  30 Oct it passes). The renders gate also drew about 1,900 or about 3,400 tab updates, run to run, because the first
+  visit of a tab lets the large demo's history loading and the Analytics report land inside whichever phase is
+  running. The gate pins `Date` (an offset applied at each page load: Playwright's `setFixedTime` freezes it and the
+  app never reaches Home), prints the first-visit round
+  as `FIRSTVISIT` without gating it, and gates the second round, where every tab is mounted and parked
+  (69 mounts + 468 updates in 4 of 4 runs). Median of three, taken on a quiet machine, as below.
+
 - **A window that grows must keep what it read, and a render baseline is recorded as the median of three runs.**
   Activity's tracker rebuilt the whole history for every page a narrowed list read (10,000 expenses: 23.6 s, then
   72 ms per new expense); it now keeps its pool, cursor and sorted events and merges each page in (0.35 s SQLite /
@@ -1423,6 +1433,17 @@ Splito lessons (add newest last, dated, with PR):
 - 2026-10-30, F-1210 e2e: **never `goto` right after a click that writes.** The write is a transaction still in flight; the reload drops it and the next assertion fails (it looked like a missing feature). Wait for the sheet to close or the toast first. A search drawer input also needs `toBeEditable()` before `fill` under load.
 - 2026-10-30, F-1210 review: **a derived adjustment must stay between zero and the thing it adjusts.** The first "leave disputed out of the plan" subtracted the disputed part from every net, which flipped signs on a settled or part-repaid group and asked someone to pay twice for a disputed "payment not received". `withoutDisputed` now shrinks each net toward zero only and rebalances with `allocate`, with a property test (sums to zero, never flips, never grows). Likewise a stored pointer into a list (an item's position) must be the item's own id: reorders and edits moved the dispute onto the wrong item.
 - 2026-10-30, F-1210 review: **an "apply the suggestion" action must never change the shape of the record to fit it.** Converting an itemised or percent split to exact amounts to apply an amount fix lost the items. One tap applies a fix only when the split mode survives it (`fixApplies`); otherwise it is an edit by hand, and the panel says why.
+- 2026-10-31, fix/integration: **parked tabs make every unscoped locator ambiguous, and a gate must not count a race.**
+  Four specs failed on the merged main with all tabs kept mounted: two asked for `request-Ishaan Verma` and
+  `person-Bela Joshi` on the page when Home and People both list them (strict mode: scope to the screen you mean, here
+  `screen-people`); the Activity Type-filter check read the list a moment after Apply, while the previous filter's rows
+  were still shown (poll for rows of the new type, never read once after Apply); and the cancelled-press test dragged
+  a mouse across the page, which selects text, and react-native-web drops the next click on that link after a
+  selection (`_selectionTerminated`, its rule), so the link looked swallowed (cancel a touch with
+  `Input.dispatchTouchEvent touchCancel` instead). The renders gate's tabs phase read about 1,900 or about 3,400
+  updates on the same build: the first visit of a tab lets background history loading and the Analytics report land
+  inside the phase, so it is printed and never gated; the second round, on parked tabs, is 69 + 468 every run. A
+  frozen clock (`page.clock.setFixedTime`) stops the app reaching Home, so the clock is pinned by an offset.
 
 
 ## 24. Checklists
@@ -1503,6 +1524,14 @@ labelled sidebar); **wide** = web 1300 px and up (Bluesky `gtTablet`, right colu
 
 ### 26.1 Principles and process
 
+- **Reuse before you write, inside Splito first** (owner 210). Before adding any component, hook, helper, row,
+  card, sheet, query, mutation, format or test helper, search this repo for one that already does it (and then
+  Bluesky, rule below) and use or extend it; two pieces of code that do the same job are a defect, fixed by
+  merging them into one shared piece. Examples that must stay single: the person row and `PersonLink`, request and
+  invite rows and their actions, the Overview card, balance chips, `activityPath` links, the invite link / QR
+  block, the FAB allow-list, empty states, filter and sort sheets, amount formatting. Every builder brief says so,
+  every Opus review lists duplicates as findings, and a builder report names what it reused. *Why:* "make sure
+  whatever can be reused do it".
 - **Bluesky first: copy, don't write.** Before writing any code (component, hook, screen, layout, list,
   dialog/sheet, menu, tabs/pager, search input, settings row, toggle, avatar, badge, toast, animation, gesture,
   haptics, keyboard handling, navigation, storage, i18n, error boundary, test helper, e2e pattern, build
@@ -3242,6 +3271,7 @@ Every owner decision, in the order it was made (all 2026-10-26). "Replaced" name
 | 207 | "add expense should have paid by always, by default to me" | Paid by is always shown on Add expense and always starts as me on a new expense (any entry point); only an Ask prefill naming a payer differs; edits keep the saved payer | § 26.13 | - |
 | 208 | "fanout more to get things done" | Run as many builders as there is independent work (no file overlap), each running only its touched specs; full e2e once per merge by the orchestrator; perf numbers only on a quiet machine | § 23 (process lesson) | At most three builders at once |
 | 209 | "also update profile page, it looks very less" | Profile becomes a full page: header with verified contacts and since-date, stat row linking out, Your balance, Payment details (UPI), Add me (QR, link), Your recent activity, Log out last | § 26.15 | Avatar, name and a few stats only |
+| 210 | "make sure whatever can be reused do it" | Reuse before writing, inside Splito first then Bluesky; duplicates are defects merged into one shared piece; briefs, reviews and reports enforce it | § 26.1 | Reuse rule covered Bluesky only |
 
 New decisions follow § 0 rule 9: rewrite the rule in its topic so only the current truth remains, then add a
 row here.
