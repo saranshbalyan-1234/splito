@@ -11,7 +11,7 @@ import {useAllEntities, useMutationCtx, usePref} from '#/data/hooks'
 import {atoms as a, useTheme, utils} from '#/alf'
 import {CategoryGlyph, useCategoryName} from '#/components/settings/CategoryIcon'
 import {Text} from '#/components/Typography'
-import {findCategory} from './categoryLookup'
+import {findCategory, nameCategory} from './categoryLookup'
 
 /** Display names by person id; the local user is "You". */
 export function useDisplayName() {
@@ -46,7 +46,7 @@ export function useCategoryLookup(): (id: string) => Category {
   const nameOf = useCategoryName()
   return id => {
     const found = findCategory(categories, id)
-    return {...found, id, name: nameOf(found)}
+    return nameCategory(found, id, nameOf(found))
   }
 }
 

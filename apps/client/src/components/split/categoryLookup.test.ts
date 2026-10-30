@@ -1,7 +1,7 @@
 import {expect, test} from 'bun:test'
 import {DEFAULT_CATEGORIES} from '@splito/sync'
 
-import {findCategory, hasStockName} from './categoryLookup'
+import {findCategory, hasStockName, nameCategory} from './categoryLookup'
 
 test('a known id is itself, hidden or not', () => {
   const food = DEFAULT_CATEGORIES.find(c => c.id === 'food')!
@@ -24,4 +24,12 @@ test('only a built-in with its stock name follows the language', () => {
   expect(hasStockName(food)).toBe(true)
   expect(hasStockName({...food, name: 'Dining out'})).toBe(false)
   expect(hasStockName({id: 'custom-1', name: food.name})).toBe(false)
+})
+
+test('the same category, id and name are the same object, so memoised children stay still', () => {
+  const food = DEFAULT_CATEGORIES.find(c => c.id === 'food')!
+  expect(nameCategory(food, 'food', 'Food')).toBe(nameCategory(food, 'food', 'Food'))
+  expect(nameCategory(food, 'food', 'Food')).not.toBe(nameCategory(food, 'food', 'भोजन'))
+  expect(nameCategory(food, 'food', 'भोजन')).toMatchObject({id: 'food', name: 'भोजन', color: food.color})
+  expect(nameCategory(food, 'gone', 'Other').id).toBe('gone')
 })

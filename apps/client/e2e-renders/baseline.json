@@ -182,6 +182,7 @@
         "mount:ButtonIcon": 12,
         "mount:ButtonText": 11,
         "mount:CategoryGlyph": 5,
+        "mount:CategoryTile": 5,
         "mount:ChevronRight": 4,
         "mount:ChipTag": 7,
         "mount:Circle": 8,

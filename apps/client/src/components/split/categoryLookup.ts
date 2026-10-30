@@ -12,3 +12,19 @@ export function findCategory(categories: readonly Category[], id: string): Categ
 export function hasStockName(category: Pick<Category, 'id' | 'name'>): boolean {
   return DEFAULT_CATEGORIES.find(c => c.id === category.id)?.name === category.name
 }
+
+const named = new WeakMap<Category, Map<string, Category>>()
+
+/**
+ * `found` under the id asked for and the name to show. The same inputs give the same object, so a memoised tile or
+ * row that is handed it does not re-render when only its parent did (a fresh `{...found}` per render did, in the
+ * renders gate).
+ */
+export function nameCategory(found: Category, id: string, name: string): Category {
+  let byKey = named.get(found)
+  if (!byKey) named.set(found, (byKey = new Map()))
+  const key = `${id}\0${name}`
+  let category = byKey.get(key)
+  if (!category) byKey.set(key, (category = {...found, id, name}))
+  return category
+}
