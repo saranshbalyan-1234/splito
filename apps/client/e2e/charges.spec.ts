@@ -1,5 +1,6 @@
 import {expect, type Page, test} from '@playwright/test'
 
+import {openAddExpense} from './composer'
 import {openDemo} from './openDemo'
 
 const DESKTOP = {width: 1440, height: 900}
@@ -20,14 +21,6 @@ const ALCOHOL = [
   ['Whisky', '250'],
   ['Beer', '150'],
 ] as const
-
-async function openAddExpense(page: Page, size: {width: number; height: number}) {
-  await page.setViewportSize(size)
-  await openDemo(page, '/people')
-  await expect(page.getByTestId('person-Riya Sharma')).toBeVisible()
-  await page.getByTestId(size.width < 600 ? 'fab-add' : 'sidebar-add').click()
-  await expect(page.getByTestId('screen-add-expense')).toBeVisible()
-}
 
 async function addCharge(
   page: Page,

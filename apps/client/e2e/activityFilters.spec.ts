@@ -94,8 +94,13 @@ for (const [name, viewport] of [['390', PHONE], ['1440', DESKTOP]] as const) {
       for (const [type, kinds] of Object.entries(families)) {
         await apply(page, [type])
         await lookBackUntilListed(page)
-        await expect.poll(async () => (await kindsShown(page)).length, {message: type}).toBeGreaterThan(0)
-        expect((await kindsShown(page)).every(k => kinds.includes(k))).toBe(true)
+        // The list follows the filter a moment after Apply: wait for the rows of this type, never read the previous list.
+        await expect
+          .poll(async () => {
+            const shown = await kindsShown(page)
+            return shown.length > 0 && shown.every(k => kinds.includes(k))
+          }, {message: type})
+          .toBe(true)
       }
       await apply(page, [])
       await expect(screen(page).getByTestId('activity-filters-dot')).toHaveCount(0)
