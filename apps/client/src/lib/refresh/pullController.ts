@@ -156,6 +156,8 @@ function uninstall() {
 /** Makes a screen's list pullable; returns the undo. */
 export function registerSurface(s: Surface) {
   surfaces.add(s)
+  // How the e2e finds what moves.
+  s.content.setAttribute('data-pull-content', '')
   install()
   return () => {
     surfaces.delete(s)

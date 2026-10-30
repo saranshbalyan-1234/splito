@@ -21,7 +21,7 @@ import {useShowShell} from '#/state/shell/minimal-mode'
 import {useShellLayout} from '#/state/shell/shell-layout'
 import {OpenedContext} from '#/lib/hooks/useAfterTransition'
 import {useScreenOpened} from '#/lib/hooks/useScreenOpened'
-import {PullSurface} from '#/lib/refresh/PullSurface'
+import {usePullToRefresh} from '#/lib/refresh/usePullToRefresh'
 import {useRefreshControl} from '#/lib/refresh/useRefreshControl'
 import {useIsWithinSplitView} from '#/lib/splitView'
 import {
@@ -142,6 +142,7 @@ export const Content = memo(function Content({
   const offsetContext = useMemo(() => ({isWithinOffsetView: true}), [])
   /* Pull to refresh on every page (owners 167, 169, 170), as `List`; web pulls through `PullSurface` below. */
   const refreshControl = useRefreshControl({enabled: !isWithinDialog && !ownRefreshControl})
+  const pull = usePullToRefresh({enabled: !isWithinDialog && !isWithinSplitView && !ownRefreshControl})
 
   // note - if we ever make the footer transparent in any way,
   // we'll need to change this to use contentInsets/scrollIndicatorInsets
@@ -191,12 +192,13 @@ export const Content = memo(function Content({
       ]}
       {...props}>
       {IS_WEB ? (
-        <PullSurface enabled={!isWithinDialog && !isWithinSplitView && !ownRefreshControl}>
-          <Center ignoreTabletLayoutOffset={ignoreTabletLayoutOffset}>
+        <>
+          {pull.indicator}
+          <Center ref={pull.contentRef} ignoreTabletLayoutOffset={ignoreTabletLayoutOffset}>
             {/* @ts-expect-error web only -esb */}
             {children}
           </Center>
-        </PullSurface>
+        </>
       ) : (
         children
       )}
@@ -222,7 +224,7 @@ export const Center = memo(function LayoutCenter({
   style,
   ignoreTabletLayoutOffset: _ignoreTabletLayoutOffset,
   ...props
-}: ViewProps & {ignoreTabletLayoutOffset?: boolean}) {
+}: ViewProps & {ignoreTabletLayoutOffset?: boolean; ref?: React.Ref<React.ComponentRef<typeof View>>}) {
   const ctx = useMemo(() => ({isWithinOffsetView: true}), [])
   return (
     <View style={[a.w_full, style]} {...props}>

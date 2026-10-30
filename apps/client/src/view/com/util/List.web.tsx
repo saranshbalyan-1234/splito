@@ -27,7 +27,7 @@ import {useIsWithinSplitView} from '#/lib/splitView'
 import {useTheme, web} from '#/alf'
 import * as Layout from '#/components/Layout'
 import {useDialogContext} from '#/components/Dialog/context'
-import {PullSurface} from '#/lib/refresh/PullSurface'
+import {usePullToRefresh} from '#/lib/refresh/usePullToRefresh'
 import {useAnalytics} from '#/analytics'
 
 export type ListMethods = {
@@ -241,6 +241,12 @@ function ListImpl<ItemT>(
 
   const nativeRef = useRef<HTMLDivElement>(null)
 
+  /* Pull to refresh (owners 167, 169, 170): the window scrolls, so the list's content moves under the header. Not in a dialog (a pull closes the sheet) or a contained scroller. */
+  const {contentRef: pullContentRef, indicator: pullIndicator} = usePullToRefresh({
+    enabled: !disableFullWindowScroll && !isWithinDialog,
+    onRefresh,
+  })
+
   // Registry of item index -> row DOM node. The list renders header/footer and
   // visibility-detector siblings too, so we can't index into the container's
   // children directly; each Row registers its own node here keyed by index.
@@ -362,9 +368,8 @@ function ListImpl<ItemT>(
         rowNodesRef={rowNodesRef}
         disableFullWindowScroll={disableFullWindowScroll}
       />
-      {/* Pull to refresh (owners 167, 169, 170): the window scrolls, so the list's content moves under the header. Not in a dialog (a pull closes the sheet) or a contained scroller. */}
-      <PullSurface enabled={!disableFullWindowScroll && !isWithinDialog} onRefresh={onRefresh}>
-      <Layout.Center>
+      {pullIndicator}
+      <Layout.Center ref={pullContentRef}>
         <View
           ref={containerRef}
           style={[
@@ -414,7 +419,6 @@ function ListImpl<ItemT>(
           {footerComponent}
         </View>
       </Layout.Center>
-      </PullSurface>
     </View>
   )
 }

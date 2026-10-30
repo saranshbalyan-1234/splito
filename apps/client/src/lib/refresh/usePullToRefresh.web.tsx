@@ -8,27 +8,20 @@ import {useShouldReduceMotion} from '#/motion/useShouldReduceMotion'
 import {useTheme} from '#/alf'
 
 /**
- * Wraps a list's or scroll view's content on phone web and gives it pull to refresh (owners 167, 169, 170). The
- * content moves down under the header while the spinner shows in the room that opens above it; the header, which sits
- * above the list in the screen, never moves. All the movement is written straight to these nodes by
- * `pullController`, so a pull renders nothing. `enabled` is false in dialogs and in a contained scroller, where the
- * window is not the one scrolling. Needs a `Layout.Screen` around it (the touch must start inside one).
+ * Pull to refresh for a list or scroll view on phone web (owners 167, 169, 170). The caller puts `contentRef` on the
+ * element that holds its content and draws `indicator` just above it, inside a positioned parent; the content moves
+ * down under the header while the spinner shows in the room that opens above it, and the header, which sits above the
+ * list in the screen, never moves. All the movement is written straight to these nodes by `pullController`, so a pull
+ * renders nothing, and there is no wrapper element to redraw with the list (owner 166). `enabled` is false in dialogs
+ * and in a contained scroller, where the window is not the one scrolling. Needs a `Layout.Screen` around it (the touch
+ * must start inside one).
  */
-export function PullSurface({
-  enabled = true,
-  onRefresh,
-  children,
-}: {
-  enabled?: boolean
-  onRefresh?: () => void | Promise<unknown>
-  children: React.ReactNode
-}) {
+export function usePullToRefresh({enabled = true, onRefresh}: {enabled?: boolean; onRefresh?: () => void | Promise<unknown>}) {
   const t = useTheme()
   const {t: l} = useLingui()
   const reduced = useShouldReduceMotion()
   const refresh = useRefreshHandler(onRefresh)
-  const root = useRef<HTMLDivElement>(null)
-  const content = useRef<HTMLDivElement>(null)
+  const content = useRef<HTMLElement>(null)
   const indicator = useRef<HTMLDivElement>(null)
   const spinner = useRef<HTMLDivElement>(null)
   const label = useRef<HTMLDivElement>(null)
@@ -40,11 +33,12 @@ export function PullSurface({
   }
 
   useEffect(() => {
-    const screen = root.current?.closest<HTMLElement>('[data-screen]')
-    if (!enabled || !screen) return
+    const node = content.current
+    const screen = node?.closest<HTMLElement>('[data-screen]')
+    if (!enabled || !node || !screen) return
     return registerSurface({
       screen,
-      content: content.current!,
+      content: node,
       indicator: indicator.current!,
       spinner: spinner.current!,
       label: label.current!,
@@ -54,9 +48,9 @@ export function PullSurface({
     } satisfies Surface)
   }, [enabled, refresh])
 
-  if (!enabled) return <>{children}</>
-  return (
-    <div ref={root} style={{position: 'relative'}}>
+  return {
+    contentRef: content as React.RefObject<never>,
+    indicator: enabled ? (
       <PullIndicator
         indicator={indicator}
         spinner={spinner}
@@ -65,11 +59,8 @@ export function PullSurface({
         pillBackground={t.palette.contrast_50}
         pillColor={t.palette.contrast_700}
       />
-      <div ref={content} data-testid="pull-content">
-        {children}
-      </div>
-    </div>
-  )
+    ) : null,
+  }
 }
 
 type NodeRef = React.RefObject<HTMLDivElement | null>

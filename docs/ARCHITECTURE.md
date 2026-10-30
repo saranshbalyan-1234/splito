@@ -1428,7 +1428,7 @@ Splito lessons (add newest last, dated, with PR):
   the root), and the list content, not the header, is translated. Three traps: `lib/` may not import `data/` (the
   refresh handler lives in `state/refresh`); the Loader's `rotate-500ms` class was never defined in `index.html`, so it
   never spun on web (Bluesky's base.html has it; now added); and `'unknown'` as a projection's change notice restarts
-  the Activity tracker, so refresh passes the empty notice. Playwright WebKit has no `Touch`/`TouchEvent` constructor
+  the Activity tracker, so refresh passes the empty notice. Metro tries `.ts` before `.web.tsx`, so a native twin named `x.ts` silently shadows `x.web.tsx` on web (the whole pull vanished and only an e2e noticed): give both twins the same extension. Playwright WebKit has no `Touch`/`TouchEvent` constructor
   and no long task API: its run dispatches touch-shaped events and reads the frame gap, and says so. Real iOS Safari
   rubber band and Android Chrome were not driven by a person.
 

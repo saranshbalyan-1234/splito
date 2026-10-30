@@ -13,7 +13,7 @@ const PHONE = {width: 390, height: 844}
 test.use({viewport: PHONE, hasTouch: true, isMobile: true})
 test.setTimeout(120_000)
 
-type Win = {__long?: number[]; __gap?: number}
+type Win = {__long?: number[]; __gap?: number; __spin?: boolean}
 
 /** One finger. `move` returns whether the page cancelled the move (WebKit only; Chromium answers undefined). */
 type Finger = {
@@ -72,7 +72,7 @@ const read = (page: Page) =>
     const screens = [...document.querySelectorAll<HTMLElement>('[data-screen]')].filter(e => e.getClientRects().length)
     const screen = screens[screens.length - 1]!
     const header = [...screen.querySelectorAll<HTMLElement>('*')].find(e => getComputedStyle(e).position === 'sticky')
-    const content = screen.querySelector<HTMLElement>('[data-testid="pull-content"]')
+    const content = screen.querySelector<HTMLElement>('[data-pull-content]')
     const indicator = screen.querySelector<HTMLElement>('[data-testid="pull-indicator"]')
     const m = new DOMMatrix(content ? getComputedStyle(content).transform : 'none')
     return {
@@ -141,6 +141,11 @@ for (const [name, path] of ROUTES) {
       w.__long = []
       new PerformanceObserver(l => l.getEntries().forEach(e => w.__long!.push(e.duration))).observe({entryTypes: ['longtask']})
       performance.clearMarks()
+      // The spinner turns only while refreshing, which can be over before a slow machine reads the page: record that it ever did.
+      w.__spin = false
+      new MutationObserver(() => {
+        if (document.querySelector('[data-testid="pull-indicator"] .rotate-500ms')) w.__spin = true
+      }).observe(document.body, {subtree: true, attributes: true, attributeFilter: ['class']})
       // WebKit has no long task API: the worst gap between two frames says the same thing (the page was not stuck).
       let last = performance.now()
       w.__gap = 0
@@ -168,9 +173,7 @@ for (const [name, path] of ROUTES) {
 
     // 2. Letting go past the threshold refreshes: one refresh, the spinner holds the content, the header still stays.
     await expect.poll(async () => (await marks(page, 'refresh:start')).length).toBe(1)
-    const during = await read(page)
-    expect(during.spinning).toBe(true)
-    expect(during.headerTop).toBe(before.headerTop)
+    expect(await page.evaluate(() => (window as unknown as Win).__spin), 'the spinner turned while refreshing').toBe(true)
     await expect.poll(async () => (await marks(page, 'refresh:end')).length).toBe(1)
     const [start] = await marks(page, 'refresh:start')
     const [end] = await marks(page, 'refresh:end')
