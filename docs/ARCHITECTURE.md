@@ -1130,6 +1130,14 @@ measures a long task); signed-URL caching for picked files (until attachments ex
 
 Inherited from GameRun (2026-10-26); each holds for Splito's stack:
 
+- 2026-10-30, process: **almost every builder took hours, mostly waiting on each other.** Six to seven builders
+  shared one machine (load 25-130); each ran the full 500+ test e2e itself, several times per round, so every run
+  took 20-30 min instead of ~10, timing tests failed under load and were re-run, and long-lived overlapping
+  branches (Home, taps, Activity, disputes) forced repeated merges of main and conflict rounds; scope added
+  mid-round and a network outage added more. Rules: at most three builders at once; a builder runs only the specs
+  its change touches (plus lint, typecheck, unit tests and the renders gate) and the orchestrator runs the full
+  e2e once per merge, on the merged main; slices are small and merge the same day, in dependency order, so
+  nothing builds on a moving target; perf numbers are taken only at load under 10.
 - A transparent RN `Modal` still swallows taps on iOS; iOS silently refuses a second modal over an open one;
   changing a dialog's `key` is dismiss + present and iOS can drop the present.
 - Yoga `flex: 1` is a 0 basis: text vanishes or wraps one letter per line on iOS/Android while web looks
