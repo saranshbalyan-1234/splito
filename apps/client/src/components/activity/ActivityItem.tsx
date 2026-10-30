@@ -13,7 +13,7 @@ import {defineMessage} from '@lingui/core/macro'
 import {Trans, useLingui} from '@lingui/react/macro'
 import {useNavigation} from '@react-navigation/native'
 import {expenseNet, formatAmount, magnitude, ZERO} from '@splito/domain'
-import {type ActivityEvent, requestName} from '@splito/sync'
+import {type ActivityEvent, type Entity, type FriendRequest, requestName} from '@splito/sync'
 
 import {useHaptics} from '#/lib/haptics'
 import {GestureActionView} from '#/lib/custom-animations/GestureActionView'
@@ -137,6 +137,7 @@ export function ActivityItem({
   me,
   locale,
   actions,
+  renderInviteActions,
   style,
 }: {
   event: ActivityEvent
@@ -145,6 +146,8 @@ export function ActivityItem({
   me: string
   locale: string
   actions: ActivityActions
+  /** Resend / Cancel for an invite still waiting (owner 195); the screen supplies the buttons Home's Invites sent uses. */
+  renderInviteActions?: (request: Entity<FriendRequest>) => React.ReactNode
   style?: StyleProp<ViewStyle>
 }) {
   const t = useTheme()
@@ -173,7 +176,7 @@ export function ActivityItem({
   const [menuAt, setMenuAt] = useState({x: 0, y: 0})
   const [isHovered, setIsHovered] = useState(false)
   const [isFocusWithin, setIsFocusWithin] = useState(false)
-  const content = useDescribe(event, snapshot, me, locale, navigation, actions)
+  const content = useDescribe(event, snapshot, me, locale, navigation, actions, renderInviteActions)
   const isDeletedEvent = DELETED_KINDS.has(event.kind)
   /* A request awaiting an answer is one line: the answers on the right in place of "...", whose items are long-press / right-click (ARCHITECTURE 26.18). */
   const isRequestRow = !!content.actions
@@ -499,6 +502,7 @@ function useDescribe(
   locale: string,
   navigation: NavigationProp,
   actions: ActivityActions,
+  renderInviteActions?: (request: Entity<FriendRequest>) => React.ReactNode,
 ): {
   avatarName: string | undefined
   icon: React.ComponentType<SVGIconProps>
@@ -676,10 +680,13 @@ function useDescribe(
           open: openPerson,
         }
       }
+      const sentRequest = snapshot.requests.get(event.entityId)
       return {
         avatarName: nameOf(event.actor),
         icon: RequestSentBadge,
         tone: 'neutral',
+        /* An invite still waiting for an answer carries Resend and Cancel in place (owner 195), the buttons Home's Invites sent has. */
+        actions: sentRequest && !sentRequest.deleted && current.direction === 'outgoing' && current.status === 'pending' ? renderInviteActions?.(sentRequest) : undefined,
         headline:
           r.reach === 'invited' ? (
             <Trans>

@@ -27,7 +27,7 @@ import {List} from '#/view/com/util/List'
 import {atoms as a, useBreakpoints, useTheme} from '#/alf'
 import * as Admonition from '#/components/Admonition'
 import {Button, ButtonIcon, ButtonText} from '#/components/Button'
-import {pathTo} from '#/lib/links/make'
+import {pathTo, seeDisputedPath} from '#/lib/links/make'
 import {useOpenLink} from '#/data/useOpenLink'
 import {useDialogControl} from '#/components/Dialog'
 import {NO_RULES} from '#/components/groups/RulesEditor'
@@ -228,7 +228,7 @@ export function SettleScreen() {
   ) : (
     <View style={[a.px_lg, a.pt_lg, a.pb_md, a.gap_xs]}>
       <SettleSummary plans={shown} me={me!.id} locale={locale} />
-      <DisputedNotice leftOut={leftOut} isIncluded={includeDisputed} onToggle={include => void setIncludeDisputed(include).then(() => setIsAdopting(true))} />
+      <DisputedNotice href={seeDisputedPath({groupId})} leftOut={leftOut} isIncluded={includeDisputed} onToggle={include => void setIncludeDisputed(include).then(() => setIsAdopting(true))} />
       <View style={[a.flex_row]}>
         <Button
           testID="settle-how"

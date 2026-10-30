@@ -43,6 +43,7 @@ import {Pencil_Stroke2_Corner0_Rounded as PencilIcon} from '#/components/icons/P
 import {SettingsSliderVertical_Stroke2_Corner0_Rounded as FilterIcon} from '#/components/icons/SettingsSlider'
 import {historyRowHide, ShowHiddenSheet, useVisibleEntries} from '#/features/hidden/ShowHidden'
 import {rowMenuWrap} from '#/features/disputes/RowMenu'
+import {seeAllTransactionsPath, seeDisputedPath} from '#/lib/links/make'
 import {markOf, useDisputedBalances, useDisputedRecords, useOpenDisputes} from '#/state/disputes'
 import {useHideItem} from '#/features/hidden/HideItem'
 import {Group3_Stroke2_Corner0_Rounded as GroupIcon} from '#/components/icons/Group'
@@ -489,6 +490,7 @@ export function GroupScreen() {
             mine={mine}
             locale={locale}
             disputed={groupDisputed.mine}
+            disputedHref={seeDisputedPath({groupId})}
           />
         </View>
 
@@ -506,6 +508,8 @@ export function GroupScreen() {
           <SectionHeader
             title={l`Expenses`}
             testID="group-expenses-title"
+            href={seeAllTransactionsPath({groupId})}
+            hrefLabel={l`See all transactions`}
             action={
               <Button
                 testID="group-filter"
@@ -701,7 +705,7 @@ export function GroupScreen() {
                   />
                 )
               case 'currency':
-                return <CurrencyHeader currency={item.currency} disputed={groupDisputed.total[item.currency]} />
+                return <CurrencyHeader currency={item.currency} disputed={groupDisputed.total[item.currency]} disputedHref={seeDisputedPath({groupId})} />
               case 'net':
                 return (
                   <MemberBalanceRow
