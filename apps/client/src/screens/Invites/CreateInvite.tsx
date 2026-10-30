@@ -246,24 +246,14 @@ export function CreateInviteScreen() {
         />
 
         {kind === 'group' ? (
-          <Toggle.Item
-            type="switch"
+          <Toggle.SwitchRow
             testID="invite-approve-joins"
             name="approveJoins"
             label={l`Approve each join`}
+            hint={l`People who use the link wait until you let them in.`}
             value={approveJoins}
             onChange={setApproveJoins}
-            style={[a.w_full, a.gap_md]}>
-            <View style={[a.flex_1, a.gap_2xs]}>
-              <Toggle.LabelText style={[a.text_md, a.font_semi_bold]}>
-                <Trans>Approve each join</Trans>
-              </Toggle.LabelText>
-              <Text style={[a.text_sm, a.leading_snug, t.atoms.text_contrast_medium]}>
-                <Trans>People who use the link wait until you let them in.</Trans>
-              </Text>
-            </View>
-            <Toggle.Switch />
-          </Toggle.Item>
+          />
         ) : null}
 
         {isLinkAvailable ? null : (

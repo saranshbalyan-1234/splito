@@ -8,6 +8,7 @@ import {nanoid} from 'nanoid/non-secure'
 import {UserAvatar} from '#/view/com/util/UserAvatar'
 import {atoms as a, tokens, useBreakpoints, useTheme, web} from '#/alf'
 import {Button, ButtonIcon, ButtonText} from '#/components/Button'
+import {ChoiceChips} from '#/components/forms/ChoiceChips'
 import * as SegmentedControl from '#/components/forms/SegmentedControl'
 import * as TextField from '#/components/forms/TextField'
 import * as Toggle from '#/components/forms/Toggle'
@@ -127,45 +128,28 @@ export function SplitEditor({
           showsHorizontalScrollIndicator={false}
           style={[{marginHorizontal: -tokens.space.lg}]}
           contentContainerStyle={[a.px_lg]}>
-          <View
-            role="radiogroup"
-            accessibilityLabel={l`How to split`}
-            style={[a.flex_row, a.gap_xs]}>
-            {SPLIT_MODES.map(mode => {
-              const isOn = form.mode === mode
-              return (
-                <Button
-                  key={mode}
-                  testID={`split-mode-${mode}`}
-                  label={labels[mode]}
-                  role="radio"
-                  aria-checked={isOn}
-                  accessibilityState={{checked: isOn}}
-                  size="small"
-                  color={isOn ? 'primary' : 'secondary'}
-                  onPress={() =>
-                    update(f =>
-                      f.mode === mode
-                        ? f
-                        : mode === 'items'
-                          ? startItemize(
-                              {...f, mode},
-                              {
-                                preset: presets.find(
-                                  p => p.id === defaultPresetId,
-                                ),
-                                newKey: () => nanoid(8),
-                                mark: decimalMark(locale),
-                              },
-                            )
-                          : {...f, mode},
-                    )
-                  }>
-                  <ButtonText>{labels[mode]}</ButtonText>
-                </Button>
+          <ChoiceChips
+            wrap={false}
+            label={l`How to split`}
+            value={form.mode}
+            onChange={mode =>
+              update(f =>
+                f.mode === mode
+                  ? f
+                  : mode === 'items'
+                    ? startItemize(
+                        {...f, mode},
+                        {
+                          preset: presets.find(p => p.id === defaultPresetId),
+                          newKey: () => nanoid(8),
+                          mark: decimalMark(locale),
+                        },
+                      )
+                    : {...f, mode},
               )
-            })}
-          </View>
+            }
+            options={SPLIT_MODES.map(mode => ({value: mode, label: labels[mode], testID: `split-mode-${mode}`}))}
+          />
         </ScrollView>
         <Text
           style={[
@@ -1045,31 +1029,17 @@ function CashRounding({
 
       {isOn ? (
         <>
-          <View
-            role="radiogroup"
-            accessibilityLabel={l`Round to`}
-            style={[a.flex_row, a.flex_wrap, a.gap_xs, {paddingLeft: 48}]}>
-            {ROUND_UNITS.map(unit => {
-              const isPicked = roundTo === unit
-              return (
-                <Button
-                  key={unit}
-                  testID={`cash-unit-${unit}`}
-                  label={l`Round to ${unitText(unit)}`}
-                  role="radio"
-                  aria-checked={isPicked}
-                  accessibilityState={{checked: isPicked}}
-                  size="small"
-                  color={isPicked ? 'primary' : 'secondary'}
-                  onPress={() => {
-                    update(f => ({...f, roundTo: unit}))
-                    onChanged(unit)
-                  }}>
-                  <ButtonText>{unitText(unit)}</ButtonText>
-                </Button>
-              )
-            })}
-          </View>
+          <ChoiceChips
+            label={l`Round to`}
+            value={String(roundTo)}
+            style={{paddingLeft: 48}}
+            onChange={picked => {
+              const unit = Number(picked) as (typeof ROUND_UNITS)[number]
+              update(f => ({...f, roundTo: unit}))
+              onChanged(unit)
+            }}
+            options={ROUND_UNITS.map(unit => ({value: String(unit), label: unitText(unit), accessibilityLabel: l`Round to ${unitText(unit)}`, testID: `cash-unit-${unit}`}))}
+          />
           {cash ? (
             <Text
               testID="cash-remainder"

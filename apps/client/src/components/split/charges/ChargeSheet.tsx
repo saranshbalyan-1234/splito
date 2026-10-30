@@ -5,7 +5,7 @@ import {type ChargeKind, parseBasisPoints} from '@splito/domain'
 
 import {useHaptics} from '#/lib/haptics'
 import {atoms as a, useTheme} from '#/alf'
-import {Button, ButtonText} from '#/components/Button'
+import {ChoiceChips} from '#/components/forms/ChoiceChips'
 import * as Dialog from '#/components/Dialog'
 import * as FormSheet from '#/components/FormSheet'
 import * as SegmentedControl from '#/components/forms/SegmentedControl'
@@ -145,25 +145,12 @@ function Inner({
           <TextField.LabelText>
             <Trans>Kind</Trans>
           </TextField.LabelText>
-          <View
-            role="radiogroup"
-            accessibilityLabel={l`Kind`}
-            style={[a.flex_row, a.flex_wrap, a.gap_xs]}>
-            {CHARGE_KINDS.map((kind: ChargeKind) => (
-              <Button
-                key={kind}
-                testID={`charge-kind-${kind}`}
-                label={kindName(kind)}
-                role="radio"
-                aria-checked={draft.kind === kind}
-                accessibilityState={{checked: draft.kind === kind}}
-                size="small"
-                color={draft.kind === kind ? 'primary' : 'secondary'}
-                onPress={() => patch({kind})}>
-                <ButtonText>{kindName(kind)}</ButtonText>
-              </Button>
-            ))}
-          </View>
+          <ChoiceChips
+            label={l`Kind`}
+            value={draft.kind}
+            onChange={kind => patch({kind})}
+            options={CHARGE_KINDS.map((kind: ChargeKind) => ({value: kind, label: kindName(kind), testID: `charge-kind-${kind}`}))}
+          />
         </View>
 
         <View>
@@ -221,81 +208,45 @@ function Inner({
           <TextField.LabelText>
             <Trans>Applies to</Trans>
           </TextField.LabelText>
-          <View
-            role="radiogroup"
-            accessibilityLabel={l`Applies to`}
-            style={[a.flex_row, a.flex_wrap, a.gap_xs]}>
-            {(
-              [
-                ['all', l`All items`],
-                ['classes', l`Tax classes`],
-                ['items', l`Chosen items`],
-              ] as const
-            ).map(([type, text]) => (
-              <Button
-                key={type}
-                testID={`charge-scope-${type}`}
-                label={text}
-                role="radio"
-                aria-checked={scope.type === type}
-                accessibilityState={{checked: scope.type === type}}
-                size="small"
-                color={scope.type === type ? 'primary' : 'secondary'}
-                onPress={() => setScope(type)}>
-                <ButtonText>{text}</ButtonText>
-              </Button>
-            ))}
-          </View>
+          <ChoiceChips
+            label={l`Applies to`}
+            value={scope.type}
+            onChange={setScope}
+            options={[
+              {value: 'all', label: l`All items`, testID: 'charge-scope-all'},
+              {value: 'classes', label: l`Tax classes`, testID: 'charge-scope-classes'},
+              {value: 'items', label: l`Chosen items`, testID: 'charge-scope-items'},
+            ]}
+          />
           {scope.type === 'classes' ? (
-            <View style={[a.flex_row, a.flex_wrap, a.gap_xs, a.pt_sm]}>
-              {visible.map(c => {
-                const isOn = scope.classes.includes(c.id)
-                return (
-                  <Button
-                    key={c.id}
-                    testID={`charge-class-${c.id}`}
-                    label={nameOf(c.id)}
-                    accessibilityState={{selected: isOn}}
-                    aria-pressed={isOn}
-                    size="tiny"
-                    variant="outline"
-                    color={isOn ? 'primary' : 'secondary'}
-                    onPress={() =>
-                      patch({scope: {type: 'classes', classes: toggle(scope.classes, c.id)}})
-                    }>
-                    <ButtonText>{nameOf(c.id)}</ButtonText>
-                  </Button>
-                )
-              })}
-            </View>
+            <ChoiceChips
+              type="checkbox"
+              size="tiny"
+              variant="outline"
+              style={[a.pt_sm]}
+              label={l`Tax classes`}
+              value={scope.classes}
+              onChange={id => patch({scope: {type: 'classes', classes: toggle(scope.classes, id)}})}
+              options={visible.map(c => ({value: c.id, label: nameOf(c.id), testID: `charge-class-${c.id}`}))}
+            />
           ) : null}
           {scope.type === 'items' ? (
-            <View style={[a.flex_row, a.flex_wrap, a.gap_xs, a.pt_sm]}>
-              {items.map(item => {
-                const isOn = scope.items.includes(item.key)
-                return (
-                  <Button
-                    key={item.key}
-                    testID={`charge-item-${item.key}`}
-                    label={item.label}
-                    accessibilityState={{selected: isOn}}
-                    aria-pressed={isOn}
-                    size="tiny"
-                    variant="outline"
-                    color={isOn ? 'primary' : 'secondary'}
-                    onPress={() =>
-                      patch({scope: {type: 'items', items: toggle(scope.items, item.key)}})
-                    }>
-                    <ButtonText>{item.label}</ButtonText>
-                  </Button>
-                )
-              })}
-              {items.length === 0 ? (
-                <Text style={[a.text_sm, t.atoms.text_contrast_medium]}>
-                  <Trans>Add items first</Trans>
-                </Text>
-              ) : null}
-            </View>
+            items.length === 0 ? (
+              <Text style={[a.text_sm, a.pt_sm, t.atoms.text_contrast_medium]}>
+                <Trans>Add items first</Trans>
+              </Text>
+            ) : (
+              <ChoiceChips
+                type="checkbox"
+                size="tiny"
+                variant="outline"
+                style={[a.pt_sm]}
+                label={l`Chosen items`}
+                value={scope.items}
+                onChange={key => patch({scope: {type: 'items', items: toggle(scope.items, key)}})}
+                options={items.map(item => ({value: item.key, label: item.label, testID: `charge-item-${item.key}`}))}
+              />
+            )
           ) : null}
           {!isScopeValid ? (
             <Text
@@ -310,16 +261,18 @@ function Inner({
         </View>
 
         <View style={[a.gap_md]}>
-          <SwitchRow
+          <Toggle.SwitchRow
             testID="charge-stacks"
+            name="stacksOn"
             label={l`Stacks on earlier charges`}
             hint={l`Worked out on the items plus the charges above it that fall on the same items`}
             value={draft.stacksOn === 'earlier'}
             onChange={on => patch({stacksOn: on ? 'earlier' : 'items'})}
           />
           {draft.kind === 'tax' ? (
-            <SwitchRow
+            <Toggle.SwitchRow
               testID="charge-inclusive"
+              name="inclusive"
               label={l`Prices include this tax`}
               hint={l`Shows the tax portion and adds nothing to the total`}
               value={draft.inclusive}
@@ -329,39 +282,5 @@ function Inner({
         </View>
       </View>
     </FormSheet.Inner>
-  )
-}
-
-function SwitchRow({
-  label,
-  hint,
-  value,
-  onChange,
-  testID,
-}: {
-  label: string
-  hint: string
-  value: boolean
-  onChange: (v: boolean) => void
-  testID: string
-}) {
-  const t = useTheme()
-  return (
-    <Toggle.Item
-      type="switch"
-      testID={testID}
-      name={testID}
-      label={label}
-      value={value}
-      onChange={onChange}
-      style={[a.w_full, a.gap_md]}>
-      <View style={[a.flex_1, a.gap_2xs]}>
-        <Text style={[a.text_md, a.font_medium]}>{label}</Text>
-        <Text style={[a.text_sm, a.leading_snug, t.atoms.text_contrast_medium]}>
-          {hint}
-        </Text>
-      </View>
-      <Toggle.Switch />
-    </Toggle.Item>
   )
 }
