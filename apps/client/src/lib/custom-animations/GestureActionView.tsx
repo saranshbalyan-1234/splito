@@ -9,7 +9,6 @@ import Animated, {
   useAnimatedReaction,
   useAnimatedStyle,
   useDerivedValue,
-  useReducedMotion,
   useSharedValue,
   withSequence,
   withTiming,
@@ -17,6 +16,7 @@ import Animated, {
 import {scheduleOnRN} from 'react-native-worklets'
 
 import {useHaptics} from '#/lib/haptics'
+import {useShouldReduceMotion} from '#/motion/useShouldReduceMotion'
 import {atoms as a} from '#/alf'
 import {type GestureActions} from './GestureActionView.shared'
 
@@ -43,7 +43,8 @@ export function GestureActionView({
   >(null)
 
   const {threshold: playThresholdHaptic} = useHaptics()
-  const isReducedMotion = useReducedMotion()
+  /* The Animations preference too, not only the OS setting (Reanimated's hook reads the OS alone, once). */
+  const isReducedMotion = useShouldReduceMotion()
 
   const transX = useSharedValue(0)
   const containerWidth = useSharedValue(0)

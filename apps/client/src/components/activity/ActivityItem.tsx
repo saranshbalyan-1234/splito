@@ -32,6 +32,7 @@ import {TimesLarge_Stroke2_Corner0_Rounded as XIcon} from '#/components/icons/Ti
 import {DotGrid3x1_Stroke2_Corner0_Rounded as DotsIcon} from '#/components/icons/DotGrid'
 import {type Props as SVGIconProps} from '#/components/icons/common'
 import * as Menu from '#/components/Menu'
+import {useRowMenuTrigger} from '#/components/RowMenu'
 import {RequestAction} from '#/components/people/RequestRow'
 import {SubtleHover} from '#/components/SubtleHover'
 import * as Toast from '#/components/Toast'
@@ -153,7 +154,6 @@ export function ActivityItem({
   const t = useTheme()
   const {t: l} = useLingui()
   const navigation = useNavigation<NavigationProp>()
-  const haptics = useHaptics()
   const {gtMobile} = useBreakpoints()
   const backgroundColor = useRowBackgroundColor(isRead)
   const rowPaddingTop = 12
@@ -204,10 +204,9 @@ export function ActivityItem({
     if (!isRead) void actions.perform('markRead', event, isRead)
     content.open?.()
   }
-  const openMenu = () => {
-    haptics.longPress()
-    menuControl.open()
-  }
+  /* Right-click, the Menu key and a long-press (native and phone-width web) all open the row menu; a request row, which has no "...", hangs it from where the pointer landed. */
+  const trigger = useRowMenuTrigger(menuControl, {onAnchor: setMenuAt})
+  const openMenu = trigger.open
   const onAccessibilityAction = (e: AccessibilityActionEvent) => {
     const name = e.nativeEvent.actionName
     if (name === 'longpress' || name === 'magicTap') openMenu()
@@ -269,36 +268,7 @@ export function ActivityItem({
               onBlur: () => setIsFocusWithin(false),
             }
           : {})}
-        {...(IS_WEB && isRequestRow
-          ? {
-              onContextMenu: (e: {
-                preventDefault(): void
-                clientX: number
-                clientY: number
-                currentTarget: Element
-              }) => {
-                e.preventDefault()
-                const box = e.currentTarget.getBoundingClientRect()
-                setMenuAt({x: e.clientX - box.left, y: e.clientY - box.top})
-                haptics.longPress()
-                menuControl.open()
-              },
-              /* Keyboard: the Menu key or Shift+F10 on the row, or on its Accept / Decline, opens the same menu. */
-              onKeyDown: ((e: {
-                key: string
-                shiftKey: boolean
-                preventDefault(): void
-                currentTarget: Element
-              }) => {
-                if (e.key !== 'ContextMenu' && !(e.shiftKey && e.key === 'F10'))
-                  return
-                e.preventDefault()
-                const box = e.currentTarget.getBoundingClientRect()
-                setMenuAt({x: box.width / 2, y: box.height})
-                menuControl.open()
-              }) as never,
-            }
-          : {})}
+        {...(IS_WEB ? {onContextMenu: trigger.onContextMenu, onKeyDown: trigger.onKeyDown as never} : {})}
         style={[
           a.relative,
           isRequestRow ? [a.flex_row, a.align_center] : undefined,
@@ -323,7 +293,7 @@ export function ActivityItem({
           }
           onAccessibilityAction={onAccessibilityAction}
           onPress={open}
-          onLongPress={IS_NATIVE ? openMenu : undefined}
+          onLongPress={trigger.onLongPress}
           style={[
             a.flex_row,
             a.align_start,

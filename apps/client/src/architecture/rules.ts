@@ -385,6 +385,11 @@ export const RULES = {
     appliesTo: p => isClient(p) && !under(p, 'lib/haptics/'),
     count: (_p, s) => importsOf(s).filter(m => m === 'expo-haptics').length,
   },
+  rowMenuGesture: {
+    why: "A hand-built `onContextMenu` outside components/RowMenu.tsx. A row's \"more actions\" menu opens through `useRowMenuTrigger` (spread as `trigger.onContextMenu`) / `RowMenu` so right-click, the Menu key and long-press (also on phone-width web) work the same on every row (consolidation finding 5). Baselined: CommentRow (rolls out with P1-d), and the two charge pickers, which are not row menus.",
+    appliesTo: p => isClient(p) && !p.endsWith('/components/RowMenu.tsx'),
+    count: (_p, s) => countMatches(code(s), /\bonContextMenu\s*[=:]\s*(?!\s|trigger\b)/g),
+  },
   viewFiles: {
     why: 'New file under src/view/ (only the frozen Bluesky utilities live there, § 1).',
     appliesTo: p => under(p, 'view/'),
