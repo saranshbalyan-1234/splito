@@ -17,7 +17,7 @@ import {
 } from '#/lib/hooks/useNavigationDeduped'
 import {IS_WEB} from '#/env'
 import {openExternal} from '#/lib/openExternal'
-import {createPressInGate, isPlainPrimaryPress} from '#/view/com/util/pressIn'
+import {createPressInGate, isPlainPrimaryPress} from '#/lib/hooks/pressIn'
 import {getTabState, tabLink, TabState} from '#/lib/routes/helpers'
 import {WebAuxClickWrapper} from '#/view/com/util/WebAuxClickWrapper'
 import {useTheme} from '#/alf'

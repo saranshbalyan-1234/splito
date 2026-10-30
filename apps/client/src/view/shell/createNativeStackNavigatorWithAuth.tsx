@@ -33,7 +33,7 @@ import {IS_WEB} from '#/env'
 import {BottomBarWeb} from './bottom-bar/BottomBarWeb'
 import {DesktopLeftNav, useLeftNavWidth} from './desktop/LeftNav'
 import {DesktopRightNav, useRightNavWidth} from './desktop/RightNav'
-import {parkTabs, type RouteLike, shallowEqual} from './parkTabs'
+import {parkTabs, type RouteLike, shallowEqual} from '#/navigation/parkTabs'
 
 // On web, only this many screens (beyond Home + focused) stay mounted.
 // Older screens are unmounted to prevent memory growth during long sessions.

@@ -1,7 +1,7 @@
 import {describe, expect, test} from 'bun:test'
 import {StackRouter} from '@react-navigation/routers'
 
-import {isPushedCopy, parkTabs, tabId} from '#/view/shell/parkTabs'
+import {isPushedCopy, parkTabs, tabId} from '#/navigation/parkTabs'
 
 const routeNames = ['People', 'Groups', 'Analytics', 'Activity', 'Group', 'Settings']
 const getIds = {People: tabId, Groups: tabId, Analytics: tabId, Activity: tabId}

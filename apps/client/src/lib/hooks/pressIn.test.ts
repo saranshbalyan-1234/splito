@@ -1,6 +1,6 @@
 import {describe, expect, test} from 'bun:test'
 
-import {createPressInGate, isPlainPrimaryPress, PRESS_IN_CLICK_WINDOW_MS} from '#/view/com/util/pressIn'
+import {createPressInGate, isPlainPrimaryPress, PRESS_IN_CLICK_WINDOW_MS} from '#/lib/hooks/pressIn'
 
 describe('createPressInGate', () => {
   test('the click that follows a press-in is swallowed once', () => {
