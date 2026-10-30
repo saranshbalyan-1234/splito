@@ -1444,6 +1444,15 @@ Splito lessons (add newest last, dated, with PR):
   updates on the same build: the first visit of a tab lets background history loading and the Analytics report land
   inside the phase, so it is printed and never gated; the second round, on parked tabs, is 69 + 468 every run. A
   frozen clock (`page.clock.setFixedTime`) stops the app reaching Home, so the clock is pinned by an offset.
+- 2026-10-31, F-269 (group requests): **someone who has been asked is not a member.** A pending group request is its own
+  record (like a friend request), so no split, expense or picker can use the person by construction; the group page,
+  the Add members sheet and the expense picker draw them greyed as "Invited" from the request, never from `members`.
+  A group's join rule (`joinPolicy`, absent reads as 'approve') is the one source for its link: the link's
+  `approveJoins` is derived from it when the link is made or the rule changes, and 'invite' revokes the links; the old
+  `invites.approveJoins` preference is gone. A new store is a schema step on both engines (checklist above, v6), and
+  a request component that reads data lives in `screens/` (Activity gets its buttons through a render prop, as for
+  friend invites). New messages must be extracted, translated and compiled before an e2e build, or the app prints the
+  message ids (`+EvjqO`) and every text assertion fails.
 
 
 ## 24. Checklists
