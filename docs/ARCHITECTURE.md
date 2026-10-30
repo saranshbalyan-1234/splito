@@ -1130,6 +1130,14 @@ measures a long task); signed-URL caching for picked files (until attachments ex
 
 Inherited from GameRun (2026-10-26); each holds for Splito's stack:
 
+- 2026-10-30, process: **almost every builder took hours, mostly waiting on each other.** Six to seven builders
+  shared one machine (load 25-130); each ran the full 500+ test e2e itself, several times per round, so every run
+  took 20-30 min instead of ~10, timing tests failed under load and were re-run, and long-lived overlapping
+  branches (Home, taps, Activity, disputes) forced repeated merges of main and conflict rounds; scope added
+  mid-round and a network outage added more. Rules: at most three builders at once; a builder runs only the specs
+  its change touches (plus lint, typecheck, unit tests and the renders gate) and the orchestrator runs the full
+  e2e once per merge, on the merged main; slices are small and merge the same day, in dependency order, so
+  nothing builds on a moving target; perf numbers are taken only at load under 10.
 - A transparent RN `Modal` still swallows taps on iOS; iOS silently refuses a second modal over an open one;
   changing a dialog's `key` is dismiss + present and iOS can drop the present.
 - Yoga `flex: 1` is a 0 basis: text vanishes or wraps one letter per line on iOS/Android while web looks
@@ -1721,7 +1729,8 @@ Bluesky's `LeftNav`, copied as closely as possible. *Why:* "you need to improve 
 good"; "the left sidebar looks bad on desktop". *Where:* `view/shell/desktop/LeftNav.tsx`.
 
 - **It holds:** the logo mark, the shared nav items (§ 26.3), the "Add expense" pill, and the shared footer
-  links pinned at the bottom (Feedback · Help · Privacy · About; same component as the drawer). No avatar or
+  links (Feedback · Help · Privacy · About; same component as the drawer) directly under the pill, not pinned to
+  the bottom of the window (owner 188). No avatar or
   `ProfileCard`, no "Splito" wordmark, no recent groups or transactions (those live in the right column,
   § 26.17). *Why:* "remove the avatar from sidebar"; "remove label from logo".
 - **Logo:** the mark only (§ 26.11), 40 px, horizontally centred in the sidebar column, 12 px (space.md) below the
@@ -1732,8 +1741,11 @@ good"; "the left sidebar looks bad on desktop". *Where:* `view/shell/desktop/Lef
   sliding active indicator (§ 26.9) sits beside the active item.
 - **Add expense:** Bluesky `ComposeBtn` as a large full-width pill with a plus icon; it opens the Add expense
   popup (§ 26.8). *Why:* "go with what Bluesky had".
-- **Geometry:** widths and paddings from Bluesky's `LEFT_NAV_STANDARD_WIDTH` / `LEFT_NAV_MINIMAL_WIDTH`;
-  hairline right border; sticky full height; scrolls on its own when tall.
+- **Compact, no space it does not need** (owner 188): the sidebar is as wide as its longest item needs (icon,
+  label, padding; about 200 px in English, wider only if a language needs it), so the content starts sooner; the
+  logo, items, pill and footer links form one block at the top with no dead band between them, and nothing is
+  pinned to the bottom. Hairline right border; sticky full height; scrolls on its own when tall. Phone and rail
+  layouts are unchanged. *Why:* "on desktop there is a lot of space we don't need there in sidebar".
 - **Rail (800-999 px):** Bluesky minimal mode: mark, icons only, round compose button.
 
 ### 26.6 FAB
@@ -1919,6 +1931,18 @@ pages". § 17 holds the engineering rules that meet these budgets.
   regression over 10 % against the main line; Opus reviews check new code for extra store reads, re-renders,
   unbounded lists and JS-thread animation. Numbers go in `docs/COMPLETION_MATRIX.md`. *Why:* "keep performance in
   mind, it should be lightning fast, no delays in rendering anywhere".
+- **Fast everywhere, proven per screen on the slowest target** (owner 189): every screen and every
+  interaction meets the budgets above, not only the ones someone reported: opening and closing each screen and
+  pushed page (Person, Group, Expense, Settle, Settings and each section, Profile, Friends and invites, Search &
+  Ask), every tab and revisit, every sheet, popup, menu and picker, the drawer, scrolling every list, typing in
+  every field and search, saving, deleting, filtering, switching demo mode, and the first load. The proof is a
+  perf sweep spec that walks every route in the link table and every interaction, measured in WebKit (the iPhone
+  simulator's Safari or Playwright WebKit) and in Chrome at 6x CPU throttle, on the large demo set and the
+  10,000-expense fixture, on a quiet machine (load under 10, or the numbers are not used): tap to visible
+  feedback < 100 ms, tap to content < 200 ms at 6x, no long task > 50 ms, no exit animation on rows of a screen
+  that is leaving. A miss is fixed at its cause before the wave closes; the per-screen table lives in
+  `docs/COMPLETION_MATRIX.md`, and a new screen or interaction joins the sweep in the same change. *Why:* "did it
+  fix the performance everywhere, not just the taps"; "it should be everywhere".
 - **Animation on every surface, UI thread only** (Reanimated worklets, no JS loops): native stack push/pop and
   swipe-back; sheets and popups; list rows enter/exit/reorder (`LinearTransition` / `FadeInDown`); press
   feedback (`PressableScale`) on every tappable row, card and button; tab switches (§ 26.9); expanding search;
@@ -2858,6 +2882,8 @@ Every owner decision, in the order it was made (all 2026-10-26). "Replaced" name
 | 185 | "also animate the splash screen icon, so that i see that its loading"; "like zoomin zoomout a little, so i know content is being downloaded" | Launch mark zooms 1 -> 1.08 -> 1 while loading, web from first paint (inline CSS), native via a matching JS launch screen; opacity pulse under reduced motion | § 26.11 | Static splash mark |
 | 186 | "when logout, it should remove all data from db" | Log out always erases the account's local DB, demo DB, account prefs, drafts, session and caches; device language/theme stay; prompt warns with the unsynced count first; no keep option | § 26.15 | Prompt offered "Keep this device's data" / "Erase this device's data" |
 | 187 | Assistant ruling after the F-1210 review | After one reopen only a group admin accepts or rejects (outside a group the adder or payer still answers and a second reopen is refused); one-tap "Accept and apply" only when the fix keeps the record's split mode (an amount fix on an itemised or exact split and a share fix on anything but an exact split are "Edit it" only, with the reason shown), and the panel states what the edit will change | § 26.20 | Admin-only closing after the first reopen without saying who answers it; one-tap fixes that converted a split to exact amounts |
+| 188 | "on desktop there is a lot of space we dont need ... there in sidebar" | Desktop sidebar fits its content (~200 px), footer links directly under Add expense, nothing pinned to the bottom | § 26.5 | Bluesky standard width; footer pinned at the bottom of the window |
+| 189 | "did it fix the performace everywhere, not just the taps"; "it should be everywhere" | Every screen and interaction meets the speed budgets, proven by a perf sweep over every route and interaction in WebKit and Chrome 6x on a quiet machine; misses fixed before the wave closes | § 26.10 | Budgets checked on a few flows and on reported problems |
 
 New decisions follow § 0 rule 9: rewrite the rule in its topic so only the current truth remains, then add a
 row here.
