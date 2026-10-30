@@ -90,7 +90,7 @@ for (const [name, viewport] of [['390', PHONE], ['1440', DESKTOP]] as const) {
       await openActivity(page)
       await expect(screen(page).getByTestId('activity-filters-dot')).toHaveCount(0)
       // The demo history holds every type but disputes (those arrive with the disputes feature); older pages are read when a type is not in the newest one.
-      const families: Record<string, string[]> = {expenses: ['expense'], payments: ['repayment', 'writeoff'], comments: ['comment'], groups: ['group'], friends: ['person', 'friendRequest'], reminders: ['reminder']}
+      const families: Record<string, string[]> = {expenses: ['expense'], payments: ['repayment', 'writeoff'], comments: ['comment'], groups: ['group'], friends: ['person', 'friendRequest'], reminders: ['reminder'], disputes: ['dispute']}
       for (const [type, kinds] of Object.entries(families)) {
         await apply(page, [type])
         await lookBackUntilListed(page)
@@ -123,18 +123,24 @@ for (const [name, viewport] of [['390', PHONE], ['1440', DESKTOP]] as const) {
       await lookBackUntilListed(page)
       await expect.poll(() => kindsShown(page)).toEqual(['group', 'reminder'])
 
-      // Disputes has nothing yet in this build: the empty state follows the filter within half a second (a bounded search, not the whole history), animated, with the way out.
+      // A type with nothing in the newest ~10 pages (Disputes scoped to a group that has none): the empty state follows the filter within half a second (a bounded search, not the whole history), animated, with the way out.
+      const quiet = await page.evaluate(async () => {
+        const s = (window as unknown as {splito: {list(t: string): Promise<Array<{id: string; data: {groupId?: string | null}}>>}}).splito
+        const withDisputes = new Set((await s.list('dispute')).map(d => d.data.groupId))
+        return (await s.list('group')).find(g => !withDisputes.has(g.id))!.id
+      })
       const t0 = Date.now()
-      await apply(page, ['disputes'])
+      await page.evaluate(id => (window as unknown as Hooks).__splitoTest.openLink(`/activity?tab=all&type=disputes&group=${id}`), quiet)
       await expect(screen(page).getByTestId('activity-empty')).toContainText(/Nothing matches/, {timeout: 2000})
-      expect(Date.now() - t0).toBeLessThan(500 + 700 /* the sheet's own close */)
+      expect(Date.now() - t0).toBeLessThan(500)
       // ... and "Look further back" reads on until the history ends.
-      for (let i = 0; i < 30 && (await screen(page).getByTestId('activity-look-further').isVisible()); i++) await screen(page).getByTestId('activity-look-further').click()
+      for (let i = 0; i < 40 && (await screen(page).getByTestId('activity-look-further').isVisible()); i++) await screen(page).getByTestId('activity-look-further').click()
       await expect(screen(page).getByTestId('activity-empty')).toContainText('Nothing matches these filters yet.')
       await expect(screen(page).getByTestId('activity-empty').locator('[data-illustration], svg, canvas').first()).toBeVisible()
+      // Show every type clears the type and keeps the group; Show everything then clears the group.
       await screen(page).getByTestId('activity-clear-filters').click()
       await expect(screen(page).getByTestId('activity-filters-dot')).toHaveCount(0)
-      await expect(rows(page).first()).toBeVisible()
+      await expect(screen(page).getByTestId('activity-group-chip')).toBeVisible()
       await page.goto('/activity')
       await expect(screen(page).getByTestId('activity-filters-dot')).toHaveCount(0)
     })

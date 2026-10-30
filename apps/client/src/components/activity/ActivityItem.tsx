@@ -43,6 +43,11 @@ import {
   ArchivedBadge,
   CommentBadge,
   DeletedBadge,
+  DisputeAcceptedBadge,
+  DisputeHoldBadge,
+  DisputeRaisedBadge,
+  DisputeRejectedBadge,
+  DisputeWithdrawnBadge,
   EditedBadge,
   FriendAcceptedBadge,
   FriendAddedBadge,
@@ -159,8 +164,9 @@ export function ActivityItem({
           ? snapshot.people.get(event.entityId)
           : event.entityType === 'friendRequest'
             ? snapshot.requests.get(event.entityId)
-            : event.entityType === 'comment' && event.data.targetType === 'expense'
-              ? snapshot.expenses.get(event.data.targetId)
+            : event.entityType === 'comment' || event.entityType === 'dispute'
+              ? /* A comment or a dispute is about a record: that record's sync state tones the row. */
+                (event.data.targetType === 'expense' ? snapshot.expenses : snapshot.transfers).get(event.data.targetId)
               : undefined
   const tone = useSyncTone(subject?.syncStatus)
   const menuControl = Menu.useMenuControl()
@@ -1021,6 +1027,76 @@ function useDescribe(
           c.targetType === 'repayment'
             ? navigation.push('Repayment', {repaymentId: c.targetId})
             : navigation.push('Expense', {expenseId: c.targetId}),
+      }
+    }
+    case 'dispute': {
+      const d = event.data
+      const raiser = <Strong>{shownName(d.raisedBy)}</Strong>
+      const target = d.targetType === 'expense' ? snapshot.expenses.get(d.targetId) : snapshot.transfers.get(d.targetId)
+      const td = target?.data as Partial<{title: string; total: bigint; amount: bigint; currency: string; groupId: string | null}> | undefined
+      const subject = <Strong>{d.targetType === 'expense' ? (td?.title ?? l`an expense`) : d.targetType === 'repayment' ? l`a payment` : l`a write-off`}</Strong>
+      const amount = td?.currency ? money((d.targetType === 'expense' ? td.total : td.amount) ?? ZERO, td.currency) : null
+      const kind = event.kind
+      const reasons: Record<string, string> = {
+        not_part: l`Not part of this`,
+        left_out: l`I was left out`,
+        wrong_amount: l`Wrong amount`,
+        wrong_share: l`Wrong split or my share`,
+        wrong_payer: l`Wrong payer`,
+        duplicate: l`Duplicate`,
+        wrong_currency_date: l`Wrong currency or date`,
+        not_received: l`Payment not received`,
+        other: l`Other`,
+        hold: l`On hold`,
+      }
+      return {
+        avatarName: nameOf(kind === 'dispute.accepted' || kind === 'dispute.rejected' || kind === 'dispute.released' ? event.actor : d.raisedBy),
+        icon:
+          kind === 'dispute.held' || kind === 'dispute.released'
+            ? DisputeHoldBadge
+            : kind === 'dispute.accepted'
+              ? DisputeAcceptedBadge
+              : kind === 'dispute.rejected'
+                ? DisputeRejectedBadge
+                : kind === 'dispute.withdrawn'
+                  ? DisputeWithdrawnBadge
+                  : DisputeRaisedBadge,
+        tone: kind === 'dispute.accepted' ? 'primary' : kind === 'dispute.rejected' ? 'negative' : 'neutral',
+        headline: {
+          'dispute.raised': <Trans>{raiser} disputed {subject}</Trans>,
+          'dispute.held': <Trans>{raiser} put {subject} on hold</Trans>,
+          'dispute.accepted': <Trans>{actor} accepted {raiser}’s dispute on {subject}</Trans>,
+          'dispute.rejected': <Trans>{actor} rejected {raiser}’s dispute on {subject}</Trans>,
+          'dispute.withdrawn': <Trans>{raiser} withdrew a dispute on {subject}</Trans>,
+          'dispute.reopened': <Trans>{raiser} reopened a dispute on {subject}</Trans>,
+          'dispute.released': <Trans>{actor} released the hold on {subject}</Trans>,
+        }[kind],
+        detail: (
+          <Detail>
+            {d.kind === 'hold' ? d.note : reasons[d.reason]}
+            {amount ? (
+              <>
+                <Dot />
+                <Text style={[a.text_sm, t.atoms.text_contrast_medium, {fontVariant: ['tabular-nums']}]}>{amount}</Text>
+              </>
+            ) : null}
+            {groupName(d.groupId) ? (
+              <>
+                <Dot />
+                {groupName(d.groupId)}
+              </>
+            ) : null}
+          </Detail>
+        ),
+        open: () =>
+          d.targetType === 'expense'
+            ? navigation.push('Expense', {expenseId: d.targetId})
+            : d.targetType === 'repayment'
+              ? navigation.push('Repayment', {repaymentId: d.targetId})
+              : // A write-off has no page of its own: its group (or the list) holds it.
+                d.groupId
+                ? navigation.push('Group', {groupId: d.groupId})
+                : navigation.navigate('People'),
       }
     }
     case 'reminder': {

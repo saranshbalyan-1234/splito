@@ -1,5 +1,6 @@
 import {
   balanceRowsFromNets,
+  capitalizeName,
   type Contact,
   contactKey,
   type CurrencyBalance,
@@ -9,7 +10,7 @@ import {
 } from '@splito/domain'
 
 import {formatContact, isContact} from './contact'
-import {cleanName, type Group, type Person, requireLive, write} from './mutations'
+import {cleanPersonName, type Group, type Person, requireLive, write} from './mutations'
 import {type Store, type Tx} from './store'
 import {type Entity, type MutationCtx} from './types'
 
@@ -115,7 +116,7 @@ export async function sendFriendRequest(
   if (outgoingRequests(requests, ctx.now()).some(r => r.data.contact && contactKey(r.data.contact) === key)) throw new DomainError('ALREADY_REQUESTED')
   const data: FriendRequest = {
     direction: 'outgoing',
-    name: input.name.trim(),
+    name: capitalizeName(input.name),
     contact,
     status: 'pending',
     reach: input.reach,
@@ -153,7 +154,7 @@ export async function receiveFriendRequest(
 ): Promise<Entity<FriendRequest>> {
   const data: FriendRequest = {
     direction: 'incoming',
-    name: cleanName(input.name),
+    name: cleanPersonName(input.name),
     contact: input.contact,
     status: 'pending',
     reach: null,
@@ -183,7 +184,7 @@ async function linkPerson(tx: Tx, ctx: MutationCtx, people: Entity<Person>[], ac
     const current = await requireLive<Person>(tx, 'person', priv.id)
     return write(tx, ctx, 'person', priv.id, {...current.data, accountId: account.accountId}, false, 'person.link', {remote})
   }
-  const data: Person = {name: cleanName(account.name), isMe: false, accountId: account.accountId, contact: account.contact}
+  const data: Person = {name: cleanPersonName(account.name), isMe: false, accountId: account.accountId, contact: account.contact}
   return write(tx, ctx, 'person', ctx.newId(), data, false, 'person.create', {remote})
 }
 

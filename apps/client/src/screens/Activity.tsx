@@ -128,6 +128,7 @@ export function ActivityScreen() {
   const emptyMessage = () => {
     if (hiddenCount > 0) return l`You've hidden everything here. New expenses, payments and group changes will show up as they happen.`
     if (canLookFurther && (isNarrowedView || bodyTab !== 'all')) return l`Nothing matches in the latest changes.`
+    if (bodyTypes.length === 1 && bodyTypes[0] === 'disputes' && !group) return l`No disputes or holds. When someone questions an expense or puts it on hold, it shows up here.`
     if (isNarrowedView) return l`Nothing matches these filters yet.`
     if (bodyTab === 'me') return l`Nothing from you yet. What you add or change shows up here.`
     if (bodyTab === 'others') return l`Nothing from other people yet. When someone else adds or changes something you share, it shows up here.`

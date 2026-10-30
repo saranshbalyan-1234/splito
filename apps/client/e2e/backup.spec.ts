@@ -119,8 +119,8 @@ test('Person > Export statement downloads a CSV with exact amounts per currency 
   expect(lines.some(l => l.includes(',INR,') && l.includes('500.00'))).toBe(true)
   expect(lines.some(l => l.includes(',EUR,') && l.includes('-5.00'))).toBe(true)
   // The closing balance of each currency equals the figure on the friend's page.
-  expect(csv).toMatch(/Closing balance,[^\r\n]*,INR,[^\r\n]*,250\.00\r\n/)
-  expect(csv).toMatch(/Closing balance,[^\r\n]*,EUR,[^\r\n]*,-5\.00\r\n/)
+  expect(csv).toMatch(/Closing balance,[^\r\n]*,INR,[^\r\n]*,250\.00,,\r\n/)
+  expect(csv).toMatch(/Closing balance,[^\r\n]*,EUR,[^\r\n]*,-5\.00,,\r\n/)
 })
 
 test('the PDF statement opens a print-ready page with a table per currency', async ({page}) => {

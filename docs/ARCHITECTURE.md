@@ -574,7 +574,7 @@ with every hot screen reading by index, never by full scan (§ 17 budgets, F-109
 
 - **One store / table per entity type** (IndexedDB object stores and SQLite tables share names and columns):
   `people`, `groups`, `group_members`, `expenses`, `expense_parties`, `repayments`, `writeoffs`, `comments`,
-  `friend_requests`, `invite_links`, `feedback`, `preferences`, plus infrastructure `history`, `outbox`,
+  `friend_requests`, `invite_links`, `feedback`, `preferences`, `reminders`, `disputes`, plus infrastructure `history`, `outbox`,
   `meta`. A new entity type gets its own store and a migration; nothing is "clubbed" into a shared store.
 - **Every row** carries `id` (UUID), `version`, `createdAt` / `updatedAt` (UTC ms), `deleted` (+ `deletedAt`,
   `purgedAt`), and for money rows `currency` + amounts as bigint minor units encoded with the codec (§ 9.3);
@@ -606,13 +606,19 @@ with every hot screen reading by index, never by full scan (§ 17 budgets, F-109
 - **Indexes for every query path** (name them `by<Field>`): people `byName`, `byUpdatedAt`; groups
   `byUpdatedAt`, `byArchived`; group_members `byPerson`; expenses `byGroupDate` `[groupId, date]`, `byDate`,
   `byUpdatedAt`, `byDeleted`; expense_parties `byPersonDate` `[personId, date]`, `byGroupPerson`; repayments and
-  writeoffs `byGroup`, `byFrom`, `byTo`, `byDate`; comments `byTarget` `[targetType, targetId]`; friend_requests
+  writeoffs `byGroup`, `byFrom`, `byTo`, `byDate`; comments `byTarget` `[targetType, targetId]`; disputes `byTarget` `[targetType, targetId]`, `byTargetStatus` `[targetType, targetId, status]` (a record's open ones: the badge, the one-open-per-person rule, the projection) and `byStatus` (every open one: the Disputed filter); friend_requests
   `byStatus`; history `byEntity` `[type, id]` and `byChangedAt`; outbox `opId` (unique), `byStatus`.
 - **Materialised balance projection** `balances` (`[personId, groupId|'', currency]` -> net minor units),
   maintained in the SAME transaction as every money write (expense, repayment, write-off, delete, restore) by
   the sync mutations, so Home, People, Groups and the right column read balances in O(rows shown) instead of
   re-deriving from the whole ledger; a `rebuildProjections()` maintenance routine recomputes it from source rows
   and a test asserts projection == recomputation after random operation sequences.
+- **Disputed projections** `disputed_balances` (`[personId, groupId|'', currency]` -> the part of that net that sits on
+  records with an open dispute or hold, plus a count) and `disputed_pairs` (`[personId, otherId, groupId|'', currency]`
+  -> the same as debts), kept in the SAME transaction as `balances` (F-1210, § 26.20): a dispute opening or closing moves
+  its record's disputed part (an item dispute counts only that item's portion), and a disputed record that is edited or
+  deleted moves it with the record. They never change `balances`; `rebuildProjections()` rebuilds them and the property test
+  compares them with a recomputation after random sequences that raise, answer and delete under disputes.
 - **Reads page by cursor** (`[date, id]` or `[updatedAt, id]`) for every list; selectors never `getAll` a money
   store on a hot path (only maintenance, export and tests may).
   A loop that pages a money store from end to end is a full read and is banned the same way.
@@ -627,7 +633,7 @@ with every hot screen reading by index, never by full scan (§ 17 budgets, F-109
   resolve at query time, so a rename rewrites no terms.
 - **One transaction per mutation** spans the entity, its projections, history and outbox (atomic, § 9.3).
 - **Versioned migrations:** `meta.schemaVersion`; IndexedDB `onupgradeneeded` and SQLite `PRAGMA user_version`
-  run ordered, idempotent steps; v1 -> v2 copies rows from `entities` into the per-type stores, builds
+  run ordered, idempotent steps (v5: the `disputes`, `disputed_balances` and `disputed_pairs` stores; v4 -> v5 adds them empty); v1 -> v2 copies rows from `entities` into the per-type stores, builds
   `group_members`, `expense_parties` and `balances`, then drops `entities`. Each migration has a test that
   loads a v1 fixture (incl. the large demo set) and checks every row and balance survives exactly.
 - **The Store interface stays the boundary** (§ 1): screens and hooks never touch IndexedDB/SQLite directly;
@@ -1196,6 +1202,11 @@ Splito lessons (add newest last, dated, with PR):
   rules: a build guard matches strings that only the guarded thing contains (a test pins the near-miss), and every
   merge to `main` is followed by checking that the Render deploy succeeded (`render deploys list`), not only the
   GitHub workflow, before saying it is live.
+- 2026-10-30, Render: **auto-deploy was switched off by our own Blueprint.** `render.yaml` said
+  `autoDeployTrigger: 'off'` (deploys were meant to come from deploy hooks, whose secrets were never set), and a
+  Blueprint sync applied it to `splito-web`, so ten pushes after 5b60890 never deployed and nothing failed. Rule: the
+  Blueprint is the source of truth for service settings, so a setting the owner relies on (auto-deploy of `main`)
+  is written there; "no new deploy in `render deploys list` after a push" counts as a failed deploy.
 - 2026-10-30, owner on iPhone Safari: **the tap-speed fix passed in Chrome and still felt broken on the phone.**
   Chrome (desktop and touch emulation) measured every tab at 4-15 ms, but Home re-rendered synchronously on switch
   (about 50 ms on the Mac, several times that on a phone) and the page had no `touch-action: manipulation`, so iOS
@@ -1215,6 +1226,17 @@ Splito lessons (add newest last, dated, with PR):
   (`back: '1'`) that stays out of the address, not by stack depth (a deep link puts People under every page).
 
 ---
+
+- 2026-10-30, F-1210 (disputes): **adding a store has a checklist, and each step has failed once.** (1) `STORES`, `ENTITY_STORE`, the `EXTRA` row builder and `EntityType`; (2) IndexedDB `onupgradeneeded` creates the new stores on every old-version path (v2, v3 and v4 each need them, before the rebuild reads the entity stores); (3) SQLite's step uses `CREATE ... IF NOT EXISTS` and a lost `user_version` is read from `meta.schemaVersion`; (4) the migration tests' downgrade helpers drop the new tables, and every fixture built from the large demo plan must **exclude the new type** (an older file cannot hold it; keep one fixture with it for the v1 upgrade); (5) the backup test's writer table needs the new type (`satisfies Record<EntityType, ...>` fails the typecheck otherwise).
+- 2026-10-30, F-1210: **a projection that depends on rows of another store is moved from both sides.** The disputed sums change when a dispute opens or closes AND when the record they name is edited or deleted (`projectEntity` handles both; the record's own write takes its disputed part off first, so the delete-then-close order leaves nothing behind). The property test sprinkles disputes over the existing random sequences on a **separate random stream and id minter**, so every existing seed still builds the same ledger; and a twin run without disputes proves balances, pairs and aggregates are identical. A write that mints ids (closing disputes as Gone mints an outbox op id) still shifts later ids: compare groups by creation order, not by id.
+- 2026-10-30, F-1210: **a host-mounted sheet needs a fresh mount and a fresh dialog control per request.** On a phone-width web page (and native) a closed sheet keeps its form state (an old note, `isSaving`), and a control that is still closing ignores `open()`: the second Reject/Reopen opened late or never, with a disabled Save. `DisputeHost` mounts a keyed sheet that owns its control and opens it as it mounts. (Remind's host reuses one sheet; its forms are stateless enough to get away with it.)
+- 2026-10-30, F-1210: **arithmetic on money belongs in `packages/domain`, even a `min` or a sum for a label** (the architecture rules `moneyArithmetic` and `unlikeCurrencySum` fail a new file in the client): the "of which disputed" capping and the Settle exclusion are `domain/disputed.ts` with tests. Raw `store.method()` calls are banned outside `data/` the same way: a `state/` hook calls a `packages/sync` function (`loadDisputeEvents`, `listDisputedBalances`), never `store.historyMany`.
+- 2026-10-30, F-1210: **components cannot import features or data** (`layerDirection`). A piece used by a component (the payment sheet needs the dispute panel) lives in `components/<area>/` and reads through `state/`; only the hosts and sheets that need `data/` stay in `features/`. Count a new `useDialogControl` too: a sheet without an address is listed in `table.test.ts` `NOT_ADDRESSABLE` with its reason.
+- 2026-10-30, F-1210: **Lingui turns a call expression in a message into `{0}`**: assign it to a named variable first (`const ago = getTimeAgo(...)`), so the Hindi translator sees `{ago}`. Do not build a sentence by gluing `": " + note` onto a translated one; show the note as its own line.
+- 2026-10-30, F-1210 e2e: **never `goto` right after a click that writes.** The write is a transaction still in flight; the reload drops it and the next assertion fails (it looked like a missing feature). Wait for the sheet to close or the toast first. A search drawer input also needs `toBeEditable()` before `fill` under load.
+- 2026-10-30, F-1210 review: **a derived adjustment must stay between zero and the thing it adjusts.** The first "leave disputed out of the plan" subtracted the disputed part from every net, which flipped signs on a settled or part-repaid group and asked someone to pay twice for a disputed "payment not received". `withoutDisputed` now shrinks each net toward zero only and rebalances with `allocate`, with a property test (sums to zero, never flips, never grows). Likewise a stored pointer into a list (an item's position) must be the item's own id: reorders and edits moved the dispute onto the wrong item.
+- 2026-10-30, F-1210 review: **an "apply the suggestion" action must never change the shape of the record to fit it.** Converting an itemised or percent split to exact amounts to apply an amount fix lost the items. One tap applies a fix only when the split mode survives it (`fixApplies`); otherwise it is an edit by hand, and the panel says why.
+
 
 ## 24. Checklists
 
@@ -1599,6 +1621,13 @@ labelled sidebar); **wide** = web 1300 px and up (Bluesky `gtTablet`, right colu
   target) does it, so no screen wires its own; where the whole row already opens something else (an expense row),
   the avatar and name are their own nested targets that open the person. Shell first (owner 152), no redraw (166).
   *Why:* "clicking on avatar or name anywhere on the website should open that friend's details".
+- **Person names are capitalised word by word** (owner 181): every word of a person's full name starts with a
+  capital letter ("saransh balyan" -> "Saransh Balyan"); the rest of each word stays as typed, so "McDonald" and
+  "D'Souza" survive. Saved that way on every path (add friend, own profile name, contacts, invites, join, demo
+  seed, sign-up) through one `capitalizeName` in `packages/domain`, and shown that way through the same function,
+  so names already saved lower-case read right too. Scripts without letter case (Devanagari) are unchanged.
+  Group names, expense titles and emails are not names and stay as typed.
+  *Why:* "name should be capitalized first letter in complete name".
 - **Activity's route is `/activity`; `/notifications` redirects to it.**
 - **A main screen reached from a link shows Back** (owner 179): when Home, People, Groups, Analytics or Activity
   is opened from something other than its own tab or sidebar item (a "See all", an Overview card, a search or Ask
@@ -1619,6 +1648,19 @@ labelled sidebar); **wide** = web 1300 px and up (Bluesky `gtTablet`, right colu
   `/activity?tab=all&type=transactions[&group=<id>]` (the tab is a query there because `Link` matches bare route
   patterns; the address bar prints `/activity/all?type=transactions`), All so a saved Me never narrows it. *Why:* "even if you go to a main screen from
   some links, it should show a back button, in case you don't go directly from tabs".
+- **Every page has a fixed parent, so Back always goes somewhere specific** (owner 184): with history, Back
+  returns to the page you came from; with none (a refresh, a pasted address, a notification, a new tab), Back
+  goes to the page's parent and the parents are stacked under it, so a second Back keeps climbing. The parents:
+  a Settings section (Appearance, Language, Notifications ...) -> Settings; a person -> People; a group ->
+  Groups; an expense or payment -> its group, else the friend it is with, else Home; Edit -> the thing edited;
+  Settle -> its group or friend; Profile -> Settings; Friends and invites -> People; Analytics/Activity
+  sub-addresses -> that tab. Back never disappears from a pushed page, refreshed or not. A main tab screen opened
+  from a link (owner 179) keeps its Back after a refresh: the address carries its origin as a short `from`
+  (`/activity/all?type=transactions&from=home`), and Back returns there; tapping the tab itself drops it. One
+  table (`backFallback` in `navigation/goBack.ts`) holds every parent; an architecture test fails on a route
+  without one. Supersedes the assistant ruling "a refreshed pushed copy becomes the plain tab". *Why:* "there
+  should be some specific set of back for sure, for example if I open Appearance in Settings, the flow is from
+  Settings to Appearance".
 - **Pushed pages** (Person, Group, Settle, Expense, Profile, Settings and its sections, Add friend, Create
   group) show Back in the header; top-level pages (People, Groups, Analytics, Activity) show the avatar. This
   one distinction also decides the FAB (§ 26.6).
@@ -1922,6 +1964,13 @@ pages". § 17 holds the engineering rules that meet these budgets.
   (light, Dim, Black, sidebar, header): changing the accent recolours the logo everywhere. Static assets
   (favicon, app icons, native splash) keep the SVG's default blue (`#1185fe`). *Why:* "changing accent color
   should change logo color as well" (replaces "keep it blue always").
+- **The splash mark breathes while the app loads** (owner 185): the logo on the launch screen zooms gently in and
+  out (scale 1 -> 1.08 -> 1, about 1.2 s a cycle, ease-in-out) for as long as content is loading, so the person
+  sees it working: on web from the very first paint (CSS keyframes inline in `index.html`, before any script
+  arrives), on iOS and Android by a JS launch screen that matches the native splash pixel for pixel and takes over
+  the moment JS runs (Reanimated, UI thread). It stops and fades into the first screen when loading ends; reduced
+  motion swaps the zoom for a slow opacity pulse. *Why:* "animate the splash screen icon, so that I see that it's
+  loading; like zoom in zoom out a little, so I know content is being downloaded".
 - **Splash in dark mode uses the Dim background, never pure black** (native splash `dark.backgroundColor` and
   the web launch screen take ALF Dim's background token, logo centred); light mode keeps the light background.
   *Why:* "on splash show the dim instead of black".
@@ -2047,6 +2096,13 @@ expands once I click". *Where:* `screens/People`, `screens/Groups`, `screens/Gro
   Payment rules are reached from the header overflow (§ 26.4). testIDs `friends-filters`, `groups-balances`,
   `group-tab-balances`.
 
+- **A trip asks where it is** (owner 182): New group and Edit group show "Where? (optional)" for the Trip type
+  only, beside the trip dates: one plain text field ("Goa", "Lisbon & Sintra"), offline, no map or place search
+  (F-313 adds those online later). It is saved on the group (`location`), shown with the type and dates ("Trip ·
+  Goa · 12-18 Mar") on the group row and the group header, searchable as a place (§ 26.19 "places"), and carried
+  into the CSV. Changing the type away from Trip keeps the value hidden, not erased. Every demo trip has one.
+  *Why:* "for trip ask for location as well".
+
 ### 26.13 Expenses and itemize
 
 *Why:* "an expense can be one expense or with multiple expense, like dinner $100, but can be divided into
@@ -2134,12 +2190,21 @@ dishes etc and each item can be assigned to each in split"; "in itemize don't sh
   "See all" means), `?type=comments,groups`, `?type=all` (clears a saved choice); `/activity/filters` is the sheet.
   `?group=<id>` scopes the list to one group (changes of that group, a comment by its expense's group) and shows a
   chip that clears it. The empty state follows the tab and the filter (§ 7: animated, with "Show every type" when
-  narrowed); while a narrowed list holds fewer than a screenful and older history exists, older pages are read
-  (a same-size skeleton shows meanwhile, never "nothing matches"). Comments are Activity events (`comment.added`,
+  narrowed; "Show every type" clears only the type and keeps a group, "Show everything" clears a group); a list
+  narrowed by a type or a group that holds fewer than a screenful searches back **at most about ten pages (1,000
+  changes) by itself**, five pages a step, under a same-size skeleton and never "nothing matches"; past that the
+  empty state says "Nothing matches in the latest changes" with **"Look further back"** (five more pages a tap), and
+  scrolling (`onEndReached`) keeps reading. A tab alone (Me, Others) never searches by itself. **Disputes get no tab
+  of their own** (ruling 2026-10-31): the tabs stay All / Me / Others, Disputes is a Type, and its empty text is the
+  disputes copy ("No disputes or holds..."). The window grows **incrementally**: `activityTracker` keeps its pool,
+  cursor and a sorted event list when `want()` grows (`loadMore` reloads with an empty notice, never `'unknown'`) and
+  rebuilds only the entities a read names; 10,000 expenses walk to a 10,000-event window in 0.35 s (SQLite) / 1.2 s
+  (IndexedDB), a new expense then costs 8 / 13 ms (`activityScale.test`; it was 23.6 s and 72 ms per expense with
+  a rebuild per page). The nav badge counts the newest page only (everything unread is newer than the read mark),
+  so it never depends on the tab, filter or window. Comments are Activity events (`comment.added`,
   written once; editing or deleting one is housekeeping, and the row never repeats the text).
   *Assistant rulings, 2026-10-30 (not yet seen by the owner):* my own changes cannot be unread; "Mark all read" on a
-  narrowed list marks only what is listed; a pushed copy that is refreshed becomes the plain tab (`back` is not
-  in the address); the Group page has no Recent transactions section yet, so its "See all" is only the helper
+  narrowed list marks only the unread rows it lists ("Marked these as read"); the Group page has no Recent transactions section yet, so its "See all" is only the helper
   `seeAllTransactionsPath(groupId)`, ready for when the section lands. *Reads/writes:* the Activity projection
   (now also refreshed by comments and reminders), prefs `activity.tab`, `activity.type`. *Cost:* one pref write
   per tab tap or Apply; the feed filters in `buildRows` (2.8 ms for 1,000 events, bench test); older pages are
@@ -2183,6 +2248,12 @@ built yet.
 
 - **Settings starts with an "Account" section** (copied from Bluesky's Settings account section and its
   Login/Signup screens' layout, `src/screens/Login`, `src/screens/Settings`).
+- **The review site is a "preview" build** (assistant's ruling 2026-10-30, after the F-250 review; the owner
+  reviews the front end on https://splito-web.onrender.com before any backend, owners 164/165): Render builds with
+  `EXPO_PUBLIC_ENV=preview`, which allows the labelled dev account ("Preview build: local dev account, data stays in
+  this browser, don't use a real password", `noindex`), never on a stage or prod tier; a real production build is
+  refused until the auth HTTP client exists. The intro slides keep their animated (Lottie) art (owners 123, 172); the
+  Pager is replaced by Bluesky's `ScreenTransition` plus a swipe, because `react-native-pager-view` is not shipped.
 - **Signed out, the app is the logged-out flow** (owners 125, 138-140): Bluesky's logged-out look, copied screen
   for screen where it still applies (`view/com/auth/LoggedOut.tsx`, `SplashScreen(.web).tsx` with the logo mark and
   tagline, `screens/Login/FormContainer` and `LoginForm` layout, Bluesky's step indicator and `BackNextButtons`),
@@ -2193,9 +2264,15 @@ built yet.
   "Sign-in arrives with sync" and only the dev/e2e "Continue with a dev account" works; no fake success, no fake
   account. *Why:* "there is signin page already there in bluesky, use that"; "basically no signup needed".
 - **Signed in (only once the backend exists):** an account row (avatar, name, email/phone, sync status) and
-  a destructive "Log out" row opening a prompt "Log out?" that warns when the outbox holds unsynced changes
-  ("N changes haven't synced yet") and offers "Keep this device's data" / "Erase this device's data". Logout
-  never silently deletes unsynced outbox rows (§ 11).
+  a destructive "Log out" row opening a prompt "Log out?". **Log out erases everything this account left on the
+  device** (owner 186): its local database (every store, the outbox, history, attachments cache), its demo
+  database, its account-scoped preferences, drafts, the session and any cached copies (service worker data
+  caches, search index); device-level choices (language, theme) stay so the logged-out flow still speaks the
+  person's language. There is no "keep" option. The prompt says what will happen ("This removes all your Splito
+  data from this device") and, when the outbox holds changes the server has not acknowledged, says so first with
+  the count ("N changes haven't synced yet and will be lost"), so nothing unsynced is deleted silently (§ 11).
+  The erase finishes before the logged-out flow shows; a failure is reported and retried, never left half-done.
+  *Why:* "when logout, it should remove all data from db".
 - **"Sign in" / "Log out" also appear in the drawer footer** (§ 26.7).
 - **Auth state comes from one `useSession()`** (Bluesky pattern, `src/state/session`), signed out until the
   backend lands.
@@ -2261,8 +2338,8 @@ built yet.
     app opens and works offline with the account's local database (one database per account, so two accounts on
     one device never mix), and only an API 401 ends the session (§ 11). Sign-in itself needs a connection, and
     says so offline.
-  - **Log out** returns to the logged-out flow and closes that account's database; the prompt of § 26.15 (keep
-    or erase this device's data, unsynced warning) still applies.
+  - **Log out** returns to the logged-out flow and closes that account's database; it erases all of that
+    account's data on the device (owner 186, § 26.15; unsynced warning first).
   - **Data already on a device from before this rule** is offered once after the first sign-in: "Move this
     device's data into your account" (F-2104), never merged silently.
   - **Until the auth API exists** (F-2101/F-2102, built after the whole front end, owner 164): dev and e2e builds offer
@@ -2466,10 +2543,15 @@ add anyway (only for you)"; "also i should be able to select from contacts". *Wh
     refund", "need the receipt") pauses a record that is not wrong yet; any participant may release it in one
     tap. Disputes and holds share the badge, the sub-total and the settle rule below.
   - **States:** Open, then exactly one of Accepted (the fix was applied: one tap applies the proposed fix as a
-    normal edit with history, or the resolver edits by hand), Rejected (reason required), Withdrawn (by the
+    normal edit with history, or the resolver edits by hand; **one tap only when the fix keeps the record's split mode:** an
+    amount fix scales an equal, percent, shares or adjusted split, a share fix needs an exact split, a payer fix never touches
+    the split, a duplicate or an unreceived payment is deleted; an amount fix on an itemised or exact split, or a share fix on
+    anything but an exact split, is not offered as one tap, only "Edit it", with a line saying why, and where one tap is offered
+    the panel says what the edit will change), Rejected (reason required), Withdrawn (by the
     person who raised it) or Gone (the record was deleted). After a rejection the raiser may reopen once with a
-    new note; after that only a group admin can close it. Editing a disputed record asks the editor "Does this
-    resolve <name>'s dispute?". **Who resolves:** the person who added the record, or its payer, or a group
+    new note; after that only a group admin answers it (accepts, rejects or reopens it): the adder and payer already said
+    no once. A record outside a group has no admin, so its adder or payer still answers a reopened dispute and a second
+    reopen is refused. Editing a disputed record asks the editor "Does this resolve <name>'s dispute?". **Who resolves:** the person who added the record, or its payer, or a group
     admin (also when the adder has left). Nobody resolves their own dispute except by withdrawing.
   - **Money: a disputed or held record still counts; it does not wait.** Balances, totals, the overview, charts
     and exports keep counting it as recorded, because the record stands until someone changes it, and a dispute
@@ -2479,6 +2561,12 @@ add anyway (only for you)"; "also i should be able to select from contacts". *Wh
     colour alone), and **Settle up leaves disputed and held amounts out of the plan by default**, says so
     ("₹400 disputed, not in this plan") and offers "Include disputed" (remembered per group,
     `group:settleIncludeDisputed`, default off), so nobody pays or chases money that is being questioned.
+    What "left out" means: per person and currency the net only shrinks toward zero by their disputed part, never flips or grows
+    (a settled group stays settled, a part-repaid balance loses at most what is still owed, a disputed "payment not received"
+    never asks anyone to pay twice), and the other side is scaled back so each currency still sums to zero; the amount stated is
+    what was actually removed. A friend's Settle up and Call it even do the same: the prefill and the write-off leave the disputed
+    part out unless "Include disputed" is on there. Item disputes name the item by its own id, so reordering a bill moves
+    nothing, and an edit that removes the item counts nothing for it and closes the dispute as Gone.
     Accepting a fix changes the balance through the edit; rejecting it changes nothing. A dispute on a record
     before a settle-up checkpoint (F-1205) shows as "Adjustment after settle-up" when accepted.
   - **Where it shows:** raising and resolving each post a system line into the record's comment thread (the
@@ -2496,6 +2584,41 @@ add anyway (only for you)"; "also i should be able to select from contacts". *Wh
     two-sided with sync (F-2208). Demo data carries every state (owner 109).
   *Why:* "add an option for disputes as well, think about it properly"; "should we calculate disputed expense
   or wait until they are resolved".
+
+  - **[Built] (F-1210, 2026-10-30)** `packages/sync/src/disputes.ts` (mutations `dispute.raise|hold|release|accept|reject|withdraw|
+    reopen|gone`, each a versioned write with history and an outbox op; accept with `apply` runs the fix through `updateExpense`
+    in the same transaction; `updateExpenseResolving` saves an edit and accepts in one), `packages/domain/src/permissions.ts`
+    (`canDispute`, `canResolveDispute`: the raiser, or whoever recorded it for them, may only withdraw or reopen; the adder, a
+    payer or an admin answer; a second reopen is admin only) and `disputed.ts` (the "of which" and Settle arithmetic).
+    Client: `components/disputes/` (badge, "of which disputed" line, panel, thread line, row menu items), `features/disputes/`
+    (`DisputeHost` at the app root with the raise/hold sheet and the reject/reopen note sheet), `state/disputes.ts` (reads and
+    writes), `lib/disputes/bus.ts`. A hold's reason is free text (required); a dispute's `other` needs a note. A proposed fix
+    exists for amount, share, payer and duplicate; "Payment not received" applies by deleting the payment; accepting without a fix
+    only records that the resolver agreed. A deleted record closes its open disputes as Gone in the deleting transaction
+    (`write()` does it for every path, a group delete included).
+  - Where it shows: Expense and Payment pages (badge, panel, thread lines), history rows (badge; right-click, long-press or a
+    "..." button on wide screens opens Dispute / Put on hold), an itemised bill's items ("Dispute my portion"), Person and Group
+    balances ("of which ₹400 disputed", per currency, pointing the way the balance does and never above it), Settle up (disputed
+    and held amounts left out by default with the amount stated, "Include disputed" remembered per group in
+    `group:settleIncludeDisputed`, a new plan hash on every raise, accept and release), the edit prompt "Does this resolve
+    <name>'s dispute?", Activity (a Disputes type on Activity's Filters, and rows for raised, held, answered, reopened, released,
+    withdrawn; Gone is the delete's own row), "Disputed only" in the Group and Person filter sheets (the page's own choice,
+    not in the address yet), Search (`status: disputed`, alone or with words), and a Dispute column in the CSV statement.
+  - **Not built (why):** the For you card's "Needs your answer" and its 3-day nudge (the card, F-230, is not built and Home is
+    being redesigned: `useOpenDisputes()` in `state/disputes.ts` is the read it needs); "Adjustment after settle-up" (needs the
+    F-1205 checkpoints); "of which disputed" on the Home overview cards (another builder owns them: follow-up note in
+    BACKLOG F-1210); the Disputed filter in the address (F-241).
+  - *Reads/writes*: stores `disputes`, `disputed_balances`, `disputed_pairs`; reads `byTargetStatus` (a record), `byStatus` (all open,
+    one projection for every list and badge), `byTarget` (a record's history), `disputedBalances`, `disputedPairs`; outbox op types
+    `dispute.raise`, `dispute.hold`, `dispute.release`, `dispute.accept`, `dispute.reject`, `dispute.withdraw`, `dispute.reopen`,
+    `dispute.gone`; no server routes yet.
+  - *Cost*: raising is one transaction (the dispute, its history row, one outbox op, plus the disputed sums of one record: two index
+    reads and a few row writes). Every money write adds one indexed read of the record's open disputes. Lists read the open
+    disputes once, not per row. No timers, no dependencies; one bundled sheet host at the root.
+  - *Telemetry*: none added (no new metric name).
+  - *Checks*: bun `permissions.test.ts`, `disputed.test.ts`, `disputes.test.ts` (both engines), `ledgerProjection.property.test.ts`
+    ("never move a balance" with disputes riding on their own random stream), `migrate.test.ts` (v4 -> v5 on both engines and the
+    large set), `demoCoverage.test.ts` (13 lines); Playwright `disputes.spec.ts` at 390 and 1440. iOS and Android: not yet.
 
 - **Notifications: one switch for money, one for comments** (owner 131; built with F-251). Settings >
   Notifications has "Payments" (one switch for both new expenses that include me and payments to or from me;
@@ -2728,6 +2851,13 @@ Every owner decision, in the order it was made (all 2026-10-26). "Replaced" name
 | 177 | "instead of manage button in middle, make it as a settings icon on right in friends in home" | Friends header: gear icon on the right (after search and Filters) opens Friends and invites; no Manage text button | § 26.3 | "Manage" text button in the middle of the header |
 | 178 | "clicking on avatar or name anywhere on the website, should open that friend details" | One shared PersonLink: any avatar or name opens /people/:id (Me -> Profile), on every screen | § 26.3 | Only friend rows opened a person |
 | 179 | "even if you go to main screen from some links, it should show back button, in case you dont go directly from tabs" | A main screen opened from a link (See all, cards, results, notifications, deep links) is a pushed page with Back to the origin; the tab itself gives the plain tab screen | § 26.3 | Links switched tabs with no way back |
+| 180 | Assistant ruling after the F-250 review (owner asleep, "take your own decisions"; owners 164/165 review the front end on Render first) | Render builds a "preview" tier: labelled local dev account allowed, `noindex`, never on stage/prod tiers; real production refused until the auth HTTP client exists; intro keeps animated Lottie art | § 26.15 | Render built `production`, which refused the dev account and broke the deploy |
+| 181 | "name should be capitalized first letter in complete name" | Every word of a person's name starts with a capital, saved and shown through one `capitalizeName`; rest of each word as typed; groups, titles, emails unchanged | § 26.3 | Names shown exactly as typed |
+| 182 | "for trip ask for location as well" | Trip groups get an optional "Where?" text field in New/Edit group; shown with type and dates, searchable, in CSV, in demo trips | § 26.12 | Trips had name and dates only |
+| 184 | "there should be some specific set of back for sure, for example if i open appearance in settings, the flow is from settings to appearance" | Every page has a fixed parent; Back with no history goes to it (parents stacked); a main tab opened from a link keeps Back after refresh via `from` in the address | § 26.3 | Assistant ruling: a refreshed pushed copy became the plain tab; parents only for a few routes |
+| 185 | "also animate the splash screen icon, so that i see that its loading"; "like zoomin zoomout a little, so i know content is being downloaded" | Launch mark zooms 1 -> 1.08 -> 1 while loading, web from first paint (inline CSS), native via a matching JS launch screen; opacity pulse under reduced motion | § 26.11 | Static splash mark |
+| 186 | "when logout, it should remove all data from db" | Log out always erases the account's local DB, demo DB, account prefs, drafts, session and caches; device language/theme stay; prompt warns with the unsynced count first; no keep option | § 26.15 | Prompt offered "Keep this device's data" / "Erase this device's data" |
+| 187 | Assistant ruling after the F-1210 review | After one reopen only a group admin accepts or rejects (outside a group the adder or payer still answers and a second reopen is refused); one-tap "Accept and apply" only when the fix keeps the record's split mode (an amount fix on an itemised or exact split and a share fix on anything but an exact split are "Edit it" only, with the reason shown), and the panel states what the edit will change | § 26.20 | Admin-only closing after the first reopen without saying who answers it; one-tap fixes that converted a split to exact amounts |
 
 New decisions follow § 0 rule 9: rewrite the rule in its topic so only the current truth remains, then add a
 row here.

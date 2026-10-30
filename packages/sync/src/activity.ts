@@ -1,6 +1,7 @@
 import {type Comment} from './comments'
+import {type Dispute, disputeEventKind} from './disputes'
 import {type FriendRequest} from './friends'
-import {type Expense, type Group, isGroupInactive, type Person, type Tombstone, type Repayment, type WriteOff} from './mutations'
+import {displayPerson, type Expense, type Group, isGroupInactive, type Person, type Tombstone, type Repayment, type WriteOff} from './mutations'
 import {type Reminder} from './reminders'
 import {type Key} from './schema'
 import {type Store, type StoreChange, touches} from './store'
@@ -23,6 +24,16 @@ type Base = {
  */
 export type GroupKind = 'group.created' | 'group.edited' | 'group.inactive' | 'group.active' | 'group.deleted' | 'group.restored' | 'group.memberLeft'
 
+/** What happened to a dispute or hold (F-1210): raised, answered, reopened, released or withdrawn. A deleted record's Gone is the delete's event. */
+export type DisputeActivityKind =
+  | 'dispute.raised'
+  | 'dispute.held'
+  | 'dispute.accepted'
+  | 'dispute.rejected'
+  | 'dispute.withdrawn'
+  | 'dispute.reopened'
+  | 'dispute.released'
+
 /** One change from the audit history, as the Activity feed shows it. */
 export type ActivityEvent = Base &
   (
@@ -39,11 +50,12 @@ export type ActivityEvent = Base &
       }
     | {entityType: 'reminder'; kind: 'reminder.nudged' | 'reminder.set'; data: Reminder; prev?: Reminder}
     | {entityType: 'comment'; kind: 'comment.added'; data: Comment; prev?: Comment}
+    | {entityType: 'dispute'; kind: DisputeActivityKind; data: Dispute; prev?: Dispute}
   )
 
 export type ActivityKind = ActivityEvent['kind']
 
-const FEED_TYPES = ['person', 'group', 'expense', 'repayment', 'writeoff', 'friendRequest', 'reminder', 'comment'] as const satisfies EntityType[]
+const FEED_TYPES = ['person', 'group', 'expense', 'repayment', 'writeoff', 'friendRequest', 'reminder', 'comment', 'dispute'] as const satisfies EntityType[]
 
 /** What a history row means, given the version before it. Undefined rows stay out of the feed. */
 function kindOf(row: HistoryRow, prev: HistoryRow | undefined): ActivityKind | undefined {
@@ -88,6 +100,10 @@ function kindOf(row: HistoryRow, prev: HistoryRow | undefined): ActivityKind | u
     case 'comment':
       // A comment shows once, when it is written; editing or deleting it is housekeeping (its text is not repeated here).
       return !prev && !row.deleted ? 'comment.added' : undefined
+    case 'dispute': {
+      const kind = disputeEventKind(row, prev)
+      return kind && kind !== 'gone' ? (`dispute.${kind}` as DisputeActivityKind) : undefined
+    }
     default:
       // Preferences are settings, not activity.
       return undefined
@@ -277,37 +293,36 @@ export function activityTracker(store: Store, want: () => number = () => ACTIVIT
     const count = finalCount()
     const hasMore = count > size
     const list = sorted.slice(0, Math.min(count, size))
-    people ??= await store.getAll('person')
+    people ??= (await store.getAll<Person>('person')).map(displayPerson)
     groups ??= await store.getAll('group')
-    // Only what the events name: an expense or a request row shows its current state; a comment names what it is on.
-    const wanted = new Map<EntityType, string[]>()
-    const refOf = (e: ActivityEvent) =>
-      e.entityType === 'comment' ? {type: e.data.targetType, id: e.data.targetId} : e.entityType === 'expense' || e.entityType === 'friendRequest' ? {type: e.entityType, id: e.entityId} : undefined
-    for (const e of list) {
-      const ref = refOf(e)
-      if (!ref || known.has(keyOf(ref.type, ref.id))) continue
-      const ids = wanted.get(ref.type) ?? []
-      ids.push(ref.id)
-      wanted.set(ref.type, ids)
+    // Only what the events name: an expense or a request row shows its current state. A comment names what it is on, and
+    // a dispute row names the record it is about (an expense, payment or write-off), not the dispute itself.
+    const subject = (e: ActivityEvent): {type: EntityType; id: string} =>
+      e.entityType === 'dispute' || e.entityType === 'comment' ? {type: e.data.targetType, id: e.data.targetId} : {type: e.entityType, id: e.entityId}
+    const subjects = list.map(subject)
+    /* The records disputes are about, built once (a payment or write-off is fetched only as a dispute's or a comment's subject). */
+    const aboutOthers = new Set(list.flatMap(e => (e.entityType === 'dispute' || e.entityType === 'comment' ? [keyOf(e.data.targetType, e.data.targetId)] : [])))
+    const wanted = new Map<EntityType, Set<string>>()
+    for (const {type, id} of subjects) {
+      if (type !== 'expense' && type !== 'friendRequest' && !aboutOthers.has(keyOf(type, id))) continue
+      if (known.has(keyOf(type, id))) continue
+      const ids = wanted.get(type) ?? new Set<string>()
+      ids.add(id)
+      wanted.set(type, ids)
     }
-    for (const [type, ids] of wanted) for (const row of await store.getMany(type, ids)) known.set(keyOf(type, row.id), row)
-    const named = (type: EntityType) => {
-      const ids = new Set<string>()
-      for (const e of list) {
-        const ref = refOf(e)
-        if (ref?.type === type) ids.add(ref.id)
-      }
-      return [...ids].map(id => known.get(keyOf(type, id))).filter((e): e is Entity => !!e)
-    }
+    for (const [type, ids] of wanted) for (const row of await store.getMany(type, [...ids])) known.set(keyOf(type, row.id), row)
+    const named = (type: EntityType) => [...new Set(subjects.filter(s => s.type === type).map(s => s.id))].map(id => known.get(keyOf(type, id))).filter((e): e is Entity => !!e)
     const entities = {
       person: people,
       group: groups,
       expense: named('expense'),
+      // A payment or write-off appears here only as the subject of a dispute or a comment; its own events carry their data.
       repayment: named('repayment'),
-      writeoff: [],
-      friendRequest: named('friendRequest'),
+      writeoff: named('writeoff'),
+      friendRequest: named('friendRequest').map(e => displayPerson(e as Entity<FriendRequest>)),
       reminder: [],
       comment: [],
+      dispute: [],
     } satisfies Record<FeedType, Entity[]>
     return {events: list, entities, isDone: isDone && !hasMore}
   }

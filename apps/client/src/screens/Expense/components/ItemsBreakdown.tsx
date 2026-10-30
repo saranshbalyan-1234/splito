@@ -11,7 +11,7 @@ import {useNumberLocale} from '#/locale/numberLocale'
 import {atoms as a, useTheme} from '#/alf'
 import {SectionLabel} from '#/components/split/shared'
 import {ChargedBreakdown} from './ChargedBreakdown'
-import {ItemRow} from './ItemRow'
+import {ItemRow, type ItemDispute} from './ItemRow'
 import {Text} from '#/components/Typography'
 
 const tabular = {fontVariant: ['tabular-nums' as const]}
@@ -27,11 +27,13 @@ export function ItemsBreakdown({
   fmt,
   name,
   avatarName,
+  dispute,
 }: {
   split: Extract<SplitInput, {mode: 'items'}>
   fmt: (v: bigint) => string
   name: (id: string) => string
   avatarName: (id: string) => string
+  dispute?: ItemDispute
 }) {
   const t = useTheme()
   const {t: l} = useLingui()
@@ -44,6 +46,7 @@ export function ItemsBreakdown({
         fmt={fmt}
         name={name}
         avatarName={avatarName}
+        dispute={dispute}
       />
     )
   const {items, subtotals} = itemBreakdown(split)
@@ -93,6 +96,7 @@ export function ItemsBreakdown({
             fmt={fmt}
             name={name}
             avatarName={avatarName}
+            dispute={dispute}
           />
         ))}
         {extras.length > 0 ? (

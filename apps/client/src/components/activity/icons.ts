@@ -7,12 +7,15 @@ import {
   CheckCheck,
   CircleCheck,
   CircleDot,
+  CirclePause,
+  CircleX,
   Eye,
   EyeOff,
   Handshake,
   MessageSquare,
   Pencil,
   Send,
+  TriangleAlert,
   Plus,
   RotateCcw,
   Trash2,
@@ -54,3 +57,10 @@ export const NudgeBadge = createIcon(BellRing, BADGE)
 export const ReminderSetBadge = createIcon(AlarmClock, BADGE)
 /** A comment on an expense or a payment. */
 export const CommentBadge = createIcon(MessageSquare, BADGE)
+
+/** A dispute raised or reopened (amber triangle), a hold (pause), accepted (tick), rejected (cross), withdrawn or released. */
+export const DisputeRaisedBadge = createIcon(TriangleAlert, BADGE)
+export const DisputeHoldBadge = createIcon(CirclePause, BADGE)
+export const DisputeAcceptedBadge = createIcon(CircleCheck, BADGE)
+export const DisputeRejectedBadge = createIcon(CircleX, BADGE)
+export const DisputeWithdrawnBadge = createIcon(RotateCcw, BADGE)
