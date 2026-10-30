@@ -660,6 +660,7 @@ Every disputed amount or count opens Activity on All with Expenses, Payments and
   1. `seeDisputedPath({groupId?})` gives `/activity?tab=all&type=expenses,payments,disputes[&group=]`, pushed with Back; used by every disputed amount/count (Person, Group balances, Settle notice, friend Settle up notice, search tip).
   2. The Filters sheet shows those three types chosen; a saved Me/Others tab never narrows it.
   3. e2e from a Person page, a Group page and Settle at 390 and 1440; row badges still open the record.
+  4. Owner 193: every transactions heading, See all and count (Home, Person, Group, Analytics, right column) uses `seeAllTransactionsPath({groupId})`: All, Type = Expenses + Payments, group-scoped in a group; single rows still open the transaction.
 
 ### F-250 Sign-in required (auth gate) `spec: owner § 26.15 (decision 125)`
 
