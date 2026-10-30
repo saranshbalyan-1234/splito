@@ -1630,7 +1630,7 @@ labelled sidebar); **wide** = web 1300 px and up (Bluesky `gtTablet`, right colu
   is opened from something other than its own tab or sidebar item (a "See all", an Overview card, a search or Ask
   result, a notification, a deep link), it opens as a pushed page with Back in the header that returns to where the
   person came from (filters from the link applied, e.g. Activity with type=transactions); tapping the tab itself
-  always gives the plain tab screen with the avatar. The FAB follows the header (§ 26.6: Back, so no FAB). One
+  always gives the plain tab screen with the avatar. The pushed copy keeps the FAB and every header action of the tab; only Back replaces the avatar (owner 190). One
   helper decides (the link resolver / `tabLink()`), not each screen. *Why:* "even if you go to a main screen from
   some links, it should show a back button, in case you don't go directly from tabs".
 - **Every page has a fixed parent, so Back always goes somewhere specific** (owner 184): with history, Back
@@ -1647,8 +1647,10 @@ labelled sidebar); **wide** = web 1300 px and up (Bluesky `gtTablet`, right colu
   should be some specific set of back for sure, for example if I open Appearance in Settings, the flow is from
   Settings to Appearance".
 - **Pushed pages** (Person, Group, Settle, Expense, Profile, Settings and its sections, Add friend, Create
-  group) show Back in the header; top-level pages (People, Groups, Analytics, Activity) show the avatar. This
-  one distinction also decides the FAB (§ 26.6).
+  group) show Back in the header; top-level pages (Home, People, Groups, Analytics, Activity) show the avatar.
+  **A main screen opened from a link is the same screen as its tab; the only difference is Back in place of the
+  avatar** (owner 190): same header actions, same FAB, same filters, layout and content. The FAB follows § 26.6,
+  not the Back state. *Why:* "the only diff should be whether back button is visible or not".
 - **The logo returns home and is inactive on home** (spec).
 - **Page background (`html`/`body` on web) always follows the active theme** (no black band under Dim
   content).
@@ -1727,16 +1729,20 @@ good"; "the left sidebar looks bad on desktop". *Where:* `view/shell/desktop/Lef
 
 ### 26.6 FAB
 
-- **The Bluesky FAB shows only at phone widths, and only on screens whose header has no Back** (People,
-  Groups, Analytics, Activity). It is hidden on every pushed page (Profile and Settings included), while a
-  sheet is open, while the keyboard shows, and on onboarding (§ 3's suppression list). Rail and desktop have
-  no FAB; the sidebar pill adds expenses there. *Why:* "fab icon to show everywhere on the screen from nav
-  bar, basically if back button is not there show it"; "home and activity also should show the fab"; "the fab
-  icon should not be visible on desktop as we have it on sidebar".
-- **Decided once, in the shell, from the header's left-slot state** (no per-screen flags). It keeps Bluesky's
+- **The Bluesky FAB shows at phone widths on every screen where you would add an expense** (owner 190): the
+  main tabs (Home, People, Groups, Analytics, Activity) **and their pushed copies opened from a link** (Back
+  replaces only the avatar; the FAB, header actions such as Search & Ask, Filters, Add friend and the gear, and
+  every other control stay exactly as on the tab), the Person page (Add expense pre-selects that friend) and the
+  Group page (pre-selects that group). It is hidden where adding an expense makes no sense: Settings and its
+  sections, Profile, Expense and payment detail, forms and the composer, while a sheet is open, while the
+  keyboard shows, and on onboarding (§ 3's suppression list). Rail and desktop have no FAB; the sidebar pill adds
+  expenses there. *Why:* "fab icon to show everywhere on the screen from nav bar"; "home and activity also should
+  show the fab"; "the fab icon should not be visible on desktop as we have it on sidebar"; "all the + buttons or
+  anything should be there" (replaces "if back button is not there show it").
+- **Decided once, in the shell, from the route** (a small allow-list of route names, pushed copies included; no per-screen flags). It keeps Bluesky's
   stays in place while scrolling (owner 87), and lists pad their bottom by the FAB clearance.
-- **Tapping it opens Add expense as a bottom sheet** (§ 26.8). On a Group page (pushed, no FAB) "Add expense"
-  lives in the body and pre-selects the group. *Why:* "use the same flow of that FAB icon".
+- **Tapping it opens Add expense as a bottom sheet** (§ 26.8). On a Group or Person page it pre-selects that group or
+  friend; wide screens, which have no FAB, keep the body's "Add expense". *Why:* "use the same flow of that FAB icon".
 - *Where:* `components/AddExpenseFAB.tsx`, `view/com/util/fab/`.
 
 ### 26.7 Drawer (side drawer)
@@ -2825,6 +2831,7 @@ Every owner decision, in the order it was made (all 2026-10-26). "Replaced" name
 | 187 | Assistant ruling after the F-1210 review | After one reopen only a group admin accepts or rejects (outside a group the adder or payer still answers and a second reopen is refused); one-tap "Accept and apply" only when the fix keeps the record's split mode (an amount fix on an itemised or exact split and a share fix on anything but an exact split are "Edit it" only, with the reason shown), and the panel states what the edit will change | § 26.20 | Admin-only closing after the first reopen without saying who answers it; one-tap fixes that converted a split to exact amounts |
 | 188 | "on desktop there is a lot of space we dont need ... there in sidebar" | Desktop sidebar fits its content (~200 px), footer links directly under Add expense, nothing pinned to the bottom | § 26.5 | Bluesky standard width; footer pinned at the bottom of the window |
 | 189 | "did it fix the performace everywhere, not just the taps"; "it should be everywhere" | Every screen and interaction meets the speed budgets, proven by a perf sweep over every route and interaction in WebKit and Chrome 6x on a quiet machine; misses fixed before the wave closes | § 26.10 | Budgets checked on a few flows and on reported problems |
+| 190 | "all the + buttons or anything should be there"; "the only diff should be whether back button is visible or not" (a main screen opened from a link) | Pushed copies keep the FAB and every header action; FAB also on Person and Group pages (pre-selecting); hidden only on Settings, Profile, detail, forms, sheets, keyboard, onboarding | § 26.6, § 26.3 | FAB only where the header had no Back; pushed copies had no FAB |
 
 New decisions follow § 0 rule 9: rewrite the rule in its topic so only the current truth remains, then add a
 row here.
