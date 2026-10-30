@@ -85,6 +85,7 @@ const titleCount = (d: Demo, title: string) => d.live.filter(e => e.data.title =
 const FEATURES: Array<[feature: string, found: (d: Demo) => boolean]> = [
   // Groups
   ['a trip group with dates', d => d.groups.some(g => g.data.kind === 'trip' && g.data.startDate && g.data.endDate)],
+  ['every trip group says where it is (owner 182)', d => d.groups.some(g => g.data.kind === 'trip') && d.groups.filter(g => g.data.kind === 'trip').every(g => !!g.data.location)],
   ['a home (flat) group', d => d.groups.some(g => g.data.kind === 'home')],
   ['an other-kind group', d => d.groups.some(g => g.data.kind === 'other')],
   ['a multi-currency group (several currencies in one group, never mixed)', d => d.groups.some(g => currenciesIn(d, g.id).size >= 2)],

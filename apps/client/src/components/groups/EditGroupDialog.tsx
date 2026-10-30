@@ -49,6 +49,7 @@ function Form({group}: {group: Entity<Group>}) {
     currency: group.data.currency,
     startDate: group.data.startDate ?? '',
     endDate: group.data.endDate ?? '',
+    location: group.data.location ?? '',
   }))
   const [value, setValue] = useState(initial)
   const [error, setError] = useState<'name' | 'dates' | null>(null)
@@ -64,6 +65,7 @@ function Form({group}: {group: Entity<Group>}) {
         currency: value.currency,
         startDate: isTrip && value.startDate ? value.startDate : null,
         endDate: isTrip && value.endDate ? value.endDate : null,
+        location: value.location,
       })
       haptics.success()
       control.close(() => Toast.show(l`Group updated`, {type: 'success'}))

@@ -199,7 +199,9 @@ export async function projectEntity(rows: RowAccess, prev: Entity | undefined, n
     addEffects(recordOf(next), 1, nets, pairs)
     await writeSums(rows, nets, pairs, (next ?? prev)!.updatedAt)
     // A disputed record that changes moves its disputed part with it (the open disputes are read by index, a few rows).
-    const open = await openDisputesOf(rows, type, (next ?? prev)!.id)
+    // A record being created (or brought back from a delete, which closed its disputes) has none: no read, so seeding
+    // thousands of records pays nothing for disputes.
+    const open = prev && !prev.deleted ? await openDisputesOf(rows, type, prev.id) : []
     if (open.length) {
       const dn: Sums = new Map()
       const dp: Sums = new Map()

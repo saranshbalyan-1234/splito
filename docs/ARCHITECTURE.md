@@ -1625,6 +1625,19 @@ labelled sidebar); **wide** = web 1300 px and up (Bluesky `gtTablet`, right colu
   always gives the plain tab screen with the avatar. The FAB follows the header (§ 26.6: Back, so no FAB). One
   helper decides (the link resolver / `tabLink()`), not each screen. *Why:* "even if you go to a main screen from
   some links, it should show a back button, in case you don't go directly from tabs".
+- **Every page has a fixed parent, so Back always goes somewhere specific** (owner 184): with history, Back
+  returns to the page you came from; with none (a refresh, a pasted address, a notification, a new tab), Back
+  goes to the page's parent and the parents are stacked under it, so a second Back keeps climbing. The parents:
+  a Settings section (Appearance, Language, Notifications ...) -> Settings; a person -> People; a group ->
+  Groups; an expense or payment -> its group, else the friend it is with, else Home; Edit -> the thing edited;
+  Settle -> its group or friend; Profile -> Settings; Friends and invites -> People; Analytics/Activity
+  sub-addresses -> that tab. Back never disappears from a pushed page, refreshed or not. A main tab screen opened
+  from a link (owner 179) keeps its Back after a refresh: the address carries its origin as a short `from`
+  (`/activity/all?type=transactions&from=home`), and Back returns there; tapping the tab itself drops it. One
+  table (`backFallback` in `navigation/goBack.ts`) holds every parent; an architecture test fails on a route
+  without one. Supersedes the assistant ruling "a refreshed pushed copy becomes the plain tab". *Why:* "there
+  should be some specific set of back for sure, for example if I open Appearance in Settings, the flow is from
+  Settings to Appearance".
 - **Pushed pages** (Person, Group, Settle, Expense, Profile, Settings and its sections, Add friend, Create
   group) show Back in the header; top-level pages (People, Groups, Analytics, Activity) show the avatar. This
   one distinction also decides the FAB (§ 26.6).
@@ -1928,6 +1941,13 @@ pages". § 17 holds the engineering rules that meet these budgets.
   (light, Dim, Black, sidebar, header): changing the accent recolours the logo everywhere. Static assets
   (favicon, app icons, native splash) keep the SVG's default blue (`#1185fe`). *Why:* "changing accent color
   should change logo color as well" (replaces "keep it blue always").
+- **The splash mark breathes while the app loads** (owner 185): the logo on the launch screen zooms gently in and
+  out (scale 1 -> 1.08 -> 1, about 1.2 s a cycle, ease-in-out) for as long as content is loading, so the person
+  sees it working: on web from the very first paint (CSS keyframes inline in `index.html`, before any script
+  arrives), on iOS and Android by a JS launch screen that matches the native splash pixel for pixel and takes over
+  the moment JS runs (Reanimated, UI thread). It stops and fades into the first screen when loading ends; reduced
+  motion swaps the zoom for a slow opacity pulse. *Why:* "animate the splash screen icon, so that I see that it's
+  loading; like zoom in zoom out a little, so I know content is being downloaded".
 - **Splash in dark mode uses the Dim background, never pure black** (native splash `dark.backgroundColor` and
   the web launch screen take ALF Dim's background token, logo centred); light mode keeps the light background.
   *Why:* "on splash show the dim instead of black".
@@ -2769,7 +2789,9 @@ Every owner decision, in the order it was made (all 2026-10-26). "Replaced" name
 | 180 | Assistant ruling after the F-250 review (owner asleep, "take your own decisions"; owners 164/165 review the front end on Render first) | Render builds a "preview" tier: labelled local dev account allowed, `noindex`, never on stage/prod tiers; real production refused until the auth HTTP client exists; intro keeps animated Lottie art | § 26.15 | Render built `production`, which refused the dev account and broke the deploy |
 | 181 | "name should be capitalized first letter in complete name" | Every word of a person's name starts with a capital, saved and shown through one `capitalizeName`; rest of each word as typed; groups, titles, emails unchanged | § 26.3 | Names shown exactly as typed |
 | 182 | "for trip ask for location as well" | Trip groups get an optional "Where?" text field in New/Edit group; shown with type and dates, searchable, in CSV, in demo trips | § 26.12 | Trips had name and dates only |
-| 183 | Assistant ruling after the F-1210 review | After one reopen only a group admin accepts or rejects (outside a group the adder or payer still answers and a second reopen is refused); one-tap "Accept and apply" only when the fix keeps the record's split mode (an amount fix on an itemised or exact split and a share fix on anything but an exact split are "Edit it" only, with the reason shown), and the panel states what the edit will change | § 26.20 | Admin-only closing after the first reopen without saying who answers it; one-tap fixes that converted a split to exact amounts |
+| 184 | "there should be some specific set of back for sure, for example if i open appearance in settings, the flow is from settings to appearance" | Every page has a fixed parent; Back with no history goes to it (parents stacked); a main tab opened from a link keeps Back after refresh via `from` in the address | § 26.3 | Assistant ruling: a refreshed pushed copy became the plain tab; parents only for a few routes |
+| 185 | "also animate the splash screen icon, so that i see that its loading"; "like zoomin zoomout a little, so i know content is being downloaded" | Launch mark zooms 1 -> 1.08 -> 1 while loading, web from first paint (inline CSS), native via a matching JS launch screen; opacity pulse under reduced motion | § 26.11 | Static splash mark |
+| 186 | Assistant ruling after the F-1210 review | After one reopen only a group admin accepts or rejects (outside a group the adder or payer still answers and a second reopen is refused); one-tap "Accept and apply" only when the fix keeps the record's split mode (an amount fix on an itemised or exact split and a share fix on anything but an exact split are "Edit it" only, with the reason shown), and the panel states what the edit will change | § 26.20 | Admin-only closing after the first reopen without saying who answers it; one-tap fixes that converted a split to exact amounts |
 
 New decisions follow § 0 rule 9: rewrite the rule in its topic so only the current truth remains, then add a
 row here.

@@ -354,7 +354,8 @@ export function GroupScreen() {
       : null
   const memberCount = members.filter(m => m.leftAt === null).length
   const memberText = memberCount === 1 ? l`1 member` : l`${memberCount} members`
-  const byline = [kindLabel, memberText].join(' · ')
+  const place = group?.data.kind === 'trip' ? group.data.location : null
+  const byline = [kindLabel, place, memberText].filter(Boolean).join(' · ')
   const current = members.filter(m => m.leftAt === null)
   /* Bluesky's "followed by" stack: three faces, then +N. */
   const stack = current.slice(0, AVATAR_STACK)
