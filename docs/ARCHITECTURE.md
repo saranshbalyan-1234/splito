@@ -2593,7 +2593,11 @@ dishes etc and each item can be assigned to each in split"; "in itemize don't sh
   own page** (owner 204, `/settings/support`, Back -> Settings) holding every help item: Send feedback, Your
   feedback, Help, Privacy, About (and the app version); the Settings list itself shows only the "Support" row,
   and the sidebar/drawer footer links still go straight to each page. *Why:* "make support a section, which opens
-  up all these menus". and the shared footer links at the bottom of the left sidebar and the drawer (§ 26.3)
+  up all these menus". **The data items work the same way under the name "Your data"** (owner 205, assistant's
+  name: plain, says whose and what): one "Your data" row in Settings opens `/settings/data` (Back -> Settings)
+  with Export, Import (restore a backup), Move this device's older data (while an old database exists) and Reset
+  all settings, plus the "Deleted items stay in their lists" note; the Settings list shows only the row. *Why:*
+  "and same for data, think of a proper name as well". and the shared footer links at the bottom of the left sidebar and the drawer (§ 26.3)
   "Feedback · Help · Privacy · About" (`desktop/RightNav.tsx`); below 1300 px desktop reaches them through the
   drawer and Settings. "Send feedback" opens a FormSheet (bottom drawer on phones, centred popup on desktop):
   type chips Bug / Idea / Question / Other, a required message, optional screenshot or photo, "Include app
@@ -3212,6 +3216,7 @@ Every owner decision, in the order it was made (all 2026-10-26). "Replaced" name
 | 202 | "move the logout button inside profile" | Log out is the last row of Profile only; removed from Settings, the drawer footer and the sidebar (the add-contact step keeps its own) | § 26.15 | Log out in Settings > Account and the drawer footer |
 | 203 | "remove settings from profile" | Profile holds only the person (avatar, name, contact, stats, Log out); its "Settings" row is removed | § 26.15 | Profile had a Settings row |
 | 204 | "make support a section, which opens up all these menus" | Settings shows one "Support" row opening /settings/support with Send feedback, Your feedback, Help, Privacy, About and the version | § 26.15 | Support items listed inline in the Settings list |
+| 205 | "and same for data, think of a proper name as well" | Settings shows one "Your data" row opening /settings/data with Export, Import, Move older data and Reset all settings | § 26.15 | Data items listed inline under a "Data" heading |
 
 New decisions follow § 0 rule 9: rewrite the rule in its topic so only the current truth remains, then add a
 row here.
