@@ -46,7 +46,7 @@ export function PrefsMirror() {
   const [accent] = usePref('accent')
   const [textScale] = usePref('textScale')
   const [haptics] = usePref('haptics')
-  const [homeTab] = usePref('homeTab')
+  const [startTab] = usePref('startTab')
   const [moneyPalette] = usePref('moneyPalette')
 
   useEffect(() => {
@@ -57,7 +57,7 @@ export function PrefsMirror() {
       accent === undefined ||
       textScale === undefined ||
       haptics === undefined ||
-      homeTab === undefined ||
+      startTab === undefined ||
       moneyPalette === undefined
     )
       return
@@ -66,10 +66,10 @@ export function PrefsMirror() {
     put('accent', accent)
     put('hapticsEnabled', haptics)
     put('moneyPalette', moneyPalette)
-    put('homeTab', homeTab)
+    put('startTab', startTab)
     const scale = fontScaleFor(textScale)
     if (scale !== getFontScale()) setFontScale(scale)
-  }, [theme, darkTheme, accent, textScale, haptics, homeTab, moneyPalette, setFontScale])
+  }, [theme, darkTheme, accent, textScale, haptics, startTab, moneyPalette, setFontScale])
 
   /*
    * The Animations preference (or the OS setting) also reaches every

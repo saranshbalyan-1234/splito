@@ -29,7 +29,7 @@ export function SignInScreen() {
       role="dialog"
       aria-modal={true}
       style={[a.flex_1, web({position: 'fixed', inset: 0})]}>
-      <LoggedOut onDismiss={() => goBack(navigation, {name: 'People'})} />
+      <LoggedOut onDismiss={() => goBack(navigation, {name: 'Home'})} />
     </View>
   )
   return IS_WEB ? <Portal>{flow}</Portal> : flow

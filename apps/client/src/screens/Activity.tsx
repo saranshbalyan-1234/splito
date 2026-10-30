@@ -21,12 +21,13 @@ import {
 } from '#/components/activity/SectionHeader'
 import {useActivityActions} from '#/components/activity/useActivityActions'
 import {useActivityFeed} from '#/components/activity/useActivityFeed'
-import {AddExpenseFAB, AddExpenseFABInset} from '#/components/AddExpenseFAB'
+import {AddExpenseFABInset} from '#/components/AddExpenseFAB'
 import {Button, ButtonText} from '#/components/Button'
 import {SearchAskButton} from '#/components/SearchAsk/SearchAskButton'
 import {HeaderAvatar} from '#/components/HeaderAvatar'
 import {MarkAllReadIcon} from '#/components/activity/icons'
 import * as Layout from '#/components/Layout'
+import {TabScreen} from '#/components/TabScreen'
 import {TabBar} from '#/components/TabBar'
 import {Text} from '#/components/Typography'
 import {Shimmer} from '#/motion/Shimmer'
@@ -99,7 +100,7 @@ export function ActivityScreen() {
   }
 
   return (
-    <Layout.Screen testID="screen-activity">
+    <TabScreen testID="screen-activity">
       {/* Rule set: avatar | Activity | Mark all read; the tabs travel with the header. */}
       <Layout.Header.Sticky>
         <Layout.Header.Outer noBottomBorder sticky={false}>
@@ -205,7 +206,6 @@ export function ActivityScreen() {
         </LayoutAnimationConfig>
         )}
       </Deferred>
-      <AddExpenseFAB />
-    </Layout.Screen>
+    </TabScreen>
   )
 }

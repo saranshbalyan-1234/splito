@@ -25,7 +25,7 @@ import {IS_WEB} from '#/env'
 const MIN_HAPTIC_GAP_MS = 50
 
 /* The phone FAB's lift above the bottom bar (the minimal-shell transform's resting offset). */
-const FAB_BAR_LIFT = 44
+const FAB_BAR_LIFT = 50
 const FAB_SIZE = 56
 /* Air between the last row and the FAB, so a row's amount is never under it. */
 const FAB_CLEARANCE = 16

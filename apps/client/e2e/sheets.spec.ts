@@ -13,8 +13,8 @@ import {openDemo as enterDemo} from './openDemo'
 const DESKTOP = {width: 1440, height: 900}
 const PHONE = {width: 390, height: 844}
 
-async function openDemo(page: Page) {
-  await enterDemo(page)
+async function openDemo(page: Page, path = '/people') {
+  await enterDemo(page, path)
   await expect(page.getByTestId('person-Arjun Mehta')).toBeVisible()
 }
 

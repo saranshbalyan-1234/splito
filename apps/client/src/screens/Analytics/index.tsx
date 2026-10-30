@@ -12,7 +12,7 @@ import {usePref} from '#/data/hooks'
 import {EmptyState} from '#/view/com/util/EmptyState'
 import {List} from '#/view/com/util/List'
 import {atoms as a, useTheme} from '#/alf'
-import {AddExpenseFAB, AddExpenseFABInset} from '#/components/AddExpenseFAB'
+import {AddExpenseFABInset} from '#/components/AddExpenseFAB'
 import {Button, ButtonIcon, ButtonText} from '#/components/Button'
 import {SearchAskButton} from '#/components/SearchAsk/SearchAskButton'
 import {HeaderAvatar} from '#/components/HeaderAvatar'
@@ -20,6 +20,7 @@ import {Download_Stroke2_Corner0_Rounded as DownloadIcon} from '#/components/ico
 import {PlusLarge_Stroke2_Corner0_Rounded as PlusIcon} from '#/components/icons/Plus'
 import {TimesLarge_Stroke2_Corner0_Rounded as XIcon} from '#/components/icons/Times'
 import * as Layout from '#/components/Layout'
+import {TabScreen} from '#/components/TabScreen'
 import * as Toast from '#/components/Toast'
 import {Text} from '#/components/Typography'
 import {Shimmer} from '#/motion/Shimmer'
@@ -56,7 +57,7 @@ export function AnalyticsScreen() {
   
 
   return (
-    <Layout.Screen testID="screen-analytics">
+    <TabScreen testID="screen-analytics">
       <Layout.Header.Outer>
         <HeaderAvatar />
         {/* Balances Search & Ask on the right, so the title stays centred. */}
@@ -150,8 +151,7 @@ export function AnalyticsScreen() {
         </LayoutAnimationConfig>
         )}
       </Deferred>
-      <AddExpenseFAB />
-    </Layout.Screen>
+    </TabScreen>
   )
 }
 

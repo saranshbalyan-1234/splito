@@ -35,7 +35,7 @@ test('opens offline, refreshing a deep route included', async ({page, context}) 
   await page.goto('/settings/about')
   await expect(page.getByTestId('screen-settings-section')).toBeVisible()
   await page.goto('/')
-  await expect(page.getByTestId('screen-people')).toBeVisible()
+  await expect(page.getByTestId('screen-home')).toBeVisible()
   await context.setOffline(false)
 })
 

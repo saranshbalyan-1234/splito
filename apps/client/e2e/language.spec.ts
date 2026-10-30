@@ -78,13 +78,14 @@ test('desktop right column: the dropdown switches the sidebar labels', async ({
   page,
 }) => {
   await page.setViewportSize(WIDE)
-  await openDemo(page)
-  await expect(page.getByTestId('person-Riya Sharma')).toBeVisible()
-  await expect(page.getByTestId('tab-people')).toContainText('Home')
+  /* Home shows no right column (owner 153), so the dropdown is found on Groups. */
+  await openDemo(page, '/groups')
+  await expect(page.getByTestId('screen-groups')).toBeVisible()
+  await expect(page.getByTestId('tab-home')).toContainText('Home')
   const dropdown = page.getByTestId('right-nav').getByTestId('app-language')
   await dropdown.click()
   await page.getByTestId('app-language-hi').click()
-  await expect(page.getByTestId('tab-people')).toContainText('घर')
+  await expect(page.getByTestId('tab-home')).toContainText('घर')
   // Settings > Language is the same preference.
   await page.goto('/settings/regional')
   await expect(page.getByTestId('language-hi')).toHaveAttribute(

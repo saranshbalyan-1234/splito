@@ -9,7 +9,7 @@ const PHONE = {width: 390, height: 844}
 
 async function openAddExpense(page: Page) {
   await page.setViewportSize(DESKTOP)
-  await openDemo(page)
+  await openDemo(page, '/people')
   await expect(page.getByTestId('person-Riya Sharma')).toBeVisible()
   await page.getByTestId('sidebar-add').click()
   await expect(page.getByTestId('screen-add-expense')).toBeVisible()
@@ -90,7 +90,7 @@ test('phones: the keypad replaces the keyboard and works as a calculator', async
   page,
 }) => {
   await page.setViewportSize(PHONE)
-  await openDemo(page)
+  await openDemo(page, '/people')
   await expect(page.getByTestId('person-Riya Sharma')).toBeVisible()
   await page.getByTestId('fab-add').click()
   await expect(page.getByTestId('screen-add-expense')).toBeVisible()
@@ -117,7 +117,7 @@ test('money direction is never colour alone: arrows and words on balances', asyn
   page,
 }) => {
   await page.setViewportSize(DESKTOP)
-  await openDemo(page)
+  await openDemo(page, '/people')
   const row = page.getByTestId('person-Riya Sharma')
   await expect(row).toBeVisible()
   await expect(row).toContainText(/(owes you|you owe) [↙↗]/)

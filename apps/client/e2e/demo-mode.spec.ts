@@ -19,7 +19,7 @@ test('Settings > Data has the Demo mode switch, no Add / Remove demo data, and n
   await expect(page.getByText('Explore Splito with sample data. Your own data is kept separately and untouched.')).toBeVisible()
   await expect(page.getByTestId('settings-demo-reset')).toHaveCount(0)
   for (const gone of ['Add demo data', 'Remove demo data']) await expect(page.getByText(gone)).toHaveCount(0)
-  await page.goto('/')
+  await page.goto('/people')
   await expect(page.getByTestId('people-empty')).toBeVisible()
 })
 
@@ -33,7 +33,7 @@ test('turning it on seeds the demo database in under 10 s, shows "Demo" on the a
   console.log(`demo mode on in ${ms} ms`)
   expect(ms).toBeLessThan(10_000)
   // The switch takes the app to the first tab: what was open belonged to the other database.
-  await expect(page.getByTestId('screen-people')).toBeVisible()
+  await expect(page.getByTestId('screen-home')).toBeVisible()
   await expect(page.getByTestId('header-avatar').last()).toHaveAttribute('aria-label', /Demo$/)
   await expect(page.getByTestId('header-avatar').last().getByTestId('sync-dot-demo')).toBeAttached()
   await page.goto('/settings')
@@ -75,7 +75,7 @@ test('the real data is untouched by a demo session; Switch back returns Home wit
   const realBefore = await names(page, 'person')
   expect(realBefore).toContain('Real Asha')
 
-  await openDemo(page)
+  await openDemo(page, '/people')
   await expect(page.getByTestId('person-Riya Sharma')).toBeVisible()
   expect(await names(page, 'person')).not.toContain('Real Asha')
   // An edit inside demo mode goes to the demo database.
@@ -88,6 +88,8 @@ test('the real data is untouched by a demo session; Switch back returns Home wit
   await expect(page).toHaveURL(/\/$/)
   // The demo database is erased behind the blocking cover: let it finish before anything reloads the page.
   await expect(page.getByTestId('demo-busy')).toHaveCount(0)
+  // Back on Home (the first tab); a friend with no record yet is on People, not in Recently active.
+  await page.getByTestId('tab-people').click()
   await expect(page.getByTestId('person-Real Asha').last()).toBeVisible()
   await expect(page.getByTestId('person-Riya Sharma')).toHaveCount(0)
   const realAfter = await names(page, 'person')
@@ -141,7 +143,7 @@ test('turning demo mode off erases the demo database and every key it kept; turn
 })
 
 test('the store swapping under an open Add friend sheet drops the sheet and writes nothing to either database', async ({page}) => {
-  await page.goto('/')
+  await page.goto('/people')
   await page.waitForFunction(() => 'splito' in window)
   await page.getByTestId('people-add-friend').click()
   await expect(page.getByTestId('screen-add-friend')).toBeVisible()
@@ -153,12 +155,13 @@ test('the store swapping under an open Add friend sheet drops the sheet and writ
   await on
   await expect(page.getByTestId('demo-busy')).toHaveCount(0)
   await expect(page.getByTestId('screen-add-friend')).toHaveCount(0)
-  await expect(page.getByTestId('screen-people')).toBeVisible()
+  await expect(page.getByTestId('screen-home')).toBeVisible()
   await expect(page.getByTestId('header-avatar').last()).toHaveAttribute('aria-label', /Demo$/)
   const inDemo = await page.evaluate(async () => JSON.stringify(await (window as unknown as {splito: {list(t: string): Promise<unknown[]>}}).splito.list('friendRequest')))
   expect(inDemo).not.toContain('zed.mid.swap')
 
   // Off again, with another sheet open on the demo side: the same, the other way round.
+  await page.getByTestId('tab-people').click()
   await page.getByTestId('people-add-friend').click()
   await page.getByTestId('add-friend-contact').fill('zed.back@example.com')
   await closeDemo(page)
@@ -172,11 +175,11 @@ for (const [name, size] of [['1440 px', {width: 1440, height: 900}], ['390 px', 
   test(`demo mode draws no banner and leaves the Home header where it was, at ${name} (owner 133)`, async ({page}) => {
     await page.setViewportSize(size)
     await page.goto('/')
-    await expect(page.getByTestId('screen-people')).toBeVisible()
+    await expect(page.getByTestId('screen-home')).toBeVisible()
     const top = async () => (await page.getByTestId('header-avatar').last().boundingBox())!.y
     const before = await top()
     await openDemo(page)
-    await expect(page.getByTestId('screen-people')).toBeVisible()
+    await expect(page.getByTestId('screen-home')).toBeVisible()
     await expect(page.getByTestId('demo-banner')).toHaveCount(0)
     await expect(page.getByText('Switch back')).toHaveCount(0)
     expect(Math.abs((await top()) - before)).toBeLessThanOrEqual(2)
@@ -200,10 +203,21 @@ test('with demo mode on every header title ends in " - Demo" (and the window tit
     await expect(page.getByText(title, {exact: true}).first()).toBeVisible()
     await expect(page).toHaveTitle(`${title} - Splito`)
   }
-  // Phones show the logo on Home, so the title slot gets a small "Demo" label beside it.
+  // Phones too, on every main screen: Home reads "Home - Demo" (not the logo with a label), like its neighbours.
   await page.setViewportSize({width: 390, height: 844})
-  await page.goto('/')
-  await expect(page.getByTestId('header-demo-label')).toHaveText('Demo')
+  for (const [path, title, screen] of [
+    ['/', 'Home - Demo', 'screen-home'],
+    ['/people', 'People - Demo', 'screen-people'],
+    ['/groups', 'Groups - Demo', 'screen-groups'],
+    ['/analytics', 'Analytics - Demo', 'screen-analytics'],
+    ['/activity', 'Activity - Demo', 'screen-activity'],
+  ] as const) {
+    await page.goto(path)
+    await expect(page.getByTestId(screen).getByText(title, {exact: true})).toBeVisible()
+  }
+  await expect(page.getByTestId('header-logo')).toHaveCount(0)
   await closeDemo(page)
-  await expect(page.getByTestId('header-demo-label')).toHaveCount(0)
+  // Off demo, the phone's Home keeps the logo.
+  await page.goto('/')
+  await expect(page.getByTestId('screen-home').getByTestId('header-logo')).toBeVisible()
 })

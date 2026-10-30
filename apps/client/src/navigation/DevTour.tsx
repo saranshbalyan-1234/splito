@@ -29,7 +29,7 @@ export function DevTour() {
     const go = (name: string, params?: object) => () =>
       (navigationRef.navigate as (n: string, p?: object) => void)(name, params)
     const steps = [
-      go('Tabs', {screen: 'People'}),
+      go('Tabs', {screen: 'Home'}),
       () => setDrawerOpenRef.current(true),
       () => setDrawerOpenRef.current(false),
       go('Tabs', {screen: 'Groups'}),

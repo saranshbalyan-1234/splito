@@ -12,6 +12,7 @@ import {
 
 test('one list, in the order of ARCHITECTURE 26.3', () => {
   expect(navigationItems(true)).toEqual([
+    'home',
     'people',
     'groups',
     'analytics',
@@ -23,14 +24,15 @@ test('one list, in the order of ARCHITECTURE 26.3', () => {
 
 test('Ask Splito is in the list now that F-2301 ships; it can still be switched off', () => {
   expect(IS_ASK_SPLITO_AVAILABLE).toBe(true)
-  expect(navigationItems()).toEqual(['people', 'groups', 'analytics', 'ask', 'activity', 'settings'])
-  expect(navigationItems(false)).toEqual(['people', 'groups', 'analytics', 'activity', 'settings'])
-  expect(bottomBarItems(['people', 'ask', 'groups'])).toEqual(['people', 'ask', 'groups'])
-  expect(bottomBarItems(['people', 'ask', 'groups'], false)).toEqual(['people', 'groups'])
+  expect(navigationItems()).toEqual(['home', 'people', 'groups', 'analytics', 'ask', 'activity', 'settings'])
+  expect(navigationItems(false)).toEqual(['home', 'people', 'groups', 'analytics', 'activity', 'settings'])
+  expect(bottomBarItems(['home', 'ask', 'groups'])).toEqual(['home', 'ask', 'groups'])
+  expect(bottomBarItems(['home', 'ask', 'groups'], false)).toEqual(['home', 'groups'])
 })
 
-test('the default bottom bar is Home, Groups, Analytics, Activity', () => {
+test('the default bottom bar is Home, People, Groups, Analytics, Activity', () => {
   expect(bottomBarItems(PREFS.tabs.default)).toEqual([
+    'home',
     'people',
     'groups',
     'analytics',
@@ -47,15 +49,15 @@ test('every item opens a route with a path, except Ask Splito, which opens the d
 
 test('the sidebar and drawer order: what is on in its order, then the rest in the shared order', () => {
   expect(splitNavigationItems(PREFS.tabs.default)).toEqual({
-    on: ['people', 'groups', 'analytics', 'activity'],
+    on: ['home', 'people', 'groups', 'analytics', 'activity'],
     off: ['ask', 'settings'],
   })
-  expect(splitNavigationItems(['people', 'settings', 'groups'])).toEqual({
-    on: ['people', 'settings', 'groups'],
-    off: ['analytics', 'ask', 'activity'],
+  expect(splitNavigationItems(['home', 'settings', 'groups'])).toEqual({
+    on: ['home', 'settings', 'groups'],
+    off: ['people', 'analytics', 'ask', 'activity'],
   })
-  expect(splitNavigationItems(['people', 'ask'], false)).toEqual({
-    on: ['people'],
-    off: ['groups', 'analytics', 'activity', 'settings'],
+  expect(splitNavigationItems(['home', 'ask'], false)).toEqual({
+    on: ['home'],
+    off: ['people', 'groups', 'analytics', 'activity', 'settings'],
   })
 })

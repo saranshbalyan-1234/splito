@@ -69,7 +69,7 @@ async function writeAndSee(page: Page, i: number) {
     })
     const committed = performance.now() - t0
     await new Promise<void>(resolve => {
-      const check = () => (document.querySelector('[data-testid="sidebar-recent-transactions"]')?.textContent?.includes(title) ? resolve() : requestAnimationFrame(check))
+      const check = () => (document.querySelector('[data-testid="home-recent-transactions"]')?.textContent?.includes(title) ? resolve() : requestAnimationFrame(check))
       check()
     })
     return {committed, ui: performance.now() - t0}
@@ -81,7 +81,7 @@ async function measure(page: Page, label: string, extra: Record<string, unknown>
   const expenses = await page.evaluate(() => (window as unknown as {splito: Splito}).splito.countExpenses())
   const opens: Awaited<ReturnType<typeof coldOpen>>[] = []
   for (let i = 0; i < RUNS; i++) opens.push(await coldOpen(page))
-  await expect(page.getByTestId('sidebar-recent-transactions')).toBeVisible()
+  await expect(page.getByTestId('home-recent-transactions')).toBeVisible()
   // The path this replaced: read every record, then work each balance out of the ledger.
   const legacy: number[] = []
   for (let i = 0; i < RUNS; i++) legacy.push(await page.evaluate(() => (window as unknown as {splito: Splito}).splito.legacyHomeMs()))
@@ -90,8 +90,8 @@ async function measure(page: Page, label: string, extra: Record<string, unknown>
   // Analytics: the tab to figures on screen (the default year, the busiest currency).
   const analytics: number[] = []
   for (let i = 0; i < RUNS; i++) {
-    await page.getByTestId('tab-people').click()
-    await expect(page.getByTestId('sidebar-recent-transactions')).toBeVisible()
+    await page.getByTestId('tab-home').click()
+    await expect(page.getByTestId('home-recent-transactions')).toBeVisible()
     analytics.push(await openTab(page, 'tab-analytics', 'analytics-expenses-title'))
   }
   // Search: one keystroke-sized change to the first page of results, for narrow and broad queries (the Search & Ask drawer).
@@ -193,7 +193,7 @@ function expectSearchBudget(r: {cpu: number; searchKeystrokeMs: Record<string, n
 async function askCase(page: Page) {
   // Ask Splito is off the default bar, so put it on the sidebar (26.3) to measure its tab.
   await page.evaluate(() =>
-    (window as unknown as {splito: {setPref(k: string, v: unknown): Promise<void>}}).splito.setPref('tabs', ['people', 'groups', 'analytics', 'ask', 'activity']),
+    (window as unknown as {splito: {setPref(k: string, v: unknown): Promise<void>}}).splito.setPref('tabs', ['home', 'people', 'groups', 'analytics', 'ask', 'activity']),
   )
   await page.getByTestId('tab-ask').waitFor()
   const question = 'Who owes me the most?'
