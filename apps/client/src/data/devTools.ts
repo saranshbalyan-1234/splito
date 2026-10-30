@@ -25,6 +25,8 @@ import {
   type Store,
   updateGroupRules,
   createComment,
+  holdRecord,
+  raiseDispute,
 } from '@splito/sync'
 
 import {IS_DEV, IS_E2E} from '#/env'
@@ -83,6 +85,9 @@ export function installDevTools(store: Store, ctx: MutationCtx) {
     },
     /** A comment written as another person (what sync will bring in, F-2208), so e2e can see the menu of someone else's comment. */
     commentAs: (authorId: string, input: Parameters<typeof createComment>[2]) => createComment(store, {...ctx, actor: authorId}, input).then(e => e.id),
+    /** A dispute or hold raised as another person (what sync will bring in, F-2208), so e2e can answer one as the adder or payer. */
+    disputeAs: (authorId: string, input: unknown) => raiseDispute(store, {...ctx, actor: authorId}, toBig(input) as Parameters<typeof raiseDispute>[2]).then(e => e.id),
+    holdAs: (authorId: string, input: unknown) => holdRecord(store, {...ctx, actor: authorId}, input as Parameters<typeof holdRecord>[2]).then(e => e.id),
     /** How many expenses (live and deleted) the store holds: an index count. */
     countExpenses: () => store.count('expense'),
     /**

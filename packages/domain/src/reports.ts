@@ -432,14 +432,14 @@ export function toCsv(rows: ReadonlyArray<ReadonlyArray<string>>): string {
 
 /**
  * The expenses behind a report as CSV: date, description, category, group,
- * currency, total, you paid, your share. Amounts are exact decimals in the
+ * currency, total, you paid, your share, location (the group's trip place, owner 182). Amounts are exact decimals in the
  * currency's own scale, never floats. Names come from the caller (they are
  * user data and translated labels).
  */
 export function reportCsv(
   expenses: ReadonlyArray<ReportExpense>,
   me: string,
-  labels: {header: string[]; categoryName: (id: string) => string; groupName: (id: string | null) => string},
+  labels: {header: string[]; categoryName: (id: string) => string; groupName: (id: string | null) => string; groupLocation: (id: string | null) => string},
 ): string {
   const rows = expenses.map(e => {
     const amount = (v: bigint) => toDecimalString(v, getCurrency(e.currency).scale)
@@ -452,6 +452,7 @@ export function reportCsv(
       amount(e.total),
       amount(e.payers[me] ?? 0n),
       amount(e.shares[me] ?? 0n),
+      labels.groupLocation(e.groupId),
     ]
   })
   return toCsv([labels.header, ...rows])

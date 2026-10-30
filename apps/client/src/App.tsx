@@ -16,6 +16,7 @@ import {GestureRoot} from '#/components/GestureRoot'
 import {Provider as PortalProvider} from '#/components/Portal'
 import {LinkHost} from '#/features/links/LinkHost'
 import {PwaHost} from '#/features/pwa/PwaHost'
+import {DisputeHost} from '#/features/disputes/DisputeHost'
 import {RemindHost} from '#/features/remind/RemindHost'
 import {ToastOutlet} from '#/components/Toast'
 import {StoreProvider} from '#/data/StoreProvider'
@@ -41,6 +42,7 @@ function Themed() {
               {/* RemindHost and LinkHost sit above the Shell, outside its BottomSheetProvider: their sheets need a portal of their own on native. */}
               <BottomSheetProvider>
                 <RemindHost />
+                <DisputeHost />
                 <LinkHost />
                 <BottomSheetOutlet />
               </BottomSheetProvider>

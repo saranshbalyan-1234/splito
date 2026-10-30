@@ -33,7 +33,6 @@ import {useDialogControl} from '#/components/Dialog'
 import {Button, ButtonText} from '#/components/Button'
 import {SearchAskButton} from '#/components/SearchAsk/SearchAskButton'
 import {HeaderAvatar} from '#/components/HeaderAvatar'
-import {MagnifyingGlass_Stroke2_Corner0_Rounded as SearchIcon} from '#/components/icons/MagnifyingGlass'
 import {PersonPlus_Filled_Stroke2_Corner0_Rounded as PersonPlusIcon} from '#/components/icons/Person'
 import * as Layout from '#/components/Layout'
 import {ListToolsHeader} from '#/components/ListToolsHeader'
@@ -274,7 +273,7 @@ export function PeopleScreen() {
               friends.length > 0 && query.trim() ? (
                 <EmptyState
                   testID="people-search-empty"
-                  icon={SearchIcon}
+                  illustration="empty-people"
                   message={l`No matches for “${query.trim()}”`}
                 />
               ) : friends.length > 0 ? (
@@ -282,7 +281,7 @@ export function PeopleScreen() {
                   /* Everything that matches is settled up: one button brings it back (it sets the preference). */
                   <EmptyState
                     testID="people-all-settled"
-                    icon={null}
+                    illustration="empty-people"
                     message={l`All settled up`}
                     button={{
                       testID: 'people-show-settled',
@@ -296,7 +295,7 @@ export function PeopleScreen() {
                 ) : (
                 <EmptyState
                   testID="people-filtered-empty"
-                  icon={null}
+                  illustration="empty-people"
                   message={l`No friends match these filters.`}
                   button={{
                     testID: 'people-clear-filters',

@@ -18,12 +18,13 @@ import {
   LayersIcon,
   ScopeDialog,
 } from '#/screens/Analytics/components/ScopeDialog'
+import {PeriodControl} from '#/screens/Analytics/components/Summary'
 import {isEverything, scopeSummary} from '#/screens/Analytics/scope'
 import {type Report} from '#/screens/Analytics/useReport'
 
 /**
- * The one row of filters above everything they scope: currency and the
- * scope chip (the period is the headline's own control). Charts, totals,
+ * The one row of filters above everything they scope: currency, the scope
+ * chip and the period, all on one line (owner 171). Charts, totals,
  * the list and the CSV all follow it. Wide screens keep one row that
  * scrolls sideways if it must, with the charts / table switch at its end;
  * phones scroll the whole row, so no chip is ever cut in half.
@@ -76,6 +77,7 @@ export function FilterBar({
       </Menu.Root>
 
       <ScopeChip report={report} />
+      <PeriodControl report={report} />
     </>
   )
 

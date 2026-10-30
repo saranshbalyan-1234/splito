@@ -8,15 +8,17 @@
  *
  * Steps: v1 -> v2 (per-type stores, members, parties, balances),
  * v2 -> v3 (the `aggregates` and `search_terms` projections and the people
- * activity column) and v3 -> v4 (the empty `reminders` store, a deleted
+ * activity column), v3 -> v4 (the empty `reminders` store, a deleted
  * expense keeps its party rows and search terms, the `history.binDays`
- * preference goes): the projections are all derived, so `migrateToV4`
- * rebuilds them from the rows and serves a v2 and a v3 file alike, and is
- * idempotent. A v1 database goes straight to the current layout.
+ * preference goes) and v4 -> v5 (the empty `disputes` store and the disputed
+ * projections): the projections are all derived, so `migrateToV4` rebuilds
+ * them from the rows and serves a v2 and a v3 file alike (it also builds the
+ * v5 ones), `migrateToV5` serves a v4 file, and both are idempotent. A v1
+ * database goes straight to the current layout.
  */
 import {decode} from './codec'
 import {type RowAccess} from './engine'
-import {rebuildProjections} from './ledgerProjection'
+import {rebuildDisputedProjections, rebuildProjections} from './ledgerProjection'
 import {completeEntity, ENTITY_STORE, entityOfRow, historyRow, outboxRow, rowOfEntity, SCHEMA_VERSION} from './schema'
 import {type Entity, type EntityType, type HistoryRow, type OutboxOp} from './types'
 
@@ -79,6 +81,16 @@ export async function migrateFromV1(legacy: LegacyV1, rows: RowAccess): Promise<
 export async function migrateToV4(rows: RowAccess): Promise<void> {
   await rows.delete(ENTITY_STORE.preference, ['history.binDays'])
   await rebuildProjections(rows, async type => (await rows.range(ENTITY_STORE[type], {})).map(r => entityOfRow(type, r)))
+  await rows.put('meta', {key: 'schemaVersion', value: String(SCHEMA_VERSION)})
+}
+
+/**
+ * v4 -> v5: the `disputes`, `disputed_balances` and `disputed_pairs` stores exist (the engine made them, empty). No
+ * dispute can exist in a v4 file, so the projections are rebuilt from the rows anyway (idempotent, and a stray
+ * dispute row from a newer build is counted); nothing else changes.
+ */
+export async function migrateToV5(rows: RowAccess): Promise<void> {
+  await rebuildDisputedProjections(rows, async type => (await rows.range(ENTITY_STORE[type], {})).map(r => entityOfRow(type, r)))
   await rows.put('meta', {key: 'schemaVersion', value: String(SCHEMA_VERSION)})
 }
 

@@ -331,6 +331,7 @@ export function useReport() {
     id === me ? l`You` : (personName.get(id) ?? l`Someone`)
   const nameOfGroup = (id: string | null) =>
     id === null ? l`Non-group` : (groupName.get(id) ?? l`Group`)
+  const locationOfGroup = (id: string | null) => (id === null ? '' : (groups.find(g => g.id === id)?.data.location ?? ''))
   /* A category deleted since its expenses were saved shows as Other. */
   const other = categoryById.get('other') ?? DEFAULT_CATEGORIES.at(-1)!
   const category = (id: string) =>
@@ -394,6 +395,7 @@ export function useReport() {
     shareOf,
     nameOfPerson,
     nameOfGroup,
+    locationOfGroup,
     category,
     spanLabel,
     /** Remembered as the period Analytics opens with (`analyticsPeriod`, decision 90); a custom range is not. */

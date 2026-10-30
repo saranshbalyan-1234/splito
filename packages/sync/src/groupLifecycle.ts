@@ -207,6 +207,8 @@ export async function deleteGroup(store: Store, ctx: MutationCtx, groupId: strin
       }
     }
     await write(tx, ctx, 'group', groupId, {...g.data, removed}, true, 'group.delete')
+    // The group's remembered "Include disputed" goes with it.
+    await editIdsPref(tx, ctx, 'group:settleIncludeDisputed', ids => (ids.includes(groupId) ? ids.filter(x => x !== groupId) : ids))
     return removed
   })
 }

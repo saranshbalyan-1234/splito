@@ -81,6 +81,7 @@ Every row of the ARCHITECTURE § 26.23 decision log (rows 1-63) and the feature(
 | 135 demo data downloaded from the backend, not bundled | § 26.1 | F-252 (backend) |
 | 128 customization only where needed; Language menu switch removed | § 26.1 | F-251 |
 | 153 Home = Overview + Recent transactions; People tab; Overview only on Home | § 26.3 | F-256 |
+| 167 pull to refresh, header stays | § 26.9 | F-258 (Wave C) |
 | 145 deep links end to end | § 26.3 | F-254 (with F-241) |
 | 125 sign-in required, nothing visible signed out | § 26.15 | F-250 (Wave C), F-2101/F-2102 moved up after Wave C |
 | 124 footer links on one line | § 26.5 | fixed on integrate/wB |
@@ -548,6 +549,106 @@ Found 2026-10-30 by the tap-speed work: § 26.9's direction-aware slide between 
   1. Slide direction follows tab order; a tap mid-slide redirects from the current position; the landing tab is the last tapped (tabTaps.spec stays green).
   2. Indicator springs; icon pops; haptic tap on native; badge springs on count change; re-tap of the active tab scrolls its list to top.
   3. Reduced motion / motion off: instant switch; renders gate and tap-latency spec do not regress.
+
+### F-258 Pull to refresh, header stays `spec: owner § 26.9 (decision 167)`
+
+Pull down at the top of Home, People, Groups, Activity, Analytics, Person and Group to refresh; the header stays fixed and visible throughout; native RefreshControl, phone-web pull handler.
+
+- **Effort** M · **Impact** 8 · **Backend** no (syncNow() hook ready for F-2103) · **Status** todo, Wave C (next free slot) · **Deps** F-255, F-256
+- **Prefs** -
+- **Acceptance**
+  1. Every full screen refreshes on pull at the top, header or not (owners 169, 170), built once in the shared scaffold with a test over every route; sheets and popups keep drag-to-close (§ 26.8); the spinner sits under the header; the header never moves or hides during the pull (e2e checks its top stays at 0 while pulling at 390).
+  2. Native: List RefreshControl on iOS and Android (simulator checked); phone web: a pull handler on the window scroll in iOS Safari (simulator) and Android Chrome, no fight with browser overscroll, scrolling unaffected (scrollWeb.spec green).
+  3. Until sync: re-reads local data and ends in under 1 s with honest status; offline ends at once, no error toast; with the backend it calls syncNow().
+  4. Nothing redraws unless data changed (owner 166); renders gate and tap-latency spec do not regress.
+
+### F-259 Activity type filter; See all transactions lands there `spec: owner § 26.14 (decision 173)`
+
+Activity Filters gain the type (Expenses, Payments, Comments, Groups, Friends and invites, Reminders, Disputes), remembered and in the URL; every Recent transactions "See all" opens Activity with type=transactions (group-scoped from a Group page).
+
+- **Effort** S · **Impact** 8 · **Backend** no · **Status** todo, Wave C (with F-1213 All/Me/Others) · **Deps** F-1213, F-256
+- **Prefs** `activity.type` (account)
+- **Acceptance**
+  1. Filters sheet on Activity has Type (multi-select) besides All/Me/Others; badge and empty state follow it; remembered after reload; `/activity?type=transactions` deep-links it.
+  2. Home, right column and Group "See all" of Recent transactions land on Activity filtered to transactions (and to that group from a Group page), opened as a pushed page with Back to where they came from (owner 179); tapping the Activity tab still gives the plain tab.
+  3. e2e at 390/1440; demo data has every type.
+
+### F-260 Screen-specific empty-state illustrations `spec: owner § 7 (decisions 146, 172)`
+
+Original animated illustrations (light and dark) for every empty state: search no match, filtered no match, all settled, no history, no balances, nothing to settle, no feedback, no invite links, not found, Ask empty, besides the existing people, groups, activity and analytics.
+
+- **Effort** M · **Impact** 7 · **Backend** no · **Status** in progress (every empty state animated with the 4 existing pieces; screen-specific art next) · **Deps** -
+- **Prefs** -
+- **Acceptance**
+  1. Each empty state uses art about its own screen, original (scripts/lottie.ts style), light and dark, lazy-loaded, plays once then rests, static under reduced motion.
+  2. A test fails on any `EmptyState` without an `illustration`.
+  3. Same size, spacing and structure everywhere; screenshots of each.
+
+### F-261 Avatar or name opens the person, everywhere `spec: owner § 26.3 (decision 178)`
+
+One shared PersonLink (avatar + name) used on every screen; tapping either opens /people/:id (Me -> Profile).
+
+- **Effort** M · **Impact** 8 · **Backend** no · **Status** todo, Wave C (next free slot, with F-1213 / F-259) · **Deps** F-256
+- **Prefs** -
+- **Acceptance**
+  1. Every avatar or name of a person (expense/payment detail, items, Activity actor, comments, Members, Balances, Settle plan, search/Ask results, recent people, requests/invites, right column) opens that person; Me opens Profile; removed/unknown open the read-only page or "Not on this device yet".
+  2. Built as one `PersonLink` (architecture test: no screen renders `UserAvatar` with a person id outside it); nested targets inside rows that open something else; 44 px targets; hover underline on web; keyboard focusable.
+  3. e2e samples each surface at 390 and 1440; no redraw regressions (renders gate).
+
+### F-262 Person names capitalised word by word `spec: owner § 26.3 (decision 181)`
+
+Every word of a person's full name starts with a capital, on save and on display.
+
+- **Effort** S · **Impact** 6 · **Backend** no (the API applies the same function in M2) · **Status** done (web), Wave C; native unverified · **Deps** -
+- **Prefs** -
+- **Acceptance**
+  1. `capitalizeName` in `packages/domain` (unit-tested: spaces, hyphens, apostrophes, "McDonald" kept, Devanagari unchanged, trims and collapses spaces).
+  2. Every save path for a person's name uses it; every display of a person's name uses it (old lower-case data reads right).
+  3. Group names, expense titles, emails untouched; e2e adds "saransh balyan" and sees "Saransh Balyan".
+
+### F-263 Every page has a fixed parent for Back `spec: owner § 26.3 (decision 184)`
+
+Back with no history goes to the page's parent (stacked), never disappears; tab copies opened from a link keep Back after a refresh via `from`.
+
+- **Effort** M · **Impact** 8 · **Backend** no · **Status** todo, Wave C (with the F-256 fix round) · **Deps** F-256
+- **Prefs** -
+- **Acceptance**
+  1. `backFallback` covers every route (architecture test fails on a missing one); default is Home, not People.
+  2. Refresh or paste /settings/appearance: Back -> Settings -> Home. Same for person, group, expense (group / friend), edit, settle, profile, friends and invites.
+  3. A pushed tab copy's address carries `from`; refresh keeps Back to the origin; tapping the tab drops it. e2e at 390 and 1440, web and the native route twins.
+
+### F-264 Breathing splash mark while loading `spec: owner § 26.11 (decision 185)`
+
+The launch logo zooms gently in and out while content loads, on web from first paint and on native from the first JS frame.
+
+- **Effort** S · **Impact** 6 · **Backend** no · **Status** todo, Wave C · **Deps** -
+- **Prefs** -
+- **Acceptance**
+  1. Web: inline CSS keyframes in `index.html` animate the mark before any script loads; it fades into the first screen; `prefers-reduced-motion` gets an opacity pulse.
+  2. iOS / Android: a JS launch screen identical to the native splash (light and Dim backgrounds, size, position) takes over without a jump and animates on the UI thread until ready.
+  3. Throttled network e2e sees the animation running; no layout shift at handover; simulator video on iOS.
+
+### F-265 Compact desktop sidebar `spec: owner § 26.5 (decision 188)`
+
+The desktop sidebar is only as wide as its content and its footer links sit right under Add expense.
+
+- **Effort** S · **Impact** 6 · **Backend** no · **Status** in progress, Wave C · **Deps** -
+- **Prefs** -
+- **Acceptance**
+  1. At 1300, 1440 and 1920 the sidebar width fits the longest item (en and hi measured, no truncation); content starts sooner.
+  2. Footer links follow the Add expense pill with normal spacing; no pinned footer, no dead band.
+  3. Rail (800-999) and phone unchanged (390 before/after identical); screenshots light and Dim.
+
+### F-266 Fast everywhere: perf sweep of every screen and interaction `spec: owner § 26.10 (decision 189)`
+
+A perf sweep spec walks every route and interaction in WebKit and Chrome at 6x CPU, and every miss is fixed at its cause.
+
+- **Effort** L · **Impact** 10 · **Backend** no · **Status** in progress, Wave C (closes the wave) · **Deps** F-255
+- **Prefs** -
+- **Acceptance**
+  1. `perf/sweep.spec.ts` covers every link-table route (open, close, revisit) and every interaction listed in § 26.10 owner 189, on the large demo set and the 10,000-expense fixture, in WebKit and Chrome 6x; it fails above budget.
+  2. Known misses fixed: Analytics revisit (330 ms at 6x), row exit animations on popped pushed pages (Person, Group, Expense), Activity narrowed paging (F-1213 review C1).
+  3. Per-screen table in COMPLETION_MATRIX taken at load under 10; the sweep is part of the merge gate from then on.
 
 ### F-250 Sign-in required (auth gate) `spec: owner § 26.15 (decision 125)`
 
@@ -1735,6 +1836,17 @@ One Settings page (`/settings/friends`) that manages friends and invites. Reques
 
 Everything a group trip needs, from first booking to closing the books.
 
+### F-705 Trip location ("Where?") `spec: owner § 26.12 (decision 182)`
+
+Trip groups ask where the trip is: an optional plain-text place on New and Edit group, shown and searchable.
+
+- **Effort** S · **Impact** 6 · **Backend** no (synced with the group in M2) · **Status** done (web), Wave C; native unverified · **Deps** -
+- **Prefs** -
+- **Acceptance**
+  1. "Where? (optional)" shows for Trip only, beside the dates; saved as `group.location` (trimmed, null when empty) through createGroup / updateGroup with history and outbox.
+  2. Group row and header read "Trip · Goa · 12-18 Mar" (parts that are missing drop out); search finds the group by its location; CSV has a Location column.
+  3. Switching type away from Trip hides the field and keeps the value; demo trips have locations; en + hi; e2e at 390 and 1440.
+
 ### F-701 Trip kitty v2: multi-currency, holder hand-off, cash count `spec v2`
 
 Several currencies in one pot, named holder with recorded hand-off, "Count the kitty" turning gaps into unrecorded spend, top-ups, card kitty, leftover return.
@@ -2558,11 +2670,11 @@ Overview first; requests, recent transactions, then Friends; Invites sent move t
 
 Dispute or hold an expense, one item of a bill, a repayment or a write-off, with a structured reason and an optional proposed fix; the adder, payer or an admin answers (accept = one-tap fix as a normal edit, reject with reason), the raiser can withdraw or reopen once. A disputed record keeps counting in balances (with an "of which disputed" line and a badge) and is left out of the Settle up plan by default. Full rule: ARCHITECTURE § 26.20 "Disputes and holds". **Best of both (2026-10-27):** Expensify's hold (`src/pages/iou/DynamicHoldReasonPage.tsx`, `src/libs/actions/IOU/Hold.ts`, `ProcessMoneyReportHoldMenu.tsx`) is the hold half, with its one-time explainer.
 
-- **Effort** L · **Impact** 8 · **Backend** no (two-sided with F-2208) · **Status** todo, Wave C (after F-1204 merges) · **Deps** F-1204, F-230, F-1205 (for acceptance 9)
+- **Effort** L · **Impact** 8 · **Backend** no (two-sided with F-2208) · **Status** built on `feat/wC-F1210-disputes` (2026-10-30; client, local, both engines), with follow-ups below · **Deps** F-1204, F-230, F-1205 (for acceptance 9)
 - **Prefs** `group:settleIncludeDisputed` (off)
 - **Acceptance**
   1. Raise from the row menu, the detail page, an itemized item's portion and a repayment/write-off; reason chips as § 26.20, note required for Other, proposed fix for amount, share, payer and duplicate; one open dispute per person per record.
-  2. `disputes` store with `byTarget` and `byStatus`; raise, hold, release, accept, reject, withdraw and reopen are sync mutations with history and an outbox op; `canDispute` / `canResolveDispute` in `domain/permissions.ts` with bun tests (raiser cannot resolve except withdraw; adder, payer or admin resolve; reopen once, then admin only).
+  2. `disputes` store with `byTarget` and `byStatus`; raise, hold, release, accept, reject, withdraw and reopen are sync mutations with history and an outbox op; `canDispute` / `canResolveDispute` in `domain/permissions.ts` with bun tests (raiser cannot resolve except withdraw; adder, payer or admin resolve; reopen once; after a reopen only a group admin answers, and outside a group the adder or payer still answers and a second reopen is refused, ruling 187).
   3. Balances, totals, overview, charts and exports still count a disputed or held record exactly as recorded (property test: balances identical with and without open disputes).
   4. Every balance surface shows a per-currency "of which disputed" line from a projection kept in the balance transaction (no scan); rows and detail show "Disputed" / "On hold" badges with icon and text.
   5. Settle up leaves disputed and held amounts out of the plan by default, states the left-out amount per currency, and "Include disputed" (remembered per group) puts them back; the plan hash changes on raise, accept, release (F-1101).
@@ -2571,6 +2683,13 @@ Dispute or hold an expense, one item of a bill, a repayment or a write-off, with
   8. Before the backend, "raised by" picks a participant (default me, "recorded by you").
   9. Accepting a dispute on a record before a settle-up checkpoint shows "Adjustment after settle-up" (with F-1205).
   10. Demo data has disputes and holds in every state (open, accepted, rejected, withdrawn, reopened, gone) in at least two currencies; demoCoverage lists them; e2e (no external hand-offs, owner 118) and the perf gate on the 10k fixture pass.
+
+**Built (2026-10-30), acceptance 1-8 and 10:** see ARCHITECTURE § 26.20 "[Built] (F-1210)". **Follow-ups, not built:**
+  - **F-230 For you card:** "Needs your answer" (open disputes on records I may answer, via `useOpenDisputes()` in `state/disputes.ts`) and the 3-day nudge on that card only. The card does not exist yet and Home is being redesigned by another builder.
+  - **Home overview cards:** the "of which disputed" line on the per-currency overview cards (another builder owns them). Person and Group balances have it; `disputed_balances` already holds the figures per person, group and currency.
+  - **Acceptance 9, "Adjustment after settle-up":** needs F-1205 checkpoints.
+  - **Disputed filter in the address** (F-241): "Disputed only" on a group and a person is page state today.
+  - **Two-sided disputes** wait for F-2208 (sync); until then "raised by" records for a chosen participant, "recorded by you".
 
 ### F-1211 Group discussion thread `spec: owner § 26.1 best of both (Expensify group chats, Bluesky group chats)`
 

@@ -33,6 +33,12 @@ import {DeletedMeta, useStruck} from '#/components/DeletedMeta'
 import {EyeIcon, EyeOffIcon} from '#/components/settings/icons'
 import {useHiddenItems} from '#/data/hiddenItems'
 import {useHideItem} from '#/features/hidden/HideItem'
+import {DisputeLine, isDisputeLine} from '#/components/disputes/DisputeLine'
+import {DisputePanel} from '#/components/disputes/DisputePanel'
+import {RecordMenuItems} from '#/components/disputes/RecordMenuItems'
+import {requestDispute} from '#/lib/disputes/bus'
+import {markOf, useDisputeEvents, useOpenDisputes} from '#/state/disputes'
+import {DisputeBadge} from '#/components/disputes/DisputeBadge'
 import {Link} from '#/view/com/util/Link'
 import {EmptyState} from '#/view/com/util/EmptyState'
 import {UserAvatar} from '#/view/com/util/UserAvatar'
@@ -59,7 +65,6 @@ import {
   useDisplayName,
   useErrorText,
 } from '#/components/split/shared'
-import {ReceiptIcon} from '#/components/split/icons'
 import {useExpense} from '#/components/split/useExpense'
 import * as Toast from '#/components/Toast'
 import {Text} from '#/components/Typography'
@@ -68,7 +73,6 @@ import {Shimmer} from '#/motion/Shimmer'
 import {SyncToned} from '#/components/SyncTone'
 import {
   HistoryLine,
-  type HistoryLineData,
   SyncFooter,
   useHistoryLines,
 } from './components/History'
@@ -134,7 +138,7 @@ export function ExpenseScreen() {
       ) : expense === null ? (
         <EmptyState
           testID="expense-not-found"
-          icon={ReceiptIcon}
+          illustration="empty-activity"
           message={l`This expense doesn’t exist. The link may be wrong.`}
           button={{
             label: l`Go to People`,
@@ -208,6 +212,9 @@ function ExpenseMenu({expense}: {expense: Entity<Expense>}) {
       </Menu.Trigger>
       <Menu.Outer>
         <Menu.Group>
+          <RecordMenuItems targetType="expense" targetId={expense.id} />
+        </Menu.Group>
+        <Menu.Group>
           <Menu.Item
             testID="expense-delete"
             label={l`Delete expense`}
@@ -243,7 +250,20 @@ function Detail({
   const avatarName = useAvatarName()
   const errorText = useErrorText()
   const groups = useAllEntities<Group>('group')
-  const lines = useHistoryLines(history)
+  const historyLines = useHistoryLines(history)
+  const disputeLines = useDisputeEvents('expense', expense.id)
+  const lines = [...historyLines, ...disputeLines]
+  const open = useOpenDisputes()
+  const mark = markOf(open, 'expense', expense.id)
+  const openHere = open?.byRecord.get(`expense:${expense.id}`)
+  /* Built once per render, not per item: the items with an open dispute (by id), and who may raise one on an item. */
+  const itemDispute = {
+    marked: new Set((openHere ?? []).flatMap(d => (d.data.itemId === null ? [] : [d.data.itemId]))),
+    me: ctx.actor,
+    onRaise: expense.deleted
+      ? undefined
+      : (itemId: string) => requestDispute({kind: 'raise', targetType: 'expense', targetId: expense.id, itemId}),
+  }
   const scroll = useAnimatedRef<Animated.ScrollView>()
   const panel = useRef<React.ComponentRef<typeof ScrollView>>(null)
   const e = expense.data
@@ -332,6 +352,7 @@ function Detail({
         {expense.deleted ? (
           <DeletedMeta testID="expense-deleted-at" at={expense.updatedAt} />
         ) : null}
+        {mark && !expense.deleted ? <DisputeBadge kind={mark === 'hold' ? 'hold' : 'dispute'} testID="expense-disputed" /> : null}
         <View style={[a.flex_row, a.align_center, a.gap_sm, a.flex_wrap]}>
           <Text
             testID="expense-detail-date"
@@ -416,6 +437,7 @@ function Detail({
 
   const breakdown = (
     <View>
+      <DisputePanel targetType="expense" targetId={expense.id} currency={e.currency} />
       <SectionLabel>
         <Trans>Paid by</Trans>
       </SectionLabel>
@@ -457,6 +479,7 @@ function Detail({
           fmt={fmt}
           name={name}
           avatarName={avatarName}
+          dispute={itemDispute}
         />
       ) : null}
 
@@ -535,7 +558,13 @@ function Detail({
       </SectionLabel>
       <DiscussionTimeline
         lines={lines}
-        renderLine={(line: HistoryLineData) => <HistoryLine line={line} />}
+        renderLine={line =>
+          isDisputeLine(line) ? (
+            <DisputeLine event={line} />
+          ) : (
+            <HistoryLine line={line} />
+          )
+        }
       />
       <SyncFooter sync={expense} />
     </>
