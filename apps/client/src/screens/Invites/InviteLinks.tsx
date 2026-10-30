@@ -1,7 +1,7 @@
 // Adapted from bluesky-social/social-app@4e4ad9c (MIT) - src/screens/Messages/JoinRequests.tsx (list of rows with inline actions) and src/screens/Messages/components/InviteLinkDialog.tsx (Step.CONFIRM_DISABLE copy)
 import {useState} from 'react'
 import {View} from 'react-native'
-import Animated, {LayoutAnimationConfig} from 'react-native-reanimated'
+import {LayoutAnimationConfig} from 'react-native-reanimated'
 import {Plural, Trans, useLingui} from '@lingui/react/macro'
 import {useNavigation} from '@react-navigation/native'
 import {
@@ -35,7 +35,7 @@ import * as Prompt from '#/components/Prompt'
 import {SyncToned} from '#/components/SyncTone'
 import * as Toast from '#/components/Toast'
 import {Text} from '#/components/Typography'
-import {useListAnimations} from '#/motion/listAnimations'
+import {AnimatedListRow} from '#/motion/listAnimations'
 
 /**
  * The invite-link rows and their Revoke prompt, shared by this screen and the
@@ -51,7 +51,6 @@ export function useInviteLinkRows(now: number) {
   const ctx = useMutationCtx()
   const haptics = useHaptics()
   const describe = useDescribeLink()
-  const listAnimations = useListAnimations()
   const groups = useEntities<Group>('group')
   const groupName = new Map((groups ?? []).map(g => [g.id, g.data.name]))
   /* A personal link sent with an invite is named after who it is for. */
@@ -89,8 +88,7 @@ export function useInviteLinkRows(now: number) {
           ? l`Invite for ${invitedName.get(link.id)}`
           : l`Friend invite`
     return (
-      <Animated.View
-        {...listAnimations}
+      <AnimatedListRow
         key={link.id}
         testID={`invite-link-${link.id}`}
         style={[
@@ -167,7 +165,7 @@ export function useInviteLinkRows(now: number) {
             </Button>
           </View>
         </SyncToned>
-      </Animated.View>
+      </AnimatedListRow>
     )
   }
 

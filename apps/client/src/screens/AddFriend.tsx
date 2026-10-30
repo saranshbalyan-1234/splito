@@ -1,11 +1,6 @@
 // Adapted from bluesky-social/social-app@4e4ad9c (MIT) - src/components/contacts/screens/GetContacts.tsx (permission primer, denied state) and src/components/contacts/screens/PhoneInput.tsx (one field, live validation)
 import {useEffect, useRef, useState} from 'react'
 import {View} from 'react-native'
-import Animated, {
-  FadeIn,
-  FadeOut,
-  LinearTransition,
-} from 'react-native-reanimated'
 import {Trans, useLingui} from '@lingui/react/macro'
 import {useNavigation} from '@react-navigation/native'
 import {
@@ -46,7 +41,7 @@ import {
 } from '#/data/hooks'
 import {UserAvatar} from '#/view/com/util/UserAvatar'
 import * as SettingsList from '#/screens/Settings/components/SettingsList'
-import {atoms as a, native, useBreakpoints, useTheme} from '#/alf'
+import {atoms as a, useBreakpoints, useTheme} from '#/alf'
 import * as Admonition from '#/components/Admonition'
 import {Button, ButtonIcon, ButtonText} from '#/components/Button'
 import * as FormSheet from '#/components/FormSheet'
@@ -73,7 +68,7 @@ import {
 } from '#/components/people/contactPicker'
 import * as Toast from '#/components/Toast'
 import {Text} from '#/components/Typography'
-import {useShouldReduceMotion} from '#/motion/useShouldReduceMotion'
+import {AnimatedListRow} from '#/motion/listAnimations'
 
 /** How long typing must pause before the directory is asked (it is rate-limited server-side). */
 const LOOKUP_DEBOUNCE_MS = 350
@@ -111,7 +106,6 @@ export function AddFriendScreen() {
   const store = useStore()
   const ctx = useMutationCtx()
   const haptics = useHaptics()
-  const shouldReduceMotion = useShouldReduceMotion()
   const people = useEntities<Person>('person')
   const {outgoing} = usePendingRequests()
   const [inviteExpiry = '7d'] = usePref('invites.defaultExpiry')
@@ -372,14 +366,6 @@ export function AddFriendScreen() {
       </Text>
     ) : undefined
 
-  const motion = shouldReduceMotion
-    ? {}
-    : {
-        entering: FadeIn.duration(180),
-        exiting: FadeOut.duration(120),
-        layout: native(LinearTransition.duration(200)),
-      }
-
   return (
     <FormSheet.Screen
       testID="screen-add-friend"
@@ -503,10 +489,9 @@ export function AddFriendScreen() {
             </TextField.Root>
           </View>
 
-          <Animated.View
+          <AnimatedListRow
             key={check.state}
-            testID={`add-friend-status-${check.state}`}
-            {...motion}>
+            testID={`add-friend-status-${check.state}`}>
             <Status
               check={check}
               value={contact ? formatContact(contact) : raw.trim()}
@@ -527,7 +512,7 @@ export function AddFriendScreen() {
                 )
               }
             />
-          </Animated.View>
+          </AnimatedListRow>
 
           <SettingsList.Container>
             <SettingsList.PressableItem

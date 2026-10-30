@@ -25,7 +25,7 @@ import {ROUTE_PATHS} from '#/routes'
  *
  * Run (after `pnpm e2e:build`): `E2E_PORT=8266 pnpm perf --project=sweep-webkit sweep` and `--project=sweep-chrome`.
  * Numbers count only on a quiet machine (1-minute load under 10): the JSON records the load before and after.
- * Filters: SWEEP_DATA=demo|bulk, SWEEP_ONLY=<flow name substring>, SWEEP_LAPS=<n> (default 4).
+ * Filters: SWEEP_DATA=demo|bulk, SWEEP_ONLY=<flow name regex>, SWEEP_LAPS=<n> (default 4).
  */
 
 /* ---------------------------------------------------------------- in-page probe */
@@ -1013,6 +1013,8 @@ test.describe.configure({timeout: 3_600_000})
 for (const data of (process.env.SWEEP_DATA ?? 'demo,bulk').split(',') as Data[]) {
   test(`sweep: every screen and interaction, ${data} data`, async ({page, browserName}, info) => {
     await page.addInitScript(installProbe)
+    page.on('pageerror', e => console.log(`pageerror: ${(e.stack ?? e.message).slice(0, 1200)}`))
+    page.on('crash', () => console.log('page crashed'))
     const cdp = browserName === 'chromium' ? await page.context().newCDPSession(page) : null
     const run: Run = {page, cdp, rate: cdp ? 6 : 1, data}
     const load = {before: loadavg()[0]!, after: 0}
@@ -1048,14 +1050,16 @@ for (const data of (process.env.SWEEP_DATA ?? 'demo,bulk').split(',') as Data[])
       misses: [], // budgeted by the cold-start rule (1.5 s), not the tap budgets
     })
 
-    for (const flow of FLOWS.filter(f => !process.env.SWEEP_ONLY || f.name.includes(process.env.SWEEP_ONLY))) {
+    for (const flow of FLOWS.filter(f => !process.env.SWEEP_ONLY || new RegExp(process.env.SWEEP_ONLY).test(f.name))) {
       try {
         rows.push(...(await runFlow(run, c, flow)))
       } catch (e) {
         /* A flow that cannot run is a miss of its own, not the end of the sweep. */
         await throttle(run, 1)
+        mkdirSync(process.env.SWEEP_OUT ?? 'perf-results', {recursive: true})
+        await page.screenshot({path: join(process.env.SWEEP_OUT ?? 'perf-results', `fail-${flow.name.replace(/\W+/g, '-')}.png`)}).catch(() => {})
         const dead: Sample = {fb: -1, ct: -1, long: 0, exits: 0}
-        rows.push({screen: flow.name, action: 'flow failed', data, first: dead, again: null, info: false, leaving: false, misses: [`flow failed: ${String(e).split('\n')[0]}`]})
+        rows.push({screen: flow.name, action: 'flow failed', data, first: dead, again: null, info: false, leaving: false, misses: [`flow failed: ${String(e).replace(/\u001b\[[0-9;]*m/g, '').split('\n').slice(0, 4).join(' ')}`]})
       }
     }
     load.after = loadavg()[0]!
