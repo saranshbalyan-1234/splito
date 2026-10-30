@@ -1702,8 +1702,8 @@ labelled sidebar); **wide** = web 1300 px and up (Bluesky `gtTablet`, right colu
 ### 26.3 Shell and navigation
 
 - **There is no Home tab; the Overview is the top of Analytics** (owner 198, replaces the Home tab of 153 below):
-  the tabs are **People, Groups, Analytics, Activity** (plus Settings in the shared list; Ask Splito is not a tab or
-  a nav item, owner 200). The
+  the tabs are **People, Groups, Analytics, Activity, Settings** (owner 206 makes Settings a tab in the default
+  bar; Ask Splito is not a tab or a nav item, owner 200). The
   Overview (per-currency balance cards with All / Groups / Direct, owners 113/114/120/161/176) is the first section of
   Analytics, above its filter row, labelled as balances right now (it ignores the period and currency filters
   below it); Recent transactions is Activity (Type = Expenses and Payments), and recently active people and groups
@@ -1778,7 +1778,7 @@ labelled sidebar); **wide** = web 1300 px and up (Bluesky `gtTablet`, right colu
   and a drag handle (Bluesky's reorderable list): what is on and its order is the bottom bar, with **any number of
   tabs** (from one item up to every item; the start tab cannot be turned off). Tabs share the bar width equally; with
   more than 5 the labels hide and icons stay at Bluesky size with their badges. Items not in the bar stay in the
-  drawer. Default bar: People, Groups, Analytics, Activity. **On rail and desktop every item always shows** (owner 155, replaces 127's "off items under More" on wide
+  drawer. Default bar: People, Groups, Analytics, Activity, Settings (owner 206). **On rail and desktop every item always shows** (owner 155, replaces 127's "off items under More" on wide
   screens): the sidebar and rail list all items (People, Groups, Analytics, Activity, Settings),
   in the order chosen in Settings > Navigation, with no "More" item; the on/off choice shapes only the phone bottom
   bar (off items stay in the phone drawer).
@@ -1876,10 +1876,11 @@ show what: centre may be page name, right maybe some basic action, and left may 
 `components/Layout/Header/`, `components/HeaderAvatar.tsx`.
 
 - **Left:** the avatar (testID `header-avatar`) on top-level pages at every width, desktop included; Bluesky
-  `BackButton` with `goBack(navigation, fallback)` on pushed pages. **At every width the avatar opens Profile,
-  which lives inside Settings** (owner 201, replaces "on phone and rail the avatar opens the drawer"):
-  `/settings/profile`, a Settings page whose Back goes to Settings (owner 184); the old `/profile` redirects there.
-  Labelled "Open profile". No avatar on the right
+  `BackButton` with `goBack(navigation, fallback)` on pushed pages. **At every width the avatar opens Profile**
+  (owner 201, replaces "on phone and rail the avatar opens the drawer"). **Profile and Settings are separate**
+  (owner 206): Profile is its own page at `/profile` (a pushed page; Back returns where you were, else the start
+  tab), and Settings is a tab of its own (`/settings`, in the default bottom bar and the sidebar). Labelled "Open
+  profile". No avatar on the right
   and no avatar dropdown menu. *Why:* "on click of avatar, now open profile inside settings" (owner 201; earlier: "it should open the drawer like Bluesky where all menu appears like the
   hamburger"), "and move this to left, where hamburger icon was there in Bluesky"; "on desktop when sidebar is
   opened completely don't open sidebar on avatar click".
@@ -2573,9 +2574,9 @@ dishes etc and each item can be assigned to each in split"; "in itemize don't sh
   account. *Why:* "there is signin page already there in bluesky, use that"; "basically no signup needed".
 - **Signed in (only once the backend exists):** an account row (avatar, name, email/phone, sync status) and
   a destructive "Log out" row opening a prompt "Log out?". **Log out lives on Profile** (owner 202): the "Log out"
-  row is the last row of Profile (`/settings/profile`) and nowhere else (not in the Settings list, the drawer footer
+  row is the last row of Profile (`/profile`) and nowhere else (not in the Settings list, the drawer footer
   or the sidebar); the blocking add-contact step keeps its own Log out. **Profile holds only the person** (owner
-  203): avatar, name, contact details, stats and Log out; no "Settings" row on it (Back already goes to Settings).
+  203): avatar, name, contact details, stats and Log out; no "Settings" row on it (Settings is its own tab, owner 206).
   *Why:* "move the logout button inside profile"; "remove settings from profile". **Log out erases everything this account left on the
   device** (owner 186): its local database (every store, the outbox, history, attachments cache), its demo
   database, its account-scoped preferences, drafts, the session and any cached copies (service worker data
@@ -3217,6 +3218,7 @@ Every owner decision, in the order it was made (all 2026-10-26). "Replaced" name
 | 203 | "remove settings from profile" | Profile holds only the person (avatar, name, contact, stats, Log out); its "Settings" row is removed | § 26.15 | Profile had a Settings row |
 | 204 | "make support a section, which opens up all these menus" | Settings shows one "Support" row opening /settings/support with Send feedback, Your feedback, Help, Privacy, About and the version | § 26.15 | Support items listed inline in the Settings list |
 | 205 | "and same for data, think of a proper name as well" | Settings shows one "Your data" row opening /settings/data with Export, Import, Move older data and Reset all settings | § 26.15 | Data items listed inline under a "Data" heading |
+| 206 | "make profile and settings as diff, avatar opens profile and settings as tab is diff" | Profile is its own page at /profile (avatar opens it, Back returns where you were); Settings is a tab (/settings) in the default bar and sidebar | § 26.4, § 26.3 | Profile inside Settings at /settings/profile (201); Settings reached from Profile Back |
 
 New decisions follow § 0 rule 9: rewrite the rule in its topic so only the current truth remains, then add a
 row here.
