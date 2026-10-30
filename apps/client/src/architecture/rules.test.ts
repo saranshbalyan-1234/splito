@@ -174,6 +174,12 @@ describe('counters', () => {
     expect(count('rnModal', "import {View} from 'react-native'\nimport {Modal} from '#/components/Modal'")).toBe(0)
   })
 
+  test('rowMenuGesture', () => {
+    expect(count('rowMenuGesture', 'const p = {onContextMenu: open}')).toBe(1)
+    expect(count('rowMenuGesture', 'const p = {onContextMenu: open}', `${CLIENT}components/RowMenu.tsx`)).toBe(0)
+    expect(count('rowMenuGesture', '// onContextMenu is only named in a comment')).toBe(0)
+  })
+
   test('expoHaptics', () => {
     expect(count('expoHaptics', "import * as Haptics from 'expo-haptics'")).toBe(1)
     expect(count('expoHaptics', "import * as Haptics from 'expo-haptics'", `${CLIENT}lib/haptics/index.ts`)).toBe(0)
