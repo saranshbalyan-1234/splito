@@ -1698,7 +1698,8 @@ Bluesky's `LeftNav`, copied as closely as possible. *Why:* "you need to improve 
 good"; "the left sidebar looks bad on desktop". *Where:* `view/shell/desktop/LeftNav.tsx`.
 
 - **It holds:** the logo mark, the shared nav items (§ 26.3), the "Add expense" pill, and the shared footer
-  links pinned at the bottom (Feedback · Help · Privacy · About; same component as the drawer). No avatar or
+  links (Feedback · Help · Privacy · About; same component as the drawer) directly under the pill, not pinned to
+  the bottom of the window (owner 188). No avatar or
   `ProfileCard`, no "Splito" wordmark, no recent groups or transactions (those live in the right column,
   § 26.17). *Why:* "remove the avatar from sidebar"; "remove label from logo".
 - **Logo:** the mark only (§ 26.11), 40 px, horizontally centred in the sidebar column, 12 px (space.md) below the
@@ -1709,8 +1710,11 @@ good"; "the left sidebar looks bad on desktop". *Where:* `view/shell/desktop/Lef
   sliding active indicator (§ 26.9) sits beside the active item.
 - **Add expense:** Bluesky `ComposeBtn` as a large full-width pill with a plus icon; it opens the Add expense
   popup (§ 26.8). *Why:* "go with what Bluesky had".
-- **Geometry:** widths and paddings from Bluesky's `LEFT_NAV_STANDARD_WIDTH` / `LEFT_NAV_MINIMAL_WIDTH`;
-  hairline right border; sticky full height; scrolls on its own when tall.
+- **Compact, no space it does not need** (owner 188): the sidebar is as wide as its longest item needs (icon,
+  label, padding; about 200 px in English, wider only if a language needs it), so the content starts sooner; the
+  logo, items, pill and footer links form one block at the top with no dead band between them, and nothing is
+  pinned to the bottom. Hairline right border; sticky full height; scrolls on its own when tall. Phone and rail
+  layouts are unchanged. *Why:* "on desktop there is a lot of space we don't need there in sidebar".
 - **Rail (800-999 px):** Bluesky minimal mode: mark, icons only, round compose button.
 
 ### 26.6 FAB
@@ -2799,6 +2803,7 @@ Every owner decision, in the order it was made (all 2026-10-26). "Replaced" name
 | 185 | "also animate the splash screen icon, so that i see that its loading"; "like zoomin zoomout a little, so i know content is being downloaded" | Launch mark zooms 1 -> 1.08 -> 1 while loading, web from first paint (inline CSS), native via a matching JS launch screen; opacity pulse under reduced motion | § 26.11 | Static splash mark |
 | 186 | "when logout, it should remove all data from db" | Log out always erases the account's local DB, demo DB, account prefs, drafts, session and caches; device language/theme stay; prompt warns with the unsynced count first; no keep option | § 26.15 | Prompt offered "Keep this device's data" / "Erase this device's data" |
 | 187 | Assistant ruling after the F-1210 review | After one reopen only a group admin accepts or rejects (outside a group the adder or payer still answers and a second reopen is refused); one-tap "Accept and apply" only when the fix keeps the record's split mode (an amount fix on an itemised or exact split and a share fix on anything but an exact split are "Edit it" only, with the reason shown), and the panel states what the edit will change | § 26.20 | Admin-only closing after the first reopen without saying who answers it; one-tap fixes that converted a split to exact amounts |
+| 188 | "on desktop there is a lot of space we dont need ... there in sidebar" | Desktop sidebar fits its content (~200 px), footer links directly under Add expense, nothing pinned to the bottom | § 26.5 | Bluesky standard width; footer pinned at the bottom of the window |
 
 New decisions follow § 0 rule 9: rewrite the rule in its topic so only the current truth remains, then add a
 row here.

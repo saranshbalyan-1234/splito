@@ -628,6 +628,17 @@ The launch logo zooms gently in and out while content loads, on web from first p
   2. iOS / Android: a JS launch screen identical to the native splash (light and Dim backgrounds, size, position) takes over without a jump and animates on the UI thread until ready.
   3. Throttled network e2e sees the animation running; no layout shift at handover; simulator video on iOS.
 
+### F-265 Compact desktop sidebar `spec: owner § 26.5 (decision 188)`
+
+The desktop sidebar is only as wide as its content and its footer links sit right under Add expense.
+
+- **Effort** S · **Impact** 6 · **Backend** no · **Status** in progress, Wave C · **Deps** -
+- **Prefs** -
+- **Acceptance**
+  1. At 1300, 1440 and 1920 the sidebar width fits the longest item (en and hi measured, no truncation); content starts sooner.
+  2. Footer links follow the Add expense pill with normal spacing; no pinned footer, no dead band.
+  3. Rail (800-999) and phone unchanged (390 before/after identical); screenshots light and Dim.
+
 ### F-250 Sign-in required (auth gate) `spec: owner § 26.15 (decision 125)`
 
 Nothing of the app is visible signed out: only the welcome tour, the logged-out flow, language and legal pages. The local database opens per account only with a session; offline after sign-in; deep links resume after sign-in.
