@@ -201,8 +201,10 @@ test('hide works from the keyboard, offers undo, and hidden rows come back from 
   await page.setViewportSize(DESKTOP)
   await openActivity(page)
   const coffee = row(page, 'expense.created', 'Coffee beans')
-  // Keyboard only: Tab from the row reveals its buttons; the menu opens with Enter and walks with arrows.
-  await coffee.getByRole('link').focus()
+  // Keyboard only: Tab from the row passes the actor's avatar (its own link, F-261), then reveals the buttons; the menu opens with Enter and walks with arrows.
+  await coffee.getByRole('link').first().focus()
+  await page.keyboard.press('Tab')
+  await expect(coffee.getByRole('link', {name: /^Open /}).last()).toBeFocused()
   await page.keyboard.press('Tab')
   await expect(coffee.getByTestId('activity-action-markRead')).toBeFocused()
   await expect(coffee.getByTestId('activity-actions')).toHaveCSS('opacity', '1')

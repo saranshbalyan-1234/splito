@@ -1067,6 +1067,15 @@ Each rule came from a measurement; the dated story is in § 23. Newest first wit
   as `FIRSTVISIT` without gating it, and gates the second round, where every tab is mounted and parked
   (69 mounts + 468 updates in 4 of 4 runs). Median of three, taken on a quiet machine, as below.
 
+- **Every person target adds components to every row that draws one, so make each one the cheapest it can be.** `PersonLink`
+  (F-261) puts a `Link` and a `Pressable` behind each avatar and name: the renders gate's scroll phase (1,000 Activity
+  rows) mounts about 360 more of each (`Pressable` 2,206 -> about 2,950), the Ask phase 19. It subscribes to nothing (the
+  ids and names come down as props; "is this me" is one context read, `state/me.ts`, never a store hook), keeps its hover
+  state local to the one link, grows to a 44 px target with padding and an equal negative margin (no wrapper, no
+  layout change), and is memoised. Where a whole row already opens the person (People rows, Members) the avatar and name
+  use `isInsideLink` and mount no extra `Link` at all. The new mounts are the feature's cost, recorded once in the renders
+  baseline; no wasted render was added.
+
 - **A window that grows must keep what it read, and a render baseline is recorded as the median of three runs.**
   Activity's tracker rebuilt the whole history for every page a narrowed list read (10,000 expenses: 23.6 s, then
   72 ms per new expense); it now keeps its pool, cursor and sorted events and merges each page in (0.35 s SQLite /
@@ -1444,6 +1453,15 @@ Splito lessons (add newest last, dated, with PR):
   updates on the same build: the first visit of a tab lets background history loading and the Analytics report land
   inside the phase, so it is printed and never gated; the second round, on parked tabs, is 69 + 468 every run. A
   frozen clock (`page.clock.setFixedTime`) stops the app reaching Home, so the clock is pinned by an offset.
+
+- 2026-10-31, F-261 (c-personlink): **making every avatar a link is a mount cost, and it moves the keyboard order.** The renders gate's scroll phase
+  counted about 360 more `PersonLink` / `Link` and about 740 more `Pressable` mounts (one per Activity row), so the baseline was
+  re-recorded on purpose (median of three; the machine was at load 30-40, not quiet, and the mount counts are not timing
+  dependent). Rows that already open the person pass `isInsideLink` and mount nothing extra. A nested link sits inside its row's
+  Pressable, so a keyboard user now tabs row -> avatar -> the row's buttons: `activity.spec` "hide works from the keyboard" waits
+  for the avatar first. A nested target carries no `href` (an anchor cannot sit in another anchor); find it by its label
+  (`Open <name>`), not as `a[href]`. Demo mode asks "Switch back to your data?" for a link naming an id the demo data lacks, so test
+  "Not on this device yet" outside demo. `components/` may not import `data/`: a one-line `state/me.ts` hook gives them my id.
 
 
 ## 24. Checklists
