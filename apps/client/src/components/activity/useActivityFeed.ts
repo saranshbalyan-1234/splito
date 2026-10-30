@@ -1,4 +1,4 @@
-import {useMemo} from 'react'
+import {useEffect, useMemo} from 'react'
 import {plural} from '@lingui/core/macro'
 import {
   ACTIVITY_PAGE,
@@ -121,13 +121,18 @@ export function useActivityFeed(
   }
 }
 
+/** The badge reads at most this many changes back looking for unread ones (about ten pages). */
+const BADGE_SCAN_MAX = 1000
+
 /**
  * The Activity nav item's badge, as Bluesky badges Notifications: unread
  * changes by other people, capped at "30+" as upstream's
- * `useUnreadNotifications`; empty when there's nothing new. Counted over the
- * newest page only, whatever tab, filter or window the screen holds: everything
- * unread is newer than the stored read mark, so the first page holds the 30 the
- * badge can show and it can never drift as the screen's window grows.
+ * `useUnreadNotifications`; empty when there's nothing new. Everything unread
+ * is newer than the stored read mark, so the count is exact once the window
+ * reaches that mark: while it holds fewer than 30 unread and has not reached
+ * the mark, the badge widens the window itself (a page at a time, bounded), so
+ * it never reads a stale newest page and never depends on the tab or filter the
+ * screen shows.
  */
 export function useActivityBadge() {
   const {actor: me} = useMutationCtx()
@@ -136,7 +141,14 @@ export function useActivityBadge() {
   const [stored] = useStorage(device, FEED_KEY)
   const state = stored ?? EMPTY_FEED_STATE
   const events = loaded?.events
-  const n = useMemo(() => (events ? buildRows(events.slice(0, ACTIVITY_PAGE), state, me, ALL_ACTIVITY, tz).unreadCount : 0), [events, state, me, tz])
+  const n = useMemo(() => (events ? buildRows(events, state, me, ALL_ACTIVITY, tz).unreadCount : 0), [events, state, me, tz])
+  const oldest = events?.at(-1)?.at
+  const needsMore = !!loaded && !loaded.isDone && n < 30 && oldest !== undefined && oldest > state.readUpTo && (events?.length ?? 0) < BADGE_SCAN_MAX
+  const ensureWindow = loaded?.ensureWindow
+  const size = events?.length ?? 0
+  useEffect(() => {
+    if (needsMore) ensureWindow?.(size + ACTIVITY_PAGE)
+  }, [needsMore, ensureWindow, size])
   return n >= 30 ? '30+' : n > 0 ? String(n) : ''
 }
 
