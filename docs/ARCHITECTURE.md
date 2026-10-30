@@ -95,8 +95,8 @@ Rules:
   A-002. [Planned]
 - **Money rules live only in `packages/domain`.** Screens and components never add, subtract, compare-to-sum
   or allocate money, and never sum unlike currencies. Reason: one place to test exactness. [Partial] Today
-  money arithmetic also lives in `components/split/form.ts`, `components/people/ledger.ts`,
-  `components/groups/net.ts` and `screens/People/sort.ts`; A-001 freezes it and A-004 moves it.
+  money arithmetic also lives in `components/split/form.ts`, `components/people/ledger.ts`
+  and `screens/People/sort.ts`; A-001 freezes it and A-004 moves it.
 - **`packages/domain` is imported, never ported**, by the client and (M2) the API. If a rule must exist twice
   (say a SQL aggregate of balances on the server), a parity test runs both on the same fixtures and the
   constants live in one module.
@@ -1152,6 +1152,12 @@ Rules:
   pinned); screenshots to a gitignored `apps/client/qa/<feature>/`. A stale selector is fixed in the spec,
   never by reverting UI. Release e2e runs on `expo export -p web` output.
 - **Every wait is bounded** (Playwright and bun): a timeout fails the test.
+- **e2e specs reuse the shared helpers (owner 210, F-274)**: `e2e/app.ts` `openApp` (load and wait for `window.splito`),
+  `e2e/viewports.ts` (`PHONE` 390, `DESKTOP` 1440, `LAPTOP`, `SIZES`; no spec defines its own), `e2e/seed.ts`
+  (`seedGroup`, `seedA04`, `BASE`), `e2e/activity.ts` (`activityScreen`, `activityRows`, `activityKinds`),
+  `e2e/composer.ts` (`composeButton`, `openAddExpense`, `pickPeople`), `e2e/openDemo.ts` (`openDemo`, `setPref`),
+  `e2e/pinClock.ts` (the one way to pin "now") and the `SplitoDevTools` type from `data/devTools.ts` instead of a
+  local `type Splito`. A client unit test that needs SQLite uses `bunExecutor` from `@splito/sync/testing`.
 - **Library workarounds and `patches/`** each have a test that fails when the workaround stops applying.
 - **Never commit tokens.** e2e uses seeded local-store fixtures; M2 signed-in QA reads a token from env or a
   gitignored file.

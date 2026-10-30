@@ -5,13 +5,14 @@ import {expect, type Page, test} from '@playwright/test'
 
 import {continueWith, devCode, toContinue} from './auth'
 import {signedOut} from './signedOut'
+import {DESKTOP, PHONE} from './viewports'
 
 /* F-249/F-250 screenshots for review: the intro slides and the Continue flow, light and Dim, phone and desktop, into the gitignored qa/auth/. */
 test.use(signedOut)
 
 const OUT = join(__dirname, '..', 'qa', 'auth')
 mkdirSync(OUT, {recursive: true})
-const SIZES = {'390': {width: 390, height: 844}, '1440': {width: 1440, height: 900}}
+const SIZES = {'390': PHONE, '1440': DESKTOP}
 const THEMES = {light: 'light', dim: 'dark'} as const
 
 for (const [size, viewport] of Object.entries(SIZES)) {

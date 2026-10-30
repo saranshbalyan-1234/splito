@@ -2,8 +2,12 @@ import {Database} from 'bun:sqlite'
 
 import type {SqlExecutor} from '../src/sqlStore'
 
-export function bunExecutor(path: string): SqlExecutor {
-  const db = new Database(path)
+/**
+ * A SQLite executor over bun:sqlite. Pass a path (`':memory:'`) to open a database that `close()` closes, or an open
+ * `Database` to share one (a test that reopens "the same file"): `close()` then leaves it open for the caller.
+ */
+export function bunExecutor(source: string | Database): SqlExecutor {
+  const db = typeof source === 'string' ? new Database(source) : source
   return {
     async exec(sql) {
       db.run(sql)
@@ -26,7 +30,7 @@ export function bunExecutor(path: string): SqlExecutor {
       }
     },
     async close() {
-      db.close()
+      if (typeof source === 'string') db.close()
     },
   }
 }

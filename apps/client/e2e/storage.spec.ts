@@ -1,13 +1,14 @@
 import {expect, test} from '@playwright/test'
 
+import {openApp} from './app'
+
 /*
  * ARCHITECTURE 9.7: the ledger never fails silently. A newer build in another
  * tab upgrading the database closes this tab's connection; the tab says so
  * and offers a reload, and the data is still there afterwards.
  */
 test('a newer build taking the database over closes this tab with a Reload prompt', async ({page}) => {
-  await page.goto('/')
-  await page.waitForFunction(() => 'splito' in window)
+  await openApp(page)
   await page.evaluate(async () => {
     const s = (window as unknown as {splito: {createPerson(name: string): Promise<string>}}).splito
     await s.createPerson('Kept Friend')

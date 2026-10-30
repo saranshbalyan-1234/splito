@@ -1,40 +1,23 @@
 import {expect, type Page, test} from '@playwright/test'
 
+import {type SplitoDevTools} from '../src/data/devTools'
+import {openApp} from './app'
+import {BASE} from './seed'
+import {SIZES} from './viewports'
+
 /*
  * F-1210 (owner 119): disputes and holds. A participant says "this is wrong" or "wait" without editing the record;
  * it keeps counting in every balance, wears a badge, is left out of Settle up by default, and is answered in the
  * open. Seeded through window.splito; everything else goes through the screens. Each flow runs on a phone (390) and
  * on a desktop (1440).
  */
-type Splito = {
-  me: string
-  createPerson(name: string): Promise<string>
-  createGroup(input: unknown): Promise<string>
-  createExpense(draft: unknown): Promise<string>
-  createRepayment(input: unknown): Promise<string>
-  disputeAs(authorId: string, input: unknown): Promise<string>
-  holdAs(authorId: string, input: unknown): Promise<string>
-  list(type: string): Promise<Array<{id: string; deleted: boolean; data: Record<string, unknown>}>>
-  setPref(key: string, value: unknown): Promise<void>
-}
-
-const SIZES = [
-  ['390', {width: 390, height: 844}],
-  ['1440', {width: 1440, height: 900}],
-] as const
-
-async function ready(page: Page) {
-  await page.goto('/')
-  await page.waitForFunction(() => 'splito' in window)
-}
-
-const BASE = {currency: 'INR', tz: 'Asia/Kolkata', category: 'food', notes: '', date: '2026-10-20'}
+const DISPUTE_BASE = {...BASE, date: '2026-10-20'}
 
 /** Bob owes me 600 on Dinner (direct) and 450 + 300 in the Goa group; Cara is in Goa too. A 500 payment from Bob. */
 async function seed(page: Page) {
-  await ready(page)
+  await openApp(page)
   return page.evaluate(async base => {
-    const s = (window as unknown as {splito: Splito}).splito
+    const s = (window as unknown as {splito: SplitoDevTools}).splito
     const bob = await s.createPerson('Bob Mehta')
     const cara = await s.createPerson('Cara Rao')
     const group = await s.createGroup({name: 'Goa', kind: 'trip', currency: 'INR', startDate: null, endDate: null, memberIds: [bob]})
@@ -62,7 +45,7 @@ async function seed(page: Page) {
     })
     const payment = await s.createRepayment({groupId: null, currency: 'INR', from: bob, to: s.me, amount: '50000', date: '2026-10-21', tz: 'Asia/Kolkata', note: ''})
     return {bob, cara, group, dinner, cab, lunch, bill, payment}
-  }, BASE)
+  }, DISPUTE_BASE)
 }
 
 /** Opens the Dispute sheet from the expense menu, picks a reason and saves it as `by` (default me). */
@@ -205,7 +188,7 @@ for (const [label, size] of SIZES) {
 
     test('Settle up leaves disputed and held amounts out, says how much, and "Include disputed" puts them back (remembered per group)', async ({page}) => {
       const {bob, group, lunch} = await seed(page)
-      await page.evaluate(([by, target]) => (window as unknown as {splito: Splito}).splito.disputeAs(by!, {targetType: 'expense', targetId: target, reason: 'wrong_amount', note: 'x'}), [bob, lunch])
+      await page.evaluate(([by, target]) => (window as unknown as {splito: SplitoDevTools}).splito.disputeAs(by!, {targetType: 'expense', targetId: target, reason: 'wrong_amount', note: 'x'}), [bob, lunch])
       await page.goto(`/groups/${group}/settle`)
       await expect(page.getByTestId('settle-count-INR')).toHaveText('1 payment')
       await expect(page.getByTestId('transfer-amount')).toContainText('₹450.00')
@@ -226,14 +209,14 @@ for (const [label, size] of SIZES) {
       const {bob} = await seed(page)
       const {group, trip} = await page.evaluate(
         async ([b, base]) => {
-          const s = (window as unknown as {splito: Splito}).splito
+          const s = (window as unknown as {splito: SplitoDevTools}).splito
           const group = await s.createGroup({name: 'Trip two', kind: 'trip', currency: 'INR', startDate: null, endDate: null, memberIds: [b]})
           const trip = await s.createExpense({...(base as object), title: 'Trip dinner', groupId: group, total: '60000', payers: {[s.me]: '60000'}, split: {mode: 'equal', participants: [s.me, b]}})
           await s.createRepayment({groupId: group, currency: 'INR', from: b, to: s.me, amount: '30000', date: '2026-10-21', tz: 'Asia/Kolkata', note: ''})
           await s.disputeAs(b as string, {targetType: 'expense', targetId: trip, reason: 'other', note: 'x'})
           return {group, trip}
         },
-        [bob, BASE] as const,
+        [bob, DISPUTE_BASE] as const,
       )
       expect(trip).toBeTruthy()
       await page.goto(`/groups/${group}/settle`)
@@ -244,7 +227,7 @@ for (const [label, size] of SIZES) {
 
     test("a friend's Settle up prefills without the disputed part and says so; Include disputed puts it back", async ({page}) => {
       const {bob, dinner} = await seed(page)
-      await page.evaluate(([by, target]) => (window as unknown as {splito: Splito}).splito.disputeAs(by!, {targetType: 'expense', targetId: target, reason: 'other', note: 'x'}), [bob, dinner])
+      await page.evaluate(([by, target]) => (window as unknown as {splito: SplitoDevTools}).splito.disputeAs(by!, {targetType: 'expense', targetId: target, reason: 'other', note: 'x'}), [bob, dinner])
       await page.goto(`/people/${bob}`)
       await expect(page.getByTestId('person-disputed-notice')).toContainText('₹600.00 disputed or on hold, not included in Settle up or Call it even.')
       await page.getByTestId('person-record-payment').click()
@@ -261,7 +244,7 @@ for (const [label, size] of SIZES) {
       const {bob, bill, dinner} = await seed(page)
       await page.evaluate(
         ([by, target, other]) => {
-          const s = (window as unknown as {splito: Splito}).splito
+          const s = (window as unknown as {splito: SplitoDevTools}).splito
           return Promise.all([
             s.disputeAs(by!, {targetType: 'expense', targetId: target, reason: 'wrong_amount', note: '', proposedFix: {kind: 'amount', amount: '90000'}}),
             s.disputeAs(by!, {targetType: 'expense', targetId: other, reason: 'wrong_amount', note: '', proposedFix: {kind: 'amount', amount: '90000'}}),
@@ -282,7 +265,7 @@ for (const [label, size] of SIZES) {
 
     test('the group Balances and Person pages say how much of a balance is disputed', async ({page}) => {
       const {bob, group, cab} = await seed(page)
-      await page.evaluate(([by, target]) => (window as unknown as {splito: Splito}).splito.holdAs(by!, {targetType: 'expense', targetId: target, note: 'refund'}), [bob, cab])
+      await page.evaluate(([by, target]) => (window as unknown as {splito: SplitoDevTools}).splito.holdAs(by!, {targetType: 'expense', targetId: target, note: 'refund'}), [bob, cab])
       await page.goto(`/groups/${group}`)
       await expect(page.getByTestId('group-disputed-INR')).toHaveText('of which ₹450.00 disputed')
       await page.goto(`/groups/${group}/balances`)
@@ -293,7 +276,7 @@ for (const [label, size] of SIZES) {
 
     test('the Disputed filter on a group, a person, Activity and Search', async ({page}) => {
       const {bob, group, cab, lunch, dinner} = await seed(page)
-      await page.evaluate(([by, target]) => (window as unknown as {splito: Splito}).splito.disputeAs(by!, {targetType: 'expense', targetId: target, reason: 'other', note: 'x'}), [bob, lunch])
+      await page.evaluate(([by, target]) => (window as unknown as {splito: SplitoDevTools}).splito.disputeAs(by!, {targetType: 'expense', targetId: target, reason: 'other', note: 'x'}), [bob, lunch])
       // Group Expenses.
       await page.goto(`/groups/${group}`)
       await expect(page.getByTestId(`history-${cab}`)).toBeVisible()
@@ -341,7 +324,7 @@ for (const [label, size] of SIZES) {
       await expect(page.getByTestId('dispute-badge-accepted')).toBeVisible()
       await expect(page.getByTestId('expense-disputed')).toHaveCount(0)
       // Deleting a disputed record closes the dispute as Gone.
-      await page.evaluate(([by, target]) => (window as unknown as {splito: Splito}).splito.disputeAs(by!, {targetType: 'expense', targetId: target, reason: 'other', note: 'x'}), [bob, lunch])
+      await page.evaluate(([by, target]) => (window as unknown as {splito: SplitoDevTools}).splito.disputeAs(by!, {targetType: 'expense', targetId: target, reason: 'other', note: 'x'}), [bob, lunch])
       await page.goto(`/expense/${lunch}`)
       await expect(page.getByTestId('expense-disputed')).toBeVisible()
       await page.getByTestId('expense-menu').click()
@@ -391,7 +374,7 @@ for (const [label, size] of SIZES) {
 
     test('CSV export has a dispute column', async ({page}, info) => {
       const {bob, dinner} = await seed(page)
-      await page.evaluate(([by, target]) => (window as unknown as {splito: Splito}).splito.disputeAs(by!, {targetType: 'expense', targetId: target, reason: 'other', note: 'x'}), [bob, dinner])
+      await page.evaluate(([by, target]) => (window as unknown as {splito: SplitoDevTools}).splito.disputeAs(by!, {targetType: 'expense', targetId: target, reason: 'other', note: 'x'}), [bob, dinner])
       await page.goto(`/people/${bob}`)
       await page.getByTestId('person-more').click()
       await page.getByTestId('person-export').click()

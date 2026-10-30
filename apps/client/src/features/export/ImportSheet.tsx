@@ -22,12 +22,12 @@ import {logger} from '#/logger'
 import {useMutationCtx, useStore} from '#/data/hooks'
 import {useToday} from '#/locale/useDates'
 import {atoms as a, useTheme} from '#/alf'
+import * as Admonition from '#/components/Admonition'
 import {Button, ButtonIcon, ButtonText} from '#/components/Button'
 import * as Dialog from '#/components/Dialog'
 import * as FormSheet from '#/components/FormSheet'
 import * as SegmentedControl from '#/components/forms/SegmentedControl'
 import {Restore_Stroke2_Corner0_Rounded as RestoreIcon, Upload_Stroke2_Corner0_Rounded as UploadIcon} from '#/components/icons/Export'
-import {Warning_Stroke2_Corner0_Rounded as WarningIcon} from '#/components/icons/Warning'
 import * as Prompt from '#/components/Prompt'
 import * as Toast from '#/components/Toast'
 import {Text} from '#/components/Typography'
@@ -204,14 +204,18 @@ function Body() {
         )}
 
         {error && (
-          <View testID="import-error" style={[a.flex_row, a.gap_md, a.align_start, a.p_md, a.rounded_md, {backgroundColor: t.palette.negative_50}]}>
-            <WarningIcon size="md" fill={t.palette.negative_500} />
-            <View style={[a.flex_1, a.gap_xs]}>
-              <Text style={[a.text_md, a.leading_snug, a.font_semi_bold, {color: t.palette.negative_700}]}>{error}</Text>
-              <Text style={[a.text_sm, {color: t.palette.negative_700}]}>
-                <Trans>Nothing was changed.</Trans>
-              </Text>
-            </View>
+          <View testID="import-error">
+            <Admonition.Outer type="error">
+              <Admonition.Row>
+                <Admonition.Icon />
+                <Admonition.Content>
+                  <Admonition.Text style={a.font_semi_bold}>{error}</Admonition.Text>
+                  <Admonition.Text>
+                    <Trans>Nothing was changed.</Trans>
+                  </Admonition.Text>
+                </Admonition.Content>
+              </Admonition.Row>
+            </Admonition.Outer>
           </View>
         )}
         {error && !loaded && (

@@ -1,7 +1,8 @@
-import {readdirSync, readFileSync} from 'node:fs'
 import {join} from 'node:path'
 
 import {expect, test} from '@playwright/test'
+
+import {readFiles, WDYR_MARKERS} from './bundleScan'
 
 /*
  * F-242 acc 1: the exported (production-mode) bundle, the one every timing run
@@ -9,13 +10,7 @@ import {expect, test} from '@playwright/test'
  * from the dev entry, `if (__DEV__) require(...)`, which Metro folds away.
  */
 test('the exported bundle holds no why-did-you-render', () => {
-  const dir = join(__dirname, '..', 'dist', '_expo', 'static', 'js', 'web')
-  const files = readdirSync(dir).filter(f => f.endsWith('.js'))
+  const files = readFiles(join(__dirname, '..', 'dist', '_expo', 'static', 'js', 'web'), /\.js$/)
   expect(files.length).toBeGreaterThan(0)
-  for (const f of files) {
-    const js = readFileSync(join(dir, f), 'utf8')
-    expect(js, f).not.toContain('wdyrStore')
-    expect(js, f).not.toContain('__wdyr')
-    expect(js, f).not.toContain('whyDidYouRender')
-  }
+  for (const {file, text} of files) for (const marker of WDYR_MARKERS) expect(text, `${file} contains ${marker}`).not.toContain(marker)
 })

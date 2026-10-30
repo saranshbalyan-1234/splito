@@ -1,78 +1,33 @@
 import {expect, type Page, test} from '@playwright/test'
 
-/* F-1113 Call it even, seeded through the app's own mutations (window.splito). */
-type Splito = {
-  me: string
-  createPerson(name: string): Promise<string>
-  createGroup(input: unknown): Promise<string>
-  createExpense(draft: unknown): Promise<string>
-  deleteExpense(id: string): Promise<void>
-}
+import {type SplitoDevTools} from '../src/data/devTools'
+import {openApp} from './app'
+import {BASE, seedA04} from './seed'
 
-async function ready(page: Page) {
-  await page.goto('/')
-  await page.waitForFunction(() => 'splito' in window)
-}
-
-/** Kavya owes me 100 directly and 50 in a shared group, plus EUR 5 directly. */
+/** Kavya owes me 100 directly and 50 in a shared group, plus EUR 5 directly (and a deleted pizza). */
 async function seed(page: Page) {
-  return page.evaluate(async () => {
-    const s = (window as unknown as {splito: Splito}).splito
-    const kavya = await s.createPerson('Kavya Rao')
-    const group = await s.createGroup({
-      name: 'Pune trip',
-      kind: 'trip',
-      currency: 'INR',
-      startDate: null,
-      endDate: null,
-      memberIds: [kavya],
-    })
-    const base = {
-      currency: 'INR',
-      tz: 'Asia/Kolkata',
-      category: 'food',
-      notes: '',
-    }
-    await s.createExpense({
-      ...base,
-      title: 'Concert',
-      groupId: null,
-      total: '20000',
-      payers: {[s.me]: '20000'},
-      split: {mode: 'equal', participants: [s.me, kavya]},
-      date: '2026-10-20',
-    })
-    await s.createExpense({
-      ...base,
-      title: 'Snacks',
-      groupId: group,
-      total: '10000',
-      payers: {[s.me]: '10000'},
-      split: {mode: 'equal', participants: [s.me, kavya]},
-      date: '2026-10-21',
-    })
-    await s.createExpense({
-      ...base,
-      currency: 'EUR',
-      title: 'Coffee',
-      groupId: null,
-      total: '1000',
-      payers: {[s.me]: '1000'},
-      split: {mode: 'equal', participants: [s.me, kavya]},
-      date: '2026-10-22',
-    })
-    const pizza = await s.createExpense({
-      ...base,
-      title: 'Pizza',
-      groupId: null,
-      total: '60000',
-      payers: {[s.me]: '60000'},
-      split: {mode: 'equal', participants: [s.me, kavya]},
-      date: '2026-10-23',
-    })
-    await s.deleteExpense(pizza)
-    return {kavya, group, pizza}
-  })
+  const {kavya, group} = await seedA04(page)
+  const pizza = await page.evaluate(
+    async ({kavya, base}) => {
+      const s = (window as unknown as {splito: SplitoDevTools}).splito
+      const draft = (title: string, total: string, date: string, over: object = {}) => ({
+        ...base,
+        title,
+        groupId: null,
+        total,
+        payers: {[s.me]: total},
+        split: {mode: 'equal', participants: [s.me, kavya]},
+        date,
+        ...over,
+      })
+      await s.createExpense(draft('Coffee', '1000', '2026-10-22', {currency: 'EUR'}))
+      const pizza = await s.createExpense(draft('Pizza', '60000', '2026-10-23'))
+      await s.deleteExpense(pizza)
+      return pizza
+    },
+    {kavya, base: BASE},
+  )
+  return {kavya, group, pizza}
 }
 
 async function openCallItEven(page: Page) {
@@ -84,7 +39,7 @@ async function openCallItEven(page: Page) {
 test('Call it even clears the INR balance (direct and group), keeps EUR, shows in history, and undoes', async ({
   page,
 }) => {
-  await ready(page)
+  await openApp(page)
   const {kavya} = await seed(page)
   await page.goto(`/people/${kavya}`)
   await expect(page.getByTestId('person-total-INR')).toHaveText('₹150.00')
@@ -125,7 +80,7 @@ test('Call it even clears the INR balance (direct and group), keeps EUR, shows i
 test('a part write-off leaves the rest open; more than the balance is refused', async ({
   page,
 }) => {
-  await ready(page)
+  await openApp(page)
   const {kavya} = await seed(page)
   await page.goto(`/people/${kavya}`)
   await openCallItEven(page)
@@ -157,7 +112,7 @@ test('a part write-off leaves the rest open; more than the balance is refused', 
 test('group balances: Call it even on a "who owes whom" row clears that pair in the group', async ({
   page,
 }) => {
-  await ready(page)
+  await openApp(page)
   const {group} = await seed(page)
   await page.goto(`/groups/${group}?tab=balances`)
   await page.getByTestId('group-owe-Kavya Rao-You-more').click()
