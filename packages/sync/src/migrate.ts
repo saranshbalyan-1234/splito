@@ -18,7 +18,7 @@
  */
 import {decode} from './codec'
 import {type RowAccess} from './engine'
-import {rebuildDisputedProjections, rebuildProjections} from './ledgerProjection'
+import {rebuildDisputedProjections, rebuildProjections, SEARCH_INDEX_VERSION} from './ledgerProjection'
 import {completeEntity, ENTITY_STORE, entityOfRow, historyRow, outboxRow, rowOfEntity, SCHEMA_VERSION} from './schema'
 import {type Entity, type EntityType, type HistoryRow, type OutboxOp} from './types'
 
@@ -95,4 +95,7 @@ export async function migrateToV5(rows: RowAccess): Promise<void> {
 }
 
 /** A freshly created database starts at the current version. */
-export const stampSchemaVersion = (rows: RowAccess) => rows.put('meta', {key: 'schemaVersion', value: String(SCHEMA_VERSION)})
+export const stampSchemaVersion = async (rows: RowAccess) => {
+  await rows.put('meta', {key: 'schemaVersion', value: String(SCHEMA_VERSION)})
+  await rows.put('meta', {key: 'searchIndex', value: SEARCH_INDEX_VERSION})
+}

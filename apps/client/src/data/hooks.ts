@@ -13,8 +13,6 @@ import {
   incomingRequests,
   type InviteLink,
   inviteLinkState,
-  type Key,
-  listOpenDisputes,
   type MutationCtx,
   outgoingRequests,
   type Person,
@@ -22,12 +20,12 @@ import {
   prefFrom,
   type PrefValue,
   type Repayment,
+  type SearchChip,
   type SearchSession,
   type SearchSummary,
+  type SearchToken,
   openSearch,
   SEARCH_PAGE,
-  searchTotals,
-  summarizeSearch,
   setPref,
   type Store,
   toExpenseRecord,
@@ -243,64 +241,45 @@ export function useRecentTransactions(size: number): HistoryPager | undefined {
 export interface SearchView {
   people: Entity<Person>[]
   groups: Entity<Group>[]
+  /** The newest matching payments and write-offs (one page) and how many match in all. */
+  payments: Entity<Repayment | WriteOff>[]
+  paymentCount: number
   /** Folded query words to highlight. */
   terms: string[]
+  /** The recognised facets, as removable chips. */
+  chips: SearchChip[]
+  /** The tokens the query was read as: each result row says which field matched with them. */
+  tokens: SearchToken[]
   /** The expenses shown: `SEARCH_PAGE` per page loaded so far, newest first. */
   expenses: Entity<Expense>[]
-  /** More matches than the pages shown (or not yet checked): "Show more" loads the next page. */
+  /** More matches than the pages shown: "Show more" loads the next page. */
   hasMore: boolean
-  /** Every expense has been checked, so "no results" is true. */
+  /** Every matching expense has been read, so "no results" is true. */
   isDone: boolean
-  /** How many expenses match and their totals per currency; undefined while they are being worked out. */
-  summary: SearchSummary | undefined
+  /** How many expenses match and their totals per currency (known with the first answer). */
+  summary: SearchSummary
+  /** The text of the comment a record was found through. */
+  commentText(id: string): string | undefined
   loadMore(): void
 }
 
-/**
- * Free-text search for `query`, paged (ARCHITECTURE 9.8, 26.10): people,
- * groups and the first page of expenses show as soon as they are found,
- * whatever the match count; the rest is read by cursor as pages are asked for
- * (`loadMore`), and the count and per-currency totals of a broad match are
- * worked out after that first page, cancelled by the next keystroke. The
- * previous answer stays up while a new one loads, and a commit that touches
- * expenses, people or groups runs the query again. Undefined until the first
- * answer.
- */
-/** `status: disputed` in a query keeps only the expenses with an open dispute or hold (F-1210); the rest of the query is the usual search. */
-const DISPUTED_FILTER = /(^|\s)status:\s*disputed(?=\s|$)/i
+/** The kinds of record a search reads: a change to one runs the open query again. */
+const SEARCH_TYPES = ['expense', 'repayment', 'writeoff', 'comment', 'dispute', 'person', 'group'] as const satisfies readonly EntityType[]
 
+/**
+ * Search for `query` (ARCHITECTURE 9.8, 26.19, F-246), paged: the query is resolved from the term keys, so the people,
+ * groups, payments, the count and per-currency totals and the first page of expenses arrive together whatever the
+ * match count, and "Show more" reads the next page by id. The previous answer stays up while a new one loads, and a
+ * commit that touches a record, a person, a group, a comment or a dispute runs the query again. Undefined until the
+ * first answer.
+ */
 export function useSearch(rawQuery: string, today: string, mark: '.' | ','): SearchView | undefined {
   const {store} = useData()
-  const isDisputed = DISPUTED_FILTER.test(rawQuery)
-  const query = isDisputed ? rawQuery.replace(DISPUTED_FILTER, ' ').trim() : rawQuery
-  /* A boolean, not the text: the read below must not run again for every keystroke, only when this flips. */
-  const isRestEmpty = isDisputed && query.trim() === ''
-  /* The expenses with an open dispute or hold, kept current while the filter is in the query. */
-  const [disputedExpenses, setDisputedExpenses] = useState<Entity<Expense>[]>()
-  useEffect(() => {
-    if (!isDisputed) return
-    let isCurrent = true
-    const load = async () => {
-      const ids = new Set<string>()
-      let after: Key | null = null
-      do {
-        const page: Awaited<ReturnType<typeof listOpenDisputes>> = await listOpenDisputes(store, {after})
-        for (const d of page.items) if (d.data.targetType === 'expense') ids.add(d.data.targetId)
-        after = page.next
-      } while (after)
-      const rows = await store.getMany<Expense>('expense', [...ids])
-      if (isCurrent) setDisputedExpenses(rows.filter(e => !e.deleted).sort((x, y) => (x.data.date < y.data.date ? 1 : x.data.date > y.data.date ? -1 : 0)))
-    }
-    void load()
-    const off = store.subscribe(change => {
-      if (touches(change, 'dispute') || touches(change, 'expense')) void load()
-    })
-    return () => {
-      isCurrent = false
-      off()
-    }
-  }, [store, isDisputed])
+  const query = rawQuery
+  const {actor: me} = useMutationCtx()
   const [categories = DEFAULT_CATEGORIES] = usePref('categories')
+  const [hiddenGroups] = usePref('groups.hidden')
+  const [hiddenItems] = usePref('lists.hiddenItems')
   const [commits, setCommits] = useState(0)
   const [session, setSession] = useState<SearchSession>()
   const [paging, setPaging] = useState({key: query, pages: 1})
@@ -310,55 +289,52 @@ export function useSearch(rawQuery: string, today: string, mark: '.' | ','): Sea
   useEffect(
     () =>
       store.subscribe(change => {
-        if (touches(change, 'expense') || touches(change, 'person') || touches(change, 'group')) setCommits(n => n + 1)
+        if (SEARCH_TYPES.some(type => touches(change, type))) setCommits(n => n + 1)
       }),
     [store],
   )
   useEffect(() => {
     let isCurrent = true
-    void openSearch(store, query, {today, mark, categories}).then(opened => {
+    void openSearch(store, query, {today, mark, categories, me, hiddenGroups, hiddenItems}).then(opened => {
       if (isCurrent) setSession(opened)
     })
     return () => {
       isCurrent = false
     }
-  }, [store, query, today, mark, categories, commits])
+  }, [store, query, today, mark, categories, me, hiddenGroups, hiddenItems, commits])
   useEffect(() => {
-    // The disputed filter waits for its expenses (the read below would spin on a session that has nothing more to give).
-    if (!session || (isDisputed && disputedExpenses === undefined)) return
+    if (!session) return
     let isCurrent = true
-    const show = (summary?: SearchSummary) => {
-      /* With the disputed filter: the disputed expenses alone, or (with words) the search's matches that are among them. */
-      const disputedIds = new Set((disputedExpenses ?? []).map(e => e.id))
-      const found = isDisputed ? (isRestEmpty ? (disputedExpenses ?? []) : session.found().filter(e => disputedIds.has(e.id))) : session.found()
+    const show = () => {
+      const found = session.found()
       const isDone = session.isDone()
       setView({
         people: session.people,
         groups: session.groups,
+        payments: session.payments,
+        paymentCount: session.paymentCount,
         terms: session.terms,
+        chips: session.chips,
+        tokens: session.tokens,
         expenses: found.slice(0, wanted),
         hasMore: found.length > wanted || !isDone,
         isDone,
-        summary: summary ?? (isDone ? summarizeSearch(found) : undefined),
+        summary: session.summary,
+        commentText: session.commentText,
       })
       return found.length >= wanted || isDone
     }
     void (async () => {
-      // The page: read chunks until it is full (one is usually enough), showing what is found as it comes.
+      // The page: read until it is full (the first is usually read already), showing what is found as it comes.
       while (!show()) {
         await session.step()
         if (!isCurrent) return
-      }
-      // After the first paint: the count and totals of every match.
-      if (!session.isDone()) {
-        const summary = await searchTotals(session, () => !isCurrent)
-        if (summary && isCurrent) show(summary)
       }
     })()
     return () => {
       isCurrent = false
     }
-  }, [session, wanted, isDisputed, isRestEmpty, disputedExpenses])
+  }, [session, wanted])
   return view && {...view, loadMore: () => setPaging({key: rawQuery, pages: pages + 1})}
 }
 

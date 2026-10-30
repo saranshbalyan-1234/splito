@@ -8,7 +8,7 @@
 import {type SpendCell} from '@splito/domain'
 
 import {type Engine, type RowAccess} from './engine'
-import {projectEntity, rebuildActivity, rebuildProjections} from './ledgerProjection'
+import {ensureSearchIndex, projectEntity, rebuildActivity, rebuildProjections} from './ledgerProjection'
 import {
   completeEntity,
   ENTITY_STORE,
@@ -223,6 +223,11 @@ export function createStore(engine: Engine): Store {
     return result
   }
 
+  /* The first search of a database whose terms predate the current index version rebuilds them once (derived data only). */
+  let searchIndex: Promise<void> | undefined
+  // full-read-ok: once per database, only when its terms predate the index version (maintenance, like `rebuildProjections`)
+  const searchIndexReady = () => (searchIndex ??= write(rows => ensureSearchIndex(rows, async type => allOf(rows, type))))
+
   return {
     transaction: fn => write((rows, recorder) => fn(makeTx(rows, recorder))),
 
@@ -300,9 +305,15 @@ export function createStore(engine: Engine): Store {
         return found.map(toCell)
       }),
 
-    terms: q => read(async rows => (await rows.range('search_terms', termQuery(q))).map(toTerm)),
+    terms: async q => {
+      await searchIndexReady()
+      return read(async rows => (await rows.range('search_terms', termQuery(q))).map(toTerm))
+    },
 
-    termCount: q => read(rows => rows.count('search_terms', termQuery(q))),
+    termCount: async q => {
+      await searchIndexReady()
+      return read(rows => rows.count('search_terms', termQuery(q)))
+    },
 
     historyPage: ({after, limit = DEFAULT_PAGE} = {}) =>
       read(rows => pageOf(rows, 'history', {index: 'byChangedAt', dir: 'prev', after, limit}, historyOfRow)),

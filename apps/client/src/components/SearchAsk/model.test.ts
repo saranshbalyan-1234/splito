@@ -18,6 +18,7 @@ test('people and groups come first, then expenses; every result is reachable by 
     people: [e('person', 'sam')],
     groups: [],
     expenses: [e('expense', 'x1'), e('expense', 'x2')],
+    payments: [],
     totals: {EUR: 100n, INR: 5n},
     terms: ['s'],
   }
@@ -59,4 +60,9 @@ test('the "Ask Splito" row heads the list and is the first stop of the keyboard,
   // Nothing found still offers the question: it is answered from the books, not the search.
   expect(searchRows({people: [], groups: [], expenses: []}, undefined, 'who owes me?')).toHaveLength(1)
   expect(searchRows({people: [], groups: [], expenses: []})).toEqual([])
+})
+
+test('payments and write-offs follow the expenses under their own heading, with the count of all of them', () => {
+  const results = {people: [], groups: [], expenses: [e('expense', 'x1')], payments: [e('repayment', 'p1'), e('writeoff', 'w1')]}
+  expect(searchRows(results, undefined, undefined, 5).map(r => (r.type === 'header' ? `${r.section}:${r.count}` : `${r.key}#${r.nav}`))).toEqual(['expenses:1', 'expense-x1#0', 'payments:5', 'payment-p1#1', 'payment-w1#2'])
 })

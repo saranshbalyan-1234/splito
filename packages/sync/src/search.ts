@@ -1,44 +1,26 @@
-import {addDays, type CurrencyCode, DomainError, type LocalDate, numberReadings, parseAmount, sumByCurrency} from '@splito/domain'
+import {addDays, type CurrencyCode, DomainError, type LocalDate, parseAmount, sumByCurrency} from '@splito/domain'
 
-import {displayPerson, type Expense, type Group, type Person} from './mutations'
+import {type Comment} from './comments'
+import {listOpenDisputes} from './disputes'
+import {displayPerson, type Expense, type Group, isGroupInactive, type Person, type Repayment, type WriteOff} from './mutations'
 import {type Key} from './schema'
-import {amountBounds, amountTerm, fold, type SearchTerm, WORD, wordsOf} from './searchTerms'
-import {type Page, type Store} from './store'
+import {type CompareOp, parseQuery, type ParsedQuery, type SearchChip, type SearchStatus, type SearchToken, type SearchType} from './searchQuery'
+import {amountBounds, amountOfTerm, amountTerm, fold, NO_GROUP, type RecordType, type SearchTerm, wordsOf} from './searchTerms'
+import {type Store} from './store'
 import {type Entity} from './types'
 
 /**
- * Free search across expenses, people and groups (BACKLOG F-1401, ARCHITECTURE
- * 9.8): a query reads the `search_terms` projection by key range and loads
- * only the rows it matches, never the ledger. Every query word must match
- * (AND); a word matches when any of its readings does (OR): "450" is the
- * amount 450 in any currency or the text "450", "march" is the month or the
- * text.
- *
- * Two ways to find the expenses, picked by how many rows the rarest word's
- * keys hold (counted, not read):
- * - narrow (at most `NARROW`): the keys give the candidate expenses; the other
- *   words are checked on those rows. Everything is known after one read.
- * - broad: the expenses are walked newest first through `byDate`, a chunk at a
- *   time, each row checked against every word. The first page (`SEARCH_PAGE`
- *   rows) is ready after the first chunk or two whatever the match count; the
- *   rest is read on demand (`step`) and by `searchTotals`, which the caller
- *   cancels on the next keystroke.
+ * Free search across expenses, payments, write-offs, comments, people and groups (BACKLOG F-246, ARCHITECTURE 9.8
+ * and 26.19). A query is resolved from the `search_terms` keys alone: each token becomes the set of record ids its
+ * key ranges hold (a word, an amount range, a month, a payer, a group's records, a status ...), the sets are
+ * intersected (AND across tokens, OR inside one facet), and the answer is ordered and totalled from the `d` and `a`
+ * keys. Only the rows shown are read (a page at a time through `step`), so the cost follows the number of keys the
+ * query touches (about a quarter of a microsecond each), never the ledger: 10,000 expenses answer in single-digit
+ * milliseconds whatever the match count. A person's or group's name is not copied onto its records, so a word is
+ * resolved to the live people and groups it names first and then to their records (`h`, `G` keys).
  */
 
-export type SearchToken =
-  | {kind: 'text'; text: string}
-  /**
-   * A plain number in the user's number format ("450", "12,50", "1,00,000"):
-   * an amount in each expense's own currency, or text. `amounts` holds every
-   * reading as a plain decimal ("1.000" under "." is 1000 or 1.000).
-   */
-  | {kind: 'amount'; amounts: string[]; text: string}
-  | {kind: 'compare'; op: CompareOp; amounts: string[]}
-  /** "today" (0) or "yesterday" (-1). */
-  | {kind: 'day'; offset: number; text: string}
-  | {kind: 'month'; month: string; year?: string; text: string}
-
-type CompareOp = '<' | '<=' | '>' | '>='
+export {type SearchToken} from './searchQuery'
 
 /** What the matching expenses add up to: how many, and one total per currency. */
 export interface SearchSummary {
@@ -47,23 +29,30 @@ export interface SearchSummary {
 }
 
 /**
- * One query's search, readable a step at a time: the people and groups (few,
- * known at once) and the matching expenses, found newest first.
+ * One query's search, readable a page at a time: the people, groups and payments (few, known at once) and the
+ * matching expenses, newest first. The count and the totals are known at once; `step` reads the next rows.
  */
 export interface SearchSession {
   people: Entity<Person>[]
   groups: Entity<Group>[]
+  /** The newest payments and write-offs that match (one page), and how many match in all. */
+  payments: Entity<Repayment | WriteOff>[]
+  paymentCount: number
   /** Folded query words to highlight. */
   terms: string[]
-  /**
-   * The matches found so far, newest first (same day: the later-created
-   * first). A day still being read is held back until it is complete, so the
-   * list only ever grows at its end.
-   */
+  /** The recognised facets, for the removable chips. */
+  chips: SearchChip[]
+  /** The tokens the query was read as (the result rows say which field matched with them). */
+  tokens: SearchToken[]
+  /** How many expenses match (a deleted one counts as a row) and what they add up to, per currency. */
+  summary: SearchSummary
+  /** The rows read so far, newest first (same day: the later-created first); a prefix of the whole answer. */
   found(): Entity<Expense>[]
-  /** True once every expense has been checked: `found()` is then every match. */
+  /** The text of the comment that matched, for an expense or payment found through one. */
+  commentText(id: string): string | undefined
+  /** True once every matching expense has been read: `found()` is then all of them. */
   isDone(): boolean
-  /** Reads and checks one more chunk. Calls overlap safely (they share the read in flight). */
+  /** Reads the next page of rows. Calls overlap safely (they share the read in flight). */
   step(): Promise<void>
 }
 
@@ -71,72 +60,25 @@ export interface SearchResults {
   expenses: Entity<Expense>[]
   people: Entity<Person>[]
   groups: Entity<Group>[]
+  payments: Entity<Repayment | WriteOff>[]
   /** Matching expenses' totals, one per currency. */
   totals: Record<CurrencyCode, bigint>
   /** Folded query words to highlight. */
   terms: string[]
 }
 
-const WORD_CHAR = /[\p{L}\p{N}\p{M}]/u
-const COMPARE = /([<>]=?)\s*([^\s<>=]+)/g
-const YEAR = /^(19|20)\d\d$/
-
-/* English date words; the rest of a query is matched as written, in any script. */
-const MONTH_NAMES = ['january', 'february', 'march', 'april', 'may', 'june', 'july', 'august', 'september', 'october', 'november', 'december']
-const MONTHS: Record<string, string> = Object.fromEntries(
-  MONTH_NAMES.flatMap((name, i) => {
-    const mm = String(i + 1).padStart(2, '0')
-    return [[name, mm], [name.slice(0, 3), mm], ...(name === 'september' ? [['sept', mm]] : [])]
-  }),
-)
-const DAYS: Record<string, number> = {today: 0, yesterday: -1}
-
-/**
- * Splits a query into tokens. Numbers are read as the amount field reads
- * them (`numberReadings`, a currency sign allowed), under `mark`, the number
- * locale's decimal mark.
- */
+/** Splits a query into tokens (English and Hindi words, amounts with shorthand, dates, people, statuses). */
 export function parseSearchQuery(query: string, mark: '.' | ',' = '.'): SearchToken[] {
-  const compares: SearchToken[] = []
-  const rest = fold(query).replace(COMPARE, (_, op: CompareOp, num: string) => {
-    const amounts = numberReadings(num, mark)
-    if (amounts.length === 0) return ` ${num} `
-    compares.push({kind: 'compare', op, amounts})
-    return ' '
-  })
-  const tokens = compares
-  const chunks = rest.split(/\s+/).filter(Boolean)
-  for (let i = 0; i < chunks.length; i++) {
-    const amounts = numberReadings(chunks[i]!, mark)
-    if (amounts.length > 0) {
-      tokens.push({kind: 'amount', amounts, text: amounts[0]!})
-      continue
-    }
-    for (const word of chunks[i]!.match(WORD) ?? []) {
-      const month = MONTHS[word]
-      const offset = DAYS[word]
-      if (month) {
-        const next = chunks[i + 1]
-        if (next && YEAR.test(next)) {
-          tokens.push({kind: 'month', month, year: next, text: word})
-          i++
-        } else tokens.push({kind: 'month', month, text: word})
-      } else if (offset !== undefined) tokens.push({kind: 'day', offset, text: word})
-      else tokens.push({kind: 'text', text: word})
-    }
-  }
-  return tokens
+  return parseQuery(query, {mark}).tokens
 }
-
-/** More rows than any one index range holds: "all of them" for one range read. */
-const ALL = 1_000_000
 
 /** Expenses shown per page of results. */
 export const SEARCH_PAGE = 30
-/** Rare-word keys at or under this many: read the candidates by key. Over it: walk the dates. */
-const NARROW = 150
-/** Rows one scan step reads. */
-const CHUNK = 200
+/** More rows than any one key range holds: "all of them" for one range read. */
+const ALL = 1_000_000
+const WORD_CHAR = /[\p{L}\p{N}\p{M}]/u
+/** Sorts after any term. */
+const END = '\uffff'
 
 type Category = {id: string; name: string}
 
@@ -146,12 +88,17 @@ export interface SearchOptions {
   mark?: '.' | ','
   /** The user's categories, by id (names are preferences, so they are not stored on expenses). */
   categories?: ReadonlyArray<Category>
+  /** My person id: "paid by me", and which side of a balance "owed" means. */
+  me?: string
+  /** The groups and the deleted records I have hidden from my lists (`groups.hidden`, `lists.hiddenItems`). */
+  hiddenGroups?: ReadonlyArray<string>
+  hiddenItems?: ReadonlyArray<string>
 }
 
 const startsWith = (words: readonly string[], prefix: string) => words.some(w => w.startsWith(prefix))
 
 /** The amount a typed number means in one currency, or null (a yen has no cents). Zeros after the last decimal digit change no value. */
-function minorOf(typed: string, currency: CurrencyCode): bigint | null {
+export function minorOf(typed: string, currency: CurrencyCode): bigint | null {
   const amount = typed.includes('.') ? typed.replace(/\.?0+$/, '') : typed
   try {
     return parseAmount(amount, currency)
@@ -161,312 +108,479 @@ function minorOf(typed: string, currency: CurrencyCode): bigint | null {
   }
 }
 
-function compares(total: bigint, minor: bigint, op: CompareOp | '='): boolean {
-  switch (op) {
-    case '=':
-      return total === minor
-    case '>':
-      return total > minor
-    case '>=':
-      return total >= minor
-    case '<':
-      return total < minor
-    case '<=':
-      return total <= minor
+/** Edit distance, for a name typed with a slip ("rhiya" for "riya"). */
+function distance(a: string, b: string): number {
+  let prev = Array.from({length: b.length + 1}, (_, j) => j)
+  for (let i = 1; i <= a.length; i++) {
+    const row = [i]
+    for (let j = 1; j <= b.length; j++) row[j] = Math.min(prev[j]! + 1, row[j - 1]! + 1, prev[j - 1]! + (a[i - 1] === b[j - 1] ? 0 : 1))
+    prev = row
+  }
+  return prev[b.length]!
+}
+
+const intersect = (a: Set<string>, b: Set<string>) => {
+  const [small, big] = a.size <= b.size ? [a, b] : [b, a]
+  const out = new Set<string>()
+  for (const id of small) if (big.has(id)) out.add(id)
+  return out
+}
+
+/** The words of a token that are text to find (highlighted in the results). */
+function wordsOfToken(t: SearchToken): string[] {
+  switch (t.kind) {
+    case 'text':
+    case 'amount':
+    case 'day':
+    case 'month':
+    case 'person':
+    case 'place':
+      return [t.text]
+    case 'any':
+      return t.options.flatMap(wordsOfToken)
+    default:
+      return []
   }
 }
 
-/** Whether a typed number (any of its readings) stands in this relation to the expense's own total. */
-function amountMatches(e: Entity<Expense>, readings: string[], op: CompareOp | '='): boolean {
-  return readings.some(typed => {
-    const minor = minorOf(typed, e.data.currency)
-    return minor !== null && compares(e.data.total, minor, op)
-  })
+const EMPTY: SearchSession = {
+  people: [],
+  groups: [],
+  payments: [],
+  paymentCount: 0,
+  terms: [],
+  chips: [],
+  tokens: [],
+  summary: {count: 0, totals: {}},
+  found: () => [],
+  commentText: () => undefined,
+  isDone: () => true,
+  step: async () => undefined,
 }
 
 /**
- * Starts a search. People and groups are ready in the session; expenses are
- * read by `session.step()` (a narrow query needs none: it is done on return).
+ * Starts a search. The people, groups and payments are ready in the session, and so are the count and totals; the
+ * first page of expenses is read before this returns, and `session.step()` reads the next.
  */
-export async function openSearch(store: Store, query: string, {today, mark = '.', categories = []}: SearchOptions): Promise<SearchSession> {
-  const tokens = parseSearchQuery(query, mark)
-  if (tokens.length === 0) return {people: [], groups: [], terms: [], found: () => [], isDone: () => true, step: async () => undefined}
-
-  const prefixTerms = (kind: 'w' | 'p' | 'g', prefix: string) => ({kind, min: prefix, max: prefix + '\uffff'})
-  const wordHits = (kind: 'w' | 'p' | 'g', prefix: string): Promise<SearchTerm[]> => store.terms(prefixTerms(kind, prefix))
-  const wordCount = (prefix: string) => store.termCount(prefixTerms('w', prefix))
-  /** The currencies that have an expense: a skip scan of the amount keys, one read each. */
-  const currencies = async () => {
-    const out: CurrencyCode[] = []
-    for (let min = ''; ; ) {
-      const [first] = await store.terms({kind: 'a', min, limit: 1})
-      if (!first) return out
-      const currency = first.term.slice(0, first.term.indexOf(':'))
-      out.push(currency)
-      min = `${currency};`
-    }
+export async function openSearch(store: Store, query: string, options: SearchOptions): Promise<SearchSession> {
+  const first = await run(store, parseQuery(query, {mark: options.mark}), options)
+  const isEmpty = (s: SearchSession) => s.people.length + s.groups.length + s.paymentCount + s.summary.count === 0
+  // "Group dinner" or "settled bill": a status or type word that found nothing was meant as text.
+  if (isEmpty(first) && first.chips.some(c => c.facet === 'status' || c.facet === 'type')) {
+    const literal = await run(store, parseQuery(query, {mark: options.mark, isLiteral: true}), options)
+    if (!isEmpty(literal)) return literal
   }
+  return first
+}
+
+async function run(store: Store, parsed: ParsedQuery, options: SearchOptions): Promise<SearchSession> {
+  const {tokens, chips} = parsed
+  if (tokens.length === 0) return EMPTY
+  const {today, categories = [], me} = options
+
+  /* ------------------------------------------------------------------ */
+  /* Key reads                                                           */
+  /* ------------------------------------------------------------------ */
+
+  const hits = (kind: SearchTerm['kind'], min?: string, max = min) => store.terms({kind, min, max})
+  const prefix = (kind: SearchTerm['kind'], p: string) => hits(kind, p, p + END)
+  const idsOf = (rows: SearchTerm[]) => rows.map(r => r.entityId)
+  const liveGroups = async (ids: Iterable<string>) => (await store.getMany<Group>('group', [...new Set(ids)])).filter(g => !g.deleted)
+  const livePeople = async (ids: Iterable<string>) => (await store.getMany<Person>('person', [...new Set(ids)])).filter(p => !p.deleted)
+  /** The records of each key value (a group's, a person's). */
+  async function recordsOf(kind: 'G' | 'h' | 'b', values: Iterable<string>): Promise<Set<string>> {
+    const out = new Set<string>()
+    for (const rows of await Promise.all([...new Set(values)].map(v => hits(kind, v)))) for (const r of rows) out.add(r.entityId)
+    return out
+  }
+
+  /** The comment (id) a record was found through, by the record. */
+  const commentOf = new Map<string, string>()
+
+  /** The currencies that have a record: a skip scan of the amount keys, one read each. */
   let currencyList: Promise<CurrencyCode[]> | undefined
-  const knownCurrencies = () => (currencyList ??= currencies())
+  const knownCurrencies = () =>
+    (currencyList ??= (async () => {
+      const out: CurrencyCode[] = []
+      for (let min = ''; ; ) {
+        const [first] = await store.terms({kind: 'a', min, limit: 1})
+        if (!first) return out
+        const currency = first.term.slice(0, first.term.indexOf(':'))
+        out.push(currency)
+        min = `${currency};`
+      }
+    })())
 
-  /* ------------------------------------------------------------------ */
-  /* Candidates: a superset of the expenses a token can match            */
-  /* ------------------------------------------------------------------ */
-
-  const expenses = new Map<string, Entity<Expense>>()
-  const load = async (ids: Iterable<string>) => {
-    const missing = [...new Set(ids)].filter(id => !expenses.has(id))
-    for (const e of await store.getMany<Expense>('expense', missing)) expenses.set(e.id, e)
-  }
-  const take = (found: Entity<Expense>[]) => {
-    for (const e of found) expenses.set(e.id, e)
-    return found.map(e => e.id)
-  }
-  const dateRange = async (from: string, to: string) => take((await store.page<Expense>('expense', {index: 'byDate', min: from, max: to, limit: ALL})).items)
-
-  /** Expenses whose own words, group, people or category start with `prefix`. */
-  async function textCandidates(prefix: string): Promise<string[]> {
-    const ids = (await wordHits('w', prefix)).map(h => h.entityId)
-    for (const h of await wordHits('g', prefix))
-      ids.push(...take((await store.page<Expense>('expense', {index: 'byGroupDate', eq: [h.entityId], limit: ALL})).items))
-    for (const h of await wordHits('p', prefix)) ids.push(...(await store.parties({index: 'byPersonDate', eq: [h.entityId], limit: ALL, includeDeleted: true})).items.map(p => p.expenseId))
-    for (const c of categories)
-      if (startsWith(wordsOf(c.name), prefix)) ids.push(...(await store.terms({kind: 'c', min: c.id, max: c.id})).map(t => t.entityId))
-    await load(ids)
-    return ids
-  }
-
-  async function amountRange(readings: string[], op: CompareOp | '='): Promise<{count: () => Promise<number>; ids: () => Promise<string[]>}> {
+  /** Records whose amount lies in `[lo, hi]` (null: unbounded) in the given currency, or in any. */
+  async function amountsIn(currencies: CurrencyCode[] | undefined, bounds: (currency: CurrencyCode) => Array<[bigint | null, bigint | null]>): Promise<Set<string>> {
     const ranges: Array<{min: string; max: string}> = []
-    for (const currency of await knownCurrencies())
-      for (const typed of readings) {
-        const minor = minorOf(typed, currency)
-        if (minor === null) continue
-        const [lo, hi] = amountBounds(currency)
-        const here = amountTerm(currency, minor)
-        ranges.push(
-          op === '=' ? {min: here, max: here} : op === '>' ? {min: amountTerm(currency, minor + 1n), max: hi} : op === '>=' ? {min: here, max: hi} : op === '<' ? {min: lo, max: amountTerm(currency, minor - 1n)} : {min: lo, max: here},
-        )
+    for (const currency of currencies ?? (await knownCurrencies())) {
+      const [first, last] = amountBounds(currency)
+      for (const [lo, hi] of bounds(currency)) ranges.push({min: lo === null ? first : amountTerm(currency, lo), max: hi === null ? last : amountTerm(currency, hi)})
+    }
+    const out = new Set<string>()
+    for (const rows of await Promise.all(ranges.map(r => hits('a', r.min, r.max)))) for (const r of rows) out.add(r.entityId)
+    return out
+  }
+  /** `each` reading of a typed number, in the currency: its minor units, or none. */
+  const minors = (readings: string[], currency: CurrencyCode) => readings.map(r => minorOf(r, currency)).filter((m): m is bigint => m !== null)
+  const compareBounds = (readings: string[], op: CompareOp | '=') => (currency: CurrencyCode): Array<[bigint | null, bigint | null]> =>
+    minors(readings, currency).map(m => (op === '=' ? [m, m] : op === '>' ? [m + 1n, null] : op === '>=' ? [m, null] : op === '<' ? [null, m - 1n] : [null, m]))
+
+  const dateIds = async (from: string, to: string) => new Set(idsOf(await hits('d', from, `${to}:${END}`)))
+
+  /** The first and last day of "this/last week/month/year". */
+  function periodRange(unit: 'week' | 'month' | 'year', offset: number): [string, string] {
+    const y = Number(today.slice(0, 4))
+    const m = Number(today.slice(5, 7)) - 1
+    if (unit === 'year') return [`${y + offset}-01-01`, `${y + offset}-12-31`]
+    if (unit === 'month') {
+      const at = new Date(Date.UTC(y, m + offset, 1))
+      const key = `${at.getUTCFullYear()}-${String(at.getUTCMonth() + 1).padStart(2, '0')}`
+      return [`${key}-01`, `${key}-31`]
+    }
+    const monday = addDays(today, -((new Date(`${today}T00:00:00Z`).getUTCDay() + 6) % 7) + 7 * offset)
+    return [monday, addDays(monday, 6)]
+  }
+
+  /* ------------------------------------------------------------------ */
+  /* One token -> the ids of the records it can match                    */
+  /* ------------------------------------------------------------------ */
+
+  /** Records with a word, a comment word, a group, person or category that starts with `p`. */
+  async function textIds(p: string): Promise<Set<string>> {
+    const out = new Set<string>()
+    const [own, comments, groupHits, personHits] = await Promise.all([prefix('w', p), prefix('n', p), prefix('g', p), prefix('p', p)])
+    for (const r of own) out.add(r.entityId)
+    for (const r of comments) {
+      out.add(r.entityId)
+      commentOf.set(r.entityId, r.term.slice(r.term.indexOf('\u0000') + 1))
+    }
+    const [groups, people] = await Promise.all([liveGroups(idsOf(groupHits)), livePeople(idsOf(personHits))])
+    const named = await Promise.all([recordsOf('G', groups.map(g => g.id)), recordsOf('h', people.map(x => x.id)), ...categories.filter(c => startsWith(wordsOf(c.name), p)).map(async c => new Set(idsOf(await hits('c', c.id))))])
+    for (const set of named) for (const id of set) out.add(id)
+    return out
+  }
+
+  /** The live people a typed name can mean: the words it starts, else a close spelling. */
+  async function peopleNamed(text: string): Promise<string[]> {
+    if (text === 'me') return me ? [me] : []
+    let ids = idsOf(await prefix('p', text))
+    if (ids.length === 0 && text.length >= 4) {
+      const limit = text.length >= 7 ? 2 : 1
+      ids = (await hits('p')).filter(r => distance(r.term.slice(0, text.length), text) <= limit).map(r => r.entityId)
+    }
+    return (await livePeople(ids)).map(p => p.id)
+  }
+
+  /** A phrase nobody matched ("with friends") is just its words. */
+  async function wordsIds(words: string[]): Promise<Set<string>> {
+    let out: Set<string> | undefined
+    for (const w of words) {
+      const set = await textIds(w)
+      out = out ? intersect(out, set) : set
+    }
+    return out ?? new Set()
+  }
+
+  let ledger: Promise<LedgerStatus> | undefined
+  const ledgerStatus = () => (ledger ??= statusOfLedger(store, me))
+
+  async function statusIds(status: SearchStatus): Promise<Set<string>> {
+    switch (status) {
+      case 'deleted':
+        return new Set(idsOf(await hits('s', 'deleted')))
+      case 'disputed': {
+        const out = new Set<string>()
+        let after: Key | null = null
+        do {
+          const page: Awaited<ReturnType<typeof listOpenDisputes>> = await listOpenDisputes(store, {after})
+          for (const d of page.items) out.add(d.data.targetId)
+          after = page.next
+        } while (after)
+        return out
       }
-    return {
-      count: async () => (await Promise.all(ranges.map(r => store.termCount({kind: 'a', ...r})))).reduce((a, b) => a + b, 0),
-      ids: async () => (await Promise.all(ranges.map(r => store.terms({kind: 'a', ...r})))).flat().map(t => t.entityId),
+      case 'hidden': {
+        const out = await recordsOf('G', options.hiddenGroups ?? [])
+        for (const id of options.hiddenItems ?? []) out.add(id)
+        return out
+      }
+      case 'inactive':
+        return recordsOf('G', (await ledgerStatus()).inactiveGroups)
+      default: {
+        const l = await ledgerStatus()
+        const groups = status === 'settled' ? l.settledGroups : status === 'owed' ? l.owedGroups : l.oweGroups
+        const out = await recordsOf('G', groups)
+        // Outside any group a record is about its people: their direct balance with me.
+        const outside = new Set(idsOf(await hits('G', NO_GROUP)))
+        const people = status === 'settled' ? l.unsettledPeople : status === 'owed' ? l.owedPeople : l.owePeople
+        const touched = await recordsOf('h', people)
+        for (const id of outside) if (status === 'settled' ? !touched.has(id) : touched.has(id)) out.add(id)
+        return out
+      }
     }
   }
 
-  /**
-   * How many expenses a word can reach, counted without reading them: its own `w` keys, the expenses of the
-   * groups and people it names (`byGroupDate`, and each person's record count from `balances`), and the category keys.
-   * A word that is a group or a person's name reaches all of their expenses, however few `w` keys it has.
-   */
-  async function textEstimate(prefix: string): Promise<number> {
-    const [own, groupHits, personHits] = await Promise.all([wordCount(prefix), wordHits('g', prefix), wordHits('p', prefix)])
-    const counts = await Promise.all([
-      ...groupHits.map(h => store.count('expense', {index: 'byGroupDate', eq: [h.entityId]})),
-      ...personHits.map(async h => (await store.balances({personId: h.entityId})).reduce((n, b) => n + b.count, 0)),
-      ...categories.filter(c => startsWith(wordsOf(c.name), prefix)).map(c => store.termCount({kind: 'c', min: c.id, max: c.id})),
-    ])
-    return counts.reduce((a, b) => a + b, own)
-  }
-
-  /** How many rows (at most) the token's own keys hold, and a way to read the candidates. */
-  async function plan(token: SearchToken): Promise<{estimate: number; candidates: () => Promise<string[]>}> {
-    if (token.kind === 'compare') {
-      const r = await Promise.all(token.amounts.map(a => amountRange([a], token.op)))
-      return {
-        estimate: (await Promise.all(r.map(x => x.count()))).reduce((a, b) => a + b, 0),
-        candidates: async () => {
-          const ids = (await Promise.all(r.map(x => x.ids()))).flat()
-          await load(ids)
-          return ids
-        },
+  async function resolve(token: SearchToken): Promise<Set<string>> {
+    switch (token.kind) {
+      case 'text':
+        return textIds(token.text)
+      case 'compare':
+        return amountsIn(token.currency ? [token.currency] : undefined, compareBounds(token.amounts, token.op))
+      case 'between':
+        return amountsIn(token.currency ? [token.currency] : undefined, currency => {
+          const out: Array<[bigint | null, bigint | null]> = []
+          for (const from of minors(token.from, currency)) for (const to of minors(token.to, currency)) out.push(from <= to ? [from, to] : [to, from])
+          return out
+        })
+      case 'around':
+        return amountsIn(token.currency ? [token.currency] : undefined, currency => minors(token.amounts, currency).map(m => [(m * 9n) / 10n, (m * 11n) / 10n]))
+      case 'amount': {
+        const out = await amountsIn(token.currency ? [token.currency] : undefined, compareBounds(token.amounts, '='))
+        // A number is also a word, and a year is also a date.
+        for (const id of await textIds(token.text)) out.add(id)
+        if (/^(19|20)\d\d$/.test(token.text)) for (const id of await dateIds(`${token.text}-01-01`, `${token.text}-12-31`)) out.add(id)
+        return out
       }
-    }
-    const own = await textEstimate(token.text)
-    const text = () => textCandidates(token.text)
-    if (token.kind === 'text') return {estimate: own, candidates: text}
-    if (token.kind === 'amount') {
-      const r = await amountRange(token.amounts, '=')
-      return {
-        estimate: own + (await r.count()) + (YEAR.test(token.text) ? 1000 : 0),
-        candidates: async () => {
-          const ids = [...(await r.ids()), ...(await text())]
-          if (YEAR.test(token.text)) ids.push(...(await dateRange(`${token.text}-01-01`, `${token.text}-12-31`)))
-          await load(ids)
-          return ids
-        },
+      case 'day': {
+        const day = addDays(today, token.offset)
+        const out = await dateIds(day, day)
+        for (const id of await textIds(token.text)) out.add(id)
+        return out
       }
-    }
-    if (token.kind === 'day') {
-      const day = addDays(today, token.offset)
-      return {estimate: own + (await store.count('expense', {index: 'byDate', min: day, max: day})), candidates: async () => [...(await dateRange(day, day)), ...(await text())]}
-    }
-    if (token.year) {
-      const from = `${token.year}-${token.month}-01`
-      const to = `${token.year}-${token.month}-31`
-      return {estimate: own + (await store.count('expense', {index: 'byDate', min: from, max: to})), candidates: async () => [...(await dateRange(from, to)), ...(await text())]}
-    }
-    return {
-      estimate: own + (await store.termCount({kind: 'm', min: token.month, max: token.month})),
-      candidates: async () => {
-        const ids = [...(await store.terms({kind: 'm', min: token.month, max: token.month})).map(t => t.entityId), ...(await text())]
-        await load(ids)
-        return ids
-      },
+      case 'month': {
+        const out = token.year ? await dateIds(`${token.year}-${token.month}-01`, `${token.year}-${token.month}-31`) : new Set(idsOf(await hits('m', token.month)))
+        for (const id of await textIds(token.text)) out.add(id)
+        return out
+      }
+      case 'period':
+        return dateIds(...periodRange(token.unit, token.offset))
+      case 'person': {
+        const people = await peopleNamed(token.text)
+        return people.length ? recordsOf(token.role === 'payer' ? 'b' : 'h', people) : wordsIds(token.words)
+      }
+      case 'place': {
+        const [own, groupHits] = await Promise.all([prefix('w', token.text), prefix('g', token.text)])
+        const out = await recordsOf('G', (await liveGroups(idsOf(groupHits))).map(g => g.id))
+        for (const r of own) out.add(r.entityId)
+        return out.size ? out : wordsIds(token.words)
+      }
+      case 'currency':
+        return new Set(idsOf(await hits('a', ...amountBounds(token.code))))
+      case 'status':
+        return statusIds(token.status)
+      case 'type':
+        // A type narrows by record kind below; a comment type keeps the records that have one.
+        return token.type === 'comment' ? new Set(idsOf(await hits('n', '', END))) : new Set()
+      case 'any': {
+        const out = new Set<string>()
+        for (const set of await Promise.all(token.options.map(resolve))) for (const id of set) out.add(id)
+        return out
+      }
     }
   }
 
   /* ------------------------------------------------------------------ */
-  /* People and groups                                                   */
+  /* The sections                                                        */
   /* ------------------------------------------------------------------ */
 
-  async function named<T>(type: 'person' | 'group', keep: (e: Entity<T>) => boolean): Promise<Entity<T>[]> {
-    if (!tokens.every(t => 'text' in t)) return []
+  const types = new Set<SearchType>(tokens.flatMap(t => (t.kind === 'type' ? [t.type] : [])))
+  const recordKinds = new Set<RecordType>()
+  if (types.has('expense')) recordKinds.add('expense')
+  if (types.has('payment')) recordKinds.add('repayment')
+  if (types.has('writeoff')) recordKinds.add('writeoff')
+  const isRecordsWanted = types.size === 0 || recordKinds.size > 0 || types.has('comment')
+  const kindWanted = (k: RecordType) => recordKinds.size === 0 || recordKinds.has(k)
+  const filters = tokens.filter(t => !(t.kind === 'type' && t.type !== 'comment'))
+
+  /* The words people and groups are found by: the plain words of the query (statuses and types narrow them). */
+  const isNameQuery = tokens.every(t => t.kind === 'text' || t.kind === 'amount' || t.kind === 'place' || t.kind === 'status' || t.kind === 'type')
+  const nameWords = tokens.flatMap(t => (t.kind === 'text' || t.kind === 'amount' || t.kind === 'place' ? [t.text] : []))
+  const statuses = tokens.flatMap(t => (t.kind === 'status' ? [t.status] : []))
+
+  async function named<T>(type: 'person' | 'group'): Promise<Entity<T>[]> {
+    if (!isNameQuery || (nameWords.length === 0 && statuses.length === 0)) return []
     let ids: Set<string> | undefined
-    for (const t of tokens) {
-      const hit = new Set((await wordHits(type === 'person' ? 'p' : 'g', (t as {text: string}).text)).map(h => h.entityId))
-      ids = ids ? new Set([...ids].filter(id => hit.has(id))) : hit
+    for (const w of nameWords) {
+      const hit = new Set(idsOf(await prefix(type === 'person' ? 'p' : 'g', w)))
+      ids = ids ? intersect(ids, hit) : hit
       if (ids.size === 0) return []
     }
-    return (await store.getMany<T>(type, [...ids!])).filter(keep).sort((x, y) => (nameOf(x) < nameOf(y) ? -1 : nameOf(x) > nameOf(y) ? 1 : x.id < y.id ? -1 : 1))
+    const candidates = ids ? await store.getMany<T>(type, [...ids]) : (await (type === 'person' ? store.page<T>('person', {limit: ALL}) : store.page<T>('group', {limit: ALL}))).items
+    const l = statuses.length ? await ledgerStatus() : undefined
+    return candidates.filter(e => statuses.every(s => statusFits(type, e, s, l!, options))).sort((x, y) => (nameOf(x) < nameOf(y) ? -1 : nameOf(x) > nameOf(y) ? 1 : x.id < y.id ? -1 : 1))
   }
   const nameOf = (e: Entity<unknown>) => fold((e.data as {name: string}).name)
 
+  const wantsPeople = types.size === 0 || types.has('friend')
+  const wantsGroups = types.size === 0 || types.has('group')
+  const [people, groups] = await Promise.all([
+    wantsPeople ? named<Person>('person').then(rows => rows.filter(p => !p.data.isMe).map(displayPerson)) : [],
+    wantsGroups ? named<Group>('group') : [],
+  ])
+
   /* ------------------------------------------------------------------ */
-  /* Expenses: smallest token first, the rest checked on its rows        */
+  /* Records: intersect the sets, order from the date keys, total from the amount keys */
   /* ------------------------------------------------------------------ */
 
-  const plans = await Promise.all(tokens.map(plan))
-  const driver = plans.reduce((best, p) => (p.estimate < best.estimate ? p : best))
-
-  /** Names the checks read, fetched for the rows of each chunk only (people and groups are renamed in place, never copied into expenses). */
-  const people = new Map<string, Entity<Person>>()
-  const groups = new Map<string, Entity<Group>>()
-  const asked = new Set<string>()
-  async function loadNames(rows: Entity<Expense>[]) {
-    const personIds = new Set<string>()
-    const groupIds = new Set<string>()
-    for (const e of rows) {
-      for (const id of [...Object.keys(e.data.payers), ...Object.keys(e.data.shares)]) if (!asked.has(`p${id}`)) personIds.add(id)
-      if (e.data.groupId && !asked.has(`g${e.data.groupId}`)) groupIds.add(e.data.groupId)
+  /* One pass over the date keys picks the matches and orders them: an entry is `<date>:<createdAt> NUL <id>`, which sorts
+     as the list does (newest first once reversed; the same day, the later-created first). */
+  const expenseEntries: string[] = []
+  const paymentEntries: string[] = []
+  const paymentKind = new Map<string, RecordType>()
+  const expenseSet = new Set<string>()
+  if (isRecordsWanted) {
+    let acc: Set<string> | undefined
+    for (const set of (filters.length ? await Promise.all(filters.map(resolve)) : []).sort((x, y) => x.size - y.size)) {
+      acc = acc ? intersect(acc, set) : set
+      if (acc.size === 0) break
     }
-    for (const id of personIds) asked.add(`p${id}`)
-    for (const id of groupIds) asked.add(`g${id}`)
-    for (const p of await store.getMany<Person>('person', [...personIds])) people.set(p.id, p)
-    for (const g of await store.getMany<Group>('group', [...groupIds])) groups.set(g.id, g)
+    if (!acc || acc.size > 0)
+      for (const r of await hits('d', '', END)) {
+        const kind = r.entityType as RecordType
+        if ((acc && !acc.has(r.entityId)) || !kindWanted(kind)) continue
+        if (kind === 'expense') {
+          expenseEntries.push(`${r.term}\u0000${r.entityId}`)
+          expenseSet.add(r.entityId)
+        } else {
+          paymentEntries.push(`${r.term}\u0000${r.entityId}`)
+          paymentKind.set(r.entityId, kind)
+        }
+      }
   }
-  const categoryNames = new Map(categories.map(c => [c.id, c.name]))
+  const newestFirst = (entries: string[]) => entries.sort().reverse().map(e => e.slice(e.indexOf('\u0000') + 1))
+  const expenseIds = newestFirst(expenseEntries)
+  const paymentIds = newestFirst(paymentEntries)
 
-  /**
-   * The words an expense can be found by, exactly as the keys say: its own text, its category's name (only a category in
-   * the list: an id with no entry is not a word), and the names of its group and people while they are live.
-   */
-  const wordsOfExpense = (e: Entity<Expense>) => {
-    const d = e.data
-    const group = d.groupId ? groups.get(d.groupId) : undefined
-    const text = [d.title, d.notes, categoryNames.get(d.category) ?? '', group && !group.deleted ? `${group.data.name} ${group.data.location ?? ''}` : '']
-    if (d.split.mode === 'items') for (const item of d.split.items) text.push(item.name ?? '')
-    for (const id of new Set([...Object.keys(d.payers), ...Object.keys(d.shares)])) {
-      const person = people.get(id)
-      if (person && !person.deleted) text.push(person.data.name)
-    }
-    return wordsOf(text.join(' '))
+  /* The totals: a deleted match is listed but never added up (decision 103). */
+  const totals = await totalsOf(store, expenseSet)
+
+  const pagePayments = paymentIds.slice(0, SEARCH_PAGE)
+  const payments = (await Promise.all((['repayment', 'writeoff'] as const).map(kind => store.getMany<Repayment>(kind, pagePayments.filter(id => paymentKind.get(id) === kind)))))
+    .flat()
+    .sort((x, y) => pagePayments.indexOf(x.id) - pagePayments.indexOf(y.id)) as Entity<Repayment | WriteOff>[]
+
+  /* ------------------------------------------------------------------ */
+  /* Expense rows, a page at a time                                      */
+  /* ------------------------------------------------------------------ */
+
+  const rows: Entity<Expense>[] = []
+  const comments = new Map<string, string>()
+  /** The text of the comment each of these records was found through. */
+  async function loadComments(ids: string[]) {
+    const found = ids.flatMap(id => (commentOf.has(id) ? [[id, commentOf.get(id)!] as const] : []))
+    if (found.length === 0) return
+    const byComment = new Map(found.map(([target, comment]) => [comment, target]))
+    for (const c of await store.getMany<Comment>('comment', [...byComment.keys()])) comments.set(byComment.get(c.id)!, c.data.body)
   }
-
-  function matches(token: SearchToken, e: Entity<Expense>, words: readonly string[]): boolean {
-    switch (token.kind) {
-      case 'compare':
-        return amountMatches(e, token.amounts, token.op)
-      case 'amount':
-        return amountMatches(e, token.amounts, '=') || (YEAR.test(token.text) && e.data.date.startsWith(token.text)) || startsWith(words, token.text)
-      case 'day':
-        return e.data.date === addDays(today, token.offset) || startsWith(words, token.text)
-      case 'month':
-        return (token.year ? e.data.date.slice(0, 7) === `${token.year}-${token.month}` : e.data.date.slice(5, 7) === token.month) || startsWith(words, token.text)
-      case 'text':
-        return startsWith(words, token.text)
-    }
-  }
-
-  /** The rows that match every word, deleted ones included (their names must be loaded). */
-  const check = (rows: Entity<Expense>[]) =>
-    rows.filter(e => {
-      const words = wordsOfExpense(e)
-      return tokens.every(t => matches(t, e, words))
-    })
-  /** Newest first; the same day, the later-created first. */
-  const newestFirst = (x: Entity<Expense>, y: Entity<Expense>) =>
-    x.data.date === y.data.date ? y.createdAt - x.createdAt || (x.id < y.id ? -1 : 1) : x.data.date < y.data.date ? 1 : -1
-
-  const base = {
-    people: (await named<Person>('person', p => !p.data.isMe)).map(displayPerson),
-    groups: await named<Group>('group', () => true),
-    terms: tokens.flatMap(t => ('text' in t ? [t.text] : [])),
-  }
-
-  if (driver.estimate <= NARROW) {
-    const candidateIds = [...new Set(await driver.candidates())]
-    await load(candidateIds)
-    const rows = candidateIds.map(id => expenses.get(id)).filter((e): e is Entity<Expense> => !!e)
-    await loadNames(rows)
-    const all = check(rows).sort(newestFirst)
-    return {...base, found: () => all, isDone: () => true, step: async () => undefined}
-  }
-
-  /* Broad: newest first through `byDate`. `settled` is complete days; `tail` the day still being read. */
-  let cursor: Key | null = null
-  let isDone = false
-  const settled: Entity<Expense>[] = []
-  let tail: Entity<Expense>[] = []
-  const flush = () => {
-    settled.push(...tail.sort(newestFirst))
-    tail = []
-  }
+  let cursor = 0
   let inFlight: Promise<void> | undefined
   const read = async () => {
-    // full-read-ok: one chunk newest first; the first page needs one, "Show more" and the totals walk (`searchTotals`, cancelled by the next keystroke) read on
-    const page: Page<Entity<Expense>> = await store.page<Expense>('expense', {index: 'byDate', dir: 'prev', after: cursor, limit: CHUNK})
-    cursor = page.next
-    await loadNames(page.items)
-    for (const e of check(page.items)) {
-      if (tail.length > 0 && tail[0]!.data.date !== e.data.date) flush()
-      tail.push(e)
+    const ids = expenseIds.slice(cursor, cursor + SEARCH_PAGE)
+    cursor += ids.length
+    const byId = new Map((await store.getMany<Expense>('expense', ids)).map(e => [e.id, e]))
+    for (const id of ids) {
+      const e = byId.get(id)
+      if (e) rows.push(e)
     }
-    // Reading has moved past the tail's day: nothing more can join it.
-    const last = page.items.at(-1)
-    if (tail.length > 0 && last && last.data.date < tail[0]!.data.date) flush()
-    if (!cursor) {
-      flush()
-      isDone = true
-    }
+    await loadComments(ids)
   }
+  const step = () => (cursor >= expenseIds.length ? Promise.resolve() : (inFlight ??= read().finally(() => (inFlight = undefined))))
+  await Promise.all([step(), loadComments(pagePayments)])
+
   return {
-    ...base,
-    found: () => settled,
-    isDone: () => isDone,
-    step: () => (isDone ? Promise.resolve() : (inFlight ??= read().finally(() => (inFlight = undefined)))),
+    people,
+    groups,
+    payments,
+    paymentCount: paymentIds.length,
+    terms: tokens.flatMap(wordsOfToken),
+    chips,
+    tokens,
+    summary: {count: expenseIds.length, totals},
+    found: () => rows,
+    commentText: id => comments.get(id),
+    isDone: () => cursor >= expenseIds.length,
+    step,
   }
 }
 
-/** Counts and adds up a session's matches. Only meaningful once `isDone()`. */
+/* -------------------------------------------------------------------------- */
+/* Ledger status: which groups and friends are settled, owed or owing           */
+/* -------------------------------------------------------------------------- */
+
+interface LedgerStatus {
+  settledGroups: string[]
+  owedGroups: string[]
+  oweGroups: string[]
+  inactiveGroups: string[]
+  /** Friends with a direct balance with me outside groups: any, one that owes me, one I owe. */
+  unsettledPeople: string[]
+  owedPeople: string[]
+  owePeople: string[]
+}
+
+async function statusOfLedger(store: Store, me: string | undefined): Promise<LedgerStatus> {
+  // full-read-ok: a person has tens of groups; the balances projection holds one row per member and currency
+  const [groups, nets, pairs] = await Promise.all([store.page<Group>('group', {limit: ALL}), store.balances(), me ? store.pairBalances(me) : Promise.resolve([])])
+  const live = groups.items.filter(g => !g.deleted)
+  const byGroup = new Map<string, Array<{personId: string; amount: bigint}>>()
+  for (const n of nets) if (n.groupId) byGroup.set(n.groupId, [...(byGroup.get(n.groupId) ?? []), n])
+  const out: LedgerStatus = {settledGroups: [], owedGroups: [], oweGroups: [], inactiveGroups: [], unsettledPeople: [], owedPeople: [], owePeople: []}
+  for (const g of live) {
+    const rows = byGroup.get(g.id) ?? []
+    if (rows.every(r => r.amount === 0n)) out.settledGroups.push(g.id)
+    if (rows.some(r => r.personId === me && r.amount > 0n)) out.owedGroups.push(g.id)
+    if (rows.some(r => r.personId === me && r.amount < 0n)) out.oweGroups.push(g.id)
+    if (isGroupInactive(g.data)) out.inactiveGroups.push(g.id)
+  }
+  // `pairBalances(me)`: what each other person owes me outside groups, per currency.
+  for (const p of pairs) {
+    if (p.amount === 0n) continue
+    out.unsettledPeople.push(p.otherId)
+    ;(p.amount > 0n ? out.owedPeople : out.owePeople).push(p.otherId)
+  }
+  return out
+}
+
+/** Whether a person or group is in the status (a section the status says nothing about is never in it). */
+function statusFits(type: 'person' | 'group', e: Entity<unknown>, status: SearchStatus, l: LedgerStatus, o: SearchOptions): boolean {
+  if (status === 'deleted') return e.deleted
+  if (e.deleted) return false
+  if (type === 'person') return false
+  switch (status) {
+    case 'hidden':
+      return !!o.hiddenGroups?.includes(e.id)
+    case 'inactive':
+      return l.inactiveGroups.includes(e.id)
+    case 'settled':
+      return l.settledGroups.includes(e.id)
+    case 'owed':
+      return l.owedGroups.includes(e.id)
+    case 'owe':
+      return l.oweGroups.includes(e.id)
+    default:
+      return false
+  }
+}
+
+/** One total per currency over the expense ids, from the amount keys alone; a deleted expense is not added up. */
+async function totalsOf(store: Store, ids: ReadonlySet<string>): Promise<Record<CurrencyCode, bigint>> {
+  if (ids.size === 0) return {}
+  const gone = new Set((await store.terms({kind: 's', min: 'deleted', max: 'deleted'})).map(r => r.entityId))
+  const parts: Array<{currency: CurrencyCode; amount: bigint}> = []
+  for (const r of await store.terms({kind: 'a', min: '', max: END})) {
+    if (!ids.has(r.entityId) || gone.has(r.entityId)) continue
+    const colon = r.term.indexOf(':')
+    parts.push({currency: r.term.slice(0, colon), amount: amountOfTerm(r.term.slice(colon + 1))})
+  }
+  return sumByCurrency(parts)
+}
+
+/** Counts and adds up expenses already in hand (kept for callers that hold rows). */
 export function summarizeSearch(found: ReadonlyArray<Entity<Expense>>): SearchSummary {
   // A deleted match is listed (and counted as a row), but never added up (decision 103).
   const live = found.filter(e => !e.deleted)
   return {count: found.length, totals: sumByCurrency(live.map(e => ({currency: e.data.currency, amount: e.data.total})))}
-}
-
-/**
- * Reads the rest of the ledger a chunk at a time and adds up every match.
- * This is the one place a search reads past its first page: a broad query's
- * totals need every match. It checks `isCancelled` between chunks (the next
- * keystroke cancels it) and returns undefined when cancelled.
- */
-export async function searchTotals(session: SearchSession, isCancelled: () => boolean): Promise<SearchSummary | undefined> {
-  while (!session.isDone()) {
-    if (isCancelled()) return undefined
-    await session.step()
-  }
-  return isCancelled() ? undefined : summarizeSearch(session.found())
 }
 
 /**
@@ -475,8 +589,8 @@ export async function searchTotals(session: SearchSession, isCancelled: () => bo
  */
 export async function searchStore(store: Store, query: string, options: SearchOptions): Promise<SearchResults> {
   const session = await openSearch(store, query, options)
-  const summary = await searchTotals(session, () => false)
-  return {expenses: session.found(), people: session.people, groups: session.groups, totals: summary?.totals ?? {}, terms: session.terms}
+  while (!session.isDone()) await session.step()
+  return {expenses: session.found(), people: session.people, groups: session.groups, payments: session.payments, totals: session.summary.totals, terms: session.terms}
 }
 
 /** Where `terms` start words of `text`, as `[start, end)` ranges into the original text. */

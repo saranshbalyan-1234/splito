@@ -358,7 +358,7 @@ msgid "{0} owes you the most: {1}."
 msgstr "{0} को आपको सबसे ज़्यादा देना है: {1}।"
 
 #. placeholder {0}: firstName(payers[0]!)
-#: src/components/SearchAsk/ResultRows.tsx:241
+#: src/components/SearchAsk/ResultRows.tsx:236
 msgid "{0} paid"
 msgstr "{0} ने भुगतान किया"
 
@@ -417,7 +417,7 @@ msgid "{0} people"
 msgstr "{0} लोग"
 
 #. placeholder {0}: payers.length
-#: src/components/SearchAsk/ResultRows.tsx:238
+#: src/components/SearchAsk/ResultRows.tsx:233
 msgid "{0} people paid"
 msgstr "{0} लोगों ने भुगतान किया"
 
@@ -469,7 +469,7 @@ msgid "{0}, {spokenList}"
 msgstr "{0}, {spokenList}"
 
 #. placeholder {0}: e.title
-#: src/components/SearchAsk/ResultRows.tsx:260
+#: src/components/SearchAsk/ResultRows.tsx:246
 msgid "{0}, {total}, {date}"
 msgstr "{0}, {total}, {date}"
 
@@ -751,6 +751,7 @@ msgid "{from} owes you"
 msgstr "{from} से आपको मिलने हैं"
 
 #: src/components/activity/ActivityItem.tsx:892
+#: src/components/SearchAsk/ResultRows.tsx:372
 msgid "{from} paid {to}"
 msgstr "{from} ने {to} को भुगतान किया"
 
@@ -791,7 +792,7 @@ msgstr "{hiddenCount, plural, one {# बदलाव आपकी गतिव�
 msgid "{label} · by {by}"
 msgstr "{label} · {by} द्वारा"
 
-#: src/components/SearchAsk/ResultRows.tsx:182
+#: src/components/SearchAsk/ResultRows.tsx:174
 msgid "{label}, not synced yet"
 msgstr "{label}, अभी सिंक नहीं हुआ"
 
@@ -820,7 +821,7 @@ msgstr "{list} विवादित या रोके हुए, इस य�
 msgid "{list} disputed or on hold, not included in Settle up or Call it even."
 msgstr "{list} विवादित या रोके हुए, हिसाब चुकाएं या हिसाब बराबर करें में शामिल नहीं हैं।"
 
-#: src/components/SearchAsk/ResultRows.tsx:376
+#: src/components/SearchAsk/ResultRows.tsx:532
 #: src/screens/Group/index.tsx:361
 #: src/screens/Groups/components/GroupRow.tsx:65
 msgid "{memberCount} members"
@@ -963,6 +964,10 @@ msgstr "{title}, {byline}, {shareLabel} {shareText} (कुल {totalText}), अ
 msgid "{title}, not synced yet"
 msgstr "{title}, अभी सिंक नहीं हुआ"
 
+#: src/components/SearchAsk/ResultRows.tsx:372
+msgid "{to} let {from} off"
+msgstr "{to} ने {from} का हिसाब माफ़ किया"
+
 #: src/features/account/LogOutPrompt.tsx:51
 msgid "{unsynced, plural, one {# change hasn’t synced yet and will be lost.} other {# changes haven’t synced yet and will be lost.}}"
 msgstr "{unsynced, plural, one {# बदलाव अभी सिंक नहीं हुआ है और खो जाएगा।} other {# बदलाव अभी सिंक नहीं हुए हैं और खो जाएँगे।}}"
@@ -1043,6 +1048,10 @@ msgstr "{who} को {groupName} से हटाया गया"
 msgid "{who} will no longer be in {groupName}. Earlier expenses and the history stay as they are."
 msgstr "{who} अब {groupName} में नहीं रहेंगे। पहले के खर्च और इतिहास जैसे हैं वैसे रहेंगे।"
 
+#: src/components/SearchAsk/ResultRows.tsx:376
+msgid "{who}, {amount}, {date}"
+msgstr "{who}, {amount}, {date}"
+
 #: src/features/searchAsk/AskAnswer.tsx:290
 msgid "{who}'s share"
 msgstr "{who} का हिस्सा"
@@ -1077,7 +1086,7 @@ msgstr "1 श्रेणी"
 msgid "1 day"
 msgstr "1 दिन"
 
-#: src/components/SearchAsk/ResultRows.tsx:376
+#: src/components/SearchAsk/ResultRows.tsx:532
 #: src/screens/Group/index.tsx:361
 #: src/screens/Groups/components/GroupRow.tsx:65
 msgid "1 member"
@@ -1680,6 +1689,8 @@ msgstr "हमेशा समूह में"
 #: src/components/people/UpiPayDialog.tsx:184
 #: src/components/SearchAsk/AskCards.tsx:200
 #: src/components/SearchAsk/AskCards.tsx:243
+#: src/components/SearchAsk/ResultRows.tsx:327
+#: src/components/SearchAsk/ResultRows.tsx:415
 #: src/components/split/charges/ChargeSheet.tsx:171
 #: src/components/split/charges/ChargeSheet.tsx:210
 #: src/components/split/fields.tsx:155
@@ -1749,7 +1760,7 @@ msgstr "विश्लेषण"
 msgid "Animations"
 msgstr "एनिमेशन"
 
-#: src/components/SearchAsk/ResultRows.tsx:456
+#: src/components/SearchAsk/ResultRows.tsx:612
 msgid "Answered on this device"
 msgstr "इसी डिवाइस पर जवाब दिया गया"
 
@@ -1761,6 +1772,10 @@ msgstr "इसी डिवाइस पर जवाब दिया गया 
 #: src/features/searchAsk/AskChat.tsx:186
 msgid "Answers from this device"
 msgstr "जवाब इसी डिवाइस से"
+
+#: src/components/SearchAsk/ResultRows.tsx:429
+msgid "Any of"
+msgstr "इनमें से कोई"
 
 #: src/screens/Invites/InviteLinks.tsx:178
 msgid "Anyone who has it can no longer use it. You can always make a new one."
@@ -1843,11 +1858,11 @@ msgstr "किसी के जुड़ने से पहले मुझस�
 msgid "Ask Splito"
 msgstr "Splito से पूछें"
 
-#: src/components/SearchAsk/ResultRows.tsx:453
+#: src/components/SearchAsk/ResultRows.tsx:609
 msgid "Ask Splito: “{query}”"
 msgstr "Splito से पूछें: “{query}”"
 
-#: src/components/SearchAsk/ResultRows.tsx:441
+#: src/components/SearchAsk/ResultRows.tsx:597
 msgid "Ask Splito: {query}"
 msgstr "Splito से पूछें: {query}"
 
@@ -1984,10 +1999,6 @@ msgstr "व्यक्ति के अनुसार"
 msgid "by week"
 msgstr "हफ्ते के हिसाब से"
 
-#: src/components/SearchAsk/ResultRows.tsx:129
-msgid "Calculating totals…"
-msgstr "कुल जोड़ा जा रहा है…"
-
 #: src/components/split/fields.tsx:334
 msgid "Calculator"
 msgstr "कैलकुलेटर"
@@ -2021,7 +2032,7 @@ msgstr "यह आमंत्रण अभी नहीं खुल सकत�
 #: src/components/Prompt.tsx:155
 #: src/components/SearchAsk/SearchHistory.tsx:191
 #: src/features/searchAsk/AskChat.tsx:251
-#: src/features/searchAsk/SearchAskBody.tsx:333
+#: src/features/searchAsk/SearchAskBody.tsx:363
 msgid "Cancel"
 msgstr "रद्द करें"
 
@@ -2047,6 +2058,7 @@ msgstr "{name} को भेजा अनुरोध रद्द करें"
 msgid "Categories"
 msgstr "श्रेणियाँ"
 
+#: src/components/SearchAsk/ResultRows.tsx:319
 #: src/components/split/pickers.tsx:168
 #: src/screens/Analytics/components/Charts.tsx:188
 #: src/screens/Analytics/index.tsx:229
@@ -2262,7 +2274,7 @@ msgstr "मेन्यू बंद करें"
 msgid "Close other Splito tabs to finish updating. Nothing is lost, and this page opens by itself when they are closed."
 msgstr "अपडेट पूरा करने के लिए Splito के दूसरे टैब बंद करें। कुछ भी खोया नहीं है, और उनके बंद होते ही यह पेज अपने आप खुल जाएगा।"
 
-#: src/features/searchAsk/SearchAskBody.tsx:327
+#: src/features/searchAsk/SearchAskBody.tsx:357
 msgid "Close search"
 msgstr "खोज बंद करें"
 
@@ -2322,6 +2334,11 @@ msgstr "कलर मोड"
 #: src/components/settings/prefControls.tsx:140
 msgid "Colour-blind safe"
 msgstr "कलर-ब्लाइंड के लिए सुरक्षित"
+
+#: src/components/SearchAsk/ResultRows.tsx:325
+#: src/components/SearchAsk/ResultRows.tsx:386
+msgid "Comment"
+msgstr "टिप्पणी"
 
 #: src/components/comments/CommentRow.tsx:335
 msgid "Comment options"
@@ -2620,7 +2637,7 @@ msgid "Counts towards: {settles}"
 msgstr "इसमें गिना जाएगा: {settles}"
 
 #: src/components/groups/GroupFields.tsx:48
-#: src/components/SearchAsk/ResultRows.tsx:369
+#: src/components/SearchAsk/ResultRows.tsx:525
 #: src/screens/Group/index.tsx:351
 #: src/screens/Groups/components/GroupRow.tsx:57
 #: src/screens/Groups/components/GroupsFilterDialog.tsx:77
@@ -2670,6 +2687,8 @@ msgstr "CSV"
 
 #: src/components/groups/GroupFields.tsx:103
 #: src/components/people/RecordPaymentDialog.tsx:348
+#: src/components/SearchAsk/ResultRows.tsx:331
+#: src/components/SearchAsk/ResultRows.tsx:423
 #: src/components/split/pickers.tsx:69
 #: src/components/split/pickers.tsx:80
 #: src/features/export/ExportSheet.tsx:213
@@ -2740,6 +2759,8 @@ msgid "Data"
 msgstr "डेटा"
 
 #: src/components/people/PaymentDetailsDialog.tsx:210
+#: src/components/SearchAsk/ResultRows.tsx:329
+#: src/components/SearchAsk/ResultRows.tsx:417
 #: src/components/split/ExpenseComposer.tsx:381
 #: src/components/split/ExpenseComposer.tsx:536
 #: src/features/export/statementText.ts:39
@@ -2855,7 +2876,8 @@ msgstr "यह टिप्पणी हटाएँ?"
 msgid "Delete this feedback?"
 msgstr "यह फ़ीडबैक हटाएँ?"
 
-#: src/components/SearchAsk/ResultRows.tsx:377
+#: src/components/SearchAsk/ResultRows.tsx:304
+#: src/components/SearchAsk/ResultRows.tsx:533
 #: src/screens/Groups/components/GroupRow.tsx:124
 #: src/screens/People/components/PersonRow.tsx:205
 msgid "Deleted"
@@ -3018,6 +3040,7 @@ msgid "Dispute this write-off"
 msgstr "इस माफ़ी पर विवाद"
 
 #: src/components/disputes/words.ts:31
+#: src/components/SearchAsk/ResultRows.tsx:303
 #: src/features/export/ExportSheet.tsx:124
 msgid "Disputed"
 msgstr "विवादित"
@@ -3453,7 +3476,7 @@ msgid "Expense options"
 msgstr "खर्च के विकल्प"
 
 #: src/components/activity/ActivityFilterDialog.tsx:44
-#: src/components/SearchAsk/ResultRows.tsx:88
+#: src/components/SearchAsk/ResultRows.tsx:95
 #: src/features/export/ImportSheet.tsx:172
 #: src/screens/Analytics/components/Charts.tsx:148
 #: src/screens/Analytics/components/Charts.tsx:188
@@ -3619,7 +3642,7 @@ msgstr "“{0}” के लिए {n, plural, one {# खर्च} other {# ख
 msgid "Found at least {n, plural, one {# expense} other {# expenses}} for “{0}”."
 msgstr "“{0}” के लिए कम से कम {n, plural, one {# खर्च} other {# खर्चे}} मिले।"
 
-#: src/components/SearchAsk/ResultRows.tsx:337
+#: src/components/SearchAsk/ResultRows.tsx:493
 #: src/features/export/ExportSheet.tsx:210
 #: src/features/export/ExportSheet.tsx:253
 #: src/screens/Person/index.tsx:197
@@ -3751,7 +3774,8 @@ msgid "Groceries"
 msgstr "किराना"
 
 #: src/components/people/RecordPaymentDialog.tsx:195
-#: src/components/SearchAsk/ResultRows.tsx:370
+#: src/components/SearchAsk/ResultRows.tsx:315
+#: src/components/SearchAsk/ResultRows.tsx:526
 #: src/components/split/ExpenseComposer.tsx:544
 #: src/components/split/pickers.tsx:267
 #: src/components/split/pickers.tsx:271
@@ -3807,7 +3831,7 @@ msgid "Group updated"
 msgstr "ग्रुप अपडेट हुआ"
 
 #: src/components/activity/ActivityFilterDialog.tsx:47
-#: src/components/SearchAsk/ResultRows.tsx:88
+#: src/components/SearchAsk/ResultRows.tsx:95
 #: src/components/TabGlyph.tsx:45
 #: src/features/export/ImportSheet.tsx:171
 #: src/navigation/Navigation.tsx:71
@@ -3875,7 +3899,8 @@ msgid "Hi {name},"
 msgstr "नमस्ते {name},"
 
 #: src/components/people/HistoryRow.tsx:209
-#: src/components/SearchAsk/ResultRows.tsx:378
+#: src/components/SearchAsk/ResultRows.tsx:305
+#: src/components/SearchAsk/ResultRows.tsx:534
 #: src/components/settings/CategoriesEditor.tsx:197
 #: src/components/settings/TaxClassesEditor.tsx:188
 #: src/screens/Groups/components/GroupRow.tsx:134
@@ -3941,7 +3966,7 @@ msgid "History"
 msgstr "इतिहास"
 
 #: src/components/groups/GroupFields.tsx:47
-#: src/components/SearchAsk/ResultRows.tsx:368
+#: src/components/SearchAsk/ResultRows.tsx:524
 #: src/components/TabGlyph.tsx:43
 #: src/navigation/Navigation.tsx:266
 #: src/screens/Group/index.tsx:351
@@ -4034,6 +4059,10 @@ msgstr "इम्पोर्ट"
 msgid "Import a backup"
 msgstr "बैकअप इम्पोर्ट करें"
 
+#: src/components/SearchAsk/ResultRows.tsx:421
+msgid "In"
+msgstr "में"
+
 #. placeholder {0}: answer.group.name
 #. placeholder {0}: date(p.from, {month: 'long', year: 'numeric'})
 #. placeholder {0}: date(p.from, {year: 'numeric'})
@@ -4074,7 +4103,8 @@ msgstr "पिछले {0} महीनों में"
 msgid "In this period"
 msgstr "इस अवधि में"
 
-#: src/components/SearchAsk/ResultRows.tsx:377
+#: src/components/SearchAsk/ResultRows.tsx:306
+#: src/components/SearchAsk/ResultRows.tsx:533
 #: src/screens/Groups/components/GroupRow.tsx:129
 #: src/screens/Groups/components/GroupsFilterDialog.tsx:88
 msgid "Inactive"
@@ -4290,6 +4320,7 @@ msgstr "यह एक बार फिर खोला जा चुका ह�
 msgid "It will take no new expenses, but you can still settle up. Money is still open in this group:"
 msgstr "इसमें नए खर्च नहीं जुड़ेंगे, पर हिसाब अब भी चुकाया जा सकता है। इस ग्रुप में पैसा अब भी बाकी है:"
 
+#: src/components/SearchAsk/ResultRows.tsx:313
 #: src/features/disputes/RaiseSheet.tsx:127
 msgid "Item"
 msgstr "चीज़"
@@ -5018,7 +5049,7 @@ msgstr "“{0}” के लिए कोई नतीजा नहीं"
 msgid "No one’s share can go below zero – make the adjustments smaller"
 msgstr "किसी का हिस्सा शून्य से कम नहीं हो सकता – बदलाव छोटे करें"
 
-#: src/components/SearchAsk/ResultRows.tsx:410
+#: src/components/SearchAsk/ResultRows.tsx:566
 msgid "No results found for “<0>{query}</0>”."
 msgstr "“<0>{query}</0>” के लिए कोई नतीजा नहीं मिला।"
 
@@ -5128,6 +5159,7 @@ msgstr "नोट"
 msgid "Note (optional)"
 msgstr "नोट (वैकल्पिक)"
 
+#: src/components/SearchAsk/ResultRows.tsx:311
 #: src/components/split/ExpenseComposer.tsx:582
 #: src/components/split/ExpenseComposer.tsx:595
 #: src/screens/Expense/index.tsx:501
@@ -5536,6 +5568,10 @@ msgstr "अब तक"
 msgid "Overview"
 msgstr "सारांश"
 
+#: src/components/SearchAsk/ResultRows.tsx:301
+msgid "Owed"
+msgstr "बकाया"
+
 #. placeholder {0}: money(v)
 #: src/screens/Analytics/components/Charts.tsx:105
 msgid "Owed to you {0}"
@@ -5577,6 +5613,8 @@ msgstr "पैकिंग"
 msgid "Paid · change who paid to remove"
 msgstr "भुगतान किया · हटाने के लिए भुगतानकर्ता बदलें"
 
+#: src/components/SearchAsk/ResultRows.tsx:323
+#: src/components/SearchAsk/ResultRows.tsx:419
 #: src/components/split/ExpenseComposer.tsx:558
 #: src/features/export/statementText.ts:45
 #: src/screens/Expense/index.tsx:454
@@ -5679,6 +5717,7 @@ msgid "Payment rules saved"
 msgstr "भुगतान के नियम सहेजे गए"
 
 #: src/components/activity/ActivityFilterDialog.tsx:45
+#: src/components/SearchAsk/ResultRows.tsx:95
 #: src/components/settings/prefControls.tsx:417
 #: src/features/export/ImportSheet.tsx:173
 msgid "Payments"
@@ -5696,7 +5735,7 @@ msgstr "आपको देता है"
 msgid "PDF"
 msgstr "PDF"
 
-#: src/components/SearchAsk/ResultRows.tsx:88
+#: src/components/SearchAsk/ResultRows.tsx:95
 #: src/components/TabGlyph.tsx:44
 #: src/features/export/ImportSheet.tsx:170
 #: src/navigation/Navigation.tsx:70
@@ -5791,6 +5830,10 @@ msgstr "पहला दिन चुनें"
 #: src/components/settings/AccentPicker.tsx:34
 msgid "Pink"
 msgstr "गुलाबी"
+
+#: src/components/SearchAsk/ResultRows.tsx:317
+msgid "Place"
+msgstr "जगह"
 
 #: src/screens/Groups/index.tsx:330
 msgid "Planning a trip or sharing a flat? Keep its expenses in one place."
@@ -6111,6 +6154,10 @@ msgstr "{name} को हटाएँ"
 #: src/screens/Group/components/GroupRows.tsx:349
 msgid "Remove {name} from group"
 msgstr "{name} को ग्रुप से हटाएँ"
+
+#: src/components/SearchAsk/ResultRows.tsx:442
+msgid "Remove {name}: {typed}"
+msgstr "हटाएं {name}: {typed}"
 
 #: src/features/friends/RemoveFriendDialog.tsx:92
 msgid "Remove {name}?"
@@ -6606,14 +6653,14 @@ msgstr "समूह या सदस्य खोजें"
 msgid "Search or add a name"
 msgstr "नाम खोजें या जोड़ें"
 
-#: src/features/searchAsk/SearchAskBody.tsx:287
-#: src/features/searchAsk/SearchAskBody.tsx:288
+#: src/features/searchAsk/SearchAskBody.tsx:317
+#: src/features/searchAsk/SearchAskBody.tsx:318
 #: src/screens/Welcome/index.tsx:52
 msgid "Search or ask anything"
 msgstr "कुछ भी खोजें या पूछें"
 
 #: src/components/SearchAsk/SearchAskButton.tsx:23
-#: src/features/searchAsk/SearchAskBody.tsx:344
+#: src/features/searchAsk/SearchAskBody.tsx:376
 msgid "Search or ask Splito"
 msgstr "Splito में खोजें या पूछें"
 
@@ -6880,6 +6927,10 @@ msgstr "{group} में {person} से हिसाब चुकता कर
 msgid "settled"
 msgstr "बराबर"
 
+#: src/components/SearchAsk/ResultRows.tsx:300
+msgid "Settled"
+msgstr "चुकता"
+
 #: src/components/BalanceText.tsx:51
 #: src/screens/Group/components/GroupRows.tsx:116
 #: src/screens/Group/components/MemberExitDialog.tsx:135
@@ -7005,11 +7056,11 @@ msgstr "छिपे बदलाव दिखाएँ"
 msgid "Show me how"
 msgstr "तरीका दिखाएँ"
 
-#: src/features/searchAsk/SearchAskBody.tsx:382
+#: src/features/searchAsk/SearchAskBody.tsx:414
 msgid "Show more"
 msgstr "और दिखाएँ"
 
-#: src/features/searchAsk/SearchAskBody.tsx:376
+#: src/features/searchAsk/SearchAskBody.tsx:408
 msgid "Show more results"
 msgstr "और नतीजे दिखाएँ"
 
@@ -7129,7 +7180,8 @@ msgstr "कुछ"
 #: src/components/people/HistoryRow.tsx:86
 #: src/components/people/PaymentDetailsDialog.tsx:112
 #: src/components/people/RecordPaymentDialog.tsx:169
-#: src/components/SearchAsk/ResultRows.tsx:235
+#: src/components/SearchAsk/ResultRows.tsx:230
+#: src/components/SearchAsk/ResultRows.tsx:369
 #: src/components/split/shared.tsx:23
 #: src/features/export/statementText.ts:20
 #: src/features/remind/RemindSheet.tsx:67
@@ -7314,6 +7366,7 @@ msgstr "शुरू की तारीख"
 msgid "Start over"
 msgstr "फिर से शुरू करें"
 
+#: src/components/SearchAsk/ResultRows.tsx:425
 #: src/screens/Groups/components/GroupsFilterDialog.tsx:84
 msgid "Status"
 msgstr "स्थिति"
@@ -7962,7 +8015,7 @@ msgstr "कुल"
 msgid "Total {0}"
 msgstr "कुल {0}"
 
-#: src/components/SearchAsk/ResultRows.tsx:134
+#: src/components/SearchAsk/ResultRows.tsx:126
 msgid "Total {totalLine}"
 msgstr "कुल {totalLine}"
 
@@ -7979,7 +8032,7 @@ msgid "Transport"
 msgstr "आना-जाना"
 
 #: src/components/groups/GroupFields.tsx:46
-#: src/components/SearchAsk/ResultRows.tsx:367
+#: src/components/SearchAsk/ResultRows.tsx:523
 #: src/screens/Group/index.tsx:351
 #: src/screens/Groups/components/GroupRow.tsx:55
 #: src/screens/Groups/components/GroupsFilterDialog.tsx:75
@@ -8001,7 +8054,7 @@ msgstr "फिर कोशिश करें"
 msgid "Try another period, or see everything you have recorded."
 msgstr "कोई दूसरी अवधि चुनें, या अब तक दर्ज सब कुछ देखें।"
 
-#: src/components/SearchAsk/ResultRows.tsx:416
+#: src/components/SearchAsk/ResultRows.tsx:572
 msgid "Try fewer words, part of a word, an amount like 450 or a month like march."
 msgstr "कम शब्द, शब्द का हिस्सा, 450 जैसी रकम या march जैसा महीना आज़माएँ।"
 
@@ -8012,6 +8065,7 @@ msgstr "इन्हें खोजकर देखें"
 #: src/components/activity/ActivityFilterDialog.tsx:78
 #: src/components/activity/ActivityFilterDialog.tsx:79
 #: src/components/groups/GroupFields.tsx:78
+#: src/components/SearchAsk/ResultRows.tsx:427
 #: src/features/export/statementText.ts:40
 #: src/screens/Groups/components/GroupsFilterDialog.tsx:71
 msgid "Type"
@@ -8461,6 +8515,11 @@ msgstr "यह रोक पर क्यों है?"
 msgid "Why not?"
 msgstr "क्यों नहीं?"
 
+#: src/components/SearchAsk/ResultRows.tsx:321
+#: src/components/SearchAsk/ResultRows.tsx:419
+msgid "With"
+msgstr "के साथ"
+
 #: src/features/export/ExportSheet.tsx:142
 msgid "With {personName}"
 msgstr "{personName} के साथ"
@@ -8574,6 +8633,7 @@ msgstr "आप"
 
 #: src/components/activity/ActivityItem.tsx:521
 #: src/components/groups/RulesEditor.tsx:219
+#: src/components/SearchAsk/ResultRows.tsx:369
 #: src/components/split/shared.tsx:23
 #: src/features/export/statementText.ts:20
 #: src/features/searchAsk/AskAnswer.tsx:60
@@ -8760,6 +8820,7 @@ msgstr "आपने {debtor} का कर्ज़ माफ़ किया"
 msgid "you owe"
 msgstr "आपको देने हैं"
 
+#: src/components/SearchAsk/ResultRows.tsx:302
 #: src/features/export/statementText.ts:68
 #: src/features/searchAsk/AskAnswer.tsx:222
 #: src/screens/Group/components/GroupBalanceCards.tsx:80
@@ -8812,7 +8873,7 @@ msgstr "आपको देने हैं <0>{0}</0>"
 msgid "you owe <0>{figure}</0>"
 msgstr "आपको देने हैं <0>{figure}</0>"
 
-#: src/components/SearchAsk/ResultRows.tsx:240
+#: src/components/SearchAsk/ResultRows.tsx:235
 #: src/data/recentTransactionRows.ts:36
 #: src/features/export/statementText.ts:46
 #: src/features/searchAsk/AskAnswer.tsx:292

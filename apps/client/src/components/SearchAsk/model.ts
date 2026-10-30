@@ -3,10 +3,12 @@ import {
   type Expense,
   type Group,
   type Person,
+  type Repayment,
   type SearchResults,
+  type WriteOff,
 } from '@splito/sync'
 
-export type SearchSection = 'people' | 'groups' | 'expenses'
+export type SearchSection = 'people' | 'groups' | 'expenses' | 'payments'
 
 /** One row of the results list; `nav` is the row's place in keyboard order. */
 export type SearchRow =
@@ -21,6 +23,12 @@ export type SearchRow =
   | {type: 'person'; key: string; nav: number; person: Entity<Person>}
   | {type: 'group'; key: string; nav: number; group: Entity<Group>}
   | {type: 'expense'; key: string; nav: number; expense: Entity<Expense>}
+  | {
+      type: 'payment'
+      key: string
+      nav: number
+      payment: Entity<Repayment | WriteOff>
+    }
   /** "Ask Splito: '<query>'", first in keyboard order (ARCHITECTURE 26.3). */
   | {type: 'ask'; key: string; nav: number; query: string}
 
@@ -28,18 +36,22 @@ export type SearchResultRow = Exclude<SearchRow, {type: 'header'}>
 
 /**
  * The results as one list: people and groups first (few, and usually what a
- * name is looking for), then expenses, each under its section heading.
+ * name is looking for), then expenses and payments, each under its section heading.
  */
 export function searchRows(
-  results: Pick<SearchResults, 'people' | 'groups' | 'expenses'>,
+  results: Pick<SearchResults, 'people' | 'groups' | 'expenses'> &
+    Partial<Pick<SearchResults, 'payments'>>,
   /** Expenses only: how many match, and whether that is known yet. Defaults to the rows given. */
   expenseCount?: {count: number; isPartial: boolean},
   /** The typed query: puts the "Ask Splito" row first. */
   askQuery?: string,
+  /** Payments and write-offs: how many match in all (the rows given are the first page). Defaults to the rows given. */
+  paymentCount?: number,
 ): SearchRow[] {
   const rows: SearchRow[] = []
   let nav = 0
-  if (askQuery) rows.push({type: 'ask', key: 'ask', nav: nav++, query: askQuery})
+  if (askQuery)
+    rows.push({type: 'ask', key: 'ask', nav: nav++, query: askQuery})
   const section = <T>(
     name: SearchSection,
     items: T[],
@@ -70,11 +82,29 @@ export function searchRows(
     nav: n,
     group,
   }))
-  section('expenses', results.expenses, (expense, n) => ({
-    type: 'expense',
-    key: `expense-${expense.id}`,
-    nav: n,
-    expense,
-  }), expenseCount)
+  section(
+    'expenses',
+    results.expenses,
+    (expense, n) => ({
+      type: 'expense',
+      key: `expense-${expense.id}`,
+      nav: n,
+      expense,
+    }),
+    expenseCount,
+  )
+  section(
+    'payments',
+    results.payments ?? [],
+    (payment, n) => ({
+      type: 'payment',
+      key: `payment-${payment.id}`,
+      nav: n,
+      payment,
+    }),
+    paymentCount === undefined
+      ? undefined
+      : {count: paymentCount, isPartial: false},
+  )
   return rows
 }

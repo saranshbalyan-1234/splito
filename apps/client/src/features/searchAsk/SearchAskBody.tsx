@@ -3,6 +3,7 @@ import {useRef, useState} from 'react'
 import {type TextInput, type TextInputKeyPressEvent, View} from 'react-native'
 import {Trans, useLingui} from '@lingui/react/macro'
 import {decimalMark} from '@splito/domain'
+import {matchedFields} from '@splito/sync'
 
 import {pathTo} from '#/lib/links/make'
 import {setSheetQuery} from '#/navigation/sheets'
@@ -10,7 +11,7 @@ import {useOpenLink} from '#/data/useOpenLink'
 import {useNumberLocale} from '#/locale/numberLocale'
 import {useFormatDay, useToday} from '#/locale/useDates'
 import {useHiddenGroups} from '#/data/groupVisibility'
-import {useMutationCtx, useSearch} from '#/data/hooks'
+import {useMutationCtx, usePref, useSearch} from '#/data/hooks'
 import {device, useStorage} from '#/storage'
 import {atoms as a, useBreakpoints, useTheme, web} from '#/alf'
 import {Button, ButtonText} from '#/components/Button'
@@ -26,7 +27,9 @@ import {
   ExpenseResult,
   GroupResult,
   NoResults,
+  PaymentResult,
   PersonResult,
+  SearchChips,
   SectionHeader,
 } from '#/components/SearchAsk/ResultRows'
 import {scrollRowIntoView} from '#/components/SearchAsk/scrollRowIntoView'
@@ -117,7 +120,8 @@ function SearchPanel({
   const textInput = useRef<React.ComponentRef<typeof TextInput>>(null)
   const [activeNav, setActiveNav] = useState(-1)
 
-  const {names, groupNames} = useSearchNames()
+  const {names, groupNames, groupData} = useSearchNames()
+  const [categories] = usePref('categories')
   const {vocab} = useAskEngine()
   const askQuestions = useAskQuestions()
   const {actor: me} = useMutationCtx()
@@ -132,10 +136,9 @@ function SearchPanel({
   const rows = results
     ? searchRows(
         results,
-        results.summary
-          ? {count: results.summary.count, isPartial: false}
-          : {count: results.expenses.length, isPartial: true},
+        {count: results.summary.count, isPartial: false},
         query.trim() || undefined,
+        results.paymentCount,
       )
     : []
   const navRows = rows.filter((r): r is SearchResultRow => r.type !== 'header')
@@ -163,7 +166,13 @@ function SearchPanel({
     close(() => {
       if (row.type === 'person') openLink.go(pathTo('Person', {personId: row.person.id}))
       else if (row.type === 'group') openLink.go(pathTo('Group', {groupId: row.group.id}))
-      else openLink.go(pathTo('Expense', {expenseId: row.expense.id}))
+      else if (row.type === 'payment') {
+        // A payment has its page; a write-off is shown on its group's or friend's page.
+        const p = row.payment
+        if (p.type === 'repayment') openLink.go(pathTo('Repayment', {repaymentId: p.id}))
+        else if (p.data.groupId) openLink.go(pathTo('Group', {groupId: p.data.groupId}))
+        else openLink.go(pathTo('Person', {personId: p.data.from === me ? p.data.to : p.data.from}))
+      } else openLink.go(pathTo('Expense', {expenseId: row.expense.id}))
     })
   }
 
@@ -211,9 +220,8 @@ function SearchPanel({
             count={row.count}
             isPartial={row.isPartial}
             totals={
-              row.section === 'expenses' ? results?.summary?.totals : undefined
+              row.section === 'expenses' ? results?.summary.totals : undefined
             }
-            isCalculating={row.section === 'expenses' && !results?.summary}
             locale={locale}
           />
         )
@@ -240,12 +248,35 @@ function SearchPanel({
             onPress={() => open(row)}
           />
         )
+      case 'payment':
+        return (
+          <PaymentResult
+            nav={row.nav}
+            payment={row.payment}
+            terms={results?.terms ?? []}
+            me={me}
+            names={names}
+            locale={locale}
+            date={formatDay(row.payment.data.date)}
+            comment={results?.commentText(row.payment.id)}
+            isActive={row.nav === activeNav}
+            onPress={() => open(row)}
+          />
+        )
       case 'expense':
         return (
           <ExpenseResult
             nav={row.nav}
             expense={row.expense}
             terms={results?.terms ?? []}
+            match={matchedFields(row.expense, {
+              tokens: results?.tokens ?? [],
+              terms: results?.terms ?? [],
+              names,
+              group: row.expense.data.groupId ? groupData.get(row.expense.data.groupId) : undefined,
+              categoryName: categories?.find(c => c.id === row.expense.data.category)?.name,
+              comment: results?.commentText(row.expense.id),
+            })}
             me={me}
             names={names}
             groupNames={groupNames}
@@ -259,6 +290,7 @@ function SearchPanel({
   }
 
   const header = (
+    <View style={[a.border_b, t.atoms.bg, t.atoms.border_contrast_low]}>
     <View
       style={[
         a.flex_row,
@@ -268,9 +300,7 @@ function SearchPanel({
         /* Phones: clear of the sheet's drag handle. */
         gtMobile ? a.pt_md : a.pt_xl,
         a.pb_md,
-        a.border_b,
         t.atoms.bg,
-        t.atoms.border_contrast_low,
       ]}>
       <View style={[a.flex_1, a.relative]}>
         <SearchInput
@@ -334,6 +364,8 @@ function SearchPanel({
           </ButtonText>
         </Button>
       )}
+    </View>
+    {results && !isEmptyQuery ? <SearchChips chips={results.chips} query={query} onQueryChange={changeQuery} /> : null}
     </View>
   )
 

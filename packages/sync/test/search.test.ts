@@ -5,21 +5,11 @@ import {beforeAll, describe, expect, test} from 'bun:test'
 
 import {openIdbStore} from '../src/idbStore'
 import {type Expense, type Group, type Person} from '../src/mutations'
-import {highlightRanges, openSearch, parseSearchQuery, SEARCH_PAGE, searchStore, searchTotals, summarizeSearch} from '../src/search'
+import {highlightRanges, openSearch, parseSearchQuery, SEARCH_PAGE, searchStore, summarizeSearch} from '../src/search'
 import {openSqlStore} from '../src/sqlStore'
 import {type Store} from '../src/store'
-import {type Entity} from '../src/types'
 import {bunExecutor} from './bunExecutor'
-
-/* Rows go in through the store's own transaction, so the search keys are the ones the app keeps. Later-created rows have later `createdAt`. */
-let clock = 0
-const entity = <T>(type: Entity['type'], id: string, data: T, deleted = false): Entity<T> => ({type, id, data, version: 1, deleted, createdAt: ++clock, updatedAt: clock, syncStatus: 'local', serverVersion: null, syncedAt: null, syncError: null})
-
-async function put(store: Store, rows: Array<Entity<unknown>>) {
-  await store.transaction(async tx => {
-    for (const r of rows) await tx.put(r)
-  })
-}
+import {entity, expense, put, resetClock} from './searchFixture'
 
 const people = [
   entity<Person>('person', 'me', {name: 'Asha Rao', isMe: true}),
@@ -34,23 +24,6 @@ const categories = [
   {id: 'food', name: 'Food'},
   {id: 'transport', name: 'Transport'},
 ]
-
-function expense(id: string, over: Partial<Expense>): Entity<Expense> {
-  return entity<Expense>('expense', id, {
-    title: 'Something',
-    groupId: null,
-    currency: 'INR',
-    total: 10000n,
-    payers: {me: 10000n},
-    split: {mode: 'equal', participants: ['me', 'riya']},
-    shares: {me: 5000n, riya: 5000n},
-    date: '2026-01-01',
-    tz: 'Asia/Kolkata',
-    category: 'food',
-    notes: '',
-    ...over,
-  })
-}
 
 const expenses = [
   expense('dinner', {title: 'Dinner at Thalassa', groupId: 'goa', total: 1250000n, date: '2025-12-22'}),
@@ -82,12 +55,12 @@ const ids = async (q: string) => (await find(q)).expenses.map(e => e.id)
 describe('parseSearchQuery', () => {
   test('splits words, amounts, comparisons and dates', () => {
     expect(parseSearchQuery('Dinner > 1,000 march 2026')).toEqual([
-      {kind: 'compare', op: '>', amounts: ['1000']},
       {kind: 'text', text: 'dinner'},
+      {kind: 'compare', op: '>', amounts: ['1000']},
       {kind: 'month', month: '03', year: '2026', text: 'march'},
     ])
     expect(parseSearchQuery('₹450 yesterday')).toEqual([
-      {kind: 'amount', amounts: ['450'], text: '450'},
+      {kind: 'amount', amounts: ['450'], text: '450', currency: 'INR'},
       {kind: 'day', offset: -1, text: 'yesterday'},
     ])
     expect(parseSearchQuery('<=12,50')).toEqual([{kind: 'compare', op: '<=', amounts: ['12.50']}])
@@ -98,7 +71,7 @@ describe('parseSearchQuery', () => {
 for (const [engine, open] of ENGINES) {
   describe(`search (${engine})`, () => {
     beforeAll(async () => {
-      clock = 0
+      resetClock()
       const store = await open()
       await put(store, [...people, ...groups, ...expenses])
       find = searchWith(store)
@@ -159,7 +132,7 @@ for (const [engine, open] of ENGINES) {
 
     test('totals per currency, never mixed', async () => {
       expect((await find('din')).totals).toEqual({EUR: 18400n, INR: 1250000n})
-      expect(await find('')).toEqual({expenses: [], people: [], groups: [], totals: {}, terms: []})
+      expect(await find('')).toEqual({expenses: [], people: [], groups: [], payments: [], totals: {}, terms: []})
     })
 
     test('terms are what to highlight', async () => {
@@ -168,7 +141,7 @@ for (const [engine, open] of ENGINES) {
 
     test('a rename, a deletion and a restore move the keys with them', async () => {
       const store = await open()
-      clock = 0
+      resetClock()
       await put(store, [...people, ...groups, expense('a', {title: 'Alpha', total: 777n, date: '2026-05-05'})])
       const f = searchWith(store)
       expect((await f('alpha')).expenses.map(e => e.id)).toEqual(['a'])
@@ -201,8 +174,8 @@ describe.each(ENGINES)('paged search on a broad match (%s)', (_engine, open) => 
   const opts = {today, categories}
   beforeAll(async () => {
     store = await open()
-    clock = 0
-    // 700 expenses over 20 days (35 a day, so a day always spans chunks), 600 of them "broad ...", every 7th deleted.
+    resetClock()
+    // 700 expenses over 20 days (35 a day, so a day always spans pages), 600 of them "broad ...", every 7th deleted.
     await put(store, [...people, ...groups])
     await put(
       store,
@@ -228,62 +201,45 @@ describe.each(ENGINES)('paged search on a broad match (%s)', (_engine, open) => 
       .map(e => e.id)
   }
 
-  test('the first page is ready after a few steps, in the final order, and only grows at its end', async () => {
+  test('the first page is read on open, in the final order, and the count is known at once', async () => {
     const want = await expected('broad')
     expect(want.length).toBeGreaterThan(500)
     const session = await openSearch(store, 'broad', opts)
+    expect(session.summary.count).toBe(want.length)
     expect(session.isDone()).toBe(false)
-    let steps = 0
-    let prev: string[] = []
-    while (session.found().length < SEARCH_PAGE) {
-      await session.step()
-      steps++
-      const now = session.found().map(e => e.id)
-      expect(now.slice(0, prev.length)).toEqual(prev)
-      prev = now
-    }
-    // One chunk of 200 rows holds well over a page of matches: never a whole-ledger read for the first page.
-    expect(steps).toBe(1)
-    expect(session.isDone()).toBe(false)
-    expect(session.found().map(e => e.id)).toEqual(want.slice(0, session.found().length))
+    expect(session.found().map(e => e.id)).toEqual(want.slice(0, SEARCH_PAGE))
   })
 
   test('walking to the end gives every match once, newest first, equal to the whole answer', async () => {
     const want = await expected('broad')
     const session = await openSearch(store, 'broad', opts)
-    while (!session.isDone()) await session.step()
+    let prev: string[] = []
+    while (!session.isDone()) {
+      await session.step()
+      const now = session.found().map(e => e.id)
+      expect(now.slice(0, prev.length)).toEqual(prev)
+      prev = now
+    }
     expect(session.found().map(e => e.id)).toEqual(want)
     const whole = await searchStore(store, 'broad', opts)
     expect(whole.expenses.map(e => e.id)).toEqual(want)
   })
 
-  test('totals add up every match, per currency, after the first page', async () => {
+  test('totals add up every match, per currency, without reading the rows', async () => {
     const want = await expected('broad')
     const session = await openSearch(store, 'broad', opts)
-    const summary = (await searchTotals(session, () => false))!
     const rows = (await store.getMany<Expense>('expense', want)).filter(e => !e.deleted)
     // b0 is deleted: listed and counted as a row, never added up.
-    expect(summary.count).toBe(want.length)
+    expect(session.summary.count).toBe(want.length)
     const sum = (c: string) => rows.filter(e => e.data.currency === c).reduce((a, e) => a + e.data.total, 0n)
-    expect(summary.totals).toEqual({EUR: sum('EUR'), INR: sum('INR')})
-    expect(summarizeSearch(session.found())).toEqual(summary)
-  })
-
-  test('a cancelled totals walk stops and returns nothing; the session can still be stepped', async () => {
-    const session = await openSearch(store, 'broad', opts)
-    let polls = 0
-    const summary = await searchTotals(session, () => ++polls > 1)
-    expect(summary).toBeUndefined()
-    expect(session.isDone()).toBe(false)
-    await session.step()
+    expect(session.summary.totals).toEqual({EUR: sum('EUR'), INR: sum('INR')})
+    expect(summarizeSearch(rows)).toEqual({count: rows.length, totals: session.summary.totals})
   })
 
   test('overlapping steps share one read', async () => {
     const session = await openSearch(store, 'broad', opts)
     await Promise.all([session.step(), session.step(), session.step()])
-    const once = await openSearch(store, 'broad', opts)
-    await once.step()
-    expect(session.found().map(e => e.id)).toEqual(once.found().map(e => e.id))
+    expect(session.found().length).toBe(2 * SEARCH_PAGE)
   })
 
   test('a broad amount comparison pages the same way', async () => {
@@ -293,7 +249,7 @@ describe.each(ENGINES)('paged search on a broad match (%s)', (_engine, open) => 
       ['< 14', 400, (t: bigint) => t < 1400n],
     ] as const) {
       const session = await openSearch(store, q, opts)
-      expect(session.isDone()).toBe(false)
+      expect(session.summary.count).toBe(count)
       while (!session.isDone()) await session.step()
       expect(session.found().length).toBe(count)
       for (const e of session.found()) expect(ok(e.data.total)).toBe(true)
@@ -304,7 +260,7 @@ describe.each(ENGINES)('paged search on a broad match (%s)', (_engine, open) => 
 describe.each(ENGINES)('what an expense can be found by is what the keys say (%s)', (_engine, open) => {
   test('a deleted person or group, and a category id that is not in the list, are not words, on the broad read path too', async () => {
     const store = await open()
-    clock = 0
+    resetClock()
     const group = (id: string, name: string, deleted = false) => entity<Group>('group', id, {name, kind: 'trip', currency: 'INR', members: [], startDate: null, endDate: null, archived: false}, deleted)
     await put(store, [
       ...people,
@@ -350,40 +306,79 @@ describe('highlightRanges', () => {
 })
 
 describe('speed', () => {
-  // A wall-clock budget for a dev machine: shared CI runners are several times slower and noisy (170 ms on GitHub's).
-  test.skipIf(!!process.env.CI)('5,000 expenses: every query under 50 ms', async () => {
-    const store = await openSqlStore(bunExecutor(':memory:'))
-    clock = 0
-    const words = ['dinner', 'lunch', 'cab', 'rent', 'groceries', 'movie', 'coffee', 'hotel', 'flight', 'snacks']
-    await put(store, [...people, ...groups])
-    for (let from = 0; from < 5000; from += 500)
-      await put(
-        store,
-        Array.from({length: 500}, (_, k) => {
-          const i = from + k
-          return expense(`e${i}`, {
-            title: `${words[i % words.length]} ${i}`,
-            notes: i % 7 ? '' : 'with friends after work',
-            groupId: i % 3 ? 'goa' : null,
-            currency: i % 5 ? 'INR' : 'EUR',
-            total: BigInt(1000 + ((i * 7919) % 500000)),
-            date: `2026-${String((i % 12) + 1).padStart(2, '0')}-${String((i % 28) + 1).padStart(2, '0')}`,
-          })
-        }),
-      )
-    const f = searchWith(store)
-    const queries = ['d', 'di', 'din', 'dinner', 'dinner goa', '450', '> 1000', '< 50 riya', 'march', 'yesterday', 'friends work', 'f', 'zzz', 'dinner 4']
-    let worst = 0
-    let slowest = ''
-    for (const q of queries) {
-      const t0 = performance.now()
-      await f(q)
-      const ms = performance.now() - t0
-      if (ms > worst) [worst, slowest] = [ms, q]
-    }
-    console.log(`search: worst query ${worst.toFixed(1)} ms ("${slowest}") over ${queries.length} queries on 5,000 expenses`)
-    expect(worst).toBeLessThan(50)
-    await store.close()
+  /*
+   * What the drawer waits for: people, groups, payments, the count and per-currency totals of every match, and the first
+   * page of rows. A query is resolved from the term keys, so the cost follows the keys it touches, not the ledger.
+   * A wall-clock budget for a dev machine at load under 10 (docs/ARCHITECTURE 17.1): shared CI runners are several times
+   * slower and noisy (170 ms on GitHub's). The median of three runs of each query is judged, after one warm-up.
+   */
+  const words = ['dinner', 'lunch', 'cab', 'rent', 'groceries', 'movie', 'coffee', 'hotel', 'flight', 'snacks']
+  const queries = [
+    'd',
+    'di',
+    'din',
+    'dinner',
+    'dinner goa',
+    '450',
+    '> 1000',
+    '>= 1000 EUR',
+    '< 50 riya',
+    'between 100 and 5000',
+    'around 1k',
+    'march',
+    'last month',
+    'yesterday',
+    'friends work',
+    'f',
+    'zzz',
+    'dinner 4',
+    'paid by riya',
+    'with riya over 100',
+    'food or travel in goa over 500',
+    'deleted',
+  ]
+
+  describe.skipIf(!!process.env.CI).each([5000, 10000])('%d expenses: every query under 50 ms', size => {
+    test('openSearch with the count, totals and first page', async () => {
+      const store = await openSqlStore(bunExecutor(':memory:'))
+      resetClock()
+      await put(store, [...people, ...groups])
+      for (let from = 0; from < size; from += 500)
+        await put(
+          store,
+          Array.from({length: 500}, (_, k) => {
+            const i = from + k
+            return expense(`e${i}`, {
+              title: `${words[i % words.length]} ${i}`,
+              notes: i % 7 ? '' : 'with friends after work',
+              groupId: i % 3 ? 'goa' : null,
+              currency: i % 5 ? 'INR' : 'EUR',
+              total: BigInt(1000 + ((i * 7919) % 500000)),
+              date: `2026-${String((i % 12) + 1).padStart(2, '0')}-${String((i % 28) + 1).padStart(2, '0')}`,
+              payers: {[i % 4 ? 'me' : 'riya']: 1000n},
+            })
+          }),
+        )
+      const opts = {today, categories, me: 'me'}
+      await openSearch(store, 'warm up', opts)
+      const timings: Array<[string, number]> = []
+      for (const q of queries) {
+        const runs: number[] = []
+        for (let k = 0; k < 3; k++) {
+          const t0 = performance.now()
+          await openSearch(store, q, opts)
+          runs.push(performance.now() - t0)
+        }
+        timings.push([q, runs.sort((x, y) => x - y)[1]!])
+      }
+      const [slowest, worst] = timings.reduce((a, b) => (b[1] > a[1] ? b : a))
+      console.log(`search: worst query ${worst.toFixed(1)} ms ("${slowest}") over ${queries.length} queries on ${size} expenses (median of 3)`)
+      expect(worst).toBeLessThan(50)
+      // The keys give the same answer as the rows: "> 1000" is every INR/EUR expense above 10.00.
+      const all = await store.page<Expense>('expense', {index: 'byDate', limit: size + 1})
+      expect((await openSearch(store, '> 1000', opts)).summary.count).toBe(all.items.filter(e => e.data.total > 100000n).length)
+      await store.close()
+    }, 120_000)
   })
 })
 
@@ -391,7 +386,7 @@ describe('F-111 M14: amounts in the user number format', () => {
   let found: (q: string, mark?: '.' | ',') => Promise<string[]>
   beforeAll(async () => {
     const store = await openSqlStore(bunExecutor(':memory:'))
-    clock = 0
+    resetClock()
     await put(store, [
       ...people,
       expense('rent', {title: 'Rent', total: 10000000n}),

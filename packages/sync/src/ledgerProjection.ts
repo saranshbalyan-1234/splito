@@ -223,7 +223,7 @@ export async function projectEntity(rows: RowAccess, prev: Entity | undefined, n
       }
     }
   }
-  if (type === 'expense' || type === 'person' || type === 'group') {
+  if (type === 'expense' || type === 'repayment' || type === 'writeoff' || type === 'comment' || type === 'person' || type === 'group') {
     const was = termRows(prev)
     const is = termRows(next)
     const kept = new Set(is.map(r => JSON.stringify(termKey(r))))
@@ -282,8 +282,29 @@ export async function rebuildProjections(rows: RowAccess, entities: (type: Entit
   await writeSums(rows, nets, pairs, latest)
   await writeAggregates(rows, aggs, latest)
   await rebuildDisputedProjections(rows, entities)
-  for (const type of ['person', 'group', 'expense'] as const) for (const e of type === 'group' ? groups : await entities(type)) for (const r of termRows(e)) await rows.put('search_terms', r)
+  await fillSearchTerms(rows, entities, groups)
+  await rows.put('meta', {key: 'searchIndex', value: SEARCH_INDEX_VERSION})
   await rebuildActivity(rows, money)
+}
+
+const INDEXED = ['person', 'group', 'expense', 'repayment', 'writeoff', 'comment'] as const
+
+async function fillSearchTerms(rows: RowAccess, entities: (type: EntityType) => Promise<Entity[]>, groups?: Entity[]) {
+  for (const type of INDEXED) for (const e of type === 'group' && groups ? groups : await entities(type)) for (const r of termRows(e)) await rows.put('search_terms', r)
+}
+
+/**
+ * The version of what `search_terms` holds. Bumped whenever a term kind is added; a database opened with an older
+ * one rebuilds the terms from its rows (derived data only, nothing else is touched), so no schema version is spent.
+ */
+export const SEARCH_INDEX_VERSION = '2'
+
+/** Rebuilds `search_terms` when the stored index version is not the current one. Cheap (one meta read) otherwise. */
+export async function ensureSearchIndex(rows: RowAccess, entities: (type: EntityType) => Promise<Entity[]>): Promise<void> {
+  if ((await rows.get('meta', ['searchIndex']))?.value === SEARCH_INDEX_VERSION) return
+  await rows.clear('search_terms')
+  await fillSearchTerms(rows, entities)
+  await rows.put('meta', {key: 'searchIndex', value: SEARCH_INDEX_VERSION})
 }
 
 /* -------------------------------------------------------------------------- */

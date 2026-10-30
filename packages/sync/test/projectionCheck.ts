@@ -3,7 +3,7 @@ import {allocate, expenseDebts, groupNet, type LedgerRecord, pairwiseBalances, p
 
 import {type Dispute} from '../src/disputes'
 import {type Expense, type Repayment} from '../src/mutations'
-import {termKey, termRows} from '../src/searchTerms'
+import {TERM_KINDS, termKey, termRows} from '../src/searchTerms'
 import {toExpenseRecord, toRepaymentRecord, toWriteOffRecord} from '../src/selectors'
 import {type Store} from '../src/store'
 import {type Entity} from '../src/types'
@@ -155,7 +155,7 @@ export async function storedAggregates(s: Store) {
 /** Every stored search term, as keys. */
 export async function storedTerms(s: Store) {
   const out: string[] = []
-  for (const kind of ['w', 'p', 'g', 'a', 'm', 'c'] as const) for (const t of await s.terms({kind})) out.push(JSON.stringify([t.kind, t.term, t.entityType, t.entityId]))
+  for (const kind of TERM_KINDS) for (const t of await s.terms({kind})) out.push(JSON.stringify([t.kind, t.term, t.entityType, t.entityId]))
   return out.sort()
 }
 

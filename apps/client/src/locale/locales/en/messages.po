@@ -358,7 +358,7 @@ msgid "{0} owes you the most: {1}."
 msgstr "{0} owes you the most: {1}."
 
 #. placeholder {0}: firstName(payers[0]!)
-#: src/components/SearchAsk/ResultRows.tsx:241
+#: src/components/SearchAsk/ResultRows.tsx:236
 msgid "{0} paid"
 msgstr "{0} paid"
 
@@ -417,7 +417,7 @@ msgid "{0} people"
 msgstr "{0} people"
 
 #. placeholder {0}: payers.length
-#: src/components/SearchAsk/ResultRows.tsx:238
+#: src/components/SearchAsk/ResultRows.tsx:233
 msgid "{0} people paid"
 msgstr "{0} people paid"
 
@@ -469,7 +469,7 @@ msgid "{0}, {spokenList}"
 msgstr "{0}, {spokenList}"
 
 #. placeholder {0}: e.title
-#: src/components/SearchAsk/ResultRows.tsx:260
+#: src/components/SearchAsk/ResultRows.tsx:246
 msgid "{0}, {total}, {date}"
 msgstr "{0}, {total}, {date}"
 
@@ -751,6 +751,7 @@ msgid "{from} owes you"
 msgstr "{from} owes you"
 
 #: src/components/activity/ActivityItem.tsx:892
+#: src/components/SearchAsk/ResultRows.tsx:372
 msgid "{from} paid {to}"
 msgstr "{from} paid {to}"
 
@@ -791,7 +792,7 @@ msgstr "{hiddenCount, plural, one {# change hidden from your activity} other {# 
 msgid "{label} · by {by}"
 msgstr "{label} · by {by}"
 
-#: src/components/SearchAsk/ResultRows.tsx:182
+#: src/components/SearchAsk/ResultRows.tsx:174
 msgid "{label}, not synced yet"
 msgstr "{label}, not synced yet"
 
@@ -820,7 +821,7 @@ msgstr "{list} disputed or on hold, not in this plan."
 msgid "{list} disputed or on hold, not included in Settle up or Call it even."
 msgstr "{list} disputed or on hold, not included in Settle up or Call it even."
 
-#: src/components/SearchAsk/ResultRows.tsx:376
+#: src/components/SearchAsk/ResultRows.tsx:532
 #: src/screens/Group/index.tsx:361
 #: src/screens/Groups/components/GroupRow.tsx:65
 msgid "{memberCount} members"
@@ -963,6 +964,10 @@ msgstr "{title}, {byline}, {shareLabel} {shareText} of {totalText}, not synced y
 msgid "{title}, not synced yet"
 msgstr "{title}, not synced yet"
 
+#: src/components/SearchAsk/ResultRows.tsx:372
+msgid "{to} let {from} off"
+msgstr "{to} let {from} off"
+
 #: src/features/account/LogOutPrompt.tsx:51
 msgid "{unsynced, plural, one {# change hasn’t synced yet and will be lost.} other {# changes haven’t synced yet and will be lost.}}"
 msgstr "{unsynced, plural, one {# change hasn’t synced yet and will be lost.} other {# changes haven’t synced yet and will be lost.}}"
@@ -1043,6 +1048,10 @@ msgstr "{who} was removed from {groupName}"
 msgid "{who} will no longer be in {groupName}. Earlier expenses and the history stay as they are."
 msgstr "{who} will no longer be in {groupName}. Earlier expenses and the history stay as they are."
 
+#: src/components/SearchAsk/ResultRows.tsx:376
+msgid "{who}, {amount}, {date}"
+msgstr "{who}, {amount}, {date}"
+
 #: src/features/searchAsk/AskAnswer.tsx:290
 msgid "{who}'s share"
 msgstr "{who}'s share"
@@ -1077,7 +1086,7 @@ msgstr "1 category"
 msgid "1 day"
 msgstr "1 day"
 
-#: src/components/SearchAsk/ResultRows.tsx:376
+#: src/components/SearchAsk/ResultRows.tsx:532
 #: src/screens/Group/index.tsx:361
 #: src/screens/Groups/components/GroupRow.tsx:65
 msgid "1 member"
@@ -1680,6 +1689,8 @@ msgstr "Always in the group"
 #: src/components/people/UpiPayDialog.tsx:184
 #: src/components/SearchAsk/AskCards.tsx:200
 #: src/components/SearchAsk/AskCards.tsx:243
+#: src/components/SearchAsk/ResultRows.tsx:327
+#: src/components/SearchAsk/ResultRows.tsx:415
 #: src/components/split/charges/ChargeSheet.tsx:171
 #: src/components/split/charges/ChargeSheet.tsx:210
 #: src/components/split/fields.tsx:155
@@ -1749,7 +1760,7 @@ msgstr "Analytics"
 msgid "Animations"
 msgstr "Animations"
 
-#: src/components/SearchAsk/ResultRows.tsx:456
+#: src/components/SearchAsk/ResultRows.tsx:612
 msgid "Answered on this device"
 msgstr "Answered on this device"
 
@@ -1761,6 +1772,10 @@ msgstr "Answered on this device · {0}"
 #: src/features/searchAsk/AskChat.tsx:186
 msgid "Answers from this device"
 msgstr "Answers from this device"
+
+#: src/components/SearchAsk/ResultRows.tsx:429
+msgid "Any of"
+msgstr "Any of"
 
 #: src/screens/Invites/InviteLinks.tsx:178
 msgid "Anyone who has it can no longer use it. You can always make a new one."
@@ -1843,11 +1858,11 @@ msgstr "Ask me before someone joins"
 msgid "Ask Splito"
 msgstr "Ask Splito"
 
-#: src/components/SearchAsk/ResultRows.tsx:453
+#: src/components/SearchAsk/ResultRows.tsx:609
 msgid "Ask Splito: “{query}”"
 msgstr "Ask Splito: “{query}”"
 
-#: src/components/SearchAsk/ResultRows.tsx:441
+#: src/components/SearchAsk/ResultRows.tsx:597
 msgid "Ask Splito: {query}"
 msgstr "Ask Splito: {query}"
 
@@ -1984,10 +1999,6 @@ msgstr "By person"
 msgid "by week"
 msgstr "by week"
 
-#: src/components/SearchAsk/ResultRows.tsx:129
-msgid "Calculating totals…"
-msgstr "Calculating totals…"
-
 #: src/components/split/fields.tsx:334
 msgid "Calculator"
 msgstr "Calculator"
@@ -2021,7 +2032,7 @@ msgstr "Can’t open this invite yet"
 #: src/components/Prompt.tsx:155
 #: src/components/SearchAsk/SearchHistory.tsx:191
 #: src/features/searchAsk/AskChat.tsx:251
-#: src/features/searchAsk/SearchAskBody.tsx:333
+#: src/features/searchAsk/SearchAskBody.tsx:363
 msgid "Cancel"
 msgstr "Cancel"
 
@@ -2047,6 +2058,7 @@ msgstr "Cancel the request to {name}"
 msgid "Categories"
 msgstr "Categories"
 
+#: src/components/SearchAsk/ResultRows.tsx:319
 #: src/components/split/pickers.tsx:168
 #: src/screens/Analytics/components/Charts.tsx:188
 #: src/screens/Analytics/index.tsx:229
@@ -2262,7 +2274,7 @@ msgstr "Close drawer menu"
 msgid "Close other Splito tabs to finish updating. Nothing is lost, and this page opens by itself when they are closed."
 msgstr "Close other Splito tabs to finish updating. Nothing is lost, and this page opens by itself when they are closed."
 
-#: src/features/searchAsk/SearchAskBody.tsx:327
+#: src/features/searchAsk/SearchAskBody.tsx:357
 msgid "Close search"
 msgstr "Close search"
 
@@ -2322,6 +2334,11 @@ msgstr "Color mode"
 #: src/components/settings/prefControls.tsx:140
 msgid "Colour-blind safe"
 msgstr "Colour-blind safe"
+
+#: src/components/SearchAsk/ResultRows.tsx:325
+#: src/components/SearchAsk/ResultRows.tsx:386
+msgid "Comment"
+msgstr "Comment"
 
 #: src/components/comments/CommentRow.tsx:335
 msgid "Comment options"
@@ -2620,7 +2637,7 @@ msgid "Counts towards: {settles}"
 msgstr "Counts towards: {settles}"
 
 #: src/components/groups/GroupFields.tsx:48
-#: src/components/SearchAsk/ResultRows.tsx:369
+#: src/components/SearchAsk/ResultRows.tsx:525
 #: src/screens/Group/index.tsx:351
 #: src/screens/Groups/components/GroupRow.tsx:57
 #: src/screens/Groups/components/GroupsFilterDialog.tsx:77
@@ -2670,6 +2687,8 @@ msgstr "CSV"
 
 #: src/components/groups/GroupFields.tsx:103
 #: src/components/people/RecordPaymentDialog.tsx:348
+#: src/components/SearchAsk/ResultRows.tsx:331
+#: src/components/SearchAsk/ResultRows.tsx:423
 #: src/components/split/pickers.tsx:69
 #: src/components/split/pickers.tsx:80
 #: src/features/export/ExportSheet.tsx:213
@@ -2740,6 +2759,8 @@ msgid "Data"
 msgstr "Data"
 
 #: src/components/people/PaymentDetailsDialog.tsx:210
+#: src/components/SearchAsk/ResultRows.tsx:329
+#: src/components/SearchAsk/ResultRows.tsx:417
 #: src/components/split/ExpenseComposer.tsx:381
 #: src/components/split/ExpenseComposer.tsx:536
 #: src/features/export/statementText.ts:39
@@ -2855,7 +2876,8 @@ msgstr "Delete this comment?"
 msgid "Delete this feedback?"
 msgstr "Delete this feedback?"
 
-#: src/components/SearchAsk/ResultRows.tsx:377
+#: src/components/SearchAsk/ResultRows.tsx:304
+#: src/components/SearchAsk/ResultRows.tsx:533
 #: src/screens/Groups/components/GroupRow.tsx:124
 #: src/screens/People/components/PersonRow.tsx:205
 msgid "Deleted"
@@ -3018,6 +3040,7 @@ msgid "Dispute this write-off"
 msgstr "Dispute this write-off"
 
 #: src/components/disputes/words.ts:31
+#: src/components/SearchAsk/ResultRows.tsx:303
 #: src/features/export/ExportSheet.tsx:124
 msgid "Disputed"
 msgstr "Disputed"
@@ -3453,7 +3476,7 @@ msgid "Expense options"
 msgstr "Expense options"
 
 #: src/components/activity/ActivityFilterDialog.tsx:44
-#: src/components/SearchAsk/ResultRows.tsx:88
+#: src/components/SearchAsk/ResultRows.tsx:95
 #: src/features/export/ImportSheet.tsx:172
 #: src/screens/Analytics/components/Charts.tsx:148
 #: src/screens/Analytics/components/Charts.tsx:188
@@ -3619,7 +3642,7 @@ msgstr "Found {n, plural, one {# expense} other {# expenses}} for “{0}”, {1}
 msgid "Found at least {n, plural, one {# expense} other {# expenses}} for “{0}”."
 msgstr "Found at least {n, plural, one {# expense} other {# expenses}} for “{0}”."
 
-#: src/components/SearchAsk/ResultRows.tsx:337
+#: src/components/SearchAsk/ResultRows.tsx:493
 #: src/features/export/ExportSheet.tsx:210
 #: src/features/export/ExportSheet.tsx:253
 #: src/screens/Person/index.tsx:197
@@ -3751,7 +3774,8 @@ msgid "Groceries"
 msgstr "Groceries"
 
 #: src/components/people/RecordPaymentDialog.tsx:195
-#: src/components/SearchAsk/ResultRows.tsx:370
+#: src/components/SearchAsk/ResultRows.tsx:315
+#: src/components/SearchAsk/ResultRows.tsx:526
 #: src/components/split/ExpenseComposer.tsx:544
 #: src/components/split/pickers.tsx:267
 #: src/components/split/pickers.tsx:271
@@ -3807,7 +3831,7 @@ msgid "Group updated"
 msgstr "Group updated"
 
 #: src/components/activity/ActivityFilterDialog.tsx:47
-#: src/components/SearchAsk/ResultRows.tsx:88
+#: src/components/SearchAsk/ResultRows.tsx:95
 #: src/components/TabGlyph.tsx:45
 #: src/features/export/ImportSheet.tsx:171
 #: src/navigation/Navigation.tsx:71
@@ -3875,7 +3899,8 @@ msgid "Hi {name},"
 msgstr "Hi {name},"
 
 #: src/components/people/HistoryRow.tsx:209
-#: src/components/SearchAsk/ResultRows.tsx:378
+#: src/components/SearchAsk/ResultRows.tsx:305
+#: src/components/SearchAsk/ResultRows.tsx:534
 #: src/components/settings/CategoriesEditor.tsx:197
 #: src/components/settings/TaxClassesEditor.tsx:188
 #: src/screens/Groups/components/GroupRow.tsx:134
@@ -3941,7 +3966,7 @@ msgid "History"
 msgstr "History"
 
 #: src/components/groups/GroupFields.tsx:47
-#: src/components/SearchAsk/ResultRows.tsx:368
+#: src/components/SearchAsk/ResultRows.tsx:524
 #: src/components/TabGlyph.tsx:43
 #: src/navigation/Navigation.tsx:266
 #: src/screens/Group/index.tsx:351
@@ -4034,6 +4059,10 @@ msgstr "Import"
 msgid "Import a backup"
 msgstr "Import a backup"
 
+#: src/components/SearchAsk/ResultRows.tsx:421
+msgid "In"
+msgstr "In"
+
 #. placeholder {0}: answer.group.name
 #. placeholder {0}: date(p.from, {month: 'long', year: 'numeric'})
 #. placeholder {0}: date(p.from, {year: 'numeric'})
@@ -4074,7 +4103,8 @@ msgstr "in the last {0} months"
 msgid "In this period"
 msgstr "In this period"
 
-#: src/components/SearchAsk/ResultRows.tsx:377
+#: src/components/SearchAsk/ResultRows.tsx:306
+#: src/components/SearchAsk/ResultRows.tsx:533
 #: src/screens/Groups/components/GroupRow.tsx:129
 #: src/screens/Groups/components/GroupsFilterDialog.tsx:88
 msgid "Inactive"
@@ -4290,6 +4320,7 @@ msgstr "It was reopened once already. A group admin can take it from here."
 msgid "It will take no new expenses, but you can still settle up. Money is still open in this group:"
 msgstr "It will take no new expenses, but you can still settle up. Money is still open in this group:"
 
+#: src/components/SearchAsk/ResultRows.tsx:313
 #: src/features/disputes/RaiseSheet.tsx:127
 msgid "Item"
 msgstr "Item"
@@ -5018,7 +5049,7 @@ msgstr "No matches for “{0}”"
 msgid "No one’s share can go below zero – make the adjustments smaller"
 msgstr "No one’s share can go below zero – make the adjustments smaller"
 
-#: src/components/SearchAsk/ResultRows.tsx:410
+#: src/components/SearchAsk/ResultRows.tsx:566
 msgid "No results found for “<0>{query}</0>”."
 msgstr "No results found for “<0>{query}</0>”."
 
@@ -5128,6 +5159,7 @@ msgstr "Note"
 msgid "Note (optional)"
 msgstr "Note (optional)"
 
+#: src/components/SearchAsk/ResultRows.tsx:311
 #: src/components/split/ExpenseComposer.tsx:582
 #: src/components/split/ExpenseComposer.tsx:595
 #: src/screens/Expense/index.tsx:501
@@ -5536,6 +5568,10 @@ msgstr "over all time"
 msgid "Overview"
 msgstr "Overview"
 
+#: src/components/SearchAsk/ResultRows.tsx:301
+msgid "Owed"
+msgstr "Owed"
+
 #. placeholder {0}: money(v)
 #: src/screens/Analytics/components/Charts.tsx:105
 msgid "Owed to you {0}"
@@ -5577,6 +5613,8 @@ msgstr "Packing"
 msgid "Paid · change who paid to remove"
 msgstr "Paid · change who paid to remove"
 
+#: src/components/SearchAsk/ResultRows.tsx:323
+#: src/components/SearchAsk/ResultRows.tsx:419
 #: src/components/split/ExpenseComposer.tsx:558
 #: src/features/export/statementText.ts:45
 #: src/screens/Expense/index.tsx:454
@@ -5679,6 +5717,7 @@ msgid "Payment rules saved"
 msgstr "Payment rules saved"
 
 #: src/components/activity/ActivityFilterDialog.tsx:45
+#: src/components/SearchAsk/ResultRows.tsx:95
 #: src/components/settings/prefControls.tsx:417
 #: src/features/export/ImportSheet.tsx:173
 msgid "Payments"
@@ -5696,7 +5735,7 @@ msgstr "pays you"
 msgid "PDF"
 msgstr "PDF"
 
-#: src/components/SearchAsk/ResultRows.tsx:88
+#: src/components/SearchAsk/ResultRows.tsx:95
 #: src/components/TabGlyph.tsx:44
 #: src/features/export/ImportSheet.tsx:170
 #: src/navigation/Navigation.tsx:70
@@ -5791,6 +5830,10 @@ msgstr "Pick the first day"
 #: src/components/settings/AccentPicker.tsx:34
 msgid "Pink"
 msgstr "Pink"
+
+#: src/components/SearchAsk/ResultRows.tsx:317
+msgid "Place"
+msgstr "Place"
 
 #: src/screens/Groups/index.tsx:330
 msgid "Planning a trip or sharing a flat? Keep its expenses in one place."
@@ -6111,6 +6154,10 @@ msgstr "Remove {name}"
 #: src/screens/Group/components/GroupRows.tsx:349
 msgid "Remove {name} from group"
 msgstr "Remove {name} from group"
+
+#: src/components/SearchAsk/ResultRows.tsx:442
+msgid "Remove {name}: {typed}"
+msgstr "Remove {name}: {typed}"
 
 #: src/features/friends/RemoveFriendDialog.tsx:92
 msgid "Remove {name}?"
@@ -6606,14 +6653,14 @@ msgstr "Search groups or members"
 msgid "Search or add a name"
 msgstr "Search or add a name"
 
-#: src/features/searchAsk/SearchAskBody.tsx:287
-#: src/features/searchAsk/SearchAskBody.tsx:288
+#: src/features/searchAsk/SearchAskBody.tsx:317
+#: src/features/searchAsk/SearchAskBody.tsx:318
 #: src/screens/Welcome/index.tsx:52
 msgid "Search or ask anything"
 msgstr "Search or ask anything"
 
 #: src/components/SearchAsk/SearchAskButton.tsx:23
-#: src/features/searchAsk/SearchAskBody.tsx:344
+#: src/features/searchAsk/SearchAskBody.tsx:376
 msgid "Search or ask Splito"
 msgstr "Search or ask Splito"
 
@@ -6880,6 +6927,10 @@ msgstr "Settle up with {person} in {group}"
 msgid "settled"
 msgstr "settled"
 
+#: src/components/SearchAsk/ResultRows.tsx:300
+msgid "Settled"
+msgstr "Settled"
+
 #: src/components/BalanceText.tsx:51
 #: src/screens/Group/components/GroupRows.tsx:116
 #: src/screens/Group/components/MemberExitDialog.tsx:135
@@ -7005,11 +7056,11 @@ msgstr "Show hidden changes"
 msgid "Show me how"
 msgstr "Show me how"
 
-#: src/features/searchAsk/SearchAskBody.tsx:382
+#: src/features/searchAsk/SearchAskBody.tsx:414
 msgid "Show more"
 msgstr "Show more"
 
-#: src/features/searchAsk/SearchAskBody.tsx:376
+#: src/features/searchAsk/SearchAskBody.tsx:408
 msgid "Show more results"
 msgstr "Show more results"
 
@@ -7129,7 +7180,8 @@ msgstr "Some"
 #: src/components/people/HistoryRow.tsx:86
 #: src/components/people/PaymentDetailsDialog.tsx:112
 #: src/components/people/RecordPaymentDialog.tsx:169
-#: src/components/SearchAsk/ResultRows.tsx:235
+#: src/components/SearchAsk/ResultRows.tsx:230
+#: src/components/SearchAsk/ResultRows.tsx:369
 #: src/components/split/shared.tsx:23
 #: src/features/export/statementText.ts:20
 #: src/features/remind/RemindSheet.tsx:67
@@ -7314,6 +7366,7 @@ msgstr "Start date"
 msgid "Start over"
 msgstr "Start over"
 
+#: src/components/SearchAsk/ResultRows.tsx:425
 #: src/screens/Groups/components/GroupsFilterDialog.tsx:84
 msgid "Status"
 msgstr "Status"
@@ -7962,7 +8015,7 @@ msgstr "Total"
 msgid "Total {0}"
 msgstr "Total {0}"
 
-#: src/components/SearchAsk/ResultRows.tsx:134
+#: src/components/SearchAsk/ResultRows.tsx:126
 msgid "Total {totalLine}"
 msgstr "Total {totalLine}"
 
@@ -7979,7 +8032,7 @@ msgid "Transport"
 msgstr "Transport"
 
 #: src/components/groups/GroupFields.tsx:46
-#: src/components/SearchAsk/ResultRows.tsx:367
+#: src/components/SearchAsk/ResultRows.tsx:523
 #: src/screens/Group/index.tsx:351
 #: src/screens/Groups/components/GroupRow.tsx:55
 #: src/screens/Groups/components/GroupsFilterDialog.tsx:75
@@ -8001,7 +8054,7 @@ msgstr "Try again"
 msgid "Try another period, or see everything you have recorded."
 msgstr "Try another period, or see everything you have recorded."
 
-#: src/components/SearchAsk/ResultRows.tsx:416
+#: src/components/SearchAsk/ResultRows.tsx:572
 msgid "Try fewer words, part of a word, an amount like 450 or a month like march."
 msgstr "Try fewer words, part of a word, an amount like 450 or a month like march."
 
@@ -8012,6 +8065,7 @@ msgstr "Try searching for"
 #: src/components/activity/ActivityFilterDialog.tsx:78
 #: src/components/activity/ActivityFilterDialog.tsx:79
 #: src/components/groups/GroupFields.tsx:78
+#: src/components/SearchAsk/ResultRows.tsx:427
 #: src/features/export/statementText.ts:40
 #: src/screens/Groups/components/GroupsFilterDialog.tsx:71
 msgid "Type"
@@ -8461,6 +8515,11 @@ msgstr "Why is it on hold?"
 msgid "Why not?"
 msgstr "Why not?"
 
+#: src/components/SearchAsk/ResultRows.tsx:321
+#: src/components/SearchAsk/ResultRows.tsx:419
+msgid "With"
+msgstr "With"
+
 #: src/features/export/ExportSheet.tsx:142
 msgid "With {personName}"
 msgstr "With {personName}"
@@ -8574,6 +8633,7 @@ msgstr "you"
 
 #: src/components/activity/ActivityItem.tsx:521
 #: src/components/groups/RulesEditor.tsx:219
+#: src/components/SearchAsk/ResultRows.tsx:369
 #: src/components/split/shared.tsx:23
 #: src/features/export/statementText.ts:20
 #: src/features/searchAsk/AskAnswer.tsx:60
@@ -8760,6 +8820,7 @@ msgstr "You let {debtor} off"
 msgid "you owe"
 msgstr "you owe"
 
+#: src/components/SearchAsk/ResultRows.tsx:302
 #: src/features/export/statementText.ts:68
 #: src/features/searchAsk/AskAnswer.tsx:222
 #: src/screens/Group/components/GroupBalanceCards.tsx:80
@@ -8812,7 +8873,7 @@ msgstr "You owe <0>{0}</0>"
 msgid "you owe <0>{figure}</0>"
 msgstr "you owe <0>{figure}</0>"
 
-#: src/components/SearchAsk/ResultRows.tsx:240
+#: src/components/SearchAsk/ResultRows.tsx:235
 #: src/data/recentTransactionRows.ts:36
 #: src/features/export/statementText.ts:46
 #: src/features/searchAsk/AskAnswer.tsx:292

@@ -16,7 +16,8 @@ const OPS: Record<string, '+' | '-' | '*' | '/'> = {
 
 /** Indian and Western shorthand: 2k, 1.5L / lakh / lac, 1.2cr / crore, 2.5m / mn. Longest spellings first. */
 const SUFFIX = 'lakhs|lakh|lacs|lac|crores|crore|cr|mn|k|l|m'
-const MULTIPLIER: Record<string, bigint> = {k: 1000n, l: 100000n, lac: 100000n, lacs: 100000n, lakh: 100000n, lakhs: 100000n, cr: 10000000n, crore: 10000000n, crores: 10000000n, m: 1000000n, mn: 1000000n}
+/** The shorthand suffixes of an amount ("2k", "1.5 lakh", "1cr") and what each multiplies by; Search reads the same words. */
+export const MULTIPLIER: Record<string, bigint> = {k: 1000n, l: 100000n, lac: 100000n, lacs: 100000n, lakh: 100000n, lakhs: 100000n, cr: 10000000n, crore: 10000000n, crores: 10000000n, m: 1000000n, mn: 1000000n}
 const TOKEN = new RegExp(`(\\d[\\d.,]*)(${SUFFIX})?|([+\\-−xX×*/÷])`, 'iy')
 const EXPRESSION = new RegExp(`\\d\\s*(?:(?:${SUFFIX})\\s*)?[+\\-−xX×*/÷]`, 'i')
 const PLAIN = new RegExp(`^([-−]?)([\\d.,]*\\d[\\d.,]*)(${SUFFIX})?$`, 'i')

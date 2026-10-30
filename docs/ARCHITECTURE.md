@@ -653,11 +653,17 @@ with every hot screen reading by index, never by full scan (§ 17 budgets, F-109
   Analytics reads the selected period by `byDate` / `byGroupDate` range and reads history-long charts from an
   `aggregates` projection (`[currency, month, groupId|'', categoryId, personId|'', kind]` -> sum and count in minor units; `personId` '' is the whole record, a person id is that person's share, `kind` separates expenses from transfers), kept in
   the same transaction as `balances` and covered by `rebuildProjections()` and the property test. Search reads
-  a `search_terms` store (normalised prefix tokens of description, notes, merchant, person and group names,
-  plus an amount key per currency -> entity id), also maintained in the mutation transaction, and loads only
-  the matching rows, paged: the first page renders within the § 26.10 budget whatever the match count, and
-  per-currency totals of a broad match fill in after it. No in-memory ledger mirror. Person and group names
-  resolve at query time, so a rename rewrites no terms.
+  a `search_terms` store, also maintained in the mutation transaction, and resolves a whole query from its keys
+  (F-246). Kinds: `w` words of a record's title / note, notes and items, `p` / `g` words of a person's (name,
+  contact, UPI id) and a group's (name, trip place) text, `a` amount per currency, `m` month, `c` category, `b` /
+  `h` who paid / who is on a record, `G` its group (`-`: none), `d` `<date>:<createdAt>` (the list order), `s`
+  `deleted`, `n` a comment's words on the record it hangs on; expenses, payments and write-offs carry them, comments
+  contribute `n` only. Each token is a set of record ids from key ranges, the sets are intersected, and the order,
+  count and per-currency totals come from the `d` and `a` keys, so the first page, the count and the totals arrive
+  together and only the rows shown are read (30 by id per page). No in-memory ledger mirror. Person and group names
+  resolve at query time (to their live ids, then to their records by `h` / `G`), so a rename rewrites no terms.
+  What `search_terms` holds is versioned in `meta.searchIndex` (`SEARCH_INDEX_VERSION`): a database whose version
+  is older rebuilds the terms from its rows on its first search (derived data only, no schema version spent).
 - **One transaction per mutation** spans the entity, its projections, history and outbox (atomic, § 9.3).
 - **Versioned migrations:** `meta.schemaVersion`; IndexedDB `onupgradeneeded` and SQLite `PRAGMA user_version`
   run ordered, idempotent steps (v5: the `disputes`, `disputed_balances` and `disputed_pairs` stores; v4 -> v5 adds them empty); v1 -> v2 copies rows from `entities` into the per-type stores, builds
@@ -1057,6 +1063,17 @@ are written; nothing records them automatically (A-037).
 
 Each rule came from a measurement; the dated story is in § 23. Newest first within each group.
 
+- **A query is answered from index keys, never by walking rows.** Search ran broad queries (`> 1000`, a common
+  prefix) by reading the ledger newest first in chunks of 200 and checking every row; the first page was fast but
+  the count and totals needed all of it (10,000 expenses: about 10 us per row of SQL, JSON decode and word checks,
+  0.1 s and growing with the ledger, so the `< 50 ms` test failed with load). Keys cost about 0.2 us a row, so each
+  token is now a set of ids from term ranges (`h` for who, `G` for a group, `d` for the date order, `a` for amount
+  ranges and totals), the sets are intersected, and only the 30 rows shown are read. The cost follows the keys a
+  query touches, so a rule: a new searchable field is a term kind, a facet is a key range, and a screen never
+  checks rows one by one to answer "how many" or "how much" (`search.test.ts` speed at 5,000 and 10,000, and the
+  oracle test that compares the keys with the rows). Measure it as the drawer waits for it (`openSearch`: people,
+  groups, payments, count, totals and the first page), not as the whole ledger read out.
+
 - **A window that grows must keep what it read, and a render baseline is recorded as the median of three runs.**
   Activity's tracker rebuilt the whole history for every page a narrowed list read (10,000 expenses: 23.6 s, then
   72 ms per new expense); it now keeps its pool, cursor and sorted events and merges each page in (0.35 s SQLite /
@@ -1090,8 +1107,6 @@ Each rule came from a measurement; the dated story is in § 23. Newest first wit
   incrementally, automatic searching is bounded (about 10 pages, then "Look further back").
 - **Membership checks use a Set.** `read.includes(id)` per event made Mark all read and every rebuild
   O(events x read); a persisted list of ids is read into a Set once.
-- **Search stays under 50 ms at 10,000 expenses** (`search.test.ts`); the slowest query was `> 1000` (amount
-  range), so amount scans need an index or a bound before the data grows.
 - **The renders baseline is a median, taken after the data has loaded.** Recording the highest of three noisy
   runs (tabs updates 1,916-3,440) let a doubling pass; the gate waits for an explicit "demo loaded" signal
   before a phase and records the median of three.
@@ -1423,6 +1438,17 @@ Splito lessons (add newest last, dated, with PR):
 - 2026-10-30, F-1210 e2e: **never `goto` right after a click that writes.** The write is a transaction still in flight; the reload drops it and the next assertion fails (it looked like a missing feature). Wait for the sheet to close or the toast first. A search drawer input also needs `toBeEditable()` before `fill` under load.
 - 2026-10-30, F-1210 review: **a derived adjustment must stay between zero and the thing it adjusts.** The first "leave disputed out of the plan" subtracted the disputed part from every net, which flipped signs on a settled or part-repaid group and asked someone to pay twice for a disputed "payment not received". `withoutDisputed` now shrinks each net toward zero only and rebalances with `allocate`, with a property test (sums to zero, never flips, never grows). Likewise a stored pointer into a list (an item's position) must be the item's own id: reorders and edits moved the dispute onto the wrong item.
 - 2026-10-30, F-1210 review: **an "apply the suggestion" action must never change the shape of the record to fit it.** Converting an itemised or percent split to exact amounts to apply an amount fix lost the items. One tap applies a fix only when the split mode survives it (`fixApplies`); otherwise it is an edit by hand, and the panel says why.
+- 2026-10-31, F-246 (c-search): **the "every query under 50 ms" test failed because broad queries read the ledger, not
+  because the amount scan was slow.** The amount range was already an index; the slow part was every broad query
+  (`f`, `> 1000`, `march`) walking `byDate` in chunks of 200 rows to check each one so the count and totals could
+  be shown (about 10 us a row, so 100 ms at 10,000 and more under load), and the old test read whole answers
+  through `searchStore`. The fix is structural: terms for every field (`b`, `h`, `G`, `d`, `s`, `n`), each token
+  resolved to a set of ids by key range, intersection, ordering and totals from the `d` and `a` keys, rows read only
+  for the page. Two things to remember: (1) reading 10,000 index rows costs 2-3 ms, reading 10,000 entity rows costs
+  70 ms, so put anything a count or a total needs into the keys; (2) a test that proves "the keys give the rows'
+  answer" (`searchOracle.test.ts`: 1,200 random expenses, 18 queries, order and totals compared with a row-by-row
+  reference) is what makes this safe, not the speed number. Also: the migration tests' `storedTerms` helper listed
+  the term kinds by hand, so a new kind failed dozens of migration tests until it read `TERM_KINDS`.
 
 
 ## 24. Checklists
@@ -2871,6 +2897,19 @@ add anyway (only for you)"; "also i should be able to select from contacts". *Wh
   results stay grouped (People, Groups, Expenses...) with totals per currency and paged (§ 9.8 `search_terms`,
   extended with tokens for every field above). *Why:* "make sure the search works logically with most of the
   things like name, place, amount, category, type, group etc".
+  *How the query is read (assistant's ruling, F-246, replacing "words and simple amount filters"):* English and
+  Hindi words for "over / under / between / around", "this / last week / month / year", months, today / yesterday,
+  "paid by X / X ne", "with X / X ke saath", "in <place>", statuses and types; amounts accept `1k`, `1.5 lakh`, `2 cr`
+  and a currency sign or code; `food or travel` is OR inside one facet, everything else AND; a name that nobody has
+  ("with friends") is just words; a status or type word that finds nothing ("group dinner", "settled bill") is
+  searched as text. Status: *deleted* = tombstones (people and groups too), *disputed* = an open dispute or hold,
+  *hidden* = the groups I hid and the deleted items I hid, *inactive* = inactive groups; *settled / owed / owe* are a
+  group's own nets (all zero / I am owed / I owe), and for a record outside any group my direct balance with the
+  others on it (a friend's balance inside groups is not folded in). Results: People, Groups, Expenses (with count and
+  per-currency totals) and Payments (payments and write-offs); a comment's text finds the expense or payment it is
+  on; each row names the field that matched (Notes, Item, Group, Place, Category, With, Paid by, Comment, Amount, Date,
+  Currency, status) and marks the words; each facet is a removable chip under the box. Not searched: invites and
+  friend requests (they are not ledger records and have their own list in People).
 - **Privacy:** AI is opt-in (preference "Ask Splito uses AI", default off until signed in); the first use
   shows exactly what data is sent; nothing is sent for on-device answers.
 
