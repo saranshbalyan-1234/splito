@@ -12,11 +12,12 @@ import {resetToRoot} from '#/navigation/ref'
 import {DemoContext, type DemoModeValue, setDemoProgress} from '#/state/demo'
 import {useDialogStateControlContext} from '#/state/dialogs'
 import {flush, logger, setDiagnosticsEnabled, setTelemetryIdentity} from '#/logger'
-import {device, setStorageScope} from '#/storage'
+import {accountScope, device, setStorageScope} from '#/storage'
 import {installDevTools} from '#/data/devTools'
 import {setDirectory} from '#/data/friends'
 import {entitiesQuery, projectionFor} from '#/data/projections'
 import {openStore} from '#/data/store'
+import {accountStoreName, demoScope} from '#/data/storeNames'
 
 type DataContext = {store: Store; ctx: MutationCtx}
 /** A store ready to be shown: the demo one brings its directory (who is on Splito there). */
@@ -25,18 +26,24 @@ type Next = DataContext & {demo: boolean; directory?: DirectoryClient}
 const Context = createContext<DataContext | null>(null)
 Context.displayName = 'SplitoDataContext'
 
-/** Stable per-install ids, read synchronously from device storage. */
-function getMutationCtx(): MutationCtx {
+/** The account's own "me" id (minted once, kept per account; ARCHITECTURE 26.15). */
+function meIdFor(accountId: string): string {
+  const ids = JSON.parse(device.get(['meIds']) ?? '{}') as Record<string, string>
+  if (!ids[accountId]) {
+    ids[accountId] = randomUUID()
+    device.set(['meIds'], JSON.stringify(ids))
+  }
+  return ids[accountId]
+}
+
+/** The device id (one per install) and the account's "me", read synchronously from device storage. */
+function getMutationCtx(accountId: string): MutationCtx {
   let deviceId = device.get(['deviceId'])
   if (!deviceId) {
     deviceId = randomUUID()
     device.set(['deviceId'], deviceId)
   }
-  let actor = device.get(['meId'])
-  if (!actor) {
-    actor = randomUUID()
-    device.set(['meId'], actor)
-  }
+  const actor = meIdFor(accountId)
   return {deviceId, actor, now: () => Date.now(), newId: () => randomUUID()}
 }
 
@@ -64,17 +71,32 @@ function wireTelemetry(store: Store, ctx: MutationCtx) {
  */
 const loadDemo = () => import('#/data/demoMode')
 
+/* Accounts with a mounted provider, and the log outs waiting for one of them to finish closing its database. */
+const mounted = new Set<string>()
+const closeWaiters = new Map<string, Array<() => void>>()
+
+/**
+ * Log out calls this BEFORE it ends the session: the promise settles once every connection of that account's store
+ * (the real one and a demo one, a switch's old store included) has been closed by `StoreProvider`'s cleanup, which is what
+ * lets "Erase" delete the database afterwards. Settles at once when no provider is mounted for the account.
+ */
+export function expectStoreClosed(accountId: string): Promise<void> {
+  if (!mounted.has(accountId)) return Promise.resolve()
+  return new Promise(resolve => closeWaiters.set(accountId, [...(closeWaiters.get(accountId) ?? []), resolve]))
+}
+
 /** A store that is open and showing, with what to undo when it goes. */
 type Live = DataContext & {demo: boolean; unwire: () => void}
 
 /**
- * Opens the local store and ensures the "me" person exists before rendering
- * children. In dev and e2e builds it can swap to the separate demo database and
+ * Opens the signed-in account's local store (one database per account, `accountStoreName`) and ensures the "me"
+ * person exists before rendering children. It is mounted only while someone is signed in (`AuthGate`) and keyed
+ * by the account, so signing out closes the database and another account opens its own. In dev and e2e builds it can swap to the separate demo database and
  * back (`setDemo`): the new store is opened and ready first, then it replaces
  * the old one in the one context value and the old connection is closed. The
  * tree never remounts (§ 3 "Root contexts stay still").
  */
-export function StoreProvider({children, fallback = null}: {children: React.ReactNode; fallback?: React.ReactNode}) {
+export function StoreProvider({accountId, children, fallback = null}: {accountId: string; children: React.ReactNode; fallback?: React.ReactNode}) {
   const [value, setValue] = useState<DataContext | null>(null)
   const [demo, setDemoFlag] = useState(false)
   const [hasDirectory, setHasDirectory] = useState(false)
@@ -83,6 +105,8 @@ export function StoreProvider({children, fallback = null}: {children: React.Reac
   /* Web only: another tab holds an older version open (`blocked`), or a newer build took the database over (`changed`). */
   const [notice, setNotice] = useState<'blocked' | 'changed' | null>(null)
   const live = useRef<Live | null>(null)
+  /* Closes of replaced stores still on their timer: unmounting waits for them too. */
+  const closingPrev = useRef(new Set<Promise<unknown>>())
   const booted = useRef<Promise<void>>(Promise.resolve())
   const notices = useRef({onBlocked: () => setNotice('blocked'), onVersionChange: () => setNotice('changed')})
 
@@ -112,7 +136,7 @@ export function StoreProvider({children, fallback = null}: {children: React.Reac
       live.current = {...next, unwire}
       setDirectory(next.demo ? (next.directory ?? null) : null)
       // Search history, read marks, drafts and the first-frame copies of preferences typed in demo mode stay in demo mode.
-      setStorageScope(next.demo ? 'demo:' : '')
+      setStorageScope(next.demo ? demoScope(accountId) : accountScope(accountId))
       installDevTools(next.store, next.ctx)
       perfMark('splito:store-adopt')
       if (prev) dropOpenUi()
@@ -121,18 +145,20 @@ export function StoreProvider({children, fallback = null}: {children: React.Reac
       setHasDirectory(next.demo && !!next.directory)
       setNotice(current => (current === 'blocked' ? null : current))
       // Resolves once the replaced store's connection is closed (a database can only be deleted then).
-      return new Promise<void>(resolve => {
+      const closed = new Promise<void>(resolve => {
         if (prev) setTimeout(() => void prev.store.close().then(resolve, resolve), 300)
         else resolve()
       })
+      closingPrev.current.add(closed)
+      return closed
     },
-    [dropOpenUi],
+    [accountId, dropOpenUi],
   )
 
   /** The real store. `ensure: false` skips the "me" write for a start that is about to open the demo database instead. */
   const openReal = useCallback(async (ensure = true) => {
-    const ctx = getMutationCtx()
-    const store = await openStore(notices.current)
+    const ctx = getMutationCtx(accountId)
+    const store = await openStore(notices.current, accountStoreName(accountId))
     try {
       if (ensure) await ensureMe(store, ctx, 'Me')
     } catch (e) {
@@ -140,7 +166,7 @@ export function StoreProvider({children, fallback = null}: {children: React.Reac
       throw e
     }
     return {store, ctx}
-  }, [])
+  }, [accountId])
 
   useEffect(() => {
     let cancelled = false
@@ -148,18 +174,24 @@ export function StoreProvider({children, fallback = null}: {children: React.Reac
     booted.current = (async () => {
       const real = await openReal(false)
       /* Dev StrictMode mounts twice: a store opened for the discarded mount is closed, never used. */
-      if (cancelled) return void real.store.close()
+      if (cancelled) {
+        await real.store.close()
+        return
+      }
       /*
        * Only the one preference row is read here (the key is `demoMode.ts`'s MODE_ID), so a start in real
        * mode never waits for the demo chunk.
        */
       const demoOn = (await real.store.get<{value: unknown}>('preference', 'demo.mode'))?.data.value === true
-      const resumed = demoOn ? await (await loadDemo()).resumeDemo(real, notices.current) : null
+      const resumed = demoOn ? await (await loadDemo()).resumeDemo(accountId, real, notices.current) : null
       if (resumed) {
         // A reload keeps the mode: the real database said so; the demo one opens, the real one closes.
-        if (cancelled) return void Promise.all([resumed.store.close(), real.store.close()])
+        if (cancelled) {
+          await Promise.all([resumed.store.close(), real.store.close()])
+          return
+        }
         void adopt({...resumed, demo: true})
-        setTimeout(() => void real.store.close(), 300)
+        closingPrev.current.add(new Promise<void>(resolve => setTimeout(() => void real.store.close().then(resolve, resolve), 300)))
       } else {
         await ensureMe(real.store, real.ctx, 'Me')
         // Only ever on the real store, before anything can switch away from (and close) it: erase the rows older builds left in it, once.
@@ -175,14 +207,24 @@ export function StoreProvider({children, fallback = null}: {children: React.Reac
       markLaunchReady() // a failed open never extends the launch screen (§ 8)
       setError(e)
     })
+    const boot = booted.current
+    const prevCloses = closingPrev.current
+    mounted.add(accountId)
     return () => {
       cancelled = true
       const cur = live.current
       live.current = null
       cur?.unwire()
-      void cur?.store.close()
+      mounted.delete(accountId)
+      /* Everything that holds this account's database is closed before a waiting log out is told (a store still opening closes itself, `cancelled`). */
+      void (async () => {
+        await boot.catch(() => {})
+        await Promise.allSettled([cur?.store.close(), ...prevCloses])
+        for (const resolve of closeWaiters.get(accountId) ?? []) resolve()
+        closeWaiters.delete(accountId)
+      })()
     }
-  }, [adopt, openReal])
+  }, [accountId, adopt, openReal])
 
   /* Switches never overlap: each waits for the one before it (a double tap, the e2e hook). */
   const queue = useRef<Promise<unknown>>(Promise.resolve())
@@ -219,7 +261,7 @@ export function StoreProvider({children, fallback = null}: {children: React.Reac
           const m = await loadDemo()
           if (on) {
             // Seeded and ready before anything changes; the real database learns of the mode last, so a failure leaves it untouched.
-            const opened = await m.openDemo(cur.ctx, notices.current, report)
+            const opened = await m.openDemo(accountId, cur.ctx, notices.current, report)
             try {
               await m.writeDemoMode(cur.store, cur.ctx, true)
             } catch (e) {
@@ -237,11 +279,11 @@ export function StoreProvider({children, fallback = null}: {children: React.Reac
             }
             // Back on the real data first; then the demo database and everything it kept are erased (owner 136).
             await adopt({...real, demo: false})
-            await m.eraseDemo()
+            await m.eraseDemo(accountId)
           }
         }),
       ),
-    [adopt, openReal, serial, withProgress],
+    [accountId, adopt, openReal, serial, withProgress],
   )
 
   useEffect(() => {
@@ -266,6 +308,11 @@ export function StoreProvider({children, fallback = null}: {children: React.Reac
       <DemoContext.Provider value={demoValue}>{children}</DemoContext.Provider>
     </Context.Provider>
   )
+}
+
+/** The open store, or null where none is (the signed-out screens): only shared primitives such as motion ask this way. */
+export function useMaybeData(): DataContext | null {
+  return useContext(Context)
 }
 
 export function useData(): DataContext {

@@ -1,6 +1,6 @@
 import {describe, expect, test} from 'bun:test'
 
-import {buildPrecache, demoLeaks} from '../../../scripts/pwa'
+import {buildPrecache, demoLeaks, withNoindex} from '../../../scripts/pwa'
 import {classify} from '../../../web/sw.js'
 import {isIosDevice} from './state'
 import {hasWorkAtStake, markWorkAtStake} from './workAtStake'
@@ -98,5 +98,13 @@ describe('demo mode ships only as lazy chunks (owner 148)', () => {
   })
   test('the demo id shape in a start-up script is not a leak (the link resolver checks it, F-254)', () => {
     expect(demoLeaks([html, file('/a.js', '/^(demo-large-[a-z0-9-]{1,48})$/i'), file('/c.js', 'plain')])).toEqual([])
+  })
+})
+
+describe('the preview build is not indexed', () => {
+  test('noindex goes into the head once', () => {
+    const html = '<html><head><title>Splito</title></head></html>'
+    expect(withNoindex(html)).toContain('<head><meta name="robots" content="noindex"><title>')
+    expect(withNoindex(withNoindex(html)).match(/robots/g)).toHaveLength(1)
   })
 })

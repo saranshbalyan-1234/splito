@@ -28,3 +28,19 @@ test('the production build holds no why-did-you-render', () => {
       expect(text, `${f} contains ${marker}`).not.toContain(marker)
   }
 })
+
+/*
+ * F-250: the PREVIEW export (what Render serves for review; a production build is refused) carries the dev sign-in the review
+ * needs and none of the e2e-only hooks. `e2e/authConfig.spec.ts` checks that production refuses to build at all.
+ */
+test('the preview build has the dev sign-in and no e2e hooks', () => {
+  const dist = join(__dirname, '..', 'dist-pwa')
+  const walk = (dir: string): string[] =>
+    readdirSync(dir, {withFileTypes: true}).flatMap(e => (e.isDirectory() ? walk(join(dir, e.name)) : [join(dir, e.name)]))
+  const text = walk(dist)
+    .filter(f => /\.js$/.test(f))
+    .map(f => readFileSync(f, 'utf8'))
+    .join('\n')
+  for (const marker of ['continue-dev-account', 'dev-banner', 'devpassword']) expect(text, `preview export lacks ${marker}`).toContain(marker)
+  for (const marker of ['seedAccount', 'seedLegacy']) expect(text, `preview export holds the e2e hook ${marker}`).not.toContain(marker)
+})

@@ -130,6 +130,7 @@ const PATH_KEYS: Record<string, (value: string) => boolean> = {
   /** Invite codes are 16 lower-case characters (`mintInviteCode`); older ones may be longer or upper-case. */
   code: v => /^[A-Za-z0-9]{6,64}$/.test(v),
   section: v => /^[a-z][a-z-]{0,31}$/.test(v),
+  step: v => /^[1-5]$/.test(v),
 }
 export function isValidPathParam(key: string, value: string): boolean {
   return (PATH_KEYS[key] ?? (() => false))(value)

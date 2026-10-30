@@ -40,7 +40,7 @@ const PARENT: {[K in Exclude<keyof AllNavigatorParams, 'Sheet'>]: (params: Param
   Settings: () => ({name: 'Home'}),
   Search: () => ({name: 'Home'}),
   SettingsSection: () => ({name: 'Settings'}),
-  SignIn: () => ({name: 'Settings'}),
+  Welcome: () => ({name: 'Home'}),
   FriendsAndInvites: () => ({name: 'People'}),
   Person: () => ({name: 'People'}),
   Group: () => ({name: 'Groups'}),

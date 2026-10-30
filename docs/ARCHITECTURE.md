@@ -840,7 +840,9 @@ call it; `/notifications` aliases to `/activity`; a bare `/` opens the Home tab 
   accept from the link.
 - **Sign-in preserves intent (M2):** an invite or claim link opened signed out stores its relative target in
   the device store (`lib/links/intent.ts`), runs sign-in or local-profile creation, then resumes (`LinkHost`).
-  [Stub] until F-250 turns `isSignInRequired` on.
+  [Built, F-250] `isSignInRequired` is `!isSignedIn()`: the signed-out app (`LoggedOutApp`) holds the address (web) or the
+  cold-start and later URLs (native) with `holdSignedOutLink` (Home and `/welcome/N` are not held), and `LinkHost` opens
+  the held link once the navigator is up (`openLinkWhenReady`) after sign-in.
 - **Every incoming URL goes through `openLink`:** on a phone the cold start's and each later URL is held
   (`lib/links/incoming`, `linking.getInitialURL` / `subscribe`) and `LinkHost` opens it; on web the page-load address
   is checked once the mode is known (`checkInitialLink`). Both apply the demo question and the signed-out hold, and a
@@ -1269,6 +1271,34 @@ Splito lessons (add newest last, dated, with PR):
   provider" check first ran for every Dialog, including closed ones, and took the app down on iOS. Checks that
   depend on context a closed dialog doesn't need run when the sheet opens, never at mount (§ 4: a closed dialog
   renders and reads nothing).
+- 2026-10-30, F-250 (feat/wC-F249-F250-auth): **Metro's inline requires make module-level side effects lazy.**
+  `state/session.ts` sets the account's device-key scope when it is first evaluated, which with inlined requires is
+  the first call of `useSession()`, i.e. after the theme had already read its first-frame accent from the unscoped
+  key (the accent was lost on every reload). `Themed` now calls `useSession()` before anything reads device storage.
+  Anything a module must do before the first render is a call made from `App`, not an import side effect.
+- 2026-10-30, F-250: **the signed-out app cannot use the store**, so shared primitives must not assume it:
+  `useShouldReduceMotion` (animations, `ScreenTransition`, `PressableScale`) reads `useMaybeStore()` and falls back to
+  the OS setting, and the language dropdown has a device twin. Check any component reused on the Continue flow with no
+  `StoreProvider` above it (the logged-out e2e fails with "useData outside StoreProvider").
+- 2026-10-30, F-250: a prompt opened from inside the web drawer is drawn under the drawer's scrim (clicks hit the scrim),
+  and closing the drawer unmounts the prompt with it: dialogs that several places open (Log out?) are mounted once in the
+  app (`LogOutHost`, `requestLogOut()`).
+- 2026-10-30, F-250 review: **an erase that races the close can silently fail.** Deleting an IndexedDB database while a
+  connection is still open blocks forever (and a native file delete throws); a log out that deletes right after unmounting
+  the provider depended on timing. The close now announces itself (`expectStoreClosed`), the delete retries and a failure is
+  shown. Likewise `Linking.getInitialURL()` answers the launch URL every time, so a log out and in replayed it: read it once.
+- 2026-10-30, F-250 review: **a build guard keyed on one env var has holes.** `EXPO_PUBLIC_ENV` unset, a tier without it, an
+  e2e build on a prod tier: each skipped the first guard. Builds now have explicit kinds, every kind but production is refused on
+  a stage/prod tier, and an unset kind means production in an export. A preview build is a real, separate kind with its own
+  checks (dev sign-in present, e2e hooks absent), not production with a switch.
+- 2026-10-30, F-250 + F-264 (the breathing splash): the splash stays up until `markLaunchReady()` is called, by `StoreProvider` once its
+  store opens. With sign-in required the store opens only with a session, so every path that never opens it must end the splash
+  itself: `LoggedOutShell` (the intro, Continue, the public pages, the blocking add step, "Logging out" and its failure, a session that
+  did not restore) calls it on mount. `auth.spec` cold-loads signed out and checks `#launch` is gone and the intro shows.
+- 2026-10-30, F-250: **the e2e sign-in is browser state, not per-spec code.** `e2e/globalSignIn.ts` signs the dev account
+  in once per config and saves `storageState`, which every context starts from; a signed-out spec opts out with
+  `test.use(signedOut)`. Playwright's `FullConfig.rootDir` is the test dir, not the config dir: resolve paths from
+  `configFile`.
 - 2026-10-30, Render: **production builds failed for hours unnoticed.** The demo-leak check in `scripts/pwa.ts`
   matched the text `demo-large-` in the start-up bundle, which the F-241 link resolver's id check contains on
   purpose; every Render build after that merge failed, and the live site silently stayed on the older build. Two
@@ -2345,8 +2375,52 @@ dishes etc and each item can be assigned to each in split"; "in itemize don't sh
 
 ### 26.15 Settings, sign in and log out
 
-*Why:* "add sign in option, and logout as well in settings". *Where:* `screens/Settings`; `useSession()` not
-built yet.
+*Why:* "add sign in option, and logout as well in settings". *Where:* `screens/Settings`, `state/session.ts`,
+`screens/Login/`, `lib/auth/`, `data/account.ts`. **[Built, F-250, front end against the dev AuthClient only]:**
+- **`useSession()`** (`state/session.ts`, Bluesky's hook shape on a module store; the account is in device storage,
+  the API token joins it in the credential store, § 11) answers `hasSession`, `currentAccount`, `missingContact` and
+  `canSync` (false until the sync engine exists, so rows still read "Saved on this device"; `useSyncDot` and
+  `useRowStatus` read `canSync`, not `hasSession`). `App.tsx`'s `AuthGate`: no account -> `LoggedOutApp` (intro, then
+  the Continue flow, no store open); an account missing its email or phone -> the blocking `AddMissingContact` (no
+  store); otherwise `StoreProvider` keyed by the account id opens `splito-acct-<id>` (`data/storeNames.ts`).
+- **`AuthClient`** (`lib/auth/types.ts`: lookup, sendCode, verifyCode, signInWithPassword, signInWithCode,
+  createAccount, resetPassword, addContact). Dev and e2e builds get `lib/auth/dev.ts` (accounts in device storage, codes
+  shown in the dev banner, a fixed dev account) as a lazy chunk reached only behind `__DEV__` / `EXPO_PUBLIC_ENV=e2e`
+  (`e2e-pwa/bundle.spec.ts` checks the production export holds none of it); every other build gets the `unavailable`
+  client and the screens say "arrives with sync". `auth-config.js` (read by `app.config.ts`) sorts builds into kinds and refuses
+  production until the auth HTTP client exists (§ 26.22); the review site is the `preview` kind.
+- **One database per account; device keys too.** Search history, Ask chat, drafts, reminder bookkeeping and the
+  first-frame preference copies are under `acct:<id>:` (`setStorageScope`), demo mode keeps `demo:`. Log out
+  (`data/account.ts logOut`, the `LogOutHost` prompt from Settings and the drawer footer) always erases (owner 186): the app
+  shows `LoggingOut` (which unmounts the provider, closing the database), then `eraseAccountData` deletes the database, the
+  demo database, the account's and demo's device keys, its "me" id and the service worker's data caches, and only then does the
+  session end; the device's language and theme are copied out first and stay.
+- **Data from before accounts:** the old unkeyed `splito` database is offered once after sign-in (`LegacyDataOffer`,
+  "Move this device's data into your account"): Move copies it through the backup path (`createBackup` ->
+  `applyBackup`, merge) and deletes it; "Not now" leaves it on disk and the offer is not repeated (a Settings > Data row
+  to ask again is the upgrade).
+- **Verification tokens (the F-2101 contract):** `verifyCode` answers a short-lived, one-use token for the contact; `createAccount`
+  takes both tokens (email and phone) and `addContact` the one, never the code again (`lib/auth/types.ts`, tested against the dev
+  client in `dev.test.ts`).
+- **Each account is its own "me" and its own demo:** the "me" person id is minted per account (`meIds` device key; the old
+  device `meId` is the pre-account database's, which Move re-points), and the demo database and its device keys are named by
+  account id (`splito-demo-<id>`, `demo:<id>:`). A session id that could not be a database name is no session. Another tab's
+  sign-in or sign-out is followed through the `storage` event on the session key.
+- **Log out waits for the close:** `expectStoreClosed(accountId)` is armed before the session ends and settles when
+  `StoreProvider`'s cleanup has closed every connection of that account (a store still opening, a swap's old store); only then
+  is the data deleted (with retries). A failure shows "Logging out" with Try again and the session stays (`loggingOut` device key,
+  so a restart resumes it), never a half-erased account. The prompt counts unsynced changes with `syncCounts()` (an index read) and
+  keeps Log out off until the count is known.
+- **The legacy offer is answered by Move, Not now or no old database;** an open or closed-by-reload offer comes again, and
+  Settings > Data keeps "Move this device's older data" while the old database exists.
+- **Signed-out pages:** the intro, Continue, Help, Privacy, About (`/settings/help|privacy|about`) and `/join/<token>` (a stub page
+  that leads to sign-in until the invite flow exists) are the only things a signed-out device shows (`lib/links/public.ts`).
+  Native: the launch URL is read once per process (`takeInitialUrlOnce`) and, signed out, only `url` events are held after it.
+- **The intro's art is Lottie** (original, `pnpm lottie`: `welcome-split|bills|settle|ask|offline`, light and dark, a still frame
+  under reduced motion); the Pager is replaced by `ScreenTransition` plus a swipe that follows the finger and ignores vertical and
+  diagonal drags; "Step N of 5" is for screen readers only.
+- **Not in this task:** setup after sign-in (F-211) and the guided tour (F-253); Google and Apple (buttons only, a
+  tap says "arrives with sync"); the real HTTP client (F-2101/F-2102).
 
 - **Settings starts with an "Account" section** (copied from Bluesky's Settings account section and its
   Login/Signup screens' layout, `src/screens/Login`, `src/screens/Settings`).
@@ -2375,7 +2449,7 @@ built yet.
   the count ("N changes haven't synced yet and will be lost"), so nothing unsynced is deleted silently (§ 11).
   The erase finishes before the logged-out flow shows; a failure is reported and retried, never left half-done.
   *Why:* "when logout, it should remove all data from db".
-- **"Sign in" / "Log out" also appear in the drawer footer** (§ 26.7).
+- **"Log out" also appears in the drawer footer** (§ 26.7; there is no "Sign in" while sign-in is required).
 - **Auth state comes from one `useSession()`** (Bluesky pattern, `src/state/session`), signed out until the
   backend lands.
 - **Feedback** ("add one feedback section as well"). Placement copied from Bluesky: a "Feedback" item in the
@@ -2764,6 +2838,12 @@ add anyway (only for you)"; "also i should be able to select from contacts". *Wh
   look-alike apps. The item in `docs/RELEASE_CHECKLIST.md` stays open until an original mark replaces the one
   logo source file and the brand kit is regenerated. *Why:* the owner chose it for development after being
   told.
+- **A production build is refused until the auth HTTP client exists** (F-250): `auth-config.js` (read by `app.config.ts`)
+  sorts every build into a kind from `EXPO_PUBLIC_ENV` (development, e2e, preview, production; no value means production in
+  an export and development in `expo start`), refuses production outright until `AUTH_HTTP_CLIENT_READY` flips (then it needs an
+  https `EXPO_PUBLIC_AUTH_API_URL`), and refuses any kind on a stage or prod tier. The review site is the **preview** kind
+  (`render.yaml` builds `EXPO_PUBLIC_ENV=preview`): the labelled dev account, a fixed note on Continue, `noindex`, no e2e hooks
+  (`authConfig.spec.ts`, `e2e-pwa/bundle.spec.ts`, `e2e-pwa/pwa.spec.ts`).
 - The other release blockers (dev-only switches inert, real auth and sync live) are listed in
   `docs/RELEASE_CHECKLIST.md`.
 

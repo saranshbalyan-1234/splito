@@ -3,10 +3,19 @@ import {join} from 'node:path'
 
 import {expect, type Page, test} from '@playwright/test'
 
-/* The production build: the only one that registers the service worker. */
+/*
+ * The PREVIEW build (`EXPO_PUBLIC_ENV=preview`, what Render serves for the owner's review; a production build is refused
+ * until the auth HTTP client exists): like production it registers the service worker, and it offers the labelled dev account,
+ * which is how these specs get in. A fresh install starts at the intro, then Continue.
+ */
 const SW_FILE = join(__dirname, '../dist-pwa/sw.js')
 
+/** Signs in through the real Continue screen (the preview build has no test hooks), then opens Settings. */
 async function controlled(page: Page) {
+  await page.goto('/')
+  await page.getByTestId('welcome-skip').click()
+  await page.getByTestId('continue-dev-account').click()
+  await expect(page.getByTestId('screen-home')).toBeVisible({timeout: 20_000})
   await page.goto('/settings')
   await expect(page.getByTestId('screen-settings')).toBeVisible()
   // The worker installs, activates and claims this page.
@@ -85,4 +94,15 @@ test('the manifest is standalone with the Dim background and brand icons', async
   const manifest = await page.evaluate(() => fetch('/manifest.json').then(r => r.json()))
   expect(manifest).toMatchObject({display: 'standalone', background_color: '#151D28', short_name: 'Splito'})
   expect(manifest.icons.length).toBeGreaterThanOrEqual(3)
+})
+
+test('the preview build says so on Continue, is not indexed, and has the labelled dev account', async ({page}) => {
+  await page.goto('/')
+  await page.getByTestId('welcome-skip').click()
+  await expect(page.getByTestId('preview-note')).toContainText("Preview build: local dev account, data stays in this browser, don't use a real password")
+  await expect(page.getByTestId('continue-dev-account')).toContainText('Continue with a dev account')
+  await expect(page.locator('meta[name="robots"]')).toHaveAttribute('content', 'noindex')
+  // No test hooks, and no database before sign-in.
+  expect(await page.evaluate(() => Object.keys((window as unknown as {__splitoTest?: object}).__splitoTest ?? {}).filter(k => ['signIn', 'signOut', 'seedAccount', 'seedLegacy', 'demoMode', 'openLink'].includes(k)))).toEqual([])
+  expect(await page.evaluate(async () => (await indexedDB.databases()).length)).toBe(0)
 })

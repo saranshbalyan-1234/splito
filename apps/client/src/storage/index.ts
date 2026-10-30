@@ -7,10 +7,11 @@ import {type Device} from '#/storage/schema'
 export * from '#/storage/schema'
 
 /*
- * Dev and e2e demo mode keeps its own search history, read marks and drafts:
- * while a prefix is set, the keys a storage lists as `scoped` live under it,
- * so nothing typed in demo mode shows up in the real data (ARCHITECTURE 26.1).
- * Production never sets one.
+ * Demo mode and each signed-in account keep their own search history, read
+ * marks and drafts: while a prefix is set, the keys a storage lists as
+ * `scoped` live under it, so nothing typed in demo mode shows up in the real
+ * data and one account never reads another's (ARCHITECTURE 26.1, 26.15).
+ * Signed out there is none.
  */
 let scope = ''
 const scopeListeners = new Set<() => void>()
@@ -22,10 +23,13 @@ export function setStorageScope(prefix: string) {
   scopeListeners.forEach(l => l())
 }
 
-/** True while keys are scoped (demo mode): the first-frame copies of preferences must not be written outside the scope. */
+/** True while demo mode's keys are in use: the first-frame copies of preferences must not be written outside the scope. */
 export function isStorageScoped() {
-  return scope !== ''
+  return scope.startsWith('demo:')
 }
+
+/** The key prefix of one account's device keys (search history, Ask chat, first-frame preference copies): two accounts never share them (F-250). */
+export const accountScope = (accountId: string) => `acct:${accountId}:`
 
 /** Deletes every key under `prefix` from every storage instance (MMKV natively, localStorage on web), then readers look again. */
 export function clearStorageScope(prefix: string) {

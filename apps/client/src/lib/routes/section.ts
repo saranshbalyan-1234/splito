@@ -24,7 +24,7 @@ const SECTION: Record<string, string> = {
   Activity: 'Activity',
   Settings: 'Settings',
   SettingsSection: 'Settings',
-  SignIn: 'Settings',
+  Welcome: 'Settings',
   FriendsAndInvites: 'Settings',
 }
 

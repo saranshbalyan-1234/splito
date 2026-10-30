@@ -35,7 +35,8 @@ export function LinkHost() {
   useEffect(() => {
     if (!hasSession) return
     const held = takeLinkIntent()
-    if (held) openLink(held, {isDemo: demo, isInStore: (target: LinkTarget) => isInStore(store, target)})
+    /* The navigator is not up yet on the first frame after sign-in: wait for it. */
+    if (held) openLinkWhenReady(held, {isDemo: demo, isInStore: (target: LinkTarget) => isInStore(store, target)})
   }, [hasSession, demo, store])
 
   /* E2E builds only: `window.__splitoTest.openLink(url)` opens a link as a push tap or a shared link would (warm). */

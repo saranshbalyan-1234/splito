@@ -1,7 +1,7 @@
 import {Linking} from 'react-native'
 import {type LinkingOptions} from '@react-navigation/native'
 
-import {holdIncoming, isAppUrl} from '#/lib/links/incoming'
+import {holdIncoming, takeInitialUrlOnce} from '#/lib/links/incoming'
 import {LINK_SCHEME, ownLinkHost} from '#/lib/links/hosts'
 import {resolveLink} from '#/lib/links/resolve'
 import {nativeState} from '#/lib/links/state'
@@ -17,8 +17,8 @@ import {type RootStackParams} from '#/lib/routes/types'
 export const linking: LinkingOptions<RootStackParams> = {
   prefixes: [`${LINK_SCHEME}://`, `https://${ownLinkHost()}`],
   getInitialURL: async () => {
-    const url = await Linking.getInitialURL()
-    if (url && isAppUrl(url)) holdIncoming(url)
+    const url = await takeInitialUrlOnce()
+    if (url) holdIncoming(url)
     return null
   },
   subscribe: () => {

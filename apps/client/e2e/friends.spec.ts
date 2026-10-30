@@ -219,7 +219,7 @@ test('offline (no directory): we’ll check when online, the request queues, Add
   // Invite links fail closed without the server: no made-up link.
   await page.goto('/invites/new')
   await expect(page.getByTestId('sheet-save')).toBeDisabled()
-  await expect(page.getByText('Invite links need a connection')).toBeVisible()
+  await expect(page.getByText('Invite links work once sync arrives')).toBeVisible()
 })
 
 test('a bad value says what is wrong after leaving the field', async ({page}) => {

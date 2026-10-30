@@ -1,4 +1,5 @@
 import {useSyncExternalStore} from 'react'
+import {Linking} from 'react-native'
 
 /**
  * Links that arrive from outside (F-254): a tap on a Universal / App Link or `splito://`, a push, a share. They
@@ -13,6 +14,19 @@ const emit = () => listeners.forEach(l => l())
 
 /** Not ours: Expo's dev client launches the app with `exp+splito://expo-development-client/...`. */
 export const isAppUrl = (url: string) => !/^exp(\+|:)/i.test(url)
+
+let didReadInitial = false
+/**
+ * The URL this process was launched with, once: `Linking.getInitialURL()` answers the same launch URL every time it is
+ * asked, so a log out and sign in (or any second reader) would replay a link that was already handled. The first reader
+ * (the navigator's `linking.getInitialURL`, or the signed-out app) takes it; everyone after gets null.
+ */
+export async function takeInitialUrlOnce(): Promise<string | null> {
+  if (didReadInitial) return null
+  didReadInitial = true
+  const url = await Linking.getInitialURL()
+  return url && isAppUrl(url) ? url : null
+}
 
 export function holdIncoming(url: string) {
   if (!isAppUrl(url)) return

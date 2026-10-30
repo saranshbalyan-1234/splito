@@ -927,7 +927,7 @@ msgstr "{subject} ने आपका दोस्ती का अनुरो�
 msgid "{subject} sent you a friend request"
 msgstr "{subject} ने आपको दोस्ती का अनुरोध भेजा"
 
-#: src/screens/Settings/index.tsx:328
+#: src/screens/Settings/index.tsx:326
 msgid "{tabCount, plural, one {# tab} other {# tabs}}"
 msgstr "{tabCount, plural, one {# टैब} other {# टैब}}"
 
@@ -951,7 +951,11 @@ msgstr "{title}, {byline}, {shareLabel} {shareText} (कुल {totalText}), अ
 msgid "{title}, not synced yet"
 msgstr "{title}, अभी सिंक नहीं हुआ"
 
-#: src/screens/Settings/index.tsx:331
+#: src/features/account/LogOutPrompt.tsx:51
+msgid "{unsynced, plural, one {# change hasn’t synced yet and will be lost.} other {# changes haven’t synced yet and will be lost.}}"
+msgstr "{unsynced, plural, one {# बदलाव अभी सिंक नहीं हुआ है और खो जाएगा।} other {# बदलाव अभी सिंक नहीं हुए हैं और खो जाएँगे।}}"
+
+#: src/screens/Settings/index.tsx:329
 msgid "{visible} categories"
 msgstr "{visible} श्रेणियाँ"
 
@@ -1052,7 +1056,7 @@ msgstr "<0>{value}</0> अभी Splito पर नहीं हैं। आम�
 msgid "= Use result"
 msgstr "= नतीजा लें"
 
-#: src/screens/Settings/index.tsx:331
+#: src/screens/Settings/index.tsx:329
 msgid "1 category"
 msgstr "1 श्रेणी"
 
@@ -1088,7 +1092,14 @@ msgstr "100% बँट गया"
 msgid "30 days"
 msgstr "30 दिन"
 
-#: src/screens/Login/SetNewPasswordForm.tsx:66
+#: src/screens/Login/CodeForm.tsx:91
+#: src/screens/Login/CodeForm.tsx:97
+#: src/screens/Login/CredentialForm.tsx:162
+#: src/screens/Login/CredentialForm.tsx:169
+msgid "6-digit code"
+msgstr "6 अंकों का कोड"
+
+#: src/screens/Login/SetNewPasswordForm.tsx:76
 msgid "6-digit reset code"
 msgstr "6 अंकों का रीसेट कोड"
 
@@ -1190,10 +1201,13 @@ msgid "a write-off"
 msgstr "एक माफ़ी"
 
 #: src/components/NavFooterLinks.tsx:35
+#: src/screens/LoggedOut/PublicPage.tsx:20
+#: src/screens/Login/ContinueForm.tsx:116
+#: src/screens/Login/ContinueForm.tsx:117
 #: src/screens/Profile.tsx:73
 #: src/screens/Profile.tsx:76
-#: src/screens/Settings/index.tsx:209
-#: src/screens/Settings/index.tsx:212
+#: src/screens/Settings/index.tsx:198
+#: src/screens/Settings/index.tsx:201
 #: src/screens/Settings/SettingsSection.tsx:51
 msgid "About"
 msgstr "परिचय"
@@ -1271,7 +1285,7 @@ msgstr "स्वीकार करने पर यह भुगतान ह�
 msgid "Accepting sets that share and scales the others to match."
 msgstr "स्वीकार करने पर वह हिस्सा तय होगा और बाकी हिस्से उसके अनुसार बदल जाएँगे।"
 
-#: src/screens/Settings/index.tsx:85
+#: src/screens/Settings/index.tsx:91
 msgid "Account"
 msgstr "खाता"
 
@@ -1331,6 +1345,10 @@ msgstr "नाम लिखें"
 msgid "Add a note (optional)"
 msgstr "नोट जोड़ें (वैकल्पिक)"
 
+#: src/screens/Login/AddMissingContact.tsx:45
+msgid "Add a phone number to keep using Splito. We’ll send a code to confirm it."
+msgstr "Splito इस्तेमाल करते रहने के लिए फ़ोन नंबर जोड़ें। पक्का करने के लिए हम एक कोड भेजेंगे।"
+
 #: src/components/split/shared.tsx:166
 msgid "Add a reason"
 msgstr "कारण लिखें"
@@ -1344,7 +1362,11 @@ msgstr "स्क्रीनशॉट या फ़ोटो जोड़ें
 msgid "Add a title"
 msgstr "शीर्षक लिखें"
 
-#: src/components/settings/AboutSettings.tsx:91
+#: src/screens/Login/AddMissingContact.tsx:45
+msgid "Add an email to keep using Splito. We’ll send a code to confirm it."
+msgstr "Splito इस्तेमाल करते रहने के लिए ईमेल जोड़ें। पक्का करने के लिए हम एक कोड भेजेंगे।"
+
+#: src/components/settings/AboutSettings.tsx:104
 msgid "Add an expense"
 msgstr "खर्च जोड़ें"
 
@@ -1490,11 +1512,21 @@ msgstr "यह खर्च जोड़ें"
 msgid "Add to group"
 msgstr "समूह में जोड़ें"
 
+#: src/screens/Login/AddMissingContact.tsx:26
+#: src/screens/Login/index.tsx:158
+msgid "Add your email"
+msgstr "अपना ईमेल जोड़ें"
+
 #: src/navigation/Drawer.tsx:86
 #: src/screens/Profile.tsx:151
 #: src/screens/Profile.tsx:164
 msgid "Add your name"
 msgstr "अपना नाम जोड़ें"
+
+#: src/screens/Login/AddMissingContact.tsx:26
+#: src/screens/Login/index.tsx:158
+msgid "Add your phone number"
+msgstr "अपना फ़ोन नंबर जोड़ें"
 
 #: src/features/remind/RemindSheet.tsx:200
 msgid "Adds a link {name} can tap to pay you in a UPI app."
@@ -1620,7 +1652,7 @@ msgstr "सूचनाओं की अनुमति दें?"
 msgid "Allowed"
 msgstr "अनुमति है"
 
-#: src/screens/Login/ForgotPasswordForm.tsx:142
+#: src/screens/Login/ForgotPasswordForm.tsx:65
 msgid "Already have a code?"
 msgstr "पहले से कोड है?"
 
@@ -1729,7 +1761,7 @@ msgid "Anyone with this link or QR code can become your friend on Splito. Using 
 msgstr "इस लिंक या QR कोड वाला कोई भी Splito पर आपका दोस्त बन सकता है। इसका इस्तेमाल स्वीकार करना माना जाता है।"
 
 #. placeholder {0}: appLanguageName(language)
-#: src/components/AppLanguageDropdown.tsx:32
+#: src/components/AppLanguageDropdown.tsx:48
 msgid "App language, current: {0}"
 msgstr "ऐप की भाषा, अभी: {0}"
 
@@ -1812,15 +1844,10 @@ msgstr "अपने आप"
 #: src/screens/AddFriend.tsx:296
 #: src/screens/AddFriend.tsx:810
 #: src/screens/AddFriend.tsx:817
-#: src/screens/Login/ChooseAccountForm.tsx:102
-#: src/screens/Login/ChooseAccountForm.tsx:106
-#: src/screens/Login/ForgotPasswordForm.tsx:101
-#: src/screens/Login/ForgotPasswordForm.tsx:106
-#: src/screens/Login/LoginForm.tsx:189
-#: src/screens/Login/LoginForm.tsx:194
-#: src/screens/Login/SetNewPasswordForm.tsx:113
-#: src/screens/Login/SetNewPasswordForm.tsx:119
-#: src/screens/Signup/BackNextButtons.tsx:29
+#: src/screens/LoggedOut/PublicPage.tsx:47
+#: src/screens/LoggedOut/PublicPage.tsx:49
+#: src/screens/Login/FormActions.tsx:33
+#: src/screens/Login/FormActions.tsx:35
 msgid "Back"
 msgstr "वापस"
 
@@ -1843,10 +1870,6 @@ msgstr "लोग पर वापस जाएं"
 #: src/features/searchAsk/AskChat.tsx:174
 msgid "Back to search results"
 msgstr "खोज के नतीजों पर वापस"
-
-#: src/screens/Settings/index.tsx:105
-msgid "Back up and share with friends"
-msgstr "बैकअप लें और मित्रों के साथ साझा करें"
 
 #: src/features/export/ExportSheet.tsx:168
 msgid "Backup"
@@ -1874,7 +1897,7 @@ msgstr "समय के साथ बैलेंस"
 msgid "Balance written off"
 msgstr "बैलेंस माफ़ किया गया"
 
-#: src/components/settings/AboutSettings.tsx:102
+#: src/components/settings/AboutSettings.tsx:115
 #: src/screens/Group/index.tsx:500
 msgid "Balances"
 msgstr "बैलेंस"
@@ -1890,6 +1913,10 @@ msgstr "बैलेंस, किसे किसको देना है औ
 #: src/components/settings/CategoryIcon.tsx:130
 msgid "Bills"
 msgstr "बिल"
+
+#: src/screens/Welcome/index.tsx:50
+msgid "Bills done right"
+msgstr "बिल, सही तरीके से"
 
 #: src/components/settings/prefControls.tsx:100
 msgid "Black"
@@ -2080,10 +2107,9 @@ msgstr "Splito पर जाँच रहे हैं…"
 msgid "Checking the amount"
 msgstr "रकम जाँच रहे हैं"
 
-#: src/screens/Login/ForgotPasswordForm.tsx:115
-#: src/screens/Login/LoginForm.tsx:201
-msgid "Checks your details"
-msgstr "आपकी जानकारी जाँचता है"
+#: src/screens/Login/index.tsx:184
+msgid "Choose a password"
+msgstr "पासवर्ड चुनें"
 
 #: src/components/split/DateDialog.tsx:111
 msgid "Choose a year"
@@ -2147,10 +2173,6 @@ msgstr "पहले चुनें कि ग्रुप कौन संभ�
 msgid "Choose who shares each item"
 msgstr "हर चीज़ के लिए चुनें कि किसने लिया"
 
-#: src/screens/Signup/StepInfo/index.tsx:141
-msgid "Choose your password"
-msgstr "अपना पासवर्ड चुनें"
-
 #: src/components/split/charges/ChargeSheet.tsx:232
 msgid "Chosen items"
 msgstr "चुनी हुई चीज़ें"
@@ -2205,7 +2227,6 @@ msgstr "साफ़ होगा: {clears}"
 #: src/components/Dialog/CloseButton.tsx:32
 #: src/components/FormSheet/shared.tsx:225
 #: src/features/searchAsk/AskChat.tsx:196
-#: src/screens/LoggedOut/index.tsx:48
 msgid "Close"
 msgstr "बंद करें"
 
@@ -2213,7 +2234,7 @@ msgstr "बंद करें"
 msgid "Close active dialog"
 msgstr "खुला डायलॉग बंद करें"
 
-#: src/screens/Login/PasswordUpdatedForm.tsx:31
+#: src/screens/Login/PasswordUpdatedForm.tsx:23
 msgid "Close alert"
 msgstr "सूचना बंद करें"
 
@@ -2238,7 +2259,7 @@ msgstr "यह डायलॉग बंद करें"
 msgid "Closes Add expense; your draft is kept"
 msgstr "खर्च जोड़ना बंद करता है; आपका ड्राफ़्ट रखा जाता है"
 
-#: src/screens/Login/PasswordUpdatedForm.tsx:32
+#: src/screens/Login/PasswordUpdatedForm.tsx:23
 msgid "Closes password update alert"
 msgstr "पासवर्ड अपडेट की सूचना बंद करता है"
 
@@ -2265,6 +2286,11 @@ msgstr "बदलाव सहेजे बिना बंद करता ह�
 #: src/features/export/statementText.ts:54
 msgid "Closing balance"
 msgstr "अंतिम बैलेंस"
+
+#: src/screens/Login/CredentialForm.tsx:115
+#: src/screens/Login/CredentialForm.tsx:117
+msgid "Code"
+msgstr "कोड"
 
 #: src/components/settings/CategoryDialog.tsx:127
 msgid "Color"
@@ -2300,17 +2326,42 @@ msgstr "हर लाइन को बिल से मिलाएँ:"
 msgid "Confirm"
 msgstr "पुष्टि करें"
 
+#: src/screens/Login/AddMissingContact.tsx:35
+#: src/screens/Login/index.tsx:172
+msgid "Confirm your email"
+msgstr "अपने ईमेल की पुष्टि करें"
+
+#: src/screens/Login/AddMissingContact.tsx:35
+#: src/screens/Login/index.tsx:172
+msgid "Confirm your phone number"
+msgstr "अपने फ़ोन नंबर की पुष्टि करें"
+
 #: src/components/Menu/index.web.tsx:114
 msgid "Context menu backdrop, click to close the menu."
 msgstr "मेन्यू की पृष्ठभूमि, मेन्यू बंद करने के लिए क्लिक करें।"
 
 #: src/screens/AddFriend.tsx:301
+#: src/screens/LoggedOut/PublicPage.tsx:41
+#: src/screens/LoggedOut/PublicPage.tsx:43
+#: src/screens/Login/FormActions.tsx:41
+#: src/screens/Login/FormActions.tsx:46
 msgid "Continue"
 msgstr "जारी रखें"
 
-#: src/screens/Signup/BackNextButtons.tsx:34
-msgid "Continue to next step"
-msgstr "अगले चरण पर जाएँ"
+#: src/screens/Login/ContinueForm.tsx:104
+#: src/screens/Login/ContinueForm.tsx:106
+msgid "Continue with a dev account"
+msgstr "डेव खाते से जारी रखें"
+
+#: src/screens/Login/SocialButtons.tsx:45
+#: src/screens/Login/SocialButtons.tsx:48
+msgid "Continue with Apple"
+msgstr "Apple के साथ जारी रखें"
+
+#: src/screens/Login/SocialButtons.tsx:53
+#: src/screens/Login/SocialButtons.tsx:56
+msgid "Continue with Google"
+msgstr "Google के साथ जारी रखें"
 
 #: src/lib/sharing.ts:56
 msgid "Copied to clipboard"
@@ -2413,11 +2464,15 @@ msgstr "ग्रुप छोड़ नहीं सके। कृपया �
 msgid "Couldn’t log this reminder. Please try again."
 msgstr "यह रिमाइंडर दर्ज नहीं हो सका। कृपया फिर कोशिश करें।"
 
+#: src/features/account/LegacyDataOffer.tsx:75
+msgid "Couldn’t move your data. It is still on this device."
+msgstr "आपका डेटा नहीं ले जा सके। वह अब भी इस डिवाइस पर है।"
+
 #: src/lib/sharing.ts:84
 msgid "Couldn’t open an app for that. Copy the link instead."
 msgstr "इसके लिए कोई ऐप नहीं खुला। इसके बजाय लिंक कॉपी करें।"
 
-#: src/data/StoreProvider.tsx:170
+#: src/data/StoreProvider.tsx:202
 msgid "Couldn’t open the demo. Showing your own data."
 msgstr "डेमो नहीं खुल सका। आपका अपना डेटा दिखाया जा रहा है।"
 
@@ -2449,7 +2504,7 @@ msgstr "{name} को हटाया नहीं जा सका। पहल
 msgid "Couldn’t remove {who}. Please try again."
 msgstr "{who} को हटा नहीं सके। कृपया फिर कोशिश करें।"
 
-#: src/screens/Settings/index.tsx:295
+#: src/screens/Settings/index.tsx:293
 msgid "Couldn’t reset settings. Please try again."
 msgstr "सेटिंग्स रीसेट नहीं हो सकीं। कृपया फिर से कोशिश करें।"
 
@@ -2561,11 +2616,7 @@ msgstr "जोड़ी"
 msgid "Create a link"
 msgstr "लिंक बनाएँ"
 
-#: src/screens/LoggedOut/SplashScreen.tsx:68
-#: src/screens/LoggedOut/SplashScreen.web.tsx:60
-#: src/screens/Login/LoginForm.tsx:218
-#: src/screens/Login/LoginForm.tsx:224
-#: src/screens/Signup/index.tsx:40
+#: src/screens/Login/index.tsx:187
 msgid "Create account"
 msgstr "खाता बनाएँ"
 
@@ -2585,14 +2636,17 @@ msgstr "आमंत्रण लिंक बनाएँ"
 msgid "Create link"
 msgstr "लिंक बनाएँ"
 
-#: src/screens/LoggedOut/SplashScreen.tsx:63
-#: src/screens/LoggedOut/SplashScreen.web.tsx:54
-msgid "Create new account"
-msgstr "नया खाता बनाएँ"
-
 #: src/features/export/ExportSheet.tsx:177
 msgid "Create PDF"
 msgstr "PDF बनाएँ"
+
+#: src/screens/Login/index.tsx:119
+#: src/screens/Login/index.tsx:137
+#: src/screens/Login/index.tsx:152
+#: src/screens/Login/index.tsx:169
+#: src/screens/Login/index.tsx:178
+msgid "Create your account"
+msgstr "अपना खाता बनाएँ"
 
 #: src/features/export/ExportSheet.tsx:167
 msgid "CSV"
@@ -2657,7 +2711,7 @@ msgid "Daily"
 msgstr "रोज़"
 
 #: src/components/settings/prefControls.tsx:81
-#: src/screens/Settings/index.tsx:323
+#: src/screens/Settings/index.tsx:321
 msgid "Dark"
 msgstr "डार्क"
 
@@ -2665,7 +2719,7 @@ msgstr "डार्क"
 msgid "Dark mode style"
 msgstr "डार्क मोड की शैली"
 
-#: src/screens/Settings/index.tsx:217
+#: src/screens/Settings/index.tsx:206
 msgid "Data"
 msgstr "डेटा"
 
@@ -2791,7 +2845,7 @@ msgstr "यह फ़ीडबैक हटाएँ?"
 msgid "Deleted"
 msgstr "हटाया गया"
 
-#: src/screens/Settings/index.tsx:223
+#: src/screens/Settings/index.tsx:212
 msgid "Deleted items now stay in their lists."
 msgstr "हटाई गई चीज़ें अब अपनी सूची में ही रहती हैं।"
 
@@ -2832,6 +2886,15 @@ msgstr "डेमो मोड"
 #: src/screens/Analytics/index.tsx:225
 msgid "Description"
 msgstr "विवरण"
+
+#. placeholder {0}: sent.to
+#: src/screens/LoggedOut/DevBanner.tsx:16
+msgid "Dev build: code for {0} is"
+msgstr "डेव बिल्ड: {0} के लिए कोड है"
+
+#: src/screens/Login/ContinueForm.tsx:110
+msgid "Dev builds only: a local account, nothing is sent."
+msgstr "केवल डेव बिल्ड: एक लोकल खाता, कुछ भी भेजा नहीं जाता।"
 
 #: src/components/people/UpiPayDialog.tsx:116
 msgid "Did the payment go through?"
@@ -3100,6 +3163,11 @@ msgstr "असर"
 msgid "Effect on your balance"
 msgstr "आपके बैलेंस पर असर"
 
+#: src/screens/Login/ContactField.tsx:35
+#: src/screens/Login/ContactField.tsx:41
+msgid "Email"
+msgstr "ईमेल"
+
 #: src/features/feedback/FeedbackList.tsx:125
 #: src/features/feedback/FeedbackSheet.tsx:126
 msgid "Email draft opened. Press send in your mail app."
@@ -3110,14 +3178,11 @@ msgstr "ईमेल का ड्राफ़्ट खुल गया है�
 msgid "Email or mobile number"
 msgstr "ईमेल या मोबाइल नंबर"
 
-#: src/screens/Login/ForgotPasswordForm.tsx:55
-#: src/screens/Login/LoginForm.tsx:81
-#: src/screens/Signup/StepInfo/index.tsx:94
+#: src/screens/Login/ContactField.tsx:35
 msgid "Email or phone"
 msgstr "ईमेल या फ़ोन"
 
-#: src/screens/Login/LoginForm.tsx:92
-#: src/screens/Signup/StepInfo/index.tsx:115
+#: src/screens/Login/ContactField.tsx:41
 msgid "Email or phone number"
 msgstr "ईमेल या फ़ोन नंबर"
 
@@ -3146,9 +3211,13 @@ msgstr "नाम, ईमेल या नंबर लिखें।"
 msgid "Enter a name."
 msgstr "नाम लिखें।"
 
-#: src/screens/Login/SetNewPasswordForm.tsx:87
+#: src/screens/Login/SetNewPasswordForm.tsx:95
 msgid "Enter a password"
 msgstr "पासवर्ड डालें"
+
+#: src/screens/Login/OtherContactForm.tsx:45
+msgid "Enter a phone number with its country code, like +91 98765 43210."
+msgstr "देश कोड के साथ फ़ोन नंबर डालें, जैसे +91 98765 43210।"
 
 #: src/features/remind/RemindMeSheet.tsx:234
 msgid "Enter a real date (YYYY-MM-DD) and time (HH:MM)."
@@ -3172,22 +3241,22 @@ msgstr "शून्य से ज़्यादा राशि लिखे�
 msgid "Enter an amount to see everyone’s share"
 msgstr "सबका हिस्सा देखने के लिए रकम लिखें"
 
-#: src/screens/Login/LoginForm.tsx:64
-#: src/screens/Signup/StepInfo/index.tsx:33
+#: src/screens/Login/ContinueForm.tsx:51
 msgid "Enter an email like name@example.com, or a phone number with its country code like +91 98765 43210."
 msgstr "name@example.com जैसा ईमेल डालें, या देश कोड के साथ फ़ोन नंबर डालें, जैसे +91 98765 43210।"
 
-#: src/screens/Login/ForgotPasswordForm.tsx:41
-msgid "Enter the email or phone number (with its country code) you signed up with."
-msgstr "जिस ईमेल या फ़ोन नंबर (देश कोड के साथ) से आपने साइन अप किया था, वह डालें।"
+#: src/screens/Login/OtherContactForm.tsx:45
+msgid "Enter an email like name@example.com."
+msgstr "name@example.com जैसा ईमेल डालें।"
 
-#: src/screens/Login/ForgotPasswordForm.tsx:84
-msgid "Enter the email or phone number you used to create your account. We'll send you a \"reset code\" so you can set a new password."
-msgstr "खाता बनाते समय इस्तेमाल किया गया ईमेल या फ़ोन नंबर डालें। हम आपको एक \"रीसेट कोड\" भेजेंगे ताकि आप नया पासवर्ड सेट कर सकें।"
+#: src/screens/Login/index.tsx:127
+msgid "Enter it to continue."
+msgstr "जारी रखने के लिए इसे डालें।"
 
-#: src/screens/Login/LoginForm.tsx:111
-msgid "Enter the email or phone number you used when you created your account"
-msgstr "खाता बनाते समय इस्तेमाल किया गया ईमेल या फ़ोन नंबर डालें"
+#: src/screens/Login/CodeForm.tsx:71
+#: src/screens/Login/CredentialForm.tsx:82
+msgid "Enter the 6-digit code."
+msgstr "6 अंकों का कोड डालें।"
 
 #: src/components/split/charges/Reconciliation.tsx:138
 msgid "Enter the printed total to check it against this."
@@ -3197,21 +3266,17 @@ msgstr "इससे मिलाने के लिए बिल पर छप
 msgid "Enter the total first, then what each person paid."
 msgstr "पहले कुल रकम लिखें, फिर हर व्यक्ति ने कितना दिया।"
 
-#: src/screens/Login/index.tsx:77
-msgid "Enter your email or phone and password"
-msgstr "अपना ईमेल या फ़ोन और पासवर्ड डालें"
-
-#: src/screens/Login/ForgotPasswordForm.tsx:65
-msgid "Enter your email or phone number"
-msgstr "अपना ईमेल या फ़ोन नंबर डालें"
-
-#: src/screens/Signup/StepInfo/index.tsx:80
+#: src/screens/Login/NameForm.tsx:38
 msgid "Enter your name"
 msgstr "अपना नाम डालें"
 
-#: src/screens/Login/LoginForm.tsx:138
+#: src/screens/Login/CredentialForm.tsx:144
 msgid "Enter your password"
 msgstr "अपना पासवर्ड डालें"
+
+#: src/screens/Login/index.tsx:78
+msgid "Enter your password or a one-time code"
+msgstr "अपना पासवर्ड या वन-टाइम कोड डालें"
 
 #: src/components/settings/CategoryIcon.tsx:129
 msgid "Entertainment"
@@ -3229,6 +3294,14 @@ msgstr "यूरोपीय"
 msgid "Even overall, open both ways"
 msgstr "कुल मिलाकर बराबर, पर दोनों ओर बकाया"
 
+#: src/screens/Login/index.tsx:159
+msgid "Every account has a verified email and phone number. We’ll send a code to confirm this one."
+msgstr "हर खाते में सत्यापित ईमेल और फ़ोन नंबर होता है। इसकी पुष्टि के लिए हम एक कोड भेजेंगे।"
+
+#: src/screens/Login/index.tsx:159
+msgid "Every account has a verified phone number and email. We’ll send a code to confirm this one."
+msgstr "हर खाते में सत्यापित फ़ोन नंबर और ईमेल होता है। इसकी पुष्टि के लिए हम एक कोड भेजेंगे।"
+
 #: src/components/activity/ActivityItem.tsx:1126
 #: src/features/remind/PersonReminders.tsx:74
 msgid "Every day"
@@ -3244,6 +3317,10 @@ msgstr "हर महीने"
 #: src/components/split/SplitEditor.tsx:1088
 msgid "Every share is a whole multiple of {0} and they add up to {1}."
 msgstr "हर हिस्सा {0} का पूरा गुणज है और सबका जोड़ {1} है।"
+
+#: src/screens/Login/AddMissingContact.tsx:30
+msgid "Every Splito account has a verified email and phone number."
+msgstr "हर Splito खाते में सत्यापित ईमेल और फ़ोन नंबर होता है।"
 
 #: src/components/activity/ActivityItem.tsx:1128
 #: src/features/remind/PersonReminders.tsx:74
@@ -3303,9 +3380,13 @@ msgstr "यहाँ जो कुछ बैकअप में नहीं ह
 msgid "Everything in the backup was already here"
 msgstr "बैकअप में सब कुछ पहले से यहाँ था"
 
+#: src/screens/Welcome/index.tsx:53
+msgid "Everything is saved on this device first, so Splito works without a connection."
+msgstr "सब कुछ पहले इसी डिवाइस पर सहेजा जाता है, इसलिए Splito बिना कनेक्शन के भी चलता है।"
+
 #: src/screens/Profile.tsx:95
-msgid "Everything is saved on this device. Sign-in, and sync across your devices, are on the way."
-msgstr "सब कुछ इस डिवाइस पर सहेजा गया है। साइन-इन और आपके डिवाइसों में सिंक जल्द आ रहे हैं।"
+msgid "Everything is saved on this device. It will sync across your devices once sync arrives."
+msgstr "सब कुछ इसी डिवाइस पर सहेजा है। सिंक आने पर यह आपके सभी डिवाइस पर सिंक होगा।"
 
 #: src/features/export/ExportSheet.tsx:168
 msgid "Everything on this device in one file: people, groups, expenses, payments, settings and history. Restore it from Settings > Import."
@@ -3315,7 +3396,7 @@ msgstr "इस डिवाइस का सब कुछ एक फ़ाइल
 msgid "Everything on this page goes back to how Splito starts."
 msgstr "इस पेज की हर सेटिंग Splito की शुरुआती सेटिंग पर लौट आएगी।"
 
-#: src/components/settings/AboutSettings.tsx:117
+#: src/components/settings/AboutSettings.tsx:130
 msgid "Everything you add stays on this device. Splito has no account or server yet, so nothing is sent anywhere."
 msgstr "आप जो भी जोड़ते हैं, वह इसी डिवाइस पर रहता है। Splito में अभी कोई खाता या सर्वर नहीं है, इसलिए कुछ भी कहीं नहीं भेजा जाता।"
 
@@ -3384,8 +3465,8 @@ msgstr "नमूना डेटा के साथ Splito आज़माए�
 
 #: src/features/export/ExportSheet.tsx:175
 #: src/screens/Group/index.tsx:635
-#: src/screens/Settings/index.tsx:230
-#: src/screens/Settings/index.tsx:234
+#: src/screens/Settings/index.tsx:219
+#: src/screens/Settings/index.tsx:223
 msgid "Export"
 msgstr "एक्सपोर्ट"
 
@@ -3418,6 +3499,10 @@ msgstr "1 खर्च एक्सपोर्ट किया गया"
 #: src/features/export/ExportSheet.tsx:155
 msgid "Exported 1 record"
 msgstr "1 रिकॉर्ड एक्सपोर्ट हुआ"
+
+#: src/screens/Login/StrengthMeter.tsx:14
+msgid "Fair"
+msgstr "ठीक-ठाक"
 
 #: src/components/NavFooterLinks.tsx:32
 msgid "Feedback"
@@ -3458,7 +3543,7 @@ msgstr "इस डिवाइस पर कोई भी खर्च, दो�
 msgid "Find me by email or phone"
 msgstr "ईमेल या फ़ोन से मुझे खोजा जा सके"
 
-#: src/screens/Settings/index.tsx:334
+#: src/screens/Settings/index.tsx:332
 msgid "Findable"
 msgstr "खोजे जा सकते हैं"
 
@@ -3487,16 +3572,16 @@ msgstr "जैसे, सर्विस चार्ज"
 msgid "For money that changed hands outside Splito – cash, UPI or a bank transfer. Splito keeps the record; it never moves money."
 msgstr "Splito के बाहर हुए लेन-देन के लिए – नकद, UPI या बैंक ट्रांसफ़र। Splito सिर्फ़ रिकॉर्ड रखता है; वह कभी पैसे नहीं भेजता।"
 
-#: src/screens/Login/index.tsx:101
-#: src/screens/Login/index.tsx:112
+#: src/screens/Login/index.tsx:91
+#: src/screens/Login/index.tsx:97
 msgid "Forgot Password"
 msgstr "पासवर्ड भूल गए"
 
-#: src/screens/Login/LoginForm.tsx:159
+#: src/screens/Login/CredentialForm.tsx:148
 msgid "Forgot password?"
 msgstr "पासवर्ड भूल गए?"
 
-#: src/screens/Login/LoginForm.tsx:166
+#: src/screens/Login/CredentialForm.tsx:155
 msgid "Forgot?"
 msgstr "भूल गए?"
 
@@ -3549,12 +3634,20 @@ msgstr "दोस्त"
 
 #: src/navigation/Navigation.tsx:77
 #: src/screens/FriendsAndInvites/index.tsx:139
-#: src/screens/Settings/index.tsx:137
-#: src/screens/Settings/index.tsx:140
+#: src/screens/Settings/index.tsx:120
+#: src/screens/Settings/index.tsx:123
 #: src/screens/Settings/SettingsSection.tsx:154
 #: src/screens/Settings/SettingsSection.tsx:157
 msgid "Friends and invites"
 msgstr "दोस्त और आमंत्रण"
+
+#: src/screens/Login/NameForm.tsx:28
+msgid "Friends see this name."
+msgstr "दोस्तों को यही नाम दिखेगा।"
+
+#: src/screens/Welcome/index.tsx:49
+msgid "Friends, groups and trips in any currency, each kept apart and never mixed."
+msgstr "किसी भी मुद्रा में दोस्त, समूह और यात्राएँ, हर एक अलग और कभी आपस में मिलाए नहीं जाते।"
 
 #. placeholder {0}: line.people
 #: src/screens/Settle/index.tsx:592
@@ -3581,6 +3674,11 @@ msgstr "आगे की तारीखें भी चलेंगी – उ
 msgid "Gentle vibrations when you tap, toggle and save"
 msgstr "टैप, टॉगल और सेव करने पर हल्का वाइब्रेशन"
 
+#: src/screens/Welcome/index.tsx:203
+#: src/screens/Welcome/index.tsx:209
+msgid "Get started"
+msgstr "शुरू करें"
+
 #: src/components/settings/TaxClassesEditor.tsx:68
 msgid "Give each item on a bill a class, like Food or Alcohol, so a charge can apply to some items only."
 msgstr "बिल की हर चीज़ को एक क्लास दें, जैसे खाना या शराब, ताकि कोई चार्ज सिर्फ़ कुछ चीज़ों पर लगे।"
@@ -3594,11 +3692,7 @@ msgstr "हर व्यक्ति को प्रतिशत दें।"
 msgid "Go back"
 msgstr "वापस जाएं"
 
-#: src/screens/Signup/BackNextButtons.tsx:23
-msgid "Go back to previous step"
-msgstr "पिछले चरण पर वापस जाएँ"
-
-#: src/screens/Login/ForgotPasswordForm.tsx:136
+#: src/screens/Login/ForgotPasswordForm.tsx:63
 msgid "Go to next"
 msgstr "आगे बढ़ें"
 
@@ -3712,13 +3806,12 @@ msgstr "जीएसटी"
 msgid "Haptics"
 msgstr "हैप्टिक्स"
 
-#: src/screens/Signup/index.tsx:96
-msgid "Having trouble?"
-msgstr "कोई समस्या आ रही है?"
-
 #: src/components/NavFooterLinks.tsx:33
-#: src/screens/Settings/index.tsx:200
-#: src/screens/Settings/index.tsx:203
+#: src/screens/LoggedOut/PublicPage.tsx:20
+#: src/screens/Login/ContinueForm.tsx:116
+#: src/screens/Login/ContinueForm.tsx:117
+#: src/screens/Settings/index.tsx:189
+#: src/screens/Settings/index.tsx:192
 #: src/screens/Settings/SettingsSection.tsx:65
 msgid "Help"
 msgstr "मदद"
@@ -3766,7 +3859,7 @@ msgstr "नमस्ते {name},"
 #: src/components/settings/TaxClassesEditor.tsx:188
 #: src/screens/Groups/components/GroupRow.tsx:134
 #: src/screens/People/components/PersonRow.tsx:213
-#: src/screens/Settings/index.tsx:334
+#: src/screens/Settings/index.tsx:332
 msgid "Hidden"
 msgstr "छिपी हुई"
 
@@ -3866,6 +3959,10 @@ msgstr "यह योजना कैसे बनती है"
 msgid "How to restore"
 msgstr "कैसे वापस लाएँ"
 
+#: src/screens/Login/CredentialForm.tsx:109
+msgid "How to sign in"
+msgstr "साइन इन कैसे करें"
+
 #: src/components/split/SplitEditor.tsx:132
 msgid "How to split"
 msgstr "कैसे बाँटें"
@@ -3875,8 +3972,8 @@ msgid "I answer questions about your own balances and spending, on this device. 
 msgstr "मैं आपके अपने बैलेंस और खर्च के सवालों के जवाब इसी डिवाइस पर देता हूँ। इनमें से कोई आज़माएँ:"
 
 #: src/features/searchAsk/AskAnswer.tsx:474
-msgid "I can answer this once you sign in. For now I can answer questions about your balances and spending on this device, like:"
-msgstr "इसका जवाब मैं साइन इन करने के बाद दे सकूँगा। फ़िलहाल मैं इसी डिवाइस पर आपके बैलेंस और खर्च के सवालों का जवाब दे सकता हूँ, जैसे:"
+msgid "I can answer this once sync arrives. For now I can answer questions about your balances and spending on this device, like:"
+msgstr "इसका जवाब मैं सिंक आने के बाद दे सकूँगा। फ़िलहाल मैं इसी डिवाइस पर आपके बैलेंस और खर्च के सवालों का जवाब दे सकता हूँ, जैसे:"
 
 #: src/features/searchAsk/AskAnswer.tsx:239
 msgid "I could not work out who owes whom in {g}."
@@ -3907,8 +4004,8 @@ msgstr "अगर आप बाद में मन बदलें, तो इ�
 msgid "If you choose Not now, the reminder is still saved, but it can’t alert you until you allow notifications."
 msgstr "अभी नहीं चुनने पर भी रिमाइंडर सहेजा जाता है, लेकिन सूचनाओं की अनुमति देने तक वह आपको सचेत नहीं कर पाएगा।"
 
-#: src/screens/Settings/index.tsx:239
-#: src/screens/Settings/index.tsx:243
+#: src/screens/Settings/index.tsx:228
+#: src/screens/Settings/index.tsx:232
 msgid "Import"
 msgstr "इम्पोर्ट"
 
@@ -4018,7 +4115,7 @@ msgstr "भारतीय रुपया"
 msgid "Indigo"
 msgstr "नील"
 
-#: src/screens/Login/SetNewPasswordForm.tsx:98
+#: src/screens/Login/SetNewPasswordForm.tsx:108
 msgid "Input new password"
 msgstr "नया पासवर्ड डालें"
 
@@ -4076,13 +4173,13 @@ msgstr "आमंत्रण लिंक या QR कोड"
 msgid "Invite links"
 msgstr "आमंत्रण लिंक"
 
-#: src/screens/Invites/CreateInvite.tsx:271
-msgid "Invite links need a connection to Splito’s servers, which arrive with sign-in and sync. Until then, add friends by email or number, or just by name."
-msgstr "आमंत्रण लिंक के लिए Splito के सर्वर से जुड़ाव चाहिए, जो साइन-इन और सिंक के साथ आएगा। तब तक दोस्तों को ईमेल, नंबर या सिर्फ़ नाम से जोड़ें।"
-
 #: src/screens/Invites/CreateInvite.tsx:102
 msgid "Invite links need a connection. Try again when you’re online."
 msgstr "आमंत्रण लिंक के लिए कनेक्शन चाहिए। ऑनलाइन होने पर फिर कोशिश करें।"
+
+#: src/screens/Invites/CreateInvite.tsx:271
+msgid "Invite links work once sync arrives. Until then, add friends by email or number, or just by name."
+msgstr "आमंत्रण लिंक सिंक आने के बाद काम करेंगे। तब तक दोस्तों को ईमेल, नंबर या सिर्फ़ नाम से जोड़ें।"
 
 #: src/screens/People/index.tsx:148
 msgid "Invite people"
@@ -4232,6 +4329,14 @@ msgstr "Splito पर मुझसे जुड़ें"
 msgid "Join me on Splito so we can split expenses:"
 msgstr "Splito पर मुझसे जुड़ें, ताकि हम खर्च बाँट सकें:"
 
+#: src/screens/Login/index.tsx:120
+#: src/screens/Login/index.tsx:138
+#: src/screens/Login/index.tsx:153
+#: src/screens/Login/index.tsx:170
+#: src/screens/Login/index.tsx:179
+msgid "Just a few details"
+msgstr "बस कुछ जानकारी"
+
 #: src/components/split/pickers.tsx:258
 msgid "Just between you and friends"
 msgstr "सिर्फ़ आप और दोस्तों के बीच"
@@ -4317,8 +4422,8 @@ msgstr "बैलेंस खुला रखकर छोड़ा"
 msgid "Let a debt go without any money changing hands. It shows in history and Activity, never counts as spending, and you can undo it."
 msgstr "बिना पैसे के लेन-देन के कोई कर्ज़ माफ़ करें। यह इतिहास और गतिविधि में दिखता है, कभी ख़र्च में नहीं गिना जाता, और आप इसे वापस ले सकते हैं।"
 
-#: src/screens/Login/index.tsx:102
-#: src/screens/Login/index.tsx:113
+#: src/screens/Login/index.tsx:92
+#: src/screens/Login/index.tsx:98
 msgid "Let's get your password reset!"
 msgstr "चलिए आपका पासवर्ड रीसेट करते हैं!"
 
@@ -4331,7 +4436,7 @@ msgid "Let's split it {ways} ways. Add the amount and who is in on it."
 msgstr "इसे {ways} लोगों में बांटते हैं। रकम और कौन-कौन शामिल है, जोड़ें।"
 
 #: src/components/settings/prefControls.tsx:80
-#: src/screens/Settings/index.tsx:323
+#: src/screens/Settings/index.tsx:321
 msgid "Light"
 msgstr "लाइट"
 
@@ -4367,6 +4472,24 @@ msgstr "शराब पर वैट"
 #: src/screens/Analytics/index.tsx:232
 msgid "Location"
 msgstr "स्थान"
+
+#: src/features/account/LogOutPrompt.tsx:57
+#: src/navigation/Drawer.tsx:213
+#: src/navigation/Drawer.tsx:223
+#: src/screens/Login/AddMissingContact.tsx:52
+#: src/screens/Login/AddMissingContact.tsx:54
+#: src/screens/Settings/index.tsx:126
+#: src/screens/Settings/index.tsx:129
+msgid "Log out"
+msgstr "लॉग आउट"
+
+#: src/features/account/LogOutPrompt.tsx:49
+msgid "Log out?"
+msgstr "लॉग आउट करें?"
+
+#: src/features/account/LoggingOut.tsx:44
+msgid "Logging out…"
+msgstr "लॉग आउट हो रहा है…"
 
 #: src/components/comments/CommentRow.tsx:194
 msgid "Long press for options"
@@ -4421,8 +4544,8 @@ msgstr "इस डिवाइस को फ़ाइल जैसा बना 
 msgid "Manage friends and invites"
 msgstr "दोस्त और आमंत्रण प्रबंधित करें"
 
-#: src/screens/Invites/CreateInvite.tsx:282
-#: src/screens/Invites/CreateInvite.tsx:287
+#: src/screens/Invites/CreateInvite.tsx:281
+#: src/screens/Invites/CreateInvite.tsx:286
 #: src/screens/Invites/Invite.tsx:267
 #: src/screens/Invites/Invite.tsx:273
 msgid "Manage invite links"
@@ -4582,6 +4705,23 @@ msgstr "आइटम {0} को नीचे ले जाएँ"
 msgid "Move item {0} up"
 msgstr "आइटम {0} को ऊपर ले जाएँ"
 
+#: src/features/account/LegacyDataOffer.tsx:69
+msgid "Move this device’s data into your account"
+msgstr "इस डिवाइस का डेटा अपने खाते में ले जाएँ"
+
+#: src/features/account/LegacyDataOffer.tsx:63
+msgid "Move this device’s data into your account?"
+msgstr "इस डिवाइस का डेटा अपने खाते में ले जाएँ?"
+
+#: src/screens/Settings/index.tsx:237
+#: src/screens/Settings/index.tsx:240
+msgid "Move this device’s older data"
+msgstr "इस डिवाइस का पुराना डेटा ले जाएँ"
+
+#: src/features/account/LegacyDataOffer.tsx:72
+msgid "Moved into your account"
+msgstr "आपके खाते में ले जाया गया"
+
 #: src/screens/Expense/components/History.tsx:75
 msgid "Moved to another group"
 msgstr "दूसरे समूह में ले जाया गया"
@@ -4602,8 +4742,8 @@ msgstr "कई लोगों ने दिया"
 #: src/components/split/charges/ChargeSheet.tsx:134
 #: src/screens/AddFriend.tsx:496
 #: src/screens/Groups/components/GroupsFilterDialog.tsx:122
+#: src/screens/Login/NameForm.tsx:32
 #: src/screens/People/components/FriendsFilterDialog.tsx:134
-#: src/screens/Signup/StepInfo/index.tsx:69
 msgid "Name"
 msgstr "नाम"
 
@@ -4620,7 +4760,7 @@ msgstr "चीज़ {0} का नाम"
 msgid "name@example.com or +91 98765 43210"
 msgstr "name@example.com या +91 98765 43210"
 
-#: src/screens/Login/ForgotPasswordForm.tsx:137
+#: src/screens/Login/ForgotPasswordForm.tsx:63
 msgid "Navigates to the next screen"
 msgstr "अगली स्क्रीन पर ले जाता है"
 
@@ -4689,7 +4829,7 @@ msgstr "नया समूह"
 msgid "New invite link"
 msgstr "नया आमंत्रण लिंक"
 
-#: src/screens/Login/SetNewPasswordForm.tsx:83
+#: src/screens/Login/SetNewPasswordForm.tsx:92
 msgid "New password"
 msgstr "नया पासवर्ड"
 
@@ -4697,21 +4837,12 @@ msgstr "नया पासवर्ड"
 msgid "New tax class"
 msgstr "नई टैक्स क्लास"
 
-#: src/screens/Login/LoginForm.tsx:214
-msgid "New to Splito?"
-msgstr "Splito पर नए हैं?"
-
 #: src/features/pwa/PwaHost.tsx:38
 msgid "New version available"
 msgstr "नया संस्करण उपलब्ध है"
 
-#: src/screens/Login/ForgotPasswordForm.tsx:114
-#: src/screens/Login/ForgotPasswordForm.tsx:120
-#: src/screens/Login/LoginForm.tsx:200
-#: src/screens/Login/LoginForm.tsx:206
-#: src/screens/Login/SetNewPasswordForm.tsx:127
-#: src/screens/Login/SetNewPasswordForm.tsx:132
-#: src/screens/Signup/BackNextButtons.tsx:40
+#: src/screens/Welcome/index.tsx:203
+#: src/screens/Welcome/index.tsx:209
 msgid "Next"
 msgstr "आगे"
 
@@ -4862,7 +4993,7 @@ msgstr "“<0>{query}</0>” के लिए कोई नतीजा नह�
 msgid "No shared groups"
 msgstr "कोई साझा समूह नहीं"
 
-#: src/components/settings/AboutSettings.tsx:122
+#: src/components/settings/AboutSettings.tsx:135
 msgid "No tracking"
 msgstr "कोई ट्रैकिंग नहीं"
 
@@ -4930,6 +5061,7 @@ msgstr "ग्रुप में नहीं"
 msgid "not involved"
 msgstr "शामिल नहीं"
 
+#: src/features/account/LegacyDataOffer.tsx:80
 #: src/features/remind/RemindMeSheet.tsx:131
 #: src/screens/AddFriend.tsx:302
 msgid "Not now"
@@ -5064,15 +5196,15 @@ msgid "of your share was paid by others"
 msgstr "आपके हिस्से में से दूसरों ने चुकाया"
 
 #: src/components/settings/prefControls.tsx:171
-#: src/screens/Settings/index.tsx:333
+#: src/screens/Settings/index.tsx:331
 msgid "Off"
 msgstr "बंद"
 
-#: src/screens/Login/PasswordUpdatedForm.tsx:36
+#: src/screens/Login/PasswordUpdatedForm.tsx:25
 msgid "Okay"
 msgstr "ठीक है"
 
-#: src/screens/Settings/index.tsx:333
+#: src/screens/Settings/index.tsx:331
 msgid "On"
 msgstr "चालू"
 
@@ -5162,8 +5294,8 @@ msgid "Only Home is on. The rest stay in the menu behind your avatar on phones."
 msgstr "सिर्फ़ होम चालू है। बाकी फ़ोन पर आपके अवतार के पीछे वाले मेनू में रहते हैं।"
 
 #: src/screens/Expense/components/History.tsx:177
-msgid "Only on this device. Sign in to sync it to your other devices."
-msgstr "केवल इस डिवाइस पर है। इसे अपने दूसरे डिवाइस पर सिंक करने के लिए साइन इन करें।"
+msgid "Only on this device. It will sync to your other devices once sync arrives."
+msgstr "केवल इस डिवाइस पर है। सिंक आने पर यह आपके दूसरे डिवाइस पर सिंक होगा।"
 
 #: src/components/settings/prefControls.tsx:470
 msgid "Only people with my invite link"
@@ -5206,7 +5338,7 @@ msgstr "{0} खोलें"
 msgid "Open {name}"
 msgstr "{name} खोलें"
 
-#: src/components/settings/AboutSettings.tsx:98
+#: src/components/settings/AboutSettings.tsx:111
 msgid "Open a friend or a group and choose Settle up to record a payment."
 msgstr "भुगतान दर्ज करने के लिए किसी दोस्त या समूह को खोलें और हिसाब चुकाएं चुनें।"
 
@@ -5276,16 +5408,6 @@ msgstr "शुरुआती बैलेंस"
 msgid "Opens {who}'s page"
 msgstr "{who} का पेज खुलता है"
 
-#: src/screens/LoggedOut/SplashScreen.tsx:64
-#: src/screens/LoggedOut/SplashScreen.web.tsx:55
-msgid "Opens flow to create a new Splito account"
-msgstr "नया Splito खाता बनाने की प्रक्रिया खोलता है"
-
-#: src/screens/LoggedOut/SplashScreen.tsx:80
-#: src/screens/LoggedOut/SplashScreen.web.tsx:67
-msgid "Opens flow to sign in to your existing Splito account"
-msgstr "आपके मौजूदा Splito खाते में साइन इन करने की प्रक्रिया खोलता है"
-
 #: src/screens/Settings/components/InstallAppItem.tsx:43
 msgid "Opens full screen from your Home Screen and works offline."
 msgstr "होम स्क्रीन से पूरी स्क्रीन पर खुलता है और ऑफ़लाइन भी चलता है।"
@@ -5333,11 +5455,6 @@ msgstr "या इन्हें ड्राफ़्ट में रखे�
 #: src/screens/Groups/components/GroupsFilterDialog.tsx:78
 msgid "Other"
 msgstr "अन्य"
-
-#: src/screens/Login/ChooseAccountForm.tsx:87
-#: src/screens/Login/ChooseAccountForm.tsx:93
-msgid "Other account"
-msgstr "दूसरा खाता"
 
 #: src/components/people/RecordPaymentDialog.tsx:364
 msgid "Other currency"
@@ -5425,17 +5542,19 @@ msgstr "इसका एक हिस्सा: {0} बकाया रहेग
 msgid "Part payments are fine."
 msgstr "आंशिक भुगतान भी ठीक है।"
 
-#: src/screens/Login/LoginForm.tsx:118
-#: src/screens/Login/LoginForm.tsx:124
-#: src/screens/Signup/StepInfo/index.tsx:130
+#: src/screens/Login/CredentialForm.tsx:110
+#: src/screens/Login/CredentialForm.tsx:112
+#: src/screens/Login/CredentialForm.tsx:126
+#: src/screens/Login/CredentialForm.tsx:130
+#: src/screens/Login/SetNewPasswordForm.tsx:92
 msgid "Password"
 msgstr "पासवर्ड"
 
-#: src/screens/Login/index.tsx:123
+#: src/screens/Login/index.tsx:114
 msgid "Password updated"
 msgstr "पासवर्ड अपडेट हो गया"
 
-#: src/screens/Login/PasswordUpdatedForm.tsx:23
+#: src/screens/Login/PasswordUpdatedForm.tsx:17
 msgid "Password updated!"
 msgstr "पासवर्ड अपडेट हो गया!"
 
@@ -5521,7 +5640,7 @@ msgstr "PDF"
 msgid "People"
 msgstr "लोग"
 
-#: src/components/settings/AboutSettings.tsx:103
+#: src/components/settings/AboutSettings.tsx:116
 msgid "People and Groups show who owes whom in each currency. Different currencies are never added together."
 msgstr "लोग और समूह हर मुद्रा में दिखाते हैं कि किसे किसको कितना देना है। अलग-अलग मुद्राएँ कभी जोड़ी नहीं जातीं।"
 
@@ -5559,6 +5678,11 @@ msgstr "अवधि: {periodName}, {0}"
 #: src/screens/Analytics/components/Charts.tsx:280
 msgid "Person"
 msgstr "व्यक्ति"
+
+#: src/screens/Login/ContactField.tsx:35
+#: src/screens/Login/ContactField.tsx:41
+msgid "Phone number"
+msgstr "फ़ोन नंबर"
 
 #: src/components/settings/prefControls.tsx:187
 msgid "Phones only."
@@ -5612,23 +5736,15 @@ msgstr "ट्रिप की योजना या फ़्लैट सा�
 msgid "Platform"
 msgstr "प्लेटफ़ॉर्म"
 
-#: src/screens/Signup/StepInfo/index.tsx:34
-msgid "Please choose your password."
-msgstr "कृपया अपना पासवर्ड चुनें।"
-
-#: src/screens/Login/LoginForm.tsx:58
+#: src/screens/Login/ContinueForm.tsx:49
 msgid "Please enter your email or phone number"
 msgstr "कृपया अपना ईमेल या फ़ोन नंबर डालें"
 
-#: src/screens/Signup/StepInfo/index.tsx:32
-msgid "Please enter your email or phone number."
-msgstr "कृपया अपना ईमेल या फ़ोन नंबर डालें।"
-
-#: src/screens/Signup/StepInfo/index.tsx:31
+#: src/screens/Login/NameForm.tsx:21
 msgid "Please enter your name."
 msgstr "कृपया अपना नाम डालें।"
 
-#: src/screens/Login/LoginForm.tsx:70
+#: src/screens/Login/CredentialForm.tsx:81
 msgid "Please enter your password"
 msgstr "कृपया अपना पासवर्ड डालें"
 
@@ -5640,7 +5756,7 @@ msgstr "जोड़"
 msgid "Positive means you are owed, negative means you owe. Every currency is its own balance; Splito never adds different currencies together. Splito records what you tell it; it does not move money. A “Group settle-up routing” line means a group settles through someone else, so your balance with this friend is not the plain sum of the records above it."
 msgstr "धनात्मक का मतलब आपको मिलना है, ऋणात्मक का मतलब आपको देना है। हर मुद्रा का अपना बैलेंस है; Splito अलग-अलग मुद्राओं को कभी नहीं जोड़ता। Splito वही दर्ज करता है जो आप बताते हैं; यह पैसे नहीं भेजता। “ग्रुप हिसाब-निपटान का तरीका” वाली पंक्ति का मतलब है कि ग्रुप में निपटान किसी और के ज़रिए होता है, इसलिए इस दोस्त के साथ आपका बैलेंस ऊपर के रिकॉर्ड का सीधा जोड़ नहीं है।"
 
-#: src/screens/Settings/index.tsx:145
+#: src/screens/Settings/index.tsx:134
 msgid "Preferences"
 msgstr "प्राथमिकताएँ"
 
@@ -5652,6 +5768,10 @@ msgstr "पसंदीदा"
 #: src/components/settings/CategoryDialog.tsx:100
 msgid "Preview"
 msgstr "झलक"
+
+#: src/screens/Login/ContinueForm.tsx:96
+msgid "Preview build: local dev account, data stays in this browser, don't use a real password."
+msgstr "प्रीव्यू बिल्ड: लोकल डेव खाता, डेटा इसी ब्राउज़र में रहता है, असली पासवर्ड इस्तेमाल न करें।"
 
 #: src/components/split/DateDialog.tsx:127
 #: src/screens/Analytics/components/RangeDialog.tsx:135
@@ -5677,13 +5797,16 @@ msgstr "प्रिंट डायलॉग खुल गया। PDF के 
 
 #: src/components/NavFooterLinks.tsx:34
 #: src/components/settings/sections.ts:52
+#: src/screens/LoggedOut/PublicPage.tsx:20
+#: src/screens/Login/ContinueForm.tsx:116
+#: src/screens/Login/ContinueForm.tsx:117
 msgid "Privacy"
 msgstr "गोपनीयता"
 
 #: src/navigation/Drawer.tsx:62
 #: src/navigation/Navigation.tsx:73
 #: src/screens/Profile.tsx:40
-#: src/screens/Settings/index.tsx:113
+#: src/screens/Settings/index.tsx:96
 msgid "Profile"
 msgstr "प्रोफ़ाइल"
 
@@ -6050,6 +6173,10 @@ msgstr "{name} को भेजा अनुरोध रद्द हुआ"
 msgid "Requests"
 msgstr "अनुरोध"
 
+#: src/screens/Login/CredentialForm.tsx:189
+msgid "Resend"
+msgstr "फिर भेजें"
+
 #: src/screens/People/components/RequestsSection.tsx:189
 msgctxt "button"
 msgid "Resend"
@@ -6076,24 +6203,24 @@ msgstr "{title} को डिफ़ॉल्ट पर रीसेट करे
 msgid "Reset {title}?"
 msgstr "{title} रीसेट करें?"
 
-#: src/screens/Settings/index.tsx:287
+#: src/screens/Settings/index.tsx:285
 msgid "Reset all"
 msgstr "सब रीसेट करें"
 
-#: src/screens/Settings/index.tsx:256
-#: src/screens/Settings/index.tsx:260
+#: src/screens/Settings/index.tsx:254
+#: src/screens/Settings/index.tsx:258
 msgid "Reset all settings"
 msgstr "सभी सेटिंग्स रीसेट करें"
 
-#: src/screens/Settings/index.tsx:285
+#: src/screens/Settings/index.tsx:283
 msgid "Reset all settings?"
 msgstr "सभी सेटिंग्स रीसेट करें?"
 
-#: src/screens/Login/SetNewPasswordForm.tsx:60
+#: src/screens/Login/SetNewPasswordForm.tsx:70
 msgid "Reset code"
 msgstr "रीसेट कोड"
 
-#: src/screens/Login/ForgotPasswordForm.tsx:52
+#: src/screens/Login/ForgotPasswordForm.tsx:50
 msgid "Reset password"
 msgstr "पासवर्ड रीसेट करें"
 
@@ -6109,7 +6236,7 @@ msgstr "यह पेज रीसेट करें"
 msgid "Reset to anyone pays anyone"
 msgstr "रीसेट करें: कोई भी किसी को भी दे"
 
-#: src/screens/Login/LoginForm.tsx:160
+#: src/screens/Login/CredentialForm.tsx:149
 msgid "Reset your password by sending a code to your email or phone"
 msgstr "अपने ईमेल या फ़ोन पर कोड भेजकर पासवर्ड रीसेट करें"
 
@@ -6313,8 +6440,12 @@ msgstr "{0} को सहेजा गया"
 msgid "Saved now; applies once the directory is live."
 msgstr "अभी सहेजा गया; डायरेक्टरी चालू होने पर लागू होगा।"
 
+#: src/screens/Settings/index.tsx:113
+msgid "saved on this device"
+msgstr "इसी डिवाइस पर सहेजा"
+
 #: src/components/settings/AboutSettings.tsx:44
-#: src/components/settings/AboutSettings.tsx:116
+#: src/components/settings/AboutSettings.tsx:129
 #: src/components/SyncStatus.tsx:18
 #: src/features/feedback/FeedbackSheet.tsx:460
 #: src/features/feedback/labels.ts:33
@@ -6328,8 +6459,8 @@ msgid "Saved on this device. It syncs to your other devices when you are online.
 msgstr "इस डिवाइस पर सहेजा गया। ऑनलाइन होने पर यह आपके दूसरे डिवाइस पर सिंक हो जाएगा।"
 
 #: src/screens/Expense/components/History.tsx:178
-msgid "Saved on this device. Sign in to sync it to your other devices."
-msgstr "इस डिवाइस पर सहेजा गया। अपने दूसरे डिवाइसों पर सिंक करने के लिए साइन इन करें।"
+msgid "Saved on this device. It will sync to your other devices once sync arrives."
+msgstr "इस डिवाइस पर सहेजा गया। सिंक आने पर यह आपके दूसरे डिवाइस पर सिंक होगा।"
 
 #: src/components/split/charges/ChargesSection.tsx:286
 msgid "Saved the charges for {title}"
@@ -6410,6 +6541,7 @@ msgstr "नाम खोजें या जोड़ें"
 
 #: src/features/searchAsk/SearchAskBody.tsx:287
 #: src/features/searchAsk/SearchAskBody.tsx:288
+#: src/screens/Welcome/index.tsx:52
 msgid "Search or ask anything"
 msgstr "कुछ भी खोजें या पूछें"
 
@@ -6463,11 +6595,16 @@ msgstr "सभी लोग देखें"
 msgid "See all requests and invites"
 msgstr "सभी अनुरोध और आमंत्रण देखें"
 
-#: src/screens/Login/ChooseAccountForm.tsx:35
-msgid "Select account"
-msgstr "खाता चुनें"
+#: src/components/settings/AboutSettings.tsx:95
+#: src/components/settings/AboutSettings.tsx:98
+msgid "See the intro"
+msgstr "परिचय देखें"
 
-#: src/components/AppLanguageDropdown.tsx:55
+#: src/screens/Welcome/index.tsx:51
+msgid "See who pays whom, record cash or UPI, and remind a friend gently."
+msgstr "देखें कौन किसे चुकाए, नकद या UPI दर्ज करें, और दोस्त को प्यार से याद दिलाएँ।"
+
+#: src/components/AppLanguageDropdown.tsx:71
 msgid "Select an app language"
 msgstr "ऐप की भाषा चुनें"
 
@@ -6475,13 +6612,15 @@ msgstr "ऐप की भाषा चुनें"
 msgid "Select an option"
 msgstr "एक विकल्प चुनें"
 
-#: src/screens/Login/index.tsx:91
-msgid "Select from an existing account"
-msgstr "मौजूदा खातों में से चुनें"
-
-#: src/components/AppLanguageDropdown.tsx:63
+#: src/components/AppLanguageDropdown.tsx:79
 msgid "Select language"
 msgstr "भाषा चुनें"
+
+#: src/screens/Login/CodeForm.tsx:113
+#: src/screens/Login/CodeForm.tsx:115
+#: src/screens/Login/CredentialForm.tsx:187
+msgid "Send a new code"
+msgstr "नया कोड भेजें"
 
 #: src/features/feedback/FeedbackList.tsx:193
 #: src/features/feedback/FeedbackList.tsx:199
@@ -6499,6 +6638,10 @@ msgstr "{0} को ईमेल से भेजें"
 msgid "Send by SMS to {0}"
 msgstr "{0} को SMS से भेजें"
 
+#: src/screens/Login/ForgotPasswordForm.tsx:61
+msgid "Send code"
+msgstr "कोड भेजें"
+
 #: src/components/comments/CommentComposer.tsx:331
 msgid "Send comment"
 msgstr "टिप्पणी भेजें"
@@ -6513,9 +6656,8 @@ msgstr "ईमेल भेजें"
 #: src/features/feedback/FeedbackList.tsx:72
 #: src/features/feedback/FeedbackSheet.tsx:135
 #: src/features/feedback/FeedbackSheet.tsx:159
-#: src/screens/Settings/index.tsx:178
-#: src/screens/Settings/index.tsx:182
-#: src/screens/Signup/index.tsx:106
+#: src/screens/Settings/index.tsx:167
+#: src/screens/Settings/index.tsx:171
 msgid "Send feedback"
 msgstr "फ़ीडबैक भेजें"
 
@@ -6545,6 +6687,11 @@ msgstr "अनुरोध भेजें"
 msgid "Send SMS"
 msgstr "SMS भेजें"
 
+#. placeholder {0}: formatContact(contact)
+#: src/screens/Login/CodeForm.tsx:86
+msgid "Sending a code to {0}…"
+msgstr "{0} को कोड भेजा जा रहा है…"
+
 #: src/features/feedback/labels.ts:35
 msgid "Sent"
 msgstr "भेजा गया"
@@ -6568,7 +6715,7 @@ msgstr "{who} का हिस्सा {amount} करें"
 msgid "Set for this group"
 msgstr "इस समूह के लिए तय"
 
-#: src/screens/Login/SetNewPasswordForm.tsx:51
+#: src/screens/Login/index.tsx:102
 msgid "Set new password"
 msgstr "नया पासवर्ड सेट करें"
 
@@ -6579,10 +6726,6 @@ msgstr "रिमाइंडर लगाएँ"
 #: src/components/split/charges/ItemClass.tsx:153
 msgid "Set the tax class of {count} selected"
 msgstr "चुनी हुई {count} चीज़ों की टैक्स क्लास तय करें"
-
-#: src/screens/Login/ForgotPasswordForm.tsx:79
-msgid "Sets the email or phone number for password reset"
-msgstr "पासवर्ड रीसेट के लिए ईमेल या फ़ोन नंबर तय करता है"
 
 #: src/components/settings/prefControls.tsx:300
 msgid "Sets which day is today. Expenses keep their own dates."
@@ -6598,7 +6741,7 @@ msgstr "डेमो तैयार हो रहा है… {0}%"
 #: src/navigation/Navigation.tsx:75
 #: src/screens/Profile.tsx:64
 #: src/screens/Profile.tsx:67
-#: src/screens/Settings/index.tsx:76
+#: src/screens/Settings/index.tsx:82
 #: src/screens/Settings/SettingsSection.tsx:75
 msgid "Settings"
 msgstr "सेटिंग्स"
@@ -6607,15 +6750,15 @@ msgstr "सेटिंग्स"
 msgid "Settings and other records"
 msgstr "सेटिंग और अन्य रिकॉर्ड"
 
-#: src/screens/Settings/index.tsx:272
+#: src/screens/Settings/index.tsx:270
 msgid "Settings are saved on this device and follow you to your other devices once sync is on."
 msgstr "सेटिंग इस डिवाइस पर सहेजी जाती हैं और सिंक चालू होने पर आपके दूसरे डिवाइस पर भी पहुँचेंगी।"
 
-#: src/screens/Settings/index.tsx:293
+#: src/screens/Settings/index.tsx:291
 msgid "Settings reset"
 msgstr "सेटिंग्स रीसेट हो गईं"
 
-#: src/components/settings/AboutSettings.tsx:97
+#: src/components/settings/AboutSettings.tsx:110
 #: src/features/friends/RemoveFriendDialog.tsx:105
 #: src/features/searchAsk/AskAnswer.tsx:272
 #: src/navigation/Navigation.tsx:81
@@ -6631,6 +6774,10 @@ msgstr "हिसाब चुकाएं"
 #: src/screens/Group/components/GroupLifecycle.tsx:324
 msgid "Settle up first"
 msgstr "पहले हिसाब चुकाएँ"
+
+#: src/screens/Welcome/index.tsx:51
+msgid "Settle up in the fewest payments"
+msgstr "कम से कम भुगतानों में हिसाब चुकाएँ"
 
 #: src/screens/Group/components/MemberExitDialog.tsx:184
 msgid "Settle up now"
@@ -6824,39 +6971,34 @@ msgstr "टैक्स वाला हिस्सा दिखाता ह�
 msgid "Shows the write-off and lets you undo it"
 msgstr "माफ़ी दिखाता है और उसे वापस लेने देता है"
 
-#: src/navigation/Drawer.tsx:228
-#: src/navigation/Drawer.tsx:235
-#: src/navigation/Navigation.tsx:76
-#: src/screens/LoggedOut/SplashScreen.tsx:78
-#: src/screens/LoggedOut/SplashScreen.tsx:85
-#: src/screens/LoggedOut/SplashScreen.web.tsx:66
-#: src/screens/LoggedOut/SplashScreen.web.tsx:72
-#: src/screens/Login/index.tsx:76
-#: src/screens/Login/index.tsx:90
-#: src/screens/Login/LoginForm.tsx:78
-#: src/screens/Settings/index.tsx:91
-#: src/screens/Settings/index.tsx:96
-msgid "Sign in"
-msgstr "साइन इन करें"
+#: src/screens/LoggedOut/PublicPage.tsx:30
+msgid "Sign in or create an account to see this invite."
+msgstr "यह आमंत्रण देखने के लिए साइन इन करें या खाता बनाएँ।"
 
-#. placeholder {0}: account.name
-#: src/screens/Login/ChooseAccountForm.tsx:54
-msgid "Sign in as {0}"
-msgstr "{0} के रूप में साइन इन करें"
-
-#: src/screens/Login/ChooseAccountForm.tsx:40
-msgid "Sign in as…"
-msgstr "इस रूप में साइन इन करें…"
-
-#: src/screens/Login/NotLiveYet.tsx:19
+#: src/screens/Login/messages.ts:10
+#: src/screens/Login/NotLiveYet.tsx:22
 msgid "Sign-in arrives with sync. Your data stays safe on this device."
 msgstr "साइन-इन सिंक के साथ आएगा। आपका डेटा इसी डिवाइस पर सुरक्षित है।"
+
+#: src/screens/Login/NotLiveYet.tsx:20
+msgid "Sign-in with Google and Apple arrives with sync. Your data stays safe on this device."
+msgstr "Google और Apple से साइन-इन सिंक के साथ आएगा। आपका डेटा इसी डिवाइस पर सुरक्षित है।"
+
+#. placeholder {0}: formatContact(contact)
+#: src/screens/Login/CredentialForm.tsx:105
+msgid "Signing in as {0}"
+msgstr "{0} के रूप में साइन इन"
+
+#: src/screens/Login/messages.ts:11
+msgid "Signing in needs a connection. Check yours and try again."
+msgstr "साइन इन के लिए कनेक्शन चाहिए। अपना कनेक्शन देखकर फिर कोशिश करें।"
 
 #: src/components/split/charges/hooks.ts:68
 msgid "Simple"
 msgstr "सिंपल"
 
 #: src/features/export/ImportSheet.tsx:276
+#: src/screens/Welcome/index.tsx:154
 msgid "Skip"
 msgstr "छोड़ें"
 
@@ -6864,6 +7006,16 @@ msgstr "छोड़ें"
 #: src/features/export/ImportSheet.tsx:310
 msgid "Skip the copy"
 msgstr "कॉपी छोड़ें"
+
+#: src/screens/Welcome/index.tsx:152
+msgid "Skip the intro"
+msgstr "परिचय छोड़ें"
+
+#. placeholder {0}: i + 1
+#. placeholder {1}: s.title
+#: src/screens/Welcome/index.tsx:187
+msgid "Slide {0} of {SLIDE_COUNT}: {1}"
+msgstr "स्लाइड {0} / {SLIDE_COUNT}: {1}"
 
 #: src/components/settings/prefControls.tsx:109
 msgid "Smaller"
@@ -6877,7 +7029,7 @@ msgstr "ताकि दोस्त जानें कि यह आप है
 msgid "Soft drinks"
 msgstr "कोल्ड ड्रिंक"
 
-#: src/screens/Settings/index.tsx:333
+#: src/screens/Settings/index.tsx:331
 msgid "Some"
 msgstr "कुछ"
 
@@ -6914,6 +7066,10 @@ msgstr "जिसे आपने टैग किया वह अब Splito �
 msgid "Something isn’t right. Check the highlighted fields."
 msgstr "कुछ ठीक नहीं है। चिह्नित जगहें जाँचें।"
 
+#: src/screens/Login/messages.ts:17
+msgid "Something went wrong. Please try again."
+msgstr "कुछ गड़बड़ हो गई। कृपया फिर कोशिश करें।"
+
 #: src/screens/Groups/components/GroupsFilterDialog.tsx:118
 #: src/screens/People/components/FriendsFilterDialog.tsx:130
 msgid "Sort by"
@@ -6931,19 +7087,26 @@ msgstr "समय के साथ खर्च"
 msgid "Split"
 msgstr "बँटवारा"
 
+#: src/screens/Welcome/index.tsx:49
+msgid "Split anything with anyone"
+msgstr "किसी के साथ भी कुछ भी बांटें"
+
 #. placeholder {0}: peopleCount(n)
 #: src/components/split/ExpenseComposer.tsx:773
 msgid "Split between {0}"
 msgstr "{0} में बँटा"
 
-#: src/screens/LoggedOut/SplashScreen.tsx:43
-#: src/screens/LoggedOut/SplashScreen.web.tsx:44
+#: src/screens/Login/ContinueForm.tsx:70
 msgid "Split bills, stay friends."
 msgstr "बिल बाँटिए, दोस्ती बनाए रखिए।"
 
 #: src/screens/Expense/index.tsx:293
 msgid "Split by exact amounts"
 msgstr "सटीक रकम से बँटा"
+
+#: src/screens/Welcome/index.tsx:50
+msgid "Split by item and portion, with different taxes per item, service charge and round-off."
+msgstr "आइटम और हिस्से के हिसाब से बांटें, हर आइटम पर अलग टैक्स, सर्विस चार्ज और राउंड-ऑफ के साथ।"
 
 #: src/screens/Expense/index.tsx:297
 msgid "Split by items"
@@ -6986,8 +7149,7 @@ msgstr "कल रात का डिनर 3 लोगों में बा�
 msgid "Split with"
 msgstr "किसके साथ बाँटें"
 
-#: src/screens/LoggedOut/SplashScreen.tsx:39
-#: src/screens/LoggedOut/SplashScreen.web.tsx:40
+#: src/screens/Login/ContinueForm.tsx:67
 msgid "Splito"
 msgstr "Splito"
 
@@ -7004,7 +7166,7 @@ msgstr "Splito आपके संपर्क नहीं खोल सकत�
 msgid "Splito can’t see your UPI app. Record the payment only once your app shows it as successful."
 msgstr "Splito आपका UPI ऐप नहीं देख सकता। भुगतान तभी दर्ज करें जब ऐप उसे सफल दिखाए।"
 
-#: src/components/settings/AboutSettings.tsx:123
+#: src/components/settings/AboutSettings.tsx:136
 msgid "Splito collects no analytics and shows no ads."
 msgstr "Splito कोई एनालिटिक्स इकट्ठा नहीं करता और कोई विज्ञापन नहीं दिखाता।"
 
@@ -7040,11 +7202,6 @@ msgstr "इसके बाद Splito किसी भी ऐप की तर�
 msgid "Splito was updated in another tab. Reload to keep going. Everything you saved is still here."
 msgstr "Splito दूसरे टैब में अपडेट हो गया है। जारी रखने के लिए फिर से लोड करें। आपका सहेजा हुआ सब कुछ यहीं है।"
 
-#: src/screens/LoggedOut/SplashScreen.tsx:95
-#: src/screens/LoggedOut/SplashScreen.web.tsx:101
-msgid "Splito works without an account. Your data stays on this device."
-msgstr "Splito बिना खाते के भी चलता है। आपका डेटा इसी डिवाइस पर रहता है।"
-
 #: src/components/settings/AboutSettings.tsx:54
 msgid "Splito's interface is built on Bluesky's social-app (MIT licence). Icons are Lucide (ISC licence). The Inter typeface is under the SIL Open Font License."
 msgstr "Splito का इंटरफ़ेस Bluesky के social-app (MIT लाइसेंस) पर बना है। आइकन Lucide (ISC लाइसेंस) के हैं। Inter टाइपफ़ेस SIL Open Font License के तहत है।"
@@ -7078,25 +7235,28 @@ msgstr "ठहरना"
 msgid "Stay as an inactive member"
 msgstr "निष्क्रिय सदस्य बने रहें"
 
-#: src/features/links/LinkHost.tsx:74
+#: src/features/links/LinkHost.tsx:75
 msgid "Stay in demo"
 msgstr "डेमो में रहें"
 
-#. placeholder {0}: state.activeStep + 1
-#. placeholder {1}: SIGNUP_STEPS.length
-#: src/screens/Signup/index.tsx:58
-msgid "Step {0} of {1}"
-msgstr "चरण {0} / {1}"
+#. placeholder {0}: slide + 1
+#: src/screens/Welcome/index.tsx:165
+msgid "Step {0} of {SLIDE_COUNT}"
+msgstr "चरण {0} / {SLIDE_COUNT}"
 
 #: src/features/pwa/InstallHelpDialog.tsx:80
 msgid "Step {n}"
 msgstr "चरण {n}"
 
+#: src/screens/Login/StrengthMeter.tsx:14
+msgid "Strong"
+msgstr "मज़बूत"
+
 #: src/components/split/ExpenseComposer.tsx:508
 msgid "suggested"
 msgstr "सुझाया गया"
 
-#: src/screens/Settings/index.tsx:174
+#: src/screens/Settings/index.tsx:163
 msgid "Support"
 msgstr "सहायता"
 
@@ -7104,11 +7264,11 @@ msgstr "सहायता"
 msgid "Swap who paid"
 msgstr "भुगतान करने वाला बदलें"
 
-#: src/features/links/LinkHost.tsx:73
+#: src/features/links/LinkHost.tsx:74
 msgid "Switch back"
 msgstr "वापस जाएँ"
 
-#: src/features/links/LinkHost.tsx:71
+#: src/features/links/LinkHost.tsx:72
 msgid "Switch back to your data?"
 msgstr "अपने डेटा पर वापस जाएँ?"
 
@@ -7136,7 +7296,7 @@ msgstr "आपके दूसरे डिवाइस पर सिंक ह�
 
 #: src/components/settings/prefControls.tsx:79
 #: src/features/feedback/FeedbackSheet.tsx:415
-#: src/screens/Settings/index.tsx:323
+#: src/screens/Settings/index.tsx:321
 msgid "System"
 msgstr "सिस्टम"
 
@@ -7213,6 +7373,14 @@ msgstr "यह रकम बहुत बड़ी है"
 msgid "That change can’t be made to this record"
 msgstr "यह बदलाव इस रिकॉर्ड में नहीं किया जा सकता"
 
+#: src/screens/Login/messages.ts:13
+msgid "That check expired. Please enter a new code."
+msgstr "वह जाँच समाप्त हो गई। कृपया नया कोड डालें।"
+
+#: src/screens/Login/messages.ts:14
+msgid "That code isn’t right. Check the 6 digits and try again."
+msgstr "यह कोड सही नहीं है। 6 अंक जाँचकर फिर कोशिश करें।"
+
 #: src/components/comments/Discussion.tsx:67
 msgid "That comment is too long. Please shorten it."
 msgstr "यह टिप्पणी बहुत लंबी है। कृपया छोटी करें।"
@@ -7225,6 +7393,10 @@ msgstr "यह नहीं हो सका। कृपया फिर को
 #: src/features/feedback/FeedbackSheet.tsx:302
 msgid "That doesn't look like an email address."
 msgstr "यह ईमेल पते जैसा नहीं लगता।"
+
+#: src/screens/Login/messages.ts:16
+msgid "That email or phone number belongs to another account."
+msgstr "यह ईमेल या फ़ोन नंबर किसी और खाते का है।"
 
 #: src/screens/AddExpense.tsx:168
 msgid "That group is inactive, so your draft is no longer in it."
@@ -7245,6 +7417,10 @@ msgstr "इतने दिन चार्ट में नहीं समा�
 #: src/components/split/shared.tsx:168
 msgid "That note is too long. Please shorten it."
 msgstr "यह नोट बहुत लंबा है। कृपया छोटा करें।"
+
+#: src/screens/Login/messages.ts:12
+msgid "That password isn’t right. Try again, or use a code instead."
+msgstr "यह पासवर्ड सही नहीं है। फिर कोशिश करें, या कोड इस्तेमाल करें।"
 
 #: src/features/feedback/FeedbackSheet.tsx:93
 msgid "That picture is too large. Try a smaller one."
@@ -7355,7 +7531,7 @@ msgstr "पूरा बैलेंस: {currency} में हिसाब �
 msgid "Their balance"
 msgstr "उनका बैलेंस"
 
-#: src/screens/Settings/index.tsx:286
+#: src/screens/Settings/index.tsx:284
 msgid "Theme, tabs, categories, language and every other setting go back to how Splito starts. Your people, groups and expenses stay as they are."
 msgstr "थीम, टैब, श्रेणियाँ, भाषा और बाकी हर सेटिंग Splito की शुरुआती सेटिंग पर लौट आएगी। आपके लोग, समूह और खर्च जैसे हैं वैसे ही रहेंगे।"
 
@@ -7516,7 +7692,7 @@ msgstr "यह Splito की बैकअप फ़ाइल नहीं है
 msgid "this item"
 msgstr "यह चीज़"
 
-#: src/features/links/LinkHost.tsx:72
+#: src/features/links/LinkHost.tsx:73
 msgid "This link is for your own groups and friends, and demo mode shows sample data. Switch demo mode off to open it."
 msgstr "यह लिंक आपके अपने ग्रुप और दोस्तों के लिए है, और डेमो मोड में नमूना डेटा दिखता है। इसे खोलने के लिए डेमो मोड बंद करें।"
 
@@ -7547,6 +7723,10 @@ msgstr "यह योजना आपके नियमों से बाह�
 msgid "this record"
 msgstr "यह रिकॉर्ड"
 
+#: src/features/account/LogOutPrompt.tsx:52
+msgid "This removes all your Splito data from this device."
+msgstr "इससे आपका सारा Splito डेटा इस डिवाइस से हट जाएगा।"
+
 #: src/features/searchAsk/AskChat.tsx:245
 msgid "This removes the conversation from this device. Your expenses and balances are not touched."
 msgstr "इससे यह बातचीत इस डिवाइस से हट जाएगी। आपके खर्च और बैलेंस पर कोई असर नहीं पड़ेगा।"
@@ -7554,6 +7734,10 @@ msgstr "इससे यह बातचीत इस डिवाइस से 
 #: src/screens/Settings/SettingsSection.tsx:231
 msgid "This settings page doesn't exist"
 msgstr "यह सेटिंग्स पेज मौजूद नहीं है"
+
+#: src/screens/Login/AddMissingContact.tsx:47
+msgid "This step needs a connection. Connect and try again."
+msgstr "इस चरण के लिए कनेक्शन चाहिए। कनेक्ट होकर फिर कोशिश करें।"
 
 #: src/components/split/shared.tsx:181
 msgid "This was already answered"
@@ -7654,6 +7838,10 @@ msgstr "आने वाला कल"
 msgid "Too many digits after the decimal point for this currency"
 msgstr "इस मुद्रा के लिए दशमलव के बाद बहुत ज़्यादा अंक हैं"
 
+#: src/screens/Login/StrengthMeter.tsx:14
+msgid "Too short: use at least 8 characters"
+msgstr "बहुत छोटा: कम से कम 8 अक्षर रखें"
+
 #: src/components/split/charges/Reconciliation.tsx:132
 #: src/screens/Analytics/index.tsx:229
 #: src/screens/Expense/components/ChargedBreakdown.tsx:192
@@ -7689,6 +7877,12 @@ msgstr "आना-जाना"
 msgid "Trip"
 msgstr "यात्रा"
 
+#: src/screens/Welcome/index.tsx:52
+msgid "Try “How much did I spend on food in Goa?” and get the answer from your own expenses."
+msgstr "“गोवा में खाने पर मैंने कितना खर्च किया?” पूछकर देखें और जवाब अपने ही खर्चों से पाएँ।"
+
+#: src/features/account/LoggingOut.tsx:34
+#: src/features/account/LoggingOut.tsx:36
 #: src/screens/Invites/Invite.tsx:322
 #: src/screens/Invites/Invite.tsx:328
 msgid "Try again"
@@ -7818,7 +8012,7 @@ msgstr "{0} इस्तेमाल करें"
 msgid "Use a percentage from 0 to 100, with up to two decimals"
 msgstr "0 से 100 तक का प्रतिशत लिखें, अधिकतम दो दशमलव"
 
-#: src/components/settings/AboutSettings.tsx:92
+#: src/components/settings/AboutSettings.tsx:105
 msgid "Use Add expense in the sidebar, or the + button on phones. Choose who paid and how to split it."
 msgstr "साइडबार में खर्च जोड़ें या फ़ोन पर + बटन इस्तेमाल करें। चुनें कि किसने भुगतान किया और कैसे बाँटना है।"
 
@@ -7831,6 +8025,10 @@ msgstr "कुल रकम के रूप में इस्तेमाल 
 #: src/components/split/SplitEditor.tsx:961
 msgid "Use as total"
 msgstr "कुल रकम बनाएँ"
+
+#: src/screens/Login/index.tsx:185
+msgid "Use at least 8 characters. You can sign in with it, or with a code, any time."
+msgstr "कम से कम 8 अक्षर रखें। आप इससे या कोड से कभी भी साइन इन कर सकते हैं।"
 
 #. placeholder {0}: setup.name
 #: src/components/split/charges/ChargesSection.tsx:182
@@ -7896,21 +8094,44 @@ msgstr "सिंक की प्रतीक्षा में"
 msgid "Wants to be friends · {0}"
 msgstr "दोस्त बनना चाहते हैं · {0}"
 
+#: src/screens/Login/messages.ts:15
+msgid "We couldn’t find that account."
+msgstr "वह खाता हमें नहीं मिला।"
+
 #: src/components/split/ExpenseComposer.tsx:445
 msgid "We kept your unsaved expense."
 msgstr "आपका बिना सहेजा खर्च रखा गया है।"
+
+#. placeholder {0}: formatContact(contact)
+#: src/screens/Login/CodeForm.tsx:86
+msgid "We sent a 6-digit code to {0}."
+msgstr "हमने {0} पर 6 अंकों का कोड भेजा है।"
+
+#. placeholder {0}: formatContact(contact)
+#: src/screens/Login/CredentialForm.tsx:185
+msgid "We sent a code to {0}."
+msgstr "हमने {0} पर एक कोड भेजा है।"
 
 #: src/screens/AddFriend.tsx:644
 msgid "We’ll check when you’re online. Your request waits on this device until then."
 msgstr "ऑनलाइन होने पर हम जाँचेंगे। तब तक आपका अनुरोध इसी डिवाइस पर रहेगा।"
 
+#: src/screens/Login/index.tsx:126
+msgid "We’ll create your account"
+msgstr "हम आपका खाता बना देंगे"
+
+#. placeholder {0}: formatContact(contact)
+#: src/screens/Login/ForgotPasswordForm.tsx:52
+msgid "We’ll send a “reset code” to {0} so you can set a new password."
+msgstr "नया पासवर्ड बनाने के लिए हम {0} पर एक “रीसेट कोड” भेजेंगे।"
+
 #: src/screens/People/components/RequestsSection.tsx:175
 msgid "We’ll send it when you’re online"
 msgstr "ऑनलाइन होने पर भेजेंगे"
 
-#: src/screens/Signup/index.tsx:41
-msgid "We’re so excited to have you join us!"
-msgstr "आपको अपने साथ पाकर हमें बहुत खुशी है!"
+#: src/screens/Login/StrengthMeter.tsx:14
+msgid "Weak"
+msgstr "कमज़ोर"
 
 #: src/screens/Analytics/components/Summary.tsx:195
 msgid "Week"
@@ -7923,6 +8144,15 @@ msgstr "हफ़्ता शुरू होता है"
 #: src/features/remind/RemindMeSheet.tsx:215
 msgid "Weekly"
 msgstr "हर हफ़्ते"
+
+#: src/navigation/Navigation.tsx:76
+msgid "Welcome"
+msgstr "स्वागत है"
+
+#: src/screens/Login/CredentialForm.tsx:103
+#: src/screens/Login/index.tsx:77
+msgid "Welcome back"
+msgstr "फिर स्वागत है"
 
 #: src/features/searchAsk/askQuestions.ts:15
 msgid "What does {name} owe me?"
@@ -8004,6 +8234,10 @@ msgstr "आपने सबके लिए जो चुकाया, बना
 #: src/screens/AddFriend.tsx:396
 msgid "What you typed won’t be kept."
 msgstr "आपने जो लिखा वह नहीं रखा जाएगा।"
+
+#: src/screens/Login/NameForm.tsx:26
+msgid "What’s your name?"
+msgstr "आपका नाम क्या है?"
 
 #: src/features/remind/RemindSheet.tsx:211
 msgid "WhatsApp"
@@ -8245,6 +8479,10 @@ msgstr "आप"
 msgid "You accepted {subject}’s friend request"
 msgstr "आपने {subject} का दोस्ती का अनुरोध स्वीकार किया"
 
+#: src/features/account/LegacyDataOffer.tsx:64
+msgid "You added people, groups and expenses on this device before accounts. Move them into this account? Nothing moves unless you say so."
+msgstr "खातों से पहले आपने इस डिवाइस पर लोग, समूह और खर्च जोड़े थे। क्या उन्हें इस खाते में ले जाएँ? आपकी हाँ के बिना कुछ नहीं जाएगा।"
+
 #. placeholder {0}: inviter.name
 #. placeholder {0}: person.data.name
 #: src/screens/Invites/Invite.tsx:155
@@ -8313,8 +8551,8 @@ msgstr "आपने {0} उधार लिए"
 msgid "you borrowed {figure}"
 msgstr "आपने {figure} उधार लिए"
 
-#: src/screens/Login/index.tsx:124
-#: src/screens/Login/PasswordUpdatedForm.tsx:26
+#: src/screens/Login/index.tsx:115
+#: src/screens/Login/PasswordUpdatedForm.tsx:20
 msgid "You can now sign in with your new password."
 msgstr "अब आप अपने नए पासवर्ड से साइन इन कर सकते हैं।"
 
@@ -8361,7 +8599,7 @@ msgstr "आपको भुगतान मिला"
 msgid "You have changes that are not saved yet. Reloading now discards them."
 msgstr "आपके कुछ बदलाव अभी सहेजे नहीं गए हैं। अभी रीलोड करने पर वे हट जाएँगे।"
 
-#: src/screens/Login/SetNewPasswordForm.tsx:38
+#: src/screens/Login/SetNewPasswordForm.tsx:51
 msgid "You have entered an invalid code. It should be 6 digits."
 msgstr "आपने गलत कोड डाला है। यह 6 अंकों का होना चाहिए।"
 
@@ -8522,9 +8760,9 @@ msgstr "{period} {scope} आपने {amount} खर्च किए।"
 msgid "You will no longer be in {groupName}. Earlier expenses and the history stay as they are."
 msgstr "आप अब {groupName} में नहीं रहेंगे। पहले के खर्च और इतिहास जैसे हैं वैसे रहेंगे।"
 
-#: src/screens/Login/SetNewPasswordForm.tsx:53
-msgid "You will receive a \"reset code\" by email or text. Enter that code here, then enter your new password."
-msgstr "आपको ईमेल या टेक्स्ट से एक \"रीसेट कोड\" मिलेगा। वह कोड यहाँ डालें, फिर अपना नया पासवर्ड डालें।"
+#: src/screens/Login/index.tsx:103
+msgid "You will receive a “reset code” by email or text. Enter that code here, then enter your new password."
+msgstr "आपको ईमेल या टेक्स्ट से एक “रीसेट कोड” मिलेगा। वह कोड यहाँ डालें, फिर नया पासवर्ड डालें।"
 
 #: src/screens/Settle/index.tsx:568
 msgid "You’ll get"
@@ -8545,6 +8783,10 @@ msgstr "आप पहले से दोस्त हैं।"
 #: src/components/activity/ActivityItem.tsx:639
 msgid "You’re friends now"
 msgstr "अब आप दोस्त हैं"
+
+#: src/screens/LoggedOut/PublicPage.tsx:20
+msgid "You’re invited to Splito"
+msgstr "आपको Splito पर आमंत्रित किया गया है"
 
 #: src/screens/Settle/index.tsx:558
 msgid "You’re not part of any of these payments."
@@ -8574,10 +8816,6 @@ msgstr "आपने यहाँ सब कुछ छिपा दिया ह
 msgid "you@example.com"
 msgstr "you@example.com"
 
-#: src/screens/Signup/index.tsx:64
-msgid "Your account"
-msgstr "आपका खाता"
-
 #: src/screens/AddFriend.tsx:758
 msgid "Your contact book is never uploaded."
 msgstr "आपकी संपर्क सूची कभी अपलोड नहीं होती।"
@@ -8585,6 +8823,10 @@ msgstr "आपकी संपर्क सूची कभी अपलोड �
 #: src/components/settings/AboutSettings.tsx:41
 msgid "Your data"
 msgstr "आपका डेटा"
+
+#: src/features/account/LoggingOut.tsx:32
+msgid "Your data could not be removed from this device yet. Close other Splito tabs and try again."
+msgstr "आपका डेटा अभी इस डिवाइस से हटाया नहीं जा सका। Splito के दूसरे टैब बंद करके फिर कोशिश करें।"
 
 #: src/components/settings/prefControls.tsx:165
 msgid "Your device asks for reduced motion, so movement stays gentle."
@@ -8594,8 +8836,8 @@ msgstr "आपका डिवाइस कम गति माँगता ह�
 msgid "Your edits to this expense won’t be saved."
 msgstr "इस खर्च में आपके बदलाव सहेजे नहीं जाएँगे।"
 
-#: src/screens/Settings/index.tsx:188
-#: src/screens/Settings/index.tsx:191
+#: src/screens/Settings/index.tsx:177
+#: src/screens/Settings/index.tsx:180
 #: src/screens/Settings/SettingsSection.tsx:58
 msgid "Your feedback"
 msgstr "आपका फ़ीडबैक"
@@ -8621,8 +8863,7 @@ msgstr "हर सप्ताह के अंत में आपका कु
 msgid "Your net balance at the end of each year, all friends together"
 msgstr "हर साल के अंत में आपका कुल बैलेंस, सभी दोस्तों के साथ"
 
-#: src/screens/Login/SetNewPasswordForm.tsx:42
-#: src/screens/Signup/StepInfo/index.tsx:35
+#: src/screens/Login/SetNewPasswordForm.tsx:52
 msgid "Your password must be at least {MIN_PASSWORD_LENGTH} characters long."
 msgstr "आपका पासवर्ड कम से कम {MIN_PASSWORD_LENGTH} अक्षरों का होना चाहिए।"
 
@@ -8655,9 +8896,9 @@ msgstr "आपका फ़ोन Splito को संपर्क खोलन�
 msgid "Your portion of the bill"
 msgstr "बिल में आपका हिस्सा"
 
-#: src/screens/Settings/index.tsx:130
-msgid "Your profile · saved on this device"
-msgstr "आपकी प्रोफ़ाइल · इस डिवाइस पर सहेजी गई"
+#: src/screens/Settings/index.tsx:113
+msgid "Your profile"
+msgstr "आपकी प्रोफ़ाइल"
 
 #: src/features/remind/PersonReminders.tsx:53
 msgid "Your reminders"
@@ -8724,3 +8965,7 @@ msgstr "आपकी UPI ID"
 #: src/features/remind/RemindSheet.tsx:185
 msgid "Your UPI ID (optional)"
 msgstr "आपकी UPI ID (वैकल्पिक)"
+
+#: src/screens/Welcome/index.tsx:53
+msgid "Yours, and works offline"
+msgstr "आपका अपना, और ऑफ़लाइन भी चलता है"

@@ -1,6 +1,7 @@
 import {type ExpoConfig} from 'expo/config'
 
 import linkHosts from './link-hosts.json'
+import {assertAuthConfig} from './auth-config'
 import {tierFrom} from './link-tier'
 
 type Tier = keyof typeof linkHosts.tiers
@@ -51,6 +52,8 @@ export function linkClaims(tier: Tier) {
 }
 
 const TIER = tierFrom(process.env.EXPO_PUBLIC_TIER)
+/* A release build without the real auth API does not build (production has no dev sign-in, F-250). */
+assertAuthConfig(process.env)
 
 const config: ExpoConfig = {
   name: 'Splito',

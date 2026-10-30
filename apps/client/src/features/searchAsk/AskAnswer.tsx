@@ -471,7 +471,7 @@ export function AskAnswer({answer, me, question, onAsk, onSearch}: Props) {
     case 'unsupported':
       return (
         <View style={[a.gap_md]}>
-          {lead(l`I can answer this once you sign in. For now I can answer questions about your balances and spending on this device, like:`)}
+          {lead(l`I can answer this once sync arrives. For now I can answer questions about your balances and spending on this device, like:`)}
           <View style={[a.flex_row, a.flex_wrap]}>{suggest(answer.suggestion)}</View>
         </View>
       )

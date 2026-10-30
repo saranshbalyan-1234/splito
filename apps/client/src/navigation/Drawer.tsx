@@ -15,9 +15,9 @@ import {NAV_ITEM_ROUTE, splitNavigationItems} from '#/lib/routes/navigationItems
 import {useTabs} from '#/lib/routes/tabs'
 import {getCurrentRoute} from '#/lib/routes/helpers'
 import {type NavigationProp} from '#/lib/routes/types'
-import {useSession} from '#/state/session'
 import {useSetDrawerOpen} from '#/state/shell'
 import {useMe} from '#/data/hooks'
+import {requestLogOut} from '#/features/account/LogOutPrompt'
 import {UserAvatar} from '#/view/com/util/UserAvatar'
 import {atoms as a, tokens, useTheme, web} from '#/alf'
 import {
@@ -181,31 +181,18 @@ function DrawerContentInner(): React.ReactNode {
         ))}
       </ScrollView>
 
-      <DrawerFooter
-        onPressSignIn={() => {
-          setDrawerOpen(false)
-          navigation.navigate('SignIn')
-        }}
-        onBeforeNavigate={() => setDrawerOpen(false)}
-      />
+      <DrawerFooter onBeforeNavigate={() => setDrawerOpen(false)} />
     </View>
   )
 }
 const DrawerContent = memo(DrawerContentInner)
 export {DrawerContent}
 
-/* The shared footer links (the sidebar shows the same), then Sign in. */
-let DrawerFooter = ({
-  onPressSignIn,
-  onBeforeNavigate,
-}: {
-  onPressSignIn: () => void
-  onBeforeNavigate: () => void
-}): React.ReactNode => {
+/* The shared footer links (the sidebar shows the same), then Log out (sign-in is required, so there is no Sign in here). */
+let DrawerFooter = ({onBeforeNavigate}: {onBeforeNavigate: () => void}): React.ReactNode => {
   const t = useTheme()
   const {t: l} = useLingui()
   const insets = useSafeAreaInsets()
-  const {hasSession} = useSession()
   return (
     <View
       style={[
@@ -221,21 +208,21 @@ let DrawerFooter = ({
           ),
         },
       ]}>
-      {/* Signed out until the auth backend lands (owner rule: Sign in in the drawer footer). */}
-      {!hasSession && (
-        <Button
-          testID="drawer-sign-in"
-          label={l`Sign in`}
-          size="small"
-          variant="solid"
-          color="primary"
-          style={[a.self_start]}
-          onPress={onPressSignIn}>
-          <ButtonText>
-            <Trans>Sign in</Trans>
-          </ButtonText>
-        </Button>
-      )}
+      <Button
+        testID="drawer-log-out"
+        label={l`Log out`}
+        size="small"
+        variant="solid"
+        color="secondary"
+        style={[a.self_start]}
+        onPress={() => {
+          onBeforeNavigate()
+          requestLogOut()
+        }}>
+        <ButtonText>
+          <Trans>Log out</Trans>
+        </ButtonText>
+      </Button>
       <NavFooterLinks onBeforeNavigate={onBeforeNavigate} />
     </View>
   )

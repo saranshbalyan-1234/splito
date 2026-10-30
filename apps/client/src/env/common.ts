@@ -11,7 +11,7 @@ export const RELEASE_VERSION: string =
  * The env the app is running in e.g. development, testflight, production, e2e
  */
 export const ENV: string = process.env.EXPO_PUBLIC_ENV as
-  'production' | 'testflight' | 'development' | 'e2e' | (string & {})
+  'production' | 'preview' | 'testflight' | 'development' | 'e2e' | (string & {})
 
 /**
  * Indicates whether the app is running in TestFlight

@@ -174,8 +174,8 @@ export function SyncFooter({sync}: {sync: Pick<RowSync, 'syncStatus'>}) {
   const {t: l} = useLingui()
   const {kind: syncKind} = useRowStatus(sync)
   const footer = {
-    local: l`Only on this device. Sign in to sync it to your other devices.`,
-    device: l`Saved on this device. Sign in to sync it to your other devices.`,
+    local: l`Only on this device. It will sync to your other devices once sync arrives.`,
+    device: l`Saved on this device. It will sync to your other devices once sync arrives.`,
     waiting: l`Saved on this device. It syncs to your other devices when you are online.`,
     syncing: l`Syncing to your other devices.`,
     synced: l`Synced to your other devices.`,

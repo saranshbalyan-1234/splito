@@ -15,7 +15,7 @@ export const ROUTE_PATHS = {
   Activity: '/activity',
   Profile: '/profile',
   Settings: '/settings',
-  SignIn: '/signin',
+  Welcome: '/welcome/:step',
   FriendsAndInvites: '/settings/friends',
   Search: '/search',
   SettingsSection: '/settings/:section',

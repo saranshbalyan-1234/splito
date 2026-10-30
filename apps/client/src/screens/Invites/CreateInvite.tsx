@@ -269,9 +269,8 @@ export function CreateInviteScreen() {
         {isLinkAvailable ? null : (
           <Admonition type="info">
             <Trans>
-              Invite links need a connection to Splito’s servers, which arrive
-              with sign-in and sync. Until then, add friends by email or
-              number, or just by name.
+              Invite links work once sync arrives. Until then, add friends by
+              email or number, or just by name.
             </Trans>
           </Admonition>
         )}
