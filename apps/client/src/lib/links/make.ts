@@ -22,8 +22,8 @@ export function pathTo(name: LinkTarget['name'], params: Record<string, string> 
  * (or `openLink`) it lands as a pushed page with Back. The tab is a query here because `Link` matches a bare route
  * pattern (`/activity`); the address bar prints it as `/activity/all`.
  */
-export function activityPath({types = [], groupId, personId}: {types?: readonly ActivityTypeId[]; groupId?: string; personId?: string} = {}) {
-  return `/activity?${new URLSearchParams({tab: 'all', ...(types.length > 0 ? {type: types.join() === 'expenses,payments' ? 'transactions' : types.join(',')} : {}), ...(groupId ? {group: groupId} : {}), ...(personId ? {person: personId} : {})})}`
+export function activityPath({types = [], groupId, personId, tab = 'all'}: {types?: readonly ActivityTypeId[]; groupId?: string; personId?: string; /** `me` for what I did (Profile's Expenses and recent activity). */ tab?: 'all' | 'me'} = {}) {
+  return `/activity?${new URLSearchParams({tab, ...(types.length > 0 ? {type: types.join() === 'expenses,payments' ? 'transactions' : types.join(',')} : {}), ...(groupId ? {group: groupId} : {}), ...(personId ? {person: personId} : {})})}`
 }
 
 /** Every transactions heading, count and "See all": Expenses and Payments (owners 173, 193). */

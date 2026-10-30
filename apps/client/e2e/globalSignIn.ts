@@ -20,7 +20,7 @@ export default async function globalSignIn(config: FullConfig) {
     await page.waitForFunction(() => !!(window as unknown as Hooks).__splitoTest?.signIn, undefined, {timeout: 240_000})
     await page.evaluate(() => (window as unknown as Hooks).__splitoTest!.signIn!())
     /* Saved only once the app is up on the account's own database, so every test starts from a state that opens. */
-    await page.getByTestId('screen-home').waitFor({timeout: 240_000})
+    await page.getByTestId('screen-people').waitFor({timeout: 240_000})
     await page.context().storageState({path: storageState})
   } finally {
     await browser.close()
