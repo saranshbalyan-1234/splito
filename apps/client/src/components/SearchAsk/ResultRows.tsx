@@ -240,6 +240,7 @@ export function ExpenseResult({
     .join(' · ')
   const fieldLabel = useFieldLabel()
   const isInGroup = !!e.groupId
+  const title = e.title
   const shown = match.slice(0, 2)
   /* Screen readers hear why it is here too: "Notes: Farewell dinner", "Comment: Please send the receipt". */
   const why = shown.map(m => ('text' in m ? `${fieldLabel(m, isInGroup)}: ${m.text}` : fieldLabel(m, isInGroup))).join(', ')
@@ -247,7 +248,7 @@ export function ExpenseResult({
   return (
     <ResultRow
       nav={nav}
-      label={why ? l`${e.title}, ${total}, ${date}, ${why}` : l`${e.title}, ${total}, ${date}`}
+      label={why ? l`${title}, ${total}, ${date}, ${why}` : l`${title}, ${total}, ${date}`}
       isActive={isActive}
       syncStatus={expense.syncStatus}
       onPress={onPress}>
