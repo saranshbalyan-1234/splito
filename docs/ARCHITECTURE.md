@@ -385,8 +385,26 @@ All user-facing strings go through Lingui; English default, Hindi second, Englis
 
 ## 8. Launch splash
 
-[Partial] The native splash comes from the `expo-splash-screen` plugin (auto-hide) and web shows a static
-mark in `public/index.html`. `StoreProvider` opens the store before rendering the shell. Not built (A-020):
+[Partial] The native splash comes from the `expo-splash-screen` plugin and web shows the launch mark in
+`public/index.html`. `StoreProvider` opens the store before rendering the shell. [Built] (F-264, owner 185) the
+mark breathes while the store opens, and the launch screen fades out (200 ms) over the first screen:
+
+- **Web:** `#launch` in `index.html` is a fixed overlay beside `#root` (not inside it, so React's first commit does
+  not remove it and the fade shifts nothing); its CSS keyframes (scale 1 -> 1.08 -> 1, 1.2 s, ease-in-out, infinite;
+  `prefers-reduced-motion` gets a 2.4 s opacity pulse) run from first paint, no script. `markLaunchReady()`
+  (`components/LaunchScreen/index.web.tsx`) fades it out and removes it. Dark mode is ALF Dim's background.
+- **iOS / Android:** `index.ts` calls `SplashScreen.preventAutoHideAsync()` at import; `components/LaunchScreen` draws
+  the same PNG as the splash plugin (200 dp, centred in the whole window, not the safe area, white or Dim by the
+  system scheme) and hides the native splash when the image has loaded, then breathes on the UI thread
+  (Reanimated `withRepeat`, `useReducedMotion` -> opacity pulse) until `markLaunchReady()`.
+- **The ready signal** is `StoreProvider`: the store is open, or a storage notice or an open error says it will not
+  be. It is a module call from an effect, so no component re-renders on ready; only the native launch screen
+  re-renders once (to unmount after its fade). Fonts are embedded natively / `font-display: swap` on web and
+  preferences read synchronously, so they need no wait. No cap is built yet (below).
+- Checks: `e2e/launch.spec.ts` (bundle held back by a gate; 390 and 1440, light and dark, reduced motion),
+  `src/alf/splash.test.ts`.
+
+Not built (A-020):
 
 - The splash holds until fonts, preferences and the local store are open and the first People/Groups
   queries have resolved, capped at 8 s; after the cap the app shows anyway.
@@ -1207,6 +1225,11 @@ Splito lessons (add newest last, dated, with PR):
   Safari's double-tap detection could hold or swallow quick taps. Rule: tap, scroll and gesture work is verified in
   real Mobile Safari (iOS simulator) and with Chrome CPU throttling at 6x before it is called done, every tab
   (Home included) is measured, and no fix is reported as working on phones from desktop numbers alone.
+- 2026-10-30, F-264 (c-splash): **the web launch mark lived inside `#root`, so React's first commit removed it** while
+  the store was still opening and the screen went blank. The launch screen is now a fixed `#launch` overlay beside
+  `#root` that `markLaunchReady()` fades out when `StoreProvider` has a store (or a notice or error). A native splash
+  can only be hidden once, so `preventAutoHideAsync()` runs in the entry and the JS launch screen hides it when its
+  image has loaded. Check the native handover in a release build: a dev client draws its own loading UI over it.
 
 ---
 
