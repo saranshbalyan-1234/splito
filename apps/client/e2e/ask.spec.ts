@@ -186,6 +186,8 @@ test('the sidebar, the drawer and a pinned bar tab all open the drawer in Ask mo
   await page.setViewportSize(PHONE)
   await page.goto('/settings/navigation')
   await page.getByTestId('tabs-toggle-ask').click()
+  // The preference is saved when the switch shows it: leaving the page before that drops the write.
+  await expect(page.getByTestId('tabs-toggle-ask')).toHaveAttribute('aria-checked', 'true')
   await page.goto('/')
   await expect(page.getByTestId('tab-ask')).toBeVisible()
   await page.getByTestId('tab-ask').click()

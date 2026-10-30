@@ -80,7 +80,7 @@ test('the real data is untouched by a demo session; Switch back returns Home wit
   expect(await names(page, 'person')).not.toContain('Real Asha')
   // An edit inside demo mode goes to the demo database.
   await page.evaluate(() => (window as unknown as {splito: Splito}).splito.createPerson('Typed in demo'))
-  expect(await names(page, 'person')).toContain('Typed in demo')
+  expect(await names(page, 'person')).toContain('Typed In Demo')
 
   // Switch back with the Settings switch: Home, with the real data and none of the demo.
   await page.goto('/settings')
@@ -100,7 +100,7 @@ test('the real data is untouched by a demo session; Switch back returns Home wit
   // Back on: a fresh dataset, the edit made in the first session is gone (owner 136).
   await openDemo(page)
   expect(await names(page, 'person')).toContain('Riya Sharma')
-  expect(await names(page, 'person')).not.toContain('Typed in demo')
+  expect(await names(page, 'person')).not.toContain('Typed In Demo')
   await closeDemo(page)
   expect(await names(page, 'person')).toContain('Real Asha')
 })

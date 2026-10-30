@@ -2996,7 +2996,7 @@ msgstr "नाम, ईमेल या नंबर लिखें।"
 msgid "Enter a name."
 msgstr "नाम लिखें।"
 
-#: src/screens/Login/SetNewPasswordForm.tsx:96
+#: src/screens/Login/SetNewPasswordForm.tsx:95
 msgid "Enter a password"
 msgstr "पासवर्ड डालें"
 
@@ -3885,7 +3885,7 @@ msgstr "भारतीय रुपया"
 msgid "Indigo"
 msgstr "नील"
 
-#: src/screens/Login/SetNewPasswordForm.tsx:109
+#: src/screens/Login/SetNewPasswordForm.tsx:108
 msgid "Input new password"
 msgstr "नया पासवर्ड डालें"
 
@@ -4573,7 +4573,7 @@ msgstr "नया समूह"
 msgid "New invite link"
 msgstr "नया आमंत्रण लिंक"
 
-#: src/screens/Login/SetNewPasswordForm.tsx:93
+#: src/screens/Login/SetNewPasswordForm.tsx:92
 msgid "New password"
 msgstr "नया पासवर्ड"
 
@@ -5241,7 +5241,7 @@ msgstr "आंशिक भुगतान भी ठीक है।"
 #: src/screens/Login/CredentialForm.tsx:112
 #: src/screens/Login/CredentialForm.tsx:126
 #: src/screens/Login/CredentialForm.tsx:130
-#: src/screens/Login/SetNewPasswordForm.tsx:93
+#: src/screens/Login/SetNewPasswordForm.tsx:92
 msgid "Password"
 msgstr "पासवर्ड"
 
@@ -5767,7 +5767,7 @@ msgstr "{name} को भेजा अनुरोध रद्द हुआ"
 msgid "Requests"
 msgstr "अनुरोध"
 
-#: src/screens/Login/CredentialForm.tsx:190
+#: src/screens/Login/CredentialForm.tsx:189
 msgid "Resend"
 msgstr "फिर भेजें"
 
@@ -6188,9 +6188,9 @@ msgstr "एक विकल्प चुनें"
 msgid "Select language"
 msgstr "भाषा चुनें"
 
-#: src/screens/Login/CodeForm.tsx:114
-#: src/screens/Login/CodeForm.tsx:116
-#: src/screens/Login/CredentialForm.tsx:188
+#: src/screens/Login/CodeForm.tsx:113
+#: src/screens/Login/CodeForm.tsx:115
+#: src/screens/Login/CredentialForm.tsx:187
 msgid "Send a new code"
 msgstr "नया कोड भेजें"
 
@@ -7601,7 +7601,7 @@ msgid "We sent a 6-digit code to {0}."
 msgstr "हमने {0} पर 6 अंकों का कोड भेजा है।"
 
 #. placeholder {0}: formatContact(contact)
-#: src/screens/Login/CredentialForm.tsx:186
+#: src/screens/Login/CredentialForm.tsx:185
 msgid "We sent a code to {0}."
 msgstr "हमने {0} पर एक कोड भेजा है।"
 

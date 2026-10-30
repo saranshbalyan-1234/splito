@@ -2996,7 +2996,7 @@ msgstr "Enter a name or an email or number."
 msgid "Enter a name."
 msgstr "Enter a name."
 
-#: src/screens/Login/SetNewPasswordForm.tsx:96
+#: src/screens/Login/SetNewPasswordForm.tsx:95
 msgid "Enter a password"
 msgstr "Enter a password"
 
@@ -3885,7 +3885,7 @@ msgstr "Indian Rupee"
 msgid "Indigo"
 msgstr "Indigo"
 
-#: src/screens/Login/SetNewPasswordForm.tsx:109
+#: src/screens/Login/SetNewPasswordForm.tsx:108
 msgid "Input new password"
 msgstr "Input new password"
 
@@ -4573,7 +4573,7 @@ msgstr "New group"
 msgid "New invite link"
 msgstr "New invite link"
 
-#: src/screens/Login/SetNewPasswordForm.tsx:93
+#: src/screens/Login/SetNewPasswordForm.tsx:92
 msgid "New password"
 msgstr "New password"
 
@@ -5241,7 +5241,7 @@ msgstr "Part payments are fine."
 #: src/screens/Login/CredentialForm.tsx:112
 #: src/screens/Login/CredentialForm.tsx:126
 #: src/screens/Login/CredentialForm.tsx:130
-#: src/screens/Login/SetNewPasswordForm.tsx:93
+#: src/screens/Login/SetNewPasswordForm.tsx:92
 msgid "Password"
 msgstr "Password"
 
@@ -5767,7 +5767,7 @@ msgstr "Request to {name} cancelled"
 msgid "Requests"
 msgstr "Requests"
 
-#: src/screens/Login/CredentialForm.tsx:190
+#: src/screens/Login/CredentialForm.tsx:189
 msgid "Resend"
 msgstr "Resend"
 
@@ -6188,9 +6188,9 @@ msgstr "Select an option"
 msgid "Select language"
 msgstr "Select language"
 
-#: src/screens/Login/CodeForm.tsx:114
-#: src/screens/Login/CodeForm.tsx:116
-#: src/screens/Login/CredentialForm.tsx:188
+#: src/screens/Login/CodeForm.tsx:113
+#: src/screens/Login/CodeForm.tsx:115
+#: src/screens/Login/CredentialForm.tsx:187
 msgid "Send a new code"
 msgstr "Send a new code"
 
@@ -7601,7 +7601,7 @@ msgid "We sent a 6-digit code to {0}."
 msgstr "We sent a 6-digit code to {0}."
 
 #. placeholder {0}: formatContact(contact)
-#: src/screens/Login/CredentialForm.tsx:186
+#: src/screens/Login/CredentialForm.tsx:185
 msgid "We sent a code to {0}."
 msgstr "We sent a code to {0}."
 
