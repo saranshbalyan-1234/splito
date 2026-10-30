@@ -1031,6 +1031,10 @@ msgstr "{who} recorded this payment"
 msgid "{who} restored this expense"
 msgstr "{who} restored this expense"
 
+#: src/screens/Repayment/index.tsx:184
+msgid "{who} edited this payment"
+msgstr "{who} edited this payment"
+
 #: src/screens/Repayment/index.tsx:185
 msgid "{who} restored this payment"
 msgstr "{who} restored this payment"

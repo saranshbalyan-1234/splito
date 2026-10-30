@@ -1031,6 +1031,10 @@ msgstr "{who} ने यह भुगतान दर्ज किया"
 msgid "{who} restored this expense"
 msgstr "{who} ने यह खर्च वापस लाया"
 
+#: src/screens/Repayment/index.tsx:184
+msgid "{who} edited this payment"
+msgstr "{who} ने यह भुगतान बदला"
+
 #: src/screens/Repayment/index.tsx:185
 msgid "{who} restored this payment"
 msgstr "{who} ने यह भुगतान वापस ला दिया"

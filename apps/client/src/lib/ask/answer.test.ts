@@ -82,6 +82,12 @@ test('spending is one line per currency and never summed across them', async () 
   expect(a.currencies[0]!.slices.map(s => [s.key, s.value])).toEqual([['food', 50000n], ['transport', 30000n]])
 })
 
+test('a category that is gone is drawn as the real Other, with its colour, not as a blank', async () => {
+  const gone = await ask('How much did I spend this month?', env({source: source(), categories: categories.filter(c => c.id !== 'transport')}))
+  if (gone.kind !== 'spend') throw new Error(gone.kind)
+  expect(gone.currencies[0]!.slices.find(s => s.key === 'transport')).toMatchObject({label: 'Other', color: '#94a3b8'})
+})
+
 test('a category and a measure narrow the figure: food, what I paid, everyone\'s total', async () => {
   const food = await ask('How much did I spend on food this month?')
   if (food.kind !== 'spend') throw new Error(food.kind)

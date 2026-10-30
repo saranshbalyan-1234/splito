@@ -130,6 +130,8 @@ Rules:
   | Dialog, sheet, form sheet | `#/components/Dialog` + `#/components/FormSheet` |
   | Confirm / discard | `#/components/Prompt` |
   | Menu, overflow | `#/components/Menu` |
+  | A row's "more actions" menu | `#/components/RowMenu` (`RowMenu`, `useRowMenuTrigger`): right-click, Menu key / Shift+F10, long-press (native and phone-width web); the "..." button on every width or wide only |
+  | Category name, tile | `useCategoryLookup` / `useCategory` (translated, gone id = Other) and `CategoryTile`, all in `#/components/split/shared` |
   | Toast, undo | `#/components/Toast` |
   | Long list | `#/view/com/util/List` |
   | In-page tabs | Bluesky Pager + `TabBar` (§ 26.9) [Partial: `components/TabBar.tsx`, no Pager yet] |
@@ -1445,6 +1447,8 @@ Splito lessons (add newest last, dated, with PR):
   inside the phase, so it is printed and never gated; the second round, on parked tabs, is 69 + 468 every run. A
   frozen clock (`page.clock.setFixedTime`) stops the app reaching Home, so the clock is pinned by an offset.
 
+
+- 2026-10-31, c-p0bf (consolidation P0-b, P0-f): **a row menu is one component, because the same gesture kept working on some rows only.** Four hand-built menus (Hide, Dispute, Activity, comments) differed on phone-width web: iOS Safari fires no `contextmenu` on a long-press, so a deleted history row and an Activity row had no way in there (`IS_NATIVE`-only `onLongPress`). `components/RowMenu.tsx` owns it (`useRowMenuTrigger`: long-press where there is no mouse, right-click, Menu key / Shift+F10; `RowMenu`: row + menu + the "..." button), and the architecture rule `rowMenuGesture` counts hand-built `onContextMenu`s (baselined: CommentRow until P1-d, two charge pickers). Test-method lesson: **Chromium's emulated touch (`Input.dispatchTouchEvent`) sends a click at the lift point, which lands on the menu's scrim and closes it about 0.3 s after release**; a real long-press does not, so `e2e/rowMenu.spec.ts` checks the menu while the finger is still down, and desktop WebKit cannot construct a `Touch` (it is sent plain touch objects). Reanimated's `useReducedMotion` is the OS setting read once at start, so a swipe or animation using it ignores the Animations preference: use `useShouldReduceMotion`. Category names translated only in Settings, so a Hindi user saw "Food" everywhere else: one `useCategoryLookup` now names them.
 
 ## 24. Checklists
 

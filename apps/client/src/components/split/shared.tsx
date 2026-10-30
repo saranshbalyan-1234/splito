@@ -3,15 +3,15 @@ import {useLingui} from '@lingui/react/macro'
 import {getCurrency} from '@splito/domain'
 import {
   type Category,
-  DEFAULT_CATEGORIES,
   type Person,
   PREFS,
 } from '@splito/sync'
 
 import {useAllEntities, useMutationCtx, usePref} from '#/data/hooks'
-import {atoms as a, useTheme} from '#/alf'
+import {atoms as a, useTheme, utils} from '#/alf'
+import {CategoryGlyph, useCategoryName} from '#/components/settings/CategoryIcon'
 import {Text} from '#/components/Typography'
-import {categoryIcon} from './icons'
+import {findCategory} from './categoryLookup'
 
 /** Display names by person id; the local user is "You". */
 export function useDisplayName() {
@@ -36,43 +36,51 @@ export function useCategories(): Category[] {
   return categories.filter(c => !c.hidden).sort((x, y) => x.order - y.order)
 }
 
-/** Every category, hidden ones included, for showing what an older expense used. */
-export function useCategory(id: string): Category {
+/**
+ * Every category by id, hidden ones included, for showing what an older expense used. The name is in the UI language
+ * when it is a built-in one the person has not renamed (as Settings shows it); their own names show as typed.
+ * A category that is gone is "Other".
+ */
+export function useCategoryLookup(): (id: string) => Category {
   const [categories = PREFS.categories.default] = usePref('categories')
-  return (
-    categories.find(c => c.id === id) ??
-    categories.find(c => c.id === 'other') ?? {
-      ...DEFAULT_CATEGORIES.at(-1)!,
-      id,
-    }
-  )
+  const nameOf = useCategoryName()
+  return id => {
+    const found = findCategory(categories, id)
+    return {...found, id, name: nameOf(found)}
+  }
+}
+
+/** One category by id; see `useCategoryLookup` for a screen that shows many. */
+export function useCategory(id: string): Category {
+  return useCategoryLookup()(id)
 }
 
 /**
- * The category's glyph on a tint of its colour, in Bluesky's rounded-square
- * avatar shape (feeds and lists use it). Sized like the avatar it replaces.
+ * The one category tile: the glyph on a tint of its colour, a rounded square sized like the avatar it replaces
+ * (Bluesky's list avatar shape). History rows, the expense page, the composer, pickers and Analytics all use it.
  */
 export function CategoryTile({
   category,
   size = 42,
 }: {
-  category: Category
+  category: Pick<Category, 'icon' | 'color'>
   size?: number
 }) {
-  const Icon = categoryIcon(category.icon)
+  const t = useTheme()
   return (
     <View
       style={[
         a.align_center,
         a.justify_center,
+        a.flex_shrink_0,
         {
           width: size,
           height: size,
           borderRadius: size > 32 ? 10 : 6,
-          backgroundColor: category.color + '24',
+          backgroundColor: utils.alpha(category.color, t.scheme === 'light' ? 0.14 : 0.22),
         },
       ]}>
-      <Icon width={Math.round(size * 0.5)} fill={category.color} />
+      <CategoryGlyph icon={category.icon} color={category.color} size={Math.round(size * 0.5)} />
     </View>
   )
 }
